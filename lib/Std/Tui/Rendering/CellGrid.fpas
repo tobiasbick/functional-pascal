@@ -13,8 +13,8 @@ uses
 // - `Grid`: Cell grid to paint.
 public procedure TuiPaintCellGrid(Canvas: TuiCanvas; Bounds: TuiRect; Grid: TuiCellGrid);
 begin
-  mutable var Width: integer := Grid.Width;
-  mutable var Height: integer := Grid.Height;
+  var Width: integer := Grid.Width;
+  var Height: integer := Grid.Height;
   if Width > Bounds.Width then
     begin
       Width := Bounds.Width;

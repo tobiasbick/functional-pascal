@@ -24,10 +24,10 @@ fn unwrap_namespace_mismatch_reports_a_type_error_before_lowering() {
                         "program UnwrapRepro;
 uses Std.Options, Std.Results, Std.Tui, Std.Test;
 begin
-  var Base: TuiStyle := TuiStyle.FromColors(
+  const Base: TuiStyle := TuiStyle.FromColors(
     TuiColor.FromRgb(1, 2, 3), TuiColor.FromRgb(4, 5, 6));
-  var Style: {container} := {constructor}(Base);
-  var Red: integer := Std.{namespace}.{function}(Style{fallback}).Background.Red;
+  const Style: {container} := {constructor}(Base);
+  const Red: integer := Std.{namespace}.{function}(Style{fallback}).Background.Red;
   AssertEquals(4, Red);
 end."
                     ),

@@ -15,8 +15,8 @@ begin
   case Std.Net.Connect('127.0.0.1', {port}, 1000) of
     when Ok(ConnectionValue):
     begin
-      var Source: Std.Tasks.CancellationSource := Std.Tasks.CreateCancellationSource();
-      var Token: Std.Tasks.CancellationToken := Std.Tasks.GetCancellationToken(Source);
+      const Source: Std.Tasks.CancellationSource := Std.Tasks.CreateCancellationSource();
+      const Token: Std.Tasks.CancellationToken := Std.Tasks.GetCancellationToken(Source);
       case Std.Net.SendBytesWithCancellation(ConnectionValue, [42, 43], Token) of
         when Ok(Count): if Count <> 2 then panic('wrong write count'); end if;
         when Error(Message): panic(Message);

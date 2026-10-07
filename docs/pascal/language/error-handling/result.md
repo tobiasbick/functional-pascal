@@ -3,8 +3,8 @@
 `Result of T, E` represents either a success (`Ok`) or a failure (`Error`):
 
 ```pascal
-var R: Result of integer, string := Ok(42);
-var E: Result of integer, string := Error('not found');
+const R: Result of integer, string := Ok(42);
+const E: Result of integer, string := Error('not found');
 ```
 
 ## Returning errors
@@ -25,7 +25,7 @@ end function;
 Use `case of` with destructuring to handle both branches:
 
 ```pascal
-var R: result of integer, string := Divide(10, 0);
+const R: result of integer, string := Divide(10, 0);
 case R of
   when Ok(V):
     WriteLn('Value: ' + IntToStr(V));

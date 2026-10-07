@@ -15,7 +15,7 @@ pub(super) fn apply_decl_source_id(decl: &mut Decl, source_id: u32) {
             apply_expr_source_id(&mut const_def.value, source_id);
             apply_span(&mut const_def.span, source_id);
         }
-        Decl::Var(var_def) | Decl::MutableVar(var_def) => {
+        Decl::Var(var_def) => {
             apply_var_def_source_id(var_def, source_id);
         }
         Decl::TypeDef(type_def) => {

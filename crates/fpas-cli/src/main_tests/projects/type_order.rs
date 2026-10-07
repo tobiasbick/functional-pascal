@@ -26,10 +26,10 @@ fn run_cli_imports_forward_recursive_types_and_reuses_compiled_units() {
     write_text(
         &cwd.join("src/main.fpas"),
         "program Main; uses App.Tree, Std.Console;
-      begin var Root: Alias := Create();
-        var Child: Edge := Edge.More(Some(Root));
-        var Populated: Node := Root with Children := [Child]; end with;
-        var Bound: function(): boolean := Populated.IsReady;
+      begin const Root: Alias := Create();
+        const Child: Edge := Edge.More(Some(Root));
+        const Populated: Node := Root with Children := [Child]; end with;
+        const Bound: function(): boolean := Populated.IsReady;
         WriteLn(Bound()); WriteLn(Populated.Seed);
       end.",
     );

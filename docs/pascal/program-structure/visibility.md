@@ -42,7 +42,7 @@ constants, variables, and types. An unmarked following declaration is private;
 visibility is not inherited.
 
 The modifier applies to `function`, `procedure`, `type`, `const`, `var`, and
-`mutable var` declarations in units. On records declared in units it also
+`var` declarations in units. On records declared in units it also
 applies directly to individual fields, functions, procedures, properties, and
 events. Every such record member is private unless it is declared `public`.
 See [Records](../language/types/records.md#field-visibility),

@@ -16,7 +16,7 @@ begin
 end function;
 
 begin
-  var O: option of integer := Some(-1);
-  var M: option of string := AndThen(O, PositiveOk);
+  const O: option of integer := Some(-1);
+  const M: option of string := AndThen(O, PositiveOk);
   WriteLn(IsNone(M));
 end.

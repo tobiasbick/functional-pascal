@@ -10,10 +10,12 @@ Nested patterns have stable resolution and concrete coverage diagnostics
 without a catch-all loophole for closed enums; adding a surrounding name cannot
 silently alter a pattern's meaning.
 
-Current enum patterns bind plain identifiers only, and scalar labels never bind,
-so binding versus comparison is not ambiguous today. It becomes ambiguous once
-patterns nest and may contain literals or constants; the explicit binding form
-is introduced together with nesting.
+Current flat enum patterns bind plain payload identifiers. Scalar value labels
+require compile-time constants after AP16.1; a bare identifier in a guarded
+scalar arm can also introduce a fresh binding, while a resolved constant remains
+a comparison. AP16.2 preserves that distinction during migration. AP20 adds
+explicit payload bindings and stable resolution for nested patterns; it must
+account for the existing scalar guard-binding form during its inventory.
 
 ## Decisions
 
@@ -49,9 +51,17 @@ end while;
 const Hit: boolean := X is Some(_);   // error: 'is' only in if, elsif, while
 ```
 
+## Open decisions
+
+Before AP20.1, specify how its explicit binding rule applies to the existing
+bare scalar guard-binding form, including shadowing and named constants.
+The agreed payload-field syntax does not yet define that migration.
+
 ## Dependencies
 
 - AP13 (`when` arms, `elsif`, statement-list bodies).
+- AP07.3 (comparison-level precedence for the AP20.3 `is` test).
+- AP16.1 (constant classification for existing scalar case labels and guards).
 
 AP03, AP15, and AP24 depend on this package.
 

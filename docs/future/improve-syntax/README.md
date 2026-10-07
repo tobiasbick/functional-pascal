@@ -43,7 +43,7 @@ against the checkout before implementing each work package.
 
 ## Package status
 
-AP01, AP02, AP04, AP07, AP11, and AP13 are complete on `codex/syntax-changes-2`,
+AP01, AP02, AP04, AP07, AP11, AP13, and AP16 are complete on `codex/syntax-changes-2`,
 including all of their work packages. Checkboxes track completed delivery in
 the working branch, as defined by the
 [status-tracking rule](development-process.md#status-tracking).
@@ -55,6 +55,11 @@ are implemented.
 [AP11: Individual declarations](ap11-individual-declarations/README.md) is complete:
 whole-unit type resolution and one keyword per declaration are implemented,
 including source, generated API, editor, and documentation migration.
+
+[AP16: Immutable and mutable bindings](ap16-immutable-and-mutable-bindings/README.md)
+is complete: computed `const`, the binding migration, writable `var`, and
+read-only value parameters are implemented. True reference parameters remain
+in AP17; native built-in type operations remain in AP06.
 
 Effort estimates are preliminary, based on the design rather than a code audit.
 Dependencies name the packages a package needs; the real prerequisites per work
@@ -77,16 +82,16 @@ package are listed in each work package file.
 | [x] | [AP13: Explicit block boundaries](ap13-explicit-block-boundaries/README.md) | Large | AP01, AP02 | Agreed direction (Q08, Q09) |
 | [ ] | [AP14: Remove computed properties](ap14-remove-computed-properties/README.md) | Small | AP06 | Agreed direction |
 | [ ] | [AP15: Remove event declarations](ap15-remove-event-declarations/README.md) | Small | AP20 | Agreed direction |
-| [ ] | [AP16: Immutable and mutable bindings](ap16-immutable-and-mutable-bindings/README.md) | Large | AP11 | Agreed direction |
+| [x] | [AP16: Immutable and mutable bindings](ap16-immutable-and-mutable-bindings/README.md) | Large | AP11 | Complete (AP16.1–AP16.3) |
 | [ ] | [AP17: Visible caller mutation](ap17-visible-caller-mutation/README.md) | Large | AP09, AP13, AP16 | Agreed direction |
 | [ ] | [AP18: Subrange types](ap18-subrange-types/README.md) | Large | AP07, AP16 | Agreed direction (Q10, Q11) |
 | [ ] | [AP19: Distinct domain types](ap19-distinct-domain-types/README.md) | Large | AP05, AP16 | Agreed direction (Q12, Q13) |
-| [ ] | [AP20: Nested patterns and explicit bindings](ap20-nested-patterns-and-explicit-bindings/README.md) | Large | AP13 | Agreed direction |
+| [ ] | [AP20: Nested patterns and explicit bindings](ap20-nested-patterns-and-explicit-bindings/README.md) | Large | AP07, AP13, AP16 | Agreed direction |
 | [ ] | [AP21: Decision expressions](ap21-decision-expressions/README.md) | Large | AP03, AP07, AP13 | Agreed direction |
 | [ ] | [AP22: Limited local inference](ap22-limited-local-inference/README.md) | Large | AP02, AP10, AP16 | Agreed direction (Q14) |
 | [ ] | [AP23: Preconditions and postconditions](ap23-preconditions-and-postconditions/README.md) | Large | AP07, AP13, AP16 | Agreed direction (Q15–Q17) |
-| [ ] | [AP24: Generic data structures](ap24-generic-data-structures/README.md) | Very large | AP10, AP20 | Agreed direction |
-| [ ] | [AP25: Conservative purity](ap25-conservative-purity/README.md) | Very large | AP14, AP16, AP17 | Retained; low priority; reassess after AP23 (Q18) |
+| [ ] | [AP24: Generic data structures](ap24-generic-data-structures/README.md) | Very large | AP03, AP10, AP11, AP20 | Agreed direction |
+| [ ] | [AP25: Conservative purity](ap25-conservative-purity/README.md) | Very large | AP14, AP16, AP17; AP23 reassessment | Retained; low priority; reassess after AP23 (Q18) |
 | [ ] | [AP26: Structured task scopes](ap26-structured-task-scopes/README.md) | Large | AP13, AP17 | Agreed direction (Q19, Q20) |
 | [ ] | [AP27: Typed placeholders](ap27-typed-placeholders/README.md) | Very large | AP02, AP22 | Retained as optional (Q21); AP22 implementation required |
 | — | [AP28: Structured editing](ap28-structured-editing/README.md) | — | AP13, AP24 | Outside language plan; transfer to editor/LSP planning afterward (Q23) |
@@ -139,9 +144,11 @@ package taken from its own file:
 
 1. AP01 and AP02: establish conventions and improve diagnostics.
 2. AP07 and AP04: small changes that remove frequent silent mistakes.
-3. AP11, then AP16 and AP17: align declaration, binding, and parameter
-   keywords with Pascal expectations. AP16.3 and AP17.1 are the one keyword
-   migration; AP16.2 prepares it, and AP17.3 completes the intrinsics.
+3. AP11, then AP16 and AP17.1: align declaration, binding, and parameter
+   keywords with Pascal expectations. AP16.2 prepares the keyword migration;
+   AP16.3 completes it and removes mutable parameters. AP17.1 then introduces
+   true reference parameters. AP17.2 waits for AP09.1; AP17.3 waits for the
+   AP06.1 receiver follow-up and its coordinated delivery with AP06.3.
 4. AP13: the largest migration. AP13.1 and AP13.2 come first; its later work
    packages unblock AP20, AP21, AP23, and AP26.
 5. AP09, AP10, and AP14.

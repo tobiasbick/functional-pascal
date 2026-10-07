@@ -1,0 +1,39 @@
+program ImmutableBindingMigrationTest;
+
+uses Std.Test;
+
+type Item = record
+  N: integer;
+end record;
+
+function ReadValue(): integer;
+begin
+  return 1;
+end function;
+
+begin
+  const N: integer := ReadValue();
+  const Object: Item := record
+    N := 7;
+  end;
+  var Score: integer := 0;
+  case 2 of
+    when Matched if Matched > 0:
+      begin
+        const ReadMatched: function(): integer := function(): integer begin
+          return Matched + Object.N;
+        end function;
+
+        Score := ReadMatched();
+        begin
+          const N: integer := 40;
+          Score := Score + N;
+        end;
+      end;
+    else
+      Score := -1;
+  end case;
+
+  AssertEquals(49, Score);
+  AssertEquals(1, N);
+end.

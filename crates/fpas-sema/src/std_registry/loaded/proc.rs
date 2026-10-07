@@ -25,8 +25,8 @@ pub(super) fn register_std_proc(checker: &mut Checker) {
         checker,
         s::STD_PROC_RUN,
         vec![
-            p("Command", Ty::String, false),
-            p("Args", Ty::Array(Box::new(Ty::String)), false),
+            p("Command", Ty::String),
+            p("Args", Ty::Array(Box::new(Ty::String))),
         ],
         Ty::Result(Box::new(Ty::Integer), Box::new(Ty::String)),
     );
@@ -34,8 +34,8 @@ pub(super) fn register_std_proc(checker: &mut Checker) {
         checker,
         s::STD_PROC_RUN_CAPTURE,
         vec![
-            p("Command", Ty::String, false),
-            p("Args", Ty::Array(Box::new(Ty::String)), false),
+            p("Command", Ty::String),
+            p("Args", Ty::Array(Box::new(Ty::String))),
         ],
         Ty::Result(Box::new(process_output), Box::new(Ty::String)),
     );

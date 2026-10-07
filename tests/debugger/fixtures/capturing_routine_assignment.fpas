@@ -35,8 +35,8 @@ begin
   return Base + Value;
 end function;
 begin
-  mutable var Current: Handler := Identity;
-  var MakeStop: integer := 0;
+  var Current: Handler := Identity;
+  const MakeStop: integer := 0;
   return Current;
 end function;
 
@@ -46,8 +46,8 @@ begin
   return (Value + Left * 10) + Right;
 end function;
 begin
-  mutable var Current: Handler := Identity;
-  var CombineStop: integer := 0;
+  var Current: Handler := Identity;
+  const CombineStop: integer := 0;
   return Current;
 end function;
 
@@ -57,10 +57,10 @@ begin
   return Value + Offset;
 end function;
 begin
-  mutable var Current: Handler := Identity;
+  var Current: Handler := Identity;
   begin
-    var Offset: integer := 99;
-    var ShadowStop: integer := 0;
+    const Offset: integer := 99;
+    const ShadowStop: integer := 0;
     return Current(1);
   end;
 end function;
@@ -71,8 +71,8 @@ begin
   return Value + Acc;
 end function;
 begin
-  mutable var Current: Handler := Identity;
-  var WalkStop: integer := 0;
+  var Current: Handler := Identity;
+  const WalkStop: integer := 0;
   if N = 0 then
     begin
       return Current(0);
@@ -91,9 +91,9 @@ begin
   return Value + Cell;
 end function;
 begin
-  mutable var Cell: integer := 1;
-  mutable var Current: Handler := Identity;
-  var CellStop: integer := 0;
+  var Cell: integer := 1;
+  var Current: Handler := Identity;
+  const CellStop: integer := 0;
   return Current;
 end function;
 
@@ -105,13 +105,13 @@ begin
   return Value + Cell;
 end function;
 begin
-  var Keep: integer := Cell;
-  mutable var Current: Handler := Identity;
-  var EnclosingStop: integer := 0;
+  const Keep: integer := Cell;
+  var Current: Handler := Identity;
+  const EnclosingStop: integer := 0;
   return Current;
 end function;
 begin
-  mutable var Cell: integer := 1;
+  var Cell: integer := 1;
   return Mid();
 end function;
 
@@ -121,10 +121,10 @@ begin
   return Value + Offset;
 end function;
 begin
-  mutable var Current: Handler := Identity;
-  var LateStop: integer := 0;
-  var Offset: integer := 7;
-  var LateReady: integer := 0;
+  var Current: Handler := Identity;
+  const LateStop: integer := 0;
+  const Offset: integer := 7;
+  const LateReady: integer := 0;
   return Current(1);
 end function;
 
@@ -134,36 +134,36 @@ begin
   return Base + Value;
 end function;
 begin
-  mutable var Current: Handler := Identity;
-  var WorkerStop: integer := 0;
+  var Current: Handler := Identity;
+  const WorkerStop: integer := 0;
   return Current(1);
 end function;
 
 function HoldTask(Pending: task): Handler;
 function IgnorePending(Value: integer): integer;
 begin
-  var Keep: task := Pending;
+  const Keep: task := Pending;
   return Value;
 end function;
 begin
-  mutable var Current: Handler := Identity;
-  var TaskStop: integer := 0;
+  var Current: Handler := Identity;
+  const TaskStop: integer := 0;
   return Current;
 end function;
 
 begin
-  mutable var Current: Handler := Identity;
-  mutable var Job: Action := Noop;
-  var First: Handler := MakeAdder(10);
-  var Both: Handler := Combine(3, 4);
-  var Shadowed: integer := Outer(7);
-  var Recursed: integer := Walk(2, 1);
-  var Mutated: Handler := Mutating();
-  var Enclosed: Handler := OuterCell();
-  var Late: integer := LateInit();
-  var Pending: task := go Worker(8);
-  var Held: Handler := HoldTask(Pending);
-  var RootStop: integer := 0;
+  var Current: Handler := Identity;
+  var Job: Action := Noop;
+  const First: Handler := MakeAdder(10);
+  const Both: Handler := Combine(3, 4);
+  const Shadowed: integer := Outer(7);
+  const Recursed: integer := Walk(2, 1);
+  const Mutated: Handler := Mutating();
+  const Enclosed: Handler := OuterCell();
+  const Late: integer := LateInit();
+  const Pending: task := go Worker(8);
+  const Held: Handler := HoldTask(Pending);
+  const RootStop: integer := 0;
   WriteLn(Wait(Pending));
   WriteLn(First(1));
 end.

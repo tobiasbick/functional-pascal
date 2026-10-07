@@ -8,7 +8,7 @@ begin
 end function;
 
 begin
-  var R: result of integer, string := Ok(21);
-  var M: result of string, string := Map(R, DoubleToStr);
+  const R: result of integer, string := Ok(21);
+  const M: result of string, string := Map(R, DoubleToStr);
   WriteLn(Unwrap(M));
 end.

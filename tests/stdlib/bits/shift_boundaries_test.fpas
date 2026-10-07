@@ -3,8 +3,8 @@ program ShiftBoundariesTest;
 uses Std.Bits, Std.Test;
 
 begin
-  var Minimum: integer := -9223372036854775807 - 1;
-  var Maximum: integer := 9223372036854775807;
+  const Minimum: integer := -9223372036854775807 - 1;
+  const Maximum: integer := 9223372036854775807;
   AssertEquals(7, ShiftLeft(7, 0));
   AssertEquals(-8, ShiftRight(-8, 0));
   AssertEquals(Minimum, ShiftLeft(Minimum, 0));

@@ -6,7 +6,7 @@ Helper functions for `Result of T, E` values. See [Error handling](../../languag
 program Example;
 uses Std.Console, Std.Results;
 begin
-  var R: Result of integer, string := Ok(42);
+  const R: Result of integer, string := Ok(42);
   WriteLn(Unwrap(R));
 end.
 ```
@@ -45,7 +45,7 @@ Examples pass named helper functions whose types match each callback parameter.
 Extracts the value from `Ok(value)`. **Runtime error** if `R` is `Error`.
 
 ```pascal
-var R: Result of integer, string := Ok(42);
+const R: Result of integer, string := Ok(42);
 WriteLn(Unwrap(R));                             // 42
 ```
 
@@ -56,7 +56,7 @@ WriteLn(Unwrap(R));                             // 42
 Extracts the value from `Ok(value)`, or returns `Default` if `R` is `Error`.
 
 ```pascal
-var R: Result of integer, string := Error('oops');
+const R: Result of integer, string := Error('oops');
 WriteLn(UnwrapOr(R, 0));                       // 0
 ```
 
@@ -67,7 +67,7 @@ WriteLn(UnwrapOr(R, 0));                       // 0
 Returns `true` if `R` is an `Ok` variant.
 
 ```pascal
-var R: Result of integer, string := Ok(42);
+const R: Result of integer, string := Ok(42);
 WriteLn(IsOk(R));                               // true
 ```
 
@@ -78,7 +78,7 @@ WriteLn(IsOk(R));                               // true
 Returns `true` if `R` is an `Error` variant.
 
 ```pascal
-var R: Result of integer, string := Error('fail');
+const R: Result of integer, string := Error('fail');
 WriteLn(IsError(R));                              // true
 ```
 
@@ -94,8 +94,8 @@ begin
   return IntToStr(V * 2);
 end function;
 
-var R: Result of integer, string := Ok(21);
-var M: Result of string, string := Map(R, DoubleToString);
+const R: Result of integer, string := Ok(21);
+const M: Result of string, string := Map(R, DoubleToString);
 // M = Ok('42')
 ```
 
@@ -115,8 +115,8 @@ begin
   end if;
 end function;
 
-var R: result of integer, string := Ok(10);
-var M: result of string, string := AndThen(R, PositiveToResult);
+const R: result of integer, string := Ok(10);
+const M: result of string, string := AndThen(R, PositiveToResult);
 // M = Ok('10')
 ```
 
@@ -132,8 +132,8 @@ begin
   return Ok(0);
 end function;
 
-var R: Result of integer, string := Error('oops');
-var M: Result of integer, string := OrElse(R, RecoverToZero);
+const R: Result of integer, string := Error('oops');
+const M: Result of integer, string := OrElse(R, RecoverToZero);
 // M = Ok(0)
 ```
 

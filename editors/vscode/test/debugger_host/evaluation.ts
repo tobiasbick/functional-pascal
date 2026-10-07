@@ -48,11 +48,11 @@ export async function verifyDebuggerEvaluation(
     "  end;",
     "",
     "begin",
-    "  var Origin: Point := record",
+    "  const Origin: Point := record",
     "    X := 3;",
     "    Y := 4;",
     "  end;",
-    "  var Offset: integer := 2;",
+    "  const Offset: integer := 2;",
     "  WriteLn(Offset);",
     "end.",
     ""

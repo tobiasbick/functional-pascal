@@ -22,12 +22,12 @@ begin
 end function;
 
 begin
-  mutable var App: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(24, 8));
-  var Pointer: TuiPointerEvent := TuiPointerEvent.Create(TuiPointerAction.Move, TuiPointerButton.NoButton, TuiPoint.Create(3, 4));
+  var App: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(24, 8));
+  const Pointer: TuiPointerEvent := TuiPointerEvent.Create(TuiPointerAction.Move, TuiPointerButton.NoButton, TuiPoint.Create(3, 4));
   App.Inject(TuiMsg.Tick(1));
   App.InjectPointerForTest(Pointer);
   App.Inject(TuiMsg.Tick(2));
-  mutable var Model: PointerModel := record
+  var Model: PointerModel := record
     Events := [];
     X := -1;
     Y := -1;

@@ -11,7 +11,7 @@ fn boolean_short_circuit_uses_branches_even_with_constant_operands() {
         ("true or (1 div 0 > 0)", true),
     ] {
         let source = format!(
-            "program Guarded; begin var Flag: boolean := {expression}; if Flag <> {expected} then panic('result'); end if; end."
+            "program Guarded; begin const Flag: boolean := {expression}; if Flag <> {expected} then panic('result'); end if; end."
         );
         let executable = crate::compile(&parse_ok(&source)).expect("compile guarded expression");
         assert!(executable.executable().code.iter().any(|word| matches!(
@@ -33,7 +33,7 @@ fn needed_boolean_operands_and_eager_bits_arguments_still_fail() {
         ("integer", "BitOr(-1, 1 div 0)"),
     ] {
         let source =
-            format!("program Needed; uses Std.Bits; begin var Flag: {ty} := {expression}; end.");
+            format!("program Needed; uses Std.Bits; begin const Flag: {ty} := {expression}; end.");
         assert!(
             run_program(&source).is_err(),
             "{expression} must evaluate the right operand"
@@ -43,7 +43,7 @@ fn needed_boolean_operands_and_eager_bits_arguments_still_fail() {
 
 #[test]
 fn skipped_operands_are_still_type_checked() {
-    let program = parse_ok("program Checked; begin var Flag: boolean := false and 123; end.");
+    let program = parse_ok("program Checked; begin const Flag: boolean := false and 123; end.");
     assert!(crate::compile(&program).is_err());
 }
 
@@ -52,8 +52,8 @@ fn nested_short_circuit_values_survive_calls_loops_and_mutation() {
     assert_succeeds(
         r#"
 program BooleanSnapshots;
-mutable var Trace: integer := 0;
-mutable var Flag: boolean := true;
+var Trace: integer := 0;
+var Flag: boolean := true;
 function Mark(Value: boolean; Digit: integer): boolean;
 begin Trace := Trace * 10 + Digit; return Value; end function;
 function Change(): boolean;
@@ -66,7 +66,7 @@ begin
     if not Combine(Mark(true, 1), Mark(false, 2) or Mark(true, 3)) then panic('call value'); end if;
     if Trace <> 123 then panic('call order'); end if;
     Trace := 0;
-    var Values: array of boolean := [Mark(false, 1), Mark(true, 2) and Mark(true, 3)];
+    const Values: array of boolean := [Mark(false, 1), Mark(true, 2) and Mark(true, 3)];
     if Values[0] or not Values[1] then panic('array values'); end if;
     if Trace <> 123 then panic('array order'); end if;
     Flag := true;
@@ -74,7 +74,7 @@ begin
     if Flag then panic('mutation'); end if;
   end for;
   Trace := 0;
-  mutable var Count: integer := 0;
+  var Count: integer := 0;
   while (Count < 2) and Mark(true, 1) do Count := Count + 1; end while;
   if Trace <> 11 then panic('while skip'); end if;
 end.

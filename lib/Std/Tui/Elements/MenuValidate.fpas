@@ -43,7 +43,7 @@ public procedure TuiMenuValidate(Nodes: array of TuiMenuNode; State: TuiMenuStat
 begin
   for Index: integer := 0 to Std.Arrays.Length(Nodes) - 1 do
     begin
-      var Id: TuiMenuNodeId := TuiMenuNodeIdOf(Nodes[Index]);
+      const Id: TuiMenuNodeId := TuiMenuNodeIdOf(Nodes[Index]);
       for Previous: integer := 0 to Index - 1 do
         begin
           if TuiMenuNodeIdOf(Nodes[Previous]).Value = Id.Value then
@@ -53,7 +53,7 @@ begin
           end if;
         end;
       end for;
-      var Mnemonic: string := TuiMenuNodeMnemonic(Nodes[Index]);
+      const Mnemonic: string := TuiMenuNodeMnemonic(Nodes[Index]);
       if Std.Str.Length(Mnemonic) > 1 then
         begin
           panic('Tui menu mnemonic must be empty or one character');
@@ -63,7 +63,7 @@ begin
       case TuiMenuNodeParent(Nodes[Index]) of
         when Some(Parent):
           begin
-            var ParentIndex: integer := TuiMenuFind(Nodes, Parent);
+            const ParentIndex: integer := TuiMenuFind(Nodes, Parent);
             if ParentIndex < 0 then
               begin
                 panic('Tui menu parent id must exist');
@@ -85,12 +85,12 @@ begin
             end if;
           end;
       end case;
-      mutable var Current: TuiMenuNodeId := Id;
-      mutable var Remaining: integer := Std.Arrays.Length(Nodes);
+      var Current: TuiMenuNodeId := Id;
+      var Remaining: integer := Std.Arrays.Length(Nodes);
       while Remaining > 0 do
         begin
           Remaining := Remaining - 1;
-          var CurrentIndex: integer := TuiMenuFind(Nodes, Current);
+          const CurrentIndex: integer := TuiMenuFind(Nodes, Current);
           case TuiMenuNodeParent(Nodes[CurrentIndex]) of
             when Some(Parent):
               begin
@@ -128,7 +128,7 @@ begin
       case State.Active of
         when Some(Active):
           begin
-            var ActiveIndex: integer := TuiMenuFind(Nodes, Active);
+            const ActiveIndex: integer := TuiMenuFind(Nodes, Active);
             if (ActiveIndex < 0) or not TuiMenuNodeSelectable(Nodes[ActiveIndex]) then
               begin
                 panic('Tui open menu active id must select an enabled node');

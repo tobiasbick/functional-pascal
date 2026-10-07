@@ -23,12 +23,12 @@ end procedure;
 function Successful(Token: CancellationToken): integer;
 begin return 42; end function;
 begin
-  var G: TaskGroup := CreateTaskGroup();
-  var A: task := StartTaskInGroup(G, Ordinary);
-  var B: task := StartTaskInGroup(G, Broken);
-  var C: task := StartTaskInGroup(G, Successful);
+  const G: TaskGroup := CreateTaskGroup();
+  const A: task := StartTaskInGroup(G, Ordinary);
+  const B: task := StartTaskInGroup(G, Broken);
+  const C: task := StartTaskInGroup(G, Successful);
   if Wait(C) <> 42 then panic('child value'); end if;
-  var Failures: array of TaskFailure := CloseTaskGroup(G);
+  const Failures: array of TaskFailure := CloseTaskGroup(G);
   if Length(Failures) <> 2 then panic('failure count'); end if;
   if Failures[0].Kind <> TaskFailureKind.ReturnedError then panic('ordinary kind'); end if;
   if Failures[0].Message <> 'ordinary' then panic('ordinary message'); end if;
@@ -96,10 +96,10 @@ fn task_group_nested_children_observe_cancellation_in_debugger() {
 fn stop_before_close(source: &str) -> DebugSession {
     let source = source
         .replace(
-            "\nbegin\n  var G:",
-            "\nprocedure BeforeClose(); begin Sleep(0); end procedure;\nbegin\n  var G:",
+            "\nbegin\n  const G:",
+            "\nprocedure BeforeClose(); begin Sleep(0); end procedure;\nbegin\n  const G:",
         )
-        .replace("  var Failures:", "  BeforeClose();\n  var Failures:");
+        .replace("  const Failures:", "  BeforeClose();\n  const Failures:");
     let (program, errors) = fpas_parser::parse(&source);
     assert!(errors.is_empty(), "{errors:?}");
     let mut session =
@@ -119,8 +119,8 @@ fn stop_before_close(source: &str) -> DebugSession {
 #[test]
 fn task_group_exited_failure_cannot_be_resumed_or_force_returned() {
     let source = SOURCE.replace(
-        "  var Failures:",
-        "  discard Select([TimerCase(5, procedure() begin end procedure)]);\n  var Failures:",
+        "  const Failures:",
+        "  discard Select([TimerCase(5, procedure() begin end procedure)]);\n  const Failures:",
     );
     let mut session = stop_before_close(&source);
     let events = session.take_task_events();
@@ -161,9 +161,9 @@ fn task_group_debugger_cancellation_is_reported_as_cancelled() {
 uses Std.Tasks, Std.Time, Std.Arrays;
 procedure Work(Token: CancellationToken); begin Sleep(1000); end procedure;
 begin
-  var G: TaskGroup := CreateTaskGroup();
-  var WorkerTask: task := StartTaskInGroup(G, Work);
-  var Failures: array of TaskFailure := CloseTaskGroup(G);
+  const G: TaskGroup := CreateTaskGroup();
+  const WorkerTask: task := StartTaskInGroup(G, Work);
+  const Failures: array of TaskFailure := CloseTaskGroup(G);
   if Length(Failures) <> 1 then panic('failure count'); end if;
   if Failures[0].Kind <> TaskFailureKind.Cancelled then panic('cancellation kind'); end if;
 end."#;
@@ -182,9 +182,9 @@ fn task_group_child_close_is_rejected_and_collected_as_runtime_failure() {
     let source = r#"program ChildCannotClose;
 uses Std.Tasks, Std.Arrays;
 begin
-  var G: TaskGroup := CreateTaskGroup();
-  var WorkerTask: task := StartTaskInGroup(G, procedure(Token: CancellationToken) begin discard CloseTaskGroup(G); end procedure);
-  var Failures: array of TaskFailure := CloseTaskGroup(G);
+  const G: TaskGroup := CreateTaskGroup();
+  const WorkerTask: task := StartTaskInGroup(G, procedure(Token: CancellationToken) begin discard CloseTaskGroup(G); end procedure);
+  const Failures: array of TaskFailure := CloseTaskGroup(G);
   if Length(Failures) <> 1 then panic('failure count'); end if;
   if Failures[0].Kind <> TaskFailureKind.RuntimeError then panic('runtime kind'); end if;
 end."#;
@@ -207,8 +207,8 @@ fn task_group_explicit_wait_keeps_the_original_panic_diagnostic() {
 uses Std.Tasks;
 procedure Work(Token: CancellationToken); begin panic('original child failure'); end procedure;
 begin
-  var G: TaskGroup := CreateTaskGroup();
-  var Child: task := StartTaskInGroup(G, Work);
+  const G: TaskGroup := CreateTaskGroup();
+  const Child: task := StartTaskInGroup(G, Work);
   Wait(Child);
 end."#;
     let (program, errors) = fpas_parser::parse(source);
@@ -226,8 +226,8 @@ fn task_group_ignored_close_report_still_has_verified_record_metadata() {
 uses Std.Tasks;
 procedure Work(Token: CancellationToken); begin panic('contained'); end procedure;
 begin
-  var G: TaskGroup := CreateTaskGroup();
-  var WorkerTask: task := StartTaskInGroup(G, Work);
+  const G: TaskGroup := CreateTaskGroup();
+  const WorkerTask: task := StartTaskInGroup(G, Work);
   discard CloseTaskGroup(G);
 end."#;
     let (program, errors) = fpas_parser::parse(source);

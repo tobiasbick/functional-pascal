@@ -40,7 +40,7 @@ public type TuiSurfaceSnapshot = record
         panic('Tui snapshot row is outside the surface');
       end;
     end if;
-    mutable var Line: string := '';
+    var Line: string := '';
     for X: integer := 0 to Self.Width - 1 do
       begin
         Line := Line + Self.CellAt(X, Y).Glyph;

@@ -222,7 +222,6 @@ impl Parser {
                 | Token::Uses
                 | Token::Const
                 | Token::Var
-                | Token::Mutable
                 | Token::Function
                 | Token::Procedure
                 | Token::If

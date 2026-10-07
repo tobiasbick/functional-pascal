@@ -3,8 +3,8 @@ program T;
 uses Std.Console, Std.Dictionaries;
 
 begin
-  var D: dict of string to integer := [:];
-  mutable var Count: integer := 0;
+  const D: dict of string to integer := [:];
+  var Count: integer := 0;
   for K: string in D do
     begin
       Count := Count + 1;

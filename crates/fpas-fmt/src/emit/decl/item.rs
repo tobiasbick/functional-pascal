@@ -21,7 +21,6 @@ pub(crate) fn emit_decl(emitter: &mut Emitter, decl: &Decl, comments: &CommentMa
     match decl {
         Decl::Const(def) => emit_const_def(emitter, def, comments),
         Decl::Var(def) => emit_var_def(emitter, "var", def, comments),
-        Decl::MutableVar(def) => emit_var_def(emitter, "mutable var", def, comments),
         Decl::TypeDef(def) => emit_type_def(emitter, def, comments),
         Decl::Function(function) => emit_function_decl(emitter, function, comments),
         Decl::Procedure(procedure) => emit_procedure_decl(emitter, procedure, comments),

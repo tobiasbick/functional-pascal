@@ -29,7 +29,7 @@ end function;
 
 function ViewWindowedTextArea(State: TextAreaModel): TuiElement;
 begin
-  var Editor: TuiElement := TuiElementBuilders.MakeTextArea(TuiControlId.Create(1), State.Text, State.Caret, State.Offset, TuiAction.Create(9));
+  const Editor: TuiElement := TuiElementBuilders.MakeTextArea(TuiControlId.Create(1), State.Text, State.Caret, State.Offset, TuiAction.Create(9));
   return TuiElementBuilders.MakeDesktop(Some(TuiControlId.Create(1)), [
                                                                         TuiElementBuilders.MakePanel('Editor', [Editor])
                                                                       ]);
@@ -74,8 +74,8 @@ begin
 end function;
 
 begin
-  mutable var App: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(6, 2));
-  mutable var Model: TextAreaModel := record
+  var App: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(6, 2));
+  var Model: TextAreaModel := record
     Text := 'ab';
     Caret := 2;
     Offset := TuiPoint.Create(0, 0);

@@ -83,7 +83,7 @@ public type TuiInputPalette = record
   // - `Style`: Concrete terminal style.
   public function WithRole(Self: TuiInputPalette; Role: TuiStyleRole; Style: TuiStyle): TuiInputPalette;
   begin
-    mutable var Updated: TuiInputPalette := Self;
+    var Updated: TuiInputPalette := Self;
     case Role of
       when TuiStyleRole.InputNormal:
         begin

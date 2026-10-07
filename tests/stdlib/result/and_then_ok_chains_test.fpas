@@ -16,7 +16,7 @@ begin
 end function;
 
 begin
-  var R: result of integer, string := Ok(10);
-  var M: result of string, string := AndThen(R, PositiveToStr);
+  const R: result of integer, string := Ok(10);
+  const M: result of string, string := AndThen(R, PositiveToStr);
   WriteLn(Unwrap(M));
 end.

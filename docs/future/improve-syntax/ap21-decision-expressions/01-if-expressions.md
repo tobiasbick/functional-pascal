@@ -10,6 +10,8 @@ Add `if C then A elsif D then B else E end if` as an expression.
 
 - AP13.4 (`if` statement syntax with `elsif` and `end if`).
 - AP07.3 (condition precedence).
+- The branch-type and expression/statement distinction decisions in the
+  [package README](README.md#open-decisions).
 
 ## Implementation
 

@@ -47,8 +47,8 @@ end procedure;
 // - `StreamValue`: Open HTTP response-body stream.
 function ReadAll(StreamValue: BodyStream): string;
 begin
-  mutable var Bytes: array of integer := [];
-  mutable var Reading: boolean := true;
+  var Bytes: array of integer := [];
+  var Reading: boolean := true;
   while Reading do
     begin
       case ReadStream(StreamValue, 5) of
@@ -85,7 +85,7 @@ begin
 end function;
 
 begin
-  mutable var Port: integer := 18080;
+  var Port: integer := 18080;
   if ParamCount() = 1 then
     begin
       Port := StrToInt(ParamStr(0));
@@ -95,9 +95,9 @@ begin
       panic('usage: http_client.fpas -- [PORT]');
     end;
   end if;
-  var BaseUrl: string := 'http://127.0.0.1:' + IntToStr(Port);
+  const BaseUrl: string := 'http://127.0.0.1:' + IntToStr(Port);
   RunBuffered('GET', Request.Get(BaseUrl + '/hello'));
-  mutable var PostRequest: Request := Request.Post(BaseUrl + '/echo');
+  var PostRequest: Request := Request.Post(BaseUrl + '/echo');
   PostRequest.Headers := [Header.Create('Content-Type', 'text/plain; charset=utf-8')];
   PostRequest.Body := Std.Net.Utf8.Encode('hello from client');
   RunBuffered('POST', PostRequest);

@@ -8,7 +8,7 @@ begin
 end function;
 
 begin
-  var Count: integer := 2;
+  const Count: integer := 2;
   AssertFalse(not Count > 0);
   AssertTrue(not Count = 3);
   AssertFalse(not Count in [1, 2, 3]);

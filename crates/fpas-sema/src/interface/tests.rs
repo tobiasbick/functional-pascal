@@ -4,6 +4,7 @@ use fpas_unit::interface::{InterfaceType, SymbolKind};
 use super::analyze_unit;
 
 mod aliases;
+mod constants;
 mod discard;
 mod public_signatures;
 mod short_names;
@@ -86,7 +87,7 @@ fn consumer_analysis_uses_interface_without_dependency_ast() {
          uses Demo.Api;
          public function Run(Value: integer): integer;
          begin
-           var Current: State := State.Ready;
+           const Current: State := State.Ready;
            return Next(Value);
          end function;\nend unit;",
     );

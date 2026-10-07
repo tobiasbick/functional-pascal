@@ -5,7 +5,7 @@ program TimeBasics;
 uses Std.Console, Std.Conv, Std.Time;
 
 begin
-  var Start: integer := MonotonicMillis();
+  const Start: integer := MonotonicMillis();
   Sleep(25);
   WriteLn('elapsed ms: ', IntToStr(ElapsedMillis(Start)));
   WriteLn('timestamp ms: ', IntToStr(TimestampMillis()));

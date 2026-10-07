@@ -13,20 +13,20 @@ begin
 end function;
 
 begin
-  var Options: ServerOptions := ServerOptions.Create();
+  const Options: ServerOptions := ServerOptions.Create();
   AssertEquals(65536, Options.MaxHeaderBytes);
   AssertEquals(1048576, Options.MaxBodyBytes);
   AssertEquals(30000, Options.ConnectionTimeoutMillis);
   AssertEquals(8, Options.MaxConcurrentRequests);
   AssertEquals(0, Options.MaxRequests);
-  var HandlerValue: RequestHandler := Handle;
-  var RequestValue: ServerRequest := record
+  const HandlerValue: RequestHandler := Handle;
+  const RequestValue: ServerRequest := record
     Method := 'OK';
     Target := '/';
     Headers := [];
     Body := [];
   end;
-  var ResponseValue: ServerResponse := HandlerValue(RequestValue);
+  const ResponseValue: ServerResponse := HandlerValue(RequestValue);
   AssertEquals(200, ResponseValue.StatusCode);
   AssertEquals('OK', ResponseValue.ReasonPhrase);
 end.

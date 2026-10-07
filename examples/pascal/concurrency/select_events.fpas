@@ -4,9 +4,9 @@ program SelectEvents;
 uses Std.Tasks, Std.Console, Std.Results;
 
 begin
-  var Messages: channel of string := CreateChannel(4);
+  const Messages: channel of string := CreateChannel(4);
   discard Send(Messages, 'hello from the queue');
-  var Message: WaitCase := ReceiveCase(Messages, procedure(Outcome: result of string, string) begin
+  const Message: WaitCase := ReceiveCase(Messages, procedure(Outcome: result of string, string) begin
     case Outcome of
       when Ok(Text):
         begin
@@ -18,7 +18,7 @@ begin
         end;
     end case;
   end procedure);
-  var Timeout: WaitCase := TimerCase(100, procedure() begin
+  const Timeout: WaitCase := TimerCase(100, procedure() begin
     WriteLn('no message before the deadline');
   end procedure);
   discard Select([Message, Timeout]);

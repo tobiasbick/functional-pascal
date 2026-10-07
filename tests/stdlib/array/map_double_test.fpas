@@ -8,8 +8,8 @@ begin
 end function;
 
 begin
-  var Nums: array of integer := [1, 2, 3];
-  var Doubled: array of integer := Map(Nums, Double);
+  const Nums: array of integer := [1, 2, 3];
+  const Doubled: array of integer := Map(Nums, Double);
   WriteLn(Doubled[0]);
   WriteLn(Doubled[1]);
   WriteLn(Doubled[2]);

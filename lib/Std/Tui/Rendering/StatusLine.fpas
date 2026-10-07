@@ -40,7 +40,7 @@ public procedure TuiPaintStatusLine(
 );
 begin
   Canvas.FillRect(Bounds, TuiCell.Create(' ', TuiStyleRole.StatusNormal));
-  mutable var X: integer := Bounds.X;
+  var X: integer := Bounds.X;
   for Index: integer := 0 to Std.Arrays.Length(Items) - 1 do
     begin
       if Index > 0 then
@@ -62,7 +62,7 @@ begin
           end;
         when TuiStatusItem.Command(Id, Text, Action, Enabled):
           begin
-            mutable var Role: TuiStyleRole := TuiStyleRole.StatusNormal;
+            var Role: TuiStyleRole := TuiStyleRole.StatusNormal;
             if not Enabled then
               begin
                 Role := TuiStyleRole.StatusDisabled;

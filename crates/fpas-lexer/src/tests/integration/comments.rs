@@ -5,11 +5,10 @@ use crate::Token;
 fn mutable_var_with_comments() {
     let src = "\
 // counter
-mutable var Count: integer := 0; // start at zero";
+var Count: integer := 0; // start at zero";
     assert_eq!(
         toks(src),
         vec![
-            Token::Mutable,
             Token::Var,
             Token::Ident("Count".into()),
             Token::Colon,

@@ -35,6 +35,7 @@ impl Checker {
         self.scopes.define_with_declaration(
             var_name,
             Symbol {
+                constant: None,
                 ty: var_ty,
                 mutable: false,
                 kind: SymbolKind::ForVar,
@@ -84,6 +85,7 @@ impl Checker {
         self.scopes.define_with_declaration(
             var_name,
             Symbol {
+                constant: None,
                 ty: var_ty,
                 mutable: false,
                 kind: SymbolKind::ForVar,

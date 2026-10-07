@@ -15,6 +15,7 @@ impl Checker {
     /// Checks a statement and confines each scoped list's declarations to that list.
     pub(crate) fn check_stmt(&mut self, stmt: &Stmt) {
         match stmt {
+            Stmt::Const(definition) => self.check_local_const_def(definition),
             Stmt::Null(_) => {}
             Stmt::Discard { expr, span } => self.check_discard(expr, *span),
             Stmt::Block(stmts, _) => {
@@ -24,9 +25,7 @@ impl Checker {
                 }
                 self.scopes.pop_scope();
             }
-
-            Stmt::Var(var_def) => self.check_var_def(var_def, false),
-            Stmt::MutableVar(var_def) => self.check_var_def(var_def, true),
+            Stmt::Var(var_def) => self.check_var_def(var_def, true),
 
             Stmt::Assign {
                 target,

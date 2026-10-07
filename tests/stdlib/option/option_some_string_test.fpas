@@ -3,6 +3,6 @@ program T;
 uses Std.Console, Std.Options;
 
 begin
-  var O: option of string := Some('hello');
+  const O: option of string := Some('hello');
   WriteLn(Unwrap(O));
 end.

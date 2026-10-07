@@ -245,7 +245,7 @@ fn cancelling_an_active_reference_scan_keeps_the_server_responsive() {
     temp.write("src/core.fpas", core);
     for index in 0..120 {
         let calls = (0..60)
-            .map(|value| format!("  var Value{value}: integer := Answer()\n"))
+            .map(|value| format!("  const Value{value}: integer := Answer()\n"))
             .collect::<String>();
         temp.write(
             format!("src/use_{index}.fpas"),

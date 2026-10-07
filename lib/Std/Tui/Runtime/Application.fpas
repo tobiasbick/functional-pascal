@@ -50,7 +50,7 @@ public type TuiApplication = record
   // Closes owned work before closing the application message inbox.
   public procedure CloseWithBackground<TMessage>(Self: TuiApplication; Inbox: channel of TMessage);
   begin
-    var Failures: array of TuiMsg := TuiAppCloseApplication(Self.Id);
+    const Failures: array of TuiMsg := TuiAppCloseApplication(Self.Id);
     discard CloseChannel(Inbox);
     TuiAppRaiseShutdownFailure(Failures);
   end procedure;
@@ -62,7 +62,7 @@ public type TuiApplication = record
   // - `Msg`: Framework message injected into the application.
   public procedure Inject(Self: TuiApplication; Msg: TuiMsg);
   begin
-    var ApplicationId: integer := TuiAppRequireOpen(Self.Id);
+    const ApplicationId: integer := TuiAppRequireOpen(Self.Id);
     TuiAppPushInput(ApplicationId, TuiHostInput.Message(Msg));
   end procedure;
 
@@ -73,7 +73,7 @@ public type TuiApplication = record
   // - `Key`: Console key event to route or match.
   public procedure InjectKeyForTest(Self: TuiApplication; Key: Std.Console.KeyEvent);
   begin
-    var ApplicationId: integer := TuiAppRequireOpen(Self.Id);
+    const ApplicationId: integer := TuiAppRequireOpen(Self.Id);
     TuiAppPushInput(ApplicationId, TuiHostInput.Key(Key));
   end procedure;
 
@@ -84,7 +84,7 @@ public type TuiApplication = record
   // - `Pointer`: Normalized pointer event to route.
   public procedure InjectPointerForTest(Self: TuiApplication; Pointer: TuiPointerEvent);
   begin
-    var ApplicationId: integer := TuiAppRequireOpen(Self.Id);
+    const ApplicationId: integer := TuiAppRequireOpen(Self.Id);
     TuiAppPushInput(ApplicationId, TuiHostInput.Pointer(Pointer));
   end procedure;
 
@@ -95,7 +95,7 @@ public type TuiApplication = record
   // - `Size`: Size in terminal cells.
   public procedure InjectResizeForTest(Self: TuiApplication; Size: TuiSize);
   begin
-    var ApplicationId: integer := TuiAppRequireOpen(Self.Id);
+    const ApplicationId: integer := TuiAppRequireOpen(Self.Id);
     TuiAppPushInput(ApplicationId, TuiHostInput.Resize(Size));
   end procedure;
 
@@ -116,7 +116,7 @@ public type TuiApplication = record
   // - `Self`: Receiver value operated on by the method.
   public function SurfaceSnapshot(Self: TuiApplication): TuiSurfaceSnapshot;
   begin
-    var ApplicationId: integer := TuiAppRequireHandle(Self.Id);
+    const ApplicationId: integer := TuiAppRequireHandle(Self.Id);
     return TuiAppSurfaces[ApplicationId - 1].Snapshot();
   end function;
 
@@ -126,7 +126,7 @@ public type TuiApplication = record
   // - `Self`: Receiver value operated on by the method.
   public function Palette(Self: TuiApplication): TuiPalette;
   begin
-    var ApplicationId: integer := TuiAppRequireHandle(Self.Id);
+    const ApplicationId: integer := TuiAppRequireHandle(Self.Id);
     return TuiAppPalettes[ApplicationId - 1];
   end function;
 
@@ -151,8 +151,8 @@ public type TuiApplication = record
   DeltaMilliseconds: integer
 ): TModel;
   begin
-    var Inbox: channel of boolean := CreateChannel(1);
-    var Model: TModel := TuiRunHeadless(Self.Id, InitialModel, Inbox, Update, TuiIgnoreApplicationMessage, View, IterationCount, DeltaMilliseconds, false);
+    const Inbox: channel of boolean := CreateChannel(1);
+    const Model: TModel := TuiRunHeadless(Self.Id, InitialModel, Inbox, Update, TuiIgnoreApplicationMessage, View, IterationCount, DeltaMilliseconds, false);
     discard CloseChannel(Inbox);
     return Model;
   end function;
@@ -208,8 +208,8 @@ public type TuiApplication = record
 ): TModel;
   begin
     TuiTerminalSessionAcquire();
-    mutable var Width: integer := ScreenWidth();
-    mutable var Height: integer := ScreenHeight();
+    var Width: integer := ScreenWidth();
+    var Height: integer := ScreenHeight();
     if Width < 1 then
       begin
         Width := 1;
@@ -221,12 +221,12 @@ public type TuiApplication = record
         Height := 1;
       end;
     end if;
-    var Size: TuiSize := TuiSize.Create(Width, Height);
-    var App: TuiApplication := record
+    const Size: TuiSize := TuiSize.Create(Width, Height);
+    const App: TuiApplication := record
       Id := TuiAppOpenApplication(Size, Palette, true);
     end;
-    var Inbox: channel of boolean := CreateChannel(1);
-    var Model: TModel := TuiRunInteractive(App.Id, InitialModel, Inbox, Update, TuiIgnoreApplicationMessage, View, false);
+    const Inbox: channel of boolean := CreateChannel(1);
+    const Model: TModel := TuiRunInteractive(App.Id, InitialModel, Inbox, Update, TuiIgnoreApplicationMessage, View, false);
     discard CloseChannel(Inbox);
     return Model;
   end function;
@@ -254,8 +254,8 @@ public type TuiApplication = record
 ): TModel;
   begin
     TuiTerminalSessionAcquire();
-    mutable var Width: integer := ScreenWidth();
-    mutable var Height: integer := ScreenHeight();
+    var Width: integer := ScreenWidth();
+    var Height: integer := ScreenHeight();
     if Width < 1 then
       begin
         Width := 1;
@@ -267,7 +267,7 @@ public type TuiApplication = record
         Height := 1;
       end;
     end if;
-    var App: TuiApplication := record
+    const App: TuiApplication := record
       Id := TuiAppOpenApplication(TuiSize.Create(Width, Height), Palette, true);
     end;
 

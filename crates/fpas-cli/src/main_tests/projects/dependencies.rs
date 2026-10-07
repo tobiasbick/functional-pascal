@@ -102,7 +102,7 @@ end unit;\n",
 program App;
 uses Geom.Api;
 begin
-  var P: Point := Point.Create(3, 4);
+  const P: Point := Point.Create(3, 4);
   Point.Print(P);
 end.
 ",

@@ -10,16 +10,16 @@ type Container = record
   Items: array of Box;
 end record;
 
-mutable var GlobalValue: integer := 5;
+var GlobalValue: integer := 5;
 
 begin
-  mutable var Index: integer := 0;
-  mutable var State: Container := record
+  var Index: integer := 0;
+  var State: Container := record
     Items := [record
       Value := 10;
     end];
   end;
-  mutable var Scores: dict of string to integer := ['blue': 20];
+  var Scores: dict of string to integer := ['blue': 20];
   WriteLn(GlobalValue);
   WriteLn(State.Items[Index].Value);
   WriteLn(Scores['blue']);

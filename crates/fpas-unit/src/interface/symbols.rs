@@ -39,12 +39,13 @@ pub enum ConstantValue {
 /// Runtime and semantic category of an exported symbol.
 #[derive(Debug, Clone, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 pub enum SymbolKind {
-    /// Compile-time constant.
+    /// Compile-time constant, optionally carrying a foldable scalar value.
+    /// Values without a scalar representation use an immutable runtime global.
     Constant(Option<ConstantValue>),
-    /// Immutable module variable.
+    /// Immutable binding whose initializer is evaluated at runtime.
+    ComputedConstant,
+    /// Reassignable module variable.
     Variable,
-    /// Mutable module variable.
-    MutableVariable,
     /// Function definition.
     Function,
     /// Procedure definition.

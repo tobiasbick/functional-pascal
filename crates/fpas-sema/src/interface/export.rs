@@ -54,12 +54,20 @@ impl check::Checker {
                 }
             }
             qualify_owned_type(&mut ty, &unit_name, &own_types);
+            let mut kind = exported_symbol_kind(declaration, symbol);
+            if let artifact::SymbolKind::Constant(Some(artifact::ConstantValue::EnumValue {
+                enum_name,
+                ..
+            })) = &mut kind
+            {
+                *enum_name = qualify_owned_name(enum_name, &unit_name, &own_types);
+            }
             symbols.push(artifact::InterfaceSymbol {
                 discard: self.scopes.discard_info(name),
                 name: name.to_string(),
                 qualified_name: format!("{unit_name}.{name}"),
                 ty,
-                kind: exported_symbol_kind(declaration),
+                kind,
             });
         }
         Ok(artifact::UnitInterface { unit_name, symbols }.canonicalized())
@@ -91,20 +99,20 @@ fn apply_declared_metadata(
 pub(super) fn declaration_name(declaration: &Decl) -> &str {
     match declaration {
         Decl::Const(value) => &value.name,
-        Decl::Var(value) | Decl::MutableVar(value) => &value.name,
+        Decl::Var(value) => &value.name,
         Decl::TypeDef(value) => &value.name,
         Decl::Function(value) => &value.name,
         Decl::Procedure(value) => &value.name,
     }
 }
 
-fn exported_symbol_kind(declaration: &Decl) -> artifact::SymbolKind {
+fn exported_symbol_kind(declaration: &Decl, symbol: &crate::scope::Symbol) -> artifact::SymbolKind {
     match declaration {
-        Decl::Const(definition) => {
-            artifact::SymbolKind::Constant(constant_value(&definition.value))
-        }
+        Decl::Const(_) => match &symbol.constant {
+            Some(info) if info.compile_time => artifact::SymbolKind::Constant(info.value.clone()),
+            _ => artifact::SymbolKind::ComputedConstant,
+        },
         Decl::Var(_) => artifact::SymbolKind::Variable,
-        Decl::MutableVar(_) => artifact::SymbolKind::MutableVariable,
         Decl::Function(_) => artifact::SymbolKind::Function,
         Decl::Procedure(_) => artifact::SymbolKind::Procedure,
         Decl::TypeDef(_) => artifact::SymbolKind::Type,

@@ -3,8 +3,8 @@ program T;
 uses Std.Console, Std.Arrays;
 
 begin
-  mutable var A: array of integer := [1, 2, 3];
-  var Last: integer := Pop(A);
+  var A: array of integer := [1, 2, 3];
+  const Last: integer := Pop(A);
   WriteLn(Last);
   WriteLn(Length(A));
 end.

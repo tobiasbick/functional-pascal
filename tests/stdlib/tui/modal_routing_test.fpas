@@ -30,8 +30,8 @@ function FindGlyph(Snapshot: TuiSurfaceSnapshot; Glyph: string): TuiPoint;
 begin
   for Y: integer := 0 to Snapshot.Height - 1 do
     begin
-      var Line: string := Snapshot.LineAt(Y);
-      var Index: integer := Std.Str.IndexOf(Line, Glyph);
+      const Line: string := Snapshot.LineAt(Y);
+      const Index: integer := Std.Str.IndexOf(Line, Glyph);
       if Index >= 0 then
         begin
           return TuiPoint.Create(Index, Y);
@@ -45,7 +45,7 @@ end function;
 
 function ViewModal(State: ModalModel): TuiElement;
 begin
-  mutable var Overlay: TuiElement := TuiElementBuilders.MakeEmpty();
+  var Overlay: TuiElement := TuiElementBuilders.MakeEmpty();
   if State.ConfirmOpen then
     begin
       Overlay := TuiElementBuilders.MakeOverlay('Confirm', [
@@ -124,8 +124,8 @@ begin
 end function;
 
 begin
-  mutable var App: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(40, 12));
-  mutable var Model: ModalModel := record
+  var App: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(40, 12));
+  var Model: ModalModel := record
     Focus := 1;
     ConfirmOpen := false;
     Actions := [];
@@ -133,7 +133,7 @@ begin
   end;
 
   Model := App.RunIterations(Model, UpdateModal, ViewModal, 0, 0);
-  var SaveAt: TuiPoint := FindGlyph(App.SurfaceSnapshot(), 'Save');
+  const SaveAt: TuiPoint := FindGlyph(App.SurfaceSnapshot(), 'Save');
   App.InjectPointerForTest(MakePointer(TuiPointerAction.Down, SaveAt.X, SaveAt.Y));
   Model := App.RunIterations(Model, UpdateModal, ViewModal, 1, 0);
   App.InjectPointerForTest(MakePointer(TuiPointerAction.Up, SaveAt.X, SaveAt.Y));
@@ -152,7 +152,7 @@ begin
   AssertEquals(2, Model.PointerHits);
   AssertEquals(1, Std.Arrays.Length(Model.Actions));
   AssertTrue(Model.ConfirmOpen);
-  var YesAt: TuiPoint := FindGlyph(App.SurfaceSnapshot(), 'Yes');
+  const YesAt: TuiPoint := FindGlyph(App.SurfaceSnapshot(), 'Yes');
   App.InjectPointerForTest(MakePointer(TuiPointerAction.Down, YesAt.X, YesAt.Y));
   Model := App.RunIterations(Model, UpdateModal, ViewModal, 1, 0);
   App.InjectPointerForTest(MakePointer(TuiPointerAction.Up, YesAt.X, YesAt.Y));

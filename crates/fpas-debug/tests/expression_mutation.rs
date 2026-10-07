@@ -22,7 +22,7 @@ type
     Items: array of Box;
   end record;
 
-mutable var
+var
   GlobalValue: integer := 5;
 
 function ChooseIndex(): integer;
@@ -31,10 +31,10 @@ begin
 end function;
 
 begin
-  mutable var Selected: integer := 0;
-  mutable var Counter: integer := 1;
-  var Fixed: integer := 2;
-  mutable var State: Container := record
+  var Selected: integer := 0;
+  var Counter: integer := 1;
+  const Fixed: integer := 2;
+  var State: Container := record
     Items := [
       record
         Value := 10;
@@ -46,8 +46,8 @@ begin
       end
     ];
   end;
-  mutable var Scores: dict of string to integer := ['blue': 30];
-  mutable var Text: string := 'abc';
+  var Scores: dict of string to integer := ['blue': 30];
+  var Text: string := 'abc';
   Counter := Counter + Fixed;
   WriteLn(GlobalValue);
   WriteLn(Counter);

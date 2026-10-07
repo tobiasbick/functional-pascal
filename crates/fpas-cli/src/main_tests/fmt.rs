@@ -125,7 +125,7 @@ main = "src/main.fpas"
 include = ["src/**/*.fpas"]
 "#,
     );
-    write_text(&main, "program Main; begin var Value:integer:=1; end.");
+    write_text(&main, "program Main; begin const Value:integer:=1; end.");
 
     let (exit_code, _, stderr_output) = run_cli_args_and_capture_output(
         &[String::from("fmt"), project.to_string_lossy().to_string()],
@@ -137,7 +137,7 @@ include = ["src/**/*.fpas"]
     assert_eq!(exit_code, 0, "stderr: {stderr_output}");
     assert_eq!(
         formatted,
-        "program Main;\n\nbegin\n  var Value: integer := 1;\nend.\n"
+        "program Main;\n\nbegin\n  const Value: integer := 1;\nend.\n"
     );
 }
 

@@ -12,9 +12,9 @@ end function;
 // Replaces one note while preserving the remaining model state.
 public function NotesWithNote(State: NotesModel; Index: integer; NoteValue: Note): NotesModel;
 begin
-  mutable var Notes: array of Note := State.Notes;
+  var Notes: array of Note := State.Notes;
   Notes[Index] := NoteValue;
-  mutable var Next: NotesModel := State;
+  var Next: NotesModel := State;
   Next.Notes := Notes;
   return Next;
 end function;
@@ -43,7 +43,7 @@ end function;
 // Applies a single-line proposal, preserving clean state for caret-only changes.
 public function NotesEditText(State: NotesModel; Action: integer; Text: string; Caret: integer): NotesModel;
 begin
-  mutable var Next: NotesModel := State;
+  var Next: NotesModel := State;
   if Action = SearchChangedAction then
     begin
       Next.Search := Text;
@@ -56,7 +56,7 @@ begin
 
   if (Action = TitleChangedAction) and NotesHasSelection(Next) then
     begin
-      mutable var NoteValue: Note := Next.Notes[Next.Selected];
+      var NoteValue: Note := Next.Notes[Next.Selected];
       Next.TitleCaret := Caret;
       if NoteValue.Title = Text then
         begin
@@ -76,8 +76,8 @@ begin
     begin
       Next.TagsText := Text;
       Next.TagsCaret := Caret;
-      mutable var NoteValue: Note := Next.Notes[Next.Selected];
-      var Tags: array of string := NoteTagsFromText(Text);
+      var NoteValue: Note := Next.Notes[Next.Selected];
+      const Tags: array of string := NoteTagsFromText(Text);
       if SameTags(NoteValue.Tags, Tags) then
         begin
           return Next;
@@ -104,10 +104,10 @@ public function NotesEditBody(
   Offset: TuiPoint
 ): NotesModel;
 begin
-  mutable var Next: NotesModel := State;
+  var Next: NotesModel := State;
   if (Action = BodyChangedAction) and NotesHasSelection(Next) then
     begin
-      mutable var NoteValue: Note := Next.Notes[Next.Selected];
+      var NoteValue: Note := Next.Notes[Next.Selected];
       Next.BodyCaret := Caret;
       Next.BodyOffset := Offset;
       if NoteValue.Body = Text then

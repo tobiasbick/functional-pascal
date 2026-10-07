@@ -4,9 +4,9 @@ uses Std.Random, Std.Test;
 
 begin
   SetSeed(-17);
-  var FirstInteger: integer := RandomInt(-1000000, 1000000);
-  var FirstReal: real := Random();
-  var SecondInteger: integer := RandomInt(-1000000, 1000000);
+  const FirstInteger: integer := RandomInt(-1000000, 1000000);
+  const FirstReal: real := Random();
+  const SecondInteger: integer := RandomInt(-1000000, 1000000);
   AssertEquals(436834, FirstInteger);
   AssertEquals(0.018693080316887545, FirstReal);
   AssertEquals(-809256, SecondInteger);

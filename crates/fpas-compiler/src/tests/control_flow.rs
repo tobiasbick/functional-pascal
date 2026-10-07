@@ -12,9 +12,9 @@ fn for_in_array_and_dictionary_execute() {
 program RegisterForIn;
 uses Std.Console, Std.Conv, Std.Dictionaries;
 begin
-  mutable var Sum: integer := 0;
+  var Sum: integer := 0;
   for Value: integer in [1, 2, 3] do Sum := Sum + Value; end for;
-  var Values: dict of string to integer := ['a': 4, 'b': 5];
+  const Values: dict of string to integer := ['a': 4, 'b': 5];
   for Key: string in Values do
   begin
     WriteLn(IntToStr(Values[Key]));
@@ -31,10 +31,10 @@ fn scalar_locals_temporaries_and_operations_execute() {
         "\
 program RegisterScalars;
 begin
-  mutable var I: integer := 7;
-  mutable var R: real := 1.5;
-  mutable var S: string := 'ab';
-  mutable var B: boolean := true;
+  var I: integer := 7;
+  var R: real := 1.5;
+  var S: string := 'ab';
+  var B: boolean := true;
   I := ((I * 3) - 1) div 2;
   R := (R + 2) / 2;
   S := S + 'cd';
@@ -52,8 +52,8 @@ fn nested_while_repeat_for_break_and_continue_execute() {
         "\
 program RegisterLoops;
 begin
-  mutable var Sum: integer := 0;
-  mutable var I: integer := 0;
+  var Sum: integer := 0;
+  var I: integer := 0;
   while I < 4 do
   begin
     I := I + 1;
@@ -80,8 +80,8 @@ fn scalar_case_values_ranges_guards_and_else_execute() {
         "\
 program RegisterCase;
 begin
-  mutable var Score: integer := 0;
-  var I: integer := 5;
+  var Score: integer := 0;
+  const I: integer := 5;
   case I of
     when Candidate if Candidate < 0: Score := 99;
     when 1..3: Score := 1;
@@ -90,14 +90,14 @@ begin
   else
     Score := 4;
   end case;
-  var S: string := 'beta';
+  const S: string := 'beta';
   case S of
     when 'alpha': Score := 10;
     when 'beta': Score := Score + 4;
   else
     Score := 20;
   end case;
-  var Flag: boolean := true;
+  const Flag: boolean := true;
   case Flag of
     when false: Score := 100;
     when true: Score := Score + 5;
@@ -114,10 +114,10 @@ fn mixed_numeric_comparisons_and_integer_edges_execute() {
 program RegisterNumeric;
 uses Std.Bits;
 begin
-  mutable var X: integer := 9223372036854775807;
+  var X: integer := 9223372036854775807;
   X := X + 1;
-  var Bits: integer := BitOr(BitAnd(12, 10), BitXor(3, 1));
-  var Shifted: integer := ShiftRight(ShiftLeft(1, 5), 2);
+  const Bits: integer := BitOr(BitAnd(12, 10), BitXor(3, 1));
+  const Shifted: integer := ShiftRight(ShiftLeft(1, 5), 2);
   if (X <> -9223372036854775807 - 1) or (Bits <> 10) or (Shifted <> 8) then
     panic('integer mismatch'); end if;
   if not (2 < 2.5) then panic('mixed comparison mismatch'); end if;

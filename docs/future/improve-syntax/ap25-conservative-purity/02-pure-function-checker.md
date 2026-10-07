@@ -10,6 +10,8 @@ Add `pure function` declarations and the conservative checker for user code.
 
 - AP25.1 (decision to implement).
 - AP14.2, AP16.3, AP17.1.
+- The shared-handle aliasing and imported-API proof decisions in the
+  [package README](README.md#open-decisions).
 
 ## Implementation
 

@@ -19,7 +19,7 @@ begin
       return;
     end;
   end if;
-  mutable var Role: TuiStyleRole := TuiStyleRole.InputNormal;
+  var Role: TuiStyleRole := TuiStyleRole.InputNormal;
   if Focused then
     begin
       Role := TuiStyleRole.InputFocused;
@@ -38,12 +38,12 @@ begin
       return;
     end;
   end if;
-  var ContentWidth: integer := Bounds.Width - 2;
-  var Viewport: TuiInputViewport := TuiInputViewportFor(Input.Text, Input.Caret, ContentWidth);
+  const ContentWidth: integer := Bounds.Width - 2;
+  const Viewport: TuiInputViewport := TuiInputViewportFor(Input.Text, Input.Caret, ContentWidth);
   if Input.Text = '' then
     begin
-      mutable var HintX: integer := Bounds.X + 1;
-      mutable var HintWidth: integer := ContentWidth;
+      var HintX: integer := Bounds.X + 1;
+      var HintWidth: integer := ContentWidth;
       if Focused and (HintWidth > 1) then
         begin
           HintX := HintX + 1;
@@ -76,13 +76,13 @@ begin
 
   if Focused then
     begin
-      mutable var CursorX: integer := (Bounds.X + 1) + Viewport.CaretColumn;
+      var CursorX: integer := (Bounds.X + 1) + Viewport.CaretColumn;
       if CursorX >= Bounds.Right() - 1 then
         begin
           CursorX := Bounds.Right() - 2;
         end;
       end if;
-      mutable var CursorGlyph: string := ' ';
+      var CursorGlyph: string := ' ';
       if Input.Caret < Std.Str.Length(Input.Text) then
         begin
           CursorGlyph := Std.Str.CharAt(Input.Text, Input.Caret);

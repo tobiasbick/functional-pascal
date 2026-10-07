@@ -5,7 +5,7 @@
 Number of elements in `A`.
 
 ```pascal
-var A: array of integer := [1, 2, 3];
+const A: array of integer := [1, 2, 3];
 WriteLn(Length(A));
 ```
 
@@ -16,8 +16,8 @@ WriteLn(Length(A));
 Returns a **new** sorted array. **`A` is not modified.**
 
 ```pascal
-var A: array of integer := [3, 1, 2];
-var B: array of integer := Sort(A);
+const A: array of integer := [3, 1, 2];
+const B: array of integer := Sort(A);
 WriteLn(IndexOf(B, 2));
 ```
 
@@ -28,8 +28,8 @@ WriteLn(IndexOf(B, 2));
 Returns a **new** array with elements in reverse order. **`A` is not modified.**
 
 ```pascal
-var A: array of integer := [1, 2, 3];
-var R: array of integer := Reverse(A);
+const A: array of integer := [1, 2, 3];
+const R: array of integer := Reverse(A);
 WriteLn(Length(R));
 ```
 
@@ -40,7 +40,7 @@ WriteLn(Length(R));
 `true` if some element equals `Value`.
 
 ```pascal
-var A: array of integer := [1, 2, 3];
+const A: array of integer := [1, 2, 3];
 WriteLn(Contains(A, 2));
 WriteLn(Contains(A, 99));
 ```
@@ -62,8 +62,8 @@ WriteLn(IndexOf([10, 20, 30], 20));
 Copies `Len` elements starting at `Start`. **Runtime error** if the range is out of bounds.
 
 ```pascal
-var A: array of integer := [10, 20, 30, 40];
-var C: array of integer := Slice(A, 1, 2);
+const A: array of integer := [10, 20, 30, 40];
+const C: array of integer := Slice(A, 1, 2);
 WriteLn(Length(C));
 ```
 

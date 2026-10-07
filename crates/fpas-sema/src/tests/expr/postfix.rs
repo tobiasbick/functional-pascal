@@ -6,7 +6,7 @@ fn field_type_on_returned_record() {
         "program T; \
          type Point = record X: integer; Y: integer; end record; \
          function Make(): Point; begin return record X := 1; Y := 2; end; end function; \
-         var V: integer := Make().X; \
+         const V: integer := Make().X; \
          begin end.",
     );
 }
@@ -16,7 +16,7 @@ fn index_result_for_returned_array() {
     check_ok(
         "program T; \
          function Make(): array of integer; begin return [10, 20, 30]; end function; \
-         var V: integer := Make()[1]; \
+         const V: integer := Make()[1]; \
          begin end.",
     );
 }
@@ -26,7 +26,7 @@ fn index_result_for_returned_dict() {
     check_ok(
         "program T; \
          function Make(): dict of string to integer; begin return ['a': 1]; end function; \
-         var V: integer := Make()['a']; \
+         const V: integer := Make()['a']; \
          begin end.",
     );
 }
@@ -36,7 +36,7 @@ fn index_result_for_returned_string() {
     check_ok(
         "program T; \
          function Make(): string; begin return 'ab'; end function; \
-         var V: string := Make()[0]; \
+         const V: string := Make()[0]; \
          begin end.",
     );
 }
@@ -53,7 +53,7 @@ fn instance_method_argument_and_return_propagation() {
            begin return record V := Self.V + 1; end; end function; \
          end record; \
          function Create(): Num; begin return record V := 2; end; end function; \
-         var Out: integer := Create().Scale(3).Next().V; \
+         const Out: integer := Create().Scale(3).Next().V; \
          begin end.",
     );
 }
@@ -65,7 +65,7 @@ fn type_alias_on_intermediate_record() {
          type Point = record X: integer; Y: integer; end record; \
          type Alias = Point; \
          function Make(): Alias; begin return record X := 4; Y := 5; end; end function; \
-         var V: integer := Make().Y; \
+         const V: integer := Make().Y; \
          begin end.",
     );
 }
@@ -76,7 +76,7 @@ fn unknown_field_on_postfix() {
         "program T; \
          type Point = record X: integer; end record; \
          function Make(): Point; begin return record X := 1; end; end function; \
-         var V: integer := Make().Missing; \
+         const V: integer := Make().Missing; \
          begin end.",
     );
     assert!(
@@ -93,7 +93,7 @@ fn invalid_suffix_does_not_cascade_into_later_suffixes() {
         "program T; \
          type Point = record X: integer; end record; \
          function Make(): Point; begin return record X := 1; end; end function; \
-         var V: integer := Make().Missing.Another; \
+         const V: integer := Make().Missing.Another; \
          begin end.",
     );
     assert_eq!(errors.len(), 1, "unexpected cascading errors: {errors:#?}");
@@ -111,7 +111,7 @@ fn unknown_method_on_postfix() {
         "program T; \
          type Point = record X: integer; end record; \
          function Make(): Point; begin return record X := 1; end; end function; \
-         var V: integer := Make().Missing(); \
+         const V: integer := Make().Missing(); \
          begin end.",
     );
     assert!(
@@ -127,7 +127,7 @@ fn non_record_member_access() {
     let errors = check_errors(
         "program T; \
          function Make(): integer; begin return 1; end function; \
-         var V: integer := Make().X; \
+         const V: integer := Make().X; \
          begin end.",
     );
     assert!(
@@ -143,7 +143,7 @@ fn wrong_index_type_on_returned_array() {
     let errors = check_errors(
         "program T; \
          function Make(): array of integer; begin return [1]; end function; \
-         var V: integer := Make()['x']; \
+         const V: integer := Make()['x']; \
          begin end.",
     );
     assert!(
@@ -160,7 +160,7 @@ fn non_indexable_receiver() {
         "program T; \
          type Point = record X: integer; end record; \
          function Make(): Point; begin return record X := 1; end; end function; \
-         var V: integer := Make()[0]; \
+         const V: integer := Make()[0]; \
          begin end.",
     );
     assert!(
@@ -179,7 +179,7 @@ fn static_function_through_returned_value() {
            begin return record X := X; end; end function; \
          end record; \
          function Make(): Point; begin return Point.Create(1); end function; \
-         var V: Point := Make().Create(2); \
+         const V: Point := Make().Create(2); \
          begin end.",
     );
     assert!(
@@ -199,7 +199,7 @@ fn procedure_method_in_expression() {
            procedure Touch(Self: Point); begin end procedure; \
          end record; \
          function Make(): Point; begin return record X := 1; end; end function; \
-         var V: integer := Make().Touch(); \
+         const V: integer := Make().Touch(); \
          begin end.",
     );
     assert!(
@@ -271,7 +271,7 @@ fn generic_instance_function_in_chain() {
          end record; \
          function Create(): Box; begin return record Value := 7; end; end function; \
          function Identity(N: integer): integer; begin return N; end function; \
-         var V: integer := Create().Map(Identity); \
+         const V: integer := Create().Map(Identity); \
          begin end.",
     );
 }
@@ -288,7 +288,7 @@ fn generic_instance_function_result_continues_chain() {
          end record; \
          function Create(): Box; begin return record Number := 7; end; end function; \
          function Wrap(N: integer): Value; begin return record Number := N; end; end function; \
-         var V: integer := Create().Map(Wrap).Number; \
+         const V: integer := Create().Map(Wrap).Number; \
          begin end.",
     );
 }
@@ -300,7 +300,7 @@ fn generic_free_function_result_continues_chain() {
          type Value = record Number: integer; end record; \
          function Identity<T>(Input: T): T; begin return Input; end function; \
          function Create(): Value; begin return record Number := 9; end; end function; \
-         var V: integer := Identity(Create()).Number; \
+         const V: integer := Identity(Create()).Number; \
          begin end.",
     );
 }
@@ -314,7 +314,7 @@ fn generic_static_function_result_continues_chain() {
            static function Identity<T>(Input: T): T; begin return Input; end function; \
          end record; \
          function Create(): Value; begin return record Number := 11; end; end function; \
-         var V: integer := Factory.Identity(Create()).Number; \
+         const V: integer := Factory.Identity(Create()).Number; \
          begin end.",
     );
 }

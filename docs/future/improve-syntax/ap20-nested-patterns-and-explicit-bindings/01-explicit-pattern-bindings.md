@@ -11,6 +11,9 @@ ignored field, in the current flat patterns.
 
 - AP13.5 (`when` case arms), so patterns are migrated once in the final arm
   syntax.
+- AP16.1 (scalar label and guard-binding classification).
+- The scalar guard-binding migration decision in the
+  [package README](README.md#open-decisions).
 
 ## Implementation
 

@@ -6,7 +6,7 @@ Wall-clock and monotonic time helpers plus task-aware sleep. This page is the fu
 program Example;
 uses Std.Console, Std.Time;
 begin
-  var Start: integer := MonotonicMillis();
+  const Start: integer := MonotonicMillis();
   Sleep(100);
   WriteLn(ElapsedMillis(Start));
 end.
@@ -69,7 +69,7 @@ WriteLn(TimestampMillis());
 Returns monotonic milliseconds since runtime initialization.
 
 ```pascal
-var Start: integer := MonotonicMillis();
+const Start: integer := MonotonicMillis();
 ```
 
 ---
@@ -79,7 +79,7 @@ var Start: integer := MonotonicMillis();
 Returns monotonic milliseconds elapsed since `Start`, a value from `MonotonicMillis`.
 
 ```pascal
-var Start: integer := MonotonicMillis();
+const Start: integer := MonotonicMillis();
 Sleep(50);
 WriteLn(ElapsedMillis(Start));
 ```

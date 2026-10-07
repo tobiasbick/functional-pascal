@@ -22,11 +22,30 @@ begin
 end function;
 
 begin
-  var R: integer := Clamp(150, 0, 100);  // 100
+  const R: integer := Clamp(150, 0, 100);  // 100
 end.
 ```
+
+## Read-only value parameters
+
+Parameters are read-only bindings. Copy a parameter into a local `var` when
+its value, fields, or elements need to change. Changes to that copy do not
+change the caller's binding:
+
+```pascal
+function Increment(Value: integer): integer;
+begin
+  var LocalValue: integer := Value;
+  LocalValue := LocalValue + 1;
+  return LocalValue;
+end function;
+```
+
+Arrays, dictionaries, and records retain value semantics when copied. Handles
+such as channels still refer to their shared resource; a read-only binding
+does not prevent operations on that resource. Closures capture a value
+parameter by value, and a local `var` by shared mutable cell.
 
 ## See also
 
 - [Declarations](declarations.md)
-- [Mutable parameters](mutable-parameters.md)

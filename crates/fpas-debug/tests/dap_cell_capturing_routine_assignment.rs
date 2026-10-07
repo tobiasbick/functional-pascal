@@ -80,7 +80,7 @@ fn dap_cell_capturing_assignment_invalidates_and_continues() {
         json!({"stopOnEntry":true}),
     );
     let _ = send(&mut adapter, &mut seq, "configurationDone", json!({}));
-    let owner = stop_at(&mut adapter, &mut seq, "var CellStop: integer := 0;");
+    let owner = stop_at(&mut adapter, &mut seq, "const CellStop: integer := 0;");
     let locals = locals_reference(&mut adapter, &mut seq, owner);
     let simple = send(
         &mut adapter,
@@ -151,7 +151,7 @@ fn dap_global_cell_destination_is_rejected_without_invalidation() {
         json!({"stopOnEntry":true}),
     );
     let _ = send(&mut adapter, &mut seq, "configurationDone", json!({}));
-    let owner = stop_at(&mut adapter, &mut seq, "var CellStop: integer := 0;");
+    let owner = stop_at(&mut adapter, &mut seq, "const CellStop: integer := 0;");
     let rejected = send(
         &mut adapter,
         &mut seq,

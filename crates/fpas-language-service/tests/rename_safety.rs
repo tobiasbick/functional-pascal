@@ -15,16 +15,16 @@ fn rename_rejects_an_inner_declaration_capturing_edited_global_uses() {
     let temp = TempDirectory::new("rename-global-capture");
     let source = r#"program GlobalCapture;
 
-var Source: integer := 1;
+const Source: integer := 1;
 
 function ReadValue(): integer;
 begin
-  var Captured: integer := 2;
+  const Captured: integer := 2;
   return Source;
 end function;
 
 begin
-  var Result: integer := ReadValue();
+  const Result: integer := ReadValue();
 end.
 "#;
     let path = temp.write("global.fpas", source);
@@ -50,16 +50,16 @@ fn rename_rejects_a_local_declaration_capturing_unedited_outer_uses() {
     let temp = TempDirectory::new("rename-local-capture");
     let source = r#"program LocalCapture;
 
-var Outer: integer := 1;
+const Outer: integer := 1;
 
 function ReadValue(): integer;
 begin
-  var Local: integer := 2;
+  const Local: integer := 2;
   return Local + Outer;
 end function;
 
 begin
-  var Result: integer := ReadValue();
+  const Result: integer := ReadValue();
 end.
 "#;
     let path = temp.write("local.fpas", source);
@@ -87,18 +87,18 @@ fn rename_allows_disjoint_local_names_and_the_edited_source_resolves() {
 
 function First(): integer;
 begin
-  var Source: integer := 1;
+  const Source: integer := 1;
   return Source;
 end function;
 
 function Second(): integer;
 begin
-  var Target: integer := 2;
+  const Target: integer := 2;
   return Target;
 end function;
 
 begin
-  var Result: integer := First() + Second();
+  const Result: integer := First() + Second();
 end.
 "#;
     let path = temp.write("disjoint.fpas", source);

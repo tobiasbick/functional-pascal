@@ -11,13 +11,16 @@ nested matching on them.
 
 - AP24.2 (generic records).
 - AP20.2 (nested patterns).
+- AP03.2 (closed-enum exhaustiveness rules).
+- AP11.1 (finite recursive construction).
 
 ## Implementation
 
 - Generic enum declarations and variant constructors with type-argument
   inference from arguments or the expected type.
-- Recursive types (for example a generic list or tree) with finite-layout
-  checks.
+- Recursive types (for example a generic list or tree) reuse AP11.1 finite
+  construction checks after type substitution; reject mandatory stored-value
+  cycles without a terminating construction.
 - Constructor lookup and nested patterns over instantiated enums;
   exhaustiveness with AP03 rules.
 

@@ -4,7 +4,7 @@ use super::{assert_succeeds, run_program};
 fn discard_evaluates_once_without_unwrapping_result_or_invoking_callable() {
     assert_succeeds(
         "program T;
-      mutable var Calls: integer := 0;
+      var Calls: integer := 0;
       function Produce(): result of integer, string;
       begin Calls := Calls + 1; return Error('ignored'); end function;
       begin discard Produce();
@@ -45,7 +45,7 @@ fn discard_preserves_postfix_evaluation_and_closure_captures() {
       end record;
       function Make(): Box; begin return record Value := 42; end; end function;
       begin discard Make().GetValue();
-      var Value: integer := 1;
+      const Value: integer := 1;
       discard function(): integer begin return Value; end function;
       end.",
     );

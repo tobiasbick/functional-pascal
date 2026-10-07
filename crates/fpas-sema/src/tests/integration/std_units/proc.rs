@@ -7,8 +7,8 @@ fn proc_run_accepts_string_command_and_string_array_args() {
 program T;
 uses Std.Proc;
 begin
-  var Status: Result of integer, string := Run('tool', ['--help']);
-  var Qualified: Result of integer, string := Std.Proc.Run('tool', ['--version']);
+  const Status: Result of integer, string := Run('tool', ['--help']);
+  const Qualified: Result of integer, string := Std.Proc.Run('tool', ['--version']);
 end.",
     );
 }
@@ -20,8 +20,8 @@ fn proc_capture_api_exposes_current_executable_and_process_output() {
 program T;
 uses Std.Proc;
 begin
-  var Executable: Result of string, string := CurrentExecutable();
-  var Captured: Result of ProcessOutput, string :=
+  const Executable: Result of string, string := CurrentExecutable();
+  const Captured: Result of ProcessOutput, string :=
     Std.Proc.RunCapture('tool', ['--version']);
 end.",
     );
@@ -34,7 +34,7 @@ fn proc_run_rejects_non_string_args_array() {
 program T;
 uses Std.Proc;
 begin
-    var Status: Result of integer, string := Run('tool', [1, 2, 3]);
+    const Status: Result of integer, string := Run('tool', [1, 2, 3]);
 end.",
     );
 
@@ -51,7 +51,7 @@ fn proc_run_capture_rejects_non_string_args_array() {
 program T;
 uses Std.Proc;
 begin
-    var Captured: Result of ProcessOutput, string := RunCapture('tool', [1, 2, 3]);
+    const Captured: Result of ProcessOutput, string := RunCapture('tool', [1, 2, 3]);
 end.",
     );
 

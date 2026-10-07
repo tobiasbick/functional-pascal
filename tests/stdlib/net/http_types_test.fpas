@@ -4,7 +4,7 @@ program HttpTypesTest;
 uses Std.Http, Std.Net.Utf8, Std.Test;
 
 begin
-  var RequestValue: Request := Request.Create('POST', 'http://localhost:8080/v1/chat');
+  const RequestValue: Request := Request.Create('POST', 'http://localhost:8080/v1/chat');
   AssertEquals('POST', RequestValue.Method);
   AssertEquals(30000, RequestValue.TimeoutMillis);
   AssertEquals('GET', Request.Get('http://localhost/get').Method);
@@ -15,7 +15,7 @@ begin
   AssertEquals('HEAD', Request.Head('http://localhost/head').Method);
   AssertEquals('OPTIONS', Request.Options('http://localhost/options').Method);
   AssertEquals('PROPFIND', Request.Create('PROPFIND', 'http://localhost/webdav').Method);
-  var ResponseValue: Response := record
+  const ResponseValue: Response := record
     StatusCode := 200;
     ReasonPhrase := 'OK';
     Headers := [Header.Create('Content-Type', 'application/json')];

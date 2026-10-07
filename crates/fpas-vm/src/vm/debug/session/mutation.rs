@@ -7,7 +7,7 @@ use crate::vm::debug::mutation::{DebugAssignmentSelector, DebugAssignmentTarget}
 mod replacement;
 
 impl DebugSession {
-    /// Replace one mutable variable or supported descendant with an evaluated expression.
+    /// Replace one variable or supported descendant with an evaluated expression.
     ///
     /// # Errors
     ///

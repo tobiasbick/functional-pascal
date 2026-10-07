@@ -56,7 +56,7 @@ program Demo;
 uses Std.Console;
 
 begin
-  var E: KeyEvent := ReadKeyEvent();
+  const E: KeyEvent := ReadKeyEvent();
   if E.kind = KeyKind.Escape then
     WriteLn('escape');
   elsif E.kind = KeyKind.Character then
@@ -114,7 +114,7 @@ The language represents the underlying ordinal as an integer index in the **fixe
 **Literals** (with `uses Std.Console`):
 
 ```pascal
-var K: KeyKind := KeyKind.Space;
+const K: KeyKind := KeyKind.Space;
 if K = KeyKind.F1 then
   WriteLn('F1');
 end if;

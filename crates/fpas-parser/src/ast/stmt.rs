@@ -12,7 +12,7 @@ impl Stmt {
             | Self::Null(span)
             | Self::Break(span)
             | Self::Continue(span) => *span,
-            Self::Var(value) | Self::MutableVar(value) => value.span,
+            Self::Const(value) | Self::Var(value) => value.span,
             Self::Assign { span, .. }
             | Self::If { span, .. }
             | Self::Case { span, .. }
@@ -44,10 +44,12 @@ pub enum Stmt {
         /// Source span of the complete statement.
         span: Span,
     },
-    /// Immutable local variable declaration.
+    /// Immutable local constant binding, initialized when execution reaches it.
+    ///
+    /// **Documentation:** `docs/pascal/language/basics/constants.md`
+    Const(VarDef),
+    /// Reassignable local variable declaration.
     Var(VarDef),
-    /// Mutable local variable declaration.
-    MutableVar(VarDef),
     /// Assignment to a variable, field, or indexed element.
     Assign {
         /// Designator that receives the assigned value.

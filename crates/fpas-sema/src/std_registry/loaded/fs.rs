@@ -8,61 +8,61 @@ pub(super) fn register_std_fs(checker: &mut Checker) {
     define_func(
         checker,
         s::STD_FS_READ_TEXT,
-        vec![p("Path", Ty::String, false)],
+        vec![p("Path", Ty::String)],
         Ty::Result(Box::new(Ty::String), Box::new(Ty::String)),
     );
     define_func(
         checker,
         s::STD_FS_WRITE_TEXT,
-        vec![p("Path", Ty::String, false), p("Text", Ty::String, false)],
+        vec![p("Path", Ty::String), p("Text", Ty::String)],
         Ty::Result(Box::new(Ty::Boolean), Box::new(Ty::String)),
     );
     define_func(
         checker,
         s::STD_FS_WRITE_TEXT_ATOMIC,
-        vec![p("Path", Ty::String, false), p("Text", Ty::String, false)],
+        vec![p("Path", Ty::String), p("Text", Ty::String)],
         Ty::Result(Box::new(Ty::Boolean), Box::new(Ty::String)),
     );
     define_func(
         checker,
         s::STD_FS_DELETE_FILE,
-        vec![p("Path", Ty::String, false)],
+        vec![p("Path", Ty::String)],
         Ty::Result(Box::new(Ty::Boolean), Box::new(Ty::String)),
     );
     define_func(
         checker,
         s::STD_FS_EXISTS,
-        vec![p("Path", Ty::String, false)],
+        vec![p("Path", Ty::String)],
         Ty::Boolean,
     );
     define_func(
         checker,
         s::STD_FS_IS_FILE,
-        vec![p("Path", Ty::String, false)],
+        vec![p("Path", Ty::String)],
         Ty::Boolean,
     );
     define_func(
         checker,
         s::STD_FS_IS_DIR,
-        vec![p("Path", Ty::String, false)],
+        vec![p("Path", Ty::String)],
         Ty::Boolean,
     );
     define_func(
         checker,
         s::STD_FS_CREATE_DIR,
-        vec![p("Path", Ty::String, false)],
+        vec![p("Path", Ty::String)],
         Ty::Result(Box::new(Ty::Boolean), Box::new(Ty::String)),
     );
     define_func(
         checker,
         s::STD_FS_CREATE_DIR_ALL,
-        vec![p("Path", Ty::String, false)],
+        vec![p("Path", Ty::String)],
         Ty::Result(Box::new(Ty::Boolean), Box::new(Ty::String)),
     );
     define_func(
         checker,
         s::STD_FS_READ_DIR,
-        vec![p("Path", Ty::String, false)],
+        vec![p("Path", Ty::String)],
         Ty::Result(
             Box::new(Ty::Array(Box::new(Ty::String))),
             Box::new(Ty::String),
@@ -71,7 +71,7 @@ pub(super) fn register_std_fs(checker: &mut Checker) {
     define_func(
         checker,
         s::STD_FS_GLOB,
-        vec![p("Pattern", Ty::String, false)],
+        vec![p("Pattern", Ty::String)],
         Ty::Result(
             Box::new(Ty::Array(Box::new(Ty::String))),
             Box::new(Ty::String),

@@ -23,8 +23,8 @@ begin
 end function;
 
 begin
-  var First: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(1, 1));
-  var Second: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(1, 1));
+  const First: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(1, 1));
+  const Second: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(1, 1));
   for I: integer := 1 to 300 do
     begin
       First.Inject(TuiMsg.Tick(I));

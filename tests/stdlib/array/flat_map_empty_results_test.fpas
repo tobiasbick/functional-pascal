@@ -8,6 +8,6 @@ begin
 end function;
 
 begin
-  var R: array of integer := FlatMap([1, 2, 3], EmptyArray);
+  const R: array of integer := FlatMap([1, 2, 3], EmptyArray);
   WriteLn(Length(R));
 end.

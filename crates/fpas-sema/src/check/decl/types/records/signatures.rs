@@ -101,6 +101,7 @@ impl Checker {
             self.scopes.define(
                 &type_param.name,
                 Symbol {
+                    constant: None,
                     ty: Ty::GenericParam(type_param.name.clone(), constraint),
                     mutable: false,
                     kind: SymbolKind::Type,
@@ -113,14 +114,15 @@ impl Checker {
             self.scopes.define_with_declaration(
                 &param.name,
                 Symbol {
+                    constant: None,
                     ty: param.ty.clone(),
-                    mutable: param.mutable,
+                    mutable: false,
                     kind: SymbolKind::Param,
                     task_bound: false,
                 },
                 *span,
             );
-            self.record_binding_discard_info(&param.name, &param.ty, param.mutable, None);
+            self.record_binding_discard_info(&param.name, &param.ty, false, None);
         }
         let previous_ctx = self.scopes.function_ctx.take();
         let owner_unit = previous_ctx

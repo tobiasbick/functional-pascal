@@ -3,7 +3,7 @@ program ElementMakeLabelTest;
 uses Std.Tui, Std.Test;
 
 begin
-  var Node: TuiElement := TuiElementBuilders.MakeLabel('hi');
+  const Node: TuiElement := TuiElementBuilders.MakeLabel('hi');
   case Node of
     when TuiElement.Label(Text):
       begin

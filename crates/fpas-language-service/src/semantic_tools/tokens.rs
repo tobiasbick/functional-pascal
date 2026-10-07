@@ -66,9 +66,7 @@ fn token_kind(kind: SymbolKind) -> SemanticTokenKind {
     match kind {
         SymbolKind::Program | SymbolKind::Unit => SemanticTokenKind::Namespace,
         SymbolKind::Constant => SemanticTokenKind::Constant,
-        SymbolKind::Variable | SymbolKind::MutableVariable | SymbolKind::LoopVariable => {
-            SemanticTokenKind::Variable
-        }
+        SymbolKind::Variable | SymbolKind::LoopVariable => SemanticTokenKind::Variable,
         SymbolKind::Type => SemanticTokenKind::Type,
         SymbolKind::Enum => SemanticTokenKind::Enum,
         SymbolKind::Function => SemanticTokenKind::Function,
@@ -83,11 +81,14 @@ fn token_kind(kind: SymbolKind) -> SemanticTokenKind {
     }
 }
 
-fn readonly(kind: SymbolKind, detail: &str) -> bool {
+fn readonly(kind: SymbolKind, _detail: &str) -> bool {
     matches!(
         kind,
-        SymbolKind::Constant | SymbolKind::Variable | SymbolKind::EnumMember
-    ) || (kind == SymbolKind::Parameter && !detail.starts_with("mutable parameter "))
+        SymbolKind::Constant
+            | SymbolKind::Parameter
+            | SymbolKind::LoopVariable
+            | SymbolKind::EnumMember
+    )
 }
 
 fn namespace_component(

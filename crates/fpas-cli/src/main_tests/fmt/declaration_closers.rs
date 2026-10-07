@@ -36,7 +36,7 @@ fn named_declarations_keep_execution_and_format_idempotently() {
         end record;
         function Answer(): integer;
             procedure Prepare(); begin return; end procedure;
-        begin Prepare(); var P: Point := record Value := 42; end; return P.ReadValue(); end function;
+        begin Prepare(); const P: Point := record Value := 42; end; return P.ReadValue(); end function;
         procedure Show(); begin WriteLn(Answer()); end procedure;
         begin Show(); end.");
     let run = ["run".into(), path.to_string_lossy().into_owned()];

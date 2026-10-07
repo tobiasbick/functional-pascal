@@ -55,7 +55,7 @@ WriteLn(Join(['home', '/etc/hosts']));
 ```
 
 ```pascal
-var Parts: array of string := ['src', 'main', 'app.txt'];
+const Parts: array of string := ['src', 'main', 'app.txt'];
 WriteLn(BaseName(Join(Parts)));
 ```
 

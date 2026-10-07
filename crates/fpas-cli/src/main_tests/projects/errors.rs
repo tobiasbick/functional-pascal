@@ -117,15 +117,15 @@ fn run_cli_reports_unit_runtime_errors_with_the_unit_path() {
     );
     write_text(
         &cwd.join("src/util.fpas"),
-        "unit App.Util;\npublic procedure Trigger();\nbegin\n  var X: integer := 1 div 0;\nend procedure;\nend unit;\n",
+        "unit App.Util;\npublic procedure Trigger();\nbegin\n  const X: integer := 1 div 0;\nend procedure;\nend unit;\n",
     );
 
     let (exit_code, _, stderr_output) = support::run_cli_and_capture_output(&project_file, &cwd);
     fs::remove_dir_all(&cwd).expect("temp directory must be removed");
 
     assert_eq!(exit_code, 2);
-    assert!(stderr_output.contains("util.fpas:4:21: error[FP5001]: Division by zero"));
-    assert!(!stderr_output.contains("main.fpas:4:21: error[FP5001]"));
+    assert!(stderr_output.contains("util.fpas:4:23: error[FP5001]: Division by zero"));
+    assert!(!stderr_output.contains("main.fpas:4:23: error[FP5001]"));
 }
 
 #[test]

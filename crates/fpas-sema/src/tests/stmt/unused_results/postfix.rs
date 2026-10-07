@@ -12,7 +12,7 @@ fn member_and_postfix_function_calls_require_consumption() {
     for statement in ["Make().Get();", "Make().Next().Get();", "Value.Get();"] {
         unused(&format!(
             "program T; {RECORD}
-          begin var Value: Box := Make(); {statement} end."
+          begin const Value: Box := Make(); {statement} end."
         ));
     }
 }
@@ -22,7 +22,7 @@ fn final_procedures_and_consumed_chains_remain_valid() {
     check_ok(&format!(
         "program T; {RECORD}
       begin Make().Print(); Make().Next().Print(); discard Make().Next().Get();
-      var N: integer := Make().Get(); end."
+      const N: integer := Make().Get(); end."
     ));
 }
 
@@ -34,7 +34,7 @@ fn receiver_calls_and_callable_record_members_require_consumption() {
     unused(
         "program T;
       type Box = record Get: function(): integer; end record;
-      begin var Value: Box := record Get := function(): integer begin return 1; end function; end;
+      begin const Value: Box := record Get := function(): integer begin return 1; end function; end;
       Value.Get(); end.",
     );
 }

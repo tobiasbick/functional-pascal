@@ -23,9 +23,12 @@ impl Parser {
                 self.parse_invalid_statement_start()
             }
             Token::Null => Stmt::Null(self.advance().span),
-            Token::Var => self.parse_var_stmt(false),
-            Token::Mutable if self.is_mutable_var_start() => self.parse_var_stmt(true),
-            Token::Mutable => self.parse_invalid_statement_start(),
+            Token::Const => self.parse_const_stmt(),
+            Token::Var => self.parse_var_stmt(),
+            Token::Ident(_) if self.is_mutable_var_start() => {
+                self.reject_mutable_binding();
+                self.parse_var_stmt()
+            }
             Token::Return => self.parse_return_stmt(),
             Token::Discard => {
                 let start = self.advance().span;
@@ -63,8 +66,8 @@ impl Parser {
             self.current_token(),
             Token::Begin
                 | Token::Null
+                | Token::Const
                 | Token::Var
-                | Token::Mutable
                 | Token::Return
                 | Token::Discard
                 | Token::Panic
@@ -87,7 +90,7 @@ impl Parser {
                 super::token_display(self.current_token())
             ),
             self.reserved_identifier_hint()
-                .unwrap_or("Expected a statement: var, if, while, for, begin, return, etc."),
+                .unwrap_or("Expected a statement: const, var, if, while, for, begin, return, etc."),
             span,
         );
         while !self.at_end() && !self.check(&Token::Semicolon) && !self.is_stmt_list_end() {

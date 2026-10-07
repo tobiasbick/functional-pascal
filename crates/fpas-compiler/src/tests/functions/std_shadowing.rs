@@ -13,7 +13,7 @@ end function;
 begin
   if Send(1, 2, 3) <> 6 then panic('local Send was not selected'); end if;
   WriteLn(IntToStr(Send(1, 2, 3)));
-  var Queue: channel of integer := CreateChannel(1);
+  const Queue: channel of integer := CreateChannel(1);
   discard Std.Tasks.Send(Queue, 42);
   case Receive(Queue) of
     when Ok(Value): if Value <> 42 then panic('qualified channel Send'); end if;
@@ -31,7 +31,7 @@ fn local_send_procedure_shadows_intrinsic_with_several_std_units() {
         r#"
 program SendProcedure;
 uses Std.Tasks, Std.Console;
-mutable var Total: integer := 0;
+var Total: integer := 0;
 procedure Send(First: integer; Second: integer; Third: integer);
 begin
   Total := First + Second + Third;
@@ -58,7 +58,7 @@ begin
   return IntToStr(42);
 end function;
 begin
-  var Send: function(Value: integer): integer := function(Value: integer): integer
+  const Send: function(Value: integer): integer := function(Value: integer): integer
   begin
     return Value + 1;
   end function;

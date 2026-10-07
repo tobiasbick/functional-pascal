@@ -14,15 +14,15 @@ procedure CompareRow(
 begin
   Expected.Clear();
   Actual.Clear();
-  var Wide: TuiCell := TuiCell.Create('中', TuiStyleRole.Accent);
+  const Wide: TuiCell := TuiCell.Create('中', TuiStyleRole.Accent);
   Expected.PutCell(TuiPoint.Create(0, 0), Wide);
   Expected.PutCell(TuiPoint.Create(3, 0), Wide);
   Actual.PutCell(TuiPoint.Create(0, 0), Wide);
   Actual.PutCell(TuiPoint.Create(3, 0), Wide);
-  var Clip: TuiRect := TuiRect.Create(ClipX, 0, ClipWidth, 1);
-  var Origin: TuiPoint := TuiPoint.Create(OriginX, 0);
-  var Reference: Std.Tui.TuiCanvas := Std.Tui.TuiCanvas.CreateLocal(Expected, Origin, Clip);
-  var Batch: Std.Tui.TuiCanvas := Std.Tui.TuiCanvas.CreateLocal(Actual, Origin, Clip);
+  const Clip: TuiRect := TuiRect.Create(ClipX, 0, ClipWidth, 1);
+  const Origin: TuiPoint := TuiPoint.Create(OriginX, 0);
+  const Reference: Std.Tui.TuiCanvas := Std.Tui.TuiCanvas.CreateLocal(Expected, Origin, Clip);
+  const Batch: Std.Tui.TuiCanvas := Std.Tui.TuiCanvas.CreateLocal(Actual, Origin, Clip);
   for X: integer := 0 to Std.Arrays.Length(Cells) - 1 do
     begin
       Reference.PutCell(TuiPoint.Create(StartX + X, 0), Cells[X]);
@@ -33,7 +33,7 @@ begin
   TuiCanvasPutCells(Batch, TuiPoint.Create(StartX, 1), Cells);
   for X: integer := 0 to 6 do
     begin
-      var Point: TuiPoint := TuiPoint.Create(X, 0);
+      const Point: TuiPoint := TuiPoint.Create(X, 0);
       AssertTrue(Std.Options.IsNone(Expected.TryCellAt(Point)) =
                  Std.Options.IsNone(Actual.TryCellAt(Point)));
       AssertEquals(Expected.Snapshot().CellAt(X, 0).Glyph, Actual.Snapshot().CellAt(X, 0).Glyph);
@@ -43,10 +43,10 @@ begin
 end procedure;
 
 begin
-  var Expected: TuiWorkingSurface := TuiWorkingSurface.Create(TuiSize.Create(7, 1));
-  var Actual: TuiWorkingSurface := TuiWorkingSurface.Create(TuiSize.Create(7, 1));
-  var Wide: TuiCell := TuiCell.Create('中', TuiStyleRole.Accent);
-  var Narrow: TuiCell := TuiCell.Create('X', TuiStyleRole.Title);
+  const Expected: TuiWorkingSurface := TuiWorkingSurface.Create(TuiSize.Create(7, 1));
+  const Actual: TuiWorkingSurface := TuiWorkingSurface.Create(TuiSize.Create(7, 1));
+  const Wide: TuiCell := TuiCell.Create('中', TuiStyleRole.Accent);
+  const Narrow: TuiCell := TuiCell.Create('X', TuiStyleRole.Title);
   for StartX: integer := -2 to 8 do
     begin
       for ClipX: integer := 0 to 2 do

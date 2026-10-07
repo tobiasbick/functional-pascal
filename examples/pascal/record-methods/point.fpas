@@ -13,8 +13,8 @@ type Point = record
 
   function Add(Self: Point; Other: Point): Point;
   begin
-    var RX: integer := Self.X + Other.X;
-    var RY: integer := Self.Y + Other.Y;
+    const RX: integer := Self.X + Other.X;
+    const RY: integer := Self.Y + Other.Y;
     return record
       X := RX;
       Y := RY;
@@ -28,11 +28,11 @@ type Point = record
 end record;
 
 begin
-  var A: Point := record
+  const A: Point := record
     X := 3;
     Y := 4;
   end;
-  var B: Point := record
+  const B: Point := record
     X := 10;
     Y := 20;
   end;
@@ -40,7 +40,7 @@ begin
   A.Print();
   B.Print();
   WriteLn('Sum of A: ' + IntToStr(A.Sum()));
-  var C: Point := A.Add(B);
+  const C: Point := A.Add(B);
   WriteLn('A + B =');
   C.Print();
 end.

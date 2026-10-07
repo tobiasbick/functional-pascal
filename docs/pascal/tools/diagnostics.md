@@ -212,7 +212,7 @@ bugs rather than adding a workaround to the program.
 | FP1009 | Invalid exponent | `1e+` | `1e+2` |
 | FP1010 | Compiler directive | `{$MODE DELPHI}` | Remove the directive. |
 | FP1011 | Invalid digit separator | `1__2` | `1_2` |
-| FP1012 | Non-ASCII identifier | `var Größe: integer := 1;` | `var Size: integer := 1;` |
+| FP1012 | Non-ASCII identifier | `const Größe: integer := 1;` | `const Size: integer := 1;` |
 | FP1013 | Invalid comment form | `(* note *)` | `// note` |
 
 ### Parser
@@ -221,9 +221,9 @@ bugs rather than adding a workaround to the program.
 |---|---|---|---|
 | FP2001 | Expected token | `program Demo begin end.` | `program Demo; begin end.` |
 | FP2002 | Expected identifier | `program ; begin end.` | `program Demo; begin end.` |
-| FP2003 | Invalid statement start | `begin 42 end.` | `begin var N: integer := 42 end.` |
+| FP2003 | Invalid statement start | `begin 42 end.` | `begin const N: integer := 42 end.` |
 | FP2004 | Missing loop direction | `for I := 1 10 do WriteLn(I)` | `for I := 1 to 10 do WriteLn(I)` |
-| FP2005 | Expected expression | `var N: integer := ;` | `var N: integer := 1;` |
+| FP2005 | Expected expression | `const N: integer := ;` | `const N: integer := 1;` |
 | FP2006 | Invalid call/assignment | `begin Name end.` | `begin Name() end.` when Name is a procedure. |
 | FP2007 | Invalid visibility | `program P; public const N: integer := 1; begin end.` | Remove `public` in a program. |
 | FP2008 | Invalid static placement | Top-level `static function F(): integer;` | Top-level `function F(): integer;` |
@@ -236,7 +236,7 @@ bugs rather than adding a workaround to the program.
 | FP2015 | Missing declaration keyword | `const A: integer := 1; B: integer := 2;` | `const A: integer := 1; const B: integer := 2;` |
 
 FP2015 points at the unprefixed name and shows a complete individual declaration.
-For exported or mutable groups, repeat `public` or `mutable var` in full.
+For exported or mutable groups, repeat `public` or `var` in full.
 
 FP2014 points at the offending comma, supplies expected/found details and shows
 the complete canonical header in its hint. Recovery stops before the list's
@@ -249,12 +249,12 @@ Call arguments still use commas; commas inside types such as
 
 | Code | Cause | Wrong example | Corrected example |
 |---|---|---|---|
-| FP3001 | Unknown type | `var N: Missing := 1;` | `var N: integer := 1;` |
+| FP3001 | Unknown type | `const N: Missing := 1;` | `const N: integer := 1;` |
 | FP3002 | Duplicate declaration | Two `const N: integer := 1;` in one scope | Keep one declaration or give them different names. |
 | FP3003 | Unknown name | `Missing()` without a declaration | Declare `procedure Missing(); begin end procedure;`. |
 | FP3004 | Ambiguous imported name | `Length(Value)` with conflicting imported Length routines | `Std.Str.Length(Value)` for a string. |
-| FP3005 | Immutable assignment | `var N: integer := 1;` followed by `N := 2` | Declare `mutable var N: integer := 1;`. |
-| FP3006 | Type mismatch | `var N: integer := 'hello';` | `var N: integer := 1;` |
+| FP3005 | Immutable assignment | `const N: integer := 1;` followed by `N := 2` | Declare `var N: integer := 1;`. |
+| FP3006 | Type mismatch | `const N: integer := 'hello';` | `const N: integer := 1;` |
 | FP3007 | Argument count | `Add(1)` for a two-parameter Add | `Add(1, 2)` |
 | FP3008 | Non-boolean condition | `if 1 then Work()` | `if true then Work()` |
 | FP3009 | Invalid panic value | `panic(1)` | `panic('failed')` |
@@ -262,7 +262,7 @@ Call arguments still use commas; commas inside types such as
 | FP3011 | Non-exhaustive case | A boolean case covering only `true` | Add the `false` branch or an `else` branch. |
 | FP3012 | Enum data count | Construct `A(1)` when A has two data fields | Construct `A(1, 2)`. |
 | FP3013 | Generic constraint | Use string for T constrained to an arithmetic type | Use integer for that arithmetic operation. |
-| FP3014 | Non-constant value | `const Text: string := ReadLn();` | `var Text: string := ReadLn();` |
+| FP3014 | Non-constant value | `when ReadValue():` in a scalar `case` | `when Value if Value = ReadValue():` |
 | FP3015 | Missing record field | Construct a record without required X | Supply `X := 1` in the record literal. |
 | FP3016 | Task-bound callable | Pass a closure capturing mutable state into another task | Pass a closure with immutable captures. |
 | FP3017 | Private record member | Access another unit's non-public record field | Export the field with `public` or use its public API. |
@@ -283,7 +283,7 @@ can describe a structural restriction and leave those fields null.
 | Code | Cause | Wrong example | Corrected example |
 |---|---|---|---|
 | FP4001 | Invalid designator base | AST references a base absent from its checked scope | Compile the AST with its matching analysis and declarations. |
-| FP4002 | Invalid assignment target | Lowering input tries to assign to a non-addressable target | Supply a checked mutable variable/field target. |
+| FP4002 | Invalid assignment target | Lowering input tries to assign to a non-addressable target | Supply a checked variable/field target. |
 | FP4003 | Intrinsic arity | Lowering input supplies one operand to a two-operand intrinsic | Supply both checked operands. |
 | FP4004 | Unsupported intrinsic lowering | Intrinsic metadata has no matching lowering case | Use the registered compiler/runtime intrinsic mapping. |
 | FP4005 | Invalid mutable array target | Mutable-array lowering receives a non-addressable expression | Supply its checked mutable array binding. |

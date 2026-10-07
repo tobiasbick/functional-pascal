@@ -157,7 +157,7 @@ include = ["src/*.fpas"]
 program Main;
 uses App.Lib;
 begin
-  var P: SecretPoint := record X := 1; Y := 2; end;
+  const P: SecretPoint := record X := 1; Y := 2; end;
 end.
 ",
     );
@@ -205,7 +205,7 @@ include = ["src/*.fpas"]
 program Main;
 uses App.Lib;
 begin
-  var P: App.Lib.SecretPoint := record X := 1; Y := 2; end;
+  const P: App.Lib.SecretPoint := record X := 1; Y := 2; end;
 end.
 ",
     );
@@ -253,7 +253,7 @@ include = ["src/*.fpas"]
     );
     write_text(
         &cwd.join("src/lib.fpas"),
-        "unit App.Lib;\n\nvar\n  Secret: integer := 42;\nend unit;\n",
+        "unit App.Lib;\n\nconst\n  Secret: integer := 42;\nend unit;\n",
     );
 
     let (exit_code, _, stderr_output) = support::run_cli_and_capture_output(&project_file, &cwd);
@@ -287,7 +287,7 @@ include = ["src/*.fpas"]
     );
     write_text(
         &cwd.join("src/lib.fpas"),
-        "unit App.Lib;\n\nmutable var\n  Counter: integer := 0;\nend unit;\n",
+        "unit App.Lib;\n\nvar\n  Counter: integer := 0;\nend unit;\n",
     );
 
     let (exit_code, _, stderr_output) = support::run_cli_and_capture_output(&project_file, &cwd);
@@ -296,7 +296,7 @@ include = ["src/*.fpas"]
     assert_eq!(exit_code, 1);
     assert!(
         stderr_output.contains("Counter"),
-        "error should mention the mutable var name, got: {stderr_output}"
+        "error should mention the var name, got: {stderr_output}"
     );
 }
 
@@ -321,7 +321,7 @@ include = ["src/*.fpas"]
     );
     write_text(
         &cwd.join("src/lib.fpas"),
-        "unit App.Lib;\n\nvar\n  Secret: integer := 42;\nend unit;\n",
+        "unit App.Lib;\n\nconst\n  Secret: integer := 42;\nend unit;\n",
     );
 
     let (exit_code, _, stderr_output) = support::run_cli_and_capture_output(&project_file, &cwd);

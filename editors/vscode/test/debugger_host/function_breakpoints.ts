@@ -26,8 +26,8 @@ export async function verifyFunctionBreakpoints(
     "end;",
     "",
     "begin",
-    "  var First: integer := Helper(1);",
-    "  var Second: integer := Helper(First);",
+    "  const First: integer := Helper(1);",
+    "  const Second: integer := Helper(First);",
     "end.",
     ""
   ];

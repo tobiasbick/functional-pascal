@@ -8,5 +8,5 @@ begin
 end function;
 
 begin
-  var X: integer := FlatMap([1, 2], Identity);
+  const X: integer := FlatMap([1, 2], Identity);
 end.

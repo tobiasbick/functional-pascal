@@ -15,6 +15,7 @@ impl Checker {
             && !self.scopes.define(
                 &td.name,
                 Symbol {
+                    constant: None,
                     ty: Ty::Named(td.name.clone()),
                     mutable: false,
                     kind: SymbolKind::Type,
@@ -77,6 +78,7 @@ impl Checker {
                 SymbolKind::EnumVariantConstructor
             };
             let symbol = Symbol {
+                constant: None,
                 ty: ty.clone(),
                 mutable: false,
                 kind,
@@ -87,6 +89,7 @@ impl Checker {
 
         if let Some(existing) = self.scopes.lookup_mut(&td.name) {
             *existing = Symbol {
+                constant: None,
                 ty,
                 mutable: false,
                 kind: SymbolKind::Type,

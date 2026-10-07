@@ -85,8 +85,8 @@ public type TuiMeasureAxis = record
         end;
       end;
     end if;
-    var ConstrainedPreferred: integer := TuiMeasureAxis.Max(Minimum, TuiMeasureAxis.Min(Preferred, Constraint.Limit));
-    var ConstrainedMaximum: integer := TuiMeasureAxis.Max(ConstrainedPreferred, TuiMeasureAxis.Min(Maximum, Constraint.Limit));
+    const ConstrainedPreferred: integer := TuiMeasureAxis.Max(Minimum, TuiMeasureAxis.Min(Preferred, Constraint.Limit));
+    const ConstrainedMaximum: integer := TuiMeasureAxis.Max(ConstrainedPreferred, TuiMeasureAxis.Min(Maximum, Constraint.Limit));
     return record
       Preferred := ConstrainedPreferred;
       Maximum := ConstrainedMaximum;

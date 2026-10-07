@@ -22,14 +22,14 @@ begin
 end function;
 
 begin
-  var Unchecked: TuiMeasureResult := TuiMeasure(TuiElementBuilders.MakeCheckBox(TuiControlId.Create(1), 'Flag', false, TuiAction.Create(1)), TuiMeasureSpec.Unbounded());
+  const Unchecked: TuiMeasureResult := TuiMeasure(TuiElementBuilders.MakeCheckBox(TuiControlId.Create(1), 'Flag', false, TuiAction.Create(1)), TuiMeasureSpec.Unbounded());
   AssertEquals(8, Unchecked.Preferred.Width);
   AssertEquals(1, Unchecked.Preferred.Height);
   AssertEquals(8, Unchecked.Minimum.Width);
-  var CheckedSize: TuiMeasureResult := TuiMeasure(TuiElementBuilders.MakeCheckBox(TuiControlId.Create(1), 'Flag', true, TuiAction.Create(1)), TuiMeasureSpec.Unbounded());
+  const CheckedSize: TuiMeasureResult := TuiMeasure(TuiElementBuilders.MakeCheckBox(TuiControlId.Create(1), 'Flag', true, TuiAction.Create(1)), TuiMeasureSpec.Unbounded());
   AssertEquals(8, CheckedSize.Preferred.Width);
-  mutable var App: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(24, 6));
-  mutable var Model: CheckModel := record
+  var App: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(24, 6));
+  var Model: CheckModel := record
     Checked := false;
   end;
 

@@ -53,25 +53,19 @@ impl Checker {
             symbol.task_bound = value_is_task_bound;
         }
 
-        let base_resolved = match target.parts.first() {
-            Some(DesignatorPart::Ident(base, _)) => self.scopes.lookup(base).is_some(),
-            _ => false,
-        };
-
-        if base_resolved && !self.designator_is_mutable_target(target) {
+        if let Some((symbol, _)) = self.designator_root_symbol(&target.parts)
+            && !self.designator_is_mutable_target(target)
+        {
             let target_name = Self::resolve_designator_name(target);
-            let hint = match target.parts.first() {
-                Some(DesignatorPart::Ident(base, _)) => self
-                    .scopes
-                    .lookup(base)
-                    .map(|symbol| match symbol.kind {
-                        SymbolKind::Const => "Constants cannot be reassigned.",
-                        SymbolKind::ForVar => "Loop variables are immutable inside the loop body.",
-                        SymbolKind::Param => "Mark the parameter `mutable` to allow reassignment.",
-                        _ => "Declare with `mutable var` to allow reassignment.",
-                    })
-                    .unwrap_or("Declare with `mutable var` to allow reassignment."),
-                _ => "Declare with `mutable var` to allow reassignment.",
+            let hint = match symbol.kind {
+                SymbolKind::Const => {
+                    "A `const` binding cannot be changed; declare it with `var` to allow reassignment."
+                }
+                SymbolKind::ForVar => "Loop variables are immutable inside the loop body.",
+                SymbolKind::Param => {
+                    "Parameters are read-only; start the body with a local copy, for example `var LocalValue: integer := Value;`."
+                }
+                _ => "Declare with `var` to allow reassignment.",
             };
 
             self.error_with_code(

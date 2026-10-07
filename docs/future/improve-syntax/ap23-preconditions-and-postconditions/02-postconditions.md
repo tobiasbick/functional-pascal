@@ -10,6 +10,7 @@ checked on every return in all build modes.
 ## Prerequisites
 
 - AP23.1 (clause machinery and reserved keywords).
+- The `try` error-return decision in the [package README](README.md#open-decisions).
 
 ## Implementation
 

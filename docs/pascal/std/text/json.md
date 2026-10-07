@@ -8,7 +8,7 @@ program Example;
 uses Std.Console, Std.Json;
 
 begin
-  var R: result of JsonValue, string := Parse('{"ok":true}');
+  const R: result of JsonValue, string := Parse('{"ok":true}');
   case R of
     when Ok(Value):
       WriteLn(Stringify(Value));
@@ -67,7 +67,7 @@ Object members become dictionary entries in document order. Rejects duplicate ob
 Parses JSON text. Accepted JSON returns `Ok(JsonValue)`. Invalid JSON returns `Error(Message)` instead of aborting the program.
 
 ```pascal
-var R: result of JsonValue, string := Std.Json.Parse('[1, true, null]');
+const R: result of JsonValue, string := Std.Json.Parse('[1, true, null]');
 case R of
   when Ok(Value):
     WriteLn(Std.Json.Stringify(Value));
@@ -90,7 +90,7 @@ zero stays `-0.0`. JSON does not distinguish these forms, so `Parse` reads eithe
 real value.
 
 ```pascal
-var Value: JsonValue := JsonValue.ArrayValue([
+const Value: JsonValue := JsonValue.ArrayValue([
   JsonValue.Bool(true),
   JsonValue.NullValue,
   JsonValue.String('hi'),

@@ -8,31 +8,31 @@ pub(super) fn register_std_path(checker: &mut Checker) {
     define_func(
         checker,
         s::STD_PATH_JOIN,
-        vec![p("Segments", Ty::Array(Box::new(Ty::String)), false)],
+        vec![p("Segments", Ty::Array(Box::new(Ty::String)))],
         Ty::String,
     );
     define_func(
         checker,
         s::STD_PATH_BASE_NAME,
-        vec![p("Path", Ty::String, false)],
+        vec![p("Path", Ty::String)],
         Ty::String,
     );
     define_func(
         checker,
         s::STD_PATH_DIR_NAME,
-        vec![p("Path", Ty::String, false)],
+        vec![p("Path", Ty::String)],
         Ty::String,
     );
     define_func(
         checker,
         s::STD_PATH_EXTENSION,
-        vec![p("Path", Ty::String, false)],
+        vec![p("Path", Ty::String)],
         Ty::String,
     );
     define_func(
         checker,
         s::STD_PATH_NORMALIZE,
-        vec![p("Path", Ty::String, false)],
+        vec![p("Path", Ty::String)],
         Ty::String,
     );
 }

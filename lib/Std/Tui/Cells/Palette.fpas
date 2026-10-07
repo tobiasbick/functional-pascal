@@ -58,21 +58,21 @@ public type TuiPalette = record
   // Returns the modern dark default palette.
   public static function Default(): TuiPalette;
   begin
-    var Background: TuiColor := TuiColor.FromRgb(13, 17, 23);
-    var Surface: TuiColor := TuiColor.FromRgb(22, 27, 34);
-    var Text: TuiColor := TuiColor.FromRgb(201, 209, 217);
-    var Muted: TuiColor := TuiColor.FromRgb(139, 148, 158);
-    var Border: TuiColor := TuiColor.FromRgb(48, 54, 61);
-    var Accent: TuiColor := TuiColor.FromRgb(88, 166, 255);
-    var Selected: TuiColor := TuiColor.FromRgb(31, 111, 235);
-    var Success: TuiColor := TuiColor.FromRgb(63, 185, 80);
-    var Failure: TuiColor := TuiColor.FromRgb(248, 81, 73);
-    var Warning: TuiColor := TuiColor.FromRgb(210, 153, 34);
-    var NormalStyle: TuiStyle := TuiStyle.FromColors(Text, Background);
-    var SelectedStyle: TuiStyle := TuiStyle.FromColors(Text, Selected);
-    var AccentStyle: TuiStyle := TuiStyle.FromColors(Accent, Background);
-    var Buttons: TuiButtonPalette := TuiButtonPalette.Create(TuiStyle.FromColors(Text, Surface), TuiStyle.FromColors(Background, Accent), SelectedStyle, TuiStyle.FromColors(Muted, Surface), TuiStyle.FromColors(Accent, Surface), TuiStyle.FromColors(Background, Accent), TuiStyle.FromColors(Text, Selected));
-    var Inputs: TuiInputPalette := TuiInputPalette.Create(TuiStyle.FromColors(Text, Surface), TuiStyle.FromColors(Text, TuiColor.FromRgb(30, 36, 44)), TuiStyle.FromColors(Muted, Surface), TuiStyle.FromColors(Background, Accent), TuiStyle.FromColors(Accent, Surface));
+    const Background: TuiColor := TuiColor.FromRgb(13, 17, 23);
+    const Surface: TuiColor := TuiColor.FromRgb(22, 27, 34);
+    const Text: TuiColor := TuiColor.FromRgb(201, 209, 217);
+    const Muted: TuiColor := TuiColor.FromRgb(139, 148, 158);
+    const Border: TuiColor := TuiColor.FromRgb(48, 54, 61);
+    const Accent: TuiColor := TuiColor.FromRgb(88, 166, 255);
+    const Selected: TuiColor := TuiColor.FromRgb(31, 111, 235);
+    const Success: TuiColor := TuiColor.FromRgb(63, 185, 80);
+    const Failure: TuiColor := TuiColor.FromRgb(248, 81, 73);
+    const Warning: TuiColor := TuiColor.FromRgb(210, 153, 34);
+    const NormalStyle: TuiStyle := TuiStyle.FromColors(Text, Background);
+    const SelectedStyle: TuiStyle := TuiStyle.FromColors(Text, Selected);
+    const AccentStyle: TuiStyle := TuiStyle.FromColors(Accent, Background);
+    const Buttons: TuiButtonPalette := TuiButtonPalette.Create(TuiStyle.FromColors(Text, Surface), TuiStyle.FromColors(Background, Accent), SelectedStyle, TuiStyle.FromColors(Muted, Surface), TuiStyle.FromColors(Accent, Surface), TuiStyle.FromColors(Background, Accent), TuiStyle.FromColors(Text, Selected));
+    const Inputs: TuiInputPalette := TuiInputPalette.Create(TuiStyle.FromColors(Text, Surface), TuiStyle.FromColors(Text, TuiColor.FromRgb(30, 36, 44)), TuiStyle.FromColors(Muted, Surface), TuiStyle.FromColors(Background, Accent), TuiStyle.FromColors(Accent, Surface));
     return record
       Normal := NormalStyle;
       Disabled := TuiStyle.FromColors(Muted, Background);
@@ -216,7 +216,7 @@ public type TuiPalette = record
   // - `Style`: Concrete terminal style.
   public function WithRole(Self: TuiPalette; Role: TuiStyleRole; Style: TuiStyle): TuiPalette;
   begin
-    mutable var Updated: TuiPalette := Self;
+    var Updated: TuiPalette := Self;
     case Role of
       when TuiStyleRole.Normal:
         begin

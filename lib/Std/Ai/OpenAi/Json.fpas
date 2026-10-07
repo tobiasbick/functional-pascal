@@ -11,13 +11,13 @@ uses Std.Ai.OpenAi.Types, Std.Arrays, Std.Conv, Std.Dictionaries, Std.Json, Std.
 // - `Options`: Optional generation controls to include.
 public function EncodeRequest(Model: string; Messages: array of ChatMessage; Options: ChatOptions): string;
 begin
-  mutable var MessageValues: array of JsonValue := [];
+  var MessageValues: array of JsonValue := [];
   for Index: integer := 0 to Std.Arrays.Length(Messages) - 1 do
     begin
       Std.Arrays.Push(MessageValues, JsonValue.Object(['role': JsonValue.String(Messages[Index].Role), 'content': JsonValue.String(Messages[Index].Content)]));
     end;
   end for;
-  mutable var Fields: dict of string to JsonValue := ['model': JsonValue.String(Model), 'messages': JsonValue.ArrayValue(MessageValues), 'stream': JsonValue.Bool(false)];
+  var Fields: dict of string to JsonValue := ['model': JsonValue.String(Model), 'messages': JsonValue.ArrayValue(MessageValues), 'stream': JsonValue.Bool(false)];
   case Options.Temperature of
     when Some(Value):
       begin

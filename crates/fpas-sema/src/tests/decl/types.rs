@@ -50,7 +50,7 @@ fn enum_members_in_scope() {
     check_ok(
         "program T; \
          type Color = enum Red; Green; Blue; end enum; \
-         var C: Color := Red; \
+         const C: Color := Red; \
          begin end.",
     );
 }
@@ -62,7 +62,7 @@ fn enum_shared_variant_name_becomes_ambiguous_at_use_site() {
          type Color = enum Red; Green; end enum; \
          type Status = enum Red; Ready; end enum; \
          begin \
-           var C: Color := Red; \
+           const C: Color := Red; \
          end.",
     );
     assert!(
@@ -91,8 +91,8 @@ fn enum_qualified_variant_names_remain_unambiguous() {
          type Color = enum Red; Green; end enum; \
          type Status = enum Red; Ready; end enum; \
          begin \
-           var C: Color := Color.Red; \
-           var S: Status := Status.Red; \
+           const C: Color := Color.Red; \
+           const S: Status := Status.Red; \
          end.",
     );
 }
@@ -135,7 +135,7 @@ fn enum_data_construct_valid() {
     check_ok(
         "program T; \
          type Shape = enum Circle(Radius: real); end enum; \
-         var S: Shape := Shape.Circle(5.0); \
+         const S: Shape := Shape.Circle(5.0); \
          begin end.",
     );
 }
@@ -145,7 +145,7 @@ fn enum_data_fieldless_construct_valid() {
     check_ok(
         "program T; \
          type Token = enum Eof; Number(Value: integer); end enum; \
-         var T: Token := Token.Eof; \
+         const T: Token := Token.Eof; \
          begin end.",
     );
 }
@@ -156,7 +156,7 @@ fn enum_data_case_destructure_valid() {
         "program T; uses Std.Console; \
          type Shape = enum Circle(Radius: real); Dot; end enum; \
          begin \
-           var S: Shape := Shape.Circle(1.0); \
+           const S: Shape := Shape.Circle(1.0); \
            case S of \
              when Shape.Circle(R): WriteLn(R); when \
              Shape.Dot: WriteLn('dot'); \
@@ -170,7 +170,7 @@ fn enum_data_wrong_arg_count() {
     check_errors(
         "program T; \
          type Shape = enum Circle(Radius: real); end enum; \
-         var S: Shape := Shape.Circle(1.0, 2.0); \
+         const S: Shape := Shape.Circle(1.0, 2.0); \
          begin end.",
     );
 }
@@ -180,14 +180,14 @@ fn enum_data_wrong_arg_type() {
     check_errors(
         "program T; \
          type Shape = enum Circle(Radius: real); end enum; \
-         var S: Shape := Shape.Circle('text'); \
+         const S: Shape := Shape.Circle('text'); \
          begin end.",
     );
 }
 
 #[test]
 fn unknown_type() {
-    check_errors("program T; var X: Foo := 42; begin end.");
+    check_errors("program T; const X: Foo := 42; begin end.");
 }
 
 #[test]
@@ -195,7 +195,7 @@ fn type_alias_scalar_valid() {
     check_ok(
         "program T; \
          type UserId = integer; \
-         var Id: UserId := 42; \
+         const Id: UserId := 42; \
          begin end.",
     );
 }
@@ -205,7 +205,7 @@ fn type_alias_names_are_case_insensitive() {
     check_ok(
         "program T; \
          type UserId = integer; \
-         var Id: userid := 42; \
+         const Id: userid := 42; \
          begin end.",
     );
 }
@@ -216,7 +216,7 @@ fn enum_variant_is_available_through_type_alias() {
         "program T; \
          type Color = enum Red; Green; end enum; \
          type PaletteColor = Color; \
-         var C: PaletteColor := PaletteColor.Green; \
+         const C: PaletteColor := PaletteColor.Green; \
          begin end.",
     );
 }
@@ -240,8 +240,8 @@ fn type_alias_to_unknown_type() {
 fn value_name_cannot_be_used_as_type() {
     let errors = check_errors(
         "program T; \
-         var Alias: integer := 1; \
-         var X: Alias := 2; \
+         const Alias: integer := 1; \
+         const X: Alias := 2; \
          begin end.",
     );
     assert!(
@@ -257,7 +257,7 @@ fn record_literal_field_names_are_case_insensitive() {
     check_ok(
         "program T; \
          type Point = record X: integer; Y: integer; end record; \
-         var P: Point := record x := 1; y := 2; end; \
+         const P: Point := record x := 1; y := 2; end; \
          begin end.",
     );
 }
@@ -272,7 +272,7 @@ fn duplicate_record_field_errors(source: &str) -> Vec<crate::SemaError> {
 #[test]
 fn anonymous_record_literal_rejects_exact_duplicate_fields() {
     let errors = duplicate_record_field_errors(
-        "program T; var N: integer := record Value := 1; Value := 2; end; begin end.",
+        "program T; const N: integer := record Value := 1; Value := 2; end; begin end.",
     );
     assert_eq!(errors.len(), 1, "unexpected diagnostics: {errors:#?}");
 }
@@ -280,7 +280,7 @@ fn anonymous_record_literal_rejects_exact_duplicate_fields() {
 #[test]
 fn anonymous_record_literal_rejects_case_only_duplicate_fields() {
     let errors = duplicate_record_field_errors(
-        "program T; var N: integer := record Value := 1; value := 2; end; begin end.",
+        "program T; const N: integer := record Value := 1; value := 2; end; begin end.",
     );
     assert_eq!(errors.len(), 1, "unexpected diagnostics: {errors:#?}");
 }
@@ -290,7 +290,7 @@ fn typed_record_literal_rejects_exact_duplicate_fields() {
     let errors = duplicate_record_field_errors(
         "program T; \
          type Point = record X: integer; Y: integer; end record; \
-         var P: Point := record X := 1; X := 2; Y := 3; end; \
+         const P: Point := record X := 1; X := 2; Y := 3; end; \
          begin end.",
     );
     assert_eq!(errors.len(), 1, "unexpected diagnostics: {errors:#?}");
@@ -301,7 +301,7 @@ fn typed_record_literal_rejects_case_only_duplicate_fields() {
     let errors = duplicate_record_field_errors(
         "program T; \
          type Point = record X: integer; Y: integer; end record; \
-         var P: Point := record X := 1; x := 2; Y := 3; end; \
+         const P: Point := record X := 1; x := 2; Y := 3; end; \
          begin end.",
     );
     assert_eq!(errors.len(), 1, "unexpected diagnostics: {errors:#?}");
@@ -312,8 +312,8 @@ fn record_update_rejects_exact_duplicate_fields() {
     let errors = duplicate_record_field_errors(
         "program T; \
          type Point = record X: integer; Y: integer; end record; \
-         var P: Point := record X := 1; Y := 2; end; \
-         var Q: Point := P with X := 3; X := 4; end with; \
+         const P: Point := record X := 1; Y := 2; end; \
+         const Q: Point := P with X := 3; X := 4; end with; \
          begin end.",
     );
     assert_eq!(errors.len(), 1, "unexpected diagnostics: {errors:#?}");
@@ -324,8 +324,8 @@ fn record_update_rejects_case_only_duplicate_fields() {
     let errors = duplicate_record_field_errors(
         "program T; \
          type Point = record X: integer; Y: integer; end record; \
-         var P: Point := record X := 1; Y := 2; end; \
-         var Q: Point := P with X := 3; x := 4; end with; \
+         const P: Point := record X := 1; Y := 2; end; \
+         const Q: Point := P with X := 3; x := 4; end with; \
          begin end.",
     );
     assert_eq!(errors.len(), 1, "unexpected diagnostics: {errors:#?}");
@@ -356,7 +356,7 @@ fn record_method_valid() {
            begin return Self.X + Self.Y; end function; \
          end record; \
          begin \
-           var P: Point := record X := 3; Y := 7; end; \
+           const P: Point := record X := 3; Y := 7; end; \
            WriteLn(P.Sum()); \
          end.",
     );
@@ -372,7 +372,7 @@ fn record_method_names_are_case_insensitive() {
                      begin return Self.X; end function; \
                  end record; \
                  begin \
-                     var P: Point := record X := 3; end; \
+                     const P: Point := record X := 3; end; \
                      WriteLn(P.sum()); \
                  end.",
     );
@@ -409,7 +409,7 @@ fn static_record_function_valid() {
            begin return record X := X; Y := Y; end; end function; \
          end record; \
          begin \
-           var P: Point := Point.Create(3, 4); \
+           const P: Point := Point.Create(3, 4); \
            WriteLn(P.X); \
          end.",
     );
@@ -425,7 +425,7 @@ fn static_record_function_case_insensitive() {
            begin return record X := X; Y := Y; end; end function; \
          end record; \
          begin \
-           var P: Point := point.create(1, 2); \
+           const P: Point := point.create(1, 2); \
            WriteLn(P.X); \
          end.",
     );
@@ -442,7 +442,7 @@ fn static_record_function_via_alias() {
          end record; \
          type Alias = Point; \
          begin \
-           var P: Alias := Alias.Create(5, 6); \
+           const P: Alias := Alias.Create(5, 6); \
            WriteLn(P.X); \
          end.",
     );
@@ -458,8 +458,8 @@ fn static_call_through_value_rejected() {
            begin return record X := X; Y := Y; end; end function; \
          end record; \
          begin \
-           var P: Point := record X := 0; Y := 0; end; \
-           var Q: Point := P.Create(1, 2); \
+           const P: Point := record X := 0; Y := 0; end; \
+           const Q: Point := P.Create(1, 2); \
          end.",
     );
     assert!(
@@ -481,8 +481,8 @@ fn instance_call_through_type_rejected() {
            begin return Self.X + Self.Y; end function; \
          end record; \
          begin \
-           var P: Point := record X := 1; Y := 2; end; \
-           var N: integer := Point.Sum(P); \
+           const P: Point := record X := 1; Y := 2; end; \
+           const N: integer := Point.Sum(P); \
          end.",
     );
     assert!(
@@ -589,7 +589,7 @@ fn static_procedure_call_through_value_rejected() {
            static procedure Reset(); begin end procedure; \
          end record; \
          begin \
-           var Value: Counter := record Value := 1; end; \
+           const Value: Counter := record Value := 1; end; \
            Value.Reset(); \
          end.",
     );
@@ -609,7 +609,7 @@ fn static_procedure_cannot_be_used_as_expression() {
          type Counter = record \
            static procedure Reset(); begin end procedure; \
          end record; \
-         begin var Value: integer := Counter.Reset(); end.",
+         begin const Value: integer := Counter.Reset(); end.",
     );
     assert!(
         errors.iter().any(|error| {

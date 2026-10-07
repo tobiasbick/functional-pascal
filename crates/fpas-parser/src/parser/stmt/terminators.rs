@@ -80,7 +80,6 @@ impl Parser {
                 | Token::Program
                 | Token::Unit
                 | Token::Type
-                | Token::Const
                 | Token::Public
                 | Token::Static
         ) || self.check(&Token::Elsif)

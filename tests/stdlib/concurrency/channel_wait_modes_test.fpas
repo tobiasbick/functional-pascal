@@ -3,7 +3,7 @@ program ChannelWaitModesTest;
 uses Std.Tasks, Std.Test;
 
 begin
-  var Messages: channel of integer := CreateChannel(1);
+  const Messages: channel of integer := CreateChannel(1);
   case TryReceive(Messages) of
     when Ok(MaybeValue):
       begin

@@ -21,7 +21,7 @@ type Counter = record
   end function;
 end record;
 begin
-  var C: Counter := record Base := 2; end;
+  const C: Counter := record Base := 2; end;
   if C.Add(3) <> 5 then panic('wrong'); end if;
 end.
 "#,
@@ -44,9 +44,9 @@ program DebugMetadata;
 
 function Add(Value: integer): integer;
 begin
-  var Offset: integer := 1;
+  const Offset: integer := 1;
   begin
-    var Nested: integer := Value + Offset;
+    const Nested: integer := Value + Offset;
     if Nested < 0 then
       panic('unreachable'); end if;
   end;
@@ -54,7 +54,7 @@ begin
 end function;
 
 begin
-  var Answer: integer := Add(41);
+  const Answer: integer := Add(41);
   if Answer <> 42 then
     panic('wrong answer'); end if;
 end.
@@ -118,7 +118,7 @@ program DebugCaptureMetadata;
 
 function Counter(): function(): integer;
 begin
-  mutable var Value: integer := 0;
+  var Value: integer := 0;
   return function(): integer begin
     Value := Value + 1;
     return Value;
@@ -126,7 +126,7 @@ begin
 end function;
 
 begin
-  var Next: function(): integer := Counter();
+  const Next: function(): integer := Counter();
   for Index: integer := 1 to 2 do
     discard Next(); end for;
 end.
@@ -168,15 +168,15 @@ type
     Value: integer;
   end record;
 
-mutable var
+var
   Scores: dict of string to integer := ['Ada': 1];
 
 begin
-  mutable var Item: Box := record
+  var Item: Box := record
     Value := 2;
   end;
-  mutable var Items: array of integer := [3];
-  var Maybe: option of integer := Some(4);
+  var Items: array of integer := [3];
+  const Maybe: option of integer := Some(4);
 end.
 "#,
     );
@@ -227,9 +227,9 @@ fn compiler_retains_shadowed_bindings_and_same_line_sequence_columns() {
 program DebugShadowMetadata;
 
 begin
-  var Value: integer := 1;
+  const Value: integer := 1;
   begin
-    var Value: integer := 2; var Other: integer := Value + 1;
+    const Value: integer := 2; const Other: integer := Value + 1;
     if Other <> 3 then panic('wrong inner value'); end if;
   end;
   if Value <> 1 then panic('wrong outer value'); end if;
@@ -279,12 +279,12 @@ begin
   return 'nope';
 end function;
 
-var GlobalCurrent: task := go Seven();
-var GlobalWrong: task := go Label();
+const GlobalCurrent: task := go Seven();
+const GlobalWrong: task := go Label();
 
 begin
-  var Current: task := go Seven();
-  var Wrong: task := go Label();
+  const Current: task := go Seven();
+  const Wrong: task := go Label();
 end.
 "#,
     );
@@ -358,7 +358,7 @@ function Outer(Offset: integer): integer;
   end function;
 begin
   begin
-    var Offset: integer := 99;
+    const Offset: integer := 99;
     return AddOffset(1);
   end;
 end function;
@@ -370,7 +370,7 @@ function Mutating(): Handler;
     return Value + Cell;
   end function;
 begin
-  mutable var Cell: integer := 1;
+  var Cell: integer := 1;
   return AddCell;
 end function;
 
@@ -382,19 +382,19 @@ function OuterCell(): Handler;
       return Value + Cell;
     end function;
   begin
-    var Keep: integer := Cell;
+    const Keep: integer := Cell;
     return AddEnclosed;
   end function;
 begin
-  mutable var Cell: integer := 1;
+  var Cell: integer := 1;
   return Mid();
 end function;
 
 begin
-  var First: Handler := MakeAdder(10);
-  var Answer: integer := Outer(7);
-  var Next: Handler := Mutating();
-  var Enclosed: Handler := OuterCell();
+  const First: Handler := MakeAdder(10);
+  const Answer: integer := Outer(7);
+  const Next: Handler := Mutating();
+  const Enclosed: Handler := OuterCell();
 end.
 "#,
     );
@@ -487,8 +487,8 @@ begin
 end function;
 
 begin
-  var First: Handler := FactoryA(1);
-  var Second: Handler := FactoryB(2);
+  const First: Handler := FactoryA(1);
+  const Second: Handler := FactoryB(2);
 end.
 "#,
     );

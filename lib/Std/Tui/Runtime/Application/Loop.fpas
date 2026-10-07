@@ -26,7 +26,7 @@ function TuiLoopApplyFramework<TModel>(
 ): TModel;
 begin
   TuiAppApplyResizeIfNeeded(ApplicationId, Msg);
-  var Cmd: TuiCmdOutput := TuiAppCommands[ApplicationId - 1];
+  const Cmd: TuiCmdOutput := TuiAppCommands[ApplicationId - 1];
   Cmd.Reset();
   return Update(Model, Msg, Cmd);
 end function;
@@ -38,7 +38,7 @@ function TuiLoopApplyApplication<TModel, TMessage>(
   UpdateApplication: function(State: TModel; Message: TMessage; Cmd: TuiCmdOutput): TModel
 ): TModel;
 begin
-  var Cmd: TuiCmdOutput := TuiAppCommands[ApplicationId - 1];
+  const Cmd: TuiCmdOutput := TuiAppCommands[ApplicationId - 1];
   Cmd.Reset();
   return UpdateApplication(Model, Message, Cmd);
 end function;
@@ -50,7 +50,7 @@ function TuiLoopFinishUpdate<TModel>(
   Present: boolean
 ): boolean;
 begin
-  var Cmd: TuiCmdOutput := TuiAppCommands[ApplicationId - 1];
+  const Cmd: TuiCmdOutput := TuiAppCommands[ApplicationId - 1];
   if TuiAppApplyCommand(ApplicationId, Cmd) then
     begin
       return true;
@@ -68,7 +68,7 @@ end procedure;
 
 procedure TuiLoopCloseWithInbox<TMessage>(ApplicationId: integer; Inbox: channel of TMessage);
 begin
-  var Failures: array of TuiMsg := TuiAppCloseApplication(ApplicationId);
+  const Failures: array of TuiMsg := TuiAppCloseApplication(ApplicationId);
   discard CloseChannel(Inbox);
   TuiAppRaiseShutdownFailure(Failures);
 end procedure;
@@ -98,14 +98,14 @@ begin
       panic('Tui tick delta must not be negative');
     end;
   end if;
-  mutable var Model: TModel := InitialModel;
+  var Model: TModel := InitialModel;
   TuiLoopRender(ApplicationId, View(Model), false);
   if BackgroundEnabled then
     begin
       TuiAppStart(ApplicationId);
     end;
   end if;
-  mutable var Remaining: integer := IterationCount;
+  var Remaining: integer := IterationCount;
   while Remaining > 0 do
     begin
       if not TuiAppOpen[ApplicationId - 1] then
@@ -207,19 +207,19 @@ public function TuiRunInteractive<TModel, TMessage>(
 ): TModel;
 begin
   discard TuiAppRequireOpen(ApplicationId);
-  var ConsoleInputs: channel of TuiHostInput := CreateChannel(32);
-  var InputGroup: TaskGroup := CreateTaskGroup();
-  var InputTask: task := StartTaskInGroup(InputGroup, function(Token: CancellationToken): result of boolean, string begin
+  const ConsoleInputs: channel of TuiHostInput := CreateChannel(32);
+  const InputGroup: TaskGroup := CreateTaskGroup();
+  const InputTask: task := StartTaskInGroup(InputGroup, function(Token: CancellationToken): result of boolean, string begin
     return TuiConsoleInputPump(Token, ConsoleInputs);
   end function);
-  mutable var Model: TModel := InitialModel;
+  var Model: TModel := InitialModel;
   TuiLoopRender(ApplicationId, View(Model), true);
   if BackgroundEnabled then
     begin
       TuiAppStart(ApplicationId);
     end;
   end if;
-  mutable var PreferApplication: boolean := false;
+  var PreferApplication: boolean := false;
   while TuiAppOpen[ApplicationId - 1] do
     begin
       TuiAppPushMessages(ApplicationId, TuiBackgroundReap(ApplicationId));
@@ -255,17 +255,17 @@ begin
         end;
       end if;
       // A due tick is queued like any framework message; a pending one bounds the wait below.
-      var TickWait: integer := TuiAppTickWait(ApplicationId);
+      const TickWait: integer := TuiAppTickWait(ApplicationId);
       if TickWait = 0 then
         begin
           TuiAppPushMessages(ApplicationId, [TuiAppTakeTick(ApplicationId)]);
           continue;
         end;
       end if;
-      mutable var ConsoleInput: option of TuiHostInput := None;
-      mutable var ApplicationInput: option of TMessage := None;
-      mutable var Cases: array of WaitCase := [];
-      var ConsoleCase: WaitCase := ReceiveCase(ConsoleInputs, procedure(Outcome: result of TuiHostInput, string) begin
+      var ConsoleInput: option of TuiHostInput := None;
+      var ApplicationInput: option of TMessage := None;
+      var Cases: array of WaitCase := [];
+      const ConsoleCase: WaitCase := ReceiveCase(ConsoleInputs, procedure(Outcome: result of TuiHostInput, string) begin
         case Outcome of
           when Ok(Input):
             begin
@@ -278,7 +278,7 @@ begin
       end procedure);
       if BackgroundEnabled then
         begin
-          var ApplicationCase: WaitCase := ReceiveCase(Inbox, procedure(Outcome: result of TMessage, string) begin
+          const ApplicationCase: WaitCase := ReceiveCase(Inbox, procedure(Outcome: result of TMessage, string) begin
             case Outcome of
               when Ok(Message):
                 begin

@@ -8,7 +8,7 @@ begin
 end function;
 
 begin
-  var O: option of integer := Some(7);
-  var M: option of string := Map(O, TripleToStr);
+  const O: option of integer := Some(7);
+  const M: option of string := Map(O, TripleToStr);
   WriteLn(Unwrap(M));
 end.

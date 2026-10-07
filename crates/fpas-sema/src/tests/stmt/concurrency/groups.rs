@@ -29,7 +29,7 @@ fn group_operations_reject_wrong_handles_and_worker_signatures() {
         "StartTaskInGroup(G, function(T: CancellationToken): result of integer, integer begin return Error(1); end function)",
     ] {
         let source = format!(
-            "program T; uses Std.Tasks; procedure Work(Token: CancellationToken); begin end procedure; begin var G: TaskGroup := CreateTaskGroup(); {call}; end."
+            "program T; uses Std.Tasks; procedure Work(Token: CancellationToken); begin end procedure; begin const G: TaskGroup := CreateTaskGroup(); {call}; end."
         );
         assert!(
             !check_errors(&source).is_empty(),
@@ -44,8 +44,8 @@ fn group_worker_rejects_mutable_captures() {
         r#"program T;
 uses Std.Tasks;
 begin
-  mutable var Count: integer := 0;
-  var G: TaskGroup := CreateTaskGroup();
+  var Count: integer := 0;
+  const G: TaskGroup := CreateTaskGroup();
   StartTaskInGroup(G, procedure(Token: CancellationToken) begin Count := Count + 1; end procedure);
 end."#,
     );
@@ -66,13 +66,13 @@ procedure NoValue(Token: CancellationToken); begin end procedure;
 function Number(Token: CancellationToken): integer; begin return 42; end function;
 function Outcome(Token: CancellationToken): result of integer, string; begin return Error('failed'); end function;
 begin
-  var G: TaskGroup := CreateTaskGroup();
-  var A: task := StartTaskInGroup(G, NoValue);
-  var B: task := StartTaskInGroup(G, Number);
-  var C: task := StartTaskInGroup(G, Outcome);
+  const G: TaskGroup := CreateTaskGroup();
+  const A: task := StartTaskInGroup(G, NoValue);
+  const B: task := StartTaskInGroup(G, Number);
+  const C: task := StartTaskInGroup(G, Outcome);
   Wait(A);
-  var N: integer := Wait(B);
-  var R: result of integer, string := Wait(C);
+  const N: integer := Wait(B);
+  const R: result of integer, string := Wait(C);
   discard CloseTaskGroup(G);
 end."#,
     );
@@ -85,9 +85,9 @@ fn group_worker_does_not_erase_its_result_type() {
 uses Std.Tasks;
 function Work(Token: CancellationToken): integer; begin return 7; end function;
 begin
-  var G: TaskGroup := CreateTaskGroup();
-  var Child: task := StartTaskInGroup(G, Work);
-  var Wrong: string := Wait(Child);
+  const G: TaskGroup := CreateTaskGroup();
+  const Child: task := StartTaskInGroup(G, Work);
+  const Wrong: string := Wait(Child);
 end."#,
     );
     assert!(!errors.is_empty(), "worker result was erased");
@@ -96,19 +96,19 @@ end."#,
 #[test]
 fn timed_group_close_preserves_result_and_failure_record_types() {
     check_ok(
-        "program T; uses Std.Tasks, Std.Results; begin var G: TaskGroup := CreateTaskGroup(); var R: result of array of TaskFailure, string := CloseTaskGroupWithTimeout(G, 0); var Reports: array of TaskFailure := Unwrap(R); end.",
+        "program T; uses Std.Tasks, Std.Results; begin const G: TaskGroup := CreateTaskGroup(); const R: result of array of TaskFailure, string := CloseTaskGroupWithTimeout(G, 0); const Reports: array of TaskFailure := Unwrap(R); end.",
     );
-    assert!(!check_errors("program T; uses Std.Tasks; begin var G: TaskGroup := CreateTaskGroup(); var Wrong: boolean := CloseTaskGroupWithTimeout(G, 0); end.").is_empty());
+    assert!(!check_errors("program T; uses Std.Tasks; begin const G: TaskGroup := CreateTaskGroup(); const Wrong: boolean := CloseTaskGroupWithTimeout(G, 0); end.").is_empty());
 }
 
 #[test]
 fn completed_group_probe_preserves_optional_failure_report_type() {
     check_ok(
-        "program T; uses Std.Tasks; begin var G: TaskGroup := CreateTaskGroup(); var R: option of array of TaskFailure := TryCloseCompletedTaskGroup(G); end.",
+        "program T; uses Std.Tasks; begin const G: TaskGroup := CreateTaskGroup(); const R: option of array of TaskFailure := TryCloseCompletedTaskGroup(G); end.",
     );
     assert!(
         !check_errors(
-            "program T; uses Std.Tasks; begin var G: TaskGroup := CreateTaskGroup(); var Wrong: boolean := TryCloseCompletedTaskGroup(G); end."
+            "program T; uses Std.Tasks; begin const G: TaskGroup := CreateTaskGroup(); const Wrong: boolean := TryCloseCompletedTaskGroup(G); end."
         )
         .is_empty()
     );

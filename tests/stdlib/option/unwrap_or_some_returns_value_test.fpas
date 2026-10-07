@@ -3,6 +3,6 @@ program T;
 uses Std.Console, Std.Options;
 
 begin
-  var O: option of integer := Some(7);
+  const O: option of integer := Some(7);
   WriteLn(UnwrapOr(O, -1));
 end.

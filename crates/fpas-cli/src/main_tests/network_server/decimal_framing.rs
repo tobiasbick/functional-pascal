@@ -22,12 +22,12 @@ fn source_review_server_checks_decimal_lengths_and_boundaries() {
             r#"program DecimalServer;
 uses Std.Http, Std.Net, Std.Net.Utf8, Std.Results, Std.Str;
 begin
-  var ListenerValue: Listener := Unwrap(Listen('127.0.0.1', {port}));
+  const ListenerValue: Listener := Unwrap(Listen('127.0.0.1', {port}));
   for I: integer := 1 to {} do
   begin
-    var ConnectionValue: Connection := Unwrap(Accept(ListenerValue));
+    const ConnectionValue: Connection := Unwrap(Accept(ListenerValue));
     discard Unwrap(SetTimeout(ConnectionValue, 2000));
-    mutable var Text: string := 'accepted';
+    var Text: string := 'accepted';
     case ReadRequest(ConnectionValue, 4096, 16) of
       when Ok(_): begin end;
       when Error(Message): begin
@@ -37,7 +37,7 @@ begin
         Text := 'rejected';
       end;
     end case;
-    mutable var ResponseValue: ServerResponse := ServerResponse.Create(200, 'OK');
+    var ResponseValue: ServerResponse := ServerResponse.Create(200, 'OK');
     ResponseValue.Body := Std.Net.Utf8.Encode(Text);
     discard Unwrap(WriteResponse(ConnectionValue, ResponseValue));
     discard Unwrap(Close(ConnectionValue));

@@ -11,7 +11,7 @@ use serde_json::{Value, json};
 
 const SOURCE: &str = r#"program BreakpointAssign;
 
-mutable var Flag: integer := 0;
+var Flag: integer := 0;
 
 begin
   Flag := 1;

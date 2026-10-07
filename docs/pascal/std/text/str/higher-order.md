@@ -20,7 +20,7 @@ begin
   return C;
 end function;
 
-var ResultText: string := Std.Str.Map('a*b', ReplaceStar); // 'a★b'
+const ResultText: string := Std.Str.Map('a*b', ReplaceStar); // 'a★b'
 ```
 
 ## `Filter(S: string; F: function(C: string): boolean): string`
@@ -33,7 +33,7 @@ begin
   return C <> ' ';
 end function;
 
-var Compact: string := Std.Str.Filter('a b c', NotSpace);  // 'abc'
+const Compact: string := Std.Str.Filter('a b c', NotSpace);  // 'abc'
 ```
 
 ## `Reduce(S: string; Init: U; F: function(Acc: U; C: string): U): U`
@@ -50,7 +50,7 @@ begin
   return Acc + 1;
 end function;
 
-var Count: integer := Std.Str.Reduce('a b c', 0, CountNonSpaces); // 3
+const Count: integer := Std.Str.Reduce('a b c', 0, CountNonSpaces); // 3
 ```
 
 For empty `S`, `Map` and `Filter` return `''` and `Reduce` returns `Init`; no callback runs. Arguments are evaluated once in the usual left-to-right order. If a callback fails, the operation stops at that scalar and propagates the error without returning a partial result. Side effects from callbacks already run remain visible.

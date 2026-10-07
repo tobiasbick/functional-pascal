@@ -41,7 +41,7 @@ Environment lookup is process-wide and effectful because it reads host process s
 Returns the environment variable named `Name`, or `None` when it is missing.
 
 ```pascal
-var Home: option of string := Get('HOME');
+const Home: option of string := Get('HOME');
 if Std.Options.IsSome(Home) then
   WriteLn(Std.Options.Unwrap(Home));
 end if;

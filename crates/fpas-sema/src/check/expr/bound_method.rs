@@ -162,7 +162,7 @@ impl Checker {
     ) -> Ty {
         match method_kind {
             MethodKind::Function(func_ty) => {
-                let Some(self_param) = func_ty.params.first() else {
+                let Some(_) = func_ty.params.first() else {
                     self.error_with_code(
                         SEMA_TYPE_MISMATCH,
                         format!(
@@ -173,17 +173,6 @@ impl Checker {
                     );
                     return Ty::Error;
                 };
-                if self_param.mutable {
-                    self.error_with_code(
-                        SEMA_TYPE_MISMATCH,
-                        format!(
-                            "Cannot bind method `{qualified}` because `Self` is `mutable`"
-                        ),
-                        "Capture a `mutable var` in a closure instead of binding a mutable receiver.",
-                        span,
-                    );
-                    return Ty::Error;
-                }
                 let visible = func_ty.params[1..].to_vec();
                 if let Some((key, receiver_part_count)) = bind_key {
                     let Ok(visible_arity) = u8::try_from(visible.len()) else {
@@ -212,7 +201,7 @@ impl Checker {
                 })
             }
             MethodKind::Procedure(proc_ty) => {
-                let Some(self_param) = proc_ty.params.first() else {
+                let Some(_) = proc_ty.params.first() else {
                     self.error_with_code(
                         SEMA_TYPE_MISMATCH,
                         format!(
@@ -223,17 +212,6 @@ impl Checker {
                     );
                     return Ty::Error;
                 };
-                if self_param.mutable {
-                    self.error_with_code(
-                        SEMA_TYPE_MISMATCH,
-                        format!(
-                            "Cannot bind method `{qualified}` because `Self` is `mutable`"
-                        ),
-                        "Capture a `mutable var` in a closure instead of binding a mutable receiver.",
-                        span,
-                    );
-                    return Ty::Error;
-                }
                 let visible = proc_ty.params[1..].to_vec();
                 if let Some((key, receiver_part_count)) = bind_key {
                     let Ok(visible_arity) = u8::try_from(visible.len()) else {

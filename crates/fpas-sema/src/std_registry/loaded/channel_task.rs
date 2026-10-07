@@ -14,13 +14,13 @@ pub fn register_std_task(c: &mut Checker) {
     define_func(
         c,
         s::STD_TASK_SELECT,
-        vec![p("Cases", Ty::Array(Box::new(case.clone())), false)],
+        vec![p("Cases", Ty::Array(Box::new(case.clone())))],
         Ty::Integer,
     );
     define_func(
         c,
         s::STD_TASK_CLOSE_WAIT_CASE,
-        vec![p("Handle", case, false)],
+        vec![p("Handle", case)],
         Ty::Boolean,
     );
     let source =
@@ -49,28 +49,25 @@ pub fn register_std_task(c: &mut Checker) {
     define_func(
         c,
         s::STD_TASK_GET_TASK_GROUP_TOKEN,
-        vec![p("Group", group.clone(), false)],
+        vec![p("Group", group.clone())],
         token.clone(),
     );
     define_func(
         c,
         s::STD_TASK_CANCEL_TASK_GROUP,
-        vec![p("Group", group.clone(), false)],
+        vec![p("Group", group.clone())],
         Ty::Boolean,
     );
     define_func(
         c,
         s::STD_TASK_CLOSE_TASK_GROUP,
-        vec![p("Group", group.clone(), false)],
+        vec![p("Group", group.clone())],
         Ty::Array(Box::new(failure.clone())),
     );
     define_func(
         c,
         s::STD_TASK_CLOSE_TASK_GROUP_WITH_TIMEOUT,
-        vec![
-            p("Group", group.clone(), false),
-            p("TimeoutMillis", Ty::Integer, false),
-        ],
+        vec![p("Group", group.clone()), p("TimeoutMillis", Ty::Integer)],
         Ty::Result(
             Box::new(Ty::Array(Box::new(failure.clone()))),
             Box::new(Ty::String),
@@ -79,7 +76,7 @@ pub fn register_std_task(c: &mut Checker) {
     define_func(
         c,
         s::STD_TASK_TRY_CLOSE_COMPLETED_TASK_GROUP,
-        vec![p("Group", group, false)],
+        vec![p("Group", group)],
         Ty::Option(Box::new(Ty::Array(Box::new(failure)))),
     );
 
@@ -92,19 +89,19 @@ pub fn register_std_task(c: &mut Checker) {
     define_func(
         c,
         s::STD_TASK_GET_CANCELLATION_TOKEN,
-        vec![p("Source", source.clone(), false)],
+        vec![p("Source", source.clone())],
         token.clone(),
     );
     define_func(
         c,
         s::STD_TASK_CANCEL,
-        vec![p("Source", source, false)],
+        vec![p("Source", source)],
         Ty::Boolean,
     );
     define_func(
         c,
         s::STD_TASK_IS_CANCELLATION_REQUESTED,
-        vec![p("Token", token, false)],
+        vec![p("Token", token)],
         Ty::Boolean,
     );
 

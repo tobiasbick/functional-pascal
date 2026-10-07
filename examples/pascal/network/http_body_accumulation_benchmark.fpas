@@ -9,18 +9,18 @@ begin
       panic('expected ITERATIONS SIZE URL');
     end;
   end if;
-  var Iterations: integer := StrToInt(ParamStr(0));
-  var Size: integer := StrToInt(ParamStr(1));
-  var Url: string := ParamStr(2);
+  const Iterations: integer := StrToInt(ParamStr(0));
+  const Size: integer := StrToInt(ParamStr(1));
+  const Url: string := ParamStr(2);
   if (Iterations < 1) or (Size < 1) then
     begin
       panic('arguments must be positive');
     end;
   end if;
-  var Started: integer := MonotonicMillis();
+  const Started: integer := MonotonicMillis();
   for Iteration: integer := 1 to Iterations do
     begin
-      var ResponseValue: Response := Std.Results.Unwrap(Send(Request.Get(Url)));
+      const ResponseValue: Response := Std.Results.Unwrap(Send(Request.Get(Url)));
       if Std.Arrays.Length(ResponseValue.Body) <> Size * 128 then
         begin
           panic('body length');

@@ -36,11 +36,15 @@ Read the pages relevant to the change. For exact productions, consult
 
 ## Syntax to keep explicit
 
-- Each type, constant, or variable repeats its own `type`, `const`, `var`, or
-  complete `mutable var` prefix. Repeat `public` on each exported declaration.
-  Bindings use `var` for immutable values and `mutable var` for reassignment.
-  Keep record fields and enum members in their existing syntax; local types
-  and constants are not declaration positions.
+- Each type, constant, or variable repeats its own `type`, `const`, or `var` keyword. Repeat `public` on each exported declaration.
+  Use `const` for immutable values and `var` for reassignment.
+  Parameters and loop variables are read-only; copy a parameter into a fresh
+  local `var` when it needs local changes or shared mutable captures.
+  Computed `const` bindings are allowed inline in statement lists;
+  their initializer runs whenever execution reaches the declaration. Keep record
+  fields and enum members in their existing syntax; local types are not allowed.
+- Scalar `case` value labels and both range endpoints require compile-time
+  constants. Calls and computed bindings belong in guard conditions.
 - Import every referenced unit with `uses`, including fully qualified `Std.*`
   calls. Qualify ambiguous short names with the current unit name from its handbook.
 - Functions return with `return`. Consume function results or use an allowed

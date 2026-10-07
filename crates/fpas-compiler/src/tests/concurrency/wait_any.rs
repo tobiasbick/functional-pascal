@@ -9,7 +9,7 @@ procedure Work();
 begin
 end procedure;
 begin
-  var T: task := go Work();
+  const T: task := go Work();
   discard WaitAnyWithTimeout([T], -1);
 end."#,
     )
@@ -24,7 +24,7 @@ fn controlled_wait_any_preserves_worker_failure() {
         "WithCancellation([T], GetCancellationToken(CreateCancellationSource()))",
     ] {
         let source = format!(
-            "program Failure; uses Std.Tasks; procedure Work(); begin panic('original failure'); end procedure; begin var T: task := go Work(); discard WaitAny{control}; end."
+            "program Failure; uses Std.Tasks; procedure Work(); begin panic('original failure'); end procedure; begin const T: task := go Work(); discard WaitAny{control}; end."
         );
         let error = run_program(&source).expect_err("task failure");
         assert_eq!(error.code, fpas_diagnostics::codes::RUNTIME_PROGRAM_PANIC);
@@ -34,7 +34,7 @@ fn controlled_wait_any_preserves_worker_failure() {
 
 #[test]
 fn wait_any_rejects_an_empty_task_array() {
-    let error = run_program("program EmptyWaitAny; uses Std.Tasks; begin var Tasks: array of task := []; discard WaitAny(Tasks); end.").expect_err("empty list");
+    let error = run_program("program EmptyWaitAny; uses Std.Tasks; begin const Tasks: array of task := []; discard WaitAny(Tasks); end.").expect_err("empty list");
     assert_eq!(error.code, fpas_diagnostics::codes::RUNTIME_INVALID_TASK);
     assert!(error.message.contains("between 1 and 1048576"));
 }
@@ -49,7 +49,7 @@ begin
   panic('original worker failure');
 end procedure;
 begin
-  var T: task := go Work();
+  const T: task := go Work();
   discard WaitAny([T]);
 end."#,
     )
@@ -68,8 +68,8 @@ begin
   return Value;
 end function;
 begin
-  var A: task := go Work(11);
-  var B: task := go Work(22);
+  const A: task := go Work(11);
+  const B: task := go Work(22);
   WaitAll([A, B]);
   if WaitAny([B, A, B]) <> 0 then panic('wrong index'); end if;
   if Wait(B) <> 22 then panic('result consumed'); end if;
@@ -91,12 +91,12 @@ begin
 end function;
 function Parent(): integer;
 begin
-  var Child: task := go Work();
+  const Child: task := go Work();
   if WaitAny([Child]) <> 0 then panic('index'); end if;
   return Wait(Child);
 end function;
 begin
-  var ParentTask: task := go Parent();
+  const ParentTask: task := go Parent();
   if WaitAny([ParentTask]) <> 0 then panic('parent index'); end if;
   if Wait(ParentTask) <> 7 then panic('value'); end if;
 end."#,

@@ -28,7 +28,7 @@ fn semantic_tokens_and_quick_fixes_use_utf16_and_reject_stale_diagnostics() {
         "src/importable.fpas",
         "unit Actions.Importable;\n\npublic function UniqueValue(): integer;\nbegin\n  return 42;\nend function;\nend unit;\n",
     );
-    let source = "program Actions;\n\nuses Actions.Core;\n\nbegin\n  var Music: string := '𝄞' + ExistingText;\n  var Value: integer := UniqueValue();\nend.\n";
+    let source = "program Actions;\n\nuses Actions.Core;\n\nbegin\n  const Music: string := '𝄞' + ExistingText;\n  const Value: integer := UniqueValue();\nend.\n";
     let main_path = temp.write("src/main.fpas", source);
     let root_uri = temp.uri(".");
     let main_uri = temp.uri("src/main.fpas");

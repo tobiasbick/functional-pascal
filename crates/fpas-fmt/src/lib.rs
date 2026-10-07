@@ -84,7 +84,8 @@ mod tests {
 
     #[test]
     fn format_source_preserves_all_comments() {
-        let source = "// Unit doc.\nunit Demo;\n\n// field doc\nmutable var Count: integer := 0;\nend unit;\n";
+        let source =
+            "// Unit doc.\nunit Demo;\n\n// field doc\nvar Count: integer := 0;\nend unit;\n";
         let (unit, errors) = parse_compilation_unit(source);
         assert!(errors.is_empty(), "{errors:?}");
 

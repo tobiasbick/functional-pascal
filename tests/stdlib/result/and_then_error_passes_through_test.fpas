@@ -8,7 +8,7 @@ begin
 end function;
 
 begin
-  var R: result of integer, string := Error('original');
-  var M: result of string, string := AndThen(R, AlwaysOk);
+  const R: result of integer, string := Error('original');
+  const M: result of string, string := AndThen(R, AlwaysOk);
   WriteLn(IsError(M));
 end.

@@ -4,13 +4,13 @@ uses Std.Tasks, Std.Arrays, Std.Results, Std.Test;
 
 procedure VerifyClose(RequestFirst: boolean);
 begin
-  var Group: TaskGroup := CreateTaskGroup();
-  var Ready: channel of boolean := CreateChannel(1);
-  var Empty: channel of integer := CreateChannel(1);
-  var Finished: channel of boolean := CreateChannel(1);
+  const Group: TaskGroup := CreateTaskGroup();
+  const Ready: channel of boolean := CreateChannel(1);
+  const Empty: channel of integer := CreateChannel(1);
+  const Finished: channel of boolean := CreateChannel(1);
   // Discard both handles: group ownership must retain the child and grandchild.
-  var ParentTask: task := StartTaskInGroup(Group, procedure(Token: CancellationToken) begin
-    var ChildTask: task := StartTaskInGroup(Group, procedure(ChildToken: CancellationToken) begin
+  const ParentTask: task := StartTaskInGroup(Group, procedure(Token: CancellationToken) begin
+    const ChildTask: task := StartTaskInGroup(Group, procedure(ChildToken: CancellationToken) begin
       case ReceiveWithCancellation(Empty, ChildToken) of
         when Ok(_):
           begin

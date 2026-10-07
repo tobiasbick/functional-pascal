@@ -50,11 +50,17 @@ pub(super) fn collect_statement_symbols(
 ) {
     for statement in statements {
         match statement {
-            Stmt::Var(value) | Stmt::MutableVar(value) => {
-                let declaration = if matches!(statement, Stmt::Var(_)) {
-                    Decl::Var(value.clone())
+            Stmt::Const(value) | Stmt::Var(value) => {
+                let declaration = if matches!(statement, Stmt::Const(_)) {
+                    Decl::Const(fpas_parser::ConstDef {
+                        name: value.name.clone(),
+                        type_expr: value.type_expr.clone(),
+                        value: value.value.clone(),
+                        visibility: value.visibility,
+                        span: value.span,
+                    })
                 } else {
-                    Decl::MutableVar(value.clone())
+                    Decl::Var(value.clone())
                 };
                 output.push(declaration_symbol(
                     snapshot,
@@ -238,8 +244,7 @@ fn parameter_symbol(
         Visibility::Private,
         named_type(&param.type_expr),
         format!(
-            "{}parameter {}: {}",
-            if param.mutable { "mutable " } else { "" },
+            "parameter {}: {}",
             param.name,
             type_text(snapshot, &param.type_expr)
         ),

@@ -18,18 +18,18 @@ type
     Scores: dict of string to integer;
   end record;
 
-mutable var
+var
   GlobalScores: dict of string to integer := ['Root': 7];
 
 begin
-  mutable var Scores: dict of string to integer := [
+  var Scores: dict of string to integer := [
     'Ada': 1,
     'Grace': 2,
     'Linus': 3
   ];
-  var FixedScores: dict of string to integer := ['Fixed': 5];
-  mutable var NestedValues: dict of string to array of integer := [:];
-  mutable var Rows: array of Row := [
+  const FixedScores: dict of string to integer := ['Fixed': 5];
+  var NestedValues: dict of string to array of integer := [:];
+  var Rows: array of Row := [
     record
       Scores := ['Left': 10];
     end,

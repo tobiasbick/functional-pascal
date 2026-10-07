@@ -53,7 +53,7 @@ fn type_mismatch_has_correct_code() {
         "\
 program T;
 begin
-  var N: integer := 'hello';
+  const N: integer := 'hello';
 end.",
     );
     assert!(

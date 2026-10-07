@@ -20,7 +20,7 @@ end function;
 
 function MakeCounter(Start: integer): function(): integer;
 begin
-  mutable var Current: integer := Start;
+  var Current: integer := Start;
   return function(): integer begin
     Current := Current + 1;
     return Current;
@@ -28,12 +28,12 @@ begin
 end function;
 
 begin
-  var Origin: Point := record
+  const Origin: Point := record
     X := 3;
     Y := 4;
   end;
-  var Counter: function(): integer := MakeCounter(10);
-  var Values: array of integer := [Origin.X, Origin.Y, Factorial(4)];
+  const Counter: function(): integer := MakeCounter(10);
+  const Values: array of integer := [Origin.X, Origin.Y, Factorial(4)];
   WriteLn(Values);
   WriteLn(Counter());
 end.

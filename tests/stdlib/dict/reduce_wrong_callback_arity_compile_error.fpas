@@ -8,6 +8,6 @@ begin
 end function;
 
 begin
-  var Values: dict of string to integer := ['A': 1];
-  var Total: integer := Reduce(Values, 0, Wrong);
+  const Values: dict of string to integer := ['A': 1];
+  const Total: integer := Reduce(Values, 0, Wrong);
 end.

@@ -3,8 +3,8 @@ program TomlParseArraysOfTablesAndEdgeValuesTest;
 uses Std.Arrays, Std.Dictionaries, Std.Options, Std.Str, Std.Test, Std.Toml;
 
 begin
-  var Parsed: result of TomlValue, string := Parse(((((((((((((('empty = []' + Chr(10)) + 'special = nan') + Chr(10)) + 'point.x = 1') + Chr(10)) + 'point.y = 2') + Chr(10)) + '[[products]]') + Chr(10)) + 'name = ''Hammer''') + Chr(10)) + '[[products]]') + Chr(10)) +
-                                                   'name = ''Nail''');
+  const Parsed: result of TomlValue, string := Parse(((((((((((((('empty = []' + Chr(10)) + 'special = nan') + Chr(10)) + 'point.x = 1') + Chr(10)) + 'point.y = 2') + Chr(10)) + '[[products]]') + Chr(10)) + 'name = ''Hammer''') + Chr(10)) + '[[products]]') + Chr(10)) +
+                                                     'name = ''Nail''');
   case Parsed of
     when Ok(Value):
       begin

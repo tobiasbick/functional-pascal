@@ -7,20 +7,20 @@ uses
 
 function Echo(Client: Connection; Token: CancellationToken): result of boolean, string;
 begin
-  var Configured: boolean := try SetTimeout(Client, 5000);
+  const Configured: boolean := try SetTimeout(Client, 5000);
   while not IsCancellationRequested(Token) do
     begin
-      var Bytes: array of integer := try ReceiveBytesWithCancellation(Client, 4096, Token);
+      const Bytes: array of integer := try ReceiveBytesWithCancellation(Client, 4096, Token);
       if Length(Bytes) = 0 then
         begin
           return Ok(true);
         end;
       end if;
-      mutable var Offset: integer := 0;
+      var Offset: integer := 0;
       while Offset < Length(Bytes) do
         begin
-          var Count: integer := try SendBytesWithCancellation(Client, Slice(Bytes, Offset, Length(Bytes) -
-                                                                                           Offset), Token);
+          const Count: integer := try SendBytesWithCancellation(Client, Slice(Bytes, Offset, Length(Bytes) -
+                                                                                             Offset), Token);
           if Count <= 0 then
             begin
               return Error('TCP write made no progress');
@@ -37,8 +37,8 @@ begin
 end function;
 
 begin
-  mutable var Port: integer := 18082;
-  mutable var LifetimeMillis: integer := 10000;
+  var Port: integer := 18082;
+  var LifetimeMillis: integer := 10000;
   if ParamCount() > 2 then
     begin
       panic('usage: tcp_parallel_echo_server.fpas -- [PORT [LIFETIME_MS]]');
@@ -62,22 +62,22 @@ begin
       panic('LIFETIME_MS must be 1..300000');
     end;
   end if;
-  var ListenerValue: Listener := Unwrap(Listen('127.0.0.1', Port));
-  var Life: ServerLifetime := Unwrap(CreateLifetime(1000, true));
+  const ListenerValue: Listener := Unwrap(Listen('127.0.0.1', Port));
+  const Life: ServerLifetime := Unwrap(CreateLifetime(1000, true));
   discard Unwrap(OwnListener(Life, ListenerValue));
   discard Unwrap(ObserveSignals(Life));
-  var Workers: TaskGroup := GetWorkGroup(Life);
+  const Workers: TaskGroup := GetWorkGroup(Life);
   for Index: integer := 1 to 4 do
     begin
-      var ConnectionTask: task := StartTaskInGroup(Workers, function(Token: CancellationToken): result of boolean, string begin
+      const ConnectionTask: task := StartTaskInGroup(Workers, function(Token: CancellationToken): result of boolean, string begin
         while not IsCancellationRequested(Token) do
           begin
             case AcceptWithCancellation(ListenerValue, Token) of
               when Ok(Client):
                 begin
-                  var Outcome: result of boolean, string := Echo(Client, Token);
+                  const Outcome: result of boolean, string := Echo(Client, Token);
                   // Close even on read/write failure. One failed client does not stop admission.
-                  var Closed: boolean := try Close(Client);
+                  const Closed: boolean := try Close(Client);
                   case Outcome of
                     when Error(Message):
                       begin
@@ -113,7 +113,7 @@ begin
   end for;
 
   WriteLn('Parallel TCP echo ready');
-  var Started: integer := MonotonicMillis();
+  const Started: integer := MonotonicMillis();
   while IsReady(Life) and (ElapsedMillis(Started) < LifetimeMillis) do
     begin
       Sleep(10);
@@ -121,7 +121,7 @@ begin
   end while;
 
   discard RequestStop(Life);
-  mutable var Failures: array of TaskFailure := [];
+  var Failures: array of TaskFailure := [];
   case CloseTaskGroupWithTimeout(Workers, RemainingMillis(Life)) of
     when Ok(Reports):
       begin

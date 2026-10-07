@@ -23,7 +23,7 @@ end enum;
 Using:
 
 ```pascal
-var C: Color := Color.Red;
+const C: Color := Color.Red;
 ```
 
 When a program defines only one enum, unqualified variant names such as `Red` may also resolve if the short name is unique. If two enums export the same variant name (for example both define `Red`), the short name becomes ambiguous: the compiler reports an error and you must use fully qualified names such as `Color.Red` and `Status.Red`. A type with the same short name hides the variant's short name, whether declared in the same unit or imported: the variant stays reachable only as `Type.Variant`.
@@ -69,9 +69,9 @@ end enum;
 Variants with fields are constructed by calling the variant with positional arguments:
 
 ```pascal
-var S: Shape := Shape.Circle(5.0);
-var R: Shape := Shape.Rectangle(10.0, 20.0);
-var P: Shape := Shape.Point;
+const S: Shape := Shape.Circle(5.0);
+const R: Shape := Shape.Rectangle(10.0, 20.0);
+const P: Shape := Shape.Point;
 ```
 
 Destructuring uses `case`:

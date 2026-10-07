@@ -5,16 +5,16 @@
 Formal syntax: [`grammar.ebnf`](../../../specs/grammar.ebnf) (`type_expr` — `dict of`, dict literals, indexing).
 
 ```pascal
-var Ages: dict of string to integer := ['Alice': 30, 'Bob': 25];
-var Empty: dict of string to integer := [:];
+const Ages: dict of string to integer := ['Alice': 30, 'Bob': 25];
+const Empty: dict of string to integer := [:];
 
-var AliceAge: integer := Ages['Alice'];
+const AliceAge: integer := Ages['Alice'];
 ```
 
 Dictionary writes require a mutable binding:
 
 ```pascal
-mutable var
+var
   Counts: dict of string to integer := ['A': 1];
 
 begin

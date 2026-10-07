@@ -134,10 +134,10 @@ fields, wrapper `.value`, and array or dictionary indexes, for example
 `Counter`, `Origin.X`, `choice.count`, `result.value`, `optional.value`,
 `State.Items[Selected].Value`, or `Scores['blue']`. Root and field lookup is
 ASCII case-insensitive. Omitting a frame deliberately searches globals only;
-a local, parameter, or capture requires a current frame and is resolved with
+a local or capture requires a current frame and is resolved with
 normal lexical shadowing.
 
-Both forms accept mutable source locals, mutable parameters, mutable globals,
+Both forms accept mutable source locals, mutable globals,
 and mutable captures backed by an existing closure cell. A visible
 source-declared mutable local or global that has not yet received a value can
 be assigned one complete replacement through the same operations. Complete mutable enum,
@@ -179,7 +179,7 @@ or task-bound functions are rejected before mutation.
 Copying a binding shares the exact existing function and capture storage and
 does not reconstruct its environment. An already materialized task-bound
 function can be copied only within its selected owner task, onto a mutable
-local or parameter register in the same selected frame. Assigning a capturing nested routine constructs a
+local register in the same selected frame. Assigning a capturing nested routine constructs a
 new function value from verified capture provenance and the selected owner
 frame; it does not search older, peer-task, or similarly named frames.
 Immutable captures clone values. `Cell` and `EnclosingCell` captures clone the
@@ -188,7 +188,7 @@ that captures a cell is task-bound to the selected stopped task: later
 invocation on another task fails before callee entry, and `go` rejects it.
 Every capture source must be initialized and visible in that frame.
 Task-bound construction and copying write only a source-declared mutable function-typed
-local or parameter register in that same frame; globals, capture-cell roots,
+local register in that same frame; globals, capture-cell roots,
 aggregate descendants, and Dynamic endpoints remain rejected for those values.
 A simple name uses ordinary lexical lookup first;
 the executable catalog is consulted only after that lookup reports an unknown
@@ -236,7 +236,7 @@ old key and missing, different new key; it preserves the value and iteration
 position. Each operation addresses a complete dictionary container through the
 same bounded textual target form, validates key and value expressions against
 portable `dict of K to V` metadata, and commits one mutable root atomically.
-The operations support locals, mutable parameters, globals, closure captures,
+The operations support locals, globals, closure captures,
 nested aggregate paths, and stopped task frames. Success expires all inspection
 references; every failure preserves both live state and existing references.
 
@@ -249,7 +249,7 @@ returns the old and new characters. These operations are available through
 JSONL, matching DAP custom requests, and three Functional Pascal VS Code
 commands. An unchanged character is rejected without writing.
 
-Immutable bindings, compiler-hidden storage,
+Value parameters, immutable bindings, compiler-hidden storage,
 evaluation-only results, synthetic function children such as `receiver` and
 `capture[i]`, function captures,
 and opaque hosted values are not
@@ -260,7 +260,7 @@ are immutable values or existing mutable cells from the selected lexical-owner
 frame — onto a structurally
 compatible mutable function-typed path. Constructed cell-capturing functions
 are task-bound to the selected task. They can be copied only within that owner
-task and may be stored only in a mutable local or parameter register of the
+task and may be stored only in a mutable local register of the
 selected owner frame. Task handles are writable by copying
 one visible initialized binding whose declared task result type matches the
 destination; the copy preserves the runtime ID and does not change scheduler

@@ -92,8 +92,8 @@ end function;
 
 Methods and nested routines follow the function/procedure rules. Anonymous
 procedures use the corresponding `procedure ... end procedure` expression form.
-Record literals are removed by AP10. `if`/`case` expressions are implemented by
-AP21 and task scopes by AP26.
+Record literals will be removed by AP10. `if`/`case` expressions remain planned
+in AP21, and task scopes in AP26.
 
 The following draft passes an anonymous function to a routine named `Apply`.
 The final `;` terminates the call statement, not the anonymous function:

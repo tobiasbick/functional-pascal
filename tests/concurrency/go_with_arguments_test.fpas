@@ -8,6 +8,6 @@ begin
 end function;
 
 begin
-  var T: task := go Add(10, 32);
+  const T: task := go Add(10, 32);
   AssertEquals(42, Std.Tasks.Wait(T));
 end.

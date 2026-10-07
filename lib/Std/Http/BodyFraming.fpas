@@ -17,10 +17,10 @@ end record;
 // - `Headers`: Parsed message fields used to determine framing.
 public function Select(Headers: array of Header): result of Framing, string;
 begin
-  mutable var TransferEncoding: string := '';
-  mutable var TransferEncodingCount: integer := 0;
-  mutable var ContentLength: integer := 0;
-  mutable var ContentLengthCount: integer := 0;
+  var TransferEncoding: string := '';
+  var TransferEncodingCount: integer := 0;
+  var ContentLength: integer := 0;
+  var ContentLengthCount: integer := 0;
   for Index: integer := 0 to Std.Arrays.Length(Headers) - 1 do
     begin
       if Std.Http.Headers.IsName(Headers[Index].Name, 'Transfer-Encoding') then

@@ -60,21 +60,21 @@ end function;
 // Loads valid notes and preserves invalid files as visible issues.
 public function NotesLoadDirectory(Directory: string): result of NotesLoad, string;
 begin
-  var DirectoryReady: boolean := try NotesEnsureDirectory(Directory);
-  var Paths: array of string := try Std.Fs.Glob(NoteDirectoryPattern(Directory));
-  mutable var Notes: array of Note := [];
-  mutable var IdCounts: dict of string to integer := [:];
-  mutable var Issues: array of NoteIssue := [];
+  const DirectoryReady: boolean := try NotesEnsureDirectory(Directory);
+  const Paths: array of string := try Std.Fs.Glob(NoteDirectoryPattern(Directory));
+  var Notes: array of Note := [];
+  var IdCounts: dict of string to integer := [:];
+  var Issues: array of NoteIssue := [];
   for Index: integer := 0 to Std.Arrays.Length(Paths) - 1 do
     begin
-      var Path: string := Paths[Index];
+      const Path: string := Paths[Index];
       case Std.Fs.ReadText(Path) of
         when Ok(Text):
           begin
             case NoteParse(Text) of
               when Ok(NoteValue):
                 begin
-                  mutable var Loaded: Note := NoteValue;
+                  var Loaded: Note := NoteValue;
                   Loaded.Path := Path;
                   Std.Arrays.Push(Notes, Loaded);
                   if Std.Dictionaries.ContainsKey(IdCounts, Loaded.Id) then
@@ -106,7 +106,7 @@ begin
       end case;
     end;
   end for;
-  mutable var Unique: array of Note := [];
+  var Unique: array of Note := [];
   for Loaded: Note in Notes do
     begin
       if IdCounts[Loaded.Id] > 1 then
@@ -133,14 +133,14 @@ end function;
 // Atomically writes one note to its stable file path.
 public function NotesSave(Directory: string; NoteValue: Note): result of boolean, string;
 begin
-  var DirectoryReady: boolean := try NotesEnsureDirectory(Directory);
+  const DirectoryReady: boolean := try NotesEnsureDirectory(Directory);
   return Std.Fs.WriteTextAtomic(NoteFilePath(Directory, NoteValue), NoteStringify(NoteValue));
 end function;
 
 // Generates an unused timestamp-and-random identity in one directory.
 public function NotesCreateId(Directory: string; TimestampMillis: integer): string;
 begin
-  mutable var Candidate: string := '';
+  var Candidate: string := '';
   repeat
     Candidate := (IntToStr(TimestampMillis) + '-') + IntToStr(Std.Random.RandomInt(100000, 999999));
   until not Std.Fs.Exists(Std.Path.Join([Directory, Candidate + '.note']));
@@ -150,7 +150,7 @@ end function;
 // Creates an in-memory draft with a new identity and current timestamp.
 public function NotesCreateDraft(Directory: string): Note;
 begin
-  var Now: integer := Std.Time.TimestampMillis();
+  const Now: integer := Std.Time.TimestampMillis();
   return NoteCreate(NotesCreateId(Directory, Now), Now);
 end function;
 end unit;

@@ -17,8 +17,8 @@ function FindGlyph(Snapshot: TuiSurfaceSnapshot; Glyph: string): TuiPoint;
 begin
   for Y: integer := 0 to Snapshot.Height - 1 do
     begin
-      var Line: string := Snapshot.LineAt(Y);
-      var Index: integer := Std.Str.IndexOf(Line, Glyph);
+      const Line: string := Snapshot.LineAt(Y);
+      const Index: integer := Std.Str.IndexOf(Line, Glyph);
       if Index >= 0 then
         begin
           return TuiPoint.Create(Index, Y);
@@ -81,15 +81,15 @@ begin
 end function;
 
 begin
-  mutable var App: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(24, 8));
-  mutable var Model: CheckModel := record
+  var App: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(24, 8));
+  var Model: CheckModel := record
     Focus := 2;
     Checked := false;
     Changes := [];
   end;
 
   Model := App.RunIterations(Model, UpdateCheck, ViewCheck, 0, 0);
-  var FlagAt: TuiPoint := FindGlyph(App.SurfaceSnapshot(), 'Flag');
+  const FlagAt: TuiPoint := FindGlyph(App.SurfaceSnapshot(), 'Flag');
   App.InjectPointerForTest(MakePointer(FlagAt.X, FlagAt.Y));
   Model := App.RunIterations(Model, UpdateCheck, ViewCheck, 2, 0);
   AssertEquals(1, Model.Focus);

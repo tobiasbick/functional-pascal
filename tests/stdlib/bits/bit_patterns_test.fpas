@@ -9,8 +9,8 @@ begin
   AssertEquals(-13, BitNot(12));
   AssertEquals(-1, BitNot(0));
   AssertEquals(0, BitNot(-1));
-  var Minimum: integer := -9223372036854775807 - 1;
-  var Maximum: integer := 9223372036854775807;
+  const Minimum: integer := -9223372036854775807 - 1;
+  const Maximum: integer := 9223372036854775807;
   AssertEquals(0, BitAnd(Minimum, Maximum));
   AssertEquals(-1, BitOr(Minimum, Maximum));
   AssertEquals(Maximum, BitXor(Minimum, -1));

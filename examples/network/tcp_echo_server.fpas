@@ -28,8 +28,8 @@ end function;
 // - `ConnectionValue`: Open TCP connection.
 function ReadLine(ConnectionValue: Connection): string;
 begin
-  mutable var Bytes: array of integer := [];
-  mutable var LineEnd: integer := -1;
+  var Bytes: array of integer := [];
+  var LineEnd: integer := -1;
   while LineEnd < 0 do
     begin
       case Std.Net.ReceiveBytes(ConnectionValue, 4096) of
@@ -57,7 +57,7 @@ begin
       panic('TCP echo server accepts exactly one LF-delimited request per connection');
     end;
   end if;
-  var TextBytes: array of integer := Std.Arrays.Slice(Bytes, 0, LineEnd);
+  const TextBytes: array of integer := Std.Arrays.Slice(Bytes, 0, LineEnd);
   case Std.Net.Utf8.Decode(TextBytes) of
     when Ok(Text):
       begin
@@ -77,11 +77,11 @@ end function;
 // - `Bytes`: Complete byte sequence to write.
 procedure WriteAll(ConnectionValue: Connection; Bytes: array of integer);
 begin
-  mutable var Offset: integer := 0;
+  var Offset: integer := 0;
   while Offset < Std.Arrays.Length(Bytes) do
     begin
-      var Remaining: array of integer := Std.Arrays.Slice(Bytes, Offset, Std.Arrays.Length(Bytes) -
-                                                                         Offset);
+      const Remaining: array of integer := Std.Arrays.Slice(Bytes, Offset, Std.Arrays.Length(Bytes) -
+                                                                           Offset);
       case Std.Net.SendBytes(ConnectionValue, Remaining) of
         when Ok(Count):
           begin
@@ -103,7 +103,7 @@ begin
 end procedure;
 
 begin
-  mutable var Port: integer := 18081;
+  var Port: integer := 18081;
   if ParamCount() = 1 then
     begin
       Port := StrToInt(ParamStr(0));
@@ -130,7 +130,7 @@ begin
                     panic(Message);
                   end;
               end case;
-              var Text: string := ReadLine(ConnectionValue);
+              const Text: string := ReadLine(ConnectionValue);
               WriteAll(ConnectionValue, Std.Net.Utf8.Encode('Echo: ' + Text));
               case Close(ConnectionValue) of
                 when Ok(_):

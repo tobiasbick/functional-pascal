@@ -10,8 +10,8 @@ begin
   return X * 2;
 end function;
 
-var Nums: array of integer := [1, 2, 3];
-var Doubled: array of integer := Map(Nums, Double);
+const Nums: array of integer := [1, 2, 3];
+const Doubled: array of integer := Map(Nums, Double);
 ```
 
 ---
@@ -26,8 +26,8 @@ begin
   return X mod 2 = 0;
 end function;
 
-var Nums: array of integer := [1, 2, 3, 4, 5];
-var Evens: array of integer := Filter(Nums, IsEven);
+const Nums: array of integer := [1, 2, 3, 4, 5];
+const Evens: array of integer := Filter(Nums, IsEven);
 ```
 
 ---
@@ -42,8 +42,8 @@ begin
   return Acc + V;
 end function;
 
-var Nums: array of integer := [1, 2, 3, 4, 5];
-var Total: integer := Reduce(Nums, 0, Sum);
+const Nums: array of integer := [1, 2, 3, 4, 5];
+const Total: integer := Reduce(Nums, 0, Sum);
 ```
 
 ---
@@ -58,8 +58,8 @@ begin
   return X > 3;
 end function;
 
-var Nums: array of integer := [1, 2, 3, 4, 5];
-var First: Option of integer := Find(Nums, IsAboveThree);
+const Nums: array of integer := [1, 2, 3, 4, 5];
+const First: Option of integer := Find(Nums, IsAboveThree);
 // Some(4)
 ```
 
@@ -75,7 +75,7 @@ begin
   return X > 15;
 end function;
 
-var Idx: integer := FindIndex([10, 20, 30], IsAboveFifteen);
+const Idx: integer := FindIndex([10, 20, 30], IsAboveFifteen);
 WriteLn(Idx)  // 1
 ```
 
@@ -91,7 +91,7 @@ begin
   return X < 0;
 end function;
 
-var HasNeg: boolean := Any([1, -2, 3], IsNegative);
+const HasNeg: boolean := Any([1, -2, 3], IsNegative);
 WriteLn(HasNeg)  // true
 ```
 
@@ -107,7 +107,7 @@ begin
   return X > 0;
 end function;
 
-var AllPos: boolean := All([1, 2, 3], IsPositive);
+const AllPos: boolean := All([1, 2, 3], IsPositive);
 WriteLn(AllPos)  // true
 ```
 

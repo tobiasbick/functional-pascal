@@ -30,7 +30,7 @@ code supplies the referenced types and values:
 const P := Point(X := 1, Y := 2);
 const Limit := 100;
 const Level := Percent(Input);
-const Name: string := Text.Trim(Input);   // ordinary call: annotation required
+const Name: string := Normalize(Input);   // ordinary call: annotation required
 ```
 
 ## Open decisions

@@ -40,6 +40,7 @@ impl Checker {
 
         let is_nested = self.scopes.scope_count() > 1;
         let symbol = Symbol {
+            constant: None,
             ty: func_ty,
             mutable: false,
             kind: SymbolKind::Function,
@@ -87,6 +88,7 @@ impl Checker {
 
         let is_nested = self.scopes.scope_count() > 1;
         let symbol = Symbol {
+            constant: None,
             ty: proc_ty,
             mutable: false,
             kind: SymbolKind::Procedure,
@@ -117,7 +119,6 @@ impl Checker {
         params
             .iter()
             .map(|p| ParamTy {
-                mutable: p.mutable,
                 name: p.name.clone(),
                 ty: self.resolve_type_expr(&p.type_expr),
             })
@@ -150,6 +151,7 @@ impl Checker {
             self.scopes.define(
                 &tp.name,
                 Symbol {
+                    constant: None,
                     ty: Ty::GenericParam(tp.name.clone(), constraint),
                     mutable: false,
                     kind: SymbolKind::Type,
@@ -162,14 +164,15 @@ impl Checker {
             self.scopes.define_with_declaration(
                 &p.name,
                 Symbol {
+                    constant: None,
                     ty: p.ty.clone(),
-                    mutable: p.mutable,
+                    mutable: false,
                     kind: SymbolKind::Param,
                     task_bound: false,
                 },
                 source.span,
             );
-            self.record_binding_discard_info(&p.name, &p.ty, p.mutable, None);
+            self.record_binding_discard_info(&p.name, &p.ty, false, None);
         }
 
         let prev_ctx = self.scopes.function_ctx.take();
@@ -229,17 +232,36 @@ impl Checker {
         let mut names = Vec::new();
         for stmt in stmts {
             let (variable, mutable) = match stmt {
-                Stmt::Var(variable) => (variable, false),
-                Stmt::MutableVar(variable) => (variable, true),
+                Stmt::Const(variable) => (variable, false),
+                Stmt::Var(variable) => (variable, true),
                 _ => continue,
             };
             let ty = self.resolve_type_expr(&variable.type_expr);
+            let constant = matches!(stmt, Stmt::Const(_)).then(|| {
+                // Nested routines can use static enclosing constants in labels before
+                // the enclosing statement list is checked in execution order.
+                let compile_time =
+                    self.const_initializer_is_compile_time_known(&variable.value, &ty);
+                crate::scope::ConstantInfo {
+                    compile_time,
+                    value: if compile_time {
+                        self.scalar_constant_value(&variable.value)
+                    } else {
+                        None
+                    },
+                }
+            });
             let defined = self.scopes.define_with_declaration(
                 &variable.name,
                 Symbol {
+                    constant,
                     ty: ty.clone(),
                     mutable,
-                    kind: SymbolKind::Var,
+                    kind: if matches!(stmt, Stmt::Const(_)) {
+                        SymbolKind::Const
+                    } else {
+                        SymbolKind::Var
+                    },
                     task_bound: false,
                 },
                 variable.span,

@@ -13,7 +13,7 @@ begin
   AssertTrue(true or UnexpectedCall());
   AssertFalse(false and (1 div 0 > 0));
   AssertTrue(true or (1 div 0 > 0));
-  var Values: array of integer := [];
+  const Values: array of integer := [];
   AssertFalse(false and (Values[0] = 1));
   AssertTrue(true or (Values[0] = 1));
 end.

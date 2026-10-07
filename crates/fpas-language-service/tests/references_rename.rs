@@ -15,7 +15,7 @@ fn references_find_cross_unit_uses_and_optionally_include_the_declaration() {
     let temp = TempDirectory::new("references-project");
     let (manifest, main, unit) = write_program_project(&temp);
     let unit_source = "unit Demo.Math;\n\npublic function Answer(): integer;\nbegin return 42; end function;\nend unit;\n";
-    let main_source = "program App;\n\nuses Demo.Math;\n\nbegin\n  var A: integer := Answer();\n  var B: integer := Demo.Math.Answer();\n  var Text: string := 'Answer';\n  // Answer()\nend.\n";
+    let main_source = "program App;\n\nuses Demo.Math;\n\nbegin\n  const A: integer := Answer();\n  const B: integer := Demo.Math.Answer();\n  const Text: string := 'Answer';\n  // Answer()\nend.\n";
     std::fs::write(&unit, unit_source).expect("write unit");
     std::fs::write(&main, main_source).expect("write program");
     let mut service = LanguageService::load(&manifest);
@@ -43,7 +43,7 @@ fn references_find_cross_unit_uses_and_optionally_include_the_declaration() {
 #[test]
 fn references_preserve_lexical_shadowing() {
     let temp = TempDirectory::new("references-shadowing");
-    let source = "program Local;\n\nvar Value: integer := 1;\n\nfunction ReadValue(Value: integer): integer;\nbegin\n  return Value;\nend function;\n\nbegin\n  var Result: integer := Value;\nend.\n";
+    let source = "program Local;\n\nconst Value: integer := 1;\n\nfunction ReadValue(Value: integer): integer;\nbegin\n  return Value;\nend function;\n\nbegin\n  const Result: integer := Value;\nend.\n";
     let path = temp.write("local.fpas", source);
     let mut service = LanguageService::new(WorkspaceContext::loose(temp.path()));
     let parameter_use = source.find("return Value").expect("parameter reference") + 7;
@@ -62,7 +62,7 @@ fn rename_produces_cross_unit_edits_for_declaration_and_uses() {
     let temp = TempDirectory::new("rename-project");
     let (manifest, main, unit) = write_program_project(&temp);
     let unit_source = "unit Demo.Math;\n\npublic function Answer(): integer;\nbegin return 42; end function;\nend unit;\n";
-    let main_source = "program App;\n\nuses Demo.Math;\n\nbegin\n  var A: integer := Answer();\n  var B: integer := Demo.Math.Answer();\nend.\n";
+    let main_source = "program App;\n\nuses Demo.Math;\n\nbegin\n  const A: integer := Answer();\n  const B: integer := Demo.Math.Answer();\nend.\n";
     std::fs::write(&unit, unit_source).expect("write unit");
     std::fs::write(&main, main_source).expect("write program");
     let mut service = LanguageService::load(&manifest);
@@ -84,7 +84,7 @@ fn reference_and_rename_spans_keep_the_snapshot_used_by_navigation() {
     let (manifest, main, unit) = write_program_project(&temp);
     let unit_source = "unit Demo.Math;\n\npublic function Answer(): integer;\nbegin return 42; end function;\nend unit;\n";
     let main_source =
-        "program App;\n\nuses Demo.Math;\n\nbegin var Value: integer := Answer(); end.\n";
+        "program App;\n\nuses Demo.Math;\n\nbegin const Value: integer := Answer(); end.\n";
     std::fs::write(&unit, unit_source).expect("write unit");
     std::fs::write(&main, main_source).expect("write program");
     let mut service = LanguageService::load(&manifest);
@@ -127,7 +127,7 @@ fn reference_and_rename_spans_keep_the_snapshot_used_by_navigation() {
 #[test]
 fn rename_rejects_keywords_and_same_scope_conflicts() {
     let temp = TempDirectory::new("rename-validation");
-    let source = "program Validation;\n\nvar Value: integer := 1;\nvar Other: integer := 2;\n\nbegin\n  var Result: integer := Value;\nend.\n";
+    let source = "program Validation;\n\nconst Value: integer := 1;\nconst Other: integer := 2;\n\nbegin\n  const Result: integer := Value;\nend.\n";
     let path = temp.write("validation.fpas", source);
     let mut service = LanguageService::new(WorkspaceContext::loose(temp.path()));
     let offset = source.rfind("Value").expect("value reference");
@@ -155,7 +155,7 @@ fn rename_rejects_keywords_and_same_scope_conflicts() {
 #[test]
 fn rename_rejects_non_ascii_identifiers() {
     let temp = TempDirectory::new("rename-non-ascii");
-    let source = "program Validation;\n\nvar Value: integer := 1;\n\nbegin\n  var Result: integer := Value;\nend.\n";
+    let source = "program Validation;\n\nconst Value: integer := 1;\n\nbegin\n  const Result: integer := Value;\nend.\n";
     let path = temp.write("validation.fpas", source);
     let mut service = LanguageService::new(WorkspaceContext::loose(temp.path()));
     let offset = source.rfind("Value").expect("value reference");
@@ -187,7 +187,7 @@ fn rename_rejects_compilation_units_and_dependencies_outside_the_editor_root() {
         "[project]\nname = \"app\"\nkind = \"program\"\nmain = \"src/main.fpas\"\n\n[dependencies]\nprojects = [\"../lib/lib.fpasprj\"]\n\n[sources]\ninclude = [\"src/**/*.fpas\"]\n",
     );
     let main_source =
-        "program App;\n\nuses Demo.Math;\n\nbegin\n  var Value: integer := Answer();\nend.\n";
+        "program App;\n\nuses Demo.Math;\n\nbegin\n  const Value: integer := Answer();\nend.\n";
     let main = temp.write("app/src/main.fpas", main_source);
     assert!(library.exists() && unit.exists());
     let mut service = LanguageService::load(&manifest);
@@ -222,7 +222,7 @@ fn rename_rejects_reverse_consumers_outside_the_editor_root() {
     );
     let main = temp.write(
         "app/src/main.fpas",
-        "program App;\n\nuses Demo.Math;\n\nbegin\n  var Value: integer := Answer();\nend.\n",
+        "program App;\n\nuses Demo.Math;\n\nbegin\n  const Value: integer := Answer();\nend.\n",
     );
     let mut service = LanguageService::load(&library);
     service

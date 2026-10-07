@@ -98,11 +98,11 @@ end function;
 
 function ViewDemo(State: DemoModel): TuiElement;
 begin
-  var Input: TuiElement := TuiElementBuilders.MakeInput(TuiControlId.Create(1), State.Text, State.Caret, TuiAction.Create(1));
-  var Confirm: TuiElement := TuiElementBuilders.MakeButton(TuiControlId.Create(2), 'Confirm', TuiAction.Create(2));
-  var Quit: TuiElement := TuiElementBuilders.MakeButton(TuiControlId.Create(3), 'Quit', TuiAction.Create(3));
-  mutable var Content: array of TuiElement := [Input, Confirm, Quit];
-  mutable var Focused: option of TuiControlId := Some(TuiControlId.Create(1));
+  const Input: TuiElement := TuiElementBuilders.MakeInput(TuiControlId.Create(1), State.Text, State.Caret, TuiAction.Create(1));
+  const Confirm: TuiElement := TuiElementBuilders.MakeButton(TuiControlId.Create(2), 'Confirm', TuiAction.Create(2));
+  const Quit: TuiElement := TuiElementBuilders.MakeButton(TuiControlId.Create(3), 'Quit', TuiAction.Create(3));
+  var Content: array of TuiElement := [Input, Confirm, Quit];
+  var Focused: option of TuiControlId := Some(TuiControlId.Create(1));
   if State.Confirming then
     begin
       Content := [

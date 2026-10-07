@@ -10,12 +10,12 @@ pub(super) fn register_std_time(checker: &mut Checker) {
     define_func(
         checker,
         s::STD_TIME_ELAPSED_MILLIS,
-        vec![p("Start", Ty::Integer, false)],
+        vec![p("Start", Ty::Integer)],
         Ty::Integer,
     );
     define_proc(
         checker,
         s::STD_TIME_SLEEP,
-        vec![p("Milliseconds", Ty::Integer, false)],
+        vec![p("Milliseconds", Ty::Integer)],
     );
 }

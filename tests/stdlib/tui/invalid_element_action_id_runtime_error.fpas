@@ -9,7 +9,7 @@ end function;
 
 function View(State: integer): TuiElement;
 begin
-  var InvalidAction: TuiAction := record
+  const InvalidAction: TuiAction := record
     Value := 0;
   end;
 
@@ -17,6 +17,6 @@ begin
 end function;
 
 begin
-  mutable var App: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(20, 4));
+  var App: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(20, 4));
   discard App.RunIterations(0, Update, View, 0, 0);
 end.

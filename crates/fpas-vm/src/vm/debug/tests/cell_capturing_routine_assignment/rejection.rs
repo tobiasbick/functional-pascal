@@ -9,7 +9,7 @@ fn preserved_identity(session: &mut DebugSession, frame: u64) -> String {
 #[test]
 fn wrong_owner_stale_and_uninitialized_cell_sources_are_atomic() {
     let mut session = DebugSession::new(compile_fixture()).expect("debug session");
-    let owner = run_to(&mut session, "var CellStop: integer := 0;");
+    let owner = run_to(&mut session, "const CellStop: integer := 0;");
     let stack = session.stack(0, 8).expect("stack");
     let root_frame = stack.items.last().expect("root").id;
     assert_eq!(preserved_identity(&mut session, owner), "1");
@@ -33,7 +33,7 @@ fn wrong_owner_stale_and_uninitialized_cell_sources_are_atomic() {
     assert_eq!(stale.kind, DebugErrorKind::UnknownFrame);
 
     let mut late = DebugSession::new(compile_fixture()).expect("late session");
-    let frame = run_to(&mut late, "var LateStop: integer := 0;");
+    let frame = run_to(&mut late, "const LateStop: integer := 0;");
     let uninitialized = late
         .set_expression(&root("Current"), &name("AddLate"), Some(frame))
         .expect_err("Cell is uninitialized");
@@ -45,7 +45,7 @@ fn wrong_owner_stale_and_uninitialized_cell_sources_are_atomic() {
 #[test]
 fn global_descendant_capture_cell_and_immutable_destinations_are_rejected() {
     let mut global = DebugSession::new(compile_fixture()).expect("global dest");
-    let frame = run_to(&mut global, "var CellStop: integer := 0;");
+    let frame = run_to(&mut global, "const CellStop: integer := 0;");
     let rejected = global
         .set_expression(&root("Shared"), &name("AddCell"), Some(frame))
         .expect_err("global");
@@ -58,7 +58,7 @@ fn global_descendant_capture_cell_and_immutable_destinations_are_rejected() {
     assert_eq!(preserved_identity(&mut global, frame), "1");
 
     let mut boxed = DebugSession::new(compile_fixture()).expect("descendant dest");
-    let frame = run_to(&mut boxed, "var BoxStop: integer := 0;");
+    let frame = run_to(&mut boxed, "const BoxStop: integer := 0;");
     let descendant = boxed
         .set_expression(&field("Packed", "Item"), &name("AddBoxed"), Some(frame))
         .expect_err("descendant");
@@ -69,7 +69,7 @@ fn global_descendant_capture_cell_and_immutable_destinations_are_rejected() {
     );
 
     let mut captured = DebugSession::new(compile_fixture()).expect("capture dest");
-    let frame = run_to(&mut captured, "var CaptureDestStop: integer := 0;");
+    let frame = run_to(&mut captured, "const CaptureDestStop: integer := 0;");
     let cell_dest = captured
         .set_expression(&root("Current"), &name("AddCaptured"), Some(frame))
         .expect_err("capture cell dest");
@@ -80,7 +80,7 @@ fn global_descendant_capture_cell_and_immutable_destinations_are_rejected() {
     );
 
     let mut frozen = DebugSession::new(compile_fixture()).expect("immutable dest");
-    let frame = run_to(&mut frozen, "var CellStop: integer := 0;");
+    let frame = run_to(&mut frozen, "const CellStop: integer := 0;");
     assert_eq!(
         frozen
             .set_expression(&root("Frozen"), &name("AddCell"), Some(frame))
@@ -93,7 +93,7 @@ fn global_descendant_capture_cell_and_immutable_destinations_are_rejected() {
 #[test]
 fn copied_task_owned_functions_cannot_escape_the_owner_frame() {
     let mut global = DebugSession::new(compile_fixture()).expect("global copy");
-    let frame = run_to(&mut global, "var CellStop: integer := 0;");
+    let frame = run_to(&mut global, "const CellStop: integer := 0;");
     global
         .set_expression(&root("Current"), &name("AddCell"), Some(frame))
         .expect("construct source");
@@ -106,7 +106,7 @@ fn copied_task_owned_functions_cannot_escape_the_owner_frame() {
     assert_eq!(rendered(&mut global, call("Shared", 1), frame), "1");
 
     let mut descendant = DebugSession::new(compile_fixture()).expect("descendant copy");
-    let frame = run_to(&mut descendant, "var CellStop: integer := 0;");
+    let frame = run_to(&mut descendant, "const CellStop: integer := 0;");
     descendant
         .set_expression(&root("Current"), &name("AddCell"), Some(frame))
         .expect("construct source");
@@ -127,7 +127,7 @@ fn copied_task_owned_functions_cannot_escape_the_owner_frame() {
     assert_eq!(&*as_function(&packed).name, "identity");
 
     let mut captured = DebugSession::new(compile_fixture()).expect("capture copy");
-    let frame = run_to(&mut captured, "var CaptureDestStop: integer := 0;");
+    let frame = run_to(&mut captured, "const CaptureDestStop: integer := 0;");
     captured
         .set_expression(&root("Source"), &name("AddCaptured"), Some(frame))
         .expect("construct source");
@@ -147,11 +147,11 @@ fn copied_task_owned_functions_reject_foreign_owner_and_stale_frame() {
     foreign
         .set_breakpoint(SourceBreakpoint {
             source: "<memory>".to_string(),
-            line: line("var RootStop: integer := 0;"),
+            line: line("const RootStop: integer := 0;"),
             column: None,
         })
         .expect("root breakpoint");
-    let worker = run_to(&mut foreign, "var WorkerStop: integer := 0;");
+    let worker = run_to(&mut foreign, "const WorkerStop: integer := 0;");
     foreign
         .set_expression(&root("Current"), &name("AddWorker"), Some(worker))
         .expect("construct worker-owned source");
@@ -165,7 +165,7 @@ fn copied_task_owned_functions_reject_foreign_owner_and_stale_frame() {
     assert_eq!(rendered(&mut foreign, call("Current", 1), root_frame), "1");
 
     let mut stale = DebugSession::new(compile_fixture()).expect("stale copy");
-    let frame = run_to(&mut stale, "var CellStop: integer := 0;");
+    let frame = run_to(&mut stale, "const CellStop: integer := 0;");
     stale
         .set_expression(&root("Current"), &name("AddCell"), Some(frame))
         .expect("construct source");
@@ -183,7 +183,7 @@ fn copied_task_owned_functions_reject_foreign_owner_and_stale_frame() {
 #[test]
 fn task_spawn_rejects_the_constructed_function() {
     let mut session = DebugSession::new(compile_fixture()).expect("spawn session");
-    let frame = run_to(&mut session, "var SpawnStop: integer := 0;");
+    let frame = run_to(&mut session, "const SpawnStop: integer := 0;");
     session
         .set_expression(&root("Current"), &name("RunSpawn"), Some(frame))
         .expect("assign task-bound procedure");
@@ -208,7 +208,7 @@ fn task_spawn_rejects_the_constructed_function() {
 #[test]
 fn foreign_task_invocation_fails_before_callee_entry() {
     let mut session = DebugSession::new(compile_fixture()).expect("worker session");
-    let worker = run_to(&mut session, "var WorkerStop: integer := 0;");
+    let worker = run_to(&mut session, "const WorkerStop: integer := 0;");
     session
         .set_expression(&root("Current"), &name("AddWorker"), Some(worker))
         .expect("worker owner assign");
@@ -233,7 +233,7 @@ fn foreign_task_invocation_fails_before_callee_entry() {
 #[test]
 fn capture_graph_limits_and_unknown_names_stay_actionable() {
     let mut limited = DebugSession::new(compile_fixture()).expect("limit session");
-    let frame = run_to(&mut limited, "var MixStop: integer := 0;");
+    let frame = run_to(&mut limited, "const MixStop: integer := 0;");
     let values = limited
         .set_expression_with_limits(
             &root("Current"),
@@ -258,7 +258,7 @@ fn capture_graph_limits_and_unknown_names_stay_actionable() {
 #[test]
 fn success_expires_old_variable_references_once() {
     let mut session = DebugSession::new(compile_fixture()).expect("debug session");
-    let frame = run_to(&mut session, "var CellStop: integer := 0;");
+    let frame = run_to(&mut session, "const CellStop: integer := 0;");
     let locals = scope_reference(&mut session, "Locals");
     session
         .set_variable(locals, "Current", &name("AddCell"))

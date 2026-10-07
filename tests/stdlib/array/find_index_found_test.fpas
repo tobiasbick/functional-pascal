@@ -8,7 +8,7 @@ begin
 end function;
 
 begin
-  var A: array of integer := [10, 20, 30];
-  var Idx: integer := FindIndex(A, IsGreaterThanFifteen);
+  const A: array of integer := [10, 20, 30];
+  const Idx: integer := FindIndex(A, IsGreaterThanFifteen);
   WriteLn(Idx);
 end.

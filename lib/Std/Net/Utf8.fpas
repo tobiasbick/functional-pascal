@@ -41,18 +41,18 @@ end function;
 // - `Bytes`: Integer byte values in `0..255`.
 public function Decode(Bytes: array of integer): result of string, string;
 begin
-  mutable var Parts: array of string := [];
-  mutable var Index: integer := 0;
+  var Parts: array of string := [];
+  var Index: integer := 0;
   while Index < Std.Arrays.Length(Bytes) do
     begin
-      var First: integer := Bytes[Index];
+      const First: integer := Bytes[Index];
       if (First < 0) or (First > 255) then
         begin
           return Invalid(Index, 'byte must be in 0..255');
         end;
       end if;
-      mutable var CodePoint: integer := 0;
-      mutable var Width: integer := 0;
+      var CodePoint: integer := 0;
+      var Width: integer := 0;
       if First <= 127 then
         begin
           CodePoint := First;
@@ -84,7 +84,7 @@ begin
 
       if Width >= 2 then
         begin
-          var Second: integer := Bytes[Index + 1];
+          const Second: integer := Bytes[Index + 1];
           if not IsContinuation(Second) then
             begin
               return Invalid(Index + 1, 'expected continuation byte');
@@ -97,7 +97,7 @@ begin
 
       if Width >= 3 then
         begin
-          var Third: integer := Bytes[Index + 2];
+          const Third: integer := Bytes[Index + 2];
           if not IsContinuation(Third) then
             begin
               return Invalid(Index + 2, 'expected continuation byte');
@@ -115,7 +115,7 @@ begin
 
       if Width = 4 then
         begin
-          var Fourth: integer := Bytes[Index + 3];
+          const Fourth: integer := Bytes[Index + 3];
           if not IsContinuation(Fourth) then
             begin
               return Invalid(Index + 3, 'expected continuation byte');

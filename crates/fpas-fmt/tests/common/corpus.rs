@@ -13,11 +13,11 @@ pub const SOURCES: &[(&str, &str)] = &[
     ),
     (
         "program_with_var",
-        "program T; var X: integer := 42; begin end.",
+        "program T; const X: integer := 42; begin end.",
     ),
     (
         "program_with_mutable_var",
-        "program T; mutable var Count: integer := 0; begin end.",
+        "program T; var Count: integer := 0; begin end.",
     ),
     (
         "hello_world",
@@ -25,23 +25,23 @@ pub const SOURCES: &[(&str, &str)] = &[
     ),
     (
         "calculator",
-        "program Calculator;\nuses Std.Console;\n\ntype Op = enum\n  OpAdd;\n  OpSub;\n  OpMul;\n  OpDiv;\nend enum;\n\nfunction Calculate(A: integer; B: integer; Operation: Op): integer;\nbegin\n  case Operation of\n    when OpAdd: return A + B;\n    when OpSub: return A - B;\n    when OpMul: return A * B;\n    when OpDiv: return A div B;\n  end case;\nend function;\n\nbegin\n  var Answer: integer := Calculate(10, 3, OpAdd);\n  Std.Console.WriteLn(Answer);\nend.",
+        "program Calculator;\nuses Std.Console;\n\ntype Op = enum\n  OpAdd;\n  OpSub;\n  OpMul;\n  OpDiv;\nend enum;\n\nfunction Calculate(A: integer; B: integer; Operation: Op): integer;\nbegin\n  case Operation of\n    when OpAdd: return A + B;\n    when OpSub: return A - B;\n    when OpMul: return A * B;\n    when OpDiv: return A div B;\n  end case;\nend function;\n\nbegin\n  const Answer: integer := Calculate(10, 3, OpAdd);\n  Std.Console.WriteLn(Answer);\nend.",
     ),
     (
         "record_creation",
-        "program Geometry;\n\ntype Point = record\n  X: real;\n  Y: real;\nend record;\n\nbegin\n  var P: Point := record X := 1.0; Y := 2.0; end;\n  var Sum: real := P.X + P.Y;\nend.",
+        "program Geometry;\n\ntype Point = record\n  X: real;\n  Y: real;\nend record;\n\nbegin\n  const P: Point := record X := 1.0; Y := 2.0; end;\n  const Sum: real := P.X + P.Y;\nend.",
     ),
     (
         "nested_loops",
-        "program T;\nbegin\n  for I: integer := 0 to 9 do\n    for J: integer := 0 to 9 do\n      begin\n        var X: integer := I * 10 + J;\n        if X mod 2 = 0 then\n          continue; end if;\n      end; end for; end for;\nend.",
+        "program T;\nbegin\n  for I: integer := 0 to 9 do\n    for J: integer := 0 to 9 do\n      begin\n        const X: integer := I * 10 + J;\n        if X mod 2 = 0 then\n          continue; end if;\n      end; end for; end for;\nend.",
     ),
     (
         "repeat_with_break",
-        "program T;\nbegin\n  mutable var X: integer := 0;\n  repeat\n    X := X + 1;\n    if X = 10 then break; end if;\n  until X = 100;\nend.",
+        "program T;\nbegin\n  var X: integer := 0;\n  repeat\n    X := X + 1;\n    if X = 10 then break; end if;\n  until X = 100;\nend.",
     ),
     (
         "array_operations",
-        "program T;\nbegin\n  var Xs: array of integer := [1, 2, 3, 4, 5];\n  var First: integer := Xs[0];\n  var Last: integer := Xs[4];\nend.",
+        "program T;\nbegin\n  const Xs: array of integer := [1, 2, 3, 4, 5];\n  const First: integer := Xs[0];\n  const Last: integer := Xs[4];\nend.",
     ),
     (
         "fibonacci",
@@ -77,15 +77,15 @@ pub const SOURCES: &[(&str, &str)] = &[
     ),
     (
         "nested_collection_literals",
-        "program T; begin var Values: array of dict of string to array of integer := [['a': [1, 2]], [:]]; end.",
+        "program T; begin const Values: array of dict of string to array of integer := [['a': [1, 2]], [:]]; end.",
     ),
     (
         "nested_record_update",
-        "program T; type Point = record X: integer; Y: integer; end record; type Pair = record First: Point; Second: Point; end record; begin var P: Pair := record First := record X := 1; Y := 2; end; Second := record X := 3; Y := 4; end; end; var Q: Pair := P with First := P.First with X := 5; end with; end with; end.",
+        "program T; type Point = record X: integer; Y: integer; end record; type Pair = record First: Point; Second: Point; end record; begin const P: Pair := record First := record X := 1; Y := 2; end; Second := record X := 3; Y := 4; end; end; const Q: Pair := P with First := P.First with X := 5; end with; end with; end.",
     ),
     (
         "nested_option_result",
-        "program T; begin var Value: result of option of array of integer, string := Ok(Some([])); end.",
+        "program T; begin const Value: result of option of array of integer, string := Ok(Some([])); end.",
     ),
     (
         "case_destructure_with_guard",
@@ -97,6 +97,6 @@ pub const SOURCES: &[(&str, &str)] = &[
     ),
     (
         "procedure_literal",
-        "program T; begin var Action: procedure() := procedure() begin return; end procedure; end.",
+        "program T; begin const Action: procedure() := procedure() begin return; end procedure; end.",
     ),
 ];

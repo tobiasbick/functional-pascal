@@ -5,7 +5,7 @@ fn division_by_zero_preserves_code_message_and_source_location() {
     let source = "\
 program RegisterDivisionError;
 begin
-  var X: integer := 7 div 0;
+  const X: integer := 7 div 0;
 end.";
     let error = run_program(source).expect_err("division should fail");
     assert_eq!(
@@ -23,7 +23,7 @@ end.";
             error.span.expect("source diagnostic span").line(),
             error.span.expect("source diagnostic span").column()
         ),
-        (3, 21)
+        (3, 23)
     );
 }
 

@@ -7,7 +7,7 @@ uses
   Mandelbrot.View;
 
 begin
-  var Inbox: channel of MandelbrotRenderFrame := CreateChannel(8);
-  var Initial: MandelbrotModel := NewMandelbrotModel(Inbox, ScreenWidth(), ScreenHeight());
+  const Inbox: channel of MandelbrotRenderFrame := CreateChannel(8);
+  const Initial: MandelbrotModel := NewMandelbrotModel(Inbox, ScreenWidth(), ScreenHeight());
   discard TuiApplication.RunWithBackground(Initial, Inbox, UpdateMandelbrot, UpdateMandelbrotFrame, ViewMandelbrot);
 end.

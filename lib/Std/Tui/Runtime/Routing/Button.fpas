@@ -20,7 +20,7 @@ begin
       end;
     when TuiElement.Desktop(Focused, Children):
       begin
-        mutable var ModalIndex: integer := -1;
+        var ModalIndex: integer := -1;
         for Index: integer := 0 to Std.Arrays.Length(Children) - 1 do
           begin
             case Children[Index] of

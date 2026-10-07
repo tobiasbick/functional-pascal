@@ -158,6 +158,7 @@ impl Checker {
             self.scopes.define(
                 name,
                 Symbol {
+                    constant: None,
                     ty: Ty::Named(name.to_string()),
                     mutable: false,
                     kind: SymbolKind::Type,

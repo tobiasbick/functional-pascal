@@ -3,7 +3,7 @@ program EventsExample;
 uses Std.Console, Std.Conv;
 
 // In-memory handler slot standing in for a live registry.
-mutable var ClickSlot: option of procedure(Sender: integer) := None;
+var ClickSlot: option of procedure(Sender: integer) := None;
 
 type ClickHandler = procedure(Sender: integer);
 
@@ -42,7 +42,7 @@ begin
 end procedure;
 
 begin
-  var B: Button := record
+  const B: Button := record
     Id := 1;
   end;
 

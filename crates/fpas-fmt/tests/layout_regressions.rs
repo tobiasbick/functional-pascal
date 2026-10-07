@@ -15,7 +15,7 @@ fn format(source: &str) -> String {
 
 #[test]
 fn wrapped_array_has_no_blank_line_before_closing_bracket() {
-    let source = "program T; begin var Values: array of string := ['aaaaaaaaaaaaaaaaaaaa', 'bbbbbbbbbbbbbbbbbbbb', 'cccccccccccccccccccc', 'dddddddddddddddddddd']; end.";
+    let source = "program T; begin const Values: array of string := ['aaaaaaaaaaaaaaaaaaaa', 'bbbbbbbbbbbbbbbbbbbb', 'cccccccccccccccccccc', 'dddddddddddddddddddd']; end.";
     let formatted = format(source);
 
     assert!(formatted.contains("[\n"), "array should wrap:\n{formatted}");
@@ -25,7 +25,7 @@ fn wrapped_array_has_no_blank_line_before_closing_bracket() {
 
 #[test]
 fn multiline_record_and_closure_array_elements_have_single_line_breaks() {
-    let record_source = "program T; type Point = record X: integer; end record; begin var Values: array of Point := [record X := 1; end, record X := 2; end]; end.";
+    let record_source = "program T; type Point = record X: integer; end record; begin const Values: array of Point := [record X := 1; end, record X := 2; end]; end.";
     let record_formatted = format(record_source);
     assert!(
         !record_formatted.contains("\n\n      X :="),
@@ -34,7 +34,7 @@ fn multiline_record_and_closure_array_elements_have_single_line_breaks() {
     assert!(!record_formatted.contains("\n\n  ]"), "{record_formatted}");
     common::assert_round_trip("record array", &record_formatted);
 
-    let closure_source = "program T; begin var Values: array of procedure() := [procedure() begin WriteLn('first'); end procedure, procedure() begin WriteLn('second'); end procedure]; end.";
+    let closure_source = "program T; begin const Values: array of procedure() := [procedure() begin WriteLn('first'); end procedure, procedure() begin WriteLn('second'); end procedure]; end.";
     let closure_formatted = format(closure_source);
     let closure_array = closure_formatted
         .split_once(":= [")
@@ -47,10 +47,10 @@ fn multiline_record_and_closure_array_elements_have_single_line_breaks() {
 
 #[test]
 fn var_and_mutable_var_eol_comments_keep_existing_output_shape() {
-    let source = "program T; begin var A: integer := 1; // immutable\nmutable var B: integer := 2; // mutable\nend.";
+    let source = "program T; begin const A: integer := 1; // immutable\nvar B: integer := 2; // mutable\nend.";
     let formatted = format(source);
 
-    assert!(formatted.contains("var A: integer := 1; // immutable\n"));
-    assert!(formatted.contains("mutable var B: integer := 2; // mutable\n"));
+    assert!(formatted.contains("const A: integer := 1; // immutable\n"));
+    assert!(formatted.contains("var B: integer := 2; // mutable\n"));
     common::assert_round_trip("variable comments", &formatted);
 }

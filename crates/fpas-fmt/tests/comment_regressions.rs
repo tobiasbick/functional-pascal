@@ -36,7 +36,7 @@ fn nested_routine_body_comments_use_structural_owners() {
 
 #[test]
 fn closure_comments_survive_expression_emission() {
-    let source = "program T;\nbegin\n  var Handler: procedure() := procedure()\n  // closure body\n  begin\n    // setup\n    WriteLn('ok'); // closure trail\n  end procedure;\n  Handler();\nend.";
+    let source = "program T;\nbegin\n  const Handler: procedure() := procedure()\n  // closure body\n  begin\n    // setup\n    WriteLn('ok'); // closure trail\n  end procedure;\n  Handler();\nend.";
     let formatted = format_idempotently(source);
 
     for comment in ["// closure body", "// setup", "// closure trail"] {
@@ -111,10 +111,10 @@ fn compilation_and_routine_header_comments_stay_on_header_lines() {
 
 #[test]
 fn eol_comment_stays_on_its_code_line() {
-    let source = "program T; begin var A: integer := 1; // value\nWriteLn(A); end.";
+    let source = "program T; begin const A: integer := 1; // value\nWriteLn(A); end.";
     let formatted = format_idempotently(source);
 
-    assert!(formatted.contains("var A: integer := 1; // value\n"));
+    assert!(formatted.contains("const A: integer := 1; // value\n"));
 }
 
 #[test]

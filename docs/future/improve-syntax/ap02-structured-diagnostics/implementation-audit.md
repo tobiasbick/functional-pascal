@@ -77,9 +77,10 @@ Paths in this inventory are relative to `crates/` unless they start with
 | Runtime | F4001–F4025, with reserved F4017 | FP5001–FP5025, with reserved FP5017 |
 | Internal invariants | F9001–F9003 | FP9001–FP9003 |
 
-There are 120 allocated codes. The current
-[diagnostics reference](../../../pascal/tools/diagnostics.md) contains exactly
-one cause/wrong/corrected row for each. Range membership does not allocate a code.
+AP02 delivered 120 allocated codes, each with one cause/wrong/corrected row in
+the [diagnostics reference](../../../pascal/tools/diagnostics.md). Later packages
+extend that catalog and reference; the counts and verification below describe
+AP02 delivery. Range membership does not allocate a code.
 
 ## Record and stream rules
 

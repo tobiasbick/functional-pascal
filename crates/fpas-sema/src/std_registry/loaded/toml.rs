@@ -62,6 +62,7 @@ pub(super) fn register_std_toml(checker: &mut Checker) {
     checker.scopes.define(
         s::STD_TOML_VALUE,
         Symbol {
+            constant: None,
             ty: toml_ty.clone(),
             mutable: false,
             kind: SymbolKind::Type,
@@ -74,6 +75,7 @@ pub(super) fn register_std_toml(checker: &mut Checker) {
         checker.scopes.define(
             &qualified_name,
             Symbol {
+                constant: None,
                 ty: toml_ty.clone(),
                 mutable: false,
                 kind: SymbolKind::EnumVariantConstructor,
@@ -85,13 +87,13 @@ pub(super) fn register_std_toml(checker: &mut Checker) {
     define_func(
         checker,
         s::STD_TOML_PARSE,
-        vec![p("Text", Ty::String, false)],
+        vec![p("Text", Ty::String)],
         Ty::Result(Box::new(toml_ty.clone()), Box::new(Ty::String)),
     );
     define_func(
         checker,
         s::STD_TOML_STRINGIFY,
-        vec![p("Value", toml_ty, false)],
+        vec![p("Value", toml_ty)],
         Ty::String,
     );
 }

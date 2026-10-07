@@ -5,6 +5,11 @@
     reason = "protocol tests keep fixture failures local"
 )]
 
+#[path = "support/parameter_copy.rs"]
+mod parameter_copy;
+
+use parameter_copy::initialized_local_frame;
+
 use std::{thread, time::Duration};
 
 use fpas_debug::{PreparedDebugTarget, jsonl::JsonlServer};
@@ -15,7 +20,7 @@ use fpas_vm::{
 use serde_json::{Value, json};
 
 fn server() -> JsonlServer {
-    let source = "program Main;\n\nfunction Twice(Value: integer): integer;\nbegin\n  return Value * 2;\nend function;\n\nbegin\n  mutable var X: integer := 1;\n  var Fixed: integer := 2;\n  X := X + Fixed;\nend.";
+    let source = "program Main;\n\nfunction Twice(Value: integer): integer;\nbegin\n  return Value * 2;\nend function;\n\nbegin\n  var X: integer := 1;\n  const Fixed: integer := 2;\n  X := X + Fixed;\nend.";
     let (program, diagnostics) = fpas_parser::parse(source);
     assert!(diagnostics.is_empty(), "parse diagnostics: {diagnostics:?}");
     let executable = fpas_compiler::compile(&program).expect("compile mutation fixture");
@@ -176,18 +181,18 @@ type
   end record;
 
 begin
-  mutable var Item: Box := record
+  var Item: Box := record
     Value := 1;
     Other := 2;
   end;
-  mutable var Nested: Container := record
+  var Nested: Container := record
     Items := [record
       Value := 3;
       Other := 4;
     end];
   end;
-  mutable var Scores: dict of string to integer := ['Ada': 2, 'Grace': 5];
-  var Marker: integer := 0;
+  var Scores: dict of string to integer := ['Ada': 2, 'Grace': 5];
+  const Marker: integer := 0;
 end.
 "#,
     );
@@ -316,19 +321,20 @@ end.
 }
 
 #[test]
-fn mutable_parameter_commit_is_observed_by_the_running_function() {
+fn parameter_is_read_only_and_local_copy_commit_is_observed() {
     let mut session = session(
         r#"
 program ParameterMutation;
 
-function ReadBack(mutable Value: integer): integer;
+function ReadBack(Value: integer): integer;
 begin
-  return Value;
+  var LocalValue: integer := Value;
+return LocalValue;
 end function;
 
 begin
-  var OutputValue: integer := ReadBack(1);
-  var Marker: integer := OutputValue;
+  const OutputValue: integer := ReadBack(1);
+  const Marker: integer := OutputValue;
 end.
 "#,
     );
@@ -338,7 +344,7 @@ end.
         }
         step(&mut session);
     };
-    session
+    let error = session
         .set_expression(
             &DebugAssignmentTarget {
                 root: "Value".to_string(),
@@ -347,7 +353,19 @@ end.
             &DebugExpression::Integer(77),
             Some(frame),
         )
-        .expect("textual mutable parameter mutation");
+        .expect_err("value parameter is read-only");
+    assert_eq!(error.kind, DebugErrorKind::VariableNotMutable);
+    let frame = initialized_local_frame(&mut session, "LocalValue");
+    session
+        .set_expression(
+            &DebugAssignmentTarget {
+                root: "LocalValue".to_string(),
+                selectors: Vec::new(),
+            },
+            &DebugExpression::Integer(77),
+            Some(frame),
+        )
+        .expect("textual local parameter-copy mutation");
     assert!(matches!(
         session.step_out().expect("return to caller"),
         DebugRunResult::Stopped(_)
@@ -373,7 +391,7 @@ program CaptureMutation;
 
 function Counter(): function(): integer;
 begin
-  mutable var Value: integer := 0;
+  var Value: integer := 0;
   return function(): integer begin
     Value := Value + 1;
     return Value;
@@ -381,9 +399,9 @@ begin
 end function;
 
 begin
-  var Next: function(): integer := Counter();
-  var First: integer := Next();
-  var Marker: integer := First;
+  const Next: function(): integer := Counter();
+  const First: integer := Next();
+  const Marker: integer := First;
 end.
 "#,
     );
@@ -429,44 +447,36 @@ end.
 }
 
 #[test]
-fn dictionary_structure_mutation_supports_parameters_and_capture_cells() {
+fn dictionary_structure_mutation_supports_parameter_copies_and_capture_cells() {
     let mut parameter_session = session(
         r#"
 program DictionaryParameterMutation;
 
-function ReadAdded(mutable Scores: dict of string to integer): integer;
+function ReadAdded(Scores: dict of string to integer): integer;
 begin
-  var Marker: integer := Scores['Seed'];
-  return Scores['Added'] + Marker;
+  var LocalScores: dict of string to integer := Scores;
+const Marker: integer := LocalScores['Seed'];
+  return LocalScores['Added'] + Marker;
 end function;
 
 begin
-  var OutputValue: integer := ReadAdded(['Seed': 1]);
-  var Marker: integer := OutputValue;
+  const OutputValue: integer := ReadAdded(['Seed': 1]);
+  const Marker: integer := OutputValue;
 end.
 "#,
     );
-    let parameter_frame = loop {
-        if session_scope(&mut parameter_session, "Parameters").is_some() {
-            break parameter_session
-                .stack(0, 1)
-                .expect("parameter dictionary stack")
-                .items[0]
-                .id;
-        }
-        step(&mut parameter_session);
-    };
+    let parameter_frame = initialized_local_frame(&mut parameter_session, "LocalScores");
     parameter_session
         .insert_dictionary_entry(
             &DebugAssignmentTarget {
-                root: "Scores".to_string(),
+                root: "LocalScores".to_string(),
                 selectors: Vec::new(),
             },
             &DebugExpression::String("Added".to_string()),
             &DebugExpression::Integer(8),
             Some(parameter_frame),
         )
-        .expect("insert into mutable dictionary parameter");
+        .expect("insert into writable dictionary parameter copy");
     assert!(matches!(
         parameter_session
             .step_out()
@@ -493,17 +503,17 @@ program DictionaryCaptureMutation;
 
 function Reader(): function(): integer;
 begin
-  mutable var Scores: dict of string to integer := ['Seed': 1];
+  var Scores: dict of string to integer := ['Seed': 1];
   return function(): integer begin
-    var Marker: integer := Scores['Seed'];
+    const Marker: integer := Scores['Seed'];
     return Scores['Added'] + Marker;
   end function;
 end function;
 
 begin
-  var ReadValue: function(): integer := Reader();
-  var OutputValue: integer := ReadValue();
-  var Marker: integer := OutputValue;
+  const ReadValue: function(): integer := Reader();
+  const OutputValue: integer := ReadValue();
+  const Marker: integer := OutputValue;
 end.
 "#,
     );
@@ -569,8 +579,8 @@ begin
 end procedure;
 
 begin
-  mutable var Scores: dict of string to integer := ['Seed': 1];
-  var Marker: integer := Scores['Seed'];
+  var Scores: dict of string to integer := ['Seed': 1];
+  const Marker: integer := Scores['Seed'];
 end.
 "#,
     );
@@ -681,8 +691,8 @@ begin
 end procedure;
 
 begin
-  mutable var Items: array of integer := [1, 2];
-  var Marker: integer := Items[0];
+  var Items: array of integer := [1, 2];
+  const Marker: integer := Items[0];
 end.
 "#,
     );

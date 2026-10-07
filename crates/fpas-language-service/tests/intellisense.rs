@@ -24,9 +24,9 @@ type Counter = record
 end record;
 
 begin
-  var Music: string := '𝄞';
-  var Value: Counter := record Amount := 1; Secret := 2; end;
-  var ResultValue: integer := Value.AmTail;
+  const Music: string := '𝄞';
+  const Value: Counter := record Amount := 1; Secret := 2; end;
+  const ResultValue: integer := Value.AmTail;
 end.
 "#;
     let path = temp.write("complete.fpas", source);
@@ -66,9 +66,9 @@ type Counter = record
 end record;
 
 begin
-  var Value: Counter := record Amount := 1; end;
+  const Value: Counter := record Amount := 1; end;
   // Value.Am
-  var Text: string := 'Value.Am';
+  const Text: string := 'Value.Am';
   Value.Am;
 end.
 "#;
@@ -104,7 +104,7 @@ fn completion_excludes_shadowed_and_private_declarations_and_adds_keywords() {
     let temp = TempDirectory::new("intellisense-scope");
     let source = r#"program Scope;
 
-var Value: string := 'global';
+const Value: string := 'global';
 
 function ReadValue(Value: integer): integer;
 begin
@@ -216,7 +216,7 @@ fn auto_import_is_offered_only_for_one_public_declaration_and_preserves_formatti
         "src/second.fpas",
         "unit Demo.Second;\n\npublic function SharedValue(): integer;\nbegin\n  return 2;\nend function;\nend unit;\n",
     );
-    let source = "program AutoImport;\n\nuses Demo.Core;\n\nbegin\n  var Value: integer := UniqueValue;\nend.\n";
+    let source = "program AutoImport;\n\nuses Demo.Core;\n\nbegin\n  const Value: integer := UniqueValue;\nend.\n";
     let main = temp.write("src/main.fpas", source);
     let mut service = LanguageService::load(&manifest);
     let cursor = source.find("UniqueValue").expect("unresolved name") + "UniqueValue".len();
@@ -315,15 +315,15 @@ begin
 end procedure;
 
 begin
-  var CounterValue: Counter := record end;
-  var Callback: function(Left: integer; Right: integer): integer := Sum;
-  var A: integer := Sum(1, Sum(2, 3));
-  var B: integer := CounterValue.Add(
+  const CounterValue: Counter := record end;
+  const Callback: function(Left: integer; Right: integer): integer := Sum;
+  const A: integer := Sum(1, Sum(2, 3));
+  const B: integer := CounterValue.Add(
     1,
     'two');
-  var C: integer := Callback(1, 2);
-  var D: integer := Identity(1);
-  var E: Shape := Shape.Circle(2.0, true);
+  const C: integer := Callback(1, 2);
+  const D: integer := Identity(1);
+  const E: Shape := Shape.Circle(2.0, true);
 end.
 "#;
     let path = temp.write("signatures.fpas", source);

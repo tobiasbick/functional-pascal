@@ -29,7 +29,7 @@ fn generic_procedure_method_on_plain_record() {
          type Wrapper = record
            Value: integer;
            procedure Apply<T>(Self: Wrapper; F: function(X: integer): T);
-           begin var _ : T := F(Self.Value); end procedure;
+           begin const _ : T := F(Self.Value); end procedure;
          end record;
          begin end.",
     );
@@ -89,8 +89,8 @@ fn generic_method_called_with_inferred_type() {
          end record;
          function Stringify(X: integer): string;
          begin return 'x'; end function;
-         var B: Box := record Value := 42; end;
-         var S: string := B.Map(Stringify);
+         const B: Box := record Value := 42; end;
+         const S: string := B.Map(Stringify);
          begin end.",
     );
 }
@@ -121,7 +121,7 @@ fn generic_method_body_can_declare_local_of_generic_type_and_return_direct_call(
            Value: integer;
            function Wrap<R>(Self: Holder; F: function(X: integer): R): R;
            begin
-             var Local: R := F(Self.Value);
+             const Local: R := F(Self.Value);
              return F(Self.Value);
            end function;
          end record;
@@ -137,7 +137,7 @@ fn generic_method_body_returning_local_generic_variable_reproducer() {
            Value: integer;
            function Wrap<R>(Self: Holder; F: function(X: integer): R): R;
            begin
-             var Local: R := F(Self.Value);
+             const Local: R := F(Self.Value);
              return Local;
            end function;
          end record;
@@ -158,8 +158,8 @@ fn generic_method_constraint_violation_at_call_site() {
            function AddTwo<T: Numeric>(Self: Box; X: T): T;
            begin return X; end function;
          end record;
-         var B: Box := record Value := 1; end;
-         var S: string := B.AddTwo('hello');
+         const B: Box := record Value := 1; end;
+         const S: string := B.AddTwo('hello');
          begin end.",
     );
     assert!(

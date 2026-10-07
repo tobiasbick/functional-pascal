@@ -121,7 +121,7 @@ begin
               begin
                 panic('unexpected request');
               end; end if;
-              mutable var ResponseValue: ServerResponse := ServerResponse.Create(200, 'OK');
+              var ResponseValue: ServerResponse := ServerResponse.Create(200, 'OK');
               ResponseValue.Headers := [Header.Create('Content-Type', 'text/plain')];
               ResponseValue.Body := Std.Net.Utf8.Encode('hello from fpas');
               case WriteResponse(Connection, ResponseValue) of
@@ -196,7 +196,7 @@ begin
               case Std.Net.Utf8.Decode(RequestValue.Body) of
                 when Ok(Text):
                 begin
-                  mutable var ResponseValue: ServerResponse := ServerResponse.Create(201, 'Created');
+                  var ResponseValue: ServerResponse := ServerResponse.Create(201, 'Created');
                   ResponseValue.Body := Std.Net.Utf8.Encode(RequestValue.Target + ':' + Text);
                   case WriteResponse(Connection, ResponseValue) of
                     when Ok(_):
@@ -274,7 +274,7 @@ begin
               begin
                 panic(Message);
               end; end if;
-              mutable var ResponseValue: ServerResponse := ServerResponse.Create(400, 'Bad Request');
+              var ResponseValue: ServerResponse := ServerResponse.Create(400, 'Bad Request');
               ResponseValue.Body := Std.Net.Utf8.Encode('rejected');
               case WriteResponse(Connection, ResponseValue) of
                 when Ok(_):
@@ -344,7 +344,7 @@ begin
               begin
                 panic(Message);
               end; end if;
-              mutable var ResponseValue: ServerResponse := ServerResponse.Create(413, 'Content Too Large');
+              var ResponseValue: ServerResponse := ServerResponse.Create(413, 'Content Too Large');
               ResponseValue.Body := Std.Net.Utf8.Encode('too large');
               case WriteResponse(Connection, ResponseValue) of
                 when Ok(_):

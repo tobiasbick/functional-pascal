@@ -23,7 +23,7 @@ type Rectangle = record
 
   procedure Describe(Self: Rectangle);
   begin
-    mutable var Kind: string := 'Rectangle';
+    var Kind: string := 'Rectangle';
     if Self.IsSquare() then
       begin
         Kind := 'Square';
@@ -36,13 +36,13 @@ type Rectangle = record
 end record;
 
 begin
-  var R: Rectangle := record
+  const R: Rectangle := record
     W := 5;
     H := 3;
   end;
 
   R.Describe();
-  var S: Rectangle := record
+  const S: Rectangle := record
     W := 4;
     H := 4;
   end;

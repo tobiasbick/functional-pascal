@@ -3,8 +3,8 @@ program TuiLayoutSnapshotTest;
 uses Std.Str, Std.Test, Std.Tui;
 
 begin
-  var App: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(20, 8));
-  var Model: integer := 0;
+  const App: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(20, 8));
+  const Model: integer := 0;
   discard App.RunIterations(Model, function(State: integer; Msg: TuiMsg; Cmd: TuiCmdOutput): integer begin
     return State;
   end function, function(State: integer): TuiElement begin
@@ -18,13 +18,13 @@ begin
                                                                                                               ])
                                                                         ]);
   end function, 0, 0);
-  var Snapshot: TuiSurfaceSnapshot := App.SurfaceSnapshot();
+  const Snapshot: TuiSurfaceSnapshot := App.SurfaceSnapshot();
   AssertTrue(Std.Str.Contains(Snapshot.LineAt(0), 'Win'));
   AssertTrue(Std.Str.Contains(Snapshot.LineAt(1), 'Hello'));
   AssertTrue(Std.Str.Contains(Snapshot.LineAt(2), 'Go'));
   AssertTrue(Std.Str.Contains(Snapshot.LineAt(3), 'ab'));
   App.Close();
-  var Wide: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(40, 10));
+  const Wide: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(40, 10));
   discard Wide.RunIterations(0, function(State: integer; Msg: TuiMsg; Cmd: TuiCmdOutput): integer begin
     return State;
   end function, function(State: integer): TuiElement begin
@@ -32,7 +32,7 @@ begin
                                                   TuiElementBuilders.MakeOverlay('Dlg', [TuiElementBuilders.MakeLabel('Body')])
                                                 ]);
   end function, 0, 0);
-  var Overlay: TuiSurfaceSnapshot := Wide.SurfaceSnapshot();
+  const Overlay: TuiSurfaceSnapshot := Wide.SurfaceSnapshot();
   AssertEquals(18, Std.Str.IndexOf(Overlay.LineAt(3), 'Dlg'));
   AssertEquals(16, Std.Str.IndexOf(Overlay.LineAt(4), 'Body'));
   AssertEquals('╭', Overlay.CellAt(15, 3).Glyph);

@@ -49,7 +49,7 @@ fn unused_intrinsic_result_is_rejected_by_check_in_json_mode() {
 #[test]
 fn explicit_discard_runs_postfix_result_once_and_procedure_calls_still_run() {
     let source = "program T; uses Std.Console;
-      mutable var Count: integer := 0;
+      var Count: integer := 0;
       type Box = record Value: integer;
         function Get(Self: Box): result of integer, string;
         begin Count := Count + 1; return Error('ignored'); end function;

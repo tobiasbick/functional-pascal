@@ -31,12 +31,12 @@ begin
       return;
     end;
   end if;
-  var Area: TuiCanvas := Canvas.Child(Bounds);
-  var Lines: array of string := Std.Str.Split(Text, Std.Str.Chr(10));
-  var LineCount: integer := Std.Arrays.Length(Lines);
+  const Area: TuiCanvas := Canvas.Child(Bounds);
+  const Lines: array of string := Std.Str.Split(Text, Std.Str.Chr(10));
+  const LineCount: integer := Std.Arrays.Length(Lines);
   for Row: integer := 0 to Bounds.Height - 1 do
     begin
-      var Line: integer := Offset.Y + Row;
+      const Line: integer := Offset.Y + Row;
       if Line < LineCount then
         begin
           Area.WriteText(TuiPoint.Create(- Offset.X, Row), Lines[Line], NormalRole);
@@ -47,9 +47,9 @@ begin
 
   if Focused then
     begin
-      var Position: TuiTextAreaPosition := TuiTextAreaLocate(Text, Caret);
-      var CaretX: integer := Position.DisplayColumn - Offset.X;
-      var CaretY: integer := Position.Line - Offset.Y;
+      const Position: TuiTextAreaPosition := TuiTextAreaLocate(Text, Caret);
+      const CaretX: integer := Position.DisplayColumn - Offset.X;
+      const CaretY: integer := Position.Line - Offset.Y;
       if (((CaretX >= 0) and (CaretX < Bounds.Width)) and (CaretY >= 0)) and
          (CaretY < Bounds.Height) then
         begin

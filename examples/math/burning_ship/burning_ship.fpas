@@ -41,7 +41,7 @@ begin
 end procedure;
 
 begin
-  var Initial: ExplorerCamera := record
+  const Initial: ExplorerCamera := record
     CenterX := -0.45;
     CenterY := -0.55;
     SpanY := 2.8;

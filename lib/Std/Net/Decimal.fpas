@@ -12,10 +12,10 @@ begin
       return Error('expected decimal digits');
     end;
   end if;
-  mutable var Value: integer := 0;
+  var Value: integer := 0;
   for Index: integer := 0 to Std.Str.Length(Text) - 1 do
     begin
-      var Digit: integer := Std.Str.Ord(Std.Str.CharAt(Text, Index)) - 48;
+      const Digit: integer := Std.Str.Ord(Std.Str.CharAt(Text, Index)) - 48;
       if (Digit < 0) or (Digit > 9) then
         begin
           return Error('expected ASCII decimal digits');

@@ -17,7 +17,7 @@ begin
   return Value + 1;
 end function;
 begin
-  mutable var Tasks: array of task := [];
+  var Tasks: array of task := [];
   for Index: integer := 1 to 8 do
   begin
     Push(Tasks, go Worker(Index));
@@ -41,7 +41,7 @@ begin
 end function;
 
 begin
-  var T: task := go Add(20, 22);
+  const T: task := go Add(20, 22);
   Std.Console.WriteLn(Std.Tasks.Wait(T));
 end.",
     );
@@ -75,7 +75,7 @@ uses Std.Tasks;
 
 function Burn(Count: integer): integer;
 begin
-  mutable var I: integer := 0;
+  var I: integer := 0;
   while I < Count do
     I := I + 1; end while;
   return I;
@@ -83,12 +83,12 @@ end function;
 
 function Work(): integer;
 begin
-  var Values: array of integer := [40, 2];
+  const Values: array of integer := [40, 2];
   return Burn(700) - 700 + Values[0] + Values[1];
 end function;
 
 begin
-  var T: task := go Work();
+  const T: task := go Work();
   if Std.Tasks.Wait(T) <> 42 then panic('task state was not restored'); end if;
 end.",
     );
@@ -108,7 +108,7 @@ begin
 end function;
 
 begin
-  var A: task := go Work(42);
+  const A: task := go Work(42);
   discard Std.Tasks.Wait(A);
 end.",
     );
@@ -144,9 +144,9 @@ begin
   case Std.Net.Listen('127.0.0.1', {port}) of
     when Ok(ListenerValue):
     begin
-      var Source: Std.Tasks.CancellationSource := Std.Tasks.CreateCancellationSource();
-      var Token: Std.Tasks.CancellationToken := Std.Tasks.GetCancellationToken(Source);
-      var Waiting: task := go WaitForCancellation(ListenerValue, Token);
+      const Source: Std.Tasks.CancellationSource := Std.Tasks.CreateCancellationSource();
+      const Token: Std.Tasks.CancellationToken := Std.Tasks.GetCancellationToken(Source);
+      const Waiting: task := go WaitForCancellation(ListenerValue, Token);
       Std.Time.Sleep(50);
       if not Std.Tasks.Cancel(Source) then panic('first cancellation did not change state'); end if;
       if Std.Tasks.Wait(Waiting) <> 'Network accept cancelled' then
@@ -174,8 +174,8 @@ begin
 end function;
 
 begin
-  var A: task := go Work(20);
-  var B: task := go Work(22);
+  const A: task := go Work(20);
+  const B: task := go Work(22);
   Std.Tasks.WaitAll([A, B]);
   discard Std.Tasks.Wait(A);
   discard Std.Tasks.Wait(B);
@@ -191,7 +191,7 @@ uses Std.Tasks;
 
 function Make(): function(): integer;
 begin
-  mutable var Value: integer := 41;
+  var Value: integer := 41;
   return function(): integer
   begin
     Value := Value + 1;
@@ -200,8 +200,8 @@ begin
 end function;
 
 begin
-  var Work: function(): integer := Make();
-  var T: task := go Work();
+  const Work: function(): integer := Make();
+  const T: task := go Work();
   discard Std.Tasks.Wait(T);
 end.";
     let error = run_program(source).expect_err("runtime must reject task-bound closure");
@@ -237,8 +237,8 @@ begin
 end function;
 
 begin
-  var Messages: channel of integer := CreateChannel(1);
-  var Producer: task := go Produce(Messages);
+  const Messages: channel of integer := CreateChannel(1);
+  const Producer: task := go Produce(Messages);
   if Take(Messages) <> 20 then panic('first channel value was not FIFO'); end if;
   if Take(Messages) <> 22 then panic('second channel value was not FIFO'); end if;
   if not Wait(Producer) then panic('channel close was not first'); end if;
@@ -272,7 +272,7 @@ end function;
 begin
   if not CloseChannelArgument(CreateChannel(1)) then
     panic('direct channel argument was not typed'); end if;
-  var Messages: channel of integer := MakeChannel();
+  const Messages: channel of integer := MakeChannel();
   if not CloseChannel(Messages) then panic('returned channel was not typed'); end if;
 end.",
     );
@@ -286,7 +286,7 @@ program ChannelWaitModes;
 uses Std.Tasks;
 
 begin
-  var Messages: channel of integer := CreateChannel(1);
+  const Messages: channel of integer := CreateChannel(1);
   case TryReceive(Messages) of
     when Ok(MaybeValue):
       case MaybeValue of
@@ -332,7 +332,7 @@ fn channel_timeout_rejects_negative_milliseconds() {
 program InvalidChannelTimeout;
 uses Std.Tasks;
 begin
-  var Messages: channel of integer := CreateChannel(1);
+  const Messages: channel of integer := CreateChannel(1);
   discard ReceiveWithTimeout(Messages, -1);
 end.",
     )
@@ -370,20 +370,20 @@ begin
 end function;
 
 begin
-  var Full: channel of integer := CreateChannel(1);
+  const Full: channel of integer := CreateChannel(1);
   case Send(Full, 1) of
     when Ok(_): begin end;
     when Error(Message): panic(Message);
   end case;
-  var SendSource: CancellationSource := CreateCancellationSource();
-  var Sending: task := go BlockedSend(Full, GetCancellationToken(SendSource));
+  const SendSource: CancellationSource := CreateCancellationSource();
+  const Sending: task := go BlockedSend(Full, GetCancellationToken(SendSource));
   Sleep(20);
   discard Cancel(SendSource);
   if Wait(Sending) <> 'Channel send was cancelled' then panic('send cancellation mismatch'); end if;
 
-  var Empty: channel of integer := CreateChannel(1);
-  var ReceiveSource: CancellationSource := CreateCancellationSource();
-  var Receiving: task := go BlockedReceive(Empty, GetCancellationToken(ReceiveSource));
+  const Empty: channel of integer := CreateChannel(1);
+  const ReceiveSource: CancellationSource := CreateCancellationSource();
+  const Receiving: task := go BlockedReceive(Empty, GetCancellationToken(ReceiveSource));
   Sleep(20);
   discard Cancel(ReceiveSource);
   if Wait(Receiving) <> 'Channel receive was cancelled' then

@@ -26,7 +26,7 @@ fn case_lists_execute_before_and_after_idempotent_formatting() {
     let path = cwd.join("case.fpas");
     write_text(
         &path,
-        "program T; uses Std.Console; function Choose(): integer; begin case Some(2) of when Some(V) if V > 0: var Answer: integer := V * 21; return Answer; when Some(V): return 0; when None: return -1; end case; end function; begin WriteLn(Choose()); end.",
+        "program T; uses Std.Console; function Choose(): integer; begin case Some(2) of when Some(V) if V > 0: const Answer: integer := V * 21; return Answer; when Some(V): return 0; when None: return -1; end case; end function; begin WriteLn(Choose()); end.",
     );
     let run = ["run".into(), path.to_string_lossy().into_owned()];
     let (code, before, stderr) = run_cli_args_and_capture_output(&run, &cwd);

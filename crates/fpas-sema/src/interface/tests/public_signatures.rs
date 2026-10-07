@@ -65,7 +65,7 @@ fn private_record_public_global_is_rejected() {
     assert_private_signature_error(
         "unit Demo.Global;
          type Hidden = record Value: integer; end record;
-         public var Current: Hidden := record Value := 1; end;\nend unit;",
+         public const Current: Hidden := record Value := 1; end;\nend unit;",
         "Current",
         "Hidden",
     );

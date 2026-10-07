@@ -21,7 +21,7 @@ fn semantic_tokens_classify_every_supported_symbol_kind_and_modifier() {
     let source = r#"unit Semantic.Sample;
 
 public const Answer: integer := 42;
-public var LabelText: string := 'sample';
+public const LabelText: string := 'sample';
 
 public type
   Choice = enum
@@ -39,13 +39,13 @@ public type
 
 public function Identity<T>(Input: T): T;
 begin
-  var Local: T := Input;
+  const Local: T := Input;
   return Local;
 end function;
 
 public procedure Notify(MessageText: string);
 begin
-  mutable var CopyText: string := MessageText;
+  var CopyText: string := MessageText;
 end procedure;
 end unit;
 "#;
@@ -71,7 +71,8 @@ end unit;
         ("Choice", SemanticTokenKind::Enum),
         ("T", SemanticTokenKind::TypeParameter),
         ("Input", SemanticTokenKind::Parameter),
-        ("Local", SemanticTokenKind::Variable),
+        ("Local", SemanticTokenKind::Constant),
+        ("CopyText", SemanticTokenKind::Variable),
         ("Value", SemanticTokenKind::Field),
         ("Current", SemanticTokenKind::Property),
         ("Changed", SemanticTokenKind::Event),
@@ -101,7 +102,7 @@ fn semantic_tokens_follow_shadowing_and_return_partial_malformed_results() {
     let temp = TempDirectory::new("semantic-token-shadowing");
     let source = r#"program Shadowing;
 
-var Value: integer := 1;
+const Value: integer := 1;
 
 function ReadValue(Value: integer): integer;
 begin
@@ -109,7 +110,7 @@ begin
 end function;
 
 begin
-  var Broken: integer := ReadValue(Value;
+  const Broken: integer := ReadValue(Value;
 end.
 "#;
     let path = temp.write("shadowing.fpas", source);
@@ -126,7 +127,7 @@ end.
         token.span.offset() == parameter_reference && token.kind == SemanticTokenKind::Parameter
     }));
     assert!(tokens.iter().any(|token| {
-        token.span.offset() == global_reference && token.kind == SemanticTokenKind::Variable
+        token.span.offset() == global_reference && token.kind == SemanticTokenKind::Constant
     }));
     assert!(
         tokens
@@ -188,7 +189,7 @@ fn unknown_type_action_adds_one_canonical_unambiguous_import() {
         "unit Actions.Types;\n\npublic type UniqueType = integer;\nend unit;\n",
     );
     let source =
-        "program Actions;\n\nuses Actions.Core;\n\nbegin\n  var Value: UniqueType := 1;\nend.\n";
+        "program Actions;\n\nuses Actions.Core;\n\nbegin\n  const Value: UniqueType := 1;\nend.\n";
     let main = temp.write("src/main.fpas", source);
     let mut service = LanguageService::load(&manifest);
     let analysis = service.analyze_document(&main).expect("project analysis");
@@ -365,7 +366,7 @@ fn import_fixture(name: &str) -> ImportFixture {
         "unit Actions.Importable;\n\npublic function UniqueValue(): integer;\nbegin\n  return 42;\nend function;\n\nfunction PrivateValue(): integer;\nbegin\n  return 0;\nend function;\nend unit;\n",
     );
     let source = format!(
-        "program Actions;\n\nuses Actions.Core;\n\nbegin\n  var Value: integer := {name}();\nend.\n"
+        "program Actions;\n\nuses Actions.Core;\n\nbegin\n  const Value: integer := {name}();\nend.\n"
     );
     let main = temp.write("src/main.fpas", &source);
     ImportFixture {

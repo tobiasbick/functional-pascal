@@ -76,7 +76,7 @@ fn parameters_to_interface(
         .map(|parameter| {
             Ok(artifact::ParameterType {
                 name: parameter.name.clone(),
-                mutable: parameter.mutable,
+
                 ty: ty_to_interface_reference(&parameter.ty)?,
             })
         })

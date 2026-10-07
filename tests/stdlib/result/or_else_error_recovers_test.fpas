@@ -8,7 +8,7 @@ begin
 end function;
 
 begin
-  var R: result of integer, string := Error('oops');
-  var M: result of integer, string := OrElse(R, RecoverZero);
+  const R: result of integer, string := Error('oops');
+  const M: result of integer, string := OrElse(R, RecoverZero);
   WriteLn(Unwrap(M));
 end.

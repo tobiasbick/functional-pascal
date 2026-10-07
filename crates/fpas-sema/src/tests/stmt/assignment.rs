@@ -4,7 +4,7 @@ use super::super::{check_errors, check_ok};
 fn assign_mutable() {
     check_ok(
         "program T; \
-         mutable var X: integer := 0; \
+         var X: integer := 0; \
          begin X := 1; end.",
     );
 }
@@ -13,7 +13,7 @@ fn assign_mutable() {
 fn assign_immutable_error() {
     check_errors(
         "program T; \
-         var X: integer := 0; \
+         const X: integer := 0; \
          begin X := 1; end.",
     );
 }
@@ -22,7 +22,7 @@ fn assign_immutable_error() {
 fn assign_type_mismatch() {
     check_errors(
         "program T; \
-         mutable var X: integer := 0; \
+         var X: integer := 0; \
          begin X := true; end.",
     );
 }
@@ -50,7 +50,7 @@ fn assign_to_array_element_ok() {
     check_ok(
         "program T; \
          begin \
-         mutable var A: array of integer := [1, 2, 3]; \
+         var A: array of integer := [1, 2, 3]; \
          A[0] := 99; \
          end.",
     );

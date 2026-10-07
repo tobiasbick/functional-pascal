@@ -4,17 +4,35 @@ use crate::types::Ty;
 use fpas_diagnostics::codes::{
     SEMA_DUPLICATE_DECLARATION, SEMA_MISSING_RECORD_FIELD, SEMA_UNKNOWN_NAME,
 };
-use fpas_parser::{Expr, FieldInit, VarDef};
+use fpas_parser::{Expr, FieldInit, TypeExpr, VarDef};
 
 impl Checker {
     /// Checks an initializer and preserves its type and static capture guarantees.
     pub(crate) fn check_var_def(&mut self, v: &VarDef, mutable: bool) {
-        let declared_ty = self.resolve_type_expr(&v.type_expr);
+        self.check_binding(&v.name, &v.type_expr, &v.value, v.span, mutable, false);
+    }
 
-        let value_ty = self.check_expr_with_expected_record_literals(&v.value, &declared_ty);
-        self.check_type_compat(&declared_ty, &value_ty, "variable initializer", v.span);
+    /// Checks a typed binding while retaining expression identity for capture metadata.
+    pub(crate) fn check_binding(
+        &mut self,
+        name: &str,
+        type_expr: &TypeExpr,
+        value: &Expr,
+        span: fpas_lexer::Span,
+        mutable: bool,
+        constant: bool,
+    ) {
+        let declared_ty = self.resolve_type_expr(type_expr);
 
-        let stored_ty = match (&declared_ty, self.ty_of_checked(&v.value)) {
+        let value_ty = self.check_expr_with_expected_record_literals(value, &declared_ty);
+        let context = if constant {
+            "const initializer"
+        } else {
+            "variable initializer"
+        };
+        self.check_type_compat(&declared_ty, &value_ty, context, span);
+
+        let stored_ty = match (&declared_ty, self.ty_of_checked(value)) {
             (crate::types::Ty::Task(inner), crate::types::Ty::Task(actual))
                 if inner.is_error() && !actual.is_error() =>
             {
@@ -23,25 +41,44 @@ impl Checker {
             _ => declared_ty.clone(),
         };
 
-        let task_bound = self.expr_is_task_bound(Self::expr_lookup_key(&v.value));
+        let task_bound = self.expr_is_task_bound(Self::expr_lookup_key(value));
+        let constant_info = constant.then(|| {
+            let compile_time = self.const_initializer_is_compile_time_known(value, &stored_ty);
+            crate::scope::ConstantInfo {
+                compile_time,
+                value: if compile_time {
+                    self.scalar_constant_value(value)
+                } else {
+                    None
+                },
+            }
+        });
         if !self.scopes.define_with_declaration(
-            &v.name,
+            name,
             Symbol {
+                constant: constant_info,
                 ty: stored_ty.clone(),
                 mutable,
-                kind: SymbolKind::Var,
+                kind: if constant {
+                    SymbolKind::Const
+                } else {
+                    SymbolKind::Var
+                },
                 task_bound,
             },
-            v.span,
+            span,
         ) {
             self.error_with_code(
                 SEMA_DUPLICATE_DECLARATION,
-                format!("Duplicate variable `{}`", v.name),
+                format!(
+                    "Duplicate {} `{name}`",
+                    if constant { "constant" } else { "variable" }
+                ),
                 "Each name must be unique in the same scope.",
-                v.span,
+                span,
             );
         }
-        self.record_binding_discard_info(&v.name, &stored_ty, mutable, Some(&v.value));
+        self.record_binding_discard_info(name, &stored_ty, mutable, Some(value));
     }
 
     fn validate_typed_record_literal_fields(

@@ -11,6 +11,11 @@ written arguments, and the recorded implicit-receiver exception. Aliasing
 between writable arguments is rejected, and local reassignment cannot become
 a caller-visible change during migration.
 
+Current behavior after AP16: ordinary parameters are read-only values,
+writable local parameter copies preserve local changes and captures, and no
+true reference parameter mode is implemented yet. `Push`/`Pop` retain their
+simple writable-array binding rule until AP17.3.
+
 ## Decisions
 
 - Parameters are read-only by default. `var` in the signature allows the
@@ -21,11 +26,13 @@ a caller-visible change during migration.
   constants, `const` bindings, and temporaries are invalid.
 - Two `var` arguments of one call must not share a root variable. This also
   rejects `Swap(var A[I], var A[J])`; use a routine such as `SwapAt(var A, I, J)`.
-- `mutable` parameters are removed. Where a routine reassigned a `mutable`
-  parameter locally, the migration introduces a local `var` copy; it never
-  turns local reassignment into caller mutation. This removal is delivered by
-  the shared keyword switch in
-  [AP16.3](../ap16-immutable-and-mutable-bindings/03-keyword-switch.md).
+- `mutable` parameters are removed by
+  [AP16.3](../ap16-immutable-and-mutable-bindings/03-keyword-switch.md), before
+  AP17.1 introduces reference parameters. The migration uses fresh local
+  `var` copies for reassignment, field/element writes, mutating intrinsics,
+  and captures (including read-only captures). Only resolved parameter
+  references are renamed, preserving shadowing and member names. Local
+  changes never become caller mutation; shared capture cells stay task-bound.
 - Intrinsics that change a caller variable use the same `var` safety rules
   and explicit marking for written arguments. The implicit receiver of a
   dot call is the agreed exception: native operations such as `Items.Push(V)`
@@ -84,8 +91,7 @@ tracks the shared review. This does not block AP16 or AP17.1/AP17.2.
 ## Dependencies
 
 - AP09 (named arguments, for the named `var` form in AP17.2).
-- AP13 (recorded package dependency; recheck at AP17.1 whether a block-syntax
-  work package is actually required).
+- AP13 (routine and expression closers; complete on the working branch).
 - AP16 (the keyword switch AP16.3).
 
 AP25 and AP26 depend on this package.

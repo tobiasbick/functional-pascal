@@ -16,7 +16,7 @@ The [cell drawing API](cells-frames.md) stores foreground and background colors 
 | `RgbColor(Red, Green, Blue)` | each channel `0..255` | `Rgb` |
 
 ```pascal
-var Value: Cell := record
+const Value: Cell := record
   glyph := 'X';
   foreground := RgbColor(255, 128, 0);
   background := Ansi256Color(17);

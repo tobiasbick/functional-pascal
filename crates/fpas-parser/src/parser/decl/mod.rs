@@ -16,11 +16,11 @@ impl Parser {
             let visibility = self.parse_visibility(allow_visibility);
             match self.current_token() {
                 Token::Const => decls.extend(self.parse_const_declaration(visibility)),
-                Token::Var => decls.extend(self.parse_variable_declaration(false, visibility)),
-                Token::Mutable if self.is_mutable_var_start() => {
-                    decls.extend(self.parse_variable_declaration(true, visibility));
+                Token::Var => decls.extend(self.parse_variable_declaration(visibility)),
+                Token::Ident(_) if self.is_mutable_var_start() => {
+                    self.reject_mutable_binding();
+                    decls.extend(self.parse_variable_declaration(visibility));
                 }
-                Token::Mutable => break,
                 Token::Type => {
                     decls.extend(self.parse_type_declaration(visibility, allow_visibility));
                 }

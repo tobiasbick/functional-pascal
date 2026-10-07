@@ -27,10 +27,10 @@ type RootType = record
   public Child: Branch;
 end record;
 
-var Root: RootType;
+const Root: RootType;
 
 begin
-  var Result: integer := Root.Child.Child.Value;
+  const Result: integer := Root.Child.Child.Value;
 end.
 "#;
     let path = temp.write("repeated.fpas", source);
@@ -87,7 +87,7 @@ fn hierarchical_unit_resolution_is_independent_of_source_and_uses_order() {
             "unit A.B;\n\npublic function Target(): integer;\nbegin return 2; end function;\nend unit;\n",
         );
         let main_source = format!(
-            "program App;\n\nuses {uses};\n\nbegin\n  var Value: integer := A.B.Target();\nend.\n"
+            "program App;\n\nuses {uses};\n\nbegin\n  const Value: integer := A.B.Target();\nend.\n"
         );
         let main = temp.write("src/main.fpas", &main_source);
         let mut service = LanguageService::load(&manifest);
@@ -111,10 +111,10 @@ fn genuinely_ambiguous_qualified_candidates_do_not_pick_source_order() {
     );
     temp.write(
         "src/ab.fpas",
-        "unit A.B;\n\npublic var C: integer := 1;\nend unit;\n",
+        "unit A.B;\n\npublic const C: integer := 1;\nend unit;\n",
     );
     let main_source =
-        "program App;\n\nuses A, A.B;\n\nbegin\n  var Value: integer := A.B.C;\nend.\n";
+        "program App;\n\nuses A, A.B;\n\nbegin\n  const Value: integer := A.B.C;\nend.\n";
     let main = temp.write("src/main.fpas", main_source);
     let mut service = LanguageService::load(&manifest);
 

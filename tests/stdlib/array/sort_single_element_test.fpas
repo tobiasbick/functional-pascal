@@ -3,7 +3,7 @@ program T;
 uses Std.Console, Std.Arrays;
 
 begin
-  var A: array of integer := [42];
-  var B: array of integer := Sort(A);
+  const A: array of integer := [42];
+  const B: array of integer := Sort(A);
   WriteLn(B[0]);
 end.

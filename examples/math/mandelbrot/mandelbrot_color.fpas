@@ -35,7 +35,7 @@ end function;
 
 public function EscapeColor(Kind: PaletteKind; EscapeValue: real): TuiColor;
 begin
-  var Band: integer := BandIndex(EscapeValue);
+  const Band: integer := BandIndex(EscapeValue);
   case Kind of
     when PaletteKind.DeepOcean:
       begin

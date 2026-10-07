@@ -16,14 +16,14 @@ fn tls_listener_reports_an_os_assigned_address() {
 uses Std.Net, Std.Test;
 function ExerciseListener(): result of boolean, string;
 begin
-  var Server: Listener := try ListenTls('127.0.0.1', 0, 'cert.pem', 'key.pem', 2000);
-  var Address: NetworkAddress := try ListenerLocalAddress(Server);
+  const Server: Listener := try ListenTls('127.0.0.1', 0, 'cert.pem', 'key.pem', 2000);
+  const Address: NetworkAddress := try ListenerLocalAddress(Server);
   AssertEquals('127.0.0.1', Address.Host);
   AssertTrue(Address.Port > 0);
   AssertTrue(Address.Port <= 65535);
-  var Client: Connection := try Connect(Address.Host, Address.Port, 2000);
-  var ClientClosed: boolean := try Close(Client);
-  var ServerClosed: boolean := try CloseListener(Server);
+  const Client: Connection := try Connect(Address.Host, Address.Port, 2000);
+  const ClientClosed: boolean := try Close(Client);
+  const ServerClosed: boolean := try CloseListener(Server);
   case ListenerLocalAddress(Server) of
     when Ok(_): panic('Closed TLS listener returned an address');
     when Error(_): begin end;

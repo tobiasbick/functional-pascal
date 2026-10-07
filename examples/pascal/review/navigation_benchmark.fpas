@@ -55,26 +55,26 @@ begin
 end function;
 
 begin
-  var Size: integer := StrToInt(ParamStr(0));
-  var Mode: string := ParamStr(1);
-  mutable var Text: string := (Std.Str.RepeatStr('x', Size) + #10) + Std.Str.RepeatStr('x', Size);
-  mutable var Caret: integer := Size;
+  const Size: integer := StrToInt(ParamStr(0));
+  const Mode: string := ParamStr(1);
+  var Text: string := (Std.Str.RepeatStr('x', Size) + #10) + Std.Str.RepeatStr('x', Size);
+  var Caret: integer := Size;
   if Mode = 'lines' then
     begin
       Text := Std.Str.RepeatStr('short' + #10, Size);
       Caret := Std.Str.Length(Text) - 7;
     end;
   end if;
-  var Initial: TextAreaModel := record
+  const Initial: TextAreaModel := record
     Text := Text;
     Caret := Caret;
     Offset := TuiPoint.Create(0, 0);
   end;
-  var App: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(20, 4));
-  var Started: integer := MonotonicMillis();
+  const App: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(20, 4));
+  const Started: integer := MonotonicMillis();
   for Pass: integer := 1 to 10 do
     begin
-      var Moved: TextAreaModel := Press(App, Initial, TuiKeyKind.Down, '');
+      const Moved: TextAreaModel := Press(App, Initial, TuiKeyKind.Down, '');
       if Moved.Caret <= Caret then
         begin
           panic('caret did not move');

@@ -47,7 +47,7 @@ Rules:
   `procedure Setter(Self: R; Value: T)`.
 - Accessors may not be static or generic, may not take extra parameters, and must
   match the property type. `Self` and a setter's value parameter are passed by
-  value; neither may be declared `mutable`.
+  value; both are read-only parameters.
 - Property names share the case-insensitive member namespace with fields, methods,
   and static routines.
 - `read` and `write` are reserved keywords and can only be used in their
@@ -59,7 +59,7 @@ Rules:
 A readable property is an ordinary expression of the property type:
 
 ```pascal
-var Caption: string := Button.Text;
+const Caption: string := Button.Text;
 WriteLn(CreateButton().Text);
 ```
 
@@ -91,12 +91,12 @@ CreateButton().Text := 'Lost';  // Error
 
 Writing a read-only property is a compile-time error.
 
-Property assignment does not require a `mutable` binding on the receiver. The
+Property assignment does not require a writable binding on the receiver. The
 setter receives `Self` by value and may update data reached through a handle,
 registry, or other mutable facility without mutating the handle binding itself:
 
 ```pascal
-var Button: TuiButton := FindButton();
+const Button: TuiButton := FindButton();
 Button.Text := 'Save';  // Valid — Button is unchanged as a value
 ```
 

@@ -27,9 +27,9 @@ begin
   Present();
   AssertScreenLine('.XYZ.', 1);
   AssertScreenLine('.....', 2);
-  var ReadBack: Cell := Unwrap(GetCell(2, 1));
-  var Foreground: Color := ReadBack.foreground;
-  var Background: Color := ReadBack.background;
+  const ReadBack: Cell := Unwrap(GetCell(2, 1));
+  const Foreground: Color := ReadBack.foreground;
+  const Background: Color := ReadBack.background;
   AssertEquals('X', ReadBack.glyph);
   AssertTrue(Foreground.kind = ColorKind.Rgb);
   AssertEquals(10, Foreground.red);

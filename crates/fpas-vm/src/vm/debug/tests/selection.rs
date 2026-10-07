@@ -17,9 +17,9 @@ begin
 end function;
 function Parent(): integer;
 begin
-  var T: task := go Child();
-  mutable var Seen: integer := 0;
-  var C: WaitCase := TaskCase(T, procedure()
+  const T: task := go Child();
+  var Seen: integer := 0;
+  const C: WaitCase := TaskCase(T, procedure()
   begin
     Sleep(0);
     Sleep(1);
@@ -29,28 +29,28 @@ begin
   return Seen;
 end function;
 begin
-  var T: task := go Parent();
-  var Q: channel of integer := CreateChannel(1);
-  mutable var Seen: integer := 0;
-  var S: WaitCase := SendCase(Q, 42, procedure(R: result of boolean, string)
+  const T: task := go Parent();
+  const Q: channel of integer := CreateChannel(1);
+  var Seen: integer := 0;
+  const S: WaitCase := SendCase(Q, 42, procedure(R: result of boolean, string)
   begin
     if not Unwrap(R) then panic('send result'); end if;
     Sleep(1);
-    var Receive: WaitCase := ReceiveCase(Q, procedure(V: result of integer, string)
+    const Receive: WaitCase := ReceiveCase(Q, procedure(V: result of integer, string)
     begin Seen := Unwrap(V); end procedure);
     if Select([Receive]) <> 0 then panic('nested selection'); end if;
   end procedure);
   if Select([S]) <> 0 then panic('send index'); end if;
   if Seen <> 42 then panic('callback did not complete'); end if;
   if Wait(T) <> 7 then panic('task value lost'); end if;
-  var Producer: task := go Produce(Q);
-  var Pending: WaitCase := ReceiveCase(Q, procedure(R: result of integer, string)
+  const Producer: task := go Produce(Q);
+  const Pending: WaitCase := ReceiveCase(Q, procedure(R: result of integer, string)
   begin Seen := Unwrap(R); end procedure);
-  var Fallback: WaitCase := TimerCase(1000, procedure() begin panic('pending receive timed out'); end procedure);
+  const Fallback: WaitCase := TimerCase(1000, procedure() begin panic('pending receive timed out'); end procedure);
   if Select([Pending, Fallback]) <> 0 then panic('pending receive index'); end if;
   if Seen <> 123 then panic('pending receive value'); end if;
   if Wait(Producer) <> 1 then panic('producer result'); end if;
-  var Closed: WaitCase := ReceiveCase(Q, procedure(R: result of integer, string)
+  const Closed: WaitCase := ReceiveCase(Q, procedure(R: result of integer, string)
   begin
     case R of
       when Ok(_): panic('closed channel delivered');
@@ -59,7 +59,7 @@ begin
   end procedure);
   discard CloseChannel(Q);
   if Select([Closed]) <> 0 then panic('closed index'); end if;
-  var Timer: WaitCase := TimerCase(2, procedure() begin Seen := 99; end procedure);
+  const Timer: WaitCase := TimerCase(2, procedure() begin Seen := 99; end procedure);
   if Select([Timer]) <> 0 then panic('timer index'); end if;
   if Seen <> 99 then panic('timer callback'); end if;
 end."#;
@@ -94,8 +94,8 @@ uses Std.Tasks;
 function Other(C: WaitCase): integer;
 begin return Select([C]); end function;
 begin
-  var C: WaitCase := TimerCase(0, procedure() begin end procedure);
-  var T: task := go Other(C);
+  const C: WaitCase := TimerCase(0, procedure() begin end procedure);
+  const T: task := go Other(C);
   discard Wait(T);
 end."#,
     );

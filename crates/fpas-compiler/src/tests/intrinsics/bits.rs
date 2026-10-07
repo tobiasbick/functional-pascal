@@ -51,7 +51,7 @@ fn invalid_shift_counts_keep_numeric_domain_diagnostics() {
     for function in ["ShiftLeft", "ShiftRight"] {
         for count in [-1, 64, i64::MAX] {
             let error = run_program(&format!(
-                "program Bad; uses Std.Bits; begin var A: integer := {function}(1, {count}); end."
+                "program Bad; uses Std.Bits; begin const A: integer := {function}(1, {count}); end."
             ))
             .unwrap_err();
             assert_eq!(error.code, RUNTIME_NUMERIC_DOMAIN_ERROR);

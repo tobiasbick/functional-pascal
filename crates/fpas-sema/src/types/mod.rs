@@ -225,8 +225,6 @@ pub struct ProcedureTy {
 /// One resolved callable parameter.
 #[derive(Debug, Clone, PartialEq)]
 pub struct ParamTy {
-    /// Whether the parameter may be mutated by the callee.
-    pub mutable: bool,
     /// Case-preserving parameter name.
     pub name: String,
     /// Resolved parameter type.
@@ -356,18 +354,19 @@ impl Ty {
                 }
                 a.return_type
                     .compatible_with_mode(&b.return_type, generic_wildcard)
-                    && a.params.iter().zip(b.params.iter()).all(|(pa, pb)| {
-                        pa.mutable == pb.mutable
-                            && pa.ty.compatible_with_mode(&pb.ty, generic_wildcard)
-                    })
+                    && a.params
+                        .iter()
+                        .zip(b.params.iter())
+                        .all(|(pa, pb)| pa.ty.compatible_with_mode(&pb.ty, generic_wildcard))
             }
             (Ty::Procedure(a), Ty::Procedure(b)) => {
                 if a.variadic != b.variadic || a.params.len() != b.params.len() {
                     return false;
                 }
-                a.params.iter().zip(b.params.iter()).all(|(pa, pb)| {
-                    pa.mutable == pb.mutable && pa.ty.compatible_with_mode(&pb.ty, generic_wildcard)
-                })
+                a.params
+                    .iter()
+                    .zip(b.params.iter())
+                    .all(|(pa, pb)| pa.ty.compatible_with_mode(&pb.ty, generic_wildcard))
             }
             _ => self == other,
         }

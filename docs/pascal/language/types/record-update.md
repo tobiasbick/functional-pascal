@@ -22,23 +22,23 @@ type Point = record
   Y: integer;
 end record;
 
-var P: Point := record
+const P: Point := record
   X := 1;
   Y := 2;
 end;
-var Q: Point := P with X := 99; end with; // Q.X=99, Q.Y=2; P is unchanged
+const Q: Point := P with X := 99; end with; // Q.X=99, Q.Y=2; P is unchanged
 ```
 
 Multiple fields can be updated in one expression:
 
 ```pascal
-var R: Point := P with X := 10; Y := 20; end with;
+const R: Point := P with X := 10; Y := 20; end with;
 ```
 
 Updates may be chained by wrapping the inner expression in parentheses:
 
 ```pascal
-var S: Point := (P with X := 5; end with) with Y := 7; end with;
+const S: Point := (P with X := 5; end with) with Y := 7; end with;
 ```
 
 `with` works on any record value, including function return values:
@@ -52,7 +52,7 @@ begin
   end;
 end function;
 
-var T: Point := Origin() with X := 42; end with;
+const T: Point := Origin() with X := 42; end with;
 ```
 
 Unknown field names and type mismatches in override values are compile-time errors.

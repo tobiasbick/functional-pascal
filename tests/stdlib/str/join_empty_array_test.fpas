@@ -3,6 +3,6 @@ program T;
 uses Std.Console, Std.Str;
 
 begin
-  var Empty: array of string := [];
+  const Empty: array of string := [];
   WriteLn(Join(Empty, ','));
 end.

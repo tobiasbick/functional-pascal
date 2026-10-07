@@ -108,18 +108,6 @@ pub(super) fn declaration_symbol(
                 type_text(snapshot, &value.type_expr)
             ),
         ),
-        Decl::MutableVar(value) => (
-            &value.name,
-            SymbolKind::MutableVariable,
-            value.span,
-            value.visibility,
-            named_type(&value.type_expr),
-            format!(
-                "mutable var {}: {}",
-                value.name,
-                type_text(snapshot, &value.type_expr)
-            ),
-        ),
         Decl::TypeDef(value) => (
             &value.name,
             if matches!(value.body, TypeBody::Enum(_)) {
@@ -156,9 +144,7 @@ pub(super) fn declaration_symbol(
     let qualified_name = format!("{owner}.{name}");
     let callable = match declaration {
         Decl::Const(value) => type_callable_signature(snapshot, name, &value.type_expr),
-        Decl::Var(value) | Decl::MutableVar(value) => {
-            type_callable_signature(snapshot, name, &value.type_expr)
-        }
+        Decl::Var(value) => type_callable_signature(snapshot, name, &value.type_expr),
         Decl::Function(value) => Some(function_signature(snapshot, value, 0)),
         Decl::Procedure(value) => Some(procedure_signature(snapshot, value, 0)),
         Decl::TypeDef(_) => None,

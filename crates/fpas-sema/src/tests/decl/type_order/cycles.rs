@@ -59,13 +59,13 @@ fn diagnostics_name_the_mandatory_cycle_after_a_finite_recursive_field() {
 fn enum_alternatives_must_have_a_finite_payload_path() {
     check_ok(
         "program T; type Chain = enum Empty; Link(Next: Chain); end enum;
-      begin var Value: Chain := Chain.Link(Chain.Empty); discard Value; end.",
+      begin const Value: Chain := Chain.Link(Chain.Empty); discard Value; end.",
     );
     check_ok(
         "program T;
       type A = enum More(Next: B); end enum;
       type B = enum Empty; More(Next: A); end enum;
-      begin var Value: A := A.More(B.Empty); discard Value; end.",
+      begin const Value: A := A.More(B.Empty); discard Value; end.",
     );
     for definitions in [
         "type A = enum More(Next: A); end enum;",

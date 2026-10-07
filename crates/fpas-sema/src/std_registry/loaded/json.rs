@@ -57,6 +57,7 @@ pub(super) fn register_std_json(checker: &mut Checker) {
     checker.scopes.define(
         s::STD_JSON_VALUE,
         Symbol {
+            constant: None,
             ty: json_ty.clone(),
             mutable: false,
             kind: SymbolKind::Type,
@@ -74,6 +75,7 @@ pub(super) fn register_std_json(checker: &mut Checker) {
         checker.scopes.define(
             &qualified_name,
             Symbol {
+                constant: None,
                 ty: json_ty.clone(),
                 mutable: false,
                 kind,
@@ -85,13 +87,13 @@ pub(super) fn register_std_json(checker: &mut Checker) {
     define_func(
         checker,
         s::STD_JSON_PARSE,
-        vec![p("Text", Ty::String, false)],
+        vec![p("Text", Ty::String)],
         Ty::Result(Box::new(json_ty.clone()), Box::new(Ty::String)),
     );
     define_func(
         checker,
         s::STD_JSON_STRINGIFY,
-        vec![p("Value", json_ty, false)],
+        vec![p("Value", json_ty)],
         Ty::String,
     );
 }

@@ -71,8 +71,6 @@ pub enum TypeExpr {
 /// Parsed formal parameter.
 #[derive(Debug, Clone, PartialEq)]
 pub struct FormalParam {
-    /// Whether the parameter is declared `mutable`.
-    pub mutable: bool,
     /// The parameter name.
     pub name: String,
     /// The parameter type.

@@ -3,8 +3,8 @@ program T;
 uses Std.Console, Std.Dictionaries;
 
 begin
-  var A: dict of string to integer := ['X': 1];
-  var B: dict of string to integer := [:];
-  var M: dict of string to integer := Std.Dictionaries.Merge(A, B);
+  const A: dict of string to integer := ['X': 1];
+  const B: dict of string to integer := [:];
+  const M: dict of string to integer := Std.Dictionaries.Merge(A, B);
   WriteLn(Std.Dictionaries.Length(M));
 end.

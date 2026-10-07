@@ -38,7 +38,7 @@ fn all_loop_forms_accept_multiple_statements_and_nested_scopes() {
     parse_ok(
         "for I: integer := 1 to 3 do A(); B(); end for;
         for I: integer := 3 downto 1 do null; end for;
-        for X: integer in Items do begin var Y: integer := X; A(Y); end; B(); end for;
+        for X: integer in Items do begin const Y: integer := X; A(Y); end; B(); end for;
         while true do if false then null; end if; break; end while;
         repeat null; until true;",
     );
@@ -151,7 +151,7 @@ fn unclosed_else_if_suggests_elsif() {
 
 #[test]
 fn explicit_scoping_end_does_not_close_the_conditional() {
-    parse_ok("if true then begin var X: integer := 1; A(X); end; B(); end if;");
+    parse_ok("if true then begin const X: integer := 1; A(X); end; B(); end if;");
     let (_, errors) = parse("program T; begin if true then begin null; end; end.");
     assert!(
         errors

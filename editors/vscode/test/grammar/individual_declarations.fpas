@@ -9,9 +9,10 @@ end record;
 public const A: integer := 1;
 public const B: integer := 2;
 
-public var C: integer := A;
-public var D: integer := B;
+public const C: integer := A;
+public const D: integer := B;
 
-public mutable var E: integer := 0;
-public mutable var F: integer := 0;
+public var E: integer := 0;
+public var F: integer := 0;
+public var mutable: integer := 0;
 end unit;

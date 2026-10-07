@@ -28,7 +28,7 @@ begin
 end procedure;
 
 begin
-  var Root: string := ScratchDir() + '/glob-tree';
+  const Root: string := ScratchDir() + '/glob-tree';
   EnsureDir(Root);
   EnsureDir(Root + '/src');
   EnsureDir(Root + '/src/ui');

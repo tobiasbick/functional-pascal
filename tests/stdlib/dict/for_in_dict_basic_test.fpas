@@ -3,7 +3,7 @@ program T;
 uses Std.Console, Std.Dictionaries;
 
 begin
-  var D: dict of string to integer := ['Alice': 30, 'Bob': 25];
+  const D: dict of string to integer := ['Alice': 30, 'Bob': 25];
   for K: string in D do
     begin
       WriteLn(K);

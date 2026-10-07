@@ -3,8 +3,8 @@ program CancellationTest;
 uses Std.Tasks, Std.Test;
 
 begin
-  var Source: CancellationSource := CreateCancellationSource();
-  var Token: CancellationToken := GetCancellationToken(Source);
+  const Source: CancellationSource := CreateCancellationSource();
+  const Token: CancellationToken := GetCancellationToken(Source);
   AssertFalse(IsCancellationRequested(Token));
   AssertTrue(Cancel(Source));
   AssertTrue(IsCancellationRequested(Token));

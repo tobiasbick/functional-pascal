@@ -113,7 +113,7 @@ without an orphan worker.
 
 `setVariable` accepts a current-stop `variablesReference`, the exact returned
 child `name`, and an FPAS expression in `value`. It supports mutable source
-locals, parameters, globals, closure cells, record fields, array elements,
+locals, globals, closure cells, record fields, array elements,
 existing dictionary values, named fields of the active data-carrying enum
 variant, the `value` child of `Result.Ok`, `Result.Error`, and
 `Option.Some`, and complete mutable enum, `Result`, and `Option` values.
@@ -130,7 +130,7 @@ non-capturing executable routine such as `AddTwo` or `Math.Transform`, or a
 named nested routine whose captures are immutable values or existing mutable
 cells in the selected lexical-owner frame. Constructed cell-capturing
 functions are task-bound to the selected task and may be stored only in a
-mutable local or parameter register of that owner frame. An already
+mutable local register of that owner frame. An already
 materialized task-bound function may be copied only within that selected owner
 task and frame; the copy preserves its exact function and cell handles. A
 simple name uses lexical lookup first. `Receiver.Method` binds one evaluated
@@ -161,7 +161,7 @@ that already holds a compatible function value, one
 statically resolved non-capturing executable routine, or a named nested routine
 whose captures are immutable values or existing mutable cells in the selected
 lexical-owner frame. Constructed cell-capturing functions are task-bound to
-the selected task and may be stored only in a mutable local or parameter
+the selected task and may be stored only in a mutable local
 register of that owner frame. Task-bound sources may be copied only within the
 selected owner task and frame. Task-typed targets accept
 one visible source binding that already holds a compatible task handle.

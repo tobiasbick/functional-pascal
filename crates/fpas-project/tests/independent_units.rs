@@ -56,7 +56,7 @@ include = ["src/**/*.fpas"]
          uses Demo.Base;
          public function Compute(X: integer): integer;
          begin
-           var P: Point := Make(X);
+           const P: Point := Make(X);
            return P.X;
          end function;\nend unit;",
     );

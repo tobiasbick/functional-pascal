@@ -38,16 +38,16 @@ begin
 end function;
 
 begin
-  var Numbers: array of integer := [1, 2, 3, 4];
+  const Numbers: array of integer := [1, 2, 3, 4];
   AssertEquals(12, Numbers.Filter(IsEven).Map(Double).Reduce(0, Sum));
   AssertEquals(4, (2).Double());
-  var Scores: dict of string to integer := ['A': 2, 'B': 3];
+  const Scores: dict of string to integer := ['A': 2, 'B': 3];
   AssertEquals(5, Scores.Reduce(0, AddEntry));
   AssertTrue(Scores.Get('A').IsSome());
   AssertEquals('AB', ('ab').Map(Upper));
   AssertEquals(2, MakeNumbers().Length());
   AssertTrue(Parse('1').IsOk());
-  var DoubleValue: function(X: integer): integer := Double;
+  const DoubleValue: function(X: integer): integer := Double;
   AssertEquals(6, (3).DoubleValue());
   AssertEquals(8, Apply(4, Double));
 end.

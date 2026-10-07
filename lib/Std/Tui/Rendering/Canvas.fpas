@@ -20,8 +20,8 @@ public type TuiCanvas = record
   // - `Bounds`: Rectangle affected by the operation.
   public static function Create(Surface: TuiWorkingSurface; Bounds: TuiRect): TuiCanvas;
   begin
-    var Size: TuiSize := Surface.Size();
-    var SurfaceBounds: TuiRect := TuiRect.Create(0, 0, Size.Width, Size.Height);
+    const Size: TuiSize := Surface.Size();
+    const SurfaceBounds: TuiRect := TuiRect.Create(0, 0, Size.Width, Size.Height);
     return record
       Surface := Surface;
       Clip := Bounds.Intersect(SurfaceBounds);
@@ -51,8 +51,8 @@ public type TuiCanvas = record
   // - `LocalBounds`: Bounds expressed in the parent canvas coordinate system.
   public function Child(Self: TuiCanvas; LocalBounds: TuiRect): TuiCanvas;
   begin
-    var Visible: TuiRect := LocalBounds.Intersect(Self.Clip);
-    var ChildClip: TuiRect := TuiRect.Create(Visible.X - LocalBounds.X, Visible.Y - LocalBounds.Y, Visible.Width, Visible.Height);
+    const Visible: TuiRect := LocalBounds.Intersect(Self.Clip);
+    const ChildClip: TuiRect := TuiRect.Create(Visible.X - LocalBounds.X, Visible.Y - LocalBounds.Y, Visible.Width, Visible.Height);
     return TuiCanvas.CreateLocal(Self.Surface, TuiPoint.Create(Self.Origin.X + LocalBounds.X, Self.Origin.Y +
                                                                                               LocalBounds.Y), ChildClip);
   end function;
@@ -70,7 +70,7 @@ public type TuiCanvas = record
         return;
       end;
     end if;
-    var CellWidth: integer := Cell.Width();
+    const CellWidth: integer := Cell.Width();
     if (CellWidth = 2) and not Self.Clip.Contains(TuiPoint.Create(Position.X + 1, Position.Y)) then
       begin
         Self.Surface.PutCell(TuiPoint.Create(Self.Origin.X + Position.X, Self.Origin.Y + Position.Y), TuiCell.Create(' ', TuiStyleRole.Normal));
@@ -101,13 +101,13 @@ public type TuiCanvas = record
   // - `Cell`: Terminal cell written by the operation.
   public procedure FillRect(Self: TuiCanvas; Bounds: TuiRect; Cell: TuiCell);
   begin
-    var CellWidth: integer := Cell.Width();
+    const CellWidth: integer := Cell.Width();
     if CellWidth <> 1 then
       begin
         panic('Tui canvas FillRect requires a one-column cell');
       end;
     end if;
-    var Visible: TuiRect := Bounds.Intersect(Self.Clip);
+    const Visible: TuiRect := Bounds.Intersect(Self.Clip);
     TuiSurfaceFillRect(Self.Surface, TuiRect.Create(Self.Origin.X + Visible.X, Self.Origin.Y +
                                                                                Visible.Y, Visible.Width, Visible.Height), Cell);
   end procedure;
@@ -121,12 +121,12 @@ public type TuiCanvas = record
   // - `Role`: Semantic style role used by the operation.
   public procedure WriteText(Self: TuiCanvas; Position: TuiPoint; Text: string; Role: TuiStyleRole);
   begin
-    mutable var X: integer := Position.X;
-    mutable var AsciiOnly: boolean := true;
-    var TextLength: integer := Std.Str.Length(Text);
+    var X: integer := Position.X;
+    var AsciiOnly: boolean := true;
+    const TextLength: integer := Std.Str.Length(Text);
     for Index: integer := 0 to TextLength - 1 do
       begin
-        var Code: integer := Std.Str.Ord(Std.Str.CharAt(Text, Index));
+        const Code: integer := Std.Str.Ord(Std.Str.CharAt(Text, Index));
         if (Code <> 10) and ((Code < 32) or (Code > 126)) then
           begin
             AsciiOnly := false;
@@ -139,7 +139,7 @@ public type TuiCanvas = record
       begin
         for Index: integer := 0 to TextLength - 1 do
           begin
-            var Glyph: string := Std.Str.CharAt(Text, Index);
+            const Glyph: string := Std.Str.CharAt(Text, Index);
             if Glyph = Std.Str.Chr(10) then
               begin
                 return;
@@ -162,7 +162,7 @@ public type TuiCanvas = record
             return;
           end;
         end if;
-        var GlyphWidth: integer := Std.Console.DisplayWidth(Glyph);
+        const GlyphWidth: integer := Std.Console.DisplayWidth(Glyph);
         if GlyphWidth > 0 then
           begin
             Self.PutCell(TuiPoint.Create(X, Position.Y), TuiCell.Create(Glyph, Role));
@@ -189,7 +189,7 @@ public type TuiCanvas = record
   Role: TuiStyleRole
 );
   begin
-    var Cell: TuiCell := TuiCell.Create('─', Role);
+    const Cell: TuiCell := TuiCell.Create('─', Role);
     for Offset: integer := 0 to Width - 1 do
       begin
         Self.PutCell(TuiPoint.Create(X + Offset, Y), Cell);
@@ -213,7 +213,7 @@ public type TuiCanvas = record
   Role: TuiStyleRole
 );
   begin
-    var Cell: TuiCell := TuiCell.Create('│', Role);
+    const Cell: TuiCell := TuiCell.Create('│', Role);
     for Offset: integer := 0 to Height - 1 do
       begin
         Self.PutCell(TuiPoint.Create(X, Y + Offset), Cell);
@@ -277,15 +277,15 @@ begin
       return;
     end;
   end if;
-  mutable var SourceX: integer := 0;
-  mutable var TargetX: integer := Position.X;
+  var SourceX: integer := 0;
+  var TargetX: integer := Position.X;
   if TargetX < Canvas.Clip.X then
     begin
       SourceX := Canvas.Clip.X - TargetX;
       TargetX := Canvas.Clip.X;
     end;
   end if;
-  mutable var Count: integer := Std.Arrays.Length(Cells) - SourceX;
+  var Count: integer := Std.Arrays.Length(Cells) - SourceX;
   if Count > Canvas.Clip.Right() - TargetX then
     begin
       Count := Canvas.Clip.Right() - TargetX;
@@ -297,7 +297,7 @@ begin
       return;
     end;
   end if;
-  mutable var Values: array of TuiCell := Std.Arrays.Slice(Cells, SourceX, Count);
+  var Values: array of TuiCell := Std.Arrays.Slice(Cells, SourceX, Count);
   if (TargetX + Count = Canvas.Clip.Right()) and (Values[Count - 1].Columns = 2) then
     begin
       Values[Count - 1] := TuiCell.Create(' ', TuiStyleRole.Normal);

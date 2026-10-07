@@ -80,7 +80,7 @@ line_comment    = '//' { (* any character except CR or LF *) } ;
 (* ---- Keywords (case-insensitive) ------------------------------- *)
 
 keyword         = 'program'   | 'unit'      | 'uses'      | 'const'
-                | 'var'       | 'mutable'   | 'function'  | 'procedure'
+                | 'var'   | 'function'  | 'procedure'
                 | 'begin'     | 'end'       | 'return'    | 'if'
                 | 'then'      | 'else'      | 'case'      | 'of'
                 | 'for'       | 'to'        | 'downto'    | 'in'
@@ -158,7 +158,6 @@ main_block          = 'begin' statement_list 'end' ;
 
 program_declaration = const_declaration
                     | var_declaration
-                    | mutable_var_declaration
                     | type_declaration
                     | function_decl
                     | procedure_decl ;
@@ -172,23 +171,23 @@ public_modifier     = 'public' ;
 (* not valid in `program` files. `private` is an ordinary identifier. *)
 
 (* Each declaration repeats its keyword; `public` applies to one     *)
-(* declaration only. Local statement bindings repeat `mutable var`   *)
-(* in full. Local type and constant declarations are not permitted.  *)
+(* declaration only. Local statement bindings repeat `var`   *)
+(* in full. Local const bindings are allowed; local types are not.  *)
 
 (* -- Constants -- *)
 const_declaration       = 'const' const_def ;
 const_def           = identifier ':' type_expr ':=' expression ';' ;
 
-(* The initializer must be compile-time known. Syntax allows a general *)
-(* expression here; the semantic checker restricts it to literals,     *)
-(* other constants, enum members, and pure operator combinations.      *)
+(* A const binding is immutable and permits a runtime initializer.   *)
+(* Local initialization occurs whenever its declaration is reached. *)
+(* Calls and computed dependencies remain computed independently of *)
+(* optimization; static forms require compile-time-known operands.   *)
 
-(* -- Immutable variables -- *)
+(* -- Imvariables -- *)
 var_declaration         = 'var' var_def ;
 var_def             = identifier ':' type_expr ':=' expression ';' ;
 
 (* -- Mutable variables -- *)
-mutable_var_declaration = 'mutable' 'var' var_def ;
 
 (* -- Type definitions -- *)
 type_declaration        = 'type' type_def ;
@@ -222,7 +221,7 @@ function_type       = 'function' '(' [ formal_type_list ] ')' ':' type_expr ;
 procedure_type      = 'procedure' '(' [ formal_type_list ] ')' ;
 
 formal_type_list    = formal_type_param { ';' formal_type_param } ;
-formal_type_param   = [ 'mutable' ] identifier ':' type_expr ;
+formal_type_param   = identifier ':' type_expr ;
 
 (* ---- 2.4 Record & Enum Types ---------------------------------- *)
 
@@ -250,7 +249,7 @@ instance_procedure_decl = instance_procedure_heading ';'
 instance_procedure_heading = 'procedure' identifier [ type_params ]
                              '(' [ instance_param_list ] ')' ;
 instance_param_list = instance_first_param { ';' param_group } ;
-instance_first_param = [ 'mutable' ] ( 'self' | identifier ) ':' type_expr ;
+instance_first_param = ( 'self' | identifier ) ':' type_expr ;
 
 (* Record member visibility is available only in unit files. The    *)
 (* modifier is written before each field, property, event, or routine; *)
@@ -309,7 +308,7 @@ procedure_heading   = 'procedure' identifier [ type_params ]
                       '(' [ param_list ] ')' ;
 
 param_list          = param_group { ';' param_group } ;
-param_group         = [ 'mutable' ] identifier ':' type_expr ;
+param_group         = identifier ':' type_expr ;
 
 nested_decl         = function_decl
                     | procedure_decl ;
@@ -326,8 +325,8 @@ control_body        = statement { statement } ;
 
 simple_statement    = block
                     | null_stmt
+                    | const_stmt
                     | var_stmt
-                    | mutable_var_stmt
                     | assignment_stmt
                     | return_stmt
                     | discard_stmt
@@ -347,9 +346,9 @@ null_stmt           = 'null' ;
 (* loop body that does nothing is written as 'null;'. Conditions and *)
 (* loop bounds use the enclosing scope; body locals do not escape.  *)
 
-(* -- Inline variable declarations -- *)
+(* -- Inline binding declarations -- *)
+const_stmt          = 'const' identifier ':' type_expr ':=' expression ;
 var_stmt            = 'var' identifier ':' type_expr ':=' expression ;
-mutable_var_stmt    = 'mutable' 'var' identifier ':' type_expr ':=' expression ;
 
 (* -- Assignment -- *)
 assignment_stmt     = designator ':=' expression ;
@@ -402,11 +401,15 @@ pattern_arg         = identifier ;                       (* binding only   *)
 (*                                                                  *)
 (* Value labels must be compile-time constants: integer,      *)
 (* string, boolean, or enum literals. Ranges use '..'.              *)
+(* Both range endpoints must be compile-time constants as well.    *)
+(* Calls, variables, and computed const dependencies are rejected. *)
+(* Put dynamic conditions in guards; enum/Option/Result patterns   *)
+(* retain their binding rules.                                    *)
 (*                                                                  *)
 (* Semantic disambiguation for guarded scalar bindings: in a scalar  *)
 (* case arm, `when Name if <boolean>:` binds the scrutinee to `Name` *)
 (* when the arm has exactly one bare identifier label and `Name`    *)
-(* does not resolve to a compile-time constant or enum member.      *)
+(* does not resolve to any const binding or enum member.      *)
 (* This shorthand is not valid for ranges or comma-separated label  *)
 (* lists.                                                           *)
 (* Destructure labels bind the inner value of Result/Option.        *)

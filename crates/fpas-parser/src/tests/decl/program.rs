@@ -65,7 +65,7 @@ fn program_with_var() {
 
 #[test]
 fn program_with_mutable_var() {
-    let p = parse_ok("program T; mutable var Count: integer := 0; begin end.");
+    let p = parse_ok("program T; var Count: integer := 0; begin end.");
     assert_eq!(p.declarations.len(), 1);
-    assert!(matches!(&p.declarations[0], Decl::MutableVar(_)));
+    assert!(matches!(&p.declarations[0], Decl::Var(_)));
 }

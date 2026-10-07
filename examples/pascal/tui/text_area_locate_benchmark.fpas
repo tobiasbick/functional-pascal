@@ -21,17 +21,17 @@ begin
       panic('expected ITERATIONS SIZE');
     end;
   end if;
-  var Iterations: integer := StrToInt(ParamStr(0));
-  var Size: integer := StrToInt(ParamStr(1));
+  const Iterations: integer := StrToInt(ParamStr(0));
+  const Size: integer := StrToInt(ParamStr(1));
   if (Iterations < 1) or (Size < 1) then
     begin
       panic('arguments must be positive');
     end;
   end if;
-  var Text: string := Std.Str.RepeatStr('é', Size);
-  var App: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(80, 24));
+  const Text: string := Std.Str.RepeatStr('é', Size);
+  const App: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(80, 24));
   discard App.RunIterations(Text, Update, View, 0, 0);
-  var Started: integer := MonotonicMillis();
+  const Started: integer := MonotonicMillis();
   for Iteration: integer := 1 to Iterations do
     begin
       discard App.RunIterations(Text, Update, View, 0, 0);
@@ -39,7 +39,7 @@ begin
   end for;
 
   WriteLn(('elapsed: ' + IntToStr(ElapsedMillis(Started))) + ' ms');
-  mutable var Visible: integer := Size;
+  var Visible: integer := Size;
   if Visible > 80 then
     begin
       Visible := 80;

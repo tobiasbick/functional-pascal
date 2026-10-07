@@ -9,7 +9,7 @@ uses Std.Args, Std.Conv, Std.Console, Std.Http, Std.Net, Std.Net.Utf8;
 // - `_RequestValue`: Validated request accepted over TLS.
 function Handle(_RequestValue: ServerRequest): ServerResponse;
 begin
-  mutable var ResponseValue: ServerResponse := ServerResponse.Create(200, 'OK');
+  var ResponseValue: ServerResponse := ServerResponse.Create(200, 'OK');
   ResponseValue.Headers := [Header.Create('Content-Type', 'text/plain; charset=utf-8')];
   ResponseValue.Body := Std.Net.Utf8.Encode('Hello over HTTPS from FPAS');
   return ResponseValue;
@@ -21,7 +21,7 @@ begin
       panic('usage: https_server.fpas -- CERTIFICATE_PEM PRIVATE_KEY_PEM [PORT]');
     end;
   end if;
-  mutable var Port: integer := 18443;
+  var Port: integer := 18443;
   if ParamCount() = 3 then
     begin
       Port := StrToInt(ParamStr(2));
@@ -32,7 +32,7 @@ begin
     when Ok(ListenerValue):
       begin
         WriteLn('HTTPS server listening on https://127.0.0.1:' + IntToStr(Port));
-        mutable var Options: ServerOptions := ServerOptions.Create();
+        var Options: ServerOptions := ServerOptions.Create();
         Options.MaxConcurrentRequests := 1;
         Options.MaxRequests := 1;
         case Serve(ListenerValue, Options, Handle) of

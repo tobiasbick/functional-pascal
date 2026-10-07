@@ -35,7 +35,7 @@ fn object_retains_layouts_constructed_by_runtime_intrinsics() {
 program RuntimeLayouts;
 uses Std.Json;
 begin
-  var Parsed: result of JsonValue, string := Parse('null');
+  const Parsed: result of JsonValue, string := Parse('null');
 end.",
     );
     let object = crate::compile_program_object_with_support(&program, &[], &[])
@@ -61,10 +61,10 @@ type
   end record;
 
 begin
-  var Origin: Point := record
+  const Origin: Point := record
     X := 1;
   end;
-  var Marker: integer := Origin.X;
+  const Marker: integer := Origin.X;
 end.
 "#,
     );
@@ -90,10 +90,10 @@ fn borrowed_standard_intrinsics_execute() {
 program RegisterIntrinsics;
 uses Std.Str, Std.Math, Std.Conv, Std.Test;
 begin
-  var Text: string := Std.Str.ToUpper('fpas');
-  var Root: real := Std.Math.Sqrt(81.0);
-  var Number: string := Std.Conv.IntToStr(42);
-  var Formatted: string := Std.Str.Format('n=%d %s', 42, 'ok');
+  const Text: string := Std.Str.ToUpper('fpas');
+  const Root: real := Std.Math.Sqrt(81.0);
+  const Number: string := Std.Conv.IntToStr(42);
+  const Formatted: string := Std.Str.Format('n=%d %s', 42, 'ok');
   Std.Test.AssertEquals('FPAS', Text);
   Std.Test.AssertEquals(9.0, Root);
   Std.Test.AssertEquals('42', Number);
@@ -155,7 +155,7 @@ begin
 end function;
 
 begin
-  var Values: array of integer := Std.Arrays.Map([2, 3, 4], Double);
+  const Values: array of integer := Std.Arrays.Map([2, 3, 4], Double);
   Std.Test.AssertEquals(3, Std.Arrays.Length(Values));
   Std.Test.AssertEquals(6, Values[1]);
 end.",
@@ -170,7 +170,7 @@ fn intrinsic_temporaries_do_not_clobber_loop_state() {
 program RegisterIntrinsicLoop;
 uses Std.Str, Std.Test;
 begin
-  mutable var Total: integer := 0;
+  var Total: integer := 0;
   for Index: integer := 1 to 3 do
   begin
     Total := Total + Std.Str.Length('abc');

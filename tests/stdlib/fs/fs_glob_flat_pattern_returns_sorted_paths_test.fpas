@@ -3,7 +3,7 @@ program FsGlobFlatPatternReturnsSortedPathsTest;
 uses Std.Arrays, Std.Fs, Std.Test;
 
 begin
-  var Prefix: string := ScratchDir() + '/glob-flat-';
+  const Prefix: string := ScratchDir() + '/glob-flat-';
   case WriteText(Prefix + 'b.txt', '') of
     when Ok(_):
       begin

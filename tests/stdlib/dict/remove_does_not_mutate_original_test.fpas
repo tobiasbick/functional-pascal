@@ -3,8 +3,8 @@ program T;
 uses Std.Console, Std.Dictionaries;
 
 begin
-  var D: dict of string to integer := ['A': 1, 'B': 2];
-  var D2: dict of string to integer := Std.Dictionaries.Remove(D, 'A');
+  const D: dict of string to integer := ['A': 1, 'B': 2];
+  const D2: dict of string to integer := Std.Dictionaries.Remove(D, 'A');
   WriteLn(Std.Dictionaries.Length(D));
   WriteLn(Std.Dictionaries.Length(D2));
 end.

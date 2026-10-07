@@ -40,8 +40,8 @@ begin
 end function;
 
 begin
-  mutable var App: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(40, 12));
-  var FinalModel: CounterModel := App.RunIterations(record
+  var App: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(40, 12));
+  const FinalModel: CounterModel := App.RunIterations(record
     Value := 0;
   end, UpdateCounter, ViewCounter, 3, 16);
   AssertEquals(3, FinalModel.Value);

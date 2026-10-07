@@ -3,6 +3,6 @@ program KeyKindEndKeyTest;
 uses Std.Console, Std.Test;
 
 begin
-  var Kind: KeyKind := KeyKind.EndKey;
+  const Kind: KeyKind := KeyKind.EndKey;
   AssertTrue(Kind = KeyKind.EndKey);
 end.

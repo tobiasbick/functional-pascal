@@ -3,6 +3,6 @@ program T;
 uses Std.Console, Std.Arrays;
 
 begin
-  var A: array of integer := Fill(7, 0);
+  const A: array of integer := Fill(7, 0);
   WriteLn(Length(A));
 end.

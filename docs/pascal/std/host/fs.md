@@ -7,8 +7,8 @@ program Example;
 uses Std.Fs, Std.Results, Std.Tasks;
 
 begin
-  var ReadJob: task := go ReadText('input.txt');
-  var Text: string := Std.Results.Unwrap(Std.Tasks.Wait(ReadJob));
+  const ReadJob: task := go ReadText('input.txt');
+  const Text: string := Std.Results.Unwrap(Std.Tasks.Wait(ReadJob));
 end.
 ```
 
@@ -69,7 +69,7 @@ Reads the entire file at `Path` as UTF-8 text.
 Files larger than 64 MiB return `Error(message)` instead of loading into memory.
 
 ```pascal
-var Content: result of string, string := ReadText('notes.txt');
+const Content: result of string, string := ReadText('notes.txt');
 if Std.Results.IsOk(Content) then
   WriteLn(Std.Results.Unwrap(Content));
 end if;

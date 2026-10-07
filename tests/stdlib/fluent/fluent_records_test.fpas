@@ -23,7 +23,7 @@ begin
 end function;
 
 begin
-  var Item: Box := record
+  const Item: Box := record
     Value := 3;
     Callback := Double;
   end;
@@ -32,14 +32,14 @@ begin
   AssertEquals(5, Item.ValueOf() + 2);
   AssertEquals(4, Item.Callback(2));
   AssertEquals(6, (Item).Callback(3));
-  var Bound: function(X: integer): integer := Item.Add;
+  const Bound: function(X: integer): integer := Item.Add;
   AssertEquals(5, (2).Bound());
-  var NamedTask: task := go Item.Add(4);
+  const NamedTask: task := go Item.Add(4);
   AssertEquals(7, Wait(NamedTask));
-  var PostfixTask: task := go (Item).Add(5);
+  const PostfixTask: task := go (Item).Add(5);
   AssertEquals(8, Wait(PostfixTask));
-  var FieldTask: task := go Item.Callback(6);
+  const FieldTask: task := go Item.Callback(6);
   AssertEquals(12, Wait(FieldTask));
-  var PostfixFieldTask: task := go (Item).Callback(7);
+  const PostfixFieldTask: task := go (Item).Callback(7);
   AssertEquals(14, Wait(PostfixFieldTask));
 end.

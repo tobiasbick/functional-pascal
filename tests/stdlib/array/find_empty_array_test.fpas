@@ -8,7 +8,7 @@ begin
 end function;
 
 begin
-  var A: array of integer := [];
-  var R: option of integer := Find(A, AlwaysTrue);
+  const A: array of integer := [];
+  const R: option of integer := Find(A, AlwaysTrue);
   WriteLn(IsNone(R));
 end.

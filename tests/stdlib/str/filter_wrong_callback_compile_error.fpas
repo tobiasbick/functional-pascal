@@ -8,5 +8,5 @@ begin
 end function;
 
 begin
-  var Filtered: string := Filter('abc', Wrong);
+  const Filtered: string := Filter('abc', Wrong);
 end.

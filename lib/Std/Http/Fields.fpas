@@ -11,7 +11,7 @@ public function IsValidValue(Value: string): boolean;
 begin
   for Index: integer := 0 to Std.Str.Length(Value) - 1 do
     begin
-      var Code: integer := Std.Str.Ord(Std.Str.CharAt(Value, Index));
+      const Code: integer := Std.Str.Ord(Std.Str.CharAt(Value, Index));
       if ((Code < 32) and (Code <> 9)) or (Code = 127) then
         begin
           return false;
@@ -30,19 +30,19 @@ end function;
 // - `MessageKind`: Message label used in diagnostics.
 public function Parse(Text: string; MessageKind: string): result of array of Header, string;
 begin
-  var Lines: array of string := Std.Str.Split(Text, #13 + #10);
-  mutable var Headers: array of Header := [];
+  const Lines: array of string := Std.Str.Split(Text, #13 + #10);
+  var Headers: array of Header := [];
   for Index: integer := 1 to Std.Arrays.Length(Lines) - 1 do
     begin
-      var Colon: integer := Std.Str.IndexOf(Lines[Index], ':');
+      const Colon: integer := Std.Str.IndexOf(Lines[Index], ':');
       if Colon <= 0 then
         begin
           return Error((('Invalid HTTP ' + MessageKind) + ' header: ') + Lines[Index]);
         end;
       end if;
-      var Name: string := Std.Str.Substring(Lines[Index], 0, Colon);
-      var Value: string := Std.Str.Trim(Std.Str.Substring(Lines[Index], Colon + 1, (Std.Str.Length(Lines[Index]) - Colon) -
-                                                                                   1));
+      const Name: string := Std.Str.Substring(Lines[Index], 0, Colon);
+      const Value: string := Std.Str.Trim(Std.Str.Substring(Lines[Index], Colon + 1, (Std.Str.Length(Lines[Index]) - Colon) -
+                                                                                     1));
       if not Std.Http.Method.IsValidToken(Name) then
         begin
           return Error((('Invalid HTTP ' + MessageKind) + ' header name: ') + Name);

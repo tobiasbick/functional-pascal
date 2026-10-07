@@ -43,7 +43,7 @@ begin
   while not EventPending() do
   begin null;
   end; end while;
-  var InputEvent: ConsoleEvent := ReadEvent();
+  const InputEvent: ConsoleEvent := ReadEvent();
   WriteLn(InputEvent.key.ch);
   if KeyPressed() then
   begin

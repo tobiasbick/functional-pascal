@@ -8,7 +8,7 @@ begin
 end function;
 
 begin
-  var Nums: array of integer := [1, 2, 3, 4, 5];
-  var Sum: integer := Reduce(Nums, 0, AddAcc);
+  const Nums: array of integer := [1, 2, 3, 4, 5];
+  const Sum: integer := Reduce(Nums, 0, AddAcc);
   WriteLn(Sum);
 end.

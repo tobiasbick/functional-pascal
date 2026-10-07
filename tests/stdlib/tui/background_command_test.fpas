@@ -13,8 +13,8 @@ begin
   case Msg of
     when TuiMsg.Started:
       begin
-        var Target: channel of integer := State.Inbox;
-        var Ready: channel of boolean := State.Ready;
+        const Target: channel of integer := State.Inbox;
+        const Ready: channel of boolean := State.Ready;
         Cmd.StartBackground(7, function(Token: CancellationToken): result of boolean, string begin
           if IsError(SendWithCancellation(Target, 42, Token)) then
             begin
@@ -49,10 +49,10 @@ begin
 end function;
 
 begin
-  var Inbox: channel of integer := CreateChannel(1);
-  var Ready: channel of boolean := CreateChannel(1);
-  var App: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(24, 4));
-  mutable var Model: CommandModel := App.RunBackgroundIterations(record
+  const Inbox: channel of integer := CreateChannel(1);
+  const Ready: channel of boolean := CreateChannel(1);
+  const App: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(24, 4));
+  var Model: CommandModel := App.RunBackgroundIterations(record
     Inbox := Inbox;
     Ready := Ready;
     Value := 0;

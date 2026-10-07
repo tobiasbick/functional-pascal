@@ -50,8 +50,8 @@ procedure Work();
 begin
 end procedure;
 begin
-  var A: task := go Number();
-  var B: task := go Work();
+  const A: task := go Number();
+  const B: task := go Work();
   Wait(B);
   if Wait(A) <> 7 then panic('wrong task result'); end if;
 end."#,

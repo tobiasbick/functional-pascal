@@ -10,7 +10,7 @@ end function;
 
 function MapValue(): integer;
 begin
-  var Values: array of integer := Map([21], SleepAndDouble);
+  const Values: array of integer := Map([21], SleepAndDouble);
   return Values[0];
 end function;
 
@@ -20,8 +20,8 @@ begin
 end function;
 
 begin
-  var Mapper: task := go MapValue();
-  var Peer: task := go PeerValue();
+  const Mapper: task := go MapValue();
+  const Peer: task := go PeerValue();
   AssertEquals(7, Wait(Peer));
   AssertEquals(42, Wait(Mapper));
 end.

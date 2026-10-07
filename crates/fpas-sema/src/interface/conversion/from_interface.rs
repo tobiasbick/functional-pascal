@@ -17,9 +17,10 @@ pub(crate) fn interface_symbol_to_sema(
     exported: &artifact::InterfaceSymbol,
 ) -> Result<Symbol, InterfaceConversionError> {
     let (kind, mutable) = match &exported.kind {
-        artifact::SymbolKind::Constant(_) => (SemaSymbolKind::Const, false),
-        artifact::SymbolKind::Variable => (SemaSymbolKind::Var, false),
-        artifact::SymbolKind::MutableVariable => (SemaSymbolKind::Var, true),
+        artifact::SymbolKind::Constant(_) | artifact::SymbolKind::ComputedConstant => {
+            (SemaSymbolKind::Const, false)
+        }
+        artifact::SymbolKind::Variable => (SemaSymbolKind::Var, true),
         artifact::SymbolKind::Function => (SemaSymbolKind::Function, false),
         artifact::SymbolKind::Procedure => (SemaSymbolKind::Procedure, false),
         artifact::SymbolKind::Type => (SemaSymbolKind::Type, false),
@@ -29,6 +30,21 @@ pub(crate) fn interface_symbol_to_sema(
         }
     };
     Ok(Symbol {
+        constant: match &exported.kind {
+            artifact::SymbolKind::Constant(value) => Some(crate::scope::ConstantInfo {
+                compile_time: true,
+                value: value.clone(),
+            }),
+            artifact::SymbolKind::ComputedConstant => Some(crate::scope::ConstantInfo {
+                compile_time: false,
+                value: None,
+            }),
+            artifact::SymbolKind::EnumMember(value) => Some(crate::scope::ConstantInfo {
+                compile_time: true,
+                value: Some(value.clone()),
+            }),
+            _ => None,
+        },
         ty: interface_type_to_ty(&exported.ty)?,
         mutable,
         kind,
@@ -106,7 +122,6 @@ fn parameters_from_interface(
         .iter()
         .map(|parameter| {
             Ok(ParamTy {
-                mutable: parameter.mutable,
                 name: parameter.name.clone(),
                 ty: interface_type_to_ty(&parameter.ty)?,
             })

@@ -53,6 +53,7 @@ impl Checker {
             if !self.scopes.define_in_root(
                 &qualified,
                 Symbol {
+                    constant: None,
                     ty: Ty::Enum(enum_ty.clone()),
                     mutable: false,
                     kind,
@@ -110,6 +111,7 @@ impl Checker {
             self.scopes.define(
                 &tp.name,
                 Symbol {
+                    constant: None,
                     ty: Ty::GenericParam(tp.name.clone(), constraint),
                     mutable: false,
                     kind: SymbolKind::Type,
@@ -144,6 +146,7 @@ impl Checker {
         if self.scopes.define(
             &td.name,
             Symbol {
+                constant: None,
                 ty,
                 mutable: false,
                 kind: SymbolKind::Type,

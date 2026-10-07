@@ -81,7 +81,10 @@ Rules:
 
 - The arm must have exactly one label.
 - The label must be a single bare identifier, not a range or a comma-separated label list.
-- If the identifier resolves to a compile-time constant or enum member, it remains a normal value label instead of becoming a binding.
+- If the identifier resolves to any `const` binding or enum member, it remains a
+  value label instead of becoming a binding. That value label must be a
+  compile-time constant; a computed `const` is rejected. Use a different binding
+  name and compare it with the computed value in the guard.
 
 ## See also
 

@@ -9,7 +9,7 @@ A modern, function-first programming language built on Pascal's readable syntax.
 ## Features
 
 - **Function-first** — Functions are the primary building block. No classical classes.
-- **Immutable by default** — All bindings are immutable unless declared with `mutable var`.
+- **Immutable by default** — All bindings are immutable unless declared with `var`.
 - **Pattern matching** — Exhaustive `case` statements with enum, `Result`, and `Option` destructuring.
 - **First-class functions** — Pass named functions as values, store them in variables, and use them with higher-order APIs.
 - **Error handling** — Built-in `Result of T, E` and `Option of T` types with a `try` operator for propagation.
@@ -203,7 +203,7 @@ begin
 end function;
 
 begin
-  var Op: function(X: integer): integer := Double;
+  const Op: function(X: integer): integer := Double;
   WriteLn(Apply(Op, 10)); // 20
 end.
 ```

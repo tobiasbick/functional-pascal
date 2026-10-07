@@ -26,7 +26,7 @@ end function;
 
 function ViewScroll(State: ScrollModel): TuiElement;
 begin
-  mutable var Focused: option of TuiControlId := None;
+  var Focused: option of TuiControlId := None;
   if State.Focus > 0 then
     begin
       Focused := Some(TuiControlId.Create(State.Focus));
@@ -78,8 +78,8 @@ begin
 end function;
 
 begin
-  mutable var App: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(12, 2));
-  mutable var Model: ScrollModel := record
+  var App: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(12, 2));
+  var Model: ScrollModel := record
     Focus := 0;
     Offset := TuiPoint.Create(0, 0);
   end;

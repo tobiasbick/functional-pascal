@@ -8,7 +8,7 @@ begin
 end function;
 
 begin
-  var A: array of integer := [];
-  var B: array of integer := Map(A, AddOne);
+  const A: array of integer := [];
+  const B: array of integer := Map(A, AddOne);
   WriteLn(Length(B));
 end.

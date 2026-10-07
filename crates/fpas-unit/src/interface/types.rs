@@ -25,8 +25,6 @@ pub struct GenericParameter {
 pub struct ParameterType {
     /// Source spelling of the parameter name.
     pub name: String,
-    /// Whether the parameter is passed as mutable `var`.
-    pub mutable: bool,
     /// Resolved parameter type.
     pub ty: InterfaceType,
 }

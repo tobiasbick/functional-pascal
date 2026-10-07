@@ -45,15 +45,15 @@ begin
 end function;
 
 begin
-  var App: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(16, 4));
-  mutable var Model: ButtonPointerModel := record
+  const App: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(16, 4));
+  var Model: ButtonPointerModel := record
     Actions := 0;
     PointerEvents := 0;
   end;
 
   Model := App.RunIterations(Model, UpdateButton, ViewButton, 0, 0);
-  var GoX: integer := Std.Str.IndexOf(App.SurfaceSnapshot().LineAt(0), 'G');
-  var Inside: TuiPoint := TuiPoint.Create(GoX, 0);
+  const GoX: integer := Std.Str.IndexOf(App.SurfaceSnapshot().LineAt(0), 'G');
+  const Inside: TuiPoint := TuiPoint.Create(GoX, 0);
   AssertTrue(App.SurfaceSnapshot().CellAt(GoX, 0).Role = TuiStyleRole.ButtonShortcut);
   App.InjectPointerForTest(Pointer(TuiPointerAction.Down, Inside));
   Model := App.RunIterations(Model, UpdateButton, ViewButton, 2, 0);

@@ -13,7 +13,7 @@ pub(super) fn check_push(c: &mut Checker, args: &[&Expr], span: Span) -> Ty {
         s::STD_ARRAY_PUSH,
         2,
         args,
-        "Example: Std.Arrays.Push(Arr, Value). The array must be a `mutable var`.",
+        "Example: Std.Arrays.Push(Arr, Value). The array must be a `var`.",
         span,
     ) {
         return Ty::Error;
@@ -26,7 +26,7 @@ pub(super) fn check_push(c: &mut Checker, args: &[&Expr], span: Span) -> Ty {
                 "`{}` first argument must be a simple mutable array variable",
                 s::STD_ARRAY_PUSH
             ),
-            "Use `mutable var N: array of T := [...]` then `Std.Arrays.Push(N, x)`.",
+            "Use `var N: array of T := [...]` then `Std.Arrays.Push(N, x)`.",
             span,
         );
         c.check_expr(args[1]);
@@ -35,8 +35,8 @@ pub(super) fn check_push(c: &mut Checker, args: &[&Expr], span: Span) -> Ty {
     let Some(elem_ty) = mutable_array_elem_ty(c, &var_name) else {
         c.error_with_code(
             SEMA_IMMUTABLE_ASSIGNMENT,
-            format!("`{var_name}` must be a `mutable var` of array type"),
-            "Declare with `mutable var Name: array of T := ...`.",
+            format!("`{var_name}` must be a `var` of array type"),
+            "Declare with `var Name: array of T := ...`.",
             span,
         );
         c.check_expr(args[1]);
@@ -67,7 +67,7 @@ pub(super) fn check_pop(c: &mut Checker, args: &[&Expr], span: Span) -> Ty {
                 "`{}` argument must be a simple mutable array variable",
                 s::STD_ARRAY_POP
             ),
-            "Use `mutable var N: array of T := [...]` then `Std.Arrays.Pop(N)`.",
+            "Use `var N: array of T := [...]` then `Std.Arrays.Pop(N)`.",
             span,
         );
         return Ty::Error;
@@ -75,8 +75,8 @@ pub(super) fn check_pop(c: &mut Checker, args: &[&Expr], span: Span) -> Ty {
     let Some(elem_ty) = mutable_array_elem_ty(c, &var_name) else {
         c.error_with_code(
             SEMA_IMMUTABLE_ASSIGNMENT,
-            format!("`{var_name}` must be a `mutable var` of array type"),
-            "Declare with `mutable var Name: array of T := ...`.",
+            format!("`{var_name}` must be a `var` of array type"),
+            "Declare with `var Name: array of T := ...`.",
             span,
         );
         return Ty::Error;

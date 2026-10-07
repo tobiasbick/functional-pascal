@@ -31,10 +31,10 @@ fn same_record_declaration_and_alias_are_compatible() {
          type Point = record X: integer; Y: integer; end record; \
          type PointAlias = Point; \
          begin \
-           var PointValue: Point := record X := 1; Y := 2; end; \
-           var SameType: Point := PointValue; \
-           var AliasValue: PointAlias := PointValue; \
-           var ContextualLiteral: PointAlias := record X := 3; Y := 4; end; \
+           const PointValue: Point := record X := 1; Y := 2; end; \
+           const SameType: Point := PointValue; \
+           const AliasValue: PointAlias := PointValue; \
+           const ContextualLiteral: PointAlias := record X := 3; Y := 4; end; \
          end.",
     );
 }
@@ -46,8 +46,8 @@ fn distinct_public_record_declarations_are_incompatible_despite_equal_fields() {
          type Point = record X: integer; Y: integer; end record; \
          type Size = record X: integer; Y: integer; end record; \
          begin \
-           var SizeValue: Size := record X := 1; Y := 2; end; \
-           var PointValue: Point := SizeValue; \
+           const SizeValue: Size := record X := 1; Y := 2; end; \
+           const PointValue: Point := SizeValue; \
          end.",
     );
 
@@ -128,9 +128,9 @@ fn anonymous_generic_binding_does_not_bridge_distinct_named_records() {
          function Pick<TValue>(A: TValue; B: TValue; C: TValue): TValue; \
          begin return A; end function; \
          begin \
-           var LeftValue: Left := record Value := 1; end; \
-           var RightValue: Right := record Value := 2; end; \
-           var ResultValue: Left := Pick(record Value := 0; end, LeftValue, RightValue); \
+           const LeftValue: Left := record Value := 1; end; \
+           const RightValue: Right := record Value := 2; end; \
+           const ResultValue: Left := Pick(record Value := 0; end, LeftValue, RightValue); \
          end.",
     );
 

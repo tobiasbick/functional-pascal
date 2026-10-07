@@ -10,6 +10,7 @@ storage in an outer variable, or channel send (Q20).
 ## Prerequisites
 
 - AP26.1 (scope ownership).
+- The closure-capture limits in the [package README](README.md#open-decisions).
 
 ## Implementation
 

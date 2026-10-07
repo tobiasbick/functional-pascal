@@ -8,8 +8,8 @@ begin
 end function;
 
 begin
-  var A: array of integer := [1, 2, 3, 4, 5];
-  var R: option of integer := Find(A, IsGreaterThanThree);
+  const A: array of integer := [1, 2, 3, 4, 5];
+  const R: option of integer := Find(A, IsGreaterThanThree);
   WriteLn(IsSome(R));
   WriteLn(Unwrap(R));
 end.

@@ -22,7 +22,7 @@ enum owned by an internal unit:
 ```pascal
 type PaletteColor = Color;
 
-var Value: PaletteColor := PaletteColor.Green;
+const Value: PaletteColor := PaletteColor.Green;
 ```
 
 ## See also

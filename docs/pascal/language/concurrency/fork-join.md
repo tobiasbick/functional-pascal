@@ -12,8 +12,8 @@ begin
 end function;
 
 begin
-  var T1: task := go Compute(3);
-  var T2: task := go Compute(4);
+  const T1: task := go Compute(3);
+  const T2: task := go Compute(4);
   WriteLn(Wait(T1) + Wait(T2));
 end.
 ```

@@ -92,18 +92,18 @@ public function TuiRouteApplicationPointer(
   Frame: TuiArrangedFrame
 ): array of TuiMsg;
 begin
-  var PointerAction: Std.Console.MouseAction := Pointer.Action;
-  var PointerButton: TuiPointerButton := Pointer.Button;
-  var PointerPosition: TuiPoint := Pointer.Position;
-  var PointerShift: boolean := Pointer.Shift;
-  var PointerCtrl: boolean := Pointer.Ctrl;
-  var PointerAlt: boolean := Pointer.Alt;
-  var PointerMeta: boolean := Pointer.Meta;
+  const PointerAction: Std.Console.MouseAction := Pointer.Action;
+  const PointerButton: TuiPointerButton := Pointer.Button;
+  const PointerPosition: TuiPoint := Pointer.Position;
+  const PointerShift: boolean := Pointer.Shift;
+  const PointerCtrl: boolean := Pointer.Ctrl;
+  const PointerAlt: boolean := Pointer.Alt;
+  const PointerMeta: boolean := Pointer.Meta;
   TuiRouteRequireMatchingFrame(Frame, Root);
   case TuiButtonCaptureGet(ApplicationId) of
     when TuiButtonPressState.Captured(Button, PreviousInside):
       begin
-        var Inside: boolean := TuiPointerInsideCapturedButton(Root, Frame, PointerPosition, Button);
+        const Inside: boolean := TuiPointerInsideCapturedButton(Root, Frame, PointerPosition, Button);
         if PointerAction = Std.Console.MouseAction.Up then
           begin
             if Inside then
@@ -126,8 +126,8 @@ begin
       begin
       end;
   end case;
-  var MenuPointer: boolean := (PointerAction = Std.Console.MouseAction.Move) or
-                              ((PointerAction = Std.Console.MouseAction.Down) and (PointerButton = TuiPointerButton.Left));
+  const MenuPointer: boolean := (PointerAction = Std.Console.MouseAction.Move) or
+                                ((PointerAction = Std.Console.MouseAction.Down) and (PointerButton = TuiPointerButton.Left));
   if MenuPointer then
     begin
       case TuiRouteMenuPointer(Root, Frame, PointerPosition, PointerAction =
@@ -150,7 +150,7 @@ begin
                                                  ]);
     end;
   end if;
-  var Previous: option of TuiControlId := TuiRootFocus(Root);
+  const Previous: option of TuiControlId := TuiRootFocus(Root);
   case TuiPointerHitAt(Frame, Root, PointerPosition) of
     when TuiPointerHit.Miss:
       begin
@@ -160,9 +160,9 @@ begin
       end;
     when TuiPointerHit.ElementButton(Button):
       begin
-        var Messages: array of TuiMsg := Std.Arrays.Concat(TuiRoutePointerFocusMessages(Previous, Button.Id), [
-                                                                                                                TuiMsg.Pointer(TuiPointerEvent.WithModifiers(PointerAction, PointerButton, PointerPosition, PointerShift, PointerCtrl, PointerAlt, PointerMeta))
-                                                                                                              ]);
+        const Messages: array of TuiMsg := Std.Arrays.Concat(TuiRoutePointerFocusMessages(Previous, Button.Id), [
+                                                                                                                  TuiMsg.Pointer(TuiPointerEvent.WithModifiers(PointerAction, PointerButton, PointerPosition, PointerShift, PointerCtrl, PointerAlt, PointerMeta))
+                                                                                                                ]);
         return TuiCapturedPointerResult(ApplicationId, Messages, Button, true);
       end;
     when TuiPointerHit.ImmediateButton(Id, Action):
@@ -173,10 +173,10 @@ begin
       end;
     when TuiPointerHit.Input(Input, Bounds):
       begin
-        var Viewport: TuiInputViewport := TuiInputViewportFor(Input.Text, Input.Caret, Bounds.Width -
-                                                                                       2);
-        var Caret: integer := TuiInputCaretAtColumn(Input.Text, Viewport, (PointerPosition.X - Bounds.X) -
-                                                                          1);
+        const Viewport: TuiInputViewport := TuiInputViewportFor(Input.Text, Input.Caret, Bounds.Width -
+                                                                                         2);
+        const Caret: integer := TuiInputCaretAtColumn(Input.Text, Viewport, (PointerPosition.X - Bounds.X) -
+                                                                            1);
         return TuiIdlePointerResult(ApplicationId, Std.Arrays.Concat(TuiRoutePointerFocusMessages(Previous, Input.Id), [
                                                                                                                          TuiMsg.TextChanged(Input.Id, Input.ChangeAction, Input.Text, Caret)
                                                                                                                        ]));
@@ -195,7 +195,7 @@ begin
       end;
     when TuiPointerHit.List(Id, Action, CurrentSelected, Proposed):
       begin
-        var FocusMessages: array of TuiMsg := TuiRoutePointerFocusMessages(Previous, Id);
+        const FocusMessages: array of TuiMsg := TuiRoutePointerFocusMessages(Previous, Id);
         if Proposed = CurrentSelected then
           begin
             if Std.Arrays.Length(FocusMessages) = 0 then
@@ -216,7 +216,7 @@ begin
       end;
     when TuiPointerHit.Scroll(Id):
       begin
-        var FocusMessages: array of TuiMsg := TuiRoutePointerFocusMessages(Previous, Id);
+        const FocusMessages: array of TuiMsg := TuiRoutePointerFocusMessages(Previous, Id);
         if Std.Arrays.Length(FocusMessages) = 0 then
           begin
             return TuiIdlePointerResult(ApplicationId, [

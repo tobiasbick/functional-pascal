@@ -15,9 +15,9 @@ fn image(outcome: &str) -> Arc<VerifiedExecutable> {
         "program Captures; uses Std.Tasks;
          type Payload = record Number: integer; end record;
          begin
-           var Captured: Payload := record Number := 42; end;
-           var Group: TaskGroup := CreateTaskGroup();
-           var WorkerTask: task := StartSupervisedTask(Group, function(Token: CancellationToken): result of integer, string
+           const Captured: Payload := record Number := 42; end;
+           const Group: TaskGroup := CreateTaskGroup();
+           const WorkerTask: task := StartSupervisedTask(Group, function(Token: CancellationToken): result of integer, string
            begin
              if Captured.Number <> 42 then panic('capture changed'); end if;
              return {outcome};

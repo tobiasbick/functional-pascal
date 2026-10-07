@@ -6,7 +6,7 @@ fn case_enum_missing_variant_is_non_exhaustive() {
         "program T; \
          type Light = enum Red; Yellow; Green; end enum; \
          begin \
-           var L: Light := Light.Red; \
+           const L: Light := Light.Red; \
            case L of \
              when Light.Red: return; when \
              Light.Green: return; \
@@ -27,7 +27,7 @@ fn case_enum_else_branch_skips_exhaustiveness_check() {
         "program T; \
          type Light = enum Red; Yellow; Green; end enum; \
          begin \
-           var L: Light := Light.Red; \
+           const L: Light := Light.Red; \
            case L of \
              when Light.Red: return; \
            else \
@@ -42,7 +42,7 @@ fn case_result_missing_variant_is_non_exhaustive() {
     let errors = check_errors(
         "program T; \
          begin \
-           var R: Result of integer, string := Ok(1); \
+           const R: Result of integer, string := Ok(1); \
            case R of \
              when Ok(V): return; \
            end case; \
@@ -62,7 +62,7 @@ fn case_data_enum_missing_variant_is_non_exhaustive() {
         "program T; \
          type Shape = enum Circle(Radius: real); Point; end enum; \
          begin \
-           var S: Shape := Shape.Point; \
+           const S: Shape := Shape.Point; \
            case S of \
              when Shape.Circle(R): return; \
            end case; \
@@ -82,7 +82,7 @@ fn case_on_recursive_enum_binding_is_checked_for_exhaustiveness() {
         "program T; \
          type Tree = enum Leaf; Node(Left: Tree; Right: Tree); end enum; \
          begin \
-           var T: Tree := Tree.Leaf; \
+           const T: Tree := Tree.Leaf; \
            case T of \
              when Tree.Node(L, R): \
                case L of when \
@@ -106,8 +106,8 @@ fn shadowed_variant_name_does_not_count_toward_exhaustiveness() {
         "program T; \
          type Color = enum Red; Green; Blue; end enum; \
          begin \
-           var C: Color := Color.Red; \
-           var Red: Color := Color.Blue; \
+           const C: Color := Color.Red; \
+           const Red: Color := Color.Blue; \
            case C of \
              when Red, Color.Green, Color.Blue: return; \
            end case; \
@@ -128,7 +128,7 @@ fn qualified_enum_variants_still_satisfy_exhaustiveness() {
         "program T; \
          type Color = enum Red; Green; Blue; end enum; \
          begin \
-           var C: Color := Color.Red; \
+           const C: Color := Color.Red; \
            case C of \
              when Color.Red, Color.Green, Color.Blue: return; \
            end case; \

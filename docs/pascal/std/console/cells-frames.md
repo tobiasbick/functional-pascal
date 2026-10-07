@@ -64,8 +64,8 @@ end record;
 Use the constructors instead of assembling a `Color` record by hand:
 
 ```pascal
-var Accent: Color := RgbColor(255, 160, 32);
-var Tile: Cell := record
+const Accent: Color := RgbColor(255, 160, 32);
+const Tile: Cell := record
   glyph := 'A';
   foreground := Accent;
   background := CrtColor(Black);
@@ -106,7 +106,7 @@ positive; a fully off-screen rectangle has no visible effect.
 at the screen edge. A wide glyph reserves its following column as a continuation:
 
 ```pascal
-var Cells: array of Cell := [
+const Cells: array of Cell := [
   record glyph := 'A'; foreground := CrtColor(White); background := CrtColor(Black); end,
   record glyph := '中'; foreground := RgbColor(80, 200, 255); background := CrtColor(Black); end
 ];
@@ -152,7 +152,7 @@ rectangle must overlap the screen and have positive dimensions.
 Each handle is one-shot:
 
 ```pascal
-var Underlay: SavedRegion :=
+const Underlay: SavedRegion :=
   SaveRegion(record x := 10; y := 4; width := 24; height := 5; end);
 FillRect(
   record x := 10; y := 4; width := 24; height := 5; end,

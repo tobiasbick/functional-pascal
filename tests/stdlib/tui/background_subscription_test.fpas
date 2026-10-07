@@ -11,10 +11,10 @@ end record;
 
 procedure ReplaceWorker(State: SubscriptionModel; Cmd: TuiCmdOutput);
 begin
-  var Gate: channel of boolean := State.Gate;
-  var Started: channel of integer := State.Started;
-  var Stopped: channel of integer := State.Stopped;
-  var Generation: integer := State.Generation;
+  const Gate: channel of boolean := State.Gate;
+  const Started: channel of integer := State.Started;
+  const Stopped: channel of integer := State.Stopped;
+  const Generation: integer := State.Generation;
   Cmd.ReplaceSubscription(1, function(Token: CancellationToken): result of boolean, string begin
     discard Send(Started, Generation);
     if IsError(ReceiveWithCancellation(Gate, Token)) then
@@ -42,7 +42,7 @@ begin
             return State;
           end;
         end if;
-        var Next: SubscriptionModel := record
+        const Next: SubscriptionModel := record
           Gate := State.Gate;
           Started := State.Started;
           Stopped := State.Stopped;
@@ -70,12 +70,12 @@ begin
 end function;
 
 begin
-  var Inbox: channel of integer := CreateChannel(1);
-  var Gate: channel of boolean := CreateChannel(1);
-  var Started: channel of integer := CreateChannel(2);
-  var Stopped: channel of integer := CreateChannel(2);
-  var App: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(24, 4));
-  mutable var Model: SubscriptionModel := App.RunBackgroundIterations(record
+  const Inbox: channel of integer := CreateChannel(1);
+  const Gate: channel of boolean := CreateChannel(1);
+  const Started: channel of integer := CreateChannel(2);
+  const Stopped: channel of integer := CreateChannel(2);
+  const App: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(24, 4));
+  var Model: SubscriptionModel := App.RunBackgroundIterations(record
     Gate := Gate;
     Started := Started;
     Stopped := Stopped;

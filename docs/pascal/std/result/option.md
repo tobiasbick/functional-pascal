@@ -6,7 +6,7 @@ Helper functions for `Option of T` values. See [Error handling](../../language/e
 program Example;
 uses Std.Console, Std.Options;
 begin
-  var O: Option of integer := Some(7);
+  const O: Option of integer := Some(7);
   WriteLn(Unwrap(O));
 end.
 ```
@@ -45,7 +45,7 @@ Examples pass named helper functions whose types match each callback parameter.
 Extracts the value from `Some(value)`. **Runtime error** if `O` is `None`.
 
 ```pascal
-var O: Option of integer := Some(7);
+const O: Option of integer := Some(7);
 WriteLn(Unwrap(O));                             // 7
 ```
 
@@ -56,7 +56,7 @@ WriteLn(Unwrap(O));                             // 7
 Extracts the value from `Some(value)`, or returns `Default` if `O` is `None`.
 
 ```pascal
-var O: Option of integer := None;
+const O: Option of integer := None;
 WriteLn(UnwrapOr(O, -1));                      // -1
 ```
 
@@ -67,7 +67,7 @@ WriteLn(UnwrapOr(O, -1));                      // -1
 Returns `true` if `O` is a `Some` variant.
 
 ```pascal
-var O: Option of integer := Some(7);
+const O: Option of integer := Some(7);
 WriteLn(IsSome(O));                             // true
 ```
 
@@ -78,7 +78,7 @@ WriteLn(IsSome(O));                             // true
 Returns `true` if `O` is `None`.
 
 ```pascal
-var O: Option of integer := None;
+const O: Option of integer := None;
 WriteLn(IsNone(O));                             // true
 ```
 
@@ -94,8 +94,8 @@ begin
   return IntToStr(V * 3);
 end function;
 
-var O: Option of integer := Some(7);
-var M: Option of string := Map(O, TripleToString);
+const O: Option of integer := Some(7);
+const M: Option of string := Map(O, TripleToString);
 // M = Some('21')
 ```
 
@@ -115,8 +115,8 @@ begin
   end if;
 end function;
 
-var O: option of integer := Some(5);
-var M: option of string := AndThen(O, PositiveToOptionString);
+const O: option of integer := Some(5);
+const M: option of string := AndThen(O, PositiveToOptionString);
 // M = Some('5')
 ```
 
@@ -132,8 +132,8 @@ begin
   return Some(99);
 end function;
 
-var O: Option of integer := None;
-var M: Option of integer := OrElse(O, Fallback99);
+const O: Option of integer := None;
+const M: Option of integer := OrElse(O, Fallback99);
 // M = Some(99)
 ```
 

@@ -101,7 +101,7 @@ public type TuiButtonPalette = record
   // - `Style`: Concrete terminal style.
   public function WithRole(Self: TuiButtonPalette; Role: TuiStyleRole; Style: TuiStyle): TuiButtonPalette;
   begin
-    mutable var Updated: TuiButtonPalette := Self;
+    var Updated: TuiButtonPalette := Self;
     case Role of
       when TuiStyleRole.ButtonNormal:
         begin

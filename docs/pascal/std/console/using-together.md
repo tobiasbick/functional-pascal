@@ -13,11 +13,11 @@ uses Std.Console;
 
 begin
   WriteText('Name: ');
-  var Name: string := ReadLn();
+  const Name: string := ReadLn();
   WriteLn('Hello, ', Name);
 
   WriteLn('Press Escape or any printable key.');
-  var Key: KeyEvent := ReadKeyEvent();
+  const Key: KeyEvent := ReadKeyEvent();
   if Key.kind = KeyKind.Escape then
     WriteLn('escape');
   else

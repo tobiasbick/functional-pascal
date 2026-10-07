@@ -6,7 +6,7 @@ Cryptographically secure randomness supplied directly by the operating system. T
 program Example;
 uses Std.Arrays, Std.Crypto, Std.Results;
 begin
-  var Token: array of integer := Unwrap(RandomBytes(32));
+  const Token: array of integer := Unwrap(RandomBytes(32));
 end.
 ```
 

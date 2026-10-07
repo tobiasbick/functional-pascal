@@ -17,10 +17,9 @@ impl LoweringContext {
         replacement: ValueId,
         span: fpas_lexer::Span,
     ) -> Result<(), CompileError> {
-        let Some(DesignatorPart::Ident(name, _)) = designator.parts.first() else {
-            return Err(unsupported(designator.span, "assignment root"));
-        };
-        if designator.parts.len() == 1 {
+        let (root_name, root_parts) = self.designator_root(designator)?;
+        let name = root_name.as_str();
+        if designator.parts.len() == root_parts {
             return if self.has_binding(name) {
                 self.write_named_local(name, replacement, span)
             } else {
@@ -33,7 +32,7 @@ impl LoweringContext {
             Some(IrType::Array(_) | IrType::Dictionary { .. }),
         ) = (
             self.direct_local(name),
-            &designator.parts[1..],
+            &designator.parts[root_parts..],
             self.root_type(name).and_then(|ty| self.type_kind(ty)),
         ) && is_side_effect_free_index(index)
         {
@@ -50,7 +49,7 @@ impl LoweringContext {
         if !self.has_binding(name)
             && self.lower_global_index_path_write(
                 name,
-                &designator.parts[1..],
+                &designator.parts[root_parts..],
                 replacement,
                 span,
             )?
@@ -66,7 +65,7 @@ impl LoweringContext {
             self.read_global(name, span)?
         };
         let updated =
-            self.lower_path_update(root, ty, &designator.parts[1..], replacement, span)?;
+            self.lower_path_update(root, ty, &designator.parts[root_parts..], replacement, span)?;
         if self.has_binding(name) {
             self.write_named_local(name, updated, span)
         } else {
@@ -168,13 +167,13 @@ impl LoweringContext {
         }
     }
 
+    /// Reads local or qualified unit globals before following field and index suffixes.
     pub(in crate::lowering) fn lower_designator_read(
         &mut self,
         designator: &Designator,
     ) -> Result<ValueId, CompileError> {
-        let Some(DesignatorPart::Ident(name, _)) = designator.parts.first() else {
-            return Err(unsupported(designator.span, "designator root"));
-        };
+        let (root_name, root_parts) = self.designator_root(designator)?;
+        let name = root_name.as_str();
         let mut ty = self
             .root_type(name)
             .ok_or_else(|| unsupported(designator.span, "unresolved designator"))?;
@@ -183,10 +182,32 @@ impl LoweringContext {
         } else {
             self.read_global(name, designator.span)?
         };
-        for part in &designator.parts[1..] {
+        for part in &designator.parts[root_parts..] {
             (value, ty) = self.lower_designator_part(value, ty, part)?;
         }
         Ok(value)
+    }
+
+    /// Resolves the same local or qualified global root for reads and writes.
+    fn designator_root(&self, designator: &Designator) -> Result<(String, usize), CompileError> {
+        let Some(DesignatorPart::Ident(name, _)) = designator.parts.first() else {
+            return Err(unsupported(designator.span, "designator root"));
+        };
+        let mut root_name = name.clone();
+        let mut root_parts = 1;
+        let mut qualified = name.clone();
+        for (index, part) in designator.parts.iter().enumerate().skip(1) {
+            let DesignatorPart::Ident(part, _) = part else {
+                break;
+            };
+            qualified.push('.');
+            qualified.push_str(part);
+            if self.has_global(&qualified) {
+                root_name.clone_from(&qualified);
+                root_parts = index + 1;
+            }
+        }
+        Ok((root_name, root_parts))
     }
 
     pub(in crate::lowering) fn lower_postfix(

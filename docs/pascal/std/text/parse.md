@@ -6,7 +6,7 @@ Structured parsing helpers for text input. `Std.Parse` is for callers that want 
 program Example;
 uses Std.Console, Std.Parse, Std.Results;
 begin
-  var Parsed: Result of integer, string := TryInt('42');
+  const Parsed: Result of integer, string := TryInt('42');
   WriteLn(UnwrapOr(Parsed, 0));
 end.
 ```
@@ -33,7 +33,7 @@ After `uses Std.Parse;` use short names (`TryInt`, `TryReal`, `TryBool`) or qual
 Parses Pascal integer text. Returns `Ok(Value)` on success or `Error(Message)` on invalid text or overflow.
 
 ```pascal
-var R: Result of integer, string := TryInt(' +1_024 ');
+const R: Result of integer, string := TryInt(' +1_024 ');
 WriteLn(UnwrapOr(R, 0));                       // 1024
 ```
 
@@ -44,7 +44,7 @@ WriteLn(UnwrapOr(R, 0));                       // 1024
 Parses Pascal real text. The text must include a fractional part; `1.0`, `-2.5`, and `1_024.0e-2` are valid, while `1e3`, `5.`, `NaN`, and `inf` are not.
 
 ```pascal
-var R: Result of real, string := TryReal('1_024.0e-2');
+const R: Result of real, string := TryReal('1_024.0e-2');
 WriteLn(UnwrapOr(R, 0.0));                     // 10.24
 ```
 
@@ -55,7 +55,7 @@ WriteLn(UnwrapOr(R, 0.0));                     // 10.24
 Parses boolean text. Leading and trailing whitespace is ignored; casing does not matter.
 
 ```pascal
-var R: Result of boolean, string := TryBool(' FALSE ');
+const R: Result of boolean, string := TryBool(' FALSE ');
 WriteLn(UnwrapOr(R, true));                    // false
 ```
 

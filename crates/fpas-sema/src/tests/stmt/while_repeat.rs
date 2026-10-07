@@ -19,7 +19,7 @@ fn while_string_condition() {
 fn while_comparison_condition() {
     check_ok(
         "program T; \
-         var X: integer := 5; \
+         const X: integer := 5; \
          begin while X > 0 do return; end while; end.",
     );
 }
@@ -28,7 +28,7 @@ fn while_comparison_condition() {
 fn while_complex_boolean_condition() {
     check_ok(
         "program T; \
-         var X: integer := 5; \
+         const X: integer := 5; \
          begin while (X > 0) and (X < 10) do return; end while; end.",
     );
 }
@@ -52,7 +52,7 @@ fn while_false_literal() {
 fn while_not_expression_condition() {
     check_ok(
         "program T; \
-         var Done: boolean := false; \
+         const Done: boolean := false; \
          begin while not Done do return; end while; end.",
     );
 }
@@ -81,7 +81,7 @@ fn repeat_real_condition() {
 fn repeat_comparison_condition() {
     check_ok(
         "program T; \
-         mutable var X: integer := 0; \
+         var X: integer := 0; \
          begin repeat X := X + 1; until X > 5; end.",
     );
 }
@@ -90,7 +90,7 @@ fn repeat_comparison_condition() {
 fn repeat_complex_boolean_condition() {
     check_ok(
         "program T; \
-         mutable var X: integer := 0; \
+         var X: integer := 0; \
          begin repeat X := X + 1; until (X > 0) and (X < 10); end.",
     );
 }
@@ -104,7 +104,7 @@ fn repeat_false_literal() {
 fn repeat_not_expression_condition() {
     check_ok(
         "program T; \
-         mutable var Done: boolean := false; \
+         var Done: boolean := false; \
          begin repeat Done := true; until not Done; end.",
     );
 }
@@ -114,7 +114,7 @@ fn repeat_condition_cannot_use_body_local() {
     let errs = check_errors(
         "program T; begin \
          repeat \
-           var X: integer := 1; \
+           const X: integer := 1; \
          until X = 1; \
          end.",
     );

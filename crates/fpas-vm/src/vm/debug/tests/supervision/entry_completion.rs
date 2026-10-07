@@ -10,13 +10,13 @@ uses Std.Tasks, Std.Arrays;
 function Work(Token: CancellationToken): result of integer, string;
 begin panic('worker body must not execute'); end function;
 begin
-  var Group: TaskGroup := CreateTaskGroup();
-  var Child: task := StartSupervisedTask(Group, Work, 1023, 0);
+  const Group: TaskGroup := CreateTaskGroup();
+  const Child: task := StartSupervisedTask(Group, Work, 1023, 0);
   case Wait(Child) of
     when Ok(_): panic('forced error lost');
     when Error(Message): if Message <> 'forced' then panic('wrong forced error'); end if;
   end case;
-  var Failures: array of TaskFailure := CloseTaskGroup(Group);
+  const Failures: array of TaskFailure := CloseTaskGroup(Group);
   if Length(Failures) <> 1 then panic('wrong report count'); end if;
   if Failures[0].Kind <> TaskFailureKind.ReturnedError then panic('wrong report kind'); end if;
   if Failures[0].Message <> 'forced' then panic('wrong report message'); end if;

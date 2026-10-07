@@ -48,6 +48,8 @@ const R: Result of (User, LoadError) := Load(Id);
 
 - AP10 (typed construction for generic records).
 - AP20 (nested patterns for generic enums).
+- AP03.2 (closed-enum exhaustiveness for AP24.3).
+- AP11.1 (finite construction of recursive records and enums).
 
 AP28 is transferred after this package.
 

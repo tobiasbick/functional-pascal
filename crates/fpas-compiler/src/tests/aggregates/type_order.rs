@@ -17,8 +17,8 @@ fn container_aliases_in_nominal_cycles_preserve_typed_layouts() {
     ] {
         assert_succeeds(&format!(
             "program T; {definitions}
-          begin var Leaf: Node := record Value := 7; Children := []; end;
-          var Root: Node := record Value := 9; Children := [Leaf]; end;
+          begin const Leaf: Node := record Value := 7; Children := []; end;
+          const Root: Node := record Value := 9; Children := [Leaf]; end;
           if Root.Children[0].Value <> 7 then panic('recursive layout'); end if; end."
         ));
     }

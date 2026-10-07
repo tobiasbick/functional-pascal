@@ -8,5 +8,5 @@ begin
 end function;
 
 begin
-  var Mapped: string := Map('abc', Empty);
+  const Mapped: string := Map('abc', Empty);
 end.

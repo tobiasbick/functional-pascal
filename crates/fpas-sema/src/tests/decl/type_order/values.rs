@@ -4,11 +4,11 @@ use fpas_diagnostics::codes::{SEMA_AMBIGUOUS_IMPORTED_NAME, SEMA_UNKNOWN_NAME};
 #[test]
 fn defaults_and_method_bodies_keep_preceding_values_visible() {
     check_ok(
-        "program T; const Limit: integer := 10; mutable var Count: integer := 0;
+        "program T; const Limit: integer := 10; var Count: integer := 0;
       type Box = record Value: integer := Limit;
         function GetValue(Self: Box): integer; begin return Self.Value + Count; end function;
       end record;
-      begin var Value: Box := record end; discard Value.GetValue(); end.",
+      begin const Value: Box := record end; discard Value.GetValue(); end.",
     );
 }
 
@@ -16,10 +16,10 @@ fn defaults_and_method_bodies_keep_preceding_values_visible() {
 fn collection_does_not_expose_later_values_in_defaults_or_bodies() {
     for declarations in [
         "type Box = record Value: integer := Later; end record; const Later: integer := 10;",
-        "type Box = record function GetValue(Self: Box): integer; begin return Later; end function; end record; var Later: integer := 10;",
+        "type Box = record function GetValue(Self: Box): integer; begin return Later; end function; end record; const Later: integer := 10;",
         "const Earlier: integer := Later; const Later: integer := 10;",
-        "var Earlier: integer := Later; var Later: integer := 10;",
-        "function GetValue(): integer; begin return Later; end function; var Later: integer := 10;",
+        "const Earlier: integer := Later; const Later: integer := 10;",
+        "function GetValue(): integer; begin return Later; end function; const Later: integer := 10;",
     ] {
         let errors = check_errors(&format!("program T; {declarations} begin end."));
         assert!(
@@ -53,7 +53,7 @@ fn preceding_values_keep_priority_over_optional_enum_short_names() {
     check_ok(
         "program T; const Ready: integer := 10;
       type State = enum Ready; end enum;
-      begin var Value: State := State.Ready; discard Value; discard Ready; end.",
+      begin const Value: State := State.Ready; discard Value; discard Ready; end.",
     );
 }
 

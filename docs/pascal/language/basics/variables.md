@@ -1,47 +1,42 @@
 # Variables
 
-Variables are **immutable by default**. Use `mutable var` to allow reassignment. Each binding repeats its complete `var` or `mutable var` prefix, both at program or unit level and in statement lists. Declaration groups are rejected with [FP2015](../../tools/diagnostics.md#parser).
+`var` declares a reassignable binding. Use `const` for an immutable binding.
+Every binding repeats its own keyword, both at program or unit level and in
+statement lists. Declaration groups are rejected with
+[FP2015](../../tools/diagnostics.md#parser).
 
-Formal syntax: [`grammar.ebnf`](../../../specs/grammar.ebnf) (`var_declaration`, `var_stmt`, `mutable_var_declaration`, and `mutable_var_stmt`).
-
-```pascal
-var Name: string := 'Alice'; // Immutable — cannot be reassigned
-
-mutable var Age: integer := 30; // Mutable — can be reassigned
-```
-
-Reassigning an immutable variable is a compile-time error:
+Formal syntax: [`grammar.ebnf`](../../../specs/grammar.ebnf)
+(`var_declaration`, `var_stmt`, `const_declaration`, and `const_stmt`).
 
 ```pascal
-var X: integer := 10;
-
-begin
-  X := 20;  // Error: cannot assign to immutable variable 'X'
-end.
+const Name: string := 'Alice';
+var Age: integer := 30;
+Age := Age + 1;
 ```
 
-Mutable variables can be reassigned freely:
+Reassigning a `const`, or changing its stored record fields or collection elements,
+is a compile-time error. The diagnostic suggests declaring a `var` when a
+writable binding is needed. Assignments through a `var` can replace the value
+or update its fields and elements; arrays, dictionaries, and records retain
+value semantics. Shared handles retain their existing sharing rules.
 
-```pascal
-mutable var Count: integer := 0;
-
-begin
-  Count := Count + 1;  // Valid mutable assignment
-end.
-```
-
-Inline mutable variables use the same syntax:
+Inline variables use the same syntax:
 
 ```pascal
 begin
-  mutable var Count: integer := 0;
+  var Count: integer := 0;
   Count := Count + 1;
 end.
 ```
 
 Each exported binding also repeats `public`; the modifier applies only to that
 declaration. Initializers execute in source order, including consecutive
-individual declarations.
+individual declarations. A `const` initializer may compute a value at runtime;
+see [Constants](constants.md).
+
+Loop variables are immutable inside each iteration. A captured local `var`
+shares one mutable cell; a captured `const` copies its value. See
+[Closures](../functions/closures.md).
 
 ## See also
 

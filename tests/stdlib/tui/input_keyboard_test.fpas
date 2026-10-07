@@ -23,7 +23,7 @@ end function;
 
 function ViewInput(State: InputKeyboardModel): TuiElement;
 begin
-  mutable var Input: TuiElement := TuiElementBuilders.MakeInputWithHint(TuiControlId.Create(1), State.Text, State.Caret, 'Command', TuiAction.Create(1));
+  var Input: TuiElement := TuiElementBuilders.MakeInputWithHint(TuiControlId.Create(1), State.Text, State.Caret, 'Command', TuiAction.Create(1));
   if State.UseHistory then
     begin
       Input := TuiElementBuilders.MakeHistoryInput(TuiControlId.Create(1), State.Text, State.Caret, 'Command', [
@@ -72,8 +72,8 @@ begin
 end function;
 
 begin
-  mutable var App: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(20, 2));
-  mutable var Model: InputKeyboardModel := record
+  var App: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(20, 2));
+  var Model: InputKeyboardModel := record
     Text := 'alpha beta';
     Caret := 10;
     UseHistory := false;

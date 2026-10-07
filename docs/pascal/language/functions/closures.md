@@ -22,12 +22,12 @@ end function);
 Here the `;` after `)` terminates the call statement.
 
 ```pascal
-mutable var Count: integer := 0;
+var Count: integer := 0;
 
-var Increment: procedure() := procedure() begin
+const Increment: procedure() := procedure() begin
   Count := Count + 1;
 end procedure;
-var AddBase: function(Value: integer): integer := function(Value: integer): integer begin
+const AddBase: function(Value: integer): integer := function(Value: integer): integer begin
   return Count + Value;
 end function;
 ```
@@ -44,11 +44,12 @@ a local, parameter, or enclosing capture that is not declared by the closure its
 
 | Binding | Capture behavior |
 | --- | --- |
-| Immutable local or value parameter | Capture its value when the closure is created. |
-| `mutable var` local or `mutable` parameter | Capture one shared mutable cell. |
+| Value parameter | Capture its value when the closure is created. |
+| `var` local | Capture one shared mutable cell. |
 | Enclosing closure capture | Reuse the same value or mutable cell. |
 | Unit or program variable | Resolve normally; not stored in the closure environment. |
-| Routine, static record routine, or constant | Resolve normally; not stored as runtime data. |
+| Local `const` binding | Copy the value when the closure is created. |
+| Routine, static record routine, or program/unit constant | Resolve normally; not stored as capture data. |
 
 All closures created by one activation and capturing the same mutable local observe
 the same cell. The cell survives until the final closure that references it is released.
@@ -56,7 +57,7 @@ the same cell. The cell survives until the final closure that references it is r
 ```pascal
 function Counter(): function(): integer;
 begin
-  mutable var Value: integer := 0;
+  var Value: integer := 0;
   return function(): integer begin
     Value := Value + 1;
     return Value;
@@ -64,8 +65,8 @@ begin
 end function;
 ```
 
-There is no capture-list syntax. Immutability is declared at the variable (or
-parameter) site.
+There is no capture-list syntax. Local bindings use `const` or `var`;
+parameters are always read-only.
 
 ## Named nested routines
 
@@ -106,20 +107,20 @@ also makes the outer closure task-bound (the mutable cells are still reachable).
 
 ```pascal
 // Accepted: immutable capture
-var N: integer := 3;
-var Work: function(): integer := function(): integer begin
+const N: integer := 3;
+const Work: function(): integer := function(): integer begin
   return N * 2;
 end function;
-var Handle: task := go Work();
+const Handle: task := go Work();
 // Rejected: mutable capture
-mutable var Count: integer := 0;
-var Inc: procedure() := procedure() begin
+var Count: integer := 0;
+const Inc: procedure() := procedure() begin
   Count := Count + 1;
 end procedure;
 
 go Inc(); // Compile-time error
 // Rejected: nested task-bound capture
-var Outer: procedure() := procedure() begin
+const Outer: procedure() := procedure() begin
   Inc();
 end procedure;
 

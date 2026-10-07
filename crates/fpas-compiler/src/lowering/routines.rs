@@ -159,7 +159,7 @@ pub(super) fn collect<'a>(
                     }
                 }
             }
-            Decl::Const(_) | Decl::Var(_) | Decl::MutableVar(_) => {}
+            Decl::Const(_) | Decl::Var(_) => {}
         }
     }
 }

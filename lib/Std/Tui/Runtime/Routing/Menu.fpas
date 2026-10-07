@@ -31,7 +31,7 @@ begin
       end;
     when TuiElement.Desktop(Focused, Children):
       begin
-        mutable var LastOverlay: integer := -1;
+        var LastOverlay: integer := -1;
         for Index: integer := 0 to Std.Arrays.Length(Children) - 1 do
           begin
             case Children[Index] of
@@ -193,7 +193,7 @@ begin
   case TuiMenuFirstSelectable(Menu.Nodes, None) of
     when Some(First):
       begin
-        mutable var Messages: array of TuiMsg := [];
+        var Messages: array of TuiMsg := [];
         if not TuiFocusMatches(Previous, Menu.Id) then
           begin
             Std.Arrays.Push(Messages, TuiMsg.FocusChanged(Previous, Some(Menu.Id)));
@@ -302,8 +302,8 @@ begin
   case Menu.State.Active of
     when Some(Active):
       begin
-        var ActiveIndex: integer := TuiMenuFind(Menu.Nodes, Active);
-        var Parent: option of TuiMenuNodeId := TuiMenuNodeParent(Menu.Nodes[ActiveIndex]);
+        const ActiveIndex: integer := TuiMenuFind(Menu.Nodes, Active);
+        const Parent: option of TuiMenuNodeId := TuiMenuNodeParent(Menu.Nodes[ActiveIndex]);
         case TuiMenuMnemonic(Menu, Key, Parent) of
           when Some(Messages):
             begin
@@ -351,7 +351,7 @@ begin
                 end case;
               end;
             end if;
-            mutable var Direction: integer := -1;
+            var Direction: integer := -1;
             if Key.kind = Std.Console.KeyKind.Down then
               begin
                 Direction := 1;
@@ -412,7 +412,7 @@ begin
             case Parent of
               when Some(ParentId):
                 begin
-                  var ParentIndex: integer := TuiMenuFind(Menu.Nodes, ParentId);
+                  const ParentIndex: integer := TuiMenuFind(Menu.Nodes, ParentId);
                   case TuiMenuNodeParent(Menu.Nodes[ParentIndex]) of
                     when Some(GrandParent):
                       begin
@@ -493,7 +493,7 @@ begin
             case TuiMenuMnemonic(Menu, Key, None) of
               when Some(Messages):
                 begin
-                  mutable var FocusMessages: array of TuiMsg := [];
+                  var FocusMessages: array of TuiMsg := [];
                   if not TuiFocusMatches(TuiRootFocus(Root), Menu.Id) then
                     begin
                       Std.Arrays.Push(FocusMessages, TuiMsg.FocusChanged(TuiRootFocus(Root), Some(Menu.Id)));

@@ -22,7 +22,6 @@ impl Parser {
             Token::Equal => "type",
             Token::Colon => match previous {
                 Some(Decl::Const(_)) => "const",
-                Some(Decl::MutableVar(_)) => "mutable var",
                 _ => "var",
             },
             _ => return None,
@@ -33,12 +32,11 @@ impl Parser {
         Some(match keyword {
             "type" => Decl::TypeDef(self.parse_type_def(visibility, allow_member_visibility)),
             "const" => Decl::Const(self.parse_const_def(visibility)),
-            "mutable var" => Decl::MutableVar(self.parse_var_def(visibility)),
             _ => Decl::Var(self.parse_var_def(visibility)),
         })
     }
 
-    /// Recovers a local binding without extending local declaration kinds.
+    /// Recovers a local binding using the preceding declaration keyword.
     pub(in crate::parser) fn recover_unprefixed_variable(
         &mut self,
         previous: Option<&Stmt>,
@@ -46,11 +44,12 @@ impl Parser {
         if !matches!(self.current_token(), Token::Ident(_)) || self.peek_token() != &Token::Colon {
             return None;
         }
-        let mutable = matches!(previous, Some(Stmt::MutableVar(_)));
-        self.report_missing_declaration_keyword(if mutable { "mutable var" } else { "var" }, false);
+        let constant = matches!(previous, Some(Stmt::Const(_)));
+        let keyword = if constant { "const" } else { "var" };
+        self.report_missing_declaration_keyword(keyword, false);
         let definition = self.parse_var_def(Visibility::Private);
-        Some(if mutable {
-            Stmt::MutableVar(definition)
+        Some(if constant {
+            Stmt::Const(definition)
         } else {
             Stmt::Var(definition)
         })

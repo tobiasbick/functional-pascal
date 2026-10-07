@@ -19,8 +19,8 @@ type
     end function;
   end record;
 begin
-  var C: Counter := record Base := 10; end;
-  var AddTen: function(Value: integer): integer := C.Add;
+  const C: Counter := record Base := 10; end;
+  const AddTen: function(Value: integer): integer := C.Add;
 end.",
     );
 }
@@ -38,8 +38,8 @@ type
     end procedure;
   end record;
 begin
-  var C: Counter := record Base := 1; end;
-  var Op: procedure() := C.Bump;
+  const C: Counter := record Base := 1; end;
+  const Op: procedure() := C.Bump;
 end.",
     );
 }
@@ -58,8 +58,8 @@ type
     end function;
   end record;
 begin
-  var P: Point := Point.Origin();
-  var F: function(): Point := P.Origin;
+  const P: Point := Point.Origin();
+  const F: function(): Point := P.Origin;
 end.",
     );
     assert!(
@@ -71,28 +71,22 @@ end.",
 }
 
 #[test]
-fn rejects_binding_mutable_self_method() {
-    let errors = check_errors(
+fn binding_a_method_with_a_local_self_copy_is_valid() {
+    check_ok(
         "\
 program T;
 type
   Counter = record
     Base: integer;
-    procedure Inc(mutable Self: Counter);
+    procedure Inc(Self: Counter);
     begin
-      Self.Base := Self.Base + 1;
+      var LocalSelf: Counter := Self;\nLocalSelf.Base := LocalSelf.Base + 1;
     end procedure;
   end record;
 begin
-  var C: Counter := record Base := 0; end;
-  var Op: procedure() := C.Inc;
+  const C: Counter := record Base := 0; end;
+  const Op: procedure() := C.Inc;
 end.",
-    );
-    assert!(
-        errors
-            .iter()
-            .any(|e| e.message.contains("mutable") && e.message.contains("bind")),
-        "{errors:#?}"
     );
 }
 
@@ -110,8 +104,8 @@ type
     end function;
   end record;
 begin
-  var C: Counter := record Base := 10; end;
-  var AddTen: function(Value: integer): integer := C.Add;
+  const C: Counter := record Base := 10; end;
+  const AddTen: function(Value: integer): integer := C.Add;
 end.",
     );
     assert!(parse_errors.is_empty(), "{parse_errors:#?}");

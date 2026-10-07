@@ -115,10 +115,9 @@ fn symbol_completion_kind(kind: SymbolKind) -> CompletionItemKind {
         SymbolKind::Program => CompletionItemKind::FILE,
         SymbolKind::Unit => CompletionItemKind::MODULE,
         SymbolKind::Constant => CompletionItemKind::CONSTANT,
-        SymbolKind::Variable
-        | SymbolKind::MutableVariable
-        | SymbolKind::Parameter
-        | SymbolKind::LoopVariable => CompletionItemKind::VARIABLE,
+        SymbolKind::Variable | SymbolKind::Parameter | SymbolKind::LoopVariable => {
+            CompletionItemKind::VARIABLE
+        }
         SymbolKind::Type => CompletionItemKind::CLASS,
         SymbolKind::Enum => CompletionItemKind::ENUM,
         SymbolKind::Function | SymbolKind::Procedure => CompletionItemKind::FUNCTION,

@@ -77,7 +77,7 @@ export async function run(): Promise<void> {
   await vscode.commands.executeCommand("workbench.action.revertAndCloseActiveEditor");
 
   const messySource =
-    "program Corrected; begin // kept\n var Value:integer:=1; end.";
+    "program Corrected; begin // kept\n const Value:integer:=1; end.";
   await verifyFormattingKeepsLineEnding(
     extension.extensionPath,
     messySource,
@@ -241,7 +241,7 @@ async function verifyFormattingKeepsLineEnding(
         "",
         "begin",
         "  // kept",
-        "  var Value: integer := 1;",
+        "  const Value: integer := 1;",
         "end.",
         ""
       ].join(newline)
@@ -279,7 +279,7 @@ async function verifyExternalProjectChanges(): Promise<void> {
     );
     await fs.writeFile(
       appSource,
-      "program WatchApp;\n\nuses Watch.Core;\n\nbegin var First: integer := WatchedValue(); end.\n"
+      "program WatchApp;\n\nuses Watch.Core;\n\nbegin const First: integer := WatchedValue(); end.\n"
     );
 
     const declarationUri = vscode.Uri.file(coreSource);
@@ -296,7 +296,7 @@ async function verifyExternalProjectChanges(): Promise<void> {
 
     await fs.writeFile(
       appSource,
-      "program WatchApp;\n\nuses Watch.Core;\n\nbegin\n  var First: integer := WatchedValue();\n  var Second: integer := WatchedValue();\nend.\n"
+      "program WatchApp;\n\nuses Watch.Core;\n\nbegin\n  const First: integer := WatchedValue();\n  const Second: integer := WatchedValue();\nend.\n"
     );
     await waitForReferences(declarationUri, position, 3);
   } finally {
@@ -329,7 +329,7 @@ async function verifyWorkspaceNavigation(): Promise<void> {
       '[project]\nname = "navigation-app"\nkind = "program"\nmain = "src/main.fpas"\n\n[dependencies]\nprojects = ["../core/core.fpasprj"]\n\n[sources]\ninclude = ["src/**/*.fpas"]\n'
     );
     const source =
-      "program NavigationApp;\n\nuses Navigation.Core;\n\nmutable var Counter: integer := 0;\n\nbegin\n  Counter := Counter + 1;\n  var Value: HostPoint := record X := Counter; end;\nend.\n";
+      "program NavigationApp;\n\nuses Navigation.Core;\n\nvar Counter: integer := 0;\n\nbegin\n  Counter := Counter + 1;\n  const Value: HostPoint := record X := Counter; end;\nend.\n";
     await fs.writeFile(appSource, source);
 
     const symbols = await waitForWorkspaceSymbols("HostPoint");

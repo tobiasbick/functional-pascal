@@ -27,8 +27,8 @@ end function;
 
 function TuiRouteSubtreeEnd(Node: TuiElement; Index: integer): integer;
 begin
-  mutable var Next: integer := Index + 1;
-  mutable var Descendants: array of TuiElement := [];
+  var Next: integer := Index + 1;
+  var Descendants: array of TuiElement := [];
   case Node of
     when TuiElement.Scroll(Id, Offset, ChangeAction, Children):
       begin
@@ -80,7 +80,7 @@ function TuiRouteTarget(
   Key: Std.Console.KeyEvent
 ): option of TuiMsg;
 begin
-  mutable var Descendants: array of TuiElement := [];
+  var Descendants: array of TuiElement := [];
   case Node of
     when TuiElement.Button(Button):
       begin
@@ -124,13 +124,13 @@ begin
             return None;
           end;
         end if;
-        var Count: integer := Std.Arrays.Length(Items);
+        const Count: integer := Std.Arrays.Length(Items);
         if Count = 0 then
           begin
             return None;
           end;
         end if;
-        mutable var NextSelected: integer := Selected;
+        var NextSelected: integer := Selected;
         if Key.kind = Std.Console.KeyKind.Up then
           begin
             NextSelected := Selected - 1;
@@ -228,15 +228,15 @@ begin
       begin
         if Id.Value = Target.Value then
           begin
-            mutable var Content: TuiSize := TuiSize.Create(0, 0);
+            var Content: TuiSize := TuiSize.Create(0, 0);
             if Std.Arrays.Length(Children) = 1 then
               begin
                 Content := TuiMeasure(Children[0], TuiMeasureSpec.Unbounded()).Preferred;
               end;
             end if;
-            var Viewport: TuiArrangedEntry := Frame.EntryAt(Index);
-            mutable var MaximumX: integer := Content.Width - Viewport.Bounds.Width;
-            mutable var MaximumY: integer := Content.Height - Viewport.Bounds.Height;
+            const Viewport: TuiArrangedEntry := Frame.EntryAt(Index);
+            var MaximumX: integer := Content.Width - Viewport.Bounds.Width;
+            var MaximumY: integer := Content.Height - Viewport.Bounds.Height;
             if MaximumX < 0 then
               begin
                 MaximumX := 0;
@@ -248,7 +248,7 @@ begin
                 MaximumY := 0;
               end;
             end if;
-            mutable var NextOffset: TuiPoint := Offset;
+            var NextOffset: TuiPoint := Offset;
             if Key.kind = Std.Console.KeyKind.Left then
               begin
                 NextOffset.X := TuiScrollClamp(Offset.X - 1, MaximumX);
@@ -328,7 +328,7 @@ begin
         return None;
       end;
   end case;
-  mutable var Next: integer := Index + 1;
+  var Next: integer := Index + 1;
   for ChildIndex: integer := 0 to Std.Arrays.Length(Descendants) - 1 do
     begin
       case TuiRouteTarget(Frame, Descendants[ChildIndex], Next, Target, Key) of
@@ -382,14 +382,14 @@ begin
       begin
       end;
   end case;
-  var Controls: array of TuiControlId := TuiFocusableControls(Root);
+  const Controls: array of TuiControlId := TuiFocusableControls(Root);
   if Std.Arrays.Length(Controls) = 0 then
     begin
       return [TuiMsg.Key(Key)];
     end;
   end if;
-  var Previous: option of TuiControlId := TuiRootFocus(Root);
-  mutable var CurrentIndex: integer := -1;
+  const Previous: option of TuiControlId := TuiRootFocus(Root);
+  var CurrentIndex: integer := -1;
   case Previous of
     when Some(Id):
       begin
@@ -399,8 +399,8 @@ begin
       begin
       end;
   end case;
-  mutable var Routed: array of TuiMsg := [];
-  mutable var Target: TuiControlId := Controls[0];
+  var Routed: array of TuiMsg := [];
+  var Target: TuiControlId := Controls[0];
   if CurrentIndex >= 0 then
     begin
       Target := Controls[CurrentIndex];
@@ -426,7 +426,7 @@ begin
           end case;
         end;
       end if;
-      mutable var NextIndex: integer := CurrentIndex + 1;
+      var NextIndex: integer := CurrentIndex + 1;
       if NextIndex >= Std.Arrays.Length(Controls) then
         begin
           NextIndex := 0;

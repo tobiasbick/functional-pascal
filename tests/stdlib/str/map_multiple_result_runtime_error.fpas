@@ -8,5 +8,5 @@ begin
 end function;
 
 begin
-  var Mapped: string := Map('😀', Expand);
+  const Mapped: string := Map('😀', Expand);
 end.

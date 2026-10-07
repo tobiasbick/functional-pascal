@@ -11,7 +11,7 @@ uses
 // - `Root`: Root of the element tree.
 public function TuiFocusFirst(Root: TuiElement): option of TuiControlId;
 begin
-  var Controls: array of TuiControlId := TuiFocusableControls(Root);
+  const Controls: array of TuiControlId := TuiFocusableControls(Root);
   if Std.Arrays.Length(Controls) = 0 then
     begin
       return None;
@@ -28,7 +28,7 @@ end function;
 // - `Preferred`: Preferred size or focus identifier.
 public function TuiFocusResolve(Root: TuiElement; Preferred: option of TuiControlId): option of TuiControlId;
 begin
-  var Controls: array of TuiControlId := TuiFocusableControls(Root);
+  const Controls: array of TuiControlId := TuiFocusableControls(Root);
   if Std.Arrays.Length(Controls) = 0 then
     begin
       return None;
@@ -59,7 +59,7 @@ end function;
 // - `Available`: Available terminal size.
 public function TuiLayoutFitFor(Root: TuiElement; Available: TuiSize): TuiLayoutFit;
 begin
-  var Measured: TuiMeasureResult := TuiMeasure(Root, TuiMeasureSpec.Unbounded());
+  const Measured: TuiMeasureResult := TuiMeasure(Root, TuiMeasureSpec.Unbounded());
   return TuiLayoutFit.Create(Measured.Minimum, Available);
 end function;
 end unit;

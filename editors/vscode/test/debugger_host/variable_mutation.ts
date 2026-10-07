@@ -35,25 +35,25 @@ export async function verifyVariableMutation(
     "    Y: integer;",
     "  end;",
     "",
-    "mutable var",
+    "var",
     "  GlobalValue: integer := 5;",
     "",
     "begin",
-    "  mutable var Scalar: integer := 1;",
-    "  var Fixed: integer := 2;",
-    "  mutable var Origin: Point := record",
+    "  var Scalar: integer := 1;",
+    "  const Fixed: integer := 2;",
+    "  var Origin: Point := record",
     "    X := 3;",
     "    Y := 4;",
     "  end;",
-    "  mutable var Items: array of integer := [6, 7];",
-    "  mutable var Scores: dict of string to integer := ['Ada': 8];",
-    "  var StopMarker: integer := Fixed;",
+    "  var Items: array of integer := [6, 7];",
+    "  var Scores: dict of string to integer := ['Ada': 8];",
+    "  const StopMarker: integer := Fixed;",
     "  WriteLn(Scalar + Origin.X + Items[1] + Scores['Ada'] + GlobalValue);",
     "end.",
     ""
   ];
   const sourcePath = await writeSource(workspaceRoot, "variable-mutation", lines);
-  const stopLine = lines.indexOf("  var StopMarker: integer := Fixed;");
+  const stopLine = lines.indexOf("  const StopMarker: integer := Fixed;");
   const breakpoint = new vscode.SourceBreakpoint(
     new vscode.Location(vscode.Uri.file(sourcePath), new vscode.Position(stopLine, 2))
   );

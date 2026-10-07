@@ -1,5 +1,5 @@
 program MalformedSyntax
 
 begin
-  var Value: integer := 1
+  const Value: integer := 1
 end.

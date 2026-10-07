@@ -6,7 +6,7 @@ Non-mutating array helpers (length, sort, search, slice, …) plus **in-place** 
 program Example;
 uses Std.Console, Std.Arrays;
 begin
-  var A: array of integer := [1, 2, 3];
+  const A: array of integer := [1, 2, 3];
   WriteLn(Length(A));
 end.
 ```
@@ -31,8 +31,8 @@ All routines are **generic over element type `T`** (your array’s element type)
 | function | `Contains(A: array of T; Value: T): boolean` | membership |
 | function | `IndexOf(A: array of T; Value: T): integer` | first index or `-1` |
 | function | `Slice(A: array of T; Start: integer; Len: integer): array of T` | sub-range; bounds checked |
-| procedure | `Push(mutable A: array of T; Value: T)` | append in place |
-| function | `Pop(mutable A: array of T): T` | remove last |
+| procedure | `Push(A: array of T; Value: T)` | append in place |
+| function | `Pop(A: array of T): T` | remove last |
 | function | `Map(A: array of T; F: function(X: T): U): array of U` | transform each element |
 | function | `Filter(A: array of T; F: function(X: T): boolean): array of T` | keep matching elements |
 | function | `Reduce(A: array of T; Init: U; F: function(Acc: U; V: T): U): U` | fold to single value |
@@ -45,7 +45,7 @@ All routines are **generic over element type `T`** (your array’s element type)
 | function | `Fill(Value: T; Count: integer): array of T` | array of `Count` copies |
 | procedure | `ForEach(A: array of T; F: procedure(X: T))` | call `F` for each element |
 
-**Mutating calls:** `Push` and `Pop` require **`A` to be a simple mutable array variable** (typically `mutable var Name: array of T := …`). The compiler rejects other targets.
+**Mutating calls:** `Push` and `Pop` require **`A` to be a simple mutable array variable** (typically `var Name: array of T := …`). The compiler rejects other targets.
 The receiver forms `A.Push(Value)` and `A.Pop()` keep this restriction.
 
 **Callbacks:** pass a named function or procedure whose type matches the parameter (e.g. `F: function(X: T): boolean`).

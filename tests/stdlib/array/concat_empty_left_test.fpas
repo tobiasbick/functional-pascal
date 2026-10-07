@@ -3,6 +3,6 @@ program T;
 uses Std.Console, Std.Arrays;
 
 begin
-  var C: array of integer := Concat([], [1, 2]);
+  const C: array of integer := Concat([], [1, 2]);
   WriteLn(Length(C));
 end.

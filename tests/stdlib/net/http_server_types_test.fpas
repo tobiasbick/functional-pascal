@@ -4,7 +4,7 @@ program HttpServerTypesTest;
 uses Std.Arrays, Std.Http, Std.Net.Utf8, Std.Test;
 
 begin
-  mutable var ResponseValue: ServerResponse := ServerResponse.Create(201, 'Created');
+  var ResponseValue: ServerResponse := ServerResponse.Create(201, 'Created');
   ResponseValue.Headers := [Header.Create('Content-Type', 'text/plain')];
   ResponseValue.Body := Std.Net.Utf8.Encode('ok');
   AssertEquals(201, ResponseValue.StatusCode);

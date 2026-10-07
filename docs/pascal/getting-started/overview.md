@@ -5,7 +5,7 @@ Functional Pascal is a modern, function-first programming language built on Pasc
 ## Design philosophy
 
 - **Function first** — Functions are the primary building block. No classical classes.
-- **Immutable by default** — All bindings are immutable unless declared with `mutable var`.
+- **Explicit binding mutability** — `const` bindings are immutable; `var` bindings permit reassignment.
 - **Explicit types** — Every variable and parameter declares its type.
 - **Safe by design** — The VM manages memory. No pointers, no manual allocation.
 - **Familiar syntax** — Pascal's `begin`, `end`, `:=`, `downto` and other well-known keywords.

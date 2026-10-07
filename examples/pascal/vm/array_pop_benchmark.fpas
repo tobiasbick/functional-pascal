@@ -9,17 +9,17 @@ begin
       panic('expected ITERATIONS SIZE');
     end;
   end if;
-  var Iterations: integer := StrToInt(ParamStr(0));
-  var Size: integer := StrToInt(ParamStr(1));
+  const Iterations: integer := StrToInt(ParamStr(0));
+  const Size: integer := StrToInt(ParamStr(1));
   if (Iterations < 1) or (Size < 1) then
     begin
       panic('arguments must be positive');
     end;
   end if;
-  var Started: integer := MonotonicMillis();
+  const Started: integer := MonotonicMillis();
   for Iteration: integer := 1 to Iterations do
     begin
-      mutable var Values: array of integer := Std.Arrays.Fill(7, Size);
+      var Values: array of integer := Std.Arrays.Fill(7, Size);
       for Index: integer := 1 to Size do
         begin
           if Std.Arrays.Pop(Values) <> 7 then

@@ -135,6 +135,7 @@ impl check::Checker {
                 SemaSymbolKind::EnumVariantConstructor
             };
             let symbol = Symbol {
+                constant: None,
                 ty: enum_symbol_ty.clone(),
                 mutable: false,
                 kind,

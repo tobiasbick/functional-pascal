@@ -4,7 +4,7 @@ All keywords are case-insensitive, following traditional Pascal convention:
 
 ```
 program   unit      uses      const
-var       mutable   function  procedure
+var       function  procedure
 begin     end       return    if
 then      else      case      of
 for       to        downto    in
@@ -27,6 +27,9 @@ member access. Some keywords are valid only in their dedicated syntax positions:
 and `write` introduce property or event accessors, the three constraint keywords follow
 a generic type parameter, and `self` names the first receiver parameter and receiver
 expression of an instance record method.
+
+`mutable` is an ordinary identifier. Binding declarations use `const` or
+`var`, and routine parameters are read-only.
 
 `private` is not a keyword. Unit declarations and record members without
 `public` are private by default, so `private` remains available as an ordinary

@@ -21,8 +21,8 @@ export async function verifyRuntimeFailureFilters(
     "program DebuggerFailureFilter;",
     "",
     "begin",
-    "  var Zero: integer := 0;",
-    "  var Value: integer := 1 div Zero;",
+    "  const Zero: integer := 0;",
+    "  const Value: integer := 1 div Zero;",
     "end.",
     ""
   ]);

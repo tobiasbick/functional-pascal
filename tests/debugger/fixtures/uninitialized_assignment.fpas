@@ -7,16 +7,16 @@ type Point = record
   Y: integer;
 end record;
 
-mutable var GlobalCount: integer := 99;
+var GlobalCount: integer := 99;
 
 begin
-  mutable var Count: integer := 1;
-  mutable var Flag: boolean := false;
-  mutable var Origin: Point := record
+  var Count: integer := 1;
+  var Flag: boolean := false;
+  var Origin: Point := record
     X := 3;
     Y := 4;
   end;
-  var Frozen: integer := 2;
+  const Frozen: integer := 2;
   WriteLn(Count);
   WriteLn(GlobalCount);
   if Flag then

@@ -26,7 +26,7 @@ export async function verifyFrameRestart(
     "",
     "function Branch(Value: integer): integer;",
     "begin",
-    "  mutable var Local: integer := Value + 10;",
+    "  var Local: integer := Value + 10;",
     "  WriteLn('effect');",
     "  return Local;",
     "end;",

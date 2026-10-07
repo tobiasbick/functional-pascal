@@ -3,7 +3,7 @@ program T;
 uses Std.Console, Std.Dictionaries;
 
 begin
-  var D: dict of string to boolean := ['ok': true];
+  const D: dict of string to boolean := ['ok': true];
   for K: string in D do
     begin
       WriteLn(K);

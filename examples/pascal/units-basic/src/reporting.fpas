@@ -6,7 +6,7 @@ uses App.Math, Std.Conv;
 
 public function DescribeClamp(Value: integer): string;
 begin
-  var Clamped: integer := Clamp(Value, 0, 100);
+  const Clamped: integer := Clamp(Value, 0, 100);
   return (('input=' + IntToStr(Value)) + ', clamped=') + IntToStr(Clamped);
 end function;
 

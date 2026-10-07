@@ -44,7 +44,6 @@ fn procedure_types_require_matching_variadic_flag_and_param_count() {
     let fixed = Ty::Procedure(ProcedureTy {
         type_params: Vec::new(),
         params: vec![ParamTy {
-            mutable: false,
             name: "x".to_string(),
             ty: Ty::Integer,
         }],
@@ -53,7 +52,6 @@ fn procedure_types_require_matching_variadic_flag_and_param_count() {
     let variadic = Ty::Procedure(ProcedureTy {
         type_params: Vec::new(),
         params: vec![ParamTy {
-            mutable: false,
             name: "x".to_string(),
             ty: Ty::Integer,
         }],
@@ -69,7 +67,6 @@ fn function_types_require_matching_variadic_flag() {
     let fixed = Ty::Function(FunctionTy {
         type_params: Vec::new(),
         params: vec![ParamTy {
-            mutable: false,
             name: "x".to_string(),
             ty: Ty::Integer,
         }],
@@ -79,7 +76,6 @@ fn function_types_require_matching_variadic_flag() {
     let variadic = Ty::Function(FunctionTy {
         type_params: Vec::new(),
         params: vec![ParamTy {
-            mutable: false,
             name: "x".to_string(),
             ty: Ty::Integer,
         }],
@@ -92,26 +88,24 @@ fn function_types_require_matching_variadic_flag() {
 }
 
 #[test]
-fn callable_types_require_matching_param_mutability() {
+fn callable_types_match_read_only_value_parameters() {
     let by_value = Ty::Procedure(ProcedureTy {
         type_params: Vec::new(),
         params: vec![ParamTy {
-            mutable: false,
             name: "x".to_string(),
             ty: Ty::Integer,
         }],
         variadic: false,
     });
-    let by_ref = Ty::Procedure(ProcedureTy {
+    let same_signature = Ty::Procedure(ProcedureTy {
         type_params: Vec::new(),
         params: vec![ParamTy {
-            mutable: true,
             name: "x".to_string(),
             ty: Ty::Integer,
         }],
         variadic: false,
     });
 
-    assert!(!by_value.compatible_with(&by_ref));
-    assert!(!by_ref.compatible_with(&by_value));
+    assert!(by_value.compatible_with(&same_signature));
+    assert!(same_signature.compatible_with(&by_value));
 }

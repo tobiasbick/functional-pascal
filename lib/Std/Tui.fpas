@@ -128,7 +128,7 @@ public type TuiStatusItem = Std.Tui.Chrome.StatusItem.TuiStatusItem;
 // Constructors for immutable status-line items.
 public type TuiStatusItemBuilders = Std.Tui.Chrome.StatusItem.TuiStatusItemBuilders;
 
-// Runtime command returned through Update's mutable output parameter.
+// Runtime command returned through Update's shared command output handle.
 public type TuiCmd = Std.Tui.Runtime.Cmd.TuiCmd;
 
 // Observable command output passed to Update.

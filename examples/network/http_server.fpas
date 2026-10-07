@@ -11,7 +11,7 @@ uses Std.Args, Std.Conv, Std.Console, Std.Http, Std.Net, Std.Net.Utf8;
 // - `Text`: UTF-8 response body.
 function TextResponse(StatusCode: integer; ReasonPhrase: string; Text: string): ServerResponse;
 begin
-  mutable var ResponseValue: ServerResponse := ServerResponse.Create(StatusCode, ReasonPhrase);
+  var ResponseValue: ServerResponse := ServerResponse.Create(StatusCode, ReasonPhrase);
   ResponseValue.Headers := [Header.Create('Content-Type', 'text/plain; charset=utf-8')];
   ResponseValue.Body := Std.Net.Utf8.Encode(Text);
   return ResponseValue;
@@ -54,7 +54,7 @@ begin
 end function;
 
 begin
-  mutable var Port: integer := 18080;
+  var Port: integer := 18080;
   if ParamCount() = 1 then
     begin
       Port := StrToInt(ParamStr(0));
@@ -69,7 +69,7 @@ begin
     when Ok(ListenerValue):
       begin
         WriteLn('HTTP server listening on http://127.0.0.1:' + IntToStr(Port));
-        mutable var Options: ServerOptions := ServerOptions.Create();
+        var Options: ServerOptions := ServerOptions.Create();
         Options.MaxConcurrentRequests := 1;
         Options.MaxRequests := 3;
         case Serve(ListenerValue, Options, Handle) of

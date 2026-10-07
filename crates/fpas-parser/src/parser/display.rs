@@ -8,7 +8,6 @@ pub(super) fn token_display(t: &Token) -> Cow<'static, str> {
         Token::Uses => "uses".into(),
         Token::Const => "const".into(),
         Token::Var => "var".into(),
-        Token::Mutable => "mutable".into(),
         Token::Function => "function".into(),
         Token::Procedure => "procedure".into(),
         Token::Begin => "begin".into(),

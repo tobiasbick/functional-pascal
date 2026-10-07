@@ -1,0 +1,71 @@
+// Covers writable var bindings, value-parameter copies, and shared capture cells.
+program BindingKeywordSwitchTest;
+
+uses Std.Arrays;
+
+type State = record
+  Value: integer;
+end record;
+
+var Global: integer := 0;
+
+function Rewrite(Values: array of integer; Item: State): integer;
+begin
+  var LocalValues: array of integer := Values;
+  var LocalItem: State := Item;
+  LocalValues[0] := 7;
+  Push(LocalValues, 9);
+  LocalItem.Value := 5;
+  return (LocalValues[0] + Pop(LocalValues)) + LocalItem.Value;
+end function;
+
+function Capture(Value: integer): function(): integer;
+function ReadValue(): integer;
+begin
+  return LocalValue;
+end function;
+begin
+  var LocalValue: integer := Value;
+  const IncrementValue: procedure() := procedure() begin
+    LocalValue := LocalValue + 1;
+  end procedure;
+  const SameName: State := record
+    Value := 40;
+  end;
+
+  begin
+    const Value: integer := 100;
+    if Value <> 100 then
+      panic('shadowing');
+    end if;
+  end;
+
+  IncrementValue();
+  if SameName.Value <> 40 then
+    panic('field name');
+  end if;
+
+  return ReadValue;
+end function;
+
+begin
+  Global := 3;
+  var mutable: integer := 1;
+  Mutable := Mutable + Global;
+  const Values: array of integer := [1];
+  const Item: State := record
+    Value := 2;
+  end;
+
+  if Rewrite(Values, Item) <> 21 then
+    panic('local copy');
+  end if;
+
+  if Values[0] <> 1 or Item.Value <> 2 then
+    panic('caller changed');
+  end if;
+  const ReadValue: function(): integer := Capture(10);
+  if ReadValue() <> 11 or Mutable <> 4 then
+    panic('shared capture or var');
+  end if;
+end.

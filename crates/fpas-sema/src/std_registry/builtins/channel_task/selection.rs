@@ -35,7 +35,7 @@ pub(super) fn check_case(c: &mut Checker, name: &str, args: &[&Expr], span: Span
         .into_iter()
         .map(|ty| ParamTy {
             name: "Outcome".into(),
-            mutable: false,
+
             ty: Ty::Result(Box::new(ty), Box::new(Ty::String)),
         })
         .collect();

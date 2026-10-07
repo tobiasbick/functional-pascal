@@ -14,11 +14,10 @@ const NoteCount: integer := 40;
 
 function BenchmarkNotes(): array of Note;
 begin
-  mutable var Notes: array of Note := [];
+  var Notes: array of Note := [];
   for Index: integer := 1 to NoteCount do
     begin
-      mutable var NoteValue: Note := NoteCreate('benchmark-' + IntToStr(Index), 1700000000000 +
-                                                                                Index);
+      var NoteValue: Note := NoteCreate('benchmark-' + IntToStr(Index), 1700000000000 + Index);
       NoteValue.Title := ('Performance note ' + IntToStr(Index)) + ' with a representative title';
       NoteValue.Tags := ['performance', 'tui', 'benchmark'];
       NoteValue.Pinned := (Index mod 7) = 0;
@@ -37,13 +36,13 @@ begin
       panic('usage: notes-headless-benchmark.fpasprj -- ITERATIONS [MAX_MILLIS]');
     end;
   end if;
-  var Iterations: integer := StrToInt(ParamStr(0));
+  const Iterations: integer := StrToInt(ParamStr(0));
   if Iterations < 1 then
     begin
       panic('ITERATIONS must be positive');
     end;
   end if;
-  mutable var MaxMillis: integer := 0;
+  var MaxMillis: integer := 0;
   if ParamCount() = 2 then
     begin
       MaxMillis := StrToInt(ParamStr(1));
@@ -54,20 +53,20 @@ begin
       end if;
     end;
   end if;
-  var Loaded: NotesLoad := record
+  const Loaded: NotesLoad := record
     Notes := BenchmarkNotes();
     Issues := [];
   end;
-  mutable var Model: NotesModel := NotesModelCreate('.temp-data/bench/notes', Loaded);
+  var Model: NotesModel := NotesModelCreate('.temp-data/bench/notes', Loaded);
   Model.Width := 120;
   Model.Height := 40;
-  mutable var App: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(120, 40));
+  var App: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(120, 40));
   Model := App.RunIterations(Model, NotesUpdate, NotesView, WarmupIterations, DeltaMillis);
-  var Started: integer := MonotonicMillis();
+  const Started: integer := MonotonicMillis();
   Model := App.RunIterations(Model, NotesUpdate, NotesView, Iterations, DeltaMillis);
-  var Elapsed: integer := ElapsedMillis(Started);
+  const Elapsed: integer := ElapsedMillis(Started);
   App.Close();
-  mutable var FramesPerSecond: integer := 0;
+  var FramesPerSecond: integer := 0;
   if Elapsed > 0 then
     begin
       FramesPerSecond := (Iterations * 1000) div Elapsed;

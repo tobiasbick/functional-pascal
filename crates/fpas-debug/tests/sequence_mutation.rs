@@ -14,9 +14,9 @@ const SOURCE: &str = r#"program JsonlSequenceMutation;
 uses Std.Console;
 
 begin
-  mutable var Numbers: array of integer := [1, 2, 3];
-  var Fixed: array of integer := [8];
-  mutable var Text: string := 'A😀B';
+  var Numbers: array of integer := [1, 2, 3];
+  const Fixed: array of integer := [8];
+  var Text: string := 'A😀B';
   WriteLn(Numbers[0]);
   WriteLn(Numbers[1]);
   WriteLn(Numbers[2]);

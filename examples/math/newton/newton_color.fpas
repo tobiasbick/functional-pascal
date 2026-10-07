@@ -6,7 +6,7 @@ uses Std.Console, Std.Math;
 
 public function RootColor(Root: integer; Shade: real): Color;
 begin
-  var T: real := Clamp(Shade, 0.2, 1.0);
+  const T: real := Clamp(Shade, 0.2, 1.0);
   if Root = 1 then
     begin
       return RgbColor(Trunc(T * 220.0), Trunc(T * 64.0), Trunc(T * 72.0));

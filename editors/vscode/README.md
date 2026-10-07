@@ -59,7 +59,7 @@ variables. **Debug: Roll Back Last Reload** restores the single preceding image
 as a new version. Active bodies, function-set or layout changes, captures, and
 anonymous closures are rejected before the live image changes. This reloads
 FPAS program code only; it does not debug or replace the native Rust VM.
-While stopped, the Variables view can edit mutable locals, parameters, globals,
+While stopped, the Variables view can edit mutable locals and globals,
 closure captures, record fields, array elements, existing dictionary
 values, active enum payload fields, `Result`/`Option` `.value` children, and
 complete mutable enum, `Result`, and `Option` values using constructor
@@ -70,7 +70,7 @@ executable routine such as `AddTwo`, `AddBase`, or `AddCell`. Named nested
 routines materialize from the selected lexical-owner frame using recorded
 immutable values and existing mutable cells. Constructed cell-capturing
 functions are task-bound to the selected task and may be stored only in a
-mutable local or parameter register of that owner frame. An already
+mutable local register of that owner frame. An already
 materialized task-bound function may be copied only within that selected owner
 task and frame; the exact function and cell handles are preserved. A task-typed Variables or
 Watch target can be replaced by copying one visible binding that already holds

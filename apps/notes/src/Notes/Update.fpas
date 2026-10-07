@@ -21,7 +21,7 @@ end function;
 
 function ResortSelected(State: NotesModel; SelectedId: string): NotesModel;
 begin
-  mutable var Next: NotesModel := State;
+  var Next: NotesModel := State;
   Next.Notes := NotesSort(State.Notes);
   Next.Selected := NoteIndexById(Next.Notes, SelectedId);
   return Next;
@@ -29,7 +29,7 @@ end function;
 
 function WithEditorFields(State: NotesModel; Selected: integer): NotesModel;
 begin
-  mutable var Next: NotesModel := State;
+  var Next: NotesModel := State;
   Next.Selected := Selected;
   Next.Pane := NotesPane.Editor;
   Next.Focus := BodyControl;
@@ -38,7 +38,7 @@ begin
   Next.BodyOffset := TuiPoint.Create(0, 0);
   if (Selected >= 0) and (Selected < Std.Arrays.Length(State.Notes)) then
     begin
-      var NoteValue: Note := State.Notes[Selected];
+      const NoteValue: Note := State.Notes[Selected];
       Next.TitleCaret := Std.Str.Length(NoteValue.Title);
       Next.TagsText := NoteTagsText(NoteValue);
       Next.TagsCaret := Std.Str.Length(Next.TagsText);
@@ -62,8 +62,8 @@ begin
       return State;
     end;
   end if;
-  mutable var Next: NotesModel := State;
-  mutable var NoteValue: Note := Next.Notes[Next.Selected];
+  var Next: NotesModel := State;
+  var NoteValue: Note := Next.Notes[Next.Selected];
   NoteValue.UpdatedMillis := Std.Time.TimestampMillis();
   NoteValue.Path := NoteFilePath(Next.Directory, NoteValue);
   case NotesSave(Next.Directory, NoteValue) of
@@ -94,7 +94,7 @@ end function;
 
 function SelectedFilteredPosition(State: NotesModel): integer;
 begin
-  var Indices: array of integer := NotesFilteredIndices(State.Notes, State.Search);
+  const Indices: array of integer := NotesFilteredIndices(State.Notes, State.Search);
   for Index: integer := 0 to Std.Arrays.Length(Indices) - 1 do
     begin
       if Indices[Index] = State.Selected then
@@ -110,20 +110,20 @@ end function;
 
 function SelectFiltered(State: NotesModel; Position: integer): NotesModel;
 begin
-  var Indices: array of integer := NotesFilteredIndices(State.Notes, State.Search);
+  const Indices: array of integer := NotesFilteredIndices(State.Notes, State.Search);
   if (Position < 0) or (Position >= Std.Arrays.Length(Indices)) then
     begin
       return State;
     end;
   end if;
-  var TargetId: string := State.Notes[Indices[Position]].Id;
-  var Saved: NotesModel := NotesPersistCurrent(State);
+  const TargetId: string := State.Notes[Indices[Position]].Id;
+  const Saved: NotesModel := NotesPersistCurrent(State);
   if Saved.Dirty or (Saved.Overlay = NotesOverlay.SaveFailure) then
     begin
       return Saved;
     end;
   end if;
-  mutable var Next: NotesModel := WithEditorFields(Saved, NoteIndexById(Saved.Notes, TargetId));
+  var Next: NotesModel := WithEditorFields(Saved, NoteIndexById(Saved.Notes, TargetId));
   Next.Pane := NotesPane.List;
   Next.Focus := ListControl;
   return Next;
@@ -131,19 +131,19 @@ end function;
 
 function CreateNote(State: NotesModel): NotesModel;
 begin
-  var Saved: NotesModel := NotesPersistCurrent(State);
+  const Saved: NotesModel := NotesPersistCurrent(State);
   if Saved.Dirty or (Saved.Overlay = NotesOverlay.SaveFailure) then
     begin
       return Saved;
     end;
   end if;
-  mutable var Next: NotesModel := Saved;
-  mutable var Draft: Note := NotesCreateDraft(Next.Directory);
+  var Next: NotesModel := Saved;
+  var Draft: Note := NotesCreateDraft(Next.Directory);
   Draft.Path := NoteFilePath(Next.Directory, Draft);
   case NotesSave(Next.Directory, Draft) of
     when Ok(Written):
       begin
-        mutable var Notes: array of Note := Next.Notes;
+        var Notes: array of Note := Next.Notes;
         Std.Arrays.Push(Notes, Draft);
         Next.Notes := Notes;
         Next := ResortSelected(Next, Draft.Id);
@@ -170,8 +170,8 @@ begin
       return State;
     end;
   end if;
-  mutable var Next: NotesModel := State;
-  mutable var NoteValue: Note := Next.Notes[Next.Selected];
+  var Next: NotesModel := State;
+  var NoteValue: Note := Next.Notes[Next.Selected];
   NoteValue.Pinned := not NoteValue.Pinned;
   Next := NotesWithNote(Next, Next.Selected, NoteValue);
   Next.Dirty := true;
@@ -181,10 +181,10 @@ end function;
 
 function SelectFirstVisible(State: NotesModel): NotesModel;
 begin
-  var Indices: array of integer := NotesFilteredIndices(State.Notes, State.Search);
+  const Indices: array of integer := NotesFilteredIndices(State.Notes, State.Search);
   if Std.Arrays.Length(Indices) = 0 then
     begin
-      mutable var Empty: NotesModel := State;
+      var Empty: NotesModel := State;
       Empty.Selected := -1;
       Empty.Pane := NotesPane.List;
       Empty.Focus := ListControl;
@@ -202,8 +202,8 @@ begin
       return State;
     end;
   end if;
-  mutable var Next: NotesModel := State;
-  mutable var NoteValue: Note := Next.Notes[Next.Selected];
+  var Next: NotesModel := State;
+  var NoteValue: Note := Next.Notes[Next.Selected];
   NoteValue.Archived := true;
   Next := NotesWithNote(Next, Next.Selected, NoteValue);
   Next.Dirty := true;
@@ -246,7 +246,7 @@ begin
 
   if Action = CommandsAction then
     begin
-      mutable var Next: NotesModel := State;
+      var Next: NotesModel := State;
       Next.Overlay := NotesOverlay.Commands;
       return Next;
     end;
@@ -254,7 +254,7 @@ begin
 
   if Action = HelpAction then
     begin
-      mutable var Next: NotesModel := State;
+      var Next: NotesModel := State;
       Next.Overlay := NotesOverlay.Help;
       return Next;
     end;
@@ -262,7 +262,7 @@ begin
 
   if Action = CloseOverlayAction then
     begin
-      mutable var Next: NotesModel := State;
+      var Next: NotesModel := State;
       Next.Overlay := NotesOverlay.Closed;
       Next.ErrorMessage := '';
       return Next;
@@ -271,7 +271,7 @@ begin
 
   if Action = SaveAndQuitAction then
     begin
-      var Saved: NotesModel := NotesPersistCurrent(State);
+      const Saved: NotesModel := NotesPersistCurrent(State);
       if not Saved.Dirty and (Saved.Overlay <> NotesOverlay.SaveFailure) then
         begin
           Cmd.Set(TuiCmd.Quit);
@@ -296,7 +296,7 @@ function RequestQuit(State: NotesModel; Cmd: TuiCmdOutput): NotesModel;
 begin
   if State.Dirty then
     begin
-      mutable var Next: NotesModel := State;
+      var Next: NotesModel := State;
       Next.Overlay := NotesOverlay.QuitConfirmation;
       return Next;
     end;
@@ -317,7 +317,7 @@ begin
   if ((Key.kind = Std.Console.KeyKind.Enter) and (State.Focus = ListControl)) and
      NotesHasSelection(State) then
     begin
-      mutable var Next: NotesModel := State;
+      var Next: NotesModel := State;
       Next.Focus := BodyControl;
       Next.Pane := NotesPane.Editor;
       return Next;
@@ -353,7 +353,7 @@ begin
       end;
     when 'f', 'F':
       begin
-        mutable var Next: NotesModel := State;
+        var Next: NotesModel := State;
         Next.Focus := SearchControl;
         Next.Pane := NotesPane.List;
         return Next;
@@ -368,14 +368,14 @@ begin
       end;
     when '1':
       begin
-        mutable var Next: NotesModel := State;
+        var Next: NotesModel := State;
         Next.Focus := SearchControl;
         Next.Pane := NotesPane.List;
         return Next;
       end;
     when '2':
       begin
-        mutable var Next: NotesModel := State;
+        var Next: NotesModel := State;
         Next.Focus := BodyControl;
         Next.Pane := NotesPane.Editor;
         return Next;
@@ -396,7 +396,7 @@ begin
       end;
     when TuiMsg.Resize(Size):
       begin
-        mutable var Next: NotesModel := State;
+        var Next: NotesModel := State;
         Next.Width := Size.Width;
         Next.Height := Size.Height;
         return Next;
@@ -406,7 +406,7 @@ begin
         case Current of
           when Some(CurrentId):
             begin
-              mutable var Next: NotesModel := State;
+              var Next: NotesModel := State;
               Next.Focus := CurrentId.Value;
               return Next;
             end;

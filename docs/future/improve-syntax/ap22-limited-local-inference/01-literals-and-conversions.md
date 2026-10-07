@@ -28,7 +28,7 @@ initializer is a literal or an explicit conversion.
 ## Affected areas
 
 - Parser local declarations, `crates/fpas-sema/src/check/decl/vars.rs`,
-  `consts.rs`, `fpas-language-service` hover.
+  `crates/fpas-sema/src/check/decl/consts/`, `fpas-language-service` hover.
 
 ## Migration
 

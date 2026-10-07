@@ -15,8 +15,7 @@ impl Checker {
     pub(crate) fn check_decl(&mut self, decl: &Decl) {
         match decl {
             Decl::Const(c) => self.check_const_def(c),
-            Decl::Var(v) => self.check_var_def(v, false),
-            Decl::MutableVar(v) => self.check_var_def(v, true),
+            Decl::Var(v) => self.check_var_def(v, true),
             Decl::TypeDef(td) => self.check_type_def(td),
             Decl::Function(f) => self.check_function_decl(f),
             Decl::Procedure(p) => self.check_procedure_decl(p),

@@ -3,7 +3,7 @@ program WaitAllEmpty;
 uses Std.Console, Std.Tasks;
 
 begin
-  var Tasks: array of task := [];
+  const Tasks: array of task := [];
   Std.Tasks.WaitAll(Tasks);
   WriteLn('ok');
 end.

@@ -3,7 +3,7 @@ program TuiSurfaceCellsTest;
 uses Std.Options, Std.Test, Std.Tui;
 
 begin
-  var Surface: TuiWorkingSurface := TuiWorkingSurface.Create(TuiSize.Create(4, 2));
+  const Surface: TuiWorkingSurface := TuiWorkingSurface.Create(TuiSize.Create(4, 2));
   AssertEquals(4, Surface.Size().Width);
   AssertEquals(2, Surface.Size().Height);
   AssertEquals(' ', Std.Options.Unwrap(Surface.TryCellAt(TuiPoint.Create(0, 0))).Glyph);
@@ -20,7 +20,7 @@ begin
   AssertEquals(' ', Std.Options.Unwrap(Surface.TryCellAt(TuiPoint.Create(0, 0))).Glyph);
   AssertTrue(Std.Options.IsNone(Surface.TryCellAt(TuiPoint.Create(-1, 0))));
   AssertTrue(Std.Options.IsNone(Surface.TryCellAt(TuiPoint.Create(4, 0))));
-  var FirstSnapshot: TuiSurfaceSnapshot := Surface.Snapshot();
+  const FirstSnapshot: TuiSurfaceSnapshot := Surface.Snapshot();
   AssertEquals('A', FirstSnapshot.CellAt(1, 0).Glyph);
   AssertEquals('B', FirstSnapshot.CellAt(2, 1).Glyph);
   AssertTrue(FirstSnapshot.CellAt(2, 1).Role = TuiStyleRole.Focused);
@@ -31,12 +31,12 @@ begin
   AssertEquals(' ', Std.Options.Unwrap(Surface.TryCellAt(TuiPoint.Create(1, 0))).Glyph);
   AssertEquals(' ', Std.Options.Unwrap(Surface.TryCellAt(TuiPoint.Create(2, 1))).Glyph);
   AssertEquals('A', FirstSnapshot.CellAt(1, 0).Glyph);
-  var Other: TuiWorkingSurface := TuiWorkingSurface.Create(TuiSize.Create(2, 1));
+  const Other: TuiWorkingSurface := TuiWorkingSurface.Create(TuiSize.Create(2, 1));
   Other.PutGlyph(0, 0, 'X');
   Surface.PutGlyph(0, 0, 'Y');
   AssertEquals('Y', Std.Options.Unwrap(Surface.TryCellAt(TuiPoint.Create(0, 0))).Glyph);
   AssertEquals('X', Std.Options.Unwrap(Other.TryCellAt(TuiPoint.Create(0, 0))).Glyph);
-  var SurfaceSlot: integer := Surface.Slot;
+  const SurfaceSlot: integer := Surface.Slot;
   for ResizeIndex: integer := 1 to 64 do
     begin
       Surface.Resize(TuiSize.Create(3 + (ResizeIndex mod 5), 2 + (ResizeIndex mod 3)));

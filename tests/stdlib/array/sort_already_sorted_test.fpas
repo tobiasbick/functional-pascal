@@ -3,8 +3,8 @@ program T;
 uses Std.Console, Std.Arrays;
 
 begin
-  var A: array of integer := [1, 2, 3];
-  var B: array of integer := Sort(A);
+  const A: array of integer := [1, 2, 3];
+  const B: array of integer := Sort(A);
   WriteLn(B[0]);
   WriteLn(B[2]);
 end.

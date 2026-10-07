@@ -160,7 +160,8 @@ fn qualify_unit_definitions(
             InterfaceSymbolKind::Function
                 | InterfaceSymbolKind::Procedure
                 | InterfaceSymbolKind::Variable
-                | InterfaceSymbolKind::MutableVariable
+                | InterfaceSymbolKind::ComputedConstant
+                | InterfaceSymbolKind::Constant(None)
                 | InterfaceSymbolKind::Type
         ) {
             public.insert(symbol.qualified_name.to_ascii_lowercase());

@@ -49,8 +49,8 @@ end procedure;
 // - `RequestValue`: Complete request and its transport limits.
 function OpenOnce(RequestValue: Request): result of StreamResponse, string;
 begin
-  var UriValue: Uri := try Std.Net.Uri.Parse(RequestValue.Url);
-  var Encoded: array of integer := try Std.Http.Wire.EncodeRequest(RequestValue, UriValue);
+  const UriValue: Uri := try Std.Net.Uri.Parse(RequestValue.Url);
+  const Encoded: array of integer := try Std.Http.Wire.EncodeRequest(RequestValue, UriValue);
   case OpenConnection(UriValue, RequestValue.TimeoutMillis) of
     when Ok(Connection):
       begin
@@ -138,8 +138,8 @@ begin
       return Error('HTTP MaxRedirects must not be negative');
     end;
   end if;
-  mutable var Current: Request := RequestValue;
-  mutable var Redirects: integer := 0;
+  var Current: Request := RequestValue;
+  var Redirects: integer := 0;
   while true do
     begin
       case OpenOnce(Current) of
@@ -164,7 +164,7 @@ begin
                           return Error('HTTP redirect count exceeds MaxRedirects');
                         end;
                       end if;
-                      mutable var Next: Request := Current;
+                      var Next: Request := Current;
                       case Std.Http.Redirect.NextRequest(Current, ResponseValue.StatusCode, Location) of
                         when Ok(Value):
                           begin
@@ -229,7 +229,7 @@ begin
   case OpenStream(RequestValue) of
     when Ok(StreamResponseValue):
       begin
-        mutable var Chunks: array of array of integer := [];
+        var Chunks: array of array of integer := [];
         while true do
           begin
             case Std.Http.Stream.ReadBody(StreamResponseValue.Body, 65536) of

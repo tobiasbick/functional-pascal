@@ -10,10 +10,10 @@ const HexMask: integer := 15;
 const BigScore: integer := 1000;
 
 begin
-  var Name: string := 'FPAS';
-  var First: string := Name[0];
-  var Last: string := Name[Length(Name) - 1];
-  var Total: Score := BigScore + HexMask;
+  const Name: string := 'FPAS';
+  const First: string := Name[0];
+  const Last: string := Name[Length(Name) - 1];
+  const Total: Score := BigScore + HexMask;
   WriteLn('total: ', IntToStr(Total));
   WriteLn('first: ', First);
   WriteLn('last: ', Last);

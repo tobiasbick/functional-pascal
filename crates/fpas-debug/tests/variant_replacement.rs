@@ -6,6 +6,11 @@
     reason = "protocol tests keep fixture failures local"
 )]
 
+#[path = "support/parameter_copy.rs"]
+mod parameter_copy;
+
+use parameter_copy::initialized_local_frame;
+
 use fpas_debug::{PreparedDebugTarget, jsonl::JsonlServer};
 use fpas_vm::{DebugAssignmentTarget, DebugExpression, DebugRunResult, DebugSession};
 use serde_json::{Value, json};
@@ -266,8 +271,8 @@ uses Std.Console, Std.Tasks;
 
 function Work(): integer;
 begin
-  mutable var Optional: Option of integer := Some(1);
-  var Marker: integer := 0;
+  var Optional: Option of integer := Some(1);
+  const Marker: integer := 0;
   case Optional of
     when Some(Value):
     begin
@@ -281,7 +286,7 @@ begin
 end function;
 
 begin
-  var Pending: task := go Work();
+  const Pending: task := go Work();
   WriteLn(Wait(Pending));
 end.
 "#;
@@ -364,7 +369,7 @@ fn root(name: &str) -> DebugAssignmentTarget {
 }
 
 #[test]
-fn variant_replacement_supports_mutable_parameters_and_capture_cells() {
+fn variant_replacement_supports_parameter_copies_and_capture_cells() {
     let mut parameter = session(
         r#"
 program VariantParameter;
@@ -375,10 +380,11 @@ type
     Pair(Left: integer; Right: integer);
   end enum;
 
-function ReadChoice(mutable Item: Choice): integer;
+function ReadChoice(Item: Choice): integer;
 begin
-  var Marker: integer := 0;
-  case Item of
+  var LocalItem: Choice := Item;
+const Marker: integer := 0;
+  case LocalItem of
     when Choice.Count(Value):
     begin
       return Value;
@@ -391,27 +397,22 @@ begin
 end function;
 
 begin
-  var OutputValue: integer := ReadChoice(Choice.Count(1));
-  var Marker: integer := OutputValue;
+  const OutputValue: integer := ReadChoice(Choice.Count(1));
+  const Marker: integer := OutputValue;
 end.
 "#,
     );
-    let parameter_frame = loop {
-        if session_scope(&mut parameter, "Parameters").is_some() {
-            break parameter.stack(0, 1).expect("parameter stack").items[0].id;
-        }
-        step(&mut parameter);
-    };
+    let parameter_frame = initialized_local_frame(&mut parameter, "LocalItem");
     parameter
         .set_expression(
-            &root("Item"),
+            &root("LocalItem"),
             &DebugExpression::Call {
                 callee: Box::new(DebugExpression::Callable("Choice.Pair".to_string())),
                 arguments: vec![DebugExpression::Integer(2), DebugExpression::Integer(3)],
             },
             Some(parameter_frame),
         )
-        .expect("replace mutable enum parameter");
+        .expect("replace writable enum parameter copy");
     assert!(matches!(
         parameter
             .step_out()
@@ -442,7 +443,7 @@ type
 
 function NextChoice(): function(): integer;
 begin
-  mutable var Selected: Choice := Choice.Count(1);
+  var Selected: Choice := Choice.Count(1);
   return function(): integer begin
     case Selected of
       when Choice.Count(Value):
@@ -458,9 +459,9 @@ begin
 end function;
 
 begin
-  var Next: function(): integer := NextChoice();
-  var First: integer := Next();
-  var Marker: integer := First;
+  const Next: function(): integer := NextChoice();
+  const First: integer := Next();
+  const Marker: integer := First;
 end.
 "#,
     );

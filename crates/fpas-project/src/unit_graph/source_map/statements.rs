@@ -15,9 +15,7 @@ pub(super) fn apply_stmt_source_id(stmt: &mut Stmt, source_id: u32) {
             }
             apply_span(span, source_id);
         }
-        Stmt::Var(var_def) | Stmt::MutableVar(var_def) => {
-            apply_var_def_source_id(var_def, source_id)
-        }
+        Stmt::Const(var_def) | Stmt::Var(var_def) => apply_var_def_source_id(var_def, source_id),
         Stmt::Assign {
             target,
             value,

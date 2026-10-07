@@ -17,13 +17,15 @@ remove declaration groups.
 
 - Parser: one declaration per keyword in existing declaration positions.
   Program and unit declarations support types, constants, and variables;
-  routine statement lists support variable bindings. Local types and constants
-  are not introduced. A second declaration without a keyword gets FP2015,
-  pointing at its name and showing the complete repeated prefix.
+  routine statement lists supported variable bindings at AP11 delivery. AP16.1
+  subsequently added local `const` bindings; local types remain unsupported.
+  A second declaration without a keyword gets FP2015, pointing at its name
+  and showing the complete repeated prefix.
 - Formatter: emit one declaration per keyword; remove group emission.
-- Repeat the complete `mutable var` form per mutable declaration while it
-  exists. Repeat `public` before each exported declaration; visibility is not
-  inherited from an earlier declaration.
+- At AP11 delivery, repeat the complete `mutable var` form per mutable
+  declaration. AP16.3 has replaced it with writable `var`. Repeat `public`
+  before each exported declaration; visibility is not inherited from an
+  earlier declaration.
 
 ## Affected areas
 
@@ -47,7 +49,8 @@ remove declaration groups.
 ## Documentation
 
 - `docs/specs/grammar.ebnf` (`const_declaration`, `var_declaration`,
-  `type_declaration`, `mutable_var_declaration`), `docs/pascal/language/basics/constants.md`,
+  `type_declaration`; the former `mutable_var_declaration` was removed by
+  AP16.3), `docs/pascal/language/basics/constants.md`,
   `variables.md`, `local-variables.md`, `docs/pascal/tools/fmt-style.md`,
   FPAS authoring skill.
 

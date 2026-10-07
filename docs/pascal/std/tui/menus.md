@@ -9,8 +9,8 @@ Root nodes must be submenus. Commands, nested submenus, and separators refer to
 their parent by identity:
 
 ```pascal
-var FileId: TuiMenuNodeId := TuiMenuNodeId.Create(1);
-var Nodes: array of TuiMenuNode := [
+const FileId: TuiMenuNodeId := TuiMenuNodeId.Create(1);
+const Nodes: array of TuiMenuNode := [
   TuiMenuNodeBuilders.Submenu(FileId, None, 'File', 'F'),
   TuiMenuNodeBuilders.CommandWithShortcut(
     TuiMenuNodeId.Create(2),

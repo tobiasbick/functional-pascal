@@ -120,7 +120,7 @@ fn nested_function_captures_enclosing_body_local() {
            function Add(Value: integer): integer; \
            begin return Value + Offset; end function; \
          begin \
-           var Offset: integer := 7; \
+           const Offset: integer := 7; \
            return Add; \
          end function; \
          begin end.",
@@ -136,7 +136,7 @@ fn nested_function_does_not_see_inner_block_locals() {
            begin return Hidden; end function; \
          begin \
            begin \
-             var Hidden: integer := 1; \
+             const Hidden: integer := 1; \
              return Inner(); \
            end; \
          end function; \
@@ -151,11 +151,11 @@ fn nested_function_does_not_see_inner_block_locals() {
 }
 
 #[test]
-fn mutable_param() {
+fn parameter_with_writable_local_copy() {
     check_ok(
         "program T; \
-         procedure Inc(mutable X: integer); \
-         begin X := X + 1; end procedure; \
+         procedure Inc(X: integer); \
+         begin var LocalX: integer := X;\nLocalX := LocalX + 1; end procedure; \
          begin end.",
     );
 }
@@ -166,7 +166,7 @@ fn generic_function_valid() {
         "program T; \
          function Identity<T>(Value: T): T; \
          begin return Value; end function; \
-         var X: integer := Identity(42); \
+         const X: integer := Identity(42); \
          begin end.",
     );
 }
@@ -182,7 +182,7 @@ fn generic_callback_returning_recursive_record_is_valid() {
          function Render<TModel>(State: TModel; ViewFn: function(State: TModel): Element): Element; \
          begin return ViewFn(State); end function; \
          begin \
-           var Root: Element := Render(record Count := 1; end, View); \
+           const Root: Element := Render(record Count := 1; end, View); \
          end.",
     );
 }
@@ -204,7 +204,7 @@ fn generic_function_reused_type_param_requires_same_concrete_type() {
          function PickFirst<T>(A: T; B: T): T; \
          begin return A; end function; \
          begin \
-           var X: integer := PickFirst(1, true); \
+           const X: integer := PickFirst(1, true); \
          end.",
     );
 }

@@ -19,8 +19,8 @@ public type ExplorerCamera = record
   // Horizontal span adjusted for terminal cell proportions.
   public function SpanX(Self: ExplorerCamera; Width: integer; Height: integer): real;
   begin
-    var SafeWidth: integer := Max(Width, 1);
-    var SafeHeight: integer := Max(Height, 1);
+    const SafeWidth: integer := Max(Width, 1);
+    const SafeHeight: integer := Max(Height, 1);
     return (Self.SpanY * (IntToReal(SafeWidth) / IntToReal(SafeHeight))) * 0.5;
   end function;
 

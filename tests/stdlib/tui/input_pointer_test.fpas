@@ -63,8 +63,8 @@ begin
 end function;
 
 begin
-  mutable var App: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(10, 2));
-  mutable var Model: InputPointerModel := record
+  var App: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(10, 2));
+  var Model: InputPointerModel := record
     FirstText := 'abcdef';
     FirstCaret := 0;
     SecondText := 'uvwxyz';

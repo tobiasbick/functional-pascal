@@ -12,7 +12,7 @@ begin
   case Msg of
     when TuiMsg.Started:
       begin
-        var Inbox: channel of integer := State.Inbox;
+        const Inbox: channel of integer := State.Inbox;
         Cmd.StartBackground(1, function(Token: CancellationToken): result of boolean, string begin
           return SendWithCancellation(Inbox, 42, Token);
         end function);
@@ -28,7 +28,7 @@ end function;
 function UpdateMessage(State: InteractiveModel; Message: integer; Cmd: TuiCmdOutput): InteractiveModel;
 begin
   Cmd.Set(TuiCmd.Quit);
-  mutable var Next: InteractiveModel := State;
+  var Next: InteractiveModel := State;
   Next.Received := Message;
   return Next;
 end function;
@@ -39,8 +39,8 @@ begin
 end function;
 
 begin
-  var Inbox: channel of integer := CreateChannel(1);
-  var Final: InteractiveModel := TuiApplication.RunWithBackground(record
+  const Inbox: channel of integer := CreateChannel(1);
+  const Final: InteractiveModel := TuiApplication.RunWithBackground(record
     Inbox := Inbox;
     Received := 0;
   end, Inbox, Update, UpdateMessage, View);

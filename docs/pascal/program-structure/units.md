@@ -6,10 +6,10 @@ Formal syntax: [`grammar.ebnf`](../../specs/grammar.ebnf) (`unit`, `program`, `u
 
 ## Unit declaration
 
-A unit file starts with a `unit` declaration followed by declarations (functions, procedures, types, constants, `var`, and `mutable var`). Every unit ends with `end unit;` after its last declaration, including a unit with no declarations. There is no main block.
+A unit file starts with a `unit` declaration followed by declarations (functions, procedures, types, constants and variables). Every unit ends with `end unit;` after its last declaration, including a unit with no declarations. There is no main block.
 
 Every type, constant, and variable has its own
-`type`, `const`, `var`, or complete `mutable var` prefix. Repeat `public`
+`type`, `const`, or `var` keyword. Repeat `public`
 before each exported declaration; it applies to that declaration only.
 
 ```pascal
@@ -51,7 +51,7 @@ uses
   Std.Console;
 
 begin
-  var Clamped: integer := Clamp(150, 0, 100);
+  const Clamped: integer := Clamp(150, 0, 100);
   WriteLn(Clamped);  // 100
 end.
 ```
@@ -78,8 +78,8 @@ program Demo;
 uses Std.Str, Std.Arrays;           // Both units may export Length
 begin
   // Length('hi');   ← ERROR: ambiguous — exists in Std.Str and Std.Arrays
-  var L1: integer := Std.Str.Length('hi');       // Qualified string Length
-  var L2: integer := Std.Arrays.Length([1, 2]);   // Qualified array Length
+  const L1: integer := Std.Str.Length('hi');       // Qualified string Length
+  const L2: integer := Std.Arrays.Length([1, 2]);   // Qualified array Length
 end.
 ```
 
@@ -139,6 +139,13 @@ public or no longer exporting the declaration.
 The final executable bytecode image links only reachable unit objects in dependency order.
 Existing top-level constant and variable initializers run in that same dependency order before
 the program body. Units do not have separate initialization or finalization syntax.
+
+A `const` initializer may call a routine or read an earlier binding. It executes
+once in declaration order for each initialized unit. Consumers read exported
+computed constants from immutable globals after dependency initialization.
+The public interface preserves whether a constant is compile-time known or
+computed; calls and references to computed constants cannot be used as `case`
+value labels, including through an imported or transitive binding.
 
 Before returning that image, the linker requires every callable definition to have a matching
 function-table entry in the same object, verifies that Unit function entries remain valid after

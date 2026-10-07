@@ -28,7 +28,7 @@ fn generic_and_callable_variable_calls_require_consumption() {
     );
     unused(
         "program T; begin
-      var Get: function(): integer := function(): integer begin return 1; end function;
+      const Get: function(): integer := function(): integer begin return 1; end function;
       Get(); end.",
     );
 }
@@ -42,7 +42,7 @@ fn intrinsic_calls_require_consumption_and_procedures_remain_valid() {
       function Value(): integer; begin return 1; end function;
       procedure Work(); begin WriteLn('work'); end procedure;
       begin Work(); WriteLn('hello'); go Work(); go Value();
-      var Job: task of integer := go Value(); discard Wait(Job); end.",
+      const Job: task of integer := go Value(); discard Wait(Job); end.",
     );
 }
 
@@ -55,7 +55,7 @@ fn consumption_forms_and_explicit_discard_remain_valid() {
       procedure Consume(Value: integer); begin end procedure;
       function Forward(): result of integer, string;
       begin return Ok(try Fallible()); end function;
-      begin var A: integer := Value(); mutable var B: integer := 0;
+      begin const A: integer := Value(); var B: integer := 0;
       B := Value(); Consume(Value()); discard Value(); discard Fallible();
       case Fallible() of when Ok(V): Consume(V); when Error(E): discard E; end case;
       end.",

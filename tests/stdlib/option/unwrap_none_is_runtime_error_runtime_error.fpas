@@ -3,6 +3,6 @@ program T;
 uses Std.Console, Std.Options;
 
 begin
-  var O: option of integer := None;
+  const O: option of integer := None;
   WriteLn(Unwrap(O));
 end.

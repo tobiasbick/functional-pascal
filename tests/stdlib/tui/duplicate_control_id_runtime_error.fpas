@@ -9,8 +9,8 @@ end function;
 
 function View(State: integer): TuiElement;
 begin
-  var Id: TuiControlId := TuiControlId.Create(1);
-  var Action: TuiAction := TuiAction.Create(10);
+  const Id: TuiControlId := TuiControlId.Create(1);
+  const Action: TuiAction := TuiAction.Create(10);
   return TuiElementBuilders.MakeRow([
                                       TuiElementBuilders.MakeButton(Id, 'First', Action),
                                       TuiElementBuilders.MakeButton(Id, 'Second', Action)
@@ -18,6 +18,6 @@ begin
 end function;
 
 begin
-  mutable var App: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(20, 4));
+  var App: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(20, 4));
   discard App.RunIterations(0, Update, View, 0, 0);
 end.

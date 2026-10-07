@@ -66,8 +66,8 @@ begin
 end function;
 
 begin
-  var App: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(30, 10));
-  mutable var Model: ButtonKeyboardModel := record
+  const App: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(30, 10));
+  var Model: ButtonKeyboardModel := record
     Focus := 1;
     Actions := [];
   end;

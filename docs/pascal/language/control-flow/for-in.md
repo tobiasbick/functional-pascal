@@ -10,7 +10,7 @@ by `end for;`. Each statement ends with `;`; use `null;` for no action.
 Iterates over each element of an array. The loop variable is immutable.
 
 ```pascal
-var Names: array of string := ['Alice', 'Bob', 'Charlie'];
+const Names: array of string := ['Alice', 'Bob', 'Charlie'];
 for Name: string in Names do
   WriteLn(Name);
 end for;
@@ -19,7 +19,7 @@ end for;
 The element type must match the array's element type:
 
 ```pascal
-var Scores: array of integer := [10, 20, 30];
+const Scores: array of integer := [10, 20, 30];
 for S: integer in Scores do
   WriteLn(S);
 end for;
@@ -32,7 +32,7 @@ Iterates over the **keys** of a `dict of K to V` in insertion order. The loop va
 ```pascal
 uses Std.Dictionaries, Std.Conv;
 
-var Ages: dict of string to integer := ['Alice': 30, 'Bob': 25];
+const Ages: dict of string to integer := ['Alice': 30, 'Bob': 25];
 
 for Name: string in Ages do
   WriteLn(Name + ': ' + IntToStr(Ages[Name]));

@@ -18,9 +18,9 @@ begin
 end function;
 
 begin
-  var Values: array of integer := [1, 2, 3, 4];
-  var Mapped: array of integer := Map(Values, Double);
-  var Filtered: array of integer := Filter(Mapped, IsAboveFour);
+  const Values: array of integer := [1, 2, 3, 4];
+  const Mapped: array of integer := Map(Values, Double);
+  const Filtered: array of integer := Filter(Mapped, IsAboveFour);
   AssertEquals(4, Length(Mapped));
   AssertEquals(2, Mapped[0]);
   AssertEquals(8, Mapped[3]);

@@ -49,4 +49,6 @@ receive an actionable diagnostic.
 The reference branch `codex/syntax-changes` implemented callable targets after
 any typed expression with target-then-arguments evaluation, reusing the
 existing `CallValue` instruction. It also found and fixed a capture defect for
-captured mutable parameters (F9001). Recheck that defect on `main`.
+captured mutable parameters (the former F9001 identity). AP16.3 has removed
+that parameter mode and migrated captures to local `var` copies; those captures
+have regression coverage. AP12 must preserve the current local-copy behavior.

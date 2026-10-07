@@ -3,12 +3,12 @@ use crate::{SemaError, analyze_unit};
 use fpas_diagnostics::codes::{SEMA_TYPE_MISMATCH, SEMA_UNKNOWN_NAME};
 use fpas_parser::{CompilationUnit, Unit, parse_compilation_unit};
 
-const PREFIX: &str = "program T; type Point = record X: integer; end record; begin var P: Point := record X := 1; end;";
+const PREFIX: &str = "program T; type Point = record X: integer; end record; begin const P: Point := record X := 1; end;";
 
 #[test]
 fn record_update_rejects_non_record_base() {
     let errors = check_errors(
-        "program T; begin var X: integer := 1; var Y: integer := X with Value := 2; end with; end.",
+        "program T; begin const X: integer := 1; const Y: integer := X with Value := 2; end with; end.",
     );
     assert!(
         errors.iter().any(|error| error.code == SEMA_TYPE_MISMATCH),
@@ -22,7 +22,7 @@ fn record_update_rejects_unknown_and_wrongly_typed_fields() {
         ("P with Missing := 2; end with", SEMA_UNKNOWN_NAME),
         ("P with X := 'wrong'; end with", SEMA_TYPE_MISMATCH),
     ] {
-        let source = format!("{PREFIX} var Q: Point := {update}; end.");
+        let source = format!("{PREFIX} const Q: Point := {update}; end.");
         let errors = check_errors(&source);
         assert!(
             errors.iter().any(|error| error.code == expected_code),

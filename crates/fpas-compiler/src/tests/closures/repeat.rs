@@ -11,7 +11,7 @@ begin
 end function;
 procedure Check();
 begin
-  mutable var Count: integer := 0;
+  var Count: integer := 0;
   repeat
     Count := Count + 1;
   until Evaluate(function(): boolean begin return Count = 3; end function);
@@ -45,7 +45,7 @@ begin
   return Check();
 end function;
 begin
-  var Check: Predicate := record Value := true; end;
+  const Check: Predicate := record Value := true; end;
   repeat
     begin end;
   until Invoke(Check.Evaluate);

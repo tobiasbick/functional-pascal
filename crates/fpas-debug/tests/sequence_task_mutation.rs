@@ -14,13 +14,13 @@ uses Std.Console, Std.Tasks;
 
 function Work(): integer;
 begin
-  mutable var Values: array of integer := [1, 3];
-  var Marker: integer := Values[0];
+  var Values: array of integer := [1, 3];
+  const Marker: integer := Values[0];
   return Values[0] + Values[1] + Values[2];
 end function;
 
 begin
-  var Pending: task := go Work();
+  const Pending: task := go Work();
   WriteLn(Wait(Pending));
 end.
 "#;

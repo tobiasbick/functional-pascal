@@ -3,16 +3,16 @@ program T;
 uses Std.Console, Std.Json, Std.Dictionaries, Std.Options, Std.Conv, Std.Arrays;
 
 begin
-  var R: result of JsonValue, string := Parse('{"name":"Ada","scores":[1,2],"active":true}');
+  const R: result of JsonValue, string := Parse('{"name":"Ada","scores":[1,2],"active":true}');
   case R of
     when Ok(V):
       begin
         case V of
           when JsonValue.Object(Fields):
             begin
-              var NameValue: option of JsonValue := Std.Dictionaries.Get(Fields, 'name');
-              var ScoresValue: option of JsonValue := Std.Dictionaries.Get(Fields, 'scores');
-              var ActiveValue: option of JsonValue := Std.Dictionaries.Get(Fields, 'active');
+              const NameValue: option of JsonValue := Std.Dictionaries.Get(Fields, 'name');
+              const ScoresValue: option of JsonValue := Std.Dictionaries.Get(Fields, 'scores');
+              const ActiveValue: option of JsonValue := Std.Dictionaries.Get(Fields, 'active');
               case Unwrap(NameValue) of
                 when JsonValue.String(Name):
                   begin

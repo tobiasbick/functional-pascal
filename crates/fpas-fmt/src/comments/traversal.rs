@@ -179,7 +179,7 @@ fn collect_stmts(stmts: &[Stmt], begins: &[usize], out: &mut CollectedAnchors) {
 
 fn collect_nested_stmt(stmt: &Stmt, begins: &[usize], out: &mut CollectedAnchors) {
     out.leading.push(stmt_start(stmt));
-    if matches!(stmt, Stmt::Var(_) | Stmt::MutableVar(_)) {
+    if matches!(stmt, Stmt::Const(_) | Stmt::Var(_)) {
         out.declarations.insert(stmt_start(stmt));
     }
     out.emission.push(EmissionAnchor {
@@ -203,7 +203,7 @@ fn collect_branch_stmt(stmt: &Stmt, begins: &[usize], out: &mut CollectedAnchors
 fn collect_stmt_contents(stmt: &Stmt, begins: &[usize], out: &mut CollectedAnchors) {
     match stmt {
         Stmt::Block(stmts, _) => collect_stmts(stmts, begins, out),
-        Stmt::Var(var) | Stmt::MutableVar(var) => collect_expr(&var.value, begins, out),
+        Stmt::Const(var) | Stmt::Var(var) => collect_expr(&var.value, begins, out),
         Stmt::Assign { target, value, .. } => {
             collect_designator(target, begins, out);
             collect_expr(value, begins, out);
@@ -346,7 +346,7 @@ fn push_uses_span(span: Span, source: &str, out: &mut CollectedAnchors) {
 fn decl_end(decl: &Decl) -> usize {
     match decl {
         Decl::Const(def) => span_end(def.span),
-        Decl::Var(def) | Decl::MutableVar(def) => span_end(def.span),
+        Decl::Var(def) => span_end(def.span),
         Decl::TypeDef(def) => span_end(def.span),
         Decl::Function(function) => span_end(function.span),
         Decl::Procedure(procedure) => span_end(procedure.span),

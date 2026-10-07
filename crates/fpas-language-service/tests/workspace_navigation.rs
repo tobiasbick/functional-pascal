@@ -57,7 +57,7 @@ fn workspace_symbols_filter_rank_limit_and_preserve_equal_names() {
 fn workspace_symbols_are_bounded_and_include_unsaved_local_declarations() {
     let temp = TempDirectory::new("workspace-symbol-limit");
     let declarations = (0..130)
-        .map(|index| format!("var Item{index:03}: integer := {index};\n"))
+        .map(|index| format!("const Item{index:03}: integer := {index};\n"))
         .collect::<String>();
     let source = format!("program Many;\n\n{declarations}\nbegin\nend.\n");
     let path = temp.write("many.fpas", &source);
@@ -88,13 +88,13 @@ type Holder = record
   public Item: integer;
 end record;
 
-mutable var Value: integer := 1;
-mutable var Pair: Holder := record Item := Value; end;
+var Value: integer := 1;
+var Pair: Holder := record Item := Value; end;
 
 function ReadValue(Value: integer): integer;
 begin
   // Value is ignored
-  var Text: string := 'Value';
+  const Text: string := 'Value';
   return Value;
 end function;
 
@@ -170,12 +170,12 @@ end unit;
 uses Demo.Types;
 
 begin
-  var AliasValue: PointAlias := record X := 1; end;
-  var HolderValue: Holder := record Item := AliasValue; end;
-  var PointValue: Point := HolderValue.Item;
-  var SelectedValue: Point := HolderValue.Selected;
-  var ResultValue: Point := Demo.Types.Echo(PointValue);
-  var HiddenValue: Secret := PointValue;
+  const AliasValue: PointAlias := record X := 1; end;
+  const HolderValue: Holder := record Item := AliasValue; end;
+  const PointValue: Point := HolderValue.Item;
+  const SelectedValue: Point := HolderValue.Selected;
+  const ResultValue: Point := Demo.Types.Echo(PointValue);
+  const HiddenValue: Secret := PointValue;
 end.
 "#;
     let main = temp.write("src/main.fpas", main_source);
@@ -244,7 +244,7 @@ end.
 #[test]
 fn unknown_type_definition_and_malformed_selection_are_safe() {
     let temp = TempDirectory::new("navigation-negative-selection");
-    let source = "program Broken;\n\nbegin\n  var Music: string := '𝄞';\n  Missing(\nend.";
+    let source = "program Broken;\n\nbegin\n  const Music: string := '𝄞';\n  Missing(\nend.";
     let path = temp.write("broken.fpas", source);
     let mut service = LanguageService::new(WorkspaceContext::loose(temp.path()));
     let missing = source.find("Missing").expect("unknown symbol");
@@ -279,7 +279,7 @@ begin
 end function;
 
 begin
-  var ResultValue: integer := ReadValue(1);
+  const ResultValue: integer := ReadValue(1);
 end.
 "#;
     let path = temp.write("select.fpas", source);
@@ -314,7 +314,7 @@ fn workspace_symbol_kinds_remain_editor_facing() {
     let temp = TempDirectory::new("workspace-symbol-kind");
     let path = temp.write(
         "kind.fpas",
-        "program Kinds; begin var Value: integer := 1; end.",
+        "program Kinds; begin const Value: integer := 1; end.",
     );
     let mut service = LanguageService::new(WorkspaceContext::loose(temp.path()));
     service
@@ -322,12 +322,12 @@ fn workspace_symbol_kinds_remain_editor_facing() {
         .open_document(
             &path,
             1,
-            "program Kinds; begin var Value: integer := 1; end.",
+            "program Kinds; begin const Value: integer := 1; end.",
         )
         .expect("open loose document");
 
     let symbols = service.workspace_symbols("Value").expect("symbol kind");
 
-    assert_eq!(symbols[0].symbol.kind, SymbolKind::Variable);
+    assert_eq!(symbols[0].symbol.kind, SymbolKind::Constant);
     assert_eq!(symbols[0].path, path);
 }

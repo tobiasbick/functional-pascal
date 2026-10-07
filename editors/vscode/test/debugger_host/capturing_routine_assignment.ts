@@ -43,19 +43,19 @@ export async function verifyCapturingRoutineAssignment(
     "    return Base + Value;",
     "  end;",
     "begin",
-    "  mutable var Current: Handler := Identity;",
-    "  var MakeStop: integer := 0;",
+    "  var Current: Handler := Identity;",
+    "  const MakeStop: integer := 0;",
     "  return Current;",
     "end;",
     "",
     "begin",
-    "  var Output: Handler := MakeAdder(10);",
+    "  const Output: Handler := MakeAdder(10);",
     "  WriteLn(Output(1));",
     "end.",
     ""
   ];
   const sourcePath = await writeSource(workspaceRoot, "capturing-routine-assignment", lines);
-  const stopLine = lines.findIndex((line) => line.includes("var MakeStop: integer := 0;"));
+  const stopLine = lines.findIndex((line) => line.includes("const MakeStop: integer := 0;"));
   assert.ok(stopLine >= 0, "compact program includes MakeStop");
   const breakpoint = new vscode.SourceBreakpoint(
     new vscode.Location(vscode.Uri.file(sourcePath), new vscode.Position(stopLine, 0)),

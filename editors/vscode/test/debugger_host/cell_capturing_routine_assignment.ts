@@ -44,11 +44,11 @@ export async function verifyCellCapturingRoutineAssignment(
     "    return Value + Cell;",
     "  end;",
     "begin",
-    "  mutable var Cell: integer := 1;",
-    "  var Original: Handler := AddCell;",
-    "  mutable var Current: Handler := Identity;",
-    "  mutable var Copy: Handler := Identity;",
-    "  var CellStop: integer := 0;",
+    "  var Cell: integer := 1;",
+    "  const Original: Handler := AddCell;",
+    "  var Current: Handler := Identity;",
+    "  var Copy: Handler := Identity;",
+    "  const CellStop: integer := 0;",
     "  Cell := Cell + 10;",
     "  WriteLn(Current(0));",
     "  WriteLn(Original(0));",
@@ -56,13 +56,13 @@ export async function verifyCellCapturingRoutineAssignment(
     "end;",
     "",
     "begin",
-    "  var Output: Handler := Mutating();",
+    "  const Output: Handler := Mutating();",
     "  WriteLn(Output(0));",
     "end.",
     ""
   ];
   const sourcePath = await writeSource(workspaceRoot, "cell-capturing-routine-assignment", lines);
-  const cellStopLine = lines.findIndex((line) => line.includes("var CellStop: integer := 0;"));
+  const cellStopLine = lines.findIndex((line) => line.includes("const CellStop: integer := 0;"));
   assert.ok(cellStopLine >= 0, "compact program includes CellStop");
   const breakpoint = new vscode.SourceBreakpoint(
     new vscode.Location(vscode.Uri.file(sourcePath), new vscode.Position(cellStopLine, 0)),
@@ -131,7 +131,7 @@ export async function verifyCellCapturingRoutineAssignment(
     assert.equal(
       output,
       "12\n13\n14\n",
-      `continuation shared the mutable cell: ${JSON.stringify(output)}`
+      `continuation shared the cell: ${JSON.stringify(output)}`
     );
     assert.ok(
       received.slice(marker.received).some((message) => message.command === "setVariable"),

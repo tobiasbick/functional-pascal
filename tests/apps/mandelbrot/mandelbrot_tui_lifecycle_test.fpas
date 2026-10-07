@@ -17,16 +17,16 @@ begin
 end function;
 
 begin
-  var Inbox: channel of MandelbrotRenderFrame := CreateChannel(4);
-  var App: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(9, 15));
-  mutable var Model: MandelbrotModel := NewMandelbrotModel(Inbox, 9, 15);
+  const Inbox: channel of MandelbrotRenderFrame := CreateChannel(4);
+  const App: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(9, 15));
+  var Model: MandelbrotModel := NewMandelbrotModel(Inbox, 9, 15);
   Model := App.RunBackgroundIterations(Model, Inbox, UpdateMandelbrot, UpdateMandelbrotFrame, ViewMandelbrot, 1, 0);
-  var InitialGeneration: integer := Model.Generation;
+  const InitialGeneration: integer := Model.Generation;
   App.Inject(TuiMsg.Key(MakeLeftKey()));
   Model := App.RunBackgroundIterations(Model, Inbox, UpdateMandelbrot, UpdateMandelbrotFrame, ViewMandelbrot, 1, 0);
   AssertEquals(InitialGeneration + 1, Model.Generation);
   AssertEquals(0, Model.RowsRendered);
-  mutable var Attempts: integer := 0;
+  var Attempts: integer := 0;
   while (Model.RowsRendered < Model.Grid.Height) and (Attempts < 500) do
     begin
       Sleep(1);

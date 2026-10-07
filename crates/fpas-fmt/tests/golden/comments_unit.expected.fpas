@@ -2,5 +2,5 @@
 unit Demo;
 
 // field doc
-mutable var Count: integer := 0;
+var Count: integer := 0;
 end unit;

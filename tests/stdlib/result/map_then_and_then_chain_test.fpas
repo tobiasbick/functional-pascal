@@ -21,8 +21,8 @@ begin
 end function;
 
 begin
-  var R: result of integer, string := Ok(5);
-  var Doubled: result of integer, string := Map(R, Double);
-  var Final: result of string, string := AndThen(Doubled, PositiveToStr);
+  const R: result of integer, string := Ok(5);
+  const Doubled: result of integer, string := Map(R, Double);
+  const Final: result of string, string := AndThen(Doubled, PositiveToStr);
   WriteLn(Unwrap(Final));
 end.

@@ -6,11 +6,11 @@ use super::super::assert_succeeds;
 fn counting_loop_bounds_use_the_outer_binding() {
     assert_succeeds(
         "program OuterBounds; begin
-          var I: integer := 3;
-          mutable var Count: integer := 0;
+          const I: integer := 3;
+          var Count: integer := 0;
           for I: integer := 1 to I do Count := Count + 1; end for;
           if Count <> 3 then panic('ascending end used the inner binding'); end if;
-          var J: integer := 1;
+          const J: integer := 1;
           for J: integer := 3 downto J do Count := Count + 1; end for;
           if Count <> 6 then panic('descending end used the inner binding'); end if;
           if (I <> 3) or (J <> 1) then panic('outer bindings were changed'); end if;
@@ -22,7 +22,7 @@ fn counting_loop_bounds_use_the_outer_binding() {
 fn nested_counting_loop_bounds_use_the_enclosing_counter() {
     assert_succeeds(
         "program NestedBounds; begin
-          mutable var Count: integer := 0;
+          var Count: integer := 0;
           for I: integer := 1 to 3 do
           begin
             for I: integer := 1 to I do Count := Count + 1; end for;
@@ -37,7 +37,7 @@ fn nested_counting_loop_bounds_use_the_enclosing_counter() {
 fn counting_loop_bounds_are_evaluated_once_in_source_order() {
     assert_succeeds(
         "program BoundOrder;
-        mutable var Trace: integer := 0;
+        var Trace: integer := 0;
         function Start(): integer;
         begin
           Trace := Trace * 10 + 1;
@@ -49,7 +49,7 @@ fn counting_loop_bounds_are_evaluated_once_in_source_order() {
           return 3;
         end function;
         begin
-          mutable var Count: integer := 0;
+          var Count: integer := 0;
           for I: integer := Start() to Finish() do Count := Count + 1; end for;
           if (Trace <> 12) or (Count <> 3) then panic('bounds evaluated out of order or repeatedly'); end if;
         end.",
@@ -77,7 +77,7 @@ fn counting_loops_stop_at_integer_extremes() {
         for tail in ["", "; continue"] {
             assert_succeeds(&format!(
                 "program CountingBounds; begin
-                  mutable var Count: integer := 0;
+                  var Count: integer := 0;
                   for I: integer := {start} {direction} {end} do
                   begin
                     Count := Count + 1;
@@ -106,7 +106,7 @@ fn counting_loops_skip_empty_ranges() {
 fn counting_loops_break_before_the_next_iteration() {
     assert_succeeds(
         "program BreakBounds; begin
-          mutable var Count: integer := 0;
+          var Count: integer := 0;
           for I: integer := 9223372036854775806 to 9223372036854775807 do
           begin
             Count := Count + 1;

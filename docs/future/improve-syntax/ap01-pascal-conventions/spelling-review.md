@@ -13,11 +13,11 @@ process, and every package README and work package under this plan.
 | Routine type parameters | The retained `function Identity<T>(...)` declaration is linked to AP24. It is a declaration, not a type application or explicit call-site instantiation. |
 | Parameters and calls | AP08 keeps individually annotated parameters separated by `;`; call arguments use `,`. AP09's named form remains fully named, using `:=`. |
 | Block endings | AP13 keeps program `end.`, unit `end unit;`, named declaration/control-flow closers, plain scoped `end;`, and `repeat ... until Condition;`. Expression closers have no separate terminator. |
-| Bindings and mutation | AP16's target examples prefer annotated `const`, using `var` for reassignment. AP17 retains explicit call-site `var` without adding implicit caller mutation. |
+| Bindings and mutation | AP16's implemented examples prefer annotated `const`, using `var` for reassignment. AP17 retains explicit call-site `var` for written arguments and the agreed native-receiver exception, with its requested follow-up. |
 | Record construction | AP10's target construction is named-field-only; enum constructors follow AP09, while patterns remain positional. |
 | Pattern bindings | AP20 uses `const Name` and `_` for payload fields; AP03's closed-enum coverage has no `else` escape. |
 | Recorded exceptions | AP19's `distinct` (Q12), AP13's named boundaries (Q08/Q09), and AP23's `requires`/`ensures` (Q15/Q16) remain linked to their recorded decisions. |
-| Draft versus current syntax | The reference identifies completed AP13 endings, branches, and no-op statements as current forms. Unimplemented bindings, construction, patterns, and domain types retain their owning package and draft status. Superseded forms in inventories, migration instructions, diagnostics, and reference-branch notes remain identified as such. |
+| Draft versus current syntax | The reference identifies completed AP11 declarations, AP13 endings, branches and no-op statements, and AP16 bindings as current forms. Unimplemented reference parameters, construction, patterns, and domain types retain their owning package and draft status. Superseded forms in inventories, migration instructions, diagnostics, and reference-branch notes remain identified as such. |
 
 ## Corrections
 
@@ -49,10 +49,11 @@ examples do not settle them.
 | [AP17](../ap17-visible-caller-mutation/README.md#follow-up-discussion), [AP17.1](../ap17-visible-caller-mutation/01-var-parameters.md#implementation) | Function types allow `var` parameters and writes completed before failure remain visible. Revisit the agreed unmarked implicit-receiver exception with the user before AP06.3/AP17.3. |
 | [AP19](../ap19-distinct-domain-types/README.md#open-decisions) | Define constraints, dictionary keys, and case labels for distinct types. |
 | [AP22](../ap22-limited-local-inference/README.md#open-decisions) | Decide the eligible literal forms and whether enum constructors qualify for local inference. |
-| [AP21.1](../ap21-decision-expressions/01-if-expressions.md#implementation), [AP23.2](../ap23-preconditions-and-postconditions/02-postconditions.md#verification) | Specify compatible branch types and whether error returns from `try` run postconditions. |
-| [AP25](../ap25-conservative-purity/README.md), [AP27](../ap27-typed-placeholders/README.md#open-decisions) | Reassess purity after contract use; select placeholder spelling only if the optional package proceeds. |
+| [AP20](../ap20-nested-patterns-and-explicit-bindings/README.md#open-decisions) | Specify the migration of the existing scalar guard-binding form under the explicit binding rule. |
+| [AP21](../ap21-decision-expressions/README.md#open-decisions), [AP23](../ap23-preconditions-and-postconditions/README.md#open-decisions) | Specify compatible branch types and whether error returns from `try` run postconditions. |
+| [AP25](../ap25-conservative-purity/README.md#open-decisions), [AP26](../ap26-structured-task-scopes/README.md#open-decisions), [AP27](../ap27-typed-placeholders/README.md#open-decisions) | Reassess purity after contract use and specify shared-handle aliasing; specify scoped closure-capture limits; select placeholder spelling only if the optional package proceeds. |
 
-The AP02 numbering gate was resolved on 2026-10-05: the user confirmed Q01's
+The AP02 numbering gate is resolved: the user confirmed Q01's
 `FPnxxx` scheme. See [AP02's resolved decisions](../ap02-structured-diagnostics/README.md#resolved-decisions).
 
 AP13's JSON variant name is confirmed as `JsonValue.NullValue`. See

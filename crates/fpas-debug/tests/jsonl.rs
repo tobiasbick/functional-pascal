@@ -44,7 +44,7 @@ fn lifecycle_is_machine_readable_and_deterministic() {
     serve_script(
         script.as_bytes(),
         &mut output,
-        server("program Main; begin var X: integer := 1; end."),
+        server("program Main; begin const X: integer := 1; end."),
     )
     .expect("serve script");
     let records = String::from_utf8(output).expect("UTF-8 records");
@@ -172,7 +172,7 @@ fn broken_protocol_writer_is_returned_as_transport_failure() {
 #[test]
 fn evaluate_parses_one_read_only_expression_and_reports_stable_errors() {
     let mut server = server(
-        "program Main; function Double(X: integer): integer; begin return X * 2; end function; begin var X: integer := 1; end.",
+        "program Main; function Double(X: integer): integer; begin return X * 2; end function; begin const X: integer := 1; end.",
     );
     let _ = server.handle_line(&request(1, "initialize", json!({"version":2})));
     let _ = server.handle_line(&request(2, "launch", json!({"stop_on_entry":true})));
@@ -302,7 +302,7 @@ fn logpoints_interpolate_without_stopping_and_shared_locations_log_before_stop()
 #[test]
 fn conditions_and_logpoints_use_detached_controlled_calls() {
     let source = "program Main;\n\
-                  mutable var Probe: integer := 0;\n\
+                  var Probe: integer := 0;\n\
                   function Matches(Value: integer): boolean;\n\
                   begin\n\
                     Probe := Probe + 1;\n\
@@ -313,7 +313,7 @@ fn conditions_and_logpoints_use_detached_controlled_calls() {
                     return Value + 10;\n\
                   end function;\n\
                   begin\n\
-                    mutable var I: integer := 0;\n\
+                    var I: integer := 0;\n\
                     while I < 3 do\n\
                     begin\n\
                       I := I + 1;\n\
@@ -386,7 +386,7 @@ fn loop_server() -> JsonlServer {
     server(
         "program Main;\n\
          begin\n\
-           mutable var I: integer := 0;\n\
+           var I: integer := 0;\n\
            while I < 5 do\n\
            begin\n\
              I := I + 1;\n\

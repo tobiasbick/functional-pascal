@@ -10,8 +10,8 @@ begin
   return IntToStr(V * 2);
 end function;
 
-var R: Result of integer, string := Ok(21);
-var M: Result of string, string := Map(R, DoubleToString);
+const R: Result of integer, string := Ok(21);
+const M: Result of string, string := Map(R, DoubleToString);
 // M = Ok('42')
 ```
 
@@ -27,8 +27,8 @@ begin
   end if;
 end function;
 
-var O: Option of integer := Some(5);
-var M: Option of string := AndThen(O, PositiveToString);
+const O: Option of integer := Some(5);
+const M: Option of string := AndThen(O, PositiveToString);
 // M = Some('5')
 ```
 

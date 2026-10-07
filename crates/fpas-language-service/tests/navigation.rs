@@ -23,12 +23,12 @@ end record;
 
 function Add(Value: integer): integer;
 begin
-  var Local: integer := Value;
+  const Local: integer := Value;
   return Local;
 end function;
 
 begin
-  mutable var Current: integer := 1;
+  var Current: integer := 1;
 end.
 "#;
     let path = temp.write("symbols.fpas", source);
@@ -46,8 +46,8 @@ end.
     let add = child(root, "Add");
     assert_eq!(add.kind, SymbolKind::Function);
     assert_eq!(child(add, "Value").kind, SymbolKind::Parameter);
-    assert_eq!(child(add, "Local").kind, SymbolKind::Variable);
-    assert_eq!(child(root, "Current").kind, SymbolKind::MutableVariable);
+    assert_eq!(child(add, "Local").kind, SymbolKind::Constant);
+    assert_eq!(child(root, "Current").kind, SymbolKind::Variable);
     for symbol in all_symbols(root) {
         assert_eq!(
             &source[symbol.selection_span.offset()..symbol.selection_span.end()],
@@ -63,19 +63,19 @@ fn hover_and_definition_follow_lexical_shadowing_and_ignore_non_identifiers() {
     let temp = TempDirectory::new("navigation-local");
     let source = r#"program Local;
 
-var Value: integer := 1;
+const Value: integer := 1;
 
 // Reads a value with **local** shadowing.
 function ReadValue(Value: integer): integer;
 begin
-  var Other: integer := Value;
+  const Other: integer := Value;
   return Other;
 end function;
 
 begin
   // Value in a comment
-  var Text: string := 'Value';
-  var Output: integer := ReadValue(Value);
+  const Text: string := 'Value';
+  const Output: integer := ReadValue(Value);
 end.
 "#;
     let path = temp.write("local.fpas", source);
@@ -148,11 +148,11 @@ end unit;
 uses Demo.Math;
 
 begin
-  var A: integer := Answer();
-  var B: integer := Demo.Math.Answer();
-  var P: Point := record X := 0; end;
-  var C: integer := P.X;
-  var D: integer := Hidden();
+  const A: integer := Answer();
+  const B: integer := Demo.Math.Answer();
+  const P: Point := record X := 0; end;
+  const C: integer := P.X;
+  const D: integer := Hidden();
 end.
 "#;
     std::fs::write(&main, main_source).expect("replace main fixture");
@@ -382,7 +382,7 @@ include = ["src/**/*.fpas"]
     );
     let main = temp.write(
         "app/src/main.fpas",
-        "program App;\n\nuses Demo.Internal;\n\nbegin\n  var Value: integer := Hidden();\nend.\n",
+        "program App;\n\nuses Demo.Internal;\n\nbegin\n  const Value: integer := Hidden();\nend.\n",
     );
     let mut service = LanguageService::load(&manifest);
     let source = std::fs::read_to_string(&main).expect("main source");

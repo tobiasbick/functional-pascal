@@ -25,13 +25,6 @@ impl AccessorOwner {
         }
     }
 
-    fn lower_label(self) -> &'static str {
-        match self {
-            Self::Property => "property",
-            Self::Event => "event",
-        }
-    }
-
     /// Accessor value type as written in signature hints.
     fn value_type(self) -> &'static str {
         match self {
@@ -163,15 +156,6 @@ impl Checker {
             );
             return None;
         }
-        if func_ty.params[0].mutable {
-            self.error_with_code(
-                SEMA_TYPE_MISMATCH,
-                format!("{label} getter `{qualified}` cannot take `mutable Self`"),
-                "Declare the getter with `Self` passed by value.",
-                member.span,
-            );
-            return None;
-        }
         if !member
             .value_ty
             .compatible_with(func_ty.return_type.as_ref())
@@ -227,18 +211,6 @@ impl Checker {
                 SEMA_TYPE_MISMATCH,
                 format!("{label} setter `{qualified}` must take `Self` and one value parameter"),
                 format!("Declare `procedure Setter(Self: Record; Value: {value_type})`."),
-                member.span,
-            );
-            return None;
-        }
-        if proc_ty.params[0].mutable || proc_ty.params[1].mutable {
-            self.error_with_code(
-                SEMA_TYPE_MISMATCH,
-                format!("{label} setter `{qualified}` must take `Self` and its value by value"),
-                format!(
-                    "Remove `mutable` from both {} setter parameters.",
-                    owner.lower_label()
-                ),
                 member.span,
             );
             return None;

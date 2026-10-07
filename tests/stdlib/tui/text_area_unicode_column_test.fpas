@@ -71,7 +71,7 @@ begin
 end function;
 
 begin
-  var App: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(4, 2));
+  const App: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(4, 2));
   for Line: string in [
                         (Std.Str.Chr(9800) + Std.Str.Chr(65038)) + 'x',
                         '',
@@ -85,12 +85,12 @@ begin
     begin
       for Column: integer := 0 to 6 do
         begin
-          var State: TextAreaModel := record
+          const State: TextAreaModel := record
             Text := (('xxxxxx' + #10) + Line) + #10;
             Caret := Column;
             Offset := TuiPoint.Create(3, 0);
           end;
-          var Moved: TextAreaModel := Press(App, State, TuiKeyKind.Down, '');
+          const Moved: TextAreaModel := Press(App, State, TuiKeyKind.Down, '');
           AssertEquals(7 + Expected(Line, Column), Moved.Caret);
         end;
       end for;

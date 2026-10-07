@@ -26,7 +26,7 @@ begin
 end function;
 
 begin
-  var Tree: TuiElement := ViewTree(0);
+  const Tree: TuiElement := ViewTree(0);
   case Tree of
     when TuiElement.Desktop(Focused, DesktopChildren):
       begin
@@ -60,7 +60,7 @@ begin
         panic('expected desktop element');
       end;
   end case;
-  mutable var App: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(30, 10));
+  var App: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(30, 10));
   AssertEquals(0, App.RunIterations(0, UpdateTree, ViewTree, 0, 0));
   App.Close();
 end.

@@ -44,8 +44,8 @@ function UpdateApplication(
   Cmd: TuiCmdOutput
 ): AppModel;
 
-var Inbox: channel of AppMessage := CreateChannel(32);
-var Final: AppModel := TuiApplication.RunWithBackground(
+const Inbox: channel of AppMessage := CreateChannel(32);
+const Final: AppModel := TuiApplication.RunWithBackground(
   Initial, Inbox, Update, UpdateApplication, View
 );
 ```

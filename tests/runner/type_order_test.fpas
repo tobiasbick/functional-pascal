@@ -4,7 +4,7 @@ uses Std.Test;
 
 const InitialState: State := State.Ready;
 
-mutable var Calls: integer := 0;
+var Calls: integer := 0;
 
 function NextValue(): integer;
 begin
@@ -12,7 +12,7 @@ begin
   return Calls;
 end function;
 
-var First: integer := NextValue();
+const First: integer := NextValue();
 
 function CreateTeam(): Team;
 begin
@@ -36,7 +36,7 @@ type Team = record
   end function;
 end record;
 
-var Second: integer := NextValue();
+const Second: integer := NextValue();
 
 type Member = record
   Home: option of Team;
@@ -70,12 +70,12 @@ end enum;
 type ChainAlias = Chain;
 
 begin
-  var Group: Team := Identity(CreateTeam());
-  var Person: Member := record
+  const Group: Team := Identity(CreateTeam());
+  const Person: Member := record
     Home := Some(Group);
   end;
-  var Populated: Team := Group with Members := [Person]; end with;
-  var Bound: function(): boolean := Populated.IsReady;
+  const Populated: Team := Group with Members := [Person]; end with;
+  const Bound: function(): boolean := Populated.IsReady;
   AssertTrue(Bound());
   AssertTrue(Group.Status = State.Ready);
   AssertEquals(2, Depth(ChainAlias.Link(ChainAlias.Link(ChainAlias.Empty))));

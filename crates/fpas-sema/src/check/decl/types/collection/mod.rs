@@ -30,7 +30,7 @@ impl Checker {
         for declaration in declarations {
             let (name, offset) = match declaration {
                 Decl::Const(value) => (&value.name, value.span.offset),
-                Decl::Var(value) | Decl::MutableVar(value) => (&value.name, value.span.offset),
+                Decl::Var(value) => (&value.name, value.span.offset),
                 Decl::Function(routine) => (&routine.name, routine.span.offset),
                 Decl::Procedure(routine) => (&routine.name, routine.span.offset),
                 Decl::TypeDef(_) => continue,
@@ -47,6 +47,7 @@ impl Checker {
             if !self.scopes.define_with_declaration(
                 &definition.name,
                 Symbol {
+                    constant: None,
                     ty: Ty::Named(definition.name.clone()),
                     mutable: false,
                     kind: SymbolKind::Type,

@@ -1,0 +1,74 @@
+program ComputedConstTest;
+
+uses Std.Test;
+
+var Calls: integer := 0;
+var Trace: string := '';
+
+function Next(): integer;
+begin
+  Calls := Calls + 1;
+  Trace := Trace + 'N';
+  return Calls;
+end function;
+
+const GlobalFirst: integer := Next();
+const GlobalSecond: integer := Next();
+
+procedure EarlyExit();
+begin
+  return;
+  const Unreached: integer := Next();
+end procedure;
+
+begin
+  AssertEquals(1, GlobalFirst);
+  AssertEquals(2, GlobalSecond);
+  AssertEquals('NN', Trace);
+  Trace := Trace + 'A';
+  const BeforeLoop: integer := Next();
+  Trace := Trace + 'B';
+  var Total: integer := 0;
+  for I: integer := 1 to 3 do
+    const PerIteration: integer := Next();
+    Total := Total + PerIteration;
+  end for;
+
+  AssertEquals(3, BeforeLoop);
+  AssertEquals(15, Total);
+  AssertEquals(6, Calls);
+  AssertEquals('NNANBNNN', Trace);
+  if false then
+    const Skipped: integer := Next();
+  end if;
+
+  for I: integer := 1 to 0 do
+    const Skipped: integer := Next();
+  end for;
+
+  EarlyExit();
+  AssertEquals(6, Calls);
+  var Remaining: integer := 2;
+  while Remaining > 0 do
+    const Current: integer := Next();
+    AssertEquals(9 - Remaining, Current);
+    Remaining := Remaining - 1;
+  end while;
+
+  repeat
+    const Current: integer := Next();
+    Remaining := Remaining + 1;
+    AssertEquals(8 + Remaining, Current);
+  until Remaining = 2;
+  AssertEquals(10, Calls);
+  const Fixed: integer := 6 * 7;
+  case 42 of
+    when Fixed:
+      const Reached: integer := Next();
+      AssertEquals(11, Reached);
+    else
+      const Unreached: integer := Next();
+  end case;
+
+  AssertEquals(11, Calls);
+end.

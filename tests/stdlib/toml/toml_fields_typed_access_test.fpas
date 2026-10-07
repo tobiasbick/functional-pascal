@@ -18,9 +18,9 @@ begin
 end function;
 
 begin
-  var Text: string := ((((((((((((('name = ''demo''' + Chr(10)) + 'port = 8080') + Chr(10)) + 'ratio = 0.5') + Chr(10)) + 'enabled = true') + Chr(10)) + 'tags = [''a'', ''b'']') + Chr(10)) + 'mixed = [''a'', 1]') + Chr(10)) + '[server]') + Chr(10)) +
-                      'host = ''local''';
-  var Fields: dict of string to TomlValue := Unwrap(ParseTable(Text));
+  const Text: string := ((((((((((((('name = ''demo''' + Chr(10)) + 'port = 8080') + Chr(10)) + 'ratio = 0.5') + Chr(10)) + 'enabled = true') + Chr(10)) + 'tags = [''a'', ''b'']') + Chr(10)) + 'mixed = [''a'', 1]') + Chr(10)) + '[server]') + Chr(10)) +
+                        'host = ''local''';
+  const Fields: dict of string to TomlValue := Unwrap(ParseTable(Text));
   AssertEquals('demo', Unwrap(StringField(Fields, 'name')));
   AssertEquals(8080, Unwrap(IntegerField(Fields, 'port')));
   AssertEquals(0.5, Unwrap(FloatField(Fields, 'ratio')));

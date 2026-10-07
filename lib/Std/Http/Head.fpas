@@ -28,12 +28,12 @@ public function ReadFinal(
   MaxResponseBytes: integer
 ): result of FinalHead, string;
 begin
-  mutable var Buffer: array of integer := [];
-  mutable var BytesReceived: integer := 0;
-  mutable var InterimResponses: integer := 0;
+  var Buffer: array of integer := [];
+  var BytesReceived: integer := 0;
+  var InterimResponses: integer := 0;
   while true do
     begin
-      mutable var Separator: integer := Std.Http.Wire.FindSeparator(Buffer, 0);
+      var Separator: integer := Std.Http.Wire.FindSeparator(Buffer, 0);
       while Separator < 0 do
         begin
           if Std.Arrays.Length(Buffer) >= MaxHeaderBytes then
@@ -41,13 +41,13 @@ begin
               return Error('HTTP response headers exceed MaxHeaderBytes');
             end;
           end if;
-          var ResponseAvailable: integer := MaxResponseBytes - BytesReceived;
+          const ResponseAvailable: integer := MaxResponseBytes - BytesReceived;
           if ResponseAvailable < 1 then
             begin
               return Error('HTTP response exceeds MaxResponseBytes');
             end;
           end if;
-          mutable var ReadMaximum: integer := MaxHeaderBytes - Std.Arrays.Length(Buffer);
+          var ReadMaximum: integer := MaxHeaderBytes - Std.Arrays.Length(Buffer);
           if ResponseAvailable < ReadMaximum then
             begin
               ReadMaximum := ResponseAvailable;
@@ -111,7 +111,7 @@ begin
               end;
             else
               begin
-                var Output: FinalHead := record
+                const Output: FinalHead := record
                   Head := Head;
                   InitialBody := Std.Arrays.Slice(Buffer, Head.BodyOffset, Std.Arrays.Length(Buffer) -
                                                                            Head.BodyOffset);

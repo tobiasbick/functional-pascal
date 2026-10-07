@@ -29,7 +29,7 @@ fn shared_state_session() -> DebugSession {
 
 uses Std.Tasks;
 
-mutable var Shared: integer := 0;
+var Shared: integer := 0;
 
 procedure Writer();
 begin
@@ -37,7 +37,7 @@ begin
 end procedure;
 
 begin
-  var Pending: task := go Writer();
+  const Pending: task := go Writer();
   Wait(Pending);
 end.
 "#;

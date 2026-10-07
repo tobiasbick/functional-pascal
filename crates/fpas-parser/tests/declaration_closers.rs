@@ -14,7 +14,7 @@ fn all_declaration_kinds_include_methods_and_nested_routines() {
     let source = "unit Demo; type Color = enum Red; end enum; type Point = record
         X: integer;
         function ReadValue(self: Point): integer; begin return self.X; end function;
-        procedure WriteValue(mutable self: Point); begin return; end procedure;
+        procedure WriteValue(self: Point); begin var LocalSelf: Point := Self;\nreturn; end procedure;
         static function Create(): Point; begin return record X := 1; end; end function;
         static procedure Reset(); begin return; end procedure;
         end record;
@@ -43,10 +43,10 @@ fn program_closer_and_anonymous_expression_terminator_ownership_are_distinct() {
     parse_ok(
         "program Demo; type Handler = function(): integer;
         function F(): integer; begin begin return 1; end; end function;
-        begin var Callback: Handler := function(): integer
+        begin const Callback: Handler := function(): integer
             function Nested(): integer; begin return 2; end function;
             begin return Nested(); end function;
-        var Value: integer := Apply(procedure() begin return; end procedure);
+        const Value: integer := Apply(procedure() begin return; end procedure);
         end.",
     );
 }

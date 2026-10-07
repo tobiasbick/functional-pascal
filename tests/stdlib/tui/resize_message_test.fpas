@@ -22,13 +22,13 @@ begin
 end function;
 
 begin
-  mutable var App: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(20, 6));
+  var App: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(20, 6));
   AssertEquals(20, App.SurfaceSnapshot().Width);
   AssertEquals(6, App.SurfaceSnapshot().Height);
   App.Inject(TuiMsg.Tick(1));
   App.InjectResizeForTest(TuiSize.Create(32, 10));
   App.Inject(TuiMsg.Tick(2));
-  mutable var Model: ResizeModel := record
+  var Model: ResizeModel := record
     Events := [];
     ResizeWidth := 0;
     ResizeHeight := 0;
@@ -51,7 +51,7 @@ begin
         end;
       when TuiMsg.Resize(Size):
         begin
-          var Snapshot: TuiSurfaceSnapshot := App.SurfaceSnapshot();
+          const Snapshot: TuiSurfaceSnapshot := App.SurfaceSnapshot();
           return record
             Events := Std.Arrays.Concat(State.Events, ['resize']);
             ResizeWidth := Size.Width;
@@ -79,6 +79,6 @@ begin
   AssertEquals(32, App.SurfaceSnapshot().Width);
   AssertEquals(10, App.SurfaceSnapshot().Height);
   App.Close();
-  var Probe: TuiWorkingSurface := TuiWorkingSurface.Create(TuiSize.Create(1, 1));
+  const Probe: TuiWorkingSurface := TuiWorkingSurface.Create(TuiSize.Create(1, 1));
   AssertEquals(2, Probe.Slot);
 end.

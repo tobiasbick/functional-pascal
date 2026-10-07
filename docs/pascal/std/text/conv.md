@@ -60,7 +60,7 @@ WriteLn(StrToInt('  -7  '));
 Converts integer to `real` (exact for integers in the representable range).
 
 ```pascal
-var X: real := IntToReal(3);
+const X: real := IntToReal(3);
 WriteLn(X);
 ```
 

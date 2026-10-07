@@ -111,9 +111,9 @@ begin
       return '';
     end;
   end if;
-  mutable var Wrapped: string := '';
-  mutable var LineWidth: integer := 0;
-  var NewLine: string := Std.Str.Chr(10);
+  var Wrapped: string := '';
+  var LineWidth: integer := 0;
+  const NewLine: string := Std.Str.Chr(10);
   for Grapheme: string in Std.Console.SplitGraphemes(Text) do
     begin
       if Grapheme = NewLine then
@@ -123,7 +123,7 @@ begin
         end;
       else
         begin
-          var GraphemeWidth: integer := Std.Console.DisplayWidth(Grapheme);
+          const GraphemeWidth: integer := Std.Console.DisplayWidth(Grapheme);
           if (LineWidth > 0) and (LineWidth + GraphemeWidth > MaximumWidth) then
             begin
               Wrapped := Wrapped + NewLine;
@@ -174,14 +174,14 @@ begin
       return ('No messages yet.' + Std.Str.Chr(10)) + 'Type below and press Enter.';
     end;
   end if;
-  mutable var MaximumWidth: integer := State.Width - 6;
+  var MaximumWidth: integer := State.Width - 6;
   if MaximumWidth < 1 then
     begin
       MaximumWidth := 1;
     end;
   end if;
-  mutable var Transcript: string := '';
-  var NewLine: string := Std.Str.Chr(10);
+  var Transcript: string := '';
+  const NewLine: string := Std.Str.Chr(10);
   for Index: integer := 0 to Std.Arrays.Length(State.Entries) - 1 do
     begin
       if Transcript <> '' then
@@ -204,17 +204,17 @@ end function;
 // - `State`: Current application state to scroll.
 public function LocalChatScrollToEnd(State: LocalChatModel): LocalChatModel;
 begin
-  mutable var Next: LocalChatModel := State;
-  var Transcript: string := LocalChatTranscript(Next);
+  var Next: LocalChatModel := State;
+  const Transcript: string := LocalChatTranscript(Next);
   Next.TranscriptCaret := Std.Str.Length(Transcript);
-  mutable var VisibleLines: integer := Next.Height - 7;
+  var VisibleLines: integer := Next.Height - 7;
   if VisibleLines < 1 then
     begin
       VisibleLines := 1;
     end;
   end if;
-  var LineCount: integer := Std.Arrays.Length(Std.Str.Split(Transcript, Std.Str.Chr(10)));
-  mutable var OffsetY: integer := LineCount - VisibleLines;
+  const LineCount: integer := Std.Arrays.Length(Std.Str.Split(Transcript, Std.Str.Chr(10)));
+  var OffsetY: integer := LineCount - VisibleLines;
   if OffsetY < 0 then
     begin
       OffsetY := 0;

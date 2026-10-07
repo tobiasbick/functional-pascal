@@ -154,7 +154,7 @@ include = ["src/*.fpas"]
         "\
 unit App.Lib;
 
-mutable var
+var
   Counter: integer := -1;
 
 public function GetCounter(): integer;
@@ -258,7 +258,7 @@ fn public_visibility_in_program_is_rejected() {
         "\
 program Main;
 
-public var
+public const
   X: integer := 1;
 
 begin

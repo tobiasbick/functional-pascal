@@ -19,7 +19,7 @@ begin
       return Error('HTTP response exceeds MaxResponseBytes');
     end;
   end if;
-  mutable var Count: integer := Available;
+  var Count: integer := Available;
   if Count > 65536 then
     begin
       Count := 65536;
@@ -57,16 +57,16 @@ end function;
 // - `Bytes`: Complete byte sequence to write.
 public function WriteAll(Connection: Std.Net.Connection; Bytes: array of integer): result of boolean, string;
 begin
-  mutable var Offset: integer := 0;
+  var Offset: integer := 0;
   while Offset < Std.Arrays.Length(Bytes) do
     begin
-      mutable var Count: integer := Std.Arrays.Length(Bytes) - Offset;
+      var Count: integer := Std.Arrays.Length(Bytes) - Offset;
       if Count > 1048576 then
         begin
           Count := 1048576;
         end;
       end if;
-      var Remaining: array of integer := Std.Arrays.Slice(Bytes, Offset, Count);
+      const Remaining: array of integer := Std.Arrays.Slice(Bytes, Offset, Count);
       case Std.Net.SendBytes(Connection, Remaining) of
         when Ok(Count):
           begin

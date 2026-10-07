@@ -33,7 +33,7 @@ An HTTP/1.1 and HTTPS client plus bounded HTTP/1.x server helpers, implemented i
 Create a request with defaults, then replace the fields needed by the caller:
 
 ```pascal
-mutable var RequestValue: Request := Request.Create('POST', 'http://127.0.0.1:8080/v1/items');
+var RequestValue: Request := Request.Create('POST', 'http://127.0.0.1:8080/v1/items');
 RequestValue.Headers := [Header.Create('Content-Type', 'application/json')];
 RequestValue.Body := Std.Net.Utf8.Encode('{"name":"example"}');
 case Send(RequestValue) of
@@ -47,8 +47,8 @@ end case;
 Standard methods have short constructors:
 
 ```pascal
-var GetRequest: Request := Request.Get('http://127.0.0.1:8080/items');
-mutable var PutRequest: Request := Request.Put('http://127.0.0.1:8080/items/42');
+const GetRequest: Request := Request.Get('http://127.0.0.1:8080/items');
+var PutRequest: Request := Request.Put('http://127.0.0.1:8080/items/42');
 PutRequest.Body := Std.Net.Utf8.Encode('{"name":"updated"}');
 ```
 
@@ -58,7 +58,7 @@ existing functions without unwrapping implicitly:
 ```pascal
 uses Std.Http, Std.Results;
 
-var TextResult: result of string, string :=
+const TextResult: result of string, string :=
   Request.Get('https://example.test/items').Send().AndThen(BodyText);
 ```
 
@@ -105,7 +105,7 @@ Independent streams may be opened and consumed by different tasks. Calls that mu
 case OpenStream(Request.Get('https://example.test/events')) of
   when Ok(ResponseValue):
     begin
-      mutable var Reading: boolean := true;
+      var Reading: boolean := true;
       while Reading do
         begin
           case ReadStream(ResponseValue.Body, 4096) of
@@ -186,7 +186,7 @@ case Listen('127.0.0.1', 8080) of
             case ReadRequest(Connection, 65536, 1048576) of
               when Ok(RequestValue):
                 begin
-                  mutable var ResponseValue: ServerResponse := ServerResponse.Create(200, 'OK');
+                  var ResponseValue: ServerResponse := ServerResponse.Create(200, 'OK');
                   ResponseValue.Body := Std.Net.Utf8.Encode('Hello');
                   case WriteResponse(Connection, ResponseValue) of
                     when Ok(_):
@@ -228,7 +228,7 @@ uses Std.Http, Std.Net, Std.Net.Utf8;
 
 function Handle(RequestValue: ServerRequest): ServerResponse;
 begin
-  mutable var ResponseValue: ServerResponse := ServerResponse.Create(200, 'OK');
+  var ResponseValue: ServerResponse := ServerResponse.Create(200, 'OK');
   ResponseValue.Body := Std.Net.Utf8.Encode('Path: ' + RequestValue.Target);
   return ResponseValue;
 end function;
@@ -237,7 +237,7 @@ end function;
 case Listen('127.0.0.1', 8080) of
   when Ok(ListenerValue):
     begin
-      mutable var Options: ServerOptions := ServerOptions.Create();
+      var Options: ServerOptions := ServerOptions.Create();
       Options.MaxConcurrentRequests := 16;
       case Serve(ListenerValue, Options, Handle) of
         when Ok(_):
@@ -271,7 +271,7 @@ remain unchanged:
 case ListenTls('127.0.0.1', 8443, 'certificate.pem', 'private-key.pem', 10000) of
   when Ok(ListenerValue):
     begin
-      mutable var Options: ServerOptions := ServerOptions.Create();
+      var Options: ServerOptions := ServerOptions.Create();
       case Serve(ListenerValue, Options, Handle) of
         when Ok(_):
           begin

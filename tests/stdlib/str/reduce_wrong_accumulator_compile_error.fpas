@@ -8,5 +8,5 @@ begin
 end function;
 
 begin
-  var Count: integer := Reduce('abc', 0, Wrong);
+  const Count: integer := Reduce('abc', 0, Wrong);
 end.

@@ -22,8 +22,8 @@ type ExplorerState = record
 
   function SpanX(Self: ExplorerState; Width: integer; Height: integer): real;
   begin
-    var SafeWidth: integer := Max(Width, 1);
-    var SafeHeight: integer := Max(Height, 1);
+    const SafeWidth: integer := Max(Width, 1);
+    const SafeHeight: integer := Max(Height, 1);
     return (Self.SpanY * (IntToReal(SafeWidth) / IntToReal(SafeHeight))) * 0.5;
   end function;
 
@@ -67,14 +67,14 @@ end function;
 
 function ViewportCX(State: ExplorerState; W: integer; H: integer; CellX: integer): real;
 begin
-  var Wr: integer := Max(W - 1, 1);
+  const Wr: integer := Max(W - 1, 1);
   return State.XMin(W, H) +
          (IntToReal(CellX - 1) / IntToReal(Wr)) * (State.XMax(W, H) - State.XMin(W, H));
 end function;
 
 function ViewportCY(State: ExplorerState; W: integer; H: integer; CellY: integer): real;
 begin
-  var Hr: integer := Max(H - 1, 1);
+  const Hr: integer := Max(H - 1, 1);
   return State.YMax() - (IntToReal(CellY - 1) / IntToReal(Hr)) * (State.YMax() - State.YMin());
 end function;
 
@@ -82,7 +82,7 @@ procedure WriteHudText(Text: string; Width: integer);
 begin
   if Width > 0 then
     begin
-      var TextLength: integer := Min(Std.Str.Length(Text), Width);
+      const TextLength: integer := Min(Std.Str.Length(Text), Width);
       if TextLength > 0 then
         begin
           WriteText(Substring(Text, 0, TextLength));
@@ -95,13 +95,13 @@ end procedure;
 procedure DrawHud(S: ExplorerState; Width: integer; Height: integer);
 begin
   Window(1, 1, ScreenWidth(), ScreenHeight());
-  var HudTop: integer := Max(ScreenHeight() - 2, 1);
+  const HudTop: integer := Max(ScreenHeight() - 2, 1);
   Window(1, HudTop, ScreenWidth(), ScreenHeight());
   NormVideo();
   ClrScr();
   GotoXY(1, 1);
   TextColorRGB(255, 220, 120);
-  var Title: string := 'Functional Pascal Newton z^3-1';
+  const Title: string := 'Functional Pascal Newton z^3-1';
   WriteHudText(Title, Width);
   TextColorRGB(156, 204, 255);
   WriteHudText('  tasks | units | records | postfix | truecolor', Max(Width - Std.Str.Length(Title), 0));
@@ -125,11 +125,11 @@ begin
   Window(1, 1, Width, Height);
 end procedure;
 
-mutable var State: ExplorerState := ExplorerState.Default();
-mutable var RenderW: integer := 1;
-mutable var RenderH: integer := 1;
-mutable var NeedsRedraw: boolean := true;
-mutable var Quit: boolean := false;
+var State: ExplorerState := ExplorerState.Default();
+var RenderW: integer := 1;
+var RenderH: integer := 1;
+var NeedsRedraw: boolean := true;
+var Quit: boolean := false;
 
 procedure RequestRedraw();
 begin
@@ -158,8 +158,8 @@ end procedure;
 
 function HandleKey(Key: KeyEvent): boolean;
 begin
-  var StepX: real := State.SpanX(RenderW, RenderH) * 0.14;
-  var StepY: real := State.SpanY * 0.14;
+  const StepX: real := State.SpanX(RenderW, RenderH) * 0.14;
+  const StepY: real := State.SpanY * 0.14;
   if Key.kind = KeyKind.Escape then
     begin
       Quit := true;
@@ -231,8 +231,8 @@ end function;
 
 procedure HandleMouse(InputEvent: ConsoleEvent);
 begin
-  var InView: boolean := (((InputEvent.mouse_x >= 1) and (InputEvent.mouse_x <= RenderW)) and (InputEvent.mouse_y >= 1)) and
-                         (InputEvent.mouse_y <= RenderH);
+  const InView: boolean := (((InputEvent.mouse_x >= 1) and (InputEvent.mouse_x <= RenderW)) and (InputEvent.mouse_y >= 1)) and
+                           (InputEvent.mouse_y <= RenderH);
   if InputEvent.mouse_action = MouseAction.ScrollUp then
     begin
       State.SpanY := Max(State.SpanY * 0.88, 0.000001);
@@ -263,8 +263,8 @@ end procedure;
 
 procedure HandleResize(Width: integer; Height: integer);
 begin
-  var NewW: integer := Max(Width, 1);
-  var NewH: integer := Max(Height - 2, 1);
+  const NewW: integer := Max(Width, 1);
+  const NewH: integer := Max(Height - 2, 1);
   if (NewW <> RenderW) or (NewH <> RenderH) then
     begin
       RenderW := NewW;

@@ -15,7 +15,7 @@ end record;
 
 function RunAccess(Iterations: integer): integer;
 begin
-  mutable var State: BenchmarkState := record
+  var State: BenchmarkState := record
     Value := 0;
     Total := 0;
   end;
@@ -36,13 +36,13 @@ begin
       panic('usage: record_field_access_benchmark.fpas -- ITERATIONS [MAX_MILLIS]');
     end;
   end if;
-  var Iterations: integer := StrToInt(ParamStr(0));
+  const Iterations: integer := StrToInt(ParamStr(0));
   if Iterations < 1 then
     begin
       panic('ITERATIONS must be positive');
     end;
   end if;
-  mutable var MaxMillis: integer := 0;
+  var MaxMillis: integer := 0;
   if ParamCount() = 2 then
     begin
       MaxMillis := StrToInt(ParamStr(1));
@@ -53,12 +53,12 @@ begin
       end if;
     end;
   end if;
-  mutable var Checksum: integer := RunAccess(WarmupIterations);
-  var Started: integer := MonotonicMillis();
+  var Checksum: integer := RunAccess(WarmupIterations);
+  const Started: integer := MonotonicMillis();
   Checksum := RunAccess(Iterations);
-  var Elapsed: integer := ElapsedMillis(Started);
-  var FieldAccesses: integer := Iterations * 5;
-  mutable var OpsPerSecond: integer := 0;
+  const Elapsed: integer := ElapsedMillis(Started);
+  const FieldAccesses: integer := Iterations * 5;
+  var OpsPerSecond: integer := 0;
   if Elapsed > 0 then
     begin
       OpsPerSecond := (FieldAccesses * 1000) div Elapsed;

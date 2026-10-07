@@ -78,7 +78,7 @@ fn jsonl_capturing_nested_routines_assign_from_the_owner_frame() {
         "launch",
         json!({"stop_on_entry":true}),
     );
-    let owner = stop_at(&mut server, &mut id, "var MakeStop: integer := 0;");
+    let owner = stop_at(&mut server, &mut id, "const MakeStop: integer := 0;");
     let locals = locals_reference(&mut server, &mut id, owner);
 
     let assigned = send(
@@ -110,7 +110,7 @@ fn jsonl_unknown_capturing_name_is_rejected_without_mutation() {
     let mut id = 0;
     let _ = send(&mut jsonl, &mut id, "initialize", json!({"version":2}));
     let _ = send(&mut jsonl, &mut id, "launch", json!({"stop_on_entry":true}));
-    let owner = stop_at(&mut jsonl, &mut id, "var MakeStop: integer := 0;");
+    let owner = stop_at(&mut jsonl, &mut id, "const MakeStop: integer := 0;");
     let qualified = send(
         &mut jsonl,
         &mut id,

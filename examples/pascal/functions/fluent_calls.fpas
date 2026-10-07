@@ -18,8 +18,8 @@ begin
 end function;
 
 begin
-  var Values: array of integer := [1, 2, 3, 4];
-  var Total: integer := Values.Filter(IsEven).Map(Double).Reduce(0, Sum);
+  const Values: array of integer := [1, 2, 3, 4];
+  const Total: integer := Values.Filter(IsEven).Map(Double).Reduce(0, Sum);
   WriteLn('Even values doubled: ' + Total.IntToStr());
   WriteLn(('  Pascal  ').Trim().ToUpper());
 end.

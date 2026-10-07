@@ -8,8 +8,8 @@ begin
 end function;
 
 begin
-  var Nums: array of integer := [1, 2, 3, 4, 5];
-  var Evens: array of integer := Filter(Nums, IsEven);
+  const Nums: array of integer := [1, 2, 3, 4, 5];
+  const Evens: array of integer := Filter(Nums, IsEven);
   WriteLn(Length(Evens));
   WriteLn(Evens[0]);
   WriteLn(Evens[1]);

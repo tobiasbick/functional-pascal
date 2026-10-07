@@ -4,7 +4,7 @@ uses Std.Options, Std.Test, Std.Tui;
 
 function ViewGrid(State: integer): TuiElement;
 begin
-  var Concrete: TuiStyle := TuiStyle.FromColors(TuiColor.FromRgb(1, 2, 3), TuiColor.FromRgb(4, 5, 6));
+  const Concrete: TuiStyle := TuiStyle.FromColors(TuiColor.FromRgb(1, 2, 3), TuiColor.FromRgb(4, 5, 6));
   return TuiElementBuilders.MakeCellGrid(TuiCellGrid.Create(4, 2, [
                                                                     TuiCell.Create('A', TuiStyleRole.Accent),
                                                                     TuiCell.Styled('B', Concrete),
@@ -24,9 +24,9 @@ begin
 end function;
 
 begin
-  var App: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(3, 2));
+  const App: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(3, 2));
   discard App.RunIterations(0, UpdateGrid, ViewGrid, 0, 0);
-  var Snapshot: TuiSurfaceSnapshot := App.SurfaceSnapshot();
+  const Snapshot: TuiSurfaceSnapshot := App.SurfaceSnapshot();
   AssertEquals('A', Snapshot.CellAt(0, 0).Glyph);
   AssertEquals('B', Snapshot.CellAt(1, 0).Glyph);
   AssertEquals(2, Std.Options.Unwrap(Snapshot.CellAt(1, 0).ConcreteStyle).Foreground.Green);

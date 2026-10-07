@@ -52,15 +52,15 @@ begin
 end function;
 
 begin
-  mutable var Current: Handler := AddOne;
-  var Backup: Handler := AddTwo;
-  var Captured: Handler := MakeAdder(10);
-  var Frozen: Handler := AddOne;
-  mutable var WrongSignature: NoArgHandler := Answer;
-  var Receiver: Counter := record
+  var Current: Handler := AddOne;
+  const Backup: Handler := AddTwo;
+  const Captured: Handler := MakeAdder(10);
+  const Frozen: Handler := AddOne;
+  var WrongSignature: NoArgHandler := Answer;
+  const Receiver: Counter := record
     Base := 10;
   end;
-  var StopMarker: integer := 0;
+  const StopMarker: integer := 0;
   WriteLn(Current(1));
   WriteLn(Captured(1));
 end.

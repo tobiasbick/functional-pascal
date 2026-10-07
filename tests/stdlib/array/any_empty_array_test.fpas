@@ -8,6 +8,6 @@ begin
 end function;
 
 begin
-  var A: array of integer := [];
+  const A: array of integer := [];
   WriteLn(Any(A, AlwaysTrue));
 end.

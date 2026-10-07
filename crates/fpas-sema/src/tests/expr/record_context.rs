@@ -15,10 +15,10 @@ procedure Draw(P: Point);
 begin
 end procedure;
 begin
-  mutable var P: Point := record end;
+  var P: Point := record end;
   P := record X := 1; end;
   Draw(record Y := 2; end);
-  var Points: array of Point := [record X := 3; end];
+  const Points: array of Point := [record X := 3; end];
 end.
 "#;
 
@@ -32,7 +32,7 @@ fn contextual_record_literal_still_requires_non_defaulted_fields() {
     let errors = check_errors(
         "program T; \
          type Point = record X: integer; Y: integer := 0; end record; \
-         begin var P: Point := record Y := 1; end; end.",
+         begin const P: Point := record Y := 1; end; end.",
     );
 
     assert!(

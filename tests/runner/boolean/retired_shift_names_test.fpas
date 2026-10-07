@@ -23,7 +23,7 @@ begin
 end function;
 
 begin
-  var Pair: Values := record
+  const Pair: Values := record
     shl := 4;
     shr := 2;
   end;

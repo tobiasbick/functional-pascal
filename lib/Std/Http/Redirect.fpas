@@ -9,7 +9,7 @@ uses Std.Arrays, Std.Conv, Std.Http.Headers, Std.Http.Types, Std.Net.Uri, Std.St
 // - `UriValue`: Parsed absolute URI.
 function Authority(UriValue: Uri): string;
 begin
-  mutable var Host: string := UriValue.Host;
+  var Host: string := UriValue.Host;
   if Std.Str.Contains(Host, ':') then
     begin
       Host := ('[' + Host) + ']';
@@ -41,7 +41,7 @@ end function;
 // - `Text`: URI reference that may contain a fragment.
 function WithoutFragment(Text: string): string;
 begin
-  var Fragment: integer := Std.Str.IndexOf(Text, '#');
+  const Fragment: integer := Std.Str.IndexOf(Text, '#');
   if Fragment < 0 then
     begin
       return Text;
@@ -57,7 +57,7 @@ end function;
 // - `Path`: URI path that may contain a query.
 function PathWithoutQuery(Path: string): string;
 begin
-  var Query: integer := Std.Str.IndexOf(Path, '?');
+  const Query: integer := Std.Str.IndexOf(Path, '?');
   if Query < 0 then
     begin
       return Path;
@@ -73,21 +73,21 @@ end function;
 // - `PathAndQuery`: Absolute path with an optional query.
 function NormalizePath(PathAndQuery: string): string;
 begin
-  mutable var Path: string := PathAndQuery;
-  mutable var Query: string := '';
-  var QueryStart: integer := Std.Str.IndexOf(PathAndQuery, '?');
+  var Path: string := PathAndQuery;
+  var Query: string := '';
+  const QueryStart: integer := Std.Str.IndexOf(PathAndQuery, '?');
   if QueryStart >= 0 then
     begin
       Path := Std.Str.Substring(PathAndQuery, 0, QueryStart);
       Query := Std.Str.Substring(PathAndQuery, QueryStart, Std.Str.Length(PathAndQuery) - QueryStart);
     end;
   end if;
-  var Parts: array of string := Std.Str.Split(Path, '/');
-  mutable var Segments: array of string := [];
+  const Parts: array of string := Std.Str.Split(Path, '/');
+  var Segments: array of string := [];
   // The first empty segment belongs to the absolute root. All others are significant.
   for Index: integer := 1 to Std.Arrays.Length(Parts) - 1 do
     begin
-      var Part: string := Parts[Index];
+      const Part: string := Parts[Index];
       if Part = '..' then
         begin
           if Std.Arrays.Length(Segments) > 0 then
@@ -109,7 +109,7 @@ begin
       end if;
     end;
   end for;
-  var Output: string := '/' + Std.Str.Join(Segments, '/');
+  const Output: string := '/' + Std.Str.Join(Segments, '/');
   return Output + Query;
 end function;
 
@@ -125,8 +125,8 @@ begin
       return Error('HTTP redirect Location contains CR or LF');
     end;
   end if;
-  var Reference: string := WithoutFragment(Std.Str.Trim(Location));
-  mutable var Target: string := '';
+  const Reference: string := WithoutFragment(Std.Str.Trim(Location));
+  var Target: string := '';
   if Reference = '' then
     begin
       Target := Origin(Base) + Base.Path;
@@ -149,9 +149,9 @@ begin
     end;
   else
     begin
-      var BasePath: string := PathWithoutQuery(Base.Path);
-      var LastSlash: integer := Std.Str.LastIndexOf(BasePath, '/');
-      mutable var Directory: string := '/';
+      const BasePath: string := PathWithoutQuery(Base.Path);
+      const LastSlash: integer := Std.Str.LastIndexOf(BasePath, '/');
+      var Directory: string := '/';
       if LastSlash >= 0 then
         begin
           Directory := Std.Str.Substring(BasePath, 0, LastSlash + 1);
@@ -199,10 +199,10 @@ end function;
 // - `DropBody`: Whether redirect semantics discard the request body.
 function FilterHeaders(Headers: array of Header; CrossOrigin: boolean; DropBody: boolean): array of Header;
 begin
-  mutable var Output: array of Header := [];
+  var Output: array of Header := [];
   for Index: integer := 0 to Std.Arrays.Length(Headers) - 1 do
     begin
-      var Name: string := Headers[Index].Name;
+      const Name: string := Headers[Index].Name;
       if CrossOrigin and
          ((Std.Http.Headers.IsName(Name, 'Authorization') or Std.Http.Headers.IsName(Name, 'Proxy-Authorization')) or Std.Http.Headers.IsName(Name, 'Cookie')) then
         begin
@@ -242,7 +242,7 @@ end function;
 // - `Location`: Location field value from the redirect response.
 public function NextRequest(Current: Request; StatusCode: integer; Location: string): result of Request, string;
 begin
-  mutable var Base: Uri := record
+  var Base: Uri := record
     Scheme := '';
     Host := '';
     Port := 0;
@@ -259,7 +259,7 @@ begin
         return Error(Message);
       end;
   end case;
-  mutable var Target: string := '';
+  var Target: string := '';
   case Resolve(Base, Location) of
     when Ok(Value):
       begin
@@ -270,7 +270,7 @@ begin
         return Error(Message);
       end;
   end case;
-  mutable var TargetUri: Uri := Base;
+  var TargetUri: Uri := Base;
   case Std.Net.Uri.Parse(Target) of
     when Ok(Value):
       begin
@@ -281,9 +281,9 @@ begin
         return Error(Message);
       end;
   end case;
-  var DropBody: boolean := ((StatusCode = 303) and (Current.Method <> 'HEAD')) or
-                           (((StatusCode = 301) or (StatusCode = 302)) and (Current.Method = 'POST'));
-  mutable var Output: Request := Current;
+  const DropBody: boolean := ((StatusCode = 303) and (Current.Method <> 'HEAD')) or
+                             (((StatusCode = 301) or (StatusCode = 302)) and (Current.Method = 'POST'));
+  var Output: Request := Current;
   Output.Url := Target;
   Output.Headers := FilterHeaders(Current.Headers, not SameOrigin(Base, TargetUri), DropBody);
   if DropBody then

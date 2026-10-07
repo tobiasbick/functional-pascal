@@ -29,7 +29,7 @@ export async function verifySemanticTools(
   );
   const sourcePath = path.join(fixtureRoot, "src", "main.fpas");
   const source =
-    "program SemanticHost;\n\nuses Semantic.Core;\n\nbegin\n  var Music: string := '𝄞' + ExistingText;\n  var Value: integer := UniqueValue();\nend.\n";
+    "program SemanticHost;\n\nuses Semantic.Core;\n\nbegin\n  const Music: string := '𝄞' + ExistingText;\n  const Value: integer := UniqueValue();\nend.\n";
   let document: vscode.TextDocument | undefined;
   try {
     await fs.mkdir(path.dirname(sourcePath), { recursive: true });

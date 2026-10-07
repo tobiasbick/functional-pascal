@@ -31,6 +31,6 @@ type State = enum
 end enum;
 
 begin
-  var Group: Team := CreateTeam();
+  const Group: Team := CreateTeam();
   WriteLn(Group.Status = State.Ready);
 end.

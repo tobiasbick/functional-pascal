@@ -17,13 +17,13 @@ uses Std.Console, Std.Tasks;
 
 function Work(): integer;
 begin
-  mutable var Value: integer := 40;
+  var Value: integer := 40;
   Value := Value + 2;
   return Value;
 end function;
 
 begin
-  var Pending: task := go Work();
+  const Pending: task := go Work();
   WriteLn(Wait(Pending));
 end.
 "#;
@@ -135,7 +135,7 @@ begin
 end procedure;
 
 begin
-  var Pending: task := go Explode();
+  const Pending: task := go Explode();
   Wait(Pending);
 end.
 "#;

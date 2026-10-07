@@ -7,19 +7,19 @@ uses Std.Arrays, Std.Conv, Std.Math, Std.Str, Std.Tui, Mandelbrot.Color, Mandelb
 // Builds the Tui view while keeping the previous image visible during rendering.
 public function ViewMandelbrot(State: MandelbrotModel): TuiElement;
 begin
-  mutable var Status: string := 'rendering';
+  var Status: string := 'rendering';
   if State.RowsRendered = State.Grid.Height then
     begin
       Status := 'ready';
     end;
   end if;
-  var Detail: string := Format('center=(%f, %f)  zoom=%f  palette=%s  %s', State.Explorer.CenterX, State.Explorer.CenterY, State.Explorer.Zoom, PaletteName(State.Explorer.Palette), Status);
-  mutable var MainChildren: array of TuiElement := [
-                                                     TuiElementBuilders.MakePanel('Mandelbrot Explorer', [TuiElementBuilders.MakeCellGrid(State.Grid)]),
-                                                     TuiElementBuilders.MakeRule(Detail),
-                                                     TuiElementBuilders.MakeGauge('Iterations', State.Explorer.MaxIter, 2048),
-                                                     TuiElementBuilders.MakeGauge('Zoom', Min(Trunc(State.Explorer.Zoom * 10.0), 1000), 1000)
-                                                   ];
+  const Detail: string := Format('center=(%f, %f)  zoom=%f  palette=%s  %s', State.Explorer.CenterX, State.Explorer.CenterY, State.Explorer.Zoom, PaletteName(State.Explorer.Palette), Status);
+  var MainChildren: array of TuiElement := [
+                                             TuiElementBuilders.MakePanel('Mandelbrot Explorer', [TuiElementBuilders.MakeCellGrid(State.Grid)]),
+                                             TuiElementBuilders.MakeRule(Detail),
+                                             TuiElementBuilders.MakeGauge('Iterations', State.Explorer.MaxIter, 2048),
+                                             TuiElementBuilders.MakeGauge('Zoom', Min(Trunc(State.Explorer.Zoom * 10.0), 1000), 1000)
+                                           ];
   if Std.Str.Length(State.FailureMessage) > 0 then
     begin
       Std.Arrays.Push(MainChildren, TuiElementBuilders.MakeRule('render failed: ' +
@@ -34,8 +34,8 @@ begin
                                                                     TuiStatusItemBuilders.MakeKeyHint('H', 'help'),
                                                                     TuiStatusItemBuilders.MakeKeyHint('Esc', 'quit')
                                                                   ]));
-  var Main: TuiElement := TuiElementBuilders.MakeColumn(MainChildren);
-  mutable var Children: array of TuiElement := [Main];
+  const Main: TuiElement := TuiElementBuilders.MakeColumn(MainChildren);
+  var Children: array of TuiElement := [Main];
   if State.HelpOpen then
     begin
       Std.Arrays.Push(Children, TuiElementBuilders.MakeOverlay('Controls', [

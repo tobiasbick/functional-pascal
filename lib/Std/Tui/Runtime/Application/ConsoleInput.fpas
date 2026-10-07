@@ -21,7 +21,7 @@ function TuiConsoleInputSettleResize(
   InitialSize: TuiSize
 ): boolean;
 begin
-  mutable var LatestSize: TuiSize := InitialSize;
+  var LatestSize: TuiSize := InitialSize;
   while not IsCancellationRequested(Token) do
     begin
       case TuiReadConsoleHostInputWithTimeout(TuiResizeSettleMilliseconds) of

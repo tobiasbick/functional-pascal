@@ -129,7 +129,7 @@ fn collect_declarations(declarations: &[Decl], offset: usize, spans: &mut Vec<So
                     }
                 }
             }
-            Decl::Const(_) | Decl::Var(_) | Decl::MutableVar(_) => {}
+            Decl::Const(_) | Decl::Var(_) => {}
         }
     }
 }
@@ -173,8 +173,8 @@ fn collect_statements(statements: &[Stmt], offset: usize, spans: &mut Vec<Source
                 collect_statements(std::slice::from_ref(body), offset, spans);
             }
             Stmt::Repeat { body, .. } => collect_statements(body, offset, spans),
-            Stmt::Var(_)
-            | Stmt::MutableVar(_)
+            Stmt::Const(_)
+            | Stmt::Var(_)
             | Stmt::Assign { .. }
             | Stmt::Return(_, _)
             | Stmt::Panic(_, _)

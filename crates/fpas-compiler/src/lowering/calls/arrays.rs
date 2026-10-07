@@ -16,7 +16,7 @@ impl LoweringContext {
         self.lower_array_push_target(target, value, span)
     }
 
-    /// Append through the same mutable variable target used by an ordinary call.
+    /// Append through the same variable target used by an ordinary call.
     pub(super) fn lower_array_push_target(
         &mut self,
         target: &Designator,
@@ -75,7 +75,7 @@ impl LoweringContext {
         self.lower_array_pop_target(target, result, span)
     }
 
-    /// Pop through the same mutable variable target used by an ordinary call.
+    /// Pop through the same variable target used by an ordinary call.
     pub(super) fn lower_array_pop_target(
         &mut self,
         target: &Designator,

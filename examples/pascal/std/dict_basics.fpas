@@ -20,10 +20,10 @@ begin
 end function;
 
 begin
-  var Scores: dict of string to integer := ['Ada': 95, 'Bob': 72, 'Cara': 91];
+  const Scores: dict of string to integer := ['Ada': 95, 'Bob': 72, 'Cara': 91];
   WriteLn('length: ', IntToStr(Std.Dictionaries.Length(Scores)));
   WriteLn('has Ada: ', ContainsKey(Scores, 'Ada'));
-  var Merged: dict of string to integer := Merge(Scores, ['Bob': 88, 'Dan': 70]);
+  const Merged: dict of string to integer := Merge(Scores, ['Bob': 88, 'Dan': 70]);
   WriteLn('merged Bob: ', IntToStr(Merged['Bob']));
   case Get(Merged, 'Eve') of
     when Some(V):
@@ -35,11 +35,11 @@ begin
         WriteLn('get missing: none (ok)');
       end;
   end case;
-  var Doubled: dict of string to integer := Std.Dictionaries.Map(Merged, DoubleScore);
+  const Doubled: dict of string to integer := Std.Dictionaries.Map(Merged, DoubleScore);
   WriteLn('map Ada doubled: ', IntToStr(Doubled['Ada']));
-  var Top: dict of string to integer := Std.Dictionaries.Filter(Merged, IsHighScore);
+  const Top: dict of string to integer := Std.Dictionaries.Filter(Merged, IsHighScore);
   WriteLn('filter len: ', IntToStr(Std.Dictionaries.Length(Top)));
-  var Ks: array of string := Keys(Top);
+  const Ks: array of string := Keys(Top);
   WriteLn('keys array len: ', IntToStr(Std.Arrays.Length(Ks)));
   WriteLn('score total: ', IntToStr(Std.Dictionaries.Reduce(Scores, 0, SumScores)));
 end.

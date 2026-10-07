@@ -36,6 +36,7 @@ pub(super) struct BindingTables<'a> {
     pub constants: &'a mut BTreeMap<String, fpas_ir::Constant>,
 }
 
+/// Installs callable, scalar constant, and runtime global bindings from unit interfaces.
 pub(super) fn install(
     interfaces: InterfaceSet<'_>,
     bindings: BindingTables<'_>,
@@ -96,11 +97,11 @@ pub(super) fn install(
                     span,
                 )?;
             }
-            SymbolKind::Variable | SymbolKind::MutableVariable => {
+            SymbolKind::Variable | SymbolKind::ComputedConstant | SymbolKind::Constant(None) => {
                 let id = GlobalId::try_from_index(globals.len())
                     .map_err(|_| unsupported(span, "imported global identifier overflow"))?;
                 let ty = interface_type_id(types, &symbol.ty, span)?;
-                let mutable = symbol.kind == SymbolKind::MutableVariable;
+                let mutable = symbol.kind == SymbolKind::Variable;
                 globals.push(Global {
                     id,
                     name: symbol.qualified_name.to_ascii_lowercase(),
@@ -109,7 +110,9 @@ pub(super) fn install(
                     initializer: None,
                 });
                 let binding = GlobalBinding { id, ty };
-                global_bindings.insert(symbol.name.to_ascii_lowercase(), binding);
+                global_bindings
+                    .entry(symbol.name.to_ascii_lowercase())
+                    .or_insert(binding);
                 global_bindings.insert(symbol.qualified_name.to_ascii_lowercase(), binding);
                 plan.globals.push((
                     id,
@@ -145,12 +148,6 @@ pub(super) fn install(
                         .entry(symbol.name.to_ascii_lowercase())
                         .or_insert(value);
                 }
-            }
-            SymbolKind::Constant(None) => {
-                return Err(unsupported(
-                    span,
-                    "imported constant without a scalar value",
-                ));
             }
             SymbolKind::EnumVariantConstructor => {}
         }

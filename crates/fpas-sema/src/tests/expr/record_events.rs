@@ -35,7 +35,7 @@ procedure Handle(Sender: Button);
 begin
 end procedure;
 begin
-  var B: Button := record Id := 1; end;
+  const B: Button := record Id := 1; end;
   B.OnClick := Handle;
   if Assigned(B.OnClick) then
     B.RaiseClick(); end if;
@@ -50,8 +50,8 @@ fn bare_event_read_is_rejected() {
     let errors = check_errors(&format!(
         "{}\
 begin
-  var B: Button := record Id := 1; end;
-  var H: procedure(Sender: Button) := B.OnClick;
+  const B: Button := record Id := 1; end;
+  const H: procedure(Sender: Button) := B.OnClick;
 end.",
         event_prelude()
     ));
@@ -65,7 +65,7 @@ end.",
 
 #[test]
 fn nil_outside_event_assignment_is_rejected() {
-    let errors = check_errors("program T; var X: integer := 0; begin X := nil; end.");
+    let errors = check_errors("program T; const X: integer := 0; begin X := nil; end.");
     assert!(
         errors
             .iter()
@@ -128,7 +128,7 @@ end.",
 }
 
 #[test]
-fn event_rejects_generic_and_mutable_accessors() {
+fn event_rejects_generic_accessors() {
     let errors = check_errors(
         "\
 program T;
@@ -138,7 +138,7 @@ type
     begin
       return None;
     end function;
-    procedure WriteOnClick(Self: Button; mutable Handler: Option of procedure());
+    procedure WriteOnClick(Self: Button; Handler: Option of procedure());
     begin
     end procedure;
     event OnClick: procedure() read ReadOnClick write WriteOnClick;
@@ -152,12 +152,6 @@ end.",
             .any(|error| error.message.contains("cannot be generic")),
         "{errors:#?}"
     );
-    assert!(
-        errors
-            .iter()
-            .any(|error| error.message.contains("by value")),
-        "{errors:#?}"
-    );
 }
 
 #[test]
@@ -168,8 +162,8 @@ procedure Handle(Sender: Button);
 begin
 end procedure;
 begin
-  var B: Button := record Id := 1; OnClick := Handle; end;
-  var C: Button := B with OnClick := Handle; end with;
+  const B: Button := record Id := 1; OnClick := Handle; end;
+  const C: Button := B with OnClick := Handle; end with;
 end.",
         event_prelude()
     ));
@@ -192,7 +186,7 @@ fn event_raise_cannot_cross_task_boundary() {
     let errors = check_errors(&format!(
         "{}\
 begin
-  var B: Button := record Id := 1; end;
+  const B: Button := record Id := 1; end;
   go B.OnClick(B);
 end.",
         event_prelude()
@@ -210,7 +204,7 @@ fn parenthesized_nil_clears_event() {
     check_ok(&format!(
         "{}\
 begin
-  var B: Button := record Id := 1; end;
+  const B: Button := record Id := 1; end;
   B.OnClick := (nil);
 end.",
         event_prelude()

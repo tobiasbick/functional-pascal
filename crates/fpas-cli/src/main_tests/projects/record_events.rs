@@ -18,7 +18,7 @@ begin
   WriteLn(IntToStr(Value));
 end procedure;
 begin
-  var B: Button := Button.Make(14);
+  const B: Button := Button.Make(14);
   B.OnClick := Handle;
   if Assigned(B.OnClick) then
     B.Click(); end if;
@@ -28,7 +28,7 @@ end.",
     write_text(
         &cwd.join("src/widget.fpas"),
         "unit App.Widget;
-public mutable var Slot: Option of procedure(Value: integer) := None;
+public var Slot: Option of procedure(Value: integer) := None;
 public type
   Button = record
     public Id: integer;

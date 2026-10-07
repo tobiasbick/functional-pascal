@@ -10,11 +10,11 @@ uses Std.Args, Std.Arrays, Std.Conv, Std.Console, Std.Net, Std.Net.Utf8;
 // - `Bytes`: Complete byte sequence to write.
 procedure WriteAll(ConnectionValue: Connection; Bytes: array of integer);
 begin
-  mutable var Offset: integer := 0;
+  var Offset: integer := 0;
   while Offset < Std.Arrays.Length(Bytes) do
     begin
-      var Remaining: array of integer := Std.Arrays.Slice(Bytes, Offset, Std.Arrays.Length(Bytes) -
-                                                                         Offset);
+      const Remaining: array of integer := Std.Arrays.Slice(Bytes, Offset, Std.Arrays.Length(Bytes) -
+                                                                           Offset);
       case Std.Net.SendBytes(ConnectionValue, Remaining) of
         when Ok(Count):
           begin
@@ -41,8 +41,8 @@ end procedure;
 // - `ConnectionValue`: Open TCP connection.
 function ReadToEnd(ConnectionValue: Connection): string;
 begin
-  mutable var Bytes: array of integer := [];
-  mutable var Reading: boolean := true;
+  var Bytes: array of integer := [];
+  var Reading: boolean := true;
   while Reading do
     begin
       case Std.Net.ReceiveBytes(ConnectionValue, 4096) of
@@ -79,7 +79,7 @@ begin
 end function;
 
 begin
-  mutable var Port: integer := 18081;
+  var Port: integer := 18081;
   if ParamCount() = 1 then
     begin
       Port := StrToInt(ParamStr(0));

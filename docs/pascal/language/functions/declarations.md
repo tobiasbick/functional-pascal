@@ -54,13 +54,14 @@ end procedure;
 Procedures use bare `return` to exit early without a value:
 
 ```pascal
-procedure LogIfPositive(mutable Count: integer; Value: integer);
+procedure LogIfPositive(Count: integer; Value: integer);
 begin
-  if Value <= 0 then
+  var LocalCount: integer := Count;
+if Value <= 0 then
     return;
   end if;
 
-  Count := Count + 1;
+  LocalCount := LocalCount + 1;
   WriteLn('logged ', Value);
 end procedure;
 ```

@@ -6,10 +6,10 @@ fn nested_closure_parameter_does_not_capture_shadowed_outer_binding() {
         "program T;
 function Make(): function(): integer;
 begin
-  mutable var Count: integer := 10;
+  var Count: integer := 10;
   return function(): integer
   begin
-    var Invoke: function(Count: integer): integer :=
+    const Invoke: function(Count: integer): integer :=
       function(Count: integer): integer
       begin
         return Count;
@@ -38,12 +38,12 @@ fn closure_block_local_does_not_capture_shadowed_outer_binding() {
         "program T;
 function Make(): function(): integer;
 begin
-  mutable var Count: integer := 10;
+  var Count: integer := 10;
   return function(): integer
   begin
     begin
-      var Count: integer := 5;
-      var Copy: integer := Count;
+      const Count: integer := 5;
+      const Copy: integer := Count;
     end;
     return 0;
   end function;
@@ -68,9 +68,9 @@ fn closure_scalar_case_guard_binding_does_not_capture_shadowed_outer() {
     let (program, parse_errors) = fpas_parser::parse(
         "program T;
 begin
-  mutable var M: integer := 0;
-  var N: integer := 1;
-  var F: procedure() :=
+  var M: integer := 0;
+  const N: integer := 1;
+  const F: procedure() :=
     procedure()
     begin
       case N of
@@ -104,13 +104,13 @@ fn nested_closure_capturing_task_bound_callable_is_task_bound() {
     let (program, parse_errors) = fpas_parser::parse(
         "program T;
 begin
-  mutable var Count: integer := 0;
-  var Inc: procedure() :=
+  var Count: integer := 0;
+  const Inc: procedure() :=
     procedure()
     begin
       Count := Count + 1;
     end procedure;
-  var Outer: procedure() :=
+  const Outer: procedure() :=
     procedure()
     begin
       Inc();

@@ -93,7 +93,7 @@ fn dap_set_expression_materializes_a_capturing_nested_routine() {
         json!({"stopOnEntry":true}),
     );
     let _ = send(&mut adapter, &mut seq, "configurationDone", json!({}));
-    let owner = stop_at(&mut adapter, &mut seq, "var MakeStop: integer := 0;");
+    let owner = stop_at(&mut adapter, &mut seq, "const MakeStop: integer := 0;");
     let locals = locals_reference(&mut adapter, &mut seq, owner);
     let simple = send(
         &mut adapter,
@@ -143,7 +143,7 @@ fn dap_unknown_capturing_name_is_rejected_without_invalidation() {
         json!({"stopOnEntry":true}),
     );
     let _ = send(&mut adapter, &mut seq, "configurationDone", json!({}));
-    let owner = stop_at(&mut adapter, &mut seq, "var MakeStop: integer := 0;");
+    let owner = stop_at(&mut adapter, &mut seq, "const MakeStop: integer := 0;");
     let rejected = send(
         &mut adapter,
         &mut seq,

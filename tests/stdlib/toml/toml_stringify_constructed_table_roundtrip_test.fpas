@@ -3,12 +3,12 @@ program TomlStringifyConstructedTableRoundtripTest;
 uses Std.Arrays, Std.Dictionaries, Std.Options, Std.Test, Std.Toml;
 
 begin
-  var Source: TomlValue := TomlValue.Table(['project': TomlValue.Table(['name': TomlValue.String('demo'), 'version': TomlValue.Integer(1), 'released': TomlValue.Datetime('2026-07-14')]), 'enabled': TomlValue.Boolean(true), 'targets': TomlValue.ArrayValue([
-                                                                                                                                                                                                                                                                 TomlValue.String('linux'),
-                                                                                                                                                                                                                                                                 TomlValue.String('windows')
-                                                                                                                                                                                                                                                               ])]);
-  var Encoded: string := Stringify(Source);
-  var Parsed: result of TomlValue, string := Parse(Encoded);
+  const Source: TomlValue := TomlValue.Table(['project': TomlValue.Table(['name': TomlValue.String('demo'), 'version': TomlValue.Integer(1), 'released': TomlValue.Datetime('2026-07-14')]), 'enabled': TomlValue.Boolean(true), 'targets': TomlValue.ArrayValue([
+                                                                                                                                                                                                                                                                   TomlValue.String('linux'),
+                                                                                                                                                                                                                                                                   TomlValue.String('windows')
+                                                                                                                                                                                                                                                                 ])]);
+  const Encoded: string := Stringify(Source);
+  const Parsed: result of TomlValue, string := Parse(Encoded);
   case Parsed of
     when Ok(Value):
       begin

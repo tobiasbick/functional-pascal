@@ -161,7 +161,7 @@ See [pascal/monorepo/README.md](pascal/monorepo/README.md) and [docs/pascal/prog
 | `fibonacci.fpas` | Recursion and counting `for` loops |
 | `pascal/basics/literals_alias_string_index.fpas` | Constants, number literals, type aliases, and string indexing |
 | `pascal/control-flow/while_repeat_example.fpas` | `while` and `repeat until` loops |
-| `pascal/functions/mutable_nested_functions.fpas` | Mutable parameters, nested functions, and mutual recursion |
+| `pascal/functions/mutable_nested_functions.fpas` | Local parameter copies, nested functions, and mutual recursion |
 | `pascal/functions/nested_functions.fpas` | Nested helper function (`Square` inside `Hypotenuse`) |
 | `pascal/higher-order-functions/higher_order_functions.fpas` | First-class functions and array helpers |
 | `pascal/enum-data/` | Enums with associated data and `case` |

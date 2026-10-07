@@ -3,8 +3,8 @@ program T;
 uses Std.Console, Std.Dictionaries, Std.Options;
 
 begin
-  var D: dict of string to integer := ['Alice': 30, 'Bob': 25];
-  var R: option of integer := Std.Dictionaries.Get(D, 'Alice');
+  const D: dict of string to integer := ['Alice': 30, 'Bob': 25];
+  const R: option of integer := Std.Dictionaries.Get(D, 'Alice');
   WriteLn(IsSome(R));
   WriteLn(Unwrap(R));
 end.

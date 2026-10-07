@@ -54,7 +54,7 @@ fn callable_results_use_known_capture_proofs() {
       function Make(Job: task of integer): function(): integer;
       begin return function(): integer begin return Wait(Job); end function; end function;
       function Work(): integer; begin return 1; end function;
-      begin var Job: task of integer := go Work(); Make(Job); end.",
+      begin const Job: task of integer := go Work(); Make(Job); end.",
     );
     assert!(!captured.help.unwrap().contains("`discard"));
 }

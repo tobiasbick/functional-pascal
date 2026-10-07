@@ -2,7 +2,7 @@ program FluentOrderTest;
 
 uses Std.Arrays, Std.Test;
 
-mutable var Visits: array of integer := [];
+var Visits: array of integer := [];
 
 function Visit(Value: integer): integer;
 begin

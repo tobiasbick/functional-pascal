@@ -22,18 +22,18 @@ begin
 end function;
 
 begin
-  var Measured: TuiMeasureResult := TuiMeasure(TuiElementBuilders.MakeList(TuiControlId.Create(1), [
-                                                                                                     'Alpha',
-                                                                                                     'Beta',
-                                                                                                     'Gamma'
-                                                                                                   ], 0, TuiAction.Create(1)), TuiMeasureSpec.Unbounded());
+  const Measured: TuiMeasureResult := TuiMeasure(TuiElementBuilders.MakeList(TuiControlId.Create(1), [
+                                                                                                       'Alpha',
+                                                                                                       'Beta',
+                                                                                                       'Gamma'
+                                                                                                     ], 0, TuiAction.Create(1)), TuiMeasureSpec.Unbounded());
   AssertEquals(7, Measured.Preferred.Width);
   AssertEquals(3, Measured.Preferred.Height);
-  var Empty: TuiMeasureResult := TuiMeasure(TuiElementBuilders.MakeList(TuiControlId.Create(1), [], -1, TuiAction.Create(1)), TuiMeasureSpec.Unbounded());
+  const Empty: TuiMeasureResult := TuiMeasure(TuiElementBuilders.MakeList(TuiControlId.Create(1), [], -1, TuiAction.Create(1)), TuiMeasureSpec.Unbounded());
   AssertEquals(2, Empty.Preferred.Width);
   AssertEquals(1, Empty.Preferred.Height);
-  mutable var App: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(24, 8));
-  mutable var Model: ListModel := record
+  var App: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(24, 8));
+  var Model: ListModel := record
     Selected := 0;
   end;
 

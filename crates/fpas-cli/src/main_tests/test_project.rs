@@ -104,7 +104,7 @@ fn test_cli_uses_manifest_script_override() {
     );
     write_text(
         &cwd.join("prompt_test.fpas"),
-        "program P;\nuses Std.Console, Std.Test;\nbegin\n  var Name: string := ReadLn();\n  AssertTrue(Name = 'Alice');\nend.",
+        "program P;\nuses Std.Console, Std.Test;\nbegin\n  const Name: string := ReadLn();\n  AssertTrue(Name = 'Alice');\nend.",
     );
     write_text(
         &cwd.join("prompt.script.toml"),

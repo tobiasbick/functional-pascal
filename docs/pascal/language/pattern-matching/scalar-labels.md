@@ -1,5 +1,11 @@
 # Scalar labels
 
+Value labels must be [compile-time constants](../basics/constants.md#compile-time-constants).
+Literal values, static constant bindings, and expressions using known operands
+are allowed. Calls, variables, and computed `const` bindings are rejected,
+including when the arm also has a guard. Put dynamic comparisons in a
+[scalar guard binding](guards.md#scalar-guard-bindings).
+
 ## Basic matching
 
 ```pascal

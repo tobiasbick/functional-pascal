@@ -13,10 +13,8 @@ pub enum SymbolKind {
     Unit,
     /// Compile-time constant.
     Constant,
-    /// Immutable variable.
+    /// Imvariable.
     Variable,
-    /// Mutable variable.
-    MutableVariable,
     /// Named type or alias.
     Type,
     /// Named enum type.

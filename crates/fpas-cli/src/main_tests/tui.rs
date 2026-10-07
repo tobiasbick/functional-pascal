@@ -38,7 +38,7 @@ include = ["{source_glob}"]
 uses Std.Tui, Std.Tui.Runtime.TerminalRenderer;
 
 begin
-  var Surface: TuiWorkingSurface := TuiWorkingSurface.Create(TuiSize.Create(4, 2));
+  const Surface: TuiWorkingSurface := TuiWorkingSurface.Create(TuiSize.Create(4, 2));
   TuiFlushSurface(Surface, TuiPalette.Default());
 end.
 "#,
@@ -51,7 +51,7 @@ end.
 uses Std.Tui, Std.Tui.Runtime.TerminalRenderer;
 
 begin
-  var Surface: TuiWorkingSurface := TuiWorkingSurface.Create(TuiSize.Create(4, 2));
+  const Surface: TuiWorkingSurface := TuiWorkingSurface.Create(TuiSize.Create(4, 2));
   TuiFlushSurface(Surface, TuiPalette.Default());
   TuiFlushSurface(Surface, TuiPalette.Default());
 end.
@@ -65,7 +65,7 @@ end.
 uses Std.Tui, Std.Tui.Runtime.TerminalRenderer;
 
 begin
-  var Surface: TuiWorkingSurface := TuiWorkingSurface.Create(TuiSize.Create(4, 2));
+  const Surface: TuiWorkingSurface := TuiWorkingSurface.Create(TuiSize.Create(4, 2));
   TuiFlushSurface(Surface, TuiPalette.Default());
   Surface.PutGlyph(1, 0, 'X');
   TuiFlushSurface(Surface, TuiPalette.Default());
@@ -81,7 +81,7 @@ uses
   Std.Console, Std.Options, Std.Test, Std.Tui, Std.Tui.Runtime.TerminalRenderer;
 
 begin
-  var Surface: TuiWorkingSurface := TuiWorkingSurface.Create(TuiSize.Create(4, 1));
+  const Surface: TuiWorkingSurface := TuiWorkingSurface.Create(TuiSize.Create(4, 1));
   Surface.PutCell(TuiPoint.Create(1, 0), TuiCell.Create('中', TuiStyleRole.Accent));
   TuiFlushSurface(Surface, TuiPalette.Default());
   Surface.PutGlyph(2, 0, 'X');
@@ -164,10 +164,10 @@ begin
 end function;
 
 begin
-  var Initial: TuiPalette := TuiPalette.Default()
+  const Initial: TuiPalette := TuiPalette.Default()
                                .WithRole(TuiStyleRole.Normal, TuiStyle.FromColors(TuiColor.FromRgb(10, 20, 30), TuiColor.FromRgb(40, 50, 60)));
   AssertEquals(1, TuiApplication.RunWithPalette(0, UpdateTheme, ViewTheme, Initial));
-  var Painted: Cell := Unwrap(GetCell(1, 1));
+  const Painted: Cell := Unwrap(GetCell(1, 1));
   AssertTrue(Painted.foreground.kind = ColorKind.Rgb);
   AssertEquals(1, Painted.foreground.red);
   AssertEquals(2, Painted.foreground.green);
@@ -239,7 +239,7 @@ begin
 end function;
 
 begin
-  var Final: Model := TuiApplication.Run(record
+  const Final: Model := TuiApplication.Run(record
     ResizeCount := 0;
     Width := 0;
     Height := 0;
@@ -305,7 +305,7 @@ begin
 end function;
 
 begin
-  var Final: Model := TuiApplication.Run(record Ticks := 0; end, Update, View);
+  const Final: Model := TuiApplication.Run(record Ticks := 0; end, Update, View);
   WriteLn(Final.Ticks);
 end.
 "#,
@@ -355,7 +355,7 @@ begin
   case Msg of
     when TuiMsg.Started:
     begin
-      var Target: channel of integer := State.Inbox;
+      const Target: channel of integer := State.Inbox;
       Cmd.StartBackground(1, function(Token: CancellationToken): result of boolean, string begin
         return SendWithCancellation(Target, 42, Token);
       end function);
@@ -387,8 +387,8 @@ begin
 end function;
 
 begin
-  var Inbox: channel of integer := CreateChannel(1);
-  var Final: Model := TuiApplication.RunWithBackground(record
+  const Inbox: channel of integer := CreateChannel(1);
+  const Final: Model := TuiApplication.RunWithBackground(record
     Inbox := Inbox;
     Value := 0;
   end, Inbox, Update, UpdateApplication, View);

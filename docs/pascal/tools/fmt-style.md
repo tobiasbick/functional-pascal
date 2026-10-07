@@ -70,7 +70,7 @@ program ControlFlowDemo;
 uses Std.Console, Std.Conv;
 
 begin
-  var X: integer := 5;
+  const X: integer := 5;
   if X > 0 then
     begin
       WriteLn('positive');
@@ -115,7 +115,7 @@ begin
       X := X + 1;
     end;
   end while;
-  mutable var N: integer := 0;
+  var N: integer := 0;
   repeat
     WriteLn(IntToStr(N));
     N := N + 1;
@@ -143,8 +143,8 @@ type Point = record
 
   function Add(Self: Point; Other: Point): Point;
   begin
-    var RX: integer := Self.X + Other.X;
-    var RY: integer := Self.Y + Other.Y;
+    const RX: integer := Self.X + Other.X;
+    const RY: integer := Self.Y + Other.Y;
     return record
       X := RX;
       Y := RY;
@@ -158,11 +158,11 @@ type Point = record
 end record;
 
 begin
-  var A: Point := record
+  const A: Point := record
     X := 3;
     Y := 4;
   end;
-  var B: Point := record
+  const B: Point := record
     X := 10;
     Y := 20;
   end;
@@ -170,7 +170,7 @@ begin
   A.Print();
   B.Print();
   WriteLn('Sum of A: ' + IntToStr(A.Sum()));
-  var C: Point := A.Add(B);
+  const C: Point := A.Add(B);
   WriteLn('A + B =');
   C.Print();
 end.
@@ -299,10 +299,10 @@ The formatter **inserts and removes** blank lines to match these rules. User-pla
 | `program Name;` | **exactly one** |
 | `unit Qualified.Name;` | **exactly one** |
 | `uses ...;` | **exactly one** |
-| consecutive declarations | **exactly one**, except adjacent `const`, `var`, or `mutable var` declarations of the same kind and visibility |
+| consecutive declarations | **exactly one**, except adjacent `const` or `var` declarations of the same kind and visibility |
 | final declaration | **exactly one** before a program’s `begin`; unit ending follows the last declaration without an extra blank line |
 | last field in a `record` type (before methods) | **exactly one** before the first method |
-| sibling statement ending in `end;` or a named control ending | **exactly one**, unless the next sibling is `var` or `mutable var` |
+| sibling statement ending in `end;` or a named control ending | **exactly one**, unless the next sibling is `const` or `var` |
 | last statement before `end` / `end.` | none |
 
 This statement-spacing rule applies only between sibling statements. It never inserts a blank line
@@ -314,14 +314,14 @@ separate `case` arms. Leading comments stay attached to the following statement 
 ## Individual declarations
 
 Each declaration emits its own `type`, `const`, `var`, or complete
-`mutable var` prefix on the same line as its name. Exported declarations
+`var` prefix on the same line as its name. Exported declarations
 repeat `public` before their keyword. Declarations retain their source order.
 Record and enum bodies indent two spaces from the declaration line; fields,
 methods, payloads, and formal parameters keep their existing syntax.
 
 ## Keywords and builtins
 
-Emit lowercase keywords: `program`, `unit`, `uses`, `begin`, `end`, `function`, `procedure`, `var`, `mutable`, `const`, `type`, `if`, `then`, `elsif`, `else`, `null`, `case`, `when`, `of`, `for`, `to`, `downto`, `in`, `do`, `while`, `repeat`, `until`, `return`, `discard`, `panic`, `break`, `continue`, `and`, `or`, `not`, `xor`, `div`, `mod`, `public`, `record`, `enum`, `array`, `channel`, `dict`, `result`, `option`, `ok`, `error`, `some`, `none`, `try`, `go`, `with`, `static`, `property`, `event`, `read`, `write`, `comparable`, `numeric`, `printable`, `self`, `nil`, `true`, `false`.
+Emit lowercase keywords: `program`, `unit`, `uses`, `begin`, `end`, `function`, `procedure`, `var`, `const`, `type`, `if`, `then`, `elsif`, `else`, `null`, `case`, `when`, `of`, `for`, `to`, `downto`, `in`, `do`, `while`, `repeat`, `until`, `return`, `discard`, `panic`, `break`, `continue`, `and`, `or`, `not`, `xor`, `div`, `mod`, `public`, `record`, `enum`, `array`, `channel`, `dict`, `result`, `option`, `ok`, `error`, `some`, `none`, `try`, `go`, `with`, `static`, `property`, `event`, `read`, `write`, `comparable`, `numeric`, `printable`, `self`, `nil`, `true`, `false`.
 
 Boolean and enum variant constructors in expressions: `Ok`, `Error`, `Some`, `None` (Pascal-style mixed case for std-like variants).
 

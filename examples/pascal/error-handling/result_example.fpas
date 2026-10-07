@@ -17,15 +17,15 @@ end function;
 
 function Stringify(A: integer; B: integer): result of string, string;
 begin
-  var Quotient: integer := try Divide(A, B);
+  const Quotient: integer := try Divide(A, B);
   return Ok((((IntToStr(A) + ' / ') + IntToStr(B)) + ' = ') + IntToStr(Quotient));
 end function;
 
 begin
-  var R1: result of integer, string := Divide(10, 3);
+  const R1: result of integer, string := Divide(10, 3);
   WriteLn('IsOk: ', IsOk(R1));
   WriteLn('Value: ', Unwrap(R1));
-  var R2: result of integer, string := Divide(5, 0);
+  const R2: result of integer, string := Divide(5, 0);
   WriteLn('IsError: ', IsError(R2));
   WriteLn('UnwrapOr: ', UnwrapOr(R2, -1));
   case Divide(42, 6) of

@@ -6,7 +6,7 @@ type Point = record
 end record;
 
 begin
-  var A: Point := record
+  const A: Point := record
     X := 3;
     Y := 4;
   end;

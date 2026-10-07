@@ -23,8 +23,8 @@ type TuiOwnedWork = record
   Replacement: option of TuiBackgroundWork;
 end record;
 
-mutable var TuiBackgroundOpen: array of boolean := [];
-mutable var TuiBackgroundWorkItems: array of array of TuiOwnedWork := [];
+var TuiBackgroundOpen: array of boolean := [];
+var TuiBackgroundWorkItems: array of array of TuiOwnedWork := [];
 
 function TuiBackgroundRequireOpen(ApplicationId: integer): integer;
 begin
@@ -40,7 +40,7 @@ end function;
 
 procedure TuiBackgroundRemove(ApplicationId: integer; Index: integer);
 begin
-  mutable var Items: array of TuiOwnedWork := TuiBackgroundWorkItems[ApplicationId - 1];
+  var Items: array of TuiOwnedWork := TuiBackgroundWorkItems[ApplicationId - 1];
   TuiBackgroundWorkItems[ApplicationId - 1] := Std.Arrays.Concat(Std.Arrays.Slice(Items, 0, Index), Std.Arrays.Slice(Items, Index +
                                                                                                                             1, (Std.Arrays.Length(Items) - Index) -
                                                                                                                                1));
@@ -52,7 +52,7 @@ function TuiBackgroundFailureMessages(
   IncludeCancellation: boolean
 ): array of TuiMsg;
 begin
-  mutable var Messages: array of TuiMsg := [];
+  var Messages: array of TuiMsg := [];
   for Failure: TaskFailure in Failures do
     begin
       if IncludeCancellation or (Failure.Kind <> TaskFailureKind.Cancelled) then
@@ -68,15 +68,15 @@ end function;
 
 function TuiBackgroundCloseAt(ApplicationId: integer; Index: integer; IncludeCancellation: boolean): array of TuiMsg;
 begin
-  var Item: TuiOwnedWork := TuiBackgroundWorkItems[ApplicationId - 1][Index];
-  var Messages: array of TuiMsg := TuiBackgroundFailureMessages(Item.Id, CloseTaskGroup(Item.Group), IncludeCancellation);
+  const Item: TuiOwnedWork := TuiBackgroundWorkItems[ApplicationId - 1][Index];
+  const Messages: array of TuiMsg := TuiBackgroundFailureMessages(Item.Id, CloseTaskGroup(Item.Group), IncludeCancellation);
   TuiBackgroundRemove(ApplicationId, Index);
   return Messages;
 end function;
 
 function TuiBackgroundFindSubscription(ApplicationId: integer; Id: integer): integer;
 begin
-  mutable var Items: array of TuiOwnedWork := TuiBackgroundWorkItems[ApplicationId - 1];
+  var Items: array of TuiOwnedWork := TuiBackgroundWorkItems[ApplicationId - 1];
   for Index: integer := 0 to Std.Arrays.Length(Items) - 1 do
     begin
       if Items[Index].Subscription and (Items[Index].Id = Id) then
@@ -97,14 +97,14 @@ procedure TuiBackgroundStart(
   Work: TuiBackgroundWork
 );
 begin
-  mutable var Items: array of TuiOwnedWork := TuiBackgroundWorkItems[ApplicationId - 1];
+  var Items: array of TuiOwnedWork := TuiBackgroundWorkItems[ApplicationId - 1];
   if Std.Arrays.Length(Items) >= 256 then
     begin
       panic('Tui application cannot own more than 256 background operations');
     end;
   end if;
-  var Group: TaskGroup := CreateTaskGroup();
-  var WorkerTask: task := StartTaskInGroup(Group, Work);
+  const Group: TaskGroup := CreateTaskGroup();
+  const WorkerTask: task := StartTaskInGroup(Group, Work);
   Std.Arrays.Push(Items, record
     Id := Id;
     Subscription := Subscription;
@@ -121,7 +121,7 @@ procedure TuiBackgroundRequestStop(
   Replacement: option of TuiBackgroundWork
 );
 begin
-  mutable var Items: array of TuiOwnedWork := TuiBackgroundWorkItems[ApplicationId - 1];
+  var Items: array of TuiOwnedWork := TuiBackgroundWorkItems[ApplicationId - 1];
   discard CancelTaskGroup(Items[Index].Group);
   Items[Index].Cancelling := true;
   Items[Index].Replacement := Replacement;
@@ -148,7 +148,7 @@ begin
           end;
         when TuiBackgroundCommand.ReplaceSubscription(Id, Work):
           begin
-            var Existing: integer := TuiBackgroundFindSubscription(ApplicationId, Id);
+            const Existing: integer := TuiBackgroundFindSubscription(ApplicationId, Id);
             if Existing >= 0 then
               begin
                 TuiBackgroundRequestStop(ApplicationId, Existing, Some(Work));
@@ -161,7 +161,7 @@ begin
           end;
         when TuiBackgroundCommand.CancelSubscription(Id):
           begin
-            var Existing: integer := TuiBackgroundFindSubscription(ApplicationId, Id);
+            const Existing: integer := TuiBackgroundFindSubscription(ApplicationId, Id);
             if Existing >= 0 then
               begin
                 TuiBackgroundRequestStop(ApplicationId, Existing, None);
@@ -186,11 +186,11 @@ end function;
 public function TuiBackgroundReap(ApplicationId: integer): array of TuiMsg;
 begin
   discard TuiBackgroundRequireOpen(ApplicationId);
-  mutable var Messages: array of TuiMsg := [];
-  mutable var Index: integer := Std.Arrays.Length(TuiBackgroundWorkItems[ApplicationId - 1]) - 1;
+  var Messages: array of TuiMsg := [];
+  var Index: integer := Std.Arrays.Length(TuiBackgroundWorkItems[ApplicationId - 1]) - 1;
   while Index >= 0 do
     begin
-      var Item: TuiOwnedWork := TuiBackgroundWorkItems[ApplicationId - 1][Index];
+      const Item: TuiOwnedWork := TuiBackgroundWorkItems[ApplicationId - 1][Index];
       case TryCloseCompletedTaskGroup(Item.Group) of
         when Some(Failures):
           begin
@@ -227,7 +227,7 @@ begin
       return [];
     end;
   end if;
-  mutable var Messages: array of TuiMsg := [];
+  var Messages: array of TuiMsg := [];
   while Std.Arrays.Length(TuiBackgroundWorkItems[ApplicationId - 1]) > 0 do
     begin
       Messages := Std.Arrays.Concat(Messages, TuiBackgroundCloseAt(ApplicationId, Std.Arrays.Length(TuiBackgroundWorkItems[ApplicationId -

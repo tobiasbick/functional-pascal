@@ -12,8 +12,8 @@ type Holder = record
   Reader: function(): integer;
 end record;
 
-mutable var BaseCalls: integer := 0;
-mutable var FieldOrder: integer := 0;
+var BaseCalls: integer := 0;
+var FieldOrder: integer := 0;
 
 function Base(): Point;
 begin
@@ -55,11 +55,11 @@ begin
 end function;
 
 begin
-  var Original: Point := record
+  const Original: Point := record
     X := 1;
     Y := 2;
   end;
-  var Updated: Point := Base() with X := FieldValue(1); Y := FieldValue(2); end with;
+  const Updated: Point := Base() with X := FieldValue(1); Y := FieldValue(2); end with;
 
   AssertEquals(1, BaseCalls);
   AssertEquals(12, FieldOrder);
@@ -70,13 +70,13 @@ begin
   AssertEquals(42, Apply(function(P: Point): integer begin
     return P.X * 21;
   end function, Original with X := 2; end with));
-  var Container: Holder := record
+  const Container: Holder := record
     Child := Original;
     Reader := function(): integer begin
       return 0;
     end function;
   end;
-  var Changed: Holder := Container with Child := Original with X := 7; end with; Reader := function(): integer begin
+  const Changed: Holder := Container with Child := Original with X := 7; end with; Reader := function(): integer begin
     return Updated.X;
   end function; end with;
 
@@ -85,16 +85,16 @@ begin
   AssertEquals(10, Changed.Reader());
   AssertEquals(1, Container.Child.X);
   AssertEquals(0, Container.Reader());
-  mutable var Captured: integer := 0;
+  var Captured: integer := 0;
   Invoke(procedure() begin
     Captured := Captured + 1;
   end procedure);
   AssertEquals(1, Captured);
   Invoke(procedure() begin end procedure);
-  var Factory: function(Value: integer): function(): integer := MakeFactory();
-  var Reader: function(): integer := Factory(42);
+  const Factory: function(Value: integer): function(): integer := MakeFactory();
+  const Reader: function(): integer := Factory(42);
   AssertEquals(42, Reader());
-  var Moved: Point := Move(Original);
+  const Moved: Point := Move(Original);
   AssertEquals(42, Moved.X);
   AssertEquals(2, Moved.Y);
 end.

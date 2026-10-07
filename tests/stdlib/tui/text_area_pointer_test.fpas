@@ -11,7 +11,7 @@ end record;
 
 function ViewTextArea(State: PointerModel): TuiElement;
 begin
-  mutable var Focused: option of TuiControlId := None;
+  var Focused: option of TuiControlId := None;
   if State.Focus > 0 then
     begin
       Focused := Some(TuiControlId.Create(State.Focus));
@@ -76,8 +76,8 @@ begin
 end function;
 
 begin
-  mutable var App: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(6, 3));
-  mutable var Model: PointerModel := record
+  var App: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(6, 3));
+  var Model: PointerModel := record
     Focus := 0;
     Text := (('zero' + Std.Str.Chr(10)) + 'one') + (Std.Str.Chr(10) + 'three');
     Caret := 0;

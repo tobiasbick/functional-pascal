@@ -68,8 +68,8 @@ begin
 end function;
 
 begin
-  mutable var App: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(24, 6));
-  mutable var Model: CheckModel := record
+  var App: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(24, 6));
+  var Model: CheckModel := record
     Focus := 1;
     Checked := false;
     Changes := [];

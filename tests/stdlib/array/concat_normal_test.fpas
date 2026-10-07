@@ -3,7 +3,7 @@ program T;
 uses Std.Console, Std.Arrays;
 
 begin
-  var C: array of integer := Concat([1, 2], [3, 4]);
+  const C: array of integer := Concat([1, 2], [3, 4]);
   WriteLn(Length(C));
   WriteLn(C[0]);
   WriteLn(C[3]);

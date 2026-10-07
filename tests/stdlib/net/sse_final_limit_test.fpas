@@ -4,10 +4,10 @@ uses Std.Arrays, Std.Http, Std.Net.Utf8, Std.Results, Std.Str, Std.Test;
 
 procedure CheckFinal(Text: string; Maximum: integer; Expected: string);
 begin
-  var Decoder: SseDecoder := Std.Results.Unwrap(CreateSseDecoder(Maximum));
-  var Before: array of SseEvent := Std.Results.Unwrap(FeedSse(Decoder, Std.Net.Utf8.Encode(Text)));
+  const Decoder: SseDecoder := Std.Results.Unwrap(CreateSseDecoder(Maximum));
+  const Before: array of SseEvent := Std.Results.Unwrap(FeedSse(Decoder, Std.Net.Utf8.Encode(Text)));
   AssertEquals(0, Std.Arrays.Length(Before));
-  var Events: array of SseEvent := Std.Results.Unwrap(FinishSse(Decoder));
+  const Events: array of SseEvent := Std.Results.Unwrap(FinishSse(Decoder));
   AssertEquals(1, Std.Arrays.Length(Events));
   AssertEquals(Expected, Events[0].Data);
   case FeedSse(Decoder, []) of
@@ -30,7 +30,7 @@ begin
 
   CheckFinal('data: x' + #13, 8, 'x');
   CheckFinal('data: x' + #10, 8, 'x');
-  var Small: SseDecoder := Std.Results.Unwrap(CreateSseDecoder(6));
+  const Small: SseDecoder := Std.Results.Unwrap(CreateSseDecoder(6));
   case FeedSse(Small, Std.Net.Utf8.Encode('data: x')) of
     when Ok(_):
       begin
@@ -40,7 +40,7 @@ begin
       begin
       end;
   end case;
-  var Empty: SseDecoder := Std.Results.Unwrap(CreateSseDecoder(1));
-  var Events: array of SseEvent := Std.Results.Unwrap(FinishSse(Empty));
+  const Empty: SseDecoder := Std.Results.Unwrap(CreateSseDecoder(1));
+  const Events: array of SseEvent := Std.Results.Unwrap(FinishSse(Empty));
   AssertEquals(0, Std.Arrays.Length(Events));
 end.

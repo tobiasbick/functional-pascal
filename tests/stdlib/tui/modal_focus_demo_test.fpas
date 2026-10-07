@@ -58,8 +58,8 @@ begin
 end function;
 
 begin
-  mutable var App: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(40, 12));
-  mutable var Model: DemoModel := record
+  var App: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(40, 12));
+  var Model: DemoModel := record
     Focus := 2;
   end;
 

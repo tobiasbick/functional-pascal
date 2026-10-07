@@ -21,7 +21,6 @@ impl Checker {
                 let param_tys = params
                     .iter()
                     .map(|param| ParamTy {
-                        mutable: param.mutable,
                         name: param.name.clone(),
                         ty: self.resolve_type_expr(&param.type_expr),
                     })
@@ -38,7 +37,6 @@ impl Checker {
                 let param_tys = params
                     .iter()
                     .map(|param| ParamTy {
-                        mutable: param.mutable,
                         name: param.name.clone(),
                         ty: self.resolve_type_expr(&param.type_expr),
                     })

@@ -15,9 +15,9 @@ begin
 end function;
 
 begin
-  var App: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(24, 8));
-  mutable var Model: integer := 0;
-  mutable var Focus: integer := 1;
+  const App: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(24, 8));
+  var Model: integer := 0;
+  var Focus: integer := 1;
   Model := App.RunIterations(Model, function(State: integer; Msg: TuiMsg; Cmd: TuiCmdOutput): integer begin
     case Msg of
       when TuiMsg.FocusChanged(Previous, Current):

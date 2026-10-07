@@ -3,7 +3,7 @@ program FsReadWriteRoundtripTest;
 uses Std.Fs, Std.Test;
 
 begin
-  var Path: string := ScratchDir() + '/roundtrip.txt';
+  const Path: string := ScratchDir() + '/roundtrip.txt';
   case WriteText(Path, 'hello fs') of
     when Ok(_):
       begin

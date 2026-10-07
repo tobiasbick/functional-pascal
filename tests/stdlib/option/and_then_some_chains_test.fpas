@@ -16,7 +16,7 @@ begin
 end function;
 
 begin
-  var O: option of integer := Some(5);
-  var M: option of string := AndThen(O, PositiveToStr);
+  const O: option of integer := Some(5);
+  const M: option of string := AndThen(O, PositiveToStr);
   WriteLn(Unwrap(M));
 end.

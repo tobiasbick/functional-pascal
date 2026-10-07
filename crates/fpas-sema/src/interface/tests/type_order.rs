@@ -43,8 +43,8 @@ fn forward_recursive_types_survive_encoded_interfaces() {
     let consumer = parse_unit(
         "unit Demo.Consumer; uses Demo.Tree;
       public function Run(): integer; begin
-        var Root: Alias := Create();
-        var Next: Edge := Edge.More(Some(Root));
+        const Root: Alias := Create();
+        const Next: Edge := Edge.More(Some(Root));
         discard Next; return Root.Count() + Alias.Empty().Count();
       end function; end unit;",
     );

@@ -78,7 +78,7 @@ WriteLn(FromChar('─', 40));
 Returns the character at the 0-based `Index`. **Runtime error** if out of bounds.
 
 ```pascal
-var C: string := CharAt('Hello', 0);
+const C: string := CharAt('Hello', 0);
 WriteLn(C);  // H
 ```
 

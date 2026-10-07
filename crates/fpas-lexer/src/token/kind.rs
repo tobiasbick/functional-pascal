@@ -29,7 +29,6 @@ pub enum Token {
     Uses,
     Const,
     Var,
-    Mutable,
     Function,
     Procedure,
     Begin,

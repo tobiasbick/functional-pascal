@@ -53,7 +53,7 @@ fn long_uses() {
 fn short_record_literal_is_multiline() {
     common::assert_golden(
         "short_record",
-        "program T; type Point = record X: integer; Y: integer; end record; begin var A: Point := record X := 3; Y := 4; end; end.",
+        "program T; type Point = record X: integer; Y: integer; end record; begin const A: Point := record X := 3; Y := 4; end; end.",
         include_str!("golden/short_record.expected.fpas"),
     );
 }
@@ -62,7 +62,7 @@ fn short_record_literal_is_multiline() {
 fn logical_block_spacing() {
     common::assert_golden(
         "logical_block_spacing",
-        "program T; type Point = record X: integer; Y: integer; end record; begin var A: Point := record X := 3; Y := 4; end; var B: Point := record X := 10; Y := 20; end; var UpdatedB: Point := B with X := 11; end with; A.Print(); if Ready then Save(); end if;\n// present result\nPresent(); if NeedsCount then Prepare(); end if; var Count: integer := 1; WriteLn(Count); if Done then Finish(); end if; end.",
+        "program T; type Point = record X: integer; Y: integer; end record; begin const A: Point := record X := 3; Y := 4; end; const B: Point := record X := 10; Y := 20; end; const UpdatedB: Point := B with X := 11; end with; A.Print(); if Ready then Save(); end if;\n// present result\nPresent(); if NeedsCount then Prepare(); end if; const Count: integer := 1; WriteLn(Count); if Done then Finish(); end if; end.",
         include_str!("golden/logical_block_spacing.expected.fpas"),
     );
 }
@@ -71,8 +71,8 @@ fn logical_block_spacing() {
 fn wrapped_parenthesized_comparisons_preserve_full_expression() {
     common::assert_golden(
         "wrapped_parenthesized_comparisons",
-        "program T; begin var InsideHorizontalBounds: boolean := (MouseEvent.mouse_x > ButtonBounds.x) and (MouseEvent.mouse_x <= ButtonBounds.x + ButtonBounds.width); end.",
-        "program T;\n\nbegin\n  var InsideHorizontalBounds: boolean := (MouseEvent.mouse_x > ButtonBounds.x) and\n                                         (MouseEvent.mouse_x <= ButtonBounds.x + ButtonBounds.width);\nend.\n",
+        "program T; begin const InsideHorizontalBounds: boolean := (MouseEvent.mouse_x > ButtonBounds.x) and (MouseEvent.mouse_x <= ButtonBounds.x + ButtonBounds.width); end.",
+        "program T;\n\nbegin\n  const InsideHorizontalBounds: boolean := (MouseEvent.mouse_x > ButtonBounds.x) and\n                                           (MouseEvent.mouse_x <= ButtonBounds.x + ButtonBounds.width);\nend.\n",
     );
 }
 
@@ -80,7 +80,7 @@ fn wrapped_parenthesized_comparisons_preserve_full_expression() {
 fn comments_unit_declaration_docs() {
     common::assert_golden(
         "comments_unit",
-        "// Unit doc.\nunit Demo;\n\n// field doc\nmutable var Count: integer := 0;\nend unit;\n",
+        "// Unit doc.\nunit Demo;\n\n// field doc\nvar Count: integer := 0;\nend unit;\n",
         include_str!("golden/comments_unit.expected.fpas"),
     );
 }
@@ -107,18 +107,18 @@ fn comments_before_begin_and_statement() {
 fn postfix_chaining_compact() {
     common::assert_golden(
         "postfix_chaining",
-        "program CompactPostfix; begin var X: integer := Factory.Create().Transform(2).Value; end.",
+        "program CompactPostfix; begin const X: integer := Factory.Create().Transform(2).Value; end.",
         include_str!("golden/postfix_chaining.expected.fpas"),
     );
     common::assert_round_trip(
         "postfix_chaining_round_trip",
-        "program CompactPostfix; begin var X: integer := Factory.Create().Transform(2).Value; end.",
+        "program CompactPostfix; begin const X: integer := Factory.Create().Transform(2).Value; end.",
     );
 }
 
 #[test]
 fn postfix_chaining_wraps_long_chain() {
-    let source = "program T; begin var X: integer := VeryLongFactoryName.CreateVeryLongThing().TransformWithVeryLongName(VeryLongArgumentAlpha).ScaleWithAnotherLongName(VeryLongArgumentBeta).Value; end.";
+    let source = "program T; begin const X: integer := VeryLongFactoryName.CreateVeryLongThing().TransformWithVeryLongName(VeryLongArgumentAlpha).ScaleWithAnotherLongName(VeryLongArgumentBeta).Value; end.";
     let (unit, errors) = fpas_parser::parse_compilation_unit(source);
     assert!(errors.is_empty(), "{errors:?}");
     let formatted = fpas_fmt::format_source(source, &unit).expect("matching source and AST");
@@ -139,11 +139,11 @@ fn postfix_chaining_wraps_long_chain() {
 fn closure_literal_round_trips() {
     common::assert_round_trip(
         "closure_compact",
-        "program T; begin var F: procedure() := procedure() begin end procedure; end.",
+        "program T; begin const F: procedure() := procedure() begin end procedure; end.",
     );
     common::assert_round_trip(
         "closure_multiline",
-        "program T;\nbegin\n  var Add: function(Value: integer): integer :=\n    function(Value: integer): integer\n    begin\n      return Value + 1;\n    end function;\nend.",
+        "program T;\nbegin\n  const Add: function(Value: integer): integer :=\n    function(Value: integer): integer\n    begin\n      return Value + 1;\n    end function;\nend.",
     );
 }
 
@@ -151,6 +151,6 @@ fn closure_literal_round_trips() {
 fn postfix_chaining_round_trips_field_index_mixture() {
     common::assert_round_trip(
         "postfix_field_index_mixture",
-        "program T; begin var X: integer := Factory.Create().Items[0].Value; end.",
+        "program T; begin const X: integer := Factory.Create().Items[0].Value; end.",
     );
 }

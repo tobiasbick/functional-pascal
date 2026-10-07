@@ -109,7 +109,7 @@ type State = enum
 end enum;
 
 begin
-  var Group: Team := CreateTeam();
+  const Group: Team := CreateTeam();
   discard Group;
 end.
 ```

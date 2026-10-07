@@ -107,9 +107,9 @@ end.",
     #[test]
     fn unit_default_private_bindings_have_individual_keywords() {
         let formatted = format_unit_decls(
-            "unit U; mutable var A: integer := 1; mutable var B: integer := 2; const C: integer := 3; const D: integer := 4;\nend unit;",
+            "unit U; var A: integer := 1; var B: integer := 2; const C: integer := 3; const D: integer := 4;\nend unit;",
         );
-        assert!(formatted.contains("mutable var A: integer := 1;\nmutable var B: integer := 2;\n"));
+        assert!(formatted.contains("var A: integer := 1;\nvar B: integer := 2;\n"));
         assert!(formatted.contains("const C: integer := 3;\nconst D: integer := 4;\n"));
     }
 

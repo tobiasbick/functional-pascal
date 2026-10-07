@@ -8,7 +8,7 @@ pub(super) fn register_std_args(checker: &mut Checker) {
     define_func(
         checker,
         s::STD_ARGS_PARAM_STR,
-        vec![p("Index", Ty::Integer, false)],
+        vec![p("Index", Ty::Integer)],
         Ty::String,
     );
 }

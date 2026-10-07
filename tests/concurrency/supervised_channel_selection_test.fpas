@@ -5,11 +5,11 @@ uses Std.Tasks, Std.Arrays, Std.Results, Std.Test;
 begin
   for Round: integer := 1 to 4 do
     begin
-      var Group: TaskGroup := CreateTaskGroup();
-      var Token: CancellationToken := GetTaskGroupToken(Group);
-      var Output: channel of integer := CreateChannel(1);
-      mutable var Children: array of task := [];
-      mutable var Seen: array of integer := [];
+      const Group: TaskGroup := CreateTaskGroup();
+      const Token: CancellationToken := GetTaskGroupToken(Group);
+      const Output: channel of integer := CreateChannel(1);
+      var Children: array of task := [];
+      var Seen: array of integer := [];
       for Item: integer := 0 to 255 do
         begin
           Push(Seen, 0);
@@ -18,7 +18,7 @@ begin
 
       for Producer: integer := 0 to 7 do
         begin
-          var Attempts: channel of boolean := CreateChannel(2);
+          const Attempts: channel of boolean := CreateChannel(2);
           discard Send(Attempts, false);
           discard Send(Attempts, true);
           Push(Children, StartSupervisedTask(Group, function(WorkerToken: CancellationToken): result of integer, string begin
@@ -51,7 +51,7 @@ begin
         begin
           AssertEquals(0, Select([
                                    ReceiveCase(Output, procedure(Outcome: result of integer, string) begin
-                                     var Number: integer := Unwrap(Outcome);
+                                     const Number: integer := Unwrap(Outcome);
                                      AssertTrue((Number >= 0) and (Number < 256));
                                      Seen[Number] := Seen[Number] + 1;
                                    end procedure),

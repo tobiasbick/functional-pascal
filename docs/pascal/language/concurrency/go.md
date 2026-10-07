@@ -9,17 +9,19 @@ Formal syntax: [`grammar.ebnf`](../../../specs/grammar.ebnf) (`go_call`, `go_stm
 Use `go` as an expression and assign it to capture a `task` handle:
 
 ```pascal
+program TaskExample;
+
 uses Std.Console, Std.Tasks;
 
 function Worker(): integer;
 begin
   return 42;
-end;
+end function;
 
 begin
-  var T: task := go Worker();
-  var R: integer := Wait(T);
-  WriteLn(R)
+  const T: task := go Worker();
+  const R: integer := Wait(T);
+  WriteLn(R);
 end.
 ```
 

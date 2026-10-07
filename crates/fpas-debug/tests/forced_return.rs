@@ -21,7 +21,7 @@ begin
 end function;
 
 begin
-  var Value: integer := Fail();
+  const Value: integer := Fail();
   WriteLn(Value);
 end.
 "#;
@@ -253,8 +253,8 @@ begin
 end function;
 
 begin
-  var Pending: task := go Work();
-  var Answer: integer := Compute(41);
+  const Pending: task := go Work();
+  const Answer: integer := Compute(41);
   WriteLn(Answer);
 end.
 "#;

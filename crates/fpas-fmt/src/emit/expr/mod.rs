@@ -244,33 +244,33 @@ mod tests {
     fn expr_from_body(source: &str) -> String {
         let (program, errors) = parse(source);
         assert!(errors.is_empty(), "{errors:?}");
-        let Stmt::Var(var) = &program.body[0] else {
-            panic!("expected var stmt");
+        let Stmt::Const(binding) = &program.body[0] else {
+            panic!("expected const stmt");
         };
-        format_expr(&var.value)
+        format_expr(&binding.value)
     }
 
     #[test]
     fn literals_and_designators() {
         assert_eq!(
-            expr_from_body("program T; begin var X: integer := 42; end."),
+            expr_from_body("program T; begin const X: integer := 42; end."),
             "42"
         );
         assert_eq!(
-            expr_from_body("program T; begin var X: real := 3.14; end."),
+            expr_from_body("program T; begin const X: real := 3.14; end."),
             "3.14"
         );
         assert_eq!(
-            expr_from_body("program T; begin var X: string := 'hi'; end."),
+            expr_from_body("program T; begin const X: string := 'hi'; end."),
             "'hi'"
         );
         assert_eq!(
-            expr_from_body("program T; begin var X: boolean := true; end."),
+            expr_from_body("program T; begin const X: boolean := true; end."),
             "true"
         );
         assert_eq!(
             expr_from_body(
-                "program T; begin var X: procedure(Msg: string) := Std.Console.WriteLn; end."
+                "program T; begin const X: procedure(Msg: string) := Std.Console.WriteLn; end."
             ),
             "Std.Console.WriteLn"
         );
@@ -279,19 +279,19 @@ mod tests {
     #[test]
     fn operators_and_calls() {
         assert_eq!(
-            expr_from_body("program T; begin var X: integer := 1 + 2 * 3; end."),
+            expr_from_body("program T; begin const X: integer := 1 + 2 * 3; end."),
             "1 + 2 * 3"
         );
         assert_eq!(
-            expr_from_body("program T; begin var X: string := IntToStr(42); end."),
+            expr_from_body("program T; begin const X: string := IntToStr(42); end."),
             "IntToStr(42)"
         );
         assert_eq!(
-            expr_from_body("program T; begin var X: boolean := not true; end."),
+            expr_from_body("program T; begin const X: boolean := not true; end."),
             "not true"
         );
         assert_eq!(
-            expr_from_body("program T; begin var X: integer := Scene[0].resolved.rect.x; end."),
+            expr_from_body("program T; begin const X: integer := Scene[0].resolved.rect.x; end."),
             "Scene[0].resolved.rect.x"
         );
     }
@@ -299,25 +299,25 @@ mod tests {
     #[test]
     fn aggregates_and_wrappers() {
         assert_eq!(
-            expr_from_body("program T; begin var X: array of integer := [1, 2, 3]; end."),
+            expr_from_body("program T; begin const X: array of integer := [1, 2, 3]; end."),
             "[1, 2, 3]"
         );
         assert_eq!(
-            expr_from_body("program T; begin var X: dict of string to integer := ['a': 1]; end."),
+            expr_from_body("program T; begin const X: dict of string to integer := ['a': 1]; end."),
             "['a': 1]"
         );
         assert_eq!(
             expr_from_body(
-                "program T; type Point = record X: integer; Y: integer; end record; begin var X: Point := record X := 1; Y := 2; end; end."
+                "program T; type Point = record X: integer; Y: integer; end record; begin const X: Point := record X := 1; Y := 2; end; end."
             ),
             "record\n  X := 1;\n  Y := 2;\nend"
         );
         assert_eq!(
-            expr_from_body("program T; begin var X: result of integer, string := Ok(42); end."),
+            expr_from_body("program T; begin const X: result of integer, string := Ok(42); end."),
             "Ok(42)"
         );
         assert_eq!(
-            expr_from_body("program T; begin var X: option of integer := None; end."),
+            expr_from_body("program T; begin const X: option of integer := None; end."),
             "None"
         );
     }
@@ -325,7 +325,7 @@ mod tests {
     #[test]
     fn nonempty_record_literal_is_multiline() {
         let formatted = expr_from_body(
-            "program T; type Point = record X: integer; end record; begin var Value: Point := record X := 1; end; end.",
+            "program T; type Point = record X: integer; end record; begin const Value: Point := record X := 1; end; end.",
         );
         assert_eq!(formatted, "record\n  X := 1;\nend");
     }
@@ -333,7 +333,7 @@ mod tests {
     #[test]
     fn empty_record_literal_has_one_space() {
         let formatted = expr_from_body(
-            "program T; type Empty = record end record; begin var Value: Empty := record  end; end.",
+            "program T; type Empty = record end record; begin const Value: Empty := record  end; end.",
         );
         assert_eq!(formatted, "record end");
     }
@@ -341,7 +341,7 @@ mod tests {
     #[test]
     fn nonempty_record_update_formats_field_assignment() {
         let formatted = expr_from_body(
-            "program T; type Point = record X: integer; end record; begin var Value: Point := Base with X := 1; end with; end.",
+            "program T; type Point = record X: integer; end record; begin const Value: Point := Base with X := 1; end with; end.",
         );
         assert_eq!(formatted, "Base with X := 1; end with");
     }
@@ -349,7 +349,7 @@ mod tests {
     #[test]
     fn nested_record_literal_indents_from_its_field() {
         let formatted = expr_from_body(
-            "program T; type Inner = record X: integer; end record; type Outer = record Item: Inner; end record; begin var Value: Outer := record Item := record X := 1; end; end; end.",
+            "program T; type Inner = record X: integer; end record; type Outer = record Item: Inner; end record; begin const Value: Outer := record Item := record X := 1; end; end; end.",
         );
         assert_eq!(
             formatted,
@@ -360,7 +360,7 @@ mod tests {
     #[test]
     fn record_literal_inside_array_continues_from_the_opening_line() {
         let formatted = expr_from_body(
-            "program T; type Item = record Value: integer; end record; type Box = record Items: array of Item; end record; begin var Value: Box := record Items := [record Value := 10; end]; end; end.",
+            "program T; type Item = record Value: integer; end record; type Box = record Items: array of Item; end record; begin const Value: Box := record Items := [record Value := 10; end]; end; end.",
         );
         assert_eq!(
             formatted,
@@ -375,7 +375,7 @@ end"
     #[test]
     fn long_binary_chain_wraps() {
         let formatted = expr_from_body(
-            "program T; begin var X: boolean := VeryLongIdentifierAlpha + VeryLongIdentifierBeta + VeryLongIdentifierGamma + VeryLongIdentifierDelta + VeryLongIdentifierEpsilon; end.",
+            "program T; begin const X: boolean := VeryLongIdentifierAlpha + VeryLongIdentifierBeta + VeryLongIdentifierGamma + VeryLongIdentifierDelta + VeryLongIdentifierEpsilon; end.",
         );
         assert!(formatted.contains(" +\n"), "formatted: {formatted}");
     }

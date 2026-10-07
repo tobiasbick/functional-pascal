@@ -13,14 +13,14 @@ end record;
 
 function Update(State: TickModel; Msg: TuiMsg; Cmd: TuiCmdOutput): TickModel;
 begin
-  mutable var Next: TickModel := State;
+  var Next: TickModel := State;
   case Msg of
     when TuiMsg.Started:
       begin
         // A far request that the background message below replaces.
         Cmd.RequestTick(600000);
         Next.Started := MonotonicMillis();
-        var Inbox: channel of integer := State.Inbox;
+        const Inbox: channel of integer := State.Inbox;
         Cmd.StartBackground(1, function(Token: CancellationToken): result of boolean, string begin
           return SendWithCancellation(Inbox, 1, Token);
         end function);
@@ -64,8 +64,8 @@ begin
 end function;
 
 begin
-  var Inbox: channel of integer := CreateChannel(1);
-  var Final: TickModel := TuiApplication.RunWithBackground(record
+  const Inbox: channel of integer := CreateChannel(1);
+  const Final: TickModel := TuiApplication.RunWithBackground(record
     Inbox := Inbox;
     Ticks := 0;
     ShortestTick := -1;

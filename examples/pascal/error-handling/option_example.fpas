@@ -19,16 +19,16 @@ end function;
 
 function DoubleFirst(Items: array of integer; Min: integer): option of string;
 begin
-  var V: integer := try FindFirst(Items, Min);
+  const V: integer := try FindFirst(Items, Min);
   return Some((IntToStr(V) + ' x 2 = ') + IntToStr(V * 2));
 end function;
 
 begin
-  var Data: array of integer := [3, 7, 15, 42, 8];
-  var Found: option of integer := FindFirst(Data, 10);
+  const Data: array of integer := [3, 7, 15, 42, 8];
+  const Found: option of integer := FindFirst(Data, 10);
   WriteLn('IsSome: ', IsSome(Found));
   WriteLn('Value: ', Unwrap(Found));
-  var Missing: option of integer := FindFirst(Data, 100);
+  const Missing: option of integer := FindFirst(Data, 100);
   WriteLn('IsNone: ', IsNone(Missing));
   WriteLn('UnwrapOr: ', UnwrapOr(Missing, 0));
   case FindFirst(Data, 40) of

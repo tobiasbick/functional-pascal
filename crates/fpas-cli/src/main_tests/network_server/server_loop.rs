@@ -14,7 +14,7 @@ uses Std.Console, Std.Http, Std.Net, Std.Net.Utf8;
 
 function Handle(RequestValue: ServerRequest): ServerResponse;
 begin
-  mutable var ResponseValue: ServerResponse := ServerResponse.Create(200, 'OK');
+  var ResponseValue: ServerResponse := ServerResponse.Create(200, 'OK');
   ResponseValue.Body := Std.Net.Utf8.Encode(RequestValue.Target);
   return ResponseValue;
 end function;
@@ -23,7 +23,7 @@ begin
   case Listen('127.0.0.1', {port}) of
     when Ok(ListenerValue):
     begin
-      mutable var Options: ServerOptions := ServerOptions.Create();
+      var Options: ServerOptions := ServerOptions.Create();
       Options.MaxConcurrentRequests := 2;
       Options.MaxRequests := 2;
       case Serve(ListenerValue, Options, Handle) of
@@ -86,7 +86,7 @@ begin
   case Listen('127.0.0.1', {port}) of
     when Ok(ListenerValue):
     begin
-      mutable var Options: ServerOptions := ServerOptions.Create();
+      var Options: ServerOptions := ServerOptions.Create();
       Options.MaxConcurrentRequests := 2;
       Options.MaxRequests := 2;
       case Serve(ListenerValue, Options, Handle) of
@@ -148,7 +148,7 @@ begin
   case Listen('127.0.0.1', {port}) of
     when Ok(ListenerValue):
     begin
-      mutable var Options: ServerOptions := ServerOptions.Create();
+      var Options: ServerOptions := ServerOptions.Create();
       Options.MaxConcurrentRequests := 0;
       case Serve(ListenerValue, Options, Handle) of
         when Ok(_): panic('invalid server options were accepted');

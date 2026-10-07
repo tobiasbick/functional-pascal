@@ -13,27 +13,21 @@ pub(super) fn register_std_bits(checker: &mut Checker) {
         define_func(
             checker,
             name,
-            vec![
-                p("Left", Ty::Integer, false),
-                p("Right", Ty::Integer, false),
-            ],
+            vec![p("Left", Ty::Integer), p("Right", Ty::Integer)],
             Ty::Integer,
         );
     }
     define_func(
         checker,
         s::STD_BITS_BIT_NOT,
-        vec![p("Value", Ty::Integer, false)],
+        vec![p("Value", Ty::Integer)],
         Ty::Integer,
     );
     for name in [s::STD_BITS_SHIFT_LEFT, s::STD_BITS_SHIFT_RIGHT] {
         define_func(
             checker,
             name,
-            vec![
-                p("Value", Ty::Integer, false),
-                p("Count", Ty::Integer, false),
-            ],
+            vec![p("Value", Ty::Integer), p("Count", Ty::Integer)],
             Ty::Integer,
         );
     }

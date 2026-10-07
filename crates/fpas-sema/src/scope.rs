@@ -7,9 +7,20 @@ pub(crate) fn canonical_symbol_name(name: &str) -> String {
     name.to_ascii_lowercase()
 }
 
-/// A symbol in the scope.
+/// Classification and optional scalar value of a constant binding.
 ///
-/// **Documentation:** `docs/pascal/language/basics/variables.md` (from the repository root).
+/// **Documentation:** `docs/pascal/language/basics/constants.md`
+#[derive(Debug, Clone)]
+pub struct ConstantInfo {
+    /// True only for the language's compile-time constant-expression forms.
+    pub compile_time: bool,
+    /// Scalar value that can be embedded in a compiled-unit interface.
+    pub value: Option<fpas_unit::interface::ConstantValue>,
+}
+
+/// A resolved lexical binding, including constant classification.
+///
+/// **Documentation:** `docs/pascal/language/basics/variables.md`
 #[derive(Debug, Clone)]
 pub struct Symbol {
     pub ty: Ty,
@@ -19,6 +30,8 @@ pub struct Symbol {
     ///
     /// **Documentation:** `docs/pascal/language/functions/closures.md`
     pub task_bound: bool,
+    /// Constant-expression classification, independent of binding mutability.
+    pub constant: Option<ConstantInfo>,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -343,6 +356,7 @@ mod tests {
             stack.define(
                 "x",
                 Symbol {
+                    constant: None,
                     ty: Ty::Integer,
                     mutable: false,
                     kind: SymbolKind::Var,
@@ -360,6 +374,7 @@ mod tests {
         assert!(stack.define(
             "offset",
             Symbol {
+                constant: None,
                 ty: Ty::Integer,
                 mutable: false,
                 kind: SymbolKind::Var,

@@ -28,7 +28,7 @@ uses Std.Console, Std.Http, Std.Net, Std.Net.Utf8;
 
 function Handle(RequestValue: ServerRequest): ServerResponse;
 begin
-  mutable var ResponseValue: ServerResponse := ServerResponse.Create(200, 'OK');
+  var ResponseValue: ServerResponse := ServerResponse.Create(200, 'OK');
   ResponseValue.Body := Std.Net.Utf8.Encode('secure ' + RequestValue.Target);
   return ResponseValue;
 end function;
@@ -37,7 +37,7 @@ begin
   case ListenTls('127.0.0.1', {port}, '{certificate_source}', '{private_key_source}', 2000) of
     when Ok(ListenerValue):
     begin
-      mutable var Options: ServerOptions := ServerOptions.Create();
+      var Options: ServerOptions := ServerOptions.Create();
       Options.MaxRequests := 1;
       case Serve(ListenerValue, Options, Handle) of
         when Ok(_):

@@ -5,13 +5,13 @@ uses Std.Console;
 const RecordCount: integer := 1;
 
 begin
-  var beginValue: string := 'if then begin end';
+  const beginValue: string := 'if then begin end';
   // function return record
-  var gifted: boolean := true;
+  const gifted: boolean := true;
   // while repeat until
-  var endif: integer := 0;
-  var shl: integer := 1;
-  var SHR: integer := 2;
+  const endif: integer := 0;
+  const shl: integer := 1;
+  const SHR: integer := 2;
   if gifted and (endif = 0) then
     begin
       WriteLn(beginValue);

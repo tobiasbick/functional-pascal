@@ -20,5 +20,5 @@ begin
 end function;
 
 begin
-  var Mapped: string := Map('abc', FailOnSecond);
+  const Mapped: string := Map('abc', FailOnSecond);
 end.

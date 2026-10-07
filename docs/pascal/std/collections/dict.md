@@ -6,7 +6,7 @@ Operations on **dictionaries** (`dict of K to V`). Dictionaries are ordered key-
 program Example;
 uses Std.Console, Std.Dictionaries;
 begin
-  var Ages: dict of string to integer := ['Alice': 30, 'Bob': 25];
+  const Ages: dict of string to integer := ['Alice': 30, 'Bob': 25];
   WriteLn(Length(Ages));
   WriteLn(ContainsKey(Ages, 'Alice'));
 end.
@@ -51,7 +51,7 @@ function Length(D: dict of K to V): integer;
 Returns the number of key-value pairs in the dict.
 
 ```pascal
-var D: dict of string to integer := ['A': 1, 'B': 2];
+const D: dict of string to integer := ['A': 1, 'B': 2];
 WriteLn(Std.Dictionaries.Length(D));  // 2
 WriteLn(Std.Dictionaries.Length([:]));  // 0
 ```
@@ -65,7 +65,7 @@ function ContainsKey(D: dict of K to V; Key: K): boolean;
 Returns `true` if the dict contains the given key, `false` otherwise.
 
 ```pascal
-var D: dict of string to integer := ['Alice': 30];
+const D: dict of string to integer := ['Alice': 30];
 WriteLn(Std.Dictionaries.ContainsKey(D, 'Alice'));    // true
 WriteLn(Std.Dictionaries.ContainsKey(D, 'Bob'));       // false
 ```
@@ -79,7 +79,7 @@ function Keys(D: dict of K to V): array of K;
 Returns an array of all keys in insertion order.
 
 ```pascal
-var D: dict of string to integer := ['Alice': 30, 'Bob': 25];
+const D: dict of string to integer := ['Alice': 30, 'Bob': 25];
 WriteLn(Std.Dictionaries.Keys(D));  // [Alice, Bob]
 ```
 
@@ -92,7 +92,7 @@ function Values(D: dict of K to V): array of V;
 Returns an array of all values in insertion order.
 
 ```pascal
-var D: dict of string to integer := ['Alice': 30, 'Bob': 25];
+const D: dict of string to integer := ['Alice': 30, 'Bob': 25];
 WriteLn(Std.Dictionaries.Values(D));  // [30, 25]
 ```
 
@@ -105,8 +105,8 @@ function Remove(D: dict of K to V; Key: K): dict of K to V;
 Returns a new dict without the given key. If the key does not exist, the original dict is returned unchanged. The original dict is not modified (immutable semantics).
 
 ```pascal
-var D: dict of string to integer := ['A': 1, 'B': 2, 'C': 3];
-var D2: dict of string to integer := Std.Dictionaries.Remove(D, 'B');
+const D: dict of string to integer := ['A': 1, 'B': 2, 'C': 3];
+const D2: dict of string to integer := Std.Dictionaries.Remove(D, 'B');
 WriteLn(D2);  // {A: 1, C: 3}
 ```
 
@@ -123,9 +123,9 @@ Safe lookup. Returns `Some(value)` if the key exists, `None` otherwise. Requires
 ```pascal
 uses Std.Dictionaries, Std.Options;
 
-var D: dict of string to integer := ['Alice': 30, 'Bob': 25];
-var Age: Option of integer := Std.Dictionaries.Get(D, 'Alice');    // Some(30)
-var Missing: Option of integer := Std.Dictionaries.Get(D, 'Eve');  // None
+const D: dict of string to integer := ['Alice': 30, 'Bob': 25];
+const Age: Option of integer := Std.Dictionaries.Get(D, 'Alice');    // Some(30)
+const Missing: Option of integer := Std.Dictionaries.Get(D, 'Eve');  // None
 ```
 
 ---
@@ -139,9 +139,9 @@ function Merge(D1: dict of K to V; D2: dict of K to V): dict of K to V;
 Returns a new dict containing all entries from both `D1` and `D2`. When the same key exists in both, `D2` wins (last-write-wins). The original dicts are not modified.
 
 ```pascal
-var Base: dict of string to integer := ['A': 1, 'B': 2];
-var Over: dict of string to integer := ['B': 9, 'C': 3];
-var M: dict of string to integer := Std.Dictionaries.Merge(Base, Over);
+const Base: dict of string to integer := ['A': 1, 'B': 2];
+const Over: dict of string to integer := ['B': 9, 'C': 3];
+const M: dict of string to integer := Std.Dictionaries.Merge(Base, Over);
 // {A: 1, B: 9, C: 3}
 ```
 
@@ -161,8 +161,8 @@ begin
   return V * 2.0;
 end function;
 
-var Prices: dict of string to real := ['Apple': 1.0, 'Banana': 0.5];
-var Doubled: dict of string to real := Std.Dictionaries.Map(Prices, DoublePrice);
+const Prices: dict of string to real := ['Apple': 1.0, 'Banana': 0.5];
+const Doubled: dict of string to real := Std.Dictionaries.Map(Prices, DoublePrice);
 WriteLn(Doubled)  // {Apple: 2.0, Banana: 1.0}
 ```
 
@@ -182,8 +182,8 @@ begin
   return V >= 60;
 end function;
 
-var Scores: dict of string to integer := ['Alice': 90, 'Bob': 55, 'Carol': 80];
-var Passing: dict of string to integer := Std.Dictionaries.Filter(Scores, IsPassingScore);
+const Scores: dict of string to integer := ['Alice': 90, 'Bob': 55, 'Carol': 80];
+const Passing: dict of string to integer := Std.Dictionaries.Filter(Scores, IsPassingScore);
 WriteLn(Passing)  // {Alice: 90, Carol: 80}
 ```
 
@@ -203,8 +203,8 @@ begin
   return Acc + Key + ':' + Std.Conv.IntToStr(Value) + ';';
 end function;
 
-var Scores: dict of string to integer := ['Alice': 90, 'Bob': 55];
-var Text: string := Std.Dictionaries.Reduce(Scores, '', Describe);
+const Scores: dict of string to integer := ['Alice': 90, 'Bob': 55];
+const Text: string := Std.Dictionaries.Reduce(Scores, '', Describe);
 // 'Alice:90;Bob:55;'
 ```
 
@@ -217,15 +217,15 @@ For an empty dictionary, `Reduce` returns `Init` without invoking `F`. Arguments
 Dict literals use bracket syntax with `:` separating keys from values:
 
 ```pascal
-var D: dict of string to integer := ['Alice': 30, 'Bob': 25];
-var Empty: dict of string to integer := [:];
+const D: dict of string to integer := ['Alice': 30, 'Bob': 25];
+const Empty: dict of string to integer := [:];
 ```
 
 Indexing uses bracket syntax (same as arrays):
 
 ```pascal
-var Age: integer := D['Alice'];       // read
-mutable var M: dict of string to integer := ['A': 1];
+const Age: integer := D['Alice'];       // read
+var M: dict of string to integer := ['A': 1];
 M['A'] := 2;                          // update existing key
 M['B'] := 3;                           // insert new key
 ```

@@ -3,5 +3,5 @@ program TuiFixedHeightNegativeRuntimeError;
 uses Std.Tui;
 
 begin
-  var _: TuiLayoutSettings := TuiLayoutSettings.Default().WithFixedHeight(-1);
+  const _: TuiLayoutSettings := TuiLayoutSettings.Default().WithFixedHeight(-1);
 end.

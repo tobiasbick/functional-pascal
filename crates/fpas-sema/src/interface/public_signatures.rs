@@ -84,9 +84,7 @@ fn private_type_in_declaration<'a>(
 ) -> Option<PrivateTypeReference<'a>> {
     match declaration {
         Decl::Const(definition) => private_type_in(&definition.type_expr, private_types),
-        Decl::Var(definition) | Decl::MutableVar(definition) => {
-            private_type_in(&definition.type_expr, private_types)
-        }
+        Decl::Var(definition) => private_type_in(&definition.type_expr, private_types),
         Decl::Function(function) => private_type_in_function(function, private_types),
         Decl::Procedure(procedure) => private_type_in_parameters(&procedure.params, private_types),
         Decl::TypeDef(definition) => match &definition.body {

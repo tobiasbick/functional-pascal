@@ -33,8 +33,8 @@ begin
 end function;
 
 begin
-  mutable var App: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(24, 8));
-  mutable var Model: ListModel := record
+  var App: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(24, 8));
+  var Model: ListModel := record
     Selected := 1;
   end;
 

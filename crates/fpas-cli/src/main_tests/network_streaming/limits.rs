@@ -53,15 +53,15 @@ function Fetch(RequestValue: Request; Streaming: boolean): result of integer, st
 begin
   if not Streaming then
   begin
-    var ResponseValue: Response := try Send(RequestValue);
+    const ResponseValue: Response := try Send(RequestValue);
     return Ok(Std.Arrays.Length(ResponseValue.Body));
   end; end if;
-  var ResponseValue: StreamResponse := try OpenStream(RequestValue);
-  mutable var Count: integer := 0;
-  mutable var Reading: boolean := true;
+  const ResponseValue: StreamResponse := try OpenStream(RequestValue);
+  var Count: integer := 0;
+  var Reading: boolean := true;
   while Reading do
   begin
-    var Bytes: array of integer := try ReadStream(ResponseValue.Body, 2);
+    const Bytes: array of integer := try ReadStream(ResponseValue.Body, 2);
     Count := Count + Std.Arrays.Length(Bytes);
     Reading := Std.Arrays.Length(Bytes) > 0;
   end; end while;
@@ -74,10 +74,10 @@ begin
     begin
       for Delta: integer := -1 to 1 do
       begin
-        mutable var RequestValue: Request := Request.Get('http://127.0.0.1:{port}/');
+        var RequestValue: Request := Request.Get('http://127.0.0.1:{port}/');
         RequestValue.MaxResponseBytes := {head_len} + BodyIndex * 3 + Delta;
         RequestValue.TimeoutMillis := 1000;
-        var Received: result of integer, string := Fetch(RequestValue, Streaming);
+        const Received: result of integer, string := Fetch(RequestValue, Streaming);
         AssertEquals(Delta >= 0, Std.Results.IsOk(Received));
         if Delta >= 0 then AssertEquals(BodyIndex * 3, Std.Results.Unwrap(Received)); end if;
       end; end for;

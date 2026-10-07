@@ -3,12 +3,12 @@ program TuiCellPaletteValuesTest;
 uses Std.Test, Std.Tui;
 
 begin
-  var RgbValue: TuiColor := TuiColor.FromRgb(10, 20, 30);
+  const RgbValue: TuiColor := TuiColor.FromRgb(10, 20, 30);
   AssertTrue(RgbValue.Kind = TuiColorKind.Rgb);
   AssertEquals(20, RgbValue.Green);
-  var Plain: TuiStyle := TuiStyle.FromColors(RgbValue, TuiColor.FromRgb(1, 2, 3));
+  const Plain: TuiStyle := TuiStyle.FromColors(RgbValue, TuiColor.FromRgb(1, 2, 3));
   AssertFalse(Plain.Bold);
-  var Styled: TuiCell := TuiCell.Styled('X', Plain);
+  const Styled: TuiCell := TuiCell.Styled('X', Plain);
   AssertEquals('X', Styled.Glyph);
   AssertEquals(1, Styled.Width());
   case Styled.ConcreteStyle of
@@ -21,7 +21,7 @@ begin
         panic('expected concrete cell style');
       end;
   end case;
-  var Palette: TuiPalette := TuiPalette.Default();
+  const Palette: TuiPalette := TuiPalette.Default();
   AssertTrue(Palette.ForRole(TuiStyleRole.Normal).Foreground.Kind = TuiColorKind.Rgb);
   AssertEquals(201, Palette.ForRole(TuiStyleRole.Normal).Foreground.Red);
   AssertEquals(13, Palette.ForRole(TuiStyleRole.Normal).Background.Red);
@@ -29,8 +29,8 @@ begin
   AssertEquals(31, Palette.ForRole(TuiStyleRole.Selected).Background.Red);
   AssertEquals(63, Palette.ForRole(TuiStyleRole.GaugeFill).Foreground.Red);
   AssertEquals(48, Palette.ForRole(TuiStyleRole.Rule).Foreground.Red);
-  var Custom: TuiStyle := TuiStyle.FromColors(TuiColor.FromRgb(1, 2, 3), RgbValue);
-  var Updated: TuiPalette := Palette.WithRole(TuiStyleRole.Warning, Custom);
+  const Custom: TuiStyle := TuiStyle.FromColors(TuiColor.FromRgb(1, 2, 3), RgbValue);
+  const Updated: TuiPalette := Palette.WithRole(TuiStyleRole.Warning, Custom);
   AssertEquals(2, Updated.ForRole(TuiStyleRole.Warning).Foreground.Green);
   AssertEquals(210, Palette.ForRole(TuiStyleRole.Warning).Foreground.Red);
 end.

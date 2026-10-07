@@ -9,6 +9,7 @@ use fpas_lexer::Span;
 use fpas_parser::{CaseLabel, Designator, DesignatorPart, DestructureVariant, Expr};
 
 impl Checker {
+    /// Checks static value labels or destructuring patterns and returns arm bindings.
     pub(super) fn check_case_label(
         &mut self,
         case_ty: &Ty,
@@ -33,9 +34,15 @@ impl Checker {
 
                 let label_ty = self.check_expr(start);
                 self.check_type_compat(case_ty, &label_ty, "case label", *span);
+                if !label_ty.is_error() {
+                    self.require_case_constant(start);
+                }
                 if let Some(range_end) = end {
                     let end_ty = self.check_expr(range_end);
                     self.check_type_compat(case_ty, &end_ty, "case label range end", *span);
+                    if !end_ty.is_error() {
+                        self.require_case_constant(range_end);
+                    }
                 }
                 None
             }

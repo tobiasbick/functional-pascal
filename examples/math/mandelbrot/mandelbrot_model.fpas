@@ -79,8 +79,8 @@ end function;
 
 function BlankGrid(Width: integer; Height: integer): TuiCellGrid;
 begin
-  var Black: TuiColor := TuiColor.FromRgb(0, 0, 0);
-  var Blank: TuiCell := TuiCell.Styled(' ', TuiStyle.FromColors(Black, Black));
+  const Black: TuiColor := TuiColor.FromRgb(0, 0, 0);
+  const Blank: TuiCell := TuiCell.Styled(' ', TuiStyle.FromColors(Black, Black));
   return TuiCellGrid.Create(Width, Height, Std.Arrays.Fill(Blank, Width * Height));
 end function;
 
@@ -93,10 +93,10 @@ public function CreateMandelbrotModel(
   Inbox: channel of MandelbrotRenderFrame
 ): MandelbrotModel;
 begin
-  var Width: integer := Max(TerminalWidth, 1);
-  var Height: integer := Max(TerminalHeight, 1);
-  var RenderWidth: integer := GridWidth(Width);
-  var RenderHeight: integer := GridHeight(Height);
+  const Width: integer := Max(TerminalWidth, 1);
+  const Height: integer := Max(TerminalHeight, 1);
+  const RenderWidth: integer := GridWidth(Width);
+  const RenderHeight: integer := GridHeight(Height);
   return record
     Explorer := Explorer;
     TerminalWidth := Width;

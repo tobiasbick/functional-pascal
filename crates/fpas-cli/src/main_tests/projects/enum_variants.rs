@@ -26,8 +26,8 @@ begin
   end;
 end function;
 begin
-  var Initial: Point := record X := 1; Y := 7; end;
-  var Outcome: State := Moved(Initial);
+  const Initial: Point := record X := 1; Y := 7; end;
+  const Outcome: State := Moved(Initial);
   case Outcome.Player of
     when Position.At(Value): WriteLn(Value.X, ',', Value.Y);
   end case;
@@ -65,8 +65,8 @@ type
   type Size = record X: integer; Y: integer; end record;
   type Position = enum At(Value: Point); end enum;
 begin
-  var Other: Size := record X := 1; Y := 2; end;
-  var Value: Position := Position.At({argument});
+  const Other: Size := record X := 1; Y := 2; end;
+  const Value: Position := Position.At({argument});
 end."
             ),
         );

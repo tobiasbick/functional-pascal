@@ -3,8 +3,8 @@
 `Option of T` represents a value that may be absent:
 
 ```pascal
-var O: Option of integer := Some(42);
-var N: Option of integer := None;
+const O: Option of integer := Some(42);
+const N: Option of integer := None;
 ```
 
 ## Using Option
@@ -25,7 +25,7 @@ end function;
 ## Handling with case
 
 ```pascal
-var Idx: option of integer := FindIndex([10, 20, 30], 20);
+const Idx: option of integer := FindIndex([10, 20, 30], 20);
 case Idx of
   when Some(I):
     WriteLn('Found at ' + IntToStr(I));

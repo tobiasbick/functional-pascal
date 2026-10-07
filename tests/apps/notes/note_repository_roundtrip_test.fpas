@@ -3,8 +3,8 @@ program NoteRepositoryRoundtripTest;
 uses Notes.Model, Notes.Repository, Std.Arrays, Std.Test;
 
 begin
-  var Directory: string := ScratchDir() + '/notes';
-  mutable var NoteValue: Note := NoteCreate('repository-roundtrip', 1700000000000);
+  const Directory: string := ScratchDir() + '/notes';
+  var NoteValue: Note := NoteCreate('repository-roundtrip', 1700000000000);
   NoteValue.Title := 'Repository roundtrip';
   NoteValue.Tags := ['storage'];
   NoteValue.Body := 'Saved atomically';

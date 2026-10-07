@@ -51,22 +51,22 @@ fn register_std_console_cell_api(checker: &mut Checker) {
     define_func(
         checker,
         s::STD_CONSOLE_CRT_COLOR,
-        vec![p("Index", Ty::Integer, false)],
+        vec![p("Index", Ty::Integer)],
         color.clone(),
     );
     define_func(
         checker,
         s::STD_CONSOLE_ANSI_256_COLOR,
-        vec![p("Index", Ty::Integer, false)],
+        vec![p("Index", Ty::Integer)],
         color.clone(),
     );
     define_func(
         checker,
         s::STD_CONSOLE_RGB_COLOR,
         vec![
-            p("Red", Ty::Integer, false),
-            p("Green", Ty::Integer, false),
-            p("Blue", Ty::Integer, false),
+            p("Red", Ty::Integer),
+            p("Green", Ty::Integer),
+            p("Blue", Ty::Integer),
         ],
         color,
     );
@@ -76,66 +76,63 @@ fn register_std_console_cell_api(checker: &mut Checker) {
         checker,
         s::STD_CONSOLE_PUT_CELL,
         vec![
-            p("X", Ty::Integer, false),
-            p("Y", Ty::Integer, false),
-            p("Value", cell.clone(), false),
+            p("X", Ty::Integer),
+            p("Y", Ty::Integer),
+            p("Value", cell.clone()),
         ],
     );
     define_func(
         checker,
         s::STD_CONSOLE_GET_CELL,
-        vec![p("X", Ty::Integer, false), p("Y", Ty::Integer, false)],
+        vec![p("X", Ty::Integer), p("Y", Ty::Integer)],
         Ty::Option(Box::new(cell.clone())),
     );
     define_proc(
         checker,
         s::STD_CONSOLE_FILL_RECT,
-        vec![
-            p("Bounds", rect.clone(), false),
-            p("Value", cell.clone(), false),
-        ],
+        vec![p("Bounds", rect.clone()), p("Value", cell.clone())],
     );
     define_proc(
         checker,
         s::STD_CONSOLE_WRITE_CELLS,
         vec![
-            p("X", Ty::Integer, false),
-            p("Y", Ty::Integer, false),
-            p("Values", Ty::Array(Box::new(cell)), false),
+            p("X", Ty::Integer),
+            p("Y", Ty::Integer),
+            p("Values", Ty::Array(Box::new(cell))),
         ],
     );
     define_func(
         checker,
         s::STD_CONSOLE_SAVE_REGION,
-        vec![p("Bounds", rect, false)],
+        vec![p("Bounds", rect)],
         saved_region.clone(),
     );
     define_proc(
         checker,
         s::STD_CONSOLE_RESTORE_REGION,
-        vec![p("Region", saved_region.clone(), false)],
+        vec![p("Region", saved_region.clone())],
     );
     define_proc(
         checker,
         s::STD_CONSOLE_DISCARD_REGION,
-        vec![p("Region", saved_region, false)],
+        vec![p("Region", saved_region)],
     );
     define_func(
         checker,
         s::STD_CONSOLE_DISPLAY_WIDTH,
-        vec![p("Text", Ty::String, false)],
+        vec![p("Text", Ty::String)],
         Ty::Integer,
     );
     define_func(
         checker,
         s::STD_CONSOLE_GRAPHEME_WIDTH,
-        vec![p("Glyph", Ty::String, false)],
+        vec![p("Glyph", Ty::String)],
         Ty::Integer,
     );
     define_func(
         checker,
         s::STD_CONSOLE_SPLIT_GRAPHEMES,
-        vec![p("Text", Ty::String, false)],
+        vec![p("Text", Ty::String)],
         Ty::Array(Box::new(Ty::String)),
     );
 }
@@ -203,7 +200,7 @@ pub(super) fn register_std_console_key_api(checker: &mut Checker) {
     define_func(
         checker,
         s::STD_CONSOLE_READ_EVENT_TIMEOUT,
-        vec![p("Milliseconds", Ty::Integer, false)],
+        vec![p("Milliseconds", Ty::Integer)],
         Ty::Option(Box::new(event_ty.clone())),
     );
     define_func(
@@ -256,7 +253,7 @@ pub(super) fn register_std_console(checker: &mut Checker) {
     define_proc(
         checker,
         s::STD_CONSOLE_GOTO_XY,
-        vec![p("X", Ty::Integer, false), p("Y", Ty::Integer, false)],
+        vec![p("X", Ty::Integer), p("Y", Ty::Integer)],
     );
     define_func(checker, s::STD_CONSOLE_WHERE_X, vec![], Ty::Integer);
     define_func(checker, s::STD_CONSOLE_WHERE_Y, vec![], Ty::Integer);
@@ -268,49 +265,49 @@ pub(super) fn register_std_console(checker: &mut Checker) {
         checker,
         s::STD_CONSOLE_WINDOW,
         vec![
-            p("X1", Ty::Integer, false),
-            p("Y1", Ty::Integer, false),
-            p("X2", Ty::Integer, false),
-            p("Y2", Ty::Integer, false),
+            p("X1", Ty::Integer),
+            p("Y1", Ty::Integer),
+            p("X2", Ty::Integer),
+            p("Y2", Ty::Integer),
         ],
     );
     define_proc(
         checker,
         s::STD_CONSOLE_TEXT_COLOR,
-        vec![p("Color", Ty::Integer, false)],
+        vec![p("Color", Ty::Integer)],
     );
     define_proc(
         checker,
         s::STD_CONSOLE_TEXT_BACKGROUND,
-        vec![p("Color", Ty::Integer, false)],
+        vec![p("Color", Ty::Integer)],
     );
     define_proc(
         checker,
         s::STD_CONSOLE_TEXT_COLOR_RGB,
         vec![
-            p("R", Ty::Integer, false),
-            p("G", Ty::Integer, false),
-            p("B", Ty::Integer, false),
+            p("R", Ty::Integer),
+            p("G", Ty::Integer),
+            p("B", Ty::Integer),
         ],
     );
     define_proc(
         checker,
         s::STD_CONSOLE_TEXT_BACKGROUND_RGB,
         vec![
-            p("R", Ty::Integer, false),
-            p("G", Ty::Integer, false),
-            p("B", Ty::Integer, false),
+            p("R", Ty::Integer),
+            p("G", Ty::Integer),
+            p("B", Ty::Integer),
         ],
     );
     define_proc(
         checker,
         s::STD_CONSOLE_TEXT_COLOR_256,
-        vec![p("Index", Ty::Integer, false)],
+        vec![p("Index", Ty::Integer)],
     );
     define_proc(
         checker,
         s::STD_CONSOLE_TEXT_BACKGROUND_256,
-        vec![p("Index", Ty::Integer, false)],
+        vec![p("Index", Ty::Integer)],
     );
     define_proc(checker, s::STD_CONSOLE_HIGH_VIDEO, vec![]);
     define_proc(checker, s::STD_CONSOLE_LOW_VIDEO, vec![]);
@@ -319,12 +316,12 @@ pub(super) fn register_std_console(checker: &mut Checker) {
     define_proc(
         checker,
         s::STD_CONSOLE_SET_TEXT_ATTR,
-        vec![p("Attr", Ty::Integer, false)],
+        vec![p("Attr", Ty::Integer)],
     );
     define_proc(
         checker,
         s::STD_CONSOLE_DELAY,
-        vec![p("Milliseconds", Ty::Integer, false)],
+        vec![p("Milliseconds", Ty::Integer)],
     );
     define_proc(checker, s::STD_CONSOLE_CURSOR_ON, vec![]);
     define_proc(checker, s::STD_CONSOLE_CURSOR_OFF, vec![]);
@@ -332,16 +329,12 @@ pub(super) fn register_std_console(checker: &mut Checker) {
     define_proc(
         checker,
         s::STD_CONSOLE_TEXT_MODE,
-        vec![p("Mode", Ty::Integer, false)],
+        vec![p("Mode", Ty::Integer)],
     );
     define_func(checker, s::STD_CONSOLE_LAST_MODE, vec![], Ty::Integer);
     define_func(checker, s::STD_CONSOLE_SCREEN_WIDTH, vec![], Ty::Integer);
     define_func(checker, s::STD_CONSOLE_SCREEN_HEIGHT, vec![], Ty::Integer);
-    define_proc(
-        checker,
-        s::STD_CONSOLE_SOUND,
-        vec![p("Hz", Ty::Integer, false)],
-    );
+    define_proc(checker, s::STD_CONSOLE_SOUND, vec![p("Hz", Ty::Integer)]);
     define_proc(checker, s::STD_CONSOLE_NO_SOUND, vec![]);
     define_proc(checker, s::STD_CONSOLE_ASSIGN_CRT, vec![]);
     define_func(checker, s::STD_CONSOLE_READ_LN, vec![], Ty::String);

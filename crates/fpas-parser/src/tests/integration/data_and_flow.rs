@@ -52,7 +52,7 @@ fn repeat_with_break() {
         "\
 program T;
 begin
-  mutable var X: integer := 0;
+  var X: integer := 0;
   repeat
     X := X + 1;
     if X = 10 then break; end if;

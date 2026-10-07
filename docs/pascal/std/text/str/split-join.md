@@ -10,7 +10,7 @@ Splits `S` around each occurrence of `Delim`. Returns a new array of segments.
 program SplitDemo;
 uses Std.Console, Std.Str, Std.Arrays;
 begin
-  var Parts: array of string := Split('x,y', ',');
+  const Parts: array of string := Split('x,y', ',');
   WriteLn(Std.Arrays.Length(Parts));
 end.
 ```

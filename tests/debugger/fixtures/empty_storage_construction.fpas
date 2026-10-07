@@ -48,8 +48,8 @@ begin
   end;
 end function;
 
-mutable var Tick: integer := 0;
-mutable var GlobalState: Holder := MakeInitialState();
+var Tick: integer := 0;
+var GlobalState: Holder := MakeInitialState();
 
 function Next(): integer;
 begin
@@ -58,22 +58,22 @@ begin
 end function;
 
 begin
-  mutable var Callback: function(): integer := Identity;
-  mutable var State: Holder := MakeInitialState();
-  mutable var Origin: Point := record
+  var Callback: function(): integer := Identity;
+  var State: Holder := MakeInitialState();
+  var Origin: Point := record
     X := 8;
     Y := 9;
   end;
-  mutable var Items: array of integer := [1, 2, 3];
-  mutable var Scores: dict of string to integer := ['red': 1];
-  mutable var Selected: Choice := Choice.Empty;
-  mutable var Outcome: result of integer, string := Ok(1);
-  mutable var Optional: option of integer := Some(1);
-  mutable var Boxed: BoxFn := record
+  var Items: array of integer := [1, 2, 3];
+  var Scores: dict of string to integer := ['red': 1];
+  var Selected: Choice := Choice.Empty;
+  var Outcome: result of integer, string := Ok(1);
+  var Optional: option of integer := Some(1);
+  var Boxed: BoxFn := record
     Action := Identity;
   end;
-  var Frozen: integer := 1;
-  var StopMarker: integer := 0;
+  const Frozen: integer := 1;
+  const StopMarker: integer := 0;
   WriteLn(State.Count);
   WriteLn(State.Nested.X);
   WriteLn(GlobalState.Count);

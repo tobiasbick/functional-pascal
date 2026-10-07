@@ -3,7 +3,7 @@ program T;
 uses Std.Console, Std.Arrays;
 
 begin
-  var A: array of integer := [42];
-  var R: array of integer := Reverse(A);
+  const A: array of integer := [42];
+  const R: array of integer := Reverse(A);
   WriteLn(R[0]);
 end.

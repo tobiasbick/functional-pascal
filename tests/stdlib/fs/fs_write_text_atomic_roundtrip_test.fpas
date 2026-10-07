@@ -3,7 +3,7 @@ program FsWriteTextAtomicRoundtripTest;
 uses Std.Fs, Std.Test;
 
 begin
-  var Path: string := ScratchDir() + '/atomic-roundtrip.txt';
+  const Path: string := ScratchDir() + '/atomic-roundtrip.txt';
   case WriteText(Path, 'old') of
     when Ok(Written):
       begin

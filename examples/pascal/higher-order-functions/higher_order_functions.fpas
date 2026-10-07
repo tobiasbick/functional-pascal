@@ -38,10 +38,10 @@ end function;
 
 begin
   WriteLn('Apply(Square, 6) = ', Apply(Square, 6));
-  var Op: function(X: integer): integer := Double;
+  const Op: function(X: integer): integer := Double;
   WriteLn('Op(7) = ', Op(7));
-  var Nums: array of integer := [1, 2, 3, 4, 5];
-  var Doubled: array of integer := Map(Nums, Double);
+  const Nums: array of integer := [1, 2, 3, 4, 5];
+  const Doubled: array of integer := Map(Nums, Double);
   WriteText('Map double: ');
   for V: integer in Doubled do
     begin
@@ -50,7 +50,7 @@ begin
   end for;
 
   WriteLn('');
-  var Big: array of integer := Filter(Nums, IsGreaterThanThree);
+  const Big: array of integer := Filter(Nums, IsGreaterThanThree);
   WriteText('Filter > 3: ');
   for V: integer in Big do
     begin
@@ -59,10 +59,10 @@ begin
   end for;
 
   WriteLn('');
-  var Total: integer := Reduce(Nums, 0, Sum);
+  const Total: integer := Reduce(Nums, 0, Sum);
   WriteLn('Reduce sum: ', Total);
-  var Squared: array of integer := Map(Nums, Square);
-  var LargeSquares: array of integer := Filter(Squared, IsGreaterThanTen);
+  const Squared: array of integer := Map(Nums, Square);
+  const LargeSquares: array of integer := Filter(Squared, IsGreaterThanTen);
   WriteText('Squares > 10: ');
   for V: integer in LargeSquares do
     begin

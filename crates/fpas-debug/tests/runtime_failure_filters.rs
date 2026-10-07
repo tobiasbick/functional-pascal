@@ -14,8 +14,8 @@ use serde_json::{Value, json};
 const DIVISION_BY_ZERO: &str = r#"program RuntimeFailure;
 
 begin
-  var Zero: integer := 0;
-  var Value: integer := 1 div Zero;
+  const Zero: integer := 0;
+  const Value: integer := 1 div Zero;
 end.
 "#;
 

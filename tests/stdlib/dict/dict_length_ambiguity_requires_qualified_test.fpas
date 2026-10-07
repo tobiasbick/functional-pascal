@@ -3,6 +3,6 @@ program T;
 uses Std.Console, Std.Dictionaries, Std.Arrays;
 
 begin
-  var D: dict of string to integer := ['X': 1];
+  const D: dict of string to integer := ['X': 1];
   WriteLn(Std.Dictionaries.Length(D));
 end.

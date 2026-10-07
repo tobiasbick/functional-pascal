@@ -105,8 +105,8 @@ fn imported_type_hides_imported_enum_variant_short_name() {
          uses Demo.Frames, Demo.Signals;
          public function Run(): integer;
          begin
-           var F: Frame := record X := 1; end;
-           var S: Signal := Signal.Frame(2);
+           const F: Frame := record X := 1; end;
+           const S: Signal := Signal.Frame(2);
            return F.X;
          end function;\nend unit;",
         &interfaces,

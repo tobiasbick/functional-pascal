@@ -67,9 +67,7 @@ pub(crate) fn symbol_kind(kind: SymbolKind) -> tower_lsp_server::ls_types::Symbo
         SymbolKind::Program => Lsp::FILE,
         SymbolKind::Unit => Lsp::MODULE,
         SymbolKind::Constant => Lsp::CONSTANT,
-        SymbolKind::Variable | SymbolKind::MutableVariable | SymbolKind::LoopVariable => {
-            Lsp::VARIABLE
-        }
+        SymbolKind::Variable | SymbolKind::LoopVariable => Lsp::VARIABLE,
         SymbolKind::Type => Lsp::CLASS,
         SymbolKind::Enum => Lsp::ENUM,
         SymbolKind::Function => Lsp::FUNCTION,

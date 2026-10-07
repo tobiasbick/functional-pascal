@@ -167,7 +167,7 @@ mod tests {
     fn blank_line_or_trailing_comment_does_not_attach() {
         for source in [
             "// detached\n\ntype Item = integer;",
-            "var Value: integer := 1; // trailing\ntype Item = integer;",
+            "const Value: integer := 1; // trailing\ntype Item = integer;",
         ] {
             let declaration = source.find("type").expect("declaration");
             assert_eq!(preceding_documentation(source, declaration), None);
@@ -181,7 +181,7 @@ mod tests {
         assert_eq!(
             parameter_documentation(
                 documentation,
-                &["Path: string".to_owned(), "mutable Text: string".to_owned()]
+                &["Path: string".to_owned(), "Text: string".to_owned()]
             ),
             [
                 Some("Destination path.".to_owned()),

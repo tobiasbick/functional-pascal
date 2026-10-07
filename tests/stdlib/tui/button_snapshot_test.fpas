@@ -22,12 +22,12 @@ begin
 end function;
 
 begin
-  var App: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(24, 10));
+  const App: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(24, 10));
   discard App.RunIterations(0, UpdateButtons, ViewButtons, 0, 0);
-  var Surface: TuiSurfaceSnapshot := App.SurfaceSnapshot();
-  var GoX: integer := Std.Str.IndexOf(Surface.LineAt(1), 'G');
-  var OkX: integer := Std.Str.IndexOf(Surface.LineAt(2), 'O');
-  var StopX: integer := Std.Str.IndexOf(Surface.LineAt(3), 'S');
+  const Surface: TuiSurfaceSnapshot := App.SurfaceSnapshot();
+  const GoX: integer := Std.Str.IndexOf(Surface.LineAt(1), 'G');
+  const OkX: integer := Std.Str.IndexOf(Surface.LineAt(2), 'O');
+  const StopX: integer := Std.Str.IndexOf(Surface.LineAt(3), 'S');
   AssertTrue(Surface.CellAt(GoX, 1).Role = TuiStyleRole.ButtonSelectedShortcut);
   AssertTrue(Surface.CellAt(OkX, 2).Role = TuiStyleRole.ButtonDefaultShortcut);
   AssertTrue(Surface.CellAt(StopX, 3).Role = TuiStyleRole.ButtonDisabled);

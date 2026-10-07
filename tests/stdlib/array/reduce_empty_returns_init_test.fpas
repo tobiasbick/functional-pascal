@@ -8,7 +8,7 @@ begin
 end function;
 
 begin
-  var A: array of integer := [];
-  var Val: integer := Reduce(A, 99, AddAcc);
+  const A: array of integer := [];
+  const Val: integer := Reduce(A, 99, AddAcc);
   WriteLn(Val);
 end.

@@ -188,8 +188,8 @@ async function verifyNegativeScopes(grammar) {
   );
   assertNoKeywordScope(tokenAt(fixture, "gifted: boolean", "gifted"));
   assertNoKeywordScope(tokenAt(fixture, "endif: integer", "endif"));
-  assertNoKeywordScope(tokenAt(fixture, "var shl", "shl"));
-  assertNoKeywordScope(tokenAt(fixture, "var SHR", "SHR"));
+  assertNoKeywordScope(tokenAt(fixture, "const shl", "shl"));
+  assertNoKeywordScope(tokenAt(fixture, "const SHR", "SHR"));
   const constantName = tokenAt(
     fixture,
     "RecordCount: integer := 1",
@@ -271,7 +271,7 @@ async function verifyReservedKeywordScopes(grammar) {
     }
   }
   for (const identifier of ["NullValue", "WhenValue", "ElsifValue"]) {
-    assertNoKeywordScope(tokenAt(fixture, `var ${identifier}`, identifier));
+    assertNoKeywordScope(tokenAt(fixture, `const ${identifier}`, identifier));
   }
   for (const keyword of ["elsif", "WHEN", "NuLl"]) {
     const token = tokenAt(fixture, "'elsif WHEN NuLl'", keyword);
@@ -400,7 +400,7 @@ async function verifyExpressionClosers(grammar) {
       assert.ok(!increase.test(spelling), `${spelling} does not open a body`);
     }
   }
-  assert.ok(increase.test("var Moved: Point := Original with"));
+  assert.ok(increase.test("const Moved: Point := Original with"));
   assert.ok(increase.test("ORIGINAL WITH // overrides"));
   const snippets = JSON.parse(await readFile(
     path.join(extensionRoot, "snippets", "fpas.json"), "utf8"
@@ -420,12 +420,12 @@ async function verifyIndividualDeclarations(grammar) {
     assertScope(tokenAt(fixture, line, "type"), "keyword.declaration.type.fpas");
     assertScope(tokenAt(fixture, line, name), "entity.name.type.fpas");
   }
-  for (const name of ["A", "B"]) {
+  for (const name of ["A", "B", "C", "D"]) {
     const line = `public const ${name}`;
     assertScope(tokenAt(fixture, line, "const"), "storage.type.constant.fpas");
     assertScope(tokenAt(fixture, line, name), "entity.name.constant.fpas");
   }
-  for (const [prefix, names] of [["var", ["C", "D"]], ["mutable var", ["E", "F"]]]) {
+  for (const [prefix, names] of [["var", ["E", "F"]]]) {
     for (const name of names) {
       const line = `public ${prefix} ${name}`;
       assertScope(tokenAt(fixture, line, "var"), "storage.type.fpas");
@@ -433,6 +433,7 @@ async function verifyIndividualDeclarations(grammar) {
     }
   }
   assertNoKeywordScope(tokenAt(fixture, "public Value: First", "Value"));
+  assertNoKeywordScope(tokenAt(fixture, "public var mutable", "mutable"));
 }
 
 export async function verifyGrammar() {

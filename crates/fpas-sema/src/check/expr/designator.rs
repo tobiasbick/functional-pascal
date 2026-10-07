@@ -157,6 +157,15 @@ impl Checker {
     }
 
     fn resolve_designator_base(&self, parts: &[DesignatorPart]) -> Option<(Ty, usize)> {
+        self.designator_root_symbol(parts)
+            .map(|(symbol, count)| (symbol.ty.clone(), count))
+    }
+
+    /// Resolves the longest visible binding prefix, including qualified unit exports.
+    pub(crate) fn designator_root_symbol(
+        &self,
+        parts: &[DesignatorPart],
+    ) -> Option<(&crate::scope::Symbol, usize)> {
         let mut qualified = String::new();
         let mut resolved = None;
         for (index, part) in parts.iter().enumerate() {
@@ -173,7 +182,7 @@ impl Checker {
                     SymbolKind::Const | SymbolKind::Var | SymbolKind::Param | SymbolKind::ForVar
                 )
             {
-                resolved = Some((symbol.ty.clone(), index + 1));
+                resolved = Some((symbol, index + 1));
             }
         }
         resolved
@@ -235,14 +244,9 @@ impl Checker {
     }
 
     pub(crate) fn designator_is_mutable_target(&self, designator: &Designator) -> bool {
-        match designator.parts.first() {
-            Some(DesignatorPart::Ident(base, _)) => {
-                let Some(symbol) = self.scopes.lookup(base) else {
-                    return false;
-                };
+        self.designator_root_symbol(&designator.parts)
+            .is_some_and(|(symbol, _)| {
                 symbol.mutable && matches!(symbol.kind, SymbolKind::Var | SymbolKind::Param)
-            }
-            _ => false,
-        }
+            })
     }
 }

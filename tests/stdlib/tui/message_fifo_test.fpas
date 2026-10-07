@@ -38,7 +38,7 @@ end function;
 
 function UpdateFifo(State: FifoModel; Msg: TuiMsg; Cmd: TuiCmdOutput): FifoModel;
 begin
-  var ResetOk: boolean := Cmd.Command() = TuiCmd.NoCommand;
+  const ResetOk: boolean := Cmd.Command() = TuiCmd.NoCommand;
   Cmd.Set(TuiCmd.NoCommand);
   case Msg of
     when TuiMsg.Tick(Delta):
@@ -65,8 +65,8 @@ begin
 end function;
 
 begin
-  mutable var App: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(20, 6));
-  mutable var Model: FifoModel := record
+  var App: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(20, 6));
+  var Model: FifoModel := record
     Events := [];
     SeenCmdWasNoCommand := true;
   end;

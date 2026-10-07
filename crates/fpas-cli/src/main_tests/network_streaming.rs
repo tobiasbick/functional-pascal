@@ -82,7 +82,7 @@ begin
       case CreateSseDecoder(4096) of
         when Ok(Decoder):
         begin
-          mutable var Reading: boolean := true;
+          var Reading: boolean := true;
           while Reading do
           begin
             case ReadStream(ResponseValue.Body, 3) of

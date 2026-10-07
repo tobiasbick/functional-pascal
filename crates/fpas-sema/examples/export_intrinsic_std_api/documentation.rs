@@ -155,11 +155,7 @@ fn parameter_names(signature: &str) -> Option<Vec<String>> {
 
 fn parameter_name(parameter: &str) -> Option<String> {
     let before_type = parameter.split(':').next()?.trim();
-    let name = before_type
-        .trim_start_matches("mutable ")
-        .split(',')
-        .next_back()?
-        .trim();
+    let name = before_type.split(',').next_back()?.trim();
     (!name.is_empty()).then(|| name.to_owned())
 }
 

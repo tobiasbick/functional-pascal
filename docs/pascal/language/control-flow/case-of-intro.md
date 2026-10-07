@@ -55,7 +55,7 @@ an arm retains an additional scope; its ending closes only that inner block.
 ```pascal
 case Items of
   when Some(Value) if Value > 0:
-    var Doubled: integer := Value * 2;
+    const Doubled: integer := Value * 2;
     WriteLn(Doubled);
     WriteLn('positive');
   when Some(Value):

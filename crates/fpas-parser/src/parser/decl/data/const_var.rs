@@ -41,22 +41,14 @@ impl Parser {
         }
     }
 
-    /// Parses one variable after its complete `var` or `mutable var` prefix.
+    /// Parses one variable after its complete `var` prefix.
     pub(in super::super) fn parse_variable_declaration(
         &mut self,
-        mutable: bool,
         visibility: Visibility,
     ) -> Option<Decl> {
-        if mutable {
-            self.advance();
-        }
         self.advance();
         if !self.can_start_declaration_definition() {
-            let (kind, example) = if mutable {
-                ("mutable variable", "mutable var X: integer := 1;")
-            } else {
-                ("variable", "var X: integer := 1;")
-            };
+            let (kind, example) = ("variable", "var X: integer := 1;");
             self.error_with_code(
                 PARSE_EXPECTED_IDENTIFIER,
                 &format!("Expected a {kind} declaration after its keyword"),
@@ -67,11 +59,7 @@ impl Parser {
             return None;
         }
         let definition = self.parse_var_def(visibility);
-        Some(if mutable {
-            Decl::MutableVar(definition)
-        } else {
-            Decl::Var(definition)
-        })
+        Some(Decl::Var(definition))
     }
 
     /// Includes reserved block keywords so identifier recovery retains the rest of the definition.

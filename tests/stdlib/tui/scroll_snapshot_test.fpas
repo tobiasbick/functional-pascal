@@ -35,8 +35,8 @@ begin
 end function;
 
 begin
-  mutable var App: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(12, 2));
-  mutable var Model: ScrollModel := record
+  var App: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(12, 2));
+  var Model: ScrollModel := record
     Offset := TuiPoint.Create(0, 0);
   end;
 

@@ -48,7 +48,7 @@ begin
   WriteLn(TrafficAdvice(Light.Yellow));
   WriteLn(TrafficAdvice(Light.Green));
   WriteLn('--- Option exhaustiveness ---');
-  var Idx: option of integer := SafeLookup([10, 20, 30], 20);
+  const Idx: option of integer := SafeLookup([10, 20, 30], 20);
   case Idx of
     when Some(I):
       begin
@@ -61,7 +61,7 @@ begin
   end case;
 
   WriteLn('--- Result exhaustiveness ---');
-  var R: result of integer, string := Ok(42);
+  const R: result of integer, string := Ok(42);
   case R of
     when Ok(V):
       begin

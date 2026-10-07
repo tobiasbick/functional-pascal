@@ -41,8 +41,8 @@ end function;\nend unit;",
         "program GenericAliasRepro;
 uses Repro.Facade, Std.Tui, Std.Test;
 begin
-  var App: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(20, 4));
-  mutable var State: Model := NewModel();
+  const App: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(20, 4));
+  var State: Model := NewModel();
   State := App.RunIterations(State, Update, View, 0, 0);
   AssertEquals(0, State.Value);
   App.Close();

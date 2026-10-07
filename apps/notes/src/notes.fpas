@@ -17,11 +17,11 @@ end function;
 
 begin
   Std.Random.Randomize();
-  var Directory: string := NotesDirectory();
+  const Directory: string := NotesDirectory();
   case NotesLoadDirectory(Directory) of
     when Ok(Loaded):
       begin
-        mutable var Initial: NotesModel := NotesModelCreate(Directory, Loaded);
+        var Initial: NotesModel := NotesModelCreate(Directory, Loaded);
         Initial.Width := Std.Console.ScreenWidth();
         Initial.Height := Std.Console.ScreenHeight();
         discard TuiApplication.RunWithPalette(Initial, NotesUpdate, NotesView, NotesPalette());

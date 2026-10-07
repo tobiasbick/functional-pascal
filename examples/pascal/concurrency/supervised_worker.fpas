@@ -3,12 +3,12 @@ program SupervisedWorker;
 uses Std.Tasks, Std.Console, Std.Results;
 
 begin
-  var Workers: TaskGroup := CreateTaskGroup();
+  const Workers: TaskGroup := CreateTaskGroup();
   // This queue models a transient failure followed by a successful operation.
-  var Outcomes: channel of boolean := CreateChannel(2);
+  const Outcomes: channel of boolean := CreateChannel(2);
   discard Send(Outcomes, false);
   discard Send(Outcomes, true);
-  var Worker: task := StartSupervisedTask(Workers, function(Token: CancellationToken): result of string, string begin
+  const Worker: task := StartSupervisedTask(Workers, function(Token: CancellationToken): result of string, string begin
     WriteLn('Starting an attempt');
     if not Unwrap(Receive(Outcomes)) then
       begin

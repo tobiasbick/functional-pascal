@@ -3,14 +3,14 @@ program WhileRepeatExample;
 uses Std.Console, Std.Conv;
 
 begin
-  mutable var Count: integer := 0;
+  var Count: integer := 0;
   while Count < 3 do
     begin
       WriteLn('while step: ', IntToStr(Count));
       Count := Count + 1;
     end;
   end while;
-  mutable var Attempts: integer := 0;
+  var Attempts: integer := 0;
   repeat
     WriteLn('repeat step: ', IntToStr(Attempts));
     Attempts := Attempts + 1;

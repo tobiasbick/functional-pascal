@@ -34,7 +34,7 @@ impl<'a> ClosureRegistry<'a> {
         for declaration in declarations {
             let value = match declaration {
                 Decl::Const(definition) => &definition.value,
-                Decl::Var(definition) | Decl::MutableVar(definition) => &definition.value,
+                Decl::Var(definition) => &definition.value,
                 Decl::TypeDef(_) | Decl::Function(_) | Decl::Procedure(_) => continue,
             };
             self.visit_expression(value, owner, metadata, types)?;
@@ -59,7 +59,7 @@ impl<'a> ClosureRegistry<'a> {
                 self.discover_statements(body, owner, metadata, types)?;
                 self.visit_expression(condition, owner, metadata, types)?;
             }
-            Stmt::Var(definition) | Stmt::MutableVar(definition) => {
+            Stmt::Const(definition) | Stmt::Var(definition) => {
                 self.visit_expression(&definition.value, owner, metadata, types)?;
             }
             Stmt::Assign { target, value, .. } => {

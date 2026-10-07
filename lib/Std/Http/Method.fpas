@@ -17,7 +17,7 @@ begin
 
   for Index: integer := 0 to Std.Str.Length(Method) - 1 do
     begin
-      var Code: integer := Std.Str.Ord(Std.Str.CharAt(Method, Index));
+      const Code: integer := Std.Str.Ord(Std.Str.CharAt(Method, Index));
       if (((Code >= 48) and (Code <= 57)) or ((Code >= 65) and (Code <= 90))) or
          ((Code >= 97) and (Code <= 122)) then
         begin

@@ -8,7 +8,7 @@ begin
 end function;
 
 begin
-  var R: result of integer, string := Error('fail');
-  var M: result of string, string := Map(R, AlwaysOk);
+  const R: result of integer, string := Error('fail');
+  const M: result of string, string := Map(R, AlwaysOk);
   WriteLn(IsError(M));
 end.

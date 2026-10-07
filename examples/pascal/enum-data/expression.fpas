@@ -46,9 +46,9 @@ begin
 end function;
 
 begin
-  var E1: Expr := Expr.Num(42);
-  var E2: Expr := Expr.Add(Expr.Num(3), Expr.Num(7));
-  var E3: Expr := Expr.Mul(E2, Expr.Add(Expr.Num(4), Expr.Num(5)));
+  const E1: Expr := Expr.Num(42);
+  const E2: Expr := Expr.Add(Expr.Num(3), Expr.Num(7));
+  const E3: Expr := Expr.Mul(E2, Expr.Add(Expr.Num(4), Expr.Num(5)));
   WriteLn((Show(E1) + ' = ') + IntToStr(Eval(E1)));
   WriteLn((Show(E2) + ' = ') + IntToStr(Eval(E2)));
   WriteLn((Show(E3) + ' = ') + IntToStr(Eval(E3)));

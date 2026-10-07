@@ -3,11 +3,11 @@ program ForExample;
 uses Std.Console, Std.Arrays;
 
 begin
-  var Scores: array of integer := [12, 45, 3, 67, 29, 88, 51, 7, 93, 34];
+  const Scores: array of integer := [12, 45, 3, 67, 29, 88, 51, 7, 93, 34];
   WriteLn('Filtered scores:');
   for I: integer := 0 to Length(Scores) - 1 do
     begin
-      var S: integer := Scores[I];
+      const S: integer := Scores[I];
       if S > 90 then
         begin
           WriteLn('Stopping — score above 90 found');

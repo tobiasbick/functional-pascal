@@ -8,13 +8,13 @@ pub(super) fn register_std_crypto(checker: &mut Checker) {
     define_func(
         checker,
         s::STD_CRYPTO_RANDOM_BYTES,
-        vec![p("Count", Ty::Integer, false)],
+        vec![p("Count", Ty::Integer)],
         Ty::Result(Box::new(Ty::Array(Box::new(Ty::Integer))), error.clone()),
     );
     define_func(
         checker,
         s::STD_CRYPTO_RANDOM_INT,
-        vec![p("Lo", Ty::Integer, false), p("Hi", Ty::Integer, false)],
+        vec![p("Lo", Ty::Integer), p("Hi", Ty::Integer)],
         Ty::Result(Box::new(Ty::Integer), error),
     );
 }

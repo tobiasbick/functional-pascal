@@ -9,7 +9,7 @@ Every body statement ends with `;`. Body-local declarations are unavailable
 in the condition and after the loop; the condition uses the enclosing scope.
 
 ```pascal
-mutable var Count: integer := 0;
+var Count: integer := 0;
 while Count < 10 do
   WriteLn(Count);
   Count := Count + 1;
@@ -27,7 +27,7 @@ The body executes at least once. Every body statement ends with `;`, including
 the last one before `until`; the condition also ends with `;`:
 
 ```pascal
-mutable var Input: string := '';
+var Input: string := '';
 repeat
   Input := ReadLn();
 until Input = 'quit';

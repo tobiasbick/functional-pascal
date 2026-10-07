@@ -17,7 +17,7 @@ fn reserved_block_keywords_are_rejected_in_declarations_with_rename_hints() {
             format!("program P; begin var {keyword}: integer := 1; end."),
             format!("program P; const {keyword}: integer := 1; begin end."),
             format!("program P; var {keyword}: integer := 1; begin end."),
-            format!("program P; mutable var {keyword}: integer := 1; begin end."),
+            format!("program P; var {keyword}: integer := 1; begin end."),
             format!("program P; type {keyword} = integer; begin end."),
             format!("program P; procedure F({keyword}: integer); begin end procedure; begin end."),
             format!("program P; type R = record {keyword}: integer; end record; begin end."),
@@ -143,7 +143,7 @@ fn reserved_names_inside_declaration_lists_preserve_following_definitions() {
                 "unit U; var First: integer := 1; var {keyword}: integer := 2; var Last: integer := 3;\nend unit;"
             ),
             format!(
-                "unit U; mutable var First: integer := 1; mutable var {keyword}: integer := 2; mutable var Last: integer := 3;\nend unit;"
+                "unit U; var First: integer := 1; var {keyword}: integer := 2; var Last: integer := 3;\nend unit;"
             ),
             format!(
                 "unit U; type First = integer; type {keyword} = integer; type Last = integer;\nend unit;"

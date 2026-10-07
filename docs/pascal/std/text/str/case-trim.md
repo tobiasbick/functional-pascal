@@ -5,7 +5,7 @@
 Returns how many characters are in `S` (scalar count).
 
 ```pascal
-var N: integer := Length('café');
+const N: integer := Length('café');
 WriteLn(N);
 ```
 

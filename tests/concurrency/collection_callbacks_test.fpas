@@ -31,13 +31,13 @@ end function;
 
 function DictionaryWork(): integer;
 begin
-  var Values: dict of string to integer := ['A': 2, 'B': 4];
+  const Values: dict of string to integer := ['A': 2, 'B': 4];
   return Std.Dictionaries.Reduce(Values, 1, Sum);
 end function;
 
 begin
-  var StringTask: task := go StringWork();
-  var DictionaryTask: task := go DictionaryWork();
+  const StringTask: task := go StringWork();
+  const DictionaryTask: task := go DictionaryWork();
   AssertEquals(3, Wait(StringTask));
   AssertEquals(7, Wait(DictionaryTask));
 end.

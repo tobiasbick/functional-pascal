@@ -63,8 +63,7 @@ continue. Debugger task creation and task restart are not contributed. Step Into
 Over, and Step Out target the selected task. A breakpoint or runtime failure
 in another task interrupts a pending step and selects the responsible task.
 
-At a stable stop, the Variables view can replace mutable locals, mutable
-parameters, mutable globals, mutable closure captures, record fields, array
+At a stable stop, the Variables view can replace mutable locals and globals, mutable closure captures, record fields, array
 elements, existing dictionary values, named fields of the currently active
 data-carrying enum variant, the `value` child of `Result.Ok`,
 `Result.Error`, and `Option.Some`, and complete mutable enum, `Result`, and
@@ -152,7 +151,7 @@ routine name such as `AddTwo`, `Math.Transform`, `AddBase`,
 `MakeAdder.AddBase`, or `AddCell`. Named nested routines materialize from the
 selected lexical-owner frame using recorded immutable values and existing
 mutable cells. Constructed cell-capturing functions are task-bound to the
-selected task and may be stored only in a mutable local or parameter register
+selected task and may be stored only in a mutable local register
 of that owner frame. An already materialized task-bound function may be copied
 only within that selected owner task and frame; the copy preserves its exact
 function and cell handles. `Receiver.Method` binds one evaluated record

@@ -28,12 +28,12 @@ procedure TuiPaintMenuLabel(
   MnemonicRole: TuiStyleRole
 );
 begin
-  mutable var X: integer := Position.X;
-  mutable var MnemonicPainted: boolean := false;
+  var X: integer := Position.X;
+  var MnemonicPainted: boolean := false;
   for Index: integer := 0 to Std.Str.Length(Text) - 1 do
     begin
-      var Glyph: string := Std.Str.CharAt(Text, Index);
-      mutable var GlyphRole: TuiStyleRole := Role;
+      const Glyph: string := Std.Str.CharAt(Text, Index);
+      var GlyphRole: TuiStyleRole := Role;
       if (not MnemonicPainted and (Mnemonic <> '')) and
          (Std.Str.ToLower(Glyph) = Std.Str.ToLower(Mnemonic)) then
         begin
@@ -65,7 +65,7 @@ public procedure TuiPaintMenuBar(
 );
 begin
   Canvas.FillRect(Bounds, TuiCell.Create(' ', TuiStyleRole.MenuNormal));
-  mutable var ActiveRoot: option of TuiMenuNodeId := None;
+  var ActiveRoot: option of TuiMenuNodeId := None;
   case State.Active of
     when Some(Active):
       begin
@@ -75,7 +75,7 @@ begin
       begin
       end;
   end case;
-  mutable var X: integer := Bounds.X;
+  var X: integer := Bounds.X;
   for Index: integer := 0 to Std.Arrays.Length(Nodes) - 1 do
     begin
       case TuiMenuNodeParent(Nodes[Index]) of
@@ -84,10 +84,10 @@ begin
           end;
         when None:
           begin
-            var Id: TuiMenuNodeId := TuiMenuNodeIdOf(Nodes[Index]);
-            var Text: string := TuiMenuNodeText(Nodes[Index]);
-            var Width: integer := Std.Console.DisplayWidth(Text) + 2;
-            mutable var Role: TuiStyleRole := TuiStyleRole.MenuNormal;
+            const Id: TuiMenuNodeId := TuiMenuNodeIdOf(Nodes[Index]);
+            const Text: string := TuiMenuNodeText(Nodes[Index]);
+            const Width: integer := Std.Console.DisplayWidth(Text) + 2;
+            var Role: TuiStyleRole := TuiStyleRole.MenuNormal;
             if (State.Open and TuiMenuIdMatches(ActiveRoot, Id)) or
                ((Focused and not State.Open) and (X = Bounds.X)) then
               begin
@@ -101,7 +101,7 @@ begin
                 Role := TuiStyleRole.MenuDisabled;
               end;
             end if;
-            mutable var MnemonicRole: TuiStyleRole := TuiStyleRole.MenuShortcut;
+            var MnemonicRole: TuiStyleRole := TuiStyleRole.MenuShortcut;
             if Role = TuiStyleRole.MenuSelected then
               begin
                 MnemonicRole := TuiStyleRole.MenuSelectedShortcut;
@@ -132,7 +132,7 @@ procedure TuiPaintMenuPopupEntry(
   State: TuiMenuState
 );
 begin
-  mutable var Role: TuiStyleRole := TuiStyleRole.MenuNormal;
+  var Role: TuiStyleRole := TuiStyleRole.MenuNormal;
   if TuiMenuIdMatches(State.Active, Id) then
     begin
       Role := TuiStyleRole.MenuSelected;
@@ -145,7 +145,7 @@ begin
       Role := TuiStyleRole.MenuDisabled;
     end;
   end if;
-  mutable var MnemonicRole: TuiStyleRole := TuiStyleRole.MenuShortcut;
+  var MnemonicRole: TuiStyleRole := TuiStyleRole.MenuShortcut;
   if Role = TuiStyleRole.MenuSelected then
     begin
       MnemonicRole := TuiStyleRole.MenuSelectedShortcut;
@@ -182,15 +182,15 @@ procedure TuiPaintMenuPopup(
   State: TuiMenuState
 );
 begin
-  var Bounds: TuiRect := Popup.Bounds;
+  const Bounds: TuiRect := Popup.Bounds;
   Canvas.FillRect(Bounds, TuiCell.Create(' ', TuiStyleRole.MenuNormal));
   Canvas.DrawFrame(Bounds, TuiStyleRole.MenuNormal);
-  mutable var Row: integer := 0;
+  var Row: integer := 0;
   for Index: integer := 0 to Std.Arrays.Length(Nodes) - 1 do
     begin
       if TuiMenuHasParent(Nodes[Index], Some(Popup.Parent)) then
         begin
-          var Y: integer := (Bounds.Y + 1) + Row;
+          const Y: integer := (Bounds.Y + 1) + Row;
           case Nodes[Index] of
             when TuiMenuNode.Separator(Id, Parent):
               begin
@@ -227,9 +227,9 @@ public procedure TuiPaintMenuPopups(
   State: TuiMenuState
 );
 begin
-  var TerminalBounds: TuiRect := TuiRect.Create(0, 0, Canvas.Surface.Size().Width, Canvas.Surface.Size()
-                                                                                     .Height);
-  var Popups: array of TuiMenuPopup := TuiMenuPopupGeometry(Nodes, State, BarBounds, TerminalBounds);
+  const TerminalBounds: TuiRect := TuiRect.Create(0, 0, Canvas.Surface.Size().Width, Canvas.Surface.Size()
+                                                                                       .Height);
+  const Popups: array of TuiMenuPopup := TuiMenuPopupGeometry(Nodes, State, BarBounds, TerminalBounds);
   for Index: integer := 0 to Std.Arrays.Length(Popups) - 1 do
     begin
       TuiPaintMenuPopup(Canvas, Popups[Index], Nodes, State);

@@ -38,12 +38,12 @@ begin
 end function;
 
 begin
-  var Inbox: channel of integer := CreateChannel(2);
-  var App: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(24, 4));
+  const Inbox: channel of integer := CreateChannel(2);
+  const App: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(24, 4));
   AssertTrue(Unwrap(App.InjectBackgroundForTest(Inbox, 4)));
   AssertTrue(Unwrap(App.InjectBackgroundForTest(Inbox, 7)));
   AssertFalse(Unwrap(App.InjectBackgroundForTest(Inbox, 9)));
-  var Model: InjectionModel := App.RunBackgroundIterations(record
+  const Model: InjectionModel := App.RunBackgroundIterations(record
     Values := [];
     Starts := 0;
   end, Inbox, UpdateFramework, UpdateApplication, View, 3, 0);

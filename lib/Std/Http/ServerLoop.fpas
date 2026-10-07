@@ -64,7 +64,7 @@ end procedure;
 // - `Connection`: Connection that supplied a malformed request.
 procedure WriteBadRequestQuietly(Connection: Std.Net.Connection);
 begin
-  var ResponseValue: ServerResponse := ServerResponse.Create(400, 'Bad Request');
+  const ResponseValue: ServerResponse := ServerResponse.Create(400, 'Bad Request');
   case Std.Http.Server.WriteResponse(Connection, ResponseValue) of
     when Ok(_):
       begin
@@ -97,7 +97,7 @@ begin
         return false;
       end;
   end case;
-  mutable var RequestValue: ServerRequest := record
+  var RequestValue: ServerRequest := record
     Method := '';
     Target := '';
     Headers := [];
@@ -116,8 +116,8 @@ begin
         return false;
       end;
   end case;
-  var ResponseValue: ServerResponse := Handler(RequestValue);
-  mutable var Succeeded: boolean := false;
+  const ResponseValue: ServerResponse := Handler(RequestValue);
+  var Succeeded: boolean := false;
   case Std.Http.Server.WriteResponse(Connection, ResponseValue) of
     when Ok(_):
       begin
@@ -161,10 +161,10 @@ begin
         return Error(Message);
       end;
   end case;
-  mutable var Accepted: integer := 0;
+  var Accepted: integer := 0;
   while (Options.MaxRequests = 0) or (Accepted < Options.MaxRequests) do
     begin
-      mutable var Tasks: array of task := [];
+      var Tasks: array of task := [];
       while HasCapacity(Options, Accepted, Std.Arrays.Length(Tasks)) do
         begin
           case Std.Net.Accept(Listener) of

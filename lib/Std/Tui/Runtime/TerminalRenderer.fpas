@@ -24,7 +24,7 @@ end function;
 
 function TuiCellToConsole(Cell: TuiCell; Palette: TuiPalette): Std.Console.Cell;
 begin
-  mutable var Style: TuiStyle := Palette.ForRole(Cell.Role);
+  var Style: TuiStyle := Palette.ForRole(Cell.Role);
   case Cell.ConcreteStyle of
     when Some(Concrete):
       begin
@@ -44,7 +44,7 @@ end function;
 
 function TuiTerminalDamageRow(Damage: TuiSurfaceDamage; Palette: TuiPalette): array of Std.Console.Cell;
 begin
-  mutable var Row: array of Std.Console.Cell := [];
+  var Row: array of Std.Console.Cell := [];
   for Cell: TuiCell in Damage.Cells do
     begin
       Std.Arrays.Push(Row, TuiCellToConsole(Cell, Palette));
@@ -64,7 +64,7 @@ end function;
 // - `Palette`: Palette used to resolve semantic style roles.
 public procedure TuiFlushSurface(Surface: TuiWorkingSurface; Palette: TuiPalette);
 begin
-  var Damage: array of TuiSurfaceDamage := TuiSurfaceTakeTerminalDamage(Surface);
+  const Damage: array of TuiSurfaceDamage := TuiSurfaceTakeTerminalDamage(Surface);
   if Std.Arrays.Length(Damage) = 0 then
     begin
       return;
@@ -74,7 +74,7 @@ begin
   BeginFrame();
   for Item: TuiSurfaceDamage in Damage do
     begin
-      var Row: array of Std.Console.Cell := TuiTerminalDamageRow(Item, Palette);
+      const Row: array of Std.Console.Cell := TuiTerminalDamageRow(Item, Palette);
       if Std.Arrays.Length(Row) > 0 then
         begin
           WriteCells(Item.FirstX + 1, Item.Y + 1, Row);

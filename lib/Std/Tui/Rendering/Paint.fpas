@@ -43,9 +43,9 @@ function TuiPaintArranged(
   Pressed: option of TuiControlId
 ): integer;
 begin
-  var Entry: TuiArrangedEntry := Frame.EntryAt(Index);
-  mutable var Next: integer := Index + 1;
-  var Clipped: TuiCanvas := TuiCanvas.CreateLocal(Canvas.Surface, TuiPoint.Create(0, 0), Entry.Clip);
+  const Entry: TuiArrangedEntry := Frame.EntryAt(Index);
+  var Next: integer := Index + 1;
+  const Clipped: TuiCanvas := TuiCanvas.CreateLocal(Canvas.Surface, TuiPoint.Create(0, 0), Entry.Clip);
   case Node of
     when TuiElement.Empty:
       begin
@@ -71,7 +71,7 @@ begin
       end;
     when TuiElement.CheckBox(Id, Text, Checked, ChangeAction):
       begin
-        mutable var Mark: string := ' ';
+        var Mark: string := ' ';
         if Checked then
           begin
             Mark := 'x';
@@ -90,7 +90,7 @@ begin
       end;
     when TuiElement.List(Id, Items, Selected, ChangeAction):
       begin
-        mutable var RowLimit: integer := Entry.Bounds.Height;
+        var RowLimit: integer := Entry.Bounds.Height;
         if RowLimit > Std.Arrays.Length(Items) then
           begin
             RowLimit := Std.Arrays.Length(Items);
@@ -99,7 +99,7 @@ begin
 
         for Row: integer := 0 to RowLimit - 1 do
           begin
-            mutable var Prefix: string := '  ';
+            var Prefix: string := '  ';
             if Row = Selected then
               begin
                 Prefix := '> ';
@@ -114,10 +114,10 @@ begin
     when TuiElement.MenuBar(Items):
       begin
         Clipped.FillRect(Entry.Bounds, TuiCell.Create(' ', TuiStyleRole.MenuNormal));
-        mutable var X: integer := Entry.Bounds.X;
+        var X: integer := Entry.Bounds.X;
         for ItemIndex: integer := 0 to Std.Arrays.Length(Items) - 1 do
           begin
-            mutable var Role: TuiStyleRole := TuiStyleRole.MenuNormal;
+            var Role: TuiStyleRole := TuiStyleRole.MenuNormal;
             if Items[ItemIndex].Enabled and TuiPaintFocused(Focused, Items[ItemIndex].Id) then
               begin
                 Role := TuiStyleRole.MenuSelected;
@@ -127,7 +127,7 @@ begin
                 Role := TuiStyleRole.MenuDisabled;
               end;
             end if;
-            var ItemText: string := (' ' + Items[ItemIndex].Text) + ' ';
+            const ItemText: string := (' ' + Items[ItemIndex].Text) + ' ';
             Clipped.WriteText(TuiPoint.Create(X, Entry.Bounds.Y), ItemText, Role);
             X := X + Std.Console.DisplayWidth(ItemText);
           end;
@@ -215,7 +215,7 @@ function TuiPaintMenuOverlays(
   AllowMenu: boolean
 ): integer;
 begin
-  mutable var Next: integer := Index + 1;
+  var Next: integer := Index + 1;
   case Node of
     when TuiElement.Menu(Id, Nodes, State, ChangeAction):
       begin
@@ -227,7 +227,7 @@ begin
       end;
     when TuiElement.Desktop(Focused, Children):
       begin
-        mutable var ModalIndex: integer := -1;
+        var ModalIndex: integer := -1;
         for ChildIndex: integer := 0 to Std.Arrays.Length(Children) - 1 do
           begin
             case Children[ChildIndex] of
@@ -320,8 +320,8 @@ public procedure TuiPaintView(
 );
 begin
   Surface.Clear();
-  var Canvas: TuiCanvas := TuiCanvas.Create(Surface, TuiRectForSize(Surface.Size()));
-  var NextIndex: integer := TuiPaintArranged(Canvas, Frame, Root, 0, None, Pressed);
+  const Canvas: TuiCanvas := TuiCanvas.Create(Surface, TuiRectForSize(Surface.Size()));
+  const NextIndex: integer := TuiPaintArranged(Canvas, Frame, Root, 0, None, Pressed);
   if NextIndex <> Frame.Count() then
     begin
       panic('Tui paint did not consume the complete arranged frame');
@@ -342,21 +342,21 @@ end procedure;
 public procedure TuiPaintTooSmallOverlay(Surface: TuiWorkingSurface);
 begin
   Surface.Clear();
-  var Size: TuiSize := Surface.Size();
+  const Size: TuiSize := Surface.Size();
   if Size.IsEmpty() then
     begin
       return;
     end;
   end if;
-  var Canvas: TuiCanvas := TuiCanvas.Create(Surface, TuiRectForSize(Size));
-  var Message: string := 'Terminal too small';
-  mutable var X: integer := 0;
+  const Canvas: TuiCanvas := TuiCanvas.Create(Surface, TuiRectForSize(Size));
+  const Message: string := 'Terminal too small';
+  var X: integer := 0;
   if Size.Width > Std.Console.DisplayWidth(Message) then
     begin
       X := (Size.Width - Std.Console.DisplayWidth(Message)) div 2;
     end;
   end if;
-  mutable var Y: integer := 0;
+  var Y: integer := 0;
   if Size.Height > 1 then
     begin
       Y := Size.Height div 2;

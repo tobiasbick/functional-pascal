@@ -9,7 +9,7 @@ end function;
 
 function Handle(RequestValue: ServerRequest): ServerResponse;
 begin
-  mutable var ResponseValue: ServerResponse := ServerResponse.Create(200, 'OK');
+  var ResponseValue: ServerResponse := ServerResponse.Create(200, 'OK');
   if (RequestValue.Method <> 'GET') or (RequestValue.Target <> '/fluent') then
     begin
       ResponseValue.Body := Std.Net.Utf8.Encode('unexpected request');
@@ -23,16 +23,16 @@ end function;
 
 function ExerciseHttp(): result of boolean, string;
 begin
-  var ListenerValue: Listener := try Listen('127.0.0.1', 0);
-  var Address: NetworkAddress := try ListenerLocalAddress(ListenerValue);
-  mutable var Options: ServerOptions := ServerOptions.Create();
+  const ListenerValue: Listener := try Listen('127.0.0.1', 0);
+  const Address: NetworkAddress := try ListenerLocalAddress(ListenerValue);
+  var Options: ServerOptions := ServerOptions.Create();
   Options.MaxRequests := 1;
-  var ServerTask: task := go Serve(ListenerValue, Options, Handle);
-  var Url: string := ('http://127.0.0.1:' + IntToStr(Address.Port)) + '/fluent';
-  var Text: string := try FetchText(Url);
+  const ServerTask: task := go Serve(ListenerValue, Options, Handle);
+  const Url: string := ('http://127.0.0.1:' + IntToStr(Address.Port)) + '/fluent';
+  const Text: string := try FetchText(Url);
   AssertEquals('hello fluent', Text);
-  var Served: boolean := try Wait(ServerTask);
-  var Closed: boolean := try CloseListener(ListenerValue);
+  const Served: boolean := try Wait(ServerTask);
+  const Closed: boolean := try CloseListener(ListenerValue);
   return Ok(Served and Closed);
 end function;
 

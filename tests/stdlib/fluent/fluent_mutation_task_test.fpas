@@ -8,12 +8,12 @@ begin
 end function;
 
 begin
-  mutable var Items: array of integer := [1, 2];
+  var Items: array of integer := [1, 2];
   Items.Push(3);
   AssertEquals(3, Items.Pop());
   AssertEquals(2, Items.Length());
-  var Job: task := go (20).Add(22);
+  const Job: task := go (20).Add(22);
   AssertEquals(42, Wait(Job));
-  var IntrinsicTask: task := go (-2).Abs();
+  const IntrinsicTask: task := go (-2).Abs();
   AssertEquals(2, Wait(IntrinsicTask));
 end.

@@ -57,26 +57,26 @@ begin
 end function;
 
 begin
-  var Inbox: channel of MandelbrotRenderFrame := CreateChannel(16);
-  mutable var Model: MandelbrotModel := NewMandelbrotModel(Inbox, 9, 15);
-  var Request: MandelbrotRenderRequest := MandelbrotRequest(Model);
-  var Cmd: TuiCmdOutput := TuiCmdOutput.Create();
-  var Stale: MandelbrotRenderFrame := record
+  const Inbox: channel of MandelbrotRenderFrame := CreateChannel(16);
+  var Model: MandelbrotModel := NewMandelbrotModel(Inbox, 9, 15);
+  const Request: MandelbrotRenderRequest := MandelbrotRequest(Model);
+  const Cmd: TuiCmdOutput := TuiCmdOutput.Create();
+  const Stale: MandelbrotRenderFrame := record
     Generation := Model.Generation - 1;
     Cells := RenderGrid(Request.XMin, Request.XMax, Request.YMin, Request.YMax, Request.Width, Request.Height, Request.MaxIter, Request.Palette).Cells;
   end;
 
   Model := UpdateMandelbrotFrame(Model, Stale, Cmd);
   AssertEquals(0, Model.RowsRendered);
-  var Source: CancellationSource := CreateCancellationSource();
+  const Source: CancellationSource := CreateCancellationSource();
   AssertTrue(IsOk(RunBackgroundRender(Request, Inbox, GetCancellationToken(Source))));
-  var Frame: MandelbrotRenderFrame := Std.Results.Unwrap(ReceiveWithTimeout(Inbox, 5000));
+  const Frame: MandelbrotRenderFrame := Std.Results.Unwrap(ReceiveWithTimeout(Inbox, 5000));
   AssertEquals(Request.Generation, Frame.Generation);
   AssertEquals(Request.Width * Request.Height, Std.Arrays.Length(Frame.Cells));
   AssertTrue(IsError(ReceiveWithTimeout(Inbox, 0)));
   Model := UpdateMandelbrotFrame(Model, Frame, Cmd);
   AssertEquals(Request.Height, Model.RowsRendered);
-  var Expected: TuiCellGrid := RenderGrid(Request.XMin, Request.XMax, Request.YMin, Request.YMax, Request.Width, Request.Height, Request.MaxIter, Request.Palette);
+  const Expected: TuiCellGrid := RenderGrid(Request.XMin, Request.XMax, Request.YMin, Request.YMax, Request.Width, Request.Height, Request.MaxIter, Request.Palette);
   for CellIndex: integer := 0 to Std.Arrays.Length(Expected.Cells) - 1 do
     begin
       AssertCellEquals(Expected.Cells[CellIndex], Model.Grid.Cells[CellIndex]);
@@ -86,7 +86,7 @@ begin
   Cmd.Reset();
   Model := UpdateMandelbrot(Model, TuiMsg.Started, Cmd);
   AssertEquals(1, Std.Arrays.Length(Cmd.ReadBackground()));
-  var OldGeneration: integer := Model.Generation;
+  const OldGeneration: integer := Model.Generation;
   Cmd.Reset();
   Model := UpdateMandelbrot(Model, TuiMsg.Key(MakeKey(TuiKeyKind.Left, '')), Cmd);
   AssertEquals(OldGeneration + 1, Model.Generation);
@@ -98,9 +98,9 @@ begin
 
   AssertEquals(0, Model.RowsRendered);
   AssertEquals(1, Std.Arrays.Length(Cmd.ReadBackground()));
-  var CancelInbox: channel of MandelbrotRenderFrame := CreateChannel(1);
-  var CancelSource: CancellationSource := CreateCancellationSource();
-  var CancelRequest: MandelbrotRenderRequest := record
+  const CancelInbox: channel of MandelbrotRenderFrame := CreateChannel(1);
+  const CancelSource: CancellationSource := CreateCancellationSource();
+  const CancelRequest: MandelbrotRenderRequest := record
     Generation := 99;
     XMin := 0.0;
     XMax := 0.0;
@@ -111,10 +111,10 @@ begin
     MaxIter := 2048;
     Palette := PaletteKind.DeepOcean;
   end;
-  var CancelToken: CancellationToken := GetCancellationToken(CancelSource);
+  const CancelToken: CancellationToken := GetCancellationToken(CancelSource);
   // Fill the output queue so publication must wait until cancellation.
   discard Send(CancelInbox, Frame);
-  var Background: task := go RunBackgroundRender(CancelRequest, CancelInbox, CancelToken);
+  const Background: task := go RunBackgroundRender(CancelRequest, CancelInbox, CancelToken);
   AssertTrue(IsError(WaitAnyWithTimeout([Background], 1)));
   AssertTrue(Cancel(CancelSource));
   AssertTrue(IsOk(Wait(Background)));

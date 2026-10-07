@@ -16,7 +16,7 @@ begin
   return 0;
 end function;
 begin
-  var T: task := go Work();
+  const T: task := go Work();
   case WaitAnyWithTimeout([T], 0) of
     when Ok(_): panic('pending task ready');
     when Error(Message): if Message <> 'Task wait timed out' then panic(Message); end if;
@@ -25,8 +25,8 @@ begin
     when Ok(_): panic('deadline extended');
     when Error(Message): if Message <> 'Task wait timed out' then panic(Message); end if;
   end case;
-  var Source: CancellationSource := CreateCancellationSource();
-  var Canceller: task := go CancelLater(Source);
+  const Source: CancellationSource := CreateCancellationSource();
+  const Canceller: task := go CancelLater(Source);
   case WaitAnyWithCancellation([T], GetCancellationToken(Source)) of
     when Ok(_): panic('not cancelled');
     when Error(Message): if Message <> 'Task wait was cancelled' then panic(Message); end if;
@@ -41,7 +41,7 @@ begin
     when Ok(_): panic('pre-cancellation lost');
     when Error(Message): if Message <> 'Task wait was cancelled' then panic(Message); end if;
   end case;
-  var Active: CancellationSource := CreateCancellationSource();
+  const Active: CancellationSource := CreateCancellationSource();
   case WaitAnyWithCancellation([T], GetCancellationToken(Active)) of
     when Ok(Index): if Index <> 0 then panic('index'); end if;
     when Error(Message): panic(Message);
@@ -71,13 +71,13 @@ begin
   return 7;
 end function;
 begin
-  var T: task := go Work();
+  const T: task := go Work();
   WaitAll([T]);
   case WaitAnyWithTimeout([T], 0) of
     when Ok(Index): if Index <> 0 then panic('index'); end if;
     when Error(Message): panic(Message);
   end case;
-  var Source: CancellationSource := CreateCancellationSource();
+  const Source: CancellationSource := CreateCancellationSource();
   discard Cancel(Source);
   case WaitAnyWithCancellation([T], GetCancellationToken(Source)) of
     when Ok(_): panic('pre-cancellation lost');

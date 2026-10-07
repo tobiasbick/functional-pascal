@@ -20,7 +20,7 @@ fn loose_file_analysis_is_cached_and_formats_the_snapshot() {
     let temp = TempDirectory::new("analysis-loose");
     let path = temp.write(
         "loose.fpas",
-        "program Loose; begin var Value: integer := 1; end.",
+        "program Loose; begin const Value: integer := 1; end.",
     );
     let mut service = LanguageService::new(WorkspaceContext::loose(temp.path()));
 
@@ -36,7 +36,7 @@ fn loose_file_analysis_is_cached_and_formats_the_snapshot() {
     assert!(diagnostics_for_document(&first).is_empty());
     assert_eq!(
         format_document(first.snapshot()).as_deref(),
-        Some("program Loose;\n\nbegin\n  var Value: integer := 1;\nend.\n")
+        Some("program Loose;\n\nbegin\n  const Value: integer := 1;\nend.\n")
     );
 }
 
@@ -136,7 +136,7 @@ fn reopened_editor_version_cannot_reuse_analysis_from_an_older_document_lifetime
         .open_document(
             &path,
             1,
-            "program Reopened;\nbegin\n  var Broken: integer := 'text';\nend.\n",
+            "program Reopened;\nbegin\n  const Broken: integer := 'text';\nend.\n",
         )
         .expect("second editor lifetime reuses client version");
     let reopened = service
@@ -232,7 +232,7 @@ include = ["src/**/*.fpas"]
     );
     let main = temp.write(
         "app/src/main.fpas",
-        "program App;\n\nuses Demo.Math;\n\nbegin\n  var Value: integer := Answer();\nend.\n",
+        "program App;\n\nuses Demo.Math;\n\nbegin\n  const Value: integer := Answer();\nend.\n",
     );
     let mut service = LanguageService::load(&workspace);
 
@@ -320,7 +320,7 @@ fn diagnostic_analysis_stays_current_when_a_sibling_source_vanishes() {
         .apply_full_text(
             &main,
             3,
-            "program App;\n\nuses Demo.Math;\n\nbegin\n  var Value: integer := Answer();\nend.\n",
+            "program App;\n\nuses Demo.Math;\n\nbegin\n  const Value: integer := Answer();\nend.\n",
         )
         .expect("restore main");
     let restored = service

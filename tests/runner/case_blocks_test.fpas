@@ -7,8 +7,8 @@ type Message = enum
   Empty;
 end enum;
 
-mutable var Evaluations: integer := 0;
-mutable var Guards: integer := 0;
+var Evaluations: integer := 0;
+var Guards: integer := 0;
 
 function Input(): integer;
 begin
@@ -28,7 +28,7 @@ begin
     when 1, 2 if Guard(false):
       return -1;
     when 2..3 if Guard(true):
-      var Answer: integer := 42;
+      const Answer: integer := 42;
       return Answer;
     when 2:
       return -2;
@@ -39,13 +39,13 @@ end function;
 
 function MakeScalarReader(): function(): integer;
 begin
-  var Value: integer := 7;
+  const Value: integer := 7;
   return function(): integer begin
     case 0 of
       when 1:
         null;
       else
-        var Value: integer := 100;
+        const Value: integer := 100;
         AssertEquals(100, Value);
     end case;
 
@@ -55,13 +55,13 @@ end function;
 
 function MakeVariantReader(): function(): integer;
 begin
-  var Value: integer := 8;
+  const Value: integer := 8;
   return function(): integer begin
     case Some(0) of
       when None:
         null;
       else
-        var Value: integer := 200;
+        const Value: integer := 200;
         AssertEquals(200, Value);
     end case;
 
@@ -73,16 +73,16 @@ begin
   AssertEquals(42, Choose());
   AssertEquals(1, Evaluations);
   AssertEquals(2, Guards);
-  var ScalarReader: function(): integer := MakeScalarReader();
+  const ScalarReader: function(): integer := MakeScalarReader();
   AssertEquals(7, ScalarReader());
-  var VariantReader: function(): integer := MakeVariantReader();
+  const VariantReader: function(): integer := MakeVariantReader();
   AssertEquals(8, VariantReader());
-  var Value: integer := 7;
+  const Value: integer := 7;
   case Message.Number(3) of
     when Message.Number(N) if N > 0:
-      var Value: integer := N;
+      const Value: integer := N;
       begin
-        var Value: integer := 9;
+        const Value: integer := 9;
         AssertEquals(9, Value);
       end;
 
@@ -100,7 +100,7 @@ begin
   end case;
 
   AssertEquals(7, Value);
-  mutable var Sum: integer := 0;
+  var Sum: integer := 0;
   for I: integer := 1 to 5 do
     case I of
       when 2:
@@ -108,7 +108,7 @@ begin
       when 5:
         break;
       else
-        var Increment: integer := I;
+        const Increment: integer := I;
         Sum := Sum + Increment;
     end case;
   end for;

@@ -3,15 +3,15 @@ program SelectMixedSourcesTest;
 uses Std.Tasks, Std.Results, Std.Test;
 
 begin
-  var Numbers: channel of integer := CreateChannel(2);
-  var Words: channel of string := CreateChannel(2);
+  const Numbers: channel of integer := CreateChannel(2);
+  const Words: channel of string := CreateChannel(2);
   discard Send(Numbers, 42);
   discard Send(Words, 'retained');
-  mutable var Seen: integer := 0;
-  var First: WaitCase := ReceiveCase(Numbers, procedure(Outcome: result of integer, string) begin
+  var Seen: integer := 0;
+  const First: WaitCase := ReceiveCase(Numbers, procedure(Outcome: result of integer, string) begin
     Seen := Unwrap(Outcome);
   end procedure);
-  var Second: WaitCase := ReceiveCase(Words, procedure(Outcome: result of string, string) begin
+  const Second: WaitCase := ReceiveCase(Words, procedure(Outcome: result of string, string) begin
     panic('losing callback ran');
   end procedure);
   AssertEquals(0, Select([First, Second]));
@@ -19,22 +19,22 @@ begin
   AssertEquals('retained', Unwrap(Receive(Words)));
   AssertFalse(CloseWaitCase(First));
   AssertFalse(CloseWaitCase(Second));
-  var Unused: WaitCase := TimerCase(0, procedure() begin
+  const Unused: WaitCase := TimerCase(0, procedure() begin
     panic('unused callback ran');
   end procedure);
   AssertTrue(CloseWaitCase(Unused));
   AssertFalse(CloseWaitCase(Unused));
-  var Source: CancellationSource := CreateCancellationSource();
+  const Source: CancellationSource := CreateCancellationSource();
   discard Cancel(Source);
-  var Cancelled: WaitCase := CancellationCase(GetCancellationToken(Source), procedure() begin
+  const Cancelled: WaitCase := CancellationCase(GetCancellationToken(Source), procedure() begin
     Seen := 7;
   end procedure);
-  var Timer: WaitCase := TimerCase(0, procedure() begin
+  const Timer: WaitCase := TimerCase(0, procedure() begin
     panic('losing timer ran');
   end procedure);
   AssertEquals(0, Select([Cancelled, Timer]));
   AssertEquals(7, Seen);
-  var Timed: WaitCase := TimerCase(1, procedure() begin
+  const Timed: WaitCase := TimerCase(1, procedure() begin
     Seen := 9;
   end procedure);
   AssertEquals(0, Select([Timed]));

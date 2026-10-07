@@ -3,16 +3,16 @@ program NoteNavigationDirtyTest;
 uses Notes.Model, Notes.Update, Std.Test, Std.Tui;
 
 begin
-  mutable var NoteValue: Note := NoteCreate('navigation', 123);
+  var NoteValue: Note := NoteCreate('navigation', 123);
   NoteValue.Title := 'Title';
   NoteValue.Body := 'Body';
   NoteValue.Tags := ['one'];
-  var Loaded: NotesLoad := record
+  const Loaded: NotesLoad := record
     Notes := [NoteValue];
     Issues := [];
   end;
-  mutable var State: NotesModel := NotesModelCreate(ScratchDir(), Loaded);
-  var Cmd: TuiCmdOutput := TuiCmdOutput.Create();
+  var State: NotesModel := NotesModelCreate(ScratchDir(), Loaded);
+  const Cmd: TuiCmdOutput := TuiCmdOutput.Create();
   for Caret: integer := 0 to 4 do
     begin
       State := NotesUpdate(State, TuiMsgTextChanged(TuiControlId.Create(3), TuiAction.Create(3), 'Title', Caret), Cmd);

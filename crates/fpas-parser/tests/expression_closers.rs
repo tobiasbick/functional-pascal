@@ -31,7 +31,7 @@ fn anonymous_routines_include_nested_declarations_and_empty_bodies() {
 fn enclosing_declarations_returns_and_arguments_own_their_terminators() {
     program_ok(
         "program T;
-        var F: function(): integer := function(): integer begin return 1; end function;
+        const F: function(): integer := function(): integer begin return 1; end function;
         function Make(): procedure(); begin return procedure() begin null; end procedure; end function;
         begin
         Apply(function(): integer begin return 2; end function, procedure() begin null; end procedure);

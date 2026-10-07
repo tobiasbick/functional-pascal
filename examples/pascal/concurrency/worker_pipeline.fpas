@@ -4,10 +4,10 @@ program WorkerPipeline;
 uses Std.Tasks, Std.Results, Std.Console, Std.Arrays;
 
 begin
-  var Jobs: channel of integer := CreateChannel(2);
-  var Results: channel of integer := CreateChannel(2);
-  var Group: TaskGroup := CreateTaskGroup();
-  var ProducerTask: task := StartTaskInGroup(Group, procedure(Token: CancellationToken) begin
+  const Jobs: channel of integer := CreateChannel(2);
+  const Results: channel of integer := CreateChannel(2);
+  const Group: TaskGroup := CreateTaskGroup();
+  const ProducerTask: task := StartTaskInGroup(Group, procedure(Token: CancellationToken) begin
     for Value: integer := 1 to 12 do
       begin
         if IsError(SendWithCancellation(Jobs, Value, Token)) then
@@ -22,7 +22,7 @@ begin
   end procedure);
   for Worker: integer := 1 to 3 do
     begin
-      var WorkerTask: task := StartTaskInGroup(Group, procedure(Token: CancellationToken) begin
+      const WorkerTask: task := StartTaskInGroup(Group, procedure(Token: CancellationToken) begin
         while not IsCancellationRequested(Token) do
           begin
             case ReceiveWithCancellation(Jobs, Token) of
@@ -45,7 +45,7 @@ begin
     end;
   end for;
   // Collect while the producer runs: filling Jobs first could deadlock the pipeline.
-  mutable var Total: integer := 0;
+  var Total: integer := 0;
   for Index: integer := 1 to 12 do
     begin
       Total := Total + Unwrap(Receive(Results));

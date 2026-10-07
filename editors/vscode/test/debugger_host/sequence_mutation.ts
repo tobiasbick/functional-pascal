@@ -52,9 +52,9 @@ export async function verifySequenceMutation(
     "uses Std.Console;",
     "",
     "begin",
-    "  mutable var Numbers: array of integer := [1, 2, 3];",
-    "  mutable var Text: string := 'A😀B';",
-    "  var StopMarker: integer := 0;",
+    "  var Numbers: array of integer := [1, 2, 3];",
+    "  var Text: string := 'A😀B';",
+    "  const StopMarker: integer := 0;",
     "  WriteLn(Numbers[0]);",
     "  WriteLn(Numbers[1]);",
     "  WriteLn(Numbers[2]);",
@@ -63,7 +63,7 @@ export async function verifySequenceMutation(
     ""
   ];
   const sourcePath = await writeSource(workspaceRoot, "sequence-mutation", lines);
-  const stopLine = lines.indexOf("  var StopMarker: integer := 0;");
+  const stopLine = lines.indexOf("  const StopMarker: integer := 0;");
   const breakpoint = new vscode.SourceBreakpoint(
     new vscode.Location(vscode.Uri.file(sourcePath), new vscode.Position(stopLine, 2))
   );

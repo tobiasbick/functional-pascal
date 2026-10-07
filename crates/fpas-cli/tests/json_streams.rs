@@ -157,7 +157,10 @@ fn all_four_commands_preserve_source_failures_in_text_and_json() {
     for (source, expected) in [
         ("program P; begin @ end.", "FP1001"),
         ("program P begin end.", "FP2001"),
-        ("program P; begin var N: integer := 'hello'; end.", "FP3006"),
+        (
+            "program P; begin const N: integer := 'hello'; end.",
+            "FP3006",
+        ),
         (
             "program P; procedure Print(A, B: integer); begin end procedure; begin end.",
             "FP2014",
@@ -304,7 +307,7 @@ fn malformed_record_initializer_finishes_with_bounded_diagnostics() {
     let root = temp_dir();
     write(
         &root.join("bad.fpas"),
-        "program P; begin var Value: integer := record then end end.",
+        "program P; begin const Value: integer := record then end end.",
     );
     let mut child = Command::new(env!("CARGO_BIN_EXE_fpas"))
         .current_dir(&root)

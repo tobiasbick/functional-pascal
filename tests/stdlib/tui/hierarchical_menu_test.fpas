@@ -24,7 +24,7 @@ function FindGlyph(Snapshot: TuiSurfaceSnapshot; Glyph: string): TuiPoint;
 begin
   for Y: integer := 0 to Snapshot.Height - 1 do
     begin
-      var X: integer := Std.Str.IndexOf(Snapshot.LineAt(Y), Glyph);
+      const X: integer := Std.Str.IndexOf(Snapshot.LineAt(Y), Glyph);
       if X >= 0 then
         begin
           return TuiPoint.Create(X, Y);
@@ -52,9 +52,9 @@ end procedure;
 
 function MenuNodes(): array of TuiMenuNode;
 begin
-  var FileId: TuiMenuNodeId := TuiMenuNodeId.Create(1);
-  var OptionsId: TuiMenuNodeId := TuiMenuNodeId.Create(2);
-  var ThemeId: TuiMenuNodeId := TuiMenuNodeId.Create(5);
+  const FileId: TuiMenuNodeId := TuiMenuNodeId.Create(1);
+  const OptionsId: TuiMenuNodeId := TuiMenuNodeId.Create(2);
+  const ThemeId: TuiMenuNodeId := TuiMenuNodeId.Create(5);
   return [
            TuiMenuNodeBuilders.Submenu(FileId, None, 'File', 'F'),
            TuiMenuNodeBuilders.Submenu(OptionsId, None, 'Options', 'O'),
@@ -117,8 +117,8 @@ begin
 end function;
 
 begin
-  mutable var App: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(40, 10));
-  mutable var Model: MenuModel := record
+  var App: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(40, 10));
+  var Model: MenuModel := record
     Focus := 100;
     Menu := TuiMenuState.Closed();
     Actions := [];
@@ -127,7 +127,7 @@ begin
   Model := App.RunIterations(Model, UpdateMenu, ViewMenu, 0, 0);
   AssertTrue(App.SurfaceSnapshot().CellAt(7, 0).Role = TuiStyleRole.MenuShortcut);
   AssertTrue(App.SurfaceSnapshot().CellAt(11, 0).Role = TuiStyleRole.MenuNormal);
-  var ClosedFileAt: TuiPoint := FindGlyph(App.SurfaceSnapshot(), 'File');
+  const ClosedFileAt: TuiPoint := FindGlyph(App.SurfaceSnapshot(), 'File');
   App.InjectPointerForTest(TuiPointerEvent.Create(TuiPointerAction.Move, TuiPointerButton.NoButton, ClosedFileAt));
   Model := App.RunIterations(Model, UpdateMenu, ViewMenu, 1, 0);
   AssertFalse(Model.Menu.Open);
@@ -162,15 +162,15 @@ begin
   AssertEquals(20, Model.Actions[2]);
   App.InjectKeyForTest(MakeKey(TuiKeyKind.F10, '', false, false));
   Model := App.RunIterations(Model, UpdateMenu, ViewMenu, 1, 0);
-  var OptionsAt: TuiPoint := FindGlyph(App.SurfaceSnapshot(), 'Options');
+  const OptionsAt: TuiPoint := FindGlyph(App.SurfaceSnapshot(), 'Options');
   App.InjectPointerForTest(TuiPointerEvent.Create(TuiPointerAction.Move, TuiPointerButton.NoButton, OptionsAt));
   Model := App.RunIterations(Model, UpdateMenu, ViewMenu, 1, 0);
   AssertActive(Model.Menu, 2);
-  var ThemeAt: TuiPoint := FindGlyph(App.SurfaceSnapshot(), 'Theme');
+  const ThemeAt: TuiPoint := FindGlyph(App.SurfaceSnapshot(), 'Theme');
   App.InjectPointerForTest(TuiPointerEvent.Create(TuiPointerAction.Move, TuiPointerButton.NoButton, ThemeAt));
   Model := App.RunIterations(Model, UpdateMenu, ViewMenu, 1, 0);
   AssertActive(Model.Menu, 5);
-  var DarkAt: TuiPoint := FindGlyph(App.SurfaceSnapshot(), 'Dark');
+  const DarkAt: TuiPoint := FindGlyph(App.SurfaceSnapshot(), 'Dark');
   App.InjectPointerForTest(TuiPointerEvent.Create(TuiPointerAction.Move, TuiPointerButton.NoButton, DarkAt));
   Model := App.RunIterations(Model, UpdateMenu, ViewMenu, 1, 0);
   AssertActive(Model.Menu, 6);

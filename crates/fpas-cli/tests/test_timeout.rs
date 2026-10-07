@@ -87,7 +87,7 @@ fn timeout_terminates_processes_started_by_the_test() {
     write(
         &test_file,
         &format!(
-            "program ProcessTest;\nuses Std.Proc;\nmutable var Status: Result of integer, string := Error('not started');\nbegin Status := Run('{command}', [{arguments}]); end."
+            "program ProcessTest;\nuses Std.Proc;\nvar Status: Result of integer, string := Error('not started');\nbegin Status := Run('{command}', [{arguments}]); end."
         ),
     );
 

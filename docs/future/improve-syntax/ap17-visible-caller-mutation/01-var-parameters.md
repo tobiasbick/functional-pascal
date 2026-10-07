@@ -10,7 +10,8 @@ aliasing rejection, capture and `go` restrictions, and forwarding.
 ## Prerequisites
 
 - AP16.3 (keyword switch; `var` bindings are reassignable).
-- AP13: recheck at start whether a block-syntax work package is required.
+- AP13.3 and AP13.6 (routine and callable-expression closers; complete on
+  the working branch).
 
 ## Implementation
 

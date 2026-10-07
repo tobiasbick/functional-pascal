@@ -22,8 +22,6 @@ pub(crate) fn emit_decls(emitter: &mut Emitter, declarations: &[Decl], comments:
 fn needs_blank_line(previous: &Decl, next: &Decl) -> bool {
     !matches!(
         (previous, next),
-        (Decl::Const(_), Decl::Const(_))
-            | (Decl::Var(_), Decl::Var(_))
-            | (Decl::MutableVar(_), Decl::MutableVar(_))
+        (Decl::Const(_), Decl::Const(_)) | (Decl::Var(_), Decl::Var(_))
     ) || previous.visibility() != next.visibility()
 }

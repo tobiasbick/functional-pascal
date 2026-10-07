@@ -31,13 +31,6 @@ pub(super) fn collect(
                 &definition.type_expr,
                 &definition.value,
                 definition.span,
-                false,
-            ),
-            Decl::MutableVar(definition) => (
-                &definition.name,
-                &definition.type_expr,
-                &definition.value,
-                definition.span,
                 true,
             ),
             _ => continue,

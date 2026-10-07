@@ -49,7 +49,17 @@ impl Parser {
 
     fn parse_formal_param(&mut self, allow_self_receiver: bool) -> Option<FormalParam> {
         let start = self.current_span();
-        let mutable = self.eat(&Token::Mutable);
+        if matches!(self.current_token(), Token::Ident(name) if name.eq_ignore_ascii_case("mutable"))
+            && matches!(self.peek_token(), Token::Ident(_) | Token::SelfKw)
+        {
+            self.error_with_code(
+                PARSE_EXPECTED_TOKEN,
+                "The `mutable` parameter modifier has been removed",
+                "Parameters are read-only. Write `Value: integer` and start the body with `var LocalValue: integer := Value;` when a writable local copy is needed.",
+                start,
+            );
+            self.advance();
+        }
         let (name, _) = if allow_self_receiver && self.check(&Token::SelfKw) {
             let span = self.advance().span;
             ("Self".to_owned(), span)
@@ -64,7 +74,6 @@ impl Parser {
         self.expect(&Token::Colon);
         let type_expr: TypeExpr = self.parse_type_expr();
         Some(FormalParam {
-            mutable,
             name,
             type_expr,
             span: self.span_from(start),

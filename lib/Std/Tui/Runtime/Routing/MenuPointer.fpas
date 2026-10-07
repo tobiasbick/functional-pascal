@@ -20,7 +20,7 @@ public type TuiPointerMenu = record
   public Bounds: TuiRect;
 end record;
 
-mutable var TuiPointerMenus: array of TuiPointerMenu := [];
+var TuiPointerMenus: array of TuiPointerMenu := [];
 
 function TuiPointerMenuWalk(
   Frame: TuiArrangedFrame;
@@ -29,13 +29,13 @@ function TuiPointerMenuWalk(
   AllowMenu: boolean
 ): integer;
 begin
-  mutable var Next: integer := Index + 1;
+  var Next: integer := Index + 1;
   case Node of
     when TuiElement.Menu(Id, Nodes, State, ChangeAction):
       begin
         if AllowMenu then
           begin
-            mutable var Menus: array of TuiPointerMenu := TuiPointerMenus;
+            var Menus: array of TuiPointerMenu := TuiPointerMenus;
             TuiPointerMenus := [];
             Std.Arrays.Push(Menus, record
               Id := Id;
@@ -50,7 +50,7 @@ begin
       end;
     when TuiElement.Desktop(Focused, Children):
       begin
-        mutable var ModalIndex: integer := -1;
+        var ModalIndex: integer := -1;
         for ChildIndex: integer := 0 to Std.Arrays.Length(Children) - 1 do
           begin
             case Children[ChildIndex] of
@@ -130,7 +130,7 @@ end function;
 
 function TuiPointerMenuFocus(Root: TuiElement; Menu: TuiPointerMenu): array of TuiMsg;
 begin
-  var Previous: option of TuiControlId := TuiRootFocus(Root);
+  const Previous: option of TuiControlId := TuiRootFocus(Root);
   if TuiFocusMatches(Previous, Menu.Id) then
     begin
       return [];
@@ -171,7 +171,7 @@ begin
       return None;
     end;
   end if;
-  mutable var X: integer := Menu.Bounds.X;
+  var X: integer := Menu.Bounds.X;
   for Index: integer := 0 to Std.Arrays.Length(Menu.Nodes) - 1 do
     begin
       case TuiMenuNodeParent(Menu.Nodes[Index]) of
@@ -180,7 +180,7 @@ begin
           end;
         when None:
           begin
-            var Width: integer := Std.Console.DisplayWidth(TuiMenuNodeText(Menu.Nodes[Index])) + 2;
+            const Width: integer := Std.Console.DisplayWidth(TuiMenuNodeText(Menu.Nodes[Index])) + 2;
             if TuiRect.Create(X, Menu.Bounds.Y, Width, 1).Contains(Point) and
                TuiMenuNodeSelectable(Menu.Nodes[Index]) then
               begin
@@ -212,18 +212,18 @@ function TuiPointerMenuPopupHit(
   Activate: boolean
 ): option of array of TuiMsg;
 begin
-  var Popups: array of TuiMenuPopup := TuiMenuPopupGeometry(Menu.Nodes, Menu.State, Menu.Bounds, TerminalBounds);
+  const Popups: array of TuiMenuPopup := TuiMenuPopupGeometry(Menu.Nodes, Menu.State, Menu.Bounds, TerminalBounds);
   for PopupIndex: integer := Std.Arrays.Length(Popups) - 1 downto 0 do
     begin
       if Popups[PopupIndex].Bounds.Contains(Point) then
         begin
-          var Row: integer := (Point.Y - Popups[PopupIndex].Bounds.Y) - 1;
+          const Row: integer := (Point.Y - Popups[PopupIndex].Bounds.Y) - 1;
           if (Row < 0) or (Row >= Popups[PopupIndex].Bounds.Height - 2) then
             begin
               return Some([]);
             end;
           end if;
-          mutable var ChildRow: integer := 0;
+          var ChildRow: integer := 0;
           for Index: integer := 0 to Std.Arrays.Length(Menu.Nodes) - 1 do
             begin
               if TuiMenuHasParent(Menu.Nodes[Index], Some(Popups[PopupIndex].Parent)) then
@@ -313,7 +313,7 @@ begin
       return None;
     end;
   end if;
-  var Menu: TuiPointerMenu := TuiPointerMenus[0];
+  const Menu: TuiPointerMenu := TuiPointerMenus[0];
   if not Activate and not Menu.State.Open then
     begin
       return None;

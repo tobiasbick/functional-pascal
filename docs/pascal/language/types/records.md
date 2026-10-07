@@ -27,7 +27,7 @@ end record;
 ## Creating a record
 
 ```pascal
-var P: Point := record
+const P: Point := record
   X := 0.0;
   Y := 5.0;
 end;
@@ -56,12 +56,12 @@ end record;
 
 type PointAlias = Point;
 
-var P: Point := record
+const P: Point := record
   X := 1;
   Y := 2;
 end;
-var A: PointAlias := P; // Valid: PointAlias names the Point declaration.
-var S: Size := P; // Error: Point and Size are distinct declarations.
+const A: PointAlias := P; // Valid: PointAlias names the Point declaration.
+const S: Size := P; // Error: Point and Size are distinct declarations.
 ```
 
 Two values of the same record type compare with `=` and `<>` field by field when every field
@@ -75,7 +75,7 @@ separately declared record types interchangeable.
 ## Accessing fields
 
 ```pascal
-var PosX: real := P.X;
+const PosX: real := P.X;
 ```
 
 ## Field visibility
@@ -110,10 +110,10 @@ rule.
 
 ## Immutability
 
-Record instances follow the same immutability rules as variables. A `mutable var` record allows field reassignment:
+Record instances follow the same immutability rules as variables. A `var` record allows field reassignment:
 
 ```pascal
-mutable var
+var
   P: Point := record
     X := 1.0;
     Y := 2.0;
@@ -143,8 +143,8 @@ end record;
 Omitting defaulted fields:
 
 ```pascal
-var C: Config := record end; // Host='localhost', Port=8080, Debug=false
-var D: Config := record
+const C: Config := record end; // Host='localhost', Port=8080, Debug=false
+const D: Config := record
   Port := 9000;
 end; // Host='localhost', Port=9000, Debug=false
 ```
@@ -152,7 +152,7 @@ end; // Host='localhost', Port=9000, Debug=false
 Explicitly providing a value overrides the default:
 
 ```pascal
-var E: Config := record
+const E: Config := record
   Host := 'example.com';
   Port := 443;
   Debug := true;
@@ -168,7 +168,7 @@ type Vertex = record
   Y: integer := 0; // Optional
 end record;
 
-var V: Vertex := record
+const V: Vertex := record
   Id := 7;
 end; // X=0, Y=0 from defaults
 ```
@@ -180,4 +180,4 @@ end; // X=0, Y=0 from defaults
 - [Record properties](record-properties.md)
 - [Record events](record-events.md)
 - [Record update](record-update.md)
-- [Mutable parameters](../functions/mutable-parameters.md)
+- [Read-only parameters](../functions/parameters.md)

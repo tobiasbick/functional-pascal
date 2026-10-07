@@ -3,6 +3,6 @@ program T;
 uses Std.Console, Std.Random;
 
 begin
-  var N: integer := RandomInt(1, 1);
+  const N: integer := RandomInt(1, 1);
   WriteLn(N);
 end.

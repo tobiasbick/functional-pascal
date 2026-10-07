@@ -117,7 +117,7 @@ mod tests {
         );
         write_text(
             &helper,
-            "unit Suite.Helper;\npublic var Answer: integer := 42;\npublic function GetAnswer(): integer;\nbegin return Answer; end function;\nend unit;\n",
+            "unit Suite.Helper;\npublic const Answer: integer := 42;\npublic function GetAnswer(): integer;\nbegin return Answer; end function;\nend unit;\n",
         );
         for (path, name) in [(&first, "First"), (&second, "Second")] {
             write_text(
@@ -171,7 +171,7 @@ mod tests {
             write_text(
                 path,
                 &format!(
-                    "program {name}; uses Std.Test; var Value: integer := {value}; begin AssertEquals({value}, Value); end."
+                    "program {name}; uses Std.Test; const Value: integer := {value}; begin AssertEquals({value}, Value); end."
                 ),
             );
         }

@@ -3,7 +3,7 @@ program FractalCameraTest;
 uses Fractal.Camera, Std.Math, Std.Test;
 
 begin
-  var Camera: ExplorerCamera := record
+  const Camera: ExplorerCamera := record
     CenterX := -0.45;
     CenterY := -0.55;
     SpanY := 2.8;

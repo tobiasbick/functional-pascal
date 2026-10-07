@@ -3,5 +3,5 @@ program T;
 uses Std.Arrays;
 
 begin
-  var C: array of integer := Concat([1], [true]);
+  const C: array of integer := Concat([1], [true]);
 end.

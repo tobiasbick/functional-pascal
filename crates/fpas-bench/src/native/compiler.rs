@@ -5,8 +5,7 @@ use std::time::Instant;
 
 /// Measures lowering after parsing and a warmup compilation, without VM execution.
 pub(super) fn run(iterations: usize, branches: usize) -> Result<(), String> {
-    let mut source =
-        String::from("program BranchBenchmark; begin mutable var Value: integer := 0;\n");
+    let mut source = String::from("program BranchBenchmark; begin var Value: integer := 0;\n");
     for _ in 0..branches {
         source.push_str(
             "if Value mod 2 = 0 then Value := Value + 1; else Value := Value + 2; end if;\n",

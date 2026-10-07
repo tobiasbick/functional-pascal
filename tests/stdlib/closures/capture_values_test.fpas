@@ -4,7 +4,7 @@ uses Std.Console, Std.Conv, Std.Test;
 
 function Counter(): function(): integer;
 begin
-  mutable var Value: integer := 0;
+  var Value: integer := 0;
   return function(): integer begin
     Value := Value + 1;
     return Value;
@@ -12,18 +12,18 @@ begin
 end function;
 
 begin
-  var Next: function(): integer := Counter();
+  const Next: function(): integer := Counter();
   AssertEquals('1', IntToStr(Next()));
   AssertEquals('2', IntToStr(Next()));
-  mutable var Count: integer := 0;
-  var Inc: procedure() := procedure() begin
+  var Count: integer := 0;
+  const Inc: procedure() := procedure() begin
     Count := Count + 1;
   end procedure;
 
   Inc();
   AssertEquals('1', IntToStr(Count));
-  var Base: integer := 10;
-  var Add: function(Value: integer): integer := function(Value: integer): integer begin
+  const Base: integer := 10;
+  const Add: function(Value: integer): integer := function(Value: integer): integer begin
     return Base + Value;
   end function;
 

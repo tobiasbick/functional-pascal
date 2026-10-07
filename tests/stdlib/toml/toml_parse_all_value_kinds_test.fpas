@@ -3,8 +3,8 @@ program TomlParseAllValueKindsTest;
 uses Std.Arrays, Std.Dictionaries, Std.Options, Std.Str, Std.Test, Std.Toml;
 
 begin
-  var Parsed: result of TomlValue, string := Parse(((((((((((((('title = ''TOML''' + Chr(10)) + 'integer = -42') + Chr(10)) + 'float = 1.5') + Chr(10)) + 'enabled = true') + Chr(10)) + 'when = 1979-05-27T07:32:00Z') + Chr(10)) + 'items = [''a'', 2]') + Chr(10)) + '[nested]') + Chr(10)) +
-                                                   'value = ''ok''');
+  const Parsed: result of TomlValue, string := Parse(((((((((((((('title = ''TOML''' + Chr(10)) + 'integer = -42') + Chr(10)) + 'float = 1.5') + Chr(10)) + 'enabled = true') + Chr(10)) + 'when = 1979-05-27T07:32:00Z') + Chr(10)) + 'items = [''a'', 2]') + Chr(10)) + '[nested]') + Chr(10)) +
+                                                     'value = ''ok''');
   case Parsed of
     when Ok(Value):
       begin

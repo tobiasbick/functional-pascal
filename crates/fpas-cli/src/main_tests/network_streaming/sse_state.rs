@@ -35,8 +35,8 @@ fn source_review_sse_failure_releases_retained_input() {
         r#"
 public function ReviewRetained(Decoder: Std.Http.Types.SseDecoder): integer;
 begin
-  var Index: integer := Std.Http.Handles.SseDecoderSlot(Decoder);
-  var State: DecoderState := LoadState(Index);
+  const Index: integer := Std.Http.Handles.SseDecoderSlot(Decoder);
+  const State: DecoderState := LoadState(Index);
   return Std.Arrays.Length(State.Buffer) + Std.Str.Length(State.Data) +
     Std.Str.Length(State.EventType) + Std.Str.Length(State.LastEventId) + State.EventBytes;
 end function;
@@ -61,14 +61,14 @@ end unit;
         r#"program RetainedSse;
 uses Std.Http, Std.Net.Utf8, Std.Results, Std.Str, Std.Test;
 begin
-  var Decoder: SseDecoder := Unwrap(CreateSseDecoder(32));
+  const Decoder: SseDecoder := Unwrap(CreateSseDecoder(32));
   discard Unwrap(FeedSse(Decoder, Std.Net.Utf8.Encode('id:old' + #10 + 'data:x' + #10)));
   AssertTrue(ReviewRetained(Decoder) > 0);
   case FeedSse(Decoder, Std.Net.Utf8.Encode(Std.Str.RepeatStr('x', 100000))) of
     when Ok(_): Fail('expected size failure'); when Error(_): begin end;
   end case;
   AssertEquals(0, ReviewRetained(Decoder));
-  var FinalDecoder: SseDecoder := Unwrap(CreateSseDecoder(32));
+  const FinalDecoder: SseDecoder := Unwrap(CreateSseDecoder(32));
   discard Unwrap(FeedSse(FinalDecoder, [255]));
   case FinishSse(FinalDecoder) of
     when Ok(_): Fail('expected UTF-8 failure'); when Error(_): begin end;

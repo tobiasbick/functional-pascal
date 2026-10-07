@@ -4,7 +4,7 @@
 type is part of the static type: `channel of integer` and `channel of string` are different types.
 
 ```pascal
-var Messages: channel of string := Std.Tasks.CreateChannel(16);
+const Messages: channel of string := Std.Tasks.CreateChannel(16);
 ```
 
 ## Type rules

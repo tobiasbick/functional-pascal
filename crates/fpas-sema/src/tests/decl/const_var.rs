@@ -16,61 +16,50 @@ fn const_type_mismatch() {
 }
 
 #[test]
-fn const_initializer_must_be_compile_time_known() {
-    let errors = check_errors(
+fn const_initializer_can_call_routine() {
+    check_ok(
         "program T; \
          function FortyTwo(): integer; \
          begin return 42; end function; \
          const X: integer := FortyTwo(); \
          begin end.",
     );
-    assert!(
-        errors
-            .iter()
-            .any(|error| { error.code == fpas_diagnostics::codes::SEMA_NON_CONSTANT_EXPRESSION }),
-        "expected non-constant-expression diagnostic, got: {errors:#?}"
-    );
 }
 
 #[test]
-fn const_initializer_cannot_read_variable() {
-    let errors = check_errors(
+fn const_initializer_can_read_variable() {
+    check_ok(
         "program T; \
-         var Seed: integer := 1; \
+         const Seed: integer := 1; \
          const X: integer := Seed; \
          begin end.",
-    );
-    assert!(
-        errors
-            .iter()
-            .any(|error| { error.code == fpas_diagnostics::codes::SEMA_NON_CONSTANT_EXPRESSION }),
-        "expected non-constant-expression diagnostic, got: {errors:#?}"
     );
 }
 
 #[test]
 fn var_valid() {
-    check_ok("program T; var X: integer := 42; begin end.");
+    check_ok("program T; const X: integer := 42; begin end.");
 }
 
 #[test]
 fn var_type_mismatch() {
-    check_errors("program T; var X: integer := true; begin end.");
+    check_errors("program T; const X: integer := true; begin end.");
 }
 
 #[test]
 fn mutable_var_valid() {
-    check_ok("program T; mutable var X: integer := 0; begin end.");
+    check_ok("program T; var X: integer := 0; begin end.");
 }
 
 #[test]
 fn duplicate_variable() {
-    check_errors("program T; var X: integer := 1; var X: integer := 2; begin end.");
+    check_errors("program T; const X: integer := 1; const X: integer := 2; begin end.");
 }
 
 #[test]
 fn duplicate_variable_differs_only_by_case_rejected() {
-    let errors = check_errors("program T; var X: integer := 1; var x: integer := 2; begin end.");
+    let errors =
+        check_errors("program T; const X: integer := 1; const x: integer := 2; begin end.");
     assert!(
         errors
             .iter()
@@ -83,8 +72,8 @@ fn duplicate_variable_differs_only_by_case_rejected() {
 fn variable_names_are_case_insensitive() {
     check_ok(
         "program T; \
-         var X: integer := 1; \
-         var Y: integer := x; \
+         const X: integer := 1; \
+         const Y: integer := x; \
          begin end.",
     );
 }

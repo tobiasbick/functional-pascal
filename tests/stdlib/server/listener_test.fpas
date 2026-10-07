@@ -6,7 +6,7 @@ function BindListener(): result of Std.Net.Listener, string;
 begin
   for Port: integer := 28100 to 28199 do
     begin
-      var Opened: result of Std.Net.Listener, string := Listen('127.0.0.1', Port);
+      const Opened: result of Std.Net.Listener, string := Listen('127.0.0.1', Port);
       if IsOk(Opened) then
         begin
           return Opened;
@@ -19,9 +19,9 @@ begin
 end function;
 
 begin
-  var Life: ServerLifetime := Unwrap(CreateLifetime(1000, false));
-  var Other: ServerLifetime := Unwrap(CreateLifetime(1000, false));
-  var Listener: Std.Net.Listener := Unwrap(BindListener());
+  const Life: ServerLifetime := Unwrap(CreateLifetime(1000, false));
+  const Other: ServerLifetime := Unwrap(CreateLifetime(1000, false));
+  const Listener: Std.Net.Listener := Unwrap(BindListener());
   AssertTrue(Unwrap(OwnListener(Life, Listener)));
   AssertTrue(not Unwrap(OwnListener(Life, Listener)));
   AssertTrue(IsError(OwnListener(Other, Listener)));

@@ -78,7 +78,7 @@ fn jsonl_cell_capturing_assignment_continues_through_shared_cells() {
         "launch",
         json!({"stop_on_entry":true}),
     );
-    let owner = stop_at(&mut server, &mut id, "var CellStop: integer := 0;");
+    let owner = stop_at(&mut server, &mut id, "const CellStop: integer := 0;");
     let locals = locals_reference(&mut server, &mut id, owner);
 
     let assigned = send(
@@ -137,7 +137,7 @@ fn jsonl_global_cell_destination_is_rejected_without_mutation() {
         "launch",
         json!({"stop_on_entry":true}),
     );
-    let owner = stop_at(&mut server, &mut id, "var CellStop: integer := 0;");
+    let owner = stop_at(&mut server, &mut id, "const CellStop: integer := 0;");
     let rejected = send(
         &mut server,
         &mut id,

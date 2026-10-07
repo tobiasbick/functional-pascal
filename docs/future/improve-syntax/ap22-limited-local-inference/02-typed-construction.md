@@ -22,7 +22,7 @@ record construction, for example `const P := Point(X := 1, Y := 2);`.
 
 ## Affected areas
 
-- `crates/fpas-sema/src/check/decl/vars.rs`, `consts.rs`.
+- `crates/fpas-sema/src/check/decl/vars.rs`, `check/decl/consts/`.
 
 ## Migration
 

@@ -12,7 +12,7 @@ begin
   case Msg of
     when TuiMsg.Started:
       begin
-        var Ready: channel of boolean := State.Ready;
+        const Ready: channel of boolean := State.Ready;
         Cmd.StartBackground(19, function(Token: CancellationToken): result of boolean, string begin
           discard Send(Ready, true);
           return Error('expected background failure');
@@ -47,10 +47,10 @@ begin
 end function;
 
 begin
-  var Inbox: channel of integer := CreateChannel(1);
-  var Ready: channel of boolean := CreateChannel(1);
-  var App: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(24, 4));
-  mutable var Model: FailureModel := App.RunBackgroundIterations(record
+  const Inbox: channel of integer := CreateChannel(1);
+  const Ready: channel of boolean := CreateChannel(1);
+  const App: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(24, 4));
+  var Model: FailureModel := App.RunBackgroundIterations(record
     Ready := Ready;
     FailureSeen := false;
   end, Inbox, UpdateFramework, UpdateApplication, View, 1, 0);

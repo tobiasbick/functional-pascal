@@ -4,19 +4,20 @@ program MutableNestedFunctions;
 
 uses Std.Console, Std.Conv;
 
-procedure ClampToRange(mutable Value: integer; Min: integer; Max: integer);
+procedure ClampToRange(Value: integer; Min: integer; Max: integer);
 begin
-  if Value < Min then
+  var LocalValue: integer := Value;
+  if LocalValue < Min then
     begin
-      Value := Min;
+      LocalValue := Min;
     end;
-  elsif Value > Max then
+  elsif LocalValue > Max then
     begin
-      Value := Max;
+      LocalValue := Max;
     end;
   end if;
 
-  WriteLn('clamped local: ', IntToStr(Value));
+  WriteLn('clamped local: ', IntToStr(LocalValue));
 end procedure;
 
 function IsEven(N: integer): boolean;
@@ -45,7 +46,7 @@ begin
 end function;
 
 begin
-  var Original: integer := 15;
+  const Original: integer := 15;
   ClampToRange(Original, 0, 10);
   WriteLn('caller unchanged: ', IntToStr(Original));
   WriteLn('is even 8: ', IsEven(8));

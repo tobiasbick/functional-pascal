@@ -85,6 +85,7 @@ impl Checker {
                 self.scopes.define_with_declaration(
                     binding_name,
                     Symbol {
+                        constant: None,
                         ty: case_ty.clone(),
                         mutable: false,
                         kind: SymbolKind::Var,
@@ -114,6 +115,7 @@ impl Checker {
                     self.scopes.define_with_declaration(
                         name,
                         Symbol {
+                            constant: None,
                             ty: ty.clone(),
                             mutable: false,
                             kind: SymbolKind::Var,

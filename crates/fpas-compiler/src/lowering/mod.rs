@@ -230,9 +230,6 @@ fn lower_analyzed_root(
             fpas_parser::Decl::Var(definition) => {
                 (&definition.name, &definition.value, definition.span)
             }
-            fpas_parser::Decl::MutableVar(definition) => {
-                (&definition.name, &definition.value, definition.span)
-            }
             _ => continue,
         };
         let value = context

@@ -25,8 +25,8 @@ impl LoweringContext {
                 self.end_scope();
                 Ok(())
             }
-            Stmt::Var(definition) => self.lower_variable(definition, false),
-            Stmt::MutableVar(definition) => self.lower_variable(definition, true),
+            Stmt::Const(definition) => self.lower_variable(definition, false),
+            Stmt::Var(definition) => self.lower_variable(definition, true),
             Stmt::Assign {
                 target,
                 value,

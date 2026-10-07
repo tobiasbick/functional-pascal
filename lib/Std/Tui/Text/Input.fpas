@@ -35,7 +35,7 @@ end function;
 // - `Width`: Width in terminal cells.
 public function TuiInputViewportFor(Text: string; Caret: integer; Width: integer): TuiInputViewport;
 begin
-  mutable var Start: integer := 0;
+  var Start: integer := 0;
   if Width <= 0 then
     begin
       return record
@@ -61,7 +61,7 @@ begin
       end if;
     end;
   end while;
-  mutable var EndIndex: integer := Start;
+  var EndIndex: integer := Start;
   while EndIndex < Std.Str.Length(Text) do
     begin
       if TuiInputWidth(Text, Start, EndIndex + 1) <= Width then
@@ -98,10 +98,10 @@ begin
       return Viewport.Start;
     end;
   end if;
-  mutable var Width: integer := 0;
+  var Width: integer := 0;
   for Index: integer := Viewport.Start to Viewport.EndIndex - 1 do
     begin
-      var GlyphWidth: integer := Std.Console.DisplayWidth(Std.Str.CharAt(Text, Index));
+      const GlyphWidth: integer := Std.Console.DisplayWidth(Std.Str.CharAt(Text, Index));
       if Column < Width + GlyphWidth then
         begin
           return Index;

@@ -23,8 +23,8 @@ type
     property ValueProp: integer read GetValue write SetValue;
   end record;
 begin
-  var B: Box := record Value := 1; end;
-  var X: integer := B.ValueProp;
+  const B: Box := record Value := 1; end;
+  const X: integer := B.ValueProp;
   B.ValueProp := 2;
 end.",
     );
@@ -44,7 +44,7 @@ type
     property Label: string write SetLabel;
   end record;
 begin
-  var H: Handle := record Id := 1; end;
+  const H: Handle := record Id := 1; end;
   H.Label := 'ok';
 end.",
     );
@@ -63,8 +63,8 @@ type
     property Password: string write SetPassword;
   end record;
 begin
-  var B: Box := record end;
-  var S: string := B.Password;
+  const B: Box := record end;
+  const S: string := B.Password;
 end.",
     );
     assert!(
@@ -87,7 +87,7 @@ type
     property Width: integer read GetWidth;
   end record;
 begin
-  var B: Box := record end;
+  const B: Box := record end;
   B.Width := 1;
 end.",
     );
@@ -157,8 +157,8 @@ type
     property Width: integer read GetWidth;
   end record;
 begin
-  var B: Box := record end;
-  var W: integer := B.Width;
+  const B: Box := record end;
+  const W: integer := B.Width;
 end.";
     let (program, parse_errors) = fpas_parser::parse(src);
     assert!(parse_errors.is_empty(), "{parse_errors:#?}");
@@ -180,35 +180,23 @@ end.";
 }
 
 #[test]
-fn property_rejects_mutable_accessor_parameters() {
-    let errors = check_errors(
+fn property_accessors_allow_local_parameter_copies() {
+    check_ok(
         "\
 program T;
 type
   Box = record
-    function GetValue(mutable Self: Box): integer;
+    function GetValue(Self: Box): integer;
     begin
-      return 0;
+      var LocalSelf: Box := Self;\nreturn 0;
     end function;
-    procedure SetValue(Self: Box; mutable Value: integer);
+    procedure SetValue(Self: Box; Value: integer);
     begin
     end procedure;
     property Value: integer read GetValue write SetValue;
   end record;
 begin
 end.",
-    );
-    assert!(
-        errors
-            .iter()
-            .any(|error| error.message.contains("mutable Self")),
-        "{errors:#?}"
-    );
-    assert!(
-        errors
-            .iter()
-            .any(|error| error.message.contains("by value")),
-        "{errors:#?}"
     );
 }
 
@@ -250,7 +238,7 @@ type
     property Value: integer read GetValue;
   end record;
 begin
-  var B: Box := record Value := 1; end;
+  const B: Box := record Value := 1; end;
 end.",
     );
     assert!(
@@ -275,8 +263,8 @@ type
     property Value: integer read GetValue;
   end record;
 begin
-  var B: Box := record end;
-  var C: Box := B with Value := 1; end with;
+  const B: Box := record end;
+  const C: Box := B with Value := 1; end with;
 end.",
     );
     assert!(

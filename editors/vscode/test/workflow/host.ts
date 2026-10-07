@@ -53,7 +53,7 @@ export async function verifyWorkflowHost(
     );
     await fs.writeFile(
       mainPath,
-      "program Workflow; begin var Value:integer:=MissingCall(); end."
+      "program Workflow; begin const Value:integer:=MissingCall(); end."
     );
     await fs.writeFile(
       testsManifest,
@@ -73,7 +73,7 @@ export async function verifyWorkflowHost(
     );
     await fs.writeFile(
       testPaths.compile,
-      "program CompileTest;\n\nbegin\n  var Value: MissingType := 1;\nend.\n"
+      "program CompileTest;\n\nbegin\n  const Value: MissingType := 1;\nend.\n"
     );
     await fs.writeFile(
       testPaths.runtime,
@@ -81,7 +81,7 @@ export async function verifyWorkflowHost(
     );
     await fs.writeFile(
       testPaths.timeout,
-      "program TimeoutTest;\n\nbegin\n  mutable var Value: integer := 0;\n  while true do\n  begin\n    Value := Value + 1;\n  end; end while;\nend.\n"
+      "program TimeoutTest;\n\nbegin\n  var Value: integer := 0;\n  while true do\n  begin\n    Value := Value + 1;\n  end; end while;\nend.\n"
     );
     await fs.writeFile(invalidManifest, "not valid toml");
 
@@ -111,7 +111,7 @@ export async function verifyWorkflowHost(
     await vscode.commands.executeCommand(FORMAT_COMMAND, programUri);
     assert.equal(
       await fs.readFile(mainPath, "utf8"),
-      "program Workflow;\n\nbegin\n  var Value: integer := MissingCall();\nend.\n"
+      "program Workflow;\n\nbegin\n  const Value: integer := MissingCall();\nend.\n"
     );
 
     const terminalsBefore = vscode.window.terminals.length;

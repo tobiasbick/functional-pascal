@@ -44,7 +44,7 @@ begin
 end function;
 
 begin
-  var Answer: integer := Calculate(10, 3, OpAdd);
+  const Answer: integer := Calculate(10, 3, OpAdd);
 end.",
     );
 }
@@ -61,7 +61,7 @@ type Point = record
 end record;
 
 begin
-  var P: Point := record X := 1.0; Y := 2.0; end;
+  const P: Point := record X := 1.0; Y := 2.0; end;
 end.",
     );
 }
@@ -110,7 +110,7 @@ fn immutable_assignment_error() {
     check_errors(
         "\
 program T;
-var X: integer := 42;
+const X: integer := 42;
 begin
   X := 100;
 end.",
@@ -124,7 +124,7 @@ fn mixed_errors() {
 program T;
 begin
   break;
-  var X: integer := true;
+  const X: integer := true;
 end.",
     );
     assert!(errs.len() >= 2);

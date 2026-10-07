@@ -5,11 +5,11 @@ uses Std.Arrays, Std.Console, Std.Options, Std.Test;
 begin
   AssertEquals(1, GraphemeWidth('é'));
   AssertEquals(2, GraphemeWidth('👩‍💻'));
-  var Graphemes: array of string := SplitGraphemes('Aé👩‍💻');
+  const Graphemes: array of string := SplitGraphemes('Aé👩‍💻');
   AssertEquals(3, Std.Arrays.Length(Graphemes));
   AssertEquals('é', Graphemes[1]);
   AssertEquals('👩‍💻', Graphemes[2]);
-  var Value: Cell := record
+  const Value: Cell := record
     glyph := 'é';
     foreground := CrtColor(7);
     background := CrtColor(0);

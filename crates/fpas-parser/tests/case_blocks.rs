@@ -148,8 +148,9 @@ fn missing_case_ending_preserves_the_enclosing_declaration() {
 
 #[test]
 fn explicit_compound_blocks_remain_inside_the_arm_scope() {
-    let program =
-        parse_ok("case X of when 1: begin var Local: integer := 1; A(Local); end; B(); end case;");
+    let program = parse_ok(
+        "case X of when 1: begin const Local: integer := 1; A(Local); end; B(); end case;",
+    );
     let Stmt::Case { arms, .. } = &program.body[0] else {
         panic!("case")
     };

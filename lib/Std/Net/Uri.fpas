@@ -79,13 +79,13 @@ begin
       return Error('URI user information is not supported');
     end;
   end if;
-  var SchemePort: integer := try DefaultPort(Scheme);
-  mutable var HasPort: boolean := false;
-  mutable var Host: string := Authority;
-  mutable var PortText: string := '';
+  const SchemePort: integer := try DefaultPort(Scheme);
+  var HasPort: boolean := false;
+  var Host: string := Authority;
+  var PortText: string := '';
   if Std.Str.StartsWith(Authority, '[') then
     begin
-      var Closing: integer := Std.Str.IndexOf(Authority, ']');
+      const Closing: integer := Std.Str.IndexOf(Authority, ']');
       if Closing < 0 then
         begin
           return Error('IPv6 URI host is missing closing bracket');
@@ -93,8 +93,8 @@ begin
       end if;
 
       Host := Std.Str.Substring(Authority, 1, Closing - 1);
-      var Remainder: string := Std.Str.Substring(Authority, Closing + 1, (Std.Str.Length(Authority) - Closing) -
-                                                                         1);
+      const Remainder: string := Std.Str.Substring(Authority, Closing + 1, (Std.Str.Length(Authority) - Closing) -
+                                                                           1);
       if Remainder <> '' then
         begin
           if not Std.Str.StartsWith(Remainder, ':') then
@@ -110,7 +110,7 @@ begin
     end;
   else
     begin
-      var Colon: integer := Std.Str.LastIndexOf(Authority, ':');
+      const Colon: integer := Std.Str.LastIndexOf(Authority, ':');
       if Colon >= 0 then
         begin
           Host := Std.Str.Substring(Authority, 0, Colon);
@@ -127,7 +127,7 @@ begin
       return Error('URI host must not be empty');
     end;
   end if;
-  mutable var Port: integer := SchemePort;
+  var Port: integer := SchemePort;
   if HasPort then
     begin
       Port := try ParsePort(PortText);
@@ -148,30 +148,29 @@ end function;
 // - `Text`: Absolute URI text to parse.
 public function Parse(Text: string): result of Uri, string;
 begin
-  var SchemeEnd: integer := Std.Str.IndexOf(Text, '://');
+  const SchemeEnd: integer := Std.Str.IndexOf(Text, '://');
   if SchemeEnd <= 0 then
     begin
       return Error('URI must be absolute and include ://');
     end;
   end if;
-  var Scheme: string := Std.Str.ToLower(Std.Str.Substring(Text, 0, SchemeEnd));
-  mutable var Rest: string := Std.Str.Substring(Text, SchemeEnd + 3, (Std.Str.Length(Text) - SchemeEnd) -
-                                                                     3);
-  var FragmentStart: integer := Std.Str.IndexOf(Rest, '#');
+  const Scheme: string := Std.Str.ToLower(Std.Str.Substring(Text, 0, SchemeEnd));
+  var Rest: string := Std.Str.Substring(Text, SchemeEnd + 3, (Std.Str.Length(Text) - SchemeEnd) - 3);
+  const FragmentStart: integer := Std.Str.IndexOf(Rest, '#');
   if FragmentStart >= 0 then
     begin
       Rest := Std.Str.Substring(Rest, 0, FragmentStart);
     end;
   end if;
-  mutable var PathStart: integer := Std.Str.IndexOf(Rest, '/');
-  var QueryStart: integer := Std.Str.IndexOf(Rest, '?');
+  var PathStart: integer := Std.Str.IndexOf(Rest, '/');
+  const QueryStart: integer := Std.Str.IndexOf(Rest, '?');
   if (PathStart < 0) or ((QueryStart >= 0) and (QueryStart < PathStart)) then
     begin
       PathStart := QueryStart;
     end;
   end if;
-  mutable var Authority: string := Rest;
-  mutable var Path: string := '/';
+  var Authority: string := Rest;
+  var Path: string := '/';
   if PathStart >= 0 then
     begin
       Authority := Std.Str.Substring(Rest, 0, PathStart);

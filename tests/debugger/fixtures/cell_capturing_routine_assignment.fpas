@@ -19,7 +19,7 @@ procedure Noop();
 begin
 end procedure;
 
-mutable var Shared: Handler := Identity;
+var Shared: Handler := Identity;
 
 function Mutating(): Handler;
 function AddCell(Value: integer): integer;
@@ -28,15 +28,15 @@ begin
   return Value + Cell;
 end function;
 begin
-  mutable var Cell: integer := 1;
-  var Original: Handler := AddCell;
-  mutable var Current: Handler := Identity;
-  var Frozen: Handler := Identity;
-  mutable var Copy: Handler := Identity;
-  mutable var Packed: Pack := record
+  var Cell: integer := 1;
+  const Original: Handler := AddCell;
+  var Current: Handler := Identity;
+  const Frozen: Handler := Identity;
+  var Copy: Handler := Identity;
+  var Packed: Pack := record
     Item := Identity;
   end;
-  var CellStop: integer := 0;
+  const CellStop: integer := 0;
   Cell := Cell + 10;
   WriteLn(Current(0));
   WriteLn(Original(0));
@@ -50,9 +50,9 @@ begin
   return (Value + Base) + Cell;
 end function;
 begin
-  mutable var Cell: integer := 1;
-  mutable var Current: Handler := Identity;
-  var MixStop: integer := 0;
+  var Cell: integer := 1;
+  var Current: Handler := Identity;
+  const MixStop: integer := 0;
   return Current;
 end function;
 
@@ -64,13 +64,13 @@ begin
   return Value + Cell;
 end function;
 begin
-  var Original: Handler := AddEnclosed;
-  mutable var Current: Handler := Identity;
-  var EnclosingStop: integer := 0;
+  const Original: Handler := AddEnclosed;
+  var Current: Handler := Identity;
+  const EnclosingStop: integer := 0;
   return Current;
 end function;
 begin
-  mutable var Cell: integer := 1;
+  var Cell: integer := 1;
   return Mid();
 end function;
 
@@ -81,9 +81,9 @@ begin
   return Value + Acc;
 end function;
 begin
-  mutable var Acc: integer := N;
-  mutable var Current: Handler := Identity;
-  var WalkStop: integer := 0;
+  var Acc: integer := N;
+  var Current: Handler := Identity;
+  const WalkStop: integer := 0;
   if N = 0 then
     begin
       return Current(0);
@@ -102,11 +102,11 @@ begin
   return Value + Offset;
 end function;
 begin
-  mutable var Offset: integer := 7;
-  mutable var Current: Handler := Identity;
+  var Offset: integer := 7;
+  var Current: Handler := Identity;
   begin
-    var Offset: integer := 99;
-    var ShadowStop: integer := 0;
+    const Offset: integer := 99;
+    const ShadowStop: integer := 0;
     return Current;
   end;
 end function;
@@ -118,10 +118,10 @@ begin
   return Value + Cell;
 end function;
 begin
-  mutable var Current: Handler := Identity;
-  var LateStop: integer := 0;
-  mutable var Cell: integer := 1;
-  var LateReady: integer := 0;
+  var Current: Handler := Identity;
+  const LateStop: integer := 0;
+  var Cell: integer := 1;
+  const LateReady: integer := 0;
   return Current;
 end function;
 
@@ -132,21 +132,22 @@ begin
   return Value + Cell;
 end function;
 begin
-  mutable var Cell: integer := 1;
-  var PendingStop: integer := 0;
-  mutable var Current: Handler := Identity;
+  var Cell: integer := 1;
+  const PendingStop: integer := 0;
+  var Current: Handler := Identity;
   return Current;
 end function;
 
-procedure Apply(mutable Current: Handler);
+procedure Apply(Current: Handler);
 function AddParam(Value: integer): integer;
 begin
   Cell := Cell + 1;
   return Value + Cell;
 end function;
 begin
-  mutable var Cell: integer := 1;
-  var ParamStop: integer := 0;
+  var LocalCurrent: Handler := Current;
+  var Cell: integer := 1;
+  const ParamStop: integer := 0;
 end procedure;
 
 function NestedBox(): integer;
@@ -156,11 +157,11 @@ begin
   return Value + Cell;
 end function;
 begin
-  mutable var Cell: integer := 1;
-  mutable var Packed: Pack := record
+  var Cell: integer := 1;
+  var Packed: Pack := record
     Item := Identity;
   end;
-  var BoxStop: integer := 0;
+  const BoxStop: integer := 0;
   return 0;
 end function;
 
@@ -175,11 +176,11 @@ begin
   return Current(0);
 end function;
 begin
-  mutable var Cell: integer := 1;
-  mutable var Source: Handler := Identity;
-  mutable var Current: Handler := Identity;
-  var Keep: integer := Touch();
-  var CaptureDestStop: integer := 0;
+  var Cell: integer := 1;
+  var Source: Handler := Identity;
+  var Current: Handler := Identity;
+  const Keep: integer := Touch();
+  const CaptureDestStop: integer := 0;
   return Current;
 end function;
 
@@ -189,10 +190,10 @@ begin
   Cell := Cell + 1;
 end procedure;
 begin
-  mutable var Cell: integer := 1;
-  mutable var Current: Action := Noop;
-  var SpawnStop: integer := 0;
-  var Pending: task := go Current();
+  var Cell: integer := 1;
+  var Current: Action := Noop;
+  const SpawnStop: integer := 0;
+  const Pending: task := go Current();
   Wait(Pending);
   return Cell;
 end function;
@@ -204,27 +205,27 @@ begin
   return Value + Cell;
 end function;
 begin
-  mutable var Cell: integer := 8;
-  mutable var Current: Handler := Identity;
-  var WorkerStop: integer := 0;
+  var Cell: integer := 8;
+  var Current: Handler := Identity;
+  const WorkerStop: integer := 0;
   return Current;
 end function;
 
 begin
-  mutable var Current: Handler := Identity;
-  var Mutated: Handler := Mutating();
-  var Combined: Handler := Mix(4);
-  var Enclosed: Handler := OuterCell();
-  var Recursed: integer := Walk(2);
-  var Shadowed: Handler := Shadow();
-  var Late: Handler := LateCell();
-  var Pending: Handler := PendingDest();
+  var Current: Handler := Identity;
+  const Mutated: Handler := Mutating();
+  const Combined: Handler := Mix(4);
+  const Enclosed: Handler := OuterCell();
+  const Recursed: integer := Walk(2);
+  const Shadowed: Handler := Shadow();
+  const Late: Handler := LateCell();
+  const Pending: Handler := PendingDest();
   Apply(Identity);
-  var Boxed: integer := NestedBox();
-  var CapturedDest: Handler := CaptureDest();
-  var Spawned: integer := SpawnProbe();
-  var Child: task := go Worker();
-  var Stolen: Handler := Wait(Child);
-  var RootStop: integer := 0;
+  const Boxed: integer := NestedBox();
+  const CapturedDest: Handler := CaptureDest();
+  const Spawned: integer := SpawnProbe();
+  const Child: task := go Worker();
+  const Stolen: Handler := Wait(Child);
+  const RootStop: integer := 0;
   WriteLn(Stolen(1));
 end.

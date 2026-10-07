@@ -48,8 +48,8 @@ type Point = record
 
   function DistanceTo(Self: Point; Other: Point): real;
   begin
-    var DX: real := Other.X - Self.X;
-    var DY: real := Other.Y - Self.Y;
+    const DX: real := Other.X - Self.X;
+    const DY: real := Other.Y - Self.Y;
     return Sqrt(DX * DX + DY * DY);
   end function;
 
@@ -63,10 +63,10 @@ end record;
 Calling instance methods:
 
 ```pascal
-var
+const
   A: Point := record X := 0.0; Y := 0.0; end;
-  var B: Point := record X := 3.0; Y := 4.0; end;
-  var Dist: real := A.DistanceTo(B);  // Self = A, Other = B
+  const B: Point := record X := 3.0; Y := 4.0; end;
+  const Dist: real := A.DistanceTo(B);  // Self = A, Other = B
 
 begin
   A.Print();  // Self = A
@@ -77,7 +77,7 @@ Returned record values can keep calling instance methods (and reading fields)
 without intermediate variables:
 
 ```pascal
-var Next: Point := BuildOrigin().Offset(1.0, 2.0).Normalize();
+const Next: Point := BuildOrigin().Offset(1.0, 2.0).Normalize();
 ```
 
 See [Expression postfix chaining](../functions/postfix-chaining.md).
@@ -98,8 +98,8 @@ type
     end function;
   end record;
 
-var C: Counter := record Base := 10; end;
-var AddTen: function(Value: integer): integer := C.Add;
+const C: Counter := record Base := 10; end;
+const AddTen: function(Value: integer): integer := C.Add;
 
 begin
   WriteLn(AddTen(5))  // 15 — Counter.Add(C, 5)
@@ -116,8 +116,8 @@ Rules:
   function value.
 - Bound methods may be stored, passed, and returned wherever that callable type
   is expected — see [First-class functions](../functions/first-class.md).
-- Binding a method whose `Self` is `mutable` is rejected; use a capturing
-  closure that explicitly closes over a `mutable var` instead.
+- `Self` is a read-only value parameter. A method may change a local `var`
+  copy; a bound method captures the receiver value.
 - Static routines are ordinary named callables (`Counter.Create`), not bound
   method values. Binding a static name through a value (`C.Create`) is an error.
 
@@ -158,9 +158,9 @@ end record;
 ```
 
 ```pascal
-var
+const
   P: Point := Point.Create(3, 4);
-  var O: Point := Point.Origin();
+  const O: Point := Point.Origin();
 begin
   Point.Print(P);
   WriteLn(P.Sum());  // 7
@@ -192,7 +192,7 @@ TuiRect.FromEdges(Left, Top, Right, Bottom);
 Copying a record does not need a static function; records have value semantics:
 
 ```pascal
-var Copy: Point := OtherPoint;
+const Copy: Point := OtherPoint;
 ```
 
 ## Free-standing functions

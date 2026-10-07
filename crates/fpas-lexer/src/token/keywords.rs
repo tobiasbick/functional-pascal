@@ -8,7 +8,6 @@ fn keyword_token(raw: &str) -> Option<Token> {
         s if s.eq_ignore_ascii_case("uses") => Some(Token::Uses),
         s if s.eq_ignore_ascii_case("const") => Some(Token::Const),
         s if s.eq_ignore_ascii_case("var") => Some(Token::Var),
-        s if s.eq_ignore_ascii_case("mutable") => Some(Token::Mutable),
         s if s.eq_ignore_ascii_case("function") => Some(Token::Function),
         s if s.eq_ignore_ascii_case("procedure") => Some(Token::Procedure),
         s if s.eq_ignore_ascii_case("begin") => Some(Token::Begin),

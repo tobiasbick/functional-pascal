@@ -15,7 +15,7 @@ another event follows the burst, it remains next in FIFO order. Test-injected
 `ConsoleEvent` values retain their explicit queue order.
 
 ```pascal
-var E: ConsoleEvent := ReadEvent();
+const E: ConsoleEvent := ReadEvent();
 if E.kind = EventKind.Resize then
   WriteLn(E.width, 'x', E.height);
 end if;
@@ -37,7 +37,7 @@ uses Std.Console, Std.Options;
 
 
 EnableRawMode();
-var MaybeEvent: option of ConsoleEvent := ReadEventTimeout(100);
+const MaybeEvent: option of ConsoleEvent := ReadEventTimeout(100);
 case MaybeEvent of
   when Some(E):
     begin
@@ -65,7 +65,7 @@ uses Std.Console, Std.Options;
 
 
 EnableRawMode();
-var MaybeE: option of ConsoleEvent := PollEvent();
+const MaybeE: option of ConsoleEvent := PollEvent();
 case MaybeE of
   when Some(E):
     begin

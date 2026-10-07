@@ -16,10 +16,8 @@ pub enum Visibility {
 pub enum Decl {
     /// A constant definition.
     Const(ConstDef),
-    /// An immutable variable definition.
+    /// A reassignable variable definition.
     Var(VarDef),
-    /// A mutable variable definition.
-    MutableVar(VarDef),
     /// A named type definition.
     TypeDef(TypeDef),
     /// A function declaration.
@@ -33,7 +31,7 @@ impl Decl {
     pub fn visibility(&self) -> Visibility {
         match self {
             Decl::Const(c) => c.visibility,
-            Decl::Var(v) | Decl::MutableVar(v) => v.visibility,
+            Decl::Var(v) => v.visibility,
             Decl::TypeDef(td) => td.visibility,
             Decl::Function(f) => f.visibility,
             Decl::Procedure(p) => p.visibility,

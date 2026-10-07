@@ -15,10 +15,7 @@ pub(super) fn register(checker: &mut Checker) {
     define_func(
         checker,
         s::STD_SERVER_CREATE_LIFETIME,
-        vec![
-            p("GraceMillis", Ty::Integer, false),
-            p("ForceExit", Ty::Boolean, false),
-        ],
+        vec![p("GraceMillis", Ty::Integer), p("ForceExit", Ty::Boolean)],
         result(lifetime.clone()),
     );
     for (name, ty) in [
@@ -34,20 +31,12 @@ pub(super) fn register(checker: &mut Checker) {
             Ty::Array(Box::new(Ty::String)),
         ),
     ] {
-        define_func(
-            checker,
-            name,
-            vec![p("Lifetime", lifetime.clone(), false)],
-            ty,
-        );
+        define_func(checker, name, vec![p("Lifetime", lifetime.clone())], ty);
     }
     define_func(
         checker,
         s::STD_SERVER_OWN_LISTENER,
-        vec![
-            p("Lifetime", lifetime, false),
-            p("Listener", listener, false),
-        ],
+        vec![p("Lifetime", lifetime), p("Listener", listener)],
         result(Ty::Boolean),
     );
 }

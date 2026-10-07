@@ -11,8 +11,8 @@ uses Std.Console, Std.Str, Std.Toml, Std.Toml.Fields;
 
 function ReadPort(Text: string): result of integer, string;
 begin
-  var Fields: dict of string to TomlValue := try ParseTable(Text);
-  var Allowed: boolean := try RequireOnlyFields(Fields, ['host', 'port']);
+  const Fields: dict of string to TomlValue := try ParseTable(Text);
+  const Allowed: boolean := try RequireOnlyFields(Fields, ['host', 'port']);
   return IntegerField(Fields, 'port');
 end function;
 

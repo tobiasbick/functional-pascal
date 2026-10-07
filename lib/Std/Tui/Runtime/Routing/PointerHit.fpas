@@ -57,11 +57,11 @@ public type TuiPointerHit = enum
   Scroll(Id: TuiControlId);
 end enum;
 
-mutable var TuiPointerBestHit: TuiPointerHit := TuiPointerHit.Miss;
+var TuiPointerBestHit: TuiPointerHit := TuiPointerHit.Miss;
 
 function TuiPointerModalChildIndex(Children: array of TuiElement): integer;
 begin
-  mutable var LastOverlay: integer := -1;
+  var LastOverlay: integer := -1;
   for Index: integer := 0 to Std.Arrays.Length(Children) - 1 do
     begin
       case Children[Index] of
@@ -87,18 +87,18 @@ function TuiPointerHitWalk(
   AllowHits: boolean
 ): integer;
 begin
-  var Entry: TuiArrangedEntry := Frame.EntryAt(Index);
-  mutable var Next: integer := Index + 1;
+  const Entry: TuiArrangedEntry := Frame.EntryAt(Index);
+  var Next: integer := Index + 1;
   case Node of
     when TuiElement.Button(Button):
       begin
-        mutable var ActiveWidth: integer := Entry.Bounds.Width - 1;
+        var ActiveWidth: integer := Entry.Bounds.Width - 1;
         if ActiveWidth < 0 then
           begin
             ActiveWidth := 0;
           end;
         end if;
-        var ActiveBounds: TuiRect := TuiRect.Create(Entry.Bounds.X, Entry.Bounds.Y, ActiveWidth, 1);
+        const ActiveBounds: TuiRect := TuiRect.Create(Entry.Bounds.X, Entry.Bounds.Y, ActiveWidth, 1);
         if (Button.Enabled and AllowHits) and Entry.Clip.Intersect(ActiveBounds).Contains(Point) then
           begin
             TuiPointerBestHit := TuiPointerHit.ElementButton(Button);
@@ -133,7 +133,7 @@ begin
       begin
         if AllowHits and Entry.Clip.Contains(Point) then
           begin
-            var Row: integer := Point.Y - Entry.Bounds.Y;
+            const Row: integer := Point.Y - Entry.Bounds.Y;
             if (Row >= 0) and (Row < Std.Arrays.Length(Items)) then
               begin
                 TuiPointerBestHit := TuiPointerHit.List(Id, ChangeAction, Selected, Row);
@@ -144,11 +144,11 @@ begin
       end;
     when TuiElement.MenuBar(Items):
       begin
-        mutable var Cursor: integer := Entry.Bounds.X;
+        var Cursor: integer := Entry.Bounds.X;
         for ItemIndex: integer := 0 to Std.Arrays.Length(Items) - 1 do
           begin
-            var Width: integer := Std.Console.DisplayWidth(Items[ItemIndex].Text) + 2;
-            var ItemBounds: TuiRect := TuiRect.Create(Cursor, Entry.Bounds.Y, Width, 1);
+            const Width: integer := Std.Console.DisplayWidth(Items[ItemIndex].Text) + 2;
+            const ItemBounds: TuiRect := TuiRect.Create(Cursor, Entry.Bounds.Y, Width, 1);
             if (AllowHits and Items[ItemIndex].Enabled) and
                Entry.Clip.Intersect(ItemBounds).Contains(Point) then
               begin
@@ -165,7 +165,7 @@ begin
       end;
     when TuiElement.StatusLine(Items):
       begin
-        mutable var Cursor: integer := Entry.Bounds.X;
+        var Cursor: integer := Entry.Bounds.X;
         for ItemIndex: integer := 0 to Std.Arrays.Length(Items) - 1 do
           begin
             if ItemIndex > 0 then
@@ -186,8 +186,8 @@ begin
                 end;
               when TuiStatusItem.Command(Id, Text, Action, Enabled):
                 begin
-                  var Width: integer := Std.Console.DisplayWidth(Text);
-                  var ItemBounds: TuiRect := TuiRect.Create(Cursor, Entry.Bounds.Y, Width, 1);
+                  const Width: integer := Std.Console.DisplayWidth(Text);
+                  const ItemBounds: TuiRect := TuiRect.Create(Cursor, Entry.Bounds.Y, Width, 1);
                   if (AllowHits and Enabled) and Entry.Clip.Intersect(ItemBounds).Contains(Point) then
                     begin
                       TuiPointerBestHit := TuiPointerHit.ImmediateButton(Id, Action);
@@ -202,7 +202,7 @@ begin
       end;
     when TuiElement.Scroll(Id, Offset, ChangeAction, Children):
       begin
-        var ScrollAllowsHits: boolean := AllowHits and Entry.Clip.Contains(Point);
+        const ScrollAllowsHits: boolean := AllowHits and Entry.Clip.Contains(Point);
         if ScrollAllowsHits then
           begin
             TuiPointerBestHit := TuiPointerHit.Scroll(Id);
@@ -257,10 +257,10 @@ begin
       end;
     when TuiElement.Desktop(Focused, Children):
       begin
-        var ModalIndex: integer := TuiPointerModalChildIndex(Children);
+        const ModalIndex: integer := TuiPointerModalChildIndex(Children);
         for ChildIndex: integer := 0 to Std.Arrays.Length(Children) - 1 do
           begin
-            mutable var ChildAllow: boolean := AllowHits;
+            var ChildAllow: boolean := AllowHits;
             if ModalIndex >= 0 then
               begin
                 ChildAllow := AllowHits and (ChildIndex = ModalIndex);

@@ -18,11 +18,11 @@ begin
 end function;
 
 begin
-  var Pending: task := go Seven();
-  mutable var Current: task := go Nine();
-  var Frozen: task := go Seven();
-  var Wrong: task := go Label();
-  mutable var StopMarker: integer := 0;
+  const Pending: task := go Seven();
+  var Current: task := go Nine();
+  const Frozen: task := go Seven();
+  const Wrong: task := go Label();
+  var StopMarker: integer := 0;
   StopMarker := StopMarker + 1;
   WriteLn(Wait(Current));
 end.

@@ -411,10 +411,7 @@ fn contains_error(ty: &Ty) -> bool {
 fn parameters(parameters: &[ParamTy]) -> String {
     parameters
         .iter()
-        .map(|parameter| {
-            let mutable = if parameter.mutable { "mutable " } else { "" };
-            format!("{mutable}{}: {}", parameter.name, parameter.ty)
-        })
+        .map(|parameter| format!("{}: {}", parameter.name, parameter.ty))
         .collect::<Vec<_>>()
         .join("; ")
 }

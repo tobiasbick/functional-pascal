@@ -5,7 +5,7 @@ use super::*;
 #[test]
 fn unique_simple_and_qualified_nested_names_materialize_from_the_owner_frame() {
     let mut session = DebugSession::new(compile_fixture()).expect("debug session");
-    let frame = run_to(&mut session, "var MakeStop: integer := 0;");
+    let frame = run_to(&mut session, "const MakeStop: integer := 0;");
     let updated = session
         .set_expression(&root("Current"), &name("AddBase"), Some(frame))
         .expect("simple nested name");
@@ -14,7 +14,7 @@ fn unique_simple_and_qualified_nested_names_materialize_from_the_owner_frame() {
     assert_eq!(rendered(&mut session, call("Current", 1), frame), "11");
 
     let mut qualified = DebugSession::new(compile_fixture()).expect("qualified session");
-    let frame = run_to(&mut qualified, "var MakeStop: integer := 0;");
+    let frame = run_to(&mut qualified, "const MakeStop: integer := 0;");
     let updated = qualified
         .set_expression(
             &root("Current"),
@@ -33,7 +33,7 @@ fn unique_simple_and_qualified_nested_names_materialize_from_the_owner_frame() {
 #[test]
 fn multiple_immutable_captures_preserve_closure_abi_order() {
     let mut session = DebugSession::new(compile_fixture()).expect("debug session");
-    let frame = run_to(&mut session, "var CombineStop: integer := 0;");
+    let frame = run_to(&mut session, "const CombineStop: integer := 0;");
     session
         .set_expression(&root("Current"), &name("AddBoth"), Some(frame))
         .expect("two captures");
@@ -44,7 +44,7 @@ fn multiple_immutable_captures_preserve_closure_abi_order() {
 #[test]
 fn selected_recursive_activation_supplies_its_own_captured_values() {
     let mut inner = DebugSession::new(compile_fixture()).expect("inner walk");
-    let frame = run_to_hit(&mut inner, "var WalkStop: integer := 0;", 3);
+    let frame = run_to_hit(&mut inner, "const WalkStop: integer := 0;", 3);
     inner
         .set_expression(&root("Current"), &name("AddAcc"), Some(frame))
         .expect("innermost Acc");
@@ -52,7 +52,7 @@ fn selected_recursive_activation_supplies_its_own_captured_values() {
     assert_eq!(rendered(&mut inner, call("Current", 0), frame), "21");
 
     let mut outer = DebugSession::new(compile_fixture()).expect("outer walk");
-    let _ = run_to_hit(&mut outer, "var WalkStop: integer := 0;", 3);
+    let _ = run_to_hit(&mut outer, "const WalkStop: integer := 0;", 3);
     let outer_frame = outer.stack(0, 8).expect("walk stack").items[2].id;
     outer
         .set_expression(&root("Current"), &name("AddAcc"), Some(outer_frame))
@@ -64,7 +64,7 @@ fn selected_recursive_activation_supplies_its_own_captured_values() {
 #[test]
 fn same_name_shadow_cannot_replace_the_exact_owner_binding() {
     let mut session = DebugSession::new(compile_fixture()).expect("debug session");
-    let frame = run_to(&mut session, "var ShadowStop: integer := 0;");
+    let frame = run_to(&mut session, "const ShadowStop: integer := 0;");
     session
         .set_expression(&root("Current"), &name("AddOffset"), Some(frame))
         .expect("parameter Offset");
@@ -75,7 +75,7 @@ fn same_name_shadow_cannot_replace_the_exact_owner_binding() {
 #[test]
 fn initialized_late_local_can_be_captured_after_its_assignment() {
     let mut session = DebugSession::new(compile_fixture()).expect("debug session");
-    let frame = run_to(&mut session, "var LateReady: integer := 0;");
+    let frame = run_to(&mut session, "const LateReady: integer := 0;");
     session
         .set_expression(&root("Current"), &name("AddLate"), Some(frame))
         .expect("initialized Offset");

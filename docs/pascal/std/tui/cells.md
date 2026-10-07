@@ -4,11 +4,11 @@
 `0..15`; `FromAnsi256` and every `FromRgb` channel accept `0..255`.
 
 ```pascal
-var Foreground: TuiColor := TuiColor.FromCrt(14);
-var Background: TuiColor := TuiColor.FromRgb(10, 20, 30);
-var Style: TuiStyle := TuiStyle.FromColors(Foreground, Background);
-var Cell: TuiCell := TuiCell.Create('X', TuiStyleRole.Focused);
-var TruecolorCell: TuiCell := TuiCell.Styled('▓', Style);
+const Foreground: TuiColor := TuiColor.FromCrt(14);
+const Background: TuiColor := TuiColor.FromRgb(10, 20, 30);
+const Style: TuiStyle := TuiStyle.FromColors(Foreground, Background);
+const Cell: TuiCell := TuiCell.Create('X', TuiStyleRole.Focused);
+const TruecolorCell: TuiCell := TuiCell.Styled('▓', Style);
 ```
 
 `TuiStyle.Create` additionally accepts `Bold`, `Dim`, `Underline`, and
@@ -56,10 +56,10 @@ or inverse cursor colors. `TuiInputPalette.WithRole` returns a copy with one
 input role replaced, while `ForRole` resolves one input role.
 
 ```pascal
-var Palette: TuiPalette := TuiPalette.Default();
-var Warning: TuiStyle := Palette.ForRole(TuiStyleRole.Warning);
-var Custom: TuiStyle := TuiStyle.FromColors(TuiColor.FromRgb(255, 128, 0), TuiColor.FromCrt(0));
-var Updated: TuiPalette := Palette.WithRole(TuiStyleRole.Accent, Custom);
+const Palette: TuiPalette := TuiPalette.Default();
+const Warning: TuiStyle := Palette.ForRole(TuiStyleRole.Warning);
+const Custom: TuiStyle := TuiStyle.FromColors(TuiColor.FromRgb(255, 128, 0), TuiColor.FromCrt(0));
+const Updated: TuiPalette := Palette.WithRole(TuiStyleRole.Accent, Custom);
 ```
 
 A palette is ordinary public FPAS data. Applications start from

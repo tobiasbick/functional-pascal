@@ -5,7 +5,7 @@
 Returns a **new** array containing all elements of `A` followed by all elements of `B`.
 
 ```pascal
-var C: array of integer := Concat([1, 2], [3, 4]);
+const C: array of integer := Concat([1, 2], [3, 4]);
 WriteLn(Length(C));  // 4
 ```
 
@@ -21,7 +21,7 @@ begin
   return [X, X * 10];
 end function;
 
-var Output: array of integer := FlatMap([1, 2, 3], ExpandPair);
+const Output: array of integer := FlatMap([1, 2, 3], ExpandPair);
 // [1, 10, 2, 20, 3, 30]
 ```
 
@@ -32,7 +32,7 @@ var Output: array of integer := FlatMap([1, 2, 3], ExpandPair);
 Creates a new array containing `Count` copies of `Value`.
 
 ```pascal
-var Zeros: array of integer := Fill(0, 5);
+const Zeros: array of integer := Fill(0, 5);
 WriteLn(Length(Zeros));  // 5
 ```
 

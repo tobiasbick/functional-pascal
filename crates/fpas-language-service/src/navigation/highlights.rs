@@ -96,7 +96,7 @@ fn declarations_write(declarations: &[Decl], span: SourceSpan) -> bool {
             }),
             TypeBody::Alias(_) | TypeBody::Enum(_) => false,
         },
-        Decl::Const(_) | Decl::Var(_) | Decl::MutableVar(_) => false,
+        Decl::Const(_) | Decl::Var(_) => false,
     })
 }
 
@@ -134,8 +134,8 @@ fn statements_write(statements: &[Stmt], span: SourceSpan) -> bool {
             statements_write(std::slice::from_ref(body), span)
         }
         Stmt::Repeat { body, .. } => statements_write(body, span),
-        Stmt::Var(_)
-        | Stmt::MutableVar(_)
+        Stmt::Const(_) | Stmt::Var(_)
+
         | Stmt::Return(_, _)
         | Stmt::Panic(_, _)
         | Stmt::Null(_)

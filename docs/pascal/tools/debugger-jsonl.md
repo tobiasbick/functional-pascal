@@ -128,7 +128,7 @@ identities reject without mutation. `task.create` and `task.restart` always
 fail with `task_create_unsupported` and `task_restart_unsupported`.
 
 `variable.set` addresses one child returned by `variables`. The reference and
-child name must belong to the current stop. Mutable locals, parameters,
+child name must belong to the current stop. Mutable locals and
 globals, closure cells, record fields, array elements, existing dictionary
 values, named fields of the active data-carrying enum variant, and the `value`
 child of `Result.Ok`, `Result.Error`, and `Option.Some` are supported.
@@ -146,7 +146,7 @@ whose captures are immutable values or existing mutable cells in the selected
 lexical-owner frame, for example `AddBase`, `MakeAdder.AddBase`, or `AddCell`.
 Constructed cell-capturing functions are task-bound to the selected task. An
 already materialized task-bound function may be copied only within that owner
-task and into a mutable local or parameter register in the same selected
+task and into a mutable local register in the same selected
 frame. The copy preserves the exact function and cell handles. A successful
 result has the same five rendered fields as `evaluate`, refreshes inspection
 state, and expires all earlier variable references. Any failure is atomic and
@@ -183,8 +183,7 @@ function value, or one statically resolved non-capturing
 executable routine such as `AddTwo` or `Math.Transform`, or a named nested
 routine whose captures are immutable values or existing mutable cells in the
 selected lexical-owner frame. Constructed cell-capturing functions are
-task-bound to the selected task and may be stored only in a mutable local or
-parameter register of that owner frame. A task-bound source may be copied only
+task-bound to the selected task and may be stored only in a mutable local register of that owner frame. A task-bound source may be copied only
 within its selected owner task and frame; global, descendant, capture-cell,
 foreign-task, and stale destinations fail without mutation. A simple name uses
 lexical lookup first and falls back to the executable catalog only after an

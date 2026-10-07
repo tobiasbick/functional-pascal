@@ -6,7 +6,7 @@ function BindListener(): result of Std.Net.Listener, string;
 begin
   for Port: integer := 28200 to 28299 do
     begin
-      var Opened: result of Std.Net.Listener, string := Listen('127.0.0.1', Port);
+      const Opened: result of Std.Net.Listener, string := Listen('127.0.0.1', Port);
       if IsOk(Opened) then
         begin
           return Opened;
@@ -19,17 +19,17 @@ begin
 end function;
 
 begin
-  var Life: ServerLifetime := Unwrap(CreateLifetime(1000, false));
-  var Group: TaskGroup := GetWorkGroup(Life);
-  var Worker: task := StartTaskInGroup(Group, function(Token: CancellationToken): result of boolean, string begin
+  const Life: ServerLifetime := Unwrap(CreateLifetime(1000, false));
+  const Group: TaskGroup := GetWorkGroup(Life);
+  const Worker: task := StartTaskInGroup(Group, function(Token: CancellationToken): result of boolean, string begin
     return Error('session failed');
   end function);
-  var Listener: Std.Net.Listener := Unwrap(BindListener());
+  const Listener: Std.Net.Listener := Unwrap(BindListener());
   discard OwnListener(Life, Listener);
   // Deliberate ownership misuse: cleanup must preserve this failure.
   discard CloseListener(Listener);
   discard RequestStop(Life);
-  var Failures: array of TaskFailure := CloseTaskGroup(Group);
+  const Failures: array of TaskFailure := CloseTaskGroup(Group);
   AssertEquals(1, Std.Arrays.Length(Failures));
   AssertEquals('session failed', Failures[0].Message);
   AssertEquals(1, Std.Arrays.Length(ShutdownErrors(Life)));

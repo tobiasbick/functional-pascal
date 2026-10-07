@@ -16,6 +16,6 @@ fn inline_var() {
 
 #[test]
 fn inline_mutable_var() {
-    let stmts = body_stmts("program T; begin mutable var X: integer := 0; end.");
-    assert!(matches!(&stmts[0], Stmt::MutableVar(_)));
+    let stmts = body_stmts("program T; begin var X: integer := 0; end.");
+    assert!(matches!(&stmts[0], Stmt::Var(_)));
 }

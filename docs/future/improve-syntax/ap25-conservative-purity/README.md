@@ -26,11 +26,19 @@ merely from immutable variable names.
   mutable state, and no externally observable mutation. Ordinary functions
   and procedures keep their side effects.
 
+## Open decisions
+
+AP25.1 remains the priority gate. Before AP25.2, specify aliasing rules for
+shared handles and the proof required from imported APIs, including which local
+mutations can be proven unobservable outside the call. AP25.2 already requires
+these details; immutable binding names alone do not establish purity.
+
 ## Dependencies
 
 - AP14 (no computed properties hiding calls).
 - AP16 (binding keywords).
 - AP17 (`var` parameters).
+- AP23 complete and used in repository code (AP25.1 reassessment gate).
 
 ## Order
 

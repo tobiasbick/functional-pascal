@@ -3,7 +3,7 @@ program T;
 uses Std.Console, Std.Dictionaries, Std.Arrays;
 
 begin
-  var D: dict of string to integer := [:];
-  var K: array of string := Std.Dictionaries.Keys(D);
+  const D: dict of string to integer := [:];
+  const K: array of string := Std.Dictionaries.Keys(D);
   WriteLn(Std.Arrays.Length(K));
 end.

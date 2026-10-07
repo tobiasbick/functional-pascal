@@ -37,26 +37,26 @@ begin
 end function;
 
 begin
-  mutable var Origin: Point := record
+  var Origin: Point := record
     X := 4;
     Y := 5;
   end;
-  mutable var Selected: Choice := Choice.Count(1);
-  mutable var PairValue: Choice := Choice.Pair(2, 3);
-  mutable var NestedValue: Choice := Choice.Nested(Origin);
-  mutable var Outcome: result of integer, string := Ok(6);
-  mutable var Failed: result of integer, string := Error('old');
-  mutable var Optional: option of integer := Some(7);
-  mutable var Missing: option of integer := None;
-  mutable var PackedBox: Box := record
+  var Selected: Choice := Choice.Count(1);
+  var PairValue: Choice := Choice.Pair(2, 3);
+  var NestedValue: Choice := Choice.Nested(Origin);
+  var Outcome: result of integer, string := Ok(6);
+  var Failed: result of integer, string := Error('old');
+  var Optional: option of integer := Some(7);
+  var Missing: option of integer := None;
+  var PackedBox: Box := record
     Items := [8, 9];
     Scores := ['blue': 10];
   end;
-  mutable var Packed: result of Box, string := Ok(PackedBox);
-  mutable var NestedOk: result of integer, string := Ok(11);
-  mutable var NestedResult: option of result of integer, string := Some(NestedOk);
-  var Fixed: Choice := Choice.Count(99);
-  var StopMarker: integer := 0;
+  var Packed: result of Box, string := Ok(PackedBox);
+  var NestedOk: result of integer, string := Ok(11);
+  var NestedResult: option of result of integer, string := Some(NestedOk);
+  const Fixed: Choice := Choice.Count(99);
+  const StopMarker: integer := 0;
   WriteLn(ChoiceValue(Selected));
   WriteLn(ChoiceValue(PairValue));
   WriteLn(ChoiceValue(NestedValue));

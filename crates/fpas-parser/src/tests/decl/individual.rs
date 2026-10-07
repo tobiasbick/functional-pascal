@@ -10,8 +10,8 @@ fn each_declaration_has_its_own_keyword_and_visibility() {
          public type First = integer; type Hidden = integer; public type Last = string;
          public const A: integer := 1; const B: integer := 2; public const C: integer := 3;
          public var D: integer := A; var E: integer := B; public var F: integer := C;
-         public mutable var G: integer := 0; mutable var H: integer := 0;
-         public mutable var I: integer := 0; end unit;",
+         public var G: integer := 0; var H: integer := 0;
+         public var I: integer := 0; end unit;",
     );
     assert_eq!(unit.declarations.len(), 12);
     for declarations in unit.declarations.chunks(3) {
@@ -19,9 +19,9 @@ fn each_declaration_has_its_own_keyword_and_visibility() {
         assert_eq!(declarations[1].visibility(), Visibility::Private);
         assert_eq!(declarations[2].visibility(), Visibility::Public);
     }
-    assert!(matches!(unit.declarations[9], Decl::MutableVar(_)));
-    assert!(matches!(unit.declarations[10], Decl::MutableVar(_)));
-    assert!(matches!(unit.declarations[11], Decl::MutableVar(_)));
+    assert!(matches!(unit.declarations[9], Decl::Var(_)));
+    assert!(matches!(unit.declarations[10], Decl::Var(_)));
+    assert!(matches!(unit.declarations[11], Decl::Var(_)));
 }
 
 #[test]
@@ -30,11 +30,7 @@ fn removed_groups_report_each_missing_keyword_at_the_name() {
         ("type A = integer;", "B = string;", "type"),
         ("const A: integer := 1;", "B: integer := 2;", "const"),
         ("var A: integer := 1;", "B: integer := 2;", "var"),
-        (
-            "mutable var A: integer := 1;",
-            "B: integer := 2;",
-            "mutable var",
-        ),
+        ("var A: integer := 1;", "B: integer := 2;", "var"),
     ] {
         for public in [false, true] {
             let modifier = if public { "public " } else { "" };
@@ -82,7 +78,7 @@ fn group_recovery_keeps_following_explicit_declarations() {
 
 #[test]
 fn local_variable_groups_repeat_the_complete_keyword() {
-    for prefix in ["var", "mutable var"] {
+    for prefix in ["var", "var"] {
         let source = format!(
             "program T; procedure P(); begin {prefix} A: integer := 1;
             B: integer := 2; {prefix} C: integer := 3; end procedure; begin P(); end."
@@ -106,10 +102,7 @@ fn local_variable_groups_repeat_the_complete_keyword() {
         };
         let FuncBody::Block { stmts, .. } = &procedure.body;
         assert_eq!(stmts.len(), 3);
-        assert_eq!(
-            matches!(stmts[1], Stmt::MutableVar(_)),
-            prefix == "mutable var"
-        );
+        assert_eq!(matches!(stmts[1], Stmt::Var(_)), prefix == "var");
     }
 }
 
@@ -120,15 +113,15 @@ fn fields_payloads_and_parameters_keep_their_own_syntax() {
          type Message = enum Data(Left: integer; Right: integer); Empty; end enum;
          procedure P(Left: integer; Right: integer); begin
            var A: integer := Left; var B: integer := Right;
-           mutable var C: integer := A; mutable var D: integer := B;
+           var C: integer := A; var D: integer := B;
          end procedure; begin end.",
     );
     assert_eq!(program.declarations.len(), 3);
 }
 
 #[test]
-fn individual_keywords_do_not_add_local_types_or_constants() {
-    for declaration in ["type Local = integer;", "const Local: integer := 1;"] {
+fn individual_keywords_do_not_add_local_types() {
+    for declaration in ["type Local = integer;"] {
         let source =
             format!("program T; procedure P(); begin {declaration} end procedure; begin end.");
         let (_, errors) = parse_with_errors(&source);

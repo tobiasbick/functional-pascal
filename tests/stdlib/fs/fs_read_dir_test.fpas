@@ -4,14 +4,14 @@ program FsReadDirTest;
 uses Std.Arrays, Std.Fs, Std.Results, Std.Tasks, Std.Test;
 
 begin
-  var Root: string := ScratchDir() + '/read-dir';
+  const Root: string := ScratchDir() + '/read-dir';
   AssertTrue(Unwrap(CreateDirAll(Root)));
   AssertEquals(0, Std.Arrays.Length(Unwrap(ReadDir(Root))));
   AssertTrue(Unwrap(CreateDir(Root + '/b-empty')));
   AssertTrue(Unwrap(CreateDir(Root + '/a-child')));
   AssertTrue(Unwrap(WriteText(Root + '/a-child/nested.txt', 'nested')));
   AssertTrue(Unwrap(WriteText(Root + '/c-file.txt', 'file')));
-  var Entries: array of string := Unwrap(ReadDir(Root));
+  const Entries: array of string := Unwrap(ReadDir(Root));
   AssertEquals(3, Std.Arrays.Length(Entries));
   AssertEquals(Root + '/a-child', Entries[0]);
   AssertEquals(Root + '/b-empty', Entries[1]);
@@ -22,8 +22,8 @@ begin
   AssertTrue(IsError(ReadDir(Root + '/missing')));
   AssertTrue(IsError(ReadDir(Root + '/c-file.txt')));
   AssertTrue(IsError(ReadDir('')));
-  var Job: task of result of array of string, string := go ReadDir(Root);
-  var FromTask: array of string := Unwrap(Std.Tasks.Wait(Job));
+  const Job: task of result of array of string, string := go ReadDir(Root);
+  const FromTask: array of string := Unwrap(Std.Tasks.Wait(Job));
   AssertEquals(3, Std.Arrays.Length(FromTask));
   for Index: integer := 0 to 2 do
     AssertEquals(Entries[Index], FromTask[Index]);

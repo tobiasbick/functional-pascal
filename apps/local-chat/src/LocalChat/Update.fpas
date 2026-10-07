@@ -19,8 +19,8 @@ const SendAction: integer := 10;
 // - `Entry`: Entry to append to the conversation.
 function AppendEntry(State: LocalChatModel; Entry: ChatEntry): LocalChatModel;
 begin
-  mutable var Next: LocalChatModel := State;
-  mutable var Entries: array of ChatEntry := Next.Entries;
+  var Next: LocalChatModel := State;
+  var Entries: array of ChatEntry := Next.Entries;
   Std.Arrays.Push(Entries, Entry);
   Next.Entries := Entries;
   return Next;
@@ -32,15 +32,15 @@ end function;
 // - `State`: Current application state containing the draft.
 function SendPrompt(State: LocalChatModel): LocalChatModel;
 begin
-  var Prompt: string := Std.Str.Trim(State.Draft);
+  const Prompt: string := Std.Str.Trim(State.Draft);
   if Prompt = '' then
     begin
-      mutable var Empty: LocalChatModel := State;
+      var Empty: LocalChatModel := State;
       Empty.Status := 'Enter a message first';
       return Empty;
     end;
   end if;
-  mutable var Next: LocalChatModel := AppendEntry(State, ChatEntry.User(Prompt));
+  var Next: LocalChatModel := AppendEntry(State, ChatEntry.User(Prompt));
   Next.Draft := '';
   Next.DraftCaret := 0;
   Next.Status := 'Contacting local model…';
@@ -85,7 +85,7 @@ begin
       begin
         if Action.Value = PromptChangedAction then
           begin
-            mutable var Next: LocalChatModel := State;
+            var Next: LocalChatModel := State;
             Next.Draft := Text;
             Next.DraftCaret := Caret;
             Next.Status := 'Ready';
@@ -99,7 +99,7 @@ begin
       begin
         if Action.Value = TranscriptChangedAction then
           begin
-            mutable var Next: LocalChatModel := State;
+            var Next: LocalChatModel := State;
             Next.TranscriptCaret := Caret;
             Next.TranscriptOffset := Offset;
             return Next;
@@ -130,7 +130,7 @@ begin
       end;
     when TuiMsg.Resize(Size):
       begin
-        mutable var Next: LocalChatModel := State;
+        var Next: LocalChatModel := State;
         Next.Width := Size.Width;
         Next.Height := Size.Height;
         return LocalChatScrollToEnd(Next);
@@ -140,7 +140,7 @@ begin
         case Current of
           when Some(CurrentId):
             begin
-              mutable var Next: LocalChatModel := State;
+              var Next: LocalChatModel := State;
               Next.Focus := CurrentId.Value;
               return Next;
             end;

@@ -54,7 +54,7 @@ end function;
 
 function RunBackgroundSignatureOnly(): DemoModel;
 begin
-  var Inbox: channel of integer := CreateChannel(4);
+  const Inbox: channel of integer := CreateChannel(4);
   return TuiApplication.RunWithBackground(record
     Ticks := 0;
   end, Inbox, UpdateDemo, UpdateBackground, ViewDemo);

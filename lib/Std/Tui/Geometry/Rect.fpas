@@ -107,8 +107,8 @@ public type TuiRect = record
   // - `Bottom`: Bottom edge or margin.
   public static function FromEdges(Left: integer; Top: integer; Right: integer; Bottom: integer): TuiRect;
   begin
-    var Width: integer := TuiRectExtentFromEdges(Left, Right, 'right');
-    var Height: integer := TuiRectExtentFromEdges(Top, Bottom, 'bottom');
+    const Width: integer := TuiRectExtentFromEdges(Left, Right, 'right');
+    const Height: integer := TuiRectExtentFromEdges(Top, Bottom, 'bottom');
     return TuiRect.Create(Left, Top, Width, Height);
   end function;
 
@@ -188,10 +188,10 @@ public type TuiRect = record
   // - `Other`: Other rectangle or value used for comparison.
   public function Intersect(Self: TuiRect; Other: TuiRect): TuiRect;
   begin
-    var X: integer := TuiRectMax(Self.X, Other.X);
-    var Y: integer := TuiRectMax(Self.Y, Other.Y);
-    var Right: integer := TuiRectMin(Self.Right(), Other.Right());
-    var Bottom: integer := TuiRectMin(Self.Bottom(), Other.Bottom());
+    const X: integer := TuiRectMax(Self.X, Other.X);
+    const Y: integer := TuiRectMax(Self.Y, Other.Y);
+    const Right: integer := TuiRectMin(Self.Right(), Other.Right());
+    const Bottom: integer := TuiRectMin(Self.Bottom(), Other.Bottom());
     if (Right <= X) or (Bottom <= Y) then
       begin
         return TuiRect.Create(X, Y, 0, 0);
@@ -207,8 +207,8 @@ public type TuiRect = record
   // - `Self`: Receiver value operated on by the method.
   public function Inset(Self: TuiRect): TuiRect;
   begin
-    mutable var InnerWidth: integer := Self.Width - 2;
-    mutable var InnerHeight: integer := Self.Height - 2;
+    var InnerWidth: integer := Self.Width - 2;
+    var InnerHeight: integer := Self.Height - 2;
     if InnerWidth < 0 then
       begin
         InnerWidth := 0;

@@ -3,8 +3,8 @@ program T;
 uses Std.Console, Std.Dictionaries;
 
 begin
-  var D: dict of string to integer := ['A': 10, 'B': 20];
-  var V: array of integer := Std.Dictionaries.Values(D);
+  const D: dict of string to integer := ['A': 10, 'B': 20];
+  const V: array of integer := Std.Dictionaries.Values(D);
   WriteLn(V[0]);
   WriteLn(V[1]);
 end.

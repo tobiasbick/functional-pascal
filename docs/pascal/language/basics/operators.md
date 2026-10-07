@@ -129,8 +129,8 @@ runtime errors, and does not propagate an error or `None` through `try`. It must
 still be syntactically valid and pass normal compile-time type checking.
 
 ```pascal
-var Denominator: integer := 0;
-var NonzeroQuotient: boolean := (Denominator <> 0) and (10 div Denominator > 0);
+const Denominator: integer := 0;
+const NonzeroQuotient: boolean := (Denominator <> 0) and (10 div Denominator > 0);
 // NonzeroQuotient is false; division is skipped.
 ```
 
@@ -143,16 +143,16 @@ Debugger watch expressions follow these same evaluation rules.
 Individual characters can be read by 0-based integer index using bracket notation. The result type is `string` (a single-character string).
 
 ```pascal
-var S: string := 'Hello';
-var C: string := S[0]; // 'H'
-var L: string := S[4]; // 'o'
+const S: string := 'Hello';
+const C: string := S[0]; // 'H'
+const L: string := S[4]; // 'o'
 ```
 
 Accessing an out-of-bounds index is a **runtime error**. The index must be an `integer`; non-integer indices are a compile-time error.
 
 ```pascal
 // iterate over characters
-mutable var I: integer := 0;
+var I: integer := 0;
 while I < Std.Str.Length(S) do
   begin
     WriteLn(S[I]);
@@ -164,7 +164,7 @@ end while;
 ## String concatenation
 
 ```pascal
-var Full: string := ('Hello' + ' ') + 'World'; // 'Hello World'
+const Full: string := ('Hello' + ' ') + 'World'; // 'Hello World'
 ```
 
 ## See also

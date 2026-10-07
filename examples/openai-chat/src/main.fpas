@@ -11,7 +11,7 @@ begin
       return;
     end;
   end if;
-  mutable var ClientValue: Client := Client.Create(ParamStr(0), ParamStr(1));
+  var ClientValue: Client := Client.Create(ParamStr(0), ParamStr(1));
   case Std.Env.Get('OPENAI_API_KEY') of
     when Some(Value):
       begin
@@ -21,13 +21,13 @@ begin
       begin
       end;
   end case;
-  mutable var Messages: array of ChatMessage := [];
-  var Options: ChatOptions := ChatOptions.Default();
+  var Messages: array of ChatMessage := [];
+  const Options: ChatOptions := ChatOptions.Default();
   WriteLn('OpenAI-compatible FPAS chat. Enter /exit to quit.');
   while true do
     begin
       WriteText('you> ');
-      var Prompt: string := ReadLn();
+      const Prompt: string := ReadLn();
       if Prompt = '/exit' then
         begin
           break;
@@ -36,7 +36,7 @@ begin
 
       if Prompt <> '' then
         begin
-          mutable var RequestMessages: array of ChatMessage := Messages;
+          var RequestMessages: array of ChatMessage := Messages;
           Std.Arrays.Push(RequestMessages, ChatMessage.User(Prompt));
           case Complete(ClientValue, RequestMessages, Options) of
             when Ok(Content):

@@ -35,7 +35,7 @@ Calling `Random` or `RandomInt` before either seeding procedure automatically in
 Returns a pseudo-random real number in `[0.0, 1.0)`.
 
 ```pascal
-var R: real := Random();
+const R: real := Random();
 ```
 
 ## `function RandomInt(Lo: integer; Hi: integer): integer`
@@ -43,7 +43,7 @@ var R: real := Random();
 Returns an unbiased pseudo-random integer in `[Lo, Hi]`, including either bound. The full `integer` range is supported. A runtime error occurs when `Lo > Hi`.
 
 ```pascal
-var Die: integer := RandomInt(1, 6);
+const Die: integer := RandomInt(1, 6);
 ```
 
 ## `procedure Randomize()`
@@ -60,9 +60,9 @@ Replaces the current VM's pseudo-random state with the repeatable sequence selec
 
 ```pascal
 SetSeed(17);
-var First: integer := RandomInt(1, 100);
+const First: integer := RandomInt(1, 100);
 SetSeed(17);
-var Repeated: integer := RandomInt(1, 100);
+const Repeated: integer := RandomInt(1, 100);
 ```
 
 ## Implementation (contributors)

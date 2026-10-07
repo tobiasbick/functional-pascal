@@ -8,7 +8,7 @@ begin
 end function;
 
 begin
-  var O: option of integer := None;
-  var M: option of string := AndThen(O, AlwaysSomeOk);
+  const O: option of integer := None;
+  const M: option of string := AndThen(O, AlwaysSomeOk);
   WriteLn(IsNone(M));
 end.

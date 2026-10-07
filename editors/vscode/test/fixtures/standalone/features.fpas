@@ -15,7 +15,7 @@ end function;
 
 begin
   // Unicode text is valid inside a UTF-8 string.
-  var Message: Greeting := record
+  const Message: Greeting := record
     Text := 'Grüße aus 東京 🙂';
     Count := 1;
   end;

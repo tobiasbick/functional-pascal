@@ -2,7 +2,7 @@ program ShortCircuitTest;
 
 uses Std.Bits, Std.Test;
 
-mutable var Trace: integer := 0;
+var Trace: integer := 0;
 
 function Mark(Value: boolean; Digit: integer): boolean;
 begin

@@ -58,11 +58,11 @@ end unit;
 uses Demo.Core;
 
 begin
-  var Music: string := '𝄞';
-  var CounterValue: Counter := record Amount := 1; end;
-  var MemberValue: integer := CounterValue.AmTail;
-  var Total: integer := Add(1, Add(2, 3));
-  var Imported: integer := UniqueValue;
+  const Music: string := '𝄞';
+  const CounterValue: Counter := record Amount := 1; end;
+  const MemberValue: integer := CounterValue.AmTail;
+  const Total: integer := Add(1, Add(2, 3));
+  const Imported: integer := UniqueValue;
 end.
 "#;
     temp.write("src/main.fpas", source);

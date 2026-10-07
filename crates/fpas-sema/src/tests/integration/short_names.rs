@@ -19,7 +19,7 @@ fn short_name_console_keypressed() {
 program T;
 uses Std.Console;
 begin
-  var P: boolean := KeyPressed();
+  const P: boolean := KeyPressed();
 end.",
     );
 }
@@ -36,8 +36,8 @@ begin
   TextColor(Yellow);
   TextBackground(Blue);
   ClrScr();
-  var X: integer := WhereX();
-  var Y: integer := WhereY();
+  const X: integer := WhereX();
+  const Y: integer := WhereY();
 end.",
     );
 }
@@ -49,7 +49,7 @@ fn short_name_math_sqrt() {
 program T;
 uses Std.Math;
 begin
-  var R: real := Sqrt(4.0);
+  const R: real := Sqrt(4.0);
 end.",
     );
 }
@@ -61,7 +61,7 @@ fn short_name_math_pi_const() {
 program T;
 uses Std.Math;
 begin
-  var R: real := Pi;
+  const R: real := Pi;
 end.",
     );
 }
@@ -73,7 +73,7 @@ fn short_name_conv_int_to_str() {
 program T;
 uses Std.Conv;
 begin
-  var S: string := IntToStr(42);
+  const S: string := IntToStr(42);
 end.",
     );
 }
@@ -85,7 +85,7 @@ fn short_name_console_key_event_type() {
 program T;
 uses Std.Console;
 begin
-  var E: KeyEvent := ReadKeyEvent();
+  const E: KeyEvent := ReadKeyEvent();
   WriteLn(E.kind = KeyKind.Space);
   WriteLn(E.shift);
 end.",
@@ -111,8 +111,8 @@ fn ambiguous_call_hint_suggests_the_method_form() {
 program T;
 uses Std.Options, Std.Results;
 begin
-  var O: option of integer := Some(3);
-  var X: integer := Unwrap(O);
+  const O: option of integer := Some(3);
+  const X: integer := Unwrap(O);
 end.",
     );
     assert_eq!(errs.len(), 1, "{errs:#?}");
@@ -124,9 +124,9 @@ end.",
 program T;
 uses Std.Options, Std.Results;
 begin
-  var O: option of integer := Some(3);
-  var R: result of integer, string := Ok(4);
-  var X: integer := O.Unwrap() + R.Unwrap();
+  const O: option of integer := Some(3);
+  const R: result of integer, string := Ok(4);
+  const X: integer := O.Unwrap() + R.Unwrap();
 end.",
     );
 }
@@ -138,7 +138,7 @@ fn ambiguous_length_error() {
 program T;
 uses Std.Str, Std.Arrays;
 begin
-  var L: integer := Length('hi');
+  const L: integer := Length('hi');
 end.",
     );
     assert!(
@@ -158,7 +158,7 @@ fn ambiguous_length_hint_has_canonical_candidate_order() {
 program T;
 uses Std.Str, Std.Arrays;
 begin
-  var L: integer := Length('hi');
+  const L: integer := Length('hi');
 end.";
     let expected = "`Length` exists in multiple imported units: Std.Arrays.Length, Std.Str.Length. Use the fully qualified name to disambiguate. Or write `Length(Value, ...)` as `Value.Length(...)`: the method form selects the routine by the type of `Value`.";
 
@@ -179,7 +179,7 @@ fn ambiguous_contains_error() {
 program T;
 uses Std.Str, Std.Arrays;
 begin
-  var B: boolean := Contains('hello', 'h');
+  const B: boolean := Contains('hello', 'h');
 end.",
     );
     assert!(
@@ -195,8 +195,8 @@ fn ambiguous_fallback_to_qualified() {
 program T;
 uses Std.Str, Std.Arrays;
 begin
-  var L: integer := Std.Str.Length('hi');
-  var L2: integer := Std.Arrays.Length([1, 2]);
+  const L: integer := Std.Str.Length('hi');
+  const L2: integer := Std.Arrays.Length([1, 2]);
 end.",
     );
 }
@@ -208,7 +208,7 @@ fn no_ambiguity_single_unit() {
 program T;
 uses Std.Str;
 begin
-  var L: integer := Length('hello');
+  const L: integer := Length('hello');
 end.",
     );
 }
@@ -222,9 +222,9 @@ fn qualified_std_name_without_uses_is_rejected() {
 program T;
 uses Std.Str;
 begin
-  var A: array of integer := [1];
-  var L1: integer := Std.Arrays.Length(A);
-  var L2: integer := Length('hi');
+  const A: array of integer := [1];
+  const L1: integer := Std.Arrays.Length(A);
+  const L2: integer := Length('hi');
 end.",
     );
     assert_eq!(errs.len(), 1, "{errs:#?}");
@@ -243,9 +243,9 @@ fn qualified_names_disambiguate_imported_std_units() {
 program T;
 uses Std.Str, Std.Arrays;
 begin
-  var A: array of integer := [1];
-  var L1: integer := Std.Arrays.Length(A);
-  var L2: integer := Std.Str.Length('hi');
+  const A: array of integer := [1];
+  const L1: integer := Std.Arrays.Length(A);
+  const L2: integer := Std.Str.Length('hi');
 end.",
     );
 }

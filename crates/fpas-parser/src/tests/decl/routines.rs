@@ -56,19 +56,17 @@ fn procedure_declaration() {
 }
 
 #[test]
-fn mutable_param() {
+fn parameter_with_local_copy() {
     let p = parse_ok(
         "program T; \
-         procedure Inc(mutable X: integer); \
+         procedure Inc(X: integer); \
          begin \
-           X := X + 1; \
+           var LocalX: integer := X;\nLocalX := LocalX + 1; \
          end procedure; \
          begin end.",
     );
     match &p.declarations[0] {
-        Decl::Procedure(proc) => {
-            assert!(proc.params[0].mutable);
-        }
+        Decl::Procedure(proc) => assert_eq!(proc.params[0].name, "X"),
         _ => panic!("expected Procedure"),
     }
 }

@@ -3,8 +3,8 @@ program T;
 uses Std.Console, Std.Arrays;
 
 begin
-  var A: array of integer := [1, 2, 3];
-  var R: array of integer := Reverse(A);
+  const A: array of integer := [1, 2, 3];
+  const R: array of integer := Reverse(A);
   WriteLn(R[0]);
   WriteLn(R[1]);
   WriteLn(R[2]);

@@ -3,6 +3,6 @@ program T;
 uses Std.Console, Std.Arrays;
 
 begin
-  mutable var A: array of integer := [];
-  var X: integer := Pop(A);
+  var A: array of integer := [];
+  const X: integer := Pop(A);
 end.

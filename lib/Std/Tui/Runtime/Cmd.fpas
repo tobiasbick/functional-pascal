@@ -12,11 +12,11 @@ public type TuiCmd = enum
   SetPalette;
 end enum;
 
-mutable var TuiCommandValues: array of TuiCmd := [];
-mutable var TuiCommandPalettes: array of option of TuiPalette := [];
-mutable var TuiCommandBackground: array of array of TuiBackgroundCommand := [];
+var TuiCommandValues: array of TuiCmd := [];
+var TuiCommandPalettes: array of option of TuiPalette := [];
+var TuiCommandBackground: array of array of TuiBackgroundCommand := [];
 // Requested tick delay in milliseconds per output; negative means no request.
-mutable var TuiCommandTickDelays: array of integer := [];
+var TuiCommandTickDelays: array of integer := [];
 
 function TuiCmdOutputRequire(Slot: integer): integer;
 begin
@@ -52,7 +52,7 @@ public type TuiCmdOutput = record
   // - `Self`: Receiver value operated on by the method.
   public procedure Reset(Self: TuiCmdOutput);
   begin
-    var Slot: integer := TuiCmdOutputRequire(Self.Slot);
+    const Slot: integer := TuiCmdOutputRequire(Self.Slot);
     TuiCommandValues[Slot - 1] := TuiCmd.NoCommand;
     TuiCommandPalettes[Slot - 1] := None;
     TuiCommandBackground[Slot - 1] := [];
@@ -63,7 +63,7 @@ public type TuiCmdOutput = record
   // The latest request of an application replaces an earlier pending one.
   public procedure RequestTick(Self: TuiCmdOutput; DelayMilliseconds: integer);
   begin
-    var Slot: integer := TuiCmdOutputRequire(Self.Slot);
+    const Slot: integer := TuiCmdOutputRequire(Self.Slot);
     if DelayMilliseconds < 0 then
       begin
         panic('Tui tick delay must not be negative');
@@ -76,8 +76,8 @@ public type TuiCmdOutput = record
   // Returns the tick delay requested by the current Update call, if any.
   public function ReadTickRequest(Self: TuiCmdOutput): option of integer;
   begin
-    var Slot: integer := TuiCmdOutputRequire(Self.Slot);
-    var Delay: integer := TuiCommandTickDelays[Slot - 1];
+    const Slot: integer := TuiCmdOutputRequire(Self.Slot);
+    const Delay: integer := TuiCommandTickDelays[Slot - 1];
     if Delay < 0 then
       begin
         return None;
@@ -90,13 +90,13 @@ public type TuiCmdOutput = record
   // Starts one operation after Update returns. The host owns it until completion or shutdown.
   public procedure StartBackground(Self: TuiCmdOutput; Id: integer; Work: TuiBackgroundWork);
   begin
-    var Slot: integer := TuiCmdOutputRequire(Self.Slot);
+    const Slot: integer := TuiCmdOutputRequire(Self.Slot);
     if Id < 1 then
       begin
         panic('Tui background id must be positive');
       end;
     end if;
-    mutable var Commands: array of TuiBackgroundCommand := TuiCommandBackground[Slot - 1];
+    var Commands: array of TuiBackgroundCommand := TuiCommandBackground[Slot - 1];
     Std.Arrays.Push(Commands, TuiBackgroundCommand.Start(Id, Work));
     TuiCommandBackground[Slot - 1] := Commands;
   end procedure;
@@ -104,13 +104,13 @@ public type TuiCmdOutput = record
   // Requests cancellation and starts the latest replacement after the previous operation ends.
   public procedure ReplaceSubscription(Self: TuiCmdOutput; Id: integer; Work: TuiBackgroundWork);
   begin
-    var Slot: integer := TuiCmdOutputRequire(Self.Slot);
+    const Slot: integer := TuiCmdOutputRequire(Self.Slot);
     if Id < 1 then
       begin
         panic('Tui subscription id must be positive');
       end;
     end if;
-    mutable var Commands: array of TuiBackgroundCommand := TuiCommandBackground[Slot - 1];
+    var Commands: array of TuiBackgroundCommand := TuiCommandBackground[Slot - 1];
     Std.Arrays.Push(Commands, TuiBackgroundCommand.ReplaceSubscription(Id, Work));
     TuiCommandBackground[Slot - 1] := Commands;
   end procedure;
@@ -118,13 +118,13 @@ public type TuiCmdOutput = record
   // Requests cancellation after Update returns; the host joins it when complete or at shutdown.
   public procedure CancelSubscription(Self: TuiCmdOutput; Id: integer);
   begin
-    var Slot: integer := TuiCmdOutputRequire(Self.Slot);
+    const Slot: integer := TuiCmdOutputRequire(Self.Slot);
     if Id < 1 then
       begin
         panic('Tui subscription id must be positive');
       end;
     end if;
-    mutable var Commands: array of TuiBackgroundCommand := TuiCommandBackground[Slot - 1];
+    var Commands: array of TuiBackgroundCommand := TuiCommandBackground[Slot - 1];
     Std.Arrays.Push(Commands, TuiBackgroundCommand.CancelSubscription(Id));
     TuiCommandBackground[Slot - 1] := Commands;
   end procedure;
@@ -136,7 +136,7 @@ public type TuiCmdOutput = record
   // - `Value`: Value used to create or update the result.
   public procedure Set(Self: TuiCmdOutput; Value: TuiCmd);
   begin
-    var Slot: integer := TuiCmdOutputRequire(Self.Slot);
+    const Slot: integer := TuiCmdOutputRequire(Self.Slot);
     TuiCommandValues[Slot - 1] := Value;
     TuiCommandPalettes[Slot - 1] := None;
   end procedure;
@@ -148,7 +148,7 @@ public type TuiCmdOutput = record
   // - `Palette`: Palette used to resolve semantic style roles.
   public procedure SetPalette(Self: TuiCmdOutput; Palette: TuiPalette);
   begin
-    var Slot: integer := TuiCmdOutputRequire(Self.Slot);
+    const Slot: integer := TuiCmdOutputRequire(Self.Slot);
     TuiCommandValues[Slot - 1] := TuiCmd.SetPalette;
     TuiCommandPalettes[Slot - 1] := Some(Palette);
   end procedure;
@@ -159,7 +159,7 @@ public type TuiCmdOutput = record
   // - `Self`: Receiver value operated on by the method.
   public function Command(Self: TuiCmdOutput): TuiCmd;
   begin
-    var Slot: integer := TuiCmdOutputRequire(Self.Slot);
+    const Slot: integer := TuiCmdOutputRequire(Self.Slot);
     return TuiCommandValues[Slot - 1];
   end function;
 
@@ -169,14 +169,14 @@ public type TuiCmdOutput = record
   // - `Self`: Receiver value operated on by the method.
   public function ReadPalette(Self: TuiCmdOutput): option of TuiPalette;
   begin
-    var Slot: integer := TuiCmdOutputRequire(Self.Slot);
+    const Slot: integer := TuiCmdOutputRequire(Self.Slot);
     return TuiCommandPalettes[Slot - 1];
   end function;
 
   // Returns background commands emitted by the current Update call.
   public function ReadBackground(Self: TuiCmdOutput): array of TuiBackgroundCommand;
   begin
-    var Slot: integer := TuiCmdOutputRequire(Self.Slot);
+    const Slot: integer := TuiCmdOutputRequire(Self.Slot);
     return TuiCommandBackground[Slot - 1];
   end function;
 end record;

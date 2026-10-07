@@ -175,7 +175,7 @@ mod tests {
     #[test]
     fn program_type_then_begin() {
         let formatted = parse_and_format(
-            "program T; type Point = record X: integer; Y: integer; end record; begin var P: Point := record X := 1; Y := 2; end; end.",
+            "program T; type Point = record X: integer; Y: integer; end record; begin const P: Point := record X := 1; Y := 2; end; end.",
         );
         assert!(formatted.contains("type Point = record\n"));
         assert!(formatted.contains("end record;\n\nbegin\n"));
@@ -184,7 +184,7 @@ mod tests {
     #[test]
     fn array_literal_short_stays_single_line() {
         let formatted = parse_and_format(
-            "program T; begin var Words: array of string := ['red', 'green', 'blue']; end.",
+            "program T; begin const Words: array of string := ['red', 'green', 'blue']; end.",
         );
         assert!(
             formatted.contains("['red', 'green', 'blue']"),

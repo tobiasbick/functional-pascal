@@ -1,117 +1,13 @@
-//! Free-variable capture analysis for closures.
-//!
-//! **Documentation:** `docs/pascal/language/functions/closures.md`
+//! Statement and expression traversal for lexical captures.
 
-use std::collections::HashSet;
-
-use crate::scope::{ScopeStack, SymbolKind};
-use crate::types::Ty;
+use super::{CaptureBinding, CaptureCollector};
+use crate::scope::SymbolKind;
 use fpas_parser::{
     CaseLabel, Decl, Designator, DesignatorPart, Expr, FuncBody, PostfixOperation, Stmt,
 };
-
-use super::{ClosureInfoMap, NestedRoutineCaptureMap};
-
-/// A free variable captured by a closure from an enclosing scope.
-///
-/// **Documentation:** `docs/pascal/language/functions/closures.md`
-#[derive(Debug, Clone, PartialEq)]
-pub struct CaptureBinding {
-    /// Whether the binding's reachable captures are statically task-free.
-    pub task_free: bool,
-    /// Source name of the captured binding.
-    pub name: String,
-    /// Resolved semantic type at the capture boundary.
-    pub ty: Ty,
-    /// `true` when the capture is mutable (cell-backed at runtime).
-    pub mutable: bool,
-    /// `true` when the captured binding already holds a task-bound value
-    /// (for example a nested closure that captured a mutable cell).
-    pub task_bound: bool,
-    /// Exact declaration of the captured source binding.
-    pub declaration: fpas_lexer::Span,
-}
-
-/// Collect lexical captures referenced by `body`.
-///
-/// A name is captured when it resolves to a `Var`, `Param`, or `ForVar` in a non-root scope
-/// outside the closure's own scope frame (`closure_scope_index`). Captures required only by a
-/// nested closure or named routine are propagated from that routine's analyzed metadata, which
-/// preserves its own parameter and local shadowing.
-///
-/// **Documentation:** `docs/pascal/language/functions/closures.md`
-#[must_use]
-pub fn collect_captures(
-    scopes: &ScopeStack,
-    closure_scope_index: usize,
-    body: &FuncBody,
-    closure_infos: &ClosureInfoMap,
-    nested_routine_captures: &NestedRoutineCaptureMap,
-) -> Vec<CaptureBinding> {
-    let mut collector = CaptureCollector {
-        scopes,
-        closure_scope_index,
-        closure_infos,
-        nested_routine_captures,
-        captures: Vec::new(),
-        seen: HashSet::new(),
-        bound_scopes: Vec::new(),
-    };
-    collector.collect_from_body(body);
-    collector.captures
-}
-
-struct CaptureCollector<'a> {
-    scopes: &'a ScopeStack,
-    closure_scope_index: usize,
-    closure_infos: &'a ClosureInfoMap,
-    nested_routine_captures: &'a NestedRoutineCaptureMap,
-    captures: Vec<CaptureBinding>,
-    seen: HashSet<String>,
-    bound_scopes: Vec<HashSet<String>>,
-}
+use std::collections::HashSet;
 
 impl CaptureCollector<'_> {
-    fn consider_name(&mut self, name: &str) {
-        let canonical = name.to_ascii_lowercase();
-        if self
-            .bound_scopes
-            .iter()
-            .rev()
-            .any(|scope| scope.contains(&canonical))
-        {
-            return;
-        }
-        if !self.seen.insert(canonical) {
-            return;
-        }
-        let Some((scope_index, symbol, declaration)) =
-            self.scopes.lookup_with_scope_and_declaration(name)
-        else {
-            return;
-        };
-        if scope_index == 0 || scope_index >= self.closure_scope_index {
-            return;
-        }
-        if !matches!(
-            symbol.kind,
-            SymbolKind::Var | SymbolKind::Param | SymbolKind::ForVar
-        ) {
-            return;
-        }
-        let Some(declaration) = declaration else {
-            return;
-        };
-        self.captures.push(CaptureBinding {
-            task_free: self.scopes.discard_info(name).value,
-            name: name.to_string(),
-            ty: symbol.ty.clone(),
-            mutable: symbol.mutable,
-            task_bound: symbol.task_bound,
-            declaration,
-        });
-    }
-
     fn push_bound_scope(&mut self) {
         self.bound_scopes.push(HashSet::new());
     }
@@ -129,7 +25,7 @@ impl CaptureCollector<'_> {
     fn collect_statement_list(&mut self, stmts: &[Stmt]) {
         for stmt in stmts {
             self.collect_from_stmt(stmt);
-            if let Stmt::Var(var) | Stmt::MutableVar(var) = stmt {
+            if let Stmt::Const(var) | Stmt::Var(var) = stmt {
                 self.bind_name(&var.name);
             }
         }
@@ -143,7 +39,7 @@ impl CaptureCollector<'_> {
 
     fn collect_from_decl(&mut self, decl: &Decl) {
         match decl {
-            Decl::Var(var) | Decl::MutableVar(var) => {
+            Decl::Var(var) => {
                 self.collect_from_expr(&var.value);
             }
             Decl::Const(var) => {
@@ -169,7 +65,8 @@ impl CaptureCollector<'_> {
         }
     }
 
-    fn collect_from_body(&mut self, body: &FuncBody) {
+    /// Walks nested routine captures and ordered local declarations in a body.
+    pub(super) fn collect_from_body(&mut self, body: &FuncBody) {
         let FuncBody::Block { nested, stmts } = body;
         for decl in nested {
             self.collect_from_decl(decl);
@@ -186,7 +83,7 @@ impl CaptureCollector<'_> {
                 self.collect_statement_list(stmts);
                 self.pop_bound_scope();
             }
-            Stmt::Var(var) | Stmt::MutableVar(var) => self.collect_from_expr(&var.value),
+            Stmt::Const(var) | Stmt::Var(var) => self.collect_from_expr(&var.value),
             Stmt::Assign { target, value, .. } => {
                 self.collect_from_designator(target);
                 self.collect_from_expr(value);

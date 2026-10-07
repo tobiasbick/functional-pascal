@@ -16,7 +16,7 @@ begin
 end function;
 
 begin
-  var R: result of integer, string := Ok(-1);
-  var M: result of string, string := AndThen(R, PositiveOk);
+  const R: result of integer, string := Ok(-1);
+  const M: result of string, string := AndThen(R, PositiveOk);
   WriteLn(IsError(M));
 end.

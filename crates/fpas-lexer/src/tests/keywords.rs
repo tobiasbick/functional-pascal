@@ -2,7 +2,7 @@ use super::toks;
 use crate::Token;
 
 #[test]
-fn all_reserved_keywords() {
+fn reserved_keywords_and_ordinary_mutable_identifier() {
     let input = "program unit uses const var mutable function procedure begin end return discard \
                  if then else elsif case when of for to downto in in do while \
                  repeat until and or not xor div mod \
@@ -18,7 +18,7 @@ fn all_reserved_keywords() {
             Token::Uses,
             Token::Const,
             Token::Var,
-            Token::Mutable,
+            Token::Ident("mutable".into()),
             Token::Function,
             Token::Procedure,
             Token::Begin,

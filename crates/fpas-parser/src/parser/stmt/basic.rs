@@ -22,24 +22,26 @@ impl Parser {
         Stmt::Block(stmts, self.span_from(start))
     }
 
-    pub(super) fn parse_var_stmt(&mut self, mutable: bool) -> Stmt {
+    /// Parses an inline constant with the shared typed-initializer syntax.
+    pub(super) fn parse_const_stmt(&mut self) -> Stmt {
+        Stmt::Const(self.parse_local_binding())
+    }
+
+    /// Parses a reassignable inline binding.
+    pub(super) fn parse_var_stmt(&mut self) -> Stmt {
+        Stmt::Var(self.parse_local_binding())
+    }
+
+    fn parse_local_binding(&mut self) -> VarDef {
         let start = self.current_span();
-        if mutable {
-            self.advance();
-        }
         self.advance();
         let (name, type_expr, value) = self.parse_typed_init_fields(start);
-        let var_def = VarDef {
+        VarDef {
             name,
             type_expr,
             value,
             visibility: Visibility::default(),
             span: self.span_from(start),
-        };
-        if mutable {
-            Stmt::MutableVar(var_def)
-        } else {
-            Stmt::Var(var_def)
         }
     }
 

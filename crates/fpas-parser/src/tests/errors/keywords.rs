@@ -6,7 +6,6 @@ const KEYWORDS: &[&str] = &[
     "uses",
     "const",
     "var",
-    "mutable",
     "function",
     "procedure",
     "begin",

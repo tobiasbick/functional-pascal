@@ -8,7 +8,7 @@ begin
 end function;
 
 begin
-  var O: option of integer := None;
-  var M: option of integer := OrElse(O, FallbackNinetyNine);
+  const O: option of integer := None;
+  const M: option of integer := OrElse(O, FallbackNinetyNine);
   WriteLn(Unwrap(M));
 end.

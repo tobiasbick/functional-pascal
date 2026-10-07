@@ -16,8 +16,8 @@ begin
       panic('Tui routing received a frame for a different element tree');
     end;
   end if;
-  mutable var Next: integer := Index + 1;
-  mutable var Descendants: array of TuiElement := [];
+  var Next: integer := Index + 1;
+  var Descendants: array of TuiElement := [];
   case Node of
     when TuiElement.Scroll(Id, Offset, ChangeAction, ScrollChildren):
       begin
@@ -87,7 +87,7 @@ end procedure;
 // - `Node`: Element or menu node processed by the operation.
 public function TuiFocusableControls(Node: TuiElement): array of TuiControlId;
 begin
-  mutable var Descendants: array of TuiElement := [];
+  var Descendants: array of TuiElement := [];
   case Node of
     when TuiElement.Button(Button):
       begin
@@ -123,7 +123,7 @@ begin
       end;
     when TuiElement.Scroll(Id, Offset, ChangeAction, Children):
       begin
-        mutable var Controls: array of TuiControlId := [Id];
+        var Controls: array of TuiControlId := [Id];
         for Index: integer := 0 to Std.Arrays.Length(Children) - 1 do
           begin
             Controls := Std.Arrays.Concat(Controls, TuiFocusableControls(Children[Index]));
@@ -134,7 +134,7 @@ begin
       end;
     when TuiElement.MenuBar(Items):
       begin
-        mutable var Controls: array of TuiControlId := [];
+        var Controls: array of TuiControlId := [];
         for Index: integer := 0 to Std.Arrays.Length(Items) - 1 do
           begin
             if Items[Index].Enabled then
@@ -149,7 +149,7 @@ begin
       end;
     when TuiElement.StatusLine(Items):
       begin
-        mutable var Controls: array of TuiControlId := [];
+        var Controls: array of TuiControlId := [];
         for Index: integer := 0 to Std.Arrays.Length(Items) - 1 do
           begin
             case Items[Index] of
@@ -192,7 +192,7 @@ begin
       end;
     when TuiElement.Desktop(Focused, Children):
       begin
-        mutable var LastOverlay: integer := -1;
+        var LastOverlay: integer := -1;
         for Index: integer := 0 to Std.Arrays.Length(Children) - 1 do
           begin
             case Children[Index] of
@@ -213,7 +213,7 @@ begin
           end;
         else
           begin
-            mutable var Controls: array of TuiControlId := [];
+            var Controls: array of TuiControlId := [];
             for Index: integer := 0 to Std.Arrays.Length(Children) - 1 do
               begin
                 Controls := Std.Arrays.Concat(Controls, TuiFocusableControls(Children[Index]));
@@ -229,7 +229,7 @@ begin
         return [];
       end;
   end case;
-  mutable var Controls: array of TuiControlId := [];
+  var Controls: array of TuiControlId := [];
   for Index: integer := 0 to Std.Arrays.Length(Descendants) - 1 do
     begin
       Controls := Std.Arrays.Concat(Controls, TuiFocusableControls(Descendants[Index]));

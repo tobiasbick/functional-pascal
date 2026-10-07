@@ -14,9 +14,9 @@ begin
 end function;
 
 begin
-  var DefaultConfig: Config := record end;
-  var DevConfig: Config := DefaultConfig with Port := 3000; end with;
-  var ProdConfig: Config := DevConfig with Host := 'api.example'; Port := 443; end with;
+  const DefaultConfig: Config := record end;
+  const DevConfig: Config := DefaultConfig with Port := 3000; end with;
+  const ProdConfig: Config := DevConfig with Host := 'api.example'; Port := 443; end with;
 
   WriteLn('Default: ' + ShowConfig(DefaultConfig));
   WriteLn('Dev: ' + ShowConfig(DevConfig));

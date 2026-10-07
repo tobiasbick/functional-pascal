@@ -8,8 +8,8 @@ begin
 end procedure;
 
 begin
-  mutable var Tasks: array of task := [];
-  var Started: integer := MonotonicMillis();
+  var Tasks: array of task := [];
+  const Started: integer := MonotonicMillis();
   for I: integer := 1 to 8 do
     begin
       Push(Tasks, go Sleeper());
@@ -17,7 +17,7 @@ begin
   end for;
 
   WaitAll(Tasks);
-  var Elapsed: integer := ElapsedMillis(Started);
+  const Elapsed: integer := ElapsedMillis(Started);
   AssertTrue(Elapsed >= 40);
   AssertTrue(Elapsed < 1000);
 end.

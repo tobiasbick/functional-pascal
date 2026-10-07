@@ -49,6 +49,12 @@ requires Lower <= Upper;
 ensures (Clamped) Clamped >= Lower and Clamped <= Upper;
 ```
 
+## Open decisions
+
+Before AP23.2, decide whether a `try` error return runs postconditions and how
+the clause-local return-value name applies to that path. AP23.2 already requires
+this rule; Q17 does not explicitly distinguish ordinary and propagated returns.
+
 ## Dependencies
 
 - AP07 (boolean rules for clause expressions).

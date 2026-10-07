@@ -3,8 +3,8 @@ program T;
 uses Std.Console, Std.Results, Std.Options;
 
 begin
-  var R: result of integer, string := Ok(42);
-  var O: option of integer := Some(7);
+  const R: result of integer, string := Ok(42);
+  const O: option of integer := Some(7);
   WriteLn(Std.Results.Unwrap(R));
   WriteLn(Std.Options.Unwrap(O));
 end.

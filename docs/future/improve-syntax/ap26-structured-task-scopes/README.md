@@ -48,6 +48,12 @@ scope
 end scope;
 ```
 
+## Open decisions
+
+Before AP26.3, specify the capture limits for closures holding scope-owned task
+handles, including the proof needed when passing them to imported helpers.
+AP26.3 already requires this detail; it must preserve the agreed no-escape rule.
+
 ## Dependencies
 
 - AP13 (block syntax with named closers).

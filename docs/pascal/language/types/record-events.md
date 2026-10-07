@@ -44,7 +44,7 @@ Rules:
 - The setter is an instance procedure with signature
   `procedure Setter(Self: R; Value: Option of HandlerType)`.
 - Accessors may not be static or generic, may not take extra parameters, and must not
-  use `mutable` parameters.
+  change their read-only parameter bindings.
 - Event names share the case-insensitive member namespace with fields, methods, static
   functions, and properties.
 - `read` and `write` are reserved keywords and can only be used in their

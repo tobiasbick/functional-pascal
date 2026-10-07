@@ -43,9 +43,9 @@ fn record_method_result_proofs_survive_unit_interfaces_and_binding() {
     let consumer = parse_unit(
         "unit Demo.MethodConsumer; uses Demo.Methods;
       public procedure Run(); begin
-      var Value: Box := record Value := 1; end;
+      const Value: Box := record Value := 1; end;
       discard Value.Make();
-      var Bound: function(): function(): integer := Value.Make;
+      const Bound: function(): function(): integer := Value.Make;
       discard Bound();
       end procedure; end unit;",
     );

@@ -29,7 +29,7 @@ fn if_else_non_boolean_condition() {
 fn if_comparison_condition() {
     check_ok(
         "program T; \
-         var X: integer := 5; \
+         const X: integer := 5; \
          begin if X > 0 then return; end if; end.",
     );
 }
@@ -38,7 +38,7 @@ fn if_comparison_condition() {
 fn if_else_if_chain_ok() {
     check_ok(
         "program T; \
-         var X: integer := 5; \
+         const X: integer := 5; \
          begin \
            if X > 10 then return; \
            elsif  X > 0 then return; \
@@ -51,7 +51,7 @@ fn if_else_if_chain_ok() {
 fn if_with_block_ok() {
     check_ok(
         "program T; \
-         mutable var X: integer := 5; \
+         var X: integer := 5; \
          begin \
            if X > 0 then begin X := 1; end; \
            else begin X := 2; end; \

@@ -29,6 +29,7 @@ pub(super) fn register_enum_type(
     checker.scopes.define(
         qualified_name,
         Symbol {
+            constant: None,
             ty: enum_ty.clone(),
             mutable: false,
             kind: SymbolKind::Type,
@@ -41,6 +42,7 @@ pub(super) fn register_enum_type(
         checker.scopes.define(
             &qualified_member,
             Symbol {
+                constant: None,
                 ty: enum_ty.clone(),
                 mutable: false,
                 kind: SymbolKind::EnumMember,
@@ -72,6 +74,7 @@ pub(super) fn register_record_type(
     checker.scopes.define(
         qualified_name,
         Symbol {
+            constant: None,
             ty: record_ty.clone(),
             mutable: false,
             kind: SymbolKind::Type,

@@ -126,14 +126,14 @@ end.";
 fn detached_global_writes_roll_back_and_stop_identity_survives() {
     let source = "\
 program DebugRollback;
-mutable var Counter: integer := 5;
+var Counter: integer := 5;
 function Increment(): integer;
 begin
   Counter := Counter + 1;
   return Counter;
 end function;
 begin
-  mutable var Anchor: integer := Counter;
+  var Anchor: integer := Counter;
   Anchor := Anchor + 1;
 end.";
     let mut session = DebugSession::new(compile(source)).expect("debug session");
@@ -168,13 +168,13 @@ fn visible_first_class_closure_uses_detached_mutable_captures() {
     let source = "\
 program DebugClosure;
 begin
-  mutable var Base: integer := 10;
-  var AddBase: function(Value: integer): integer :=
+  var Base: integer := 10;
+  const AddBase: function(Value: integer): integer :=
     function(Value: integer): integer
     begin
       return Base + Value;
     end function;
-  mutable var Marker: integer := 0;
+  var Marker: integer := 0;
   Marker := Marker + 1;
 end.";
     let mut session = DebugSession::new(compile(source)).expect("debug session");

@@ -10,7 +10,7 @@ fn unwrap_rejects_non_containers_without_cascading_argument_errors() {
                     "program T;
 uses Std.{namespace};
 begin
-  var N: integer := Std.{namespace}.{function}({argument}{fallback});
+  const N: integer := Std.{namespace}.{function}({argument}{fallback});
 end."
                 ));
                 assert_eq!(errs.len(), 1, "{errs:#?}");
@@ -50,7 +50,7 @@ fn std_conv_str_to_int_type_mismatch() {
 program T;
 uses Std.Conv;
 begin
-  var N: integer := Std.Conv.StrToInt(42);
+  const N: integer := Std.Conv.StrToInt(42);
 end.",
     );
     assert!(
@@ -70,7 +70,7 @@ fn std_str_format_requires_template_argument() {
 program T;
 uses Std.Str;
 begin
-  var S: string := Std.Str.Format();
+  const S: string := Std.Str.Format();
 end.",
     );
     assert!(
@@ -87,7 +87,7 @@ fn std_str_format_checks_template_type() {
 program T;
 uses Std.Str;
 begin
-  var S: string := Std.Str.Format(42);
+  const S: string := Std.Str.Format(42);
 end.",
     );
     assert!(
@@ -104,14 +104,11 @@ fn std_array_push_requires_mutable_array() {
 program T;
 uses Std.Arrays;
 begin
-  var A: array of integer := [1];
+  const A: array of integer := [1];
   Std.Arrays.Push(A, 2);
 end.",
     );
-    assert!(
-        errs.iter().any(|e| e.message.contains("mutable var")),
-        "{errs:#?}"
-    );
+    assert!(errs.iter().any(|e| e.message.contains("var")), "{errs:#?}");
 }
 
 #[test]
@@ -121,7 +118,7 @@ fn std_dict_merge_requires_matching_rhs_dict_type() {
 program T;
 uses Std.Dictionaries;
 begin
-  var M: dict of integer to integer := Std.Dictionaries.Merge([1: 10], ['x': true]);
+  const M: dict of integer to integer := Std.Dictionaries.Merge([1: 10], ['x': true]);
 end.",
     );
     assert!(
@@ -138,7 +135,7 @@ fn std_dict_merge_requires_dict_rhs() {
 program T;
 uses Std.Dictionaries;
 begin
-  var M: dict of integer to integer := Std.Dictionaries.Merge([1: 10], 42);
+  const M: dict of integer to integer := Std.Dictionaries.Merge([1: 10], 42);
 end.",
     );
     assert!(
@@ -155,7 +152,7 @@ fn std_dict_get_requires_matching_key_type() {
 program T;
 uses Std.Dictionaries;
 begin
-  var V: Option of integer := Std.Dictionaries.Get(['Alice': 1], 42);
+  const V: Option of integer := Std.Dictionaries.Get(['Alice': 1], 42);
 end.",
     );
     assert!(
@@ -176,7 +173,7 @@ begin
   return X;
 end function;
 begin
-  var V: Option of integer := Std.Arrays.Find([1, 2, 3], WrongReturn);
+  const V: Option of integer := Std.Arrays.Find([1, 2, 3], WrongReturn);
 end.",
     );
     assert!(

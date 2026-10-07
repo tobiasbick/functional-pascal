@@ -22,9 +22,9 @@ once in source order. When a generic call infers a concrete return type from its
 arguments, later suffixes use that concrete type.
 
 ```pascal
-var Green: integer := BuildPalette().ForRole(TuiStyleRole.Normal).Foreground.Green;
-var First: string := LoadItems()[0];
-var Scaled: integer := Num.Create(3).Scale(2).Next().Value;
+const Green: integer := BuildPalette().ForRole(TuiStyleRole.Normal).Foreground.Green;
+const First: string := LoadItems()[0];
+const Scaled: integer := Num.Create(3).Scale(2).Next().Value;
 ```
 
 Qualified root calls such as `Std.Math.Sqrt(4.0)` remain ordinary calls. Only
@@ -62,7 +62,7 @@ result:
 
 ```pascal
 discard Factory.Create().Compute();
-var Value: integer := Factory.Create().Compute();
+const Value: integer := Factory.Create().Compute();
 ```
 
 ## Indexing

@@ -15,7 +15,7 @@ end function;
 
 function RunNumbers(Iterations: integer): integer;
 begin
-  mutable var Value: integer := 0;
+  var Value: integer := 0;
   for Index: integer := 1 to Iterations do
     begin
       Value := Advance(Value, 1);
@@ -31,13 +31,13 @@ begin
       panic('usage: dynamic_numeric_benchmark.fpas -- ITERATIONS [MAX_MILLIS]');
     end;
   end if;
-  var Iterations: integer := StrToInt(ParamStr(0));
+  const Iterations: integer := StrToInt(ParamStr(0));
   if Iterations < 1 then
     begin
       panic('ITERATIONS must be positive');
     end;
   end if;
-  mutable var MaxMillis: integer := 0;
+  var MaxMillis: integer := 0;
   if ParamCount() = 2 then
     begin
       MaxMillis := StrToInt(ParamStr(1));
@@ -48,11 +48,11 @@ begin
       end if;
     end;
   end if;
-  mutable var Value: integer := RunNumbers(WarmupIterations);
-  var Started: integer := MonotonicMillis();
+  var Value: integer := RunNumbers(WarmupIterations);
+  const Started: integer := MonotonicMillis();
   Value := RunNumbers(Iterations);
-  var Elapsed: integer := ElapsedMillis(Started);
-  mutable var OpsPerSecond: integer := 0;
+  const Elapsed: integer := ElapsedMillis(Started);
+  var OpsPerSecond: integer := 0;
   if Elapsed > 0 then
     begin
       OpsPerSecond := (Iterations * 1000) div Elapsed;

@@ -1,11 +1,11 @@
 # Mutating
 
-## `procedure Push(mutable A: array of T; Value: T)`
+## `procedure Push(A: array of T; Value: T)`
 
 Appends `Value` to the end of **`A`** (mutates `A`).
 
 ```pascal
-mutable var A: array of integer := [1, 2];
+var A: array of integer := [1, 2];
 Push(A, 3);
 A.Push(4);
 WriteLn(Length(A));
@@ -13,14 +13,14 @@ WriteLn(Length(A));
 
 ---
 
-## `function Pop(mutable A: array of T): T`
+## `function Pop(A: array of T): T`
 
 Removes the **last** element and returns it. **`A` becomes shorter.** **Runtime error** if `A` is empty.
 
 ```pascal
-mutable var A: array of integer := [1, 2, 3];
-var Last: integer := Pop(A);
-var Next: integer := A.Pop();
+var A: array of integer := [1, 2, 3];
+const Last: integer := Pop(A);
+const Next: integer := A.Pop();
 WriteLn(Last);
 WriteLn(Length(A));
 ```

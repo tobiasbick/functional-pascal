@@ -6,21 +6,21 @@ uses
   Std.Tui.Runtime.Cmd, Std.Tui.Runtime.Input, Std.Tui.Runtime.Msg, Std.Tui.Runtime.Routing,
   Std.Tui.Runtime.Routing.Pointer, Std.Tui.Runtime.TerminalSession, Std.Time;
 
-public mutable var TuiAppInputHead: array of integer := [];
-public mutable var TuiAppMessageHead: array of integer := [];
-public mutable var TuiAppOpen: array of boolean := [];
-public mutable var TuiAppInputs: array of array of TuiHostInput := [];
-public mutable var TuiAppMessages: array of array of TuiMsg := [];
-public mutable var TuiAppSurfaces: array of TuiWorkingSurface := [];
-public mutable var TuiAppFrames: array of TuiArrangedFrame := [];
-public mutable var TuiAppTrees: array of TuiElement := [];
-public mutable var TuiAppCommands: array of TuiCmdOutput := [];
-public mutable var TuiAppInteractive: array of boolean := [];
-public mutable var TuiAppPalettes: array of TuiPalette := [];
-public mutable var TuiAppStarted: array of boolean := [];
+public var TuiAppInputHead: array of integer := [];
+public var TuiAppMessageHead: array of integer := [];
+public var TuiAppOpen: array of boolean := [];
+public var TuiAppInputs: array of array of TuiHostInput := [];
+public var TuiAppMessages: array of array of TuiMsg := [];
+public var TuiAppSurfaces: array of TuiWorkingSurface := [];
+public var TuiAppFrames: array of TuiArrangedFrame := [];
+public var TuiAppTrees: array of TuiElement := [];
+public var TuiAppCommands: array of TuiCmdOutput := [];
+public var TuiAppInteractive: array of boolean := [];
+public var TuiAppPalettes: array of TuiPalette := [];
+public var TuiAppStarted: array of boolean := [];
 // Monotonic time of the pending tick request and its due time; negative due means none.
-public mutable var TuiAppTickRequestedAt: array of integer := [];
-public mutable var TuiAppTickDueAt: array of integer := [];
+public var TuiAppTickRequestedAt: array of integer := [];
+public var TuiAppTickDueAt: array of integer := [];
 
 // Opens application-owned state and returns its stable identifier.
 public function TuiAppOpenApplication(Size: TuiSize; Palette: TuiPalette; Interactive: boolean): integer;
@@ -58,7 +58,7 @@ begin
       return [];
     end;
   end if;
-  var BackgroundFailures: array of TuiMsg := TuiBackgroundCloseApplication(ApplicationId);
+  const BackgroundFailures: array of TuiMsg := TuiBackgroundCloseApplication(ApplicationId);
   TuiAppOpen[ApplicationId - 1] := false;
   TuiAppInputHead[ApplicationId - 1] := 0;
   TuiAppMessageHead[ApplicationId - 1] := 0;
@@ -128,11 +128,11 @@ end function;
 // Removes the next queued input, compacting only after at least half is consumed.
 public function TuiAppPopInput(ApplicationId: integer): TuiHostInput;
 begin
-  var Slot: integer := ApplicationId - 1;
-  var Head: integer := TuiAppInputHead[Slot];
-  var Item: TuiHostInput := TuiAppInputs[Slot][Head];
-  var Next: integer := Head + 1;
-  var Count: integer := Std.Arrays.Length(TuiAppInputs[Slot]);
+  const Slot: integer := ApplicationId - 1;
+  const Head: integer := TuiAppInputHead[Slot];
+  const Item: TuiHostInput := TuiAppInputs[Slot][Head];
+  const Next: integer := Head + 1;
+  const Count: integer := Std.Arrays.Length(TuiAppInputs[Slot]);
   if (Next = Count) or ((Next >= 64) and (Next >= Count div 2)) then
     begin
       TuiAppInputs[Slot] := Std.Arrays.Slice(TuiAppInputs[Slot], Next, Count - Next);
@@ -156,11 +156,11 @@ end function;
 // Removes the next queued message, compacting only after at least half is consumed.
 public function TuiAppPopMessage(ApplicationId: integer): TuiMsg;
 begin
-  var Slot: integer := ApplicationId - 1;
-  var Head: integer := TuiAppMessageHead[Slot];
-  var Item: TuiMsg := TuiAppMessages[Slot][Head];
-  var Next: integer := Head + 1;
-  var Count: integer := Std.Arrays.Length(TuiAppMessages[Slot]);
+  const Slot: integer := ApplicationId - 1;
+  const Head: integer := TuiAppMessageHead[Slot];
+  const Item: TuiMsg := TuiAppMessages[Slot][Head];
+  const Next: integer := Head + 1;
+  const Count: integer := Std.Arrays.Length(TuiAppMessages[Slot]);
   if (Next = Count) or ((Next >= 64) and (Next >= Count div 2)) then
     begin
       TuiAppMessages[Slot] := Std.Arrays.Slice(TuiAppMessages[Slot], Next, Count - Next);
@@ -178,7 +178,7 @@ end function;
 // Enqueues messages in their original order.
 public procedure TuiAppPushMessages(ApplicationId: integer; Messages: array of TuiMsg);
 begin
-  mutable var Queue: array of TuiMsg := TuiAppMessages[ApplicationId - 1];
+  var Queue: array of TuiMsg := TuiAppMessages[ApplicationId - 1];
   TuiAppMessages[ApplicationId - 1] := [];
   for Item: TuiMsg in Messages do
     begin
@@ -192,7 +192,7 @@ end procedure;
 // Enqueues one input for the application.
 public procedure TuiAppPushInput(ApplicationId: integer; Input: TuiHostInput);
 begin
-  mutable var Queue: array of TuiHostInput := TuiAppInputs[ApplicationId - 1];
+  var Queue: array of TuiHostInput := TuiAppInputs[ApplicationId - 1];
   TuiAppInputs[ApplicationId - 1] := [];
   Std.Arrays.Push(Queue, Input);
   TuiAppInputs[ApplicationId - 1] := Queue;
@@ -283,7 +283,7 @@ begin
   case Output.ReadTickRequest() of
     when Some(Delay):
       begin
-        var Now: integer := MonotonicMillis();
+        const Now: integer := MonotonicMillis();
         TuiAppTickRequestedAt[ApplicationId - 1] := Now;
         TuiAppTickDueAt[ApplicationId - 1] := Now + Delay;
       end;
@@ -299,13 +299,13 @@ end function;
 // Returns milliseconds until the pending tick is due: 0 when due, -1 without a pending tick.
 public function TuiAppTickWait(ApplicationId: integer): integer;
 begin
-  var Due: integer := TuiAppTickDueAt[ApplicationId - 1];
+  const Due: integer := TuiAppTickDueAt[ApplicationId - 1];
   if Due < 0 then
     begin
       return -1;
     end;
   end if;
-  var Remaining: integer := Due - MonotonicMillis();
+  const Remaining: integer := Due - MonotonicMillis();
   if Remaining < 0 then
     begin
       return 0;

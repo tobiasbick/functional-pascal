@@ -63,7 +63,7 @@ result is non-finite or outside the signed 64-bit integer range. In particular,
 - **Note:** provided via compile-time lowering for `Std.Math.Pi` (and short `Pi` when imported).
 
 ```pascal
-var R: real := Pi;
+const R: real := Pi;
 WriteLn(Round(R));
 ```
 

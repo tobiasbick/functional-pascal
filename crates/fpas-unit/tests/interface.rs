@@ -27,7 +27,7 @@ fn sample_interface() -> UnitInterface {
                     }],
                     parameters: vec![ParameterType {
                         name: "Value".to_string(),
-                        mutable: true,
+
                         ty: InterfaceType::GenericParameter(
                             "T".to_string(),
                             Some(TypeConstraint::Comparable),

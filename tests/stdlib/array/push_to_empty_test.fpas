@@ -3,7 +3,7 @@ program T;
 uses Std.Console, Std.Arrays;
 
 begin
-  mutable var A: array of integer := [];
+  var A: array of integer := [];
   Push(A, 42);
   WriteLn(Length(A));
   WriteLn(A[0]);

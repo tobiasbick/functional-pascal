@@ -6,11 +6,11 @@
 Formal syntax: [`grammar.ebnf`](../../../specs/grammar.ebnf) (`type_expr` — `result` / `option`).
 
 ```pascal
-var Success: Result of integer, string := Ok(42);
-var Failure: Result of integer, string := Error('not found');
+const Success: Result of integer, string := Ok(42);
+const Failure: Result of integer, string := Error('not found');
 
-var Present: Option of integer := Some(7);
-var Missing: Option of integer := None;
+const Present: Option of integer := Some(7);
+const Missing: Option of integer := None;
 ```
 
 Use `case` destructuring to handle both forms:

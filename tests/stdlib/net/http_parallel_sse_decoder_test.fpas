@@ -17,7 +17,7 @@ begin
 end function;
 
 begin
-  mutable var Tasks: array of task := [];
+  var Tasks: array of task := [];
   for Index: integer := 1 to 128 do
     begin
       Push(Tasks, go CreateDecoder(Index));
@@ -25,7 +25,7 @@ begin
   end for;
 
   WaitAll(Tasks);
-  mutable var Decoders: array of SseDecoder := [];
+  var Decoders: array of SseDecoder := [];
   for Index: integer := 0 to Length(Tasks) - 1 do
     begin
       Push(Decoders, Wait(Tasks[Index]));
@@ -34,7 +34,7 @@ begin
 
   for Index: integer := 0 to Length(Decoders) - 1 do
     begin
-      var Expected: string := IntToStr(Index);
+      const Expected: string := IntToStr(Index);
       case FeedSse(Decoders[Index], Std.Net.Utf8.Encode((('data: ' + Expected) + #10) + #10)) of
         when Ok(Events):
           begin

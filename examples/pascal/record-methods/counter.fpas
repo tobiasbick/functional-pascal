@@ -8,7 +8,7 @@ type Counter = record
 
   function Increment(Self: Counter): Counter;
   begin
-    var NewValue: integer := Self.Value + Self.Step;
+    const NewValue: integer := Self.Value + Self.Step;
     return record
       Value := NewValue;
       Step := Self.Step;
@@ -30,13 +30,13 @@ type Counter = record
 end record;
 
 begin
-  var C: Counter := record
+  const C: Counter := record
     Value := 0;
     Step := 5;
   end;
 
   C.Show();
   WriteLn('Counter: ' + IntToStr(C.Increment().Increment().Increment().Value));
-  var Cleared: Counter := C.Increment().Increment().Reset();
+  const Cleared: Counter := C.Increment().Increment().Reset();
   Cleared.Show();
 end.

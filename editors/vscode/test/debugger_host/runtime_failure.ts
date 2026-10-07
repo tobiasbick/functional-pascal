@@ -25,8 +25,8 @@ export async function verifyRuntimeFailure(
     "program DebuggerFailure;",
     "",
     "begin",
-    "  var Zero: integer := 0;",
-    "  var Value: integer := 1 div Zero;",
+    "  const Zero: integer := 0;",
+    "  const Value: integer := 1 div Zero;",
     "end.",
     ""
   ]);

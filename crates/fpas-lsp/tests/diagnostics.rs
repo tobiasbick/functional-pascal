@@ -65,13 +65,13 @@ fn parser_and_semantic_errors_publish_and_a_fixed_version_clears_them() {
         TranscriptStep::Message(change(
             uri,
             2,
-            "program Semantic;\nbegin\n  var Value: integer := 'wrong';\nend.\n",
+            "program Semantic;\nbegin\n  const Value: integer := 'wrong';\nend.\n",
         )),
         TranscriptStep::Wait(ANALYSIS_WAIT),
         TranscriptStep::Message(change(
             uri,
             3,
-            "program Fixed;\nbegin\n  var Value: integer := 1;\nend.\n",
+            "program Fixed;\nbegin\n  const Value: integer := 1;\nend.\n",
         )),
         TranscriptStep::Wait(ANALYSIS_WAIT),
         TranscriptStep::Message(shutdown(2)),
@@ -137,12 +137,12 @@ fn rapid_changes_publish_only_the_latest_document_version() {
         TranscriptStep::Message(change(
             uri,
             2,
-            "program Second;\nbegin\n  var Value: integer := 'wrong';\nend.\n",
+            "program Second;\nbegin\n  const Value: integer := 'wrong';\nend.\n",
         )),
         TranscriptStep::Message(change(
             uri,
             3,
-            "program Latest;\nbegin\n  var Value: integer := 1;\nend.\n",
+            "program Latest;\nbegin\n  const Value: integer := 1;\nend.\n",
         )),
         TranscriptStep::Wait(ANALYSIS_WAIT),
         TranscriptStep::Message(shutdown(2)),
@@ -208,7 +208,7 @@ include = ["src/**/*.fpas"]
     );
     temp.write(
         "src/main.fpas",
-        "program App;\n\nuses Demo.Math;\n\nbegin\n  var Value: integer := Answer();\nend.\n",
+        "program App;\n\nuses Demo.Math;\n\nbegin\n  const Value: integer := Answer();\nend.\n",
     );
     let unit_source = "unit Demo.Math;\n\npublic function Answer(): integer;\nbegin\n  return 'wrong';\nend function;\nend unit;\n";
     temp.write("src/math.fpas", unit_source);
@@ -256,7 +256,7 @@ include = ["src/**/*.fpas"]
 "#,
     );
     let valid =
-        "program App;\n\nuses Demo.Math;\n\nbegin\n  var Value: integer := Answer();\nend.\n";
+        "program App;\n\nuses Demo.Math;\n\nbegin\n  const Value: integer := Answer();\nend.\n";
     let unit_source = "unit Demo.Math;\n\npublic function Answer(): integer;\nbegin\n  return 42;\nend function;\nend unit;\n";
     let main = temp.write("src/main.fpas", valid);
     let unit = temp.write("src/math.fpas", unit_source);
@@ -420,7 +420,7 @@ include = ["main.fpas"]
 "#,
     );
     let source =
-        "program External;\n\nuses Std.Tui;\n\nbegin\n  var Palette: TuiPalette := 1;\nend.\n";
+        "program External;\n\nuses Std.Tui;\n\nbegin\n  const Palette: TuiPalette := 1;\nend.\n";
     temp.write("external/main.fpas", source);
     let root_uri = temp.uri("external");
     let standard_library_uri = temp.uri("bundle");

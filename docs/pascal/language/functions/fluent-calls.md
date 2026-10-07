@@ -8,8 +8,8 @@ their written order. Ordinary calls remain available.
 ```pascal
 uses Std.Arrays, Std.Test;
 
-var Values: array of integer := [1, 2, 3, 4];
-var Total: integer := Values.Filter(IsEven).Map(Double).Reduce(0, Sum);
+const Values: array of integer := [1, 2, 3, 4];
+const Total: integer := Values.Filter(IsEven).Map(Double).Reduce(0, Sum);
 AssertEquals(12, Total)
 ```
 
@@ -42,9 +42,9 @@ receiver type. This can disambiguate imported short names:
 ```pascal
 uses Std.Arrays, Std.Dictionaries, Std.Str;
 
-var A: array of integer := [1];
-var D: dict of string to integer := ['a': 2];
-var Count: integer := A.Length() + D.Length() + ('hi').Length();
+const A: array of integer := [1];
+const D: dict of string to integer := ['a': 2];
+const Count: integer := A.Length() + D.Length() + ('hi').Length();
 ```
 
 If several imported callables still match, use a qualified ordinary call.
@@ -56,8 +56,8 @@ callable with no explicit parameters cannot be selected by a receiver.
 ## Procedures and mutation
 
 A procedure can end a call chain used as a statement. It cannot feed a later
-step because it produces no value. An ordinary `mutable` parameter keeps its
-usual binding semantics; it does not require a mutable receiver variable.
+step because it produces no value. Ordinary parameters are read-only value
+bindings; their calls do not require a writable receiver variable.
 
 `Std.Arrays.Push` and `Pop` are stricter: their receiver must be a simple
 mutable array variable. `Items.Push(Value)` and `Items.Pop()` work when

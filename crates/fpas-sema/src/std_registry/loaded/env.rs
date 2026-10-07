@@ -8,13 +8,13 @@ pub(super) fn register_std_env(checker: &mut Checker) {
     define_func(
         checker,
         s::STD_ENV_GET,
-        vec![p("Name", Ty::String, false)],
+        vec![p("Name", Ty::String)],
         Ty::Option(Box::new(Ty::String)),
     );
     define_func(
         checker,
         s::STD_ENV_EXISTS,
-        vec![p("Name", Ty::String, false)],
+        vec![p("Name", Ty::String)],
         Ty::Boolean,
     );
 }

@@ -133,7 +133,7 @@ impl LoweringContext {
             locals.push(Local {
                 id: local,
                 ty: input.ty,
-                mutable: true,
+                mutable: false,
                 capture: None,
             });
             debug.bindings.push(fpas_ir::DebugBinding {
@@ -141,7 +141,7 @@ impl LoweringContext {
                 name: input.name.clone(),
                 kind: fpas_ir::DebugBindingKind::Parameter,
                 ty: input.ty,
-                mutable: true,
+                mutable: false,
                 scope: 0,
                 declaration: input.declaration,
                 hidden: false,

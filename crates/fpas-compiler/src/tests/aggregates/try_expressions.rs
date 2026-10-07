@@ -5,9 +5,9 @@ fn check_expression(body: &str) {
         r#"
 program TryExpressions;
 uses Std.Tasks;
-mutable var Written: integer := 0;
-mutable var Grid: array of array of integer := [[0, 0, 0], [0, 0, 0]];
-mutable var Handler: Option of function(X: integer; Y: integer): integer := None;
+var Written: integer := 0;
+var Grid: array of array of integer := [[0, 0, 0], [0, 0, 0]];
+var Handler: Option of function(X: integer; Y: integer): integer := None;
 type
   Binary = function(X: integer; Y: integer): integer;
   type Bucket = record Items: array of integer; end record;
@@ -26,7 +26,7 @@ type
   end record;
   type Message = enum Move(X: integer; Y: integer); end enum;
   type Pair = record First: integer; Second: integer; end record;
-mutable var Trace: integer := 0;
+var Trace: integer := 0;
 function ReadValue(Value: integer; FailAt: integer): result of integer, string;
 begin
   Trace := Trace * 10 + Value;
@@ -39,8 +39,8 @@ begin
 end function;
 function ReadHandler(FailAt: integer): result of Binary, string;
 begin
-  var X: integer := try ReadValue(1, FailAt);
-  var Y: integer := try ReadValue(2, FailAt);
+  const X: integer := try ReadValue(1, FailAt);
+  const Y: integer := try ReadValue(2, FailAt);
   return Ok(Combine);
 end function;
 function Probe(FailAt: integer): result of integer, string;
@@ -64,7 +64,7 @@ end.
 #[test]
 fn enum_constructor_preserves_earlier_try_arguments() {
     check_expression(
-        "var Value: Message := Message.Move(try ReadValue(1, FailAt), try ReadValue(2, FailAt)); case Value of when Message.Move(X, Y): return Ok(X * 10 + Y); end case;",
+        "const Value: Message := Message.Move(try ReadValue(1, FailAt), try ReadValue(2, FailAt)); case Value of when Message.Move(X, Y): return Ok(X * 10 + Y); end case;",
     );
 }
 
@@ -76,14 +76,14 @@ fn direct_call_preserves_earlier_try_arguments() {
 #[test]
 fn array_literal_preserves_earlier_try_elements() {
     check_expression(
-        "var Values: array of integer := [try ReadValue(1, FailAt), try ReadValue(2, FailAt)]; return Ok(Values[0] * 10 + Values[1]);",
+        "const Values: array of integer := [try ReadValue(1, FailAt), try ReadValue(2, FailAt)]; return Ok(Values[0] * 10 + Values[1]);",
     );
 }
 
 #[test]
 fn dictionary_literal_preserves_try_key_across_try_value() {
     check_expression(
-        "var Values: dict of integer to integer := [try ReadValue(1, FailAt): try ReadValue(2, FailAt)]; return Ok(10 + Values[1]);",
+        "const Values: dict of integer to integer := [try ReadValue(1, FailAt): try ReadValue(2, FailAt)]; return Ok(10 + Values[1]);",
     );
 }
 
@@ -95,14 +95,14 @@ fn binary_expression_preserves_left_operand_across_try() {
 #[test]
 fn record_update_preserves_base_and_fields_across_try() {
     check_expression(
-        "var Original: Pair := record First := 8; Second := 9; end; var Value: Pair := Original with First := try ReadValue(1, FailAt); Second := try ReadValue(2, FailAt); end with; return Ok(Value.First * 10 + Value.Second);",
+        "const Original: Pair := record First := 8; Second := 9; end; const Value: Pair := Original with First := try ReadValue(1, FailAt); Second := try ReadValue(2, FailAt); end with; return Ok(Value.First * 10 + Value.Second);",
     );
 }
 
 #[test]
 fn function_value_preserves_callee_across_try() {
     check_expression(
-        "var F: function(X: integer; Y: integer): integer := Combine; return Ok(F(try ReadValue(1, FailAt), try ReadValue(2, FailAt)));",
+        "const F: function(X: integer; Y: integer): integer := Combine; return Ok(F(try ReadValue(1, FailAt), try ReadValue(2, FailAt)));",
     );
 }
 
@@ -116,14 +116,14 @@ fn task_spawn_preserves_callee_and_arguments_across_try() {
 #[test]
 fn index_read_preserves_collection_across_try() {
     check_expression(
-        "var Values: array of integer := [0, 10]; return Ok(Values[try ReadValue(1, FailAt)] + (try ReadValue(2, FailAt)));",
+        "const Values: array of integer := [0, 10]; return Ok(Values[try ReadValue(1, FailAt)] + (try ReadValue(2, FailAt)));",
     );
 }
 
 #[test]
 fn nested_index_write_preserves_path_and_replacement_across_try() {
     check_expression(
-        "mutable var Values: array of array of integer := [[0, 0, 0], [0, 0, 0]]; Values[try ReadValue(1, FailAt)][try ReadValue(2, FailAt)] := 12; return Ok(Values[1][2]);",
+        "var Values: array of array of integer := [[0, 0, 0], [0, 0, 0]]; Values[try ReadValue(1, FailAt)][try ReadValue(2, FailAt)] := 12; return Ok(Values[1][2]);",
     );
 }
 
@@ -144,63 +144,63 @@ fn membership_preserves_value_across_try() {
 #[test]
 fn counting_loop_preserves_start_across_try_bound() {
     check_expression(
-        "mutable var Total: integer := 0; for I: integer := try ReadValue(1, FailAt) to try ReadValue(2, FailAt) do Total := Total * 10 + I; end for; return Ok(Total);",
+        "var Total: integer := 0; for I: integer := try ReadValue(1, FailAt) to try ReadValue(2, FailAt) do Total := Total * 10 + I; end for; return Ok(Total);",
     );
 }
 
 #[test]
-fn case_range_preserves_subject_and_lower_comparison_across_try() {
+fn case_guard_preserves_subject_and_lower_comparison_across_try() {
     check_expression(
-        "case 1 of when (try ReadValue(1, FailAt))..(try ReadValue(2, FailAt)): return Ok(12); else return Ok(0); end case;",
+        "case 1 of when Subject if Subject >= (try ReadValue(1, FailAt)) and Subject <= (try ReadValue(2, FailAt)): return Ok(12); else return Ok(0); end case;",
     );
 }
 
 #[test]
-fn case_label_preserves_subject_across_try() {
+fn case_guard_preserves_subject_across_try() {
     check_expression(
-        "case 1 of when (try ReadValue(1, FailAt)): return Ok(10 + (try ReadValue(2, FailAt))); else return Ok(0); end case;",
+        "case 1 of when Subject if Subject = (try ReadValue(1, FailAt)): return Ok(10 + (try ReadValue(2, FailAt))); else return Ok(0); end case;",
     );
 }
 
 #[test]
 fn method_preserves_receiver_and_arguments_across_try() {
     check_expression(
-        "var C: Counter := record Base := 0; end; return Ok(C.Add(try ReadValue(1, FailAt), try ReadValue(2, FailAt)));",
+        "const C: Counter := record Base := 0; end; return Ok(C.Add(try ReadValue(1, FailAt), try ReadValue(2, FailAt)));",
     );
 }
 
 #[test]
 fn postfix_method_preserves_receiver_across_try() {
     check_expression(
-        "var C: Counter := record Base := 0; end; return Ok((C).Add(try ReadValue(1, FailAt), try ReadValue(2, FailAt)));",
+        "const C: Counter := record Base := 0; end; return Ok((C).Add(try ReadValue(1, FailAt), try ReadValue(2, FailAt)));",
     );
 }
 
 #[test]
 fn property_write_preserves_receiver_across_try() {
     check_expression(
-        "var C: Counter := record Base := 0; end; C.Number := (try ReadValue(1, FailAt)) * 10 + (try ReadValue(2, FailAt)); return Ok(Written);",
+        "const C: Counter := record Base := 0; end; C.Number := (try ReadValue(1, FailAt)) * 10 + (try ReadValue(2, FailAt)); return Ok(Written);",
     );
 }
 
 #[test]
 fn event_raise_preserves_handler_and_arguments_across_try() {
     check_expression(
-        "var C: Counter := record Base := 0; end; C.OnValue := Combine; return Ok(C.OnValue(try ReadValue(1, FailAt), try ReadValue(2, FailAt)));",
+        "const C: Counter := record Base := 0; end; C.OnValue := Combine; return Ok(C.OnValue(try ReadValue(1, FailAt), try ReadValue(2, FailAt)));",
     );
 }
 
 #[test]
 fn event_write_preserves_receiver_across_try() {
     check_expression(
-        "var C: Counter := record Base := 0; end; C.OnValue := try ReadHandler(FailAt); return Ok(C.OnValue(1, 2));",
+        "const C: Counter := record Base := 0; end; C.OnValue := try ReadHandler(FailAt); return Ok(C.OnValue(1, 2));",
     );
 }
 
 #[test]
 fn record_field_write_preserves_parent_across_try_index() {
     check_expression(
-        "mutable var Value: Bucket := record Items := [0, 0]; end; Value.Items[try ReadValue(1, FailAt)] := 12; var Ignored: integer := try ReadValue(2, FailAt); return Ok(Value.Items[1]);",
+        "var Value: Bucket := record Items := [0, 0]; end; Value.Items[try ReadValue(1, FailAt)] := 12; const Ignored: integer := try ReadValue(2, FailAt); return Ok(Value.Items[1]);",
     );
 }
 
@@ -209,7 +209,7 @@ fn option_try_preserves_arguments_and_stops_at_none() {
     assert_succeeds(
         r#"
 program OptionArguments;
-mutable var Trace: integer := 0;
+var Trace: integer := 0;
 function ReadValue(Value: integer; FailAt: integer): Option of integer;
 begin
   Trace := Trace * 10 + Value;
@@ -239,7 +239,7 @@ fn saved_operands_retain_snapshots_across_mutation_and_loop_iterations() {
     assert_succeeds(
         r#"
 program Snapshots;
-mutable var Values: array of integer := [12, 99];
+var Values: array of integer := [12, 99];
 function Change(): result of integer, string;
 begin Values := [77, 88]; return Ok(0); end function;
 function Probe(): result of integer, string;
@@ -248,8 +248,8 @@ begin
   begin
     Values := [12, 99];
     if Values[try Change()] <> 12 then panic('collection snapshot'); end if;
-    mutable var X: integer := I;
-    var Update: function(): result of integer, string := function(): result of integer, string
+    var X: integer := I;
+    const Update: function(): result of integer, string := function(): result of integer, string
     begin X := 99; return Ok(10); end function;
     if X + (try Update()) <> I + 10 then panic('local snapshot'); end if;
     if X <> 99 then panic('mutation missing'); end if;
@@ -282,8 +282,8 @@ function MakeValues(): result of array of integer, string;
 begin return Ok([2, 3]); end function;
 function Probe(Fail: boolean): result of integer, string;
 begin
-  var Values: array of integer := try Tagged(MakeValues());
-  var Number: integer := try Tagged(MakeInt(Fail));
+  const Values: array of integer := try Tagged(MakeValues());
+  const Number: integer := try Tagged(MakeInt(Fail));
   return Ok(Number * 10 + Values[0] + Values[1]);
 end function;
 begin
@@ -308,7 +308,7 @@ begin
 end function;
 function Probe(Present: boolean): Option of integer;
 begin
-  var Number: integer := try Wrapped(Lookup(Present));
+  const Number: integer := try Wrapped(Lookup(Present));
   return Some(Number + 2);
 end function;
 begin

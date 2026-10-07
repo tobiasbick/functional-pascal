@@ -118,7 +118,6 @@ impl Checker {
                     .params
                     .iter()
                     .map(|param| ParamTy {
-                        mutable: param.mutable,
                         name: param.name.clone(),
                         ty: checker.resolve_method_param_type(
                             &param.type_expr,
@@ -185,6 +184,7 @@ impl Checker {
         self.scopes.define(
             &qualified,
             Symbol {
+                constant: None,
                 ty,
                 mutable: false,
                 kind: symbol_kind,

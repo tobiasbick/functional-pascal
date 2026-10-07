@@ -24,11 +24,11 @@ begin
   if (P.X <> 0) or (P.Y <> 2) then panic('argument defaults'); end if;
 end procedure;
 begin
-  mutable var P: Point := record end;
+  var P: Point := record end;
   P := record X := 1; end;
   Draw(record Y := 2; end);
-  var Points: array of Point := [record X := 3; end];
-  var Returned: Point := Origin();
+  const Points: array of Point := [record X := 3; end];
+  const Returned: Point := Origin();
   if (P.X <> 1) or (P.Y <> 0) or
      (Points[0].X <> 3) or (Points[0].Y <> 0) or
      (Returned.X <> 4) or (Returned.Y <> 0) or
@@ -44,11 +44,11 @@ fn globals_arrays_and_dictionaries_execute() {
     assert_succeeds(
         "\
 program RegisterCollections;
-mutable var Total: integer := 1;
+var Total: integer := 1;
 begin
-  mutable var Values: array of integer := [2, 3, 4];
+  var Values: array of integer := [2, 3, 4];
   Values[1] := 8;
-  mutable var Lookup: dict of string to integer := ['a': 5];
+  var Lookup: dict of string to integer := ['a': 5];
   Lookup['b'] := 7;
   Total := Total + Values[1] + Lookup['b'];
   if (Total <> 16) or not (8 in Values) or not ('b' in Lookup) then
@@ -68,9 +68,9 @@ type
     Y: integer := 2;
   end record;
 begin
-  var Original: Point := record X := 1; end;
-  var Updated: Point := Original with X := 9; end with;
-  mutable var Items: array of Point := [Original, Updated];
+  const Original: Point := record X := 1; end;
+  const Updated: Point := Original with X := 9; end with;
+  var Items: array of Point := [Original, Updated];
   Items[0].Y := 7;
   if (Original.X <> 1) or (Original.Y <> 2) or (Updated.X <> 9) then
     panic('record copy mismatch'); end if;
@@ -92,10 +92,10 @@ type
     Empty;
   end enum;
 begin
-  var A: Result of integer, string := Ok(5);
-  var B: Option of integer := Some(6);
-  var C: Option of integer := None;
-  var D: Choice := Choice.Number(7);
+  const A: Result of integer, string := Ok(5);
+  const B: Option of integer := Some(6);
+  const C: Option of integer := None;
+  const D: Choice := Choice.Number(7);
   if (A <> Ok(5)) or (B <> Some(6)) or (C <> None) then
     panic('variant mismatch'); end if;
 end.",
@@ -113,7 +113,7 @@ type
     Right: integer;
   end record;
 begin
-  mutable var VALUE: Pair := record Left := 1; Right := 2; end;
+  var VALUE: Pair := record Left := 1; Right := 2; end;
   value.lEfT := VALUE.right;
   if Value.Left <> 2 then panic('case mismatch'); end if;
 end.",
@@ -128,12 +128,12 @@ fn try_unwraps_and_returns_early_for_result_and_option() {
 program RegisterTry;
 function ResultValue(Input: Result of integer, string): Result of integer, string;
 begin
-  var Value: integer := try Input;
+  const Value: integer := try Input;
   return Ok(Value + 1);
 end function;
 function OptionValue(Input: Option of integer): Option of integer;
 begin
-  var Value: integer := try Input;
+  const Value: integer := try Input;
   return Some(Value + 1);
 end function;
 begin
@@ -192,18 +192,18 @@ type
     Pair(Left: integer; Right: integer);
   end enum;
 begin
-  mutable var Sum: integer := 0;
-  var ResultValue: Result of integer, string := Ok(3);
+  var Sum: integer := 0;
+  const ResultValue: Result of integer, string := Ok(3);
   case ResultValue of
     when Ok(Value): Sum := Sum + Value;
     when Error(Message): Sum := 99;
   end case;
-  var OptionValue: Option of integer := Some(4);
+  const OptionValue: Option of integer := Some(4);
   case OptionValue of
     when Some(Value): Sum := Sum + Value;
     when None: Sum := 99;
   end case;
-  var ShapeValue: Shape := Shape.Pair(5, 6);
+  const ShapeValue: Shape := Shape.Pair(5, 6);
   case ShapeValue of
     when Shape.Point: Sum := 99;
     when Shape.Pair(A, B): Sum := Sum + A + B;
@@ -226,9 +226,9 @@ type
   end enum;
   type StateAlias = State;
 begin
-  var Value: State := state.rUnNiNg;
-  var AliasValue: StateAlias := StateAlias.Done;
-  mutable var Number: integer := 0;
+  const Value: State := state.rUnNiNg;
+  const AliasValue: StateAlias := StateAlias.Done;
+  var Number: integer := 0;
   case Value of
     when State.Ready: Number := 4;
     when State.Running: Number := 5;
@@ -255,8 +255,8 @@ fn record_methods_properties_and_events_execute() {
     assert_succeeds(
         "\
 program RegisterMembers;
-mutable var LastValue: integer := 0;
-mutable var Handler: Option of procedure(Value: integer) := None;
+var LastValue: integer := 0;
+var Handler: Option of procedure(Value: integer) := None;
 
 type
   Counter = record
@@ -294,13 +294,13 @@ begin
 end procedure;
 
 begin
-  var C: Counter := record Value := 6; end;
+  const C: Counter := record Value := 6; end;
   if C.Double() <> 12 then panic('method mismatch'); end if;
   if C.Number <> 6 then panic('property read mismatch'); end if;
   C.Number := 9;
   if LastValue <> 9 then panic('property write mismatch'); end if;
 
-  var B: Button := record end;
+  const B: Button := record end;
   if Assigned(B.OnValue) then panic('unexpected handler'); end if;
   B.OnValue := Remember;
   if not Assigned(B.OnValue) then panic('missing handler'); end if;
@@ -327,7 +327,7 @@ type
     property Number: integer read ReadNumber;
   end record;
 begin
-  var C: Counter := record Value := 1; end;
+  const C: Counter := record Value := 1; end;
   if C.Number <> 1 then panic('property metadata fixture'); end if;
 end.",
     );
@@ -355,7 +355,7 @@ fn string_indexing_and_membership_execute() {
         "\
 program RegisterStringAggregateOps;
 begin
-  var Text: string := 'Hällo';
+  const Text: string := 'Hällo';
   if Text[1] <> 'ä' then panic('unicode string index mismatch'); end if;
   if not ('äll' in Text) then panic('substring membership mismatch'); end if;
   if not ('ä' in Text) then panic('character membership mismatch'); end if;
@@ -384,7 +384,7 @@ type Pair = record
   First: integer;
   Second: integer := 7;
 end record;
-mutable var Calls: integer := 0;
+var Calls: integer := 0;
 function Next(): integer;
 begin
   Calls := Calls + 1;
@@ -393,7 +393,7 @@ end function;
 begin
   if (record First := Next(); Second := Next(); end).Second <> 2 then
     panic('anonymous record initializer order'); end if;
-  var Typed: Pair := record First := Next(); end;
+  const Typed: Pair := record First := Next(); end;
   if (Typed.First <> 3) or (Typed.Second <> 7) or (Calls <> 3) then
     panic('record initializer order'); end if;
 end.
@@ -419,9 +419,9 @@ begin
   return Value;
 end function;
 begin
-  var P: Point := Identity(record X := 8; end);
+  const P: Point := Identity(record X := 8; end);
   if P.X <> 8 then panic('generic record mismatch'); end if;
-  var C: Choice := Identity(Choice.Number(9));
+  const C: Choice := Identity(Choice.Number(9));
   case C of
     when Choice.Number(Value): if Value <> 9 then panic('generic enum payload mismatch'); end if;
     when Choice.Empty: panic('generic enum variant mismatch');
@@ -457,7 +457,7 @@ begin
   return Value * 2;
 end function;
 begin
-  var B: Box := box.create(11);
+  const B: Box := box.create(11);
   if B.Map(Double) <> 22 then panic('generic method mismatch'); end if;
   if Box.Create(7).Number <> 7 then panic('postfix property mismatch'); end if;
 end.",
@@ -478,8 +478,8 @@ type
     end function;
   end record;
 begin
-  var C: Counter := record Base := 10; end;
-  var AddToCounter: function(Value: integer): integer := C.Add;
+  const C: Counter := record Base := 10; end;
+  const AddToCounter: function(Value: integer): integer := C.Add;
   if AddToCounter(7) <> 17 then panic('bound method mismatch'); end if;
 end.",
     );
@@ -490,7 +490,7 @@ fn event_handlers_accept_bound_record_methods() {
     assert_succeeds(
         "\
 program RegisterBoundEvent;
-mutable var Handler: Option of function(Value: integer): integer := None;
+var Handler: Option of function(Value: integer): integer := None;
 type
   Counter = record
     Base: integer;
@@ -514,8 +514,8 @@ type
     event OnValue: function(Value: integer): integer read ReadValue write WriteValue;
   end record;
 begin
-  var C: Counter := record Base := 12; end;
-  var S: Source := record end;
+  const C: Counter := record Base := 12; end;
+  const S: Source := record end;
   S.OnValue := C.Add;
   if S.OnValue(8) <> 20 then panic('bound event mismatch'); end if;
 end.",
@@ -527,8 +527,8 @@ fn chained_properties_evaluate_receiver_then_value_once() {
     assert_succeeds(
         "\
 program RegisterPropertyOrder;
-mutable var Step: integer := 0;
-mutable var Written: integer := 0;
+var Step: integer := 0;
+var Written: integer := 0;
 type
   Inner = record
     Value: integer;
@@ -559,7 +559,7 @@ begin
   return 23;
 end function;
 begin
-  var O: Outer := record Item := record Value := 17; end; end;
+  const O: Outer := record Item := record Value := 17; end; end;
   O.Child.Number := BuildValue();
   if (Step <> 123) or (Written <> 23) then panic('property write order mismatch'); end if;
   Step := 0;
@@ -575,9 +575,9 @@ mod arrays;
 fn global_nested_index_write_uses_direct_path_and_preserves_value_aliases() {
     let source = "\
 program RegisterGlobalIndexPath;
-mutable var Surface: array of array of integer := [[1, 2]];
+var Surface: array of array of integer := [[1, 2]];
 begin
-  var Original: array of array of integer := Surface;
+  const Original: array of array of integer := Surface;
   Surface[0][1] := 9;
   if Original[0][1] <> 2 then panic('global alias changed'); end if;
   if Surface[0][1] <> 9 then panic('global path value mismatch'); end if;
@@ -596,7 +596,7 @@ fn global_nested_index_write_preserves_index_side_effect_order() {
     assert_succeeds(
         "\
 program RegisterGlobalIndexOrder;
-mutable var Surface: array of array of integer := [[1, 2]];
+var Surface: array of array of integer := [[1, 2]];
 function ChangeSurface(): integer;
 begin
   Surface := [[3, 4]];
@@ -615,9 +615,9 @@ fn global_nested_dictionary_write_inserts_leaf_and_preserves_aliases() {
     assert_succeeds(
         "\
 program RegisterGlobalDictionaryPath;
-mutable var Lookup: dict of string to dict of string to integer := ['outer': ['old': 1]];
+var Lookup: dict of string to dict of string to integer := ['outer': ['old': 1]];
 begin
-  var Original: dict of string to dict of string to integer := Lookup;
+  const Original: dict of string to dict of string to integer := Lookup;
   Lookup['outer']['new'] := 2;
   if 'new' in Original['outer'] then panic('dictionary alias changed'); end if;
   if Lookup['outer']['new'] <> 2 then panic('dictionary path value mismatch'); end if;

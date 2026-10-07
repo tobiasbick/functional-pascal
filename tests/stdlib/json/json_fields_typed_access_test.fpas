@@ -18,7 +18,7 @@ begin
 end function;
 
 begin
-  var Fields: dict of string to JsonValue := Unwrap(ParseObject('{"s":"x","b":true,"n":2.5,"i":-7,"big":1e300,"o":{"k":1},"rows":["a","b"],"mixed":["a",1]}'));
+  const Fields: dict of string to JsonValue := Unwrap(ParseObject('{"s":"x","b":true,"n":2.5,"i":-7,"big":1e300,"o":{"k":1},"rows":["a","b"],"mixed":["a",1]}'));
   AssertEquals('x', Unwrap(StringField(Fields, 's')));
   AssertTrue(Unwrap(BooleanField(Fields, 'b')));
   AssertEquals(2.5, Unwrap(NumberField(Fields, 'n')));

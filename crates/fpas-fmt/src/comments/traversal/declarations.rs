@@ -17,7 +17,7 @@ pub(super) fn collect_decls(decls: &[Decl], begins: &[usize], out: &mut Collecte
                 push_span(def.span, out);
                 collect_expr(&def.value, begins, out);
             }
-            Decl::Var(def) | Decl::MutableVar(def) => {
+            Decl::Var(def) => {
                 push_span(def.span, out);
                 collect_expr(&def.value, begins, out);
             }

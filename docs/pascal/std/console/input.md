@@ -11,7 +11,7 @@ These share one **line-oriented** buffer: typed text and test “stdin” lines 
 - **Buffer:** same stream as `ReadText()`.
 
 ```pascal
-var Line: string := ReadLn();
+const Line: string := ReadLn();
 WriteLn(Line);
 ```
 
@@ -24,7 +24,7 @@ WriteLn(Line);
 - **Buffer:** same as `ReadLn()`.
 
 ```pascal
-var C: string := ReadText();
+const C: string := ReadText();
 WriteLn(C);
 ```
 

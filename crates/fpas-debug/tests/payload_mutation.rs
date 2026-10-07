@@ -262,8 +262,8 @@ uses Std.Console, Std.Tasks;
 
 function Work(): integer;
 begin
-  mutable var Optional: Option of integer := Some(1);
-  var Marker: integer := 0;
+  var Optional: Option of integer := Some(1);
+  const Marker: integer := 0;
   case Optional of
     when Some(Value):
     begin
@@ -277,7 +277,7 @@ begin
 end function;
 
 begin
-  var Pending: task := go Work();
+  const Pending: task := go Work();
   WriteLn(Wait(Pending));
 end.
 "#;

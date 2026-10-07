@@ -137,7 +137,7 @@ end function;
 //
 // Parameters:
 // - `A`: Input value used by `Pop`.
-public function Pop(mutable A: array of T): T;
+public function Pop(A: array of T): T;
 begin
   panic('Intrinsic API declaration');
 end function;
@@ -147,7 +147,7 @@ end function;
 // Parameters:
 // - `A`: Input value used by `Push`.
 // - `Value`: Value consumed or returned by the operation.
-public procedure Push(mutable A: array of T; Value: T);
+public procedure Push(A: array of T; Value: T);
 begin
   panic('Intrinsic API declaration');
 end procedure;

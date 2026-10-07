@@ -193,13 +193,13 @@ uses Std.Console, Std.Tasks;
 
 function Work(): integer;
 begin
-  mutable var Count: integer := 1;
-  var Marker: integer := 0;
+  var Count: integer := 1;
+  const Marker: integer := 0;
   return Count;
 end function;
 
 begin
-  var Pending: task := go Work();
+  const Pending: task := go Work();
   WriteLn(Wait(Pending));
 end.
 "#;

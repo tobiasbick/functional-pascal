@@ -64,7 +64,7 @@ fn http_client_sends_request_and_decodes_chunked_response() {
 uses Std.Console, Std.Http, Std.Net.Utf8;
 
 begin
-  mutable var RequestValue: Request := Request.Create('POST', 'http://127.0.0.1:{port}/v1/chat');
+  var RequestValue: Request := Request.Create('POST', 'http://127.0.0.1:{port}/v1/chat');
   RequestValue.Headers := [Header.Create('X-Test', 'yes')];
   RequestValue.Body := Std.Net.Utf8.Encode('ping');
   case Send(RequestValue) of
@@ -176,7 +176,7 @@ begin
 end procedure;
 
 begin
-  var BaseUrl: string := 'http://127.0.0.1:{port}';
+  const BaseUrl: string := 'http://127.0.0.1:{port}';
   Expect(Request.Get(BaseUrl + '/get'), 2);
   Expect(Request.Post(BaseUrl + '/post'), 2);
   Expect(Request.Put(BaseUrl + '/put'), 2);
@@ -270,10 +270,10 @@ fn openai_compatible_client_sends_configured_chat_completion() {
 uses Std.Ai.OpenAi, Std.Console;
 
 begin
-  mutable var ClientValue: Client := Client.Create('http://127.0.0.1:{port}/v1', 'local-model');
+  var ClientValue: Client := Client.Create('http://127.0.0.1:{port}/v1', 'local-model');
   ClientValue.ApiKey := Some('test-key');
   ClientValue.TimeoutMillis := 5000;
-  mutable var Options: ChatOptions := ChatOptions.Default();
+  var Options: ChatOptions := ChatOptions.Default();
   Options.Temperature := Some(0.25);
   Options.MaxTokens := Some(64);
   case Complete(

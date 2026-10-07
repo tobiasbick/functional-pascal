@@ -10,13 +10,13 @@ type Holder = record
 end record;
 
 begin
-  var Original: Holder := record
+  const Original: Holder := record
     Items := [1, 2];
     Tags := ['old': 1];
     MaybeItems := Some([3]);
     Lookup := Ok(['old': 2]);
   end;
-  var Updated: Holder := Original with Items := []; Tags := [:]; MaybeItems := Some([]); Lookup := Ok([:]); end with;
+  const Updated: Holder := Original with Items := []; Tags := [:]; MaybeItems := Some([]); Lookup := Ok([:]); end with;
 
   AssertEquals(0, Std.Arrays.Length(Updated.Items));
   AssertEquals(0, Std.Dictionaries.Length(Updated.Tags));

@@ -13,11 +13,11 @@ procedure TuiPaintButtonText(
   ShortcutRole: TuiStyleRole
 );
 begin
-  mutable var X: integer := Position.X;
+  var X: integer := Position.X;
   for Index: integer := 0 to Std.Str.Length(Button.Text) - 1 do
     begin
-      var Glyph: string := Std.Str.CharAt(Button.Text, Index);
-      mutable var GlyphRole: TuiStyleRole := Role;
+      const Glyph: string := Std.Str.CharAt(Button.Text, Index);
+      var GlyphRole: TuiStyleRole := Role;
       if (Button.Mnemonic <> '') and (Std.Str.ToLower(Glyph) = Std.Str.ToLower(Button.Mnemonic)) then
         begin
           GlyphRole := ShortcutRole;
@@ -97,11 +97,11 @@ begin
       return;
     end;
   end if;
-  mutable var Role: TuiStyleRole := TuiButtonRole(Button, Focused);
-  mutable var ShortcutRole: TuiStyleRole := TuiButtonShortcutRole(Button, Focused);
-  var ContentWidth: integer := Bounds.Width;
-  var TextWidth: integer := Std.Console.DisplayWidth(Button.Text);
-  mutable var TextX: integer := Bounds.X + ((ContentWidth - TextWidth) div 2);
+  var Role: TuiStyleRole := TuiButtonRole(Button, Focused);
+  var ShortcutRole: TuiStyleRole := TuiButtonShortcutRole(Button, Focused);
+  const ContentWidth: integer := Bounds.Width;
+  const TextWidth: integer := Std.Console.DisplayWidth(Button.Text);
+  var TextX: integer := Bounds.X + ((ContentWidth - TextWidth) div 2);
   if TextX < Bounds.X + 1 then
     begin
       TextX := Bounds.X + 1;

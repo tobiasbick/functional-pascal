@@ -28,7 +28,7 @@ fn embedding_does_not_implicitly_authorize_process_control() {
     vm(
         "program Test; uses Std.Server, Std.Results, Std.Tasks, Std.Test; begin
       AssertTrue(IsError(CreateLifetime(10, true)));
-      var Life: ServerLifetime := Unwrap(CreateLifetime(10, false));
+      const Life: ServerLifetime := Unwrap(CreateLifetime(10, false));
       AssertTrue(IsError(ObserveSignals(Life)));
       discard RequestStop(Life); discard CloseTaskGroup(GetWorkGroup(Life));
       AssertTrue(IsOk(FinishShutdown(Life))); end.",
@@ -40,9 +40,9 @@ fn embedding_does_not_implicitly_authorize_process_control() {
 #[test]
 fn stop_rejects_new_group_work() {
     let error = vm("program Test; uses Std.Server, Std.Results, Std.Tasks; begin
-      var Life: ServerLifetime := Unwrap(CreateLifetime(10, false));
+      const Life: ServerLifetime := Unwrap(CreateLifetime(10, false));
       discard RequestStop(Life);
-      var WorkerTask: task := StartTaskInGroup(GetWorkGroup(Life), function(Token: CancellationToken): boolean begin return true; end function);
+      const WorkerTask: task := StartTaskInGroup(GetWorkGroup(Life), function(Token: CancellationToken): boolean begin return true; end function);
       end.").run().unwrap_err();
     assert!(
         error.message.contains("closing or cancelled"),
@@ -165,7 +165,7 @@ fn server_lifecycle_child() {
     };
     let source = format!(
         "program Child; uses Std.Server, Std.Results, Std.Tasks, Std.Time, Std.Console, Std.Test;
-        begin var Life: ServerLifetime := Unwrap(CreateLifetime(50, true)); {body} end."
+        begin const Life: ServerLifetime := Unwrap(CreateLifetime(50, true)); {body} end."
     );
     let (program, errors) = fpas_parser::parse(&source);
     assert!(errors.is_empty(), "{errors:?}");

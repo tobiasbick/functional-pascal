@@ -27,4 +27,5 @@ mod decl;
 mod errors;
 mod expr;
 mod integration;
+mod keyword_switch;
 mod stmt;

@@ -19,7 +19,7 @@ type Counter = record
 end record;
 
 begin
-  var C: Counter := record
+  const C: Counter := record
     Base := 10;
   end;
 

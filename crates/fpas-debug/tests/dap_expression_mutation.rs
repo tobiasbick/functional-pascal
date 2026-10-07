@@ -16,13 +16,13 @@ type
     Value: integer;
   end record;
 
-mutable var
+var
   GlobalValue: integer := 5;
 
 begin
-  mutable var Index: integer := 0;
-  mutable var Counter: integer := 1;
-  mutable var Items: array of Box := [record
+  var Index: integer := 0;
+  var Counter: integer := 1;
+  var Items: array of Box := [record
     Value := 10;
   end];
   Counter := Counter + 1;

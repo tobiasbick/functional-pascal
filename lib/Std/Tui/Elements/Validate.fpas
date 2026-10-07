@@ -77,7 +77,7 @@ end function;
 
 function TuiElementValidateAndCollect(Node: TuiElement): array of integer;
 begin
-  mutable var Seen: array of integer := [];
+  var Seen: array of integer := [];
   case Node of
     when TuiElement.Button(Button):
       begin
@@ -138,7 +138,7 @@ begin
       begin
         TuiElementValidateControl(Id);
         TuiElementValidateAction(ChangeAction);
-        var Count: integer := Std.Arrays.Length(Items);
+        const Count: integer := Std.Arrays.Length(Items);
         if Count = 0 then
           begin
             if Selected <> -1 then
@@ -256,10 +256,10 @@ begin
       begin
       end;
   end case;
-  var Children: array of TuiElement := TuiElementChildren(Node);
+  const Children: array of TuiElement := TuiElementChildren(Node);
   for ChildIndex: integer := 0 to Std.Arrays.Length(Children) - 1 do
     begin
-      var ChildIds: array of integer := TuiElementValidateAndCollect(Children[ChildIndex]);
+      const ChildIds: array of integer := TuiElementValidateAndCollect(Children[ChildIndex]);
       for IdIndex: integer := 0 to Std.Arrays.Length(ChildIds) - 1 do
         begin
           if TuiElementControlSeen(Seen, ChildIds[IdIndex]) then

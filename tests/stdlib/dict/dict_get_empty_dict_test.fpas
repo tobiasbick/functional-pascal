@@ -3,7 +3,7 @@ program T;
 uses Std.Console, Std.Dictionaries, Std.Options;
 
 begin
-  var D: dict of string to integer := [:];
-  var R: option of integer := Std.Dictionaries.Get(D, 'X');
+  const D: dict of string to integer := [:];
+  const R: option of integer := Std.Dictionaries.Get(D, 'X');
   WriteLn(IsNone(R));
 end.

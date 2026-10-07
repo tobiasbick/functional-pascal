@@ -45,10 +45,10 @@ fn timed_group_close_returns_while_a_running_pool_worker_ignores_cancellation() 
         r#"program NonCooperativeWorker;
 uses Std.Tasks, Std.Results, Std.Options, Std.Arrays;
 begin
-  var Group: TaskGroup := CreateTaskGroup();
-  var Ready: channel of boolean := CreateChannel(1);
-  var Release: channel of boolean := CreateChannel(1);
-  var Child: task := StartTaskInGroup(Group, function(Token: CancellationToken): integer
+  const Group: TaskGroup := CreateTaskGroup();
+  const Ready: channel of boolean := CreateChannel(1);
+  const Release: channel of boolean := CreateChannel(1);
+  const Child: task := StartTaskInGroup(Group, function(Token: CancellationToken): integer
   begin
     discard Send(Ready, true);
     while IsNone(Std.Results.Unwrap(TryReceive(Release))) do begin null; end; end while;
@@ -83,13 +83,13 @@ fn child_timed_group_close_yields_to_its_waiting_parent() {
         r#"program NestedClose;
 uses Std.Tasks, Std.Results, Std.Arrays;
 begin
-  var Outer: TaskGroup := CreateTaskGroup();
-  var Ready: channel of boolean := CreateChannel(1);
-  var Gate: channel of integer := CreateChannel(1);
-  var Parent: task := StartTaskInGroup(Outer, procedure(Token: CancellationToken)
+  const Outer: TaskGroup := CreateTaskGroup();
+  const Ready: channel of boolean := CreateChannel(1);
+  const Gate: channel of integer := CreateChannel(1);
+  const Parent: task := StartTaskInGroup(Outer, procedure(Token: CancellationToken)
   begin
-    var Inner: TaskGroup := CreateTaskGroup();
-    var Child: task := StartTaskInGroup(Inner, function(Stop: CancellationToken): integer
+    const Inner: TaskGroup := CreateTaskGroup();
+    const Child: task := StartTaskInGroup(Inner, function(Stop: CancellationToken): integer
       begin return Unwrap(Receive(Gate)); end function);
     if not IsError(CloseTaskGroupWithTimeout(Inner, 2)) then panic('premature close'); end if;
     discard Unwrap(Send(Ready, true));

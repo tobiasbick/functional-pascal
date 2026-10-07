@@ -16,11 +16,13 @@ fully qualified name always works ([grammar](../../../specs/grammar.ebnf),
 
 ## Decisions (Q04)
 
-- A plain `uses Std.Str;` keeps opening public symbols under their short names.
+- A plain `uses Std.Fs;` keeps opening public symbols under their short names.
   Ambiguous short names are errors at the point of use; qualified names remain
   available.
-- Add `uses Std.Str as Text;`. An aliased import opens no short names; its
-  symbols are reached only through the alias, for example `Text.Trim(Input)`.
+- Add `uses Std.Fs as Files;`. An aliased import opens no short names; its
+  symbols are reached only through the alias, for example `Files.ReadText(Path)`.
+  Use retained standard units for these examples; AP06 removes the five
+  type-helper units from public imports.
 - Diagnose an alias that collides with another alias or a local name.
 - Public parameter and result types stay explicit.
 

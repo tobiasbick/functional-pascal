@@ -32,7 +32,7 @@ begin
 end procedure;
 
 begin
-  var Limited: SseDecoder := Unwrap(CreateSseDecoder(8));
+  const Limited: SseDecoder := Unwrap(CreateSseDecoder(8));
   case FeedSse(Limited, Std.Net.Utf8.Encode(Std.Str.RepeatStr('x', 100000))) of
     when Ok(_):
       begin
@@ -44,7 +44,7 @@ begin
   end case;
 
   Terminal(Limited);
-  var Invalid: SseDecoder := Unwrap(CreateSseDecoder(16));
+  const Invalid: SseDecoder := Unwrap(CreateSseDecoder(16));
   AssertEquals(0, Std.Arrays.Length(Unwrap(FeedSse(Invalid, [255]))));
   case FinishSse(Invalid) of
     when Ok(_):
@@ -57,12 +57,12 @@ begin
   end case;
 
   Terminal(Invalid);
-  var Many: SseDecoder := Unwrap(CreateSseDecoder(9));
-  var Events: array of SseEvent := Unwrap(FeedSse(Many, Std.Net.Utf8.Encode(Std.Str.RepeatStr((('data:x' + #13) + #10) +
-                                                                                              #10, 500))));
+  const Many: SseDecoder := Unwrap(CreateSseDecoder(9));
+  const Events: array of SseEvent := Unwrap(FeedSse(Many, Std.Net.Utf8.Encode(Std.Str.RepeatStr((('data:x' + #13) + #10) +
+                                                                                                #10, 500))));
   AssertEquals(500, Std.Arrays.Length(Events));
   AssertEquals('x', Events[499].Data);
-  var Split: SseDecoder := Unwrap(CreateSseDecoder(9));
+  const Split: SseDecoder := Unwrap(CreateSseDecoder(9));
   AssertEquals(0, Std.Arrays.Length(Unwrap(FeedSse(Split, Std.Net.Utf8.Encode('data:x' + #13)))));
   AssertEquals(1, Std.Arrays.Length(Unwrap(FeedSse(Split, [10, 10]))));
   AssertEquals(0, Std.Arrays.Length(Unwrap(FinishSse(Split))));

@@ -3,14 +3,14 @@
 const PRODUCER: &str = r#"program ChannelCompatibility;
 uses Std.Tasks, Std.Results, Std.Arrays;
 begin
-  var Group: TaskGroup := CreateTaskGroup();
-  var Queue: channel of integer := CreateChannel(1);
-  var Child: task := StartTaskInGroup(Group, procedure(Token: CancellationToken)
+  const Group: TaskGroup := CreateTaskGroup();
+  const Queue: channel of integer := CreateChannel(1);
+  const Child: task := StartTaskInGroup(Group, procedure(Token: CancellationToken)
   begin
     for Item: integer := 1 to 2 do
       discard Unwrap(SEND_OPERATION); end for;
   end procedure);
-  mutable var Total: integer := 0;
+  var Total: integer := 0;
   for Item: integer := 1 to 2 do
     discard Select([
       ReceiveCase(Queue, procedure(Outcome: result of integer, string)
@@ -43,11 +43,11 @@ fn timed_send_cooperates_with_a_select_consumer() {
 const CONSUMER: &str = r#"program ReceiveCompatibility;
 uses Std.Tasks, Std.Results, Std.Arrays;
 begin
-  var Group: TaskGroup := CreateTaskGroup();
-  var Queue: channel of integer := CreateChannel(1);
-  var Child: task := StartTaskInGroup(Group, function(Token: CancellationToken): integer
+  const Group: TaskGroup := CreateTaskGroup();
+  const Queue: channel of integer := CreateChannel(1);
+  const Child: task := StartTaskInGroup(Group, function(Token: CancellationToken): integer
   begin
-    mutable var Total: integer := 0;
+    var Total: integer := 0;
     for Item: integer := 1 to 2 do Total := Total + Unwrap(RECEIVE_OPERATION); end for;
     return Total;
   end function);
@@ -80,7 +80,7 @@ fn timed_receive_cooperates_with_a_select_producer() {
 fn nested_task_barriers_release_the_consumers_stack() {
     let source = PRODUCER.replace(
         "for Item: integer := 1 to 2 do\n      discard Unwrap(SEND_OPERATION); end for;",
-        "var Grandchild: task := StartTaskInGroup(Group, procedure(ChildToken: CancellationToken)
+        "const Grandchild: task := StartTaskInGroup(Group, procedure(ChildToken: CancellationToken)
          begin discard Send(Queue, 1); discard Send(Queue, 2); end procedure);
          WAIT_OPERATION;",
     );
@@ -99,8 +99,8 @@ fn nested_task_barriers_release_the_consumers_stack() {
 fn closing_a_nested_group_releases_the_consumers_stack() {
     let source = PRODUCER.replace(
         "for Item: integer := 1 to 2 do\n      discard Unwrap(SEND_OPERATION); end for;",
-        "var Nested: TaskGroup := CreateTaskGroup();
-         var Grandchild: task := StartTaskInGroup(Nested, procedure(ChildToken: CancellationToken)
+        "const Nested: TaskGroup := CreateTaskGroup();
+         const Grandchild: task := StartTaskInGroup(Nested, procedure(ChildToken: CancellationToken)
            begin discard Send(Queue, 1); discard Send(Queue, 2); end procedure);
          if Length(CloseTaskGroup(Nested)) <> 0 then panic('nested child failed'); end if;",
     );

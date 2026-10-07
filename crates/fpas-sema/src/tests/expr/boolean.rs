@@ -12,7 +12,7 @@ fn integer_logical_operators_suggest_the_matching_bits_function() {
         ("not 1", "BitNot"),
     ] {
         let errors = check_errors(&format!(
-            "program T; begin var Value: integer := {expression}; end."
+            "program T; begin const Value: integer := {expression}; end."
         ));
         assert_eq!(errors.len(), 1, "{expression}: {errors:?}");
         assert_eq!(errors[0].code, SEMA_TYPE_MISMATCH);
@@ -35,7 +35,7 @@ fn mixed_and_other_non_boolean_operands_are_rejected_without_integer_hints() {
         ] {
             let expression = format!("{left} {operator} {right}");
             let errors = check_errors(&format!(
-                "program T; begin var Value: boolean := {expression}; end."
+                "program T; begin const Value: boolean := {expression}; end."
             ));
             assert_eq!(errors.len(), 1, "{expression}: {errors:?}");
             assert_eq!(errors[0].code, SEMA_TYPE_MISMATCH);
@@ -49,10 +49,10 @@ fn mixed_and_other_non_boolean_operands_are_rejected_without_integer_hints() {
 #[test]
 fn aliases_keep_boolean_and_integer_operator_rules() {
     check_ok(
-        "program T; type Flag = boolean; var A: Flag := true; var B: Flag := false; begin var C: boolean := (A and B) xor not A; end.",
+        "program T; type Flag = boolean; const A: Flag := true; const B: Flag := false; begin const C: boolean := (A and B) xor not A; end.",
     );
     let errors = check_errors(
-        "program T; type Bits = integer; var A: Bits := 1; begin var B: Bits := A or A; end.",
+        "program T; type Bits = integer; const A: Bits := 1; begin const B: Bits := A or A; end.",
     );
     assert!(
         errors[0]
@@ -72,7 +72,7 @@ fn invalid_names_do_not_cascade_into_logical_type_errors() {
         "Missing xor false",
     ] {
         let errors = check_errors(&format!(
-            "program T; begin var Value: boolean := {expression}; end."
+            "program T; begin const Value: boolean := {expression}; end."
         ));
         assert_eq!(errors.len(), 1, "{expression}: {errors:?}");
         assert_ne!(errors[0].code, SEMA_TYPE_MISMATCH);

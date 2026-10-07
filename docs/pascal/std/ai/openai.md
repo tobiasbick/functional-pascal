@@ -12,7 +12,7 @@ Non-streaming chat completions for configurable OpenAI-compatible HTTP endpoints
 | function | `Complete(Client; Messages; Options): Result of string, string` | returns the first text choice |
 
 ```pascal
-var ClientValue: Client := Client.Create('http://127.0.0.1:8080/v1', 'local-model');
+const ClientValue: Client := Client.Create('http://127.0.0.1:8080/v1', 'local-model');
 case Complete(ClientValue, [ChatMessage.User('Hello')], ChatOptions.Default()) of
   when Ok(Content):
     WriteLn(Content);

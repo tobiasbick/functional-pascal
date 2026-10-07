@@ -8,13 +8,13 @@ pub(super) fn register_std_random(checker: &mut Checker) {
     define_func(
         checker,
         s::STD_RANDOM_RANDOM_INT,
-        vec![p("Lo", Ty::Integer, false), p("Hi", Ty::Integer, false)],
+        vec![p("Lo", Ty::Integer), p("Hi", Ty::Integer)],
         Ty::Integer,
     );
     define_proc(checker, s::STD_RANDOM_RANDOMIZE, vec![]);
     define_proc(
         checker,
         s::STD_RANDOM_SET_SEED,
-        vec![p("Seed", Ty::Integer, false)],
+        vec![p("Seed", Ty::Integer)],
     );
 }

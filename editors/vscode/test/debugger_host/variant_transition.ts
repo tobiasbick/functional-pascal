@@ -55,11 +55,11 @@ export async function verifyVariantTransition(
     "end;",
     "",
     "begin",
-    "  mutable var Selected: Choice := Choice.Empty;",
-    "  mutable var Outcome: Result of integer, string := Ok(2);",
-    "  mutable var Optional: Option of integer := None;",
-    "  var Fixed: Choice := Choice.Count(9);",
-    "  var StopMarker: integer := 0;",
+    "  var Selected: Choice := Choice.Empty;",
+    "  var Outcome: Result of integer, string := Ok(2);",
+    "  var Optional: Option of integer := None;",
+    "  const Fixed: Choice := Choice.Count(9);",
+    "  const StopMarker: integer := 0;",
     "  WriteLn(ChoiceValue(Selected));",
     "  case Outcome of",
     "    Ok(Value):",
@@ -86,7 +86,7 @@ export async function verifyVariantTransition(
     ""
   ];
   const sourcePath = await writeSource(workspaceRoot, "variant-transition", lines);
-  const stopLine = lines.indexOf("  var StopMarker: integer := 0;");
+  const stopLine = lines.indexOf("  const StopMarker: integer := 0;");
   const breakpoint = new vscode.SourceBreakpoint(
     new vscode.Location(vscode.Uri.file(sourcePath), new vscode.Position(stopLine, 2))
   );

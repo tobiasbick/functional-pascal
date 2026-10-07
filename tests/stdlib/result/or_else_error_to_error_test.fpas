@@ -8,7 +8,7 @@ begin
 end function;
 
 begin
-  var R: result of integer, string := Error('first');
-  var M: result of integer, string := OrElse(R, ReplaceError);
+  const R: result of integer, string := Error('first');
+  const M: result of integer, string := OrElse(R, ReplaceError);
   WriteLn(IsError(M));
 end.

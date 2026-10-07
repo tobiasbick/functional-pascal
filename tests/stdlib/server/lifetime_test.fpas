@@ -5,10 +5,10 @@ uses Std.Server, Std.Tasks, Std.Time, Std.Results, Std.Test, Std.Arrays;
 begin
   AssertTrue(IsError(CreateLifetime(-1, false)));
   AssertTrue(IsError(CreateLifetime(86400001, false)));
-  var Life: ServerLifetime := Std.Results.Unwrap(CreateLifetime(20, false));
-  var Group: TaskGroup := GetWorkGroup(Life);
-  var Gate: channel of boolean := CreateChannel(1);
-  var Worker: task := StartTaskInGroup(Group, function(Token: CancellationToken): boolean begin
+  const Life: ServerLifetime := Std.Results.Unwrap(CreateLifetime(20, false));
+  const Group: TaskGroup := GetWorkGroup(Life);
+  const Gate: channel of boolean := CreateChannel(1);
+  const Worker: task := StartTaskInGroup(Group, function(Token: CancellationToken): boolean begin
     return Std.Results.Unwrap(Receive(Gate));
   end function);
   AssertTrue(IsReady(Life));

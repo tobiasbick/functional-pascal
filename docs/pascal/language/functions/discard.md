@@ -21,7 +21,7 @@ function call of a postfix chain. Procedure calls and `go` statements remain
 valid standalone statements.
 
 ```pascal
-var Value: integer := Compute();
+const Value: integer := Compute();
 discard Compute();
 discard Factory.Create().Compute();
 ```

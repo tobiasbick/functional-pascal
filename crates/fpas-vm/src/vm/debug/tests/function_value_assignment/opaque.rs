@@ -9,19 +9,19 @@ const SOURCE: &str = r#"program OpaqueIdentityBoundary;
 uses Std.Console;
 
 begin
-  var Region: SavedRegion := SaveRegion(record
+  const Region: SavedRegion := SaveRegion(record
     x := 1;
     y := 1;
     width := 1;
     height := 1;
   end);
-  mutable var Copy: SavedRegion := SaveRegion(record
+  var Copy: SavedRegion := SaveRegion(record
     x := 1;
     y := 2;
     width := 1;
     height := 1;
   end);
-  var StopMarker: integer := 0;
+  const StopMarker: integer := 0;
 end.
 "#;
 
@@ -35,7 +35,7 @@ fn run_to_stop(session: &mut DebugSession) -> u64 {
     let line = u32::try_from(
         SOURCE
             .lines()
-            .position(|line| line.contains("var StopMarker: integer := 0;"))
+            .position(|line| line.contains("const StopMarker: integer := 0;"))
             .expect("stop marker")
             .saturating_add(1),
     )

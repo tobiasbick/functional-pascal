@@ -139,7 +139,7 @@ end function;
 
 function ViewEditor(State: EditorModel): TuiElement;
 begin
-  mutable var Overlay: TuiElement := TuiElementBuilders.MakeEmpty();
+  var Overlay: TuiElement := TuiElementBuilders.MakeEmpty();
   if State.ConfirmOpen then
     begin
       Overlay := TuiElementBuilders.MakeOverlay('Confirm', [
@@ -177,7 +177,7 @@ begin
 end function;
 
 begin
-  var Initial: EditorModel := record
+  const Initial: EditorModel := record
     Name := '';
     NameCaret := 0;
     Focused := NameControlValue;
@@ -185,15 +185,15 @@ begin
     Saved := false;
     Quit := false;
   end;
-  var DirectCmd: TuiCmdOutput := TuiCmdOutput.Create();
-  var DirectQuit: EditorModel := UpdateEditor(Initial, TuiMsg.QuitRequested, DirectCmd);
+  const DirectCmd: TuiCmdOutput := TuiCmdOutput.Create();
+  const DirectQuit: EditorModel := UpdateEditor(Initial, TuiMsg.QuitRequested, DirectCmd);
   AssertTrue(DirectCmd.Command() = TuiCmd.Quit);
   AssertTrue(DirectQuit.Quit);
-  mutable var App: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(40, 12));
+  var App: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(40, 12));
   App.InjectKeyForTest(MakeKey(TuiKeyKind.Character, 'A'));
   App.InjectKeyForTest(MakeKey(TuiKeyKind.Character, 'd'));
   App.InjectKeyForTest(MakeKey(TuiKeyKind.Character, 'a'));
-  mutable var Model: EditorModel := App.RunIterations(Initial, UpdateEditor, ViewEditor, 3, 0);
+  var Model: EditorModel := App.RunIterations(Initial, UpdateEditor, ViewEditor, 3, 0);
   AssertEquals('Ada', Model.Name);
   AssertEquals(3, Model.NameCaret);
   App.InjectKeyForTest(MakeKey(TuiKeyKind.Tab, ''));
@@ -201,18 +201,18 @@ begin
   Model := App.RunIterations(Model, UpdateEditor, ViewEditor, 2, 0);
   AssertTrue(Model.ConfirmOpen);
   AssertEquals(YesControlValue, Model.Focused);
-  var DialogSurface: TuiSurfaceSnapshot := App.SurfaceSnapshot();
+  const DialogSurface: TuiSurfaceSnapshot := App.SurfaceSnapshot();
   AssertTrue(Std.Str.Contains(DialogSurface.LineAt(4), ' Confirm '));
   AssertTrue(Std.Str.Contains(DialogSurface.LineAt(5), 'Save changes?'));
   App.InjectKeyForTest(MakeKey(TuiKeyKind.Enter, ''));
   Model := App.RunIterations(Model, UpdateEditor, ViewEditor, 1, 0);
   AssertFalse(Model.ConfirmOpen);
   AssertTrue(Model.Saved);
-  var BeforeQuit: TuiSurfaceSnapshot := App.SurfaceSnapshot();
+  const BeforeQuit: TuiSurfaceSnapshot := App.SurfaceSnapshot();
   App.InjectKeyForTest(MakeKey(TuiKeyKind.Escape, ''));
   Model := App.RunIterations(Model, UpdateEditor, ViewEditor, 1, 0);
   AssertTrue(Model.Quit);
-  var AfterQuit: TuiSurfaceSnapshot := App.SurfaceSnapshot();
+  const AfterQuit: TuiSurfaceSnapshot := App.SurfaceSnapshot();
   AssertEquals(BeforeQuit.LineAt(2), AfterQuit.LineAt(2));
   AssertFalse(Std.Str.Contains(AfterQuit.LineAt(2), 'SHOULD NOT PAINT'));
 end.

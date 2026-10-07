@@ -29,7 +29,7 @@ begin
   return 7;
 end function;
 begin
-  var T: task := go N();
+  const T: task := go N();
   WriteLn(Wait(T));
 end.
 ```
@@ -101,8 +101,8 @@ only when it checks the token. The cancellation-aware `Std.Net` connect, accept,
 operations observe tokens while their interruptible network phases are pending.
 
 ```pascal
-var Source: CancellationSource := CreateCancellationSource();
-var Token: CancellationToken := GetCancellationToken(Source);
+const Source: CancellationSource := CreateCancellationSource();
+const Token: CancellationToken := GetCancellationToken(Source);
 discard Cancel(Source);
 if IsCancellationRequested(Token) then
   begin
@@ -269,7 +269,7 @@ debugger failure recovery after its terminal report has been published.
 because capacity alone cannot infer `T`:
 
 ```pascal
-var Messages: channel of string := CreateChannel(16);
+const Messages: channel of string := CreateChannel(16);
 ```
 
 `Send` waits until space is available. `Receive` waits until a value is available. Successful sends
@@ -324,7 +324,7 @@ task-bound values with mutable captures cannot cross the channel boundary. See
 Blocks until the spawned call completes, then returns its value. The task result is **consumed**: calling `Wait` again on the same logical completion is a runtime error.
 
 ```pascal
-var T: task := go Square(6);
+const T: task := go Square(6);
 WriteLn(Wait(T));
 ```
 
@@ -337,8 +337,8 @@ WriteLn(Wait(T));
 Blocks until every task in the array has finished. This is a **barrier only**; it does not pop return values. Typical use: synchronize before reading results with `Wait`, or when you only need to know that all work finished.
 
 ```pascal
-var Ta: task := go Work(1);
-var Tb: task := go Work(2);
+const Ta: task := go Work(1);
+const Tb: task := go Work(2);
 WaitAll([Ta, Tb]);
 // still valid:
 Wait(Ta);
@@ -366,7 +366,7 @@ by `Wait` still counts as complete, as with `WaitAll`; waiting for its value aga
 Existing runtime-wide worker-failure handling remains active.
 
 ```pascal
-var First: integer := WaitAny([Ta, Tb]);
+const First: integer := WaitAny([Ta, Tb]);
 // Both results still belong to their task handles.
 WaitAll([Ta, Tb]);
 Wait(Ta);

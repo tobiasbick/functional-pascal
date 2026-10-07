@@ -148,8 +148,20 @@ impl Parser {
         }
     }
 
+    /// Rejects the retired binding prefix and recovers at its `var` keyword.
+    pub(crate) fn reject_mutable_binding(&mut self) {
+        self.error_with_code(
+            fpas_diagnostics::codes::PARSE_EXPECTED_TOKEN,
+            "The `mutable var` binding prefix has been removed",
+            "Use `var X: integer := 0;` for a reassignable binding, or `const X: integer := 0;` for an immutable binding.",
+            self.current_span(),
+        );
+        self.advance();
+    }
+
     pub(crate) fn is_mutable_var_start(&self) -> bool {
-        matches!(self.current_token(), Token::Mutable) && self.peek_token() == &Token::Var
+        matches!(self.current_token(), Token::Ident(name) if name.eq_ignore_ascii_case("mutable"))
+            && self.peek_token() == &Token::Var
     }
 
     pub(crate) fn expect_ident(&mut self) -> Option<(String, Span)> {

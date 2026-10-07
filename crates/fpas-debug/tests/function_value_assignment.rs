@@ -278,14 +278,14 @@ end function;
 
 function Work(): integer;
 begin
-  mutable var Current: Handler := AddOne;
-  var Backup: Handler := AddTwo;
-  var Marker: integer := 0;
+  var Current: Handler := AddOne;
+  const Backup: Handler := AddTwo;
+  const Marker: integer := 0;
   return Current(1);
 end function;
 
 begin
-  var Pending: task := go Work();
+  const Pending: task := go Work();
   WriteLn(Wait(Pending));
 end.
 "#;
@@ -298,7 +298,7 @@ end.
     let _ = send(&mut server, &mut id, "initialize", json!({"version":2}));
     let marker_line = TASK_SOURCE
         .lines()
-        .position(|line| line.contains("var Marker: integer := 0;"))
+        .position(|line| line.contains("const Marker: integer := 0;"))
         .expect("marker line")
         + 1;
     let breakpoint = send(

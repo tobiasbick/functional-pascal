@@ -8,7 +8,7 @@ program Example;
 uses Std.Console, Std.Str, Std.Toml;
 
 begin
-  var Parsed: result of TomlValue, string := Parse(('[project]' + Chr(10)) + 'name = ''demo''');
+  const Parsed: result of TomlValue, string := Parse(('[project]' + Chr(10)) + 'name = ''demo''');
   case Parsed of
     when Ok(Value):
       WriteLn(Stringify(Value));
@@ -59,7 +59,7 @@ Parses a TOML document. Valid input returns `Ok(TomlValue)`; syntax errors retur
 All TOML 1.0 value kinds are represented: strings, signed 64-bit integers, floating-point values (including `inf` and `nan`), booleans, date/time values, arrays, tables, inline tables, and arrays of tables.
 
 ```pascal
-var Parsed: result of TomlValue, string := Parse(((((('title = ''example''' + Chr(10)) + 'enabled = true') + Chr(10)) + '[server]') + Chr(10)) +
+const Parsed: result of TomlValue, string := Parse(((((('title = ''example''' + Chr(10)) + 'enabled = true') + Chr(10)) + '[server]') + Chr(10)) +
                                                  'port = 8080');
 case Parsed of
   when Ok(Value):
@@ -83,7 +83,7 @@ function Stringify(Value: TomlValue): string;
 Encodes a `TomlValue` tree as TOML. The supplied root must be a table because TOML documents have table roots. `Stringify` raises a runtime error for malformed manually constructed values, non-string table keys, invalid date/time text, or nesting deeper than 256 levels.
 
 ```pascal
-var Value: TomlValue := TomlValue.Table([
+const Value: TomlValue := TomlValue.Table([
   'project': TomlValue.Table([
     'name': TomlValue.String('demo'),
     'version': TomlValue.Integer(1)

@@ -13,10 +13,12 @@ migration preserves exported names, scopes, and recursive types.
 
 - Each declaration has its own `type`, `const`, or `var` keyword; groups that
   inherit a declaration category from a preceding entry are removed.
-  Repeat `mutable var` for each mutable binding while that form exists, and
-  repeat `public` for each exported declaration when splitting a public group.
-- The rule applies only where declarations are already permitted. It does not
-  introduce local type or constant declarations.
+  Repeat `public` for each exported declaration when splitting a public group.
+  AP11 delivery repeated the former `mutable var` prefix; AP16.3 has replaced
+  that prefix with writable `var`.
+- The rule applies only where declarations are permitted. AP11 itself did not
+  introduce local types or constants; AP16.1 subsequently added local `const`
+  bindings. Local type declarations remain unsupported.
 - Q07: all types declared in the same unit or program are visible to each
   other regardless of declaration order, including mutually recursive types.
   No explicit forward type declaration is required. Constants and variables

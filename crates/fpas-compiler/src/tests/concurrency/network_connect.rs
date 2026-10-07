@@ -9,8 +9,8 @@ fn network_connect_cancellation_variants_execute_end_to_end() {
 program CancellableConnect;
 uses Std.Net, Std.Tasks;
 begin
-  var Source: Std.Tasks.CancellationSource := Std.Tasks.CreateCancellationSource();
-  var Token: Std.Tasks.CancellationToken := Std.Tasks.GetCancellationToken(Source);
+  const Source: Std.Tasks.CancellationSource := Std.Tasks.CreateCancellationSource();
+  const Token: Std.Tasks.CancellationToken := Std.Tasks.GetCancellationToken(Source);
   case Std.Net.ConnectWithCancellation('127.0.0.1', {port}, 1000, Token) of
     when Ok(ConnectionValue): discard Std.Net.Close(ConnectionValue);
     when Error(Message): panic(Message);

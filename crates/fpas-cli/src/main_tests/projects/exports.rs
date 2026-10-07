@@ -133,7 +133,7 @@ include = ["src/**/*.fpas"]
     );
     write_text(
         &app_dir.join("src/main.fpas"),
-        "program App;\nuses Sessions.Outcome, Std.Console, Std.Tasks;\nfunction Session(): result of boolean, string;\nbegin\n  return Error('session failed');\nend function;\nbegin\n  var Job: task := go Session();\n  WriteLn(Describe(Job));\nend.\n",
+        "program App;\nuses Sessions.Outcome, Std.Console, Std.Tasks;\nfunction Session(): result of boolean, string;\nbegin\n  return Error('session failed');\nend function;\nbegin\n  const Job: task := go Session();\n  WriteLn(Describe(Job));\nend.\n",
     );
 
     let (exit_code, stdout_output, stderr_output) =

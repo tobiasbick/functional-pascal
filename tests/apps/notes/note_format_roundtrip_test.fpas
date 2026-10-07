@@ -3,7 +3,7 @@ program NoteFormatRoundtripTest;
 uses Notes.Format, Notes.Model, Std.Arrays, Std.Str, Std.Test;
 
 begin
-  var Source: Note := record
+  const Source: Note := record
     Id := '1700000000000-123456';
     Title := 'Agent-era notes';
     CreatedMillis := 1700000000000;
@@ -14,7 +14,7 @@ begin
     Body := ('Human-readable body' + Std.Str.Chr(10)) + 'with Markdown.';
     Path := '';
   end;
-  var Encoded: string := NoteStringify(Source);
+  const Encoded: string := NoteStringify(Source);
   case NoteParse(Encoded) of
     when Ok(Parsed):
       begin
@@ -33,7 +33,7 @@ begin
         Fail(Message);
       end;
   end case;
-  var CrLf: string := Std.Str.Replace(Encoded, Std.Str.Chr(10), Std.Str.Chr(13) + Std.Str.Chr(10));
+  const CrLf: string := Std.Str.Replace(Encoded, Std.Str.Chr(10), Std.Str.Chr(13) + Std.Str.Chr(10));
   case NoteParse(CrLf) of
     when Ok(Parsed):
       begin

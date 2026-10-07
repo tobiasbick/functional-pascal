@@ -12,7 +12,7 @@ fn format(source: &str) -> String {
 #[test]
 fn arguments_and_enclosing_declarations_have_distinct_terminator_owners() {
     let formatted = format(
-        "program T; begin var F: procedure() := procedure() begin end procedure; Apply(function(): integer begin return 1; end function, P with X := 2; end with); end.",
+        "program T; begin const F: procedure() := procedure() begin end procedure; Apply(function(): integer begin return 1; end function, P with X := 2; end with); end.",
     );
     assert!(
         formatted.contains("procedure() begin end procedure;"),
@@ -29,7 +29,7 @@ fn arguments_and_enclosing_declarations_have_distinct_terminator_owners() {
 #[test]
 fn nested_closures_updates_and_literals_keep_their_matching_endings() {
     let formatted = format(
-        "program T; function Make(): function(): integer; begin return function(): integer begin var Q: Holder := P with Child := P.Child with X := 1; end with; Data := record X := 2; end; Reader := function(): integer begin return 3; end function; end with; return Q.Reader(); end function; end function; begin end.",
+        "program T; function Make(): function(): integer; begin return function(): integer begin const Q: Holder := P with Child := P.Child with X := 1; end with; Data := record X := 2; end; Reader := function(): integer begin return 3; end function; end with; return Q.Reader(); end function; end function; begin end.",
     );
     assert_eq!(formatted.matches("end function").count(), 3, "{formatted}");
     assert_eq!(formatted.matches("end with").count(), 2, "{formatted}");
@@ -54,7 +54,7 @@ fn comments_before_inside_and_after_expression_endings_survive_once() {
         end // inside update end
         with // update argument ending
         );
-        var F: procedure() := procedure() begin end procedure; // declaration ending
+        const F: procedure() := procedure() begin end procedure; // declaration ending
         end.",
     );
     for comment in [
@@ -93,7 +93,7 @@ fn comments_before_inside_and_after_expression_endings_survive_once() {
 #[test]
 fn empty_closure_ending_comments_are_preserved() {
     let formatted = format(
-        "program T; begin var F: procedure() := procedure() begin
+        "program T; begin const F: procedure() := procedure() begin
         // empty body
         end // inside empty closer
         procedure; end.",
@@ -106,7 +106,7 @@ fn empty_closure_ending_comments_are_preserved() {
 #[test]
 fn closure_fields_indent_their_bodies_and_keep_the_field_terminator_before_comments() {
     let formatted = format(
-        "program T; begin var P: Holder := record
+        "program T; begin const P: Holder := record
         // reader field
         Reader := function(): integer begin return 1;
         // field closure ending

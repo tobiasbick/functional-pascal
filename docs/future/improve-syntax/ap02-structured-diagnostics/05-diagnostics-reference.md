@@ -40,7 +40,9 @@ This work package is the documentation.
 
 ## Result
 
-The reference covers all 120 allocated codes. Compiler/linker invariant rows
-use invalid artifact or host-state examples where no accepted FPAS source can
+At AP02 delivery, the reference covered all 120 allocated codes. Later
+packages extend the same catalog and reference with their own allocations.
+Compiler/linker invariant rows use invalid artifact or host-state examples
+where no accepted FPAS source can
 directly trigger the failure. Delivery is recorded in the
 [implementation audit](implementation-audit.md).

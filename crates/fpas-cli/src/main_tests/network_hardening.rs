@@ -143,7 +143,7 @@ fn cross_origin_303_redirect_changes_post_to_get_and_strips_credentials() {
 uses Std.Console, Std.Http, Std.Net.Utf8;
 
 begin
-  mutable var RequestValue: Request := Request.Post('http://127.0.0.1:{redirect_port}/submit');
+  var RequestValue: Request := Request.Post('http://127.0.0.1:{redirect_port}/submit');
   RequestValue.Headers := [
     Header.Create('Authorization', 'Bearer secret'),
     Header.Create('Cookie', 'session=secret'),
@@ -204,7 +204,7 @@ fn http_client_enforces_header_and_redirect_limits() {
 uses Std.Console, Std.Http, Std.Str;
 
 begin
-  mutable var HeaderRequest: Request := Request.Get('http://127.0.0.1:{header_port}/');
+  var HeaderRequest: Request := Request.Get('http://127.0.0.1:{header_port}/');
   HeaderRequest.MaxHeaderBytes := 48;
   case Send(HeaderRequest) of
     when Ok(_): panic('oversized response head was accepted');
@@ -213,7 +213,7 @@ begin
       if not Std.Str.Contains(Message, 'MaxHeaderBytes') then panic(Message); end if;
     end;
   end case;
-  mutable var RedirectRequest: Request := Request.Get('http://127.0.0.1:{redirect_port}/');
+  var RedirectRequest: Request := Request.Get('http://127.0.0.1:{redirect_port}/');
   RedirectRequest.MaxRedirects := 0;
   case Send(RedirectRequest) of
     when Ok(_): panic('redirect limit was ignored');

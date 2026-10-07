@@ -9,7 +9,7 @@ end function;
 
 function SidebarWidth(State: NotesModel): integer;
 begin
-  var Width: integer := State.Width div 3;
+  const Width: integer := State.Width div 3;
   if Width < 32 then
     begin
       return 32;
@@ -44,8 +44,8 @@ end function;
 
 function Header(State: NotesModel): TuiElement;
 begin
-  mutable var Dirty: string := '';
-  mutable var Issues: string := '';
+  var Dirty: string := '';
+  var Issues: string := '';
   if State.Dirty then
     begin
       Dirty := '  ● unsaved';
@@ -64,9 +64,9 @@ end function;
 
 function ListPane(State: NotesModel): TuiElement;
 begin
-  var Search: TuiElement := TuiElementBuilders.MakeInputWithHint(TuiControlId.Create(SearchControl), State.Search, State.SearchCaret, 'Search notes…', TuiAction.Create(SearchChangedAction));
-  var Items: array of string := NotesListItems(State.Notes, State.Search, ListPaneWidth(State) - 4);
-  var NotesList: TuiElement := TuiElementBuilders.MakeList(TuiControlId.Create(ListControl), Items, NotesSelectedFilteredPosition(State), TuiAction.Create(SelectionChangedAction));
+  const Search: TuiElement := TuiElementBuilders.MakeInputWithHint(TuiControlId.Create(SearchControl), State.Search, State.SearchCaret, 'Search notes…', TuiAction.Create(SearchChangedAction));
+  const Items: array of string := NotesListItems(State.Notes, State.Search, ListPaneWidth(State) - 4);
+  const NotesList: TuiElement := TuiElementBuilders.MakeList(TuiControlId.Create(ListControl), Items, NotesSelectedFilteredPosition(State), TuiAction.Create(SelectionChangedAction));
   return TuiElementBuilders.MakePanel('Notes', [
                                                  Search,
                                                  TuiElementBuilders.MakeRule(''),
@@ -89,11 +89,11 @@ begin
       return EmptyEditor();
     end;
   end if;
-  var NoteValue: Note := State.Notes[State.Selected];
-  var Title: TuiElement := TuiElementBuilders.MakeInputWithHint(TuiControlId.Create(TitleControl), NoteValue.Title, State.TitleCaret, 'Note title', TuiAction.Create(TitleChangedAction));
-  var Tags: TuiElement := TuiElementBuilders.MakeInputWithHint(TuiControlId.Create(TagsControl), State.TagsText, State.TagsCaret, 'tags, separated, by commas', TuiAction.Create(TagsChangedAction));
-  var Body: TuiElement := TuiElementBuilders.MakeTextArea(TuiControlId.Create(BodyControl), NoteValue.Body, State.BodyCaret, State.BodyOffset, TuiAction.Create(BodyChangedAction));
-  mutable var Pin: string := '';
+  const NoteValue: Note := State.Notes[State.Selected];
+  const Title: TuiElement := TuiElementBuilders.MakeInputWithHint(TuiControlId.Create(TitleControl), NoteValue.Title, State.TitleCaret, 'Note title', TuiAction.Create(TitleChangedAction));
+  const Tags: TuiElement := TuiElementBuilders.MakeInputWithHint(TuiControlId.Create(TagsControl), State.TagsText, State.TagsCaret, 'tags, separated, by commas', TuiAction.Create(TagsChangedAction));
+  const Body: TuiElement := TuiElementBuilders.MakeTextArea(TuiControlId.Create(BodyControl), NoteValue.Body, State.BodyCaret, State.BodyOffset, TuiAction.Create(BodyChangedAction));
+  var Pin: string := '';
   if NoteValue.Pinned then
     begin
       Pin := ' ★';
@@ -142,11 +142,11 @@ end function;
 
 function CommandOverlay(State: NotesModel): TuiElement;
 begin
-  var HasNote: boolean := (State.Selected >= 0) and
-                          (State.Selected < Std.Arrays.Length(State.Notes));
-  mutable var Save: TuiElement := TuiElementBuilders.MakeDisabledButton(TuiControlId.Create(SaveNoteControl), 'Save note', '', TuiAction.Create(SaveNoteAction));
-  mutable var Pin: TuiElement := TuiElementBuilders.MakeDisabledButton(TuiControlId.Create(TogglePinControl), 'Toggle pin', '', TuiAction.Create(TogglePinAction));
-  mutable var Archive: TuiElement := TuiElementBuilders.MakeDisabledButton(TuiControlId.Create(ArchiveNoteControl), 'Archive note', '', TuiAction.Create(ArchiveNoteAction));
+  const HasNote: boolean := (State.Selected >= 0) and
+                            (State.Selected < Std.Arrays.Length(State.Notes));
+  var Save: TuiElement := TuiElementBuilders.MakeDisabledButton(TuiControlId.Create(SaveNoteControl), 'Save note', '', TuiAction.Create(SaveNoteAction));
+  var Pin: TuiElement := TuiElementBuilders.MakeDisabledButton(TuiControlId.Create(TogglePinControl), 'Toggle pin', '', TuiAction.Create(TogglePinAction));
+  var Archive: TuiElement := TuiElementBuilders.MakeDisabledButton(TuiControlId.Create(ArchiveNoteControl), 'Archive note', '', TuiAction.Create(ArchiveNoteAction));
   if HasNote then
     begin
       Save := TuiElementBuilders.MakeButton(TuiControlId.Create(SaveNoteControl), 'Save note', TuiAction.Create(SaveNoteAction));
@@ -341,9 +341,9 @@ begin
                                                   ]);
     end;
   end if;
-  mutable var Children: array of TuiElement := [
-                                                 TuiElementBuilders.MakeColumn([Header(State), Expanding(MainContent(State), 1), Status(State)])
-                                               ];
+  var Children: array of TuiElement := [
+                                         TuiElementBuilders.MakeColumn([Header(State), Expanding(MainContent(State), 1), Status(State)])
+                                       ];
   if State.Overlay <> NotesOverlay.Closed then
     begin
       Std.Arrays.Push(Children, Overlay(State));

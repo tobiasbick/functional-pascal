@@ -88,10 +88,10 @@ An address queried after `CloseListener` returns `Error`.
 ```pascal
 function InspectListener(): Result of NetworkAddress, string;
 begin
-  var Server: Listener := try Listen('127.0.0.1', 0);
-  var Address: NetworkAddress := try ListenerLocalAddress(Server);
+  const Server: Listener := try Listen('127.0.0.1', 0);
+  const Address: NetworkAddress := try ListenerLocalAddress(Server);
   // Address.Host is '127.0.0.1'; Address.Port is the assigned nonzero port.
-  var Closed: boolean := try CloseListener(Server);
+  const Closed: boolean := try CloseListener(Server);
   return Ok(Address);
 end function;
 ```

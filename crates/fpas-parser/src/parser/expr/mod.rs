@@ -1,3 +1,4 @@
+mod arguments;
 mod closure;
 mod logical;
 mod postfix;
@@ -75,30 +76,5 @@ impl Parser {
             parts,
             span: self.span_from(start),
         }
-    }
-
-    /// Parses comma-separated arguments, rejecting expression-owned final terminators.
-    pub(crate) fn parse_arg_list(&mut self) -> Vec<Expr> {
-        let mut args = Vec::new();
-        loop {
-            let arg = self.parse_expression();
-            if matches!(&arg, Expr::Closure(_) | Expr::RecordUpdate { .. })
-                && self.check(&Token::Semicolon)
-                && matches!(self.peek_token(), Token::RParen | Token::Comma)
-            {
-                self.error_with_code(
-                    PARSE_EXPECTED_TOKEN,
-                    "Expression arguments do not have a terminating `;`",
-                    "Remove `;` before the argument separator or `)`, for example `Apply(function(): integer begin return 1; end function)`.",
-                    self.current_span(),
-                );
-                self.advance();
-            }
-            args.push(arg);
-            if !self.eat(&Token::Comma) {
-                break;
-            }
-        }
-        args
     }
 }

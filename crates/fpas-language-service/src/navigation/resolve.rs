@@ -4,6 +4,7 @@ use fpas_diagnostics::SourceSpan;
 use fpas_lexer::Token;
 
 use super::NavigationDocument;
+use super::named_arguments::NamedArgumentLabel;
 use crate::{DocumentSymbol, SymbolKind, SymbolVisibility};
 
 pub(crate) fn resolve(
@@ -20,6 +21,17 @@ pub(crate) fn resolve(
         .find(|symbol| contains(symbol.selection_span, offset))
     {
         return Some((target_index, symbol.clone(), range));
+    }
+
+    match super::named_arguments::resolve_named_argument(
+        documents,
+        target_index,
+        token_index,
+        &name,
+    ) {
+        NamedArgumentLabel::Parameter(index, symbol) => return Some((index, *symbol, range)),
+        NamedArgumentLabel::Unresolved => return None,
+        NamedArgumentLabel::NotLabel => {}
     }
 
     if let Some((index, symbol)) =
@@ -298,7 +310,8 @@ fn imported_top_level(
         .collect()
 }
 
-fn unqualified_kind(kind: SymbolKind) -> bool {
+/// Returns whether a declaration kind can be referenced by an unqualified name.
+pub(crate) fn unqualified_kind(kind: SymbolKind) -> bool {
     !matches!(
         kind,
         SymbolKind::Program

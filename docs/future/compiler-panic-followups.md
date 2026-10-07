@@ -13,4 +13,14 @@ language or hide the limitation inside a library implementation.
 
 ## Open entries
 
-There are currently no open entries.
+### Debugger evaluation accepts positional call arguments only
+
+- **Source shape:** a debugger `evaluate` expression with named arguments, for
+  example `Sub(Left := 1, Right := 2)` or `Shape.Rect(Width := 1.0, Height := 2.0)`.
+- **Restriction:** `crates/fpas-debug/src/evaluation/validate.rs` rejects
+  `Expr::NamedArgument`; the debugger resolves calls without semantic analysis
+  and therefore has no parameter-name mapping.
+- **Workaround:** pass the arguments by position in declaration order.
+- **Resolution:** map names to the callee's parameter or variant-field names
+  from the debug metadata, evaluate in written order, and add debugger
+  evaluation tests for routines, methods, and variant constructors.

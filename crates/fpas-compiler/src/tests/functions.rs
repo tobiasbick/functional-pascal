@@ -1,5 +1,6 @@
 use super::assert_succeeds;
 
+mod named_arguments;
 mod std_shadowing;
 
 #[test]

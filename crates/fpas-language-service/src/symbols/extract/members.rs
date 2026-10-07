@@ -97,6 +97,32 @@ pub(super) fn type_children(
             .members
             .iter()
             .map(|member| {
+                // Fields are named only by `Name := Value` construction arguments, so their
+                // lexical scope is the variant declaration itself.
+                let variant_owner = format!("{owner}.{}", member.name);
+                let variant_scope = member.span.diagnostic_span_or_synthetic();
+                let fields = member
+                    .fields
+                    .iter()
+                    .map(|field| {
+                        member_symbol(
+                            snapshot,
+                            &variant_owner,
+                            &field.name,
+                            SymbolKind::Field,
+                            field.span,
+                            Visibility::Public,
+                            named_type(&field.type_expr),
+                            format!(
+                                "field {}: {}",
+                                field.name,
+                                type_text(snapshot, &field.type_expr)
+                            ),
+                            variant_scope,
+                            Vec::new(),
+                        )
+                    })
+                    .collect();
                 let mut symbol = member_symbol(
                     snapshot,
                     owner,
@@ -107,7 +133,7 @@ pub(super) fn type_children(
                     Some(owner.to_owned()),
                     format!("enum member {owner}.{}", member.name),
                     declaration_scope,
-                    Vec::new(),
+                    fields,
                 );
                 if !member.fields.is_empty() {
                     let parameters = member

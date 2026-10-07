@@ -381,3 +381,25 @@ end.
         assert!(help.signature.label.contains(expected_label), "{help:?}");
     }
 }
+
+#[test]
+fn signature_help_selects_the_named_parameter_or_variant_field() {
+    let temp = TempDirectory::new("intellisense-named-signatures");
+    let source = "program Named;\n\ntype Shape = enum\n  Rect(Width: real; Height: real);\nend enum;\n\nfunction Sub(Left: integer; Right: integer): integer;\nbegin\n  return Left - Right;\nend function;\n\nbegin\n  const A: integer := Sub(Right := 1, Left := 2);\n  const S: Shape := Shape.Rect(Height := 1.0, Width := 2.0);\nend.\n";
+    let path = temp.write("named.fpas", source);
+    let mut service = LanguageService::new(WorkspaceContext::loose(temp.path()));
+    for (marker, expected) in [
+        ("Right := 1", 1),
+        ("Left := 2", 0),
+        ("Height := 1.0", 1),
+        ("Width := 2.0", 0),
+    ] {
+        let cursor = source.find(marker).expect("named argument") + marker.len() - 1;
+        let help = service
+            .signature_help(&path, cursor)
+            .expect("signature help")
+            .value
+            .expect("callable signature");
+        assert_eq!(help.active_parameter, Some(expected), "{marker}");
+    }
+}

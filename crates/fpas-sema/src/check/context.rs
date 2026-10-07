@@ -14,6 +14,12 @@ pub type ExprTypeMap = HashMap<usize, Ty>;
 /// Maps a call expression or call-statement designator to its canonical `Std.*` dispatch name.
 pub type IntrinsicCallMap = HashMap<usize, String>;
 
+/// Maps the first written argument of a named call to the written argument
+/// index for each parameter, in parameter order.
+///
+/// **Documentation:** `docs/pascal/language/functions/parameters.md`
+pub type NamedArgumentOrderMap = HashMap<usize, Vec<usize>>;
+
 /// Target selected for a free or first-class receiver call.
 ///
 /// **Documentation:** `docs/pascal/language/functions/fluent-calls.md`
@@ -200,6 +206,8 @@ pub struct AnalysisMetadata {
     pub expr_types: ExprTypeMap,
     /// Canonical standard-library calls keyed by expression or designator identity.
     pub intrinsic_calls: IntrinsicCallMap,
+    /// Parameter order of named calls keyed by the first written argument's identity.
+    pub named_argument_orders: NamedArgumentOrderMap,
     /// Fully resolved named types used to construct deterministic runtime layouts.
     pub named_types: NamedTypeMap,
     /// Resolved record method calls keyed by expression or designator identity.
@@ -242,6 +250,8 @@ pub struct Checker {
     pub(crate) expr_types: ExprTypeMap,
     /// Canonical standard-library calls keyed by expression or designator identity.
     pub(crate) intrinsic_calls: IntrinsicCallMap,
+    /// Parameter order of named calls keyed by the first written argument's identity.
+    pub(crate) named_argument_orders: NamedArgumentOrderMap,
     pub(crate) method_calls: MethodCallMap,
     /// Selected free and first-class receiver calls.
     pub(crate) fluent_calls: FluentCallMap,
@@ -327,6 +337,7 @@ impl Checker {
             errors: Vec::new(),
             expr_types: ExprTypeMap::new(),
             intrinsic_calls: IntrinsicCallMap::new(),
+            named_argument_orders: NamedArgumentOrderMap::new(),
             method_calls: MethodCallMap::new(),
             fluent_calls: FluentCallMap::new(),
             member_value_calls: MemberValueCallMap::new(),
@@ -362,6 +373,7 @@ impl Checker {
             errors: self.errors,
             expr_types: self.expr_types,
             intrinsic_calls: self.intrinsic_calls,
+            named_argument_orders: self.named_argument_orders,
             named_types,
             method_calls: self.method_calls,
             fluent_calls: self.fluent_calls,

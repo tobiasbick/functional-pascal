@@ -40,7 +40,7 @@ end case;
 
 Rules:
 
-- Each field position is a bare identifier binding, matched positionally to the variant fields.
+- Each field position is a bare identifier binding, matched positionally to the variant fields. Named fields such as `when Shape.Circle(Radius := R):` are rejected (FP3026), although [construction](../types/enums.md) accepts them.
 - A pattern variant must belong to the scrutinee enum type (`Shape.Circle` when matching `Shape`).
 - Use an `if` guard for additional constraints on a bound value (literals, ranges, or comparisons).
 

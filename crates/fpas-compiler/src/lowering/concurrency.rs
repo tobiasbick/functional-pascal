@@ -208,7 +208,7 @@ impl LoweringContext {
         retain_result: bool,
     ) -> Result<ValueId, CompileError> {
         let callee = self.save_value(callee);
-        let arguments = self.lower_expression_values(args, None, span)?;
+        let arguments = self.lower_argument_values(args, span)?;
         let callee = self.restore_value(callee, span)?;
         self.record_call_arguments(arguments.len(), span)?;
         self.can_spawn_tasks = true;
@@ -279,7 +279,7 @@ impl LoweringContext {
             (callee, callable.result)
         };
         let callee = self.save_value(callee);
-        let mut values = self.lower_expression_values(args, None, span)?;
+        let mut values = self.lower_argument_values(args, span)?;
         if let Some(receiver) = receiver {
             values.insert(0, self.restore_value(receiver, span)?);
         }

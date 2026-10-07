@@ -87,7 +87,7 @@ impl LoweringContext {
             None
         };
 
-        let mut values = self.lower_expression_values(args, None, span)?;
+        let mut values = self.lower_argument_values(args, span)?;
         values.insert(0, self.restore_value(receiver, span)?);
         let callee = callee
             .map(|value| self.restore_value(value, span))

@@ -80,16 +80,15 @@ end unit;
 
 ## 3. Records, enums, and construction
 
-Current forms: record fields and defaults, enum payload declarations, and
-positional variant construction, named type closers, and the main-body
-terminator (AP13;
+Current forms: record fields and defaults, enum payload declarations,
+positional and named variant construction (AP09.2), named type closers, and
+the main-body terminator (AP13;
 [records](../../../pascal/language/types/records.md),
 [enums](../../../pascal/language/types/enums.md)). Payload declarations also
 separate individually typed parameters with `;`.
 
 One keyword per declaration (AP11) and computed `const` bindings (AP16) are
-implemented. Draft forms: named record construction (AP10) and named variant
-arguments (AP09.2).
+implemented. Draft form: named record construction (AP10).
 
 ```pascal
 program Shapes;
@@ -119,12 +118,12 @@ visibility rule.
 
 ## 4. Ordinary calls and visible caller mutation
 
-Current forms: explicit parameter and result types, positional calls, and
-assignment, statement terminators, and routine closers (AP13;
+Current forms: explicit parameter and result types, positional and fully named
+calls (AP09), assignment, statement terminators, and routine closers (AP13;
 [parameters](../../../pascal/language/functions/parameters.md)).
 
 Writable `var` bindings are implemented by AP16. Draft forms: `var` parameters
-and arguments (AP17.1), and the fully named call (AP09 and AP17.2).
+and arguments (AP17.1), and named `var` arguments (AP17.2).
 
 ```pascal
 program Calls;

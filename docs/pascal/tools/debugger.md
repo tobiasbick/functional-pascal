@@ -103,6 +103,8 @@ Visible first-class function values and closures may be called when their
 captures can be detached safely. Aggregate results can be expanded like
 ordinary variables and expire on resume. `go`, newly entered closure syntax,
 statements, declarations, and assignments inside `evaluate` remain rejected.
+Calls in debugger expressions take positional arguments only; named arguments
+such as `Sub(Left := 1, Right := 2)` are rejected.
 
 Watch expressions use the same [operator precedence](../language/basics/operators.md#operator-precedence)
 as program expressions. For example, `not Count > 0` negates the comparison,

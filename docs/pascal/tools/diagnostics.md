@@ -234,6 +234,7 @@ bugs rather than adding a workaround to the program.
 | FP2013 | Trailing enum field separator | `type E = enum A(X: integer;); end;` | `type E = enum A(X: integer); end;` |
 | FP2014 | Comma/grouped parameters | `function Add(A: integer, B: integer): integer;` or `function Add(A, B: integer): integer;` | `function Add(A: integer; B: integer): integer;` |
 | FP2015 | Missing declaration keyword | `const A: integer := 1; B: integer := 2;` | `const A: integer := 1; const B: integer := 2;` |
+| FP2016 | Mixed positional and named arguments | `Move(1, Dy := 2)` | `Move(Dx := 1, Dy := 2)` or `Move(1, 2)` |
 
 FP2015 points at the unprefixed name and shows a complete individual declaration.
 For exported or mutable groups, repeat `public` or `var` in full.
@@ -273,6 +274,14 @@ Call arguments still use commas; commas inside types such as
 | FP3022 | Unused function result | `Compute();` or a postfix chain ending in a function | Consume the value or use `discard` when permitted. For `Result`, handle with `case` or propagate with `try` while consuming the success value. |
 | FP3023 | Cyclic type alias | `type A = B; type B = A;` | End the alias chain at a concrete type; use a record or enum for finite recursion. |
 | FP3024 | No finite recursive value | `type Node = record Next: Node; end record;` | Break the required cycle with `Option`, an empty container, or a finite enum alternative. |
+| FP3025 | Invalid named argument | `Sub(Left := 1, Rigth := 2)` | `Sub(Left := 1, Right := 2)` |
+| FP3026 | Named arguments not supported | `F(Value := 3)` for a function value `F` | `F(3)` |
+
+FP3025 also reports a parameter or enum variant field named twice and a named
+call that omits one; its hint lists the declared names. FP3026 applies to
+function values, receiver calls, variadic routines, polymorphic
+standard-library operations, `Ok`/`Error`/`Some`, and enum patterns, which take
+positional arguments.
 
 Ordinary declaration, assignment, return and argument type compatibility checks
 supply type names in `expected` and `found` for FP3006. Other uses of that code

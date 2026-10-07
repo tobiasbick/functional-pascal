@@ -1,5 +1,6 @@
 //! Direct and first-class call lowering.
 
+mod arguments;
 mod arrays;
 mod fluent;
 
@@ -107,11 +108,13 @@ impl LoweringContext {
         if name.eq_ignore_ascii_case(fpas_std::std_symbols::STD_ARRAY_POP) {
             return self.lower_array_pop(arguments, result, span);
         }
-        let first_type = arguments.first().and_then(|argument| {
-            self.expr_types
-                .get(&fpas_sema::expr_lookup_key(argument))
-                .cloned()
-        });
+        let first_type = self
+            .argument_for_parameter(arguments, 0)
+            .and_then(|argument| {
+                self.expr_types
+                    .get(&fpas_sema::expr_lookup_key(argument))
+                    .cloned()
+            });
         let Some(intrinsic) = crate::intrinsic_catalog::resolve(name, first_type.as_ref()) else {
             let callable = self
                 .resolve_callable(name)
@@ -269,7 +272,7 @@ impl LoweringContext {
         arguments: &[Expr],
         span: fpas_lexer::Span,
     ) -> Result<Vec<ValueId>, CompileError> {
-        let values = self.lower_expression_values(arguments, None, span)?;
+        let values = self.lower_argument_values(arguments, span)?;
         self.record_call_arguments(values.len(), span)?;
         Ok(values)
     }

@@ -23,6 +23,11 @@ remain valid in this work package.
 - Compiler: evaluate supplied fields in written order, then missing defaults
   in declaration order.
 - Generic and imported record types; formatter.
+- Language service: resolve `Field := Value` labels of typed construction to
+  the record field, as AP09 does for parameters and variant fields, so field
+  rename updates them. Rename currently misses labels in anonymous
+  `record Field := Value; end` literals because the editor does not know their
+  record type; AP10.3 removes that form.
 
 ## Affected areas
 
@@ -45,3 +50,4 @@ None in this work package.
   outside the declaring unit, imported types, nested construction.
 - Written-order evaluation with side-effect traces.
 - Rejections: positional, unknown, duplicate, missing, wrong type.
+- Editor: renaming a record field updates typed-construction labels.

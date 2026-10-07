@@ -2,6 +2,7 @@
 
 mod document;
 mod highlights;
+pub(crate) mod named_arguments;
 mod references;
 mod rename;
 mod resolve;

@@ -570,7 +570,11 @@ record_literal      = 'record' { field_init } 'end' ;
 (* has a default value: var P: Point := record end;                 *)
 field_init          = identifier ':=' expression ';' ;
 
-arg_list            = expression { ',' expression } ;
+(* A call is fully positional or fully named (FP2016).                *)
+(* Documentation: docs/pascal/language/functions/parameters.md        *)
+arg_list            = expression { ',' expression }
+                    | named_arg { ',' named_arg } ;
+named_arg           = identifier ':=' expression ;
 
 (* -- Array literal -- *)
 array_literal       = '[' [ expression { ',' expression } ] ']' ;

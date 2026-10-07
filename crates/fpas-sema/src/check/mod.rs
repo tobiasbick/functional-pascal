@@ -31,6 +31,7 @@ pub use context::IntrinsicCallMap;
 pub use context::MemberValueCallMap;
 pub use context::MethodCallMap;
 pub use context::MethodCallTarget;
+pub use context::NamedArgumentOrderMap;
 pub use context::NamedTypeMap;
 pub use context::PropertyReadInfo;
 pub use context::PropertyReadMap;

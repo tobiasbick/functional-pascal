@@ -179,6 +179,11 @@ pub(super) fn emit_expr_impl(
             closure.span.offset,
             comments,
         ),
+        Expr::NamedArgument { name, value, .. } => {
+            emitter.write(name);
+            emitter.write(" := ");
+            emit_expr(emitter, value, 0, comments);
+        }
         Expr::Error(..) => emitter.write("<error>"),
     }
 }
@@ -293,6 +298,16 @@ mod tests {
         assert_eq!(
             expr_from_body("program T; begin const X: integer := Scene[0].resolved.rect.x; end."),
             "Scene[0].resolved.rect.x"
+        );
+    }
+
+    #[test]
+    fn named_call_arguments_keep_names_and_written_order() {
+        assert_eq!(
+            expr_from_body(
+                "program T; begin const X: integer := Sub(Right:=1,Left:=Max(A := 2, B := 3)); end."
+            ),
+            "Sub(Right := 1, Left := Max(A := 2, B := 3))"
         );
     }
 

@@ -27,8 +27,29 @@ impl Expr {
             | Self::BinaryOp { span, .. }
             | Self::RecordLiteral { span, .. }
             | Self::RecordUpdate { span, .. }
-            | Self::Postfix { span, .. } => *span,
+            | Self::Postfix { span, .. }
+            | Self::NamedArgument { span, .. } => *span,
             Self::Closure(closure) => closure.span,
+        }
+    }
+
+    /// Returns the value of a call argument, looking through a named argument.
+    ///
+    /// **Documentation:** `docs/pascal/language/functions/parameters.md`
+    #[must_use]
+    pub fn argument_value(&self) -> &Expr {
+        match self {
+            Self::NamedArgument { value, .. } => value,
+            other => other,
+        }
+    }
+
+    /// Returns the written parameter name of a named call argument.
+    #[must_use]
+    pub fn argument_name(&self) -> Option<&str> {
+        match self {
+            Self::NamedArgument { name, .. } => Some(name),
+            _ => None,
         }
     }
 }
@@ -145,6 +166,22 @@ pub enum Expr {
     ///
     /// **Documentation:** `docs/pascal/language/functions/closures.md`
     Closure(Box<ClosureExpr>),
+    /// `Name := Value` argument of a fully named call.
+    ///
+    /// Appears only directly inside a call argument list; semantic analysis maps
+    /// the name to a declared parameter.
+    ///
+    /// **Documentation:** `docs/pascal/language/functions/parameters.md`
+    NamedArgument {
+        /// Parameter name as written.
+        name: String,
+        /// Source span of the parameter name.
+        name_span: Span,
+        /// Argument value.
+        value: Box<Expr>,
+        /// Source span of the complete named argument.
+        span: Span,
+    },
     /// Placeholder emitted when the parser fails to parse an expression.
     /// Downstream passes should propagate this as an error rather than
     /// checking or compiling it.

@@ -23,6 +23,10 @@ nested matching on them.
   cycles without a terminating construction.
 - Constructor lookup and nested patterns over instantiated enums;
   exhaustiveness with AP03 rules.
+- Named variant construction from AP09.2 (`Tree.Node(Left := L, Right := R)`):
+  map names to the generic variant's fields, infer type arguments from the
+  mapped fields, and keep written-order evaluation. AP09.2 covers only
+  non-generic enums.
 
 ## Affected areas
 
@@ -42,3 +46,5 @@ None.
 
 - Multiple instantiations, recursion, invalid recursion, nested patterns,
   `Lookup.Missing` without context rejected, imported generic enums.
+- Named construction of generic variants, including type-argument inference
+  from reordered named fields and imported generic enums.

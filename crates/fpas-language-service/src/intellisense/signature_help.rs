@@ -61,8 +61,21 @@ impl LanguageService {
                 |documentation| parameter_documentation(documentation, &signature.parameters),
             );
             parameter_documentation.truncate(signature.parameters.len());
-            let active_parameter = (!signature.parameters.is_empty())
-                .then(|| frame.active_argument.min(signature.parameters.len() - 1));
+            let named_parameter = frame
+                .argument_name
+                .and_then(|token| token_name(document, token))
+                .and_then(|name| {
+                    signature.parameters.iter().position(|parameter| {
+                        parameter
+                            .split(':')
+                            .next()
+                            .is_some_and(|declared| declared.trim().eq_ignore_ascii_case(&name))
+                    })
+                });
+            let active_parameter = named_parameter.or_else(|| {
+                (!signature.parameters.is_empty())
+                    .then(|| frame.active_argument.min(signature.parameters.len() - 1))
+            });
             Some(SignatureHelp {
                 signature,
                 documentation,
@@ -81,6 +94,8 @@ impl LanguageService {
 struct CallFrame {
     callable_token: usize,
     active_argument: usize,
+    /// Name token of the current `Name := Value` argument.
+    argument_name: Option<usize>,
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -102,6 +117,7 @@ fn active_call(document: &NavigationDocument, offset: usize) -> Option<CallFrame
                 callable_before(document, index).map(|callable_token| CallFrame {
                     callable_token,
                     active_argument: 0,
+                    argument_name: None,
                 }),
             )),
             Token::RParen => pop_parenthesis(&mut delimiters),
@@ -110,6 +126,18 @@ fn active_call(document: &NavigationDocument, offset: usize) -> Option<CallFrame
             Token::Comma => {
                 if let Some(Delimiter::Parenthesis(Some(frame))) = delimiters.last_mut() {
                     frame.active_argument = frame.active_argument.saturating_add(1);
+                    frame.argument_name = None;
+                }
+            }
+            Token::ColonAssign => {
+                if let Some(Delimiter::Parenthesis(Some(frame))) = delimiters.last_mut()
+                    && let Some(name) = index.checked_sub(1)
+                    && matches!(tokens[name].token, Token::Ident(_))
+                    && name.checked_sub(1).is_some_and(|start| {
+                        matches!(tokens[start].token, Token::LParen | Token::Comma)
+                    })
+                {
+                    frame.argument_name = Some(name);
                 }
             }
             _ => {}

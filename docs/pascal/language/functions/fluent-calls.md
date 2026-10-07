@@ -53,6 +53,10 @@ After one callable is selected, its argument count, types, generic inference,
 constraints, and return type are checked just as for an ordinary call. A
 callable with no explicit parameters cannot be selected by a receiver.
 
+Receiver calls take positional arguments only. To pass arguments by name, use
+an ordinary call such as `Sub(Left := Value, Right := 1)`; see
+[Named arguments](parameters.md#named-arguments).
+
 ## Procedures and mutation
 
 A procedure can end a call chain used as a statement. It cannot feed a later

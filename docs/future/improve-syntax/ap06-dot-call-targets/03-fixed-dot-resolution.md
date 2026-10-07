@@ -59,6 +59,11 @@ and remove the five former public type-helper units and their duplicate calls.
   with a similar name exists, mention it.
 - Language service: completion after `.` lists fields, methods, and catalog
   operations only; signature help covers catalog operations.
+- Named arguments: receiver calls, native type operations, and polymorphic
+  standard-library operations take positional arguments only today (FP3026,
+  AP09.1). Decide with the user whether catalog operations accept named
+  explicit arguments (the receiver stays unnamed); if so, give each catalog
+  entry parameter names and reuse `crates/fpas-sema/src/check/calls/named.rs`.
 - Apply the agreed implicit-receiver exception after the requested follow-up
   discussion: native mutating operations use ordinary dot calls without a
   receiver `var` marker or additional parentheses. Store the writable-receiver

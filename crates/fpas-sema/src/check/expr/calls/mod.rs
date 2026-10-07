@@ -5,8 +5,9 @@ pub(in crate::check) use fluent::FluentCall;
 pub(in crate::check) use methods::MethodCallSite;
 
 use super::super::Checker;
+use crate::check::calls::CallTarget;
 use crate::scope::SymbolKind;
-use crate::types::Ty;
+use crate::types::{ParamTy, Ty};
 use fpas_diagnostics::codes::{
     SEMA_AMBIGUOUS_IMPORTED_NAME, SEMA_TYPE_MISMATCH, SEMA_UNKNOWN_NAME,
 };
@@ -135,7 +136,7 @@ impl Checker {
             self.intrinsic_calls.insert(call_key, dispatch.clone());
         }
         if symbol_kind == SymbolKind::BuiltinStd {
-            return crate::std_registry::check_builtin_std_call(self, &dispatch, args, span);
+            return self.check_builtin_std_call_positional(name, &dispatch, args, span);
         }
 
         if symbol_kind == SymbolKind::EnumVariantConstructor {
@@ -144,7 +145,13 @@ impl Checker {
 
         match &symbol_ty {
             Ty::Function(func_ty) => {
-                let inferred = self.check_function_call_args(name, func_ty, args, span);
+                let inferred = self.check_function_call_args(
+                    name,
+                    func_ty,
+                    CallTarget::for_symbol(symbol_kind),
+                    args,
+                    span,
+                );
                 Self::substitute_type_params(&func_ty.return_type, &inferred)
             }
             Ty::Procedure(_) => {
@@ -180,7 +187,7 @@ impl Checker {
     ) -> Ty {
         if symbol_kind == SymbolKind::BuiltinStd {
             let dispatch = self.builtin_std_dispatch_name(name);
-            return crate::std_registry::check_builtin_std_call(self, &dispatch, args, span);
+            return self.check_builtin_std_call_positional(name, &dispatch, args, span);
         }
 
         if symbol_kind == SymbolKind::EnumVariantConstructor {
@@ -198,11 +205,23 @@ impl Checker {
 
         match &symbol_ty {
             Ty::Function(func_ty) => {
-                let inferred = self.check_function_call_args(name, func_ty, args, span);
+                let inferred = self.check_function_call_args(
+                    name,
+                    func_ty,
+                    CallTarget::for_symbol(symbol_kind),
+                    args,
+                    span,
+                );
                 Self::substitute_type_params(&func_ty.return_type, &inferred)
             }
             Ty::Procedure(proc_ty) => {
-                self.check_procedure_call_args(name, proc_ty, args, span);
+                self.check_procedure_call_args(
+                    name,
+                    proc_ty,
+                    CallTarget::for_symbol(symbol_kind),
+                    args,
+                    span,
+                );
                 Ty::Unit
             }
             _ => {
@@ -220,6 +239,28 @@ impl Checker {
         }
     }
 
+    /// Checks a polymorphic standard-library call, which takes positional arguments only.
+    pub(in crate::check) fn check_builtin_std_call_positional(
+        &mut self,
+        name: &str,
+        dispatch: &str,
+        args: &[Expr],
+        span: Span,
+    ) -> Ty {
+        if self.reject_named_arguments(
+            args,
+            name,
+            "This standard-library operation has no declared parameter names; pass its arguments by position.",
+        ) {
+            self.check_args_only(args);
+            return Ty::Error;
+        }
+        crate::std_registry::check_builtin_std_call(self, dispatch, args, span)
+    }
+
+    /// Checks variant construction with positional or named field arguments.
+    ///
+    /// **Documentation:** `docs/pascal/language/types/enums.md`
     fn check_enum_variant_constructor_call(
         &mut self,
         name: &str,
@@ -234,6 +275,23 @@ impl Checker {
                 .iter()
                 .find(|v| v.name.eq_ignore_ascii_case(variant_name))
             {
+                let fields = variant
+                    .fields
+                    .iter()
+                    .map(|(field_name, field_ty)| ParamTy {
+                        name: field_name.clone(),
+                        ty: field_ty.clone(),
+                    })
+                    .collect::<Vec<_>>();
+                let Some(args) = self.order_call_arguments(
+                    name,
+                    CallTarget::EnumVariant,
+                    &fields,
+                    false,
+                    &args.iter().collect::<Vec<_>>(),
+                ) else {
+                    return enum_ty.clone();
+                };
                 if args.len() != variant.fields.len() {
                     self.error_with_code(
                         SEMA_TYPE_MISMATCH,
@@ -268,7 +326,7 @@ impl Checker {
                 }
 
                 for arg in args.iter().skip(variant.fields.len()) {
-                    self.check_expr(arg);
+                    self.check_expr(arg.argument_value());
                 }
 
                 return enum_ty.clone();

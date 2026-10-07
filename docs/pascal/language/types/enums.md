@@ -66,13 +66,19 @@ type Shape = enum
 end enum;
 ```
 
-Variants with fields are constructed by calling the variant with positional arguments:
+Variants with fields are constructed by calling the variant with positional arguments in
+field order, or with every field named:
 
 ```pascal
 const S: Shape := Shape.Circle(5.0);
 const R: Shape := Shape.Rectangle(10.0, 20.0);
+const N: Shape := Shape.Rectangle(Height := 20.0, Width := 10.0);
 const P: Shape := Shape.Point;
 ```
+
+Named construction follows the [named-argument rules](../functions/parameters.md#named-arguments):
+field names match without regard to case, arguments are evaluated in written order, a call is
+fully positional or fully named, and every field is passed exactly once.
 
 Destructuring uses `case`:
 
@@ -91,7 +97,7 @@ Values of an enum with data compare with `=` and `<>`: they are equal when they 
 variant and equal fields, so `Shape.Circle(5.0) = Shape.Circle(5.0)` is `true`. This requires every
 field of every variant to compare; see [Operators](../basics/operators.md).
 
-Each binding name in the pattern is positional — it corresponds to the field at that position in the variant declaration. A variant without fields (like `Point` above) uses no parentheses.
+Each binding name in the pattern is positional — it corresponds to the field at that position in the variant declaration. Patterns do not accept `Field := Binding` (FP3026), and binding names need not match field names. A variant without fields (like `Point` above) uses no parentheses.
 Each field position uses a plain identifier binding; use an `if` guard on the `case` arm for extra constraints.
 
 Parentheses in a variant declaration must contain at least one field, and semicolons

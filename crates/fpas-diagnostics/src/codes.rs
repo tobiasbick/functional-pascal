@@ -95,6 +95,10 @@ define_codes!(PARSE_ALLOCATED_CODES => {
     ///
     /// Documentation: `docs/pascal/tools/diagnostics.md` (FP2015).
     PARSE_MISSING_DECLARATION_KEYWORD = 2015;
+    /// A call mixes positional and named arguments.
+    ///
+    /// Documentation: `docs/pascal/tools/diagnostics.md` (FP2016).
+    PARSE_MIXED_CALL_ARGUMENTS = 2016;
 });
 
 define_codes!(SEMA_ALLOCATED_CODES => {
@@ -150,6 +154,14 @@ define_codes!(SEMA_ALLOCATED_CODES => {
     SEMA_CYCLIC_TYPE_ALIAS = 3023;
     /// Recursive required fields or payloads provide no finite construction.
     SEMA_NO_FINITE_TYPE_VALUE = 3024;
+    /// A named argument is unknown or duplicated, or a named call omits a parameter.
+    ///
+    /// Documentation: `docs/pascal/tools/diagnostics.md` (FP3025).
+    SEMA_INVALID_NAMED_ARGUMENT = 3025;
+    /// Named arguments are used for a call target that accepts only positional arguments.
+    ///
+    /// Documentation: `docs/pascal/tools/diagnostics.md` (FP3026).
+    SEMA_NAMED_ARGUMENTS_NOT_SUPPORTED = 3026;
 });
 
 define_codes!(COMPILE_ALLOCATED_CODES => {

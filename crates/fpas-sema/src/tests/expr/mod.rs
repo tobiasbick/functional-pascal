@@ -6,6 +6,7 @@ mod bound_methods;
 mod closures;
 mod equality;
 mod fluent;
+mod named_arguments;
 mod postfix;
 mod record_context;
 mod record_events;
@@ -212,6 +213,7 @@ fn analysis_metadata_exposes_all_named_results() {
         errors,
         expr_types,
         intrinsic_calls,
+        named_argument_orders,
         named_types,
         method_calls,
         fluent_calls,
@@ -234,6 +236,7 @@ fn analysis_metadata_exposes_all_named_results() {
             errors.len(),
             expr_types.len(),
             intrinsic_calls.len(),
+            named_argument_orders.len(),
             method_calls.len(),
             fluent_calls.len(),
             member_value_calls.len(),
@@ -248,7 +251,7 @@ fn analysis_metadata_exposes_all_named_results() {
             event_assigned.len(),
             event_raises.len(),
         ],
-        [0; 16]
+        [0; 17]
     );
 }
 

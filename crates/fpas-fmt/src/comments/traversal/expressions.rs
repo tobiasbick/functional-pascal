@@ -26,7 +26,8 @@ pub(super) fn collect_expr(expr: &Expr, begins: &[usize], out: &mut CollectedAnc
         | Expr::ResultError(operand, _)
         | Expr::OptionSome(operand, _)
         | Expr::Try(operand, _)
-        | Expr::Go(operand, _) => collect_expr(operand, begins, out),
+        | Expr::Go(operand, _)
+        | Expr::NamedArgument { value: operand, .. } => collect_expr(operand, begins, out),
         Expr::BinaryOp { left, right, .. } => {
             collect_expr(left, begins, out);
             collect_expr(right, begins, out);

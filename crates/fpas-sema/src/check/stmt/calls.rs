@@ -1,4 +1,5 @@
 use super::super::Checker;
+use crate::check::calls::CallTarget;
 use crate::check::expr::MethodCallSite;
 use crate::scope::SymbolKind;
 use crate::types::Ty;
@@ -33,16 +34,28 @@ impl Checker {
                     .insert(crate::designator_lookup_key(designator), dispatch.clone());
             }
             if kind == SymbolKind::BuiltinStd {
-                return crate::std_registry::check_builtin_std_call(self, &dispatch, args, span);
+                return self.check_builtin_std_call_positional(&name, &dispatch, args, span);
             }
 
             match ty {
                 Ty::Procedure(proc_ty) => {
-                    self.check_procedure_call_args(&name, &proc_ty, args, span);
+                    self.check_procedure_call_args(
+                        &name,
+                        &proc_ty,
+                        CallTarget::for_symbol(kind),
+                        args,
+                        span,
+                    );
                     return Ty::Unit;
                 }
                 Ty::Function(func_ty) => {
-                    let inferred = self.check_function_call_args(&name, &func_ty, args, span);
+                    let inferred = self.check_function_call_args(
+                        &name,
+                        &func_ty,
+                        CallTarget::for_symbol(kind),
+                        args,
+                        span,
+                    );
                     return Self::substitute_type_params(&func_ty.return_type, &inferred);
                 }
                 _ => {

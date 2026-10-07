@@ -2,8 +2,8 @@ use super::Checker;
 use crate::scope::{SymbolKind, canonical_symbol_name};
 use crate::types::{EnumTy, Ty};
 use fpas_diagnostics::codes::{
-    SEMA_DUPLICATE_DECLARATION, SEMA_ENUM_FIELD_COUNT_MISMATCH, SEMA_NON_BOOLEAN_CONDITION,
-    SEMA_TYPE_MISMATCH,
+    SEMA_DUPLICATE_DECLARATION, SEMA_ENUM_FIELD_COUNT_MISMATCH, SEMA_NAMED_ARGUMENTS_NOT_SUPPORTED,
+    SEMA_NON_BOOLEAN_CONDITION, SEMA_TYPE_MISMATCH,
 };
 use fpas_lexer::Span;
 use fpas_parser::{CaseLabel, Designator, DesignatorPart, DestructureVariant, Expr};
@@ -271,9 +271,23 @@ impl Checker {
             return Vec::new();
         }
 
+        if let Some(Expr::NamedArgument { name_span, .. }) =
+            args.iter().find(|arg| arg.argument_name().is_some())
+        {
+            self.error_with_code(
+                SEMA_NAMED_ARGUMENTS_NOT_SUPPORTED,
+                "Enum patterns bind variant fields by position",
+                "Write one binding per field in declaration order, for example `when Shape.Circle(R):`; binding names need not match field names.",
+                *name_span,
+            );
+        }
         let mut bindings = Vec::new();
         for (arg, field_ty) in args.iter().zip(field_types.iter()) {
-            bindings.extend(self.collect_enum_pattern_bindings(field_ty, arg, true));
+            bindings.extend(self.collect_enum_pattern_bindings(
+                field_ty,
+                arg.argument_value(),
+                true,
+            ));
         }
         bindings
     }

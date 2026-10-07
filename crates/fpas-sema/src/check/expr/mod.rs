@@ -87,6 +87,7 @@ impl Checker {
                 &closure.body,
                 closure.span,
             ),
+            Expr::NamedArgument { .. } => self.check_misplaced_named_argument(expr),
             Expr::Error(_) => Ty::Error,
         };
         let key = Self::expr_lookup_key(expr);

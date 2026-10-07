@@ -4,6 +4,7 @@
 
 use super::super::super::Checker;
 use crate::check::FluentCallTarget;
+use crate::check::calls::CallTarget;
 use crate::scope::{Symbol, SymbolKind, canonical_symbol_name};
 use crate::types::Ty;
 use fpas_diagnostics::codes::{
@@ -147,11 +148,23 @@ impl Checker {
     ) -> Ty {
         let result = match member_ty {
             Ty::Function(signature) => {
-                let inferred = self.check_function_call_args(name, signature, args, span);
+                let inferred = self.check_function_call_args(
+                    name,
+                    signature,
+                    CallTarget::FunctionValue,
+                    args,
+                    span,
+                );
                 Self::substitute_type_params(&signature.return_type, &inferred)
             }
             Ty::Procedure(signature) => {
-                self.check_procedure_call_args(name, signature, args, span);
+                self.check_procedure_call_args(
+                    name,
+                    signature,
+                    CallTarget::FunctionValue,
+                    args,
+                    span,
+                );
                 Ty::Unit
             }
             _ => {
@@ -199,6 +212,16 @@ impl Checker {
             self.check_args_only(args);
             return Ty::Error;
         };
+        if symbol.kind == SymbolKind::BuiltinStd
+            && self.reject_named_arguments(
+                args,
+                &target_name,
+                "Receiver calls take positional arguments.",
+            )
+        {
+            self.check_args_only(args);
+            return Ty::Error;
+        }
         let mut all_args = Vec::with_capacity(args.len() + 1);
         all_args.push(receiver);
         all_args.extend(args.iter());

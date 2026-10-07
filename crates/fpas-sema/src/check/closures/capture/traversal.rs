@@ -272,7 +272,8 @@ impl CaptureCollector<'_> {
             | Expr::ResultError(operand, _)
             | Expr::OptionSome(operand, _)
             | Expr::Try(operand, _)
-            | Expr::Go(operand, _) => self.collect_from_expr(operand),
+            | Expr::Go(operand, _)
+            | Expr::NamedArgument { value: operand, .. } => self.collect_from_expr(operand),
             Expr::BinaryOp { left, right, .. } => {
                 self.collect_from_expr(left);
                 self.collect_from_expr(right);

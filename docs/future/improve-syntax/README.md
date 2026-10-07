@@ -61,6 +61,11 @@ is complete: computed `const`, the binding migration, writable `var`, and
 read-only value parameters are implemented. True reference parameters remain
 in AP17; native built-in type operations remain in AP06.
 
+[AP09: Named arguments](ap09-named-arguments/README.md) is complete: fully
+named calls of declared routines, record methods, and enum variant
+constructors are implemented. Remaining gaps are recorded in AP06.3, AP10.1,
+AP24.3, and the compiler and language-limit follow-ups.
+
 Effort estimates are preliminary, based on the design rather than a code audit.
 Dependencies name the packages a package needs; the real prerequisites per work
 package are listed in each work package file.
@@ -75,7 +80,7 @@ package are listed in each work package file.
 | [ ] | [AP06: Fixed dot-call targets](ap06-dot-call-targets/README.md) | Medium | None | Agreed direction (Q05, revised); native type operations |
 | [x] | [AP07: Boolean rules](ap07-boolean-rules/README.md) | Medium | AP02 | Complete (Q02, Q03) |
 | — | [AP08: Comma-separated parameter lists](ap08-comma-separated-parameter-lists/README.md) | — | — | Rejected; closed (Q06) |
-| [ ] | [AP09: Named arguments](ap09-named-arguments/README.md) | Medium | AP02 | Agreed direction |
+| [x] | [AP09: Named arguments](ap09-named-arguments/README.md) | Medium | AP02 | Complete (AP09.1, AP09.2) |
 | [ ] | [AP10: Typed record construction](ap10-typed-record-construction/README.md) | Medium | AP09 | Agreed direction |
 | [x] | [AP11: Individual declarations](ap11-individual-declarations/README.md) | Medium | AP01 | Complete (Q07) |
 | [ ] | [AP12: Callable expressions](ap12-callable-expressions/README.md) | Medium | AP06 | Proposal |

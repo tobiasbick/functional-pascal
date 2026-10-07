@@ -167,6 +167,11 @@ fn lower(
             "closure construction",
             "Use a visible scalar or aggregate value.",
         )),
+        Expr::NamedArgument { .. } => Err(unsupported(
+            expression,
+            "named call arguments",
+            "Pass debugger call arguments by position.",
+        )),
         Expr::Error(_) => Err(unsupported(
             expression,
             "recovered parser nodes",

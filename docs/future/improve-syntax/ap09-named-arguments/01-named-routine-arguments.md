@@ -45,3 +45,22 @@ None; positional calls stay valid.
   traces, method calls, generic routines, imported routines.
 - Rejections: unknown, duplicate, missing, mixed, function values.
 - Formatter round trip and signature help.
+
+## Result
+
+Delivered as planned, with these agreed scope details:
+
+- Declared `Std.*` routines accept named arguments with the parameter names of
+  their generated signatures. Polymorphic standard-library operations (for
+  example `Abs`, `Push`) and variadic routines (`WriteLn`, `Format`) take
+  positional arguments only (FP3026).
+- Receiver calls `Value.Name(...)` and calls through function values or
+  callable record members take positional arguments only (FP3026). Native
+  receiver operations are revisited with AP06.
+- Enum variant constructors rejected named arguments in this work package;
+  [AP09.2](02-named-variant-arguments.md) added them.
+- Mixed calls are a parse error (FP2016); unknown, duplicate, and missing
+  names are FP3025.
+- Editor support: signature help selects the named parameter, and navigation
+  and rename resolve a `Name :=` label to the callee's parameter. Debugger
+  evaluation accepts positional call arguments only.

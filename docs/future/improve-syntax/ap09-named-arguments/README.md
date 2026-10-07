@@ -51,8 +51,21 @@ variant constructors.
 
 ## Work packages
 
-- [ ] [AP09.1: Named arguments for routines and methods](01-named-routine-arguments.md)
-- [ ] [AP09.2: Named arguments for enum variant constructors](02-named-variant-arguments.md)
+- [x] [AP09.1: Named arguments for routines and methods](01-named-routine-arguments.md)
+- [x] [AP09.2: Named arguments for enum variant constructors](02-named-variant-arguments.md)
+
+## Follow-up work recorded elsewhere
+
+AP09 is complete. These gaps are tracked in the plans that own them:
+
+- Named arguments for receiver calls and native type operations:
+  [AP06.3](../ap06-dot-call-targets/03-fixed-dot-resolution.md).
+- Named construction of generic enum variants:
+  [AP24.3](../ap24-generic-data-structures/03-generic-enums.md).
+- Editor rename of record fields used in `record Field := Value; end` literals:
+  [AP10.1](../ap10-typed-record-construction/01-typed-construction.md).
+- Named arguments in debugger evaluation:
+  [compiler and language-limit follow-ups](../../compiler-panic-followups.md).
 
 ## Acceptance
 

@@ -68,6 +68,16 @@ pub(super) fn apply_expr_source_id(expr: &mut Expr, source_id: u32) {
             apply_postfix_operations_source_id(operations, source_id);
             apply_span(span, source_id);
         }
+        Expr::NamedArgument {
+            name_span,
+            value,
+            span,
+            ..
+        } => {
+            apply_span(name_span, source_id);
+            apply_expr_source_id(value, source_id);
+            apply_span(span, source_id);
+        }
         Expr::Closure(closure) => {
             for param in &mut closure.params {
                 apply_formal_param_source_id(param, source_id);

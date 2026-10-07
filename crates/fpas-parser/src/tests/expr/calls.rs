@@ -42,3 +42,71 @@ fn qualified_call_expr_std_unit_keyword_after_dot() {
         _ => panic!("expected Call"),
     }
 }
+
+#[test]
+fn named_call_arguments_keep_written_order() {
+    match parse_expr("Move(Dy := 2, Dx := 1 + 1)") {
+        Expr::Call { args, .. } => {
+            let names = args
+                .iter()
+                .map(|arg| arg.argument_name().expect("named argument"))
+                .collect::<Vec<_>>();
+            assert_eq!(names, ["Dy", "Dx"]);
+            assert!(matches!(
+                args[1].argument_value(),
+                Expr::BinaryOp {
+                    op: BinaryOp::Add,
+                    ..
+                }
+            ));
+        }
+        _ => panic!("expected Call"),
+    }
+}
+
+#[test]
+fn named_arguments_parse_in_postfix_method_and_statement_calls() {
+    match parse_expr("Make().Moved(Dx := 1, Dy := 2)") {
+        Expr::Postfix { operations, .. } => match &operations[0] {
+            PostfixOperation::MethodCall { args, .. } => {
+                assert!(args.iter().all(|arg| arg.argument_name().is_some()));
+            }
+            _ => panic!("expected method call"),
+        },
+        _ => panic!("expected Postfix"),
+    }
+    let program = super::super::parse_ok("program T; begin Show(Count := 1, Text := 'x'); end.");
+    match &program.body[0] {
+        Stmt::Call { args, .. } => assert_eq!(args[1].argument_name(), Some("Text")),
+        other => panic!("expected call statement, got {other:?}"),
+    }
+}
+
+#[test]
+fn mixed_positional_and_named_arguments_are_rejected_and_recovered() {
+    let (program, errors) =
+        super::super::parse_with_errors("program T; begin Move(1, Dy := 2); end.");
+    let errors = errors
+        .iter()
+        .filter_map(crate::ParseDiagnostic::as_parser_error)
+        .collect::<Vec<_>>();
+    assert_eq!(errors.len(), 1, "{errors:#?}");
+    assert_eq!(
+        errors[0].code,
+        fpas_diagnostics::codes::PARSE_MIXED_CALL_ARGUMENTS
+    );
+    match &program.body[0] {
+        Stmt::Call { args, .. } => {
+            assert!(args.iter().all(|arg| arg.argument_name().is_none()));
+        }
+        other => panic!("expected call statement, got {other:?}"),
+    }
+}
+
+#[test]
+fn named_value_inside_ok_is_kept_for_semantic_diagnostics() {
+    match parse_expr("Ok(Value := 1)") {
+        Expr::ResultOk(inner, _) => assert_eq!(inner.argument_name(), Some("Value")),
+        other => panic!("expected Ok, got {other:?}"),
+    }
+}

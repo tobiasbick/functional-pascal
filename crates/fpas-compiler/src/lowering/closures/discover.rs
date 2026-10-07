@@ -253,7 +253,8 @@ impl<'a> ClosureRegistry<'a> {
             | Expr::Try(operand, _)
             | Expr::ResultOk(operand, _)
             | Expr::ResultError(operand, _)
-            | Expr::OptionSome(operand, _) => {
+            | Expr::OptionSome(operand, _)
+            | Expr::NamedArgument { value: operand, .. } => {
                 self.visit_expression(operand, owner, metadata, types)?;
             }
             Expr::Go(operand, _) => {

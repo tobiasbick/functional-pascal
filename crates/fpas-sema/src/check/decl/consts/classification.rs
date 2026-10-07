@@ -129,7 +129,8 @@ impl Checker {
             | Expr::Paren(operand, _)
             | Expr::ResultOk(operand, _)
             | Expr::ResultError(operand, _)
-            | Expr::OptionSome(operand, _) => self.non_constant_part(operand),
+            | Expr::OptionSome(operand, _)
+            | Expr::NamedArgument { value: operand, .. } => self.non_constant_part(operand),
             Expr::BinaryOp { left, right, .. } => self
                 .non_constant_part(left)
                 .or_else(|| self.non_constant_part(right)),

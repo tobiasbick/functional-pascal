@@ -137,7 +137,7 @@ impl LoweringContext {
         };
         let handler = self.emit_value(Operation::UnwrapSome(option), handler_ty, span)?;
         let handler = self.save_value(handler);
-        let values = self.lower_expression_values(arguments, None, span)?;
+        let values = self.lower_argument_values(arguments, span)?;
         let handler = self.restore_value(handler, span)?;
         self.record_call_arguments(values.len(), span)?;
         let result = match self.type_kind(handler_ty) {
@@ -194,7 +194,7 @@ impl LoweringContext {
                     let result = self.type_table.id(&result_ty, span.line, span.column)?;
                     let callee = self.lower_postfix_callable_member(value, operation)?;
                     let callee = self.save_value(callee);
-                    let values = self.lower_expression_values(args, None, *span)?;
+                    let values = self.lower_argument_values(args, *span)?;
                     let callee = self.restore_value(callee, *span)?;
                     self.record_call_arguments(values.len(), *span)?;
                     let value = self.emit_value(
@@ -222,7 +222,7 @@ impl LoweringContext {
                 };
                 let callable = self.member_callable(&qualified_name, *span, "postfix method")?;
                 let value = self.save_value(value);
-                let mut values = self.lower_expression_values(args, None, *span)?;
+                let mut values = self.lower_argument_values(args, *span)?;
                 values.insert(0, self.restore_value(value, *span)?);
                 let result = self.emit_member_call(&callable, values, *span)?;
                 Ok(Some((result, callable.result)))
@@ -294,7 +294,7 @@ impl LoweringContext {
             self.lower_designator_read(designator)?
         };
         let callee = self.save_value(callee);
-        let values = self.lower_expression_values(arguments, None, span)?;
+        let values = self.lower_argument_values(arguments, span)?;
         let callee = self.restore_value(callee, span)?;
         self.record_call_arguments(values.len(), span)?;
         self.emit_value(
@@ -327,7 +327,7 @@ impl LoweringContext {
         } else {
             None
         };
-        let mut values = self.lower_expression_values(arguments, None, span)?;
+        let mut values = self.lower_argument_values(arguments, span)?;
         if let Some(receiver) = receiver {
             values.insert(0, self.restore_value(receiver, span)?);
         }

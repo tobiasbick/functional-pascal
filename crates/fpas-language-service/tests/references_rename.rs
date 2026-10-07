@@ -236,3 +236,88 @@ fn rename_rejects_reverse_consumers_outside_the_editor_root() {
 
     assert!(matches!(outside, RenameError::OutsideWorkspace { .. }));
 }
+
+#[test]
+fn named_argument_labels_follow_parameters_not_same_named_locals() {
+    let temp = TempDirectory::new("references-named-arguments");
+    let source = "program Named;\n\nfunction Sub(Left: integer; Right: integer): integer;\nbegin\n  return Left - Right;\nend function;\n\nbegin\n  const Left: integer := 10;\n  const A: integer := Sub(Right := 1, Left := Left);\nend.\n";
+    let path = temp.write("named.fpas", source);
+    let mut service = LanguageService::new(WorkspaceContext::loose(temp.path()));
+
+    let parameter = source
+        .find("Left: integer;")
+        .expect("parameter declaration");
+    let parameter_edits = service
+        .rename(&path, parameter, "Minuend")
+        .expect("parameter rename")
+        .value;
+    let label = source.find("Left := Left").expect("named label");
+    let mut offsets = parameter_edits
+        .iter()
+        .map(|edit| edit.range.offset())
+        .collect::<Vec<_>>();
+    offsets.sort_unstable();
+    assert_eq!(
+        offsets,
+        [
+            parameter,
+            source.find("Left - Right").expect("body use"),
+            label
+        ],
+        "{parameter_edits:?}"
+    );
+
+    let local = source
+        .find("Left: integer := 10")
+        .expect("local declaration");
+    let local_edits = service
+        .rename(&path, local, "Start")
+        .expect("local rename")
+        .value;
+    assert_eq!(local_edits.len(), 2, "{local_edits:?}");
+    assert!(local_edits.iter().all(|edit| edit.range.offset() != label));
+}
+
+#[test]
+fn renaming_a_variant_field_updates_named_construction_labels() {
+    let temp = TempDirectory::new("references-named-variant-fields");
+    let source = "program Named;\n\ntype Shape = enum\n  Rect(Width: real; Height: real);\nend enum;\n\nbegin\n  const Width: real := 2.0;\n  const S: Shape := Shape.Rect(Height := 1.0, Width := Width);\nend.\n";
+    let path = temp.write("named.fpas", source);
+    let mut service = LanguageService::new(WorkspaceContext::loose(temp.path()));
+
+    let field = source.find("Width: real;").expect("field declaration");
+    let label = source.find("Width := Width").expect("named label");
+    let mut offsets = service
+        .rename(&path, field, "Span")
+        .expect("field rename")
+        .value
+        .iter()
+        .map(|edit| edit.range.offset())
+        .collect::<Vec<_>>();
+    offsets.sort_unstable();
+    assert_eq!(offsets, [field, label]);
+
+    assert!(matches!(
+        service.rename(&path, field, "Height"),
+        Err(RenameError::Conflict { .. })
+    ));
+}
+
+#[test]
+fn renaming_a_record_field_updates_member_accesses() {
+    let temp = TempDirectory::new("references-record-field");
+    let source = "program Fields;\n\ntype Point = record\n  X: integer;\n  Y: integer;\nend record;\n\nbegin\n  const P: Point := record X := 1; Y := 2; end;\n  const A: integer := P.X;\nend.\n";
+    let path = temp.write("fields.fpas", source);
+    let mut service = LanguageService::new(WorkspaceContext::loose(temp.path()));
+    let field = source.find("X: integer;").expect("field declaration");
+    let edits = service
+        .rename(&path, field, "Left")
+        .expect("field rename")
+        .value;
+    assert!(
+        edits
+            .iter()
+            .any(|edit| edit.range.offset() == source.find("P.X").expect("access") + 2),
+        "{edits:?}"
+    );
+}

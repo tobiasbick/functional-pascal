@@ -37,6 +37,7 @@ pub use check::IntrinsicCallMap;
 pub use check::MemberValueCallMap;
 pub use check::MethodCallMap;
 pub use check::MethodCallTarget;
+pub use check::NamedArgumentOrderMap;
 pub use check::NamedTypeMap;
 pub use check::NestedRoutineCaptureInfo;
 pub use check::NestedRoutineCaptureMap;

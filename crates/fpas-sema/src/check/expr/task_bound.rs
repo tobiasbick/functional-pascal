@@ -14,7 +14,10 @@ impl Checker {
             | Expr::ResultOk(inner, _)
             | Expr::ResultError(inner, _)
             | Expr::OptionSome(inner, _)
-            | Expr::Try(inner, _) => self.expr_is_task_bound(Self::expr_lookup_key(inner)),
+            | Expr::Try(inner, _)
+            | Expr::NamedArgument { value: inner, .. } => {
+                self.expr_is_task_bound(Self::expr_lookup_key(inner))
+            }
             Expr::ArrayLiteral(elements, _) => elements
                 .iter()
                 .any(|element| self.expr_is_task_bound(Self::expr_lookup_key(element))),

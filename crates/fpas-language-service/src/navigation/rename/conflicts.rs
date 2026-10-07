@@ -5,8 +5,9 @@ use fpas_lexer::Token;
 
 use super::RenameError;
 use crate::navigation::NavigationDocument;
+use crate::navigation::named_arguments::is_named_argument_label;
 use crate::navigation::references::{ReferenceLocation, ResolvedTarget, resolve_target};
-use crate::navigation::resolve::resolve_unqualified;
+use crate::navigation::resolve::{resolve_unqualified, unqualified_kind};
 use crate::{CancellationToken, DocumentSymbol};
 
 pub(super) fn reject_resolution_conflicts(
@@ -57,6 +58,10 @@ fn ensure_edited_references_still_bind(
     references: &[ReferenceLocation],
     cancellation: &CancellationToken,
 ) -> Result<(), RenameError> {
+    // Fields, properties, and events bind through their owner, never lexically.
+    if !unqualified_kind(target.symbol.kind) {
+        return Ok(());
+    }
     for reference in references {
         cancellation.check()?;
         let Some(document_index) = documents
@@ -148,7 +153,9 @@ fn is_unqualified(document: &NavigationDocument, span: SourceSpan) -> bool {
     else {
         return false;
     };
-    index == 0 || !matches!(document.tokens[index - 1].token, Token::Dot)
+    // Named-argument labels bind to the callee's parameter, not lexically.
+    (index == 0 || !matches!(document.tokens[index - 1].token, Token::Dot))
+        && !is_named_argument_label(document, index)
 }
 
 fn same_declaration(resolved: (usize, DocumentSymbol), target: &ResolvedTarget) -> bool {

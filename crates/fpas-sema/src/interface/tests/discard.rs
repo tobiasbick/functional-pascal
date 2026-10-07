@@ -80,7 +80,7 @@ fn closure_factory_proofs_survive_encoded_unit_interfaces() {
       public procedure Run(); begin discard Make(1); discard Demo.Callbacks.Make(2); end procedure;
       end unit;",
     );
-    let analysis = analyze_unit(&consumer, &[interface.clone()]).unwrap();
+    let analysis = analyze_unit(&consumer, std::slice::from_ref(&interface)).unwrap();
     assert!(
         analysis.metadata.errors.is_empty(),
         "{:?}",

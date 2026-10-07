@@ -1,5 +1,11 @@
 //! AP13.5 arm lists, named endings, diagnostics, and boundary recovery.
 
+#![allow(
+    clippy::expect_used,
+    clippy::panic,
+    reason = "test fixtures fail fast with direct assertions for diagnostic clarity"
+)]
+
 use fpas_parser::{Decl, FuncBody, Program, Stmt, parse};
 
 fn parse_ok(body: &str) -> Program {

@@ -2,6 +2,10 @@
     dead_code,
     reason = "each integration-test binary uses a different subset of fixture helpers"
 )]
+#![allow(
+    clippy::expect_used,
+    reason = "test fixtures fail fast with direct assertions for diagnostic clarity"
+)]
 
 use std::path::{Path, PathBuf};
 use std::sync::atomic::{AtomicU64, Ordering};

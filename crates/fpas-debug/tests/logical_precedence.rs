@@ -1,5 +1,11 @@
 //! Debugger watches use program precedence and reject ambiguous logical chains.
 
+#![allow(
+    clippy::expect_used,
+    clippy::unwrap_used,
+    reason = "test fixtures fail fast with direct assertions for diagnostic clarity"
+)]
+
 use fpas_debug::{PreparedDebugTarget, jsonl::JsonlServer};
 use serde_json::{Value, json};
 

@@ -1,5 +1,10 @@
 //! AP13.4 formatting, explicit scopes, branch ownership, and comment preservation.
 
+#![allow(
+    clippy::expect_used,
+    reason = "test fixtures fail fast with direct assertions for diagnostic clarity"
+)]
+
 mod common;
 
 fn format(source: &str) -> String {

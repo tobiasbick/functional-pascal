@@ -1,5 +1,10 @@
 //! AP13.4 control bodies, named endings, diagnostics, and recovery.
 
+#![allow(
+    clippy::panic,
+    reason = "test fixtures fail fast with direct assertions for diagnostic clarity"
+)]
+
 use fpas_parser::{Decl, FuncBody, Program, Stmt, parse};
 
 fn parse_ok(body: &str) -> Program {

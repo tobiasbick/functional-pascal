@@ -80,7 +80,7 @@ impl Checker {
                 finite
             })
         } else {
-            variants.unwrap().iter().any(|variant| {
+            variants.into_iter().flatten().any(|variant| {
                 variant.fields.iter().all(|(field, ty)| {
                     path.push(format!("{name}.{}.{field}", variant.name));
                     let finite = self.type_has_finite_value(ty, active, path, cycle);

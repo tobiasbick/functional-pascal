@@ -1,5 +1,10 @@
 //! AP13.5 case indentation, explicit scopes, and comment ownership.
 
+#![allow(
+    clippy::expect_used,
+    reason = "test fixtures fail fast with direct assertions for diagnostic clarity"
+)]
+
 mod common;
 
 fn format(source: &str) -> String {

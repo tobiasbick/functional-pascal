@@ -1,5 +1,10 @@
 //! AP13.6 expression ending layout and comment-preserving round trips.
 
+#![allow(
+    clippy::expect_used,
+    reason = "test fixtures fail fast with direct assertions for diagnostic clarity"
+)]
+
 mod common;
 
 fn format(source: &str) -> String {

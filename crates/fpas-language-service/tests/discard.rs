@@ -1,5 +1,10 @@
 //! Statement completion includes the explicit discard keyword.
 
+#![allow(
+    clippy::unwrap_used,
+    reason = "test fixtures fail fast with direct assertions for diagnostic clarity"
+)]
+
 mod support;
 
 use fpas_language_service::{CompletionKind, LanguageService, WorkspaceContext};

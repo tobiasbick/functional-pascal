@@ -1,5 +1,11 @@
 //! AP13.3 declaration endings, diagnostics, and enclosing-boundary recovery.
 
+#![allow(
+    clippy::panic,
+    clippy::unwrap_used,
+    reason = "test fixtures fail fast with direct assertions for diagnostic clarity"
+)]
+
 use fpas_diagnostics::codes::PARSE_EXPECTED_TOKEN;
 use fpas_parser::{CompilationUnit, Decl, parse_compilation_unit};
 

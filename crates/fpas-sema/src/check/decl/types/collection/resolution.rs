@@ -48,9 +48,7 @@ impl Checker {
             }
             return None;
         }
-        let Some(definition) = self.type_collection.pending.get(&key).cloned() else {
-            return None;
-        };
+        let definition = self.type_collection.pending.get(&key).cloned()?;
         self.type_collection
             .resolving
             .push((key.clone(), matches!(definition.body, TypeBody::Alias(_))));

@@ -1,5 +1,11 @@
 //! Formatting preserves logical grouping, including ASTs without explicit parentheses.
 
+#![allow(
+    clippy::expect_used,
+    clippy::panic,
+    reason = "test fixtures fail fast with direct assertions for diagnostic clarity"
+)]
+
 use fpas_parser::{Expr, Stmt, parse};
 
 fn expression(program: &fpas_parser::Program) -> &Expr {

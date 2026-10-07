@@ -36,12 +36,13 @@ impl Parser {
     pub(super) fn expect_if_end(&mut self, nested_else_if: bool) {
         let error_count = self.errors.len();
         self.expect_block_end(&Token::If);
-        if nested_else_if && self.errors.len() > error_count {
-            if let Some(error) = self.errors.get_mut(error_count) {
-                error.help.get_or_insert_default().push_str(
-                    " `else if` starts a nested conditional and needs its own `end if;`. Use `elsif` to continue this conditional instead.",
-                );
-            }
+        if nested_else_if
+            && self.errors.len() > error_count
+            && let Some(error) = self.errors.get_mut(error_count)
+        {
+            error.help.get_or_insert_default().push_str(
+                " `else if` starts a nested conditional and needs its own `end if;`. Use `elsif` to continue this conditional instead.",
+            );
         }
     }
 }

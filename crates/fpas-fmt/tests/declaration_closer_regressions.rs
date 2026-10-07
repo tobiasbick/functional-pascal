@@ -1,5 +1,11 @@
 //! AP13.3 formatting and comment ownership around named declaration endings.
 
+#![allow(
+    clippy::expect_used,
+    clippy::unwrap_used,
+    reason = "test fixtures fail fast with direct assertions for diagnostic clarity"
+)]
+
 mod common;
 
 fn format(source: &str) -> String {

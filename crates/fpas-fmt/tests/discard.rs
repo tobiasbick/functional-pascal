@@ -1,5 +1,10 @@
 //! Explicit discard retains operands, closure endings, comments, and terminators.
 
+#![allow(
+    clippy::unwrap_used,
+    reason = "test fixtures fail fast with direct assertions for diagnostic clarity"
+)]
+
 use fpas_parser::parse_compilation_unit;
 
 #[test]

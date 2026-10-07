@@ -1,5 +1,10 @@
 //! Canonical keywords, visibility, and comments for individual declarations.
 
+#![allow(
+    clippy::expect_used,
+    reason = "test fixtures fail fast with direct assertions for diagnostic clarity"
+)]
+
 mod common;
 
 #[test]

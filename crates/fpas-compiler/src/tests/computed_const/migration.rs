@@ -5,9 +5,9 @@ use super::*;
 #[test]
 fn migration_preserves_guard_bindings_and_nested_shadowing() {
     for initializer in ["1", "ReadValue()"] {
-        for (keyword, binding) in [("const", "Matched")] {
-            let source = format!(
-                "program T;
+        let (keyword, binding) = ("const", "Matched");
+        let source = format!(
+            "program T;
                 type Item = record N: integer; end record;
                 function ReadValue(): integer; begin return 1; end function;
                 begin
@@ -30,9 +30,8 @@ fn migration_preserves_guard_bindings_and_nested_shadowing() {
                   end case;
                   if Score <> 49 or N <> 1 then panic('migration changed scope'); end if;
                 end."
-            );
-            assert_succeeds(&source);
-        }
+        );
+        assert_succeeds(&source);
     }
 }
 

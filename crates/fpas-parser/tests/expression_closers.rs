@@ -1,5 +1,11 @@
 //! AP13.6 expression endings, terminator ownership, and boundary recovery.
 
+#![allow(
+    clippy::panic,
+    clippy::unwrap_used,
+    reason = "test fixtures fail fast with direct assertions for diagnostic clarity"
+)]
+
 use fpas_diagnostics::codes::{PARSE_EMPTY_RECORD_UPDATE, PARSE_EXPECTED_TOKEN};
 use fpas_parser::{CompilationUnit, Expr, Stmt, parse_compilation_unit, parse_expression};
 

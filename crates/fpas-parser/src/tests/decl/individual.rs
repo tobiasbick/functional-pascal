@@ -121,10 +121,7 @@ fn fields_payloads_and_parameters_keep_their_own_syntax() {
 
 #[test]
 fn individual_keywords_do_not_add_local_types() {
-    for declaration in ["type Local = integer;"] {
-        let source =
-            format!("program T; procedure P(); begin {declaration} end procedure; begin end.");
-        let (_, errors) = parse_with_errors(&source);
-        assert!(!errors.is_empty(), "{source}");
-    }
+    let source = "program T; procedure P(); begin type Local = integer; end procedure; begin end.";
+    let (_, errors) = parse_with_errors(source);
+    assert!(!errors.is_empty(), "{source}");
 }

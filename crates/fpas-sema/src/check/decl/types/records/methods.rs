@@ -19,11 +19,11 @@ pub(super) struct CheckedRecordMembers {
 
 impl Checker {
     /// Register record signatures without checking executable bodies.
-    pub(super) fn check_record_methods<'a>(
+    pub(super) fn check_record_methods(
         &mut self,
         type_name: &str,
         record_ty: &Ty,
-        methods: &'a [RecordMethod],
+        methods: &[RecordMethod],
         seen_members: &mut HashSet<String>,
     ) -> CheckedRecordMembers {
         let mut checked_methods = Vec::new();

@@ -1,5 +1,10 @@
 //! Stop after a migrated parameter's writable local copy is initialized.
 
+#![allow(
+    clippy::panic,
+    reason = "test fixtures fail fast with direct assertions for diagnostic clarity"
+)]
+
 use fpas_vm::{DebugRunResult, DebugSession};
 
 /// Finds the current frame with a live, initialized local copy.

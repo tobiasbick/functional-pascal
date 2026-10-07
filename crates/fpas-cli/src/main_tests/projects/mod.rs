@@ -11,6 +11,7 @@ mod errors;
 mod exports;
 mod generic_aliases;
 mod individual_declarations;
+mod named_var_arguments;
 mod qualified;
 mod record_events;
 mod record_properties;

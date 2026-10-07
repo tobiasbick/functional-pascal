@@ -167,7 +167,7 @@ pub enum Expr {
     ///
     /// **Documentation:** `docs/pascal/language/functions/closures.md`
     Closure(Box<ClosureExpr>),
-    /// `Name := Value` argument of a fully named call.
+    /// `Name := Value` or `Name := var Designator` argument of a fully named call.
     ///
     /// Appears only directly inside a call argument list; semantic analysis maps
     /// the name to a declared parameter.
@@ -178,14 +178,14 @@ pub enum Expr {
         name: String,
         /// Source span of the parameter name.
         name_span: Span,
-        /// Argument value.
+        /// Argument value, including a `VarArgument` for a reference parameter.
         value: Box<Expr>,
         /// Source span of the complete named argument.
         span: Span,
     },
     /// `var Designator` argument for a `var` parameter.
     ///
-    /// Appears only directly inside a call argument list.
+    /// Appears in a call argument list, directly or as a named argument's value.
     ///
     /// **Documentation:** `docs/pascal/language/functions/var-parameters.md`
     VarArgument {

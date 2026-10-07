@@ -139,3 +139,81 @@ fn record_receiver_self_cannot_be_a_var_parameter() {
     );
     assert_eq!(errors.len(), 1, "{errors:#?}");
 }
+
+#[test]
+fn named_var_arguments_preserve_names_designators_and_spans() {
+    let source = "program T; begin Swap(B := var Items[Index()], A := var P.X); end.";
+    let program = super::super::parse_ok(source);
+    let Stmt::Call { args, .. } = &program.body[0] else {
+        panic!("expected call statement");
+    };
+    for (arg, name, text) in [
+        (&args[0], "B", "var Items[Index()]"),
+        (&args[1], "A", "var P.X"),
+    ] {
+        assert_eq!(arg.argument_name(), Some(name));
+        let Expr::VarArgument { designator, span } = arg.argument_value() else {
+            panic!("expected var argument: {arg:?}");
+        };
+        assert_eq!(&source[span.offset..span.offset + span.length], text);
+        assert_eq!(designator.parts.len(), 2);
+        let named_span = arg.span();
+        assert_eq!(
+            &source[named_span.offset..named_span.offset + named_span.length],
+            format!("{name} := {text}")
+        );
+    }
+}
+
+#[test]
+fn named_var_arguments_parse_in_statement_and_postfix_calls() {
+    let program = super::super::parse_ok("program T; begin Increase(Value := var Counter); end.");
+    let Stmt::Call { args, .. } = &program.body[0] else {
+        panic!("expected statement call");
+    };
+    assert!(matches!(args[0].argument_value(), Expr::VarArgument { .. }));
+    let Expr::Postfix { operations, .. } = parse_expr("Make().Store(Value := var Counter)") else {
+        panic!("expected postfix call");
+    };
+    let PostfixOperation::MethodCall { args, .. } = &operations[0] else {
+        panic!("expected method call");
+    };
+    assert!(matches!(args[0].argument_value(), Expr::VarArgument { .. }));
+}
+
+#[test]
+fn mixed_named_and_positional_var_arguments_recover_without_losing_markers() {
+    for call in ["Swap(var A, B := var B)", "Swap(A := var A, var B)"] {
+        let (program, errors) =
+            super::super::parse_with_errors(&format!("program T; begin {call}; end."));
+        let errors = errors
+            .iter()
+            .filter_map(crate::ParseDiagnostic::as_parser_error)
+            .collect::<Vec<_>>();
+        assert_eq!(errors.len(), 1, "{call}: {errors:#?}");
+        assert_eq!(
+            errors[0].code,
+            fpas_diagnostics::codes::PARSE_MIXED_CALL_ARGUMENTS
+        );
+        let Stmt::Call { args, .. } = &program.body[0] else {
+            panic!("expected call");
+        };
+        assert!(
+            args.iter()
+                .all(|arg| matches!(arg, Expr::VarArgument { .. }))
+        );
+    }
+}
+
+#[test]
+fn named_var_argument_requires_a_designator() {
+    for call in [
+        "Increase(Value := var 42)",
+        "Increase(Value := var (Counter))",
+        "Increase(Value := var Counter + 1)",
+    ] {
+        let (_, errors) =
+            super::super::parse_with_errors(&format!("program T; begin {call}; Show(1); end."));
+        assert!(!errors.is_empty(), "{call}");
+    }
+}

@@ -29,8 +29,15 @@ None.
 ## Documentation
 
 - `var-parameters.md`, `parameters.md`.
+- `docs/specs/grammar.ebnf` (`named_arg`).
 
 ## Verification
 
 - Named `var` arguments in any order, aliasing rejection across named
   arguments, missing marker in named form, evaluation-order traces.
+- Writable storage, exact types, forwarding, generic routines, methods,
+  imported routines with compiled-unit reuse, and writes retained on `try` exit.
+- Rejections: marker on a read-only parameter, invalid writable storage,
+  invalid name mappings, mixed calls, function values, and `go` calls.
+- Formatter round trip and comments, signature help, and separate rename of
+  parameter labels and referenced variables; regular CLI and FPAS test runs.

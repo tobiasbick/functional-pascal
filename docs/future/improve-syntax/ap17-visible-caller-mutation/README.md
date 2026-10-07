@@ -11,8 +11,9 @@ written arguments, and the recorded implicit-receiver exception. Aliasing
 between writable arguments is rejected, and local reassignment cannot become
 a caller-visible change during migration.
 
-Current behavior: ordinary parameters are read-only values, and AP17.1
-implements positional `var` parameters and arguments. `Push`/`Pop` retain
+Current behavior: ordinary parameters are read-only values, AP17.1 implements
+`var` parameters and positional arguments, and AP17.2 implements named `var`
+arguments. `Push`/`Pop` retain
 their simple writable-array binding rule until AP17.3, so they do not accept
 a `var` parameter yet.
 
@@ -106,7 +107,7 @@ and removes their special simple-variable rule after the requested review.
 ## Work packages
 
 - [x] [AP17.1: var parameters and arguments](01-var-parameters.md)
-- [ ] [AP17.2: Named var arguments](02-named-var-arguments.md)
+- [x] [AP17.2: Named var arguments](02-named-var-arguments.md)
 - [ ] [AP17.3: Caller-mutating intrinsics](03-caller-mutating-intrinsics.md)
 
 ## Acceptance

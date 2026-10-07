@@ -96,6 +96,5 @@ Follow-up work recorded elsewhere:
 - `Push`/`Pop` on a `var` parameter and receiver calls whose first parameter
   is `var` are rejected (FP3027); [AP17.3](03-caller-mutating-intrinsics.md)
   and [AP06.3](../ap06-dot-call-targets/03-fixed-dot-resolution.md) decide them.
-- Named `var` arguments: [AP17.2](02-named-var-arguments.md).
 - Debugger writes and calls with `var` parameters:
   [compiler and language-limit follow-ups](../../compiler-panic-followups.md).

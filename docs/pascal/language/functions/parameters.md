@@ -48,6 +48,7 @@ parameter by value, and a local `var` by shared mutable cell.
 
 To change the caller's variable, declare a [`var` parameter](var-parameters.md)
 and mark the argument: `Increase(var Counter)`.
+For a named call, write `Increase(Value := var Counter)`.
 
 ## Named arguments
 
@@ -72,6 +73,12 @@ is rejected (FP2016). Parameters have no default values, so a named call passes
 every parameter exactly once. Unknown, duplicated and missing names are reported
 with the declared parameter names (FP3025). Because parameter names are part of
 the call syntax, renaming a public parameter changes the routine's API.
+
+A [`var` parameter](var-parameters.md) uses `Name := var Designator` in a named
+call. Read-only parameters still use `Name := Value`. The `var` marker is required
+only for `var` parameters (FP3027), and the same writable-storage, exact-type,
+aliasing, and lifetime checks apply as in positional calls. Reordering labels
+does not change the evaluation order of values or reference roots and indices.
 
 Named arguments apply to calls of declared functions and procedures, including
 imported and `Std.*` routines with declared signatures, record methods

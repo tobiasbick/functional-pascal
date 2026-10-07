@@ -38,32 +38,37 @@ impl Parser {
         self.reject_mixed_arguments(args)
     }
 
-    /// Parses one positional argument, `var Designator`, or `Name := Value`.
+    /// Parses one positional or named argument, including `Name := var Designator`.
     pub(super) fn parse_argument(&mut self) -> Expr {
-        if self.check(&Token::Var) {
-            let start = self.advance().span;
-            let designator = self.parse_designator();
-            return Expr::VarArgument {
-                designator,
-                span: self.span_from(start),
-            };
-        }
         if !(matches!(self.current_token(), Token::Ident(_))
             && matches!(self.peek_token(), Token::ColonAssign))
         {
-            return self.parse_expression();
+            return self.parse_argument_value();
         }
         let start = self.current_span();
         let (name, name_span) = self
             .expect_ident()
             .unwrap_or_else(|| self.error_ident(start));
         self.expect(&Token::ColonAssign);
-        let value = self.parse_expression();
+        let value = self.parse_argument_value();
         Expr::NamedArgument {
             name,
             name_span,
             value: Box::new(value),
             span: self.span_from(start),
+        }
+    }
+
+    fn parse_argument_value(&mut self) -> Expr {
+        if self.check(&Token::Var) {
+            let start = self.advance().span;
+            let designator = self.parse_designator();
+            Expr::VarArgument {
+                designator,
+                span: self.span_from(start),
+            }
+        } else {
+            self.parse_expression()
         }
     }
 

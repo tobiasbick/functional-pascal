@@ -4,6 +4,8 @@
 
 use super::super::assert_succeeds;
 
+mod named_arguments;
+
 #[test]
 fn var_parameters_update_variables_fields_elements_and_globals() {
     assert_succeeds(

@@ -24,7 +24,20 @@ begin
 end.
 ```
 
-Formal syntax: [`grammar.ebnf`](../../../specs/grammar.ebnf) (`param_group`, `var_arg`).
+Named calls put the marker after the parameter label:
+
+```pascal
+Increase(Value := var Counter);
+Swap(B := var Right, A := var Left);
+```
+
+The call is fully positional or fully named. Names select parameters; arguments,
+including the roots and indices of `var` arguments, are evaluated once in written
+left-to-right order. The same storage, type, aliasing, and lifetime rules apply
+to both forms. See [Named arguments](parameters.md#named-arguments).
+
+Formal syntax: [`grammar.ebnf`](../../../specs/grammar.ebnf)
+(`param_group`, `named_arg`, `var_arg`).
 
 ## Arguments
 
@@ -116,7 +129,6 @@ See [Function types](function-types.md).
 - `Push` and `Pop` need a local or unit array variable; a `var` parameter of
   array type is not accepted. Copy it into a local `var`, change the copy, and
   assign it back.
-- Named arguments cannot be marked with `var`; pass `var` arguments by position.
 
 ## See also
 

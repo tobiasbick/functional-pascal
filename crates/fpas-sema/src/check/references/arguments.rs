@@ -26,12 +26,19 @@ impl Checker {
     /// Checks one argument against a parameter, handling `var` markers on either side.
     ///
     /// Returns the argument type and, for a valid `var` argument, its root variable.
+    /// Named calls include the parameter label in marker correction hints.
     pub(in crate::check) fn check_argument_for_param(
         &mut self,
         callee: &str,
         param: &ParamTy,
         arg: &Expr,
+        named: bool,
     ) -> (Ty, Option<VarArgumentRoot>) {
+        let label = if named {
+            format!("{} := ", param.name)
+        } else {
+            String::new()
+        };
         match (param.is_var(), arg) {
             (true, Expr::VarArgument { designator, .. }) => {
                 let (ty, root) = self.check_var_argument(designator);
@@ -57,11 +64,11 @@ impl Checker {
             (true, other) => {
                 let hint = match other {
                     Expr::Designator(designator) => format!(
-                        "Write `var {}` so the change to the caller's variable is visible at the call site.",
+                        "Write `{label}var {}` so the change to the caller's variable is visible at the call site.",
                         render_designator(designator)
                     ),
                     _ => format!(
-                        "A `var` parameter needs a variable. Declare one, for example `var Temp: {} := …;`, and pass `var Temp`.",
+                        "A `var` parameter needs a variable. Declare one, for example `var Temp: {} := …;`, and pass `{label}var Temp`.",
                         param.ty
                     ),
                 };
@@ -87,7 +94,7 @@ impl Checker {
                         param.name
                     ),
                     format!(
-                        "Remove `var` and pass `{}`.",
+                        "Remove `var` and pass `{label}{}`.",
                         render_designator(designator)
                     ),
                     arg.span(),

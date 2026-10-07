@@ -58,9 +58,10 @@ including source, generated API, editor, and documentation migration.
 
 [AP16: Immutable and mutable bindings](ap16-immutable-and-mutable-bindings/README.md)
 is complete: computed `const`, the binding migration, writable `var`, and
-read-only value parameters are implemented. AP17.1 adds positional `var`
-reference parameters; the named `var` form and caller-mutating intrinsics
-remain in AP17.2 and AP17.3; native built-in type operations remain in AP06.
+read-only value parameters are implemented. AP17.1 adds `var` reference
+parameters and positional arguments; AP17.2 adds named `var` arguments.
+Caller-mutating intrinsics remain in AP17.3; native built-in type operations
+remain in AP06.
 
 [AP09: Named arguments](ap09-named-arguments/README.md) is complete: fully
 named calls of declared routines, record methods, and enum variant

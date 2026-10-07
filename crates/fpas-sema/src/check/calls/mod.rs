@@ -231,17 +231,23 @@ impl Checker {
             );
         }
 
-        let mut arg_types = Vec::with_capacity(args.len());
+        let mut argument_indices = (0..args.len()).collect::<Vec<_>>();
+        if named {
+            // Mapping changes parameter order; checking still follows the source order.
+            argument_indices.sort_unstable_by_key(|&index| args[index].span().offset);
+        }
+        let mut arg_types = vec![Ty::Error; args.len()];
         let mut var_roots = Vec::new();
-        for (index, arg) in args.iter().enumerate() {
+        for index in argument_indices {
+            let arg = args[index];
             let arg_ty = if let Some(param) = params.get(index) {
-                let (ty, root) = self.check_argument_for_param(name, param, arg);
+                let (ty, root) = self.check_argument_for_param(name, param, arg, named);
                 var_roots.extend(root);
                 ty
             } else {
                 self.check_expr(arg)
             };
-            arg_types.push(arg_ty);
+            arg_types[index] = arg_ty;
         }
         self.reject_var_argument_aliases(&var_roots, span);
 

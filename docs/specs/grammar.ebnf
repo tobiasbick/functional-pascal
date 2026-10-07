@@ -577,7 +577,7 @@ field_init          = identifier ':=' expression ';' ;
 arg_list            = positional_arg { ',' positional_arg }
                     | named_arg { ',' named_arg } ;
 positional_arg      = expression | var_arg ;
-named_arg           = identifier ':=' expression ;
+named_arg           = identifier ':=' ( expression | var_arg ) ;
 (* Argument for a `var` parameter: a variable, field, or element.     *)
 (* Documentation: docs/pascal/language/functions/var-parameters.md    *)
 var_arg             = 'var' designator ;

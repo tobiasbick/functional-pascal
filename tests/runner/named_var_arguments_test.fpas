@@ -1,0 +1,46 @@
+program NamedVarArgumentsTest;
+
+uses Std.Test;
+
+var Trace: string := '';
+
+function Mark(Tag: string; Value: integer): integer;
+begin
+  Trace := Trace + Tag;
+  return Value;
+end function;
+
+procedure Store(First: integer; var Target: integer; Last: integer);
+begin
+  Target := First * 10 + Last;
+end procedure;
+
+procedure Swap<T>(var A: T; var B: T);
+begin
+  const Temp: T := A;
+  A := B;
+  B := Temp;
+end procedure;
+
+procedure Increase(var Value: integer);
+begin
+  Value := Value + 1;
+end procedure;
+
+procedure Forward(var Value: integer);
+begin
+  Increase(Value := var Value);
+end procedure;
+
+begin
+  var Items: array of integer := [0, 0, 0];
+  Store(Last := Mark('c', 3), Target := var Items[Mark('b', 2)], First := Mark('a', 1));
+  AssertEquals('cba', Trace);
+  AssertEquals(13, Items[2]);
+  var Counter: integer := 7;
+  Swap(B := var Counter, A := var Items[2]);
+  AssertEquals(7, Items[2]);
+  AssertEquals(13, Counter);
+  Forward(Value := var Counter);
+  AssertEquals(14, Counter);
+end.

@@ -9,6 +9,8 @@ use fpas_diagnostics::codes::{
     SEMA_VAR_ARGUMENT_ALIAS, SEMA_VAR_ARGUMENT_MARKER, SEMA_VAR_PARAMETER_ESCAPE,
 };
 
+mod named_arguments;
+
 const DECLARATIONS: &str = r#"
 type Point = record
   X: integer;

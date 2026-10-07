@@ -40,9 +40,13 @@ call forms; AP06.3 implements the catalog. This is a planning document.
 - Scalars, channels, and task handles have no instance catalog entries. Add
   operations for these types only after a concrete need and an explicit
   catalog extension decision. Record methods retain their declared behavior.
-- `Push` and `Pop` are preserved as array operations. AP06.1 decides how
-  caller mutation is marked on their receiver; AP17.3 delivers the `var`
-  rules. Preservation does not authorize two parallel public call forms.
+- `Push` and `Pop` are preserved as array operations. Their implicit receiver
+  uses ordinary dot syntax without a `var` marker or additional parentheses;
+  the catalog records that they require a writable receiver. Explicitly
+  written `var` arguments keep their markers, and AP17's safety rules still
+  apply to writable receivers. AP17.3 delivers these checks. The user
+  requested a [follow-up discussion](README.md#follow-up-discussion) before
+  AP06.3/AP17.3. Each operation retains one public call form.
 - `Join` belongs to `array of string`, according to its actual receiver,
   despite its former placement in `Std.Str`. `Fill` constructs an array;
   `Chr` constructs a string and does not become an integer instance method.
@@ -136,8 +140,8 @@ Additional existing operations to preserve:
 | Dot call and remaining arguments | Standard routine | Result type | Meaning |
 | --- | --- | --- | --- |
 | `ForEach(F: procedure(X: T))` | `Std.Arrays.ForEach` | `Unit` | Invoke a procedure per element; only a final chain step |
-| `Push(Value: T)` | `Std.Arrays.Push` | `Unit` | Append to the caller's array; explicit receiver mutation marking pending |
-| `Pop()` | `Std.Arrays.Pop` | `T` | Remove and return the last element; explicit receiver mutation marking pending |
+| `Push(Value: T)` | `Std.Arrays.Push` | `Unit` | Append to the caller's array; requires a writable receiver, with no call-site receiver marker |
+| `Pop()` | `Std.Arrays.Pop` | `T` | Remove and return the last element; requires a writable receiver, with no call-site receiver marker |
 
 Specialized receiver: `array of string`.
 

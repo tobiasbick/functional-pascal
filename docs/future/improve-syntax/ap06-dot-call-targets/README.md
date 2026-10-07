@@ -3,8 +3,9 @@
 Status: agreed direction (Q05, revised): built-in type operations are always
 available with one public call form, consistent names, and preservation of
 existing distinct operations. Canonical names for the extended inventory,
-type-qualified factory syntax, name conflicts, and explicit receiver mutation
-marking must be settled in AP06.1 before implementation. Effort: medium.
+type-qualified factory syntax, and name conflicts must be settled in AP06.1
+before implementation. The implicit-receiver exception is agreed, with a
+user-requested follow-up discussion before AP06.3/AP17.3. Effort: medium.
 Completion is tracked in the
 [central README](../README.md); the process is in
 [development-process.md](../development-process.md).
@@ -58,8 +59,8 @@ rules ([receiver calls](../../../pascal/language/functions/fluent-calls.md),
   caller variable. AP06.3 adds `IsEmpty` for strings,
   arrays, and dictionaries. Scalars, channels, and task handles receive
   instance operations only after a concrete need and an explicit extension
-  decision. Existing `Push` and `Pop` remain array operations; AP06.1 settles
-  receiver mutation marking, with AP17.3 delivering the `var` rules.
+  decision. Existing `Push` and `Pop` remain array operations using the
+  implicit-receiver exception below; AP17.3 delivers the mutation checks.
 - **No automatic free-function lookup.** Dot notation no longer searches
   visible free functions, procedures, or callable values by their first
   parameter. User-defined free functions and all other routines are called
@@ -67,6 +68,18 @@ rules ([receiver calls](../../../pascal/language/functions/fluent-calls.md),
 - **Receiver passing stays.** The left value is passed as `Self` to a method,
   or as the first input argument of a catalog operation. The receiver is
   evaluated once, before the written arguments, which keep their order.
+- **Implicit-receiver exception (agreed; revisit before implementation).**
+  Dot-call receivers use ordinary `Value.Operation(...)` syntax, including
+  mutating native operations such as `Items.Push(Value)` and `Items.Pop()`.
+  AP17's call-site `var` marker applies to explicitly written arguments;
+  the implicit receiver needs neither a `var` marker nor additional
+  parentheses. The catalog records which operations require a writable
+  receiver. Such a receiver must be a `var` binding, a field or element of
+  one, or a forwarded `var` parameter; reject `const` bindings and temporaries.
+  Apply AP17's aliasing, lifetime, `go`, evaluation, and failure rules to the
+  writable receiver as well. Record methods retain their existing semantics.
+  The user requested that this exception be discussed again; see
+  [Follow-up discussion](#follow-up-discussion).
 - **Unchanged from Q05:** no pipe operator. Dot notation remains available for
   actual record members (fields, callable fields, methods).
 
@@ -129,13 +142,19 @@ implementation work package starts:
    function with the same name; resolution of overloaded standard routines;
    a record field holding a callable value with the same name as a method.
    The shared naming rules above are already agreed.
-3. **Mutation marking.** How AP17's call-site `var` marking applies to the
-   receiver of `Push`, `Pop`, and other caller-mutating type operations.
-   Keeping these operations and one public call form is already agreed.
 
 Catalog scope, the base names, preservation of additional distinct operations,
 automatic availability, and one public call form are agreed in
 [catalog.md](catalog.md). The inventory validates those decisions.
+
+## Follow-up discussion
+
+The implicit-receiver exception is recorded as the current decision. The user
+explicitly requested that we discuss it again. Revisit the consistency of
+unmarked mutating receivers with AP17's explicit argument marking in AP06.1,
+before implementing AP06.3 or AP17.3. Record the discussion's outcome here and
+in the [AP17 README](../ap17-visible-caller-mutation/README.md#follow-up-discussion).
+This follow-up does not block AP16 or AP17.1/AP17.2.
 
 ## Dependencies
 

@@ -18,7 +18,15 @@ Pascal and most other languages expect `var` to be reassignable.
 ## Decisions
 
 - `const` prevents reassignment of the binding and allows a computed initial
-  value; `var` permits reassignment. Both initialize on scope entry.
+  value; `var` permits reassignment. A local initializer is evaluated once
+  whenever execution reaches its declaration, in statement order. A loop-body
+  declaration initializes on every iteration that reaches it; an untaken
+  branch does not evaluate its initializer. Program and unit initializers
+  retain their existing declaration and unit-initialization order.
+- Put a computed binding before a loop when its value should be evaluated
+  once for that whole loop. Binding immutability does not memoize calls or
+  hoist declarations. Optimizations must preserve observable effects,
+  failures, and whether the declaration is reached.
 - The `mutable` keyword is removed from the language, for bindings and
   parameters (see AP17).
 - A `for` loop variable is an immutable binding for each iteration, written
@@ -28,6 +36,14 @@ Pascal and most other languages expect `var` to be reassignable.
 - Compile-time constants are preserved: a computed `const` is rejected where a
   compile-time constant is required (for example subrange bounds or case
   labels), with a diagnostic that names the non-constant part.
+- Keep the existing constant-expression forms when their operands are
+  compile-time known. Function and method calls are runtime computations,
+  including user routines, standard-library/intrinsic routines, and native
+  type operations, even when a routine appears pure. A `const` initialized
+  from such a call or from another computed `const` remains computed;
+  dependent bindings cannot be used in compile-time constant contexts.
+  Optimization or purity analysis does not change this language-level
+  classification.
 - Closure capture keeps today's behavior: a captured `const` is copied, a
   captured `var` shares one mutable cell (today's `mutable var` rule).
 - Teaching examples prefer `const` and use `var` only for reassignment.

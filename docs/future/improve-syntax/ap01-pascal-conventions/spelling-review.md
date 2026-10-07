@@ -39,13 +39,14 @@ process, and every package README and work package under this plan.
 
 ## Open decisions retained
 
-AP01 needs no additional language decision. These existing gates belong to
-their packages and remain open; the reference examples do not settle them.
+AP01 needs no additional language decision. The remaining decision gates and
+requested follow-up discussions belong to their owning packages; the reference
+examples do not settle them.
 
-| Package | Remaining decision or specification |
+| Package | Remaining decision, specification, or follow-up |
 |---------|-------------------------------------|
-| [AP06](../ap06-dot-call-targets/README.md#open-decisions), [AP12](../ap12-callable-expressions/README.md#open-decisions) | Settle extended catalog names, type-qualified factories, conflicts, and receiver mutation marking; native type operations and automatic availability are agreed. Accept or reject callable-expression targets and their evaluation order. |
-| [AP17](../ap17-visible-caller-mutation/README.md#open-decisions), [AP17.1](../ap17-visible-caller-mutation/01-var-parameters.md#implementation) | Decide `var` parameters on function types and effects retained after a failed caller-mutating call. |
+| [AP06](../ap06-dot-call-targets/README.md#open-decisions), [AP12](../ap12-callable-expressions/README.md#open-decisions) | Settle extended catalog names, type-qualified factories, and conflicts; native type operations and automatic availability are agreed. Revisit the agreed implicit-receiver exception with the user before AP06.3/AP17.3. Accept or reject callable-expression targets and their evaluation order. |
+| [AP17](../ap17-visible-caller-mutation/README.md#follow-up-discussion), [AP17.1](../ap17-visible-caller-mutation/01-var-parameters.md#implementation) | Function types allow `var` parameters and writes completed before failure remain visible. Revisit the agreed unmarked implicit-receiver exception with the user before AP06.3/AP17.3. |
 | [AP19](../ap19-distinct-domain-types/README.md#open-decisions) | Define constraints, dictionary keys, and case labels for distinct types. |
 | [AP22](../ap22-limited-local-inference/README.md#open-decisions) | Decide the eligible literal forms and whether enum constructors qualify for local inference. |
 | [AP21.1](../ap21-decision-expressions/01-if-expressions.md#implementation), [AP23.2](../ap23-preconditions-and-postconditions/02-postconditions.md#verification) | Specify compatible branch types and whether error returns from `try` run postconditions. |

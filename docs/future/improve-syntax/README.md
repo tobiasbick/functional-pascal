@@ -150,8 +150,9 @@ package taken from its own file:
 8. AP26, then AP25 after its reassessment.
 9. AP05 and AP06 can proceed independently; AP06 native operations require
    no imports. Complete AP06 once its remaining names, factory forms,
-   conflicts, and mutation marking are settled, then AP12 after its decision.
-   AP06.1 is a decision work package and can be prepared at any time.
+   conflicts, and the user-requested follow-up on the agreed implicit-receiver
+   exception are settled, then AP12 after its decision. AP06.1 is a decision
+   work package and can be prepared at any time.
 
 AP27 is optional and follows AP22. AP28 is retained as editor/LSP work outside
 this language plan, for transfer after AP13 and AP24. AP29 is rejected.

@@ -4,26 +4,33 @@ Package: [AP17: Visible caller mutation](README.md)
 
 ## Scope
 
-Make intrinsics that change a caller variable use explicit `var` arguments,
-including the receiver marking for native array `Push` and `Pop` agreed in
-AP06.1, and remove their special simple-variable rule. These remain native
-type operations, without a parallel free-call API.
+Make intrinsics that change a caller variable use AP17's shared `var` safety
+checks and explicit markers on written `var` arguments. Native array `Push`
+and `Pop` use the agreed implicit-receiver exception: ordinary dot calls
+without a receiver `var` marker or additional parentheses. Remove their
+special simple-variable rule. These remain native type operations with one
+public call form.
 
 ## Prerequisites
 
 - AP17.1 (`var` arguments).
-- AP06.1 (decision on explicit receiver mutation marking).
+- AP06.1 (catalog and rules, including the recorded outcome of the
+  user-requested discussion revisiting the implicit-receiver exception).
 
 Coordinate with AP06.3's removal of the old type-helper units. Record the
-concrete implementation order when the receiver-marking syntax is settled;
-the migration must not reintroduce a public `Std.Arrays` API.
+concrete implementation order after the requested follow-up discussion and
+before implementation; use the agreed native dot form throughout migration.
 
 ## Implementation
 
 - Verify how `Push`, `Pop`, and other caller-mutating intrinsics mutate today.
-- Declare their receiver parameter as `var` in the registry and catalog-derived
+- Record the writable-receiver mode in the registry and catalog-derived
   editor signatures; reuse the AP17.1 checks instead of the special rule.
-- Apply the AP06.1 decision for receiver marking in the one native call form.
+  Include an implicit writable receiver in aliasing, lifetime, `go`,
+  single-evaluation, and failure checks despite its unmarked syntax.
+- Apply the agreed receiver exception: `Items.Push(Value)` and `Items.Pop()`
+  require a writable receiver and have no receiver marker or extra
+  parentheses. Other explicitly written `var` arguments keep their markers.
 
 ## Affected areas
 
@@ -34,9 +41,10 @@ the migration must not reintroduce a public `Std.Arrays` API.
 
 ## Migration
 
-Apply the agreed explicit receiver marking to every affected native operation
-call in all repository consumers. Coordinate remaining ordinary-call and
-import removal with AP06.3.
+Use ordinary dot syntax for every affected native receiver call in all
+repository consumers. Add explicit `var` markers only to written arguments
+that require them. Coordinate remaining ordinary-call and import removal
+with AP06.3.
 
 ## Documentation
 
@@ -46,5 +54,9 @@ import removal with AP06.3.
 
 ## Verification
 
-- Direct, field, element, and forwarded `var` arguments; rejection of `const`
-  and temporaries; dot forms per AP06.1; FPAS suite.
+- Unmarked native calls on writable direct, field, element, and forwarded
+  receivers; rejection of `const` and temporary receivers; explicit markers
+  on other written `var` arguments. Verify receiver evaluation once, aliasing
+  and `go` restrictions, and retained writes on failure. Preserve other
+  array values that share storage and the existing `Push`/`Pop` result and
+  chaining behavior; FPAS suite.

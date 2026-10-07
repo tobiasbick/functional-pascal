@@ -14,7 +14,8 @@ and remove the five former public type-helper units and their duplicate calls.
 ## Prerequisites
 
 - AP06.2 (migration preparations and explicit list of remaining conversions).
-- AP06.1 (complete names, factory forms, conflicts, and mutation marking).
+- AP06.1 (complete names, factory forms, conflicts, and the recorded outcome
+  of the user-requested implicit-receiver follow-up discussion).
 
 ## Implementation
 
@@ -58,10 +59,13 @@ and remove the five former public type-helper units and their duplicate calls.
   with a similar name exists, mention it.
 - Language service: completion after `.` lists fields, methods, and catalog
   operations only; signature help covers catalog operations.
-- Apply the agreed rule for mutating operations; if they need AP17's `var`
-  rules, coordinate the delivery with AP17.3. Membership and one public type
-  operation form are settled; explicit receiver marking is an AP06.1 decision.
-  Do not retain a free-call fallback for mutation.
+- Apply the agreed implicit-receiver exception after the requested follow-up
+  discussion: native mutating operations use ordinary dot calls without a
+  receiver `var` marker or additional parentheses. Store the writable-receiver
+  requirement in the catalog; reuse AP17's argument validity, aliasing,
+  lifetime, `go`, evaluation, and failure checks. Explicitly written `var`
+  arguments retain their markers. Coordinate delivery with AP17.3 and record
+  the order in AP06.1; keep one public type-operation form.
 
 ## Affected areas
 
@@ -122,8 +126,11 @@ Negative tests keep removed forms only as rejection cases.
 - Other Std units still require explicit imports. Added imports cannot alter
   a native operation's target or availability.
 - Rejection of unlisted catalog names and catalog calls on scalars, channels,
-  task handles, or an unconstrained generic receiver. Mutating entries follow
-  the AP06.1 receiver-marking decision; `Push` and `Pop` are retained.
+  task handles, or an unconstrained generic receiver. Mutating entries use
+  the agreed unmarked-receiver exception and reject `const` and temporary
+  receivers. Cover writable direct, field, element, and forwarded receivers,
+  and preservation of other array values that share storage. `Push` and
+  `Pop` are retained with their existing return types and chaining behavior.
 - A local or imported function named like a catalog operation behaves as the
   agreed conflict rules state; it never selects a different dot-call target.
 - Receiver-before-argument evaluation order; `go` with a dot call.

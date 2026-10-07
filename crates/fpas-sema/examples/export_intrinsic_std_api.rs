@@ -150,13 +150,13 @@ fn render_constants(
     if names.is_empty() {
         return Ok(());
     }
-    output.push_str("\npublic const\n");
     for name in names {
         let symbol = take_symbol(symbols, &name, "constant")?;
-        render_documentation(output, unit, &name, symbol, documentation, "  ");
+        output.push('\n');
+        render_documentation(output, unit, &name, symbol, documentation, "");
         let _ = writeln!(
             output,
-            "  {name}: {} := {};",
+            "public const {name}: {} := {};",
             symbol.ty,
             default_value(&symbol.ty)
         );
@@ -178,10 +178,10 @@ fn render_types(
     if type_names.is_empty() {
         return Ok(());
     }
-    output.push_str("\npublic type\n");
     for name in type_names {
         let symbol = take_symbol(symbols, &name, "type")?;
-        render_documentation(output, unit, &name, symbol, documentation, "  ");
+        output.push('\n');
+        render_documentation(output, unit, &name, symbol, documentation, "");
         match &symbol.ty {
             Ty::Enum(value) => render_enum(output, unit, &name, value),
             Ty::Record(value) => {
@@ -201,7 +201,7 @@ fn render_types(
                 )?;
             }
             _ => {
-                let _ = writeln!(output, "  {name} = {};", symbol.ty);
+                let _ = writeln!(output, "public type {name} = {};", symbol.ty);
             }
         }
     }
@@ -209,15 +209,15 @@ fn render_types(
 }
 
 fn render_enum(output: &mut String, _unit: &str, name: &str, value: &fpas_sema::EnumTy) {
-    let _ = writeln!(output, "  {name} = enum");
+    let _ = writeln!(output, "public type {name} = enum");
     for variant in &value.variants {
-        let _ = writeln!(output, "    // `{}` enum member.", variant.name);
+        let _ = writeln!(output, "  // `{}` enum member.", variant.name);
         if !variant.fields.is_empty() {
-            output.push_str("    //\n    // Parameters:\n");
+            output.push_str("  //\n  // Parameters:\n");
             for (field, ty) in &variant.fields {
                 let _ = writeln!(
                     output,
-                    "    // - `{field}`: {}",
+                    "  // - `{field}`: {}",
                     parameter_description(
                         field,
                         &format!("{name}.{}", variant.name),
@@ -231,7 +231,7 @@ fn render_enum(output: &mut String, _unit: &str, name: &str, value: &fpas_sema::
         }
         let separator = ";";
         if variant.fields.is_empty() {
-            let _ = writeln!(output, "    {}{separator}", variant.name);
+            let _ = writeln!(output, "  {}{separator}", variant.name);
         } else {
             let fields = variant
                 .fields
@@ -239,10 +239,10 @@ fn render_enum(output: &mut String, _unit: &str, name: &str, value: &fpas_sema::
                 .map(|(field, ty)| format!("{field}: {ty}"))
                 .collect::<Vec<_>>()
                 .join("; ");
-            let _ = writeln!(output, "    {}({fields}){separator}", variant.name);
+            let _ = writeln!(output, "  {}({fields}){separator}", variant.name);
         }
     }
-    output.push_str("  end enum;\n");
+    output.push_str("end enum;\n");
 }
 
 fn is_source_identifier(name: &str) -> bool {
@@ -261,13 +261,13 @@ fn render_record(
     symbols: &mut BTreeMap<String, &IntrinsicStdSymbol>,
     documentation: &HashMap<(String, String), DocumentationRow>,
 ) -> Result<(), String> {
-    let _ = writeln!(output, "  {name} = record");
+    let _ = writeln!(output, "public type {name} = record");
     if value.fields.is_empty() && member_names.is_empty() {
-        output.push_str("    // Compiler-owned storage for this opaque handle.\n");
-        output.push_str("    _IntrinsicHandle: integer;\n");
+        output.push_str("  // Compiler-owned storage for this opaque handle.\n");
+        output.push_str("  _IntrinsicHandle: integer;\n");
     } else {
         for (field, ty) in &value.fields {
-            let _ = writeln!(output, "    public {field}: {ty};");
+            let _ = writeln!(output, "  public {field}: {ty};");
         }
     }
     for member_name in member_names {
@@ -276,17 +276,17 @@ fn render_record(
             continue;
         }
         let short_name = member_name.rsplit('.').next().unwrap_or(member_name);
-        render_documentation(output, unit, member_name, symbol, documentation, "    ");
+        render_documentation(output, unit, member_name, symbol, documentation, "  ");
         render_routine(
             output,
             short_name,
             symbol,
             documentation_row(unit, member_name, documentation),
-            "    ",
+            "  ",
             true,
         );
     }
-    output.push_str("  end record;\n");
+    output.push_str("end record;\n");
     Ok(())
 }
 

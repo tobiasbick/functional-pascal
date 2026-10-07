@@ -3,10 +3,9 @@ program CellGridHeadlessBenchmark;
 
 uses Std.Args, Std.Arrays, Std.Console, Std.Conv, Std.Time, Std.Tui;
 
-const
-  GridWidth: integer := 98;
-  GridHeight: integer := 32;
-  WarmupIterations: integer := 5;
+const GridWidth: integer := 98;
+const GridHeight: integer := 32;
+const WarmupIterations: integer := 5;
 
 function Update(Grid: TuiCellGrid; Msg: TuiMsg; Cmd: TuiCmdOutput): TuiCellGrid;
 begin

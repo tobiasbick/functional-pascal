@@ -4,11 +4,10 @@ uses
   Std.Console, Std.Tasks, Std.Arrays, Std.Conv, Std.Math, Std.Str, Std.Results, Julia.Color,
   Julia.Compute;
 
-public type
-  RenderRow = record
-    public Y: integer;
-    public Samples: array of PixelSample;
-  end record;
+public type RenderRow = record
+  public Y: integer;
+  public Samples: array of PixelSample;
+end record;
 
 function EscapeGlyph(EscapeValue: real): string;
 begin
@@ -64,14 +63,13 @@ begin
   WriteCells(1, Y, Cells);
 end procedure;
 
-public type
-  // A render owns four workers and at most four queued rows.
-  RenderJob = record
-    public Group: TaskGroup;
-    public Rows: channel of RenderRow;
-    public Width: integer;
-    public Palette: PaletteKind;
-  end record;
+// A render owns four workers and at most four queued rows.
+public type RenderJob = record
+  public Group: TaskGroup;
+  public Rows: channel of RenderRow;
+  public Width: integer;
+  public Palette: PaletteKind;
+end record;
 
 // Start a bounded render. Each worker owns every fourth row.
 public function StartRender(

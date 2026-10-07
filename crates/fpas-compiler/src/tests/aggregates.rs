@@ -3,6 +3,7 @@ use super::*;
 mod record_updates;
 mod structural_equality;
 mod try_expressions;
+mod type_order;
 
 #[test]
 fn contextual_record_literals_expand_defaults_in_all_lowering_positions() {
@@ -223,7 +224,7 @@ type
     Running;
     Done = 9;
   end enum;
-  StateAlias = State;
+  type StateAlias = State;
 begin
   var Value: State := state.rUnNiNg;
   var AliasValue: StateAlias := StateAlias.Done;
@@ -275,7 +276,7 @@ type
     property Number: integer read ReadNumber write WriteNumber;
   end record;
 
-  Button = record
+  type Button = record
     function ReadOnValue(Self: Button): Option of procedure(Value: integer);
     begin
       return Handler;
@@ -409,7 +410,7 @@ type
   Point = record
     X: integer;
   end record;
-  Choice = enum
+  type Choice = enum
     Number(Value: integer);
     Empty;
   end enum;
@@ -498,7 +499,7 @@ type
       return Self.Base + Value;
     end function;
   end record;
-  Source = record
+  type Source = record
     function ReadValue(Self: Source): Option of function(Value: integer): integer;
     begin
       return Handler;
@@ -543,7 +544,7 @@ type
     end procedure;
     property Number: integer read ReadNumber write WriteNumber;
   end record;
-  Outer = record
+  type Outer = record
     Item: Inner;
     function ReadChild(Self: Outer): Inner;
     begin

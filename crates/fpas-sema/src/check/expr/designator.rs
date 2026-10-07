@@ -179,26 +179,6 @@ impl Checker {
         resolved
     }
 
-    pub(crate) fn resolve_visible_type(&self, ty: &Ty) -> Ty {
-        let mut resolved = ty.clone();
-        let mut visited = std::collections::HashSet::new();
-        while let Ty::Named(name) = &resolved {
-            let key = crate::scope::canonical_symbol_name(name);
-            if !visited.insert(key) {
-                break;
-            }
-            let Some(symbol) = self
-                .scopes
-                .lookup(name)
-                .filter(|symbol| matches!(symbol.kind, SymbolKind::Type))
-            else {
-                break;
-            };
-            resolved = symbol.ty.clone();
-        }
-        resolved
-    }
-
     /// Resolve `[index]` on a value whose static type is `ty` (aliases already resolved by caller).
     pub(crate) fn check_index_access(
         &mut self,

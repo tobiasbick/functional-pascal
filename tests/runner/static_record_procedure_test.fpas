@@ -2,14 +2,14 @@ program StaticRecordProcedureTest;
 
 uses Std.Test;
 
-type
-  Verifier = record
-    static procedure Verify(Value: integer);
-    begin
-      AssertEquals(42, Value);
-    end procedure;
-  end record;
-  VerifierAlias = Verifier;
+type Verifier = record
+  static procedure Verify(Value: integer);
+  begin
+    AssertEquals(42, Value);
+  end procedure;
+end record;
+
+type VerifierAlias = Verifier;
 
 begin
   Verifier.Verify(42);

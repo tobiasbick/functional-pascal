@@ -3,6 +3,11 @@
 Records can declare functions and procedures that operate on their data, and
 **static functions and procedures** that belong to the type itself.
 
+Member signatures are available throughout the declaring unit or program,
+including before the record declaration. Method bodies are checked at the
+record declaration's source position, so values and free routines must precede
+that declaration. See [type declaration order](declaration-order.md).
+
 Formal syntax: [`grammar.ebnf`](../../../specs/grammar.ebnf) (`record_method`,
 `function_decl`, `procedure_decl`).
 
@@ -37,23 +42,22 @@ inside an instance method. Callers use value dot notation; `Self` is passed
 implicitly.
 
 ```pascal
-type
-  Point = record
-    X: real;
-    Y: real;
+type Point = record
+  X: real;
+  Y: real;
 
-    function DistanceTo(Self: Point; Other: Point): real;
-    begin
-      var DX: real := Other.X - Self.X;
-      var DY: real := Other.Y - Self.Y;
-      return Sqrt(DX * DX + DY * DY);
-    end function;
+  function DistanceTo(Self: Point; Other: Point): real;
+  begin
+    var DX: real := Other.X - Self.X;
+    var DY: real := Other.Y - Self.Y;
+    return Sqrt(DX * DX + DY * DY);
+  end function;
 
-    procedure Print(Self: Point);
-    begin
-      WriteLn('(' + RealToStr(Self.X) + ', ' + RealToStr(Self.Y) + ')');
-    end procedure;
-  end record;
+  procedure Print(Self: Point);
+  begin
+    WriteLn(((('(' + RealToStr(Self.X)) + ', ') + RealToStr(Self.Y)) + ')');
+  end procedure;
+end record;
 ```
 
 Calling instance methods:
@@ -61,8 +65,8 @@ Calling instance methods:
 ```pascal
 var
   A: Point := record X := 0.0; Y := 0.0; end;
-  B: Point := record X := 3.0; Y := 4.0; end;
-  Dist: real := A.DistanceTo(B);  // Self = A, Other = B
+  var B: Point := record X := 3.0; Y := 4.0; end;
+  var Dist: real := A.DistanceTo(B);  // Self = A, Other = B
 
 begin
   A.Print();  // Self = A
@@ -124,40 +128,39 @@ body. Static routines have no implicit receiver and must not declare a `Self`
 parameter. They are called through the type name:
 
 ```pascal
-type
-  Point = record
-    X: integer;
-    Y: integer;
+type Point = record
+  X: integer;
+  Y: integer;
 
-    static function Create(X: integer; Y: integer): Point;
-    begin
-      return record
-        X := X;
-        Y := Y;
-      end;
-    end function;
+  static function Create(X: integer; Y: integer): Point;
+  begin
+    return record
+      X := X;
+      Y := Y;
+    end;
+  end function;
 
-    static function Origin(): Point;
-    begin
-      return Point.Create(0, 0);
-    end function;
+  static function Origin(): Point;
+  begin
+    return Point.Create(0, 0);
+  end function;
 
-    static procedure Print(Value: Point);
-    begin
-      WriteLn('(' + IntToStr(Value.X) + ', ' + IntToStr(Value.Y) + ')');
-    end procedure;
+  static procedure Print(Value: Point);
+  begin
+    WriteLn(((('(' + IntToStr(Value.X)) + ', ') + IntToStr(Value.Y)) + ')');
+  end procedure;
 
-    function Sum(Self: Point): integer;
-    begin
-      return Self.X + Self.Y;
-    end function;
-  end record;
+  function Sum(Self: Point): integer;
+  begin
+    return Self.X + Self.Y;
+  end function;
+end record;
 ```
 
 ```pascal
 var
   P: Point := Point.Create(3, 4);
-  O: Point := Point.Origin();
+  var O: Point := Point.Origin();
 begin
   Point.Print(P);
   WriteLn(P.Sum());  // 7
@@ -199,7 +202,7 @@ Free-standing functions work equally well for operations on records:
 ```pascal
 function PointToString(P: Point): string;
 begin
-  return '(' + RealToStr(P.X) + ', ' + RealToStr(P.Y) + ')';
+  return ((('(' + RealToStr(P.X)) + ', ') + RealToStr(P.Y)) + ')';
 end function;
 ```
 

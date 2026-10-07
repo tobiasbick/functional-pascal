@@ -7,6 +7,7 @@ mod aliases;
 mod discard;
 mod public_signatures;
 mod short_names;
+mod type_order;
 
 fn parse_unit(source: &str) -> fpas_parser::Unit {
     let (parsed, errors) = parse_compilation_unit(source);

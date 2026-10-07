@@ -8,6 +8,10 @@ Formal syntax: [`grammar.ebnf`](../../specs/grammar.ebnf) (`unit`, `program`, `u
 
 A unit file starts with a `unit` declaration followed by declarations (functions, procedures, types, constants, `var`, and `mutable var`). Every unit ends with `end unit;` after its last declaration, including a unit with no declarations. There is no main block.
 
+Every type, constant, and variable has its own
+`type`, `const`, `var`, or complete `mutable var` prefix. Repeat `public`
+before each exported declaration; it applies to that declaration only.
+
 ```pascal
 unit MyApp.Utils;
 

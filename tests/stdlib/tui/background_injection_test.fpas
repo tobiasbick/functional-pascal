@@ -2,11 +2,10 @@ program TuiBackgroundInjectionTest;
 
 uses Std.Arrays, Std.Results, Std.Tasks, Std.Test, Std.Tui;
 
-type
-  InjectionModel = record
-    Values: array of integer;
-    Starts: integer;
-  end record;
+type InjectionModel = record
+  Values: array of integer;
+  Starts: integer;
+end record;
 
 function UpdateFramework(State: InjectionModel; Msg: TuiMsg; Cmd: TuiCmdOutput): InjectionModel;
 begin

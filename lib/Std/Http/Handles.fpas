@@ -1,17 +1,17 @@
 // Opaque handle wrappers shared by HTTP implementation units.
 unit Std.Http.Handles;
 
-public type
-  // Opaque pull-based HTTP response body.
-  BodyStream = record
-    // Private index into the streaming body registry.
-    Slot: integer;
-  end record;
-  // Opaque incremental Server-Sent Events decoder.
-  SseDecoder = record
-    // Private index into the SSE decoder registry.
-    Slot: integer;
-  end record;
+// Opaque pull-based HTTP response body.
+public type BodyStream = record
+  // Private index into the streaming body registry.
+  Slot: integer;
+end record;
+
+// Opaque incremental Server-Sent Events decoder.
+public type SseDecoder = record
+  // Private index into the SSE decoder registry.
+  Slot: integer;
+end record;
 
 // Creates an HTTP body handle for the streaming implementation.
 //

@@ -6,10 +6,9 @@ program VmStringConcatBenchmark;
 
 uses Std.Args, Std.Console, Std.Conv, Std.Str, Std.Time;
 
-const
-  WarmupIterations: integer := 200000;
-  Prefix: string := 'frame-';
-  Suffix: string := '-ready';
+const WarmupIterations: integer := 200000;
+const Prefix: string := 'frame-';
+const Suffix: string := '-ready';
 
 function RunConcat(Iterations: integer): integer;
 begin

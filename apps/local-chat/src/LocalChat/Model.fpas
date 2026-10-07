@@ -3,80 +3,81 @@ unit LocalChat.Model;
 
 uses Std.Arrays, Std.Console, Std.Str, Std.Tui;
 
-public type
-  // Origin of one visible local chat entry.
-  ChatRole = enum
-    // Prompt submitted by the user.
-    User;
-    // Text returned by the local model.
-    Assistant;
-    // Error returned while processing a request.
-    Failure;
-  end enum;
-  // One entry retained for display during the current process.
-  ChatEntry = record
-    // Origin used to label the entry.
-    public Role: ChatRole;
-    // Entry text displayed in the transcript.
-    public Text: string;
+// Origin of one visible local chat entry.
+public type ChatRole = enum
+  // Prompt submitted by the user.
+  User;
+  // Text returned by the local model.
+  Assistant;
+  // Error returned while processing a request.
+  Failure;
+end enum;
 
-    // Creates a user entry.
-    //
-    // Parameters:
-    // - `Text`: Prompt text submitted by the user.
-    public static function User(Text: string): ChatEntry;
-    begin
-      return record
-        Role := ChatRole.User;
-        Text := Text;
-      end;
-    end function;
+// One entry retained for display during the current process.
+public type ChatEntry = record
+  // Origin used to label the entry.
+  public Role: ChatRole;
+  // Entry text displayed in the transcript.
+  public Text: string;
 
-    // Creates an assistant entry.
-    //
-    // Parameters:
-    // - `Text`: Completion text returned by the model.
-    public static function Assistant(Text: string): ChatEntry;
-    begin
-      return record
-        Role := ChatRole.Assistant;
-        Text := Text;
-      end;
-    end function;
+  // Creates a user entry.
+  //
+  // Parameters:
+  // - `Text`: Prompt text submitted by the user.
+  public static function User(Text: string): ChatEntry;
+  begin
+    return record
+      Role := ChatRole.User;
+      Text := Text;
+    end;
+  end function;
 
-    // Creates a failed-request entry.
-    //
-    // Parameters:
-    // - `Text`: Error text returned by the request service.
-    public static function Failure(Text: string): ChatEntry;
-    begin
-      return record
-        Role := ChatRole.Failure;
-        Text := Text;
-      end;
-    end function;
-  end record;
-  // Complete immutable state supplied to the Local Chat MVU view.
-  LocalChatModel = record
-    // Conversation entries in display order.
-    public Entries: array of ChatEntry;
-    // Current prompt editor contents.
-    public Draft: string;
-    // Caret position inside `Draft`.
-    public DraftCaret: integer;
-    // Caret position inside the read-only transcript.
-    public TranscriptCaret: integer;
-    // Current transcript viewport offset.
-    public TranscriptOffset: TuiPoint;
-    // Identifier of the focused control.
-    public Focus: integer;
-    // Short status text shown in the footer.
-    public Status: string;
-    // Current terminal width in cells.
-    public Width: integer;
-    // Current terminal height in cells.
-    public Height: integer;
-  end record;
+  // Creates an assistant entry.
+  //
+  // Parameters:
+  // - `Text`: Completion text returned by the model.
+  public static function Assistant(Text: string): ChatEntry;
+  begin
+    return record
+      Role := ChatRole.Assistant;
+      Text := Text;
+    end;
+  end function;
+
+  // Creates a failed-request entry.
+  //
+  // Parameters:
+  // - `Text`: Error text returned by the request service.
+  public static function Failure(Text: string): ChatEntry;
+  begin
+    return record
+      Role := ChatRole.Failure;
+      Text := Text;
+    end;
+  end function;
+end record;
+
+// Complete immutable state supplied to the Local Chat MVU view.
+public type LocalChatModel = record
+  // Conversation entries in display order.
+  public Entries: array of ChatEntry;
+  // Current prompt editor contents.
+  public Draft: string;
+  // Caret position inside `Draft`.
+  public DraftCaret: integer;
+  // Caret position inside the read-only transcript.
+  public TranscriptCaret: integer;
+  // Current transcript viewport offset.
+  public TranscriptOffset: TuiPoint;
+  // Identifier of the focused control.
+  public Focus: integer;
+  // Short status text shown in the footer.
+  public Status: string;
+  // Current terminal width in cells.
+  public Width: integer;
+  // Current terminal height in cells.
+  public Height: integer;
+end record;
 
 // Creates an empty Local Chat model for the supplied terminal size.
 //

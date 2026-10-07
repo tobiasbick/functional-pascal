@@ -5,29 +5,38 @@ uses
   Std.Http.Client, Std.Http.Headers, Std.Http.Server, Std.Http.ServerLoop, Std.Http.Sse,
   Std.Http.Stream, Std.Http.Types, Std.Net, Std.Net.Utf8;
 
-public type
-  // One HTTP field name and value.
-  Header = Std.Http.Types.Header;
-  // One complete non-streaming HTTP request.
-  Request = Std.Http.Types.Request;
-  // One complete non-streaming HTTP response.
-  Response = Std.Http.Types.Response;
-  // Status, headers, and a pull-based response body.
-  StreamResponse = Std.Http.Types.StreamResponse;
-  // One request accepted by the HTTP server helpers.
-  ServerRequest = Std.Http.Types.ServerRequest;
-  // One complete response written by the HTTP server helpers.
-  ServerResponse = Std.Http.Types.ServerResponse;
-  // Limits and concurrency used by the HTTP server loop.
-  ServerOptions = Std.Http.Types.ServerOptions;
-  // Maps one accepted request to its complete response.
-  RequestHandler = Std.Http.Types.RequestHandler;
-  // Opaque pull-based HTTP response body.
-  BodyStream = Std.Http.Types.BodyStream;
-  // One decoded Server-Sent Events message.
-  SseEvent = Std.Http.Types.SseEvent;
-  // Opaque incremental Server-Sent Events decoder.
-  SseDecoder = Std.Http.Types.SseDecoder;
+// One HTTP field name and value.
+public type Header = Std.Http.Types.Header;
+
+// One complete non-streaming HTTP request.
+public type Request = Std.Http.Types.Request;
+
+// One complete non-streaming HTTP response.
+public type Response = Std.Http.Types.Response;
+
+// Status, headers, and a pull-based response body.
+public type StreamResponse = Std.Http.Types.StreamResponse;
+
+// One request accepted by the HTTP server helpers.
+public type ServerRequest = Std.Http.Types.ServerRequest;
+
+// One complete response written by the HTTP server helpers.
+public type ServerResponse = Std.Http.Types.ServerResponse;
+
+// Limits and concurrency used by the HTTP server loop.
+public type ServerOptions = Std.Http.Types.ServerOptions;
+
+// Maps one accepted request to its complete response.
+public type RequestHandler = Std.Http.Types.RequestHandler;
+
+// Opaque pull-based HTTP response body.
+public type BodyStream = Std.Http.Types.BodyStream;
+
+// One decoded Server-Sent Events message.
+public type SseEvent = Std.Http.Types.SseEvent;
+
+// Opaque incremental Server-Sent Events decoder.
+public type SseDecoder = Std.Http.Types.SseDecoder;
 
 // Sends one HTTP/1.1 request and follows bounded redirects.
 //

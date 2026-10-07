@@ -2,8 +2,7 @@ program KeywordBoundaries;
 
 uses Std.Console;
 
-const
-  RecordCount: integer := 1;
+const RecordCount: integer := 1;
 
 begin
   var beginValue: string := 'if then begin end';
@@ -14,7 +13,8 @@ begin
   var shl: integer := 1;
   var SHR: integer := 2;
   if gifted and (endif = 0) then
-  begin
-    WriteLn(beginValue);
-  end; end if;
+    begin
+      WriteLn(beginValue);
+    end;
+  end if;
 end.

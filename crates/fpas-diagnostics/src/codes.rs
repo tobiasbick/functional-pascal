@@ -91,6 +91,10 @@ define_codes!(PARSE_ALLOCATED_CODES => {
     ///
     /// Documentation: `docs/pascal/tools/diagnostics.md` (FP2014).
     PARSE_INVALID_PARAMETER_SEPARATOR = 2014;
+    /// A declaration omitted its individual `type`, `const`, or variable keyword.
+    ///
+    /// Documentation: `docs/pascal/tools/diagnostics.md` (FP2015).
+    PARSE_MISSING_DECLARATION_KEYWORD = 2015;
 });
 
 define_codes!(SEMA_ALLOCATED_CODES => {
@@ -142,6 +146,10 @@ define_codes!(SEMA_ALLOCATED_CODES => {
     /// A function result in statement position is neither consumed nor explicitly discarded.
     /// Documentation: `docs/pascal/language/functions/discard.md`.
     SEMA_UNUSED_FUNCTION_RESULT = 3022;
+    /// A cycle containing only aliases cannot resolve to a concrete type.
+    SEMA_CYCLIC_TYPE_ALIAS = 3023;
+    /// Recursive required fields or payloads provide no finite construction.
+    SEMA_NO_FINITE_TYPE_VALUE = 3024;
 });
 
 define_codes!(COMPILE_ALLOCATED_CODES => {

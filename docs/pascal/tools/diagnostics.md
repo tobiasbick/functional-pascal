@@ -233,6 +233,10 @@ bugs rather than adding a workaround to the program.
 | FP2012 | Empty enum data list | `type E = enum A(); end;` | `type E = enum A; end;` |
 | FP2013 | Trailing enum field separator | `type E = enum A(X: integer;); end;` | `type E = enum A(X: integer); end;` |
 | FP2014 | Comma/grouped parameters | `function Add(A: integer, B: integer): integer;` or `function Add(A, B: integer): integer;` | `function Add(A: integer; B: integer): integer;` |
+| FP2015 | Missing declaration keyword | `const A: integer := 1; B: integer := 2;` | `const A: integer := 1; const B: integer := 2;` |
+
+FP2015 points at the unprefixed name and shows a complete individual declaration.
+For exported or mutable groups, repeat `public` or `mutable var` in full.
 
 FP2014 points at the offending comma, supplies expected/found details and shows
 the complete canonical header in its hint. Recovery stops before the list's
@@ -267,6 +271,8 @@ Call arguments still use commas; commas inside types such as
 | FP3020 | Discard requires a value | `discard Work();` when `Work` is a procedure | Call the procedure directly. |
 | FP3021 | Unsafe discard | A task handle, task-containing aggregate, or callable with unverified captures | Retain and consume handles; use task-free captures or constraints. For a direct `discard go Worker();`, use `go Worker();`. |
 | FP3022 | Unused function result | `Compute();` or a postfix chain ending in a function | Consume the value or use `discard` when permitted. For `Result`, handle with `case` or propagate with `try` while consuming the success value. |
+| FP3023 | Cyclic type alias | `type A = B; type B = A;` | End the alias chain at a concrete type; use a record or enum for finite recursion. |
+| FP3024 | No finite recursive value | `type Node = record Next: Node; end record;` | Break the required cycle with `Option`, an empty container, or a finite enum alternative. |
 
 Ordinary declaration, assignment, return and argument type compatibility checks
 supply type names in `expected` and `found` for FP3006. Other uses of that code
@@ -372,7 +378,6 @@ The allocated inventory is maintained in
 [`codes.rs`](../../../crates/fpas-diagnostics/src/codes.rs). Its consistency tests
 require exactly one catalog row per allocated code, with both example columns
 filled; unrelated examples or mere mentions do not satisfy coverage.
-
 
 ## Implementation
 

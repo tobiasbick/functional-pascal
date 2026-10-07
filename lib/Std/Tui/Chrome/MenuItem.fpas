@@ -2,70 +2,69 @@ unit Std.Tui.Chrome.MenuItem;
 
 uses Std.Tui.Ids.Action, Std.Tui.Ids.ControlId;
 
-public type
-  // Immutable description of one flat menu-bar action.
-  TuiMenuItem = record
-    // Stable identifier of the value.
-    public Id: TuiControlId;
-    // Text stored or displayed by the value.
-    public Text: string;
-    // Application action associated with the value.
-    public Action: TuiAction;
-    // Whether the item can be activated.
-    public Enabled: boolean;
-    // Shortcut text, gesture, or style.
-    public Shortcut: string;
+// Immutable description of one flat menu-bar action.
+public type TuiMenuItem = record
+  // Stable identifier of the value.
+  public Id: TuiControlId;
+  // Text stored or displayed by the value.
+  public Text: string;
+  // Application action associated with the value.
+  public Action: TuiAction;
+  // Whether the item can be activated.
+  public Enabled: boolean;
+  // Shortcut text, gesture, or style.
+  public Shortcut: string;
 
-    // Creates an enabled menu item without a shortcut hint.
-    //
-    // Parameters:
-    // - `Id`: Identifier assigned to the created or selected value.
-    // - `Text`: Text processed or displayed by the operation.
-    // - `Action`: Application action associated with the control or emitted message.
-    public static function Create(Id: TuiControlId; Text: string; Action: TuiAction): TuiMenuItem;
-    begin
-      return record
-        Id := Id;
-        Text := Text;
-        Action := Action;
-        Enabled := true;
-        Shortcut := '';
-      end;
-    end function;
+  // Creates an enabled menu item without a shortcut hint.
+  //
+  // Parameters:
+  // - `Id`: Identifier assigned to the created or selected value.
+  // - `Text`: Text processed or displayed by the operation.
+  // - `Action`: Application action associated with the control or emitted message.
+  public static function Create(Id: TuiControlId; Text: string; Action: TuiAction): TuiMenuItem;
+  begin
+    return record
+      Id := Id;
+      Text := Text;
+      Action := Action;
+      Enabled := true;
+      Shortcut := '';
+    end;
+  end function;
 
-    // Creates a disabled menu item without a shortcut hint.
-    //
-    // Parameters:
-    // - `Id`: Identifier assigned to the created or selected value.
-    // - `Text`: Text processed or displayed by the operation.
-    // - `Action`: Application action associated with the control or emitted message.
-    public static function Disabled(Id: TuiControlId; Text: string; Action: TuiAction): TuiMenuItem;
-    begin
-      return record
-        Id := Id;
-        Text := Text;
-        Action := Action;
-        Enabled := false;
-        Shortcut := '';
-      end;
-    end function;
+  // Creates a disabled menu item without a shortcut hint.
+  //
+  // Parameters:
+  // - `Id`: Identifier assigned to the created or selected value.
+  // - `Text`: Text processed or displayed by the operation.
+  // - `Action`: Application action associated with the control or emitted message.
+  public static function Disabled(Id: TuiControlId; Text: string; Action: TuiAction): TuiMenuItem;
+  begin
+    return record
+      Id := Id;
+      Text := Text;
+      Action := Action;
+      Enabled := false;
+      Shortcut := '';
+    end;
+  end function;
 
-    // Creates an enabled menu item with a display-only shortcut hint.
-    //
-    // Parameters:
-    // - `Id`: Identifier assigned to the created or selected value.
-    // - `Text`: Text processed or displayed by the operation.
-    // - `Action`: Application action associated with the control or emitted message.
-    // - `Shortcut`: Shortcut gesture or display text.
-    public static function WithShortcut(Id: TuiControlId; Text: string; Action: TuiAction; Shortcut: string): TuiMenuItem;
-    begin
-      return record
-        Id := Id;
-        Text := Text;
-        Action := Action;
-        Enabled := true;
-        Shortcut := Shortcut;
-      end;
-    end function;
-  end record;
+  // Creates an enabled menu item with a display-only shortcut hint.
+  //
+  // Parameters:
+  // - `Id`: Identifier assigned to the created or selected value.
+  // - `Text`: Text processed or displayed by the operation.
+  // - `Action`: Application action associated with the control or emitted message.
+  // - `Shortcut`: Shortcut gesture or display text.
+  public static function WithShortcut(Id: TuiControlId; Text: string; Action: TuiAction; Shortcut: string): TuiMenuItem;
+  begin
+    return record
+      Id := Id;
+      Text := Text;
+      Action := Action;
+      Enabled := true;
+      Shortcut := Shortcut;
+    end;
+  end function;
+end record;
 end unit;

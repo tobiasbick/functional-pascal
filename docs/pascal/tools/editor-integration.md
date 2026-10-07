@@ -330,7 +330,8 @@ owners, and are limited to 100 entries per query.
 Hover shows the resolved source declaration followed by its attached Markdown documentation, when
 present. The documentation comes from the resolved declaration's current source snapshot, including
 cross-unit and unsaved declarations. Intrinsic `Std.*` units use generated editor-only declarations
-under `lib/api/Std/`; these declarations expose the Rust-registered signatures and normal `//`
+under `lib/api/Std/`; each generated type or constant repeats its complete
+`public type` or `public const` prefix. These declarations expose the Rust-registered signatures and normal `//`
 Markdown blocks without participating in compilation or runtime dispatch. **Go to Definition** works for
 declarations and references in the same file and across units in the loaded
 project. Project navigation follows FPAS rules for lexical shadowing, direct

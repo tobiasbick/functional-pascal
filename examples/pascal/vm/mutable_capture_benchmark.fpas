@@ -6,8 +6,7 @@ program VmMutableCaptureBenchmark;
 
 uses Std.Args, Std.Console, Std.Conv, Std.Time;
 
-const
-  WarmupIterations: integer := 10000;
+const WarmupIterations: integer := 10000;
 
 function RunCalls(Iterations: integer): integer;
 begin

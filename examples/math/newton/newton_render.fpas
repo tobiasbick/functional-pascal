@@ -4,74 +4,74 @@ unit Newton.Render;
 
 uses Std.Console, Std.Tasks, Std.Arrays, Std.Conv, Std.Math, Std.Str, Newton.Color;
 
-type
-  Complex = record
-    public Re: real;
-    public Im: real;
+type Complex = record
+  public Re: real;
+  public Im: real;
 
-    public static function Create(Re: real; Im: real): Complex;
-    begin
-      return record
-        Re := Re;
-        Im := Im;
-      end;
-    end function;
+  public static function Create(Re: real; Im: real): Complex;
+  begin
+    return record
+      Re := Re;
+      Im := Im;
+    end;
+  end function;
 
-    public function Add(Self: Complex; Other: Complex): Complex;
-    begin
-      return record
-        Re := Self.Re + Other.Re;
-        Im := Self.Im + Other.Im;
-      end;
-    end function;
+  public function Add(Self: Complex; Other: Complex): Complex;
+  begin
+    return record
+      Re := Self.Re + Other.Re;
+      Im := Self.Im + Other.Im;
+    end;
+  end function;
 
-    public function Sub(Self: Complex; Other: Complex): Complex;
-    begin
-      return record
-        Re := Self.Re - Other.Re;
-        Im := Self.Im - Other.Im;
-      end;
-    end function;
+  public function Sub(Self: Complex; Other: Complex): Complex;
+  begin
+    return record
+      Re := Self.Re - Other.Re;
+      Im := Self.Im - Other.Im;
+    end;
+  end function;
 
-    public function Mul(Self: Complex; Other: Complex): Complex;
-    begin
-      return record
-        Re := Self.Re * Other.Re - Self.Im * Other.Im;
-        Im := Self.Re * Other.Im + Self.Im * Other.Re;
-      end;
-    end function;
+  public function Mul(Self: Complex; Other: Complex): Complex;
+  begin
+    return record
+      Re := Self.Re * Other.Re - Self.Im * Other.Im;
+      Im := Self.Re * Other.Im + Self.Im * Other.Re;
+    end;
+  end function;
 
-    public function Scale(Self: Complex; Factor: real): Complex;
-    begin
-      return record
-        Re := Self.Re * Factor;
-        Im := Self.Im * Factor;
-      end;
-    end function;
+  public function Scale(Self: Complex; Factor: real): Complex;
+  begin
+    return record
+      Re := Self.Re * Factor;
+      Im := Self.Im * Factor;
+    end;
+  end function;
 
-    public function Sq(Self: Complex): Complex;
-    begin
-      return Self.Mul(Self);
-    end function;
+  public function Sq(Self: Complex): Complex;
+  begin
+    return Self.Mul(Self);
+  end function;
 
-    public function Inv(Self: Complex): Complex;
-    begin
-      var Den: real := Self.Re * Self.Re + Self.Im * Self.Im;
-      return record
-        Re := Self.Re / Den;
-        Im := - Self.Im / Den;
-      end;
-    end function;
+  public function Inv(Self: Complex): Complex;
+  begin
+    var Den: real := Self.Re * Self.Re + Self.Im * Self.Im;
+    return record
+      Re := Self.Re / Den;
+      Im := - Self.Im / Den;
+    end;
+  end function;
 
-    public function MagSq(Self: Complex): real;
-    begin
-      return Self.Re * Self.Re + Self.Im * Self.Im;
-    end function;
-  end record;
-  PixelSample = record
-    public Root: integer;
-    public Shade: real;
-  end record;
+  public function MagSq(Self: Complex): real;
+  begin
+    return Self.Re * Self.Re + Self.Im * Self.Im;
+  end function;
+end record;
+
+type PixelSample = record
+  public Root: integer;
+  public Shade: real;
+end record;
 
 function ClosestRoot(Z: Complex): integer;
 begin

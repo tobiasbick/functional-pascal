@@ -2,12 +2,11 @@ program TuiBackgroundCommandTest;
 
 uses Std.Results, Std.Tasks, Std.Test, Std.Tui;
 
-type
-  CommandModel = record
-    Inbox: channel of integer;
-    Ready: channel of boolean;
-    Value: integer;
-  end record;
+type CommandModel = record
+  Inbox: channel of integer;
+  Ready: channel of boolean;
+  Value: integer;
+end record;
 
 function UpdateFramework(State: CommandModel; Msg: TuiMsg; Cmd: TuiCmdOutput): CommandModel;
 begin

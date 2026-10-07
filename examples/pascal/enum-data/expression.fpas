@@ -2,13 +2,12 @@ program ExpressionEval;
 
 uses Std.Console, Std.Conv;
 
-type
-  // A simple expression tree using enums with associated data
-  Expr = enum
-    Num(Value: integer);
-    Add(Left: Expr; Right: Expr);
-    Mul(Left: Expr; Right: Expr);
-  end enum;
+// A simple expression tree using enums with associated data
+type Expr = enum
+  Num(Value: integer);
+  Add(Left: Expr; Right: Expr);
+  Mul(Left: Expr; Right: Expr);
+end enum;
 
 function Eval(E: Expr): integer;
 begin

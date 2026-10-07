@@ -2,21 +2,19 @@ unit Std.Tui.Runtime.Routing.ButtonCapture;
 
 uses Std.Arrays, Std.Tui.Chrome.Button, Std.Tui.Ids.ControlId;
 
-public type
-  // Host-owned pointer capture for one button press.
-  TuiButtonPressState = enum
-    // Represents the `Idle` variant of `TuiButtonPressState`.
-    Idle;
-    // Represents the `Captured` variant of `TuiButtonPressState`.
-    //
-    // Parameters:
-    // - `Button`: Button specification carried by the variant.
-    // - `Inside`: Whether the pointer remains inside the captured control.
-    Captured(Button: TuiButtonSpec; Inside: boolean);
-  end enum;
+// Host-owned pointer capture for one button press.
+public type TuiButtonPressState = enum
+  // Represents the `Idle` variant of `TuiButtonPressState`.
+  Idle;
+  // Represents the `Captured` variant of `TuiButtonPressState`.
+  //
+  // Parameters:
+  // - `Button`: Button specification carried by the variant.
+  // - `Inside`: Whether the pointer remains inside the captured control.
+  Captured(Button: TuiButtonSpec; Inside: boolean);
+end enum;
 
-mutable var
-  TuiButtonPressStates: array of TuiButtonPressState := [];
+mutable var TuiButtonPressStates: array of TuiButtonPressState := [];
 
 // Allocates idle button-capture state for one application.
 public procedure TuiButtonCaptureOpen();

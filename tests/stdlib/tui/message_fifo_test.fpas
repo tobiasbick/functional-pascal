@@ -2,11 +2,10 @@ program TuiMessageFifoTest;
 
 uses Std.Arrays, Std.Test, Std.Tui;
 
-type
-  FifoModel = record
-    Events: array of string;
-    SeenCmdWasNoCommand: boolean;
-  end record;
+type FifoModel = record
+  Events: array of string;
+  SeenCmdWasNoCommand: boolean;
+end record;
 
 function MakeKey(Kind: TuiKeyKind; Character: string): TuiKeyEvent;
 begin

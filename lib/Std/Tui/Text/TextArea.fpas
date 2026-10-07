@@ -2,18 +2,17 @@ unit Std.Tui.Text.TextArea;
 
 uses Std.Arrays, Std.Console, Std.Str, Std.Tui.Geometry.Point, Std.Tui.Geometry.Size;
 
-public type
-  // Logical and terminal-cell location of one controlled text-area caret.
-  TuiTextAreaPosition = record
-    // Zero-based logical line index.
-    public Line: integer;
-    // Character index at which the logical line starts.
-    public LineStart: integer;
-    // Exclusive character index of the logical line.
-    public LineEnd: integer;
-    // Zero-based terminal display column.
-    public DisplayColumn: integer;
-  end record;
+// Logical and terminal-cell location of one controlled text-area caret.
+public type TuiTextAreaPosition = record
+  // Zero-based logical line index.
+  public Line: integer;
+  // Character index at which the logical line starts.
+  public LineStart: integer;
+  // Exclusive character index of the logical line.
+  public LineEnd: integer;
+  // Zero-based terminal display column.
+  public DisplayColumn: integer;
+end record;
 
 // Returns the number of logical LF-separated lines, including a trailing empty line.
 //

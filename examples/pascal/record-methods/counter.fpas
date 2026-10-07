@@ -2,33 +2,32 @@ program CounterExample;
 
 uses Std.Console, Std.Conv;
 
-type
-  Counter = record
-    Value: integer;
-    Step: integer;
+type Counter = record
+  Value: integer;
+  Step: integer;
 
-    function Increment(Self: Counter): Counter;
-    begin
-      var NewValue: integer := Self.Value + Self.Step;
-      return record
-        Value := NewValue;
-        Step := Self.Step;
-      end;
-    end function;
+  function Increment(Self: Counter): Counter;
+  begin
+    var NewValue: integer := Self.Value + Self.Step;
+    return record
+      Value := NewValue;
+      Step := Self.Step;
+    end;
+  end function;
 
-    function Reset(Self: Counter): Counter;
-    begin
-      return record
-        Value := 0;
-        Step := Self.Step;
-      end;
-    end function;
+  function Reset(Self: Counter): Counter;
+  begin
+    return record
+      Value := 0;
+      Step := Self.Step;
+    end;
+  end function;
 
-    procedure Show(Self: Counter);
-    begin
-      WriteLn('Counter: ' + IntToStr(Self.Value));
-    end procedure;
-  end record;
+  procedure Show(Self: Counter);
+  begin
+    WriteLn('Counter: ' + IntToStr(Self.Value));
+  end procedure;
+end record;
 
 begin
   var C: Counter := record

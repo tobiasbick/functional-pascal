@@ -7,9 +7,8 @@ uses
   Std.Tui.Layout.MeasureResult, Std.Tui.Layout.MeasureSpec, Std.Tui.Layout.SizePolicy,
   Std.Tui.Layout.Spacer, Std.Tui.Text.TextArea;
 
-public const
-  // Sentinel maximum extent used by expanding layout measurements.
-  TuiMeasureExpandingMaximum: integer := 9223372036854775807;
+// Sentinel maximum extent used by expanding layout measurements.
+public const TuiMeasureExpandingMaximum: integer := 9223372036854775807;
 
 function TuiMeasureLeafLabel(Text: string): TuiMeasureResult;
 begin

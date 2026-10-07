@@ -13,37 +13,36 @@ begin
   return 0;
 end function;
 
-public type
-  // Reports whether allocated bounds satisfy a measured minimum.
-  TuiLayoutFit = record
-    // Minimum value or size.
-    public Minimum: TuiSize;
-    // Available terminal size.
-    public Available: TuiSize;
-    // Amount by which the minimum size exceeds the available size.
-    public Overflow: TuiSize;
+// Reports whether allocated bounds satisfy a measured minimum.
+public type TuiLayoutFit = record
+  // Minimum value or size.
+  public Minimum: TuiSize;
+  // Available terminal size.
+  public Available: TuiSize;
+  // Amount by which the minimum size exceeds the available size.
+  public Overflow: TuiSize;
 
-    // Creates a fit report from minimum and available sizes.
-    //
-    // Parameters:
-    // - `Minimum`: Minimum accepted value or extent.
-    // - `Available`: Available terminal size.
-    public static function Create(Minimum: TuiSize; Available: TuiSize): TuiLayoutFit;
-    begin
-      return record
-        Minimum := Minimum;
-        Available := Available;
-        Overflow := TuiSize.Create(TuiLayoutFitOverflow(Minimum.Width, Available.Width), TuiLayoutFitOverflow(Minimum.Height, Available.Height));
-      end;
-    end function;
+  // Creates a fit report from minimum and available sizes.
+  //
+  // Parameters:
+  // - `Minimum`: Minimum accepted value or extent.
+  // - `Available`: Available terminal size.
+  public static function Create(Minimum: TuiSize; Available: TuiSize): TuiLayoutFit;
+  begin
+    return record
+      Minimum := Minimum;
+      Available := Available;
+      Overflow := TuiSize.Create(TuiLayoutFitOverflow(Minimum.Width, Available.Width), TuiLayoutFitOverflow(Minimum.Height, Available.Height));
+    end;
+  end function;
 
-    // Returns whether neither axis overflows.
-    //
-    // Parameters:
-    // - `Self`: Receiver value operated on by the method.
-    public function Fits(Self: TuiLayoutFit): boolean;
-    begin
-      return (Self.Overflow.Width = 0) and (Self.Overflow.Height = 0);
-    end function;
-  end record;
+  // Returns whether neither axis overflows.
+  //
+  // Parameters:
+  // - `Self`: Receiver value operated on by the method.
+  public function Fits(Self: TuiLayoutFit): boolean;
+  begin
+    return (Self.Overflow.Width = 0) and (Self.Overflow.Height = 0);
+  end function;
+end record;
 end unit;

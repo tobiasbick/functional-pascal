@@ -2,11 +2,10 @@ program RetiredShiftNamesTest;
 
 uses Std.Bits, Std.Test;
 
-type
-  Values = record
-    shl: integer;
-    shr: integer;
-  end record;
+type Values = record
+  shl: integer;
+  shr: integer;
+end record;
 
 function shl(Value: integer): integer;
 begin

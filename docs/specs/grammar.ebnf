@@ -13,7 +13,6 @@
 (* This file is the formal syntax annex (lexer + parser shape).       *)
 (* ================================================================ *)
 
-
 (* ================================================================ *)
 (* PART 1 — LEXICAL GRAMMAR                                        *)
 (* ================================================================ *)
@@ -116,7 +115,6 @@ token           = keyword | identifier | integer_literal
 (* '<=' and '>=' take priority over '<'/'>' followed by '='.        *)
 (* '<>' takes priority over '<' followed by '>'.                    *)
 
-
 (* ================================================================ *)
 (* PART 2 — SYNTACTIC GRAMMAR                                      *)
 (* ================================================================ *)
@@ -158,10 +156,10 @@ main_block          = 'begin' statement_list 'end' ;
 
 (* ---- 2.2 Declarations ----------------------------------------- *)
 
-program_declaration = const_block
-                    | var_block
-                    | mutable_var_block
-                    | type_block
+program_declaration = const_declaration
+                    | var_declaration
+                    | mutable_var_declaration
+                    | type_declaration
                     | function_decl
                     | procedure_decl ;
 
@@ -173,8 +171,12 @@ public_modifier     = 'public' ;
 (* applies to every member of a record declared in a unit. `public` is *)
 (* not valid in `program` files. `private` is an ordinary identifier. *)
 
+(* Each declaration repeats its keyword; `public` applies to one     *)
+(* declaration only. Local statement bindings repeat `mutable var`   *)
+(* in full. Local type and constant declarations are not permitted.  *)
+
 (* -- Constants -- *)
-const_block         = 'const' const_def { const_def } ;
+const_declaration       = 'const' const_def ;
 const_def           = identifier ':' type_expr ':=' expression ';' ;
 
 (* The initializer must be compile-time known. Syntax allows a general *)
@@ -182,14 +184,14 @@ const_def           = identifier ':' type_expr ':=' expression ';' ;
 (* other constants, enum members, and pure operator combinations.      *)
 
 (* -- Immutable variables -- *)
-var_block           = 'var' var_def { var_def } ;
+var_declaration         = 'var' var_def ;
 var_def             = identifier ':' type_expr ':=' expression ';' ;
 
 (* -- Mutable variables -- *)
-mutable_var_block   = 'mutable' 'var' var_def { var_def } ;
+mutable_var_declaration = 'mutable' 'var' var_def ;
 
 (* -- Type definitions -- *)
-type_block          = 'type' type_def { type_def } ;
+type_declaration        = 'type' type_def ;
 type_def            = identifier '=' type_body ';' ;
 type_body           = record_type
                     | enum_type

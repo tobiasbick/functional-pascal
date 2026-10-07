@@ -2,14 +2,13 @@ unit Std.Tui.Rendering.Surface.Row;
 
 uses Std.Arrays, Std.Tui.Cells.Cell, Std.Tui.Cells.StyleRole;
 
-public type
-  // Updated cell and continuation arrays for one working-surface row.
-  TuiSurfaceRow = record
-    // Leading cells and blanks for continuation columns.
-    public Cells: array of TuiCell;
-    // Whether each column continues a wide glyph from its left neighbor.
-    public Continuations: array of boolean;
-  end record;
+// Updated cell and continuation arrays for one working-surface row.
+public type TuiSurfaceRow = record
+  // Leading cells and blanks for continuation columns.
+  public Cells: array of TuiCell;
+  // Whether each column continues a wide glyph from its left neighbor.
+  public Continuations: array of boolean;
+end record;
 
 // Writes consecutive cells into one row while preserving wide-glyph invariants.
 // The caller clips Values to the row and supplies matching continuation storage.

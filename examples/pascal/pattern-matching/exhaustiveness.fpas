@@ -2,13 +2,12 @@ program ExhaustivenessExample;
 
 uses Std.Console, Std.Conv, Std.Arrays;
 
-type
-  // Every enum variant must have a case arm unless an else branch is present.
-  Light = enum
-    Red;
-    Yellow;
-    Green;
-  end enum;
+// Every enum variant must have a case arm unless an else branch is present.
+type Light = enum
+  Red;
+  Yellow;
+  Green;
+end enum;
 
 function TrafficAdvice(L: Light): string;
 begin

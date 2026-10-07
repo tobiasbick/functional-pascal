@@ -2,28 +2,29 @@ program VariantConstruction;
 
 uses Std.Console;
 
-type
-  Point = record
-    X: integer;
-    Y: integer;
-  end record;
-  Choice = enum
-    Empty;
-    Count(Value: integer);
-    Pair(Left: integer; Right: integer);
-    Nested(Item: Point);
-  end enum;
-  Holder = record
-    Item: Choice;
-  end record;
-  Outer = enum
-    First(Item: Choice);
-    Second(Item: Choice);
-  end enum;
+type Point = record
+  X: integer;
+  Y: integer;
+end record;
 
-mutable var
-  GlobalChoice: Choice := Choice.Empty;
-  Tick: integer := 0;
+type Choice = enum
+  Empty;
+  Count(Value: integer);
+  Pair(Left: integer; Right: integer);
+  Nested(Item: Point);
+end enum;
+
+type Holder = record
+  Item: Choice;
+end record;
+
+type Outer = enum
+  First(Item: Choice);
+  Second(Item: Choice);
+end enum;
+
+mutable var GlobalChoice: Choice := Choice.Empty;
+mutable var Tick: integer := 0;
 
 function ChoiceValue(Item: Choice): integer;
 begin

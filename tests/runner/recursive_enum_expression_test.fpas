@@ -2,12 +2,11 @@ program RecursiveEnumExpressionTest;
 
 uses Std.Test;
 
-type
-  Expr = enum
-    Num(Value: integer);
-    Add(Left: Expr; Right: Expr);
-    Mul(Left: Expr; Right: Expr);
-  end enum;
+type Expr = enum
+  Num(Value: integer);
+  Add(Left: Expr; Right: Expr);
+  Mul(Left: Expr; Right: Expr);
+end enum;
 
 function Eval(E: Expr): integer;
 begin

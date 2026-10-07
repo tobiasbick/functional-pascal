@@ -2,29 +2,32 @@ program FunctionValueAssignment;
 
 uses Std.Console;
 
-type
-  Handler = function(Value: integer): integer;
-  NoArgHandler = function(): integer;
-  Math = record
-    static function Transform(Value: integer): integer;
-    begin
-      return Value + 3;
-    end function;
-  end record;
-  Stats = record
-    static function Transform(Value: integer): integer;
-    begin
-      return Value + 4;
-    end function;
-  end record;
-  Counter = record
-    Base: integer;
+type Handler = function(Value: integer): integer;
 
-    function Add(Self: Counter; Value: integer): integer;
-    begin
-      return Self.Base + Value;
-    end function;
-  end record;
+type NoArgHandler = function(): integer;
+
+type Math = record
+  static function Transform(Value: integer): integer;
+  begin
+    return Value + 3;
+  end function;
+end record;
+
+type Stats = record
+  static function Transform(Value: integer): integer;
+  begin
+    return Value + 4;
+  end function;
+end record;
+
+type Counter = record
+  Base: integer;
+
+  function Add(Self: Counter; Value: integer): integer;
+  begin
+    return Self.Base + Value;
+  end function;
+end record;
 
 function AddOne(Value: integer): integer;
 begin

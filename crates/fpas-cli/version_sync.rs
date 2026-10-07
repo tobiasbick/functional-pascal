@@ -2,6 +2,9 @@ use std::fs;
 use std::io;
 use std::path::Path;
 
+/// Validates individually declared compiler and library version constants.
+///
+/// **Documentation:** `docs/pascal/std/README.md`
 pub(crate) fn validate_std_version(path: &Path, expected: &str) -> io::Result<()> {
     let source = fs::read_to_string(path)?;
     for constant in ["CompilerVersion", "LibraryVersion"] {
@@ -25,7 +28,12 @@ pub(crate) fn validate_std_version(path: &Path, expected: &str) -> io::Result<()
 
 fn constant_value<'a>(source: &'a str, name: &str) -> Option<&'a str> {
     source.lines().find_map(|line| {
-        let declaration = line.trim().strip_prefix(name)?;
+        let line = line.trim();
+        let line = line.strip_prefix("public ").unwrap_or(line);
+        let declaration = line
+            .strip_prefix("const ")?
+            .trim_start()
+            .strip_prefix(name)?;
         let value = declaration
             .strip_prefix(": string")?
             .trim_start()
@@ -51,7 +59,7 @@ mod tests {
         let source = root.join("Version.fpas");
         write_text(
             &source,
-            "const\n  CompilerVersion: string := '1.2.3';\n  LibraryVersion: string := '1.2.3';\n",
+            "public const CompilerVersion: string := '1.2.3';\npublic const LibraryVersion: string := '1.2.3';\n",
         );
 
         validate_std_version(&source, "1.2.3").expect("matching versions must be accepted");
@@ -64,7 +72,7 @@ mod tests {
         let source = root.join("Version.fpas");
         write_text(
             &source,
-            "const\n  CompilerVersion: string := '1.2.3';\n  LibraryVersion: string := '1.2.2';\n",
+            "const CompilerVersion: string := '1.2.3';\nconst LibraryVersion: string := '1.2.2';\n",
         );
 
         let error = validate_std_version(&source, "1.2.3")
@@ -79,7 +87,7 @@ mod tests {
     fn rejects_a_missing_required_version() {
         let root = create_temp_dir("stdlib-version-missing");
         let source = root.join("Version.fpas");
-        write_text(&source, "const\n  CompilerVersion: string := '1.2.3';\n");
+        write_text(&source, "const CompilerVersion: string := '1.2.3';\n");
 
         let error =
             validate_std_version(&source, "1.2.3").expect_err("missing versions must be rejected");

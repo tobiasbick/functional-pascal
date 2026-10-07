@@ -2,20 +2,21 @@ program PayloadMutation;
 
 uses Std.Console;
 
-type
-  Point = record
-    X: integer;
-    Y: integer;
-  end record;
-  Choice = enum
-    Count(Value: integer);
-    Pair(Left: integer; Right: integer);
-    Nested(Item: Point);
-  end enum;
-  Box = record
-    Items: array of integer;
-    Scores: dict of string to integer;
-  end record;
+type Point = record
+  X: integer;
+  Y: integer;
+end record;
+
+type Choice = enum
+  Count(Value: integer);
+  Pair(Left: integer; Right: integer);
+  Nested(Item: Point);
+end enum;
+
+type Box = record
+  Items: array of integer;
+  Scores: dict of string to integer;
+end record;
 
 function ChoiceValue(Item: Choice): integer;
 begin

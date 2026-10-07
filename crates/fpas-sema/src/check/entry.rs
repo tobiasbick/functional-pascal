@@ -7,8 +7,10 @@ use fpas_parser::{Program, Unit};
 use fpas_unit::interface::UnitInterface;
 
 impl Checker {
+    /// Collect whole-program types before checking ordered declarations and the body.
     pub fn check_program(&mut self, program: &Program) {
         self.prepare_program(program);
+        self.collect_unit_types(&program.declarations);
 
         for decl in &program.declarations {
             self.check_decl(decl);
@@ -17,6 +19,7 @@ impl Checker {
         self.check_program_body(program);
     }
 
+    /// Install dependency interfaces, collect types, and check an ordered program.
     pub(crate) fn check_program_with_interfaces(
         &mut self,
         program: &Program,
@@ -41,6 +44,7 @@ impl Checker {
             .collect();
         self.install_supporting_interface_types(supporting_interfaces)?;
         self.install_interfaces(program, interfaces)?;
+        self.collect_unit_types(&program.declarations);
 
         for decl in &program.declarations {
             self.check_decl(decl);
@@ -50,6 +54,7 @@ impl Checker {
         Ok(())
     }
 
+    /// Check a unit with whole-unit type visibility and source-order values.
     pub(crate) fn check_unit_with_interfaces(
         &mut self,
         unit: &Unit,
@@ -81,6 +86,7 @@ impl Checker {
             return_type: None,
             owner_unit: Some(unit.name.parts.join(".")),
         });
+        self.collect_unit_types(&unit.declarations);
         for declaration in &unit.declarations {
             self.check_decl(declaration);
         }

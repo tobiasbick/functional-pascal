@@ -14,113 +14,164 @@ uses
   Std.Tui.Runtime.Application, Std.Tui.Runtime.Application.Background, Std.Tui.Runtime.Cmd,
   Std.Tui.Runtime.Helpers, Std.Tui.Runtime.Msg, Std.Tui.Runtime.PointerEvent;
 
-public type
-  // Zero-based terminal-cell coordinate.
-  TuiPoint = Std.Tui.Geometry.Point.TuiPoint;
-  // Fixed terminal extent used by headless Tui hosts.
-  TuiSize = Std.Tui.Geometry.Size.TuiSize;
-  // Zero-based half-open terminal-cell rectangle.
-  TuiRect = Std.Tui.Geometry.Rect.TuiRect;
-  // Color representation kind for terminal painting.
-  TuiColorKind = Std.Tui.Cells.Color.TuiColorKind;
-  // Validated CRT, ANSI-256, or RGB color value.
-  TuiColor = Std.Tui.Cells.Color.TuiColor;
-  // Semantic style role resolved through `TuiPalette`.
-  TuiStyleRole = Std.Tui.Cells.StyleRole.TuiStyleRole;
-  // Concrete foreground/background colors and text attributes.
-  TuiStyle = Std.Tui.Cells.Style.TuiStyle;
-  // One validated renderable grapheme with a semantic style role.
-  TuiCell = Std.Tui.Cells.Cell.TuiCell;
-  // Maps every `TuiStyleRole` to a concrete `TuiStyle`.
-  TuiPalette = Std.Tui.Cells.Palette.TuiPalette;
-  // Concrete styles for every visual button state.
-  TuiButtonPalette = Std.Tui.Cells.ButtonPalette.TuiButtonPalette;
-  // Concrete styles for every visual one-line input state.
-  TuiInputPalette = Std.Tui.Cells.InputPalette.TuiInputPalette;
-  // Per-axis growth and shrink policy kind.
-  TuiSizePolicyKind = Std.Tui.Layout.SizePolicy.TuiSizePolicyKind;
-  // Independent horizontal and vertical size policies.
-  TuiSizePolicy = Std.Tui.Layout.SizePolicy.TuiSizePolicy;
-  // Alignment of content inside an allocated layout slot.
-  TuiAlignmentKind = Std.Tui.Layout.Alignment.TuiAlignmentKind;
-  // Independent horizontal and vertical alignment.
-  TuiAlignment = Std.Tui.Layout.Alignment.TuiAlignment;
-  // Non-negative outer margins around a laid-out child.
-  TuiMargins = Std.Tui.Layout.Margins.TuiMargins;
-  // Immutable layout inputs for a single-child layout wrapper.
-  TuiLayoutSettings = Std.Tui.Layout.LayoutSettings.TuiLayoutSettings;
-  // Whether a measure axis is unbounded or capped.
-  TuiMeasureConstraintKind = Std.Tui.Layout.MeasureConstraint.TuiMeasureConstraintKind;
-  // One-axis measurement constraint.
-  TuiMeasureConstraint = Std.Tui.Layout.MeasureConstraint.TuiMeasureConstraint;
-  // Width and height measurement constraints.
-  TuiMeasureSpec = Std.Tui.Layout.MeasureSpec.TuiMeasureSpec;
-  // Minimum, preferred, and maximum extents.
-  TuiMeasureResult = Std.Tui.Layout.MeasureResult.TuiMeasureResult;
-  // Whether a spacer is fixed or expanding.
-  TuiSpacerKind = Std.Tui.Layout.Spacer.TuiSpacerKind;
-  // Empty layout extent used between siblings.
-  TuiSpacer = Std.Tui.Layout.Spacer.TuiSpacer;
-  // Fit report for terminal-too-small layout.
-  TuiLayoutFit = Std.Tui.Layout.LayoutFit.TuiLayoutFit;
-  // Positive identity unique among interactive nodes in one rendered tree.
-  TuiControlId = Std.Tui.Ids.ControlId.TuiControlId;
-  // Positive application intent; repetitions across controls are allowed.
-  TuiAction = Std.Tui.Ids.Action.TuiAction;
-  // Immutable button identity, label, mnemonic, action, and state.
-  TuiButtonSpec = Std.Tui.Chrome.Button.TuiButtonSpec;
-  // Immutable one-line input state, hint, and optional history.
-  TuiInputSpec = Std.Tui.Chrome.Input.TuiInputSpec;
-  // Immutable rectangular grid of concrete or theme-resolved terminal cells.
-  TuiCellGrid = Std.Tui.Chrome.CellGrid.TuiCellGrid;
-  // Immutable bounded value displayed as a compact dashboard gauge.
-  TuiGauge = Std.Tui.Chrome.Gauge.TuiGauge;
-  // Immutable description of one flat menu-bar action.
-  TuiMenuItem = Std.Tui.Chrome.MenuItem.TuiMenuItem;
-  // Structural keyboard gesture used by menu commands.
-  TuiKeyGesture = Std.Tui.Chrome.KeyGesture.TuiKeyGesture;
-  // Positive identity of one node in a flat menu definition.
-  TuiMenuNodeId = Std.Tui.Chrome.MenuNode.TuiMenuNodeId;
-  // One flat parent-linked menu node.
-  TuiMenuNode = Std.Tui.Chrome.MenuNode.TuiMenuNode;
-  // Model-owned open and active menu state.
-  TuiMenuState = Std.Tui.Chrome.MenuNode.TuiMenuState;
-  // Named constructors for flat menu nodes.
-  TuiMenuNodeBuilders = Std.Tui.Chrome.MenuNode.TuiMenuNodeBuilders;
-  // Immutable display or action item in a status line.
-  TuiStatusItem = Std.Tui.Chrome.StatusItem.TuiStatusItem;
-  // Constructors for immutable status-line items.
-  TuiStatusItemBuilders = Std.Tui.Chrome.StatusItem.TuiStatusItemBuilders;
-  // Runtime command returned through Update's mutable output parameter.
-  TuiCmd = Std.Tui.Runtime.Cmd.TuiCmd;
-  // Observable command output passed to Update.
-  TuiCmdOutput = Std.Tui.Runtime.Cmd.TuiCmdOutput;
-  // Cooperative callback executed as application-owned background work.
-  TuiBackgroundWork = Std.Tui.Runtime.Application.Background.TuiBackgroundWork;
-  // Framework message delivered to Update.
-  TuiMsg = Std.Tui.Runtime.Msg.TuiMsg;
-  // Pointer button carried by a normalized pointer event.
-  TuiPointerButton = Std.Tui.Runtime.PointerEvent.TuiPointerButton;
-  // Normalized pointer action in zero-based application coordinates.
-  TuiPointerEvent = Std.Tui.Runtime.PointerEvent.TuiPointerEvent;
-  // Console mouse action used by pointer events.
-  TuiPointerAction = Std.Console.MouseAction;
-  // Immutable element-tree node.
-  TuiElement = Std.Tui.Elements.Element.TuiElement;
-  // Named element constructors.
-  TuiElementBuilders = Std.Tui.Elements.Element.TuiElementBuilders;
-  // Explicit copy of the last painted headless surface.
-  TuiSurfaceSnapshot = Std.Tui.Rendering.Surface.TuiSurfaceSnapshot;
-  // Host-owned mutable working surface handle.
-  TuiWorkingSurface = Std.Tui.Rendering.Surface.TuiWorkingSurface;
-  // Private frame-scoped drawing capability over one working surface.
-  TuiCanvas = Std.Tui.Rendering.Canvas.TuiCanvas;
-  // Headless application host.
-  TuiApplication = Std.Tui.Runtime.Application.TuiApplication;
-  // Console key event used by headless key injection.
-  TuiKeyEvent = Std.Console.KeyEvent;
-  // Console key kind used by headless key injection.
-  TuiKeyKind = Std.Console.KeyKind;
+// Zero-based terminal-cell coordinate.
+public type TuiPoint = Std.Tui.Geometry.Point.TuiPoint;
+
+// Fixed terminal extent used by headless Tui hosts.
+public type TuiSize = Std.Tui.Geometry.Size.TuiSize;
+
+// Zero-based half-open terminal-cell rectangle.
+public type TuiRect = Std.Tui.Geometry.Rect.TuiRect;
+
+// Color representation kind for terminal painting.
+public type TuiColorKind = Std.Tui.Cells.Color.TuiColorKind;
+
+// Validated CRT, ANSI-256, or RGB color value.
+public type TuiColor = Std.Tui.Cells.Color.TuiColor;
+
+// Semantic style role resolved through `TuiPalette`.
+public type TuiStyleRole = Std.Tui.Cells.StyleRole.TuiStyleRole;
+
+// Concrete foreground/background colors and text attributes.
+public type TuiStyle = Std.Tui.Cells.Style.TuiStyle;
+
+// One validated renderable grapheme with a semantic style role.
+public type TuiCell = Std.Tui.Cells.Cell.TuiCell;
+
+// Maps every `TuiStyleRole` to a concrete `TuiStyle`.
+public type TuiPalette = Std.Tui.Cells.Palette.TuiPalette;
+
+// Concrete styles for every visual button state.
+public type TuiButtonPalette = Std.Tui.Cells.ButtonPalette.TuiButtonPalette;
+
+// Concrete styles for every visual one-line input state.
+public type TuiInputPalette = Std.Tui.Cells.InputPalette.TuiInputPalette;
+
+// Per-axis growth and shrink policy kind.
+public type TuiSizePolicyKind = Std.Tui.Layout.SizePolicy.TuiSizePolicyKind;
+
+// Independent horizontal and vertical size policies.
+public type TuiSizePolicy = Std.Tui.Layout.SizePolicy.TuiSizePolicy;
+
+// Alignment of content inside an allocated layout slot.
+public type TuiAlignmentKind = Std.Tui.Layout.Alignment.TuiAlignmentKind;
+
+// Independent horizontal and vertical alignment.
+public type TuiAlignment = Std.Tui.Layout.Alignment.TuiAlignment;
+
+// Non-negative outer margins around a laid-out child.
+public type TuiMargins = Std.Tui.Layout.Margins.TuiMargins;
+
+// Immutable layout inputs for a single-child layout wrapper.
+public type TuiLayoutSettings = Std.Tui.Layout.LayoutSettings.TuiLayoutSettings;
+
+// Whether a measure axis is unbounded or capped.
+public type TuiMeasureConstraintKind = Std.Tui.Layout.MeasureConstraint.TuiMeasureConstraintKind;
+
+// One-axis measurement constraint.
+public type TuiMeasureConstraint = Std.Tui.Layout.MeasureConstraint.TuiMeasureConstraint;
+
+// Width and height measurement constraints.
+public type TuiMeasureSpec = Std.Tui.Layout.MeasureSpec.TuiMeasureSpec;
+
+// Minimum, preferred, and maximum extents.
+public type TuiMeasureResult = Std.Tui.Layout.MeasureResult.TuiMeasureResult;
+
+// Whether a spacer is fixed or expanding.
+public type TuiSpacerKind = Std.Tui.Layout.Spacer.TuiSpacerKind;
+
+// Empty layout extent used between siblings.
+public type TuiSpacer = Std.Tui.Layout.Spacer.TuiSpacer;
+
+// Fit report for terminal-too-small layout.
+public type TuiLayoutFit = Std.Tui.Layout.LayoutFit.TuiLayoutFit;
+
+// Positive identity unique among interactive nodes in one rendered tree.
+public type TuiControlId = Std.Tui.Ids.ControlId.TuiControlId;
+
+// Positive application intent; repetitions across controls are allowed.
+public type TuiAction = Std.Tui.Ids.Action.TuiAction;
+
+// Immutable button identity, label, mnemonic, action, and state.
+public type TuiButtonSpec = Std.Tui.Chrome.Button.TuiButtonSpec;
+
+// Immutable one-line input state, hint, and optional history.
+public type TuiInputSpec = Std.Tui.Chrome.Input.TuiInputSpec;
+
+// Immutable rectangular grid of concrete or theme-resolved terminal cells.
+public type TuiCellGrid = Std.Tui.Chrome.CellGrid.TuiCellGrid;
+
+// Immutable bounded value displayed as a compact dashboard gauge.
+public type TuiGauge = Std.Tui.Chrome.Gauge.TuiGauge;
+
+// Immutable description of one flat menu-bar action.
+public type TuiMenuItem = Std.Tui.Chrome.MenuItem.TuiMenuItem;
+
+// Structural keyboard gesture used by menu commands.
+public type TuiKeyGesture = Std.Tui.Chrome.KeyGesture.TuiKeyGesture;
+
+// Positive identity of one node in a flat menu definition.
+public type TuiMenuNodeId = Std.Tui.Chrome.MenuNode.TuiMenuNodeId;
+
+// One flat parent-linked menu node.
+public type TuiMenuNode = Std.Tui.Chrome.MenuNode.TuiMenuNode;
+
+// Model-owned open and active menu state.
+public type TuiMenuState = Std.Tui.Chrome.MenuNode.TuiMenuState;
+
+// Named constructors for flat menu nodes.
+public type TuiMenuNodeBuilders = Std.Tui.Chrome.MenuNode.TuiMenuNodeBuilders;
+
+// Immutable display or action item in a status line.
+public type TuiStatusItem = Std.Tui.Chrome.StatusItem.TuiStatusItem;
+
+// Constructors for immutable status-line items.
+public type TuiStatusItemBuilders = Std.Tui.Chrome.StatusItem.TuiStatusItemBuilders;
+
+// Runtime command returned through Update's mutable output parameter.
+public type TuiCmd = Std.Tui.Runtime.Cmd.TuiCmd;
+
+// Observable command output passed to Update.
+public type TuiCmdOutput = Std.Tui.Runtime.Cmd.TuiCmdOutput;
+
+// Cooperative callback executed as application-owned background work.
+public type TuiBackgroundWork = Std.Tui.Runtime.Application.Background.TuiBackgroundWork;
+
+// Framework message delivered to Update.
+public type TuiMsg = Std.Tui.Runtime.Msg.TuiMsg;
+
+// Pointer button carried by a normalized pointer event.
+public type TuiPointerButton = Std.Tui.Runtime.PointerEvent.TuiPointerButton;
+
+// Normalized pointer action in zero-based application coordinates.
+public type TuiPointerEvent = Std.Tui.Runtime.PointerEvent.TuiPointerEvent;
+
+// Console mouse action used by pointer events.
+public type TuiPointerAction = Std.Console.MouseAction;
+
+// Immutable element-tree node.
+public type TuiElement = Std.Tui.Elements.Element.TuiElement;
+
+// Named element constructors.
+public type TuiElementBuilders = Std.Tui.Elements.Element.TuiElementBuilders;
+
+// Explicit copy of the last painted headless surface.
+public type TuiSurfaceSnapshot = Std.Tui.Rendering.Surface.TuiSurfaceSnapshot;
+
+// Host-owned mutable working surface handle.
+public type TuiWorkingSurface = Std.Tui.Rendering.Surface.TuiWorkingSurface;
+
+// Private frame-scoped drawing capability over one working surface.
+public type TuiCanvas = Std.Tui.Rendering.Canvas.TuiCanvas;
+
+// Headless application host.
+public type TuiApplication = Std.Tui.Runtime.Application.TuiApplication;
+
+// Console key event used by headless key injection.
+public type TuiKeyEvent = Std.Console.KeyEvent;
+
+// Console key kind used by headless key injection.
+public type TuiKeyKind = Std.Console.KeyKind;
 
 // Creates a source-aware action message.
 //

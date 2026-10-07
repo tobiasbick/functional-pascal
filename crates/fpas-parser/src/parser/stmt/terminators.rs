@@ -13,7 +13,10 @@ impl Parser {
     pub(crate) fn parse_statement_list(&mut self) -> Vec<Stmt> {
         let mut statements = Vec::new();
         while !self.is_stmt_list_end() {
-            statements.push(self.parse_terminated_statement());
+            let statement = self
+                .recover_unprefixed_variable(statements.last())
+                .unwrap_or_else(|| self.parse_terminated_statement());
+            statements.push(statement);
         }
         statements
     }

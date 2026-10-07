@@ -2,11 +2,10 @@ program DebuggerTarget;
 
 uses Std.Console;
 
-type
-  Point = record
-    X: integer;
-    Y: integer;
-  end record;
+type Point = record
+  X: integer;
+  Y: integer;
+end record;
 
 function Factorial(Value: integer): integer;
 begin

@@ -6,11 +6,9 @@ program VmGlobalAccessBenchmark;
 
 uses Std.Args, Std.Console, Std.Conv, Std.Time;
 
-const
-  WarmupIterations: integer := 10000;
+const WarmupIterations: integer := 10000;
 
-mutable var
-  GlobalValue: integer := 0;
+mutable var GlobalValue: integer := 0;
 
 function RunAccess(Iterations: integer): integer;
 begin

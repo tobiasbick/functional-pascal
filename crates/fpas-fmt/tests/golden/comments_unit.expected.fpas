@@ -1,7 +1,6 @@
 // Unit doc.
 unit Demo;
 
-mutable var
-  // field doc
-  Count: integer := 0;
+// field doc
+mutable var Count: integer := 0;
 end unit;

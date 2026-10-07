@@ -2,13 +2,12 @@ program TuiBackgroundSubscriptionTest;
 
 uses Std.Results, Std.Tasks, Std.Test, Std.Tui;
 
-type
-  SubscriptionModel = record
-    Gate: channel of boolean;
-    Started: channel of integer;
-    Stopped: channel of integer;
-    Generation: integer;
-  end record;
+type SubscriptionModel = record
+  Gate: channel of boolean;
+  Started: channel of integer;
+  Stopped: channel of integer;
+  Generation: integer;
+end record;
 
 procedure ReplaceWorker(State: SubscriptionModel; Cmd: TuiCmdOutput);
 begin

@@ -11,21 +11,20 @@ begin
   return Value;
 end function;
 
-public type
-  // Positive application-intent identity; duplicates across controls are allowed.
-  TuiAction = record
-    // Validated scalar value represented by the record.
-    public Value: integer;
+// Positive application-intent identity; duplicates across controls are allowed.
+public type TuiAction = record
+  // Validated scalar value represented by the record.
+  public Value: integer;
 
-    // Creates a validated positive action identity.
-    //
-    // Parameters:
-    // - `Value`: Value used to create or update the result.
-    public static function Create(Value: integer): TuiAction;
-    begin
-      return record
-        Value := TuiActionRequirePositive(Value);
-      end;
-    end function;
-  end record;
+  // Creates a validated positive action identity.
+  //
+  // Parameters:
+  // - `Value`: Value used to create or update the result.
+  public static function Create(Value: integer): TuiAction;
+  begin
+    return record
+      Value := TuiActionRequirePositive(Value);
+    end;
+  end function;
+end record;
 end unit;

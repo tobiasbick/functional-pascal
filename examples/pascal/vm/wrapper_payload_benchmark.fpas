@@ -6,8 +6,7 @@ program WrapperPayloadBenchmark;
 
 uses Std.Args, Std.Console, Std.Conv, Std.Options, Std.Results, Std.Time;
 
-const
-  WarmupIterations: integer := 100;
+const WarmupIterations: integer := 100;
 
 function RunWrappers(Iterations: integer): integer;
 begin

@@ -6,8 +6,7 @@ program VmBranchDispatchBenchmark;
 
 uses Std.Args, Std.Console, Std.Conv, Std.Time;
 
-const
-  WarmupIterations: integer := 100000;
+const WarmupIterations: integer := 100000;
 
 function RunBranches(Iterations: integer): integer;
 begin

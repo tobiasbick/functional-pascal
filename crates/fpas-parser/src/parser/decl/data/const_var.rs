@@ -1,12 +1,19 @@
+//! Individual constant and variable declarations.
+//!
+//! **Documentation:** `docs/pascal/language/basics/variables.md`
+
 use crate::ast::*;
 use crate::parser::Parser;
 use fpas_diagnostics::codes::PARSE_EXPECTED_IDENTIFIER;
 use fpas_lexer::Token;
 
 impl Parser {
-    pub(in super::super) fn parse_const_block(&mut self, visibility: Visibility) -> Vec<Decl> {
+    /// Parses exactly one constant after its own `const` keyword.
+    pub(in super::super) fn parse_const_declaration(
+        &mut self,
+        visibility: Visibility,
+    ) -> Option<Decl> {
         self.advance();
-        let mut defs = Vec::new();
         if !self.can_start_declaration_definition() {
             self.error_with_code(
                 PARSE_EXPECTED_IDENTIFIER,
@@ -15,14 +22,13 @@ impl Parser {
                     .unwrap_or("Add a declaration such as `const X: integer := 1;`."),
                 self.current_span(),
             );
+            return None;
         }
-        while self.can_start_declaration_definition() {
-            defs.push(Decl::Const(self.parse_const_def(visibility)));
-        }
-        defs
+        Some(Decl::Const(self.parse_const_def(visibility)))
     }
 
-    fn parse_const_def(&mut self, visibility: Visibility) -> ConstDef {
+    /// Parses a constant definition, including one recovered after a missing keyword.
+    pub(in crate::parser::decl) fn parse_const_def(&mut self, visibility: Visibility) -> ConstDef {
         let start = self.current_span();
         let (name, type_expr, value) = self.parse_typed_init_fields(start);
         self.expect_semi();
@@ -35,16 +41,16 @@ impl Parser {
         }
     }
 
-    pub(in super::super) fn parse_var_block(
+    /// Parses one variable after its complete `var` or `mutable var` prefix.
+    pub(in super::super) fn parse_variable_declaration(
         &mut self,
         mutable: bool,
         visibility: Visibility,
-    ) -> Vec<Decl> {
+    ) -> Option<Decl> {
         if mutable {
             self.advance();
         }
         self.advance();
-        let mut defs = Vec::new();
         if !self.can_start_declaration_definition() {
             let (kind, example) = if mutable {
                 ("mutable variable", "mutable var X: integer := 1;")
@@ -53,21 +59,19 @@ impl Parser {
             };
             self.error_with_code(
                 PARSE_EXPECTED_IDENTIFIER,
-                &format!("Expected a {kind} declaration after the section keyword"),
+                &format!("Expected a {kind} declaration after its keyword"),
                 self.reserved_identifier_hint()
                     .unwrap_or(&format!("Add a declaration such as `{example}`.")),
                 self.current_span(),
             );
+            return None;
         }
-        while self.can_start_declaration_definition() {
-            let var_def = self.parse_var_def(visibility);
-            if mutable {
-                defs.push(Decl::MutableVar(var_def));
-            } else {
-                defs.push(Decl::Var(var_def));
-            }
-        }
-        defs
+        let definition = self.parse_var_def(visibility);
+        Some(if mutable {
+            Decl::MutableVar(definition)
+        } else {
+            Decl::Var(definition)
+        })
     }
 
     /// Includes reserved block keywords so identifier recovery retains the rest of the definition.
@@ -75,6 +79,7 @@ impl Parser {
         matches!(self.current_token(), Token::Ident(_)) || self.reserved_identifier_hint().is_some()
     }
 
+    /// Parses a single binding's name, required type, and initializer.
     pub(in crate::parser) fn parse_typed_init_fields(
         &mut self,
         start: fpas_lexer::Span,
@@ -87,6 +92,7 @@ impl Parser {
         (name, type_expr, value)
     }
 
+    /// Parses one variable definition and its terminator.
     pub(in crate::parser) fn parse_var_def(&mut self, visibility: Visibility) -> VarDef {
         let start = self.current_span();
         let (name, type_expr, value) = self.parse_typed_init_fields(start);

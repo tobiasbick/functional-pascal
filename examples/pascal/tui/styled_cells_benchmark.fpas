@@ -6,10 +6,9 @@ program TuiStyledCellsBenchmark;
 
 uses Std.Args, Std.Arrays, Std.Console, Std.Conv, Std.Time, Std.Tui;
 
-const
-  // One 128 by 44 cell frame of half-block pixels.
-  FrameWidth: integer := 128;
-  FrameHeight: integer := 44;
+// One 128 by 44 cell frame of half-block pixels.
+const FrameWidth: integer := 128;
+const FrameHeight: integer := 44;
 
 // Builds one frame of cells whose colors vary per cell and returns a checksum of its channels.
 function BuildFrame(Frame: integer): integer;

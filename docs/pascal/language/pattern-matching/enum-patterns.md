@@ -3,13 +3,12 @@
 Match on enum variants:
 
 ```pascal
-type
-  Direction = enum
-    North;
-    South;
-    East;
-    West;
-  end enum;
+type Direction = enum
+  North;
+  South;
+  East;
+  West;
+end enum;
 
 function DirectionName(D: Direction): string;
 begin

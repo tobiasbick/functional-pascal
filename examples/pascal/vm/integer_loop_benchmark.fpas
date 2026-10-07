@@ -6,8 +6,7 @@ program VmIntegerLoopBenchmark;
 
 uses Std.Args, Std.Console, Std.Conv, Std.Time;
 
-const
-  WarmupIterations: integer := 1000000;
+const WarmupIterations: integer := 1000000;
 
 function RunLoop(Iterations: integer): integer;
 begin

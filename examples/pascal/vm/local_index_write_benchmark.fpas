@@ -3,8 +3,7 @@ program LocalIndexWriteBenchmark;
 
 uses Std.Args, Std.Arrays, Std.Console, Std.Conv, Std.Time;
 
-const
-  WarmupIterations: integer := 100;
+const WarmupIterations: integer := 100;
 
 function RewriteValues(mutable Values: array of integer; Iterations: integer): integer;
 begin

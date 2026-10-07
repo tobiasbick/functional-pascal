@@ -4,60 +4,60 @@ unit Tricorn.Render;
 
 uses Std.Console, Std.Tasks, Std.Arrays, Std.Conv, Std.Math, Std.Str, Tricorn.Color;
 
-type
-  Complex = record
-    public Re: real;
-    public Im: real;
+type Complex = record
+  public Re: real;
+  public Im: real;
 
-    public static function Zero(): Complex;
-    begin
-      return record
-        Re := 0.0;
-        Im := 0.0;
-      end;
-    end function;
+  public static function Zero(): Complex;
+  begin
+    return record
+      Re := 0.0;
+      Im := 0.0;
+    end;
+  end function;
 
-    public static function Create(Re: real; Im: real): Complex;
-    begin
-      return record
-        Re := Re;
-        Im := Im;
-      end;
-    end function;
+  public static function Create(Re: real; Im: real): Complex;
+  begin
+    return record
+      Re := Re;
+      Im := Im;
+    end;
+  end function;
 
-    public function Conj(Self: Complex): Complex;
-    begin
-      return record
-        Re := Self.Re;
-        Im := - Self.Im;
-      end;
-    end function;
+  public function Conj(Self: Complex): Complex;
+  begin
+    return record
+      Re := Self.Re;
+      Im := - Self.Im;
+    end;
+  end function;
 
-    public function Sq(Self: Complex): Complex;
-    begin
-      return record
-        Re := Self.Re * Self.Re - Self.Im * Self.Im;
-        Im := (2.0 * Self.Re) * Self.Im;
-      end;
-    end function;
+  public function Sq(Self: Complex): Complex;
+  begin
+    return record
+      Re := Self.Re * Self.Re - Self.Im * Self.Im;
+      Im := (2.0 * Self.Re) * Self.Im;
+    end;
+  end function;
 
-    public function Add(Self: Complex; Other: Complex): Complex;
-    begin
-      return record
-        Re := Self.Re + Other.Re;
-        Im := Self.Im + Other.Im;
-      end;
-    end function;
+  public function Add(Self: Complex; Other: Complex): Complex;
+  begin
+    return record
+      Re := Self.Re + Other.Re;
+      Im := Self.Im + Other.Im;
+    end;
+  end function;
 
-    public function MagSq(Self: Complex): real;
-    begin
-      return Self.Re * Self.Re + Self.Im * Self.Im;
-    end function;
-  end record;
-  PixelSample = record
-    public IsInside: boolean;
-    public EscapeValue: real;
-  end record;
+  public function MagSq(Self: Complex): real;
+  begin
+    return Self.Re * Self.Re + Self.Im * Self.Im;
+  end function;
+end record;
+
+type PixelSample = record
+  public IsInside: boolean;
+  public EscapeValue: real;
+end record;
 
 function Iterate(C: Complex; MaxIter: integer): PixelSample;
 begin

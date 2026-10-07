@@ -12,12 +12,12 @@ type
     X: integer;
     Y: real;
   end record;
-  Box = record
+  type Box = record
     Corner: Point;
     Label: string;
     Tag: option of Point;
   end record;
-  Shape = enum
+  type Shape = enum
     Circle(Center: Point; Radius: integer);
     Square(Side: integer);
     Dot;

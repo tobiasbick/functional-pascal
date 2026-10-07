@@ -2,21 +2,23 @@ program CapturingRoutineAssignment;
 
 uses Std.Console, Std.Tasks;
 
-type
-  Handler = function(Value: integer): integer;
-  Action = procedure();
-  Math = record
-    static function Transform(Value: integer): integer;
-    begin
-      return Value + 5;
-    end function;
-  end record;
-  Stats = record
-    static function Transform(Value: integer): integer;
-    begin
-      return Value + 6;
-    end function;
-  end record;
+type Handler = function(Value: integer): integer;
+
+type Action = procedure();
+
+type Math = record
+  static function Transform(Value: integer): integer;
+  begin
+    return Value + 5;
+  end function;
+end record;
+
+type Stats = record
+  static function Transform(Value: integer): integer;
+  begin
+    return Value + 6;
+  end function;
+end record;
 
 function Identity(Value: integer): integer;
 begin

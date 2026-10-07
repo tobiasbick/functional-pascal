@@ -6,8 +6,7 @@ uses
   Std.Arrays, Std.Console, Std.Conv, Std.Math, Std.Tasks, Std.Tui, Mandelbrot.Color,
   Mandelbrot.Model, Mandelbrot.Render;
 
-const
-  RenderSubscriptionId: integer := 1;
+const RenderSubscriptionId: integer := 1;
 
 procedure QueueRender(State: MandelbrotModel; Cmd: TuiCmdOutput);
 begin

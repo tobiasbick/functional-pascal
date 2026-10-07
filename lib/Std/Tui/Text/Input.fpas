@@ -2,20 +2,19 @@ unit Std.Tui.Text.Input;
 
 uses Std.Console, Std.Str;
 
-public type
-  // Derived horizontal viewport for a one-line input.
-  TuiInputViewport = record
-    // Zero-based character index at which the viewport starts.
-    public Start: integer;
-    // Exclusive zero-based character index of the viewport.
-    public EndIndex: integer;
-    // Whether text is clipped on the left.
-    public LeftClipped: boolean;
-    // Whether text is clipped on the right.
-    public RightClipped: boolean;
-    // Zero-based terminal column of the caret.
-    public CaretColumn: integer;
-  end record;
+// Derived horizontal viewport for a one-line input.
+public type TuiInputViewport = record
+  // Zero-based character index at which the viewport starts.
+  public Start: integer;
+  // Exclusive zero-based character index of the viewport.
+  public EndIndex: integer;
+  // Whether text is clipped on the left.
+  public LeftClipped: boolean;
+  // Whether text is clipped on the right.
+  public RightClipped: boolean;
+  // Zero-based terminal column of the caret.
+  public CaretColumn: integer;
+end record;
 
 function TuiInputWidth(Text: string; Start: integer; EndIndex: integer): integer;
 begin

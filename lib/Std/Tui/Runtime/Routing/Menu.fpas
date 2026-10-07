@@ -5,18 +5,17 @@ uses
   Std.Tui.Elements.Element, Std.Tui.Ids.Action, Std.Tui.Ids.ControlId, Std.Tui.Runtime.Msg,
   Std.Tui.Runtime.Routing.Focus;
 
-public type
-  // One controlled menu found in the active routing subtree.
-  TuiRouteMenu = record
-    // Stable identifier of the value.
-    public Id: TuiControlId;
-    // Flat ordered menu-node collection.
-    public Nodes: array of TuiMenuNode;
-    // Controlled menu state.
-    public State: TuiMenuState;
-    // Action emitted when the controlled value changes.
-    public ChangeAction: TuiAction;
-  end record;
+// One controlled menu found in the active routing subtree.
+public type TuiRouteMenu = record
+  // Stable identifier of the value.
+  public Id: TuiControlId;
+  // Flat ordered menu-node collection.
+  public Nodes: array of TuiMenuNode;
+  // Controlled menu state.
+  public State: TuiMenuState;
+  // Action emitted when the controlled value changes.
+  public ChangeAction: TuiAction;
+end record;
 
 function TuiFindRouteMenu(Node: TuiElement): option of TuiRouteMenu;
 begin

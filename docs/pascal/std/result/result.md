@@ -115,10 +115,8 @@ begin
   end if;
 end function;
 
-var
-  R: result of integer, string := Ok(10);
-  M: result of string, string := AndThen(R, PositiveToResult);
-
+var R: result of integer, string := Ok(10);
+var M: result of string, string := AndThen(R, PositiveToResult);
 // M = Ok('10')
 ```
 

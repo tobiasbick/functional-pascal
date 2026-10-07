@@ -11,7 +11,7 @@ fn parse_ok(source: &str) -> CompilationUnit {
 
 #[test]
 fn all_declaration_kinds_include_methods_and_nested_routines() {
-    let source = "unit Demo; type Color = enum Red; end enum; Point = record
+    let source = "unit Demo; type Color = enum Red; end enum; type Point = record
         X: integer;
         function ReadValue(self: Point): integer; begin return self.X; end function;
         procedure WriteValue(mutable self: Point); begin return; end procedure;
@@ -32,7 +32,7 @@ fn all_declaration_kinds_include_methods_and_nested_routines() {
 #[test]
 fn declaration_keywords_are_case_insensitive() {
     parse_ok(
-        "UNIT Demo; TYPE E = ENUM A; END ENUM; R = RECORD END RECORD;
+        "UNIT Demo; TYPE E = ENUM A; END ENUM; type R = RECORD END RECORD;
         FUNCTION F(): integer; BEGIN RETURN 1; END FUNCTION;
         PROCEDURE P(); BEGIN RETURN; END PROCEDURE; END UNIT;",
     );

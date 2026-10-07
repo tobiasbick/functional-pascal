@@ -3,31 +3,31 @@ unit Std.Http.Sse;
 
 uses Std.Arrays, Std.Http.Handles, Std.Http.Types, Std.Net.Utf8, Std.Str;
 
-type
-  // Mutable parsing state retained for one decoder handle.
-  DecoderState = record
-    // Incomplete input bytes not yet terminated by a line ending.
-    Buffer: array of integer;
-    // Joined data fields for the current event.
-    Data: string;
-    // Optional event field for the current event.
-    EventType: string;
-    // Most recently observed event identifier.
-    LastEventId: string;
-    // Bytes accumulated for the current event.
-    EventBytes: integer;
-    // Maximum bytes allowed for one event.
-    Maximum: integer;
-    // Whether the decoder has consumed its final input.
-    Finished: boolean;
-  end record;
-  // Result of processing every complete line currently buffered.
-  DecoderProcess = record
-    // Updated decoder state.
-    State: DecoderState;
-    // Complete events emitted while processing.
-    Events: array of SseEvent;
-  end record;
+// Mutable parsing state retained for one decoder handle.
+type DecoderState = record
+  // Incomplete input bytes not yet terminated by a line ending.
+  Buffer: array of integer;
+  // Joined data fields for the current event.
+  Data: string;
+  // Optional event field for the current event.
+  EventType: string;
+  // Most recently observed event identifier.
+  LastEventId: string;
+  // Bytes accumulated for the current event.
+  EventBytes: integer;
+  // Maximum bytes allowed for one event.
+  Maximum: integer;
+  // Whether the decoder has consumed its final input.
+  Finished: boolean;
+end record;
+
+// Result of processing every complete line currently buffered.
+type DecoderProcess = record
+  // Updated decoder state.
+  State: DecoderState;
+  // Complete events emitted while processing.
+  Events: array of SseEvent;
+end record;
 
 // Reserves and stores one state in the hosted HTTP registry.
 function ReserveState(State: DecoderState): integer;

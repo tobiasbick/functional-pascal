@@ -2,14 +2,13 @@ program TuiBackgroundPendingTest;
 
 uses Std.Results, Std.Tasks, Std.Test, Std.Time, Std.Tui;
 
-type
-  PendingModel = record
-    Gate: channel of boolean;
-    Ready: channel of boolean;
-    Started: channel of boolean;
-    FailOld: boolean;
-    Failures: integer;
-  end record;
+type PendingModel = record
+  Gate: channel of boolean;
+  Ready: channel of boolean;
+  Started: channel of boolean;
+  FailOld: boolean;
+  Failures: integer;
+end record;
 
 function Update(State: PendingModel; Msg: TuiMsg; Cmd: TuiCmdOutput): PendingModel;
 begin

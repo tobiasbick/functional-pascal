@@ -26,16 +26,15 @@ Every Functional Pascal program starts with a `program` declaration, optional `u
 ```pascal
 program MyApp;
 
-uses
-  Std.Console;
+uses Std.Console;
 
 // constant declarations
-const
-  MaxItems: integer := 100;
+
+const MaxItems: integer := 100;
 
 // variable declarations
-var
-  Counter: integer := 0;
+
+var Counter: integer := 0;
 
 // function declarations
 function Add(A: integer; B: integer): integer;

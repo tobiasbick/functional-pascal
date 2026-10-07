@@ -5,8 +5,7 @@ program VmTypedScalarBenchmark;
 
 uses Std.Args, Std.Console, Std.Conv, Std.Time;
 
-const
-  WarmupIterations: integer := 10000;
+const WarmupIterations: integer := 10000;
 
 function RunReal(Iterations: integer): integer;
 begin

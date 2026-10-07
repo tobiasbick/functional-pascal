@@ -2,27 +2,26 @@ program BoundMethodsExample;
 
 uses Std.Console, Std.Conv;
 
-type
-  Counter = record
-    Base: integer;
+type Counter = record
+  Base: integer;
 
-    function Add(Self: Counter; Value: integer): integer;
-    begin
-      return Self.Base + Value;
-    end function;
+  function Add(Self: Counter; Value: integer): integer;
+  begin
+    return Self.Base + Value;
+  end function;
 
-    procedure Show(Self: Counter);
-    begin
-      WriteLn('Base: ' + IntToStr(Self.Base));
-    end procedure;
+  procedure Show(Self: Counter);
+  begin
+    WriteLn('Base: ' + IntToStr(Self.Base));
+  end procedure;
 
-    static function Make(Base: integer): Counter;
-    begin
-      return record
-        Base := Base;
-      end;
-    end function;
-  end record;
+  static function Make(Base: integer): Counter;
+  begin
+    return record
+      Base := Base;
+    end;
+  end function;
+end record;
 
 function Apply(F: function(Value: integer): integer; Value: integer): integer;
 begin

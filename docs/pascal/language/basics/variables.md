@@ -1,22 +1,19 @@
 # Variables
 
-Variables are **immutable by default**. Use `mutable var` to allow reassignment. This works both as a declaration block and as an inline statement inside a `begin..end` block.
+Variables are **immutable by default**. Use `mutable var` to allow reassignment. Each binding repeats its complete `var` or `mutable var` prefix, both at program or unit level and in statement lists. Declaration groups are rejected with [FP2015](../../tools/diagnostics.md#parser).
 
-Formal syntax: [`grammar.ebnf`](../../../specs/grammar.ebnf) (`var_block`, `var_stmt`, `mutable_var_block`, and `mutable_var_stmt`).
+Formal syntax: [`grammar.ebnf`](../../../specs/grammar.ebnf) (`var_declaration`, `var_stmt`, `mutable_var_declaration`, and `mutable_var_stmt`).
 
 ```pascal
-var
-  Name: string := 'Alice';       // Immutable — cannot be reassigned
+var Name: string := 'Alice'; // Immutable — cannot be reassigned
 
-mutable var
-  Age: integer := 30;            // Mutable — can be reassigned
+mutable var Age: integer := 30; // Mutable — can be reassigned
 ```
 
 Reassigning an immutable variable is a compile-time error:
 
 ```pascal
-var
-  X: integer := 10;
+var X: integer := 10;
 
 begin
   X := 20;  // Error: cannot assign to immutable variable 'X'
@@ -26,8 +23,7 @@ end.
 Mutable variables can be reassigned freely:
 
 ```pascal
-mutable var
-  Count: integer := 0;
+mutable var Count: integer := 0;
 
 begin
   Count := Count + 1;  // Valid mutable assignment
@@ -42,6 +38,10 @@ begin
   Count := Count + 1;
 end.
 ```
+
+Each exported binding also repeats `public`; the modifier applies only to that
+declaration. Initializers execute in source order, including consecutive
+individual declarations.
 
 ## See also
 

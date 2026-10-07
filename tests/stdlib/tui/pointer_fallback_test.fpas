@@ -2,14 +2,13 @@ program TuiPointerFallbackTest;
 
 uses Std.Arrays, Std.Test, Std.Tui;
 
-type
-  PointerModel = record
-    Events: array of string;
-    X: integer;
-    Y: integer;
-    Action: TuiPointerAction;
-    Button: TuiPointerButton;
-  end record;
+type PointerModel = record
+  Events: array of string;
+  X: integer;
+  Y: integer;
+  Action: TuiPointerAction;
+  Button: TuiPointerButton;
+end record;
 
 function PushEvent(State: PointerModel; InputEvent: string): PointerModel;
 begin

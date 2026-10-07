@@ -2,13 +2,12 @@ program RecordUpdateContextTest;
 
 uses Std.Arrays, Std.Dictionaries, Std.Options, Std.Results, Std.Test;
 
-type
-  Holder = record
-    Items: array of integer;
-    Tags: dict of string to integer;
-    MaybeItems: option of array of integer;
-    Lookup: result of dict of string to integer, string;
-  end record;
+type Holder = record
+  Items: array of integer;
+  Tags: dict of string to integer;
+  MaybeItems: option of array of integer;
+  Lookup: result of dict of string to integer, string;
+end record;
 
 begin
   var Original: Holder := record

@@ -2,10 +2,9 @@ program TuiModalFocusDemoTest;
 
 uses Std.Test, Std.Tui;
 
-type
-  DemoModel = record
-    Focus: integer;
-  end record;
+type DemoModel = record
+  Focus: integer;
+end record;
 
 function Key(Kind: TuiKeyKind): TuiKeyEvent;
 begin

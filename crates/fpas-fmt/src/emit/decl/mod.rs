@@ -1,7 +1,7 @@
 //! Declarations (const, var, type, routines).
 
-mod group;
 mod item;
+mod list;
 mod routines;
 
 use fpas_parser::Decl;
@@ -10,8 +10,8 @@ use crate::comments::CommentMap;
 
 use super::Emitter;
 
-pub(crate) use group::emit_decls;
 pub(crate) use item::emit_decl;
+pub(crate) use list::emit_decls;
 
 /// Formats a declaration list (unit declarations or program type / top-level decls).
 #[must_use]
@@ -48,7 +48,7 @@ mod tests {
         );
         assert_eq!(
             formatted,
-            "type\n  IdBox = record\n    Value: integer;\n  end record;\n"
+            "type IdBox = record\n  Value: integer;\nend record;\n"
         );
     }
 
@@ -79,19 +79,19 @@ begin
 end.",
         );
         assert!(
-            formatted.contains("X: integer;\n    Y: integer;\n\n    function Sum"),
+            formatted.contains("X: integer;\n  Y: integer;\n\n  function Sum"),
             "formatted:\n{formatted}"
         );
         assert!(formatted.contains("return Self.X + Self.Y;"));
-        assert!(formatted.contains("end function;\n  end record;\n"));
+        assert!(formatted.contains("end function;\nend record;\n"));
     }
 
     #[test]
     fn enum_and_alias() {
         let formatted = format_program_decls(
-            "program T; type Color = enum Red; Green; Blue; end enum; IntAlias = integer; begin end.",
+            "program T; type Color = enum Red; Green; Blue; end enum; type IntAlias = integer; begin end.",
         );
-        assert!(formatted.contains("Color = enum\n    Red;\n    Green;\n    Blue;\n  end enum;\n"));
+        assert!(formatted.contains("Color = enum\n  Red;\n  Green;\n  Blue;\nend enum;\n"));
         assert!(formatted.contains("IntAlias = integer;\n"));
     }
 
@@ -105,21 +105,21 @@ end.",
     }
 
     #[test]
-    fn unit_default_private_vars_and_consts_are_block_grouped() {
+    fn unit_default_private_bindings_have_individual_keywords() {
         let formatted = format_unit_decls(
             "unit U; mutable var A: integer := 1; mutable var B: integer := 2; const C: integer := 3; const D: integer := 4;\nend unit;",
         );
-        assert!(formatted.contains("mutable var\n  A: integer := 1;\n  B: integer := 2;\n"));
-        assert!(formatted.contains("const\n  C: integer := 3;\n  D: integer := 4;\n"));
+        assert!(formatted.contains("mutable var A: integer := 1;\nmutable var B: integer := 2;\n"));
+        assert!(formatted.contains("const C: integer := 3;\nconst D: integer := 4;\n"));
     }
 
     #[test]
-    fn unit_default_private_type_uses_type_block() {
+    fn unit_default_private_type_has_its_own_keyword() {
         let formatted = format_unit_decls(
             "unit U; type Complex = record Re: real; Im: real; end record;\nend unit;",
         );
         assert!(
-            formatted.contains("type\n  Complex = record\n"),
+            formatted.contains("type Complex = record\n"),
             "formatted:\n{formatted}"
         );
     }

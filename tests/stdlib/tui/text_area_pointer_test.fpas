@@ -2,13 +2,12 @@ program TuiTextAreaPointerTest;
 
 uses Std.Str, Std.Test, Std.Tui;
 
-type
-  PointerModel = record
-    Focus: integer;
-    Text: string;
-    Caret: integer;
-    Offset: TuiPoint;
-  end record;
+type PointerModel = record
+  Focus: integer;
+  Text: string;
+  Caret: integer;
+  Offset: TuiPoint;
+end record;
 
 function ViewTextArea(State: PointerModel): TuiElement;
 begin

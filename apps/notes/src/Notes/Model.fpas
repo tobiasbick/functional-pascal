@@ -2,64 +2,68 @@ unit Notes.Model;
 
 uses Notes.Actions, Std.Arrays, Std.Console, Std.Conv, Std.Str, Std.Tui;
 
-public type
-  // One persisted `.note` document and its source path.
-  Note = record
-    public Id: string;
-    public Title: string;
-    public CreatedMillis: integer;
-    public UpdatedMillis: integer;
-    public Tags: array of string;
-    public Pinned: boolean;
-    public Archived: boolean;
-    public Body: string;
-    public Path: string;
-  end record;
-  // One note file that could not be read or parsed.
-  NoteIssue = record
-    public Path: string;
-    public Message: string;
-  end record;
-  // Complete result of loading one notes directory.
-  NotesLoad = record
-    public Notes: array of Note;
-    public Issues: array of NoteIssue;
-  end record;
-  // Visible pane in a narrow terminal.
-  NotesPane = enum
-    List;
-    Editor;
-  end enum;
-  // Active modal layer, if any.
-  NotesOverlay = enum
-    Closed;
-    Commands;
-    Help;
-    QuitConfirmation;
-    SaveFailure;
-  end enum;
-  // Complete immutable application state supplied to the MVU view.
-  NotesModel = record
-    public Directory: string;
-    public Notes: array of Note;
-    public Issues: array of NoteIssue;
-    public Selected: integer;
-    public Search: string;
-    public SearchCaret: integer;
-    public TitleCaret: integer;
-    public TagsText: string;
-    public TagsCaret: integer;
-    public BodyCaret: integer;
-    public BodyOffset: TuiPoint;
-    public Focus: integer;
-    public Pane: NotesPane;
-    public Overlay: NotesOverlay;
-    public Dirty: boolean;
-    public Status: string;
-    public ErrorMessage: string;
-    public Width: integer;
-    public Height: integer;
-  end record;
+// One persisted `.note` document and its source path.
+public type Note = record
+  public Id: string;
+  public Title: string;
+  public CreatedMillis: integer;
+  public UpdatedMillis: integer;
+  public Tags: array of string;
+  public Pinned: boolean;
+  public Archived: boolean;
+  public Body: string;
+  public Path: string;
+end record;
+
+// One note file that could not be read or parsed.
+public type NoteIssue = record
+  public Path: string;
+  public Message: string;
+end record;
+
+// Complete result of loading one notes directory.
+public type NotesLoad = record
+  public Notes: array of Note;
+  public Issues: array of NoteIssue;
+end record;
+
+// Visible pane in a narrow terminal.
+public type NotesPane = enum
+  List;
+  Editor;
+end enum;
+
+// Active modal layer, if any.
+public type NotesOverlay = enum
+  Closed;
+  Commands;
+  Help;
+  QuitConfirmation;
+  SaveFailure;
+end enum;
+
+// Complete immutable application state supplied to the MVU view.
+public type NotesModel = record
+  public Directory: string;
+  public Notes: array of Note;
+  public Issues: array of NoteIssue;
+  public Selected: integer;
+  public Search: string;
+  public SearchCaret: integer;
+  public TitleCaret: integer;
+  public TagsText: string;
+  public TagsCaret: integer;
+  public BodyCaret: integer;
+  public BodyOffset: TuiPoint;
+  public Focus: integer;
+  public Pane: NotesPane;
+  public Overlay: NotesOverlay;
+  public Dirty: boolean;
+  public Status: string;
+  public ErrorMessage: string;
+  public Width: integer;
+  public Height: integer;
+end record;
 
 // Creates a new unsaved note with stable identity and timestamps.
 public function NoteCreate(Id: string; TimestampMillis: integer): Note;

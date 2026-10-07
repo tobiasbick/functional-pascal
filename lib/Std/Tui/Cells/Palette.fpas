@@ -4,320 +4,319 @@ uses
   Std.Tui.Cells.ButtonPalette, Std.Tui.Cells.Color, Std.Tui.Cells.InputPalette,
   Std.Tui.Cells.StyleRole, Std.Tui.Cells.Style;
 
-public type
-  // Maps every semantic `TuiStyleRole` to a concrete terminal style.
-  TuiPalette = record
-    // Style used for normal content.
-    public Normal: TuiStyle;
-    // Style used for disabled content.
-    public Disabled: TuiStyle;
-    // Style or identifier used for focused content.
-    public Focused: TuiStyle;
-    // Selected item index or style.
-    public Selected: TuiStyle;
-    // Shortcut text, gesture, or style.
-    public Shortcut: TuiStyle;
-    // Style used for borders and frames.
-    public Frame: TuiStyle;
-    // Style used for titles.
-    public Title: TuiStyle;
-    // Style used for normal menu items.
-    public MenuNormal: TuiStyle;
-    // Style used for disabled menu items.
-    public MenuDisabled: TuiStyle;
-    // Style used for menu shortcuts.
-    public MenuShortcut: TuiStyle;
-    // Style used for the selected menu item.
-    public MenuSelected: TuiStyle;
-    // Shortcut style used for the selected menu item.
-    public MenuSelectedShortcut: TuiStyle;
-    // Style used for normal status-line items.
-    public StatusNormal: TuiStyle;
-    // Style used for disabled status-line items.
-    public StatusDisabled: TuiStyle;
-    // Style used for status-line shortcuts.
-    public StatusShortcut: TuiStyle;
-    // Style used for selected status-line items.
-    public StatusSelected: TuiStyle;
-    // Styles used by button controls.
-    public Buttons: TuiButtonPalette;
-    // Styles used by input controls.
-    public Inputs: TuiInputPalette;
-    // Style used for horizontal rules.
-    public Rule: TuiStyle;
-    // Style used for the unfilled gauge track.
-    public GaugeTrack: TuiStyle;
-    // Style used for the filled gauge region.
-    public GaugeFill: TuiStyle;
-    // Style used for failure content.
-    public Failure: TuiStyle;
-    // Style used for warning content.
-    public Warning: TuiStyle;
-    // Style used for accent content.
-    public Accent: TuiStyle;
+// Maps every semantic `TuiStyleRole` to a concrete terminal style.
+public type TuiPalette = record
+  // Style used for normal content.
+  public Normal: TuiStyle;
+  // Style used for disabled content.
+  public Disabled: TuiStyle;
+  // Style or identifier used for focused content.
+  public Focused: TuiStyle;
+  // Selected item index or style.
+  public Selected: TuiStyle;
+  // Shortcut text, gesture, or style.
+  public Shortcut: TuiStyle;
+  // Style used for borders and frames.
+  public Frame: TuiStyle;
+  // Style used for titles.
+  public Title: TuiStyle;
+  // Style used for normal menu items.
+  public MenuNormal: TuiStyle;
+  // Style used for disabled menu items.
+  public MenuDisabled: TuiStyle;
+  // Style used for menu shortcuts.
+  public MenuShortcut: TuiStyle;
+  // Style used for the selected menu item.
+  public MenuSelected: TuiStyle;
+  // Shortcut style used for the selected menu item.
+  public MenuSelectedShortcut: TuiStyle;
+  // Style used for normal status-line items.
+  public StatusNormal: TuiStyle;
+  // Style used for disabled status-line items.
+  public StatusDisabled: TuiStyle;
+  // Style used for status-line shortcuts.
+  public StatusShortcut: TuiStyle;
+  // Style used for selected status-line items.
+  public StatusSelected: TuiStyle;
+  // Styles used by button controls.
+  public Buttons: TuiButtonPalette;
+  // Styles used by input controls.
+  public Inputs: TuiInputPalette;
+  // Style used for horizontal rules.
+  public Rule: TuiStyle;
+  // Style used for the unfilled gauge track.
+  public GaugeTrack: TuiStyle;
+  // Style used for the filled gauge region.
+  public GaugeFill: TuiStyle;
+  // Style used for failure content.
+  public Failure: TuiStyle;
+  // Style used for warning content.
+  public Warning: TuiStyle;
+  // Style used for accent content.
+  public Accent: TuiStyle;
 
-    // Returns the modern dark default palette.
-    public static function Default(): TuiPalette;
-    begin
-      var Background: TuiColor := TuiColor.FromRgb(13, 17, 23);
-      var Surface: TuiColor := TuiColor.FromRgb(22, 27, 34);
-      var Text: TuiColor := TuiColor.FromRgb(201, 209, 217);
-      var Muted: TuiColor := TuiColor.FromRgb(139, 148, 158);
-      var Border: TuiColor := TuiColor.FromRgb(48, 54, 61);
-      var Accent: TuiColor := TuiColor.FromRgb(88, 166, 255);
-      var Selected: TuiColor := TuiColor.FromRgb(31, 111, 235);
-      var Success: TuiColor := TuiColor.FromRgb(63, 185, 80);
-      var Failure: TuiColor := TuiColor.FromRgb(248, 81, 73);
-      var Warning: TuiColor := TuiColor.FromRgb(210, 153, 34);
-      var NormalStyle: TuiStyle := TuiStyle.FromColors(Text, Background);
-      var SelectedStyle: TuiStyle := TuiStyle.FromColors(Text, Selected);
-      var AccentStyle: TuiStyle := TuiStyle.FromColors(Accent, Background);
-      var Buttons: TuiButtonPalette := TuiButtonPalette.Create(TuiStyle.FromColors(Text, Surface), TuiStyle.FromColors(Background, Accent), SelectedStyle, TuiStyle.FromColors(Muted, Surface), TuiStyle.FromColors(Accent, Surface), TuiStyle.FromColors(Background, Accent), TuiStyle.FromColors(Text, Selected));
-      var Inputs: TuiInputPalette := TuiInputPalette.Create(TuiStyle.FromColors(Text, Surface), TuiStyle.FromColors(Text, TuiColor.FromRgb(30, 36, 44)), TuiStyle.FromColors(Muted, Surface), TuiStyle.FromColors(Background, Accent), TuiStyle.FromColors(Accent, Surface));
-      return record
-        Normal := NormalStyle;
-        Disabled := TuiStyle.FromColors(Muted, Background);
-        Focused := SelectedStyle;
-        Selected := SelectedStyle;
-        Shortcut := AccentStyle;
-        Frame := TuiStyle.FromColors(Border, Background);
-        Title := TuiStyle.FromColors(Text, Background);
-        MenuNormal := TuiStyle.FromColors(Text, Surface);
-        MenuDisabled := TuiStyle.FromColors(Muted, Surface);
-        MenuShortcut := TuiStyle.FromColors(Accent, Surface);
-        MenuSelected := SelectedStyle;
-        MenuSelectedShortcut := TuiStyle.FromColors(Text, Selected);
-        StatusNormal := TuiStyle.FromColors(Text, Surface);
-        StatusDisabled := TuiStyle.FromColors(Muted, Surface);
-        StatusShortcut := TuiStyle.FromColors(Accent, Surface);
-        StatusSelected := SelectedStyle;
-        Buttons := Buttons;
-        Inputs := Inputs;
-        Rule := TuiStyle.FromColors(Border, Background);
-        GaugeTrack := TuiStyle.FromColors(Border, Background);
-        GaugeFill := TuiStyle.FromColors(Success, Background);
-        Failure := TuiStyle.FromColors(Failure, Background);
-        Warning := TuiStyle.FromColors(Warning, Background);
-        Accent := AccentStyle;
-      end;
-    end function;
+  // Returns the modern dark default palette.
+  public static function Default(): TuiPalette;
+  begin
+    var Background: TuiColor := TuiColor.FromRgb(13, 17, 23);
+    var Surface: TuiColor := TuiColor.FromRgb(22, 27, 34);
+    var Text: TuiColor := TuiColor.FromRgb(201, 209, 217);
+    var Muted: TuiColor := TuiColor.FromRgb(139, 148, 158);
+    var Border: TuiColor := TuiColor.FromRgb(48, 54, 61);
+    var Accent: TuiColor := TuiColor.FromRgb(88, 166, 255);
+    var Selected: TuiColor := TuiColor.FromRgb(31, 111, 235);
+    var Success: TuiColor := TuiColor.FromRgb(63, 185, 80);
+    var Failure: TuiColor := TuiColor.FromRgb(248, 81, 73);
+    var Warning: TuiColor := TuiColor.FromRgb(210, 153, 34);
+    var NormalStyle: TuiStyle := TuiStyle.FromColors(Text, Background);
+    var SelectedStyle: TuiStyle := TuiStyle.FromColors(Text, Selected);
+    var AccentStyle: TuiStyle := TuiStyle.FromColors(Accent, Background);
+    var Buttons: TuiButtonPalette := TuiButtonPalette.Create(TuiStyle.FromColors(Text, Surface), TuiStyle.FromColors(Background, Accent), SelectedStyle, TuiStyle.FromColors(Muted, Surface), TuiStyle.FromColors(Accent, Surface), TuiStyle.FromColors(Background, Accent), TuiStyle.FromColors(Text, Selected));
+    var Inputs: TuiInputPalette := TuiInputPalette.Create(TuiStyle.FromColors(Text, Surface), TuiStyle.FromColors(Text, TuiColor.FromRgb(30, 36, 44)), TuiStyle.FromColors(Muted, Surface), TuiStyle.FromColors(Background, Accent), TuiStyle.FromColors(Accent, Surface));
+    return record
+      Normal := NormalStyle;
+      Disabled := TuiStyle.FromColors(Muted, Background);
+      Focused := SelectedStyle;
+      Selected := SelectedStyle;
+      Shortcut := AccentStyle;
+      Frame := TuiStyle.FromColors(Border, Background);
+      Title := TuiStyle.FromColors(Text, Background);
+      MenuNormal := TuiStyle.FromColors(Text, Surface);
+      MenuDisabled := TuiStyle.FromColors(Muted, Surface);
+      MenuShortcut := TuiStyle.FromColors(Accent, Surface);
+      MenuSelected := SelectedStyle;
+      MenuSelectedShortcut := TuiStyle.FromColors(Text, Selected);
+      StatusNormal := TuiStyle.FromColors(Text, Surface);
+      StatusDisabled := TuiStyle.FromColors(Muted, Surface);
+      StatusShortcut := TuiStyle.FromColors(Accent, Surface);
+      StatusSelected := SelectedStyle;
+      Buttons := Buttons;
+      Inputs := Inputs;
+      Rule := TuiStyle.FromColors(Border, Background);
+      GaugeTrack := TuiStyle.FromColors(Border, Background);
+      GaugeFill := TuiStyle.FromColors(Success, Background);
+      Failure := TuiStyle.FromColors(Failure, Background);
+      Warning := TuiStyle.FromColors(Warning, Background);
+      Accent := AccentStyle;
+    end;
+  end function;
 
-    // Resolves the concrete style for one semantic role.
-    //
-    // Parameters:
-    // - `Self`: Receiver value operated on by the method.
-    // - `Role`: Semantic style role used by the operation.
-    public function ForRole(Self: TuiPalette; Role: TuiStyleRole): TuiStyle;
-    begin
-      case Role of
-        when TuiStyleRole.Normal:
-          begin
-            return Self.Normal;
-          end;
-        when TuiStyleRole.Disabled:
-          begin
-            return Self.Disabled;
-          end;
-        when TuiStyleRole.Focused:
-          begin
-            return Self.Focused;
-          end;
-        when TuiStyleRole.Selected:
-          begin
-            return Self.Selected;
-          end;
-        when TuiStyleRole.Shortcut:
-          begin
-            return Self.Shortcut;
-          end;
-        when TuiStyleRole.Frame:
-          begin
-            return Self.Frame;
-          end;
-        when TuiStyleRole.Title:
-          begin
-            return Self.Title;
-          end;
-        when TuiStyleRole.MenuNormal:
-          begin
-            return Self.MenuNormal;
-          end;
-        when TuiStyleRole.MenuDisabled:
-          begin
-            return Self.MenuDisabled;
-          end;
-        when TuiStyleRole.MenuShortcut:
-          begin
-            return Self.MenuShortcut;
-          end;
-        when TuiStyleRole.MenuSelected:
-          begin
-            return Self.MenuSelected;
-          end;
-        when TuiStyleRole.MenuSelectedShortcut:
-          begin
-            return Self.MenuSelectedShortcut;
-          end;
-        when TuiStyleRole.StatusNormal:
-          begin
-            return Self.StatusNormal;
-          end;
-        when TuiStyleRole.StatusDisabled:
-          begin
-            return Self.StatusDisabled;
-          end;
-        when TuiStyleRole.StatusShortcut:
-          begin
-            return Self.StatusShortcut;
-          end;
-        when TuiStyleRole.StatusSelected:
-          begin
-            return Self.StatusSelected;
-          end;
-        when TuiStyleRole.ButtonNormal, TuiStyleRole.ButtonDefault, TuiStyleRole.ButtonSelected, TuiStyleRole.ButtonDisabled, TuiStyleRole.ButtonShortcut, TuiStyleRole.ButtonDefaultShortcut, TuiStyleRole.ButtonSelectedShortcut:
-          begin
-            return Self.Buttons.ForRole(Role);
-          end;
-        when TuiStyleRole.InputNormal, TuiStyleRole.InputFocused, TuiStyleRole.InputHint, TuiStyleRole.InputCursor, TuiStyleRole.InputScroll:
-          begin
-            return Self.Inputs.ForRole(Role);
-          end;
-        when TuiStyleRole.Rule:
-          begin
-            return Self.Rule;
-          end;
-        when TuiStyleRole.GaugeTrack:
-          begin
-            return Self.GaugeTrack;
-          end;
-        when TuiStyleRole.GaugeFill:
-          begin
-            return Self.GaugeFill;
-          end;
-        when TuiStyleRole.Failure:
-          begin
-            return Self.Failure;
-          end;
-        when TuiStyleRole.Warning:
-          begin
-            return Self.Warning;
-          end;
-        when TuiStyleRole.Accent:
-          begin
-            return Self.Accent;
-          end;
-      end case;
-    end function;
+  // Resolves the concrete style for one semantic role.
+  //
+  // Parameters:
+  // - `Self`: Receiver value operated on by the method.
+  // - `Role`: Semantic style role used by the operation.
+  public function ForRole(Self: TuiPalette; Role: TuiStyleRole): TuiStyle;
+  begin
+    case Role of
+      when TuiStyleRole.Normal:
+        begin
+          return Self.Normal;
+        end;
+      when TuiStyleRole.Disabled:
+        begin
+          return Self.Disabled;
+        end;
+      when TuiStyleRole.Focused:
+        begin
+          return Self.Focused;
+        end;
+      when TuiStyleRole.Selected:
+        begin
+          return Self.Selected;
+        end;
+      when TuiStyleRole.Shortcut:
+        begin
+          return Self.Shortcut;
+        end;
+      when TuiStyleRole.Frame:
+        begin
+          return Self.Frame;
+        end;
+      when TuiStyleRole.Title:
+        begin
+          return Self.Title;
+        end;
+      when TuiStyleRole.MenuNormal:
+        begin
+          return Self.MenuNormal;
+        end;
+      when TuiStyleRole.MenuDisabled:
+        begin
+          return Self.MenuDisabled;
+        end;
+      when TuiStyleRole.MenuShortcut:
+        begin
+          return Self.MenuShortcut;
+        end;
+      when TuiStyleRole.MenuSelected:
+        begin
+          return Self.MenuSelected;
+        end;
+      when TuiStyleRole.MenuSelectedShortcut:
+        begin
+          return Self.MenuSelectedShortcut;
+        end;
+      when TuiStyleRole.StatusNormal:
+        begin
+          return Self.StatusNormal;
+        end;
+      when TuiStyleRole.StatusDisabled:
+        begin
+          return Self.StatusDisabled;
+        end;
+      when TuiStyleRole.StatusShortcut:
+        begin
+          return Self.StatusShortcut;
+        end;
+      when TuiStyleRole.StatusSelected:
+        begin
+          return Self.StatusSelected;
+        end;
+      when TuiStyleRole.ButtonNormal, TuiStyleRole.ButtonDefault, TuiStyleRole.ButtonSelected, TuiStyleRole.ButtonDisabled, TuiStyleRole.ButtonShortcut, TuiStyleRole.ButtonDefaultShortcut, TuiStyleRole.ButtonSelectedShortcut:
+        begin
+          return Self.Buttons.ForRole(Role);
+        end;
+      when TuiStyleRole.InputNormal, TuiStyleRole.InputFocused, TuiStyleRole.InputHint, TuiStyleRole.InputCursor, TuiStyleRole.InputScroll:
+        begin
+          return Self.Inputs.ForRole(Role);
+        end;
+      when TuiStyleRole.Rule:
+        begin
+          return Self.Rule;
+        end;
+      when TuiStyleRole.GaugeTrack:
+        begin
+          return Self.GaugeTrack;
+        end;
+      when TuiStyleRole.GaugeFill:
+        begin
+          return Self.GaugeFill;
+        end;
+      when TuiStyleRole.Failure:
+        begin
+          return Self.Failure;
+        end;
+      when TuiStyleRole.Warning:
+        begin
+          return Self.Warning;
+        end;
+      when TuiStyleRole.Accent:
+        begin
+          return Self.Accent;
+        end;
+    end case;
+  end function;
 
-    // Returns a copy with one semantic role replaced.
-    //
-    // Parameters:
-    // - `Self`: Receiver value operated on by the method.
-    // - `Role`: Semantic style role used by the operation.
-    // - `Style`: Concrete terminal style.
-    public function WithRole(Self: TuiPalette; Role: TuiStyleRole; Style: TuiStyle): TuiPalette;
-    begin
-      mutable var Updated: TuiPalette := Self;
-      case Role of
-        when TuiStyleRole.Normal:
-          begin
-            Updated.Normal := Style;
-          end;
-        when TuiStyleRole.Disabled:
-          begin
-            Updated.Disabled := Style;
-          end;
-        when TuiStyleRole.Focused:
-          begin
-            Updated.Focused := Style;
-          end;
-        when TuiStyleRole.Selected:
-          begin
-            Updated.Selected := Style;
-          end;
-        when TuiStyleRole.Shortcut:
-          begin
-            Updated.Shortcut := Style;
-          end;
-        when TuiStyleRole.Frame:
-          begin
-            Updated.Frame := Style;
-          end;
-        when TuiStyleRole.Title:
-          begin
-            Updated.Title := Style;
-          end;
-        when TuiStyleRole.MenuNormal:
-          begin
-            Updated.MenuNormal := Style;
-          end;
-        when TuiStyleRole.MenuDisabled:
-          begin
-            Updated.MenuDisabled := Style;
-          end;
-        when TuiStyleRole.MenuShortcut:
-          begin
-            Updated.MenuShortcut := Style;
-          end;
-        when TuiStyleRole.MenuSelected:
-          begin
-            Updated.MenuSelected := Style;
-          end;
-        when TuiStyleRole.MenuSelectedShortcut:
-          begin
-            Updated.MenuSelectedShortcut := Style;
-          end;
-        when TuiStyleRole.StatusNormal:
-          begin
-            Updated.StatusNormal := Style;
-          end;
-        when TuiStyleRole.StatusDisabled:
-          begin
-            Updated.StatusDisabled := Style;
-          end;
-        when TuiStyleRole.StatusShortcut:
-          begin
-            Updated.StatusShortcut := Style;
-          end;
-        when TuiStyleRole.StatusSelected:
-          begin
-            Updated.StatusSelected := Style;
-          end;
-        when TuiStyleRole.ButtonNormal, TuiStyleRole.ButtonDefault, TuiStyleRole.ButtonSelected, TuiStyleRole.ButtonDisabled, TuiStyleRole.ButtonShortcut, TuiStyleRole.ButtonDefaultShortcut, TuiStyleRole.ButtonSelectedShortcut:
-          begin
-            Updated.Buttons := Updated.Buttons.WithRole(Role, Style);
-          end;
-        when TuiStyleRole.InputNormal, TuiStyleRole.InputFocused, TuiStyleRole.InputHint, TuiStyleRole.InputCursor, TuiStyleRole.InputScroll:
-          begin
-            Updated.Inputs := Updated.Inputs.WithRole(Role, Style);
-          end;
-        when TuiStyleRole.Rule:
-          begin
-            Updated.Rule := Style;
-          end;
-        when TuiStyleRole.GaugeTrack:
-          begin
-            Updated.GaugeTrack := Style;
-          end;
-        when TuiStyleRole.GaugeFill:
-          begin
-            Updated.GaugeFill := Style;
-          end;
-        when TuiStyleRole.Failure:
-          begin
-            Updated.Failure := Style;
-          end;
-        when TuiStyleRole.Warning:
-          begin
-            Updated.Warning := Style;
-          end;
-        when TuiStyleRole.Accent:
-          begin
-            Updated.Accent := Style;
-          end;
-      end case;
+  // Returns a copy with one semantic role replaced.
+  //
+  // Parameters:
+  // - `Self`: Receiver value operated on by the method.
+  // - `Role`: Semantic style role used by the operation.
+  // - `Style`: Concrete terminal style.
+  public function WithRole(Self: TuiPalette; Role: TuiStyleRole; Style: TuiStyle): TuiPalette;
+  begin
+    mutable var Updated: TuiPalette := Self;
+    case Role of
+      when TuiStyleRole.Normal:
+        begin
+          Updated.Normal := Style;
+        end;
+      when TuiStyleRole.Disabled:
+        begin
+          Updated.Disabled := Style;
+        end;
+      when TuiStyleRole.Focused:
+        begin
+          Updated.Focused := Style;
+        end;
+      when TuiStyleRole.Selected:
+        begin
+          Updated.Selected := Style;
+        end;
+      when TuiStyleRole.Shortcut:
+        begin
+          Updated.Shortcut := Style;
+        end;
+      when TuiStyleRole.Frame:
+        begin
+          Updated.Frame := Style;
+        end;
+      when TuiStyleRole.Title:
+        begin
+          Updated.Title := Style;
+        end;
+      when TuiStyleRole.MenuNormal:
+        begin
+          Updated.MenuNormal := Style;
+        end;
+      when TuiStyleRole.MenuDisabled:
+        begin
+          Updated.MenuDisabled := Style;
+        end;
+      when TuiStyleRole.MenuShortcut:
+        begin
+          Updated.MenuShortcut := Style;
+        end;
+      when TuiStyleRole.MenuSelected:
+        begin
+          Updated.MenuSelected := Style;
+        end;
+      when TuiStyleRole.MenuSelectedShortcut:
+        begin
+          Updated.MenuSelectedShortcut := Style;
+        end;
+      when TuiStyleRole.StatusNormal:
+        begin
+          Updated.StatusNormal := Style;
+        end;
+      when TuiStyleRole.StatusDisabled:
+        begin
+          Updated.StatusDisabled := Style;
+        end;
+      when TuiStyleRole.StatusShortcut:
+        begin
+          Updated.StatusShortcut := Style;
+        end;
+      when TuiStyleRole.StatusSelected:
+        begin
+          Updated.StatusSelected := Style;
+        end;
+      when TuiStyleRole.ButtonNormal, TuiStyleRole.ButtonDefault, TuiStyleRole.ButtonSelected, TuiStyleRole.ButtonDisabled, TuiStyleRole.ButtonShortcut, TuiStyleRole.ButtonDefaultShortcut, TuiStyleRole.ButtonSelectedShortcut:
+        begin
+          Updated.Buttons := Updated.Buttons.WithRole(Role, Style);
+        end;
+      when TuiStyleRole.InputNormal, TuiStyleRole.InputFocused, TuiStyleRole.InputHint, TuiStyleRole.InputCursor, TuiStyleRole.InputScroll:
+        begin
+          Updated.Inputs := Updated.Inputs.WithRole(Role, Style);
+        end;
+      when TuiStyleRole.Rule:
+        begin
+          Updated.Rule := Style;
+        end;
+      when TuiStyleRole.GaugeTrack:
+        begin
+          Updated.GaugeTrack := Style;
+        end;
+      when TuiStyleRole.GaugeFill:
+        begin
+          Updated.GaugeFill := Style;
+        end;
+      when TuiStyleRole.Failure:
+        begin
+          Updated.Failure := Style;
+        end;
+      when TuiStyleRole.Warning:
+        begin
+          Updated.Warning := Style;
+        end;
+      when TuiStyleRole.Accent:
+        begin
+          Updated.Accent := Style;
+        end;
+    end case;
 
-      return Updated;
-    end function;
-  end record;
+    return Updated;
+  end function;
+end record;
 end unit;

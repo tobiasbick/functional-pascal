@@ -6,23 +6,21 @@ uses
   Std.Tui.Ids.Action, Std.Tui.Ids.ControlId, Std.Tui.Layout.Frame, Std.Tui.Runtime.Msg,
   Std.Tui.Runtime.Routing.Focus;
 
-public type
-  // Controlled menu and arranged bar bounds used by pointer routing.
-  TuiPointerMenu = record
-    // Stable identifier of the value.
-    public Id: TuiControlId;
-    // Flat ordered menu-node collection.
-    public Nodes: array of TuiMenuNode;
-    // Controlled menu state.
-    public State: TuiMenuState;
-    // Action emitted when the controlled value changes.
-    public ChangeAction: TuiAction;
-    // Rectangle occupied by the value.
-    public Bounds: TuiRect;
-  end record;
+// Controlled menu and arranged bar bounds used by pointer routing.
+public type TuiPointerMenu = record
+  // Stable identifier of the value.
+  public Id: TuiControlId;
+  // Flat ordered menu-node collection.
+  public Nodes: array of TuiMenuNode;
+  // Controlled menu state.
+  public State: TuiMenuState;
+  // Action emitted when the controlled value changes.
+  public ChangeAction: TuiAction;
+  // Rectangle occupied by the value.
+  public Bounds: TuiRect;
+end record;
 
-mutable var
-  TuiPointerMenus: array of TuiPointerMenu := [];
+mutable var TuiPointerMenus: array of TuiPointerMenu := [];
 
 function TuiPointerMenuWalk(
   Frame: TuiArrangedFrame;

@@ -2,12 +2,11 @@ program TuiListKeyboardTest;
 
 uses Std.Arrays, Std.Test, Std.Tui;
 
-type
-  ListModel = record
-    Focus: integer;
-    Selected: integer;
-    Changes: array of integer;
-  end record;
+type ListModel = record
+  Focus: integer;
+  Selected: integer;
+  Changes: array of integer;
+end record;
 
 function MakeKey(Kind: TuiKeyKind): TuiKeyEvent;
 begin

@@ -2,15 +2,13 @@ program CaseBlocksTest;
 
 uses Std.Test;
 
-type
-  Message = enum
-    Number(Value: integer);
-    Empty;
-  end enum;
+type Message = enum
+  Number(Value: integer);
+  Empty;
+end enum;
 
-mutable var
-  Evaluations: integer := 0;
-  Guards: integer := 0;
+mutable var Evaluations: integer := 0;
+mutable var Guards: integer := 0;
 
 function Input(): integer;
 begin

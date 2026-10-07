@@ -26,6 +26,11 @@ fn tests_tree_round_trip() {
 }
 
 #[test]
+fn library_tree_round_trip() {
+    round_trip_tree("lib", &repo_root("lib"));
+}
+
+#[test]
 fn apps_tree_round_trip() {
     round_trip_tree("apps", &repo_root("apps"));
 }

@@ -535,7 +535,7 @@ type
   Payload = record
     Value: integer;
   end record;
-  Choice = enum
+  type Choice = enum
     Holder(Count: Payload);
     Count(Value: integer);
   end enum;

@@ -2,12 +2,13 @@ program CellCapturingRoutineAssignment;
 
 uses Std.Console, Std.Tasks;
 
-type
-  Handler = function(Value: integer): integer;
-  Action = procedure();
-  Pack = record
-    Item: Handler;
-  end record;
+type Handler = function(Value: integer): integer;
+
+type Action = procedure();
+
+type Pack = record
+  Item: Handler;
+end record;
 
 function Identity(Value: integer): integer;
 begin
@@ -18,8 +19,7 @@ procedure Noop();
 begin
 end procedure;
 
-mutable var
-  Shared: Handler := Identity;
+mutable var Shared: Handler := Identity;
 
 function Mutating(): Handler;
 function AddCell(Value: integer): integer;

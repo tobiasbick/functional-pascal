@@ -2,8 +2,7 @@ program TryOperandsTest;
 
 uses Std.Test;
 
-mutable var
-  Trace: integer := 0;
+mutable var Trace: integer := 0;
 
 function ReadResult(Value: boolean; Fail: boolean; Digit: integer): result of boolean, string;
 begin

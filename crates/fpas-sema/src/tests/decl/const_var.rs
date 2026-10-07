@@ -7,7 +7,7 @@ fn const_valid() {
 
 #[test]
 fn const_can_reference_previous_const() {
-    check_ok("program T; const A: integer := 40; B: integer := A + 2; begin end.");
+    check_ok("program T; const A: integer := 40; const B: integer := A + 2; begin end.");
 }
 
 #[test]

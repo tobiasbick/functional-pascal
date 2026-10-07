@@ -1,3 +1,7 @@
+//! Individual type declarations and enum bodies.
+//!
+//! **Documentation:** `docs/pascal/language/types/declaration-order.md`
+
 use crate::ast::*;
 use crate::parser::Parser;
 use fpas_diagnostics::codes::{
@@ -7,13 +11,13 @@ use fpas_diagnostics::codes::{
 use fpas_lexer::Token;
 
 impl Parser {
-    pub(in super::super) fn parse_type_block(
+    /// Parses exactly one type after its own `type` keyword.
+    pub(in super::super) fn parse_type_declaration(
         &mut self,
         visibility: Visibility,
         allow_member_visibility: bool,
-    ) -> Vec<Decl> {
+    ) -> Option<Decl> {
         self.advance();
-        let mut defs = Vec::new();
         if !self.can_start_declaration_definition() {
             self.error_with_code(
                 PARSE_EXPECTED_IDENTIFIER,
@@ -22,16 +26,19 @@ impl Parser {
                     .unwrap_or("Add a declaration such as `type Count = integer;`."),
                 self.current_span(),
             );
+            return None;
         }
-        while self.can_start_declaration_definition() {
-            defs.push(Decl::TypeDef(
-                self.parse_type_def(visibility, allow_member_visibility),
-            ));
-        }
-        defs
+        Some(Decl::TypeDef(
+            self.parse_type_def(visibility, allow_member_visibility),
+        ))
     }
 
-    fn parse_type_def(&mut self, visibility: Visibility, allow_member_visibility: bool) -> TypeDef {
+    /// Parses a type definition, including one recovered after a missing keyword.
+    pub(in crate::parser::decl) fn parse_type_def(
+        &mut self,
+        visibility: Visibility,
+        allow_member_visibility: bool,
+    ) -> TypeDef {
         let start = self.current_span();
         let (name, _) = self.expect_ident_or_error(start);
         if self.check(&Token::Less) {

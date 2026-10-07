@@ -36,7 +36,11 @@ Read the pages relevant to the change. For exact productions, consult
 
 ## Syntax to keep explicit
 
-- Bindings use `var` for immutable values and `mutable var` for reassignment.
+- Each type, constant, or variable repeats its own `type`, `const`, `var`, or
+  complete `mutable var` prefix. Repeat `public` on each exported declaration.
+  Bindings use `var` for immutable values and `mutable var` for reassignment.
+  Keep record fields and enum members in their existing syntax; local types
+  and constants are not declaration positions.
 - Import every referenced unit with `uses`, including fully qualified `Std.*`
   calls. Qualify ambiguous short names with the current unit name from its handbook.
 - Functions return with `return`. Consume function results or use an allowed

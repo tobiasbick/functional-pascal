@@ -2,31 +2,29 @@ unit Std.Tui.Runtime.Application.Background;
 
 uses Std.Arrays, Std.Options, Std.Results, Std.Tasks, Std.Tui.Runtime.Msg;
 
-public type
-  // Cooperative function executed as host-owned background work.
-  TuiBackgroundWork = function(Token: CancellationToken): result of boolean, string;
-  // Work requested by one completed Update callback.
-  TuiBackgroundCommand = enum
-    // Starts one independently owned operation.
-    Start(Id: integer; Work: TuiBackgroundWork);
-    // Requests cancellation and defers the latest replacement until the old source ends.
-    ReplaceSubscription(Id: integer; Work: TuiBackgroundWork);
-    // Requests cancellation and clears any pending replacement with the matching id.
-    CancelSubscription(Id: integer);
-  end enum;
+// Cooperative function executed as host-owned background work.
+public type TuiBackgroundWork = function(Token: CancellationToken): result of boolean, string;
 
-type
-  TuiOwnedWork = record
-    Id: integer;
-    Subscription: boolean;
-    Group: TaskGroup;
-    Cancelling: boolean;
-    Replacement: option of TuiBackgroundWork;
-  end record;
+// Work requested by one completed Update callback.
+public type TuiBackgroundCommand = enum
+  // Starts one independently owned operation.
+  Start(Id: integer; Work: TuiBackgroundWork);
+  // Requests cancellation and defers the latest replacement until the old source ends.
+  ReplaceSubscription(Id: integer; Work: TuiBackgroundWork);
+  // Requests cancellation and clears any pending replacement with the matching id.
+  CancelSubscription(Id: integer);
+end enum;
 
-mutable var
-  TuiBackgroundOpen: array of boolean := [];
-  TuiBackgroundWorkItems: array of array of TuiOwnedWork := [];
+type TuiOwnedWork = record
+  Id: integer;
+  Subscription: boolean;
+  Group: TaskGroup;
+  Cancelling: boolean;
+  Replacement: option of TuiBackgroundWork;
+end record;
+
+mutable var TuiBackgroundOpen: array of boolean := [];
+mutable var TuiBackgroundWorkItems: array of array of TuiOwnedWork := [];
 
 function TuiBackgroundRequireOpen(ApplicationId: integer): integer;
 begin

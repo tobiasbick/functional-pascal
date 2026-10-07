@@ -2,15 +2,14 @@ program TuiInputPointerTest;
 
 uses Std.Test, Std.Tui;
 
-type
-  InputPointerModel = record
-    FirstText: string;
-    FirstCaret: integer;
-    SecondText: string;
-    SecondCaret: integer;
-    LastSource: integer;
-    LastAction: integer;
-  end record;
+type InputPointerModel = record
+  FirstText: string;
+  FirstCaret: integer;
+  SecondText: string;
+  SecondCaret: integer;
+  LastSource: integer;
+  LastAction: integer;
+end record;
 
 function ViewInput(State: InputPointerModel): TuiElement;
 begin

@@ -2,11 +2,10 @@ program TuiBackgroundFailureTest;
 
 uses Std.Results, Std.Tasks, Std.Test, Std.Tui;
 
-type
-  FailureModel = record
-    Ready: channel of boolean;
-    FailureSeen: boolean;
-  end record;
+type FailureModel = record
+  Ready: channel of boolean;
+  FailureSeen: boolean;
+end record;
 
 function UpdateFramework(State: FailureModel; Msg: TuiMsg; Cmd: TuiCmdOutput): FailureModel;
 begin

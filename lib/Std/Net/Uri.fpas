@@ -3,18 +3,17 @@ unit Std.Net.Uri;
 
 uses Std.Net.Decimal, Std.Str;
 
-public type
-  // Parsed absolute network URI used by protocol clients.
-  Uri = record
-    // Lowercase URI scheme.
-    public Scheme: string;
-    // Host name or unbracketed IPv6 address.
-    public Host: string;
-    // Explicit or scheme-default TCP port.
-    public Port: integer;
-    // Origin-form path including an optional query.
-    public Path: string;
-  end record;
+// Parsed absolute network URI used by protocol clients.
+public type Uri = record
+  // Lowercase URI scheme.
+  public Scheme: string;
+  // Host name or unbracketed IPv6 address.
+  public Host: string;
+  // Explicit or scheme-default TCP port.
+  public Port: integer;
+  // Origin-form path including an optional query.
+  public Path: string;
+end record;
 
 // Returns the default port for a supported URI scheme.
 //

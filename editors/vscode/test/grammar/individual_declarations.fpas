@@ -1,0 +1,17 @@
+unit Highlighting.Declarations;
+
+public type First = integer;
+
+public type Second = record
+  public Value: First;
+end record;
+
+public const A: integer := 1;
+public const B: integer := 2;
+
+public var C: integer := A;
+public var D: integer := B;
+
+public mutable var E: integer := 0;
+public mutable var F: integer := 0;
+end unit;

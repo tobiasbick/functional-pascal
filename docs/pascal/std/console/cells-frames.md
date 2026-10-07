@@ -10,32 +10,35 @@ All coordinates in this API are **1-based and screen-absolute**. They do not use
 ## Quick reference
 
 ```pascal
-type
-  ColorKind = enum
-    Crt;
-    Ansi256;
-    Rgb;
-  end enum;
-  Color = record
-    kind: ColorKind;
-    index: integer;
-    red: integer;
-    green: integer;
-    blue: integer;
-  end record;
-  Cell = record
-    glyph: string;
-    foreground: Color;
-    background: Color;
-  end record;
-  Rect = record
-    x: integer;
-    y: integer;
-    width: integer;
-    height: integer;
-  end record;
-  SavedRegion = record
-  end record;
+type ColorKind = enum
+  Crt;
+  Ansi256;
+  Rgb;
+end enum;
+
+type Color = record
+  kind: ColorKind;
+  index: integer;
+  red: integer;
+  green: integer;
+  blue: integer;
+end record;
+
+type Cell = record
+  glyph: string;
+  foreground: Color;
+  background: Color;
+end record;
+
+type Rect = record
+  x: integer;
+  y: integer;
+  width: integer;
+  height: integer;
+end record;
+
+type SavedRegion = record
+end record;
 ```
 
 | Symbol | Result | Purpose |

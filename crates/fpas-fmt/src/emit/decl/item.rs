@@ -15,13 +15,14 @@ use super::routines::{
     emit_procedure_header, finish_routine_header_line,
 };
 
+/// Emit one complete declaration, including its own keyword and visibility.
 pub(crate) fn emit_decl(emitter: &mut Emitter, decl: &Decl, comments: &CommentMap) {
     emit_leading_comments(emitter, comments, crate::span::decl_span(decl), true);
     match decl {
-        Decl::Const(def) => emit_const_def(emitter, def, false, comments),
-        Decl::Var(def) => emit_var_def(emitter, "var", def, false, comments),
-        Decl::MutableVar(def) => emit_var_def(emitter, "mutable var", def, false, comments),
-        Decl::TypeDef(def) => emit_type_def(emitter, def, comments, false),
+        Decl::Const(def) => emit_const_def(emitter, def, comments),
+        Decl::Var(def) => emit_var_def(emitter, "var", def, comments),
+        Decl::MutableVar(def) => emit_var_def(emitter, "mutable var", def, comments),
+        Decl::TypeDef(def) => emit_type_def(emitter, def, comments),
         Decl::Function(function) => emit_function_decl(emitter, function, comments),
         Decl::Procedure(procedure) => emit_procedure_decl(emitter, procedure, comments),
     }
@@ -34,19 +35,10 @@ pub(super) fn emit_visibility(emitter: &mut Emitter, visibility: Visibility) {
     }
 }
 
-pub(super) fn emit_const_def(
-    emitter: &mut Emitter,
-    def: &ConstDef,
-    in_const_block: bool,
-    comments: &CommentMap,
-) {
+fn emit_const_def(emitter: &mut Emitter, def: &ConstDef, comments: &CommentMap) {
     emitter.write_current_indent();
-    if !in_const_block {
-        emit_visibility(emitter, def.visibility);
-    }
-    if !in_const_block {
-        emitter.write("const ");
-    }
+    emit_visibility(emitter, def.visibility);
+    emitter.write("const ");
     emitter.write(&def.name);
     emitter.write(": ");
     emit_type_expr(emitter, &def.type_expr);
@@ -55,19 +47,11 @@ pub(super) fn emit_const_def(
     finish_decl_line(emitter, comments, def.span.offset);
 }
 
-pub(super) fn emit_var_def(
-    emitter: &mut Emitter,
-    keyword: &str,
-    def: &VarDef,
-    in_var_block: bool,
-    comments: &CommentMap,
-) {
+fn emit_var_def(emitter: &mut Emitter, keyword: &str, def: &VarDef, comments: &CommentMap) {
     emitter.write_current_indent();
-    if !in_var_block {
-        emit_visibility(emitter, def.visibility);
-        emitter.write(keyword);
-        emitter.write(" ");
-    }
+    emit_visibility(emitter, def.visibility);
+    emitter.write(keyword);
+    emitter.write(" ");
     emitter.write(&def.name);
     emitter.write(": ");
     emit_type_expr(emitter, &def.type_expr);
@@ -76,19 +60,10 @@ pub(super) fn emit_var_def(
     finish_decl_line(emitter, comments, def.span.offset);
 }
 
-pub(super) fn emit_type_def(
-    emitter: &mut Emitter,
-    def: &TypeDef,
-    comments: &CommentMap,
-    in_type_block: bool,
-) {
+fn emit_type_def(emitter: &mut Emitter, def: &TypeDef, comments: &CommentMap) {
     emitter.write_current_indent();
-    if !in_type_block {
-        emit_visibility(emitter, def.visibility);
-    }
-    if !in_type_block {
-        emitter.write("type ");
-    }
+    emit_visibility(emitter, def.visibility);
+    emitter.write("type ");
     emitter.write(&def.name);
     emitter.write(" = ");
     emit_type_body(emitter, &def.body, comments);

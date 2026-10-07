@@ -41,7 +41,7 @@ export async function verifyEmptyStorageConstruction(
     "    X: integer;",
     "    Y: integer;",
     "  end;",
-    "  Holder = record",
+    "  type Holder = record",
     "    Count: integer;",
     "    Nested: Point;",
     "  end;",

@@ -6,6 +6,8 @@ use fpas_lexer::Span;
 use fpas_parser::{TypeBody, TypeDef, TypeParam};
 use std::sync::Arc;
 
+/// Whole-unit structural type collection and recursive construction checks.
+pub(crate) mod collection;
 mod enums;
 mod record_accessors;
 mod record_events;
@@ -13,7 +15,16 @@ mod record_properties;
 mod records;
 
 impl Checker {
+    /// Collect a structural definition or check its values at the source position.
     pub(super) fn check_type_def(&mut self, td: &TypeDef) {
+        if !self.type_collection.collecting {
+            if self.has_collected_type(td)
+                && let TypeBody::Record(record) = &td.body
+            {
+                self.check_record_values(td, record);
+            }
+            return;
+        }
         match &td.body {
             TypeBody::Record(record) => self.check_record_type_def(td, record),
             TypeBody::Enum(enum_ty) => self.check_enum_type_def(td, enum_ty),
@@ -23,17 +34,15 @@ impl Checker {
 
     fn check_alias_type_def(&mut self, td: &TypeDef, type_expr: &fpas_parser::TypeExpr) {
         let ty = self.resolve_type_expr(type_expr);
-        if !self.define_type_symbol(td, ty.clone()) {
-            return;
-        }
-
-        if let Ty::Enum(enum_ty) = ty {
-            self.register_enum_alias_variant_symbols(td, &enum_ty);
-        }
+        self.define_type_symbol(td, ty);
     }
 
     /// Expose qualified enum variants through an alias without adding ambiguous short names.
-    fn register_enum_alias_variant_symbols(&mut self, td: &TypeDef, enum_ty: &Arc<EnumTy>) {
+    pub(in crate::check::decl::types) fn register_enum_alias_variant_symbols(
+        &mut self,
+        td: &TypeDef,
+        enum_ty: &Arc<EnumTy>,
+    ) {
         for variant in &enum_ty.variants {
             let kind = if variant.fields.is_empty() {
                 SymbolKind::EnumMember
@@ -124,7 +133,14 @@ impl Checker {
             .collect()
     }
 
+    /// Replace a collected placeholder or report a duplicate type definition.
     pub(super) fn define_type_symbol(&mut self, td: &TypeDef, ty: Ty) -> bool {
+        if self.has_collected_type(td) {
+            if let Some(symbol) = self.scopes.lookup_mut(&td.name) {
+                symbol.ty = ty;
+            }
+            return true;
+        }
         if self.scopes.define(
             &td.name,
             Symbol {

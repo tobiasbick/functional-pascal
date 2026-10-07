@@ -6,11 +6,10 @@ program VmUnicodeCharAtBenchmark;
 
 uses Std.Args, Std.Console, Std.Conv, Std.Str, Std.Time;
 
-const
-  WarmupIterations: integer := 10000;
-  PatternRepetitions: integer := 64;
-  PatternLength: integer := 4;
-  TextLength: integer := PatternRepetitions * PatternLength;
+const WarmupIterations: integer := 10000;
+const PatternRepetitions: integer := 64;
+const PatternLength: integer := 4;
+const TextLength: integer := PatternRepetitions * PatternLength;
 
 function MakeText(): string;
 begin

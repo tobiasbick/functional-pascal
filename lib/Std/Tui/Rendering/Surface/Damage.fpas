@@ -2,16 +2,15 @@ unit Std.Tui.Rendering.Surface.Damage;
 
 uses Std.Arrays, Std.Options, Std.Tui.Cells.Cell, Std.Tui.Cells.Color, Std.Tui.Cells.Style;
 
-public type
-  // One changed horizontal range prepared for the internal terminal renderer.
-  TuiSurfaceDamage = record
-    // Zero-based vertical terminal-cell coordinate.
-    public Y: integer;
-    // First changed horizontal cell coordinate.
-    public FirstX: integer;
-    // Row-major terminal cells.
-    public Cells: array of TuiCell;
-  end record;
+// One changed horizontal range prepared for the internal terminal renderer.
+public type TuiSurfaceDamage = record
+  // Zero-based vertical terminal-cell coordinate.
+  public Y: integer;
+  // First changed horizontal cell coordinate.
+  public FirstX: integer;
+  // Row-major terminal cells.
+  public Cells: array of TuiCell;
+end record;
 
 function TuiSurfaceColorEqual(Left: TuiColor; Right: TuiColor): boolean;
 begin

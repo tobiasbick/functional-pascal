@@ -2,8 +2,7 @@ program ControlBlocksTest;
 
 uses Std.Test;
 
-mutable var
-  Evaluations: integer := 0;
+mutable var Evaluations: integer := 0;
 
 function Condition(Value: boolean): boolean;
 begin

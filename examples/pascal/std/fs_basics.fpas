@@ -4,9 +4,8 @@ program FsBasics;
 
 uses Std.Console, Std.Fs, Std.Results;
 
-const
-  Scratch: string := '.temp-data';
-  DemoPath: string := Scratch + '/_fpas_fs_demo.txt';
+const Scratch: string := '.temp-data';
+const DemoPath: string := Scratch + '/_fpas_fs_demo.txt';
 
 begin
   if not Exists(Scratch) then

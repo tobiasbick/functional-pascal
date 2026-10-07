@@ -2,16 +2,15 @@ program ExpressionMutation;
 
 uses Std.Console;
 
-type
-  Box = record
-    Value: integer;
-  end record;
-  Container = record
-    Items: array of Box;
-  end record;
+type Box = record
+  Value: integer;
+end record;
 
-mutable var
-  GlobalValue: integer := 5;
+type Container = record
+  Items: array of Box;
+end record;
+
+mutable var GlobalValue: integer := 5;
 
 begin
   mutable var Index: integer := 0;

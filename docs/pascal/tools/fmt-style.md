@@ -132,31 +132,30 @@ program PointExample;
 
 uses Std.Console, Std.Conv;
 
-type
-  Point = record
-    X: integer;
-    Y: integer;
+type Point = record
+  X: integer;
+  Y: integer;
 
-    function Sum(Self: Point): integer;
-    begin
-      return Self.X + Self.Y;
-    end function;
+  function Sum(Self: Point): integer;
+  begin
+    return Self.X + Self.Y;
+  end function;
 
-    function Add(Self: Point; Other: Point): Point;
-    begin
-      var RX: integer := Self.X + Other.X;
-      var RY: integer := Self.Y + Other.Y;
-      return record
-        X := RX;
-        Y := RY;
-      end;
-    end function;
+  function Add(Self: Point; Other: Point): Point;
+  begin
+    var RX: integer := Self.X + Other.X;
+    var RY: integer := Self.Y + Other.Y;
+    return record
+      X := RX;
+      Y := RY;
+    end;
+  end function;
 
-    procedure Print(Self: Point);
-    begin
-      WriteLn('(' + IntToStr(Self.X) + ', ' + IntToStr(Self.Y) + ')');
-    end procedure;
-  end record;
+  procedure Print(Self: Point);
+  begin
+    WriteLn(((('(' + IntToStr(Self.X)) + ', ') + IntToStr(Self.Y)) + ')');
+  end procedure;
+end record;
 
 begin
   var A: Point := record
@@ -300,7 +299,8 @@ The formatter **inserts and removes** blank lines to match these rules. User-pla
 | `program Name;` | **exactly one** |
 | `unit Qualified.Name;` | **exactly one** |
 | `uses ...;` | **exactly one** |
-| `type` block (after the final declaration terminator) | **exactly one** before the next top-level section (`begin` in programs, or `function` / `procedure` / … in units) |
+| consecutive declarations | **exactly one**, except adjacent `const`, `var`, or `mutable var` declarations of the same kind and visibility |
+| final declaration | **exactly one** before a program’s `begin`; unit ending follows the last declaration without an extra blank line |
 | last field in a `record` type (before methods) | **exactly one** before the first method |
 | sibling statement ending in `end;` or a named control ending | **exactly one**, unless the next sibling is `var` or `mutable var` |
 | last statement before `end` / `end.` | none |
@@ -310,6 +310,14 @@ before structural continuations or closers such as `elsif`, `when`, `else`, `unt
 separate `case` arms. Leading comments stay attached to the following statement after the blank line.
 
 ---
+
+## Individual declarations
+
+Each declaration emits its own `type`, `const`, `var`, or complete
+`mutable var` prefix on the same line as its name. Exported declarations
+repeat `public` before their keyword. Declarations retain their source order.
+Record and enum bodies indent two spaces from the declaration line; fields,
+methods, payloads, and formal parameters keep their existing syntax.
 
 ## Keywords and builtins
 
@@ -380,39 +388,36 @@ routine stays compact unless comments require separate lines.
 
 ## More examples — `record` types (snippet)
 
-**Also golden output** — shape of a `type` section inside a formatted file. See **PointExample** above for a full program.
+**Also golden output** — shape of individual `type` declarations inside a formatted file. See **PointExample** above for a full program.
 
 ### One field
 
 ```pascal
-type
-  IdBox = record
-    Value: integer;
-  end record;
+type IdBox = record
+  Value: integer;
+end record;
 ```
 
 ### Five fields
 
 ```pascal
-type
-  Person = record
-    Id: integer;
-    Name: string;
-    Age: integer;
-    Active: boolean;
-    Score: real;
-  end record;
+type Person = record
+  Id: integer;
+  Name: string;
+  Age: integer;
+  Active: boolean;
+  Score: real;
+end record;
 ```
 
 ### Fields with defaults
 
 ```pascal
-type
-  Config = record
-    Host: string := 'localhost';
-    Port: integer := 8080;
-    Retries: integer := 3;
-  end record;
+type Config = record
+  Host: string := 'localhost';
+  Port: integer := 8080;
+  Retries: integer := 3;
+end record;
 ```
 
 ### Record literal (expression)
@@ -486,7 +491,7 @@ type
     Point;
   end enum;
 
-  IntBox = Box of integer;
+  type IntBox = Box of integer;
 ```
 
 ---

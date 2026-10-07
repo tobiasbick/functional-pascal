@@ -3,8 +3,7 @@ unit Notes.Format;
 uses
   Notes.Model, Std.Arrays, Std.Conv, Std.Dictionaries, Std.Options, Std.Results, Std.Str, Std.Toml;
 
-const
-  NoteFormatVersion: integer := 1;
+const NoteFormatVersion: integer := 1;
 
 function MissingField(Name: string): string;
 begin

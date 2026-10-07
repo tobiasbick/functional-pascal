@@ -1,6 +1,7 @@
 mod consts;
 mod routines;
-mod types;
+/// Type declarations, whole-unit collection, and record member checking.
+pub(crate) mod types;
 mod vars;
 
 use super::Checker;
@@ -22,6 +23,7 @@ impl Checker {
         }
     }
 
+    /// Compare canonical types, including recursive nominal references.
     pub(crate) fn check_type_compat(
         &mut self,
         expected: &Ty,
@@ -29,7 +31,9 @@ impl Checker {
         context: &str,
         span: fpas_lexer::Span,
     ) {
-        if !expected.assignment_compatible_with(actual) {
+        let expected = self.resolve_visible_type(expected);
+        let actual = self.resolve_visible_type(actual);
+        if !expected.assignment_compatible_with(&actual) {
             self.errors.push(
                 crate::error::sema_error(
                     SEMA_TYPE_MISMATCH,

@@ -2,8 +2,7 @@ program DiscardTest;
 
 uses Std.Test;
 
-mutable var
-  Calls: integer := 0;
+mutable var Calls: integer := 0;
 
 function Produce(): result of integer, string;
 begin

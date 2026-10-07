@@ -175,7 +175,7 @@ fn generic_function_valid() {
 fn generic_callback_returning_recursive_record_is_valid() {
     check_ok(
         "program T; \
-         type Element = record Text: string; Children: array of Element; end record; \
+         type Element = record Text: string; Children: array of Element; end record; type \
               Model = record Count: integer; end record; \
          function View(State: Model): Element; \
          begin return record Text := 'root'; Children := []; end; end function; \

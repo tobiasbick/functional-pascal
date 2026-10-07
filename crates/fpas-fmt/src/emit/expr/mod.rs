@@ -349,7 +349,7 @@ mod tests {
     #[test]
     fn nested_record_literal_indents_from_its_field() {
         let formatted = expr_from_body(
-            "program T; type Inner = record X: integer; end record; Outer = record Item: Inner; end record; begin var Value: Outer := record Item := record X := 1; end; end; end.",
+            "program T; type Inner = record X: integer; end record; type Outer = record Item: Inner; end record; begin var Value: Outer := record Item := record X := 1; end; end; end.",
         );
         assert_eq!(
             formatted,
@@ -360,7 +360,7 @@ mod tests {
     #[test]
     fn record_literal_inside_array_continues_from_the_opening_line() {
         let formatted = expr_from_body(
-            "program T; type Item = record Value: integer; end record; Box = record Items: array of Item; end record; begin var Value: Box := record Items := [record Value := 10; end]; end; end.",
+            "program T; type Item = record Value: integer; end record; type Box = record Items: array of Item; end record; begin var Value: Box := record Items := [record Value := 10; end]; end; end.",
         );
         assert_eq!(
             formatted,

@@ -6,14 +6,12 @@ program VmRecordFieldAccessBenchmark;
 
 uses Std.Args, Std.Console, Std.Conv, Std.Time;
 
-const
-  WarmupIterations: integer := 10000;
+const WarmupIterations: integer := 10000;
 
-type
-  BenchmarkState = record
-    Value: integer;
-    Total: integer;
-  end record;
+type BenchmarkState = record
+  Value: integer;
+  Total: integer;
+end record;
 
 function RunAccess(Iterations: integer): integer;
 begin

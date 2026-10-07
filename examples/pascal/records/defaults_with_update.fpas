@@ -2,12 +2,11 @@ program RecordDefaultsWithUpdate;
 
 uses Std.Console, Std.Conv;
 
-type
-  Config = record
-    Host: string := 'localhost';
-    Port: integer := 8080;
-    Retries: integer := 3;
-  end record;
+type Config = record
+  Host: string := 'localhost';
+  Port: integer := 8080;
+  Retries: integer := 3;
+end record;
 
 function ShowConfig(Value: Config): string;
 begin

@@ -2,11 +2,10 @@ program TuiBackgroundPanicTest;
 
 uses Std.Results, Std.Tasks, Std.Test, Std.Time, Std.Tui;
 
-type
-  PanicModel = record
-    Ready: channel of boolean;
-    FailureSeen: boolean;
-  end record;
+type PanicModel = record
+  Ready: channel of boolean;
+  FailureSeen: boolean;
+end record;
 
 function UpdateFramework(State: PanicModel; Msg: TuiMsg; Cmd: TuiCmdOutput): PanicModel;
 begin

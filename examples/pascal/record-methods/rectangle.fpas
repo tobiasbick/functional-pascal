@@ -2,39 +2,38 @@ program RectangleExample;
 
 uses Std.Console, Std.Conv;
 
-type
-  Rectangle = record
-    W: integer;
-    H: integer;
+type Rectangle = record
+  W: integer;
+  H: integer;
 
-    function Area(Self: Rectangle): integer;
-    begin
-      return Self.W * Self.H;
-    end function;
+  function Area(Self: Rectangle): integer;
+  begin
+    return Self.W * Self.H;
+  end function;
 
-    function Perimeter(Self: Rectangle): integer;
-    begin
-      return 2 * (Self.W + Self.H);
-    end function;
+  function Perimeter(Self: Rectangle): integer;
+  begin
+    return 2 * (Self.W + Self.H);
+  end function;
 
-    function IsSquare(Self: Rectangle): boolean;
-    begin
-      return Self.W = Self.H;
-    end function;
+  function IsSquare(Self: Rectangle): boolean;
+  begin
+    return Self.W = Self.H;
+  end function;
 
-    procedure Describe(Self: Rectangle);
-    begin
-      mutable var Kind: string := 'Rectangle';
-      if Self.IsSquare() then
-        begin
-          Kind := 'Square';
-        end;
-      end if;
+  procedure Describe(Self: Rectangle);
+  begin
+    mutable var Kind: string := 'Rectangle';
+    if Self.IsSquare() then
+      begin
+        Kind := 'Square';
+      end;
+    end if;
 
-      WriteLn((((((((Kind + ' ') + IntToStr(Self.W)) + 'x') + IntToStr(Self.H)) + ' area=') + IntToStr(Self.Area())) + ' perimeter=') +
-              IntToStr(Self.Perimeter()));
-    end procedure;
-  end record;
+    WriteLn((((((((Kind + ' ') + IntToStr(Self.W)) + 'x') + IntToStr(Self.H)) + ' area=') + IntToStr(Self.Area())) + ' perimeter=') +
+            IntToStr(Self.Perimeter()));
+  end procedure;
+end record;
 
 begin
   var R: Rectangle := record

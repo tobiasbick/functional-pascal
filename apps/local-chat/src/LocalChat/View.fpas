@@ -3,17 +3,16 @@ unit LocalChat.View;
 
 uses LocalChat.Model, Std.Options, Std.Tui;
 
-const
-  // Identifier of the prompt input control.
-  PromptControl: integer := 1;
-  // Identifier of the transcript text area.
-  TranscriptControl: integer := 2;
-  // Action emitted when the prompt text changes.
-  PromptChangedAction: integer := 1;
-  // Action emitted when the transcript viewport changes.
-  TranscriptChangedAction: integer := 2;
-  // Action emitted by the send button.
-  SendAction: integer := 10;
+// Identifier of the prompt input control.
+const PromptControl: integer := 1;
+// Identifier of the transcript text area.
+const TranscriptControl: integer := 2;
+// Action emitted when the prompt text changes.
+const PromptChangedAction: integer := 1;
+// Action emitted when the transcript viewport changes.
+const TranscriptChangedAction: integer := 2;
+// Action emitted by the send button.
+const SendAction: integer := 10;
 
 // Wraps one child in an expanding layout element.
 //

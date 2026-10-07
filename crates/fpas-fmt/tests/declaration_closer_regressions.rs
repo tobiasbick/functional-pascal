@@ -14,7 +14,7 @@ fn every_named_closer_preserves_comments_before_and_after_it() {
         type E = enum A;
         // enum close
         end enum; // enum tail
-        R = record X: integer;
+        type R = record X: integer;
             function F(self: R): integer; begin return self.X;
             // function close
             end function; // function tail
@@ -72,7 +72,7 @@ fn declaration_and_expression_endings_preserve_plain_scoping_blocks() {
 fn comments_between_closer_keywords_stay_with_their_declaration() {
     let formatted = format(
         "unit Demo; type E = enum A; end // enum ending\n enum;
-        R = record end\n// record ending\nrecord;
+        type R = record end\n// record ending\nrecord;
         function F(): integer; begin return 1; end // function ending\nfunction;
         procedure P(); begin return; end\n// procedure ending\nprocedure;
         end // unit ending\nunit; // unit tail",

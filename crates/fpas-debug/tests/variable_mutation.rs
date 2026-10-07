@@ -171,7 +171,7 @@ type
     Value: integer;
     Other: integer;
   end record;
-  Container = record
+  type Container = record
     Items: array of Box;
   end record;
 

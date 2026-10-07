@@ -2,25 +2,23 @@ program ConfirmDialogSliceTest;
 
 uses Std.Console, Std.Str, Std.Tui, Std.Test;
 
-const
-  NameControlValue: integer := 1;
-  SaveControlValue: integer := 2;
-  YesControlValue: integer := 3;
-  NoControlValue: integer := 4;
-  NameChangedActionValue: integer := 10;
-  SaveActionValue: integer := 11;
-  ConfirmYesActionValue: integer := 12;
-  ConfirmNoActionValue: integer := 13;
+const NameControlValue: integer := 1;
+const SaveControlValue: integer := 2;
+const YesControlValue: integer := 3;
+const NoControlValue: integer := 4;
+const NameChangedActionValue: integer := 10;
+const SaveActionValue: integer := 11;
+const ConfirmYesActionValue: integer := 12;
+const ConfirmNoActionValue: integer := 13;
 
-type
-  EditorModel = record
-    Name: string;
-    NameCaret: integer;
-    Focused: integer;
-    ConfirmOpen: boolean;
-    Saved: boolean;
-    Quit: boolean;
-  end record;
+type EditorModel = record
+  Name: string;
+  NameCaret: integer;
+  Focused: integer;
+  ConfirmOpen: boolean;
+  Saved: boolean;
+  Quit: boolean;
+end record;
 
 function EditorState(
   State: EditorModel;

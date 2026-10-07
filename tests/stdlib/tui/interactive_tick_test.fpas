@@ -3,14 +3,13 @@ program TuiInteractiveTickTest;
 
 uses Std.Results, Std.Tasks, Std.Test, Std.Time, Std.Tui;
 
-type
-  TickModel = record
-    Inbox: channel of integer;
-    Ticks: integer;
-    ShortestTick: integer;
-    Started: integer;
-    Replaced: boolean;
-  end record;
+type TickModel = record
+  Inbox: channel of integer;
+  Ticks: integer;
+  ShortestTick: integer;
+  Started: integer;
+  Replaced: boolean;
+end record;
 
 function Update(State: TickModel; Msg: TuiMsg; Cmd: TuiCmdOutput): TickModel;
 begin

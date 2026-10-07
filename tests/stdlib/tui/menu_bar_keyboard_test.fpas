@@ -2,11 +2,10 @@ program TuiMenuBarKeyboardTest;
 
 uses Std.Arrays, Std.Test, Std.Tui;
 
-type
-  MenuModel = record
-    Focus: integer;
-    Actions: array of integer;
-  end record;
+type MenuModel = record
+  Focus: integer;
+  Actions: array of integer;
+end record;
 
 function MakeKey(Kind: TuiKeyKind): TuiKeyEvent;
 begin

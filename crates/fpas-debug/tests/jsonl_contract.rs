@@ -37,7 +37,7 @@ fn positive_contract_stops_reports_stack_and_completes_fixture() {
         }
         if command == "stack" {
             assert_eq!(
-                response[0]["body"]["frames"][0]["location"]["line"], 37,
+                response[0]["body"]["frames"][0]["location"]["line"], 36,
                 "{response:?}"
             );
         }
@@ -51,7 +51,7 @@ fn positive_contract_stops_reports_stack_and_completes_fixture() {
     assert!(records.iter().any(|record| {
         record["event"] == "stopped"
             && record["body"]["reason"] == "breakpoint"
-            && record["body"]["location"]["line"] == 37
+            && record["body"]["location"]["line"] == 36
     }));
     let output = records
         .iter()

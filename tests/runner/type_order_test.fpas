@@ -1,0 +1,85 @@
+program TypeOrderTest;
+
+uses Std.Test;
+
+const InitialState: State := State.Ready;
+
+mutable var Calls: integer := 0;
+
+function NextValue(): integer;
+begin
+  Calls := Calls + 1;
+  return Calls;
+end function;
+
+var First: integer := NextValue();
+
+function CreateTeam(): Team;
+begin
+  return Team.Empty();
+end function;
+
+type Team = record
+  Members: array of Member;
+  Status: State := InitialState;
+
+  static function Empty(): Team;
+  begin
+    return record
+      Members := [];
+    end;
+  end function;
+
+  function IsReady(Self: Team): boolean;
+  begin
+    return Self.Status = State.Ready;
+  end function;
+end record;
+
+var Second: integer := NextValue();
+
+type Member = record
+  Home: option of Team;
+end record;
+
+type State = enum
+  Ready;
+  Busy;
+end enum;
+
+function Identity<T>(Value: T): T;
+begin
+  return Value;
+end function;
+
+function Depth(Value: Chain): integer;
+begin
+  case Value of
+    when Chain.Empty:
+      return 0;
+    when Chain.Link(Next):
+      return 1 + Depth(Next);
+  end case;
+end function;
+
+type Chain = enum
+  Empty;
+  Link(Next: ChainAlias);
+end enum;
+
+type ChainAlias = Chain;
+
+begin
+  var Group: Team := Identity(CreateTeam());
+  var Person: Member := record
+    Home := Some(Group);
+  end;
+  var Populated: Team := Group with Members := [Person]; end with;
+  var Bound: function(): boolean := Populated.IsReady;
+  AssertTrue(Bound());
+  AssertTrue(Group.Status = State.Ready);
+  AssertEquals(2, Depth(ChainAlias.Link(ChainAlias.Link(ChainAlias.Empty))));
+  AssertEquals(1, First);
+  AssertEquals(2, Second);
+  AssertEquals(2, Calls);
+end.

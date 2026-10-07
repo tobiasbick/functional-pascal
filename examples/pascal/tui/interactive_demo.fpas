@@ -2,12 +2,11 @@ program TuiInteractiveDemo;
 
 uses Std.Tui;
 
-type
-  DemoModel = record
-    Text: string;
-    Caret: integer;
-    Confirming: boolean;
-  end record;
+type DemoModel = record
+  Text: string;
+  Caret: integer;
+  Confirming: boolean;
+end record;
 
 function UpdateDemo(State: DemoModel; Msg: TuiMsg; Cmd: TuiCmdOutput): DemoModel;
 begin

@@ -2,8 +2,7 @@ unit Std.Tui.Runtime.TerminalSession;
 
 uses Std.Console;
 
-mutable var
-  TuiTerminalSessionOpen: boolean := false;
+mutable var TuiTerminalSessionOpen: boolean := false;
 
 // Acquires the process terminal for one interactive Tui host.
 //

@@ -2,13 +2,12 @@ program TuiBackgroundResponsivenessTest;
 
 uses Std.Results, Std.Tasks, Std.Test, Std.Time, Std.Tui;
 
-type
-  Model = record
-    Generation: integer;
-    Gate: channel of boolean;
-    Started: channel of integer;
-    Painted: channel of integer;
-  end record;
+type Model = record
+  Generation: integer;
+  Gate: channel of boolean;
+  Started: channel of integer;
+  Painted: channel of integer;
+end record;
 
 procedure Replace(State: Model; Cmd: TuiCmdOutput);
 begin

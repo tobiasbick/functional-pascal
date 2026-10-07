@@ -6,8 +6,7 @@ program TaskSpawnWaitBenchmark;
 
 uses Std.Args, Std.Arrays, Std.Console, Std.Conv, Std.Tasks, Std.Time;
 
-const
-  WarmupIterations: integer := 10;
+const WarmupIterations: integer := 10;
 
 function Worker(Value: integer): integer;
 begin

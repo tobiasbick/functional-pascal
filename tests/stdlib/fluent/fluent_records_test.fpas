@@ -7,16 +7,15 @@ begin
   return X * 2;
 end function;
 
-type
-  Box = record
-    Value: integer;
-    Callback: function(X: integer): integer;
+type Box = record
+  Value: integer;
+  Callback: function(X: integer): integer;
 
-    function Add(Self: Box; X: integer): integer;
-    begin
-      return Self.Value + X;
-    end function;
-  end record;
+  function Add(Self: Box; X: integer): integer;
+  begin
+    return Self.Value + X;
+  end function;
+end record;
 
 function ValueOf(B: Box): integer;
 begin

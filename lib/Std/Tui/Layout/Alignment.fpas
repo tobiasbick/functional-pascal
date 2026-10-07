@@ -1,59 +1,59 @@
 unit Std.Tui.Layout.Alignment;
 
-public type
-  // Alignment of content inside an allocated layout slot.
-  TuiAlignmentKind = enum
-    // Represents the `Leading` variant of `TuiAlignmentKind`.
-    Leading;
-    // Represents the `Center` variant of `TuiAlignmentKind`.
-    Center;
-    // Represents the `Trailing` variant of `TuiAlignmentKind`.
-    Trailing;
-    // Represents the `Fill` variant of `TuiAlignmentKind`.
-    Fill;
-  end enum;
-  // Independent horizontal and vertical alignment.
-  TuiAlignment = record
-    // Horizontal policy, alignment, or extent.
-    public Horizontal: TuiAlignmentKind;
-    // Vertical policy, alignment, or extent.
-    public Vertical: TuiAlignmentKind;
+// Alignment of content inside an allocated layout slot.
+public type TuiAlignmentKind = enum
+  // Represents the `Leading` variant of `TuiAlignmentKind`.
+  Leading;
+  // Represents the `Center` variant of `TuiAlignmentKind`.
+  Center;
+  // Represents the `Trailing` variant of `TuiAlignmentKind`.
+  Trailing;
+  // Represents the `Fill` variant of `TuiAlignmentKind`.
+  Fill;
+end enum;
 
-    // Creates a mixed-axis alignment.
-    //
-    // Parameters:
-    // - `Horizontal`: Horizontal policy, alignment, or extent.
-    // - `Vertical`: Vertical policy, alignment, or extent.
-    public static function Create(Horizontal: TuiAlignmentKind; Vertical: TuiAlignmentKind): TuiAlignment;
-    begin
-      return record
-        Horizontal := Horizontal;
-        Vertical := Vertical;
-      end;
-    end function;
+// Independent horizontal and vertical alignment.
+public type TuiAlignment = record
+  // Horizontal policy, alignment, or extent.
+  public Horizontal: TuiAlignmentKind;
+  // Vertical policy, alignment, or extent.
+  public Vertical: TuiAlignmentKind;
 
-    // Leading on both axes.
-    public static function Leading(): TuiAlignment;
-    begin
-      return TuiAlignment.Create(TuiAlignmentKind.Leading, TuiAlignmentKind.Leading);
-    end function;
+  // Creates a mixed-axis alignment.
+  //
+  // Parameters:
+  // - `Horizontal`: Horizontal policy, alignment, or extent.
+  // - `Vertical`: Vertical policy, alignment, or extent.
+  public static function Create(Horizontal: TuiAlignmentKind; Vertical: TuiAlignmentKind): TuiAlignment;
+  begin
+    return record
+      Horizontal := Horizontal;
+      Vertical := Vertical;
+    end;
+  end function;
 
-    // Centered on both axes.
-    public static function Center(): TuiAlignment;
-    begin
-      return TuiAlignment.Create(TuiAlignmentKind.Center, TuiAlignmentKind.Center);
-    end function;
+  // Leading on both axes.
+  public static function Leading(): TuiAlignment;
+  begin
+    return TuiAlignment.Create(TuiAlignmentKind.Leading, TuiAlignmentKind.Leading);
+  end function;
 
-    // Trailing on both axes.
-    public static function Trailing(): TuiAlignment;
-    begin
-      return TuiAlignment.Create(TuiAlignmentKind.Trailing, TuiAlignmentKind.Trailing);
-    end function;
+  // Centered on both axes.
+  public static function Center(): TuiAlignment;
+  begin
+    return TuiAlignment.Create(TuiAlignmentKind.Center, TuiAlignmentKind.Center);
+  end function;
 
-    // Fill on both axes.
-    public static function Fill(): TuiAlignment;
-    begin
-      return TuiAlignment.Create(TuiAlignmentKind.Fill, TuiAlignmentKind.Fill);
-    end function;
-  end record;
+  // Trailing on both axes.
+  public static function Trailing(): TuiAlignment;
+  begin
+    return TuiAlignment.Create(TuiAlignmentKind.Trailing, TuiAlignmentKind.Trailing);
+  end function;
+
+  // Fill on both axes.
+  public static function Fill(): TuiAlignment;
+  begin
+    return TuiAlignment.Create(TuiAlignmentKind.Fill, TuiAlignmentKind.Fill);
+  end function;
+end record;
 end unit;

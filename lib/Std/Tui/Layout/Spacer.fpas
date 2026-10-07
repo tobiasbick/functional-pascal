@@ -1,54 +1,54 @@
 unit Std.Tui.Layout.Spacer;
 
-public type
-  // Whether a spacer has a fixed extent or expands.
-  TuiSpacerKind = enum
-    // Represents the `Fixed` variant of `TuiSpacerKind`.
-    Fixed;
-    // Represents the `Expanding` variant of `TuiSpacerKind`.
-    Expanding;
-  end enum;
-  // Empty layout extent used between siblings.
-  TuiSpacer = record
-    // Variant kind represented by the value.
-    public Kind: TuiSpacerKind;
-    // Minimum extent retained while expanding.
-    public MinimumExtent: integer;
+// Whether a spacer has a fixed extent or expands.
+public type TuiSpacerKind = enum
+  // Represents the `Fixed` variant of `TuiSpacerKind`.
+  Fixed;
+  // Represents the `Expanding` variant of `TuiSpacerKind`.
+  Expanding;
+end enum;
 
-    // Creates a fixed spacer with a non-negative extent.
-    //
-    // Parameters:
-    // - `Extent`: Fixed extent of the spacer.
-    public static function Fixed(Extent: integer): TuiSpacer;
-    begin
-      if Extent < 0 then
-        begin
-          panic('Tui fixed spacer extent must not be negative');
-        end;
-      end if;
+// Empty layout extent used between siblings.
+public type TuiSpacer = record
+  // Variant kind represented by the value.
+  public Kind: TuiSpacerKind;
+  // Minimum extent retained while expanding.
+  public MinimumExtent: integer;
 
-      return record
-        Kind := TuiSpacerKind.Fixed;
-        MinimumExtent := Extent;
+  // Creates a fixed spacer with a non-negative extent.
+  //
+  // Parameters:
+  // - `Extent`: Fixed extent of the spacer.
+  public static function Fixed(Extent: integer): TuiSpacer;
+  begin
+    if Extent < 0 then
+      begin
+        panic('Tui fixed spacer extent must not be negative');
       end;
-    end function;
+    end if;
 
-    // Creates an expanding spacer with a non-negative minimum extent.
-    //
-    // Parameters:
-    // - `MinimumExtent`: Minimum extent retained by an expanding spacer.
-    public static function Expanding(MinimumExtent: integer): TuiSpacer;
-    begin
-      if MinimumExtent < 0 then
-        begin
-          panic('Tui expanding spacer minimum extent must not be negative');
-        end;
-      end if;
+    return record
+      Kind := TuiSpacerKind.Fixed;
+      MinimumExtent := Extent;
+    end;
+  end function;
 
-      return record
-        Kind := TuiSpacerKind.Expanding;
-        MinimumExtent := MinimumExtent;
+  // Creates an expanding spacer with a non-negative minimum extent.
+  //
+  // Parameters:
+  // - `MinimumExtent`: Minimum extent retained by an expanding spacer.
+  public static function Expanding(MinimumExtent: integer): TuiSpacer;
+  begin
+    if MinimumExtent < 0 then
+      begin
+        panic('Tui expanding spacer minimum extent must not be negative');
       end;
-    end function;
-  end record;
+    end if;
+
+    return record
+      Kind := TuiSpacerKind.Expanding;
+      MinimumExtent := MinimumExtent;
+    end;
+  end function;
+end record;
 end unit;

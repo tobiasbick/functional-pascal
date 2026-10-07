@@ -6,22 +6,21 @@ uses
   Std.Tui.Runtime.Cmd, Std.Tui.Runtime.Input, Std.Tui.Runtime.Msg, Std.Tui.Runtime.Routing,
   Std.Tui.Runtime.Routing.Pointer, Std.Tui.Runtime.TerminalSession, Std.Time;
 
-public mutable var
-  TuiAppInputHead: array of integer := [];
-  TuiAppMessageHead: array of integer := [];
-  TuiAppOpen: array of boolean := [];
-  TuiAppInputs: array of array of TuiHostInput := [];
-  TuiAppMessages: array of array of TuiMsg := [];
-  TuiAppSurfaces: array of TuiWorkingSurface := [];
-  TuiAppFrames: array of TuiArrangedFrame := [];
-  TuiAppTrees: array of TuiElement := [];
-  TuiAppCommands: array of TuiCmdOutput := [];
-  TuiAppInteractive: array of boolean := [];
-  TuiAppPalettes: array of TuiPalette := [];
-  TuiAppStarted: array of boolean := [];
-  // Monotonic time of the pending tick request and its due time; negative due means none.
-  TuiAppTickRequestedAt: array of integer := [];
-  TuiAppTickDueAt: array of integer := [];
+public mutable var TuiAppInputHead: array of integer := [];
+public mutable var TuiAppMessageHead: array of integer := [];
+public mutable var TuiAppOpen: array of boolean := [];
+public mutable var TuiAppInputs: array of array of TuiHostInput := [];
+public mutable var TuiAppMessages: array of array of TuiMsg := [];
+public mutable var TuiAppSurfaces: array of TuiWorkingSurface := [];
+public mutable var TuiAppFrames: array of TuiArrangedFrame := [];
+public mutable var TuiAppTrees: array of TuiElement := [];
+public mutable var TuiAppCommands: array of TuiCmdOutput := [];
+public mutable var TuiAppInteractive: array of boolean := [];
+public mutable var TuiAppPalettes: array of TuiPalette := [];
+public mutable var TuiAppStarted: array of boolean := [];
+// Monotonic time of the pending tick request and its due time; negative due means none.
+public mutable var TuiAppTickRequestedAt: array of integer := [];
+public mutable var TuiAppTickDueAt: array of integer := [];
 
 // Opens application-owned state and returns its stable identifier.
 public function TuiAppOpenApplication(Size: TuiSize; Palette: TuiPalette; Interactive: boolean): integer;

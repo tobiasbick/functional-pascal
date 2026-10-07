@@ -6,9 +6,8 @@ program TuiHeadlessRenderBenchmark;
 
 uses Std.Args, Std.Arrays, Std.Console, Std.Conv, Std.Time, Std.Tui;
 
-const
-  WarmupIterations: integer := 100;
-  DeltaMillis: integer := 16;
+const WarmupIterations: integer := 100;
+const DeltaMillis: integer := 16;
 
 function UpdateBenchmark(State: integer; Msg: TuiMsg; Cmd: TuiCmdOutput): integer;
 begin

@@ -3,13 +3,14 @@ unit Std.Ai.OpenAi;
 
 uses Std.Ai.OpenAi.Client, Std.Ai.OpenAi.Types;
 
-public type
-  // One role-tagged chat message.
-  ChatMessage = Std.Ai.OpenAi.Types.ChatMessage;
-  // Connection and model settings for an OpenAI-compatible endpoint.
-  Client = Std.Ai.OpenAi.Types.Client;
-  // Optional generation controls for one completion.
-  ChatOptions = Std.Ai.OpenAi.Types.ChatOptions;
+// One role-tagged chat message.
+public type ChatMessage = Std.Ai.OpenAi.Types.ChatMessage;
+
+// Connection and model settings for an OpenAI-compatible endpoint.
+public type Client = Std.Ai.OpenAi.Types.Client;
+
+// Optional generation controls for one completion.
+public type ChatOptions = Std.Ai.OpenAi.Types.ChatOptions;
 
 // Sends one non-streaming OpenAI-compatible chat completion.
 //

@@ -412,6 +412,29 @@ async function verifyExpressionClosers(grammar) {
 }
 
 /** Loads the grammar and verifies positive, negative, and edge-case scopes. */
+async function verifyIndividualDeclarations(grammar) {
+  const fixture = await tokenizeFixture(grammar, "individual_declarations.fpas");
+  for (const name of ["First", "Second"]) {
+    const line = `public type ${name}`;
+    assertScope(tokenAt(fixture, line, "public"), "keyword.declaration.visibility.fpas");
+    assertScope(tokenAt(fixture, line, "type"), "keyword.declaration.type.fpas");
+    assertScope(tokenAt(fixture, line, name), "entity.name.type.fpas");
+  }
+  for (const name of ["A", "B"]) {
+    const line = `public const ${name}`;
+    assertScope(tokenAt(fixture, line, "const"), "storage.type.constant.fpas");
+    assertScope(tokenAt(fixture, line, name), "entity.name.constant.fpas");
+  }
+  for (const [prefix, names] of [["var", ["C", "D"]], ["mutable var", ["E", "F"]]]) {
+    for (const name of names) {
+      const line = `public ${prefix} ${name}`;
+      assertScope(tokenAt(fixture, line, "var"), "storage.type.fpas");
+      assertScope(tokenAt(fixture, line, name), "variable.other.definition.fpas");
+    }
+  }
+  assertNoKeywordScope(tokenAt(fixture, "public Value: First", "Value"));
+}
+
 export async function verifyGrammar() {
   const grammar = await createGrammar();
   await verifyDeclarationClosers(grammar);
@@ -419,6 +442,7 @@ export async function verifyGrammar() {
   await verifyCaseBlocks(grammar);
   await verifyExpressionClosers(grammar);
   await verifyPositiveScopes(grammar);
+  await verifyIndividualDeclarations(grammar);
   await verifyNegativeScopes(grammar);
   await verifyEdgeScopes(grammar);
   await verifyReservedKeywordScopes(grammar);

@@ -3,14 +3,13 @@ unit Std.Tui.Chrome.MenuGeometry;
 uses
   Std.Arrays, Std.Console, Std.Tui.Chrome.MenuNode, Std.Tui.Chrome.MenuQuery, Std.Tui.Geometry.Rect;
 
-public type
-  // Bounds of one open popup and the submenu whose children it displays.
-  TuiMenuPopup = record
-    // Parent menu-node identifier.
-    public Parent: TuiMenuNodeId;
-    // Rectangle occupied by the value.
-    public Bounds: TuiRect;
-  end record;
+// Bounds of one open popup and the submenu whose children it displays.
+public type TuiMenuPopup = record
+  // Parent menu-node identifier.
+  public Parent: TuiMenuNodeId;
+  // Rectangle occupied by the value.
+  public Bounds: TuiRect;
+end record;
 
 function TuiMenuRootItemX(Nodes: array of TuiMenuNode; BarBounds: TuiRect; Target: TuiMenuNodeId): integer;
 begin

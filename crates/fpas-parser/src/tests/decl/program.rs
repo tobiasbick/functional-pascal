@@ -46,7 +46,7 @@ fn program_with_const() {
 
 #[test]
 fn program_with_multiple_consts() {
-    let p = parse_ok("program T; const A: integer := 1; B: integer := 2; begin end.");
+    let p = parse_ok("program T; const A: integer := 1; const B: integer := 2; begin end.");
     assert_eq!(p.declarations.len(), 2);
 }
 

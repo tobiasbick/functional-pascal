@@ -162,12 +162,11 @@ program PatternMatching;
 
 uses Std.Console;
 
-type
-  Light = enum
-    Red;
-    Yellow;
-    Green;
-  end enum;
+type Light = enum
+  Red;
+  Yellow;
+  Green;
+end enum;
 
 function TrafficAdvice(L: Light): string;
 begin

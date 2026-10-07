@@ -1,0 +1,62 @@
+program IndividualDeclarationsTest;
+
+uses Std.Test;
+
+const FirstConstant: integer := 10;
+const SecondConstant: integer := FirstConstant + 1;
+
+mutable var Calls: integer := 0;
+mutable var Changes: integer := 0;
+
+function NextValue(): integer;
+begin
+  Calls := Calls + 1;
+  return Calls;
+end function;
+
+var First: integer := NextValue();
+var Second: integer := NextValue();
+
+type Container = record
+  Value: Later;
+end record;
+
+type Later = integer;
+
+procedure CheckLocalBindings();
+begin
+  var A: integer := NextValue();
+  var B: integer := NextValue();
+  mutable var C: integer := A;
+  mutable var D: integer := B;
+  C := C + 10;
+  D := D + 20;
+  AssertEquals(3, A);
+  AssertEquals(4, B);
+  AssertEquals(13, C);
+  AssertEquals(24, D);
+  begin
+    var A: integer := 99;
+    var B: integer := A + 1;
+    AssertEquals(100, B);
+  end;
+
+  AssertEquals(3, A);
+  Changes := C + D;
+end procedure;
+
+begin
+  AssertEquals(10, FirstConstant);
+  AssertEquals(11, SecondConstant);
+  AssertEquals(1, First);
+  AssertEquals(2, Second);
+  AssertEquals(2, Calls);
+  var Box: Container := record
+    Value := Second;
+  end;
+
+  AssertEquals(2, Box.Value);
+  CheckLocalBindings();
+  AssertEquals(4, Calls);
+  AssertEquals(37, Changes);
+end.

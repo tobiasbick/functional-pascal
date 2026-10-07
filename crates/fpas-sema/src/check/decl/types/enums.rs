@@ -9,16 +9,19 @@ use std::collections::HashSet;
 use std::sync::Arc;
 
 impl Checker {
+    /// Collect enum payloads and register qualified variants before ordered bodies.
     pub(super) fn check_enum_type_def(&mut self, td: &TypeDef, enum_ty: &EnumType) {
-        if !self.scopes.define(
-            &td.name,
-            Symbol {
-                ty: Ty::Named(td.name.clone()),
-                mutable: false,
-                kind: SymbolKind::Type,
-                task_bound: false,
-            },
-        ) {
+        if !self.has_collected_type(td)
+            && !self.scopes.define(
+                &td.name,
+                Symbol {
+                    ty: Ty::Named(td.name.clone()),
+                    mutable: false,
+                    kind: SymbolKind::Type,
+                    task_bound: false,
+                },
+            )
+        {
             self.define_type_symbol(td, Ty::Error);
             return;
         }
@@ -151,6 +154,10 @@ impl Checker {
         }
 
         let short_key = canonical_symbol_name(variant_name);
+
+        if self.has_preceding_value(variant_name, span.offset) {
+            return;
+        }
 
         if let Some(candidates) = self.ambiguous_enum_variants.get(&short_key) {
             let mut updated = candidates.clone();

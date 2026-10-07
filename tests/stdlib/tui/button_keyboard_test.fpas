@@ -2,11 +2,10 @@ program TuiButtonKeyboardTest;
 
 uses Std.Arrays, Std.Test, Std.Tui;
 
-type
-  ButtonKeyboardModel = record
-    Focus: integer;
-    Actions: array of integer;
-  end record;
+type ButtonKeyboardModel = record
+  Focus: integer;
+  Actions: array of integer;
+end record;
 
 function MakeKey(Kind: TuiKeyKind; Character: string; Alt: boolean): TuiKeyEvent;
 begin

@@ -2,10 +2,9 @@ program TuiInteractiveRunSignatureTest;
 
 uses Std.Tasks, Std.Test, Std.Tui;
 
-type
-  DemoModel = record
-    Ticks: integer;
-  end record;
+type DemoModel = record
+  Ticks: integer;
+end record;
 
 function UpdateDemo(State: DemoModel; Msg: TuiMsg; Cmd: TuiCmdOutput): DemoModel;
 begin

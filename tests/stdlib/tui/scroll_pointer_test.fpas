@@ -2,11 +2,10 @@ program TuiScrollPointerTest;
 
 uses Std.Test, Std.Tui;
 
-type
-  ScrollModel = record
-    Focus: integer;
-    Offset: TuiPoint;
-  end record;
+type ScrollModel = record
+  Focus: integer;
+  Offset: TuiPoint;
+end record;
 
 function MakeDownPointer(X: integer; Y: integer): TuiPointerEvent;
 begin

@@ -81,19 +81,18 @@ begin
   Window(1, 1, Width, Height);
 end procedure;
 
-mutable var
-  ResetCamera: ExplorerCamera := record
-    CenterX := 0.0;
-    CenterY := 0.0;
-    SpanY := 2.8;
-    MaxIter := 160;
-    Palette := 1;
-  end;
-  State: ExplorerCamera := ResetCamera;
-  RenderW: integer := 1;
-  RenderH: integer := 1;
-  NeedsRedraw: boolean := true;
-  Quit: boolean := false;
+mutable var ResetCamera: ExplorerCamera := record
+  CenterX := 0.0;
+  CenterY := 0.0;
+  SpanY := 2.8;
+  MaxIter := 160;
+  Palette := 1;
+end;
+mutable var State: ExplorerCamera := ResetCamera;
+mutable var RenderW: integer := 1;
+mutable var RenderH: integer := 1;
+mutable var NeedsRedraw: boolean := true;
+mutable var Quit: boolean := false;
 
 procedure RequestRedraw();
 begin

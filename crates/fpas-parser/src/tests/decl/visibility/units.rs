@@ -41,12 +41,12 @@ fn public_applies_to_every_supported_declaration_kind() {
 }
 
 #[test]
-fn public_visibility_applies_to_an_entire_declaration_block() {
+fn public_visibility_is_repeated_on_individual_declarations() {
     let unit = parse_unit_ok(
         "unit MyApp.Core;
          public const
            A: integer := 1;
-           B: integer := 2;
+           public const B: integer := 2;
          const
            C: integer := 3;\nend unit;",
     );

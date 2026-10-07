@@ -177,7 +177,7 @@ mod tests {
         let formatted = parse_and_format(
             "program T; type Point = record X: integer; Y: integer; end record; begin var P: Point := record X := 1; Y := 2; end; end.",
         );
-        assert!(formatted.contains("type\n  Point = record\n"));
+        assert!(formatted.contains("type Point = record\n"));
         assert!(formatted.contains("end record;\n\nbegin\n"));
     }
 

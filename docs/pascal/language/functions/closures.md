@@ -22,16 +22,14 @@ end function);
 Here the `;` after `)` terminates the call statement.
 
 ```pascal
-mutable var
-  Count: integer := 0;
+mutable var Count: integer := 0;
 
-var
-  Increment: procedure() := procedure() begin
-    Count := Count + 1;
-  end procedure;
-  AddBase: function(Value: integer): integer := function(Value: integer): integer begin
-    return Count + Value;
-  end function;
+var Increment: procedure() := procedure() begin
+  Count := Count + 1;
+end procedure;
+var AddBase: function(Value: integer): integer := function(Value: integer): integer begin
+  return Count + Value;
+end function;
 ```
 
 Closures may be stored in variables and records, passed as arguments, returned from

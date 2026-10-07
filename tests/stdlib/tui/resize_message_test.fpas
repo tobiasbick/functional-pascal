@@ -2,14 +2,13 @@ program TuiResizeMessageTest;
 
 uses Std.Arrays, Std.Test, Std.Tui;
 
-type
-  ResizeModel = record
-    Events: array of string;
-    ResizeWidth: integer;
-    ResizeHeight: integer;
-    HostWidthAtResize: integer;
-    HostHeightAtResize: integer;
-  end record;
+type ResizeModel = record
+  Events: array of string;
+  ResizeWidth: integer;
+  ResizeHeight: integer;
+  HostWidthAtResize: integer;
+  HostHeightAtResize: integer;
+end record;
 
 function PushEvent(State: ResizeModel; InputEvent: string): ResizeModel;
 begin

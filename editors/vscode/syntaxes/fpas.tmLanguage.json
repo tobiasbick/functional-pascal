@@ -4,12 +4,6 @@
   "scopeName": "source.fpas",
   "patterns": [
     {
-      "include": "#typeSection"
-    },
-    {
-      "include": "#constSection"
-    },
-    {
       "include": "#comments"
     },
     {
@@ -38,106 +32,6 @@
     }
   ],
   "repository": {
-    "typeSection": {
-      "name": "meta.declaration.type-section.fpas",
-      "begin": "^(?i:(?:(public)\\s+)?(type))\\b",
-      "beginCaptures": {
-        "1": {
-          "name": "keyword.declaration.visibility.fpas"
-        },
-        "2": {
-          "name": "keyword.declaration.type.fpas"
-        }
-      },
-      "end": "^(?=(?i:(?:(?:public|static)\\s+)?(?:const|var|mutable|function|procedure|begin|type|end\\s+unit)\\b))",
-      "patterns": [
-        {
-          "include": "#comments"
-        },
-        {
-          "include": "#strings"
-        },
-        {
-          "match": "^\\s+([A-Za-z_][A-Za-z0-9_]*)\\s*(=)",
-          "captures": {
-            "1": {
-              "name": "entity.name.type.fpas"
-            },
-            "2": {
-              "name": "keyword.operator.assignment.type.fpas"
-            }
-          }
-        },
-        {
-          "include": "#constants"
-        },
-        {
-          "include": "#keywords"
-        },
-        {
-          "include": "#builtInTypes"
-        },
-        {
-          "include": "#qualifiedNames"
-        },
-        {
-          "include": "#operators"
-        },
-        {
-          "include": "#punctuation"
-        }
-      ]
-    },
-    "constSection": {
-      "name": "meta.declaration.const-section.fpas",
-      "begin": "^(?i:(?:(public)\\s+)?(const))\\b",
-      "beginCaptures": {
-        "1": {
-          "name": "keyword.declaration.visibility.fpas"
-        },
-        "2": {
-          "name": "storage.type.constant.fpas"
-        }
-      },
-      "end": "^(?=(?i:(?:(?:public|static)\\s+)?(?:const|var|mutable|function|procedure|begin|type|end\\s+unit)\\b))",
-      "patterns": [
-        {
-          "include": "#comments"
-        },
-        {
-          "include": "#strings"
-        },
-        {
-          "match": "^\\s+([A-Za-z_][A-Za-z0-9_]*)\\s*(:)",
-          "captures": {
-            "1": {
-              "name": "entity.name.constant.fpas"
-            },
-            "2": {
-              "name": "punctuation.separator.type.fpas"
-            }
-          }
-        },
-        {
-          "include": "#constants"
-        },
-        {
-          "include": "#keywords"
-        },
-        {
-          "include": "#builtInTypes"
-        },
-        {
-          "include": "#qualifiedNames"
-        },
-        {
-          "include": "#operators"
-        },
-        {
-          "include": "#punctuation"
-        }
-      ]
-    },
     "comments": {
       "patterns": [
         {
@@ -168,6 +62,10 @@
     "declarations": {
       "patterns": [
         {
+          "name": "keyword.declaration.visibility.fpas",
+          "match": "(?i:\\bpublic\\b)"
+        },
+        {
           "match": "(?i:\\b(program|unit)\\b)\\s+([A-Za-z_][A-Za-z0-9_]*(?:\\.[A-Za-z_][A-Za-z0-9_]*)*)",
           "captures": {
             "1": {
@@ -190,13 +88,38 @@
           }
         },
         {
-          "match": "(?i:\\b(const|var)\\b)\\s+([A-Za-z_][A-Za-z0-9_]*)",
+          "match": "(?i:\\b(var)\\b)\\s+([A-Za-z_][A-Za-z0-9_]*)",
           "captures": {
             "1": {
               "name": "storage.type.fpas"
             },
             "2": {
               "name": "variable.other.definition.fpas"
+            }
+          }
+        },
+        {
+          "match": "(?i:\\b(type)\\b)\\s+([A-Za-z_][A-Za-z0-9_]*)\\s*(=)",
+          "captures": {
+            "1": {
+              "name": "keyword.declaration.type.fpas"
+            },
+            "2": {
+              "name": "entity.name.type.fpas"
+            },
+            "3": {
+              "name": "keyword.operator.assignment.type.fpas"
+            }
+          }
+        },
+        {
+          "match": "(?i:\\b(const)\\b)\\s+([A-Za-z_][A-Za-z0-9_]*)",
+          "captures": {
+            "1": {
+              "name": "storage.type.constant.fpas"
+            },
+            "2": {
+              "name": "entity.name.constant.fpas"
             }
           }
         }

@@ -3,14 +3,13 @@ unit Std.Http.BodyFraming;
 
 uses Std.Arrays, Std.Http.Headers, Std.Http.Types, Std.Net.Decimal, Std.Str;
 
-public type
-  // Selected HTTP message-body framing mode and remaining fixed length.
-  Framing = record
-    // Internal framing mode identifier.
-    public Mode: integer;
-    // Bytes remaining for fixed-length framing.
-    public Remaining: integer;
-  end record;
+// Selected HTTP message-body framing mode and remaining fixed length.
+public type Framing = record
+  // Internal framing mode identifier.
+  public Mode: integer;
+  // Bytes remaining for fixed-length framing.
+  public Remaining: integer;
+end record;
 
 // Selects one unambiguous HTTP message-body framing mode.
 //

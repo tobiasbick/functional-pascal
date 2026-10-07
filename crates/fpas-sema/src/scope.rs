@@ -21,12 +21,6 @@ pub struct Symbol {
     pub task_bound: bool,
 }
 
-impl Symbol {
-    pub fn ty_mut(&mut self) -> &mut Ty {
-        &mut self.ty
-    }
-}
-
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum SymbolKind {
     Const,
@@ -207,14 +201,13 @@ impl ScopeStack {
         self.lookup_with_scope(name).map(|(_, symbol)| symbol)
     }
 
-    /// Resolves a stored type identity without mistaking a shadowing value for its declaration.
+    /// Resolves a stored unit-level type identity without accepting a shadowing value or parameter.
     pub(crate) fn lookup_type(&self, name: &str) -> Option<&Symbol> {
         let canonical = canonical_symbol_name(name);
         self.scopes
-            .iter()
-            .rev()
-            .filter_map(|scope| scope.symbols.get(&canonical))
-            .find(|entry| entry.symbol.kind == SymbolKind::Type)
+            .first()
+            .and_then(|scope| scope.symbols.get(&canonical))
+            .filter(|entry| entry.symbol.kind == SymbolKind::Type)
             .map(|entry| &entry.symbol)
     }
 

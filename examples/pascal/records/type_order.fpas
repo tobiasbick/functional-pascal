@@ -1,0 +1,36 @@
+program TypeOrderExample;
+
+uses Std.Console;
+
+const InitialState: State := State.Ready;
+
+function CreateTeam(): Team;
+begin
+  return Team.Empty();
+end function;
+
+type Team = record
+  Members: array of Member;
+  Status: State := InitialState;
+
+  static function Empty(): Team;
+  begin
+    return record
+      Members := [];
+    end;
+  end function;
+end record;
+
+type Member = record
+  Home: option of Team;
+end record;
+
+type State = enum
+  Ready;
+  Busy;
+end enum;
+
+begin
+  var Group: Team := CreateTeam();
+  WriteLn(Group.Status = State.Ready);
+end.

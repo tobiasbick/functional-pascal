@@ -3,11 +3,10 @@ program HighlightingShowcase;
 
 uses Std.Console;
 
-type
-  Point = record
-    X: integer;
-    Y: real;
-  end record;
+type Point = record
+  X: integer;
+  Y: real;
+end record;
 
 function Distance(Value: Point): real;
 begin
@@ -16,11 +15,15 @@ end function;
 
 begin
   // Origin value.
-  var Origin: Point := record X := 42; Y := 3.5; end;
+  var Origin: Point := record
+    X := 42;
+    Y := 3.5;
+  end;
   // Mask value.
   var Mask: integer := 42;
   if Mask >= 1 then
-  begin
-    Std.Console.WriteLn('It''s the origin');
-  end; end if;
+    begin
+      Std.Console.WriteLn('It''s the origin');
+    end;
+  end if;
 end.

@@ -2,96 +2,95 @@ unit Std.Tui.Layout.MeasureAxis;
 
 uses Std.Tui.Layout.MeasureConstraint;
 
-public const
-  // Largest integer used for checked layout-axis calculations.
-  TuiMeasureAxisIntegerMax: integer := 9223372036854775807;
+// Largest integer used for checked layout-axis calculations.
+public const TuiMeasureAxisIntegerMax: integer := 9223372036854775807;
 
-public type
-  // Preferred and maximum extents after applying one axis constraint.
-  TuiMeasureAxisResult = record
-    // Preferred size.
-    public Preferred: integer;
-    // Maximum value or size.
-    public Maximum: integer;
-  end record;
-  // Integer helpers for layout measurement.
-  TuiMeasureAxis = record
-    // Returns the lesser of two extents.
-    //
-    // Parameters:
-    // - `Left`: Left input value or edge.
-    // - `Right`: Right input value or edge.
-    public static function Min(Left: integer; Right: integer): integer;
-    begin
-      if Left < Right then
-        begin
-          return Left;
-        end;
-      end if;
+// Preferred and maximum extents after applying one axis constraint.
+public type TuiMeasureAxisResult = record
+  // Preferred size.
+  public Preferred: integer;
+  // Maximum value or size.
+  public Maximum: integer;
+end record;
 
-      return Right;
-    end function;
+// Integer helpers for layout measurement.
+public type TuiMeasureAxis = record
+  // Returns the lesser of two extents.
+  //
+  // Parameters:
+  // - `Left`: Left input value or edge.
+  // - `Right`: Right input value or edge.
+  public static function Min(Left: integer; Right: integer): integer;
+  begin
+    if Left < Right then
+      begin
+        return Left;
+      end;
+    end if;
 
-    // Returns the greater of two extents.
-    //
-    // Parameters:
-    // - `Left`: Left input value or edge.
-    // - `Right`: Right input value or edge.
-    public static function Max(Left: integer; Right: integer): integer;
-    begin
-      if Left > Right then
-        begin
-          return Left;
-        end;
-      end if;
+    return Right;
+  end function;
 
-      return Right;
-    end function;
+  // Returns the greater of two extents.
+  //
+  // Parameters:
+  // - `Left`: Left input value or edge.
+  // - `Right`: Right input value or edge.
+  public static function Max(Left: integer; Right: integer): integer;
+  begin
+    if Left > Right then
+      begin
+        return Left;
+      end;
+    end if;
 
-    // Adds two extents and rejects overflow.
-    //
-    // Parameters:
-    // - `Left`: Left input value or edge.
-    // - `Right`: Right input value or edge.
-    public static function Add(Left: integer; Right: integer): integer;
-    begin
-      if Left > TuiMeasureAxisIntegerMax - Right then
-        begin
-          panic('Tui layout measurement overflows integer extents');
-        end;
-      end if;
+    return Right;
+  end function;
 
-      return Left + Right;
-    end function;
+  // Adds two extents and rejects overflow.
+  //
+  // Parameters:
+  // - `Left`: Left input value or edge.
+  // - `Right`: Right input value or edge.
+  public static function Add(Left: integer; Right: integer): integer;
+  begin
+    if Left > TuiMeasureAxisIntegerMax - Right then
+      begin
+        panic('Tui layout measurement overflows integer extents');
+      end;
+    end if;
 
-    // Constrains preferred and maximum extents by an axis constraint.
-    //
-    // Parameters:
-    // - `Minimum`: Minimum accepted value or extent.
-    // - `Preferred`: Preferred size or focus identifier.
-    // - `Maximum`: Maximum accepted value or extent.
-    // - `Constraint`: Measurement constraint applied to the axis.
-    public static function Apply(
+    return Left + Right;
+  end function;
+
+  // Constrains preferred and maximum extents by an axis constraint.
+  //
+  // Parameters:
+  // - `Minimum`: Minimum accepted value or extent.
+  // - `Preferred`: Preferred size or focus identifier.
+  // - `Maximum`: Maximum accepted value or extent.
+  // - `Constraint`: Measurement constraint applied to the axis.
+  public static function Apply(
   Minimum: integer;
   Preferred: integer;
   Maximum: integer;
   Constraint: TuiMeasureConstraint
 ): TuiMeasureAxisResult;
-    begin
-      if not Constraint.IsBounded() then
-        begin
-          return record
-            Preferred := Preferred;
-            Maximum := Maximum;
-          end;
+  begin
+    if not Constraint.IsBounded() then
+      begin
+        return record
+          Preferred := Preferred;
+          Maximum := Maximum;
         end;
-      end if;
-      var ConstrainedPreferred: integer := TuiMeasureAxis.Max(Minimum, TuiMeasureAxis.Min(Preferred, Constraint.Limit));
-      var ConstrainedMaximum: integer := TuiMeasureAxis.Max(ConstrainedPreferred, TuiMeasureAxis.Min(Maximum, Constraint.Limit));
-      return record
-        Preferred := ConstrainedPreferred;
-        Maximum := ConstrainedMaximum;
       end;
-    end function;
-  end record;
+    end if;
+    var ConstrainedPreferred: integer := TuiMeasureAxis.Max(Minimum, TuiMeasureAxis.Min(Preferred, Constraint.Limit));
+    var ConstrainedMaximum: integer := TuiMeasureAxis.Max(ConstrainedPreferred, TuiMeasureAxis.Min(Maximum, Constraint.Limit));
+    return record
+      Preferred := ConstrainedPreferred;
+      Maximum := ConstrainedMaximum;
+    end;
+  end function;
+end record;
 end unit;

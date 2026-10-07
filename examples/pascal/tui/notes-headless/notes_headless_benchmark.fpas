@@ -8,10 +8,9 @@ uses
   Notes.Model, Notes.Update, Notes.View, Std.Args, Std.Arrays, Std.Console, Std.Conv, Std.Str,
   Std.Time, Std.Tui;
 
-const
-  WarmupIterations: integer := 25;
-  DeltaMillis: integer := 16;
-  NoteCount: integer := 40;
+const WarmupIterations: integer := 25;
+const DeltaMillis: integer := 16;
+const NoteCount: integer := 40;
 
 function BenchmarkNotes(): array of Note;
 begin

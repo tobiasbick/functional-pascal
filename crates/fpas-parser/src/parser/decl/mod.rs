@@ -9,19 +9,20 @@ use fpas_diagnostics::codes::{PARSE_INVALID_STATIC_PLACEMENT, PARSE_INVALID_VISI
 use fpas_lexer::Token;
 
 impl Parser {
+    /// Parses an ordered list with an explicit keyword on each declaration.
     pub(crate) fn parse_declarations(&mut self, allow_visibility: bool) -> Vec<Decl> {
         let mut decls = Vec::new();
         loop {
             let visibility = self.parse_visibility(allow_visibility);
             match self.current_token() {
-                Token::Const => decls.extend(self.parse_const_block(visibility)),
-                Token::Var => decls.extend(self.parse_var_block(false, visibility)),
+                Token::Const => decls.extend(self.parse_const_declaration(visibility)),
+                Token::Var => decls.extend(self.parse_variable_declaration(false, visibility)),
                 Token::Mutable if self.is_mutable_var_start() => {
-                    decls.extend(self.parse_var_block(true, visibility));
+                    decls.extend(self.parse_variable_declaration(true, visibility));
                 }
                 Token::Mutable => break,
                 Token::Type => {
-                    decls.extend(self.parse_type_block(visibility, allow_visibility));
+                    decls.extend(self.parse_type_declaration(visibility, allow_visibility));
                 }
                 Token::Function => {
                     decls.push(Decl::Function(self.parse_function_decl(visibility)));
@@ -34,7 +35,16 @@ impl Parser {
                         decls.push(decl);
                     }
                 }
-                _ => break,
+                _ => {
+                    let Some(declaration) = self.recover_unprefixed_declaration(
+                        decls.last(),
+                        visibility,
+                        allow_visibility,
+                    ) else {
+                        break;
+                    };
+                    decls.push(declaration);
+                }
             }
         }
         decls

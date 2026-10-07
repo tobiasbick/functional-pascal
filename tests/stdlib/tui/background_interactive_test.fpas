@@ -2,11 +2,10 @@ program TuiBackgroundInteractiveTest;
 
 uses Std.Results, Std.Tasks, Std.Test, Std.Tui;
 
-type
-  InteractiveModel = record
-    Inbox: channel of integer;
-    Received: integer;
-  end record;
+type InteractiveModel = record
+  Inbox: channel of integer;
+  Received: integer;
+end record;
 
 function Update(State: InteractiveModel; Msg: TuiMsg; Cmd: TuiCmdOutput): InteractiveModel;
 begin

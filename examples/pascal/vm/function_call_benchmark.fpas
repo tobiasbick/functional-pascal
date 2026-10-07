@@ -6,8 +6,7 @@ program VmFunctionCallBenchmark;
 
 uses Std.Args, Std.Console, Std.Conv, Std.Time;
 
-const
-  WarmupIterations: integer := 10000;
+const WarmupIterations: integer := 10000;
 
 function Increment(Value: integer): integer;
 begin

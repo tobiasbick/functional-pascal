@@ -6,9 +6,8 @@ program VmArrayLengthBenchmark;
 
 uses Std.Args, Std.Arrays, Std.Console, Std.Conv, Std.Time;
 
-const
-  WarmupIterations: integer := 10000;
-  ArraySize: integer := 10000;
+const WarmupIterations: integer := 10000;
+const ArraySize: integer := 10000;
 
 function MakeValues(Count: integer): array of integer;
 begin

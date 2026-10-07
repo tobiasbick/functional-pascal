@@ -2,11 +2,10 @@ program TuiScrollKeyboardTest;
 
 uses Std.Arrays, Std.Test, Std.Tui;
 
-type
-  ScrollModel = record
-    Offset: TuiPoint;
-    Changes: array of integer;
-  end record;
+type ScrollModel = record
+  Offset: TuiPoint;
+  Changes: array of integer;
+end record;
 
 function MakeKey(Kind: TuiKeyKind): TuiKeyEvent;
 begin

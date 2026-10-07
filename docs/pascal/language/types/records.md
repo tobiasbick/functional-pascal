@@ -6,6 +6,10 @@ Records may refer to themselves through an aggregate field such as
 `Children: array of Element`. These recursive record types are valid in ordinary variables,
 function return types, first-class function signatures, and generic routine inference.
 
+Types and record member signatures are available regardless of declaration
+order within a unit or program. Mutually recursive stored fields must admit
+finite construction; see [type declaration order](declaration-order.md).
+
 Formal syntax: [`grammar.ebnf`](../../../specs/grammar.ebnf) (`record_type`, record literals in expressions).
 
 ## Declaring a record
@@ -14,21 +18,19 @@ A record declaration ends with `end record;`. Its methods use `end function;` or
 `end procedure;` according to their declaration kind.
 
 ```pascal
-type
-  Point = record
-    X: real;
-    Y: real;
-  end record;
+type Point = record
+  X: real;
+  Y: real;
+end record;
 ```
 
 ## Creating a record
 
 ```pascal
-var
-  P: Point := record
-    X := 0.0;
-    Y := 5.0;
-  end;
+var P: Point := record
+  X := 0.0;
+  Y := 5.0;
+end;
 ```
 
 Each field may appear at most once in a record literal. Field names are
@@ -42,26 +44,24 @@ because they contain fields with the same names and types. Assignments, argument
 values must use the same record declaration or an alias of that declaration.
 
 ```pascal
-type
-  Point = record
-    X: integer;
-    Y: integer;
-  end record;
+type Point = record
+  X: integer;
+  Y: integer;
+end record;
 
-  Size = record
-    X: integer;
-    Y: integer;
-  end record;
+type Size = record
+  X: integer;
+  Y: integer;
+end record;
 
-  PointAlias = Point;
+type PointAlias = Point;
 
-var
-  P: Point := record
-    X := 1;
-    Y := 2;
-  end;
-  A: PointAlias := P;  // Valid: PointAlias names the Point declaration.
-  S: Size := P;        // Error: Point and Size are distinct declarations.
+var P: Point := record
+  X := 1;
+  Y := 2;
+end;
+var A: PointAlias := P; // Valid: PointAlias names the Point declaration.
+var S: Size := P; // Error: Point and Size are distinct declarations.
 ```
 
 Two values of the same record type compare with `=` and `<>` field by field when every field
@@ -75,8 +75,7 @@ separately declared record types interchangeable.
 ## Accessing fields
 
 ```pascal
-var
-  PosX: real := P.X;
+var PosX: real := P.X;
 ```
 
 ## Field visibility
@@ -88,11 +87,10 @@ visibility sections and no explicit `private` keyword.
 ```pascal
 unit MyApp.Counters;
 
-public type
-  Counter = record
-    Value: integer;
-    public Step: integer;
-  end record;
+public type Counter = record
+  Value: integer;
+  public Step: integer;
+end record;
 end unit;
 ```
 
@@ -128,44 +126,51 @@ end.
 
 ## Default field values
 
+Defaults are checked at the record declaration's source position. They may
+use preceding values and routines, and types declared anywhere in the unit or
+program. Later values and free routines remain unavailable.
+
 A field declaration may include a default value using `:=`. When a record literal omits a field that has a default, the compiler substitutes the default automatically. Fields without a default must always be supplied.
 
 ```pascal
-type
-  Config = record
-    Host: string := 'localhost';
-    Port: integer := 8080;
-    Debug: boolean := false;
-  end record;
+type Config = record
+  Host: string := 'localhost';
+  Port: integer := 8080;
+  Debug: boolean := false;
+end record;
 ```
 
 Omitting defaulted fields:
 
 ```pascal
-var
-  C: Config := record end;                 // Host='localhost', Port=8080, Debug=false
-  D: Config := record Port := 9000; end;   // Host='localhost', Port=9000, Debug=false
+var C: Config := record end; // Host='localhost', Port=8080, Debug=false
+var D: Config := record
+  Port := 9000;
+end; // Host='localhost', Port=9000, Debug=false
 ```
 
 Explicitly providing a value overrides the default:
 
 ```pascal
-var
-  E: Config := record Host := 'example.com'; Port := 443; Debug := true; end;
+var E: Config := record
+  Host := 'example.com';
+  Port := 443;
+  Debug := true;
+end;
 ```
 
 Fields without a default remain required:
 
 ```pascal
-type
-  Vertex = record
-    Id: integer;           // Required
-    X: integer := 0;       // Optional
-    Y: integer := 0;       // Optional
-  end record;
+type Vertex = record
+  Id: integer; // Required
+  X: integer := 0; // Optional
+  Y: integer := 0; // Optional
+end record;
 
-var
-  V: Vertex := record Id := 7; end;  // X=0, Y=0 from defaults
+var V: Vertex := record
+  Id := 7;
+end; // X=0, Y=0 from defaults
 ```
 
 ## See also

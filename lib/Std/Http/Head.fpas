@@ -3,20 +3,18 @@ unit Std.Http.Head;
 
 uses Std.Arrays, Std.Http.Types, Std.Http.Wire, Std.Net;
 
-const
-  // Maximum informational responses accepted before the final response.
-  MaxInterimResponses: integer := 8;
+// Maximum informational responses accepted before the final response.
+const MaxInterimResponses: integer := 8;
 
-public type
-  // One final response head plus bytes already read from its body.
-  FinalHead = record
-    // Parsed final response metadata.
-    public Head: ResponseHead;
-    // Body bytes read together with the response head.
-    public InitialBody: array of integer;
-    // Total network bytes consumed so far.
-    public BytesReceived: integer;
-  end record;
+// One final response head plus bytes already read from its body.
+public type FinalHead = record
+  // Parsed final response metadata.
+  public Head: ResponseHead;
+  // Body bytes read together with the response head.
+  public InitialBody: array of integer;
+  // Total network bytes consumed so far.
+  public BytesReceived: integer;
+end record;
 
 // Reads bounded response heads and skips supported informational responses.
 //

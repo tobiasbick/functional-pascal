@@ -5,8 +5,7 @@ uses
   Std.Arrays, Std.Conv, Std.Http.BodyFraming, Std.Http.Fields, Std.Http.Headers, Std.Http.Method,
   Std.Http.Types, Std.Net.Uri, Std.Net.Utf8, Std.Parse, Std.Str;
 
-const
-  MaximumChunkSize: integer := 9223372036854775807;
+const MaximumChunkSize: integer := 9223372036854775807;
 
 // Finds the next HTTP head terminator.
 //

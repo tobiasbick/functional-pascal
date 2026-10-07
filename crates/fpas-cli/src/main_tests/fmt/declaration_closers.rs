@@ -31,7 +31,7 @@ fn named_declarations_keep_execution_and_format_idempotently() {
     write_text(&unit_path, "unit Empty; end unit;");
     write_text(&path, "program Demo; uses Std.Console;
         type Status = enum Ready; end enum;
-        Point = record Value: integer;
+        type Point = record Value: integer;
             function ReadValue(Self: Point): integer; begin return Self.Value; end function;
         end record;
         function Answer(): integer;

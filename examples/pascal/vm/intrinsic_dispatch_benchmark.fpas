@@ -6,9 +6,8 @@ program VmIntrinsicDispatchBenchmark;
 
 uses Std.Args, Std.Arrays, Std.Console, Std.Conv, Std.Dictionaries, Std.Str, Std.Time;
 
-const
-  WarmupIterations: integer := 10000;
-  CallsPerIteration: integer := 3;
+const WarmupIterations: integer := 10000;
+const CallsPerIteration: integer := 3;
 
 function RunDispatch(
   Values: array of integer;

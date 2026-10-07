@@ -6,8 +6,7 @@ uses
   Std.Tui.Layout.Margins, Std.Tui.Layout.Measure, Std.Tui.Layout.MeasureResult,
   Std.Tui.Layout.MeasureSpec, Std.Tui.Layout.SizePolicy, Std.Tui.Layout.Spacer;
 
-mutable var
-  TuiArrangeBuilding: array of TuiArrangedEntry := [];
+mutable var TuiArrangeBuilding: array of TuiArrangedEntry := [];
 
 function TuiArrangeMin(Left: integer; Right: integer): integer;
 begin

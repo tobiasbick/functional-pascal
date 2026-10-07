@@ -21,9 +21,8 @@ end procedure;
 Type arguments are inferred from the call-site arguments — no explicit instantiation is needed:
 
 ```pascal
-var
-  X: integer := Identity(42);    // T inferred as integer
-  S: string  := Identity('hi');  // T inferred as string
+var X: integer := Identity(42); // T inferred as integer
+var S: string := Identity('hi'); // T inferred as string
 ```
 
 ## Generic record methods
@@ -31,38 +30,35 @@ var
 Record methods declare type parameters in the method header; those parameters are scoped to the method.
 
 ```pascal
-type
-  Box = record
-    Value: integer;
+type Box = record
+  Value: integer;
 
-    function Map<R>(Self: Box; F: function(X: integer): R): R;
-    begin
-      return F(Self.Value);
-    end function;
-  end record;
+  function Map<R>(Self: Box; F: function(X: integer): R): R;
+  begin
+    return F(Self.Value);
+  end function;
+end record;
 
 function ToText(X: integer): string;
 begin
   return 'value=' + IntToStr(X);
 end function;
 
-var
-  B: Box := record
-    Value := 42;
-  end;
-  S: string := B.Map(ToText); // R inferred as string
+var B: Box := record
+  Value := 42;
+end;
+var S: string := B.Map(ToText); // R inferred as string
 ```
 
 Method-level type parameters may also use constraints:
 
 ```pascal
-type
-  Accumulator = record
-    function Add<T: Numeric>(Self: Accumulator; Extra: T): T;
-    begin
-      return Extra;
-    end function;
-  end record;
+type Accumulator = record
+  function Add<T: Numeric>(Self: Accumulator; Extra: T): T;
+  begin
+    return Extra;
+  end function;
+end record;
 ```
 
 ## Implementation
@@ -105,8 +101,7 @@ end function;
 Constraint violations at call sites are compile-time errors:
 
 ```pascal
-var
-  M: integer := Max(3, 7);    // Valid — integer is Comparable
+var M: integer := Max(3, 7); // Valid — integer is Comparable
 // var Bad := Max([1], [2]);   ← compile error: array is not Comparable
 ```
 

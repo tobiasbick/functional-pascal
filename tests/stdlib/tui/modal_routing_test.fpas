@@ -2,13 +2,12 @@ program TuiModalRoutingTest;
 
 uses Std.Arrays, Std.Str, Std.Test, Std.Tui;
 
-type
-  ModalModel = record
-    Focus: integer;
-    ConfirmOpen: boolean;
-    Actions: array of integer;
-    PointerHits: integer;
-  end record;
+type ModalModel = record
+  Focus: integer;
+  ConfirmOpen: boolean;
+  Actions: array of integer;
+  PointerHits: integer;
+end record;
 
 function MakePointer(Action: TuiPointerAction; X: integer; Y: integer): TuiPointerEvent;
 begin

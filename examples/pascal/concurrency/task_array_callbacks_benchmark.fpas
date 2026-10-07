@@ -6,10 +6,9 @@ program TaskArrayCallbacksBenchmark;
 
 uses Std.Args, Std.Arrays, Std.Console, Std.Conv, Std.Tasks, Std.Time;
 
-const
-  WarmupIterations: integer := 20;
-  ArraySize: integer := 64;
-  CallbacksPerElement: integer := 3;
+const WarmupIterations: integer := 20;
+const ArraySize: integer := 64;
+const CallbacksPerElement: integer := 3;
 
 function Double(Value: integer): integer;
 begin

@@ -4,68 +4,68 @@ unit Mandelbrot.Model;
 
 uses Std.Arrays, Std.Conv, Std.Math, Std.Tasks, Std.Tui, Mandelbrot.Color, Mandelbrot.Render;
 
-public type
-  ExplorerState = record
-    public CenterX: real;
-    public CenterY: real;
-    public SpanY: real;
-    public MaxIter: integer;
-    public Palette: PaletteKind;
+public type ExplorerState = record
+  public CenterX: real;
+  public CenterY: real;
+  public SpanY: real;
+  public MaxIter: integer;
+  public Palette: PaletteKind;
 
-    public static function Default(): ExplorerState;
-    begin
-      return record
-        CenterX := -0.75;
-        CenterY := 0.0;
-        SpanY := 2.4;
-        MaxIter := 160;
-        Palette := PaletteKind.DeepOcean;
-      end;
-    end function;
+  public static function Default(): ExplorerState;
+  begin
+    return record
+      CenterX := -0.75;
+      CenterY := 0.0;
+      SpanY := 2.4;
+      MaxIter := 160;
+      Palette := PaletteKind.DeepOcean;
+    end;
+  end function;
 
-    public function SpanX(Self: ExplorerState; Width: integer; Height: integer): real;
-    begin
-      return (Self.SpanY * (IntToReal(Max(Width, 1)) / IntToReal(Max(Height, 1)))) * 0.5;
-    end function;
+  public function SpanX(Self: ExplorerState; Width: integer; Height: integer): real;
+  begin
+    return (Self.SpanY * (IntToReal(Max(Width, 1)) / IntToReal(Max(Height, 1)))) * 0.5;
+  end function;
 
-    public function XMin(Self: ExplorerState; Width: integer; Height: integer): real;
-    begin
-      return Self.CenterX - (Self.SpanX(Width, Height) * 0.5);
-    end function;
+  public function XMin(Self: ExplorerState; Width: integer; Height: integer): real;
+  begin
+    return Self.CenterX - (Self.SpanX(Width, Height) * 0.5);
+  end function;
 
-    public function XMax(Self: ExplorerState; Width: integer; Height: integer): real;
-    begin
-      return Self.CenterX + (Self.SpanX(Width, Height) * 0.5);
-    end function;
+  public function XMax(Self: ExplorerState; Width: integer; Height: integer): real;
+  begin
+    return Self.CenterX + (Self.SpanX(Width, Height) * 0.5);
+  end function;
 
-    public function YMin(Self: ExplorerState): real;
-    begin
-      return Self.CenterY - (Self.SpanY * 0.5);
-    end function;
+  public function YMin(Self: ExplorerState): real;
+  begin
+    return Self.CenterY - (Self.SpanY * 0.5);
+  end function;
 
-    public function YMax(Self: ExplorerState): real;
-    begin
-      return Self.CenterY + (Self.SpanY * 0.5);
-    end function;
+  public function YMax(Self: ExplorerState): real;
+  begin
+    return Self.CenterY + (Self.SpanY * 0.5);
+  end function;
 
-    public function GetZoom(Self: ExplorerState): real;
-    begin
-      return 2.4 / Self.SpanY;
-    end function;
+  public function GetZoom(Self: ExplorerState): real;
+  begin
+    return 2.4 / Self.SpanY;
+  end function;
 
-    public property Zoom: real read GetZoom;
-  end record;
-  MandelbrotModel = record
-    public Explorer: ExplorerState;
-    public TerminalWidth: integer;
-    public TerminalHeight: integer;
-    public Grid: TuiCellGrid;
-    public HelpOpen: boolean;
-    public Generation: integer;
-    public RowsRendered: integer;
-    public FailureMessage: string;
-    public Inbox: channel of MandelbrotRenderFrame;
-  end record;
+  public property Zoom: real read GetZoom;
+end record;
+
+public type MandelbrotModel = record
+  public Explorer: ExplorerState;
+  public TerminalWidth: integer;
+  public TerminalHeight: integer;
+  public Grid: TuiCellGrid;
+  public HelpOpen: boolean;
+  public Generation: integer;
+  public RowsRendered: integer;
+  public FailureMessage: string;
+  public Inbox: channel of MandelbrotRenderFrame;
+end record;
 
 public function GridWidth(TerminalWidth: integer): integer;
 begin

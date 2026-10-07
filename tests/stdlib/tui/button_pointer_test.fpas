@@ -2,11 +2,10 @@ program TuiButtonPointerTest;
 
 uses Std.Arrays, Std.Str, Std.Test, Std.Tui;
 
-type
-  ButtonPointerModel = record
-    Actions: integer;
-    PointerEvents: integer;
-  end record;
+type ButtonPointerModel = record
+  Actions: integer;
+  PointerEvents: integer;
+end record;
 
 function ViewButton(State: ButtonPointerModel): TuiElement;
 begin

@@ -2,12 +2,11 @@ program ShapesExample;
 
 uses Std.Console, Std.Conv, Std.Math;
 
-type
-  Shape = enum
-    Circle(Radius: real);
-    Rectangle(Width: real; Height: real);
-    Point;
-  end enum;
+type Shape = enum
+  Circle(Radius: real);
+  Rectangle(Width: real; Height: real);
+  Point;
+end enum;
 
 function Area(S: Shape): real;
 begin

@@ -230,7 +230,10 @@ pub struct AnalysisMetadata {
     pub event_raises: EventRaiseMap,
 }
 
+/// Semantic checking state for whole-unit types and ordered executable declarations.
 pub struct Checker {
+    /// Whole-unit structural type resolution, separate from ordered value checking.
+    pub(crate) type_collection: super::decl::types::collection::TypeCollection,
     pub(crate) discard_exprs: HashMap<usize, fpas_unit::interface::DiscardInfo>,
     pub(crate) discard_results: Vec<bool>,
     pub(crate) routine_discard_results: HashMap<String, bool>,
@@ -316,6 +319,7 @@ impl Checker {
     /// Creates an empty semantic checker and its expression-analysis tables.
     pub fn new() -> Self {
         Self {
+            type_collection: Default::default(),
             discard_exprs: HashMap::new(),
             discard_results: Vec::new(),
             routine_discard_results: HashMap::new(),

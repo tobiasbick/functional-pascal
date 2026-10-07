@@ -6,9 +6,8 @@ program VmStringLengthBenchmark;
 
 uses Std.Args, Std.Console, Std.Conv, Std.Str, Std.Time;
 
-const
-  WarmupIterations: integer := 10000;
-  StringSize: integer := 10000;
+const WarmupIterations: integer := 10000;
+const StringSize: integer := 10000;
 
 function MakeLong(Count: integer): string;
 begin

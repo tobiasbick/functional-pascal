@@ -2,8 +2,7 @@ program BitArgumentOrderTest;
 
 uses Std.Bits, Std.Test;
 
-mutable var
-  Trace: integer := 0;
+mutable var Trace: integer := 0;
 
 function Mark(Value: integer; Digit: integer): integer;
 begin

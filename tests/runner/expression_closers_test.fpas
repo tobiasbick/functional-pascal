@@ -2,19 +2,18 @@ program ExpressionClosersTest;
 
 uses Std.Test;
 
-type
-  Point = record
-    X: integer;
-    Y: integer;
-  end record;
-  Holder = record
-    Child: Point;
-    Reader: function(): integer;
-  end record;
+type Point = record
+  X: integer;
+  Y: integer;
+end record;
 
-mutable var
-  BaseCalls: integer := 0;
-  FieldOrder: integer := 0;
+type Holder = record
+  Child: Point;
+  Reader: function(): integer;
+end record;
+
+mutable var BaseCalls: integer := 0;
+mutable var FieldOrder: integer := 0;
 
 function Base(): Point;
 begin

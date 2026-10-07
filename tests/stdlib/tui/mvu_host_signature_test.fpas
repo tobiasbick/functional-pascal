@@ -3,10 +3,9 @@ program MvuHostSignatureTest;
 // Phase 0: prove the exact generic RunIterations / Update / View callable pattern.
 uses Std.Tui, Std.Test;
 
-type
-  CounterModel = record
-    Value: integer;
-  end record;
+type CounterModel = record
+  Value: integer;
+end record;
 
 function UpdateCounter(State: CounterModel; Msg: TuiMsg; Cmd: TuiCmdOutput): CounterModel;
 begin

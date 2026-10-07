@@ -14,8 +14,8 @@ fn enum_payload_infers_nested_anonymous_record_type() {
 uses Std.Console;
 type
   Point = record X: integer; Y: integer; end record;
-  Position = enum At(Value: Point); end enum;
-  State = record Player: Position; end record;
+  type Position = enum At(Value: Point); end enum;
+  type State = record Player: Position; end record;
 function Moved(Current: Point): State;
 begin
   return record
@@ -62,8 +62,8 @@ fn enum_record_payload_rejects_incompatible_arguments() {
                 "program InvalidEnumRecordPayload;
 type
   Point = record X: integer; Y: integer; end record;
-  Size = record X: integer; Y: integer; end record;
-  Position = enum At(Value: Point); end enum;
+  type Size = record X: integer; Y: integer; end record;
+  type Position = enum At(Value: Point); end enum;
 begin
   var Other: Size := record X := 1; Y := 2; end;
   var Value: Position := Position.At({argument});

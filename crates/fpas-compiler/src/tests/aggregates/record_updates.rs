@@ -35,7 +35,7 @@ type
     X: integer;
     Y: integer;
   end record;
-  Holder = record
+  type Holder = record
     Tags: dict of string to integer;
     Origin: Point;
     Label: option of string;

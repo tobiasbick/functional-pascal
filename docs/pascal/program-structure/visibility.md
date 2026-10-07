@@ -17,11 +17,10 @@ unit MyApp.Geometry;
 
 uses Std.Math;
 
-public type
-  Point = record
-    public X: real;
-    public Y: real;
-  end record;
+public type Point = record
+  public X: real;
+  public Y: real;
+end record;
 
 function Square(V: real): real;
 begin
@@ -37,6 +36,10 @@ end unit;
 
 `Point` and `Distance` are public. `Square` is private because it has no
 `public` modifier.
+
+Repeat `public` before each exported declaration, including consecutive
+constants, variables, and types. An unmarked following declaration is private;
+visibility is not inherited.
 
 The modifier applies to `function`, `procedure`, `type`, `const`, `var`, and
 `mutable var` declarations in units. On records declared in units it also

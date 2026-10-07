@@ -137,16 +137,16 @@ fn reserved_names_inside_declaration_lists_preserve_following_definitions() {
     for keyword in RESERVED {
         for source in [
             format!(
-                "unit U; const First: integer := 1; {keyword}: integer := 2; Last: integer := 3;\nend unit;"
+                "unit U; const First: integer := 1; const {keyword}: integer := 2; const Last: integer := 3;\nend unit;"
             ),
             format!(
-                "unit U; var First: integer := 1; {keyword}: integer := 2; Last: integer := 3;\nend unit;"
+                "unit U; var First: integer := 1; var {keyword}: integer := 2; var Last: integer := 3;\nend unit;"
             ),
             format!(
-                "unit U; mutable var First: integer := 1; {keyword}: integer := 2; Last: integer := 3;\nend unit;"
+                "unit U; mutable var First: integer := 1; mutable var {keyword}: integer := 2; mutable var Last: integer := 3;\nend unit;"
             ),
             format!(
-                "unit U; type First = integer; {keyword} = integer; Last = integer;\nend unit;"
+                "unit U; type First = integer; type {keyword} = integer; type Last = integer;\nend unit;"
             ),
         ] {
             let (unit, diagnostics) = parse_compilation_unit_with_errors(&source);

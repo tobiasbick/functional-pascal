@@ -27,7 +27,7 @@ public type
   Choice = enum
     First;
   end enum;
-  Counter = record
+  public type Counter = record
     public Value: integer;
     public property Current: integer read GetCurrent;
     public event Changed: procedure() read ReadChanged write WriteChanged;

@@ -2,23 +2,23 @@ program VariantReplacement;
 
 uses Std.Console;
 
-type
-  Point = record
-    X: integer;
-    Y: integer;
-  end record;
-  Choice = enum
-    Empty;
-    Count(Value: integer);
-    Pair(Left: integer; Right: integer);
-    Nested(Item: Point);
-  end enum;
-  Holder = record
-    Item: Choice;
-  end record;
+type Point = record
+  X: integer;
+  Y: integer;
+end record;
 
-mutable var
-  GlobalChoice: Choice := Choice.Count(15);
+type Choice = enum
+  Empty;
+  Count(Value: integer);
+  Pair(Left: integer; Right: integer);
+  Nested(Item: Point);
+end enum;
+
+type Holder = record
+  Item: Choice;
+end record;
+
+mutable var GlobalChoice: Choice := Choice.Count(15);
 
 function ChoiceValue(Item: Choice): integer;
 begin

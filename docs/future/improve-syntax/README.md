@@ -43,7 +43,7 @@ against the checkout before implementing each work package.
 
 ## Package status
 
-AP01, AP02, AP04, AP07, and AP13 are complete on `codex/syntax-changes-2`,
+AP01, AP02, AP04, AP07, AP11, and AP13 are complete on `codex/syntax-changes-2`,
 including all of their work packages. Checkboxes track completed delivery in
 the working branch, as defined by the
 [status-tracking rule](development-process.md#status-tracking).
@@ -51,6 +51,10 @@ the working branch, as defined by the
 [AP07: Boolean rules](ap07-boolean-rules/README.md) is complete: short-circuit
 evaluation, `Std.Bits`, explicit logical grouping, and boolean-only operators
 are implemented.
+
+[AP11: Individual declarations](ap11-individual-declarations/README.md) is complete:
+whole-unit type resolution and one keyword per declaration are implemented,
+including source, generated API, editor, and documentation migration.
 
 Effort estimates are preliminary, based on the design rather than a code audit.
 Dependencies name the packages a package needs; the real prerequisites per work
@@ -68,7 +72,7 @@ package are listed in each work package file.
 | — | [AP08: Comma-separated parameter lists](ap08-comma-separated-parameter-lists/README.md) | — | — | Rejected; closed (Q06) |
 | [ ] | [AP09: Named arguments](ap09-named-arguments/README.md) | Medium | AP02 | Agreed direction |
 | [ ] | [AP10: Typed record construction](ap10-typed-record-construction/README.md) | Medium | AP09 | Agreed direction |
-| [ ] | [AP11: Individual declarations](ap11-individual-declarations/README.md) | Medium | AP01 | Agreed direction (Q07) |
+| [x] | [AP11: Individual declarations](ap11-individual-declarations/README.md) | Medium | AP01 | Complete (Q07) |
 | [ ] | [AP12: Callable expressions](ap12-callable-expressions/README.md) | Medium | AP06 | Proposal |
 | [x] | [AP13: Explicit block boundaries](ap13-explicit-block-boundaries/README.md) | Large | AP01, AP02 | Agreed direction (Q08, Q09) |
 | [ ] | [AP14: Remove computed properties](ap14-remove-computed-properties/README.md) | Small | AP06 | Agreed direction |

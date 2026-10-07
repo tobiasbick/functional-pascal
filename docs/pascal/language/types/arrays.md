@@ -5,9 +5,8 @@ Dynamic arrays that grow as needed (0-based indexing).
 Formal syntax: [`grammar.ebnf`](../../../specs/grammar.ebnf) (`type_expr` — `array of`, array literals, indexing).
 
 ```pascal
-var
-  Numbers: array of integer := [1, 2, 3];
-  Empty: array of string := [];
+var Numbers: array of integer := [1, 2, 3];
+var Empty: array of string := [];
 ```
 
 Operations:

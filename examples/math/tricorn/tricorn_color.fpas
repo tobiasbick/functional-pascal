@@ -4,12 +4,11 @@ unit Tricorn.Color;
 
 uses Std.Console, Std.Math;
 
-public type
-  PaletteKind = enum
-    DeepOcean;
-    Ember;
-    Aurora;
-  end enum;
+public type PaletteKind = enum
+  DeepOcean;
+  Ember;
+  Aurora;
+end enum;
 
 public function PaletteName(Kind: PaletteKind): string;
 begin

@@ -49,7 +49,7 @@ fn closure_comments_survive_expression_emission() {
 
 #[test]
 fn record_enum_and_routine_eol_comments_remain_on_member_lines() {
-    let source = "program T;\ntype Shape = enum\n  // leading member\n  Plain; // plain\n  Valued = 2; // valued\n  Circle(Radius: real); // payload\nend enum;\nCounter = record\n  Value: integer; // field\n  function ReadValue(Self: Counter): integer;\n  begin\n    return Self.Value;\n  end function; // method\n  property Current: integer read ReadValue; // property\n  event Changed: procedure() read ReadChanged write WriteChanged; // event\nend record;\nfunction Top(): integer;\nbegin\n  return 1;\nend function; // top routine\nbegin\nend.";
+    let source = "program T;\ntype Shape = enum\n  // leading member\n  Plain; // plain\n  Valued = 2; // valued\n  Circle(Radius: real); // payload\nend enum;\ntype Counter = record\n  Value: integer; // field\n  function ReadValue(Self: Counter): integer;\n  begin\n    return Self.Value;\n  end function; // method\n  property Current: integer read ReadValue; // property\n  event Changed: procedure() read ReadChanged write WriteChanged; // event\nend record;\nfunction Top(): integer;\nbegin\n  return 1;\nend function; // top routine\nbegin\nend.";
     let formatted = format_idempotently(source);
 
     for line in [
@@ -64,7 +64,7 @@ fn record_enum_and_routine_eol_comments_remain_on_member_lines() {
     ] {
         assert!(formatted.contains(line), "missing `{line}`:\n{formatted}");
     }
-    assert!(formatted.contains("// leading member\n    Plain"));
+    assert!(formatted.contains("// leading member\n  Plain"));
 }
 
 #[test]

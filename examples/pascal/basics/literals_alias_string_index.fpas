@@ -4,12 +4,10 @@ program LiteralsAliasStringIndex;
 
 uses Std.Console, Std.Conv, Std.Str;
 
-type
-  Score = integer;
+type Score = integer;
 
-const
-  HexMask: integer := 15;
-  BigScore: integer := 1000;
+const HexMask: integer := 15;
+const BigScore: integer := 1000;
 
 begin
   var Name: string := 'FPAS';

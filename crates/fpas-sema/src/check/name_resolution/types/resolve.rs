@@ -6,6 +6,7 @@ use fpas_diagnostics::codes::SEMA_UNKNOWN_TYPE;
 use fpas_parser::{QualifiedId, TypeExpr};
 
 impl Checker {
+    /// Resolve a type expression, lazily completing pending whole-unit type headers.
     pub(crate) fn resolve_type_expr(&mut self, type_expr: &TypeExpr) -> Ty {
         match type_expr {
             TypeExpr::Named { id, .. } => self.resolve_named_type(id),
@@ -79,6 +80,9 @@ impl Checker {
             "string" => Ty::String,
             "task" => Ty::Task(Box::new(Ty::Error)),
             _ => {
+                if let Some(override_ty) = self.resolve_collected_type(&name) {
+                    return override_ty;
+                }
                 if let Some(symbol) = self.scopes.lookup(&name) {
                     if matches!(symbol.kind, SymbolKind::Type) {
                         symbol.ty.clone()

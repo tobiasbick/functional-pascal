@@ -10,8 +10,8 @@ mutable var Grid: array of array of integer := [[0, 0, 0], [0, 0, 0]];
 mutable var Handler: Option of function(X: integer; Y: integer): integer := None;
 type
   Binary = function(X: integer; Y: integer): integer;
-  Bucket = record Items: array of integer; end record;
-  Counter = record
+  type Bucket = record Items: array of integer; end record;
+  type Counter = record
     Base: integer;
     function Add(Self: Counter; X: integer; Y: integer): integer;
     begin return Self.Base + X * 10 + Y; end function;
@@ -24,8 +24,8 @@ type
     begin Handler := Value; end procedure;
     event OnValue: function(X: integer; Y: integer): integer read ReadHandler write WriteHandler;
   end record;
-  Message = enum Move(X: integer; Y: integer); end enum;
-  Pair = record First: integer; Second: integer; end record;
+  type Message = enum Move(X: integer; Y: integer); end enum;
+  type Pair = record First: integer; Second: integer; end record;
 mutable var Trace: integer := 0;
 function ReadValue(Value: integer; FailAt: integer): result of integer, string;
 begin

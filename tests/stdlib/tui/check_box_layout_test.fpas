@@ -2,10 +2,9 @@ program TuiCheckBoxLayoutTest;
 
 uses Std.Str, Std.Test, Std.Tui;
 
-type
-  CheckModel = record
-    Checked: boolean;
-  end record;
+type CheckModel = record
+  Checked: boolean;
+end record;
 
 function ViewCheck(State: CheckModel): TuiElement;
 begin

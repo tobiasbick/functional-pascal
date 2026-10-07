@@ -2,14 +2,12 @@ program UninitializedAssignment;
 
 uses Std.Console;
 
-type
-  Point = record
-    X: integer;
-    Y: integer;
-  end record;
+type Point = record
+  X: integer;
+  Y: integer;
+end record;
 
-mutable var
-  GlobalCount: integer := 99;
+mutable var GlobalCount: integer := 99;
 
 begin
   mutable var Count: integer := 1;

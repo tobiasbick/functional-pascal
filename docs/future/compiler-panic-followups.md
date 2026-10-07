@@ -24,3 +24,22 @@ language or hide the limitation inside a library implementation.
 - **Resolution:** map names to the callee's parameter or variant-field names
   from the debug metadata, evaluate in written order, and add debugger
   evaluation tests for routines, methods, and variant constructors.
+
+### Debugger cannot write or pass `var` parameters
+
+- **Source shape:** a debugger assignment to a `var` parameter, a debugger
+  `evaluate` expression with a `var` argument, or a debugger call of a routine
+  that declares a `var` parameter.
+- **Restriction:** inspection shows a `var` parameter as the caller's current
+  value, but the debugger treats the binding as read-only;
+  `crates/fpas-debug/src/evaluation/validate.rs` rejects `Expr::VarArgument`,
+  and a debugger call of a `var`-parameter routine fails inside the callee
+  because no reference is passed. Portable debug types describe reference
+  types as `Dynamic`, so debugger function-value assignment cannot compare
+  parameter modes.
+- **Workaround:** assign the caller's variable in the caller frame, and call
+  routines with `var` parameters from program code.
+- **Resolution:** carry parameter modes in portable debug types, write through
+  the reference with the same checks as program code, reject `var`-parameter
+  callees before invocation with a clear message, and add debugger tests for
+  each case.

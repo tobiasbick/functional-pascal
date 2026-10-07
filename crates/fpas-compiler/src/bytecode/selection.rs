@@ -160,6 +160,43 @@ impl<'a> Selector<'a> {
                 self.allocation.value(*value)?.get(),
                 0,
             ),
+            Operation::MakeCellReference(cell) => abc(
+                Opcode::MakeCellReference,
+                self.result_register(result)?,
+                self.allocation.value(*cell)?.get(),
+                0,
+            ),
+            Operation::MakeGlobalReference(global) => abx(
+                Opcode::MakeGlobalReference,
+                self.result_register(result)?,
+                global.get(),
+            ),
+            Operation::ReferenceField {
+                reference, field, ..
+            } => abc(
+                Opcode::ReferenceField,
+                self.result_register(result)?,
+                self.allocation.value(*reference)?.get(),
+                narrow(field.get(), "record field")?,
+            ),
+            Operation::ReferenceElement { reference, index } => abc(
+                Opcode::ReferenceElement,
+                self.result_register(result)?,
+                self.allocation.value(*reference)?.get(),
+                self.allocation.value(*index)?.get(),
+            ),
+            Operation::ReferenceRead(reference) => abc(
+                Opcode::ReferenceRead,
+                self.result_register(result)?,
+                self.allocation.value(*reference)?.get(),
+                0,
+            ),
+            Operation::ReferenceWrite { reference, value } => abc(
+                Opcode::ReferenceWrite,
+                self.allocation.value(*reference)?.get(),
+                self.allocation.value(*value)?.get(),
+                0,
+            ),
             Operation::SpawnTask { callee, arguments } => {
                 return self.select_spawn(*callee, arguments, result, false);
             }

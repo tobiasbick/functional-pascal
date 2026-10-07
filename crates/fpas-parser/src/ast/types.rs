@@ -68,11 +68,25 @@ pub enum TypeExpr {
     },
 }
 
+/// How a formal parameter receives its argument.
+///
+/// **Documentation:** `docs/pascal/language/functions/var-parameters.md`
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
+pub enum ParamMode {
+    /// Read-only value parameter.
+    #[default]
+    Value,
+    /// `var` parameter that changes the caller's variable.
+    Var,
+}
+
 /// Parsed formal parameter.
 #[derive(Debug, Clone, PartialEq)]
 pub struct FormalParam {
     /// The parameter name.
     pub name: String,
+    /// How the parameter receives its argument.
+    pub mode: ParamMode,
     /// The parameter type.
     pub type_expr: TypeExpr,
     /// The source span covering the parameter declaration.

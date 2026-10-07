@@ -49,11 +49,14 @@ pub(super) fn relocation_category(
         Opcode::CallDirect | Opcode::TailCall | Opcode::MakeClosure => {
             Some(RelocationCategory::Function)
         }
-        Opcode::LoadGlobal | Opcode::StoreGlobal | Opcode::StoreGlobalIndexPath => {
-            Some(RelocationCategory::Global)
-        }
+        Opcode::LoadGlobal
+        | Opcode::StoreGlobal
+        | Opcode::StoreGlobalIndexPath
+        | Opcode::MakeGlobalReference => Some(RelocationCategory::Global),
         Opcode::MakeRecord => Some(RelocationCategory::Record),
-        Opcode::LoadField | Opcode::StoreField => Some(RelocationCategory::RecordField),
+        Opcode::LoadField | Opcode::StoreField | Opcode::ReferenceField => {
+            Some(RelocationCategory::RecordField)
+        }
         Opcode::MakeEnum | Opcode::TestVariant => Some(RelocationCategory::EnumVariant),
         Opcode::LoadEnumField => Some(RelocationCategory::EnumField),
         _ => None,

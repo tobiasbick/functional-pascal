@@ -104,7 +104,9 @@ captures can be detached safely. Aggregate results can be expanded like
 ordinary variables and expire on resume. `go`, newly entered closure syntax,
 statements, declarations, and assignments inside `evaluate` remain rejected.
 Calls in debugger expressions take positional arguments only; named arguments
-such as `Sub(Left := 1, Right := 2)` are rejected.
+such as `Sub(Left := 1, Right := 2)` and `var` arguments are rejected.
+Inspection shows a `var` parameter as the caller's current value; the
+debugger does not assign to `var` parameters.
 
 Watch expressions use the same [operator precedence](../language/basics/operators.md#operator-precedence)
 as program expressions. For example, `not Count > 0` negates the comparison,

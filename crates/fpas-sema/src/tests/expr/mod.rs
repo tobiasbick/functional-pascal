@@ -13,6 +13,7 @@ mod record_events;
 mod record_properties;
 mod record_updates;
 mod std_shadowing;
+mod var_parameters;
 
 // ── Literals ────────────────────────────────────────────────────
 

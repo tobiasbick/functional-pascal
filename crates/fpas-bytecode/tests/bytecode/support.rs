@@ -189,7 +189,7 @@ pub fn all_opcodes_executable() -> Executable {
 fn valid_instruction(opcode: Opcode, next_address: u32) -> Instruction {
     match opcode {
         Opcode::LoadConstant => abx(opcode, 0, 0),
-        Opcode::LoadGlobal | Opcode::StoreGlobal => abx(opcode, 0, 0),
+        Opcode::LoadGlobal | Opcode::StoreGlobal | Opcode::MakeGlobalReference => abx(opcode, 0, 0),
         Opcode::Jump => abx(opcode, 0, next_address),
         Opcode::BranchIfFalse | Opcode::BranchIfTrue => abx(opcode, 0, next_address),
         Opcode::LoadUnit | Opcode::MakeNone => abc(opcode, 0, 0, 0, 0),
@@ -201,6 +201,8 @@ fn valid_instruction(opcode: Opcode, next_address: u32) -> Instruction {
         | Opcode::IntegerToReal
         | Opcode::MakeCell
         | Opcode::CellRead
+        | Opcode::MakeCellReference
+        | Opcode::ReferenceRead
         | Opcode::MakeOk
         | Opcode::MakeError
         | Opcode::MakeSome
@@ -209,7 +211,8 @@ fn valid_instruction(opcode: Opcode, next_address: u32) -> Instruction {
         | Opcode::UnwrapOk
         | Opcode::UnwrapError
         | Opcode::UnwrapSome => abc(opcode, 0, 1, 0, 0),
-        Opcode::CellWrite => abc(opcode, 0, 1, 0, 0),
+        Opcode::CellWrite | Opcode::ReferenceWrite => abc(opcode, 0, 1, 0, 0),
+        Opcode::ReferenceField => abc(opcode, 0, 1, 0, 0),
         Opcode::Return => return_unit(),
         Opcode::Panic => abc(opcode, 0, 0, 0, 0),
         Opcode::CallDirect | Opcode::TailCall => abc(opcode, NO_REGISTER, 1, 0, 0),

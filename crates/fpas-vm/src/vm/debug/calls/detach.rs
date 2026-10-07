@@ -100,6 +100,11 @@ impl ValueDetacher {
                 })
             }
             Value::Cell(cell) => self.detach_cell(cell),
+            Value::Reference(_) => Err(error(
+                DebugErrorKind::UnavailableValue,
+                "debug calls cannot detach `var` parameter references",
+                "Pass the variable's current value instead.",
+            )),
             Value::Task(_) => Err(error(
                 DebugErrorKind::UnavailableValue,
                 "debug calls cannot detach task handles",

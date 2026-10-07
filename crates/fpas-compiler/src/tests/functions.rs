@@ -2,6 +2,7 @@ use super::assert_succeeds;
 
 mod named_arguments;
 mod std_shadowing;
+mod var_parameters;
 
 #[test]
 fn direct_function_call_executes() {

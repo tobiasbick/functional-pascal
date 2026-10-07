@@ -1,0 +1,113 @@
+//! Lifetime rules: a `var` parameter must not outlive the call that supplied it.
+//!
+//! **Documentation:** `docs/pascal/language/functions/var-parameters.md`
+
+use super::super::Checker;
+use super::super::closures::CaptureBinding;
+use crate::scope::SymbolKind;
+use fpas_diagnostics::codes::SEMA_VAR_PARAMETER_ESCAPE;
+use fpas_lexer::Span;
+use fpas_parser::{Designator, DesignatorPart, Expr};
+
+impl Checker {
+    /// Rejects an anonymous closure that captures a `var` parameter.
+    pub(in crate::check) fn reject_closure_var_captures(
+        &mut self,
+        captures: &[CaptureBinding],
+        span: Span,
+    ) {
+        if let Some(capture) = captures.iter().find(|capture| capture.reference) {
+            self.error_with_code(
+                SEMA_VAR_PARAMETER_ESCAPE,
+                format!("A closure cannot capture `var` parameter `{}`", capture.name),
+                format!(
+                    "The closure could outlive the call. Copy the value into a local first, for example `const Current: {} := {};`, and capture the copy.",
+                    capture.ty, capture.name
+                ),
+                span,
+            );
+        }
+    }
+
+    /// Remembers whether a named nested routine uses an enclosing `var` parameter.
+    pub(in crate::check) fn record_var_parameter_routine(
+        &mut self,
+        name: &str,
+        captures: &[CaptureBinding],
+    ) {
+        let Some(key) = self.routine_scope_key(name) else {
+            return;
+        };
+        match captures.iter().find(|capture| capture.reference) {
+            Some(capture) => {
+                self.var_parameter_routines
+                    .insert(key, capture.name.clone());
+            }
+            None => {
+                self.var_parameter_routines.remove(&key);
+            }
+        }
+    }
+
+    /// Rejects a nested routine used as a value while it uses an enclosing `var` parameter.
+    pub(in crate::check) fn reject_var_parameter_routine_value(&mut self, designator: &Designator) {
+        let [DesignatorPart::Ident(name, span)] = designator.parts.as_slice() else {
+            return;
+        };
+        if let Some(parameter) = self.var_parameter_routine(name) {
+            self.error_with_code(
+                SEMA_VAR_PARAMETER_ESCAPE,
+                format!(
+                    "`{name}` uses `var` parameter `{parameter}` and cannot be used as a value"
+                ),
+                format!(
+                    "Call `{name}` directly while the enclosing routine runs, or pass `{parameter}` to it as a parameter."
+                ),
+                *span,
+            );
+        }
+    }
+
+    /// Rejects `var` arguments and `var`-parameter routines in a `go` call.
+    pub(in crate::check) fn reject_var_references_in_go(
+        &mut self,
+        callee: Option<&Designator>,
+        args: &[Expr],
+        span: Span,
+    ) {
+        if let Some(arg) = args
+            .iter()
+            .find(|arg| matches!(arg.argument_value(), Expr::VarArgument { .. }))
+        {
+            self.error_with_code(
+                SEMA_VAR_PARAMETER_ESCAPE,
+                "`go` cannot pass a `var` argument",
+                "The task could outlive the caller's variable. Pass a value and return the result through the task, for example `const T: task := go Compute(Value);`.",
+                arg.span(),
+            );
+            return;
+        }
+        if let Some([DesignatorPart::Ident(name, _)]) =
+            callee.map(|designator| designator.parts.as_slice())
+            && let Some(parameter) = self.var_parameter_routine(name)
+        {
+            self.error_with_code(
+                SEMA_VAR_PARAMETER_ESCAPE,
+                format!("`go` cannot start `{name}` because it uses `var` parameter `{parameter}`"),
+                format!("Call `{name}` directly, or pass `{parameter}` to the task by value."),
+                span,
+            );
+        }
+    }
+
+    fn var_parameter_routine(&self, name: &str) -> Option<String> {
+        let key = self.routine_scope_key(name)?;
+        self.var_parameter_routines.get(&key).cloned()
+    }
+
+    fn routine_scope_key(&self, name: &str) -> Option<String> {
+        let (scope, symbol) = self.scopes.lookup_with_scope(name)?;
+        matches!(symbol.kind, SymbolKind::Function | SymbolKind::Procedure)
+            .then(|| format!("{scope}:{}", name.to_ascii_lowercase()))
+    }
+}

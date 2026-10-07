@@ -99,6 +99,7 @@ pub fn analyze_debug_effects(executable: &VerifiedExecutable) -> Vec<FunctionEff
                     Err(_) => local[index] = local[index].union(DebugEffectSet::UNKNOWN),
                 },
                 Opcode::CellWrite
+                | Opcode::ReferenceWrite
                 | Opcode::StoreGlobal
                 | Opcode::IndexSet
                 | Opcode::StoreField

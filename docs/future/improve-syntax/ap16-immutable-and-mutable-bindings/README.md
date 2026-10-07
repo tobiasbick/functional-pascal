@@ -29,7 +29,7 @@ read-only, and `mutable` is an ordinary identifier
   hoist declarations. Optimizations must preserve observable effects,
   failures, and whether the declaration is reached.
 - The `mutable` keyword is removed from the language, for bindings and
-  parameters by AP16.3; AP17.1 follows with reference parameters.
+  parameters by AP16.3; AP17.1 then added reference parameters.
 - A `for` loop variable is an immutable binding for each iteration, written
   without a keyword. Assigning to it is an error.
 - Binding immutability is separate from deep immutability of shared handles and
@@ -63,7 +63,7 @@ read-only, and `mutable` is an ordinary identifier
   explicitly adapts focused tests to the new writable `var` meaning.
 - The keyword migration (immutable `var` to `const`, `mutable var` to `var`)
   is completed by AP16.3, including removal of mutable parameters. AP17.1
-  follows with true reference parameters.
+  then added true reference parameters.
 
 ```pascal
 const Caption: string := MakeCaption();
@@ -90,7 +90,7 @@ tests and focused tests and reference examples of the still-valid syntax.
 That preparatory migration preserves behavior in the AP16.1 language.
 AP16.3 is the single keyword switch: `var` becomes
 reassignable and `mutable` disappears from bindings and parameters. AP17's
-`var` parameters follow in AP17.1, so `var` never means two different things
+`var` parameters followed in AP17.1, so `var` never means two different things
 on `main`.
 
 ## Work packages

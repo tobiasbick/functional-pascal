@@ -43,6 +43,10 @@ go LogEvent('started');
 
 Bare values, operators, and non-call expressions are rejected by the parser or semantic checker.
 
+A `go` call cannot pass a `var` argument, and cannot start a nested routine that uses an enclosing
+[`var` parameter](../functions/var-parameters.md) (FP3030): the task could outlive the caller's
+variable.
+
 ## See also
 
 - [Task handles](task-handles.md)

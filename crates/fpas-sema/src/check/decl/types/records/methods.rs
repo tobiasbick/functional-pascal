@@ -124,6 +124,7 @@ impl Checker {
                             type_name,
                             record_ty,
                         ),
+                        mode: param.mode,
                     })
                     .collect();
                 (return_ty, params)

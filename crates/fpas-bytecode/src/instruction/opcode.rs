@@ -230,11 +230,25 @@ pub enum Opcode {
     /// otherwise, and in debugger-owned execution, it runs as `CallValue` followed by that
     /// `Return`.
     TailCallValue = 106,
+    /// Create a reference to the variable held by the capture cell in B.
+    ///
+    /// **Documentation:** `docs/pascal/language/functions/var-parameters.md`
+    MakeCellReference = 107,
+    /// Create a reference to the mutable global slot Bx.
+    MakeGlobalReference = 108,
+    /// Narrow reference B to positional record field C.
+    ReferenceField = 109,
+    /// Narrow reference B to the array element whose index is in register C.
+    ReferenceElement = 110,
+    /// Read the value referenced by B.
+    ReferenceRead = 111,
+    /// Write value B through reference A.
+    ReferenceWrite = 112,
 }
 
 impl Opcode {
     /// Exhaustive opcode inventory used by format and verifier tests.
-    pub const ALL: [Self; 102] = [
+    pub const ALL: [Self; 108] = [
         Self::LoadConstant,
         Self::LoadUnit,
         Self::Move,
@@ -337,6 +351,12 @@ impl Opcode {
         Self::ForLoop,
         Self::TailCall,
         Self::TailCallValue,
+        Self::MakeCellReference,
+        Self::MakeGlobalReference,
+        Self::ReferenceField,
+        Self::ReferenceElement,
+        Self::ReferenceRead,
+        Self::ReferenceWrite,
     ];
 
     /// Return the physical payload form assigned to this opcode.
@@ -348,7 +368,8 @@ impl Opcode {
             | Self::BranchIfFalse
             | Self::BranchIfTrue
             | Self::LoadGlobal
-            | Self::StoreGlobal => InstructionForm::Abx,
+            | Self::StoreGlobal
+            | Self::MakeGlobalReference => InstructionForm::Abx,
             _ => InstructionForm::Abc,
         }
     }

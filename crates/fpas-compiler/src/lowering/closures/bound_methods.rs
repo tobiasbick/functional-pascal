@@ -31,6 +31,7 @@ impl ClosureRegistry<'_> {
                 name: format!("argument{index}"),
                 ty: *ty,
                 declaration: None,
+                reference: false,
             })
             .collect::<Vec<_>>();
         let captures = vec![CaptureInput {
@@ -39,6 +40,7 @@ impl ClosureRegistry<'_> {
             storage_ty: routine.receiver_ty,
             kind: CaptureKind::Value,
             declaration: None,
+            reference: false,
         }];
         let mut context = LoweringContext::new(FunctionInput {
             name: &routine.name,

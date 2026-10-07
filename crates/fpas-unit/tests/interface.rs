@@ -8,8 +8,8 @@
 
 use fpas_unit::interface::{
     CallableType, ConstantValue, EnumType, EnumVariant, FieldType, GenericParameter,
-    InterfaceSymbol, InterfaceType, MethodType, ParameterType, RecordType, SymbolKind,
-    TypeConstraint, UnitInterface, decode_interface, encode_interface,
+    InterfaceSymbol, InterfaceType, MethodType, ParameterMode, ParameterType, RecordType,
+    SymbolKind, TypeConstraint, UnitInterface, decode_interface, encode_interface,
 };
 
 fn sample_interface() -> UnitInterface {
@@ -32,6 +32,7 @@ fn sample_interface() -> UnitInterface {
                             "T".to_string(),
                             Some(TypeConstraint::Comparable),
                         ),
+                        mode: ParameterMode::Var,
                     }],
                     result: Some(Box::new(InterfaceType::Array(Box::new(
                         InterfaceType::GenericParameter(

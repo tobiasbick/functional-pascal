@@ -14,6 +14,8 @@ pub(super) struct Binding {
     pub ty: TypeId,
     pub depth: u32,
     pub cell: bool,
+    /// Storage holds a reference to a caller variable (`var` parameter).
+    pub reference: bool,
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -43,6 +45,43 @@ pub(crate) struct CaptureInput {
     pub kind: fpas_ir::CaptureKind,
     /// Exact source declaration when the capture originates in user code.
     pub declaration: Option<fpas_ir::SourceSpan>,
+    /// The captured binding is a `var` parameter whose storage is a reference.
+    pub reference: bool,
+}
+
+impl CaptureInput {
+    /// Chooses the capture representation for one semantically analyzed capture.
+    ///
+    /// A `var` parameter is captured by value as its reference, so reads and writes in
+    /// a non-escaping nested routine still reach the caller's variable.
+    pub(crate) fn from_binding(
+        capture: &fpas_sema::CaptureBinding,
+        ty: TypeId,
+        reuses_cell: bool,
+        types: &mut types::TypeTable,
+        span: fpas_lexer::Span,
+    ) -> Result<Self, crate::CompileError> {
+        let (kind, storage_ty) = if capture.reference {
+            (fpas_ir::CaptureKind::Value, types.reference_type(ty, span)?)
+        } else if reuses_cell {
+            (
+                fpas_ir::CaptureKind::EnclosingCell,
+                types.cell_type(ty, span)?,
+            )
+        } else if capture.mutable {
+            (fpas_ir::CaptureKind::Cell, types.cell_type(ty, span)?)
+        } else {
+            (fpas_ir::CaptureKind::Value, ty)
+        };
+        Ok(Self {
+            name: capture.name.clone(),
+            ty,
+            storage_ty,
+            kind,
+            declaration: Some(capture.declaration.diagnostic_span_or_synthetic()),
+            reference: capture.reference,
+        })
+    }
 }
 
 #[derive(Debug, Clone)]
@@ -54,6 +93,8 @@ pub(crate) struct ParameterInput {
     pub ty: TypeId,
     /// Exact source declaration when the parameter originates in user code.
     pub declaration: Option<fpas_ir::SourceSpan>,
+    /// `var` parameter: `ty` is a reference whose reads and writes reach the caller.
+    pub reference: bool,
 }
 
 #[derive(Debug, Clone)]

@@ -212,6 +212,21 @@ impl Checker {
             self.check_args_only(args);
             return Ty::Error;
         };
+        let receiver_param_is_var = match &symbol.ty {
+            Ty::Function(signature) => signature.params.first().is_some_and(|p| p.is_var()),
+            Ty::Procedure(signature) => signature.params.first().is_some_and(|p| p.is_var()),
+            _ => false,
+        };
+        if receiver_param_is_var {
+            self.error_with_code(
+                fpas_diagnostics::codes::SEMA_VAR_ARGUMENT_MARKER,
+                format!("`{target_name}` takes its first argument as a `var` parameter, which a receiver call cannot mark"),
+                format!("Call it directly with an explicit marker, for example `{name}(var Value, …)`."),
+                span,
+            );
+            self.check_args_only(args);
+            return Ty::Error;
+        }
         if symbol.kind == SymbolKind::BuiltinStd
             && self.reject_named_arguments(
                 args,

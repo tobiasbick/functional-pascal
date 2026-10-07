@@ -323,6 +323,10 @@ pub struct Checker {
     ///
     /// **Documentation:** `docs/pascal/language/functions/closures.md`
     pub(crate) task_bound_exprs: HashSet<usize>,
+    /// Scope-qualified nested routine names → the enclosing `var` parameter they use.
+    ///
+    /// **Documentation:** `docs/pascal/language/functions/var-parameters.md`
+    pub(crate) var_parameter_routines: HashMap<String, String>,
 }
 
 impl Checker {
@@ -364,6 +368,7 @@ impl Checker {
             event_assigned: EventAssignedMap::new(),
             event_raises: EventRaiseMap::new(),
             task_bound_exprs: HashSet::new(),
+            var_parameter_routines: HashMap::new(),
         }
     }
 

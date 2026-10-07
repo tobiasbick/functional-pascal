@@ -49,6 +49,7 @@ impl LoweringContext {
             ty,
             depth: self.scope_depth,
             cell: false,
+            reference: false,
         });
         Ok(local)
     }
@@ -70,7 +71,7 @@ impl LoweringContext {
         self.bindings.iter().rev().find(|binding| binding.name.eq_ignore_ascii_case(name)).map(|binding| (binding.storage, binding.ty)).ok_or_else(|| internal_compiler_error(format!("Local `{name}` was not present in register-lowering scope metadata."), "This is an internal compiler error. Re-run compilation and report the source program.", span.line, span.column))
     }
 
-    fn binding_is_cell(&self, name: &str) -> bool {
+    pub(super) fn binding_is_cell(&self, name: &str) -> bool {
         self.bindings
             .iter()
             .rev()
@@ -85,12 +86,15 @@ impl LoweringContext {
     ) -> Result<ValueId, CompileError> {
         let (storage, ty) = self.resolve_local(name, span)?;
         let cell = self.binding_is_cell(name);
+        let reference = self.binding_is_reference(name);
         match storage {
             BindingStorage::Local(local) => {
-                let storage_ty = if cell { self.cell_type(ty, span)? } else { ty };
+                let storage_ty = self.binding_storage_type(ty, cell, reference, span)?;
                 let value = self.emit_value(Operation::ReadLocal(local), storage_ty, span)?;
                 if cell {
                     self.emit_value(Operation::CellRead(value), ty, span)
+                } else if reference {
+                    self.emit_value(Operation::ReferenceRead(value), ty, span)
                 } else {
                     Ok(value)
                 }
@@ -105,9 +109,10 @@ impl LoweringContext {
     ) -> Result<ValueId, CompileError> {
         let (storage, ty) = self.resolve_local(name, span)?;
         let cell = self.binding_is_cell(name);
+        let reference = self.binding_is_reference(name);
         match storage {
             BindingStorage::Local(local) => {
-                let storage_ty = if cell { self.cell_type(ty, span)? } else { ty };
+                let storage_ty = self.binding_storage_type(ty, cell, reference, span)?;
                 self.emit_value(Operation::ReadLocal(local), storage_ty, span)
             }
         }
@@ -120,14 +125,18 @@ impl LoweringContext {
         span: Span,
     ) -> Result<(), CompileError> {
         let (storage, ty) = self.resolve_local(name, span)?;
-        match (storage, self.binding_is_cell(name)) {
-            (BindingStorage::Local(local), false) => self.write_local(local, value, span),
-            (BindingStorage::Local(local), true) => {
-                let cell_ty = self.cell_type(ty, span)?;
-                let cell = self.emit_value(Operation::ReadLocal(local), cell_ty, span)?;
-                self.emit_effect(Operation::CellWrite { cell, value }, span)
-            }
+        let BindingStorage::Local(local) = storage;
+        if self.binding_is_reference(name) {
+            let reference_ty = self.type_table.reference_type(ty, span)?;
+            let reference = self.emit_value(Operation::ReadLocal(local), reference_ty, span)?;
+            return self.emit_effect(Operation::ReferenceWrite { reference, value }, span);
         }
+        if self.binding_is_cell(name) {
+            let cell_ty = self.cell_type(ty, span)?;
+            let cell = self.emit_value(Operation::ReadLocal(local), cell_ty, span)?;
+            return self.emit_effect(Operation::CellWrite { cell, value }, span);
+        }
+        self.write_local(local, value, span)
     }
 
     pub(in crate::lowering) fn closure_target(
@@ -211,7 +220,7 @@ impl LoweringContext {
 
     /// Resolve a local whose value can be updated without capture-cell indirection.
     pub(in crate::lowering) fn direct_local(&self, name: &str) -> Option<LocalId> {
-        if self.binding_is_cell(name) {
+        if self.binding_is_cell(name) || self.binding_is_reference(name) {
             return None;
         }
         self.bindings

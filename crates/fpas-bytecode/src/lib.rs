@@ -52,9 +52,10 @@ pub use operand::{
 };
 pub use validate::{ValidationError, ValidationErrorKind};
 pub use value::{
-    EnumValue, FunctionValue, RecordValue, RuntimeEnumLayout, RuntimeRecordLayout, SharedArray,
-    SharedDict, SharedEnum, SharedFunction, SharedRecord, SharedStr, Value, managed_value_buffer,
+    EnumValue, FunctionValue, RecordValue, ReferenceRoot, ReferenceStep, RuntimeEnumLayout,
+    RuntimeRecordLayout, SharedArray, SharedDict, SharedEnum, SharedFunction, SharedRecord,
+    SharedReference, SharedStr, Value, VariableReference, managed_value_buffer,
 };
 
 /// Persistent register instruction-set version recorded in compiled artifacts.
-pub const BYTECODE_VERSION: u32 = 15;
+pub const BYTECODE_VERSION: u32 = 16;

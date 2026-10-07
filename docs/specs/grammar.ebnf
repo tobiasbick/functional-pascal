@@ -221,7 +221,7 @@ function_type       = 'function' '(' [ formal_type_list ] ')' ':' type_expr ;
 procedure_type      = 'procedure' '(' [ formal_type_list ] ')' ;
 
 formal_type_list    = formal_type_param { ';' formal_type_param } ;
-formal_type_param   = identifier ':' type_expr ;
+formal_type_param   = [ 'var' ] identifier ':' type_expr ;
 
 (* ---- 2.4 Record & Enum Types ---------------------------------- *)
 
@@ -308,7 +308,9 @@ procedure_heading   = 'procedure' identifier [ type_params ]
                       '(' [ param_list ] ')' ;
 
 param_list          = param_group { ';' param_group } ;
-param_group         = identifier ':' type_expr ;
+(* `var` declares a parameter that changes the caller's variable.     *)
+(* Documentation: docs/pascal/language/functions/var-parameters.md    *)
+param_group         = [ 'var' ] identifier ':' type_expr ;
 
 nested_decl         = function_decl
                     | procedure_decl ;
@@ -572,9 +574,13 @@ field_init          = identifier ':=' expression ';' ;
 
 (* A call is fully positional or fully named (FP2016).                *)
 (* Documentation: docs/pascal/language/functions/parameters.md        *)
-arg_list            = expression { ',' expression }
+arg_list            = positional_arg { ',' positional_arg }
                     | named_arg { ',' named_arg } ;
+positional_arg      = expression | var_arg ;
 named_arg           = identifier ':=' expression ;
+(* Argument for a `var` parameter: a variable, field, or element.     *)
+(* Documentation: docs/pascal/language/functions/var-parameters.md    *)
+var_arg             = 'var' designator ;
 
 (* -- Array literal -- *)
 array_literal       = '[' [ expression { ',' expression } ] ']' ;

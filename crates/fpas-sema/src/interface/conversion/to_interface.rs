@@ -76,8 +76,11 @@ fn parameters_to_interface(
         .map(|parameter| {
             Ok(artifact::ParameterType {
                 name: parameter.name.clone(),
-
                 ty: ty_to_interface_reference(&parameter.ty)?,
+                mode: match parameter.mode {
+                    crate::types::ParamMode::Value => artifact::ParameterMode::Value,
+                    crate::types::ParamMode::Var => artifact::ParameterMode::Var,
+                },
             })
         })
         .collect()

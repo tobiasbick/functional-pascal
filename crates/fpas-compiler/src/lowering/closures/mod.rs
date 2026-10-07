@@ -126,11 +126,12 @@ impl<'a> ClosureRegistry<'a> {
             .iter()
             .map(|parameter| {
                 types
-                    .type_expr(&parameter.type_expr)
+                    .formal_param_type(parameter, &[])
                     .map(|ty| ParameterInput {
                         name: parameter.name.clone(),
                         ty,
                         declaration: Some(parameter.span.diagnostic_span_or_synthetic()),
+                        reference: parameter.mode == fpas_parser::ParamMode::Var,
                     })
             })
             .collect::<Result<Vec<_>, _>>()?;

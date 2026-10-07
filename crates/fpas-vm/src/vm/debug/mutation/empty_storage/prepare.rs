@@ -131,6 +131,9 @@ fn walk_identity(value: &Value, max_depth: usize, depth: usize) -> Result<(), De
         Value::Cell(_) => Err(diagnostics::identity_bearing(
             "capture cells are not portable empty-storage seeds",
         )),
+        Value::Reference(_) => Err(diagnostics::identity_bearing(
+            "`var` parameter references are not portable empty-storage seeds",
+        )),
         Value::Task(_) => Err(diagnostics::identity_bearing(
             "task handles are not portable empty-storage seeds",
         )),

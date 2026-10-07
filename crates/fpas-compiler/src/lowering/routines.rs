@@ -190,9 +190,7 @@ pub(super) fn callable_table(
         let parameters = routine
             .params()
             .iter()
-            .map(|parameter| {
-                types.type_expr_with_params(&parameter.type_expr, routine.type_params())
-            })
+            .map(|parameter| types.formal_param_type(parameter, routine.type_params()))
             .collect::<Result<Vec<_>, _>>()?;
         let result = routine.result(types)?;
         let value_type = types.function_type(parameters.clone(), result, routine.span())?;
@@ -216,25 +214,13 @@ pub(super) fn callable_table(
                             outer.name.eq_ignore_ascii_case(&capture.name)
                                 && outer.kind != fpas_ir::CaptureKind::Value
                         });
-                        let kind = if reuses_cell {
-                            fpas_ir::CaptureKind::EnclosingCell
-                        } else if capture.mutable {
-                            fpas_ir::CaptureKind::Cell
-                        } else {
-                            fpas_ir::CaptureKind::Value
-                        };
-                        let storage_ty = if capture.mutable {
-                            types.cell_type(ty, routine.span())?
-                        } else {
-                            ty
-                        };
-                        Ok(super::context::CaptureInput {
-                            name: capture.name.clone(),
+                        super::context::CaptureInput::from_binding(
+                            capture,
                             ty,
-                            storage_ty,
-                            kind,
-                            declaration: Some(capture.declaration.diagnostic_span_or_synthetic()),
-                        })
+                            reuses_cell,
+                            types,
+                            routine.span(),
+                        )
                     })
                     .collect::<Result<Vec<_>, CompileError>>()
             })
@@ -287,11 +273,12 @@ pub(super) fn lower(
         .iter()
         .map(|parameter| {
             types
-                .type_expr_with_params(&parameter.type_expr, routine.type_params())
+                .formal_param_type(parameter, routine.type_params())
                 .map(|ty| ParameterInput {
                     name: parameter.name.clone(),
                     ty,
                     declaration: Some(parameter.span.diagnostic_span_or_synthetic()),
+                    reference: parameter.mode == fpas_parser::ParamMode::Var,
                 })
         })
         .collect::<Result<Vec<_>, _>>()?;

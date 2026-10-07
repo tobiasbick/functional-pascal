@@ -103,7 +103,8 @@ pub(crate) fn parameter_documentation(
         .collect()
 }
 
-fn parameter_name(label: &str) -> Option<&str> {
+/// Returns the parameter name of a `Name: Type` or `var Name: Type` signature label.
+pub(crate) fn parameter_name(label: &str) -> Option<&str> {
     label.split_once(':')?.0.split_whitespace().next_back()
 }
 

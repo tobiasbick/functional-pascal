@@ -135,6 +135,10 @@ fn walk(value: &Value, depth: usize, state: &mut WalkState) -> Result<(), DebugS
         ));
     }
     match value {
+        Value::Reference(_) => Err(ownership(
+            "source function captures a `var` parameter reference",
+            "Assign a function whose captures contain no references, cells, tasks, or opaque handles.",
+        )),
         Value::Cell(_) => Err(ownership(
             "source function captures a mutable cell",
             "Assign a non-task-bound function whose captures contain no cells, tasks, or opaque handles.",

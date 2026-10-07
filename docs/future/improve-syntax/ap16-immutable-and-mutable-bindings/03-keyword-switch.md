@@ -94,5 +94,6 @@ initialization/shutdown fixture hung and was terminated; a separate complete
 initialization, capability-registration acknowledgement, shutdown, and exit
 protocol check passed. All AP16.3 regression tests passed.
 
-AP16 is complete. AP17.1 follows with true reference parameters; the existing
-simple writable-array target exception for `Push`/`Pop` remains until AP17.3.
+AP16 is complete. AP17.1 has since added true reference parameters; the
+existing simple writable-array target exception for `Push`/`Pop` remains until
+AP17.3.

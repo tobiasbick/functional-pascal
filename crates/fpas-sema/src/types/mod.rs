@@ -1,3 +1,4 @@
+pub use fpas_parser::ParamMode;
 use std::sync::Arc;
 
 /// Built-in type constraints for generic parameters.
@@ -229,6 +230,37 @@ pub struct ParamTy {
     pub name: String,
     /// Resolved parameter type.
     pub ty: Ty,
+    /// Whether the parameter is read-only or a `var` parameter.
+    ///
+    /// **Documentation:** `docs/pascal/language/functions/var-parameters.md`
+    pub mode: ParamMode,
+}
+
+impl ParamTy {
+    /// Creates a read-only value parameter.
+    #[must_use]
+    pub fn value(name: impl Into<String>, ty: Ty) -> Self {
+        Self {
+            name: name.into(),
+            ty,
+            mode: ParamMode::Value,
+        }
+    }
+
+    /// Returns whether the parameter changes the caller's variable.
+    #[must_use]
+    pub fn is_var(&self) -> bool {
+        self.mode == ParamMode::Var
+    }
+}
+
+impl std::fmt::Display for ParamTy {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        if self.is_var() {
+            write!(f, "var ")?;
+        }
+        write!(f, "{}: {}", self.name, self.ty)
+    }
 }
 
 impl std::fmt::Display for Ty {
@@ -249,7 +281,7 @@ impl std::fmt::Display for Ty {
                     if i > 0 {
                         write!(f, "; ")?;
                     }
-                    write!(f, "{}: {}", p.name, p.ty)?;
+                    write!(f, "{p}")?;
                 }
                 write!(f, "): {}", ft.return_type)
             }
@@ -259,7 +291,7 @@ impl std::fmt::Display for Ty {
                     if i > 0 {
                         write!(f, "; ")?;
                     }
-                    write!(f, "{}: {}", p.name, p.ty)?;
+                    write!(f, "{p}")?;
                 }
                 write!(f, ")")
             }
@@ -354,19 +386,13 @@ impl Ty {
                 }
                 a.return_type
                     .compatible_with_mode(&b.return_type, generic_wildcard)
-                    && a.params
-                        .iter()
-                        .zip(b.params.iter())
-                        .all(|(pa, pb)| pa.ty.compatible_with_mode(&pb.ty, generic_wildcard))
+                    && Self::params_compatible_with_mode(&a.params, &b.params, generic_wildcard)
             }
             (Ty::Procedure(a), Ty::Procedure(b)) => {
                 if a.variadic != b.variadic || a.params.len() != b.params.len() {
                     return false;
                 }
-                a.params
-                    .iter()
-                    .zip(b.params.iter())
-                    .all(|(pa, pb)| pa.ty.compatible_with_mode(&pb.ty, generic_wildcard))
+                Self::params_compatible_with_mode(&a.params, &b.params, generic_wildcard)
             }
             _ => self == other,
         }
@@ -399,6 +425,20 @@ impl Ty {
     /// True for ordinal types (integer, boolean, simple enum without data).
     pub fn is_ordinal(&self) -> bool {
         matches!(self, Ty::Integer | Ty::Boolean) || matches!(self, Ty::Enum(e) if !e.has_data())
+    }
+
+    /// Parameter modes are part of callable compatibility: a read-only and a
+    /// `var` parameter never substitute for each other.
+    ///
+    /// **Documentation:** `docs/pascal/language/functions/function-types.md`
+    fn params_compatible_with_mode(
+        params: &[ParamTy],
+        other_params: &[ParamTy],
+        generic_wildcard: bool,
+    ) -> bool {
+        params.iter().zip(other_params).all(|(param, other)| {
+            param.mode == other.mode && param.ty.compatible_with_mode(&other.ty, generic_wildcard)
+        })
     }
 
     fn record_fields_compatible_with_mode(

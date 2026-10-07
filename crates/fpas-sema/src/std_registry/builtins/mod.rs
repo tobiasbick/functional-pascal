@@ -87,7 +87,8 @@ pub(super) fn simple_var_name(expr: &Expr) -> Option<String> {
 
 pub(super) fn mutable_array_elem_ty(c: &Checker, name: &str) -> Option<Ty> {
     let sym = c.scopes.lookup(name)?;
-    if !sym.mutable {
+    // `var` parameters are writable but are not simple array variables.
+    if !sym.mutable || sym.kind != crate::scope::SymbolKind::Var {
         return None;
     }
     match &sym.ty {

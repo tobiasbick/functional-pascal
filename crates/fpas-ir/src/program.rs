@@ -115,6 +115,10 @@ pub enum IrType {
     Cell(TypeId),
     /// A task handle whose result type is known to the compiler.
     Task(TypeId),
+    /// A reference to a caller variable, record field, or array element of this type.
+    ///
+    /// **Documentation:** `docs/pascal/language/functions/var-parameters.md`
+    Reference(TypeId),
 }
 
 /// An identified lowered type definition.

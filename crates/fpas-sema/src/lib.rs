@@ -56,7 +56,7 @@ pub use interface::{
 pub use std_registry::{
     IntrinsicStdSymbol, IntrinsicStdSymbolKind, intrinsic_std_symbols, intrinsic_std_units,
 };
-pub use types::{EnumTy, FunctionTy, ParamTy, ProcedureTy, RecordTy, Ty};
+pub use types::{EnumTy, FunctionTy, ParamMode, ParamTy, ProcedureTy, RecordTy, Ty};
 
 use fpas_parser::Program;
 

@@ -218,6 +218,22 @@ Operation::StoreLocalIndex {
         Operation::MakeCell(value) => validate_cell_make(scope, *value, result),
         Operation::CellRead(cell) => validate_cell_read(scope, *cell, result),
         Operation::CellWrite { cell, value } => validate_cell_write(scope, *cell, *value),
+        Operation::MakeCellReference(cell) => validate_cell_reference(scope, *cell, result),
+        Operation::MakeGlobalReference(global) => {
+            validate_global_reference(scope, *global, result)
+        }
+        Operation::ReferenceField {
+            reference,
+            layout,
+            field,
+        } => validate_reference_field(scope, *reference, *layout, *field, result),
+        Operation::ReferenceElement { reference, index } => {
+            validate_reference_element(scope, *reference, *index, result)
+        }
+        Operation::ReferenceRead(reference) => validate_reference_read(scope, *reference, result),
+        Operation::ReferenceWrite { reference, value } => {
+            validate_reference_write(scope, *reference, *value)
+        }
         Operation::SpawnTask { callee, arguments } => validate_spawn(scope, *callee, arguments, result),
         Operation::SpawnDetachedTask { callee, arguments } => validate_call_value(scope, *callee, arguments, None),
         Operation::Yield => Ok(()),

@@ -30,6 +30,10 @@ pub struct CaptureBinding {
     pub task_bound: bool,
     /// Exact declaration of the captured source binding.
     pub declaration: fpas_lexer::Span,
+    /// `true` when the binding is a `var` parameter whose storage is the caller's variable.
+    ///
+    /// **Documentation:** `docs/pascal/language/functions/var-parameters.md`
+    pub reference: bool,
 }
 
 /// Collect lexical captures referenced by `body`.
@@ -109,6 +113,7 @@ impl CaptureCollector<'_> {
             mutable: symbol.mutable,
             task_bound: symbol.task_bound,
             declaration,
+            reference: symbol.is_var_parameter(),
         });
     }
 }

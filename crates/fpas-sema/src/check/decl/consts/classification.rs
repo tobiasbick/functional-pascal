@@ -108,6 +108,13 @@ impl Checker {
                         });
                 (!known).then(|| (format!("binding `{full_name}`"), expr.span()))
             }
+            Expr::VarArgument { designator, .. } => Some((
+                format!(
+                    "`var` argument `{}`",
+                    Self::resolve_designator_name(designator)
+                ),
+                expr.span(),
+            )),
             Expr::Call { designator, .. } => Some((
                 format!("call `{}`", Self::resolve_designator_name(designator)),
                 expr.span(),

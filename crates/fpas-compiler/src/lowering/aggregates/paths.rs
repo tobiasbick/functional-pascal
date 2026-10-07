@@ -189,7 +189,10 @@ impl LoweringContext {
     }
 
     /// Resolves the same local or qualified global root for reads and writes.
-    fn designator_root(&self, designator: &Designator) -> Result<(String, usize), CompileError> {
+    pub(in crate::lowering) fn designator_root(
+        &self,
+        designator: &Designator,
+    ) -> Result<(String, usize), CompileError> {
         let Some(DesignatorPart::Ident(name, _)) = designator.parts.first() else {
             return Err(unsupported(designator.span, "designator root"));
         };

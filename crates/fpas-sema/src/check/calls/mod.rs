@@ -232,14 +232,18 @@ impl Checker {
         }
 
         let mut arg_types = Vec::with_capacity(args.len());
+        let mut var_roots = Vec::new();
         for (index, arg) in args.iter().enumerate() {
             let arg_ty = if let Some(param) = params.get(index) {
-                self.check_expr_with_expected_record_literals(arg, &param.ty)
+                let (ty, root) = self.check_argument_for_param(name, param, arg);
+                var_roots.extend(root);
+                ty
             } else {
                 self.check_expr(arg)
             };
             arg_types.push(arg_ty);
         }
+        self.reject_var_argument_aliases(&var_roots, span);
 
         let inferred = self.validate_routine_constraints(type_params, params, &arg_types, span);
         for (index, ((param, arg_ty), arg)) in params.iter().zip(&arg_types).zip(&args).enumerate()

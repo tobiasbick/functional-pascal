@@ -121,6 +121,7 @@ impl Checker {
             .map(|p| ParamTy {
                 name: p.name.clone(),
                 ty: self.resolve_type_expr(&p.type_expr),
+                mode: p.mode,
             })
             .collect()
     }
@@ -166,7 +167,7 @@ impl Checker {
                 Symbol {
                     constant: None,
                     ty: p.ty.clone(),
-                    mutable: false,
+                    mutable: p.is_var(),
                     kind: SymbolKind::Param,
                     task_bound: false,
                 },
@@ -280,6 +281,7 @@ impl Checker {
         key: usize,
         captures: Vec<CaptureBinding>,
     ) {
+        self.record_var_parameter_routine(name, &captures);
         let task_bound = task_bound_from_captures(&captures);
         if let Some(symbol) = self.scopes.lookup_mut(name) {
             symbol.task_bound = task_bound;

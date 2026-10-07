@@ -28,9 +28,9 @@ end.
 
 ## Read-only value parameters
 
-Parameters are read-only bindings. Copy a parameter into a local `var` when
-its value, fields, or elements need to change. Changes to that copy do not
-change the caller's binding:
+Parameters are read-only bindings unless they are declared with `var`. Copy a
+read-only parameter into a local `var` when its value, fields, or elements need
+to change. Changes to that copy do not change the caller's binding:
 
 ```pascal
 function Increment(Value: integer): integer;
@@ -45,6 +45,9 @@ Arrays, dictionaries, and records retain value semantics when copied. Handles
 such as channels still refer to their shared resource; a read-only binding
 does not prevent operations on that resource. Closures capture a value
 parameter by value, and a local `var` by shared mutable cell.
+
+To change the caller's variable, declare a [`var` parameter](var-parameters.md)
+and mark the argument: `Increase(var Counter)`.
 
 ## Named arguments
 

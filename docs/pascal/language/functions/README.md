@@ -8,6 +8,7 @@ Formal syntax: [`grammar.ebnf`](../../../specs/grammar.ebnf) (`function_decl`, `
 |-------|-------------|
 | [Declarations](declarations.md) | `function` / `procedure` shape and early exit |
 | [Parameters](parameters.md) | Parameter lists, call syntax, and named arguments |
+| [`var` parameters](var-parameters.md) | Parameters that change the caller's variable |
 | [Function types](function-types.md) | Callable type expressions |
 | [First-class functions](first-class.md) | Variables and higher-order calls |
 | [Nested functions](nested.md) | Local helpers and mutual recursion |

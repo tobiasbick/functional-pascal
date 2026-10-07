@@ -5,6 +5,7 @@ mod block_order;
 mod blocks;
 mod debug;
 mod descriptors;
+mod references;
 mod saved_values;
 
 #[cfg(test)]
@@ -137,6 +138,12 @@ impl LoweringContext {
                 mutable: false,
                 capture: None,
             });
+            // A `var` parameter binding has the referenced type; its storage is the reference.
+            let value_ty = if input.reference {
+                referenced_type(&type_table, input.ty)?
+            } else {
+                input.ty
+            };
             debug.bindings.push(fpas_ir::DebugBinding {
                 local,
                 name: input.name.clone(),
@@ -152,9 +159,10 @@ impl LoweringContext {
             bindings.push(Binding {
                 name: input.name.to_ascii_lowercase(),
                 storage: BindingStorage::Local(local),
-                ty: input.ty,
+                ty: value_ty,
                 depth: 0,
                 cell: false,
+                reference: input.reference,
             });
             entry.instructions.push(Instruction {
                 source: None,
@@ -185,7 +193,11 @@ impl LoweringContext {
                 local,
                 name: capture.name.clone(),
                 kind: fpas_ir::DebugBindingKind::Capture,
-                ty: capture.ty,
+                ty: if capture.reference {
+                    capture.storage_ty
+                } else {
+                    capture.ty
+                },
                 mutable: capture.kind != fpas_ir::CaptureKind::Value,
                 scope: 0,
                 declaration: capture.declaration,
@@ -199,6 +211,7 @@ impl LoweringContext {
                 ty: capture.ty,
                 depth: 0,
                 cell: capture.kind != fpas_ir::CaptureKind::Value,
+                reference: capture.reference,
             });
         }
         Ok(Self {
@@ -210,7 +223,12 @@ impl LoweringContext {
             captures: captures
                 .iter()
                 .map(|capture| fpas_ir::CaptureDeclaration {
-                    ty: capture.ty,
+                    // A `var` parameter is captured as its reference value.
+                    ty: if capture.reference {
+                        capture.storage_ty
+                    } else {
+                        capture.ty
+                    },
                     kind: capture.kind,
                 })
                 .collect(),
@@ -458,6 +476,19 @@ pub(super) fn target(block: BlockId) -> BlockTarget {
     BlockTarget {
         block,
         arguments: Vec::new(),
+    }
+}
+
+/// Returns the type behind a `var` parameter's reference type.
+fn referenced_type(type_table: &types::TypeTable, ty: TypeId) -> Result<TypeId, CompileError> {
+    match type_table.kind(ty) {
+        Some(fpas_ir::IrType::Reference(inner)) => Ok(*inner),
+        _ => Err(internal_compiler_error(
+            "A `var` parameter was lowered without a reference type.",
+            "This is an internal compiler error. Re-run compilation and report the source program.",
+            1,
+            1,
+        )),
     }
 }
 

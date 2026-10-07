@@ -45,6 +45,7 @@ a local, parameter, or enclosing capture that is not declared by the closure its
 | Binding | Capture behavior |
 | --- | --- |
 | Value parameter | Capture its value when the closure is created. |
+| `var` parameter | Rejected (FP3030): the closure could outlive the call. Copy the value into a local first. |
 | `var` local | Capture one shared mutable cell. |
 | Enclosing closure capture | Reuse the same value or mutable cell. |
 | Unit or program variable | Resolve normally; not stored in the closure environment. |
@@ -66,7 +67,8 @@ end function;
 ```
 
 There is no capture-list syntax. Local bindings use `const` or `var`;
-parameters are always read-only.
+read-only parameters are captured by value, and `var` parameters cannot be
+captured by an anonymous closure.
 
 ## Named nested routines
 

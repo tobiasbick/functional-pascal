@@ -116,7 +116,7 @@ impl Checker {
                 Symbol {
                     constant: None,
                     ty: param.ty.clone(),
-                    mutable: false,
+                    mutable: param.is_var(),
                     kind: SymbolKind::Param,
                     task_bound: false,
                 },

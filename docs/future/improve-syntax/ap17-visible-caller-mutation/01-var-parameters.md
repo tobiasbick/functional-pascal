@@ -69,3 +69,33 @@ None; no `var` parameters exist yet.
   Verify that writes before a panic or `try` exit remain visible for whole
   variables, fields, and elements, through declared routines and function
   values, while later writes do not execute.
+
+## Result
+
+Delivered with the agreed defaults for the open details:
+
+- Unit and program variables, including public `var` variables of imported
+  units, are valid `var` arguments.
+- A closure may pass a `var` local it captures (`Increase(var Count)`).
+- Named nested routines may use an enclosing `var` parameter when called
+  directly; using such a routine as a value or with `go` is rejected (FP3030).
+- Element arguments are array elements; dictionary entries and string
+  characters are rejected (FP3028).
+- Aliasing is checked among the arguments of one call; changes through other
+  names, such as a unit variable written directly, are documented.
+- Record methods accept `var` parameters; the receiver `Self` cannot be `var`.
+
+Implementation: a `var` argument creates a runtime reference (root cell or
+global plus field and element steps fixed at the call). Locals passed as `var`
+are cell-backed. The IR type `Reference(T)` carries parameter modes through
+function types, unit interfaces (`.fpascu` format 9), objects (version 9), and
+bytecode (version 16).
+
+Follow-up work recorded elsewhere:
+
+- `Push`/`Pop` on a `var` parameter and receiver calls whose first parameter
+  is `var` are rejected (FP3027); [AP17.3](03-caller-mutating-intrinsics.md)
+  and [AP06.3](../ap06-dot-call-targets/03-fixed-dot-resolution.md) decide them.
+- Named `var` arguments: [AP17.2](02-named-var-arguments.md).
+- Debugger writes and calls with `var` parameters:
+  [compiler and language-limit follow-ups](../../compiler-panic-followups.md).

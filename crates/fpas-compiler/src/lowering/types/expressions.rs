@@ -25,6 +25,34 @@ impl TypeTable {
         self.type_expr_with_generics(type_expr, &generics)
     }
 
+    /// Lowers a formal parameter; a `var` parameter receives a reference to its type.
+    ///
+    /// **Documentation:** `docs/pascal/language/functions/var-parameters.md`
+    pub fn formal_param_type(
+        &mut self,
+        parameter: &fpas_parser::FormalParam,
+        type_params: &[fpas_parser::TypeParam],
+    ) -> Result<TypeId, CompileError> {
+        let generics = type_params
+            .iter()
+            .map(|parameter| parameter.name.to_ascii_lowercase())
+            .collect();
+        self.param_type_with_generics(parameter, &generics)
+    }
+
+    fn param_type_with_generics(
+        &mut self,
+        parameter: &fpas_parser::FormalParam,
+        generics: &BTreeSet<String>,
+    ) -> Result<TypeId, CompileError> {
+        let ty = self.type_expr_with_generics(&parameter.type_expr, generics)?;
+        if parameter.mode == fpas_parser::ParamMode::Var {
+            self.intern_kind(IrType::Reference(ty), parameter.span)
+        } else {
+            Ok(ty)
+        }
+    }
+
     fn type_expr_with_generics(
         &mut self,
         type_expr: &fpas_parser::TypeExpr,
@@ -111,7 +139,7 @@ impl TypeTable {
             } => {
                 let parameters = params
                     .iter()
-                    .map(|parameter| self.type_expr_with_generics(&parameter.type_expr, generics))
+                    .map(|parameter| self.param_type_with_generics(parameter, generics))
                     .collect::<Result<Vec<_>, _>>()?;
                 let result = self.type_expr_with_generics(return_type, generics)?;
                 self.intern_kind(IrType::Function { parameters, result }, *span)
@@ -119,7 +147,7 @@ impl TypeTable {
             TypeExpr::ProcedureType { params, span } => {
                 let parameters = params
                     .iter()
-                    .map(|parameter| self.type_expr_with_generics(&parameter.type_expr, generics))
+                    .map(|parameter| self.param_type_with_generics(parameter, generics))
                     .collect::<Result<Vec<_>, _>>()?;
                 self.intern_kind(
                     IrType::Function {

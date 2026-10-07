@@ -36,7 +36,7 @@ pub(super) fn check_push(c: &mut Checker, args: &[&Expr], span: Span) -> Ty {
         c.error_with_code(
             SEMA_IMMUTABLE_ASSIGNMENT,
             format!("`{var_name}` must be a `var` of array type"),
-            "Declare with `var Name: array of T := ...`.",
+            "Declare with `var Name: array of T := ...`. For a `var` parameter, copy it into a local `var`, change the copy, and assign the copy back to the parameter.",
             span,
         );
         c.check_expr(args[1]);
@@ -76,7 +76,7 @@ pub(super) fn check_pop(c: &mut Checker, args: &[&Expr], span: Span) -> Ty {
         c.error_with_code(
             SEMA_IMMUTABLE_ASSIGNMENT,
             format!("`{var_name}` must be a `var` of array type"),
-            "Declare with `var Name: array of T := ...`.",
+            "Declare with `var Name: array of T := ...`. For a `var` parameter, copy it into a local `var`, change the copy, and assign the copy back to the parameter.",
             span,
         );
         return Ty::Error;

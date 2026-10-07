@@ -180,9 +180,10 @@ fn replace_abc(
         | Opcode::MakeRecord
         | Opcode::MakeEnum => (operands.a, mapped, operands.c),
         Opcode::StoreGlobalIndexPath => (operands.a, mapped, operands.c),
-        Opcode::LoadField | Opcode::TestVariant | Opcode::LoadEnumField => {
-            (operands.a, operands.b, mapped)
-        }
+        Opcode::LoadField
+        | Opcode::ReferenceField
+        | Opcode::TestVariant
+        | Opcode::LoadEnumField => (operands.a, operands.b, mapped),
         Opcode::StoreField => (operands.a, mapped, operands.c),
         _ => return Err(format!("opcode {opcode:?} has no relocatable ABC operand")),
     };

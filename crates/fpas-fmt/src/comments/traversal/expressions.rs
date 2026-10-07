@@ -11,7 +11,9 @@ use fpas_lexer::Span;
 /// Collects expression bodies and named endings without taking their owner's terminator.
 pub(super) fn collect_expr(expr: &Expr, begins: &[usize], out: &mut CollectedAnchors) {
     match expr {
-        Expr::Designator(designator) => collect_designator(designator, begins, out),
+        Expr::Designator(designator) | Expr::VarArgument { designator, .. } => {
+            collect_designator(designator, begins, out);
+        }
         Expr::Call {
             designator, args, ..
         } => {

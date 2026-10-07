@@ -273,9 +273,10 @@ fn validate_ir_type(program: &Program, ty: &IrType) -> Result<(), ValidationErro
                 id: layout.get(),
             }))
         }
-        IrType::Cell(inner) | IrType::Task(inner) | IrType::Channel(inner) => {
-            require_type(program, *inner)
-        }
+        IrType::Cell(inner)
+        | IrType::Task(inner)
+        | IrType::Channel(inner)
+        | IrType::Reference(inner) => require_type(program, *inner),
         _ => Ok(()),
     }
 }

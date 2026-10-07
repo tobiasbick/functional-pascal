@@ -1,6 +1,7 @@
-//! Named calls to routines imported from compiled units.
+//! Named and `var` calls to routines imported from compiled units.
 //!
-//! Documentation: `docs/pascal/language/functions/parameters.md`
+//! Documentation: `docs/pascal/language/functions/parameters.md`,
+//! `docs/pascal/language/functions/var-parameters.md`
 
 #![allow(
     clippy::expect_used,
@@ -99,5 +100,51 @@ include = ["src/**/*.fpas"]
     let warm = build(&root, &main);
     assert_eq!(warm.counters().compiled, 0, "the unit sidecar is reused");
     assert_eq!(run(warm), ["8", "12"]);
+    fs::remove_dir_all(&root).ok();
+}
+
+#[test]
+fn var_parameters_and_their_function_types_cross_compiled_units() {
+    let root: PathBuf =
+        std::env::temp_dir().join(format!("fpas-var-parameters-{}", std::process::id()));
+    let main = root.join("src/main.fpas");
+    write(
+        &root.join("demo.fpasprj"),
+        r#"[project]
+name = "demo"
+kind = "program"
+main = "src/main.fpas"
+
+[sources]
+include = ["src/**/*.fpas"]
+"#,
+    );
+    write(
+        &root.join("src/counters.fpas"),
+        "unit Demo.Counters;
+         public type Step = procedure(var Value: integer);
+         public var Total: integer := 0;
+         public procedure Increase(var Value: integer);
+         begin Value := Value + 1; end procedure;
+         public procedure Apply(Action: Step; var Value: integer);
+         begin Action(var Value); end procedure;
+end unit;",
+    );
+    write(
+        &main,
+        "program Demo;
+         uses Demo.Counters, Std.Console;
+         begin
+           var Counter: integer := 1;
+           Increase(var Counter);
+           Apply(Increase, var Counter);
+           Increase(var Demo.Counters.Total);
+           Std.Console.WriteLn(Counter, ' ', Total);
+         end.",
+    );
+    assert_eq!(run(build(&root, &main)), ["3 1"]);
+    let warm = build(&root, &main);
+    assert_eq!(warm.counters().compiled, 0, "the unit sidecar is reused");
+    assert_eq!(run(warm), ["3 1"]);
     fs::remove_dir_all(&root).ok();
 }

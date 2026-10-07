@@ -91,6 +91,7 @@ impl fmt::Display for Value {
                     write!(formatter, "<function {}>", function.name)?;
                 }
                 Value::Cell(_) => formatter.write_str("<cell>")?,
+                Value::Reference(_) => formatter.write_str("<reference>")?,
                 Value::Task(id) => write!(formatter, "<task {id}>")?,
                 Value::OpaqueHandle(_) => formatter.write_str("<opaque handle>")?,
             }

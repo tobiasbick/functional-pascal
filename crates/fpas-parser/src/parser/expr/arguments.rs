@@ -38,8 +38,16 @@ impl Parser {
         self.reject_mixed_arguments(args)
     }
 
-    /// Parses one positional argument or one `Name := Value` named argument.
+    /// Parses one positional argument, `var Designator`, or `Name := Value`.
     pub(super) fn parse_argument(&mut self) -> Expr {
+        if self.check(&Token::Var) {
+            let start = self.advance().span;
+            let designator = self.parse_designator();
+            return Expr::VarArgument {
+                designator,
+                span: self.span_from(start),
+            };
+        }
         if !(matches!(self.current_token(), Token::Ident(_))
             && matches!(self.peek_token(), Token::ColonAssign))
         {

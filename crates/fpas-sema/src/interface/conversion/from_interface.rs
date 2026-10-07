@@ -124,6 +124,10 @@ fn parameters_from_interface(
             Ok(ParamTy {
                 name: parameter.name.clone(),
                 ty: interface_type_to_ty(&parameter.ty)?,
+                mode: match parameter.mode {
+                    artifact::ParameterMode::Value => crate::types::ParamMode::Value,
+                    artifact::ParameterMode::Var => crate::types::ParamMode::Var,
+                },
             })
         })
         .collect()

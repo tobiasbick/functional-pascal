@@ -24,6 +24,10 @@ pub(super) fn apply_expr_source_id(expr: &mut Expr, source_id: u32) {
             apply_span(span, source_id);
         }
         Expr::Designator(designator) => apply_designator_source_id(designator, source_id),
+        Expr::VarArgument { designator, span } => {
+            apply_designator_source_id(designator, source_id);
+            apply_span(span, source_id);
+        }
         Expr::Call {
             designator,
             args,

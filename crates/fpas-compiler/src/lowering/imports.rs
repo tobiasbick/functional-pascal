@@ -199,7 +199,14 @@ fn install_callable(
     let parameters = callable_type
         .parameters
         .iter()
-        .map(|parameter| interface_type_id(types, &parameter.ty, span))
+        .map(|parameter| {
+            let ty = interface_type_id(types, &parameter.ty, span)?;
+            // A `var` parameter receives a reference to the caller's variable.
+            match parameter.mode {
+                fpas_unit::interface::ParameterMode::Value => Ok(ty),
+                fpas_unit::interface::ParameterMode::Var => types.reference_type(ty, span),
+            }
+        })
         .collect::<Result<Vec<_>, _>>()?;
     let result = callable_type
         .result

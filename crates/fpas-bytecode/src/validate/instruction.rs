@@ -106,6 +106,10 @@ fn validate_abx(
             validate_register(site, operand, a)?;
             validate_table_u32(site, "globals", "global", bx, executable.globals.len())
         }
+        Opcode::MakeGlobalReference => {
+            validate_register(site, "destination", a)?;
+            validate_table_u32(site, "globals", "global", bx, executable.globals.len())
+        }
         Opcode::Jump => canonical_u16(site, "A", a, 0),
         Opcode::BranchIfFalse | Opcode::BranchIfTrue => validate_register(site, "condition", a),
         _ => Err(instruction_error(

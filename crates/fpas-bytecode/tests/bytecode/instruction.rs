@@ -53,7 +53,7 @@ fn opcode_inventory_is_exhaustive() {
         .filter_map(|raw| Opcode::try_from(raw).ok())
         .collect();
     assert_eq!(decoded, Opcode::ALL);
-    assert_eq!(Opcode::ALL.len(), 102);
+    assert_eq!(Opcode::ALL.len(), 108);
 }
 
 #[test]

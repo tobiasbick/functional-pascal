@@ -10,5 +10,6 @@ include!("operands/aggregates.rs");
 include!("operands/p5.rs");
 include!("operands/closures.rs");
 include!("operands/cells.rs");
+include!("operands/references.rs");
 include!("operands/terminators.rs");
 include!("operands/types.rs");

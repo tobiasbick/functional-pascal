@@ -210,6 +210,11 @@ pub(super) fn render_with_executable(
             limits,
         ),
         Value::Cell(cell) => render_cell(cell, value, limits, executable),
+        Value::Reference(_) => leaf(
+            "<reference>".to_string(),
+            value.type_name.clone(),
+            Some("var parameter".to_string()),
+        ),
     }
 }
 

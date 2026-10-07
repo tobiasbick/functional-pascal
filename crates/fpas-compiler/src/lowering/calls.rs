@@ -3,6 +3,7 @@
 mod arguments;
 mod arrays;
 mod fluent;
+mod var_arguments;
 
 use fpas_ir::{Constant, IntrinsicId, Operation, TypeId, ValueId};
 use fpas_parser::{Designator, DesignatorPart, Expr};

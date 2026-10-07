@@ -186,25 +186,7 @@ impl<'a> ClosureRegistry<'a> {
                                         && outer.kind != CaptureKind::Value
                                 })
                             });
-                        let kind = if reuses_cell {
-                            CaptureKind::EnclosingCell
-                        } else if capture.mutable {
-                            CaptureKind::Cell
-                        } else {
-                            CaptureKind::Value
-                        };
-                        let storage_ty = if capture.mutable {
-                            types.cell_type(ty, closure.span)?
-                        } else {
-                            ty
-                        };
-                        Ok(CaptureInput {
-                            name: capture.name.clone(),
-                            ty,
-                            storage_ty,
-                            kind,
-                            declaration: Some(capture.declaration.diagnostic_span_or_synthetic()),
-                        })
+                        CaptureInput::from_binding(capture, ty, reuses_cell, types, closure.span)
                     })
                     .collect::<Result<Vec<_>, CompileError>>()?;
                 for capture in &captures {
@@ -239,6 +221,18 @@ impl<'a> ClosureRegistry<'a> {
                     self.register_bound_method(key, info, owner, designator.span, types)?;
                 }
                 self.visit_designator(&designator.parts, owner, metadata, types)?
+            }
+            Expr::VarArgument { designator, .. } => {
+                // A local passed as `var` lives in a cell so the callee can write it.
+                // Documentation: docs/pascal/language/functions/var-parameters.md
+                if let Some(fpas_parser::DesignatorPart::Ident(root, _)) = designator.parts.first()
+                {
+                    self.cell_names
+                        .entry(owner)
+                        .or_default()
+                        .insert(root.to_ascii_lowercase());
+                }
+                self.visit_designator(&designator.parts, owner, metadata, types)?;
             }
             Expr::Call {
                 designator, args, ..

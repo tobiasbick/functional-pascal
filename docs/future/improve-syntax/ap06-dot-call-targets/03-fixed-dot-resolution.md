@@ -64,6 +64,10 @@ and remove the five former public type-helper units and their duplicate calls.
   AP09.1). Decide with the user whether catalog operations accept named
   explicit arguments (the receiver stays unnamed); if so, give each catalog
   entry parameter names and reuse `crates/fpas-sema/src/check/calls/named.rs`.
+- `var` receivers: a receiver call of a free routine whose first parameter is
+  `var` is rejected today (FP3027, AP17.1). Decide together with the
+  implicit-receiver exception whether such calls stay rejected or use the
+  writable-receiver checks of AP17.3.
 - Apply the agreed implicit-receiver exception after the requested follow-up
   discussion: native mutating operations use ordinary dot calls without a
   receiver `var` marker or additional parentheses. Store the writable-receiver

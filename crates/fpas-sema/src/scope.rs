@@ -34,6 +34,15 @@ pub struct Symbol {
     pub constant: Option<ConstantInfo>,
 }
 
+impl Symbol {
+    /// Returns whether this binding is a `var` parameter.
+    ///
+    /// **Documentation:** `docs/pascal/language/functions/var-parameters.md`
+    pub(crate) fn is_var_parameter(&self) -> bool {
+        self.kind == SymbolKind::Param && self.mutable
+    }
+}
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum SymbolKind {
     Const,

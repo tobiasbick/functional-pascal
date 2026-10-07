@@ -136,7 +136,8 @@ fn types_compatible(program: &Program, expected: TypeId, actual: TypeId) -> bool
         (Some(IrType::Array(a)), Some(IrType::Array(b)))
         | (Some(IrType::Option(a)), Some(IrType::Option(b)))
         | (Some(IrType::Task(a)), Some(IrType::Task(b)))
-        | (Some(IrType::Channel(a)), Some(IrType::Channel(b))) => {
+        | (Some(IrType::Channel(a)), Some(IrType::Channel(b)))
+        | (Some(IrType::Reference(a)), Some(IrType::Reference(b))) => {
             types_compatible(program, *a, *b)
         }
         (

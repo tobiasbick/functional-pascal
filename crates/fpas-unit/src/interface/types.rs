@@ -20,6 +20,15 @@ pub struct GenericParameter {
     pub constraint: Option<TypeConstraint>,
 }
 
+/// How a callable parameter receives its argument.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+pub enum ParameterMode {
+    /// Read-only value parameter.
+    Value,
+    /// `var` parameter that changes the caller's variable.
+    Var,
+}
+
 /// One callable parameter.
 #[derive(Debug, Clone, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 pub struct ParameterType {
@@ -27,6 +36,8 @@ pub struct ParameterType {
     pub name: String,
     /// Resolved parameter type.
     pub ty: InterfaceType,
+    /// Parameter mode; part of callable compatibility.
+    pub mode: ParameterMode,
 }
 
 /// Function or procedure signature.

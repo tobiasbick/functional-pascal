@@ -5,6 +5,7 @@ mod equal;
 mod function;
 mod managed_heap;
 mod payload;
+mod reference;
 mod string;
 
 pub use aggregate::{
@@ -16,6 +17,7 @@ use equal::values_equal;
 pub use function::{FunctionValue, SharedFunction};
 pub use managed_heap::managed_value_buffer;
 pub use payload::ValuePayload;
+pub use reference::{ReferenceRoot, ReferenceStep, SharedReference, VariableReference};
 pub use string::SharedStr;
 
 /// Runtime value in the VM.
@@ -71,6 +73,10 @@ pub enum Value {
     Task(u64),
     /// Opaque host-resource handle that FPAS code can only pass back to its owning intrinsic.
     OpaqueHandle(u64),
+    /// Reference received by a `var` parameter.
+    ///
+    /// **Documentation:** `docs/pascal/language/functions/var-parameters.md`
+    Reference(SharedReference),
 }
 
 impl Clone for Value {
@@ -107,6 +113,7 @@ impl Value {
             Self::OptionSome(value) => Self::OptionSome(value.clone()),
             Self::Function(value) => Self::Function(value.clone()),
             Self::Cell(value) => Self::Cell(value.clone()),
+            Self::Reference(value) => Self::Reference(value.clone()),
             Self::Integer(_)
             | Self::Real(_)
             | Self::Boolean(_)
@@ -192,6 +199,7 @@ impl Value {
             Value::OptionNone => "Option.None",
             Value::Function(_) => "function",
             Value::Cell(_) => "cell",
+            Value::Reference(_) => "reference",
             Value::Task(_) => "task",
             Value::OpaqueHandle(_) => "opaque handle",
         }

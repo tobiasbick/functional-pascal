@@ -110,3 +110,32 @@ fn named_value_inside_ok_is_kept_for_semantic_diagnostics() {
         other => panic!("expected Ok, got {other:?}"),
     }
 }
+
+#[test]
+fn var_arguments_and_var_parameters_parse() {
+    match parse_expr("Swap(var A[I], var P.X)") {
+        Expr::Call { args, .. } => {
+            assert!(
+                args.iter()
+                    .all(|arg| matches!(arg, Expr::VarArgument { .. }))
+            );
+        }
+        _ => panic!("expected Call"),
+    }
+    let program = super::super::parse_ok(
+        "program T; procedure Increase(var Value: integer; Step: integer); begin end procedure; begin end.",
+    );
+    let Decl::Procedure(procedure) = &program.declarations[0] else {
+        panic!("expected procedure");
+    };
+    assert_eq!(procedure.params[0].mode, ParamMode::Var);
+    assert_eq!(procedure.params[1].mode, ParamMode::Value);
+}
+
+#[test]
+fn record_receiver_self_cannot_be_a_var_parameter() {
+    let (_, errors) = super::super::parse_with_errors(
+        "program T; type Point = record X: integer; procedure Move(var Self: Point); begin end procedure; end record; begin end.",
+    );
+    assert_eq!(errors.len(), 1, "{errors:#?}");
+}

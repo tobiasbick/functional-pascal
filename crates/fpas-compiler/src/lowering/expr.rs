@@ -99,6 +99,7 @@ impl LoweringContext {
                 span,
             } => self.lower_postfix(base, operations, *span),
             Expr::NamedArgument { value, .. } => self.lower_expression(value),
+            Expr::VarArgument { designator, .. } => self.lower_var_argument(designator),
             _ => Err(unsupported(expression.span(), "expression")),
         }
     }

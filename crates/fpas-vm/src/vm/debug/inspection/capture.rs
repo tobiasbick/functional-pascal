@@ -96,9 +96,16 @@ impl InspectionSnapshot {
                 .base
                 .saturating_add(usize::from(binding.register.get()));
             let initialized = worker.register_is_initialized(register);
+            // A `var` parameter shows the caller's current value, not its reference.
             let value = initialized
                 .then(|| worker.registers.get(register).cloned())
-                .flatten();
+                .flatten()
+                .and_then(|value| match value {
+                    fpas_bytecode::Value::Reference(reference) => {
+                        worker.read_reference(&reference).ok()
+                    }
+                    other => Some(other),
+                });
             frame_bindings.push(super::snapshot::FrameBinding {
                 initialized,
                 value: value.clone(),

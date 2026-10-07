@@ -9,12 +9,20 @@ pub(super) fn operation_values(operation: &Operation) -> Vec<ValueId> {
         | Operation::ReadLocal(_)
         | Operation::ArrayPop { .. }
         | Operation::LoadGlobal(_)
+        | Operation::MakeGlobalReference(_)
         | Operation::MakeNone
         | Operation::Yield => Vec::new(),
         Operation::WriteLocal { value, .. }
         | Operation::StoreGlobal { value, .. }
         | Operation::MakeCell(value)
-        | Operation::CellRead(value) => vec![*value],
+        | Operation::CellRead(value)
+        | Operation::MakeCellReference(value)
+        | Operation::ReferenceRead(value)
+        | Operation::ReferenceField {
+            reference: value, ..
+        } => vec![*value],
+        Operation::ReferenceElement { reference, index } => vec![*reference, *index],
+        Operation::ReferenceWrite { reference, value } => vec![*reference, *value],
         Operation::MakeOk(value)
         | Operation::MakeError(value)
         | Operation::MakeSome(value)

@@ -32,7 +32,10 @@ impl Checker {
             Expr::Real(_, _) => Ty::Real,
             Expr::Str(_, _) => Ty::String,
             Expr::Bool(_, _) => Ty::Boolean,
-            Expr::Designator(designator) => self.check_designator_expr(designator),
+            Expr::Designator(designator) => {
+                self.reject_var_parameter_routine_value(designator);
+                self.check_designator_expr(designator)
+            }
             Expr::Call {
                 designator,
                 args,
@@ -88,6 +91,7 @@ impl Checker {
                 closure.span,
             ),
             Expr::NamedArgument { .. } => self.check_misplaced_named_argument(expr),
+            Expr::VarArgument { .. } => self.check_misplaced_var_argument(expr),
             Expr::Error(_) => Ty::Error,
         };
         let key = Self::expr_lookup_key(expr);
@@ -134,6 +138,19 @@ impl Checker {
             }
         };
 
+        match inner {
+            Expr::Call {
+                designator, args, ..
+            } => {
+                self.reject_var_references_in_go(Some(designator), args, span);
+            }
+            Expr::Postfix { operations, .. } => {
+                if let Some(PostfixOperation::MethodCall { args, .. }) = operations.last() {
+                    self.reject_var_references_in_go(None, args, span);
+                }
+            }
+            _ => {}
+        }
         let inner_key = Self::expr_lookup_key(inner);
         self.expr_types.insert(inner_key, inner_ty.clone());
         self.reject_spawned_event_raise(inner_key, span);

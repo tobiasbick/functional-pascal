@@ -257,6 +257,37 @@ pub enum Operation {
         /// Replacement cell content.
         value: ValueId,
     },
+    /// Creates a reference to the variable stored in a capture cell.
+    ///
+    /// **Documentation:** `docs/pascal/language/functions/var-parameters.md`
+    MakeCellReference(ValueId),
+    /// Creates a reference to a mutable global slot.
+    MakeGlobalReference(GlobalId),
+    /// Narrows a reference to one record field.
+    ReferenceField {
+        /// Reference to a record value.
+        reference: ValueId,
+        /// Record layout of the referenced value.
+        layout: RecordLayoutId,
+        /// Field selected by the new reference.
+        field: FieldId,
+    },
+    /// Narrows a reference to one array element; the index is fixed when created.
+    ReferenceElement {
+        /// Reference to an array value.
+        reference: ValueId,
+        /// Integer element index.
+        index: ValueId,
+    },
+    /// Reads the current value through a reference.
+    ReferenceRead(ValueId),
+    /// Replaces the referenced value; the caller's variable changes immediately.
+    ReferenceWrite {
+        /// Target reference.
+        reference: ValueId,
+        /// Replacement value.
+        value: ValueId,
+    },
     /// Spawns a task from a function value.
     SpawnTask {
         /// Callee function value.
@@ -314,6 +345,11 @@ impl Operation {
                 | Self::MakeClosure { .. }
                 | Self::MakeCell(_)
                 | Self::CellRead(_)
+                | Self::MakeCellReference(_)
+                | Self::MakeGlobalReference(_)
+                | Self::ReferenceField { .. }
+                | Self::ReferenceElement { .. }
+                | Self::ReferenceRead(_)
                 | Self::SpawnTask { .. }
         )
     }

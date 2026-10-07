@@ -403,3 +403,22 @@ fn signature_help_selects_the_named_parameter_or_variant_field() {
         assert_eq!(help.active_parameter, Some(expected), "{marker}");
     }
 }
+
+#[test]
+fn signature_help_marks_var_parameters() {
+    let temp = TempDirectory::new("intellisense-var-signatures");
+    let source = "program Vars;\n\nprocedure Increase(var Value: integer; Step: integer);\nbegin\n  Value := Value + Step;\nend procedure;\n\nbegin\n  var Counter: integer := 0;\n  Increase(var Counter, 1);\nend.\n";
+    let path = temp.write("vars.fpas", source);
+    let mut service = LanguageService::new(WorkspaceContext::loose(temp.path()));
+    let cursor = source.find("var Counter, ").expect("var argument") + "var Counter, ".len();
+    let help = service
+        .signature_help(&path, cursor)
+        .expect("signature help")
+        .value
+        .expect("callable signature");
+    assert_eq!(
+        help.signature.parameters,
+        ["var Value: integer", "Step: integer"]
+    );
+    assert_eq!(help.active_parameter, Some(1));
+}

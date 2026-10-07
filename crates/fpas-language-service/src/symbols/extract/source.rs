@@ -138,7 +138,18 @@ fn parameter_labels(
     params
         .iter()
         .skip(implicit_parameters)
-        .map(|param| format!("{}: {}", param.name, type_text(snapshot, &param.type_expr)))
+        .map(|param| {
+            let mode = if param.mode == fpas_parser::ParamMode::Var {
+                "var "
+            } else {
+                ""
+            };
+            format!(
+                "{mode}{}: {}",
+                param.name,
+                type_text(snapshot, &param.type_expr)
+            )
+        })
         .collect()
 }
 

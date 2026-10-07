@@ -168,12 +168,14 @@ fn validate_dynamic(
         ));
     }
     match value {
-        Value::Function(_) | Value::Cell(_) | Value::Task(_) | Value::OpaqueHandle(_) => {
-            Err(dynamic_error(
-                value,
-                "dynamic assignment rejects live or opaque runtime values",
-            ))
-        }
+        Value::Function(_)
+        | Value::Cell(_)
+        | Value::Reference(_)
+        | Value::Task(_)
+        | Value::OpaqueHandle(_) => Err(dynamic_error(
+            value,
+            "dynamic assignment rejects live or opaque runtime values",
+        )),
         Value::Array(values) => values
             .iter()
             .try_for_each(|value| validate_dynamic(value, max_depth, depth + 1)),

@@ -276,12 +276,23 @@ Call arguments still use commas; commas inside types such as
 | FP3024 | No finite recursive value | `type Node = record Next: Node; end record;` | Break the required cycle with `Option`, an empty container, or a finite enum alternative. |
 | FP3025 | Invalid named argument | `Sub(Left := 1, Rigth := 2)` | `Sub(Left := 1, Right := 2)` |
 | FP3026 | Named arguments not supported | `F(Value := 3)` for a function value `F` | `F(3)` |
+| FP3027 | `var` marker mismatch | `Increase(Counter)` for `procedure Increase(var Value: integer)` | `Increase(var Counter)` |
+| FP3028 | Invalid `var` argument | `Increase(var Fixed)` for a `const` binding `Fixed` | Declare `var Fixed: integer := 1;` and pass `var Fixed`. |
+| FP3029 | Aliased `var` arguments | `Swap(var A[I], var A[J])` | `SwapAt(var A, I, J)` |
+| FP3030 | `var` parameter escapes the call | A closure that captures `var` parameter `Total` | Capture a local copy `const Current: integer := Total;` |
 
 FP3025 also reports a parameter or enum variant field named twice and a named
 call that omits one; its hint lists the declared names. FP3026 applies to
 function values, receiver calls, variadic routines, polymorphic
 standard-library operations, `Ok`/`Error`/`Some`, and enum patterns, which take
 positional arguments.
+
+FP3027 hints show the marked argument, for example `var Counter`, or ask to
+remove `var` for a read-only parameter. FP3028 names the reason a `var`
+argument is not writable storage (a `const` binding, read-only parameter, loop
+variable, dictionary entry, string character, property, or computed value).
+FP3030 covers closures, routine values, and `go` calls that would let a `var`
+parameter outlive its call.
 
 Ordinary declaration, assignment, return and argument type compatibility checks
 supply type names in `expected` and `found` for FP3006. Other uses of that code

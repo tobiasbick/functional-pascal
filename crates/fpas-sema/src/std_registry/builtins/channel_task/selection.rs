@@ -33,11 +33,7 @@ pub(super) fn check_case(c: &mut Checker, name: &str, args: &[&Expr], span: Span
     };
     let params = payload
         .into_iter()
-        .map(|ty| ParamTy {
-            name: "Outcome".into(),
-
-            ty: Ty::Result(Box::new(ty), Box::new(Ty::String)),
-        })
+        .map(|ty| ParamTy::value("Outcome", Ty::Result(Box::new(ty), Box::new(Ty::String))))
         .collect();
     expect_type(
         c,

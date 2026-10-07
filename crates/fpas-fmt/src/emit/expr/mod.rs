@@ -179,6 +179,10 @@ pub(super) fn emit_expr_impl(
             closure.span.offset,
             comments,
         ),
+        Expr::VarArgument { designator, .. } => {
+            emitter.write("var ");
+            emit_designator(emitter, designator, comments);
+        }
         Expr::NamedArgument { name, value, .. } => {
             emitter.write(name);
             emitter.write(" := ");
@@ -308,6 +312,14 @@ mod tests {
                 "program T; begin const X: integer := Sub(Right:=1,Left:=Max(A := 2, B := 3)); end."
             ),
             "Sub(Right := 1, Left := Max(A := 2, B := 3))"
+        );
+    }
+
+    #[test]
+    fn var_arguments_keep_their_marker() {
+        assert_eq!(
+            expr_from_body("program T; begin const X: integer := Next(var  Items[ 0 ]); end."),
+            "Next(var Items[0])"
         );
     }
 

@@ -23,6 +23,7 @@ impl Checker {
                     .map(|param| ParamTy {
                         name: param.name.clone(),
                         ty: self.resolve_type_expr(&param.type_expr),
+                        mode: param.mode,
                     })
                     .collect();
                 let return_ty = self.resolve_type_expr(return_type);
@@ -39,6 +40,7 @@ impl Checker {
                     .map(|param| ParamTy {
                         name: param.name.clone(),
                         ty: self.resolve_type_expr(&param.type_expr),
+                        mode: param.mode,
                     })
                     .collect();
                 Ty::Procedure(ProcedureTy {

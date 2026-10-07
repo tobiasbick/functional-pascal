@@ -48,6 +48,7 @@ impl Checker {
                 result,
             },
         );
+        self.reject_closure_var_captures(&captures, _span);
         let info = closure_info_from_captures(synthetic_name, captures);
         if info.task_bound {
             self.mark_expr_task_bound(key);

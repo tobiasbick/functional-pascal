@@ -122,8 +122,8 @@ Current forms: explicit parameter and result types, positional and fully named
 calls (AP09), assignment, statement terminators, and routine closers (AP13;
 [parameters](../../../pascal/language/functions/parameters.md)).
 
-Writable `var` bindings are implemented by AP16. Draft forms: `var` parameters
-and arguments (AP17.1), and named `var` arguments (AP17.2).
+Writable `var` bindings are implemented by AP16, and positional `var`
+parameters and arguments by AP17.1. Draft form: named `var` arguments (AP17.2).
 
 ```pascal
 program Calls;
@@ -149,8 +149,8 @@ end.
 
 The `Add` result is consumed by assignment. Both calls to `Increase` are
 procedure statements; neither silently discards a function result (AP04).
-AP17's function-type modes and writes retained on failure are agreed; its
-reference-parameter implementation is still pending.
+AP17.1 implements the reference parameters, their function-type modes, and
+writes retained on failure; the named `var` form follows in AP17.2.
 
 ## 5. Conditional branches and a plain scoping block
 

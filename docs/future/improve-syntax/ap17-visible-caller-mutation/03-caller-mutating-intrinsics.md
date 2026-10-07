@@ -24,6 +24,10 @@ before implementation; use the agreed native dot form throughout migration.
 ## Implementation
 
 - Verify how `Push`, `Pop`, and other caller-mutating intrinsics mutate today.
+  After AP17.1, `Push`/`Pop` reject a `var` parameter as their array (only
+  local and unit `var` arrays pass the simple-variable rule); lowering must
+  write through the parameter's reference (`ReferenceRead`/`ReferenceWrite`)
+  once the receiver check accepts it.
 - Record the writable-receiver mode in the registry and catalog-derived
   editor signatures; reuse the AP17.1 checks instead of the special rule.
   Include an implicit writable receiver in aliasing, lifetime, `go`,

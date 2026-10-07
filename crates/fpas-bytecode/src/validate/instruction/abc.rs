@@ -110,6 +110,8 @@ pub(super) fn validate_abc(
         | Opcode::IntegerToReal
         | Opcode::MakeCell
         | Opcode::CellRead
+        | Opcode::MakeCellReference
+        | Opcode::ReferenceRead
         | Opcode::MakeOk
         | Opcode::MakeError
         | Opcode::MakeSome
@@ -138,6 +140,37 @@ pub(super) fn validate_abc(
         Opcode::CellWrite => {
             validate_registers(site, &[("cell", a), ("value", b)])?;
             canonical_tail(site, c, auxiliary)
+        }
+        Opcode::ReferenceWrite => {
+            validate_registers(site, &[("reference", a), ("value", b)])?;
+            canonical_tail(site, c, auxiliary)
+        }
+        Opcode::ReferenceElement => {
+            validate_registers(site, &[("destination", a), ("reference", b), ("index", c)])?;
+            canonical_u8(site, "auxiliary", auxiliary, 0)
+        }
+        Opcode::ReferenceField => {
+            validate_registers(site, &[("destination", a), ("reference", b)])?;
+            let available = executable
+                .records
+                .iter()
+                .map(|layout| layout.fields.len())
+                .max()
+                .unwrap_or(0);
+            if usize::from(c) >= available {
+                return Err(ValidationError::instruction(
+                    executable,
+                    function_id,
+                    address,
+                    Some(opcode),
+                    ValidationErrorKind::LayoutReference {
+                        operand: "record field",
+                        actual: c,
+                        available,
+                    },
+                ));
+            }
+            canonical_u8(site, "auxiliary", auxiliary, 0)
         }
         Opcode::Return => {
             validate_destination(site, a, function.return_convention)?;
@@ -228,6 +261,7 @@ pub(super) fn validate_abc(
         | Opcode::BranchIfTrue
         | Opcode::LoadGlobal
         | Opcode::StoreGlobal
+        | Opcode::MakeGlobalReference
         | Opcode::MakeRecord
         | Opcode::LoadField
         | Opcode::StoreField

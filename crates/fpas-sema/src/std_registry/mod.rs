@@ -23,10 +23,7 @@ use crate::scope::{Symbol, SymbolKind};
 use crate::types::*;
 
 fn p(name: &str, ty: Ty) -> ParamTy {
-    ParamTy {
-        name: name.to_string(),
-        ty,
-    }
+    ParamTy::value(name, ty)
 }
 
 fn define_func(c: &mut Checker, q: &str, params: Vec<ParamTy>, ret: Ty) {

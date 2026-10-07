@@ -162,6 +162,24 @@ define_codes!(SEMA_ALLOCATED_CODES => {
     ///
     /// Documentation: `docs/pascal/tools/diagnostics.md` (FP3026).
     SEMA_NAMED_ARGUMENTS_NOT_SUPPORTED = 3026;
+    /// A `var` parameter receives an unmarked argument, or `var` marks an argument
+    /// for a read-only parameter.
+    ///
+    /// Documentation: `docs/pascal/tools/diagnostics.md` (FP3027).
+    SEMA_VAR_ARGUMENT_MARKER = 3027;
+    /// A `var` argument is not a writable variable, record field, or array element.
+    ///
+    /// Documentation: `docs/pascal/tools/diagnostics.md` (FP3028).
+    SEMA_INVALID_VAR_ARGUMENT = 3028;
+    /// Two `var` arguments of one call refer to the same variable.
+    ///
+    /// Documentation: `docs/pascal/tools/diagnostics.md` (FP3029).
+    SEMA_VAR_ARGUMENT_ALIAS = 3029;
+    /// A `var` parameter or argument would outlive the call through a closure,
+    /// routine value, or `go`.
+    ///
+    /// Documentation: `docs/pascal/tools/diagnostics.md` (FP3030).
+    SEMA_VAR_PARAMETER_ESCAPE = 3030;
 });
 
 define_codes!(COMPILE_ALLOCATED_CODES => {

@@ -167,6 +167,11 @@ fn lower(
             "closure construction",
             "Use a visible scalar or aggregate value.",
         )),
+        Expr::VarArgument { .. } => Err(unsupported(
+            expression,
+            "`var` call arguments",
+            "Debugger evaluation cannot change caller variables through `var` parameters.",
+        )),
         Expr::NamedArgument { .. } => Err(unsupported(
             expression,
             "named call arguments",

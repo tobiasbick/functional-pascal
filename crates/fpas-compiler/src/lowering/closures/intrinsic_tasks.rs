@@ -119,6 +119,7 @@ impl ClosureRegistry<'_> {
                 name: format!("argument{index}"),
                 ty: *ty,
                 declaration: None,
+                reference: false,
             })
             .collect::<Vec<_>>();
         let mut context = LoweringContext::new(FunctionInput {

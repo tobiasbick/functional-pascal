@@ -61,12 +61,14 @@ an ordinary call such as `Sub(Left := Value, Right := 1)`; see
 
 A procedure can end a call chain used as a statement. It cannot feed a later
 step because it produces no value. Ordinary parameters are read-only value
-bindings; their calls do not require a writable receiver variable.
+bindings; their calls do not require a writable receiver variable. A routine
+whose first parameter is a [`var` parameter](var-parameters.md) cannot be
+called through a receiver (FP3027); call it directly, `Increase(var Counter)`.
 
 `Std.Arrays.Push` and `Pop` are stricter: their receiver must be a simple
 mutable array variable. `Items.Push(Value)` and `Items.Pop()` work when
 `Items` is such a variable. `(Items).Push(Value)`, indexed or field receivers,
-and returned arrays are invalid for those intrinsics.
+`var` parameters, and returned arrays are invalid for those intrinsics.
 
 `go Receiver.Name(Arguments)` also spawns an eligible call. The receiver is
 evaluated before its explicit arguments.

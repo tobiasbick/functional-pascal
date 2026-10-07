@@ -278,9 +278,8 @@ impl Checker {
                 let fields = variant
                     .fields
                     .iter()
-                    .map(|(field_name, field_ty)| ParamTy {
-                        name: field_name.clone(),
-                        ty: field_ty.clone(),
+                    .map(|(field_name, field_ty)| {
+                        ParamTy::value(field_name.clone(), field_ty.clone())
                     })
                     .collect::<Vec<_>>();
                 let Some(args) = self.order_call_arguments(

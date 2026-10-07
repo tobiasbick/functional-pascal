@@ -100,6 +100,7 @@ impl Checker {
                 } = expr
                 {
                     self.check_call_stmt(designator, args, *call_span);
+                    self.reject_var_references_in_go(Some(designator), args, *span);
                     self.reject_spawned_event_raise(
                         crate::designator_lookup_key(designator),
                         *span,

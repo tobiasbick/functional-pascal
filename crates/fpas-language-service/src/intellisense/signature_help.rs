@@ -8,7 +8,7 @@ use super::SignatureHelp;
 use crate::navigation::{NavigationDocument, NavigationResult, resolve, token_name};
 use crate::{
     LanguageService, LanguageServiceError,
-    documentation::{parameter_documentation, preceding_documentation},
+    documentation::{parameter_documentation, parameter_name, preceding_documentation},
 };
 
 impl LanguageService {
@@ -66,10 +66,8 @@ impl LanguageService {
                 .and_then(|token| token_name(document, token))
                 .and_then(|name| {
                     signature.parameters.iter().position(|parameter| {
-                        parameter
-                            .split(':')
-                            .next()
-                            .is_some_and(|declared| declared.trim().eq_ignore_ascii_case(&name))
+                        parameter_name(parameter)
+                            .is_some_and(|declared| declared.eq_ignore_ascii_case(&name))
                     })
                 });
             let active_parameter = named_parameter.or_else(|| {

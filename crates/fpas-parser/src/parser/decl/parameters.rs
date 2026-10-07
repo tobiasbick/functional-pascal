@@ -4,7 +4,7 @@
 //! `docs/pascal/tools/diagnostics.md`.
 
 use super::super::Parser;
-use crate::ast::{FormalParam, TypeExpr};
+use crate::ast::{FormalParam, ParamMode, TypeExpr};
 use crate::error::parse_error;
 use fpas_diagnostics::codes::{PARSE_EXPECTED_TOKEN, PARSE_INVALID_PARAMETER_SEPARATOR};
 use fpas_lexer::Token;
@@ -60,8 +60,21 @@ impl Parser {
             );
             self.advance();
         }
+        let mode = if self.eat(&Token::Var) {
+            ParamMode::Var
+        } else {
+            ParamMode::Value
+        };
         let (name, _) = if allow_self_receiver && self.check(&Token::SelfKw) {
             let span = self.advance().span;
+            if mode == ParamMode::Var {
+                self.error_with_code(
+                    PARSE_EXPECTED_TOKEN,
+                    "The record receiver `Self` cannot be a `var` parameter",
+                    "Declare `Self: RecordType` and return an updated record, for example `function Moved(Self: Point; Dx: integer): Point;`.",
+                    start,
+                );
+            }
             ("Self".to_owned(), span)
         } else {
             self.expect_ident()
@@ -75,6 +88,7 @@ impl Parser {
         let type_expr: TypeExpr = self.parse_type_expr();
         Some(FormalParam {
             name,
+            mode,
             type_expr,
             span: self.span_from(start),
         })

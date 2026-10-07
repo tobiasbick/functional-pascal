@@ -244,7 +244,12 @@ fn parameter_symbol(
         Visibility::Private,
         named_type(&param.type_expr),
         format!(
-            "parameter {}: {}",
+            "{} {}: {}",
+            if param.mode == fpas_parser::ParamMode::Var {
+                "var parameter"
+            } else {
+                "parameter"
+            },
             param.name,
             type_text(snapshot, &param.type_expr)
         ),

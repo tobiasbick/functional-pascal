@@ -1,6 +1,6 @@
 //! Type expressions and formal parameters.
 
-use fpas_parser::{FormalParam, QualifiedId, TypeExpr, TypeParam};
+use fpas_parser::{FormalParam, ParamMode, QualifiedId, TypeExpr, TypeParam};
 
 use super::Emitter;
 use super::wrap::{emit_wrapped_semicolon_paren_list, measure_emit};
@@ -114,6 +114,9 @@ pub(crate) fn emit_formal_params_in_parens(
 }
 
 fn emit_formal_param(emitter: &mut Emitter, param: &FormalParam) {
+    if param.mode == ParamMode::Var {
+        emitter.write("var ");
+    }
     emitter.write(&param.name);
     emitter.write(": ");
     emit_type_expr(emitter, &param.type_expr);
@@ -186,6 +189,12 @@ mod tests {
         assert_eq!(
             type_from_const("program T; begin const F: function(X: integer): integer := Add; end."),
             "function(X: integer): integer"
+        );
+        assert_eq!(
+            type_from_const(
+                "program T; begin const F: procedure(var   X: integer; Y: integer) := Step; end."
+            ),
+            "procedure(var X: integer; Y: integer)"
         );
         assert_eq!(
             type_from_const("program T; begin const P: procedure(Msg: string) := WriteLn; end."),

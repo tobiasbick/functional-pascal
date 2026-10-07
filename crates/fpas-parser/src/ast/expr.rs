@@ -28,7 +28,8 @@ impl Expr {
             | Self::RecordLiteral { span, .. }
             | Self::RecordUpdate { span, .. }
             | Self::Postfix { span, .. }
-            | Self::NamedArgument { span, .. } => *span,
+            | Self::NamedArgument { span, .. }
+            | Self::VarArgument { span, .. } => *span,
             Self::Closure(closure) => closure.span,
         }
     }
@@ -180,6 +181,17 @@ pub enum Expr {
         /// Argument value.
         value: Box<Expr>,
         /// Source span of the complete named argument.
+        span: Span,
+    },
+    /// `var Designator` argument for a `var` parameter.
+    ///
+    /// Appears only directly inside a call argument list.
+    ///
+    /// **Documentation:** `docs/pascal/language/functions/var-parameters.md`
+    VarArgument {
+        /// Caller variable, field, or element passed by reference.
+        designator: Designator,
+        /// Source span of the complete argument including `var`.
         span: Span,
     },
     /// Placeholder emitted when the parser fails to parse an expression.

@@ -147,7 +147,7 @@ impl TypeTable {
                 parameters: function
                     .params
                     .iter()
-                    .map(|parameter| self.intern(&parameter.ty, line, column))
+                    .map(|parameter| self.intern_param(parameter, line, column))
                     .collect::<Result<Vec<_>, _>>()?,
                 result: self.intern(&function.return_type, line, column)?,
             },
@@ -155,7 +155,7 @@ impl TypeTable {
                 parameters: procedure
                     .params
                     .iter()
-                    .map(|parameter| self.intern(&parameter.ty, line, column))
+                    .map(|parameter| self.intern_param(parameter, line, column))
                     .collect::<Result<Vec<_>, _>>()?,
                 result: UNIT,
             },
@@ -178,6 +178,32 @@ impl TypeTable {
         })?;
         self.definitions.push(TypeDefinition { id, kind });
         Ok(id)
+    }
+
+    /// Lowers a semantic parameter; a `var` parameter receives a reference to its type.
+    ///
+    /// **Documentation:** `docs/pascal/language/functions/var-parameters.md`
+    pub fn intern_param(
+        &mut self,
+        parameter: &fpas_sema::ParamTy,
+        line: u32,
+        column: u32,
+    ) -> Result<TypeId, CompileError> {
+        let ty = self.intern(&parameter.ty, line, column)?;
+        if parameter.is_var() {
+            self.intern_kind(
+                IrType::Reference(ty),
+                fpas_lexer::Span {
+                    offset: 0,
+                    length: 0,
+                    line,
+                    column,
+                    source_id: 0,
+                },
+            )
+        } else {
+            Ok(ty)
+        }
     }
 
     pub fn id(&self, ty: &Ty, line: u32, column: u32) -> Result<TypeId, CompileError> {
@@ -321,6 +347,15 @@ impl TypeTable {
         span: fpas_lexer::Span,
     ) -> Result<TypeId, CompileError> {
         self.intern_kind(IrType::Array(element), span)
+    }
+
+    /// Returns the reference type for a `var` argument of type `inner`.
+    pub fn reference_type(
+        &mut self,
+        inner: TypeId,
+        span: fpas_lexer::Span,
+    ) -> Result<TypeId, CompileError> {
+        self.intern_kind(IrType::Reference(inner), span)
     }
 
     pub fn cell_type(

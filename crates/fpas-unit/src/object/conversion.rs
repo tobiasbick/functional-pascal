@@ -23,13 +23,14 @@ pub(super) fn relocation_for_instruction(
             | Opcode::BranchIfTrue
             | Opcode::LoadGlobal
             | Opcode::StoreGlobal
+            | Opcode::MakeGlobalReference
     ) {
         let operands = instruction
             .abx_operands()
             .map_err(|error| ObjectError::Instruction(error.to_string()))?;
         return Ok(Some(match opcode {
             Opcode::LoadConstant => RelocationKind::Constant(operands.bx),
-            Opcode::LoadGlobal | Opcode::StoreGlobal => {
+            Opcode::LoadGlobal | Opcode::StoreGlobal | Opcode::MakeGlobalReference => {
                 RelocationKind::Global(SymbolReference::Local(operands.bx))
             }
             _ => RelocationKind::CodeAddress(operands.bx),
@@ -48,7 +49,7 @@ pub(super) fn relocation_for_instruction(
         Opcode::MakeRecord => Some(RelocationKind::Record(SymbolReference::Local(u32::from(
             operands.b,
         )))),
-        Opcode::LoadField => Some(RelocationKind::RecordField(operands.c)),
+        Opcode::LoadField | Opcode::ReferenceField => Some(RelocationKind::RecordField(operands.c)),
         Opcode::StoreField => Some(RelocationKind::RecordField(operands.b)),
         Opcode::MakeEnum | Opcode::TestVariant => {
             let index = if opcode == Opcode::MakeEnum {

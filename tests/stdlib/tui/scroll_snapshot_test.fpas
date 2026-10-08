@@ -23,9 +23,7 @@ begin
   case Msg of
     when TuiMsg.ScrollChanged(Source, Action, Offset):
       begin
-        return record
-          Offset := Offset;
-        end;
+        return ScrollModel(Offset := Offset);
       end;
     else
       begin
@@ -36,10 +34,7 @@ end function;
 
 begin
   var App: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(12, 2));
-  var Model: ScrollModel := record
-    Offset := TuiPoint.Create(0, 0);
-  end;
-
+  var Model: ScrollModel := ScrollModel(Offset := TuiPoint.Create(0, 0));
   Model := App.RunIterations(Model, UpdateScroll, ViewScroll, 0, 0);
   AssertTrue(App.SurfaceSnapshot().LineAt(0).Contains('First'));
   App.Inject(TuiMsgScrollChanged(TuiControlId.Create(1), TuiAction.Create(7), TuiPoint.Create(0, 1)));

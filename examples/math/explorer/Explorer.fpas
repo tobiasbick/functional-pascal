@@ -82,13 +82,7 @@ begin
   Window(1, 1, Width, Height);
 end procedure;
 
-var ResetCamera: ExplorerCamera := record
-  CenterX := 0.0;
-  CenterY := 0.0;
-  SpanY := 2.8;
-  MaxIter := 160;
-  Palette := 1;
-end;
+var ResetCamera: ExplorerCamera := fractal.camera.explorercamera(CenterX := 0.0, CenterY := 0.0, SpanY := 2.8, MaxIter := 160, Palette := 1);
 var State: ExplorerCamera := ResetCamera;
 var RenderW: integer := 1;
 var RenderH: integer := 1;
@@ -118,16 +112,7 @@ begin
   RenderW := RenderWidth();
   RenderH := RenderHeight();
   BeginFrame();
-  FillRect(record
-    x := 1;
-    y := 1;
-    width := ScreenWidth();
-    height := ScreenHeight();
-  end, record
-    glyph := ' ';
-    foreground := RgbColor(0, 0, 0);
-    background := RgbColor(0, 0, 0);
-  end);
+  FillRect(Std.Console.Rect(x := 1, y := 1, width := ScreenWidth(), height := ScreenHeight()), Std.Console.Cell(glyph := ' ', foreground := RgbColor(0, 0, 0), background := RgbColor(0, 0, 0)));
   RenderFrame(State.XMin(RenderW, RenderH), State.XMax(RenderW, RenderH), State.YMin(), State.YMax(), RenderW, RenderH, State.MaxIter, State.Palette);
   DrawHud(State, RenderW, RenderH, Title, PaletteLabel);
   Present();

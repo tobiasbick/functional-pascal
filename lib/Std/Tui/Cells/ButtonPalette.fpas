@@ -39,15 +39,7 @@ public type TuiButtonPalette = record
   SelectedShortcut: TuiStyle
 ): TuiButtonPalette;
   begin
-    return record
-      Normal := Normal;
-      Default := Default;
-      Selected := Selected;
-      Disabled := Disabled;
-      Shortcut := Shortcut;
-      DefaultShortcut := DefaultShortcut;
-      SelectedShortcut := SelectedShortcut;
-    end;
+    return TuiButtonPalette(Normal := Normal, Default := Default, Selected := Selected, Disabled := Disabled, Shortcut := Shortcut, DefaultShortcut := DefaultShortcut, SelectedShortcut := SelectedShortcut);
   end function;
 
   // Resolves one button role.

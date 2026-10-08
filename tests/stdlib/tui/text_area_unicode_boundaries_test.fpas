@@ -22,10 +22,7 @@ end function;
 
 procedure CheckCaret(App: TuiApplication; Text: string; Caret: integer; X: integer; Y: integer);
 begin
-  discard App.RunIterations(record
-    Text := Text;
-    Caret := Caret;
-  end, Update, View, 0, 0);
+  discard App.RunIterations(Model(Text := Text, Caret := Caret), Update, View, 0, 0);
   AssertTrue(App.SurfaceSnapshot().CellAt(X, Y).Role = TuiStyleRole.Focused);
 end procedure;
 

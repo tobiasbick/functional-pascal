@@ -13,6 +13,7 @@ mod equality;
 mod event_access;
 mod operators;
 mod postfix;
+mod record_construction;
 mod record_fields;
 mod task_bound;
 

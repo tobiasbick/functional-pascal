@@ -88,12 +88,7 @@ begin
               case Std.Http.Stream.CreateBody(Connection, FinalHead.InitialBody, FinalHead.Head.Headers, Std.Http.Wire.ResponseHasBody(RequestValue.Method, FinalHead.Head.StatusCode), FinalHead.BytesReceived, RequestValue.MaxResponseBytes) of
                 when Ok(Body):
                   begin
-                    return Ok(record
-                      StatusCode := FinalHead.Head.StatusCode;
-                      ReasonPhrase := FinalHead.Head.ReasonPhrase;
-                      Headers := FinalHead.Head.Headers;
-                      Body := Body;
-                    end);
+                    return Ok(StreamResponse(StatusCode := FinalHead.Head.StatusCode, ReasonPhrase := FinalHead.Head.ReasonPhrase, Headers := FinalHead.Head.Headers, Body := Body));
                   end;
                 when Error(Message):
                   begin
@@ -237,12 +232,7 @@ begin
                 begin
                   if Bytes.Length() = 0 then
                     begin
-                      return Ok(record
-                        StatusCode := StreamResponseValue.StatusCode;
-                        ReasonPhrase := StreamResponseValue.ReasonPhrase;
-                        Headers := StreamResponseValue.Headers;
-                        Body := Std.Http.Io.JoinChunks(Chunks);
-                      end);
+                      return Ok(Response(StatusCode := StreamResponseValue.StatusCode, ReasonPhrase := StreamResponseValue.ReasonPhrase, Headers := StreamResponseValue.Headers, Body := Std.Http.Io.JoinChunks(Chunks)));
                     end;
                   end if;
 

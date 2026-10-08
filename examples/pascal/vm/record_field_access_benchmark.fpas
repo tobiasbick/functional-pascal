@@ -15,11 +15,7 @@ end record;
 
 function RunAccess(Iterations: integer): integer;
 begin
-  var State: BenchmarkState := record
-    Value := 0;
-    Total := 0;
-  end;
-
+  var State: BenchmarkState := BenchmarkState(Value := 0, Total := 0);
   for Index: integer := 1 to Iterations do
     begin
       State.Value := State.Value + 1;

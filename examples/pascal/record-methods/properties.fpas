@@ -19,10 +19,7 @@ type Counter = record
 end record;
 
 begin
-  const C: Counter := record
-    Base := 10;
-  end;
-
+  const C: Counter := Counter(Base := 10);
   WriteLn('Stored value: ' + IntToStr(C.Value));
   // The setter receives Self by value, so this records the request but does not mutate C.
   C.Value := 20;

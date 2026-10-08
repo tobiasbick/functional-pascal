@@ -28,7 +28,7 @@ begin
   Items.Push(Last);
 end procedure;
 begin
-  var H: Holder := record Items := [1]; end;
+  var H: Holder := Holder( Items := [1] );
   var Rows: array of array of integer := [[2]];
   Change(var H, var Rows);
   Add(var H.Items);

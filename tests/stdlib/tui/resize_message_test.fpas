@@ -12,13 +12,7 @@ end record;
 
 function PushEvent(State: ResizeModel; InputEvent: string): ResizeModel;
 begin
-  return record
-    Events := State.Events.Concat([InputEvent]);
-    ResizeWidth := State.ResizeWidth;
-    ResizeHeight := State.ResizeHeight;
-    HostWidthAtResize := State.HostWidthAtResize;
-    HostHeightAtResize := State.HostHeightAtResize;
-  end;
+  return ResizeModel(Events := State.Events.Concat([InputEvent]), ResizeWidth := State.ResizeWidth, ResizeHeight := State.ResizeHeight, HostWidthAtResize := State.HostWidthAtResize, HostHeightAtResize := State.HostHeightAtResize);
 end function;
 
 begin
@@ -28,14 +22,7 @@ begin
   App.Inject(TuiMsg.Tick(1));
   App.InjectResizeForTest(TuiSize.Create(32, 10));
   App.Inject(TuiMsg.Tick(2));
-  var Model: ResizeModel := record
-    Events := [];
-    ResizeWidth := 0;
-    ResizeHeight := 0;
-    HostWidthAtResize := 0;
-    HostHeightAtResize := 0;
-  end;
-
+  var Model: ResizeModel := ResizeModel(Events := [], ResizeWidth := 0, ResizeHeight := 0, HostWidthAtResize := 0, HostHeightAtResize := 0);
   Model := App.RunIterations(Model, function(State: ResizeModel; Msg: TuiMsg; Cmd: TuiCmdOutput): ResizeModel begin
     Cmd.Set(TuiCmd.NoCommand);
     case Msg of
@@ -52,13 +39,7 @@ begin
       when TuiMsg.Resize(Size):
         begin
           const Snapshot: TuiSurfaceSnapshot := App.SurfaceSnapshot();
-          return record
-            Events := State.Events.Concat(['resize']);
-            ResizeWidth := Size.Width;
-            ResizeHeight := Size.Height;
-            HostWidthAtResize := Snapshot.Width;
-            HostHeightAtResize := Snapshot.Height;
-          end;
+          return ResizeModel(Events := State.Events.Concat(['resize']), ResizeWidth := Size.Width, ResizeHeight := Size.Height, HostWidthAtResize := Snapshot.Width, HostHeightAtResize := Snapshot.Height);
         end;
       else
         begin

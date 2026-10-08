@@ -12,9 +12,7 @@ begin
   case Msg of
     when TuiMsg.Tick(Delta):
       begin
-        return record
-          Ticks := State.Ticks + 1;
-        end;
+        return DemoModel(Ticks := State.Ticks + 1);
       end;
     when TuiMsg.MenuChanged(MenuSource, MenuAction, MenuState):
       begin
@@ -40,24 +38,18 @@ end function;
 
 function UpdateBackground(State: DemoModel; Message: integer; Cmd: TuiCmdOutput): DemoModel;
 begin
-  return record
-    Ticks := State.Ticks + Message;
-  end;
+  return DemoModel(Ticks := State.Ticks + Message);
 end function;
 
 function RunSignatureOnly(): DemoModel;
 begin
-  return TuiApplication.Run(record
-    Ticks := 0;
-  end, UpdateDemo, ViewDemo);
+  return TuiApplication.Run(DemoModel(Ticks := 0), UpdateDemo, ViewDemo);
 end function;
 
 function RunBackgroundSignatureOnly(): DemoModel;
 begin
   const Inbox: channel of integer := CreateChannel(4);
-  return TuiApplication.RunWithBackground(record
-    Ticks := 0;
-  end, Inbox, UpdateDemo, UpdateBackground, ViewDemo);
+  return TuiApplication.RunWithBackground(DemoModel(Ticks := 0), Inbox, UpdateDemo, UpdateBackground, ViewDemo);
 end function;
 
 begin

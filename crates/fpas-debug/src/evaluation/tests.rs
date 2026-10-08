@@ -226,7 +226,7 @@ fn validator_accepts_the_complete_read_only_category_matrix() {
         "Value.Method()",
         "[]",
         "[: ]",
-        "record X := 1; end",
+        "MakePoint(1)",
         "Ok(1)",
         "Error('x')",
         "Some(1)",

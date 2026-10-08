@@ -9,14 +9,7 @@ end record;
 
 function MakeKey(Kind: TuiKeyKind; Character: string; Alt: boolean): TuiKeyEvent;
 begin
-  return record
-    kind := Kind;
-    ch := Character;
-    shift := false;
-    ctrl := false;
-    alt := Alt;
-    meta := false;
-  end;
+  return TuiKeyEvent(kind := Kind, ch := Character, shift := false, ctrl := false, alt := Alt, meta := false);
 end function;
 
 function ViewButtons(State: ButtonKeyboardModel): TuiElement;
@@ -37,20 +30,16 @@ begin
   case Msg of
     when TuiMsg.Action(Source, Action):
       begin
-        return record
-          Focus := State.Focus;
-          Actions := State.Actions.Concat([Action.Value]);
-        end;
+        return ButtonKeyboardModel(Focus := State.Focus, Actions := State.Actions.Concat([
+                                                                                           Action.Value
+                                                                                         ]));
       end;
     when TuiMsg.FocusChanged(Previous, Current):
       begin
         case Current of
           when Some(Id):
             begin
-              return record
-                Focus := Id.Value;
-                Actions := State.Actions;
-              end;
+              return ButtonKeyboardModel(Focus := Id.Value, Actions := State.Actions);
             end;
           when None:
             begin
@@ -67,11 +56,7 @@ end function;
 
 begin
   const App: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(30, 10));
-  var Model: ButtonKeyboardModel := record
-    Focus := 1;
-    Actions := [];
-  end;
-
+  var Model: ButtonKeyboardModel := ButtonKeyboardModel(Focus := 1, Actions := []);
   Model := App.RunIterations(Model, UpdateButtons, ViewButtons, 0, 0);
   App.InjectKeyForTest(MakeKey(TuiKeyKind.Enter, '', false));
   Model := App.RunIterations(Model, UpdateButtons, ViewButtons, 1, 0);
@@ -82,11 +67,7 @@ begin
   App.InjectKeyForTest(MakeKey(TuiKeyKind.Character, 'c', true));
   Model := App.RunIterations(Model, UpdateButtons, ViewButtons, 1, 0);
   AssertEquals(2, Model.Actions.Length());
-  Model := record
-    Focus := 3;
-    Actions := Model.Actions;
-  end;
-
+  Model := ButtonKeyboardModel(Focus := 3, Actions := Model.Actions);
   Model := App.RunIterations(Model, UpdateButtons, ViewButtons, 0, 0);
   App.InjectKeyForTest(MakeKey(TuiKeyKind.Space, '', false));
   Model := App.RunIterations(Model, UpdateButtons, ViewButtons, 1, 0);

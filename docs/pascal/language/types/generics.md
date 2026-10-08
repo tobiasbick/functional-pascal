@@ -44,9 +44,9 @@ begin
   return 'value=' + IntToStr(X);
 end function;
 
-const B: Box := record
-  Value := 42;
-end;
+const B: Box := Box(
+  Value := 42
+);
 const S: string := B.Map(ToText); // R inferred as string
 ```
 

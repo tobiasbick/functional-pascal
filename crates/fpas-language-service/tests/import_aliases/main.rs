@@ -17,7 +17,7 @@ use std::path::PathBuf;
 use fpas_language_service::LanguageService;
 use support::TempDirectory;
 
-const UNIT: &str = "unit Demo.Math;\n\npublic type Point = record\n  public X: integer;\n  Hidden: integer;\nend record;\n\n// Returns its argument.\npublic function Answer(Value: integer): integer;\nbegin\n  return Value;\nend function;\n\npublic function MakePoint(): Point;\nbegin\n  return record X := 1; Hidden := 0; end;\nend function;\n\npublic var Origin: Point := record X := 1; Hidden := 0; end;\n\nfunction Secret(): integer;\nbegin\n  return 0;\nend function;\nend unit;\n";
+const UNIT: &str = "unit Demo.Math;\n\npublic type Point = record\n  public X: integer;\n  Hidden: integer;\nend record;\n\n// Returns its argument.\npublic function Answer(Value: integer): integer;\nbegin\n  return Value;\nend function;\n\npublic function MakePoint(): Point;\nbegin\n  return Point( X := 1, Hidden := 0 );\nend function;\n\npublic var Origin: Point := Point( X := 1, Hidden := 0 );\n\nfunction Secret(): integer;\nbegin\n  return 0;\nend function;\nend unit;\n";
 
 struct Fixture {
     temp: TempDirectory,

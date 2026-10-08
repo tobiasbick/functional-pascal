@@ -65,7 +65,7 @@ package are listed in each work package file.
 | [x] | [AP07: Boolean rules](ap07-boolean-rules/README.md) | Medium | AP02 | Complete (Q02, Q03) |
 | — | [AP08: Comma-separated parameter lists](ap08-comma-separated-parameter-lists/README.md) | — | — | Rejected; closed (Q06) |
 | [x] | [AP09: Named arguments](ap09-named-arguments/README.md) | Medium | AP02 | Complete (AP09.1, AP09.2) |
-| [ ] | [AP10: Typed record construction](ap10-typed-record-construction/README.md) | Medium | AP09 | Agreed direction |
+| [ ] | [AP10: Typed record construction](ap10-typed-record-construction/README.md) | Medium | AP09 | AP10.1 and AP10.2 complete; literal removal open |
 | [x] | [AP11: Individual declarations](ap11-individual-declarations/README.md) | Medium | AP01 | Complete (Q07) |
 | [ ] | [AP12: Callable expressions](ap12-callable-expressions/README.md) | Medium | AP06 | Proposal |
 | [x] | [AP13: Explicit block boundaries](ap13-explicit-block-boundaries/README.md) | Large | AP01, AP02 | Complete (Q08, Q09) |

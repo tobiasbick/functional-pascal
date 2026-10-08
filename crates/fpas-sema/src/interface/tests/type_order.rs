@@ -9,7 +9,7 @@ fn forward_recursive_types_survive_encoded_interfaces() {
         "unit Demo.Tree;
       public function Create(): Node; begin return Node.Empty(); end function;
       public type Node = record public Children: array of Edge;
-        public static function Empty(): Node; begin return record Children := []; end; end function;
+        public static function Empty(): Node; begin return Node( Children := [] ); end function;
         public function Count(Self: Node): integer; begin return 1; end function;
       end record;
       public type Edge = enum Stop; More(Next: Option of Node); end enum;
@@ -60,7 +60,7 @@ fn forward_recursive_types_survive_encoded_interfaces() {
 fn early_references_do_not_expose_private_types_or_members() {
     let source = parse_unit(
         "unit Demo.Hidden;
-      public function Create(): Hidden; begin return record Value := 1; end; end function;
+      public function Create(): Hidden; begin return Hidden( Value := 1 ); end function;
       type Hidden = record Value: integer; end record; end unit;",
     );
     let analysis = analyze_unit(&source, &[]).unwrap();

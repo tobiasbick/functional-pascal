@@ -78,6 +78,12 @@ impl Checker {
     }
 
     fn non_constant_part(&mut self, expr: &Expr) -> Option<(String, fpas_lexer::Span)> {
+        if let Some(known) = self
+            .record_default_constants
+            .get(&Self::expr_lookup_key(expr))
+        {
+            return (!known).then(|| ("record field default".into(), expr.span()));
+        }
         match expr {
             Expr::Integer(..)
             | Expr::Real(..)
@@ -115,6 +121,39 @@ impl Checker {
                 ),
                 expr.span(),
             )),
+            Expr::Call { args, .. }
+                if self
+                    .record_constructions
+                    .contains(&Self::expr_lookup_key(expr)) =>
+            {
+                if let Some(part) = args
+                    .iter()
+                    .find_map(|argument| self.non_constant_part(argument.argument_value()))
+                {
+                    return Some(part);
+                }
+                let Some(Ty::Record(record)) =
+                    self.expr_types.get(&Self::expr_lookup_key(expr)).cloned()
+                else {
+                    return Some(("record construction".into(), expr.span()));
+                };
+                let defaults = self
+                    .record_defaults
+                    .get(&record.name)
+                    .cloned()
+                    .unwrap_or_default();
+                defaults.into_iter().find_map(|(name, value)| {
+                    if args.iter().any(|argument| {
+                        argument
+                            .argument_name()
+                            .is_some_and(|provided| provided.eq_ignore_ascii_case(&name))
+                    }) {
+                        None
+                    } else {
+                        value.and_then(|value| self.non_constant_part(&value))
+                    }
+                })
+            }
             Expr::Call { designator, .. } => Some((
                 format!("call `{}`", Self::resolve_designator_name(designator)),
                 expr.span(),

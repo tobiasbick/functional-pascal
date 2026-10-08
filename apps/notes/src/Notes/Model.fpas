@@ -68,17 +68,7 @@ end record;
 // Creates a new unsaved note with stable identity and timestamps.
 public function NoteCreate(Id: string; TimestampMillis: integer): Note;
 begin
-  return record
-    Id := Id;
-    Title := 'Untitled note';
-    CreatedMillis := TimestampMillis;
-    UpdatedMillis := TimestampMillis;
-    Tags := [];
-    Pinned := false;
-    Archived := false;
-    Body := '';
-    Path := '';
-  end;
+  return Note(Id := Id, Title := 'Untitled note', CreatedMillis := TimestampMillis, UpdatedMillis := TimestampMillis, Tags := [], Pinned := false, Archived := false, Body := '', Path := '');
 end function;
 
 // Creates initial application state from a directory load result.
@@ -108,27 +98,7 @@ begin
     end;
   end if;
 
-  return record
-    Directory := Directory;
-    Notes := Loaded.Notes;
-    Issues := Loaded.Issues;
-    Selected := Selected;
-    Search := '';
-    SearchCaret := 0;
-    TitleCaret := TitleCaret;
-    TagsText := TagsText;
-    TagsCaret := TagsCaret;
-    BodyCaret := 0;
-    BodyOffset := TuiPoint.Create(0, 0);
-    Focus := Focus;
-    Pane := Pane;
-    Overlay := NotesOverlay.Closed;
-    Dirty := false;
-    Status := Status;
-    ErrorMessage := '';
-    Width := 100;
-    Height := 30;
-  end;
+  return NotesModel(Directory := Directory, Notes := Loaded.Notes, Issues := Loaded.Issues, Selected := Selected, Search := '', SearchCaret := 0, TitleCaret := TitleCaret, TagsText := TagsText, TagsCaret := TagsCaret, BodyCaret := 0, BodyOffset := TuiPoint.Create(0, 0), Focus := Focus, Pane := Pane, Overlay := NotesOverlay.Closed, Dirty := false, Status := Status, ErrorMessage := '', Width := 100, Height := 30);
 end function;
 
 // Formats a note's tags for the controlled metadata input.

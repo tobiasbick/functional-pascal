@@ -30,7 +30,7 @@ fn expression_endings_execute_before_and_after_idempotent_formatting() {
     let path = cwd.join("expressions.fpas");
     write_text(
         &path,
-        "program T; uses Std.Console; type Point = record X: integer; end record; function Apply(F: function(P: Point): integer; P: Point): integer; begin return F(P); end function; begin const P: Point := record X := 1; end; WriteLn(Apply(function(P: Point): integer begin return P.X * 21; end function, P with X := 2; end with)); end.",
+        "program T; uses Std.Console; type Point = record X: integer; end record; function Apply(F: function(P: Point): integer; P: Point): integer; begin return F(P); end function; begin const P: Point := Point( X := 1 ); WriteLn(Apply(function(P: Point): integer begin return P.X * 21; end function, P with X := 2; end with)); end.",
     );
     let run = ["run".into(), path.to_string_lossy().into_owned()];
     let (code, before, stderr) = run_cli_args_and_capture_output(&run, &cwd);

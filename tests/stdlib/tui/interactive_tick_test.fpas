@@ -65,13 +65,7 @@ end function;
 
 begin
   const Inbox: channel of integer := CreateChannel(1);
-  const Final: TickModel := TuiApplication.RunWithBackground(record
-    Inbox := Inbox;
-    Ticks := 0;
-    ShortestTick := -1;
-    Started := 0;
-    Replaced := false;
-  end, Inbox, Update, UpdateMessage, View);
+  const Final: TickModel := TuiApplication.RunWithBackground(TickModel(Inbox := Inbox, Ticks := 0, ShortestTick := -1, Started := 0, Replaced := false), Inbox, Update, UpdateMessage, View);
   AssertTrue(Final.Replaced);
   AssertEquals(3, Final.Ticks);
   // Every tick waited at least its requested delay.

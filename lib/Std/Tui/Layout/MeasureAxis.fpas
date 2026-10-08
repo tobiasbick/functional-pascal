@@ -79,18 +79,12 @@ public type TuiMeasureAxis = record
   begin
     if not Constraint.IsBounded() then
       begin
-        return record
-          Preferred := Preferred;
-          Maximum := Maximum;
-        end;
+        return TuiMeasureAxisResult(Preferred := Preferred, Maximum := Maximum);
       end;
     end if;
     const ConstrainedPreferred: integer := TuiMeasureAxis.Max(Minimum, TuiMeasureAxis.Min(Preferred, Constraint.Limit));
     const ConstrainedMaximum: integer := TuiMeasureAxis.Max(ConstrainedPreferred, TuiMeasureAxis.Min(Maximum, Constraint.Limit));
-    return record
-      Preferred := ConstrainedPreferred;
-      Maximum := ConstrainedMaximum;
-    end;
+    return TuiMeasureAxisResult(Preferred := ConstrainedPreferred, Maximum := ConstrainedMaximum);
   end function;
 end record;
 end unit;

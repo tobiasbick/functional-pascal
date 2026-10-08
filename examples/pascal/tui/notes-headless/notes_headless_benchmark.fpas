@@ -51,10 +51,7 @@ begin
       end if;
     end;
   end if;
-  const Loaded: NotesLoad := record
-    Notes := BenchmarkNotes();
-    Issues := [];
-  end;
+  const Loaded: NotesLoad := notes.model.notesload(Notes := BenchmarkNotes(), Issues := []);
   var Model: NotesModel := NotesModelCreate('.temp-data/bench/notes', Loaded);
   Model.Width := 120;
   Model.Height := 40;

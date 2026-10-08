@@ -8,7 +8,7 @@ type Point = record
   X: real;
   Y: real;
 end record;
-var P: Point := record X := 0.0; Y := 5.0 end;";
+var P: Point := Point( X := 0.0, Y := 5.0 );";
 
     assert_eq!(
         toks(src),
@@ -33,15 +33,16 @@ var P: Point := record X := 0.0; Y := 5.0 end;";
             Token::Colon,
             Token::Ident("Point".into()),
             Token::ColonAssign,
-            Token::Record,
+            Token::Ident("Point".into()),
+            Token::LParen,
             Token::Ident("X".into()),
             Token::ColonAssign,
             Token::Real(0.0),
-            Token::Semicolon,
+            Token::Comma,
             Token::Ident("Y".into()),
             Token::ColonAssign,
             Token::Real(5.0),
-            Token::End,
+            Token::RParen,
             Token::Semicolon,
         ]
     );

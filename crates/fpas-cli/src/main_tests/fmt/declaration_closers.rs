@@ -29,16 +29,19 @@ fn named_declarations_keep_execution_and_format_idempotently() {
     let path = cwd.join("declarations.fpas");
     let unit_path = cwd.join("empty.fpas");
     write_text(&unit_path, "unit Empty; end unit;");
-    write_text(&path, "program Demo; uses Std.Console;
+    write_text(
+        &path,
+        "program Demo; uses Std.Console;
         type Status = enum Ready; end enum;
         type Point = record Value: integer;
             function ReadValue(Self: Point): integer; begin return Self.Value; end function;
         end record;
         function Answer(): integer;
             procedure Prepare(); begin return; end procedure;
-        begin Prepare(); const P: Point := record Value := 42; end; return P.ReadValue(); end function;
+        begin Prepare(); const P: Point := Point( Value := 42 ); return P.ReadValue(); end function;
         procedure Show(); begin WriteLn(Answer()); end procedure;
-        begin Show(); end.");
+        begin Show(); end.",
+    );
     let run = ["run".into(), path.to_string_lossy().into_owned()];
     let (code, before, stderr) = run_cli_args_and_capture_output(&run, &cwd);
     assert_eq!(code, 0, "{stderr}");

@@ -9,14 +9,7 @@ end record;
 
 function MakeKey(Kind: TuiKeyKind): TuiKeyEvent;
 begin
-  return record
-    kind := Kind;
-    ch := '';
-    shift := false;
-    ctrl := false;
-    alt := false;
-    meta := false;
-  end;
+  return TuiKeyEvent(kind := Kind, ch := '', shift := false, ctrl := false, alt := false, meta := false);
 end function;
 
 function ViewScroll(State: ScrollModel): TuiElement;
@@ -41,10 +34,7 @@ begin
       begin
         AssertEquals(1, Source.Value);
         AssertEquals(7, Action.Value);
-        return record
-          Offset := Offset;
-          Changes := State.Changes.Concat([Offset.Y]);
-        end;
+        return ScrollModel(Offset := Offset, Changes := State.Changes.Concat([Offset.Y]));
       end;
     else
       begin
@@ -55,11 +45,7 @@ end function;
 
 begin
   var App: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(12, 3));
-  var Model: ScrollModel := record
-    Offset := TuiPoint.Create(0, 0);
-    Changes := [];
-  end;
-
+  var Model: ScrollModel := ScrollModel(Offset := TuiPoint.Create(0, 0), Changes := []);
   Model := App.RunIterations(Model, UpdateScroll, ViewScroll, 0, 0);
   App.InjectKeyForTest(MakeKey(TuiKeyKind.Down));
   Model := App.RunIterations(Model, UpdateScroll, ViewScroll, 1, 0);

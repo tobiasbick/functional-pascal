@@ -84,12 +84,7 @@ begin
       if Caret <= LineEnd then
         begin
           const Prefix: string := (Lines[Line]).Slice(0, Caret - LineStart);
-          return record
-            Line := Line;
-            LineStart := LineStart;
-            LineEnd := LineEnd;
-            DisplayColumn := Std.Console.DisplayWidth(Prefix);
-          end;
+          return TuiTextAreaPosition(Line := Line, LineStart := LineStart, LineEnd := LineEnd, DisplayColumn := Std.Console.DisplayWidth(Prefix));
         end;
       end if;
 

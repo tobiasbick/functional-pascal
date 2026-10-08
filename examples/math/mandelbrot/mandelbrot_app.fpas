@@ -39,32 +39,12 @@ end function;
 
 function ToggleHelp(State: MandelbrotModel): MandelbrotModel;
 begin
-  return record
-    Explorer := State.Explorer;
-    TerminalWidth := State.TerminalWidth;
-    TerminalHeight := State.TerminalHeight;
-    Grid := State.Grid;
-    HelpOpen := not State.HelpOpen;
-    Generation := State.Generation;
-    RowsRendered := State.RowsRendered;
-    FailureMessage := State.FailureMessage;
-    Inbox := State.Inbox;
-  end;
+  return mandelbrot.model.mandelbrotmodel(Explorer := State.Explorer, TerminalWidth := State.TerminalWidth, TerminalHeight := State.TerminalHeight, Grid := State.Grid, HelpOpen := not State.HelpOpen, Generation := State.Generation, RowsRendered := State.RowsRendered, FailureMessage := State.FailureMessage, Inbox := State.Inbox);
 end function;
 
 function WithFailure(State: MandelbrotModel; Message: string): MandelbrotModel;
 begin
-  return record
-    Explorer := State.Explorer;
-    TerminalWidth := State.TerminalWidth;
-    TerminalHeight := State.TerminalHeight;
-    Grid := State.Grid;
-    HelpOpen := State.HelpOpen;
-    Generation := State.Generation;
-    RowsRendered := State.RowsRendered;
-    FailureMessage := Message;
-    Inbox := State.Inbox;
-  end;
+  return mandelbrot.model.mandelbrotmodel(Explorer := State.Explorer, TerminalWidth := State.TerminalWidth, TerminalHeight := State.TerminalHeight, Grid := State.Grid, HelpOpen := State.HelpOpen, Generation := State.Generation, RowsRendered := State.RowsRendered, FailureMessage := Message, Inbox := State.Inbox);
 end function;
 
 function ViewportX(State: ExplorerState; Width: integer; Height: integer; CellX: integer): real;

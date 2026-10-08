@@ -5,7 +5,7 @@ const RECORD: &str = "type Box = record Value: integer;
   function Get(Self: Box): integer; begin return Self.Value; end function;
   procedure Print(Self: Box); begin end procedure;
   end record;
-  function Make(): Box; begin return record Value := 1; end; end function;";
+  function Make(): Box; begin return Box( Value := 1 ); end function;";
 
 #[test]
 fn member_and_postfix_function_calls_require_consumption() {
@@ -34,7 +34,7 @@ fn receiver_calls_and_callable_record_members_require_consumption() {
     unused(
         "program T;
       type Box = record Get: function(): integer; end record;
-      begin const Value: Box := record Get := function(): integer begin return 1; end function; end;
+      begin const Value: Box := Box( Get := function(): integer begin return 1; end function );
       Value.Get(); end.",
     );
 }
@@ -47,7 +47,7 @@ fn postfix_callable_hints_agree_with_explicit_discard_rules() {
         function Make(Self: Box): function(): integer;
         begin return function(): integer begin return Self.Value; end function; end function;
       end record;
-      function Build(): Box; begin return record Value := 1; end; end function;
+      function Build(): Box; begin return Box( Value := 1 ); end function;
       begin Build().Make(); end.",
     );
     assert!(error.help.unwrap().contains("`discard Call();`"));
@@ -57,7 +57,7 @@ fn postfix_callable_hints_agree_with_explicit_discard_rules() {
         function Make(Self: Box): function(): integer;
         begin return function(): integer begin return Self.Value; end function; end function;
       end record;
-      function Build(): Box; begin return record Value := 1; end; end function;
+      function Build(): Box; begin return Box( Value := 1 ); end function;
       begin discard Build().Make(); end.",
     );
 }
@@ -71,7 +71,7 @@ fn postfix_task_results_do_not_recommend_invalid_discard() {
         function Start(Self: Box): task of integer;
         begin return go Work(); end function;
       end record;
-      function Make(): Box; begin return record end; end function;
+      function Make(): Box; begin return Box( ); end function;
       begin Make().Start(); end.",
     );
     assert!(!error.help.unwrap().contains("`discard"));

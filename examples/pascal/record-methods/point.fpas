@@ -15,10 +15,7 @@ type Point = record
   begin
     const RX: integer := Self.X + Other.X;
     const RY: integer := Self.Y + Other.Y;
-    return record
-      X := RX;
-      Y := RY;
-    end;
+    return Point(X := RX, Y := RY);
   end function;
 
   procedure Print(Self: Point);
@@ -28,15 +25,8 @@ type Point = record
 end record;
 
 begin
-  const A: Point := record
-    X := 3;
-    Y := 4;
-  end;
-  const B: Point := record
-    X := 10;
-    Y := 20;
-  end;
-
+  const A: Point := Point(X := 3, Y := 4);
+  const B: Point := Point(X := 10, Y := 20);
   A.Print();
   B.Print();
   WriteLn('Sum of A: ' + IntToStr(A.Sum()));

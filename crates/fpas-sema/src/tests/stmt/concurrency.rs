@@ -309,7 +309,7 @@ begin
   const ResultQueue: channel of result of procedure(), string := CreateChannel(1);
   const OptionQueue: channel of option of procedure() := CreateChannel(1);
   Send(ArrayQueue, [Work]);
-  Send(RecordQueue, record Work := Work; end);
+  Send(RecordQueue, WorkBox( Work := Work ));
   Send(ResultQueue, Ok(Work));
   Send(OptionQueue, Some(Work));
 end.",
@@ -338,7 +338,7 @@ end record;
 begin
   var Count: integer := 0;
   const Work: procedure() := procedure() begin Count := Count + 1; end procedure;
-  const Boxed: WorkBox := record Work := Work; Safe := 7; end;
+  const Boxed: WorkBox := WorkBox( Work := Work, Safe := 7 );
   const WorkQueue: channel of procedure() := CreateChannel(1);
   const SafeQueue: channel of integer := CreateChannel(1);
   Send(WorkQueue, Boxed.Work);

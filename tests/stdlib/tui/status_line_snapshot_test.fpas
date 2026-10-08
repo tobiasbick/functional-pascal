@@ -25,8 +25,7 @@ end function;
 
 begin
   var App: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(24, 3));
-  var Model: StatusModel := record end;
-
+  var Model: StatusModel := StatusModel();
   Model := App.RunIterations(Model, UpdateStatus, ViewStatus, 0, 0);
   const Surface: TuiSurfaceSnapshot := App.SurfaceSnapshot();
   AssertTrue(Surface.LineAt(0).Contains('Ready F2 Save Open Quit'));

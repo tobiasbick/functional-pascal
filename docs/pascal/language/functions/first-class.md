@@ -36,9 +36,9 @@ type
   end record;
 
 begin
-  const C: Counter := record
-    Base := 10;
-  end;
+  const C: Counter := Counter(
+    Base := 10
+  );
   const AddTen: function(Value: integer): integer := C.Add;
   WriteLn(AddTen(5)); // 15
   WriteLn(Apply(AddTen, 7)); // 17

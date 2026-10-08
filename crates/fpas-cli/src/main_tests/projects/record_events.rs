@@ -48,7 +48,7 @@ public type
     end procedure;
     public static function Make(Id: integer): Button;
     begin
-      return record Id := Id; end;
+      return Button( Id := Id );
     end function;
   end record;
 end unit;\n",

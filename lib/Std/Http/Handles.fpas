@@ -19,9 +19,7 @@ end record;
 // - `Slot`: Index of the backing stream state.
 public function NewBodyStream(Slot: integer): BodyStream;
 begin
-  return record
-    Slot := Slot;
-  end;
+  return BodyStream(Slot := Slot);
 end function;
 
 // Returns the backing slot for an HTTP body handle.
@@ -39,9 +37,7 @@ end function;
 // - `Slot`: Index of the backing decoder state.
 public function NewSseDecoder(Slot: integer): SseDecoder;
 begin
-  return record
-    Slot := Slot;
-  end;
+  return SseDecoder(Slot := Slot);
 end function;
 
 // Returns the backing slot for an SSE decoder handle.

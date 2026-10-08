@@ -29,7 +29,7 @@ public type
       return Self.Base + Value;
     end function;
   end record;
-public const Global: Counter := record Base := 12; end;
+public const Global: Counter := Counter( Base := 12 );
 end unit;\n",
     );
 

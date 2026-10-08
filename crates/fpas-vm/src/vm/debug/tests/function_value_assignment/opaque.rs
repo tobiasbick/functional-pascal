@@ -9,18 +9,18 @@ const SOURCE: &str = r#"program OpaqueIdentityBoundary;
 uses Std.Console;
 
 begin
-  const Region: SavedRegion := SaveRegion(record
-    x := 1;
-    y := 1;
-    width := 1;
-    height := 1;
-  end);
-  var Copy: SavedRegion := SaveRegion(record
-    x := 1;
-    y := 2;
-    width := 1;
-    height := 1;
-  end);
+  const Region: SavedRegion := SaveRegion(Std.Console.Rect(
+    x := 1,
+    y := 1,
+    width := 1,
+    height := 1
+  ));
+  var Copy: SavedRegion := SaveRegion(Std.Console.Rect(
+    x := 1,
+    y := 2,
+    width := 1,
+    height := 1
+  ));
   const StopMarker: integer := 0;
 end.
 "#;

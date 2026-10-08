@@ -61,7 +61,7 @@ type Point = record
 end record;
 
 begin
-  const P: Point := record X := 1.0; Y := 2.0; end;
+  const P: Point := Point( X := 1.0, Y := 2.0 );
 end.",
     );
 }

@@ -35,7 +35,7 @@ public type
     end procedure;
     public property Value: integer read GetValue write SetValue;
   end record;
-public const Global: Counter := record Base := 12; end;
+public const Global: Counter := Counter( Base := 12 );
 end unit;\n",
     );
 

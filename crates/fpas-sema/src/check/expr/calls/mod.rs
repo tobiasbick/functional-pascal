@@ -154,6 +154,11 @@ impl Checker {
         if symbol_kind == SymbolKind::EnumVariantConstructor {
             return self.check_enum_variant_constructor_call(name, &symbol_ty, args, span);
         }
+        if symbol_kind == SymbolKind::Type
+            && let Ty::Record(record) = self.resolve_visible_type(&symbol_ty)
+        {
+            return self.check_record_construction(call_key, &record, args, span);
+        }
         let dispatch = self.builtin_std_dispatch_name(name);
         if dispatch.starts_with("Std.") {
             self.intrinsic_calls.insert(call_key, dispatch.clone());
@@ -209,7 +214,10 @@ impl Checker {
             return self.check_builtin_std_call_positional(name, &dispatch, args, span);
         }
 
-        if symbol_kind == SymbolKind::EnumVariantConstructor {
+        if symbol_kind == SymbolKind::EnumVariantConstructor
+            || (symbol_kind == SymbolKind::Type
+                && matches!(self.resolve_visible_type(&symbol_ty), Ty::Record(_)))
+        {
             self.error_with_code(
                 SEMA_TYPE_MISMATCH,
                 format!(

@@ -10,14 +10,7 @@ end record;
 
 function MakeKey(Kind: TuiKeyKind; Character: string): TuiKeyEvent;
 begin
-  return record
-    kind := Kind;
-    ch := Character;
-    shift := false;
-    ctrl := false;
-    alt := false;
-    meta := false;
-  end;
+  return Std.Console.KeyEvent(kind := Kind, ch := Character, shift := false, ctrl := false, alt := false, meta := false);
 end function;
 
 function ViewTextArea(State: TextAreaModel): TuiElement;
@@ -35,11 +28,7 @@ begin
       begin
         AssertEquals(1, Source.Value);
         AssertEquals(9, Action.Value);
-        return record
-          Text := Text;
-          Caret := Caret;
-          Offset := Offset;
-        end;
+        return TextAreaModel(Text := Text, Caret := Caret, Offset := Offset);
       end;
     else
       begin
@@ -85,11 +74,7 @@ begin
     begin
       for Column: integer := 0 to 6 do
         begin
-          const State: TextAreaModel := record
-            Text := (('xxxxxx' + #10) + Line) + #10;
-            Caret := Column;
-            Offset := TuiPoint.Create(3, 0);
-          end;
+          const State: TextAreaModel := TextAreaModel(Text := (('xxxxxx' + #10) + Line) + #10, Caret := Column, Offset := TuiPoint.Create(3, 0));
           const Moved: TextAreaModel := Press(App, State, TuiKeyKind.Down, '');
           AssertEquals(7 + Expected(Line, Column), Moved.Caret);
         end;

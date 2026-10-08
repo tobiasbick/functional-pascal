@@ -35,7 +35,7 @@ procedure Handle(Sender: Button);
 begin
 end procedure;
 begin
-  const B: Button := record Id := 1; end;
+  const B: Button := Button( Id := 1 );
   B.OnClick := Handle;
   if Assigned(B.OnClick) then
     B.RaiseClick(); end if;
@@ -50,7 +50,7 @@ fn bare_event_read_is_rejected() {
     let errors = check_errors(&format!(
         "{}\
 begin
-  const B: Button := record Id := 1; end;
+  const B: Button := Button( Id := 1 );
   const H: procedure(Sender: Button) := B.OnClick;
 end.",
         event_prelude()
@@ -162,7 +162,7 @@ procedure Handle(Sender: Button);
 begin
 end procedure;
 begin
-  const B: Button := record Id := 1; OnClick := Handle; end;
+  const B: Button := Button( Id := 1, OnClick := Handle );
   const C: Button := B with OnClick := Handle; end with;
 end.",
         event_prelude()
@@ -186,7 +186,7 @@ fn event_raise_cannot_cross_task_boundary() {
     let errors = check_errors(&format!(
         "{}\
 begin
-  const B: Button := record Id := 1; end;
+  const B: Button := Button( Id := 1 );
   go B.OnClick(B);
 end.",
         event_prelude()
@@ -204,7 +204,7 @@ fn parenthesized_nil_clears_event() {
     check_ok(&format!(
         "{}\
 begin
-  const B: Button := record Id := 1; end;
+  const B: Button := Button( Id := 1 );
   B.OnClick := (nil);
 end.",
         event_prelude()

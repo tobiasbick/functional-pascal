@@ -42,7 +42,7 @@ fn alias_resolves_exports_without_changing_nominal_type_identity() {
         public type Point = Api.Point;
         public function Run(): integer;
         begin
-          var P: aPI.Point := record X := Api.Answer; end;
+          var P: aPI.Point := aPI.Point( X := Api.Answer );
           const S: Api.State := Api.State.Ready;
           const Shape: Api.Shape := Api.Shape.Rect(Height := 3, Width := 4);
           const Step: Api.Step := Api.Increase;
@@ -84,7 +84,7 @@ fn alias_hides_original_paths_and_all_short_names() {
         "const X: integer := Answer;",
         "const X: State := Ready;",
         "const X: Shape := Shape.Rect(1, 2);",
-        "const X: Demo.Api.Point := record X := 1; end;",
+        "const X: Demo.Api.Point := Demo.Api.Point( X := 1 );",
         "const X: integer := Demo.Api.Next(1);",
         "const X: integer := Demo.Api.Answer;",
     ] {

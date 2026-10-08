@@ -33,9 +33,7 @@ begin
   var Current: Handler := Identity;
   const Frozen: Handler := Identity;
   var Copy: Handler := Identity;
-  var Packed: Pack := record
-    Item := Identity;
-  end;
+  var Packed: Pack := Pack(Item := Identity);
   const CellStop: integer := 0;
   Cell := Cell + 10;
   WriteLn(Current(0));
@@ -158,9 +156,7 @@ begin
 end function;
 begin
   var Cell: integer := 1;
-  var Packed: Pack := record
-    Item := Identity;
-  end;
+  var Packed: Pack := Pack(Item := Identity);
   const BoxStop: integer := 0;
   return 0;
 end function;

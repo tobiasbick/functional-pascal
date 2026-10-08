@@ -97,13 +97,7 @@ begin
         return false;
       end;
   end case;
-  var RequestValue: ServerRequest := record
-    Method := '';
-    Target := '';
-    Headers := [];
-    Body := [];
-  end;
-
+  var RequestValue: ServerRequest := std.http.types.serverrequest(Method := '', Target := '', Headers := [], Body := []);
   case Std.Http.Server.ReadRequest(Connection, Options.MaxHeaderBytes, Options.MaxBodyBytes) of
     when Ok(Value):
       begin

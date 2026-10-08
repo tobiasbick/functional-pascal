@@ -95,7 +95,7 @@ fn binary_expression_preserves_left_operand_across_try() {
 #[test]
 fn record_update_preserves_base_and_fields_across_try() {
     check_expression(
-        "const Original: Pair := record First := 8; Second := 9; end; const Value: Pair := Original with First := try ReadValue(1, FailAt); Second := try ReadValue(2, FailAt); end with; return Ok(Value.First * 10 + Value.Second);",
+        "const Original: Pair := Pair( First := 8, Second := 9 ); const Value: Pair := Original with First := try ReadValue(1, FailAt); Second := try ReadValue(2, FailAt); end with; return Ok(Value.First * 10 + Value.Second);",
     );
 }
 
@@ -165,42 +165,42 @@ fn case_guard_preserves_subject_across_try() {
 #[test]
 fn method_preserves_receiver_and_arguments_across_try() {
     check_expression(
-        "const C: Counter := record Base := 0; end; return Ok(C.Add(try ReadValue(1, FailAt), try ReadValue(2, FailAt)));",
+        "const C: Counter := Counter( Base := 0 ); return Ok(C.Add(try ReadValue(1, FailAt), try ReadValue(2, FailAt)));",
     );
 }
 
 #[test]
 fn postfix_method_preserves_receiver_across_try() {
     check_expression(
-        "const C: Counter := record Base := 0; end; return Ok((C).Add(try ReadValue(1, FailAt), try ReadValue(2, FailAt)));",
+        "const C: Counter := Counter( Base := 0 ); return Ok((C).Add(try ReadValue(1, FailAt), try ReadValue(2, FailAt)));",
     );
 }
 
 #[test]
 fn property_write_preserves_receiver_across_try() {
     check_expression(
-        "const C: Counter := record Base := 0; end; C.Number := (try ReadValue(1, FailAt)) * 10 + (try ReadValue(2, FailAt)); return Ok(Written);",
+        "const C: Counter := Counter( Base := 0 ); C.Number := (try ReadValue(1, FailAt)) * 10 + (try ReadValue(2, FailAt)); return Ok(Written);",
     );
 }
 
 #[test]
 fn event_raise_preserves_handler_and_arguments_across_try() {
     check_expression(
-        "const C: Counter := record Base := 0; end; C.OnValue := Combine; return Ok(C.OnValue(try ReadValue(1, FailAt), try ReadValue(2, FailAt)));",
+        "const C: Counter := Counter( Base := 0 ); C.OnValue := Combine; return Ok(C.OnValue(try ReadValue(1, FailAt), try ReadValue(2, FailAt)));",
     );
 }
 
 #[test]
 fn event_write_preserves_receiver_across_try() {
     check_expression(
-        "const C: Counter := record Base := 0; end; C.OnValue := try ReadHandler(FailAt); return Ok(C.OnValue(1, 2));",
+        "const C: Counter := Counter( Base := 0 ); C.OnValue := try ReadHandler(FailAt); return Ok(C.OnValue(1, 2));",
     );
 }
 
 #[test]
 fn record_field_write_preserves_parent_across_try_index() {
     check_expression(
-        "var Value: Bucket := record Items := [0, 0]; end; Value.Items[try ReadValue(1, FailAt)] := 12; const Ignored: integer := try ReadValue(2, FailAt); return Ok(Value.Items[1]);",
+        "var Value: Bucket := Bucket( Items := [0, 0] ); Value.Items[try ReadValue(1, FailAt)] := 12; const Ignored: integer := try ReadValue(2, FailAt); return Ok(Value.Items[1]);",
     );
 }
 

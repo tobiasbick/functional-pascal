@@ -2,10 +2,12 @@
 
 Package: [AP10: Typed record construction](README.md)
 
+Status: Complete.
+
 ## Scope
 
-Rewrite every `record ... end` literal to typed construction while both forms
-are valid.
+Positive record-construction consumers use `TypeName(Field := Value, ...)`.
+The parser and compiler still support the literal form until AP10.3.
 
 ## Prerequisites
 
@@ -13,27 +15,53 @@ are valid.
 
 ## Implementation
 
-- Take the record type from each literal's expected type as resolved by sema;
-  qualify the type name where needed.
-- Preserve field values and the observable evaluation order. Where the old
-  order differs from written order and a field has side effects, introduce an
-  intermediate binding.
-- About 590 literal sites existed in `.fpas` sources at planning time.
+- Constructors name the expected record type, with a visible alias or unit
+  qualification where needed. Facade aliases such as `TuiKeyEvent` respect
+  the existing imports.
+- Field values and defaults are preserved. Migrated arguments follow field
+  declaration order to preserve literal evaluation order. Interleaved defaults
+  with side effects use intermediate bindings before construction.
+- Empty construction uses `TypeName()`; nested records, arrays, enum payloads,
+  `Result`/`Option` values, and generic calls name their record types explicitly.
 
 ## Affected areas
 
-- `.fpas` sources under `lib/`, `apps/`, `examples/`, `tests/`; Rust-embedded
-  fixtures; formatter goldens; templates; documentation examples; skills.
+- `.fpas` sources under `lib/`, `apps/`, `examples/`, and `tests/`.
+- Rust-embedded fixtures, parser/lexer assertions, formatter goldens, editor
+  fixtures and generated test sources, documentation examples, and the FPAS
+  authoring skill.
+- Debugger expression fixtures use existing positional factories where named
+  construction is unavailable in debugger evaluation. The restriction and
+  workaround are tracked in [compiler-panic-followups.md](../../compiler-panic-followups.md).
+- The JSONL breakpoint contract matches the migrated fixture's executable line.
 
 ## Migration
 
-This work package is the migration; the conversion tool is not merged.
+The conversion tool is temporary and is not part of the repository.
+
+Representative coverage:
+
+- `crates/fpas-compiler/src/tests/aggregates/record_construction.rs`
+- `crates/fpas-parser/src/tests/expr/aggregates.rs`
+- `crates/fpas-lexer/src/tests/integration/declarations.rs`
+- `crates/fpas-fmt/tests/golden_output.rs`
+- `crates/fpas-fmt/tests/expression_closer_regressions.rs`
+- `crates/fpas-debug/tests/jsonl_contract.rs`
+- `tests/stdlib/records/typed_construction_test.fpas`
 
 ## Documentation
 
-Documentation examples move to typed construction.
+Record, record-method, default, declaration-order, console, TUI, and formatter
+examples use typed construction. The authoring skill describes named fields
+and the constructor's evaluation order.
 
 ## Verification
 
-- No `record ... end` literal remains outside negative tests.
-- Full FPAS suite, example/app checks, and workspace tests pass unchanged.
+- AST inspection finds no record literals in `.fpas` files or positive embedded
+  fixtures. Embedded legacy forms remain only in negative tests.
+- The full FPAS suite and example/app checks pass. Formatting, formatter goldens,
+  editor compilation, grammar/contracts, generated debugger-program type checks,
+  and plan links are checked.
+- Workspace coverage for migrated consumers passes. The full cloud run retains
+  the two existing VM socket-timeout failures; the existing hanging LSP watcher
+  test is excluded.

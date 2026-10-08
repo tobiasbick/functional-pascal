@@ -36,10 +36,20 @@ pub(super) fn resolve_named_argument(
     let Some(callable) = enclosing_callable(document, token_index) else {
         return NamedArgumentLabel::Unresolved;
     };
-    let Some((index, callee, _)) = resolve(documents, target_index, tokens[callable].span.offset)
+    let Some((mut index, mut callee, _)) =
+        resolve(documents, target_index, tokens[callable].span.offset)
     else {
         return NamedArgumentLabel::Unresolved;
     };
+    if callee.kind == SymbolKind::Type {
+        let Some((owner, record)) =
+            super::record_construction::constructor_record(documents, target_index, index, callee)
+        else {
+            return NamedArgumentLabel::Unresolved;
+        };
+        index = owner;
+        callee = record;
+    }
     callee
         .children
         .into_iter()

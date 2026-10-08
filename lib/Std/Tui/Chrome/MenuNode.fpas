@@ -19,9 +19,7 @@ public type TuiMenuNodeId = record
       end;
     end if;
 
-    return record
-      Value := Value;
-    end;
+    return TuiMenuNodeId(Value := Value);
   end function;
 end record;
 
@@ -65,10 +63,7 @@ public type TuiMenuState = record
   // Creates a closed menu state.
   public static function Closed(): TuiMenuState;
   begin
-    return record
-      Open := false;
-      Active := None;
-    end;
+    return TuiMenuState(Open := false, Active := None);
   end function;
 
   // Creates an open menu state with one active node.
@@ -77,10 +72,7 @@ public type TuiMenuState = record
   // - `Id`: Identifier assigned to the created or selected value.
   public static function OpenAt(Id: TuiMenuNodeId): TuiMenuState;
   begin
-    return record
-      Open := true;
-      Active := Some(Id);
-    end;
+    return TuiMenuState(Open := true, Active := Some(Id));
   end function;
 end record;
 

@@ -2,6 +2,7 @@
 
 mod imports;
 mod members;
+mod record_construction;
 mod routines;
 mod source;
 
@@ -154,7 +155,9 @@ pub(super) fn declaration_symbol(
         Decl::Var(value) => type_callable_signature(snapshot, name, &value.type_expr),
         Decl::Function(value) => Some(function_signature(snapshot, value, 0)),
         Decl::Procedure(value) => Some(procedure_signature(snapshot, value, 0)),
-        Decl::TypeDef(_) => None,
+        Decl::TypeDef(definition) => {
+            record_construction::constructor_signature(snapshot, definition)
+        }
     };
     let children = match declaration {
         Decl::TypeDef(value) => members::type_children(

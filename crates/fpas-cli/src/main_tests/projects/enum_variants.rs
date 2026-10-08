@@ -18,15 +18,14 @@ type
   type State = record Player: Position; end record;
 function Moved(Current: Point): State;
 begin
-  return record
-    Player := Position.At(record
-      Y := Current.Y;
-      X := Current.X + 1;
-    end);
-  end;
+  return State(
+    Player := Position.At(Point(
+      X := Current.X + 1,
+      Y := Current.Y
+    ))\n  );
 end function;
 begin
-  const Initial: Point := record X := 1; Y := 7; end;
+  const Initial: Point := Point( X := 1, Y := 7 );
   const Outcome: State := Moved(Initial);
   case Outcome.Player of
     when Position.At(Value): WriteLn(Value.X, ',', Value.Y);
@@ -65,7 +64,7 @@ type
   type Size = record X: integer; Y: integer; end record;
   type Position = enum At(Value: Point); end enum;
 begin
-  const Other: Size := record X := 1; Y := 2; end;
+  const Other: Size := Size( X := 1, Y := 2 );
   const Value: Position := Position.At({argument});
 end."
             ),

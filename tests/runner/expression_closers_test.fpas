@@ -18,10 +18,7 @@ var FieldOrder: integer := 0;
 function Base(): Point;
 begin
   BaseCalls := BaseCalls + 1;
-  return record
-    X := 1;
-    Y := 2;
-  end;
+  return Point(X := 1, Y := 2);
 end function;
 
 function FieldValue(Value: integer): integer;
@@ -55,10 +52,7 @@ begin
 end function;
 
 begin
-  const Original: Point := record
-    X := 1;
-    Y := 2;
-  end;
+  const Original: Point := Point(X := 1, Y := 2);
   const Updated: Point := Base() with X := FieldValue(1); Y := FieldValue(2); end with;
 
   AssertEquals(1, BaseCalls);
@@ -70,12 +64,9 @@ begin
   AssertEquals(42, Apply(function(P: Point): integer begin
     return P.X * 21;
   end function, Original with X := 2; end with));
-  const Container: Holder := record
-    Child := Original;
-    Reader := function(): integer begin
-      return 0;
-    end function;
-  end;
+  const Container: Holder := Holder(Child := Original, Reader := function(): integer begin
+    return 0;
+  end function);
   const Changed: Holder := Container with Child := Original with X := 7; end with; Reader := function(): integer begin
     return Updated.X;
   end function; end with;

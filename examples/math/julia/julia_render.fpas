@@ -21,19 +21,11 @@ begin
   if Sample.IsInside then
     begin
       const CellShade: Color := InsideColor();
-      return record
-        glyph := ' ';
-        foreground := CellShade;
-        background := CellShade;
-      end;
+      return Std.Console.Cell(glyph := ' ', foreground := CellShade, background := CellShade);
     end;
   end if;
 
-  return record
-    glyph := EscapeGlyph(Sample.EscapeValue);
-    foreground := EscapeColor(Palette, Sample.EscapeValue);
-    background := RgbColor(0, 0, 0);
-  end;
+  return Std.Console.Cell(glyph := EscapeGlyph(Sample.EscapeValue), foreground := EscapeColor(Palette, Sample.EscapeValue), background := RgbColor(0, 0, 0));
 end function;
 
 procedure DrawRow(Row: array of PixelSample; Width: integer; Y: integer; Palette: PaletteKind);
@@ -97,11 +89,7 @@ begin
                 return;
               end;
             end if;
-            const Row: RenderRow := record
-              Y := Py;
-              Samples := Samples;
-            end;
-
+            const Row: RenderRow := RenderRow(Y := Py, Samples := Samples);
             if SendWithCancellation(Rows, Row, Token).IsError() then
               begin
                 return;
@@ -115,12 +103,7 @@ begin
     end;
   end for;
 
-  return record
-    Group := Group;
-    Rows := Rows;
-    Width := Width;
-    Palette := Palette;
-  end;
+  return RenderJob(Group := Group, Rows := Rows, Width := Width, Palette := Palette);
 end function;
 
 // Draw a bounded batch on the terminal-owning task without waiting for workers.

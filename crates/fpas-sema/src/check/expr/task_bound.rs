@@ -28,6 +28,28 @@ impl Checker {
             Expr::RecordLiteral { fields, .. } => fields
                 .iter()
                 .any(|field| self.expr_is_task_bound(Self::expr_lookup_key(&field.value))),
+            Expr::Call { args, .. } if self.record_constructions.contains(&key) => {
+                args.iter().any(|argument| {
+                    self.expr_is_task_bound(Self::expr_lookup_key(argument.argument_value()))
+                }) || self.expr_types.get(&key).is_some_and(|ty| {
+                    let Ty::Record(record) = ty else {
+                        return false;
+                    };
+                    self.record_defaults
+                        .get(&record.name)
+                        .is_some_and(|defaults| {
+                            defaults.iter().any(|(name, value)| {
+                                !args.iter().any(|argument| {
+                                    argument
+                                        .argument_name()
+                                        .is_some_and(|provided| provided.eq_ignore_ascii_case(name))
+                                }) && value.as_ref().is_some_and(|value| {
+                                    self.expr_is_task_bound(Self::expr_lookup_key(value))
+                                })
+                            })
+                        })
+                })
+            }
             Expr::RecordUpdate { base, fields, .. } => {
                 self.expr_is_task_bound(Self::expr_lookup_key(base))
                     || fields

@@ -9,12 +9,7 @@ begin
   AssertEquals(3, Graphemes.Length());
   AssertEquals('é', Graphemes[1]);
   AssertEquals('👩‍💻', Graphemes[2]);
-  const Value: Cell := record
-    glyph := 'é';
-    foreground := CrtColor(7);
-    background := CrtColor(0);
-  end;
-
+  const Value: Cell := Std.Console.Cell(glyph := 'é', foreground := CrtColor(7), background := CrtColor(0));
   PutCell(1, 1, Value);
   AssertEquals('é', GetCell(1, 1).Unwrap().glyph);
 end.

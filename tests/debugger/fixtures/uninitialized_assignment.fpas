@@ -12,10 +12,7 @@ var GlobalCount: integer := 99;
 begin
   var Count: integer := 1;
   var Flag: boolean := false;
-  var Origin: Point := record
-    X := 3;
-    Y := 4;
-  end;
+  var Origin: Point := Point(X := 3, Y := 4);
   const Frozen: integer := 2;
   WriteLn(Count);
   WriteLn(GlobalCount);

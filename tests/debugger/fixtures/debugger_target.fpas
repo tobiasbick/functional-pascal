@@ -28,10 +28,7 @@ begin
 end function;
 
 begin
-  const Origin: Point := record
-    X := 3;
-    Y := 4;
-  end;
+  const Origin: Point := Point(X := 3, Y := 4);
   const Counter: function(): integer := MakeCounter(10);
   const Values: array of integer := [Origin.X, Origin.Y, Factorial(4)];
   WriteLn(Values);

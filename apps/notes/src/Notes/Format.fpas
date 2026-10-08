@@ -140,17 +140,7 @@ begin
     end;
   end if;
 
-  return Ok(record
-    Id := Id;
-    Title := Title;
-    CreatedMillis := Created;
-    UpdatedMillis := Updated;
-    Tags := try FieldTags(Fields);
-    Pinned := try FieldBoolean(Fields, 'pinned');
-    Archived := try FieldBoolean(Fields, 'archived');
-    Body := Body;
-    Path := '';
-  end);
+  return Ok(Note(Id := Id, Title := Title, CreatedMillis := Created, UpdatedMillis := Updated, Tags := try FieldTags(Fields), Pinned := try FieldBoolean(Fields, 'pinned'), Archived := try FieldBoolean(Fields, 'archived'), Body := Body, Path := ''));
 end function;
 
 // Parses one UTF-8 `.note` document with TOML frontmatter.

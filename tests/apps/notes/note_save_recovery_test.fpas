@@ -5,10 +5,10 @@ uses Notes.Model, Notes.Repository, Notes.Update, Std.Fs, Std.Test, Std.Tui;
 begin
   const Blocked: string := ScratchDir() + '/blocked';
   AssertTrue(Std.Fs.WriteText(Blocked, 'file, not directory').Unwrap());
-  const Loaded: NotesLoad := record
-    Notes := [NoteCreate('one', 1), NoteCreate('two', 2)];
-    Issues := [];
-  end;
+  const Loaded: NotesLoad := notes.model.notesload(Notes := [
+                                                              NoteCreate('one', 1),
+                                                              NoteCreate('two', 2)
+                                                            ], Issues := []);
   var State: NotesModel := NotesModelCreate(Blocked, Loaded);
   State.Dirty := true;
   State := NotesPersistCurrent(State);

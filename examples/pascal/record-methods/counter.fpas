@@ -9,18 +9,12 @@ type Counter = record
   function Increment(Self: Counter): Counter;
   begin
     const NewValue: integer := Self.Value + Self.Step;
-    return record
-      Value := NewValue;
-      Step := Self.Step;
-    end;
+    return Counter(Value := NewValue, Step := Self.Step);
   end function;
 
   function Reset(Self: Counter): Counter;
   begin
-    return record
-      Value := 0;
-      Step := Self.Step;
-    end;
+    return Counter(Value := 0, Step := Self.Step);
   end function;
 
   procedure Show(Self: Counter);
@@ -30,11 +24,7 @@ type Counter = record
 end record;
 
 begin
-  const C: Counter := record
-    Value := 0;
-    Step := 5;
-  end;
-
+  const C: Counter := Counter(Value := 0, Step := 5);
   C.Show();
   WriteLn('Counter: ' + IntToStr(C.Increment().Increment().Increment().Value));
   const Cleared: Counter := C.Increment().Increment().Reset();

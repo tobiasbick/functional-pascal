@@ -23,11 +23,7 @@ begin
 end function;
 
 begin
-  const Pair: Values := record
-    shl := 4;
-    shr := 2;
-  end;
-
+  const Pair: Values := Values(shl := 4, shr := 2);
   AssertEquals(4, ShL(3));
   AssertEquals(2, SHR(3));
   AssertEquals(6, Add(Pair.SHL, Pair.Shr));

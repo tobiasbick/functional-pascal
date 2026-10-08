@@ -542,9 +542,9 @@ type
   end enum;
 
 begin
-  const Initial: Payload := record
-    Value := 1;
-  end;
+  const Initial: Payload := Payload(
+    Value := 1
+  );
   var Selected: Choice := Choice.Holder(Initial);
   const Marker: integer := 0;
 end.

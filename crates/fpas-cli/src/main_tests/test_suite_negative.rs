@@ -36,7 +36,7 @@ fn record_update_requires_separator_between_fields() {
     let (exit_code, _stdout, stderr) = support::run_source_and_capture_output(
         "record_update_missing_separator.fpas",
         "program T; type Point = record X: integer; Y: integer; end record; \
-         begin const P: Point := record X := 1; Y := 2; end; \
+         begin const P: Point := Point( X := 1, Y := 2 ); \
          const Q: Point := P with X := 3 Y := 4; end with; end.",
     );
     assert_ne!(exit_code, 0, "malformed record update was accepted");

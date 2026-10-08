@@ -306,7 +306,7 @@ fn renaming_a_variant_field_updates_named_construction_labels() {
 #[test]
 fn renaming_a_record_field_updates_member_accesses() {
     let temp = TempDirectory::new("references-record-field");
-    let source = "program Fields;\n\ntype Point = record\n  X: integer;\n  Y: integer;\nend record;\n\nbegin\n  const P: Point := record X := 1; Y := 2; end;\n  const A: integer := P.X;\nend.\n";
+    let source = "program Fields;\n\ntype Point = record\n  X: integer;\n  Y: integer;\nend record;\n\nbegin\n  const P: Point := Point( X := 1, Y := 2 );\n  const A: integer := P.X;\nend.\n";
     let path = temp.write("fields.fpas", source);
     let mut service = LanguageService::new(WorkspaceContext::loose(temp.path()));
     let field = source.find("X: integer;").expect("field declaration");

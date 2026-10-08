@@ -30,12 +30,12 @@ begin
   const FixedScores: dict of string to integer := ['Fixed': 5];
   var NestedValues: dict of string to array of integer := [:];
   var Rows: array of Row := [
-    record
-      Scores := ['Left': 10];
-    end,
-    record
-      Scores := ['Right': 20];
-    end
+    Row(
+      Scores := ['Left': 10]
+    ),
+    Row(
+      Scores := ['Right': 20]
+    )
   ];
   WriteLn(Scores['Hopper']);
   WriteLn(Scores['Bob']);

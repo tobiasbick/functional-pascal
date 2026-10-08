@@ -37,7 +37,7 @@ begin
   var A: integer := 1;
   var B: integer := 2;
   Swap(var A, var B);
-  var P: Point := record X := 1; Y := 2; end;
+  var P: Point := Point( X := 1, Y := 2 );
   MovePoint(var P);
   Increase(var P.X);
   var Items: array of integer := [5, 6, 7];

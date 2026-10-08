@@ -74,9 +74,6 @@ begin
     end;
   end for;
 
-  return record
-    Cells := NextCells;
-    Continuations := NextContinuations;
-  end;
+  return TuiSurfaceRow(Cells := NextCells, Continuations := NextContinuations);
 end function;
 end unit;

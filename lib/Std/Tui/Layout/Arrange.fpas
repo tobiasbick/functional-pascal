@@ -193,11 +193,7 @@ begin
   const Index: integer := TuiArrangeBuilding.Length();
   var Entries: array of TuiArrangedEntry := TuiArrangeBuilding;
   TuiArrangeBuilding := [];
-  Entries.Push(record
-    ParentIndex := ParentIndex;
-    Bounds := NodeBounds;
-    Clip := Clip;
-  end);
+  Entries.Push(std.tui.layout.frame.tuiarrangedentry(ParentIndex := ParentIndex, Bounds := NodeBounds, Clip := Clip));
   TuiArrangeBuilding := Entries;
   return Index;
 end function;

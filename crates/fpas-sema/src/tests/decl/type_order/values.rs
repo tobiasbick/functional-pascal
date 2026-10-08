@@ -8,7 +8,7 @@ fn defaults_and_method_bodies_keep_preceding_values_visible() {
       type Box = record Value: integer := Limit;
         function GetValue(Self: Box): integer; begin return Self.Value + Count; end function;
       end record;
-      begin const Value: Box := record end; discard Value.GetValue(); end.",
+      begin const Value: Box := Box( ); discard Value.GetValue(); end.",
     );
 }
 

@@ -10,42 +10,27 @@ type Complex = record
 
   public static function Zero(): Complex;
   begin
-    return record
-      Re := 0.0;
-      Im := 0.0;
-    end;
+    return Complex(Re := 0.0, Im := 0.0);
   end function;
 
   public static function Create(Re: real; Im: real): Complex;
   begin
-    return record
-      Re := Re;
-      Im := Im;
-    end;
+    return Complex(Re := Re, Im := Im);
   end function;
 
   public function Conj(Self: Complex): Complex;
   begin
-    return record
-      Re := Self.Re;
-      Im := - Self.Im;
-    end;
+    return Complex(Re := Self.Re, Im := - Self.Im);
   end function;
 
   public function Sq(Self: Complex): Complex;
   begin
-    return record
-      Re := Self.Re * Self.Re - Self.Im * Self.Im;
-      Im := (2.0 * Self.Re) * Self.Im;
-    end;
+    return Complex(Re := Self.Re * Self.Re - Self.Im * Self.Im, Im := (2.0 * Self.Re) * Self.Im);
   end function;
 
   public function Add(Self: Complex; Other: Complex): Complex;
   begin
-    return record
-      Re := Self.Re + Other.Re;
-      Im := Self.Im + Other.Im;
-    end;
+    return Complex(Re := Self.Re + Other.Re, Im := Self.Im + Other.Im);
   end function;
 
   public function MagSq(Self: Complex): real;
@@ -73,18 +58,12 @@ begin
 
   if N >= MaxIter then
     begin
-      return record
-        IsInside := true;
-        EscapeValue := 0.0;
-      end;
+      return PixelSample(IsInside := true, EscapeValue := 0.0);
     end;
   end if;
   const MagnitudeSq: real := Max(Z.MagSq(), 4.0);
   const Smooth: real := (IntToReal(N) + 1.0) - (Log(Log(MagnitudeSq) * 0.5) / Log(2.0));
-  return record
-    IsInside := false;
-    EscapeValue := Smooth;
-  end;
+  return PixelSample(IsInside := false, EscapeValue := Smooth);
 end function;
 
 function ComputeRow(
@@ -139,19 +118,11 @@ begin
   if Sample.IsInside then
     begin
       const CellShade: Color := InsideColor();
-      return record
-        glyph := ' ';
-        foreground := CellShade;
-        background := CellShade;
-      end;
+      return Std.Console.Cell(glyph := ' ', foreground := CellShade, background := CellShade);
     end;
   end if;
 
-  return record
-    glyph := EscapeGlyph(Sample.EscapeValue);
-    foreground := EscapeColor(Palette, Sample.EscapeValue);
-    background := RgbColor(0, 0, 0);
-  end;
+  return Std.Console.Cell(glyph := EscapeGlyph(Sample.EscapeValue), foreground := EscapeColor(Palette, Sample.EscapeValue), background := RgbColor(0, 0, 0));
 end function;
 
 procedure DrawRow(Row: array of PixelSample; Width: integer; Y: integer; Palette: PaletteKind);

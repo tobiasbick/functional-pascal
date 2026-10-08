@@ -41,9 +41,7 @@ public type TuiCmdOutput = record
     TuiCommandPalettes := TuiCommandPalettes.Concat([None]);
     TuiCommandBackground := TuiCommandBackground.Concat([[]]);
     TuiCommandTickDelays := TuiCommandTickDelays.Concat([-1]);
-    return record
-      Slot := TuiCommandValues.Length();
-    end;
+    return TuiCmdOutput(Slot := TuiCommandValues.Length());
   end function;
 
   // Resets the output before one Update call.

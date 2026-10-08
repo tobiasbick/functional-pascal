@@ -22,9 +22,7 @@ public type TuiAction = record
   // - `Value`: Value used to create or update the result.
   public static function Create(Value: integer): TuiAction;
   begin
-    return record
-      Value := TuiActionRequirePositive(Value);
-    end;
+    return TuiAction(Value := TuiActionRequirePositive(Value));
   end function;
 end record;
 end unit;

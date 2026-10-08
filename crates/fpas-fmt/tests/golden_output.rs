@@ -35,7 +35,7 @@ fn unit_clamp() {
 fn record_member_visibility() {
     common::assert_golden(
         "record_visibility",
-        "unit Demo.Counter; public type Counter = record Value: integer; public Step: integer; function Hidden(Self: Counter): integer; begin return Self.Value; end function; public static function Create(): Counter; begin return record Value := 0; Step := 1; end; end function; public property Current: integer read Hidden; public event Changed: procedure() read ReadChanged write WriteChanged; end record;\nend unit;",
+        "unit Demo.Counter; public type Counter = record Value: integer; public Step: integer; function Hidden(Self: Counter): integer; begin return Self.Value; end function; public static function Create(): Counter; begin return Counter( Value := 0, Step := 1 ); end function; public property Current: integer read Hidden; public event Changed: procedure() read ReadChanged write WriteChanged; end record;\nend unit;",
         include_str!("golden/record_visibility.expected.fpas"),
     );
 }
@@ -50,10 +50,10 @@ fn long_uses() {
 }
 
 #[test]
-fn short_record_literal_is_multiline() {
+fn short_record_construction_is_compact() {
     common::assert_golden(
         "short_record",
-        "program T; type Point = record X: integer; Y: integer; end record; begin const A: Point := record X := 3; Y := 4; end; end.",
+        "program T; type Point = record X: integer; Y: integer; end record; begin const A: Point := Point( X := 3, Y := 4 ); end.",
         include_str!("golden/short_record.expected.fpas"),
     );
 }
@@ -62,7 +62,7 @@ fn short_record_literal_is_multiline() {
 fn logical_block_spacing() {
     common::assert_golden(
         "logical_block_spacing",
-        "program T; type Point = record X: integer; Y: integer; end record; begin const A: Point := record X := 3; Y := 4; end; const B: Point := record X := 10; Y := 20; end; const UpdatedB: Point := B with X := 11; end with; A.Print(); if Ready then Save(); end if;\n// present result\nPresent(); if NeedsCount then Prepare(); end if; const Count: integer := 1; WriteLn(Count); if Done then Finish(); end if; end.",
+        "program T; type Point = record X: integer; Y: integer; end record; begin const A: Point := Point( X := 3, Y := 4 ); const B: Point := Point( X := 10, Y := 20 ); const UpdatedB: Point := B with X := 11; end with; A.Print(); if Ready then Save(); end if;\n// present result\nPresent(); if NeedsCount then Prepare(); end if; const Count: integer := 1; WriteLn(Count); if Done then Finish(); end if; end.",
         include_str!("golden/logical_block_spacing.expected.fpas"),
     );
 }

@@ -56,7 +56,8 @@ AP09 is complete. These gaps are tracked in the plans that own them:
 - Named construction of generic enum variants:
   [AP24.3](../ap24-generic-data-structures/03-generic-enums.md).
 - Editor rename of record fields used in `record Field := Value; end` literals:
-  [AP10.1](../ap10-typed-record-construction/01-typed-construction.md).
+  [AP10.3](../ap10-typed-record-construction/03-remove-record-literals.md)
+  removes these literals. AP10.1 supports labels in typed construction.
 - Named arguments in debugger evaluation:
   [compiler and language-limit follow-ups](../../compiler-panic-followups.md).
 

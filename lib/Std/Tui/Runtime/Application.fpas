@@ -33,9 +33,7 @@ public type TuiApplication = record
   // - `Palette`: Palette used to resolve semantic style roles.
   public static function OpenForTestWithPalette(Size: TuiSize; Palette: TuiPalette): TuiApplication;
   begin
-    return record
-      Id := TuiAppOpenApplication(Size, Palette, false);
-    end;
+    return TuiApplication(Id := TuiAppOpenApplication(Size, Palette, false));
   end function;
 
   // Closes the host and discards all pending input and messages.
@@ -222,9 +220,7 @@ public type TuiApplication = record
       end;
     end if;
     const Size: TuiSize := TuiSize.Create(Width, Height);
-    const App: TuiApplication := record
-      Id := TuiAppOpenApplication(Size, Palette, true);
-    end;
+    const App: TuiApplication := TuiApplication(Id := TuiAppOpenApplication(Size, Palette, true));
     const Inbox: channel of boolean := CreateChannel(1);
     const Model: TModel := TuiRunInteractive(App.Id, InitialModel, Inbox, Update, TuiIgnoreApplicationMessage, View, false);
     discard CloseChannel(Inbox);
@@ -267,10 +263,7 @@ public type TuiApplication = record
         Height := 1;
       end;
     end if;
-    const App: TuiApplication := record
-      Id := TuiAppOpenApplication(TuiSize.Create(Width, Height), Palette, true);
-    end;
-
+    const App: TuiApplication := TuiApplication(Id := TuiAppOpenApplication(TuiSize.Create(Width, Height), Palette, true));
     return TuiRunInteractive(App.Id, InitialModel, Inbox, Update, UpdateApplication, View, true);
   end function;
 end record;

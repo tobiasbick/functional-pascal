@@ -15,7 +15,12 @@ impl Checker {
             .fields
             .iter()
             .filter(|field| seen.insert(field.name.to_ascii_lowercase()))
-            .map(|field| (field.name.clone(), field.default_value.clone()))
+            .map(|field| {
+                (
+                    field.name.clone(),
+                    field.default_value.clone().map(std::sync::Arc::new),
+                )
+            })
             .collect();
         if defaults.iter().any(|(_, value)| value.is_some()) {
             self.record_defaults
@@ -23,7 +28,7 @@ impl Checker {
         }
     }
 
-    /// Check original default expressions with only preceding values in scope.
+    /// Check retained defaults with stable identity and only preceding values in scope.
     pub(super) fn check_record_defaults(&mut self, definition: &TypeDef, record: &RecordType) {
         let Some(symbol) = self.scopes.lookup_type(&definition.name) else {
             return;
@@ -36,7 +41,16 @@ impl Checker {
             if !seen.insert(field.name.to_ascii_lowercase()) {
                 continue;
             }
-            let Some(expression) = &field.default_value else {
+            let expression = self
+                .record_defaults
+                .get(&definition.name)
+                .and_then(|fields| {
+                    fields
+                        .iter()
+                        .find(|(name, _)| name.eq_ignore_ascii_case(&field.name))
+                })
+                .and_then(|(_, value)| value.clone());
+            let Some(expression) = expression else {
                 continue;
             };
             let Some((_, expected)) = shape
@@ -46,7 +60,7 @@ impl Checker {
             else {
                 continue;
             };
-            let actual = self.check_expr_with_expected_record_literals(expression, expected);
+            let actual = self.check_expr_with_expected_record_literals(&expression, expected);
             self.check_type_compat(
                 expected,
                 &actual,
@@ -58,8 +72,11 @@ impl Checker {
                     definition.name.to_ascii_lowercase(),
                     field.name.to_ascii_lowercase(),
                 ),
-                self.discard_info(expression).value,
+                self.discard_info(&expression).value,
             );
+            let compile_time = self.const_initializer_is_compile_time_known(&expression, expected);
+            self.record_default_constants
+                .insert(Self::expr_lookup_key(&expression), compile_time);
         }
     }
 }

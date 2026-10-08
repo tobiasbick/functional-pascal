@@ -105,7 +105,7 @@ fn imported_type_hides_imported_enum_variant_short_name() {
          uses Demo.Frames, Demo.Signals;
          public function Run(): integer;
          begin
-           const F: Frame := record X := 1; end;
+           const F: Frame := Frame(X := 1);
            const S: Signal := Signal.Frame(2);
            return F.X;
          end function;\nend unit;",
@@ -120,7 +120,18 @@ fn imported_type_hides_imported_enum_variant_short_name() {
          begin return Frame(2); end function;\nend unit;",
         &interfaces,
     );
-    assert_eq!(variant_short.len(), 1, "{variant_short:#?}");
+    assert!(
+        variant_short
+            .iter()
+            .any(|message| message.contains("requires named fields")),
+        "{variant_short:#?}"
+    );
+    assert!(
+        variant_short
+            .iter()
+            .any(|message| message.contains("demo.frames.frame")),
+        "{variant_short:#?}"
+    );
 }
 
 #[test]

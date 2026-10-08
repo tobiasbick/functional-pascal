@@ -34,7 +34,7 @@ begin
   Items.Push(3);
 end procedure;
 begin
-  var H: Holder := record Items := [1]; end;
+  var H: Holder := Holder( Items := [1] );
   H.Items.Push(2);
   Add(var H.Items);
   if H.Items.Pop() <> 3 then panic('forwarded write'); end if;
@@ -60,7 +60,7 @@ fn writes_before_panic_and_failed_pop_remain_in_caller_storage() {
             r#"program T;
 
 type Holder = record Items: array of integer; end record;
-var Global: Holder := record Items := [1]; end;
+var Global: Holder := Holder( Items := [1] );
 procedure Change(var H: Holder);
 begin {mutation} {tail} end procedure;
 begin Change(var Global); end."#

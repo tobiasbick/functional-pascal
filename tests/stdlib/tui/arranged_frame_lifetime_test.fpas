@@ -4,14 +4,7 @@ uses Std.Test, Std.Tui;
 
 function MakeKey(Kind: TuiKeyKind; Character: string): TuiKeyEvent;
 begin
-  return record
-    kind := Kind;
-    ch := Character;
-    shift := false;
-    ctrl := false;
-    alt := false;
-    meta := false;
-  end;
+  return TuiKeyEvent(kind := Kind, ch := Character, shift := false, ctrl := false, alt := false, meta := false);
 end function;
 
 begin

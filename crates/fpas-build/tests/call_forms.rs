@@ -170,7 +170,7 @@ include = ["src/**/*.fpas"]
 
 public type Holder = record public Items: array of integer; end record;
 public var Items: array of integer := [1];
-public var State: Holder := record Items := [2]; end;
+public var State: Holder := Holder( Items := [2] );
 public procedure Append(var Target: array of integer; Value: integer);
 begin Target.Push(Value); end procedure;
 end unit;"#,

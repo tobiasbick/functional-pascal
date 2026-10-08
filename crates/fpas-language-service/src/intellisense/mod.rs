@@ -5,6 +5,7 @@ mod completion;
 mod context;
 pub(crate) mod native;
 mod native_receiver;
+mod record_construction;
 mod signature_help;
 
 use std::path::PathBuf;

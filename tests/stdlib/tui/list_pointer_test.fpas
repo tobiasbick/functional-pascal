@@ -47,10 +47,7 @@ begin
         case Current of
           when Some(Id):
             begin
-              return record
-                Focus := Id.Value;
-                Selected := State.Selected;
-              end;
+              return ListModel(Focus := Id.Value, Selected := State.Selected);
             end;
           when None:
             begin
@@ -60,10 +57,7 @@ begin
       end;
     when TuiMsg.SelectionChanged(Source, Action, Selected):
       begin
-        return record
-          Focus := State.Focus;
-          Selected := Selected;
-        end;
+        return ListModel(Focus := State.Focus, Selected := Selected);
       end;
     else
       begin
@@ -74,11 +68,7 @@ end function;
 
 begin
   var App: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(24, 8));
-  var Model: ListModel := record
-    Focus := 1;
-    Selected := 0;
-  end;
-
+  var Model: ListModel := ListModel(Focus := 1, Selected := 0);
   Model := App.RunIterations(Model, UpdateList, ViewList, 0, 0);
   const BetaAt: TuiPoint := FindGlyph(App.SurfaceSnapshot(), 'Beta');
   App.InjectPointerForTest(MakePointer(BetaAt.X, BetaAt.Y));

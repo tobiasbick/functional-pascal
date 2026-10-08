@@ -40,10 +40,7 @@ end function;
 
 begin
   const Inbox: channel of integer := CreateChannel(1);
-  const Final: InteractiveModel := TuiApplication.RunWithBackground(record
-    Inbox := Inbox;
-    Received := 0;
-  end, Inbox, Update, UpdateMessage, View);
+  const Final: InteractiveModel := TuiApplication.RunWithBackground(InteractiveModel(Inbox := Inbox, Received := 0), Inbox, Update, UpdateMessage, View);
   AssertEquals(42, Final.Received);
   AssertTrue(TrySend(Inbox, 1).IsError());
 end.

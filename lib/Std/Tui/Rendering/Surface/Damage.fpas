@@ -113,10 +113,6 @@ begin
     end;
   end for;
 
-  return record
-    Y := Y;
-    FirstX := FirstX;
-    Cells := ChangedCells;
-  end;
+  return TuiSurfaceDamage(Y := Y, FirstX := FirstX, Cells := ChangedCells);
 end function;
 end unit;

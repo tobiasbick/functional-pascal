@@ -51,11 +51,7 @@ begin
         case Current of
           when Some(Id):
             begin
-              return record
-                Focus := Id.Value;
-                Checked := State.Checked;
-                Changes := State.Changes;
-              end;
+              return CheckModel(Focus := Id.Value, Checked := State.Checked, Changes := State.Changes);
             end;
           when None:
             begin
@@ -67,11 +63,9 @@ begin
       begin
         AssertEquals(1, Source.Value);
         AssertEquals(9, Action.Value);
-        return record
-          Focus := State.Focus;
-          Checked := Checked;
-          Changes := State.Changes.Concat([Checked]);
-        end;
+        return CheckModel(Focus := State.Focus, Checked := Checked, Changes := State.Changes.Concat([
+                                                                                                      Checked
+                                                                                                    ]));
       end;
     else
       begin
@@ -82,12 +76,7 @@ end function;
 
 begin
   var App: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(24, 8));
-  var Model: CheckModel := record
-    Focus := 2;
-    Checked := false;
-    Changes := [];
-  end;
-
+  var Model: CheckModel := CheckModel(Focus := 2, Checked := false, Changes := []);
   Model := App.RunIterations(Model, UpdateCheck, ViewCheck, 0, 0);
   const FlagAt: TuiPoint := FindGlyph(App.SurfaceSnapshot(), 'Flag');
   App.InjectPointerForTest(MakePointer(FlagAt.X, FlagAt.Y));

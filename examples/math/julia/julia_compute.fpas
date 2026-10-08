@@ -8,26 +8,17 @@ type Complex = record
 
   public static function Create(Re: real; Im: real): Complex;
   begin
-    return record
-      Re := Re;
-      Im := Im;
-    end;
+    return Complex(Re := Re, Im := Im);
   end function;
 
   public function Sq(Self: Complex): Complex;
   begin
-    return record
-      Re := Self.Re * Self.Re - Self.Im * Self.Im;
-      Im := (2.0 * Self.Re) * Self.Im;
-    end;
+    return Complex(Re := Self.Re * Self.Re - Self.Im * Self.Im, Im := (2.0 * Self.Re) * Self.Im);
   end function;
 
   public function Add(Self: Complex; Other: Complex): Complex;
   begin
-    return record
-      Re := Self.Re + Other.Re;
-      Im := Self.Im + Other.Im;
-    end;
+    return Complex(Re := Self.Re + Other.Re, Im := Self.Im + Other.Im);
   end function;
 
   public function MagSq(Self: Complex): real;
@@ -61,18 +52,12 @@ begin
 
   if N >= MaxIter then
     begin
-      return record
-        IsInside := true;
-        EscapeValue := 0.0;
-      end;
+      return PixelSample(IsInside := true, EscapeValue := 0.0);
     end;
   end if;
   const MagnitudeSq: real := Max(Z.MagSq(), 4.0);
   const Smooth: real := (IntToReal(N) + 1.0) - (Log(Log(MagnitudeSq) * 0.5) / Log(2.0));
-  return record
-    IsInside := false;
-    EscapeValue := Smooth;
-  end;
+  return PixelSample(IsInside := false, EscapeValue := Smooth);
 end function;
 
 // Compute one row, returning an empty array when cancellation is observed.

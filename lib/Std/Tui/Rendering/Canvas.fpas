@@ -22,11 +22,7 @@ public type TuiCanvas = record
   begin
     const Size: TuiSize := Surface.Size();
     const SurfaceBounds: TuiRect := TuiRect.Create(0, 0, Size.Width, Size.Height);
-    return record
-      Surface := Surface;
-      Clip := Bounds.Intersect(SurfaceBounds);
-      Origin := TuiPoint.Create(0, 0);
-    end;
+    return TuiCanvas(Surface := Surface, Clip := Bounds.Intersect(SurfaceBounds), Origin := TuiPoint.Create(0, 0));
   end function;
 
   // Creates a canvas with an explicit surface origin and local clip rectangle.
@@ -37,11 +33,7 @@ public type TuiCanvas = record
   // - `Clip`: Clipping rectangle for drawing.
   public static function CreateLocal(Surface: TuiWorkingSurface; Origin: TuiPoint; Clip: TuiRect): TuiCanvas;
   begin
-    return record
-      Surface := Surface;
-      Clip := Clip;
-      Origin := Origin;
-    end;
+    return TuiCanvas(Surface := Surface, Clip := Clip, Origin := Origin);
   end function;
 
   // Returns a nested canvas for `LocalBounds` in this canvas's local coordinates.

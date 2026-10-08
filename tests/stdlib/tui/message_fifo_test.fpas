@@ -9,22 +9,13 @@ end record;
 
 function MakeKey(Kind: TuiKeyKind; Character: string): TuiKeyEvent;
 begin
-  return record
-    kind := Kind;
-    ch := Character;
-    shift := false;
-    ctrl := false;
-    alt := false;
-    meta := false;
-  end;
+  return TuiKeyEvent(kind := Kind, ch := Character, shift := false, ctrl := false, alt := false, meta := false);
 end function;
 
 function PushEvent(State: FifoModel; InputEvent: string; CmdWasNoCommand: boolean): FifoModel;
 begin
-  return record
-    Events := State.Events.Concat([InputEvent]);
-    SeenCmdWasNoCommand := State.SeenCmdWasNoCommand and CmdWasNoCommand;
-  end;
+  return FifoModel(Events := State.Events.Concat([InputEvent]), SeenCmdWasNoCommand := State.SeenCmdWasNoCommand and
+                                                                                       CmdWasNoCommand);
 end function;
 
 function ViewFifo(State: FifoModel): TuiElement;
@@ -66,11 +57,7 @@ end function;
 
 begin
   var App: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(20, 6));
-  var Model: FifoModel := record
-    Events := [];
-    SeenCmdWasNoCommand := true;
-  end;
-
+  var Model: FifoModel := FifoModel(Events := [], SeenCmdWasNoCommand := true);
   Model := App.RunIterations(Model, UpdateFifo, ViewFifo, 0, 0);
   App.Inject(TuiMsg.Tick(1));
   App.InjectKeyForTest(MakeKey(TuiKeyKind.Enter, ''));

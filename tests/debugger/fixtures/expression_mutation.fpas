@@ -14,11 +14,7 @@ var GlobalValue: integer := 5;
 
 begin
   var Index: integer := 0;
-  var State: Container := record
-    Items := [record
-      Value := 10;
-    end];
-  end;
+  var State: Container := Container(Items := [Box(Value := 10)]);
   var Scores: dict of string to integer := ['blue': 20];
   WriteLn(GlobalValue);
   WriteLn(State.Items[Index].Value);

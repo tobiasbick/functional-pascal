@@ -25,13 +25,13 @@ public type Holder = record public Position: Point; public Points: array of Poin
         "program Main;
 uses Demo.Types, Std.Console;
 begin
-  const Original: Holder := record
-    Position := record X := 1; Y := 2; end;
-    Points := [record X := 5; Y := 6; end];
-  end;
+  const Original: Holder := Holder(
+    Position := Demo.Types.Point( X := 1, Y := 2 ),
+    Points := [Demo.Types.Point( X := 5, Y := 6 )]
+  );
   const Changed: Holder := Original with
-    Position := record X := 3; Y := 4; end;
-    Points := [record X := 7; Y := 8; end];
+    Position := Demo.Types.Point( X := 3, Y := 4 );
+    Points := [Demo.Types.Point( X := 7, Y := 8 )];
   end with;
   WriteLn(Changed.Position.X);
   WriteLn(Changed.Position.Y);

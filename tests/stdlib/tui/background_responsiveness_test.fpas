@@ -83,12 +83,7 @@ begin
   const Started: channel of integer := CreateChannel(4);
   const Painted: channel of integer := CreateChannel(1);
   const App: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(20, 4));
-  var State: Model := App.RunBackgroundIterations(record
-    Generation := 0;
-    Gate := Gate;
-    Started := Started;
-    Painted := Painted;
-  end, Inbox, Update, UpdateMessage, View, 1, 0);
+  var State: Model := App.RunBackgroundIterations(Model(Generation := 0, Gate := Gate, Started := Started, Painted := Painted), Inbox, Update, UpdateMessage, View, 1, 0);
   AssertEquals(0, ReceiveWithTimeout(Started, 5000).Unwrap());
   const Observer: task := go ReleaseAfterPaint(Painted, Gate);
   for Index: integer := 1 to 3 do

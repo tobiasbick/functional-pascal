@@ -19,7 +19,7 @@ type
     end function;
   end record;
 begin
-  const C: Counter := record Base := 10; end;
+  const C: Counter := Counter( Base := 10 );
   const AddTen: function(Value: integer): integer := C.Add;
 end.",
     );
@@ -38,7 +38,7 @@ type
     end procedure;
   end record;
 begin
-  const C: Counter := record Base := 1; end;
+  const C: Counter := Counter( Base := 1 );
   const Op: procedure() := C.Bump;
 end.",
     );
@@ -54,7 +54,7 @@ type
     X: integer;
     static function Origin(): Point;
     begin
-      return record X := 0; end;
+      return Point( X := 0 );
     end function;
   end record;
 begin
@@ -84,7 +84,7 @@ type
     end procedure;
   end record;
 begin
-  const C: Counter := record Base := 0; end;
+  const C: Counter := Counter( Base := 0 );
   const Op: procedure() := C.Inc;
 end.",
     );
@@ -104,7 +104,7 @@ type
     end function;
   end record;
 begin
-  const C: Counter := record Base := 10; end;
+  const C: Counter := Counter( Base := 10 );
   const AddTen: function(Value: integer): integer := C.Add;
 end.",
     );

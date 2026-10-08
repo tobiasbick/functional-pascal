@@ -424,7 +424,12 @@ aliased units supply that name, each qualified suggestion remains distinct.
 Adding a different unit preserves existing aliases and adds no duplicate import.
 
 Signature help covers functions, procedures, record methods, nested routines,
-function values, enum constructors with associated values, and generic calls.
+function values, typed record constructors, enum constructors with associated
+values, and generic calls. Record constructors offer unfilled field names with
+`:=` at argument starts and show declared field defaults. Constructor labels
+support definition, hover, references, and field rename through transparent
+type aliases and import aliases. Records with private fields do not expose
+constructor fields or signatures outside their declaring unit.
 It tracks the active argument through nested and multiline expressions and
 shows the callable Markdown plus the matching `Parameters:` entry. The
 extension also contributes parser- and formatter-checked snippets for programs,

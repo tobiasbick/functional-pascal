@@ -43,10 +43,7 @@ begin
 end function;
 
 begin
-  var Origin: Point := record
-    X := 4;
-    Y := 5;
-  end;
+  var Origin: Point := Point(X := 4, Y := 5);
   var Selected: Choice := Choice.Count(1);
   var PairValue: Choice := Choice.Pair(2, 3);
   var EmptyValue: Choice := Choice.Empty;
@@ -58,9 +55,7 @@ begin
   var Packed: result of array of integer, string := Ok([8, 9]);
   var NestedOk: result of integer, string := Ok(11);
   var NestedResult: option of result of integer, string := Some(NestedOk);
-  var PackedHolder: Holder := record
-    Item := Choice.Count(12);
-  end;
+  var PackedHolder: Holder := Holder(Item := Choice.Count(12));
   var Items: array of Choice := [Choice.Count(13)];
   var Scores: dict of string to Choice := ['blue': Choice.Count(14)];
   const Fixed: Choice := Choice.Count(99);

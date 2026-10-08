@@ -21,12 +21,7 @@ begin
   case Node of
     when TuiElement.Menu(Id, Nodes, State, ChangeAction):
       begin
-        return Some(record
-          Id := Id;
-          Nodes := Nodes;
-          State := State;
-          ChangeAction := ChangeAction;
-        end);
+        return Some(TuiRouteMenu(Id := Id, Nodes := Nodes, State := State, ChangeAction := ChangeAction));
       end;
     when TuiElement.Desktop(Focused, Children):
       begin

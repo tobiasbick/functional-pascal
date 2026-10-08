@@ -27,10 +27,7 @@ public type TuiSpacer = record
       end;
     end if;
 
-    return record
-      Kind := TuiSpacerKind.Fixed;
-      MinimumExtent := Extent;
-    end;
+    return TuiSpacer(Kind := TuiSpacerKind.Fixed, MinimumExtent := Extent);
   end function;
 
   // Creates an expanding spacer with a non-negative minimum extent.
@@ -45,10 +42,7 @@ public type TuiSpacer = record
       end;
     end if;
 
-    return record
-      Kind := TuiSpacerKind.Expanding;
-      MinimumExtent := MinimumExtent;
-    end;
+    return TuiSpacer(Kind := TuiSpacerKind.Expanding, MinimumExtent := MinimumExtent);
   end function;
 end record;
 end unit;

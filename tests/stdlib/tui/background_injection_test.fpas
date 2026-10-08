@@ -12,10 +12,7 @@ begin
   case Msg of
     when TuiMsg.Started:
       begin
-        return record
-          Values := State.Values;
-          Starts := State.Starts + 1;
-        end;
+        return InjectionModel(Values := State.Values, Starts := State.Starts + 1);
       end;
     else
       begin
@@ -26,10 +23,7 @@ end function;
 
 function UpdateApplication(State: InjectionModel; Message: integer; Cmd: TuiCmdOutput): InjectionModel;
 begin
-  return record
-    Values := State.Values.Concat([Message]);
-    Starts := State.Starts;
-  end;
+  return InjectionModel(Values := State.Values.Concat([Message]), Starts := State.Starts);
 end function;
 
 function View(State: InjectionModel): TuiElement;
@@ -43,10 +37,7 @@ begin
   AssertTrue(App.InjectBackgroundForTest(Inbox, 4).Unwrap());
   AssertTrue(App.InjectBackgroundForTest(Inbox, 7).Unwrap());
   AssertFalse(App.InjectBackgroundForTest(Inbox, 9).Unwrap());
-  const Model: InjectionModel := App.RunBackgroundIterations(record
-    Values := [];
-    Starts := 0;
-  end, Inbox, UpdateFramework, UpdateApplication, View, 3, 0);
+  const Model: InjectionModel := App.RunBackgroundIterations(InjectionModel(Values := [], Starts := 0), Inbox, UpdateFramework, UpdateApplication, View, 3, 0);
   AssertEquals(1, Model.Starts);
   AssertEquals(2, Model.Values.Length());
   AssertEquals(4, Model.Values[0]);

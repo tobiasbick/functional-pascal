@@ -15,10 +15,7 @@ end function;
 
 begin
   // Origin value.
-  const Origin: Point := record
-    X := 42;
-    Y := 3.5;
-  end;
+  const Origin: Point := Point(X := 42, Y := 3.5);
   // Mask value.
   const Mask: integer := 42;
   if Mask >= 1 then

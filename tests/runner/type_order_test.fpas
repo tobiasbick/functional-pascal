@@ -25,9 +25,7 @@ type Team = record
 
   static function Empty(): Team;
   begin
-    return record
-      Members := [];
-    end;
+    return Team(Members := []);
   end function;
 
   function IsReady(Self: Team): boolean;
@@ -71,9 +69,7 @@ type ChainAlias = Chain;
 
 begin
   const Group: Team := Identity(CreateTeam());
-  const Person: Member := record
-    Home := Some(Group);
-  end;
+  const Person: Member := Member(Home := Some(Group));
   const Populated: Team := Group with Members := [Person]; end with;
   const Bound: function(): boolean := Populated.IsReady;
   AssertTrue(Bound());

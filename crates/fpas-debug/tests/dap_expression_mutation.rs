@@ -22,9 +22,9 @@ var
 begin
   var Index: integer := 0;
   var Counter: integer := 1;
-  var Items: array of Box := [record
-    Value := 10;
-  end];
+  var Items: array of Box := [Box(
+    Value := 10
+  )];
   Counter := Counter + 1;
   GlobalValue := GlobalValue + Items[Index].Value;
 end.

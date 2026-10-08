@@ -30,14 +30,21 @@ Use `TuiMsgTextAreaChanged` to construct the same message explicitly. An
 application normally accepts a routed proposal in `Update`:
 
 ```pascal
-TuiMsg.TextAreaChanged(Source, Action, Text, Caret, Offset):
+type EditorModel = record
+  Text: string;
+  Caret: integer;
+  Offset: TuiPoint;
+end record;
+
+function Update(Model: EditorModel; Msg: TuiMsg): EditorModel;
 begin
-  return record
-    Text := Text;
-    Caret := Caret;
-    Offset := Offset;
-  end;
-end;
+  case Msg of
+    when TuiMsg.TextAreaChanged(Source, Action, Text, Caret, Offset):
+      return EditorModel(Text := Text, Caret := Caret, Offset := Offset);
+    else
+      return Model;
+  end case;
+end function;
 ```
 
 The host stores no editable text, caret, or scroll state between frames.

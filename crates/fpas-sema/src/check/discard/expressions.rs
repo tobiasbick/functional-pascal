@@ -4,7 +4,7 @@
 
 use super::{Checker, types::TaskSafety};
 use crate::types::Ty;
-use fpas_parser::{Designator, DesignatorPart, Expr, FieldInit, PostfixOperation};
+use fpas_parser::{Designator, DesignatorPart, Expr, PostfixOperation};
 use fpas_unit::interface::DiscardInfo;
 
 impl Checker {
@@ -54,7 +54,13 @@ impl Checker {
                 ..Default::default()
             },
             Expr::RecordLiteral { fields, .. } => DiscardInfo {
-                value: self.record_literal_is_task_free(fields, &ty),
+                value: self.record_fields_are_task_free(
+                    fields
+                        .iter()
+                        .map(|field| (field.name.as_str(), &field.value))
+                        .collect(),
+                    &ty,
+                ),
                 ..Default::default()
             },
             Expr::RecordUpdate { base, fields, .. } => DiscardInfo {
@@ -120,6 +126,9 @@ impl Checker {
                 if matches!(self.resolve_visible_type(ty), Ty::Channel(_)) {
                     return false;
                 }
+                if self.record_constructions.contains(&key) {
+                    return self.discard_exprs.get(&key).is_some_and(|info| info.value);
+                }
                 let target = self
                     .method_calls
                     .get(&key)
@@ -136,7 +145,8 @@ impl Checker {
         }
     }
 
-    fn record_literal_is_task_free(&self, fields: &[FieldInit], ty: &Ty) -> bool {
+    /// Share record capture proofs between constructor expressions and unused-result hints.
+    pub(crate) fn record_fields_are_task_free(&self, fields: Vec<(&str, &Expr)>, ty: &Ty) -> bool {
         let Ty::Record(record) = ty else {
             return false;
         };
@@ -148,8 +158,8 @@ impl Checker {
                 TaskSafety::Forbidden(_) => false,
                 TaskSafety::Captures => fields
                     .iter()
-                    .find(|field| field.name.eq_ignore_ascii_case(name))
-                    .map(|field| self.discard_info(&field.value).value)
+                    .find(|(field, _)| field.eq_ignore_ascii_case(name))
+                    .map(|(_, value)| self.discard_info(value).value)
                     .unwrap_or_else(|| {
                         self.record_default_discard
                             .get(&(record.name.to_ascii_lowercase(), name.to_ascii_lowercase()))

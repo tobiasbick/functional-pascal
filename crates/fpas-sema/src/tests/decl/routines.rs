@@ -178,11 +178,11 @@ fn generic_callback_returning_recursive_record_is_valid() {
          type Element = record Text: string; Children: array of Element; end record; type \
               Model = record Count: integer; end record; \
          function View(State: Model): Element; \
-         begin return record Text := 'root'; Children := []; end; end function; \
+         begin return Element( Text := 'root', Children := [] ); end function; \
          function Render<TModel>(State: TModel; ViewFn: function(State: TModel): Element): Element; \
          begin return ViewFn(State); end function; \
          begin \
-           const Root: Element := Render(record Count := 1; end, View); \
+           const Root: Element := Render(Model( Count := 1 ), View); \
          end.",
     );
 }

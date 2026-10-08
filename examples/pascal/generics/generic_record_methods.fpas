@@ -26,13 +26,9 @@ begin
 end function;
 
 begin
-  const B: Box := record
-    Value := 42;
-  end;
-
+  const B: Box := Box(Value := 42);
   WriteLn(B.Map(ToText));
-  const A: Accumulator := record end;
-
+  const A: Accumulator := Accumulator();
   WriteLn('numeric int: ', IntToStr(A.EchoNumeric(21)));
   WriteLn('numeric real ok: ', A.EchoNumeric(1.5) > 1.0);
 end.

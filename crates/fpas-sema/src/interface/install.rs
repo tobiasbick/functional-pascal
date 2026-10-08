@@ -122,7 +122,11 @@ impl check::Checker {
             .map(|field| {
                 (
                     field.name.clone(),
-                    field.default_value.as_ref().map(constant_value_to_expr),
+                    field
+                        .default_value
+                        .as_ref()
+                        .map(constant_value_to_expr)
+                        .map(std::sync::Arc::new),
                 )
             })
             .collect();

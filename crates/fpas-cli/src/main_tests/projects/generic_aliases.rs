@@ -25,7 +25,7 @@ public type
   Model = Repro.Model.Model;
 public function NewModel(): Model;
 begin
-  return record Value := 0; end;
+  return Model( Value := 0 );
 end function;
 public function Update(State: Model; Msg: TuiMsg; Cmd: TuiCmdOutput): Model;
 begin

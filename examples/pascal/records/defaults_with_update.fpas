@@ -14,7 +14,7 @@ begin
 end function;
 
 begin
-  const DefaultConfig: Config := record end;
+  const DefaultConfig: Config := Config();
   const DevConfig: Config := DefaultConfig with Port := 3000; end with;
   const ProdConfig: Config := DevConfig with Host := 'api.example'; Port := 443; end with;
 

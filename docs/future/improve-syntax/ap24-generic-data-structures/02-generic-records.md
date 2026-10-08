@@ -8,6 +8,10 @@ Allow user-defined generic records, for example
 `type Pair of (K: Comparable, V) = record ... end record;`, with typed
 construction and constructor type-argument inference.
 
+AP10.1 supplies construction for concrete record types and their aliases.
+This work package introduces generic record declarations and extends that
+construction with generic type substitution and type-argument inference.
+
 ## Prerequisites
 
 - AP24.1 (parenthesized type arguments).

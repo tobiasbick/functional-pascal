@@ -42,13 +42,8 @@ begin
             return State;
           end;
         end if;
-        const Next: SubscriptionModel := record
-          Gate := State.Gate;
-          Started := State.Started;
-          Stopped := State.Stopped;
-          Generation := State.Generation + 1;
-        end;
-
+        const Next: SubscriptionModel := SubscriptionModel(Gate := State.Gate, Started := State.Started, Stopped := State.Stopped, Generation := State.Generation +
+                                                                                                                                                 1);
         ReplaceWorker(Next, Cmd);
         return Next;
       end;
@@ -75,12 +70,7 @@ begin
   const Started: channel of integer := CreateChannel(2);
   const Stopped: channel of integer := CreateChannel(2);
   const App: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(24, 4));
-  var Model: SubscriptionModel := App.RunBackgroundIterations(record
-    Gate := Gate;
-    Started := Started;
-    Stopped := Stopped;
-    Generation := 0;
-  end, Inbox, UpdateFramework, UpdateApplication, View, 1, 0);
+  var Model: SubscriptionModel := App.RunBackgroundIterations(SubscriptionModel(Gate := Gate, Started := Started, Stopped := Stopped, Generation := 0), Inbox, UpdateFramework, UpdateApplication, View, 1, 0);
   AssertEquals(0, ReceiveWithTimeout(Started, 10000).Unwrap());
   App.Inject(TuiMsg.Tick(1));
   Model := App.RunBackgroundIterations(Model, Inbox, UpdateFramework, UpdateApplication, View, 1, 0);

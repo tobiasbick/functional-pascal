@@ -1,0 +1,31 @@
+program TypedConstructionTest;
+
+uses Std.Test;
+
+type Point = record
+  X: integer;
+  Y: integer := 2;
+end record;
+
+type Position = Point;
+
+type Box = record
+  Value: Point;
+  Items: array of Point;
+end record;
+
+function Make<T>(Value: T): Point;
+begin
+  return Position(X := 5);
+end function;
+
+begin
+  const P: Point := Position(Y := 4, X := 1);
+  const B: Box := Box(Items := [Point(X := 3)], Value := P);
+  const G: Point := Make('value');
+  AssertEquals(1, P.X);
+  AssertEquals(4, P.Y);
+  AssertEquals(2, B.Items[0].Y);
+  AssertEquals(5, G.X);
+  AssertTrue(Point(X := 1, Y := 4) = P);
+end.

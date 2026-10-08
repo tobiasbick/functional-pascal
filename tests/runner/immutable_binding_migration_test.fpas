@@ -13,9 +13,7 @@ end function;
 
 begin
   const N: integer := ReadValue();
-  const Object: Item := record
-    N := 7;
-  end;
+  const Object: Item := Item(N := 7);
   var Score: integer := 0;
   case 2 of
     when Matched if Matched > 0:

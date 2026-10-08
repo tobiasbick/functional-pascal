@@ -23,7 +23,7 @@ type
     property ValueProp: integer read GetValue write SetValue;
   end record;
 begin
-  const B: Box := record Value := 1; end;
+  const B: Box := Box( Value := 1 );
   const X: integer := B.ValueProp;
   B.ValueProp := 2;
 end.",
@@ -44,7 +44,7 @@ type
     property Label: string write SetLabel;
   end record;
 begin
-  const H: Handle := record Id := 1; end;
+  const H: Handle := Handle( Id := 1 );
   H.Label := 'ok';
 end.",
     );
@@ -63,7 +63,7 @@ type
     property Password: string write SetPassword;
   end record;
 begin
-  const B: Box := record end;
+  const B: Box := Box( );
   const S: string := B.Password;
 end.",
     );
@@ -87,7 +87,7 @@ type
     property Width: integer read GetWidth;
   end record;
 begin
-  const B: Box := record end;
+  const B: Box := Box( );
   B.Width := 1;
 end.",
     );
@@ -157,7 +157,7 @@ type
     property Width: integer read GetWidth;
   end record;
 begin
-  const B: Box := record end;
+  const B: Box := Box( );
   const W: integer := B.Width;
 end.";
     let (program, parse_errors) = fpas_parser::parse(src);
@@ -238,7 +238,7 @@ type
     property Value: integer read GetValue;
   end record;
 begin
-  const B: Box := record Value := 1; end;
+  const B: Box := Box( Value := 1 );
 end.",
     );
     assert!(
@@ -263,7 +263,7 @@ type
     property Value: integer read GetValue;
   end record;
 begin
-  const B: Box := record end;
+  const B: Box := Box( );
   const C: Box := B with Value := 1; end with;
 end.",
     );

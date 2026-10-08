@@ -23,8 +23,7 @@ end function;
 
 begin
   var App: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(20, 3));
-  var Model: MenuModel := record end;
-
+  var Model: MenuModel := MenuModel();
   Model := App.RunIterations(Model, UpdateMenu, ViewMenu, 0, 0);
   const Surface: TuiSurfaceSnapshot := App.SurfaceSnapshot();
   AssertTrue(Surface.LineAt(0).Contains(' Open  Save '));

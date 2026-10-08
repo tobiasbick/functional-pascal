@@ -35,9 +35,7 @@ public type TuiArrangedFrame = record
   begin
     var Empty: array of TuiArrangedEntry := [];
     TuiFrameEntries := TuiFrameEntries.Concat([Empty]);
-    return record
-      Slot := TuiFrameEntries.Length();
-    end;
+    return TuiArrangedFrame(Slot := TuiFrameEntries.Length());
   end function;
 
   // Clears all entries before a fresh arrange pass.
@@ -64,11 +62,7 @@ public type TuiArrangedFrame = record
     var Entries: array of TuiArrangedEntry := TuiFrameEntries[Slot - 1];
     const Index: integer := Entries.Length();
     TuiFrameEntries[Slot - 1] := [];
-    Entries.Push(record
-      ParentIndex := ParentIndex;
-      Bounds := Bounds;
-      Clip := Clip;
-    end);
+    Entries.Push(TuiArrangedEntry(ParentIndex := ParentIndex, Bounds := Bounds, Clip := Clip));
     TuiFrameEntries[Slot - 1] := Entries;
     return Index;
   end function;

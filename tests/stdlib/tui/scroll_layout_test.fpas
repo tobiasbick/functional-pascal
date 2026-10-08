@@ -47,10 +47,7 @@ begin
   AssertEquals(2, FixedMeasured.Preferred.Height);
   AssertEquals(2, FixedMeasured.Maximum.Height);
   var App: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(12, 5));
-  var Model: ScrollModel := record
-    Offset := TuiPoint.Create(0, 4);
-  end;
-
+  var Model: ScrollModel := ScrollModel(Offset := TuiPoint.Create(0, 4));
   Model := App.RunIterations(Model, UpdateScroll, ViewScroll, 0, 0);
   AssertTrue(App.SurfaceSnapshot().LineAt(0).Contains('One'));
   App.InjectResizeForTest(TuiSize.Create(12, 2));

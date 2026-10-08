@@ -576,10 +576,14 @@ postfix_suffix      = '.' identifier [ call_args ]
 call_args           = '(' [ arg_list ] ')' ;
 
 (* -- Record construction -- *)
+(* A call whose normally resolved target is a record type or transparent alias. *)
+(* This is the named-only semantic subset of designator + call_args above. *)
+typed_record_construction = qualified_id '(' [ named_field_argument { ',' named_field_argument } ] ')' ;
+named_field_argument = identifier ':=' expression ;
 record_literal      = 'record' { field_init } 'end' ;
 
 (* Zero field_inits is valid when every field of the target type    *)
-(* has a default value: var P: Point := record end;                 *)
+(* has a default value: var P: Point := Point();                 *)
 field_init          = identifier ':=' expression ';' ;
 
 (* A call is fully positional or fully named (FP2016).                *)

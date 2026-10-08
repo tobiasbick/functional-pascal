@@ -164,9 +164,9 @@ var
   GlobalValues: array of integer := [4, 6];
 
 begin
-  var Nested: Container := record
-    Items := [1, 3];
-  end;
+  var Nested: Container := Container(
+    Items := [1, 3]
+  );
   const Marker: integer := Nested.Items[0] + GlobalValues[0];
 end.
 "#,

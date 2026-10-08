@@ -61,9 +61,9 @@ type
   end record;
 
 begin
-  const Origin: Point := record
-    X := 1;
-  end;
+  const Origin: Point := Point(
+    X := 1
+  );
   const Marker: integer := Origin.X;
 end.
 "#,

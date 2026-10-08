@@ -28,15 +28,7 @@ public type TuiInputSpec = record
   // - `ChangeAction`: Application action emitted when the value changes.
   public static function Create(Id: TuiControlId; Text: string; Caret: integer; ChangeAction: TuiAction): TuiInputSpec;
   begin
-    return record
-      Id := Id;
-      Text := Text;
-      Caret := Caret;
-      Hint := '';
-      History := [];
-      HistoryDraft := '';
-      ChangeAction := ChangeAction;
-    end;
+    return TuiInputSpec(Id := Id, Text := Text, Caret := Caret, Hint := '', History := [], HistoryDraft := '', ChangeAction := ChangeAction);
   end function;
 
   // Creates an input that paints a hint while its text is empty.
@@ -55,15 +47,7 @@ public type TuiInputSpec = record
   ChangeAction: TuiAction
 ): TuiInputSpec;
   begin
-    return record
-      Id := Id;
-      Text := Text;
-      Caret := Caret;
-      Hint := Hint;
-      History := [];
-      HistoryDraft := '';
-      ChangeAction := ChangeAction;
-    end;
+    return TuiInputSpec(Id := Id, Text := Text, Caret := Caret, Hint := Hint, History := [], HistoryDraft := '', ChangeAction := ChangeAction);
   end function;
 
   // Creates an input with oldest-to-newest Up/Down history and a restorable draft.
@@ -86,15 +70,7 @@ public type TuiInputSpec = record
   ChangeAction: TuiAction
 ): TuiInputSpec;
   begin
-    return record
-      Id := Id;
-      Text := Text;
-      Caret := Caret;
-      Hint := Hint;
-      History := History;
-      HistoryDraft := HistoryDraft;
-      ChangeAction := ChangeAction;
-    end;
+    return TuiInputSpec(Id := Id, Text := Text, Caret := Caret, Hint := Hint, History := History, HistoryDraft := HistoryDraft, ChangeAction := ChangeAction);
   end function;
 end record;
 end unit;

@@ -9,6 +9,7 @@ mod fluent;
 mod named_arguments;
 mod native;
 mod postfix;
+mod record_construction;
 mod record_context;
 mod record_events;
 mod record_properties;
@@ -226,6 +227,7 @@ fn analysis_metadata_exposes_all_named_results() {
         fluent_calls,
         member_value_calls,
         record_defaults,
+        record_constructions,
         scalar_case_bindings,
         closure_infos,
         nested_routine_captures,
@@ -238,6 +240,7 @@ fn analysis_metadata_exposes_all_named_results() {
     } = analyze_with_types(&program);
 
     assert_eq!(named_types.len(), 4);
+    assert!(record_constructions.is_empty());
     assert_eq!(
         [
             errors.len(),
@@ -266,7 +269,7 @@ fn analysis_metadata_exposes_all_named_results() {
 #[test]
 fn equality_records_with_comparable_fields_are_valid() {
     check_ok(
-        "program T; type Id = record Value: integer; end record; const A: Id := record Value := 1; end; const B: Id := record Value := 1; end; const Same: boolean := A = B; begin end.",
+        "program T; type Id = record Value: integer; end record; const A: Id := Id( Value := 1 ); const B: Id := Id( Value := 1 ); const Same: boolean := A = B; begin end.",
     );
 }
 

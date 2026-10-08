@@ -51,10 +51,7 @@ begin
   AssertEquals(1, First);
   AssertEquals(2, Second);
   AssertEquals(2, Calls);
-  const Box: Container := record
-    Value := Second;
-  end;
-
+  const Box: Container := Container(Value := Second);
   AssertEquals(2, Box.Value);
   CheckLocalBindings();
   AssertEquals(4, Calls);

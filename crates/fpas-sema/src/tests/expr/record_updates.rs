@@ -3,7 +3,7 @@ use crate::{SemaError, analyze_unit};
 use fpas_diagnostics::codes::{SEMA_TYPE_MISMATCH, SEMA_UNKNOWN_NAME};
 use fpas_parser::{CompilationUnit, Unit, parse_compilation_unit};
 
-const PREFIX: &str = "program T; type Point = record X: integer; end record; begin const P: Point := record X := 1; end;";
+const PREFIX: &str = "program T; type Point = record X: integer; end record; begin const P: Point := Point( X := 1 );";
 
 #[test]
 fn record_update_rejects_non_record_base() {
@@ -65,10 +65,10 @@ fn imported_update_errors(update: &str) -> Vec<SemaError> {
 }
 
 #[test]
-fn record_update_contextually_types_imported_record_literals_and_array_elements() {
+fn record_update_accepts_imported_record_constructions_and_array_elements() {
     for update in [
-        "Position := record X := 3; Y := 4; end",
-        "Points := [record X := 3; Y := 4; end]",
+        "Position := Point( X := 3, Y := 4 )",
+        "Points := [Point( X := 3, Y := 4 )]",
     ] {
         let errors = imported_update_errors(update);
         assert!(errors.is_empty(), "update: {update}; errors: {errors:#?}");
@@ -79,11 +79,11 @@ fn record_update_contextually_types_imported_record_literals_and_array_elements(
 fn record_update_preserves_imported_record_field_and_nominal_validation() {
     for (update, code) in [
         (
-            "Position := record X := 'wrong'; Y := 4; end",
+            "Position := Point( X := 'wrong', Y := 4 )",
             SEMA_TYPE_MISMATCH,
         ),
         (
-            "Position := record X := 3; Y := 4; Missing := 0; end",
+            "Position := Point( X := 3, Y := 4, Missing := 0 )",
             SEMA_UNKNOWN_NAME,
         ),
         ("Position := Other", SEMA_TYPE_MISMATCH),

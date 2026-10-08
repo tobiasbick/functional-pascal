@@ -150,7 +150,7 @@ uses Demo.Math;
 begin
   const A: integer := Answer();
   const B: integer := Demo.Math.Answer();
-  const P: Point := record X := 0; end;
+  const P: Point := demo.math.point( X := 0 );
   const C: integer := P.X;
   const D: integer := Hidden();
 end.

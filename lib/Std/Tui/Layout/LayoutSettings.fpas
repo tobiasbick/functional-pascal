@@ -42,14 +42,7 @@ public type TuiLayoutSettings = record
   Stretch: integer
 ): TuiLayoutSettings;
   begin
-    return record
-      Margins := Margins;
-      SizePolicy := SizePolicy;
-      Alignment := Alignment;
-      Stretch := TuiLayoutSettingsRequireNonNegativeStretch(Stretch);
-      Width := None;
-      Height := None;
-    end;
+    return TuiLayoutSettings(Margins := Margins, SizePolicy := SizePolicy, Alignment := Alignment, Stretch := TuiLayoutSettingsRequireNonNegativeStretch(Stretch), Width := None, Height := None);
   end function;
 
   // Returns a copy constrained to one total width; negative widths panic.
@@ -65,14 +58,7 @@ public type TuiLayoutSettings = record
       end;
     end if;
 
-    return record
-      Margins := Self.Margins;
-      SizePolicy := Self.SizePolicy;
-      Alignment := Self.Alignment;
-      Stretch := Self.Stretch;
-      Width := Some(Width);
-      Height := Self.Height;
-    end;
+    return TuiLayoutSettings(Margins := Self.Margins, SizePolicy := Self.SizePolicy, Alignment := Self.Alignment, Stretch := Self.Stretch, Width := Some(Width), Height := Self.Height);
   end function;
 
   // Returns a copy constrained to one total height; negative heights panic.
@@ -88,14 +74,7 @@ public type TuiLayoutSettings = record
       end;
     end if;
 
-    return record
-      Margins := Self.Margins;
-      SizePolicy := Self.SizePolicy;
-      Alignment := Self.Alignment;
-      Stretch := Self.Stretch;
-      Width := Self.Width;
-      Height := Some(Height);
-    end;
+    return TuiLayoutSettings(Margins := Self.Margins, SizePolicy := Self.SizePolicy, Alignment := Self.Alignment, Stretch := Self.Stretch, Width := Self.Width, Height := Some(Height));
   end function;
 
   // Zero margins, preferred policy, fill alignment, and stretch zero.

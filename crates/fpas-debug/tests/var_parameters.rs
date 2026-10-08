@@ -33,7 +33,7 @@ end procedure;
 begin
   var Counter: integer := 0;
   var Items: array of integer := [0, 0];
-  var P: Point := record X := 0; end;
+  var P: Point := Point( X := 0 );
   Fail(var Counter, var Items[1], var P.X, 0);
 end.";
     let mut session = DebugSession::new(compile(source)).expect("debug session");

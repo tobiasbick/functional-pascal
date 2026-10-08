@@ -17,9 +17,7 @@ type Counter = record
 
   static function Make(Base: integer): Counter;
   begin
-    return record
-      Base := Base;
-    end;
+    return Counter(Base := Base);
   end function;
 end record;
 
@@ -29,14 +27,9 @@ begin
 end function;
 
 begin
-  var C: Counter := record
-    Base := 10;
-  end;
+  var C: Counter := Counter(Base := 10);
   const AddTen: function(Value: integer): integer := C.Add;
-  C := record
-    Base := 99;
-  end;
-
+  C := Counter(Base := 99);
   WriteLn(IntToStr(AddTen(5)));
   WriteLn(IntToStr(Apply(AddTen, 7)));
   const ShowBase: procedure() := Counter.Make(3).Show;

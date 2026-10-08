@@ -25,7 +25,7 @@ fn wrapped_array_has_no_blank_line_before_closing_bracket() {
 
 #[test]
 fn multiline_record_and_closure_array_elements_have_single_line_breaks() {
-    let record_source = "program T; type Point = record X: integer; end record; begin const Values: array of Point := [record X := 1; end, record X := 2; end]; end.";
+    let record_source = "program T; type Point = record X: integer; end record; begin const Values: array of Point := [Point( X := 1 ), Point( X := 2 )]; end.";
     let record_formatted = format(record_source);
     assert!(
         !record_formatted.contains("\n\n      X :="),

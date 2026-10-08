@@ -20,12 +20,7 @@ begin
   AssertEquals(8, Options.MaxConcurrentRequests);
   AssertEquals(0, Options.MaxRequests);
   const HandlerValue: RequestHandler := Handle;
-  const RequestValue: ServerRequest := record
-    Method := 'OK';
-    Target := '/';
-    Headers := [];
-    Body := [];
-  end;
+  const RequestValue: ServerRequest := std.http.types.serverrequest(Method := 'OK', Target := '/', Headers := [], Body := []);
   const ResponseValue: ServerResponse := HandlerValue(RequestValue);
   AssertEquals(200, ResponseValue.StatusCode);
   AssertEquals('OK', ResponseValue.ReasonPhrase);

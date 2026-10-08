@@ -45,7 +45,7 @@ begin
   return Check();
 end function;
 begin
-  const Check: Predicate := record Value := true; end;
+  const Check: Predicate := Predicate( Value := true );
   repeat
     begin end;
   until Invoke(Check.Evaluate);

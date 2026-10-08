@@ -119,9 +119,7 @@ public type TuiWorkingSurface = record
     TuiSurfacePresentedCells := TuiSurfacePresentedCells.Concat([Rows]);
     TuiSurfacePresentedContinuations := TuiSurfacePresentedContinuations.Concat([ContinuationRows]);
     TuiSurfacePresentedReady := TuiSurfacePresentedReady.Concat([false]);
-    return record
-      Slot := TuiSurfaceSizes.Length();
-    end;
+    return TuiWorkingSurface(Slot := TuiSurfaceSizes.Length());
   end function;
 
   // Replaces the working grid while preserving this surface's storage slot.
@@ -267,11 +265,7 @@ public type TuiWorkingSurface = record
       end;
     end for;
 
-    return record
-      Width := Size.Width;
-      Height := Size.Height;
-      Cells := Cells;
-    end;
+    return std.tui.rendering.surface.snapshot.tuisurfacesnapshot(Width := Size.Width, Height := Size.Height, Cells := Cells);
   end function;
 end record;
 

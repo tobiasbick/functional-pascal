@@ -28,7 +28,7 @@ fn unit_record_routines_preserve_per_member_visibility() {
          type Counter = record \
            function Hidden(Self: Counter): integer; begin return 1; end function; \
            public procedure Reset(Self: Counter); begin end procedure; \
-           static function CreateHidden(): Counter; begin return record end; end function; \
+           static function CreateHidden(): Counter; begin return Counter( ); end function; \
            public static procedure Clear(); begin end procedure; \
          end record;\nend unit;",
     );
@@ -133,7 +133,7 @@ fn record_with_static_function() {
     let p = parse_ok(
         "program T; type Point = record X: integer; Y: integer; \
          static function Create(X: integer; Y: integer): Point; \
-         begin return record X := X; Y := Y; end; end function; \
+         begin return Point( X := X, Y := Y ); end function; \
          end record; begin end.",
     );
     match &p.declarations[0] {
@@ -160,7 +160,7 @@ fn record_static_and_instance_methods_together() {
     let p = parse_ok(
         "program T; type Point = record X: integer; Y: integer; \
          static function Origin(): Point; \
-         begin return record X := 0; Y := 0; end; end function; \
+         begin return Point( X := 0, Y := 0 ); end function; \
          function Sum(Self: Point): integer; begin return Self.X + Self.Y; end function; \
          end record; begin end.",
     );

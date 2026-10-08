@@ -181,16 +181,16 @@ type
   end record;
 
 begin
-  var Item: Box := record
-    Value := 1;
-    Other := 2;
-  end;
-  var Nested: Container := record
-    Items := [record
-      Value := 3;
-      Other := 4;
-    end];
-  end;
+  var Item: Box := Box(
+    Value := 1,
+    Other := 2
+  );
+  var Nested: Container := Container(
+    Items := [Box(
+      Value := 3,
+      Other := 4
+    )]
+  );
   var Scores: dict of string to integer := ['Ada': 2, 'Grace': 5];
   const Marker: integer := 0;
 end.

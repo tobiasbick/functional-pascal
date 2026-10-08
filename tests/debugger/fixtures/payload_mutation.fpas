@@ -37,10 +37,7 @@ begin
 end function;
 
 begin
-  var Origin: Point := record
-    X := 4;
-    Y := 5;
-  end;
+  var Origin: Point := Point(X := 4, Y := 5);
   var Selected: Choice := Choice.Count(1);
   var PairValue: Choice := Choice.Pair(2, 3);
   var NestedValue: Choice := Choice.Nested(Origin);
@@ -48,10 +45,7 @@ begin
   var Failed: result of integer, string := Error('old');
   var Optional: option of integer := Some(7);
   var Missing: option of integer := None;
-  var PackedBox: Box := record
-    Items := [8, 9];
-    Scores := ['blue': 10];
-  end;
+  var PackedBox: Box := Box(Items := [8, 9], Scores := ['blue': 10]);
   var Packed: result of Box, string := Ok(PackedBox);
   var NestedOk: result of integer, string := Ok(11);
   var NestedResult: option of result of integer, string := Some(NestedOk);

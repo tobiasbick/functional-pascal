@@ -16,14 +16,7 @@ end function;
 
 function MakeKey(Kind: TuiKeyKind; Character: string): TuiKeyEvent;
 begin
-  return record
-    kind := Kind;
-    ch := Character;
-    shift := false;
-    ctrl := false;
-    alt := false;
-    meta := false;
-  end;
+  return TuiKeyEvent(kind := Kind, ch := Character, shift := false, ctrl := false, alt := false, meta := false);
 end function;
 
 function FindGlyph(Snapshot: TuiSurfaceSnapshot; Glyph: string): TuiPoint;
@@ -74,12 +67,7 @@ begin
         case Current of
           when Some(Id):
             begin
-              return record
-                Focus := Id.Value;
-                ConfirmOpen := State.ConfirmOpen;
-                Actions := State.Actions;
-                PointerHits := State.PointerHits;
-              end;
+              return ModalModel(Focus := Id.Value, ConfirmOpen := State.ConfirmOpen, Actions := State.Actions, PointerHits := State.PointerHits);
             end;
           when None:
             begin
@@ -91,30 +79,20 @@ begin
       begin
         if Action.Value = 10 then
           begin
-            return record
-              Focus := 3;
-              ConfirmOpen := true;
-              Actions := State.Actions.Concat([Action.Value]);
-              PointerHits := State.PointerHits;
-            end;
+            return ModalModel(Focus := 3, ConfirmOpen := true, Actions := State.Actions.Concat([
+                                                                                                 Action.Value
+                                                                                               ]), PointerHits := State.PointerHits);
           end;
         end if;
 
-        return record
-          Focus := 1;
-          ConfirmOpen := false;
-          Actions := State.Actions.Concat([Action.Value]);
-          PointerHits := State.PointerHits;
-        end;
+        return ModalModel(Focus := 1, ConfirmOpen := false, Actions := State.Actions.Concat([
+                                                                                              Action.Value
+                                                                                            ]), PointerHits := State.PointerHits);
       end;
     when TuiMsg.Pointer(Pointer):
       begin
-        return record
-          Focus := State.Focus;
-          ConfirmOpen := State.ConfirmOpen;
-          Actions := State.Actions;
-          PointerHits := State.PointerHits + 1;
-        end;
+        return ModalModel(Focus := State.Focus, ConfirmOpen := State.ConfirmOpen, Actions := State.Actions, PointerHits := State.PointerHits +
+                                                                                                                           1);
       end;
     else
       begin
@@ -125,13 +103,7 @@ end function;
 
 begin
   var App: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(40, 12));
-  var Model: ModalModel := record
-    Focus := 1;
-    ConfirmOpen := false;
-    Actions := [];
-    PointerHits := 0;
-  end;
-
+  var Model: ModalModel := ModalModel(Focus := 1, ConfirmOpen := false, Actions := [], PointerHits := 0);
   Model := App.RunIterations(Model, UpdateModal, ViewModal, 0, 0);
   const SaveAt: TuiPoint := FindGlyph(App.SurfaceSnapshot(), 'Save');
   App.InjectPointerForTest(MakePointer(TuiPointerAction.Down, SaveAt.X, SaveAt.Y));

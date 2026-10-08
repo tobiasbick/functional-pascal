@@ -110,12 +110,8 @@ begin
               end;
             else
               begin
-                const Output: FinalHead := record
-                  Head := Head;
-                  InitialBody := Buffer.Slice(Head.BodyOffset, Buffer.Length() - Head.BodyOffset);
-                  BytesReceived := BytesReceived;
-                end;
-
+                const Output: FinalHead := FinalHead(Head := Head, InitialBody := Buffer.Slice(Head.BodyOffset, Buffer.Length() -
+                                                                                                                Head.BodyOffset), BytesReceived := BytesReceived);
                 return Ok(Output);
               end;
             end if;

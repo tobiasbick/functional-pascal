@@ -46,14 +46,7 @@ end procedure;
 
 function MakeKey(Kind: TuiKeyKind; Character: string): TuiKeyEvent;
 begin
-  return record
-    kind := Kind;
-    ch := Character;
-    shift := false;
-    ctrl := false;
-    alt := false;
-    meta := false;
-  end;
+  return Std.Console.KeyEvent(kind := Kind, ch := Character, shift := false, ctrl := false, alt := false, meta := false);
 end function;
 
 begin
@@ -61,11 +54,9 @@ begin
   var Model: MandelbrotModel := NewMandelbrotModel(Inbox, 9, 15);
   const Request: MandelbrotRenderRequest := MandelbrotRequest(Model);
   const Cmd: TuiCmdOutput := TuiCmdOutput.Create();
-  const Stale: MandelbrotRenderFrame := record
-    Generation := Model.Generation - 1;
-    Cells := RenderGrid(Request.XMin, Request.XMax, Request.YMin, Request.YMax, Request.Width, Request.Height, Request.MaxIter, Request.Palette).Cells;
-  end;
-
+  const Stale: MandelbrotRenderFrame := mandelbrot.render.mandelbrotrenderframe(Generation := Model.Generation -
+                                                                                              1, Cells := RenderGrid(Request.XMin, Request.XMax, Request.YMin, Request.YMax, Request.Width, Request.Height, Request.MaxIter, Request.Palette)
+                                                                                                            .Cells);
   Model := UpdateMandelbrotFrame(Model, Stale, Cmd);
   AssertEquals(0, Model.RowsRendered);
   const Source: CancellationSource := CreateCancellationSource();
@@ -100,17 +91,7 @@ begin
   AssertEquals(1, Cmd.ReadBackground().Length());
   const CancelInbox: channel of MandelbrotRenderFrame := CreateChannel(1);
   const CancelSource: CancellationSource := CreateCancellationSource();
-  const CancelRequest: MandelbrotRenderRequest := record
-    Generation := 99;
-    XMin := 0.0;
-    XMax := 0.0;
-    YMin := 0.0;
-    YMax := 0.0;
-    Width := 8;
-    Height := 100;
-    MaxIter := 2048;
-    Palette := PaletteKind.DeepOcean;
-  end;
+  const CancelRequest: MandelbrotRenderRequest := mandelbrot.render.mandelbrotrenderrequest(Generation := 99, XMin := 0.0, XMax := 0.0, YMin := 0.0, YMax := 0.0, Width := 8, Height := 100, MaxIter := 2048, Palette := PaletteKind.DeepOcean);
   const CancelToken: CancellationToken := GetCancellationToken(CancelSource);
   // Fill the output queue so publication must wait until cancellation.
   discard Send(CancelInbox, Frame);

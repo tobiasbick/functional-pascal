@@ -34,18 +34,7 @@ end function;
 
 function MakeInitialState(): Holder;
 begin
-  return record
-    Count := 1;
-    Nested := record
-      X := 2;
-      Y := 3;
-    end;
-    Items := [10, 20, 30];
-    Scores := ['blue': 4];
-    Item := Choice.Count(5);
-    Outcome := Ok(6);
-    Optional := Some(7);
-  end;
+  return Holder(Count := 1, Nested := Point(X := 2, Y := 3), Items := [10, 20, 30], Scores := ['blue': 4], Item := Choice.Count(5), Outcome := Ok(6), Optional := Some(7));
 end function;
 
 var Tick: integer := 0;
@@ -60,18 +49,13 @@ end function;
 begin
   var Callback: function(): integer := Identity;
   var State: Holder := MakeInitialState();
-  var Origin: Point := record
-    X := 8;
-    Y := 9;
-  end;
+  var Origin: Point := Point(X := 8, Y := 9);
   var Items: array of integer := [1, 2, 3];
   var Scores: dict of string to integer := ['red': 1];
   var Selected: Choice := Choice.Empty;
   var Outcome: result of integer, string := Ok(1);
   var Optional: option of integer := Some(1);
-  var Boxed: BoxFn := record
-    Action := Identity;
-  end;
+  var Boxed: BoxFn := BoxFn(Action := Identity);
   const Frozen: integer := 1;
   const StopMarker: integer := 0;
   WriteLn(State.Count);

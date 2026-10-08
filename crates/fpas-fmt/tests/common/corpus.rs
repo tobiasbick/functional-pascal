@@ -29,7 +29,7 @@ pub const SOURCES: &[(&str, &str)] = &[
     ),
     (
         "record_creation",
-        "program Geometry;\n\ntype Point = record\n  X: real;\n  Y: real;\nend record;\n\nbegin\n  const P: Point := record X := 1.0; Y := 2.0; end;\n  const Sum: real := P.X + P.Y;\nend.",
+        "program Geometry;\n\ntype Point = record\n  X: real;\n  Y: real;\nend record;\n\nbegin\n  const P: Point := Point( X := 1.0, Y := 2.0 );\n  const Sum: real := P.X + P.Y;\nend.",
     ),
     (
         "nested_loops",
@@ -69,7 +69,7 @@ pub const SOURCES: &[(&str, &str)] = &[
     ),
     (
         "record_with_static_function",
-        "program T; type Point = record X: integer; Y: integer; static function Create(X: integer; Y: integer): Point; begin return record X := X; Y := Y; end; end function; end record; begin end.",
+        "program T; type Point = record X: integer; Y: integer; static function Create(X: integer; Y: integer): Point; begin return Point( X := X, Y := Y ); end function; end record; begin end.",
     ),
     (
         "record_with_static_procedure",
@@ -81,7 +81,7 @@ pub const SOURCES: &[(&str, &str)] = &[
     ),
     (
         "nested_record_update",
-        "program T; type Point = record X: integer; Y: integer; end record; type Pair = record First: Point; Second: Point; end record; begin const P: Pair := record First := record X := 1; Y := 2; end; Second := record X := 3; Y := 4; end; end; const Q: Pair := P with First := P.First with X := 5; end with; end with; end.",
+        "program T; type Point = record X: integer; Y: integer; end record; type Pair = record First: Point; Second: Point; end record; begin const P: Pair := Pair( First := Point( X := 1, Y := 2 ), Second := Point( X := 3, Y := 4 ) ); const Q: Pair := P with First := P.First with X := 5; end with; end with; end.",
     ),
     (
         "nested_option_result",

@@ -24,10 +24,7 @@ begin
         AssertEquals(23, Id);
         AssertTrue(Kind = TaskFailureKind.Panicked);
         AssertEquals('panic: expected Tui worker panic', Message);
-        return record
-          Ready := State.Ready;
-          FailureSeen := true;
-        end;
+        return PanicModel(Ready := State.Ready, FailureSeen := true);
       end;
     else
       begin
@@ -50,10 +47,7 @@ begin
   const Inbox: channel of integer := CreateChannel(1);
   const Ready: channel of boolean := CreateChannel(1);
   const App: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(24, 4));
-  var Model: PanicModel := App.RunBackgroundIterations(record
-    Ready := Ready;
-    FailureSeen := false;
-  end, Inbox, UpdateFramework, UpdateApplication, View, 1, 0);
+  var Model: PanicModel := App.RunBackgroundIterations(PanicModel(Ready := Ready, FailureSeen := false), Inbox, UpdateFramework, UpdateApplication, View, 1, 0);
   AssertTrue(ReceiveWithTimeout(Ready, 10000).Unwrap());
   while not Model.FailureSeen do
     begin

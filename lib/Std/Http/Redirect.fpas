@@ -242,13 +242,7 @@ end function;
 // - `Location`: Location field value from the redirect response.
 public function NextRequest(Current: Request; StatusCode: integer; Location: string): result of Request, string;
 begin
-  var Base: Uri := record
-    Scheme := '';
-    Host := '';
-    Port := 0;
-    Path := '';
-  end;
-
+  var Base: Uri := std.net.uri.uri(Scheme := '', Host := '', Port := 0, Path := '');
   case Std.Net.Uri.Parse(Current.Url) of
     when Ok(Value):
       begin

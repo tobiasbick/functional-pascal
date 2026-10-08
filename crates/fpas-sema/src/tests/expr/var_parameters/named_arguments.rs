@@ -14,7 +14,7 @@ fn named_var_arguments_accept_storage_in_any_parameter_order() {
     check_ok(&program(
         r#"
   var Counter: integer := 0;
-  var P: Point := record X := 1; Y := 2; end;
+  var P: Point := Point( X := 1, Y := 2 );
   var Items: array of integer := [1, 2];
   Increase(vAlUe := var Counter);
   Increase(Value := var P.X);
@@ -61,7 +61,7 @@ fn named_var_arguments_reject_shared_roots_in_written_order() {
             "Items[0]",
         ),
         (
-            "var P: Point := record X := 1; Y := 2; end; Swap(B := var P.Y, A := var P.X);",
+            "var P: Point := Point( X := 1, Y := 2 ); Swap(B := var P.Y, A := var P.X);",
             "P.Y",
             "P.X",
         ),

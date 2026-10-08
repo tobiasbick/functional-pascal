@@ -89,7 +89,7 @@ type Holder = record
 end record;
 
 var Value: integer := 1;
-var Pair: Holder := record Item := Value; end;
+var Pair: Holder := Holder( Item := Value );
 
 function ReadValue(Value: integer): integer;
 begin
@@ -170,8 +170,8 @@ end unit;
 uses Demo.Types;
 
 begin
-  const AliasValue: PointAlias := record X := 1; end;
-  const HolderValue: Holder := record Item := AliasValue; end;
+  const AliasValue: PointAlias := PointAlias( X := 1 );
+  const HolderValue: Holder := Holder( Item := AliasValue );
   const PointValue: Point := HolderValue.Item;
   const SelectedValue: Point := HolderValue.Selected;
   const ResultValue: Point := Demo.Types.Echo(PointValue);

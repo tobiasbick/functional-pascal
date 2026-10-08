@@ -9,11 +9,7 @@ begin
       const Old: RenderJob := StartRender(-1.0, 1.0, -1.0, 1.0, 8, 100, 2048, PaletteKind.DeepOcean, 0.0, 0.0);
       discard ReceiveWithTimeout(Old.Rows, 5000).Unwrap();
       const Token: CancellationToken := GetTaskGroupToken(Old.Group);
-      const Filler: RenderRow := record
-        Y := 0;
-        Samples := [];
-      end;
-
+      const Filler: RenderRow := julia.render.renderrow(Y := 0, Samples := []);
       while TrySend(Old.Rows, Filler).Unwrap() do
         begin
           null;

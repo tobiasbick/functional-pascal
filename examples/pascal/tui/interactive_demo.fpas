@@ -18,21 +18,13 @@ begin
       end;
     when TuiMsg.TextChanged(Source, Action, Text, Caret):
       begin
-        return record
-          Text := Text;
-          Caret := Caret;
-          Confirming := State.Confirming;
-        end;
+        return DemoModel(Text := Text, Caret := Caret, Confirming := State.Confirming);
       end;
     when TuiMsg.Action(Source, Action):
       begin
         if Action.Value = 2 then
           begin
-            return record
-              Text := State.Text;
-              Caret := State.Caret;
-              Confirming := true;
-            end;
+            return DemoModel(Text := State.Text, Caret := State.Caret, Confirming := true);
           end;
         end if;
 
@@ -122,9 +114,5 @@ begin
 end function;
 
 begin
-  discard TuiApplication.Run(record
-    Text := '';
-    Caret := 0;
-    Confirming := false;
-  end, UpdateDemo, ViewDemo);
+  discard TuiApplication.Run(DemoModel(Text := '', Caret := 0, Confirming := false), UpdateDemo, ViewDemo);
 end.

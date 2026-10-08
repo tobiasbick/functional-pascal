@@ -42,7 +42,7 @@ fn private_record_function_result_is_rejected() {
         "unit Demo.ReturnValue;
          type Hidden = record Value: integer; end record;
          public function Make(): Hidden;
-         begin return record Value := 1; end; end function;\nend unit;",
+         begin return Hidden( Value := 1 ); end function;\nend unit;",
         "Make",
         "Hidden",
     );
@@ -65,7 +65,7 @@ fn private_record_public_global_is_rejected() {
     assert_private_signature_error(
         "unit Demo.Global;
          type Hidden = record Value: integer; end record;
-         public const Current: Hidden := record Value := 1; end;\nend unit;",
+         public const Current: Hidden := Hidden( Value := 1 );\nend unit;",
         "Current",
         "Hidden",
     );

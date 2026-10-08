@@ -41,13 +41,6 @@ begin
 end procedure;
 
 begin
-  const Initial: ExplorerCamera := record
-    CenterX := 0.0;
-    CenterY := 0.0;
-    SpanY := 2.8;
-    MaxIter := 160;
-    Palette := 3;
-  end;
-
+  const Initial: ExplorerCamera := fractal.camera.explorercamera(CenterX := 0.0, CenterY := 0.0, SpanY := 2.8, MaxIter := 160, Palette := 3);
   RunExplorer('Functional Pascal Tricorn', Initial, Draw, Label);
 end.

@@ -10,14 +10,7 @@ end record;
 
 function MakeKey(Kind: TuiKeyKind): TuiKeyEvent;
 begin
-  return record
-    kind := Kind;
-    ch := '';
-    shift := false;
-    ctrl := false;
-    alt := false;
-    meta := false;
-  end;
+  return TuiKeyEvent(kind := Kind, ch := '', shift := false, ctrl := false, alt := false, meta := false);
 end function;
 
 function ViewList(State: ListModel): TuiElement;
@@ -37,11 +30,9 @@ begin
       begin
         AssertEquals(1, Source.Value);
         AssertEquals(5, Action.Value);
-        return record
-          Focus := State.Focus;
-          Selected := Selected;
-          Changes := State.Changes.Concat([Selected]);
-        end;
+        return ListModel(Focus := State.Focus, Selected := Selected, Changes := State.Changes.Concat([
+                                                                                                       Selected
+                                                                                                     ]));
       end;
     else
       begin
@@ -52,12 +43,7 @@ end function;
 
 begin
   var App: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(24, 8));
-  var Model: ListModel := record
-    Focus := 1;
-    Selected := 0;
-    Changes := [];
-  end;
-
+  var Model: ListModel := ListModel(Focus := 1, Selected := 0, Changes := []);
   Model := App.RunIterations(Model, UpdateList, ViewList, 0, 0);
   App.InjectKeyForTest(MakeKey(TuiKeyKind.Down));
   Model := App.RunIterations(Model, UpdateList, ViewList, 1, 0);

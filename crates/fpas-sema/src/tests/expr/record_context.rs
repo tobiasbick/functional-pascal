@@ -6,19 +6,19 @@ type Point = record
   X: integer := 0;
   Y: integer := 0;
 end record;
-const OriginPoint: Point := record X := 0; end;
+const OriginPoint: Point := Point( X := 0 );
 function Origin(): Point;
 begin
-  return record X := 0; end;
+  return Point( X := 0 );
 end function;
 procedure Draw(P: Point);
 begin
 end procedure;
 begin
-  var P: Point := record end;
-  P := record X := 1; end;
-  Draw(record Y := 2; end);
-  const Points: array of Point := [record X := 3; end];
+  var P: Point := Point( );
+  P := Point( X := 1 );
+  Draw(Point( Y := 2 ));
+  const Points: array of Point := [Point( X := 3 )];
 end.
 "#;
 
@@ -32,7 +32,7 @@ fn contextual_record_literal_still_requires_non_defaulted_fields() {
     let errors = check_errors(
         "program T; \
          type Point = record X: integer; Y: integer := 0; end record; \
-         begin const P: Point := record Y := 1; end; end.",
+         begin const P: Point := Point( Y := 1 ); end.",
     );
 
     assert!(

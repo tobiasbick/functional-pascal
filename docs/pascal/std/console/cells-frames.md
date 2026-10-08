@@ -65,11 +65,7 @@ Use the constructors instead of assembling a `Color` record by hand:
 
 ```pascal
 const Accent: Color := RgbColor(255, 160, 32);
-const Tile: Cell := record
-  glyph := 'A';
-  foreground := Accent;
-  background := CrtColor(Black);
-end;
+const Tile: Cell := Cell(glyph := 'A', foreground := Accent, background := CrtColor(Black));
 ```
 
 `CrtColor` accepts `0..15`, including the named CRT constants such as `Black`, `LightGray`, and
@@ -107,9 +103,9 @@ at the screen edge. A wide glyph reserves its following column as a continuation
 
 ```pascal
 const Cells: array of Cell := [
-  record glyph := 'A'; foreground := CrtColor(White); background := CrtColor(Black); end,
-  record glyph := '中'; foreground := RgbColor(80, 200, 255); background := CrtColor(Black); end
-];
+                                Cell(glyph := 'A', foreground := CrtColor(White), background := CrtColor(Black)),
+                                Cell(glyph := '中', foreground := RgbColor(80, 200, 255), background := CrtColor(Black))
+                              ];
 WriteCells(1, 1, Cells);
 ```
 
@@ -129,10 +125,7 @@ screen changes until `Present`, reducing visible tearing in fullscreen redraws:
 
 ```pascal
 BeginFrame();
-FillRect(
-  record x := 1; y := 1; width := ScreenWidth(); height := ScreenHeight(); end,
-  record glyph := ' '; foreground := CrtColor(LightGray); background := CrtColor(Black); end
-);
+FillRect(Rect(x := 1, y := 1, width := ScreenWidth(), height := ScreenHeight()), Cell(glyph := ' ', foreground := CrtColor(LightGray), background := CrtColor(Black)));
 WriteCells(1, 1, Cells);
 Present();
 ```
@@ -152,12 +145,8 @@ rectangle must overlap the screen and have positive dimensions.
 Each handle is one-shot:
 
 ```pascal
-const Underlay: SavedRegion :=
-  SaveRegion(record x := 10; y := 4; width := 24; height := 5; end);
-FillRect(
-  record x := 10; y := 4; width := 24; height := 5; end,
-  record glyph := ' '; foreground := CrtColor(White); background := Ansi256Color(24); end
-);
+const Underlay: SavedRegion := SaveRegion(Rect(x := 10, y := 4, width := 24, height := 5));
+FillRect(Rect(x := 10, y := 4, width := 24, height := 5), Cell(glyph := ' ', foreground := CrtColor(White), background := Ansi256Color(24)));
 RestoreRegion(Underlay);
 ```
 

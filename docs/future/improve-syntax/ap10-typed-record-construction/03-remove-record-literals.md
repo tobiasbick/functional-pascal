@@ -9,7 +9,7 @@ typed replacement.
 
 ## Prerequisites
 
-- AP10.2 (no literals remain).
+- AP10.2 (no literals remain in positive consumers).
 
 ## Implementation
 
@@ -25,7 +25,9 @@ typed replacement.
 
 ## Migration
 
-None beyond AP10.2.
+Positive consumers are migrated by AP10.2. Negative fixtures that validate
+record fields move to typed construction; fixtures for the removed syntax
+assert the replacement diagnostic.
 
 ## Documentation
 

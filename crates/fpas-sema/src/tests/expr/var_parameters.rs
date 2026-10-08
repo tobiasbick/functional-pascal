@@ -59,7 +59,7 @@ fn var_arguments_accept_variables_fields_elements_globals_and_forwarding() {
     check_ok(&program(
         r#"
   var Counter: integer := 0;
-  var P: Point := record X := 1; Y := 2; end;
+  var P: Point := Point( X := 1, Y := 2 );
   var Items: array of integer := [1, 2];
   Increase(var Counter);
   Increase(var P.X);
@@ -149,7 +149,7 @@ fn var_arguments_require_the_exact_parameter_type() {
 fn var_arguments_of_one_call_must_not_share_a_root() {
     for body in [
         "  var Items: array of integer := [1, 2];\n  Swap(var Items[0], var Items[1]);",
-        "  var P: Point := record X := 1; Y := 2; end;\n  Swap(var P.X, var P.Y);",
+        "  var P: Point := Point( X := 1, Y := 2 );\n  Swap(var P.X, var P.Y);",
         "  var Counter: integer := 0;\n  Swap(var Counter, var Counter);",
     ] {
         assert_eq!(error_codes(body), [SEMA_VAR_ARGUMENT_ALIAS], "{body}");

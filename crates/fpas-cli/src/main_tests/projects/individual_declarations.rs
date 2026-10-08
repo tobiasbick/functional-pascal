@@ -30,7 +30,7 @@ fn individual_declarations_export_each_name_and_preserve_initialization_order() 
     write_text(
         &cwd.join("src/main.fpas"),
         "program Main; uses App.Values, Std.Console;
-        begin const Value: Box := record Value := A + B; end;
+        begin const Value: Box := Box( Value := A + B );
             WriteLn(Value.Value); WriteLn(First); WriteLn(Second); WriteLn(Total());
             Left := Left + 10; Right := Right + 20;
             WriteLn(Left); WriteLn(Right);

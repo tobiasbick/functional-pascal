@@ -37,7 +37,7 @@ type
     Value: integer;
     static function Create(Value: integer): Counter;
     begin
-      return record Value := Value; end;
+      return Counter( Value := Value );
     end function;
     function Double(Self: Counter): integer;
     begin
@@ -72,7 +72,7 @@ end.";
     let cases = [
         ("Counter.Create(6).Double()", "12"),
         ("Counter.Create(7).Number", "7"),
-        ("(record Value := 8; end).Double()", "16"),
+        ("Counter.Create(8).Double()", "16"),
         ("Std.Math.Abs(-9)", "9"),
         ("Touch()", "()"),
         ("try Some(11)", "11"),

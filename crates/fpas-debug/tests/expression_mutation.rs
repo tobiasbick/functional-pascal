@@ -34,18 +34,18 @@ begin
   var Selected: integer := 0;
   var Counter: integer := 1;
   const Fixed: integer := 2;
-  var State: Container := record
+  var State: Container := Container(
     Items := [
-      record
-        Value := 10;
-        Other := 11;
-      end,
-      record
-        Value := 20;
-        Other := 21;
-      end
-    ];
-  end;
+      Box(
+        Value := 10,
+        Other := 11
+      ),
+      Box(
+        Value := 20,
+        Other := 21
+      )
+    ]
+  );
   var Scores: dict of string to integer := ['blue': 30];
   var Text: string := 'abc';
   Counter := Counter + Fixed;

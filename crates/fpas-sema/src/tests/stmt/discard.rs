@@ -33,7 +33,7 @@ fn task_aggregate_types_are_checked_even_when_empty_or_inactive() {
         (
             "type Box = record Job: Option of task of integer; end record;",
             "Box",
-            "record Job := None; end",
+            "Box( Job := None )",
         ),
         (
             "type Choice = enum Empty; Active(Job: task of integer); end enum;",
@@ -61,12 +61,12 @@ fn task_aggregate_types_are_checked_even_when_empty_or_inactive() {
 fn recursive_record_payloads_use_the_completed_type() {
     check_ok(
         "program T; type Node = record Next: Option of Node; end record;
-      begin const Root: Node := record Next := None; end; discard Root; discard Root.Next; end.",
+      begin const Root: Node := Node( Next := None ); discard Root; discard Root.Next; end.",
     );
     let errors = check_errors(
         "program T;
       type Node = record Next: Option of Node; Job: Option of task of integer; end record;
-      begin const Root: Node := record Next := None; Job := None; end;
+      begin const Root: Node := Node( Next := None, Job := None );
       discard Root.Next; end.",
     );
     assert!(errors.iter().any(|error| error.code == SEMA_UNSAFE_DISCARD));
@@ -78,7 +78,7 @@ fn recursive_record_payloads_use_the_completed_type() {
     let errors = check_errors(
         "program T;
       type Node = record Next: Option of Node; Job: Option of task of integer; end record;
-      begin const Root: Node := record Next := None; Job := None; end;
+      begin const Root: Node := Node( Next := None, Job := None );
       const Node: integer := 1; discard Root.Next; end.",
     );
     assert!(errors.iter().any(|error| error.code == SEMA_UNSAFE_DISCARD));
@@ -171,7 +171,7 @@ fn captured_channels_and_bound_receivers_are_checked_recursively() {
       end record;
       begin const Values: channel of task of integer := CreateChannel(1);
       discard function(): integer begin const Copy: channel of task of integer := Values; return 1; end function;
-      const Value: Box := record Job := None; end;
+      const Value: Box := Box( Job := None );
       discard Value.Ready;
       end.");
     assert_eq!(
@@ -232,7 +232,7 @@ fn callable_parameters_have_unknown_captures() {
 fn omitted_record_fields_keep_default_capture_proofs() {
     check_ok("program T;
       type Box = record Value: function(): integer := function(): integer begin return 1; end function; end record;
-      begin const Value: Box := record end; discard Value; end.");
+      begin const Value: Box := Box( ); discard Value; end.");
     let errors = check_errors(
         "program T; uses Std.Tasks;
       function Work(): integer; begin return 1; end function;
@@ -240,7 +240,7 @@ fn omitted_record_fields_keep_default_capture_proofs() {
       begin return function(): integer begin return Wait(Job); end function; end function;
       const Callback: function(): integer := Make(go Work());
       type Box = record Value: function(): integer := Callback; end record;
-      begin const Value: Box := record end; discard Value; end.",
+      begin const Value: Box := Box( ); discard Value; end.",
     );
     assert!(errors.iter().any(|error| error.code == SEMA_UNSAFE_DISCARD));
 }
@@ -284,7 +284,7 @@ fn callable_signatures_and_record_methods_do_not_own_result_handles() {
         function Start(Self: Box): task of integer;
         begin return go Work(); end function;
       end record;
-      begin const Value: Box := record Value := 1; end;
+      begin const Value: Box := Box( Value := 1 );
       discard Value; discard Value.Start;
       discard function(Job: task of integer): task of integer begin return Job; end function;
       end.",

@@ -8,7 +8,7 @@ fn valid_expression_delimiters_parse_without_diagnostics() {
         "F(1, 2)",
         "[1, 2]",
         "['a': 1, 'b': 2]",
-        "record X := 1; end",
+        "Point( X := 1 )",
         "Some([:])",
     ] {
         let source = format!("program T; begin return {expression}; end.");

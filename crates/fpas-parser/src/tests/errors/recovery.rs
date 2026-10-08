@@ -13,7 +13,7 @@ fn record_initializers_preserve_recovery_boundaries_without_repeating_errors() {
         assert!(!diagnostics.is_empty(), "{source}");
         assert!(diagnostics.len() < 16, "{source}: {diagnostics:#?}");
     }
-    for expression in ["record X := 1; end", "P with X := 1; end with"] {
+    for expression in ["Point( X := 1 )", "P with X := 1; end with"] {
         let source = format!("program P; begin var Value: integer := {expression}; end.");
         let (_, diagnostics) = parse_with_errors(&source);
         assert!(diagnostics.is_empty(), "{source}: {diagnostics:#?}");

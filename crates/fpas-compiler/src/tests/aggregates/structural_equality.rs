@@ -27,14 +27,14 @@ begin
   if Value <> Expected then panic('wrong: ' + Name); end if;
 end procedure;
 begin
-  const A: Point := record X := 1; Y := 2.0; end;
-  const B: Point := record X := 1; Y := 2.0; end;
+  const A: Point := Point( X := 1, Y := 2.0 );
+  const B: Point := Point( X := 1, Y := 2.0 );
   const C: Point := A with Y := 2.5; end with;
   Check('same fields', A = B, true);
   Check('updated field', A = C, false);
   Check('not equal', A <> C, true);
-  const Box1: Box := record Corner := A; Label := 'a'; Tag := Some(B); end;
-  const Box2: Box := record Corner := B; Label := 'a'; Tag := Some(A); end;
+  const Box1: Box := Box( Corner := A, Label := 'a', Tag := Some(B) );
+  const Box2: Box := Box( Corner := B, Label := 'a', Tag := Some(A) );
   Check('nested', Box1 = Box2, true);
   Check('nested differs', Box1 = (Box2 with Tag := None; end with), false);
   const S1: Shape := Shape.Circle(A, 3);

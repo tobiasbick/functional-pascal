@@ -23,13 +23,7 @@ public type TuiMenuItem = record
   // - `Action`: Application action associated with the control or emitted message.
   public static function Create(Id: TuiControlId; Text: string; Action: TuiAction): TuiMenuItem;
   begin
-    return record
-      Id := Id;
-      Text := Text;
-      Action := Action;
-      Enabled := true;
-      Shortcut := '';
-    end;
+    return TuiMenuItem(Id := Id, Text := Text, Action := Action, Enabled := true, Shortcut := '');
   end function;
 
   // Creates a disabled menu item without a shortcut hint.
@@ -40,13 +34,7 @@ public type TuiMenuItem = record
   // - `Action`: Application action associated with the control or emitted message.
   public static function Disabled(Id: TuiControlId; Text: string; Action: TuiAction): TuiMenuItem;
   begin
-    return record
-      Id := Id;
-      Text := Text;
-      Action := Action;
-      Enabled := false;
-      Shortcut := '';
-    end;
+    return TuiMenuItem(Id := Id, Text := Text, Action := Action, Enabled := false, Shortcut := '');
   end function;
 
   // Creates an enabled menu item with a display-only shortcut hint.
@@ -58,13 +46,7 @@ public type TuiMenuItem = record
   // - `Shortcut`: Shortcut gesture or display text.
   public static function WithShortcut(Id: TuiControlId; Text: string; Action: TuiAction; Shortcut: string): TuiMenuItem;
   begin
-    return record
-      Id := Id;
-      Text := Text;
-      Action := Action;
-      Enabled := true;
-      Shortcut := Shortcut;
-    end;
+    return TuiMenuItem(Id := Id, Text := Text, Action := Action, Enabled := true, Shortcut := Shortcut);
   end function;
 end record;
 end unit;

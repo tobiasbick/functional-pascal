@@ -20,48 +20,28 @@ begin
     when TuiMsg.MenuChanged(MenuSource, MenuAction, MenuState):
       begin
         Cmd.Set(TuiCmd.Quit);
-        return record
-          LabelText := 'SHOULD NOT PAINT';
-          Quit := true;
-          Updates := State.Updates + 1;
-        end;
+        return QuitModel(LabelText := 'SHOULD NOT PAINT', Quit := true, Updates := State.Updates + 1);
       end;
     when TuiMsg.QuitRequested:
       begin
         Cmd.Set(TuiCmd.Quit);
-        return record
-          LabelText := 'SHOULD NOT PAINT';
-          Quit := true;
-          Updates := State.Updates + 1;
-        end;
+        return QuitModel(LabelText := 'SHOULD NOT PAINT', Quit := true, Updates := State.Updates + 1);
       end;
     when TuiMsg.Tick(Delta):
       begin
-        return record
-          LabelText := 'after-tick';
-          Quit := false;
-          Updates := State.Updates + 1;
-        end;
+        return QuitModel(LabelText := 'after-tick', Quit := false, Updates := State.Updates + 1);
       end;
     else
       begin
-        return record
-          LabelText := State.LabelText;
-          Quit := State.Quit;
-          Updates := State.Updates + 1;
-        end;
+        return QuitModel(LabelText := State.LabelText, Quit := State.Quit, Updates := State.Updates +
+                                                                                      1);
       end;
   end case;
 end function;
 
 begin
   var App: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(20, 4));
-  var Model: QuitModel := record
-    LabelText := 'before';
-    Quit := false;
-    Updates := 0;
-  end;
-
+  var Model: QuitModel := QuitModel(LabelText := 'before', Quit := false, Updates := 0);
   Model := App.RunIterations(Model, UpdateQuit, ViewQuit, 0, 0);
   AssertTrue(App.SurfaceSnapshot().LineAt(0).Contains('before'));
   App.Inject(TuiMsg.QuitRequested);

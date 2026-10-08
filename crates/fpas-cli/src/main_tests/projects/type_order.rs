@@ -16,7 +16,7 @@ fn run_cli_imports_forward_recursive_types_and_reuses_compiled_units() {
         public Children: array of Edge;
         public Status: State;
         public Seed: integer := 7;
-        public static function Empty(): Node; begin return record Children := []; Status := Initial; end; end function;
+        public static function Empty(): Node; begin return Node( Children := [], Status := Initial ); end function;
         public function IsReady(Self: Node): boolean; begin return Self.Status = State.Ready; end function;
       end record;
       public type Edge = enum Stop; More(Next: Option of Node); end enum;

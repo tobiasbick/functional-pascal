@@ -58,6 +58,10 @@ Read the pages relevant to the change. For exact productions, consult
   Expression closers receive their terminator from the enclosing statement.
 - Unit declarations and record members are private by default; `public` exports
   an individual declaration or member in a unit.
+- Construct records through their type with named fields, for example
+  `Point(X := 1, Y := 2)`. Omit fields only when they have defaults; use
+  `TypeName()` for empty records or to use all defaults. Supplied values run in
+  written order, followed by omitted defaults in declaration order.
 - Strings use single quotes and doubled quotes for escaping. Source comments use
   `//`; adjacent standalone blocks provide [Markdown documentation](../../../docs/pascal/language/basics/comments.md).
 

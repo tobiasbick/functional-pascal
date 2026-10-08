@@ -8,14 +8,7 @@ end record;
 
 function Key(Kind: TuiKeyKind): TuiKeyEvent;
 begin
-  return record
-    kind := Kind;
-    ch := '';
-    shift := false;
-    ctrl := false;
-    alt := false;
-    meta := false;
-  end;
+  return TuiKeyEvent(kind := Kind, ch := '', shift := false, ctrl := false, alt := false, meta := false);
 end function;
 
 function UpdateDemo(State: DemoModel; Msg: TuiMsg; Cmd: TuiCmdOutput): DemoModel;
@@ -27,9 +20,7 @@ begin
         case Current of
           when Some(Id):
             begin
-              return record
-                Focus := Id.Value;
-              end;
+              return DemoModel(Focus := Id.Value);
             end;
           when None:
             begin
@@ -59,10 +50,7 @@ end function;
 
 begin
   var App: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(40, 12));
-  var Model: DemoModel := record
-    Focus := 2;
-  end;
-
+  var Model: DemoModel := DemoModel(Focus := 2);
   Model := App.RunIterations(Model, UpdateDemo, ViewDemo, 0, 0);
   App.InjectKeyForTest(Key(TuiKeyKind.Tab));
   Model := App.RunIterations(Model, UpdateDemo, ViewDemo, 1, 0);

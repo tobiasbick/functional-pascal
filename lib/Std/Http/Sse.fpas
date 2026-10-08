@@ -130,11 +130,8 @@ begin
         end;
       end if;
 
-      LocalEvents.Push(record
-        EventType := EventType;
-        Data := State.Data.Slice(0, State.Data.Length() - 1);
-        Id := State.LastEventId;
-      end);
+      LocalEvents.Push(std.http.types.sseevent(EventType := EventType, Data := State.Data.Slice(0, State.Data.Length() -
+                                                                                                   1), Id := State.LastEventId));
     end;
   end if;
 
@@ -230,11 +227,7 @@ begin
       LocalState.Finished := true;
     end;
   end if;
-  const Output: DecoderProcess := record
-    State := LocalState;
-    Events := Events;
-  end;
-
+  const Output: DecoderProcess := DecoderProcess(State := LocalState, Events := Events);
   return Ok(Output);
 end function;
 
@@ -262,15 +255,7 @@ begin
       return Error('SSE MaxEventBytes must be positive');
     end;
   end if;
-  const State: DecoderState := record
-    Buffer := [];
-    Data := '';
-    EventType := '';
-    LastEventId := '';
-    EventBytes := 0;
-    Maximum := MaxEventBytes;
-    Finished := false;
-  end;
+  const State: DecoderState := DecoderState(Buffer := [], Data := '', EventType := '', LastEventId := '', EventBytes := 0, Maximum := MaxEventBytes, Finished := false);
   const Slot: integer := ReserveState(State);
   return Ok(Std.Http.Handles.NewSseDecoder(Slot));
 end function;

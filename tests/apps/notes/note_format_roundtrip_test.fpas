@@ -3,17 +3,11 @@ program NoteFormatRoundtripTest;
 uses Notes.Format, Notes.Model, Std.Test;
 
 begin
-  const Source: Note := record
-    Id := '1700000000000-123456';
-    Title := 'Agent-era notes';
-    CreatedMillis := 1700000000000;
-    UpdatedMillis := 1700000000123;
-    Tags := ['fpas', 'tui'];
-    Pinned := true;
-    Archived := false;
-    Body := ('Human-readable body' + string.Chr(10)) + 'with Markdown.';
-    Path := '';
-  end;
+  const Source: Note := notes.model.note(Id := '1700000000000-123456', Title := 'Agent-era notes', CreatedMillis := 1700000000000, UpdatedMillis := 1700000000123, Tags := [
+                                                                                                                                                                             'fpas',
+                                                                                                                                                                             'tui'
+                                                                                                                                                                           ], Pinned := true, Archived := false, Body := ('Human-readable body' + string.Chr(10)) +
+                                                                                                                                                                                                                         'with Markdown.', Path := '');
   const Encoded: string := NoteStringify(Source);
   case NoteParse(Encoded) of
     when Ok(Parsed):

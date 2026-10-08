@@ -48,7 +48,7 @@ include = ["src/**/*.fpas"]
         "unit Demo.Base;
          public type Point = record public X: integer := 1; end record;
          public function Make(X: integer): Point;
-         begin return record X := X; end; end function;\nend unit;",
+         begin return Point( X := X ); end function;\nend unit;",
     );
     write(
         &root.join("src/math.fpas"),

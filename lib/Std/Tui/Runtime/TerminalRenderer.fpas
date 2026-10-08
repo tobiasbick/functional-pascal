@@ -35,11 +35,7 @@ begin
       end;
   end case;
 
-  return record
-    glyph := Cell.Glyph;
-    foreground := TuiColorToConsole(Style.Foreground);
-    background := TuiColorToConsole(Style.Background);
-  end;
+  return Std.Console.Cell(glyph := Cell.Glyph, foreground := TuiColorToConsole(Style.Foreground), background := TuiColorToConsole(Style.Background));
 end function;
 
 function TuiTerminalDamageRow(Damage: TuiSurfaceDamage; Palette: TuiPalette): array of Std.Console.Cell;

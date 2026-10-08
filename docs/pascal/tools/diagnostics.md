@@ -264,7 +264,7 @@ Call arguments still use commas; commas inside types such as
 | FP3012 | Enum data count | Construct `A(1)` when A has two data fields | Construct `A(1, 2)`. |
 | FP3013 | Generic constraint | Use string for T constrained to an arithmetic type | Use integer for that arithmetic operation. |
 | FP3014 | Non-constant value | `when ReadValue():` in a scalar `case` | `when Value if Value = ReadValue():` |
-| FP3015 | Missing record field | Construct a record without required X | Supply `X := 1` in the record literal. |
+| FP3015 | Missing record field | Construct a record without required X | Supply `X := 1` in typed record construction. |
 | FP3016 | Task-bound callable | Pass a closure capturing mutable state into another task | Pass a closure with immutable captures. |
 | FP3017 | Private record member | Access another unit's non-public record field | Export the field with `public` or use its public API. |
 | FP3018 | Enum backing overflow | Implicit variant after backing value `9223372036854775807` | Assign a smaller unused explicit backing value. |

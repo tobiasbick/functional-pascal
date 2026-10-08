@@ -6,14 +6,8 @@ type Point = record
 end record;
 
 begin
-  const A: Point := record
-    X := 3;
-    Y := 4;
-  end;
-  const B: Point := record
-    X := 10;
-    Y := 20;
-  end;
+  const A: Point := Point(X := 3, Y := 4);
+  const B: Point := Point(X := 10, Y := 20);
   const UpdatedB: Point := B with X := 11; end with;
 
   A.Print();

@@ -151,7 +151,7 @@ type
     Blue: integer;
   end record;
 begin
-  const Value: Channels := record Red := 10; Green := 20; Blue := 30; end;
+  const Value: Channels := Channels( Red := 10, Green := 20, Blue := 30 );
   if Value.Red * 10000 + Value.Green * 100 + Value.Blue <> 102030 then
     panic('record fields did not shadow standard constants'); end if;
 end.

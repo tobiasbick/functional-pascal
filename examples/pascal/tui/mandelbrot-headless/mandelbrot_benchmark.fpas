@@ -19,17 +19,7 @@ function RenderOnce(Paint: boolean): integer;
 begin
   const Width: integer := 152;
   const Height: integer := 35;
-  const Request: MandelbrotRenderRequest := record
-    Generation := 1;
-    XMin := -3.355714285714286;
-    XMax := 1.855714285714286;
-    YMin := -1.2;
-    YMax := 1.2;
-    Width := Width;
-    Height := Height;
-    MaxIter := 160;
-    Palette := PaletteKind.DeepOcean;
-  end;
+  const Request: MandelbrotRenderRequest := mandelbrot.render.mandelbrotrenderrequest(Generation := 1, XMin := -3.355714285714286, XMax := 1.855714285714286, YMin := -1.2, YMax := 1.2, Width := Width, Height := Height, MaxIter := 160, Palette := PaletteKind.DeepOcean);
   const Inbox: channel of MandelbrotRenderFrame := CreateChannel(8);
   const Source: CancellationSource := CreateCancellationSource();
   const Worker: task := go RunBackgroundRender(Request, Inbox, GetCancellationToken(Source));

@@ -6,14 +6,7 @@ uses
 
 function MakeLeftKey(): TuiKeyEvent;
 begin
-  return record
-    kind := TuiKeyKind.Left;
-    ch := '';
-    shift := false;
-    ctrl := false;
-    alt := false;
-    meta := false;
-  end;
+  return TuiKeyEvent(kind := TuiKeyKind.Left, ch := '', shift := false, ctrl := false, alt := false, meta := false);
 end function;
 
 begin
@@ -37,8 +30,6 @@ begin
 
   AssertEquals(Model.Grid.Height, Model.RowsRendered);
   App.CloseWithBackground(Inbox);
-  AssertTrue(TrySend(Inbox, record
-    Generation := Model.Generation;
-    Cells := [];
-  end).IsError());
+  AssertTrue(TrySend(Inbox, MandelbrotRenderFrame(Generation := Model.Generation, Cells := []))
+               .IsError());
 end.

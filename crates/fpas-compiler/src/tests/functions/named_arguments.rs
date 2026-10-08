@@ -53,7 +53,7 @@ type Point = record
 
   static function Create(X: integer; Y: integer): Point;
   begin
-    return record X := X; Y := Y; end;
+    return Point( X := X, Y := Y );
   end function;
 end record;
 function Origin(): Point;

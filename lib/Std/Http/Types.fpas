@@ -17,10 +17,7 @@ public type Header = record
   // - `Value`: HTTP field value.
   public static function Create(Name: string; Value: string): Header;
   begin
-    return record
-      Name := Name;
-      Value := Value;
-    end;
+    return Header(Name := Name, Value := Value);
   end function;
 end record;
 
@@ -50,16 +47,7 @@ public type Request = record
   // - `Url`: Absolute HTTP or HTTPS URL.
   public static function Create(Method: string; Url: string): Request;
   begin
-    return record
-      Method := Method;
-      Url := Url;
-      Headers := [];
-      Body := [];
-      TimeoutMillis := 30000;
-      MaxHeaderBytes := 65536;
-      MaxResponseBytes := 16777216;
-      MaxRedirects := 5;
-    end;
+    return Request(Method := Method, Url := Url, Headers := [], Body := [], TimeoutMillis := 30000, MaxHeaderBytes := 65536, MaxResponseBytes := 16777216, MaxRedirects := 5);
   end function;
 
   // Creates a GET request with default transport limits.
@@ -195,12 +183,7 @@ public type ServerResponse = record
   // - `ReasonPhrase`: HTTP reason phrase written in the status line.
   public static function Create(StatusCode: integer; ReasonPhrase: string): ServerResponse;
   begin
-    return record
-      StatusCode := StatusCode;
-      ReasonPhrase := ReasonPhrase;
-      Headers := [];
-      Body := [];
-    end;
+    return ServerResponse(StatusCode := StatusCode, ReasonPhrase := ReasonPhrase, Headers := [], Body := []);
   end function;
 end record;
 
@@ -220,13 +203,7 @@ public type ServerOptions = record
   // Returns the default bounded server-loop configuration.
   public static function Create(): ServerOptions;
   begin
-    return record
-      MaxHeaderBytes := 65536;
-      MaxBodyBytes := 1048576;
-      ConnectionTimeoutMillis := 30000;
-      MaxConcurrentRequests := 8;
-      MaxRequests := 0;
-    end;
+    return ServerOptions(MaxHeaderBytes := 65536, MaxBodyBytes := 1048576, ConnectionTimeoutMillis := 30000, MaxConcurrentRequests := 8, MaxRequests := 0);
   end function;
 end record;
 

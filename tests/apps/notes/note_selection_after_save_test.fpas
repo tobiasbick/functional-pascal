@@ -5,10 +5,7 @@ uses Notes.Model, Notes.Update, Std.Test, Std.Tui;
 begin
   const Target: Note := NoteCreate('target', 2);
   const Edited: Note := NoteCreate('edited', 1);
-  const Loaded: NotesLoad := record
-    Notes := [Target, Edited];
-    Issues := [];
-  end;
+  const Loaded: NotesLoad := notes.model.notesload(Notes := [Target, Edited], Issues := []);
   var Model: NotesModel := NotesModelCreate(ScratchDir() + '/notes', Loaded);
   Model.Selected := 1;
   Model.Dirty := true;

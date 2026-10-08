@@ -4,11 +4,7 @@ uses Std.Console, Std.Test;
 
 function CellWith(Glyph: string; Foreground: Color): Cell;
 begin
-  return record
-    glyph := Glyph;
-    foreground := Foreground;
-    background := CrtColor(Black);
-  end;
+  return Std.Console.Cell(glyph := Glyph, foreground := Foreground, background := CrtColor(Black));
 end function;
 
 begin
@@ -17,12 +13,7 @@ begin
   BeginFrame();
   PutCell(2, 1, CellWith('中', CrtColor(Yellow)));
   Present();
-  const Region: SavedRegion := SaveRegion(record
-    x := 3;
-    y := 1;
-    width := 1;
-    height := 1;
-  end);
+  const Region: SavedRegion := SaveRegion(Std.Console.Rect(x := 3, y := 1, width := 1, height := 1));
   PutCell(3, 1, CellWith('X', CrtColor(White)));
   RestoreRegion(Region);
   Present();

@@ -32,12 +32,7 @@ begin
         case Current of
           when Some(Id):
             begin
-              return record
-                Focus := Id.Value;
-                Text := State.Text;
-                Caret := State.Caret;
-                Offset := State.Offset;
-              end;
+              return PointerModel(Focus := Id.Value, Text := State.Text, Caret := State.Caret, Offset := State.Offset);
             end;
           when None:
             begin
@@ -49,12 +44,7 @@ begin
       begin
         AssertEquals(1, Source.Value);
         AssertEquals(9, Action.Value);
-        return record
-          Focus := State.Focus;
-          Text := Text;
-          Caret := Caret;
-          Offset := Offset;
-        end;
+        return PointerModel(Focus := State.Focus, Text := Text, Caret := Caret, Offset := Offset);
       end;
     else
       begin
@@ -77,26 +67,15 @@ end function;
 
 begin
   var App: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(6, 3));
-  var Model: PointerModel := record
-    Focus := 0;
-    Text := (('zero' + string.Chr(10)) + 'one') + (string.Chr(10) + 'three');
-    Caret := 0;
-    Offset := TuiPoint.Create(0, 0);
-  end;
-
+  var Model: PointerModel := PointerModel(Focus := 0, Text := (('zero' + string.Chr(10)) + 'one') +
+                                                              (string.Chr(10) + 'three'), Caret := 0, Offset := TuiPoint.Create(0, 0));
   Model := App.RunIterations(Model, UpdateTextArea, ViewTextArea, 0, 0);
   Model := Click(App, Model, 2, 1, 2);
   AssertEquals(1, Model.Focus);
   AssertEquals(7, Model.Caret);
   Model := Click(App, Model, 5, 1, 1);
   AssertEquals(8, Model.Caret);
-  Model := record
-    Focus := 1;
-    Text := Model.Text;
-    Caret := Model.Caret;
-    Offset := TuiPoint.Create(2, 1);
-  end;
-
+  Model := PointerModel(Focus := 1, Text := Model.Text, Caret := Model.Caret, Offset := TuiPoint.Create(2, 1));
   Model := App.RunIterations(Model, UpdateTextArea, ViewTextArea, 0, 0);
   Model := Click(App, Model, 1, 1, 1);
   AssertEquals(12, Model.Caret);

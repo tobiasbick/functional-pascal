@@ -132,12 +132,7 @@ begin
     end;
   end if;
 
-  return Ok(record
-    Scheme := Scheme;
-    Host := Host;
-    Port := Port;
-    Path := Path;
-  end);
+  return Ok(Uri(Scheme := Scheme, Host := Host, Port := Port, Path := Path));
 end function;
 
 // Parses an absolute HTTP or HTTPS URI.

@@ -29,25 +29,11 @@ begin
       begin
         if Source.Value = 1 then
           begin
-            return record
-              FirstText := Text;
-              FirstCaret := Caret;
-              SecondText := State.SecondText;
-              SecondCaret := State.SecondCaret;
-              LastSource := Source.Value;
-              LastAction := Action.Value;
-            end;
+            return InputPointerModel(FirstText := Text, FirstCaret := Caret, SecondText := State.SecondText, SecondCaret := State.SecondCaret, LastSource := Source.Value, LastAction := Action.Value);
           end;
         end if;
 
-        return record
-          FirstText := State.FirstText;
-          FirstCaret := State.FirstCaret;
-          SecondText := Text;
-          SecondCaret := Caret;
-          LastSource := Source.Value;
-          LastAction := Action.Value;
-        end;
+        return InputPointerModel(FirstText := State.FirstText, FirstCaret := State.FirstCaret, SecondText := Text, SecondCaret := Caret, LastSource := Source.Value, LastAction := Action.Value);
       end;
     else
       begin
@@ -64,15 +50,7 @@ end function;
 
 begin
   var App: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(10, 2));
-  var Model: InputPointerModel := record
-    FirstText := 'abcdef';
-    FirstCaret := 0;
-    SecondText := 'uvwxyz';
-    SecondCaret := 0;
-    LastSource := 0;
-    LastAction := 0;
-  end;
-
+  var Model: InputPointerModel := InputPointerModel(FirstText := 'abcdef', FirstCaret := 0, SecondText := 'uvwxyz', SecondCaret := 0, LastSource := 0, LastAction := 0);
   Model := App.RunIterations(Model, UpdateInput, ViewInput, 0, 0);
   Model := Click(App, Model, 4, 0);
   AssertEquals(3, Model.FirstCaret);
@@ -84,15 +62,7 @@ begin
   AssertEquals(22, Model.LastAction);
   Model := Click(App, Model, 9, 0);
   AssertEquals(6, Model.FirstCaret);
-  Model := record
-    FirstText := 'a界b';
-    FirstCaret := 0;
-    SecondText := Model.SecondText;
-    SecondCaret := Model.SecondCaret;
-    LastSource := 0;
-    LastAction := 0;
-  end;
-
+  Model := InputPointerModel(FirstText := 'a界b', FirstCaret := 0, SecondText := Model.SecondText, SecondCaret := Model.SecondCaret, LastSource := 0, LastAction := 0);
   Model := App.RunIterations(Model, UpdateInput, ViewInput, 0, 0);
   Model := Click(App, Model, 3, 0);
   AssertEquals(1, Model.FirstCaret);

@@ -31,13 +31,7 @@ public type TuiInputPalette = record
   Scroll: TuiStyle
 ): TuiInputPalette;
   begin
-    return record
-      Normal := Normal;
-      Focused := Focused;
-      Hint := Hint;
-      Cursor := Cursor;
-      Scroll := Scroll;
-    end;
+    return TuiInputPalette(Normal := Normal, Focused := Focused, Hint := Hint, Cursor := Cursor, Scroll := Scroll);
   end function;
 
   // Resolves one input role.

@@ -12,13 +12,7 @@ end record;
 
 function PushEvent(State: PointerModel; InputEvent: string): PointerModel;
 begin
-  return record
-    Events := State.Events.Concat([InputEvent]);
-    X := State.X;
-    Y := State.Y;
-    Action := State.Action;
-    Button := State.Button;
-  end;
+  return PointerModel(Events := State.Events.Concat([InputEvent]), X := State.X, Y := State.Y, Action := State.Action, Button := State.Button);
 end function;
 
 begin
@@ -27,14 +21,7 @@ begin
   App.Inject(TuiMsg.Tick(1));
   App.InjectPointerForTest(Pointer);
   App.Inject(TuiMsg.Tick(2));
-  var Model: PointerModel := record
-    Events := [];
-    X := -1;
-    Y := -1;
-    Action := TuiPointerAction.Unknown;
-    Button := TuiPointerButton.Left;
-  end;
-
+  var Model: PointerModel := PointerModel(Events := [], X := -1, Y := -1, Action := TuiPointerAction.Unknown, Button := TuiPointerButton.Left);
   Model := App.RunIterations(Model, function(State: PointerModel; Msg: TuiMsg; Cmd: TuiCmdOutput): PointerModel begin
     Cmd.Set(TuiCmd.NoCommand);
     case Msg of
@@ -50,13 +37,7 @@ begin
         end;
       when TuiMsg.Pointer(InputEvent):
         begin
-          return record
-            Events := State.Events.Concat(['pointer']);
-            X := InputEvent.Position.X;
-            Y := InputEvent.Position.Y;
-            Action := InputEvent.Action;
-            Button := InputEvent.Button;
-          end;
+          return PointerModel(Events := State.Events.Concat(['pointer']), X := InputEvent.Position.X, Y := InputEvent.Position.Y, Action := InputEvent.Action, Button := InputEvent.Button);
         end;
       else
         begin

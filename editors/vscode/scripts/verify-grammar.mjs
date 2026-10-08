@@ -163,7 +163,7 @@ async function verifyPositiveScopes(grammar) {
     "comment.line.double-slash.fpas"
   );
   assertScope(
-    tokenAt(fixture, "Point := record", ":="),
+    tokenAt(fixture, "Point := Point", ":="),
     "keyword.operator.fpas"
   );
   assertScope(

@@ -15,10 +15,7 @@ public type ChatMessage = record
   // - `Content`: Text content of the message.
   public static function Create(Role: string; Content: string): ChatMessage;
   begin
-    return record
-      Role := Role;
-      Content := Content;
-    end;
+    return ChatMessage(Role := Role, Content := Content);
   end function;
 
   // Creates a system instruction message.
@@ -69,13 +66,7 @@ public type Client = record
   // - `Model`: Model identifier sent with chat requests.
   public static function Create(BaseUrl: string; Model: string): Client;
   begin
-    return record
-      BaseUrl := BaseUrl;
-      Model := Model;
-      ApiKey := None;
-      TimeoutMillis := 120000;
-      MaxResponseBytes := 16777216;
-    end;
+    return Client(BaseUrl := BaseUrl, Model := Model, ApiKey := None, TimeoutMillis := 120000, MaxResponseBytes := 16777216);
   end function;
 end record;
 
@@ -89,10 +80,7 @@ public type ChatOptions = record
   // Returns options that omit every optional generation control.
   public static function Default(): ChatOptions;
   begin
-    return record
-      Temperature := None;
-      MaxTokens := None;
-    end;
+    return ChatOptions(Temperature := None, MaxTokens := None);
   end function;
 end record;
 end unit;

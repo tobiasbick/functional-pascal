@@ -21,9 +21,9 @@ type Team = record
 
   static function Empty(): Team;
   begin
-    return record
-      Members := [];
-    end;
+    return Team(
+      Members := []
+    );
   end function;
 end record;
 

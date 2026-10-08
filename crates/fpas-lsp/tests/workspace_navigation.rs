@@ -20,7 +20,7 @@ fn phase09_navigation_capabilities_and_utf16_results_are_exposed() {
     );
     temp.write(
         "src/types.fpas",
-        "unit Demo.Types;\n\npublic type Point = record public X: integer; end record;\npublic function Create(): Point; begin return record X := 1; end; end function;\nend unit;\n",
+        "unit Demo.Types;\n\npublic type Point = record public X: integer; end record;\npublic function Create(): Point; begin return Point( X := 1 ); end function;\nend unit;\n",
     );
     temp.write(
         "src/other.fpas",

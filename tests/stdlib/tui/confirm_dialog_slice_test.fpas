@@ -30,14 +30,7 @@ function EditorState(
   Quit: boolean
 ): EditorModel;
 begin
-  return record
-    Name := Name;
-    NameCaret := Caret;
-    Focused := Focused;
-    ConfirmOpen := ConfirmOpen;
-    Saved := Saved;
-    Quit := Quit;
-  end;
+  return EditorModel(Name := Name, NameCaret := Caret, Focused := Focused, ConfirmOpen := ConfirmOpen, Saved := Saved, Quit := Quit);
 end function;
 
 function UpdateEditor(State: EditorModel; Msg: TuiMsg; Cmd: TuiCmdOutput): EditorModel;
@@ -166,25 +159,11 @@ end function;
 
 function MakeKey(Kind: TuiKeyKind; Character: string): TuiKeyEvent;
 begin
-  return record
-    kind := Kind;
-    ch := Character;
-    shift := false;
-    ctrl := false;
-    alt := false;
-    meta := false;
-  end;
+  return Std.Console.KeyEvent(kind := Kind, ch := Character, shift := false, ctrl := false, alt := false, meta := false);
 end function;
 
 begin
-  const Initial: EditorModel := record
-    Name := '';
-    NameCaret := 0;
-    Focused := NameControlValue;
-    ConfirmOpen := false;
-    Saved := false;
-    Quit := false;
-  end;
+  const Initial: EditorModel := EditorModel(Name := '', NameCaret := 0, Focused := NameControlValue, ConfirmOpen := false, Saved := false, Quit := false);
   const DirectCmd: TuiCmdOutput := TuiCmdOutput.Create();
   const DirectQuit: EditorModel := UpdateEditor(Initial, TuiMsg.QuitRequested, DirectCmd);
   AssertTrue(DirectCmd.Command() = TuiCmd.Quit);

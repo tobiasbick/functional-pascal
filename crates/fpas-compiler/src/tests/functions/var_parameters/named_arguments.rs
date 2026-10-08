@@ -41,7 +41,7 @@ type Point = record
   static procedure SetValue(Value: integer; var Target: integer);
   begin Target := Value; end procedure;
 end record;
-function Origin(): Point; begin return record X := 3; end; end function;
+function Origin(): Point; begin return Point( X := 3 ); end function;
 procedure Increase(var Value: integer); begin Value := Value + 1; end procedure;
 procedure Forward(var Value: integer);
   procedure Nested(); begin Increase(Value := var Value); end procedure;
@@ -81,7 +81,7 @@ begin
 end function;
 begin
   var Value: integer := 0;
-  var P: Point := record X := 0; end;
+  var P: Point := Point( X := 0 );
   var Items: array of integer := [0];
   const A: Result of integer, string := Run(Target := var Value);
   const B: Result of integer, string := Run(Target := var P.X);

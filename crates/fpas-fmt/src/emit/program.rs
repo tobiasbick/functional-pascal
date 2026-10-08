@@ -183,7 +183,7 @@ mod tests {
     #[test]
     fn program_type_then_begin() {
         let formatted = parse_and_format(
-            "program T; type Point = record X: integer; Y: integer; end record; begin const P: Point := record X := 1; Y := 2; end; end.",
+            "program T; type Point = record X: integer; Y: integer; end record; begin const P: Point := Point( X := 1, Y := 2 ); end.",
         );
         assert!(formatted.contains("type Point = record\n"));
         assert!(formatted.contains("end record;\n\nbegin\n"));

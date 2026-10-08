@@ -31,11 +31,7 @@ public type TuiCellGrid = record
       end;
     end if;
 
-    return record
-      Width := Width;
-      Height := Height;
-      Cells := Cells;
-    end;
+    return TuiCellGrid(Width := Width, Height := Height, Cells := Cells);
   end function;
 end record;
 end unit;

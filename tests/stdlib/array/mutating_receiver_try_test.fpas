@@ -22,9 +22,7 @@ begin
 end function;
 
 begin
-  var H: Holder := record
-    Items := [1];
-  end;
+  var H: Holder := Holder(Items := [1]);
   const Original: Holder := H;
   const Outcome: result of integer, string := Change(var H);
   case Outcome of

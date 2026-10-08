@@ -10,14 +10,7 @@ end record;
 
 function MakeKey(Kind: TuiKeyKind; Character: string): TuiKeyEvent;
 begin
-  return record
-    kind := Kind;
-    ch := Character;
-    shift := false;
-    ctrl := false;
-    alt := false;
-    meta := false;
-  end;
+  return TuiKeyEvent(kind := Kind, ch := Character, shift := false, ctrl := false, alt := false, meta := false);
 end function;
 
 function ViewCheck(State: CheckModel): TuiElement;
@@ -38,11 +31,7 @@ begin
         case Current of
           when Some(Id):
             begin
-              return record
-                Focus := Id.Value;
-                Checked := State.Checked;
-                Changes := State.Changes;
-              end;
+              return CheckModel(Focus := Id.Value, Checked := State.Checked, Changes := State.Changes);
             end;
           when None:
             begin
@@ -54,11 +43,9 @@ begin
       begin
         AssertEquals(1, Source.Value);
         AssertEquals(9, Action.Value);
-        return record
-          Focus := State.Focus;
-          Checked := Checked;
-          Changes := State.Changes.Concat([Checked]);
-        end;
+        return CheckModel(Focus := State.Focus, Checked := Checked, Changes := State.Changes.Concat([
+                                                                                                      Checked
+                                                                                                    ]));
       end;
     else
       begin
@@ -69,12 +56,7 @@ end function;
 
 begin
   var App: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(24, 6));
-  var Model: CheckModel := record
-    Focus := 1;
-    Checked := false;
-    Changes := [];
-  end;
-
+  var Model: CheckModel := CheckModel(Focus := 1, Checked := false, Changes := []);
   Model := App.RunIterations(Model, UpdateCheck, ViewCheck, 0, 0);
   App.InjectKeyForTest(MakeKey(TuiKeyKind.Space, ''));
   Model := App.RunIterations(Model, UpdateCheck, ViewCheck, 1, 0);

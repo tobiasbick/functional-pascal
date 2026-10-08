@@ -7,7 +7,7 @@ fn later_types_variants_methods_and_defaults_are_available() {
       const Initial: State := State.Ready;
       function Create(): Team; begin return Team.Empty(); end function;
       type Team = record Members: array of Member; Status: State := Initial;
-        static function Empty(): Team; begin return record Members := []; end; end function;
+        static function Empty(): Team; begin return Team( Members := [] ); end function;
       end record;
       type Member = record Home: Option of Team; end record;
       type State = enum Ready; Busy; end enum;
@@ -29,8 +29,8 @@ fn nominal_recursion_through_aliases_is_finite() {
     check_ok(
         "program T; type Link = Option of Node;
       type Node = record Next: Link; end record;
-      begin const Root: Node := record Next := None; end;
-      const Next: Node := record Next := Some(Root); end; discard Next; end.",
+      begin const Root: Node := Node( Next := None );
+      const Next: Node := Node( Next := Some(Root) ); discard Next; end.",
     );
 }
 
@@ -50,7 +50,7 @@ fn mutual_records_enums_and_aliases_work_in_every_declaration_order() {
         [2, 1, 0],
     ] {
         check_ok(&format!(
-            "program T; {} {} {} begin const Root: Node := record Value := Choice.Empty; end; discard Root; end.",
+            "program T; {} {} {} begin const Root: Node := Node( Value := Choice.Empty ); discard Root; end.",
             definitions[order[0]], definitions[order[1]], definitions[order[2]]
         ));
     }
@@ -62,7 +62,7 @@ fn method_type_parameters_do_not_change_other_type_definitions() {
         "program T;
       type First = record
         static function Identity<T: Numeric>(Value: T): T; begin return Value; end function;
-        static function Make(): Later; begin return record Value := State.Ready; end; end function;
+        static function Make(): Later; begin return Later( Value := State.Ready ); end function;
       end record;
       type Later = record Value: State; end record;
       type State = enum Ready; end enum;
@@ -75,7 +75,7 @@ fn generic_routines_can_infer_recursive_forward_types() {
     check_ok(
         "program T;
       function Identity<T>(Value: T): T; begin return Value; end function;
-      function Create(): Node; begin return record Children := []; end; end function;
+      function Create(): Node; begin return Node( Children := [] ); end function;
       type Node = record Children: array of Node; end record;
       begin const Value: Node := Identity(Create()); discard Value; end.",
     );
@@ -102,7 +102,7 @@ fn recursive_fields_keep_complete_method_signatures() {
       type B = record Back: Option of A;
         function Value(Self: B): integer; begin return 7; end function;
       end record;
-      begin const Value: A := record Next := record Back := None; end; end;
+      begin const Value: A := A( Next := B( Back := None ) );
       const Bound: function(): integer := Value.Next.Value;
       discard Inspect(Value); discard Bound(); end.",
     );

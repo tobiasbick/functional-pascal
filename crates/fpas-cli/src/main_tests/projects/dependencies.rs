@@ -60,10 +60,10 @@ public type
 
     public static function Create(X: integer; Y: integer): PointImpl;
     begin
-      return record
-        X := X;
-        Y := Y;
-      end;
+      return PointImpl(
+        X := X,
+        Y := Y
+      );
     end function;
 
     public static procedure Print(Value: PointImpl);

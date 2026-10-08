@@ -3,6 +3,7 @@
 mod document;
 mod highlights;
 pub(crate) mod named_arguments;
+pub(crate) mod record_construction;
 mod references;
 mod rename;
 mod resolve;

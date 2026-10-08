@@ -13,6 +13,9 @@ use std::path::{Path, PathBuf};
 use fpas_build::{BuildOptions, ProgramArtifactTarget, build_program_artifact};
 use fpas_project::{build_unit_graph_for_program, load_project};
 
+#[path = "record_construction/mod.rs"]
+mod record_construction;
+
 fn write(path: &Path, source: &str) {
     if let Some(parent) = path.parent() {
         fs::create_dir_all(parent).expect("fixture directory");
@@ -77,7 +80,7 @@ include = ["src/**/*.fpas"]
           public Status: State;
           public Offset: integer := 2;
           public static function Create(Value: integer): Point;
-          begin return record X := Value; Status := State.Ready; end; end function;
+          begin return Point( X := Value, Status := State.Ready ); end function;
           public function Add(Self: Point; Value: integer): integer;
           begin return Self.X + Value; end function;
         end record;

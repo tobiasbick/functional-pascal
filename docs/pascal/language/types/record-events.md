@@ -109,7 +109,7 @@ the handler itself may start explicitly safe work when needed.
 
 ## Events versus fields and properties
 
-- record literals cannot initialize an event;
+- record construction cannot initialize an event;
 - record update expressions cannot name an event;
 - copying a record copies its fields only;
 - bare event reads are forbidden outside `Assigned`, assignment, and owner raise.

@@ -23,11 +23,7 @@ begin
 end function;
 
 begin
-  const Item: Box := record
-    Value := 3;
-    Callback := Double;
-  end;
-
+  const Item: Box := Box(Value := 3, Callback := Double);
   AssertEquals(5, Item.Add(2));
   AssertEquals(5, ValueOf(Item) + 2);
   AssertEquals(4, Item.Callback(2));

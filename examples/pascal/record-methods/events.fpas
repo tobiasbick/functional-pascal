@@ -42,10 +42,7 @@ begin
 end procedure;
 
 begin
-  const B: Button := record
-    Id := 1;
-  end;
-
+  const B: Button := Button(Id := 1);
   B.Click();
   B.OnClick := HandleClick;
   B.Click();

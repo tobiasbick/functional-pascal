@@ -21,7 +21,7 @@ type Counter = record
   end function;
 end record;
 begin
-  const C: Counter := record Base := 2; end;
+  const C: Counter := Counter( Base := 2 );
   if C.Add(3) <> 5 then panic('wrong'); end if;
 end.
 "#,
@@ -172,9 +172,9 @@ var
   Scores: dict of string to integer := ['Ada': 1];
 
 begin
-  var Item: Box := record
-    Value := 2;
-  end;
+  var Item: Box := Box(
+    Value := 2
+  );
   var Items: array of integer := [3];
   const Maybe: option of integer := Some(4);
 end.

@@ -90,7 +90,7 @@ fn constant_aggregates_preserve_static_forms_and_hidden_default_dependencies() {
         const Mapping: dict of string to integer := ['a': 1];
         const Wrapped: Option of integer := Some(2);
         const Answer: result of integer, string := Ok(3);
-        const P: Point := record end;
+        const P: Point := Point( );
         const Updated: Point := P with X := 2; end with;
         begin case 1 of when P.X: null; end case; end.",
     );
@@ -98,7 +98,7 @@ fn constant_aggregates_preserve_static_forms_and_hidden_default_dependencies() {
         "program T;
         function Value(): integer; begin return 1; end function;
         type Point = record X: integer := Value(); end record;
-        const P: Point := record end;
+        const P: Point := Point( );
         begin case 1 of when P.X: null; end case; end.",
     );
     assert!(

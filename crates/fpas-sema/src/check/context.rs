@@ -185,10 +185,11 @@ pub struct EventRaiseInfo {
 pub type EventRaiseMap = HashMap<usize, EventRaiseInfo>;
 
 /// Maps a named record type to its ordered field list, each entry carrying an optional
-/// cloned default expression. The order matches the type definition.
+/// shared default expression. Stable allocation retains checked expression identity;
+/// the order matches the type definition.
 ///
 /// **Documentation:** `docs/pascal/language/types/records.md` (Default field values)
-pub type RecordDefaultsMap = HashMap<String, Vec<(String, Option<Expr>)>>;
+pub type RecordDefaultsMap = HashMap<String, Vec<(String, Option<std::sync::Arc<Expr>>)>>;
 
 /// Marks `CaseLabel::Value.start` expressions that semantic analysis interpreted
 /// as scalar guard bindings instead of value labels.
@@ -196,8 +197,8 @@ pub type ScalarCaseBindingMap = HashSet<usize>;
 
 /// Compiler-facing diagnostics and lowering metadata produced by semantic analysis.
 ///
-/// All identity-keyed maps refer to nodes in the immutable AST passed to the analysis entry
-/// point and remain valid only while compiling or inspecting that same AST allocation.
+/// Identity-keyed maps refer to the immutable source AST or the retained expressions in
+/// `record_defaults`. They remain valid while inspecting those same allocations.
 #[derive(Debug, Default)]
 pub struct AnalysisMetadata {
     /// Canonical direct unit identities to source-local aliases.
@@ -211,6 +212,9 @@ pub struct AnalysisMetadata {
     pub intrinsic_calls: IntrinsicCallMap,
     /// Parameter order of named calls keyed by the first written argument's identity.
     pub named_argument_orders: NamedArgumentOrderMap,
+    /// Calls resolved to record types, rather than routines returning records.
+    /// **Documentation:** `docs/pascal/language/types/records.md`
+    pub record_constructions: HashSet<usize>,
     /// Fully resolved named types used to construct deterministic runtime layouts.
     pub named_types: NamedTypeMap,
     /// Resolved record method calls keyed by expression or designator identity.
@@ -286,8 +290,12 @@ pub struct Checker {
     pub(crate) source_short_candidates: HashMap<String, Vec<(String, crate::scope::Symbol)>>,
     /// Named record type → ordered (field_name, optional_default_expr) pairs.
     pub(crate) record_defaults: RecordDefaultsMap,
+    /// Identity keys of calls that construct a concrete record type.
+    pub(crate) record_constructions: HashSet<usize>,
     /// Canonical record and field names → task-freedom of their checked default values.
     pub(crate) record_default_discard: HashMap<(String, String), bool>,
+    /// Default expression identity → constant classification in the declaration environment.
+    pub(crate) record_default_constants: HashMap<usize, bool>,
     /// `case` label expressions that bind the scrutinee for a guarded scalar arm.
     pub(crate) scalar_case_bindings: ScalarCaseBindingMap,
     /// Closure expression identity → capture / capability metadata.
@@ -360,7 +368,9 @@ impl Checker {
             source_short_alias_keys: HashSet::new(),
             source_short_candidates: HashMap::new(),
             record_defaults: RecordDefaultsMap::new(),
+            record_constructions: HashSet::new(),
             record_default_discard: HashMap::new(),
+            record_default_constants: HashMap::new(),
             scalar_case_bindings: ScalarCaseBindingMap::new(),
             closure_infos: ClosureInfoMap::new(),
             nested_routine_captures: NestedRoutineCaptureMap::new(),
@@ -375,6 +385,7 @@ impl Checker {
         }
     }
 
+    /// Return lowering metadata while retaining the checked default expression allocations.
     pub fn finish(self) -> AnalysisMetadata {
         let named_types = self.scopes.root_types();
         AnalysisMetadata {
@@ -388,6 +399,7 @@ impl Checker {
             fluent_calls: self.fluent_calls,
             member_value_calls: self.member_value_calls,
             record_defaults: self.record_defaults,
+            record_constructions: self.record_constructions,
             scalar_case_bindings: self.scalar_case_bindings,
             closure_infos: self.closure_infos,
             nested_routine_captures: self.nested_routine_captures,
@@ -403,9 +415,9 @@ impl Checker {
     /// Stable identity key for an AST expression node.
     ///
     /// Uses the memory address of the `Expr` reference. This is sound because:
-    /// - The AST (`Program`) is immutable and heap-allocated for the entire analysis.
-    /// - No AST nodes are moved or cloned during checking.
-    /// - Keys are only used within a single `check_program` call.
+    /// - The source AST is immutable for the entire analysis.
+    /// - Checked defaults are retained in shared allocations in `record_defaults`.
+    /// - Checked nodes are not moved or cloned; keys belong to those allocations.
     pub fn expr_lookup_key(expr: &Expr) -> usize {
         std::ptr::from_ref(expr) as usize
     }

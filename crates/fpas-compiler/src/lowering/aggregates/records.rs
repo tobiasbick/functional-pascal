@@ -11,6 +11,7 @@ use crate::CompileError;
 use super::super::context::{LoweringContext, unsupported};
 
 impl LoweringContext {
+    /// Expand contextual literals in declaration order, retaining checked field defaults.
     pub(in crate::lowering) fn lower_record_literal(
         &mut self,
         fields: &[FieldInit],
@@ -46,18 +47,23 @@ impl LoweringContext {
             let expression = provided
                 .get(&name.to_ascii_lowercase())
                 .copied()
-                .or(default.as_ref())
+                .or(default.as_deref())
                 .ok_or_else(|| unsupported(expression.span(), "missing record field"))?;
             let expected = field_types
                 .iter()
                 .find(|(field, _)| field.eq_ignore_ascii_case(name))
                 .map(|(_, ty)| *ty)
                 .ok_or_else(|| unsupported(expression.span(), "record field type"))?;
-            resolved.push((expression, expected));
+            resolved.push((
+                expression,
+                expected,
+                !provided.contains_key(&name.to_ascii_lowercase()),
+            ));
         }
         self.lower_resolved_record_fields(layout, ty, expression.span(), &resolved)
     }
 
+    /// Lower a contextual literal against a supplied record layout without changing its order.
     pub(in crate::lowering) fn lower_record_literal_as(
         &mut self,
         fields: &[FieldInit],
@@ -97,10 +103,14 @@ impl LoweringContext {
                     defaults
                         .iter()
                         .find(|(field, _)| field.eq_ignore_ascii_case(name))
-                        .and_then(|(_, value)| value.as_ref())
+                        .and_then(|(_, value)| value.as_deref())
                 })
                 .ok_or_else(|| unsupported(span, "missing record field"))?;
-            resolved.push((expression, *field_ty));
+            resolved.push((
+                expression,
+                *field_ty,
+                !provided.contains_key(&name.to_ascii_lowercase()),
+            ));
         }
         self.lower_resolved_record_fields(layout, ty, span, &resolved)
     }
@@ -110,11 +120,15 @@ impl LoweringContext {
         layout: fpas_ir::RecordLayoutId,
         ty: TypeId,
         span: fpas_lexer::Span,
-        fields: &[(&Expr, TypeId)],
+        fields: &[(&Expr, TypeId, bool)],
     ) -> Result<ValueId, CompileError> {
         let mut staged = Vec::with_capacity(fields.len());
-        for &(expression, field_ty) in fields {
-            let value = self.lower_expression_as(expression, field_ty)?;
+        for &(expression, field_ty, default) in fields {
+            let value = if default {
+                self.lower_record_default(expression, field_ty)?
+            } else {
+                self.lower_expression_as(expression, field_ty)?
+            };
             let local = self.declare_hidden_local(field_ty, expression.span())?;
             self.write_local(local, value, expression.span())?;
             staged.push((local, field_ty, expression.span()));

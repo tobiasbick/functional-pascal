@@ -2,52 +2,72 @@
 
 Package: [AP10: Typed record construction](README.md)
 
-## Scope
+Status: complete.
 
-Add `TypeName(Field := Value, ...)` for record construction. Record literals
-remain valid in this work package.
+## Result
 
-## Prerequisites
+Concrete record types and transparent type aliases support
+`TypeName(Field := Value, ...)`, including imported types, qualified names,
+import aliases, and construction inside generic routines. Aliases preserve
+the original nominal identity, defaults, and declaring-unit visibility.
 
-- AP09.1 (named argument syntax and mapping).
+Call targets follow normal lexical and qualified lookup. A nearer value or
+routine keeps its ordinary meaning; no hidden record type is used as a
+fallback. Types and routines cannot share a case-insensitive name in one scope.
 
-## Implementation
+Fields are named only and matched case-insensitively. Unknown, duplicate,
+missing required, and incorrectly typed fields are diagnosed. Methods,
+properties, events, and `var` arguments are not constructor fields. Omitted
+fields use declared defaults. Records with private stored fields construct
+only inside their defining unit, even when those fields have defaults.
 
-- Verify whether a type and a routine may share a name today; make a record
-  type name used as a call target always mean construction, and diagnose
-  conflicting declarations.
-- Sema: named fields only; unknown, duplicate, and missing required fields;
-  swapped field types; defaults for omitted fields; private-field
-  construction only in the declaring unit. Positional construction is an
-  error showing the named form.
-- Compiler: evaluate supplied fields in written order, then missing defaults
-  in declaration order.
-- Generic and imported record types; formatter.
-- Language service: resolve `Field := Value` labels of typed construction to
-  the record field, as AP09 does for parameters and variant fields, so field
-  rename updates them. Rename currently misses labels in anonymous
-  `record Field := Value; end` literals because the editor does not know their
-  record type; AP10.3 removes that form.
+Supplied fields evaluate once in written order; omitted defaults follow in
+field declaration order. Checked defaults retain expression identity and their
+declaration environment, including nested constructors, named routine calls,
+and callable defaults. Scalar defaults survive exported type aliases and
+facades. Unit interfaces carry scalar constant defaults.
 
-## Affected areas
+The formatter preserves constructor syntax and argument order. Editor field
+completion inserts named labels and excludes supplied fields. Signature help
+shows defaults and the named active field. Definition, hover, references, and
+rename resolve constructor labels to the original field through type and
+import aliases. Private records expose no constructor fields or signatures
+outside the defining unit.
 
-- `crates/fpas-sema/src/check/decl/types/records.rs`, `check/record_visibility.rs`,
-  call checking.
-- `crates/fpas-compiler/src/lowering/aggregates/records.rs`.
-- `fpas-fmt`, language-service completion inside construction.
+The contextual `record ... end` literal remains valid with its existing
+field-declaration evaluation order. Positive consumers use typed construction
+after AP10.2; AP10.3 owns removal of the literal form. Anonymous literal labels
+remain outside editor field rename.
 
-## Migration
+User-defined generic record types and constructor type-argument inference
+belong to [AP24.2](../ap24-generic-data-structures/02-generic-records.md).
 
-None in this work package.
+## Implementation locations
+
+- `crates/fpas-sema/src/check/expr/record_construction/`: constructor and shared
+  contextual field validation; call resolution and construction metadata.
+- `crates/fpas-sema/src/check/decl/types/records/defaults.rs`: retained defaults;
+  constant, discard, and task-bound classification use the checked fields.
+- `crates/fpas-sema/src/interface/export.rs`: scalar defaults in exported aliases.
+- `crates/fpas-compiler/src/lowering/aggregates/record_construction.rs`: ordered
+  field evaluation; `context/expressions.rs` retains default declaration scope.
+- `crates/fpas-language-service/src/navigation/record_construction.rs` and
+  `src/intellisense/record_construction.rs`: canonical field resolution and
+  completion; symbol extraction and signature help expose constructors.
+
+## Regression coverage
+
+Sema, compiler, build, formatter, and language-service tests cover concrete,
+empty, nested, aliased, imported, and generic-routine construction; lexical
+shadowing and scope collisions; private fields inside and outside their unit;
+required/defaulted fields and invalid field lists; written-order traces and
+`try` exits; default binding and metadata; constant and callable capture
+classification; interface reuse and facade aliases; field labels, signatures,
+completion, and rename. The FPAS suite includes
+`tests/stdlib/records/typed_construction_test.fpas`.
 
 ## Documentation
 
-- `docs/pascal/language/types/records.md`, `docs/specs/grammar.ebnf`.
-
-## Verification
-
-- Construction with all fields, with defaults, with private fields inside and
-  outside the declaring unit, imported types, nested construction.
-- Written-order evaluation with side-effect traces.
-- Rejections: positional, unknown, duplicate, missing, wrong type.
-- Editor: renaming a record field updates typed-construction labels.
+- [Records](../../../pascal/language/types/records.md).
+- [Editor integration](../../../pascal/tools/editor-integration.md).
+- `docs/specs/grammar.ebnf` (`typed_record_construction`).

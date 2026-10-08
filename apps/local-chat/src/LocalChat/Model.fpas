@@ -26,10 +26,7 @@ public type ChatEntry = record
   // - `Text`: Prompt text submitted by the user.
   public static function User(Text: string): ChatEntry;
   begin
-    return record
-      Role := ChatRole.User;
-      Text := Text;
-    end;
+    return ChatEntry(Role := ChatRole.User, Text := Text);
   end function;
 
   // Creates an assistant entry.
@@ -38,10 +35,7 @@ public type ChatEntry = record
   // - `Text`: Completion text returned by the model.
   public static function Assistant(Text: string): ChatEntry;
   begin
-    return record
-      Role := ChatRole.Assistant;
-      Text := Text;
-    end;
+    return ChatEntry(Role := ChatRole.Assistant, Text := Text);
   end function;
 
   // Creates a failed-request entry.
@@ -50,10 +44,7 @@ public type ChatEntry = record
   // - `Text`: Error text returned by the request service.
   public static function Failure(Text: string): ChatEntry;
   begin
-    return record
-      Role := ChatRole.Failure;
-      Text := Text;
-    end;
+    return ChatEntry(Role := ChatRole.Failure, Text := Text);
   end function;
 end record;
 
@@ -86,17 +77,7 @@ end record;
 // - `Height`: Initial terminal height in cells.
 public function LocalChatModelCreate(Width: integer; Height: integer): LocalChatModel;
 begin
-  return record
-    Entries := [];
-    Draft := '';
-    DraftCaret := 0;
-    TranscriptCaret := 0;
-    TranscriptOffset := TuiPoint.Create(0, 0);
-    Focus := 1;
-    Status := 'Ready';
-    Width := Width;
-    Height := Height;
-  end;
+  return LocalChatModel(Entries := [], Draft := '', DraftCaret := 0, TranscriptCaret := 0, TranscriptOffset := TuiPoint.Create(0, 0), Focus := 1, Status := 'Ready', Width := Width, Height := Height);
 end function;
 
 // Wraps text at grapheme boundaries for a cell-width limit.

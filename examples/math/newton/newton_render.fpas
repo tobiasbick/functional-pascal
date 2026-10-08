@@ -10,42 +10,28 @@ type Complex = record
 
   public static function Create(Re: real; Im: real): Complex;
   begin
-    return record
-      Re := Re;
-      Im := Im;
-    end;
+    return Complex(Re := Re, Im := Im);
   end function;
 
   public function Add(Self: Complex; Other: Complex): Complex;
   begin
-    return record
-      Re := Self.Re + Other.Re;
-      Im := Self.Im + Other.Im;
-    end;
+    return Complex(Re := Self.Re + Other.Re, Im := Self.Im + Other.Im);
   end function;
 
   public function Sub(Self: Complex; Other: Complex): Complex;
   begin
-    return record
-      Re := Self.Re - Other.Re;
-      Im := Self.Im - Other.Im;
-    end;
+    return Complex(Re := Self.Re - Other.Re, Im := Self.Im - Other.Im);
   end function;
 
   public function Mul(Self: Complex; Other: Complex): Complex;
   begin
-    return record
-      Re := Self.Re * Other.Re - Self.Im * Other.Im;
-      Im := Self.Re * Other.Im + Self.Im * Other.Re;
-    end;
+    return Complex(Re := Self.Re * Other.Re - Self.Im * Other.Im, Im := Self.Re * Other.Im +
+                                                                        Self.Im * Other.Re);
   end function;
 
   public function Scale(Self: Complex; Factor: real): Complex;
   begin
-    return record
-      Re := Self.Re * Factor;
-      Im := Self.Im * Factor;
-    end;
+    return Complex(Re := Self.Re * Factor, Im := Self.Im * Factor);
   end function;
 
   public function Sq(Self: Complex): Complex;
@@ -56,10 +42,7 @@ type Complex = record
   public function Inv(Self: Complex): Complex;
   begin
     const Den: real := Self.Re * Self.Re + Self.Im * Self.Im;
-    return record
-      Re := Self.Re / Den;
-      Im := - Self.Im / Den;
-    end;
+    return Complex(Re := Self.Re / Den, Im := - Self.Im / Den);
   end function;
 
   public function MagSq(Self: Complex): real;
@@ -106,20 +89,14 @@ begin
       const Z2: Complex := Z.Sq();
       if Z2.MagSq() < 0.000000000001 then
         begin
-          return record
-            Root := 0;
-            Shade := 0.0;
-          end;
+          return PixelSample(Root := 0, Shade := 0.0);
         end;
       end if;
       const Next: Complex := Z.Scale(2.0 / 3.0).Add(Z2.Inv().Scale(1.0 / 3.0));
       if Next.Sub(Z).MagSq() < Tolerance then
         begin
           const Shade: real := 1.0 - (IntToReal(N) / IntToReal(Max(MaxIter, 1)));
-          return record
-            Root := ClosestRoot(Next);
-            Shade := Shade;
-          end;
+          return PixelSample(Root := ClosestRoot(Next), Shade := Shade);
         end;
       end if;
 
@@ -128,10 +105,7 @@ begin
     end;
   end while;
 
-  return record
-    Root := ClosestRoot(Z);
-    Shade := 0.25;
-  end;
+  return PixelSample(Root := ClosestRoot(Z), Shade := 0.25);
 end function;
 
 function ComputeRow(
@@ -185,19 +159,11 @@ begin
   if Sample.Root = 0 then
     begin
       const CellShade: Color := InsideColor();
-      return record
-        glyph := ' ';
-        foreground := CellShade;
-        background := CellShade;
-      end;
+      return Std.Console.Cell(glyph := ' ', foreground := CellShade, background := CellShade);
     end;
   end if;
   const Fg: Color := RootColor(Sample.Root, Sample.Shade);
-  return record
-    glyph := ShadeGlyph(Sample.Shade);
-    foreground := Fg;
-    background := RgbColor(0, 0, 0);
-  end;
+  return Std.Console.Cell(glyph := ShadeGlyph(Sample.Shade), foreground := Fg, background := RgbColor(0, 0, 0));
 end function;
 
 procedure DrawRow(Row: array of PixelSample; Width: integer; Y: integer);

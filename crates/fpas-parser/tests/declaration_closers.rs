@@ -21,7 +21,7 @@ fn all_declaration_kinds_include_methods_and_nested_routines() {
         X: integer;
         function ReadValue(self: Point): integer; begin return self.X; end function;
         procedure WriteValue(self: Point); begin var LocalSelf: Point := Self;\nreturn; end procedure;
-        static function Create(): Point; begin return record X := 1; end; end function;
+        static function Create(): Point; begin return Point( X := 1 ); end function;
         static procedure Reset(); begin return; end procedure;
         end record;
         function Outer(): integer;

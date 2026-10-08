@@ -1,6 +1,6 @@
 //! Extraction and qualification of persistent interfaces from analyzed units.
 
-use fpas_parser::{Decl, Expr, TypeBody, Unit, Visibility};
+use fpas_parser::{Decl, Expr, Unit, Visibility};
 use fpas_unit::interface as artifact;
 
 use crate::check;
@@ -41,7 +41,7 @@ impl check::Checker {
             } else {
                 ty_to_interface_reference(&symbol.ty)?
             };
-            apply_declared_metadata(declaration, &mut ty)?;
+            self.apply_record_defaults(declaration, &mut ty)?;
             if let artifact::InterfaceType::Record(record) = &mut ty {
                 for method in record
                     .methods
@@ -72,27 +72,30 @@ impl check::Checker {
         }
         Ok(artifact::UnitInterface { unit_name, symbols }.canonicalized())
     }
-}
 
-fn apply_declared_metadata(
-    declaration: &Decl,
-    ty: &mut artifact::InterfaceType,
-) -> Result<(), InterfaceConversionError> {
-    let Decl::TypeDef(definition) = declaration else {
-        return Ok(());
-    };
-    if let (TypeBody::Record(declared), artifact::InterfaceType::Record(interface)) =
-        (&definition.body, ty)
-    {
-        for (field, declared_field) in interface.fields.iter_mut().zip(&declared.fields) {
-            field.default_value = declared_field
-                .default_value
-                .as_ref()
-                .map(interface_constant_value)
-                .transpose()?;
+    /// Preserve the original record's scalar defaults when exporting concrete types or aliases.
+    fn apply_record_defaults(
+        &self,
+        declaration: &Decl,
+        ty: &mut artifact::InterfaceType,
+    ) -> Result<(), InterfaceConversionError> {
+        if !matches!(declaration, Decl::TypeDef(_)) {
+            return Ok(());
         }
+        if let artifact::InterfaceType::Record(record) = ty
+            && let Some(defaults) = self.record_defaults.get(&record.name)
+        {
+            for field in &mut record.fields {
+                field.default_value = defaults
+                    .iter()
+                    .find(|(name, _)| name.eq_ignore_ascii_case(&field.name))
+                    .and_then(|(_, value)| value.as_deref())
+                    .map(interface_constant_value)
+                    .transpose()?;
+            }
+        }
+        Ok(())
     }
-    Ok(())
 }
 
 /// Return the declared source name of a top-level declaration.

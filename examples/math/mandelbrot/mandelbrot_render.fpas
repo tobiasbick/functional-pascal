@@ -10,34 +10,22 @@ public type Complex = record
 
   public static function Zero(): Complex;
   begin
-    return record
-      Re := 0.0;
-      Im := 0.0;
-    end;
+    return Complex(Re := 0.0, Im := 0.0);
   end function;
 
   public static function Create(Re: real; Im: real): Complex;
   begin
-    return record
-      Re := Re;
-      Im := Im;
-    end;
+    return Complex(Re := Re, Im := Im);
   end function;
 
   public function Sq(Self: Complex): Complex;
   begin
-    return record
-      Re := Self.Re * Self.Re - Self.Im * Self.Im;
-      Im := (2.0 * Self.Re) * Self.Im;
-    end;
+    return Complex(Re := Self.Re * Self.Re - Self.Im * Self.Im, Im := (2.0 * Self.Re) * Self.Im);
   end function;
 
   public function Add(Self: Complex; Other: Complex): Complex;
   begin
-    return record
-      Re := Self.Re + Other.Re;
-      Im := Self.Im + Other.Im;
-    end;
+    return Complex(Re := Self.Re + Other.Re, Im := Self.Im + Other.Im);
   end function;
 
   public function MagSq(Self: Complex): real;
@@ -73,17 +61,12 @@ function FinishSample(Z: Complex; Iterations: integer; MaxIter: integer): PixelS
 begin
   if Iterations >= MaxIter then
     begin
-      return record
-        IsInside := true;
-        EscapeValue := 0.0;
-      end;
+      return PixelSample(IsInside := true, EscapeValue := 0.0);
     end;
   end if;
   const MagnitudeSq: real := Max(Z.MagSq(), 4.0);
-  return record
-    IsInside := false;
-    EscapeValue := (IntToReal(Iterations) + 1.0) - (Log(Log(MagnitudeSq) * 0.5) / Log(2.0));
-  end;
+  return PixelSample(IsInside := false, EscapeValue := (IntToReal(Iterations) + 1.0) -
+                                                       (Log(Log(MagnitudeSq) * 0.5) / Log(2.0)));
 end function;
 
 function Iterate(C: Complex; MaxIter: integer): PixelSample;
@@ -262,17 +245,7 @@ public function RenderGrid(
   Palette: PaletteKind
 ): TuiCellGrid;
 begin
-  const Request: MandelbrotRenderRequest := record
-    Generation := 0;
-    XMin := XMin;
-    XMax := XMax;
-    YMin := YMin;
-    YMax := YMax;
-    Width := Width;
-    Height := Height;
-    MaxIter := MaxIter;
-    Palette := Palette;
-  end;
+  const Request: MandelbrotRenderRequest := MandelbrotRenderRequest(Generation := 0, XMin := XMin, XMax := XMax, YMin := YMin, YMax := YMax, Width := Width, Height := Height, MaxIter := MaxIter, Palette := Palette);
   var Cells: array of TuiCell := [];
   for Py: integer := 0 to Height - 1 do
     begin
@@ -324,10 +297,7 @@ begin
       Cells := Cells.Concat(Row);
       if Py = Request.Height - 1 then
         begin
-          if SendWithCancellation(Inbox, record
-            Generation := Request.Generation;
-            Cells := Cells;
-          end, HostToken)
+          if SendWithCancellation(Inbox, MandelbrotRenderFrame(Generation := Request.Generation, Cells := Cells), HostToken)
                .IsError() then
             begin
               break;

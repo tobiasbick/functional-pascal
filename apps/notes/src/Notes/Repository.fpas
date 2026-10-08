@@ -87,19 +87,13 @@ begin
                 end;
               when Error(Message):
                 begin
-                  Issues.Push(record
-                    Path := Path;
-                    Message := Message;
-                  end);
+                  Issues.Push(notes.model.noteissue(Path := Path, Message := Message));
                 end;
             end case;
           end;
         when Error(Message):
           begin
-            Issues.Push(record
-              Path := Path;
-              Message := Message;
-            end);
+            Issues.Push(notes.model.noteissue(Path := Path, Message := Message));
           end;
       end case;
     end;
@@ -109,10 +103,8 @@ begin
     begin
       if IdCounts[Loaded.Id] > 1 then
         begin
-          Issues.Push(record
-            Path := Loaded.Path;
-            Message := ('Duplicate note ID: ' + Loaded.Id) + '. Give each file a unique ID before editing.';
-          end);
+          Issues.Push(notes.model.noteissue(Path := Loaded.Path, Message := ('Duplicate note ID: ' + Loaded.Id) +
+                                                                            '. Give each file a unique ID before editing.'));
         end;
       else
         begin
@@ -122,10 +114,7 @@ begin
     end;
   end for;
 
-  return Ok(record
-    Notes := NotesSort(Unique);
-    Issues := Issues;
-  end);
+  return Ok(NotesLoad(Notes := NotesSort(Unique), Issues := Issues));
 end function;
 
 // Atomically writes one note to its stable file path.

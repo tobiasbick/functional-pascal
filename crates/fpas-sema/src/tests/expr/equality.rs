@@ -26,14 +26,14 @@ end."
 #[test]
 fn records_and_payload_enums_with_comparable_fields_support_equality() {
     for (declarations, condition) in [
-        ("const A: Point := record X := 1; Y := 2.0; end;", "A = A"),
+        ("const A: Point := Point( X := 1, Y := 2.0 );", "A = A"),
         (
-            "const A: Named := record Point := record X := 1; Y := 2.0; end; Name := 'a'; Tag := None; end;",
+            "const A: Named := Named( Point := Point( X := 1, Y := 2.0 ), Name := 'a', Tag := None );",
             "A <> A",
         ),
         (
             "const S: Shape := Shape.Dot;",
-            "S = Shape.Circle(record X := 1; Y := 1.0; end, 2)",
+            "S = Shape.Circle(Point( X := 1, Y := 1.0 ), 2)",
         ),
         (
             "const T: Tree := Tree.Leaf(1);",
@@ -52,10 +52,10 @@ end."
 #[test]
 fn aggregates_with_non_comparable_fields_reject_equality() {
     for (declarations, condition) in [
-        ("const B: Bag := record Items := []; end;", "B = B"),
+        ("const B: Bag := Bag( Items := [] );", "B = B"),
         ("const H: Holder := Holder.Empty;", "H = Holder.Empty"),
         (
-            "const C: Callback := record Run := function(): integer begin return 1; end function; end;",
+            "const C: Callback := Callback( Run := function(): integer begin return 1; end function );",
             "C <> C",
         ),
     ] {
@@ -72,10 +72,10 @@ fn aggregates_with_non_comparable_fields_reject_equality() {
 #[test]
 fn records_of_different_types_and_ordering_stay_rejected() {
     let different = errors_for(
-        "const A: Point := record X := 1; Y := 2.0; end; const S: Shape := Shape.Dot;",
+        "const A: Point := Point( X := 1, Y := 2.0 ); const S: Shape := Shape.Dot;",
         "A = S",
     );
     assert_eq!(different.len(), 1, "{different:#?}");
-    let ordered = errors_for("const A: Point := record X := 1; Y := 2.0; end;", "A < A");
+    let ordered = errors_for("const A: Point := Point( X := 1, Y := 2.0 );", "A < A");
     assert_eq!(ordered.len(), 1, "{ordered:#?}");
 }

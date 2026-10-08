@@ -32,13 +32,13 @@ fn arguments_and_enclosing_declarations_have_distinct_terminator_owners() {
 }
 
 #[test]
-fn nested_closures_updates_and_literals_keep_their_matching_endings() {
+fn nested_closures_updates_and_constructions_keep_their_matching_endings() {
     let formatted = format(
-        "program T; function Make(): function(): integer; begin return function(): integer begin const Q: Holder := P with Child := P.Child with X := 1; end with; Data := record X := 2; end; Reader := function(): integer begin return 3; end function; end with; return Q.Reader(); end function; end function; begin end.",
+        "program T; function Make(): function(): integer; begin return function(): integer begin const Q: Holder := P with Child := P.Child with X := 1; end with; Data := Point( X := 2 ); Reader := function(): integer begin return 3; end function; end with; return Q.Reader(); end function; end function; begin end.",
     );
     assert_eq!(formatted.matches("end function").count(), 3, "{formatted}");
     assert_eq!(formatted.matches("end with").count(), 2, "{formatted}");
-    assert!(formatted.contains("X := 2;\n"), "{formatted}");
+    assert!(formatted.contains("Data := Point(X := 2);"), "{formatted}");
 }
 
 #[test]
@@ -109,16 +109,20 @@ fn empty_closure_ending_comments_are_preserved() {
 }
 
 #[test]
-fn closure_fields_indent_their_bodies_and_keep_the_field_terminator_before_comments() {
+fn closure_fields_keep_ending_comments_inside_constructor_arguments() {
     let formatted = format(
-        "program T; begin const P: Holder := record
+        "program T; begin const P: Holder := Holder(
         // reader field
         Reader := function(): integer begin return 1;
         // field closure ending
-        end function; // reader terminator
-        end; end.",
+        end function // reader terminator
+        ); end.",
     );
-    assert!(formatted.contains("    Reader := function(): integer begin\n      return 1;\n    // field closure ending\n    end function; // reader terminator\n  end;"), "{formatted}");
+    assert!(
+        formatted.contains("end function // reader terminator\n  );"),
+        "{formatted}"
+    );
+    assert!(!formatted.contains("end function; // reader terminator"));
     for comment in ["reader field", "field closure ending", "reader terminator"] {
         assert_eq!(
             formatted.matches(&format!("// {comment}")).count(),

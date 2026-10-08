@@ -56,7 +56,7 @@ fn explicit_discard_runs_postfix_result_once_and_procedure_calls_still_run() {
         procedure Show(Self: Box); begin WriteLn(Self.Value); end procedure;
       end record;
       function Make(): Box;
-      begin Count := Count + 1; return record Value := 7; end; end function;
+      begin Count := Count + 1; return Box( Value := 7 ); end function;
       begin discard Make().Get(); Make().Show(); WriteLn(Count); end.";
     let (exit, stdout, stderr) = support::run_source_and_capture_output("discard.fpas", source);
     assert_eq!(exit, 0, "{stderr}");

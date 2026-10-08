@@ -47,11 +47,11 @@ fn enclosing_declarations_returns_and_arguments_own_their_terminators() {
 }
 
 #[test]
-fn updates_nest_with_literals_closures_and_parenthesized_chaining() {
+fn updates_nest_with_constructions_closures_and_parenthesized_chaining() {
     for source in [
         "P with X := 1; end with",
         "P with Child := Q with X := 1; end with; Reader := function(): integer begin return 2; end function; end with",
-        "P with Child := record X := 1; end; Items := []; end with",
+        "P with Child := Point( X := 1 ); Items := []; end with",
         "(P with X := 1; end with) with Y := 2; end with",
         "P WITH X := 1; END WITH",
     ] {
@@ -60,10 +60,7 @@ fn updates_nest_with_literals_closures_and_parenthesized_chaining() {
     program_ok(
         "program T; begin Apply(P with X := 1; end with, 2); return P with X := 2; end with; end.",
     );
-    assert!(matches!(
-        expression_ok("record end"),
-        Expr::RecordLiteral { .. }
-    ));
+    assert!(matches!(expression_ok("Empty( )"), Expr::Call { .. }));
 }
 
 #[test]

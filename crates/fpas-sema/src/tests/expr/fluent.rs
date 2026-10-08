@@ -105,7 +105,7 @@ fn record_field_blocks_free_call_fallback() {
     let errors = check_errors(
         "program T; type Item = record Value: integer; end record; \
          function Value(X: Item): integer; begin return 2; end function; \
-         begin const I: Item := record Value := 1; end; \
+         begin const I: Item := Item( Value := 1 ); \
          const N: integer := I.Value(); end.",
     );
     assert!(

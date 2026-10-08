@@ -438,18 +438,7 @@ begin
       end case;
     end;
   end if;
-  const State: StreamState := record
-    Connection := Connection;
-    Buffer := InitialBody;
-    Mode := Mode;
-    Remaining := Remaining;
-    ChunkRemaining := 0;
-    NeedChunkTerminator := false;
-    BytesReceived := BytesReceived;
-    Maximum := Maximum;
-    Finished := false;
-    Open := true;
-  end;
+  const State: StreamState := std.http.stream.types.streamstate(Connection := Connection, Buffer := InitialBody, Mode := Mode, Remaining := Remaining, ChunkRemaining := 0, NeedChunkTerminator := false, BytesReceived := BytesReceived, Maximum := Maximum, Finished := false, Open := true);
   const Index: integer := ReserveState(State);
   if (not HasBody) or ((Mode = 1) and (Remaining = 0)) then
     begin

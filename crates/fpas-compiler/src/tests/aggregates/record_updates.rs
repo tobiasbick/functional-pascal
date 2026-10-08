@@ -12,7 +12,7 @@ type
     Names: array of string;
   end record;
 begin
-  const Full: Bag := record Items := [1, 2, 3]; Names := ['a']; end;
+  const Full: Bag := Bag( Items := [1, 2, 3], Names := ['a'] );
   const Emptied: Bag := Full with Items := []; end with;
   if Emptied.Items.Length() <> 0 then panic('items not emptied'); end if;
   if Emptied.Names.Length() <> 1 then panic('names changed'); end if;
@@ -43,16 +43,16 @@ type
     Scores: dict of string to array of integer;
   end record;
 begin
-  const Full: Holder := record
-    Tags := ['a': 1];
-    Origin := record X := 1; Y := 2; end;
-    Label := Some('named');
-    Grid := [[1], [2, 3]];
-    Scores := ['a': [1]];
-  end;
+  const Full: Holder := Holder(
+    Tags := ['a': 1],
+    Origin := Point( X := 1, Y := 2 ),
+    Label := Some('named'),
+    Grid := [[1], [2, 3]],
+    Scores := ['a': [1]]
+  );
   const Reset: Holder := Full with
     Tags := [:];
-    Origin := record X := 7; Y := 8; end;
+    Origin := Point( X := 7, Y := 8 );
     Label := None;
     Grid := [[]];
     Scores := ['b': []];
@@ -78,10 +78,10 @@ type Holder = record
   Lookup: result of dict of string to integer, string;
 end record;
 begin
-  const Original: Holder := record
-    Values := Some([1]);
-    Lookup := Ok(['a': 1]);
-  end;
+  const Original: Holder := Holder(
+    Values := Some([1]),
+    Lookup := Ok(['a': 1])
+  );
   const Updated: Holder := Original with
     Values := Some([]);
     Lookup := Ok([:]);

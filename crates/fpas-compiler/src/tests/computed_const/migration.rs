@@ -12,7 +12,7 @@ fn migration_preserves_guard_bindings_and_nested_shadowing() {
                 function ReadValue(): integer; begin return 1; end function;
                 begin
                   {keyword} N: integer := {initializer};
-                  const Object: Item := record N := 7; end;
+                  const Object: Item := Item( N := 7 );
                   var Score: integer := 0;
                   case 2 of
                     when {binding} if {binding} > 0:

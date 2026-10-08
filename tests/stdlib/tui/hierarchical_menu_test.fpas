@@ -10,14 +10,7 @@ end record;
 
 function MakeKey(Kind: TuiKeyKind; Character: string; Ctrl: boolean; Alt: boolean): TuiKeyEvent;
 begin
-  return record
-    kind := Kind;
-    ch := Character;
-    shift := false;
-    ctrl := Ctrl;
-    alt := Alt;
-    meta := false;
-  end;
+  return TuiKeyEvent(kind := Kind, ch := Character, shift := false, ctrl := Ctrl, alt := Alt, meta := false);
 end function;
 
 function FindGlyph(Snapshot: TuiSurfaceSnapshot; Glyph: string): TuiPoint;
@@ -81,11 +74,7 @@ begin
         case Current of
           when Some(Id):
             begin
-              return record
-                Focus := Id.Value;
-                Menu := State.Menu;
-                Actions := State.Actions;
-              end;
+              return MenuModel(Focus := Id.Value, Menu := State.Menu, Actions := State.Actions);
             end;
           when None:
             begin
@@ -95,19 +84,13 @@ begin
       end;
     when TuiMsg.MenuChanged(Source, Action, Menu):
       begin
-        return record
-          Focus := State.Focus;
-          Menu := Menu;
-          Actions := State.Actions;
-        end;
+        return MenuModel(Focus := State.Focus, Menu := Menu, Actions := State.Actions);
       end;
     when TuiMsg.Action(Source, Action):
       begin
-        return record
-          Focus := State.Focus;
-          Menu := State.Menu;
-          Actions := State.Actions.Concat([Action.Value]);
-        end;
+        return MenuModel(Focus := State.Focus, Menu := State.Menu, Actions := State.Actions.Concat([
+                                                                                                     Action.Value
+                                                                                                   ]));
       end;
     else
       begin
@@ -118,12 +101,7 @@ end function;
 
 begin
   var App: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(40, 10));
-  var Model: MenuModel := record
-    Focus := 100;
-    Menu := TuiMenuState.Closed();
-    Actions := [];
-  end;
-
+  var Model: MenuModel := MenuModel(Focus := 100, Menu := TuiMenuState.Closed(), Actions := []);
   Model := App.RunIterations(Model, UpdateMenu, ViewMenu, 0, 0);
   AssertTrue(App.SurfaceSnapshot().CellAt(7, 0).Role = TuiStyleRole.MenuShortcut);
   AssertTrue(App.SurfaceSnapshot().CellAt(11, 0).Role = TuiStyleRole.MenuNormal);

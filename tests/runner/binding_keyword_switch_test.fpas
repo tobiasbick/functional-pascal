@@ -27,10 +27,7 @@ begin
   const IncrementValue: procedure() := procedure() begin
     LocalValue := LocalValue + 1;
   end procedure;
-  const SameName: State := record
-    Value := 40;
-  end;
-
+  const SameName: State := State(Value := 40);
   begin
     const Value: integer := 100;
     if Value <> 100 then
@@ -51,10 +48,7 @@ begin
   var mutable: integer := 1;
   Mutable := Mutable + Global;
   const Values: array of integer := [1];
-  const Item: State := record
-    Value := 2;
-  end;
-
+  const Item: State := State(Value := 2);
   if Rewrite(Values, Item) <> 21 then
     panic('local copy');
   end if;

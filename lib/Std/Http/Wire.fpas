@@ -370,12 +370,8 @@ begin
       end;
   end case;
 
-  return Ok(record
-    StatusCode := StatusCode;
-    ReasonPhrase := Status[1];
-    Headers := Headers;
-    BodyOffset := Separator + 4;
-  end);
+  return Ok(ResponseHead(StatusCode := StatusCode, ReasonPhrase := Status[1], Headers := Headers, BodyOffset := Separator +
+                                                                                                                4));
 end function;
 
 // Parses one complete buffered HTTP response.
@@ -393,12 +389,7 @@ begin
         case ResponseBody(Head.Headers, RawBody, ResponseHasBody(RequestMethod, Head.StatusCode)) of
           when Ok(Body):
             begin
-              return Ok(record
-                StatusCode := Head.StatusCode;
-                ReasonPhrase := Head.ReasonPhrase;
-                Headers := Head.Headers;
-                Body := Body;
-              end);
+              return Ok(Response(StatusCode := Head.StatusCode, ReasonPhrase := Head.ReasonPhrase, Headers := Head.Headers, Body := Body));
             end;
           when Error(Message):
             begin

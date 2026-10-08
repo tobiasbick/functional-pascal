@@ -17,11 +17,7 @@ public type TuiGauge = record
   // - `Maximum`: Maximum accepted value or extent.
   public static function Create(LabelText: string; Value: integer; Maximum: integer): TuiGauge;
   begin
-    return record
-      LabelText := LabelText;
-      Value := Value;
-      Maximum := Maximum;
-    end;
+    return TuiGauge(LabelText := LabelText, Value := Value, Maximum := Maximum);
   end function;
 end record;
 end unit;

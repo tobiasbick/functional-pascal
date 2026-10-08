@@ -12,7 +12,7 @@ type Point = record
 end record;
 
 begin
-  var P: Point := record X := 1.0; Y := 2.0; end;
+  var P: Point := Point( X := 1.0, Y := 2.0 );
   var Sum: real := P.X + P.Y;
 end.",
     );

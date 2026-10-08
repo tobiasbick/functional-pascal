@@ -232,10 +232,7 @@ begin
         end;
       end if;
 
-      Popups.Push(record
-        Parent := Parents[Index];
-        Bounds := TuiRect.Create(X, Y, Size.Width, Size.Height);
-      end);
+      Popups.Push(TuiMenuPopup(Parent := Parents[Index], Bounds := TuiRect.Create(X, Y, Size.Width, Size.Height)));
     end;
   end for;
 

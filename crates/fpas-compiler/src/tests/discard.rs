@@ -43,7 +43,7 @@ fn discard_preserves_postfix_evaluation_and_closure_captures() {
       type Box = record Value: integer;
         function GetValue(Self: Box): integer; begin return Self.Value; end function;
       end record;
-      function Make(): Box; begin return record Value := 42; end; end function;
+      function Make(): Box; begin return Box( Value := 42 ); end function;
       begin discard Make().GetValue();
       const Value: integer := 1;
       discard function(): integer begin return Value; end function;

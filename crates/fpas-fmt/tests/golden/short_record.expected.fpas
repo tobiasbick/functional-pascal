@@ -6,8 +6,5 @@ type Point = record
 end record;
 
 begin
-  const A: Point := record
-    X := 3;
-    Y := 4;
-  end;
+  const A: Point := Point(X := 3, Y := 4);
 end.

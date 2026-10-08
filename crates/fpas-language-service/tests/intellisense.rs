@@ -25,7 +25,7 @@ end record;
 
 begin
   const Music: string := '𝄞';
-  const Value: Counter := record Amount := 1; Secret := 2; end;
+  const Value: Counter := Counter( Amount := 1, Secret := 2 );
   const ResultValue: integer := Value.AmTail;
 end.
 "#;
@@ -66,7 +66,7 @@ type Counter = record
 end record;
 
 begin
-  const Value: Counter := record Amount := 1; end;
+  const Value: Counter := Counter( Amount := 1 );
   // Value.Am
   const Text: string := 'Value.Am';
   Value.Am;
@@ -315,7 +315,7 @@ begin
 end procedure;
 
 begin
-  const CounterValue: Counter := record end;
+  const CounterValue: Counter := Counter( );
   const Callback: function(Left: integer; Right: integer): integer := Sum;
   const A: integer := Sum(1, Sum(2, 3));
   const B: integer := CounterValue.Add(

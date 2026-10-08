@@ -5,6 +5,7 @@ mod block_order;
 mod blocks;
 mod debug;
 mod descriptors;
+mod expressions;
 mod references;
 mod saved_values;
 
@@ -52,6 +53,7 @@ pub(super) struct LoweringContext {
     pub(super) named_argument_orders: fpas_sema::NamedArgumentOrderMap,
     pub(super) scalar_case_bindings: ScalarCaseBindingMap,
     pub(super) record_defaults: fpas_sema::RecordDefaultsMap,
+    pub(super) record_constructions: std::collections::HashSet<usize>,
     pub(super) method_calls: fpas_sema::MethodCallMap,
     pub(super) fluent_calls: fpas_sema::FluentCallMap,
     pub(super) member_value_calls: fpas_sema::MemberValueCallMap,
@@ -245,6 +247,7 @@ impl LoweringContext {
             named_argument_orders: metadata.named_argument_orders.clone(),
             scalar_case_bindings: metadata.scalar_case_bindings.clone(),
             record_defaults: metadata.record_defaults.clone(),
+            record_constructions: metadata.record_constructions.clone(),
             method_calls: metadata.method_calls.clone(),
             fluent_calls: metadata.fluent_calls.clone(),
             member_value_calls: metadata.member_value_calls.clone(),
@@ -276,66 +279,6 @@ impl LoweringContext {
             max_call_arguments: 0,
             can_spawn_tasks: false,
         })
-    }
-
-    pub(super) fn expression_type(
-        &self,
-        expression: &fpas_parser::Expr,
-    ) -> Result<Ty, CompileError> {
-        self.expr_types
-            .get(&fpas_sema::expr_lookup_key(expression))
-            .cloned()
-            .ok_or_else(|| {
-                let span = expression.span();
-                internal_compiler_error(
-                    format!(
-                        "Expression type is missing after semantic analysis for `{expression:?}`."
-                    ),
-                    "This is an internal compiler error. Re-run compilation and report the source program.",
-                    span.line,
-                    span.column,
-                )
-            })
-    }
-
-    pub(super) fn expression_ir_type(
-        &self,
-        expression: &fpas_parser::Expr,
-    ) -> Result<TypeId, CompileError> {
-        let span = expression.span();
-        if let fpas_parser::Expr::Call { designator, .. } = expression {
-            let key = fpas_sema::expr_lookup_key(expression);
-            if !self.intrinsic_calls.contains_key(&key) {
-                if let Some(result) = self.member_call_result(key) {
-                    return Ok(result);
-                }
-                let qualified = designator
-                    .parts
-                    .iter()
-                    .map(|part| match part {
-                        fpas_parser::DesignatorPart::Ident(name, _) => Some(name.as_str()),
-                        fpas_parser::DesignatorPart::Index(_, _) => None,
-                    })
-                    .collect::<Option<Vec<_>>>()
-                    .map(|parts| parts.join("."));
-                if let Some(result) = qualified
-                    .as_deref()
-                    .and_then(|name| self.call_result_type(name))
-                {
-                    return Ok(result);
-                }
-            }
-        }
-        if !self
-            .expr_types
-            .contains_key(&fpas_sema::expr_lookup_key(expression))
-            && let fpas_parser::Expr::Designator(designator) = expression
-            && let Some(ty) = self.designator_type(designator)
-        {
-            return Ok(ty);
-        }
-        self.type_table
-            .id(&self.expression_type(expression)?, span.line, span.column)
     }
 
     pub(super) fn specialize_task_binding(&self, declared: TypeId, inferred: TypeId) -> TypeId {

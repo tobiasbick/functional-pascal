@@ -13,13 +13,7 @@ public type ExplorerState = record
 
   public static function Default(): ExplorerState;
   begin
-    return record
-      CenterX := -0.75;
-      CenterY := 0.0;
-      SpanY := 2.4;
-      MaxIter := 160;
-      Palette := PaletteKind.DeepOcean;
-    end;
+    return ExplorerState(CenterX := -0.75, CenterY := 0.0, SpanY := 2.4, MaxIter := 160, Palette := PaletteKind.DeepOcean);
   end function;
 
   public function SpanX(Self: ExplorerState; Width: integer; Height: integer): real;
@@ -97,17 +91,7 @@ begin
   const Height: integer := Max(TerminalHeight, 1);
   const RenderWidth: integer := GridWidth(Width);
   const RenderHeight: integer := GridHeight(Height);
-  return record
-    Explorer := Explorer;
-    TerminalWidth := Width;
-    TerminalHeight := Height;
-    Grid := BlankGrid(RenderWidth, RenderHeight);
-    HelpOpen := HelpOpen;
-    Generation := Generation;
-    RowsRendered := 0;
-    FailureMessage := '';
-    Inbox := Inbox;
-  end;
+  return MandelbrotModel(Explorer := Explorer, TerminalWidth := Width, TerminalHeight := Height, Grid := BlankGrid(RenderWidth, RenderHeight), HelpOpen := HelpOpen, Generation := Generation, RowsRendered := 0, FailureMessage := '', Inbox := Inbox);
 end function;
 
 // Creates the initial blank model; TuiMsg.Started schedules its first render.
@@ -122,16 +106,6 @@ end function;
 
 public function MandelbrotRequest(State: MandelbrotModel): MandelbrotRenderRequest;
 begin
-  return record
-    Generation := State.Generation;
-    XMin := State.Explorer.XMin(State.Grid.Width, State.Grid.Height);
-    XMax := State.Explorer.XMax(State.Grid.Width, State.Grid.Height);
-    YMin := State.Explorer.YMin();
-    YMax := State.Explorer.YMax();
-    Width := State.Grid.Width;
-    Height := State.Grid.Height;
-    MaxIter := State.Explorer.MaxIter;
-    Palette := State.Explorer.Palette;
-  end;
+  return mandelbrot.render.mandelbrotrenderrequest(Generation := State.Generation, XMin := State.Explorer.XMin(State.Grid.Width, State.Grid.Height), XMax := State.Explorer.XMax(State.Grid.Width, State.Grid.Height), YMin := State.Explorer.YMin(), YMax := State.Explorer.YMax(), Width := State.Grid.Width, Height := State.Grid.Height, MaxIter := State.Explorer.MaxIter, Palette := State.Explorer.Palette);
 end function;
 end unit;

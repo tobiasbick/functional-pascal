@@ -219,11 +219,11 @@ begin
     when TuiMsg.Resize(Size):
     begin
       Cmd.Set(TuiCmd.Quit);
-      return record
-        ResizeCount := State.ResizeCount + 1;
-        Width := Size.Width;
-        Height := Size.Height;
-      end;
+      return Model(
+        ResizeCount := State.ResizeCount + 1,
+        Width := Size.Width,
+        Height := Size.Height
+      );
     end;
     else
     begin
@@ -238,11 +238,11 @@ begin
 end function;
 
 begin
-  const Final: Model := TuiApplication.Run(record
-    ResizeCount := 0;
-    Width := 0;
-    Height := 0;
-  end, Update, View);
+  const Final: Model := TuiApplication.Run(Model(
+    ResizeCount := 0,
+    Width := 0,
+    Height := 0
+  ), Update, View);
   WriteLn(Final.ResizeCount);
   WriteLn(Final.Width);
   WriteLn(Final.Height);
@@ -284,7 +284,7 @@ begin
   case Msg of
     when TuiMsg.Tick(Delta):
     begin
-      return record Ticks := State.Ticks + 1; end;
+      return Model( Ticks := State.Ticks + 1 );
     end;
     when TuiMsg.QuitRequested:
     begin
@@ -304,7 +304,7 @@ begin
 end function;
 
 begin
-  const Final: Model := TuiApplication.Run(record Ticks := 0; end, Update, View);
+  const Final: Model := TuiApplication.Run(Model( Ticks := 0 ), Update, View);
   WriteLn(Final.Ticks);
 end.
 "#,
@@ -374,10 +374,10 @@ end function;
 function UpdateApplication(State: Model; Message: integer; Cmd: TuiCmdOutput): Model;
 begin
   Cmd.Set(TuiCmd.Quit);
-  return record
-    Inbox := State.Inbox;
-    Value := Message;
-  end;
+  return Model(
+    Inbox := State.Inbox,
+    Value := Message
+  );
 end function;
 
 function View(State: Model): TuiElement;
@@ -387,10 +387,10 @@ end function;
 
 begin
   const Inbox: channel of integer := CreateChannel(1);
-  const Final: Model := TuiApplication.RunWithBackground(record
-    Inbox := Inbox;
-    Value := 0;
-  end, Inbox, Update, UpdateApplication, View);
+  const Final: Model := TuiApplication.RunWithBackground(Model(
+    Inbox := Inbox,
+    Value := 0
+  ), Inbox, Update, UpdateApplication, View);
   WriteLn(Final.Value);
 end.
 "#,

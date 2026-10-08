@@ -9,10 +9,7 @@ end function;
 
 function View(State: integer): TuiElement;
 begin
-  const InvalidAction: TuiAction := record
-    Value := 0;
-  end;
-
+  const InvalidAction: TuiAction := std.tui.ids.action.tuiaction(Value := 0);
   return TuiElement.Button(TuiButtonSpec.Normal(TuiControlId.Create(1), 'Invalid', '', InvalidAction));
 end function;
 

@@ -59,7 +59,7 @@ uses Demo.Core;
 
 begin
   const Music: string := '𝄞';
-  const CounterValue: Counter := record Amount := 1; end;
+  const CounterValue: Counter := Counter( Amount := 1 );
   const MemberValue: integer := CounterValue.AmTail;
   const Total: integer := Add(1, Add(2, 3));
   const Imported: integer := UniqueValue;

@@ -11,10 +11,7 @@ public type Counter = record
 
   public static function Create(): Counter;
   begin
-    return record
-      Value := 0;
-      Step := 1;
-    end;
+    return Counter(Value := 0, Step := 1);
   end function;
 
   public property Current: integer read Hidden;

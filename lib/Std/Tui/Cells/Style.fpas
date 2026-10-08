@@ -24,14 +24,7 @@ public type TuiStyle = record
   // - `Background`: Background color.
   public static function FromColors(Foreground: TuiColor; Background: TuiColor): TuiStyle;
   begin
-    return record
-      Foreground := Foreground;
-      Background := Background;
-      Bold := false;
-      Dim := false;
-      Underline := false;
-      Inverse := false;
-    end;
+    return TuiStyle(Foreground := Foreground, Background := Background, Bold := false, Dim := false, Underline := false, Inverse := false);
   end function;
 
   // Creates a style with colors and explicit text attributes.
@@ -52,14 +45,7 @@ public type TuiStyle = record
   Inverse: boolean
 ): TuiStyle;
   begin
-    return record
-      Foreground := Foreground;
-      Background := Background;
-      Bold := Bold;
-      Dim := Dim;
-      Underline := Underline;
-      Inverse := Inverse;
-    end;
+    return TuiStyle(Foreground := Foreground, Background := Background, Bold := Bold, Dim := Dim, Underline := Underline, Inverse := Inverse);
   end function;
 end record;
 end unit;

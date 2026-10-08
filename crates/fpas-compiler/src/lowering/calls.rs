@@ -22,6 +22,9 @@ impl LoweringContext {
         span: fpas_lexer::Span,
         call_key: usize,
     ) -> Result<ValueId, CompileError> {
+        if self.record_constructions.contains(&call_key) {
+            return self.lower_record_construction(arguments, result, span);
+        }
         if self.member_value_calls.contains_key(&call_key) {
             return self.lower_member_value_call(designator, arguments, result, span);
         }

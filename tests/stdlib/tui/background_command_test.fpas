@@ -36,11 +36,7 @@ end function;
 
 function UpdateApplication(State: CommandModel; Message: integer; Cmd: TuiCmdOutput): CommandModel;
 begin
-  return record
-    Inbox := State.Inbox;
-    Ready := State.Ready;
-    Value := Message;
-  end;
+  return CommandModel(Inbox := State.Inbox, Ready := State.Ready, Value := Message);
 end function;
 
 function View(State: CommandModel): TuiElement;
@@ -52,11 +48,7 @@ begin
   const Inbox: channel of integer := CreateChannel(1);
   const Ready: channel of boolean := CreateChannel(1);
   const App: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(24, 4));
-  var Model: CommandModel := App.RunBackgroundIterations(record
-    Inbox := Inbox;
-    Ready := Ready;
-    Value := 0;
-  end, Inbox, UpdateFramework, UpdateApplication, View, 1, 0);
+  var Model: CommandModel := App.RunBackgroundIterations(CommandModel(Inbox := Inbox, Ready := Ready, Value := 0), Inbox, UpdateFramework, UpdateApplication, View, 1, 0);
   AssertTrue(ReceiveWithTimeout(Ready, 10000).Unwrap());
   Model := App.RunBackgroundIterations(Model, Inbox, UpdateFramework, UpdateApplication, View, 1, 0);
   AssertEquals(42, Model.Value);

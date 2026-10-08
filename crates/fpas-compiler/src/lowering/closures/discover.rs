@@ -24,18 +24,29 @@ impl<'a> ClosureRegistry<'a> {
         Ok(())
     }
 
+    /// Discover source initializers and retained field defaults using their checked identities.
     pub fn discover_declaration_initializers(
         &mut self,
         declarations: &'a [Decl],
         owner: FunctionId,
-        metadata: &AnalysisMetadata,
+        metadata: &'a AnalysisMetadata,
         types: &mut types::TypeTable,
     ) -> Result<(), CompileError> {
         for declaration in declarations {
             let value = match declaration {
                 Decl::Const(definition) => &definition.value,
                 Decl::Var(definition) => &definition.value,
-                Decl::TypeDef(_) | Decl::Function(_) | Decl::Procedure(_) => continue,
+                Decl::TypeDef(definition) => {
+                    if let Some(fields) = metadata.record_defaults.get(&definition.name) {
+                        for (_, value) in fields {
+                            if let Some(value) = value {
+                                self.visit_expression(value, owner, metadata, types)?;
+                            }
+                        }
+                    }
+                    continue;
+                }
+                Decl::Function(_) | Decl::Procedure(_) => continue,
             };
             self.visit_expression(value, owner, metadata, types)?;
         }

@@ -7,10 +7,7 @@ begin
   NoteValue.Title := 'Title';
   NoteValue.Body := 'Body';
   NoteValue.Tags := ['one'];
-  const Loaded: NotesLoad := record
-    Notes := [NoteValue];
-    Issues := [];
-  end;
+  const Loaded: NotesLoad := notes.model.notesload(Notes := [NoteValue], Issues := []);
   var State: NotesModel := NotesModelCreate(ScratchDir(), Loaded);
   const Cmd: TuiCmdOutput := TuiCmdOutput.Create();
   for Caret: integer := 0 to 4 do

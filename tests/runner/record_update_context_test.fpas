@@ -10,12 +10,7 @@ type Holder = record
 end record;
 
 begin
-  const Original: Holder := record
-    Items := [1, 2];
-    Tags := ['old': 1];
-    MaybeItems := Some([3]);
-    Lookup := Ok(['old': 2]);
-  end;
+  const Original: Holder := Holder(Items := [1, 2], Tags := ['old': 1], MaybeItems := Some([3]), Lookup := Ok(['old': 2]));
   const Updated: Holder := Original with Items := []; Tags := [:]; MaybeItems := Some([]); Lookup := Ok([:]); end with;
 
   AssertEquals(0, Updated.Items.Length());

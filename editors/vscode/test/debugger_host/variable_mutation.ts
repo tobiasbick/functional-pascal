@@ -33,7 +33,7 @@ export async function verifyVariableMutation(
     "  Point = record",
     "    X: integer;",
     "    Y: integer;",
-    "  end;",
+    "  end record;",
     "",
     "var",
     "  GlobalValue: integer := 5;",
@@ -41,16 +41,16 @@ export async function verifyVariableMutation(
     "begin",
     "  var Scalar: integer := 1;",
     "  const Fixed: integer := 2;",
-    "  var Origin: Point := record",
-    "    X := 3;",
-    "    Y := 4;",
-    "  end;",
+    "  var Origin: Point := Point(",
+    "    X := 3,",
+    "    Y := 4",
+    "  );",
     "  var Items: array of integer := [6, 7];",
     "  var Scores: dict of string to integer := ['Ada': 8];",
     "  const StopMarker: integer := Fixed;",
     "  WriteLn(Scalar + Origin.X + Items[1] + Scores['Ada'] + GlobalValue);",
     "end.",
-    ""
+    "",
   ];
   const sourcePath = await writeSource(workspaceRoot, "variable-mutation", lines);
   const stopLine = lines.indexOf("  const StopMarker: integer := Fixed;");

@@ -15,15 +15,7 @@ type ExplorerState = record
 
   static function Default(): ExplorerState;
   begin
-    return record
-      CenterX := 0.0;
-      CenterY := 0.0;
-      SpanY := 2.4;
-      Jr := -0.8;
-      Ji := 0.156;
-      MaxIter := 96;
-      Palette := PaletteKind.DeepOcean;
-    end;
+    return ExplorerState(CenterX := 0.0, CenterY := 0.0, SpanY := 2.4, Jr := -0.8, Ji := 0.156, MaxIter := 96, Palette := PaletteKind.DeepOcean);
   end function;
 
   function SpanX(Self: ExplorerState; Width: integer; Height: integer): real;
@@ -159,16 +151,7 @@ begin
   RenderW := RenderWidth();
   RenderH := RenderHeight();
   BeginFrame();
-  FillRect(record
-    x := 1;
-    y := 1;
-    width := ScreenWidth();
-    height := ScreenHeight();
-  end, record
-    glyph := ' ';
-    foreground := RgbColor(0, 0, 0);
-    background := RgbColor(0, 0, 0);
-  end);
+  FillRect(Std.Console.Rect(x := 1, y := 1, width := ScreenWidth(), height := ScreenHeight()), Std.Console.Cell(glyph := ' ', foreground := RgbColor(0, 0, 0), background := RgbColor(0, 0, 0)));
   ActiveRender := Some(StartRender(State.XMin(RenderW, RenderH), State.XMax(RenderW, RenderH), State.YMin(), State.YMax(), RenderW, RenderH, State.MaxIter, State.Palette, State.Jr, State.Ji));
   DrawHud(State, RenderW, RenderH);
   Present();

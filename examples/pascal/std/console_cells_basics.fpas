@@ -5,29 +5,12 @@ program ConsoleCellsBasics;
 uses Std.Console;
 
 begin
-  const Bounds: Rect := record
-    x := 1;
-    y := 1;
-    width := 6;
-    height := 1;
-  end;
+  const Bounds: Rect := Std.Console.Rect(x := 1, y := 1, width := 6, height := 1);
   const Underlay: SavedRegion := SaveRegion(Bounds);
   BeginFrame();
-  FillRect(Bounds, record
-    glyph := ' ';
-    foreground := CrtColor(White);
-    background := Ansi256Color(24);
-  end);
-  const First: Cell := record
-    glyph := 'O';
-    foreground := RgbColor(255, 220, 120);
-    background := Ansi256Color(24);
-  end;
-  const Second: Cell := record
-    glyph := 'K';
-    foreground := RgbColor(156, 204, 255);
-    background := Ansi256Color(24);
-  end;
+  FillRect(Bounds, Std.Console.Cell(glyph := ' ', foreground := CrtColor(White), background := Ansi256Color(24)));
+  const First: Cell := Std.Console.Cell(glyph := 'O', foreground := RgbColor(255, 220, 120), background := Ansi256Color(24));
+  const Second: Cell := Std.Console.Cell(glyph := 'K', foreground := RgbColor(156, 204, 255), background := Ansi256Color(24));
   const LabelCells: array of Cell := [First, Second];
   WriteCells(2, 1, LabelCells);
   const ReadBack: option of Cell := GetCell(2, 1);

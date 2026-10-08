@@ -287,13 +287,7 @@ begin
         return Error(Message);
       end;
   end case;
-  const Output: ServerRequest := record
-    Method := RequestLine[0];
-    Target := RequestLine[1];
-    Headers := Headers;
-    Body := Body;
-  end;
-
+  const Output: ServerRequest := std.http.types.serverrequest(Method := RequestLine[0], Target := RequestLine[1], Headers := Headers, Body := Body);
   return Ok(Output);
 end function;
 

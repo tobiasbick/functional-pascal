@@ -74,25 +74,16 @@ begin
         end;
       end if;
 
-      return Ok(record
-        Mode := 2;
-        Remaining := 0;
-      end);
+      return Ok(Framing(Mode := 2, Remaining := 0));
     end;
   end if;
 
   if ContentLengthCount > 0 then
     begin
-      return Ok(record
-        Mode := 1;
-        Remaining := ContentLength;
-      end);
+      return Ok(Framing(Mode := 1, Remaining := ContentLength));
     end;
   end if;
 
-  return Ok(record
-    Mode := 3;
-    Remaining := 0;
-  end);
+  return Ok(Framing(Mode := 3, Remaining := 0));
 end function;
 end unit;

@@ -51,7 +51,24 @@ impl LanguageService {
             }
             let (document_index, symbol, _) =
                 resolve(&context.documents, target_index, callable_token.span.offset)?;
-            let signature = symbol.callable?;
+            let signature = if symbol.kind == crate::SymbolKind::Type {
+                let (_, record) = crate::navigation::record_construction::constructor_record(
+                    &context.documents,
+                    target_index,
+                    document_index,
+                    symbol.clone(),
+                )?;
+                let mut signature = record.callable?;
+                signature.label = format!(
+                    "{}({}): {}",
+                    symbol.name,
+                    signature.parameters.join("; "),
+                    symbol.name
+                );
+                signature
+            } else {
+                symbol.callable?
+            };
             let documentation = preceding_documentation(
                 context.documents[document_index].snapshot.source(),
                 symbol.full_span.offset(),
@@ -89,8 +106,11 @@ impl LanguageService {
 }
 
 #[derive(Debug, Clone, Copy)]
-struct CallFrame {
-    callable_token: usize,
+/// Innermost call and current argument boundaries shared by help and field completion.
+pub(super) struct CallFrame {
+    pub(super) callable_token: usize,
+    pub(super) parenthesis: usize,
+    pub(super) argument_start: usize,
     active_argument: usize,
     /// Name token of the current `Name := Value` argument.
     argument_name: Option<usize>,
@@ -102,7 +122,8 @@ enum Delimiter {
     Bracket,
 }
 
-fn active_call(document: &NavigationDocument, offset: usize) -> Option<CallFrame> {
+/// Track nested delimiters to identify the active source call at a byte offset.
+pub(super) fn active_call(document: &NavigationDocument, offset: usize) -> Option<CallFrame> {
     let tokens = &document.tokens;
     let mut delimiters = Vec::<Delimiter>::new();
     for (index, token) in tokens
@@ -114,6 +135,8 @@ fn active_call(document: &NavigationDocument, offset: usize) -> Option<CallFrame
             Token::LParen => delimiters.push(Delimiter::Parenthesis(
                 callable_before(document, index).map(|callable_token| CallFrame {
                     callable_token,
+                    parenthesis: index,
+                    argument_start: index + 1,
                     active_argument: 0,
                     argument_name: None,
                 }),
@@ -124,6 +147,7 @@ fn active_call(document: &NavigationDocument, offset: usize) -> Option<CallFrame
             Token::Comma => {
                 if let Some(Delimiter::Parenthesis(Some(frame))) = delimiters.last_mut() {
                     frame.active_argument = frame.active_argument.saturating_add(1);
+                    frame.argument_start = index + 1;
                     frame.argument_name = None;
                 }
             }

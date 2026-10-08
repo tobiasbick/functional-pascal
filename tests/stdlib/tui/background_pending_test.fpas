@@ -80,13 +80,7 @@ begin
   const Ready: channel of boolean := CreateChannel(1);
   const Started: channel of boolean := CreateChannel(1);
   const App: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(24, 4));
-  var State: PendingModel := App.RunBackgroundIterations(record
-    Gate := Gate;
-    Ready := Ready;
-    Started := Started;
-    FailOld := true;
-    Failures := 0;
-  end, Inbox, Update, UpdateMessage, View, 1, 0);
+  var State: PendingModel := App.RunBackgroundIterations(PendingModel(Gate := Gate, Ready := Ready, Started := Started, FailOld := true, Failures := 0), Inbox, Update, UpdateMessage, View, 1, 0);
   AssertTrue(ReceiveWithTimeout(Ready, 5000).Unwrap());
   App.Inject(TuiMsg.Tick(1));
   App.Inject(TuiMsg.Tick(2));

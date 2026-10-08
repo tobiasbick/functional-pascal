@@ -36,16 +36,8 @@ type Rectangle = record
 end record;
 
 begin
-  const R: Rectangle := record
-    W := 5;
-    H := 3;
-  end;
-
+  const R: Rectangle := Rectangle(W := 5, H := 3);
   R.Describe();
-  const S: Rectangle := record
-    W := 4;
-    H := 4;
-  end;
-
+  const S: Rectangle := Rectangle(W := 4, H := 4);
   S.Describe();
 end.

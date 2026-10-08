@@ -145,10 +145,7 @@ type Point = record
   begin
     const RX: integer := Self.X + Other.X;
     const RY: integer := Self.Y + Other.Y;
-    return record
-      X := RX;
-      Y := RY;
-    end;
+    return Point(X := RX, Y := RY);
   end function;
 
   procedure Print(Self: Point);
@@ -158,15 +155,8 @@ type Point = record
 end record;
 
 begin
-  const A: Point := record
-    X := 3;
-    Y := 4;
-  end;
-  const B: Point := record
-    X := 10;
-    Y := 20;
-  end;
-
+  const A: Point := Point(X := 3, Y := 4);
+  const B: Point := Point(X := 10, Y := 20);
   A.Print();
   B.Print();
   WriteLn('Sum of A: ' + IntToStr(A.Sum()));
@@ -249,7 +239,7 @@ end unit;
 |-----------|------------|
 | `uses` clause | After commas; continuation lines indented **2 spaces** from column 0 |
 | `function` / `procedure` formal lists | After `;` between parameters |
-| Record literals with fields | Always multi-line; keep semicolons after every field |
+| Record construction | Named call arguments; wrap after commas when over width |
 | Array literals | Multi-line when over width |
 | Long binary chains / calls | Break at lowest-precedence operator; never inside string literals |
 | Postfix chains (`.Field` / `[Index]` / `.Method(...)`) | Break before each suffix; indent continuations **2 spaces** from the expression base column |
@@ -287,7 +277,6 @@ are rejected by the parser and must be written as `null;`.
 | program body | `begin` … `end.` |
 | `repeat` … `until` | statement list directly under `repeat` |
 | `record` / `enum` type | `record` … `end record;` / `enum` … `end enum;` |
-| record literal | `record` … `end` |
 | unit | declarations followed by `end unit;` |
 
 ## Blank lines
@@ -423,30 +412,21 @@ type Config = record
 end record;
 ```
 
-### Record literal (expression)
+### Record construction (expression)
 
-Non-empty record literals are always multi-line. Every field keeps its trailing `;`, including the
-last field before `end`:
-
-Empty record literals stay on one line with exactly one space:
+Record construction follows named-call formatting. Short calls stay on one line;
+long calls wrap after commas. Empty construction has no spaces inside parentheses:
 
 ```pascal
-record end
+Empty()
 ```
 
 ```pascal
-record
-  X := 3;
-  Y := 4;
-end
+Point(X := 3, Y := 4)
 ```
 
 ```pascal
-record
-  Host := 'api';
-  Port := 443;
-  Retries := 5;
-end
+Config(Host := 'api', Port := 443, Retries := 5)
 ```
 
 ### Long `uses` (wrapped, v2 golden)
@@ -463,15 +443,17 @@ begin
 end.
 ```
 
-### Record literal (v2 golden)
+### Record construction (v2 golden)
 
 ```pascal
-record
-  Host := 'api.example.com';
-  Port := 443;
-  Retries := 5;
-  TimeoutSeconds := 30;
-end
+type NetworkConfig = record
+  Host: string;
+  Port: integer;
+  Retries: integer;
+  TimeoutSeconds: integer;
+end record;
+
+const Remote: NetworkConfig := NetworkConfig(Host := 'api.example.com', Port := 443, Retries := 5, TimeoutSeconds := 30);
 ```
 
 ---

@@ -89,7 +89,7 @@ fn generic_method_called_with_inferred_type() {
          end record;
          function Stringify(X: integer): string;
          begin return 'x'; end function;
-         const B: Box := record Value := 42; end;
+         const B: Box := Box( Value := 42 );
          const S: string := B.Map(Stringify);
          begin end.",
     );
@@ -158,7 +158,7 @@ fn generic_method_constraint_violation_at_call_site() {
            function AddTwo<T: Numeric>(Self: Box; X: T): T;
            begin return X; end function;
          end record;
-         const B: Box := record Value := 1; end;
+         const B: Box := Box( Value := 1 );
          const S: string := B.AddTwo('hello');
          begin end.",
     );

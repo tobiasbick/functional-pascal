@@ -44,6 +44,11 @@ fn complete(
     offset: usize,
     context: super::context::CompletionContext,
 ) -> Vec<CompletionCandidate> {
+    if let Some(candidates) =
+        super::record_construction::field_completions(documents, target_index, offset, &context)
+    {
+        return candidates;
+    }
     let symbols = if let Some(receiver) = &context.receiver {
         member_candidates(documents, target_index, receiver, offset)
     } else {
@@ -221,7 +226,8 @@ fn public_members(
         .collect()
 }
 
-fn declaration_candidate(
+/// Build declaration-backed completions shared with constructor field labels.
+pub(super) fn declaration_candidate(
     documents: &[NavigationDocument],
     document_index: usize,
     symbol: &DocumentSymbol,

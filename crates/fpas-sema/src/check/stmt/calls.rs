@@ -49,6 +49,16 @@ impl Checker {
                 self.check_args_only(args);
                 return Ty::Error;
             }
+            if kind == SymbolKind::Type
+                && let Ty::Record(record) = self.resolve_visible_type(&ty)
+            {
+                return self.check_record_construction(
+                    crate::designator_lookup_key(designator),
+                    &record,
+                    args,
+                    span,
+                );
+            }
 
             let dispatch = self.builtin_std_dispatch_name(&name);
             if dispatch.starts_with("Std.") {

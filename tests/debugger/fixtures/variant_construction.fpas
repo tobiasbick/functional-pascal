@@ -93,10 +93,7 @@ begin
 end function;
 
 begin
-  var Origin: Point := record
-    X := 4;
-    Y := 5;
-  end;
+  var Origin: Point := Point(X := 4, Y := 5);
   var Selected: Choice := Choice.Empty;
   var PairValue: Choice := Choice.Pair(2, 3);
   var EmptyValue: Choice := Choice.Empty;
@@ -105,9 +102,7 @@ begin
   var Failed: result of integer, string := Error('old');
   var Optional: option of integer := Some(7);
   var Missing: option of integer := None;
-  var PackedHolder: Holder := record
-    Item := Choice.Empty;
-  end;
+  var PackedHolder: Holder := Holder(Item := Choice.Empty);
   var Items: array of Choice := [Choice.Empty];
   var Scores: dict of string to Choice := ['blue': Choice.Empty];
   var WrappedChoice: result of Choice, string := Ok(Choice.Empty);

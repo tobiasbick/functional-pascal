@@ -1,13 +1,14 @@
 use super::*;
 
 mod mutating_arrays;
+mod record_construction;
 mod record_updates;
 mod structural_equality;
 mod try_expressions;
 mod type_order;
 
 #[test]
-fn contextual_record_literals_expand_defaults_in_all_lowering_positions() {
+fn typed_record_constructions_expand_defaults_in_all_lowering_positions() {
     assert_succeeds(
         r#"
 program ContextualRecords;
@@ -15,20 +16,20 @@ type Point = record
   X: integer := 0;
   Y: integer := 0;
 end record;
-const OriginPoint: Point := record X := 0; end;
+const OriginPoint: Point := Point( X := 0 );
 function Origin(): Point;
 begin
-  return record X := 4; end;
+  return Point( X := 4 );
 end function;
 procedure Draw(P: Point);
 begin
   if (P.X <> 0) or (P.Y <> 2) then panic('argument defaults'); end if;
 end procedure;
 begin
-  var P: Point := record end;
-  P := record X := 1; end;
-  Draw(record Y := 2; end);
-  const Points: array of Point := [record X := 3; end];
+  var P: Point := Point( );
+  P := Point( X := 1 );
+  Draw(Point( Y := 2 ));
+  const Points: array of Point := [Point( X := 3 )];
   const Returned: Point := Origin();
   if (P.X <> 1) or (P.Y <> 0) or
      (Points[0].X <> 3) or (Points[0].Y <> 0) or
@@ -69,7 +70,7 @@ type
     Y: integer := 2;
   end record;
 begin
-  const Original: Point := record X := 1; end;
+  const Original: Point := Point( X := 1 );
   const Updated: Point := Original with X := 9; end with;
   var Items: array of Point := [Original, Updated];
   Items[0].Y := 7;
@@ -114,7 +115,7 @@ type
     Right: integer;
   end record;
 begin
-  var VALUE: Pair := record Left := 1; Right := 2; end;
+  var VALUE: Pair := Pair( Left := 1, Right := 2 );
   value.lEfT := VALUE.right;
   if Value.Left <> 2 then panic('case mismatch'); end if;
 end.",
@@ -163,11 +164,11 @@ begin
 end function;
 function Build(Second: Result of integer, string): Result of Triple, string;
 begin
-  return Ok(record
-    First := 1;
-    Second := try ReadValue(Second);
-    Third := try ReadValue(Ok(3));
-  end);
+  return Ok(Triple(
+    First := 1,
+    Second := try ReadValue(Second),
+    Third := try ReadValue(Ok(3))
+  ));
 end function;
 begin
   case Build(Ok(2)) of
@@ -295,13 +296,13 @@ begin
 end procedure;
 
 begin
-  const C: Counter := record Value := 6; end;
+  const C: Counter := Counter( Value := 6 );
   if C.Double() <> 12 then panic('method mismatch'); end if;
   if C.Number <> 6 then panic('property read mismatch'); end if;
   C.Number := 9;
   if LastValue <> 9 then panic('property write mismatch'); end if;
 
-  const B: Button := record end;
+  const B: Button := Button( );
   if Assigned(B.OnValue) then panic('unexpected handler'); end if;
   B.OnValue := Remember;
   if not Assigned(B.OnValue) then panic('missing handler'); end if;
@@ -328,7 +329,7 @@ type
     property Number: integer read ReadNumber;
   end record;
 begin
-  const C: Counter := record Value := 1; end;
+  const C: Counter := Counter( Value := 1 );
   if C.Number <> 1 then panic('property metadata fixture'); end if;
 end.",
     );
@@ -365,19 +366,20 @@ end.",
 }
 
 #[test]
-fn anonymous_record_shapes_use_positional_fields() {
+fn typed_record_constructions_expose_named_fields() {
     assert_succeeds(
         "\
-program RegisterAnonymousRecord;
+program RegisterConstructedRecord;
+type Pair = record Left: integer; Right: integer; end record;
 begin
-  if (record Left := 3; Right := 4; end).Left <> 3 then
+  if Pair(Left := 3, Right := 4).Left <> 3 then
     panic('anonymous record mismatch'); end if;
 end.",
     );
 }
 
 #[test]
-fn inferred_and_contextual_records_preserve_initializer_order() {
+fn typed_records_preserve_migrated_initializer_order() {
     assert_succeeds(
         r#"
 program RecordInitializerOrder;
@@ -392,9 +394,9 @@ begin
   return Calls;
 end function;
 begin
-  if (record First := Next(); Second := Next(); end).Second <> 2 then
+  if (Pair( First := Next(), Second := Next() )).Second <> 2 then
     panic('anonymous record initializer order'); end if;
-  const Typed: Pair := record First := Next(); end;
+  const Typed: Pair := Pair( First := Next() );
   if (Typed.First <> 3) or (Typed.Second <> 7) or (Calls <> 3) then
     panic('record initializer order'); end if;
 end.
@@ -420,7 +422,7 @@ begin
   return Value;
 end function;
 begin
-  const P: Point := Identity(record X := 8; end);
+  const P: Point := Identity(Point( X := 8 ));
   if P.X <> 8 then panic('generic record mismatch'); end if;
   const C: Choice := Identity(Choice.Number(9));
   case C of
@@ -441,7 +443,7 @@ type
     Value: integer;
     static function Create(Value: integer): Box;
     begin
-      return record Value := Value; end;
+      return Box( Value := Value );
     end function;
     function ReadNumber(Self: Box): integer;
     begin
@@ -479,7 +481,7 @@ type
     end function;
   end record;
 begin
-  const C: Counter := record Base := 10; end;
+  const C: Counter := Counter( Base := 10 );
   const AddToCounter: function(Value: integer): integer := C.Add;
   if AddToCounter(7) <> 17 then panic('bound method mismatch'); end if;
 end.",
@@ -515,8 +517,8 @@ type
     event OnValue: function(Value: integer): integer read ReadValue write WriteValue;
   end record;
 begin
-  const C: Counter := record Base := 12; end;
-  const S: Source := record end;
+  const C: Counter := Counter( Base := 12 );
+  const S: Source := Source( );
   S.OnValue := C.Add;
   if S.OnValue(8) <> 20 then panic('bound event mismatch'); end if;
 end.",
@@ -560,7 +562,7 @@ begin
   return 23;
 end function;
 begin
-  const O: Outer := record Item := record Value := 17; end; end;
+  const O: Outer := Outer( Item := Inner( Value := 17 ) );
   O.Child.Number := BuildValue();
   if (Step <> 123) or (Written <> 23) then panic('property write order mismatch'); end if;
   Step := 0;

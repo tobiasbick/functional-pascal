@@ -41,13 +41,6 @@ begin
 end procedure;
 
 begin
-  const Initial: ExplorerCamera := record
-    CenterX := -0.45;
-    CenterY := -0.55;
-    SpanY := 2.8;
-    MaxIter := 160;
-    Palette := 2;
-  end;
-
+  const Initial: ExplorerCamera := fractal.camera.explorercamera(CenterX := -0.45, CenterY := -0.55, SpanY := 2.8, MaxIter := 160, Palette := 2);
   RunExplorer('Functional Pascal Burning Ship', Initial, Draw, Label);
 end.

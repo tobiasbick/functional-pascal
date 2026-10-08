@@ -26,14 +26,7 @@ public type TuiButtonSpec = record
   // - `Action`: Application action associated with the control or emitted message.
   public static function Normal(Id: TuiControlId; Text: string; Mnemonic: string; Action: TuiAction): TuiButtonSpec;
   begin
-    return record
-      Id := Id;
-      Text := Text;
-      Mnemonic := Mnemonic;
-      Action := Action;
-      Default := false;
-      Enabled := true;
-    end;
+    return TuiButtonSpec(Id := Id, Text := Text, Mnemonic := Mnemonic, Action := Action, Default := false, Enabled := true);
   end function;
 
   // Creates an enabled default button.
@@ -45,14 +38,7 @@ public type TuiButtonSpec = record
   // - `Action`: Application action associated with the control or emitted message.
   public static function DefaultButton(Id: TuiControlId; Text: string; Mnemonic: string; Action: TuiAction): TuiButtonSpec;
   begin
-    return record
-      Id := Id;
-      Text := Text;
-      Mnemonic := Mnemonic;
-      Action := Action;
-      Default := true;
-      Enabled := true;
-    end;
+    return TuiButtonSpec(Id := Id, Text := Text, Mnemonic := Mnemonic, Action := Action, Default := true, Enabled := true);
   end function;
 
   // Creates a disabled normal button.
@@ -64,14 +50,7 @@ public type TuiButtonSpec = record
   // - `Action`: Application action associated with the control or emitted message.
   public static function Disabled(Id: TuiControlId; Text: string; Mnemonic: string; Action: TuiAction): TuiButtonSpec;
   begin
-    return record
-      Id := Id;
-      Text := Text;
-      Mnemonic := Mnemonic;
-      Action := Action;
-      Default := false;
-      Enabled := false;
-    end;
+    return TuiButtonSpec(Id := Id, Text := Text, Mnemonic := Mnemonic, Action := Action, Default := false, Enabled := false);
   end function;
 end record;
 end unit;

@@ -253,11 +253,11 @@ fn value_name_cannot_be_used_as_type() {
 }
 
 #[test]
-fn record_literal_field_names_are_case_insensitive() {
+fn record_construction_field_names_are_case_insensitive() {
     check_ok(
         "program T; \
          type Point = record X: integer; Y: integer; end record; \
-         const P: Point := record x := 1; y := 2; end; \
+         const P: Point := Point( x := 1, y := 2 ); \
          begin end.",
     );
 }
@@ -286,22 +286,22 @@ fn anonymous_record_literal_rejects_case_only_duplicate_fields() {
 }
 
 #[test]
-fn typed_record_literal_rejects_exact_duplicate_fields() {
+fn typed_record_construction_rejects_exact_duplicate_fields() {
     let errors = duplicate_record_field_errors(
         "program T; \
          type Point = record X: integer; Y: integer; end record; \
-         const P: Point := record X := 1; X := 2; Y := 3; end; \
+         const P: Point := Point( X := 1, X := 2, Y := 3 ); \
          begin end.",
     );
     assert_eq!(errors.len(), 1, "unexpected diagnostics: {errors:#?}");
 }
 
 #[test]
-fn typed_record_literal_rejects_case_only_duplicate_fields() {
+fn typed_record_construction_rejects_case_only_duplicate_fields() {
     let errors = duplicate_record_field_errors(
         "program T; \
          type Point = record X: integer; Y: integer; end record; \
-         const P: Point := record X := 1; x := 2; Y := 3; end; \
+         const P: Point := Point( X := 1, x := 2, Y := 3 ); \
          begin end.",
     );
     assert_eq!(errors.len(), 1, "unexpected diagnostics: {errors:#?}");
@@ -312,7 +312,7 @@ fn record_update_rejects_exact_duplicate_fields() {
     let errors = duplicate_record_field_errors(
         "program T; \
          type Point = record X: integer; Y: integer; end record; \
-         const P: Point := record X := 1; Y := 2; end; \
+         const P: Point := Point( X := 1, Y := 2 ); \
          const Q: Point := P with X := 3; X := 4; end with; \
          begin end.",
     );
@@ -324,7 +324,7 @@ fn record_update_rejects_case_only_duplicate_fields() {
     let errors = duplicate_record_field_errors(
         "program T; \
          type Point = record X: integer; Y: integer; end record; \
-         const P: Point := record X := 1; Y := 2; end; \
+         const P: Point := Point( X := 1, Y := 2 ); \
          const Q: Point := P with X := 3; x := 4; end with; \
          begin end.",
     );
@@ -356,7 +356,7 @@ fn record_method_valid() {
            begin return Self.X + Self.Y; end function; \
          end record; \
          begin \
-           const P: Point := record X := 3; Y := 7; end; \
+           const P: Point := Point( X := 3, Y := 7 ); \
            WriteLn(P.Sum()); \
          end.",
     );
@@ -372,7 +372,7 @@ fn record_method_names_are_case_insensitive() {
                      begin return Self.X; end function; \
                  end record; \
                  begin \
-                     const P: Point := record X := 3; end; \
+                     const P: Point := Point( X := 3 ); \
                      WriteLn(P.sum()); \
                  end.",
     );
@@ -406,7 +406,7 @@ fn static_record_function_valid() {
          type Point = record \
            X: integer; Y: integer; \
            static function Create(X: integer; Y: integer): Point; \
-           begin return record X := X; Y := Y; end; end function; \
+           begin return Point( X := X, Y := Y ); end function; \
          end record; \
          begin \
            const P: Point := Point.Create(3, 4); \
@@ -422,7 +422,7 @@ fn static_record_function_case_insensitive() {
          type Point = record \
            X: integer; Y: integer; \
            static function Create(X: integer; Y: integer): Point; \
-           begin return record X := X; Y := Y; end; end function; \
+           begin return Point( X := X, Y := Y ); end function; \
          end record; \
          begin \
            const P: Point := point.create(1, 2); \
@@ -438,7 +438,7 @@ fn static_record_function_via_alias() {
          type Point = record \
            X: integer; Y: integer; \
            static function Create(X: integer; Y: integer): Point; \
-           begin return record X := X; Y := Y; end; end function; \
+           begin return Point( X := X, Y := Y ); end function; \
          end record; \
          type Alias = Point; \
          begin \
@@ -455,10 +455,10 @@ fn static_call_through_value_rejected() {
          type Point = record \
            X: integer; Y: integer; \
            static function Create(X: integer; Y: integer): Point; \
-           begin return record X := X; Y := Y; end; end function; \
+           begin return Point( X := X, Y := Y ); end function; \
          end record; \
          begin \
-           const P: Point := record X := 0; Y := 0; end; \
+           const P: Point := Point( X := 0, Y := 0 ); \
            const Q: Point := P.Create(1, 2); \
          end.",
     );
@@ -481,7 +481,7 @@ fn instance_call_through_type_rejected() {
            begin return Self.X + Self.Y; end function; \
          end record; \
          begin \
-           const P: Point := record X := 1; Y := 2; end; \
+           const P: Point := Point( X := 1, Y := 2 ); \
            const N: integer := Point.Sum(P); \
          end.",
     );
@@ -522,9 +522,9 @@ fn static_overload_attempt_rejected() {
          type Point = record \
            X: integer; \
            static function Create(X: integer): Point; \
-           begin return record X := X; end; end function; \
+           begin return Point( X := X ); end function; \
            static function Create(X: integer; Y: integer): Point; \
-           begin return record X := X; end; end function; \
+           begin return Point( X := X ); end function; \
          end record; \
          begin end.",
     );
@@ -589,7 +589,7 @@ fn static_procedure_call_through_value_rejected() {
            static procedure Reset(); begin end procedure; \
          end record; \
          begin \
-           const Value: Counter := record Value := 1; end; \
+           const Value: Counter := Counter( Value := 1 ); \
            Value.Reset(); \
          end.",
     );

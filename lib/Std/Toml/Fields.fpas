@@ -2,7 +2,7 @@
 // See docs/pascal/std/text/toml-fields.md.
 unit Std.Toml.Fields;
 
-uses Std.Arrays, Std.Dictionaries, Std.Toml;
+uses Std.Toml;
 
 // Builds the type-mismatch error for one key.
 //
@@ -39,7 +39,7 @@ end function;
 // - `Name`: Required key name.
 public function Field(Fields: dict of string to TomlValue; Name: string): result of TomlValue, string;
 begin
-  case Std.Dictionaries.Get(Fields, Name) of
+  case Fields.Get(Name) of
     when Some(Value):
       begin
         return Ok(Value);
@@ -178,7 +178,7 @@ begin
       case Item of
         when TomlValue.String(Value):
           begin
-            Std.Arrays.Push(Values, Value);
+            Values.Push(Value);
           end;
         else
           begin
@@ -198,9 +198,9 @@ end function;
 // - `Allowed`: Every permitted key name.
 public function RequireOnlyFields(Fields: dict of string to TomlValue; Allowed: array of string): result of boolean, string;
 begin
-  for Name: string in Std.Dictionaries.Keys(Fields) do
+  for Name: string in Fields.Keys() do
     begin
-      if not Std.Arrays.Contains(Allowed, Name) then
+      if not Allowed.Contains(Name) then
         begin
           return Error('unexpected field ' + Name);
         end;

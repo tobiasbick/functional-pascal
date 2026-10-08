@@ -49,6 +49,23 @@ impl LanguageService {
     ) -> Result<NavigationResult<Option<HoverInfo>>, LanguageServiceError> {
         let context = self.navigation_context(path)?;
         let value = context.target_index.and_then(|target_index| {
+            if let Some((entry, receiver)) =
+                crate::intellisense::native::native_at(&context.documents, target_index, offset)
+            {
+                let token = context.documents[target_index]
+                    .tokens
+                    .iter()
+                    .find(|token| {
+                        token.span.offset <= offset
+                            && offset < token.span.offset + token.span.length
+                    })?;
+                return Some(HoverInfo {
+                    contents: crate::intellisense::native::signature(entry, receiver.as_ref())
+                        .label,
+                    documentation: Some(entry.documentation.into()),
+                    range: token.span.diagnostic_span_or_synthetic(),
+                });
+            }
             resolve(&context.documents, target_index, offset).map(
                 |(document_index, symbol, range)| HoverInfo {
                     documentation: preceding_documentation(

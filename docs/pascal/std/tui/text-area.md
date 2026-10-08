@@ -14,8 +14,8 @@ TuiElementBuilders.MakeTextArea(
 ```
 
 `Id` and `ChangeAction` must be positive typed identities. `Caret` is a
-zero-based `Std.Str` character index in the inclusive range
-`0..Std.Str.Length(Text)`. `Offset.X` is a non-negative terminal display column;
+zero-based `String operations` character index in the inclusive range
+`0..Text.Length()`. `Offset.X` is a non-negative terminal display column;
 `Offset.Y` is a non-negative zero-based logical line.
 
 ## Controlled change
@@ -52,7 +52,7 @@ When focused, the element handles:
 | Enter | Insert LF and move to the new line. |
 | Tab | Insert two spaces. |
 | Backspace / Delete | Delete the preceding or following character. |
-| Left / Right | Move one `Std.Str` character. |
+| Left / Right | Move one `String operations` character. |
 | Up / Down | Move one logical line, preserving the nearest terminal display column. |
 | Home / End | Move to the start or end of the current logical line. |
 | PageUp / PageDown | Move by the arranged viewport height. |

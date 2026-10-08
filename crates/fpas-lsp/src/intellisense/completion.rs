@@ -65,6 +65,12 @@ pub(crate) fn completion_item(
             value.insert_text,
         ))),
         additional_text_edits,
+        documentation: value.inline_documentation.map(|value| {
+            Documentation::MarkupContent(MarkupContent {
+                kind: MarkupKind::Markdown,
+                value,
+            })
+        }),
         data,
         ..CompletionItem::default()
     })

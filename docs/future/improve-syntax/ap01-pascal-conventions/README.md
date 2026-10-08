@@ -24,15 +24,10 @@ are drafts, not current-language examples.
   `function Identity<T>(Value: T): T;`; calls infer their type arguments.
   This is not a type application
   ([AP24](../ap24-generic-data-structures/README.md)).
-- A formatter change is not required for this package.
 
 ## Dependencies
 
 None. AP05, AP11, and AP13 depend on this package.
-
-## Order
-
-AP01.1 establishes the reference examples; AP01.2 checks the plan against them.
 
 ## Work packages
 
@@ -44,10 +39,8 @@ AP01.1 establishes the reference examples; AP01.2 checks the plan against them.
 The reference examples state a consistent Pascal-oriented form without
 presenting unresolved grammar as implemented behavior.
 
-## Delivery
+## Result
 
-The [reference style](reference-style.md) provides ten annotated draft examples.
-The [spelling review](spelling-review.md) records the plan-wide checks,
-corrections, and decisions left with the owning packages. Both work packages
-are complete on the working branch under the
-[development process](../development-process.md#status-tracking).
+The [reference style](reference-style.md) defines ten examples, and the
+[spelling rules](spelling-review.md) apply across the plan. Implemented forms
+link to the current handbook; forms owned by open APs remain identified drafts.

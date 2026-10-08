@@ -1,7 +1,6 @@
 unit Notes.Format;
 
-uses
-  Notes.Model, Std.Arrays, Std.Conv, Std.Dictionaries, Std.Options, Std.Results, Std.Str, Std.Toml;
+uses Notes.Model, Std.Conv, Std.Toml;
 
 const NoteFormatVersion: integer := 1;
 
@@ -12,7 +11,7 @@ end function;
 
 function FieldString(Fields: dict of string to TomlValue; Name: string): result of string, string;
 begin
-  case Std.Dictionaries.Get(Fields, Name) of
+  case Fields.Get(Name) of
     when Some(Value):
       begin
         case Value of
@@ -35,7 +34,7 @@ end function;
 
 function FieldInteger(Fields: dict of string to TomlValue; Name: string): result of integer, string;
 begin
-  case Std.Dictionaries.Get(Fields, Name) of
+  case Fields.Get(Name) of
     when Some(Value):
       begin
         case Value of
@@ -58,7 +57,7 @@ end function;
 
 function FieldBoolean(Fields: dict of string to TomlValue; Name: string): result of boolean, string;
 begin
-  case Std.Dictionaries.Get(Fields, Name) of
+  case Fields.Get(Name) of
     when Some(Value):
       begin
         case Value of
@@ -81,19 +80,19 @@ end function;
 
 function FieldTags(Fields: dict of string to TomlValue): result of array of string, string;
 begin
-  case Std.Dictionaries.Get(Fields, 'tags') of
+  case Fields.Get('tags') of
     when Some(Value):
       begin
         case Value of
           when TomlValue.ArrayValue(Items):
             begin
               var Tags: array of string := [];
-              for Index: integer := 0 to Std.Arrays.Length(Items) - 1 do
+              for Index: integer := 0 to Items.Length() - 1 do
                 begin
                   case Items[Index] of
                     when TomlValue.String(Tag):
                       begin
-                        Std.Arrays.Push(Tags, Tag);
+                        Tags.Push(Tag);
                       end;
                     else
                       begin
@@ -127,7 +126,7 @@ begin
     end;
   end if;
   const Id: string := try FieldString(Fields, 'id');
-  if Std.Str.Trim(Id) = '' then
+  if Id.Trim() = '' then
     begin
       return Error('Note field `id` must not be empty');
     end;
@@ -157,27 +156,26 @@ end function;
 // Parses one UTF-8 `.note` document with TOML frontmatter.
 public function NoteParse(Text: string): result of Note, string;
 begin
-  const NewLine: string := Std.Str.Chr(10);
-  const Source: string := Std.Str.Replace(Std.Str.Replace(Text, Std.Str.Chr(13) + NewLine, NewLine), Std.Str.Chr(13), NewLine);
+  const NewLine: string := string.Chr(10);
+  const Source: string := Text.Replace(string.Chr(13) + NewLine, NewLine)
+                            .Replace(string.Chr(13), NewLine);
   const Prefix: string := '+++' + NewLine;
-  if not Std.Str.StartsWith(Source, Prefix) then
+  if not Source.StartsWith(Prefix) then
     begin
       return Error('A .note file must start with a `+++` TOML header');
     end;
   end if;
-  const Remaining: string := Std.Str.Substring(Source, Std.Str.Length(Prefix), Std.Str.Length(Source) -
-                                                                               Std.Str.Length(Prefix));
+  const Remaining: string := Source.Slice(Prefix.Length(), Source.Length() - Prefix.Length());
   const Boundary: string := (NewLine + '+++') + NewLine;
-  const BoundaryIndex: integer := Std.Str.IndexOf(Remaining, Boundary);
+  const BoundaryIndex: integer := Remaining.IndexOf(Boundary);
   if BoundaryIndex < 0 then
     begin
       return Error('A .note file must close its TOML header with `+++`');
     end;
   end if;
-  const Header: string := Std.Str.Substring(Remaining, 0, BoundaryIndex);
-  const BodyStart: integer := BoundaryIndex + Std.Str.Length(Boundary);
-  const Body: string := Std.Str.Substring(Remaining, BodyStart, Std.Str.Length(Remaining) -
-                                                                BodyStart);
+  const Header: string := Remaining.Slice(0, BoundaryIndex);
+  const BodyStart: integer := BoundaryIndex + Boundary.Length();
+  const Body: string := Remaining.Slice(BodyStart, Remaining.Length() - BodyStart);
   case Std.Toml.Parse(Header) of
     when Ok(Value):
       begin
@@ -203,14 +201,14 @@ end function;
 public function NoteStringify(NoteValue: Note): string;
 begin
   var TagValues: array of TomlValue := [];
-  for Index: integer := 0 to Std.Arrays.Length(NoteValue.Tags) - 1 do
+  for Index: integer := 0 to NoteValue.Tags.Length() - 1 do
     begin
-      Std.Arrays.Push(TagValues, TomlValue.String(NoteValue.Tags[Index]));
+      TagValues.Push(TomlValue.String(NoteValue.Tags[Index]));
     end;
   end for;
   const Header: TomlValue := TomlValue.Table(['format': TomlValue.Integer(NoteFormatVersion), 'id': TomlValue.String(NoteValue.Id), 'title': TomlValue.String(NoteValue.Title), 'created_ms': TomlValue.Integer(NoteValue.CreatedMillis), 'updated_ms': TomlValue.Integer(NoteValue.UpdatedMillis), 'tags': TomlValue.ArrayValue(TagValues), 'pinned': TomlValue.Boolean(NoteValue.Pinned), 'archived': TomlValue.Boolean(NoteValue.Archived)]);
-  const NewLine: string := Std.Str.Chr(10);
-  return ((((('+++' + NewLine) + Std.Str.TrimRight(Std.Toml.Stringify(Header))) + NewLine) + '+++') + NewLine) +
+  const NewLine: string := string.Chr(10);
+  return ((((('+++' + NewLine) + Std.Toml.Stringify(Header).TrimRight()) + NewLine) + '+++') + NewLine) +
          NoteValue.Body;
 end function;
 end unit;

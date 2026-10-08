@@ -1,7 +1,7 @@
 program T;
 
-uses Std.Console, Std.Str;
+uses Std.Console;
 
 begin
-  WriteLn(Substring('abc', 0, 3));
+  WriteLn('abc'.Slice(0, 3));
 end.

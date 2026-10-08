@@ -1,6 +1,6 @@
 program SupervisedWorker;
 
-uses Std.Tasks, Std.Console, Std.Results;
+uses Std.Tasks, Std.Console;
 
 begin
   const Workers: TaskGroup := CreateTaskGroup();
@@ -10,7 +10,7 @@ begin
   discard Send(Outcomes, true);
   const Worker: task := StartSupervisedTask(Workers, function(Token: CancellationToken): result of string, string begin
     WriteLn('Starting an attempt');
-    if not Unwrap(Receive(Outcomes)) then
+    if not Receive(Outcomes).Unwrap() then
       begin
         return Error('temporary failure');
       end;
@@ -19,7 +19,7 @@ begin
     return Ok('Worker completed');
   end function, 2, 10);
   // Wait retrieves the final result; intermediate failures remain inside the supervisor.
-  WriteLn(Unwrap(Wait(Worker)));
+  WriteLn(Wait(Worker).Unwrap());
   discard CloseTaskGroup(Workers);
   discard CloseChannel(Outcomes);
 end.

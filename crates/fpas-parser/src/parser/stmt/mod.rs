@@ -121,7 +121,8 @@ impl Parser {
     }
 
     fn can_start_expression(&self) -> bool {
-        self.is_ident_designator_start()
+        matches!(self.current_token(), Token::Array)
+            || self.is_ident_designator_start()
             || self.at_closure_expr_start()
             || matches!(
                 self.current_token(),

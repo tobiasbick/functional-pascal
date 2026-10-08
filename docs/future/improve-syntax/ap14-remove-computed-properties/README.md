@@ -21,9 +21,8 @@ time; no library or app API depends on them.
 
 ## Dependencies
 
-- AP06. Getters and setters become record methods, which stay dot-callable
-  under the AP06 decision (Q05, revised). The recorded decision satisfies this
-  dependency; no AP06 implementation work package is required first.
+- AP06 (complete): getters and setters become record methods, which use
+  declared-member dot calls.
 
 AP25 depends on this package.
 

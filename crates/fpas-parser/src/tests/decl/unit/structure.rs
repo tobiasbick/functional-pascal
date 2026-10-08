@@ -23,17 +23,13 @@ end unit;\n",
 
 #[test]
 fn unit_with_multiple_uses_comma_separated() {
-    let unit = parse_unit_ok(
-        "\
-unit MyApp.Core;
-uses Std.Console, Std.Math, Std.Str;
-end unit;\n",
-    );
+    let unit =
+        parse_unit_ok("unit MyApp.Core;\nuses Std.Console, Std.Math, Std.Crypto;\nend unit;\n");
 
     assert_eq!(unit.uses.len(), 3);
     assert_eq!(unit.uses[0].parts, vec!["Std", "Console"]);
     assert_eq!(unit.uses[1].parts, vec!["Std", "Math"]);
-    assert_eq!(unit.uses[2].parts, vec!["Std", "Str"]);
+    assert_eq!(unit.uses[2].parts, vec!["Std", "Crypto"]);
 }
 
 #[test]

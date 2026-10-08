@@ -29,11 +29,11 @@ begin
   end;
 
   AssertEquals(5, Item.Add(2));
-  AssertEquals(5, Item.ValueOf() + 2);
+  AssertEquals(5, ValueOf(Item) + 2);
   AssertEquals(4, Item.Callback(2));
   AssertEquals(6, (Item).Callback(3));
   const Bound: function(X: integer): integer := Item.Add;
-  AssertEquals(5, (2).Bound());
+  AssertEquals(5, Bound(2));
   const NamedTask: task := go Item.Add(4);
   AssertEquals(7, Wait(NamedTask));
   const PostfixTask: task := go (Item).Add(5);

@@ -32,7 +32,7 @@ fn qualified_call_expr() {
 
 #[test]
 fn qualified_call_expr_std_unit_keyword_after_dot() {
-    match parse_expr("Std.Arrays.Length(x)") {
+    match parse_expr("Std.Math.Abs(x)") {
         Expr::Call {
             designator, args, ..
         } => {

@@ -53,7 +53,7 @@ pub const SOURCES: &[(&str, &str)] = &[
     ),
     (
         "unit_clamp_compact",
-        "unit MyApp.Utils; uses Std.Math; function Clamp(Value: integer; Min: integer; Max: integer): integer; begin if Value < Min then return Min; elsif  Value > Max then return Max; else return Value; end if; end function; function IsBlank(S: string): boolean; begin return Length(Trim(S)) = 0; end function;\nend unit;",
+        "unit MyApp.Utils; uses Std.Math; function Clamp(Value: integer; Min: integer; Max: integer): integer; begin if Value < Min then return Min; elsif  Value > Max then return Max; else return Value; end if; end function; function IsBlank(S: string): boolean; begin return S.Trim().Length() = 0; end function;\nend unit;",
     ),
     (
         "unit_mixed_visibility",

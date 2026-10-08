@@ -1,6 +1,6 @@
 program SelectMixedSourcesTest;
 
-uses Std.Tasks, Std.Results, Std.Test;
+uses Std.Tasks, Std.Test;
 
 begin
   const Numbers: channel of integer := CreateChannel(2);
@@ -9,14 +9,14 @@ begin
   discard Send(Words, 'retained');
   var Seen: integer := 0;
   const First: WaitCase := ReceiveCase(Numbers, procedure(Outcome: result of integer, string) begin
-    Seen := Unwrap(Outcome);
+    Seen := Outcome.Unwrap();
   end procedure);
   const Second: WaitCase := ReceiveCase(Words, procedure(Outcome: result of string, string) begin
     panic('losing callback ran');
   end procedure);
   AssertEquals(0, Select([First, Second]));
   AssertEquals(42, Seen);
-  AssertEquals('retained', Unwrap(Receive(Words)));
+  AssertEquals('retained', Receive(Words).Unwrap());
   AssertFalse(CloseWaitCase(First));
   AssertFalse(CloseWaitCase(Second));
   const Unused: WaitCase := TimerCase(0, procedure() begin

@@ -1,8 +1,8 @@
 program T;
 
-uses Std.Console, Std.Results;
+uses Std.Console;
 
 begin
   const R: result of integer, string := Ok(42);
-  WriteLn(UnwrapOr(R, 0));
+  WriteLn(R.UnwrapOr(0));
 end.

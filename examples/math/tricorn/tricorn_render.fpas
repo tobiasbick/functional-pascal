@@ -2,7 +2,7 @@
 
 unit Tricorn.Render;
 
-uses Std.Console, Std.Tasks, Std.Arrays, Std.Conv, Std.Math, Std.Str, Tricorn.Color;
+uses Std.Console, Std.Tasks, Std.Conv, Std.Math, Tricorn.Color;
 
 type Complex = record
   public Re: real;
@@ -118,7 +118,7 @@ begin
   for Px: integer := 0 to Width - 1 do
     begin
       const cx: real := XMin + (Px / Wr) * (XMax - XMin);
-      Push(Row, Iterate(Complex.Create(cx, cy), MaxIter));
+      Row.Push(Iterate(Complex.Create(cx, cy), MaxIter));
     end;
   end for;
 
@@ -128,10 +128,10 @@ end function;
 function EscapeGlyph(EscapeValue: real): string;
 begin
   const Ramp: string := ' ░▒▓█';
-  const Count: integer := Std.Str.Length(Ramp);
+  const Count: integer := Ramp.Length();
   const Phase: real := Frac(EscapeValue * 0.08);
   const Index: integer := Clamp(Trunc(Phase * IntToReal(Count)), 0, Count - 1);
-  return CharAt(Ramp, Index);
+  return Ramp.CharAt(Index);
 end function;
 
 function RenderCell(Sample: PixelSample; Palette: PaletteKind): Cell;
@@ -172,7 +172,7 @@ begin
   var Cells: array of Cell := [];
   for Px: integer := 0 to DrawWidth - 1 do
     begin
-      Push(Cells, RenderCell(Row[Px], Palette));
+      Cells.Push(RenderCell(Row[Px], Palette));
     end;
   end for;
 
@@ -193,7 +193,7 @@ begin
   var Tasks: array of task := [];
   for Py: integer := 0 to Height - 1 do
     begin
-      Push(Tasks, go ComputeRow(Py, Width, Height, XMin, XMax, YMin, YMax, MaxIter));
+      Tasks.Push(go ComputeRow(Py, Width, Height, XMin, XMax, YMin, YMax, MaxIter));
     end;
   end for;
 

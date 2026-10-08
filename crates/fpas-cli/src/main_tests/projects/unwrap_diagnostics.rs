@@ -1,9 +1,9 @@
-//! Type diagnostics for unwrapping the wrong container before field access.
+//! Native unwrap chains and migration diagnostics before field-access lowering.
 
 use super::*;
 
 #[test]
-fn unwrap_namespace_mismatch_reports_a_type_error_before_lowering() {
+fn native_unwrap_chains_and_retired_namespace_diagnostics() {
     let cwd = create_temp_dir("unwrap-namespace");
     let project = cwd.join("repro.fpasprj");
     support::write_program_project_file(&project, "src/main.fpas", &["src/**/*.fpas"]);
@@ -11,28 +11,27 @@ fn unwrap_namespace_mismatch_reports_a_type_error_before_lowering() {
         .ancestors()
         .nth(2)
         .expect("repository root");
-    for (container, constructor, correct, wrong) in [
-        ("option of TuiStyle", "Some", "Options", "Results"),
-        ("result of TuiStyle, string", "Ok", "Results", "Options"),
+    for (container, constructor) in [
+        ("option of TuiStyle", "Some"),
+        ("result of TuiStyle, string", "Ok"),
     ] {
         for function in ["Unwrap", "UnwrapOr"] {
-            for namespace in [wrong, correct] {
-                let fallback = if function == "UnwrapOr" { ", Base" } else { "" };
+            for namespace in [None, Some("Options"), Some("Results")] {
+                let fallback = if function == "UnwrapOr" { "Base" } else { "" };
+                let call = match namespace {
+                    None => format!("Style.{function}({fallback})"),
+                    Some(namespace) => {
+                        let tail = if fallback.is_empty() { "" } else { ", Base" };
+                        format!("Std.{namespace}.{function}(Style{tail})")
+                    }
+                };
                 write_text(
                     &cwd.join("src/main.fpas"),
                     &format!(
-                        "program UnwrapRepro;
-uses Std.Options, Std.Results, Std.Tui, Std.Test;
-begin
-  const Base: TuiStyle := TuiStyle.FromColors(
-    TuiColor.FromRgb(1, 2, 3), TuiColor.FromRgb(4, 5, 6));
-  const Style: {container} := {constructor}(Base);
-  const Red: integer := Std.{namespace}.{function}(Style{fallback}).Background.Red;
-  AssertEquals(4, Red);
-end."
+                        "program UnwrapRepro;\nuses Std.Tui, Std.Test;\nbegin\n  const Base: TuiStyle := TuiStyle.FromColors(\n    TuiColor.FromRgb(1, 2, 3), TuiColor.FromRgb(4, 5, 6));\n  const Style: {container} := {constructor}(Base);\n  const Red: integer := {call}.Background.Red;\n  AssertEquals(4, Red);\nend."
                     ),
                 );
-                let command = if namespace == correct { "run" } else { "check" };
+                let command = if namespace.is_none() { "run" } else { "check" };
                 let (code, _, stderr) = support::run_cli_args_and_capture_output(
                     &[
                         command.to_string(),
@@ -42,13 +41,13 @@ end."
                     ],
                     &cwd,
                 );
-                if namespace == correct {
-                    assert_eq!(code, 0, "{namespace}.{function}: {stderr}");
+                if namespace.is_none() {
+                    assert_eq!(code, 0, "{call}: {stderr}");
                 } else {
-                    assert_ne!(code, 0, "{namespace}.{function}");
-                    assert!(stderr.contains("FP3006"), "{stderr}");
+                    assert_ne!(code, 0, "{call}");
+                    assert!(stderr.contains("FP3003"), "{stderr}");
                     assert!(
-                        stderr.contains(&format!("Std.{namespace}.{function}")),
+                        stderr.contains(&format!("Use `Value.{function}(…)`")),
                         "{stderr}"
                     );
                     assert!(!stderr.contains("FP9001"), "{stderr}");

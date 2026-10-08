@@ -107,145 +107,85 @@ end.",
 #[test]
 fn ambiguous_call_hint_suggests_the_method_form() {
     let errs = check_errors(
-        "\
-program T;
-uses Std.Options, Std.Results;
-begin
-  const O: option of integer := Some(3);
-  const X: integer := Unwrap(O);
-end.",
+        "program T;\n\nbegin\n  const O: option of integer := Some(3);\n  const X: integer := Unwrap(O);\nend.",
     );
     assert_eq!(errs.len(), 1, "{errs:#?}");
     let hint = errs[0].help.as_deref().unwrap_or("");
-    assert!(hint.contains("`Value.Unwrap(...)`"), "{hint}");
+    assert!(hint.contains("`Value.Unwrap(…)`"), "{hint}");
     // The suggested method form resolves by the receiver's type.
     check_ok(
-        "\
-program T;
-uses Std.Options, Std.Results;
-begin
-  const O: option of integer := Some(3);
-  const R: result of integer, string := Ok(4);
-  const X: integer := O.Unwrap() + R.Unwrap();
-end.",
+        "program T;\n\nbegin\n  const O: option of integer := Some(3);\n  const R: result of integer, string := Ok(4);\n  const X: integer := O.Unwrap() + R.Unwrap();\nend.",
     );
 }
 
 #[test]
-fn ambiguous_length_error() {
-    let errs = check_errors(
-        "\
-program T;
-uses Std.Str, Std.Arrays;
-begin
-  const L: integer := Length('hi');
-end.",
-    );
+fn old_length_free_call_has_native_migration_hint() {
+    let errors = check_errors("program T; begin const L: integer := Length('hi'); end.");
+    assert_eq!(errors.len(), 1, "{errors:#?}");
     assert!(
-        errs.iter().any(|e| e.message.contains("Ambiguous")),
-        "{errs:#?}"
-    );
-    let h = errs[0].help.as_deref().unwrap_or("");
-    assert!(
-        h.contains("Std.Str.Length") && h.contains("Std.Arrays.Length"),
-        "hint should list both candidates: {h}"
+        errors[0]
+            .help
+            .as_deref()
+            .is_some_and(|hint| hint.contains("Value.Length")),
+        "{errors:#?}"
     );
 }
 
 #[test]
-fn ambiguous_length_hint_has_canonical_candidate_order() {
-    let source = "\
-program T;
-uses Std.Str, Std.Arrays;
-begin
-  const L: integer := Length('hi');
-end.";
-    let expected = "`Length` exists in multiple imported units: Std.Arrays.Length, Std.Str.Length. Use the fully qualified name to disambiguate. Or write `Length(Value, ...)` as `Value.Length(...)`: the method form selects the routine by the type of `Value`.";
-
-    for _ in 0..64 {
-        let errors = check_errors(source);
-        let help = errors
-            .iter()
-            .find_map(|error| error.help.as_deref())
-            .expect("ambiguous name help");
-        assert_eq!(help, expected);
+fn removed_helpers_have_stable_native_hints() {
+    for (name, hint) in [
+        ("Length('hi')", "Value.Length"),
+        ("Contains('hi', 'h')", "Value.Contains"),
+    ] {
+        let errors = check_errors(&format!("program T; begin discard {name}; end."));
+        assert_eq!(errors.len(), 1, "{errors:#?}");
+        assert!(
+            errors[0]
+                .help
+                .as_deref()
+                .is_some_and(|help| help.contains(hint)),
+            "{errors:#?}"
+        );
     }
 }
 
 #[test]
-fn ambiguous_contains_error() {
-    let errs = check_errors(
-        "\
-program T;
-uses Std.Str, Std.Arrays;
-begin
-  const B: boolean := Contains('hello', 'h');
-end.",
-    );
-    assert!(
-        errs.iter().any(|e| e.message.contains("Ambiguous")),
-        "{errs:#?}"
-    );
+fn removed_type_units_cannot_be_imported() {
+    for unit in ["Str", "Arrays", "Dictionaries", "Options", "Results"] {
+        let errors = check_errors(&format!("program T; uses Std.{unit}; begin end."));
+        assert_eq!(errors.len(), 1, "{errors:#?}");
+        assert!(errors[0].message.contains("removed"), "{errors:#?}");
+    }
 }
 
 #[test]
-fn ambiguous_fallback_to_qualified() {
+fn type_operations_disambiguate_imported_units() {
     check_ok(
-        "\
-program T;
-uses Std.Str, Std.Arrays;
-begin
-  const L: integer := Std.Str.Length('hi');
-  const L2: integer := Std.Arrays.Length([1, 2]);
-end.",
+        "program T;\n\nbegin\n  const L: integer := 'hi'.Length();\n  const L2: integer := [1, 2].Length();\nend.",
     );
 }
 
 #[test]
 fn no_ambiguity_single_unit() {
-    check_ok(
-        "\
-program T;
-uses Std.Str;
-begin
-  const L: integer := Length('hello');
-end.",
-    );
+    check_ok("program T;\n\nbegin\n  const L: integer := 'hello'.Length();\nend.");
 }
 
 /// A fully qualified name never imports its unit: the missing unit is reported, and the short
 /// names of the imported units keep their meaning.
 #[test]
-fn qualified_std_name_without_uses_is_rejected() {
-    let errs = check_errors(
-        "\
-program T;
-uses Std.Str;
-begin
-  const A: array of integer := [1];
-  const L1: integer := Std.Arrays.Length(A);
-  const L2: integer := Length('hi');
-end.",
-    );
-    assert_eq!(errs.len(), 1, "{errs:#?}");
+fn other_standard_units_still_require_imports() {
+    let errors = check_errors("program T; begin const X: real := Std.Math.Sqrt(4.0); end.");
     assert!(
-        errs[0]
-            .message
-            .contains("Unit `Std.Arrays` is not imported"),
-        "{errs:#?}"
+        errors
+            .iter()
+            .any(|error| error.message.contains("not imported")),
+        "{errors:#?}"
     );
 }
 
 #[test]
-fn qualified_names_disambiguate_imported_std_units() {
+fn receiver_types_disambiguate_imported_std_units() {
     check_ok(
-        "\
-program T;
-uses Std.Str, Std.Arrays;
-begin
-  const A: array of integer := [1];
-  const L1: integer := Std.Arrays.Length(A);
-  const L2: integer := Std.Str.Length('hi');
-end.",
+        "program T;\n\nbegin\n  const A: array of integer := [1];\n  const L1: integer := A.Length();\n  const L2: integer := 'hi'.Length();\nend.",
     );
 }

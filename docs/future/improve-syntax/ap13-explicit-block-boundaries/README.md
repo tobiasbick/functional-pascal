@@ -1,6 +1,6 @@
 # AP13: Explicit block boundaries
 
-Status: complete (AP13.1–AP13.6); agreed direction (Q08, Q09).
+Status: complete (AP13.1–AP13.6; Q08, Q09).
 Effort: large. Completion is tracked in
 the [central README](../README.md); the process is in
 [development-process.md](../development-process.md).
@@ -45,11 +45,11 @@ allows `null` to be reserved as a keyword while JSON text remains unchanged.
 - A compound statement may appear in a branch or loop body. Its `end;` closes
   only that scope; the enclosing control structure still needs its named
   closer, such as `end if;` or `end while;`.
-- Expressions take no terminating `;` of their own. Anonymous routines,
-  record updates, and `if`/`case` expressions close with their named ending;
+- Expressions take no terminating `;` of their own. Anonymous routines and
+  record updates close with their named ending;
   any following `;` terminates the enclosing statement or declaration, as in
-  `return case Value of ... end case;` or
-  `const Moved: Point := P with X := 1; end with;`.
+  `const Moved: Point := P with X := 1; end with;`. The planned decision
+  expressions follow this ownership rule under AP21.
 - An anonymous routine passed as an argument ends before the call's closing
   parenthesis; no `;` separates its ending from that parenthesis. Its body
   statements still require semicolons.
@@ -95,7 +95,7 @@ procedures use the corresponding `procedure ... end procedure` expression form.
 Record literals will be removed by AP10. `if`/`case` expressions remain planned
 in AP21, and task scopes in AP26.
 
-The following draft passes an anonymous function to a routine named `Apply`.
+The following example passes an anonymous function to a routine named `Apply`.
 The final `;` terminates the call statement, not the anonymous function:
 
 ```pascal
@@ -109,15 +109,15 @@ Apply(
 
 ### Details
 
-- **`elsif` continues an `if` chain.** It replaces the earlier `else if`
-  continuation, which made `else` followed by `if` ambiguous. When a missing
+- **`elsif` continues an `if` chain.** `else if` is a nested
+  conditional, with its own ending. When a missing
   `end if;` follows `else if`, the diagnostic suggests `elsif`.
 - **Case arms start with `when`.** Each arm is `when Labels [if Guard]:`
   followed by a statement list; the next `when`, the catch-all, or `end case`
   ends the arm. No lookahead is needed to find an arm boundary.
 - **Empty branches contain `null;`.** A `case` arm, `if` branch, or loop body
   with no action is written as the statement `null;`; an empty statement list
-  is an error. `null` becomes a reserved keyword.
+  is an error. `null` is a reserved keyword.
 - **The catch-all arm is `else`.** It follows the last `when` arm, holds a
   statement list, and is ended by `end case`. Under AP03 it is valid only for
   open domains such as `integer` or `string`, not for closed enums.
@@ -127,7 +127,7 @@ Apply(
 
 ```pascal
 case Shape of
-  when Shape.Circle(const R):
+  when Shape.Circle(R):
     Area := Pi * R * R;
     Log('circle');
   when Shape.Point:
@@ -150,11 +150,10 @@ end with;
 
 ## Open decisions
 
-There are no open decisions for AP13.1 through AP13.6. The single-statement-body
-transition rule is confirmed in [AP13.2](02-statement-terminators.md#confirmed-transition-rule).
-Task-scope decisions belong to AP26.
+None for AP13. Decision-expression and task-scope decisions belong to
+AP21 and AP26.
 
-## Common requirements for every work package
+## Implementation and regression coverage
 
 - Parser diagnostics show the expected closer or terminator, for example
   "expected `end if;`, found `end function;`", and recover at the statement
@@ -162,30 +161,22 @@ Task-scope decisions belong to AP26.
 - The formatter emits every `;` and named closer, keeps comments attached
   across closers, indents bodies one level, and stays idempotent; CLI and
   editor formatting are identical.
-- Each work package migrates every repository consumer (see the
-  [migration rules](../development-process.md#migration-rules)) and updates
+- Repository consumers follow the implemented forms (see the
+  [migration rules](../development-process.md#migration-rules)) with matching
   `docs/specs/grammar.ebnf`, `docs/pascal/tools/fmt-style.md`, the affected
   `docs/pascal/` pages, editor snippets and highlighting, CLI templates, and the
   FPAS authoring skill for its constructs.
-- Tests: positive parser and formatter cases for each affected block-table
+- Tests: positive parser and formatter cases for each implemented block-table
   row; negative cases for missing `;` and mismatched closers; parse, format,
-  parse equality and identical second formatting; unchanged FPAS suite results.
-- No legacy parser mode ships; conversion tools stay on the branch.
+  parse equality and identical second formatting; repository consumer checks.
+- No legacy parser mode is shipped.
 
 ## Dependencies
 
 - AP01 (reference style), AP02 (diagnostic codes).
 
-AP17, AP20, AP21, AP23, and AP26 depend on this package; AP28 is transferred
-after it.
-
-## Order
-
-AP13.1 reserves the new keywords. AP13.2 switches to statement terminators;
-the closer work packages build on it. AP13.3 (declarations) and AP13.4
-(conditionals and loops) are independent of each other. AP13.5 (case arms)
-reuses the statement-list branches of AP13.4. AP13.6 (expression closers)
-follows AP13.3 so anonymous routines match named routines.
+AP17, AP20, AP21, AP23, and AP26 depend on this package. AP28's editor/LSP
+transfer also requires AP24.
 
 ## Work packages
 
@@ -196,15 +187,6 @@ follows AP13.3 so anonymous routines match named routines.
 - [x] [AP13.5: Case arms](05-case-arms.md)
 - [x] [AP13.6: Expression closers](06-expression-closers.md)
 
-## Delivery
-
-AP13.1 through AP13.6 are implemented and verified on `codex/syntax-changes-2`.
-Their Result sections record the delivered scope and the known pre-existing
-workspace check failures. The overall package is complete. Current declaration,
-statement, and expression endings, retained compound scopes, and terminator
-ownership are covered by the package regressions and repository suites.
-Decision expressions and task scopes remain owned by AP21 and AP26 respectively.
-
 ## Acceptance
 
 Every block kind has one canonical form, including retained plain scoping
@@ -212,13 +194,3 @@ blocks, the program's `end.`, and `repeat ... until`; every statement and
 declaration ends with `;` except the program's final `end.`; expressions have
 no terminating `;` of their own; branch ownership is structural, not inferred;
 and all repository sources, docs, and tests use the new syntax.
-
-## Reference
-
-The reference branch `codex/syntax-changes` delivered this syntax in one
-change with a focused parser module `fpas-parser/src/parser/blocks.rs`,
-declaration-list emission in the formatter, and an end-to-end conversion
-regression `crates/fpas-cli/src/main_tests/fmt/source_conversion.rs`. Reserving
-`null` required renaming the `JsonValue.Null` variant (the reference chose
-`NullValue`). A program-entry name collision (a program and a routine sharing a
-name) surfaced during that work; recheck it on `main`.

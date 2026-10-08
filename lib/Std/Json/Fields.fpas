@@ -2,7 +2,7 @@
 // See docs/pascal/std/text/json-fields.md.
 unit Std.Json.Fields;
 
-uses Std.Arrays, Std.Conv, Std.Dictionaries, Std.Json, Std.Math;
+uses Std.Conv, Std.Json, Std.Math;
 
 // Exclusive upper and inclusive lower real bounds of the 64-bit integer range.
 const IntegerUpperBound: real := 9223372036854776000.0;
@@ -43,7 +43,7 @@ end function;
 // - `Name`: Required field name.
 public function Field(Fields: dict of string to JsonValue; Name: string): result of JsonValue, string;
 begin
-  case Std.Dictionaries.Get(Fields, Name) of
+  case Fields.Get(Name) of
     when Some(Value):
       begin
         return Ok(Value);
@@ -187,7 +187,7 @@ begin
       case Item of
         when JsonValue.String(Value):
           begin
-            Std.Arrays.Push(Values, Value);
+            Values.Push(Value);
           end;
         else
           begin
@@ -207,9 +207,9 @@ end function;
 // - `Allowed`: Every permitted field name.
 public function RequireOnlyFields(Fields: dict of string to JsonValue; Allowed: array of string): result of boolean, string;
 begin
-  for Name: string in Std.Dictionaries.Keys(Fields) do
+  for Name: string in Fields.Keys() do
     begin
-      if not Std.Arrays.Contains(Allowed, Name) then
+      if not Allowed.Contains(Name) then
         begin
           return Error('unexpected field ' + Name);
         end;

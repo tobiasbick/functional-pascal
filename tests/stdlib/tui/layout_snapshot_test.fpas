@@ -1,6 +1,6 @@
 program TuiLayoutSnapshotTest;
 
-uses Std.Str, Std.Test, Std.Tui;
+uses Std.Test, Std.Tui;
 
 begin
   const App: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(20, 8));
@@ -19,10 +19,10 @@ begin
                                                                         ]);
   end function, 0, 0);
   const Snapshot: TuiSurfaceSnapshot := App.SurfaceSnapshot();
-  AssertTrue(Std.Str.Contains(Snapshot.LineAt(0), 'Win'));
-  AssertTrue(Std.Str.Contains(Snapshot.LineAt(1), 'Hello'));
-  AssertTrue(Std.Str.Contains(Snapshot.LineAt(2), 'Go'));
-  AssertTrue(Std.Str.Contains(Snapshot.LineAt(3), 'ab'));
+  AssertTrue(Snapshot.LineAt(0).Contains('Win'));
+  AssertTrue(Snapshot.LineAt(1).Contains('Hello'));
+  AssertTrue(Snapshot.LineAt(2).Contains('Go'));
+  AssertTrue(Snapshot.LineAt(3).Contains('ab'));
   App.Close();
   const Wide: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(40, 10));
   discard Wide.RunIterations(0, function(State: integer; Msg: TuiMsg; Cmd: TuiCmdOutput): integer begin
@@ -33,8 +33,8 @@ begin
                                                 ]);
   end function, 0, 0);
   const Overlay: TuiSurfaceSnapshot := Wide.SurfaceSnapshot();
-  AssertEquals(18, Std.Str.IndexOf(Overlay.LineAt(3), 'Dlg'));
-  AssertEquals(16, Std.Str.IndexOf(Overlay.LineAt(4), 'Body'));
+  AssertEquals(18, Overlay.LineAt(3).IndexOf('Dlg'));
+  AssertEquals(16, Overlay.LineAt(4).IndexOf('Body'));
   AssertEquals('╭', Overlay.CellAt(15, 3).Glyph);
   AssertEquals('╮', Overlay.CellAt(23, 3).Glyph);
   Wide.Close();

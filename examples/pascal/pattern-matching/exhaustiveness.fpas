@@ -1,6 +1,6 @@
 program ExhaustivenessExample;
 
-uses Std.Console, Std.Conv, Std.Arrays;
+uses Std.Console, Std.Conv;
 
 // Every enum variant must have a case arm unless an else branch is present.
 type Light = enum
@@ -29,7 +29,7 @@ end function;
 
 function SafeLookup(Items: array of integer; Target: integer): option of integer;
 begin
-  for I: integer := 0 to Length(Items) - 1 do
+  for I: integer := 0 to Items.Length() - 1 do
     begin
       if Items[I] = Target then
         begin

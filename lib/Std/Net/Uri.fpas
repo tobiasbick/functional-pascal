@@ -1,7 +1,7 @@
 // Absolute HTTP and HTTPS URI parsing for network clients.
 unit Std.Net.Uri;
 
-uses Std.Net.Decimal, Std.Str;
+uses Std.Net.Decimal;
 
 // Parsed absolute network URI used by protocol clients.
 public type Uri = record
@@ -74,7 +74,7 @@ begin
     end;
   end if;
 
-  if Std.Str.Contains(Authority, '@') then
+  if Authority.Contains('@') then
     begin
       return Error('URI user information is not supported');
     end;
@@ -83,40 +83,38 @@ begin
   var HasPort: boolean := false;
   var Host: string := Authority;
   var PortText: string := '';
-  if Std.Str.StartsWith(Authority, '[') then
+  if Authority.StartsWith('[') then
     begin
-      const Closing: integer := Std.Str.IndexOf(Authority, ']');
+      const Closing: integer := Authority.IndexOf(']');
       if Closing < 0 then
         begin
           return Error('IPv6 URI host is missing closing bracket');
         end;
       end if;
 
-      Host := Std.Str.Substring(Authority, 1, Closing - 1);
-      const Remainder: string := Std.Str.Substring(Authority, Closing + 1, (Std.Str.Length(Authority) - Closing) -
-                                                                           1);
+      Host := Authority.Slice(1, Closing - 1);
+      const Remainder: string := Authority.Slice(Closing + 1, (Authority.Length() - Closing) - 1);
       if Remainder <> '' then
         begin
-          if not Std.Str.StartsWith(Remainder, ':') then
+          if not Remainder.StartsWith(':') then
             begin
               return Error('Unexpected text after IPv6 URI host');
             end;
           end if;
 
           HasPort := true;
-          PortText := Std.Str.Substring(Remainder, 1, Std.Str.Length(Remainder) - 1);
+          PortText := Remainder.Slice(1, Remainder.Length() - 1);
         end;
       end if;
     end;
   else
     begin
-      const Colon: integer := Std.Str.LastIndexOf(Authority, ':');
+      const Colon: integer := Authority.LastIndexOf(':');
       if Colon >= 0 then
         begin
-          Host := Std.Str.Substring(Authority, 0, Colon);
+          Host := Authority.Slice(0, Colon);
           HasPort := true;
-          PortText := Std.Str.Substring(Authority, Colon + 1, (Std.Str.Length(Authority) - Colon) -
-                                                              1);
+          PortText := Authority.Slice(Colon + 1, (Authority.Length() - Colon) - 1);
         end;
       end if;
     end;
@@ -148,22 +146,22 @@ end function;
 // - `Text`: Absolute URI text to parse.
 public function Parse(Text: string): result of Uri, string;
 begin
-  const SchemeEnd: integer := Std.Str.IndexOf(Text, '://');
+  const SchemeEnd: integer := Text.IndexOf('://');
   if SchemeEnd <= 0 then
     begin
       return Error('URI must be absolute and include ://');
     end;
   end if;
-  const Scheme: string := Std.Str.ToLower(Std.Str.Substring(Text, 0, SchemeEnd));
-  var Rest: string := Std.Str.Substring(Text, SchemeEnd + 3, (Std.Str.Length(Text) - SchemeEnd) - 3);
-  const FragmentStart: integer := Std.Str.IndexOf(Rest, '#');
+  const Scheme: string := Text.Slice(0, SchemeEnd).ToLower();
+  var Rest: string := Text.Slice(SchemeEnd + 3, (Text.Length() - SchemeEnd) - 3);
+  const FragmentStart: integer := Rest.IndexOf('#');
   if FragmentStart >= 0 then
     begin
-      Rest := Std.Str.Substring(Rest, 0, FragmentStart);
+      Rest := Rest.Slice(0, FragmentStart);
     end;
   end if;
-  var PathStart: integer := Std.Str.IndexOf(Rest, '/');
-  const QueryStart: integer := Std.Str.IndexOf(Rest, '?');
+  var PathStart: integer := Rest.IndexOf('/');
+  const QueryStart: integer := Rest.IndexOf('?');
   if (PathStart < 0) or ((QueryStart >= 0) and (QueryStart < PathStart)) then
     begin
       PathStart := QueryStart;
@@ -173,9 +171,9 @@ begin
   var Path: string := '/';
   if PathStart >= 0 then
     begin
-      Authority := Std.Str.Substring(Rest, 0, PathStart);
-      Path := Std.Str.Substring(Rest, PathStart, Std.Str.Length(Rest) - PathStart);
-      if Std.Str.StartsWith(Path, '?') then
+      Authority := Rest.Slice(0, PathStart);
+      Path := Rest.Slice(PathStart, Rest.Length() - PathStart);
+      if Path.StartsWith('?') then
         begin
           Path := '/' + Path;
         end;

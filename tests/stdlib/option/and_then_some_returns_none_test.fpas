@@ -1,6 +1,6 @@
 program T;
 
-uses Std.Console, Std.Options;
+uses Std.Console;
 
 function PositiveOk(V: integer): option of string;
 begin
@@ -17,6 +17,6 @@ end function;
 
 begin
   const O: option of integer := Some(-1);
-  const M: option of string := AndThen(O, PositiveOk);
-  WriteLn(IsNone(M));
+  const M: option of string := O.AndThen(PositiveOk);
+  WriteLn(M.IsNone());
 end.

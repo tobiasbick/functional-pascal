@@ -2,7 +2,7 @@
 
 program FsBasics;
 
-uses Std.Console, Std.Fs, Std.Results;
+uses Std.Console, Std.Fs;
 
 const Scratch: string := '.temp-data';
 const DemoPath: string := Scratch + '/_fpas_fs_demo.txt';

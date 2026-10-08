@@ -3,6 +3,7 @@
 mod bound_methods;
 mod discover;
 mod intrinsic_tasks;
+mod mutating_receivers;
 
 use std::collections::{BTreeMap, BTreeSet, HashMap};
 
@@ -42,6 +43,7 @@ pub(super) struct IntrinsicTaskRoutine {
     pub id: FunctionId,
     name: String,
     intrinsic: fpas_bytecode::Intrinsic,
+    is_empty: bool,
     parameters: Vec<fpas_ir::TypeId>,
     result: fpas_ir::TypeId,
     span: fpas_lexer::Span,

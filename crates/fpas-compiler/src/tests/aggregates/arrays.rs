@@ -53,17 +53,7 @@ end.
 
 #[test]
 fn array_push_uses_direct_opcode_and_preserves_value_aliases() {
-    let source = "\
-program RegisterArrayPush;
-uses Std.Arrays;
-begin
-  var A: array of integer := [1];
-  const Original: array of integer := A;
-  Push(A, 2);
-  if Length(Original) <> 1 then panic('array alias changed'); end if;
-  if Length(A) <> 2 then panic('array push length mismatch'); end if;
-  if A[1] <> 2 then panic('array push value mismatch'); end if;
-end.";
+    let source = "program RegisterArrayPush;\n\nbegin\n  var A: array of integer := [1];\n  const Original: array of integer := A;\n  A.Push(2);\n  if Original.Length() <> 1 then panic('array alias changed'); end if;\n  if A.Length() <> 2 then panic('array push length mismatch'); end if;\n  if A[1] <> 2 then panic('array push value mismatch'); end if;\nend.";
     assert_succeeds(source);
 
     let program = super::parse_ok(source);
@@ -81,25 +71,25 @@ end.";
 fn array_pop_uses_direct_opcode_and_preserves_value_aliases() {
     let source = r#"
 program RegisterArrayPop;
-uses Std.Arrays;
+
 var Global: array of integer := [4, 5];
 begin
   var A: array of integer := [1, 2];
   const Original: array of integer := A;
-  if Pop(A) <> 2 then panic('last value'); end if;
-  if Length(Original) <> 2 then panic('alias length'); end if;
+  if A.Pop() <> 2 then panic('last value'); end if;
+  if Original.Length() <> 2 then panic('alias length'); end if;
   if Original[1] <> 2 then panic('alias value'); end if;
-  if Pop(A) <> 1 then panic('first value'); end if;
-  if Length(A) <> 0 then panic('empty length'); end if;
-  if Pop(Global) <> 5 then panic('global value'); end if;
-  if Length(Global) <> 1 then panic('global length'); end if;
+  if A.Pop() <> 1 then panic('first value'); end if;
+  if A.Length() <> 0 then panic('empty length'); end if;
+  if Global.Pop() <> 5 then panic('global value'); end if;
+  if Global.Length() <> 1 then panic('global length'); end if;
   var Captured: array of integer := [7, 8];
   const Take: function(): integer := function(): integer
   begin
-    return Pop(Captured);
+    return Captured.Pop();
   end function;
   if Take() <> 8 then panic('capture value'); end if;
-  if Length(Captured) <> 1 then panic('capture length'); end if;
+  if Captured.Length() <> 1 then panic('capture length'); end if;
 end."#;
     assert_succeeds(source);
     let executable = crate::compile(&super::super::parse_ok(source)).expect("compile");

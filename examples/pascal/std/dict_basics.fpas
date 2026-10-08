@@ -2,7 +2,7 @@
 
 program DictBasics;
 
-uses Std.Console, Std.Conv, Std.Dictionaries, Std.Options, Std.Arrays;
+uses Std.Console, Std.Conv;
 
 function DoubleScore(V: integer): integer;
 begin
@@ -21,11 +21,11 @@ end function;
 
 begin
   const Scores: dict of string to integer := ['Ada': 95, 'Bob': 72, 'Cara': 91];
-  WriteLn('length: ', IntToStr(Std.Dictionaries.Length(Scores)));
-  WriteLn('has Ada: ', ContainsKey(Scores, 'Ada'));
-  const Merged: dict of string to integer := Merge(Scores, ['Bob': 88, 'Dan': 70]);
+  WriteLn('length: ', IntToStr(Scores.Length()));
+  WriteLn('has Ada: ', Scores.ContainsKey('Ada'));
+  const Merged: dict of string to integer := Scores.Merge(['Bob': 88, 'Dan': 70]);
   WriteLn('merged Bob: ', IntToStr(Merged['Bob']));
-  case Get(Merged, 'Eve') of
+  case Merged.Get('Eve') of
     when Some(V):
       begin
         WriteLn('unexpected Eve: ', IntToStr(V));
@@ -35,11 +35,11 @@ begin
         WriteLn('get missing: none (ok)');
       end;
   end case;
-  const Doubled: dict of string to integer := Std.Dictionaries.Map(Merged, DoubleScore);
+  const Doubled: dict of string to integer := Merged.Map(DoubleScore);
   WriteLn('map Ada doubled: ', IntToStr(Doubled['Ada']));
-  const Top: dict of string to integer := Std.Dictionaries.Filter(Merged, IsHighScore);
-  WriteLn('filter len: ', IntToStr(Std.Dictionaries.Length(Top)));
-  const Ks: array of string := Keys(Top);
-  WriteLn('keys array len: ', IntToStr(Std.Arrays.Length(Ks)));
-  WriteLn('score total: ', IntToStr(Std.Dictionaries.Reduce(Scores, 0, SumScores)));
+  const Top: dict of string to integer := Merged.Filter(IsHighScore);
+  WriteLn('filter len: ', IntToStr(Top.Length()));
+  const Ks: array of string := Top.Keys();
+  WriteLn('keys array len: ', IntToStr(Ks.Length()));
+  WriteLn('score total: ', IntToStr(Scores.Reduce(0, SumScores)));
 end.

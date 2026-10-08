@@ -33,7 +33,10 @@ impl Checker {
         let intrinsic_uses: Vec<_> = program
             .uses
             .iter()
-            .filter(|used| !dependency_names.contains(&used.parts.join(".").to_ascii_lowercase()))
+            .filter(|used| {
+                fpas_std::is_retired_type_helper_unit(&used.parts.join("."))
+                    || !dependency_names.contains(&used.parts.join(".").to_ascii_lowercase())
+            })
             .cloned()
             .collect();
         self.prepare_uses(&intrinsic_uses);
@@ -68,7 +71,10 @@ impl Checker {
         let intrinsic_uses: Vec<_> = unit
             .uses
             .iter()
-            .filter(|used| !dependency_names.contains(&used.parts.join(".").to_ascii_lowercase()))
+            .filter(|used| {
+                fpas_std::is_retired_type_helper_unit(&used.parts.join("."))
+                    || !dependency_names.contains(&used.parts.join(".").to_ascii_lowercase())
+            })
             .cloned()
             .collect();
         self.prepare_uses(&intrinsic_uses);

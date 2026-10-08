@@ -1,6 +1,6 @@
 program TuiBackgroundCommandTest;
 
-uses Std.Results, Std.Tasks, Std.Test, Std.Tui;
+uses Std.Tasks, Std.Test, Std.Tui;
 
 type CommandModel = record
   Inbox: channel of integer;
@@ -16,7 +16,7 @@ begin
         const Target: channel of integer := State.Inbox;
         const Ready: channel of boolean := State.Ready;
         Cmd.StartBackground(7, function(Token: CancellationToken): result of boolean, string begin
-          if IsError(SendWithCancellation(Target, 42, Token)) then
+          if SendWithCancellation(Target, 42, Token).IsError() then
             begin
               return Ok(true);
             end;
@@ -57,7 +57,7 @@ begin
     Ready := Ready;
     Value := 0;
   end, Inbox, UpdateFramework, UpdateApplication, View, 1, 0);
-  AssertTrue(Unwrap(ReceiveWithTimeout(Ready, 10000)));
+  AssertTrue(ReceiveWithTimeout(Ready, 10000).Unwrap());
   Model := App.RunBackgroundIterations(Model, Inbox, UpdateFramework, UpdateApplication, View, 1, 0);
   AssertEquals(42, Model.Value);
   App.CloseWithBackground(Inbox);

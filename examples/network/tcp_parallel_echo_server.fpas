@@ -1,9 +1,7 @@
 // Four connection workers with signal-aware shutdown and explicit process escalation.
 program ParallelTcpEchoServer;
 
-uses
-  Std.Args, Std.Conv, Std.Arrays, Std.Console, Std.Net, Std.Tasks, Std.Results, Std.Time,
-  Std.Server;
+uses Std.Args, Std.Conv, Std.Console, Std.Net, Std.Tasks, Std.Time, Std.Server;
 
 function Echo(Client: Connection; Token: CancellationToken): result of boolean, string;
 begin
@@ -11,16 +9,16 @@ begin
   while not IsCancellationRequested(Token) do
     begin
       const Bytes: array of integer := try ReceiveBytesWithCancellation(Client, 4096, Token);
-      if Length(Bytes) = 0 then
+      if Bytes.Length() = 0 then
         begin
           return Ok(true);
         end;
       end if;
       var Offset: integer := 0;
-      while Offset < Length(Bytes) do
+      while Offset < Bytes.Length() do
         begin
-          const Count: integer := try SendBytesWithCancellation(Client, Slice(Bytes, Offset, Length(Bytes) -
-                                                                                             Offset), Token);
+          const Count: integer := try SendBytesWithCancellation(Client, Bytes.Slice(Offset, Bytes.Length() -
+                                                                                            Offset), Token);
           if Count <= 0 then
             begin
               return Error('TCP write made no progress');
@@ -62,10 +60,10 @@ begin
       panic('LIFETIME_MS must be 1..300000');
     end;
   end if;
-  const ListenerValue: Listener := Unwrap(Listen('127.0.0.1', Port));
-  const Life: ServerLifetime := Unwrap(CreateLifetime(1000, true));
-  discard Unwrap(OwnListener(Life, ListenerValue));
-  discard Unwrap(ObserveSignals(Life));
+  const ListenerValue: Listener := Listen('127.0.0.1', Port).Unwrap();
+  const Life: ServerLifetime := CreateLifetime(1000, true).Unwrap();
+  discard OwnListener(Life, ListenerValue).Unwrap();
+  discard ObserveSignals(Life).Unwrap();
   const Workers: TaskGroup := GetWorkGroup(Life);
   for Index: integer := 1 to 4 do
     begin
@@ -147,8 +145,8 @@ begin
     end;
   end for;
 
-  discard Unwrap(FinishShutdown(Life));
-  if Length(Failures) <> 0 then
+  discard FinishShutdown(Life).Unwrap();
+  if Failures.Length() <> 0 then
     begin
       panic('TCP worker failed');
     end;

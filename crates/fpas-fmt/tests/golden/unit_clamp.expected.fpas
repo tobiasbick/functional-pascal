@@ -15,6 +15,6 @@ end function;
 
 function IsBlank(S: string): boolean;
 begin
-  return Length(Trim(S)) = 0;
+  return S.Trim().Length() = 0;
 end function;
 end unit;

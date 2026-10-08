@@ -1,7 +1,7 @@
 // Scaling workload driven by cargo bench-fpas. Setup is outside the timer.
 program ScalarMembershipBenchmark;
 
-uses Std.Args, Std.Console, Std.Conv, Std.Time, Std.Arrays;
+uses Std.Args, Std.Console, Std.Conv, Std.Time;
 
 begin
   if ParamCount() <> 2 then
@@ -16,11 +16,11 @@ begin
       panic('arguments must be positive');
     end;
   end if;
-  const Values: array of integer := Std.Arrays.Fill(7, Size);
+  const Values: array of integer := array.Fill(7, Size);
   const Started: integer := MonotonicMillis();
   for Iteration: integer := 1 to Iterations do
     begin
-      if Std.Arrays.Contains(Values, 8) then
+      if Values.Contains(8) then
         begin
           panic('missing scalar');
         end;

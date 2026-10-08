@@ -7,7 +7,7 @@ requiring a nested `case` per key.
 ```pascal
 program Example;
 
-uses Std.Console, Std.Str, Std.Toml, Std.Toml.Fields;
+uses Std.Console, Std.Toml, Std.Toml.Fields;
 
 function ReadPort(Text: string): result of integer, string;
 begin
@@ -17,7 +17,7 @@ begin
 end function;
 
 begin
-  case ReadPort(('host = ''localhost''' + Chr(10)) + 'port = 8080') of
+  case ReadPort(('host = ''localhost''' + string.Chr(10)) + 'port = 8080') of
     when Ok(Port):
       WriteLn(Port);
     when Error(Message):

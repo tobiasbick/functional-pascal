@@ -91,9 +91,9 @@ fn named_arguments_apply_to_standard_library_routines() {
     assert_succeeds(
         r#"
 program NamedStd;
-uses Std.Str;
+
 begin
-  if Std.Str.PadLeft(PadChar := '.', Width := 3, S := 'x') <> '..x' then
+  if 'x'.PadLeft(PadChar := '.', Width := 3) <> '..x' then
     panic('standard-library named arguments'); end if;
 end.
 "#,

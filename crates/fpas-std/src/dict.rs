@@ -1,6 +1,6 @@
 //! Runtime implementations for `Std.Dictionaries.*` intrinsics.
 //!
-//! **Documentation:** `docs/pascal/std/collections/dict.md`
+//! **Documentation:** `docs/pascal/language/types/dictionary-operations.md`
 
 use crate::error::StdError;
 use crate::intrinsic_args::{IntrinsicCall, expect_dict, pop_dict, pop_value};

@@ -1,32 +1,32 @@
 program ServerLifetimeTest;
 
-uses Std.Server, Std.Tasks, Std.Time, Std.Results, Std.Test, Std.Arrays;
+uses Std.Server, Std.Tasks, Std.Time, Std.Test;
 
 begin
-  AssertTrue(IsError(CreateLifetime(-1, false)));
-  AssertTrue(IsError(CreateLifetime(86400001, false)));
-  const Life: ServerLifetime := Std.Results.Unwrap(CreateLifetime(20, false));
+  AssertTrue(CreateLifetime(-1, false).IsError());
+  AssertTrue(CreateLifetime(86400001, false).IsError());
+  const Life: ServerLifetime := CreateLifetime(20, false).Unwrap();
   const Group: TaskGroup := GetWorkGroup(Life);
   const Gate: channel of boolean := CreateChannel(1);
   const Worker: task := StartTaskInGroup(Group, function(Token: CancellationToken): boolean begin
-    return Std.Results.Unwrap(Receive(Gate));
+    return Receive(Gate).Unwrap();
   end function);
   AssertTrue(IsReady(Life));
   AssertTrue(not IsCancellationRequested(GetStopToken(Life)));
-  AssertTrue(IsError(FinishShutdown(Life)));
+  AssertTrue(FinishShutdown(Life).IsError());
   AssertTrue(RequestStop(Life));
   AssertTrue(not IsReady(Life));
   AssertTrue(IsCancellationRequested(GetStopToken(Life)));
   AssertTrue(not RequestStop(Life));
-  AssertTrue(IsError(CloseTaskGroupWithTimeout(Group, RemainingMillis(Life))));
+  AssertTrue(CloseTaskGroupWithTimeout(Group, RemainingMillis(Life)).IsError());
   AssertEquals(0, RemainingMillis(Life));
-  AssertTrue(IsError(FinishShutdown(Life)));
+  AssertTrue(FinishShutdown(Life).IsError());
   AssertTrue(not RequestStop(Life));
   AssertEquals(0, RemainingMillis(Life));
   discard Send(Gate, true);
-  AssertEquals(0, Std.Arrays.Length(CloseTaskGroup(Group)));
-  AssertTrue(Std.Results.Unwrap(FinishShutdown(Life)));
-  AssertTrue(Std.Results.Unwrap(FinishShutdown(Life)));
-  AssertEquals(0, Std.Arrays.Length(ShutdownErrors(Life)));
+  AssertEquals(0, CloseTaskGroup(Group).Length());
+  AssertTrue(FinishShutdown(Life).Unwrap());
+  AssertTrue(FinishShutdown(Life).Unwrap());
+  AssertEquals(0, ShutdownErrors(Life).Length());
   discard CloseChannel(Gate);
 end.

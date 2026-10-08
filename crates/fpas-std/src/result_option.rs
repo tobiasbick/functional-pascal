@@ -1,6 +1,6 @@
 //! `Std.Results.*` and `Std.Options.*` intrinsic implementations.
 //!
-//! **Documentation:** `docs/pascal/std/result/result.md` and `docs/pascal/std/result/option.md` (from the repository root).
+//! **Documentation:** `docs/pascal/language/types/result-operations.md` and `docs/pascal/language/types/option-operations.md` (from the repository root).
 
 use crate::error::{StdError, std_runtime_error};
 use crate::intrinsic_args::{IntrinsicCall, pop_value};
@@ -21,7 +21,7 @@ pub(crate) fn run(
                     return Err(std_runtime_error(
                         RUNTIME_UNWRAP_FAILURE,
                         format!("Called Std.Results.Unwrap on Error({e})"),
-                        "Check with Std.Results.IsOk before unwrapping, or use Std.Results.UnwrapOr.",
+                        "Check Value.IsOk() before unwrapping, or use Value.UnwrapOr(Default).",
                         location,
                     ));
                 }
@@ -32,7 +32,7 @@ pub(crate) fn run(
                             "Std.Results.Unwrap expects a Result value, got {}",
                             val.type_name()
                         ),
-                        "Pass a Result value (Ok or Error) to Std.Results.Unwrap.",
+                        "Call Value.Unwrap() on a Result value (Ok or Error).",
                         location,
                     ));
                 }
@@ -51,7 +51,7 @@ pub(crate) fn run(
                             "Std.Results.UnwrapOr expects a Result value, got {}",
                             val.type_name()
                         ),
-                        "Pass a Result value (Ok or Error) as the first argument to Std.Results.UnwrapOr.",
+                        "Call Value.UnwrapOr(Default) on a Result value (Ok or Error).",
                         location,
                     ));
                 }
@@ -73,7 +73,7 @@ pub(crate) fn run(
                     return Err(std_runtime_error(
                         RUNTIME_UNWRAP_FAILURE,
                         "Called Std.Options.Unwrap on None",
-                        "Check with Std.Options.IsSome before unwrapping, or use Std.Options.UnwrapOr.",
+                        "Check Value.IsSome() before unwrapping, or use Value.UnwrapOr(Default).",
                         location,
                     ));
                 }
@@ -84,7 +84,7 @@ pub(crate) fn run(
                             "Std.Options.Unwrap expects an Option value, got {}",
                             val.type_name()
                         ),
-                        "Pass an Option value (Some or None) to Std.Options.Unwrap.",
+                        "Call Value.Unwrap() on an Option value (Some or None).",
                         location,
                     ));
                 }
@@ -103,7 +103,7 @@ pub(crate) fn run(
                             "Std.Options.UnwrapOr expects an Option value, got {}",
                             val.type_name()
                         ),
-                        "Pass an Option value (Some or None) as the first argument to Std.Options.UnwrapOr.",
+                        "Call Value.UnwrapOr(Default) on an Option value (Some or None).",
                         location,
                     ));
                 }

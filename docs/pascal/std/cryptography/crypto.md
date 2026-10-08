@@ -4,9 +4,9 @@ Cryptographically secure randomness supplied directly by the operating system. T
 
 ```pascal
 program Example;
-uses Std.Arrays, Std.Crypto, Std.Results;
+uses Std.Crypto;
 begin
-  const Token: array of integer := Unwrap(RandomBytes(32));
+  const Token: array of integer := RandomBytes(32).Unwrap();
 end.
 ```
 
@@ -30,7 +30,7 @@ Returns exactly `Count` bytes. Each byte is represented by an `integer` in `0..2
 ```pascal
 case RandomBytes(32) of
   when Ok(Bytes):
-    WriteLn(Std.Arrays.Length(Bytes));
+    WriteLn(Bytes.Length());
   when Error(Message):
     panic(Message);
 end case;

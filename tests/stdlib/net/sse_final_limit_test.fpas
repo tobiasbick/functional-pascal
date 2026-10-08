@@ -1,14 +1,14 @@
 program SseFinalLimitTest;
 
-uses Std.Arrays, Std.Http, Std.Net.Utf8, Std.Results, Std.Str, Std.Test;
+uses Std.Http, Std.Net.Utf8, Std.Test;
 
 procedure CheckFinal(Text: string; Maximum: integer; Expected: string);
 begin
-  const Decoder: SseDecoder := Std.Results.Unwrap(CreateSseDecoder(Maximum));
-  const Before: array of SseEvent := Std.Results.Unwrap(FeedSse(Decoder, Std.Net.Utf8.Encode(Text)));
-  AssertEquals(0, Std.Arrays.Length(Before));
-  const Events: array of SseEvent := Std.Results.Unwrap(FinishSse(Decoder));
-  AssertEquals(1, Std.Arrays.Length(Events));
+  const Decoder: SseDecoder := CreateSseDecoder(Maximum).Unwrap();
+  const Before: array of SseEvent := FeedSse(Decoder, Std.Net.Utf8.Encode(Text)).Unwrap();
+  AssertEquals(0, Before.Length());
+  const Events: array of SseEvent := FinishSse(Decoder).Unwrap();
+  AssertEquals(1, Events.Length());
   AssertEquals(Expected, Events[0].Data);
   case FeedSse(Decoder, []) of
     when Ok(_):
@@ -30,7 +30,7 @@ begin
 
   CheckFinal('data: x' + #13, 8, 'x');
   CheckFinal('data: x' + #10, 8, 'x');
-  const Small: SseDecoder := Std.Results.Unwrap(CreateSseDecoder(6));
+  const Small: SseDecoder := CreateSseDecoder(6).Unwrap();
   case FeedSse(Small, Std.Net.Utf8.Encode('data: x')) of
     when Ok(_):
       begin
@@ -40,7 +40,7 @@ begin
       begin
       end;
   end case;
-  const Empty: SseDecoder := Std.Results.Unwrap(CreateSseDecoder(1));
-  const Events: array of SseEvent := Std.Results.Unwrap(FinishSse(Empty));
-  AssertEquals(0, Std.Arrays.Length(Events));
+  const Empty: SseDecoder := CreateSseDecoder(1).Unwrap();
+  const Events: array of SseEvent := FinishSse(Empty).Unwrap();
+  AssertEquals(0, Events.Length());
 end.

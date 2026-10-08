@@ -1,6 +1,6 @@
 program TaskGroupLifecycleTest;
 
-uses Std.Tasks, Std.Arrays, Std.Results, Std.Test;
+uses Std.Tasks, Std.Test;
 
 procedure VerifyClose(RequestFirst: boolean);
 begin
@@ -26,7 +26,7 @@ begin
     end procedure);
     discard Send(Ready, true);
   end procedure);
-  AssertTrue(Unwrap(Receive(Ready)));
+  AssertTrue(Receive(Ready).Unwrap());
   if RequestFirst then
     begin
       AssertTrue(CancelTaskGroup(Group));
@@ -35,10 +35,10 @@ begin
     end;
   end if;
 
-  AssertEquals(0, Length(CloseTaskGroup(Group)));
+  AssertEquals(0, CloseTaskGroup(Group).Length());
   // Close must not return before the grandchild's final side effect.
-  AssertTrue(Unwrap(Receive(Finished)));
-  AssertEquals(0, Length(CloseTaskGroup(Group)));
+  AssertTrue(Receive(Finished).Unwrap());
+  AssertEquals(0, CloseTaskGroup(Group).Length());
   discard CloseChannel(Ready);
   discard CloseChannel(Empty);
   discard CloseChannel(Finished);

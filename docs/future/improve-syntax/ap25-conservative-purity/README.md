@@ -30,7 +30,7 @@ merely from immutable variable names.
 
 AP25.1 remains the priority gate. Before AP25.2, specify aliasing rules for
 shared handles and the proof required from imported APIs, including which local
-mutations can be proven unobservable outside the call. AP25.2 already requires
+mutations can be proven unobservable outside the call. AP25.2 requires
 these details; immutable binding names alone do not establish purity.
 
 ## Dependencies

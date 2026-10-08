@@ -1,6 +1,6 @@
 program SupervisedChannelSelectionTest;
 
-uses Std.Tasks, Std.Arrays, Std.Results, Std.Test;
+uses Std.Tasks, Std.Test;
 
 begin
   for Round: integer := 1 to 4 do
@@ -12,7 +12,7 @@ begin
       var Seen: array of integer := [];
       for Item: integer := 0 to 255 do
         begin
-          Push(Seen, 0);
+          Seen.Push(0);
         end;
       end for;
 
@@ -21,8 +21,8 @@ begin
           const Attempts: channel of boolean := CreateChannel(2);
           discard Send(Attempts, false);
           discard Send(Attempts, true);
-          Push(Children, StartSupervisedTask(Group, function(WorkerToken: CancellationToken): result of integer, string begin
-            if not Unwrap(Receive(Attempts)) then
+          Children.Push(StartSupervisedTask(Group, function(WorkerToken: CancellationToken): result of integer, string begin
+            if not Receive(Attempts).Unwrap() then
               begin
                 return Error('transient startup failure');
               end;
@@ -33,7 +33,7 @@ begin
               begin
                 discard Select([
                                  SendCase(Output, Producer * 32 + Item, procedure(Outcome: result of boolean, string) begin
-                                   AssertTrue(Unwrap(Outcome));
+                                   AssertTrue(Outcome.Unwrap());
                                  end procedure),
                                  CancellationCase(WorkerToken, procedure() begin
                                    panic('producer cancelled before drain');
@@ -51,7 +51,7 @@ begin
         begin
           AssertEquals(0, Select([
                                    ReceiveCase(Output, procedure(Outcome: result of integer, string) begin
-                                     const Number: integer := Unwrap(Outcome);
+                                     const Number: integer := Outcome.Unwrap();
                                      AssertTrue((Number >= 0) and (Number < 256));
                                      Seen[Number] := Seen[Number] + 1;
                                    end procedure),
@@ -66,15 +66,15 @@ begin
       end for;
 
       WaitAll(Children);
-      AssertEquals(0, Length(CloseTaskGroup(Group)));
-      AssertEquals(0, Length(CloseTaskGroup(Group)));
+      AssertEquals(0, CloseTaskGroup(Group).Length());
+      AssertEquals(0, CloseTaskGroup(Group).Length());
       for Count: integer in Seen do
         begin
           AssertEquals(1, Count);
         end;
       end for;
 
-      case Unwrap(TryReceive(Output)) of
+      case TryReceive(Output).Unwrap() of
         when Some(_):
           begin
             panic('duplicate delivery after drain');

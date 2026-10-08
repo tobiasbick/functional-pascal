@@ -1,6 +1,6 @@
 program TuiStatusLineSnapshotTest;
 
-uses Std.Str, Std.Test, Std.Tui;
+uses Std.Test, Std.Tui;
 
 type StatusModel = record
 end record;
@@ -29,7 +29,7 @@ begin
 
   Model := App.RunIterations(Model, UpdateStatus, ViewStatus, 0, 0);
   const Surface: TuiSurfaceSnapshot := App.SurfaceSnapshot();
-  AssertTrue(Std.Str.Contains(Surface.LineAt(0), 'Ready F2 Save Open Quit'));
+  AssertTrue(Surface.LineAt(0).Contains('Ready F2 Save Open Quit'));
   AssertTrue(Surface.CellAt(0, 0).Role = TuiStyleRole.StatusNormal);
   AssertTrue(Surface.CellAt(6, 0).Role = TuiStyleRole.StatusShortcut);
   AssertTrue(Surface.CellAt(9, 0).Role = TuiStyleRole.StatusNormal);

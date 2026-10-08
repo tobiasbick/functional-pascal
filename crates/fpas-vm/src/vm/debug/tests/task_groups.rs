@@ -9,7 +9,7 @@ const LIFECYCLE: &str =
     include_str!("../../../../../../tests/concurrency/task_group_lifecycle_test.fpas");
 
 const SOURCE: &str = r#"program GroupFailures;
-uses Std.Tasks, Std.Time, Std.Arrays;
+uses Std.Tasks, Std.Time;
 function Ordinary(Token: CancellationToken): result of integer, string;
 begin
   Sleep(1);
@@ -29,12 +29,12 @@ begin
   const C: task := StartTaskInGroup(G, Successful);
   if Wait(C) <> 42 then panic('child value'); end if;
   const Failures: array of TaskFailure := CloseTaskGroup(G);
-  if Length(Failures) <> 2 then panic('failure count'); end if;
+  if Failures.Length() <> 2 then panic('failure count'); end if;
   if Failures[0].Kind <> TaskFailureKind.ReturnedError then panic('ordinary kind'); end if;
   if Failures[0].Message <> 'ordinary' then panic('ordinary message'); end if;
   if Failures[1].Kind <> TaskFailureKind.Panicked then panic('panic kind'); end if;
   if Failures[1].Line <= 0 then panic('panic location'); end if;
-  if Length(CloseTaskGroup(G)) <> 0 then panic('repeat close'); end if;
+  if CloseTaskGroup(G).Length() <> 0 then panic('repeat close'); end if;
 end."#;
 
 #[test]
@@ -158,13 +158,13 @@ fn task_group_exited_failure_cannot_be_resumed_or_force_returned() {
 #[test]
 fn task_group_debugger_cancellation_is_reported_as_cancelled() {
     let source = r#"program CancelOwnedChild;
-uses Std.Tasks, Std.Time, Std.Arrays;
+uses Std.Tasks, Std.Time;
 procedure Work(Token: CancellationToken); begin Sleep(1000); end procedure;
 begin
   const G: TaskGroup := CreateTaskGroup();
   const WorkerTask: task := StartTaskInGroup(G, Work);
   const Failures: array of TaskFailure := CloseTaskGroup(G);
-  if Length(Failures) <> 1 then panic('failure count'); end if;
+  if Failures.Length() <> 1 then panic('failure count'); end if;
   if Failures[0].Kind <> TaskFailureKind.Cancelled then panic('cancellation kind'); end if;
 end."#;
     let mut session = stop_before_close(source);
@@ -180,12 +180,12 @@ end."#;
 #[test]
 fn task_group_child_close_is_rejected_and_collected_as_runtime_failure() {
     let source = r#"program ChildCannotClose;
-uses Std.Tasks, Std.Arrays;
+uses Std.Tasks;
 begin
   const G: TaskGroup := CreateTaskGroup();
   const WorkerTask: task := StartTaskInGroup(G, procedure(Token: CancellationToken) begin discard CloseTaskGroup(G); end procedure);
   const Failures: array of TaskFailure := CloseTaskGroup(G);
-  if Length(Failures) <> 1 then panic('failure count'); end if;
+  if Failures.Length() <> 1 then panic('failure count'); end if;
   if Failures[0].Kind <> TaskFailureKind.RuntimeError then panic('runtime kind'); end if;
 end."#;
     let (program, errors) = fpas_parser::parse(source);

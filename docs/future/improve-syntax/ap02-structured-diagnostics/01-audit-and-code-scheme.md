@@ -2,55 +2,28 @@
 
 Package: [AP02: Structured diagnostics](README.md)
 
-## Scope
-
-Audit the existing diagnostic model and producers, apply the confirmed code
-scheme, and improve a representative set of existing errors before building
-anything new. Do not create a parallel error system.
-
-## Prerequisites
-
-- The confirmed Q01 numbering decision in the [package README](README.md).
-
-## Implementation
-
-- Inventory `crates/fpas-diagnostics` (code type, code catalog, record,
-  location, span, renderer) and every producer: lexer, parser, sema, compiler,
-  VM, project, build, linker, CLI, runner, and language service.
-- Apply the confirmed numbering scheme to the catalog and its range tests.
-  If codes are renumbered, update every test, golden, and document that
-  mentions a code.
-- Show the code in all human-readable output.
-- Improve a representative set of frequent errors with a source position,
-  short explanation, expected versus found value or type, and a concrete
-  correction hint that does not guess business decisions.
-
-## Affected areas
-
-- `crates/fpas-diagnostics/src/` (`code.rs`, `codes.rs`, `diagnostic.rs`,
-  `render.rs`).
-- Producers in `fpas-lexer`, `fpas-parser`, `fpas-sema`, `fpas-compiler`,
-  `fpas-vm`; tests and goldens that assert codes or messages.
-
-## Migration
-
-Rewrite asserted codes and messages in tests and goldens. FPAS sources are
-unaffected.
-
-## Documentation
-
-Update any current page that cites a code. The full reference follows in AP02.5.
-
-## Verification
-
-- Code uniqueness and phase-range tests pass for the confirmed scheme.
-- Tests for each improved representative error assert the code, position,
-  expected/found details, and hint.
-- Required checks from the [process](../development-process.md#required-checks).
+Status: complete.
 
 ## Result
 
-Delivered together with the remaining AP02 slices so code identity, transport
-and consumers agree. The producer inventory and FP4xxx subranges are recorded
-in the [implementation audit](implementation-audit.md). Delivery completion is
-tracked in the package checklist.
+Diagnostics use stable `FPnxxx` codes in text and structured output:
+
+| Range | Producer |
+| --- | --- |
+| FP1xxx | Lexer |
+| FP2xxx | Parser |
+| FP3xxx | Semantic analysis |
+| FP4000–FP4099 | Compiler |
+| FP4100–FP4999 | Project, build, linker, CLI, test runner |
+| FP5xxx | Runtime |
+| FP9xxx | Internal invariants |
+
+The shared catalog is `crates/fpas-diagnostics/src/codes.rs`. Code identity is
+preserved through consumers, with concrete correction hints where applicable.
+
+## Regression coverage
+
+Catalog tests check allocation uniqueness and phase ranges. Producer and CLI
+regressions check representative codes, positions, structured details and hints.
+See the [implementation map](implementation-audit.md) and
+[diagnostics reference](../../../pascal/tools/diagnostics.md).

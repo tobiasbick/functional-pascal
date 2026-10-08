@@ -1,7 +1,7 @@
 // JSON encoding and decoding for OpenAI-compatible chat completions.
 unit Std.Ai.OpenAi.Json;
 
-uses Std.Ai.OpenAi.Types, Std.Arrays, Std.Conv, Std.Dictionaries, Std.Json, Std.Options;
+uses Std.Ai.OpenAi.Types, Std.Conv, Std.Json;
 
 // Encodes one non-streaming chat-completion request body.
 //
@@ -12,9 +12,9 @@ uses Std.Ai.OpenAi.Types, Std.Arrays, Std.Conv, Std.Dictionaries, Std.Json, Std.
 public function EncodeRequest(Model: string; Messages: array of ChatMessage; Options: ChatOptions): string;
 begin
   var MessageValues: array of JsonValue := [];
-  for Index: integer := 0 to Std.Arrays.Length(Messages) - 1 do
+  for Index: integer := 0 to Messages.Length() - 1 do
     begin
-      Std.Arrays.Push(MessageValues, JsonValue.Object(['role': JsonValue.String(Messages[Index].Role), 'content': JsonValue.String(Messages[Index].Content)]));
+      MessageValues.Push(JsonValue.Object(['role': JsonValue.String(Messages[Index].Role), 'content': JsonValue.String(Messages[Index].Content)]));
     end;
   end for;
   var Fields: dict of string to JsonValue := ['model': JsonValue.String(Model), 'messages': JsonValue.ArrayValue(MessageValues), 'stream': JsonValue.Bool(false)];
@@ -48,7 +48,7 @@ end function;
 // - `Name`: Required field name.
 function RequiredField(Fields: dict of string to JsonValue; Name: string): result of JsonValue, string;
 begin
-  case Std.Dictionaries.Get(Fields, Name) of
+  case Fields.Get(Name) of
     when Some(Value):
       begin
         return Ok(Value);
@@ -78,7 +78,7 @@ begin
                     case ChoicesValue of
                       when JsonValue.ArrayValue(Choices):
                         begin
-                          if Std.Arrays.Length(Choices) = 0 then
+                          if Choices.Length() = 0 then
                             begin
                               return Error('OpenAI-compatible response contains no choices');
                             end;

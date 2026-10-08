@@ -1,6 +1,6 @@
 program T;
 
-uses Std.Console, Std.Results, Std.Conv;
+uses Std.Console, Std.Conv;
 
 function DoubleToStr(V: integer): string;
 begin
@@ -9,6 +9,6 @@ end function;
 
 begin
   const R: result of integer, string := Ok(21);
-  const M: result of string, string := Map(R, DoubleToStr);
-  WriteLn(Unwrap(M));
+  const M: result of string, string := R.Map(DoubleToStr);
+  WriteLn(M.Unwrap());
 end.

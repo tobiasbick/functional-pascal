@@ -2,7 +2,7 @@
 
 These examples cover the implemented `Std.Net`, `Std.Server`, `Std.Http`, `Std.Net.Uri`, and
 `Std.Net.Utf8` APIs. The OpenAI-compatible chat demo remains in
-[`examples/openai-chat/`](../openai-chat/).
+[`examples/openai-chat/`](../openai-chat).
 
 ## Local HTTP pair
 

@@ -1,6 +1,6 @@
 program T;
 
-uses Std.Console, Std.Arrays;
+uses Std.Console;
 
 procedure PrintValue(X: integer);
 begin
@@ -8,6 +8,6 @@ begin
 end procedure;
 
 begin
-  ForEach([], PrintValue);
+  [].ForEach(PrintValue);
   WriteLn('done');
 end.

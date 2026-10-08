@@ -86,19 +86,7 @@ end.
 #[test]
 fn borrowed_standard_intrinsics_execute() {
     let execution = assert_succeeds(
-        "\
-program RegisterIntrinsics;
-uses Std.Str, Std.Math, Std.Conv, Std.Test;
-begin
-  const Text: string := Std.Str.ToUpper('fpas');
-  const Root: real := Std.Math.Sqrt(81.0);
-  const Number: string := Std.Conv.IntToStr(42);
-  const Formatted: string := Std.Str.Format('n=%d %s', 42, 'ok');
-  Std.Test.AssertEquals('FPAS', Text);
-  Std.Test.AssertEquals(9.0, Root);
-  Std.Test.AssertEquals('42', Number);
-  Std.Test.AssertEquals('n=42 ok', Formatted);
-end.",
+        "program RegisterIntrinsics;\nuses Std.Math, Std.Conv, Std.Test;\nbegin\n  const Text: string := 'fpas'.ToUpper();\n  const Root: real := Std.Math.Sqrt(81.0);\n  const Number: string := Std.Conv.IntToStr(42);\n  const Formatted: string := 'n=%d %s'.Format(42, 'ok');\n  Std.Test.AssertEquals('FPAS', Text);\n  Std.Test.AssertEquals(9.0, Root);\n  Std.Test.AssertEquals('42', Number);\n  Std.Test.AssertEquals('n=42 ok', Formatted);\nend.",
     );
     assert_eq!(execution.value, fpas_bytecode::Value::Unit);
 }
@@ -106,12 +94,7 @@ end.",
 #[test]
 fn intrinsic_selection_uses_one_verified_register_window_convention() {
     let program = parse_ok(
-        "\
-program RegisterIntrinsicShape;
-uses Std.Str;
-begin
-  if Std.Str.Length('abc') <> 3 then panic('bad'); end if;
-end.",
+        "program RegisterIntrinsicShape;\n\nbegin\n  if 'abc'.Length() <> 3 then panic('bad'); end if;\nend.",
     );
     let metadata = fpas_sema::analyze_with_types(&program);
     assert!(
@@ -120,8 +103,11 @@ end.",
         metadata.errors
     );
     assert!(
-        !metadata.intrinsic_calls.is_empty(),
-        "sema did not record intrinsic calls"
+        metadata
+            .fluent_calls
+            .values()
+            .any(|call| call.name == "Std.Str.Length"),
+        "sema did not record the type operation"
     );
     let executable =
         crate::compile(&program).expect("register intrinsic compilation should succeed");
@@ -145,20 +131,7 @@ end.",
 #[test]
 fn higher_order_intrinsics_invoke_numeric_callbacks() {
     let execution = assert_succeeds(
-        "\
-program RegisterCallbacks;
-uses Std.Arrays, Std.Test;
-
-function Double(Value: integer): integer;
-begin
-  return Value * 2;
-end function;
-
-begin
-  const Values: array of integer := Std.Arrays.Map([2, 3, 4], Double);
-  Std.Test.AssertEquals(3, Std.Arrays.Length(Values));
-  Std.Test.AssertEquals(6, Values[1]);
-end.",
+        "program RegisterCallbacks;\nuses Std.Test;\n\nfunction Double(Value: integer): integer;\nbegin\n  return Value * 2;\nend function;\n\nbegin\n  const Values: array of integer := [2, 3, 4].Map(Double);\n  Std.Test.AssertEquals(3, Values.Length());\n  Std.Test.AssertEquals(6, Values[1]);\nend.",
     );
     assert_eq!(execution.value, fpas_bytecode::Value::Unit);
 }
@@ -166,17 +139,7 @@ end.",
 #[test]
 fn intrinsic_temporaries_do_not_clobber_loop_state() {
     assert_succeeds(
-        "\
-program RegisterIntrinsicLoop;
-uses Std.Str, Std.Test;
-begin
-  var Total: integer := 0;
-  for Index: integer := 1 to 3 do
-  begin
-    Total := Total + Std.Str.Length('abc');
-  end; end for;
-  Std.Test.AssertEquals(9, Total);
-end.",
+        "program RegisterIntrinsicLoop;\nuses Std.Test;\nbegin\n  var Total: integer := 0;\n  for Index: integer := 1 to 3 do\n  begin\n    Total := Total + 'abc'.Length();\n  end; end for;\n  Std.Test.AssertEquals(9, Total);\nend.",
     );
 }
 

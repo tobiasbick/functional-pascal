@@ -1,6 +1,6 @@
 program CellFrameTest;
 
-uses Std.Console, Std.Options, Std.Test;
+uses Std.Console, Std.Test;
 
 function MakeCell(Glyph: string; Foreground: Color; Background: Color): Cell;
 begin
@@ -27,7 +27,7 @@ begin
   Present();
   AssertScreenLine('.XYZ.', 1);
   AssertScreenLine('.....', 2);
-  const ReadBack: Cell := Unwrap(GetCell(2, 1));
+  const ReadBack: Cell := GetCell(2, 1).Unwrap();
   const Foreground: Color := ReadBack.foreground;
   const Background: Color := ReadBack.background;
   AssertEquals('X', ReadBack.glyph);

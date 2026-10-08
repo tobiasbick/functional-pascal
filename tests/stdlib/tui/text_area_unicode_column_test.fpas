@@ -1,6 +1,6 @@
 program TextAreaUnicodeColumnTest;
 
-uses Std.Console, Std.Str, Std.Test, Std.Tui;
+uses Std.Console, Std.Test, Std.Tui;
 
 type TextAreaModel = record
   Text: string;
@@ -57,9 +57,9 @@ end function;
 // Reference the original scalar-prefix contract only for short correctness fixtures.
 function Expected(Line: string; Column: integer): integer;
 begin
-  for I: integer := 0 to Std.Str.Length(Line) - 1 do
+  for I: integer := 0 to Line.Length() - 1 do
     begin
-      if Std.Console.DisplayWidth(Std.Str.Substring(Line, 0, I + 1)) > Column then
+      if Std.Console.DisplayWidth(Line.Slice(0, I + 1)) > Column then
         begin
           return I;
         end;
@@ -67,19 +67,19 @@ begin
     end;
   end for;
 
-  return Std.Str.Length(Line);
+  return Line.Length();
 end function;
 
 begin
   const App: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(4, 2));
   for Line: string in [
-                        (Std.Str.Chr(9800) + Std.Str.Chr(65038)) + 'x',
+                        (string.Chr(9800) + string.Chr(65038)) + 'x',
                         '',
-                        ('e' + Std.Str.Chr(769)) + 'x',
+                        ('e' + string.Chr(769)) + 'x',
                         '中a',
-                        ('👩' + Std.Str.Chr(8205)) + '💻x',
-                        (('1' + Std.Str.Chr(65039)) + Std.Str.Chr(8419)) + 'x',
-                        Std.Str.Chr(769) + 'a',
+                        ('👩' + string.Chr(8205)) + '💻x',
+                        (('1' + string.Chr(65039)) + string.Chr(8419)) + 'x',
+                        string.Chr(769) + 'a',
                         '🇩🇪x'
                       ] do
     begin

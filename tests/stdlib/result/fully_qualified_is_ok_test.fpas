@@ -1,8 +1,8 @@
 program T;
 
-uses Std.Console, Std.Results;
+uses Std.Console;
 
 begin
   const R: result of integer, string := Ok(1);
-  WriteLn(Std.Results.IsOk(R));
+  WriteLn(R.IsOk());
 end.

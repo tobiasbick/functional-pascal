@@ -1,0 +1,36 @@
+program NativeTasksTest;
+
+uses Std.Tasks, Std.Test;
+
+var Trace: string := '';
+
+function Text(): string;
+begin
+  Trace := Trace + 'R';
+  return 'é😀ab';
+end function;
+
+function Number(Mark: string; Value: integer): integer;
+begin
+  Trace := Trace + Mark;
+  return Value;
+end function;
+
+function Empty(): array of integer;
+begin
+  Trace := Trace + 'E';
+  return [];
+end function;
+
+begin
+  const PartTask: task of string := go Text().Slice(Len := Number('L', 2), Start := Number('S', 1));
+  AssertEquals('RLS', Trace);
+  AssertEquals('😀a', Wait(PartTask));
+  const EmptyTask: task of boolean := go Empty().IsEmpty();
+  AssertTrue(Wait(EmptyTask));
+  AssertEquals('RLSE', Trace);
+  const CopiesTask: task of array of string := go array.Fill(Count := 2, Value := 'x');
+  AssertEquals('xx', Wait(CopiesTask).Join(''));
+  const CharacterTask: task of string := go string.Chr(N := 65);
+  AssertEquals('A', Wait(CharacterTask));
+end.

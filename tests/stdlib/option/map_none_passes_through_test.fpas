@@ -1,6 +1,6 @@
 program T;
 
-uses Std.Console, Std.Options;
+uses Std.Console;
 
 function AlwaysOk(V: integer): string;
 begin
@@ -9,6 +9,6 @@ end function;
 
 begin
   const O: option of integer := None;
-  const M: option of string := Map(O, AlwaysOk);
-  WriteLn(IsNone(M));
+  const M: option of string := O.Map(AlwaysOk);
+  WriteLn(M.IsNone());
 end.

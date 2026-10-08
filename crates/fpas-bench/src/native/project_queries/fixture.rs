@@ -22,12 +22,21 @@ impl Fixture {
         let directory = scratch.path();
         let manifest = directory.join("queries.fpasprj");
         std::fs::write(&manifest, "[project]\nname = \"queries\"\nkind = \"program\"\nmain = \"main.fpas\"\n[sources]\ninclude = [\"*.fpas\"]\n").map_err(|error| error.to_string())?;
-        let mut source = String::from("program ProjectQueries;\nuses Std.Str");
+        let mut source = String::from("program ProjectQueries;\n");
+        if units > 0 {
+            source.push_str("uses ");
+        }
         for unit in 0..units {
-            write!(source, ", Bench.U{unit}").map_err(|error| error.to_string())?;
+            if unit > 0 {
+                source.push_str(", ");
+            }
+            write!(source, "Bench.U{unit}").map_err(|error| error.to_string())?;
             std::fs::write(directory.join(format!("unit{unit}.fpas")), format!("unit Bench.U{unit};\npublic function Answer{unit}(): integer;\nbegin return {unit}; end function;\nend unit;\n")).map_err(|error| error.to_string())?;
         }
-        source.push_str(";\nbegin\nconst Count: integer := Std.Str.Length('é😀');\n");
+        if units > 0 {
+            source.push_str(";\n");
+        }
+        source.push_str("begin\nconst Count: integer := 'é😀'.Length();\n");
         for unit in 0..units {
             writeln!(source, "const Value{unit}: integer := Answer{unit}();")
                 .map_err(|error| error.to_string())?;

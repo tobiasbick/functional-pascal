@@ -197,7 +197,11 @@ const Copy: Point := OtherPoint;
 
 ## Free-standing functions
 
-Free-standing functions work equally well for operations on records:
+Free-standing functions work equally well for operations on records and are
+called ordinarily. They are never selected by receiver lookup. Their returned
+record or built-in value can start a chain, such as `PointToString(P).Trim()`.
+Declared methods continue a chain by returning `Self`, another record, or a
+built-in type. See [Dot calls](../functions/fluent-calls.md).
 
 ```pascal
 function PointToString(P: Point): string;

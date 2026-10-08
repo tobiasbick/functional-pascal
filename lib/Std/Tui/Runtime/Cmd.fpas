@@ -1,6 +1,6 @@
 unit Std.Tui.Runtime.Cmd;
 
-uses Std.Arrays, Std.Options, Std.Tui.Cells.Palette, Std.Tui.Runtime.Application.Background;
+uses Std.Tui.Cells.Palette, Std.Tui.Runtime.Application.Background;
 
 // Runtime command returned by an application's Update function.
 public type TuiCmd = enum
@@ -20,7 +20,7 @@ var TuiCommandTickDelays: array of integer := [];
 
 function TuiCmdOutputRequire(Slot: integer): integer;
 begin
-  if (Slot < 1) or (Slot > Std.Arrays.Length(TuiCommandValues)) then
+  if (Slot < 1) or (Slot > TuiCommandValues.Length()) then
     begin
       panic('Tui command output handle is invalid');
     end;
@@ -37,12 +37,12 @@ public type TuiCmdOutput = record
   // Allocates one reusable command output.
   public static function Create(): TuiCmdOutput;
   begin
-    TuiCommandValues := Std.Arrays.Concat(TuiCommandValues, [TuiCmd.NoCommand]);
-    TuiCommandPalettes := Std.Arrays.Concat(TuiCommandPalettes, [None]);
-    TuiCommandBackground := Std.Arrays.Concat(TuiCommandBackground, [[]]);
-    TuiCommandTickDelays := Std.Arrays.Concat(TuiCommandTickDelays, [-1]);
+    TuiCommandValues := TuiCommandValues.Concat([TuiCmd.NoCommand]);
+    TuiCommandPalettes := TuiCommandPalettes.Concat([None]);
+    TuiCommandBackground := TuiCommandBackground.Concat([[]]);
+    TuiCommandTickDelays := TuiCommandTickDelays.Concat([-1]);
     return record
-      Slot := Std.Arrays.Length(TuiCommandValues);
+      Slot := TuiCommandValues.Length();
     end;
   end function;
 
@@ -97,7 +97,7 @@ public type TuiCmdOutput = record
       end;
     end if;
     var Commands: array of TuiBackgroundCommand := TuiCommandBackground[Slot - 1];
-    Std.Arrays.Push(Commands, TuiBackgroundCommand.Start(Id, Work));
+    Commands.Push(TuiBackgroundCommand.Start(Id, Work));
     TuiCommandBackground[Slot - 1] := Commands;
   end procedure;
 
@@ -111,7 +111,7 @@ public type TuiCmdOutput = record
       end;
     end if;
     var Commands: array of TuiBackgroundCommand := TuiCommandBackground[Slot - 1];
-    Std.Arrays.Push(Commands, TuiBackgroundCommand.ReplaceSubscription(Id, Work));
+    Commands.Push(TuiBackgroundCommand.ReplaceSubscription(Id, Work));
     TuiCommandBackground[Slot - 1] := Commands;
   end procedure;
 
@@ -125,7 +125,7 @@ public type TuiCmdOutput = record
       end;
     end if;
     var Commands: array of TuiBackgroundCommand := TuiCommandBackground[Slot - 1];
-    Std.Arrays.Push(Commands, TuiBackgroundCommand.CancelSubscription(Id));
+    Commands.Push(TuiBackgroundCommand.CancelSubscription(Id));
     TuiCommandBackground[Slot - 1] := Commands;
   end procedure;
 

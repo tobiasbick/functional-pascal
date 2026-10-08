@@ -1,7 +1,7 @@
 // Incremental bounded Server-Sent Events decoding.
 unit Std.Http.Sse;
 
-uses Std.Arrays, Std.Http.Handles, Std.Http.Types, Std.Net.Utf8, Std.Str;
+uses Std.Http.Handles, Std.Http.Types, Std.Net.Utf8;
 
 // Mutable parsing state retained for one decoder handle.
 type DecoderState = record
@@ -74,7 +74,7 @@ end function;
 // - `Bytes`: Buffered bytes to scan from the beginning.
 function LineEnd(Bytes: array of integer; Final: boolean): array of integer;
 begin
-  for Index: integer := 0 to Std.Arrays.Length(Bytes) - 1 do
+  for Index: integer := 0 to Bytes.Length() - 1 do
     begin
       if Bytes[Index] = 10 then
         begin
@@ -84,7 +84,7 @@ begin
 
       if Bytes[Index] = 13 then
         begin
-          if Index + 1 >= Std.Arrays.Length(Bytes) then
+          if Index + 1 >= Bytes.Length() then
             begin
               if Final then
                 begin
@@ -108,9 +108,9 @@ begin
     end;
   end for;
 
-  if Final and (Std.Arrays.Length(Bytes) > 0) then
+  if Final and (Bytes.Length() > 0) then
     begin
-      return [Std.Arrays.Length(Bytes), 0];
+      return [Bytes.Length(), 0];
     end;
   end if;
 
@@ -130,9 +130,9 @@ begin
         end;
       end if;
 
-      Std.Arrays.Push(LocalEvents, record
+      LocalEvents.Push(record
         EventType := EventType;
-        Data := Std.Str.Substring(State.Data, 0, Std.Str.Length(State.Data) - 1);
+        Data := State.Data.Slice(0, State.Data.Length() - 1);
         Id := State.LastEventId;
       end);
     end;
@@ -152,7 +152,7 @@ begin
   var EndValue: array of integer := LineEnd(LocalState.Buffer, Final);
   while EndValue[0] >= 0 do
     begin
-      const LineBytes: array of integer := Std.Arrays.Slice(LocalState.Buffer, 0, EndValue[0]);
+      const LineBytes: array of integer := LocalState.Buffer.Slice(0, EndValue[0]);
       LocalState.EventBytes := (LocalState.EventBytes + EndValue[0]) + EndValue[1];
       if LocalState.EventBytes > LocalState.Maximum then
         begin
@@ -160,8 +160,8 @@ begin
         end;
       end if;
 
-      LocalState.Buffer := Std.Arrays.Slice(LocalState.Buffer, EndValue[0] + EndValue[1], (Std.Arrays.Length(LocalState.Buffer) - EndValue[0]) -
-                                                                                          EndValue[1]);
+      LocalState.Buffer := LocalState.Buffer.Slice(EndValue[0] + EndValue[1], (LocalState.Buffer.Length() - EndValue[0]) -
+                                                                              EndValue[1]);
       case Std.Net.Utf8.Decode(LineBytes) of
         when Ok(Line):
           begin
@@ -172,18 +172,18 @@ begin
                 LocalState.EventType := '';
                 LocalState.EventBytes := 0;
               end;
-            elsif not Std.Str.StartsWith(Line, ':') then
+            elsif not Line.StartsWith(':') then
               begin
                 var Name: string := Line;
                 var Value: string := '';
-                const Colon: integer := Std.Str.IndexOf(Line, ':');
+                const Colon: integer := Line.IndexOf(':');
                 if Colon >= 0 then
                   begin
-                    Name := Std.Str.Substring(Line, 0, Colon);
-                    Value := Std.Str.Substring(Line, Colon + 1, (Std.Str.Length(Line) - Colon) - 1);
-                    if Std.Str.StartsWith(Value, ' ') then
+                    Name := Line.Slice(0, Colon);
+                    Value := Line.Slice(Colon + 1, (Line.Length() - Colon) - 1);
+                    if Value.StartsWith(' ') then
                       begin
-                        Value := Std.Str.Substring(Value, 1, Std.Str.Length(Value) - 1);
+                        Value := Value.Slice(1, Value.Length() - 1);
                       end;
                     end if;
                   end;
@@ -197,7 +197,7 @@ begin
                   begin
                     LocalState.EventType := Value;
                   end;
-                elsif (Name = 'id') and (not Std.Str.Contains(Value, #0)) then
+                elsif (Name = 'id') and (not Value.Contains(#0)) then
                   begin
                     LocalState.LastEventId := Value;
                   end;
@@ -215,7 +215,7 @@ begin
     end;
   end while;
 
-  if LocalState.EventBytes + Std.Arrays.Length(LocalState.Buffer) > LocalState.Maximum then
+  if LocalState.EventBytes + LocalState.Buffer.Length() > LocalState.Maximum then
     begin
       return Error('SSE event exceeds MaxEventBytes');
     end;
@@ -293,11 +293,10 @@ begin
         end if;
         var Events: array of SseEvent := [];
         var Offset: integer := 0;
-        while Offset < Std.Arrays.Length(Bytes) do
+        while Offset < Bytes.Length() do
           begin
-            const Available: integer := (State.Maximum - State.EventBytes) -
-                                        Std.Arrays.Length(State.Buffer);
-            var Count: integer := Std.Arrays.Length(Bytes) - Offset;
+            const Available: integer := (State.Maximum - State.EventBytes) - State.Buffer.Length();
+            var Count: integer := Bytes.Length() - Offset;
             if Count > 1024 then
               begin
                 Count := 1024;
@@ -311,14 +310,14 @@ begin
               end;
             end if;
 
-            State.Buffer := Std.Arrays.Concat(State.Buffer, Std.Arrays.Slice(Bytes, Offset, Count));
+            State.Buffer := State.Buffer.Concat(Bytes.Slice(Offset, Count));
             case Process(State, false) of
               when Ok(Output):
                 begin
                   State := Output.State;
                   for Item: SseEvent in Output.Events do
                     begin
-                      Std.Arrays.Push(Events, Item);
+                      Events.Push(Item);
                     end;
                   end for;
                 end;

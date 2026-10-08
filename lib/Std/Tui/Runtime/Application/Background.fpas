@@ -1,6 +1,6 @@
 unit Std.Tui.Runtime.Application.Background;
 
-uses Std.Arrays, Std.Options, Std.Results, Std.Tasks, Std.Tui.Runtime.Msg;
+uses Std.Tasks, Std.Tui.Runtime.Msg;
 
 // Cooperative function executed as host-owned background work.
 public type TuiBackgroundWork = function(Token: CancellationToken): result of boolean, string;
@@ -28,7 +28,7 @@ var TuiBackgroundWorkItems: array of array of TuiOwnedWork := [];
 
 function TuiBackgroundRequireOpen(ApplicationId: integer): integer;
 begin
-  if ((ApplicationId < 1) or (ApplicationId > Std.Arrays.Length(TuiBackgroundOpen))) or
+  if ((ApplicationId < 1) or (ApplicationId > TuiBackgroundOpen.Length())) or
      not TuiBackgroundOpen[ApplicationId - 1] then
     begin
       panic('Tui background host is closed');
@@ -41,9 +41,9 @@ end function;
 procedure TuiBackgroundRemove(ApplicationId: integer; Index: integer);
 begin
   var Items: array of TuiOwnedWork := TuiBackgroundWorkItems[ApplicationId - 1];
-  TuiBackgroundWorkItems[ApplicationId - 1] := Std.Arrays.Concat(Std.Arrays.Slice(Items, 0, Index), Std.Arrays.Slice(Items, Index +
-                                                                                                                            1, (Std.Arrays.Length(Items) - Index) -
-                                                                                                                               1));
+  TuiBackgroundWorkItems[ApplicationId - 1] := Items.Slice(0, Index)
+                                                 .Concat(Items.Slice(Index + 1, (Items.Length() - Index) -
+                                                                                1));
 end procedure;
 
 function TuiBackgroundFailureMessages(
@@ -57,7 +57,7 @@ begin
     begin
       if IncludeCancellation or (Failure.Kind <> TaskFailureKind.Cancelled) then
         begin
-          Std.Arrays.Push(Messages, TuiMsg.BackgroundFailed(Id, Failure.Kind, Failure.Message, Failure.Code, Failure.Line, Failure.Column));
+          Messages.Push(TuiMsg.BackgroundFailed(Id, Failure.Kind, Failure.Message, Failure.Code, Failure.Line, Failure.Column));
         end;
       end if;
     end;
@@ -77,7 +77,7 @@ end function;
 function TuiBackgroundFindSubscription(ApplicationId: integer; Id: integer): integer;
 begin
   var Items: array of TuiOwnedWork := TuiBackgroundWorkItems[ApplicationId - 1];
-  for Index: integer := 0 to Std.Arrays.Length(Items) - 1 do
+  for Index: integer := 0 to Items.Length() - 1 do
     begin
       if Items[Index].Subscription and (Items[Index].Id = Id) then
         begin
@@ -98,14 +98,14 @@ procedure TuiBackgroundStart(
 );
 begin
   var Items: array of TuiOwnedWork := TuiBackgroundWorkItems[ApplicationId - 1];
-  if Std.Arrays.Length(Items) >= 256 then
+  if Items.Length() >= 256 then
     begin
       panic('Tui application cannot own more than 256 background operations');
     end;
   end if;
   const Group: TaskGroup := CreateTaskGroup();
   const WorkerTask: task := StartTaskInGroup(Group, Work);
-  Std.Arrays.Push(Items, record
+  Items.Push(record
     Id := Id;
     Subscription := Subscription;
     Group := Group;
@@ -131,8 +131,8 @@ end procedure;
 // Allocates the background ownership slot for a new application.
 public procedure TuiBackgroundOpenApplication();
 begin
-  TuiBackgroundOpen := Std.Arrays.Concat(TuiBackgroundOpen, [true]);
-  TuiBackgroundWorkItems := Std.Arrays.Concat(TuiBackgroundWorkItems, [[]]);
+  TuiBackgroundOpen := TuiBackgroundOpen.Concat([true]);
+  TuiBackgroundWorkItems := TuiBackgroundWorkItems.Concat([[]]);
 end procedure;
 
 // Requests cancellation without joining on the UI path; replacement admission is deferred to reap.
@@ -179,7 +179,7 @@ end function;
 public function TuiBackgroundHasWork(ApplicationId: integer): boolean;
 begin
   discard TuiBackgroundRequireOpen(ApplicationId);
-  return Std.Arrays.Length(TuiBackgroundWorkItems[ApplicationId - 1]) > 0;
+  return TuiBackgroundWorkItems[ApplicationId - 1].Length() > 0;
 end function;
 
 // Collects completed groups and starts only the latest pending replacement after its predecessor ends.
@@ -187,14 +187,14 @@ public function TuiBackgroundReap(ApplicationId: integer): array of TuiMsg;
 begin
   discard TuiBackgroundRequireOpen(ApplicationId);
   var Messages: array of TuiMsg := [];
-  var Index: integer := Std.Arrays.Length(TuiBackgroundWorkItems[ApplicationId - 1]) - 1;
+  var Index: integer := TuiBackgroundWorkItems[ApplicationId - 1].Length() - 1;
   while Index >= 0 do
     begin
       const Item: TuiOwnedWork := TuiBackgroundWorkItems[ApplicationId - 1][Index];
       case TryCloseCompletedTaskGroup(Item.Group) of
         when Some(Failures):
           begin
-            Messages := Std.Arrays.Concat(Messages, TuiBackgroundFailureMessages(Item.Id, Failures, not Item.Cancelling));
+            Messages := Messages.Concat(TuiBackgroundFailureMessages(Item.Id, Failures, not Item.Cancelling));
             TuiBackgroundRemove(ApplicationId, Index);
             case Item.Replacement of
               when Some(Work):
@@ -221,18 +221,18 @@ end function;
 // Cancels and joins all owned work at shutdown without starting pending replacements.
 public function TuiBackgroundCloseApplication(ApplicationId: integer): array of TuiMsg;
 begin
-  if ((ApplicationId < 1) or (ApplicationId > Std.Arrays.Length(TuiBackgroundOpen))) or
+  if ((ApplicationId < 1) or (ApplicationId > TuiBackgroundOpen.Length())) or
      not TuiBackgroundOpen[ApplicationId - 1] then
     begin
       return [];
     end;
   end if;
   var Messages: array of TuiMsg := [];
-  while Std.Arrays.Length(TuiBackgroundWorkItems[ApplicationId - 1]) > 0 do
+  while TuiBackgroundWorkItems[ApplicationId - 1].Length() > 0 do
     begin
-      Messages := Std.Arrays.Concat(Messages, TuiBackgroundCloseAt(ApplicationId, Std.Arrays.Length(TuiBackgroundWorkItems[ApplicationId -
-                                                                                                                           1]) -
-                                                                                  1, false));
+      Messages := Messages.Concat(TuiBackgroundCloseAt(ApplicationId, TuiBackgroundWorkItems[ApplicationId -
+                                                                                             1].Length() -
+                                                                      1, false));
     end;
   end while;
 

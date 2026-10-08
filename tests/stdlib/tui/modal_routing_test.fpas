@@ -1,6 +1,6 @@
 program TuiModalRoutingTest;
 
-uses Std.Arrays, Std.Str, Std.Test, Std.Tui;
+uses Std.Test, Std.Tui;
 
 type ModalModel = record
   Focus: integer;
@@ -31,7 +31,7 @@ begin
   for Y: integer := 0 to Snapshot.Height - 1 do
     begin
       const Line: string := Snapshot.LineAt(Y);
-      const Index: integer := Std.Str.IndexOf(Line, Glyph);
+      const Index: integer := Line.IndexOf(Glyph);
       if Index >= 0 then
         begin
           return TuiPoint.Create(Index, Y);
@@ -94,7 +94,7 @@ begin
             return record
               Focus := 3;
               ConfirmOpen := true;
-              Actions := Std.Arrays.Concat(State.Actions, [Action.Value]);
+              Actions := State.Actions.Concat([Action.Value]);
               PointerHits := State.PointerHits;
             end;
           end;
@@ -103,7 +103,7 @@ begin
         return record
           Focus := 1;
           ConfirmOpen := false;
-          Actions := Std.Arrays.Concat(State.Actions, [Action.Value]);
+          Actions := State.Actions.Concat([Action.Value]);
           PointerHits := State.PointerHits;
         end;
       end;
@@ -150,7 +150,7 @@ begin
   App.InjectPointerForTest(MakePointer(TuiPointerAction.Down, SaveAt.X, SaveAt.Y));
   Model := App.RunIterations(Model, UpdateModal, ViewModal, 1, 0);
   AssertEquals(2, Model.PointerHits);
-  AssertEquals(1, Std.Arrays.Length(Model.Actions));
+  AssertEquals(1, Model.Actions.Length());
   AssertTrue(Model.ConfirmOpen);
   const YesAt: TuiPoint := FindGlyph(App.SurfaceSnapshot(), 'Yes');
   App.InjectPointerForTest(MakePointer(TuiPointerAction.Down, YesAt.X, YesAt.Y));
@@ -158,7 +158,7 @@ begin
   App.InjectPointerForTest(MakePointer(TuiPointerAction.Up, YesAt.X, YesAt.Y));
   Model := App.RunIterations(Model, UpdateModal, ViewModal, 1, 0);
   AssertFalse(Model.ConfirmOpen);
-  AssertEquals(2, Std.Arrays.Length(Model.Actions));
+  AssertEquals(2, Model.Actions.Length());
   AssertEquals(30, Model.Actions[1]);
   App.InjectKeyForTest(MakeKey(TuiKeyKind.Tab, ''));
   Model := App.RunIterations(Model, UpdateModal, ViewModal, 1, 0);

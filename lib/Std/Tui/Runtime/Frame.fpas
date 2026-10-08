@@ -1,9 +1,9 @@
 unit Std.Tui.Runtime.Frame;
 
 uses
-  Std.Options, Std.Tui.Elements.Element, Std.Tui.Elements.Validate, Std.Tui.Geometry.Rect,
-  Std.Tui.Geometry.Size, Std.Tui.Ids.ControlId, Std.Tui.Layout.Arrange, Std.Tui.Layout.Frame,
-  Std.Tui.Rendering.Paint, Std.Tui.Rendering.Surface;
+  Std.Tui.Elements.Element, Std.Tui.Elements.Validate, Std.Tui.Geometry.Rect, Std.Tui.Geometry.Size,
+  Std.Tui.Ids.ControlId, Std.Tui.Layout.Arrange, Std.Tui.Layout.Frame, Std.Tui.Rendering.Paint,
+  Std.Tui.Rendering.Surface;
 
 // Validates, arranges, and paints one complete frame into the host-owned arranged frame.
 //

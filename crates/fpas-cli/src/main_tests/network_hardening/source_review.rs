@@ -116,14 +116,14 @@ fn source_review_client_rejects_non_decimal_lengths() {
         "source-review-lengths",
         &format!(
             r#"program DecimalLengths;
-uses Std.Http, Std.Str;
+uses Std.Http;
 begin
   for I: integer := 1 to {} do
   begin
     case Send(Request.Get('http://127.0.0.1:{port}/')) of
       when Ok(_): panic('invalid Content-Length accepted');
       when Error(Message): begin
-        if not Std.Str.Contains(Message, 'Content-Length') then panic(Message); end if;
+        if not Message.Contains('Content-Length') then panic(Message); end if;
       end;
     end case;
   end; end for;

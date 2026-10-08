@@ -1,12 +1,12 @@
 program GraphemeCellTest;
 
-uses Std.Arrays, Std.Console, Std.Options, Std.Test;
+uses Std.Console, Std.Test;
 
 begin
   AssertEquals(1, GraphemeWidth('é'));
   AssertEquals(2, GraphemeWidth('👩‍💻'));
   const Graphemes: array of string := SplitGraphemes('Aé👩‍💻');
-  AssertEquals(3, Std.Arrays.Length(Graphemes));
+  AssertEquals(3, Graphemes.Length());
   AssertEquals('é', Graphemes[1]);
   AssertEquals('👩‍💻', Graphemes[2]);
   const Value: Cell := record
@@ -16,5 +16,5 @@ begin
   end;
 
   PutCell(1, 1, Value);
-  AssertEquals('é', Std.Options.Unwrap(GetCell(1, 1)).glyph);
+  AssertEquals('é', GetCell(1, 1).Unwrap().glyph);
 end.

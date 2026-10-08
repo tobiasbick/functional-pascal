@@ -1,7 +1,7 @@
 program T;
 
-uses Std.Console, Std.Str;
+uses Std.Console;
 
 begin
-  WriteLn(RepeatStr('ab', 3));
+  WriteLn('ab'.RepeatStr(3));
 end.

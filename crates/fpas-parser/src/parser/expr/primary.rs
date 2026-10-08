@@ -23,6 +23,7 @@ impl Parser {
         }
 
         match self.current_token().clone() {
+            Token::Array => self.parse_native_factory(),
             Token::Integer(v) => {
                 let span = self.current_span();
                 self.advance();
@@ -106,6 +107,40 @@ impl Parser {
                 }
                 Expr::Error(span)
             }
+        }
+    }
+
+    /// Parses the keyword-owned `string.Chr` and `array.Fill` call shape.
+    fn parse_native_factory(&mut self) -> Expr {
+        let start = self.current_span();
+        let owner = if self.check(&Token::Array) {
+            "array"
+        } else {
+            "string"
+        };
+        self.advance();
+        self.expect(&Token::Dot);
+        let (name, name_span) = self
+            .expect_ident()
+            .unwrap_or_else(|| self.error_ident(self.current_span()));
+        self.expect(&Token::LParen);
+        let args = if self.check(&Token::RParen) {
+            Vec::new()
+        } else {
+            self.parse_arg_list()
+        };
+        self.expect(&Token::RParen);
+        let span = self.span_from(start);
+        Expr::Call {
+            designator: Designator {
+                parts: vec![
+                    DesignatorPart::Ident(owner.into(), start),
+                    DesignatorPart::Ident(name, name_span),
+                ],
+                span,
+            },
+            args,
+            span,
         }
     }
 

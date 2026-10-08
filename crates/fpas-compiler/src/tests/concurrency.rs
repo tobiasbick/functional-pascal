@@ -9,22 +9,7 @@ mod wait_any;
 #[test]
 fn task_spawn_with_arguments_keeps_loop_branch_addresses_aligned() {
     assert_succeeds(
-        "\
-program RegisterTaskArgumentLoop;
-uses Std.Arrays, Std.Tasks;
-function Worker(Value: integer): integer;
-begin
-  return Value + 1;
-end function;
-begin
-  var Tasks: array of task := [];
-  for Index: integer := 1 to 8 do
-  begin
-    Push(Tasks, go Worker(Index));
-  end; end for;
-  WaitAll(Tasks);
-  if Length(Tasks) <> 8 then panic('task loop count mismatch'); end if;
-end.",
+        "program RegisterTaskArgumentLoop;\nuses Std.Tasks;\nfunction Worker(Value: integer): integer;\nbegin\n  return Value + 1;\nend function;\nbegin\n  var Tasks: array of task := [];\n  for Index: integer := 1 to 8 do\n  begin\n    Tasks.Push(go Worker(Index));\n  end; end for;\n  WaitAll(Tasks);\n  if Tasks.Length() <> 8 then panic('task loop count mismatch'); end if;\nend.",
     );
 }
 

@@ -68,9 +68,10 @@ impl Checker {
         }
     }
 
-    /// Rejects `var` arguments and `var`-parameter routines in a `go` call.
+    /// Rejects explicit/implicit writable arguments and `var`-parameter routines in `go`.
     pub(in crate::check) fn reject_var_references_in_go(
         &mut self,
+        call_key: usize,
         callee: Option<&Designator>,
         args: &[Expr],
         span: Span,
@@ -84,6 +85,22 @@ impl Checker {
                 "`go` cannot pass a `var` argument",
                 "The task could outlive the caller's variable. Pass a value and return the result through the task, for example `const T: task := go Compute(Value);`.",
                 arg.span(),
+            );
+            return;
+        }
+        let intrinsic = self
+            .fluent_calls
+            .get(&call_key)
+            .map(|target| target.name.as_str())
+            .or_else(|| self.intrinsic_calls.get(&call_key).map(String::as_str));
+        if intrinsic.is_some_and(|name| {
+            crate::std_registry::intrinsic_std_receiver_mode(name) == crate::types::ParamMode::Var
+        }) {
+            self.error_with_code(
+                SEMA_VAR_PARAMETER_ESCAPE,
+                "`go` cannot pass an implicit writable receiver",
+                "Call `Items.Push(Value)` or `Items.Pop()` on the current task. A writable receiver follows the same lifetime rules as an explicit `var` argument.",
+                span,
             );
             return;
         }

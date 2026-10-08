@@ -1,8 +1,8 @@
 program T;
 
-uses Std.Console, Std.Options;
+uses Std.Console;
 
 begin
   const O: option of integer := None;
-  WriteLn(Std.Options.UnwrapOr(O, 0));
+  WriteLn(O.UnwrapOr(0));
 end.

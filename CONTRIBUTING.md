@@ -3,13 +3,13 @@
 Thanks for contributing to Functional Pascal.
 
 This project is experimental and moves quickly. Useful work includes implementing
-behavior described in [`docs/pascal/`](docs/pascal/), fixing diagnostics, improving
+behavior described in [`docs/pascal/`](docs/pascal), fixing diagnostics, improving
 tests, simplifying tangled code, and keeping docs aligned with what actually runs.
 
 ## Ground rules
 
 - **`docs/pascal/` is the source of truth** for implemented behavior. Do not document
-  unimplemented features there; plans belong in [`docs/future/`](docs/future/).
+  unimplemented features there; plans belong in [`docs/future/`](docs/future).
 - Prefer the smallest change that fully solves the problem.
 - Do not duplicate existing logic. Prefer rewriting unclear code over layering more of it.
 - Remove dead code your change makes obsolete.
@@ -17,7 +17,7 @@ tests, simplifying tangled code, and keeping docs aligned with what actually run
 - When implementing language behavior in Rust, link to the matching page under `docs/pascal/`.
 
 Agent-oriented detail (file layout, Definition of done, skills) lives in
-[`AGENTS.md`](AGENTS.md) and [`.agents/skills/`](.agents/skills/).
+[`AGENTS.md`](AGENTS.md) and [`.agents/skills/`](.agents/skills).
 
 ## How to work
 

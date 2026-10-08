@@ -2,70 +2,21 @@
 
 Package: [AP13: Explicit block boundaries](README.md)
 
-## Scope
-
-Change `;` from a statement separator to a terminator: every statement and
-declaration ends with `;`, including the last one before `end`, `else`, or
-`until`. The program's final `end.` is the only exception. Block closers stay
-as they are in this work package.
-
-## Prerequisites
-
-- AP02 (diagnostic codes).
-
-## Implementation
-
-- Parser: rework `statement_list` so each statement requires its `;`. Reject a
-  missing final `;` with a diagnostic and recover at the next statement.
-- Apply the agreed rule before `else` as well: the statement that ends a
-  branch is terminated by `;` before `else`, which the old separator grammar
-  rejected. Diagnose a missing `;` there.
-- Formatter: emit every terminator.
-
-### Confirmed transition rule
-
-Until named control-flow closers are introduced by AP13.4, `if`, `for`, and
-`while` keep their single-statement bodies. The final body's `;` also
-terminates the enclosing control statement; no second `;` is added. Each
-branch is terminated before `else`. Existing nearest-unmatched-`if` ownership
-is preserved; explicit compound statements disambiguate nested branches.
-The completed AP13.4 package replaces this transition with statement-list
-bodies and named control-flow closers.
-
-## Affected areas
-
-- `crates/fpas-parser/src/parser/` (statement lists, `stmt/`).
-- `crates/fpas-fmt/src/emit/stmt/`, comment traversal.
-
-## Migration
-
-Add missing terminators in every repository consumer. The formatter on the
-branch can perform the rewrite once the parser accepts both forms there; the
-merged parser accepts only the new form.
-
-## Documentation
-
-- `docs/specs/grammar.ebnf` (`statement_list`), `fmt-style.md`, control-flow
-  and declaration pages, authoring skill.
-
-## Verification
-
-- Missing final `;` in routine bodies, loops, branches, and `repeat`;
-  terminators before `until`; comments before closers.
-- Corpus round trip and idempotence; unchanged FPAS suite.
+Status: complete.
 
 ## Result
 
-Implemented locally on `codex/syntax-changes-2` after the local AP02 and
-AP13.1 changes. Statements require terminators at every list boundary,
-including before `else` and `until`; declarations retain their required
-terminators. The single-statement control-body transition is superseded by
-AP13.4, which supplies statement-list bodies and named closers. The program
-keeps `end.`, and expression closers have no terminator of their own.
+Every statement and declaration requires `;`, including the final statement
+before a closer, `elsif`, `when`, `else` or `until`. A program's final main-block
+`end.` is the exception. Expressions have no terminator of their own.
 
-Repository sources, embedded fixtures, source generators, formatter goldens,
-CLI templates, editor snippets, and documentation examples are migrated.
-Conversion used temporary parser-guided tools under the ignored
-`.temp-data/` directory; the parser has no legacy acceptance mode.
-Named closers are delivered by AP13.3 through AP13.6. Delivery and applicable
-verification for statement terminators are complete on the working branch.
+Control-flow bodies are statement lists with named closers. Parser recovery
+preserves following statements and owning boundaries, while formatting emits
+every terminator and preserves attached comments.
+
+## Regression coverage
+
+Parser, formatter and execution tests cover missing final terminators,
+branches, loops, repeats, comments, nested closers and idempotence.
+See [grammar](../../../specs/grammar.ebnf) and
+[formatter style](../../../pascal/tools/fmt-style.md).

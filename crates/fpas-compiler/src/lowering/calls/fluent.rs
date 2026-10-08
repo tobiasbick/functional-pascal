@@ -35,7 +35,7 @@ impl LoweringContext {
                 .name
                 .eq_ignore_ascii_case(fpas_std::std_symbols::STD_ARRAY_PUSH)
             {
-                let [value] = args else {
+                let Some(value) = self.argument_for_parameter(args, 0) else {
                     return Err(unsupported(span, "fluent array push arguments"));
                 };
                 return self.lower_array_push_target(&receiver, value, span);
@@ -57,53 +57,10 @@ impl LoweringContext {
         span: fpas_lexer::Span,
     ) -> Result<ValueId, CompileError> {
         let receiver = self.save_value(receiver);
-        let named = self.resolve_callable(&target.name);
-        let callee = if self.has_binding(&target.name) {
-            let value = self.read_named_local(&target.name, span)?;
-            Some(self.save_value(value))
-        } else if self.has_global(&target.name) {
-            let value = self.read_global(&target.name, span)?;
-            Some(self.save_value(value))
-        } else if let Some(callable) = &named {
-            if callable.captures.is_empty() {
-                None
-            } else {
-                let captures = callable
-                    .captures
-                    .iter()
-                    .map(|capture| self.read_capture(&capture.name, span))
-                    .collect::<Result<Vec<_>, _>>()?;
-                let value = self.emit_value(
-                    Operation::MakeClosure {
-                        function: callable.function,
-                        captures,
-                    },
-                    callable.value_type,
-                    span,
-                )?;
-                Some(self.save_value(value))
-            }
-        } else {
-            None
-        };
-
         let mut values = self.lower_argument_values(args, span)?;
         values.insert(0, self.restore_value(receiver, span)?);
-        let callee = callee
-            .map(|value| self.restore_value(value, span))
-            .transpose()?;
         self.record_call_arguments(values.len(), span)?;
 
-        if let Some(callee) = callee {
-            return self.emit_value(
-                Operation::CallValue {
-                    callee,
-                    arguments: values,
-                },
-                result,
-                span,
-            );
-        }
         if let Some(intrinsic) =
             crate::intrinsic_catalog::resolve(&target.name, Some(&target.receiver_ty))
         {
@@ -120,22 +77,45 @@ impl LoweringContext {
                     span,
                 )?);
             }
-            return self.emit_value(
+            let is_empty = fpas_sema::native_operation_by_implementation(&target.name)
+                .is_some_and(|entry| entry.lowering == fpas_sema::NativeLowering::IsEmpty);
+            let value = self.emit_value(
                 Operation::Intrinsic {
                     intrinsic: IntrinsicId::new(u32::from(u16::from(intrinsic))),
                     arguments: values,
                 },
-                result,
+                if is_empty {
+                    super::super::types::INTEGER
+                } else {
+                    result
+                },
                 span,
-            );
+            )?;
+            return if is_empty {
+                self.lower_native_is_empty(value, span)
+            } else {
+                Ok(value)
+            };
         }
-        let callable = named.ok_or_else(|| unsupported(span, "fluent call target"))?;
-        self.emit_value(
-            Operation::CallDirect {
-                function: callable.function,
-                arguments: values,
-            },
-            result,
+        Err(unsupported(span, "native catalog intrinsic"))
+    }
+
+    /// Completes IsEmpty by comparing the reused length result with zero.
+    pub(in crate::lowering) fn lower_native_is_empty(
+        &mut self,
+        length: ValueId,
+        span: fpas_lexer::Span,
+    ) -> Result<ValueId, CompileError> {
+        let zero = self.emit_value(
+            Operation::Const(Constant::Integer(0)),
+            super::super::types::INTEGER,
+            span,
+        )?;
+        self.emit_binary(
+            fpas_ir::BinaryOperation::Equal,
+            length,
+            zero,
+            super::super::types::BOOLEAN,
             span,
         )
     }

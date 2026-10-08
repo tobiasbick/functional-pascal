@@ -4,11 +4,11 @@ Basic blocking filesystem operations for hosted FPAS programs. This page is the 
 
 ```pascal
 program Example;
-uses Std.Fs, Std.Results, Std.Tasks;
+uses Std.Fs, Std.Tasks;
 
 begin
   const ReadJob: task := go ReadText('input.txt');
-  const Text: string := Std.Results.Unwrap(Std.Tasks.Wait(ReadJob));
+  const Text: string := Std.Tasks.Wait(ReadJob).Unwrap();
 end.
 ```
 
@@ -70,8 +70,8 @@ Files larger than 64 MiB return `Error(message)` instead of loading into memory.
 
 ```pascal
 const Content: result of string, string := ReadText('notes.txt');
-if Std.Results.IsOk(Content) then
-  WriteLn(Std.Results.Unwrap(Content));
+if Content.IsOk() then
+  WriteLn(Content.Unwrap());
 end if;
 ```
 
@@ -82,7 +82,7 @@ end if;
 Writes UTF-8 text to `Path`, creating or replacing the file.
 
 ```pascal
-if Std.Results.IsOk(WriteText('out.txt', 'hello')) then
+if Std.Fs.WriteText('out.txt', 'hello').IsOk() then
   WriteLn('written');
 end if;
 ```
@@ -150,7 +150,7 @@ WriteLn(IsDir('src'));
 Creates a single directory at `Path`. Parent directories must already exist. An existing entry at `Path`, including an existing directory, returns `Error(message)`.
 
 ```pascal
-if Std.Results.IsOk(CreateDir('build/output')) then
+if CreateDir('build/output').IsOk() then
   WriteLn('directory created');
 end if;
 ```
@@ -180,7 +180,7 @@ Expands `Pattern` against the host filesystem and returns every matching **file*
 case Glob('src/**/*.fpas') of
   when Ok(Paths):
     begin
-      WriteLn(Std.Arrays.Length(Paths));
+      WriteLn(Paths.Length());
     end;
   when Error(Message):
     begin

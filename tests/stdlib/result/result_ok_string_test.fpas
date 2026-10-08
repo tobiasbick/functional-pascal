@@ -1,8 +1,8 @@
 program T;
 
-uses Std.Console, Std.Results;
+uses Std.Console;
 
 begin
   const R: result of string, string := Ok('hello');
-  WriteLn(Unwrap(R));
+  WriteLn(R.Unwrap());
 end.

@@ -60,14 +60,14 @@ implementation details.
 
 | Concern | Source |
 | --- | --- |
-| Elements and invariants | [`Elements/`](../../../../lib/Std/Tui/Elements/) |
-| Geometry and measurement | [`Geometry/`](../../../../lib/Std/Tui/Geometry/), [`Layout/`](../../../../lib/Std/Tui/Layout/) |
-| Cell, style, and palette values | [`Cells/`](../../../../lib/Std/Tui/Cells/) |
-| Working surface, canvas, and paint | [`Rendering/`](../../../../lib/Std/Tui/Rendering/) |
+| Elements and invariants | [`Elements/`](../../../../lib/Std/Tui/Elements) |
+| Geometry and measurement | [`Geometry/`](../../../../lib/Std/Tui/Geometry), [`Layout/`](../../../../lib/Std/Tui/Layout) |
+| Cell, style, and palette values | [`Cells/`](../../../../lib/Std/Tui/Cells) |
+| Working surface, canvas, and paint | [`Rendering/`](../../../../lib/Std/Tui/Rendering) |
 | Text-area text geometry | [`Text/TextArea.fpas`](../../../../lib/Std/Tui/Text/TextArea.fpas) |
-| Application host and routing | [`Runtime/`](../../../../lib/Std/Tui/Runtime/) |
-| Chrome values | [`Chrome/`](../../../../lib/Std/Tui/Chrome/) |
-| FPAS regressions | [`tests/stdlib/tui/`](../../../../tests/stdlib/tui/) |
+| Application host and routing | [`Runtime/`](../../../../lib/Std/Tui/Runtime) |
+| Chrome values | [`Chrome/`](../../../../lib/Std/Tui/Chrome) |
+| FPAS regressions | [`tests/stdlib/tui/`](../../../../tests/stdlib/tui) |
 
 ## See also
 

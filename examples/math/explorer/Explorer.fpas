@@ -1,7 +1,7 @@
 // Shared terminal lifecycle and input handling for the fractal examples.
 unit Fractal.Explorer;
 
-uses Fractal.Camera, Std.Console, Std.Conv, Std.Math, Std.Options, Std.Str;
+uses Fractal.Camera, Std.Console, Std.Conv, Std.Math;
 
 function RenderWidth(): integer;
 begin
@@ -32,10 +32,10 @@ procedure WriteHudText(Text: string; Width: integer);
 begin
   if Width > 0 then
     begin
-      const TextLength: integer := Min(Std.Str.Length(Text), Width);
+      const TextLength: integer := Min(Text.Length(), Width);
       if TextLength > 0 then
         begin
-          WriteText(Substring(Text, 0, TextLength));
+          WriteText(Text.Slice(0, TextLength));
         end;
       end if;
     end;
@@ -60,12 +60,13 @@ begin
   WriteHudText(Title, Width);
   TextColorRGB(156, 204, 255);
   WriteHudText('  tasks | units | records | truecolor | mouse | focus | paste', Max(Width -
-                                                                                    Std.Str.Length(Title), 0));
+                                                                                    Title.Length(), 0));
   if ScreenHeight() >= 2 then
     begin
       GotoXY(1, 2);
       NormVideo();
-      WriteHudText(Format('size=%dx%d  center=(%f, %f)  zoom=%f  iter=%d  palette=%s', Width, Height, S.CenterX, S.CenterY, S.Zoom, S.MaxIter, PaletteLabel(S.Palette)), Width);
+      WriteHudText('size=%dx%d  center=(%f, %f)  zoom=%f  iter=%d  palette=%s'
+                     .Format(Width, Height, S.CenterX, S.CenterY, S.Zoom, S.MaxIter, PaletteLabel(S.Palette)), Width);
     end;
   end if;
 

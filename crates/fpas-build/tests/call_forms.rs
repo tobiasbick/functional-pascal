@@ -148,3 +148,49 @@ end unit;",
     assert_eq!(run(warm), ["3 1"]);
     fs::remove_dir_all(&root).ok();
 }
+
+#[test]
+fn mutating_intrinsics_write_imported_arrays_and_forward_across_compiled_units() {
+    let root =
+        std::env::temp_dir().join(format!("fpas-mutating-intrinsics-{}", std::process::id()));
+    let main = root.join("src/main.fpas");
+    write(
+        &root.join("demo.fpasprj"),
+        r#"[project]
+name = "demo"
+kind = "program"
+main = "src/main.fpas"
+[sources]
+include = ["src/**/*.fpas"]
+"#,
+    );
+    write(
+        &root.join("src/state.fpas"),
+        r#"unit Demo.State;
+
+public type Holder = record public Items: array of integer; end record;
+public var Items: array of integer := [1];
+public var State: Holder := record Items := [2]; end;
+public procedure Append(var Target: array of integer; Value: integer);
+begin Target.Push(Value); end procedure;
+end unit;"#,
+    );
+    write(
+        &main,
+        r#"program Demo;
+uses Demo.State, Std.Console;
+begin
+  Demo.State.Items.Push(3);
+  Demo.State.State.Items.Push(4);
+  Append(var Demo.State.Items, 5);
+  Append(var State.Items, 6);
+  WriteLn(Demo.State.Items.Pop(), ' ', Demo.State.Items.Pop(), ' ', Demo.State.Items[0]);
+  WriteLn(State.Items.Pop(), ' ', Demo.State.State.Items.Pop(), ' ', State.Items[0]);
+end."#,
+    );
+    assert_eq!(run(build(&root, &main)), ["5 3 1", "6 4 2"]);
+    let warm = build(&root, &main);
+    assert_eq!(warm.counters().compiled, 0, "the unit sidecar is reused");
+    assert_eq!(run(warm), ["5 3 1", "6 4 2"]);
+    fs::remove_dir_all(&root).ok();
+}

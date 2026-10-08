@@ -3,9 +3,9 @@
 use super::*;
 
 #[test]
-fn standard_intrinsic_tasks_preserve_result_and_qualified_dispatch() {
+fn standard_type_operation_tasks_preserve_results() {
     assert_succeeds(
-        "program IntrinsicTasks; uses Std.Tasks, Std.Str, Std.Math; begin if Wait(go Std.Str.Length('abc')) <> 3 then panic('qualified result'); end if; if Wait(go Abs(-7)) <> 7 then panic('short result'); end if; if Wait(go Std.Str.Format('%d:%s', 4, 'x')) <> '4:x' then panic('variadic result'); end if; end.",
+        "program IntrinsicTasks; uses Std.Tasks, Std.Math; begin if Wait(go 'abc'.Length()) <> 3 then panic('type operation result'); end if; if Wait(go Abs(-7)) <> 7 then panic('short result'); end if; if Wait(go '%d:%s'.Format(4, 'x')) <> '4:x' then panic('variadic result'); end if; end.",
     );
 }
 

@@ -1,6 +1,6 @@
 program T;
 
-uses Std.Console, Std.Arrays, Std.Options;
+uses Std.Console;
 
 function IsGreaterThanTen(X: integer): boolean;
 begin
@@ -9,6 +9,6 @@ end function;
 
 begin
   const A: array of integer := [1, 2, 3];
-  const R: option of integer := Find(A, IsGreaterThanTen);
-  WriteLn(IsNone(R));
+  const R: option of integer := A.Find(IsGreaterThanTen);
+  WriteLn(R.IsNone());
 end.

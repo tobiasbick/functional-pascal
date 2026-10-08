@@ -1,13 +1,13 @@
 //! `Std.Options` intrinsic discriminants.
 //!
-//! **Documentation:** `docs/pascal/std/result/option.md` (from the repository root).
+//! **Documentation:** `docs/pascal/language/types/option-operations.md` (from the repository root).
 
 use num_enum::TryFromPrimitive;
 
 documented_intrinsic_enum! {
 /// Intrinsics for `Std.Options.*`.
 ///
-/// **Documentation:** `docs/pascal/std/result/option.md`
+/// **Documentation:** `docs/pascal/language/types/option-operations.md`
 #[derive(Debug, Clone, Copy, PartialEq, Eq, TryFromPrimitive)]
 #[repr(u16)]
 pub enum OptionIntrinsic {
@@ -17,15 +17,15 @@ pub enum OptionIntrinsic {
     IsNone = 97,
     /// `Std.Options.Map(O, F)` — `Some(v)` → `Some(F(v))`, `None` passthrough.
     ///
-    /// **Documentation:** `docs/pascal/std/result/option.md`
+    /// **Documentation:** `docs/pascal/language/types/option-operations.md`
     Map = 133,
     /// `Std.Options.AndThen(O, F)` — `Some(v)` → `F(v)`, `None` passthrough.
     ///
-    /// **Documentation:** `docs/pascal/std/result/option.md`
+    /// **Documentation:** `docs/pascal/language/types/option-operations.md`
     AndThen = 134,
     /// `Std.Options.OrElse(O, F)` — `Some(v)` passthrough, `None` → `F()`.
     ///
-    /// **Documentation:** `docs/pascal/std/result/option.md`
+    /// **Documentation:** `docs/pascal/language/types/option-operations.md`
     OrElse = 135,
 }
 }

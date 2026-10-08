@@ -1,5 +1,6 @@
 mod fluent;
 mod methods;
+mod native;
 
 pub(in crate::check) use fluent::FluentCall;
 pub(in crate::check) use methods::MethodCallSite;
@@ -34,7 +35,26 @@ impl Checker {
         span: Span,
         allow_procedure_result: bool,
     ) -> CallResolution {
+        if let Some(result) =
+            self.try_check_native_factory(Self::expr_lookup_key(call_expr), designator, args, span)
+        {
+            return CallResolution::MethodResult(result);
+        }
         let name = Self::resolve_designator_name(designator);
+        if name
+            .get(..4)
+            .is_some_and(|prefix| prefix.eq_ignore_ascii_case("Std."))
+            && let Some(hint) = crate::std_registry::native_migration_hint(&name)
+        {
+            self.error_with_code(
+                SEMA_UNKNOWN_NAME,
+                format!("Removed free type operation `{name}`"),
+                hint,
+                span,
+            );
+            self.check_args_only(args);
+            return CallResolution::Failed;
+        }
         self.ensure_fq_std_unit_loaded(&name);
 
         if let Some(symbol) = self.scopes.lookup(&name) {

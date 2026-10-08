@@ -1,8 +1,8 @@
 unit Std.Tui.Runtime.Routing.Button;
 
 uses
-  Std.Arrays, Std.Console, Std.Str, Std.Tui.Chrome.Button, Std.Tui.Elements.Element,
-  Std.Tui.Ids.ControlId, Std.Tui.Runtime.Msg;
+  Std.Console, Std.Tui.Chrome.Button, Std.Tui.Elements.Element, Std.Tui.Ids.ControlId,
+  Std.Tui.Runtime.Msg;
 
 function TuiButtonFind(Node: TuiElement; RequireDefault: boolean; Mnemonic: string): option of TuiButtonSpec;
 begin
@@ -10,7 +10,7 @@ begin
     when TuiElement.Button(Button):
       begin
         if Button.Enabled and
-           ((RequireDefault and Button.Default) or ((Mnemonic <> '') and (Std.Str.ToLower(Button.Mnemonic) = Std.Str.ToLower(Mnemonic)))) then
+           ((RequireDefault and Button.Default) or ((Mnemonic <> '') and (Button.Mnemonic.ToLower() = Mnemonic.ToLower()))) then
           begin
             return Some(Button);
           end;
@@ -21,7 +21,7 @@ begin
     when TuiElement.Desktop(Focused, Children):
       begin
         var ModalIndex: integer := -1;
-        for Index: integer := 0 to Std.Arrays.Length(Children) - 1 do
+        for Index: integer := 0 to Children.Length() - 1 do
           begin
             case Children[Index] of
               when TuiElement.Overlay(Title, OverlayChildren):
@@ -41,7 +41,7 @@ begin
           end;
         end if;
 
-        for Index: integer := 0 to Std.Arrays.Length(Children) - 1 do
+        for Index: integer := 0 to Children.Length() - 1 do
           begin
             case TuiButtonFind(Children[Index], RequireDefault, Mnemonic) of
               when Some(Button):
@@ -59,7 +59,7 @@ begin
       end;
     when TuiElement.Scroll(Id, Offset, ChangeAction, Children):
       begin
-        for Index: integer := 0 to Std.Arrays.Length(Children) - 1 do
+        for Index: integer := 0 to Children.Length() - 1 do
           begin
             case TuiButtonFind(Children[Index], RequireDefault, Mnemonic) of
               when Some(Button):
@@ -77,7 +77,7 @@ begin
       end;
     when TuiElement.Row(Children, Spacing):
       begin
-        for Index: integer := 0 to Std.Arrays.Length(Children) - 1 do
+        for Index: integer := 0 to Children.Length() - 1 do
           begin
             case TuiButtonFind(Children[Index], RequireDefault, Mnemonic) of
               when Some(Button):
@@ -95,7 +95,7 @@ begin
       end;
     when TuiElement.Column(Children, Spacing):
       begin
-        for Index: integer := 0 to Std.Arrays.Length(Children) - 1 do
+        for Index: integer := 0 to Children.Length() - 1 do
           begin
             case TuiButtonFind(Children[Index], RequireDefault, Mnemonic) of
               when Some(Button):
@@ -113,7 +113,7 @@ begin
       end;
     when TuiElement.Layout(Settings, Children):
       begin
-        for Index: integer := 0 to Std.Arrays.Length(Children) - 1 do
+        for Index: integer := 0 to Children.Length() - 1 do
           begin
             case TuiButtonFind(Children[Index], RequireDefault, Mnemonic) of
               when Some(Button):
@@ -131,7 +131,7 @@ begin
       end;
     when TuiElement.Panel(Title, Children):
       begin
-        for Index: integer := 0 to Std.Arrays.Length(Children) - 1 do
+        for Index: integer := 0 to Children.Length() - 1 do
           begin
             case TuiButtonFind(Children[Index], RequireDefault, Mnemonic) of
               when Some(Button):
@@ -149,7 +149,7 @@ begin
       end;
     when TuiElement.Overlay(Title, Children):
       begin
-        for Index: integer := 0 to Std.Arrays.Length(Children) - 1 do
+        for Index: integer := 0 to Children.Length() - 1 do
           begin
             case TuiButtonFind(Children[Index], RequireDefault, Mnemonic) of
               when Some(Button):

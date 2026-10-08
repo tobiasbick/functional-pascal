@@ -2,7 +2,7 @@
 
 program LiteralsAliasStringIndex;
 
-uses Std.Console, Std.Conv, Std.Str;
+uses Std.Console, Std.Conv;
 
 type Score = integer;
 
@@ -12,7 +12,7 @@ const BigScore: integer := 1000;
 begin
   const Name: string := 'FPAS';
   const First: string := Name[0];
-  const Last: string := Name[Length(Name) - 1];
+  const Last: string := Name[Name.Length() - 1];
   const Total: Score := BigScore + HexMask;
   WriteLn('total: ', IntToStr(Total));
   WriteLn('first: ', First);

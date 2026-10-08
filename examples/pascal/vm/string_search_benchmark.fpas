@@ -1,26 +1,26 @@
 // Measures short searches on long strings without including input construction.
 program VmStringSearchBenchmark;
 
-uses Std.Args, Std.Console, Std.Conv, Std.Str, Std.Time;
+uses Std.Args, Std.Console, Std.Conv, Std.Time;
 
 function RunSearch(Text: string; Iterations: integer): integer;
 begin
   var Matches: integer := 0;
   for Index: integer := 1 to Iterations do
     begin
-      if Std.Str.StartsWith(Text, 'é') then
+      if Text.StartsWith('é') then
         begin
           Matches := Matches + 1;
         end;
       end if;
 
-      if Std.Str.EndsWith(Text, '😀') then
+      if Text.EndsWith('😀') then
         begin
           Matches := Matches + 1;
         end;
       end if;
 
-      if Std.Str.Contains(Text, 'é') then
+      if Text.Contains('é') then
         begin
           Matches := Matches + 1;
         end;
@@ -54,7 +54,7 @@ begin
       end if;
     end;
   end if;
-  const Text: string := ('é' + Std.Str.RepeatStr('x', 32768)) + '😀';
+  const Text: string := ('é' + 'x'.RepeatStr(32768)) + '😀';
   if RunSearch(Text, 1000) <> 3000 then
     begin
       panic('warmup search mismatch');

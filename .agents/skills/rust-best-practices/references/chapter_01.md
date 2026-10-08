@@ -78,7 +78,7 @@ let new_num = increment(num); // `num` still usable after this point
 * The struct **represents a "plain data object"**, without resourcing to ownership (no heap allocations. Example: `Vec` and `Strings`).
 * ❗**The type does not also implement `Iterator`.** Even if every field is `Copy`, never put `Copy` and `Iterator` on the same type (see [§1.5](#15-iterator-iter-vs-for)).
 
-❗**Rust Arrays are stack allocated.** Which means they can be copied if their underlying type is `Copy`, but this will be allocated in the program stack which can easily become a stack overflow. More on [Chapter 3 - Stack vs Heap](./chapter_03.md#33-stack-vs-heap-be-size-smart)
+❗**Rust Arrays are stack allocated.** Which means they can be copied if their underlying type is `Copy`, but this will be allocated in the program stack which can easily become a stack overflow. More on [Chapter 3 - Stack vs Heap](chapter_03.md#33-stack-vs-heap-be-size-smart)
 
 For reference, each primitive type size in bytes:
 
@@ -492,7 +492,7 @@ When deeper justification is needed, prefer to:
 * **Link to a Design Doc or an ADR**, business logic lives well in design docs while performance tradeoffs live well in ADRs.
 * Move runtime example and usage docs into Rust Docs, `/// doc comment`, where they can be tested and kept up-to-date by tools like `cargo doc`.
 
-> Doc-comments and Doc-testing, `///` and `//!` in [Chapter 8 - Comments vs Documentation](./chapter_08.md)
+> Doc-comments and Doc-testing, `///` and `//!` in [Chapter 8 - Comments vs Documentation](chapter_08.md)
 
 ## 1.7 Use Declarations - "imports"
 
@@ -557,7 +557,7 @@ group_imports = "StdExternalCrate"
 
 ## 1.8 When to Extract a Function (and When Not To)
 
-This chapter ([§1.6](#-breaking-up-long-functions-over-commenting-them)) and [Chapter 8](./chapter_08.md#85-replace-comments-with-code) recommend splitting long functions and replacing narrative comments with named helpers. That advice is about **naming and clarity** -- it is *not* a license to hunt down every repeated line. Extraction has a cost: every helper adds indirection, and a **wrong abstraction is much harder to remove than a little duplication**.
+This chapter ([§1.6](#-breaking-up-long-functions-over-commenting-them)) and [Chapter 8](chapter_08.md#85-replace-comments-with-code) recommend splitting long functions and replacing narrative comments with named helpers. That advice is about **naming and clarity** -- it is *not* a license to hunt down every repeated line. Extraction has a cost: every helper adds indirection, and a **wrong abstraction is much harder to remove than a little duplication**.
 
 > "Duplication is far cheaper than the wrong abstraction." -- [Sandi Metz, The Wrong Abstraction](https://sandimetz.com/blog/2016/1/20/the-wrong-abstraction)
 
@@ -629,7 +629,7 @@ If you find yourself maintaining an abstraction like `write_entry`, [Sandi Metz'
 ### ❌ Don't extract when:
 * It is **1-2 lines used in fewer than 3 places** -- the helper is pure indirection.
 * The call sites are only *almost* identical, and unifying them requires **flag parameters** or extra branches.
-* The only motivation is **line count**. A single-caller helper pays off when its *name* clarifies intent ([§1.6](#-breaking-up-long-functions-over-commenting-them), [§8.5](./chapter_08.md#85-replace-comments-with-code)) -- not when it merely relocates code.
+* The only motivation is **line count**. A single-caller helper pays off when its *name* clarifies intent ([§1.6](#-breaking-up-long-functions-over-commenting-them), [§8.5](chapter_08.md#85-replace-comments-with-code)) -- not when it merely relocates code.
 * You are **guessing** at a future abstraction. Wait for the third usage to reveal its real shape.
 
 ### 🧫 Test code: readability beats DRY
@@ -641,7 +641,7 @@ In tests, be **even more tolerant of duplication**. The Google Testing Blog call
 * **Shared test helpers couple unrelated tests.** Change one behavior and dozens of tests fail at once -- for the helper's sake, not the behavior's.
 
 Where to draw the line:
-* ✅ Share **setup and fixtures** -- a shared setup function or `rstest` cases, as [Chapter 5](./chapter_05.md#51-tests-as-living-documentation) recommends. Constructing a test server twice is boilerplate, not knowledge.
+* ✅ Share **setup and fixtures** -- a shared setup function or `rstest` cases, as [Chapter 5](chapter_05.md#51-tests-as-living-documentation) recommends. Constructing a test server twice is boilerplate, not knowledge.
 * ❌ Keep each test's **action and assertion inline**, even when they look repetitive across tests.
 
 > 🚨 When in doubt, **prefer duplication**. A duplicated line is trivially fixed later; a wrong abstraction accretes parameters and conditionals, because each maintainer keeps patching it instead of undoing it.

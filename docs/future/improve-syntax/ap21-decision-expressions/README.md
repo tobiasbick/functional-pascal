@@ -39,8 +39,8 @@ end case;
 
 Before AP21.1, specify branch-type compatibility, including numeric widening
 and expected-type propagation. Also specify how an expression `if` is
-distinguished from a statement `if` at the start of a statement. These details
-were already required by AP21.1; the agreed forms above do not settle them.
+distinguished from a statement `if` at the start of a statement. AP21.1 requires
+these decisions; the agreed forms above do not settle them.
 
 ## Dependencies
 

@@ -1,7 +1,7 @@
 // Responsive TUI element construction for the Local Chat application.
 unit LocalChat.View;
 
-uses LocalChat.Model, Std.Options, Std.Tui;
+uses LocalChat.Model, Std.Tui;
 
 // Identifier of the prompt input control.
 const PromptControl: integer := 1;

@@ -252,8 +252,8 @@ Call arguments still use commas; commas inside types such as
 |---|---|---|---|
 | FP3001 | Unknown type | `const N: Missing := 1;` | `const N: integer := 1;` |
 | FP3002 | Duplicate declaration | Two `const N: integer := 1;` in one scope | Keep one declaration or give them different names. |
-| FP3003 | Unknown name | `Missing()` without a declaration | Declare `procedure Missing(); begin end procedure;`. |
-| FP3004 | Ambiguous imported name | `Length(Value)` with conflicting imported Length routines | `Std.Str.Length(Value)` for a string. |
+| FP3003 | Unknown name or unlisted dot operation | `Missing()` or `Text.Substring(0, 1)` | Declare the routine or use `Text.Slice(0, 1)`. |
+| FP3004 | Ambiguous imported name | `Send(Value)` with conflicting imported Send routines | `MyApp.Net.Send(Value)` for the intended unit. |
 | FP3005 | Immutable assignment | `const N: integer := 1;` followed by `N := 2` | Declare `var N: integer := 1;`. |
 | FP3006 | Type mismatch | `const N: integer := 'hello';` | `const N: integer := 1;` |
 | FP3007 | Argument count | `Add(1)` for a two-parameter Add | `Add(1, 2)` |

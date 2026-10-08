@@ -1,6 +1,6 @@
 program TuiBackgroundResponsivenessTest;
 
-uses Std.Results, Std.Tasks, Std.Test, Std.Time, Std.Tui;
+uses Std.Tasks, Std.Test, Std.Time, Std.Tui;
 
 type Model = record
   Generation: integer;
@@ -74,7 +74,7 @@ begin
   // A timeout releases the gate even on the old blocking implementation.
   const Paint: result of integer, string := ReceiveWithTimeout(Painted, 3000);
   discard Send(Gate, true);
-  return IsOk(Paint);
+  return Paint.IsOk();
 end function;
 
 begin
@@ -89,7 +89,7 @@ begin
     Started := Started;
     Painted := Painted;
   end, Inbox, Update, UpdateMessage, View, 1, 0);
-  AssertEquals(0, Unwrap(ReceiveWithTimeout(Started, 5000)));
+  AssertEquals(0, ReceiveWithTimeout(Started, 5000).Unwrap());
   const Observer: task := go ReleaseAfterPaint(Painted, Gate);
   for Index: integer := 1 to 3 do
     begin
@@ -102,15 +102,15 @@ begin
   AssertTrue(Wait(Observer));
   var Replacement: result of integer, string := ReceiveWithTimeout(Started, 0);
   const Deadline: integer := MonotonicMillis() + 5000;
-  while IsError(Replacement) and (MonotonicMillis() < Deadline) do
+  while Replacement.IsError() and (MonotonicMillis() < Deadline) do
     begin
       State := App.RunBackgroundIterations(State, Inbox, Update, UpdateMessage, View, 1, 0);
       Replacement := ReceiveWithTimeout(Started, 1);
     end;
   end while;
 
-  AssertEquals(3, Unwrap(Replacement));
-  AssertTrue(IsError(ReceiveWithTimeout(Started, 0)));
+  AssertEquals(3, Replacement.Unwrap());
+  AssertTrue(ReceiveWithTimeout(Started, 0).IsError());
   App.CloseWithBackground(Inbox);
   discard CloseChannel(Gate);
   discard CloseChannel(Started);

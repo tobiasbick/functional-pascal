@@ -1,7 +1,6 @@
 unit Std.Tui.Chrome.MenuGeometry;
 
-uses
-  Std.Arrays, Std.Console, Std.Tui.Chrome.MenuNode, Std.Tui.Chrome.MenuQuery, Std.Tui.Geometry.Rect;
+uses Std.Console, Std.Tui.Chrome.MenuNode, Std.Tui.Chrome.MenuQuery, Std.Tui.Geometry.Rect;
 
 // Bounds of one open popup and the submenu whose children it displays.
 public type TuiMenuPopup = record
@@ -14,7 +13,7 @@ end record;
 function TuiMenuRootItemX(Nodes: array of TuiMenuNode; BarBounds: TuiRect; Target: TuiMenuNodeId): integer;
 begin
   var X: integer := BarBounds.X;
-  for Index: integer := 0 to Std.Arrays.Length(Nodes) - 1 do
+  for Index: integer := 0 to Nodes.Length() - 1 do
     begin
       case TuiMenuNodeParent(Nodes[Index]) of
         when Some(Parent):
@@ -40,7 +39,7 @@ end function;
 function TuiMenuChildRow(Nodes: array of TuiMenuNode; Parent: TuiMenuNodeId; Target: TuiMenuNodeId): integer;
 begin
   var Row: integer := 0;
-  for Index: integer := 0 to Std.Arrays.Length(Nodes) - 1 do
+  for Index: integer := 0 to Nodes.Length() - 1 do
     begin
       if TuiMenuHasParent(Nodes[Index], Some(Parent)) then
         begin
@@ -63,7 +62,7 @@ function TuiMenuPopupSize(Nodes: array of TuiMenuNode; Parent: TuiMenuNodeId): T
 begin
   var Width: integer := 4;
   var Height: integer := 2;
-  for Index: integer := 0 to Std.Arrays.Length(Nodes) - 1 do
+  for Index: integer := 0 to Nodes.Length() - 1 do
     begin
       if TuiMenuHasParent(Nodes[Index], Some(Parent)) then
         begin
@@ -126,11 +125,11 @@ begin
             end case;
           end;
         end if;
-        var Remaining: integer := Std.Arrays.Length(Nodes) + 1;
+        var Remaining: integer := Nodes.Length() + 1;
         while Remaining > 0 do
           begin
             Remaining := Remaining - 1;
-            Std.Arrays.Push(Reversed, Current);
+            Reversed.Push(Current);
             CurrentIndex := TuiMenuFind(Nodes, Current);
             case TuiMenuNodeParent(Nodes[CurrentIndex]) of
               when Some(Parent):
@@ -149,10 +148,10 @@ begin
       begin
       end;
   end case;
-  var Index: integer := Std.Arrays.Length(Reversed) - 1;
+  var Index: integer := Reversed.Length() - 1;
   while Index >= 0 do
     begin
-      Std.Arrays.Push(Opened, Reversed[Index]);
+      Opened.Push(Reversed[Index]);
       Index := Index - 1;
     end;
   end while;
@@ -188,7 +187,7 @@ begin
   end if;
   const Parents: array of TuiMenuNodeId := TuiMenuOpenParents(Nodes, State);
   var Popups: array of TuiMenuPopup := [];
-  for Index: integer := 0 to Std.Arrays.Length(Parents) - 1 do
+  for Index: integer := 0 to Parents.Length() - 1 do
     begin
       const Size: TuiRect := TuiMenuPopupSize(Nodes, Parents[Index]);
       var X: integer := TuiMenuRootItemX(Nodes, BarBounds, Parents[0]);
@@ -233,7 +232,7 @@ begin
         end;
       end if;
 
-      Std.Arrays.Push(Popups, record
+      Popups.Push(record
         Parent := Parents[Index];
         Bounds := TuiRect.Create(X, Y, Size.Width, Size.Height);
       end);

@@ -1,0 +1,106 @@
+program NativeNamedOrderTest;
+
+uses Std.Test;
+
+var Trace: string := '';
+
+function Text(): string;
+begin
+  Trace := Trace + 'R';
+  return 'é😀ab';
+end function;
+
+function Number(Mark: string; Value: integer): integer;
+begin
+  Trace := Trace + Mark;
+  return Value;
+end function;
+
+function Word(): string;
+begin
+  Trace := Trace + 'V';
+  return 'hi';
+end function;
+
+function Sum(Acc: integer; Value: integer): integer;
+begin
+  return Acc + Value;
+end function;
+
+function Reducer(): function(Acc: integer; Value: integer): integer;
+begin
+  Trace := Trace + 'F';
+  return Sum;
+end function;
+
+function StopNumber(): result of integer, string;
+begin
+  Trace := Trace + 'L';
+  return Error('stopped');
+end function;
+
+function SliceAfterFailure(): result of string, string;
+begin
+  return Ok(Text().Slice(Len := try StopNumber(), Start := Number('S', 1)));
+end function;
+
+function EmptyString(): string;
+begin
+  Trace := Trace + 'E';
+  return '';
+end function;
+
+function EmptyArray(): array of integer;
+begin
+  Trace := Trace + 'A';
+  return [];
+end function;
+
+function EmptyDictionary(): dict of string to integer;
+begin
+  Trace := Trace + 'D';
+  return [:];
+end function;
+
+begin
+  const Part: string := Text().Slice(Len := Number('L', 2), Start := Number('S', 1));
+  AssertEquals('😀a', Part);
+  AssertEquals('RLS', Trace);
+  Trace := '';
+  const LowerCase: string := Text().sLiCe(lEn := Number('L', 1), sTaRt := Number('S', 0));
+  AssertEquals('é', LowerCase);
+  AssertEquals('RLS', Trace);
+  Trace := '';
+  const Folded: integer := [1, 2, 3].Reduce(F := Reducer(), Init := Number('I', 0));
+  AssertEquals(6, Folded);
+  AssertEquals('FI', Trace);
+  Trace := '';
+  const Failed: result of string, string := SliceAfterFailure();
+  AssertTrue(Failed.IsError());
+  AssertEquals('RL', Trace);
+  Trace := '';
+  const Copies: array of string := array.Fill(Count := Number('C', 2), Value := Word());
+  AssertEquals('hi|hi', Copies.Join(Delim := '|'));
+  AssertEquals('CV', Trace);
+  Trace := '';
+  const Letter: string := string.Chr(N := Number('N', 128512));
+  AssertEquals('😀', Letter);
+  AssertEquals('N', Trace);
+  const EmptyCopies: array of string := array.Fill(Value := 'x', Count := 0);
+  AssertTrue(EmptyCopies.IsEmpty());
+  Trace := '';
+  AssertTrue(EmptyString().IsEmpty());
+  AssertTrue(EmptyArray().IsEmpty());
+  AssertTrue(EmptyDictionary().IsEmpty());
+  AssertEquals('EAD', Trace);
+  AssertTrue(not '😀'.IsEmpty());
+  AssertTrue(not [1].IsEmpty());
+  AssertTrue(not ['a': 1].IsEmpty());
+  var Items: array of integer := [1];
+  const Original: array of integer := Items;
+  Items.Push(Value := 3);
+  AssertEquals(3, Items.Pop());
+  AssertEquals(1, Items.Length());
+  AssertEquals(1, Original.Length());
+  AssertEquals('x: 3', '%s: %d'.Format('x', 3));
+end.

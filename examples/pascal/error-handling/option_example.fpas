@@ -1,10 +1,10 @@
 program OptionExample;
 
-uses Std.Console, Std.Conv, Std.Arrays, Std.Options;
+uses Std.Console, Std.Conv;
 
 function FindFirst(Items: array of integer; Min: integer): option of integer;
 begin
-  for I: integer := 0 to Length(Items) - 1 do
+  for I: integer := 0 to Items.Length() - 1 do
     begin
       if Items[I] >= Min then
         begin
@@ -26,11 +26,11 @@ end function;
 begin
   const Data: array of integer := [3, 7, 15, 42, 8];
   const Found: option of integer := FindFirst(Data, 10);
-  WriteLn('IsSome: ', IsSome(Found));
-  WriteLn('Value: ', Unwrap(Found));
+  WriteLn('IsSome: ', Found.IsSome());
+  WriteLn('Value: ', Found.Unwrap());
   const Missing: option of integer := FindFirst(Data, 100);
-  WriteLn('IsNone: ', IsNone(Missing));
-  WriteLn('UnwrapOr: ', UnwrapOr(Missing, 0));
+  WriteLn('IsNone: ', Missing.IsNone());
+  WriteLn('UnwrapOr: ', Missing.UnwrapOr(0));
   case FindFirst(Data, 40) of
     when Some(V):
       begin

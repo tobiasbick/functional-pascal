@@ -1,8 +1,6 @@
 // Covers writable var bindings, value-parameter copies, and shared capture cells.
 program BindingKeywordSwitchTest;
 
-uses Std.Arrays;
-
 type State = record
   Value: integer;
 end record;
@@ -14,9 +12,9 @@ begin
   var LocalValues: array of integer := Values;
   var LocalItem: State := Item;
   LocalValues[0] := 7;
-  Push(LocalValues, 9);
+  LocalValues.Push(9);
   LocalItem.Value := 5;
-  return (LocalValues[0] + Pop(LocalValues)) + LocalItem.Value;
+  return (LocalValues[0] + LocalValues.Pop()) + LocalItem.Value;
 end function;
 
 function Capture(Value: integer): function(): integer;

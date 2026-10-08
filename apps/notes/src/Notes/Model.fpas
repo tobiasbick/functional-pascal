@@ -1,6 +1,6 @@
 unit Notes.Model;
 
-uses Notes.Actions, Std.Arrays, Std.Console, Std.Conv, Std.Str, Std.Tui;
+uses Notes.Actions, Std.Console, Std.Conv, Std.Tui;
 
 // One persisted `.note` document and its source path.
 public type Note = record
@@ -91,20 +91,20 @@ begin
   var TitleCaret: integer := 0;
   var TagsText: string := '';
   var TagsCaret: integer := 0;
-  if Std.Arrays.Length(Loaded.Notes) > 0 then
+  if Loaded.Notes.Length() > 0 then
     begin
       Selected := 0;
       Focus := TitleControl;
       Pane := NotesPane.Editor;
-      TitleCaret := Std.Str.Length(Loaded.Notes[0].Title);
-      TagsText := Std.Str.Join(Loaded.Notes[0].Tags, ', ');
-      TagsCaret := Std.Str.Length(TagsText);
+      TitleCaret := Loaded.Notes[0].Title.Length();
+      TagsText := Loaded.Notes[0].Tags.Join(', ');
+      TagsCaret := TagsText.Length();
     end;
   end if;
 
-  if Std.Arrays.Length(Loaded.Issues) > 0 then
+  if Loaded.Issues.Length() > 0 then
     begin
-      Status := IntToStr(Std.Arrays.Length(Loaded.Issues)) + ' invalid note file(s)';
+      Status := IntToStr(Loaded.Issues.Length()) + ' invalid note file(s)';
     end;
   end if;
 
@@ -134,20 +134,20 @@ end function;
 // Formats a note's tags for the controlled metadata input.
 public function NoteTagsText(NoteValue: Note): string;
 begin
-  return Std.Str.Join(NoteValue.Tags, ', ');
+  return NoteValue.Tags.Join(', ');
 end function;
 
 // Parses, trims, and deduplicates comma-separated tags.
 public function NoteTagsFromText(Text: string): array of string;
 begin
   var Tags: array of string := [];
-  const Parts: array of string := Std.Str.Split(Text, ',');
-  for Index: integer := 0 to Std.Arrays.Length(Parts) - 1 do
+  const Parts: array of string := Text.Split(',');
+  for Index: integer := 0 to Parts.Length() - 1 do
     begin
-      const Tag: string := Std.Str.Trim(Parts[Index]);
-      if (Tag <> '') and (not Std.Arrays.Contains(Tags, Tag)) then
+      const Tag: string := Parts[Index].Trim();
+      if (Tag <> '') and (not Tags.Contains(Tag)) then
         begin
-          Std.Arrays.Push(Tags, Tag);
+          Tags.Push(Tag);
         end;
       end if;
     end;
@@ -159,7 +159,7 @@ end function;
 // Reports whether an active note matches a case-insensitive query.
 public function NoteMatches(NoteValue: Note; Search: string): boolean;
 begin
-  const Query: string := Std.Str.ToLower(Std.Str.Trim(Search));
+  const Query: string := Search.Trim().ToLower();
   if Query = '' then
     begin
       return not NoteValue.Archived;
@@ -172,19 +172,19 @@ begin
     end;
   end if;
 
-  return (Std.Str.Contains(Std.Str.ToLower(NoteValue.Title), Query) or Std.Str.Contains(Std.Str.ToLower(NoteValue.Body), Query)) or
-         Std.Str.Contains(Std.Str.ToLower(NoteTagsText(NoteValue)), Query);
+  return (NoteValue.Title.ToLower().Contains(Query) or NoteValue.Body.ToLower().Contains(Query)) or
+         NoteTagsText(NoteValue).ToLower().Contains(Query);
 end function;
 
 // Returns source-array indices for all visible filtered notes.
 public function NotesFilteredIndices(Notes: array of Note; Search: string): array of integer;
 begin
   var Indices: array of integer := [];
-  for Index: integer := 0 to Std.Arrays.Length(Notes) - 1 do
+  for Index: integer := 0 to Notes.Length() - 1 do
     begin
       if NoteMatches(Notes[Index], Search) then
         begin
-          Std.Arrays.Push(Indices, Index);
+          Indices.Push(Index);
         end;
       end if;
     end;
@@ -237,7 +237,7 @@ public function NotesListItems(Notes: array of Note; Search: string; MaximumWidt
 begin
   var Items: array of string := [];
   const Indices: array of integer := NotesFilteredIndices(Notes, Search);
-  for Index: integer := 0 to Std.Arrays.Length(Indices) - 1 do
+  for Index: integer := 0 to Indices.Length() - 1 do
     begin
       const NoteValue: Note := Notes[Indices[Index]];
       var Prefix: string := '  ';
@@ -253,7 +253,7 @@ begin
         end;
       end if;
 
-      Std.Arrays.Push(Items, ClipListText((Prefix + NoteValue.Title) + Tags, MaximumWidth));
+      Items.Push(ClipListText((Prefix + NoteValue.Title) + Tags, MaximumWidth));
     end;
   end for;
 

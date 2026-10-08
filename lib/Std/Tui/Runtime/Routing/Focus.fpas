@@ -1,8 +1,7 @@
 unit Std.Tui.Runtime.Routing.Focus;
 
 uses
-  Std.Arrays, Std.Tui.Chrome.StatusItem, Std.Tui.Elements.Element, Std.Tui.Ids.ControlId,
-  Std.Tui.Layout.Frame;
+  Std.Tui.Chrome.StatusItem, Std.Tui.Elements.Element, Std.Tui.Ids.ControlId, Std.Tui.Layout.Frame;
 
 function TuiRouteFrameMatchesNode(
   Frame: TuiArrangedFrame;
@@ -52,7 +51,7 @@ begin
       end;
   end case;
 
-  for ChildIndex: integer := 0 to Std.Arrays.Length(Descendants) - 1 do
+  for ChildIndex: integer := 0 to Descendants.Length() - 1 do
     begin
       Next := TuiRouteFrameMatchesNode(Frame, Descendants[ChildIndex], Next, Index);
     end;
@@ -124,9 +123,9 @@ begin
     when TuiElement.Scroll(Id, Offset, ChangeAction, Children):
       begin
         var Controls: array of TuiControlId := [Id];
-        for Index: integer := 0 to Std.Arrays.Length(Children) - 1 do
+        for Index: integer := 0 to Children.Length() - 1 do
           begin
-            Controls := Std.Arrays.Concat(Controls, TuiFocusableControls(Children[Index]));
+            Controls := Controls.Concat(TuiFocusableControls(Children[Index]));
           end;
         end for;
 
@@ -135,11 +134,11 @@ begin
     when TuiElement.MenuBar(Items):
       begin
         var Controls: array of TuiControlId := [];
-        for Index: integer := 0 to Std.Arrays.Length(Items) - 1 do
+        for Index: integer := 0 to Items.Length() - 1 do
           begin
             if Items[Index].Enabled then
               begin
-                Controls := Std.Arrays.Concat(Controls, [Items[Index].Id]);
+                Controls := Controls.Concat([Items[Index].Id]);
               end;
             end if;
           end;
@@ -150,14 +149,14 @@ begin
     when TuiElement.StatusLine(Items):
       begin
         var Controls: array of TuiControlId := [];
-        for Index: integer := 0 to Std.Arrays.Length(Items) - 1 do
+        for Index: integer := 0 to Items.Length() - 1 do
           begin
             case Items[Index] of
               when TuiStatusItem.Command(Id, Text, Action, Enabled):
                 begin
                   if Enabled then
                     begin
-                      Controls := Std.Arrays.Concat(Controls, [Id]);
+                      Controls := Controls.Concat([Id]);
                     end;
                   end if;
                 end;
@@ -193,7 +192,7 @@ begin
     when TuiElement.Desktop(Focused, Children):
       begin
         var LastOverlay: integer := -1;
-        for Index: integer := 0 to Std.Arrays.Length(Children) - 1 do
+        for Index: integer := 0 to Children.Length() - 1 do
           begin
             case Children[Index] of
               when TuiElement.Overlay(Title, OverlayChildren):
@@ -214,9 +213,9 @@ begin
         else
           begin
             var Controls: array of TuiControlId := [];
-            for Index: integer := 0 to Std.Arrays.Length(Children) - 1 do
+            for Index: integer := 0 to Children.Length() - 1 do
               begin
-                Controls := Std.Arrays.Concat(Controls, TuiFocusableControls(Children[Index]));
+                Controls := Controls.Concat(TuiFocusableControls(Children[Index]));
               end;
             end for;
 
@@ -230,9 +229,9 @@ begin
       end;
   end case;
   var Controls: array of TuiControlId := [];
-  for Index: integer := 0 to Std.Arrays.Length(Descendants) - 1 do
+  for Index: integer := 0 to Descendants.Length() - 1 do
     begin
-      Controls := Std.Arrays.Concat(Controls, TuiFocusableControls(Descendants[Index]));
+      Controls := Controls.Concat(TuiFocusableControls(Descendants[Index]));
     end;
   end for;
 
@@ -264,7 +263,7 @@ end function;
 // - `Id`: Identifier assigned to the created or selected value.
 public function TuiControlIndex(Controls: array of TuiControlId; Id: TuiControlId): integer;
 begin
-  for Index: integer := 0 to Std.Arrays.Length(Controls) - 1 do
+  for Index: integer := 0 to Controls.Length() - 1 do
     begin
       if Controls[Index].Value = Id.Value then
         begin

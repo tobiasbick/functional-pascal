@@ -1,6 +1,6 @@
 unit Std.Tui.Rendering.Surface.Row;
 
-uses Std.Arrays, Std.Tui.Cells.Cell, Std.Tui.Cells.StyleRole;
+uses Std.Tui.Cells.Cell, Std.Tui.Cells.StyleRole;
 
 // Updated cell and continuation arrays for one working-surface row.
 public type TuiSurfaceRow = record
@@ -23,8 +23,8 @@ begin
   var NextCells: array of TuiCell := Cells;
   var NextContinuations: array of boolean := Continuations;
   const Blank: TuiCell := TuiCell.Create(' ', TuiStyleRole.Normal);
-  const RightX: integer := Std.Arrays.Length(Cells);
-  for Offset: integer := 0 to Std.Arrays.Length(Values) - 1 do
+  const RightX: integer := Cells.Length();
+  for Offset: integer := 0 to Values.Length() - 1 do
     begin
       const X: integer := FirstX + Offset;
       if NextContinuations[X] then

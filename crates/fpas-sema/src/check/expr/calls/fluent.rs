@@ -1,15 +1,12 @@
-//! Receiver-based lookup for free routines and first-class callables.
+//! Fixed catalog lookup for built-in dot operations.
 //!
 //! **Documentation:** `docs/pascal/language/functions/fluent-calls.md`
 
 use super::super::super::Checker;
 use crate::check::FluentCallTarget;
 use crate::check::calls::CallTarget;
-use crate::scope::{Symbol, SymbolKind, canonical_symbol_name};
 use crate::types::Ty;
-use fpas_diagnostics::codes::{
-    SEMA_AMBIGUOUS_IMPORTED_NAME, SEMA_TYPE_MISMATCH, SEMA_UNKNOWN_NAME,
-};
+use fpas_diagnostics::codes::{SEMA_TYPE_MISMATCH, SEMA_UNKNOWN_NAME};
 use fpas_lexer::Span;
 use fpas_parser::{Designator, DesignatorPart, Expr};
 
@@ -191,7 +188,7 @@ impl Checker {
         result
     }
 
-    /// Selects and checks a receiver call using its first explicit parameter.
+    /// Checks a built-in dot operation selected only by static receiver and name.
     pub(in crate::check) fn check_fluent_call(&mut self, call: FluentCall<'_>) -> Ty {
         let FluentCall {
             call_key,
@@ -208,78 +205,31 @@ impl Checker {
             self.check_args_only(args);
             return Ty::Error;
         }
-        let Some((target_name, symbol)) = self.select_fluent_target(name, receiver_ty, span) else {
-            self.check_args_only(args);
-            return Ty::Error;
-        };
-        let receiver_param_is_var = match &symbol.ty {
-            Ty::Function(signature) => signature.params.first().is_some_and(|p| p.is_var()),
-            Ty::Procedure(signature) => signature.params.first().is_some_and(|p| p.is_var()),
-            _ => false,
-        };
-        if receiver_param_is_var {
+        let Some(operation) = crate::std_registry::native_operation(receiver_ty, name) else {
+            let hint = if receiver_ty == &Ty::String && name.eq_ignore_ascii_case("Substring") {
+                "Use `.Slice(Start, Len)` for a checked Unicode-scalar range."
+            } else {
+                "Use a declared record member or a built-in catalog operation. Call your own free functions ordinarily, for example `Name(Value, …)`."
+            };
             self.error_with_code(
-                fpas_diagnostics::codes::SEMA_VAR_ARGUMENT_MARKER,
-                format!("`{target_name}` takes its first argument as a `var` parameter, which a receiver call cannot mark"),
-                format!("Call it directly with an explicit marker, for example `{name}(var Value, …)`."),
+                SEMA_UNKNOWN_NAME,
+                format!("Type `{receiver_ty}` has no dot operation `{name}`"),
+                hint,
                 span,
             );
             self.check_args_only(args);
             return Ty::Error;
-        }
-        if symbol.kind == SymbolKind::BuiltinStd
-            && self.reject_named_arguments(
-                args,
-                &target_name,
-                "Receiver calls take positional arguments.",
-            )
-        {
-            self.check_args_only(args);
-            return Ty::Error;
-        }
-        let mut all_args = Vec::with_capacity(args.len() + 1);
-        all_args.push(receiver);
-        all_args.extend(args.iter());
-        self.prechecked_receivers
-            .insert(Self::expr_lookup_key(receiver), receiver_ty.clone());
-
-        let result = if symbol.kind == SymbolKind::BuiltinStd {
-            crate::std_registry::check_builtin_std_call_refs(self, &target_name, &all_args, span)
-        } else {
-            match &symbol.ty {
-                Ty::Function(signature) => {
-                    let inferred = self.check_fluent_function_call_args(
-                        &target_name,
-                        signature,
-                        &all_args,
-                        span,
-                    );
-                    Self::substitute_type_params(&signature.return_type, &inferred)
-                }
-                Ty::Procedure(signature) => {
-                    self.check_fluent_procedure_call_args(&target_name, signature, &all_args, span);
-                    Ty::Unit
-                }
-                _ => {
-                    self.error_with_code(
-                        SEMA_TYPE_MISMATCH,
-                        format!("`{target_name}` is not callable"),
-                        "Choose a function, procedure, or callable value with a first parameter.",
-                        span,
-                    );
-                    self.check_args_only(args);
-                    Ty::Error
-                }
-            }
         };
         self.prechecked_receivers
+            .insert(Self::expr_lookup_key(receiver), receiver_ty.clone());
+        let result = self.check_native_arguments(operation, Some(receiver), args, span);
+        self.prechecked_receivers
             .remove(&Self::expr_lookup_key(receiver));
-
         if result == Ty::Unit && !allow_procedure_result {
             self.error_with_code(
                 SEMA_TYPE_MISMATCH,
-                format!("`{target_name}` does not return a value"),
-                "Use this call as the final operation of a statement.",
+                format!("`{name}` does not return a value"),
+                "Use the operation as the final step of a statement.",
                 span,
             );
             return Ty::Error;
@@ -287,7 +237,7 @@ impl Checker {
         self.fluent_calls.insert(
             call_key,
             FluentCallTarget {
-                name: target_name,
+                name: operation.implementation.to_string(),
                 receiver_reads,
                 receiver_ty: receiver_ty.clone(),
                 result_ty: result.clone(),
@@ -296,111 +246,9 @@ impl Checker {
         );
         result
     }
-
-    fn select_fluent_target(
-        &mut self,
-        name: &str,
-        receiver_ty: &Ty,
-        span: Span,
-    ) -> Option<(String, Symbol)> {
-        let key = canonical_symbol_name(name);
-        if let Some((scope, symbol)) = self.scopes.lookup_with_scope(name)
-            && (scope > 0
-                || !self.std_short_alias_keys.contains(&key)
-                    && !self.source_short_alias_keys.contains(&key))
-        {
-            let symbol = symbol.clone();
-            if self.fluent_symbol_accepts(name, &symbol, receiver_ty) {
-                return Some((name.to_string(), symbol));
-            }
-            self.error_with_code(
-                    SEMA_TYPE_MISMATCH,
-                    format!("`{name}` cannot be called with receiver type `{receiver_ty}`"),
-                    "The nearest binding must be callable and accept the receiver as its first parameter.",
-                    span,
-                );
-            return None;
-        }
-
-        let mut matches = self
-            .imported_candidates
-            .get(&key)
-            .into_iter()
-            .flatten()
-            .filter_map(|qualified| {
-                let symbol = self.scopes.lookup(qualified)?.clone();
-                self.fluent_symbol_accepts(qualified, &symbol, receiver_ty)
-                    .then_some((qualified.clone(), symbol))
-            })
-            .collect::<Vec<_>>();
-        matches.sort_by(|left, right| {
-            left.0
-                .to_ascii_lowercase()
-                .cmp(&right.0.to_ascii_lowercase())
-        });
-        matches.dedup_by(|left, right| left.0.eq_ignore_ascii_case(&right.0));
-        match matches.len() {
-            1 => matches.pop(),
-            0 => {
-                self.error_with_code(
-                    SEMA_UNKNOWN_NAME,
-                    format!("No visible `{name}` accepts receiver type `{receiver_ty}`"),
-                    "Import a unit that exports a matching callable, or call a qualified routine explicitly.",
-                    span,
-                );
-                None
-            }
-            _ => {
-                self.error_with_code(
-                    SEMA_AMBIGUOUS_IMPORTED_NAME,
-                    format!("Ambiguous receiver call `.{name}(...)` for `{receiver_ty}`"),
-                    format!(
-                        "Matching imported callables: {}. Use a qualified ordinary call.",
-                        matches
-                            .iter()
-                            .map(|entry| entry.0.as_str())
-                            .collect::<Vec<_>>()
-                            .join(", ")
-                    ),
-                    span,
-                );
-                None
-            }
-        }
-    }
-
-    fn fluent_symbol_accepts(&self, name: &str, symbol: &Symbol, receiver_ty: &Ty) -> bool {
-        if symbol.kind == SymbolKind::BuiltinStd {
-            return crate::std_registry::builtin_accepts_receiver(name, receiver_ty)
-                .unwrap_or(false);
-        }
-        let first = match &symbol.ty {
-            Ty::Function(signature) => signature.params.first(),
-            Ty::Procedure(signature) => signature.params.first(),
-            _ => None,
-        };
-        first.is_some_and(|param| first_param_accepts(&param.ty, receiver_ty))
-    }
 }
 
-fn first_param_accepts(expected: &Ty, receiver: &Ty) -> bool {
-    match (expected, receiver) {
-        (Ty::GenericParam(_, constraint), actual) => {
-            constraint.is_none_or(|constraint| constraint.satisfied_by(actual))
-        }
-        (Ty::Array(left), Ty::Array(right))
-        | (Ty::Channel(left), Ty::Channel(right))
-        | (Ty::Option(left), Ty::Option(right))
-        | (Ty::Task(left), Ty::Task(right)) => first_param_accepts(left, right),
-        (Ty::Dict(left_key, left_value), Ty::Dict(right_key, right_value))
-        | (Ty::Result(left_key, left_value), Ty::Result(right_key, right_value)) => {
-            first_param_accepts(left_key, right_key) && first_param_accepts(left_value, right_value)
-        }
-        _ => expected.compatible_with(receiver),
-    }
-}
-
-/// One receiver call `Receiver.Name(Args)` resolved through a free routine.
+/// One built-in dot call `Receiver.Name(Args)` resolved through the fixed catalog.
 pub(in crate::check) struct FluentCall<'a> {
     /// Lookup key recording the resolved target.
     pub(in crate::check) call_key: usize,

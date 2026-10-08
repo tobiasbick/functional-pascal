@@ -20,16 +20,16 @@ pub type IntrinsicCallMap = HashMap<usize, String>;
 /// **Documentation:** `docs/pascal/language/functions/parameters.md`
 pub type NamedArgumentOrderMap = HashMap<usize, Vec<usize>>;
 
-/// Target selected for a free or first-class receiver call.
+/// Fixed native catalog target selected for a built-in dot call.
 ///
 /// **Documentation:** `docs/pascal/language/functions/fluent-calls.md`
 #[derive(Debug, Clone, PartialEq)]
 pub struct FluentCallTarget {
-    /// Qualified routine name, or the lexical callable binding name.
+    /// Private implementation identity of the selected native operation.
     pub name: String,
     /// Getter reads needed while evaluating a designator receiver.
     pub receiver_reads: Vec<PropertyReadInfo>,
-    /// Static receiver type used for intrinsic overload selection.
+    /// Static receiver type selecting the catalog operation.
     pub receiver_ty: Ty,
     /// Fully checked result type, including generic substitution.
     pub result_ty: Ty,
@@ -212,7 +212,7 @@ pub struct AnalysisMetadata {
     pub named_types: NamedTypeMap,
     /// Resolved record method calls keyed by expression or designator identity.
     pub method_calls: MethodCallMap,
-    /// Selected free and first-class receiver calls.
+    /// Selected fixed built-in dot operations.
     pub fluent_calls: FluentCallMap,
     /// Calls through callable record fields or properties.
     pub member_value_calls: MemberValueCallMap,
@@ -253,7 +253,7 @@ pub struct Checker {
     /// Parameter order of named calls keyed by the first written argument's identity.
     pub(crate) named_argument_orders: NamedArgumentOrderMap,
     pub(crate) method_calls: MethodCallMap,
-    /// Selected free and first-class receiver calls.
+    /// Selected fixed built-in dot operations.
     pub(crate) fluent_calls: FluentCallMap,
     /// Calls through callable record fields or properties.
     pub(crate) member_value_calls: MemberValueCallMap,

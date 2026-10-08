@@ -8,20 +8,7 @@ mod repetition;
 #[test]
 fn for_in_array_and_dictionary_execute() {
     assert_succeeds(
-        "\
-program RegisterForIn;
-uses Std.Console, Std.Conv, Std.Dictionaries;
-begin
-  var Sum: integer := 0;
-  for Value: integer in [1, 2, 3] do Sum := Sum + Value; end for;
-  const Values: dict of string to integer := ['a': 4, 'b': 5];
-  for Key: string in Values do
-  begin
-    WriteLn(IntToStr(Values[Key]));
-    Sum := Sum + Values[Key];
-  end; end for;
-  if Sum <> 15 then panic('for-in mismatch'); end if;
-end.",
+        "program RegisterForIn;\nuses Std.Console, Std.Conv;\nbegin\n  var Sum: integer := 0;\n  for Value: integer in [1, 2, 3] do Sum := Sum + Value; end for;\n  const Values: dict of string to integer := ['a': 4, 'b': 5];\n  for Key: string in Values do\n  begin\n    WriteLn(IntToStr(Values[Key]));\n    Sum := Sum + Values[Key];\n  end; end for;\n  if Sum <> 15 then panic('for-in mismatch'); end if;\nend.",
     );
 }
 

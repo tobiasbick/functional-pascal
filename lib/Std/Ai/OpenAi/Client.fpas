@@ -1,7 +1,7 @@
 // HTTP orchestration for OpenAI-compatible chat completions.
 unit Std.Ai.OpenAi.Client;
 
-uses Std.Ai.OpenAi.Json, Std.Ai.OpenAi.Types, Std.Arrays, Std.Conv, Std.Http, Std.Net.Utf8, Std.Str;
+uses Std.Ai.OpenAi.Json, Std.Ai.OpenAi.Types, Std.Conv, Std.Http, Std.Net.Utf8;
 
 // Appends the chat-completions path to a base API URL.
 //
@@ -9,7 +9,7 @@ uses Std.Ai.OpenAi.Json, Std.Ai.OpenAi.Types, Std.Arrays, Std.Conv, Std.Http, St
 // - `BaseUrl`: Base API URL with or without a trailing slash.
 function CompletionUrl(BaseUrl: string): string;
 begin
-  if Std.Str.EndsWith(BaseUrl, '/') then
+  if BaseUrl.EndsWith('/') then
     begin
       return BaseUrl + 'chat/completions';
     end;
@@ -38,7 +38,7 @@ begin
     end;
   end if;
 
-  if Std.Arrays.Length(Messages) = 0 then
+  if Messages.Length() = 0 then
     begin
       return Error('OpenAI-compatible chat requires at least one message');
     end;
@@ -52,7 +52,7 @@ begin
       begin
         if Value <> '' then
           begin
-            Std.Arrays.Push(Headers, Header.Create('Authorization', 'Bearer ' + Value));
+            Headers.Push(Header.Create('Authorization', 'Bearer ' + Value));
           end;
         end if;
       end;

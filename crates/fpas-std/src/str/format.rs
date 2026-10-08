@@ -1,6 +1,6 @@
 //! `Std.Str.Format` template expansion.
 //!
-//! **Documentation:** `docs/pascal/std/text/str/README.md`
+//! **Documentation:** `docs/pascal/language/types/string/README.md`
 
 use crate::error::{StdError, std_runtime_error};
 use fpas_bytecode::{SourceLocation, Value};
@@ -8,7 +8,7 @@ use fpas_diagnostics::codes::RUNTIME_FORMAT_MISMATCH;
 
 /// Applies printf-style format specifiers (`%d`, `%f`, `%s`, `%%`) to `args`.
 ///
-/// **Documentation:** `docs/pascal/std/text/str/README.md`
+/// **Documentation:** `docs/pascal/language/types/string/README.md`
 pub(super) fn apply_format(
     template: &str,
     args: &[Value],

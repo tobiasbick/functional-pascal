@@ -1,6 +1,6 @@
 unit Std.Tui.Runtime.Routing.ButtonCapture;
 
-uses Std.Arrays, Std.Tui.Chrome.Button, Std.Tui.Ids.ControlId;
+uses Std.Tui.Chrome.Button, Std.Tui.Ids.ControlId;
 
 // Host-owned pointer capture for one button press.
 public type TuiButtonPressState = enum
@@ -19,7 +19,7 @@ var TuiButtonPressStates: array of TuiButtonPressState := [];
 // Allocates idle button-capture state for one application.
 public procedure TuiButtonCaptureOpen();
 begin
-  TuiButtonPressStates := Std.Arrays.Concat(TuiButtonPressStates, [TuiButtonPressState.Idle]);
+  TuiButtonPressStates := TuiButtonPressStates.Concat([TuiButtonPressState.Idle]);
 end procedure;
 
 // Clears button-capture state for one application.

@@ -89,8 +89,8 @@ Starts `Command` with `Args`, waits for the process to exit, and returns `Ok(exi
 
 ```pascal
 const Status: result of integer, string := Run('fpas', ['--version']);
-if Std.Results.IsError(Status) then
-  WriteLn(Std.Results.UnwrapOr(Status, -1));
+if Status.IsError() then
+  WriteLn(Status.UnwrapOr(-1));
 end if;
 ```
 

@@ -1,10 +1,10 @@
 unit Std.Tui.Runtime.Routing.Key;
 
 uses
-  Std.Arrays, Std.Console, Std.Str, Std.Tui.Chrome.StatusItem, Std.Tui.Elements.Element,
-  Std.Tui.Geometry.Point, Std.Tui.Geometry.Size, Std.Tui.Ids.ControlId, Std.Tui.Layout.Frame,
-  Std.Tui.Layout.Measure, Std.Tui.Layout.MeasureSpec, Std.Tui.Runtime.Msg,
-  Std.Tui.Runtime.Routing.Button, Std.Tui.Runtime.Routing.Focus, Std.Tui.Runtime.Routing.Menu,
+  Std.Console, Std.Tui.Chrome.StatusItem, Std.Tui.Elements.Element, Std.Tui.Geometry.Point,
+  Std.Tui.Geometry.Size, Std.Tui.Ids.ControlId, Std.Tui.Layout.Frame, Std.Tui.Layout.Measure,
+  Std.Tui.Layout.MeasureSpec, Std.Tui.Runtime.Msg, Std.Tui.Runtime.Routing.Button,
+  Std.Tui.Runtime.Routing.Focus, Std.Tui.Runtime.Routing.Menu,
   Std.Tui.Runtime.Routing.FocusNavigation, Std.Tui.Runtime.Routing.Input,
   Std.Tui.Runtime.Routing.TextArea;
 
@@ -63,7 +63,7 @@ begin
       end;
   end case;
 
-  for ChildIndex: integer := 0 to Std.Arrays.Length(Descendants) - 1 do
+  for ChildIndex: integer := 0 to Descendants.Length() - 1 do
     begin
       Next := TuiRouteSubtreeEnd(Descendants[ChildIndex], Next);
     end;
@@ -124,7 +124,7 @@ begin
             return None;
           end;
         end if;
-        const Count: integer := Std.Arrays.Length(Items);
+        const Count: integer := Items.Length();
         if Count = 0 then
           begin
             return None;
@@ -173,7 +173,7 @@ begin
       end;
     when TuiElement.MenuBar(Items):
       begin
-        for ItemIndex: integer := 0 to Std.Arrays.Length(Items) - 1 do
+        for ItemIndex: integer := 0 to Items.Length() - 1 do
           begin
             if (Items[ItemIndex].Id.Value = Target.Value) and Items[ItemIndex].Enabled then
               begin
@@ -197,7 +197,7 @@ begin
       end;
     when TuiElement.StatusLine(Items):
       begin
-        for ItemIndex: integer := 0 to Std.Arrays.Length(Items) - 1 do
+        for ItemIndex: integer := 0 to Items.Length() - 1 do
           begin
             case Items[ItemIndex] of
               when TuiStatusItem.Command(Id, Text, Action, Enabled):
@@ -229,7 +229,7 @@ begin
         if Id.Value = Target.Value then
           begin
             var Content: TuiSize := TuiSize.Create(0, 0);
-            if Std.Arrays.Length(Children) = 1 then
+            if Children.Length() = 1 then
               begin
                 Content := TuiMeasure(Children[0], TuiMeasureSpec.Unbounded()).Preferred;
               end;
@@ -329,7 +329,7 @@ begin
       end;
   end case;
   var Next: integer := Index + 1;
-  for ChildIndex: integer := 0 to Std.Arrays.Length(Descendants) - 1 do
+  for ChildIndex: integer := 0 to Descendants.Length() - 1 do
     begin
       case TuiRouteTarget(Frame, Descendants[ChildIndex], Next, Target, Key) of
         when Some(Msg):
@@ -383,7 +383,7 @@ begin
       end;
   end case;
   const Controls: array of TuiControlId := TuiFocusableControls(Root);
-  if Std.Arrays.Length(Controls) = 0 then
+  if Controls.Length() = 0 then
     begin
       return [TuiMsg.Key(Key)];
     end;
@@ -407,7 +407,7 @@ begin
     end;
   else
     begin
-      Std.Arrays.Push(Routed, TuiMsg.FocusChanged(Previous, Some(Target)));
+      Routed.Push(TuiMsg.FocusChanged(Previous, Some(Target)));
     end;
   end if;
 
@@ -427,7 +427,7 @@ begin
         end;
       end if;
       var NextIndex: integer := CurrentIndex + 1;
-      if NextIndex >= Std.Arrays.Length(Controls) then
+      if NextIndex >= Controls.Length() then
         begin
           NextIndex := 0;
         end;
@@ -450,7 +450,7 @@ begin
   case TuiRouteTarget(Frame, Root, 0, Target, Key) of
     when Some(Msg):
       begin
-        Std.Arrays.Push(Routed, Msg);
+        Routed.Push(Msg);
       end;
     when None:
       begin
@@ -459,7 +459,7 @@ begin
             case TuiRouteDefaultButtonEnter(Root) of
               when Some(Msg):
                 begin
-                  Std.Arrays.Push(Routed, Msg);
+                  Routed.Push(Msg);
                   return Routed;
                 end;
               when None:
@@ -469,7 +469,7 @@ begin
           end;
         end if;
 
-        Std.Arrays.Push(Routed, TuiMsg.Key(Key));
+        Routed.Push(TuiMsg.Key(Key));
       end;
   end case;
 

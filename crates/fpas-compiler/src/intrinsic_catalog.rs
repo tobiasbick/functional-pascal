@@ -21,6 +21,11 @@ macro_rules! family {
 /// Resolve one semantically validated canonical standard-library call.
 #[must_use]
 pub(crate) fn resolve(name: &str, first_argument: Option<&Ty>) -> Option<Intrinsic> {
+    if let Some(entry) = fpas_sema::native_operation_by_implementation(name)
+        && entry.lowering == fpas_sema::NativeLowering::IsEmpty
+    {
+        return resolve(&name.replace("IsEmpty", "Length"), first_argument);
+    }
     if name == "Std.Net.Utf8.EncodeBytes" {
         return Some(Intrinsic::Str(StrIntrinsic::Utf8Encode));
     }

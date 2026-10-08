@@ -1,12 +1,10 @@
 program StringFilterWrongCallbackCompileError;
 
-uses Std.Str;
-
 function Wrong(C: string): integer;
 begin
   return 1;
 end function;
 
 begin
-  const Filtered: string := Filter('abc', Wrong);
+  const Filtered: string := 'abc'.Filter(Wrong);
 end.

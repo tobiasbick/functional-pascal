@@ -1,6 +1,6 @@
 program TextAreaNavigationBenchmark;
 
-uses Std.Args, Std.Conv, Std.Time, Std.Console, Std.Str, Std.Test, Std.Tui;
+uses Std.Args, Std.Conv, Std.Time, Std.Console, Std.Test, Std.Tui;
 
 type TextAreaModel = record
   Text: string;
@@ -57,12 +57,12 @@ end function;
 begin
   const Size: integer := StrToInt(ParamStr(0));
   const Mode: string := ParamStr(1);
-  var Text: string := (Std.Str.RepeatStr('x', Size) + #10) + Std.Str.RepeatStr('x', Size);
+  var Text: string := ('x'.RepeatStr(Size) + #10) + 'x'.RepeatStr(Size);
   var Caret: integer := Size;
   if Mode = 'lines' then
     begin
-      Text := Std.Str.RepeatStr('short' + #10, Size);
-      Caret := Std.Str.Length(Text) - 7;
+      Text := ('short' + #10).RepeatStr(Size);
+      Caret := Text.Length() - 7;
     end;
   end if;
   const Initial: TextAreaModel := record

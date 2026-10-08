@@ -69,10 +69,3 @@ generics. AP24.2 adds generic records, AP24.3 generic enums with recursion.
 Generic records and enums work across concrete types with explainable rules,
 including recursion and nested matching, rather than per-type exceptions, and
 every type application uses the same `of` form.
-
-## Reference
-
-The reference branch `codex/syntax-changes` found that
-`fpas-parser/src/parser/decl/data/type_defs.rs` explicitly rejects generic type
-definitions and that sema currently rejects coercion of a generic function
-value to a concrete signature.

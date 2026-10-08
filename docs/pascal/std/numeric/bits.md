@@ -105,7 +105,7 @@ debug and release builds and in debugger watches.
 | Intrinsic identifiers | [`fpas-bytecode/src/intrinsic/bits.rs`](../../../../crates/fpas-bytecode/src/intrinsic/bits.rs) |
 | Compiler call mapping | [`fpas-compiler/src/intrinsic_catalog.rs`](../../../../crates/fpas-compiler/src/intrinsic_catalog.rs) |
 | Generated editor declarations | [`lib/api/Std/Bits.fpas`](../../../../lib/api/Std/Bits.fpas) |
-| FPAS regressions | [`tests/stdlib/bits/`](../../../../tests/stdlib/bits/) |
+| FPAS regressions | [`tests/stdlib/bits/`](../../../../tests/stdlib/bits) |
 
 ## See also
 

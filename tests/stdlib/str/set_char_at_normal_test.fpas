@@ -1,7 +1,7 @@
 program T;
 
-uses Std.Console, Std.Str;
+uses Std.Console;
 
 begin
-  WriteLn(SetCharAt('Hello', 0, 'J'));
+  WriteLn('Hello'.SetCharAt(0, 'J'));
 end.

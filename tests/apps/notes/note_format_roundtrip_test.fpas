@@ -1,6 +1,6 @@
 program NoteFormatRoundtripTest;
 
-uses Notes.Format, Notes.Model, Std.Arrays, Std.Str, Std.Test;
+uses Notes.Format, Notes.Model, Std.Test;
 
 begin
   const Source: Note := record
@@ -11,7 +11,7 @@ begin
     Tags := ['fpas', 'tui'];
     Pinned := true;
     Archived := false;
-    Body := ('Human-readable body' + Std.Str.Chr(10)) + 'with Markdown.';
+    Body := ('Human-readable body' + string.Chr(10)) + 'with Markdown.';
     Path := '';
   end;
   const Encoded: string := NoteStringify(Source);
@@ -22,7 +22,7 @@ begin
         AssertEquals(Source.Title, Parsed.Title);
         AssertEquals(Source.CreatedMillis, Parsed.CreatedMillis);
         AssertEquals(Source.UpdatedMillis, Parsed.UpdatedMillis);
-        AssertEquals(2, Std.Arrays.Length(Parsed.Tags));
+        AssertEquals(2, Parsed.Tags.Length());
         AssertEquals('fpas', Parsed.Tags[0]);
         AssertEquals(true, Parsed.Pinned);
         AssertEquals(false, Parsed.Archived);
@@ -33,7 +33,7 @@ begin
         Fail(Message);
       end;
   end case;
-  const CrLf: string := Std.Str.Replace(Encoded, Std.Str.Chr(10), Std.Str.Chr(13) + Std.Str.Chr(10));
+  const CrLf: string := Encoded.Replace(string.Chr(10), string.Chr(13) + string.Chr(10));
   case NoteParse(CrLf) of
     when Ok(Parsed):
       begin

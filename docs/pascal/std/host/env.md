@@ -5,11 +5,11 @@ Process environment access for hosted FPAS programs. This page is the full API f
 ```pascal
 program Example;
 
-uses Std.Console, Std.Env, Std.Options;
+uses Std.Console, Std.Env;
 
 begin
   if Exists('PATH') then
-    WriteLn(Std.Options.Unwrap(Get('PATH')));
+    WriteLn(Get('PATH').Unwrap());
   end if;
 end.
 ```
@@ -42,8 +42,8 @@ Returns the environment variable named `Name`, or `None` when it is missing.
 
 ```pascal
 const Home: option of string := Get('HOME');
-if Std.Options.IsSome(Home) then
-  WriteLn(Std.Options.Unwrap(Home));
+if Home.IsSome() then
+  WriteLn(Home.Unwrap());
 end if;
 ```
 

@@ -1,6 +1,6 @@
 //! Resumable Unicode-scalar collection operations for `Std.Str`.
 //!
-//! **Documentation:** `docs/pascal/std/text/str/higher-order.md` (from the repository root).
+//! **Documentation:** `docs/pascal/language/types/string/higher-order.md` (from the repository root).
 
 use fpas_bytecode::Value;
 

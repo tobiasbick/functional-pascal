@@ -26,7 +26,7 @@ fn hello_uses() {
 fn unit_clamp() {
     common::assert_golden(
         "unit_clamp",
-        "unit MyApp.Utils; uses Std.Math; public function Clamp(Value: integer; Min: integer; Max: integer): integer; begin if Value < Min then return Min; elsif  Value > Max then return Max; else return Value; end if; end function; function IsBlank(S: string): boolean; begin return Length(Trim(S)) = 0; end function;\nend unit;",
+        "unit MyApp.Utils; uses Std.Math; public function Clamp(Value: integer; Min: integer; Max: integer): integer; begin if Value < Min then return Min; elsif  Value > Max then return Max; else return Value; end if; end function; function IsBlank(S: string): boolean; begin return S.Trim().Length() = 0; end function;\nend unit;",
         include_str!("golden/unit_clamp.expected.fpas"),
     );
 }
@@ -44,7 +44,7 @@ fn record_member_visibility() {
 fn long_uses() {
     common::assert_golden(
         "long_uses",
-        "program LongUses; uses Std.Console, Std.Conv, Std.Arrays, Std.Dictionaries, Std.Options, Std.Results, Std.String, MyApp.Very.Long.Namespace.One, MyApp.Very.Long.Namespace.Two; begin WriteLn('ok'); end.",
+        "program LongUses; uses Std.Console, Std.Conv, Std.Crypto, MyApp.Very.Long.Namespace.One, MyApp.Very.Long.Namespace.Two; begin WriteLn('ok'); end.",
         include_str!("golden/long_uses.expected.fpas"),
     );
 }

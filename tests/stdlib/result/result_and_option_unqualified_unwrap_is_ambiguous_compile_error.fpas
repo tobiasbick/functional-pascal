@@ -1,8 +1,0 @@
-program T;
-
-uses Std.Console, Std.Results, Std.Options;
-
-begin
-  const R: result of integer, string := Ok(42);
-  WriteLn(Unwrap(R));
-end.

@@ -4,7 +4,7 @@
 
 program TaskArrayCallbacksBenchmark;
 
-uses Std.Args, Std.Arrays, Std.Console, Std.Conv, Std.Tasks, Std.Time;
+uses Std.Args, Std.Console, Std.Conv, Std.Tasks, Std.Time;
 
 const WarmupIterations: integer := 20;
 const ArraySize: integer := 64;
@@ -30,7 +30,7 @@ begin
   var Values: array of integer := [];
   for Index: integer := 1 to ArraySize do
     begin
-      Std.Arrays.Push(Values, Index);
+      Values.Push(Index);
     end;
   end for;
 
@@ -42,9 +42,9 @@ begin
   var Total: integer := 0;
   for Index: integer := 1 to Iterations do
     begin
-      const Mapped: array of integer := Std.Arrays.Map(Values, Double);
-      const Filtered: array of integer := Std.Arrays.Filter(Mapped, IsEven);
-      Total := Total + Std.Arrays.Reduce(Filtered, 0, Sum);
+      const Mapped: array of integer := Values.Map(Double);
+      const Filtered: array of integer := Mapped.Filter(IsEven);
+      Total := Total + Filtered.Reduce(0, Sum);
     end;
   end for;
 

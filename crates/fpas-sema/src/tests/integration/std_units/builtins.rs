@@ -2,26 +2,21 @@ use super::check_errors;
 
 #[test]
 fn unwrap_rejects_non_containers_without_cascading_argument_errors() {
-    for namespace in ["Options", "Results"] {
-        for function in ["Unwrap", "UnwrapOr"] {
-            for argument in ["42", "MissingValue"] {
-                let fallback = if function == "UnwrapOr" { ", 0" } else { "" };
-                let errs = check_errors(&format!(
-                    "program T;
-uses Std.{namespace};
-begin
-  const N: integer := Std.{namespace}.{function}({argument}{fallback});
-end."
-                ));
-                assert_eq!(errs.len(), 1, "{errs:#?}");
-                if argument == "42" {
-                    assert_eq!(errs[0].code, fpas_diagnostics::codes::SEMA_TYPE_MISMATCH);
-                    assert!(errs[0].message.contains("first argument"), "{errs:#?}");
+    for operation in ["Unwrap", "UnwrapOr"] {
+        for argument in ["42", "MissingValue"] {
+            let fallback = if operation == "UnwrapOr" { "0" } else { "" };
+            let errors = check_errors(&format!(
+                "program T; begin const N: integer := ({argument}).{operation}({fallback}); end."
+            ));
+            assert_eq!(errors.len(), 1, "{errors:#?}");
+            assert!(
+                errors[0].message.contains(if argument == "42" {
+                    "has no dot operation"
                 } else {
-                    assert!(errs[0].message.contains("MissingValue"), "{errs:#?}");
-                    assert_ne!(errs[0].code, fpas_diagnostics::codes::SEMA_TYPE_MISMATCH);
-                }
-            }
+                    "MissingValue"
+                }),
+                "{errors:#?}"
+            );
         }
     }
 }
@@ -64,49 +59,32 @@ end.",
 }
 
 #[test]
-fn std_str_format_requires_template_argument() {
-    let errs = check_errors(
-        "\
-program T;
-uses Std.Str;
-begin
-  const S: string := Std.Str.Format();
-end.",
-    );
+fn native_format_has_no_free_factory_form() {
+    let errors = check_errors("program T; begin const S: string := Format(); end.");
+    assert_eq!(errors.len(), 1, "{errors:#?}");
     assert!(
-        errs.iter()
-            .any(|e| e.code == fpas_diagnostics::codes::SEMA_WRONG_ARGUMENT_COUNT),
-        "{errs:#?}"
+        errors[0]
+            .help
+            .as_deref()
+            .is_some_and(|hint| hint.contains("Value.Format")),
+        "{errors:#?}"
     );
 }
 
 #[test]
-fn std_str_format_checks_template_type() {
-    let errs = check_errors(
-        "\
-program T;
-uses Std.Str;
-begin
-  const S: string := Std.Str.Format(42);
-end.",
-    );
+fn native_format_requires_string_receiver() {
+    let errors = check_errors("program T; begin const S: string := (42).Format(); end.");
+    assert_eq!(errors.len(), 1, "{errors:#?}");
     assert!(
-        errs.iter()
-            .any(|e| e.code == fpas_diagnostics::codes::SEMA_TYPE_MISMATCH),
-        "{errs:#?}"
+        errors[0].message.contains("has no dot operation"),
+        "{errors:#?}"
     );
 }
 
 #[test]
 fn std_array_push_requires_mutable_array() {
     let errs = check_errors(
-        "\
-program T;
-uses Std.Arrays;
-begin
-  const A: array of integer := [1];
-  Std.Arrays.Push(A, 2);
-end.",
+        "program T;\n\nbegin\n  const A: array of integer := [1];\n  A.Push(2);\nend.",
     );
     assert!(errs.iter().any(|e| e.message.contains("var")), "{errs:#?}");
 }
@@ -114,12 +92,7 @@ end.",
 #[test]
 fn std_dict_merge_requires_matching_rhs_dict_type() {
     let errs = check_errors(
-        "\
-program T;
-uses Std.Dictionaries;
-begin
-  const M: dict of integer to integer := Std.Dictionaries.Merge([1: 10], ['x': true]);
-end.",
+        "program T;\n\nbegin\n  const M: dict of integer to integer := [1: 10].Merge(['x': true]);\nend.",
     );
     assert!(
         errs.iter()
@@ -131,12 +104,7 @@ end.",
 #[test]
 fn std_dict_merge_requires_dict_rhs() {
     let errs = check_errors(
-        "\
-program T;
-uses Std.Dictionaries;
-begin
-  const M: dict of integer to integer := Std.Dictionaries.Merge([1: 10], 42);
-end.",
+        "program T;\n\nbegin\n  const M: dict of integer to integer := [1: 10].Merge(42);\nend.",
     );
     assert!(
         errs.iter()
@@ -148,12 +116,7 @@ end.",
 #[test]
 fn std_dict_get_requires_matching_key_type() {
     let errs = check_errors(
-        "\
-program T;
-uses Std.Dictionaries;
-begin
-  const V: Option of integer := Std.Dictionaries.Get(['Alice': 1], 42);
-end.",
+        "program T;\n\nbegin\n  const V: Option of integer := ['Alice': 1].Get(42);\nend.",
     );
     assert!(
         errs.iter()
@@ -165,16 +128,7 @@ end.",
 #[test]
 fn std_array_find_requires_boolean_callback_result() {
     let errs = check_errors(
-        "\
-program T;
-uses Std.Arrays;
-function WrongReturn(X: integer): integer;
-begin
-  return X;
-end function;
-begin
-  const V: Option of integer := Std.Arrays.Find([1, 2, 3], WrongReturn);
-end.",
+        "program T;\n\nfunction WrongReturn(X: integer): integer;\nbegin\n  return X;\nend function;\nbegin\n  const V: Option of integer := [1, 2, 3].Find(WrongReturn);\nend.",
     );
     assert!(
         errs.iter()
@@ -186,16 +140,7 @@ end.",
 #[test]
 fn std_array_for_each_requires_procedure_callback() {
     let errs = check_errors(
-        "\
-program T;
-uses Std.Arrays;
-function NotAProcedure(X: integer): integer;
-begin
-  return X;
-end function;
-begin
-  Std.Arrays.ForEach([1, 2, 3], NotAProcedure);
-end.",
+        "program T;\n\nfunction NotAProcedure(X: integer): integer;\nbegin\n  return X;\nend function;\nbegin\n  [1, 2, 3].ForEach(NotAProcedure);\nend.",
     );
     assert!(
         errs.iter()

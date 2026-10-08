@@ -123,7 +123,7 @@ fn intrinsic_std_definition_targets_the_editor_api_declaration() {
 
 #[test]
 fn receiver_call_completion_filters_imported_collection_routines() {
-    let source = "program FluentCompletion;\nuses Std.Arrays, Std.Dictionaries;\nbegin\n  const Items: array of integer := [1];\n  const N: integer := Items.Len;\nend.\n";
+    let source = "program FluentCompletion;\n\nbegin\n  const Items: array of integer := [1];\n  const N: integer := Items.Len;\nend.\n";
     let (_temp, path, mut service) = intrinsic_std_fixture(source);
     let offset = source.find("Items.Len").expect("receiver call") + "Items.Len".len();
     let candidates = service
@@ -133,20 +133,20 @@ fn receiver_call_completion_filters_imported_collection_routines() {
     assert!(
         candidates
             .iter()
-            .any(|item| item.qualified_name == "Std.Arrays.Length"),
+            .any(|item| item.qualified_name == "array.Length"),
         "{candidates:#?}"
     );
     assert!(
         !candidates
             .iter()
-            .any(|item| item.qualified_name == "Std.Dictionaries.Length"),
+            .any(|item| item.qualified_name == "dict.Length"),
         "{candidates:#?}"
     );
 }
 
 #[test]
 fn receiver_completion_on_returned_and_parenthesized_arrays() {
-    let source = "program FluentResults;\nuses Std.Arrays;\nfunction MakeValues(): array of integer; begin return [1]; end function;\nbegin\n  const Items: array of integer := [2];\n  const A: integer := MakeValues().Len;\n  const B: integer := (Items).Len;\nend.\n";
+    let source = "program FluentResults;\n\nfunction MakeValues(): array of integer; begin return [1]; end function;\nbegin\n  const Items: array of integer := [2];\n  const A: integer := MakeValues().Len;\n  const B: integer := (Items).Len;\nend.\n";
     let (_temp, path, mut service) = intrinsic_std_fixture(source);
     for needle in ["MakeValues().Len", "(Items).Len"] {
         let offset = source.find(needle).expect("receiver") + needle.len();
@@ -157,7 +157,7 @@ fn receiver_completion_on_returned_and_parenthesized_arrays() {
         assert!(
             candidates
                 .iter()
-                .any(|item| item.qualified_name == "Std.Arrays.Length"),
+                .any(|item| item.qualified_name == "array.Length"),
             "{needle}: {candidates:#?}"
         );
     }
@@ -165,15 +165,17 @@ fn receiver_completion_on_returned_and_parenthesized_arrays() {
 
 #[test]
 fn receiver_call_definition_and_signature_use_selected_array_routine() {
-    let source = "program FluentNavigation;\nuses Std.Arrays, Std.Dictionaries;\nbegin\n  const Items: array of integer := [1, 2];\n  const N: integer := Items.Slice(0, 1).Length();\nend.\n";
+    let source = "program FluentNavigation;\n\nbegin\n  const Items: array of integer := [1, 2];\n  const N: integer := Items.Slice(0, 1).Length();\nend.\n";
     let (_temp, path, mut service) = intrinsic_std_fixture(source);
     let offset = source.find("Length()").expect("fluent name");
     let definitions = service
         .definitions(&path, offset)
         .expect("receiver definition")
         .value;
-    assert_eq!(definitions.len(), 1, "{definitions:#?}");
-    assert_eq!(definitions[0].symbol.qualified_name, "Std.Arrays.Length");
+    assert!(
+        definitions.is_empty(),
+        "native operations have no free declarations: {definitions:#?}"
+    );
 
     let argument = source.find("Slice(0, 1)").expect("slice call") + "Slice(0, ".len();
     let help = service
@@ -408,4 +410,114 @@ fn intrinsic_std_editor_api_is_valid_syntax_without_runtime_analysis() {
         analysis.diagnostics()
     );
     assert!(analysis.semantic().is_none());
+}
+
+#[test]
+fn mutating_native_signatures_expose_only_explicit_parameters() {
+    let source = "program T; begin var Items: array of integer := [1]; Items.Push(Value := 2); const Last: integer := Items.Pop(); end.";
+    let (_temp, path, mut service) = intrinsic_std_fixture(source);
+    let dot = source.find("Push(").expect("dot call") + "Push(".len();
+    let help = service
+        .signature_help(&path, dot)
+        .expect("signature query")
+        .value
+        .expect("native signature");
+    assert_eq!(help.signature.parameters, ["Value: integer"]);
+    assert!(
+        help.documentation
+            .as_deref()
+            .is_some_and(|doc| doc.contains("writable receiver")),
+        "{help:#?}"
+    );
+    let pop = source.find("Pop()").expect("pop call") + "Pop(".len();
+    let help = service
+        .signature_help(&path, pop)
+        .expect("signature query")
+        .value
+        .expect("native signature");
+    assert!(help.signature.parameters.is_empty(), "{help:#?}");
+}
+
+#[test]
+fn native_signature_help_uses_catalog_names_factories_and_variadic_format() {
+    let source = "program T; begin const Text: string := 'abc'; const S: string := Text.Slice(Len := 1, Start := 0); const A: array of integer := array.Fill(Count := 2, Value := 7); const C: string := string.Chr(N := 65); const Message: string := '%d %s'.Format(1, 'x'); end.";
+    let (_temp, path, mut service) = intrinsic_std_fixture(source);
+    for (needle, parameters, active) in [
+        ("Len :=", vec!["Start: integer", "Len: integer"], 1),
+        ("Count :=", vec!["Value: T", "Count: integer"], 1),
+        ("N :=", vec!["N: integer"], 0),
+        ("1, 'x'", vec!["Arguments..."], 0),
+    ] {
+        let offset = source.find(needle).expect("argument") + needle.len();
+        let help = service
+            .signature_help(&path, offset)
+            .expect("signature query")
+            .value
+            .expect("native signature");
+        assert_eq!(help.signature.parameters, parameters, "{needle}: {help:#?}");
+        assert_eq!(help.active_parameter, Some(active), "{needle}");
+    }
+}
+
+#[test]
+fn native_completions_ignore_free_functions_and_cover_aliases_chains_and_factories() {
+    let source = "program T; type Integers = array of integer; function Trim(X: integer): integer; begin return X; end function; begin const A: Integers := [1]; const X: integer := A.Len; const S: string := ' hi '.Tr; const Y: integer := 'a,b'.Split(',').Len; const B: array of integer := array.Fi; const C: string := string.Ch; const D: integer := (1).Tr; end.";
+    let (_temp, path, mut service) = intrinsic_std_fixture(source);
+    for (needle, expected) in [
+        ("A.Len", Some("array.Length")),
+        ("' hi '.Tr", Some("string.Trim")),
+        ("Split(',').Len", Some("array.Length")),
+        ("array.Fi", Some("array.Fill")),
+        ("string.Ch", Some("string.Chr")),
+        ("(1).Tr", None),
+    ] {
+        let offset = source.find(needle).expect("completion prefix") + needle.len();
+        let candidates = service
+            .completions(&path, offset)
+            .expect("native completion")
+            .value;
+        if let Some(expected) = expected {
+            let entry = candidates
+                .iter()
+                .find(|entry| entry.qualified_name == expected)
+                .unwrap_or_else(|| panic!("{needle}: {candidates:#?}"));
+            assert!(entry.inline_documentation.is_some());
+            assert!(entry.additional_edit.is_none());
+        } else {
+            assert!(candidates.is_empty(), "{needle}: {candidates:#?}");
+        }
+        assert!(
+            candidates
+                .iter()
+                .all(|entry| !entry.qualified_name.starts_with("T.Trim"))
+        );
+    }
+}
+
+#[test]
+fn former_type_helper_units_are_absent_from_editor_indices_and_auto_imports() {
+    let source = "program T; begin Len; end.";
+    let (_temp, path, mut service) = intrinsic_std_fixture(source);
+    let retired = [
+        "Std.Str.",
+        "Std.Arrays.",
+        "Std.Dictionaries.",
+        "Std.Options.",
+        "Std.Results.",
+    ];
+    let index = service.workspace_symbol_index().expect("index");
+    assert!(index.all_locations().iter().all(|location| {
+        retired
+            .iter()
+            .all(|prefix| !location.symbol.qualified_name.starts_with(prefix))
+    }));
+    let candidates = service
+        .completions(&path, source.find("Len;").expect("prefix") + 3)
+        .expect("completion")
+        .value;
+    assert!(candidates.iter().all(|entry| {
+        retired
+            .iter()
+            .all(|prefix| !entry.qualified_name.starts_with(prefix))
+    }));
 }

@@ -1,6 +1,6 @@
 program SupervisedTaskRetryTest;
 
-uses Std.Tasks, Std.Arrays, Std.Results, Std.Test;
+uses Std.Tasks, Std.Test;
 
 begin
   const Group: TaskGroup := CreateTaskGroup();
@@ -9,7 +9,7 @@ begin
   discard Send(Attempts, 1);
   discard Send(Attempts, 2);
   const Child: task := StartSupervisedTask(Group, function(Token: CancellationToken): result of integer, string begin
-    const Attempt: integer := Unwrap(Receive(Attempts));
+    const Attempt: integer := Receive(Attempts).Unwrap();
     if Attempt = 0 then
       begin
         return Error('retryable error');
@@ -25,7 +25,7 @@ begin
     return Ok(42);
   end function, 2, 1);
   AssertEquals(0, WaitAny([Child]));
-  AssertEquals(42, Unwrap(Wait(Child)));
-  AssertEquals(0, Length(CloseTaskGroup(Group)));
+  AssertEquals(42, Wait(Child).Unwrap());
+  AssertEquals(0, CloseTaskGroup(Group).Length());
   discard CloseChannel(Attempts);
 end.

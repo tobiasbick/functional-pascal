@@ -1,7 +1,5 @@
 program StringMapCallbackFailureRuntimeError;
 
-uses Std.Str;
-
 function FailOnSecond(C: string): string;
 begin
   if C = 'b' then
@@ -20,5 +18,5 @@ begin
 end function;
 
 begin
-  const Mapped: string := Map('abc', FailOnSecond);
+  const Mapped: string := 'abc'.Map(FailOnSecond);
 end.

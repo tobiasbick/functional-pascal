@@ -1,6 +1,6 @@
 program FsGlobFlatPatternReturnsSortedPathsTest;
 
-uses Std.Arrays, Std.Fs, Std.Test;
+uses Std.Fs, Std.Test;
 
 begin
   const Prefix: string := ScratchDir() + '/glob-flat-';
@@ -27,7 +27,7 @@ begin
   case Glob(Prefix + '*.txt') of
     when Ok(Paths):
       begin
-        AssertEquals(2, Std.Arrays.Length(Paths));
+        AssertEquals(2, Paths.Length());
         AssertEquals(Prefix + 'a.txt', Paths[0]);
         AssertEquals(Prefix + 'b.txt', Paths[1]);
       end;

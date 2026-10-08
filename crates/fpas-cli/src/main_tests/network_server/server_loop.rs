@@ -137,7 +137,7 @@ fn fpas_http_server_loop_rejects_invalid_options_before_accepting() {
         format!(
             r#"program HttpServerLoopInvalidOptions;
 
-uses Std.Console, Std.Http, Std.Net, Std.Str;
+uses Std.Console, Std.Http, Std.Net;
 
 function Handle(_RequestValue: ServerRequest): ServerResponse;
 begin
@@ -154,7 +154,7 @@ begin
         when Ok(_): panic('invalid server options were accepted');
         when Error(Message):
         begin
-          if not Std.Str.Contains(Message, 'MaxConcurrentRequests') then
+          if not Message.Contains('MaxConcurrentRequests') then
           begin
             panic(Message);
           end; end if;

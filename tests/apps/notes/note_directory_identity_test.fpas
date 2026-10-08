@@ -1,29 +1,27 @@
 program NoteDirectoryIdentityTest;
 
-uses
-  Notes.Model, Notes.Repository, Notes.Update, Std.Arrays, Std.Fs, Std.Path, Std.Results, Std.Str,
-  Std.Test, Std.Tui;
+uses Notes.Model, Notes.Repository, Notes.Update, Std.Fs, Std.Path, Std.Test, Std.Tui;
 
 procedure CheckDirectory(Name: string; Sibling: string);
 begin
   const Root: string := ScratchDir();
   const Directory: string := Std.Path.Join([Root, Name]);
   const Adjacent: string := Std.Path.Join([Root, Sibling]);
-  AssertTrue(Unwrap(NotesEnsureDirectory(Directory)));
+  AssertTrue(NotesEnsureDirectory(Directory).Unwrap());
   var Outside: Note := NoteCreate('outside', 1);
   Outside.Title := 'untouched';
-  AssertTrue(Unwrap(NotesSave(Adjacent, Outside)));
-  const Before: string := Unwrap(Std.Fs.ReadText(NoteFilePath(Adjacent, Outside)));
-  AssertEquals(0, Std.Arrays.Length(Unwrap(NotesLoadDirectory(Directory)).Notes));
+  AssertTrue(NotesSave(Adjacent, Outside).Unwrap());
+  const Before: string := Std.Fs.ReadText(NoteFilePath(Adjacent, Outside)).Unwrap();
+  AssertEquals(0, NotesLoadDirectory(Directory).Unwrap().Notes.Length());
   var Inside: Note := NoteCreate('inside', 2);
-  AssertTrue(Unwrap(NotesSave(Directory, Inside)));
-  const Loaded: NotesLoad := Unwrap(NotesLoadDirectory(Directory));
-  AssertEquals(1, Std.Arrays.Length(Loaded.Notes));
-  AssertEquals(Std.Str.Replace(NoteFilePath(Directory, Inside), '\', '/'), Std.Str.Replace(Loaded.Notes[0].Path, '\', '/'));
+  AssertTrue(NotesSave(Directory, Inside).Unwrap());
+  const Loaded: NotesLoad := NotesLoadDirectory(Directory).Unwrap();
+  AssertEquals(1, Loaded.Notes.Length());
+  AssertEquals(NoteFilePath(Directory, Inside).Replace('\', '/'), Loaded.Notes[0].Path.Replace('\', '/'));
   Inside := Loaded.Notes[0];
   Inside.Title := 'edited';
-  AssertTrue(Unwrap(NotesSave(Directory, Inside)));
-  AssertEquals(Before, Unwrap(Std.Fs.ReadText(NoteFilePath(Adjacent, Outside))));
+  AssertTrue(NotesSave(Directory, Inside).Unwrap());
+  AssertEquals(Before, Std.Fs.ReadText(NoteFilePath(Adjacent, Outside)).Unwrap());
 end procedure;
 
 begin
@@ -37,14 +35,14 @@ begin
   Second.Path := Directory + '/second.note';
   Second.Title := 'second';
   const Unique: Note := NoteCreate('unique', 3);
-  AssertTrue(Unwrap(NotesSave(Directory, First)));
-  AssertTrue(Unwrap(NotesSave(Directory, Second)));
-  AssertTrue(Unwrap(NotesSave(Directory, Unique)));
-  const FirstText: string := Unwrap(Std.Fs.ReadText(First.Path));
-  const SecondText: string := Unwrap(Std.Fs.ReadText(Second.Path));
-  const Loaded: NotesLoad := Unwrap(NotesLoadDirectory(Directory));
-  AssertEquals(1, Std.Arrays.Length(Loaded.Notes));
-  AssertEquals(2, Std.Arrays.Length(Loaded.Issues));
+  AssertTrue(NotesSave(Directory, First).Unwrap());
+  AssertTrue(NotesSave(Directory, Second).Unwrap());
+  AssertTrue(NotesSave(Directory, Unique).Unwrap());
+  const FirstText: string := Std.Fs.ReadText(First.Path).Unwrap();
+  const SecondText: string := Std.Fs.ReadText(Second.Path).Unwrap();
+  const Loaded: NotesLoad := NotesLoadDirectory(Directory).Unwrap();
+  AssertEquals(1, Loaded.Notes.Length());
+  AssertEquals(2, Loaded.Issues.Length());
   AssertEquals('unique', Loaded.Notes[0].Id);
   AssertTrue((Loaded.Issues[0].Path = First.Path) or (Loaded.Issues[1].Path = First.Path));
   AssertTrue((Loaded.Issues[0].Path = Second.Path) or (Loaded.Issues[1].Path = Second.Path));
@@ -56,6 +54,6 @@ begin
   AssertFalse(State.Dirty);
   State := NotesUpdate(State, TuiMsgAction(TuiControlId.Create(23), TuiAction.Create(13)), Cmd);
   AssertEquals(-1, State.Selected);
-  AssertEquals(FirstText, Unwrap(Std.Fs.ReadText(First.Path)));
-  AssertEquals(SecondText, Unwrap(Std.Fs.ReadText(Second.Path)));
+  AssertEquals(FirstText, Std.Fs.ReadText(First.Path).Unwrap());
+  AssertEquals(SecondText, Std.Fs.ReadText(Second.Path).Unwrap());
 end.

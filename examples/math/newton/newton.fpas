@@ -2,7 +2,7 @@
 
 program NewtonShowcase;
 
-uses Std.Console, Std.Conv, Std.Math, Std.Options, Std.Str, Newton.Render;
+uses Std.Console, Std.Conv, Std.Math, Newton.Render;
 
 type ExplorerState = record
   CenterX: real;
@@ -82,10 +82,10 @@ procedure WriteHudText(Text: string; Width: integer);
 begin
   if Width > 0 then
     begin
-      const TextLength: integer := Min(Std.Str.Length(Text), Width);
+      const TextLength: integer := Min(Text.Length(), Width);
       if TextLength > 0 then
         begin
-          WriteText(Substring(Text, 0, TextLength));
+          WriteText(Text.Slice(0, TextLength));
         end;
       end if;
     end;
@@ -104,12 +104,13 @@ begin
   const Title: string := 'Functional Pascal Newton z^3-1';
   WriteHudText(Title, Width);
   TextColorRGB(156, 204, 255);
-  WriteHudText('  tasks | units | records | postfix | truecolor', Max(Width - Std.Str.Length(Title), 0));
+  WriteHudText('  tasks | units | records | postfix | truecolor', Max(Width - Title.Length(), 0));
   if ScreenHeight() >= 2 then
     begin
       GotoXY(1, 2);
       NormVideo();
-      WriteHudText(Format('size=%dx%d  center=(%f, %f)  zoom=%f  iter=%d', Width, Height, S.CenterX, S.CenterY, S.Zoom, S.MaxIter), Width);
+      WriteHudText('size=%dx%d  center=(%f, %f)  zoom=%f  iter=%d'
+                     .Format(Width, Height, S.CenterX, S.CenterY, S.Zoom, S.MaxIter), Width);
     end;
   end if;
 

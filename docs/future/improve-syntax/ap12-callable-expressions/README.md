@@ -18,6 +18,8 @@ receive an actionable diagnostic.
 - Keep call parentheses explicit. Do not add automatic partial application,
   currying, or a second lambda shorthand; retain existing anonymous functions.
 - Calls on function values are positional only (AP09).
+- Preserve current capture storage: captured `const` and value parameters are
+  copied; captured local `var` bindings share mutable cells.
 
 ## Open decisions
 
@@ -43,12 +45,3 @@ AP12.1 records the decision; AP12.2 implements it.
 
 All function-valued call targets follow the same rules; non-callable targets
 receive an actionable diagnostic.
-
-## Reference
-
-The reference branch `codex/syntax-changes` implemented callable targets after
-any typed expression with target-then-arguments evaluation, reusing the
-existing `CallValue` instruction. It also found and fixed a capture defect for
-captured mutable parameters (the former F9001 identity). AP16.3 has removed
-that parameter mode and migrated captures to local `var` copies; those captures
-have regression coverage. AP12 must preserve the current local-copy behavior.

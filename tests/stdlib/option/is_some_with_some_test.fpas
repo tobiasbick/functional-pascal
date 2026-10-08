@@ -1,8 +1,8 @@
 program T;
 
-uses Std.Console, Std.Options;
+uses Std.Console;
 
 begin
   const O: option of integer := Some(7);
-  WriteLn(IsSome(O));
+  WriteLn(O.IsSome());
 end.

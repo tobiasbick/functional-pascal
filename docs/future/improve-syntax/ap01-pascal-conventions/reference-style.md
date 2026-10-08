@@ -52,6 +52,7 @@ The example uses only implemented forms.
 program Counting;
 
 const Step: integer := 2;
+
 var Count: integer := 0;
 
 begin
@@ -74,7 +75,6 @@ public function Add(Left: integer; Right: integer): integer;
 begin
   return Left + Right;
 end function;
-
 end unit;
 ```
 
@@ -167,6 +167,7 @@ implemented forms.
 program Branches;
 
 const Score: integer := 75;
+
 var Grade: integer := 0;
 
 begin
@@ -303,19 +304,14 @@ forms.
 ```pascal
 program Callbacks;
 
-function Apply(Operation: function(Value: integer): integer;
-  Value: integer): integer;
+function Apply(Operation: function(Value: integer): integer; Value: integer): integer;
 begin
   return Operation(Value);
 end function;
 
-const Doubled: integer := Apply(
-  function(Value: integer): integer
-  begin
-    return Value * 2;
-  end function,
-  3
-);
+const Doubled: integer := Apply(function(Value: integer): integer begin
+  return Value * 2;
+end function, 3);
 
 begin
   null;

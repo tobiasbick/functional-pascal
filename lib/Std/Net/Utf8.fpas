@@ -1,7 +1,7 @@
 // Validated conversion between FPAS strings and UTF-8 byte arrays.
 unit Std.Net.Utf8;
 
-uses Std.Arrays, Std.Conv, Std.Str;
+uses Std.Conv;
 
 // Internal bulk codec implemented by the string runtime.
 function EncodeBytes(Text: string): array of integer;
@@ -43,7 +43,7 @@ public function Decode(Bytes: array of integer): result of string, string;
 begin
   var Parts: array of string := [];
   var Index: integer := 0;
-  while Index < Std.Arrays.Length(Bytes) do
+  while Index < Bytes.Length() do
     begin
       const First: integer := Bytes[Index];
       if (First < 0) or (First > 255) then
@@ -76,7 +76,7 @@ begin
         end;
       end if;
 
-      if Index + Width > Std.Arrays.Length(Bytes) then
+      if Index + Width > Bytes.Length() then
         begin
           return Invalid(Index, 'truncated sequence');
         end;
@@ -133,11 +133,11 @@ begin
         end;
       end if;
 
-      Std.Arrays.Push(Parts, Std.Str.Chr(CodePoint));
+      Parts.Push(string.Chr(CodePoint));
       Index := Index + Width;
     end;
   end while;
 
-  return Ok(Std.Str.Join(Parts, ''));
+  return Ok(Parts.Join(''));
 end function;
 end unit;

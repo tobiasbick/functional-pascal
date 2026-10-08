@@ -1,6 +1,6 @@
 program UnicodeRegionTest;
 
-uses Std.Console, Std.Options, Std.Test;
+uses Std.Console, Std.Test;
 
 function CellWith(Glyph: string; Foreground: Color): Cell;
 begin
@@ -26,7 +26,7 @@ begin
   PutCell(3, 1, CellWith('X', CrtColor(White)));
   RestoreRegion(Region);
   Present();
-  const WideCell: Cell := Unwrap(GetCell(2, 1));
+  const WideCell: Cell := GetCell(2, 1).Unwrap();
   AssertEquals('中', WideCell.glyph);
-  AssertTrue(IsNone(GetCell(3, 1)));
+  AssertTrue(GetCell(3, 1).IsNone());
 end.

@@ -22,6 +22,8 @@ without guessing between literals and factories.
 - A record with private fields can still be constructed only inside its
   declaring unit; importers use public factory functions.
 - A record type name used as a call target always means construction.
+- Evaluate supplied fields in written order, then missing defaults in
+  declaration order.
 
 ```pascal
 const P: Point := Point(X := 10, Y := 20);
@@ -53,10 +55,3 @@ AP10.3 removes the literal form.
 
 One canonical structural-construction rule exposes the type and field mapping
 without guessing between literals and factories.
-
-## Reference
-
-The reference branch `codex/syntax-changes` found that construction currently
-resolves supplied fields through a map and evaluates in declaration/default
-order. Evaluate supplied fields in written order, then missing defaults in
-declaration order.

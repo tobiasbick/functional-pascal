@@ -1,7 +1,7 @@
 // Bounded HTTP response-head reading and informational-response handling.
 unit Std.Http.Head;
 
-uses Std.Arrays, Std.Http.Types, Std.Http.Wire, Std.Net;
+uses Std.Http.Types, Std.Http.Wire, Std.Net;
 
 // Maximum informational responses accepted before the final response.
 const MaxInterimResponses: integer := 8;
@@ -36,7 +36,7 @@ begin
       var Separator: integer := Std.Http.Wire.FindSeparator(Buffer, 0);
       while Separator < 0 do
         begin
-          if Std.Arrays.Length(Buffer) >= MaxHeaderBytes then
+          if Buffer.Length() >= MaxHeaderBytes then
             begin
               return Error('HTTP response headers exceed MaxHeaderBytes');
             end;
@@ -47,7 +47,7 @@ begin
               return Error('HTTP response exceeds MaxResponseBytes');
             end;
           end if;
-          var ReadMaximum: integer := MaxHeaderBytes - Std.Arrays.Length(Buffer);
+          var ReadMaximum: integer := MaxHeaderBytes - Buffer.Length();
           if ResponseAvailable < ReadMaximum then
             begin
               ReadMaximum := ResponseAvailable;
@@ -63,14 +63,14 @@ begin
           case Std.Net.ReceiveBytes(Connection, ReadMaximum) of
             when Ok(Bytes):
               begin
-                if Std.Arrays.Length(Bytes) = 0 then
+                if Bytes.Length() = 0 then
                   begin
                     return Error('HTTP response is missing the header terminator');
                   end;
                 end if;
 
-                BytesReceived := BytesReceived + Std.Arrays.Length(Bytes);
-                Buffer := Std.Arrays.Concat(Buffer, Bytes);
+                BytesReceived := BytesReceived + Bytes.Length();
+                Buffer := Buffer.Concat(Bytes);
               end;
             when Error(Message):
               begin
@@ -106,15 +106,13 @@ begin
                   end;
                 end if;
 
-                Buffer := Std.Arrays.Slice(Buffer, Head.BodyOffset, Std.Arrays.Length(Buffer) -
-                                                                    Head.BodyOffset);
+                Buffer := Buffer.Slice(Head.BodyOffset, Buffer.Length() - Head.BodyOffset);
               end;
             else
               begin
                 const Output: FinalHead := record
                   Head := Head;
-                  InitialBody := Std.Arrays.Slice(Buffer, Head.BodyOffset, Std.Arrays.Length(Buffer) -
-                                                                           Head.BodyOffset);
+                  InitialBody := Buffer.Slice(Head.BodyOffset, Buffer.Length() - Head.BodyOffset);
                   BytesReceived := BytesReceived;
                 end;
 

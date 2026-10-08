@@ -1,6 +1,6 @@
 program FluentCollectionTest;
 
-uses Std.Arrays, Std.Dictionaries, Std.Json, Std.Options, Std.Results, Std.Str, Std.Test;
+uses Std.Json, Std.Test;
 
 function IsEven(X: integer): boolean;
 begin
@@ -24,7 +24,7 @@ end function;
 
 function Upper(C: string): string;
 begin
-  return Std.Str.ToUpper(C);
+  return C.ToUpper();
 end function;
 
 function MakeNumbers(): array of integer;
@@ -34,13 +34,13 @@ end function;
 
 function Apply(X: integer; Operation: function(Value: integer): integer): integer;
 begin
-  return X.Operation();
+  return Operation(X);
 end function;
 
 begin
   const Numbers: array of integer := [1, 2, 3, 4];
   AssertEquals(12, Numbers.Filter(IsEven).Map(Double).Reduce(0, Sum));
-  AssertEquals(4, (2).Double());
+  AssertEquals(4, Double(2));
   const Scores: dict of string to integer := ['A': 2, 'B': 3];
   AssertEquals(5, Scores.Reduce(0, AddEntry));
   AssertTrue(Scores.Get('A').IsSome());
@@ -48,6 +48,6 @@ begin
   AssertEquals(2, MakeNumbers().Length());
   AssertTrue(Parse('1').IsOk());
   const DoubleValue: function(X: integer): integer := Double;
-  AssertEquals(6, (3).DoubleValue());
+  AssertEquals(6, DoubleValue(3));
   AssertEquals(8, Apply(4, Double));
 end.

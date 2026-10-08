@@ -365,15 +365,14 @@ impl LoweringContext {
             })
     }
 
+    /// Resolves the stored type of a path below a local or qualified global root.
     pub(in crate::lowering) fn designator_type(
         &self,
         designator: &fpas_parser::Designator,
     ) -> Option<TypeId> {
-        let fpas_parser::DesignatorPart::Ident(name, _) = designator.parts.first()? else {
-            return None;
-        };
-        let mut ty = self.root_type(name)?;
-        for part in &designator.parts[1..] {
+        let (name, root_parts) = self.designator_root(designator).ok()?;
+        let mut ty = self.root_type(&name)?;
+        for part in &designator.parts[root_parts..] {
             ty = match (part, self.type_kind(ty)?) {
                 (fpas_parser::DesignatorPart::Ident(name, _), fpas_ir::IrType::Record(layout)) => {
                     self.record_field(layout, name)?.1

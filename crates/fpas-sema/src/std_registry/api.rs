@@ -120,3 +120,29 @@ mod tests {
         }
     }
 }
+
+#[cfg(test)]
+mod mutation_tests {
+    use super::intrinsic_std_symbols;
+    use crate::types::Ty;
+
+    #[test]
+    fn array_mutation_catalog_preserves_writable_mode() {
+        for name in ["Push", "Pop"] {
+            let operation = crate::native_operation(&Ty::Array(Box::new(Ty::Integer)), name)
+                .expect("native operation");
+            assert_eq!(operation.receiver_mode(), crate::ParamMode::Var);
+            assert!(
+                (operation.signature)()
+                    .params
+                    .iter()
+                    .all(|param| !param.is_var())
+            );
+        }
+        assert!(intrinsic_std_symbols("Std.Arrays").is_empty());
+        assert_eq!(
+            crate::intrinsic_std_receiver_mode("Std.Arrays.Sort"),
+            crate::ParamMode::Value
+        );
+    }
+}

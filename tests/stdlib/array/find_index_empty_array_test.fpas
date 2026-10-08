@@ -1,6 +1,6 @@
 program T;
 
-uses Std.Console, Std.Arrays;
+uses Std.Console;
 
 function AlwaysTrue(X: integer): boolean;
 begin
@@ -9,6 +9,6 @@ end function;
 
 begin
   const A: array of integer := [];
-  const Idx: integer := FindIndex(A, AlwaysTrue);
+  const Idx: integer := A.FindIndex(AlwaysTrue);
   WriteLn(Idx);
 end.

@@ -1,0 +1,33 @@
+program MutatingReceiverOrderTest;
+
+uses Std.Test;
+
+var Trace: string := '';
+
+function Index(): integer;
+begin
+  Trace := Trace + 'i';
+  return 0;
+end function;
+
+function Replace(var Rows: array of array of integer): integer;
+begin
+  Trace := Trace + 'v';
+  Rows := [[5], [6]];
+  return 9;
+end function;
+
+begin
+  var Rows: array of array of integer := [[1], [2]];
+  const Original: array of array of integer := Rows;
+  Rows[Index()].Push(Replace(var Rows));
+  AssertEquals('iv', Trace);
+  AssertEquals(2, Rows[0].Length());
+  AssertEquals(5, Rows[0][0]);
+  AssertEquals(9, Rows[0][1]);
+  AssertEquals(1, Original[0][0]);
+  Trace := '';
+  AssertEquals(9, Rows[Index()].Pop());
+  AssertEquals('i', Trace);
+  AssertEquals(1, Rows[0].Length());
+end.

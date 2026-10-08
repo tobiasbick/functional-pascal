@@ -1,9 +1,9 @@
 program T;
 
-uses Std.Console, Std.Dictionaries, Std.Options;
+uses Std.Console;
 
 begin
   const D: dict of string to integer := ['Alice': 30];
-  const R: option of integer := Std.Dictionaries.Get(D, 'Eve');
-  WriteLn(IsNone(R));
+  const R: option of integer := D.Get('Eve');
+  WriteLn(R.IsNone());
 end.

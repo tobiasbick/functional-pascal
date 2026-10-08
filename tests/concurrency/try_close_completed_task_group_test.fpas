@@ -1,11 +1,11 @@
 program TryCloseCompletedTaskGroupTest;
 
-uses Std.Arrays, Std.Options, Std.Results, Std.Tasks, Std.Test, Std.Time;
+uses Std.Tasks, Std.Test, Std.Time;
 
 begin
   const Empty: TaskGroup := CreateTaskGroup();
-  AssertEquals(0, Std.Arrays.Length(Std.Options.Unwrap(TryCloseCompletedTaskGroup(Empty))));
-  AssertEquals(0, Std.Arrays.Length(Std.Options.Unwrap(TryCloseCompletedTaskGroup(Empty))));
+  AssertEquals(0, TryCloseCompletedTaskGroup(Empty).Unwrap().Length());
+  AssertEquals(0, TryCloseCompletedTaskGroup(Empty).Unwrap().Length());
   const Gate: channel of boolean := CreateChannel(1);
   const Ready: channel of boolean := CreateChannel(1);
   const Returned: TaskGroup := CreateTaskGroup();
@@ -22,18 +22,18 @@ begin
         end;
     end case;
   end function);
-  AssertTrue(Std.Results.Unwrap(ReceiveWithTimeout(Ready, 10000)));
-  AssertTrue(IsNone(TryCloseCompletedTaskGroup(Returned)));
+  AssertTrue(ReceiveWithTimeout(Ready, 10000).Unwrap());
+  AssertTrue(TryCloseCompletedTaskGroup(Returned).IsNone());
   discard Send(Gate, true);
   var ReturnedFailures: option of array of TaskFailure := None;
-  while IsNone(ReturnedFailures) do
+  while ReturnedFailures.IsNone() do
     begin
       Sleep(1);
       ReturnedFailures := TryCloseCompletedTaskGroup(Returned);
     end;
   end while;
-  const ReturnedReport: array of TaskFailure := Std.Options.Unwrap(ReturnedFailures);
-  AssertEquals(1, Std.Arrays.Length(ReturnedReport));
+  const ReturnedReport: array of TaskFailure := ReturnedFailures.Unwrap();
+  AssertEquals(1, ReturnedReport.Length());
   AssertTrue(ReturnedReport[0].Kind = TaskFailureKind.ReturnedError);
   AssertEquals('expected returned error', ReturnedReport[0].Message);
   const PanicReady: channel of boolean := CreateChannel(1);
@@ -42,16 +42,16 @@ begin
     discard Send(PanicReady, true);
     panic('expected panic report');
   end procedure);
-  AssertTrue(Std.Results.Unwrap(ReceiveWithTimeout(PanicReady, 10000)));
+  AssertTrue(ReceiveWithTimeout(PanicReady, 10000).Unwrap());
   var PanicFailures: option of array of TaskFailure := None;
-  while IsNone(PanicFailures) do
+  while PanicFailures.IsNone() do
     begin
       Sleep(1);
       PanicFailures := TryCloseCompletedTaskGroup(Panicked);
     end;
   end while;
-  const PanicReport: array of TaskFailure := Std.Options.Unwrap(PanicFailures);
-  AssertEquals(1, Std.Arrays.Length(PanicReport));
+  const PanicReport: array of TaskFailure := PanicFailures.Unwrap();
+  AssertEquals(1, PanicReport.Length());
   AssertTrue(PanicReport[0].Kind = TaskFailureKind.Panicked);
   AssertEquals('panic: expected panic report', PanicReport[0].Message);
   discard CloseChannel(Gate);

@@ -4,7 +4,7 @@
 
 program VmUnicodeCharAtBenchmark;
 
-uses Std.Args, Std.Console, Std.Conv, Std.Str, Std.Time;
+uses Std.Args, Std.Console, Std.Conv, Std.Time;
 
 const WarmupIterations: integer := 10000;
 const PatternRepetitions: integer := 64;
@@ -28,7 +28,7 @@ begin
   var Matches: integer := 0;
   for Index: integer := 1 to Iterations do
     begin
-      if Std.Str.CharAt(Text, Index mod TextLength) = '😀' then
+      if Text.CharAt(Index mod TextLength) = '😀' then
         begin
           Matches := Matches + 1;
         end;

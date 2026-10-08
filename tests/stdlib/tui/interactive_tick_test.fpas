@@ -1,7 +1,7 @@
 // Verifies that the interactive host delivers requested ticks after their delay and that a later request replaces a pending one.
 program TuiInteractiveTickTest;
 
-uses Std.Results, Std.Tasks, Std.Test, Std.Time, Std.Tui;
+uses Std.Tasks, Std.Test, Std.Time, Std.Tui;
 
 type TickModel = record
   Inbox: channel of integer;

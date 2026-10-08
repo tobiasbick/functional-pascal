@@ -1,8 +1,8 @@
 program T;
 
-uses Std.Console, Std.Dictionaries;
+uses Std.Console;
 
 begin
   const D: dict of string to integer := [:];
-  WriteLn(Std.Dictionaries.Length(D));
+  WriteLn(D.Length());
 end.

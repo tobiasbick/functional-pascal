@@ -65,11 +65,26 @@ impl ClosureRegistry<'_> {
             } else {
                 return Ok(());
             };
+        let is_empty = metadata
+            .fluent_calls
+            .get(&key)
+            .and_then(|target| fpas_sema::native_operation_by_implementation(&target.name))
+            .is_some_and(|entry| entry.lowering == fpas_sema::NativeLowering::IsEmpty);
         let mut parameters = Vec::new();
         if let Some(receiver_ty) = receiver_ty {
             parameters.push(types.intern(receiver_ty, span.line, span.column)?);
         }
-        for argument in args {
+        let ordered_args = if let Some(order) = args.first().and_then(|arg| {
+            metadata
+                .named_argument_orders
+                .get(&fpas_sema::expr_lookup_key(arg))
+        }) {
+            order.iter().map(|&index| &args[index]).collect::<Vec<_>>()
+        } else {
+            args.iter().collect::<Vec<_>>()
+        };
+        for argument in ordered_args {
+            let argument = argument.argument_value();
             let ty = metadata
                 .expr_types
                 .get(&fpas_sema::expr_lookup_key(argument))
@@ -94,6 +109,7 @@ impl ClosureRegistry<'_> {
             id,
             name: format!("$intrinsic_task_{}", id.get()),
             intrinsic,
+            is_empty,
             parameters,
             result,
             span,
@@ -198,9 +214,18 @@ impl ClosureRegistry<'_> {
                 intrinsic: IntrinsicId::new(u32::from(u16::from(routine.intrinsic))),
                 arguments,
             },
-            routine.result,
+            if routine.is_empty {
+                types::INTEGER
+            } else {
+                routine.result
+            },
             routine.span,
         )?;
+        let result = if routine.is_empty {
+            context.lower_native_is_empty(result, routine.span)?
+        } else {
+            result
+        };
         if routine.result == types::UNIT {
             context.terminate(Terminator::Return(None))?;
         } else {

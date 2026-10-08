@@ -1,6 +1,6 @@
 program TuiBackgroundPanicTest;
 
-uses Std.Results, Std.Tasks, Std.Test, Std.Time, Std.Tui;
+uses Std.Tasks, Std.Test, Std.Time, Std.Tui;
 
 type PanicModel = record
   Ready: channel of boolean;
@@ -54,7 +54,7 @@ begin
     Ready := Ready;
     FailureSeen := false;
   end, Inbox, UpdateFramework, UpdateApplication, View, 1, 0);
-  AssertTrue(Unwrap(ReceiveWithTimeout(Ready, 10000)));
+  AssertTrue(ReceiveWithTimeout(Ready, 10000).Unwrap());
   while not Model.FailureSeen do
     begin
       Sleep(1);

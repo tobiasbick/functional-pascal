@@ -1,6 +1,6 @@
 program TuiBackgroundPendingTest;
 
-uses Std.Results, Std.Tasks, Std.Test, Std.Time, Std.Tui;
+uses Std.Tasks, Std.Test, Std.Time, Std.Tui;
 
 type PendingModel = record
   Gate: channel of boolean;
@@ -87,7 +87,7 @@ begin
     FailOld := true;
     Failures := 0;
   end, Inbox, Update, UpdateMessage, View, 1, 0);
-  AssertTrue(Unwrap(ReceiveWithTimeout(Ready, 5000)));
+  AssertTrue(ReceiveWithTimeout(Ready, 5000).Unwrap());
   App.Inject(TuiMsg.Tick(1));
   App.Inject(TuiMsg.Tick(2));
   State := App.RunBackgroundIterations(State, Inbox, Update, UpdateMessage, View, 2, 0);
@@ -101,17 +101,17 @@ begin
   end while;
 
   AssertEquals(1, State.Failures);
-  AssertTrue(IsError(ReceiveWithTimeout(Started, 0)));
+  AssertTrue(ReceiveWithTimeout(Started, 0).IsError());
   App.CloseWithBackground(Inbox);
   const SecondInbox: channel of integer := CreateChannel(1);
   const SecondApp: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(24, 4));
   State.FailOld := false;
   State := SecondApp.RunBackgroundIterations(State, SecondInbox, Update, UpdateMessage, View, 1, 0);
-  AssertTrue(Unwrap(ReceiveWithTimeout(Ready, 5000)));
+  AssertTrue(ReceiveWithTimeout(Ready, 5000).Unwrap());
   SecondApp.Inject(TuiMsg.Tick(1));
   State := SecondApp.RunBackgroundIterations(State, SecondInbox, Update, UpdateMessage, View, 1, 0);
   SecondApp.CloseWithBackground(SecondInbox);
-  AssertTrue(IsError(ReceiveWithTimeout(Started, 0)));
+  AssertTrue(ReceiveWithTimeout(Started, 0).IsError());
   discard CloseChannel(Gate);
   discard CloseChannel(Ready);
   discard CloseChannel(Started);

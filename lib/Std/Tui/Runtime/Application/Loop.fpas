@@ -1,10 +1,10 @@
 unit Std.Tui.Runtime.Application.Loop;
 
 uses
-  Std.Arrays, Std.Console, Std.Options, Std.Results, Std.Tasks, Std.Tui.Cells.Palette,
-  Std.Tui.Elements.Element, Std.Tui.Runtime.Application.Background,
-  Std.Tui.Runtime.Application.ConsoleInput, Std.Tui.Runtime.Application.State, Std.Tui.Runtime.Cmd,
-  Std.Tui.Runtime.Frame, Std.Tui.Runtime.Input, Std.Tui.Runtime.Msg, Std.Tui.Runtime.Routing.Pointer,
+  Std.Console, Std.Tasks, Std.Tui.Cells.Palette, Std.Tui.Elements.Element,
+  Std.Tui.Runtime.Application.Background, Std.Tui.Runtime.Application.ConsoleInput,
+  Std.Tui.Runtime.Application.State, Std.Tui.Runtime.Cmd, Std.Tui.Runtime.Frame,
+  Std.Tui.Runtime.Input, Std.Tui.Runtime.Msg, Std.Tui.Runtime.Routing.Pointer,
   Std.Tui.Runtime.TerminalRenderer;
 
 procedure TuiLoopRender(ApplicationId: integer; Tree: TuiElement; Present: boolean);
@@ -148,7 +148,7 @@ begin
         end;
       elsif BackgroundEnabled then
         begin
-          case Std.Results.Unwrap(TryReceive(Inbox)) of
+          case TryReceive(Inbox).Unwrap() of
             when Some(Message):
               begin
                 Remaining := Remaining - 1;
@@ -291,31 +291,31 @@ begin
           end procedure);
           if PreferApplication then
             begin
-              Std.Arrays.Push(Cases, ApplicationCase);
-              Std.Arrays.Push(Cases, ConsoleCase);
+              Cases.Push(ApplicationCase);
+              Cases.Push(ConsoleCase);
             end;
           else
             begin
-              Std.Arrays.Push(Cases, ConsoleCase);
-              Std.Arrays.Push(Cases, ApplicationCase);
+              Cases.Push(ConsoleCase);
+              Cases.Push(ApplicationCase);
             end;
           end if;
         end;
       else
         begin
-          Std.Arrays.Push(Cases, ConsoleCase);
+          Cases.Push(ConsoleCase);
         end;
       end if;
 
       if TuiBackgroundHasWork(ApplicationId) then
         begin
-          Std.Arrays.Push(Cases, TimerCase(50, procedure() begin end procedure));
+          Cases.Push(TimerCase(50, procedure() begin end procedure));
         end;
       end if;
 
       if TickWait > 0 then
         begin
-          Std.Arrays.Push(Cases, TimerCase(TickWait, procedure() begin end procedure));
+          Cases.Push(TimerCase(TickWait, procedure() begin end procedure));
         end;
       end if;
 

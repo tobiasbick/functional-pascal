@@ -249,3 +249,24 @@ fn write_text(path: &Path, text: &str) {
 fn remove_dir(path: &Path) {
     fs::remove_dir_all(path).expect("test directory must be removed");
 }
+
+#[test]
+fn source_standard_library_cannot_restore_retired_type_helper_units() {
+    for unit in ["Str", "Arrays", "Dictionaries", "Options", "Results"] {
+        let dir = temp_dir("retired-type-helper");
+        write_text(
+            &dir.join("stdlib.fpasprj"),
+            "[project]\nname = \"stdlib\"\nkind = \"library\"\n[sources]\ninclude = [\"Std/**/*.fpas\"]\n",
+        );
+        write_text(
+            &dir.join(format!("Std/{unit}.fpas")),
+            &format!("unit Std.{unit}; end unit;"),
+        );
+        let error = load_standard_library(&dir).expect_err("retired type helper must fail");
+        remove_dir(&dir);
+        assert!(
+            error.to_string().contains("removed type-helper namespace"),
+            "{error}"
+        );
+    }
+}

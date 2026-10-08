@@ -4,7 +4,7 @@
 
 program VmArrayLengthBenchmark;
 
-uses Std.Args, Std.Arrays, Std.Console, Std.Conv, Std.Time;
+uses Std.Args, Std.Console, Std.Conv, Std.Time;
 
 const WarmupIterations: integer := 10000;
 const ArraySize: integer := 10000;
@@ -14,7 +14,7 @@ begin
   var Values: array of integer := [];
   for Index: integer := 1 to Count do
     begin
-      Std.Arrays.Push(Values, Index);
+      Values.Push(Index);
     end;
   end for;
 
@@ -26,7 +26,7 @@ begin
   var Total: integer := 0;
   for Index: integer := 1 to Iterations do
     begin
-      Total := Total + Std.Arrays.Length(Values);
+      Total := Total + Values.Length();
     end;
   end for;
 

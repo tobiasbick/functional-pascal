@@ -5,7 +5,6 @@ use std::path::Path;
 
 use super::auto_import::auto_import_candidates;
 use super::context::completion_context;
-use super::receiver::receiver_callable_candidates;
 use super::{CompletionCandidate, CompletionDocumentation, CompletionKind, CompletionSource};
 use crate::navigation::{
     NavigationDocument, NavigationResult, find_type, resolve_qualified, resolve_unqualified,
@@ -46,15 +45,7 @@ fn complete(
     context: super::context::CompletionContext,
 ) -> Vec<CompletionCandidate> {
     let symbols = if let Some(receiver) = &context.receiver {
-        let mut members = member_candidates(documents, target_index, receiver, offset);
-        members.extend(receiver_callable_candidates(
-            documents,
-            target_index,
-            receiver,
-            offset,
-            &members,
-        ));
-        members
+        member_candidates(documents, target_index, receiver, offset)
     } else {
         visible_candidates(documents, target_index, offset)
     };
@@ -73,6 +64,20 @@ fn complete(
             )
         })
         .collect::<Vec<_>>();
+
+    if let Some(receiver) = &context.receiver {
+        candidates.extend(
+            super::native::completions(
+                documents,
+                target_index,
+                receiver,
+                offset,
+                context.replacement,
+            )
+            .into_iter()
+            .filter(|candidate| starts_with(&candidate.label, &context.prefix)),
+        );
+    }
 
     if context.receiver.is_none() {
         candidates.extend(keyword_candidates(&context));
@@ -232,6 +237,7 @@ fn declaration_candidate(
         insert_text: symbol.name.clone(),
         replacement_span,
         source,
+        inline_documentation: None,
         documentation: Some(CompletionDocumentation {
             path: documents[document_index].path.clone(),
             declaration_offset: symbol.full_span.offset(),
@@ -265,6 +271,7 @@ fn keyword_candidates(context: &super::context::CompletionContext) -> Vec<Comple
             insert_text: (*keyword).to_owned(),
             replacement_span: context.replacement,
             source: CompletionSource::Keyword,
+            inline_documentation: None,
             documentation: None,
             additional_edit: None,
         })

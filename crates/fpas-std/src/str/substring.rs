@@ -6,7 +6,7 @@ use fpas_diagnostics::codes::RUNTIME_STRING_INDEX_OUT_OF_BOUNDS;
 
 /// Extracts a checked Unicode scalar range while retaining immutable value semantics.
 ///
-/// Documentation: `docs/pascal/std/text/str/search.md`.
+/// Documentation: `docs/pascal/language/types/string/search.md`.
 pub(super) fn extract(
     source: &SharedStr,
     start: i64,

@@ -5,7 +5,7 @@ fn record_update_types_empty_array_override_from_the_field() {
     assert_succeeds(
         r#"
 program EmptyArrayUpdate;
-uses Std.Arrays;
+
 type
   Bag = record
     Items: array of integer;
@@ -14,9 +14,9 @@ type
 begin
   const Full: Bag := record Items := [1, 2, 3]; Names := ['a']; end;
   const Emptied: Bag := Full with Items := []; end with;
-  if Std.Arrays.Length(Emptied.Items) <> 0 then panic('items not emptied'); end if;
-  if Std.Arrays.Length(Emptied.Names) <> 1 then panic('names changed'); end if;
-  if Std.Arrays.Length(Full.Items) <> 3 then panic('base mutated'); end if;
+  if Emptied.Items.Length() <> 0 then panic('items not emptied'); end if;
+  if Emptied.Names.Length() <> 1 then panic('names changed'); end if;
+  if Full.Items.Length() <> 3 then panic('base mutated'); end if;
   const Refilled: Bag := Emptied with Items := [4]; end with;
   if Refilled.Items[0] <> 4 then panic('refill'); end if;
 end.
@@ -29,7 +29,7 @@ fn record_update_types_context_dependent_overrides_from_the_field() {
     assert_succeeds(
         r#"
 program ContextUpdate;
-uses Std.Arrays, Std.Dictionaries, Std.Options;
+
 type
   Point = record
     X: integer;
@@ -57,11 +57,11 @@ begin
     Grid := [[]];
     Scores := ['b': []];
   end with;
-  if Std.Dictionaries.Length(Reset.Tags) <> 0 then panic('empty dictionary'); end if;
+  if Reset.Tags.Length() <> 0 then panic('empty dictionary'); end if;
   if Reset.Origin.X + Reset.Origin.Y <> 15 then panic('record literal'); end if;
-  if not Std.Options.IsNone(Reset.Label) then panic('none'); end if;
-  if Std.Arrays.Length(Reset.Grid[0]) <> 0 then panic('nested empty array'); end if;
-  if Std.Arrays.Length(Reset.Scores['b']) <> 0 then panic('empty dictionary value'); end if;
+  if not Reset.Label.IsNone() then panic('none'); end if;
+  if Reset.Grid[0].Length() <> 0 then panic('nested empty array'); end if;
+  if Reset.Scores['b'].Length() <> 0 then panic('empty dictionary value'); end if;
 end.
 "#,
     );
@@ -72,7 +72,7 @@ fn record_update_propagates_context_through_option_and_result_payloads() {
     assert_succeeds(
         r#"
 program NestedUpdate;
-uses Std.Arrays, Std.Dictionaries, Std.Options, Std.Results;
+
 type Holder = record
   Values: option of array of integer;
   Lookup: result of dict of string to integer, string;
@@ -86,11 +86,11 @@ begin
     Values := Some([]);
     Lookup := Ok([:]);
   end with;
-  if Std.Arrays.Length(Std.Options.Unwrap(Updated.Values)) <> 0 then
+  if Updated.Values.Unwrap().Length() <> 0 then
     panic('option payload'); end if;
-  if Std.Dictionaries.Length(Std.Results.Unwrap(Updated.Lookup)) <> 0 then
+  if Updated.Lookup.Unwrap().Length() <> 0 then
     panic('result payload'); end if;
-  if Std.Arrays.Length(Std.Options.Unwrap(Original.Values)) <> 1 then
+  if Original.Values.Unwrap().Length() <> 1 then
     panic('base mutated'); end if;
 end.
 "#,

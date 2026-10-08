@@ -1,10 +1,10 @@
 program T;
 
-uses Std.Console, Std.Arrays;
+uses Std.Console;
 
 begin
-  const C: array of integer := Concat([1, 2], [3, 4]);
-  WriteLn(Length(C));
+  const C: array of integer := [1, 2].Concat([3, 4]);
+  WriteLn(C.Length());
   WriteLn(C[0]);
   WriteLn(C[3]);
 end.

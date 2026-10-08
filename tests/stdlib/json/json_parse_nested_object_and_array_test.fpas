@@ -1,6 +1,6 @@
 program T;
 
-uses Std.Console, Std.Json, Std.Dictionaries, Std.Options, Std.Conv, Std.Arrays;
+uses Std.Console, Std.Json, Std.Conv;
 
 begin
   const R: result of JsonValue, string := Parse('{"name":"Ada","scores":[1,2],"active":true}');
@@ -10,10 +10,10 @@ begin
         case V of
           when JsonValue.Object(Fields):
             begin
-              const NameValue: option of JsonValue := Std.Dictionaries.Get(Fields, 'name');
-              const ScoresValue: option of JsonValue := Std.Dictionaries.Get(Fields, 'scores');
-              const ActiveValue: option of JsonValue := Std.Dictionaries.Get(Fields, 'active');
-              case Unwrap(NameValue) of
+              const NameValue: option of JsonValue := Fields.Get('name');
+              const ScoresValue: option of JsonValue := Fields.Get('scores');
+              const ActiveValue: option of JsonValue := Fields.Get('active');
+              case NameValue.Unwrap() of
                 when JsonValue.String(Name):
                   begin
                     WriteLn(Name);
@@ -24,10 +24,10 @@ begin
                   end;
               end case;
 
-              case Unwrap(ScoresValue) of
+              case ScoresValue.Unwrap() of
                 when JsonValue.ArrayValue(Scores):
                   begin
-                    WriteLn(IntToStr(Std.Arrays.Length(Scores)));
+                    WriteLn(IntToStr(Scores.Length()));
                   end;
                 else
                   begin
@@ -35,7 +35,7 @@ begin
                   end;
               end case;
 
-              case Unwrap(ActiveValue) of
+              case ActiveValue.Unwrap() of
                 when JsonValue.Bool(Active):
                   begin
                     WriteLn(Active);

@@ -1,8 +1,6 @@
 unit Notes.Repository;
 
-uses
-  Notes.Ordering, Notes.Format, Notes.Model, Std.Arrays, Std.Conv, Std.Dictionaries, Std.Fs,
-  Std.Path, Std.Random, Std.Results, Std.Str, Std.Time;
+uses Notes.Ordering, Notes.Format, Notes.Model, Std.Conv, Std.Fs, Std.Path, Std.Random, Std.Time;
 
 // Creates the notes directory or validates that it already exists.
 public function NotesEnsureDirectory(Directory: string): result of boolean, string;
@@ -37,7 +35,7 @@ end function;
 // Sorts pinned notes first, then by descending timestamp; ties keep input order.
 public function NotesSort(Notes: array of Note): array of Note;
 begin
-  return Notes.NotesOrdered();
+  return Notes.Ordering.NotesOrdered(Notes);
 end function;
 
 function AppendEscapedPattern(Acc: string; Character: string): string;
@@ -54,7 +52,7 @@ end function;
 // Escapes only the literal directory; the final note-file pattern stays active.
 function NoteDirectoryPattern(Directory: string): string;
 begin
-  return Std.Path.Join([Std.Str.Reduce(Directory, '', AppendEscapedPattern), '*.note']);
+  return Std.Path.Join([Directory.Reduce('', AppendEscapedPattern), '*.note']);
 end function;
 
 // Loads valid notes and preserves invalid files as visible issues.
@@ -65,7 +63,7 @@ begin
   var Notes: array of Note := [];
   var IdCounts: dict of string to integer := [:];
   var Issues: array of NoteIssue := [];
-  for Index: integer := 0 to Std.Arrays.Length(Paths) - 1 do
+  for Index: integer := 0 to Paths.Length() - 1 do
     begin
       const Path: string := Paths[Index];
       case Std.Fs.ReadText(Path) of
@@ -76,8 +74,8 @@ begin
                 begin
                   var Loaded: Note := NoteValue;
                   Loaded.Path := Path;
-                  Std.Arrays.Push(Notes, Loaded);
-                  if Std.Dictionaries.ContainsKey(IdCounts, Loaded.Id) then
+                  Notes.Push(Loaded);
+                  if IdCounts.ContainsKey(Loaded.Id) then
                     begin
                       IdCounts[Loaded.Id] := IdCounts[Loaded.Id] + 1;
                     end;
@@ -89,7 +87,7 @@ begin
                 end;
               when Error(Message):
                 begin
-                  Std.Arrays.Push(Issues, record
+                  Issues.Push(record
                     Path := Path;
                     Message := Message;
                   end);
@@ -98,7 +96,7 @@ begin
           end;
         when Error(Message):
           begin
-            Std.Arrays.Push(Issues, record
+            Issues.Push(record
               Path := Path;
               Message := Message;
             end);
@@ -111,14 +109,14 @@ begin
     begin
       if IdCounts[Loaded.Id] > 1 then
         begin
-          Std.Arrays.Push(Issues, record
+          Issues.Push(record
             Path := Loaded.Path;
             Message := ('Duplicate note ID: ' + Loaded.Id) + '. Give each file a unique ID before editing.';
           end);
         end;
       else
         begin
-          Std.Arrays.Push(Unique, Loaded);
+          Unique.Push(Loaded);
         end;
       end if;
     end;

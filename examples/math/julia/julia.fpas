@@ -2,7 +2,7 @@
 
 program JuliaShowcase;
 
-uses Std.Console, Std.Conv, Std.Math, Std.Options, Std.Str, Julia.Color, Julia.Render;
+uses Std.Console, Std.Conv, Std.Math, Julia.Color, Julia.Render;
 
 type ExplorerState = record
   CenterX: real;
@@ -88,10 +88,10 @@ procedure WriteHudText(Text: string; Width: integer);
 begin
   if Width > 0 then
     begin
-      const TextLength: integer := Min(Std.Str.Length(Text), Width);
+      const TextLength: integer := Min(Text.Length(), Width);
       if TextLength > 0 then
         begin
-          WriteText(Substring(Text, 0, TextLength));
+          WriteText(Text.Slice(0, TextLength));
         end;
       end if;
     end;
@@ -110,12 +110,13 @@ begin
   const Title: string := 'Functional Pascal Julia';
   WriteHudText(Title, Width);
   TextColorRGB(156, 204, 255);
-  WriteHudText('  tasks | units | records | postfix | truecolor', Max(Width - Std.Str.Length(Title), 0));
+  WriteHudText('  tasks | units | records | postfix | truecolor', Max(Width - Title.Length(), 0));
   if ScreenHeight() >= 2 then
     begin
       GotoXY(1, 2);
       NormVideo();
-      WriteHudText(Format('size=%dx%d  c=(%f,%f)  jr=%f  ji=%f  zoom=%f  iter=%d  pal=%s', Width, Height, S.CenterX, S.CenterY, S.Jr, S.Ji, S.Zoom, S.MaxIter, PaletteName(S.Palette)), Width);
+      WriteHudText('size=%dx%d  c=(%f,%f)  jr=%f  ji=%f  zoom=%f  iter=%d  pal=%s'
+                     .Format(Width, Height, S.CenterX, S.CenterY, S.Jr, S.Ji, S.Zoom, S.MaxIter, PaletteName(S.Palette)), Width);
     end;
   end if;
 

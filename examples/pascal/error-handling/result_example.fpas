@@ -1,6 +1,6 @@
 program ResultExample;
 
-uses Std.Console, Std.Conv, Std.Results;
+uses Std.Console, Std.Conv;
 
 function Divide(A: integer; B: integer): result of integer, string;
 begin
@@ -23,11 +23,11 @@ end function;
 
 begin
   const R1: result of integer, string := Divide(10, 3);
-  WriteLn('IsOk: ', IsOk(R1));
-  WriteLn('Value: ', Unwrap(R1));
+  WriteLn('IsOk: ', R1.IsOk());
+  WriteLn('Value: ', R1.Unwrap());
   const R2: result of integer, string := Divide(5, 0);
-  WriteLn('IsError: ', IsError(R2));
-  WriteLn('UnwrapOr: ', UnwrapOr(R2, -1));
+  WriteLn('IsError: ', R2.IsError());
+  WriteLn('UnwrapOr: ', R2.UnwrapOr(-1));
   case Divide(42, 6) of
     when Ok(V):
       begin

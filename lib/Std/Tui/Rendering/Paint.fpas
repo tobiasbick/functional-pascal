@@ -1,7 +1,7 @@
 unit Std.Tui.Rendering.Paint;
 
 uses
-  Std.Arrays, Std.Console, Std.Tui.Cells.Cell, Std.Tui.Cells.StyleRole, Std.Tui.Chrome.StatusItem,
+  Std.Console, Std.Tui.Cells.Cell, Std.Tui.Cells.StyleRole, Std.Tui.Chrome.StatusItem,
   Std.Tui.Elements.Element, Std.Tui.Geometry.Point, Std.Tui.Geometry.Rect, Std.Tui.Geometry.Size,
   Std.Tui.Ids.ControlId, Std.Tui.Layout.Frame, Std.Tui.Rendering.Button, Std.Tui.Rendering.Canvas,
   Std.Tui.Rendering.CellGrid, Std.Tui.Rendering.Chrome, Std.Tui.Rendering.Gauge,
@@ -91,9 +91,9 @@ begin
     when TuiElement.List(Id, Items, Selected, ChangeAction):
       begin
         var RowLimit: integer := Entry.Bounds.Height;
-        if RowLimit > Std.Arrays.Length(Items) then
+        if RowLimit > Items.Length() then
           begin
-            RowLimit := Std.Arrays.Length(Items);
+            RowLimit := Items.Length();
           end;
         end if;
 
@@ -115,7 +115,7 @@ begin
       begin
         Clipped.FillRect(Entry.Bounds, TuiCell.Create(' ', TuiStyleRole.MenuNormal));
         var X: integer := Entry.Bounds.X;
-        for ItemIndex: integer := 0 to Std.Arrays.Length(Items) - 1 do
+        for ItemIndex: integer := 0 to Items.Length() - 1 do
           begin
             var Role: TuiStyleRole := TuiStyleRole.MenuNormal;
             if Items[ItemIndex].Enabled and TuiPaintFocused(Focused, Items[ItemIndex].Id) then
@@ -155,7 +155,7 @@ begin
       end;
     when TuiElement.Scroll(Id, Offset, ChangeAction, Children):
       begin
-        for ChildIndex: integer := 0 to Std.Arrays.Length(Children) - 1 do
+        for ChildIndex: integer := 0 to Children.Length() - 1 do
           begin
             Next := TuiPaintArranged(Canvas, Frame, Children[ChildIndex], Next, Focused, Pressed);
           end;
@@ -163,7 +163,7 @@ begin
       end;
     when TuiElement.Row(Children, Spacing):
       begin
-        for ChildIndex: integer := 0 to Std.Arrays.Length(Children) - 1 do
+        for ChildIndex: integer := 0 to Children.Length() - 1 do
           begin
             Next := TuiPaintArranged(Canvas, Frame, Children[ChildIndex], Next, Focused, Pressed);
           end;
@@ -171,7 +171,7 @@ begin
       end;
     when TuiElement.Column(Children, Spacing):
       begin
-        for ChildIndex: integer := 0 to Std.Arrays.Length(Children) - 1 do
+        for ChildIndex: integer := 0 to Children.Length() - 1 do
           begin
             Next := TuiPaintArranged(Canvas, Frame, Children[ChildIndex], Next, Focused, Pressed);
           end;
@@ -179,7 +179,7 @@ begin
       end;
     when TuiElement.Layout(Settings, Children):
       begin
-        for ChildIndex: integer := 0 to Std.Arrays.Length(Children) - 1 do
+        for ChildIndex: integer := 0 to Children.Length() - 1 do
           begin
             Next := TuiPaintArranged(Canvas, Frame, Children[ChildIndex], Next, Focused, Pressed);
           end;
@@ -188,7 +188,7 @@ begin
     when TuiElement.Panel(Title, Children), TuiElement.Overlay(Title, Children):
       begin
         TuiPaintPanel(Clipped, Entry.Bounds, Title);
-        for ChildIndex: integer := 0 to Std.Arrays.Length(Children) - 1 do
+        for ChildIndex: integer := 0 to Children.Length() - 1 do
           begin
             Next := TuiPaintArranged(Canvas, Frame, Children[ChildIndex], Next, Focused, Pressed);
           end;
@@ -196,7 +196,7 @@ begin
       end;
     when TuiElement.Desktop(DesktopFocus, Children):
       begin
-        for ChildIndex: integer := 0 to Std.Arrays.Length(Children) - 1 do
+        for ChildIndex: integer := 0 to Children.Length() - 1 do
           begin
             Next := TuiPaintArranged(Canvas, Frame, Children[ChildIndex], Next, DesktopFocus, Pressed);
           end;
@@ -228,7 +228,7 @@ begin
     when TuiElement.Desktop(Focused, Children):
       begin
         var ModalIndex: integer := -1;
-        for ChildIndex: integer := 0 to Std.Arrays.Length(Children) - 1 do
+        for ChildIndex: integer := 0 to Children.Length() - 1 do
           begin
             case Children[ChildIndex] of
               when TuiElement.Overlay(Title, OverlayChildren):
@@ -242,7 +242,7 @@ begin
           end;
         end for;
 
-        for ChildIndex: integer := 0 to Std.Arrays.Length(Children) - 1 do
+        for ChildIndex: integer := 0 to Children.Length() - 1 do
           begin
             Next := TuiPaintMenuOverlays(Canvas, Frame, Children[ChildIndex], Next, AllowMenu and
                                                                                     ((ModalIndex < 0) or (ModalIndex = ChildIndex)));
@@ -251,7 +251,7 @@ begin
       end;
     when TuiElement.Scroll(Id, Offset, ChangeAction, Children):
       begin
-        for ChildIndex: integer := 0 to Std.Arrays.Length(Children) - 1 do
+        for ChildIndex: integer := 0 to Children.Length() - 1 do
           begin
             Next := TuiPaintMenuOverlays(Canvas, Frame, Children[ChildIndex], Next, AllowMenu);
           end;
@@ -259,7 +259,7 @@ begin
       end;
     when TuiElement.Row(Children, Spacing):
       begin
-        for ChildIndex: integer := 0 to Std.Arrays.Length(Children) - 1 do
+        for ChildIndex: integer := 0 to Children.Length() - 1 do
           begin
             Next := TuiPaintMenuOverlays(Canvas, Frame, Children[ChildIndex], Next, AllowMenu);
           end;
@@ -267,7 +267,7 @@ begin
       end;
     when TuiElement.Column(Children, Spacing):
       begin
-        for ChildIndex: integer := 0 to Std.Arrays.Length(Children) - 1 do
+        for ChildIndex: integer := 0 to Children.Length() - 1 do
           begin
             Next := TuiPaintMenuOverlays(Canvas, Frame, Children[ChildIndex], Next, AllowMenu);
           end;
@@ -275,7 +275,7 @@ begin
       end;
     when TuiElement.Layout(Settings, Children):
       begin
-        for ChildIndex: integer := 0 to Std.Arrays.Length(Children) - 1 do
+        for ChildIndex: integer := 0 to Children.Length() - 1 do
           begin
             Next := TuiPaintMenuOverlays(Canvas, Frame, Children[ChildIndex], Next, AllowMenu);
           end;
@@ -283,7 +283,7 @@ begin
       end;
     when TuiElement.Panel(Title, Children):
       begin
-        for ChildIndex: integer := 0 to Std.Arrays.Length(Children) - 1 do
+        for ChildIndex: integer := 0 to Children.Length() - 1 do
           begin
             Next := TuiPaintMenuOverlays(Canvas, Frame, Children[ChildIndex], Next, AllowMenu);
           end;
@@ -291,7 +291,7 @@ begin
       end;
     when TuiElement.Overlay(Title, Children):
       begin
-        for ChildIndex: integer := 0 to Std.Arrays.Length(Children) - 1 do
+        for ChildIndex: integer := 0 to Children.Length() - 1 do
           begin
             Next := TuiPaintMenuOverlays(Canvas, Frame, Children[ChildIndex], Next, AllowMenu);
           end;

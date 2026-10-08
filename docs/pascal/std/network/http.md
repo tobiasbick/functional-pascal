@@ -52,14 +52,14 @@ var PutRequest: Request := Request.Put('http://127.0.0.1:8080/items/42');
 PutRequest.Body := Std.Net.Utf8.Encode('{"name":"updated"}');
 ```
 
-Receiver calls can thread the request and the explicit `Result` through the
-existing functions without unwrapping implicitly:
+Call `Send` with the request, then chain on the explicit `Result` without
+unwrapping implicitly:
 
 ```pascal
-uses Std.Http, Std.Results;
+uses Std.Http;
 
 const TextResult: result of string, string :=
-  Request.Get('https://example.test/items').Send().AndThen(BodyText);
+  Std.Http.Send(Request.Get('https://example.test/items')).AndThen(BodyText);
 ```
 
 `Method` deliberately remains a string so extension methods are not excluded. For example, a
@@ -111,7 +111,7 @@ case OpenStream(Request.Get('https://example.test/events')) of
           case ReadStream(ResponseValue.Body, 4096) of
             when Ok(Bytes):
               begin
-                Reading := Std.Arrays.Length(Bytes) <> 0;
+                Reading := Bytes.Length() <> 0;
               end;
             when Error(Message):
               begin

@@ -27,7 +27,7 @@ short-circuit and `xor` evaluates both operands. Integer bit operations use
 - `not` binds below the comparisons and above the binary logical operators:
   `not Count > 0` means `not (Count > 0)`, and `not Done and Ready` means
   `(not Done) and Ready`.
-- Bit operations become named functions in the new `Std.Bits` unit (Q02):
+- Integer bit operations use named functions in `Std.Bits` (Q02):
   `BitAnd`, `BitOr`, `BitXor`, `BitNot`, `ShiftLeft`, `ShiftRight`; `shl` and
   `shr` are no longer keywords. Integer operands of `and`, `or`, `xor`, or
   `not` are diagnosed with the matching function name.
@@ -60,9 +60,11 @@ From strongest to weakest:
 | 2 | unary `-`, `try` | |
 | 3 | `*`, `/`, `div`, `mod` | |
 | 4 | `+`, `-` | |
-| 5 | `=`, `<>`, `<`, `>`, `<=`, `>=`, `in`, `is` | non-associative |
+| 5 | `=`, `<>`, `<`, `>`, `<=`, `>=`, `in` | non-associative |
 | 6 | `not` | |
 | 7 | `and`, `or`, `xor` | same-operator chains only |
+
+The `is` pattern test is planned in AP20.3 at comparison precedence.
 
 Comparison chains such as `A < B < C` are errors. The diagnostic suggests
 `A < B and B < C`. Mixed logical operators require parentheses; `not A = B`
@@ -73,11 +75,6 @@ means `not (A = B)`.
 - AP02 (diagnostic codes).
 
 AP18, AP21, and AP23 depend on this package.
-
-## Order
-
-AP07.1 and AP07.2 are independent. AP07.3 changes precedence and may run in
-parallel with AP07.2. AP07.4 needs `Std.Bits` from AP07.2.
 
 ## Work packages
 
@@ -91,13 +88,3 @@ parallel with AP07.2. AP07.4 needs `Std.Bits` from AP07.2.
 Evaluation order and precedence are unambiguous and covered by boundary tests;
 mixed logical operators require parentheses; migration does not silently change
 meaning.
-
-## Reference
-
-The reference branch `codex/syntax-changes` identified eager Boolean lowering
-and already rejected chained comparisons. The completed package on
-`codex/syntax-changes-2` uses branch-based `and`/`or` lowering in
-`crates/fpas-compiler/src/lowering/expr/boolean.rs`, retains eager Boolean
-`xor`, and rejects comparison chains. The AP07.3 AST audit found no existing
-logical expression requiring regrouping; AP07.4 migrates integer operator
-fixtures to `Std.Bits`.

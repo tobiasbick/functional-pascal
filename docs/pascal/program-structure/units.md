@@ -15,7 +15,7 @@ before each exported declaration; it applies to that declaration only.
 ```pascal
 unit MyApp.Utils;
 
-uses Std.Str;
+
 
 public function Clamp(Value: integer; Min: integer; Max: integer): integer;
 begin
@@ -30,7 +30,7 @@ end function;
 
 public function IsBlank(S: string): boolean;
 begin
-  return Length(Trim(S)) = 0;
+  return S.Trim().Length() = 0;
 end function;
 end unit;
 ```
@@ -71,17 +71,20 @@ end.
 
 ### Ambiguity rule
 
-When two or more imported units export the same short name, the short name becomes ambiguous. This applies equally to `Std.*` units and your own units, in any combination, and regardless of parameter counts: a routine `Send` from `MyApp.Net` and `Std.Tasks.Send` make `Send` ambiguous. No error is raised at the `uses` site; the compiler reports an error only when the ambiguous short name is actually used. The fully qualified name always works as a fallback:
+When two or more imported units export the same short name, the short name becomes ambiguous. This applies equally to `Std.*` units and your own units, in any combination, and regardless of parameter counts: a routine `Send` from `MyApp.Net` and `Std.Tasks.Send` make `Send` ambiguous. No error is raised at the `uses` site; the compiler reports an error only when the ambiguous short name is actually used. The fully qualified name selects an ordinary imported routine. Built-in
+operations are independent of unit imports and their free routine names:
 
 ```pascal
 program Demo;
-uses Std.Str, Std.Arrays;           // Both units may export Length
 begin
-  // Length('hi');   ← ERROR: ambiguous — exists in Std.Str and Std.Arrays
-  const L1: integer := Std.Str.Length('hi');       // Qualified string Length
-  const L2: integer := Std.Arrays.Length([1, 2]);   // Qualified array Length
+  const L1: integer := 'hi'.Length();
+  const L2: integer := [1, 2].Length();
 end.
 ```
+
+String, array, dictionary, `Option`, and `Result` operations need no `uses`.
+The five former type-helper units and their free API have been removed; see
+[Dot calls](../language/functions/fluent-calls.md).
 
 ## Reserved namespace `Std`
 

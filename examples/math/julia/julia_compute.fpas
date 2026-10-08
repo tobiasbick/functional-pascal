@@ -1,6 +1,6 @@
 unit Julia.Compute;
 
-uses Std.Tasks, Std.Math, Std.Conv, Std.Arrays;
+uses Std.Tasks, Std.Math, Std.Conv;
 
 type Complex = record
   public Re: real;
@@ -116,7 +116,7 @@ begin
         end;
       end if;
       const cx: real := XMin + (Px / Wr) * (XMax - XMin);
-      Push(Row, Iterate(Complex.Create(cx, cy), C, MaxIter, Token));
+      Row.Push(Iterate(Complex.Create(cx, cy), C, MaxIter, Token));
     end;
   end for;
 

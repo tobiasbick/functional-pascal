@@ -1,6 +1,6 @@
 program T;
 
-uses Std.Console, Std.Arrays;
+uses Std.Console;
 
 function IsGreaterThanFifteen(X: integer): boolean;
 begin
@@ -9,6 +9,6 @@ end function;
 
 begin
   const A: array of integer := [10, 20, 30];
-  const Idx: integer := FindIndex(A, IsGreaterThanFifteen);
+  const Idx: integer := A.FindIndex(IsGreaterThanFifteen);
   WriteLn(Idx);
 end.

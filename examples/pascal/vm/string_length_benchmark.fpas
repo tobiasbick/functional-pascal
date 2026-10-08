@@ -4,7 +4,7 @@
 
 program VmStringLengthBenchmark;
 
-uses Std.Args, Std.Console, Std.Conv, Std.Str, Std.Time;
+uses Std.Args, Std.Console, Std.Conv, Std.Time;
 
 const WarmupIterations: integer := 10000;
 const StringSize: integer := 10000;
@@ -26,7 +26,7 @@ begin
   var Total: integer := 0;
   for Index: integer := 1 to Iterations do
     begin
-      Total := Total + Std.Str.Length(Text);
+      Total := Total + Text.Length();
     end;
   end for;
 

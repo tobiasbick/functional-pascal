@@ -3,7 +3,8 @@
 mod auto_import;
 mod completion;
 mod context;
-mod receiver;
+pub(crate) mod native;
+mod native_receiver;
 mod signature_help;
 
 use std::path::PathBuf;
@@ -77,6 +78,8 @@ pub struct CompletionCandidate {
     pub replacement_span: SourceSpan,
     /// Suggestion origin.
     pub source: CompletionSource,
+    /// Catalog documentation available without a source declaration.
+    pub inline_documentation: Option<String>,
     /// Optional declaration identity resolved only after item selection.
     pub documentation: Option<CompletionDocumentation>,
     /// Optional same-document import edit.

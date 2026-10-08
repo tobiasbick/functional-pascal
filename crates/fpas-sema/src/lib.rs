@@ -54,7 +54,10 @@ pub use interface::{
     interface_type_to_ty, ty_to_interface_type,
 };
 pub use std_registry::{
-    IntrinsicStdSymbol, IntrinsicStdSymbolKind, intrinsic_std_symbols, intrinsic_std_units,
+    IntrinsicStdSymbol, IntrinsicStdSymbolKind, NativeLowering, NativeOperation, NativeReceiver,
+    intrinsic_std_receiver_mode, intrinsic_std_symbols, intrinsic_std_units, native_factory,
+    native_operation, native_operation_by_implementation, native_operations,
+    validate_native_catalog,
 };
 pub use types::{EnumTy, FunctionTy, ParamMode, ParamTy, ProcedureTy, RecordTy, Ty};
 

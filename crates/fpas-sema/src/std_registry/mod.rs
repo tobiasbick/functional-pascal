@@ -8,6 +8,7 @@ mod aliases;
 mod api;
 mod builtins;
 mod loaded;
+mod native;
 mod receiver;
 
 pub use aliases::register_short_aliases;
@@ -16,7 +17,12 @@ pub use api::{
 };
 pub use builtins::{check_builtin_std_call, check_builtin_std_call_refs};
 pub use loaded::{register_loaded_std, register_single_std_unit};
-pub(crate) use receiver::builtin_accepts_receiver;
+pub use native::{
+    NativeLowering, NativeOperation, NativeReceiver, native_factory, native_migration_hint,
+    native_operation, native_operation_by_implementation, native_operations,
+    validate_native_catalog,
+};
+pub use receiver::intrinsic_std_receiver_mode;
 
 use crate::check::Checker;
 use crate::scope::{Symbol, SymbolKind};
@@ -36,24 +42,6 @@ fn define_func(c: &mut Checker, q: &str, params: Vec<ParamTy>, ret: Ty) {
                 params,
                 return_type: Box::new(ret),
                 variadic: false,
-            }),
-            mutable: false,
-            kind: SymbolKind::Function,
-            task_bound: false,
-        },
-    );
-}
-
-fn define_func_variadic(c: &mut Checker, q: &str, params: Vec<ParamTy>, ret: Ty) {
-    c.scopes.define(
-        q,
-        Symbol {
-            constant: None,
-            ty: Ty::Function(FunctionTy {
-                type_params: Vec::new(),
-                params,
-                return_type: Box::new(ret),
-                variadic: true,
             }),
             mutable: false,
             kind: SymbolKind::Function,

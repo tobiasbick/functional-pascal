@@ -1,6 +1,6 @@
 //! `Std.Arrays.*` intrinsic implementations (non-mutating; `Push`/`Pop` use dedicated VM opcodes).
 //!
-//! **Documentation:** `docs/pascal/std/collections/array/README.md` (from the repository root).
+//! **Documentation:** `docs/pascal/language/types/array/README.md` (from the repository root).
 //! **Maintenance:** Keep that Markdown file aligned with this file, `intrinsics.rs`,
 //! `fpas-vm` (`ArrayPush` / `ArrayPop`), `fpas-compiler`, and `fpas-sema` `std_registry.rs`.
 
@@ -56,7 +56,7 @@ pub(crate) fn run(
                     std_runtime_error(
                         RUNTIME_VM_OPERAND_TYPE_MISMATCH,
                         m,
-                        "Use arrays of comparable primitive values (integer, real, string, boolean) with Std.Arrays.Sort.",
+                        "Use arrays of comparable primitive values (integer, real, string, boolean) with Items.Sort().",
                         location,
                     )
                 })?);

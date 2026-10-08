@@ -1,7 +1,7 @@
 // MVU update logic for the Local Chat application.
 unit LocalChat.Update;
 
-uses LocalChat.Model, LocalChat.Service, Std.Arrays, Std.Console, Std.Options, Std.Str, Std.Tui;
+uses LocalChat.Model, LocalChat.Service, Std.Console, Std.Tui;
 
 // Identifier of the prompt input control.
 const PromptControl: integer := 1;
@@ -21,7 +21,7 @@ function AppendEntry(State: LocalChatModel; Entry: ChatEntry): LocalChatModel;
 begin
   var Next: LocalChatModel := State;
   var Entries: array of ChatEntry := Next.Entries;
-  Std.Arrays.Push(Entries, Entry);
+  Entries.Push(Entry);
   Next.Entries := Entries;
   return Next;
 end function;
@@ -32,7 +32,7 @@ end function;
 // - `State`: Current application state containing the draft.
 function SendPrompt(State: LocalChatModel): LocalChatModel;
 begin
-  const Prompt: string := Std.Str.Trim(State.Draft);
+  const Prompt: string := State.Draft.Trim();
   if Prompt = '' then
     begin
       var Empty: LocalChatModel := State;

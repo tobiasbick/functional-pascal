@@ -1,12 +1,10 @@
 program T;
 
-uses Std.Arrays;
-
 function Identity(V: integer): integer;
 begin
   return V;
 end function;
 
 begin
-  const X: integer := FlatMap([1, 2], Identity);
+  const X: integer := [1, 2].FlatMap(Identity);
 end.

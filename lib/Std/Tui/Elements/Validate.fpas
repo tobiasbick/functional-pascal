@@ -1,12 +1,12 @@
 unit Std.Tui.Elements.Validate;
 
 uses
-  Std.Arrays, Std.Conv, Std.Str, Std.Tui.Chrome.StatusItem, Std.Tui.Elements.Element,
-  Std.Tui.Elements.MenuValidate, Std.Tui.Ids.Action, Std.Tui.Ids.ControlId;
+  Std.Conv, Std.Tui.Chrome.StatusItem, Std.Tui.Elements.Element, Std.Tui.Elements.MenuValidate,
+  Std.Tui.Ids.Action, Std.Tui.Ids.ControlId;
 
 function TuiElementControlSeen(Seen: array of integer; Value: integer): boolean;
 begin
-  for Index: integer := 0 to Std.Arrays.Length(Seen) - 1 do
+  for Index: integer := 0 to Seen.Length() - 1 do
     begin
       if Seen[Index] = Value then
         begin
@@ -83,38 +83,37 @@ begin
       begin
         TuiElementValidateControl(Button.Id);
         TuiElementValidateAction(Button.Action);
-        if Std.Str.Length(Button.Mnemonic) > 1 then
+        if Button.Mnemonic.Length() > 1 then
           begin
             panic('Tui button mnemonic must be empty or one character');
           end;
         end if;
 
-        if (Button.Mnemonic <> '') and
-           not Std.Str.Contains(Std.Str.ToLower(Button.Text), Std.Str.ToLower(Button.Mnemonic)) then
+        if (Button.Mnemonic <> '') and not Button.Text.ToLower().Contains(Button.Mnemonic.ToLower()) then
           begin
             panic('Tui button mnemonic must occur in its text');
           end;
         end if;
 
-        Std.Arrays.Push(Seen, Button.Id.Value);
+        Seen.Push(Button.Id.Value);
       end;
     when TuiElement.Input(Input):
       begin
         TuiElementValidateControl(Input.Id);
         TuiElementValidateAction(Input.ChangeAction);
-        if (Input.Caret < 0) or (Input.Caret > Std.Str.Length(Input.Text)) then
+        if (Input.Caret < 0) or (Input.Caret > Input.Text.Length()) then
           begin
             panic('Tui input caret must be within its text');
           end;
         end if;
 
-        Std.Arrays.Push(Seen, Input.Id.Value);
+        Seen.Push(Input.Id.Value);
       end;
     when TuiElement.TextArea(Id, Text, Caret, Offset, ChangeAction):
       begin
         TuiElementValidateControl(Id);
         TuiElementValidateAction(ChangeAction);
-        if (Caret < 0) or (Caret > Std.Str.Length(Text)) then
+        if (Caret < 0) or (Caret > Text.Length()) then
           begin
             panic('Tui text area caret must be within its text');
           end;
@@ -126,19 +125,19 @@ begin
           end;
         end if;
 
-        Std.Arrays.Push(Seen, Id.Value);
+        Seen.Push(Id.Value);
       end;
     when TuiElement.CheckBox(Id, Text, Checked, ChangeAction):
       begin
         TuiElementValidateControl(Id);
         TuiElementValidateAction(ChangeAction);
-        Std.Arrays.Push(Seen, Id.Value);
+        Seen.Push(Id.Value);
       end;
     when TuiElement.List(Id, Items, Selected, ChangeAction):
       begin
         TuiElementValidateControl(Id);
         TuiElementValidateAction(ChangeAction);
-        const Count: integer := Std.Arrays.Length(Items);
+        const Count: integer := Items.Length();
         if Count = 0 then
           begin
             if Selected <> -1 then
@@ -153,7 +152,7 @@ begin
           end;
         end if;
 
-        Std.Arrays.Push(Seen, Id.Value);
+        Seen.Push(Id.Value);
       end;
     when TuiElement.Scroll(Id, Offset, ChangeAction, Children):
       begin
@@ -165,17 +164,17 @@ begin
           end;
         end if;
 
-        if Std.Arrays.Length(Children) <> 1 then
+        if Children.Length() <> 1 then
           begin
             panic('Tui scroll wrappers require exactly one child');
           end;
         end if;
 
-        Std.Arrays.Push(Seen, Id.Value);
+        Seen.Push(Id.Value);
       end;
     when TuiElement.MenuBar(Items):
       begin
-        for Index: integer := 0 to Std.Arrays.Length(Items) - 1 do
+        for Index: integer := 0 to Items.Length() - 1 do
           begin
             TuiElementValidateControl(Items[Index].Id);
             TuiElementValidateAction(Items[Index].Action);
@@ -186,7 +185,7 @@ begin
               end;
             end if;
 
-            Std.Arrays.Push(Seen, Items[Index].Id.Value);
+            Seen.Push(Items[Index].Id.Value);
           end;
         end for;
       end;
@@ -195,7 +194,7 @@ begin
         TuiElementValidateControl(Id);
         TuiElementValidateAction(ChangeAction);
         TuiMenuValidate(Nodes, State);
-        Std.Arrays.Push(Seen, Id.Value);
+        Seen.Push(Id.Value);
       end;
     when TuiElement.Gauge(Gauge):
       begin
@@ -213,7 +212,7 @@ begin
       end;
     when TuiElement.StatusLine(Items):
       begin
-        for Index: integer := 0 to Std.Arrays.Length(Items) - 1 do
+        for Index: integer := 0 to Items.Length() - 1 do
           begin
             case Items[Index] of
               when TuiStatusItem.Command(Id, Text, Action, Enabled):
@@ -227,7 +226,7 @@ begin
                     end;
                   end if;
 
-                  Std.Arrays.Push(Seen, Id.Value);
+                  Seen.Push(Id.Value);
                 end;
               else
                 begin
@@ -246,7 +245,7 @@ begin
       end;
     when TuiElement.Layout(Settings, Children):
       begin
-        if Std.Arrays.Length(Children) <> 1 then
+        if Children.Length() <> 1 then
           begin
             panic('Tui layout wrappers require exactly one child');
           end;
@@ -257,10 +256,10 @@ begin
       end;
   end case;
   const Children: array of TuiElement := TuiElementChildren(Node);
-  for ChildIndex: integer := 0 to Std.Arrays.Length(Children) - 1 do
+  for ChildIndex: integer := 0 to Children.Length() - 1 do
     begin
       const ChildIds: array of integer := TuiElementValidateAndCollect(Children[ChildIndex]);
-      for IdIndex: integer := 0 to Std.Arrays.Length(ChildIds) - 1 do
+      for IdIndex: integer := 0 to ChildIds.Length() - 1 do
         begin
           if TuiElementControlSeen(Seen, ChildIds[IdIndex]) then
             begin
@@ -269,7 +268,7 @@ begin
             end;
           end if;
 
-          Std.Arrays.Push(Seen, ChildIds[IdIndex]);
+          Seen.Push(ChildIds[IdIndex]);
         end;
       end for;
     end;

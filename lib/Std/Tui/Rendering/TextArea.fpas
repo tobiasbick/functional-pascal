@@ -1,8 +1,8 @@
 unit Std.Tui.Rendering.TextArea;
 
 uses
-  Std.Arrays, Std.Str, Std.Tui.Cells.Cell, Std.Tui.Cells.StyleRole, Std.Tui.Geometry.Point,
-  Std.Tui.Geometry.Rect, Std.Tui.Rendering.Canvas, Std.Tui.Text.TextArea;
+  Std.Tui.Cells.Cell, Std.Tui.Cells.StyleRole, Std.Tui.Geometry.Point, Std.Tui.Geometry.Rect,
+  Std.Tui.Rendering.Canvas, Std.Tui.Text.TextArea;
 
 // Paints clipped text-area lines and a focused visible caret.
 //
@@ -32,8 +32,8 @@ begin
     end;
   end if;
   const Area: TuiCanvas := Canvas.Child(Bounds);
-  const Lines: array of string := Std.Str.Split(Text, Std.Str.Chr(10));
-  const LineCount: integer := Std.Arrays.Length(Lines);
+  const Lines: array of string := Text.Split(string.Chr(10));
+  const LineCount: integer := Lines.Length();
   for Row: integer := 0 to Bounds.Height - 1 do
     begin
       const Line: integer := Offset.Y + Row;

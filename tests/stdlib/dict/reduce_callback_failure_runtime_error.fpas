@@ -1,7 +1,5 @@
 program DictionaryReduceCallbackFailureRuntimeError;
 
-uses Std.Dictionaries;
-
 function FailOnSecond(Acc: integer; Key: string; Value: integer): integer;
 begin
   if Key = 'B' then
@@ -15,5 +13,5 @@ end function;
 
 begin
   const Values: dict of string to integer := ['A': 1, 'B': 2, 'C': 3];
-  const Total: integer := Reduce(Values, 0, FailOnSecond);
+  const Total: integer := Values.Reduce(0, FailOnSecond);
 end.

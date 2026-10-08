@@ -1,7 +1,7 @@
 // Measures repeated direct writes to a local copy-on-write array.
 program LocalIndexWriteBenchmark;
 
-uses Std.Args, Std.Arrays, Std.Console, Std.Conv, Std.Time;
+uses Std.Args, Std.Console, Std.Conv, Std.Time;
 
 const WarmupIterations: integer := 100;
 
@@ -10,7 +10,7 @@ begin
   var LocalValues: array of integer := Values;
   for Iteration: integer := 1 to Iterations do
     begin
-      for Index: integer := 0 to Std.Arrays.Length(LocalValues) - 1 do
+      for Index: integer := 0 to LocalValues.Length() - 1 do
         begin
           LocalValues[Index] := Iteration + Index;
         end;
@@ -18,7 +18,7 @@ begin
     end;
   end for;
 
-  return LocalValues[0] + LocalValues[Std.Arrays.Length(LocalValues) - 1];
+  return LocalValues[0] + LocalValues[LocalValues.Length() - 1];
 end function;
 
 begin
@@ -34,8 +34,8 @@ begin
       panic('ITERATIONS and SIZE must be positive');
     end;
   end if;
-  var Checksum: integer := RewriteValues(Std.Arrays.Fill(0, Size), WarmupIterations);
-  const Values: array of integer := Std.Arrays.Fill(0, Size);
+  var Checksum: integer := RewriteValues(array.Fill(0, Size), WarmupIterations);
+  const Values: array of integer := array.Fill(0, Size);
   const Started: integer := MonotonicMillis();
   Checksum := RewriteValues(Values, Iterations);
   const Elapsed: integer := ElapsedMillis(Started);

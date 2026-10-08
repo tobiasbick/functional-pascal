@@ -1,13 +1,13 @@
 //! `Std.Str` intrinsic discriminants.
 //!
-//! **Documentation:** `docs/pascal/std/text/str/README.md` (from the repository root).
+//! **Documentation:** `docs/pascal/language/types/string/README.md` (from the repository root).
 
 use num_enum::TryFromPrimitive;
 
 documented_intrinsic_enum! {
 /// Intrinsics for `Std.Str.*`.
 ///
-/// **Documentation:** `docs/pascal/std/text/str/README.md`
+/// **Documentation:** `docs/pascal/language/types/string/README.md`
 #[derive(Debug, Clone, Copy, PartialEq, Eq, TryFromPrimitive)]
 #[repr(u16)]
 pub enum StrIntrinsic {
@@ -26,85 +26,85 @@ pub enum StrIntrinsic {
     IsNumeric = 32,
     /// `Std.Str.RepeatStr(S, N)` — repeat string N times; `N <= 0` returns `''`.
     ///
-    /// **Documentation:** `docs/pascal/std/text/str/README.md`
+    /// **Documentation:** `docs/pascal/language/types/string/README.md`
     Repeat = 200,
     /// `Std.Str.PadLeft(S, Width, PadChar)` — left-pad string to width.
     ///
-    /// **Documentation:** `docs/pascal/std/text/str/README.md`
+    /// **Documentation:** `docs/pascal/language/types/string/README.md`
     PadLeft = 201,
     /// `Std.Str.PadRight(S, Width, PadChar)` — right-pad string to width.
     ///
-    /// **Documentation:** `docs/pascal/std/text/str/README.md`
+    /// **Documentation:** `docs/pascal/language/types/string/README.md`
     PadRight = 202,
     /// `Std.Str.PadCenter(S, Width, PadChar)` — center-pad string to width.
     ///
-    /// **Documentation:** `docs/pascal/std/text/str/README.md`
+    /// **Documentation:** `docs/pascal/language/types/string/README.md`
     PadCenter = 203,
     /// `Std.Str.FromChar(C, N)` — create string of N copies of a single-character string `C`.
     ///
-    /// **Documentation:** `docs/pascal/std/text/str/README.md`
+    /// **Documentation:** `docs/pascal/language/types/string/README.md`
     FromChar = 204,
     /// `Std.Str.CharAt(S, Index)` — character at zero-based index.
     ///
-    /// **Documentation:** `docs/pascal/std/text/str/README.md`
+    /// **Documentation:** `docs/pascal/language/types/string/README.md`
     CharAt = 205,
     /// `Std.Str.SetCharAt(S, Index, C)` — return new string with one character replaced.
     ///
-    /// **Documentation:** `docs/pascal/std/text/str/README.md`
+    /// **Documentation:** `docs/pascal/language/types/string/README.md`
     SetCharAt = 206,
     /// `Std.Str.Ord(S)` — Unicode code point of a single-character string.
     ///
-    /// **Documentation:** `docs/pascal/std/text/str/README.md`
+    /// **Documentation:** `docs/pascal/language/types/string/README.md`
     Ord = 207,
     /// `Std.Str.Chr(N)` — single-character string from Unicode code point.
     ///
-    /// **Documentation:** `docs/pascal/std/text/str/README.md`
+    /// **Documentation:** `docs/pascal/language/types/string/README.md`
     Chr = 208,
     /// `Std.Str.Insert(S, Index, Sub)` — insert substring at index.
     ///
-    /// **Documentation:** `docs/pascal/std/text/str/README.md`
+    /// **Documentation:** `docs/pascal/language/types/string/README.md`
     Insert = 209,
     /// `Std.Str.Delete(S, Index, Len)` — delete Len chars starting at Index.
     ///
-    /// **Documentation:** `docs/pascal/std/text/str/README.md`
+    /// **Documentation:** `docs/pascal/language/types/string/README.md`
     Delete = 210,
     /// `Std.Str.Reverse(S)` — reverse a string.
     ///
-    /// **Documentation:** `docs/pascal/std/text/str/README.md`
+    /// **Documentation:** `docs/pascal/language/types/string/README.md`
     Reverse = 211,
     /// `Std.Str.TrimLeft(S)` — trim leading whitespace.
     ///
-    /// **Documentation:** `docs/pascal/std/text/str/README.md`
+    /// **Documentation:** `docs/pascal/language/types/string/README.md`
     TrimLeft = 212,
     /// `Std.Str.TrimRight(S)` — trim trailing whitespace.
     ///
-    /// **Documentation:** `docs/pascal/std/text/str/README.md`
+    /// **Documentation:** `docs/pascal/language/types/string/README.md`
     TrimRight = 213,
     /// `Std.Str.LastIndexOf(S, Sub)` — last occurrence index or -1.
     ///
-    /// **Documentation:** `docs/pascal/std/text/str/README.md`
+    /// **Documentation:** `docs/pascal/language/types/string/README.md`
     LastIndexOf = 214,
     /// `Std.Str.Format(Template, ...)` — printf-style string formatting.
     ///
     /// Stack convention: template pushed first, then each arg, then arg count as integer.
     /// Specifiers: `%d` integer, `%f` real, `%s` string, `%%` literal percent.
     ///
-    /// **Documentation:** `docs/pascal/std/text/str/README.md`
+    /// **Documentation:** `docs/pascal/language/types/string/README.md`
     Format = 242,
     /// Internal bulk UTF-8 encoder for `Std.Net.Utf8.EncodeBytes`.
     /// See `docs/pascal/std/network/utf8.md`.
     Utf8Encode = 568,
     /// Map each Unicode scalar to exactly one Unicode scalar.
     ///
-    /// **Documentation:** `docs/pascal/std/text/str/README.md`
+    /// **Documentation:** `docs/pascal/language/types/string/README.md`
     Map = 569,
     /// Keep Unicode scalars selected by a callback.
     ///
-    /// **Documentation:** `docs/pascal/std/text/str/README.md`
+    /// **Documentation:** `docs/pascal/language/types/string/README.md`
     Filter = 570,
     /// Fold Unicode scalars from an explicit initial value.
     ///
-    /// **Documentation:** `docs/pascal/std/text/str/README.md`
+    /// **Documentation:** `docs/pascal/language/types/string/README.md`
     Reduce = 571,
 }
 }

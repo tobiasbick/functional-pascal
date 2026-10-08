@@ -40,7 +40,7 @@ end procedure;
 "#;
 
 fn program(body: &str) -> String {
-    format!("program T;\nuses Std.Console, Std.Math, Std.Str;\n{ROUTINES}\nbegin\n{body}\nend.")
+    format!("program T;\nuses Std.Console, Std.Math;\n{ROUTINES}\nbegin\n{body}\nend.")
 }
 
 fn single_error_code(body: &str) -> fpas_diagnostics::DiagnosticCode {
@@ -57,7 +57,7 @@ fn named_arguments_map_routines_methods_and_standard_routines() {
   Show(Count := 1, Text := 'x');
   const P: Point := Point.Create(Y := 2, X := 1);
   const Q: Point := P.Moved(Dy := 1, Dx := 2);
-  const S: string := Std.Str.PadLeft(PadChar := '.', Width := 3, S := 'x');
+  const S: string := 'x'.PadLeft(PadChar := '.', Width := 3);
 "#,
     ));
 }
@@ -127,7 +127,7 @@ fn positional_only_targets_reject_named_arguments() {
         "  const A: integer := Abs(Value := -1);",
         "  WriteLn(Text := 'x');",
         "  const R: result of integer, string := Ok(Value := 1);",
-        "  const A: integer := 5.Sub(Right := 1);",
+        "  const S: string := '%d'.Format(Value := 1);",
     ] {
         assert_eq!(
             single_error_code(body),

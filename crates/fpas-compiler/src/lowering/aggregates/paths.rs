@@ -1,7 +1,7 @@
 //! Nested designator reads, writes, and postfix field or index access.
 //!
 //! Indexed writes retain the collection value semantics documented in
-//! `docs/pascal/std/collections/array/README.md`.
+//! `docs/pascal/language/types/array/README.md`.
 
 use crate::CompileError;
 use fpas_ir::{IrType, Operation, TypeId, ValueId};

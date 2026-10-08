@@ -1,10 +1,10 @@
 program T;
 
-uses Std.Console, Std.Arrays;
+uses Std.Console;
 
 begin
   var A: array of integer := [1, 2, 3];
-  const Last: integer := Pop(A);
+  const Last: integer := A.Pop();
   WriteLn(Last);
-  WriteLn(Length(A));
+  WriteLn(A.Length());
 end.

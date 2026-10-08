@@ -1,8 +1,7 @@
 unit Std.Tui.Runtime.Application.ConsoleInput;
 
 uses
-  Std.Options, Std.Results, Std.Tasks, Std.Time, Std.Tui.Geometry.Size,
-  Std.Tui.Runtime.ConsoleEvents, Std.Tui.Runtime.Input;
+  Std.Tasks, Std.Time, Std.Tui.Geometry.Size, Std.Tui.Runtime.ConsoleEvents, Std.Tui.Runtime.Input;
 
 const TuiResizeSettleMilliseconds: integer := 50;
 
@@ -12,7 +11,7 @@ function TuiConsoleInputSend(
   Input: TuiHostInput
 ): boolean;
 begin
-  return IsError(SendWithCancellation(Output, Input, Token));
+  return SendWithCancellation(Output, Input, Token).IsError();
 end function;
 
 function TuiConsoleInputSettleResize(

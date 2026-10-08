@@ -1,7 +1,7 @@
 unit Std.Tui.Runtime.ConsoleEvents;
 
 uses
-  Std.Console, Std.Options, Std.Tui.Geometry.Point, Std.Tui.Geometry.Size, Std.Tui.Runtime.Input,
+  Std.Console, Std.Tui.Geometry.Point, Std.Tui.Geometry.Size, Std.Tui.Runtime.Input,
   Std.Tui.Runtime.PointerEvent;
 
 function TuiPointerButtonFromConsole(Button: Std.Console.MouseButton): TuiPointerButton;

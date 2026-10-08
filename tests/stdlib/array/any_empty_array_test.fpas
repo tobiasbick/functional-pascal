@@ -1,6 +1,6 @@
 program T;
 
-uses Std.Console, Std.Arrays;
+uses Std.Console;
 
 function AlwaysTrue(X: integer): boolean;
 begin
@@ -9,5 +9,5 @@ end function;
 
 begin
   const A: array of integer := [];
-  WriteLn(Any(A, AlwaysTrue));
+  WriteLn(A.Any(AlwaysTrue));
 end.

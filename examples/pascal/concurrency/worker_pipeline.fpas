@@ -1,7 +1,7 @@
 // A producer, three workers, and a collector share bounded channels.
 program WorkerPipeline;
 
-uses Std.Tasks, Std.Results, Std.Console, Std.Arrays;
+uses Std.Tasks, Std.Console;
 
 begin
   const Jobs: channel of integer := CreateChannel(2);
@@ -10,7 +10,7 @@ begin
   const ProducerTask: task := StartTaskInGroup(Group, procedure(Token: CancellationToken) begin
     for Value: integer := 1 to 12 do
       begin
-        if IsError(SendWithCancellation(Jobs, Value, Token)) then
+        if SendWithCancellation(Jobs, Value, Token).IsError() then
           begin
             return;
           end;
@@ -28,7 +28,7 @@ begin
             case ReceiveWithCancellation(Jobs, Token) of
               when Ok(Value):
                 begin
-                  if IsError(SendWithCancellation(Results, Value * Value, Token)) then
+                  if SendWithCancellation(Results, Value * Value, Token).IsError() then
                     begin
                       return;
                     end;
@@ -48,14 +48,14 @@ begin
   var Total: integer := 0;
   for Index: integer := 1 to 12 do
     begin
-      Total := Total + Unwrap(Receive(Results));
+      Total := Total + Receive(Results).Unwrap();
     end;
   end for;
 
   case CloseTaskGroupWithTimeout(Group, 1000) of
     when Ok(Failures):
       begin
-        if Length(Failures) <> 0 then
+        if Failures.Length() <> 0 then
           begin
             panic('Worker failed');
           end;
@@ -64,7 +64,7 @@ begin
     when Error(_):
       begin
         // A timeout retains ownership. Joining is still required, not a forced kill.
-        if Length(CloseTaskGroup(Group)) <> 0 then
+        if CloseTaskGroup(Group).Length() <> 0 then
           begin
             panic('Worker failed');
           end;

@@ -1,7 +1,7 @@
 // Immutable state and transcript formatting for the Local Chat application.
 unit LocalChat.Model;
 
-uses Std.Arrays, Std.Console, Std.Str, Std.Tui;
+uses Std.Console, Std.Tui;
 
 // Origin of one visible local chat entry.
 public type ChatRole = enum
@@ -113,7 +113,7 @@ begin
   end if;
   var Wrapped: string := '';
   var LineWidth: integer := 0;
-  const NewLine: string := Std.Str.Chr(10);
+  const NewLine: string := string.Chr(10);
   for Grapheme: string in Std.Console.SplitGraphemes(Text) do
     begin
       if Grapheme = NewLine then
@@ -169,9 +169,9 @@ end function;
 // - `State`: Current application state containing entries and terminal dimensions.
 public function LocalChatTranscript(State: LocalChatModel): string;
 begin
-  if Std.Arrays.Length(State.Entries) = 0 then
+  if State.Entries.Length() = 0 then
     begin
-      return ('No messages yet.' + Std.Str.Chr(10)) + 'Type below and press Enter.';
+      return ('No messages yet.' + string.Chr(10)) + 'Type below and press Enter.';
     end;
   end if;
   var MaximumWidth: integer := State.Width - 6;
@@ -181,8 +181,8 @@ begin
     end;
   end if;
   var Transcript: string := '';
-  const NewLine: string := Std.Str.Chr(10);
-  for Index: integer := 0 to Std.Arrays.Length(State.Entries) - 1 do
+  const NewLine: string := string.Chr(10);
+  for Index: integer := 0 to State.Entries.Length() - 1 do
     begin
       if Transcript <> '' then
         begin
@@ -206,14 +206,14 @@ public function LocalChatScrollToEnd(State: LocalChatModel): LocalChatModel;
 begin
   var Next: LocalChatModel := State;
   const Transcript: string := LocalChatTranscript(Next);
-  Next.TranscriptCaret := Std.Str.Length(Transcript);
+  Next.TranscriptCaret := Transcript.Length();
   var VisibleLines: integer := Next.Height - 7;
   if VisibleLines < 1 then
     begin
       VisibleLines := 1;
     end;
   end if;
-  const LineCount: integer := Std.Arrays.Length(Std.Str.Split(Transcript, Std.Str.Chr(10)));
+  const LineCount: integer := Transcript.Split(string.Chr(10)).Length();
   var OffsetY: integer := LineCount - VisibleLines;
   if OffsetY < 0 then
     begin

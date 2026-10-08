@@ -1,8 +1,8 @@
 unit Std.Tui.Rendering.Canvas;
 
 uses
-  Std.Arrays, Std.Console, Std.Str, Std.Tui.Cells.Cell, Std.Tui.Cells.StyleRole,
-  Std.Tui.Geometry.Point, Std.Tui.Geometry.Rect, Std.Tui.Geometry.Size, Std.Tui.Rendering.Surface;
+  Std.Console, Std.Tui.Cells.Cell, Std.Tui.Cells.StyleRole, Std.Tui.Geometry.Point,
+  Std.Tui.Geometry.Rect, Std.Tui.Geometry.Size, Std.Tui.Rendering.Surface;
 
 // Private frame-scoped drawing capability over one working surface.
 public type TuiCanvas = record
@@ -123,10 +123,10 @@ public type TuiCanvas = record
   begin
     var X: integer := Position.X;
     var AsciiOnly: boolean := true;
-    const TextLength: integer := Std.Str.Length(Text);
+    const TextLength: integer := Text.Length();
     for Index: integer := 0 to TextLength - 1 do
       begin
-        const Code: integer := Std.Str.Ord(Std.Str.CharAt(Text, Index));
+        const Code: integer := Text.CharAt(Index).Ord();
         if (Code <> 10) and ((Code < 32) or (Code > 126)) then
           begin
             AsciiOnly := false;
@@ -139,8 +139,8 @@ public type TuiCanvas = record
       begin
         for Index: integer := 0 to TextLength - 1 do
           begin
-            const Glyph: string := Std.Str.CharAt(Text, Index);
-            if Glyph = Std.Str.Chr(10) then
+            const Glyph: string := Text.CharAt(Index);
+            if Glyph = string.Chr(10) then
               begin
                 return;
               end;
@@ -157,7 +157,7 @@ public type TuiCanvas = record
 
     for Glyph: string in Std.Console.SplitGraphemes(Text) do
       begin
-        if Glyph = Std.Str.Chr(10) then
+        if Glyph = string.Chr(10) then
           begin
             return;
           end;
@@ -285,7 +285,7 @@ begin
       TargetX := Canvas.Clip.X;
     end;
   end if;
-  var Count: integer := Std.Arrays.Length(Cells) - SourceX;
+  var Count: integer := Cells.Length() - SourceX;
   if Count > Canvas.Clip.Right() - TargetX then
     begin
       Count := Canvas.Clip.Right() - TargetX;
@@ -297,7 +297,7 @@ begin
       return;
     end;
   end if;
-  var Values: array of TuiCell := Std.Arrays.Slice(Cells, SourceX, Count);
+  var Values: array of TuiCell := Cells.Slice(SourceX, Count);
   if (TargetX + Count = Canvas.Clip.Right()) and (Values[Count - 1].Columns = 2) then
     begin
       Values[Count - 1] := TuiCell.Create(' ', TuiStyleRole.Normal);

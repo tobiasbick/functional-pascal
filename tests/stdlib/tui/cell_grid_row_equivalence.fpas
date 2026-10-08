@@ -1,6 +1,6 @@
 program CellGridRowEquivalenceTest;
 
-uses Std.Arrays, Std.Options, Std.Test, Std.Tui, Std.Tui.Rendering.Canvas;
+uses Std.Test, Std.Tui, Std.Tui.Rendering.Canvas;
 
 procedure CompareRow(
   Expected: TuiWorkingSurface;
@@ -23,7 +23,7 @@ begin
   const Origin: TuiPoint := TuiPoint.Create(OriginX, 0);
   const Reference: Std.Tui.TuiCanvas := Std.Tui.TuiCanvas.CreateLocal(Expected, Origin, Clip);
   const Batch: Std.Tui.TuiCanvas := Std.Tui.TuiCanvas.CreateLocal(Actual, Origin, Clip);
-  for X: integer := 0 to Std.Arrays.Length(Cells) - 1 do
+  for X: integer := 0 to Cells.Length() - 1 do
     begin
       Reference.PutCell(TuiPoint.Create(StartX + X, 0), Cells[X]);
     end;
@@ -34,8 +34,7 @@ begin
   for X: integer := 0 to 6 do
     begin
       const Point: TuiPoint := TuiPoint.Create(X, 0);
-      AssertTrue(Std.Options.IsNone(Expected.TryCellAt(Point)) =
-                 Std.Options.IsNone(Actual.TryCellAt(Point)));
+      AssertTrue(Expected.TryCellAt(Point).IsNone() = Actual.TryCellAt(Point).IsNone());
       AssertEquals(Expected.Snapshot().CellAt(X, 0).Glyph, Actual.Snapshot().CellAt(X, 0).Glyph);
       AssertTrue(Expected.Snapshot().CellAt(X, 0).Role = Actual.Snapshot().CellAt(X, 0).Role);
     end;

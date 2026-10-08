@@ -1,6 +1,6 @@
 unit Std.Tui.Chrome.KeyGesture;
 
-uses Std.Console, Std.Str;
+uses Std.Console;
 
 // Structural keyboard gesture used by menu commands.
 public type TuiKeyGesture = record
@@ -66,7 +66,7 @@ public type TuiKeyGesture = record
 
     if Self.Kind = Std.Console.KeyKind.Character then
       begin
-        return Std.Str.ToLower(Self.Character) = Std.Str.ToLower(Key.ch);
+        return Self.Character.ToLower() = Key.ch.ToLower();
       end;
     end if;
 

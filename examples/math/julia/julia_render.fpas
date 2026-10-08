@@ -1,8 +1,6 @@
 unit Julia.Render;
 
-uses
-  Std.Console, Std.Tasks, Std.Arrays, Std.Conv, Std.Math, Std.Str, Std.Results, Julia.Color,
-  Julia.Compute;
+uses Std.Console, Std.Tasks, Std.Conv, Std.Math, Julia.Color, Julia.Compute;
 
 public type RenderRow = record
   public Y: integer;
@@ -12,10 +10,10 @@ end record;
 function EscapeGlyph(EscapeValue: real): string;
 begin
   const Ramp: string := ' ░▒▓█';
-  const Count: integer := Std.Str.Length(Ramp);
+  const Count: integer := Ramp.Length();
   const Phase: real := Frac(EscapeValue * 0.08);
   const Index: integer := Clamp(Trunc(Phase * IntToReal(Count)), 0, Count - 1);
-  return CharAt(Ramp, Index);
+  return Ramp.CharAt(Index);
 end function;
 
 function RenderCell(Sample: PixelSample; Palette: PaletteKind): Cell;
@@ -56,7 +54,7 @@ begin
   var Cells: array of Cell := [];
   for Px: integer := 0 to DrawWidth - 1 do
     begin
-      Push(Cells, RenderCell(Row[Px], Palette));
+      Cells.Push(RenderCell(Row[Px], Palette));
     end;
   end for;
 
@@ -104,7 +102,7 @@ begin
               Samples := Samples;
             end;
 
-            if IsError(SendWithCancellation(Rows, Row, Token)) then
+            if SendWithCancellation(Rows, Row, Token).IsError() then
               begin
                 return;
               end;
@@ -130,7 +128,7 @@ public procedure PollRender(Job: RenderJob);
 begin
   for Index: integer := 1 to 4 do
     begin
-      case Std.Results.Unwrap(TryReceive(Job.Rows)) of
+      case TryReceive(Job.Rows).Unwrap() of
         when Some(Row):
           begin
             if (Row.Y + 1) <= Max(ScreenHeight() - 3, 1) then
@@ -154,7 +152,7 @@ public procedure StopRender(Job: RenderJob);
 begin
   const Failures: array of TaskFailure := CloseTaskGroup(Job.Group);
   discard CloseChannel(Job.Rows);
-  if Std.Arrays.Length(Failures) <> 0 then
+  if Failures.Length() <> 0 then
     begin
       panic(Failures[0].Message);
     end;

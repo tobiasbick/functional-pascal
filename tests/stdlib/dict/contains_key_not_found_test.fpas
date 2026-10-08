@@ -1,8 +1,8 @@
 program T;
 
-uses Std.Console, Std.Dictionaries;
+uses Std.Console;
 
 begin
   const D: dict of string to integer := ['Alice': 30];
-  WriteLn(Std.Dictionaries.ContainsKey(D, 'Bob'));
+  WriteLn(D.ContainsKey('Bob'));
 end.

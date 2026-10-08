@@ -1,6 +1,6 @@
 program TuiBackgroundFailureTest;
 
-uses Std.Results, Std.Tasks, Std.Test, Std.Tui;
+uses Std.Tasks, Std.Test, Std.Tui;
 
 type FailureModel = record
   Ready: channel of boolean;
@@ -54,7 +54,7 @@ begin
     Ready := Ready;
     FailureSeen := false;
   end, Inbox, UpdateFramework, UpdateApplication, View, 1, 0);
-  AssertTrue(Unwrap(ReceiveWithTimeout(Ready, 10000)));
+  AssertTrue(ReceiveWithTimeout(Ready, 10000).Unwrap());
   Model := App.RunBackgroundIterations(Model, Inbox, UpdateFramework, UpdateApplication, View, 1, 0);
   AssertTrue(Model.FailureSeen);
   App.CloseWithBackground(Inbox);

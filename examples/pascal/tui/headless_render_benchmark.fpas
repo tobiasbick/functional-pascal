@@ -4,7 +4,7 @@
 
 program TuiHeadlessRenderBenchmark;
 
-uses Std.Args, Std.Arrays, Std.Console, Std.Conv, Std.Time, Std.Tui;
+uses Std.Args, Std.Console, Std.Conv, Std.Time, Std.Tui;
 
 const WarmupIterations: integer := 100;
 const DeltaMillis: integer := 16;
@@ -77,13 +77,13 @@ begin
   var Children: array of TuiElement := [TuiElementBuilders.MakeLabel('frame ' + IntToStr(State))];
   for Index: integer := 2 to 32 do
     begin
-      Std.Arrays.Push(Children, TuiElementBuilders.MakeLabel('row'));
+      Children.Push(TuiElementBuilders.MakeLabel('row'));
     end;
   end for;
   const SharedAction: TuiAction := TuiAction.Create(100);
   for Index: integer := 1 to 8 do
     begin
-      Std.Arrays.Push(Children, TuiElementBuilders.MakeButton(TuiControlId.Create(Index), 'action', SharedAction));
+      Children.Push(TuiElementBuilders.MakeButton(TuiControlId.Create(Index), 'action', SharedAction));
     end;
   end for;
 

@@ -18,7 +18,7 @@ addition to the verification list of each of its work packages.
 | Imports | Introduce a colliding helper | Qualified calls retain their target |
 | Dot calls | Declare a free function named like a standard operation | The dot call keeps its catalog or member target |
 | Native type operations | Use the complete built-in catalog without imports | Operations remain available; the five former helper units provide no parallel public API |
-| Operation preservation | Compare the former type-helper API with the catalog | Every distinct operation survives; only verified synonymous forms share one canonical replacement |
+| Catalog coverage | Check all 78 native entries against the catalog | Names, receiver shapes, signatures, constraints, errors, and evaluation rules match |
 | Booleans | `X > 0 and Y > 0`; `A and B or C` | First parses as two comparisons; second asks for parentheses |
 | Discard | Unused `Result` from a cleanup call | Rejected without `discard`; accepted with it |
 | Blocks | Nested conditionals and endings | Unambiguous branch ownership and useful recovery |
@@ -47,7 +47,8 @@ Do not invent native test syntax for these tests.
 
 ## Integrated target example
 
-This uncompiled draft combines [AP13](ap13-explicit-block-boundaries/README.md),
+This uncompiled draft combines [AP03](ap03-explicit-closed-enum-cases/README.md),
+[AP13](ap13-explicit-block-boundaries/README.md),
 [AP20](ap20-nested-patterns-and-explicit-bindings/README.md),
 [AP21](ap21-decision-expressions/README.md),
 [AP24](ap24-generic-data-structures/README.md), and

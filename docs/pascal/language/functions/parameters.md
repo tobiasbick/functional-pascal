@@ -85,12 +85,13 @@ imported and `Std.*` routines with declared signatures, record methods
 (`Point.Moved(Dx := 1, Dy := 2)`; `Self` is implicit), static record routines,
 `go` calls of such routines, and enum variant constructors, whose field names
 act as parameter names (`Shape.Rectangle(Width := 10.0, Height := 20.0)`; see
-[Enums](../types/enums.md)). The following forms take positional arguments only
+[Enums](../types/enums.md)). Fixed-signature native type operations and the
+`string.Chr` / `array.Fill` factories also support named explicit arguments;
+the implicit receiver cannot be named. The following forms take positional arguments only
 and reject names (FP3026):
 
 - function values: closures, callable bindings and parameters, and callable
   record fields, because function types do not carry parameter names;
-- receiver calls such as `Value.Sub(1)`;
 - `Ok(…)`, `Error(…)`, and `Some(…)`, and enum patterns in `case` labels;
 - variadic routines such as `WriteLn` and `Format`, and polymorphic
   standard-library operations such as `Abs`.

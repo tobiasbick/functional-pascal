@@ -1,9 +1,9 @@
 program T;
 
-uses Std.Console, Std.Dictionaries, Std.Arrays;
+uses Std.Console;
 
 begin
   const D: dict of string to integer := [:];
-  const K: array of string := Std.Dictionaries.Keys(D);
-  WriteLn(Std.Arrays.Length(K));
+  const K: array of string := D.Keys();
+  WriteLn(K.Length());
 end.

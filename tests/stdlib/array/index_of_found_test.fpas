@@ -1,7 +1,7 @@
 program T;
 
-uses Std.Console, Std.Arrays;
+uses Std.Console;
 
 begin
-  WriteLn(IndexOf([10, 20, 30], 20));
+  WriteLn([10, 20, 30].IndexOf(20));
 end.

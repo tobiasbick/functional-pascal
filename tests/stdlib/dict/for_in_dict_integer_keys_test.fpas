@@ -1,6 +1,6 @@
 program T;
 
-uses Std.Console, Std.Dictionaries, Std.Conv;
+uses Std.Console, Std.Conv;
 
 begin
   const D: dict of integer to string := [1: 'one', 2: 'two', 3: 'three'];

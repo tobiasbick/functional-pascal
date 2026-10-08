@@ -1,6 +1,6 @@
 unit Std.Tui.Text.TextArea;
 
-uses Std.Arrays, Std.Console, Std.Str, Std.Tui.Geometry.Point, Std.Tui.Geometry.Size;
+uses Std.Console, Std.Tui.Geometry.Point, Std.Tui.Geometry.Size;
 
 // Logical and terminal-cell location of one controlled text-area caret.
 public type TuiTextAreaPosition = record
@@ -20,7 +20,7 @@ end record;
 // - `Text`: Text processed or displayed by the operation.
 public function TuiTextAreaLineCount(Text: string): integer;
 begin
-  return Std.Arrays.Length(Std.Str.Split(Text, Std.Str.Chr(10)));
+  return Text.Split(string.Chr(10)).Length();
 end function;
 
 // Returns one zero-based logical line without its LF separator.
@@ -30,8 +30,8 @@ end function;
 // - `Line`: Zero-based logical line index.
 public function TuiTextAreaLineText(Text: string; Line: integer): string;
 begin
-  const Lines: array of string := Std.Str.Split(Text, Std.Str.Chr(10));
-  if (Line < 0) or (Line >= Std.Arrays.Length(Lines)) then
+  const Lines: array of string := Text.Split(string.Chr(10));
+  if (Line < 0) or (Line >= Lines.Length()) then
     begin
       panic('Tui text area line must be within its text');
     end;
@@ -49,15 +49,15 @@ begin
     end;
   end if;
 
-  if Target >= Std.Arrays.Length(Lines) then
+  if Target >= Lines.Length() then
     begin
-      Target := Std.Arrays.Length(Lines) - 1;
+      Target := Lines.Length() - 1;
     end;
   end if;
   var Start: integer := 0;
   for Index: integer := 0 to Target - 1 do
     begin
-      Start := (Start + Std.Str.Length(Lines[Index])) + 1;
+      Start := (Start + Lines[Index].Length()) + 1;
     end;
   end for;
 
@@ -71,19 +71,19 @@ end function;
 // - `Caret`: Zero-based character index of the caret.
 public function TuiTextAreaLocate(Text: string; Caret: integer): TuiTextAreaPosition;
 begin
-  if (Caret < 0) or (Caret > Std.Str.Length(Text)) then
+  if (Caret < 0) or (Caret > Text.Length()) then
     begin
       panic('Tui text area caret must be within its text');
     end;
   end if;
-  const Lines: array of string := Std.Str.Split(Text, Std.Str.Chr(10));
+  const Lines: array of string := Text.Split(string.Chr(10));
   var LineStart: integer := 0;
-  for Line: integer := 0 to Std.Arrays.Length(Lines) - 1 do
+  for Line: integer := 0 to Lines.Length() - 1 do
     begin
-      const LineEnd: integer := LineStart + Std.Str.Length(Lines[Line]);
+      const LineEnd: integer := LineStart + Lines[Line].Length();
       if Caret <= LineEnd then
         begin
-          const Prefix: string := Std.Str.Substring(Lines[Line], 0, Caret - LineStart);
+          const Prefix: string := (Lines[Line]).Slice(0, Caret - LineStart);
           return record
             Line := Line;
             LineStart := LineStart;
@@ -114,8 +114,8 @@ begin
       TargetColumn := 0;
     end;
   end if;
-  const Lines: array of string := Std.Str.Split(Text, Std.Str.Chr(10));
-  if (Line < 0) or (Line >= Std.Arrays.Length(Lines)) then
+  const Lines: array of string := Text.Split(string.Chr(10));
+  if (Line < 0) or (Line >= Lines.Length()) then
     begin
       panic('Tui text area line must be within its text');
     end;
@@ -132,10 +132,9 @@ begin
       if Column + 2 > TargetColumn then
         begin
           // Preserve scalar-index positions inside the crossing cluster, including emoji selectors.
-          for Index: integer := 0 to Std.Str.Length(Grapheme) - 1 do
+          for Index: integer := 0 to Grapheme.Length() - 1 do
             begin
-              if Column + Std.Console.DisplayWidth(Std.Str.Substring(Grapheme, 0, Index + 1)) >
-                 TargetColumn then
+              if Column + Std.Console.DisplayWidth(Grapheme.Slice(0, Index + 1)) > TargetColumn then
                 begin
                   return (Start + Characters) + Index;
                 end;
@@ -146,7 +145,7 @@ begin
       end if;
 
       Column := Column + Width;
-      Characters := Characters + Std.Str.Length(Grapheme);
+      Characters := Characters + Grapheme.Length();
     end;
   end for;
 
@@ -159,9 +158,9 @@ end function;
 // - `Text`: Text processed or displayed by the operation.
 public function TuiTextAreaContentSize(Text: string): TuiSize;
 begin
-  const Lines: array of string := Std.Str.Split(Text, Std.Str.Chr(10));
+  const Lines: array of string := Text.Split(string.Chr(10));
   var Width: integer := 1;
-  for Index: integer := 0 to Std.Arrays.Length(Lines) - 1 do
+  for Index: integer := 0 to Lines.Length() - 1 do
     begin
       const LineWidth: integer := Std.Console.DisplayWidth(Lines[Index]);
       if LineWidth > Width then
@@ -172,7 +171,7 @@ begin
     end;
   end for;
 
-  return TuiSize.Create(Width, Std.Arrays.Length(Lines));
+  return TuiSize.Create(Width, Lines.Length());
 end function;
 
 // Adjusts a non-negative model offset only as much as needed to reveal the caret.

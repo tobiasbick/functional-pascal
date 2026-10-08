@@ -1,6 +1,6 @@
 # AP04: Discarded function values
 
-Status: implemented (AP04.1 and AP04.2 complete). Effort: small.
+Status: complete. Effort: small.
 Completion is tracked in the
 [central README](../README.md); the process is in
 [development-process.md](../development-process.md).
@@ -16,7 +16,7 @@ handle.
 - A function result in statement position must be consumed. Procedures remain
   the ordinary standalone calls.
 - `discard Expression;` is the explicit form for ignoring a function result.
-  `discard` becomes a reserved keyword.
+  `discard` is a reserved keyword.
 - `Result` values may be discarded only with `discard`; an unused `Result`
   without it is an error.
 - Task handles and aggregates containing them cannot be discarded.
@@ -50,10 +50,6 @@ None.
 ## Dependencies
 
 - AP02 (diagnostic codes and hints).
-
-## Order
-
-AP04.1 adds `discard`; AP04.2 requires consumption and migrates callers.
 
 ## Work packages
 

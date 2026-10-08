@@ -2,7 +2,7 @@
 
 program ProcBasics;
 
-uses Std.Console, Std.Conv, Std.Proc, Std.Results;
+uses Std.Console, Std.Conv, Std.Proc;
 
 begin
   case Run('fpas', ['--version']) of

@@ -1,8 +1,8 @@
 program T;
 
-uses Std.Console, Std.Arrays;
+uses Std.Console;
 
 begin
   const A: array of integer := [1, 2];
-  const C: array of integer := Slice(A, 0, 10);
+  const C: array of integer := A.Slice(0, 10);
 end.

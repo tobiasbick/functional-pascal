@@ -43,7 +43,7 @@ fn run_modes(source: &str) {
 fn timed_group_close_returns_while_a_running_pool_worker_ignores_cancellation() {
     let (program, errors) = fpas_parser::parse(
         r#"program NonCooperativeWorker;
-uses Std.Tasks, Std.Results, Std.Options, Std.Arrays;
+uses Std.Tasks;
 begin
   const Group: TaskGroup := CreateTaskGroup();
   const Ready: channel of boolean := CreateChannel(1);
@@ -51,15 +51,15 @@ begin
   const Child: task := StartTaskInGroup(Group, function(Token: CancellationToken): integer
   begin
     discard Send(Ready, true);
-    while IsNone(Std.Results.Unwrap(TryReceive(Release))) do begin null; end; end while;
+    while TryReceive(Release).Unwrap().IsNone() do begin null; end; end while;
     if not IsCancellationRequested(Token) then panic('cancellation was not retained'); end if;
     return 42;
   end function);
-  while IsNone(Std.Results.Unwrap(TryReceive(Ready))) do begin null; end; end while;
-  if not IsError(CloseTaskGroupWithTimeout(Group, 2)) then panic('running worker was lost'); end if;
+  while TryReceive(Ready).Unwrap().IsNone() do begin null; end; end while;
+  if not CloseTaskGroupWithTimeout(Group, 2).IsError() then panic('running worker was lost'); end if;
   discard Send(Release, true);
   if Wait(Child) <> 42 then panic('worker could not finish after timeout'); end if;
-  if Length(CloseTaskGroup(Group)) <> 0 then panic('close failed'); end if;
+  if CloseTaskGroup(Group).Length() <> 0 then panic('close failed'); end if;
   discard CloseChannel(Ready); discard CloseChannel(Release);
 end."#,
     );
@@ -81,7 +81,7 @@ fn timed_group_close_retains_blocked_worker_until_a_later_successful_close() {
 fn child_timed_group_close_yields_to_its_waiting_parent() {
     run_modes(
         r#"program NestedClose;
-uses Std.Tasks, Std.Results, Std.Arrays;
+uses Std.Tasks;
 begin
   const Outer: TaskGroup := CreateTaskGroup();
   const Ready: channel of boolean := CreateChannel(1);
@@ -90,15 +90,15 @@ begin
   begin
     const Inner: TaskGroup := CreateTaskGroup();
     const Child: task := StartTaskInGroup(Inner, function(Stop: CancellationToken): integer
-      begin return Unwrap(Receive(Gate)); end function);
-    if not IsError(CloseTaskGroupWithTimeout(Inner, 2)) then panic('premature close'); end if;
-    discard Unwrap(Send(Ready, true));
+      begin return Receive(Gate).Unwrap(); end function);
+    if not CloseTaskGroupWithTimeout(Inner, 2).IsError() then panic('premature close'); end if;
+    discard Send(Ready, true).Unwrap();
     if Wait(Child) <> 42 then panic('child result was lost'); end if;
-    if Length(Unwrap(CloseTaskGroupWithTimeout(Inner, 1000))) <> 0 then panic('inner failures'); end if;
+    if CloseTaskGroupWithTimeout(Inner, 1000).Unwrap().Length() <> 0 then panic('inner failures'); end if;
   end procedure);
-  discard Unwrap(Receive(Ready));
-  discard Unwrap(Send(Gate, 42));
-  if Length(Unwrap(CloseTaskGroupWithTimeout(Outer, 1000))) <> 0 then panic('outer failures'); end if;
+  discard Receive(Ready).Unwrap();
+  discard Send(Gate, 42).Unwrap();
+  if CloseTaskGroupWithTimeout(Outer, 1000).Unwrap().Length() <> 0 then panic('outer failures'); end if;
   discard CloseChannel(Ready); discard CloseChannel(Gate);
 end."#,
     );

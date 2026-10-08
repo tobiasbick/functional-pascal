@@ -1,7 +1,7 @@
 // Stable ordering of persisted notes.
 unit Notes.Ordering;
 
-uses Notes.Model, Std.Arrays;
+uses Notes.Model;
 
 function Before(Left: Note; Right: Note): boolean;
 begin

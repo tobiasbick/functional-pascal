@@ -1,8 +1,8 @@
 program T;
 
-uses Std.Console, Std.Arrays;
+uses Std.Console;
 
 begin
   const A: array of integer := [1, 2, 3];
-  WriteLn(Contains(A, 2));
+  WriteLn(A.Contains(2));
 end.

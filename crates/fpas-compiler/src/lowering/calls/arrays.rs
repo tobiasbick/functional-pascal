@@ -1,22 +1,10 @@
 //! Mutable array intrinsic lowering.
-//! Documentation: `docs/pascal/std/collections/array/mutating.md`.
+//! Documentation: `docs/pascal/language/types/array/mutating.md`.
 
 use super::*;
 
 impl LoweringContext {
-    /// Lowers array append, consuming direct local storage where available.
-    pub(super) fn lower_array_push(
-        &mut self,
-        arguments: &[Expr],
-        span: fpas_lexer::Span,
-    ) -> Result<ValueId, CompileError> {
-        let [Expr::Designator(target), value] = arguments else {
-            return Err(unsupported(span, "Std.Arrays.Push arguments"));
-        };
-        self.lower_array_push_target(target, value, span)
-    }
-
-    /// Append through the same variable target used by an ordinary call.
+    /// Appends through storage selected before the value argument is evaluated.
     pub(super) fn lower_array_push_target(
         &mut self,
         target: &Designator,
@@ -28,16 +16,23 @@ impl LoweringContext {
             Some(fpas_ir::IrType::Array(element)) => element,
             _ => return Err(unsupported(target.span, "mutable array target type")),
         };
+        let (root, root_parts) = self.designator_root(target)?;
+        let local = (root_parts == target.parts.len())
+            .then(|| self.direct_local(&root))
+            .flatten();
+        let reference = if local.is_none() {
+            let reference = self.lower_var_argument(target)?;
+            Some(self.save_value(reference))
+        } else {
+            None
+        };
         let value = match value {
             Expr::RecordLiteral { fields, span } => {
                 self.lower_record_literal_as(fields, element_ty, *span)?
             }
             _ => self.lower_expression(value)?,
         };
-        let [DesignatorPart::Ident(name, _)] = target.parts.as_slice() else {
-            return Err(unsupported(target.span, "mutable array target"));
-        };
-        if let Some(local) = self.direct_local(name) {
+        if let Some(local) = local {
             return self.emit_value(
                 Operation::ArrayPush { local, value },
                 super::super::types::UNIT,
@@ -45,7 +40,11 @@ impl LoweringContext {
             );
         }
 
-        let array = self.lower_designator_read(target)?;
+        let reference = self.restore_value(
+            reference.ok_or_else(|| unsupported(span, "array receiver reference"))?,
+            span,
+        )?;
+        let array = self.emit_value(Operation::ReferenceRead(reference), array_ty, span)?;
         let appended = self.emit_value(Operation::MakeArray(vec![value]), array_ty, span)?;
         self.record_call_arguments(2, span)?;
         let updated = self.emit_intrinsic_value(
@@ -54,7 +53,13 @@ impl LoweringContext {
             array_ty,
             span,
         )?;
-        self.lower_designator_write(target, updated, span)?;
+        self.emit_effect(
+            Operation::ReferenceWrite {
+                reference,
+                value: updated,
+            },
+            span,
+        )?;
         self.emit_value(
             Operation::Const(Constant::Unit),
             super::super::types::UNIT,
@@ -62,20 +67,7 @@ impl LoweringContext {
         )
     }
 
-    /// Lowers array removal while retaining the general path for cells and globals.
-    pub(super) fn lower_array_pop(
-        &mut self,
-        arguments: &[Expr],
-        result: TypeId,
-        span: fpas_lexer::Span,
-    ) -> Result<ValueId, CompileError> {
-        let [Expr::Designator(target)] = arguments else {
-            return Err(unsupported(span, "Std.Arrays.Pop argument"));
-        };
-        self.lower_array_pop_target(target, result, span)
-    }
-
-    /// Pop through the same variable target used by an ordinary call.
+    /// Pops through direct local storage or an evaluated receiver reference.
     pub(super) fn lower_array_pop_target(
         &mut self,
         target: &Designator,
@@ -83,12 +75,14 @@ impl LoweringContext {
         span: fpas_lexer::Span,
     ) -> Result<ValueId, CompileError> {
         let array_ty = self.mutable_array_target_type(target)?;
-        if let [DesignatorPart::Ident(name, _)] = target.parts.as_slice()
-            && let Some(local) = self.direct_local(name)
+        let (root, root_parts) = self.designator_root(target)?;
+        if root_parts == target.parts.len()
+            && let Some(local) = self.direct_local(&root)
         {
             return self.emit_value(Operation::ArrayPop { local }, result, span);
         }
-        let array = self.lower_designator_read(target)?;
+        let reference = self.lower_var_argument(target)?;
+        let array = self.emit_value(Operation::ReferenceRead(reference), array_ty, span)?;
         self.record_call_arguments(1, span)?;
         let length = self.emit_intrinsic_value(
             fpas_bytecode::Intrinsic::Array(fpas_bytecode::ArrayIntrinsic::Length),
@@ -130,15 +124,18 @@ impl LoweringContext {
             array_ty,
             span,
         )?;
-        self.lower_designator_write(target, shortened, span)?;
+        self.emit_effect(
+            Operation::ReferenceWrite {
+                reference,
+                value: shortened,
+            },
+            span,
+        )?;
         Ok(popped)
     }
 
     fn mutable_array_target_type(&self, target: &Designator) -> Result<TypeId, CompileError> {
-        let [DesignatorPart::Ident(name, _)] = target.parts.as_slice() else {
-            return Err(unsupported(target.span, "mutable array target"));
-        };
-        self.root_type(name)
+        self.designator_type(target)
             .ok_or_else(|| unsupported(target.span, "mutable array target type"))
     }
 }

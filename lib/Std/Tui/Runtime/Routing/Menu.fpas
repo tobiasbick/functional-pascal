@@ -1,9 +1,8 @@
 unit Std.Tui.Runtime.Routing.Menu;
 
 uses
-  Std.Arrays, Std.Console, Std.Str, Std.Tui.Chrome.MenuNode, Std.Tui.Chrome.MenuQuery,
-  Std.Tui.Elements.Element, Std.Tui.Ids.Action, Std.Tui.Ids.ControlId, Std.Tui.Runtime.Msg,
-  Std.Tui.Runtime.Routing.Focus;
+  Std.Console, Std.Tui.Chrome.MenuNode, Std.Tui.Chrome.MenuQuery, Std.Tui.Elements.Element,
+  Std.Tui.Ids.Action, Std.Tui.Ids.ControlId, Std.Tui.Runtime.Msg, Std.Tui.Runtime.Routing.Focus;
 
 // One controlled menu found in the active routing subtree.
 public type TuiRouteMenu = record
@@ -32,7 +31,7 @@ begin
     when TuiElement.Desktop(Focused, Children):
       begin
         var LastOverlay: integer := -1;
-        for Index: integer := 0 to Std.Arrays.Length(Children) - 1 do
+        for Index: integer := 0 to Children.Length() - 1 do
           begin
             case Children[Index] of
               when TuiElement.Overlay(Title, OverlayChildren):
@@ -52,7 +51,7 @@ begin
           end;
         end if;
 
-        for Index: integer := 0 to Std.Arrays.Length(Children) - 1 do
+        for Index: integer := 0 to Children.Length() - 1 do
           begin
             case TuiFindRouteMenu(Children[Index]) of
               when Some(Menu):
@@ -70,7 +69,7 @@ begin
       end;
     when TuiElement.Scroll(Id, Offset, ChangeAction, Children):
       begin
-        for Index: integer := 0 to Std.Arrays.Length(Children) - 1 do
+        for Index: integer := 0 to Children.Length() - 1 do
           begin
             case TuiFindRouteMenu(Children[Index]) of
               when Some(Menu):
@@ -88,7 +87,7 @@ begin
       end;
     when TuiElement.Row(Children, Spacing):
       begin
-        for Index: integer := 0 to Std.Arrays.Length(Children) - 1 do
+        for Index: integer := 0 to Children.Length() - 1 do
           begin
             case TuiFindRouteMenu(Children[Index]) of
               when Some(Menu):
@@ -106,7 +105,7 @@ begin
       end;
     when TuiElement.Column(Children, Spacing):
       begin
-        for Index: integer := 0 to Std.Arrays.Length(Children) - 1 do
+        for Index: integer := 0 to Children.Length() - 1 do
           begin
             case TuiFindRouteMenu(Children[Index]) of
               when Some(Menu):
@@ -124,7 +123,7 @@ begin
       end;
     when TuiElement.Layout(Settings, Children):
       begin
-        for Index: integer := 0 to Std.Arrays.Length(Children) - 1 do
+        for Index: integer := 0 to Children.Length() - 1 do
           begin
             case TuiFindRouteMenu(Children[Index]) of
               when Some(Menu):
@@ -142,7 +141,7 @@ begin
       end;
     when TuiElement.Panel(Title, Children):
       begin
-        for Index: integer := 0 to Std.Arrays.Length(Children) - 1 do
+        for Index: integer := 0 to Children.Length() - 1 do
           begin
             case TuiFindRouteMenu(Children[Index]) of
               when Some(Menu):
@@ -160,7 +159,7 @@ begin
       end;
     when TuiElement.Overlay(Title, Children):
       begin
-        for Index: integer := 0 to Std.Arrays.Length(Children) - 1 do
+        for Index: integer := 0 to Children.Length() - 1 do
           begin
             case TuiFindRouteMenu(Children[Index]) of
               when Some(Menu):
@@ -196,11 +195,11 @@ begin
         var Messages: array of TuiMsg := [];
         if not TuiFocusMatches(Previous, Menu.Id) then
           begin
-            Std.Arrays.Push(Messages, TuiMsg.FocusChanged(Previous, Some(Menu.Id)));
+            Messages.Push(TuiMsg.FocusChanged(Previous, Some(Menu.Id)));
           end;
         end if;
 
-        Std.Arrays.Push(Messages, TuiMenuChange(Menu, TuiMenuState.OpenAt(First)));
+        Messages.Push(TuiMenuChange(Menu, TuiMenuState.OpenAt(First)));
         return Messages;
       end;
     when None:
@@ -232,7 +231,7 @@ end function;
 
 function TuiMenuShortcut(Menu: TuiRouteMenu; Key: Std.Console.KeyEvent): option of array of TuiMsg;
 begin
-  for Index: integer := 0 to Std.Arrays.Length(Menu.Nodes) - 1 do
+  for Index: integer := 0 to Menu.Nodes.Length() - 1 do
     begin
       if TuiMenuNodeSelectable(Menu.Nodes[Index]) then
         begin
@@ -269,10 +268,10 @@ begin
     end;
   end if;
 
-  for Index: integer := 0 to Std.Arrays.Length(Menu.Nodes) - 1 do
+  for Index: integer := 0 to Menu.Nodes.Length() - 1 do
     begin
       if ((TuiMenuHasParent(Menu.Nodes[Index], Parent) and TuiMenuNodeSelectable(Menu.Nodes[Index])) and (TuiMenuNodeMnemonic(Menu.Nodes[Index]) <> '')) and
-         (Std.Str.ToLower(TuiMenuNodeMnemonic(Menu.Nodes[Index])) = Std.Str.ToLower(Key.ch)) then
+         (TuiMenuNodeMnemonic(Menu.Nodes[Index]).ToLower() = Key.ch.ToLower()) then
         begin
           if TuiMenuNodeIsSubmenu(Menu.Nodes[Index]) then
             begin
@@ -496,11 +495,11 @@ begin
                   var FocusMessages: array of TuiMsg := [];
                   if not TuiFocusMatches(TuiRootFocus(Root), Menu.Id) then
                     begin
-                      Std.Arrays.Push(FocusMessages, TuiMsg.FocusChanged(TuiRootFocus(Root), Some(Menu.Id)));
+                      FocusMessages.Push(TuiMsg.FocusChanged(TuiRootFocus(Root), Some(Menu.Id)));
                     end;
                   end if;
 
-                  return Some(Std.Arrays.Concat(FocusMessages, Messages));
+                  return Some(FocusMessages.Concat(Messages));
                 end;
               when None:
                 begin

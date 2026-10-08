@@ -1,10 +1,10 @@
 program T;
 
-uses Std.Console, Std.Dictionaries;
+uses Std.Console;
 
 begin
   const D: dict of string to integer := ['A': 1, 'B': 2];
-  const D2: dict of string to integer := Std.Dictionaries.Remove(D, 'A');
-  WriteLn(Std.Dictionaries.Length(D));
-  WriteLn(Std.Dictionaries.Length(D2));
+  const D2: dict of string to integer := D.Remove('A');
+  WriteLn(D.Length());
+  WriteLn(D2.Length());
 end.

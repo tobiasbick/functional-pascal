@@ -1,7 +1,7 @@
 program T;
 
-uses Std.Console, Std.Str;
+uses Std.Console;
 
 begin
-  WriteLn(Chr(4294967296));
+  WriteLn(string.Chr(4294967296));
 end.

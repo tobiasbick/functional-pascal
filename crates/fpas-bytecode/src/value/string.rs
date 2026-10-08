@@ -70,8 +70,8 @@ pub struct SharedStr(Arc<StrBody>);
 impl SharedStr {
     /// Unicode scalar count (`Std.Str.Length`), cached at construction and concat time.
     ///
-    /// **Documentation:** `docs/pascal/std/text/str/case-trim.md` (Length); contributor map in
-    /// `docs/pascal/std/text/str/README.md`.
+    /// **Documentation:** `docs/pascal/language/types/string/case-trim.md` (Length); contributor map in
+    /// `docs/pascal/language/types/string/README.md`.
     pub fn char_len(&self) -> usize {
         self.0.char_len
     }
@@ -122,7 +122,7 @@ impl SharedStr {
 
     /// Unicode scalar at `index`, or `None` when `index` is not below [`Self::char_len`].
     ///
-    /// **Documentation:** `docs/pascal/std/text/str/format-chars.md` (CharAt).
+    /// **Documentation:** `docs/pascal/language/types/string/format-chars.md` (CharAt).
     pub fn char_at(&self, index: usize) -> Option<char> {
         if index >= self.char_len() {
             return None;

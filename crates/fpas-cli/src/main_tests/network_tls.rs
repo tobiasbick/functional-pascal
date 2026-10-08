@@ -42,7 +42,7 @@ fn https_client_rejects_untrusted_server_certificate() {
         &format!(
             r#"program HttpsUntrustedCertificate;
 
-uses Std.Console, Std.Http, Std.Str;
+uses Std.Console, Std.Http;
 
 begin
   case Send(Request.Get('https://localhost:{port}/')) of
@@ -52,7 +52,7 @@ begin
     end;
     when Error(Message):
     begin
-      if not Std.Str.Contains(Message, 'TLS handshake failed') then
+      if not Message.Contains( 'TLS handshake failed') then
       begin
         panic(Message);
       end; end if;

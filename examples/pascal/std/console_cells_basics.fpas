@@ -2,7 +2,7 @@
 
 program ConsoleCellsBasics;
 
-uses Std.Console, Std.Options;
+uses Std.Console;
 
 begin
   const Bounds: Rect := record

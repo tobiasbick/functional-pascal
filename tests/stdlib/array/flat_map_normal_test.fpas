@@ -1,6 +1,6 @@
 program T;
 
-uses Std.Console, Std.Arrays;
+uses Std.Console;
 
 function Expand(X: integer): array of integer;
 begin
@@ -8,8 +8,8 @@ begin
 end function;
 
 begin
-  const R: array of integer := FlatMap([1, 2, 3], Expand);
-  WriteLn(Length(R));
+  const R: array of integer := [1, 2, 3].FlatMap(Expand);
+  WriteLn(R.Length());
   WriteLn(R[0]);
   WriteLn(R[1]);
   WriteLn(R[4]);

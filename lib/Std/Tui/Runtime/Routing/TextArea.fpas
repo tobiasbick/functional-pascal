@@ -1,7 +1,7 @@
 unit Std.Tui.Runtime.Routing.TextArea;
 
 uses
-  Std.Console, Std.Str, Std.Tui.Geometry.Point, Std.Tui.Geometry.Rect, Std.Tui.Geometry.Size,
+  Std.Console, Std.Tui.Geometry.Point, Std.Tui.Geometry.Rect, Std.Tui.Geometry.Size,
   Std.Tui.Ids.Action, Std.Tui.Ids.ControlId, Std.Tui.Runtime.Msg, Std.Tui.Text.TextArea;
 
 function TuiTextAreaClampLine(Text: string; Line: integer): integer;
@@ -48,38 +48,38 @@ begin
   if (((Key.kind = Std.Console.KeyKind.Character) and not Key.ctrl) and not Key.alt) and
      not Key.meta then
     begin
-      NextText := Std.Str.Insert(Text, Caret, Key.ch);
-      NextCaret := Caret + Std.Str.Length(Key.ch);
+      NextText := Text.Insert(Caret, Key.ch);
+      NextCaret := Caret + Key.ch.Length();
     end;
   elsif Key.kind = Std.Console.KeyKind.Space then
     begin
-      NextText := Std.Str.Insert(Text, Caret, ' ');
+      NextText := Text.Insert(Caret, ' ');
       NextCaret := Caret + 1;
     end;
   elsif Key.kind = Std.Console.KeyKind.Enter then
     begin
-      NextText := Std.Str.Insert(Text, Caret, Std.Str.Chr(10));
+      NextText := Text.Insert(Caret, string.Chr(10));
       NextCaret := Caret + 1;
     end;
   elsif Key.kind = Std.Console.KeyKind.Tab then
     begin
-      NextText := Std.Str.Insert(Text, Caret, '  ');
+      NextText := Text.Insert(Caret, '  ');
       NextCaret := Caret + 2;
     end;
   elsif (Key.kind = Std.Console.KeyKind.Backspace) and (Caret > 0) then
     begin
-      NextText := Std.Str.Delete(Text, Caret - 1, 1);
+      NextText := Text.Delete(Caret - 1, 1);
       NextCaret := Caret - 1;
     end;
-  elsif (Key.kind = Std.Console.KeyKind.Delete) and (Caret < Std.Str.Length(Text)) then
+  elsif (Key.kind = Std.Console.KeyKind.Delete) and (Caret < Text.Length()) then
     begin
-      NextText := Std.Str.Delete(Text, Caret, 1);
+      NextText := Text.Delete(Caret, 1);
     end;
   elsif (Key.kind = Std.Console.KeyKind.Left) and (Caret > 0) then
     begin
       NextCaret := Caret - 1;
     end;
-  elsif (Key.kind = Std.Console.KeyKind.Right) and (Caret < Std.Str.Length(Text)) then
+  elsif (Key.kind = Std.Console.KeyKind.Right) and (Caret < Text.Length()) then
     begin
       NextCaret := Caret + 1;
     end;

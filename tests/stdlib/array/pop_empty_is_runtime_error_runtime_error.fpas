@@ -1,8 +1,8 @@
 program T;
 
-uses Std.Console, Std.Arrays;
+uses Std.Console;
 
 begin
   var A: array of integer := [];
-  const X: integer := Pop(A);
+  const X: integer := A.Pop();
 end.

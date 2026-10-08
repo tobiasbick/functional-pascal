@@ -1,6 +1,6 @@
 program StringHigherOrderTest;
 
-uses Std.Str, Std.Test;
+uses Std.Test;
 
 function ReplaceFace(C: string): string;
 begin
@@ -30,21 +30,21 @@ end function;
 
 begin
   const Text: string := 'a😀éb';
-  AssertEquals(5, Length(Text));
-  AssertEquals('aßéb', Map(Text, ReplaceFace));
-  AssertEquals(5, Length(Map(Text, ReplaceFace)));
-  AssertEquals('a😀eb', Filter(Text, KeepBase));
-  AssertEquals('ab', Filter('a ́b', KeepBase));
-  AssertEquals(5, Reduce(Text, 0, Count));
-  AssertEquals('b́e😀a', Reduce(Text, '', Prepend));
+  AssertEquals(5, Text.Length());
+  AssertEquals('aßéb', Text.Map(ReplaceFace));
+  AssertEquals(5, Text.Map(ReplaceFace).Length());
+  AssertEquals('a😀eb', Text.Filter(KeepBase));
+  AssertEquals('ab', 'a ́b'.Filter(KeepBase));
+  AssertEquals(5, Text.Reduce(0, Count));
+  AssertEquals('b́e😀a', Text.Reduce('', Prepend));
   var Calls: integer := 0;
   const Observe: function(C: string): string := function(C: string): string begin
     Calls := Calls + 1;
     return C;
   end function;
 
-  AssertEquals('', Map('', Observe));
-  AssertEquals('', Filter('', KeepBase));
-  AssertEquals(42, Reduce('', 42, Count));
+  AssertEquals('', ''.Map(Observe));
+  AssertEquals('', ''.Filter(KeepBase));
+  AssertEquals(42, ''.Reduce(42, Count));
   AssertEquals(0, Calls);
 end.

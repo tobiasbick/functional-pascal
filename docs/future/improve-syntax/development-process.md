@@ -36,9 +36,11 @@ directory, in addition to the repository rules in [AGENTS.md](../../../AGENTS.md
   the destination and transfer conditions. Neither has work packages.
 - Do not add dates, personal or machine metadata, or a chronological change
   log. Evidence (commands run, results, notable findings) belongs in the pull
-  request description. A short **Result** section may be appended to a work
-  package file when the delivery deviates from the plan or leaves follow-up
-  work for a later work package.
+  request description. Completed work-package files state current behavior,
+  implementation ownership, regression coverage and actual open follow-ups.
+  Remove intermediate migration states, superseded rules, branch comparisons,
+  old test-run counts and chronological delivery reports. Keep package and
+  work-package checkboxes consistent with their factual status.
 
 ## Branches and pull requests
 
@@ -93,8 +95,9 @@ passes the checks, and has accurate documentation.
   changing syntax or semantics. Such details are listed in the package README
   under **Open decisions**; the affected work package names them in its
   prerequisites.
-- Code fragments in this plan are draft syntax, not compiled examples. Check
-  current behavior against the checkout before implementing a work package.
+- Code fragments in open packages are draft syntax unless explicitly identified
+  as current examples. Completed packages describe implemented behavior and
+  link to its handbook. Check the checkout before implementing an open package.
 
 ## Migration rules
 

@@ -1,7 +1,7 @@
 program T;
 
-uses Std.Console, Std.Str;
+uses Std.Console;
 
 begin
-  WriteLn(LastIndexOf('hello', 'ell'));
+  WriteLn('hello'.LastIndexOf('ell'));
 end.

@@ -4,8 +4,8 @@ Combinators and accessors for `Result of T, E` and `Option of T`.
 
 | Unit | Description |
 |------|-------------|
-| [`Std.Results`](result.md) | `Unwrap`, `Map`, `AndThen`, `OrElse` |
-| [`Std.Options`](option.md) | `Unwrap`, `Map`, `AndThen`, `OrElse` |
+| [`Result operations`](../../language/types/result-operations.md) | `Unwrap`, `Map`, `AndThen`, `OrElse` |
+| [`Option operations`](../../language/types/option-operations.md) | `Unwrap`, `Map`, `AndThen`, `OrElse` |
 
 Language rules: [Error handling](../../language/error-handling/README.md).
 

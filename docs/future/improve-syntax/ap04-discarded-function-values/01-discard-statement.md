@@ -2,28 +2,12 @@
 
 Package: [AP04: Discarded function values](README.md)
 
-## Scope
+Status: complete.
 
-Add the statement `discard Expression;` and reserve `discard`. Unused function
-results remain accepted in this work package.
+## Result
 
-## Prerequisites
-
-- AP02 (diagnostic codes).
-
-## Implementation
-
-- Lexer: reserve `discard`; diagnose its use as an identifier with a rename hint.
-- Parser and AST: the `discard` statement.
-- Sema: the operand must produce a value; reject procedure calls; reject task
-  handles and values whose type contains task handles according to the rules
-  below. Apply the agreed generic, channel, and callable policies consistently.
-- Sema and unit interfaces: track and propagate whether callable captures are
-  statically proven free of task handles. Preserve this information through
-  bindings, assignments, arguments, returns, aggregates, and imported units;
-  lost or unavailable information must not be treated as proof.
-- Compiler: evaluate the operand exactly once and drop the value.
-- Formatter and editor highlighting.
+`discard Expression;` evaluates a value once and deliberately ignores it.
+`discard` is reserved. Procedure calls produce no value and are rejected.
 
 ## Operand and type rules
 
@@ -49,7 +33,7 @@ contents is needed for the type check.
 
 ### Generic operands
 
-Agreed: allow `discard Value;` in generic code only when the declared
+Allow `discard Value;` in generic code only when the declared
 constraints prove that the operand type cannot contain task handles for every
 permitted type argument. Apply this rule recursively to containers containing
 generic parameters; channels and callable captures must also satisfy their
@@ -69,7 +53,7 @@ rules below.
 
 ### Channels
 
-Agreed: inspect the channel element type recursively, using the same rules as
+Inspect the channel element type recursively, using the same rules as
 for array elements. Allow discard only when the element type is statically
 proven unable to contain task handles.
 
@@ -84,7 +68,7 @@ proven unable to contain task handles.
 
 ### Callable values and closure captures
 
-Agreed: allow discard of a function or procedure value only when its stored
+Allow discard of a function or procedure value only when its stored
 captures are statically proven free of task handles.
 
 - Capture-free callables and closures with proven task-free captures are
@@ -104,8 +88,8 @@ that the callable stores a live task handle and is not a reason to reject
 discard: discarding a callable value does not invoke it. Conversely, a closure
 can capture a task even when its signature mentions only ordinary values.
 
-Capture analysis and propagation across unit interfaces are part of AP04.1.
-The current callable signature alone cannot express this proof. Existing
+Capture analysis and unit-interface metadata provide this proof; a callable
+signature alone cannot express it. Existing
 task-bound closure checks describe mutable state and task affinity; they are
 not proof that a closure does or does not capture task handles. Keep both
 properties separate, and perform the discard check at compile time.
@@ -120,57 +104,19 @@ planned in [AP26.3](../ap26-structured-task-scopes/03-handle-escape-restrictions
   containing task handles, explain which type or nested field prevents discard
   and advise retaining and consuming the handles. Do not suggest spawning a
   new task as a replacement.
-- AP04.2 must use the same operand classification when offering `discard` as
+- Unused-result diagnostics use the same operand classification when offering `discard` as
   a fix for unused function results, so that its hint never recommends an
   invalid discard.
 
-## Affected areas
+## Implementation
 
-- `crates/fpas-lexer/src/token/keywords.rs`, `fpas-parser` statement parsing,
-  `fpas-sema/src/check/stmt/`, `fpas-sema/src/check/discard/`,
-  `fpas-sema/src/check/closures/`, callable
-  propagation and `fpas-unit` interfaces, `fpas-compiler` statement lowering,
-  `fpas-fmt`, `editors/vscode/syntaxes/`.
+Checking lives in `crates/fpas-sema/src/check/discard/` and callable capture
+analysis. Immutable bindings, aggregate construction/defaults, results and
+unit interfaces carry capture proofs. Mutable storage containing callables is
+conservatively unknown; scalar mutable captures can remain provably task-free.
 
-## Migration
+## Regression coverage
 
-Rename any repository identifier spelled `discard`.
-
-## Documentation
-
-- `docs/specs/grammar.ebnf`, keyword list, a section on discarding values in
-  the functions or statements documentation.
-
-## Verification
-
-- Tests: ordinary values, `Result`, `Option`, postfix chains, task handles,
-  aggregates containing task handles, procedures, and exactly-once evaluation.
-- Include aliases, nested aggregates, empty containers, inactive variants,
-  recursive types, and record methods returning tasks without stored handles.
-- Generic tests: unconstrained and `Printable` parameters rejected, `Numeric`
-  and `Comparable` accepted, and the same cases nested in aggregate types.
-  Observed call sites must not relax the generic-body check. Concrete task-free
-  results of generic calls are accepted; task-containing results are rejected.
-- Channel tests: task-free elements accepted; direct and nested task handles
-  rejected, including empty channels and channels with additional references.
-- Callable tests: capture-free and proven task-free captures accepted; direct,
-  nested, and transitive task captures rejected; unknown captures rejected.
-  Include captured channels, bound-method receivers, and callable signatures
-  accepting or returning tasks without capturing them.
-- Verify capture information through bindings, assignments, arguments,
-  returns, aggregates, and imported units. Missing information must reject
-  discard rather than silently permitting it.
-- Include callable default values in omitted record fields.
-- Verify that only a direct discarded `go` expression receives the
-  `go Worker();` replacement hint.
-- Formatter round trip; VS Code grammar verification.
-
-## Result
-
-Static capture proofs are retained through immutable bindings, aggregate
-construction (including record defaults), routine results, and unit interfaces.
-Mutable storage containing callables is conservatively treated as having
-unknown captures, including after assignments. Scalar mutable captures remain
-provably task-free when their declared type excludes task handles.
-
-AP04.2 requires consumption of function results.
+Tests cover recursive types, generics, channels, unknown and transitive captures,
+bound methods, defaults, imported proofs, task rejection and exactly-once
+execution. See [discard](../../../pascal/language/functions/discard.md).

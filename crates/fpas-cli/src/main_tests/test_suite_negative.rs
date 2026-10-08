@@ -431,10 +431,10 @@ fn pad_center_negative_width_is_runtime_error() {
 }
 
 #[test]
-fn result_and_option_unqualified_unwrap_is_ambiguous_compile_error() {
+fn free_unwrap_is_removed_compile_error() {
     run_file_expect_failure(
-        "tests/stdlib/result/result_and_option_unqualified_unwrap_is_ambiguous_compile_error.fpas",
-        Some("error[FP3004]: Ambiguous imported symbol `Unwrap`"),
+        "tests/stdlib/result/free_unwrap_is_removed_compile_error.fpas",
+        Some("Use `Value.Unwrap(…)`"),
     );
 }
 

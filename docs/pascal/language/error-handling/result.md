@@ -50,4 +50,4 @@ discarded; see [discarding values](../functions/discard.md).
 - [Types — Result and Option](../types/result-option-types.md)
 - [Pattern matching — Result and Option](../pattern-matching/result-option-patterns.md)
 - [Try operator](try.md)
-- [`Std.Results`](../../std/result/result.md)
+- [`Result operations`](../types/result-operations.md)

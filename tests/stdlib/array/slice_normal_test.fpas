@@ -1,11 +1,11 @@
 program T;
 
-uses Std.Console, Std.Arrays;
+uses Std.Console;
 
 begin
   const A: array of integer := [10, 20, 30, 40];
-  const C: array of integer := Slice(A, 1, 2);
-  WriteLn(Length(C));
+  const C: array of integer := A.Slice(1, 2);
+  WriteLn(C.Length());
   WriteLn(C[0]);
   WriteLn(C[1]);
 end.

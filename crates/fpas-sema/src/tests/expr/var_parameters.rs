@@ -5,10 +5,11 @@
 use super::{check_errors, check_ok};
 use fpas_diagnostics::DiagnosticCode;
 use fpas_diagnostics::codes::{
-    SEMA_IMMUTABLE_ASSIGNMENT, SEMA_INVALID_VAR_ARGUMENT, SEMA_TYPE_MISMATCH,
-    SEMA_VAR_ARGUMENT_ALIAS, SEMA_VAR_ARGUMENT_MARKER, SEMA_VAR_PARAMETER_ESCAPE,
+    SEMA_INVALID_VAR_ARGUMENT, SEMA_TYPE_MISMATCH, SEMA_VAR_ARGUMENT_ALIAS,
+    SEMA_VAR_ARGUMENT_MARKER, SEMA_VAR_PARAMETER_ESCAPE,
 };
 
+mod mutating_intrinsics;
 mod named_arguments;
 
 const DECLARATIONS: &str = r#"
@@ -219,20 +220,9 @@ end.",
 }
 
 #[test]
-fn receiver_calls_and_array_mutation_reject_var_receivers() {
+fn free_receiver_calls_reject_var_first_parameters() {
     assert_eq!(
         error_codes("  var Counter: integer := 0;\n  Counter.Increase();"),
-        [SEMA_VAR_ARGUMENT_MARKER]
+        [fpas_diagnostics::codes::SEMA_UNKNOWN_NAME]
     );
-    let errors = check_errors(
-        "program T;
-uses Std.Arrays;
-procedure Add(var Items: array of integer);
-begin
-  Push(Items, 1);
-end procedure;
-begin
-end.",
-    );
-    assert_eq!(errors[0].code, SEMA_IMMUTABLE_ASSIGNMENT);
 }

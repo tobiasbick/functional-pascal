@@ -1,9 +1,9 @@
 unit Std.Tui.Runtime.Helpers;
 
 uses
-  Std.Arrays, Std.Tui.Elements.Element, Std.Tui.Geometry.Size, Std.Tui.Ids.ControlId,
-  Std.Tui.Layout.LayoutFit, Std.Tui.Layout.Measure, Std.Tui.Layout.MeasureResult,
-  Std.Tui.Layout.MeasureSpec, Std.Tui.Runtime.Routing.Focus;
+  Std.Tui.Elements.Element, Std.Tui.Geometry.Size, Std.Tui.Ids.ControlId, Std.Tui.Layout.LayoutFit,
+  Std.Tui.Layout.Measure, Std.Tui.Layout.MeasureResult, Std.Tui.Layout.MeasureSpec,
+  Std.Tui.Runtime.Routing.Focus;
 
 // Returns the first focusable control in the active modal or full tree, or `None`.
 //
@@ -12,7 +12,7 @@ uses
 public function TuiFocusFirst(Root: TuiElement): option of TuiControlId;
 begin
   const Controls: array of TuiControlId := TuiFocusableControls(Root);
-  if Std.Arrays.Length(Controls) = 0 then
+  if Controls.Length() = 0 then
     begin
       return None;
     end;
@@ -29,7 +29,7 @@ end function;
 public function TuiFocusResolve(Root: TuiElement; Preferred: option of TuiControlId): option of TuiControlId;
 begin
   const Controls: array of TuiControlId := TuiFocusableControls(Root);
-  if Std.Arrays.Length(Controls) = 0 then
+  if Controls.Length() = 0 then
     begin
       return None;
     end;

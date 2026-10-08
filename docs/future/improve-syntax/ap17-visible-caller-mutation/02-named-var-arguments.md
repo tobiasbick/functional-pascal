@@ -2,42 +2,21 @@
 
 Package: [AP17: Visible caller mutation](README.md)
 
-## Scope
+Status: complete.
 
-Allow the named form `Increase(Value := var Counter)`.
+## Result
 
-## Prerequisites
+`Increase(Value := var Counter)` is the named reference-argument form.
+AP09 mapping uses declared names while AP17 storage, exact-type, aliasing,
+lifetime, forwarding and task checks apply in written argument order.
+Completed writes survive early `try` returns. Function values remain positional.
 
-- AP17.1 (`var` parameters).
-- AP09.1 (named arguments).
+Formatter and signature help recognize the form. Parameter labels and referenced
+variables navigate and rename separately.
 
-## Implementation
+## Regression coverage
 
-- Parser: `Name := var Designator` in named argument lists.
-- Sema: apply the AP17.1 argument, aliasing, and evaluation rules to named
-  arguments in written order.
-- Formatter and signature help.
-
-## Affected areas
-
-- Parser call arguments, sema named-argument mapping, `fpas-fmt`.
-
-## Migration
-
-None.
-
-## Documentation
-
-- `var-parameters.md`, `parameters.md`.
-- `docs/specs/grammar.ebnf` (`named_arg`).
-
-## Verification
-
-- Named `var` arguments in any order, aliasing rejection across named
-  arguments, missing marker in named form, evaluation-order traces.
-- Writable storage, exact types, forwarding, generic routines, methods,
-  imported routines with compiled-unit reuse, and writes retained on `try` exit.
-- Rejections: marker on a read-only parameter, invalid writable storage,
-  invalid name mappings, mixed calls, function values, and `go` calls.
-- Formatter round trip and comments, signature help, and separate rename of
-  parameter labels and referenced variables; regular CLI and FPAS test runs.
+Parser, sema, compiler, CLI, editor and FPAS tests cover reordering, traces,
+methods, generics, imports/compiled-unit reuse, retained writes, invalid names,
+missing/excess markers, read-only storage, aliasing, mixed calls and `go`.
+See [var parameters](../../../pascal/language/functions/var-parameters.md).

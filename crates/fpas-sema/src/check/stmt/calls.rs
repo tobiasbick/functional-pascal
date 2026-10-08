@@ -17,7 +17,29 @@ impl Checker {
         args: &[Expr],
         span: Span,
     ) -> Ty {
+        if let Some(result) = self.try_check_native_factory(
+            crate::designator_lookup_key(designator),
+            designator,
+            args,
+            span,
+        ) {
+            return result;
+        }
         let name = Self::resolve_designator_name(designator);
+        if name
+            .get(..4)
+            .is_some_and(|prefix| prefix.eq_ignore_ascii_case("Std."))
+            && let Some(hint) = crate::std_registry::native_migration_hint(&name)
+        {
+            self.error_with_code(
+                SEMA_UNKNOWN_NAME,
+                format!("Removed free type operation `{name}`"),
+                hint,
+                span,
+            );
+            self.check_args_only(args);
+            return Ty::Error;
+        }
         self.ensure_fq_std_unit_loaded(&name);
 
         if let Some(symbol) = self.scopes.lookup(&name) {

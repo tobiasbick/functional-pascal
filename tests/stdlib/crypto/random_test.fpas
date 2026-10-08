@@ -1,13 +1,13 @@
 program CryptoRandomTest;
 
-uses Std.Arrays, Std.Crypto, Std.Results, Std.Test;
+uses Std.Crypto, Std.Test;
 
 begin
   case RandomBytes(32) of
     when Ok(Bytes):
       begin
-        AssertEquals(32, Length(Bytes));
-        for Index: integer := 0 to Length(Bytes) - 1 do
+        AssertEquals(32, Bytes.Length());
+        for Index: integer := 0 to Bytes.Length() - 1 do
           begin
             AssertTrue(Bytes[Index] >= 0);
             AssertTrue(Bytes[Index] <= 255);
@@ -31,7 +31,7 @@ begin
       end;
   end case;
 
-  AssertTrue(Std.Results.IsError(RandomBytes(-1)));
-  AssertTrue(Std.Results.IsError(RandomBytes(1048577)));
-  AssertTrue(Std.Results.IsError(RandomInt(2, 1)));
+  AssertTrue(RandomBytes(-1).IsError());
+  AssertTrue(RandomBytes(1048577).IsError());
+  AssertTrue(RandomInt(2, 1).IsError());
 end.

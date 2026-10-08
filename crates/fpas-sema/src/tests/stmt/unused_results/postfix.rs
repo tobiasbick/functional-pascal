@@ -30,7 +30,7 @@ fn final_procedures_and_consumed_chains_remain_valid() {
 fn receiver_calls_and_callable_record_members_require_consumption() {
     unused("program T;
       function Plus(Value: integer; Other: integer): integer; begin return Value + Other; end function;
-      begin (1).Plus(2); end.");
+      begin [1].Length(); end.");
     unused(
         "program T;
       type Box = record Get: function(): integer; end record;

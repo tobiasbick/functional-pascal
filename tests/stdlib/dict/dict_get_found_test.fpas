@@ -1,10 +1,10 @@
 program T;
 
-uses Std.Console, Std.Dictionaries, Std.Options;
+uses Std.Console;
 
 begin
   const D: dict of string to integer := ['Alice': 30, 'Bob': 25];
-  const R: option of integer := Std.Dictionaries.Get(D, 'Alice');
-  WriteLn(IsSome(R));
-  WriteLn(Unwrap(R));
+  const R: option of integer := D.Get('Alice');
+  WriteLn(R.IsSome());
+  WriteLn(R.Unwrap());
 end.

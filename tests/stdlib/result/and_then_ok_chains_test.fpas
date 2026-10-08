@@ -1,6 +1,6 @@
 program T;
 
-uses Std.Console, Std.Results, Std.Conv;
+uses Std.Console, Std.Conv;
 
 function PositiveToStr(V: integer): result of string, string;
 begin
@@ -17,6 +17,6 @@ end function;
 
 begin
   const R: result of integer, string := Ok(10);
-  const M: result of string, string := AndThen(R, PositiveToStr);
-  WriteLn(Unwrap(M));
+  const M: result of string, string := R.AndThen(PositiveToStr);
+  WriteLn(M.Unwrap());
 end.

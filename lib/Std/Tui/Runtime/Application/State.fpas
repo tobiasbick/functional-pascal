@@ -1,9 +1,9 @@
 unit Std.Tui.Runtime.Application.State;
 
 uses
-  Std.Arrays, Std.Options, Std.Tui.Cells.Palette, Std.Tui.Elements.Element, Std.Tui.Geometry.Size,
-  Std.Tui.Layout.Frame, Std.Tui.Rendering.Surface, Std.Tui.Runtime.Application.Background,
-  Std.Tui.Runtime.Cmd, Std.Tui.Runtime.Input, Std.Tui.Runtime.Msg, Std.Tui.Runtime.Routing,
+  Std.Tui.Cells.Palette, Std.Tui.Elements.Element, Std.Tui.Geometry.Size, Std.Tui.Layout.Frame,
+  Std.Tui.Rendering.Surface, Std.Tui.Runtime.Application.Background, Std.Tui.Runtime.Cmd,
+  Std.Tui.Runtime.Input, Std.Tui.Runtime.Msg, Std.Tui.Runtime.Routing,
   Std.Tui.Runtime.Routing.Pointer, Std.Tui.Runtime.TerminalSession, Std.Time;
 
 public var TuiAppInputHead: array of integer := [];
@@ -25,29 +25,29 @@ public var TuiAppTickDueAt: array of integer := [];
 // Opens application-owned state and returns its stable identifier.
 public function TuiAppOpenApplication(Size: TuiSize; Palette: TuiPalette; Interactive: boolean): integer;
 begin
-  Std.Arrays.Push(TuiAppInputHead, 0);
-  Std.Arrays.Push(TuiAppMessageHead, 0);
-  TuiAppOpen := Std.Arrays.Concat(TuiAppOpen, [true]);
-  TuiAppInputs := Std.Arrays.Concat(TuiAppInputs, [[]]);
-  TuiAppMessages := Std.Arrays.Concat(TuiAppMessages, [[]]);
-  TuiAppSurfaces := Std.Arrays.Concat(TuiAppSurfaces, [TuiWorkingSurface.Create(Size)]);
-  TuiAppFrames := Std.Arrays.Concat(TuiAppFrames, [TuiArrangedFrame.Create()]);
-  TuiAppTrees := Std.Arrays.Concat(TuiAppTrees, [TuiElement.Empty]);
-  TuiAppCommands := Std.Arrays.Concat(TuiAppCommands, [TuiCmdOutput.Create()]);
-  TuiAppInteractive := Std.Arrays.Concat(TuiAppInteractive, [Interactive]);
-  TuiAppPalettes := Std.Arrays.Concat(TuiAppPalettes, [Palette]);
-  TuiAppStarted := Std.Arrays.Concat(TuiAppStarted, [false]);
-  TuiAppTickRequestedAt := Std.Arrays.Concat(TuiAppTickRequestedAt, [0]);
-  TuiAppTickDueAt := Std.Arrays.Concat(TuiAppTickDueAt, [-1]);
+  TuiAppInputHead.Push(0);
+  TuiAppMessageHead.Push(0);
+  TuiAppOpen := TuiAppOpen.Concat([true]);
+  TuiAppInputs := TuiAppInputs.Concat([[]]);
+  TuiAppMessages := TuiAppMessages.Concat([[]]);
+  TuiAppSurfaces := TuiAppSurfaces.Concat([TuiWorkingSurface.Create(Size)]);
+  TuiAppFrames := TuiAppFrames.Concat([TuiArrangedFrame.Create()]);
+  TuiAppTrees := TuiAppTrees.Concat([TuiElement.Empty]);
+  TuiAppCommands := TuiAppCommands.Concat([TuiCmdOutput.Create()]);
+  TuiAppInteractive := TuiAppInteractive.Concat([Interactive]);
+  TuiAppPalettes := TuiAppPalettes.Concat([Palette]);
+  TuiAppStarted := TuiAppStarted.Concat([false]);
+  TuiAppTickRequestedAt := TuiAppTickRequestedAt.Concat([0]);
+  TuiAppTickDueAt := TuiAppTickDueAt.Concat([-1]);
   TuiBackgroundOpenApplication();
   Std.Tui.Runtime.Routing.Pointer.TuiPointerRoutingOpen();
-  return Std.Arrays.Length(TuiAppOpen);
+  return TuiAppOpen.Length();
 end function;
 
 // Cancels owned work, closes application state, and returns shutdown failures.
 public function TuiAppCloseApplication(ApplicationId: integer): array of TuiMsg;
 begin
-  if (ApplicationId < 1) or (ApplicationId > Std.Arrays.Length(TuiAppOpen)) then
+  if (ApplicationId < 1) or (ApplicationId > TuiAppOpen.Length()) then
     begin
       return [];
     end;
@@ -78,7 +78,7 @@ end function;
 // Raises the first shutdown failure after application resources have been released.
 public procedure TuiAppRaiseShutdownFailure(Failures: array of TuiMsg);
 begin
-  if Std.Arrays.Length(Failures) = 0 then
+  if Failures.Length() = 0 then
     begin
       return;
     end;
@@ -98,7 +98,7 @@ end procedure;
 
 public function TuiAppRequireHandle(ApplicationId: integer): integer;
 begin
-  if (ApplicationId < 1) or (ApplicationId > Std.Arrays.Length(TuiAppOpen)) then
+  if (ApplicationId < 1) or (ApplicationId > TuiAppOpen.Length()) then
     begin
       panic('Tui application handle is stale');
     end;
@@ -122,7 +122,7 @@ end function;
 // Returns the number of unread inputs for one application.
 public function TuiAppInputCount(ApplicationId: integer): integer;
 begin
-  return Std.Arrays.Length(TuiAppInputs[ApplicationId - 1]) - TuiAppInputHead[ApplicationId - 1];
+  return TuiAppInputs[ApplicationId - 1].Length() - TuiAppInputHead[ApplicationId - 1];
 end function;
 
 // Removes the next queued input, compacting only after at least half is consumed.
@@ -132,10 +132,10 @@ begin
   const Head: integer := TuiAppInputHead[Slot];
   const Item: TuiHostInput := TuiAppInputs[Slot][Head];
   const Next: integer := Head + 1;
-  const Count: integer := Std.Arrays.Length(TuiAppInputs[Slot]);
+  const Count: integer := TuiAppInputs[Slot].Length();
   if (Next = Count) or ((Next >= 64) and (Next >= Count div 2)) then
     begin
-      TuiAppInputs[Slot] := Std.Arrays.Slice(TuiAppInputs[Slot], Next, Count - Next);
+      TuiAppInputs[Slot] := TuiAppInputs[Slot].Slice(Next, Count - Next);
       TuiAppInputHead[Slot] := 0;
     end;
   else
@@ -150,7 +150,7 @@ end function;
 // Returns the number of unread messages for one application.
 public function TuiAppMessageCount(ApplicationId: integer): integer;
 begin
-  return Std.Arrays.Length(TuiAppMessages[ApplicationId - 1]) - TuiAppMessageHead[ApplicationId - 1];
+  return TuiAppMessages[ApplicationId - 1].Length() - TuiAppMessageHead[ApplicationId - 1];
 end function;
 
 // Removes the next queued message, compacting only after at least half is consumed.
@@ -160,10 +160,10 @@ begin
   const Head: integer := TuiAppMessageHead[Slot];
   const Item: TuiMsg := TuiAppMessages[Slot][Head];
   const Next: integer := Head + 1;
-  const Count: integer := Std.Arrays.Length(TuiAppMessages[Slot]);
+  const Count: integer := TuiAppMessages[Slot].Length();
   if (Next = Count) or ((Next >= 64) and (Next >= Count div 2)) then
     begin
-      TuiAppMessages[Slot] := Std.Arrays.Slice(TuiAppMessages[Slot], Next, Count - Next);
+      TuiAppMessages[Slot] := TuiAppMessages[Slot].Slice(Next, Count - Next);
       TuiAppMessageHead[Slot] := 0;
     end;
   else
@@ -182,7 +182,7 @@ begin
   TuiAppMessages[ApplicationId - 1] := [];
   for Item: TuiMsg in Messages do
     begin
-      Std.Arrays.Push(Queue, Item);
+      Queue.Push(Item);
     end;
   end for;
 
@@ -194,7 +194,7 @@ public procedure TuiAppPushInput(ApplicationId: integer; Input: TuiHostInput);
 begin
   var Queue: array of TuiHostInput := TuiAppInputs[ApplicationId - 1];
   TuiAppInputs[ApplicationId - 1] := [];
-  Std.Arrays.Push(Queue, Input);
+  Queue.Push(Input);
   TuiAppInputs[ApplicationId - 1] := Queue;
 end procedure;
 

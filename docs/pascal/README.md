@@ -4,7 +4,7 @@ A function-first programming language built on Pascal's readable syntax and clea
 
 Language specification: [`docs/pascal/`](.) — implemented behavior and stdlib reference.
 
-Planned features: [`docs/future/`](../future/).
+Planned features: [`docs/future/`](../future).
 
 ## Design Principles
 

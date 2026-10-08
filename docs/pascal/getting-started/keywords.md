@@ -43,8 +43,7 @@ the JSON null constructor is `JsonValue.NullValue`. Longer identifiers such as
 Reserved words cannot be used as declarations or member names, even after a
 qualifier. Public APIs must therefore use an identifier-safe spelling such as `EndKey`
 instead of `End`, `NoCommand` instead of `None`, or `CompletedCommand` instead of
-`Result`. The standard units follow the same rule, which is why they are named `Std.Results` and
-`Std.Tasks` rather than after the `result` and `task` keywords. FPAS has no escaped-identifier syntax.
+`Result`. Standard units follow the same rule; `Std.Tasks` uses an identifier-safe unit name. FPAS has no escaped-identifier syntax.
 
 ## Example
 

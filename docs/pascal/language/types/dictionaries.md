@@ -23,7 +23,7 @@ begin
 end.
 ```
 
-Use `Std.Dictionaries` for helpers such as `Length`, `ContainsKey`, `Get`, `Keys`, `Values`, and `Remove` — see [`Std.Dictionaries`](../../std/collections/dict.md).
+Dictionaries provide import-free dot operations such as `Length`, `ContainsKey`, `Get`, `Keys`, `Values`, and `Remove` — see [`Dictionary operations`](dictionary-operations.md).
 
 ## See also
 

@@ -14,8 +14,8 @@ Compiler and editor tooling for Functional Pascal projects.
 
 ## See also
 
-- [`fpas-fmt`](../../../crates/fpas-fmt/) — formatter implementation
-- [`fpas-language-service`](../../../crates/fpas-language-service/) — compiler-backed editor analysis
-- [`fpas-lsp`](../../../crates/fpas-lsp/) — Language Server Protocol transport
-- [`editors/vscode`](../../../editors/vscode/) — VS Code-compatible extension and packaging
+- [`fpas-fmt`](../../../crates/fpas-fmt) — formatter implementation
+- [`fpas-language-service`](../../../crates/fpas-language-service) — compiler-backed editor analysis
+- [`fpas-lsp`](../../../crates/fpas-lsp) — Language Server Protocol transport
+- [`editors/vscode`](../../../editors/vscode) — VS Code-compatible extension and packaging
 - [Projects](../program-structure/projects.md) — how the CLI discovers `.fpasprj` files

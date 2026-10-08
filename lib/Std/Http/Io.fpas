@@ -1,12 +1,12 @@
 // Bounded byte transfers for HTTP transports.
 unit Std.Http.Io;
 
-uses Std.Arrays, Std.Net;
+uses Std.Net;
 
 // Materializes ordered response or request fragments as one byte array.
 public function JoinChunks(Chunks: array of array of integer): array of integer;
 begin
-  return Std.Arrays.FlatMap(Chunks, function(Chunk: array of integer): array of integer begin
+  return Chunks.FlatMap(function(Chunk: array of integer): array of integer begin
     return Chunk;
   end function);
 end function;
@@ -35,7 +35,7 @@ begin
   case Std.Net.ReceiveBytes(Connection, Count) of
     when Ok(Bytes):
       begin
-        if Std.Arrays.Length(Bytes) > Available then
+        if Bytes.Length() > Available then
           begin
             return Error('HTTP response exceeds MaxResponseBytes');
           end;
@@ -58,15 +58,15 @@ end function;
 public function WriteAll(Connection: Std.Net.Connection; Bytes: array of integer): result of boolean, string;
 begin
   var Offset: integer := 0;
-  while Offset < Std.Arrays.Length(Bytes) do
+  while Offset < Bytes.Length() do
     begin
-      var Count: integer := Std.Arrays.Length(Bytes) - Offset;
+      var Count: integer := Bytes.Length() - Offset;
       if Count > 1048576 then
         begin
           Count := 1048576;
         end;
       end if;
-      const Remaining: array of integer := Std.Arrays.Slice(Bytes, Offset, Count);
+      const Remaining: array of integer := Bytes.Slice(Offset, Count);
       case Std.Net.SendBytes(Connection, Remaining) of
         when Ok(Count):
           begin

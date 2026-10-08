@@ -69,7 +69,7 @@ The result will look like a flame graph where:
 
 > Cloning is cheap... **until it isn't**
 
-In sections [Borrowing over Cloning](./chapter_01.md#11-borrowing-over-cloning) and [Important Clippy lints to respect](./chapter_02.md#23-important-clippy-lints-to-respect) we mentioned the impacts of cloning and the relevant clippy lint [`redundant_clone`](https://rust-lang.github.io/rust-clippy/master/#redundant_clone), so in this section we will explore a bit "when to pass ownership".
+In sections [Borrowing over Cloning](chapter_01.md#11-borrowing-over-cloning) and [Important Clippy lints to respect](chapter_02.md#23-important-clippy-lints-to-respect) we mentioned the impacts of cloning and the relevant clippy lint [`redundant_clone`](https://rust-lang.github.io/rust-clippy/master/#redundant_clone), so in this section we will explore a bit "when to pass ownership".
 
 * 🚨 If you really need to clone, leave it to the last moment.
 

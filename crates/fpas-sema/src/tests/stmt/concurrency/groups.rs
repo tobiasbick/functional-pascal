@@ -96,7 +96,7 @@ end."#,
 #[test]
 fn timed_group_close_preserves_result_and_failure_record_types() {
     check_ok(
-        "program T; uses Std.Tasks, Std.Results; begin const G: TaskGroup := CreateTaskGroup(); const R: result of array of TaskFailure, string := CloseTaskGroupWithTimeout(G, 0); const Reports: array of TaskFailure := Unwrap(R); end.",
+        "program T; uses Std.Tasks; begin const G: TaskGroup := CreateTaskGroup(); const R: result of array of TaskFailure, string := CloseTaskGroupWithTimeout(G, 0); const Reports: array of TaskFailure := R.Unwrap(); end.",
     );
     assert!(!check_errors("program T; uses Std.Tasks; begin const G: TaskGroup := CreateTaskGroup(); const Wrong: boolean := CloseTaskGroupWithTimeout(G, 0); end.").is_empty());
 }

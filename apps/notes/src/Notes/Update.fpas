@@ -1,12 +1,12 @@
 unit Notes.Update;
 
 uses
-  Notes.Actions, Notes.Model, Notes.Editing, Notes.Repository, Std.Arrays, Std.Console, Std.Conv,
-  Std.Options, Std.Str, Std.Time, Std.Tui;
+  Notes.Actions, Notes.Model, Notes.Editing, Notes.Repository, Std.Console, Std.Conv, Std.Time,
+  Std.Tui;
 
 function NoteIndexById(Notes: array of Note; Id: string): integer;
 begin
-  for Index: integer := 0 to Std.Arrays.Length(Notes) - 1 do
+  for Index: integer := 0 to Notes.Length() - 1 do
     begin
       if Notes[Index].Id = Id then
         begin
@@ -36,12 +36,12 @@ begin
   Next.Dirty := false;
   Next.BodyCaret := 0;
   Next.BodyOffset := TuiPoint.Create(0, 0);
-  if (Selected >= 0) and (Selected < Std.Arrays.Length(State.Notes)) then
+  if (Selected >= 0) and (Selected < State.Notes.Length()) then
     begin
       const NoteValue: Note := State.Notes[Selected];
-      Next.TitleCaret := Std.Str.Length(NoteValue.Title);
+      Next.TitleCaret := NoteValue.Title.Length();
       Next.TagsText := NoteTagsText(NoteValue);
-      Next.TagsCaret := Std.Str.Length(Next.TagsText);
+      Next.TagsCaret := Next.TagsText.Length();
     end;
   else
     begin
@@ -95,7 +95,7 @@ end function;
 function SelectedFilteredPosition(State: NotesModel): integer;
 begin
   const Indices: array of integer := NotesFilteredIndices(State.Notes, State.Search);
-  for Index: integer := 0 to Std.Arrays.Length(Indices) - 1 do
+  for Index: integer := 0 to Indices.Length() - 1 do
     begin
       if Indices[Index] = State.Selected then
         begin
@@ -111,7 +111,7 @@ end function;
 function SelectFiltered(State: NotesModel; Position: integer): NotesModel;
 begin
   const Indices: array of integer := NotesFilteredIndices(State.Notes, State.Search);
-  if (Position < 0) or (Position >= Std.Arrays.Length(Indices)) then
+  if (Position < 0) or (Position >= Indices.Length()) then
     begin
       return State;
     end;
@@ -144,11 +144,11 @@ begin
     when Ok(Written):
       begin
         var Notes: array of Note := Next.Notes;
-        Std.Arrays.Push(Notes, Draft);
+        Notes.Push(Draft);
         Next.Notes := Notes;
         Next := ResortSelected(Next, Draft.Id);
         Next := WithEditorFields(Next, Next.Selected);
-        Next.TitleCaret := Std.Str.Length(Draft.Title);
+        Next.TitleCaret := Draft.Title.Length();
         Next.Focus := TitleControl;
         Next.Status := 'Created a new note';
         return Next;
@@ -182,7 +182,7 @@ end function;
 function SelectFirstVisible(State: NotesModel): NotesModel;
 begin
   const Indices: array of integer := NotesFilteredIndices(State.Notes, State.Search);
-  if Std.Arrays.Length(Indices) = 0 then
+  if Indices.Length() = 0 then
     begin
       var Empty: NotesModel := State;
       Empty.Selected := -1;

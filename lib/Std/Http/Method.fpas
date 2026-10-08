@@ -1,8 +1,6 @@
 // HTTP method and field-name token validation.
 unit Std.Http.Method;
 
-uses Std.Str;
-
 // Reports whether a method is a non-empty RFC 9110 token.
 //
 // Parameters:
@@ -15,9 +13,9 @@ begin
     end;
   end if;
 
-  for Index: integer := 0 to Std.Str.Length(Method) - 1 do
+  for Index: integer := 0 to Method.Length() - 1 do
     begin
-      const Code: integer := Std.Str.Ord(Std.Str.CharAt(Method, Index));
+      const Code: integer := Method.CharAt(Index).Ord();
       if (((Code >= 48) and (Code <= 57)) or ((Code >= 65) and (Code <= 90))) or
          ((Code >= 97) and (Code <= 122)) then
         begin

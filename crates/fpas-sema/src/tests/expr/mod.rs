@@ -7,6 +7,7 @@ mod closures;
 mod equality;
 mod fluent;
 mod named_arguments;
+mod native;
 mod postfix;
 mod record_context;
 mod record_events;
@@ -172,17 +173,21 @@ fn equality_type_mismatch() {
 }
 
 #[test]
-fn analyze_with_types_records_canonical_standard_intrinsic_calls() {
+fn analyze_with_types_records_canonical_intrinsics_and_type_operations() {
     let (program, parse_errors) = fpas_parser::parse(
-        "program T; uses Std.Str, Std.Console; begin Std.Console.WriteLn(Std.Str.Length('abc')); end.",
+        "program T; uses Std.Console; begin Std.Console.WriteLn('abc'.Length()); end.",
     );
     assert!(parse_errors.is_empty(), "{parse_errors:#?}");
     let metadata = analyze_with_types(&program);
     assert!(metadata.errors.is_empty(), "{:?}", metadata.errors);
     let calls = metadata.intrinsic_calls.values().collect::<Vec<_>>();
     assert!(
-        calls.iter().any(|call| call.as_str() == "Std.Str.Length"),
-        "{calls:?}"
+        metadata
+            .fluent_calls
+            .values()
+            .any(|call| call.name == "Std.Str.Length"),
+        "{:?}",
+        metadata.fluent_calls
     );
     assert!(
         calls

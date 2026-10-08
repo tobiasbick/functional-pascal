@@ -25,8 +25,8 @@ desktop editors. The implemented editor features are:
 - language-server restart and output-channel commands
 
 The extension and native language server live under
-[`editors/vscode/`](../../../editors/vscode/) and
-[`crates/fpas-lsp/`](../../../crates/fpas-lsp/). They use standard VS Code
+[`editors/vscode/`](../../../editors/vscode) and
+[`crates/fpas-lsp/`](../../../crates/fpas-lsp). They use standard VS Code
 extension and Language Server Protocol APIs; no compiler behavior is
 reimplemented in TypeScript.
 

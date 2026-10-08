@@ -1,13 +1,13 @@
 program ServerFailureTest;
 
-uses Std.Server, Std.Net, Std.Tasks, Std.Results, Std.Test, Std.Arrays;
+uses Std.Server, Std.Net, Std.Tasks, Std.Test;
 
 function BindListener(): result of Std.Net.Listener, string;
 begin
   for Port: integer := 28200 to 28299 do
     begin
       const Opened: result of Std.Net.Listener, string := Listen('127.0.0.1', Port);
-      if IsOk(Opened) then
+      if Opened.IsOk() then
         begin
           return Opened;
         end;
@@ -19,19 +19,19 @@ begin
 end function;
 
 begin
-  const Life: ServerLifetime := Unwrap(CreateLifetime(1000, false));
+  const Life: ServerLifetime := CreateLifetime(1000, false).Unwrap();
   const Group: TaskGroup := GetWorkGroup(Life);
   const Worker: task := StartTaskInGroup(Group, function(Token: CancellationToken): result of boolean, string begin
     return Error('session failed');
   end function);
-  const Listener: Std.Net.Listener := Unwrap(BindListener());
+  const Listener: Std.Net.Listener := BindListener().Unwrap();
   discard OwnListener(Life, Listener);
   // Deliberate ownership misuse: cleanup must preserve this failure.
   discard CloseListener(Listener);
   discard RequestStop(Life);
   const Failures: array of TaskFailure := CloseTaskGroup(Group);
-  AssertEquals(1, Std.Arrays.Length(Failures));
+  AssertEquals(1, Failures.Length());
   AssertEquals('session failed', Failures[0].Message);
-  AssertEquals(1, Std.Arrays.Length(ShutdownErrors(Life)));
-  AssertTrue(Unwrap(FinishShutdown(Life)));
+  AssertEquals(1, ShutdownErrors(Life).Length());
+  AssertTrue(FinishShutdown(Life).Unwrap());
 end.

@@ -1,6 +1,6 @@
 program TomlStringifyConstructedTableRoundtripTest;
 
-uses Std.Arrays, Std.Dictionaries, Std.Options, Std.Test, Std.Toml;
+uses Std.Test, Std.Toml;
 
 begin
   const Source: TomlValue := TomlValue.Table(['project': TomlValue.Table(['name': TomlValue.String('demo'), 'version': TomlValue.Integer(1), 'released': TomlValue.Datetime('2026-07-14')]), 'enabled': TomlValue.Boolean(true), 'targets': TomlValue.ArrayValue([
@@ -15,10 +15,10 @@ begin
         case Value of
           when TomlValue.Table(Fields):
             begin
-              case Std.Options.Unwrap(Std.Dictionaries.Get(Fields, 'project')) of
+              case Fields.Get('project').Unwrap() of
                 when TomlValue.Table(Project):
                   begin
-                    case Std.Options.Unwrap(Std.Dictionaries.Get(Project, 'name')) of
+                    case Project.Get('name').Unwrap() of
                       when TomlValue.String(Name):
                         begin
                           AssertEquals('demo', Name);
@@ -29,7 +29,7 @@ begin
                         end;
                     end case;
 
-                    case Std.Options.Unwrap(Std.Dictionaries.Get(Project, 'released')) of
+                    case Project.Get('released').Unwrap() of
                       when TomlValue.Datetime(Date):
                         begin
                           AssertEquals('2026-07-14', Date);
@@ -46,10 +46,10 @@ begin
                   end;
               end case;
 
-              case Std.Options.Unwrap(Std.Dictionaries.Get(Fields, 'targets')) of
+              case Fields.Get('targets').Unwrap() of
                 when TomlValue.ArrayValue(Targets):
                   begin
-                    AssertEquals(2, Std.Arrays.Length(Targets));
+                    AssertEquals(2, Targets.Length());
                   end;
                 else
                   begin

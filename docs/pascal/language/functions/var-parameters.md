@@ -1,7 +1,7 @@
 # `var` parameters
 
 A `var` parameter lets a routine change a variable of its caller. Parameters
-are read-only unless they are declared with `var`. Every argument for a `var`
+are read-only unless they are declared with `var`. Every explicitly written argument for a `var`
 parameter is marked with `var` at the call site, so a call that changes caller
 state is visible where it is written:
 
@@ -126,9 +126,13 @@ See [Function types](function-types.md).
 - The record receiver `Self` cannot be a `var` parameter.
 - A receiver call such as `Counter.Increase()` cannot supply a `var` first
   parameter; write `Increase(var Counter)`.
-- `Push` and `Pop` need a local or unit array variable; a `var` parameter of
-  array type is not accepted. Copy it into a local `var`, change the copy, and
-  assign it back.
+- Array `Push` and `Pop` accept an implicit writable receiver:
+  `Items.Push(Value)` and `Items.Pop()`. It has no receiver marker or additional
+  parentheses and uses the same storage, aliasing, evaluation, and lifetime
+  checks. Fields, array elements, and forwarded `var` parameters are accepted;
+  `const` and computed receivers are rejected. Explicit ordinary-call arguments
+  retain `var`, for example `Push(var Items, Value)`. See
+  [Mutating arrays](../types/array/mutating.md).
 
 ## See also
 

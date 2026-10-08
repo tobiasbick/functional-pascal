@@ -10,9 +10,11 @@ const N: Option of integer := None;
 ## Using Option
 
 ```pascal
+
+
 function FindIndex(Items: array of integer; Target: integer): option of integer;
 begin
-  for I: integer := 0 to Length(Items) - 1 do
+  for I: integer := 0 to Items.Length() - 1 do
     if Items[I] = Target then
       return Some(I);
     end if;
@@ -39,4 +41,4 @@ end case;
 - [Types — Result and Option](../types/result-option-types.md)
 - [Pattern matching — Result and Option](../pattern-matching/result-option-patterns.md)
 - [Try operator](try.md)
-- [`Std.Options`](../../std/result/option.md)
+- [`Option operations`](../types/option-operations.md)

@@ -2,7 +2,7 @@
 unit Std.Tui.Rendering.Button;
 
 uses
-  Std.Console, Std.Str, Std.Tui.Cells.Cell, Std.Tui.Cells.StyleRole, Std.Tui.Chrome.Button,
+  Std.Console, Std.Tui.Cells.Cell, Std.Tui.Cells.StyleRole, Std.Tui.Chrome.Button,
   Std.Tui.Geometry.Point, Std.Tui.Geometry.Rect, Std.Tui.Rendering.Canvas;
 
 procedure TuiPaintButtonText(
@@ -14,11 +14,11 @@ procedure TuiPaintButtonText(
 );
 begin
   var X: integer := Position.X;
-  for Index: integer := 0 to Std.Str.Length(Button.Text) - 1 do
+  for Index: integer := 0 to Button.Text.Length() - 1 do
     begin
-      const Glyph: string := Std.Str.CharAt(Button.Text, Index);
+      const Glyph: string := Button.Text.CharAt(Index);
       var GlyphRole: TuiStyleRole := Role;
-      if (Button.Mnemonic <> '') and (Std.Str.ToLower(Glyph) = Std.Str.ToLower(Button.Mnemonic)) then
+      if (Button.Mnemonic <> '') and (Glyph.ToLower() = Button.Mnemonic.ToLower()) then
         begin
           GlyphRole := ShortcutRole;
         end;

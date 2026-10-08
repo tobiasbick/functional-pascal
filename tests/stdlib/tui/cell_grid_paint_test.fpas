@@ -1,6 +1,6 @@
 program TuiCellGridPaintTest;
 
-uses Std.Options, Std.Test, Std.Tui;
+uses Std.Test, Std.Tui;
 
 function ViewGrid(State: integer): TuiElement;
 begin
@@ -29,7 +29,7 @@ begin
   const Snapshot: TuiSurfaceSnapshot := App.SurfaceSnapshot();
   AssertEquals('A', Snapshot.CellAt(0, 0).Glyph);
   AssertEquals('B', Snapshot.CellAt(1, 0).Glyph);
-  AssertEquals(2, Std.Options.Unwrap(Snapshot.CellAt(1, 0).ConcreteStyle).Foreground.Green);
+  AssertEquals(2, Snapshot.CellAt(1, 0).ConcreteStyle.Unwrap().Foreground.Green);
   AssertEquals('C', Snapshot.CellAt(2, 0).Glyph);
   AssertEquals('E', Snapshot.CellAt(0, 1).Glyph);
   AssertEquals('F', Snapshot.CellAt(1, 1).Glyph);

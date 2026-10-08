@@ -5,10 +5,10 @@ Parse and stringify TOML 1.0 documents with an explicit Functional Pascal value 
 ```pascal
 program Example;
 
-uses Std.Console, Std.Str, Std.Toml;
+uses Std.Console, Std.Toml;
 
 begin
-  const Parsed: result of TomlValue, string := Parse(('[project]' + Chr(10)) + 'name = ''demo''');
+  const Parsed: result of TomlValue, string := Parse(('[project]' + string.Chr(10)) + 'name = ''demo''');
   case Parsed of
     when Ok(Value):
       WriteLn(Stringify(Value));
@@ -59,7 +59,7 @@ Parses a TOML document. Valid input returns `Ok(TomlValue)`; syntax errors retur
 All TOML 1.0 value kinds are represented: strings, signed 64-bit integers, floating-point values (including `inf` and `nan`), booleans, date/time values, arrays, tables, inline tables, and arrays of tables.
 
 ```pascal
-const Parsed: result of TomlValue, string := Parse(((((('title = ''example''' + Chr(10)) + 'enabled = true') + Chr(10)) + '[server]') + Chr(10)) +
+const Parsed: result of TomlValue, string := Parse(((((('title = ''example''' + string.Chr(10)) + 'enabled = true') + string.Chr(10)) + '[server]') + string.Chr(10)) +
                                                  'port = 8080');
 case Parsed of
   when Ok(Value):

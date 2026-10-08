@@ -1,6 +1,6 @@
 program TuiBackgroundInteractiveTest;
 
-uses Std.Results, Std.Tasks, Std.Test, Std.Tui;
+uses Std.Tasks, Std.Test, Std.Tui;
 
 type InteractiveModel = record
   Inbox: channel of integer;
@@ -45,5 +45,5 @@ begin
     Received := 0;
   end, Inbox, Update, UpdateMessage, View);
   AssertEquals(42, Final.Received);
-  AssertTrue(IsError(TrySend(Inbox, 1)));
+  AssertTrue(TrySend(Inbox, 1).IsError());
 end.

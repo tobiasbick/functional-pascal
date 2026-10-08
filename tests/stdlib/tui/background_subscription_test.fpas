@@ -1,6 +1,6 @@
 program TuiBackgroundSubscriptionTest;
 
-uses Std.Results, Std.Tasks, Std.Test, Std.Tui;
+uses Std.Tasks, Std.Test, Std.Tui;
 
 type SubscriptionModel = record
   Gate: channel of boolean;
@@ -17,7 +17,7 @@ begin
   const Generation: integer := State.Generation;
   Cmd.ReplaceSubscription(1, function(Token: CancellationToken): result of boolean, string begin
     discard Send(Started, Generation);
-    if IsError(ReceiveWithCancellation(Gate, Token)) then
+    if ReceiveWithCancellation(Gate, Token).IsError() then
       begin
         discard Send(Stopped, Generation);
       end;
@@ -81,16 +81,16 @@ begin
     Stopped := Stopped;
     Generation := 0;
   end, Inbox, UpdateFramework, UpdateApplication, View, 1, 0);
-  AssertEquals(0, Unwrap(ReceiveWithTimeout(Started, 10000)));
+  AssertEquals(0, ReceiveWithTimeout(Started, 10000).Unwrap());
   App.Inject(TuiMsg.Tick(1));
   Model := App.RunBackgroundIterations(Model, Inbox, UpdateFramework, UpdateApplication, View, 1, 0);
   AssertEquals(1, Model.Generation);
-  AssertEquals(0, Unwrap(ReceiveWithTimeout(Stopped, 10000)));
+  AssertEquals(0, ReceiveWithTimeout(Stopped, 10000).Unwrap());
   Model := App.RunBackgroundIterations(Model, Inbox, UpdateFramework, UpdateApplication, View, 1, 0);
-  AssertEquals(1, Unwrap(ReceiveWithTimeout(Started, 10000)));
+  AssertEquals(1, ReceiveWithTimeout(Started, 10000).Unwrap());
   App.CloseWithBackground(Inbox);
-  AssertEquals(1, Unwrap(ReceiveWithTimeout(Stopped, 10000)));
-  AssertTrue(IsError(TrySend(Inbox, 1)));
+  AssertEquals(1, ReceiveWithTimeout(Stopped, 10000).Unwrap());
+  AssertTrue(TrySend(Inbox, 1).IsError());
   discard CloseChannel(Gate);
   discard CloseChannel(Started);
   discard CloseChannel(Stopped);

@@ -1,13 +1,13 @@
 program PushPreservesAliasTest;
 
-uses Std.Arrays, Std.Test;
+uses Std.Test;
 
 begin
   var Updated: array of integer := [1];
   const Original: array of integer := Updated;
-  Push(Updated, 2);
-  AssertEquals(1, Length(Original));
+  Updated.Push(2);
+  AssertEquals(1, Original.Length());
   AssertEquals(1, Original[0]);
-  AssertEquals(2, Length(Updated));
+  AssertEquals(2, Updated.Length());
   AssertEquals(2, Updated[1]);
 end.

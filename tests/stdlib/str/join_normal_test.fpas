@@ -1,7 +1,7 @@
 program T;
 
-uses Std.Console, Std.Str;
+uses Std.Console;
 
 begin
-  WriteLn(Join(['a', 'b', 'c'], ':'));
+  WriteLn(['a', 'b', 'c'].Join(':'));
 end.

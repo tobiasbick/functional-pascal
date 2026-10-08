@@ -2,9 +2,7 @@
 
 unit Mandelbrot.Render;
 
-uses
-  Std.Arrays, Std.Conv, Std.Math, Std.Results, Std.Str, Std.Tasks, Std.Time, Std.Tui,
-  Mandelbrot.Color;
+uses Std.Conv, Std.Math, Std.Tasks, Std.Time, Std.Tui, Mandelbrot.Color;
 
 public type Complex = record
   public Re: real;
@@ -150,7 +148,7 @@ begin
   for Px: integer := 0 to Width - 1 do
     begin
       const Cx: real := XMin + (Px / IntToReal(WidthRange)) * (XMax - XMin);
-      Std.Arrays.Push(Row, Iterate(Complex.Create(Cx, Cy), MaxIter));
+      Row.Push(Iterate(Complex.Create(Cx, Cy), MaxIter));
     end;
   end for;
 
@@ -191,7 +189,7 @@ begin
         end;
       end if;
       const Cx: real := XMin + (Px / IntToReal(WidthRange)) * (XMax - XMin);
-      Std.Arrays.Push(Row, IterateCancellable(Complex.Create(Cx, Cy), MaxIter, HostToken, WorkerToken));
+      Row.Push(IterateCancellable(Complex.Create(Cx, Cy), MaxIter, HostToken, WorkerToken));
     end;
   end for;
 
@@ -207,9 +205,9 @@ end function;
 function EscapeGlyph(EscapeValue: real): string;
 begin
   const Ramp: string := ' ░▒▓█';
-  const Count: integer := Std.Str.Length(Ramp);
+  const Count: integer := Ramp.Length();
   const Index: integer := Clamp(Trunc(Frac(EscapeValue * 0.08) * IntToReal(Count)), 0, Count - 1);
-  return Std.Str.CharAt(Ramp, Index);
+  return Ramp.CharAt(Index);
 end function;
 
 function RenderCell(Sample: PixelSample; Palette: PaletteKind): TuiCell;
@@ -230,7 +228,7 @@ begin
   var Cells: array of TuiCell := [];
   for Sample: PixelSample in Samples do
     begin
-      Std.Arrays.Push(Cells, RenderCell(Sample, Palette));
+      Cells.Push(RenderCell(Sample, Palette));
     end;
   end for;
 
@@ -279,7 +277,7 @@ begin
   for Py: integer := 0 to Height - 1 do
     begin
       const Row: array of TuiCell := RenderRowCells(Request, Py);
-      Cells := Std.Arrays.Concat(Cells, Row);
+      Cells := Cells.Concat(Row);
     end;
   end for;
 
@@ -303,15 +301,15 @@ begin
         end;
       end if;
 
-      Std.Arrays.Push(Tasks, StartTaskInGroup(Group, function(WorkerToken: CancellationToken): array of TuiCell begin
+      Tasks.Push(StartTaskInGroup(Group, function(WorkerToken: CancellationToken): array of TuiCell begin
         return RenderRowCellsCancellable(Request, Py, HostToken, WorkerToken);
       end function));
     end;
   end for;
   var Cells: array of TuiCell := [];
-  for Py: integer := 0 to Std.Arrays.Length(Tasks) - 1 do
+  for Py: integer := 0 to Tasks.Length() - 1 do
     begin
-      if IsError(WaitAnyWithCancellation([Tasks[Py]], HostToken)) then
+      if WaitAnyWithCancellation([Tasks[Py]], HostToken).IsError() then
         begin
           break;
         end;
@@ -323,13 +321,14 @@ begin
         end;
       end if;
 
-      Cells := Std.Arrays.Concat(Cells, Row);
+      Cells := Cells.Concat(Row);
       if Py = Request.Height - 1 then
         begin
-          if IsError(SendWithCancellation(Inbox, record
+          if SendWithCancellation(Inbox, record
             Generation := Request.Generation;
             Cells := Cells;
-          end, HostToken)) then
+          end, HostToken)
+               .IsError() then
             begin
               break;
             end;

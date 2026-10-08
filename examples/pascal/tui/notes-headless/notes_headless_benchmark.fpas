@@ -4,9 +4,7 @@
 
 program NotesHeadlessBenchmark;
 
-uses
-  Notes.Model, Notes.Update, Notes.View, Std.Args, Std.Arrays, Std.Console, Std.Conv, Std.Str,
-  Std.Time, Std.Tui;
+uses Notes.Model, Notes.Update, Notes.View, Std.Args, Std.Console, Std.Conv, Std.Time, Std.Tui;
 
 const WarmupIterations: integer := 25;
 const DeltaMillis: integer := 16;
@@ -21,9 +19,9 @@ begin
       NoteValue.Title := ('Performance note ' + IntToStr(Index)) + ' with a representative title';
       NoteValue.Tags := ['performance', 'tui', 'benchmark'];
       NoteValue.Pinned := (Index mod 7) = 0;
-      NoteValue.Body := ((('This is a representative note body for frame ' + IntToStr(Index)) + '.') + Std.Str.Chr(10)) +
+      NoteValue.Body := ((('This is a representative note body for frame ' + IntToStr(Index)) + '.') + string.Chr(10)) +
                         'It keeps the editor, list, metadata, and layout paths active.';
-      Std.Arrays.Push(Notes, NoteValue);
+      Notes.Push(NoteValue);
     end;
   end for;
 
@@ -85,7 +83,7 @@ begin
     end;
   end if;
 
-  WriteLn('notes rendered: ' + IntToStr(Std.Arrays.Length(Model.Notes)));
+  WriteLn('notes rendered: ' + IntToStr(Model.Notes.Length()));
   if (MaxMillis > 0) and (Elapsed > MaxMillis) then
     begin
       panic(((('Notes TUI benchmark regression: ' + IntToStr(Elapsed)) + ' ms exceeds limit ') + IntToStr(MaxMillis)) +

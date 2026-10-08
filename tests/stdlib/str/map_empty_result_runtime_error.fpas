@@ -1,12 +1,10 @@
 program StringMapEmptyResultRuntimeError;
 
-uses Std.Str;
-
 function Empty(C: string): string;
 begin
   return '';
 end function;
 
 begin
-  const Mapped: string := Map('abc', Empty);
+  const Mapped: string := 'abc'.Map(Empty);
 end.

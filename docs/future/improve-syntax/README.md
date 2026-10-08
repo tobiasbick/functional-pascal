@@ -37,36 +37,18 @@ decision before language implementation. Open details in either category are
 listed under **Open decisions** in the owning package and must be resolved with
 the user before changing syntax or semantics.
 
-Every code fragment in these files is draft syntax, not a compiled example or
-a promise that the current compiler accepts it. Current behavior must be checked
-against the checkout before implementing each work package.
+Completed packages describe current implemented rules and regression coverage.
+Examples owned by open packages are draft syntax; mixed examples identify their
+pending owners. Check current behavior against the checkout before implementing
+an open work package.
 
 ## Package status
 
-AP01, AP02, AP04, AP07, AP11, AP13, and AP16 are complete on `codex/syntax-changes-2`,
-including all of their work packages. Checkboxes track completed delivery in
-the working branch, as defined by the
+AP01, AP02, AP04, AP06, AP07, AP09, AP11, AP13, AP16, and AP17 are
+complete, including all their work packages. Their READMEs and work-package
+files record implemented behavior, implementation owners, regression coverage,
+and any independent follow-ups. Checkboxes use the
 [status-tracking rule](development-process.md#status-tracking).
-
-[AP07: Boolean rules](ap07-boolean-rules/README.md) is complete: short-circuit
-evaluation, `Std.Bits`, explicit logical grouping, and boolean-only operators
-are implemented.
-
-[AP11: Individual declarations](ap11-individual-declarations/README.md) is complete:
-whole-unit type resolution and one keyword per declaration are implemented,
-including source, generated API, editor, and documentation migration.
-
-[AP16: Immutable and mutable bindings](ap16-immutable-and-mutable-bindings/README.md)
-is complete: computed `const`, the binding migration, writable `var`, and
-read-only value parameters are implemented. AP17.1 adds `var` reference
-parameters and positional arguments; AP17.2 adds named `var` arguments.
-Caller-mutating intrinsics remain in AP17.3; native built-in type operations
-remain in AP06.
-
-[AP09: Named arguments](ap09-named-arguments/README.md) is complete: fully
-named calls of declared routines, record methods, and enum variant
-constructors are implemented. Remaining gaps are recorded in AP06.3, AP10.1,
-AP24.3, and the compiler and language-limit follow-ups.
 
 Effort estimates are preliminary, based on the design rather than a code audit.
 Dependencies name the packages a package needs; the real prerequisites per work
@@ -74,23 +56,23 @@ package are listed in each work package file.
 
 | Done | Package | Effort | Depends on | Direction |
 |------|---------|--------|------------|-----------|
-| [x] | [AP01: Pascal conventions](ap01-pascal-conventions/README.md) | Small | None | Agreed direction |
-| [x] | [AP02: Structured diagnostics](ap02-structured-diagnostics/README.md) | Small | None | Agreed direction (Q01) |
+| [x] | [AP01: Pascal conventions](ap01-pascal-conventions/README.md) | Small | None | Complete |
+| [x] | [AP02: Structured diagnostics](ap02-structured-diagnostics/README.md) | Small | None | Complete (Q01) |
 | [ ] | [AP03: Explicit closed-enum cases](ap03-explicit-closed-enum-cases/README.md) | Small | AP02, AP20 | Agreed direction |
 | [x] | [AP04: Discarded function values](ap04-discarded-function-values/README.md) | Small | AP02 | Complete |
 | [ ] | [AP05: Qualified imports](ap05-qualified-imports/README.md) | Medium | AP01, AP02 | Agreed direction (Q04) |
-| [ ] | [AP06: Fixed dot-call targets](ap06-dot-call-targets/README.md) | Medium | None | Agreed direction (Q05, revised); native type operations |
+| [x] | [AP06: Fixed dot-call targets](ap06-dot-call-targets/README.md) | Medium | AP09.1, AP17.3 (AP06.3) | Complete (Q05) |
 | [x] | [AP07: Boolean rules](ap07-boolean-rules/README.md) | Medium | AP02 | Complete (Q02, Q03) |
 | — | [AP08: Comma-separated parameter lists](ap08-comma-separated-parameter-lists/README.md) | — | — | Rejected; closed (Q06) |
 | [x] | [AP09: Named arguments](ap09-named-arguments/README.md) | Medium | AP02 | Complete (AP09.1, AP09.2) |
 | [ ] | [AP10: Typed record construction](ap10-typed-record-construction/README.md) | Medium | AP09 | Agreed direction |
 | [x] | [AP11: Individual declarations](ap11-individual-declarations/README.md) | Medium | AP01 | Complete (Q07) |
 | [ ] | [AP12: Callable expressions](ap12-callable-expressions/README.md) | Medium | AP06 | Proposal |
-| [x] | [AP13: Explicit block boundaries](ap13-explicit-block-boundaries/README.md) | Large | AP01, AP02 | Agreed direction (Q08, Q09) |
+| [x] | [AP13: Explicit block boundaries](ap13-explicit-block-boundaries/README.md) | Large | AP01, AP02 | Complete (Q08, Q09) |
 | [ ] | [AP14: Remove computed properties](ap14-remove-computed-properties/README.md) | Small | AP06 | Agreed direction |
 | [ ] | [AP15: Remove event declarations](ap15-remove-event-declarations/README.md) | Small | AP20 | Agreed direction |
 | [x] | [AP16: Immutable and mutable bindings](ap16-immutable-and-mutable-bindings/README.md) | Large | AP11 | Complete (AP16.1–AP16.3) |
-| [ ] | [AP17: Visible caller mutation](ap17-visible-caller-mutation/README.md) | Large | AP09, AP13, AP16 | Agreed direction |
+| [x] | [AP17: Visible caller mutation](ap17-visible-caller-mutation/README.md) | Large | AP09, AP13, AP16, AP06.2 (AP17.3) | Complete |
 | [ ] | [AP18: Subrange types](ap18-subrange-types/README.md) | Large | AP07, AP16 | Agreed direction (Q10, Q11) |
 | [ ] | [AP19: Distinct domain types](ap19-distinct-domain-types/README.md) | Large | AP05, AP16 | Agreed direction (Q12, Q13) |
 | [ ] | [AP20: Nested patterns and explicit bindings](ap20-nested-patterns-and-explicit-bindings/README.md) | Large | AP07, AP13, AP16 | Agreed direction |
@@ -119,7 +101,7 @@ and transfer conditions are recorded in the owning package README.
 | AP03 | AP03.1 migrate catch-alls; AP03.2 reject catch-alls |
 | AP04 | AP04.1 discard statement; AP04.2 require consumed results |
 | AP05 | AP05.1 import aliases; AP05.2 alias-aware tooling |
-| AP06 | AP06.1 complete catalog and remaining forms; AP06.2 prepare consumer migration; AP06.3 native type operations and removal of duplicate call forms |
+| AP06 | AP06.1 catalog/rules; AP06.2 consumer preparation; AP06.3 native type operations and removal of duplicate call forms (all complete) |
 | AP07 | AP07.1 short-circuit evaluation; AP07.2 `Std.Bits`; AP07.3 logical precedence; AP07.4 boolean-only operators |
 | AP09 | AP09.1 routine arguments; AP09.2 variant constructors |
 | AP10 | AP10.1 typed construction; AP10.2 migrate literals; AP10.3 remove literals |
@@ -129,7 +111,7 @@ and transfer conditions are recorded in the owning package README.
 | AP14 | AP14.1 migrate properties; AP14.2 remove declarations |
 | AP15 | AP15.1 migrate events; AP15.2 remove declarations |
 | AP16 | AP16.1 computed const; AP16.2 migrate immutable var; AP16.3 keyword switch |
-| AP17 | AP17.1 var parameters; AP17.2 named var arguments; AP17.3 mutating intrinsics |
+| AP17 | Complete: var parameters, named var arguments, and shared mutation checks for caller-mutating intrinsics |
 | AP18 | AP18.1 declarations and conversions; AP18.2 membership |
 | AP19 | AP19.1 declarations and conversions; AP19.2 comparisons |
 | AP20 | AP20.1 explicit bindings; AP20.2 nested patterns; AP20.3 `is` test |
@@ -145,36 +127,27 @@ AP08, AP28, and AP29 have no work packages.
 
 ## Recommended order
 
-Package numbers group related work; they are not the execution order. Ordered
-by expected benefit relative to cost, with the real prerequisites of each work
-package taken from its own file:
+Package numbers group related work; they are not the execution order. The
+completed foundation is listed above. For the remaining work, keep the
+following dependency order; the exact prerequisites and unresolved decisions
+are recorded in each work-package file.
 
-1. AP01 and AP02: establish conventions and improve diagnostics.
-2. AP07 and AP04: small changes that remove frequent silent mistakes.
-3. AP11, then AP16 and AP17.1: align declaration, binding, and parameter
-   keywords with Pascal expectations. AP16.2 prepares the keyword migration;
-   AP16.3 completes it and removes mutable parameters. AP17.1 then introduces
-   true reference parameters. AP17.2 waits for AP09.1; AP17.3 waits for the
-   AP06.1 receiver follow-up and its coordinated delivery with AP06.3.
-4. AP13: the largest migration. AP13.1 and AP13.2 come first; its later work
-   packages unblock AP20, AP21, AP23, and AP26.
-5. AP09, AP10, and AP14.
-6. AP20, then AP03 and AP15; AP21 and AP24.
-7. AP18, AP19, and AP23.
-8. AP26, then AP25 after its reassessment.
-9. AP05 and AP06 can proceed independently; AP06 native operations require
-   no imports. Complete AP06 once its remaining names, factory forms,
-   conflicts, and the user-requested follow-up on the agreed implicit-receiver
-   exception are settled, then AP12 after its decision. AP06.1 is a decision
-   work package and can be prepared at any time.
+1. AP10 and AP14 follow the completed named-argument and dot-call rules.
+2. AP20 enables AP03 and AP15; AP21 and AP24 follow their required parts of
+   AP03, AP10, and AP20.
+3. AP18 and AP23 use the completed Boolean and binding rules. AP19 also
+   requires AP05.
+4. AP26 uses the completed block and caller-mutation rules. Reassess AP25
+   after AP23 and practical use of its contracts; AP14 is also a prerequisite.
 
-AP27 is optional and follows AP22. AP28 is retained as editor/LSP work outside
-this language plan, for transfer after AP13 and AP24. AP29 is rejected.
+AP05 can proceed independently and enables AP19. AP12 can proceed to its
+accept/reject decision now that AP06 is complete; its implementation still
+requires that decision. AP22 uses the completed diagnostic and binding rules;
+its typed-construction portion requires AP10.1.
 
-Several syntax migrations touch the same sources. Where a later work package
-would make an earlier rewrite obsolete, the earlier file names the dependency
-so each file is migrated once in its final form; AP03.1 and AP20.1 wait for
-AP13.5 for that reason.
+AP27 is optional and follows AP22. AP28 is editor/LSP work outside this
+language plan; AP24 remains its transfer prerequisite. AP08 and AP29 are
+rejected and closed.
 
 ## Decision gates
 
@@ -214,8 +187,8 @@ agreement. Do not add a feature solely because an inspiration language has it.
 ## Document map
 
 - Package directories `apNN-*/`: one README plus one file per work package.
-- [AP01 reference style](ap01-pascal-conventions/reference-style.md): canonical
-  draft examples and the distinction between current and planned forms.
+- [AP01 reference style](ap01-pascal-conventions/reference-style.md): reference
+  examples and the distinction between current and planned forms.
 - [development-process.md](development-process.md): branches, merges, status
   tracking, migration rules, required checks.
 - [shared-constraints.md](shared-constraints.md): cross-package rules,
@@ -225,10 +198,3 @@ All 23 questionnaire decisions are recorded in the owning packages as Q01–Q23.
 These decisions do not mark implementation complete; remaining implementation
 details and explicit decision gates stay in the owning packages.
 Implemented behavior remains in the [current handbook](../../pascal/README.md).
-
-The branch `codex/syntax-changes` is a reference only: it carries an earlier,
-functional-first redesign with its own stage plan and several implemented
-slices. Its alias-only imports and removal of record methods diverge from
-the decisions recorded in AP05 and AP06 here; the decisions here win.
-Package READMEs note the reusable findings from that branch under
-**Reference**.

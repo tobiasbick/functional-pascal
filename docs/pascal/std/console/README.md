@@ -20,7 +20,10 @@ After `uses Std.Console;` you can call symbols in either form:
 | **Fully qualified** | `Std.Console.WriteLn('hi')` |
 | **Short** | `WriteLn('hi')` |
 
-Short names exist only for symbols that belong to a `uses`'d unit. If two imported units expose the **same** short name (for example `Length` from `Std.Str` and `Std.Arrays`), the compiler reports an **ambiguous** error at the use site; then use the full name (`Std.Str.Length`, `Std.Arrays.Length`).
+Short names exist only for exported symbols of imported units. If two imported
+units expose the same short name, qualify the ordinary call with its unit.
+Built-in type operations are always available and use their static receiver type;
+`Text.Length()` and `Items.Length()` need no imports.
 
 Types follow the same idea: `KeyEvent` is the short form of `Std.Console.KeyEvent` when `Std.Console` is imported.
 

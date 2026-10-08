@@ -1,6 +1,6 @@
 program DictForInExample;
 
-uses Std.Console, Std.Conv, Std.Dictionaries;
+uses Std.Console, Std.Conv;
 
 begin
   const Ages: dict of string to integer := ['Alice': 30, 'Bob': 25, 'Cara': 31];

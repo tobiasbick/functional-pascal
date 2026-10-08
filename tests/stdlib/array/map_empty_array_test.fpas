@@ -1,6 +1,6 @@
 program T;
 
-uses Std.Console, Std.Arrays;
+uses Std.Console;
 
 function AddOne(X: integer): integer;
 begin
@@ -9,6 +9,6 @@ end function;
 
 begin
   const A: array of integer := [];
-  const B: array of integer := Map(A, AddOne);
-  WriteLn(Length(B));
+  const B: array of integer := A.Map(AddOne);
+  WriteLn(B.Length());
 end.

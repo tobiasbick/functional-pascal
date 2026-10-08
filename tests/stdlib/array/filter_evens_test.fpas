@@ -1,6 +1,6 @@
 program T;
 
-uses Std.Console, Std.Arrays;
+uses Std.Console;
 
 function IsEven(X: integer): boolean;
 begin
@@ -9,8 +9,8 @@ end function;
 
 begin
   const Nums: array of integer := [1, 2, 3, 4, 5];
-  const Evens: array of integer := Filter(Nums, IsEven);
-  WriteLn(Length(Evens));
+  const Evens: array of integer := Nums.Filter(IsEven);
+  WriteLn(Evens.Length());
   WriteLn(Evens[0]);
   WriteLn(Evens[1]);
 end.

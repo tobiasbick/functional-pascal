@@ -1,6 +1,6 @@
 program T;
 
-uses Std.Console, Std.Arrays;
+uses Std.Console;
 
 function AddAcc(Acc: integer; V: integer): integer;
 begin
@@ -9,6 +9,6 @@ end function;
 
 begin
   const Nums: array of integer := [1, 2, 3, 4, 5];
-  const Sum: integer := Reduce(Nums, 0, AddAcc);
+  const Sum: integer := Nums.Reduce(0, AddAcc);
   WriteLn(Sum);
 end.

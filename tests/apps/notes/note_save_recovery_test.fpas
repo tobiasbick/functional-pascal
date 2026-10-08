@@ -1,10 +1,10 @@
 program NoteSaveRecoveryTest;
 
-uses Notes.Model, Notes.Repository, Notes.Update, Std.Fs, Std.Results, Std.Test, Std.Tui;
+uses Notes.Model, Notes.Repository, Notes.Update, Std.Fs, Std.Test, Std.Tui;
 
 begin
   const Blocked: string := ScratchDir() + '/blocked';
-  AssertTrue(Unwrap(Std.Fs.WriteText(Blocked, 'file, not directory')));
+  AssertTrue(Std.Fs.WriteText(Blocked, 'file, not directory').Unwrap());
   const Loaded: NotesLoad := record
     Notes := [NoteCreate('one', 1), NoteCreate('two', 2)];
     Issues := [];
@@ -15,7 +15,7 @@ begin
   AssertTrue(State.Dirty);
   AssertTrue(State.Overlay = NotesOverlay.SaveFailure);
   AssertTrue(State.ErrorMessage <> '');
-  AssertTrue(Unwrap(Std.Fs.DeleteFile(Blocked)));
+  AssertTrue(Std.Fs.DeleteFile(Blocked).Unwrap());
   State := NotesPersistCurrent(State);
   AssertFalse(State.Dirty);
   AssertTrue(State.Overlay = NotesOverlay.Closed);

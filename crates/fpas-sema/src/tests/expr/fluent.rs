@@ -1,5 +1,5 @@
 use super::{check_errors, check_ok};
-use fpas_diagnostics::codes::SEMA_AMBIGUOUS_IMPORTED_NAME;
+use fpas_diagnostics::codes::SEMA_UNKNOWN_NAME;
 use fpas_parser::{CompilationUnit, parse_compilation_unit};
 
 fn interface_for(source: &str) -> fpas_unit::interface::UnitInterface {
@@ -32,7 +32,7 @@ fn imported_call_errors(
 }
 
 #[test]
-fn imported_source_routines_filter_only_by_receiver() {
+fn imported_source_routines_use_qualified_ordinary_calls() {
     let interfaces = [
         interface_for(
             "unit Demo.First; public function Choose(Value: integer; Text: string): integer; begin return 1; end function;\nend unit;",
@@ -42,7 +42,7 @@ fn imported_source_routines_filter_only_by_receiver() {
         ),
     ];
     let errors = imported_call_errors(
-        "program T; uses Demo.First, Demo.Second; begin const N: integer := (1).Choose('x'); end.",
+        "program T; uses Demo.First, Demo.Second; begin const N: integer := Demo.First.Choose(1, 'x'); end.",
         &interfaces,
     );
     assert!(errors.is_empty(), "{errors:#?}");
@@ -63,14 +63,11 @@ fn trailing_arguments_do_not_break_imported_receiver_tie() {
         &interfaces,
     );
     assert!(
-        errors
-            .iter()
-            .any(|error| error.code == SEMA_AMBIGUOUS_IMPORTED_NAME
-                && error
-                    .help
-                    .as_deref()
-                    .is_some_and(|help| help.contains("Demo.First.Choose")
-                        && help.contains("Demo.Second.Choose"))),
+        errors.iter().any(|error| error.code == SEMA_UNKNOWN_NAME
+            && error
+                .help
+                .as_deref()
+                .is_some_and(|help| help.contains("free functions ordinarily"))),
         "{errors:#?}"
     );
 }
@@ -78,57 +75,28 @@ fn trailing_arguments_do_not_break_imported_receiver_tie() {
 #[test]
 fn imported_intrinsics_select_by_receiver_type() {
     check_ok(
-        "program T; uses Std.Arrays, Std.Dictionaries, Std.Str; \
-         begin const A: array of integer := [1]; \
-         const D: dict of string to integer := ['a': 2]; \
-         const N: integer := A.Length() + D.Length() + ('ab').Length(); end.",
+        "program T;  begin const A: array of integer := [1]; const D: dict of string to integer := ['a': 2]; const N: integer := A.Length() + D.Length() + ('ab').Length(); end.",
     );
 }
 
 #[test]
-fn lexical_function_shadows_imports_even_when_incompatible() {
-    let errors = check_errors(
-        "program T; uses Std.Arrays; \
-         function Length(S: string): integer; begin return 0; end function; \
-         begin const A: array of integer := [1]; const N: integer := A.Length(); end.",
-    );
-    assert!(
-        errors
-            .iter()
-            .any(|error| error.message.contains("cannot be called with receiver")),
-        "{errors:#?}"
+fn native_length_ignores_same_named_free_function() {
+    check_ok(
+        "program T;  function Length(S: string): integer; begin return 0; end function; begin const A: array of integer := [1]; const N: integer := A.Length(); end.",
     );
 }
 
 #[test]
-fn noncallable_local_shadows_matching_import() {
-    let errors = check_errors(
-        "program T; uses Std.Arrays; \
-         begin const A: array of integer := [1]; \
-         const Length: integer := 7; const N: integer := A.Length(); end.",
-    );
-    assert!(
-        errors
-            .iter()
-            .any(|error| error.message.contains("cannot be called with receiver")),
-        "{errors:#?}"
+fn native_length_ignores_same_named_local_value() {
+    check_ok(
+        "program T;  begin const A: array of integer := [1]; const Length: integer := 7; const N: integer := A.Length(); end.",
     );
 }
 
 #[test]
-fn trailing_arguments_do_not_reselect_a_shadowed_callable() {
-    let errors = check_errors(
-        "program T; uses Std.Arrays; \
-         function Map(A: array of integer; X: integer): integer; begin return X; end function; \
-         function Double(X: integer): integer; begin return X * 2; end function; \
-         begin const A: array of integer := [1]; \
-         const B: array of integer := A.Map(Double); end.",
-    );
-    assert!(
-        errors
-            .iter()
-            .any(|error| error.message.contains("argument")),
-        "{errors:#?}"
+fn native_map_ignores_same_named_free_function() {
+    check_ok(
+        "program T;  function Map(A: array of integer; X: integer): integer; begin return X; end function; function Double(X: integer): integer; begin return X * 2; end function; begin const A: array of integer := [1]; const B: array of integer := A.Map(Double); end.",
     );
 }
 
@@ -152,7 +120,7 @@ fn record_field_blocks_free_call_fallback() {
 fn constrained_generic_receiver_matches_only_valid_type() {
     check_ok(
         "program T; function Identity<T: Numeric>(X: T): T; begin return X; end function; \
-         begin const N: integer := (2).Identity(); end.",
+         begin const N: integer := Identity(2); end.",
     );
     let errors = check_errors(
         "program T; function Identity<T: Numeric>(X: T): T; begin return X; end function; \
@@ -161,21 +129,19 @@ fn constrained_generic_receiver_matches_only_valid_type() {
     assert!(
         errors
             .iter()
-            .any(|error| error.message.contains("cannot be called with receiver")),
+            .any(|error| error.message.contains("has no dot operation")),
         "{errors:#?}"
     );
 }
 
 #[test]
 fn array_mutation_rejects_parenthesized_receiver() {
-    let errors = check_errors(
-        "program T; uses Std.Arrays; \
-         begin var A: array of integer := [1]; (A).Push(2); end.",
-    );
+    let errors =
+        check_errors("program T;  begin var A: array of integer := [1]; (A).Push(2); end.");
     assert!(
         errors
             .iter()
-            .any(|error| error.message.contains("simple mutable array variable")),
+            .any(|error| error.code == fpas_diagnostics::codes::SEMA_INVALID_VAR_ARGUMENT),
         "{errors:#?}"
     );
 }
@@ -184,11 +150,11 @@ fn array_mutation_rejects_parenthesized_receiver() {
 fn procedure_must_end_a_statement_chain() {
     check_ok(
         "program T; procedure Consume(X: integer); begin end procedure; \
-         begin (2).Consume(); end.",
+         begin Consume(2); end.",
     );
     let errors = check_errors(
         "program T; procedure Consume(X: integer); begin end procedure; \
-         begin const N: integer := (2).Consume(); end.",
+         begin const N: integer := [2].ForEach(procedure(X: integer) begin end procedure); end.",
     );
     assert!(
         errors
@@ -200,9 +166,27 @@ fn procedure_must_end_a_statement_chain() {
 
 #[test]
 fn erroneous_receiver_does_not_cascade() {
-    let errors = check_errors(
-        "program T; uses Std.Arrays, Std.Dictionaries; \
-         begin const N: integer := Unknown.Length(); end.",
+    let errors = check_errors("program T;  begin const N: integer := Unknown.Length(); end.");
+    assert_eq!(errors.len(), 1, "{errors:#?}");
+}
+
+#[test]
+fn imported_same_named_free_functions_coexist_with_fixed_native_targets() {
+    let interfaces = [interface_for(
+        "unit Demo.Helpers; public function Length(Value: string): integer; begin return 99; end function; end unit;",
+    )];
+    let errors = imported_call_errors(
+        "program T; uses Demo.Helpers; begin const Own: integer := Length('x'); const Native: integer := 'x'.Length(); end.",
+        &interfaces,
+    );
+    assert!(errors.is_empty(), "{errors:#?}");
+    let errors = imported_call_errors(
+        "program T; uses Demo.Helpers; begin const N: integer := 'x'.Length('extra'); end.",
+        &interfaces,
     );
     assert_eq!(errors.len(), 1, "{errors:#?}");
+    assert_eq!(
+        errors[0].code,
+        fpas_diagnostics::codes::SEMA_WRONG_ARGUMENT_COUNT
+    );
 }

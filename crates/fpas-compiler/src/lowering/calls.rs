@@ -103,12 +103,6 @@ impl LoweringContext {
         result: TypeId,
         span: fpas_lexer::Span,
     ) -> Result<ValueId, CompileError> {
-        if name.eq_ignore_ascii_case(fpas_std::std_symbols::STD_ARRAY_PUSH) {
-            return self.lower_array_push(arguments, span);
-        }
-        if name.eq_ignore_ascii_case(fpas_std::std_symbols::STD_ARRAY_POP) {
-            return self.lower_array_pop(arguments, result, span);
-        }
         let first_type = self
             .argument_for_parameter(arguments, 0)
             .and_then(|argument| {

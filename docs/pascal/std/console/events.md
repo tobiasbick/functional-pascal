@@ -33,7 +33,7 @@ runtime continues waiting with the remaining deadline instead of returning
 deadline reaches zero.
 
 ```pascal
-uses Std.Console, Std.Options;
+uses Std.Console;
 
 
 EnableRawMode();
@@ -61,7 +61,7 @@ that no FPAS event is available, so a ready press following a release is
 returned by the same call.
 
 ```pascal
-uses Std.Console, Std.Options;
+uses Std.Console;
 
 
 EnableRawMode();

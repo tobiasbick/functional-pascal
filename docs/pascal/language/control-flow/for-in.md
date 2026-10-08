@@ -27,10 +27,10 @@ end for;
 
 ## Dict key iteration
 
-Iterates over the **keys** of a `dict of K to V` in insertion order. The loop variable receives each key; values can be looked up via the key inside the body. Requires `uses Std.Dictionaries`.
+Iterates over the **keys** of a `dict of K to V` in insertion order. The loop variable receives each key; values can be looked up via the key inside the body. No import is required.
 
 ```pascal
-uses Std.Dictionaries, Std.Conv;
+uses Std.Conv;
 
 const Ages: dict of string to integer := ['Alice': 30, 'Bob': 25];
 

@@ -1,20 +1,20 @@
 program JuliaCancelTest;
 
-uses Julia.Render, Julia.Compute, Julia.Color, Std.Tasks, Std.Arrays, Std.Results, Std.Test;
+uses Julia.Render, Julia.Compute, Julia.Color, Std.Tasks, Std.Test;
 
 begin
   for Attempt: integer := 1 to 10 do
     begin
       // More rows than queue capacity; deliberately leave the result queue undrained.
       const Old: RenderJob := StartRender(-1.0, 1.0, -1.0, 1.0, 8, 100, 2048, PaletteKind.DeepOcean, 0.0, 0.0);
-      discard Unwrap(ReceiveWithTimeout(Old.Rows, 5000));
+      discard ReceiveWithTimeout(Old.Rows, 5000).Unwrap();
       const Token: CancellationToken := GetTaskGroupToken(Old.Group);
       const Filler: RenderRow := record
         Y := 0;
         Samples := [];
       end;
 
-      while Unwrap(TrySend(Old.Rows, Filler)) do
+      while TrySend(Old.Rows, Filler).Unwrap() do
         begin
           null;
         end;
@@ -23,12 +23,12 @@ begin
       discard CancelTaskGroup(Old.Group);
       AssertTrue(IsCancellationRequested(Token));
       // A cancelled CPU row returns no partial result to publish.
-      AssertEquals(0, Length(ComputeRow(0, 8, 1, -1.0, 1.0, -1.0, 1.0, 2048, 0.0, 0.0, Token)));
+      AssertEquals(0, ComputeRow(0, 8, 1, -1.0, 1.0, -1.0, 1.0, 2048, 0.0, 0.0, Token).Length());
       StopRender(Old);
       const Fresh: RenderJob := StartRender(0.0, 0.0, 0.0, 0.0, 1, 1, 32, PaletteKind.Ember, 0.0, 0.0);
-      const Row: RenderRow := Unwrap(ReceiveWithTimeout(Fresh.Rows, 5000));
+      const Row: RenderRow := ReceiveWithTimeout(Fresh.Rows, 5000).Unwrap();
       AssertEquals(0, Row.Y);
-      AssertEquals(1, Length(Row.Samples));
+      AssertEquals(1, Row.Samples.Length());
       AssertTrue(Row.Samples[0].IsInside);
       StopRender(Fresh);
     end;

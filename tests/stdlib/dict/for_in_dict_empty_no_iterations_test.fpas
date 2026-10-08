@@ -1,6 +1,6 @@
 program T;
 
-uses Std.Console, Std.Dictionaries;
+uses Std.Console;
 
 begin
   const D: dict of string to integer := [:];

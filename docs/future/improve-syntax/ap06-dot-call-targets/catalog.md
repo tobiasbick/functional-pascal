@@ -2,29 +2,35 @@
 
 Package: [AP06: Fixed dot-call targets](README.md)
 
-Status: agreed scope, automatic availability, and one public call form per
-operation. The base catalog is extended to preserve every existing distinct
-operation of the five type groups. AP06.1 settles the remaining names and
-call forms; AP06.3 implements the catalog. This is a planning document.
+Status: complete. The catalog defines 78 public native operations. Their
+signatures, naming, import, factory, collision, and mutation rules are enforced
+by `crates/fpas-sema/src/std_registry/native/`. Automatic checks validate the
+catalog and its type-handbook signatures.
 
 ## Scope and conventions
 
 - The catalog covers `string`, `array of T`, `dict of K to V`, `Option of T`,
-  and `Result of (T, E)`. Their operations are available without `uses`.
-- Preserve all distinct operations currently exposed by `Std.Str`,
-  `Std.Arrays`, `Std.Dictionaries`, `Std.Options`, and `Std.Results`, including
-  operations outside the earlier base catalog. Keep one canonical public
-  name per operation; retire genuine synonymous copies only after checking
-  their complete semantics, constraints, errors, and evaluation behavior.
-- The tables' standard-routine names identify the existing implementation
-  and migration source. They are not a second public API in the target
-  language. The five former units are removed from public imports and
-  ordinary calls; other standard units still require explicit `uses`.
+  and `Result of T, E`. Their operations are available without `uses`.
+- Every operation has one canonical public name. Operations with different
+  semantics, constraints, or errors remain distinct.
+- The private implementation IDs in the tables identify runtime ownership,
+  not a second public API. `Std.Str`, `Std.Arrays`, `Std.Dictionaries`,
+  `Std.Options`, and `Std.Results` are unavailable as public imports, free
+  calls, or function references. Other standard units require explicit `uses`.
 - Instance operations have one public form, `Value.Operation(Arguments)`.
   Their receiver supplies the existing routine's first parameter; instance
-  tables list only the remaining arguments in their written order.
+  tables list the public explicit parameters in declaration order.
   Operations that construct a value without a receiver belong to the
-  result type; AP06.1 records one canonical type-qualified form for them.
+  result type and use `string.Chr(...)` or `array.Fill(...)` as recorded below.
+- Explicit arguments of fixed-signature operations may be fully positional
+  or fully named, using the
+  stable public parameter names in the tables. The receiver is unnamed.
+  Apply AP09's case-insensitive name matching, required-argument checks, and
+  rejection of unknown, duplicate, or mixed arguments. Named arguments
+  evaluate in written order after the receiver, then map to parameter order.
+  Thus `Items.Push(3)` and `Items.Push(Value := 3)` select the same operation.
+  Variadic `Format` takes positional arguments only; its heterogeneous tail
+  has no public parameter names.
 - `T`, `U`, `K`, `V`, `V2`, `E`, and `E2` denote generic types. Existing
   generic inference and operation-specific type constraints still apply.
   Container receivers with generic element, key, value, or error types use
@@ -32,7 +38,21 @@ call forms; AP06.3 implements the catalog. This is a planning document.
   catalog operations.
 - Apply the [agreed naming rules](README.md#standard-operation-naming-agreed).
   `Length` is the single count name, and `IsEmpty` is the single emptiness
-  name for strings, arrays, and dictionaries.
+  name for strings, arrays, and dictionaries. Treat strings as character
+  sequences for naming and use array names for corresponding operations:
+  string `Slice` replaces `Substring` while keeping Unicode-scalar behavior.
+- Local and imported free routines may share catalog names; those names are
+  not globally reserved. A native dot call is selected by its static receiver
+  type and case-insensitive operation name. An ordinary free call keeps its
+  ordinary name resolution and is not a parallel native API. Invalid native
+  argument counts, names, or types never trigger free-routine lookup.
+- Each receiver type has one signature per case-insensitive operation name.
+  Existing generic inference and constraints apply after target selection;
+  trailing arguments and the expected result type do not select overloads.
+  Matching names on different receiver types are allowed. Reject duplicate
+  catalog entries during validation. Record members, including callable
+  fields and instance/static methods, retain their existing shared
+  case-insensitive namespace and duplicate-declaration errors.
 - Existing entries keep their current FPAS semantics. Collection processing
   remains eager; there is no implicit iterator, deferred execution, unwrap,
   retry, or conversion. The receiver is evaluated once before the written
@@ -44,31 +64,28 @@ call forms; AP06.3 implements the catalog. This is a planning document.
   uses ordinary dot syntax without a `var` marker or additional parentheses;
   the catalog records that they require a writable receiver. Explicitly
   written `var` arguments keep their markers, and AP17's safety rules still
-  apply to writable receivers. AP17.3 delivers these checks. The user
-  requested a [follow-up discussion](README.md#follow-up-discussion) before
-  AP06.3/AP17.3. Each operation retains one public call form.
-- `Join` belongs to `array of string`, according to its actual receiver,
-  despite its former placement in `Std.Str`. `Fill` constructs an array;
-  `Chr` constructs a string and does not become an integer instance method.
-- Existing function references such as `Std.Str.Length` migrate to named
-  wrappers or existing anonymous functions calling the type operation.
-  Documentation and editor signatures come from the catalog rather than
-  public stubs for the removed units.
+  apply to writable receivers. The shared checks accept writable roots,
+  record fields, array elements, imported variables, and forwarded reference
+  parameters; they reject read-only bindings and temporary values. The result
+  of `Pop` may initialize a `const`. See
+  [writable receivers](README.md#writable-receivers).
+- `Join` belongs to `array of string`. `Fill` constructs an array; `Chr`
+  constructs a string.
+- Function values use named wrappers or anonymous functions calling the type
+  operation. Documentation and editor signatures come from the catalog.
 
-The tables account for all 75 existing routines in the five former units,
-plus the three agreed `IsEmpty` additions. This preserves scope, not duplicate
-public spellings. AP06.1 validates equivalent operations and canonical names,
-including `Substring` versus the existing array `Slice` name, before code
-changes. It must not discard distinct behavior as a mere alias.
+The [coverage inventory](inventory.md) lists the 78 entries and their
+regression owners. Array naming governs equivalent string operations;
+`Std.Str.Substring` is the private implementation ID for native string `Slice`.
 
 ## String
 
-Receiver: `string`. Existing behavior: [`Std.Str`](../../../pascal/std/text/str/README.md).
+Receiver: `string`. Type documentation: [String operations](../../../pascal/language/types/string/README.md).
 
-| Dot call and remaining arguments | Standard routine | Result type | Meaning |
+| Dot call and remaining arguments | Private implementation | Result type | Meaning |
 | --- | --- | --- | --- |
 | `Length()` | `Std.Str.Length` | `integer` | Number of Unicode scalars |
-| `IsEmpty()` | `Std.Str.IsEmpty` (new) | `boolean` | Whether the scalar count is zero |
+| `IsEmpty()` | `Std.Str.IsEmpty` | `boolean` | Whether the scalar count is zero |
 | `Contains(Sub: string)` | `Std.Str.Contains` | `boolean` | Substring membership |
 | `StartsWith(Pre: string)` | `Std.Str.StartsWith` | `boolean` | Prefix test |
 | `EndsWith(Suf: string)` | `Std.Str.EndsWith` | `boolean` | Suffix test |
@@ -82,11 +99,11 @@ Receiver: `string`. Existing behavior: [`Std.Str`](../../../pascal/std/text/str/
 | `Filter(F: function(C: string): boolean)` | `Std.Str.Filter` | `string` | Keep matching scalars |
 | `Reduce(Init: U; F: function(Acc: U; C: string): U)` | `Std.Str.Reduce` | `U` | Fold scalars left to right |
 
-Additional existing operations to preserve:
+Other operations:
 
-| Dot call and remaining arguments | Standard routine | Result type | Meaning |
+| Dot call and remaining arguments | Private implementation | Result type | Meaning |
 | --- | --- | --- | --- |
-| `Substring(Start: integer; Len: integer)` | `Std.Str.Substring` | `string` | Return the checked scalar range; canonical name reviewed with array `Slice` |
+| `Slice(Start: integer; Len: integer)` | `Std.Str.Substring` | `string` | Return the checked scalar range; same public name and argument roles as array `Slice` |
 | `LastIndexOf(Sub: string)` | `Std.Str.LastIndexOf` | `integer` | Last matching scalar index, or `-1` |
 | `IsNumeric()` | `Std.Str.IsNumeric` | `boolean` | Whether the value matches the existing numeric-text rules |
 | `RepeatStr(N: integer)` | `Std.Str.RepeatStr` | `string` | Repeat the complete string |
@@ -102,24 +119,26 @@ Additional existing operations to preserve:
 | `Reverse()` | `Std.Str.Reverse` | `string` | Return reversed scalars |
 | `TrimLeft()` | `Std.Str.TrimLeft` | `string` | Remove leading whitespace |
 | `TrimRight()` | `Std.Str.TrimRight` | `string` | Remove trailing whitespace |
-| `Format(Arguments...)` | `Std.Str.Format` | `string` | Use the receiver as the format template and retain existing variadic arguments |
+| `Format(Arguments...)` | `Std.Str.Format` | `string` | Use the receiver as the format template; heterogeneous variadic arguments are positional only |
 
 String length and character indexes count Unicode scalars, not UTF-8 bytes or
 grapheme clusters. String callbacks receive a one-scalar `string`; `Map`
 requires each callback result to contain exactly one scalar.
 `FromChar` and `RepeatStr` are not interchangeable aliases: `FromChar` rejects
 empty and multi-scalar receivers, while `RepeatStr` accepts whole strings.
-Retain that distinction. `Format` is variadic even though the current generated
-editor declaration lists only its template parameter.
+`Format` is variadic with a positional public form, for example `'%s: %d'.Format('x', 3)`. `Arguments...` describes
+the variadic tail rather than a parameter name; reject named arguments with
+AP09's positional-only diagnostic. Preserve existing format specifiers and
+argument-count/type errors, without an array or spread-argument alternative.
 
 ## Array
 
-Receiver: `array of T`. Existing behavior: [`Std.Arrays`](../../../pascal/std/collections/array/README.md).
+Receiver: `array of T`. Type documentation: [Array operations](../../../pascal/language/types/array/README.md).
 
-| Dot call and remaining arguments | Standard routine | Result type | Meaning |
+| Dot call and remaining arguments | Private implementation | Result type | Meaning |
 | --- | --- | --- | --- |
 | `Length()` | `Std.Arrays.Length` | `integer` | Number of elements |
-| `IsEmpty()` | `Std.Arrays.IsEmpty` (new) | `boolean` | Whether the element count is zero |
+| `IsEmpty()` | `Std.Arrays.IsEmpty` | `boolean` | Whether the element count is zero |
 | `Contains(Value: T)` | `Std.Arrays.Contains` | `boolean` | Element membership |
 | `IndexOf(Value: T)` | `Std.Arrays.IndexOf` | `integer` | First matching index, or `-1` |
 | `Map(F: function(X: T): U)` | `Std.Arrays.Map` | `array of U` | Transform each element |
@@ -135,9 +154,9 @@ Receiver: `array of T`. Existing behavior: [`Std.Arrays`](../../../pascal/std/co
 | `Concat(B: array of T)` | `Std.Arrays.Concat` | `array of T` | Append the second array's elements to the result |
 | `FlatMap(F: function(X: T): array of U)` | `Std.Arrays.FlatMap` | `array of U` | Map each element, then flatten the results |
 
-Additional existing operations to preserve:
+Other operations:
 
-| Dot call and remaining arguments | Standard routine | Result type | Meaning |
+| Dot call and remaining arguments | Private implementation | Result type | Meaning |
 | --- | --- | --- | --- |
 | `ForEach(F: procedure(X: T))` | `Std.Arrays.ForEach` | `Unit` | Invoke a procedure per element; only a final chain step |
 | `Push(Value: T)` | `Std.Arrays.Push` | `Unit` | Append to the caller's array; requires a writable receiver, with no call-site receiver marker |
@@ -145,34 +164,53 @@ Additional existing operations to preserve:
 
 Specialized receiver: `array of string`.
 
-| Dot call and remaining arguments | Standard routine | Result type | Meaning |
+| Dot call and remaining arguments | Private implementation | Result type | Meaning |
 | --- | --- | --- | --- |
 | `Join(Delim: string)` | `Std.Str.Join` | `string` | Join the receiver's strings with the delimiter |
 
 `Sort`, `Reverse`, `Slice`, and `Concat` return values without changing the
 caller variable. All listed entries preserve the existing array-operation
-semantics and constraints.
+semantics and constraints. `Sort` preserves its current runtime support for
+integer, real, string, and boolean elements; unsupported values still fail at
+runtime. `Fill` retains its count and collection-limit checks.
 
 ## Operations without an instance receiver
 
 These existing operations remain available as operations of their result
 type. The table lists all arguments because no instance receiver is passed.
-AP06.1 must record the exact type-qualified spelling, including how a generic
-array type is written. No factory syntax is implicitly approved by this table.
+The agreed public forms are `string.Chr(...)` and `array.Fill(...)`, available
+without imports. `Fill` infers the element type `T` from `Value` and returns
+`array of T`; no explicit generic type arguments are written. There is no
+parallel `(array of T).Fill(...)` form. Binding type annotations remain
+required and are checked against the result using existing type rules;
+this does not extend AP22 local inference.
 
-| Owning type | Operation and all arguments | Standard routine | Result type | Meaning |
+| Owning type | Public factory and all arguments | Private implementation | Result type | Meaning |
 | --- | --- | --- | --- | --- |
-| `string` | `Chr(N: integer)` | `Std.Str.Chr` | `string` | Construct one scalar from a valid Unicode codepoint |
-| `array of T` | `Fill(Value: T; Count: integer)` | `Std.Arrays.Fill` | `array of T` | Construct an array of repeated values |
+| `string` | `string.Chr(N: integer)` | `Std.Str.Chr` | `string` | Construct one scalar from a valid Unicode codepoint |
+| `array of T` | `array.Fill(Value: T; Count: integer)` | `Std.Arrays.Fill` | `array of T` | Construct an array of repeated values |
+
+Examples using fully named arguments:
+
+```pascal
+const Letter: string := string.Chr(N := 65);
+const Numbers: array of integer := array.Fill(Value := 7, Count := 3);
+const Words: array of string := array.Fill(Value := 'hi', Count := 2);
+```
+
+Positional arguments such as `string.Chr(65)` and `array.Fill(7, 3)` select
+the same factories. All written arguments follow AP09 mapping and evaluation
+rules; there is no receiver to evaluate or name. Existing `Chr` and `Fill`
+semantics and error behavior remain unchanged.
 
 ## Dictionary
 
-Receiver: `dict of K to V`. Existing behavior: [`Std.Dictionaries`](../../../pascal/std/collections/dict.md).
+Receiver: `dict of K to V`. Type documentation: [Dictionary operations](../../../pascal/language/types/dictionary-operations.md).
 
-| Dot call and remaining arguments | Standard routine | Result type | Meaning |
+| Dot call and remaining arguments | Private implementation | Result type | Meaning |
 | --- | --- | --- | --- |
 | `Length()` | `Std.Dictionaries.Length` | `integer` | Number of entries |
-| `IsEmpty()` | `Std.Dictionaries.IsEmpty` (new) | `boolean` | Whether the entry count is zero |
+| `IsEmpty()` | `Std.Dictionaries.IsEmpty` | `boolean` | Whether the entry count is zero |
 | `ContainsKey(Key: K)` | `Std.Dictionaries.ContainsKey` | `boolean` | Key membership |
 | `Get(Key: K)` | `Std.Dictionaries.Get` | `Option of V` | Safe lookup, or `None` |
 | `Keys()` | `Std.Dictionaries.Keys` | `array of K` | Keys in insertion order |
@@ -188,9 +226,9 @@ Dictionary operations preserve their current insertion-order semantics.
 
 ## Option
 
-Receiver: `Option of T`. Existing behavior: [`Std.Options`](../../../pascal/std/result/option.md).
+Receiver: `Option of T`. Type documentation: [Option operations](../../../pascal/language/types/option-operations.md).
 
-| Dot call and remaining arguments | Standard routine | Result type | Meaning |
+| Dot call and remaining arguments | Private implementation | Result type | Meaning |
 | --- | --- | --- | --- |
 | `IsSome()` | `Std.Options.IsSome` | `boolean` | Whether a value is present |
 | `IsNone()` | `Std.Options.IsNone` | `boolean` | Whether the option is absent |
@@ -202,15 +240,15 @@ Receiver: `Option of T`. Existing behavior: [`Std.Options`](../../../pascal/std/
 
 ## Result
 
-Receiver: `Result of (T, E)`. Existing behavior: [`Std.Results`](../../../pascal/std/result/result.md).
+Receiver: `Result of T, E`. Type documentation: [Result operations](../../../pascal/language/types/result-operations.md).
 
-| Dot call and remaining arguments | Standard routine | Result type | Meaning |
+| Dot call and remaining arguments | Private implementation | Result type | Meaning |
 | --- | --- | --- | --- |
 | `IsOk()` | `Std.Results.IsOk` | `boolean` | Whether the result is successful |
 | `IsError()` | `Std.Results.IsError` | `boolean` | Whether the result is an error |
-| `Map(F: function(V: T): U)` | `Std.Results.Map` | `Result of (U, E)` | Transform the successful value |
-| `AndThen(F: function(V: T): Result of (U, E))` | `Std.Results.AndThen` | `Result of (U, E)` | Chain an operation with the same error type |
-| `OrElse(F: function(Err: E): Result of (T, E2))` | `Std.Results.OrElse` | `Result of (T, E2)` | Invoke error recovery; may change the error type |
+| `Map(F: function(V: T): U)` | `Std.Results.Map` | `Result of U, E` | Transform the successful value |
+| `AndThen(F: function(V: T): Result of U, E)` | `Std.Results.AndThen` | `Result of U, E` | Chain an operation with the same error type |
+| `OrElse(F: function(Err: E): Result of T, E2)` | `Std.Results.OrElse` | `Result of T, E2` | Invoke error recovery; may change the error type |
 | `Unwrap()` | `Std.Results.Unwrap` | `T` | Extract the value; panic for `Error` |
 | `UnwrapOr(Default: T)` | `Std.Results.UnwrapOr` | `T` | Extract the value or use the default |
 
@@ -218,6 +256,10 @@ Receiver: `Result of (T, E)`. Existing behavior: [`Std.Results`](../../../pascal
 
 - `Length()` returns `integer`, and `IsEmpty()` returns `boolean`, for all
   three collection receiver types. Their counted units differ by type.
+- `Slice(Start, Len)` returns a checked range for both strings and arrays.
+  String indexes and lengths count Unicode scalars; array indexes and lengths
+  count elements. `Substring` is a private implementation ID,
+  not an additional native name.
 - `Map(F)` transforms the contained value. Arrays can change element type,
   dictionaries change value type while keeping keys, and `Option`/`Result`
   change the success type. Strings preserve one scalar per callback result.
@@ -233,35 +275,34 @@ Receiver: `Result of (T, E)`. Existing behavior: [`Std.Results`](../../../pascal
   when the present or successful value is selected. These preserve existing
   evaluation and callback rules.
 
-## IsEmpty delivery
+## IsEmpty
 
-AP06.3 adds `IsEmpty()` as a native operation of strings, arrays, and
-dictionaries. Each returns whether the corresponding `Length` is zero,
-evaluates its receiver once, and does not mutate the caller variable. Names
-such as `Std.Str.IsEmpty` in the mapping tables identify implementation
-ownership only; they do not introduce publicly callable Std routines.
+`IsEmpty()` is a native operation of strings, arrays, and dictionaries. It
+returns whether the corresponding `Length` is zero, evaluates its receiver
+once, and does not mutate the caller variable. The private IDs in the tables
+do not introduce publicly callable Std routines.
 
-Reuse existing length handling. Update the standard-library registration,
-required checking/lowering/runtime layers, catalog-derived editor signatures,
-current type documentation, and regression tests in the same delivery.
-AP06.2's migration does not depend on these new operations.
+## Regression coverage
 
-## Verification
+Catalog checks enforce unique case-insensitive names per receiver, common
+canonical names, signatures, type constraints, and documented differences.
+Compiler and FPAS regressions cover:
 
-- Check every catalog mapping against its standard routine's receiver,
-  argument roles, result type, generic constraints, and existing semantics.
-- Automatic catalog checks enforce unique names per receiver, common
-  canonical names, comparable signatures, and the documented differences.
-- Account for every existing operation, with either a retained type operation
-  or a verified synonymous mapping to its one canonical replacement. Keep
-  operations with different constraints or errors distinct.
-- Test every supported entry, type-changing chains, and receiver evaluation
-  before its arguments. Completion and signature help use the same catalog.
-- Test `IsEmpty` on empty and nonempty strings, arrays, and dictionaries,
-  without imports, and on receivers with observable evaluation.
-- Test `Join` on `array of string`, `ForEach` as a final procedure call,
-  variadic `Format`, and the agreed type-qualified `Chr` and `Fill` forms.
-- Verify automatic availability, rejection of the removed units and their
-  free-call forms, and explicit imports for other standard units.
-- Verify that scalars, channels, task handles, and unrelated standard routines
-  do not acquire instance entries through free-routine lookup.
+- Every supported entry, type-changing chains, Unicode-scalar string behavior,
+  and receiver evaluation before arguments.
+- Local/imported free routines with catalog names, fixed dot-call resolution
+  on invalid arguments, and duplicate catalog or record-member errors.
+- Shared string/array `Slice` names and range checks; rejection of native
+  string `Substring` with a `Slice` hint.
+- Positional and named native arguments, including writable `Push`, written
+  evaluation order, generic inference, and invalid-name/count/mixing errors.
+- Empty and nonempty `IsEmpty` receivers, specialized `Join`, final procedure
+  `ForEach`, and positional heterogeneous `Format` with its error behavior.
+- `string.Chr` and `array.Fill`, reordered named arguments, zero-count type
+  inference, binding annotation checks, and rejection of alternate factory
+  spellings or explicit type arguments.
+- Automatic availability, rejected helper imports/free-call forms, and the
+  absence of catalog entries for scalars, channels, and task handles.
+
+Completion, signature help, hover, handbook signatures, and API export use the
+same catalog. Test owners are listed in [inventory.md](inventory.md).

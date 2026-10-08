@@ -23,35 +23,35 @@ impl LanguageService {
             let document = &context.documents[target_index];
             let frame = active_call(document, offset)?;
             let callable_token = &document.tokens[frame.callable_token];
+            if let Some((entry, receiver)) = super::native::native_at(
+                &context.documents,
+                target_index,
+                callable_token.span.offset,
+            ) {
+                let signature = super::native::signature(entry, receiver.as_ref());
+                let active_parameter = frame
+                    .argument_name
+                    .and_then(|token| token_name(document, token))
+                    .and_then(|name| {
+                        signature.parameters.iter().position(|parameter| {
+                            parameter_name(parameter)
+                                .is_some_and(|declared| declared.eq_ignore_ascii_case(&name))
+                        })
+                    })
+                    .or_else(|| {
+                        (!signature.parameters.is_empty())
+                            .then(|| frame.active_argument.min(signature.parameters.len() - 1))
+                    });
+                return Some(SignatureHelp {
+                    parameter_documentation: vec![None; signature.parameters.len()],
+                    signature,
+                    documentation: Some(entry.documentation.into()),
+                    active_parameter,
+                });
+            }
             let (document_index, symbol, _) =
                 resolve(&context.documents, target_index, callable_token.span.offset)?;
-            let mut signature = symbol.callable?;
-            let is_receiver_call = document
-                .analysis
-                .as_ref()
-                .and_then(|analysis| analysis.semantic())
-                .is_some_and(|semantic| {
-                    semantic.metadata().fluent_calls.values().any(|call| {
-                        call.name
-                            .rsplit('.')
-                            .next()
-                            .is_some_and(|short| short.eq_ignore_ascii_case(&symbol.name))
-                            && call.call_span.offset <= callable_token.span.offset
-                            && callable_token.span.offset
-                                < call.call_span.offset.saturating_add(call.call_span.length)
-                    })
-                });
-            if is_receiver_call && !signature.parameters.is_empty() {
-                signature.parameters.remove(0);
-                if let Some(open) = signature.label.find('(')
-                    && let Some(close) = signature.label.rfind(')')
-                    && open < close
-                {
-                    signature
-                        .label
-                        .replace_range(open + 1..close, &signature.parameters.join("; "));
-                }
-            }
+            let signature = symbol.callable?;
             let documentation = preceding_documentation(
                 context.documents[document_index].snapshot.source(),
                 symbol.full_span.offset(),

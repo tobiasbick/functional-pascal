@@ -13,15 +13,22 @@ use crate::check::Checker;
 use crate::types::Ty;
 use fpas_diagnostics::codes::{INTERNAL_COMPILER_INVARIANT_FAILURE, SEMA_WRONG_ARGUMENT_COUNT};
 use fpas_lexer::Span;
-use fpas_parser::{DesignatorPart, Expr};
+use fpas_parser::Expr;
 
+/// Checks a positional intrinsic call with explicitly written arguments.
 pub fn check_builtin_std_call(c: &mut Checker, name: &str, args: &[Expr], span: Span) -> Ty {
-    check_builtin_std_call_refs(c, name, &args.iter().collect::<Vec<_>>(), span)
+    check_builtin_std_call_refs(c, name, &args.iter().collect::<Vec<_>>(), false, span)
 }
 
 /// Check an intrinsic using the original argument nodes, including an implicit receiver.
-pub fn check_builtin_std_call_refs(c: &mut Checker, name: &str, args: &[&Expr], span: Span) -> Ty {
-    if let Some(ty) = array::check_array_builtin_std_call(c, name, args, span) {
+pub fn check_builtin_std_call_refs(
+    c: &mut Checker,
+    name: &str,
+    args: &[&Expr],
+    implicit_receiver: bool,
+    span: Span,
+) -> Ty {
+    if let Some(ty) = array::check_array_builtin_std_call(c, name, args, implicit_receiver, span) {
         return ty;
     }
     if let Some(ty) = channel_task::check_channel_task_builtin_std_call(c, name, args, span) {
@@ -70,31 +77,6 @@ fn check_argument_count(
         span,
     );
     false
-}
-
-pub(super) fn simple_var_name(expr: &Expr) -> Option<String> {
-    let Expr::Designator(d) = expr else {
-        return None;
-    };
-    if d.parts.len() != 1 {
-        return None;
-    }
-    match &d.parts[0] {
-        DesignatorPart::Ident(name, _) => Some(name.clone()),
-        _ => None,
-    }
-}
-
-pub(super) fn mutable_array_elem_ty(c: &Checker, name: &str) -> Option<Ty> {
-    let sym = c.scopes.lookup(name)?;
-    // `var` parameters are writable but are not simple array variables.
-    if !sym.mutable || sym.kind != crate::scope::SymbolKind::Var {
-        return None;
-    }
-    match &sym.ty {
-        Ty::Array(elem) => Some(*elem.clone()),
-        _ => None,
-    }
 }
 
 pub(super) fn array_elem_ty(ty: &Ty) -> Option<Ty> {

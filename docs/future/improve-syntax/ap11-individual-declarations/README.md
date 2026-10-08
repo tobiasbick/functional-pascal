@@ -14,11 +14,9 @@ migration preserves exported names, scopes, and recursive types.
 - Each declaration has its own `type`, `const`, or `var` keyword; groups that
   inherit a declaration category from a preceding entry are removed.
   Repeat `public` for each exported declaration when splitting a public group.
-  AP11 delivery repeated the former `mutable var` prefix; AP16.3 has replaced
-  that prefix with writable `var`.
-- The rule applies only where declarations are permitted. AP11 itself did not
-  introduce local types or constants; AP16.1 subsequently added local `const`
-  bindings. Local type declarations remain unsupported.
+- The rule applies where declarations are permitted. Program and unit
+  declarations support `type`, `const`, and `var`; statement lists support
+  local `const` and `var`. Local type declarations are unsupported.
 - Q07: all types declared in the same unit or program are visible to each
   other regardless of declaration order, including mutually recursive types.
   No explicit forward type declaration is required. Constants and variables
@@ -46,11 +44,6 @@ None.
 
 AP16 depends on this package.
 
-## Order
-
-AP11.1 makes type order irrelevant, so AP11.2 can split groups of mutually
-referencing types without reordering them.
-
 ## Work packages
 
 - [x] [AP11.1: Order-independent type declarations](01-order-independent-types.md)
@@ -60,11 +53,3 @@ referencing types without reordering them.
 
 A local edit cannot accidentally inherit the wrong declaration category, and
 migration preserves exported names, scopes, and recursive types.
-
-## Reference
-
-The reference branch `codex/syntax-changes` found that the checker installs a
-placeholder only for the record currently being checked, which is not
-whole-unit forward resolution. It added a focused sema module
-`check/decl/types/collection.rs` that collects type headers before signatures
-and bodies.

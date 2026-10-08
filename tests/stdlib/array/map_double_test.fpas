@@ -1,6 +1,6 @@
 program T;
 
-uses Std.Console, Std.Arrays;
+uses Std.Console;
 
 function Double(X: integer): integer;
 begin
@@ -9,7 +9,7 @@ end function;
 
 begin
   const Nums: array of integer := [1, 2, 3];
-  const Doubled: array of integer := Map(Nums, Double);
+  const Doubled: array of integer := Nums.Map(Double);
   WriteLn(Doubled[0]);
   WriteLn(Doubled[1]);
   WriteLn(Doubled[2]);

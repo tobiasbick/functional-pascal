@@ -1,9 +1,9 @@
 unit Std.Tui.Rendering.Surface;
 
 uses
-  Std.Arrays, Std.Options, Std.Tui.Cells.Cell, Std.Tui.Rendering.Surface.Row,
-  Std.Tui.Rendering.Surface.Damage, Std.Tui.Rendering.Surface.Snapshot, Std.Tui.Cells.StyleRole,
-  Std.Tui.Geometry.Point, Std.Tui.Geometry.Rect, Std.Tui.Geometry.Size;
+  Std.Tui.Cells.Cell, Std.Tui.Rendering.Surface.Row, Std.Tui.Rendering.Surface.Damage,
+  Std.Tui.Rendering.Surface.Snapshot, Std.Tui.Cells.StyleRole, Std.Tui.Geometry.Point,
+  Std.Tui.Geometry.Rect, Std.Tui.Geometry.Size;
 
 var TuiSurfaceSizes: array of TuiSize := [];
 var TuiSurfaceCells: array of array of array of TuiCell := [];
@@ -25,17 +25,17 @@ end function;
 
 function TuiSurfaceBlankRow(Width: integer): array of TuiCell;
 begin
-  return Std.Arrays.Fill(TuiSurfaceBlank(), Width);
+  return array.Fill(TuiSurfaceBlank(), Width);
 end function;
 
 function TuiSurfaceBlankContinuationRow(Width: integer): array of boolean;
 begin
-  return Std.Arrays.Fill(false, Width);
+  return array.Fill(false, Width);
 end function;
 
 function TuiSurfaceRequire(Slot: integer): integer;
 begin
-  if (Slot < 1) or (Slot > Std.Arrays.Length(TuiSurfaceSizes)) then
+  if (Slot < 1) or (Slot > TuiSurfaceSizes.Length()) then
     begin
       panic('Tui working surface handle is invalid');
     end;
@@ -104,25 +104,23 @@ public type TuiWorkingSurface = record
   // - `Size`: Size in terminal cells.
   public static function Create(Size: TuiSize): TuiWorkingSurface;
   begin
-    TuiSurfaceSizes := Std.Arrays.Concat(TuiSurfaceSizes, [Size]);
+    TuiSurfaceSizes := TuiSurfaceSizes.Concat([Size]);
     var Rows: array of array of TuiCell := [];
     var ContinuationRows: array of array of boolean := [];
     for Y: integer := 0 to Size.Height - 1 do
       begin
-        Std.Arrays.Push(Rows, TuiSurfaceBlankRow(Size.Width));
-        Std.Arrays.Push(ContinuationRows, TuiSurfaceBlankContinuationRow(Size.Width));
+        Rows.Push(TuiSurfaceBlankRow(Size.Width));
+        ContinuationRows.Push(TuiSurfaceBlankContinuationRow(Size.Width));
       end;
     end for;
 
-    TuiSurfaceCells := Std.Arrays.Concat(TuiSurfaceCells, [Rows]);
-    TuiSurfaceContinuations := Std.Arrays.Concat(TuiSurfaceContinuations, [ContinuationRows]);
-    TuiSurfacePresentedCells := Std.Arrays.Concat(TuiSurfacePresentedCells, [Rows]);
-    TuiSurfacePresentedContinuations := Std.Arrays.Concat(TuiSurfacePresentedContinuations, [
-                                                                                              ContinuationRows
-                                                                                            ]);
-    TuiSurfacePresentedReady := Std.Arrays.Concat(TuiSurfacePresentedReady, [false]);
+    TuiSurfaceCells := TuiSurfaceCells.Concat([Rows]);
+    TuiSurfaceContinuations := TuiSurfaceContinuations.Concat([ContinuationRows]);
+    TuiSurfacePresentedCells := TuiSurfacePresentedCells.Concat([Rows]);
+    TuiSurfacePresentedContinuations := TuiSurfacePresentedContinuations.Concat([ContinuationRows]);
+    TuiSurfacePresentedReady := TuiSurfacePresentedReady.Concat([false]);
     return record
-      Slot := Std.Arrays.Length(TuiSurfaceSizes);
+      Slot := TuiSurfaceSizes.Length();
     end;
   end function;
 
@@ -138,8 +136,8 @@ public type TuiWorkingSurface = record
     var ContinuationRows: array of array of boolean := [];
     for Y: integer := 0 to Size.Height - 1 do
       begin
-        Std.Arrays.Push(Rows, TuiSurfaceBlankRow(Size.Width));
-        Std.Arrays.Push(ContinuationRows, TuiSurfaceBlankContinuationRow(Size.Width));
+        Rows.Push(TuiSurfaceBlankRow(Size.Width));
+        ContinuationRows.Push(TuiSurfaceBlankContinuationRow(Size.Width));
       end;
     end for;
 
@@ -257,11 +255,11 @@ public type TuiWorkingSurface = record
           begin
             if TuiSurfaceContinuations[Slot - 1][Y][X] then
               begin
-                Std.Arrays.Push(Cells, TuiSurfaceBlank());
+                Cells.Push(TuiSurfaceBlank());
               end;
             else
               begin
-                Std.Arrays.Push(Cells, TuiSurfaceCells[Slot - 1][Y][X]);
+                Cells.Push(TuiSurfaceCells[Slot - 1][Y][X]);
               end;
             end if;
           end;
@@ -295,8 +293,8 @@ begin
   const Visible: TuiRect := Bounds.Intersect(TuiRect.Create(0, 0, Size.Width, Size.Height));
   if (Visible.X = 0) and (Visible.Width = Size.Width) then
     begin
-      const FilledRow: array of TuiCell := Std.Arrays.Fill(Cell, Size.Width);
-      const FilledContinuations: array of boolean := Std.Arrays.Fill(false, Size.Width);
+      const FilledRow: array of TuiCell := array.Fill(Cell, Size.Width);
+      const FilledContinuations: array of boolean := array.Fill(false, Size.Width);
       for Y: integer := Visible.Y to Visible.Bottom() - 1 do
         begin
           TuiSurfaceCells[Slot - 1][Y] := FilledRow;
@@ -313,7 +311,7 @@ begin
       return;
     end;
   end if;
-  const Values: array of TuiCell := Std.Arrays.Fill(Cell, Visible.Width);
+  const Values: array of TuiCell := array.Fill(Cell, Visible.Width);
   for Y: integer := Visible.Y to Visible.Bottom() - 1 do
     begin
       const Row: TuiSurfaceRow := TuiSurfaceWriteRow(TuiSurfaceCells[Slot - 1][Y], TuiSurfaceContinuations[Slot -
@@ -357,9 +355,9 @@ begin
             end;
           elsif FirstX >= 0 then
             begin
-              Std.Arrays.Push(Damage, TuiSurfaceDamageForRange(TuiSurfaceCells[Slot - 1][Y], TuiSurfaceContinuations[Slot -
-                                                                                                                     1][Y], Y, FirstX, X -
-                                                                                                                                       1));
+              Damage.Push(TuiSurfaceDamageForRange(TuiSurfaceCells[Slot - 1][Y], TuiSurfaceContinuations[Slot -
+                                                                                                         1][Y], Y, FirstX, X -
+                                                                                                                           1));
               FirstX := -1;
             end;
           end if;
@@ -368,9 +366,9 @@ begin
 
       if FirstX >= 0 then
         begin
-          Std.Arrays.Push(Damage, TuiSurfaceDamageForRange(TuiSurfaceCells[Slot - 1][Y], TuiSurfaceContinuations[Slot -
-                                                                                                                 1][Y], Y, FirstX, Size.Width -
-                                                                                                                                   1));
+          Damage.Push(TuiSurfaceDamageForRange(TuiSurfaceCells[Slot - 1][Y], TuiSurfaceContinuations[Slot -
+                                                                                                     1][Y], Y, FirstX, Size.Width -
+                                                                                                                       1));
         end;
       end if;
     end;
@@ -397,7 +395,7 @@ public procedure TuiSurfacePutCells(
   Cells: array of TuiCell
 );
 begin
-  if Std.Arrays.Length(Cells) = 0 then
+  if Cells.Length() = 0 then
     begin
       return;
     end;
@@ -417,7 +415,7 @@ begin
       TargetX := 0;
     end;
   end if;
-  var Count: integer := Std.Arrays.Length(Cells) - SourceX;
+  var Count: integer := Cells.Length() - SourceX;
   if Count > Size.Width - TargetX then
     begin
       Count := Size.Width - TargetX;
@@ -429,7 +427,7 @@ begin
       return;
     end;
   end if;
-  const Values: array of TuiCell := Std.Arrays.Slice(Cells, SourceX, Count);
+  const Values: array of TuiCell := Cells.Slice(SourceX, Count);
   const Row: TuiSurfaceRow := TuiSurfaceWriteRow(TuiSurfaceCells[Slot - 1][Position.Y], TuiSurfaceContinuations[Slot -
                                                                                                                 1][Position.Y], TargetX, Values);
   TuiSurfaceCells[Slot - 1][Position.Y] := Row.Cells;

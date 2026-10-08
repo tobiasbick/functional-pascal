@@ -52,13 +52,21 @@ fn identifier_end(source: &str, offset: usize) -> usize {
     end
 }
 
-fn receiver_before(source: &str, replacement_start: usize) -> Option<String> {
+pub(super) fn receiver_before(source: &str, replacement_start: usize) -> Option<String> {
     let before = source.get(..replacement_start)?;
     let dot = before.strip_suffix('.')?;
     let mut start = dot.len();
     let mut parentheses = 0usize;
     let mut brackets = 0usize;
+    let mut quoted = false;
     for (index, character) in dot.char_indices().rev() {
+        if character == '\'' {
+            quoted = !quoted;
+        }
+        if quoted {
+            start = index;
+            continue;
+        }
         match character {
             ')' => parentheses += 1,
             ']' => brackets += 1,

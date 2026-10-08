@@ -213,11 +213,11 @@ end.
 ```pascal
 program OptionExample;
 
-uses Std.Console, Std.Arrays;
+uses Std.Console;
 
 function FindFirst(Items: array of integer; Min: integer): option of integer;
 begin
-  for I: integer := 0 to Length(Items) - 1 do
+  for I: integer := 0 to Items.Length() - 1 do
     if Items[I] >= Min then
       return Some(Items[I]);
     end if;
@@ -240,7 +240,7 @@ begin
 end.
 ```
 
-More examples in the [`examples/`](examples/) directory.
+More examples in the [`examples/`](examples) directory.
 
 ### Interactive Mandelbrot TUI
 
@@ -258,11 +258,11 @@ and its background-work structure.
 
 ### Tests
 
-Author-facing tests are `*_test.fpas` programs under [`tests/`](tests/) (`stdlib/`, including `stdlib/tui/`, `concurrency/`, `runner/`, `console/`, and `apps/`). Run the full suite with `fpas test tests/` or `fpas test tests/suite.fpasprj`. See [`docs/pascal/std/testing/test.md`](docs/pascal/std/testing/test.md) and [`examples/README.md`](examples/README.md).
+Author-facing tests are `*_test.fpas` programs under [`tests/`](tests) (`stdlib/`, including `stdlib/tui/`, `concurrency/`, `runner/`, `console/`, and `apps/`). Run the full suite with `fpas test tests/` or `fpas test tests/suite.fpasprj`. See [`docs/pascal/std/testing/test.md`](docs/pascal/std/testing/test.md) and [`examples/README.md`](examples/README.md).
 
 ### Multi-file projects and libraries
 
-Larger programs use a `.fpasprj` project file. Each imported unit is built independently into a source-adjacent `.fpascu` sidecar and linked into the final program automatically. Sources and manifests remain authoritative; sidecars are derived, Git-ignored build outputs. Reference library projects from `[dependencies].projects` (paths) or `[dependencies].workspace` (member `project.name` inside a `.fpasworkspace`). Libraries may hide internal units from dependents with `[exports].units` in the library `.fpasprj`. See [Projects](docs/pascal/program-structure/projects.md), [library-deps](examples/pascal/library-deps/), and [monorepo](examples/pascal/monorepo/).
+Larger programs use a `.fpasprj` project file. Each imported unit is built independently into a source-adjacent `.fpascu` sidecar and linked into the final program automatically. Sources and manifests remain authoritative; sidecars are derived, Git-ignored build outputs. Reference library projects from `[dependencies].projects` (paths) or `[dependencies].workspace` (member `project.name` inside a `.fpasworkspace`). Libraries may hide internal units from dependents with `[exports].units` in the library `.fpasprj`. See [Projects](docs/pascal/program-structure/projects.md), [library-deps](examples/pascal/library-deps), and [monorepo](examples/pascal/monorepo).
 
 ```sh
 fpas init project my-app
@@ -277,7 +277,7 @@ cd my-suite && fpas run             # run the sole program member
 
 ## Documentation
 
-The full language specification lives in [`docs/pascal/`](docs/pascal/). Start with the [documentation hub](docs/pascal/README.md) for area navigation and the learning path.
+The full language specification lives in [`docs/pascal/`](docs/pascal). Start with the [documentation hub](docs/pascal/README.md) for area navigation and the learning path.
 
 | Area | Hub |
 |------|-----|
@@ -305,16 +305,16 @@ Ordered learning path:
 13. [Formatter style](docs/pascal/tools/fmt-style.md)
 14. [Editor integration](docs/pascal/tools/editor-integration.md)
 
-Roadmaps, implementation progress, and deferred work: [`docs/future/`](docs/future/).
+Roadmaps, implementation progress, and deferred work: [`docs/future/`](docs/future).
 
 ## Contributing
 
 See [`CONTRIBUTING.md`](CONTRIBUTING.md). Short pointers:
 
-- Language spec: [`docs/pascal/`](docs/pascal/) ([hub](docs/pascal/README.md)) — source of truth for implemented behavior
-- Agents: [`AGENTS.md`](AGENTS.md) and skills under [`.agents/skills/`](.agents/skills/)
+- Language spec: [`docs/pascal/`](docs/pascal) ([hub](docs/pascal/README.md)) — source of truth for implemented behavior
+- Agents: [`AGENTS.md`](AGENTS.md) and skills under [`.agents/skills/`](.agents/skills)
 - Examples: [`examples/README.md`](examples/README.md)
-- FPAS tests: [`tests/`](tests/) and [`docs/pascal/std/testing/test.md`](docs/pascal/std/testing/test.md)
+- FPAS tests: [`tests/`](tests) and [`docs/pascal/std/testing/test.md`](docs/pascal/std/testing/test.md)
 - Verify locally: `cargo fmt`, `cargo build`, `cargo test --workspace`, and `fpas fmt --check` on touched `.fpas` paths when relevant
 
 ## Project Structure

@@ -1,6 +1,6 @@
 program Utf8BoundariesTest;
 
-uses Std.Net.Utf8, Std.Results, Std.Str, Std.Test;
+uses Std.Net.Utf8, Std.Test;
 
 procedure Invalid(Bytes: array of integer);
 begin
@@ -21,18 +21,18 @@ begin
                         #0,
                         #127,
                         #128,
-                        Std.Str.Chr(2047),
-                        Std.Str.Chr(2048),
-                        Std.Str.Chr(55295),
-                        Std.Str.Chr(57344),
-                        Std.Str.Chr(65535),
-                        Std.Str.Chr(65536),
-                        Std.Str.Chr(1114111),
-                        'e' + Std.Str.Chr(769),
-                        Std.Str.RepeatStr('x' + Std.Str.Chr(769), 2048)
+                        string.Chr(2047),
+                        string.Chr(2048),
+                        string.Chr(55295),
+                        string.Chr(57344),
+                        string.Chr(65535),
+                        string.Chr(65536),
+                        string.Chr(1114111),
+                        'e' + string.Chr(769),
+                        ('x' + string.Chr(769)).RepeatStr(2048)
                       ] do
     begin
-      AssertEquals(Text, Unwrap(Std.Net.Utf8.Decode(Std.Net.Utf8.Encode(Text))));
+      AssertEquals(Text, Std.Net.Utf8.Decode(Std.Net.Utf8.Encode(Text)).Unwrap());
     end;
   end for;
 

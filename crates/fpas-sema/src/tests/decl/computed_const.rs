@@ -39,15 +39,11 @@ fn runtime_dependencies_are_named_in_value_and_range_diagnostics() {
         ("Computed..3", "Computed"),
         ("(ReadValue() + 1)..3", "ReadValue"),
         ("Std.Math.Abs(-1)", "Abs"),
-        ("Std.Str.Length('x')", "Length"),
+        ("'x'.Length()", "Length"),
         ("'abc'.Length()", "Length"),
     ] {
         let source = format!(
-            "program T; uses Std.Math, Std.Str;
-            function ReadValue(): integer; begin return 1; end function;
-            const Seed: integer := ReadValue() - 1; const Computed: integer := ReadValue();
-            const Derived: integer := Computed + 1;
-            begin case 1 of when {label}: null; else null; end case; end."
+            "program T; uses Std.Math;\n            function ReadValue(): integer; begin return 1; end function;\n            const Seed: integer := ReadValue() - 1; const Computed: integer := ReadValue();\n            const Derived: integer := Computed + 1;\n            begin case 1 of when {label}: null; else null; end case; end."
         );
         let errors = check_errors(&source);
         assert!(

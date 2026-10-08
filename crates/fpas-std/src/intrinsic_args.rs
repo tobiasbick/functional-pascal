@@ -197,7 +197,7 @@ pub(crate) fn value_as_string_for_join(
                 "Join expects an array of strings, got {}",
                 other.type_name()
             ),
-            "Convert each array element to a string before calling Std.Str.Join.",
+            "Convert each array element to a string before calling Items.Join(Delim).",
             location,
         )),
     }

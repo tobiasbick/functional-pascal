@@ -1,6 +1,6 @@
 program FsGlobRecursivePatternTest;
 
-uses Std.Arrays, Std.Fs, Std.Test;
+uses Std.Fs, Std.Test;
 
 procedure EnsureDir(Path: string);
 begin
@@ -55,7 +55,7 @@ begin
   case Glob(Root + '/src/**/*.fpas') of
     when Ok(Paths):
       begin
-        AssertEquals(2, Std.Arrays.Length(Paths));
+        AssertEquals(2, Paths.Length());
         AssertEquals(Root + '/src/main.fpas', Paths[0]);
         AssertEquals(Root + '/src/ui/menu.fpas', Paths[1]);
       end;

@@ -28,6 +28,20 @@ pub fn is_std_root_segment(segment: &str) -> bool {
     segment.eq_ignore_ascii_case(STD_ROOT_SEGMENT)
 }
 
+/// Whether a former type-helper unit is now owned by import-free native operations.
+#[must_use]
+pub fn is_retired_type_helper_unit(name: &str) -> bool {
+    [
+        STD_UNIT_STR,
+        STD_UNIT_ARRAY,
+        STD_UNIT_DICT,
+        STD_UNIT_OPTION,
+        STD_UNIT_RESULT,
+    ]
+    .iter()
+    .any(|unit| unit.eq_ignore_ascii_case(name))
+}
+
 /// Resolves a case-insensitive unit tail such as `console` to its canonical name.
 pub fn canonical_std_unit_from_tail(tail: &str) -> Option<&'static str> {
     const UNITS: &[(&str, &str)] = &[
@@ -41,7 +55,6 @@ pub fn canonical_std_unit_from_tail(tail: &str) -> Option<&'static str> {
         ("version", STD_UNIT_VERSION),
         ("console", STD_UNIT_CONSOLE),
         ("tui", STD_UNIT_TUI),
-        ("str", STD_UNIT_STR),
         ("conv", STD_UNIT_CONV),
         ("crypto", STD_UNIT_CRYPTO),
         ("parse", STD_UNIT_PARSE),
@@ -49,11 +62,7 @@ pub fn canonical_std_unit_from_tail(tail: &str) -> Option<&'static str> {
         ("bits", STD_UNIT_BITS),
         ("net", STD_UNIT_NET),
         ("random", STD_UNIT_RANDOM),
-        ("arrays", STD_UNIT_ARRAY),
-        ("results", STD_UNIT_RESULT),
-        ("options", STD_UNIT_OPTION),
         ("tasks", STD_UNIT_TASK),
-        ("dictionaries", STD_UNIT_DICT),
         ("json", STD_UNIT_JSON),
         ("toml", STD_UNIT_TOML),
         ("test", STD_UNIT_TEST),

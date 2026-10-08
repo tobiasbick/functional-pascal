@@ -1,6 +1,6 @@
 program TuiMenuBarKeyboardTest;
 
-uses Std.Arrays, Std.Test, Std.Tui;
+uses Std.Test, Std.Tui;
 
 type MenuModel = record
   Focus: integer;
@@ -54,7 +54,7 @@ begin
       begin
         return record
           Focus := State.Focus;
-          Actions := Std.Arrays.Concat(State.Actions, [Action.Value]);
+          Actions := State.Actions.Concat([Action.Value]);
         end;
       end;
     else
@@ -74,14 +74,14 @@ begin
   Model := App.RunIterations(Model, UpdateMenu, ViewMenu, 0, 0);
   App.InjectKeyForTest(MakeKey(TuiKeyKind.Enter));
   Model := App.RunIterations(Model, UpdateMenu, ViewMenu, 1, 0);
-  AssertEquals(1, Std.Arrays.Length(Model.Actions));
+  AssertEquals(1, Model.Actions.Length());
   AssertEquals(10, Model.Actions[0]);
   App.InjectKeyForTest(MakeKey(TuiKeyKind.Tab));
   Model := App.RunIterations(Model, UpdateMenu, ViewMenu, 1, 0);
   AssertEquals(3, Model.Focus);
   App.InjectKeyForTest(MakeKey(TuiKeyKind.Space));
   Model := App.RunIterations(Model, UpdateMenu, ViewMenu, 1, 0);
-  AssertEquals(2, Std.Arrays.Length(Model.Actions));
+  AssertEquals(2, Model.Actions.Length());
   AssertEquals(30, Model.Actions[1]);
   App.Close();
 end.

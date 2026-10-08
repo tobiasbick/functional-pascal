@@ -1,6 +1,6 @@
 program ProcRunCaptureTest;
 
-uses Std.Proc, Std.Str, Std.Test;
+uses Std.Proc, Std.Test;
 
 begin
   case CurrentExecutable() of
@@ -10,7 +10,7 @@ begin
           when Ok(Output):
             begin
               AssertEquals(0, Output.ExitCode);
-              AssertTrue(Contains(Output.Stdout, 'fpas'));
+              AssertTrue(Output.Stdout.Contains('fpas'));
               AssertEquals('', Output.Stderr);
             end;
           when Error(Message):

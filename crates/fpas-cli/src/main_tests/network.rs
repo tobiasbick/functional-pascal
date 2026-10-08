@@ -151,7 +151,7 @@ fn http_client_supports_standard_extension_and_head_methods() {
         &format!(
             r#"program HttpClientMethods;
 
-uses Std.Arrays, Std.Console, Std.Http, Std.Str;
+uses Std.Console, Std.Http;
 
 procedure Expect(RequestValue: Request; ExpectedBodyLength: integer);
 begin
@@ -163,7 +163,7 @@ begin
         panic('unexpected HTTP status');
       end; end if;
 
-      if Std.Arrays.Length(ResponseValue.Body) <> ExpectedBodyLength then
+      if ResponseValue.Body.Length() <> ExpectedBodyLength then
       begin
         panic('unexpected HTTP body length');
       end; end if;
@@ -192,7 +192,7 @@ begin
     end;
     when Error(Message):
     begin
-      if not Std.Str.Contains(Message, 'RFC 9110 token') then
+      if not Message.Contains( 'RFC 9110 token') then
       begin
         panic(Message);
       end; end if;

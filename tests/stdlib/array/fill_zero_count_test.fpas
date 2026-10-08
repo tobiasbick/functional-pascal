@@ -1,8 +1,8 @@
 program T;
 
-uses Std.Console, Std.Arrays;
+uses Std.Console;
 
 begin
-  const A: array of integer := Fill(7, 0);
-  WriteLn(Length(A));
+  const A: array of integer := array.Fill(7, 0);
+  WriteLn(A.Length());
 end.

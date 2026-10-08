@@ -3,7 +3,7 @@
 use super::*;
 
 const SOURCE: &str = r#"program SelectionContinuation;
-uses Std.Tasks, Std.Time, Std.Results;
+uses Std.Tasks, Std.Time;
 function Produce(Q: channel of integer): integer;
 begin
   Sleep(2);
@@ -34,10 +34,10 @@ begin
   var Seen: integer := 0;
   const S: WaitCase := SendCase(Q, 42, procedure(R: result of boolean, string)
   begin
-    if not Unwrap(R) then panic('send result'); end if;
+    if not R.Unwrap() then panic('send result'); end if;
     Sleep(1);
     const Receive: WaitCase := ReceiveCase(Q, procedure(V: result of integer, string)
-    begin Seen := Unwrap(V); end procedure);
+    begin Seen := V.Unwrap(); end procedure);
     if Select([Receive]) <> 0 then panic('nested selection'); end if;
   end procedure);
   if Select([S]) <> 0 then panic('send index'); end if;
@@ -45,7 +45,7 @@ begin
   if Wait(T) <> 7 then panic('task value lost'); end if;
   const Producer: task := go Produce(Q);
   const Pending: WaitCase := ReceiveCase(Q, procedure(R: result of integer, string)
-  begin Seen := Unwrap(R); end procedure);
+  begin Seen := R.Unwrap(); end procedure);
   const Fallback: WaitCase := TimerCase(1000, procedure() begin panic('pending receive timed out'); end procedure);
   if Select([Pending, Fallback]) <> 0 then panic('pending receive index'); end if;
   if Seen <> 123 then panic('pending receive value'); end if;

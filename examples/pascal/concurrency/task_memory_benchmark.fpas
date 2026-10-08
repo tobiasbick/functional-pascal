@@ -5,7 +5,7 @@
 
 program TaskMemoryBenchmark;
 
-uses Std.Args, Std.Arrays, Std.Console, Std.Conv, Std.Tasks, Std.Time;
+uses Std.Args, Std.Console, Std.Conv, Std.Tasks, Std.Time;
 
 const SleepMillis: integer := 10000;
 const ProgressEvery: integer := 10000;
@@ -33,7 +33,7 @@ begin
   var Tasks: array of task := [];
   for I: integer := 1 to TaskCount do
     begin
-      Push(Tasks, go Worker());
+      Tasks.Push(go Worker());
       if I mod ProgressEvery = 0 then
         begin
           WriteLn('spawned ' + IntToStr(I));

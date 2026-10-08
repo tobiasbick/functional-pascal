@@ -1,6 +1,6 @@
 program TuiButtonSnapshotTest;
 
-uses Std.Str, Std.Test, Std.Tui;
+uses Std.Test, Std.Tui;
 
 function ViewButtons(State: integer): TuiElement;
 begin
@@ -25,9 +25,9 @@ begin
   const App: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(24, 10));
   discard App.RunIterations(0, UpdateButtons, ViewButtons, 0, 0);
   const Surface: TuiSurfaceSnapshot := App.SurfaceSnapshot();
-  const GoX: integer := Std.Str.IndexOf(Surface.LineAt(1), 'G');
-  const OkX: integer := Std.Str.IndexOf(Surface.LineAt(2), 'O');
-  const StopX: integer := Std.Str.IndexOf(Surface.LineAt(3), 'S');
+  const GoX: integer := Surface.LineAt(1).IndexOf('G');
+  const OkX: integer := Surface.LineAt(2).IndexOf('O');
+  const StopX: integer := Surface.LineAt(3).IndexOf('S');
   AssertTrue(Surface.CellAt(GoX, 1).Role = TuiStyleRole.ButtonSelectedShortcut);
   AssertTrue(Surface.CellAt(OkX, 2).Role = TuiStyleRole.ButtonDefaultShortcut);
   AssertTrue(Surface.CellAt(StopX, 3).Role = TuiStyleRole.ButtonDisabled);

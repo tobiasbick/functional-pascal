@@ -1,6 +1,6 @@
 program T;
 
-uses Std.Console, Std.Options, Std.Conv;
+uses Std.Console, Std.Conv;
 
 function Double(V: integer): integer;
 begin
@@ -22,7 +22,7 @@ end function;
 
 begin
   const O: option of integer := Some(5);
-  const Doubled: option of integer := Map(O, Double);
-  const Final: option of string := AndThen(Doubled, PositiveToStr);
-  WriteLn(Unwrap(Final));
+  const Doubled: option of integer := O.Map(Double);
+  const Final: option of string := Doubled.AndThen(PositiveToStr);
+  WriteLn(Final.Unwrap());
 end.

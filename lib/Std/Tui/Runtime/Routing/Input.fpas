@@ -1,15 +1,13 @@
 unit Std.Tui.Runtime.Routing.Input;
 
-uses
-  Std.Arrays, Std.Console, Std.Str, Std.Tui.Chrome.Input, Std.Tui.Ids.ControlId,
-  Std.Tui.Runtime.Msg;
+uses Std.Console, Std.Tui.Chrome.Input, Std.Tui.Ids.ControlId, Std.Tui.Runtime.Msg;
 
 function TuiInputPreviousWord(Text: string; Caret: integer): integer;
 begin
   var Index: integer := Caret;
   while Index > 0 do
     begin
-      if Std.Str.CharAt(Text, Index - 1) = ' ' then
+      if Text.CharAt(Index - 1) = ' ' then
         begin
           Index := Index - 1;
         end;
@@ -23,7 +21,7 @@ begin
 
   while Index > 0 do
     begin
-      if Std.Str.CharAt(Text, Index - 1) <> ' ' then
+      if Text.CharAt(Index - 1) <> ' ' then
         begin
           Index := Index - 1;
         end;
@@ -41,9 +39,9 @@ end function;
 function TuiInputNextWord(Text: string; Caret: integer): integer;
 begin
   var Index: integer := Caret;
-  while Index < Std.Str.Length(Text) do
+  while Index < Text.Length() do
     begin
-      if Std.Str.CharAt(Text, Index) <> ' ' then
+      if Text.CharAt(Index) <> ' ' then
         begin
           Index := Index + 1;
         end;
@@ -55,9 +53,9 @@ begin
     end;
   end while;
 
-  while Index < Std.Str.Length(Text) do
+  while Index < Text.Length() do
     begin
-      if Std.Str.CharAt(Text, Index) = ' ' then
+      if Text.CharAt(Index) = ' ' then
         begin
           Index := Index + 1;
         end;
@@ -80,7 +78,7 @@ begin
     end;
   end if;
 
-  for Index: integer := Std.Arrays.Length(Input.History) - 1 downto 0 do
+  for Index: integer := Input.History.Length() - 1 downto 0 do
     begin
       if Input.History[Index] = Input.Text then
         begin
@@ -95,7 +93,7 @@ end function;
 
 function TuiInputHistoryKey(Input: TuiInputSpec; Key: Std.Console.KeyEvent): option of TuiMsg;
 begin
-  if Std.Arrays.Length(Input.History) = 0 then
+  if Input.History.Length() = 0 then
     begin
       return None;
     end;
@@ -105,15 +103,15 @@ begin
     begin
       if Index < 0 then
         begin
-          const Text: string := Input.History[Std.Arrays.Length(Input.History) - 1];
-          return Some(TuiMsg.TextChanged(Input.Id, Input.ChangeAction, Text, Std.Str.Length(Text)));
+          const Text: string := Input.History[Input.History.Length() - 1];
+          return Some(TuiMsg.TextChanged(Input.Id, Input.ChangeAction, Text, Text.Length()));
         end;
       end if;
 
       if Index > 0 then
         begin
           const Text: string := Input.History[Index - 1];
-          return Some(TuiMsg.TextChanged(Input.Id, Input.ChangeAction, Text, Std.Str.Length(Text)));
+          return Some(TuiMsg.TextChanged(Input.Id, Input.ChangeAction, Text, Text.Length()));
         end;
       end if;
 
@@ -129,14 +127,14 @@ begin
         end;
       end if;
 
-      if Index < Std.Arrays.Length(Input.History) - 1 then
+      if Index < Input.History.Length() - 1 then
         begin
           const Text: string := Input.History[Index + 1];
-          return Some(TuiMsg.TextChanged(Input.Id, Input.ChangeAction, Text, Std.Str.Length(Text)));
+          return Some(TuiMsg.TextChanged(Input.Id, Input.ChangeAction, Text, Text.Length()));
         end;
       end if;
 
-      return Some(TuiMsg.TextChanged(Input.Id, Input.ChangeAction, Input.HistoryDraft, Std.Str.Length(Input.HistoryDraft)));
+      return Some(TuiMsg.TextChanged(Input.Id, Input.ChangeAction, Input.HistoryDraft, Input.HistoryDraft.Length()));
     end;
   end if;
 
@@ -160,15 +158,15 @@ begin
   if ((Key.kind = Std.Console.KeyKind.Character) and not Key.ctrl) and
      (not Key.alt and not Key.meta) then
     begin
-      return Some(TuiMsg.TextChanged(Input.Id, Input.ChangeAction, Std.Str.Insert(Input.Text, Input.Caret, Key.ch), Input.Caret +
-                                                                                                                    Std.Str.Length(Key.ch)));
+      return Some(TuiMsg.TextChanged(Input.Id, Input.ChangeAction, Input.Text.Insert(Input.Caret, Key.ch), Input.Caret +
+                                                                                                           Key.ch.Length()));
     end;
   end if;
 
   if ((Key.kind = Std.Console.KeyKind.Space) and not Key.ctrl) and (not Key.alt and not Key.meta) then
     begin
-      return Some(TuiMsg.TextChanged(Input.Id, Input.ChangeAction, Std.Str.Insert(Input.Text, Input.Caret, ' '), Input.Caret +
-                                                                                                                 1));
+      return Some(TuiMsg.TextChanged(Input.Id, Input.ChangeAction, Input.Text.Insert(Input.Caret, ' '), Input.Caret +
+                                                                                                        1));
     end;
   end if;
 
@@ -181,12 +179,12 @@ begin
         end;
       end if;
 
-      return Some(TuiMsg.TextChanged(Input.Id, Input.ChangeAction, Std.Str.Delete(Input.Text, Start, Input.Caret -
-                                                                                                     Start), Start));
+      return Some(TuiMsg.TextChanged(Input.Id, Input.ChangeAction, Input.Text.Delete(Start, Input.Caret -
+                                                                                            Start), Start));
     end;
   end if;
 
-  if (Key.kind = Std.Console.KeyKind.Delete) and (Input.Caret < Std.Str.Length(Input.Text)) then
+  if (Key.kind = Std.Console.KeyKind.Delete) and (Input.Caret < Input.Text.Length()) then
     begin
       var EndIndex: integer := Input.Caret + 1;
       if Key.ctrl then
@@ -195,8 +193,8 @@ begin
         end;
       end if;
 
-      return Some(TuiMsg.TextChanged(Input.Id, Input.ChangeAction, Std.Str.Delete(Input.Text, Input.Caret, EndIndex -
-                                                                                                           Input.Caret), Input.Caret));
+      return Some(TuiMsg.TextChanged(Input.Id, Input.ChangeAction, Input.Text.Delete(Input.Caret, EndIndex -
+                                                                                                  Input.Caret), Input.Caret));
     end;
   end if;
 
@@ -213,7 +211,7 @@ begin
     end;
   end if;
 
-  if (Key.kind = Std.Console.KeyKind.Right) and (Input.Caret < Std.Str.Length(Input.Text)) then
+  if (Key.kind = Std.Console.KeyKind.Right) and (Input.Caret < Input.Text.Length()) then
     begin
       var Caret: integer := Input.Caret + 1;
       if Key.ctrl then
@@ -234,7 +232,7 @@ begin
 
   if Key.kind = Std.Console.KeyKind.EndKey then
     begin
-      return Some(TuiMsg.TextChanged(Input.Id, Input.ChangeAction, Input.Text, Std.Str.Length(Input.Text)));
+      return Some(TuiMsg.TextChanged(Input.Id, Input.ChangeAction, Input.Text, Input.Text.Length()));
     end;
   end if;
 

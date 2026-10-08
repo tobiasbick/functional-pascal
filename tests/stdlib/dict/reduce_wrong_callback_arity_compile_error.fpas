@@ -1,7 +1,5 @@
 program DictionaryReduceWrongCallbackArityCompileError;
 
-uses Std.Dictionaries;
-
 function Wrong(Acc: integer; Value: integer): integer;
 begin
   return Acc + Value;
@@ -9,5 +7,5 @@ end function;
 
 begin
   const Values: dict of string to integer := ['A': 1];
-  const Total: integer := Reduce(Values, 0, Wrong);
+  const Total: integer := Values.Reduce(0, Wrong);
 end.

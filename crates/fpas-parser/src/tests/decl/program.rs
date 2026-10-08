@@ -18,17 +18,17 @@ fn program_with_uses() {
 }
 
 #[test]
-fn program_with_uses_std_array() {
-    let p = parse_ok("program T; uses Std.Arrays; begin end.");
+fn program_with_single_standard_unit() {
+    let p = parse_ok("program T; uses Std.Crypto; begin end.");
     assert_eq!(p.uses.len(), 1);
-    assert_eq!(p.uses[0].parts, vec!["Std", "Arrays"]);
+    assert_eq!(p.uses[0].parts, vec!["Std", "Crypto"]);
 }
 
 #[test]
-fn program_with_uses_std_arrays_case_insensitively() {
-    let p = parse_ok("program T; uses std.arrays; begin end.");
+fn program_with_standard_unit_preserves_written_case() {
+    let p = parse_ok("program T; uses std.crypto; begin end.");
     assert_eq!(p.uses.len(), 1);
-    assert_eq!(p.uses[0].parts, vec!["std", "arrays"]);
+    assert_eq!(p.uses[0].parts, vec!["std", "crypto"]);
 }
 
 #[test]

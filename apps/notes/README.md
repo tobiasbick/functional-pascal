@@ -134,5 +134,5 @@ apps/notes/
         └── View.fpas        # responsive TUI and overlays
 ```
 
-Regression tests live under [`tests/apps/notes/`](../../tests/apps/notes/) and
+Regression tests live under [`tests/apps/notes/`](../../tests/apps/notes) and
 use the same `notes-core` library as the application.

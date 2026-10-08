@@ -21,8 +21,8 @@ fully qualified name always works ([grammar](../../../specs/grammar.ebnf),
   available.
 - Add `uses Std.Fs as Files;`. An aliased import opens no short names; its
   symbols are reached only through the alias, for example `Files.ReadText(Path)`.
-  Use retained standard units for these examples; AP06 removes the five
-  type-helper units from public imports.
+  The five type-helper units removed by AP06 are unavailable as imports;
+  other standard units follow these rules.
 - Diagnose an alias that collides with another alias or a local name.
 - Public parameter and result types stay explicit.
 
@@ -47,11 +47,3 @@ AP05.1 delivers the language change; AP05.2 brings editor tooling up to date.
 
 Qualified lookup is stable under unrelated imports, with concrete collision
 diagnostics, and plain imports keep their recorded default meaning.
-
-## Reference
-
-The reference branch `codex/syntax-changes` implemented alias-only imports
-(every import requires an alias; no short names). That diverges from Q04 and
-is not adopted. Its owner map remains useful: parser `program.rs`, sema
-`check/entry.rs`, `check/name_resolution/`, `interface/install.rs`, and
-project `unit_graph/resolve.rs`.

@@ -1,6 +1,6 @@
 program FluentOrderTest;
 
-uses Std.Arrays, Std.Test;
+uses Std.Test;
 
 var Visits: array of integer := [];
 
@@ -16,7 +16,7 @@ begin
 end function;
 
 begin
-  AssertEquals(3, (Visit(1)).Add(Visit(2)));
+  AssertEquals(3, Add(Visit(1), Visit(2)));
   AssertEquals(2, Visits.Length());
   AssertEquals(1, Visits[0]);
   AssertEquals(2, Visits[1]);

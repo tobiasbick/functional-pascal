@@ -1,7 +1,7 @@
 program T;
 
-uses Std.Console, Std.Str;
+uses Std.Console;
 
 begin
-  WriteLn(RepeatStr('x', -5));
+  WriteLn('x'.RepeatStr(-5));
 end.

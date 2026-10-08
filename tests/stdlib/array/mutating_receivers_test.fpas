@@ -1,0 +1,67 @@
+program MutatingReceiversTest;
+
+uses Std.Test;
+
+type Holder = record
+  Items: array of integer;
+end record;
+
+var Global: Holder := record
+  Items := [1];
+end;
+
+procedure Append(var Items: array of integer; Value: integer);
+begin
+  Items.Push(Value);
+end procedure;
+
+procedure Forward(var Items: array of integer; Value: integer);
+begin
+  Append(var Items, Value);
+end procedure;
+
+procedure Change(var H: Holder; var Rows: array of array of integer);
+begin
+  H.Items.Push(4);
+  Rows[0].Push(5);
+  AssertEquals(5, Rows[0].Pop());
+end procedure;
+
+begin
+  var H: Holder := record
+    Items := [2];
+  end;
+  const Original: Holder := H;
+  var Rows: array of array of integer := [[3]];
+  const OldRows: array of array of integer := Rows;
+  Change(var H, var Rows);
+  Forward(var H.Items, 6);
+  AssertEquals(6, H.Items.Pop());
+  AssertEquals(4, H.Items.Pop());
+  AssertEquals(1, Original.Items.Length());
+  AssertEquals(2, Original.Items[0]);
+  AssertEquals(1, OldRows[0].Length());
+  Global.Items.Push(7);
+  AssertEquals(7, Global.Items.Pop());
+  var Holders: array of Holder := [H];
+  Holders[0].Items.Push(8);
+  AssertEquals(8, Holders[0].Items.Pop());
+  AssertEquals(1, H.Items.Length());
+  var Local: Holder := record
+    Items := [9];
+  end;
+  const AddCaptured: procedure() := procedure() begin
+    Local.Items.Push(10);
+  end procedure;
+
+  AddCaptured();
+  AssertEquals(10, Local.Items.Pop());
+  const TakeCaptured: function(): integer := function(): integer begin
+    return Local.Items.Pop();
+  end function;
+
+  AssertEquals(9, TakeCaptured());
+  var Lists: array of array of integer := [[11, 12]];
+  AssertEquals(2, Lists.Pop().Length());
+  AssertEquals(0, Lists.Length());
+end.

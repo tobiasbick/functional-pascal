@@ -1,7 +1,7 @@
 // Spec: docs/pascal/std/concurrency/task.md
 program SelectEvents;
 
-uses Std.Tasks, Std.Console, Std.Results;
+uses Std.Tasks, Std.Console;
 
 begin
   const Messages: channel of string := CreateChannel(4);

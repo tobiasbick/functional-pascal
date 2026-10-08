@@ -4,10 +4,10 @@ Structured parsing helpers for text input. `Std.Parse` is for callers that want 
 
 ```pascal
 program Example;
-uses Std.Console, Std.Parse, Std.Results;
+uses Std.Console, Std.Parse;
 begin
   const Parsed: Result of integer, string := TryInt('42');
-  WriteLn(UnwrapOr(Parsed, 0));
+  WriteLn(Parsed.UnwrapOr(0));
 end.
 ```
 
@@ -34,7 +34,7 @@ Parses Pascal integer text. Returns `Ok(Value)` on success or `Error(Message)` o
 
 ```pascal
 const R: Result of integer, string := TryInt(' +1_024 ');
-WriteLn(UnwrapOr(R, 0));                       // 1024
+WriteLn(R.UnwrapOr(0));                       // 1024
 ```
 
 ---
@@ -45,7 +45,7 @@ Parses Pascal real text. The text must include a fractional part; `1.0`, `-2.5`,
 
 ```pascal
 const R: Result of real, string := TryReal('1_024.0e-2');
-WriteLn(UnwrapOr(R, 0.0));                     // 10.24
+WriteLn(R.UnwrapOr(0.0));                     // 10.24
 ```
 
 ---
@@ -56,14 +56,14 @@ Parses boolean text. Leading and trailing whitespace is ignored; casing does not
 
 ```pascal
 const R: Result of boolean, string := TryBool(' FALSE ');
-WriteLn(UnwrapOr(R, true));                    // false
+WriteLn(R.UnwrapOr(true));                    // false
 ```
 
 ---
 
 ## Error handling
 
-`Try*` functions do not raise runtime parse errors. Inspect the result with `Std.Results.IsOk` / `Std.Results.IsError`, recover with `Std.Results.UnwrapOr`, or destructure the result with `case`.
+`Try*` functions do not raise runtime parse errors. Inspect the result with `.IsOk()` / `.IsError()`, recover with `.UnwrapOr(Default)`, or destructure the result with `case`.
 
 ```pascal
 case TryInt(Input) of

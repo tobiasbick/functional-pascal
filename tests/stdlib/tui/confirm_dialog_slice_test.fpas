@@ -1,6 +1,6 @@
 program ConfirmDialogSliceTest;
 
-uses Std.Console, Std.Str, Std.Tui, Std.Test;
+uses Std.Console, Std.Tui, Std.Test;
 
 const NameControlValue: integer := 1;
 const SaveControlValue: integer := 2;
@@ -202,8 +202,8 @@ begin
   AssertTrue(Model.ConfirmOpen);
   AssertEquals(YesControlValue, Model.Focused);
   const DialogSurface: TuiSurfaceSnapshot := App.SurfaceSnapshot();
-  AssertTrue(Std.Str.Contains(DialogSurface.LineAt(4), ' Confirm '));
-  AssertTrue(Std.Str.Contains(DialogSurface.LineAt(5), 'Save changes?'));
+  AssertTrue(DialogSurface.LineAt(4).Contains(' Confirm '));
+  AssertTrue(DialogSurface.LineAt(5).Contains('Save changes?'));
   App.InjectKeyForTest(MakeKey(TuiKeyKind.Enter, ''));
   Model := App.RunIterations(Model, UpdateEditor, ViewEditor, 1, 0);
   AssertFalse(Model.ConfirmOpen);
@@ -214,5 +214,5 @@ begin
   AssertTrue(Model.Quit);
   const AfterQuit: TuiSurfaceSnapshot := App.SurfaceSnapshot();
   AssertEquals(BeforeQuit.LineAt(2), AfterQuit.LineAt(2));
-  AssertFalse(Std.Str.Contains(AfterQuit.LineAt(2), 'SHOULD NOT PAINT'));
+  AssertFalse(AfterQuit.LineAt(2).Contains('SHOULD NOT PAINT'));
 end.

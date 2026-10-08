@@ -135,6 +135,12 @@ impl<'a> ClosureRegistry<'a> {
             Stmt::Call {
                 designator, args, ..
             } => {
+                self.register_mutating_receiver(
+                    designator,
+                    fpas_sema::designator_lookup_key(designator),
+                    owner,
+                    metadata,
+                );
                 self.visit_designator(&designator.parts, owner, metadata, types)?;
                 for argument in args {
                     self.visit_expression(argument, owner, metadata, types)?;
@@ -237,6 +243,12 @@ impl<'a> ClosureRegistry<'a> {
             Expr::Call {
                 designator, args, ..
             } => {
+                self.register_mutating_receiver(
+                    designator,
+                    fpas_sema::expr_lookup_key(expression),
+                    owner,
+                    metadata,
+                );
                 self.visit_designator(&designator.parts, owner, metadata, types)?;
                 for argument in args {
                     self.visit_expression(argument, owner, metadata, types)?;

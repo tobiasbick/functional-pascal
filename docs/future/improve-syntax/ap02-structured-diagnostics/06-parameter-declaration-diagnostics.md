@@ -2,46 +2,22 @@
 
 Package: [AP02: Structured diagnostics](README.md)
 
-## Scope
-
-Diagnose comma-separated or grouped parameter declarations with the canonical
-semicolon-separated, individually typed form retained by
-[AP08](../ap08-comma-separated-parameter-lists/README.md) (Q06).
-
-## Prerequisites
-
-- AP02.1 (code scheme).
-
-## Implementation
-
-- Recognize `function Add(A: integer, B: integer)` and
-  `function Add(A, B: integer)` in the parser.
-- Report a parser diagnostic that shows the canonical form, for example
-  `function Add(A: integer; B: integer): integer;`, and recover at the
-  closing parenthesis.
-
-## Affected areas
-
-- `crates/fpas-parser/src/parser/decl/routines.rs` (parameter lists).
-- `crates/fpas-diagnostics/src/codes.rs`.
-
-## Migration
-
-None; the forms are already invalid.
-
-## Documentation
-
-Add the code to the diagnostics reference. `docs/pascal/language/functions/parameters.md`
-may mention the diagnostic hint.
-
-## Verification
-
-- Parser tests for both invalid forms in functions, procedures, methods, and
-  anonymous routines, and for the valid canonical form.
+Status: complete.
 
 ## Result
 
-Parameter parsing now lives in the focused `decl/parameters.rs` module.
-FP2014 covers both invalid forms, including callable types, without changing
-accepted grammar. Validation also exposed and fixed a non-progress loop in
-record initializer recovery; see the [implementation audit](implementation-audit.md).
+FP2014 diagnoses comma-separated and grouped parameter declarations, including
+routine, method, anonymous-routine, and callable-type headings. The hint shows
+the canonical individually typed, semicolon-separated form:
+
+```pascal
+function Add(A: integer; B: integer): integer;
+```
+
+Parameter parsing lives in `crates/fpas-parser/src/parser/decl/parameters.rs`.
+Recovery preserves the enclosing declaration and following source.
+
+## Regression coverage
+
+Parser tests cover both rejected forms and the canonical form.
+See [parameters](../../../pascal/language/functions/parameters.md).

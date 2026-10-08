@@ -1,8 +1,8 @@
 program T;
 
-uses Std.Console, Std.Str;
+uses Std.Console;
 
 begin
   const Empty: array of string := [];
-  WriteLn(Join(Empty, ','));
+  WriteLn(Empty.Join(','));
 end.

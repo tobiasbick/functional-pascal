@@ -1,5 +1,5 @@
 //! Array construction and consuming mutations.
-//! Documentation: `docs/pascal/std/collections/array/mutating.md`.
+//! Documentation: `docs/pascal/language/types/array/mutating.md`.
 
 use super::*;
 
@@ -30,7 +30,7 @@ impl Worker {
                 return Err(self.aggregate_error_code(
                     RUNTIME_ARRAY_INDEX_OUT_OF_BOUNDS,
                     "Array index -1 out of bounds (len 0)",
-                    "Check array length before calling Std.Arrays.Pop.",
+                    "Check Items.IsEmpty() before calling Items.Pop().",
                 ));
             }
             other => return Err(self.type_mismatch("array", other)),

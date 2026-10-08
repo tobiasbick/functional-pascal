@@ -1,6 +1,6 @@
 program CollectionCallbacksTest;
 
-uses Std.Dictionaries, Std.Str, Std.Tasks, Std.Test;
+uses Std.Tasks, Std.Test;
 
 function Identity(C: string): string;
 begin
@@ -24,15 +24,15 @@ end function;
 
 function StringWork(): integer;
 begin
-  AssertEquals('a😀b', Std.Str.Map('a😀b', Identity));
-  AssertEquals('😀', Std.Str.Filter('a😀b', KeepFace));
-  return Std.Str.Reduce('a😀b', 0, Count);
+  AssertEquals('a😀b', 'a😀b'.Map(Identity));
+  AssertEquals('😀', 'a😀b'.Filter(KeepFace));
+  return 'a😀b'.Reduce(0, Count);
 end function;
 
 function DictionaryWork(): integer;
 begin
   const Values: dict of string to integer := ['A': 2, 'B': 4];
-  return Std.Dictionaries.Reduce(Values, 1, Sum);
+  return Values.Reduce(1, Sum);
 end function;
 
 begin

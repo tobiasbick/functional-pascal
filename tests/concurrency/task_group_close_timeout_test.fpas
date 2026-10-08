@@ -1,16 +1,16 @@
 program TaskGroupCloseTimeoutTest;
 
-uses Std.Tasks, Std.Results, Std.Arrays, Std.Test;
+uses Std.Tasks, Std.Test;
 
 begin
   const Empty: TaskGroup := CreateTaskGroup();
-  AssertEquals(0, Length(Unwrap(CloseTaskGroupWithTimeout(Empty, 0))));
-  AssertEquals(0, Length(Unwrap(CloseTaskGroupWithTimeout(Empty, 0))));
+  AssertEquals(0, CloseTaskGroupWithTimeout(Empty, 0).Unwrap().Length());
+  AssertEquals(0, CloseTaskGroupWithTimeout(Empty, 0).Unwrap().Length());
   const Group: TaskGroup := CreateTaskGroup();
   const Token: CancellationToken := GetTaskGroupToken(Group);
   const Gate: channel of integer := CreateChannel(1);
   const Child: task := StartTaskInGroup(Group, function(Stop: CancellationToken): result of integer, string begin
-    discard Unwrap(Receive(Gate));
+    discard Receive(Gate).Unwrap();
     if not IsCancellationRequested(Stop) then
       begin
         panic('missing cancellation');
@@ -32,12 +32,12 @@ begin
   end case;
 
   AssertTrue(IsCancellationRequested(Token));
-  AssertTrue(IsError(CloseTaskGroupWithTimeout(Group, 0)));
-  discard Unwrap(Send(Gate, 1));
-  const Reports: array of TaskFailure := Unwrap(CloseTaskGroupWithTimeout(Group, 1000));
-  AssertEquals(1, Length(Reports));
+  AssertTrue(CloseTaskGroupWithTimeout(Group, 0).IsError());
+  discard Send(Gate, 1).Unwrap();
+  const Reports: array of TaskFailure := CloseTaskGroupWithTimeout(Group, 1000).Unwrap();
+  AssertEquals(1, Reports.Length());
   AssertTrue(Reports[0].Kind = TaskFailureKind.ReturnedError);
   AssertEquals('retained worker failure', Reports[0].Message);
-  AssertEquals(0, Length(CloseTaskGroup(Group)));
+  AssertEquals(0, CloseTaskGroup(Group).Length());
   discard CloseChannel(Gate);
 end.

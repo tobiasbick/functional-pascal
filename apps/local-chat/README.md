@@ -45,4 +45,4 @@ apps/local-chat/
 ```
 
 The headless workflow regression lives under
-[`tests/apps/local_chat/`](../../tests/apps/local_chat/).
+[`tests/apps/local_chat/`](../../tests/apps/local_chat).

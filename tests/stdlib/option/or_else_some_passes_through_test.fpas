@@ -1,6 +1,6 @@
 program T;
 
-uses Std.Console, Std.Options;
+uses Std.Console;
 
 function FallbackNinetyNine(): option of integer;
 begin
@@ -9,6 +9,6 @@ end function;
 
 begin
   const O: option of integer := Some(7);
-  const M: option of integer := OrElse(O, FallbackNinetyNine);
-  WriteLn(Unwrap(M));
+  const M: option of integer := O.OrElse(FallbackNinetyNine);
+  WriteLn(M.Unwrap());
 end.

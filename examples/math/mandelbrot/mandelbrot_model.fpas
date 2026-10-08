@@ -2,7 +2,7 @@
 
 unit Mandelbrot.Model;
 
-uses Std.Arrays, Std.Conv, Std.Math, Std.Tasks, Std.Tui, Mandelbrot.Color, Mandelbrot.Render;
+uses Std.Conv, Std.Math, Std.Tasks, Std.Tui, Mandelbrot.Color, Mandelbrot.Render;
 
 public type ExplorerState = record
   public CenterX: real;
@@ -81,7 +81,7 @@ function BlankGrid(Width: integer; Height: integer): TuiCellGrid;
 begin
   const Black: TuiColor := TuiColor.FromRgb(0, 0, 0);
   const Blank: TuiCell := TuiCell.Styled(' ', TuiStyle.FromColors(Black, Black));
-  return TuiCellGrid.Create(Width, Height, Std.Arrays.Fill(Blank, Width * Height));
+  return TuiCellGrid.Create(Width, Height, array.Fill(Blank, Width * Height));
 end function;
 
 public function CreateMandelbrotModel(

@@ -1,6 +1,6 @@
 //! Higher-order `Std.Arrays` semantic checks: `Map`, `Filter`, `Reduce`, `FlatMap`.
 //!
-//! **Documentation:** `docs/pascal/std/collections/array/README.md` (from the repository root).
+//! **Documentation:** `docs/pascal/language/types/array/README.md` (from the repository root).
 
 use crate::check::Checker;
 use crate::types::Ty;
@@ -14,14 +14,14 @@ use super::super::super::callbacks::{
 };
 use super::super::{array_elem_ty, check_argument_count};
 
-/// `Std.Arrays.Map(Arr, F)` → `array of U` where `F: function(V: T): U`.
+/// `Arr.Map(F)` → `array of U` where `F: function(V: T): U`.
 pub(crate) fn check_map(c: &mut Checker, args: &[&Expr], span: Span) -> Ty {
     if !check_argument_count(
         c,
         s::STD_ARRAY_MAP,
         2,
         args,
-        "Example: Std.Arrays.Map(Arr, function(X: integer): integer begin return X * 2 end function).",
+        "Example: Arr.Map(function(X: integer): integer begin return X * 2; end function).",
         span,
     ) {
         return Ty::Error;
@@ -53,14 +53,14 @@ pub(crate) fn check_map(c: &mut Checker, args: &[&Expr], span: Span) -> Ty {
     }
 }
 
-/// `Std.Arrays.Filter(Arr, F)` → `array of T` where `F: function(V: T): boolean`.
+/// `Arr.Filter(F)` → `array of T` where `F: function(V: T): boolean`.
 pub(crate) fn check_filter(c: &mut Checker, args: &[&Expr], span: Span) -> Ty {
     if !check_argument_count(
         c,
         s::STD_ARRAY_FILTER,
         2,
         args,
-        "Example: Std.Arrays.Filter(Arr, function(X: integer): boolean begin return X > 0 end function).",
+        "Example: Arr.Filter(function(X: integer): boolean begin return X > 0; end function).",
         span,
     ) {
         return Ty::Error;
@@ -94,14 +94,14 @@ pub(crate) fn check_filter(c: &mut Checker, args: &[&Expr], span: Span) -> Ty {
     arr_ty
 }
 
-/// `Std.Arrays.Reduce(Arr, Init, F)` → `U` where `F: function(Acc: U; V: T): U`.
+/// `Arr.Reduce(Init, F)` → `U` where `F: function(Acc: U; V: T): U`.
 pub(crate) fn check_reduce(c: &mut Checker, args: &[&Expr], span: Span) -> Ty {
     if !check_argument_count(
         c,
         s::STD_ARRAY_REDUCE,
         3,
         args,
-        "Example: Std.Arrays.Reduce(Arr, 0, function(Acc: integer; V: integer): integer begin return Acc + V end function).",
+        "Example: Arr.Reduce(0, function(Acc: integer; V: integer): integer begin return Acc + V; end function).",
         span,
     ) {
         return Ty::Error;
@@ -137,14 +137,14 @@ pub(crate) fn check_reduce(c: &mut Checker, args: &[&Expr], span: Span) -> Ty {
     }
 }
 
-/// `Std.Arrays.FlatMap(Arr, F)` → `array of U` where `F: function(V: T): array of U`.
+/// `Arr.FlatMap(F)` → `array of U` where `F: function(V: T): array of U`.
 pub(crate) fn check_flat_map(c: &mut Checker, args: &[&Expr], span: Span) -> Ty {
     if !check_argument_count(
         c,
         s::STD_ARRAY_FLAT_MAP,
         2,
         args,
-        "Example: Std.Arrays.FlatMap(Arr, function(X: integer): array of integer begin ... end function).",
+        "Example: Arr.FlatMap(function(X: integer): array of integer begin ... end function).",
         span,
     ) {
         return Ty::Error;

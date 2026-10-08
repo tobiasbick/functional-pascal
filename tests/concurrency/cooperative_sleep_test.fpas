@@ -1,6 +1,6 @@
 program CooperativeSleepTest;
 
-uses Std.Arrays, Std.Tasks, Std.Test, Std.Time;
+uses Std.Tasks, Std.Test, Std.Time;
 
 procedure Sleeper();
 begin
@@ -12,7 +12,7 @@ begin
   const Started: integer := MonotonicMillis();
   for I: integer := 1 to 8 do
     begin
-      Push(Tasks, go Sleeper());
+      Tasks.Push(go Sleeper());
     end;
   end for;
 

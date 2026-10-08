@@ -1,6 +1,6 @@
 unit Std.Tui.Rendering.Surface.Damage;
 
-uses Std.Arrays, Std.Options, Std.Tui.Cells.Cell, Std.Tui.Cells.Color, Std.Tui.Cells.Style;
+uses Std.Tui.Cells.Cell, Std.Tui.Cells.Color, Std.Tui.Cells.Style;
 
 // One changed horizontal range prepared for the internal terminal renderer.
 public type TuiSurfaceDamage = record
@@ -107,7 +107,7 @@ begin
     begin
       if not Continuations[X] then
         begin
-          Std.Arrays.Push(ChangedCells, Cells[X]);
+          ChangedCells.Push(Cells[X]);
         end;
       end if;
     end;

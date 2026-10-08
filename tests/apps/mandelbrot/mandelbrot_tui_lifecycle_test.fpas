@@ -1,8 +1,8 @@
 program MandelbrotTuiLifecycleTest;
 
 uses
-  Mandelbrot.App, Mandelbrot.Model, Mandelbrot.Render, Mandelbrot.View, Std.Arrays, Std.Results,
-  Std.Tasks, Std.Test, Std.Time, Std.Tui;
+  Mandelbrot.App, Mandelbrot.Model, Mandelbrot.Render, Mandelbrot.View, Std.Tasks, Std.Test,
+  Std.Time, Std.Tui;
 
 function MakeLeftKey(): TuiKeyEvent;
 begin
@@ -37,8 +37,8 @@ begin
 
   AssertEquals(Model.Grid.Height, Model.RowsRendered);
   App.CloseWithBackground(Inbox);
-  AssertTrue(IsError(TrySend(Inbox, record
+  AssertTrue(TrySend(Inbox, record
     Generation := Model.Generation;
     Cells := [];
-  end)));
+  end).IsError());
 end.

@@ -201,7 +201,7 @@ fn http_client_enforces_header_and_redirect_limits() {
         &format!(
             r#"program HttpClientLimits;
 
-uses Std.Console, Std.Http, Std.Str;
+uses Std.Console, Std.Http;
 
 begin
   var HeaderRequest: Request := Request.Get('http://127.0.0.1:{header_port}/');
@@ -210,7 +210,7 @@ begin
     when Ok(_): panic('oversized response head was accepted');
     when Error(Message):
     begin
-      if not Std.Str.Contains(Message, 'MaxHeaderBytes') then panic(Message); end if;
+      if not Message.Contains( 'MaxHeaderBytes') then panic(Message); end if;
     end;
   end case;
   var RedirectRequest: Request := Request.Get('http://127.0.0.1:{redirect_port}/');
@@ -219,7 +219,7 @@ begin
     when Ok(_): panic('redirect limit was ignored');
     when Error(Message):
     begin
-      if not Std.Str.Contains(Message, 'MaxRedirects') then panic(Message); end if;
+      if not Message.Contains( 'MaxRedirects') then panic(Message); end if;
     end;
   end case;
   WriteLn('ok');
@@ -280,7 +280,7 @@ fn http_client_rejects_ambiguous_framing_and_excess_interim_responses() {
         &format!(
             r#"program HttpHostileResponses;
 
-uses Std.Console, Std.Http, Std.Str;
+uses Std.Console, Std.Http;
 
 procedure ExpectError(Url: string; Text: string);
 begin
@@ -288,7 +288,7 @@ begin
     when Ok(_): panic('hostile HTTP response was accepted');
     when Error(Message):
     begin
-      if not Std.Str.Contains(Message, Text) then panic(Message); end if;
+      if not Message.Contains( Text) then panic(Message); end if;
     end;
   end case;
 end procedure;
@@ -332,7 +332,7 @@ fn http_client_rejects_chunk_size_integer_overflow() {
         &format!(
             r#"program HttpChunkSizeOverflow;
 
-uses Std.Console, Std.Http, Std.Str;
+uses Std.Console, Std.Http;
 
 procedure ExpectOverflow(Path: string);
 begin
@@ -340,7 +340,7 @@ begin
     when Ok(_): panic('overflowing HTTP chunk size was accepted');
     when Error(Message):
     begin
-      if not Std.Str.Contains(Message, 'exceeds the integer range') then panic(Message); end if;
+      if not Message.Contains( 'exceeds the integer range') then panic(Message); end if;
     end;
   end case;
 end procedure;

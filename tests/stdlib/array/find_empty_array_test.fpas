@@ -1,6 +1,6 @@
 program T;
 
-uses Std.Console, Std.Arrays, Std.Options;
+uses Std.Console;
 
 function AlwaysTrue(X: integer): boolean;
 begin
@@ -9,6 +9,6 @@ end function;
 
 begin
   const A: array of integer := [];
-  const R: option of integer := Find(A, AlwaysTrue);
-  WriteLn(IsNone(R));
+  const R: option of integer := A.Find(AlwaysTrue);
+  WriteLn(R.IsNone());
 end.

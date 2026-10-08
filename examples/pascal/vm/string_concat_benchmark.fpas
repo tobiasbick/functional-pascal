@@ -4,7 +4,7 @@
 
 program VmStringConcatBenchmark;
 
-uses Std.Args, Std.Console, Std.Conv, Std.Str, Std.Time;
+uses Std.Args, Std.Console, Std.Conv, Std.Time;
 
 const WarmupIterations: integer := 200000;
 const Prefix: string := 'frame-';
@@ -16,7 +16,7 @@ begin
   for Index: integer := 1 to Iterations do
     begin
       const Built: string := (Prefix + IntToStr(Index)) + Suffix;
-      Total := Total + Std.Str.Length(Built);
+      Total := Total + Built.Length();
     end;
   end for;
 

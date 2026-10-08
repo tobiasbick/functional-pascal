@@ -1,7 +1,7 @@
 unit Std.Tui.Runtime.Routing.PointerHit;
 
 uses
-  Std.Arrays, Std.Console, Std.Tui.Chrome.Button, Std.Tui.Chrome.Input, Std.Tui.Chrome.StatusItem,
+  Std.Console, Std.Tui.Chrome.Button, Std.Tui.Chrome.Input, Std.Tui.Chrome.StatusItem,
   Std.Tui.Elements.Element, Std.Tui.Geometry.Point, Std.Tui.Geometry.Rect, Std.Tui.Ids.Action,
   Std.Tui.Ids.ControlId, Std.Tui.Layout.Frame;
 
@@ -62,7 +62,7 @@ var TuiPointerBestHit: TuiPointerHit := TuiPointerHit.Miss;
 function TuiPointerModalChildIndex(Children: array of TuiElement): integer;
 begin
   var LastOverlay: integer := -1;
-  for Index: integer := 0 to Std.Arrays.Length(Children) - 1 do
+  for Index: integer := 0 to Children.Length() - 1 do
     begin
       case Children[Index] of
         when TuiElement.Overlay(Title, OverlayChildren):
@@ -134,7 +134,7 @@ begin
         if AllowHits and Entry.Clip.Contains(Point) then
           begin
             const Row: integer := Point.Y - Entry.Bounds.Y;
-            if (Row >= 0) and (Row < Std.Arrays.Length(Items)) then
+            if (Row >= 0) and (Row < Items.Length()) then
               begin
                 TuiPointerBestHit := TuiPointerHit.List(Id, ChangeAction, Selected, Row);
               end;
@@ -145,7 +145,7 @@ begin
     when TuiElement.MenuBar(Items):
       begin
         var Cursor: integer := Entry.Bounds.X;
-        for ItemIndex: integer := 0 to Std.Arrays.Length(Items) - 1 do
+        for ItemIndex: integer := 0 to Items.Length() - 1 do
           begin
             const Width: integer := Std.Console.DisplayWidth(Items[ItemIndex].Text) + 2;
             const ItemBounds: TuiRect := TuiRect.Create(Cursor, Entry.Bounds.Y, Width, 1);
@@ -166,7 +166,7 @@ begin
     when TuiElement.StatusLine(Items):
       begin
         var Cursor: integer := Entry.Bounds.X;
-        for ItemIndex: integer := 0 to Std.Arrays.Length(Items) - 1 do
+        for ItemIndex: integer := 0 to Items.Length() - 1 do
           begin
             if ItemIndex > 0 then
               begin
@@ -209,7 +209,7 @@ begin
           end;
         end if;
 
-        for ChildIndex: integer := 0 to Std.Arrays.Length(Children) - 1 do
+        for ChildIndex: integer := 0 to Children.Length() - 1 do
           begin
             Next := TuiPointerHitWalk(Frame, Children[ChildIndex], Next, Point, ScrollAllowsHits);
           end;
@@ -217,7 +217,7 @@ begin
       end;
     when TuiElement.Row(Children, Spacing):
       begin
-        for ChildIndex: integer := 0 to Std.Arrays.Length(Children) - 1 do
+        for ChildIndex: integer := 0 to Children.Length() - 1 do
           begin
             Next := TuiPointerHitWalk(Frame, Children[ChildIndex], Next, Point, AllowHits);
           end;
@@ -225,7 +225,7 @@ begin
       end;
     when TuiElement.Column(Children, Spacing):
       begin
-        for ChildIndex: integer := 0 to Std.Arrays.Length(Children) - 1 do
+        for ChildIndex: integer := 0 to Children.Length() - 1 do
           begin
             Next := TuiPointerHitWalk(Frame, Children[ChildIndex], Next, Point, AllowHits);
           end;
@@ -233,7 +233,7 @@ begin
       end;
     when TuiElement.Layout(Settings, Children):
       begin
-        for ChildIndex: integer := 0 to Std.Arrays.Length(Children) - 1 do
+        for ChildIndex: integer := 0 to Children.Length() - 1 do
           begin
             Next := TuiPointerHitWalk(Frame, Children[ChildIndex], Next, Point, AllowHits);
           end;
@@ -241,7 +241,7 @@ begin
       end;
     when TuiElement.Panel(Title, Children):
       begin
-        for ChildIndex: integer := 0 to Std.Arrays.Length(Children) - 1 do
+        for ChildIndex: integer := 0 to Children.Length() - 1 do
           begin
             Next := TuiPointerHitWalk(Frame, Children[ChildIndex], Next, Point, AllowHits);
           end;
@@ -249,7 +249,7 @@ begin
       end;
     when TuiElement.Overlay(Title, Children):
       begin
-        for ChildIndex: integer := 0 to Std.Arrays.Length(Children) - 1 do
+        for ChildIndex: integer := 0 to Children.Length() - 1 do
           begin
             Next := TuiPointerHitWalk(Frame, Children[ChildIndex], Next, Point, AllowHits);
           end;
@@ -258,7 +258,7 @@ begin
     when TuiElement.Desktop(Focused, Children):
       begin
         const ModalIndex: integer := TuiPointerModalChildIndex(Children);
-        for ChildIndex: integer := 0 to Std.Arrays.Length(Children) - 1 do
+        for ChildIndex: integer := 0 to Children.Length() - 1 do
           begin
             var ChildAllow: boolean := AllowHits;
             if ModalIndex >= 0 then

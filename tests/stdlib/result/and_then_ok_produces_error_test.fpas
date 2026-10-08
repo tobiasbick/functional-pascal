@@ -1,6 +1,6 @@
 program T;
 
-uses Std.Console, Std.Results;
+uses Std.Console;
 
 function PositiveOk(V: integer): result of string, string;
 begin
@@ -17,6 +17,6 @@ end function;
 
 begin
   const R: result of integer, string := Ok(-1);
-  const M: result of string, string := AndThen(R, PositiveOk);
-  WriteLn(IsError(M));
+  const M: result of string, string := R.AndThen(PositiveOk);
+  WriteLn(M.IsError());
 end.

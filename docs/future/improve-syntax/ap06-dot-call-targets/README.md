@@ -1,104 +1,62 @@
 # AP06: Fixed dot-call targets
 
-Status: agreed direction (Q05, revised): built-in type operations are always
-available with one public call form, consistent names, and preservation of
-existing distinct operations. Canonical names for the extended inventory,
-type-qualified factory syntax, and name conflicts must be settled in AP06.1
-before implementation. The implicit-receiver exception is agreed, with a
-user-requested follow-up discussion before AP06.3/AP17.3. Effort: medium.
-Completion is tracked in the
-[central README](../README.md); the process is in
-[development-process.md](../development-process.md).
+Status: complete (Q05). Effort: medium. Package completion is tracked in the
+[central README](../README.md); work-package completion is listed below.
 
-This package was previously titled "Remove automatic receivers". The revised
-decision keeps dot chaining for record methods and native built-in type
-operations, removes automatic lookup of arbitrary free functions, and replaces
-the five former type-helper units with a single public API on the types.
+## Implemented behavior
 
-## Goal
+- A dot call selects a declared record member or one operation from the
+  [native catalog](catalog.md), by static receiver type and case-insensitive
+  name. Results may return Self, a new record, or another type that continues
+  the chain. Callable record fields/properties remain actual member calls.
+- String, array, dictionary, Option and Result operations are available without
+  imports. Instance calls use `Value.Operation(...)`. The five retired helper
+  units have no public imports, ordinary calls or free routine references.
+  Other standard units require imports.
+- The catalog contains 78 entries: 75 distinct operations and three empty
+  checks. All eager-processing, Unicode-scalar, dictionary-order and
+  value-returning semantics are retained. `Sort`, `Merge` and `Remove` return
+  values without changing caller storage. `Join` belongs to arrays of string.
+- The only factories are `string.Chr(N)` and `array.Fill(Value, Count)`, accepting
+  positional or fully named arguments. Fill infers its element type from Value,
+  even when Count is zero. Typed-array factory spelling and explicit generic
+  arguments are rejected; binding type annotations remain required.
+- Fixed signatures accept positional or fully named explicit arguments under
+  AP09. Names are stable and case-insensitive; unknown, duplicate, missing and
+  mixed names are rejected. The receiver is unnamed and evaluates once before
+  explicit arguments, which evaluate once in written order before mapping.
+  Variadic `Format` is positional and heterogeneous.
+- Own free functions and callable values use ordinary calls; they are never
+  found through their first parameter. Same-named free routines may coexist
+  with native operations. Invalid native arguments never trigger fallback.
+- Each receiver type has one signature per operation name. Trailing arguments
+  and expected result types do not choose overloads. Generic inference follows
+  target selection. Duplicate catalog names are rejected, including specialized
+  array overlap. Record members retain their shared case-insensitive namespace.
+- Scalars, channels, task handles and unconstrained generic receivers have no
+  native instance operations. Known generic container shapes retain their
+  catalog operations. Dot notation introduces no pipe operator or alternate
+  free-function call form.
 
-A dot call `Value.Name(Arguments)` has a fixed, predictable target: a record
-method of the value's record type, or one operation assigned to its built-in
-type. Built-in operations require no imports and have no duplicate ordinary
-call form. An imported or local free function can never reinterpret a dot call.
+## Writable receivers
 
-Current behavior: `Value.Name(Args)` may resolve to any visible free routine or
-callable value whose first parameter accepts the receiver, with layered lookup
-rules ([receiver calls](../../../pascal/language/functions/fluent-calls.md),
-[postfix chaining](../../../pascal/language/functions/postfix-chaining.md)).
-
-## Decisions (Q05, revised)
-
-- **Record methods keep dot chaining.** Instance methods declared in a record
-  (with `Self`) stay callable as `Value.Method(Arguments)`. A method returns
-  `Self`'s record type or a new value; the chain continues on the static type
-  of that result.
-- **Native operations on catalog types.** For `string`, arrays,
-  dictionaries, `Option`, and `Result`, existing operations
-  such as `Trim`, `Map`, and `Filter` are assigned to dot notation in a fixed,
-  unambiguous catalog. Each catalog entry maps one receiver type and one name
-  to exactly one implementation. A result may change type, and the
-  chain continues on the new type.
-- **Automatic availability and one call form.** The five types provide their
-  operations directly, without `uses Std.Str`, `Std.Arrays`,
-  `Std.Dictionaries`, `Std.Options`, or `Std.Results`. Instance operations use
-  `Value.Operation(...)`; operations without an instance receiver use one
-  type-qualified form agreed in AP06.1. Remove the five units from public
-  imports and remove their ordinary calls and free function references.
-  Other standard units, such as `Std.Fs`, `Std.Net`, and `Std.Console`, still
-  require explicit imports and follow AP05.
-- **Preserve all distinct operations.** The base catalog is not a deletion
-  boundary. Keep existing additional operations as type operations, retiring
-  only verified synonymous copies in favor of one canonical name. The
-  complete inventory and implementation mappings, argument roles, result
-  types, and required differences are in [catalog.md](catalog.md).
-  `Join` belongs to `array of string`; `Fill` is an array factory and `Chr`
-  a string factory. Existing operations keep their FPAS semantics,
-  including eager collection processing and Unicode scalar indexes.
-  `Sort`, `Merge`, and `Remove` keep returning values without changing the
-  caller variable. AP06.3 adds `IsEmpty` for strings,
-  arrays, and dictionaries. Scalars, channels, and task handles receive
-  instance operations only after a concrete need and an explicit extension
-  decision. Existing `Push` and `Pop` remain array operations using the
-  implicit-receiver exception below; AP17.3 delivers the mutation checks.
-- **No automatic free-function lookup.** Dot notation no longer searches
-  visible free functions, procedures, or callable values by their first
-  parameter. User-defined free functions and all other routines are called
-  with ordinary call syntax, nested or through intermediate bindings.
-- **Receiver passing stays.** The left value is passed as `Self` to a method,
-  or as the first input argument of a catalog operation. The receiver is
-  evaluated once, before the written arguments, which keep their order.
-- **Implicit-receiver exception (agreed; revisit before implementation).**
-  Dot-call receivers use ordinary `Value.Operation(...)` syntax, including
-  mutating native operations such as `Items.Push(Value)` and `Items.Pop()`.
-  AP17's call-site `var` marker applies to explicitly written arguments;
-  the implicit receiver needs neither a `var` marker nor additional
-  parentheses. The catalog records which operations require a writable
-  receiver. Such a receiver must be a `var` binding, a field or element of
-  one, or a forwarded `var` parameter; reject `const` bindings and temporaries.
-  Apply AP17's aliasing, lifetime, `go`, evaluation, and failure rules to the
-  writable receiver as well. Record methods retain their existing semantics.
-  The user requested that this exception be discussed again; see
-  [Follow-up discussion](#follow-up-discussion).
-- **Unchanged from Q05:** no pipe operator. Dot notation remains available for
-  actual record members (fields, callable fields, methods).
-
-Draft, using agreed AP16 bindings:
+`Items.Push(Value)` and `Items.Pop()` require writable storage. Their implicit
+receiver needs neither a `var` marker nor extra parentheses. Valid receivers
+include `var` bindings, writable fields/array elements, imported variables and
+forwarded reference parameters. Constants, read-only parameters, temporaries,
+properties and dictionary entries are rejected.
 
 ```pascal
-function WordLength(Word: string): integer;
-begin
-  return Word.Length();
-end function;
-
-const Input: string := '  hello world  ';
-const Words: array of string := Input.Trim().Split(' ');
-const Sizes: array of integer := Words.Map(WordLength);
-const Next: Point := Origin.Offset(1.0, 2.0).Normalize();  // record methods
-const Clean: string := Normalize(Input);                    // own free function
-const Bad: string := Input.Normalize();   // error: 'Normalize' is not a method
-                                          // or standard operation of string
+var Items: array of integer := [1, 2];
+Items.Push(Value := 3);
+const Last: integer := Items.Pop();
 ```
+
+The catalog marks writable receivers. [AP17](../ap17-visible-caller-mutation/README.md)
+storage, aliasing, lifetime, task, evaluation and failure rules apply.
+Explicit reference arguments retain their `var` markers; own free routines with
+reference parameters remain ordinary calls. Record methods retain their declared
+Self behavior.
 
 ## Standard-operation naming (agreed)
 
@@ -110,6 +68,13 @@ to catalog operations; user-defined record methods retain their declared names.
   operation for strings, arrays, and dictionaries: Unicode scalar count,
   element count, and entry count respectively. Shared operations such as `Map`,
   `Filter`, and `Reduce` follow the same rule.
+- **String names follow arrays (agreed).** For naming, treat a string as a
+  sequence of characters and use the array name for corresponding operations.
+  In particular, string `Slice(Start: integer; Len: integer)` replaces the
+  public `Substring` spelling and matches array `Slice`; do not expose both
+  names. Preserve the string operation's Unicode-scalar indexes, bounds
+  checks, result type, and evaluation behavior. String-specific operations
+  retain their names when there is no corresponding array operation.
 - **One canonical name per operation.** Do not add synonymous catalog names
   such as `Size()` or `Count()` alongside or instead of `Length()` for these
   counts.
@@ -129,73 +94,24 @@ to catalog operations; user-defined record methods retain their declared names.
 
 ## Open decisions
 
-These must be decided explicitly with the user in AP06.1, before any
-implementation work package starts:
-
-1. **Extended catalog names and factory forms.** Validate the complete
-   inventory against the naming rules and settle any equivalent operation
-   names across types, such as string `Substring` and array `Slice`. Record
-   one type-qualified spelling for `Chr` and generic array `Fill` and their
-   type inference. Preservation is agreed; their final public spelling must
-   be explicit before implementation.
-2. **Name conflicts.** How a catalog name relates to a local or imported free
-   function with the same name; resolution of overloaded standard routines;
-   a record field holding a callable value with the same name as a method.
-   The shared naming rules above are already agreed.
-
-Catalog scope, the base names, preservation of additional distinct operations,
-automatic availability, and one public call form are agreed in
-[catalog.md](catalog.md). The inventory validates those decisions.
-
-## Follow-up discussion
-
-The implicit-receiver exception is recorded as the current decision. The user
-explicitly requested that we discuss it again. Revisit the consistency of
-unmarked mutating receivers with AP17's explicit argument marking in AP06.1,
-before implementing AP06.3 or AP17.3. Record the discussion's outcome here and
-in the [AP17 README](../ap17-visible-caller-mutation/README.md#follow-up-discussion).
-This follow-up does not block AP16 or AP17.1/AP17.2.
+None.
 
 ## Dependencies
 
-None for built-in type operation availability. AP05 continues to define imports
-for other units; native type operations do not depend on import aliases.
-
-AP12 and AP14 depend on this package.
-
-## Order
-
-AP06.1 validates the agreed catalog and records the remaining decisions.
-AP06.2 prepares consumer migration using forms accepted by the current compiler.
-AP06.3 adds native type operations, `IsEmpty`, and the agreed factory forms,
-finishes migrations requiring the new syntax, and removes the old public units
-and their free-call API in the same delivery.
+AP09 provides named-argument mapping. AP17 provides shared caller-mutation
+checks. Native availability does not depend on AP05 import aliases.
+AP12 and AP14 depend on the fixed member/catalog rule.
 
 ## Work packages
 
-- [ ] [AP06.1: Catalog names and remaining operation rules](01-catalog-and-rules-decision.md)
-- [ ] [AP06.2: Prepare type-operation and free-call migration](02-migrate-non-catalog-calls.md)
-- [ ] [AP06.3: Implement native operations and remove duplicate call forms](03-fixed-dot-resolution.md)
+- [x] [AP06.1: Catalog names and remaining operation rules](01-catalog-and-rules-decision.md)
+- [x] [AP06.2: Prepare type-operation and free-call migration](02-migrate-non-catalog-calls.md)
+- [x] [AP06.3: Implement native operations and remove duplicate call forms](03-fixed-dot-resolution.md)
 
-## Acceptance
+## Implementation and coverage
 
-An imported or local free function cannot reinterpret a dot call. Record-method
-calls and catalog operations retain their meaning and allow type-changing
-chains. Every former free-function receiver call is migrated to an ordinary
-call with equivalent behavior when its target is not a native type operation.
-Calls to the five former type-helper units migrate to their one canonical
-type-operation form. Equivalent catalog operations use the same
-canonical name and comparable argument roles across receiver types; automatic
-checks and tests enforce the agreed naming rules.
-The five types expose all agreed distinct operations automatically, including
-`IsEmpty` for strings, arrays, and dictionaries. No existing distinct behavior
-is dropped, and the old units provide no parallel public path. Other units
-retain explicit imports. Existing operation semantics remain unchanged.
-
-## Reference
-
-The reference branch `codex/syntax-changes` removed record methods and all
-receiver calls. That direction is superseded by this decision and is not
-adopted. Its owner map remains useful: sema `check/expr/calls/fluent.rs`,
-`calls/methods.rs`, `check/expr/bound_method.rs`, and compiler
-`lowering/calls/fluent.rs`.
+`crates/fpas-sema/src/std_registry/native/` supplies the checker, compiler and
+editor catalog. [Coverage](inventory.md) accounts for every entry, consumer
+migration, API removal and regression owner. Current usage is documented in
+[dot calls](../../../pascal/language/functions/fluent-calls.md) and the
+[built-in type pages](../../../pascal/language/types/README.md).

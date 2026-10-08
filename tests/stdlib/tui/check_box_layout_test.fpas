@@ -1,6 +1,6 @@
 program TuiCheckBoxLayoutTest;
 
-uses Std.Str, Std.Test, Std.Tui;
+uses Std.Test, Std.Tui;
 
 type CheckModel = record
   Checked: boolean;
@@ -34,11 +34,11 @@ begin
   end;
 
   Model := App.RunIterations(Model, UpdateCheck, ViewCheck, 0, 0);
-  AssertTrue(Std.Str.Contains(App.SurfaceSnapshot().LineAt(1), 'Flag'));
+  AssertTrue(App.SurfaceSnapshot().LineAt(1).Contains('Flag'));
   App.InjectResizeForTest(TuiSize.Create(12, 4));
   Model := App.RunIterations(Model, UpdateCheck, ViewCheck, 1, 0);
   AssertEquals(12, App.SurfaceSnapshot().Width);
   AssertEquals(4, App.SurfaceSnapshot().Height);
-  AssertTrue(Std.Str.Contains(App.SurfaceSnapshot().LineAt(1), 'Fla'));
+  AssertTrue(App.SurfaceSnapshot().LineAt(1).Contains('Fla'));
   App.Close();
 end.

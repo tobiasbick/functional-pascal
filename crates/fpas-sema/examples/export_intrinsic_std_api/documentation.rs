@@ -26,6 +26,19 @@ pub(super) fn render_documentation(
         Ty::Procedure(procedure) => &procedure.params,
         _ => return,
     };
+    if parameters
+        .first()
+        .is_some_and(|parameter| parameter.is_var())
+    {
+        let _ = writeln!(
+            output,
+            "{indent}// Dot calls use an implicit writable receiver without a `var` marker."
+        );
+        let _ = writeln!(
+            output,
+            "{indent}// Written array arguments require `var`; writable receivers cannot be passed to `go`."
+        );
+    }
     let documented_parameters = if parameters.is_empty() {
         row.and_then(|row| parameter_names(&row.signature))
             .unwrap_or_default()
@@ -41,15 +54,18 @@ pub(super) fn render_documentation(
     let _ = writeln!(output, "{indent}//");
     let _ = writeln!(output, "{indent}// Parameters:");
     for parameter in documented_parameters {
-        let parameter_type = parameters
+        let metadata = parameters
             .iter()
-            .find(|candidate| candidate.name.eq_ignore_ascii_case(&parameter))
+            .find(|candidate| candidate.name.eq_ignore_ascii_case(&parameter));
+        let parameter_type = metadata
+            .filter(|candidate| !super::contains_error(&candidate.ty))
             .map(|candidate| candidate.ty.to_string());
-        let _ = writeln!(
-            output,
-            "{indent}// - `{parameter}`: {}",
+        let description = if metadata.is_some_and(|parameter| parameter.is_var()) {
+            "Caller array storage changed by the operation; requires a writable variable, record field, array element, or forwarded `var` parameter.".to_string()
+        } else {
             parameter_description(&parameter, name, parameter_type.as_deref())
-        );
+        };
+        let _ = writeln!(output, "{indent}// - `{parameter}`: {}", description);
     }
 }
 
@@ -155,7 +171,11 @@ fn parameter_names(signature: &str) -> Option<Vec<String>> {
 
 fn parameter_name(parameter: &str) -> Option<String> {
     let before_type = parameter.split(':').next()?.trim();
-    let name = before_type.split(',').next_back()?.trim();
+    let name = before_type
+        .split(',')
+        .next_back()?
+        .trim()
+        .trim_start_matches("var ");
     (!name.is_empty()).then(|| name.to_owned())
 }
 

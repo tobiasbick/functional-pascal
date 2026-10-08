@@ -6,7 +6,7 @@ use super::*;
 fn forcing_a_supervised_error_result_finishes_the_task_without_retrying() {
     let (program, errors) = fpas_parser::parse(
         r#"program ForcedSupervisor;
-uses Std.Tasks, Std.Arrays;
+uses Std.Tasks;
 function Work(Token: CancellationToken): result of integer, string;
 begin panic('worker body must not execute'); end function;
 begin
@@ -17,7 +17,7 @@ begin
     when Error(Message): if Message <> 'forced' then panic('wrong forced error'); end if;
   end case;
   const Failures: array of TaskFailure := CloseTaskGroup(Group);
-  if Length(Failures) <> 1 then panic('wrong report count'); end if;
+  if Failures.Length() <> 1 then panic('wrong report count'); end if;
   if Failures[0].Kind <> TaskFailureKind.ReturnedError then panic('wrong report kind'); end if;
   if Failures[0].Message <> 'forced' then panic('wrong report message'); end if;
 end."#,

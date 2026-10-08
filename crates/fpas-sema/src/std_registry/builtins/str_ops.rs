@@ -1,6 +1,6 @@
 //! Type checks for `Std.Str` operations that invoke FPAS callbacks.
 //!
-//! **Documentation:** `docs/pascal/std/text/str/higher-order.md` (from the repository root).
+//! **Documentation:** `docs/pascal/language/types/string/higher-order.md` (from the repository root).
 
 use crate::check::Checker;
 use crate::types::Ty;
@@ -83,7 +83,7 @@ fn check_reduce(c: &mut Checker, args: &[&Expr], span: Span) -> Ty {
         s::STD_STR_REDUCE,
         3,
         args,
-        "Pass Reduce(S, Init, function(Acc: U; C: string): U).",
+        "Pass S.Reduce(Init, function(Acc: U; C: string): U).",
         span,
     ) {
         return Ty::Error;

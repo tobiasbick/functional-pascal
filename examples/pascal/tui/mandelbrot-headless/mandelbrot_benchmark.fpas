@@ -2,8 +2,8 @@
 program MandelbrotBenchmark;
 
 uses
-  Mandelbrot.Color, Mandelbrot.Render, Std.Args, Std.Arrays, Std.Console, Std.Conv, Std.Results,
-  Std.Tasks, Std.Time, Std.Tui;
+  Mandelbrot.Color, Mandelbrot.Render, Std.Args, Std.Console, Std.Conv, Std.Tasks, Std.Time,
+  Std.Tui;
 
 function Update(Grid: TuiCellGrid; Msg: TuiMsg; Cmd: TuiCmdOutput): TuiCellGrid;
 begin
@@ -34,13 +34,13 @@ begin
   const Source: CancellationSource := CreateCancellationSource();
   const Worker: task := go RunBackgroundRender(Request, Inbox, GetCancellationToken(Source));
   const App: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(Width, Height));
-  var Grid: TuiCellGrid := TuiCellGrid.Create(Width, Height, Std.Arrays.Fill(TuiCell.Styled(' ', TuiStyle.FromColors(TuiColor.FromRgb(0, 0, 0), TuiColor.FromRgb(0, 0, 0))), Width *
-                                                                                                                                                                             Height));
+  var Grid: TuiCellGrid := TuiCellGrid.Create(Width, Height, array.Fill(TuiCell.Styled(' ', TuiStyle.FromColors(TuiColor.FromRgb(0, 0, 0), TuiColor.FromRgb(0, 0, 0))), Width *
+                                                                                                                                                                        Height));
   var Count: integer := 0;
   while Count < Width * Height do
     begin
-      const Message: MandelbrotRenderFrame := Unwrap(ReceiveWithTimeout(Inbox, 30000));
-      Count := Count + Std.Arrays.Length(Message.Cells);
+      const Message: MandelbrotRenderFrame := ReceiveWithTimeout(Inbox, 30000).Unwrap();
+      Count := Count + Message.Cells.Length();
       if Paint then
         begin
           Grid := TuiCellGrid.Create(Width, Height, Message.Cells);
@@ -50,7 +50,7 @@ begin
     end;
   end while;
 
-  if not IsOk(Wait(Worker)) then
+  if not Wait(Worker).IsOk() then
     begin
       panic('render failed');
     end;

@@ -2,7 +2,7 @@
 unit Std.Tui.Rendering.Input;
 
 uses
-  Std.Str, Std.Tui.Cells.Cell, Std.Tui.Cells.StyleRole, Std.Tui.Chrome.Input, Std.Tui.Geometry.Point,
+  Std.Tui.Cells.Cell, Std.Tui.Cells.StyleRole, Std.Tui.Chrome.Input, Std.Tui.Geometry.Point,
   Std.Tui.Geometry.Rect, Std.Tui.Rendering.Canvas, Std.Tui.Text.Input;
 
 // Paints one input with hint text, horizontal scroll markers, and a block cursor.
@@ -57,8 +57,8 @@ begin
   else
     begin
       Canvas.Child(TuiRect.Create(Bounds.X + 1, Bounds.Y, ContentWidth, 1))
-        .WriteText(TuiPoint.Create(0, 0), Std.Str.Substring(Input.Text, Viewport.Start, Viewport.EndIndex -
-                                                                                        Viewport.Start), Role);
+        .WriteText(TuiPoint.Create(0, 0), Input.Text.Slice(Viewport.Start, Viewport.EndIndex -
+                                                                           Viewport.Start), Role);
     end;
   end if;
 
@@ -83,9 +83,9 @@ begin
         end;
       end if;
       var CursorGlyph: string := ' ';
-      if Input.Caret < Std.Str.Length(Input.Text) then
+      if Input.Caret < Input.Text.Length() then
         begin
-          CursorGlyph := Std.Str.CharAt(Input.Text, Input.Caret);
+          CursorGlyph := Input.Text.CharAt(Input.Caret);
         end;
       end if;
 

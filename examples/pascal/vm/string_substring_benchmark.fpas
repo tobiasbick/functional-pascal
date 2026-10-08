@@ -1,40 +1,40 @@
 // Measures short, empty, and full slices of long ASCII or Unicode strings.
 program VmStringSubstringBenchmark;
 
-uses Std.Args, Std.Console, Std.Conv, Std.Str, Std.Time;
+uses Std.Args, Std.Console, Std.Conv, Std.Time;
 
 function RunSlices(Text: string; UnitText: string; Iterations: integer): integer;
 begin
-  const Count: integer := Std.Str.Length(Text);
-  const Width: integer := Std.Str.Length(UnitText);
+  const Count: integer := Text.Length();
+  const Width: integer := UnitText.Length();
   var Matches: integer := 0;
   for Index: integer := 1 to Iterations do
     begin
-      if Std.Str.Substring(Text, 0, Width) = UnitText then
+      if Text.Slice(0, Width) = UnitText then
         begin
           Matches := Matches + 1;
         end;
       end if;
 
-      if Std.Str.Substring(Text, Count div 2, Width) = UnitText then
+      if Text.Slice(Count div 2, Width) = UnitText then
         begin
           Matches := Matches + 1;
         end;
       end if;
 
-      if Std.Str.Substring(Text, Count - Width, Width) = UnitText then
+      if Text.Slice(Count - Width, Width) = UnitText then
         begin
           Matches := Matches + 1;
         end;
       end if;
 
-      if Std.Str.Substring(Text, Count, 0) = '' then
+      if Text.Slice(Count, 0) = '' then
         begin
           Matches := Matches + 1;
         end;
       end if;
 
-      if Std.Str.Substring(Text, 0, Count) = Text then
+      if Text.Slice(0, Count) = Text then
         begin
           Matches := Matches + 1;
         end;
@@ -69,7 +69,7 @@ begin
       UnitText := 'aé😀界';
     end;
   end if;
-  const Text: string := Std.Str.RepeatStr(UnitText, 8192);
+  const Text: string := UnitText.RepeatStr(8192);
   if RunSlices(Text, UnitText, 100) <> 500 then
     begin
       panic('warmup substring mismatch');

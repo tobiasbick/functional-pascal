@@ -1,11 +1,11 @@
 program ForExample;
 
-uses Std.Console, Std.Arrays;
+uses Std.Console;
 
 begin
   const Scores: array of integer := [12, 45, 3, 67, 29, 88, 51, 7, 93, 34];
   WriteLn('Filtered scores:');
-  for I: integer := 0 to Length(Scores) - 1 do
+  for I: integer := 0 to Scores.Length() - 1 do
     begin
       const S: integer := Scores[I];
       if S > 90 then

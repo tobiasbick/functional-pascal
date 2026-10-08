@@ -1,17 +1,17 @@
 program FsCreateDirAllTest;
 
-uses Std.Fs, Std.Results, Std.Test;
+uses Std.Fs, Std.Test;
 
 begin
   const Root: string := ScratchDir() + '/create-dir-all';
   const Leaf: string := Root + '/parent/leaf';
-  AssertTrue(Unwrap(CreateDirAll(Leaf)));
+  AssertTrue(CreateDirAll(Leaf).Unwrap());
   AssertTrue(IsDir(Leaf));
   // An existing directory is success, unlike CreateDir.
-  AssertTrue(Unwrap(CreateDirAll(Leaf)));
-  AssertTrue(IsError(CreateDir(Leaf)));
+  AssertTrue(CreateDirAll(Leaf).Unwrap());
+  AssertTrue(CreateDir(Leaf).IsError());
   const Blocking: string := Root + '/blocking-file';
-  AssertTrue(Unwrap(WriteText(Blocking, 'not a directory')));
-  AssertTrue(IsError(CreateDirAll(Blocking)));
-  AssertTrue(IsError(CreateDirAll(Blocking + '/child')));
+  AssertTrue(WriteText(Blocking, 'not a directory').Unwrap());
+  AssertTrue(CreateDirAll(Blocking).IsError());
+  AssertTrue(CreateDirAll(Blocking + '/child').IsError());
 end.

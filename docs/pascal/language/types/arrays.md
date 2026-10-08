@@ -12,19 +12,21 @@ const Empty: array of string := [];
 Operations:
 
 ```pascal
-const
-  Len: integer := Length(Numbers);  // 3
-  First: integer := Numbers[0];     // 1
+program ArrayOperations;
 
-var
-  Items: array of integer := [1, 2];
+
+const Numbers: array of integer := [1, 2, 3];
+const Len: integer := Numbers.Length();  // 3
+const First: integer := Numbers[0];     // 1
+var Items: array of integer := [1, 2];
 
 begin
-  Push(Items, 3);  // [1, 2, 3]
+  Items.Push(3);  // [1, 2, 3]
 end.
 ```
 
-Use `Std.Arrays` for `Map`, `Filter`, `Reduce`, and other helpers — see [`Std.Arrays`](../../std/collections/array/README.md).
+Arrays provide `Map`, `Filter`, `Reduce`, `Length`, `IsEmpty`, and other operations
+through dot calls without imports. `array.Fill(Value, Count)` constructs values — see [`Array operations`](array/README.md).
 
 ## See also
 

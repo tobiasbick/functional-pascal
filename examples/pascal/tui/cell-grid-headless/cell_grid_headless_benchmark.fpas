@@ -1,7 +1,7 @@
 // Measures repeated painting of one prebuilt cell grid through the headless TUI host.
 program CellGridHeadlessBenchmark;
 
-uses Std.Args, Std.Arrays, Std.Console, Std.Conv, Std.Time, Std.Tui;
+uses Std.Args, Std.Console, Std.Conv, Std.Time, Std.Tui;
 
 const GridWidth: integer := 98;
 const GridHeight: integer := 32;
@@ -36,8 +36,8 @@ begin
   end if;
   const Style: TuiStyle := TuiStyle.FromColors(TuiColor.FromRgb(214, 218, 224), TuiColor.FromRgb(18, 22, 28));
   const Cell: TuiCell := TuiCell.Styled('#', Style);
-  var Grid: TuiCellGrid := TuiCellGrid.Create(GridWidth, GridHeight, Std.Arrays.Fill(Cell, GridWidth *
-                                                                                           GridHeight));
+  var Grid: TuiCellGrid := TuiCellGrid.Create(GridWidth, GridHeight, array.Fill(Cell, GridWidth *
+                                                                                      GridHeight));
   const App: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(GridWidth, GridHeight));
   for Warmup: integer := 1 to WarmupIterations do
     begin

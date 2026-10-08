@@ -1,9 +1,9 @@
 program TomlParseAllValueKindsTest;
 
-uses Std.Arrays, Std.Dictionaries, Std.Options, Std.Str, Std.Test, Std.Toml;
+uses Std.Test, Std.Toml;
 
 begin
-  const Parsed: result of TomlValue, string := Parse(((((((((((((('title = ''TOML''' + Chr(10)) + 'integer = -42') + Chr(10)) + 'float = 1.5') + Chr(10)) + 'enabled = true') + Chr(10)) + 'when = 1979-05-27T07:32:00Z') + Chr(10)) + 'items = [''a'', 2]') + Chr(10)) + '[nested]') + Chr(10)) +
+  const Parsed: result of TomlValue, string := Parse(((((((((((((('title = ''TOML''' + string.Chr(10)) + 'integer = -42') + string.Chr(10)) + 'float = 1.5') + string.Chr(10)) + 'enabled = true') + string.Chr(10)) + 'when = 1979-05-27T07:32:00Z') + string.Chr(10)) + 'items = [''a'', 2]') + string.Chr(10)) + '[nested]') + string.Chr(10)) +
                                                      'value = ''ok''');
   case Parsed of
     when Ok(Value):
@@ -11,7 +11,7 @@ begin
         case Value of
           when TomlValue.Table(Fields):
             begin
-              case Std.Options.Unwrap(Std.Dictionaries.Get(Fields, 'title')) of
+              case Fields.Get('title').Unwrap() of
                 when TomlValue.String(Text):
                   begin
                     AssertEquals('TOML', Text);
@@ -22,7 +22,7 @@ begin
                   end;
               end case;
 
-              case Std.Options.Unwrap(Std.Dictionaries.Get(Fields, 'integer')) of
+              case Fields.Get('integer').Unwrap() of
                 when TomlValue.Integer(Number):
                   begin
                     AssertEquals(-42, Number);
@@ -33,7 +33,7 @@ begin
                   end;
               end case;
 
-              case Std.Options.Unwrap(Std.Dictionaries.Get(Fields, 'float')) of
+              case Fields.Get('float').Unwrap() of
                 when TomlValue.Float(Number):
                   begin
                     AssertEquals(1.5, Number);
@@ -44,7 +44,7 @@ begin
                   end;
               end case;
 
-              case Std.Options.Unwrap(Std.Dictionaries.Get(Fields, 'enabled')) of
+              case Fields.Get('enabled').Unwrap() of
                 when TomlValue.Boolean(Enabled):
                   begin
                     AssertTrue(Enabled);
@@ -55,7 +55,7 @@ begin
                   end;
               end case;
 
-              case Std.Options.Unwrap(Std.Dictionaries.Get(Fields, 'when')) of
+              case Fields.Get('when').Unwrap() of
                 when TomlValue.Datetime(Timestamp):
                   begin
                     AssertEquals('1979-05-27T07:32:00Z', Timestamp);
@@ -66,10 +66,10 @@ begin
                   end;
               end case;
 
-              case Std.Options.Unwrap(Std.Dictionaries.Get(Fields, 'items')) of
+              case Fields.Get('items').Unwrap() of
                 when TomlValue.ArrayValue(Items):
                   begin
-                    AssertEquals(2, Std.Arrays.Length(Items));
+                    AssertEquals(2, Items.Length());
                   end;
                 else
                   begin
@@ -77,10 +77,10 @@ begin
                   end;
               end case;
 
-              case Std.Options.Unwrap(Std.Dictionaries.Get(Fields, 'nested')) of
+              case Fields.Get('nested').Unwrap() of
                 when TomlValue.Table(Nested):
                   begin
-                    case Std.Options.Unwrap(Std.Dictionaries.Get(Nested, 'value')) of
+                    case Nested.Get('value').Unwrap() of
                       when TomlValue.String(Text):
                         begin
                           AssertEquals('ok', Text);

@@ -1,0 +1,40 @@
+program MutatingReceiverTryTest;
+
+uses Std.Test;
+
+type Holder = record
+  Items: array of integer;
+end record;
+
+function Stop(): result of integer, string;
+begin
+  return Error('stopped');
+end function;
+
+function Change(var H: Holder): result of integer, string;
+begin
+  H.Items.Push(2);
+  const Last: integer := H.Items.Pop();
+  H.Items.Push(Last + 1);
+  const Ignored: integer := try Stop();
+  H.Items.Push(99);
+  return Ok(Ignored);
+end function;
+
+begin
+  var H: Holder := record
+    Items := [1];
+  end;
+  const Original: Holder := H;
+  const Outcome: result of integer, string := Change(var H);
+  case Outcome of
+    when Error(Message):
+      AssertEquals('stopped', Message);
+    when Ok(Value):
+      panic('Expected failure');
+  end case;
+
+  AssertEquals(2, H.Items.Length());
+  AssertEquals(3, H.Items[1]);
+  AssertEquals(1, Original.Items.Length());
+end.

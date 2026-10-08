@@ -34,9 +34,6 @@ impl Checker {
             CallTarget::FunctionValue => Some(format!(
                 "`{name}` is a function value; call it positionally, for example `{name}(…)`. Function types do not carry parameter names."
             )),
-            CallTarget::ReceiverCall => Some(format!(
-                "Receiver calls `.{name}(…)` take positional arguments. Call the routine directly to name its parameters."
-            )),
         };
         if let Some(hint) = hint {
             self.reject_named_arguments(args.iter().copied(), name, &hint);

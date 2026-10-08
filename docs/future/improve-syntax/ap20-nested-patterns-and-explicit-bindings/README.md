@@ -11,9 +11,8 @@ without a catch-all loophole for closed enums; adding a surrounding name cannot
 silently alter a pattern's meaning.
 
 Current flat enum patterns bind plain payload identifiers. Scalar value labels
-require compile-time constants after AP16.1; a bare identifier in a guarded
-scalar arm can also introduce a fresh binding, while a resolved constant remains
-a comparison. AP16.2 preserves that distinction during migration. AP20 adds
+require compile-time constants. A bare identifier in a guarded scalar arm can
+introduce a fresh binding, while a resolved constant is a comparison. AP20 adds
 explicit payload bindings and stable resolution for nested patterns; it must
 account for the existing scalar guard-binding form during its inventory.
 

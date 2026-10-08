@@ -1,6 +1,6 @@
 program T;
 
-uses Std.Console, Std.Options, Std.Conv;
+uses Std.Console, Std.Conv;
 
 function TripleToStr(V: integer): string;
 begin
@@ -9,6 +9,6 @@ end function;
 
 begin
   const O: option of integer := Some(7);
-  const M: option of string := Map(O, TripleToStr);
-  WriteLn(Unwrap(M));
+  const M: option of string := O.Map(TripleToStr);
+  WriteLn(M.Unwrap());
 end.

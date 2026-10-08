@@ -26,7 +26,7 @@ Interactive demos are checked without opening their terminal UI.
 
 ## Stdlib regression suite (`tests/`)
 
-The **FPAS regression suite** lives in [`tests/`](../tests/) as `*_test.fpas` files with optional golden sidecars. Layout:
+The **FPAS regression suite** lives in [`tests/`](../tests) as `*_test.fpas` files with optional golden sidecars. Layout:
 
 | Directory | Contents |
 |-----------|----------|
@@ -183,15 +183,15 @@ See [pascal/monorepo/README.md](pascal/monorepo/README.md) and [docs/pascal/prog
 | `pascal/tui/notes-headless/notes-headless-benchmark.fpasprj` | Real Notes application rendering through a headless `Std.Tui` project benchmark |
 | `pascal/tui/mandelbrot-headless/mandelbrot-benchmark.fpasprj` | Production Mandelbrot tasks and bounded delivery, optionally including headless grid painting; `cargo bench-fpas run --group mandelbrot` |
 | `pascal/vm/integer_loop_benchmark.fpas` | Tight integer arithmetic loop for VM dispatch / int-op throughput |
-| `pascal/vm/array_push_benchmark.fpas` | Growing `Std.Arrays.Push` for VM array locals / SharedArray COW |
-| `pascal/vm/array_length_benchmark.fpas` | Repeated `Std.Arrays.Length` on a shared live array (read-only COW path) |
+| `pascal/vm/array_push_benchmark.fpas` | Growing `Items.Push` for VM array locals / SharedArray COW |
+| `pascal/vm/array_length_benchmark.fpas` | Repeated `Items.Length` on a shared live array (read-only COW path) |
 | `pascal/vm/string_concat_benchmark.fpas` | Short string concat + `IntToStr` for VM string ops |
-| `pascal/vm/string_length_benchmark.fpas` | Repeated `Std.Str.Length` on a long live string |
+| `pascal/vm/string_length_benchmark.fpas` | Repeated `Text.Length` on a long live string |
 | `pascal/vm/intrinsic_dispatch_benchmark.fpas` | Mixed array, string, and dictionary length calls for intrinsic-routing throughput |
 | `pascal/vm/function_call_benchmark.fpas` | Direct and captured function-call throughput |
 | `pascal/vm/array_callbacks_benchmark.fpas` | `Map`, `Filter`, and `Reduce` callback throughput |
 | `pascal/vm/record_update_benchmark.fpas` | Record construction, field access, and `with` update throughput |
-| `pascal/vm/unicode_char_at_benchmark.fpas` | `Std.Str.CharAt` throughput over multi-byte Unicode text |
+| `pascal/vm/unicode_char_at_benchmark.fpas` | `Text.CharAt` throughput over multi-byte Unicode text |
 | `pascal/vm/wrapper_payload_benchmark.fpas` | `Result` and `Option` payload construction and unwrap throughput |
 | `pascal/generics/generic_functions.fpas` | Generic functions |
 | `pascal/generics/generic_record_methods.fpas` | Method-level generics and constraints on record methods |
@@ -200,8 +200,8 @@ See [pascal/monorepo/README.md](pascal/monorepo/README.md) and [docs/pascal/prog
 | `pascal/records/defaults_with_update.fpas` | Default fields and `with` updates |
 | `pascal/std/args_basics.fpas` | `Std.Args` — arguments passed after `--` |
 | `pascal/std/console_cells_basics.fpas` | `Std.Console` — framed cell fill/write/read-back and saved-region restore |
-| `pascal/std/str_basics.fpas` | `Std.Str` — trim, split/join, `Format`, search/replace |
-| `pascal/std/dict_basics.fpas` | `Std.Dictionaries` — literals, `Get`, `Merge`, `Map`/`Filter` (qualified when also using `Std.Arrays` / `Std.Options`) |
+| `pascal/std/str_basics.fpas` | String operations — trim, split/join, `Format`, search/replace |
+| `pascal/std/dict_basics.fpas` | Dictionary operations — literals, `Get`, `Merge`, `Map`/`Filter` |
 | `pascal/std/env_basics.fpas` | `Std.Env` — environment lookup and missing values |
 | `pascal/std/fs_basics.fpas` | `Std.Fs` — create directories, write/read UTF-8 text, path checks |
 | `pascal/std/json_basics.fpas` | `Std.Json` — parse, inspect, and stringify JSON trees |
@@ -211,7 +211,7 @@ See [pascal/monorepo/README.md](pascal/monorepo/README.md) and [docs/pascal/prog
 | `pascal/std/random_basics.fpas` | `Std.Random` — random real and inclusive integer ranges |
 | `pascal/std/task_basics.fpas` | `Std.Tasks` — `go`, `Wait`, `WaitAll` |
 | `pascal/std/time_basics.fpas` | `Std.Time` — monotonic time, elapsed time, timestamp, sleep |
-| `pascal/std/array_basics.fpas` | `Std.Arrays` — `Length`, `Sort`, `Any`, `All` |
+| `pascal/std/array_basics.fpas` | Array operations — `Length`, `Sort`, `Any`, `All` |
 | `network/http_server.fpas` + `network/http_client.fpas` | Local HTTP server plus buffered and streaming client |
 | `network/tcp_echo_server.fpas` + `network/tcp_echo_client.fpas` | Raw TCP lifecycle, timeouts, UTF-8, and partial writes |
 | [`network/tcp_parallel_echo_server.fpas`](network/tcp_parallel_echo_server.fpas) | Four connection workers, owned listener, signal-aware shutdown, and explicit process escalation on loopback |

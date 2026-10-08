@@ -142,11 +142,23 @@ impl Checker {
             Expr::Call {
                 designator, args, ..
             } => {
-                self.reject_var_references_in_go(Some(designator), args, span);
+                self.reject_var_references_in_go(
+                    Self::expr_lookup_key(inner),
+                    Some(designator),
+                    args,
+                    span,
+                );
             }
             Expr::Postfix { operations, .. } => {
-                if let Some(PostfixOperation::MethodCall { args, .. }) = operations.last() {
-                    self.reject_var_references_in_go(None, args, span);
+                if let Some(operation @ PostfixOperation::MethodCall { args, .. }) =
+                    operations.last()
+                {
+                    self.reject_var_references_in_go(
+                        Self::postfix_operation_lookup_key(operation),
+                        None,
+                        args,
+                        span,
+                    );
                 }
             }
             _ => {}

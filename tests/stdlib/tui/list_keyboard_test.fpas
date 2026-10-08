@@ -1,6 +1,6 @@
 program TuiListKeyboardTest;
 
-uses Std.Arrays, Std.Test, Std.Tui;
+uses Std.Test, Std.Tui;
 
 type ListModel = record
   Focus: integer;
@@ -40,7 +40,7 @@ begin
         return record
           Focus := State.Focus;
           Selected := Selected;
-          Changes := Std.Arrays.Concat(State.Changes, [Selected]);
+          Changes := State.Changes.Concat([Selected]);
         end;
       end;
     else
@@ -68,6 +68,6 @@ begin
   App.InjectKeyForTest(MakeKey(TuiKeyKind.Home));
   Model := App.RunIterations(Model, UpdateList, ViewList, 1, 0);
   AssertEquals(0, Model.Selected);
-  AssertEquals(3, Std.Arrays.Length(Model.Changes));
+  AssertEquals(3, Model.Changes.Length());
   App.Close();
 end.

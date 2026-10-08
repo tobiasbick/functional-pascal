@@ -14,6 +14,11 @@ Formal syntax: [`grammar.ebnf`](../../../specs/grammar.ebnf) (`type_declaration`
 | [Record update](record-update.md) | `with` copy-and-override expressions |
 | [Result and Option types](result-option-types.md) | `Result of T, E` and `Option of T` type forms |
 | [Enumerations](enums.md) | Plain, backed, and data-carrying enums |
+| [String operations](string/README.md) | Unicode scalar operations, `Slice`, `IsEmpty`, and `string.Chr` |
+| [Array operations](array/README.md) | Eager callbacks, `Length`, `IsEmpty`, writable `Push`/`Pop`, and `array.Fill` |
+| [Dictionary operations](dictionary-operations.md) | Lookup, insertion-order callbacks, `Length`, and `IsEmpty` |
+| [Option operations](option-operations.md) | Presence, mapping, fallbacks, and unwrapping |
+| [Result operations](result-operations.md) | Success/error mapping, recovery, and unwrapping |
 | [Arrays](arrays.md) | `array of T`, indexing, mutation |
 | [Channels](channels.md) | `channel of T`, bounded FIFO communication and closure |
 | [Task handles](../concurrency/task-handles.md#typed-task-handles) | `task` and `task of T`, handles whose `Wait` yields `T` |

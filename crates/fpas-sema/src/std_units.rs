@@ -72,6 +72,14 @@ pub fn canonical_unit_from_uses_clause(q: &QualifiedId) -> Result<String, String
         ));
     }
     let tail = q.parts[1].as_str();
+    if ["Str", "Arrays", "Dictionaries", "Options", "Results"]
+        .iter()
+        .any(|name| tail.eq_ignore_ascii_case(name))
+    {
+        return Err(format!(
+            "`Std.{tail}` has been removed. Built-in type operations use dot calls and need no import."
+        ));
+    }
     let Some(canon) = canonical_std_unit_from_segments(&q.parts[0], tail) else {
         return Err(format!(
             "Unknown standard library unit `Std.{tail}`. Available: {}.",
@@ -111,6 +119,9 @@ pub fn missing_std_unit(name: &str, loaded: &HashSet<String>) -> Option<String> 
 
 /// LLM-friendly hint when a call or identifier is missing from scope.
 pub fn hint_for_unknown_std_name(name: &str, loaded: &HashSet<String>) -> String {
+    if let Some(hint) = crate::std_registry::native_migration_hint(name) {
+        return hint;
+    }
     let parsed = parse_std_qualified_call(name);
     let parts: Vec<&str> = name.split('.').collect();
 

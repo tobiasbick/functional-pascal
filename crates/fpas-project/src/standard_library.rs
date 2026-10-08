@@ -148,6 +148,12 @@ fn validate_intrinsic_collisions(
             unreachable!("standard-library source validation accepts units only")
         };
         let name = crate::source::qualified_id_to_string(&unit.name);
+        if fpas_std::is_retired_type_helper_unit(&name) {
+            return Err(invalid_standard_library(
+                format!("Source standard-library unit `{name}` uses a removed type-helper namespace."),
+                "Built-in operations have one native dot form and cannot be restored as Std helper units.".to_string(),
+            ));
+        }
         if STD_UNITS_INTRINSIC
             .iter()
             .any(|intrinsic| intrinsic.eq_ignore_ascii_case(&name))

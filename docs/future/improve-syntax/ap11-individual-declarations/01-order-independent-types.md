@@ -2,35 +2,19 @@
 
 Package: [AP11: Individual declarations](README.md)
 
-Status: implemented on `codex/syntax-changes-2`. Current behavior is documented
-in [type declaration order](../../../pascal/language/types/declaration-order.md).
+Status: complete.
 
-## Scope
+## Result
 
-Resolve type references across all type declarations of a unit or program
-regardless of order, including mutually recursive types (Q07), enum variants,
-and record method signatures. Constants and variables keep declaration order.
-
-## Prerequisites
-
-None.
-
-## Implementation
-
-- Sema: collect type names, resolve structural type definitions, and register
-  enum variants and record method signatures before checking ordered value
-  declarations and executable bodies.
-- Separate structural resolution from field-default and method-body checking.
-  Check these expressions and bodies at the original type declaration position
-  with the ordinary lexical scope and preceding value declarations available.
-- Reject alias-only cycles and recursive definitions with no finite
-  construction, using the rules below and a diagnostic naming the cycle.
-- Keep value initialization order unchanged; do not reorder effects.
-- Preserve scope and visibility of exported types across compiled units.
+Type names, structural definitions, enum variants and record method signatures
+are available throughout their unit or program. Value declarations and their
+initialization effects retain source order. Structural collection and finite
+construction checking live in `crates/fpas-sema/src/check/decl/types/collection/`;
+record defaults and ordered bodies have separate checking paths.
 
 ## Type and member visibility
 
-Agreed: a type, its enum variants, and its record method signatures are
+A type, its enum variants, and its record method signatures are
 available throughout their declaring unit or program, including in earlier
 value initializers and routine bodies. For example, `State.Ready` and
 `Team.Empty()` may appear before the declarations of `State` and `Team`.
@@ -50,7 +34,7 @@ declaration-order rules for values.
 
 ## Recursive types
 
-Agreed: nominal records and enums may be mutually recursive when their stored
+Nominal records and enums may be mutually recursive when their stored
 values admit a finite construction. The check follows stored fields and enum
 payloads across type references, rather than rejecting every dependency cycle.
 
@@ -74,7 +58,7 @@ payloads across type references, rather than rejecting every dependency cycle.
 
 ## Examples
 
-The following examples are implemented acceptance cases. A runnable version is
+The examples cover type visibility and finite recursive construction. A runnable version is
 in [type_order.fpas](../../../../examples/pascal/records/type_order.fpas).
 
 ```pascal
@@ -146,44 +130,9 @@ end record;
 const DefaultLimit: integer := 10;
 ```
 
-## Affected areas
+## Regression coverage
 
-- `crates/fpas-sema/src/check/entry.rs`, `check/decl/types/`.
-- Structural collection and finite-construction checking live in
-  `check/decl/types/collection/`; record fields, defaults, and ordered bodies
-  have separate modules under `check/decl/types/records/`.
-- Type/member name resolution and cycle-safe consumers of recursive types.
-- Unit interface export of recursive types.
-
-## Migration
-
-None; existing order-dependent sources stay valid.
-
-## Documentation
-
-- `docs/pascal/language/types/README.md`, records/enums pages, and record
-  methods: type/member availability, finite recursive construction, and
-  declaration-order checking of value expressions.
-
-## Verification
-
-- Forward references in type bodies, routine signatures, and earlier value
-  declarations; later enum variants and record method signatures are usable.
-- Mutually recursive records through arrays and `Option`; recursive enums
-  with a terminating alternative, including indirect terminating paths.
-- Reject alias-only cycles, mandatory direct and mutual record-field cycles,
-  and enums whose alternatives all necessarily continue the recursion.
-  Diagnostics identify the participating types and fields/payloads.
-- Existing recursive types, aliases to valid recursive types, imported
-  recursive types, generic routine inference, and member visibility remain
-  valid under the same rules.
-- Field defaults and method bodies can use preceding constants and variables;
-  references to later values remain errors. Retain existing free-routine and
-  initializer ordering errors for values.
-- Verify that type collection does not reorder effectful value initialization.
-- Preserve qualification and ambiguity diagnostics for enum variants and
-  record members, including references before their type declaration.
-
-Regression coverage includes sema type-order tests, encoded-interface tests,
-compiler runtime tests, compiled-unit reuse through the CLI, and
-`tests/runner/type_order_test.fpas` in the repository suite.
+Sema, interface, compiler, CLI and `tests/runner/type_order_test.fpas` tests
+cover forward references, finite recursion, rejected cycles, visibility,
+ambiguity, generics, source-order value checks and initialization effects.
+See [type declaration order](../../../pascal/language/types/declaration-order.md).

@@ -22,12 +22,20 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         .parent()
         .and_then(Path::parent)
         .ok_or("fpas-sema must live below the repository root")?;
+    fpas_sema::validate_native_catalog(
+        &fpas_sema::native_operations().copied().collect::<Vec<_>>(),
+    )?;
     let documentation = documentation_rows(&repository.join("docs/pascal/std"))?;
-    if !documentation.contains_key(&(String::from("Std.Arrays"), String::from("all"))) {
-        return Err("Std.Arrays.All documentation row is missing".into());
-    }
     let output = repository.join("lib/api/Std");
     fs::create_dir_all(&output)?;
+
+    // Type operations have no public Std declarations. Remove stale generated files.
+    for retired in ["Str", "Arrays", "Dictionaries", "Options", "Results"] {
+        let path = output.join(format!("{retired}.fpas"));
+        if path.exists() {
+            fs::remove_file(path)?;
+        }
+    }
 
     for unit in intrinsic_std_units() {
         let path = output.join(format!("{}.fpas", unit.trim_start_matches("Std.")));
@@ -411,7 +419,14 @@ fn contains_error(ty: &Ty) -> bool {
 fn parameters(parameters: &[ParamTy]) -> String {
     parameters
         .iter()
-        .map(|parameter| format!("{}: {}", parameter.name, parameter.ty))
+        .map(|parameter| {
+            format!(
+                "{}{}: {}",
+                if parameter.is_var() { "var " } else { "" },
+                parameter.name,
+                parameter.ty
+            )
+        })
         .collect::<Vec<_>>()
         .join("; ")
 }

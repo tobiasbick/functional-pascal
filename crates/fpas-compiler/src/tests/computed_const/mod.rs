@@ -5,18 +5,9 @@ mod units;
 
 #[test]
 fn loop_const_captures_keep_each_iterations_value_after_the_loop() {
-    assert_succeeds("program T; uses Std.Arrays;
-        begin var Callbacks: array of function(): integer := [];
-        for I: integer := 1 to 3 do
-            const Current: integer := I * 10;
-            const Callback: function(): integer := function(): integer begin return Current; end function;
-            Std.Arrays.Push(Callbacks, Callback);
-        end for;
-        const First: function(): integer := Callbacks[0];
-        const Second: function(): integer := Callbacks[1];
-        const Third: function(): integer := Callbacks[2];
-        if First() <> 10 or Second() <> 20 or Third() <> 30 then panic('iteration capture'); end if;
-        end.");
+    assert_succeeds(
+        "program T; \n        begin var Callbacks: array of function(): integer := [];\n        for I: integer := 1 to 3 do\n            const Current: integer := I * 10;\n            const Callback: function(): integer := function(): integer begin return Current; end function;\n            Callbacks.Push(Callback);\n        end for;\n        const First: function(): integer := Callbacks[0];\n        const Second: function(): integer := Callbacks[1];\n        const Third: function(): integer := Callbacks[2];\n        if First() <> 10 or Second() <> 20 or Third() <> 30 then panic('iteration capture'); end if;\n        end.",
+    );
 }
 
 #[test]

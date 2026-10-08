@@ -1,5 +1,6 @@
 use super::*;
 
+mod mutating_arrays;
 mod record_updates;
 mod structural_equality;
 mod try_expressions;

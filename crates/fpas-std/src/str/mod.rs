@@ -1,6 +1,6 @@
 //! `Std.Str.*` intrinsic implementations (`match` arms).
 //!
-//! **Documentation:** `docs/pascal/std/text/str/README.md` (from the repository root).
+//! **Documentation:** `docs/pascal/language/types/string/README.md` (from the repository root).
 //! **Maintenance:** Keep that Markdown file aligned with this file, `intrinsics.rs`,
 //! `fpas-bytecode::Intrinsic`, `fpas-compiler` std call lowering, and `fpas-sema` `std_registry.rs`.
 
@@ -88,7 +88,7 @@ pub(crate) fn run(
                 return Err(std_runtime_error(
                     RUNTIME_INTRINSIC_STACK_STATE_ERROR,
                     "Split delimiter must not be empty",
-                    "Pass a non-empty delimiter string to Std.Str.Split.",
+                    "Pass a non-empty delimiter to Text.Split(Delim).",
                     location,
                 ));
             }
@@ -335,7 +335,7 @@ fn checked_pad_width(
         Err(std_runtime_error(
             RUNTIME_NUMERIC_DOMAIN_ERROR,
             format!("{intrinsic_name} width must be >= 0, got {width}"),
-            format!("Pass a non-negative width to Std.Str.{intrinsic_name}."),
+            format!("Pass a non-negative width to Text.{intrinsic_name}(Width, PadChar)."),
             location,
         ))
     } else {

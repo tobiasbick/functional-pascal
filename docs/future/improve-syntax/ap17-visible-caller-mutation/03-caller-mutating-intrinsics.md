@@ -2,65 +2,30 @@
 
 Package: [AP17: Visible caller mutation](README.md)
 
-## Scope
+Status: complete.
 
-Make intrinsics that change a caller variable use AP17's shared `var` safety
-checks and explicit markers on written `var` arguments. Native array `Push`
-and `Pop` use the agreed implicit-receiver exception: ordinary dot calls
-without a receiver `var` marker or additional parentheses. Remove their
-special simple-variable rule. These remain native type operations with one
-public call form.
+## Result
 
-## Prerequisites
+Native `Items.Push(Value)` and `Items.Pop()` use the shared writable-storage
+checks. Their implicit receiver has no `var` marker or extra parentheses.
+Writable direct, field, array-element, imported-variable and forwarded-reference
+receivers are valid. Constants, read-only values, properties, dictionary entries,
+string characters and computed receivers are rejected.
 
-- AP17.1 (`var` arguments).
-- AP06.1 (catalog and rules, including the recorded outcome of the
-  user-requested discussion revisiting the implicit-receiver exception).
+The root and indices are fixed once before explicit arguments. Mutation uses
+that storage after argument evaluation. `Push` appends its read-only Value and
+returns no value; `Pop` removes and returns the final element. Copy-on-write
+preserves other values sharing the array. Completed writes survive failures and
+`try` exits; writable receivers cannot cross `go` boundaries.
 
-Coordinate with AP06.3's removal of the old type-helper units. Record the
-concrete implementation order after the requested follow-up discussion and
-before implementation; use the agreed native dot form throughout migration.
+The native catalog provides the only public form, including
+`Items.Push(Value := 3)`, without helper imports. Own free routines with a first
+`var` parameter remain ordinary explicitly marked calls. Checking and lowering
+share reference storage paths with ordinary `var` parameters.
 
-## Implementation
+## Regression coverage
 
-- Verify how `Push`, `Pop`, and other caller-mutating intrinsics mutate today.
-  After AP17.1, `Push`/`Pop` reject a `var` parameter as their array (only
-  local and unit `var` arrays pass the simple-variable rule); lowering must
-  write through the parameter's reference (`ReferenceRead`/`ReferenceWrite`)
-  once the receiver check accepts it.
-- Record the writable-receiver mode in the registry and catalog-derived
-  editor signatures; reuse the AP17.1 checks instead of the special rule.
-  Include an implicit writable receiver in aliasing, lifetime, `go`,
-  single-evaluation, and failure checks despite its unmarked syntax.
-- Apply the agreed receiver exception: `Items.Push(Value)` and `Items.Pop()`
-  require a writable receiver and have no receiver marker or extra
-  parentheses. Other explicitly written `var` arguments keep their markers.
-
-## Affected areas
-
-- `crates/fpas-sema/src/std_registry/builtins/array/mutation.rs`,
-  `crates/fpas-compiler/src/lowering/calls/arrays.rs`, generated
-  native operation signatures replacing `lib/api/Std/Arrays.fpas`, and other
-  mutating intrinsics found by the audit.
-
-## Migration
-
-Use ordinary dot syntax for every affected native receiver call in all
-repository consumers. Add explicit `var` markers only to written arguments
-that require them. Coordinate remaining ordinary-call and import removal
-with AP06.3.
-
-## Documentation
-
-- Array operation/mutation documentation replacing the former
-  `docs/pascal/std/collections/array/mutating.md` unit API, other affected
-  pages, and `fluent-calls.md` or its AP06 successor.
-
-## Verification
-
-- Unmarked native calls on writable direct, field, element, and forwarded
-  receivers; rejection of `const` and temporary receivers; explicit markers
-  on other written `var` arguments. Verify receiver evaluation once, aliasing
-  and `go` restrictions, and retained writes on failure. Preserve other
-  array values that share storage and the existing `Push`/`Pop` result and
-  chaining behavior; FPAS suite.
+Compiler, sema and FPAS tests cover every writable/rejected storage form,
+forwarding, shared arrays, index/evaluation order, mutation during arguments,
+failures, `try`, named Push, task rejection and returned Pop chains.
+See [array mutation](../../../pascal/language/types/array/mutating.md).

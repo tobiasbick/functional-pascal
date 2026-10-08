@@ -4,7 +4,7 @@ Strings, conversions, structured parsing, JSON, and TOML.
 
 | Unit | Description |
 |------|-------------|
-| [`Std.Str`](str/README.md) | String operations |
+| [`String operations`](../../language/types/string/README.md) | String operations |
 | [`Std.Conv`](conv.md) | Type conversions |
 | [`Std.Parse`](parse.md) | `TryInt`, `TryReal`, `TryBool` |
 | [`Std.Json`](json.md) | JSON trees |

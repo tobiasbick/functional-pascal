@@ -1,13 +1,13 @@
 program ServerListenerTest;
 
-uses Std.Server, Std.Net, Std.Tasks, Std.Results, Std.Test, Std.Arrays;
+uses Std.Server, Std.Net, Std.Tasks, Std.Test;
 
 function BindListener(): result of Std.Net.Listener, string;
 begin
   for Port: integer := 28100 to 28199 do
     begin
       const Opened: result of Std.Net.Listener, string := Listen('127.0.0.1', Port);
-      if IsOk(Opened) then
+      if Opened.IsOk() then
         begin
           return Opened;
         end;
@@ -19,19 +19,19 @@ begin
 end function;
 
 begin
-  const Life: ServerLifetime := Unwrap(CreateLifetime(1000, false));
-  const Other: ServerLifetime := Unwrap(CreateLifetime(1000, false));
-  const Listener: Std.Net.Listener := Unwrap(BindListener());
-  AssertTrue(Unwrap(OwnListener(Life, Listener)));
-  AssertTrue(not Unwrap(OwnListener(Life, Listener)));
-  AssertTrue(IsError(OwnListener(Other, Listener)));
+  const Life: ServerLifetime := CreateLifetime(1000, false).Unwrap();
+  const Other: ServerLifetime := CreateLifetime(1000, false).Unwrap();
+  const Listener: Std.Net.Listener := BindListener().Unwrap();
+  AssertTrue(OwnListener(Life, Listener).Unwrap());
+  AssertTrue(not OwnListener(Life, Listener).Unwrap());
+  AssertTrue(OwnListener(Other, Listener).IsError());
   AssertTrue(RequestStop(Life));
-  AssertTrue(IsError(Accept(Listener)));
-  AssertTrue(IsError(OwnListener(Life, Listener)));
-  AssertEquals(0, Std.Arrays.Length(CloseTaskGroup(GetWorkGroup(Life))));
-  AssertTrue(Unwrap(FinishShutdown(Life)));
-  AssertEquals(0, Std.Arrays.Length(ShutdownErrors(Life)));
+  AssertTrue(Accept(Listener).IsError());
+  AssertTrue(OwnListener(Life, Listener).IsError());
+  AssertEquals(0, CloseTaskGroup(GetWorkGroup(Life)).Length());
+  AssertTrue(FinishShutdown(Life).Unwrap());
+  AssertEquals(0, ShutdownErrors(Life).Length());
   discard RequestStop(Other);
   discard CloseTaskGroup(GetWorkGroup(Other));
-  AssertTrue(Unwrap(FinishShutdown(Other)));
+  AssertTrue(FinishShutdown(Other).Unwrap());
 end.

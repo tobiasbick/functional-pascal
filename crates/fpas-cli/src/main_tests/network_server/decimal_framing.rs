@@ -20,29 +20,29 @@ fn source_review_server_checks_decimal_lengths_and_boundaries() {
         "source-review-server-decimal",
         format!(
             r#"program DecimalServer;
-uses Std.Http, Std.Net, Std.Net.Utf8, Std.Results, Std.Str;
+uses Std.Http, Std.Net, Std.Net.Utf8;
 begin
-  const ListenerValue: Listener := Unwrap(Listen('127.0.0.1', {port}));
+  const ListenerValue: Listener := Listen('127.0.0.1', {port}).Unwrap();
   for I: integer := 1 to {} do
   begin
-    const ConnectionValue: Connection := Unwrap(Accept(ListenerValue));
-    discard Unwrap(SetTimeout(ConnectionValue, 2000));
+    const ConnectionValue: Connection := Accept(ListenerValue).Unwrap();
+    discard SetTimeout(ConnectionValue, 2000).Unwrap();
     var Text: string := 'accepted';
     case ReadRequest(ConnectionValue, 4096, 16) of
       when Ok(_): begin end;
       when Error(Message): begin
         if I = {} then
-        begin if not Std.Str.Contains(Message, 'MaxBodyBytes') then panic(Message); end if; end;
-        else begin if not Std.Str.Contains(Message, 'Content-Length') then panic(Message); end if; end; end if;
+        begin if not Message.Contains('MaxBodyBytes') then panic(Message); end if; end;
+        else begin if not Message.Contains('Content-Length') then panic(Message); end if; end; end if;
         Text := 'rejected';
       end;
     end case;
     var ResponseValue: ServerResponse := ServerResponse.Create(200, 'OK');
     ResponseValue.Body := Std.Net.Utf8.Encode(Text);
-    discard Unwrap(WriteResponse(ConnectionValue, ResponseValue));
-    discard Unwrap(Close(ConnectionValue));
+    discard WriteResponse(ConnectionValue, ResponseValue).Unwrap();
+    discard Close(ConnectionValue).Unwrap();
   end; end for;
-  discard Unwrap(CloseListener(ListenerValue));
+  discard CloseListener(ListenerValue).Unwrap();
 end.
 "#,
             cases.len(),

@@ -77,8 +77,7 @@ end.
         &wide,
         r#"program FlushWideTransition;
 
-uses
-  Std.Console, Std.Options, Std.Test, Std.Tui, Std.Tui.Runtime.TerminalRenderer;
+uses Std.Console, Std.Test, Std.Tui, Std.Tui.Runtime.TerminalRenderer;
 
 begin
   const Surface: TuiWorkingSurface := TuiWorkingSurface.Create(TuiSize.Create(4, 1));
@@ -86,8 +85,8 @@ begin
   TuiFlushSurface(Surface, TuiPalette.Default());
   Surface.PutGlyph(2, 0, 'X');
   TuiFlushSurface(Surface, TuiPalette.Default());
-  AssertEquals(' ', Std.Options.Unwrap(GetCell(2, 1)).glyph);
-  AssertEquals('X', Std.Options.Unwrap(GetCell(3, 1)).glyph);
+  AssertEquals(' ', GetCell(2, 1).Unwrap().glyph);
+  AssertEquals('X', GetCell(3, 1).Unwrap().glyph);
 end.
 "#,
     );
@@ -135,7 +134,7 @@ fn theme_switch_repaints_unchanged_terminal_cells() {
         &program,
         r#"program ThemeSwitch;
 
-uses Std.Console, Std.Options, Std.Test, Std.Tui;
+uses Std.Console, Std.Test, Std.Tui;
 
 function UpdateTheme(State: integer; Msg: TuiMsg; Cmd: TuiCmdOutput): integer;
 begin
@@ -167,7 +166,7 @@ begin
   const Initial: TuiPalette := TuiPalette.Default()
                                .WithRole(TuiStyleRole.Normal, TuiStyle.FromColors(TuiColor.FromRgb(10, 20, 30), TuiColor.FromRgb(40, 50, 60)));
   AssertEquals(1, TuiApplication.RunWithPalette(0, UpdateTheme, ViewTheme, Initial));
-  const Painted: Cell := Unwrap(GetCell(1, 1));
+  const Painted: Cell := GetCell(1, 1).Unwrap();
   AssertTrue(Painted.foreground.kind = ColorKind.Rgb);
   AssertEquals(1, Painted.foreground.red);
   AssertEquals(2, Painted.foreground.green);
@@ -342,7 +341,7 @@ fn interactive_background_message_wakes_idle_host_and_repaints() {
         &program,
         r#"program BackgroundWakeup;
 
-uses Std.Console, Std.Results, Std.Tasks, Std.Tui;
+uses Std.Console, Std.Tasks, Std.Tui;
 
 type
   Model = record

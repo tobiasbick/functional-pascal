@@ -1,6 +1,6 @@
 program T;
 
-uses Std.Console, Std.Results, Std.Conv;
+uses Std.Console, Std.Conv;
 
 function ToStr(V: integer): string;
 begin
@@ -9,6 +9,6 @@ end function;
 
 begin
   const R: result of integer, string := Ok(5);
-  const M: result of string, string := Std.Results.Map(R, ToStr);
-  WriteLn(Unwrap(M));
+  const M: result of string, string := R.Map(ToStr);
+  WriteLn(M.Unwrap());
 end.

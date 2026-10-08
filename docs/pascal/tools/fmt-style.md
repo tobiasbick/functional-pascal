@@ -2,7 +2,7 @@
 
 Canonical output rules for the AST pretty-printer. These are **normative for `fpas fmt`** once implemented. The emitter encodes them; this file is the human-readable spec.
 
-**Status:** **complete** (2026-06). Normative for [`fpas fmt`](../../../crates/fpas-cli/src/cli_fmt/) and the [editor formatter](editor-integration.md#formatting). Edit golden examples when the style changes; both entry points must match them.
+**Status:** **complete** (2026-06). Normative for [`fpas fmt`](../../../crates/fpas-cli/src/cli_fmt) and the [editor formatter](editor-integration.md#formatting). Edit golden examples when the style changes; both entry points must match them.
 
 **How to read this file**
 
@@ -199,7 +199,7 @@ end function;
 
 function IsBlank(S: string): boolean;
 begin
-  return Length(Trim(S)) = 0;
+  return S.Trim().Length() = 0;
 end function;
 end unit;
 ```
@@ -453,9 +453,7 @@ When the `uses` line exceeds 100 columns, break after commas:
 ```pascal
 program LongUses;
 
-uses
-  Std.Console, Std.Conv, Std.Arrays, Std.Dictionaries, Std.Options, Std.Results, Std.String,
-  MyApp.Very.Long.Namespace.One, MyApp.Very.Long.Namespace.Two;
+uses Std.Console, Std.Conv, Std.Crypto, MyApp.Very.Long.Namespace.One, MyApp.Very.Long.Namespace.Two;
 
 begin
   WriteLn('ok');
@@ -530,7 +528,7 @@ comment and a declaration, formatting retains one blank line so the comment rema
 
 [`format_compilation_unit`](../../../crates/fpas-fmt/src/lib.rs) without source cannot recover comments from the AST alone — use [`format_source`](../../../crates/fpas-fmt/src/lib.rs) when comments must be kept. `format_source` is fallible and rejects a compilation unit that was not parsed from the exact source snapshot, including invalid or out-of-range UTF-8 spans.
 
-**Tests:** [`comments_unit.expected.fpas`](../../../crates/fpas-fmt/tests/golden/comments_unit.expected.fpas), [`comments_program.expected.fpas`](../../../crates/fpas-fmt/tests/golden/comments_program.expected.fpas), [`comments_before_body.expected.fpas`](../../../crates/fpas-fmt/tests/golden/comments_before_body.expected.fpas), and the focused comment/API/layout regressions under [`crates/fpas-fmt/tests/`](../../../crates/fpas-fmt/tests/).
+**Tests:** [`comments_unit.expected.fpas`](../../../crates/fpas-fmt/tests/golden/comments_unit.expected.fpas), [`comments_program.expected.fpas`](../../../crates/fpas-fmt/tests/golden/comments_program.expected.fpas), [`comments_before_body.expected.fpas`](../../../crates/fpas-fmt/tests/golden/comments_before_body.expected.fpas), and the focused comment/API/layout regressions under [`crates/fpas-fmt/tests/`](../../../crates/fpas-fmt/tests).
 
 ## Intentional diffs from source
 
@@ -545,7 +543,7 @@ The formatter **normalizes** valid input. These changes are deliberate (not bugs
 | User-placed blank lines | Only the fixed rules in [Blank lines](#blank-lines) |
 | `uses` on same line as header | Header blank line + `uses` on its own line |
 | Extra parentheses from parse tree | May differ where precedence makes them redundant |
-| `uses` unit name casing (`Std.Arrays`) | Canonical qualified id spelling from the AST |
+| `uses` unit name casing (`Array operations`) | Canonical qualified id spelling from the AST |
 
 ## Non-goals
 

@@ -1,10 +1,10 @@
 program T;
 
-uses Std.Console, Std.Dictionaries;
+uses Std.Console;
 
 begin
   const A: dict of string to integer := ['A': 1, 'B': 2];
   const B: dict of string to integer := ['B': 9, 'C': 3];
-  const M: dict of string to integer := Std.Dictionaries.Merge(A, B);
+  const M: dict of string to integer := A.Merge(B);
   WriteLn(M['B']);
 end.

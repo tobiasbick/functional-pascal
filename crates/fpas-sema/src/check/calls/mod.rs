@@ -22,8 +22,6 @@ pub(crate) enum CallTarget {
     Routine,
     /// Closure, callable binding, parameter, or callable record member.
     FunctionValue,
-    /// Receiver call `Value.Name(...)` resolved through a free routine.
-    ReceiverCall,
     /// Enum variant constructor; its fields act as parameters.
     EnumVariant,
 }
@@ -96,7 +94,8 @@ impl Checker {
         );
     }
 
-    pub(crate) fn check_fluent_function_call_args(
+    /// Checks pre-mapped native argument references using ordinary parameter rules.
+    pub(crate) fn check_function_call_refs(
         &mut self,
         name: &str,
         func_ty: &FunctionTy,
@@ -108,7 +107,7 @@ impl Checker {
                 name,
                 routine_label: "Function",
                 arity_hint: "Check the number of arguments.",
-                target: CallTarget::ReceiverCall,
+                target: CallTarget::Routine,
                 type_params: &func_ty.type_params,
                 params: &func_ty.params,
                 variadic: func_ty.variadic,
@@ -116,28 +115,6 @@ impl Checker {
             args,
             span,
         )
-    }
-
-    pub(crate) fn check_fluent_procedure_call_args(
-        &mut self,
-        name: &str,
-        proc_ty: &ProcedureTy,
-        args: &[&Expr],
-        span: Span,
-    ) {
-        self.check_routine_call_args(
-            RoutineCallSignature {
-                name,
-                routine_label: "Procedure",
-                arity_hint: "Check the number of arguments.",
-                target: CallTarget::ReceiverCall,
-                type_params: &proc_ty.type_params,
-                params: &proc_ty.params,
-                variadic: proc_ty.variadic,
-            },
-            args,
-            span,
-        );
     }
 
     /// Checks instance-method arguments against the parameters after `Self`.

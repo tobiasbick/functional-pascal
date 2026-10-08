@@ -1,6 +1,6 @@
 program T;
 
-uses Std.Console, Std.Options;
+uses Std.Console;
 
 function AlwaysSomeOk(V: integer): option of string;
 begin
@@ -9,6 +9,6 @@ end function;
 
 begin
   const O: option of integer := None;
-  const M: option of string := AndThen(O, AlwaysSomeOk);
-  WriteLn(IsNone(M));
+  const M: option of string := O.AndThen(AlwaysSomeOk);
+  WriteLn(M.IsNone());
 end.

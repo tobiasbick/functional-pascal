@@ -1,6 +1,6 @@
 //! Type checking for `Std.Dictionaries.Reduce`.
 //!
-//! **Documentation:** `docs/pascal/std/collections/dict.md` (from the repository root).
+//! **Documentation:** `docs/pascal/language/types/dictionary-operations.md` (from the repository root).
 
 use crate::check::Checker;
 use crate::types::Ty;

@@ -257,7 +257,7 @@ fn fpas_http_server_rejects_ambiguous_request_framing() {
         format!(
             r#"program HttpServerHostile;
 
-uses Std.Http, Std.Net, Std.Net.Utf8, Std.Str;
+uses Std.Http, Std.Net, Std.Net.Utf8;
 
 begin
   case Listen('127.0.0.1', {port}) of
@@ -270,7 +270,7 @@ begin
             when Ok(_): panic('ambiguous framing was accepted');
             when Error(Message):
             begin
-              if not Std.Str.Contains(Message, 'both Transfer-Encoding and Content-Length') then
+              if not Message.Contains('both Transfer-Encoding and Content-Length') then
               begin
                 panic(Message);
               end; end if;
@@ -327,7 +327,7 @@ fn fpas_http_server_enforces_request_body_limit() {
         format!(
             r#"program HttpServerBodyLimit;
 
-uses Std.Http, Std.Net, Std.Net.Utf8, Std.Str;
+uses Std.Http, Std.Net, Std.Net.Utf8;
 
 begin
   case Listen('127.0.0.1', {port}) of
@@ -340,7 +340,7 @@ begin
             when Ok(_): panic('oversized request body was accepted');
             when Error(Message):
             begin
-              if not Std.Str.Contains(Message, 'MaxBodyBytes') then
+              if not Message.Contains('MaxBodyBytes') then
               begin
                 panic(Message);
               end; end if;

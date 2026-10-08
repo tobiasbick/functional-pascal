@@ -1,6 +1,6 @@
 unit Std.Tui.Elements.MenuValidate;
 
-uses Std.Arrays, Std.Options, Std.Str, Std.Tui.Chrome.MenuNode, Std.Tui.Chrome.MenuQuery;
+uses Std.Tui.Chrome.MenuNode, Std.Tui.Chrome.MenuQuery;
 
 function TuiMenuSameOptionalId(Left: option of TuiMenuNodeId; Right: option of TuiMenuNodeId): boolean;
 begin
@@ -41,7 +41,7 @@ end function;
 // - `State`: Controlled state used by the operation.
 public procedure TuiMenuValidate(Nodes: array of TuiMenuNode; State: TuiMenuState);
 begin
-  for Index: integer := 0 to Std.Arrays.Length(Nodes) - 1 do
+  for Index: integer := 0 to Nodes.Length() - 1 do
     begin
       const Id: TuiMenuNodeId := TuiMenuNodeIdOf(Nodes[Index]);
       for Previous: integer := 0 to Index - 1 do
@@ -54,7 +54,7 @@ begin
         end;
       end for;
       const Mnemonic: string := TuiMenuNodeMnemonic(Nodes[Index]);
-      if Std.Str.Length(Mnemonic) > 1 then
+      if Mnemonic.Length() > 1 then
         begin
           panic('Tui menu mnemonic must be empty or one character');
         end;
@@ -86,7 +86,7 @@ begin
           end;
       end case;
       var Current: TuiMenuNodeId := Id;
-      var Remaining: integer := Std.Arrays.Length(Nodes);
+      var Remaining: integer := Nodes.Length();
       while Remaining > 0 do
         begin
           Remaining := Remaining - 1;
@@ -113,7 +113,7 @@ begin
       for Other: integer := 0 to Index - 1 do
         begin
           if (TuiMenuSameOptionalId(TuiMenuNodeParent(Nodes[Other]), TuiMenuNodeParent(Nodes[Index])) and (Mnemonic <> '')) and
-             (Std.Str.ToLower(Mnemonic) = Std.Str.ToLower(TuiMenuNodeMnemonic(Nodes[Other]))) then
+             (Mnemonic.ToLower() = TuiMenuNodeMnemonic(Nodes[Other]).ToLower()) then
             begin
               panic('Tui sibling menu mnemonics must be unique');
             end;

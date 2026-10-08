@@ -1,6 +1,6 @@
 program TuiTextAreaSnapshotTest;
 
-uses Std.Str, Std.Test, Std.Tui;
+uses Std.Test, Std.Tui;
 
 type SnapshotModel = record
   Focused: boolean;
@@ -14,7 +14,7 @@ begin
       Focus := Some(TuiControlId.Create(1));
     end;
   end if;
-  const Text: string := (('012345' + Std.Str.Chr(10)) + 'alpha') + (Std.Str.Chr(10) + 'omega');
+  const Text: string := (('012345' + string.Chr(10)) + 'alpha') + (string.Chr(10) + 'omega');
   return TuiElementBuilders.MakeDesktop(Focus, [
                                                  TuiElementBuilders.MakeTextArea(TuiControlId.Create(1), Text, 9, TuiPoint.Create(1, 1), TuiAction.Create(9))
                                                ]);

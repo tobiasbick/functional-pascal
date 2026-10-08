@@ -1,6 +1,6 @@
 program TuiPointerFallbackTest;
 
-uses Std.Arrays, Std.Test, Std.Tui;
+uses Std.Test, Std.Tui;
 
 type PointerModel = record
   Events: array of string;
@@ -13,7 +13,7 @@ end record;
 function PushEvent(State: PointerModel; InputEvent: string): PointerModel;
 begin
   return record
-    Events := Std.Arrays.Concat(State.Events, [InputEvent]);
+    Events := State.Events.Concat([InputEvent]);
     X := State.X;
     Y := State.Y;
     Action := State.Action;
@@ -51,7 +51,7 @@ begin
       when TuiMsg.Pointer(InputEvent):
         begin
           return record
-            Events := Std.Arrays.Concat(State.Events, ['pointer']);
+            Events := State.Events.Concat(['pointer']);
             X := InputEvent.Position.X;
             Y := InputEvent.Position.Y;
             Action := InputEvent.Action;
@@ -70,7 +70,7 @@ begin
                                                                                                                ])
                                                                         ]);
   end function, 3, 0);
-  AssertEquals(3, Std.Arrays.Length(Model.Events));
+  AssertEquals(3, Model.Events.Length());
   AssertEquals('tick-1', Model.Events[0]);
   AssertEquals('pointer', Model.Events[1]);
   AssertEquals('tick-2', Model.Events[2]);

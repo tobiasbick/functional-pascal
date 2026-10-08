@@ -1,6 +1,6 @@
 # AP09: Named arguments
 
-Status: agreed direction. Effort: medium. Completion is tracked in the
+Status: complete. Effort: medium. Completion is tracked in the
 [central README](../README.md); the process is in
 [development-process.md](../development-process.md).
 
@@ -18,16 +18,16 @@ mappings receive concrete diagnostics.
   parameter changes the API.
 - Parameters have no default values; every parameter is passed. Optional
   settings use an options record with field defaults (AP10).
-- Named arguments apply to declared routines, methods, and enum variant
-  constructors. Function values (closures, variables or parameters of a
-  function type) are called positionally only, because function-type
-  compatibility ignores parameter names.
+- Named arguments apply to declared routines, methods, enum variant
+  constructors, and fixed-signature native operations. Native receivers are
+  unnamed; variadic `Format` is positional. Function values (closures, variables,
+  or parameters of a function type) are called positionally only, because
+  function-type compatibility ignores parameter names.
 - Arguments are evaluated in written left-to-right order, even when named
   arguments reorder parameters.
 
 ```pascal
 CopyFile(Source := InputPath, Destination := BackupPath, Overwrite := false);
-Start(Host := 'localhost', Options := ServerOptions(Port := 9000));
 
 const F: function(Value: integer): integer := Double;
 const Answer: integer := F(3);         // valid: result consumed
@@ -44,11 +44,6 @@ the named-argument restriction.
 
 AP10 and AP17 depend on this package.
 
-## Order
-
-AP09.1 covers routines and methods; AP09.2 extends the same rules to enum
-variant constructors.
-
 ## Work packages
 
 - [x] [AP09.1: Named arguments for routines and methods](01-named-routine-arguments.md)
@@ -58,8 +53,6 @@ variant constructors.
 
 AP09 is complete. These gaps are tracked in the plans that own them:
 
-- Named arguments for receiver calls and native type operations:
-  [AP06.3](../ap06-dot-call-targets/03-fixed-dot-resolution.md).
 - Named construction of generic enum variants:
   [AP24.3](../ap24-generic-data-structures/03-generic-enums.md).
 - Editor rename of record fields used in `record Field := Value; end` literals:

@@ -1,10 +1,10 @@
 program T;
 
-uses Std.Console, Std.Dictionaries, Std.Arrays;
+uses Std.Console;
 
 begin
   const D: dict of string to integer := ['B': 2, 'A': 1];
-  const K: array of string := Std.Dictionaries.Keys(D);
+  const K: array of string := D.Keys();
   WriteLn(K[0]);
   WriteLn(K[1]);
 end.

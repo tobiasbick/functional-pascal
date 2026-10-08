@@ -1,9 +1,9 @@
 program T;
 
-uses Std.Console, Std.Arrays;
+uses Std.Console;
 
 begin
   const A: array of integer := [42];
-  const R: array of integer := Reverse(A);
+  const R: array of integer := A.Reverse();
   WriteLn(R[0]);
 end.

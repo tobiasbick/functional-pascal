@@ -1,6 +1,6 @@
 program T;
 
-uses Std.Console, Std.Results;
+uses Std.Console;
 
 function AlwaysOk(V: integer): result of string, string;
 begin
@@ -9,6 +9,6 @@ end function;
 
 begin
   const R: result of integer, string := Error('original');
-  const M: result of string, string := AndThen(R, AlwaysOk);
-  WriteLn(IsError(M));
+  const M: result of string, string := R.AndThen(AlwaysOk);
+  WriteLn(M.IsError());
 end.

@@ -1,12 +1,12 @@
 // Long-document caret rendering through the public headless TUI.
 program TextAreaLocateBenchmark;
 
-uses Std.Args, Std.Console, Std.Conv, Std.Str, Std.Time, Std.Tui;
+uses Std.Args, Std.Console, Std.Conv, Std.Time, Std.Tui;
 
 function View(Text: string): TuiElement;
 begin
   return TuiElementBuilders.MakeDesktop(Some(TuiControlId.Create(1)), [
-                                                                        TuiElementBuilders.MakeTextArea(TuiControlId.Create(1), Text, Std.Str.Length(Text), TuiPoint.Create(0, 0), TuiAction.Create(1))
+                                                                        TuiElementBuilders.MakeTextArea(TuiControlId.Create(1), Text, Text.Length(), TuiPoint.Create(0, 0), TuiAction.Create(1))
                                                                       ]);
 end function;
 
@@ -28,7 +28,7 @@ begin
       panic('arguments must be positive');
     end;
   end if;
-  const Text: string := Std.Str.RepeatStr('é', Size);
+  const Text: string := 'é'.RepeatStr(Size);
   const App: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(80, 24));
   discard App.RunIterations(Text, Update, View, 0, 0);
   const Started: integer := MonotonicMillis();
@@ -46,8 +46,7 @@ begin
     end;
   end if;
 
-  if Std.Str.Substring(App.SurfaceSnapshot().LineAt(0), 0, Visible) <>
-     Std.Str.RepeatStr('é', Visible) then
+  if (App.SurfaceSnapshot().LineAt(0)).Slice(0, Visible) <> 'é'.RepeatStr(Visible) then
     begin
       panic('rendered text');
     end;

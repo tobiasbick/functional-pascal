@@ -1,4 +1,4 @@
-use super::{array_elem_ty, check_argument_count, mutable_array_elem_ty, simple_var_name};
+use super::{array_elem_ty, check_argument_count};
 use crate::check::Checker;
 use crate::types::Ty;
 use fpas_lexer::Span;
@@ -9,10 +9,12 @@ mod higher_order;
 mod mutation;
 mod query;
 
+/// Checks an array intrinsic with either a written or an implicit first argument.
 pub(super) fn check_array_builtin_std_call(
     c: &mut Checker,
     name: &str,
     args: &[&Expr],
+    implicit_receiver: bool,
     span: Span,
 ) -> Option<Ty> {
     let ty = match name {
@@ -24,8 +26,8 @@ pub(super) fn check_array_builtin_std_call(
             query::check_contains_or_index_of(c, name, args, span)
         }
         s::STD_ARRAY_SLICE => query::check_slice(c, args, span),
-        s::STD_ARRAY_PUSH => mutation::check_push(c, args, span),
-        s::STD_ARRAY_POP => mutation::check_pop(c, args, span),
+        s::STD_ARRAY_PUSH => mutation::check_push(c, name, args, implicit_receiver, span),
+        s::STD_ARRAY_POP => mutation::check_pop(c, name, args, implicit_receiver, span),
         s::STD_ARRAY_MAP => higher_order::check_map(c, args, span),
         s::STD_ARRAY_FILTER => higher_order::check_filter(c, args, span),
         s::STD_ARRAY_REDUCE => higher_order::check_reduce(c, args, span),

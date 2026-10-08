@@ -1,6 +1,6 @@
 program FsGlobInvalidPatternReturnsErrorTest;
 
-uses Std.Fs, Std.Str, Std.Test;
+uses Std.Fs, Std.Test;
 
 begin
   case Glob('[unclosed') of
@@ -10,7 +10,7 @@ begin
       end;
     when Error(Message):
       begin
-        AssertTrue(Contains(Message, 'Invalid glob pattern'));
+        AssertTrue(Message.Contains('Invalid glob pattern'));
       end;
   end case;
 end.

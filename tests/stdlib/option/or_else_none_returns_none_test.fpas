@@ -1,6 +1,6 @@
 program T;
 
-uses Std.Console, Std.Options;
+uses Std.Console;
 
 function AlwaysNone(): option of integer;
 begin
@@ -9,6 +9,6 @@ end function;
 
 begin
   const O: option of integer := None;
-  const M: option of integer := OrElse(O, AlwaysNone);
-  WriteLn(IsNone(M));
+  const M: option of integer := O.OrElse(AlwaysNone);
+  WriteLn(M.IsNone());
 end.

@@ -52,7 +52,7 @@ end scope;
 
 Before AP26.3, specify the capture limits for closures holding scope-owned task
 handles, including the proof needed when passing them to imported helpers.
-AP26.3 already requires this detail; it must preserve the agreed no-escape rule.
+AP26.3 requires this decision and must preserve the agreed no-escape rule.
 
 ## Dependencies
 
@@ -74,12 +74,3 @@ AP26.2 adds failure propagation. AP26.3 enforces handle escape restrictions.
 
 Ownership, detachment, and completion are visible and governed by the same
 explained rule on every exit path.
-
-## Reference
-
-The reference branch `codex/syntax-changes` mapped the owners: compiler
-`lowering/concurrency.rs` and `lowering/closures/intrinsic_tasks.rs`; VM
-`vm/tasks/spawn.rs`, `groups/`, `supervision/`, and `shared/task_results.rs`.
-Existing group close keeps ownership until join and supports cooperative
-cancellation. Concrete consumers include `lib/Std/Tui/Runtime/Application/`
-and the concurrency and network examples.

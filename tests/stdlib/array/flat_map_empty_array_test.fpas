@@ -1,6 +1,6 @@
 program T;
 
-uses Std.Console, Std.Arrays;
+uses Std.Console;
 
 function Wrap(X: integer): array of integer;
 begin
@@ -8,6 +8,6 @@ begin
 end function;
 
 begin
-  const R: array of integer := FlatMap([], Wrap);
-  WriteLn(Length(R));
+  const R: array of integer := [].FlatMap(Wrap);
+  WriteLn(R.Length());
 end.

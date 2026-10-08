@@ -1,8 +1,7 @@
 program LongUses;
 
 uses
-  Std.Console, Std.Conv, Std.Arrays, Std.Dictionaries, Std.Options, Std.Results, Std.String,
-  MyApp.Very.Long.Namespace.One, MyApp.Very.Long.Namespace.Two;
+  Std.Console, Std.Conv, Std.Crypto, MyApp.Very.Long.Namespace.One, MyApp.Very.Long.Namespace.Two;
 
 begin
   WriteLn('ok');

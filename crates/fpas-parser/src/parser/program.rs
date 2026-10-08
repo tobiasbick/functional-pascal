@@ -108,10 +108,7 @@ impl Parser {
         }
     }
 
-    fn parse_uses_and_declarations(
-        &mut self,
-        allow_visibility: bool,
-    ) -> (Vec<QualifiedId>, Vec<Decl>) {
+    fn parse_uses_and_declarations(&mut self, allow_visibility: bool) -> (Vec<Import>, Vec<Decl>) {
         let uses = if self.check(&Token::Uses) {
             self.parse_uses_clause()
         } else {
@@ -119,17 +116,6 @@ impl Parser {
         };
         let declarations = self.parse_declarations(allow_visibility);
         (uses, declarations)
-    }
-
-    fn parse_uses_clause(&mut self) -> Vec<QualifiedId> {
-        self.advance();
-        let mut units = Vec::new();
-        units.push(self.parse_qualified_id());
-        while self.eat(&Token::Comma) {
-            units.push(self.parse_qualified_id());
-        }
-        self.expect_semi();
-        units
     }
 
     /// Parse a dotted identifier path while preserving strong sync tokens on recovery.

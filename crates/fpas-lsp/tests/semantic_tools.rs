@@ -92,7 +92,8 @@ fn semantic_tokens_and_quick_fixes_use_utf16_and_reject_stale_diagnostics() {
             "function",
             "procedure",
             "method",
-            "constant"
+            "constant",
+            "keyword"
         ])
     );
     assert_eq!(
@@ -175,6 +176,54 @@ fn semantic_tokens_and_quick_fixes_use_utf16_and_reject_stale_diagnostics() {
         response(&transcript.messages, 4)
     );
     assert_eq!(response(&transcript.messages, 5)["result"], Value::Null);
+}
+
+#[test]
+fn import_modifier_and_alias_named_as_use_keyword_and_namespace_legend_entries() {
+    let temp = TempDirectory::new("alias-semantic-tokens");
+    temp.write("alias.fpasprj", "[project]\nname = \"alias\"\nkind = \"program\"\nmain = \"src/main.fpas\"\n\n[sources]\ninclude = [\"src/**/*.fpas\"]\n");
+    temp.write("src/math.fpas", "unit Demo.Math;\npublic function Answer(): integer;\nbegin return 1; end function;\nend unit;\n");
+    let source = "program App;\nuses Demo.Math as As;\nbegin\n  discard As.Answer();\nend.\n";
+    temp.write("src/main.fpas", source);
+    let root_uri = temp.uri(".");
+    let uri = temp.uri("src/main.fpas");
+    let transcript = run(&[
+        initialize_with_root(1, Some(&root_uri)),
+        initialized(),
+        open(&uri, 1, source),
+        semantic_tokens(2, &uri),
+        shutdown(3),
+        exit(),
+    ]);
+    assert!(transcript.output.status.success());
+    let data = response(&transcript.messages, 2)["result"]["data"]
+        .as_array()
+        .expect("semantic data");
+    let tokens = decode_tokens(data);
+    assert_token(
+        &tokens,
+        position(source, source.find("as As").expect("modifier")),
+        2,
+        14,
+    );
+    assert_token(
+        &tokens,
+        position(source, source.find("as As").expect("alias") + 3),
+        2,
+        0,
+    );
+    assert_token(
+        &tokens,
+        position(source, source.find("As.Answer").expect("namespace")),
+        2,
+        0,
+    );
+    assert_token(
+        &tokens,
+        position(source, source.find("Answer()").expect("function")),
+        6,
+        10,
+    );
 }
 
 fn open(uri: &str, version: i32, text: &str) -> Value {

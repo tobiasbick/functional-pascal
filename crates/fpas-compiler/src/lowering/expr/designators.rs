@@ -105,7 +105,7 @@ impl LoweringContext {
             };
             return self.emit_value(Operation::Const(constant), ty, designator.span);
         }
-        let [DesignatorPart::Ident(name, _)] = designator.parts.as_slice() else {
+        let Some(name) = qualified.as_deref() else {
             return self.lower_designator_read(designator);
         };
         if self.has_binding(name) {
@@ -126,6 +126,8 @@ impl LoweringContext {
                 callable.value_type,
                 designator.span,
             )
+        } else if designator.parts.len() > 1 {
+            self.lower_designator_read(designator)
         } else {
             Err(unsupported(designator.span, "unresolved designator"))
         }

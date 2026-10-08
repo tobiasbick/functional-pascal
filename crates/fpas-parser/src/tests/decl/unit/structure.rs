@@ -16,7 +16,7 @@ end unit;\n",
 
     assert_eq!(unit.name.parts, vec!["MyApp", "Math"]);
     assert_eq!(unit.uses.len(), 1);
-    assert_eq!(unit.uses[0].parts, vec!["Std", "Math"]);
+    assert_eq!(unit.uses[0].unit.parts, vec!["Std", "Math"]);
     assert_eq!(unit.declarations.len(), 1);
     assert!(matches!(&unit.declarations[0], Decl::Function(_)));
 }
@@ -27,9 +27,9 @@ fn unit_with_multiple_uses_comma_separated() {
         parse_unit_ok("unit MyApp.Core;\nuses Std.Console, Std.Math, Std.Crypto;\nend unit;\n");
 
     assert_eq!(unit.uses.len(), 3);
-    assert_eq!(unit.uses[0].parts, vec!["Std", "Console"]);
-    assert_eq!(unit.uses[1].parts, vec!["Std", "Math"]);
-    assert_eq!(unit.uses[2].parts, vec!["Std", "Crypto"]);
+    assert_eq!(unit.uses[0].unit.parts, vec!["Std", "Console"]);
+    assert_eq!(unit.uses[1].unit.parts, vec!["Std", "Math"]);
+    assert_eq!(unit.uses[2].unit.parts, vec!["Std", "Crypto"]);
 }
 
 #[test]

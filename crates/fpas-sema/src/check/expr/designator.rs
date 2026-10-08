@@ -89,7 +89,10 @@ impl Checker {
                         return Ty::Error;
                     }
 
-                    let hint = if is_qualified_ident_chain {
+                    let hint = if let Some(hint) = self.scopes.imports.hidden_path_hint(&full_name)
+                    {
+                        hint
+                    } else if is_qualified_ident_chain {
                         if crate::std_units::looks_like_std_qualified_name(&full_name) {
                             self.hint_unknown_callable(&full_name)
                         } else {

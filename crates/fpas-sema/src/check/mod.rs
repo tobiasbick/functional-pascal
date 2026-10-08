@@ -5,6 +5,7 @@ mod decl;
 mod discard;
 mod entry;
 mod expr;
+mod imports;
 mod name_resolution;
 mod record_visibility;
 mod references;

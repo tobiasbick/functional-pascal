@@ -200,6 +200,9 @@ pub type ScalarCaseBindingMap = HashSet<usize>;
 /// point and remain valid only while compiling or inspecting that same AST allocation.
 #[derive(Debug, Default)]
 pub struct AnalysisMetadata {
+    /// Canonical direct unit identities to source-local aliases.
+    /// **Documentation:** `docs/pascal/program-structure/units.md`
+    pub import_aliases: BTreeMap<String, String>,
     /// Semantic diagnostics. An empty collection means analysis succeeded.
     pub errors: Vec<SemaError>,
     /// Inferred expression types keyed by expression identity.
@@ -375,6 +378,7 @@ impl Checker {
     pub fn finish(self) -> AnalysisMetadata {
         let named_types = self.scopes.root_types();
         AnalysisMetadata {
+            import_aliases: self.scopes.imports.aliases.clone(),
             errors: self.errors,
             expr_types: self.expr_types,
             intrinsic_calls: self.intrinsic_calls,

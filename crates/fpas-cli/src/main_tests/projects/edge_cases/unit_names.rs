@@ -29,25 +29,39 @@ fn duplicate_unit_names_in_different_files_rejected() {
 }
 
 #[test]
-fn duplicate_uses_entries_are_harmless() {
+fn duplicate_direct_imports_are_rejected() {
     let cwd = create_temp_dir("run-dup-uses");
     let project_file = cwd.join("app.fpasprj");
     support::write_program_project_file(&project_file, "src/main.fpas", &["src/*.fpas"]);
     write_text(
-        &cwd.join("src/main.fpas"),
-        "program Main;\nuses App.Lib, App.Lib, Std.Console;\nbegin\n  WriteLn(GetVal());\nend.\n",
-    );
-    write_text(
         &cwd.join("src/lib.fpas"),
-        "unit App.Lib;\npublic function GetVal(): integer;\nbegin\n  return 7;\nend function;\nend unit;\n",
+        "unit App.Lib; public function GetVal(): integer; begin return 7; end function; end unit;",
     );
-
-    let (exit_code, stdout_output, stderr_output) =
-        support::run_cli_and_capture_output(&project_file, &cwd);
+    for imports in [
+        "App.Lib, app.lib",
+        "App.Lib as Lib, App.Lib as Other",
+        "App.Lib, App.Lib as Lib",
+        "App.Lib as Lib, App.Lib",
+        "Std.Math, std.math",
+    ] {
+        write_text(
+            &cwd.join("src/main.fpas"),
+            &format!("program Main;\nuses {imports};\nbegin end.\n"),
+        );
+        let (exit_code, stdout_output, stderr_output) =
+            support::run_cli_and_capture_output(&project_file, &cwd);
+        assert_eq!(exit_code, 1, "{imports}: {stderr_output}");
+        assert!(stdout_output.is_empty());
+        assert!(
+            stderr_output.contains("error[FP3002]: Repeated import"),
+            "{stderr_output}"
+        );
+        assert!(
+            stderr_output.contains("once per source file"),
+            "{stderr_output}"
+        );
+    }
     fs::remove_dir_all(&cwd).expect("temp directory must be removed");
-
-    assert_eq!(exit_code, 0, "stderr: {stderr_output}");
-    assert_eq!(stdout_output, "7\n");
 }
 
 #[test]

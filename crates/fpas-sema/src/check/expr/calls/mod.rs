@@ -151,16 +151,15 @@ impl Checker {
         args: &[Expr],
         span: Span,
     ) -> Ty {
+        if symbol_kind == SymbolKind::EnumVariantConstructor {
+            return self.check_enum_variant_constructor_call(name, &symbol_ty, args, span);
+        }
         let dispatch = self.builtin_std_dispatch_name(name);
         if dispatch.starts_with("Std.") {
             self.intrinsic_calls.insert(call_key, dispatch.clone());
         }
         if symbol_kind == SymbolKind::BuiltinStd {
             return self.check_builtin_std_call_positional(name, &dispatch, args, span);
-        }
-
-        if symbol_kind == SymbolKind::EnumVariantConstructor {
-            return self.check_enum_variant_constructor_call(name, &symbol_ty, args, span);
         }
 
         match &symbol_ty {

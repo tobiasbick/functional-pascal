@@ -217,6 +217,7 @@ fn analysis_metadata_exposes_all_named_results() {
 
     let crate::AnalysisMetadata {
         errors,
+        import_aliases,
         expr_types,
         intrinsic_calls,
         named_argument_orders,
@@ -240,6 +241,7 @@ fn analysis_metadata_exposes_all_named_results() {
     assert_eq!(
         [
             errors.len(),
+            import_aliases.len(),
             expr_types.len(),
             intrinsic_calls.len(),
             named_argument_orders.len(),
@@ -257,7 +259,7 @@ fn analysis_metadata_exposes_all_named_results() {
             event_assigned.len(),
             event_raises.len(),
         ],
-        [0; 17]
+        [0; 18]
     );
 }
 

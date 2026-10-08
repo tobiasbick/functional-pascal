@@ -36,6 +36,14 @@ pub fn register_short_aliases(checker: &mut Checker) {
 
     let units: Vec<String> = checker.loaded_std_units.iter().cloned().collect();
     for unit in &units {
+        if checker
+            .scopes
+            .imports
+            .aliases
+            .contains_key(&unit.to_ascii_lowercase())
+        {
+            continue;
+        }
         let prefix = format!("{unit}.");
         let qualified_names = checker.scopes.names_with_prefix(&prefix);
         for qname in qualified_names {

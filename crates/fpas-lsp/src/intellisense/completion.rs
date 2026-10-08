@@ -119,7 +119,7 @@ fn completion_kind(kind: CompletionKind) -> CompletionItemKind {
 fn symbol_completion_kind(kind: SymbolKind) -> CompletionItemKind {
     match kind {
         SymbolKind::Program => CompletionItemKind::FILE,
-        SymbolKind::Unit => CompletionItemKind::MODULE,
+        SymbolKind::Unit | SymbolKind::ImportAlias => CompletionItemKind::MODULE,
         SymbolKind::Constant => CompletionItemKind::CONSTANT,
         SymbolKind::Variable | SymbolKind::Parameter | SymbolKind::LoopVariable => {
             CompletionItemKind::VARIABLE

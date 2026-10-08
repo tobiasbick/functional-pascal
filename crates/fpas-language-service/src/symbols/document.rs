@@ -11,6 +11,9 @@ pub enum SymbolKind {
     Program,
     /// Unit compilation-unit declaration.
     Unit,
+    /// Source-local namespace introduced by `uses Unit.Name as Alias`.
+    /// See `docs/pascal/program-structure/units.md`.
+    ImportAlias,
     /// Compile-time constant.
     Constant,
     /// Imvariable.

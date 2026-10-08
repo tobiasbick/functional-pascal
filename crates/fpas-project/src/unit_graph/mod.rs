@@ -204,7 +204,7 @@ fn insert_unit(
 /// Resolves units reachable from a program or test entry `uses` clause.
 pub fn resolve_program_units(
     graph: &UnitGraph,
-    root_uses: &[QualifiedId],
+    root_uses: &[fpas_parser::Import],
 ) -> Result<ResolvedUnitGraph, crate::ProjectError> {
     let policy = ImportPolicy::new(graph);
     let reachable = resolve_reachable(root_uses, graph, &policy)?;
@@ -221,8 +221,8 @@ pub(crate) fn canonical_unit_key(id: &QualifiedId) -> String {
     qualified_id_to_string(id).to_ascii_lowercase()
 }
 
-pub(crate) fn is_intrinsic_std_unit(used: &QualifiedId, graph: &UnitGraph) -> bool {
-    let key = canonical_unit_key(used);
+pub(crate) fn is_intrinsic_std_unit(used: &fpas_parser::Import, graph: &UnitGraph) -> bool {
+    let key = canonical_unit_key(&used.unit);
     !graph.contains(&key)
         && fpas_std::STD_UNITS_INTRINSIC
             .iter()

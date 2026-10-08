@@ -88,7 +88,7 @@ impl Checker {
         }
 
         // RecordTy clones on values may omit the table; consult the type symbol.
-        if let Some(symbol) = self.scopes.lookup(&record_ty.name)
+        if let Some(symbol) = self.scopes.lookup_type(&record_ty.name)
             && let Ty::Record(stored) = &symbol.ty
             && let Some((_, function_ty)) = stored
                 .static_functions
@@ -116,7 +116,7 @@ impl Checker {
             return Some(procedure_ty.clone());
         }
 
-        if let Some(symbol) = self.scopes.lookup(&record_ty.name)
+        if let Some(symbol) = self.scopes.lookup_type(&record_ty.name)
             && let Ty::Record(stored) = &symbol.ty
             && let Some((_, procedure_ty)) = stored
                 .static_procedures

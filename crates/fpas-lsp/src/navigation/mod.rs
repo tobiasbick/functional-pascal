@@ -61,11 +61,12 @@ pub(crate) fn span_range(
     ))
 }
 
+/// Maps declarations and local import aliases to LSP symbol categories.
 pub(crate) fn symbol_kind(kind: SymbolKind) -> tower_lsp_server::ls_types::SymbolKind {
     use tower_lsp_server::ls_types::SymbolKind as Lsp;
     match kind {
         SymbolKind::Program => Lsp::FILE,
-        SymbolKind::Unit => Lsp::MODULE,
+        SymbolKind::Unit | SymbolKind::ImportAlias => Lsp::MODULE,
         SymbolKind::Constant => Lsp::CONSTANT,
         SymbolKind::Variable | SymbolKind::LoopVariable => Lsp::VARIABLE,
         SymbolKind::Type => Lsp::CLASS,

@@ -339,6 +339,13 @@ and library `[exports].units`. For hierarchical unit names, navigation checks
 every matching imported owner and returns a target only when the complete
 qualified identity resolves unambiguously.
 
+For `uses Demo.Math as M;`, `M.Answer` resolves to the original public
+declaration in `Demo.Math`. The alias `M` has a local definition at its import
+declaration; the unit path inside `uses` navigates to the unit source. Short
+names and the original qualified path stay hidden for aliased imports.
+References, hover, signature help, named arguments, and named-type navigation
+use the same alias resolution, including different aliases in different files.
+
 **Go to Type Definition** follows the named source type of variables,
 parameters, record fields and properties, function results, and aliases. It
 uses the same import, qualification, visibility, and record-member resolution
@@ -367,6 +374,12 @@ Each edit for an open document carries the analyzed editor version; edits for
 closed files are explicitly unversioned. Clients that cannot apply versioned
 `documentChanges` receive no rename edit, preventing stale ranges from being
 applied through an unsafe fallback.
+An import alias can be renamed within its source file, updating its declaration
+and every resolved qualifier. Renaming an imported symbol updates its original
+declaration and symbol references through all aliases, preserving those aliases.
+Rename rejects names that shadow an import alias, even in nested scopes with
+no current alias usage. Alias names also obey the compiler's declaration,
+primitive-type, and unit-namespace collision rules.
 Program and unit names are excluded because a correct rename would also have to
 rename source files or manifests. Rename is rejected atomically when either the
 declaration or any resolved usage is outside the opened editor folder, so no
@@ -391,17 +404,24 @@ Equal candidates imported from different units remain distinct so the editor
 can present their qualified owners. Private, shadowed, and non-exported
 declarations are excluded.
 
-After a receiver and `.`, completion includes visible callables whose first
-parameter accepts the receiver's type. Existing record members take priority
-over same-named free callables. Definition and hover resolve a complete
-receiver call to the selected callable, and signature help shows only its
-remaining explicit parameters because the receiver supplies the first one.
+After an import alias and `.`, completion lists only that unit's public
+declarations. After a value receiver and `.`, completion lists public record
+members and the fixed native operations of its built-in type. Chains continue
+on each result's type. Definition, hover, and signature help follow the resolved
+record method or native operation; explicit parameters exclude the implicit receiver.
 
 When one unresolved identifier maps to exactly one public declaration in one
 accessible unit, completion can add that unit to the compilation unit's `uses`
 clause. The edit is produced through the canonical formatter and is withheld
 when the declaration or unit is ambiguous, inaccessible, already visible, or
 the existing clause cannot be edited conservatively.
+Existing direct imports are compared by canonical unit name, case-insensitively.
+A plain import already supplies its short names. For an aliased import,
+completion inserts the existing alias qualifier, such as `M.Answer`, without
+editing `uses`, including when the import contains comments. These qualified
+suggestions take precedence over new imports of equal short names. If several
+aliased units supply that name, each qualified suggestion remains distinct.
+Adding a different unit preserves existing aliases and adds no duplicate import.
 
 Signature help covers functions, procedures, record methods, nested routines,
 function values, enum constructors with associated values, and generic calls.
@@ -433,6 +453,10 @@ proves them. Token ranges use UTF-16 positions, preserve lexical ordering, and
 remain non-overlapping. Recovered malformed source can return a safe partial
 result. The TextMate grammar remains active before server startup and whenever
 semantic analysis has no token for a source region.
+Import aliases are namespace tokens. Both semantic highlighting and TextMate
+highlight `as` as a keyword only between a unit path and its alias in `uses`,
+including case variations and multiline imports with comments. A unit segment,
+alias, or ordinary identifier named `As` keeps its identifier classification.
 
 **Quick Fix** (`Ctrl+.`) can add a unit to `uses` for an unknown type (`FP3001`)
 or unknown callable (`FP3003`) when the project contains exactly one accessible

@@ -166,9 +166,19 @@ impl LoweringContext {
                 retain_result,
             );
         }
-        let [DesignatorPart::Ident(name, _)] = designator.parts.as_slice() else {
+        let Some(name) = designator
+            .parts
+            .iter()
+            .map(|part| match part {
+                DesignatorPart::Ident(name, _) => Some(name.as_str()),
+                DesignatorPart::Index(_, _) => None,
+            })
+            .collect::<Option<Vec<_>>>()
+            .map(|parts| parts.join("."))
+        else {
             return Err(unsupported(designator.span, "task call target"));
         };
+        let name = name.as_str();
         let (callee, output) = if self.has_binding(name) {
             let callee_ty = self
                 .binding_type(name)

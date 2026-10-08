@@ -80,6 +80,7 @@ impl Checker {
             if let Some(binding_name) =
                 self.scalar_guard_binding_name(&case_ty, &arm.labels, &arm.guard)
             {
+                self.check_import_alias_collision(binding_name, arm.span);
                 self.mark_scalar_guard_binding(&arm.labels[0]);
                 self.scopes.push_scope();
                 self.scopes.define_with_declaration(
@@ -112,6 +113,7 @@ impl Checker {
             if !bindings.is_empty() {
                 self.scopes.push_scope();
                 for (name, ty) in &bindings {
+                    self.check_import_alias_collision(name, arm.span);
                     self.scopes.define_with_declaration(
                         name,
                         Symbol {

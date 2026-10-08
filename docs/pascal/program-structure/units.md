@@ -41,7 +41,7 @@ The program file uses a `program` declaration instead of `unit`. It does not def
 
 ## Using units
 
-Units must be explicitly imported via `uses` to be accessible — including `Std.*` units. Being listed in the project `.fpasprj` file does not make a unit automatically visible. This also applies to fully qualified names: `Std.Math.Abs(-3)` compiles only with `Std.Math` in `uses`; a qualified name never imports its unit.
+Units must be explicitly imported via `uses` to be accessible — including `Std.*` units. Being listed in the project `.fpasprj` file does not make a unit automatically visible. This also applies to fully qualified names: `Std.Math.Abs(-3)` requires a plain `Std.Math` import; a qualified name never imports its unit.
 
 ```pascal
 program Main;
@@ -58,7 +58,7 @@ end.
 
 ## Short names and qualified names
 
-When a unit is imported via `uses`, its exported symbols become available by their short (unqualified) name and by their fully qualified name:
+With a plain import such as `uses Std.Console;`, its exported symbols become available by their short (unqualified) name and by their fully qualified name:
 
 ```pascal
 program Hello;
@@ -69,9 +69,48 @@ begin
 end.
 ```
 
+### Import aliases
+
+An alias exposes a unit's public symbols only through `Alias.Name`. It opens
+no short names and hides that unit's original path in the importing file:
+
+```pascal
+program Aliases;
+
+uses Std.Math as Math, Std.Console as Console;
+
+begin
+  const Root: real := Math.Sqrt(9.0);
+  Console.WriteLn(Root);
+end.
+```
+
+Here `Sqrt(9.0)` and `Std.Math.Sqrt(9.0)` are errors; use `Math.Sqrt(9.0)`.
+Aliases apply to public types, enum variants, constants, variables, routines,
+and task calls, for example `go Math.Sqrt(9.0)`. Record methods and native
+built-in type operations keep their existing dot syntax.
+
+Unit names and aliases are case-insensitive. The word `as` is contextual in
+`uses`, immediately after the unit name; it remains an ordinary identifier
+elsewhere, including qualified unit segments and an alias named `As`.
+
+An alias cannot collide with another alias, an imported or declaring unit namespace root, a built-in
+type name, or a declaration in the importing file. Local declarations,
+parameters, generic parameters, loop variables, and pattern bindings cannot
+shadow it. Rename either the alias or the conflicting declaration.
+
+Import each unit at most once per source file. Repeated plain imports,
+different aliases for the same unit, and plain/aliased combinations are errors,
+including differences only in case. Shared transitive dependencies are allowed.
+
+Aliases belong to the importing source file; they are not re-exported.
+Unit resolution, export restrictions, public type identities, linked symbols,
+and compiled-unit sidecars use the original canonical unit name. Renaming an
+alias in the program does not rebuild unchanged dependency units.
+
 ### Ambiguity rule
 
-When two or more imported units export the same short name, the short name becomes ambiguous. This applies equally to `Std.*` units and your own units, in any combination, and regardless of parameter counts: a routine `Send` from `MyApp.Net` and `Std.Tasks.Send` make `Send` ambiguous. No error is raised at the `uses` site; the compiler reports an error only when the ambiguous short name is actually used. The fully qualified name selects an ordinary imported routine. Built-in
+When two or more plainly imported units export the same short name, the short name becomes ambiguous. This applies equally to `Std.*` units and your own units, in any combination, and regardless of parameter counts: a routine `Send` from `MyApp.Net` and `Std.Tasks.Send` make `Send` ambiguous. No error is raised at the `uses` site; the compiler reports an error only when the ambiguous short name is actually used. The fully qualified name selects an ordinary imported routine. Built-in
 operations are independent of unit imports and their free routine names:
 
 ```pascal

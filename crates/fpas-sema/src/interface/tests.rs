@@ -6,6 +6,7 @@ use super::analyze_unit;
 mod aliases;
 mod constants;
 mod discard;
+mod import_aliases;
 mod public_signatures;
 mod short_names;
 mod type_order;

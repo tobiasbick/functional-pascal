@@ -141,16 +141,20 @@ unit_heading        = 'unit' qualified_id ';' ;
 
 (* Units have no main block. They contain declarations only.        *)
 
-(* uses_clause: each qualified_id names a unit to import. All symbols of the unit are brought into
+(* uses_clause: each import_entry names a unit to import. Plain imports bring public symbols into
    scope under their short (unqualified) name. If two units export the same short name, the name is
    ambiguous and the compiler reports an error at the point of use (not at the uses site). The fully
-   qualified name always works as a fallback. User-defined project and library units may use qualified
+   qualified name works for a plain import. An aliased import exposes public symbols only through
+   Alias.Name, without short names or access through the original path. Each unit occurs at most
+   once per file's direct imports, comparing names case-insensitively. `as` is contextual immediately
+   after the imported unit name, not a reserved keyword. User-defined project and library units may use qualified
    names but must not use `Std` as their leading segment. Intrinsic standard-library units use
    two-part names such as `Std.Console`. The trusted source-standard-library manifest may additionally
    export multi-segment `Std.*` units such as `Std.Tools.Format`; applications may import only the
    units exported by that manifest. Unknown or non-exported `Std.*` units are rejected. *)
 
-uses_clause         = 'uses' qualified_id { ',' qualified_id } ';' ;
+uses_clause         = 'uses' import_entry { ',' import_entry } ';' ;
+import_entry        = qualified_id [ 'as' identifier ] ;
 
 main_block          = 'begin' statement_list 'end' ;
 

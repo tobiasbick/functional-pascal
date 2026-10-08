@@ -34,16 +34,16 @@ impl Checker {
             .uses
             .iter()
             .filter(|used| {
-                fpas_std::is_retired_type_helper_unit(&used.parts.join("."))
-                    || !dependency_names.contains(&used.parts.join(".").to_ascii_lowercase())
+                fpas_std::is_retired_type_helper_unit(&used.unit.parts.join("."))
+                    || !dependency_names.contains(&used.unit.parts.join(".").to_ascii_lowercase())
             })
             .cloned()
             .collect();
-        self.prepare_uses(&intrinsic_uses);
+        self.prepare_uses(&program.uses, &intrinsic_uses, None);
         self.used_unit_names = program
             .uses
             .iter()
-            .map(|used| used.parts.join(".").to_ascii_lowercase())
+            .map(|used| used.unit.parts.join(".").to_ascii_lowercase())
             .collect();
         self.install_supporting_interface_types(supporting_interfaces)?;
         self.install_interfaces(program, interfaces)?;
@@ -72,16 +72,20 @@ impl Checker {
             .uses
             .iter()
             .filter(|used| {
-                fpas_std::is_retired_type_helper_unit(&used.parts.join("."))
-                    || !dependency_names.contains(&used.parts.join(".").to_ascii_lowercase())
+                fpas_std::is_retired_type_helper_unit(&used.unit.parts.join("."))
+                    || !dependency_names.contains(&used.unit.parts.join(".").to_ascii_lowercase())
             })
             .cloned()
             .collect();
-        self.prepare_uses(&intrinsic_uses);
+        self.prepare_uses(
+            &unit.uses,
+            &intrinsic_uses,
+            unit.name.parts.first().map(String::as_str),
+        );
         self.used_unit_names = unit
             .uses
             .iter()
-            .map(|used| used.parts.join(".").to_ascii_lowercase())
+            .map(|used| used.unit.parts.join(".").to_ascii_lowercase())
             .collect();
         self.install_supporting_interface_types(supporting_interfaces)?;
         self.install_interfaces_for_declarations(&unit.declarations, interfaces)?;
@@ -101,13 +105,20 @@ impl Checker {
     }
 
     fn prepare_program(&mut self, program: &Program) {
-        self.prepare_uses(&program.uses);
+        self.prepare_uses(&program.uses, &program.uses, None);
     }
 
-    fn prepare_uses(&mut self, uses: &[fpas_parser::QualifiedId]) {
+    fn prepare_uses(
+        &mut self,
+        uses: &[fpas_parser::Import],
+        intrinsic_uses: &[fpas_parser::Import],
+        owner_root: Option<&str>,
+    ) {
+        self.register_primitive_types();
+        self.initialize_imports(uses, owner_root);
         self.used_unit_names = uses
             .iter()
-            .map(|used| used.parts.join(".").to_ascii_lowercase())
+            .map(|used| used.unit.parts.join(".").to_ascii_lowercase())
             .collect();
         self.loaded_std_units.clear();
         self.imported_candidates.clear();
@@ -117,8 +128,8 @@ impl Checker {
         self.source_short_candidates.clear();
         self.ambiguous_enum_variants.clear();
         self.enum_short_variant_keys.clear();
-        for u in uses {
-            match canonical_unit_from_uses_clause(u) {
+        for u in intrinsic_uses {
+            match canonical_unit_from_uses_clause(&u.unit) {
                 Ok(canon) => {
                     self.loaded_std_units.insert(canon);
                 }
@@ -136,7 +147,6 @@ impl Checker {
             }
         }
 
-        self.register_primitive_types();
         self.register_loaded_std_library();
     }
 

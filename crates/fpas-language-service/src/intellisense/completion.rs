@@ -91,15 +91,21 @@ fn complete(
                 auto_import_candidates(documents, target_index, &context.prefix, &visible_labels)
                     .into_iter()
                     .map(|candidate| {
-                        declaration_candidate(
+                        let mut completion = declaration_candidate(
                             documents,
                             candidate.document_index,
                             candidate.symbol,
                             context.replacement,
                             CompletionSource::AutoImport,
                             2,
-                            Some(candidate.edit),
-                        )
+                            candidate.edit,
+                        );
+                        if let Some(namespace) = candidate.namespace {
+                            completion.insert_text =
+                                format!("{namespace}.{}", candidate.symbol.name);
+                            completion.label = completion.insert_text.clone();
+                        }
+                        completion
                     }),
             );
         }
@@ -116,6 +122,7 @@ fn complete(
     candidates
 }
 
+/// Lists lexical declarations, aliases, and public names from plain imports.
 pub(super) fn visible_candidates(
     documents: &[NavigationDocument],
     target_index: usize,
@@ -146,7 +153,7 @@ pub(super) fn visible_candidates(
         .map(|symbol| (target_index, *symbol))
         .collect::<Vec<_>>();
     for (document_index, document) in documents.iter().enumerate() {
-        if document_index == target_index || !target.uses_owner(&document.owner) {
+        if document_index == target_index || !target.opens_owner(&document.owner) {
             continue;
         }
         for symbol in document
@@ -169,8 +176,9 @@ fn member_candidates<'a>(
     offset: usize,
 ) -> Vec<(usize, &'a DocumentSymbol)> {
     if let Some((index, document)) = documents.iter().enumerate().find(|(_, document)| {
-        document.owner.eq_ignore_ascii_case(receiver)
-            && documents[target_index].uses_owner(&document.owner)
+        documents[target_index]
+            .namespace_for(&document.owner)
+            .is_some_and(|namespace| namespace.eq_ignore_ascii_case(receiver))
     }) {
         return public_members(document.top_level(), index, target_index);
     }

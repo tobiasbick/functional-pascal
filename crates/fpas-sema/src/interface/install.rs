@@ -16,6 +16,7 @@ impl check::Checker {
         interfaces: &[artifact::UnitInterface],
     ) -> Result<(), InterfaceConversionError> {
         for interface in interfaces {
+            self.scopes.imports.note_unit(&interface.unit_name);
             for exported in &interface.symbols {
                 if exported.kind != artifact::SymbolKind::Type {
                     continue;
@@ -54,6 +55,11 @@ impl check::Checker {
         let mut short_candidates = HashMap::<String, Vec<(String, Symbol)>>::new();
 
         for interface in interfaces {
+            let aliased = self
+                .scopes
+                .imports
+                .aliases
+                .contains_key(&interface.unit_name.to_ascii_lowercase());
             for exported in &interface.symbols {
                 let symbol = interface_symbol_to_sema(exported)?;
                 self.scopes
@@ -73,13 +79,18 @@ impl check::Checker {
                     .entry(canonical_symbol_name(&exported.name))
                     .or_default()
                     .push(exported.qualified_name.clone());
-                if !own_names.contains(&canonical_symbol_name(&exported.name)) {
+                if !aliased && !own_names.contains(&canonical_symbol_name(&exported.name)) {
                     short_candidates
                         .entry(canonical_symbol_name(&exported.name))
                         .or_default()
                         .push((exported.qualified_name.clone(), symbol));
                 }
-                self.install_imported_enum_variants(exported, &mut short_candidates, &own_names)?;
+                self.install_imported_enum_variants(
+                    exported,
+                    &mut short_candidates,
+                    &own_names,
+                    aliased,
+                )?;
             }
         }
 
@@ -123,6 +134,7 @@ impl check::Checker {
         exported: &artifact::InterfaceSymbol,
         short_candidates: &mut std::collections::HashMap<String, Vec<(String, Symbol)>>,
         own_names: &std::collections::HashSet<String>,
+        aliased: bool,
     ) -> Result<(), InterfaceConversionError> {
         let artifact::InterfaceType::Enum(enum_ty) = &exported.ty else {
             return Ok(());
@@ -143,6 +155,9 @@ impl check::Checker {
             };
             let fully_qualified = format!("{}.{}", enum_ty.name, variant.name);
             self.scopes.define_in_root(&fully_qualified, symbol.clone());
+            if aliased {
+                continue;
+            }
             if !own_names.contains(&canonical_symbol_name(&exported.name)) {
                 let type_qualified_short = format!("{}.{}", exported.name, variant.name);
                 short_candidates

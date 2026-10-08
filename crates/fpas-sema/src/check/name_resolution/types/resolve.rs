@@ -112,7 +112,12 @@ impl Checker {
                     self.error_with_code(
                         SEMA_UNKNOWN_TYPE,
                         format!("Unknown type `{name}`"),
-                        "Check spelling or add a type definition.",
+                        self.scopes
+                            .imports
+                            .hidden_path_hint(&name)
+                            .unwrap_or_else(|| {
+                                "Check spelling or add a type definition.".to_string()
+                            }),
                         qid.span,
                     );
                     Ty::Error

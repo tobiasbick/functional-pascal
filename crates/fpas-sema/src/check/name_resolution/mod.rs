@@ -7,6 +7,16 @@ mod types;
 
 impl Checker {
     pub(crate) fn hint_unknown_callable(&self, name: &str) -> String {
+        if let Some(hint) = self.scopes.imports.hidden_path_hint(name) {
+            return hint;
+        }
+        if let Some((root, _)) = name.split_once('.')
+            && self.scopes.imports.is_alias(root)
+        {
+            return format!(
+                "Check the public symbol name after import alias `{root}`. Private unit members are not visible outside their unit."
+            );
+        }
         if let Some((unit, _)) = name.rsplit_once('.')
             && !unit.to_ascii_lowercase().starts_with("std.")
             && self.used_unit_names.contains(&unit.to_ascii_lowercase())

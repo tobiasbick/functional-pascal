@@ -176,7 +176,7 @@ async function verifyPositiveScopes(grammar) {
   );
   assertScope(
     tokenAt(fixture, "uses Std.Console", "Std.Console"),
-    "variable.other.qualified.fpas"
+    "entity.name.namespace.fpas"
   );
 }
 
@@ -436,6 +436,26 @@ async function verifyIndividualDeclarations(grammar) {
   assertNoKeywordScope(tokenAt(fixture, "public var mutable", "mutable"));
 }
 
+async function verifyImportAliases(grammar) {
+  const fixture = await tokenizeFixture(grammar, "import_aliases.fpas");
+  for (const [line, modifier] of [["uses Demo.Math as M", "as"],
+    ["As as First", "as"], ["Demo.As as As", "as"],
+    ["AS // contextual keyword", "AS"]]) {
+    assertScope(tokenAt(fixture, line, modifier), "keyword.declaration.import.fpas");
+  }
+  for (const [line, name, occurrence] of [["uses Demo.Math as M", "M", 1],
+    ["As as First", "As", 0], ["Demo.As as As", "As", 0],
+    ["Demo.As as As", "As", 1], ["       As", "As", 0],
+    ["       Other;", "Other", 0]]) {
+    assertScope(tokenAt(fixture, line, name, occurrence), "entity.name.namespace.fpas");
+    assertNoKeywordScope(tokenAt(fixture, line, name, occurrence));
+  }
+  for (const line of ["const As:", "const Value:", "discard As.Answer()"])
+    assertNoKeywordScope(tokenAt(fixture, line, "As"));
+  assertScope(tokenAt(fixture, "// uses", "as"), "comment.line.double-slash.fpas");
+  assertScope(tokenAt(fixture, "const Text:", "as"), "string.quoted.single.fpas");
+}
+
 export async function verifyGrammar() {
   const grammar = await createGrammar();
   await verifyDeclarationClosers(grammar);
@@ -444,6 +464,7 @@ export async function verifyGrammar() {
   await verifyExpressionClosers(grammar);
   await verifyPositiveScopes(grammar);
   await verifyIndividualDeclarations(grammar);
+  await verifyImportAliases(grammar);
   await verifyNegativeScopes(grammar);
   await verifyEdgeScopes(grammar);
   await verifyReservedKeywordScopes(grammar);

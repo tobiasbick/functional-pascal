@@ -22,6 +22,9 @@ impl Checker {
         mutable: bool,
         constant: bool,
     ) {
+        if self.check_import_alias_collision(name, span) {
+            return;
+        }
         let declared_ty = self.resolve_type_expr(type_expr);
 
         let value_ty = self.check_expr_with_expected_record_literals(value, &declared_ty);

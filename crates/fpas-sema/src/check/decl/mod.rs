@@ -13,6 +13,16 @@ use std::collections::HashSet;
 
 impl Checker {
     pub(crate) fn check_decl(&mut self, decl: &Decl) {
+        let (name, span) = match decl {
+            Decl::Const(d) => (&d.name, d.span),
+            Decl::Var(d) => (&d.name, d.span),
+            Decl::TypeDef(d) => (&d.name, d.span),
+            Decl::Function(d) => (&d.name, d.span),
+            Decl::Procedure(d) => (&d.name, d.span),
+        };
+        if self.check_import_alias_collision(name, span) {
+            return;
+        }
         match decl {
             Decl::Const(c) => self.check_const_def(c),
             Decl::Var(v) => self.check_var_def(v, true),
@@ -61,6 +71,7 @@ impl Checker {
     ) {
         let mut seen = HashSet::new();
         for type_param in type_params {
+            self.check_import_alias_collision(&type_param.name, span);
             if !seen.insert(canonical_symbol_name(&type_param.name)) {
                 self.report_duplicate_declaration("type parameter", &type_param.name, span);
             }
@@ -70,6 +81,7 @@ impl Checker {
     pub(crate) fn check_unique_formal_param_names(&mut self, params: &[FormalParam]) {
         let mut seen = HashSet::new();
         for param in params {
+            self.check_import_alias_collision(&param.name, param.span);
             if !seen.insert(canonical_symbol_name(&param.name)) {
                 self.report_duplicate_declaration("parameter", &param.name, param.span);
             }

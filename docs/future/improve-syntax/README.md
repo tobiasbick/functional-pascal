@@ -44,7 +44,7 @@ an open work package.
 
 ## Package status
 
-AP01, AP02, AP04, AP06, AP07, AP09, AP11, AP13, AP16, and AP17 are
+AP01, AP02, AP04, AP05, AP06, AP07, AP09, AP11, AP13, AP16, and AP17 are
 complete, including all their work packages. Their READMEs and work-package
 files record implemented behavior, implementation owners, regression coverage,
 and any independent follow-ups. Checkboxes use the
@@ -60,7 +60,7 @@ package are listed in each work package file.
 | [x] | [AP02: Structured diagnostics](ap02-structured-diagnostics/README.md) | Small | None | Complete (Q01) |
 | [ ] | [AP03: Explicit closed-enum cases](ap03-explicit-closed-enum-cases/README.md) | Small | AP02, AP20 | Agreed direction |
 | [x] | [AP04: Discarded function values](ap04-discarded-function-values/README.md) | Small | AP02 | Complete |
-| [ ] | [AP05: Qualified imports](ap05-qualified-imports/README.md) | Medium | AP01, AP02 | Agreed direction (Q04) |
+| [x] | [AP05: Qualified imports](ap05-qualified-imports/README.md) | Medium | AP01, AP02 | Complete: import aliases and alias-aware editor tooling |
 | [x] | [AP06: Fixed dot-call targets](ap06-dot-call-targets/README.md) | Medium | AP09.1, AP17.3 (AP06.3) | Complete (Q05) |
 | [x] | [AP07: Boolean rules](ap07-boolean-rules/README.md) | Medium | AP02 | Complete (Q02, Q03) |
 | — | [AP08: Comma-separated parameter lists](ap08-comma-separated-parameter-lists/README.md) | — | — | Rejected; closed (Q06) |
@@ -135,12 +135,12 @@ are recorded in each work-package file.
 1. AP10 and AP14 follow the completed named-argument and dot-call rules.
 2. AP20 enables AP03 and AP15; AP21 and AP24 follow their required parts of
    AP03, AP10, and AP20.
-3. AP18 and AP23 use the completed Boolean and binding rules. AP19 also
-   requires AP05.
+3. AP18 and AP23 use the completed Boolean and binding rules. AP19 uses the
+   completed import and binding rules.
 4. AP26 uses the completed block and caller-mutation rules. Reassess AP25
    after AP23 and practical use of its contracts; AP14 is also a prerequisite.
 
-AP05 can proceed independently and enables AP19. AP12 can proceed to its
+AP12 can proceed to its
 accept/reject decision now that AP06 is complete; its implementation still
 requires that decision. AP22 uses the completed diagnostic and binding rules;
 its typed-construction portion requires AP10.1.

@@ -1,0 +1,17 @@
+program ImportAliasesTest;
+
+uses Std.Test, Std.Math as Math, Std.Conv as Numbers, Std.Tasks as Jobs, Std.Json as Json;
+
+begin
+  AssertEquals(3.0, Math.Sqrt(9.0));
+  AssertTrue(math.pi > 3.14);
+  AssertEquals('42', Numbers.IntToStr(42));
+  AssertEquals('value', ' value '.Trim());
+  var Items: array of integer := [1];
+  Items.Push(2);
+  AssertEquals(2, Items.Length());
+  const Pending: task of real := go Math.Sqrt(16.0);
+  AssertEquals(4.0, Jobs.Wait(Pending));
+  const Value: Json.JsonValue := Json.JsonValue.Bool(true);
+  AssertEquals('true', Json.Stringify(Value));
+end.

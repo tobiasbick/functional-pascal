@@ -44,6 +44,9 @@ impl Checker {
             let Decl::TypeDef(definition) = declaration else {
                 continue;
             };
+            if self.scopes.imports.is_alias(&definition.name) {
+                continue;
+            }
             if !self.scopes.define_with_declaration(
                 &definition.name,
                 Symbol {

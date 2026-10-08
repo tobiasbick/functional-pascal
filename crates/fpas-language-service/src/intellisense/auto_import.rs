@@ -11,12 +11,16 @@ use super::CompletionEdit;
 use crate::navigation::NavigationDocument;
 use crate::{DocumentSymbol, SymbolKind, SymbolVisibility};
 
+/// A public symbol, optionally qualified by an existing source alias.
 pub(super) struct AutoImportCandidate<'a> {
     pub(super) document_index: usize,
     pub(super) symbol: &'a DocumentSymbol,
-    pub(super) edit: CompletionEdit,
+    pub(super) edit: Option<CompletionEdit>,
+    pub(super) namespace: Option<String>,
 }
 
+/// Reuses direct imports before offering a new, unambiguous unit import.
+/// See `docs/pascal/tools/editor-integration.md`.
 pub(super) fn auto_import_candidates<'a>(
     documents: &'a [NavigationDocument],
     target_index: usize,
@@ -26,7 +30,7 @@ pub(super) fn auto_import_candidates<'a>(
     let target = &documents[target_index];
     let mut grouped = HashMap::<String, Vec<(usize, &DocumentSymbol)>>::new();
     for (document_index, document) in documents.iter().enumerate() {
-        if document_index == target_index || target.uses_owner(&document.owner) {
+        if document_index == target_index || target.opens_owner(&document.owner) {
             continue;
         }
         for symbol in document.top_level().iter().filter(|symbol| {
@@ -44,15 +48,38 @@ pub(super) fn auto_import_candidates<'a>(
 
     let mut candidates = grouped
         .into_values()
-        .filter_map(|matches| {
+        .flat_map(|matches| {
+            let existing = matches
+                .iter()
+                .filter_map(|(document_index, symbol)| {
+                    let alias = target
+                        .import_for(&documents[*document_index].owner)?
+                        .alias
+                        .as_ref()?;
+                    Some(AutoImportCandidate {
+                        document_index: *document_index,
+                        symbol,
+                        edit: None,
+                        namespace: Some(alias.name.clone()),
+                    })
+                })
+                .collect::<Vec<_>>();
+            if !existing.is_empty() {
+                return existing;
+            }
             let [(document_index, symbol)] = matches.as_slice() else {
-                return None;
+                return Vec::new();
             };
-            import_edit(target, &documents[*document_index].owner).map(|edit| AutoImportCandidate {
+            let owner = &documents[*document_index].owner;
+            let Some(edit) = import_edit(target, owner) else {
+                return Vec::new();
+            };
+            vec![AutoImportCandidate {
                 document_index: *document_index,
                 symbol,
-                edit,
-            })
+                edit: Some(edit),
+                namespace: None,
+            }]
         })
         .collect::<Vec<_>>();
     candidates.sort_by(|left, right| {
@@ -118,16 +145,21 @@ fn canonical_uses_clause(document: &NavigationDocument, unit: &str) -> Option<St
         CompilationUnit::Program(program) => &mut program.uses,
         CompilationUnit::Unit(unit) => &mut unit.uses,
     };
-    uses.push(QualifiedId {
-        parts: unit.split('.').map(str::to_owned).collect(),
-        span: Span {
-            offset: 0,
-            length: 0,
-            line: 1,
-            column: 1,
-            source_id: 0,
-        },
-    });
+    if !uses
+        .iter()
+        .any(|import| import.unit.parts.join(".").eq_ignore_ascii_case(unit))
+    {
+        uses.push(fpas_parser::Import::from(QualifiedId {
+            parts: unit.split('.').map(str::to_owned).collect(),
+            span: Span {
+                offset: 0,
+                length: 0,
+                line: 1,
+                column: 1,
+                source_id: 0,
+            },
+        }));
+    }
     let formatted = format_compilation_unit(&compilation);
     let start = formatted.find("uses")?;
     let end = formatted.get(start..)?.find(';')? + start + 1;

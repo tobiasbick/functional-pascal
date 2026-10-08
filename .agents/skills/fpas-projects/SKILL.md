@@ -41,6 +41,9 @@ or `fpas test --help`.
    consumer's manifest; workspace dependencies name a member's `project.name`.
    The workspace lists members. Consumers import exported units with `uses`;
    library `[exports].units` controls their public unit surface.
+   Source aliases such as `uses Library.Api as Api;` do not change manifest
+   export names, unit graph identities, or dependency sidecars. Import each
+   unit once per source file; shared transitive dependencies remain allowed.
 4. Use [fpas-authoring](../fpas-authoring/SKILL.md) when editing `.fpas` sources.
 
 ## Verify manifests

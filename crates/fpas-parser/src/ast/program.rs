@@ -1,4 +1,4 @@
-use super::{Decl, Stmt};
+use super::{Decl, Import, Stmt};
 use fpas_lexer::Span;
 
 /// Parsed top-level source file.
@@ -18,7 +18,7 @@ pub struct Program {
     /// Source span of the program name.
     pub name_span: Span,
     /// Units imported by the program's `uses` clause.
-    pub uses: Vec<QualifiedId>,
+    pub uses: Vec<Import>,
     /// Top-level declarations in source order.
     pub declarations: Vec<Decl>,
     /// Statements in the program body.
@@ -33,7 +33,7 @@ pub struct Unit {
     /// Qualified unit name declared by the header.
     pub name: QualifiedId,
     /// Units imported by the unit's `uses` clause.
-    pub uses: Vec<QualifiedId>,
+    pub uses: Vec<Import>,
     /// Unit-level declarations in source order.
     pub declarations: Vec<Decl>,
     /// Source span of the complete unit.

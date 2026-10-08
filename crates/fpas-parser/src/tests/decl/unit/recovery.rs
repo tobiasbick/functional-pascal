@@ -56,8 +56,8 @@ end unit;\n",
     };
 
     assert_eq!(unit.uses.len(), 2);
-    assert_eq!(unit.uses[0].parts, vec!["_error_"]);
-    assert_eq!(unit.uses[1].parts, vec!["Std", "Console"]);
+    assert_eq!(unit.uses[0].unit.parts, vec!["_error_"]);
+    assert_eq!(unit.uses[1].unit.parts, vec!["Std", "Console"]);
     assert_eq!(unit.declarations.len(), 1);
     assert!(matches!(&unit.declarations[0], Decl::Function(_)));
 }
@@ -80,7 +80,7 @@ end unit;\n",
     };
 
     assert_eq!(unit.uses.len(), 1);
-    assert_eq!(unit.uses[0].parts, vec!["_error_"]);
+    assert_eq!(unit.uses[0].unit.parts, vec!["_error_"]);
     assert_eq!(unit.declarations.len(), 1);
     assert!(matches!(&unit.declarations[0], Decl::Function(_)));
 }

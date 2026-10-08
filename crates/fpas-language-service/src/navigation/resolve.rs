@@ -7,6 +7,8 @@ use super::NavigationDocument;
 use super::named_arguments::NamedArgumentLabel;
 use crate::{DocumentSymbol, SymbolKind, SymbolVisibility};
 
+/// Resolves declarations and uses through source-local import namespaces.
+/// See `docs/pascal/tools/editor-integration.md`.
 pub(crate) fn resolve(
     documents: &[NavigationDocument],
     target_index: usize,
@@ -14,6 +16,21 @@ pub(crate) fn resolve(
 ) -> Option<(usize, DocumentSymbol, SourceSpan)> {
     let target = documents.get(target_index)?;
     let (token_index, name, range) = identifier_at(target, offset)?;
+    if target.is_import_modifier(offset) {
+        return None;
+    }
+    if let Some(import) = target
+        .uses
+        .iter()
+        .find(|import| contains(import.unit.span.diagnostic_span_or_synthetic(), offset))
+    {
+        let owner = import.unit.parts.join(".");
+        let (index, document) = documents
+            .iter()
+            .enumerate()
+            .find(|(_, document)| document.owner.eq_ignore_ascii_case(&owner))?;
+        return Some((index, document.roots.first()?.clone(), range));
+    }
 
     if let Some(symbol) = target
         .all_symbols()
@@ -102,6 +119,7 @@ pub(crate) fn token_name(document: &NavigationDocument, index: usize) -> Option<
         .map(|()| value.to_owned())
 }
 
+/// Resolves lexical bindings and public short names opened by plain imports.
 pub(crate) fn resolve_unqualified(
     documents: &[NavigationDocument],
     target_index: usize,
@@ -137,6 +155,7 @@ pub(crate) fn resolve_unqualified(
     })
 }
 
+/// Resolves a visible unit namespace or members of a resolved value or type.
 pub(crate) fn resolve_qualified(
     documents: &[NavigationDocument],
     target_index: usize,
@@ -149,88 +168,118 @@ pub(crate) fn resolve_qualified(
         .iter()
         .enumerate()
         .filter_map(|(index, document)| {
-            let owner_parts = document.owner.split('.').count();
+            let namespace = target.namespace_for(&document.owner)?;
+            let owner_parts = namespace.split('.').count();
             (parts.len() >= owner_parts
                 && parts[..owner_parts]
                     .join(".")
-                    .eq_ignore_ascii_case(&document.owner)
-                && target.uses_owner(&document.owner))
+                    .eq_ignore_ascii_case(&namespace))
             .then_some((index, document, owner_parts))
         })
         .collect::<Vec<_>>();
     if !owner_candidates.is_empty() {
-        let qualified = parts.join(".");
         let mut resolved = owner_candidates
             .into_iter()
             .filter_map(|(index, document, owner_parts)| {
-                let symbol = if parts.len() == owner_parts {
-                    document.roots.first()
-                } else {
-                    document.all_symbols().into_iter().find(|symbol| {
-                        symbol.qualified_name.eq_ignore_ascii_case(&qualified)
-                            && (index == target_index
-                                || symbol.visibility == SymbolVisibility::Public)
-                    })
-                }?;
-                Some((index, symbol.clone()))
+                if parts.len() == owner_parts {
+                    return Some((index, document.roots.first()?.clone()));
+                }
+                let symbol = document.top_level().iter().find(|symbol| {
+                    symbol.name.eq_ignore_ascii_case(&parts[owner_parts])
+                        && (index == target_index || symbol.visibility == SymbolVisibility::Public)
+                })?;
+                resolve_members(
+                    documents,
+                    target_index,
+                    index,
+                    symbol.clone(),
+                    &parts[owner_parts + 1..],
+                )
             })
             .collect::<Vec<_>>();
         return (resolved.len() == 1).then(|| resolved.remove(0));
     }
 
     let (base_index, base) = resolve_unqualified(documents, target_index, first, offset)?;
-    let mut owner_type = if matches!(base.kind, SymbolKind::Type | SymbolKind::Enum) {
-        Some(base.qualified_name)
-    } else {
-        base.type_name
-    }?;
-    for (member_index, member_name) in parts[1..].iter().enumerate() {
-        let (type_index, type_symbol) =
-            find_type(documents, target_index, base_index, &owner_type)?;
+    resolve_members(documents, target_index, base_index, base, &parts[1..])
+}
+
+fn resolve_members(
+    documents: &[NavigationDocument],
+    target_index: usize,
+    mut base_index: usize,
+    mut base: DocumentSymbol,
+    members: &[String],
+) -> Option<(usize, DocumentSymbol)> {
+    for member_name in members {
+        let owner_type = if matches!(base.kind, SymbolKind::Type | SymbolKind::Enum) {
+            &base.qualified_name
+        } else {
+            base.type_name.as_ref()?
+        };
+        let (type_index, type_symbol) = find_type(documents, target_index, base_index, owner_type)?;
         let member = type_symbol.children.iter().find(|member| {
             member.name.eq_ignore_ascii_case(member_name)
                 && (type_index == target_index || member.visibility == SymbolVisibility::Public)
         })?;
-        owner_type = member
-            .type_name
-            .clone()
-            .unwrap_or_else(|| member.qualified_name.clone());
-        if member_index + 2 == parts.len() {
-            return Some((type_index, member.clone()));
-        }
+        base = member.clone();
+        base_index = type_index;
     }
-    None
+    Some((base_index, base))
 }
 
+/// Resolves a named type using the declaration's own import environment.
+/// See `docs/pascal/tools/editor-integration.md`.
 pub(crate) fn find_type<'a>(
     documents: &'a [NavigationDocument],
     target_index: usize,
     preferred_index: usize,
     name: &str,
 ) -> Option<(usize, &'a DocumentSymbol)> {
-    let short = name.rsplit('.').next().unwrap_or(name);
     let preferred = &documents[preferred_index];
+    let canonical = preferred.canonical_name(name);
+    if canonical.contains('.') {
+        return documents.iter().enumerate().find_map(|(index, document)| {
+            if !preferred.uses_owner(&document.owner) {
+                return None;
+            }
+            document
+                .top_level()
+                .iter()
+                .find(|symbol| {
+                    matches!(symbol.kind, SymbolKind::Type | SymbolKind::Enum)
+                        && symbol.qualified_name.eq_ignore_ascii_case(&canonical)
+                        && (index == target_index || symbol.visibility == SymbolVisibility::Public)
+                })
+                .map(|symbol| (index, symbol))
+        });
+    }
     if let Some(symbol) = preferred.top_level().iter().find(|symbol| {
         matches!(symbol.kind, SymbolKind::Type | SymbolKind::Enum)
-            && symbol.name.eq_ignore_ascii_case(short)
+            && symbol.name.eq_ignore_ascii_case(name)
+            && (preferred_index == target_index || symbol.visibility == SymbolVisibility::Public)
     }) {
         return Some((preferred_index, symbol));
     }
-    documents.iter().enumerate().find_map(|(index, document)| {
-        if index != target_index && !documents[target_index].uses_owner(&document.owner) {
-            return None;
-        }
-        document
-            .top_level()
-            .iter()
-            .find(|symbol| {
-                matches!(symbol.kind, SymbolKind::Type | SymbolKind::Enum)
-                    && (symbol.name.eq_ignore_ascii_case(short)
-                        || symbol.qualified_name.eq_ignore_ascii_case(name))
-                    && (index == target_index || symbol.visibility == SymbolVisibility::Public)
-            })
-            .map(|symbol| (index, symbol))
-    })
+    let mut matches = documents
+        .iter()
+        .enumerate()
+        .filter_map(|(index, document)| {
+            if !preferred.opens_owner(&document.owner) {
+                return None;
+            }
+            document
+                .top_level()
+                .iter()
+                .find(|symbol| {
+                    matches!(symbol.kind, SymbolKind::Type | SymbolKind::Enum)
+                        && symbol.name.eq_ignore_ascii_case(name)
+                        && (index == target_index || symbol.visibility == SymbolVisibility::Public)
+                })
+                .map(|symbol| (index, symbol))
+        })
+        .collect::<Vec<_>>();
+    (matches.len() == 1).then(|| matches.remove(0))
 }
 
 fn imported_top_level(
@@ -241,7 +290,7 @@ fn imported_top_level(
     documents
         .iter()
         .enumerate()
-        .filter(|(index, document)| *index != target_index && target.uses_owner(&document.owner))
+        .filter(|(index, document)| *index != target_index && target.opens_owner(&document.owner))
         .flat_map(|(index, document)| {
             document
                 .top_level()

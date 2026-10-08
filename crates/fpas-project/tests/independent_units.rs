@@ -82,7 +82,7 @@ include = ["src/**/*.fpas"]
             .iter()
             .filter_map(|dependency| {
                 interfaces
-                    .get(&dependency.parts.join(".").to_ascii_lowercase())
+                    .get(&dependency.unit.parts.join(".").to_ascii_lowercase())
                     .cloned()
             })
             .collect();

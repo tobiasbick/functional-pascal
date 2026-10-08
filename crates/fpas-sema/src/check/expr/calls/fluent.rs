@@ -24,6 +24,12 @@ impl Checker {
             })
             .collect::<Option<Vec<_>>>();
         names.is_some_and(|names| {
+            if names
+                .first()
+                .is_some_and(|root| self.scopes.imports.is_alias(root))
+            {
+                return names.len() == 1;
+            }
             self.used_unit_names
                 .contains(&names.join(".").to_ascii_lowercase())
                 && names

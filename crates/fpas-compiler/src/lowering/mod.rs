@@ -157,6 +157,7 @@ fn lower_analyzed_root(
         .map_err(|_| vec![context::unsupported(span, "function identifier overflow")])?;
     let (imports, imported_stubs) = imports::install(
         imports::InterfaceSet {
+            aliases: &metadata.import_aliases,
             direct: interfaces,
             supporting: supporting_interfaces,
         },

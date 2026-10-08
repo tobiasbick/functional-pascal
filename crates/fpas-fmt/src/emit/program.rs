@@ -1,6 +1,6 @@
 //! `program` and `unit` compilation units.
 
-use fpas_parser::{Program, QualifiedId, Unit};
+use fpas_parser::{Import, Program, Unit};
 
 use crate::comments::{
     CommentMap, emit_leading_comments, emit_trailing_comments, emit_trailing_end_comments,
@@ -81,7 +81,7 @@ fn emit_unit(emitter: &mut Emitter, unit: &Unit, comments: &CommentMap) {
     emit_trailing_end_comments(emitter, comments);
 }
 
-fn emit_optional_uses(emitter: &mut Emitter, uses: &[QualifiedId], comments: &CommentMap) {
+fn emit_optional_uses(emitter: &mut Emitter, uses: &[Import], comments: &CommentMap) {
     if uses.is_empty() {
         return;
     }
@@ -95,20 +95,20 @@ fn emit_optional_uses(emitter: &mut Emitter, uses: &[QualifiedId], comments: &Co
     }
     let items: Vec<String> = uses
         .iter()
-        .map(|unit_name| measure_emit(|inner| emit_qualified_id(inner, unit_name)))
+        .map(|unit_name| measure_emit(|inner| emit_import(inner, unit_name)))
         .collect();
     emit_wrapped_comma_list(emitter, "uses ", crate::style::INDENT_WIDTH, &items, ";");
     emitter.blank_line();
 }
 
-fn emit_commented_uses(emitter: &mut Emitter, uses: &[QualifiedId], comments: &CommentMap) {
+fn emit_commented_uses(emitter: &mut Emitter, uses: &[Import], comments: &CommentMap) {
     emitter.writeln("uses");
     emitter.with_indent(|inner| {
         for (index, unit_name) in uses.iter().enumerate() {
             let offset = unit_name.span.offset;
             emit_leading_comments(inner, comments, offset, false);
             inner.write_current_indent();
-            emit_qualified_id(inner, unit_name);
+            emit_import(inner, unit_name);
             inner.write(if index + 1 == uses.len() { ";" } else { "," });
             emit_trailing_comments(inner, comments, offset);
             if !inner.ends_with_newline() {
@@ -116,6 +116,14 @@ fn emit_commented_uses(emitter: &mut Emitter, uses: &[QualifiedId], comments: &C
             }
         }
     });
+}
+
+fn emit_import(emitter: &mut Emitter, import: &Import) {
+    emit_qualified_id(emitter, &import.unit);
+    if let Some(alias) = &import.alias {
+        emitter.write(" as ");
+        emitter.write(&alias.name);
+    }
 }
 
 fn finish_header_line(emitter: &mut Emitter, comments: &CommentMap, owner_start: usize) {
@@ -199,6 +207,22 @@ mod tests {
         );
         assert!(formatted.contains("uses\n"));
         assert!(formatted.contains("MyApp.Very.Long.Namespace.Two"));
+    }
+
+    #[test]
+    fn import_aliases_preserve_spelling_comments_and_round_trip() {
+        let source = "program T;\nuses\n  Std.Math AS Numbers, // calculation\n  App.As aS As; // contextual name\nbegin end.";
+        let formatted = parse_and_format(source);
+        assert!(formatted.contains("Std.Math as Numbers,"), "{formatted}");
+        assert!(formatted.contains("App.As as As;"), "{formatted}");
+        assert_eq!(formatted.matches("// calculation").count(), 1);
+        assert_eq!(formatted.matches("// contextual name").count(), 1);
+        assert_eq!(parse_and_format(&formatted), formatted);
+        let long = parse_and_format(
+            "unit Demo.Consumer; uses App.Very.Long.Namespace.One as FirstNamespace, App.Very.Long.Namespace.Two as SecondNamespace, Std.Math as Numbers; end unit;",
+        );
+        assert!(long.contains("uses\n"), "{long}");
+        assert_eq!(parse_and_format(&long), long);
     }
 
     #[test]

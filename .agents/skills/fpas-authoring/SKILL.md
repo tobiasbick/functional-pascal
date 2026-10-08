@@ -47,6 +47,10 @@ Read the pages relevant to the change. For exact productions, consult
   constants. Calls and computed bindings belong in guard conditions.
 - Import every referenced unit with `uses`, including fully qualified `Std.*`
   calls. Qualify ambiguous short names with the current unit name from its handbook.
+  Import each unit only once per file, comparing names case-insensitively.
+  `uses Std.Math as Math;` exposes only `Math.Name`, with no short names or
+  access through `Std.Math.Name`. Alias names cannot be shadowed by declarations,
+  parameters, loop variables, or pattern bindings. `as` remains contextual in `uses`.
 - Functions return with `return`. Consume function results or use an allowed
   explicit [discard](../../../docs/pascal/language/functions/discard.md).
 - Statements end with `;`. Use each construct's named closer, such as

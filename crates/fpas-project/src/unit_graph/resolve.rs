@@ -4,7 +4,6 @@ use std::collections::HashSet;
 use std::path::Path;
 
 use fpas_diagnostics::codes::PROJECT_UNIT_NOT_EXPORTED;
-use fpas_parser::QualifiedId;
 
 use crate::ProjectError;
 use crate::model::{LibraryExportPolicy, SourceOrigin};
@@ -23,12 +22,15 @@ impl<'a> ImportPolicy<'a> {
         Self { graph }
     }
 
-    pub(crate) fn validate_root_uses(&self, uses: &[QualifiedId]) -> Result<(), ProjectError> {
+    pub(crate) fn validate_root_uses(
+        &self,
+        uses: &[fpas_parser::Import],
+    ) -> Result<(), ProjectError> {
         if !self.graph.link_meta().enforces_export_rules() {
             return Ok(());
         }
         for used in uses {
-            let target_key = canonical_unit_key(used);
+            let target_key = canonical_unit_key(&used.unit);
             if !self.can_import(&SourceOrigin::Own, &target_key) {
                 return Err(self.not_exported_error(&target_key));
             }
@@ -137,7 +139,7 @@ impl<'a> ImportPolicy<'a> {
 }
 
 pub(super) fn resolve_reachable(
-    root_uses: &[QualifiedId],
+    root_uses: &[fpas_parser::Import],
     graph: &UnitGraph,
     policy: &ImportPolicy<'_>,
 ) -> Result<HashSet<String>, ProjectError> {
@@ -147,7 +149,7 @@ pub(super) fn resolve_reachable(
 
     for used in root_uses {
         if !is_intrinsic_std_unit(used, graph) {
-            queue.push(canonical_unit_key(used));
+            queue.push(canonical_unit_key(&used.unit));
         }
     }
 
@@ -162,7 +164,7 @@ pub(super) fn resolve_reachable(
             if is_intrinsic_std_unit(used, graph) {
                 continue;
             }
-            let dependency_key = canonical_unit_key(used);
+            let dependency_key = canonical_unit_key(&used.unit);
             if !graph.contains(&dependency_key) {
                 return Err(unknown_unit_error(
                     &dependency_key,
@@ -194,7 +196,7 @@ pub(super) fn all_library_units(graph: &UnitGraph) -> Result<HashSet<String>, Pr
             if is_intrinsic_std_unit(used, graph) {
                 continue;
             }
-            let dependency_key = canonical_unit_key(used);
+            let dependency_key = canonical_unit_key(&used.unit);
             if !reachable.contains(&dependency_key) {
                 return Err(unknown_unit_error(
                     &dependency_key,

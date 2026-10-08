@@ -1,5 +1,7 @@
 //! Interface-backed register bindings and verifier-safe imported function stubs.
 
+mod names;
+
 use std::collections::{BTreeMap, BTreeSet};
 
 use fpas_ir::{
@@ -24,6 +26,7 @@ pub(crate) struct ImportPlan {
 }
 
 pub(super) struct InterfaceSet<'a> {
+    pub aliases: &'a BTreeMap<String, String>,
     pub direct: &'a [UnitInterface],
     pub supporting: &'a [UnitInterface],
 }
@@ -53,29 +56,39 @@ pub(super) fn install(
     let mut symbols = interfaces
         .direct
         .iter()
-        .flat_map(|interface| &interface.symbols)
+        .flat_map(|interface| {
+            let plain = !interfaces
+                .aliases
+                .contains_key(&interface.unit_name.to_ascii_lowercase());
+            interface.symbols.iter().map(move |symbol| (symbol, plain))
+        })
         .collect::<Vec<_>>();
-    symbols.sort_by_key(|symbol| symbol.qualified_name.to_ascii_lowercase());
+    symbols.sort_by_key(|(symbol, _)| symbol.qualified_name.to_ascii_lowercase());
     symbols.dedup_by(|left, right| {
-        left.qualified_name
-            .eq_ignore_ascii_case(&right.qualified_name)
+        left.0
+            .qualified_name
+            .eq_ignore_ascii_case(&right.0.qualified_name)
     });
     let short_constant_counts = symbols
         .iter()
-        .filter(|symbol| {
-            matches!(
-                symbol.kind,
-                SymbolKind::Constant(Some(_)) | SymbolKind::EnumMember(_)
-            )
+        .filter(|(symbol, plain)| {
+            *plain
+                && matches!(
+                    symbol.kind,
+                    SymbolKind::Constant(Some(_)) | SymbolKind::EnumMember(_)
+                )
         })
-        .fold(BTreeMap::<String, usize>::new(), |mut counts, symbol| {
-            *counts.entry(symbol.name.to_ascii_lowercase()).or_default() += 1;
-            counts
-        });
+        .fold(
+            BTreeMap::<String, usize>::new(),
+            |mut counts, (symbol, _)| {
+                *counts.entry(symbol.name.to_ascii_lowercase()).or_default() += 1;
+                counts
+            },
+        );
     let mut plan = ImportPlan::default();
     let mut stubs = Vec::new();
     let mut installed_callables = BTreeSet::new();
-    for symbol in symbols {
+    for (symbol, plain) in symbols {
         match &symbol.kind {
             SymbolKind::Function | SymbolKind::Procedure => {
                 let callable_type = match &symbol.ty {
@@ -86,7 +99,7 @@ pub(super) fn install(
                 };
                 install_callable(
                     &symbol.qualified_name,
-                    Some(&symbol.name),
+                    plain.then_some(symbol.name.as_str()),
                     callable_type,
                     types,
                     callables,
@@ -110,9 +123,11 @@ pub(super) fn install(
                     initializer: None,
                 });
                 let binding = GlobalBinding { id, ty };
-                global_bindings
-                    .entry(symbol.name.to_ascii_lowercase())
-                    .or_insert(binding);
+                if plain {
+                    global_bindings
+                        .entry(symbol.name.to_ascii_lowercase())
+                        .or_insert(binding);
+                }
                 global_bindings.insert(symbol.qualified_name.to_ascii_lowercase(), binding);
                 plan.globals.push((
                     id,
@@ -139,10 +154,11 @@ pub(super) fn install(
             SymbolKind::Constant(Some(value)) | SymbolKind::EnumMember(value) => {
                 let value = lower_constant(value);
                 constants.insert(symbol.qualified_name.to_ascii_lowercase(), value.clone());
-                if short_constant_counts
-                    .get(&symbol.name.to_ascii_lowercase())
-                    .copied()
-                    == Some(1)
+                if plain
+                    && short_constant_counts
+                        .get(&symbol.name.to_ascii_lowercase())
+                        .copied()
+                        == Some(1)
                 {
                     constants
                         .entry(symbol.name.to_ascii_lowercase())
@@ -173,6 +189,10 @@ pub(super) fn install(
         )?;
     }
     collect_layouts(interfaces.supporting, &mut plan);
+    names::install(interfaces.aliases, callables);
+    names::install(interfaces.aliases, global_bindings);
+    names::install(interfaces.aliases, constants);
+    names::install_constants(interfaces.aliases, constants);
     Ok((plan, stubs))
 }
 

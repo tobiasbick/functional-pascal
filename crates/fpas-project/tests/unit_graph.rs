@@ -50,7 +50,7 @@ include = ["src/**/*.fpas"]
     manifest
 }
 
-fn uses_from_program(source: &str) -> Vec<fpas_parser::QualifiedId> {
+fn uses_from_program(source: &str) -> Vec<fpas_parser::Import> {
     let (program, diagnostics) = fpas_parser::parse(source);
     assert!(
         diagnostics
@@ -89,6 +89,42 @@ fn graph_records_unit_identity_origin_dependencies_and_source_path() {
         feature.path()
     );
 
+    fs::remove_dir_all(dir).ok();
+}
+
+#[test]
+fn import_aliases_keep_canonical_dependencies_and_source_ids() {
+    let dir = temp_dir("import-aliases");
+    let manifest = write_project(
+        &dir,
+        &[
+            ("shared.fpas", "unit Demo.Shared; end unit;"),
+            (
+                "left.fpas",
+                "unit Demo.Left; uses Demo.Shared as Shared; end unit;",
+            ),
+            (
+                "right.fpas",
+                "unit Demo.Right; uses demo.shared as Common; end unit;",
+            ),
+        ],
+    );
+    let project = load_project(&manifest).expect("project");
+    let graph = build_unit_graph(&project.source_files, &project.link_meta).expect("graph");
+    let imports =
+        uses_from_program("program App; uses Demo.Left as Left, Demo.Right as Right; begin end.");
+    let resolved = resolve_program_units(&graph, &imports).expect("canonical dependency graph");
+    assert_eq!(resolved.order(), ["demo.shared", "demo.left", "demo.right"]);
+    let left = graph.get("demo.left").expect("left unit");
+    let import = &left.parsed_unit().uses[0];
+    assert_eq!(import.unit.parts, ["Demo", "Shared"]);
+    assert_eq!(import.alias.as_ref().expect("alias").name, "Shared");
+    assert_eq!(import.unit.span.source_id, left.source_id());
+    assert_eq!(import.span.source_id, left.source_id());
+    assert_eq!(
+        import.alias.as_ref().expect("alias").span.source_id,
+        left.source_id()
+    );
     fs::remove_dir_all(dir).ok();
 }
 

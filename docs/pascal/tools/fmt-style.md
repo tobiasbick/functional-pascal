@@ -383,6 +383,9 @@ routine stays compact unless comments require separate lines.
 - Unary `not` / unary `-`: **one space** before the operand (`not x`, `-1`).
 - Empty parameter lists: `()` not omitted.
 - `uses` clause: comma-separated, one space after comma.
+  An alias is emitted as `Unit as Alias`: lowercase contextual `as`, one
+  space on either side, and the written spelling of both names preserved.
+  Alias entries follow the same wrapping and comment rules as plain imports.
 
 ---
 

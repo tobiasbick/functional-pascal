@@ -13,7 +13,7 @@ end.",
     );
     assert_eq!(p.name, "Hello");
     assert_eq!(p.uses.len(), 1);
-    assert_eq!(p.uses[0].parts, vec!["Std", "Console"]);
+    assert_eq!(p.uses[0].unit.parts, vec!["Std", "Console"]);
     assert_eq!(p.body.len(), 1);
     assert!(matches!(&p.body[0], Stmt::Call { .. }));
 }

@@ -8,6 +8,8 @@ use fpas_diagnostics::{DiagnosticCode, SourceSpan};
 /// Semantic source category attached to one identifier token.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum SemanticTokenKind {
+    /// Contextual import modifier; see `docs/pascal/program-structure/units.md`.
+    Keyword,
     /// Program or unit namespace component.
     Namespace,
     /// Named non-enum type.

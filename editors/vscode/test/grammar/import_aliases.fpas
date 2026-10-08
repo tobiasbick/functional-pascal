@@ -1,0 +1,21 @@
+program ImportHighlighting;
+
+uses Demo.Math as M,
+     As as First,
+     Demo.As as As,
+     Demo.
+       // An ordinary unit segment on the next line.
+       As
+       // Modifier and alias may also be separated by comments.
+       AS // contextual keyword
+       Other;
+
+const As: integer := 1;
+
+begin
+  const Value: integer := As;
+  discard M.Answer();
+  discard As.Answer();
+  // uses Demo.Math as CommentAlias;
+  const Text: string := 'uses Demo.Math as StringAlias';
+end.

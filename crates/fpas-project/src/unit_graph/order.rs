@@ -83,7 +83,7 @@ fn topo_visit(
         if is_intrinsic_std_unit(used, graph) {
             continue;
         }
-        let dependency_key = canonical_unit_key(used);
+        let dependency_key = canonical_unit_key(&used.unit);
         if reachable.contains(&dependency_key) {
             topo_visit(&dependency_key, reachable, graph, state, stack, order)?;
         }

@@ -4,7 +4,7 @@ use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
-use fpas_parser::{CompilationUnit, QualifiedId};
+use fpas_parser::CompilationUnit;
 use fpas_project::{
     ProjectKind, build_unit_graph_for_program_from_parsed_sources,
     build_unit_graph_from_parsed_sources, resolve_library_units, resolve_program_units,
@@ -125,11 +125,11 @@ pub(super) fn analyze_project(
 }
 
 fn direct_interfaces(
-    uses: &[QualifiedId],
+    uses: &[fpas_parser::Import],
     interfaces: &HashMap<String, UnitInterface>,
 ) -> Vec<UnitInterface> {
     uses.iter()
-        .filter_map(|used| interfaces.get(&used.parts.join(".").to_ascii_lowercase()))
+        .filter_map(|used| interfaces.get(&used.unit.parts.join(".").to_ascii_lowercase()))
         .cloned()
         .collect()
 }

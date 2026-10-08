@@ -15,6 +15,7 @@ impl Checker {
         body: &Stmt,
         span: Span,
     ) {
+        self.check_import_alias_collision(var_name, span);
         let var_ty = self.resolve_type_expr(var_type);
         if !var_ty.is_ordinal() && !var_ty.is_error() {
             self.error_with_code(
@@ -59,6 +60,7 @@ impl Checker {
         body: &Stmt,
         span: Span,
     ) {
+        self.check_import_alias_collision(var_name, span);
         let var_ty = self.resolve_type_expr(var_type);
         let iter_ty = self.check_expr(iterable);
 

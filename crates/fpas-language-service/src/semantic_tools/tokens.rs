@@ -38,6 +38,13 @@ fn classify_document(documents: &[NavigationDocument], target_index: usize) -> V
                 return None;
             };
             let span = token.span.diagnostic_span_or_synthetic();
+            if target.is_import_modifier(span.offset()) {
+                return Some(SemanticToken {
+                    span,
+                    kind: SemanticTokenKind::Keyword,
+                    modifiers: SemanticTokenModifiers::default(),
+                });
+            }
             if let Some((document_index, symbol, _)) =
                 resolve(documents, target_index, span.offset())
             {
@@ -64,7 +71,9 @@ fn classify_document(documents: &[NavigationDocument], target_index: usize) -> V
 
 fn token_kind(kind: SymbolKind) -> SemanticTokenKind {
     match kind {
-        SymbolKind::Program | SymbolKind::Unit => SemanticTokenKind::Namespace,
+        SymbolKind::Program | SymbolKind::Unit | SymbolKind::ImportAlias => {
+            SemanticTokenKind::Namespace
+        }
         SymbolKind::Constant => SemanticTokenKind::Constant,
         SymbolKind::Variable | SymbolKind::LoopVariable => SemanticTokenKind::Variable,
         SymbolKind::Type => SemanticTokenKind::Type,
@@ -122,10 +131,10 @@ fn namespace_component(
     }
     let selected_part = selected_part.unwrap_or(usize::MAX);
     documents.iter().any(|document| {
-        if !target.uses_owner(&document.owner) {
+        let Some(namespace) = target.namespace_for(&document.owner) else {
             return false;
-        }
-        let owner = document.owner.split('.').collect::<Vec<_>>();
+        };
+        let owner = namespace.split('.').collect::<Vec<_>>();
         selected_part < owner.len()
             && names.len() >= owner.len()
             && names[..owner.len()]

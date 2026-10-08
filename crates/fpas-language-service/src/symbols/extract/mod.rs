@@ -1,5 +1,6 @@
 //! Hierarchical symbol extraction from recovered parser ASTs.
 
+mod imports;
 mod members;
 mod routines;
 mod source;
@@ -17,6 +18,7 @@ pub(crate) use source::{
     procedure_signature, type_callable_signature, type_text,
 };
 
+/// Extracts compilation-unit declarations, including source-local import aliases.
 pub(super) fn extract(snapshot: &DocumentSnapshot) -> (String, Vec<DocumentSymbol>) {
     match snapshot.compilation_unit() {
         CompilationUnit::Program(program) => {
@@ -27,6 +29,10 @@ pub(super) fn extract(snapshot: &DocumentSnapshot) -> (String, Vec<DocumentSymbo
                 .iter()
                 .map(|declaration| declaration_symbol(snapshot, &owner, declaration, full_span))
                 .collect::<Vec<_>>();
+            children.splice(
+                0..0,
+                imports::alias_symbols(&owner, &program.uses, full_span),
+            );
             routines::collect_statement_symbols(
                 snapshot,
                 &owner,
@@ -53,11 +59,12 @@ pub(super) fn extract(snapshot: &DocumentSnapshot) -> (String, Vec<DocumentSymbo
         CompilationUnit::Unit(unit) => {
             let owner = unit.name.parts.join(".");
             let full_span = unit.span.diagnostic_span_or_synthetic();
-            let children = unit
+            let mut children = unit
                 .declarations
                 .iter()
                 .map(|declaration| declaration_symbol(snapshot, &owner, declaration, full_span))
-                .collect();
+                .collect::<Vec<_>>();
+            children.splice(0..0, imports::alias_symbols(&owner, &unit.uses, full_span));
             let entries = vec![DocumentSymbol {
                 name: owner.clone(),
                 qualified_name: owner.clone(),

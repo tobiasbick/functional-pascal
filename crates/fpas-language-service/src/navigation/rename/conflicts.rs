@@ -10,6 +10,7 @@ use crate::navigation::references::{ReferenceLocation, ResolvedTarget, resolve_t
 use crate::navigation::resolve::{resolve_unqualified, unqualified_kind};
 use crate::{CancellationToken, DocumentSymbol};
 
+/// Preserves lexical binding and source-local import alias reservations during rename.
 pub(super) fn reject_resolution_conflicts(
     documents: &[NavigationDocument],
     target: &ResolvedTarget,
@@ -17,6 +18,7 @@ pub(super) fn reject_resolution_conflicts(
     references: &[ReferenceLocation],
     cancellation: &CancellationToken,
 ) -> Result<(), RenameError> {
+    super::aliases::reject_alias_conflicts(documents, target, new_name)?;
     reject_same_scope_conflict(documents, target, new_name)?;
 
     let mut renamed = documents.to_vec();
@@ -119,6 +121,15 @@ fn rename_target_symbol(
     target: &ResolvedTarget,
     new_name: &str,
 ) {
+    if target.symbol.kind == crate::SymbolKind::ImportAlias {
+        for import in &mut documents[target.document_index].uses {
+            if let Some(alias) = &mut import.alias
+                && alias.span.diagnostic_span_or_synthetic() == target.symbol.selection_span
+            {
+                alias.name = new_name.to_owned();
+            }
+        }
+    }
     for symbol in &mut documents[target.document_index].roots {
         if let Some(symbol) = find_symbol_mut(symbol, target.symbol.selection_span) {
             symbol.name = new_name.to_owned();

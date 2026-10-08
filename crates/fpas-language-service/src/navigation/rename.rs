@@ -1,5 +1,6 @@
 //! Validation and edit generation for project-aware symbol rename.
 
+mod aliases;
 mod conflicts;
 
 use std::fmt;
@@ -65,7 +66,7 @@ pub enum RenameError {
         /// Rejected replacement text.
         name: String,
     },
-    /// The replacement would collide with a declaration or change lexical binding.
+    /// The replacement would collide with a declaration or import alias, or change binding.
     Conflict {
         /// Requested replacement name.
         name: String,
@@ -96,7 +97,7 @@ impl fmt::Display for RenameError {
             ),
             Self::Conflict { name } => write!(
                 formatter,
-                "Cannot rename to `{name}` because that name conflicts with a declaration or would change lexical binding."
+                "Cannot rename to `{name}` because that name conflicts with a declaration or import alias, or would change lexical binding."
             ),
         }
     }

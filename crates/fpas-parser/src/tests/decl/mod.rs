@@ -3,6 +3,7 @@ use crate::ParseDiagnostic;
 use crate::ast::*;
 use fpas_diagnostics::codes::PARSE_EXPECTED_TOKEN;
 
+mod import_aliases;
 mod individual;
 mod program;
 mod routines;

@@ -4,16 +4,19 @@ use std::path::PathBuf;
 use std::sync::Arc;
 
 use fpas_lexer::{SpannedToken, lex};
-use fpas_parser::CompilationUnit;
+use fpas_parser::{CompilationUnit, Import};
+
+mod imports;
 
 use crate::{DocumentAnalysis, DocumentSnapshot, DocumentSymbol, DocumentSymbols};
 
 #[derive(Clone)]
+/// Symbols and source-local imports used by editor resolution.
 pub(crate) struct NavigationDocument {
     pub(crate) path: PathBuf,
     pub(crate) snapshot: Arc<DocumentSnapshot>,
     pub(crate) owner: String,
-    pub(crate) uses: Vec<String>,
+    pub(crate) uses: Vec<Import>,
     pub(crate) roots: Vec<DocumentSymbol>,
     pub(crate) tokens: Vec<SpannedToken>,
     pub(crate) is_editor_api: bool,
@@ -41,9 +44,7 @@ impl NavigationDocument {
             CompilationUnit::Program(program) => &program.uses,
             CompilationUnit::Unit(unit) => &unit.uses,
         }
-        .iter()
-        .map(|used| used.parts.join("."))
-        .collect();
+        .clone();
         let tokens = lex(snapshot.source()).0;
         Self {
             path: snapshot.path().to_path_buf(),
@@ -66,14 +67,6 @@ impl NavigationDocument {
             .first()
             .map(|root| root.children.as_slice())
             .unwrap_or_default()
-    }
-
-    pub(crate) fn uses_owner(&self, owner: &str) -> bool {
-        self.owner.eq_ignore_ascii_case(owner)
-            || self
-                .uses
-                .iter()
-                .any(|used| used.eq_ignore_ascii_case(owner))
     }
 }
 

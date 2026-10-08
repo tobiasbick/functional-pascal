@@ -10,6 +10,9 @@
       "include": "#strings"
     },
     {
+      "include": "#imports"
+    },
+    {
       "include": "#declarations"
     },
     {
@@ -32,6 +35,38 @@
     }
   ],
   "repository": {
+    "imports": {
+      "begin": "(?i:\\buses\\b)",
+      "beginCaptures": {"0": {"name": "keyword.declaration.fpas"}},
+      "end": ";",
+      "endCaptures": {"0": {"name": "punctuation.terminator.statement.fpas"}},
+      "patterns": [
+        {"include": "#comments"},
+        {
+          "begin": "\\b[A-Za-z_][A-Za-z0-9_]*",
+          "beginCaptures": {"0": {"name": "entity.name.namespace.fpas"}},
+          "end": "(?=[,;])",
+          "patterns": [
+            {"include": "#comments"},
+            {
+              "begin": "\\.",
+              "beginCaptures": {"0": {"name": "punctuation.separator.fpas"}},
+              "end": "([A-Za-z_][A-Za-z0-9_]*)|(?=[,;])",
+              "endCaptures": {"1": {"name": "entity.name.namespace.fpas"}},
+              "patterns": [{"include": "#comments"}]
+            },
+            {
+              "begin": "(?i:\\bas\\b)",
+              "beginCaptures": {"0": {"name": "keyword.declaration.import.fpas"}},
+              "end": "([A-Za-z_][A-Za-z0-9_]*)|(?=[,;])",
+              "endCaptures": {"1": {"name": "entity.name.namespace.fpas"}},
+              "patterns": [{"include": "#comments"}]
+            }
+          ]
+        },
+        {"include": "#punctuation"}
+      ]
+    },
     "comments": {
       "patterns": [
         {

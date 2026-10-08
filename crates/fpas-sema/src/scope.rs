@@ -1,3 +1,5 @@
+mod imports;
+
 use crate::types::Ty;
 use fpas_lexer::Span;
 use std::collections::BTreeMap;
@@ -84,6 +86,7 @@ impl Scope {
 /// Stack of scopes for lexical scoping.
 #[derive(Debug)]
 pub struct ScopeStack {
+    pub(crate) imports: imports::ImportNames,
     scopes: Vec<Scope>,
     imported_discard: HashMap<String, fpas_unit::interface::DiscardInfo>,
     /// Current loop depth (for break/continue validation).
@@ -107,6 +110,7 @@ impl ScopeStack {
     pub fn new() -> Self {
         Self {
             scopes: vec![Scope::new()],
+            imports: Default::default(),
             imported_discard: HashMap::new(),
             loop_depth: 0,
             function_ctx: None,
@@ -128,6 +132,9 @@ impl ScopeStack {
     /// Define a symbol in the current (innermost) scope.
     /// Returns false if already defined in the same scope.
     pub fn define(&mut self, name: &str, symbol: Symbol) -> bool {
+        if self.imports.is_alias(name) {
+            return false;
+        }
         let scope_index = self.scopes.len() - 1;
         Self::define_in_scope(&mut self.scopes[scope_index], name, symbol, None)
     }
@@ -139,6 +146,9 @@ impl ScopeStack {
         symbol: Symbol,
         declaration: Span,
     ) -> bool {
+        if self.imports.is_alias(name) {
+            return false;
+        }
         let scope_index = self.scopes.len() - 1;
         Self::define_in_scope(
             &mut self.scopes[scope_index],
@@ -153,6 +163,9 @@ impl ScopeStack {
     ///
     /// **Documentation:** `docs/pascal/program-structure/units.md` (from the repository root).
     pub fn define_in_root(&mut self, name: &str, symbol: Symbol) -> bool {
+        if self.imports.is_alias(name) {
+            return false;
+        }
         Self::define_in_scope(&mut self.scopes[0], name, symbol, None)
     }
 
@@ -203,7 +216,7 @@ impl ScopeStack {
         &self,
         name: &str,
     ) -> Option<(usize, &Symbol, Option<Span>)> {
-        let canonical_name = canonical_symbol_name(name);
+        let canonical_name = self.imports.visible_name(name)?;
         for (index, scope) in self.scopes.iter().enumerate().rev() {
             if let Some(sym) = scope.symbols.get(&canonical_name) {
                 return Some((index, &sym.symbol, sym.declaration));
@@ -225,7 +238,7 @@ impl ScopeStack {
 
     /// Resolves a stored unit-level type identity without accepting a shadowing value or parameter.
     pub(crate) fn lookup_type(&self, name: &str) -> Option<&Symbol> {
-        let canonical = canonical_symbol_name(name);
+        let canonical = self.imports.canonical_name(name);
         self.scopes
             .first()
             .and_then(|scope| scope.symbols.get(&canonical))
@@ -235,7 +248,7 @@ impl ScopeStack {
 
     /// Looks up static value and result guarantees at the same lexical binding as its type.
     pub(crate) fn discard_info(&self, name: &str) -> fpas_unit::interface::DiscardInfo {
-        let canonical = canonical_symbol_name(name);
+        let canonical = self.imports.canonical_name(name);
         self.scopes
             .iter()
             .rev()
@@ -257,7 +270,7 @@ impl ScopeStack {
 
     /// Attaches static capture guarantees to an existing binding.
     pub(crate) fn set_discard_info(&mut self, name: &str, info: fpas_unit::interface::DiscardInfo) {
-        let canonical = canonical_symbol_name(name);
+        let canonical = self.imports.canonical_name(name);
         for scope in self.scopes.iter_mut().rev() {
             if let Some(entry) = scope.symbols.get_mut(&canonical) {
                 entry.discard = info;
@@ -268,7 +281,7 @@ impl ScopeStack {
 
     /// Look up the original stored spelling for a symbol name.
     pub fn lookup_original_name(&self, name: &str) -> Option<&str> {
-        let canonical_name = canonical_symbol_name(name);
+        let canonical_name = self.imports.visible_name(name)?;
         for scope in self.scopes.iter().rev() {
             if let Some(sym) = scope.symbols.get(&canonical_name) {
                 return Some(&sym.original_name);
@@ -297,12 +310,26 @@ impl ScopeStack {
 
     /// Return resolved root type declarations in deterministic canonical-name order.
     pub(crate) fn root_types(&self) -> BTreeMap<String, Ty> {
-        self.scopes[0]
+        let mut types = self.scopes[0]
             .symbols
             .iter()
             .filter(|(_, entry)| entry.symbol.kind == SymbolKind::Type)
             .map(|(name, entry)| (name.clone(), entry.symbol.ty.clone()))
-            .collect()
+            .collect::<BTreeMap<_, _>>();
+        for (unit, alias) in &self.imports.aliases {
+            let prefix = format!("{unit}.");
+            for (name, entry) in &self.scopes[0].symbols {
+                if entry.symbol.kind == SymbolKind::Type
+                    && let Some(tail) = name.strip_prefix(&prefix)
+                {
+                    types.insert(
+                        format!("{}.{}", alias.to_ascii_lowercase(), tail),
+                        entry.symbol.ty.clone(),
+                    );
+                }
+            }
+        }
+        types
     }
 
     /// Mutable lookup for updating a symbol after initial definition.
@@ -350,48 +377,4 @@ impl Default for ScopeStack {
 }
 
 #[cfg(test)]
-mod tests {
-    use super::{ScopeStack, Symbol, SymbolKind};
-    use crate::types::Ty;
-
-    #[test]
-    fn pop_scope_never_removes_root_scope() {
-        let mut stack = ScopeStack::new();
-        stack.push_scope();
-        stack.pop_scope();
-        stack.pop_scope();
-
-        assert!(
-            stack.define(
-                "x",
-                Symbol {
-                    constant: None,
-                    ty: Ty::Integer,
-                    mutable: false,
-                    kind: SymbolKind::Var,
-                    task_bound: false,
-                }
-            ),
-            "root scope must remain usable after extra pop_scope"
-        );
-    }
-
-    #[test]
-    fn remove_from_current_drops_only_the_innermost_symbol() {
-        let mut stack = ScopeStack::new();
-        stack.push_scope();
-        assert!(stack.define(
-            "offset",
-            Symbol {
-                constant: None,
-                ty: Ty::Integer,
-                mutable: false,
-                kind: SymbolKind::Var,
-                task_bound: false,
-            }
-        ));
-        assert!(stack.remove_from_current("Offset"));
-        assert!(stack.lookup_current("offset").is_none());
-        assert!(!stack.remove_from_current("offset"));
-    }
-}
+mod tests;

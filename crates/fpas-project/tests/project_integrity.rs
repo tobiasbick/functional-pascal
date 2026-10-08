@@ -39,7 +39,7 @@ fn write(path: &Path, text: &str) {
     fs::write(path, text).expect("fixture file");
 }
 
-fn uses(source: &str) -> Vec<QualifiedId> {
+fn uses(source: &str) -> Vec<fpas_parser::Import> {
     let (parsed, diagnostics) = fpas_parser::parse(source);
     assert!(diagnostics.is_empty(), "{diagnostics:?}");
     parsed.uses
@@ -161,7 +161,7 @@ fn graph_dependencies_come_from_source_instead_of_matching_hash_sidecar() {
     let graph = build_unit_graph(&[feature, real], &ProjectLinkMeta::default()).expect("graph");
     let node = graph.get("demo.feature").expect("source Unit name");
 
-    assert_eq!(node.direct_uses()[0].parts.join("."), "Demo.Real");
+    assert_eq!(node.direct_uses()[0].unit.parts.join("."), "Demo.Real");
     fs::remove_dir_all(dir).ok();
 }
 
@@ -183,11 +183,14 @@ fn lexical_aliases_preserve_library_exports() {
         LibraryExportPolicy::ListedUnits(HashSet::new()),
     );
     let graph = build_unit_graph(&[source], &link_meta).expect("graph");
-    let root_uses = uses("program App;\nuses Lib.Internal;\nbegin\nend.\n");
-
-    let error = resolve_program_units(&graph, &root_uses).expect_err("private Unit must fail");
-
-    assert!(error.to_string().contains("not exported"), "{error}");
+    for source in [
+        "program App; uses Lib.Internal; begin end.",
+        "program App; uses Lib.Internal as Internal; begin end.",
+    ] {
+        let error =
+            resolve_program_units(&graph, &uses(source)).expect_err("private Unit must fail");
+        assert!(error.to_string().contains("not exported"), "{error}");
+    }
     fs::remove_dir_all(dir).ok();
 }
 

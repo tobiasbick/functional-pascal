@@ -293,11 +293,6 @@ impl<'a> ClosureRegistry<'a> {
                     self.visit_expression(value, owner, metadata, types)?;
                 }
             }
-            Expr::RecordLiteral { fields, .. } => {
-                for field in fields {
-                    self.visit_expression(&field.value, owner, metadata, types)?;
-                }
-            }
             Expr::RecordUpdate { base, fields, .. } => {
                 self.visit_expression(base, owner, metadata, types)?;
                 for field in fields {

@@ -50,9 +50,9 @@ fn enum_record_payload_rejects_incompatible_arguments() {
     let cwd = create_temp_dir("invalid-enum-record-payload");
     let source = cwd.join("main.fpas");
     for argument in [
-        "record X := 'wrong'; Y := 2; end",
-        "record X := 1; end",
-        "record X := 1; Y := 2; Z := 3; end",
+        "Point( X := 'wrong', Y := 2 )",
+        "Point( X := 1 )",
+        "Point( X := 1, Y := 2, Z := 3 )",
         "Other",
     ] {
         write_text(

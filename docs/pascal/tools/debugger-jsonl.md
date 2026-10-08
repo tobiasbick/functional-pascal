@@ -164,7 +164,7 @@ selectors (`.Field`) and index selectors (`[expression]`). Field selectors
 address record fields, active enum payload fields, wrapper `.value`, and an
 explicit inactive single-payload variant suffix such as `Some.value`,
 `Ok.value`, `Error.value`, or `Count.Value`. Parenthesized or
-computed bases, calls as the root/path, properties, assignments, declarations,
+computed bases, calls as the root/path, assignments, declarations,
 and statements are rejected. A supplied current `frame_id` selects that
 frame's task and lexical scope. An omitted frame searches globals only and
 never falls back to the selected or main frame. Array indexes must be in range;
@@ -345,8 +345,8 @@ not become ordinary mutation. Failure leaves empty storage and inspection
 handles unchanged. A later source initializer still overwrites the debugger
 value. Initialize advertises `storage_initialize`.
 
-`evaluate` may call exact executable routines, record methods and readable
-properties, visible first-class functions, and deterministic `Std.*`
+`evaluate` may call exact executable routines, record methods, visible
+first-class functions, and deterministic `Std.*`
 intrinsics. Calls use a detached copy of globals, arguments, receivers,
 captures, cells, and aggregates, so accepted writes never change the stopped
 program. Host I/O, nondeterminism, blocking, task operations, opaque resources,

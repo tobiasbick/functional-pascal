@@ -84,7 +84,6 @@ fn token_kind(kind: SymbolKind) -> SemanticTokenKind {
         SymbolKind::TypeParameter => SemanticTokenKind::TypeParameter,
         SymbolKind::Parameter => SemanticTokenKind::Parameter,
         SymbolKind::Field => SemanticTokenKind::Field,
-        SymbolKind::Property => SemanticTokenKind::Property,
         SymbolKind::Event => SemanticTokenKind::Event,
         SymbolKind::EnumMember => SemanticTokenKind::EnumMember,
     }

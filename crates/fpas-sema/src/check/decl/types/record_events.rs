@@ -3,7 +3,7 @@
 //! **Documentation:** `docs/pascal/language/types/record-events.md`
 
 use super::Checker;
-use super::record_accessors::{AccessorMember, AccessorOwner};
+use super::record_event_accessors::AccessorMember;
 use crate::types::{EventTy, Ty};
 use fpas_diagnostics::codes::SEMA_TYPE_MISMATCH;
 use fpas_parser::RecordEvent;
@@ -61,7 +61,6 @@ impl Checker {
 
             let option_handler = Ty::Option(Box::new(handler_ty.clone()));
             let member = AccessorMember {
-                owner: AccessorOwner::Event,
                 type_name,
                 record_ty,
                 name: &event.name,

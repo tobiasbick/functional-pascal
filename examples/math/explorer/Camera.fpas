@@ -53,8 +53,5 @@ public type ExplorerCamera = record
   begin
     return 2.8 / Self.SpanY;
   end function;
-
-  // Current relative zoom factor.
-  public property Zoom: real read GetZoom;
 end record;
 end unit;

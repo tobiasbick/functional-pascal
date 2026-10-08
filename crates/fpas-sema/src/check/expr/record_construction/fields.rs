@@ -1,4 +1,4 @@
-//! Shared contextual field checking for record literals and typed construction.
+//! Field checking for typed record construction.
 //!
 //! **Documentation:** `docs/pascal/language/types/records.md`
 
@@ -8,13 +8,12 @@ use fpas_diagnostics::codes::{SEMA_MISSING_RECORD_FIELD, SEMA_UNKNOWN_NAME};
 use fpas_parser::Expr;
 
 impl Checker {
-    /// Check supplied values, visibility, and required fields for either construction form.
+    /// Check supplied values, visibility, and required fields of a typed construction.
     pub(crate) fn validate_typed_record_fields(
         &mut self,
         fields: &[(&str, &Expr, fpas_lexer::Span)],
         record_ty: &RecordTy,
         span: fpas_lexer::Span,
-        context: &str,
     ) {
         let construction_rejected = self.reject_private_record_construction(record_ty, span);
 
@@ -24,7 +23,7 @@ impl Checker {
                 .iter()
                 .find(|(candidate, _)| candidate.eq_ignore_ascii_case(name))
             {
-                let value_ty = self.check_expr_with_expected_record_literals(value, field_ty);
+                let value_ty = self.check_expr(value);
                 self.check_type_compat(
                     field_ty,
                     &value_ty,
@@ -32,25 +31,11 @@ impl Checker {
                     field_span,
                 );
             } else {
-                if record_ty
-                    .properties
-                    .iter()
-                    .any(|(candidate, _)| candidate.eq_ignore_ascii_case(name))
-                {
+                if self.find_record_event_on_type(record_ty, name).is_some() {
                     self.error_with_code(
                         SEMA_UNKNOWN_NAME,
                         format!(
-                            "Record type `{}` property `{}` cannot be initialized in {context}",
-                            record_ty.name, name
-                        ),
-                        "Properties are not record fields. Assign to the property after construction.",
-                        field_span,
-                    );
-                } else if self.find_record_event_on_type(record_ty, name).is_some() {
-                    self.error_with_code(
-                        SEMA_UNKNOWN_NAME,
-                        format!(
-                            "Record type `{}` event `{}` cannot be initialized in {context}",
+                            "Record type `{}` event `{}` cannot be initialized in record construction",
                             record_ty.name, name
                         ),
                         "Events are not record fields. Assign a handler after construction.",
@@ -101,7 +86,7 @@ impl Checker {
                 self.error_with_code(
                     SEMA_MISSING_RECORD_FIELD,
                     format!(
-                        "Required field `{field_name}` is missing from {context} for type `{}`",
+                        "Required field `{field_name}` is missing from record construction for type `{}`",
                         record_ty.name
                     ),
                     format!(

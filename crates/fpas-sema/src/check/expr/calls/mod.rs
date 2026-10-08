@@ -340,9 +340,7 @@ impl Checker {
                 }
 
                 for (arg, (_field_name, field_ty)) in args.iter().zip(variant.fields.iter()) {
-                    // Record literals inherit their argument type; see
-                    // `docs/pascal/language/types/records.md`.
-                    let arg_ty = self.check_expr_with_expected_record_literals(arg, field_ty);
+                    let arg_ty = self.check_expr(arg);
                     self.check_type_compat(
                         field_ty,
                         &arg_ty,

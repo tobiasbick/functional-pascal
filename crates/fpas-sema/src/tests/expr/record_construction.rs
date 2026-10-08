@@ -69,15 +69,9 @@ fn an_empty_constructor_needs_all_fields_to_have_defaults() {
 }
 
 #[test]
-fn methods_properties_and_events_are_not_constructor_fields() {
+fn methods_are_not_constructor_fields() {
     let errors = check_errors(
-        "program T; type Point = record X: integer; function GetX(Self: Point): integer; begin return Self.X; end function; property Value: integer read GetX; end record; begin const P: Point := Point(X := 1, Value := 2, GetX := 3); end.",
-    );
-    assert!(
-        errors
-            .iter()
-            .any(|error| error.message.contains("property `Value`")),
-        "{errors:#?}"
+        "program T; type Point = record X: integer; function GetX(Self: Point): integer; begin return Self.X; end function; end record; begin const P: Point := Point(X := 1, GetX := 3); end.",
     );
     assert!(
         errors

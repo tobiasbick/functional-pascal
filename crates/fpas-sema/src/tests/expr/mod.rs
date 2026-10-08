@@ -12,7 +12,6 @@ mod postfix;
 mod record_construction;
 mod record_context;
 mod record_events;
-mod record_properties;
 mod record_updates;
 mod std_shadowing;
 mod var_parameters;
@@ -232,8 +231,6 @@ fn analysis_metadata_exposes_all_named_results() {
         closure_infos,
         nested_routine_captures,
         bound_methods,
-        property_reads,
-        property_writes,
         event_writes,
         event_assigned,
         event_raises,
@@ -256,13 +253,11 @@ fn analysis_metadata_exposes_all_named_results() {
             closure_infos.len(),
             nested_routine_captures.len(),
             bound_methods.len(),
-            property_reads.len(),
-            property_writes.len(),
             event_writes.len(),
             event_assigned.len(),
             event_raises.len(),
         ],
-        [0; 18]
+        [0; 16]
     );
 }
 

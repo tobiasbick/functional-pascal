@@ -8,7 +8,7 @@ use fpas_diagnostics::codes::SEMA_TYPE_MISMATCH;
 use fpas_lexer::Span;
 use fpas_parser::{Designator, DesignatorPart, Expr};
 
-use super::super::context::{EventAssignedInfo, EventRaiseInfo, PropertyReadInfo};
+use super::super::context::{EventAssignedInfo, EventRaiseInfo};
 
 /// Inputs required to validate and record an event raise.
 pub(crate) struct EventRaiseRequest<'a> {
@@ -20,8 +20,6 @@ pub(crate) struct EventRaiseRequest<'a> {
     pub(crate) record_ty: &'a RecordTy,
     /// Name of the event member being raised.
     pub(crate) event_name: &'a str,
-    /// Property reads required to evaluate the receiver exactly once.
-    pub(crate) receiver_reads: Vec<PropertyReadInfo>,
     /// Arguments passed to the event handler.
     pub(crate) args: &'a [Expr],
     /// Source span of the call.
@@ -94,20 +92,19 @@ impl Checker {
             return Some(Ty::Error);
         };
 
-        let (event, receiver_reads, receiver_part_count) =
-            match self.resolve_event_designator(event_designator) {
-                Ok(Some(resolved)) => resolved,
-                Ok(None) => {
-                    self.error_with_code(
-                        SEMA_TYPE_MISMATCH,
-                        "`Assigned` requires an event designator",
-                        "Write `Assigned(Receiver.EventName)`.",
-                        event_designator.span,
-                    );
-                    return Some(Ty::Error);
-                }
-                Err(()) => return Some(Ty::Error),
-            };
+        let (event, receiver_part_count) = match self.resolve_event_designator(event_designator) {
+            Ok(Some(resolved)) => resolved,
+            Ok(None) => {
+                self.error_with_code(
+                    SEMA_TYPE_MISMATCH,
+                    "`Assigned` requires an event designator",
+                    "Write `Assigned(Receiver.EventName)`.",
+                    event_designator.span,
+                );
+                return Some(Ty::Error);
+            }
+            Err(()) => return Some(Ty::Error),
+        };
 
         let key = Self::expr_lookup_key(call_expr);
         self.event_assigned.insert(
@@ -115,7 +112,6 @@ impl Checker {
             EventAssignedInfo {
                 getter_name: event.getter,
                 receiver_part_count,
-                receiver_reads,
             },
         );
         Some(Ty::Boolean)
@@ -136,7 +132,6 @@ impl Checker {
             designator,
             record_ty,
             event_name,
-            receiver_reads,
             args,
             span,
             as_statement,
@@ -208,7 +203,6 @@ impl Checker {
             EventRaiseInfo {
                 getter_name: event.getter,
                 receiver_part_count: designator.parts.len() - 1,
-                receiver_reads,
                 arity,
             },
         );
@@ -265,7 +259,7 @@ impl Checker {
     fn resolve_event_designator(
         &mut self,
         designator: &Designator,
-    ) -> Result<Option<(EventTy, Vec<PropertyReadInfo>, usize)>, ()> {
+    ) -> Result<Option<(EventTy, usize)>, ()> {
         if designator.parts.len() < 2 {
             return Ok(None);
         }
@@ -273,12 +267,7 @@ impl Checker {
             Some(DesignatorPart::Ident(name, span)) => (name.clone(), *span),
             _ => return Ok(None),
         };
-        let receiver_key = crate::designator_lookup_key(designator);
         let receiver_ty = self.check_designator_prefix_expr(designator, designator.parts.len() - 1);
-        let receiver_reads = self
-            .property_reads
-            .remove(&receiver_key)
-            .unwrap_or_default();
         let Ty::Record(record_ty) = self.resolve_visible_type(&receiver_ty) else {
             return Ok(None);
         };
@@ -288,7 +277,7 @@ impl Checker {
         let Some(event) = self.find_record_event_on_type(&record_ty, &event_name) else {
             return Ok(None);
         };
-        Ok(Some((event, receiver_reads, designator.parts.len() - 1)))
+        Ok(Some((event, designator.parts.len() - 1)))
     }
 
     fn caller_may_raise_event(&self, event: &EventTy) -> bool {

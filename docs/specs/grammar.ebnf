@@ -92,7 +92,7 @@ keyword         = 'program'   | 'unit'      | 'uses'      | 'const'
                 | 'break'     | 'continue'  | 'result'    | 'option'
                 | 'ok'        | 'error'     | 'some'      | 'none'
                 | 'try'       | 'public'
-                | 'go'        | 'dict'      | 'with'      | 'static' | 'property'
+                | 'go'        | 'dict'      | 'with'      | 'static'
                 | 'event'     | 'read'      | 'write'     | 'comparable'
                 | 'numeric'   | 'printable' | 'self'      | 'nil'
                 | 'channel'   | 'task'
@@ -233,13 +233,13 @@ record_type         = 'record'
                       { record_member }
                       'end' 'record' ;
 record_member       = [ public_modifier ]
-                      ( field_def | record_method | record_property | record_event ) ;
+                      ( field_def | record_method | record_event ) ;
 field_def           = identifier ':' type_expr [ ':=' expression ] ';' ;
 
 (* ':= expression' is an optional default value for the field.      *)
-(* When a record literal omits a field that has a default, the      *)
-(* compiler substitutes the default automatically.  Fields without  *)
-(* a default must be supplied in every record literal.              *)
+(* When a record construction omits a field that has a default,    *)
+(* the compiler substitutes the default automatically.  Fields      *)
+(* without a default must be supplied in every construction.        *)
 
 record_method       = static_record_method | instance_record_method ;
 static_record_method = 'static' ( function_decl | procedure_decl ) ;
@@ -256,7 +256,7 @@ instance_param_list = instance_first_param { ';' param_group } ;
 instance_first_param = ( 'self' | identifier ) ':' type_expr ;
 
 (* Record member visibility is available only in unit files. The    *)
-(* modifier is written before each field, property, event, or routine; *)
+(* modifier is written before each field, event, or routine;          *)
 (* there are no visibility sections.                                 *)
 
 (* Instance record methods must declare Self as the first parameter, *)
@@ -270,17 +270,8 @@ instance_first_param = ( 'self' | identifier ) ':' type_expr ;
 (* Record methods may declare their own type_params via the shared   *)
 (* function_decl / procedure_decl grammar.                           *)
 
-(* Computed properties are backed by instance accessors. `read` and  *)
-(* `write` are reserved keywords. At least one accessor is required. *)
-(* See docs/pascal/language/types/                                   *)
-(* record-properties.md.                                             *)
-record_property     = 'property' identifier ':' type_expr
-                      property_accessor { property_accessor } ';' ;
-property_accessor   = 'read' identifier
-                    | 'write' identifier ;
-
-(* Events are specialized properties whose logical type is a callable. *)
-(* Both accessors are required and deal in Option of HandlerType.      *)
+(* Event accessors are instance methods; `read` and `write` are       *)
+(* reserved keywords. Both accessors deal in Option of HandlerType.   *)
 (* See docs/pascal/language/types/record-events.md.                    *)
 (* Events require both accessors in fixed read-then-write order.     *)
 record_event        = 'event' identifier ':' type_expr
@@ -548,7 +539,6 @@ primary_atom        = native_array_factory
                     | '(' expression ')'
                     | array_literal
                     | dict_literal
-                    | record_literal
                     | 'go' go_call                       (* task handle    *)
                     | closure_expr
                     | designator [ call_args ] ;
@@ -580,10 +570,10 @@ call_args           = '(' [ arg_list ] ')' ;
 (* This is the named-only semantic subset of designator + call_args above. *)
 typed_record_construction = qualified_id '(' [ named_field_argument { ',' named_field_argument } ] ')' ;
 named_field_argument = identifier ':=' expression ;
-record_literal      = 'record' { field_init } 'end' ;
+(* Zero named_field_arguments is valid when every field of the      *)
+(* target type has a default value: var P: Point := Point();        *)
 
-(* Zero field_inits is valid when every field of the target type    *)
-(* has a default value: var P: Point := Point();                 *)
+(* Field override of a record update.                               *)
 field_init          = identifier ':=' expression ';' ;
 
 (* A call is fully positional or fully named (FP2016).                *)

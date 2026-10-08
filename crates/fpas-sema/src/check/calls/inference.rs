@@ -127,14 +127,6 @@ impl Checker {
                             ),
                             span,
                         );
-                    } else if matches!(
-                        (previous, actual_ty),
-                        (Ty::Record(previous), Ty::Record(actual))
-                            if previous.name == "<anonymous>" && actual.name != "<anonymous>"
-                    ) {
-                        // A later argument can supply the declaration identity that an earlier
-                        // generic record literal did not have context to infer.
-                        inferred.insert(key, actual_ty.clone());
                     }
                 } else {
                     inferred.insert(key, actual_ty.clone());

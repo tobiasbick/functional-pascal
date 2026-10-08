@@ -229,24 +229,14 @@ impl Checker {
         self.reject_var_argument_aliases(&var_roots, span);
 
         let inferred = self.validate_routine_constraints(type_params, params, &arg_types, span);
-        for (index, ((param, arg_ty), arg)) in params.iter().zip(&arg_types).zip(&args).enumerate()
-        {
+        for (index, (param, actual)) in params.iter().zip(&arg_types).enumerate() {
             let expected = Self::substitute_type_params(&param.ty, &inferred);
-            let actual = if matches!(
-                (&expected, arg_ty),
-                (Ty::Record(expected), Ty::Record(actual))
-                    if expected.name != "<anonymous>" && actual.name == "<anonymous>"
-            ) {
-                self.check_expr_with_expected_record_literals(arg, &expected)
-            } else {
-                arg_ty.clone()
-            };
             let role = if named {
                 format!("argument `{}`", param.name)
             } else {
                 format!("argument {}", index + 1)
             };
-            self.check_type_compat(&expected, &actual, &role, span);
+            self.check_type_compat(&expected, actual, &role, span);
         }
         inferred
     }

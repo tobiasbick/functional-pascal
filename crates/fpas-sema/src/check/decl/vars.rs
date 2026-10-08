@@ -1,6 +1,5 @@
 use super::Checker;
 use crate::scope::{Symbol, SymbolKind};
-use crate::types::Ty;
 use fpas_diagnostics::codes::SEMA_DUPLICATE_DECLARATION;
 use fpas_parser::{Expr, TypeExpr, VarDef};
 
@@ -25,7 +24,7 @@ impl Checker {
         }
         let declared_ty = self.resolve_type_expr(type_expr);
 
-        let value_ty = self.check_expr_with_expected_record_literals(value, &declared_ty);
+        let value_ty = self.check_expr(value);
         let context = if constant {
             "const initializer"
         } else {
@@ -89,69 +88,5 @@ impl Checker {
             .get(&key)
             .cloned()
             .unwrap_or(crate::types::Ty::Error)
-    }
-
-    /// When a record or array-of-record expression is contextually typed, annotate it with
-    /// the named record type so the compiler emits `MakeRecord` with the runtime type tag.
-    pub(crate) fn check_expr_with_expected_record_literals(
-        &mut self,
-        expr: &Expr,
-        expected: &Ty,
-    ) -> Ty {
-        self.try_annotate_expected_record_literals(expr, expected)
-            .unwrap_or_else(|| self.check_expr(expr))
-    }
-
-    fn try_annotate_expected_record_literals(&mut self, expr: &Expr, expected: &Ty) -> Option<Ty> {
-        let resolved = self.resolve_visible_type(expected);
-        match (expr, &resolved) {
-            (
-                Expr::RecordLiteral {
-                    fields,
-                    span: lit_span,
-                },
-                Ty::Record(record_ty),
-            ) => {
-                self.validate_unique_record_fields(fields, "record literal");
-                let provided: Vec<_> = fields
-                    .iter()
-                    .map(|field| (field.name.as_str(), &field.value, field.span))
-                    .collect();
-                self.validate_typed_record_fields(
-                    &provided,
-                    record_ty,
-                    *lit_span,
-                    "record literal",
-                );
-                let key = Self::expr_lookup_key(expr);
-                self.expr_types.insert(key, Ty::Record(record_ty.clone()));
-                self.propagate_task_bound_expr(expr, key);
-                self.record_discard_info(expr);
-                Some(Ty::Record(record_ty.clone()))
-            }
-            (Expr::ArrayLiteral(elements, _), Ty::Array(element_ty)) => {
-                let element_resolved = self.resolve_visible_type(element_ty);
-                if matches!(element_resolved, Ty::Record(_)) {
-                    for element in elements {
-                        let actual =
-                            self.check_expr_with_expected_record_literals(element, element_ty);
-                        self.check_type_compat(
-                            element_ty,
-                            &actual,
-                            "array element",
-                            element.span(),
-                        );
-                    }
-                    let key = Self::expr_lookup_key(expr);
-                    self.expr_types.insert(key, resolved.clone());
-                    self.propagate_task_bound_expr(expr, key);
-                    self.record_discard_info(expr);
-                    Some(resolved)
-                } else {
-                    None
-                }
-            }
-            _ => None,
-        }
     }
 }

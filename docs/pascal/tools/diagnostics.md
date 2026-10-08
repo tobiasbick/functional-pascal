@@ -235,6 +235,16 @@ bugs rather than adding a workaround to the program.
 | FP2014 | Comma/grouped parameters | `function Add(A: integer, B: integer): integer;` or `function Add(A, B: integer): integer;` | `function Add(A: integer; B: integer): integer;` |
 | FP2015 | Missing declaration keyword | `const A: integer := 1; B: integer := 2;` | `const A: integer := 1; const B: integer := 2;` |
 | FP2016 | Mixed positional and named arguments | `Move(1, Dy := 2)` | `Move(Dx := 1, Dy := 2)` or `Move(1, 2)` |
+| FP2017 | Removed record literal | `const P: Point := record X := 1; Y := 2; end;` | `const P: Point := Point(X := 1, Y := 2);` |
+| FP2018 | Removed record property | `property Zoom: real read GetZoom;` in a record | Remove the declaration and call `Camera.GetZoom()` |
+
+FP2017 names the declared type when the literal is the initializer of a typed
+constant, variable, or field default, for example `Point(X := ..., Y := ...)`;
+in other positions the hint uses `TypeName` for the expected record type.
+
+FP2018 names the property's written `read` and `write` methods in its hint, for
+example `Value.GetZoom()`; it does not invent accessor names. A record field or
+other binding may still be named `property`.
 
 FP2015 points at the unprefixed name and shows a complete individual declaration.
 For exported or mutable groups, repeat `public` or `var` in full.
@@ -290,7 +300,7 @@ positional arguments.
 FP3027 hints show the marked argument, for example `var Counter`, or ask to
 remove `var` for a read-only parameter. FP3028 names the reason a `var`
 argument is not writable storage (a `const` binding, read-only parameter, loop
-variable, dictionary entry, string character, property, or computed value).
+variable, dictionary entry, string character, or computed value).
 FP3030 covers closures, routine values, and `go` calls that would let a `var`
 parameter outlive its call.
 

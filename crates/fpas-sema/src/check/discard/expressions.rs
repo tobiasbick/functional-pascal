@@ -53,16 +53,6 @@ impl Checker {
                     }),
                 ..Default::default()
             },
-            Expr::RecordLiteral { fields, .. } => DiscardInfo {
-                value: self.record_fields_are_task_free(
-                    fields
-                        .iter()
-                        .map(|field| (field.name.as_str(), &field.value))
-                        .collect(),
-                    &ty,
-                ),
-                ..Default::default()
-            },
             Expr::RecordUpdate { base, fields, .. } => DiscardInfo {
                 value: self.discard_info(base).value
                     && fields
@@ -187,12 +177,6 @@ impl Checker {
             return DiscardInfo::default();
         };
         let mut info = self.scopes.discard_info(base);
-        if self
-            .property_reads
-            .contains_key(&crate::designator_lookup_key(designator))
-        {
-            return DiscardInfo::default();
-        }
         info.result = self
             .bound_methods
             .get(&crate::designator_lookup_key(designator))

@@ -194,17 +194,6 @@ fn qualify_owned_type(
             {
                 qualify_callable(&mut method.callable, unit_name, own_types);
             }
-            for property in &mut record.properties {
-                qualify_owned_type(&mut property.ty, unit_name, own_types);
-                property.getter = property
-                    .getter
-                    .take()
-                    .map(|name| qualify_member_name(&name, unit_name, own_types));
-                property.setter = property
-                    .setter
-                    .take()
-                    .map(|name| qualify_member_name(&name, unit_name, own_types));
-            }
             for event in &mut record.events {
                 qualify_owned_type(&mut event.handler, unit_name, own_types);
                 event.getter = qualify_member_name(&event.getter, unit_name, own_types);

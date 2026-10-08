@@ -140,11 +140,6 @@ fn canonicalize_type(ty: &mut InterfaceType) {
             {
                 canonicalize_callable(&mut method.callable);
             }
-            for property in &mut record.properties {
-                canonicalize_type(&mut property.ty);
-                property.getter = property.getter.as_deref().map(canonical_name);
-                property.setter = property.setter.as_deref().map(canonical_name);
-            }
             for event in &mut record.events {
                 canonicalize_type(&mut event.handler);
                 event.getter = canonical_name(&event.getter);
@@ -153,7 +148,6 @@ fn canonicalize_type(ty: &mut InterfaceType) {
             }
             sort_named(&mut record.methods, |value| &value.name);
             sort_named(&mut record.static_routines, |value| &value.name);
-            sort_named(&mut record.properties, |value| &value.name);
             sort_named(&mut record.events, |value| &value.name);
         }
         Enum(enum_ty) => {

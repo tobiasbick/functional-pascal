@@ -15,7 +15,8 @@ time.
 ## Decisions
 
 - `event`, the event-only `nil`, and `Assigned` are removed without replacement
-  grammar.
+  grammar. `read` and `write`, kept reserved by AP14 for event accessors, become
+  identifiers.
 - A handler is an ordinary field of type `Option of HandlerType`, set and
   cleared with record methods or record updates and invoked through a `case`
   or an `is` test.

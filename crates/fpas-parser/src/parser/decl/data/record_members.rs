@@ -1,4 +1,4 @@
-//! Record field, routine, property, and event parsing.
+//! Record field, routine, and event parsing.
 
 use crate::ast::*;
 use crate::parser::Parser;
@@ -20,7 +20,6 @@ impl Parser {
         self.advance();
         let mut fields = Vec::new();
         let mut methods = Vec::new();
-        let mut properties = Vec::new();
         let mut events = Vec::new();
         while !self.check(&Token::End) && !self.at_end() {
             let visibility = self.parse_visibility(allow_member_visibility);
@@ -40,12 +39,10 @@ impl Parser {
                         methods.push(method);
                     }
                 }
-                Token::Property => {
-                    properties.push(self.parse_record_property(visibility));
-                }
                 Token::Event => {
                     events.push(self.parse_record_event(visibility));
                 }
+                _ if self.at_removed_property() => self.reject_removed_property(),
                 _ => fields.push(self.parse_field_def(visibility)),
             }
         }
@@ -53,75 +50,7 @@ impl Parser {
         RecordType {
             fields,
             methods,
-            properties,
             events,
-            span: self.span_from(start),
-        }
-    }
-
-    /// Parse `property Name: Type [read Getter] [write Setter];`.
-    ///
-    /// **Documentation:** `docs/pascal/language/types/record-properties.md`
-    fn parse_record_property(&mut self, visibility: Visibility) -> RecordProperty {
-        let start = self.current_span();
-        self.advance();
-        let (name, _) = self
-            .expect_ident()
-            .unwrap_or_else(|| self.error_ident(start));
-        self.expect(&Token::Colon);
-        let type_expr = self.parse_type_expr();
-
-        let mut read = None;
-        let mut write = None;
-        while matches!(self.current_token(), Token::Read | Token::Write) {
-            let kw_span = self.current_span();
-            if self.eat(&Token::Read) {
-                let (getter, _) = self
-                    .expect_ident()
-                    .unwrap_or_else(|| self.error_ident(kw_span));
-                if read.is_some() {
-                    self.error_with_code(
-                        PARSE_EXPECTED_TOKEN,
-                        "Duplicate `read` clause on property",
-                        "Write `property Name: Type read Getter write Setter;`.",
-                        kw_span,
-                    );
-                } else {
-                    read = Some(getter);
-                }
-            } else if self.eat(&Token::Write) {
-                let (setter, _) = self
-                    .expect_ident()
-                    .unwrap_or_else(|| self.error_ident(kw_span));
-                if write.is_some() {
-                    self.error_with_code(
-                        PARSE_EXPECTED_TOKEN,
-                        "Duplicate `write` clause on property",
-                        "Write `property Name: Type read Getter write Setter;`.",
-                        kw_span,
-                    );
-                } else {
-                    write = Some(setter);
-                }
-            }
-        }
-
-        if read.is_none() && write.is_none() {
-            self.error_with_code(
-                PARSE_EXPECTED_TOKEN,
-                "Property must declare at least one of `read` or `write`",
-                "Write `property Name: Type read Getter;` or add a `write` clause.",
-                self.current_span(),
-            );
-        }
-
-        self.expect_semi();
-        RecordProperty {
-            name,
-            type_expr,
-            visibility,
-            read,
-            write,
             span: self.span_from(start),
         }
     }
@@ -237,7 +166,7 @@ impl Parser {
         self.expect(&Token::Colon);
         let type_expr = self.parse_type_expr();
         let default_value = if self.eat(&Token::ColonAssign) {
-            Some(self.parse_expression())
+            Some(self.parse_initializer(&type_expr))
         } else {
             None
         };

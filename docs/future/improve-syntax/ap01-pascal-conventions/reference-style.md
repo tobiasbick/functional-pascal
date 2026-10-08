@@ -3,7 +3,7 @@
 This is the reference for [AP01](README.md). The ten reference examples
 distinguish implemented forms from changes owned by open packages. Examples
 that combine planned forms remain uncompiled drafts. The program, unit,
-conditional, loop, and callback examples use only implemented forms. A draft
+record, conditional, loop, and callback examples use only implemented forms. A draft
 does not approve an open decision or claim that the current compiler accepts
 it. AP13 statement endings, block closers,
 `elsif`, `when`, and `null;`, AP11 individual declarations, and AP16
@@ -87,8 +87,8 @@ the main-body terminator (AP13;
 [enums](../../../pascal/language/types/enums.md)). Payload declarations also
 separate individually typed parameters with `;`.
 
-One keyword per declaration (AP11) and computed `const` bindings (AP16) are
-implemented. Draft form: named record construction (AP10).
+One keyword per declaration (AP11), computed `const` bindings (AP16), and
+named record construction (AP10) are implemented.
 
 ```pascal
 program Shapes;
@@ -255,8 +255,8 @@ terminators, and named closers (AP13;
 [generic routines](../../../pascal/language/functions/generic-routines.md)).
 
 Draft forms: parenthesized multi-argument type applications and user-defined
-generic records/enums (AP24), and named record construction (AP10). Computed
-`const` bindings are implemented by AP16.
+generic records/enums (AP24). Computed `const` bindings (AP16) and named
+record construction (AP10) are implemented.
 
 ```pascal
 program Generics;

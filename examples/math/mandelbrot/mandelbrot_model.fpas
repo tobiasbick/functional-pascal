@@ -45,8 +45,6 @@ public type ExplorerState = record
   begin
     return 2.4 / Self.SpanY;
   end function;
-
-  public property Zoom: real read GetZoom;
 end record;
 
 public type MandelbrotModel = record

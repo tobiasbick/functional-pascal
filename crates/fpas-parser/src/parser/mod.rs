@@ -25,4 +25,6 @@ pub struct Parser {
     nesting_depth: usize,
     nesting_limit_reached: bool,
     block_closers: Vec<Token>,
+    /// Token position and type name of the initializer being parsed for a named declared type.
+    initializer_type: Option<(usize, String)>,
 }

@@ -42,8 +42,7 @@ impl LoweringContext {
             }
             return self.lower_array_pop_target(&receiver, result, span);
         }
-        let (receiver, _) =
-            self.lower_member_receiver(designator, part_count, &target.receiver_reads)?;
+        let (receiver, _) = self.lower_member_receiver(designator, part_count)?;
         self.lower_fluent_value(receiver, args, target, result, span)
     }
 

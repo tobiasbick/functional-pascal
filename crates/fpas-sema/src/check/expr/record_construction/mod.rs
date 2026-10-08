@@ -38,7 +38,7 @@ impl Checker {
             fields.iter().map(|&(name, _, span)| (name, span)),
             "record construction",
         );
-        self.validate_typed_record_fields(&fields, record, span, "record construction");
+        self.validate_typed_record_fields(&fields, record, span);
         let ty = Ty::Record(record.clone());
         let task_free = self.record_fields_are_task_free(
             fields

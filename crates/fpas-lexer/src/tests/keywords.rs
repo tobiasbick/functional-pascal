@@ -2,7 +2,7 @@ use super::toks;
 use crate::Token;
 
 #[test]
-fn reserved_keywords_and_ordinary_mutable_identifier() {
+fn reserved_keywords_and_ordinary_mutable_and_property_identifiers() {
     let input = "program unit uses const var mutable function procedure begin end return discard \
                  if then else elsif case when of for to downto in in do while \
                  repeat until and or not xor div mod \
@@ -70,7 +70,7 @@ fn reserved_keywords_and_ordinary_mutable_identifier() {
             Token::Dict,
             Token::With,
             Token::Static,
-            Token::Property,
+            Token::Ident("property".into()),
             Token::Event,
             Token::Read,
             Token::Write,

@@ -302,7 +302,6 @@ pub(super) fn assignment_executable() -> VerifiedExecutable {
                 name: StringId::new(28),
                 ty: DebugTypeId::new(2),
             }],
-            properties: Vec::new(),
             methods: vec![RecordMethod {
                 name: StringId::new(38),
                 routine: StringId::new(36),

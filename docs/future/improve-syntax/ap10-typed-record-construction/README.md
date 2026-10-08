@@ -1,6 +1,6 @@
 # AP10: Typed record construction
 
-Status: AP10.1 and AP10.2 complete; AP10.3 open. Effort: medium. Completion is tracked in the
+Status: complete (AP10.1–AP10.3). Effort: medium. Completion is tracked in the
 [central README](../README.md); the process is in
 [development-process.md](../development-process.md).
 
@@ -67,7 +67,7 @@ AP10.3 removes the literal form.
 
 - [x] [AP10.1: Typed construction](01-typed-construction.md)
 - [x] [AP10.2: Migrate record literals](02-migrate-record-literals.md)
-- [ ] [AP10.3: Remove record literals](03-remove-record-literals.md)
+- [x] [AP10.3: Remove record literals](03-remove-record-literals.md)
 
 ## Acceptance
 

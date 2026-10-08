@@ -27,8 +27,6 @@ pub type NamedArgumentOrderMap = HashMap<usize, Vec<usize>>;
 pub struct FluentCallTarget {
     /// Private implementation identity of the selected native operation.
     pub name: String,
-    /// Getter reads needed while evaluating a designator receiver.
-    pub receiver_reads: Vec<PropertyReadInfo>,
     /// Static receiver type selecting the catalog operation.
     pub receiver_ty: Ty,
     /// Fully checked result type, including generic substitution.
@@ -40,7 +38,7 @@ pub struct FluentCallTarget {
 /// Maps call or postfix-operation identity to its selected receiver-call target.
 pub type FluentCallMap = HashMap<usize, FluentCallTarget>;
 
-/// Maps a callable record field or property call to its checked result type.
+/// Maps a callable record field call to its checked result type.
 pub type MemberValueCallMap = HashMap<usize, Ty>;
 
 /// Canonical root type name to its fully resolved semantic type.
@@ -55,8 +53,6 @@ pub enum MethodCallTarget {
     Instance {
         /// Qualified callable name.
         qualified_name: String,
-        /// Property getter reads needed while evaluating the receiver designator.
-        receiver_reads: Vec<PropertyReadInfo>,
     },
     /// Static record routine: emit only the explicit arguments (no receiver).
     Static(String),
@@ -100,38 +96,6 @@ pub struct BoundMethodInfo {
 /// Maps designator or postfix-operation identity to [`BoundMethodInfo`].
 pub type BoundMethodMap = HashMap<usize, BoundMethodInfo>;
 
-/// Semantic metadata for a property getter read (`B.Text`).
-///
-/// **Documentation:** `docs/pascal/language/types/record-properties.md`
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub struct PropertyReadInfo {
-    /// Qualified getter name (e.g. `Button.GetText`).
-    pub getter_name: String,
-    /// Number of designator parts forming the receiver before the property name.
-    ///
-    /// Zero for postfix `.Text` because its receiver is already on the stack.
-    pub receiver_part_count: usize,
-}
-
-/// Maps designator or postfix Field identity to its ordered property getter reads.
-pub type PropertyReadMap = HashMap<usize, Vec<PropertyReadInfo>>;
-
-/// Semantic metadata for a property setter assignment (`B.Text := …`).
-///
-/// **Documentation:** `docs/pascal/language/types/record-properties.md`
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub struct PropertyWriteInfo {
-    /// Qualified setter name (e.g. `Button.SetText`).
-    pub setter_name: String,
-    /// Number of designator parts forming the receiver before the property name.
-    pub receiver_part_count: usize,
-    /// Ordered property getter reads needed while evaluating the receiver path.
-    pub receiver_reads: Vec<PropertyReadInfo>,
-}
-
-/// Maps assignment-target designator identity to [`PropertyWriteInfo`].
-pub type PropertyWriteMap = HashMap<usize, PropertyWriteInfo>;
-
 /// Semantic metadata for an event setter assignment (`B.OnClick := …` / `:= nil`).
 ///
 /// **Documentation:** `docs/pascal/language/types/record-events.md`
@@ -141,8 +105,6 @@ pub struct EventWriteInfo {
     pub setter_name: String,
     /// Number of designator parts forming the receiver before the event name.
     pub receiver_part_count: usize,
-    /// Ordered property getter reads needed while evaluating the receiver path.
-    pub receiver_reads: Vec<PropertyReadInfo>,
     /// When `true`, the RHS is `nil` and lowers to `None`; otherwise wrap as `Some`.
     pub clear: bool,
 }
@@ -159,8 +121,6 @@ pub struct EventAssignedInfo {
     pub getter_name: String,
     /// Number of designator parts forming the receiver before the event name.
     pub receiver_part_count: usize,
-    /// Ordered property getter reads needed while evaluating the receiver path.
-    pub receiver_reads: Vec<PropertyReadInfo>,
 }
 
 /// Maps `Assigned(...)` call-expression identity to [`EventAssignedInfo`].
@@ -175,8 +135,6 @@ pub struct EventRaiseInfo {
     pub getter_name: String,
     /// Number of designator parts forming the receiver before the event name.
     pub receiver_part_count: usize,
-    /// Ordered property getter reads needed while evaluating the receiver path.
-    pub receiver_reads: Vec<PropertyReadInfo>,
     /// Handler argument count (not counting the event receiver).
     pub arity: u8,
 }
@@ -221,9 +179,9 @@ pub struct AnalysisMetadata {
     pub method_calls: MethodCallMap,
     /// Selected fixed built-in dot operations.
     pub fluent_calls: FluentCallMap,
-    /// Calls through callable record fields or properties.
+    /// Calls through callable record fields.
     pub member_value_calls: MemberValueCallMap,
-    /// Named record defaults used while lowering record literals.
+    /// Named record defaults used while lowering record constructions.
     pub record_defaults: RecordDefaultsMap,
     /// Scalar `case` labels interpreted as guard bindings.
     pub scalar_case_bindings: ScalarCaseBindingMap,
@@ -233,10 +191,6 @@ pub struct AnalysisMetadata {
     pub nested_routine_captures: NestedRoutineCaptureMap,
     /// Bound instance-method values keyed by designator identity.
     pub bound_methods: BoundMethodMap,
-    /// Property getter reads keyed by designator identity.
-    pub property_reads: PropertyReadMap,
-    /// Property setter assignments keyed by assignment-target identity.
-    pub property_writes: PropertyWriteMap,
     /// Event setter assignments keyed by assignment-target identity.
     pub event_writes: EventWriteMap,
     /// `Assigned(event)` calls keyed by call-expression identity.
@@ -262,7 +216,7 @@ pub struct Checker {
     pub(crate) method_calls: MethodCallMap,
     /// Selected fixed built-in dot operations.
     pub(crate) fluent_calls: FluentCallMap,
-    /// Calls through callable record fields or properties.
+    /// Calls through callable record fields.
     pub(crate) member_value_calls: MemberValueCallMap,
     /// Imported public symbols grouped by their unqualified name.
     pub(crate) imported_candidates: HashMap<String, Vec<String>>,
@@ -310,14 +264,6 @@ pub struct Checker {
     ///
     /// **Documentation:** `docs/pascal/language/types/record-methods.md`
     pub(crate) bound_methods: BoundMethodMap,
-    /// Designator / postfix Field identity → property getter metadata.
-    ///
-    /// **Documentation:** `docs/pascal/language/types/record-properties.md`
-    pub(crate) property_reads: PropertyReadMap,
-    /// Assignment-target designator identity → property setter metadata.
-    ///
-    /// **Documentation:** `docs/pascal/language/types/record-properties.md`
-    pub(crate) property_writes: PropertyWriteMap,
     /// Assignment-target designator identity → event setter metadata.
     ///
     /// **Documentation:** `docs/pascal/language/types/record-events.md`
@@ -375,8 +321,6 @@ impl Checker {
             closure_infos: ClosureInfoMap::new(),
             nested_routine_captures: NestedRoutineCaptureMap::new(),
             bound_methods: BoundMethodMap::new(),
-            property_reads: PropertyReadMap::new(),
-            property_writes: PropertyWriteMap::new(),
             event_writes: EventWriteMap::new(),
             event_assigned: EventAssignedMap::new(),
             event_raises: EventRaiseMap::new(),
@@ -404,8 +348,6 @@ impl Checker {
             closure_infos: self.closure_infos,
             nested_routine_captures: self.nested_routine_captures,
             bound_methods: self.bound_methods,
-            property_reads: self.property_reads,
-            property_writes: self.property_writes,
             event_writes: self.event_writes,
             event_assigned: self.event_assigned,
             event_raises: self.event_raises,

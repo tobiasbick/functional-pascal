@@ -1,4 +1,4 @@
-program PropertiesExample;
+program AccessorsExample;
 
 uses Std.Console, Std.Conv;
 
@@ -14,14 +14,12 @@ type Counter = record
   begin
     WriteLn('Setter received: ' + IntToStr(Value));
   end procedure;
-
-  property Value: integer read GetBase write SetBase;
 end record;
 
 begin
   const C: Counter := Counter(Base := 10);
-  WriteLn('Stored value: ' + IntToStr(C.Value));
+  WriteLn('Stored value: ' + IntToStr(C.GetBase()));
   // The setter receives Self by value, so this records the request but does not mutate C.
-  C.Value := 20;
-  WriteLn('Stored value after setter: ' + IntToStr(C.Value));
+  C.SetBase(20);
+  WriteLn('Stored value after setter: ' + IntToStr(C.GetBase()));
 end.

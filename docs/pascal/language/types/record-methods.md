@@ -11,6 +11,10 @@ that declaration. See [type declaration order](declaration-order.md).
 Formal syntax: [`grammar.ebnf`](../../../specs/grammar.ebnf) (`record_method`,
 `function_decl`, `procedure_decl`).
 
+Records have no computed properties (FP2018). Computed values and state changes
+are ordinary methods that callers invoke with parentheses, for example
+`Camera.GetZoom()`.
+
 ## Routine visibility
 
 Record functions and procedures declared in a unit are private by default.
@@ -31,8 +35,8 @@ type
 The declaring unit may call `ReadValue`; importing units cannot. `Create` and
 `Current` are public. Visibility applies to
 instance functions, instance procedures, static functions, and static
-procedures. It is valid only in unit files. Record fields, properties, and
-events use the same rule.
+procedures. It is valid only in unit files. Record fields and events use the
+same rule.
 
 ## Instance methods
 
@@ -171,7 +175,7 @@ Rules:
 - Do not call a static routine through a value (`Value.Create(...)` is an error).
 - Do not call an instance method through the type (`TypeName.Sum(...)` is an error).
 - Static and instance members share one case-insensitive name set with fields and
-  properties; duplicates are rejected.
+  events; duplicates are rejected.
 - FPAS has no routine overloading: static routines in one record need distinct names.
 - Static fields and special constructors are not part of this feature.
 - A public type alias whose resolved type is a record exposes the same static routines
@@ -212,7 +216,6 @@ Method-level type parameters are documented in [Generics](generics.md#generic-re
 
 - [Records](records.md)
 - [Generics](generics.md)
-- [Record properties](record-properties.md)
 - [Record events](record-events.md)
 - [First-class functions](../functions/first-class.md)
 - [Capturing closures](../functions/closures.md)

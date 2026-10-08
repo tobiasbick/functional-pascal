@@ -38,8 +38,8 @@ conversion.
 ## Fixed targets and names
 
 Record methods retain their declared `Self` parameter and can return `Self`,
-a new record, or another type to continue a chain. Callable fields and
-properties take only their explicit arguments. Invalid record members do not
+a new record, or another type to continue a chain. Callable fields take
+only their explicit arguments. Invalid record members do not
 fall through to free functions.
 
 Built-in operations use the static receiver type and catalog name alone.
@@ -96,7 +96,7 @@ A procedure may finish a statement chain; it produces no value for a later step.
 `Items.Push(Value)` and `Items.Pop()` require writable array storage without a
 receiver marker or additional parentheses. Fields, array elements, and forwarded
 `var` parameters use the shared storage checks. Constants, read-only parameters,
-properties, dictionary entries, and computed receivers are rejected (FP3028).
+dictionary entries, and computed receivers are rejected (FP3028).
 `Items.Push(Value := 3)` applies the same checks. Explicit written `var` arguments
 retain their markers; `Push`'s `Value` parameter is read-only.
 

@@ -5,7 +5,7 @@ use crate::navigation::{NavigationDocument, find_type, resolve_qualified, resolv
 use fpas_parser::{Expr, PostfixOperation};
 use fpas_sema::Ty;
 mod inference;
-use inference::{operation_result, shape};
+use inference::{ReceiverLookup, operation_result, shape};
 
 pub(super) fn receiver_type(
     documents: &[NavigationDocument],
@@ -218,14 +218,16 @@ pub(super) fn receiver_type(
                         && let Some(ty) =
                             receiver_type(documents, target, prefix, offset, depth + 1)
                         && let Some(result) = operation_result(
-                            documents,
-                            target,
+                            &ReceiverLookup {
+                                documents,
+                                target,
+                                offset,
+                                depth: depth + 1,
+                            },
                             &ty,
                             name,
                             args,
                             receiver,
-                            offset,
-                            depth + 1,
                         )
                     {
                         return Some(result);
@@ -250,14 +252,16 @@ pub(super) fn receiver_type(
         for operation in operations {
             ty = match operation {
                 PostfixOperation::MethodCall { name, args, .. } => operation_result(
-                    documents,
-                    target,
+                    &ReceiverLookup {
+                        documents,
+                        target,
+                        offset,
+                        depth: depth + 1,
+                    },
                     &ty,
                     name,
                     args,
                     receiver,
-                    offset,
-                    depth + 1,
                 )?,
                 PostfixOperation::Index { .. } => match ty {
                     Ty::Array(inner) | Ty::Option(inner) => *inner,

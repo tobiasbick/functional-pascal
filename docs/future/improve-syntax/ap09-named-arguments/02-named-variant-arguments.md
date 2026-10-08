@@ -15,8 +15,7 @@ names and accept positional arguments only (FP3026).
 Variant fields are document symbols. Navigation, signature help and rename
 cover named labels. Registry-only keyword-named variants lack navigable field
 symbols. Named construction of generic enums belongs to AP24.3. AP10.1 covers
-typed record labels; AP10.3 removes anonymous record literals, whose labels
-remain outside editor field rename.
+typed record labels; AP10.3 removed anonymous record literals.
 
 ## Regression coverage
 

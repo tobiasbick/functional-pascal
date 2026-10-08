@@ -326,7 +326,6 @@ fn typed_executable(consume_pending: bool) -> VerifiedExecutable {
                 name: StringId::new(26),
                 ty: DebugTypeId::new(4),
             }],
-            properties: Vec::new(),
             methods: Vec::new(),
         }],
         enums: Vec::new(),

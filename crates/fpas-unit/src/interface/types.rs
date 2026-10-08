@@ -76,19 +76,6 @@ pub struct MethodType {
     pub callable: CallableType,
 }
 
-/// A computed record property.
-#[derive(Debug, Clone, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
-pub struct PropertyType {
-    /// Source spelling of the property.
-    pub name: String,
-    /// Declared property type.
-    pub ty: InterfaceType,
-    /// Qualified getter definition, when readable.
-    pub getter: Option<String>,
-    /// Qualified setter definition, when writable.
-    pub setter: Option<String>,
-}
-
 /// A record event.
 #[derive(Debug, Clone, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 pub struct EventType {
@@ -119,8 +106,6 @@ pub struct RecordType {
     pub methods: Vec<MethodType>,
     /// Static routines in canonical name order.
     pub static_routines: Vec<MethodType>,
-    /// Properties in canonical name order.
-    pub properties: Vec<PropertyType>,
     /// Events in canonical name order.
     pub events: Vec<EventType>,
 }

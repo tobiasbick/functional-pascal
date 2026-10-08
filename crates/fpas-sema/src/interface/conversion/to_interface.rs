@@ -139,18 +139,6 @@ fn record_to_interface(
                 })
             }))
             .collect::<Result<_, InterfaceConversionError>>()?,
-        properties: record
-            .properties
-            .iter()
-            .map(|(name, property)| {
-                Ok(artifact::PropertyType {
-                    name: name.clone(),
-                    ty: ty_to_interface_reference(&property.ty)?,
-                    getter: property.getter.clone(),
-                    setter: property.setter.clone(),
-                })
-            })
-            .collect::<Result<_, InterfaceConversionError>>()?,
         events: record
             .events
             .iter()

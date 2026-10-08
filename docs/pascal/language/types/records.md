@@ -10,7 +10,7 @@ Types and record member signatures are available regardless of declaration
 order within a unit or program. Mutually recursive stored fields must admit
 finite construction; see [type declaration order](declaration-order.md).
 
-Formal syntax: [`grammar.ebnf`](../../../specs/grammar.ebnf) (`record_type`, `typed_record_construction`, `record_literal`).
+Formal syntax: [`grammar.ebnf`](../../../specs/grammar.ebnf) (`record_type`, `typed_record_construction`).
 
 ## Declaring a record
 
@@ -32,10 +32,12 @@ Call the record type with named fields:
 const P: Point := Point(X := 0.0, Y := 5.0);
 ```
 
-Construction requires named fields; `Point(0.0, 5.0)` is an error. Unknown,
+Typed construction is the only way to create a record value; there is no
+`record ... end` literal (FP2017). Construction requires named fields;
+`Point(0.0, 5.0)` is an error. Unknown,
 duplicate, missing required, and incorrectly typed fields are errors. Names
-are case-insensitive. Fields may be supplied in any order. Methods,
-properties, and events are not stored fields and cannot be initialized here.
+are case-insensitive. Fields may be supplied in any order. Methods
+and events are not stored fields and cannot be initialized here.
 Field values are copied; `var` arguments are not accepted.
 
 Supplied values are evaluated once, in written order. Missing defaults run
@@ -114,14 +116,13 @@ Code in `MyApp.Counters` may read and write `Value`. Importing units may use
 meaning for that field.
 
 A named record with at least one private field can be constructed only inside
-its declaring unit, through typed construction, even if all private fields have default
+its declaring unit, even if all private fields have default
 values. Importers obtain such values from public functions or static functions.
 They may copy received values and use record updates for public fields; private
 fields are preserved and cannot be named in an update.
 
 Record member visibility is valid only for records declared in unit files.
-Functions, procedures, properties, and events use the same private-default
-rule.
+Functions, procedures, and events use the same private-default rule.
 
 ## Immutability
 
@@ -141,8 +142,8 @@ Defaults are checked at the record declaration's source position. They may
 use preceding values and routines, and types declared anywhere in the unit or
 program. Later values and free routines remain unavailable.
 
-A field declaration may include a default value using `:=`. Both construction
-forms substitute omitted defaults automatically. Defaults retain their
+A field declaration may include a default value using `:=`. Construction
+substitutes omitted defaults automatically. Defaults retain their
 declaration environment when a caller shadows names. Fields without a default
 must always be supplied. Defaults exported through unit interfaces must be
 scalar constant expressions; transparent exported aliases preserve them.
@@ -160,13 +161,6 @@ Omitting defaulted fields:
 ```pascal
 const C: Config := Config(); // Host='localhost', Port=8080, Debug=false
 const D: Config := Config(Port := 9000); // Host='localhost', Debug=false
-```
-
-The equivalent contextual literals are:
-
-```pascal
-const C: Config := Config(); // Host='localhost', Port=8080, Debug=false
-const D: Config := Config(Port := 9000); // Host='localhost', Port=9000, Debug=false
 ```
 
 Explicitly providing a value overrides the default:
@@ -193,7 +187,6 @@ const V: Vertex := Vertex(
 
 - [Record methods](record-methods.md)
 - [Visibility](../../program-structure/visibility.md)
-- [Record properties](record-properties.md)
 - [Record events](record-events.md)
 - [Record update](record-update.md)
 - [Read-only parameters](../functions/parameters.md)

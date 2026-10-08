@@ -45,14 +45,14 @@ Rules:
   `procedure Setter(Self: R; Value: Option of HandlerType)`.
 - Accessors may not be static or generic, may not take extra parameters, and must not
   change their read-only parameter bindings.
-- Event names share the case-insensitive member namespace with fields, methods, static
-  functions, and properties.
+- Event names share the case-insensitive member namespace with fields, methods, and static
+  functions.
 - `read` and `write` are reserved keywords and can only be used in their
   dedicated syntax positions.
 - Type aliases expose events from the resolved record type.
 
-Events are not ordinary [record properties](record-properties.md): they are not readable
-as values, use `nil` / `Assigned`, and may be raised only from the declaring unit.
+Events are not readable as values, use `nil` / `Assigned`, and may be raised only from
+the declaring unit.
 
 ## Assignment
 
@@ -71,7 +71,7 @@ Rules:
   function variables). Use `None` for `Option` values.
 - Assignment replaces the previous handler synchronously.
 - The receiver is evaluated once before the handler expression.
-- Assignment through an immutable handle binding is valid (same as properties).
+- Assignment through an immutable handle binding is valid.
 - Assignment through a temporary receiver remains invalid.
 
 ## `Assigned`
@@ -107,7 +107,7 @@ An event raise cannot be spawned with `go`: the installed handler may own mutabl
 captures and therefore be task-bound. Raise the event synchronously on its current task;
 the handler itself may start explicitly safe work when needed.
 
-## Events versus fields and properties
+## Events versus fields
 
 - record construction cannot initialize an event;
 - record update expressions cannot name an event;
@@ -116,7 +116,6 @@ the handler itself may start explicitly safe work when needed.
 
 ## See also
 
-- [Record properties](record-properties.md)
 - [Record methods](record-methods.md) — bound methods as handler values
 - [First-class functions](../functions/first-class.md)
 - [Closures](../functions/closures.md)

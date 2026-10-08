@@ -9,7 +9,6 @@ Formal syntax: [`grammar.ebnf`](../../../specs/grammar.ebnf) (`type_declaration`
 | [Type declaration order](declaration-order.md) | Whole-unit type/member visibility, ordered values, and finite recursion |
 | [Records](records.md) | Declaration, literals, fields, immutability, default values |
 | [Record methods](record-methods.md) | Instance methods with implicit `Self`; bound method values; static functions and procedures via the type |
-| [Record properties](record-properties.md) | Computed properties backed by instance `read` / `write` accessors |
 | [Record events](record-events.md) | Single-handler events with `nil`, `Assigned`, and owner-only raise |
 | [Record update](record-update.md) | `with` copy-and-override expressions |
 | [Result and Option types](result-option-types.md) | `Result of T, E` and `Option of T` type forms |

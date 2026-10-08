@@ -234,22 +234,12 @@ impl Checker {
 
         let through_type = self.designator_denotes_type(&receiver_designator);
         // Resolve the full receiver path (supports qualified aliases like `Geom.Api.Point`).
-        let receiver_key = crate::designator_lookup_key(designator);
         let receiver_ty = self.check_designator_prefix_expr(designator, designator.parts.len() - 1);
-        let receiver_reads = self
-            .property_reads
-            .remove(&receiver_key)
-            .unwrap_or_default();
         let resolved_receiver_ty = self.resolve_visible_type(&receiver_ty);
 
         let record_ty = match &resolved_receiver_ty {
             Ty::Record(record_ty) => record_ty.clone(),
-            _ => {
-                if !receiver_reads.is_empty() {
-                    self.property_reads.insert(receiver_key, receiver_reads);
-                }
-                return None;
-            }
+            _ => return None,
         };
 
         if self.reject_private_record_member(&record_ty, &method_name, span) {
@@ -261,11 +251,7 @@ impl Checker {
             && (record_ty
                 .fields
                 .iter()
-                .any(|(name, _)| name.eq_ignore_ascii_case(&method_name))
-                || record_ty
-                    .properties
-                    .iter()
-                    .any(|(name, _)| name.eq_ignore_ascii_case(&method_name)))
+                .any(|(name, _)| name.eq_ignore_ascii_case(&method_name)))
         {
             let member_ty = self.check_designator_expr(designator);
             return Some(self.check_member_value_call(
@@ -340,9 +326,6 @@ impl Checker {
                 self.check_args_only(args);
                 return Some(Ty::Error);
             }
-            if !receiver_reads.is_empty() {
-                self.property_reads.insert(receiver_key, receiver_reads);
-            }
             return None;
         }
 
@@ -370,7 +353,6 @@ impl Checker {
                 designator,
                 record_ty: &record_ty,
                 event_name: &method_name,
-                receiver_reads: receiver_reads.clone(),
                 args,
                 span,
                 as_statement: allow_procedure_result,
@@ -379,19 +361,12 @@ impl Checker {
             return Some(ty);
         }
 
-        let Some(method_kind) = self.resolve_method_kind(&record_ty, &method_name, &qualified)
-        else {
-            if !receiver_reads.is_empty() {
-                self.property_reads.insert(receiver_key, receiver_reads);
-            }
-            return None;
-        };
+        let method_kind = self.resolve_method_kind(&record_ty, &method_name, &qualified)?;
 
         self.method_calls.insert(
             call_key,
             MethodCallTarget::Instance {
                 qualified_name: qualified.clone(),
-                receiver_reads,
             },
         );
 

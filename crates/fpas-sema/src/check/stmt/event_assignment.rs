@@ -7,7 +7,7 @@ use crate::types::{EventTy, RecordTy};
 use fpas_lexer::Span;
 use fpas_parser::{Designator, Expr};
 
-use super::super::context::{EventWriteInfo, PropertyReadInfo};
+use super::super::context::EventWriteInfo;
 
 impl Checker {
     /// Type-checks an assignment to a record event and records its setter call.
@@ -19,7 +19,6 @@ impl Checker {
         value: &Expr,
         span: Span,
         event: EventTy,
-        receiver_reads: Vec<PropertyReadInfo>,
     ) {
         let clear = is_event_clear(value);
         if !clear {
@@ -33,7 +32,6 @@ impl Checker {
             EventWriteInfo {
                 setter_name: event.setter,
                 receiver_part_count: target.parts.len() - 1,
-                receiver_reads,
                 clear,
             },
         );

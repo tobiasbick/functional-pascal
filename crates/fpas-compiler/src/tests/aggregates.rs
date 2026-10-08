@@ -253,7 +253,7 @@ end.",
 }
 
 #[test]
-fn record_methods_properties_and_events_execute() {
+fn record_methods_and_events_execute() {
     assert_succeeds(
         "\
 program RegisterMembers;
@@ -267,15 +267,6 @@ type
     begin
       return Self.Value * 2;
     end function;
-    function ReadNumber(Self: Counter): integer;
-    begin
-      return Self.Value;
-    end function;
-    procedure WriteNumber(Self: Counter; Value: integer);
-    begin
-      LastValue := Value;
-    end procedure;
-    property Number: integer read ReadNumber write WriteNumber;
   end record;
 
   type Button = record
@@ -298,9 +289,6 @@ end procedure;
 begin
   const C: Counter := Counter( Value := 6 );
   if C.Double() <> 12 then panic('method mismatch'); end if;
-  if C.Number <> 6 then panic('property read mismatch'); end if;
-  C.Number := 9;
-  if LastValue <> 9 then panic('property write mismatch'); end if;
 
   const B: Button := Button( );
   if Assigned(B.OnValue) then panic('unexpected handler'); end if;
@@ -311,43 +299,6 @@ begin
   B.OnValue := (nil);
   if Assigned(B.OnValue) then panic('handler was not cleared'); end if;
 end.",
-    );
-}
-
-#[test]
-fn readable_record_properties_keep_exact_getter_metadata() {
-    let program = parse_ok(
-        "\
-program RecordPropertyMetadata;
-type
-  Counter = record
-    Value: integer;
-    function ReadNumber(Self: Counter): integer;
-    begin
-      return Self.Value;
-    end function;
-    property Number: integer read ReadNumber;
-  end record;
-begin
-  const C: Counter := Counter( Value := 1 );
-  if C.Number <> 1 then panic('property metadata fixture'); end if;
-end.",
-    );
-    let executable = crate::compile(&program).expect("property metadata source should compile");
-    let executable = executable.executable();
-    let record = executable
-        .records
-        .iter()
-        .find(|record| executable.strings.get(record.name) == Some("Counter"))
-        .expect("Counter record layout");
-    let property = record
-        .properties
-        .first()
-        .expect("readable property metadata");
-    assert_eq!(executable.strings.get(property.name), Some("Number"));
-    assert_eq!(
-        executable.strings.get(property.getter),
-        Some("Counter.ReadNumber")
     );
 }
 
@@ -373,7 +324,7 @@ program RegisterConstructedRecord;
 type Pair = record Left: integer; Right: integer; end record;
 begin
   if Pair(Left := 3, Right := 4).Left <> 3 then
-    panic('anonymous record mismatch'); end if;
+    panic('constructed record mismatch'); end if;
 end.",
     );
 }
@@ -395,7 +346,7 @@ begin
 end function;
 begin
   if (Pair( First := Next(), Second := Next() )).Second <> 2 then
-    panic('anonymous record initializer order'); end if;
+    panic('record initializer order'); end if;
   const Typed: Pair := Pair( First := Next() );
   if (Typed.First <> 3) or (Typed.Second <> 7) or (Calls <> 3) then
     panic('record initializer order'); end if;
@@ -449,7 +400,6 @@ type
     begin
       return Self.Value;
     end function;
-    property Number: integer read ReadNumber;
     function Map<T>(Self: Box; Transform: function(Value: integer): T): T;
     begin
       return Transform(Self.Value);
@@ -462,7 +412,7 @@ end function;
 begin
   const B: Box := box.create(11);
   if B.Map(Double) <> 22 then panic('generic method mismatch'); end if;
-  if Box.Create(7).Number <> 7 then panic('postfix property mismatch'); end if;
+  if Box.Create(7).ReadNumber() <> 7 then panic('postfix method mismatch'); end if;
 end.",
     );
 }
@@ -521,53 +471,6 @@ begin
   const S: Source := Source( );
   S.OnValue := C.Add;
   if S.OnValue(8) <> 20 then panic('bound event mismatch'); end if;
-end.",
-    );
-}
-
-#[test]
-fn chained_properties_evaluate_receiver_then_value_once() {
-    assert_succeeds(
-        "\
-program RegisterPropertyOrder;
-var Step: integer := 0;
-var Written: integer := 0;
-type
-  Inner = record
-    Value: integer;
-    function ReadNumber(Self: Inner): integer;
-    begin
-      Step := Step * 10 + 4;
-      return Self.Value;
-    end function;
-    procedure WriteNumber(Self: Inner; Value: integer);
-    begin
-      Step := Step * 10 + 3;
-      Written := Value;
-    end procedure;
-    property Number: integer read ReadNumber write WriteNumber;
-  end record;
-  type Outer = record
-    Item: Inner;
-    function ReadChild(Self: Outer): Inner;
-    begin
-      Step := Step * 10 + 1;
-      return Self.Item;
-    end function;
-    property Child: Inner read ReadChild;
-  end record;
-function BuildValue(): integer;
-begin
-  Step := Step * 10 + 2;
-  return 23;
-end function;
-begin
-  const O: Outer := Outer( Item := Inner( Value := 17 ) );
-  O.Child.Number := BuildValue();
-  if (Step <> 123) or (Written <> 23) then panic('property write order mismatch'); end if;
-  Step := 0;
-  if O.Child.Number <> 17 then panic('property read mismatch'); end if;
-  if Step <> 14 then panic('property read order mismatch'); end if;
 end.",
     );
 }

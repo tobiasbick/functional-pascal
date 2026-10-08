@@ -18,7 +18,6 @@ fn document_symbols_cover_roots_types_routines_parameters_members_and_variables(
 
 type Point = record
   public X: integer;
-  property LabelText: string read GetLabel;
 end record;
 
 function Add(Value: integer): integer;
@@ -42,7 +41,6 @@ end.
     let point = child(root, "Point");
     assert_eq!(point.kind, SymbolKind::Type);
     assert_eq!(child(point, "X").kind, SymbolKind::Field);
-    assert_eq!(child(point, "LabelText").kind, SymbolKind::Property);
     let add = child(root, "Add");
     assert_eq!(add.kind, SymbolKind::Function);
     assert_eq!(child(add, "Value").kind, SymbolKind::Parameter);

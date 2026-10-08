@@ -14,9 +14,7 @@ use crate::comments::CommentMap;
 use super::Emitter;
 use super::wrap::{exceeds_width, measure_emit, text_width};
 use binary::{binary_op_spaced, emit_binary_with_break};
-use literal::{
-    emit_array_literal, emit_record_fields, format_real, format_string, needs_space_after_negate,
-};
+use literal::{emit_array_literal, format_real, format_string, needs_space_after_negate};
 use postfix::emit_postfix;
 use precedence::{PREFIX_PREC, binary_prec, operand_prec, unary_prec};
 
@@ -138,7 +136,6 @@ pub(super) fn emit_expr_impl(
             }
             emitter.write("]");
         }
-        Expr::RecordLiteral { fields, .. } => emit_record_fields(emitter, fields, comments),
         Expr::RecordUpdate { base, fields, span } => {
             record_update::emit_record_update(emitter, base, fields, span.offset, comments);
         }

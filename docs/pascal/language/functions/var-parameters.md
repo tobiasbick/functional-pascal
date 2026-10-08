@@ -51,7 +51,7 @@ A `var` argument names storage the caller can change:
   variable: `Increase(var Value)`.
 
 Constants, `const` bindings, read-only parameters, loop variables, dictionary
-entries, string characters, properties, and computed values cannot be passed as
+entries, string characters, and computed values cannot be passed as
 `var` (FP3028). Copy such a value into a local `var`, pass that, and assign
 the result back.
 

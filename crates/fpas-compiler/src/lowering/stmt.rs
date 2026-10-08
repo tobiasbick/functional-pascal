@@ -36,9 +36,6 @@ impl LoweringContext {
                 if let Some(info) = self.event_writes.get(&key).cloned() {
                     return self.lower_event_write(target, value, &info, *span);
                 }
-                if let Some(info) = self.property_writes.get(&key).cloned() {
-                    return self.lower_property_write(target, value, &info, *span);
-                }
                 let value = match self.designator_type(target) {
                     Some(expected) => self.lower_expression_as(value, expected)?,
                     None => self.lower_expression(value)?,

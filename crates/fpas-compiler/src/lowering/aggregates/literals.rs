@@ -126,9 +126,6 @@ impl LoweringContext {
         expected: TypeId,
     ) -> Result<ValueId, CompileError> {
         match expression {
-            Expr::RecordLiteral { fields, span } => {
-                self.lower_record_literal_as(fields, expected, *span)
-            }
             Expr::ArrayLiteral(values, span) => {
                 self.lower_array_literal_as(values, expected, *span)
             }

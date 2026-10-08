@@ -26,12 +26,7 @@ impl LoweringContext {
         } else {
             None
         };
-        let value = match value {
-            Expr::RecordLiteral { fields, span } => {
-                self.lower_record_literal_as(fields, element_ty, *span)?
-            }
-            _ => self.lower_expression(value)?,
-        };
+        let value = self.lower_expression_as(value, element_ty)?;
         if let Some(local) = local {
             return self.emit_value(
                 Operation::ArrayPush { local, value },

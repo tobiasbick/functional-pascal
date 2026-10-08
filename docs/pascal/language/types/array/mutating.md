@@ -40,7 +40,7 @@ as a [`var` argument](../../functions/var-parameters.md):
 - an array element of writable storage, `Rows[Index].Pop()`;
 - a forwarded `var` parameter, including its fields or elements.
 
-Constants, read-only parameters, loop variables, properties, dictionary entries,
+Constants, read-only parameters, loop variables, dictionary entries,
 and computed or returned arrays are rejected (FP3028). Parenthesized values are
 expressions rather than writable receiver designators.
 

@@ -7,8 +7,8 @@ use super::{
     OBJECT_VERSION, ObjectConstant, ObjectDebugBinding, ObjectDebugBindingKind,
     ObjectDebugLocation, ObjectDebugScope, ObjectEnumLayout, ObjectEnumVariant, ObjectError,
     ObjectFunction, ObjectFunctionDebugInfo, ObjectGlobal, ObjectInitializer, ObjectRecordLayout,
-    ObjectRecordMethod, ObjectRecordProperty, ObjectReturn, ObjectSequencePoint, ObjectSourceRun,
-    RelocatableObject, Relocation, SymbolReference, canonical,
+    ObjectRecordMethod, ObjectReturn, ObjectSequencePoint, ObjectSourceRun, RelocatableObject,
+    Relocation, SymbolReference, canonical,
 };
 
 impl RelocatableObject {
@@ -102,16 +102,6 @@ impl RelocatableObject {
                         .map(|field| strings(field.name))
                         .collect::<Result<Vec<_>, _>>()?,
                     field_types: record.fields.iter().map(|field| field.ty.get()).collect(),
-                    properties: record
-                        .properties
-                        .iter()
-                        .map(|property| {
-                            Ok(ObjectRecordProperty {
-                                name: strings(property.name)?,
-                                getter: strings(property.getter)?,
-                            })
-                        })
-                        .collect::<Result<Vec<_>, ObjectError>>()?,
                     methods: record
                         .methods
                         .iter()

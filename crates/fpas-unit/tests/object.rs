@@ -9,8 +9,8 @@ use fpas_bytecode::{
     CodeRange, Constant, DebugBinding, DebugBindingKind, DebugScope, DebugSourceLocation,
     EnumLayout, EnumTypeId, EnumVariant, Executable, FunctionDebugInfo, FunctionFlags, FunctionId,
     FunctionInfo, GlobalInfo, Instruction, InstructionAddress, NO_REGISTER, Opcode, RecordField,
-    RecordLayout, RecordMethod, RecordProperty, Register, ReturnConvention, SequencePoint,
-    SourceId, SourceMap, SourceRun, StringId, StringTable,
+    RecordLayout, RecordMethod, Register, ReturnConvention, SequencePoint, SourceId, SourceMap,
+    SourceRun, StringId, StringTable,
 };
 use fpas_unit::object::{
     OBJECT_VERSION, ObjectError, RelocatableObject, RelocationKind, decode_object, encode_object,
@@ -128,10 +128,6 @@ fn candidate() -> Executable {
                 name: StringId::new(5),
                 ty: fpas_bytecode::DebugTypeId::new(0),
             }],
-            properties: vec![RecordProperty {
-                name: StringId::new(5),
-                getter: StringId::new(1),
-            }],
             methods: vec![RecordMethod {
                 name: StringId::new(9),
                 routine: StringId::new(10),
@@ -187,8 +183,8 @@ fn conversion_covers_every_register_table_operand_and_is_deterministic() {
     let second = object();
     assert_eq!(first, second);
     assert_eq!(first.version, OBJECT_VERSION);
-    assert_eq!(first.records[0].properties[0].name, "field");
-    assert_eq!(first.records[0].properties[0].getter, "demo.helper");
+    assert_eq!(first.records[0].methods[0].name, "method");
+    assert_eq!(first.records[0].methods[0].routine, "demo.record.method");
     assert_eq!(
         first.debug_types[1],
         fpas_unit::object::ObjectDebugType::Record("demo.record".to_string())

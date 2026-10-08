@@ -6,7 +6,6 @@ mod assignment;
 mod calls;
 mod control_flow;
 mod event_assignment;
-mod property_assignment;
 
 use super::Checker;
 use fpas_parser::*;

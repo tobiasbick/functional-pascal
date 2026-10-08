@@ -24,8 +24,6 @@ pub enum SemanticTokenKind {
     Variable,
     /// Record field.
     Field,
-    /// Computed record property.
-    Property,
     /// Record event.
     Event,
     /// Enum member or associated-data constructor.

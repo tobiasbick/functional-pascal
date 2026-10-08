@@ -160,7 +160,6 @@ pub fn one_field_record(field_type: u32) -> fpas_unit::object::ObjectRecordLayou
         name: "shared.node".to_string(),
         fields: vec!["value".to_string()],
         field_types: vec![field_type],
-        properties: Vec::new(),
         methods: Vec::new(),
     }
 }

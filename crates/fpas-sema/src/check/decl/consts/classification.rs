@@ -32,30 +32,14 @@ impl Checker {
             | (Expr::ResultError(value, _), Ty::Result(_, inner)) => {
                 self.const_initializer_is_compile_time_known(value, &inner)
             }
-            (
-                Expr::RecordLiteral { fields, .. } | Expr::RecordUpdate { fields, .. },
-                Ty::Record(record),
-            ) => {
-                let defaults = self
-                    .record_defaults
-                    .get(&record.name)
-                    .cloned()
-                    .unwrap_or_default();
+            (Expr::RecordUpdate { fields, .. }, Ty::Record(record)) => {
                 record.fields.iter().all(|(name, ty)| {
-                    if let Some(field) = fields
+                    fields
                         .iter()
                         .find(|field| field.name.eq_ignore_ascii_case(name))
-                    {
-                        return self.const_initializer_is_compile_time_known(&field.value, ty);
-                    }
-                    if matches!(expr, Expr::RecordUpdate { .. }) {
-                        return true;
-                    }
-                    defaults
-                        .iter()
-                        .find(|(field, _)| field.eq_ignore_ascii_case(name))
-                        .and_then(|(_, value)| value.as_ref())
-                        .is_none_or(|value| self.const_initializer_is_compile_time_known(value, ty))
+                        .is_none_or(|field| {
+                            self.const_initializer_is_compile_time_known(&field.value, ty)
+                        })
                 })
             }
             _ => true,
@@ -187,34 +171,6 @@ impl Checker {
                 self.non_constant_part(key)
                     .or_else(|| self.non_constant_part(value))
             }),
-            Expr::RecordLiteral { fields, .. } => {
-                if let Some(part) = fields
-                    .iter()
-                    .find_map(|field| self.non_constant_part(&field.value))
-                {
-                    return Some(part);
-                }
-                // Omitted defaults participate in classification just like written fields.
-                let ty = self.expr_types.get(&Self::expr_lookup_key(expr)).cloned();
-                if let Some(Ty::Record(record)) = ty {
-                    let defaults = self
-                        .record_defaults
-                        .get(&record.name)
-                        .cloned()
-                        .unwrap_or_default();
-                    for (name, default) in defaults {
-                        if !fields
-                            .iter()
-                            .any(|field| field.name.eq_ignore_ascii_case(&name))
-                            && let Some(default) = default
-                            && let Some(part) = self.non_constant_part(&default)
-                        {
-                            return Some(part);
-                        }
-                    }
-                }
-                None
-            }
             Expr::RecordUpdate { base, fields, .. } => self.non_constant_part(base).or_else(|| {
                 fields
                     .iter()

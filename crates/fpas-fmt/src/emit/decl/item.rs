@@ -1,8 +1,8 @@
 //! Individual declaration emission (const, var, type, routines).
 
 use fpas_parser::{
-    ConstDef, Decl, EnumMember, EnumType, FieldDef, RecordEvent, RecordMethod, RecordProperty,
-    RecordType, TypeBody, TypeDef, VarDef, Visibility,
+    ConstDef, Decl, EnumMember, EnumType, FieldDef, RecordEvent, RecordMethod, RecordType,
+    TypeBody, TypeDef, VarDef, Visibility,
 };
 
 use crate::comments::{CommentMap, emit_leading_comments, emit_trailing_comments};
@@ -92,18 +92,8 @@ fn emit_record_type(emitter: &mut Emitter, record: &RecordType, comments: &Comme
             }
             emit_record_method(inner, method, comments);
         }
-        let need_property_gap = (!record.fields.is_empty() || !record.methods.is_empty())
-            && !record.properties.is_empty();
-        if need_property_gap {
-            inner.write("\n");
-        }
-        for property in &record.properties {
-            emit_record_property(inner, property, comments);
-        }
-        let need_event_gap = (!record.fields.is_empty()
-            || !record.methods.is_empty()
-            || !record.properties.is_empty())
-            && !record.events.is_empty();
+        let need_event_gap =
+            (!record.fields.is_empty() || !record.methods.is_empty()) && !record.events.is_empty();
         if need_event_gap {
             inner.write("\n");
         }
@@ -217,25 +207,6 @@ fn emit_record_method(emitter: &mut Emitter, method: &RecordMethod, comments: &C
             );
         }
     }
-}
-
-fn emit_record_property(emitter: &mut Emitter, property: &RecordProperty, comments: &CommentMap) {
-    emit_leading_comments(emitter, comments, property.span.offset, false);
-    emitter.write_current_indent();
-    emit_visibility(emitter, property.visibility);
-    emitter.write("property ");
-    emitter.write(&property.name);
-    emitter.write(": ");
-    emit_type_expr(emitter, &property.type_expr);
-    if let Some(getter) = &property.read {
-        emitter.write(" read ");
-        emitter.write(getter);
-    }
-    if let Some(setter) = &property.write {
-        emitter.write(" write ");
-        emitter.write(setter);
-    }
-    finish_decl_line(emitter, comments, property.span.offset);
 }
 
 fn emit_record_event(emitter: &mut Emitter, event: &RecordEvent, comments: &CommentMap) {

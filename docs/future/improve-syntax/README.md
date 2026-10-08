@@ -65,11 +65,11 @@ package are listed in each work package file.
 | [x] | [AP07: Boolean rules](ap07-boolean-rules/README.md) | Medium | AP02 | Complete (Q02, Q03) |
 | — | [AP08: Comma-separated parameter lists](ap08-comma-separated-parameter-lists/README.md) | — | — | Rejected; closed (Q06) |
 | [x] | [AP09: Named arguments](ap09-named-arguments/README.md) | Medium | AP02 | Complete (AP09.1, AP09.2) |
-| [ ] | [AP10: Typed record construction](ap10-typed-record-construction/README.md) | Medium | AP09 | AP10.1 and AP10.2 complete; literal removal open |
+| [x] | [AP10: Typed record construction](ap10-typed-record-construction/README.md) | Medium | AP09 | Complete (AP10.1–AP10.3) |
 | [x] | [AP11: Individual declarations](ap11-individual-declarations/README.md) | Medium | AP01 | Complete (Q07) |
 | [ ] | [AP12: Callable expressions](ap12-callable-expressions/README.md) | Medium | AP06 | Proposal |
 | [x] | [AP13: Explicit block boundaries](ap13-explicit-block-boundaries/README.md) | Large | AP01, AP02 | Complete (Q08, Q09) |
-| [ ] | [AP14: Remove computed properties](ap14-remove-computed-properties/README.md) | Small | AP06 | Agreed direction |
+| [x] | [AP14: Remove computed properties](ap14-remove-computed-properties/README.md) | Small | AP06 | Complete (AP14.1, AP14.2) |
 | [ ] | [AP15: Remove event declarations](ap15-remove-event-declarations/README.md) | Small | AP20 | Agreed direction |
 | [x] | [AP16: Immutable and mutable bindings](ap16-immutable-and-mutable-bindings/README.md) | Large | AP11 | Complete (AP16.1–AP16.3) |
 | [x] | [AP17: Visible caller mutation](ap17-visible-caller-mutation/README.md) | Large | AP09, AP13, AP16, AP06.2 (AP17.3) | Complete |
@@ -132,18 +132,18 @@ completed foundation is listed above. For the remaining work, keep the
 following dependency order; the exact prerequisites and unresolved decisions
 are recorded in each work-package file.
 
-1. AP10 and AP14 follow the completed named-argument and dot-call rules.
-2. AP20 enables AP03 and AP15; AP21 and AP24 follow their required parts of
-   AP03, AP10, and AP20.
-3. AP18 and AP23 use the completed Boolean and binding rules. AP19 uses the
+1. AP20 enables AP03 and AP15; AP21 and AP24 follow their required parts of
+   AP03 and AP20 on top of the completed typed record construction (AP10).
+2. AP18 and AP23 use the completed Boolean and binding rules. AP19 uses the
    completed import and binding rules.
-4. AP26 uses the completed block and caller-mutation rules. Reassess AP25
-   after AP23 and practical use of its contracts; AP14 is also a prerequisite.
+3. AP26 uses the completed block and caller-mutation rules. Reassess AP25
+   after AP23 and practical use of its contracts; its AP14 prerequisite is
+   complete.
 
 AP12 can proceed to its
 accept/reject decision now that AP06 is complete; its implementation still
-requires that decision. AP22 uses the completed diagnostic and binding rules;
-its typed-construction portion requires AP10.1.
+requires that decision. AP22 uses the completed diagnostic, binding, and typed
+record construction rules.
 
 AP27 is optional and follows AP22. AP28 is editor/LSP work outside this
 language plan; AP24 remains its transfer prerequisite. AP08 and AP29 are

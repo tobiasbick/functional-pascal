@@ -145,11 +145,11 @@ fn empty_const_section_keeps_following_var_declaration() {
 }
 
 #[test]
-fn expression_recovery_keeps_record_end_and_following_statement() {
+fn expression_recovery_keeps_record_update_end_and_following_statement() {
     use fpas_diagnostics::codes::PARSE_EXPECTED_EXPRESSION;
 
     let (program, errors) =
-        parse_with_errors("program T; begin X := record Field := end; Y := 1; end.");
+        parse_with_errors("program T; begin X := P with Field := end with; Y := 1; end.");
 
     assert!(errors.iter().any(|error| {
         error

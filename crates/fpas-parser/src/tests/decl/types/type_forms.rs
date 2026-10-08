@@ -19,9 +19,9 @@ fn event_keyword_cannot_be_a_type_name() {
 }
 
 #[test]
-fn property_keyword_cannot_be_a_variable_name() {
+fn property_is_an_ordinary_variable_name() {
     let (_, errors) = parse_with_errors("program T; var Property: integer := 1; begin end.");
-    assert!(!errors.is_empty());
+    assert!(errors.is_empty(), "{errors:#?}");
 }
 
 #[test]

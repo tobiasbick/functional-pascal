@@ -29,7 +29,6 @@ public type
   end enum;
   public type Counter = record
     public Value: integer;
-    public property Current: integer read GetCurrent;
     public event Changed: procedure() read ReadChanged write WriteChanged;
     public function Add<T>(Self: Counter; Amount: T): integer;
     begin
@@ -74,7 +73,6 @@ end unit;
         ("Local", SemanticTokenKind::Constant),
         ("CopyText", SemanticTokenKind::Variable),
         ("Value", SemanticTokenKind::Field),
-        ("Current", SemanticTokenKind::Property),
         ("Changed", SemanticTokenKind::Event),
         ("First", SemanticTokenKind::EnumMember),
         ("Identity", SemanticTokenKind::Function),

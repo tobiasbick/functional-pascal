@@ -7,7 +7,7 @@ use fpas_unit::interface as artifact;
 use crate::scope::{Symbol, SymbolKind as SemaSymbolKind};
 use crate::types::{
     EnumTy, EnumVariantTy, EventTy, FunctionTy, GenericParamDef, MethodKind, ParamTy, ProcedureTy,
-    PropertyTy, RecordTy, Ty, TypeConstraint,
+    RecordTy, Ty, TypeConstraint,
 };
 
 use super::InterfaceConversionError;
@@ -182,20 +182,6 @@ fn interface_to_record(
         methods,
         static_functions,
         static_procedures,
-        properties: record
-            .properties
-            .iter()
-            .map(|property| {
-                Ok((
-                    property.name.clone(),
-                    PropertyTy {
-                        ty: interface_type_to_ty(&property.ty)?,
-                        getter: property.getter.clone(),
-                        setter: property.setter.clone(),
-                    },
-                ))
-            })
-            .collect::<Result<_, InterfaceConversionError>>()?,
         events: record
             .events
             .iter()

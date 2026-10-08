@@ -18,12 +18,12 @@ fn valid_expression_delimiters_parse_without_diagnostics() {
 }
 
 #[test]
-fn trailing_delimiters_and_missing_record_separator_are_rejected() {
+fn trailing_delimiters_and_missing_field_separator_are_rejected() {
     for (expression, expected_code) in [
         ("F(1,)", PARSE_EXPECTED_EXPRESSION),
         ("[1,]", PARSE_EXPECTED_EXPRESSION),
         ("['a': 1,]", PARSE_EXPECTED_EXPRESSION),
-        ("record X := 1 end", PARSE_EXPECTED_TOKEN),
+        ("P with X := 1 end with", PARSE_EXPECTED_TOKEN),
         ("Some()", PARSE_EXPECTED_EXPRESSION),
     ] {
         let source = format!("program T; begin return {expression}; end.");

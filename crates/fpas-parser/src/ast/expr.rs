@@ -25,7 +25,6 @@ impl Expr {
             Self::Call { span, .. }
             | Self::UnaryOp { span, .. }
             | Self::BinaryOp { span, .. }
-            | Self::RecordLiteral { span, .. }
             | Self::RecordUpdate { span, .. }
             | Self::Postfix { span, .. }
             | Self::NamedArgument { span, .. }
@@ -105,13 +104,6 @@ pub enum Expr {
     ///
     /// **Documentation:** `docs/pascal/language/types/dictionaries.md`
     DictLiteral(Vec<(Expr, Expr)>, Span),
-    /// Record literal with explicitly initialized fields.
-    RecordLiteral {
-        /// Field initializers in source order.
-        fields: Vec<FieldInit>,
-        /// Source span of the complete record literal.
-        span: Span,
-    },
     /// `Ok(expr)` — wrap value in Result::Ok.
     ResultOk(Box<Expr>, Span),
     /// `Error(expr)` — wrap value in Result::Error.
@@ -250,7 +242,7 @@ pub enum PostfixOperation {
     },
 }
 
-/// Record or `new` field initializer.
+/// Field initializer of a record update.
 #[derive(Debug, Clone, PartialEq)]
 pub struct FieldInit {
     /// Initialized field name.

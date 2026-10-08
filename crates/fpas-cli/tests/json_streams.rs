@@ -332,9 +332,7 @@ fn malformed_record_initializer_finishes_with_bounded_diagnostics() {
     let records = stderr_records(&output);
     assert!(records.len() < 16, "{records:?}");
     assert!(
-        records
-            .iter()
-            .any(|record| record["code"] == "FP2001" && record["expected"] == "end"),
+        records.iter().any(|record| record["code"] == "FP2017"),
         "{records:?}"
     );
 }

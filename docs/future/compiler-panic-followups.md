@@ -28,6 +28,16 @@ language or hide the limitation inside a library implementation.
   from the debug metadata, evaluate in written order, and add debugger
   evaluation tests for routines, methods, variant constructors, and typed record
   construction with field defaults and visibility checks.
+- **Leftover after AP10.3:** the debugger front end no longer produces
+  `DebugExpression::Record`, the VM's structural record construction that picks
+  a layout by its exact field set
+  (`crates/fpas-vm/src/vm/debug/evaluation/model.rs`,
+  `DebugCallTarget::Record` in `crates/fpas-vm/src/vm/debug/calls/execute.rs`).
+  Only VM tests in
+  `crates/fpas-vm/src/vm/debug/tests/empty_storage_construction/rejection.rs`
+  still build it. Replace it with typed construction by record type name,
+  applying field defaults and visibility, when named debugger construction is
+  implemented, and move those tests to the new form.
 
 ### Debugger cannot write or pass `var` parameters
 

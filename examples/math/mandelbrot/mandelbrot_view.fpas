@@ -14,12 +14,12 @@ begin
     end;
   end if;
   const Detail: string := 'center=(%f, %f)  zoom=%f  palette=%s  %s'
-                            .Format(State.Explorer.CenterX, State.Explorer.CenterY, State.Explorer.Zoom, PaletteName(State.Explorer.Palette), Status);
+                            .Format(State.Explorer.CenterX, State.Explorer.CenterY, State.Explorer.GetZoom(), PaletteName(State.Explorer.Palette), Status);
   var MainChildren: array of TuiElement := [
                                              TuiElementBuilders.MakePanel('Mandelbrot Explorer', [TuiElementBuilders.MakeCellGrid(State.Grid)]),
                                              TuiElementBuilders.MakeRule(Detail),
                                              TuiElementBuilders.MakeGauge('Iterations', State.Explorer.MaxIter, 2048),
-                                             TuiElementBuilders.MakeGauge('Zoom', Min(Trunc(State.Explorer.Zoom * 10.0), 1000), 1000)
+                                             TuiElementBuilders.MakeGauge('Zoom', Min(Trunc(State.Explorer.GetZoom() * 10.0), 1000), 1000)
                                            ];
   if State.FailureMessage.Length() > 0 then
     begin

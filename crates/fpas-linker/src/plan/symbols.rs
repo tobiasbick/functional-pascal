@@ -204,9 +204,6 @@ fn matching_layout_definition(
                             (right_object, *right_type),
                         )
                     })
-                && named_routines_match(&left_layout.properties, &right_layout.properties, |item| {
-                    (&item.name, &item.getter)
-                })
                 && named_routines_match(&left_layout.methods, &right_layout.methods, |item| {
                     (&item.name, &item.routine)
                 })

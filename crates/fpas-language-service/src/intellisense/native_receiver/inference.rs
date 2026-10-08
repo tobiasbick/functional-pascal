@@ -44,16 +44,27 @@ pub(super) fn shape(text: &str) -> Option<Ty> {
     }
 }
 
+/// Document context for nested receiver-type lookups.
+pub(super) struct ReceiverLookup<'a> {
+    pub(super) documents: &'a [NavigationDocument],
+    pub(super) target: usize,
+    pub(super) offset: usize,
+    pub(super) depth: usize,
+}
+
 pub(super) fn operation_result(
-    documents: &[NavigationDocument],
-    target: usize,
+    lookup: &ReceiverLookup<'_>,
     receiver_ty: &Ty,
     name: &str,
     args: &[Expr],
     source: &str,
-    offset: usize,
-    depth: usize,
 ) -> Option<Ty> {
+    let ReceiverLookup {
+        documents,
+        target,
+        offset,
+        depth,
+    } = *lookup;
     let operation = fpas_sema::native_operation(receiver_ty, name)?;
     let signature = operation.signature_for(Some(receiver_ty));
     let argument = |parameter: &str| {

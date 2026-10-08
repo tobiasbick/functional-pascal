@@ -19,9 +19,6 @@ impl LoweringContext {
         if self.bound_method_targets.contains_key(&designator_key) {
             return self.lower_bound_method(designator, designator_key);
         }
-        if let Some(reads) = self.property_reads.get(&designator_key).cloned() {
-            return self.lower_property_read(designator, &reads);
-        }
         let qualified = designator
             .parts
             .iter()

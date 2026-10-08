@@ -16,15 +16,15 @@ enum      array     channel   task
 panic     break     continue  result
 option    ok        error     some
 none      try       public    go
-dict      with      static    property
-event     read      write     comparable
-numeric   printable self      nil
-elsif     when      null      discard
+dict      with      static    event
+read      write     numeric   comparable
+printable self      nil       elsif
+when      null      discard
 ```
 
 Every word in the table is fully reserved, including after `.` in a qualified name or
 member access. Some keywords are valid only in their dedicated syntax positions: `read`
-and `write` introduce property or event accessors, the three constraint keywords follow
+and `write` introduce event accessors, the three constraint keywords follow
 a generic type parameter, and `self` names the first receiver parameter and receiver
 expression of an instance record method.
 

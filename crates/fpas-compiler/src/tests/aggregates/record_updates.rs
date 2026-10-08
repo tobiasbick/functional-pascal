@@ -58,7 +58,7 @@ begin
     Scores := ['b': []];
   end with;
   if Reset.Tags.Length() <> 0 then panic('empty dictionary'); end if;
-  if Reset.Origin.X + Reset.Origin.Y <> 15 then panic('record literal'); end if;
+  if Reset.Origin.X + Reset.Origin.Y <> 15 then panic('record construction'); end if;
   if not Reset.Label.IsNone() then panic('none'); end if;
   if Reset.Grid[0].Length() <> 0 then panic('nested empty array'); end if;
   if Reset.Scores['b'].Length() <> 0 then panic('empty dictionary value'); end if;

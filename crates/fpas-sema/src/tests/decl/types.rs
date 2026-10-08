@@ -270,22 +270,6 @@ fn duplicate_record_field_errors(source: &str) -> Vec<crate::SemaError> {
 }
 
 #[test]
-fn anonymous_record_literal_rejects_exact_duplicate_fields() {
-    let errors = duplicate_record_field_errors(
-        "program T; const N: integer := record Value := 1; Value := 2; end; begin end.",
-    );
-    assert_eq!(errors.len(), 1, "unexpected diagnostics: {errors:#?}");
-}
-
-#[test]
-fn anonymous_record_literal_rejects_case_only_duplicate_fields() {
-    let errors = duplicate_record_field_errors(
-        "program T; const N: integer := record Value := 1; value := 2; end; begin end.",
-    );
-    assert_eq!(errors.len(), 1, "unexpected diagnostics: {errors:#?}");
-}
-
-#[test]
 fn typed_record_construction_rejects_exact_duplicate_fields() {
     let errors = duplicate_record_field_errors(
         "program T; \

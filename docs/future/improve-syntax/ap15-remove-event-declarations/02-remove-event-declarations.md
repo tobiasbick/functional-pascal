@@ -5,7 +5,8 @@ Package: [AP15: Remove event declarations](README.md)
 ## Scope
 
 Remove `event`, the event-only `nil` literal, and `Assigned`; diagnose them
-with the optional-field replacement.
+with the optional-field replacement. Release `read` and `write`, which only
+event accessors still use after AP14.2.
 
 ## Prerequisites
 
@@ -14,7 +15,7 @@ with the optional-field replacement.
 
 ## Implementation
 
-- Lexer: remove `event` and `nil`.
+- Lexer: remove `event`, `nil`, `read`, and `write`; they become identifiers.
 - Parser: recognize event declarations and `nil`; report the replacement
   (`Option of HandlerType` field, `None`, and an `is Some(const Handler)` test).
 - Sema: diagnose `Assigned` with the same replacement.
@@ -40,5 +41,6 @@ None beyond AP15.1.
 
 ## Verification
 
-- Rejection tests for `event`, `nil`, and `Assigned` with hints.
+- Rejection tests for `event`, `nil`, and `Assigned` with hints; `read` and
+  `write` usable as identifiers.
 - Workspace tests, FPAS suite, VS Code grammar verification.

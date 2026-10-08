@@ -28,7 +28,7 @@ fn call(name: &str, arguments: Vec<DebugExpression>) -> DebugExpression {
 }
 
 #[test]
-fn methods_properties_static_constructors_records_and_intrinsics_execute() {
+fn methods_static_constructors_records_and_intrinsics_execute() {
     let source = "\
 program DebugMembers;
 uses Std.Math;
@@ -47,7 +47,6 @@ type
     begin
       return Self.Value;
     end function;
-    property Number: integer read ReadNumber;
   end record;
 procedure Touch();
 begin
@@ -71,7 +70,7 @@ end.";
 
     let cases = [
         ("Counter.Create(6).Double()", "12"),
-        ("Counter.Create(7).Number", "7"),
+        ("Counter.Create(7).ReadNumber()", "7"),
         ("Counter.Create(8).Double()", "16"),
         ("Std.Math.Abs(-9)", "9"),
         ("Touch()", "()"),

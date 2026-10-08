@@ -54,7 +54,6 @@ const KEYWORDS: &[&str] = &[
     "dict",
     "with",
     "static",
-    "property",
     "event",
     "read",
     "write",

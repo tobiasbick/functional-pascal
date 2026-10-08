@@ -20,6 +20,7 @@ impl Parser {
             nesting_depth: 0,
             nesting_limit_reached: false,
             block_closers: Vec::new(),
+            initializer_type: None,
         }
     }
 

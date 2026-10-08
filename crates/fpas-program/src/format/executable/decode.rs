@@ -3,8 +3,7 @@
 use fpas_bytecode::{
     CodeRange, Constant, DebugTypeId, EnumLayout, EnumTypeId, EnumVariant, FunctionFlags,
     FunctionId, FunctionInfo, GlobalInfo, GlobalInitializer, Instruction, InstructionAddress,
-    RecordField, RecordLayout, RecordProperty, ReturnConvention, SourceId, SourceRun, StringId,
-    StringTable,
+    RecordField, RecordLayout, ReturnConvention, SourceId, SourceRun, StringId, StringTable,
 };
 
 use super::super::debug::{self, DebugCounts};
@@ -135,7 +134,8 @@ pub(super) fn decode_records(
         fpas_bytecode::limits::MAX_RECORD_LAYOUTS,
     )?;
     let mut reader = SectionReader::new(section.bytes, "record section");
-    reader.ensure_entries(section.item_count, 16, "record_name")?;
+    // Name, field count, and method count.
+    reader.ensure_entries(section.item_count, 12, "record_name")?;
     let mut records = Vec::new();
     for _ in 0..section.item_count {
         let name = StringId::new(reader.u32("record_name")?);
@@ -147,20 +147,6 @@ pub(super) fn decode_records(
             fields.push(RecordField {
                 name: StringId::new(reader.u32("record_field_name")?),
                 ty: DebugTypeId::new(reader.u32("record_field_type")?),
-            });
-        }
-        let property_count = reader.u32("record_property_count")? as usize;
-        check_count(
-            section.tag,
-            property_count,
-            fpas_bytecode::limits::MAX_LAYOUT_FIELDS,
-        )?;
-        reader.ensure_entries(property_count, 8, "record_property_name")?;
-        let mut properties = Vec::with_capacity(property_count);
-        for _ in 0..property_count {
-            properties.push(RecordProperty {
-                name: StringId::new(reader.u32("record_property_name")?),
-                getter: StringId::new(reader.u32("record_property_getter")?),
             });
         }
         let method_count = reader.u32("record_method_count")? as usize;
@@ -180,7 +166,6 @@ pub(super) fn decode_records(
         records.push(RecordLayout {
             name,
             fields,
-            properties,
             methods,
         });
     }

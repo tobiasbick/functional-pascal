@@ -209,17 +209,6 @@ pub(super) fn record_layouts(image: &Executable) -> Vec<String> {
                     )
                 })
                 .collect();
-            let properties: Vec<String> = record
-                .properties
-                .iter()
-                .map(|property| {
-                    format!(
-                        "{}:{}",
-                        string_at(image, property.name),
-                        string_at(image, property.getter)
-                    )
-                })
-                .collect();
             let methods: Vec<String> = record
                 .methods
                 .iter()
@@ -232,10 +221,9 @@ pub(super) fn record_layouts(image: &Executable) -> Vec<String> {
                 })
                 .collect();
             format!(
-                "{}|{}|{}|{}",
+                "{}|{}|{}",
                 string_at(image, record.name),
                 fields.join(","),
-                properties.join(","),
                 methods.join(",")
             )
         })

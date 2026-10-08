@@ -153,7 +153,6 @@ public type PointAlias = Point;
 
 public type Holder = record
   public Item: Point;
-  public property Selected: Point read Item;
 end record;
 
 type Secret = Point;
@@ -173,7 +172,6 @@ begin
   const AliasValue: PointAlias := PointAlias( X := 1 );
   const HolderValue: Holder := Holder( Item := AliasValue );
   const PointValue: Point := HolderValue.Item;
-  const SelectedValue: Point := HolderValue.Selected;
   const ResultValue: Point := Demo.Types.Echo(PointValue);
   const HiddenValue: Secret := PointValue;
 end.
@@ -194,14 +192,6 @@ end.
         .expect("member type")
         .value;
     assert_eq!(member_target[0].symbol.name, "Point");
-
-    let property =
-        main_source.find("HolderValue.Selected").expect("property") + "HolderValue.".len();
-    let property_target = service
-        .type_definitions(&main, property)
-        .expect("property type")
-        .value;
-    assert_eq!(property_target[0].symbol.name, "Point");
 
     let unit_source = std::fs::read_to_string(&unit).expect("unit source");
     let alias_decl = unit_source.find("PointAlias =").expect("alias declaration");

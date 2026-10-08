@@ -144,13 +144,6 @@ pub(in crate::vm::debug) enum DebugCallTarget {
         /// Source member name.
         name: String,
     },
-    /// Property getter fallback after no stored field matched.
-    Property {
-        /// Receiver passed to the getter.
-        receiver: fpas_bytecode::Value,
-        /// Source property name.
-        name: String,
-    },
     /// Construct a record whose layout exactly matches these field names.
     Record {
         /// Field names in source order.

@@ -184,7 +184,7 @@
       "patterns": [
         {
           "name": "keyword.declaration.fpas",
-          "match": "(?i:\\b(program|unit|uses|const|var|function|procedure|type|public|static|property|event)\\b)"
+          "match": "(?i:\\b(program|unit|uses|const|var|function|procedure|type|public|static|event)\\b)"
         },
         {
           "name": "keyword.control.fpas",

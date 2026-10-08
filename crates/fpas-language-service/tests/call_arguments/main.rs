@@ -1,5 +1,7 @@
 //! Signature help and navigation for named reference arguments.
 
+#![allow(clippy::expect_used)]
+
 #[path = "../support/mod.rs"]
 mod support;
 

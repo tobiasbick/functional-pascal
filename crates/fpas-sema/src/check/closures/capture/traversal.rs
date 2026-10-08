@@ -291,11 +291,6 @@ impl CaptureCollector<'_> {
                     self.collect_from_expr(value);
                 }
             }
-            Expr::RecordLiteral { fields, .. } => {
-                for field in fields {
-                    self.collect_from_expr(&field.value);
-                }
-            }
             Expr::RecordUpdate { base, fields, .. } => {
                 self.collect_from_expr(base);
                 for field in fields {

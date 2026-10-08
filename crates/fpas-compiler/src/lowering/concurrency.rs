@@ -102,12 +102,7 @@ impl LoweringContext {
             .get(&fpas_sema::expr_lookup_key(expression))
             .cloned()
         {
-            let key = fpas_sema::designator_lookup_key(designator);
-            let callee = if let Some(reads) = self.property_reads.get(&key).cloned() {
-                self.lower_property_read(designator, &reads)?
-            } else {
-                self.lower_designator_read(designator)?
-            };
+            let callee = self.lower_designator_read(designator)?;
             let output = self.type_table.id(&result_ty, span.line, span.column)?;
             return self.spawn_callable_value(callee, output, args, span, retain_result);
         }
@@ -116,11 +111,8 @@ impl LoweringContext {
             .get(&fpas_sema::expr_lookup_key(expression))
             .cloned()
         {
-            let (receiver, _) = self.lower_member_receiver(
-                designator,
-                designator.parts.len().saturating_sub(1),
-                &target.receiver_reads,
-            )?;
+            let (receiver, _) =
+                self.lower_member_receiver(designator, designator.parts.len().saturating_sub(1))?;
             return self.lower_resolved_go(
                 fpas_sema::expr_lookup_key(expression),
                 Some(receiver),
@@ -139,11 +131,10 @@ impl LoweringContext {
             .cloned()
         {
             let receiver = match &target {
-                MethodCallTarget::Instance { receiver_reads, .. } => Some(
+                MethodCallTarget::Instance { .. } => Some(
                     self.lower_member_receiver(
                         designator,
                         designator.parts.len().saturating_sub(1),
-                        receiver_reads,
                     )?
                     .0,
                 ),

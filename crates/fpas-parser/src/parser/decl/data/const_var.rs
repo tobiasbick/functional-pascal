@@ -76,7 +76,7 @@ impl Parser {
         self.expect(&Token::Colon);
         let type_expr = self.parse_type_expr();
         self.expect(&Token::ColonAssign);
-        let value = self.parse_expression();
+        let value = self.parse_initializer(&type_expr);
         (name, type_expr, value)
     }
 

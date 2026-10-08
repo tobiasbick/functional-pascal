@@ -96,7 +96,7 @@ Evaluation is available only at a stable stop. It accepts FPAS literals,
 visible names, parentheses, unary `-` and `not`, arithmetic, Boolean,
 comparison and `in` operators, stored record/enum fields, and read-only
 array, dictionary, or string indexes. It also accepts controlled calls,
-readable properties, instance and static record methods, array/dictionary/record/Result/Option construction, fully qualified enum
+instance and static record methods, array/dictionary/record/Result/Option construction, fully qualified enum
 constructors, record updates, and `try`. Names are ASCII
 case-insensitive; the innermost parameter/local/capture wins, then globals.
 Visible first-class function values and closures may be called when their
@@ -298,7 +298,7 @@ and clients must request variables again. Existing `setVariable` and
 clients use the explicit dictionary operations instead. Standard `setVariable`
 and `setExpression` still cannot resize arrays or address string characters;
 clients use the explicit sequence operations instead. Mutation cannot invoke a
-property setter or otherwise change control flow. Executables without exact
+routine or otherwise change control flow. Executables without exact
 initializer metadata retain the conservative behavior: the mutation succeeds,
 but a later ordinary source store can overwrite it. Parameters and captures do
 not have suppressible declaration stores and remain unavailable while

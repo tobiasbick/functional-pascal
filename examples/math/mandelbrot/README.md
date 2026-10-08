@@ -3,8 +3,8 @@
 Fullscreen terminal Mandelbrot explorer and the canonical interactive `Std.Tui`
 example. The program project depends on a separately testable core library.
 
-Demonstrates: units and project dependencies, record methods/statics/`Zoom`
-property, postfix chaining (`Z.Sq().Add(C)`), MVU state, `TuiCellGrid`, concrete
+Demonstrates: units and project dependencies, record methods and statics,
+postfix chaining (`Z.Sq().Add(C)`), MVU state, `TuiCellGrid`, concrete
 truecolor cells, panels, rules, gauges, status hints, and a modal overlay.
 
 The initial frame is blank and remains interactive while a render subscription

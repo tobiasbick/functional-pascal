@@ -112,12 +112,6 @@ fn private_type_in_declaration<'a>(
                 })
                 .or_else(|| {
                     record
-                        .properties
-                        .iter()
-                        .find_map(|property| private_type_in(&property.type_expr, private_types))
-                })
-                .or_else(|| {
-                    record
                         .events
                         .iter()
                         .find_map(|event| private_type_in(&event.type_expr, private_types))

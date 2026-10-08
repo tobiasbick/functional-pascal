@@ -116,13 +116,7 @@ impl Checker {
         match operation {
             PostfixOperation::Field { name, span } => {
                 let key = Self::postfix_operation_lookup_key(operation);
-                self.check_record_member_access(
-                    &resolved,
-                    name,
-                    *span,
-                    Some((key, 0)),
-                    Some((key, 0)),
-                )
+                self.check_record_member_access(&resolved, name, *span, Some((key, 0)))
             }
             PostfixOperation::Index { index, span } => {
                 self.check_index_access(&resolved, index, *span)
@@ -158,7 +152,6 @@ impl Checker {
                 span,
                 call_span: span,
                 allow_procedure_result: procedure_result_is_discarded,
-                receiver_reads: Vec::new(),
             });
         };
 
@@ -174,18 +167,8 @@ impl Checker {
             .fields
             .iter()
             .any(|(name, _)| name.eq_ignore_ascii_case(method_name))
-            || record_ty
-                .properties
-                .iter()
-                .any(|(name, _)| name.eq_ignore_ascii_case(method_name))
         {
-            let member_ty = self.check_record_member_access(
-                receiver_ty,
-                method_name,
-                span,
-                Some((op_key, 0)),
-                None,
-            );
+            let member_ty = self.check_record_member_access(receiver_ty, method_name, span, None);
             return self.check_member_value_call(
                 op_key,
                 method_name,
@@ -215,31 +198,6 @@ impl Checker {
 
         let Some(method_kind) = self.resolve_method_kind(record_ty, method_name, &qualified) else {
             if record_ty
-                .fields
-                .iter()
-                .any(|(name, _)| name.eq_ignore_ascii_case(method_name))
-                || record_ty
-                    .properties
-                    .iter()
-                    .any(|(name, _)| name.eq_ignore_ascii_case(method_name))
-            {
-                let member_ty = self.check_record_member_access(
-                    receiver_ty,
-                    method_name,
-                    span,
-                    Some((op_key, 0)),
-                    None,
-                );
-                return self.check_member_value_call(
-                    op_key,
-                    method_name,
-                    &member_ty,
-                    args,
-                    span,
-                    procedure_result_is_discarded,
-                );
-            }
-            if record_ty
                 .events
                 .iter()
                 .any(|(name, _)| name.eq_ignore_ascii_case(method_name))
@@ -265,7 +223,6 @@ impl Checker {
                 span,
                 call_span: span,
                 allow_procedure_result: procedure_result_is_discarded,
-                receiver_reads: Vec::new(),
             });
         };
 
@@ -273,7 +230,6 @@ impl Checker {
             op_key,
             MethodCallTarget::Instance {
                 qualified_name: qualified.clone(),
-                receiver_reads: Vec::new(),
             },
         );
 

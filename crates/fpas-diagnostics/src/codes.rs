@@ -99,6 +99,14 @@ define_codes!(PARSE_ALLOCATED_CODES => {
     ///
     /// Documentation: `docs/pascal/tools/diagnostics.md` (FP2016).
     PARSE_MIXED_CALL_ARGUMENTS = 2016;
+    /// A removed `record Field := Value; end` literal appears in an expression.
+    ///
+    /// Documentation: `docs/pascal/tools/diagnostics.md` (FP2017).
+    PARSE_REMOVED_RECORD_LITERAL = 2017;
+    /// A removed `property` declaration appears in a record.
+    ///
+    /// Documentation: `docs/pascal/tools/diagnostics.md` (FP2018).
+    PARSE_REMOVED_PROPERTY = 2018;
 });
 
 define_codes!(SEMA_ALLOCATED_CODES => {
@@ -117,7 +125,7 @@ define_codes!(SEMA_ALLOCATED_CODES => {
     SEMA_CONSTRAINT_VIOLATION = 3013;
     SEMA_NON_CONSTANT_EXPRESSION = 3014;
 
-    /// A required record field (without a default value) is missing from a record literal.
+    /// A required record field (without a default value) is missing from a record construction.
     ///
     /// **Documentation:** `docs/pascal/language/types/records.md` (Default field values)
     SEMA_MISSING_RECORD_FIELD = 3015;

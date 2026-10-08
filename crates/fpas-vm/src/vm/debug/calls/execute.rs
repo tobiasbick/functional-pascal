@@ -100,10 +100,7 @@ impl CallSandbox {
                 "Call a named function, procedure, method, or visible function value.",
             )),
             DebugCallTarget::Method { receiver, name } => {
-                self.invoke_member(receiver, &name, arguments, false)
-            }
-            DebugCallTarget::Property { receiver, name } => {
-                self.invoke_member(receiver, &name, arguments, true)
+                self.invoke_member(receiver, &name, arguments)
             }
             DebugCallTarget::Record { fields } => self.construct_record(&fields, arguments),
         }
@@ -190,7 +187,6 @@ impl CallSandbox {
         receiver: Value,
         member: &str,
         mut arguments: Vec<Value>,
-        property: bool,
     ) -> Result<Value, DebugSessionError> {
         let Value::Record(record) = &receiver else {
             return Err(error(
@@ -202,36 +198,7 @@ impl CallSandbox {
                 "Call instance members on record values.",
             ));
         };
-        let name = if property {
-            let getter = self
-                .executable
-                .executable()
-                .records
-                .get(usize::from(record.body().layout.record.get()))
-                .and_then(|layout| {
-                    layout.properties.iter().find(|property| {
-                        self.executable
-                            .executable()
-                            .strings
-                            .get(property.name)
-                            .is_some_and(|name| name.eq_ignore_ascii_case(member))
-                    })
-                })
-                .and_then(|property| self.executable.executable().strings.get(property.getter))
-                .ok_or_else(|| {
-                    error(
-                        DebugErrorKind::UnknownCallable,
-                        format!(
-                            "record `{}` has no readable property `{member}`",
-                            record.body().layout.type_name
-                        ),
-                        "Use a stored field or a readable property from the executable metadata.",
-                    )
-                })?;
-            getter.to_string()
-        } else {
-            format!("{}.{}", record.body().layout.type_name, member)
-        };
+        let name = format!("{}.{}", record.body().layout.type_name, member);
         arguments.insert(0, receiver);
         self.invoke_named(&name, arguments)
     }

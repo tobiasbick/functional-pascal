@@ -1,7 +1,7 @@
 use fpas_bytecode::{
     CodeRange, Constant, DebugType, DebugTypeId, EnumLayout, EnumTypeId, EnumVariant, Executable,
     FunctionFlags, FunctionId, FunctionInfo, GlobalInfo, Instruction, InstructionAddress,
-    Intrinsic, NO_REGISTER, Opcode, RecordField, RecordLayout, RecordProperty, ReturnConvention,
+    Intrinsic, NO_REGISTER, Opcode, RecordField, RecordLayout, RecordMethod, ReturnConvention,
     SourceId, SourceMap, SourceRun, StringId, StringTable, intrinsic::ConsoleIntrinsic,
 };
 
@@ -149,11 +149,10 @@ pub fn all_opcodes_executable() -> Executable {
                 name: StringId::new(4),
                 ty: DebugTypeId::new(0),
             }],
-            properties: vec![RecordProperty {
+            methods: vec![RecordMethod {
                 name: StringId::new(4),
-                getter: StringId::new(1),
+                routine: StringId::new(1),
             }],
-            methods: Vec::new(),
         }],
         enums: vec![EnumLayout {
             name: StringId::new(5),

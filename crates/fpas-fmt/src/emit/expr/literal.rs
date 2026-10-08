@@ -10,39 +10,6 @@ use crate::style::INDENT_WIDTH;
 use super::super::Emitter;
 use super::super::wrap::{exceeds_width, measure_emit, text_width};
 
-/// Emits literal fields with their own indentation and comment anchors.
-pub(super) fn emit_record_fields(
-    emitter: &mut Emitter,
-    fields: &[FieldInit],
-    comments: &CommentMap,
-) {
-    if fields.is_empty() {
-        emitter.write("record ");
-        emit_record_field_inits(emitter, fields, comments);
-        emitter.write(record_literal_end(fields));
-        return;
-    }
-
-    let base_column = emitter.indent_level() * INDENT_WIDTH;
-    emitter.write("record\n");
-    emitter.with_indent(|inner| {
-        for field in fields {
-            crate::comments::emit_leading_comments(inner, comments, field.span.offset, false);
-            inner.write_current_indent();
-            inner.write(&field.name);
-            inner.write(" := ");
-            super::emit_expr_impl(inner, &field.value, 0, false, comments);
-            inner.write(";");
-            crate::comments::emit_trailing_comments(inner, comments, field.span.offset);
-            if !inner.ends_with_newline() {
-                inner.write_line_end();
-            }
-        }
-    });
-    write_to_column(emitter, base_column);
-    emitter.write("end");
-}
-
 pub(super) fn write_to_column(emitter: &mut Emitter, column: usize) {
     let pad = column.saturating_sub(emitter.column());
     emitter.write(&" ".repeat(pad));
@@ -60,8 +27,8 @@ pub(super) fn emit_array_literal(emitter: &mut Emitter, elements: &[Expr], comme
         return;
     }
 
-    // Multi-line items (record literals) continue relative to the indentation of the line that
-    // opens the array, so `[record` keeps its fields one level deeper and `end]` on that level.
+    // Multi-line items (closures, record updates) continue relative to the indentation of the line that
+    // opens the array, so their bodies stay one level deeper and their endings on that level.
     let single_line = format!("[{}]", items.join(", "));
     let line_indent = emitter.line_indent();
     let fits = single_line.split('\n').enumerate().all(|(index, line)| {
@@ -125,10 +92,6 @@ pub(super) fn emit_record_field_inits(
         emitter.write(" := ");
         super::emit_expr(emitter, &field.value, 0, comments);
     }
-}
-
-pub(super) fn record_literal_end(fields: &[FieldInit]) -> &'static str {
-    if fields.is_empty() { "end" } else { "; end" }
 }
 
 pub(super) fn format_string(value: &str) -> String {

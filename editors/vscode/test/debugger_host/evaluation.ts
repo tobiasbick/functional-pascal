@@ -44,7 +44,6 @@ export async function verifyDebuggerEvaluation(
     "    begin",
     "      return Self.X;",
     "    end function;",
-    "    property First: integer read ReadFirst;",
     "  end record;",
     "",
     "begin",
@@ -105,12 +104,12 @@ export async function verifyDebuggerEvaluation(
       ["X", "3"],
       ["Y", "4"]
     ]);
-    const property = await session.customRequest("evaluate", {
-      expression: "Point.Create(6, 7).First",
+    const accessor = await session.customRequest("evaluate", {
+      expression: "Point.Create(6, 7).ReadFirst()",
       frameId,
       context: "hover"
     }) as EvaluateResult;
-    assert.equal(property.result, "6", "compiler property metadata resolves the exact getter");
+    assert.equal(accessor.result, "6", "an accessor method is called on a constructed value");
     const activeSession = session;
     await assert.rejects(
       async () => activeSession.customRequest("evaluate", {

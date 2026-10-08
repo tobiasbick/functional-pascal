@@ -70,10 +70,7 @@ impl Checker {
                     hint,
                     other.span(),
                 );
-                (
-                    self.check_expr_with_expected_record_literals(other, &param.ty),
-                    None,
-                )
+                (self.check_expr(other), None)
             }
             (false, Expr::VarArgument { designator, .. }) => {
                 self.error_with_code(
@@ -90,10 +87,7 @@ impl Checker {
                 );
                 (self.check_designator_expr(designator), None)
             }
-            (false, _) => (
-                self.check_expr_with_expected_record_literals(arg, &param.ty),
-                None,
-            ),
+            (false, _) => (self.check_expr(arg), None),
         }
     }
 

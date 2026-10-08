@@ -113,34 +113,11 @@ pub struct RecordType {
     pub fields: Vec<FieldDef>,
     /// The record's instance and static routines.
     pub methods: Vec<RecordMethod>,
-    /// Computed properties backed by instance accessors.
-    ///
-    /// **Documentation:** `docs/pascal/language/types/record-properties.md`
-    pub properties: Vec<RecordProperty>,
     /// Event members backed by `Option of Handler` accessors.
     ///
     /// **Documentation:** `docs/pascal/language/types/record-events.md`
     pub events: Vec<RecordEvent>,
     /// The source span covering the complete `record ... end` body.
-    pub span: Span,
-}
-
-/// A computed property declared inside a `record … end` block.
-///
-/// **Documentation:** `docs/pascal/language/types/record-properties.md`
-#[derive(Debug, Clone, PartialEq)]
-pub struct RecordProperty {
-    /// The property name.
-    pub name: String,
-    /// The value type exposed by the property.
-    pub type_expr: TypeExpr,
-    /// Member visibility; private when no modifier was written.
-    pub visibility: Visibility,
-    /// Instance function name after contextual `read`.
-    pub read: Option<String>,
-    /// Instance procedure name after contextual `write`.
-    pub write: Option<String>,
-    /// The source span covering the property declaration.
     pub span: Span,
 }
 
@@ -207,8 +184,7 @@ pub struct FieldDef {
     pub type_expr: TypeExpr,
     /// Member visibility; private when no modifier was written.
     pub visibility: Visibility,
-    /// Optional default expression used when the field is omitted from a record literal.
-    /// Only valid on a named record type definition, not on anonymous literals.
+    /// Optional default expression used when a record construction omits the field.
     pub default_value: Option<Expr>,
     /// The source span covering the field declaration.
     pub span: Span,

@@ -60,7 +60,7 @@ impl Checker {
             else {
                 continue;
             };
-            let actual = self.check_expr_with_expected_record_literals(&expression, expected);
+            let actual = self.check_expr(&expression);
             self.check_type_compat(
                 expected,
                 &actual,

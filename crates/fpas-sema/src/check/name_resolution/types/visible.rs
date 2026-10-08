@@ -21,7 +21,7 @@ impl Checker {
             resolved = symbol.ty.clone();
         }
         let name = match &resolved {
-            Ty::Record(record) if record.name != "<anonymous>" => &record.name,
+            Ty::Record(record) => &record.name,
             Ty::Enum(enumeration) => &enumeration.name,
             _ => return resolved,
         };

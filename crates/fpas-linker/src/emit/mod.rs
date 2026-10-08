@@ -10,7 +10,7 @@ use std::collections::BTreeMap;
 use fpas_bytecode::{
     CodeRange, EnumLayout, EnumVariant, Executable, FunctionFlags, FunctionInfo, GlobalInfo,
     Instruction, InstructionAddress, NO_REGISTER, Opcode, RecordField, RecordLayout,
-    RecordProperty, ReturnConvention,
+    ReturnConvention,
 };
 use fpas_unit::object::ObjectReturn;
 
@@ -74,16 +74,6 @@ pub fn link_objects(
                         })
                     })
                     .collect::<Result<Vec<_>, _>>()?,
-                properties: record
-                    .properties
-                    .iter()
-                    .map(|property| {
-                        Ok(RecordProperty {
-                            name: strings.intern(&property.name)?,
-                            getter: strings.intern(&property.getter)?,
-                        })
-                    })
-                    .collect::<Result<Vec<_>, LinkError>>()?,
                 methods: record
                     .methods
                     .iter()

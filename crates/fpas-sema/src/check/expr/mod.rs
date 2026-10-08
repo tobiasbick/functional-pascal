@@ -52,7 +52,6 @@ impl Checker {
             Expr::Paren(inner, _) => self.check_expr(inner),
             Expr::ArrayLiteral(elements, _) => self.check_array_literal(elements),
             Expr::DictLiteral(pairs, _) => self.check_dict_literal(pairs),
-            Expr::RecordLiteral { fields, .. } => self.check_record_literal(fields),
             Expr::ResultOk(inner, _) => {
                 let inner_ty = self.check_expr(inner);
                 Ty::Result(Box::new(inner_ty), Box::new(Ty::Error))
@@ -249,26 +248,6 @@ impl Checker {
         Ty::Dict(Box::new(first_key_ty), Box::new(first_val_ty))
     }
 
-    fn check_record_literal(&mut self, fields: &[FieldInit]) -> Ty {
-        self.validate_unique_record_fields(fields, "record literal");
-        let field_types = fields
-            .iter()
-            .map(|field| (field.name.clone(), self.check_expr(&field.value)))
-            .collect();
-
-        Ty::Record(std::sync::Arc::new(crate::types::RecordTy {
-            name: "<anonymous>".into(),
-            owner_unit: None,
-            private_members: Vec::new(),
-            fields: field_types,
-            methods: Vec::new(),
-            static_functions: Vec::new(),
-            static_procedures: Vec::new(),
-            properties: Vec::new(),
-            events: Vec::new(),
-        }))
-    }
-
     /// Type-check a record update expression: `base with Field := Value; … end`.
     ///
     /// The base must resolve to a record type. Each override field must exist in
@@ -319,29 +298,13 @@ impl Checker {
                 .iter()
                 .find(|(name, _)| name.eq_ignore_ascii_case(&field_init.name))
             {
-                let value_ty =
-                    self.check_expr_with_expected_record_literals(&field_init.value, field_ty);
+                let value_ty = self.check_expr(&field_init.value);
                 self.check_type_compat(
                     field_ty,
                     &value_ty,
                     &format!("field update `{}`", field_init.name),
                     span,
                 );
-            } else if record_ty
-                .properties
-                .iter()
-                .any(|(name, _)| name.eq_ignore_ascii_case(&field_init.name))
-            {
-                self.error_with_code(
-                    fpas_diagnostics::codes::SEMA_UNKNOWN_NAME,
-                    format!(
-                        "Record type `{}` property `{}` cannot be set in a `with` update",
-                        record_ty.name, field_init.name
-                    ),
-                    "Properties are not record fields. Assign to the property with `Value.Prop := …` instead.",
-                    span,
-                );
-                let _ = self.check_expr(&field_init.value);
             } else if self
                 .find_record_event_on_type(&record_ty, &field_init.name)
                 .is_some()
@@ -374,7 +337,6 @@ impl Checker {
             }
         }
 
-        // Return the same type as the base (named or anonymous).
         base_ty
     }
 

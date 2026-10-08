@@ -32,7 +32,7 @@ fn statement_ends_with_end(stmt: &Stmt) -> bool {
 
 fn expression_ends_with_end(expr: &Expr) -> bool {
     match expr {
-        Expr::RecordLiteral { .. } | Expr::RecordUpdate { .. } | Expr::Closure(..) => true,
+        Expr::RecordUpdate { .. } | Expr::Closure(..) => true,
         Expr::UnaryOp { operand, .. } | Expr::Try(operand, ..) | Expr::Go(operand, ..) => {
             expression_ends_with_end(operand)
         }

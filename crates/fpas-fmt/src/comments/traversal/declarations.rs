@@ -46,11 +46,6 @@ pub(super) fn collect_decls(decls: &[Decl], begins: &[usize], out: &mut Collecte
                                 }
                             }
                         }
-                        for property in &record.properties {
-                            out.leading.push(property.span.offset);
-                            out.declarations.insert(property.span.offset);
-                            push_span(property.span, out);
-                        }
                         for event in &record.events {
                             out.leading.push(event.span.offset);
                             out.declarations.insert(event.span.offset);

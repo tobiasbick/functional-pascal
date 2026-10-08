@@ -248,7 +248,6 @@ fn record_layout_changes_are_rejected() {
             name: StringId::new(1),
             ty: DebugTypeId::new(0),
         }],
-        properties: Vec::new(),
         methods: Vec::new(),
     });
     let candidate = image.verify().expect("record layout candidate");
@@ -589,7 +588,6 @@ fn incompatible_replace_is_rejected_before_the_live_image_changes() {
             name: StringId::new(1),
             ty: DebugTypeId::new(0),
         }],
-        properties: Vec::new(),
         methods: Vec::new(),
     });
     let candidate = image.verify().expect("record layout candidate");

@@ -12,7 +12,6 @@ fn cloning_record_type_shares_immutable_descriptor() {
         methods: Vec::new(),
         static_functions: Vec::new(),
         static_procedures: Vec::new(),
-        properties: Vec::new(),
         events: Vec::new(),
     }));
 

@@ -1,31 +1,62 @@
-//! Record construction and named record-update expression endings.
+//! Removed record literals and named record-update expression endings.
 //!
-//! **Documentation:** `docs/pascal/language/types/record-update.md`.
+//! **Documentation:** `docs/pascal/language/types/records.md`,
+//! `docs/pascal/language/types/record-update.md`.
 
 use super::super::Parser;
-use crate::ast::{Expr, FieldInit};
-use fpas_diagnostics::codes::PARSE_EMPTY_RECORD_UPDATE;
+use crate::ast::{Expr, FieldInit, TypeExpr};
+use fpas_diagnostics::codes::{PARSE_EMPTY_RECORD_UPDATE, PARSE_REMOVED_RECORD_LITERAL};
 use fpas_lexer::{Span, Token};
 
 impl Parser {
-    /// Parses a record literal, retaining its existing unnamed `end`.
-    pub(super) fn parse_record_literal(&mut self) -> Expr {
+    /// Parses the initializer of a declaration whose type is written before it.
+    ///
+    /// A named declared type lets the removed-literal diagnostic name the constructor.
+    pub(in crate::parser) fn parse_initializer(&mut self, type_expr: &TypeExpr) -> Expr {
+        let outer = self.initializer_type.take();
+        if let TypeExpr::Named { id, .. } = type_expr {
+            self.initializer_type = Some((self.pos, id.parts.join(".")));
+        }
+        let value = self.parse_expression();
+        self.initializer_type = outer;
+        value
+    }
+
+    /// Rejects the removed `record Field := Value; end` literal and skips it.
+    pub(super) fn reject_record_literal(&mut self) -> Expr {
+        let type_name = self
+            .initializer_type
+            .as_ref()
+            .filter(|(position, _)| *position == self.pos)
+            .map(|(_, name)| name.clone());
         let start = self.advance().span;
         let fields = self.parse_field_init_list();
-        if self.at_enclosing_block_end() {
-            self.error_with_code(
-                fpas_diagnostics::codes::PARSE_EXPECTED_TOKEN,
-                "Expected `end` before the enclosing block ending",
-                "Close this record literal with `end` before its enclosing construct.",
-                self.current_span(),
-            );
+        if !self.at_enclosing_block_end() {
+            self.eat(&Token::End);
+        }
+        let span = self.span_from(start);
+        let arguments = if fields.is_empty() {
+            "Field := Value".to_string()
         } else {
-            self.expect(&Token::End);
-        }
-        Expr::RecordLiteral {
-            fields,
-            span: self.span_from(start),
-        }
+            fields
+                .iter()
+                .map(|field| format!("{} := ...", field.name))
+                .collect::<Vec<_>>()
+                .join(", ")
+        };
+        let hint = match type_name {
+            Some(name) => format!("Construct the record by its type name: `{name}({arguments})`."),
+            None => format!(
+                "Construct the record by its type name, for example `TypeName({arguments})`, where `TypeName` is the expected record type."
+            ),
+        };
+        self.error_with_code(
+            PARSE_REMOVED_RECORD_LITERAL,
+            "Record literals `record ... end` are not supported",
+            &hint,
+            span,
+        );
+        Expr::Error(span)
     }
 
     /// Parses `base with Field := Value; … end with` without consuming a terminator.

@@ -45,13 +45,6 @@ pub(super) fn collect_expr(expr: &Expr, begins: &[usize], out: &mut CollectedAnc
                 collect_expr(value, begins, out);
             }
         }
-        Expr::RecordLiteral { fields, .. } => {
-            for field in fields {
-                out.leading.push(field.span.offset);
-                push_span(field.span, out);
-                collect_expr(&field.value, begins, out);
-            }
-        }
         Expr::RecordUpdate { base, fields, span } => {
             collect_expression_closer(*span, out);
             collect_expr(base, begins, out);

@@ -18,7 +18,7 @@ pub enum LiveImageUpdateClass {
     InactiveFunctionBody,
     /// A function currently on a stack has a different body.
     ActiveFunctionBody,
-    /// Record field, property, or method layout differs.
+    /// Record field or method layout differs.
     RecordLayout,
     /// Enum type or variant layout differs.
     EnumLayout,

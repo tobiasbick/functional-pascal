@@ -102,7 +102,6 @@ fn sample_interface() -> UnitInterface {
                             variadic: false,
                         },
                     }],
-                    properties: Vec::new(),
                     events: Vec::new(),
                 })),
                 kind: SymbolKind::Type,

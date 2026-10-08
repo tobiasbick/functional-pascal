@@ -54,7 +54,6 @@ fn lexical_kind(kind: SymbolKind) -> bool {
         SymbolKind::Program
             | SymbolKind::Unit
             | SymbolKind::Field
-            | SymbolKind::Property
             | SymbolKind::Event
             | SymbolKind::Method
             | SymbolKind::EnumMember

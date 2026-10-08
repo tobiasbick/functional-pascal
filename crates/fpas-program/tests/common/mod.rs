@@ -11,8 +11,8 @@ use fpas_bytecode::{
     CodeRange, Constant, DebugBinding, DebugBindingKind, DebugScope, DebugSourceLocation,
     EnumLayout, EnumTypeId, EnumVariant, Executable, FunctionDebugInfo, FunctionFlags, FunctionId,
     FunctionInfo, GlobalInfo, Instruction, InstructionAddress, NO_REGISTER, Opcode, RecordField,
-    RecordLayout, RecordMethod, RecordProperty, Register, ReturnConvention, SequencePoint,
-    SourceId, SourceMap, SourceRun, StringId, StringTable,
+    RecordLayout, RecordMethod, Register, ReturnConvention, SequencePoint, SourceId, SourceMap,
+    SourceRun, StringId, StringTable,
 };
 use fpas_program::{Digest, LinkedUnitIdentity, ProgramIdentity, ProgramImage};
 
@@ -138,10 +138,6 @@ pub fn program_image() -> ProgramImage {
             fields: vec![RecordField {
                 name: StringId::new(5),
                 ty: fpas_bytecode::DebugTypeId::new(2),
-            }],
-            properties: vec![RecordProperty {
-                name: StringId::new(10),
-                getter: StringId::new(0),
             }],
             methods: vec![RecordMethod {
                 name: StringId::new(12),

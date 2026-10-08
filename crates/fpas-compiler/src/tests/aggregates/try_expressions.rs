@@ -17,7 +17,6 @@ type
     begin return Self.Base + X * 10 + Y; end function;
     procedure WriteNumber(Self: Counter; Value: integer);
     begin Written := Self.Base + Value; end procedure;
-    property Number: integer write WriteNumber;
     function ReadHandler(Self: Counter): Option of Binary;
     begin return Handler; end function;
     procedure WriteHandler(Self: Counter; Value: Option of Binary);
@@ -177,9 +176,9 @@ fn postfix_method_preserves_receiver_across_try() {
 }
 
 #[test]
-fn property_write_preserves_receiver_across_try() {
+fn procedure_method_preserves_receiver_across_try() {
     check_expression(
-        "const C: Counter := Counter( Base := 0 ); C.Number := (try ReadValue(1, FailAt)) * 10 + (try ReadValue(2, FailAt)); return Ok(Written);",
+        "const C: Counter := Counter( Base := 0 ); C.WriteNumber((try ReadValue(1, FailAt)) * 10 + (try ReadValue(2, FailAt))); return Ok(Written);",
     );
 }
 

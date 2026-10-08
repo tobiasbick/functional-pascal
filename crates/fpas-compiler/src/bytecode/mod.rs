@@ -104,16 +104,6 @@ pub(super) fn compile_program(
                         })
                 })
                 .collect::<Result<Vec<_>, _>>()?;
-            let properties = layout
-                .properties
-                .iter()
-                .map(|property| {
-                    Ok(fpas_bytecode::RecordProperty {
-                        name: metadata.intern_string(&property.name)?,
-                        getter: metadata.intern_string(&property.getter)?,
-                    })
-                })
-                .collect::<Result<Vec<_>, CompileError>>()?;
             let methods = layout
                 .methods
                 .iter()
@@ -127,7 +117,6 @@ pub(super) fn compile_program(
             Ok(fpas_bytecode::RecordLayout {
                 name,
                 fields,
-                properties,
                 methods,
             })
         })

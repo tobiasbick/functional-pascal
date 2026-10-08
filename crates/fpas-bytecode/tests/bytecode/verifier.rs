@@ -724,12 +724,12 @@ fn string_constant_and_layout_metadata_references_are_rejected() {
         }
     ));
 
-    let mut property = all_opcodes_executable();
-    property.records[0].properties[0].getter = StringId::new(99);
+    let mut method = all_opcodes_executable();
+    method.records[0].methods[0].routine = StringId::new(99);
     assert!(matches!(
-        error_kind(property),
+        error_kind(method),
         ValidationErrorKind::StringReference {
-            owner: "record property getter",
+            owner: "record method routine",
             ..
         }
     ));

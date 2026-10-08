@@ -150,7 +150,6 @@ pub(super) fn assignment_executable() -> VerifiedExecutable {
                     ty: DebugTypeId::new(0),
                 },
             ],
-            properties: Vec::new(),
             methods: Vec::new(),
         }],
         enums: Vec::new(),

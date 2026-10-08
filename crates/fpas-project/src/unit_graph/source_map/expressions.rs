@@ -50,12 +50,6 @@ pub(super) fn apply_expr_source_id(expr: &mut Expr, source_id: u32) {
             apply_expr_source_id(right, source_id);
             apply_span(span, source_id);
         }
-        Expr::RecordLiteral { fields, span } => {
-            for field in fields {
-                apply_field_init_source_id(field, source_id);
-            }
-            apply_span(span, source_id);
-        }
         Expr::RecordUpdate { base, fields, span } => {
             apply_expr_source_id(base, source_id);
             for field in fields {

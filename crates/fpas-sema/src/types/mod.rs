@@ -127,27 +127,10 @@ pub struct RecordTy {
     ///
     /// **Documentation:** `docs/pascal/language/types/record-methods.md`
     pub static_procedures: Vec<(String, ProcedureTy)>,
-    /// Computed properties backed by instance accessors.
-    ///
-    /// **Documentation:** `docs/pascal/language/types/record-properties.md`
-    pub properties: Vec<(String, PropertyTy)>,
     /// Event members backed by `Option of Handler` accessors.
     ///
     /// **Documentation:** `docs/pascal/language/types/record-events.md`
     pub events: Vec<(String, EventTy)>,
-}
-
-/// A computed record property and its resolved accessor names.
-///
-/// **Documentation:** `docs/pascal/language/types/record-properties.md`
-#[derive(Debug, Clone, PartialEq)]
-pub struct PropertyTy {
-    /// Declared property type.
-    pub ty: Ty,
-    /// Qualified getter name (`Record.GetText`), when readable.
-    pub getter: Option<String>,
-    /// Qualified setter name (`Record.SetText`), when writable.
-    pub setter: Option<String>,
 }
 
 /// A record event and its resolved `Option of Handler` accessors.
@@ -343,20 +326,15 @@ impl Ty {
             (Ty::Named(n), Ty::Record(r)) | (Ty::Record(r), Ty::Named(n)) => {
                 n.eq_ignore_ascii_case(&r.name)
             }
-            // Named records are nominal. Anonymous literals remain structural until their
-            // surrounding expression supplies a declaration identity.
+            // Records are nominal.
             // Documentation: docs/pascal/language/types/records.md
             (Ty::Record(a), Ty::Record(b)) => {
-                if a.name == "<anonymous>" || b.name == "<anonymous>" {
-                    Self::record_fields_compatible_with_mode(&a.fields, &b.fields, generic_wildcard)
-                } else {
-                    a.name.eq_ignore_ascii_case(&b.name)
-                        && match (&a.owner_unit, &b.owner_unit) {
-                            (Some(a_owner), Some(b_owner)) => a_owner.eq_ignore_ascii_case(b_owner),
-                            (None, None) => true,
-                            _ => false,
-                        }
-                }
+                a.name.eq_ignore_ascii_case(&b.name)
+                    && match (&a.owner_unit, &b.owner_unit) {
+                        (Some(a_owner), Some(b_owner)) => a_owner.eq_ignore_ascii_case(b_owner),
+                        (None, None) => true,
+                        _ => false,
+                    }
             }
             // Enums: same name is sufficient (type-erased generics).
             (Ty::Enum(a), Ty::Enum(b)) => a.name.eq_ignore_ascii_case(&b.name),
@@ -438,28 +416,6 @@ impl Ty {
     ) -> bool {
         params.iter().zip(other_params).all(|(param, other)| {
             param.mode == other.mode && param.ty.compatible_with_mode(&other.ty, generic_wildcard)
-        })
-    }
-
-    fn record_fields_compatible_with_mode(
-        fields: &[(String, Ty)],
-        other_fields: &[(String, Ty)],
-        generic_wildcard: bool,
-    ) -> bool {
-        if fields.len() != other_fields.len() {
-            return false;
-        }
-
-        fields.iter().all(|(name, ty)| {
-            other_fields
-                .iter()
-                .find(|(other_name, _)| other_name.eq_ignore_ascii_case(name))
-                .is_some_and(|(_, other_ty)| ty.compatible_with_mode(other_ty, generic_wildcard))
-        }) && other_fields.iter().all(|(name, ty)| {
-            fields
-                .iter()
-                .find(|(other_name, _)| other_name.eq_ignore_ascii_case(name))
-                .is_some_and(|(_, other_ty)| ty.compatible_with_mode(other_ty, generic_wildcard))
         })
     }
 }

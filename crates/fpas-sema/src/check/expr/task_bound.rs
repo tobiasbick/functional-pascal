@@ -25,9 +25,6 @@ impl Checker {
                 self.expr_is_task_bound(Self::expr_lookup_key(key))
                     || self.expr_is_task_bound(Self::expr_lookup_key(value))
             }),
-            Expr::RecordLiteral { fields, .. } => fields
-                .iter()
-                .any(|field| self.expr_is_task_bound(Self::expr_lookup_key(&field.value))),
             Expr::Call { args, .. } if self.record_constructions.contains(&key) => {
                 args.iter().any(|argument| {
                     self.expr_is_task_bound(Self::expr_lookup_key(argument.argument_value()))

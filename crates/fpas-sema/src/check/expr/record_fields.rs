@@ -1,4 +1,4 @@
-//! Shared validation for record literal and update field lists.
+//! Validation for record update field lists.
 
 use super::Checker;
 use crate::scope::canonical_symbol_name;

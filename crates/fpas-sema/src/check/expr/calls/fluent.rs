@@ -84,10 +84,6 @@ impl Checker {
                     .iter()
                     .any(|(member, _)| member.eq_ignore_ascii_case(name))
                 || record
-                    .properties
-                    .iter()
-                    .any(|(member, _)| member.eq_ignore_ascii_case(name))
-                || record
                     .events
                     .iter()
                     .any(|(member, _)| member.eq_ignore_ascii_case(name));
@@ -96,10 +92,6 @@ impl Checker {
                     .fields
                     .iter()
                     .any(|(member, _)| member.eq_ignore_ascii_case(name))
-                    || record
-                        .properties
-                        .iter()
-                        .any(|(member, _)| member.eq_ignore_ascii_case(name))
                 {
                     let member_ty = self.check_designator_expr(designator);
                     return Some(self.check_member_value_call(
@@ -122,10 +114,6 @@ impl Checker {
             }
         }
         let receiver = Expr::Designator(prefix);
-        let receiver_reads = self
-            .property_reads
-            .remove(&crate::designator_lookup_key(designator))
-            .unwrap_or_default();
         Some(self.check_fluent_call(FluentCall {
             call_key,
             receiver: &receiver,
@@ -135,11 +123,10 @@ impl Checker {
             span,
             call_span: *name_span,
             allow_procedure_result,
-            receiver_reads,
         }))
     }
 
-    /// Checks a call through a callable record field or property.
+    /// Checks a call through a callable record field.
     pub(in crate::check) fn check_member_value_call(
         &mut self,
         call_key: usize,
@@ -174,7 +161,7 @@ impl Checker {
                 self.error_with_code(
                     SEMA_TYPE_MISMATCH,
                     format!("Record member `{name}` is not callable"),
-                    "Use a callable field or property, or call a qualified free routine.",
+                    "Use a callable field, or call a qualified free routine.",
                     span,
                 );
                 self.check_args_only(args);
@@ -205,7 +192,6 @@ impl Checker {
             span,
             call_span,
             allow_procedure_result,
-            receiver_reads,
         } = call;
         if receiver_ty.is_error() {
             self.check_args_only(args);
@@ -244,7 +230,6 @@ impl Checker {
             call_key,
             FluentCallTarget {
                 name: operation.implementation.to_string(),
-                receiver_reads,
                 receiver_ty: receiver_ty.clone(),
                 result_ty: result.clone(),
                 call_span,
@@ -272,6 +257,4 @@ pub(in crate::check) struct FluentCall<'a> {
     pub(in crate::check) call_span: Span,
     /// Accept procedures (statement position or `go`).
     pub(in crate::check) allow_procedure_result: bool,
-    /// Property getter reads needed while evaluating the receiver.
-    pub(in crate::check) receiver_reads: Vec<crate::check::PropertyReadInfo>,
 }

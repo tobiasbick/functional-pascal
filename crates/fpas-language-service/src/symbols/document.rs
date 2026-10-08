@@ -34,8 +34,6 @@ pub enum SymbolKind {
     Parameter,
     /// Record field.
     Field,
-    /// Record computed property.
-    Property,
     /// Record event.
     Event,
     /// Enum member.

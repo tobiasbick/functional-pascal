@@ -57,7 +57,7 @@ impl Parser {
                 Expr::Paren(Box::new(expr), self.span_from(start))
             }
             Token::LBracket => self.parse_array_or_dict_literal(),
-            Token::Record => self.parse_record_literal(),
+            Token::Record => self.reject_record_literal(),
             Token::Ok => {
                 let (inner, span) = self.parse_paren_wrapped_after_keyword();
                 Expr::ResultOk(Box::new(inner), span)

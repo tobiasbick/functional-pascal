@@ -108,15 +108,6 @@ fn lower(
                 })
                 .collect::<Result<Vec<_>, EvaluationParseError>>()?,
         )),
-        Expr::RecordLiteral { fields, .. } => Ok(DebugExpression::Record(
-            fields
-                .iter()
-                .map(|field| {
-                    lower(&field.value, depth + 1, limits, budget)
-                        .map(|value| (field.name.clone(), value))
-                })
-                .collect::<Result<Vec<_>, _>>()?,
-        )),
         Expr::ResultOk(value, _) => Ok(DebugExpression::ResultOk(Box::new(lower(
             value,
             depth + 1,

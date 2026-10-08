@@ -18,19 +18,8 @@ pub struct RecordLayout {
     pub name: StringId,
     /// Fields in numeric slot order.
     pub fields: Vec<RecordField>,
-    /// Readable source properties and exact canonical getter routines.
-    pub properties: Vec<RecordProperty>,
     /// Instance methods and exact canonical routines.
     pub methods: Vec<RecordMethod>,
-}
-
-/// Property-to-getter mapping used by exact debugger member binding.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub struct RecordProperty {
-    /// Public source property name.
-    pub name: StringId,
-    /// Canonical qualified getter routine name.
-    pub getter: StringId,
 }
 
 /// Method-to-routine mapping used by exact debugger bound-receiver construction.

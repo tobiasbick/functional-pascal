@@ -1,11 +1,8 @@
-//! Lowering for semantically resolved record methods, properties, and events.
+//! Lowering for semantically resolved record methods and events.
 
 use fpas_ir::{IrType, Operation, TypeId, ValueId};
 use fpas_parser::{Designator, DesignatorPart, Expr, PostfixOperation};
-use fpas_sema::{
-    EventAssignedInfo, EventRaiseInfo, EventWriteInfo, MethodCallTarget, PropertyReadInfo,
-    PropertyWriteInfo,
-};
+use fpas_sema::{EventAssignedInfo, EventRaiseInfo, EventWriteInfo, MethodCallTarget};
 
 use crate::CompileError;
 
@@ -27,9 +24,7 @@ impl LoweringContext {
             .get(&key)
             .cloned()
             .ok_or_else(|| unsupported(designator.span, "bound method adapter"))?;
-        let reads = self.property_reads.get(&key).cloned().unwrap_or_default();
-        let (receiver, _) =
-            self.lower_member_receiver(designator, info.receiver_part_count, &reads)?;
+        let (receiver, _) = self.lower_member_receiver(designator, info.receiver_part_count)?;
         self.emit_value(
             Operation::MakeClosure {
                 function: target.function,
@@ -40,33 +35,6 @@ impl LoweringContext {
         )
     }
 
-    pub(super) fn lower_property_read(
-        &mut self,
-        designator: &Designator,
-        reads: &[PropertyReadInfo],
-    ) -> Result<ValueId, CompileError> {
-        self.lower_member_receiver(designator, designator.parts.len(), reads)
-            .map(|(value, _)| value)
-    }
-
-    /// Retains the property receiver while evaluating the assigned value.
-    pub(super) fn lower_property_write(
-        &mut self,
-        target: &Designator,
-        value: &Expr,
-        info: &PropertyWriteInfo,
-        span: fpas_lexer::Span,
-    ) -> Result<(), CompileError> {
-        let (receiver, _) =
-            self.lower_member_receiver(target, info.receiver_part_count, &info.receiver_reads)?;
-        let receiver = self.save_value(receiver);
-        let value = self.lower_expression(value)?;
-        let receiver = self.restore_value(receiver, span)?;
-        let callable = self.member_callable(&info.setter_name, target.span, "property setter")?;
-        let _ = self.emit_member_call(&callable, vec![receiver, value], span)?;
-        Ok(())
-    }
-
     /// Retains the event receiver while evaluating the assigned handler.
     pub(super) fn lower_event_write(
         &mut self,
@@ -75,8 +43,7 @@ impl LoweringContext {
         info: &EventWriteInfo,
         span: fpas_lexer::Span,
     ) -> Result<(), CompileError> {
-        let (receiver, _) =
-            self.lower_member_receiver(target, info.receiver_part_count, &info.receiver_reads)?;
+        let (receiver, _) = self.lower_member_receiver(target, info.receiver_part_count)?;
         let receiver = self.save_value(receiver);
         let callable = self.member_callable(&info.setter_name, target.span, "event setter")?;
         let option_ty = callable
@@ -107,7 +74,6 @@ impl LoweringContext {
         let option = self.lower_event_getter(
             designator,
             info.receiver_part_count,
-            &info.receiver_reads,
             &info.getter_name,
             span,
         )?;
@@ -125,7 +91,6 @@ impl LoweringContext {
         let option = self.lower_event_getter(
             designator,
             info.receiver_part_count,
-            &info.receiver_reads,
             &info.getter_name,
             span,
         )?;
@@ -178,17 +143,7 @@ impl LoweringContext {
             return Ok(Some((closure, target.value_type)));
         }
         match operation {
-            PostfixOperation::Field { span, .. } => {
-                let Some(reads) = self.property_reads.get(&key).cloned() else {
-                    return Ok(None);
-                };
-                let Some(info) = reads.first() else {
-                    return Err(unsupported(*span, "empty property metadata"));
-                };
-                let callable = self.member_callable(&info.getter_name, *span, "property getter")?;
-                let result = self.emit_member_call(&callable, vec![value], *span)?;
-                Ok(Some((result, callable.result)))
-            }
+            PostfixOperation::Field { .. } => Ok(None),
             PostfixOperation::MethodCall { args, span, .. } => {
                 if let Some(result_ty) = self.member_value_calls.get(&key).cloned() {
                     let result = self.type_table.id(&result_ty, span.line, span.column)?;
@@ -231,7 +186,7 @@ impl LoweringContext {
         }
     }
 
-    /// Reads a callable field or property from an already evaluated record.
+    /// Reads a callable field from an already evaluated record.
     pub(super) fn lower_postfix_callable_member(
         &mut self,
         value: ValueId,
@@ -240,14 +195,6 @@ impl LoweringContext {
         let PostfixOperation::MethodCall { name, span, .. } = operation else {
             unreachable!("only a method-call operation can call a record member");
         };
-        let key = fpas_sema::postfix_operation_lookup_key(operation);
-        if let Some(reads) = self.property_reads.get(&key).cloned() {
-            let Some(info) = reads.first() else {
-                return Err(unsupported(*span, "callable property metadata"));
-            };
-            let callable = self.member_callable(&info.getter_name, *span, "callable property")?;
-            return self.emit_member_call(&callable, vec![value], *span);
-        }
         let ty = self
             .lowered_value_type(value)
             .ok_or_else(|| unsupported(*span, "callable field receiver type"))?;
@@ -287,12 +234,7 @@ impl LoweringContext {
         result: TypeId,
         span: fpas_lexer::Span,
     ) -> Result<ValueId, CompileError> {
-        let key = fpas_sema::designator_lookup_key(designator);
-        let callee = if let Some(reads) = self.property_reads.get(&key).cloned() {
-            self.lower_property_read(designator, &reads)?
-        } else {
-            self.lower_designator_read(designator)?
-        };
+        let callee = self.lower_designator_read(designator)?;
         let callee = self.save_value(callee);
         let values = self.lower_argument_values(arguments, span)?;
         let callee = self.restore_value(callee, span)?;
@@ -317,12 +259,9 @@ impl LoweringContext {
         span: fpas_lexer::Span,
     ) -> Result<ValueId, CompileError> {
         let callable = self.member_callable(target.qualified_name(), span, "record method")?;
-        let receiver = if let MethodCallTarget::Instance { receiver_reads, .. } = target {
-            let (receiver, _) = self.lower_member_receiver(
-                designator,
-                designator.parts.len().saturating_sub(1),
-                receiver_reads,
-            )?;
+        let receiver = if let MethodCallTarget::Instance { .. } = target {
+            let (receiver, _) =
+                self.lower_member_receiver(designator, designator.parts.len().saturating_sub(1))?;
             Some(self.save_value(receiver))
         } else {
             None
@@ -346,12 +285,10 @@ impl LoweringContext {
         &mut self,
         designator: &Designator,
         receiver_part_count: usize,
-        receiver_reads: &[PropertyReadInfo],
         getter_name: &str,
         span: fpas_lexer::Span,
     ) -> Result<ValueId, CompileError> {
-        let (receiver, _) =
-            self.lower_member_receiver(designator, receiver_part_count, receiver_reads)?;
+        let (receiver, _) = self.lower_member_receiver(designator, receiver_part_count)?;
         let getter = self.member_callable(getter_name, span, "event getter")?;
         self.emit_member_call(&getter, vec![receiver], span)
     }
@@ -360,46 +297,11 @@ impl LoweringContext {
         &mut self,
         designator: &Designator,
         part_count: usize,
-        reads: &[PropertyReadInfo],
     ) -> Result<(ValueId, TypeId), CompileError> {
         if part_count == 0 || part_count > designator.parts.len() {
             return Err(unsupported(designator.span, "record member receiver path"));
         }
-        let mut ordered = reads.to_vec();
-        ordered.sort_by_key(|info| info.receiver_part_count);
-        let Some(first) = ordered.first() else {
-            return self.lower_raw_designator_prefix(designator, part_count);
-        };
-        let (mut value, _) =
-            self.lower_raw_designator_prefix(designator, first.receiver_part_count)?;
-        let getter =
-            self.member_callable(&first.getter_name, designator.span, "property getter")?;
-        value = self.emit_member_call(&getter, vec![value], designator.span)?;
-        let mut ty = getter.result;
-        let mut cursor = first.receiver_part_count.saturating_add(1);
-        for read in ordered.iter().skip(1) {
-            (value, _) = self.lower_raw_suffix(
-                value,
-                ty,
-                designator
-                    .parts
-                    .get(cursor..read.receiver_part_count)
-                    .ok_or_else(|| unsupported(designator.span, "property receiver ordering"))?,
-            )?;
-            let getter =
-                self.member_callable(&read.getter_name, designator.span, "property getter")?;
-            value = self.emit_member_call(&getter, vec![value], designator.span)?;
-            ty = getter.result;
-            cursor = read.receiver_part_count.saturating_add(1);
-        }
-        self.lower_raw_suffix(
-            value,
-            ty,
-            designator
-                .parts
-                .get(cursor..part_count)
-                .ok_or_else(|| unsupported(designator.span, "property receiver suffix"))?,
-        )
+        self.lower_raw_designator_prefix(designator, part_count)
     }
 
     fn lower_raw_designator_prefix(

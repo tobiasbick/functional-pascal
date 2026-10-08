@@ -9,6 +9,8 @@ mod keywords;
 mod nesting;
 mod parameters;
 mod recovery;
+mod removed_properties;
+mod removed_record_literals;
 mod reserved_keywords;
 mod statement_terminators;
 mod syntax;

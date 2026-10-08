@@ -85,8 +85,7 @@ impl Checker {
         if named {
             for arg in args {
                 let value = arg.argument_value();
-                // A record literal can need the receiver's contextual element type.
-                if matches!(value, Expr::RecordLiteral { .. } | Expr::VarArgument { .. }) {
+                if matches!(value, Expr::VarArgument { .. }) {
                     continue;
                 }
                 let ty = self.check_expr(value);
@@ -124,7 +123,7 @@ impl Checker {
             }
             // IsEmpty reuses Length with an integer result before returning boolean.
             if operation.lowering == NativeLowering::IsEmpty {
-                signature.return_type = Box::new(Ty::Integer);
+                *signature.return_type = Ty::Integer;
             }
             let inferred =
                 self.check_function_call_refs(operation.name, &signature, &all_args, span);

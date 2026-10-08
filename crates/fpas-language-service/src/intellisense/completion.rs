@@ -310,11 +310,7 @@ fn starts_with(name: &str, prefix: &str) -> bool {
 fn unqualified_kind(kind: SymbolKind) -> bool {
     !matches!(
         kind,
-        SymbolKind::Program
-            | SymbolKind::Unit
-            | SymbolKind::Field
-            | SymbolKind::Property
-            | SymbolKind::Event
+        SymbolKind::Program | SymbolKind::Unit | SymbolKind::Field | SymbolKind::Event
     )
 }
 

@@ -15,7 +15,7 @@ use std::path::{Path, PathBuf};
 use std::process::Command;
 use std::sync::atomic::{AtomicU64, Ordering};
 
-use fpas_parser::{CompilationUnit, QualifiedId, parse_compilation_unit};
+use fpas_parser::{CompilationUnit, parse_compilation_unit};
 use fpas_project::{
     LibraryExportPolicy, ProjectLinkMeta, SourceOrigin, build_unit_graph,
     build_unit_graph_from_parsed_sources, build_unit_graph_with_standard_library, load_project,

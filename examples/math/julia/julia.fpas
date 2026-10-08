@@ -49,8 +49,6 @@ type ExplorerState = record
   begin
     return 2.4 / Self.SpanY;
   end function;
-
-  property Zoom: real read GetZoom;
 end record;
 
 function RenderWidth(): integer;
@@ -108,7 +106,7 @@ begin
       GotoXY(1, 2);
       NormVideo();
       WriteHudText('size=%dx%d  c=(%f,%f)  jr=%f  ji=%f  zoom=%f  iter=%d  pal=%s'
-                     .Format(Width, Height, S.CenterX, S.CenterY, S.Jr, S.Ji, S.Zoom, S.MaxIter, PaletteName(S.Palette)), Width);
+                     .Format(Width, Height, S.CenterX, S.CenterY, S.Jr, S.Ji, S.GetZoom(), S.MaxIter, PaletteName(S.Palette)), Width);
     end;
   end if;
 

@@ -91,7 +91,7 @@ impl Checker {
         self.error_with_code(
             SEMA_DUPLICATE_DECLARATION,
             format!("Duplicate record member `{type_name}.{name}`"),
-            "Each field, method, static routine, property, and event name must be unique within the record type.",
+            "Each field, method, static routine, and event name must be unique within the record type.",
             span,
         );
         false

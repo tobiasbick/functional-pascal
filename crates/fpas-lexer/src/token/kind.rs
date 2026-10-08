@@ -88,17 +88,13 @@ pub enum Token {
     ///
     /// **Documentation:** `docs/pascal/language/types/record-methods.md`
     Static,
-    /// Marks a computed record property: `property Text: string read GetText write SetText`.
-    ///
-    /// **Documentation:** `docs/pascal/language/types/record-properties.md`
-    Property,
     /// Marks a record event: `event OnClick: Handler read Get write Set`.
     ///
     /// **Documentation:** `docs/pascal/language/types/record-events.md`
     Event,
-    /// Introduces a readable property or event accessor.
+    /// Introduces an event's read accessor.
     Read,
-    /// Introduces a writable property or event accessor.
+    /// Introduces an event's write accessor.
     Write,
     /// Restricts a generic type parameter to comparable types.
     Comparable,

@@ -35,7 +35,7 @@ fn unit_clamp() {
 fn record_member_visibility() {
     common::assert_golden(
         "record_visibility",
-        "unit Demo.Counter; public type Counter = record Value: integer; public Step: integer; function Hidden(Self: Counter): integer; begin return Self.Value; end function; public static function Create(): Counter; begin return Counter( Value := 0, Step := 1 ); end function; public property Current: integer read Hidden; public event Changed: procedure() read ReadChanged write WriteChanged; end record;\nend unit;",
+        "unit Demo.Counter; public type Counter = record Value: integer; public Step: integer; public function Hidden(Self: Counter): integer; begin return Self.Value; end function; public static function Create(): Counter; begin return Counter( Value := 0, Step := 1 ); end function; public event Changed: procedure() read ReadChanged write WriteChanged; end record;\nend unit;",
         include_str!("golden/record_visibility.expected.fpas"),
     );
 }

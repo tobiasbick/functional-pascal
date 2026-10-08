@@ -151,14 +151,6 @@ pub(super) fn encode_records(executable: &Executable) -> Result<EncodedSection, 
         }
         write_u32(
             &mut bytes,
-            checked_u32("record_properties", record.properties.len())?,
-        );
-        for property in &record.properties {
-            write_u32(&mut bytes, property.name.get());
-            write_u32(&mut bytes, property.getter.get());
-        }
-        write_u32(
-            &mut bytes,
             checked_u32("record_methods", record.methods.len())?,
         );
         for method in &record.methods {

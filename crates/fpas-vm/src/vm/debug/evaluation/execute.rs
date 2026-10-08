@@ -99,17 +99,7 @@ fn evaluate_with_qualified_fallback(
                 }
                 Err(error) => return Err(error),
             };
-            match value_ops::field(&base, name) {
-                Ok(value) => value,
-                Err(_error) if matches!(base, Value::Record(_)) => invoke(
-                    DebugCallTarget::Property {
-                        receiver: base,
-                        name: name.clone(),
-                    },
-                    Vec::new(),
-                )?,
-                Err(error) => return Err(operation_error(error)),
-            }
+            value_ops::field(&base, name).map_err(operation_error)?
         }
         DebugExpression::Index { base, index } => {
             count_traversal(budget, limits)?;

@@ -1,5 +1,7 @@
 //! Formatting and comment preservation for named reference arguments.
 
+#![allow(clippy::expect_used)]
+
 #[path = "../common/mod.rs"]
 mod common;
 

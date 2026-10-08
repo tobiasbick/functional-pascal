@@ -83,7 +83,6 @@ impl LoweringContext {
             }
             Expr::ArrayLiteral(values, _) => self.lower_array_literal(values, expression),
             Expr::DictLiteral(values, _) => self.lower_dictionary_literal(values, expression),
-            Expr::RecordLiteral { fields, .. } => self.lower_record_literal(fields, expression),
             Expr::RecordUpdate { base, fields, .. } => {
                 self.lower_record_update(base, fields, expression)
             }

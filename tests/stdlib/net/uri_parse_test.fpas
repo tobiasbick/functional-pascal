@@ -5,50 +5,50 @@ uses Std.Net.Uri, Std.Test;
 
 begin
   case Std.Net.Uri.Parse('http://127.0.0.1:8080/v1/chat?stream=false') of
-    when Ok(Value):
+    when Ok(const Value):
       begin
         AssertEquals('http', Value.Scheme);
         AssertEquals('127.0.0.1', Value.Host);
         AssertEquals(8080, Value.Port);
         AssertEquals('/v1/chat?stream=false', Value.Path);
       end;
-    when Error(Message):
+    when Error(const Message):
       begin
         Fail(Message);
       end;
   end case;
 
   case Std.Net.Uri.Parse('https://example.test') of
-    when Ok(Value):
+    when Ok(const Value):
       begin
         AssertEquals(443, Value.Port);
         AssertEquals('/', Value.Path);
       end;
-    when Error(Message):
+    when Error(const Message):
       begin
         Fail(Message);
       end;
   end case;
 
   case Std.Net.Uri.Parse('http://example.test/path?q=1#section') of
-    when Ok(Value):
+    when Ok(const Value):
       begin
         AssertEquals('example.test', Value.Host);
         AssertEquals('/path?q=1', Value.Path);
       end;
-    when Error(Message):
+    when Error(const Message):
       begin
         Fail(Message);
       end;
   end case;
 
   case Std.Net.Uri.Parse('https://example.test#section') of
-    when Ok(Value):
+    when Ok(const Value):
       begin
         AssertEquals('example.test', Value.Host);
         AssertEquals('/', Value.Path);
       end;
-    when Error(Message):
+    when Error(const Message):
       begin
         Fail(Message);
       end;

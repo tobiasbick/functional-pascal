@@ -64,7 +64,7 @@ From strongest to weakest:
 | 6 | `not` | |
 | 7 | `and`, `or`, `xor` | same-operator chains only |
 
-The `is` pattern test is planned in AP20.3 at comparison precedence.
+The `is` pattern test (AP20.3) shares the comparison precedence.
 
 Comparison chains such as `A < B < C` are errors. The diagnostic suggests
 `A < B and B < C`. Mixed logical operators require parentheses; `not A = B`

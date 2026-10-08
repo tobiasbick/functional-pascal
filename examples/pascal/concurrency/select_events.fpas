@@ -8,11 +8,11 @@ begin
   discard Send(Messages, 'hello from the queue');
   const Message: WaitCase := ReceiveCase(Messages, procedure(Outcome: result of string, string) begin
     case Outcome of
-      when Ok(Text):
+      when Ok(const Text):
         begin
           WriteLn(Text);
         end;
-      when Error(Reason):
+      when Error(const Reason):
         begin
           WriteLn(Reason);
         end;

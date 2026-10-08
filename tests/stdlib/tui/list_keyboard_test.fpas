@@ -26,7 +26,7 @@ function UpdateList(State: ListModel; Msg: TuiMsg; Cmd: TuiCmdOutput): ListModel
 begin
   Cmd.Set(TuiCmd.NoCommand);
   case Msg of
-    when TuiMsg.SelectionChanged(Source, Action, Selected):
+    when TuiMsg.SelectionChanged(const Source, const Action, const Selected):
       begin
         AssertEquals(1, Source.Value);
         AssertEquals(5, Action.Value);

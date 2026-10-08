@@ -12,11 +12,11 @@ begin
       begin
         return 'zero';
       end;
-    when N if N > 0:
+    when const N if N > 0:
       begin
         return 'positive';
       end;
-    when N if N < 0:
+    when const N if N < 0:
       begin
         return 'negative';
       end;
@@ -28,19 +28,19 @@ Guards work with all label types — values, ranges, destructuring, and enum pat
 
 ```pascal
 case S of
-  when Shape.Circle(R) if R > 10.0:
+  when Shape.Circle(const R) if R > 10.0:
     begin
       WriteLn('Large circle');
     end;
-  when Shape.Circle(R):
+  when Shape.Circle(const R):
     begin
       WriteLn('Small circle');
     end;
-  when Shape.Rectangle(W, H) if W = H:
+  when Shape.Rectangle(const W, const H) if W = H:
     begin
       WriteLn('Square');
     end;
-  when Shape.Rectangle(W, H):
+  when Shape.Rectangle(const W, const H):
     begin
       WriteLn('Rectangle');
     end;
@@ -52,19 +52,19 @@ end case;
 ```
 
 The guard expression has access to any bindings introduced by the label.
-For enum patterns, pattern arguments bind names only; put literals and extra checks in the `if` guard.
+For enum, Result, and Option patterns, payload positions bind with `const Name`, ignore with `_`, or compare with constants; put ranges and computed checks in the `if` guard.
 
 ## Scalar guard bindings
 
-In scalar `case` arms, a single bare identifier with a guard introduces a binding for the matched value:
+In scalar `case` arms, `const Name` with a guard binds the matched value:
 
 ```pascal
 case Value of
-  when N if N > 0:
+  when const N if N > 0:
     begin
       WriteLn('positive');
     end;
-  when N if N < 0:
+  when const N if N < 0:
     begin
       WriteLn('negative');
     end;
@@ -79,12 +79,13 @@ end case;
 
 Rules:
 
-- The arm must have exactly one label.
-- The label must be a single bare identifier, not a range or a comma-separated label list.
-- If the identifier resolves to any `const` binding or enum member, it remains a
-  value label instead of becoming a binding. That value label must be a
-  compile-time constant; a computed `const` is rejected. Use a different binding
-  name and compare it with the computed value in the guard.
+- `const Name` must be the arm's only label and requires a guard; use `else`
+  for the remaining values (FP3032).
+- It is valid only in scalar `case` statements. Result, Option, and data-enum
+  patterns bind inside the pattern, for example `Some(const Value)`.
+- A bare identifier label is always a value comparison. It must name a
+  compile-time constant or an enum member; a computed `const` is rejected. A
+  name that resolves to nothing reports FP3031 with the `const Name` form.
 
 ## See also
 

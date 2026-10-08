@@ -18,11 +18,11 @@ function UpdateButton(State: ButtonPointerModel; Msg: TuiMsg; Cmd: TuiCmdOutput)
 begin
   Cmd.Set(TuiCmd.NoCommand);
   case Msg of
-    when TuiMsg.Action(Source, Action):
+    when TuiMsg.Action(const Source, const Action):
       begin
         return ButtonPointerModel(Actions := State.Actions + 1, PointerEvents := State.PointerEvents);
       end;
-    when TuiMsg.Pointer(Pointer):
+    when TuiMsg.Pointer(const Pointer):
       begin
         return ButtonPointerModel(Actions := State.Actions, PointerEvents := State.PointerEvents + 1);
       end;

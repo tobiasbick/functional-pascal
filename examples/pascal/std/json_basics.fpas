@@ -5,15 +5,15 @@ uses Std.Console, Std.Json, Std.Conv;
 begin
   const Parsed: result of JsonValue, string := Parse('{"name":"Ada","scores":[10,20],"active":true}');
   case Parsed of
-    when Ok(Value):
+    when Ok(const Value):
       begin
         case Value of
-          when JsonValue.Object(Fields):
+          when JsonValue.Object(const Fields):
             begin
               const NameValue: option of JsonValue := Fields.Get('name');
               const ScoresValue: option of JsonValue := Fields.Get('scores');
               case NameValue.Unwrap() of
-                when JsonValue.String(Name):
+                when JsonValue.String(const Name):
                   begin
                     WriteLn('name = ' + Name);
                   end;
@@ -24,7 +24,7 @@ begin
               end case;
 
               case ScoresValue.Unwrap() of
-                when JsonValue.ArrayValue(Scores):
+                when JsonValue.ArrayValue(const Scores):
                   begin
                     WriteLn('scores = ' + IntToStr(Scores.Length()));
                   end;
@@ -42,7 +42,7 @@ begin
             end;
         end case;
       end;
-    when Error(Message):
+    when Error(const Message):
       begin
         WriteLn('JSON error: ' + Message);
       end;

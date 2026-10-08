@@ -25,7 +25,7 @@ begin
   Model := App.RunIterations(Model, function(State: PointerModel; Msg: TuiMsg; Cmd: TuiCmdOutput): PointerModel begin
     Cmd.Set(TuiCmd.NoCommand);
     case Msg of
-      when TuiMsg.Tick(Delta):
+      when TuiMsg.Tick(const Delta):
         begin
           if Delta = 1 then
             begin
@@ -35,7 +35,7 @@ begin
 
           return PushEvent(State, 'tick-2');
         end;
-      when TuiMsg.Pointer(InputEvent):
+      when TuiMsg.Pointer(const InputEvent):
         begin
           return PointerModel(Events := State.Events.Concat(['pointer']), X := InputEvent.Position.X, Y := InputEvent.Position.Y, Action := InputEvent.Action, Button := InputEvent.Button);
         end;

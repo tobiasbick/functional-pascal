@@ -11,7 +11,7 @@ uses
 function TuiPaintFocused(Focused: option of TuiControlId; Id: TuiControlId): boolean;
 begin
   case Focused of
-    when Some(Value):
+    when Some(const Value):
       begin
         return Value.Value = Id.Value;
       end;
@@ -50,26 +50,26 @@ begin
     when TuiElement.Empty:
       begin
       end;
-    when TuiElement.Spacer(Value):
+    when TuiElement.Spacer(const Value):
       begin
       end;
-    when TuiElement.Label(Text):
+    when TuiElement.Label(const Text):
       begin
         TuiPaintTextInBounds(Clipped, Entry.Bounds, Text, TuiStyleRole.Normal);
       end;
-    when TuiElement.Button(Button):
+    when TuiElement.Button(const Button):
       begin
         TuiPaintButton(Clipped, Entry.Bounds, Button, TuiPaintFocused(Focused, Button.Id), TuiPaintFocused(Pressed, Button.Id));
       end;
-    when TuiElement.Input(Input):
+    when TuiElement.Input(const Input):
       begin
         TuiPaintInput(Clipped, Entry.Bounds, Input, TuiPaintFocused(Focused, Input.Id));
       end;
-    when TuiElement.TextArea(Id, Text, Caret, Offset, ChangeAction):
+    when TuiElement.TextArea(const Id, const Text, const Caret, const Offset, const ChangeAction):
       begin
         TuiPaintTextArea(Clipped, Entry.Bounds, Text, Caret, Offset, TuiPaintFocused(Focused, Id), TuiStyleRole.Normal, TuiStyleRole.Focused);
       end;
-    when TuiElement.CheckBox(Id, Text, Checked, ChangeAction):
+    when TuiElement.CheckBox(const Id, const Text, const Checked, const ChangeAction):
       begin
         var Mark: string := ' ';
         if Checked then
@@ -88,7 +88,7 @@ begin
           end;
         end if;
       end;
-    when TuiElement.List(Id, Items, Selected, ChangeAction):
+    when TuiElement.List(const Id, const Items, const Selected, const ChangeAction):
       begin
         var RowLimit: integer := Entry.Bounds.Height;
         if RowLimit > Items.Length() then
@@ -111,7 +111,7 @@ begin
           end;
         end for;
       end;
-    when TuiElement.MenuBar(Items):
+    when TuiElement.MenuBar(const Items):
       begin
         Clipped.FillRect(Entry.Bounds, TuiCell.Create(' ', TuiStyleRole.MenuNormal));
         var X: integer := Entry.Bounds.X;
@@ -133,27 +133,27 @@ begin
           end;
         end for;
       end;
-    when TuiElement.Menu(Id, Nodes, State, ChangeAction):
+    when TuiElement.Menu(const Id, const Nodes, const State, const ChangeAction):
       begin
         TuiPaintMenuBar(Clipped, Entry.Bounds, Nodes, State, TuiPaintFocused(Focused, Id));
       end;
-    when TuiElement.StatusLine(Items):
+    when TuiElement.StatusLine(const Items):
       begin
         TuiPaintStatusLine(Clipped, Entry.Bounds, Items, Focused);
       end;
-    when TuiElement.CellGrid(Grid):
+    when TuiElement.CellGrid(const Grid):
       begin
         TuiPaintCellGrid(Clipped, Entry.Bounds, Grid);
       end;
-    when TuiElement.Rule(Text):
+    when TuiElement.Rule(const Text):
       begin
         TuiPaintRule(Clipped, Entry.Bounds, Text);
       end;
-    when TuiElement.Gauge(Gauge):
+    when TuiElement.Gauge(const Gauge):
       begin
         TuiPaintGauge(Clipped, Entry.Bounds, Gauge);
       end;
-    when TuiElement.Scroll(Id, Offset, ChangeAction, Children):
+    when TuiElement.Scroll(const Id, const Offset, const ChangeAction, const Children):
       begin
         for ChildIndex: integer := 0 to Children.Length() - 1 do
           begin
@@ -161,7 +161,7 @@ begin
           end;
         end for;
       end;
-    when TuiElement.Row(Children, Spacing):
+    when TuiElement.Row(const Children, const Spacing):
       begin
         for ChildIndex: integer := 0 to Children.Length() - 1 do
           begin
@@ -169,7 +169,7 @@ begin
           end;
         end for;
       end;
-    when TuiElement.Column(Children, Spacing):
+    when TuiElement.Column(const Children, const Spacing):
       begin
         for ChildIndex: integer := 0 to Children.Length() - 1 do
           begin
@@ -177,7 +177,7 @@ begin
           end;
         end for;
       end;
-    when TuiElement.Layout(Settings, Children):
+    when TuiElement.Layout(const Settings, const Children):
       begin
         for ChildIndex: integer := 0 to Children.Length() - 1 do
           begin
@@ -185,7 +185,7 @@ begin
           end;
         end for;
       end;
-    when TuiElement.Panel(Title, Children), TuiElement.Overlay(Title, Children):
+    when TuiElement.Panel(const Title, const Children), TuiElement.Overlay(const Title, const Children):
       begin
         TuiPaintPanel(Clipped, Entry.Bounds, Title);
         for ChildIndex: integer := 0 to Children.Length() - 1 do
@@ -194,7 +194,7 @@ begin
           end;
         end for;
       end;
-    when TuiElement.Desktop(DesktopFocus, Children):
+    when TuiElement.Desktop(const DesktopFocus, const Children):
       begin
         for ChildIndex: integer := 0 to Children.Length() - 1 do
           begin
@@ -217,7 +217,7 @@ function TuiPaintMenuOverlays(
 begin
   var Next: integer := Index + 1;
   case Node of
-    when TuiElement.Menu(Id, Nodes, State, ChangeAction):
+    when TuiElement.Menu(const Id, const Nodes, const State, const ChangeAction):
       begin
         if AllowMenu and State.Open then
           begin
@@ -225,13 +225,13 @@ begin
           end;
         end if;
       end;
-    when TuiElement.Desktop(Focused, Children):
+    when TuiElement.Desktop(const Focused, const Children):
       begin
         var ModalIndex: integer := -1;
         for ChildIndex: integer := 0 to Children.Length() - 1 do
           begin
             case Children[ChildIndex] of
-              when TuiElement.Overlay(Title, OverlayChildren):
+              when TuiElement.Overlay(const Title, const OverlayChildren):
                 begin
                   ModalIndex := ChildIndex;
                 end;
@@ -249,7 +249,7 @@ begin
           end;
         end for;
       end;
-    when TuiElement.Scroll(Id, Offset, ChangeAction, Children):
+    when TuiElement.Scroll(const Id, const Offset, const ChangeAction, const Children):
       begin
         for ChildIndex: integer := 0 to Children.Length() - 1 do
           begin
@@ -257,7 +257,7 @@ begin
           end;
         end for;
       end;
-    when TuiElement.Row(Children, Spacing):
+    when TuiElement.Row(const Children, const Spacing):
       begin
         for ChildIndex: integer := 0 to Children.Length() - 1 do
           begin
@@ -265,7 +265,7 @@ begin
           end;
         end for;
       end;
-    when TuiElement.Column(Children, Spacing):
+    when TuiElement.Column(const Children, const Spacing):
       begin
         for ChildIndex: integer := 0 to Children.Length() - 1 do
           begin
@@ -273,7 +273,7 @@ begin
           end;
         end for;
       end;
-    when TuiElement.Layout(Settings, Children):
+    when TuiElement.Layout(const Settings, const Children):
       begin
         for ChildIndex: integer := 0 to Children.Length() - 1 do
           begin
@@ -281,7 +281,7 @@ begin
           end;
         end for;
       end;
-    when TuiElement.Panel(Title, Children):
+    when TuiElement.Panel(const Title, const Children):
       begin
         for ChildIndex: integer := 0 to Children.Length() - 1 do
           begin
@@ -289,7 +289,7 @@ begin
           end;
         end for;
       end;
-    when TuiElement.Overlay(Title, Children):
+    when TuiElement.Overlay(const Title, const Children):
       begin
         for ChildIndex: integer := 0 to Children.Length() - 1 do
           begin

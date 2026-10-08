@@ -106,6 +106,10 @@ pub enum Token {
     SelfKw,
     /// Reserved keyword `null`; unavailable as an identifier.
     Null,
+    /// Pattern test `Value is Pattern` in `if`, `elsif`, and `while` conditions.
+    ///
+    /// **Documentation:** `docs/pascal/language/pattern-matching/is-test.md`
+    Is,
     /// Clears an event handler: `Button.OnClick := nil`.
     ///
     /// **Documentation:** `docs/pascal/language/types/record-events.md`

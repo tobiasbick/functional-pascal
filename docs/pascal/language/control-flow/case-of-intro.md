@@ -54,11 +54,11 @@ an arm retains an additional scope; its ending closes only that inner block.
 
 ```pascal
 case Items of
-  when Some(Value) if Value > 0:
+  when Some(const Value) if Value > 0:
     const Doubled: integer := Value * 2;
     WriteLn(Doubled);
     WriteLn('positive');
-  when Some(Value):
+  when Some(const Value):
     null;
   when None:
     WriteLn('missing');

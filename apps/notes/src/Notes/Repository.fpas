@@ -67,10 +67,10 @@ begin
     begin
       const Path: string := Paths[Index];
       case Std.Fs.ReadText(Path) of
-        when Ok(Text):
+        when Ok(const Text):
           begin
             case NoteParse(Text) of
-              when Ok(NoteValue):
+              when Ok(const NoteValue):
                 begin
                   var Loaded: Note := NoteValue;
                   Loaded.Path := Path;
@@ -85,13 +85,13 @@ begin
                     end;
                   end if;
                 end;
-              when Error(Message):
+              when Error(const Message):
                 begin
                   Issues.Push(notes.model.noteissue(Path := Path, Message := Message));
                 end;
             end case;
           end;
-        when Error(Message):
+        when Error(const Message):
           begin
             Issues.Push(notes.model.noteissue(Path := Path, Message := Message));
           end;

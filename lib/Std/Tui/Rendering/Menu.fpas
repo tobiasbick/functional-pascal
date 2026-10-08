@@ -8,7 +8,7 @@ uses
 function TuiMenuIdMatches(Value: option of TuiMenuNodeId; Id: TuiMenuNodeId): boolean;
 begin
   case Value of
-    when Some(Current):
+    when Some(const Current):
       begin
         return Current.Value = Id.Value;
       end;
@@ -66,7 +66,7 @@ begin
   Canvas.FillRect(Bounds, TuiCell.Create(' ', TuiStyleRole.MenuNormal));
   var ActiveRoot: option of TuiMenuNodeId := None;
   case State.Active of
-    when Some(Active):
+    when Some(const Active):
       begin
         ActiveRoot := TuiMenuRootOf(Nodes, Active);
       end;
@@ -78,7 +78,7 @@ begin
   for Index: integer := 0 to Nodes.Length() - 1 do
     begin
       case TuiMenuNodeParent(Nodes[Index]) of
-        when Some(Parent):
+        when Some(const Parent):
           begin
           end;
         when None:
@@ -157,7 +157,7 @@ begin
 
   TuiPaintMenuLabel(Canvas, TuiPoint.Create(Bounds.X + 2, Y), Text, Mnemonic, Role, MnemonicRole);
   case TuiMenuNodeShortcut(Node) of
-    when Some(Gesture):
+    when Some(const Gesture):
       begin
         Canvas.WriteText(TuiPoint.Create((Bounds.Right() - 2) -
                                          Std.Console.DisplayWidth(Gesture.Display), Y), Gesture.Display, Role);
@@ -191,15 +191,15 @@ begin
         begin
           const Y: integer := (Bounds.Y + 1) + Row;
           case Nodes[Index] of
-            when TuiMenuNode.Separator(Id, Parent):
+            when TuiMenuNode.Separator(const Id, const Parent):
               begin
                 Canvas.DrawHorizontalLine(Bounds.X + 1, Y, Bounds.Width - 2, TuiStyleRole.MenuNormal);
               end;
-            when TuiMenuNode.Command(Id, Parent, Text, Mnemonic, Action, Enabled, Shortcut):
+            when TuiMenuNode.Command(const Id, const Parent, const Text, const Mnemonic, const Action, const Enabled, const Shortcut):
               begin
                 TuiPaintMenuPopupEntry(Canvas, Bounds, Y, Nodes[Index], Id, Text, Mnemonic, Enabled, State);
               end;
-            when TuiMenuNode.Submenu(Id, Parent, Text, Mnemonic, Enabled):
+            when TuiMenuNode.Submenu(const Id, const Parent, const Text, const Mnemonic, const Enabled):
               begin
                 TuiPaintMenuPopupEntry(Canvas, Bounds, Y, Nodes[Index], Id, Text, Mnemonic, Enabled, State);
               end;

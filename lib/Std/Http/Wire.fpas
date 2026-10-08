@@ -190,22 +190,22 @@ begin
       const LineBytes: array of integer := Bytes.Slice(Position, LineEnd - Position);
       var Line: string := '';
       case Std.Net.Utf8.Decode(LineBytes) of
-        when Ok(Value):
+        when Ok(const Value):
           begin
             Line := Value;
           end;
-        when Error(Message):
+        when Error(const Message):
           begin
             return Error('HTTP chunk size is not ASCII: ' + Message);
           end;
       end case;
       var Size: integer := 0;
       case ParseChunkSize(Line) of
-        when Ok(Value):
+        when Ok(const Value):
           begin
             Size := Value;
           end;
-        when Error(Message):
+        when Error(const Message):
           begin
             return Error(Message);
           end;
@@ -271,7 +271,7 @@ begin
   end if;
 
   case Std.Http.BodyFraming.Select(Headers) of
-    when Ok(Framing):
+    when Ok(const Framing):
       begin
         if Framing.Mode = 2 then
           begin
@@ -293,7 +293,7 @@ begin
 
         return Ok(Bytes);
       end;
-    when Error(Message):
+    when Error(const Message):
       begin
         return Error(Message);
       end;
@@ -315,11 +315,11 @@ begin
   const HeaderBytes: array of integer := Bytes.Slice(0, Separator);
   var HeaderText: string := '';
   case Std.Net.Utf8.Decode(HeaderBytes) of
-    when Ok(Value):
+    when Ok(const Value):
       begin
         HeaderText := Value;
       end;
-    when Error(Message):
+    when Error(const Message):
       begin
         return Error('HTTP response headers are not valid UTF-8: ' + Message);
       end;
@@ -332,11 +332,11 @@ begin
   end if;
   var Status: array of string := [];
   case ParseStatus(Lines[0]) of
-    when Ok(Value):
+    when Ok(const Value):
       begin
         Status := Value;
       end;
-    when Error(Message):
+    when Error(const Message):
       begin
         return Error(Message);
       end;
@@ -349,22 +349,22 @@ begin
   end if;
 
   case Std.Parse.TryInt(Status[0]) of
-    when Ok(Value):
+    when Ok(const Value):
       begin
         StatusCode := Value;
       end;
-    when Error(Message):
+    when Error(const Message):
       begin
         return Error('Invalid HTTP status code: ' + Message);
       end;
   end case;
   var Headers: array of Header := [];
   case Std.Http.Fields.Parse(HeaderText, 'response') of
-    when Ok(Value):
+    when Ok(const Value):
       begin
         Headers := Value;
       end;
-    when Error(Message):
+    when Error(const Message):
       begin
         return Error(Message);
       end;
@@ -382,22 +382,22 @@ end function;
 public function ParseResponse(Bytes: array of integer; RequestMethod: string): result of Response, string;
 begin
   case ParseResponseHead(Bytes) of
-    when Ok(Head):
+    when Ok(const Head):
       begin
         const RawBody: array of integer := Bytes.Slice(Head.BodyOffset, Bytes.Length() -
                                                                         Head.BodyOffset);
         case ResponseBody(Head.Headers, RawBody, ResponseHasBody(RequestMethod, Head.StatusCode)) of
-          when Ok(Body):
+          when Ok(const Body):
             begin
               return Ok(Response(StatusCode := Head.StatusCode, ReasonPhrase := Head.ReasonPhrase, Headers := Head.Headers, Body := Body));
             end;
-          when Error(Message):
+          when Error(const Message):
             begin
               return Error(Message);
             end;
         end case;
       end;
-    when Error(Message):
+    when Error(const Message):
       begin
         return Error(Message);
       end;

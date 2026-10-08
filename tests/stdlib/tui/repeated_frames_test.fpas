@@ -6,7 +6,7 @@ function UpdateFrames(State: integer; Msg: TuiMsg; Cmd: TuiCmdOutput): integer;
 begin
   Cmd.Set(TuiCmd.NoCommand);
   case Msg of
-    when TuiMsg.Tick(Delta):
+    when TuiMsg.Tick(const Delta):
       begin
         return State + 1;
       end;

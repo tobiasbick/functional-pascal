@@ -10,7 +10,7 @@ begin
                                                                                                                                                                                                                          'with Markdown.', Path := '');
   const Encoded: string := NoteStringify(Source);
   case NoteParse(Encoded) of
-    when Ok(Parsed):
+    when Ok(const Parsed):
       begin
         AssertEquals(Source.Id, Parsed.Id);
         AssertEquals(Source.Title, Parsed.Title);
@@ -22,19 +22,19 @@ begin
         AssertEquals(false, Parsed.Archived);
         AssertEquals(Source.Body, Parsed.Body);
       end;
-    when Error(Message):
+    when Error(const Message):
       begin
         Fail(Message);
       end;
   end case;
   const CrLf: string := Encoded.Replace(string.Chr(10), string.Chr(13) + string.Chr(10));
   case NoteParse(CrLf) of
-    when Ok(Parsed):
+    when Ok(const Parsed):
       begin
         AssertEquals(Source.Title, Parsed.Title);
         AssertEquals(Source.Body, Parsed.Body);
       end;
-    when Error(Message):
+    when Error(const Message):
       begin
         Fail(Message);
       end;

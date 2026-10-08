@@ -149,10 +149,6 @@ pub type EventRaiseMap = HashMap<usize, EventRaiseInfo>;
 /// **Documentation:** `docs/pascal/language/types/records.md` (Default field values)
 pub type RecordDefaultsMap = HashMap<String, Vec<(String, Option<std::sync::Arc<Expr>>)>>;
 
-/// Marks `CaseLabel::Value.start` expressions that semantic analysis interpreted
-/// as scalar guard bindings instead of value labels.
-pub type ScalarCaseBindingMap = HashSet<usize>;
-
 /// Compiler-facing diagnostics and lowering metadata produced by semantic analysis.
 ///
 /// Identity-keyed maps refer to the immutable source AST or the retained expressions in
@@ -183,8 +179,6 @@ pub struct AnalysisMetadata {
     pub member_value_calls: MemberValueCallMap,
     /// Named record defaults used while lowering record constructions.
     pub record_defaults: RecordDefaultsMap,
-    /// Scalar `case` labels interpreted as guard bindings.
-    pub scalar_case_bindings: ScalarCaseBindingMap,
     /// Capture metadata for anonymous closures.
     pub closure_infos: ClosureInfoMap,
     /// Capture metadata for escaping named nested routines.
@@ -250,8 +244,6 @@ pub struct Checker {
     pub(crate) record_default_discard: HashMap<(String, String), bool>,
     /// Default expression identity → constant classification in the declaration environment.
     pub(crate) record_default_constants: HashMap<usize, bool>,
-    /// `case` label expressions that bind the scrutinee for a guarded scalar arm.
-    pub(crate) scalar_case_bindings: ScalarCaseBindingMap,
     /// Closure expression identity → capture / capability metadata.
     ///
     /// **Documentation:** `docs/pascal/language/functions/closures.md`
@@ -317,7 +309,6 @@ impl Checker {
             record_constructions: HashSet::new(),
             record_default_discard: HashMap::new(),
             record_default_constants: HashMap::new(),
-            scalar_case_bindings: ScalarCaseBindingMap::new(),
             closure_infos: ClosureInfoMap::new(),
             nested_routine_captures: NestedRoutineCaptureMap::new(),
             bound_methods: BoundMethodMap::new(),
@@ -344,7 +335,6 @@ impl Checker {
             member_value_calls: self.member_value_calls,
             record_defaults: self.record_defaults,
             record_constructions: self.record_constructions,
-            scalar_case_bindings: self.scalar_case_bindings,
             closure_infos: self.closure_infos,
             nested_routine_captures: self.nested_routine_captures,
             bound_methods: self.bound_methods,

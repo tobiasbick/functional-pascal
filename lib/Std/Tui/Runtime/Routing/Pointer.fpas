@@ -43,7 +43,7 @@ function TuiPointerInsideCapturedButton(
 ): boolean;
 begin
   case TuiPointerHitAt(Frame, Root, Position) of
-    when TuiPointerHit.ElementButton(Hit):
+    when TuiPointerHit.ElementButton(const Hit):
       begin
         return Hit.Id.Value = Button.Id.Value;
       end;
@@ -101,7 +101,7 @@ begin
   const PointerMeta: boolean := Pointer.Meta;
   TuiRouteRequireMatchingFrame(Frame, Root);
   case TuiButtonCaptureGet(ApplicationId) of
-    when TuiButtonPressState.Captured(Button, PreviousInside):
+    when TuiButtonPressState.Captured(const Button, const PreviousInside):
       begin
         const Inside: boolean := TuiPointerInsideCapturedButton(Root, Frame, PointerPosition, Button);
         if PointerAction = Std.Console.MouseAction.Up then
@@ -132,7 +132,7 @@ begin
     begin
       case TuiRouteMenuPointer(Root, Frame, PointerPosition, PointerAction =
                                                              Std.Console.MouseAction.Down) of
-        when Some(Messages):
+        when Some(const Messages):
           begin
             return TuiIdlePointerResult(ApplicationId, Messages);
           end;
@@ -158,7 +158,7 @@ begin
                                                      TuiMsg.Pointer(TuiPointerEvent.WithModifiers(PointerAction, PointerButton, PointerPosition, PointerShift, PointerCtrl, PointerAlt, PointerMeta))
                                                    ]);
       end;
-    when TuiPointerHit.ElementButton(Button):
+    when TuiPointerHit.ElementButton(const Button):
       begin
         const Messages: array of TuiMsg := TuiRoutePointerFocusMessages(Previous, Button.Id)
                                              .Concat([
@@ -166,12 +166,12 @@ begin
                                                      ]);
         return TuiCapturedPointerResult(ApplicationId, Messages, Button, true);
       end;
-    when TuiPointerHit.ImmediateButton(Id, Action):
+    when TuiPointerHit.ImmediateButton(const Id, const Action):
       begin
         return TuiIdlePointerResult(ApplicationId, TuiRoutePointerFocusMessages(Previous, Id)
                                                      .Concat([TuiMsg.Action(Id, Action)]));
       end;
-    when TuiPointerHit.Input(Input, Bounds):
+    when TuiPointerHit.Input(const Input, const Bounds):
       begin
         const Viewport: TuiInputViewport := TuiInputViewportFor(Input.Text, Input.Caret, Bounds.Width -
                                                                                          2);
@@ -182,21 +182,21 @@ begin
                                                                TuiMsg.TextChanged(Input.Id, Input.ChangeAction, Input.Text, Caret)
                                                              ]));
       end;
-    when TuiPointerHit.TextArea(Id, Action, Text, Offset, Bounds):
+    when TuiPointerHit.TextArea(const Id, const Action, const Text, const Offset, const Bounds):
       begin
         return TuiIdlePointerResult(ApplicationId, TuiRoutePointerFocusMessages(Previous, Id)
                                                      .Concat([
                                                                TuiRouteTextAreaPointer(Id, Text, Offset, Action, Bounds, PointerPosition)
                                                              ]));
       end;
-    when TuiPointerHit.CheckBox(Id, Action, Checked):
+    when TuiPointerHit.CheckBox(const Id, const Action, const Checked):
       begin
         return TuiIdlePointerResult(ApplicationId, TuiRoutePointerFocusMessages(Previous, Id)
                                                      .Concat([
                                                                TuiMsg.CheckChanged(Id, Action, not Checked)
                                                              ]));
       end;
-    when TuiPointerHit.List(Id, Action, CurrentSelected, Proposed):
+    when TuiPointerHit.List(const Id, const Action, const CurrentSelected, const Proposed):
       begin
         const FocusMessages: array of TuiMsg := TuiRoutePointerFocusMessages(Previous, Id);
         if Proposed = CurrentSelected then
@@ -217,7 +217,7 @@ begin
                                                                           TuiMsg.SelectionChanged(Id, Action, Proposed)
                                                                         ]));
       end;
-    when TuiPointerHit.Scroll(Id):
+    when TuiPointerHit.Scroll(const Id):
       begin
         const FocusMessages: array of TuiMsg := TuiRoutePointerFocusMessages(Previous, Id);
         if FocusMessages.Length() = 0 then

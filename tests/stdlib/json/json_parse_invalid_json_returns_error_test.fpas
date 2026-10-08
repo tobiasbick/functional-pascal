@@ -5,11 +5,11 @@ uses Std.Console, Std.Json;
 begin
   const R: result of JsonValue, string := Parse('{bad json');
   case R of
-    when Ok(V):
+    when Ok(const V):
       begin
         WriteLn(Stringify(V));
       end;
-    when Error(E):
+    when Error(const E):
       begin
         WriteLn('error');
       end;

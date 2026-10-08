@@ -16,11 +16,11 @@ begin
       begin
         return State;
       end;
-    when TuiMsg.TextChanged(Source, Action, Text, Caret):
+    when TuiMsg.TextChanged(const Source, const Action, const Text, const Caret):
       begin
         return DemoModel(Text := Text, Caret := Caret, Confirming := State.Confirming);
       end;
-    when TuiMsg.Action(Source, Action):
+    when TuiMsg.Action(const Source, const Action):
       begin
         if Action.Value = 2 then
           begin
@@ -41,47 +41,47 @@ begin
         Cmd.Set(TuiCmd.Quit);
         return State;
       end;
-    when TuiMsg.Key(Key):
+    when TuiMsg.Key(const Key):
       begin
         return State;
       end;
-    when TuiMsg.Pointer(Pointer):
+    when TuiMsg.Pointer(const Pointer):
       begin
         return State;
       end;
-    when TuiMsg.Tick(Delta):
+    when TuiMsg.Tick(const Delta):
       begin
         return State;
       end;
-    when TuiMsg.Resize(Size):
+    when TuiMsg.Resize(const Size):
       begin
         return State;
       end;
-    when TuiMsg.FocusChanged(Previous, Current):
+    when TuiMsg.FocusChanged(const Previous, const Current):
       begin
         return State;
       end;
-    when TuiMsg.TextAreaChanged(Source, Action, Text, Caret, TextAreaOffset):
+    when TuiMsg.TextAreaChanged(const Source, const Action, const Text, const Caret, const TextAreaOffset):
       begin
         return State;
       end;
-    when TuiMsg.CheckChanged(Source, Action, Checked):
+    when TuiMsg.CheckChanged(const Source, const Action, const Checked):
       begin
         return State;
       end;
-    when TuiMsg.SelectionChanged(Source, Action, Selected):
+    when TuiMsg.SelectionChanged(const Source, const Action, const Selected):
       begin
         return State;
       end;
-    when TuiMsg.ScrollChanged(Source, Action, Offset):
+    when TuiMsg.ScrollChanged(const Source, const Action, const Offset):
       begin
         return State;
       end;
-    when TuiMsg.MenuChanged(MenuSource, MenuAction, MenuState):
+    when TuiMsg.MenuChanged(const MenuSource, const MenuAction, const MenuState):
       begin
         return State;
       end;
-    when TuiMsg.BackgroundFailed(Id, Kind, Message, Code, Line, Column):
+    when TuiMsg.BackgroundFailed(const Id, const Kind, const Message, const Code, const Line, const Column):
       begin
         return State;
       end;

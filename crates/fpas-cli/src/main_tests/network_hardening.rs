@@ -81,14 +81,14 @@ uses Std.Console, Std.Http;
 
 begin
   case Send(Request.Get('http://127.0.0.1:{port}/start')) of
-    when Ok(ResponseValue):
+    when Ok(const ResponseValue):
     begin
       case BodyText(ResponseValue) of
-        when Ok(Text): WriteLn(Text);
-        when Error(Message): panic(Message);
+        when Ok(const Text): WriteLn(Text);
+        when Error(const Message): panic(Message);
       end case;
     end;
-    when Error(Message): panic(Message);
+    when Error(const Message): panic(Message);
   end case;
 end.
 "#
@@ -151,8 +151,8 @@ begin
   ];
   RequestValue.Body := Std.Net.Utf8.Encode('payload');
   case Send(RequestValue) of
-    when Ok(ResponseValue): WriteLn(ResponseValue.StatusCode);
-    when Error(Message): panic(Message);
+    when Ok(const ResponseValue): WriteLn(ResponseValue.StatusCode);
+    when Error(const Message): panic(Message);
   end case;
 end.
 "#
@@ -208,7 +208,7 @@ begin
   HeaderRequest.MaxHeaderBytes := 48;
   case Send(HeaderRequest) of
     when Ok(_): panic('oversized response head was accepted');
-    when Error(Message):
+    when Error(const Message):
     begin
       if not Message.Contains( 'MaxHeaderBytes') then panic(Message); end if;
     end;
@@ -217,7 +217,7 @@ begin
   RedirectRequest.MaxRedirects := 0;
   case Send(RedirectRequest) of
     when Ok(_): panic('redirect limit was ignored');
-    when Error(Message):
+    when Error(const Message):
     begin
       if not Message.Contains( 'MaxRedirects') then panic(Message); end if;
     end;
@@ -286,7 +286,7 @@ procedure ExpectError(Url: string; Text: string);
 begin
   case Send(Request.Get(Url)) of
     when Ok(_): panic('hostile HTTP response was accepted');
-    when Error(Message):
+    when Error(const Message):
     begin
       if not Message.Contains( Text) then panic(Message); end if;
     end;
@@ -338,7 +338,7 @@ procedure ExpectOverflow(Path: string);
 begin
   case Send(Request.Get('http://127.0.0.1:{port}/' + Path)) of
     when Ok(_): panic('overflowing HTTP chunk size was accepted');
-    when Error(Message):
+    when Error(const Message):
     begin
       if not Message.Contains( 'exceeds the integer range') then panic(Message); end if;
     end;

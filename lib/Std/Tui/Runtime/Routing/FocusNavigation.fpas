@@ -7,7 +7,7 @@ uses
 function TuiButtonFocusControls(Node: TuiElement): array of TuiControlId;
 begin
   case Node of
-    when TuiElement.Button(Button):
+    when TuiElement.Button(const Button):
       begin
         if Button.Enabled then
           begin
@@ -17,13 +17,13 @@ begin
 
         return [];
       end;
-    when TuiElement.Desktop(Focused, Children):
+    when TuiElement.Desktop(const Focused, const Children):
       begin
         var LastOverlay: integer := -1;
         for Index: integer := 0 to Children.Length() - 1 do
           begin
             case Children[Index] of
-              when TuiElement.Overlay(Title, OverlayChildren):
+              when TuiElement.Overlay(const Title, const OverlayChildren):
                 begin
                   LastOverlay := Index;
                 end;
@@ -48,7 +48,7 @@ begin
 
         return Controls;
       end;
-    when TuiElement.Scroll(Id, Offset, ChangeAction, Children):
+    when TuiElement.Scroll(const Id, const Offset, const ChangeAction, const Children):
       begin
         var Controls: array of TuiControlId := [];
         for Index: integer := 0 to Children.Length() - 1 do
@@ -59,7 +59,7 @@ begin
 
         return Controls;
       end;
-    when TuiElement.Row(Children, Spacing):
+    when TuiElement.Row(const Children, const Spacing):
       begin
         var Controls: array of TuiControlId := [];
         for Index: integer := 0 to Children.Length() - 1 do
@@ -70,7 +70,7 @@ begin
 
         return Controls;
       end;
-    when TuiElement.Column(Children, Spacing):
+    when TuiElement.Column(const Children, const Spacing):
       begin
         var Controls: array of TuiControlId := [];
         for Index: integer := 0 to Children.Length() - 1 do
@@ -81,7 +81,7 @@ begin
 
         return Controls;
       end;
-    when TuiElement.Layout(Settings, Children):
+    when TuiElement.Layout(const Settings, const Children):
       begin
         var Controls: array of TuiControlId := [];
         for Index: integer := 0 to Children.Length() - 1 do
@@ -92,7 +92,7 @@ begin
 
         return Controls;
       end;
-    when TuiElement.Panel(Title, Children):
+    when TuiElement.Panel(const Title, const Children):
       begin
         var Controls: array of TuiControlId := [];
         for Index: integer := 0 to Children.Length() - 1 do
@@ -103,7 +103,7 @@ begin
 
         return Controls;
       end;
-    when TuiElement.Overlay(Title, Children):
+    when TuiElement.Overlay(const Title, const Children):
       begin
         var Controls: array of TuiControlId := [];
         for Index: integer := 0 to Children.Length() - 1 do
@@ -160,7 +160,7 @@ begin
   end if;
   var CurrentIndex: integer := -1;
   case Previous of
-    when Some(Id):
+    when Some(const Id):
       begin
         CurrentIndex := TuiControlIndex(Controls, Id);
       end;

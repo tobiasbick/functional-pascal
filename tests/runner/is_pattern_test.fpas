@@ -1,0 +1,62 @@
+program IsPatternTest;
+
+uses Std.Test;
+
+type Shape = enum
+  Circle(Radius: integer);
+  Rect(Width: integer; Height: integer);
+  Point;
+end enum;
+
+function Describe(S: Shape): string;
+begin
+  if S is Shape.Circle(const R) and R > 10 then
+    return 'large circle';
+  elsif S is Shape.Circle(_) then
+    return 'circle';
+  elsif S is Shape.Rect(const W, const H) and W = H then
+    return 'square';
+  elsif S is Shape.Point then
+    return 'point';
+  else
+    return 'other';
+  end if;
+end function;
+
+function SumUntilNone(Values: array of option of integer): integer;
+begin
+  var Index: integer := 0;
+  var Total: integer := 0;
+  while Index < Values.Length() and Values[Index] is Some(const Value) do
+    Total := Total + Value;
+    Index := Index + 1;
+  end while;
+
+  return Total;
+end function;
+
+function Nested(R: result of option of integer, string): integer;
+begin
+  if R is Ok(Some(const Value)) and Value > 0 then
+    return Value;
+  end if;
+
+  if R is Error('stop') then
+    return -1;
+  end if;
+
+  return 0;
+end function;
+
+begin
+  AssertEquals('large circle', Describe(Shape.Circle(20)));
+  AssertEquals('circle', Describe(Shape.Circle(2)));
+  AssertEquals('square', Describe(Shape.Rect(3, 3)));
+  AssertEquals('other', Describe(Shape.Rect(3, 4)));
+  AssertEquals('point', Describe(Shape.Point));
+  AssertEquals(6, SumUntilNone([Some(1), Some(2), Some(3), None, Some(9)]));
+  AssertEquals(5, Nested(Ok(Some(5))));
+  AssertEquals(0, Nested(Ok(Some(-5))));
+  AssertEquals(0, Nested(Ok(None)));
+  AssertEquals(-1, Nested(Error('stop')));
+end.

@@ -25,7 +25,7 @@ begin
           return SendWithCancellation(Inbox, 1, Token);
         end function);
       end;
-    when TuiMsg.Tick(Elapsed):
+    when TuiMsg.Tick(const Elapsed):
       begin
         Next.Ticks := State.Ticks + 1;
         if (State.ShortestTick < 0) or (Elapsed < State.ShortestTick) then

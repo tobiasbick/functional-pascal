@@ -50,7 +50,7 @@ begin
   WriteLn('--- Option exhaustiveness ---');
   const Idx: option of integer := SafeLookup([10, 20, 30], 20);
   case Idx of
-    when Some(I):
+    when Some(const I):
       begin
         WriteLn('Found at index ' + IntToStr(I));
       end;
@@ -63,11 +63,11 @@ begin
   WriteLn('--- Result exhaustiveness ---');
   const R: result of integer, string := Ok(42);
   case R of
-    when Ok(V):
+    when Ok(const V):
       begin
         WriteLn('Value: ' + IntToStr(V));
       end;
-    when Error(E):
+    when Error(const E):
       begin
         WriteLn('Error: ' + E);
       end;

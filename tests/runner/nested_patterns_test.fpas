@@ -1,0 +1,89 @@
+program NestedPatternsTest;
+
+uses Std.Test;
+
+type Color = enum
+  Red;
+  Green;
+end enum;
+
+type Shape = enum
+  Circle(Radius: integer);
+  Rect(Width: integer; Height: integer);
+  Tinted(Tone: Color; Size: integer);
+  Point;
+end enum;
+
+const Limit: integer := 3;
+
+function Describe(R: result of option of integer, string): string;
+begin
+  case R of
+    when Ok(Some(0)):
+      return 'zero';
+    when Ok(Some(Limit)):
+      return 'limit';
+    when Ok(Some(const Value)) if Value < 0:
+      return 'negative';
+    when Ok(Some(_)):
+      return 'value';
+    when Ok(None):
+      return 'empty';
+    when Error('timeout'):
+      return 'timeout';
+    when Error(const Message):
+      return 'error:' + Message;
+  end case;
+end function;
+
+function Area(S: option of Shape): integer;
+begin
+  case S of
+    when Some(Shape.Circle(const R)):
+      return R * R;
+    when Some(Shape.Rect(_, 0)):
+      return -1;
+    when Some(Shape.Rect(const W, const H)):
+      return W * H;
+    when Some(Shape.Tinted(Color.Red, const Size)):
+      return Size;
+    when Some(Shape.Tinted(Green, _)):
+      return 7;
+    when Some(Shape.Point):
+      return 0;
+    when None:
+      return -2;
+  end case;
+end function;
+
+function Flag(B: option of boolean): integer;
+begin
+  case B of
+    when Some(true):
+      return 1;
+    when Some(false):
+      return 0;
+    when None:
+      return -1;
+  end case;
+end function;
+
+begin
+  AssertEquals('zero', Describe(Ok(Some(0))));
+  AssertEquals('limit', Describe(Ok(Some(3))));
+  AssertEquals('negative', Describe(Ok(Some(-4))));
+  AssertEquals('value', Describe(Ok(Some(9))));
+  AssertEquals('empty', Describe(Ok(None)));
+  AssertEquals('timeout', Describe(Error('timeout')));
+  AssertEquals('error:disk', Describe(Error('disk')));
+  AssertEquals(4, Area(Some(Shape.Circle(2))));
+  AssertEquals(-1, Area(Some(Shape.Rect(5, 0))));
+  AssertEquals(6, Area(Some(Shape.Rect(2, 3))));
+  AssertEquals(8, Area(Some(Shape.Tinted(Color.Red, 8))));
+  AssertEquals(7, Area(Some(Shape.Tinted(Color.Green, 8))));
+  AssertEquals(0, Area(Some(Shape.Point)));
+  AssertEquals(-2, Area(None));
+  AssertEquals(1, Flag(Some(true)));
+  AssertEquals(0, Flag(Some(false)));
+  AssertEquals(-1, Flag(None));
+end.

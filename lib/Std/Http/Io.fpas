@@ -33,7 +33,7 @@ begin
   end if;
 
   case Std.Net.ReceiveBytes(Connection, Count) of
-    when Ok(Bytes):
+    when Ok(const Bytes):
       begin
         if Bytes.Length() > Available then
           begin
@@ -43,7 +43,7 @@ begin
 
         return Ok(Bytes);
       end;
-    when Error(Message):
+    when Error(const Message):
       begin
         return Error(Message);
       end;
@@ -68,7 +68,7 @@ begin
       end if;
       const Remaining: array of integer := Bytes.Slice(Offset, Count);
       case Std.Net.SendBytes(Connection, Remaining) of
-        when Ok(Count):
+        when Ok(const Count):
           begin
             if Count <= 0 then
               begin
@@ -78,7 +78,7 @@ begin
 
             Offset := Offset + Count;
           end;
-        when Error(Message):
+        when Error(const Message):
           begin
             return Error(Message);
           end;

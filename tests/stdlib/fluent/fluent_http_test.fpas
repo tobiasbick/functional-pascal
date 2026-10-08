@@ -38,11 +38,11 @@ end function;
 
 begin
   case ExerciseHttp() of
-    when Ok(Succeeded):
+    when Ok(const Succeeded):
       begin
         AssertTrue(Succeeded);
       end;
-    when Error(Message):
+    when Error(const Message):
       begin
         Fail(Message);
       end;

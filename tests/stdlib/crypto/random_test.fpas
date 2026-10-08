@@ -4,7 +4,7 @@ uses Std.Crypto, Std.Test;
 
 begin
   case RandomBytes(32) of
-    when Ok(Bytes):
+    when Ok(const Bytes):
       begin
         AssertEquals(32, Bytes.Length());
         for Index: integer := 0 to Bytes.Length() - 1 do
@@ -14,18 +14,18 @@ begin
           end;
         end for;
       end;
-    when Error(Message):
+    when Error(const Message):
       begin
         Fail(Message);
       end;
   end case;
 
   case RandomInt(7, 7) of
-    when Ok(Value):
+    when Ok(const Value):
       begin
         AssertEquals(7, Value);
       end;
-    when Error(Message):
+    when Error(const Message):
       begin
         Fail(Message);
       end;

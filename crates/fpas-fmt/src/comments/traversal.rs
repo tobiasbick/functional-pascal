@@ -7,7 +7,7 @@ use declarations::{collect_closer, collect_decls};
 use std::collections::{BTreeMap, BTreeSet};
 
 use fpas_lexer::{Span, Token, lex_with_comments};
-use fpas_parser::{CaseArm, CaseLabel, CompilationUnit, Decl, Program, Stmt, Unit};
+use fpas_parser::{CaseArm, CaseLabel, CompilationUnit, Decl, Pattern, Program, Stmt, Unit};
 
 use super::anchors::{EmissionAnchor, span_end, stmt_end, stmt_start};
 use expressions::{collect_designator, collect_expr};
@@ -309,17 +309,37 @@ fn collect_case_arm(arm: &CaseArm, begins: &[usize], out: &mut CollectedAnchors)
     out.leading.push(arm.span.offset);
     push_span(arm.span, out);
     for label in &arm.labels {
-        if let CaseLabel::Value { start, end, .. } = label {
-            collect_expr(start, begins, out);
-            if let Some(end) = end {
-                collect_expr(end, begins, out);
+        match label {
+            CaseLabel::Value { start, end, .. } => {
+                collect_expr(start, begins, out);
+                if let Some(end) = end {
+                    collect_expr(end, begins, out);
+                }
             }
+            CaseLabel::Pattern(pattern) => collect_pattern(pattern, begins, out),
+            CaseLabel::Binding { .. } => {}
         }
     }
     if let Some(guard) = &arm.guard {
         collect_expr(guard, begins, out);
     }
     collect_branch_stmt(&arm.body, begins, out);
+}
+
+fn collect_pattern(pattern: &Pattern, begins: &[usize], out: &mut CollectedAnchors) {
+    match pattern {
+        Pattern::Value(expr) => collect_expr(expr, begins, out),
+        Pattern::Variant { fields, .. } => {
+            for field in fields {
+                collect_pattern(&field.pattern, begins, out);
+            }
+        }
+        Pattern::Destructure {
+            payload: Some(payload),
+            ..
+        } => collect_pattern(payload, begins, out),
+        Pattern::Binding { .. } | Pattern::Wildcard(_) | Pattern::Destructure { .. } => {}
+    }
 }
 
 fn push_span(span: Span, out: &mut CollectedAnchors) {

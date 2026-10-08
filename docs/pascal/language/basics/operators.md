@@ -53,7 +53,7 @@ From highest to lowest binding strength:
 | 2 | Unary `-`, `try` | Prefix |
 | 3 | `*`, `/`, `div`, `mod` | Left to right |
 | 4 | `+`, `-` | Left to right |
-| 5 | `=`, `<>`, `<`, `>`, `<=`, `>=`, `in` | Non-associative |
+| 5 | `=`, `<>`, `<`, `>`, `<=`, `>=`, `in`, `is` | Non-associative |
 | 6 | `not` | Prefix |
 | 7 | `and`, `or`, `xor` | Same-operator chains only, left to right |
 

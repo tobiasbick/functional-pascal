@@ -76,6 +76,15 @@ pub(super) fn apply_expr_source_id(expr: &mut Expr, source_id: u32) {
             apply_expr_source_id(value, source_id);
             apply_span(span, source_id);
         }
+        Expr::Is {
+            value,
+            pattern,
+            span,
+        } => {
+            apply_expr_source_id(value, source_id);
+            super::statements::apply_pattern_source_id(pattern, source_id);
+            apply_span(span, source_id);
+        }
         Expr::Closure(closure) => {
             for param in &mut closure.params {
                 apply_formal_param_source_id(param, source_id);

@@ -39,7 +39,7 @@ uses Std.Console;
 EnableRawMode();
 const MaybeEvent: option of ConsoleEvent := ReadEventTimeout(100);
 case MaybeEvent of
-  when Some(E):
+  when Some(const E):
     begin
       WriteLn(E.kind);
     end;
@@ -67,7 +67,7 @@ uses Std.Console;
 EnableRawMode();
 const MaybeE: option of ConsoleEvent := PollEvent();
 case MaybeE of
-  when Some(E):
+  when Some(const E):
     begin
       WriteLn('got event');
     end;

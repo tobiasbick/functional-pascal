@@ -62,10 +62,10 @@ function UpdateModal(State: ModalModel; Msg: TuiMsg; Cmd: TuiCmdOutput): ModalMo
 begin
   Cmd.Set(TuiCmd.NoCommand);
   case Msg of
-    when TuiMsg.FocusChanged(Previous, Current):
+    when TuiMsg.FocusChanged(const Previous, const Current):
       begin
         case Current of
-          when Some(Id):
+          when Some(const Id):
             begin
               return ModalModel(Focus := Id.Value, ConfirmOpen := State.ConfirmOpen, Actions := State.Actions, PointerHits := State.PointerHits);
             end;
@@ -75,7 +75,7 @@ begin
             end;
         end case;
       end;
-    when TuiMsg.Action(Source, Action):
+    when TuiMsg.Action(const Source, const Action):
       begin
         if Action.Value = 10 then
           begin
@@ -89,7 +89,7 @@ begin
                                                                                               Action.Value
                                                                                             ]), PointerHits := State.PointerHits);
       end;
-    when TuiMsg.Pointer(Pointer):
+    when TuiMsg.Pointer(const Pointer):
       begin
         return ModalModel(Focus := State.Focus, ConfirmOpen := State.ConfirmOpen, Actions := State.Actions, PointerHits := State.PointerHits +
                                                                                                                            1);

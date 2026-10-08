@@ -40,31 +40,31 @@ end procedure;
 function TuiElementChildren(Node: TuiElement): array of TuiElement;
 begin
   case Node of
-    when TuiElement.Scroll(Id, Offset, ChangeAction, Children):
+    when TuiElement.Scroll(const Id, const Offset, const ChangeAction, const Children):
       begin
         return Children;
       end;
-    when TuiElement.Row(Children, Spacing):
+    when TuiElement.Row(const Children, const Spacing):
       begin
         return Children;
       end;
-    when TuiElement.Column(Children, Spacing):
+    when TuiElement.Column(const Children, const Spacing):
       begin
         return Children;
       end;
-    when TuiElement.Layout(Settings, Children):
+    when TuiElement.Layout(const Settings, const Children):
       begin
         return Children;
       end;
-    when TuiElement.Panel(Title, Children):
+    when TuiElement.Panel(const Title, const Children):
       begin
         return Children;
       end;
-    when TuiElement.Overlay(Title, Children):
+    when TuiElement.Overlay(const Title, const Children):
       begin
         return Children;
       end;
-    when TuiElement.Desktop(Focused, Children):
+    when TuiElement.Desktop(const Focused, const Children):
       begin
         return Children;
       end;
@@ -79,7 +79,7 @@ function TuiElementValidateAndCollect(Node: TuiElement): array of integer;
 begin
   var Seen: array of integer := [];
   case Node of
-    when TuiElement.Button(Button):
+    when TuiElement.Button(const Button):
       begin
         TuiElementValidateControl(Button.Id);
         TuiElementValidateAction(Button.Action);
@@ -97,7 +97,7 @@ begin
 
         Seen.Push(Button.Id.Value);
       end;
-    when TuiElement.Input(Input):
+    when TuiElement.Input(const Input):
       begin
         TuiElementValidateControl(Input.Id);
         TuiElementValidateAction(Input.ChangeAction);
@@ -109,7 +109,7 @@ begin
 
         Seen.Push(Input.Id.Value);
       end;
-    when TuiElement.TextArea(Id, Text, Caret, Offset, ChangeAction):
+    when TuiElement.TextArea(const Id, const Text, const Caret, const Offset, const ChangeAction):
       begin
         TuiElementValidateControl(Id);
         TuiElementValidateAction(ChangeAction);
@@ -127,13 +127,13 @@ begin
 
         Seen.Push(Id.Value);
       end;
-    when TuiElement.CheckBox(Id, Text, Checked, ChangeAction):
+    when TuiElement.CheckBox(const Id, const Text, const Checked, const ChangeAction):
       begin
         TuiElementValidateControl(Id);
         TuiElementValidateAction(ChangeAction);
         Seen.Push(Id.Value);
       end;
-    when TuiElement.List(Id, Items, Selected, ChangeAction):
+    when TuiElement.List(const Id, const Items, const Selected, const ChangeAction):
       begin
         TuiElementValidateControl(Id);
         TuiElementValidateAction(ChangeAction);
@@ -154,7 +154,7 @@ begin
 
         Seen.Push(Id.Value);
       end;
-    when TuiElement.Scroll(Id, Offset, ChangeAction, Children):
+    when TuiElement.Scroll(const Id, const Offset, const ChangeAction, const Children):
       begin
         TuiElementValidateControl(Id);
         TuiElementValidateAction(ChangeAction);
@@ -172,7 +172,7 @@ begin
 
         Seen.Push(Id.Value);
       end;
-    when TuiElement.MenuBar(Items):
+    when TuiElement.MenuBar(const Items):
       begin
         for Index: integer := 0 to Items.Length() - 1 do
           begin
@@ -189,14 +189,14 @@ begin
           end;
         end for;
       end;
-    when TuiElement.Menu(Id, Nodes, State, ChangeAction):
+    when TuiElement.Menu(const Id, const Nodes, const State, const ChangeAction):
       begin
         TuiElementValidateControl(Id);
         TuiElementValidateAction(ChangeAction);
         TuiMenuValidate(Nodes, State);
         Seen.Push(Id.Value);
       end;
-    when TuiElement.Gauge(Gauge):
+    when TuiElement.Gauge(const Gauge):
       begin
         if Gauge.Maximum <= 0 then
           begin
@@ -210,12 +210,12 @@ begin
           end;
         end if;
       end;
-    when TuiElement.StatusLine(Items):
+    when TuiElement.StatusLine(const Items):
       begin
         for Index: integer := 0 to Items.Length() - 1 do
           begin
             case Items[Index] of
-              when TuiStatusItem.Command(Id, Text, Action, Enabled):
+              when TuiStatusItem.Command(const Id, const Text, const Action, const Enabled):
                 begin
                   TuiElementValidateControl(Id);
                   TuiElementValidateAction(Action);
@@ -235,7 +235,7 @@ begin
           end;
         end for;
       end;
-    when TuiElement.Row(Children, Spacing), TuiElement.Column(Children, Spacing):
+    when TuiElement.Row(const Children, const Spacing), TuiElement.Column(const Children, const Spacing):
       begin
         if Spacing < 0 then
           begin
@@ -243,7 +243,7 @@ begin
           end;
         end if;
       end;
-    when TuiElement.Layout(Settings, Children):
+    when TuiElement.Layout(const Settings, const Children):
       begin
         if Children.Length() <> 1 then
           begin
@@ -275,10 +275,10 @@ begin
   end for;
 
   case Node of
-    when TuiElement.Desktop(Focused, DesktopChildren):
+    when TuiElement.Desktop(const Focused, const DesktopChildren):
       begin
         case Focused of
-          when Some(Id):
+          when Some(const Id):
             begin
               if not TuiElementControlSeen(Seen, Id.Value) then
                 begin

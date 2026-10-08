@@ -19,7 +19,7 @@ begin
   RestoreRegion(Underlay);
   Present();
   case ReadBack of
-    when Some(Value):
+    when Some(const Value):
       begin
         WriteLn('ReadText back: ' + Value.glyph);
       end;

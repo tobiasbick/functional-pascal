@@ -9,12 +9,12 @@ uses Std.Console, Std.Proc;
 
 begin
   case Std.Proc.RunCapture('fpas', ['--version']) of
-    when Ok(Output):
+    when Ok(const Output):
       begin
         WriteLn(Output.Stdout);
         WriteLn('exit code: ', Output.ExitCode);
       end;
-    when Error(Message):
+    when Error(const Message):
       WriteLn(Message);
   end case;
 end.
@@ -111,12 +111,12 @@ terminal.
 
 ```pascal
 case RunCapture('fpas', ['check', 'main.fpas']) of
-  when Ok(Output):
+  when Ok(const Output):
     begin
       WriteLn(Output.Stdout);
       WriteLn(Output.Stderr);
     end;
-  when Error(Message):
+  when Error(const Message):
     WriteLn(Message);
 end case;
 ```

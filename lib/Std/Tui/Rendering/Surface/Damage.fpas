@@ -27,10 +27,10 @@ end function;
 function TuiSurfaceConcreteStyleEqual(Left: option of TuiStyle; Right: option of TuiStyle): boolean;
 begin
   case Left of
-    when Some(LeftStyle):
+    when Some(const LeftStyle):
       begin
         case Right of
-          when Some(RightStyle):
+          when Some(const RightStyle):
             begin
               return TuiSurfaceStyleEqual(LeftStyle, RightStyle);
             end;
@@ -43,7 +43,7 @@ begin
     when None:
       begin
         case Right of
-          when Some(RightStyle):
+          when Some(const RightStyle):
             begin
               return false;
             end;

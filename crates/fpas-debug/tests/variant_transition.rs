@@ -302,7 +302,7 @@ begin
   var Optional: Option of integer := None;
   const Marker: integer := 0;
   case Optional of
-    when Some(Value):
+    when Some(const Value):
     begin
       return Value;
     end;
@@ -420,7 +420,7 @@ const Marker: integer := 0;
     begin
       return 0;
     end;
-    when Choice.Count(Value):
+    when Choice.Count(const Value):
     begin
       return Value;
     end;
@@ -478,7 +478,7 @@ begin
       begin
         return 0;
       end;
-      when Choice.Count(Value):
+      when Choice.Count(const Value):
       begin
         return Value;
       end;

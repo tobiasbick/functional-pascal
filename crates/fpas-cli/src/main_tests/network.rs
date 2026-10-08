@@ -68,19 +68,19 @@ begin
   RequestValue.Headers := [Header.Create('X-Test', 'yes')];
   RequestValue.Body := Std.Net.Utf8.Encode('ping');
   case Send(RequestValue) of
-    when Ok(ResponseValue):
+    when Ok(const ResponseValue):
     begin
       WriteLn(ResponseValue.StatusCode);
       case BodyText(ResponseValue) of
-        when Ok(Text): WriteLn(Text);
-        when Error(Message): panic(Message);
+        when Ok(const Text): WriteLn(Text);
+        when Error(const Message): panic(Message);
       end case;
       case HeaderValue(ResponseValue, 'content-type') of
-        when Some(Value): WriteLn(Value);
+        when Some(const Value): WriteLn(Value);
         when None: panic('missing content type');
       end case;
     end;
-    when Error(Message): panic(Message);
+    when Error(const Message): panic(Message);
   end case;
 end.
 "#
@@ -156,7 +156,7 @@ uses Std.Console, Std.Http;
 procedure Expect(RequestValue: Request; ExpectedBodyLength: integer);
 begin
   case Send(RequestValue) of
-    when Ok(ResponseValue):
+    when Ok(const ResponseValue):
     begin
       if ResponseValue.StatusCode <> 200 then
       begin
@@ -168,7 +168,7 @@ begin
         panic('unexpected HTTP body length');
       end; end if;
     end;
-    when Error(Message):
+    when Error(const Message):
     begin
       panic(Message);
     end;
@@ -186,11 +186,11 @@ begin
   Expect(Request.Options(BaseUrl + '/options'), 2);
   Expect(Request.Create('PROPFIND', BaseUrl + '/webdav'), 2);
   case Send(Request.Create('BAD@METHOD', BaseUrl + '/invalid')) of
-    when Ok(ResponseValue):
+    when Ok(const ResponseValue):
     begin
       panic('invalid HTTP method was accepted');
     end;
-    when Error(Message):
+    when Error(const Message):
     begin
       if not Message.Contains( 'RFC 9110 token') then
       begin
@@ -281,8 +281,8 @@ begin
     [ChatMessage.System('Be concise'), ChatMessage.User('Hello locally')],
     Options
   ) of
-    when Ok(Content): WriteLn(Content);
-    when Error(Message): panic(Message);
+    when Ok(const Content): WriteLn(Content);
+    when Error(const Message): panic(Message);
   end case;
 end.
 "#

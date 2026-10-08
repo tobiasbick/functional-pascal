@@ -10,9 +10,9 @@ uses Std.Console, Std.Json;
 begin
   const R: result of JsonValue, string := Parse('{"ok":true}');
   case R of
-    when Ok(Value):
+    when Ok(const Value):
       WriteLn(Stringify(Value));
-    when Error(Message):
+    when Error(const Message):
       WriteLn(Message);
   end case;
 end.
@@ -69,9 +69,9 @@ Parses JSON text. Accepted JSON returns `Ok(JsonValue)`. Invalid JSON returns `E
 ```pascal
 const R: result of JsonValue, string := Std.Json.Parse('[1, true, null]');
 case R of
-  when Ok(Value):
+  when Ok(const Value):
     WriteLn(Std.Json.Stringify(Value));
-  when Error(Message):
+  when Error(const Message):
     WriteLn('JSON error: ' + Message);
 end case;
 ```

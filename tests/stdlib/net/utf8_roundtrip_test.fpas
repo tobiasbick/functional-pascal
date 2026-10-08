@@ -8,22 +8,22 @@ begin
   const Bytes: array of integer := Encode(Text);
   AssertEquals(19, Bytes.Length());
   case Decode(Bytes) of
-    when Ok(Decoded):
+    when Ok(const Decoded):
       begin
         AssertEquals(Text, Decoded);
       end;
-    when Error(Message):
+    when Error(const Message):
       begin
         Fail(Message);
       end;
   end case;
 
   case Decode([240, 40, 140, 188]) of
-    when Ok(Decoded):
+    when Ok(const Decoded):
       begin
         Fail('invalid UTF-8 decoded as ' + Decoded);
       end;
-    when Error(Message):
+    when Error(const Message):
       begin
         AssertTrue(Message.Contains('continuation'));
       end;

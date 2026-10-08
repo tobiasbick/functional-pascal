@@ -26,9 +26,9 @@ begin
   const Original: Holder := H;
   const Outcome: result of integer, string := Change(var H);
   case Outcome of
-    when Error(Message):
+    when Error(const Message):
       AssertEquals('stopped', Message);
-    when Ok(Value):
+    when Ok(const Value):
       panic('Expected failure');
   end case;
 

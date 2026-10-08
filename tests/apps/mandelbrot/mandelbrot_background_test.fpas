@@ -19,10 +19,10 @@ begin
   AssertTrue(Expected.Role = Actual.Role);
   AssertEquals(Expected.Columns, Actual.Columns);
   case Expected.ConcreteStyle of
-    when Some(ExpectedStyle):
+    when Some(const ExpectedStyle):
       begin
         case Actual.ConcreteStyle of
-          when Some(ActualStyle):
+          when Some(const ActualStyle):
             begin
               AssertColorEquals(ExpectedStyle.Foreground, ActualStyle.Foreground);
               AssertColorEquals(ExpectedStyle.Background, ActualStyle.Background);

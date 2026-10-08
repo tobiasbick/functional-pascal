@@ -45,6 +45,14 @@ Read the pages relevant to the change. For exact productions, consult
   fields and enum members in their existing syntax; local types are not allowed.
 - Scalar `case` value labels and both range endpoints require compile-time
   constants. Calls and computed bindings belong in guard conditions.
+- Patterns bind explicitly: `when Some(const Value):`,
+  `when Shape.Rect(const W, _):`, and `when const N if N > 0:` for a scalar
+  guard binding. `_` ignores one field. Patterns nest (`Ok(Some(const User))`)
+  and compare payloads with literals or compile-time constants; a plain
+  identifier that names no constant is an error. Coverage is checked
+  recursively, and labels covered by earlier arms are rejected. Test one
+  pattern with `if Value is Some(const X) and X > 0 then` or
+  `while Value is ... do`; `is` is valid only there, and `is` is reserved.
 - Import every referenced unit with `uses`, including fully qualified `Std.*`
   calls. Qualify ambiguous short names with the current unit name from its handbook.
   Import each unit only once per file, comparing names case-insensitively.

@@ -29,7 +29,7 @@ begin
   end if;
 
   case ListenTls('127.0.0.1', Port, ParamStr(0), ParamStr(1), 10000) of
-    when Ok(ListenerValue):
+    when Ok(const ListenerValue):
       begin
         WriteLn('HTTPS server listening on https://127.0.0.1:' + IntToStr(Port));
         var Options: ServerOptions := ServerOptions.Create();
@@ -39,7 +39,7 @@ begin
           when Ok(_):
             begin
             end;
-          when Error(Message):
+          when Error(const Message):
             begin
               panic(Message);
             end;
@@ -50,13 +50,13 @@ begin
             begin
               WriteLn('HTTPS server handled 1 request');
             end;
-          when Error(Message):
+          when Error(const Message):
             begin
               panic(Message);
             end;
         end case;
       end;
-    when Error(Message):
+    when Error(const Message):
       begin
         panic(Message);
       end;

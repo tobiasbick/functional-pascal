@@ -142,7 +142,7 @@ Programs that own every cell (explorers, animations, custom TUIs) use `Std.Conso
 1. `EnableRawMode`, `EnterAltScreen`, optional `EnableMouse` / `EnableFocus` / `EnablePaste`, `CursorOff`
 2. A `var NeedsRedraw` flag; paint proc calls `BeginFrame`, draws with `FillRect`,
    row-oriented `WriteCells`, and calls `Present`
-3. Loop: paint when `NeedsRedraw`, then `case ReadEventTimeout(16) of Some(E): …; None: … end`
+3. Loop: paint when `NeedsRedraw`, then `case ReadEventTimeout(16) of Some(const E): …; None: … end`
    for keys, mouse, resize
 4. Cleanup: reverse the enable calls, `LeaveAltScreen`, `DisableRawMode`, `CursorOn`
 

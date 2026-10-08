@@ -89,7 +89,7 @@ pub const SOURCES: &[(&str, &str)] = &[
     ),
     (
         "case_destructure_with_guard",
-        "program T; begin case Value of when Some(Item) if Item > 0: return; when None: return; end case; end.",
+        "program T; begin case Value of when Some(const Item) if Item > 0: return; when None: return; end case; end.",
     ),
     (
         "postfix_call_chain",

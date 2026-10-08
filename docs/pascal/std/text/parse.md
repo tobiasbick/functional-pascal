@@ -67,9 +67,9 @@ WriteLn(R.UnwrapOr(true));                    // false
 
 ```pascal
 case TryInt(Input) of
-  when Ok(N):
+  when Ok(const N):
     WriteLn(N);
-  when Error(Message):
+  when Error(const Message):
     WriteLn(Message);
 end case;
 ```

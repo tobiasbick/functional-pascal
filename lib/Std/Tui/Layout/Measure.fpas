@@ -21,7 +21,7 @@ begin
   for Index: integer := 0 to Nodes.Length() - 1 do
     begin
       case TuiMenuNodeParent(Nodes[Index]) of
-        when Some(Parent):
+        when Some(const Parent):
           begin
           end;
         when None:
@@ -95,15 +95,15 @@ begin
       end if;
 
       case Items[Index] of
-        when TuiStatusItem.Hint(Text):
+        when TuiStatusItem.Hint(const Text):
           begin
             Width := Width + Std.Console.DisplayWidth(Text);
           end;
-        when TuiStatusItem.Command(Id, Text, Action, Enabled):
+        when TuiStatusItem.Command(const Id, const Text, const Action, const Enabled):
           begin
             Width := Width + Std.Console.DisplayWidth(Text);
           end;
-        when TuiStatusItem.KeyHint(KeyText, Text):
+        when TuiStatusItem.KeyHint(const KeyText, const Text):
           begin
             Width := ((Width + Std.Console.DisplayWidth(KeyText)) + Std.Console.DisplayWidth(Text)) +
                      1;
@@ -226,31 +226,31 @@ begin
       begin
         return TuiMeasureResult.Fixed(TuiSize.Create(0, 0));
       end;
-    when TuiElement.Label(Text):
+    when TuiElement.Label(const Text):
       begin
         return TuiMeasureApplyPolicy(TuiMeasureLeafLabel(Text), TuiSizePolicy.Preferred(), Spec);
       end;
-    when TuiElement.Button(Button):
+    when TuiElement.Button(const Button):
       begin
         return TuiMeasureApplyPolicy(TuiMeasureLeafButton(Button.Text), TuiSizePolicy.Preferred(), Spec);
       end;
-    when TuiElement.Input(Input):
+    when TuiElement.Input(const Input):
       begin
         return TuiMeasureApplyPolicy(TuiMeasureLeafInput(Input.Text, Input.Hint), TuiSizePolicy.Preferred(), Spec);
       end;
-    when TuiElement.TextArea(Id, Text, Caret, Offset, ChangeAction):
+    when TuiElement.TextArea(const Id, const Text, const Caret, const Offset, const ChangeAction):
       begin
         return TuiMeasureApplyPolicy(TuiMeasureLeafTextArea(Text), TuiSizePolicy.Expanding(), Spec);
       end;
-    when TuiElement.CheckBox(Id, Text, Checked, ChangeAction):
+    when TuiElement.CheckBox(const Id, const Text, const Checked, const ChangeAction):
       begin
         return TuiMeasureApplyPolicy(TuiMeasureLeafCheckBox(Text), TuiSizePolicy.Preferred(), Spec);
       end;
-    when TuiElement.List(Id, Items, Selected, ChangeAction):
+    when TuiElement.List(const Id, const Items, const Selected, const ChangeAction):
       begin
         return TuiMeasureApplyPolicy(TuiMeasureLeafList(Items), TuiSizePolicy.Preferred(), Spec);
       end;
-    when TuiElement.Scroll(Id, Offset, ChangeAction, Children):
+    when TuiElement.Scroll(const Id, const Offset, const ChangeAction, const Children):
       begin
         if Children.Length() = 1 then
           begin
@@ -262,38 +262,38 @@ begin
 
         return TuiMeasureResult.Fixed(TuiSize.Create(0, 0));
       end;
-    when TuiElement.MenuBar(Items):
+    when TuiElement.MenuBar(const Items):
       begin
         return TuiMeasureApplyPolicy(TuiMeasureLeafMenuBar(Items), TuiSizePolicy.Preferred(), Spec);
       end;
-    when TuiElement.Menu(Id, Nodes, State, ChangeAction):
+    when TuiElement.Menu(const Id, const Nodes, const State, const ChangeAction):
       begin
         return TuiMeasureApplyPolicy(TuiMeasureLeafMenu(Nodes), TuiSizePolicy.Preferred(), Spec);
       end;
-    when TuiElement.StatusLine(Items):
+    when TuiElement.StatusLine(const Items):
       begin
         return TuiMeasureApplyPolicy(TuiMeasureLeafStatusLine(Items), TuiSizePolicy.Preferred(), Spec);
       end;
-    when TuiElement.CellGrid(Grid):
+    when TuiElement.CellGrid(const Grid):
       begin
         return TuiMeasureApplyPolicy(TuiMeasureResult.Fixed(TuiSize.Create(Grid.Width, Grid.Height)), TuiSizePolicy.Preferred(), Spec);
       end;
-    when TuiElement.Rule(Text):
+    when TuiElement.Rule(const Text):
       begin
         const MinimumWidth: integer := Std.Console.DisplayWidth(Text) + 4;
         return TuiMeasureApplyPolicy(TuiMeasureResult.Create(TuiSize.Create(MinimumWidth, 1), TuiSize.Create(MinimumWidth, 1), TuiSize.Create(TuiMeasureExpandingMaximum, 1)), TuiSizePolicy.Create(TuiSizePolicyKind.Expanding, TuiSizePolicyKind.Fixed), Spec);
       end;
-    when TuiElement.Gauge(Gauge):
+    when TuiElement.Gauge(const Gauge):
       begin
         const MinimumWidth: integer := Std.Console.DisplayWidth(Gauge.LabelText) + 10;
         return TuiMeasureApplyPolicy(TuiMeasureResult.Create(TuiSize.Create(MinimumWidth, 1), TuiSize.Create(MinimumWidth +
                                                                                                              8, 1), TuiSize.Create(TuiMeasureExpandingMaximum, 1)), TuiSizePolicy.Create(TuiSizePolicyKind.Expanding, TuiSizePolicyKind.Fixed), Spec);
       end;
-    when TuiElement.Spacer(Value):
+    when TuiElement.Spacer(const Value):
       begin
         return TuiMeasureApplyPolicy(TuiMeasureSpacerValue(Value, true), TuiSizePolicy.Preferred(), Spec);
       end;
-    when TuiElement.Row(Children, Spacing):
+    when TuiElement.Row(const Children, const Spacing):
       begin
         var MinimumMain: integer := 0;
         var PreferredMain: integer := 0;
@@ -329,7 +329,7 @@ begin
 
         return TuiMeasureApplyPolicy(TuiMeasureResult.Create(TuiSize.Create(MinimumMain, MinimumCross), TuiSize.Create(PreferredMain, PreferredCross), TuiSize.Create(MaximumMain, MaximumCross)), TuiSizePolicy.Preferred(), Spec);
       end;
-    when TuiElement.Column(Children, Spacing):
+    when TuiElement.Column(const Children, const Spacing):
       begin
         var MinimumMain: integer := 0;
         var PreferredMain: integer := 0;
@@ -365,7 +365,7 @@ begin
 
         return TuiMeasureApplyPolicy(TuiMeasureResult.Create(TuiSize.Create(MinimumCross, MinimumMain), TuiSize.Create(PreferredCross, PreferredMain), TuiSize.Create(MaximumCross, MaximumMain)), TuiSizePolicy.Preferred(), Spec);
       end;
-    when TuiElement.Layout(Settings, Children):
+    when TuiElement.Layout(const Settings, const Children):
       begin
         var Child: TuiMeasureResult := TuiMeasureResult.Fixed(TuiSize.Create(0, 0));
         if (Children.Length() = 1) and TuiMeasureChildParticipates(Children[0]) then
@@ -382,7 +382,7 @@ begin
                                                                                                                                                                                                                                                                     Settings.Margins.Vertical()));
         Hint := TuiMeasureApplyPolicy(Hint, Settings.SizePolicy, Spec);
         case Settings.Width of
-          when Some(Width):
+          when Some(const Width):
             begin
               Hint := TuiMeasureResult.Create(TuiSize.Create(Width, Hint.Minimum.Height), TuiSize.Create(Width, Hint.Preferred.Height), TuiSize.Create(Width, Hint.Maximum.Height));
             end;
@@ -392,7 +392,7 @@ begin
         end case;
 
         case Settings.Height of
-          when Some(Height):
+          when Some(const Height):
             begin
               Hint := TuiMeasureResult.Create(TuiSize.Create(Hint.Minimum.Width, Height), TuiSize.Create(Hint.Preferred.Width, Height), TuiSize.Create(Hint.Maximum.Width, Height));
             end;
@@ -403,7 +403,7 @@ begin
 
         return Hint;
       end;
-    when TuiElement.Panel(Title, Children), TuiElement.Overlay(Title, Children):
+    when TuiElement.Panel(const Title, const Children), TuiElement.Overlay(const Title, const Children):
       begin
         var ContentMinW: integer := 0;
         var ContentPrefW: integer := 0;
@@ -436,7 +436,7 @@ begin
                                                                                                                                                                                                                               2));
         return TuiMeasureApplyPolicy(Hint, TuiSizePolicy.Preferred(), Spec);
       end;
-    when TuiElement.Desktop(Focused, Children):
+    when TuiElement.Desktop(const Focused, const Children):
       begin
         var MinimumWidth: integer := 0;
         var PreferredWidth: integer := 0;

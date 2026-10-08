@@ -100,9 +100,9 @@ file.
 
 ```pascal
 case WriteTextAtomic('note.note', EncodedNote) of
-  when Ok(Written):
+  when Ok(const Written):
     WriteLn('saved');
-  when Error(Message):
+  when Error(const Message):
     WriteLn(Message);
 end case;
 ```
@@ -163,9 +163,9 @@ Creates the directory at `Path` together with every missing parent directory and
 
 ```pascal
 case CreateDirAll('build/output/logs') of
-  when Ok(Created):
+  when Ok(const Created):
     WriteLn('directory ready');
-  when Error(Message):
+  when Error(const Message):
     WriteLn('cannot create directory: ' + Message);
 end case;
 ```
@@ -178,11 +178,11 @@ Expands `Pattern` against the host filesystem and returns every matching **file*
 
 ```pascal
 case Glob('src/**/*.fpas') of
-  when Ok(Paths):
+  when Ok(const Paths):
     begin
       WriteLn(Paths.Length());
     end;
-  when Error(Message):
+  when Error(const Message):
     begin
       WriteLn(Message);
     end;

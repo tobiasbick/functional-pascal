@@ -12,7 +12,7 @@ begin
   AssertEquals('X', Styled.Glyph);
   AssertEquals(1, Styled.Width());
   case Styled.ConcreteStyle of
-    when Some(Concrete):
+    when Some(const Concrete):
       begin
         AssertEquals(20, Concrete.Foreground.Green);
       end;

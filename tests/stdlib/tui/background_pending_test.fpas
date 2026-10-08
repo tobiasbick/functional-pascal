@@ -31,7 +31,7 @@ begin
           return Ok(true);
         end function);
       end;
-    when TuiMsg.Tick(Delta):
+    when TuiMsg.Tick(const Delta):
       begin
         if Delta = 1 then
           begin
@@ -47,7 +47,7 @@ begin
           end;
         end if;
       end;
-    when TuiMsg.BackgroundFailed(Id, Kind, Message, Code, Line, Column):
+    when TuiMsg.BackgroundFailed(const Id, const Kind, const Message, const Code, const Line, const Column):
       begin
         AssertEquals(1, Id);
         AssertTrue(Kind = TaskFailureKind.ReturnedError);

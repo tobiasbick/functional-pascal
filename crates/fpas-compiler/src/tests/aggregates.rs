@@ -172,10 +172,10 @@ begin
 end function;
 begin
   case Build(Ok(2)) of
-    when Ok(Value):
+    when Ok(const Value):
       if (Value.First <> 1) or (Value.Second <> 2) or (Value.Third <> 3) then
         panic('record values'); end if;
-    when Error(Message): panic('unexpected record error');
+    when Error(const Message): panic('unexpected record error');
   end case;
   if Build(Error('expected')) <> Error('expected') then
     panic('record try propagation'); end if;
@@ -197,18 +197,18 @@ begin
   var Sum: integer := 0;
   const ResultValue: Result of integer, string := Ok(3);
   case ResultValue of
-    when Ok(Value): Sum := Sum + Value;
-    when Error(Message): Sum := 99;
+    when Ok(const Value): Sum := Sum + Value;
+    when Error(const Message): Sum := 99;
   end case;
   const OptionValue: Option of integer := Some(4);
   case OptionValue of
-    when Some(Value): Sum := Sum + Value;
+    when Some(const Value): Sum := Sum + Value;
     when None: Sum := 99;
   end case;
   const ShapeValue: Shape := Shape.Pair(5, 6);
   case ShapeValue of
     when Shape.Point: Sum := 99;
-    when Shape.Pair(A, B): Sum := Sum + A + B;
+    when Shape.Pair(const A, const B): Sum := Sum + A + B;
   end case;
   if Sum <> 18 then panic('pattern mismatch'); end if;
 end.",
@@ -377,7 +377,7 @@ begin
   if P.X <> 8 then panic('generic record mismatch'); end if;
   const C: Choice := Identity(Choice.Number(9));
   case C of
-    when Choice.Number(Value): if Value <> 9 then panic('generic enum payload mismatch'); end if;
+    when Choice.Number(const Value): if Value <> 9 then panic('generic enum payload mismatch'); end if;
     when Choice.Empty: panic('generic enum variant mismatch');
   end case;
 end.",

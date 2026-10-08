@@ -10,11 +10,11 @@ function UpdateDemo(State: DemoModel; Msg: TuiMsg; Cmd: TuiCmdOutput): DemoModel
 begin
   Cmd.Set(TuiCmd.NoCommand);
   case Msg of
-    when TuiMsg.Tick(Delta):
+    when TuiMsg.Tick(const Delta):
       begin
         return DemoModel(Ticks := State.Ticks + 1);
       end;
-    when TuiMsg.MenuChanged(MenuSource, MenuAction, MenuState):
+    when TuiMsg.MenuChanged(const MenuSource, const MenuAction, const MenuState):
       begin
         Cmd.Set(TuiCmd.Quit);
         return State;

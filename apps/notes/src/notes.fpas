@@ -19,14 +19,14 @@ begin
   Std.Random.Randomize();
   const Directory: string := NotesDirectory();
   case NotesLoadDirectory(Directory) of
-    when Ok(Loaded):
+    when Ok(const Loaded):
       begin
         var Initial: NotesModel := NotesModelCreate(Directory, Loaded);
         Initial.Width := Std.Console.ScreenWidth();
         Initial.Height := Std.Console.ScreenHeight();
         discard TuiApplication.RunWithPalette(Initial, NotesUpdate, NotesView, NotesPalette());
       end;
-    when Error(Message):
+    when Error(const Message):
       begin
         Std.Console.WriteLn('Could not open notes: ' + Message);
       end;

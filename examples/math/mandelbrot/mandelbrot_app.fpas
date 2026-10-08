@@ -197,15 +197,15 @@ begin
         QueueRender(State, Cmd);
         return State;
       end;
-    when TuiMsg.Key(Key):
+    when TuiMsg.Key(const Key):
       begin
         return UpdateKey(State, Key, Cmd);
       end;
-    when TuiMsg.Pointer(Pointer):
+    when TuiMsg.Pointer(const Pointer):
       begin
         return UpdatePointer(State, Pointer, Cmd);
       end;
-    when TuiMsg.Resize(Size):
+    when TuiMsg.Resize(const Size):
       begin
         if (Size.Width = State.TerminalWidth) and (Size.Height = State.TerminalHeight) then
           begin
@@ -215,7 +215,7 @@ begin
 
         return RestartRender(State, State.Explorer, Size.Width, Size.Height, Cmd);
       end;
-    when TuiMsg.BackgroundFailed(Id, Kind, Message, Code, Line, Column):
+    when TuiMsg.BackgroundFailed(const Id, const Kind, const Message, const Code, const Line, const Column):
       begin
         if Id = RenderSubscriptionId then
           begin

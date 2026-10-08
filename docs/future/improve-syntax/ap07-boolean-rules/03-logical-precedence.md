@@ -13,7 +13,7 @@ with a hint such as `A < B and B < C`.
 
 Parser, formatter and debugger use the same table. Formatting preserves
 explicit grouping and adds required grouping for generated expressions.
-The planned `is` pattern test belongs to AP20.3.
+The `is` pattern test (AP20.3) shares the comparison level.
 
 ## Regression coverage
 

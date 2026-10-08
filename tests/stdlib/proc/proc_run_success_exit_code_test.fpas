@@ -5,19 +5,19 @@ uses Std.Proc, Std.Test;
 begin
   // Host process that exits 0 on Windows and Unix.
   case Run('cmd', ['/C', 'exit 0']) of
-    when Ok(Code):
+    when Ok(const Code):
       begin
         AssertEquals(0, Code);
       end;
-    when Error(Message):
+    when Error(const Message):
       begin
         // Fall back for non-Windows hosts where `cmd` is absent.
         case Run('sh', ['-c', 'exit 0']) of
-          when Ok(Code):
+          when Ok(const Code):
             begin
               AssertEquals(0, Code);
             end;
-          when Error(FallbackMessage):
+          when Error(const FallbackMessage):
             begin
               Fail((Message + ' / ') + FallbackMessage);
             end;

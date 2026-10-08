@@ -127,7 +127,7 @@ Apply(
 
 ```pascal
 case Shape of
-  when Shape.Circle(R):
+  when Shape.Circle(const R):
     Area := Pi * R * R;
     Log('circle');
   when Shape.Point:

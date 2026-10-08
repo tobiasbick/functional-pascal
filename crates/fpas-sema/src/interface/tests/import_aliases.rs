@@ -171,7 +171,7 @@ fn alias_cannot_be_shadowed_by_declarations_parameters_loops_or_patterns() {
         ),
         (
             "",
-            "const X: option of integer := Some(1); case X of when Some(Api): null; when None: null; end case;",
+            "const X: option of integer := Some(1); case X of when Some(const Api): null; when None: null; end case;",
         ),
     ] {
         let diagnostics = errors("Demo.Api as Api", declarations, body);

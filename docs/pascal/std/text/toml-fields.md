@@ -18,9 +18,9 @@ end function;
 
 begin
   case ReadPort(('host = ''localhost''' + string.Chr(10)) + 'port = 8080') of
-    when Ok(Port):
+    when Ok(const Port):
       WriteLn(Port);
-    when Error(Message):
+    when Error(const Message):
       WriteLn('invalid configuration: ' + Message);
   end case;
 end.

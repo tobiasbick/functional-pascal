@@ -21,11 +21,11 @@ begin
   end function);
   const First: result of array of TaskFailure, string := CloseTaskGroupWithTimeout(Group, 2);
   case First of
-    when Error(Message):
+    when Error(const Message):
       begin
         AssertEquals('Task group close timed out', Message);
       end;
-    when Ok(Reports):
+    when Ok(const Reports):
       begin
         panic('worker has not been released');
       end;

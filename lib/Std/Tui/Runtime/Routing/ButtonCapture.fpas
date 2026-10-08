@@ -67,7 +67,7 @@ end procedure;
 public function TuiButtonCapturePressed(ApplicationId: integer): option of TuiControlId;
 begin
   case TuiButtonPressStates[ApplicationId - 1] of
-    when TuiButtonPressState.Captured(Button, Inside) if Inside:
+    when TuiButtonPressState.Captured(const Button, const Inside) if Inside:
       begin
         return Some(Button.Id);
       end;
@@ -75,7 +75,7 @@ begin
       begin
         return None;
       end;
-    when TuiButtonPressState.Captured(Button, Inside):
+    when TuiButtonPressState.Captured(const Button, const Inside):
       begin
         return None;
       end;

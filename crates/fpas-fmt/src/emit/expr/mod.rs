@@ -3,6 +3,7 @@
 mod binary;
 mod closure;
 mod literal;
+mod patterns;
 mod postfix;
 mod precedence;
 mod record_update;
@@ -15,6 +16,7 @@ use super::Emitter;
 use super::wrap::{exceeds_width, measure_emit, text_width};
 use binary::{binary_op_spaced, emit_binary_with_break};
 use literal::{emit_array_literal, format_real, format_string, needs_space_after_negate};
+pub(crate) use patterns::emit_pattern;
 use postfix::emit_postfix;
 use precedence::{PREFIX_PREC, binary_prec, operand_prec, unary_prec};
 
@@ -184,6 +186,19 @@ pub(super) fn emit_expr_impl(
             emitter.write(name);
             emitter.write(" := ");
             emit_expr(emitter, value, 0, comments);
+        }
+        Expr::Is { value, pattern, .. } => {
+            // `is` binds like a comparison.
+            const IS_PREC: u8 = 3;
+            if IS_PREC < min_prec {
+                emitter.write("(");
+                emit_expr_impl(emitter, expr, 0, false, comments);
+                emitter.write(")");
+                return;
+            }
+            emit_expr_impl(emitter, value, IS_PREC + 1, false, comments);
+            emitter.write(" is ");
+            emit_pattern(emitter, pattern, comments);
         }
         Expr::Error(..) => emitter.write("<error>"),
     }

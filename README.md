@@ -228,7 +228,7 @@ end function;
 
 begin
   case FindFirst([3, 7, 15, 42], 10) of
-    when Some(V):
+    when Some(const V):
       begin
         WriteLn('Found: ', V);
       end;

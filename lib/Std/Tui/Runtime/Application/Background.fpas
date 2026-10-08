@@ -136,11 +136,11 @@ begin
   for Command: TuiBackgroundCommand in Commands do
     begin
       case Command of
-        when TuiBackgroundCommand.Start(Id, Work):
+        when TuiBackgroundCommand.Start(const Id, const Work):
           begin
             TuiBackgroundStart(ApplicationId, Id, false, Work);
           end;
-        when TuiBackgroundCommand.ReplaceSubscription(Id, Work):
+        when TuiBackgroundCommand.ReplaceSubscription(const Id, const Work):
           begin
             const Existing: integer := TuiBackgroundFindSubscription(ApplicationId, Id);
             if Existing >= 0 then
@@ -153,7 +153,7 @@ begin
               end;
             end if;
           end;
-        when TuiBackgroundCommand.CancelSubscription(Id):
+        when TuiBackgroundCommand.CancelSubscription(const Id):
           begin
             const Existing: integer := TuiBackgroundFindSubscription(ApplicationId, Id);
             if Existing >= 0 then
@@ -186,12 +186,12 @@ begin
     begin
       const Item: TuiOwnedWork := TuiBackgroundWorkItems[ApplicationId - 1][Index];
       case TryCloseCompletedTaskGroup(Item.Group) of
-        when Some(Failures):
+        when Some(const Failures):
           begin
             Messages := Messages.Concat(TuiBackgroundFailureMessages(Item.Id, Failures, not Item.Cancelling));
             TuiBackgroundRemove(ApplicationId, Index);
             case Item.Replacement of
-              when Some(Work):
+              when Some(const Work):
                 begin
                   TuiBackgroundStart(ApplicationId, Item.Id, true, Work);
                 end;

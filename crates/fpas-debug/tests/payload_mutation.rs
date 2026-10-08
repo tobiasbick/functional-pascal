@@ -265,7 +265,7 @@ begin
   var Optional: Option of integer := Some(1);
   const Marker: integer := 0;
   case Optional of
-    when Some(Value):
+    when Some(const Value):
     begin
       return Value;
     end;

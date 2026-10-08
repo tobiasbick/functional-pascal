@@ -30,31 +30,31 @@ begin
   var Next: integer := Index + 1;
   var Descendants: array of TuiElement := [];
   case Node of
-    when TuiElement.Scroll(Id, Offset, ChangeAction, Children):
+    when TuiElement.Scroll(const Id, const Offset, const ChangeAction, const Children):
       begin
         Descendants := Children;
       end;
-    when TuiElement.Row(Children, Spacing):
+    when TuiElement.Row(const Children, const Spacing):
       begin
         Descendants := Children;
       end;
-    when TuiElement.Column(Children, Spacing):
+    when TuiElement.Column(const Children, const Spacing):
       begin
         Descendants := Children;
       end;
-    when TuiElement.Layout(Settings, Children):
+    when TuiElement.Layout(const Settings, const Children):
       begin
         Descendants := Children;
       end;
-    when TuiElement.Panel(Title, Children):
+    when TuiElement.Panel(const Title, const Children):
       begin
         Descendants := Children;
       end;
-    when TuiElement.Overlay(Title, Children):
+    when TuiElement.Overlay(const Title, const Children):
       begin
         Descendants := Children;
       end;
-    when TuiElement.Desktop(Focused, Children):
+    when TuiElement.Desktop(const Focused, const Children):
       begin
         Descendants := Children;
       end;
@@ -82,15 +82,15 @@ function TuiRouteTarget(
 begin
   var Descendants: array of TuiElement := [];
   case Node of
-    when TuiElement.Button(Button):
+    when TuiElement.Button(const Button):
       begin
         return TuiRouteFocusedButtonKey(Button, Target, Key);
       end;
-    when TuiElement.Input(Input):
+    when TuiElement.Input(const Input):
       begin
         return TuiRouteInputKey(Input, Target, Key);
       end;
-    when TuiElement.TextArea(Id, Text, Caret, Offset, ChangeAction):
+    when TuiElement.TextArea(const Id, const Text, const Caret, const Offset, const ChangeAction):
       begin
         if Id.Value <> Target.Value then
           begin
@@ -101,7 +101,7 @@ begin
         return TuiRouteTextAreaKey(Id, Text, Caret, Offset, ChangeAction, Frame.EntryAt(Index)
                                                                             .Bounds, Key);
       end;
-    when TuiElement.CheckBox(Id, Text, Checked, ChangeAction):
+    when TuiElement.CheckBox(const Id, const Text, const Checked, const ChangeAction):
       begin
         if Id.Value <> Target.Value then
           begin
@@ -117,7 +117,7 @@ begin
 
         return None;
       end;
-    when TuiElement.List(Id, Items, Selected, ChangeAction):
+    when TuiElement.List(const Id, const Items, const Selected, const ChangeAction):
       begin
         if Id.Value <> Target.Value then
           begin
@@ -171,7 +171,7 @@ begin
 
         return Some(TuiMsg.SelectionChanged(Id, ChangeAction, NextSelected));
       end;
-    when TuiElement.MenuBar(Items):
+    when TuiElement.MenuBar(const Items):
       begin
         for ItemIndex: integer := 0 to Items.Length() - 1 do
           begin
@@ -191,16 +191,16 @@ begin
 
         return None;
       end;
-    when TuiElement.Menu(Id, Nodes, State, ChangeAction):
+    when TuiElement.Menu(const Id, const Nodes, const State, const ChangeAction):
       begin
         return None;
       end;
-    when TuiElement.StatusLine(Items):
+    when TuiElement.StatusLine(const Items):
       begin
         for ItemIndex: integer := 0 to Items.Length() - 1 do
           begin
             case Items[ItemIndex] of
-              when TuiStatusItem.Command(Id, Text, Action, Enabled):
+              when TuiStatusItem.Command(const Id, const Text, const Action, const Enabled):
                 begin
                   if (Id.Value = Target.Value) and Enabled then
                     begin
@@ -224,7 +224,7 @@ begin
 
         return None;
       end;
-    when TuiElement.Scroll(Id, Offset, ChangeAction, Children):
+    when TuiElement.Scroll(const Id, const Offset, const ChangeAction, const Children):
       begin
         if Id.Value = Target.Value then
           begin
@@ -299,27 +299,27 @@ begin
 
         Descendants := Children;
       end;
-    when TuiElement.Row(Children, Spacing):
+    when TuiElement.Row(const Children, const Spacing):
       begin
         Descendants := Children;
       end;
-    when TuiElement.Column(Children, Spacing):
+    when TuiElement.Column(const Children, const Spacing):
       begin
         Descendants := Children;
       end;
-    when TuiElement.Layout(Settings, Children):
+    when TuiElement.Layout(const Settings, const Children):
       begin
         Descendants := Children;
       end;
-    when TuiElement.Panel(Title, Children):
+    when TuiElement.Panel(const Title, const Children):
       begin
         Descendants := Children;
       end;
-    when TuiElement.Overlay(Title, Children):
+    when TuiElement.Overlay(const Title, const Children):
       begin
         Descendants := Children;
       end;
-    when TuiElement.Desktop(Focused, Children):
+    when TuiElement.Desktop(const Focused, const Children):
       begin
         Descendants := Children;
       end;
@@ -332,7 +332,7 @@ begin
   for ChildIndex: integer := 0 to Descendants.Length() - 1 do
     begin
       case TuiRouteTarget(Frame, Descendants[ChildIndex], Next, Target, Key) of
-        when Some(Msg):
+        when Some(const Msg):
           begin
             return Some(Msg);
           end;
@@ -358,7 +358,7 @@ public function TuiRouteKey(Root: TuiElement; Frame: TuiArrangedFrame; Key: Std.
 begin
   TuiRouteRequireMatchingFrame(Frame, Root);
   case TuiRouteMenuKey(Root, Key) of
-    when Some(Messages):
+    when Some(const Messages):
       begin
         return Messages;
       end;
@@ -374,7 +374,7 @@ begin
   end if;
 
   case TuiRouteButtonMnemonicKey(Root, Key) of
-    when Some(Messages):
+    when Some(const Messages):
       begin
         return Messages;
       end;
@@ -391,7 +391,7 @@ begin
   const Previous: option of TuiControlId := TuiRootFocus(Root);
   var CurrentIndex: integer := -1;
   case Previous of
-    when Some(Id):
+    when Some(const Id):
       begin
         CurrentIndex := TuiControlIndex(Controls, Id);
       end;
@@ -416,7 +416,7 @@ begin
       if CurrentIndex >= 0 then
         begin
           case TuiRouteTarget(Frame, Root, 0, Target, Key) of
-            when Some(Msg):
+            when Some(const Msg):
               begin
                 return [Msg];
               end;
@@ -438,7 +438,7 @@ begin
   end if;
 
   case TuiRouteButtonFocusNavigation(Root, Previous, Key) of
-    when Some(Messages):
+    when Some(const Messages):
       begin
         return Messages;
       end;
@@ -448,7 +448,7 @@ begin
   end case;
 
   case TuiRouteTarget(Frame, Root, 0, Target, Key) of
-    when Some(Msg):
+    when Some(const Msg):
       begin
         Routed.Push(Msg);
       end;
@@ -457,7 +457,7 @@ begin
         if Key.kind = Std.Console.KeyKind.Enter then
           begin
             case TuiRouteDefaultButtonEnter(Root) of
-              when Some(Msg):
+              when Some(const Msg):
                 begin
                   Routed.Push(Msg);
                   return Routed;

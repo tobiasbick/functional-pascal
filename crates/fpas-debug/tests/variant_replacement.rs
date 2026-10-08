@@ -274,7 +274,7 @@ begin
   var Optional: Option of integer := Some(1);
   const Marker: integer := 0;
   case Optional of
-    when Some(Value):
+    when Some(const Value):
     begin
       return Value;
     end;
@@ -385,11 +385,11 @@ begin
   var LocalItem: Choice := Item;
 const Marker: integer := 0;
   case LocalItem of
-    when Choice.Count(Value):
+    when Choice.Count(const Value):
     begin
       return Value;
     end;
-    when Choice.Pair(Left, Right):
+    when Choice.Pair(const Left, const Right):
     begin
       return Left + Right;
     end;
@@ -446,11 +446,11 @@ begin
   var Selected: Choice := Choice.Count(1);
   return function(): integer begin
     case Selected of
-      when Choice.Count(Value):
+      when Choice.Count(const Value):
       begin
         return Value;
       end;
-      when Choice.Pair(Left, Right):
+      when Choice.Pair(const Left, const Right):
       begin
         return Left + Right;
       end;

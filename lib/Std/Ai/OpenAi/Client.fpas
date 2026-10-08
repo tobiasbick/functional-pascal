@@ -48,7 +48,7 @@ begin
                                     Header.Create('Accept', 'application/json')
                                   ];
   case ClientValue.ApiKey of
-    when Some(Value):
+    when Some(const Value):
       begin
         if Value <> '' then
           begin
@@ -66,10 +66,10 @@ begin
   RequestValue.TimeoutMillis := ClientValue.TimeoutMillis;
   RequestValue.MaxResponseBytes := ClientValue.MaxResponseBytes;
   case Std.Http.Send(RequestValue) of
-    when Ok(ResponseValue):
+    when Ok(const ResponseValue):
       begin
         case Std.Http.BodyText(ResponseValue) of
-          when Ok(Text):
+          when Ok(const Text):
             begin
               if (ResponseValue.StatusCode < 200) or (ResponseValue.StatusCode >= 300) then
                 begin
@@ -80,13 +80,13 @@ begin
 
               return Std.Ai.OpenAi.Json.DecodeResponse(Text);
             end;
-          when Error(Message):
+          when Error(const Message):
             begin
               return Error('OpenAI-compatible response body is not UTF-8: ' + Message);
             end;
         end case;
       end;
-    when Error(Message):
+    when Error(const Message):
       begin
         return Error(Message);
       end;

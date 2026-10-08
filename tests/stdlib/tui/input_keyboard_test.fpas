@@ -33,11 +33,11 @@ function UpdateInput(State: InputKeyboardModel; Msg: TuiMsg; Cmd: TuiCmdOutput):
 begin
   Cmd.Set(TuiCmd.NoCommand);
   case Msg of
-    when TuiMsg.TextChanged(Source, Action, Text, Caret):
+    when TuiMsg.TextChanged(const Source, const Action, const Text, const Caret):
       begin
         return InputKeyboardModel(Text := Text, Caret := Caret, UseHistory := State.UseHistory, KeyHits := State.KeyHits);
       end;
-    when TuiMsg.Key(Key):
+    when TuiMsg.Key(const Key):
       begin
         return InputKeyboardModel(Text := State.Text, Caret := State.Caret, UseHistory := State.UseHistory, KeyHits := State.KeyHits +
                                                                                                                        1);

@@ -11,15 +11,15 @@ end enum;
 function Eval(E: Expr): integer;
 begin
   case E of
-    when Expr.Num(Value):
+    when Expr.Num(const Value):
       begin
         return Value;
       end;
-    when Expr.Add(Left, Right):
+    when Expr.Add(const Left, const Right):
       begin
         return Eval(Left) + Eval(Right);
       end;
-    when Expr.Mul(Left, Right):
+    when Expr.Mul(const Left, const Right):
       begin
         return Eval(Left) * Eval(Right);
       end;

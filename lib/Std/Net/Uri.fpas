@@ -43,7 +43,7 @@ end function;
 function ParsePort(Text: string): result of integer, string;
 begin
   case Std.Net.Decimal.Parse(Text, 65535) of
-    when Ok(Port):
+    when Ok(const Port):
       begin
         if (Port >= 1) and (Port <= 65535) then
           begin
@@ -53,7 +53,7 @@ begin
 
         return Error('URI port must be in 1..65535');
       end;
-    when Error(Message):
+    when Error(const Message):
       begin
         return Error('Invalid URI port: ' + Message);
       end;

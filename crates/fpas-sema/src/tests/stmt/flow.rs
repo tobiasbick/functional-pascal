@@ -21,7 +21,7 @@ fn case_data_enum_rejects_foreign_root_variant() {
          begin \
            const S: Shape := Shape.Point; \
            case S of \
-             when Other.Square(Size): return; \
+             when Other.Square(const Size): return; \
              when Shape.Point: return; \
            end case; \
          end.",
@@ -85,7 +85,7 @@ fn case_option_rejects_result_patterns() {
          begin \
            const O: Option of integer := None; \
            case O of \
-             when Ok(V): return; when \
+             when Ok(const V): return; when \
              None: return; \
            end case; \
          end.",
@@ -105,7 +105,7 @@ fn case_result_multi_label_shared_binding_valid() {
          begin \
            const R: Result of string, string := Ok('hello'); \
            case R of \
-             when Ok(Msg), Error(Msg): WriteLn(Msg); \
+             when Ok(const Msg), Error(const Msg): WriteLn(Msg); \
            end case; \
          end.",
     );
@@ -118,7 +118,7 @@ fn case_result_multi_label_binding_names_are_case_insensitive() {
          begin \
            const R: Result of string, string := Ok('hello'); \
            case R of \
-             when Ok(Message), Error(message): WriteLn(Message); \
+             when Ok(const Message), Error(const message): WriteLn(Message); \
            end case; \
          end.",
     );
@@ -131,7 +131,7 @@ fn case_result_multi_label_checks_shared_body_once() {
          begin \
            const R: Result of string, string := Ok('hello'); \
            case R of \
-             when Ok(Message), Error(message): \
+             when Ok(const Message), Error(const message): \
                const Invalid: integer := 'not an integer'; \
            end case; \
          end.",
@@ -153,7 +153,7 @@ fn case_result_multi_label_rejects_incompatible_binding_types() {
          begin \
            const R: Result of integer, string := Ok(1); \
            case R of \
-             when Ok(Value), Error(Value): return; \
+             when Ok(const Value), Error(const Value): return; \
            end case; \
          end.",
     );
@@ -173,7 +173,7 @@ fn case_result_multi_label_rejects_different_binding_names() {
          begin \
            const R: Result of string, string := Ok('value'); \
            case R of \
-             when Ok(Value), Error(Message): return; \
+             when Ok(const Value), Error(const Message): return; \
            end case; \
          end.",
     );
@@ -194,7 +194,7 @@ fn case_data_enum_pattern_rejects_duplicate_binding_names() {
          begin \
            const P: Pair := Pair.Values(1, 2); \
            case P of \
-             when Pair.Values(Value, value): return; \
+             when Pair.Values(const Value, const value): return; \
            end case; \
          end.",
     );

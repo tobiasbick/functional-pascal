@@ -25,7 +25,7 @@ function UpdateInput(State: InputPointerModel; Msg: TuiMsg; Cmd: TuiCmdOutput): 
 begin
   Cmd.Set(TuiCmd.NoCommand);
   case Msg of
-    when TuiMsg.TextChanged(Source, Action, Text, Caret):
+    when TuiMsg.TextChanged(const Source, const Action, const Text, const Caret):
       begin
         if Source.Value = 1 then
           begin

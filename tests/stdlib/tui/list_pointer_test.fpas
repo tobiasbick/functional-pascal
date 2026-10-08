@@ -42,10 +42,10 @@ function UpdateList(State: ListModel; Msg: TuiMsg; Cmd: TuiCmdOutput): ListModel
 begin
   Cmd.Set(TuiCmd.NoCommand);
   case Msg of
-    when TuiMsg.FocusChanged(Previous, Current):
+    when TuiMsg.FocusChanged(const Previous, const Current):
       begin
         case Current of
-          when Some(Id):
+          when Some(const Id):
             begin
               return ListModel(Focus := Id.Value, Selected := State.Selected);
             end;
@@ -55,7 +55,7 @@ begin
             end;
         end case;
       end;
-    when TuiMsg.SelectionChanged(Source, Action, Selected):
+    when TuiMsg.SelectionChanged(const Source, const Action, const Selected):
       begin
         return ListModel(Focus := State.Focus, Selected := Selected);
       end;

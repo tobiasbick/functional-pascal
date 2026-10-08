@@ -139,7 +139,7 @@ uses Std.Console, Std.Test, Std.Tui;
 function UpdateTheme(State: integer; Msg: TuiMsg; Cmd: TuiCmdOutput): integer;
 begin
   case Msg of
-    when TuiMsg.Resize(Size):
+    when TuiMsg.Resize(const Size):
     begin
       Cmd.SetPalette(TuiPalette.Default()
                        .WithRole(TuiStyleRole.Normal, TuiStyle.FromColors(TuiColor.FromRgb(1, 2, 3), TuiColor.FromRgb(4, 5, 6))));
@@ -216,7 +216,7 @@ type
 function Update(State: Model; Msg: TuiMsg; Cmd: TuiCmdOutput): Model;
 begin
   case Msg of
-    when TuiMsg.Resize(Size):
+    when TuiMsg.Resize(const Size):
     begin
       Cmd.Set(TuiCmd.Quit);
       return Model(
@@ -282,7 +282,7 @@ type
 function Update(State: Model; Msg: TuiMsg; Cmd: TuiCmdOutput): Model;
 begin
   case Msg of
-    when TuiMsg.Tick(Delta):
+    when TuiMsg.Tick(const Delta):
     begin
       return Model( Ticks := State.Ticks + 1 );
     end;
@@ -360,7 +360,7 @@ begin
       end function);
       return State;
     end;
-    when TuiMsg.BackgroundFailed(Id, Kind, Message, Code, Line, Column):
+    when TuiMsg.BackgroundFailed(const Id, const Kind, const Message, const Code, const Line, const Column):
     begin
       panic(Message);
     end;

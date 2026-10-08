@@ -12,7 +12,7 @@ end function;
 function Update(Value: integer; Msg: TuiMsg; Cmd: TuiCmdOutput): integer;
 begin
   case Msg of
-    when TuiMsg.Tick(Delta):
+    when TuiMsg.Tick(const Delta):
       begin
         return Value + Delta;
       end;
@@ -41,7 +41,7 @@ begin
       if Mode = 'utf8' then
         begin
           case Std.Net.Utf8.Decode(Std.Net.Utf8.Encode(Text)) of
-            when Ok(Decoded):
+            when Ok(const Decoded):
               begin
                 if Decoded <> Text then
                   begin
@@ -49,7 +49,7 @@ begin
                   end;
                 end if;
               end;
-            when Error(Message):
+            when Error(const Message):
               begin
                 panic(Message);
               end;

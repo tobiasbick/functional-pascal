@@ -5,6 +5,7 @@ mod aggregates;
 mod calls;
 mod closures;
 mod designators;
+mod is_tests;
 mod logical;
 mod operators;
 mod postfix;

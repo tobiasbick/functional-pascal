@@ -11,11 +11,11 @@ uses Std.Args, Std.Conv, Std.Console, Std.Http, Std.Net.Utf8;
 procedure PrintBuffered(LabelText: string; ResponseValue: Response);
 begin
   case BodyText(ResponseValue) of
-    when Ok(Text):
+    when Ok(const Text):
       begin
         WriteLn((((LabelText + ' ') + IntToStr(ResponseValue.StatusCode)) + ': ') + Text);
       end;
-    when Error(Message):
+    when Error(const Message):
       begin
         panic(Message);
       end;
@@ -30,11 +30,11 @@ end procedure;
 procedure RunBuffered(LabelText: string; RequestValue: Request);
 begin
   case Send(RequestValue) of
-    when Ok(ResponseValue):
+    when Ok(const ResponseValue):
       begin
         PrintBuffered(LabelText, ResponseValue);
       end;
-    when Error(Message):
+    when Error(const Message):
       begin
         panic(Message);
       end;
@@ -52,7 +52,7 @@ begin
   while Reading do
     begin
       case ReadStream(StreamValue, 5) of
-        when Ok(Part):
+        when Ok(const Part):
           begin
             if Part.Length() = 0 then
               begin
@@ -64,7 +64,7 @@ begin
               end;
             end if;
           end;
-        when Error(Message):
+        when Error(const Message):
           begin
             panic(Message);
           end;
@@ -73,11 +73,11 @@ begin
   end while;
 
   case Std.Net.Utf8.Decode(Bytes) of
-    when Ok(Text):
+    when Ok(const Text):
       begin
         return Text;
       end;
-    when Error(Message):
+    when Error(const Message):
       begin
         panic(Message);
       end;
@@ -102,12 +102,12 @@ begin
   PostRequest.Body := Std.Net.Utf8.Encode('hello from client');
   RunBuffered('POST', PostRequest);
   case OpenStream(Request.Get(BaseUrl + '/stream')) of
-    when Ok(ResponseValue):
+    when Ok(const ResponseValue):
       begin
         WriteLn((('STREAM ' + IntToStr(ResponseValue.StatusCode)) + ': ') +
                 ReadAll(ResponseValue.Body));
       end;
-    when Error(Message):
+    when Error(const Message):
       begin
         panic(Message);
       end;

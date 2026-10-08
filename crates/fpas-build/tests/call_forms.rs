@@ -76,7 +76,7 @@ include = ["src/**/*.fpas"]
          public function Sub(Left: integer; Right: integer): integer;
          begin return Left - Right; end function;
          public function Area(S: Shape): integer;
-         begin case S of when Shape.Rect(W, H): return W * H; end case; end function;\nend unit;",
+         begin case S of when Shape.Rect(const W, const H): return W * H; end case; end function;\nend unit;",
     );
     write(
         &main,

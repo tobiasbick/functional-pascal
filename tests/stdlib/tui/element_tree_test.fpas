@@ -28,11 +28,11 @@ end function;
 begin
   const Tree: TuiElement := ViewTree(0);
   case Tree of
-    when TuiElement.Desktop(Focused, DesktopChildren):
+    when TuiElement.Desktop(const Focused, const DesktopChildren):
       begin
         AssertEquals(2, DesktopChildren.Length());
         case DesktopChildren[0] of
-          when TuiElement.Panel(Title, PanelChildren):
+          when TuiElement.Panel(const Title, const PanelChildren):
             begin
               AssertEquals('Dashboard', Title);
               AssertEquals(1, PanelChildren.Length());
@@ -44,7 +44,7 @@ begin
         end case;
 
         case DesktopChildren[1] of
-          when TuiElement.Overlay(Title, OverlayChildren):
+          when TuiElement.Overlay(const Title, const OverlayChildren):
             begin
               AssertEquals('Confirm', Title);
               AssertEquals(1, OverlayChildren.Length());

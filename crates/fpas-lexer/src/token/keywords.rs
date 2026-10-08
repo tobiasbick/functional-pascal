@@ -67,6 +67,7 @@ fn keyword_token(raw: &str) -> Option<Token> {
         s if s.eq_ignore_ascii_case("self") => Some(Token::SelfKw),
         s if s.eq_ignore_ascii_case("nil") => Some(Token::Nil),
         s if s.eq_ignore_ascii_case("null") => Some(Token::Null),
+        s if s.eq_ignore_ascii_case("is") => Some(Token::Is),
         _ => None,
     }
 }

@@ -19,7 +19,7 @@ begin
         end function);
         return State;
       end;
-    when TuiMsg.BackgroundFailed(Id, Kind, Message, Code, Line, Column):
+    when TuiMsg.BackgroundFailed(const Id, const Kind, const Message, const Code, const Line, const Column):
       begin
         AssertEquals(19, Id);
         AssertTrue(Kind = TaskFailureKind.ReturnedError);

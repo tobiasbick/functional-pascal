@@ -1,7 +1,27 @@
-use super::{FormalParam, FuncBody, TypeExpr};
+use super::{FormalParam, FuncBody, Pattern, TypeExpr};
 use fpas_lexer::Span;
 
 impl Expr {
+    /// Appends the conditions of a top-level `and` chain in evaluation order.
+    ///
+    /// Parentheses and other operators remain single conditions. Semantic checking
+    /// and lowering use this same boundary for pattern-test bindings.
+    /// **Documentation:** `docs/pascal/language/pattern-matching/is-test.md`
+    pub fn collect_conjuncts<'a>(&'a self, out: &mut Vec<&'a Self>) {
+        match self {
+            Self::BinaryOp {
+                op: BinaryOp::And,
+                left,
+                right,
+                ..
+            } => {
+                left.collect_conjuncts(out);
+                right.collect_conjuncts(out);
+            }
+            other => out.push(other),
+        }
+    }
+
     /// Returns the source span that covers this expression.
     #[must_use]
     pub fn span(&self) -> Span {
@@ -28,7 +48,8 @@ impl Expr {
             | Self::RecordUpdate { span, .. }
             | Self::Postfix { span, .. }
             | Self::NamedArgument { span, .. }
-            | Self::VarArgument { span, .. } => *span,
+            | Self::VarArgument { span, .. }
+            | Self::Is { span, .. } => *span,
             Self::Closure(closure) => closure.span,
         }
     }
@@ -184,6 +205,20 @@ pub enum Expr {
         /// Caller variable, field, or element passed by reference.
         designator: Designator,
         /// Source span of the complete argument including `var`.
+        span: Span,
+    },
+    /// `Value is Pattern`: tests one pattern and binds its names.
+    ///
+    /// Valid only as an `if`, `elsif`, or `while` condition, optionally joined
+    /// with later conditions by `and`.
+    ///
+    /// **Documentation:** `docs/pascal/language/pattern-matching/is-test.md`
+    Is {
+        /// Tested value.
+        value: Box<Expr>,
+        /// Pattern the value must match.
+        pattern: Box<Pattern>,
+        /// Source span of the complete test.
         span: Span,
     },
     /// Placeholder emitted when the parser fails to parse an expression.

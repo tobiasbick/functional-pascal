@@ -26,7 +26,7 @@ begin
         while not IsCancellationRequested(Token) do
           begin
             case ReceiveWithCancellation(Jobs, Token) of
-              when Ok(Value):
+              when Ok(const Value):
                 begin
                   if SendWithCancellation(Results, Value * Value, Token).IsError() then
                     begin
@@ -53,7 +53,7 @@ begin
   end for;
 
   case CloseTaskGroupWithTimeout(Group, 1000) of
-    when Ok(Failures):
+    when Ok(const Failures):
       begin
         if Failures.Length() <> 0 then
           begin

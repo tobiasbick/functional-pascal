@@ -118,10 +118,10 @@ end function;
 begin
   const S: Shape := Shape.Rect(Height := Mark('h', 1.0), Width := Mark('w', 10.0));
   case S of
-    when Shape.Rect(W, H):
+    when Shape.Rect(const W, const H):
       if (W <> 10.0) or (H <> 1.0) then
         panic('named variant fields bound to the wrong fields'); end if;
-    when Shape.Circle(R): panic('wrong variant');
+    when Shape.Circle(const R): panic('wrong variant');
   end case;
   if Trace <> 'hw' then
     panic('named variant fields were not evaluated in written order'); end if;

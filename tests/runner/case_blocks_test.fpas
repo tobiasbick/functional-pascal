@@ -79,7 +79,7 @@ begin
   AssertEquals(8, VariantReader());
   const Value: integer := 7;
   case Message.Number(3) of
-    when Message.Number(N) if N > 0:
+    when Message.Number(const N) if N > 0:
       const Value: integer := N;
       begin
         const Value: integer := 9;
@@ -88,12 +88,12 @@ begin
 
       AssertEquals(3, Value);
       case Some(Value) of
-        when Some(V):
+        when Some(const V):
           AssertEquals(3, V);
         when None:
           AssertTrue(false);
       end case;
-    when Message.Number(N):
+    when Message.Number(const N):
       AssertTrue(false);
     when Message.Empty:
       null;

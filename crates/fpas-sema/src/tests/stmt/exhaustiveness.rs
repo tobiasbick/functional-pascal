@@ -44,7 +44,7 @@ fn case_result_missing_variant_is_non_exhaustive() {
          begin \
            const R: Result of integer, string := Ok(1); \
            case R of \
-             when Ok(V): return; \
+             when Ok(const V): return; \
            end case; \
          end.",
     );
@@ -64,7 +64,7 @@ fn case_data_enum_missing_variant_is_non_exhaustive() {
          begin \
            const S: Shape := Shape.Point; \
            case S of \
-             when Shape.Circle(R): return; \
+             when Shape.Circle(const R): return; \
            end case; \
          end.",
     );
@@ -84,9 +84,9 @@ fn case_on_recursive_enum_binding_is_checked_for_exhaustiveness() {
          begin \
            const T: Tree := Tree.Leaf; \
            case T of \
-             when Tree.Node(L, R): \
+             when Tree.Node(const L, const R): \
                case L of when \
-                 Tree.Node(A, B): return; \
+                 Tree.Node(const A, const B): return; \
                end case; when \
              Tree.Leaf: return; \
            end case; \

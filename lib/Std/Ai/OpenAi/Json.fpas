@@ -19,7 +19,7 @@ begin
   end for;
   var Fields: dict of string to JsonValue := ['model': JsonValue.String(Model), 'messages': JsonValue.ArrayValue(MessageValues), 'stream': JsonValue.Bool(false)];
   case Options.Temperature of
-    when Some(Value):
+    when Some(const Value):
       begin
         Fields['temperature'] := JsonValue.Number(Value);
       end;
@@ -29,7 +29,7 @@ begin
   end case;
 
   case Options.MaxTokens of
-    when Some(Value):
+    when Some(const Value):
       begin
         Fields['max_tokens'] := JsonValue.Number(Std.Conv.IntToReal(Value));
       end;
@@ -49,7 +49,7 @@ end function;
 function RequiredField(Fields: dict of string to JsonValue; Name: string): result of JsonValue, string;
 begin
   case Fields.Get(Name) of
-    when Some(Value):
+    when Some(const Value):
       begin
         return Ok(Value);
       end;
@@ -67,16 +67,16 @@ end function;
 public function DecodeResponse(Text: string): result of string, string;
 begin
   case Std.Json.Parse(Text) of
-    when Ok(Root):
+    when Ok(const Root):
       begin
         case Root of
-          when JsonValue.Object(RootFields):
+          when JsonValue.Object(const RootFields):
             begin
               case RequiredField(RootFields, 'choices') of
-                when Ok(ChoicesValue):
+                when Ok(const ChoicesValue):
                   begin
                     case ChoicesValue of
-                      when JsonValue.ArrayValue(Choices):
+                      when JsonValue.ArrayValue(const Choices):
                         begin
                           if Choices.Length() = 0 then
                             begin
@@ -85,19 +85,19 @@ begin
                           end if;
 
                           case Choices[0] of
-                            when JsonValue.Object(ChoiceFields):
+                            when JsonValue.Object(const ChoiceFields):
                               begin
                                 case RequiredField(ChoiceFields, 'message') of
-                                  when Ok(MessageValue):
+                                  when Ok(const MessageValue):
                                     begin
                                       case MessageValue of
-                                        when JsonValue.Object(MessageFields):
+                                        when JsonValue.Object(const MessageFields):
                                           begin
                                             case RequiredField(MessageFields, 'content') of
-                                              when Ok(ContentValue):
+                                              when Ok(const ContentValue):
                                                 begin
                                                   case ContentValue of
-                                                    when JsonValue.String(Content):
+                                                    when JsonValue.String(const Content):
                                                       begin
                                                         return Ok(Content);
                                                       end;
@@ -107,7 +107,7 @@ begin
                                                       end;
                                                   end case;
                                                 end;
-                                              when Error(Message):
+                                              when Error(const Message):
                                                 begin
                                                   return Error(Message);
                                                 end;
@@ -119,7 +119,7 @@ begin
                                           end;
                                       end case;
                                     end;
-                                  when Error(Message):
+                                  when Error(const Message):
                                     begin
                                       return Error(Message);
                                     end;
@@ -137,7 +137,7 @@ begin
                         end;
                     end case;
                   end;
-                when Error(Message):
+                when Error(const Message):
                   begin
                     return Error(Message);
                   end;
@@ -149,7 +149,7 @@ begin
             end;
         end case;
       end;
-    when Error(Message):
+    when Error(const Message):
       begin
         return Error('Invalid OpenAI-compatible JSON response: ' + Message);
       end;

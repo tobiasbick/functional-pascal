@@ -4,11 +4,11 @@ uses Std.Fs, Std.Test;
 
 begin
   case Glob(ScratchDir() + '/no-match/**/*.fpas') of
-    when Ok(Paths):
+    when Ok(const Paths):
       begin
         AssertEquals(0, Paths.Length());
       end;
-    when Error(Message):
+    when Error(const Message):
       begin
         Fail(Message);
       end;

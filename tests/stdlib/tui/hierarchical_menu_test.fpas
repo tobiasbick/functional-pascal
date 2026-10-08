@@ -32,7 +32,7 @@ end function;
 procedure AssertActive(Menu: TuiMenuState; Expected: integer);
 begin
   case Menu.Active of
-    when Some(Id):
+    when Some(const Id):
       begin
         AssertEquals(Expected, Id.Value);
       end;
@@ -69,10 +69,10 @@ function UpdateMenu(State: MenuModel; Msg: TuiMsg; Cmd: TuiCmdOutput): MenuModel
 begin
   Cmd.Set(TuiCmd.NoCommand);
   case Msg of
-    when TuiMsg.FocusChanged(Previous, Current):
+    when TuiMsg.FocusChanged(const Previous, const Current):
       begin
         case Current of
-          when Some(Id):
+          when Some(const Id):
             begin
               return MenuModel(Focus := Id.Value, Menu := State.Menu, Actions := State.Actions);
             end;
@@ -82,11 +82,11 @@ begin
             end;
         end case;
       end;
-    when TuiMsg.MenuChanged(Source, Action, Menu):
+    when TuiMsg.MenuChanged(const Source, const Action, const Menu):
       begin
         return MenuModel(Focus := State.Focus, Menu := Menu, Actions := State.Actions);
       end;
-    when TuiMsg.Action(Source, Action):
+    when TuiMsg.Action(const Source, const Action):
       begin
         return MenuModel(Focus := State.Focus, Menu := State.Menu, Actions := State.Actions.Concat([
                                                                                                      Action.Value

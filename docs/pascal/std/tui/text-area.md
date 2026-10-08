@@ -39,7 +39,7 @@ end record;
 function Update(Model: EditorModel; Msg: TuiMsg): EditorModel;
 begin
   case Msg of
-    when TuiMsg.TextAreaChanged(Source, Action, Text, Caret, Offset):
+    when TuiMsg.TextAreaChanged(const Source, const Action, const Text, const Caret, const Offset):
       return EditorModel(Text := Text, Caret := Caret, Offset := Offset);
     else
       return Model;

@@ -280,14 +280,14 @@ case Send(Messages, 'ready') of
   when Ok(_):
     begin
     end;
-  when Error(Message):
+  when Error(const Message):
     panic(Message);
 end case;
 
 case Receive(Messages) of
-  when Ok(Message):
+  when Ok(const Message):
     WriteLn(Message);
-  when Error(Message):
+  when Error(const Message):
     panic(Message);
 end case;
 ```

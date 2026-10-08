@@ -26,7 +26,7 @@ begin
   Model := App.RunIterations(Model, function(State: ResizeModel; Msg: TuiMsg; Cmd: TuiCmdOutput): ResizeModel begin
     Cmd.Set(TuiCmd.NoCommand);
     case Msg of
-      when TuiMsg.Tick(Delta):
+      when TuiMsg.Tick(const Delta):
         begin
           if Delta = 1 then
             begin
@@ -36,7 +36,7 @@ begin
 
           return PushEvent(State, 'tick-2');
         end;
-      when TuiMsg.Resize(Size):
+      when TuiMsg.Resize(const Size):
         begin
           const Snapshot: TuiSurfaceSnapshot := App.SurfaceSnapshot();
           return ResizeModel(Events := State.Events.Concat(['resize']), ResizeWidth := Size.Width, ResizeHeight := Size.Height, HostWidthAtResize := Snapshot.Width, HostHeightAtResize := Snapshot.Height);

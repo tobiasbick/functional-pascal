@@ -15,7 +15,7 @@ fn migration_preserves_guard_bindings_and_nested_shadowing() {
                   const Object: Item := Item( N := 7 );
                   var Score: integer := 0;
                   case 2 of
-                    when {binding} if {binding} > 0:
+                    when const {binding} if {binding} > 0:
                       begin
                         const ReadMatched: function(): integer :=
                           function(): integer

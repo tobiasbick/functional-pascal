@@ -33,15 +33,15 @@ begin
       begin
         return 0;
       end;
-    when Choice.Count(Value):
+    when Choice.Count(const Value):
       begin
         return Value;
       end;
-    when Choice.Pair(Left, Right):
+    when Choice.Pair(const Left, const Right):
       begin
         return Left + Right;
       end;
-    when Choice.Nested(Item):
+    when Choice.Nested(const Item):
       begin
         return Item.X + Item.Y;
       end;
@@ -57,11 +57,11 @@ end function;
 function ResultValue(Item: result of integer, string): integer;
 begin
   case Item of
-    when Ok(Value):
+    when Ok(const Value):
       begin
         return Value;
       end;
-    when Error(Message):
+    when Error(const Message):
       begin
         return -1;
       end;
@@ -71,11 +71,11 @@ end function;
 function WrappedChoiceValue(Item: result of Choice, string): integer;
 begin
   case Item of
-    when Ok(Value):
+    when Ok(const Value):
       begin
         return ChoiceValue(Value);
       end;
-    when Error(Message):
+    when Error(const Message):
       begin
         return -1;
       end;
@@ -85,7 +85,7 @@ end function;
 function OuterChoiceValue(Item: Outer): integer;
 begin
   case Item of
-    when Outer.First(Value), Outer.Second(Value):
+    when Outer.First(const Value), Outer.Second(const Value):
       begin
         return ChoiceValue(Value);
       end;

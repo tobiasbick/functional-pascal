@@ -19,17 +19,17 @@ end record;
 function TuiFindRouteMenu(Node: TuiElement): option of TuiRouteMenu;
 begin
   case Node of
-    when TuiElement.Menu(Id, Nodes, State, ChangeAction):
+    when TuiElement.Menu(const Id, const Nodes, const State, const ChangeAction):
       begin
         return Some(TuiRouteMenu(Id := Id, Nodes := Nodes, State := State, ChangeAction := ChangeAction));
       end;
-    when TuiElement.Desktop(Focused, Children):
+    when TuiElement.Desktop(const Focused, const Children):
       begin
         var LastOverlay: integer := -1;
         for Index: integer := 0 to Children.Length() - 1 do
           begin
             case Children[Index] of
-              when TuiElement.Overlay(Title, OverlayChildren):
+              when TuiElement.Overlay(const Title, const OverlayChildren):
                 begin
                   LastOverlay := Index;
                 end;
@@ -49,7 +49,7 @@ begin
         for Index: integer := 0 to Children.Length() - 1 do
           begin
             case TuiFindRouteMenu(Children[Index]) of
-              when Some(Menu):
+              when Some(const Menu):
                 begin
                   return Some(Menu);
                 end;
@@ -62,12 +62,12 @@ begin
 
         return None;
       end;
-    when TuiElement.Scroll(Id, Offset, ChangeAction, Children):
+    when TuiElement.Scroll(const Id, const Offset, const ChangeAction, const Children):
       begin
         for Index: integer := 0 to Children.Length() - 1 do
           begin
             case TuiFindRouteMenu(Children[Index]) of
-              when Some(Menu):
+              when Some(const Menu):
                 begin
                   return Some(Menu);
                 end;
@@ -80,12 +80,12 @@ begin
 
         return None;
       end;
-    when TuiElement.Row(Children, Spacing):
+    when TuiElement.Row(const Children, const Spacing):
       begin
         for Index: integer := 0 to Children.Length() - 1 do
           begin
             case TuiFindRouteMenu(Children[Index]) of
-              when Some(Menu):
+              when Some(const Menu):
                 begin
                   return Some(Menu);
                 end;
@@ -98,12 +98,12 @@ begin
 
         return None;
       end;
-    when TuiElement.Column(Children, Spacing):
+    when TuiElement.Column(const Children, const Spacing):
       begin
         for Index: integer := 0 to Children.Length() - 1 do
           begin
             case TuiFindRouteMenu(Children[Index]) of
-              when Some(Menu):
+              when Some(const Menu):
                 begin
                   return Some(Menu);
                 end;
@@ -116,12 +116,12 @@ begin
 
         return None;
       end;
-    when TuiElement.Layout(Settings, Children):
+    when TuiElement.Layout(const Settings, const Children):
       begin
         for Index: integer := 0 to Children.Length() - 1 do
           begin
             case TuiFindRouteMenu(Children[Index]) of
-              when Some(Menu):
+              when Some(const Menu):
                 begin
                   return Some(Menu);
                 end;
@@ -134,12 +134,12 @@ begin
 
         return None;
       end;
-    when TuiElement.Panel(Title, Children):
+    when TuiElement.Panel(const Title, const Children):
       begin
         for Index: integer := 0 to Children.Length() - 1 do
           begin
             case TuiFindRouteMenu(Children[Index]) of
-              when Some(Menu):
+              when Some(const Menu):
                 begin
                   return Some(Menu);
                 end;
@@ -152,12 +152,12 @@ begin
 
         return None;
       end;
-    when TuiElement.Overlay(Title, Children):
+    when TuiElement.Overlay(const Title, const Children):
       begin
         for Index: integer := 0 to Children.Length() - 1 do
           begin
             case TuiFindRouteMenu(Children[Index]) of
-              when Some(Menu):
+              when Some(const Menu):
                 begin
                   return Some(Menu);
                 end;
@@ -185,7 +185,7 @@ end function;
 function TuiMenuOpenFirst(Menu: TuiRouteMenu; Previous: option of TuiControlId): array of TuiMsg;
 begin
   case TuiMenuFirstSelectable(Menu.Nodes, None) of
-    when Some(First):
+    when Some(const First):
       begin
         var Messages: array of TuiMsg := [];
         if not TuiFocusMatches(Previous, Menu.Id) then
@@ -207,7 +207,7 @@ end function;
 function TuiMenuCommandMessages(Menu: TuiRouteMenu; Node: TuiMenuNode): array of TuiMsg;
 begin
   case TuiMenuNodeAction(Node) of
-    when Some(Action):
+    when Some(const Action):
       begin
         if Menu.State.Open then
           begin
@@ -231,7 +231,7 @@ begin
       if TuiMenuNodeSelectable(Menu.Nodes[Index]) then
         begin
           case TuiMenuNodeShortcut(Menu.Nodes[Index]) of
-            when Some(Shortcut):
+            when Some(const Shortcut):
               begin
                 if Shortcut.Matches(Key) then
                   begin
@@ -294,12 +294,12 @@ begin
   end if;
 
   case Menu.State.Active of
-    when Some(Active):
+    when Some(const Active):
       begin
         const ActiveIndex: integer := TuiMenuFind(Menu.Nodes, Active);
         const Parent: option of TuiMenuNodeId := TuiMenuNodeParent(Menu.Nodes[ActiveIndex]);
         case TuiMenuMnemonic(Menu, Key, Parent) of
-          when Some(Messages):
+          when Some(const Messages):
             begin
               return Some(Messages);
             end;
@@ -313,7 +313,7 @@ begin
             if TuiMenuNodeIsSubmenu(Menu.Nodes[ActiveIndex]) then
               begin
                 case TuiMenuFirstSelectable(Menu.Nodes, Some(Active)) of
-                  when Some(Child):
+                  when Some(const Child):
                     begin
                       return Some([TuiMenuChange(Menu, TuiMenuState.OpenAt(Child))]);
                     end;
@@ -335,7 +335,7 @@ begin
                TuiMenuNodeIsSubmenu(Menu.Nodes[ActiveIndex]) then
               begin
                 case TuiMenuFirstSelectable(Menu.Nodes, Some(Active)) of
-                  when Some(Child):
+                  when Some(const Child):
                     begin
                       return Some([TuiMenuChange(Menu, TuiMenuState.OpenAt(Child))]);
                     end;
@@ -353,7 +353,7 @@ begin
             end if;
 
             case TuiMenuNextSelectable(Menu.Nodes, Active, Direction) of
-              when Some(Next):
+              when Some(const Next):
                 begin
                   return Some([TuiMenuChange(Menu, TuiMenuState.OpenAt(Next))]);
                 end;
@@ -370,7 +370,7 @@ begin
             if TuiMenuNodeIsSubmenu(Menu.Nodes[ActiveIndex]) then
               begin
                 case TuiMenuFirstSelectable(Menu.Nodes, Some(Active)) of
-                  when Some(Child):
+                  when Some(const Child):
                     begin
                       return Some([TuiMenuChange(Menu, TuiMenuState.OpenAt(Child))]);
                     end;
@@ -382,10 +382,10 @@ begin
             end if;
 
             case TuiMenuRootOf(Menu.Nodes, Active) of
-              when Some(Root):
+              when Some(const Root):
                 begin
                   case TuiMenuNextSelectable(Menu.Nodes, Root, 1) of
-                    when Some(NextRoot):
+                    when Some(const NextRoot):
                       begin
                         return Some([TuiMenuChange(Menu, TuiMenuState.OpenAt(NextRoot))]);
                       end;
@@ -404,18 +404,18 @@ begin
         if Key.kind = Std.Console.KeyKind.Left then
           begin
             case Parent of
-              when Some(ParentId):
+              when Some(const ParentId):
                 begin
                   const ParentIndex: integer := TuiMenuFind(Menu.Nodes, ParentId);
                   case TuiMenuNodeParent(Menu.Nodes[ParentIndex]) of
-                    when Some(GrandParent):
+                    when Some(const GrandParent):
                       begin
                         return Some([TuiMenuChange(Menu, TuiMenuState.OpenAt(ParentId))]);
                       end;
                     when None:
                       begin
                         case TuiMenuNextSelectable(Menu.Nodes, ParentId, -1) of
-                          when Some(NextRoot):
+                          when Some(const NextRoot):
                             begin
                               return Some([TuiMenuChange(Menu, TuiMenuState.OpenAt(NextRoot))]);
                             end;
@@ -429,7 +429,7 @@ begin
               when None:
                 begin
                   case TuiMenuNextSelectable(Menu.Nodes, Active, -1) of
-                    when Some(NextRoot):
+                    when Some(const NextRoot):
                       begin
                         return Some([TuiMenuChange(Menu, TuiMenuState.OpenAt(NextRoot))]);
                       end;
@@ -458,10 +458,10 @@ end function;
 public function TuiRouteMenuKey(Root: TuiElement; Key: Std.Console.KeyEvent): option of array of TuiMsg;
 begin
   case TuiFindRouteMenu(Root) of
-    when Some(Menu):
+    when Some(const Menu):
       begin
         case TuiMenuShortcut(Menu, Key) of
-          when Some(Messages):
+          when Some(const Messages):
             begin
               return Some(Messages);
             end;
@@ -485,7 +485,7 @@ begin
         if Key.alt then
           begin
             case TuiMenuMnemonic(Menu, Key, None) of
-              when Some(Messages):
+              when Some(const Messages):
                 begin
                   var FocusMessages: array of TuiMsg := [];
                   if not TuiFocusMatches(TuiRootFocus(Root), Menu.Id) then

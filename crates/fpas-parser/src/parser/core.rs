@@ -94,6 +94,7 @@ impl Parser {
                 | Token::LessEqual
                 | Token::GreaterEqual
                 | Token::In
+                | Token::Is
         )
     }
 
@@ -200,6 +201,9 @@ impl Parser {
             ),
             Token::Null => Some(
                 "`null` is a reserved keyword. Rename the identifier, for example to `NullValue`; use `JsonValue.NullValue` for JSON null.",
+            ),
+            Token::Is => Some(
+                "`is` is a reserved keyword for pattern tests. Rename the identifier, for example to `IsValue`.",
             ),
             _ => None,
         }

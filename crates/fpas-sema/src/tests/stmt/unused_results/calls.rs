@@ -57,7 +57,7 @@ fn consumption_forms_and_explicit_discard_remain_valid() {
       begin return Ok(try Fallible()); end function;
       begin const A: integer := Value(); var B: integer := 0;
       B := Value(); Consume(Value()); discard Value(); discard Fallible();
-      case Fallible() of when Ok(V): Consume(V); when Error(E): discard E; end case;
+      case Fallible() of when Ok(const V): Consume(V); when Error(const E): discard E; end case;
       end.",
     );
 }

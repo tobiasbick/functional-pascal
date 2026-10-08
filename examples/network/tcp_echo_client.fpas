@@ -15,7 +15,7 @@ begin
     begin
       const Remaining: array of integer := Bytes.Slice(Offset, Bytes.Length() - Offset);
       case Std.Net.SendBytes(ConnectionValue, Remaining) of
-        when Ok(Count):
+        when Ok(const Count):
           begin
             if Count <= 0 then
               begin
@@ -25,7 +25,7 @@ begin
 
             Offset := Offset + Count;
           end;
-        when Error(Message):
+        when Error(const Message):
           begin
             panic(Message);
           end;
@@ -45,7 +45,7 @@ begin
   while Reading do
     begin
       case Std.Net.ReceiveBytes(ConnectionValue, 4096) of
-        when Ok(Part):
+        when Ok(const Part):
           begin
             if Part.Length() = 0 then
               begin
@@ -57,7 +57,7 @@ begin
               end;
             end if;
           end;
-        when Error(Message):
+        when Error(const Message):
           begin
             panic(Message);
           end;
@@ -66,11 +66,11 @@ begin
   end while;
 
   case Std.Net.Utf8.Decode(Bytes) of
-    when Ok(Text):
+    when Ok(const Text):
       begin
         return Text;
       end;
-    when Error(Message):
+    when Error(const Message):
       begin
         panic(Message);
       end;
@@ -90,13 +90,13 @@ begin
   end if;
 
   case Connect('127.0.0.1', Port, 5000) of
-    when Ok(ConnectionValue):
+    when Ok(const ConnectionValue):
       begin
         case SetTimeout(ConnectionValue, 5000) of
           when Ok(_):
             begin
             end;
-          when Error(Message):
+          when Error(const Message):
             begin
               panic(Message);
             end;
@@ -108,13 +108,13 @@ begin
           when Ok(_):
             begin
             end;
-          when Error(Message):
+          when Error(const Message):
             begin
               panic(Message);
             end;
         end case;
       end;
-    when Error(Message):
+    when Error(const Message):
       begin
         panic(Message);
       end;

@@ -273,7 +273,7 @@ Call arguments still use commas; commas inside types such as
 | FP3011 | Non-exhaustive case | A boolean case covering only `true` | Add the `false` branch or an `else` branch. |
 | FP3012 | Enum data count | Construct `A(1)` when A has two data fields | Construct `A(1, 2)`. |
 | FP3013 | Generic constraint | Use string for T constrained to an arithmetic type | Use integer for that arithmetic operation. |
-| FP3014 | Non-constant value | `when ReadValue():` in a scalar `case` | `when Value if Value = ReadValue():` |
+| FP3014 | Non-constant value | `when ReadValue():` in a scalar `case` | `when const Value if Value = ReadValue():` |
 | FP3015 | Missing record field | Construct a record without required X | Supply `X := 1` in typed record construction. |
 | FP3016 | Task-bound callable | Pass a closure capturing mutable state into another task | Pass a closure with immutable captures. |
 | FP3017 | Private record member | Access another unit's non-public record field | Export the field with `public` or use its public API. |
@@ -290,6 +290,10 @@ Call arguments still use commas; commas inside types such as
 | FP3028 | Invalid `var` argument | `Increase(var Fixed)` for a `const` binding `Fixed` | Declare `var Fixed: integer := 1;` and pass `var Fixed`. |
 | FP3029 | Aliased `var` arguments | `Swap(var A[I], var A[J])` | `SwapAt(var A, I, J)` |
 | FP3030 | `var` parameter escapes the call | A closure that captures `var` parameter `Total` | Capture a local copy `const Current: integer := Total;` |
+| FP3031 | Implicit pattern binding | `when Some(Value):` or `when N if N > 0:` | `when Some(const Value):` or `when const N if N > 0:` |
+| FP3032 | Misplaced scalar binding | `when const N:` without a guard | `when const N if N > 0:`, or `else` for the remaining values |
+| FP3033 | Unreachable case label | `when Some(_):` before `when Some(1):` | Move `when Some(1):` before `when Some(_):` or remove it |
+| FP3034 | Misplaced `is` test | `const Hit: boolean := X is Some(_);` | `if X is Some(_) then ... end if;` or a `case` |
 
 FP3025 also reports a parameter or enum variant field named twice and a named
 call that omits one; its hint lists the declared names. FP3026 applies to
@@ -303,6 +307,14 @@ argument is not writable storage (a `const` binding, read-only parameter, loop
 variable, dictionary entry, string character, or computed value).
 FP3030 covers closures, routine values, and `go` calls that would let a `var`
 parameter outlive its call.
+
+FP3031 reports a plain identifier in a pattern field and a bare scalar label
+that names no constant; its hint shows the `const Name` form. FP3032 reports a
+scalar `const Name` label without a guard, next to other labels in its arm, or
+in a Result, Option, or data-enum `case`. FP3033 reports a label of an enum,
+Result, or Option `case` that earlier unguarded arms already cover completely.
+FP3034 reports an `is` test outside an `if`, `elsif`, or `while` condition,
+including under `or` or `not` and in a `case` guard.
 
 Ordinary declaration, assignment, return and argument type compatibility checks
 supply type names in `expected` and `found` for FP3006. Other uses of that code

@@ -5,7 +5,7 @@ uses Std.Tui, Std.Test;
 begin
   const Node: TuiElement := TuiElementBuilders.MakeLabel('hi');
   case Node of
-    when TuiElement.Label(Text):
+    when TuiElement.Label(const Text):
       begin
         AssertEquals('hi', Text);
       end;

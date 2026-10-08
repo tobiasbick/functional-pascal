@@ -6,7 +6,7 @@ fn static_labels_ranges_and_dynamic_guards_remain_valid() {
     check_ok(
         "program T; function ReadValue(): integer; begin return 2; end function;
         begin const First: integer := 1; const Last: integer := First + 2;
-        case 2 of when First..Last: null; when V if V = ReadValue(): null; end case; end.",
+        case 2 of when First..Last: null; when const V if V = ReadValue(): null; end case; end.",
     );
 }
 

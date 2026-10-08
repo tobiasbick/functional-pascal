@@ -265,7 +265,8 @@ impl<'a> ClosureRegistry<'a> {
                     self.visit_expression(argument, owner, metadata, types)?;
                 }
             }
-            Expr::UnaryOp { operand, .. }
+            Expr::Is { value: operand, .. }
+            | Expr::UnaryOp { operand, .. }
             | Expr::Paren(operand, _)
             | Expr::Try(operand, _)
             | Expr::ResultOk(operand, _)

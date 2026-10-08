@@ -55,7 +55,7 @@ begin
   case Value of
     when Chain.Empty:
       return 0;
-    when Chain.Link(Next):
+    when Chain.Link(const Next):
       return 1 + Depth(Next);
   end case;
 end function;

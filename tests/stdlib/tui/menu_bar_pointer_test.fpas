@@ -38,10 +38,10 @@ function UpdateMenu(State: MenuModel; Msg: TuiMsg; Cmd: TuiCmdOutput): MenuModel
 begin
   Cmd.Set(TuiCmd.NoCommand);
   case Msg of
-    when TuiMsg.FocusChanged(Previous, Current):
+    when TuiMsg.FocusChanged(const Previous, const Current):
       begin
         case Current of
-          when Some(Id):
+          when Some(const Id):
             begin
               return MenuModel(Focus := Id.Value, Actions := State.Actions);
             end;
@@ -51,7 +51,7 @@ begin
             end;
         end case;
       end;
-    when TuiMsg.Action(Source, Action):
+    when TuiMsg.Action(const Source, const Action):
       begin
         return MenuModel(Focus := State.Focus, Actions := State.Actions.Concat([Action.Value]));
       end;

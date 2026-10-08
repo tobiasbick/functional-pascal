@@ -18,31 +18,31 @@ begin
   var Next: integer := Index + 1;
   var Descendants: array of TuiElement := [];
   case Node of
-    when TuiElement.Scroll(Id, Offset, ChangeAction, ScrollChildren):
+    when TuiElement.Scroll(const Id, const Offset, const ChangeAction, const ScrollChildren):
       begin
         Descendants := ScrollChildren;
       end;
-    when TuiElement.Row(RowChildren, Spacing):
+    when TuiElement.Row(const RowChildren, const Spacing):
       begin
         Descendants := RowChildren;
       end;
-    when TuiElement.Column(ColumnChildren, Spacing):
+    when TuiElement.Column(const ColumnChildren, const Spacing):
       begin
         Descendants := ColumnChildren;
       end;
-    when TuiElement.Layout(Settings, LayoutChildren):
+    when TuiElement.Layout(const Settings, const LayoutChildren):
       begin
         Descendants := LayoutChildren;
       end;
-    when TuiElement.Panel(Title, PanelChildren):
+    when TuiElement.Panel(const Title, const PanelChildren):
       begin
         Descendants := PanelChildren;
       end;
-    when TuiElement.Overlay(Title, OverlayChildren):
+    when TuiElement.Overlay(const Title, const OverlayChildren):
       begin
         Descendants := OverlayChildren;
       end;
-    when TuiElement.Desktop(Focused, DesktopChildren):
+    when TuiElement.Desktop(const Focused, const DesktopChildren):
       begin
         Descendants := DesktopChildren;
       end;
@@ -88,7 +88,7 @@ public function TuiFocusableControls(Node: TuiElement): array of TuiControlId;
 begin
   var Descendants: array of TuiElement := [];
   case Node of
-    when TuiElement.Button(Button):
+    when TuiElement.Button(const Button):
       begin
         if Button.Enabled then
           begin
@@ -100,27 +100,27 @@ begin
           end;
         end if;
       end;
-    when TuiElement.Input(Input):
+    when TuiElement.Input(const Input):
       begin
         return [Input.Id];
       end;
-    when TuiElement.TextArea(Id, Text, Caret, Offset, ChangeAction):
+    when TuiElement.TextArea(const Id, const Text, const Caret, const Offset, const ChangeAction):
       begin
         return [Id];
       end;
-    when TuiElement.CheckBox(Id, Text, Checked, ChangeAction):
+    when TuiElement.CheckBox(const Id, const Text, const Checked, const ChangeAction):
       begin
         return [Id];
       end;
-    when TuiElement.List(Id, Items, Selected, ChangeAction):
+    when TuiElement.List(const Id, const Items, const Selected, const ChangeAction):
       begin
         return [Id];
       end;
-    when TuiElement.Menu(Id, Nodes, State, ChangeAction):
+    when TuiElement.Menu(const Id, const Nodes, const State, const ChangeAction):
       begin
         return [Id];
       end;
-    when TuiElement.Scroll(Id, Offset, ChangeAction, Children):
+    when TuiElement.Scroll(const Id, const Offset, const ChangeAction, const Children):
       begin
         var Controls: array of TuiControlId := [Id];
         for Index: integer := 0 to Children.Length() - 1 do
@@ -131,7 +131,7 @@ begin
 
         return Controls;
       end;
-    when TuiElement.MenuBar(Items):
+    when TuiElement.MenuBar(const Items):
       begin
         var Controls: array of TuiControlId := [];
         for Index: integer := 0 to Items.Length() - 1 do
@@ -146,13 +146,13 @@ begin
 
         return Controls;
       end;
-    when TuiElement.StatusLine(Items):
+    when TuiElement.StatusLine(const Items):
       begin
         var Controls: array of TuiControlId := [];
         for Index: integer := 0 to Items.Length() - 1 do
           begin
             case Items[Index] of
-              when TuiStatusItem.Command(Id, Text, Action, Enabled):
+              when TuiStatusItem.Command(const Id, const Text, const Action, const Enabled):
                 begin
                   if Enabled then
                     begin
@@ -169,33 +169,33 @@ begin
 
         return Controls;
       end;
-    when TuiElement.Row(RowChildren, Spacing):
+    when TuiElement.Row(const RowChildren, const Spacing):
       begin
         Descendants := RowChildren;
       end;
-    when TuiElement.Column(ColumnChildren, Spacing):
+    when TuiElement.Column(const ColumnChildren, const Spacing):
       begin
         Descendants := ColumnChildren;
       end;
-    when TuiElement.Layout(Settings, LayoutChildren):
+    when TuiElement.Layout(const Settings, const LayoutChildren):
       begin
         Descendants := LayoutChildren;
       end;
-    when TuiElement.Panel(Title, PanelChildren):
+    when TuiElement.Panel(const Title, const PanelChildren):
       begin
         Descendants := PanelChildren;
       end;
-    when TuiElement.Overlay(Title, OverlayChildren):
+    when TuiElement.Overlay(const Title, const OverlayChildren):
       begin
         Descendants := OverlayChildren;
       end;
-    when TuiElement.Desktop(Focused, Children):
+    when TuiElement.Desktop(const Focused, const Children):
       begin
         var LastOverlay: integer := -1;
         for Index: integer := 0 to Children.Length() - 1 do
           begin
             case Children[Index] of
-              when TuiElement.Overlay(Title, OverlayChildren):
+              when TuiElement.Overlay(const Title, const OverlayChildren):
                 begin
                   LastOverlay := Index;
                 end;
@@ -245,7 +245,7 @@ end function;
 public function TuiRootFocus(Root: TuiElement): option of TuiControlId;
 begin
   case Root of
-    when TuiElement.Desktop(Focused, Children):
+    when TuiElement.Desktop(const Focused, const Children):
       begin
         return Focused;
       end;
@@ -294,7 +294,7 @@ end function;
 public function TuiFocusMatches(Focused: option of TuiControlId; Target: TuiControlId): boolean;
 begin
   case Focused of
-    when Some(Id):
+    when Some(const Id):
       begin
         return TuiSameControlId(Id, Target);
       end;

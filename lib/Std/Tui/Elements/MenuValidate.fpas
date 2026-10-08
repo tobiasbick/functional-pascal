@@ -5,10 +5,10 @@ uses Std.Tui.Chrome.MenuNode, Std.Tui.Chrome.MenuQuery;
 function TuiMenuSameOptionalId(Left: option of TuiMenuNodeId; Right: option of TuiMenuNodeId): boolean;
 begin
   case Left of
-    when Some(LeftId):
+    when Some(const LeftId):
       begin
         case Right of
-          when Some(RightId):
+          when Some(const RightId):
             begin
               return LeftId.Value = RightId.Value;
             end;
@@ -21,7 +21,7 @@ begin
     when None:
       begin
         case Right of
-          when Some(RightId):
+          when Some(const RightId):
             begin
               return false;
             end;
@@ -61,7 +61,7 @@ begin
       end if;
 
       case TuiMenuNodeParent(Nodes[Index]) of
-        when Some(Parent):
+        when Some(const Parent):
           begin
             const ParentIndex: integer := TuiMenuFind(Nodes, Parent);
             if ParentIndex < 0 then
@@ -92,7 +92,7 @@ begin
           Remaining := Remaining - 1;
           const CurrentIndex: integer := TuiMenuFind(Nodes, Current);
           case TuiMenuNodeParent(Nodes[CurrentIndex]) of
-            when Some(Parent):
+            when Some(const Parent):
               begin
                 if Parent.Value = Id.Value then
                   begin
@@ -126,7 +126,7 @@ begin
   if State.Open then
     begin
       case State.Active of
-        when Some(Active):
+        when Some(const Active):
           begin
             const ActiveIndex: integer := TuiMenuFind(Nodes, Active);
             if (ActiveIndex < 0) or not TuiMenuNodeSelectable(Nodes[ActiveIndex]) then
@@ -144,7 +144,7 @@ begin
   else
     begin
       case State.Active of
-        when Some(Active):
+        when Some(const Active):
           begin
             panic('Tui closed menu must not have an active node');
           end;

@@ -11,7 +11,7 @@ begin
           begin
             Fail('feed after error');
           end;
-        when Error(Message):
+        when Error(const Message):
           begin
             AssertTrue(Message.Contains('finished'));
           end;
@@ -22,7 +22,7 @@ begin
           begin
             Fail('finish after error');
           end;
-        when Error(Message):
+        when Error(const Message):
           begin
             AssertTrue(Message.Contains('finished'));
           end;

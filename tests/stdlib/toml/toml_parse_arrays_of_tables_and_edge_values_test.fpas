@@ -6,13 +6,13 @@ begin
   const Parsed: result of TomlValue, string := Parse(((((((((((((('empty = []' + string.Chr(10)) + 'special = nan') + string.Chr(10)) + 'point.x = 1') + string.Chr(10)) + 'point.y = 2') + string.Chr(10)) + '[[products]]') + string.Chr(10)) + 'name = ''Hammer''') + string.Chr(10)) + '[[products]]') + string.Chr(10)) +
                                                      'name = ''Nail''');
   case Parsed of
-    when Ok(Value):
+    when Ok(const Value):
       begin
         case Value of
-          when TomlValue.Table(Fields):
+          when TomlValue.Table(const Fields):
             begin
               case Fields.Get('empty').Unwrap() of
-                when TomlValue.ArrayValue(Items):
+                when TomlValue.ArrayValue(const Items):
                   begin
                     AssertEquals(0, Items.Length());
                   end;
@@ -23,7 +23,7 @@ begin
               end case;
 
               case Fields.Get('special').Unwrap() of
-                when TomlValue.Float(Number):
+                when TomlValue.Float(const Number):
                   begin
                     AssertTrue(Number <> Number);
                   end;
@@ -34,7 +34,7 @@ begin
               end case;
 
               case Fields.Get('point').Unwrap() of
-                when TomlValue.Table(Point):
+                when TomlValue.Table(const Point):
                   begin
                     AssertEquals(2, Point.Length());
                   end;
@@ -45,14 +45,14 @@ begin
               end case;
 
               case Fields.Get('products').Unwrap() of
-                when TomlValue.ArrayValue(Products):
+                when TomlValue.ArrayValue(const Products):
                   begin
                     AssertEquals(2, Products.Length());
                     case Products[0] of
-                      when TomlValue.Table(Product):
+                      when TomlValue.Table(const Product):
                         begin
                           case Product.Get('name').Unwrap() of
-                            when TomlValue.String(Name):
+                            when TomlValue.String(const Name):
                               begin
                                 AssertEquals('Hammer', Name);
                               end;
@@ -69,10 +69,10 @@ begin
                     end case;
 
                     case Products[1] of
-                      when TomlValue.Table(Product):
+                      when TomlValue.Table(const Product):
                         begin
                           case Product.Get('name').Unwrap() of
-                            when TomlValue.String(Name):
+                            when TomlValue.String(const Name):
                               begin
                                 AssertEquals('Nail', Name);
                               end;
@@ -100,7 +100,7 @@ begin
             end;
         end case;
       end;
-    when Error(Message):
+    when Error(const Message):
       begin
         Fail(Message);
       end;

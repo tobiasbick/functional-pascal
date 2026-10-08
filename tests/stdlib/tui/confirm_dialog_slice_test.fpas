@@ -37,26 +37,26 @@ function UpdateEditor(State: EditorModel; Msg: TuiMsg; Cmd: TuiCmdOutput): Edito
 begin
   Cmd.Set(TuiCmd.NoCommand);
   case Msg of
-    when TuiMsg.Key(Key):
+    when TuiMsg.Key(const Key):
       begin
         return State;
       end;
-    when TuiMsg.Pointer(Pointer):
+    when TuiMsg.Pointer(const Pointer):
       begin
         return State;
       end;
-    when TuiMsg.Resize(Size):
+    when TuiMsg.Resize(const Size):
       begin
         return State;
       end;
-    when TuiMsg.Tick(Delta):
+    when TuiMsg.Tick(const Delta):
       begin
         return State;
       end;
-    when TuiMsg.FocusChanged(Previous, Current):
+    when TuiMsg.FocusChanged(const Previous, const Current):
       begin
         case Current of
-          when Some(Id):
+          when Some(const Id):
             begin
               return EditorState(State, State.Name, State.NameCaret, Id.Value, State.ConfirmOpen, State.Saved, State.Quit);
             end;
@@ -66,7 +66,7 @@ begin
             end;
         end case;
       end;
-    when TuiMsg.Action(Source, Action):
+    when TuiMsg.Action(const Source, const Action):
       begin
         if Action.Value = SaveActionValue then
           begin
@@ -91,29 +91,29 @@ begin
 
         return State;
       end;
-    when TuiMsg.TextChanged(Source, Action, Text, Caret):
+    when TuiMsg.TextChanged(const Source, const Action, const Text, const Caret):
       begin
         AssertEquals(NameControlValue, Source.Value);
         AssertEquals(NameChangedActionValue, Action.Value);
         return EditorState(State, Text, Caret, State.Focused, State.ConfirmOpen, State.Saved, State.Quit);
       end;
-    when TuiMsg.TextAreaChanged(Source, Action, Text, Caret, Offset):
+    when TuiMsg.TextAreaChanged(const Source, const Action, const Text, const Caret, const Offset):
       begin
         return State;
       end;
-    when TuiMsg.CheckChanged(Source, Action, Checked):
+    when TuiMsg.CheckChanged(const Source, const Action, const Checked):
       begin
         return State;
       end;
-    when TuiMsg.SelectionChanged(Source, Action, Selected):
+    when TuiMsg.SelectionChanged(const Source, const Action, const Selected):
       begin
         return State;
       end;
-    when TuiMsg.ScrollChanged(Source, Action, Offset):
+    when TuiMsg.ScrollChanged(const Source, const Action, const Offset):
       begin
         return State;
       end;
-    when TuiMsg.MenuChanged(MenuSource, MenuAction, MenuState):
+    when TuiMsg.MenuChanged(const MenuSource, const MenuAction, const MenuState):
       begin
         Cmd.Set(TuiCmd.Quit);
         return EditorState(State, 'SHOULD NOT PAINT', 0, State.Focused, State.ConfirmOpen, State.Saved, true);

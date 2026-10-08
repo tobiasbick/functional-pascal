@@ -20,7 +20,7 @@ function UpdateCheck(State: CheckModel; Msg: TuiMsg; Cmd: TuiCmdOutput): CheckMo
 begin
   Cmd.Set(TuiCmd.NoCommand);
   case Msg of
-    when TuiMsg.CheckChanged(Source, Action, Checked):
+    when TuiMsg.CheckChanged(const Source, const Action, const Checked):
       begin
         return CheckModel(Focus := State.Focus, Checked := Checked);
       end;

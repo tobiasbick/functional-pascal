@@ -36,7 +36,7 @@ begin
   end if;
 
   case Preferred of
-    when Some(Id):
+    when Some(const Id):
       begin
         if TuiControlIndex(Controls, Id) >= 0 then
           begin

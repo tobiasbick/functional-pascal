@@ -5,25 +5,25 @@ uses Std.Console, Std.Conv, Std.Net.Uri, Std.Net.Utf8;
 
 begin
   case Std.Net.Uri.Parse('https://example.com:8443/api/items?limit=2') of
-    when Ok(UriValue):
+    when Ok(const UriValue):
       begin
         WriteLn('scheme: ' + UriValue.Scheme);
         WriteLn('host: ' + UriValue.Host);
         WriteLn('port: ' + IntToStr(UriValue.Port));
         WriteLn('path: ' + UriValue.Path);
       end;
-    when Error(Message):
+    when Error(const Message):
       begin
         panic(Message);
       end;
   end case;
   const Bytes: array of integer := Std.Net.Utf8.Encode('Grüße aus FPAS');
   case Std.Net.Utf8.Decode(Bytes) of
-    when Ok(Text):
+    when Ok(const Text):
       begin
         WriteLn('UTF-8: ' + Text);
       end;
-    when Error(Message):
+    when Error(const Message):
       begin
         panic(Message);
       end;

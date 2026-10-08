@@ -168,6 +168,11 @@ fn lower(
             "named call arguments",
             "Pass debugger call arguments by position.",
         )),
+        Expr::Is { .. } => Err(unsupported(
+            expression,
+            "`is` pattern tests",
+            "Evaluate the tested value and inspect it directly.",
+        )),
         Expr::Error(_) => Err(unsupported(
             expression,
             "recovered parser nodes",

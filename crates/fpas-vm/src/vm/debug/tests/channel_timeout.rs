@@ -11,16 +11,16 @@ begin
   const Messages: channel of integer := CreateChannel(1);
   case ReceiveWithTimeout(Messages, 25) of
     when Ok(_): panic('empty channel did not time out');
-    when Error(Message):
+    when Error(const Message):
       if Message <> 'Channel receive timed out' then panic(Message); end if;
   end case;
   case Send(Messages, 1) of
     when Ok(_): begin end;
-    when Error(Message): panic(Message);
+    when Error(const Message): panic(Message);
   end case;
   case SendWithTimeout(Messages, 2, 25) of
     when Ok(_): panic('full channel did not time out');
-    when Error(Message):
+    when Error(const Message):
       if Message <> 'Channel send timed out' then panic(Message); end if;
   end case;
 end.

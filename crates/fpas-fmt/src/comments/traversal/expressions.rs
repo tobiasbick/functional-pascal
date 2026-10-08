@@ -30,6 +30,10 @@ pub(super) fn collect_expr(expr: &Expr, begins: &[usize], out: &mut CollectedAnc
         | Expr::Try(operand, _)
         | Expr::Go(operand, _)
         | Expr::NamedArgument { value: operand, .. } => collect_expr(operand, begins, out),
+        Expr::Is { value, pattern, .. } => {
+            collect_expr(value, begins, out);
+            super::collect_pattern(pattern, begins, out);
+        }
         Expr::BinaryOp { left, right, .. } => {
             collect_expr(left, begins, out);
             collect_expr(right, begins, out);

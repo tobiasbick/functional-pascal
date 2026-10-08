@@ -7,7 +7,7 @@ uses
 function TuiButtonFind(Node: TuiElement; RequireDefault: boolean; Mnemonic: string): option of TuiButtonSpec;
 begin
   case Node of
-    when TuiElement.Button(Button):
+    when TuiElement.Button(const Button):
       begin
         if Button.Enabled and
            ((RequireDefault and Button.Default) or ((Mnemonic <> '') and (Button.Mnemonic.ToLower() = Mnemonic.ToLower()))) then
@@ -18,13 +18,13 @@ begin
 
         return None;
       end;
-    when TuiElement.Desktop(Focused, Children):
+    when TuiElement.Desktop(const Focused, const Children):
       begin
         var ModalIndex: integer := -1;
         for Index: integer := 0 to Children.Length() - 1 do
           begin
             case Children[Index] of
-              when TuiElement.Overlay(Title, OverlayChildren):
+              when TuiElement.Overlay(const Title, const OverlayChildren):
                 begin
                   ModalIndex := Index;
                 end;
@@ -44,7 +44,7 @@ begin
         for Index: integer := 0 to Children.Length() - 1 do
           begin
             case TuiButtonFind(Children[Index], RequireDefault, Mnemonic) of
-              when Some(Button):
+              when Some(const Button):
                 begin
                   return Some(Button);
                 end;
@@ -57,12 +57,12 @@ begin
 
         return None;
       end;
-    when TuiElement.Scroll(Id, Offset, ChangeAction, Children):
+    when TuiElement.Scroll(const Id, const Offset, const ChangeAction, const Children):
       begin
         for Index: integer := 0 to Children.Length() - 1 do
           begin
             case TuiButtonFind(Children[Index], RequireDefault, Mnemonic) of
-              when Some(Button):
+              when Some(const Button):
                 begin
                   return Some(Button);
                 end;
@@ -75,12 +75,12 @@ begin
 
         return None;
       end;
-    when TuiElement.Row(Children, Spacing):
+    when TuiElement.Row(const Children, const Spacing):
       begin
         for Index: integer := 0 to Children.Length() - 1 do
           begin
             case TuiButtonFind(Children[Index], RequireDefault, Mnemonic) of
-              when Some(Button):
+              when Some(const Button):
                 begin
                   return Some(Button);
                 end;
@@ -93,12 +93,12 @@ begin
 
         return None;
       end;
-    when TuiElement.Column(Children, Spacing):
+    when TuiElement.Column(const Children, const Spacing):
       begin
         for Index: integer := 0 to Children.Length() - 1 do
           begin
             case TuiButtonFind(Children[Index], RequireDefault, Mnemonic) of
-              when Some(Button):
+              when Some(const Button):
                 begin
                   return Some(Button);
                 end;
@@ -111,12 +111,12 @@ begin
 
         return None;
       end;
-    when TuiElement.Layout(Settings, Children):
+    when TuiElement.Layout(const Settings, const Children):
       begin
         for Index: integer := 0 to Children.Length() - 1 do
           begin
             case TuiButtonFind(Children[Index], RequireDefault, Mnemonic) of
-              when Some(Button):
+              when Some(const Button):
                 begin
                   return Some(Button);
                 end;
@@ -129,12 +129,12 @@ begin
 
         return None;
       end;
-    when TuiElement.Panel(Title, Children):
+    when TuiElement.Panel(const Title, const Children):
       begin
         for Index: integer := 0 to Children.Length() - 1 do
           begin
             case TuiButtonFind(Children[Index], RequireDefault, Mnemonic) of
-              when Some(Button):
+              when Some(const Button):
                 begin
                   return Some(Button);
                 end;
@@ -147,12 +147,12 @@ begin
 
         return None;
       end;
-    when TuiElement.Overlay(Title, Children):
+    when TuiElement.Overlay(const Title, const Children):
       begin
         for Index: integer := 0 to Children.Length() - 1 do
           begin
             case TuiButtonFind(Children[Index], RequireDefault, Mnemonic) of
-              when Some(Button):
+              when Some(const Button):
                 begin
                   return Some(Button);
                 end;
@@ -211,7 +211,7 @@ begin
   end if;
 
   case TuiFindMnemonicButton(Root, Key.ch) of
-    when Some(Button):
+    when Some(const Button):
       begin
         return Some([TuiMsg.Action(Button.Id, Button.Action)]);
       end;
@@ -257,7 +257,7 @@ end function;
 public function TuiRouteDefaultButtonEnter(Root: TuiElement): option of TuiMsg;
 begin
   case TuiFindDefaultButton(Root) of
-    when Some(Button):
+    when Some(const Button):
       begin
         return Some(TuiMsg.Action(Button.Id, Button.Action));
       end;

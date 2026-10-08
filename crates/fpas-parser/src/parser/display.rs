@@ -67,6 +67,7 @@ pub(super) fn token_display(t: &Token) -> Cow<'static, str> {
         Token::SelfKw => "Self".into(),
         Token::Nil => "nil".into(),
         Token::Null => "null".into(),
+        Token::Is => "is".into(),
         Token::Integer(v) => format!("{v}").into(),
         Token::Real(v) => format!("{v}").into(),
         Token::Str(s) => format!("'{s}'").into(),

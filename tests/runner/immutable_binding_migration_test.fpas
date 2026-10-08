@@ -16,7 +16,7 @@ begin
   const Object: Item := Item(N := 7);
   var Score: integer := 0;
   case 2 of
-    when Matched if Matched > 0:
+    when const Matched if Matched > 0:
       begin
         const ReadMatched: function(): integer := function(): integer begin
           return Matched + Object.N;

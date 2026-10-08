@@ -306,7 +306,7 @@ begin
       end if;
 
       case ReadEventTimeout(16) of
-        when Some(E):
+        when Some(const E):
           begin
             HandleEvent(E);
           end;

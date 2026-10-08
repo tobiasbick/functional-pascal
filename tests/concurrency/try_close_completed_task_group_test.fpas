@@ -16,7 +16,7 @@ begin
         begin
           return Error('expected returned error');
         end;
-      when Error(Message):
+      when Error(const Message):
         begin
           return Error('probe cancelled pending work');
         end;

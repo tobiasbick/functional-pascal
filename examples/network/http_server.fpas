@@ -32,11 +32,11 @@ begin
   if (RequestValue.Method = 'POST') and (RequestValue.Target = '/echo') then
     begin
       case Std.Net.Utf8.Decode(RequestValue.Body) of
-        when Ok(Text):
+        when Ok(const Text):
           begin
             return TextResponse(200, 'OK', 'Echo: ' + Text);
           end;
-        when Error(Message):
+        when Error(const Message):
           begin
             return TextResponse(400, 'Bad Request', Message);
           end;
@@ -66,7 +66,7 @@ begin
   end if;
 
   case Listen('127.0.0.1', Port) of
-    when Ok(ListenerValue):
+    when Ok(const ListenerValue):
       begin
         WriteLn('HTTP server listening on http://127.0.0.1:' + IntToStr(Port));
         var Options: ServerOptions := ServerOptions.Create();
@@ -77,7 +77,7 @@ begin
             begin
               WriteLn('HTTP server handled 3 requests');
             end;
-          when Error(Message):
+          when Error(const Message):
             begin
               panic(Message);
             end;
@@ -87,13 +87,13 @@ begin
           when Ok(_):
             begin
             end;
-          when Error(Message):
+          when Error(const Message):
             begin
               panic(Message);
             end;
         end case;
       end;
-    when Error(Message):
+    when Error(const Message):
       begin
         panic(Message);
       end;

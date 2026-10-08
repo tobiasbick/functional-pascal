@@ -96,7 +96,7 @@ keyword         = 'program'   | 'unit'      | 'uses'      | 'const'
                 | 'event'     | 'read'      | 'write'     | 'comparable'
                 | 'numeric'   | 'printable' | 'self'      | 'nil'
                 | 'channel'   | 'task'
-                | 'elsif'     | 'when'      | 'null' ;
+                | 'elsif'     | 'when'      | 'null'      | 'is' ;
 
 (* ---- Symbols --------------------------------------------------- *)
 
@@ -380,21 +380,29 @@ case_stmt           = 'case' expression 'of'
 
 case_arm            = 'when' case_label_list [ 'if' expression ] ':' control_body ;
 case_label_list     = case_label { ',' case_label } ;
-case_label          = destructure_label                  (* Result/Option  *)
+case_label          = destructure_pattern                (* Result/Option  *)
                     | enum_pattern                       (* enum with data *)
+                    | 'const' identifier                 (* scalar binding *)
                     | expression [ '..' expression ] ;  (* value/range    *)
 
-destructure_label   = ( 'ok' | 'error' | 'some' ) '(' identifier ')'
+destructure_pattern = ( 'ok' | 'error' | 'some' ) '(' pattern ')'
                     | 'none' ;
 
-enum_pattern        = qualified_id '(' pattern_arg { ',' pattern_arg } ')'
+enum_pattern        = qualified_id '(' pattern { ',' pattern } ')'
                     | qualified_id ;                     (* fieldless variant *)
 
-pattern_arg         = identifier ;                       (* binding only   *)
+pattern             = 'const' identifier                 (* binding        *)
+                    | '_'                                (* ignored value  *)
+                    | destructure_pattern
+                    | enum_pattern
+                    | additive_expr ;                    (* constant comparison *)
 
-(* Each field position in an enum pattern is a plain identifier binding. *)
-(* Use a guard clause for additional constraints:                       *)
-(*   Shape.Circle(R) if R > 10.0: ...                                *)
+(* Patterns nest: `Ok(Some(const User))`. A payload binds with       *)
+(* `const Name`, ignores with `_`, or compares with a literal, named *)
+(* compile-time constant, or enum member of an ordinal, enum, or     *)
+(* string type. A name that is not a constant is rejected (FP3031). *)
+(* Use a guard clause for other constraints:                         *)
+(*   Shape.Circle(const R) if R > 10.0: ...                          *)
 (*                                                                  *)
 (* Value labels must be compile-time constants: integer,      *)
 (* string, boolean, or enum literals. Ranges use '..'.              *)
@@ -403,15 +411,12 @@ pattern_arg         = identifier ;                       (* binding only   *)
 (* Put dynamic conditions in guards; enum/Option/Result patterns   *)
 (* retain their binding rules.                                    *)
 (*                                                                  *)
-(* Semantic disambiguation for guarded scalar bindings: in a scalar  *)
-(* case arm, `when Name if <boolean>:` binds the scrutinee to `Name` *)
-(* when the arm has exactly one bare identifier label and `Name`    *)
-(* does not resolve to any const binding or enum member.      *)
-(* This shorthand is not valid for ranges or comma-separated label  *)
-(* lists.                                                           *)
+(* Scalar guard binding: `when const Name if <boolean>:` binds the   *)
+(* scrutinee to `Name`. It must be the arm's only label and needs a *)
+(* guard. A bare identifier label is always a value comparison.     *)
 (* Destructure labels bind the inner value of Result/Option.        *)
 (* Enum patterns match a variant and bind its fields positionally:  *)
-(* Shape.Circle(R) binds Radius to R.                               *)
+(* Shape.Circle(const R) binds Radius to R.                         *)
 (*                                                                  *)
 (* Guard clause ('if' expression) on an arm: the arm matches only   *)
 (* when the label matches AND the guard evaluates to true. The      *)
@@ -495,8 +500,15 @@ or_tail             = 'or' not_expr { 'or' not_expr } ;
 xor_tail            = 'xor' not_expr { 'xor' not_expr } ;
 not_expr            = 'not' not_expr | comparison_expr ;
 
-comparison_expr     = additive_expr [ comparison_op additive_expr ] ;
+comparison_expr     = additive_expr [ comparison_op additive_expr
+                                    | 'is' pattern ] ;
 comparison_op       = '=' | '<>' | '<' | '>' | '<=' | '>=' | 'in' ;
+
+(* `Value is Pattern` is valid only as an if, elsif, or while condition, *)
+(* alone or within a top-level `and` chain; its bindings are visible in  *)
+(* later conditions of that chain and in the guarded body (FP3034).      *)
+(* In a pattern, a compared value is an additive_expr.                   *)
+(* Documentation: docs/pascal/language/pattern-matching/is-test.md       *)
 
 (* `in` tests membership: value in array, key in dict, or substring in string. *)
 

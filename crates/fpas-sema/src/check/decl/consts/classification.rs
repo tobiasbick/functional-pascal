@@ -4,7 +4,7 @@ use super::Checker;
 use crate::scope::SymbolKind;
 use crate::types::Ty;
 use fpas_diagnostics::codes::SEMA_NON_CONSTANT_EXPRESSION;
-use fpas_parser::{DesignatorPart, Expr, PostfixOperation};
+use fpas_parser::{Designator, DesignatorPart, Expr, PostfixOperation};
 
 impl Checker {
     /// Classifies typed aggregate initializers, including omitted nested defaults.
@@ -56,9 +56,25 @@ impl Checker {
         if let Some((name, span)) = self.non_constant_part(expr) {
             self.error_with_code(SEMA_NON_CONSTANT_EXPRESSION,
                 format!("Case label requires a compile-time constant; {name} is computed at runtime"),
-                "Use a literal or a compile-time constant for value labels and range endpoints. Put dynamic conditions in a guard, for example `when Value if Value = ReadValue(): ...`.",
+                "Use a literal or a compile-time constant for value labels and range endpoints. Put dynamic conditions in a guard, for example `when const Value if Value = ReadValue(): ...`.",
                 span);
         }
+    }
+
+    /// Rejects a call written as a scalar case label, naming the called routine.
+    pub(crate) fn require_case_constant_call(
+        &mut self,
+        callee: &Designator,
+        span: fpas_lexer::Span,
+    ) {
+        let name = match callee.parts.last() {
+            Some(DesignatorPart::Ident(name, _)) => name.clone(),
+            _ => Self::resolve_designator_name(callee),
+        };
+        self.error_with_code(SEMA_NON_CONSTANT_EXPRESSION,
+            format!("Case label requires a compile-time constant; call `{name}` is computed at runtime"),
+            "Use a literal or a compile-time constant for value labels and range endpoints. Put dynamic conditions in a guard, for example `when const Value if Value = ReadValue(): ...`.",
+            span);
     }
 
     fn non_constant_part(&mut self, expr: &Expr) -> Option<(String, fpas_lexer::Span)> {
@@ -176,9 +192,12 @@ impl Checker {
                     .iter()
                     .find_map(|field| self.non_constant_part(&field.value))
             }),
-            Expr::Try(..) | Expr::Go(..) | Expr::Closure(_) | Expr::Nil(_) | Expr::Error(_) => {
-                Some(("expression".to_string(), expr.span()))
-            }
+            Expr::Try(..)
+            | Expr::Go(..)
+            | Expr::Closure(_)
+            | Expr::Nil(_)
+            | Expr::Is { .. }
+            | Expr::Error(_) => Some(("expression".to_string(), expr.span())),
         }
     }
 }

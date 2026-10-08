@@ -26,7 +26,7 @@ function TuiCellToConsole(Cell: TuiCell; Palette: TuiPalette): Std.Console.Cell;
 begin
   var Style: TuiStyle := Palette.ForRole(Cell.Role);
   case Cell.ConcreteStyle of
-    when Some(Concrete):
+    when Some(const Concrete):
       begin
         Style := Concrete;
       end;

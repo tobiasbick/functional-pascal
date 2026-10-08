@@ -21,7 +21,7 @@ end function;
 
 begin
   case Listen('127.0.0.1', {port}) of
-    when Ok(ListenerValue):
+    when Ok(const ListenerValue):
     begin
       var Options: ServerOptions := ServerOptions.Create();
       Options.MaxConcurrentRequests := 2;
@@ -30,14 +30,14 @@ begin
         when Ok(_):
         begin
         end;
-        when Error(Message): panic(Message);
+        when Error(const Message): panic(Message);
       end case;
       case CloseListener(ListenerValue) of
         when Ok(_): WriteLn('served');
-        when Error(Message): panic(Message);
+        when Error(const Message): panic(Message);
       end case;
     end;
-    when Error(Message): panic(Message);
+    when Error(const Message): panic(Message);
   end case;
 end.
 "#
@@ -84,7 +84,7 @@ end function;
 
 begin
   case Listen('127.0.0.1', {port}) of
-    when Ok(ListenerValue):
+    when Ok(const ListenerValue):
     begin
       var Options: ServerOptions := ServerOptions.Create();
       Options.MaxConcurrentRequests := 2;
@@ -93,16 +93,16 @@ begin
         when Ok(_):
         begin
         end;
-        when Error(Message): panic(Message);
+        when Error(const Message): panic(Message);
       end case;
       case CloseListener(ListenerValue) of
         when Ok(_):
         begin
         end;
-        when Error(Message): panic(Message);
+        when Error(const Message): panic(Message);
       end case;
     end;
-    when Error(Message): panic(Message);
+    when Error(const Message): panic(Message);
   end case;
 end.
 "#
@@ -146,13 +146,13 @@ end function;
 
 begin
   case Listen('127.0.0.1', {port}) of
-    when Ok(ListenerValue):
+    when Ok(const ListenerValue):
     begin
       var Options: ServerOptions := ServerOptions.Create();
       Options.MaxConcurrentRequests := 0;
       case Serve(ListenerValue, Options, Handle) of
         when Ok(_): panic('invalid server options were accepted');
-        when Error(Message):
+        when Error(const Message):
         begin
           if not Message.Contains('MaxConcurrentRequests') then
           begin
@@ -162,10 +162,10 @@ begin
       end case;
       case CloseListener(ListenerValue) of
         when Ok(_): WriteLn('rejected');
-        when Error(Message): panic(Message);
+        when Error(const Message): panic(Message);
       end case;
     end;
-    when Error(Message): panic(Message);
+    when Error(const Message): panic(Message);
   end case;
 end.
 "#

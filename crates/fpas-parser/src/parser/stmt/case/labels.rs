@@ -1,4 +1,4 @@
-//! Scalar labels, ranges, and existing destructuring patterns.
+//! Scalar labels, ranges, explicit bindings, and pattern labels.
 //!
 //! **Documentation:** `docs/pascal/language/pattern-matching/README.md`.
 
@@ -21,29 +21,20 @@ impl Parser {
         let start = self.current_span();
 
         match self.current_token() {
-            Token::Ok | Token::Error | Token::Some | Token::None => {
-                let variant = match self.current_token() {
-                    Token::Ok => DestructureVariant::Ok,
-                    Token::Error => DestructureVariant::Error,
-                    Token::Some => DestructureVariant::Some,
-                    Token::None => DestructureVariant::None,
-                    _ => unreachable!(),
-                };
+            Token::Const => {
                 self.advance();
-                let binding = if variant == DestructureVariant::None {
-                    None
-                } else {
-                    self.expect(&Token::LParen);
-                    let binding = self.expect_ident().map(|(name, _)| name);
-                    self.expect(&Token::RParen);
-                    binding
-                };
-                return CaseLabel::Destructure {
-                    variant,
-                    binding,
+                let name = self
+                    .expect_ident()
+                    .map_or_else(|| crate::parser::ERROR_IDENT.to_string(), |(name, _)| name);
+                return CaseLabel::Binding {
+                    name,
                     span: self.span_from(start),
                 };
             }
+            Token::Ok | Token::Error | Token::Some | Token::None => {
+                return CaseLabel::Pattern(self.parse_pattern());
+            }
+            _ if self.at_variant_pattern() => return CaseLabel::Pattern(self.parse_pattern()),
             _ => {}
         }
 

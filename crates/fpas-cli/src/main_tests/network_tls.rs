@@ -46,11 +46,11 @@ uses Std.Console, Std.Http;
 
 begin
   case Send(Request.Get('https://localhost:{port}/')) of
-    when Ok(ResponseValue):
+    when Ok(const ResponseValue):
     begin
       panic('untrusted HTTPS server was accepted');
     end;
-    when Error(Message):
+    when Error(const Message):
     begin
       if not Message.Contains( 'TLS handshake failed') then
       begin

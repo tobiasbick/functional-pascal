@@ -32,7 +32,7 @@ begin
   WriteLn('IsNone: ', Missing.IsNone());
   WriteLn('UnwrapOr: ', Missing.UnwrapOr(0));
   case FindFirst(Data, 40) of
-    when Some(V):
+    when Some(const V):
       begin
         WriteLn('Found >= 40: ', V);
       end;
@@ -43,7 +43,7 @@ begin
   end case;
 
   case FindFirst(Data, 100) of
-    when Some(V):
+    when Some(const V):
       begin
         WriteLn('Found >= 100: ', V);
       end;
@@ -54,7 +54,7 @@ begin
   end case;
 
   case DoubleFirst(Data, 10) of
-    when Some(S):
+    when Some(const S):
       begin
         WriteLn(S);
       end;
@@ -65,7 +65,7 @@ begin
   end case;
 
   case DoubleFirst(Data, 100) of
-    when Some(S):
+    when Some(const S):
       begin
         WriteLn(S);
       end;

@@ -12,10 +12,10 @@ end function;
 function FieldString(Fields: dict of string to TomlValue; Name: string): result of string, string;
 begin
   case Fields.Get(Name) of
-    when Some(Value):
+    when Some(const Value):
       begin
         case Value of
-          when TomlValue.String(Text):
+          when TomlValue.String(const Text):
             begin
               return Ok(Text);
             end;
@@ -35,10 +35,10 @@ end function;
 function FieldInteger(Fields: dict of string to TomlValue; Name: string): result of integer, string;
 begin
   case Fields.Get(Name) of
-    when Some(Value):
+    when Some(const Value):
       begin
         case Value of
-          when TomlValue.Integer(Number):
+          when TomlValue.Integer(const Number):
             begin
               return Ok(Number);
             end;
@@ -58,10 +58,10 @@ end function;
 function FieldBoolean(Fields: dict of string to TomlValue; Name: string): result of boolean, string;
 begin
   case Fields.Get(Name) of
-    when Some(Value):
+    when Some(const Value):
       begin
         case Value of
-          when TomlValue.Boolean(Flag):
+          when TomlValue.Boolean(const Flag):
             begin
               return Ok(Flag);
             end;
@@ -81,16 +81,16 @@ end function;
 function FieldTags(Fields: dict of string to TomlValue): result of array of string, string;
 begin
   case Fields.Get('tags') of
-    when Some(Value):
+    when Some(const Value):
       begin
         case Value of
-          when TomlValue.ArrayValue(Items):
+          when TomlValue.ArrayValue(const Items):
             begin
               var Tags: array of string := [];
               for Index: integer := 0 to Items.Length() - 1 do
                 begin
                   case Items[Index] of
-                    when TomlValue.String(Tag):
+                    when TomlValue.String(const Tag):
                       begin
                         Tags.Push(Tag);
                       end;
@@ -167,10 +167,10 @@ begin
   const BodyStart: integer := BoundaryIndex + Boundary.Length();
   const Body: string := Remaining.Slice(BodyStart, Remaining.Length() - BodyStart);
   case Std.Toml.Parse(Header) of
-    when Ok(Value):
+    when Ok(const Value):
       begin
         case Value of
-          when TomlValue.Table(Fields):
+          when TomlValue.Table(const Fields):
             begin
               return ParseFields(Fields, Body);
             end;
@@ -180,7 +180,7 @@ begin
             end;
         end case;
       end;
-    when Error(Message):
+    when Error(const Message):
       begin
         return Error('Invalid .note TOML header: ' + Message);
       end;

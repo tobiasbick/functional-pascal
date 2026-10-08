@@ -17,14 +17,14 @@ Use `case` destructuring to handle both forms:
 
 ```pascal
 case Success of
-  when Ok(Value):
+  when Ok(const Value):
     WriteLn(IntToStr(Value));
-  when Error(Message):
+  when Error(const Message):
     WriteLn(Message);
 end case;
 
 case Present of
-  when Some(Value):
+  when Some(const Value):
     WriteLn(IntToStr(Value));
   when None:
     WriteLn('empty');

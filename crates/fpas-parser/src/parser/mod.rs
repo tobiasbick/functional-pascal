@@ -5,6 +5,7 @@ mod display;
 mod expr;
 mod imports;
 mod nesting;
+mod patterns;
 mod program;
 mod stmt;
 

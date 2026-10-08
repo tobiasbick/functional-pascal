@@ -5,11 +5,11 @@ uses Std.Conv, Std.Http, Std.Net.Utf8, Std.Tasks, Std.Test;
 function CreateDecoder(Index: integer): SseDecoder;
 begin
   case CreateSseDecoder(1024) of
-    when Ok(Decoder):
+    when Ok(const Decoder):
       begin
         return Decoder;
       end;
-    when Error(Message):
+    when Error(const Message):
       begin
         panic((('decoder ' + IntToStr(Index)) + ' failed: ') + Message);
       end;
@@ -36,12 +36,12 @@ begin
     begin
       const Expected: string := IntToStr(Index);
       case FeedSse(Decoders[Index], Std.Net.Utf8.Encode((('data: ' + Expected) + #10) + #10)) of
-        when Ok(Events):
+        when Ok(const Events):
           begin
             AssertEquals(1, Events.Length());
             AssertEquals(Expected, Events[0].Data);
           end;
-        when Error(Message):
+        when Error(const Message):
           begin
             panic(Message);
           end;
@@ -51,7 +51,7 @@ begin
         when Ok(_):
           begin
           end;
-        when Error(Message):
+        when Error(const Message):
           begin
             panic(Message);
           end;

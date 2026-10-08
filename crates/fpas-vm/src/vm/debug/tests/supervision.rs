@@ -228,7 +228,7 @@ begin
   begin discard Send(Attempts, 1); return Error('last failure'); end function, 2, 0);
   case Wait(Child) of
     when Ok(_): panic('unexpected success');
-    when Error(Message): if Message <> 'last failure' then panic('wrong final error'); end if;
+    when Error(const Message): if Message <> 'last failure' then panic('wrong final error'); end if;
   end case;
   const Failures: array of TaskFailure := CloseTaskGroup(G);
   if Failures.Length() <> 1 then panic('attempts became children'); end if;

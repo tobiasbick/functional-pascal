@@ -22,7 +22,7 @@ begin
   AssertTrue(Settings.Alignment.Horizontal = TuiAlignmentKind.Fill);
   AssertEquals(0, Settings.Stretch);
   case Settings.Width of
-    when Some(Width):
+    when Some(const Width):
       begin
         Fail('default layout settings must not constrain width');
       end;
@@ -32,7 +32,7 @@ begin
   end case;
 
   case Settings.Height of
-    when Some(Height):
+    when Some(const Height):
       begin
         Fail('default layout settings must not constrain height');
       end;
@@ -42,7 +42,7 @@ begin
   end case;
   const FixedWidth: TuiLayoutSettings := Settings.WithFixedWidth(7);
   case FixedWidth.Width of
-    when Some(Width):
+    when Some(const Width):
       begin
         AssertEquals(7, Width);
       end;
@@ -53,7 +53,7 @@ begin
   end case;
   const FixedHeight: TuiLayoutSettings := Settings.WithFixedHeight(5);
   case FixedHeight.Height of
-    when Some(Height):
+    when Some(const Height):
       begin
         AssertEquals(5, Height);
       end;
@@ -64,7 +64,7 @@ begin
   end case;
   const FixedSize: TuiLayoutSettings := FixedWidth.WithFixedHeight(5);
   case FixedSize.Width of
-    when Some(Width):
+    when Some(const Width):
       begin
         AssertEquals(7, Width);
       end;
@@ -75,7 +75,7 @@ begin
   end case;
 
   case FixedSize.Height of
-    when Some(Height):
+    when Some(const Height):
       begin
         AssertEquals(5, Height);
       end;
@@ -117,7 +117,7 @@ begin
                                                                  TuiElementBuilders.MakeLabel('B')
                                                                ], 2);
   case Spaced of
-    when TuiElement.Row(Children, Spacing):
+    when TuiElement.Row(const Children, const Spacing):
       begin
         AssertEquals(2, Spacing);
         AssertEquals(2, Children.Length());
@@ -129,7 +129,7 @@ begin
   end case;
   const Wrapped: TuiElement := TuiElementBuilders.MakeLayout(Settings, TuiElementBuilders.MakeLabel('X'));
   case Wrapped of
-    when TuiElement.Layout(WrappedSettings, WrappedChildren):
+    when TuiElement.Layout(const WrappedSettings, const WrappedChildren):
       begin
         AssertEquals(1, WrappedChildren.Length());
         AssertEquals(0, WrappedSettings.Stretch);
@@ -141,7 +141,7 @@ begin
   end case;
   const SpacerElement: TuiElement := TuiElementBuilders.MakeSpacer(FixedSpacer);
   case SpacerElement of
-    when TuiElement.Spacer(Value):
+    when TuiElement.Spacer(const Value):
       begin
         AssertEquals(3, Value.MinimumExtent);
       end;

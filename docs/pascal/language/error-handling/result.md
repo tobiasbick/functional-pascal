@@ -27,9 +27,9 @@ Use `case of` with destructuring to handle both branches:
 ```pascal
 const R: result of integer, string := Divide(10, 0);
 case R of
-  when Ok(V):
+  when Ok(const V):
     WriteLn('Value: ' + IntToStr(V));
-  when Error(E):
+  when Error(const E):
     WriteLn('Error: ' + E);
 end case;
 ```

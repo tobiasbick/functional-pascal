@@ -10,9 +10,9 @@ uses Std.Console, Std.Toml;
 begin
   const Parsed: result of TomlValue, string := Parse(('[project]' + string.Chr(10)) + 'name = ''demo''');
   case Parsed of
-    when Ok(Value):
+    when Ok(const Value):
       WriteLn(Stringify(Value));
-    when Error(Message):
+    when Error(const Message):
       WriteLn(Message);
   end case;
 end.
@@ -62,14 +62,14 @@ All TOML 1.0 value kinds are represented: strings, signed 64-bit integers, float
 const Parsed: result of TomlValue, string := Parse(((((('title = ''example''' + string.Chr(10)) + 'enabled = true') + string.Chr(10)) + '[server]') + string.Chr(10)) +
                                                  'port = 8080');
 case Parsed of
-  when Ok(Value):
+  when Ok(const Value):
     case Value of
-      when TomlValue.Table(Fields):
+      when TomlValue.Table(const Fields):
         WriteLn('parsed');
       else
         null;
     end case;
-  when Error(Message):
+  when Error(const Message):
     WriteLn('TOML error: ' + Message);
 end case;
 ```

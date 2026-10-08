@@ -17,7 +17,7 @@ function UpdateQuit(State: QuitModel; Msg: TuiMsg; Cmd: TuiCmdOutput): QuitModel
 begin
   AssertTrue(Cmd.Command() = TuiCmd.NoCommand);
   case Msg of
-    when TuiMsg.MenuChanged(MenuSource, MenuAction, MenuState):
+    when TuiMsg.MenuChanged(const MenuSource, const MenuAction, const MenuState):
       begin
         Cmd.Set(TuiCmd.Quit);
         return QuitModel(LabelText := 'SHOULD NOT PAINT', Quit := true, Updates := State.Updates + 1);
@@ -27,7 +27,7 @@ begin
         Cmd.Set(TuiCmd.Quit);
         return QuitModel(LabelText := 'SHOULD NOT PAINT', Quit := true, Updates := State.Updates + 1);
       end;
-    when TuiMsg.Tick(Delta):
+    when TuiMsg.Tick(const Delta):
       begin
         return QuitModel(LabelText := 'after-tick', Quit := false, Updates := State.Updates + 1);
       end;

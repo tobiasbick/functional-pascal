@@ -20,7 +20,7 @@ begin
     when Ok(_):
       begin
       end;
-    when Error(Message):
+    when Error(const Message):
       begin
         Fail(Message);
       end;
@@ -36,7 +36,7 @@ begin
     when Ok(_):
       begin
       end;
-    when Error(Message):
+    when Error(const Message):
       begin
         Fail(Message);
       end;
@@ -46,20 +46,20 @@ begin
     when Ok(_):
       begin
       end;
-    when Error(Message):
+    when Error(const Message):
       begin
         Fail(Message);
       end;
   end case;
 
   case Glob(Root + '/src/**/*.fpas') of
-    when Ok(Paths):
+    when Ok(const Paths):
       begin
         AssertEquals(2, Paths.Length());
         AssertEquals(Root + '/src/main.fpas', Paths[0]);
         AssertEquals(Root + '/src/ui/menu.fpas', Paths[1]);
       end;
-    when Error(Message):
+    when Error(const Message):
       begin
         Fail(Message);
       end;

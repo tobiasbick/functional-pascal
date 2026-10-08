@@ -5,22 +5,22 @@ uses Std.Tasks, Std.Test;
 function SendValues(Messages: channel of integer): boolean;
 begin
   case Send(Messages, 10) of
-    when Ok(Sent):
+    when Ok(const Sent):
       begin
         AssertTrue(Sent);
       end;
-    when Error(Message):
+    when Error(const Message):
       begin
         Fail(Message);
       end;
   end case;
 
   case Send(Messages, 20) of
-    when Ok(Sent):
+    when Ok(const Sent):
       begin
         AssertTrue(Sent);
       end;
-    when Error(Message):
+    when Error(const Message):
       begin
         Fail(Message);
       end;
@@ -32,11 +32,11 @@ end function;
 function ReceiveValue(Messages: channel of integer): integer;
 begin
   case Receive(Messages) of
-    when Ok(Value):
+    when Ok(const Value):
       begin
         return Value;
       end;
-    when Error(Message):
+    when Error(const Message):
       begin
         Fail(Message);
         return 0;
@@ -55,7 +55,7 @@ begin
       begin
         Fail('closed channel returned an extra value');
       end;
-    when Error(Message):
+    when Error(const Message):
       begin
         AssertEquals('Channel is closed', Message);
       end;

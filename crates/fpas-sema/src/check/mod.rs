@@ -36,4 +36,3 @@ pub use context::MethodCallTarget;
 pub use context::NamedArgumentOrderMap;
 pub use context::NamedTypeMap;
 pub use context::RecordDefaultsMap;
-pub use context::ScalarCaseBindingMap;

@@ -13,10 +13,10 @@ begin
   var Focus: integer := 1;
   Model := App.RunIterations(Model, function(State: integer; Msg: TuiMsg; Cmd: TuiCmdOutput): integer begin
     case Msg of
-      when TuiMsg.FocusChanged(Previous, Current):
+      when TuiMsg.FocusChanged(const Previous, const Current):
         begin
           case Current of
-            when Some(Id):
+            when Some(const Id):
               begin
                 Focus := Id.Value;
                 return State;
@@ -27,7 +27,7 @@ begin
               end;
           end case;
         end;
-      when TuiMsg.Action(Source, Action):
+      when TuiMsg.Action(const Source, const Action):
         begin
           return State + Action.Value;
         end;
@@ -51,10 +51,10 @@ begin
   App.InjectKeyForTest(MakeKey(TuiKeyKind.Tab, ''));
   Model := App.RunIterations(Model, function(State: integer; Msg: TuiMsg; Cmd: TuiCmdOutput): integer begin
     case Msg of
-      when TuiMsg.FocusChanged(Previous, Current):
+      when TuiMsg.FocusChanged(const Previous, const Current):
         begin
           case Current of
-            when Some(Id):
+            when Some(const Id):
               begin
                 Focus := Id.Value;
                 return State;
@@ -65,7 +65,7 @@ begin
               end;
           end case;
         end;
-      when TuiMsg.Action(Source, Action):
+      when TuiMsg.Action(const Source, const Action):
         begin
           return State + Action.Value;
         end;
@@ -88,10 +88,10 @@ begin
   App.InjectKeyForTest(MakeKey(TuiKeyKind.Enter, ''));
   Model := App.RunIterations(Model, function(State: integer; Msg: TuiMsg; Cmd: TuiCmdOutput): integer begin
     case Msg of
-      when TuiMsg.FocusChanged(Previous, Current):
+      when TuiMsg.FocusChanged(const Previous, const Current):
         begin
           case Current of
-            when Some(Id):
+            when Some(const Id):
               begin
                 Focus := Id.Value;
                 return State;
@@ -102,7 +102,7 @@ begin
               end;
           end case;
         end;
-      when TuiMsg.Action(Source, Action):
+      when TuiMsg.Action(const Source, const Action):
         begin
           return State + Action.Value;
         end;

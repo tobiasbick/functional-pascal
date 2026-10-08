@@ -37,9 +37,9 @@ var RequestValue: Request := Request.Create('POST', 'http://127.0.0.1:8080/v1/it
 RequestValue.Headers := [Header.Create('Content-Type', 'application/json')];
 RequestValue.Body := Std.Net.Utf8.Encode('{"name":"example"}');
 case Send(RequestValue) of
-  when Ok(ResponseValue):
+  when Ok(const ResponseValue):
     WriteLn(ResponseValue.StatusCode);
-  when Error(Message):
+  when Error(const Message):
     panic(Message);
 end case;
 ```
@@ -103,17 +103,17 @@ Independent streams may be opened and consumed by different tasks. Calls that mu
 
 ```pascal
 case OpenStream(Request.Get('https://example.test/events')) of
-  when Ok(ResponseValue):
+  when Ok(const ResponseValue):
     begin
       var Reading: boolean := true;
       while Reading do
         begin
           case ReadStream(ResponseValue.Body, 4096) of
-            when Ok(Bytes):
+            when Ok(const Bytes):
               begin
                 Reading := Bytes.Length() <> 0;
               end;
-            when Error(Message):
+            when Error(const Message):
               begin
                 panic(Message);
               end;
@@ -121,7 +121,7 @@ case OpenStream(Request.Get('https://example.test/events')) of
         end;
       end while;
     end;
-  when Error(Message):
+  when Error(const Message):
     begin
       panic(Message);
     end;
@@ -170,21 +170,21 @@ uses Std.Http, Std.Net, Std.Net.Utf8;
 
 
 case Listen('127.0.0.1', 8080) of
-  when Ok(ListenerValue):
+  when Ok(const ListenerValue):
     begin
       case Accept(ListenerValue) of
-        when Ok(Connection):
+        when Ok(const Connection):
           begin
             case SetTimeout(Connection, 30000) of
               when Ok(_):
                 begin
                 end;
-              when Error(Message):
+              when Error(const Message):
                 panic(Message);
             end case;
 
             case ReadRequest(Connection, 65536, 1048576) of
-              when Ok(RequestValue):
+              when Ok(const RequestValue):
                 begin
                   var ResponseValue: ServerResponse := ServerResponse.Create(200, 'OK');
                   ResponseValue.Body := Std.Net.Utf8.Encode('Hello');
@@ -192,11 +192,11 @@ case Listen('127.0.0.1', 8080) of
                     when Ok(_):
                       begin
                       end;
-                    when Error(Message):
+                    when Error(const Message):
                       panic(Message);
                   end case;
                 end;
-              when Error(Message):
+              when Error(const Message):
                 panic(Message);
             end case;
 
@@ -204,15 +204,15 @@ case Listen('127.0.0.1', 8080) of
               when Ok(_):
                 begin
                 end;
-              when Error(Message):
+              when Error(const Message):
                 panic(Message);
             end case;
           end;
-        when Error(Message):
+        when Error(const Message):
           panic(Message);
       end case;
     end;
-  when Error(Message):
+  when Error(const Message):
     panic(Message);
 end case;
 ```
@@ -235,7 +235,7 @@ end function;
 
 
 case Listen('127.0.0.1', 8080) of
-  when Ok(ListenerValue):
+  when Ok(const ListenerValue):
     begin
       var Options: ServerOptions := ServerOptions.Create();
       Options.MaxConcurrentRequests := 16;
@@ -243,11 +243,11 @@ case Listen('127.0.0.1', 8080) of
         when Ok(_):
           begin
           end;
-        when Error(Message):
+        when Error(const Message):
           panic(Message);
       end case;
     end;
-  when Error(Message):
+  when Error(const Message):
     panic(Message);
 end case;
 ```
@@ -269,18 +269,18 @@ remain unchanged:
 
 ```pascal
 case ListenTls('127.0.0.1', 8443, 'certificate.pem', 'private-key.pem', 10000) of
-  when Ok(ListenerValue):
+  when Ok(const ListenerValue):
     begin
       var Options: ServerOptions := ServerOptions.Create();
       case Serve(ListenerValue, Options, Handle) of
         when Ok(_):
           begin
           end;
-        when Error(Message):
+        when Error(const Message):
           panic(Message);
       end case;
     end;
-  when Error(Message):
+  when Error(const Message):
     panic(Message);
 end case;
 ```

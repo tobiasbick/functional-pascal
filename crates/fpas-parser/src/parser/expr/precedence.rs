@@ -13,6 +13,17 @@ impl Parser {
         let start = self.current_span();
         let left = self.parse_additive();
 
+        if self.eat(&Token::Is) {
+            let pattern = self.parse_pattern();
+            let expr = Expr::Is {
+                value: Box::new(left),
+                pattern: Box::new(pattern),
+                span: self.span_from(start),
+            };
+            self.recover_from_chained_comparison();
+            return expr;
+        }
+
         let op = match self.current_token() {
             Token::Equal => Some(BinaryOp::Eq),
             Token::NotEqual => Some(BinaryOp::NotEq),
@@ -59,7 +70,7 @@ impl Parser {
     }
 
     /// Parses left-associative addition and subtraction.
-    pub(super) fn parse_additive(&mut self) -> Expr {
+    pub(in crate::parser) fn parse_additive(&mut self) -> Expr {
         let start = self.current_span();
         let mut left = self.parse_multiplicative();
 

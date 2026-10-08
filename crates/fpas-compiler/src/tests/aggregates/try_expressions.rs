@@ -63,7 +63,7 @@ end.
 #[test]
 fn enum_constructor_preserves_earlier_try_arguments() {
     check_expression(
-        "const Value: Message := Message.Move(try ReadValue(1, FailAt), try ReadValue(2, FailAt)); case Value of when Message.Move(X, Y): return Ok(X * 10 + Y); end case;",
+        "const Value: Message := Message.Move(try ReadValue(1, FailAt), try ReadValue(2, FailAt)); case Value of when Message.Move(const X, const Y): return Ok(X * 10 + Y); end case;",
     );
 }
 
@@ -150,14 +150,14 @@ fn counting_loop_preserves_start_across_try_bound() {
 #[test]
 fn case_guard_preserves_subject_and_lower_comparison_across_try() {
     check_expression(
-        "case 1 of when Subject if Subject >= (try ReadValue(1, FailAt)) and Subject <= (try ReadValue(2, FailAt)): return Ok(12); else return Ok(0); end case;",
+        "case 1 of when const Subject if Subject >= (try ReadValue(1, FailAt)) and Subject <= (try ReadValue(2, FailAt)): return Ok(12); else return Ok(0); end case;",
     );
 }
 
 #[test]
 fn case_guard_preserves_subject_across_try() {
     check_expression(
-        "case 1 of when Subject if Subject = (try ReadValue(1, FailAt)): return Ok(10 + (try ReadValue(2, FailAt))); else return Ok(0); end case;",
+        "case 1 of when const Subject if Subject = (try ReadValue(1, FailAt)): return Ok(10 + (try ReadValue(2, FailAt))); else return Ok(0); end case;",
     );
 }
 
@@ -268,8 +268,8 @@ program GenericResultTry;
 function Tagged<T>(Value: result of T, string): result of T, string;
 begin
   case Value of
-    when Ok(Content): return Ok(Content);
-    when Error(Message): return Error('tagged ' + Message);
+    when Ok(const Content): return Ok(Content);
+    when Error(const Message): return Error('tagged ' + Message);
   end case;
 end function;
 function MakeInt(Fail: boolean): result of integer, string;

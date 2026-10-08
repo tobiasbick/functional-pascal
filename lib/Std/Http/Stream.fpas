@@ -84,7 +84,7 @@ begin
   end if;
 
   case Std.Http.Io.ReadResponseBytes(State.Connection, State.Maximum - State.BytesReceived) of
-    when Ok(Bytes):
+    when Ok(const Bytes):
       begin
         if Bytes.Length() = 0 then
           begin
@@ -97,7 +97,7 @@ begin
         StoreState(Index, State);
         return Ok(true);
       end;
-    when Error(Message):
+    when Error(const Message):
       begin
         CloseAt(Index);
         return Error(Message);
@@ -115,7 +115,7 @@ begin
   while LoadState(Index).Buffer.Length() < Count do
     begin
       case ReadNetwork(Index) of
-        when Ok(ReadMore):
+        when Ok(const ReadMore):
           begin
             if not ReadMore then
               begin
@@ -123,7 +123,7 @@ begin
               end;
             end if;
           end;
-        when Error(Message):
+        when Error(const Message):
           begin
             return Error(Message);
           end;
@@ -171,7 +171,7 @@ begin
   if LoadState(Index).Buffer.Length() = 0 then
     begin
       case ReadNetwork(Index) of
-        when Ok(ReadMore):
+        when Ok(const ReadMore):
           begin
             if not ReadMore then
               begin
@@ -180,7 +180,7 @@ begin
               end;
             end if;
           end;
-        when Error(Message):
+        when Error(const Message):
           begin
             return Error(Message);
           end;
@@ -216,7 +216,7 @@ begin
   if LoadState(Index).Buffer.Length() = 0 then
     begin
       case ReadNetwork(Index) of
-        when Ok(ReadMore):
+        when Ok(const ReadMore):
           begin
             if not ReadMore then
               begin
@@ -225,7 +225,7 @@ begin
               end;
             end if;
           end;
-        when Error(Message):
+        when Error(const Message):
           begin
             return Error(Message);
           end;
@@ -246,7 +246,7 @@ begin
   while LineEnd < 0 do
     begin
       case ReadNetwork(Index) of
-        when Ok(ReadMore):
+        when Ok(const ReadMore):
           begin
             if not ReadMore then
               begin
@@ -255,7 +255,7 @@ begin
               end;
             end if;
           end;
-        when Error(Message):
+        when Error(const Message):
           begin
             return Error(Message);
           end;
@@ -269,11 +269,11 @@ begin
   State.Buffer := State.Buffer.Slice(LineEnd + 2, (State.Buffer.Length() - LineEnd) - 2);
   StoreState(Index, State);
   case Std.Net.Utf8.Decode(LineBytes) of
-    when Ok(Line):
+    when Ok(const Line):
       begin
         return Std.Http.Wire.ParseChunkSize(Line);
       end;
-    when Error(Message):
+    when Error(const Message):
       begin
         return Error('HTTP chunk size is not ASCII: ' + Message);
       end;
@@ -294,7 +294,7 @@ begin
           if LoadState(Index).Buffer.Length() = 0 then
             begin
               case ReadNetwork(Index) of
-                when Ok(ReadMore):
+                when Ok(const ReadMore):
                   begin
                     if not ReadMore then
                       begin
@@ -303,7 +303,7 @@ begin
                       end;
                     end if;
                   end;
-                when Error(Message):
+                when Error(const Message):
                   begin
                     return Error(Message);
                   end;
@@ -333,7 +333,7 @@ begin
       if LoadState(Index).NeedChunkTerminator then
         begin
           case EnsureBytes(Index, 2) of
-            when Ok(Complete):
+            when Ok(const Complete):
               begin
                 if not Complete then
                   begin
@@ -342,7 +342,7 @@ begin
                   end;
                 end if;
               end;
-            when Error(Message):
+            when Error(const Message):
               begin
                 return Error(Message);
               end;
@@ -363,7 +363,7 @@ begin
       end if;
 
       case ReadChunkSize(Index) of
-        when Ok(Size):
+        when Ok(const Size):
           begin
             if Size = 0 then
               begin
@@ -382,7 +382,7 @@ begin
             SizeState.ChunkRemaining := Size;
             StoreState(Index, SizeState);
           end;
-        when Error(Message):
+        when Error(const Message):
           begin
             CloseAt(Index);
             return Error(Message);
@@ -417,12 +417,12 @@ begin
   if HasBody then
     begin
       case Std.Http.BodyFraming.Select(Headers) of
-        when Ok(Value):
+        when Ok(const Value):
           begin
             Mode := Value.Mode;
             Remaining := Value.Remaining;
           end;
-        when Error(Message):
+        when Error(const Message):
           begin
             case Std.Net.Close(Connection) of
               when Ok(_):
@@ -463,7 +463,7 @@ begin
   end if;
 
   case StateIndex(StreamValue) of
-    when Ok(Index):
+    when Ok(const Index):
       begin
         if LoadState(Index).Finished then
           begin
@@ -485,7 +485,7 @@ begin
 
         return ReadUntilClose(Index, MaxBytes);
       end;
-    when Error(Message):
+    when Error(const Message):
       begin
         return Error(Message);
       end;
@@ -499,12 +499,12 @@ end function;
 public function CloseBody(StreamValue: Std.Http.Types.BodyStream): result of boolean, string;
 begin
   case StateIndex(StreamValue) of
-    when Ok(Index):
+    when Ok(const Index):
       begin
         CloseAt(Index);
         return Ok(true);
       end;
-    when Error(Message):
+    when Error(const Message):
       begin
         return Error(Message);
       end;

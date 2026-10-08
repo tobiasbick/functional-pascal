@@ -14,7 +14,7 @@ begin
   const Child: task := StartSupervisedTask(Group, Work, 1023, 0);
   case Wait(Child) of
     when Ok(_): panic('forced error lost');
-    when Error(Message): if Message <> 'forced' then panic('wrong forced error'); end if;
+    when Error(const Message): if Message <> 'forced' then panic('wrong forced error'); end if;
   end case;
   const Failures: array of TaskFailure := CloseTaskGroup(Group);
   if Failures.Length() <> 1 then panic('wrong report count'); end if;

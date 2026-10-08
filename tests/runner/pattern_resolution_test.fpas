@@ -1,0 +1,85 @@
+program PatternResolutionTest;
+
+uses Std.Test;
+
+type Pair = enum
+  Both(Left: integer; Right: integer);
+  Empty;
+end enum;
+
+type Color = enum
+  Red;
+  Green;
+end enum;
+
+type PairAlias = Pair;
+
+function MakeCase(): function(Value: Pair): integer;
+begin
+  const Limit: integer := 3;
+  return function(Value: Pair): integer begin
+    case Value of
+      when Pair.Both(const Limit, Limit):
+        return Limit;
+      else
+        return -1;
+    end case;
+  end function;
+end function;
+
+function MakeIs(): function(Value: Pair): integer;
+begin
+  const Limit: integer := 3;
+  return function(Value: Pair): integer begin
+    if Value is PairAlias.Both(const Limit, Limit) and Limit > 0 then
+      return Limit;
+    end if;
+
+    return -1;
+  end function;
+end function;
+
+function BoolCode(Value: option of boolean): integer;
+begin
+  const Yes: boolean := true;
+  const No: boolean := false;
+  case Value of
+    when Some((Yes)):
+      return 1;
+    when Some(No):
+      return 2;
+    when None:
+      return 0;
+  end case;
+end function;
+
+function ColorCode(Value: option of Color): integer;
+begin
+  const RedChoice: Color := Color.Red;
+  const GreenChoice: Color := Color.Green;
+  case Value of
+    when Some(RedChoice):
+      return 1;
+    when Some((GreenChoice)):
+      return 2;
+    when None:
+      return 0;
+  end case;
+end function;
+
+begin
+  const MatchCase: function(Value: Pair): integer := MakeCase();
+  const MatchIs: function(Value: Pair): integer := MakeIs();
+  AssertEquals(8, MatchCase(Pair.Both(8, 3)));
+  AssertEquals(-1, MatchCase(Pair.Both(3, 8)));
+  AssertEquals(-1, MatchCase(Pair.Empty));
+  AssertEquals(8, MatchIs(Pair.Both(8, 3)));
+  AssertEquals(-1, MatchIs(Pair.Both(3, 8)));
+  AssertEquals(-1, MatchIs(Pair.Empty));
+  AssertEquals(1, BoolCode(Some(true)));
+  AssertEquals(2, BoolCode(Some(false)));
+  AssertEquals(0, BoolCode(None));
+  AssertEquals(1, ColorCode(Some(Color.Red)));
+  AssertEquals(2, ColorCode(Some(Color.Green)));
+  AssertEquals(0, ColorCode(None));
+end.

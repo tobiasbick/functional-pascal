@@ -53,9 +53,18 @@ impl LoweringContext {
             for label in &arm.labels {
                 let next_test = self.new_block(arm.span)?;
                 let body_block = self.new_block(arm.span)?;
-                let is_binding = self.is_scalar_binding(label);
-                let matched = self
-                    .lower_case_match(label, case_local, case_ir_ty, &case_ty, is_binding, span)?;
+                let binding = match label {
+                    CaseLabel::Binding { name, .. } => Some(name.as_str()),
+                    _ => None,
+                };
+                let matched = self.lower_case_match(
+                    label,
+                    case_local,
+                    case_ir_ty,
+                    &case_ty,
+                    binding.is_some(),
+                    span,
+                )?;
                 self.terminate(Terminator::Branch {
                     condition: matched,
                     then_target: target(body_block),
@@ -63,10 +72,8 @@ impl LoweringContext {
                 })?;
 
                 self.switch_to(body_block);
-                if is_binding {
+                if let Some(name) = binding {
                     self.begin_scope();
-                    let name =
-                        binding_name(label).ok_or_else(|| unsupported(arm.span, "case binding"))?;
                     let value =
                         self.emit_value(Operation::ReadLocal(case_local), case_ir_ty, span)?;
                     let local = self.declare_local(name, case_ir_ty, false, arm.span)?;
@@ -87,7 +94,7 @@ impl LoweringContext {
                     self.jump(merge_block)?;
                     has_merge_predecessor = true;
                 }
-                if is_binding {
+                if binding.is_some() {
                     self.end_scope();
                 }
                 self.switch_to(next_test);
@@ -181,26 +188,4 @@ impl LoweringContext {
             (_, true) => BinaryOperation::LessEqualDynamic,
         }
     }
-
-    fn is_scalar_binding(&self, label: &CaseLabel) -> bool {
-        let CaseLabel::Value { start, .. } = label else {
-            return false;
-        };
-        self.scalar_case_bindings
-            .contains(&fpas_sema::expr_lookup_key(start))
-    }
-}
-
-fn binding_name(label: &CaseLabel) -> Option<&str> {
-    let CaseLabel::Value {
-        start: Expr::Designator(designator),
-        ..
-    } = label
-    else {
-        return None;
-    };
-    let [fpas_parser::DesignatorPart::Ident(name, _)] = designator.parts.as_slice() else {
-        return None;
-    };
-    Some(name)
 }

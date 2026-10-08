@@ -14,7 +14,7 @@ begin
         when Ok(_):
           begin
           end;
-        when Error(M):
+        when Error(const M):
           begin
             WriteLn('create scratch error: ', M);
             return;
@@ -28,18 +28,18 @@ begin
       begin
         WriteLn('write: ok');
       end;
-    when Error(M):
+    when Error(const M):
       begin
         WriteLn('write error: ', M);
       end;
   end case;
 
   case Std.Fs.ReadText(DemoPath) of
-    when Ok(Text):
+    when Ok(const Text):
       begin
         WriteLn('read: ', Text);
       end;
-    when Error(M):
+    when Error(const M):
       begin
         WriteLn('read error: ', M);
       end;

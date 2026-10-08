@@ -47,7 +47,7 @@ constants. A diagnostic names the offending call or binding. Use a
 ```pascal
 const Expected: integer := ReadExpected();
 case Actual of
-  when Value if Value = Expected:
+  when const Value if Value = Expected:
     HandleMatch();
   else
     HandleOther();

@@ -28,16 +28,16 @@ function UpdateButtons(State: ButtonKeyboardModel; Msg: TuiMsg; Cmd: TuiCmdOutpu
 begin
   Cmd.Set(TuiCmd.NoCommand);
   case Msg of
-    when TuiMsg.Action(Source, Action):
+    when TuiMsg.Action(const Source, const Action):
       begin
         return ButtonKeyboardModel(Focus := State.Focus, Actions := State.Actions.Concat([
                                                                                            Action.Value
                                                                                          ]));
       end;
-    when TuiMsg.FocusChanged(Previous, Current):
+    when TuiMsg.FocusChanged(const Previous, const Current):
       begin
         case Current of
-          when Some(Id):
+          when Some(const Id):
             begin
               return ButtonKeyboardModel(Focus := Id.Value, Actions := State.Actions);
             end;

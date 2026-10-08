@@ -29,9 +29,9 @@ Returns exactly `Count` bytes. Each byte is represented by an `integer` in `0..2
 
 ```pascal
 case RandomBytes(32) of
-  when Ok(Bytes):
+  when Ok(const Bytes):
     WriteLn(Bytes.Length());
-  when Error(Message):
+  when Error(const Message):
     panic(Message);
 end case;
 ```
@@ -42,9 +42,9 @@ Returns a uniformly sampled integer in the inclusive range `[Lo, Hi]`. Equal bou
 
 ```pascal
 case RandomInt(100000, 999999) of
-  when Ok(Code):
+  when Ok(const Code):
     WriteLn(Code);
-  when Error(Message):
+  when Error(const Message):
     panic(Message);
 end case;
 ```

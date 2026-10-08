@@ -6,13 +6,13 @@ begin
   const Parsed: result of TomlValue, string := Parse(((((((((((((('title = ''TOML''' + string.Chr(10)) + 'integer = -42') + string.Chr(10)) + 'float = 1.5') + string.Chr(10)) + 'enabled = true') + string.Chr(10)) + 'when = 1979-05-27T07:32:00Z') + string.Chr(10)) + 'items = [''a'', 2]') + string.Chr(10)) + '[nested]') + string.Chr(10)) +
                                                      'value = ''ok''');
   case Parsed of
-    when Ok(Value):
+    when Ok(const Value):
       begin
         case Value of
-          when TomlValue.Table(Fields):
+          when TomlValue.Table(const Fields):
             begin
               case Fields.Get('title').Unwrap() of
-                when TomlValue.String(Text):
+                when TomlValue.String(const Text):
                   begin
                     AssertEquals('TOML', Text);
                   end;
@@ -23,7 +23,7 @@ begin
               end case;
 
               case Fields.Get('integer').Unwrap() of
-                when TomlValue.Integer(Number):
+                when TomlValue.Integer(const Number):
                   begin
                     AssertEquals(-42, Number);
                   end;
@@ -34,7 +34,7 @@ begin
               end case;
 
               case Fields.Get('float').Unwrap() of
-                when TomlValue.Float(Number):
+                when TomlValue.Float(const Number):
                   begin
                     AssertEquals(1.5, Number);
                   end;
@@ -45,7 +45,7 @@ begin
               end case;
 
               case Fields.Get('enabled').Unwrap() of
-                when TomlValue.Boolean(Enabled):
+                when TomlValue.Boolean(const Enabled):
                   begin
                     AssertTrue(Enabled);
                   end;
@@ -56,7 +56,7 @@ begin
               end case;
 
               case Fields.Get('when').Unwrap() of
-                when TomlValue.Datetime(Timestamp):
+                when TomlValue.Datetime(const Timestamp):
                   begin
                     AssertEquals('1979-05-27T07:32:00Z', Timestamp);
                   end;
@@ -67,7 +67,7 @@ begin
               end case;
 
               case Fields.Get('items').Unwrap() of
-                when TomlValue.ArrayValue(Items):
+                when TomlValue.ArrayValue(const Items):
                   begin
                     AssertEquals(2, Items.Length());
                   end;
@@ -78,10 +78,10 @@ begin
               end case;
 
               case Fields.Get('nested').Unwrap() of
-                when TomlValue.Table(Nested):
+                when TomlValue.Table(const Nested):
                   begin
                     case Nested.Get('value').Unwrap() of
-                      when TomlValue.String(Text):
+                      when TomlValue.String(const Text):
                         begin
                           AssertEquals('ok', Text);
                         end;
@@ -103,7 +103,7 @@ begin
             end;
         end case;
       end;
-    when Error(Message):
+    when Error(const Message):
       begin
         Fail(Message);
       end;

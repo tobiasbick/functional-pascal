@@ -29,7 +29,7 @@ begin
   for Cell: TuiCell in Cells do
     begin
       case Cell.ConcreteStyle of
-        when Some(Style):
+        when Some(const Style):
           begin
             Checksum := (Checksum + Style.Foreground.Red) + Style.Background.Green;
           end;

@@ -85,6 +85,10 @@ include = ["src/**/*.fpas"]
           begin return Self.X + Value; end function;
         end record;
         public type Shape = enum Rect(Width: integer; Height: integer); end enum;
+        public const ReadyChoice: State := State.Ready;
+        public const BusyChoice: State := State.Busy;
+        public const Yes: boolean := true;
+        public const No: boolean := false;
         public type Step = procedure(var Value: integer);
         end unit;",
     );
@@ -102,7 +106,30 @@ include = ["src/**/*.fpas"]
         public procedure Apply(Action: Model.Step; var Value: integer);
         begin Action(var Value); end procedure;
         public function Area(Value: Model.Shape): integer;
-        begin case Value of when Model.Shape.Rect(W, H): return W * H; end case; end function;
+        begin case Value of when Model.Shape.Rect(const W, const H): return W * H; end case; end function;
+        public function StateCode(Value: option of Model.State): integer;
+        begin
+          case Value of
+            when Some(Model.ReadyChoice): return 1;
+            when Some(Model.BusyChoice): return 2;
+            when None: return 0;
+          end case;
+        end function;
+        public function BoolCode(Value: option of boolean): integer;
+        begin
+          case Value of
+            when Some(Model.Yes): return 1;
+            when Some(Model.No): return 2;
+            when None: return 0;
+          end case;
+        end function;
+        public function NestedArea(Value: option of Model.Shape): integer;
+        begin
+          if Value is Some(Model.Shape.Rect(const W, const H)) and W > 0 then
+            return W * H;
+          end if;
+          return 0;
+        end function;
         public function Make(Value: integer): Model.Point;
         begin return Model.Point.Create(Value); end function;
         end unit;",
@@ -131,11 +158,22 @@ include = ["src/**/*.fpas"]
           Console.WriteLn(Counter, ' ', Api.Total, ' ', Api.Items.Length(), ' ', Api.Answer);
           Console.WriteLn(Api.Area(Shape), ' ', Point.Add(3), ' ', Bound(4), ' ', Increment(4));
           Console.WriteLn(Point.Status = Model.State.Ready, ' ', Jobs.Wait(Pending));
+          Console.WriteLn(Api.StateCode(Some(Model.State.Ready)), ' ', Api.StateCode(Some(Model.State.Busy)), ' ', Api.StateCode(None));
+          Console.WriteLn(Api.BoolCode(Some(true)), ' ', Api.BoolCode(Some(false)), ' ', Api.BoolCode(None));
+          Console.WriteLn(Api.NestedArea(Some(Shape)), ' ', Api.NestedArea(None));
         end.";
     write(&main, source);
     let cold = build(&root, &main);
     assert_eq!(cold.counters().compiled, 3);
-    let expected = ["10 18", "3 1 2 42", "12 13 14 5", "true 7"];
+    let expected = [
+        "10 18",
+        "3 1 2 42",
+        "12 13 14 5",
+        "true 7",
+        "1 2 0",
+        "1 2 0",
+        "12 0",
+    ];
     assert_eq!(run(cold), expected);
     write(
         &main,

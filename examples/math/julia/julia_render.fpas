@@ -112,7 +112,7 @@ begin
   for Index: integer := 1 to 4 do
     begin
       case TryReceive(Job.Rows).Unwrap() of
-        when Some(Row):
+        when Some(const Row):
           begin
             if (Row.Y + 1) <= Max(ScreenHeight() - 3, 1) then
               begin

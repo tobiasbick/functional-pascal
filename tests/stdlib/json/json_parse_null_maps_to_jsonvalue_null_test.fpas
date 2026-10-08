@@ -5,7 +5,7 @@ uses Std.Console, Std.Json;
 begin
   const R: result of JsonValue, string := Parse('null');
   case R of
-    when Ok(V):
+    when Ok(const V):
       begin
         case V of
           when JsonValue.NullValue:
@@ -18,7 +18,7 @@ begin
             end;
         end case;
       end;
-    when Error(E):
+    when Error(const E):
       begin
         WriteLn('error: ' + E);
       end;

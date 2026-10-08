@@ -8,7 +8,7 @@ begin
       begin
         Fail('Expected invalid glob pattern to fail');
       end;
-    when Error(Message):
+    when Error(const Message):
       begin
         AssertTrue(Message.Contains('Invalid glob pattern'));
       end;

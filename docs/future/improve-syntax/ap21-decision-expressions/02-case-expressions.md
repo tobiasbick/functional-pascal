@@ -17,8 +17,9 @@ with AP03 coverage rules.
 
 - Parser: `case` in expression position; each arm is one expression ended by
   `;`; optional `else` arm for open domains.
-- Sema: coverage as for `case` statements; pattern bindings visible in the arm
-  expression; branch-type compatibility from AP21.1.
+- Sema: coverage and unreachable-label checks as for `case` statements (the
+  AP20.2 pattern matrix in `if_case/coverage.rs`); pattern bindings visible in
+  the arm expression; branch-type compatibility from AP21.1.
 - Compiler: reuse case lowering with a value result.
 - Diagnostics: missing variants, missing `end case`, statements in an arm.
 

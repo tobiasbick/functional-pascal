@@ -16,6 +16,17 @@ while Count < 10 do
 end while;
 ```
 
+A `while` condition may test a pattern; its bindings are visible in the body
+and are evaluated again before every iteration:
+
+```pascal
+while Queue.Next() is Some(const Job) do
+  Run(Job);
+end while;
+```
+
+See [Pattern test with `is`](../pattern-matching/is-test.md).
+
 ## Repeat-until loop
 
 The `until` condition uses the enclosing scope. Variables declared inside the

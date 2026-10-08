@@ -160,7 +160,7 @@ begin
       LocalState.Buffer := LocalState.Buffer.Slice(EndValue[0] + EndValue[1], (LocalState.Buffer.Length() - EndValue[0]) -
                                                                               EndValue[1]);
       case Std.Net.Utf8.Decode(LineBytes) of
-        when Ok(Line):
+        when Ok(const Line):
           begin
             if Line = '' then
               begin
@@ -202,7 +202,7 @@ begin
               end;
             end if;
           end;
-        when Error(Message):
+        when Error(const Message):
           begin
             return Error('SSE line is not valid UTF-8: ' + Message);
           end;
@@ -268,7 +268,7 @@ end function;
 public function Feed(Decoder: Std.Http.Types.SseDecoder; Bytes: array of integer): result of array of SseEvent, string;
 begin
   case DecoderIndex(Decoder) of
-    when Ok(Index):
+    when Ok(const Index):
       begin
         var State: DecoderState := LoadState(Index);
         if State.Finished then
@@ -297,7 +297,7 @@ begin
 
             State.Buffer := State.Buffer.Concat(Bytes.Slice(Offset, Count));
             case Process(State, false) of
-              when Ok(Output):
+              when Ok(const Output):
                 begin
                   State := Output.State;
                   for Item: SseEvent in Output.Events do
@@ -306,7 +306,7 @@ begin
                     end;
                   end for;
                 end;
-              when Error(Message):
+              when Error(const Message):
                 begin
                   StoreState(Index, FailedState(State));
                   return Error(Message);
@@ -320,7 +320,7 @@ begin
         StoreState(Index, State);
         return Ok(Events);
       end;
-    when Error(Message):
+    when Error(const Message):
       begin
         return Error(Message);
       end;
@@ -334,7 +334,7 @@ end function;
 public function Finish(Decoder: Std.Http.Types.SseDecoder): result of array of SseEvent, string;
 begin
   case DecoderIndex(Decoder) of
-    when Ok(Index):
+    when Ok(const Index):
       begin
         const State: DecoderState := LoadState(Index);
         if State.Finished then
@@ -344,19 +344,19 @@ begin
         end if;
 
         case Process(State, true) of
-          when Ok(Output):
+          when Ok(const Output):
             begin
               StoreState(Index, Output.State);
               return Ok(Output.Events);
             end;
-          when Error(Message):
+          when Error(const Message):
             begin
               StoreState(Index, FailedState(State));
               return Error(Message);
             end;
         end case;
       end;
-    when Error(Message):
+    when Error(const Message):
       begin
         return Error(Message);
       end;

@@ -7,12 +7,12 @@ uses Std.Net;
 
 
 case Connect('127.0.0.1', 8080, 5000) of
-  when Ok(Connection):
+  when Ok(const Connection):
     begin
       // Use ReceiveBytes, SendBytes, SetTimeout, and Close.
       null;
     end;
-  when Error(Message):
+  when Error(const Message):
     panic(Message);
 end case;
 ```

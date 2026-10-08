@@ -19,7 +19,7 @@ use fpas_ir::{
     ValueDefinition, ValueId,
 };
 use fpas_lexer::Span;
-use fpas_sema::{ExprTypeMap, ScalarCaseBindingMap, Ty};
+use fpas_sema::{ExprTypeMap, Ty};
 
 use crate::CompileError;
 use crate::error::internal_compiler_error;
@@ -51,7 +51,6 @@ pub(super) struct LoweringContext {
     pub(super) expr_types: ExprTypeMap,
     pub(super) intrinsic_calls: fpas_sema::IntrinsicCallMap,
     pub(super) named_argument_orders: fpas_sema::NamedArgumentOrderMap,
-    pub(super) scalar_case_bindings: ScalarCaseBindingMap,
     pub(super) record_defaults: fpas_sema::RecordDefaultsMap,
     pub(super) record_constructions: std::collections::HashSet<usize>,
     pub(super) method_calls: fpas_sema::MethodCallMap,
@@ -243,7 +242,6 @@ impl LoweringContext {
             expr_types: metadata.expr_types.clone(),
             intrinsic_calls: metadata.intrinsic_calls.clone(),
             named_argument_orders: metadata.named_argument_orders.clone(),
-            scalar_case_bindings: metadata.scalar_case_bindings.clone(),
             record_defaults: metadata.record_defaults.clone(),
             record_constructions: metadata.record_constructions.clone(),
             method_calls: metadata.method_calls.clone(),

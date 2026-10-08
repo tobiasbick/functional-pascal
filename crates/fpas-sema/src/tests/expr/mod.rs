@@ -227,7 +227,6 @@ fn analysis_metadata_exposes_all_named_results() {
         member_value_calls,
         record_defaults,
         record_constructions,
-        scalar_case_bindings,
         closure_infos,
         nested_routine_captures,
         bound_methods,
@@ -249,7 +248,6 @@ fn analysis_metadata_exposes_all_named_results() {
             fluent_calls.len(),
             member_value_calls.len(),
             record_defaults.len(),
-            scalar_case_bindings.len(),
             closure_infos.len(),
             nested_routine_captures.len(),
             bound_methods.len(),
@@ -257,7 +255,7 @@ fn analysis_metadata_exposes_all_named_results() {
             event_assigned.len(),
             event_raises.len(),
         ],
-        [0; 16]
+        [0; 15]
     );
 }
 

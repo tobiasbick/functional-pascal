@@ -35,7 +35,7 @@ end function;
 
 begin
   case ListenTls('127.0.0.1', {port}, '{certificate_source}', '{private_key_source}', 2000) of
-    when Ok(ListenerValue):
+    when Ok(const ListenerValue):
     begin
       var Options: ServerOptions := ServerOptions.Create();
       Options.MaxRequests := 1;
@@ -43,14 +43,14 @@ begin
         when Ok(_):
         begin
         end;
-        when Error(Message): panic(Message);
+        when Error(const Message): panic(Message);
       end case;
       case CloseListener(ListenerValue) of
         when Ok(_): WriteLn('served https');
-        when Error(Message): panic(Message);
+        when Error(const Message): panic(Message);
       end case;
     end;
-    when Error(Message): panic(Message);
+    when Error(const Message): panic(Message);
   end case;
 end.
 "#

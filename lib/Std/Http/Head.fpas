@@ -61,7 +61,7 @@ begin
           end if;
 
           case Std.Net.ReceiveBytes(Connection, ReadMaximum) of
-            when Ok(Bytes):
+            when Ok(const Bytes):
               begin
                 if Bytes.Length() = 0 then
                   begin
@@ -72,7 +72,7 @@ begin
                 BytesReceived := BytesReceived + Bytes.Length();
                 Buffer := Buffer.Concat(Bytes);
               end;
-            when Error(Message):
+            when Error(const Message):
               begin
                 return Error(Message);
               end;
@@ -89,7 +89,7 @@ begin
       end if;
 
       case Std.Http.Wire.ParseResponseHead(Buffer) of
-        when Ok(Head):
+        when Ok(const Head):
           begin
             if (Head.StatusCode >= 100) and (Head.StatusCode < 200) then
               begin
@@ -116,7 +116,7 @@ begin
               end;
             end if;
           end;
-        when Error(Message):
+        when Error(const Message):
           begin
             return Error(Message);
           end;

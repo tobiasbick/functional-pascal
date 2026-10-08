@@ -29,7 +29,7 @@ begin
   const Snapshot: TuiSurfaceSnapshot := App.SurfaceSnapshot();
   AssertEquals('A', Snapshot.CellAt(0, 0).Glyph);
   case Snapshot.CellAt(0, 0).ConcreteStyle of
-    when Some(Style):
+    when Some(const Style):
       begin
         AssertEquals(2, Style.Foreground.Green);
         AssertEquals(5, Style.Background.Green);

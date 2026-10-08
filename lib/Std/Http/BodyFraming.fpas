@@ -33,7 +33,7 @@ begin
       if Std.Http.Headers.IsName(Headers[Index].Name, 'Content-Length') then
         begin
           case Std.Net.Decimal.Parse(Headers[Index].Value, 9223372036854775807) of
-            when Ok(Length):
+            when Ok(const Length):
               begin
                 if (ContentLengthCount > 0) and (Length <> ContentLength) then
                   begin
@@ -44,7 +44,7 @@ begin
                 ContentLength := Length;
                 ContentLengthCount := ContentLengthCount + 1;
               end;
-            when Error(Message):
+            when Error(const Message):
               begin
                 return Error('Invalid HTTP Content-Length: ' + Message);
               end;

@@ -16,7 +16,7 @@ begin
   for Index: integer := 0 to Nodes.Length() - 1 do
     begin
       case TuiMenuNodeParent(Nodes[Index]) of
-        when Some(Parent):
+        when Some(const Parent):
           begin
           end;
         when None:
@@ -69,7 +69,7 @@ begin
           Height := Height + 1;
           var ContentWidth: integer := Std.Console.DisplayWidth(TuiMenuNodeText(Nodes[Index]));
           case TuiMenuNodeShortcut(Nodes[Index]) of
-            when Some(Shortcut):
+            when Some(const Shortcut):
               begin
                 ContentWidth := (ContentWidth + Std.Console.DisplayWidth(Shortcut.Display)) + 2;
               end;
@@ -108,14 +108,14 @@ begin
   end if;
 
   case State.Active of
-    when Some(Active):
+    when Some(const Active):
       begin
         var Current: TuiMenuNodeId := Active;
         var CurrentIndex: integer := TuiMenuFind(Nodes, Current);
         if not TuiMenuNodeIsSubmenu(Nodes[CurrentIndex]) then
           begin
             case TuiMenuNodeParent(Nodes[CurrentIndex]) of
-              when Some(Parent):
+              when Some(const Parent):
                 begin
                   Current := Parent;
                 end;
@@ -132,7 +132,7 @@ begin
             Reversed.Push(Current);
             CurrentIndex := TuiMenuFind(Nodes, Current);
             case TuiMenuNodeParent(Nodes[CurrentIndex]) of
-              when Some(Parent):
+              when Some(const Parent):
                 begin
                   Current := Parent;
                 end;

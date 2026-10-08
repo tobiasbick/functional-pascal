@@ -137,7 +137,7 @@ end procedure;
 procedure PaintFrame();
 begin
   case ActiveRender of
-    when Some(Job):
+    when Some(const Job):
       begin
         StopRender(Job);
       end;
@@ -362,7 +362,7 @@ begin
       end if;
 
       case ActiveRender of
-        when Some(Job):
+        when Some(const Job):
           begin
             BeginFrame();
             PollRender(Job);
@@ -374,7 +374,7 @@ begin
       end case;
 
       case ReadEventTimeout(16) of
-        when Some(E):
+        when Some(const E):
           begin
             HandleEvent(E);
           end;
@@ -386,7 +386,7 @@ begin
   end while;
 
   case ActiveRender of
-    when Some(Job):
+    when Some(const Job):
       begin
         StopRender(Job);
       end;

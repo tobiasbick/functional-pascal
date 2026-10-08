@@ -163,7 +163,7 @@ begin
   end if;
 
   case Std.Net.Uri.Parse(Target) of
-    when Ok(Parsed):
+    when Ok(const Parsed):
       begin
         if Reference.Contains('://') or Reference.StartsWith('//') then
           begin
@@ -173,7 +173,7 @@ begin
 
         return Ok(Target);
       end;
-    when Error(Message):
+    when Error(const Message):
       begin
         return Error('Invalid HTTP redirect Location: ' + Message);
       end;
@@ -244,33 +244,33 @@ public function NextRequest(Current: Request; StatusCode: integer; Location: str
 begin
   var Base: Uri := std.net.uri.uri(Scheme := '', Host := '', Port := 0, Path := '');
   case Std.Net.Uri.Parse(Current.Url) of
-    when Ok(Value):
+    when Ok(const Value):
       begin
         Base := Value;
       end;
-    when Error(Message):
+    when Error(const Message):
       begin
         return Error(Message);
       end;
   end case;
   var Target: string := '';
   case Resolve(Base, Location) of
-    when Ok(Value):
+    when Ok(const Value):
       begin
         Target := Value;
       end;
-    when Error(Message):
+    when Error(const Message):
       begin
         return Error(Message);
       end;
   end case;
   var TargetUri: Uri := Base;
   case Std.Net.Uri.Parse(Target) of
-    when Ok(Value):
+    when Ok(const Value):
       begin
         TargetUri := Value;
       end;
-    when Error(Message):
+    when Error(const Message):
       begin
         return Error(Message);
       end;

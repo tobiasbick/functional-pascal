@@ -2,9 +2,9 @@ program CaseBlocks;
 
 begin
   case Some(1) of
-    when Some(Value) if Value > 0:
+    when Some(const Value) if Value > 0:
       null;
-    when Some(Value):
+    when Some(const Value):
       case Value of
         when 0, 1:
           null;

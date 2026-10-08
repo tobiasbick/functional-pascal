@@ -30,7 +30,7 @@ begin
     var Text: string := 'accepted';
     case ReadRequest(ConnectionValue, 4096, 16) of
       when Ok(_): begin end;
-      when Error(Message): begin
+      when Error(const Message): begin
         if I = {} then
         begin if not Message.Contains('MaxBodyBytes') then panic(Message); end if; end;
         else begin if not Message.Contains('Content-Length') then panic(Message); end if; end; end if;

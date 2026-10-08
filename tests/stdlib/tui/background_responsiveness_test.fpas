@@ -34,7 +34,7 @@ begin
       begin
         Replace(State, Cmd);
       end;
-    when TuiMsg.Tick(Delta):
+    when TuiMsg.Tick(const Delta):
       begin
         if Delta > 0 then
           begin

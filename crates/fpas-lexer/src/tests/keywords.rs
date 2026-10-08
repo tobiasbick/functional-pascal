@@ -8,7 +8,7 @@ fn reserved_keywords_and_ordinary_mutable_and_property_identifiers() {
                  repeat until and or not xor div mod \
                  true false type record enum array channel task panic break continue \
                  public result option ok error some none try \
-                 go dict with static property event read write comparable numeric printable self nil null";
+                 go dict with static property event read write comparable numeric printable self nil null is";
     let tokens = toks(input);
     assert_eq!(
         tokens,
@@ -80,6 +80,7 @@ fn reserved_keywords_and_ordinary_mutable_and_property_identifiers() {
             Token::SelfKw,
             Token::Nil,
             Token::Null,
+            Token::Is,
         ]
     );
 }
@@ -91,6 +92,7 @@ fn block_keywords_are_reserved_in_every_ascii_letter_case() {
         ("when", Token::When),
         ("null", Token::Null),
         ("discard", Token::Discard),
+        ("is", Token::Is),
     ] {
         for uppercase_mask in 0..(1 << keyword.len()) {
             let spelling = keyword

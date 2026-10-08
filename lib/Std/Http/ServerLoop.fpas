@@ -99,7 +99,7 @@ begin
   end case;
   var RequestValue: ServerRequest := std.http.types.serverrequest(Method := '', Target := '', Headers := [], Body := []);
   case Std.Http.Server.ReadRequest(Connection, Options.MaxHeaderBytes, Options.MaxBodyBytes) of
-    when Ok(Value):
+    when Ok(const Value):
       begin
         RequestValue := Value;
       end;
@@ -150,7 +150,7 @@ begin
     when Ok(_):
       begin
       end;
-    when Error(Message):
+    when Error(const Message):
       begin
         return Error(Message);
       end;
@@ -162,12 +162,12 @@ begin
       while HasCapacity(Options, Accepted, Tasks.Length()) do
         begin
           case Std.Net.Accept(Listener) of
-            when Ok(Connection):
+            when Ok(const Connection):
               begin
                 Tasks.Push(go ServeConnection(Connection, Options, Handler));
                 Accepted := Accepted + 1;
               end;
-            when Error(Message):
+            when Error(const Message):
               begin
                 Std.Tasks.WaitAll(Tasks);
                 return Error(Message);

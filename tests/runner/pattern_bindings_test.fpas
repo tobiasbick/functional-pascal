@@ -1,0 +1,47 @@
+program PatternBindingsTest;
+
+uses Std.Test;
+
+type Shape = enum
+  Circle(Radius: integer);
+  Rect(Width: integer; Height: integer);
+end enum;
+
+function Measure(S: Shape): integer;
+begin
+  case S of
+    when Shape.Circle(const R):
+      return R;
+    when Shape.Rect(_, const H):
+      return H;
+  end case;
+end function;
+
+function Classify(N: integer): string;
+begin
+  case N of
+    when const Small if Small < 10:
+      return 'small';
+    else
+      return 'large';
+  end case;
+end function;
+
+function Payload(O: option of integer): integer;
+begin
+  case O of
+    when Some(const Value):
+      return Value;
+    when None:
+      return 0;
+  end case;
+end function;
+
+begin
+  AssertEquals(2, Measure(Shape.Circle(2)));
+  AssertEquals(5, Measure(Shape.Rect(4, 5)));
+  AssertEquals('small', Classify(3));
+  AssertEquals('large', Classify(30));
+  AssertEquals(9, Payload(Some(9)));
+  AssertEquals(0, Payload(None));
+end.

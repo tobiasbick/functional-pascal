@@ -188,6 +188,22 @@ define_codes!(SEMA_ALLOCATED_CODES => {
     ///
     /// Documentation: `docs/pascal/tools/diagnostics.md` (FP3030).
     SEMA_VAR_PARAMETER_ESCAPE = 3030;
+    /// A pattern binds a name without `const`, or a bare scalar label names no constant.
+    ///
+    /// Documentation: `docs/pascal/tools/diagnostics.md` (FP3031).
+    SEMA_IMPLICIT_PATTERN_BINDING = 3031;
+    /// A scalar `const Name` label lacks a guard, shares its arm, or matches a non-scalar case.
+    ///
+    /// Documentation: `docs/pascal/tools/diagnostics.md` (FP3032).
+    SEMA_INVALID_CASE_BINDING = 3032;
+    /// A case label can never match because earlier unguarded arms cover it.
+    ///
+    /// Documentation: `docs/pascal/tools/diagnostics.md` (FP3033).
+    SEMA_UNREACHABLE_CASE_LABEL = 3033;
+    /// An `is` pattern test appears outside an `if`, `elsif`, or `while` condition.
+    ///
+    /// Documentation: `docs/pascal/tools/diagnostics.md` (FP3034).
+    SEMA_MISPLACED_IS_TEST = 3034;
 });
 
 define_codes!(COMPILE_ALLOCATED_CODES => {

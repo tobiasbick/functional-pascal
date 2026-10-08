@@ -149,7 +149,7 @@ begin
       elsif BackgroundEnabled then
         begin
           case TryReceive(Inbox).Unwrap() of
-            when Some(Message):
+            when Some(const Message):
               begin
                 Remaining := Remaining - 1;
                 Model := TuiLoopApplyApplication(ApplicationId, Model, Message, UpdateApplication);
@@ -267,11 +267,11 @@ begin
       var Cases: array of WaitCase := [];
       const ConsoleCase: WaitCase := ReceiveCase(ConsoleInputs, procedure(Outcome: result of TuiHostInput, string) begin
         case Outcome of
-          when Ok(Input):
+          when Ok(const Input):
             begin
               ConsoleInput := Some(Input);
             end;
-          when Error(Message):
+          when Error(const Message):
             begin
             end;
         end case;
@@ -280,11 +280,11 @@ begin
         begin
           const ApplicationCase: WaitCase := ReceiveCase(Inbox, procedure(Outcome: result of TMessage, string) begin
             case Outcome of
-              when Ok(Message):
+              when Ok(const Message):
                 begin
                   ApplicationInput := Some(Message);
                 end;
-              when Error(Failure):
+              when Error(const Failure):
                 begin
                 end;
             end case;
@@ -322,7 +322,7 @@ begin
       discard Select(Cases);
       PreferApplication := not PreferApplication;
       case ConsoleInput of
-        when Some(Input):
+        when Some(const Input):
           begin
             TuiAppRouteInput(ApplicationId, Input);
           end;
@@ -332,7 +332,7 @@ begin
       end case;
 
       case ApplicationInput of
-        when Some(Message):
+        when Some(const Message):
           begin
             Model := TuiLoopApplyApplication(ApplicationId, Model, Message, UpdateApplication);
             if TuiLoopFinishUpdate(ApplicationId, Model, View, true) then

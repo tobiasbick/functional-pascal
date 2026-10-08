@@ -29,44 +29,44 @@ begin
   WriteLn('IsError: ', R2.IsError());
   WriteLn('UnwrapOr: ', R2.UnwrapOr(-1));
   case Divide(42, 6) of
-    when Ok(V):
+    when Ok(const V):
       begin
         WriteLn('42 / 6 = ', V);
       end;
-    when Error(E):
+    when Error(const E):
       begin
         WriteLn('Error: ', E);
       end;
   end case;
 
   case Divide(7, 0) of
-    when Ok(V):
+    when Ok(const V):
       begin
         WriteLn('7 / 0 = ', V);
       end;
-    when Error(E):
+    when Error(const E):
       begin
         WriteLn('Error: ', E);
       end;
   end case;
 
   case Stringify(100, 4) of
-    when Ok(S):
+    when Ok(const S):
       begin
         WriteLn(S);
       end;
-    when Error(E):
+    when Error(const E):
       begin
         WriteLn('Failed: ', E);
       end;
   end case;
 
   case Stringify(100, 0) of
-    when Ok(S):
+    when Ok(const S):
       begin
         WriteLn(S);
       end;
-    when Error(E):
+    when Error(const E):
       begin
         WriteLn('Failed: ', E);
       end;

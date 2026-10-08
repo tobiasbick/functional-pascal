@@ -21,7 +21,7 @@ function UpdateScroll(State: ScrollModel; Msg: TuiMsg; Cmd: TuiCmdOutput): Scrol
 begin
   Cmd.Set(TuiCmd.NoCommand);
   case Msg of
-    when TuiMsg.ScrollChanged(Source, Action, Offset):
+    when TuiMsg.ScrollChanged(const Source, const Action, const Offset):
       begin
         return ScrollModel(Offset := Offset);
       end;

@@ -26,7 +26,7 @@ begin
   const Merged: dict of string to integer := Scores.Merge(['Bob': 88, 'Dan': 70]);
   WriteLn('merged Bob: ', IntToStr(Merged['Bob']));
   case Merged.Get('Eve') of
-    when Some(V):
+    when Some(const V):
       begin
         WriteLn('unexpected Eve: ', IntToStr(V));
       end;

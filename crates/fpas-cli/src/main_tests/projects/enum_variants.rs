@@ -28,7 +28,7 @@ begin
   const Initial: Point := Point( X := 1, Y := 7 );
   const Outcome: State := Moved(Initial);
   case Outcome.Player of
-    when Position.At(Value): WriteLn(Value.X, ',', Value.Y);
+    when Position.At(const Value): WriteLn(Value.X, ',', Value.Y);
   end case;
 end.",
     );
@@ -108,7 +108,7 @@ public type
 public function Encode(Value: Message): string;
 begin
   case Value of
-    when Message.ErrorMessage(Code):
+    when Message.ErrorMessage(const Code):
     begin
       return Stringify(JsonValue.String(Code));
     end;
@@ -128,4 +128,54 @@ end.",
     fs::remove_dir_all(&cwd).expect("remove fixture");
     assert_eq!(exit_code, 0, "stderr: {stderr}");
     assert_eq!(stdout, "\"code\"\n");
+}
+
+#[test]
+fn pattern_diagnostics_reject_duplicate_values_and_invalid_qualifiers() {
+    let cwd = create_temp_dir("pattern-resolution-diagnostics");
+    let source = cwd.join("main.fpas");
+    for (body, expected_code) in [
+        (
+            "case Value of when Some(Shape.Circle(1)): null; when Some(Shape.Circle(1)): null; else null; end case;",
+            "FP3033",
+        ),
+        (
+            "case Value of when Some(Other.Point): null; else null; end case;",
+            "FP3006",
+        ),
+        (
+            "if Value is Some(Other.Circle(_)) then null; end if;",
+            "FP3006",
+        ),
+        (
+            "if Value is Some(Missing.Point) then null; end if;",
+            "FP3003",
+        ),
+        (
+            "if Value is Some(Shape.Circle(Radius)) then null; end if;",
+            "FP3031",
+        ),
+    ] {
+        write_text(
+            &source,
+            &format!(
+                "program PatternResolution;
+type Shape = enum Circle(Radius: integer); Point; end enum;
+type Other = enum Circle(Radius: integer); Point; end enum;
+procedure Probe(Value: option of Shape);
+begin {body} end procedure;
+begin end."
+            ),
+        );
+        for command in ["check", "run"] {
+            let (code, _, stderr) = support::run_cli_args_and_capture_output(
+                &[command.to_string(), source.to_string_lossy().into_owned()],
+                &cwd,
+            );
+            assert_ne!(code, 0, "{command} accepted {body}");
+            assert!(stderr.contains(expected_code), "{command}: {stderr}");
+            assert!(!stderr.contains("FP9001"), "{command}: {stderr}");
+        }
+    }
+    fs::remove_dir_all(&cwd).expect("remove fixture");
 }

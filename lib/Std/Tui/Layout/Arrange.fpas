@@ -69,11 +69,11 @@ end function;
 function TuiArrangeGrowthWeight(Node: TuiElement; Horizontal: boolean): integer;
 begin
   case Node of
-    when TuiElement.TextArea(Id, Text, Caret, Offset, ChangeAction):
+    when TuiElement.TextArea(const Id, const Text, const Caret, const Offset, const ChangeAction):
       begin
         return 1;
       end;
-    when TuiElement.Spacer(Value):
+    when TuiElement.Spacer(const Value):
       begin
         if Value.Kind = TuiSpacerKind.Expanding then
           begin
@@ -83,12 +83,12 @@ begin
 
         return 0;
       end;
-    when TuiElement.Layout(Settings, Children):
+    when TuiElement.Layout(const Settings, const Children):
       begin
         if Horizontal then
           begin
             case Settings.Width of
-              when Some(Width):
+              when Some(const Width):
                 begin
                   return 0;
                 end;
@@ -100,7 +100,7 @@ begin
         else
           begin
             case Settings.Height of
-              when Some(Height):
+              when Some(const Height):
                 begin
                   return 0;
                 end;
@@ -362,15 +362,15 @@ begin
   const Clip: TuiRect := NodeBounds.Intersect(ParentClip);
   const SelfIndex: integer := TuiArrangePushEntry(ParentIndex, NodeBounds, Clip);
   case Node of
-    when TuiElement.Row(Children, Spacing):
+    when TuiElement.Row(const Children, const Spacing):
       begin
         ArrangeRowColumn(true, Children, Spacing, NodeBounds, Clip, SelfIndex);
       end;
-    when TuiElement.Column(Children, Spacing):
+    when TuiElement.Column(const Children, const Spacing):
       begin
         ArrangeRowColumn(false, Children, Spacing, NodeBounds, Clip, SelfIndex);
       end;
-    when TuiElement.Layout(Settings, Children):
+    when TuiElement.Layout(const Settings, const Children):
       begin
         const Content: TuiRect := TuiArrangeContentRect(NodeBounds, Settings.Margins);
         if Children.Length() = 1 then
@@ -381,7 +381,7 @@ begin
           end;
         end if;
       end;
-    when TuiElement.Scroll(Id, Offset, ChangeAction, Children):
+    when TuiElement.Scroll(const Id, const Offset, const ChangeAction, const Children):
       begin
         if Children.Length() = 1 then
           begin
@@ -406,17 +406,17 @@ begin
           end;
         end if;
       end;
-    when TuiElement.Panel(Title, Children), TuiElement.Overlay(Title, Children):
+    when TuiElement.Panel(const Title, const Children), TuiElement.Overlay(const Title, const Children):
       begin
         ArrangeRowColumn(false, Children, 0, NodeBounds.Inset(), Clip, SelfIndex);
       end;
-    when TuiElement.Desktop(Focused, Children):
+    when TuiElement.Desktop(const Focused, const Children):
       begin
         const Spec: TuiMeasureSpec := TuiMeasureSpec.AtMost(TuiSize.Create(NodeBounds.Width, NodeBounds.Height));
         for Index: integer := 0 to Children.Length() - 1 do
           begin
             case Children[Index] of
-              when TuiElement.Overlay(Title, OverlayChildren):
+              when TuiElement.Overlay(const Title, const OverlayChildren):
                 begin
                   const Measured: TuiMeasureResult := TuiMeasure(Children[Index], Spec);
                   const Width: integer := TuiArrangeMin(Measured.Preferred.Width, NodeBounds.Width);

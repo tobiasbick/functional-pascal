@@ -54,7 +54,7 @@ begin
   begin
     case R of
       when Ok(_): panic('closed channel delivered');
-      when Error(Message): if Message <> 'Channel is closed' then panic(Message); end if;
+      when Error(const Message): if Message <> 'Channel is closed' then panic(Message); end if;
     end case;
   end procedure);
   discard CloseChannel(Q);

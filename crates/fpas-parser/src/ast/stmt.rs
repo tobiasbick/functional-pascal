@@ -1,4 +1,4 @@
-use super::{Designator, Expr, TypeExpr, VarDef};
+use super::{Designator, Expr, Pattern, TypeExpr, VarDef};
 use fpas_lexer::Span;
 
 impl Stmt {
@@ -200,26 +200,17 @@ pub enum CaseLabel {
         /// Source span of the complete label.
         span: Span,
     },
-    /// Destructure pattern for Result/Option: `Ok(Binding)`, `Error(Binding)`, `Some(Binding)`, `None`.
-    Destructure {
-        /// Result or option variant matched by the pattern.
-        variant: DestructureVariant,
-        /// Name bound to the wrapped value, when the variant carries one.
-        binding: Option<String>,
-        /// Source span of the complete pattern.
+    /// Scalar guard binding: `const Name` in `when const Name if Guard:`.
+    ///
+    /// **Documentation:** `docs/pascal/language/pattern-matching/guards.md`
+    Binding {
+        /// Bound name as written.
+        name: String,
+        /// Source span of the complete label, including `const`.
         span: Span,
     },
-}
-
-/// Result or option variant used by a destructuring case label.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum DestructureVariant {
-    /// Successful result containing a value.
-    Ok,
-    /// Failed result containing an error value.
-    Error,
-    /// Present option containing a value.
-    Some,
-    /// Empty option without a value.
-    None,
+    /// Variant or Result/Option pattern: `Shape.Circle(const R)`, `Ok(Some(_))`, `None`.
+    ///
+    /// **Documentation:** `docs/pascal/language/pattern-matching/README.md`
+    Pattern(Pattern),
 }

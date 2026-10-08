@@ -13,7 +13,7 @@ begin
   end if;
   var ClientValue: Client := Client.Create(ParamStr(0), ParamStr(1));
   case Std.Env.Get('OPENAI_API_KEY') of
-    when Some(Value):
+    when Some(const Value):
       begin
         ClientValue.ApiKey := Some(Value);
       end;
@@ -39,13 +39,13 @@ begin
           var RequestMessages: array of ChatMessage := Messages;
           RequestMessages.Push(ChatMessage.User(Prompt));
           case Complete(ClientValue, RequestMessages, Options) of
-            when Ok(Content):
+            when Ok(const Content):
               begin
                 WriteLn('assistant> ' + Content);
                 Messages.Push(ChatMessage.User(Prompt));
                 Messages.Push(ChatMessage.Assistant(Content));
               end;
-            when Error(Message):
+            when Error(const Message):
               begin
                 WriteLn('error> ' + Message);
               end;

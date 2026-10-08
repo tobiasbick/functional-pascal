@@ -30,7 +30,7 @@ function TuiPointerMenuWalk(
 begin
   var Next: integer := Index + 1;
   case Node of
-    when TuiElement.Menu(Id, Nodes, State, ChangeAction):
+    when TuiElement.Menu(const Id, const Nodes, const State, const ChangeAction):
       begin
         if AllowMenu then
           begin
@@ -42,13 +42,13 @@ begin
           end;
         end if;
       end;
-    when TuiElement.Desktop(Focused, Children):
+    when TuiElement.Desktop(const Focused, const Children):
       begin
         var ModalIndex: integer := -1;
         for ChildIndex: integer := 0 to Children.Length() - 1 do
           begin
             case Children[ChildIndex] of
-              when TuiElement.Overlay(Title, OverlayChildren):
+              when TuiElement.Overlay(const Title, const OverlayChildren):
                 begin
                   ModalIndex := ChildIndex;
                 end;
@@ -66,7 +66,7 @@ begin
           end;
         end for;
       end;
-    when TuiElement.Scroll(Id, Offset, ChangeAction, Children):
+    when TuiElement.Scroll(const Id, const Offset, const ChangeAction, const Children):
       begin
         for ChildIndex: integer := 0 to Children.Length() - 1 do
           begin
@@ -74,7 +74,7 @@ begin
           end;
         end for;
       end;
-    when TuiElement.Row(Children, Spacing):
+    when TuiElement.Row(const Children, const Spacing):
       begin
         for ChildIndex: integer := 0 to Children.Length() - 1 do
           begin
@@ -82,7 +82,7 @@ begin
           end;
         end for;
       end;
-    when TuiElement.Column(Children, Spacing):
+    when TuiElement.Column(const Children, const Spacing):
       begin
         for ChildIndex: integer := 0 to Children.Length() - 1 do
           begin
@@ -90,7 +90,7 @@ begin
           end;
         end for;
       end;
-    when TuiElement.Layout(Settings, Children):
+    when TuiElement.Layout(const Settings, const Children):
       begin
         for ChildIndex: integer := 0 to Children.Length() - 1 do
           begin
@@ -98,7 +98,7 @@ begin
           end;
         end for;
       end;
-    when TuiElement.Panel(Title, Children):
+    when TuiElement.Panel(const Title, const Children):
       begin
         for ChildIndex: integer := 0 to Children.Length() - 1 do
           begin
@@ -106,7 +106,7 @@ begin
           end;
         end for;
       end;
-    when TuiElement.Overlay(Title, Children):
+    when TuiElement.Overlay(const Title, const Children):
       begin
         for ChildIndex: integer := 0 to Children.Length() - 1 do
           begin
@@ -137,7 +137,7 @@ end function;
 function TuiPointerMenuHover(Menu: TuiPointerMenu; Id: TuiMenuNodeId): array of TuiMsg;
 begin
   case Menu.State.Active of
-    when Some(Active):
+    when Some(const Active):
       begin
         if Active.Value = Id.Value then
           begin
@@ -169,7 +169,7 @@ begin
   for Index: integer := 0 to Menu.Nodes.Length() - 1 do
     begin
       case TuiMenuNodeParent(Menu.Nodes[Index]) of
-        when Some(Parent):
+        when Some(const Parent):
           begin
           end;
         when None:
@@ -252,7 +252,7 @@ begin
                       end if;
 
                       case TuiMenuNodeAction(Menu.Nodes[Index]) of
-                        when Some(Action):
+                        when Some(const Action):
                           begin
                             return Some([
                                           TuiMsg.MenuChanged(Menu.Id, Menu.ChangeAction, TuiMenuState.Closed()),
@@ -316,7 +316,7 @@ begin
   end if;
 
   case TuiPointerMenuBarHit(Root, Menu, Point, Activate) of
-    when Some(Messages):
+    when Some(const Messages):
       begin
         return Some(Messages);
       end;
@@ -328,7 +328,7 @@ begin
   if Menu.State.Open then
     begin
       case TuiPointerMenuPopupHit(Menu, Point, Frame.EntryAt(0).Bounds, Activate) of
-        when Some(Messages):
+        when Some(const Messages):
           begin
             return Some(Messages);
           end;

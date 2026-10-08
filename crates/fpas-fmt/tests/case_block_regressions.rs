@@ -26,7 +26,7 @@ fn arm_lists_indent_without_inserting_compound_blocks() {
 #[test]
 fn nested_cases_and_explicit_blocks_keep_their_endings() {
     let formatted = format(
-        "program T; begin case X of when 1: begin A(); end; case Y of when Some(V): B(V); when None: null; end case; else null; end case; end.",
+        "program T; begin case X of when 1: begin A(); end; case Y of when Some(const V): B(V); when None: null; end case; else null; end case; end.",
     );
     assert_eq!(formatted.matches("end case;").count(), 2);
     assert!(
@@ -34,7 +34,7 @@ fn nested_cases_and_explicit_blocks_keep_their_endings() {
         "{formatted}"
     );
     assert!(
-        formatted.contains("when Some(V):\n          B(V);"),
+        formatted.contains("when Some(const V):\n          B(V);"),
         "{formatted}"
     );
 }
@@ -82,4 +82,56 @@ fn comments_between_arms_and_inside_named_endings_survive_once() {
         formatted.contains("end case; // after case end"),
         "{formatted}"
     );
+}
+
+#[test]
+fn explicit_pattern_bindings_and_wildcards_round_trip() {
+    let formatted = format(
+        "program T; begin case S of when Shape.Rect(const W,_): A(W); when Shape.Circle(Radius:=const R): null; end case; case N of when const V if V>0: null; else null; end case; case O of when Error( _ ): null; when Ok(const Value): null; end case; end.",
+    );
+    for line in [
+        "when Shape.Rect(const W, _):",
+        "when Shape.Circle(Radius := const R):",
+        "when const V if V > 0:",
+        "when Error(_):",
+        "when Ok(const Value):",
+    ] {
+        assert!(formatted.contains(line), "missing `{line}`:\n{formatted}");
+    }
+}
+
+#[test]
+fn nested_patterns_round_trip() {
+    let formatted = format(
+        "program T; begin case R of when Ok(Some(Shape.Rect(const W,0))): null; when Ok( None ): null; when Error('x'): null; else null; end case; end.",
+    );
+    for line in [
+        "when Ok(Some(Shape.Rect(const W, 0))):",
+        "when Ok(None):",
+        "when Error('x'):",
+    ] {
+        assert!(
+            formatted.contains(line),
+            "missing `{line}`:
+{formatted}"
+        );
+    }
+}
+
+#[test]
+fn is_tests_round_trip_with_comparison_precedence() {
+    let formatted = format(
+        "program T; begin if X is Some( const V ) and V>0 then null; elsif not (X is None) then null; end if; while Q.Next() is Some(const Job) do null; end while; end.",
+    );
+    for line in [
+        "if X is Some(const V) and V > 0 then",
+        "elsif not (X is None) then",
+        "while Q.Next() is Some(const Job) do",
+    ] {
+        assert!(
+            formatted.contains(line),
+            "missing `{line}`:
+{formatted}"
+        );
+    }
 }

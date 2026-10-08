@@ -3,17 +3,21 @@
 //! **Documentation:** `docs/pascal/language/control-flow/README.md`, `docs/pascal/language/pattern-matching/README.md`, `docs/pascal/language/error-handling/README.md` (from the repository root).
 
 mod bindings;
-mod exhaustiveness;
+mod coverage;
 mod labels;
+mod patterns;
+mod scalar_bindings;
 
 use super::super::super::Checker;
 use crate::scope::{Symbol, SymbolKind};
 use crate::types::{EnumTy, Ty};
+use coverage::Pat;
 use fpas_diagnostics::codes::{
-    SEMA_INVALID_PANIC_ARGUMENT, SEMA_NON_BOOLEAN_CONDITION, SEMA_TYPE_MISMATCH,
+    SEMA_INVALID_PANIC_ARGUMENT, SEMA_NON_EXHAUSTIVE_CASE, SEMA_TYPE_MISMATCH,
+    SEMA_UNREACHABLE_CASE_LABEL,
 };
 use fpas_lexer::Span;
-use fpas_parser::{CaseArm, Expr, Stmt};
+use fpas_parser::{CaseArm, CaseLabel, Expr, Stmt};
 
 impl Checker {
     pub(in super::super) fn check_panic_stmt(&mut self, expr: &Expr) {
@@ -35,19 +39,11 @@ impl Checker {
         else_branch: Option<&Stmt>,
         span: Span,
     ) {
-        let condition_ty = self.check_expr(condition);
-        if matches!(condition_ty, Ty::GenericParam(..)) {
-            self.check_type_compat(&Ty::Boolean, &condition_ty, "if condition", span);
-        } else if !Ty::Boolean.assignment_compatible_with(&condition_ty) {
-            self.error_with_code(
-                SEMA_NON_BOOLEAN_CONDITION,
-                "Condition must be a boolean expression",
-                "if <boolean> then ...",
-                span,
-            );
-        }
-
+        // `is` bindings live in the condition and the then-branch only.
+        self.scopes.push_scope();
+        self.check_branch_condition(condition, "if", span);
         self.check_stmt(then_branch);
+        self.scopes.pop_scope();
         if let Some(else_branch) = else_branch {
             self.check_stmt(else_branch);
         }
@@ -76,12 +72,15 @@ impl Checker {
             span,
         );
 
+        let is_scalar_case = !is_result_or_option && !is_data_enum;
+        let is_pattern_case = is_result_or_option || is_data_enum || is_simple_enum;
+        let mut rows: Vec<Vec<Pat>> = Vec::new();
+        let mut coverage_valid = is_pattern_case && !case_ty.is_error();
         for arm in arms {
             if let Some(binding_name) =
-                self.scalar_guard_binding_name(&case_ty, &arm.labels, &arm.guard)
+                self.scalar_case_binding(is_scalar_case, &arm.labels, &arm.guard)
             {
                 self.check_import_alias_collision(binding_name, arm.span);
-                self.mark_scalar_guard_binding(&arm.labels[0]);
                 self.scopes.push_scope();
                 self.scopes.define_with_declaration(
                     binding_name,
@@ -100,14 +99,28 @@ impl Checker {
                 continue;
             }
 
-            let binding_sets = arm
-                .labels
-                .iter()
-                .map(|label| {
-                    self.check_case_label(&case_ty, is_result_or_option, is_data_enum, label)
-                        .unwrap_or_default()
-                })
-                .collect();
+            let mut binding_sets = Vec::with_capacity(arm.labels.len());
+            for label in &arm.labels {
+                let errors_before = self.errors.len();
+                let checked = self.check_case_label(&case_ty, is_pattern_case, label);
+                if self.errors.len() != errors_before {
+                    coverage_valid = false;
+                }
+                if coverage_valid {
+                    let row = vec![checked.pat];
+                    if !self.pattern_row_is_useful(&rows, &row, std::slice::from_ref(&case_ty)) {
+                        self.error_with_code(
+                            SEMA_UNREACHABLE_CASE_LABEL,
+                            "Case label is unreachable; earlier arms already match every value it matches",
+                            "Remove the label, or move it before the arm that already covers it.",
+                            label_span(label),
+                        );
+                    } else if arm.guard.is_none() {
+                        rows.push(row);
+                    }
+                }
+                binding_sets.push(checked.bindings);
+            }
             let bindings = self.shared_case_arm_bindings(binding_sets, arm.span);
 
             if !bindings.is_empty() {
@@ -142,8 +155,16 @@ impl Checker {
             self.scopes.pop_scope();
         }
 
-        if else_body.is_none() {
-            self.check_exhaustiveness(&case_ty, arms, span);
+        if else_body.is_none() && coverage_valid {
+            let missing = self.missing_patterns(&rows, &case_ty);
+            if !missing.is_empty() {
+                self.error_with_code(
+                    SEMA_NON_EXHAUSTIVE_CASE,
+                    format!("Non-exhaustive case: missing {}", missing.join(", ")),
+                    "Add arms for the missing patterns or an else branch. Guarded arms do not count toward coverage.",
+                    span,
+                );
+            }
         }
     }
 
@@ -171,5 +192,12 @@ impl Checker {
             "Use integer, boolean, enum, string, Result, or Option.",
             span,
         );
+    }
+}
+
+fn label_span(label: &CaseLabel) -> Span {
+    match label {
+        CaseLabel::Value { span, .. } | CaseLabel::Binding { span, .. } => *span,
+        CaseLabel::Pattern(pattern) => pattern.span(),
     }
 }

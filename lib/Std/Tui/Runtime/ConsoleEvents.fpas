@@ -74,7 +74,7 @@ end function;
 public function TuiReadConsoleHostInputWithTimeout(TimeoutMillis: integer): option of TuiHostInput;
 begin
   case ReadEventTimeout(TimeoutMillis) of
-    when Some(InputEvent):
+    when Some(const InputEvent):
       begin
         return TuiConsoleEventToHostInput(InputEvent);
       end;

@@ -14,16 +14,19 @@ to be listed explicitly. Guarded arms do not count as coverage.
 
 ## Implementation
 
-- In the exhaustiveness check, reject `else` when the scrutinee is a closed
+- In the case coverage check, reject `else` when the scrutinee is a closed
   enum, `Option`, or `Result`. Keep `else` for open domains.
 - The diagnostic lists the variants the `else` replaced and suggests a
-  `null;` arm or an `is` test.
+  `null;` arm or an `is` test. The AP20.2 pattern matrix
+  (`missing_patterns` in `if_case/coverage.rs`) already computes the missing
+  patterns without the `else`.
 - A guarded arm alone does not cover its variant; a field wildcard `_` does
   not cover a missing variant.
 
 ## Affected areas
 
-- `crates/fpas-sema/src/check/stmt/control_flow/if_case/` (exhaustiveness).
+- `crates/fpas-sema/src/check/stmt/control_flow/if_case/` (`mod.rs` and
+  `coverage.rs`).
 - `crates/fpas-diagnostics/src/codes.rs`.
 
 ## Migration

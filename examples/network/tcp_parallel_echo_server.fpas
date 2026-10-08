@@ -71,13 +71,13 @@ begin
         while not IsCancellationRequested(Token) do
           begin
             case AcceptWithCancellation(ListenerValue, Token) of
-              when Ok(Client):
+              when Ok(const Client):
                 begin
                   const Outcome: result of boolean, string := Echo(Client, Token);
                   // Close even on read/write failure. One failed client does not stop admission.
                   const Closed: boolean := try Close(Client);
                   case Outcome of
-                    when Error(Message):
+                    when Error(const Message):
                       begin
                         if not IsCancellationRequested(Token) then
                           begin
@@ -90,7 +90,7 @@ begin
                       end;
                   end case;
                 end;
-              when Error(Message):
+              when Error(const Message):
                 begin
                   if IsCancellationRequested(Token) then
                     begin
@@ -121,11 +121,11 @@ begin
   discard RequestStop(Life);
   var Failures: array of TaskFailure := [];
   case CloseTaskGroupWithTimeout(Workers, RemainingMillis(Life)) of
-    when Ok(Reports):
+    when Ok(const Reports):
       begin
         Failures := Reports;
       end;
-    when Error(Message):
+    when Error(const Message):
       begin
         WriteLn(Message);
         // The independent host watchdog remains armed even if diagnostic output blocks.

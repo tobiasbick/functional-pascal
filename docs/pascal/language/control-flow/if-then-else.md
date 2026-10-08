@@ -45,6 +45,10 @@ else
 end if;
 ```
 
+A condition may test a pattern and bind its names for the branch, for example
+`if Item is Some(const Value) and Value > 0 then`; see
+[Pattern test with `is`](../pattern-matching/is-test.md).
+
 An empty branch is an error; write `null;` to state that no action is needed.
 The formatter preserves nested conditionals and explicit scoping blocks.
 

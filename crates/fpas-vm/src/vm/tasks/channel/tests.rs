@@ -104,11 +104,11 @@ begin
   const Client: Connection := Accept(ListenerValue).Unwrap();
   const Configured: boolean := SetTimeout(Client, 5000).Unwrap();
   case ReceiveBytesWithCancellation(Client, 1, Token) of
-    when Ok(Bytes):
+    when Ok(const Bytes):
     begin
       return Bytes.Length() = 1;
     end;
-    when Error(Message):
+    when Error(const Message):
     begin
       return false;
     end;

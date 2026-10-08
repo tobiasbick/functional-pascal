@@ -92,6 +92,7 @@ impl Checker {
             ),
             Expr::NamedArgument { .. } => self.check_misplaced_named_argument(expr),
             Expr::VarArgument { .. } => self.check_misplaced_var_argument(expr),
+            Expr::Is { .. } => self.check_misplaced_is_test(expr),
             Expr::Error(_) => Ty::Error,
         };
         let key = Self::expr_lookup_key(expr);

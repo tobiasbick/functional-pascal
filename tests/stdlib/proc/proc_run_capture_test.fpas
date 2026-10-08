@@ -4,22 +4,22 @@ uses Std.Proc, Std.Test;
 
 begin
   case CurrentExecutable() of
-    when Ok(Executable):
+    when Ok(const Executable):
       begin
         case RunCapture(Executable, ['--version']) of
-          when Ok(Output):
+          when Ok(const Output):
             begin
               AssertEquals(0, Output.ExitCode);
               AssertTrue(Output.Stdout.Contains('fpas'));
               AssertEquals('', Output.Stderr);
             end;
-          when Error(Message):
+          when Error(const Message):
             begin
               Fail(Message);
             end;
         end case;
       end;
-    when Error(Message):
+    when Error(const Message):
       begin
         Fail(Message);
       end;

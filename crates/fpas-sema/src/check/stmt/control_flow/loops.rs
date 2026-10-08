@@ -104,21 +104,13 @@ impl Checker {
     }
 
     pub(in super::super) fn check_while_stmt(&mut self, condition: &Expr, body: &Stmt, span: Span) {
-        let condition_ty = self.check_expr(condition);
-        if matches!(condition_ty, Ty::GenericParam(..)) {
-            self.check_type_compat(&Ty::Boolean, &condition_ty, "while condition", span);
-        } else if !Ty::Boolean.assignment_compatible_with(&condition_ty) {
-            self.error_with_code(
-                SEMA_NON_BOOLEAN_CONDITION,
-                "While condition must be a boolean expression",
-                "while <boolean> do ...",
-                span,
-            );
-        }
-
+        // `is` bindings live in the condition and the loop body only.
+        self.scopes.push_scope();
+        self.check_branch_condition(condition, "while", span);
         self.scopes.loop_depth += 1;
         self.check_stmt(body);
         self.scopes.loop_depth -= 1;
+        self.scopes.pop_scope();
     }
 
     pub(in super::super) fn check_repeat_stmt(

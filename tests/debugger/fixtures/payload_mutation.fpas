@@ -21,15 +21,15 @@ end record;
 function ChoiceValue(Item: Choice): integer;
 begin
   case Item of
-    when Choice.Count(Value):
+    when Choice.Count(const Value):
       begin
         return Value;
       end;
-    when Choice.Pair(Left, Right):
+    when Choice.Pair(const Left, const Right):
       begin
         return Left + Right;
       end;
-    when Choice.Nested(Item):
+    when Choice.Nested(const Item):
       begin
         return Item.X + Item.Y;
       end;
@@ -55,29 +55,29 @@ begin
   WriteLn(ChoiceValue(PairValue));
   WriteLn(ChoiceValue(NestedValue));
   case Outcome of
-    when Ok(Value):
+    when Ok(const Value):
       begin
         WriteLn(Value);
       end;
-    when Error(Message):
+    when Error(const Message):
       begin
         WriteLn(Message);
       end;
   end case;
 
   case Failed of
-    when Ok(Value):
+    when Ok(const Value):
       begin
         WriteLn(Value);
       end;
-    when Error(Message):
+    when Error(const Message):
       begin
         WriteLn(Message);
       end;
   end case;
 
   case Optional of
-    when Some(Value):
+    when Some(const Value):
       begin
         WriteLn(Value);
       end;
@@ -88,26 +88,26 @@ begin
   end case;
 
   case Packed of
-    when Ok(Value):
+    when Ok(const Value):
       begin
         WriteLn(Value.Items[1]);
         WriteLn(Value.Scores['blue']);
       end;
-    when Error(Message):
+    when Error(const Message):
       begin
         WriteLn(Message);
       end;
   end case;
 
   case NestedResult of
-    when Some(Inner):
+    when Some(const Inner):
       begin
         case Inner of
-          when Ok(Value):
+          when Ok(const Value):
             begin
               WriteLn(Value);
             end;
-          when Error(Message):
+          when Error(const Message):
             begin
               WriteLn(Message);
             end;

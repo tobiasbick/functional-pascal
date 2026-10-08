@@ -10,16 +10,16 @@ begin
   const Encoded: string := Stringify(Source);
   const Parsed: result of TomlValue, string := Parse(Encoded);
   case Parsed of
-    when Ok(Value):
+    when Ok(const Value):
       begin
         case Value of
-          when TomlValue.Table(Fields):
+          when TomlValue.Table(const Fields):
             begin
               case Fields.Get('project').Unwrap() of
-                when TomlValue.Table(Project):
+                when TomlValue.Table(const Project):
                   begin
                     case Project.Get('name').Unwrap() of
-                      when TomlValue.String(Name):
+                      when TomlValue.String(const Name):
                         begin
                           AssertEquals('demo', Name);
                         end;
@@ -30,7 +30,7 @@ begin
                     end case;
 
                     case Project.Get('released').Unwrap() of
-                      when TomlValue.Datetime(Date):
+                      when TomlValue.Datetime(const Date):
                         begin
                           AssertEquals('2026-07-14', Date);
                         end;
@@ -47,7 +47,7 @@ begin
               end case;
 
               case Fields.Get('targets').Unwrap() of
-                when TomlValue.ArrayValue(Targets):
+                when TomlValue.ArrayValue(const Targets):
                   begin
                     AssertEquals(2, Targets.Length());
                   end;
@@ -63,7 +63,7 @@ begin
             end;
         end case;
       end;
-    when Error(Message):
+    when Error(const Message):
       begin
         Fail(Message);
       end;

@@ -15,7 +15,7 @@ begin
                                                                                                                                    ])
                                                                                          ]);
   case TuiFocusFirst(Tree) of
-    when Some(Id):
+    when Some(const Id):
       begin
         AssertEquals(3, Id.Value);
       end;
@@ -26,7 +26,7 @@ begin
   end case;
 
   case TuiFocusResolve(Tree, Some(TuiControlId.Create(1))) of
-    when Some(Id):
+    when Some(const Id):
       begin
         AssertEquals(3, Id.Value);
       end;
@@ -37,7 +37,7 @@ begin
   end case;
 
   case TuiFocusResolve(Tree, Some(TuiControlId.Create(3))) of
-    when Some(Id):
+    when Some(const Id):
       begin
         AssertEquals(3, Id.Value);
       end;
@@ -53,7 +53,7 @@ begin
                                                                                                                                     ])
                                                                                              ]);
   case TuiFocusResolve(HostOnly, Some(TuiControlId.Create(2))) of
-    when Some(Id):
+    when Some(const Id):
       begin
         AssertEquals(2, Id.Value);
       end;
@@ -64,7 +64,7 @@ begin
   end case;
 
   case TuiFocusResolve(HostOnly, Some(TuiControlId.Create(9))) of
-    when Some(Id):
+    when Some(const Id):
       begin
         AssertEquals(1, Id.Value);
       end;

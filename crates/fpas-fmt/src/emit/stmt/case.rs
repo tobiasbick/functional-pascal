@@ -3,10 +3,10 @@
 //! **Documentation:** `docs/pascal/language/control-flow/case-of-intro.md`.
 
 use super::super::Emitter;
-use super::super::expr::emit_expr;
+use super::super::expr::{emit_expr, emit_pattern};
 use super::line::write_indented;
 use crate::comments::{CommentMap, emit_leading_comments, stmt_start};
-use fpas_parser::{CaseArm, CaseLabel, DestructureVariant, Stmt};
+use fpas_parser::{CaseArm, CaseLabel, Stmt};
 
 /// Emits `when` arms, an optional scoped catch-all, and `end case`.
 pub(super) fn emit_case(emitter: &mut Emitter, stmt: &Stmt, comments: &CommentMap) {
@@ -75,22 +75,10 @@ fn emit_case_label(emitter: &mut Emitter, label: &CaseLabel, comments: &CommentM
                 emit_expr(emitter, end_expr, 0, comments);
             }
         }
-        CaseLabel::Destructure {
-            variant, binding, ..
-        } => {
-            let name = match variant {
-                DestructureVariant::Ok => "Ok",
-                DestructureVariant::Error => "Error",
-                DestructureVariant::Some => "Some",
-                DestructureVariant::None => "None",
-            };
+        CaseLabel::Binding { name, .. } => {
+            emitter.write("const ");
             emitter.write(name);
-            if *variant == DestructureVariant::None {
-                return;
-            }
-            emitter.write("(");
-            emitter.write(binding.as_deref().unwrap_or("_"));
-            emitter.write(")");
         }
+        CaseLabel::Pattern(pattern) => emit_pattern(emitter, pattern, comments),
     }
 }

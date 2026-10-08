@@ -76,17 +76,17 @@ end procedure;
 
 begin
   case OpenStream(Request.Get('http://127.0.0.1:{port}/events')) of
-    when Ok(ResponseValue):
+    when Ok(const ResponseValue):
     begin
       WriteLn(ResponseValue.StatusCode);
       case CreateSseDecoder(4096) of
-        when Ok(Decoder):
+        when Ok(const Decoder):
         begin
           var Reading: boolean := true;
           while Reading do
           begin
             case ReadStream(ResponseValue.Body, 3) of
-              when Ok(Bytes):
+              when Ok(const Bytes):
               begin
                 if Bytes.Length() = 0 then
                 begin
@@ -95,23 +95,23 @@ begin
                 else
                 begin
                   case FeedSse(Decoder, Bytes) of
-                    when Ok(Events): PrintEvents(Events);
-                    when Error(Message): panic(Message);
+                    when Ok(const Events): PrintEvents(Events);
+                    when Error(const Message): panic(Message);
                   end case;
                 end; end if;
               end;
-              when Error(Message): panic(Message);
+              when Error(const Message): panic(Message);
             end case;
           end; end while;
           case FinishSse(Decoder) of
-            when Ok(Events): PrintEvents(Events);
-            when Error(Message): panic(Message);
+            when Ok(const Events): PrintEvents(Events);
+            when Error(const Message): panic(Message);
           end case;
         end;
-        when Error(Message): panic(Message);
+        when Error(const Message): panic(Message);
       end case;
     end;
-    when Error(Message): panic(Message);
+    when Error(const Message): panic(Message);
   end case;
 end.
 "#
@@ -164,21 +164,21 @@ uses Std.Console, Std.Http;
 
 begin
   case OpenStream(Request.Get('http://127.0.0.1:{port}/truncated')) of
-    when Ok(ResponseValue):
+    when Ok(const ResponseValue):
     begin
       case ReadStream(ResponseValue.Body, 8) of
-        when Ok(Bytes):
+        when Ok(const Bytes):
         begin
           if Bytes.Length() <> 3 then
           begin
             panic('unexpected first body fragment');
           end; end if;
         end;
-        when Error(Message): panic(Message);
+        when Error(const Message): panic(Message);
       end case;
       case ReadStream(ResponseValue.Body, 8) of
         when Ok(_): panic('truncated Content-Length was accepted');
-        when Error(Message):
+        when Error(const Message):
         begin
           if not Message.Contains( 'shorter than Content-Length') then
           begin
@@ -188,7 +188,7 @@ begin
       end case;
       WriteLn('ok');
     end;
-    when Error(Message): panic(Message);
+    when Error(const Message): panic(Message);
   end case;
 end.
 "#

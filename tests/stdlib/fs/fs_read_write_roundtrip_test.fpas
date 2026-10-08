@@ -8,7 +8,7 @@ begin
     when Ok(_):
       begin
       end;
-    when Error(Message):
+    when Error(const Message):
       begin
         Fail(Message);
       end;
@@ -17,11 +17,11 @@ begin
   AssertTrue(Exists(Path));
   AssertTrue(IsFile(Path));
   case ReadText(Path) of
-    when Ok(Text):
+    when Ok(const Text):
       begin
         AssertEquals('hello fs', Text);
       end;
-    when Error(Message):
+    when Error(const Message):
       begin
         Fail(Message);
       end;

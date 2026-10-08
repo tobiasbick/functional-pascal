@@ -13,14 +13,14 @@ function ReadUntilCancelled(ConnectionValue: Std.Net.Connection;
   Token: Std.Tasks.CancellationToken): string;
 begin
   case Std.Net.ReceiveBytesWithCancellation(ConnectionValue, 1, Token) of
-    when Ok(Data): return 'received';
-    when Error(Message): return Message;
+    when Ok(const Data): return 'received';
+    when Error(const Message): return Message;
   end case;
 end function;
 
 begin
   case Std.Net.Connect('127.0.0.1', {port}, 1000) of
-    when Ok(ConnectionValue):
+    when Ok(const ConnectionValue):
     begin
       discard Std.Net.SetTimeout(ConnectionValue, 1000);
       const Source: Std.Tasks.CancellationSource := Std.Tasks.CreateCancellationSource();
@@ -31,11 +31,11 @@ begin
       if Std.Tasks.Wait(Waiting) <> 'Network read cancelled' then
         panic('read did not report cancellation'); end if;
       case Std.Net.Close(ConnectionValue) of
-        when Ok(Closed): if not Closed then panic('close failed'); end if;
-        when Error(Message): panic(Message);
+        when Ok(const Closed): if not Closed then panic('close failed'); end if;
+        when Error(const Message): panic(Message);
       end case;
     end;
-    when Error(Message): panic(Message);
+    when Error(const Message): panic(Message);
   end case;
 end."
     ));

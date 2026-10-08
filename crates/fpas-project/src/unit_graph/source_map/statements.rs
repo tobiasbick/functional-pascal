@@ -3,7 +3,7 @@ use super::expressions::{apply_designator_source_id, apply_expr_source_id};
 use super::support::apply_span;
 use super::types::apply_type_expr_source_id;
 
-use fpas_parser::{CaseArm, CaseLabel, Stmt};
+use fpas_parser::{CaseArm, CaseLabel, Pattern, Stmt};
 
 /// Applies the source file identity to a statement and its nested syntax.
 pub(super) fn apply_stmt_source_id(stmt: &mut Stmt, source_id: u32) {
@@ -155,6 +155,34 @@ fn apply_case_label_source_id(label: &mut CaseLabel, source_id: u32) {
             }
             apply_span(span, source_id);
         }
-        CaseLabel::Destructure { span, .. } => apply_span(span, source_id),
+        CaseLabel::Binding { span, .. } => apply_span(span, source_id),
+        CaseLabel::Pattern(pattern) => apply_pattern_source_id(pattern, source_id),
+    }
+}
+
+pub(super) fn apply_pattern_source_id(pattern: &mut Pattern, source_id: u32) {
+    match pattern {
+        Pattern::Binding { span, .. } | Pattern::Wildcard(span) => apply_span(span, source_id),
+        Pattern::Value(expr) => apply_expr_source_id(expr, source_id),
+        Pattern::Variant {
+            constructor,
+            fields,
+            span,
+        } => {
+            apply_designator_source_id(constructor, source_id);
+            for field in fields {
+                if let Some((_, label_span)) = &mut field.label {
+                    apply_span(label_span, source_id);
+                }
+                apply_pattern_source_id(&mut field.pattern, source_id);
+            }
+            apply_span(span, source_id);
+        }
+        Pattern::Destructure { payload, span, .. } => {
+            if let Some(payload) = payload {
+                apply_pattern_source_id(payload, source_id);
+            }
+            apply_span(span, source_id);
+        }
     }
 }

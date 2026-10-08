@@ -33,7 +33,7 @@ end function;
 begin
   case ExerciseListener() of
     when Ok(_): begin end;
-    when Error(Message): panic(Message);
+    when Error(const Message): panic(Message);
   end case;
 end."
             .replace(

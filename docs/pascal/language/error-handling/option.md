@@ -29,7 +29,7 @@ end function;
 ```pascal
 const Idx: option of integer := FindIndex([10, 20, 30], 20);
 case Idx of
-  when Some(I):
+  when Some(const I):
     WriteLn('Found at ' + IntToStr(I));
   when None:
     WriteLn('Not found');

@@ -360,17 +360,18 @@ async function verifyCaseBlocks(grammar) {
   ));
   const increase = new RegExp(configuration.indentationRules.increaseIndentPattern);
   const decrease = new RegExp(configuration.indentationRules.decreaseIndentPattern);
-  for (const line of ["case Some(1) of", "when Some(Value) if Value > 0:", "when 0, 1:"]) {
+  for (const line of ["case Some(1) of", "when Some(const Value) if Value > 0:", "when 0, 1:"]) {
     assert.ok(increase.test(line), `${line} opens a body`);
     assert.ok(increase.test(`${line.toUpperCase()} // body`));
   }
-  for (const line of ["when Some(Value):", "when None:", "else", "end case;"]) {
+  for (const line of ["when Some(const Value):", "when None:", "else", "end case;"]) {
     assert.ok(decrease.test(line), `${line} decreases indentation`);
     assert.ok(decrease.test(line.toUpperCase()));
   }
   assert.ok(!increase.test("end case;"));
   assert.ok(!increase.test("END CASE; // ending"));
-  assertScope(tokenAt(fixture, "when Some(Value) if Value > 0:", "when"), "keyword.control.fpas");
+  assertScope(tokenAt(fixture, "when Some(const Value) if Value > 0:", "when"), "keyword.control.fpas");
+  assertScope(tokenAt(fixture, "when Some(const Value) if Value > 0:", "const"), "storage.type.constant.fpas");
   assertScope(tokenAt(fixture, "end case;", "end"), "keyword.control.fpas");
   assertScope(tokenAt(fixture, "end case;", "case"), "keyword.control.fpas");
   const snippets = JSON.parse(await readFile(

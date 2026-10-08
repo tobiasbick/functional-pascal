@@ -1,9 +1,8 @@
 //! Statement and expression traversal for lexical captures.
 
 use super::{CaptureBinding, CaptureCollector};
-use crate::scope::SymbolKind;
 use fpas_parser::{
-    CaseLabel, Decl, Designator, DesignatorPart, Expr, FuncBody, PostfixOperation, Stmt,
+    CaseLabel, Decl, Designator, DesignatorPart, Expr, FuncBody, Pattern, PostfixOperation, Stmt,
 };
 use std::collections::HashSet;
 
@@ -102,8 +101,11 @@ impl CaptureCollector<'_> {
                 else_branch,
                 ..
             } => {
+                // `is` bindings in the condition are visible only in the then-branch.
+                self.push_bound_scope();
                 self.collect_from_expr(condition);
                 self.collect_from_stmt(then_branch);
+                self.pop_bound_scope();
                 if let Some(branch) = else_branch {
                     self.collect_from_stmt(branch);
                 }
@@ -117,24 +119,24 @@ impl CaptureCollector<'_> {
                 self.collect_from_expr(expr);
                 for arm in arms {
                     self.push_bound_scope();
-                    // Mirror `check_case_stmt` scalar-guard bindings so a bare
-                    // designator label with a guard does not capture a shadowed
-                    // outer variable of the same name.
-                    self.bind_scalar_guard_name(&arm.labels, &arm.guard);
                     for label in &arm.labels {
                         match label {
                             CaseLabel::Value { start, end, .. } => {
-                                self.bind_pattern_names(start);
                                 self.collect_from_expr(start);
                                 if let Some(end) = end {
                                     self.collect_from_expr(end);
                                 }
                             }
-                            CaseLabel::Destructure { binding, .. } => {
-                                if let Some(binding) = binding {
-                                    self.bind_name(binding);
-                                }
-                            }
+                            CaseLabel::Binding { .. } => {}
+                            CaseLabel::Pattern(pattern) => self.collect_pattern_values(pattern),
+                        }
+                    }
+                    // Comparisons in every label resolve before the arm's names are bound.
+                    for label in &arm.labels {
+                        match label {
+                            CaseLabel::Binding { name, .. } => self.bind_name(name),
+                            CaseLabel::Pattern(pattern) => self.bind_pattern(pattern),
+                            CaseLabel::Value { .. } => {}
                         }
                     }
                     if let Some(guard) = &arm.guard {
@@ -178,8 +180,10 @@ impl CaptureCollector<'_> {
             Stmt::While {
                 condition, body, ..
             } => {
+                self.push_bound_scope();
                 self.collect_from_expr(condition);
                 self.collect_from_stmt(body);
+                self.pop_bound_scope();
             }
             Stmt::Repeat {
                 body, condition, ..
@@ -200,51 +204,40 @@ impl CaptureCollector<'_> {
         }
     }
 
-    fn bind_pattern_names(&mut self, expr: &Expr) {
-        let Expr::Call { args, .. } = expr else {
-            return;
-        };
-        for arg in args {
-            if let Expr::Designator(designator) = arg
-                && let [DesignatorPart::Ident(name, _)] = designator.parts.as_slice()
-            {
-                self.bind_name(name);
+    fn collect_pattern_values(&mut self, pattern: &Pattern) {
+        match pattern {
+            Pattern::Value(expr) => self.collect_from_expr(expr),
+            Pattern::Variant { fields, .. } => {
+                for field in fields {
+                    self.collect_pattern_values(&field.pattern);
+                }
             }
+            Pattern::Destructure {
+                payload: Some(payload),
+                ..
+            } => {
+                self.collect_pattern_values(payload);
+            }
+            Pattern::Binding { .. } | Pattern::Wildcard(_) | Pattern::Destructure { .. } => {}
         }
     }
 
-    /// Bind a scalar `case` guard label (`m if m > 0`) the same way type checking does.
-    ///
-    /// Without this, a bare designator label is walked as a free reference and can
-    /// spuriously capture an outer variable that the arm actually shadows.
-    ///
-    /// **Documentation:** `docs/pascal/language/functions/closures.md`,
-    /// `docs/pascal/language/pattern-matching/guards.md`
-    fn bind_scalar_guard_name(&mut self, labels: &[CaseLabel], guard: &Option<Expr>) {
-        if guard.is_none() || labels.len() != 1 {
-            return;
-        }
-        let CaseLabel::Value {
-            start, end: None, ..
-        } = &labels[0]
-        else {
-            return;
-        };
-        let Expr::Designator(designator) = start else {
-            return;
-        };
-        if designator.parts.len() != 1 {
-            return;
-        }
-        let DesignatorPart::Ident(name, _) = &designator.parts[0] else {
-            return;
-        };
-        if name == "_" {
-            return;
-        }
-        match self.scopes.lookup(name) {
-            Some(symbol) if matches!(symbol.kind, SymbolKind::Const | SymbolKind::EnumMember) => {}
-            _ => self.bind_name(name),
+    /// Binds names after the pattern's comparison values have been visited.
+    fn bind_pattern(&mut self, pattern: &Pattern) {
+        match pattern {
+            Pattern::Binding { name, .. } => self.bind_name(name),
+            Pattern::Wildcard(_) => {}
+            Pattern::Value(_) => {}
+            Pattern::Variant { fields, .. } => {
+                for field in fields {
+                    self.bind_pattern(&field.pattern);
+                }
+            }
+            Pattern::Destructure { payload, .. } => {
+                if let Some(payload) = payload {
+                    self.bind_pattern(payload);
+                }
+            }
         }
     }
 
@@ -276,6 +269,11 @@ impl CaptureCollector<'_> {
             | Expr::Try(operand, _)
             | Expr::Go(operand, _)
             | Expr::NamedArgument { value: operand, .. } => self.collect_from_expr(operand),
+            Expr::Is { value, pattern, .. } => {
+                self.collect_from_expr(value);
+                self.collect_pattern_values(pattern);
+                self.bind_pattern(pattern);
+            }
             Expr::BinaryOp { left, right, .. } => {
                 self.collect_from_expr(left);
                 self.collect_from_expr(right);

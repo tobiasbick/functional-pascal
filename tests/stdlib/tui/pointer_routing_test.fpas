@@ -59,10 +59,10 @@ function UpdateRoute(State: RouteModel; Msg: TuiMsg; Cmd: TuiCmdOutput): RouteMo
 begin
   Cmd.Set(TuiCmd.NoCommand);
   case Msg of
-    when TuiMsg.FocusChanged(Previous, Current):
+    when TuiMsg.FocusChanged(const Previous, const Current):
       begin
         case Current of
-          when Some(Id):
+          when Some(const Id):
             begin
               return RouteModel(Focus := Id.Value, Actions := State.Actions, PointerHits := State.PointerHits);
             end;
@@ -72,7 +72,7 @@ begin
             end;
         end case;
       end;
-    when TuiMsg.Action(Source, Action):
+    when TuiMsg.Action(const Source, const Action):
       begin
         if Action.Value = 33 then
           begin
@@ -82,7 +82,7 @@ begin
 
         return RouteModel(Focus := State.Focus, Actions := State.Actions.Concat([Action.Value]), PointerHits := State.PointerHits);
       end;
-    when TuiMsg.Pointer(Pointer):
+    when TuiMsg.Pointer(const Pointer):
       begin
         return RouteModel(Focus := State.Focus, Actions := State.Actions, PointerHits := State.PointerHits +
                                                                                          1);

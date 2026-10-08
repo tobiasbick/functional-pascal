@@ -103,19 +103,19 @@ uses Std.Console, Std.Http, Std.Net, Std.Net.Utf8;
 
 begin
   case Listen('127.0.0.1', {port}) of
-    when Ok(ListenerValue):
+    when Ok(const ListenerValue):
     begin
       case Accept(ListenerValue) of
-        when Ok(Connection):
+        when Ok(const Connection):
         begin
           case SetTimeout(Connection, 2000) of
             when Ok(_):
             begin
             end;
-            when Error(Message): panic(Message);
+            when Error(const Message): panic(Message);
           end case;
           case ReadRequest(Connection, 4096, 1024) of
-            when Ok(RequestValue):
+            when Ok(const RequestValue):
             begin
               if (RequestValue.Method <> 'GET') or (RequestValue.Target <> '/hello?name=fpas') then
               begin
@@ -128,26 +128,26 @@ begin
                 when Ok(_):
                 begin
                 end;
-                when Error(Message): panic(Message);
+                when Error(const Message): panic(Message);
               end case;
             end;
-            when Error(Message): panic(Message);
+            when Error(const Message): panic(Message);
           end case;
           case Close(Connection) of
             when Ok(_):
             begin
             end;
-            when Error(Message): panic(Message);
+            when Error(const Message): panic(Message);
           end case;
         end;
-        when Error(Message): panic(Message);
+        when Error(const Message): panic(Message);
       end case;
       case CloseListener(ListenerValue) of
         when Ok(_): WriteLn('served');
-        when Error(Message): panic(Message);
+        when Error(const Message): panic(Message);
       end case;
     end;
-    when Error(Message): panic(Message);
+    when Error(const Message): panic(Message);
   end case;
 end.
 "#
@@ -179,22 +179,22 @@ uses Std.Http, Std.Net, Std.Net.Utf8;
 
 begin
   case Listen('127.0.0.1', {port}) of
-    when Ok(ListenerValue):
+    when Ok(const ListenerValue):
     begin
       case Accept(ListenerValue) of
-        when Ok(Connection):
+        when Ok(const Connection):
         begin
           case SetTimeout(Connection, 2000) of
             when Ok(_):
             begin
             end;
-            when Error(Message): panic(Message);
+            when Error(const Message): panic(Message);
           end case;
           case ReadRequest(Connection, 4096, 1024) of
-            when Ok(RequestValue):
+            when Ok(const RequestValue):
             begin
               case Std.Net.Utf8.Decode(RequestValue.Body) of
-                when Ok(Text):
+                when Ok(const Text):
                 begin
                   var ResponseValue: ServerResponse := ServerResponse.Create(201, 'Created');
                   ResponseValue.Body := Std.Net.Utf8.Encode(RequestValue.Target + ':' + Text);
@@ -202,31 +202,31 @@ begin
                     when Ok(_):
                     begin
                     end;
-                    when Error(Message): panic(Message);
+                    when Error(const Message): panic(Message);
                   end case;
                 end;
-                when Error(Message): panic(Message);
+                when Error(const Message): panic(Message);
               end case;
             end;
-            when Error(Message): panic(Message);
+            when Error(const Message): panic(Message);
           end case;
           case Close(Connection) of
             when Ok(_):
             begin
             end;
-            when Error(Message): panic(Message);
+            when Error(const Message): panic(Message);
           end case;
         end;
-        when Error(Message): panic(Message);
+        when Error(const Message): panic(Message);
       end case;
       case CloseListener(ListenerValue) of
         when Ok(_):
         begin
         end;
-        when Error(Message): panic(Message);
+        when Error(const Message): panic(Message);
       end case;
     end;
-    when Error(Message): panic(Message);
+    when Error(const Message): panic(Message);
   end case;
 end.
 "#
@@ -261,14 +261,14 @@ uses Std.Http, Std.Net, Std.Net.Utf8;
 
 begin
   case Listen('127.0.0.1', {port}) of
-    when Ok(ListenerValue):
+    when Ok(const ListenerValue):
     begin
       case Accept(ListenerValue) of
-        when Ok(Connection):
+        when Ok(const Connection):
         begin
           case ReadRequest(Connection, 4096, 1024) of
             when Ok(_): panic('ambiguous framing was accepted');
-            when Error(Message):
+            when Error(const Message):
             begin
               if not Message.Contains('both Transfer-Encoding and Content-Length') then
               begin
@@ -280,7 +280,7 @@ begin
                 when Ok(_):
                 begin
                 end;
-                when Error(WriteMessage): panic(WriteMessage);
+                when Error(const WriteMessage): panic(WriteMessage);
               end case;
             end;
           end case;
@@ -288,19 +288,19 @@ begin
             when Ok(_):
             begin
             end;
-            when Error(Message): panic(Message);
+            when Error(const Message): panic(Message);
           end case;
         end;
-        when Error(Message): panic(Message);
+        when Error(const Message): panic(Message);
       end case;
       case CloseListener(ListenerValue) of
         when Ok(_):
         begin
         end;
-        when Error(Message): panic(Message);
+        when Error(const Message): panic(Message);
       end case;
     end;
-    when Error(Message): panic(Message);
+    when Error(const Message): panic(Message);
   end case;
 end.
 "#
@@ -331,14 +331,14 @@ uses Std.Http, Std.Net, Std.Net.Utf8;
 
 begin
   case Listen('127.0.0.1', {port}) of
-    when Ok(ListenerValue):
+    when Ok(const ListenerValue):
     begin
       case Accept(ListenerValue) of
-        when Ok(Connection):
+        when Ok(const Connection):
         begin
           case ReadRequest(Connection, 4096, 4) of
             when Ok(_): panic('oversized request body was accepted');
-            when Error(Message):
+            when Error(const Message):
             begin
               if not Message.Contains('MaxBodyBytes') then
               begin
@@ -350,7 +350,7 @@ begin
                 when Ok(_):
                 begin
                 end;
-                when Error(WriteMessage): panic(WriteMessage);
+                when Error(const WriteMessage): panic(WriteMessage);
               end case;
             end;
           end case;
@@ -358,19 +358,19 @@ begin
             when Ok(_):
             begin
             end;
-            when Error(Message): panic(Message);
+            when Error(const Message): panic(Message);
           end case;
         end;
-        when Error(Message): panic(Message);
+        when Error(const Message): panic(Message);
       end case;
       case CloseListener(ListenerValue) of
         when Ok(_):
         begin
         end;
-        when Error(Message): panic(Message);
+        when Error(const Message): panic(Message);
       end case;
     end;
-    when Error(Message): panic(Message);
+    when Error(const Message): panic(Message);
   end case;
 end.
 "#

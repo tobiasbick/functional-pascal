@@ -37,7 +37,7 @@ Do not invent native test syntax for these tests.
 | Bindings | Immutable name versus mutable/shared value | Binding, aggregate-write, and capture rules are delivered in [AP16](ap16-immutable-and-mutable-bindings/README.md); shared handles retain their resource semantics |
 | Constants | Computed initialization versus compile-time constant | Case-label rules are delivered in [AP16.1](ap16-immutable-and-mutable-bindings/01-computed-const-bindings.md); subrange bounds follow in [AP18.1](ap18-subrange-types/01-subrange-declarations.md) |
 | Parameters | Read-only parameter versus `var` caller mutation | See [AP17](ap17-visible-caller-mutation/README.md) |
-| Patterns | Explicit binding versus literal/constant comparison | Scalar guard-binding migration, shadowing, and constructor lookup; see [AP20](ap20-nested-patterns-and-explicit-bindings/README.md#open-decisions) |
+| Patterns | Explicit binding versus literal/constant comparison | Scalar guard bindings, shadowing, constructor lookup, and recursive coverage are delivered in [AP20](ap20-nested-patterns-and-explicit-bindings/README.md#decisions); closed-enum `else` rejection remains in [AP03](ap03-explicit-closed-enum-cases/README.md) |
 | Types | One `of` application form for built-in and user generic types | None; see [AP24](ap24-generic-data-structures/README.md) |
 | Arguments | Fully positional versus fully named | None; see [AP09](ap09-named-arguments/README.md) |
 | Records | Typed structural construction versus factory | None; see [AP10](ap10-typed-record-construction/README.md) |
@@ -53,7 +53,10 @@ This uncompiled draft combines [AP03](ap03-explicit-closed-enum-cases/README.md)
 [AP21](ap21-decision-expressions/README.md),
 [AP24](ap24-generic-data-structures/README.md), and
 [AP25](ap25-conservative-purity/README.md).
-It is not a request to implement them in one pass. Settle their rules first.
+AP13 block boundaries and AP20 pattern bindings are implemented. Closed-enum
+`else` rejection, decision expressions, generic data declarations, and purity
+remain drafts owned by AP03, AP21, AP24, and AP25. Settle their remaining rules
+before implementation; this example does not request a combined implementation.
 
 ```pascal
 type Lookup of T = enum

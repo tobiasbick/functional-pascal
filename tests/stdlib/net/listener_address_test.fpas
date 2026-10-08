@@ -41,7 +41,7 @@ begin
     when Ok(_):
       begin
       end;
-    when Error(Message):
+    when Error(const Message):
       begin
         panic(Message);
       end;

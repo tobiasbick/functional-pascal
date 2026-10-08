@@ -10,7 +10,7 @@ begin
         Fail('expected an error result');
         return '';
       end;
-    when Error(Message):
+    when Error(const Message):
       begin
         return Message;
       end;

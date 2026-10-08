@@ -3,6 +3,7 @@ use super::*;
 mod boolean;
 mod counting;
 mod ordinal;
+mod pattern_bindings;
 mod repetition;
 
 #[test]
@@ -70,7 +71,7 @@ begin
   var Score: integer := 0;
   const I: integer := 5;
   case I of
-    when Candidate if Candidate < 0: Score := 99;
+    when const Candidate if Candidate < 0: Score := 99;
     when 1..3: Score := 1;
     when 5 if I > 5: Score := 2;
     when 5: Score := 3;

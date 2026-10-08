@@ -85,7 +85,7 @@ begin
   end if;
 
   case Failures[0] of
-    when TuiMsg.BackgroundFailed(IgnoredId, Kind, Message, Code, Line, Column):
+    when TuiMsg.BackgroundFailed(const IgnoredId, const Kind, const Message, const Code, const Line, const Column):
       begin
         panic(Message);
       end;
@@ -218,22 +218,22 @@ end procedure;
 public procedure TuiAppRouteInput(ApplicationId: integer; Input: TuiHostInput);
 begin
   case Input of
-    when TuiHostInput.Message(InputMsg):
+    when TuiHostInput.Message(const InputMsg):
       begin
         TuiAppPushMessages(ApplicationId, [InputMsg]);
       end;
-    when TuiHostInput.Key(Key):
+    when TuiHostInput.Key(const Key):
       begin
         TuiAppPushMessages(ApplicationId, TuiRouteKey(TuiAppTrees[ApplicationId - 1], TuiAppFrames[ApplicationId -
                                                                                                    1], Key));
       end;
-    when TuiHostInput.Pointer(Pointer):
+    when TuiHostInput.Pointer(const Pointer):
       begin
         TuiAppPushMessages(ApplicationId, Std.Tui.Runtime.Routing.Pointer.TuiRouteApplicationPointer(Pointer, ApplicationId, TuiAppTrees[ApplicationId -
                                                                                                                                          1], TuiAppFrames[ApplicationId -
                                                                                                                                                           1]));
       end;
-    when TuiHostInput.Resize(Size):
+    when TuiHostInput.Resize(const Size):
       begin
         TuiAppPushMessages(ApplicationId, [TuiMsg.Resize(Size)]);
       end;
@@ -243,7 +243,7 @@ end procedure;
 public procedure TuiAppApplyResizeIfNeeded(ApplicationId: integer; Msg: TuiMsg);
 begin
   case Msg of
-    when TuiMsg.Resize(Size):
+    when TuiMsg.Resize(const Size):
       begin
         TuiAppApplyResize(ApplicationId, Size);
       end;
@@ -266,7 +266,7 @@ begin
     when TuiCmd.SetPalette:
       begin
         case Output.ReadPalette() of
-          when Some(Palette):
+          when Some(const Palette):
             begin
               TuiAppPalettes[ApplicationId - 1] := Palette;
             end;
@@ -281,7 +281,7 @@ begin
   end case;
 
   case Output.ReadTickRequest() of
-    when Some(Delay):
+    when Some(const Delay):
       begin
         const Now: integer := MonotonicMillis();
         TuiAppTickRequestedAt[ApplicationId - 1] := Now;

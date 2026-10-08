@@ -42,7 +42,6 @@ pub use check::NamedTypeMap;
 pub use check::NestedRoutineCaptureInfo;
 pub use check::NestedRoutineCaptureMap;
 pub use check::RecordDefaultsMap;
-pub use check::ScalarCaseBindingMap;
 pub use error::SemaError;
 pub use interface::{
     InterfaceConversionError, UnitAnalysis, analyze_program_with_interface_support,

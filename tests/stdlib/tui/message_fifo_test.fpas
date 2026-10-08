@@ -32,19 +32,19 @@ begin
   const ResetOk: boolean := Cmd.Command() = TuiCmd.NoCommand;
   Cmd.Set(TuiCmd.NoCommand);
   case Msg of
-    when TuiMsg.Tick(Delta):
+    when TuiMsg.Tick(const Delta):
       begin
         return PushEvent(State, 'tick', ResetOk);
       end;
-    when TuiMsg.Action(Source, Action):
+    when TuiMsg.Action(const Source, const Action):
       begin
         return PushEvent(State, 'action', ResetOk);
       end;
-    when TuiMsg.FocusChanged(Previous, Current):
+    when TuiMsg.FocusChanged(const Previous, const Current):
       begin
         return PushEvent(State, 'focus', ResetOk);
       end;
-    when TuiMsg.Key(Key):
+    when TuiMsg.Key(const Key):
       begin
         return PushEvent(State, 'key', ResetOk);
       end;

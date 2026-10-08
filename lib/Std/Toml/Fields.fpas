@@ -21,7 +21,7 @@ end function;
 public function ParseTable(Text: string): result of dict of string to TomlValue, string;
 begin
   case try Std.Toml.Parse(Text) of
-    when TomlValue.Table(Fields):
+    when TomlValue.Table(const Fields):
       begin
         return Ok(Fields);
       end;
@@ -40,7 +40,7 @@ end function;
 public function Field(Fields: dict of string to TomlValue; Name: string): result of TomlValue, string;
 begin
   case Fields.Get(Name) of
-    when Some(Value):
+    when Some(const Value):
       begin
         return Ok(Value);
       end;
@@ -59,7 +59,7 @@ end function;
 public function StringField(Fields: dict of string to TomlValue; Name: string): result of string, string;
 begin
   case try Field(Fields, Name) of
-    when TomlValue.String(Value):
+    when TomlValue.String(const Value):
       begin
         return Ok(Value);
       end;
@@ -78,7 +78,7 @@ end function;
 public function IntegerField(Fields: dict of string to TomlValue; Name: string): result of integer, string;
 begin
   case try Field(Fields, Name) of
-    when TomlValue.Integer(Value):
+    when TomlValue.Integer(const Value):
       begin
         return Ok(Value);
       end;
@@ -97,7 +97,7 @@ end function;
 public function FloatField(Fields: dict of string to TomlValue; Name: string): result of real, string;
 begin
   case try Field(Fields, Name) of
-    when TomlValue.Float(Value):
+    when TomlValue.Float(const Value):
       begin
         return Ok(Value);
       end;
@@ -116,7 +116,7 @@ end function;
 public function BooleanField(Fields: dict of string to TomlValue; Name: string): result of boolean, string;
 begin
   case try Field(Fields, Name) of
-    when TomlValue.Boolean(Value):
+    when TomlValue.Boolean(const Value):
       begin
         return Ok(Value);
       end;
@@ -135,7 +135,7 @@ end function;
 public function TableField(Fields: dict of string to TomlValue; Name: string): result of dict of string to TomlValue, string;
 begin
   case try Field(Fields, Name) of
-    when TomlValue.Table(Value):
+    when TomlValue.Table(const Value):
       begin
         return Ok(Value);
       end;
@@ -154,7 +154,7 @@ end function;
 public function ArrayField(Fields: dict of string to TomlValue; Name: string): result of array of TomlValue, string;
 begin
   case try Field(Fields, Name) of
-    when TomlValue.ArrayValue(Items):
+    when TomlValue.ArrayValue(const Items):
       begin
         return Ok(Items);
       end;
@@ -176,7 +176,7 @@ begin
   for Item: TomlValue in try ArrayField(Fields, Name) do
     begin
       case Item of
-        when TomlValue.String(Value):
+        when TomlValue.String(const Value):
           begin
             Values.Push(Value);
           end;

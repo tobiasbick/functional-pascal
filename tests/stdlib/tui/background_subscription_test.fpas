@@ -35,7 +35,7 @@ begin
         ReplaceWorker(State, Cmd);
         return State;
       end;
-    when TuiMsg.Tick(Delta):
+    when TuiMsg.Tick(const Delta):
       begin
         if Delta = 0 then
           begin

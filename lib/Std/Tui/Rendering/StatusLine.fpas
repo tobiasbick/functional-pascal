@@ -8,7 +8,7 @@ uses
 function TuiStatusFocused(Focused: option of TuiControlId; Id: TuiControlId): boolean;
 begin
   case Focused of
-    when Some(Value):
+    when Some(const Value):
       begin
         return Value.Value = Id.Value;
       end;
@@ -50,17 +50,17 @@ begin
       end if;
 
       case Items[Index] of
-        when TuiStatusItem.Hint(Text):
+        when TuiStatusItem.Hint(const Text):
           begin
             X := TuiStatusWrite(Canvas, X, Bounds.Y, Text, TuiStyleRole.StatusNormal);
           end;
-        when TuiStatusItem.KeyHint(KeyText, Text):
+        when TuiStatusItem.KeyHint(const KeyText, const Text):
           begin
             X := TuiStatusWrite(Canvas, X, Bounds.Y, KeyText, TuiStyleRole.StatusShortcut);
             X := TuiStatusWrite(Canvas, X, Bounds.Y, ' ', TuiStyleRole.StatusNormal);
             X := TuiStatusWrite(Canvas, X, Bounds.Y, Text, TuiStyleRole.StatusNormal);
           end;
-        when TuiStatusItem.Command(Id, Text, Action, Enabled):
+        when TuiStatusItem.Command(const Id, const Text, const Action, const Enabled):
           begin
             var Role: TuiStyleRole := TuiStyleRole.StatusNormal;
             if not Enabled then

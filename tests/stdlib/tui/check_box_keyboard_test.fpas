@@ -26,10 +26,10 @@ function UpdateCheck(State: CheckModel; Msg: TuiMsg; Cmd: TuiCmdOutput): CheckMo
 begin
   Cmd.Set(TuiCmd.NoCommand);
   case Msg of
-    when TuiMsg.FocusChanged(Previous, Current):
+    when TuiMsg.FocusChanged(const Previous, const Current):
       begin
         case Current of
-          when Some(Id):
+          when Some(const Id):
             begin
               return CheckModel(Focus := Id.Value, Checked := State.Checked, Changes := State.Changes);
             end;
@@ -39,7 +39,7 @@ begin
             end;
         end case;
       end;
-    when TuiMsg.CheckChanged(Source, Action, Checked):
+    when TuiMsg.CheckChanged(const Source, const Action, const Checked):
       begin
         AssertEquals(1, Source.Value);
         AssertEquals(9, Action.Value);

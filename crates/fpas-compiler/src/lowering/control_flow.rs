@@ -2,6 +2,7 @@
 //!
 //! Documentation: `docs/pascal/language/control-flow/while-repeat.md`.
 
+mod conditions;
 mod counting;
 
 use fpas_ir::{BinaryOperation, Constant, IntrinsicId, IrType, Operation, Terminator};
@@ -73,19 +74,31 @@ impl LoweringContext {
         else_branch: Option<&Stmt>,
         span: fpas_lexer::Span,
     ) -> Result<(), CompileError> {
-        let condition = self.lower_expression(condition)?;
-        let then_block = self.new_block(span)?;
-        let else_block = self.new_block(span)?;
-        let merge_block = self.new_block(span)?;
-        self.terminate(Terminator::Branch {
-            condition,
-            then_target: target(then_block),
-            else_target: target(else_block),
-        })?;
-
-        self.switch_to(then_block);
-        self.lower_statement(then_branch)?;
-        let then_continues = !self.is_terminated();
+        let else_block;
+        let merge_block;
+        let then_continues;
+        if conditions::has_pattern_test(condition) {
+            else_block = self.new_block(span)?;
+            merge_block = self.new_block(span)?;
+            self.begin_scope();
+            self.lower_pattern_condition(condition, else_block)?;
+            self.lower_statement(then_branch)?;
+            then_continues = !self.is_terminated();
+            self.end_scope();
+        } else {
+            let condition = self.lower_expression(condition)?;
+            let then_block = self.new_block(span)?;
+            else_block = self.new_block(span)?;
+            merge_block = self.new_block(span)?;
+            self.terminate(Terminator::Branch {
+                condition,
+                then_target: target(then_block),
+                else_target: target(else_block),
+            })?;
+            self.switch_to(then_block);
+            self.lower_statement(then_branch)?;
+            then_continues = !self.is_terminated();
+        }
         if then_continues {
             self.jump(merge_block)?;
         }
@@ -120,12 +133,19 @@ impl LoweringContext {
         self.jump(condition_block)?;
 
         self.switch_to(condition_block);
-        let condition = self.lower_expression(condition)?;
-        self.terminate(Terminator::Branch {
-            condition,
-            then_target: target(body_block),
-            else_target: target(after_block),
-        })?;
+        let pattern_condition = conditions::has_pattern_test(condition);
+        if pattern_condition {
+            self.begin_scope();
+            self.lower_pattern_condition(condition, after_block)?;
+            self.jump(body_block)?;
+        } else {
+            let condition = self.lower_expression(condition)?;
+            self.terminate(Terminator::Branch {
+                condition,
+                then_target: target(body_block),
+                else_target: target(after_block),
+            })?;
+        }
 
         self.push_loop(LoopTargets {
             break_block: after_block,
@@ -137,6 +157,9 @@ impl LoweringContext {
             self.jump(condition_block)?;
         }
         self.pop_loop();
+        if pattern_condition {
+            self.end_scope();
+        }
         self.switch_to(after_block);
         Ok(())
     }

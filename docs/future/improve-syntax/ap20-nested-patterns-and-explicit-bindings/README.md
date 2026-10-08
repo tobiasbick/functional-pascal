@@ -1,20 +1,22 @@
 # AP20: Nested patterns and explicit bindings
 
-Status: agreed direction. Effort: large. Completion is tracked in the
+Status: complete (AP20.1–AP20.3). Effort: large. Completion is tracked in the
 [central README](../README.md); the process is in
 [development-process.md](../development-process.md).
 
 ## Goal
 
 Nested patterns have stable resolution and concrete coverage diagnostics
-without a catch-all loophole for closed enums; adding a surrounding name cannot
-silently alter a pattern's meaning.
+with recursive exhaustiveness and unreachable-label checks. Bindings remain
+explicit regardless of surrounding names. Rejecting `else` on closed enums is
+the separate, open AP03 package; current cases accept `else`.
 
-Current flat enum patterns bind plain payload identifiers. Scalar value labels
-require compile-time constants. A bare identifier in a guarded scalar arm can
-introduce a fresh binding, while a resolved constant is a comparison. AP20 adds
-explicit payload bindings and stable resolution for nested patterns; it must
-account for the existing scalar guard-binding form during its inventory.
+After AP20.1 and AP20.2, patterns bind with `const Name`, ignore fields with
+`_`, nest, and compare payloads with compile-time constants; coverage is
+checked recursively and covered labels are rejected. Scalar guard bindings use
+`when const N if Guard:`, and a bare scalar label is always a value
+comparison. `Value is Pattern` tests one pattern as an `if`, `elsif`, or
+`while` condition (AP20.3).
 
 ## Decisions
 
@@ -28,6 +30,27 @@ account for the existing scalar guard-binding form during its inventory.
   bindings; it cannot appear under `or` or `not`. It is not a `case` and has no
   exhaustiveness check. `is` is not a free boolean value.
 - `is` becomes a reserved keyword.
+- Scalar guard bindings use the same explicit form:
+  `when const N if N > 0:`. A bare identifier in a scalar label is always a
+  value comparison and must name a compile-time constant or enum member; an
+  unknown name reports a diagnostic showing `const N`. The existing limits
+  stay: exactly one label in the arm and a required guard, so
+  `when const N:` without a guard is rejected in favour of `else`.
+- A bare identifier in a payload position (AP20.2), for example
+  `Some(MaxValue)`, is a comparison. Like scalar labels it must be a
+  compile-time constant; computed `const` values belong in the guard. A name
+  that is not a constant reports a diagnostic showing `const Name`.
+- `_` ignores exactly one field. When that field has an enum type,
+  `Some(_)` covers all of its variants. Only `_` in place of a whole variant
+  (`when _:`) is rejected.
+- Pattern bindings are `const` only; there is no `var` binding. Patterns stay
+  positional; named fields such as `Shape.Circle(Radius := const R)` remain
+  rejected (FP3026).
+- One arm may list several labels with the same binding names and compatible
+  types, for example `when Ok(const Msg), Error(const Msg):`.
+- Exhaustiveness is computed recursively for nested patterns: `Ok(Some(_))`,
+  `Ok(None)`, and `Error(_)` together are exhaustive. Guards do not count
+  toward coverage. Rejecting `else` on closed enums belongs to AP03.
 
 ```pascal
 case Response of
@@ -52,9 +75,8 @@ const Hit: boolean := X is Some(_);   // error: 'is' only in if, elsif, while
 
 ## Open decisions
 
-Before AP20.1, specify how its explicit binding rule applies to the existing
-bare scalar guard-binding form, including shadowing and named constants.
-The agreed payload-field syntax does not yet define that migration.
+None. The scalar guard-binding migration and the pattern details above were
+agreed before AP20.1.
 
 ## Dependencies
 
@@ -72,12 +94,15 @@ stay unambiguous. AP20.3 adds the `is` test using the same pattern rules.
 
 ## Work packages
 
-- [ ] [AP20.1: Explicit pattern bindings](01-explicit-pattern-bindings.md)
-- [ ] [AP20.2: Nested patterns](02-nested-patterns.md)
-- [ ] [AP20.3: Pattern test with is](03-is-pattern-test.md)
+- [x] [AP20.1: Explicit pattern bindings](01-explicit-pattern-bindings.md)
+- [x] [AP20.2: Nested patterns](02-nested-patterns.md)
+- [x] [AP20.3: Pattern test with is](03-is-pattern-test.md)
 
 ## Acceptance
 
 Nested patterns have stable resolution and concrete coverage diagnostics
-without a catch-all loophole for closed enums; adding a surrounding name cannot
-silently alter a pattern's meaning.
+with recursive exhaustiveness and unreachable-label checks. Named compile-time
+constants contribute their values to coverage, and qualified constructors must
+resolve to a variant of the matched enum. Pattern bindings cannot hide names
+used by comparisons in the same label or another label of the arm, including
+inside closures. The independent closed-enum `else` restriction remains in AP03.

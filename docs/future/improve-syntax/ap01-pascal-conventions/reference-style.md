@@ -221,8 +221,8 @@ Current forms: enum payloads, qualified variants, `case ... of`, declaration
 closers and statement terminators, `when` arms, and `null;` (AP13;
 [enums](../../../pascal/language/types/enums.md)).
 
-Computed `const` and writable `var` are implemented by AP16. Draft forms:
-`const` in payload patterns (AP20.1), and mandatory explicit coverage without
+Computed `const` and writable `var` (AP16) and `const` in payload patterns
+(AP20.1) are implemented. Draft form: mandatory explicit coverage without
 `else` for the closed enum (AP03).
 
 ```pascal

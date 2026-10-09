@@ -362,19 +362,38 @@ Regression coverage:
 
 <a id="c05"></a>
 
-## C05 — P2 — Finite construction checking expands a shared type graph exponentially
+## C05 — P2: shared finite type graphs are checked without repeated expansion
 
-- Owner: [crates/fpas-sema/src/check/decl/types/collection/finite.rs:14-32,42-97](../../../../crates/fpas-sema/src/check/decl/types/collection/finite.rs), especially the field traversal at lines 76-80 and removal from the active set at line 92.
-- Contract: [docs/pascal/language/types/declaration-order.md:66-91](../../../../docs/pascal/language/types/declaration-order.md) and AP11.1 require finite record graphs to be accepted.
-- Actual: the checker tracks the current recursion path but does not retain a completed finite result. Both fields referencing the same next record recursively recheck its entire subtree; the outer loop repeats this from every declared type. For N records each containing two fields of the next type, this performs O(2^N) graph traversal despite an O(N) source/type graph. No values need to be constructed.
-- Reproduction: generate `type R0 = record Left: R1; Right: R1; end record;`, continuing through R21, then `type R22 = record Value: integer; end record;`, all in `program FiniteDag; ... begin end.`. Source is 1,214 bytes and 23 type declarations.
-- Command: `fpas check --std-lib lib .temp-data/syntax-review-syntax/finite-dag-22.fpas`.
-- Bounded observations with the verified current **debug** CLI: depth 8: 242 ms; 12: 259 ms; 16: 636 ms; 20: 8,533 ms; 22: terminated at 15,020 ms with `ETIMEDOUT`. These are diagnostic stress observations during concurrent audit work, not release benchmarks or a claimed production speed ratio. The exponential recurrence is independently visible in the source.
-- Impact: tiny legal type files can stall compiler and editor analysis. This is newly relevant to AP11 whole-file finite-construction checking.
-- Needed coverage: a shared acyclic type DAG and a recursive graph with shared terminating alternatives. Verify bounded graph work, preferably using visit counts/fixed-point invariants rather than a fragile wall-clock assertion. A finite-type fixed-point/SCC analysis or appropriate memoization should avoid re-expansion while preserving cycle diagnostics.
-- Evidence files: `finite.cjs`, `finite22.cjs`, `finite-results.json`, `finite22-results.json`, `finite-dag-*.fpas` under `.temp-data/syntax-review-syntax/`.
+Package: AP11.1.
 
-The exact 23-type input can be regenerated without constructing any FPAS values:
+Status: resolved. See [repair verification](README.md#c05) for checks and
+independent workspace validation blockers.
+
+Implemented behavior: finite construction is solved once over a shared graph
+for all collected type declarations. Canonical nominal record and enum identities
+are expanded once. Record fields and each enum alternative require all their
+payloads; enums and `Result` need one finite alternative. Scalars, empty
+containers, callable signatures and handles supply terminating seeds.
+
+A worklist computes the least fixed point. Each finite node is queued once,
+and each dependency receives at most one notification, so constraint solving
+uses O(V + E) work and storage. Recursive components without a terminating
+alternative remain non-finite. Cycle witnesses follow only non-finite
+dependencies after solving; shared finite alternatives cannot leave an optional
+cycle in a mandatory-field diagnostic. A witness follows a bounded graph path
+per failing declaration.
+
+Owners:
+
+- [Declaration validation](../../../../crates/fpas-sema/src/check/decl/types/collection/finite/mod.rs).
+- [Graph collection, worklist and cycle witnesses](../../../../crates/fpas-sema/src/check/decl/types/collection/finite/graph.rs).
+
+Contract: [Finite recursive values](../../../../docs/pascal/language/types/declaration-order.md#finite-recursive-values)
+retains all existing rules for required fields, terminating alternatives and
+alias-cycle rejection. The repair changes the checking algorithm without
+changing the language rules.
+
+CLI control: generate `.temp-data/finite-dag-22.fpas` without constructing values:
 
 ```python
 from pathlib import Path
@@ -384,10 +403,34 @@ source = 'program FiniteDag;\n'
 for i in range(depth):
     source += f'type R{i} = record Left: R{i + 1}; Right: R{i + 1}; end record;\n'
 source += f'type R{depth} = record Value: integer; end record;\nbegin end.\n'
-target = Path('.temp-data/syntax-review-syntax/finite-dag-22.fpas')
+target = Path('.temp-data/finite-dag-22.fpas')
 target.parent.mkdir(parents=True, exist_ok=True)
 target.write_text(source, encoding='utf-8')
 ```
+
+Command:
+
+```text
+fpas check --std-lib lib .temp-data/finite-dag-22.fpas
+```
+
+The 23-type control is accepted with exit 0. The same built debug CLI also
+accepts controls at depths 12, 20, 40 and 64. Regression assertions use graph
+work counts rather than elapsed-time thresholds.
+
+Regression coverage:
+
+- [Graph invariants](../../../../crates/fpas-sema/src/check/decl/types/collection/finite/graph/tests.rs):
+  shared acyclic records through depth 256, shared mutually recursive enum
+  alternatives with one terminating seed, and repeated non-terminating alternatives.
+  Tests verify one nominal expansion per identity, bounded dependency work and
+  bounded failure witnesses across all roots.
+- [Semantic integration](../../../../crates/fpas-sema/src/tests/decl/type_order/finite_graphs.rs):
+  the 41-type record DAG, declaration and variant order, aliases, mixed finite
+  and mandatory paths, and Result/enum cycle diagnostics for every declared type.
+- Existing [recursive-type tests](../../../../crates/fpas-sema/src/tests/decl/type_order/cycles.rs)
+  and forward/interface/compiler regressions retain the current finite-value
+  and declaration-order contract.
 
 <a id="c06"></a>
 

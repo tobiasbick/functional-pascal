@@ -65,8 +65,8 @@ priorities; this sequence does not close or reclassify them.
 
 ## Finding index
 
-**Repair status: C01-C04 and H01/H02 are resolved; 16 findings remain open.
-The debugger follow-ups are complete. The next open compiler finding is C05.** The Done column
+**Repair status: C01-C05 and H01/H02 are resolved; 15 findings remain open.
+The debugger follow-ups are complete. The next open compiler finding is C06.** The Done column
 tracks repairs, independently of package-completion checkboxes and the audit's
 original severity counts.
 
@@ -76,7 +76,7 @@ original severity counts.
 | [x] | [C02](compiler-and-semantics.md#c02) | P2 | resolved: sibling nested calls preserve transitive captures and reference lifetimes |
 | [x] | [C03](compiler-and-semantics.md#c03) | P2 | resolved: pattern bindings preserve callable task restrictions and discard proofs |
 | [x] | [C04](compiler-and-semantics.md#c04) | P2 | resolved: static record fields and derived constants contribute evaluated pattern values across units |
-| [ ] | [C05](compiler-and-semantics.md#c05) | P2 | Finite construction checking expands a shared type graph exponentially |
+| [x] | [C05](compiler-and-semantics.md#c05) | P2 | resolved: shared finite type graphs use one worklist solution with bounded dependency work |
 | [ ] | [C06](compiler-and-semantics.md#c06) | P2 | A valid program sharing its name with a declaration fails object compilation |
 | [ ] | [T01](tooling-and-tests.md#t01) | P2 | LSP project failures discard the stable diagnostic record |
 | [ ] | [T02](tooling-and-tests.md#t02) | P2 | Root-program import failures lose an available path and source span |
@@ -292,6 +292,34 @@ All C01-C04 regressions pass. The unchanged VM socket assertion
 The previously failing backpressure control passes in this run. The LSP watcher
 test remains excluded after its previously confirmed timeouts. The complete
 Rust workspace is not green.
+
+### C05
+
+C05 replaces recursive re-expansion with a shared finite-construction graph and
+one worklist solution across all declared types. Nominal definitions are expanded
+once, finite dependencies are propagated once, and cycle witnesses follow only
+non-finite paths. AP11.1 and the declaration-order handbook describe the
+implementation; language rules and diagnostic codes are unchanged.
+
+| Check | C05 repair result |
+| --- | --- |
+| `cargo fmt --all --check` | Passed |
+| `cargo build --offline` | Passed |
+| `cargo test --offline -p fpas-sema -p fpas-compiler --no-fail-fast -- --test-threads=1` | Passed: 853 tests, including 7 new C05 regression tests |
+| Built CLI shared-record controls | Depths 12, 20, 22, 40 and 64 all pass `fpas check --std-lib lib` with exit 0 |
+| Deterministic graph-work controls | Up to 256 nominal types; finite notifications and nominal expansions stay bounded by the graph, without timing assertions |
+| `fpas fmt --check lib apps examples tests` | Passed |
+| `fpas test --std-lib lib tests/suite.fpasprj` | Passed: 488 passed, 1 intentional skip, 0 failed |
+| Rust workspace, serial verification | 3,844 passed and 2 failed across 202 result groups; the known LSP watcher hang was excluded |
+| Changed Markdown documents | All local links and anchors resolve; whitespace check passed |
+
+The workspace command was
+`cargo test --offline --workspace --no-fail-fast -- --skip initialized_registers_source_and_manifest_file_watchers --test-threads=1`.
+All C01-C05 regressions pass. The two unchanged VM network assertions described
+under [C02](#c02) fail with the same observations: the cancelled backpressure
+write completes with 65,536 bytes, and the socket timeout is 32 ms instead of
+the expected 30 ms. The LSP watcher test remains excluded after its previously
+confirmed timeouts. The complete Rust workspace is not green.
 
 ## Verification
 

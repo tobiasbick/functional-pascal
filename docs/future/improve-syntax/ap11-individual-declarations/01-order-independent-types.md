@@ -38,6 +38,14 @@ Nominal records and enums may be mutually recursive when their stored
 values admit a finite construction. The check follows stored fields and enum
 payloads across type references, rather than rejecting every dependency cycle.
 
+Construction requirements are collected in one shared graph for all declared
+types. A worklist computes the least fixed point of finite values: records
+require all stored fields, enum alternatives require all their payloads, and
+enums or `Result` need one finite alternative. Each nominal definition is
+expanded once and each dependency receives at most one finite notification.
+Mandatory cycle diagnostics follow only non-finite dependencies after solving
+the graph, retaining the participating type and field names.
+
 - Reject cycles consisting only of aliases, such as `A = B` and `B = A`.
   An alias to a valid recursive record or enum remains valid.
 - Allow optional or empty-container paths that can end the recursion. For
@@ -135,4 +143,8 @@ const DefaultLimit: integer := 10;
 Sema, interface, compiler, CLI and `tests/runner/type_order_test.fpas` tests
 cover forward references, finite recursion, rejected cycles, visibility,
 ambiguity, generics, source-order value checks and initialization effects.
+Shared record DAGs, mutually recursive alternatives and failure witnesses are
+covered in `crates/fpas-sema/src/tests/decl/type_order/finite_graphs.rs`.
+Internal graph tests count expansions and propagated edges for graphs with up
+to 256 nominal types, avoiding wall-clock assertions.
 See [type declaration order](../../../pascal/language/types/declaration-order.md).

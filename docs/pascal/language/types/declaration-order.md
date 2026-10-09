@@ -67,6 +67,12 @@ defaults are substituted when a record is constructed.
 Records and enums may be mutually recursive when a finite value can be
 constructed. The check follows stored fields and enum payloads across types.
 
+Shared finite type definitions are valid when referenced by multiple required
+fields. The compiler checks one shared construction graph and reuses its results
+across declarations; shared paths do not repeatedly expand the same definitions.
+Terminating alternatives are evaluated across the complete graph, independently
+of declaration or variant order.
+
 - Every required record field must admit a finite value. Mandatory direct or
   mutual record cycles are rejected.
 - `Option` can terminate with `None`. Arrays and dictionaries can terminate

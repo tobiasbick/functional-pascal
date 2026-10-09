@@ -133,8 +133,10 @@ reference assignment is complete in the
 [compiler follow-ups](../compiler-panic-followups.md#scheduling), as specified in
 the agreed [review repair order](review/README.md#repair-order).
 C04 is complete: static record fields contribute evaluated pattern values,
-including across compiled units. Continue with the remaining review findings;
-C05 is the next open compiler finding.
+including across compiled units.
+C05 is complete: finite construction uses a shared graph and bounded worklist
+propagation. Continue with the remaining review findings; C06 is the next open
+compiler finding.
 Completed package checkboxes remain the implementation status; these
 repairs are tracked by their review findings and follow-up entries.
 Use the review's Done column to skip completed repairs.

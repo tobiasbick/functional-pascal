@@ -3,5 +3,6 @@
 use super::super::{check_errors, check_ok};
 
 mod cycles;
+mod finite_graphs;
 mod forward;
 mod values;

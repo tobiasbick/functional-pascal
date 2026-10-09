@@ -96,7 +96,9 @@ fn parse_target_ast(
     reject_diagnostics(expression, diagnostics)
 }
 
-fn collect_target(
+/// Collects stored selectors from a validated designator for assignment or `var` passing.
+/// See `docs/pascal/language/functions/var-parameters.md`.
+pub(super) fn collect_target(
     expression: DebugExpression,
     selectors: &mut Vec<DebugAssignmentSelector>,
 ) -> Result<String, ()> {

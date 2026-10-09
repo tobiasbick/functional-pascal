@@ -72,10 +72,9 @@ fn lower(
                         DebugExpression::MethodCall {
                             receiver: Box::new(lowered),
                             name: name.clone(),
-                            arguments: args
-                                .iter()
-                                .map(|argument| lower(argument, depth + 1, limits, budget))
-                                .collect::<Result<Vec<_>, _>>()?,
+                            arguments: super::arguments::lower(args, |argument| {
+                                lower(argument, depth + 1, limits, budget)
+                            })?,
                         }
                     }
                 };
@@ -86,10 +85,9 @@ fn lower(
             designator, args, ..
         } => Ok(DebugExpression::Call {
             callee: Box::new(lower_call_designator(designator, depth, limits, budget)?),
-            arguments: args
-                .iter()
-                .map(|argument| lower(argument, depth + 1, limits, budget))
-                .collect::<Result<Vec<_>, _>>()?,
+            arguments: super::arguments::lower(args, |argument| {
+                lower(argument, depth + 1, limits, budget)
+            })?,
         }),
         Expr::ArrayLiteral(elements, _) => Ok(DebugExpression::Array(
             elements
@@ -158,15 +156,19 @@ fn lower(
             "closure construction",
             "Use a visible scalar or aggregate value.",
         )),
-        Expr::VarArgument { .. } => Err(unsupported(
-            expression,
-            "`var` call arguments",
-            "Debugger evaluation cannot change caller variables through `var` parameters.",
-        )),
+        Expr::VarArgument { designator, .. } => {
+            let lowered = lower_designator(designator, depth, limits, budget)?;
+            let mut selectors = Vec::new();
+            let root = super::target::collect_target(lowered, &mut selectors)
+                .map_err(|()| unsupported_designator(designator))?;
+            Ok(DebugExpression::VarArgument(
+                fpas_vm::DebugAssignmentTarget { root, selectors },
+            ))
+        }
         Expr::NamedArgument { .. } => Err(unsupported(
             expression,
-            "named call arguments",
-            "Pass debugger call arguments by position.",
+            "named arguments outside a call",
+            "Use named arguments in a declared routine, method, or constructor call.",
         )),
         Expr::Is { .. } => Err(unsupported(
             expression,
@@ -200,10 +202,7 @@ fn lower_call_designator(
                 DesignatorPart::Index(_, _) => None,
             })
             .collect::<Vec<_>>();
-        if names.len() == 1 {
-            return Ok(DebugExpression::Name(names[0].to_string()));
-        }
-        return Ok(DebugExpression::Callable(names.join(".")));
+        return Ok(DebugExpression::Name(names.join(".")));
     }
     lower_designator(designator, depth, limits, budget)
 }

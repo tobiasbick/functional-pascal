@@ -39,7 +39,7 @@ impl LoweringContext {
                 self.lower_pattern_test(source, ty, pattern, fail, &mut bindings)?;
                 for (name, binding_ty, local) in bindings {
                     let value = self.emit_value(Operation::ReadLocal(local), binding_ty, *span)?;
-                    let named = self.declare_local(&name, binding_ty, false, *span)?;
+                    let named = self.declare_local(&name, binding_ty, false, pattern.span())?;
                     self.write_local(named, value, *span)?;
                 }
             } else {

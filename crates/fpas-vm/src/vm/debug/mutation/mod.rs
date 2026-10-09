@@ -4,7 +4,8 @@ mod dictionary;
 pub(in crate::vm::debug) mod empty_storage;
 mod function_value;
 mod model;
-mod portable_type;
+/// Bounded portable type equality, including parameter modes; see `docs/pascal/tools/debugger.md`.
+pub(in crate::vm::debug) mod portable_type;
 mod replace;
 mod resolve;
 mod sequence;
@@ -33,6 +34,8 @@ pub use model::{
     DebugArrayMutationResult, DebugAssignmentSelector, DebugAssignmentTarget,
     DebugDictionaryMutationResult, DebugStringMutationResult,
 };
+/// Reads an already resolved aggregate path; see `docs/pascal/tools/debugger.md`.
+pub(in crate::vm::debug) use replace::resolve as resolve_value_path;
 pub(in crate::vm::debug) use resolve::{ResolvedAssignment, resolve_assignment, target_with_value};
 pub(in crate::vm::debug) use sequence::{insert_array, remove_array, replace_string_character};
 pub(in crate::vm::debug) use task_value::{
@@ -69,6 +72,17 @@ pub(in crate::vm::debug) fn validate_value(
     max_depth: usize,
 ) -> Result<(), DebugSessionError> {
     validate::value(executable.executable(), expected, value, max_depth)
+}
+
+/// Checks detached call values, including nested function signatures and parameter modes.
+/// See `docs/pascal/tools/debugger.md`.
+pub(in crate::vm::debug) fn validate_call_value(
+    executable: &VerifiedExecutable,
+    expected: fpas_bytecode::DebugTypeId,
+    value: &Value,
+    max_depth: usize,
+) -> Result<(), DebugSessionError> {
+    validate::call_value(executable.executable(), expected, value, max_depth)
 }
 
 pub(in crate::vm::debug) fn commit(

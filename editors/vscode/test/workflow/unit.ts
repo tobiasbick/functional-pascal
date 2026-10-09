@@ -71,12 +71,12 @@ export async function verifyWorkflowUnits(): Promise<void> {
     { command: "/usr/bin/xterm", args: ["-e", "/opt/fpas", "run", target] }
   );
 
-  const candidates = ["C:\\work\\one.fpasprj", "C:\\work\\two.fpasprj"];
+  const candidates = ["one", "two"].map(name => path.join(nativeRoot, "work", `${name}.fpasprj`));
   assert.equal(
-    rememberedProject(candidates, "c:\\WORK\\TWO.fpasprj"),
+    rememberedProject(candidates, process.platform === "win32" ? candidates[1].toUpperCase() : candidates[1]),
     candidates[1]
   );
-  assert.equal(rememberedProject(candidates, "C:\\work\\gone.fpasprj"), undefined);
+  assert.equal(rememberedProject(candidates, path.join(nativeRoot, "work", "gone.fpasprj")), undefined);
 
   const diagnosticRoot = path.join(nativeRoot, "project with spaces");
   const mainDiagnostic = path.join(diagnosticRoot, "main.fpas");

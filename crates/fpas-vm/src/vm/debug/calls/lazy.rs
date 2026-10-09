@@ -11,7 +11,9 @@ use crate::vm::debug::types::DebugSessionError;
 use crate::vm::layouts::RuntimeLayouts;
 
 /// Creates detached call state only when an evaluated expression invokes a call.
-pub(in crate::vm::debug) struct LazyCallSandbox {
+pub(in crate::vm::debug) struct LazyCallSandbox<'a> {
+    inspection: &'a crate::vm::debug::inspection::InspectionSnapshot,
+    frame_id: Option<u64>,
     executable: Arc<VerifiedExecutable>,
     layouts: Arc<RuntimeLayouts>,
     globals: Arc<RwLock<Vec<Option<Value>>>>,
@@ -20,9 +22,11 @@ pub(in crate::vm::debug) struct LazyCallSandbox {
     sandbox: Option<CallSandbox>,
 }
 
-impl LazyCallSandbox {
+impl<'a> LazyCallSandbox<'a> {
     /// Retains the inputs needed to create a detached call sandbox on first invocation.
     pub(in crate::vm::debug) fn new(
+        inspection: &'a crate::vm::debug::inspection::InspectionSnapshot,
+        frame_id: Option<u64>,
         executable: Arc<VerifiedExecutable>,
         layouts: Arc<RuntimeLayouts>,
         globals: Arc<RwLock<Vec<Option<Value>>>>,
@@ -30,6 +34,8 @@ impl LazyCallSandbox {
         cancelled: Arc<AtomicBool>,
     ) -> Self {
         Self {
+            inspection,
+            frame_id,
             executable,
             layouts,
             globals,
@@ -45,18 +51,50 @@ impl LazyCallSandbox {
         target: DebugCallTarget,
         arguments: Vec<Value>,
     ) -> Result<Value, DebugSessionError> {
-        if let Some(sandbox) = self.sandbox.as_mut() {
-            return sandbox.invoke(target, arguments);
+        if self.sandbox.is_none() {
+            let image = self.executable.executable();
+            let function = self
+                .inspection
+                .frame_function(self.frame_id)
+                .unwrap_or(image.entry);
+            let source = image
+                .functions
+                .get(function.get() as usize)
+                .and_then(|function| {
+                    function
+                        .debug
+                        .sequence_points
+                        .first()
+                        .map(|point| point.location.source)
+                        .or_else(|| {
+                            image
+                                .source_map
+                                .lookup(fpas_bytecode::InstructionAddress::new(
+                                    function.code.end.get().saturating_sub(1),
+                                ))
+                                .map(|run| run.source)
+                        })
+                })
+                .unwrap_or(fpas_bytecode::SourceId::new(0));
+            self.sandbox = Some(CallSandbox::new(
+                Arc::clone(&self.executable),
+                Arc::clone(&self.layouts),
+                source,
+                &self.globals,
+                self.limits,
+                Arc::clone(&self.cancelled),
+            )?);
         }
-        let mut sandbox = CallSandbox::new(
-            Arc::clone(&self.executable),
-            Arc::clone(&self.layouts),
-            &self.globals,
-            self.limits,
-            Arc::clone(&self.cancelled),
-        )?;
-        let result = sandbox.invoke(target, arguments);
-        self.sandbox = Some(sandbox);
-        result
+        let sandbox = self.sandbox.as_mut().ok_or_else(|| {
+            super::detach::error(
+                crate::vm::debug::types::DebugErrorKind::UnavailableValue,
+                "debug call sandbox is unavailable",
+                "Retry at a stable stop.",
+            )
+        })?;
+        if let DebugCallTarget::Reference(assignment) = target {
+            return sandbox.reference(self.inspection, self.frame_id, &assignment, &arguments);
+        }
+        sandbox.invoke(target, arguments)
     }
 }

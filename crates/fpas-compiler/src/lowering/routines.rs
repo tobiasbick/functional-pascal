@@ -212,6 +212,8 @@ pub(super) fn callable_table(
                         )?;
                         let reuses_cell = parent_captures.iter().any(|outer| {
                             outer.name.eq_ignore_ascii_case(&capture.name)
+                                && outer.declaration
+                                    == Some(capture.declaration.diagnostic_span_or_synthetic())
                                 && outer.kind != fpas_ir::CaptureKind::Value
                         });
                         super::context::CaptureInput::from_binding(

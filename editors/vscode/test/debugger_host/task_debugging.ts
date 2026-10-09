@@ -49,7 +49,7 @@ export async function verifyTaskDebugging(
     "  var Value: integer := Start;",
     "  Value := Value + 1;",
     "  return Value;",
-    "end;",
+    "end function;",
     "",
     "begin",
     "  const First: task := go Work(10);",

@@ -3,6 +3,7 @@
 //! **Documentation:** `docs/pascal/tools/debugger.md`
 
 mod bound_method;
+mod call_signature;
 mod captures;
 mod destination;
 mod routine;
@@ -16,6 +17,7 @@ use super::super::inspection::{InspectionSnapshot, MutationTarget};
 use super::super::types::{DebugErrorKind, DebugSessionError};
 
 pub(in crate::vm::debug) use bound_method::prepare as prepare_bound_method;
+pub(super) use call_signature::validate as validate_call_signature;
 pub(in crate::vm::debug) use routine::prepare as prepare_routine;
 pub(in crate::vm::debug) use source::{FunctionSource, extract as source};
 

@@ -5,6 +5,7 @@ import * as vscode from "vscode";
 import { verifyDebuggerLifecycle } from "./debugger_host/lifecycle";
 import { verifyBreakpointPolicies } from "./debugger_host/breakpoint_policies";
 import { verifyDebuggerEvaluation } from "./debugger_host/evaluation";
+import { verifyVarParameterCalls } from "./debugger_host/var_parameters";
 import { verifyExpressionMutation } from "./debugger_host/expression_mutation";
 import { verifyDictionaryMutation } from "./debugger_host/dictionary_mutation";
 import { verifySequenceMutation } from "./debugger_host/sequence_mutation";
@@ -56,6 +57,7 @@ export async function verifyDebuggerHost(): Promise<void> {
     await verifyRuntimeFailure(workspaceRoot, received, sent);
     await verifyRuntimeFailureFilters(workspaceRoot, received, sent);
     await verifyDebuggerEvaluation(workspaceRoot, received, sent);
+    await verifyVarParameterCalls(workspaceRoot, sent);
     await verifyExpressionMutation(workspaceRoot, received, sent);
     await verifyDictionaryMutation(workspaceRoot, received, sent);
     await verifySequenceMutation(workspaceRoot, received, sent);

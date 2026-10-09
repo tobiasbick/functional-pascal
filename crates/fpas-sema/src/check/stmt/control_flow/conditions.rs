@@ -3,7 +3,6 @@
 //! **Documentation:** `docs/pascal/language/pattern-matching/is-test.md`
 
 use super::super::super::Checker;
-use crate::scope::{Symbol, SymbolKind};
 use crate::types::Ty;
 use fpas_diagnostics::codes::{
     SEMA_DUPLICATE_DECLARATION, SEMA_MISPLACED_IS_TEST, SEMA_NON_BOOLEAN_CONDITION,
@@ -73,17 +72,7 @@ impl Checker {
         let bindings = self.check_is_pattern(&value_ty, pattern);
         for (name, ty) in bindings {
             self.check_import_alias_collision(&name, pattern.span());
-            if !self.scopes.define_with_declaration(
-                &name,
-                Symbol {
-                    constant: None,
-                    ty,
-                    mutable: false,
-                    kind: SymbolKind::Var,
-                    task_bound: false,
-                },
-                pattern.span(),
-            ) {
+            if !self.define_pattern_binding(&name, &ty, value, pattern.span()) {
                 self.error_with_code(
                     SEMA_DUPLICATE_DECLARATION,
                     format!(

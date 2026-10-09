@@ -67,6 +67,19 @@ impl TypeTable {
             id,
             name: record.name.clone(),
             fields: Vec::new(),
+            construction: Some(fpas_ir::RecordConstructionInfo {
+                owner_unit: record.owner_unit.clone(),
+                requires_owner: record.owner_unit.is_some()
+                    && record.fields.iter().any(|(name, _)| {
+                        record
+                            .private_members
+                            .iter()
+                            .any(|private| private.eq_ignore_ascii_case(name))
+                    }),
+                aliases: Vec::new(),
+                scope_unit: String::new(),
+                defaults: vec![None; record.fields.len()],
+            }),
             methods: record
                 .methods
                 .iter()

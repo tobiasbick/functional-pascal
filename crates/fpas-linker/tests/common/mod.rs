@@ -157,6 +157,7 @@ pub fn private_record_copy(
 
 pub fn one_field_record(field_type: u32) -> fpas_unit::object::ObjectRecordLayout {
     fpas_unit::object::ObjectRecordLayout {
+        construction: None,
         name: "shared.node".to_string(),
         fields: vec!["value".to_string()],
         field_types: vec![field_type],

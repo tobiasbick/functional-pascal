@@ -33,7 +33,7 @@ export async function verifyTaskResultReplacement(
     "function Work(): integer;",
     "begin",
     "  return 7;",
-    "end;",
+    "end function;",
     "",
     "begin",
     "  const Pending: task := go Work();",

@@ -183,6 +183,7 @@ pub(super) fn variant_executable() -> VerifiedExecutable {
             initializer: None,
         }],
         records: vec![RecordLayout {
+            construction: None,
             name: StringId::new(25),
             fields: vec![RecordField {
                 name: StringId::new(26),
@@ -337,7 +338,31 @@ pub(super) fn collision_executable() -> VerifiedExecutable {
                 register_count: 3,
                 return_convention: ReturnConvention::Value,
                 flags: FunctionFlags::default(),
-                debug: FunctionDebugInfo::default(),
+                debug: FunctionDebugInfo {
+                    scopes: vec![DebugScope {
+                        id: 0,
+                        parent: None,
+                    }],
+                    bindings: [7, 8]
+                        .into_iter()
+                        .enumerate()
+                        .map(|(index, name)| DebugBinding {
+                            name: StringId::new(name),
+                            type_name: StringId::new(4),
+                            ty: DebugTypeId::new(0),
+                            register: Register::new(index as u16).expect("parameter register"),
+                            kind: DebugBindingKind::Parameter,
+                            mutable: false,
+                            scope: 0,
+                            declaration: Some(location(2)),
+                            hidden: false,
+                            cell_backed: false,
+                            initializer: None,
+                        })
+                        .collect(),
+                    result_type: Some(DebugTypeId::new(0)),
+                    ..Default::default()
+                },
             },
         ],
         constants: vec![Constant::Integer(1), Constant::Integer(99)],

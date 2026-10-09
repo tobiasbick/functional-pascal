@@ -28,7 +28,7 @@ export async function verifyBreakpointPolicies(
     "  begin",
     "    Counter := Counter + 1;",
     "    WriteLn(Counter);",
-    "  end;",
+    "  end; end while;",
     "end.",
     ""
   ];

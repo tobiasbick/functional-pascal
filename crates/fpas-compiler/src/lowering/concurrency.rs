@@ -185,7 +185,7 @@ impl LoweringContext {
             let captures = callable
                 .captures
                 .iter()
-                .map(|capture| self.read_capture(&capture.name, span))
+                .map(|capture| self.read_capture(capture, span))
                 .collect::<Result<Vec<_>, _>>()?;
             let callee = self.emit_value(
                 Operation::MakeClosure {
@@ -267,7 +267,7 @@ impl LoweringContext {
             let captures = callable
                 .captures
                 .iter()
-                .map(|capture| self.read_capture(&capture.name, span))
+                .map(|capture| self.read_capture(capture, span))
                 .collect::<Result<Vec<_>, _>>()?;
             let callee = self.emit_value(
                 Operation::MakeClosure {

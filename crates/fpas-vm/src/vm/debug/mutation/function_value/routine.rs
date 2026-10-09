@@ -130,6 +130,7 @@ fn resolve_unique(
     }
 }
 
+/// Reconstructs the declared portable signature in parameter register order.
 pub(super) fn portable_signature(
     executable: &Executable,
     function: &FunctionInfo,
@@ -146,12 +147,13 @@ pub(super) fn portable_signature(
             "Assign a routine whose parameters are ordinary declared source parameters.",
         ));
     }
-    let parameters = function
+    let mut parameters = function
         .debug
         .bindings
         .iter()
         .filter(|binding| binding.kind == DebugBindingKind::Parameter && !binding.hidden)
         .collect::<Vec<_>>();
+    parameters.sort_by_key(|binding| binding.register.get());
     let arity = usize::from(function.arity);
     if parameters.len() != arity {
         return Err(type_error(

@@ -41,7 +41,8 @@ pub struct CaptureBinding {
 /// A name is captured when it resolves to a `Const`, `Var`, `Param`, or `ForVar` in a non-root scope
 /// outside the closure's own scope frame (`closure_scope_index`). Captures required only by a
 /// nested closure or named routine are propagated from that routine's analyzed metadata, which
-/// preserves its own parameter and local shadowing.
+/// preserves its own parameter and local shadowing. Named sibling references propagate the same
+/// metadata, retaining the captured declaration rather than resolving its name again.
 ///
 /// **Documentation:** `docs/pascal/language/functions/closures.md`
 #[must_use]
@@ -58,10 +59,14 @@ pub fn collect_captures(
         closure_infos,
         nested_routine_captures,
         captures: Vec::new(),
-        seen: HashSet::new(),
+        seen_routines: HashSet::new(),
         bound_scopes: Vec::new(),
     };
     collector.collect_from_body(body);
+    // Name lookup in the lowered frame must prefer the nearest captured declaration.
+    collector
+        .captures
+        .sort_by_key(|capture| scopes.capture_scope_index(&capture.name, capture.declaration));
     collector.captures
 }
 
@@ -71,7 +76,7 @@ struct CaptureCollector<'a> {
     closure_infos: &'a ClosureInfoMap,
     nested_routine_captures: &'a NestedRoutineCaptureMap,
     captures: Vec<CaptureBinding>,
-    seen: HashSet<String>,
+    seen_routines: HashSet<usize>,
     bound_scopes: Vec<HashSet<String>>,
 }
 
@@ -86,14 +91,20 @@ impl CaptureCollector<'_> {
         {
             return;
         }
-        if !self.seen.insert(canonical) {
-            return;
-        }
         let Some((scope_index, symbol, declaration)) =
             self.scopes.lookup_with_scope_and_declaration(name)
         else {
             return;
         };
+        if matches!(symbol.kind, SymbolKind::Function | SymbolKind::Procedure) {
+            if let Some(key) = self.scopes.routine_capture_key(name)
+                && self.seen_routines.insert(key)
+                && let Some(info) = self.nested_routine_captures.get(&key)
+            {
+                self.collect_transitive_captures(&info.captures.clone());
+            }
+            return;
+        }
         if scope_index == 0 || scope_index >= self.closure_scope_index {
             return;
         }
@@ -106,6 +117,11 @@ impl CaptureCollector<'_> {
         let Some(declaration) = declaration else {
             return;
         };
+        if self.captures.iter().any(|capture| {
+            capture.declaration == declaration && capture.name.eq_ignore_ascii_case(name)
+        }) {
+            return;
+        }
         self.captures.push(CaptureBinding {
             task_free: self.scopes.discard_info(name).value,
             name: name.to_string(),

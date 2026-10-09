@@ -123,6 +123,7 @@ fn candidate() -> Executable {
             }),
         }],
         records: vec![RecordLayout {
+            construction: None,
             name: StringId::new(4),
             fields: vec![RecordField {
                 name: StringId::new(5),

@@ -70,7 +70,7 @@ impl LoweringContext {
                 let captures = target
                     .captures
                     .iter()
-                    .map(|capture| self.read_capture(&capture.name, expression.span()))
+                    .map(|capture| self.read_capture(capture, expression.span()))
                     .collect::<Result<Vec<_>, _>>()?;
                 self.emit_value(
                     Operation::MakeClosure {

@@ -3,6 +3,7 @@
 mod bindings;
 mod block_order;
 mod blocks;
+mod captures;
 mod debug;
 mod descriptors;
 mod expressions;
@@ -49,6 +50,8 @@ pub(super) struct LoweringContext {
     constants: BTreeMap<String, fpas_ir::Constant>,
     pub(super) type_table: types::TypeTable,
     pub(super) expr_types: ExprTypeMap,
+    /// Full designators resolved to enum members by semantic analysis.
+    pub(super) enum_members: std::collections::HashSet<usize>,
     pub(super) intrinsic_calls: fpas_sema::IntrinsicCallMap,
     pub(super) named_argument_orders: fpas_sema::NamedArgumentOrderMap,
     pub(super) record_defaults: fpas_sema::RecordDefaultsMap,
@@ -160,6 +163,7 @@ impl LoweringContext {
                 storage: BindingStorage::Local(local),
                 ty: value_ty,
                 depth: 0,
+                declaration: input.declaration,
                 cell: false,
                 reference: input.reference,
             });
@@ -204,14 +208,19 @@ impl LoweringContext {
                 cell_backed: capture.kind != fpas_ir::CaptureKind::Value,
                 initializer: None,
             });
-            bindings.push(Binding {
-                name: capture.name.to_ascii_lowercase(),
-                storage: BindingStorage::Local(local),
-                ty: capture.ty,
-                depth: 0,
-                cell: capture.kind != fpas_ir::CaptureKind::Value,
-                reference: capture.reference,
-            });
+            // Keep parameters visible ahead of same-named transitive captures.
+            bindings.insert(
+                index,
+                Binding {
+                    name: capture.name.to_ascii_lowercase(),
+                    storage: BindingStorage::Local(local),
+                    ty: capture.ty,
+                    depth: 0,
+                    declaration: capture.declaration,
+                    cell: capture.kind != fpas_ir::CaptureKind::Value,
+                    reference: capture.reference,
+                },
+            );
         }
         Ok(Self {
             program_name: name.to_ascii_lowercase(),
@@ -240,6 +249,7 @@ impl LoweringContext {
             constants,
             type_table,
             expr_types: metadata.expr_types.clone(),
+            enum_members: metadata.enum_members.clone(),
             intrinsic_calls: metadata.intrinsic_calls.clone(),
             named_argument_orders: metadata.named_argument_orders.clone(),
             record_defaults: metadata.record_defaults.clone(),

@@ -48,6 +48,7 @@ impl LoweringContext {
             storage: BindingStorage::Local(local),
             ty,
             depth: self.scope_depth,
+            declaration: Some(span.diagnostic_span_or_synthetic()),
             cell: false,
             reference: false,
         });
@@ -98,22 +99,6 @@ impl LoweringContext {
                 } else {
                     Ok(value)
                 }
-            }
-        }
-    }
-
-    pub(in crate::lowering) fn read_capture(
-        &mut self,
-        name: &str,
-        span: Span,
-    ) -> Result<ValueId, CompileError> {
-        let (storage, ty) = self.resolve_local(name, span)?;
-        let cell = self.binding_is_cell(name);
-        let reference = self.binding_is_reference(name);
-        match storage {
-            BindingStorage::Local(local) => {
-                let storage_ty = self.binding_storage_type(ty, cell, reference, span)?;
-                self.emit_value(Operation::ReadLocal(local), storage_ty, span)
             }
         }
     }

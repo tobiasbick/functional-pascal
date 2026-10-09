@@ -11,49 +11,49 @@ entry here in the same change. Include the source shape, observed failure or res
 workaround, and a concrete later resolution with regression coverage. Do not silently extend the
 language or hide the limitation inside a library implementation.
 
+## Scheduling
+
+The debugger repairs are complete under the agreed
+[syntax review repair order](improve-syntax/review/README.md#repair-order).
+The remaining review findings retain their listed priorities and Done status.
+
 ## Open entries
 
-### Debugger evaluation accepts positional call arguments only
+No entries are currently open.
 
-- **Source shape:** a debugger `evaluate` expression with named arguments, for
-  example `Sub(Left := 1, Right := 2)`, `Shape.Rect(Width := 1.0, Height := 2.0)`,
-  or typed record construction `Point(X := 1, Y := 2)`.
-- **Restriction:** `crates/fpas-debug/src/evaluation/validate.rs` rejects
-  `Expr::NamedArgument`; the debugger resolves calls without semantic analysis
-  and therefore has no parameter-name mapping.
-- **Workaround:** pass routine or variant arguments by position in declaration
-  order. For records, evaluate an existing value or call a positional factory
-  such as `Point.Create(1, 2)`; record construction itself is named only.
-- **Resolution:** map names to the callee's parameter or variant-field names
-  from the debug metadata, evaluate in written order, and add debugger
-  evaluation tests for routines, methods, variant constructors, and typed record
-  construction with field defaults and visibility checks.
-- **Leftover after AP10.3:** the debugger front end no longer produces
-  `DebugExpression::Record`, the VM's structural record construction that picks
-  a layout by its exact field set
-  (`crates/fpas-vm/src/vm/debug/evaluation/model.rs`,
-  `DebugCallTarget::Record` in `crates/fpas-vm/src/vm/debug/calls/execute.rs`).
-  Only VM tests in
-  `crates/fpas-vm/src/vm/debug/tests/empty_storage_construction/rejection.rs`
-  still build it. Replace it with typed construction by record type name,
-  applying field defaults and visibility, when named debugger construction is
-  implemented, and move those tests to the new form.
+## Completed debugger repairs
 
-### Debugger cannot write or pass `var` parameters
+### Named calls and typed record construction
 
-- **Source shape:** a debugger assignment to a `var` parameter, a debugger
-  `evaluate` expression with a `var` argument, or a debugger call of a routine
-  that declares a `var` parameter.
-- **Restriction:** inspection shows a `var` parameter as the caller's current
-  value, but the debugger treats the binding as read-only;
-  `crates/fpas-debug/src/evaluation/validate.rs` rejects `Expr::VarArgument`,
-  and a debugger call of a `var`-parameter routine fails inside the callee
-  because no reference is passed. Portable debug types describe reference
-  types as `Dynamic`, so debugger function-value assignment cannot compare
-  parameter modes.
-- **Workaround:** assign the caller's variable in the caller frame, and call
-  routines with `var` parameters from program code.
-- **Resolution:** carry parameter modes in portable debug types, write through
-  the reference with the same checks as program code, reject `var`-parameter
-  callees before invocation with a clear message, and add debugger tests for
-  each case.
+- [x] Declared routines, record methods, and enum constructors map fully named
+  arguments to retained parameter or field names, case-insensitively. Argument
+  expressions run in written order before reordering. Function values and
+  debugger intrinsics use positional arguments.
+- [x] Record construction selects the exact visible nominal type, including
+  source type aliases and `uses` aliases. Supplied field expressions precede
+  omitted defaults, which run in declaration order in the declaration scope.
+- [x] Required fields, duplicate and unknown names, value types, and private-field
+  construction restrictions are checked before default bodies execute.
+- [x] Object linking and compiled-program serialization preserve constructor
+  visibility, source-local aliases, and default routines. Available units without
+  a source import do not expose constructor names.
+- [x] Rust integration tests cover mapping, evaluation order, nominal identity,
+  imports, defaults, visibility, effects, and portable metadata. DAP coverage
+  exercises named calls and typed construction.
+
+### Reference parameters in debugger calls and assignments
+
+- [x] Portable debug types retain reference parameter modes, including inside
+  first-class function signatures. Calls and function-value assignments compare
+  these modes.
+- [x] Explicit `var` arguments resolve initialized writable bindings, stored
+  record fields, and array elements with exact types and distinct roots. Invalid
+  argument modes or paths fail before the callee body executes.
+- [x] Reference calls share the detached evaluation sandbox; writes do not alter
+  the stopped program. Later arguments resolve paths against the sandbox's
+  current storage.
+- [x] `setVariable` and `setExpression` write through stopped reference parameters
+  to caller storage. Failed writes preserve values and handles; successful writes
+  commit atomically and refresh handles.
+- [x] Rust and real DAP regressions cover accepted reference calls, rejected call
+  shapes, detached writes, and live write-through behavior.

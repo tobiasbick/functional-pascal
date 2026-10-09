@@ -3,7 +3,12 @@
 mod detach;
 mod enum_constructor;
 mod execute;
+mod function;
 mod lazy;
+mod named_arguments;
+mod parameters;
+mod record_construction;
+mod references;
 mod resolution;
 
 use std::sync::Arc;

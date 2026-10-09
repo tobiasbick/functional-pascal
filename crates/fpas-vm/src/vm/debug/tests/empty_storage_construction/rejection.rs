@@ -37,10 +37,13 @@ fn eligibility_rejects_initialized_immutable_parameter_capture_and_root_only_tar
     session
         .set_expression(
             &root("Nested"),
-            &DebugExpression::Record(vec![
-                ("X".to_string(), DebugExpression::Integer(1)),
-                ("Y".to_string(), DebugExpression::Integer(2)),
-            ]),
+            &DebugExpression::Record {
+                name: "Point".into(),
+                fields: vec![
+                    ("X".to_string(), DebugExpression::Integer(1)),
+                    ("Y".to_string(), DebugExpression::Integer(2)),
+                ],
+            },
             Some(frame),
         )
         .expect("complete nested root");
@@ -49,10 +52,13 @@ fn eligibility_rejects_initialized_immutable_parameter_capture_and_root_only_tar
         session
             .initialize_storage(
                 &field("Nested", "X"),
-                &DebugExpression::Record(vec![
-                    ("X".to_string(), DebugExpression::Integer(1)),
-                    ("Y".to_string(), DebugExpression::Integer(2)),
-                ]),
+                &DebugExpression::Record {
+                    name: "Point".into(),
+                    fields: vec![
+                        ("X".to_string(), DebugExpression::Integer(1)),
+                        ("Y".to_string(), DebugExpression::Integer(2)),
+                    ]
+                },
                 &DebugExpression::Integer(3),
                 Some(frame),
             )
@@ -117,10 +123,13 @@ fn expired_running_and_foreign_frames_are_rejected() {
         session
             .initialize_storage(
                 &nested("Origin", &["X"]),
-                &DebugExpression::Record(vec![
-                    ("X".to_string(), DebugExpression::Integer(1)),
-                    ("Y".to_string(), DebugExpression::Integer(2)),
-                ]),
+                &DebugExpression::Record {
+                    name: "Point".into(),
+                    fields: vec![
+                        ("X".to_string(), DebugExpression::Integer(1)),
+                        ("Y".to_string(), DebugExpression::Integer(2)),
+                    ]
+                },
                 &DebugExpression::Integer(3),
                 Some(frame),
             )
@@ -296,10 +305,13 @@ fn identity_bearing_seeds_and_hidden_names_are_rejected() {
         session
             .initialize_storage(
                 &nested("Boxed", &["Action"]),
-                &DebugExpression::Record(vec![(
-                    "Action".to_string(),
-                    DebugExpression::Name("Callback".to_string()),
-                )]),
+                &DebugExpression::Record {
+                    name: "BoxFn".into(),
+                    fields: vec![(
+                        "Action".to_string(),
+                        DebugExpression::Name("Callback".to_string()),
+                    )]
+                },
                 &DebugExpression::Name("Callback".to_string()),
                 Some(frame),
             )

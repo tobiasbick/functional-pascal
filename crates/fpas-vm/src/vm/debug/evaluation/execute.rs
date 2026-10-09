@@ -55,6 +55,27 @@ fn evaluate_with_qualified_fallback(
         DebugExpression::Boolean(value) => Value::Boolean(*value),
         DebugExpression::String(value) => Value::Str(value.clone().into()),
         DebugExpression::Name(name) => resolve(name)?,
+        DebugExpression::VarArgument(assignment) => {
+            let indexes = assignment
+                .selectors
+                .iter()
+                .filter_map(|selector| match selector {
+                    crate::vm::debug::mutation::DebugAssignmentSelector::Index(expression) => {
+                        Some(expression)
+                    }
+                    _ => None,
+                })
+                .map(|expression| evaluate(expression, depth + 1, limits, budget, resolve, invoke))
+                .collect::<Result<Vec<_>, _>>()?;
+            return invoke(DebugCallTarget::Reference(assignment.clone()), indexes);
+        }
+        DebugExpression::NamedArgument { .. } => return Err(DebugSessionError {
+            kind: DebugErrorKind::EvaluationType,
+            message: "named debugger argument is outside a call".into(),
+            hint:
+                "Use named arguments only in calls of declared routines, methods, or constructors."
+                    .into(),
+        }),
         DebugExpression::Callable(name) => {
             return invoke(DebugCallTarget::Named(name.clone()), Vec::new());
         }
@@ -110,13 +131,7 @@ fn evaluate_with_qualified_fallback(
         DebugExpression::Call { callee, arguments } => {
             let target = match callee.as_ref() {
                 DebugExpression::Callable(name) => DebugCallTarget::Named(name.clone()),
-                DebugExpression::Name(name) => match resolve(name) {
-                    Ok(value) => DebugCallTarget::Value(value),
-                    Err(error) if error.kind == DebugErrorKind::UnknownName => {
-                        DebugCallTarget::Named(name.clone())
-                    }
-                    Err(error) => return Err(error),
-                },
+                DebugExpression::Name(name) => super::callee::resolve(name, resolve)?,
                 expression => DebugCallTarget::Value(evaluate(
                     expression,
                     depth + 1,
@@ -126,8 +141,9 @@ fn evaluate_with_qualified_fallback(
                     invoke,
                 )?),
             };
-            let arguments = evaluate_arguments(arguments, depth, limits, budget, resolve, invoke)?;
-            invoke(target, arguments)?
+            super::call_arguments::evaluate_call(
+                target, arguments, depth, limits, budget, resolve, invoke,
+            )?
         }
         DebugExpression::MethodCall {
             receiver,
@@ -135,13 +151,17 @@ fn evaluate_with_qualified_fallback(
             arguments,
         } => {
             let receiver = evaluate(receiver, depth + 1, limits, budget, resolve, invoke)?;
-            let arguments = evaluate_arguments(arguments, depth, limits, budget, resolve, invoke)?;
-            invoke(
+            super::call_arguments::evaluate_call(
                 DebugCallTarget::Method {
                     receiver,
                     name: name.clone(),
                 },
                 arguments,
+                depth,
+                limits,
+                budget,
+                resolve,
+                invoke,
             )?
         }
         DebugExpression::Array(elements) => Value::Array(
@@ -158,13 +178,19 @@ fn evaluate_with_qualified_fallback(
                 })
                 .collect::<Result<Vec<_>, DebugSessionError>>()?,
         ),
-        DebugExpression::Record(fields) => {
+        DebugExpression::Record { name, fields } => {
             let names = fields.iter().map(|(name, _)| name.clone()).collect();
             let values = fields
                 .iter()
                 .map(|(_, value)| evaluate(value, depth + 1, limits, budget, resolve, invoke))
                 .collect::<Result<Vec<_>, _>>()?;
-            invoke(DebugCallTarget::Record { fields: names }, values)?
+            invoke(
+                DebugCallTarget::Record {
+                    name: name.clone(),
+                    fields: names,
+                },
+                values,
+            )?
         }
         DebugExpression::RecordUpdate { base, fields } => {
             let Value::Record(mut record) =

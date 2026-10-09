@@ -8,11 +8,14 @@ use fpas_sema::AnalysisMetadata;
 use super::super::types;
 
 #[derive(Debug, Clone)]
+/// Lexical storage and the source declaration that introduced it.
 pub(super) struct Binding {
     pub name: String,
     pub storage: BindingStorage,
     pub ty: TypeId,
     pub depth: u32,
+    /// Exact source binding, used when forwarding captures through a shadowing scope.
+    pub declaration: Option<fpas_ir::SourceSpan>,
     pub cell: bool,
     /// Storage holds a reference to a caller variable (`var` parameter).
     pub reference: bool,

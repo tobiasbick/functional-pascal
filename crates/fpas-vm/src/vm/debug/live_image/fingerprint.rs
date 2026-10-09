@@ -415,6 +415,9 @@ fn type_key_inner(image: &Executable, id: DebugTypeId, depth: u8) -> String {
         Some(DebugType::Task(inner)) => {
             format!("task<{}>", type_key_inner(image, *inner, depth + 1))
         }
+        Some(DebugType::Reference(inner)) => {
+            format!("var<{}>", type_key_inner(image, *inner, depth + 1))
+        }
         Some(DebugType::Channel(inner)) => {
             format!("channel<{}>", type_key_inner(image, *inner, depth + 1))
         }

@@ -1,3 +1,4 @@
+mod captures;
 mod imports;
 
 use crate::types::Ty;
@@ -73,6 +74,7 @@ struct ScopedSymbol {
     original_name: String,
     symbol: Symbol,
     declaration: Option<Span>,
+    routine_capture_key: Option<usize>,
 }
 
 impl Scope {
@@ -186,6 +188,7 @@ impl ScopeStack {
                 original_name: name.to_string(),
                 symbol,
                 declaration,
+                routine_capture_key: None,
             },
         );
         true

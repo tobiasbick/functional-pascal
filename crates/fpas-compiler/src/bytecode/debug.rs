@@ -176,8 +176,7 @@ fn lower_type(ty: &IrType) -> Result<DebugType, CompileError> {
         IrType::Cell(inner) => DebugType::Cell(id(*inner)),
         IrType::Task(inner) => DebugType::Task(id(*inner)),
         IrType::Channel(inner) => DebugType::Channel(id(*inner)),
-        // The debugger presents a `var` parameter through its caller's current value.
-        IrType::Reference(_) => DebugType::Dynamic,
+        IrType::Reference(inner) => DebugType::Reference(id(*inner)),
     })
 }
 

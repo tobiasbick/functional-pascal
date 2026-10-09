@@ -25,6 +25,7 @@ fn many_layouts_keep_canonical_name_order_with_unrelated_definitions() {
         let name = format!("library.unit.record{number:03}");
         let index = library.records.len() as u32;
         library.records.push(fpas_unit::object::ObjectRecordLayout {
+            construction: None,
             name: name.clone(),
             fields: Vec::new(),
             field_types: Vec::new(),
@@ -57,6 +58,7 @@ fn many_layouts_keep_canonical_name_order_with_unrelated_definitions() {
 fn matching_private_layout_copies_share_one_canonical_type_id() {
     let mut first = unit(true);
     first.records.push(fpas_unit::object::ObjectRecordLayout {
+        construction: None,
         name: "std.console.keyevent".to_string(),
         fields: vec!["kind".to_string(), "character".to_string()],
         field_types: vec![0, 0],
@@ -80,6 +82,7 @@ fn matching_private_layout_copies_share_one_canonical_type_id() {
         definition.name = definition.name.replacen("library.unit", "other.unit", 1);
     }
     second.records.push(fpas_unit::object::ObjectRecordLayout {
+        construction: None,
         name: "std.console.keyevent".to_string(),
         fields: vec!["kind".to_string(), "character".to_string()],
         field_types: vec![0, 0],
@@ -239,6 +242,7 @@ fn enum_layout_copies_compare_variant_field_types() {
 fn incompatible_record_layout_import_is_rejected_before_relocation() {
     let mut library = unit(true);
     library.records.push(fpas_unit::object::ObjectRecordLayout {
+        construction: None,
         name: "library.unit.point".to_string(),
         fields: vec!["x".to_string(), "y".to_string()],
         field_types: vec![0, 0],
@@ -285,6 +289,7 @@ fn imported_global_record_and_enum_references_become_dense_numeric_ids() {
         initializer: None,
     });
     library.records.push(fpas_unit::object::ObjectRecordLayout {
+        construction: None,
         name: "library.unit.point".to_string(),
         fields: vec!["x".to_string()],
         field_types: vec![0],

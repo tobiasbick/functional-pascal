@@ -101,6 +101,32 @@ impl RelocatableObject {
                         .iter()
                         .map(|field| strings(field.name))
                         .collect::<Result<Vec<_>, _>>()?,
+                    construction: record
+                        .construction
+                        .as_ref()
+                        .map(|info| {
+                            Ok(super::ObjectRecordConstructionInfo {
+                                owner_unit: info.owner_unit.map(&strings).transpose()?,
+                                requires_owner: info.requires_owner,
+                                aliases: info
+                                    .aliases
+                                    .iter()
+                                    .map(|alias| {
+                                        Ok(super::ObjectRecordTypeAlias {
+                                            source: alias.source.get(),
+                                            name: strings(alias.name)?,
+                                            unit: strings(alias.unit)?,
+                                        })
+                                    })
+                                    .collect::<Result<Vec<_>, ObjectError>>()?,
+                                defaults: info
+                                    .defaults
+                                    .iter()
+                                    .map(|name| name.map(&strings).transpose())
+                                    .collect::<Result<Vec<_>, _>>()?,
+                            })
+                        })
+                        .transpose()?,
                     field_types: record.fields.iter().map(|field| field.ty.get()).collect(),
                     methods: record
                         .methods

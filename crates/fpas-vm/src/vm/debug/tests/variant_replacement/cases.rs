@@ -226,15 +226,16 @@ fn constructor_and_replacement_failures_are_atomic() {
     let variables = session.variables(locals, 0, 20).expect("locals");
     let selected = named(&variables.items, "Selected").variables_reference;
 
+    let short_failure = session
+        .evaluate(
+            &enum_call("Pair", vec![DebugExpression::Integer(1)]),
+            Some(frame),
+        )
+        .expect_err("short name");
     assert_eq!(
-        session
-            .evaluate(
-                &enum_call("Pair", vec![DebugExpression::Integer(1)]),
-                Some(frame)
-            )
-            .expect_err("short name")
-            .kind,
-        DebugErrorKind::UnknownCallable
+        short_failure.kind,
+        DebugErrorKind::UnknownCallable,
+        "{short_failure:?}"
     );
     assert_eq!(
         session

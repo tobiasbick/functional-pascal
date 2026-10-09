@@ -79,7 +79,11 @@ accepting or returning a task in the callable signature is not a stored
 capture.
 
 The compiler preserves known capture information through immutable bindings,
-aggregate construction, routine results, and compiled-unit interfaces.
+aggregate construction, pattern bindings in `is` and `case`, routine results,
+and compiled-unit interfaces. This includes `while` conditions and nested
+Result/Option patterns. Extracting a callable retains the matched value's known
+proof; extraction does not establish a proof for unknown or mutable callable
+contents. Scalar payloads are checked by their own type.
 Record construction also checks captures in omitted fields' default values.
 Callable parameters and values lacking capture information are rejected.
 Mutable storage with callable contents is conservatively treated as having

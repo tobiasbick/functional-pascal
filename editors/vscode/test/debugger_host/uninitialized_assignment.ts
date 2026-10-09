@@ -45,7 +45,7 @@ export async function verifyUninitializedAssignment(
     "  else",
     "  begin",
     "    WriteLn(0);",
-    "  end;",
+    "  end; end if;",
     "  WriteLn(Frozen);",
     "end.",
     ""

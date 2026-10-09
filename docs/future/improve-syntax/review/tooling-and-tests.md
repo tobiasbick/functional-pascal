@@ -109,62 +109,51 @@ Verified with `python .temp-data/syntax-review-tooling/editor_probe.py`. The req
 
 <a id="h01"></a>
 
-## H01 — P2: The migrated workflow fixture retains the old diagnostic offset
+## H01 — P2: Resolved — workflow diagnostics use the fixture token range
 
 **Package:** AP16 consumer migration; AP02 editor verification.
 
-[editors/vscode/test/workflow/host.ts:54-56](../../../../editors/vscode/test/workflow/host.ts) writes:
+[Workflow host coverage](../../../../editors/vscode/test/workflow/host.ts)
+derives the expected source range from `MissingCall` in the generated invalid
+program. It verifies FP3003, severity, source, both range endpoints, and the
+help text. The source position assertion remains exact when the declaration
+spelling changes.
 
-```pascal
-program Workflow; begin const Value:integer:=MissingCall(); end.
-```
-
-The same file, line 99, asserts zero-based character **43**. `MissingCall` actually starts at **45** after `let` was replaced with `const`. The real CLI/LSP/workflow diagnostic correctly reports line 0, character 45 and code FP3003. The fixture was migrated in `c66326e23`; the literal expected offset was not.
-
-**Reproduction:** `node editors/vscode/scripts/run-tests.mjs`. Both the initial run and an isolated retry fail at `verifyWorkflowHost` with actual character 45 versus expected 43; exit code 1. The isolated retry had no concurrent builds.
-
-**Impact:** The full extension-host suite is currently red. [editors/vscode/test/extension.test.ts:166-167](../../../../editors/vscode/test/extension.test.ts) awaits the failing workflow check before starting debugger-host checks, so those later checks and the subsequent standard-library navigation/lifecycle checks do not run. Passing TypeScript compilation and grammar verification does not establish that the host suite passes.
-
-**Required correction and validation:** Derive the expected range from the fixture token or update the exact verified offset. Then run the complete suite; do not remove or relax the source-position assertion. H02 identifies additional invalid sources that are hidden by this first failure.
+The [workflow unit fixtures](../../../../editors/vscode/test/workflow/unit.ts)
+use native paths for remembered-project selection. Explicit Windows and POSIX
+path-identity controls remain in the
+[project-index tests](../../../../editors/vscode/test/workflow/project_index.ts).
 
 <a id="h02"></a>
 
-## H02 — P2: Debugger-host fixtures still use removed block and pattern syntax
+## H02 — P2: Resolved — debugger-host sources use current block and pattern syntax
 
 **Packages:** AP13 and AP20 consumer migration.
 
-A bounded extraction checked 31 complete embedded FPAS programs from 30 TypeScript files under [editors/vscode/test/debugger_host/](../../../../editors/vscode/test/debugger_host/). **20 programs across 19 files fail parsing with FP2001; 11 pass.** The only template substitution needed was the numeric live-reload value, replaced by `1`. These are positive debugger fixtures, not expected syntax-error tests.
+The positive generated programs in
+[debugger-host coverage](../../../../editors/vscode/test/debugger_host/)
+use named function, enum, case, conditional, and loop closers. Case patterns
+use `when` and explicit `const` bindings. The migration preserves source line
+counts and breakpoint locations in all affected scenarios.
 
-| Source owner | Template starts at line | First observed parser error |
-| --- | --- | --- |
-| [editors/vscode/test/debugger_host/breakpoint_policies.ts](../../../../editors/vscode/test/debugger_host/breakpoint_policies.ts) | 21 | Expected `end while;`, found `end.` |
-| [editors/vscode/test/debugger_host/capturing_routine_assignment.ts](../../../../editors/vscode/test/debugger_host/capturing_routine_assignment.ts) | 28 | Expected `end function;`, found `end;` |
-| [editors/vscode/test/debugger_host/cell_capturing_routine_assignment.ts](../../../../editors/vscode/test/debugger_host/cell_capturing_routine_assignment.ts) | 28 | Expected `end function;`, found `end;` |
-| [editors/vscode/test/debugger_host/forced_return.ts](../../../../editors/vscode/test/debugger_host/forced_return.ts) | 32 | Expected `end function;`, found `end;` |
-| [editors/vscode/test/debugger_host/forced_return.ts](../../../../editors/vscode/test/debugger_host/forced_return.ts) | 159 | Expected `end function;`, found `end;` |
-| [editors/vscode/test/debugger_host/frame_restart.ts](../../../../editors/vscode/test/debugger_host/frame_restart.ts) | 23 | Expected `end function;`, found `end;` |
-| [editors/vscode/test/debugger_host/function_breakpoints.ts](../../../../editors/vscode/test/debugger_host/function_breakpoints.ts) | 21 | Expected `end function;`, found `end;` |
-| [editors/vscode/test/debugger_host/function_value_assignment.ts](../../../../editors/vscode/test/debugger_host/function_value_assignment.ts) | 28 | Expected `end function;`, found `end;` |
-| [editors/vscode/test/debugger_host/live_reload.ts](../../../../editors/vscode/test/debugger_host/live_reload.ts) | 102 | Expected `end function;`, found `end;` |
-| [editors/vscode/test/debugger_host/pause.ts](../../../../editors/vscode/test/debugger_host/pause.ts) | 21 | Expected `end while;`, found `end.` |
-| [editors/vscode/test/debugger_host/payload_mutation.ts](../../../../editors/vscode/test/debugger_host/payload_mutation.ts) | 28 | Expected `end enum;`, found `end;` |
-| [editors/vscode/test/debugger_host/task_control.ts](../../../../editors/vscode/test/debugger_host/task_control.ts) | 30 | Expected `end function;`, found `end;` |
-| [editors/vscode/test/debugger_host/task_debugging.ts](../../../../editors/vscode/test/debugger_host/task_debugging.ts) | 43 | Expected `end function;`, found `end;` |
-| [editors/vscode/test/debugger_host/task_handle_assignment.ts](../../../../editors/vscode/test/debugger_host/task_handle_assignment.ts) | 28 | Expected `end function;`, found `end;` |
-| [editors/vscode/test/debugger_host/task_lifecycle.ts](../../../../editors/vscode/test/debugger_host/task_lifecycle.ts) | 26 | Expected `end function;`, found `end;` |
-| [editors/vscode/test/debugger_host/task_result_replacement.ts](../../../../editors/vscode/test/debugger_host/task_result_replacement.ts) | 29 | Expected `end function;`, found `end;` |
-| [editors/vscode/test/debugger_host/uninitialized_assignment.ts](../../../../editors/vscode/test/debugger_host/uninitialized_assignment.ts) | 28 | Expected `end if;`, found `end.` |
-| [editors/vscode/test/debugger_host/variant_construction.ts](../../../../editors/vscode/test/debugger_host/variant_construction.ts) | 35 | Expected `end enum;`, found `end;` |
-| [editors/vscode/test/debugger_host/variant_replacement.ts](../../../../editors/vscode/test/debugger_host/variant_replacement.ts) | 28 | Expected `end enum;`, found `end;` |
-| [editors/vscode/test/debugger_host/variant_transition.ts](../../../../editors/vscode/test/debugger_host/variant_transition.ts) | 28 | Expected `end enum;`, found `end;` |
+Independent extraction and `fpas check --std-lib lib <fixture> --diagnostics json`
+verify all 33 positive embedded programs in 31 source files, including the
+[reference-call coverage](../../../../editors/vscode/test/debugger_host/var_parameters.ts).
+The fixtures cover breakpoint policies, pause, closures, forced return, frame
+restart, function values, live reload, payloads, tasks, initialization, and
+variant manipulation. Intentionally invalid evaluation expressions and
+rejected debugger operations retain their negative assertions.
 
-The table shows the first diagnostic for each program; parser recovery may report additional errors. It is not a complete inventory of invalid constructs within each fixture. Examples include missing `end while;`, anonymous `end;` where `end function;` or `end enum;` is required, and old case arms such as `Choice.Count(Value):` / `Ok(Value):` without `when` and explicit `const` bindings.
+The shared debugger call boundary rejects missing explicit `var` arguments
+before the callee body executes. Rust and real DAP tests cover unused parameters,
+callee-body failures, procedures, instance methods, function values, and bound
+methods. Accepted explicit reference calls operate on detached storage;
+stopped-state assignments write through reference parameters. These repairs are
+complete in the
+[compiler follow-ups](../../compiler-panic-followups.md#reference-parameters-in-debugger-calls-and-assignments).
 
-**Reproduction:** Extract the indicated `program ... end.` template without altering its syntax and run `fpas check --std-lib lib <extracted-file> --diagnostics json`. Local evidence is in `.temp-data/syntax-review-tooling/embedded-editor/results.json`; the extraction harness is `.temp-data/syntax-review-tooling/embedded_editor_probe.py`. For example, `breakpoint_policies.ts:21` produces `Expected end while;, found end.` at the last program line.
-
-**Impact:** Once H01 is corrected, these programs cannot reach the debugger behaviors their tests are intended to verify. They cover breakpoints, pause, closures, forced return, frame restart, function values, live reload, payloads, tasks, storage initialization and variant manipulation. Existing Rust debugger tests passing does not validate these separate TypeScript-generated programs.
-
-**Required correction and validation:** Migrate all positive embedded sources, retain their intended runtime behaviors and breakpoint positions, and parse/check generated debugger programs independently before running the full host sequence. Negative parser fixtures must remain explicitly distinguished.
+See [repair verification](README.md#h01h02) for the complete host and Rust
+check results.
 
 ## Additional successful tooling checks
 

@@ -26,6 +26,10 @@ impl Checker {
             let full_name = Self::resolve_designator_parts_name(parts);
             self.ensure_fq_std_unit_loaded(&full_name);
             if let Some(symbol) = self.scopes.lookup(&full_name) {
+                if parts.len() == designator.parts.len() && symbol.kind == SymbolKind::EnumMember {
+                    self.enum_members
+                        .insert(crate::designator_lookup_key(designator));
+                }
                 return symbol.ty.clone();
             }
         }

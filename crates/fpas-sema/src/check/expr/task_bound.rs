@@ -3,7 +3,7 @@
 //! **Documentation:** `docs/pascal/language/types/channels.md`.
 
 use super::Checker;
-use crate::types::Ty;
+use crate::types::{Ty, TypeConstraint};
 use fpas_parser::Expr;
 
 impl Checker {
@@ -74,42 +74,53 @@ impl Checker {
         }
     }
 
-    fn type_can_contain_callable(&self, ty: &Ty) -> bool {
+    /// Whether this value type can retain callable captures, including nested payloads.
+    pub(in crate::check) fn type_can_contain_callable(&self, ty: &Ty) -> bool {
         self.type_can_contain_callable_inner(ty, &mut std::collections::HashSet::new())
     }
 
     fn type_can_contain_callable_inner(
         &self,
         ty: &Ty,
-        visited_records: &mut std::collections::HashSet<usize>,
+        visited_types: &mut std::collections::HashSet<usize>,
     ) -> bool {
         match self.resolve_visible_type(ty) {
+            Ty::GenericParam(_, Some(TypeConstraint::Numeric | TypeConstraint::Comparable)) => {
+                false
+            }
             Ty::Function(_) | Ty::Procedure(_) | Ty::GenericParam(_, _) => true,
             Ty::Array(inner) | Ty::Option(inner) => {
-                self.type_can_contain_callable_inner(&inner, visited_records)
+                self.type_can_contain_callable_inner(&inner, visited_types)
             }
             Ty::Result(ok, error) | Ty::Dict(ok, error) => {
-                self.type_can_contain_callable_inner(&ok, visited_records)
-                    || self.type_can_contain_callable_inner(&error, visited_records)
+                self.type_can_contain_callable_inner(&ok, visited_types)
+                    || self.type_can_contain_callable_inner(&error, visited_types)
             }
             Ty::Record(record) => {
                 let identity = std::sync::Arc::as_ptr(&record) as usize;
-                if !visited_records.insert(identity) {
+                if !visited_types.insert(identity) {
                     return false;
                 }
                 let contains_callable = record
                     .fields
                     .iter()
-                    .any(|(_, field)| self.type_can_contain_callable_inner(field, visited_records));
-                visited_records.remove(&identity);
+                    .any(|(_, field)| self.type_can_contain_callable_inner(field, visited_types));
+                visited_types.remove(&identity);
                 contains_callable
             }
-            Ty::Enum(enumeration) => enumeration.variants.iter().any(|variant| {
-                variant
-                    .fields
-                    .iter()
-                    .any(|(_, field)| self.type_can_contain_callable_inner(field, visited_records))
-            }),
+            Ty::Enum(enumeration) => {
+                let identity = std::sync::Arc::as_ptr(&enumeration) as usize;
+                if !visited_types.insert(identity) {
+                    return false;
+                }
+                let contains_callable = enumeration.variants.iter().any(|variant| {
+                    variant.fields.iter().any(|(_, field)| {
+                        self.type_can_contain_callable_inner(field, visited_types)
+                    })
+                });
+                visited_types.remove(&identity);
+                contains_callable
+            }
             Ty::Integer
             | Ty::Real
             | Ty::Boolean

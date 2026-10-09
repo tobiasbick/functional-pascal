@@ -23,7 +23,7 @@ export async function verifyPauseAndDisconnect(
     "begin",
     "  while true do",
     "  begin",
-    "  end;",
+    "  end; end while;",
     "end.",
     ""
   ]);

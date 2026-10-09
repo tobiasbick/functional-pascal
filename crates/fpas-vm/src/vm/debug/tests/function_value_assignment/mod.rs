@@ -234,7 +234,11 @@ pub(super) fn assignment_executable() -> VerifiedExecutable {
                 1,
                 3,
                 ReturnConvention::Value,
-                capturing_cell_debug(12, 2),
+                FunctionDebugInfo {
+                    bindings: integer_param.bindings.clone(),
+                    result_type: integer_param.result_type,
+                    ..capturing_cell_debug(12, 2)
+                },
             ),
             routine(
                 5,
@@ -297,6 +301,7 @@ pub(super) fn assignment_executable() -> VerifiedExecutable {
             initializer: None,
         }],
         records: vec![RecordLayout {
+            construction: None,
             name: StringId::new(27),
             fields: vec![RecordField {
                 name: StringId::new(28),

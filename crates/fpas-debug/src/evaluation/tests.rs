@@ -263,7 +263,7 @@ fn validator_lowers_qualified_enum_constructors_to_call_and_field_forms() {
         matches!(
             pair,
             DebugExpression::Call { ref callee, ref arguments }
-                if matches!(callee.as_ref(), DebugExpression::Callable(name) if name == "Choice.Pair")
+                if matches!(callee.as_ref(), DebugExpression::Name(name) if name == "Choice.Pair")
                     && arguments.len() == 2
         ),
         "{pair:?}"

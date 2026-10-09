@@ -22,7 +22,8 @@ pub use metadata::{
     ObjectCaptureKind, ObjectCaptureSource, ObjectConstant, ObjectDebugBinding,
     ObjectDebugBindingKind, ObjectDebugLocation, ObjectDebugScope, ObjectDebugType,
     ObjectEnumLayout, ObjectEnumVariant, ObjectFunctionDebugInfo, ObjectGlobal, ObjectInitializer,
-    ObjectRecordLayout, ObjectRecordMethod, ObjectSequencePoint, ObjectSourceRun,
+    ObjectRecordConstructionInfo, ObjectRecordLayout, ObjectRecordMethod, ObjectRecordTypeAlias,
+    ObjectSequencePoint, ObjectSourceRun,
 };
 pub use relocation::{Relocation, RelocationKind};
 pub use symbol::{
@@ -35,7 +36,7 @@ use validation::{
 };
 
 /// Schema version embedded in every encoded register object payload.
-pub const OBJECT_VERSION: u16 = 10;
+pub const OBJECT_VERSION: u16 = 11;
 
 /// Independently compiled register-bytecode object with symbolic external references.
 #[derive(Debug, Clone, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
@@ -165,6 +166,23 @@ impl RelocatableObject {
                 if instruction.opcode().ok() != Some(fpas_bytecode::Opcode::StoreGlobal) {
                     return Err(ObjectError::InvalidTableReference(
                         "global source initializer store",
+                    ));
+                }
+            }
+        }
+        for record in &self.records {
+            if let Some(info) = &record.construction {
+                if info.defaults.len() != record.fields.len()
+                    || (info.requires_owner && info.owner_unit.is_none())
+                    || info.aliases.len() > fpas_bytecode::limits::MAX_STRINGS
+                    || info.aliases.iter().any(|alias| {
+                        alias.source as usize >= self.sources.len()
+                            || alias.name.is_empty()
+                            || alias.unit.is_empty()
+                    })
+                {
+                    return Err(ObjectError::InvalidTableReference(
+                        "record construction metadata",
                     ));
                 }
             }

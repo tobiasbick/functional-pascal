@@ -162,6 +162,9 @@ pub struct AnalysisMetadata {
     pub errors: Vec<SemaError>,
     /// Inferred expression types keyed by expression identity.
     pub expr_types: ExprTypeMap,
+    /// Designators resolved to enum members, keyed by full designator identity.
+    /// **Documentation:** `docs/pascal/language/pattern-matching/syntax.md`
+    pub enum_members: HashSet<usize>,
     /// Canonical standard-library calls keyed by expression or designator identity.
     pub intrinsic_calls: IntrinsicCallMap,
     /// Parameter order of named calls keyed by the first written argument's identity.
@@ -203,6 +206,8 @@ pub struct Checker {
     pub(crate) scopes: ScopeStack,
     pub(crate) errors: Vec<SemaError>,
     pub(crate) expr_types: ExprTypeMap,
+    /// Full designators whose resolved symbol is an enum member.
+    pub(crate) enum_members: HashSet<usize>,
     /// Canonical standard-library calls keyed by expression or designator identity.
     pub(crate) intrinsic_calls: IntrinsicCallMap,
     /// Parameter order of named calls keyed by the first written argument's identity.
@@ -289,6 +294,7 @@ impl Checker {
             scopes: ScopeStack::new(),
             errors: Vec::new(),
             expr_types: ExprTypeMap::new(),
+            enum_members: HashSet::new(),
             intrinsic_calls: IntrinsicCallMap::new(),
             named_argument_orders: NamedArgumentOrderMap::new(),
             method_calls: MethodCallMap::new(),
@@ -327,6 +333,7 @@ impl Checker {
             import_aliases: self.scopes.imports.aliases.clone(),
             errors: self.errors,
             expr_types: self.expr_types,
+            enum_members: self.enum_members,
             intrinsic_calls: self.intrinsic_calls,
             named_argument_orders: self.named_argument_orders,
             named_types,

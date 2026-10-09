@@ -89,6 +89,16 @@ end function;
 Non-escaping nested helpers that are only called by name while their parent frame is
 active keep the existing nested-function behavior.
 
+A routine's captures include the captures needed by the named sibling routines
+it calls or uses as values. Each capture retains its original lexical binding,
+even when the caller has a parameter or local with the same name. Shared mutable
+cells, reference storage, and task restrictions propagate through the call chain.
+
+A named helper that directly or indirectly uses an enclosing `var` parameter
+can only be called by name while the enclosing call runs. Using it as a routine
+value, starting it with `go`, or calling it from an anonymous closure is rejected
+with FP3030. See [Reference-parameter lifetimes](var-parameters.md#lifetime).
+
 ## Lifetime and equality
 
 Creating or copying a closure copies the callable value and shares its environment.
@@ -106,6 +116,11 @@ An immutable capture environment may cross a task boundary. A closure that conta
 mutable capture is **task-bound** and cannot be used as the callable of `go`, sent to
 another task, or returned through a task result. Capturing another task-bound callable
 also makes the outer closure task-bound (the mutable cells are still reachable).
+
+Extracting a callable with `const Name` in an `is` or `case` pattern preserves
+the matched value's known task-bound state. This applies in `while` conditions,
+nested payloads, guards, and closures that capture the extracted callable.
+Binding a scalar payload does not make that scalar task-bound.
 
 ```pascal
 // Accepted: immutable capture

@@ -1,6 +1,7 @@
 //! Executable materialization from a validated [`super::plan::LinkPlan`].
 
 mod constants;
+mod record_construction;
 mod relocation;
 mod source_map;
 mod strings;
@@ -55,7 +56,7 @@ pub fn link_objects(
             })
         })
         .collect::<Result<Vec<_>, LinkError>>()?;
-    let linked_records = ids
+    let mut linked_records = ids
         .layouts
         .record_order
         .iter()
@@ -74,6 +75,7 @@ pub fn link_objects(
                         })
                     })
                     .collect::<Result<Vec<_>, _>>()?,
+                construction: None,
                 methods: record
                     .methods
                     .iter()
@@ -220,6 +222,13 @@ pub fn link_objects(
         &code_layout.bases,
         &debug_type_ids,
         &mut strings,
+    )?;
+    record_construction::merge(
+        &objects,
+        &ids,
+        &source_map,
+        &mut strings,
+        &mut linked_records,
     )?;
     for (function, debug) in linked_functions.iter_mut().zip(function_debug) {
         function.debug = debug;

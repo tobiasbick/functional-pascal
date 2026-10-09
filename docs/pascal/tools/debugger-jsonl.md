@@ -352,6 +352,20 @@ captures, cells, and aggregates, so accepted writes never change the stopped
 program. Host I/O, nondeterminism, blocking, task operations, opaque resources,
 and unknown dynamic effects are denied. The accepted expression forms and
 effect policy are documented in [Source debugger](debugger.md).
+Declared routines, record methods, and enum constructors accept fully named
+arguments as well as positional arguments. Values run in written order before
+mapping names to parameters; visible function values and debugger intrinsics
+remain positional. Typed record construction uses visible type names and unit
+aliases, applies omitted defaults in declaration order, and checks construction
+visibility and required fields.
+
+Reference calls require explicit `var`, for example
+`Add(Item := var Count, Amount := 2)`. Arguments must refer to initialized,
+writable storage with exact types and distinct roots. Invalid modes and paths
+fail before the callee body. Reference writes during `evaluate` affect only the
+detached sandbox. `variable.set` and `expression.set` on a stopped `var`
+parameter instead commit through the reference to the caller's storage, using
+the ordinary atomic mutation and handle-refresh rules.
 
 Conditions and log expressions use the same detached subset documented in
 [Source debugger](debugger.md). Invalid syntax or unsupported constructs make

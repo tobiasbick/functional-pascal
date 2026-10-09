@@ -139,6 +139,16 @@ pub(super) fn assignment_executable() -> VerifiedExecutable {
             }),
         }],
         records: vec![RecordLayout {
+            construction: Some(fpas_bytecode::RecordConstructionInfo {
+                owner_unit: None,
+                requires_owner: false,
+                defaults: vec![None; 2],
+                aliases: vec![fpas_bytecode::RecordTypeAlias {
+                    source: SourceId::new(0),
+                    name: StringId::new(12),
+                    unit: StringId::new(0),
+                }],
+            }),
             name: StringId::new(12),
             fields: vec![
                 RecordField {

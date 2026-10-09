@@ -58,6 +58,34 @@ pub struct ObjectRecordLayout {
     pub field_types: Vec<u32>,
     /// Instance methods and canonical routine names.
     pub methods: Vec<ObjectRecordMethod>,
+    /// Typed construction metadata; see `docs/pascal/language/types/records.md`.
+    pub construction: Option<ObjectRecordConstructionInfo>,
+}
+
+/// Relocatable construction access, visible aliases, and default routines.
+/// See `docs/pascal/language/types/records.md`.
+#[derive(Debug, Clone, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+pub struct ObjectRecordConstructionInfo {
+    /// Declaring unit, absent for program-owned records.
+    pub owner_unit: Option<String>,
+    /// Whether construction requires the declaring unit's scope.
+    pub requires_owner: bool,
+    /// Source-visible type aliases.
+    pub aliases: Vec<ObjectRecordTypeAlias>,
+    /// Zero-argument default routine names in field declaration order.
+    pub defaults: Vec<Option<String>>,
+}
+
+/// Object-local source visibility of one nominal record type name.
+/// See `docs/pascal/language/types/records.md`.
+#[derive(Debug, Clone, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+pub struct ObjectRecordTypeAlias {
+    /// Object-local source index.
+    pub source: u32,
+    /// Visible type name.
+    pub name: String,
+    /// Unit or program owning the source scope.
+    pub unit: String,
 }
 
 /// Relocatable method-to-routine mapping.
@@ -130,6 +158,8 @@ pub enum ObjectDebugType {
     Task(u32),
     /// Typed channel element type.
     Channel(u32),
+    /// Writable parameter referent; see `docs/pascal/language/functions/var-parameters.md`.
+    Reference(u32),
 }
 
 /// Ordered enum layout.

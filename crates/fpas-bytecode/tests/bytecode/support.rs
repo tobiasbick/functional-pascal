@@ -144,6 +144,7 @@ pub fn all_opcodes_executable() -> Executable {
             initializer: None,
         }],
         records: vec![RecordLayout {
+            construction: None,
             name: StringId::new(3),
             fields: vec![RecordField {
                 name: StringId::new(4),

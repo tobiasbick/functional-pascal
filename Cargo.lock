@@ -500,7 +500,10 @@ dependencies = [
  "fpas-compiler",
  "fpas-diagnostics",
  "fpas-lexer",
+ "fpas-linker",
  "fpas-parser",
+ "fpas-program",
+ "fpas-unit",
  "fpas-vm",
  "serde_json",
 ]

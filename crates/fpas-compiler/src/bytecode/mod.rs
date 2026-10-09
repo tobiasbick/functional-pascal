@@ -118,6 +118,40 @@ pub(super) fn compile_program(
                 name,
                 fields,
                 methods,
+                construction: layout
+                    .construction
+                    .as_ref()
+                    .map(|info| {
+                        Ok(fpas_bytecode::RecordConstructionInfo {
+                            owner_unit: info
+                                .owner_unit
+                                .as_deref()
+                                .map(|owner| metadata.intern_string(owner))
+                                .transpose()?,
+                            requires_owner: info.requires_owner,
+                            aliases: info
+                                .aliases
+                                .iter()
+                                .map(|alias| {
+                                    Ok(fpas_bytecode::RecordTypeAlias {
+                                        source: fpas_bytecode::SourceId::new(0),
+                                        name: metadata.intern_string(alias)?,
+                                        unit: metadata.intern_string(&info.scope_unit)?,
+                                    })
+                                })
+                                .collect::<Result<Vec<_>, CompileError>>()?,
+                            defaults: info
+                                .defaults
+                                .iter()
+                                .map(|name| {
+                                    name.as_deref()
+                                        .map(|name| metadata.intern_string(name))
+                                        .transpose()
+                                })
+                                .collect::<Result<Vec<_>, _>>()?,
+                        })
+                    })
+                    .transpose()?,
             })
         })
         .collect::<Result<Vec<_>, CompileError>>()?;

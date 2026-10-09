@@ -52,4 +52,6 @@ pub enum DebugType {
     Task(DebugTypeId),
     /// Typed channel handle element type.
     Channel(DebugTypeId),
+    /// Writable `var` parameter referent; see `docs/pascal/language/functions/var-parameters.md`.
+    Reference(DebugTypeId),
 }

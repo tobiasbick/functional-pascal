@@ -219,6 +219,7 @@ fn analysis_metadata_exposes_all_named_results() {
         errors,
         import_aliases,
         expr_types,
+        enum_members,
         intrinsic_calls,
         named_argument_orders,
         named_types,
@@ -242,6 +243,7 @@ fn analysis_metadata_exposes_all_named_results() {
             errors.len(),
             import_aliases.len(),
             expr_types.len(),
+            enum_members.len(),
             intrinsic_calls.len(),
             named_argument_orders.len(),
             method_calls.len(),
@@ -255,7 +257,7 @@ fn analysis_metadata_exposes_all_named_results() {
             event_assigned.len(),
             event_raises.len(),
         ],
-        [0; 15]
+        [0; 16]
     );
 }
 

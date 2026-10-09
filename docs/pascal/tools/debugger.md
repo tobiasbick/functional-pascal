@@ -103,10 +103,35 @@ Visible first-class function values and closures may be called when their
 captures can be detached safely. Aggregate results can be expanded like
 ordinary variables and expire on resume. `go`, newly entered closure syntax,
 statements, declarations, and assignments inside `evaluate` remain rejected.
-Calls in debugger expressions take positional arguments only; named arguments
-such as `Sub(Left := 1, Right := 2)` and `var` arguments are rejected.
-Inspection shows a `var` parameter as the caller's current value; the
-debugger does not assign to `var` parameters.
+Declared routines, record methods, and enum constructors accept either fully
+positional or fully named arguments, for example `Sub(Right := 2, Left := 9)`.
+Names match declared parameters case-insensitively; every parameter must occur
+once. Argument expressions run in written order before parameter reordering.
+Visible function values and debugger intrinsics use positional arguments.
+
+Record construction names an exact visible nominal type or alias, for example
+`Point(Y := 2)`. Supplied field expressions run in written order, followed by
+omitted field defaults in declaration order. Required fields must be supplied;
+unknown or duplicate fields and incompatible values fail before defaults run.
+Unit imports and their aliases determine visible type names. A record with any
+private stored field can be constructed only in its declaring unit. Defaults
+execute in their declaration scope under the same detached-call effect policy
+and resource limits as other debugger calls.
+
+Reference parameters require explicit `var` arguments, for example
+`Add(Item := var Count, Amount := 2)`. The designator must name initialized,
+writable storage with the exact declared type. Stored record fields and array
+elements are supported; multiple reference parameters require distinct storage
+roots. These rules apply to declared routines, methods, function values, and
+bound methods. Invalid argument modes and designators fail before the callee
+executes. Accepted writes affect only the detached evaluation sandbox.
+Portable function signatures retain value/reference modes for both call
+arguments and debugger function-value assignment.
+
+Inspection shows a `var` parameter as the caller's current value.
+`setVariable` and `setExpression` write through that reference to the caller's
+storage. Type and path checks precede an atomic commit; failure preserves live
+values and inspection handles, while success refreshes the stop's handles.
 
 Watch expressions use the same [operator precedence](../language/basics/operators.md#operator-precedence)
 as program expressions. For example, `not Count > 0` negates the comparison,

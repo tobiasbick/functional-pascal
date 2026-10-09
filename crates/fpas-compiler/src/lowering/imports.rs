@@ -1,6 +1,10 @@
 //! Interface-backed register bindings and verifier-safe imported function stubs.
 
 mod names;
+mod record_callables;
+mod record_names;
+
+use record_callables::install_record_callables;
 
 use std::collections::{BTreeMap, BTreeSet};
 
@@ -8,9 +12,7 @@ use fpas_ir::{
     BasicBlock, BlockId, Function, FunctionId, FunctionSignature, Global, GlobalId, Instruction,
     Operation, Terminator, ValueDefinition, ValueId,
 };
-use fpas_unit::interface::{
-    CallableType, ConstantValue, InterfaceType, RecordType, SymbolKind, UnitInterface,
-};
+use fpas_unit::interface::{CallableType, ConstantValue, InterfaceType, SymbolKind, UnitInterface};
 use fpas_unit::object::{ImportShape, ObjectImport};
 
 use crate::CompileError;
@@ -25,8 +27,11 @@ pub(crate) struct ImportPlan {
     pub layouts: Vec<ObjectImport>,
 }
 
+/// Interfaces available for lowering and imports actually visible in this source.
+/// See `docs/pascal/program-structure/units.md`.
 pub(super) struct InterfaceSet<'a> {
     pub aliases: &'a BTreeMap<String, String>,
+    pub uses: &'a [fpas_parser::Import],
     pub direct: &'a [UnitInterface],
     pub supporting: &'a [UnitInterface],
 }
@@ -77,6 +82,20 @@ pub(super) fn install(
                     symbol.kind,
                     SymbolKind::Constant(Some(_)) | SymbolKind::EnumMember(_)
                 )
+        })
+        .fold(
+            BTreeMap::<String, usize>::new(),
+            |mut counts, (symbol, _)| {
+                *counts.entry(symbol.name.to_ascii_lowercase()).or_default() += 1;
+                counts
+            },
+        );
+    let short_type_counts = symbols
+        .iter()
+        .filter(|(symbol, plain)| {
+            *plain
+                && symbol.kind == SymbolKind::Type
+                && record_names::is_visible(&interfaces, symbol)
         })
         .fold(
             BTreeMap::<String, usize>::new(),
@@ -139,6 +158,14 @@ pub(super) fn install(
             }
             SymbolKind::Type => {
                 if let InterfaceType::Record(record) = &symbol.ty {
+                    if record_names::is_visible(&interfaces, symbol) {
+                        let ty = interface_type_id(types, &symbol.ty, span)?;
+                        let short = (plain
+                            && short_type_counts.get(&symbol.name.to_ascii_lowercase())
+                                == Some(&1))
+                        .then_some(symbol.name.as_str());
+                        types.register_imported_record_names(&symbol.qualified_name, short, ty);
+                    }
                     install_record_callables(
                         record,
                         types,
@@ -275,41 +302,6 @@ fn install_callable(
         result,
         span,
     )?);
-    Ok(())
-}
-
-#[allow(clippy::too_many_arguments)]
-fn install_record_callables(
-    record: &RecordType,
-    types: &mut TypeTable,
-    callables: &mut BTreeMap<String, Callable>,
-    plan: &mut ImportPlan,
-    stubs: &mut Vec<Function>,
-    installed: &mut BTreeSet<String>,
-    first_function: u32,
-    span: fpas_lexer::Span,
-) -> Result<(), CompileError> {
-    for method in record.methods.iter().chain(&record.static_routines) {
-        if record
-            .private_members
-            .iter()
-            .any(|private| private.eq_ignore_ascii_case(&method.name))
-        {
-            continue;
-        }
-        install_callable(
-            &format!("{}.{}", record.name, method.name),
-            None,
-            &method.callable,
-            types,
-            callables,
-            plan,
-            stubs,
-            installed,
-            first_function,
-            span,
-        )?;
-    }
     Ok(())
 }
 

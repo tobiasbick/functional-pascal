@@ -1,5 +1,6 @@
 //! FPAS parser validation and lowering for read-only debugger expressions.
 
+mod arguments;
 mod boolean;
 mod log_message;
 mod parse;

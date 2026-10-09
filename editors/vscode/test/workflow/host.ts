@@ -37,6 +37,8 @@ export async function verifyWorkflowHost(
   const testsManifest = path.join(testsRoot, "workflow-tests.fpasprj");
   const invalidManifest = path.join(invalidRoot, "invalid.fpasprj");
   const mainPath = path.join(programRoot, "src", "main.fpas");
+  const invalidSource = "program Workflow; begin const Value:integer:=MissingCall(); end.";
+  const missingCallOffset = invalidSource.indexOf("MissingCall");
   const testPaths = Object.fromEntries(
     ["pass", "fail", "skip", "compile", "runtime", "timeout"].map((name) => [
       name,
@@ -51,10 +53,7 @@ export async function verifyWorkflowHost(
       programManifest,
       '[project]\nname = "workflow"\nkind = "program"\nmain = "src/main.fpas"\n\n[sources]\ninclude = ["src/**/*.fpas"]\n'
     );
-    await fs.writeFile(
-      mainPath,
-      "program Workflow; begin const Value:integer:=MissingCall(); end."
-    );
+    await fs.writeFile(mainPath, invalidSource);
     await fs.writeFile(
       testsManifest,
       '[project]\nname = "workflow-tests"\nkind = "test"\n\n[sources]\ninclude = ["*_test.fpas"]\n'
@@ -86,7 +85,7 @@ export async function verifyWorkflowHost(
     await fs.writeFile(invalidManifest, "not valid toml");
 
     const programUri = vscode.Uri.file(programManifest);
-    await api.workflow.selectProject(programUri);
+    await selectGeneratedProject(api, programUri);
     await vscode.commands.executeCommand(CHECK_COMMAND, programUri);
     const problems = vscode.languages.getDiagnostics(vscode.Uri.file(mainPath));
     assert.ok(
@@ -96,7 +95,9 @@ export async function verifyWorkflowHost(
           diagnostic.code === "FP3003" &&
           diagnostic.severity === vscode.DiagnosticSeverity.Error &&
           diagnostic.range.start.line === 0 &&
-          diagnostic.range.start.character === 43 &&
+          diagnostic.range.start.character === missingCallOffset &&
+          diagnostic.range.end.line === 0 &&
+          diagnostic.range.end.character === missingCallOffset + "MissingCall".length &&
           diagnostic.message.includes("Help:")
       ),
       JSON.stringify({ problems, operation: api.workflow.lastOperation() })
@@ -129,7 +130,7 @@ export async function verifyWorkflowHost(
       .getConfiguration("functionalPascal")
       .update("testTimeoutSeconds", 1, vscode.ConfigurationTarget.Workspace);
     const testsUri = vscode.Uri.file(testsManifest);
-    await api.workflow.selectProject(testsUri);
+    await selectGeneratedProject(api, testsUri);
     const discovered = await api.workflow.discoverTests();
     assert.deepEqual(
       discovered.map((file) => path.basename(file)).sort(),
@@ -171,5 +172,22 @@ export async function verifyWorkflowHost(
       .getConfiguration("functionalPascal")
       .update("testTimeoutSeconds", undefined, vscode.ConfigurationTarget.Workspace);
     await fs.rm(fixtureRoot, { recursive: true, force: true });
+  }
+}
+
+async function selectGeneratedProject(
+  api: FunctionalPascalExtensionApi,
+  uri: vscode.Uri
+): Promise<void> {
+  const deadline = Date.now() + 15_000;
+  for (;;) {
+    try {
+      await api.workflow.selectProject(uri);
+      return;
+    } catch (error) {
+      if (!(error instanceof Error) ||
+          !error.message.includes("outside the opened folder") || Date.now() >= deadline) throw error;
+      await new Promise(resolve => setTimeout(resolve, 25));
+    }
   }
 }

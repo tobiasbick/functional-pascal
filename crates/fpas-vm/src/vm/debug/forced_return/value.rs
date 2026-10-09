@@ -53,9 +53,9 @@ pub(in crate::vm::debug) fn reject_declared_category(
             "forced return does not support channel-handle results",
             "Use a non-channel result type for forced return.",
         )),
-        DebugType::Cell(_) => Err(unsupported(
-            "forced return does not support capture-cell results",
-            "Use a non-cell result type for forced return.",
+        DebugType::Reference(_) | DebugType::Cell(_) => Err(unsupported(
+            "forced return does not support reference or capture-cell results",
+            "Use a value result type for forced return.",
         )),
         DebugType::Unit
         | DebugType::Boolean

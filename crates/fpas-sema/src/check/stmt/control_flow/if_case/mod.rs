@@ -9,7 +9,6 @@ mod patterns;
 mod scalar_bindings;
 
 use super::super::super::Checker;
-use crate::scope::{Symbol, SymbolKind};
 use crate::types::{EnumTy, Ty};
 use coverage::Pat;
 use fpas_diagnostics::codes::{
@@ -82,17 +81,7 @@ impl Checker {
             {
                 self.check_import_alias_collision(binding_name, arm.span);
                 self.scopes.push_scope();
-                self.scopes.define_with_declaration(
-                    binding_name,
-                    Symbol {
-                        constant: None,
-                        ty: case_ty.clone(),
-                        mutable: false,
-                        kind: SymbolKind::Var,
-                        task_bound: false,
-                    },
-                    arm.span,
-                );
+                self.define_pattern_binding(binding_name, &case_ty, expr, arm.span);
                 self.check_guard(&arm.guard, span);
                 self.check_stmt(&arm.body);
                 self.scopes.pop_scope();
@@ -127,17 +116,7 @@ impl Checker {
                 self.scopes.push_scope();
                 for (name, ty) in &bindings {
                     self.check_import_alias_collision(name, arm.span);
-                    self.scopes.define_with_declaration(
-                        name,
-                        Symbol {
-                            constant: None,
-                            ty: ty.clone(),
-                            mutable: false,
-                            kind: SymbolKind::Var,
-                            task_bound: false,
-                        },
-                        arm.span,
-                    );
+                    self.define_pattern_binding(name, ty, expr, arm.span);
                 }
             }
             self.check_guard(&arm.guard, span);

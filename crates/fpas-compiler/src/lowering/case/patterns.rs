@@ -149,6 +149,9 @@ impl LoweringContext {
         let span = expr.span();
         if let (Some(IrType::Enum(layout)), Expr::Designator(designator)) =
             (self.type_kind(ty), expr)
+            && self
+                .enum_members
+                .contains(&fpas_sema::designator_lookup_key(designator))
             && let Some(DesignatorPart::Ident(name, _)) = designator.parts.last()
             && let Some((variant, _)) = self.enum_variant(layout, name)
         {

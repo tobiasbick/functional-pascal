@@ -200,6 +200,10 @@ impl<'a> ClosureRegistry<'a> {
                             .is_some_and(|routine| {
                                 routine.captures.iter().any(|outer| {
                                     outer.name.eq_ignore_ascii_case(&capture.name)
+                                        && outer.declaration
+                                            == Some(
+                                                capture.declaration.diagnostic_span_or_synthetic(),
+                                            )
                                         && outer.kind != CaptureKind::Value
                                 })
                             });
@@ -222,10 +226,23 @@ impl<'a> ClosureRegistry<'a> {
                         captures: captures.clone(),
                     },
                 );
+                let owner_name = self
+                    .callables
+                    .iter()
+                    .find(|(_, callable)| callable.function == owner)
+                    .map(|(name, _)| name.as_str())
+                    .or_else(|| {
+                        self.routines
+                            .iter()
+                            .find(|routine| routine.id == owner)
+                            .map(|routine| routine.name.as_str())
+                    })
+                    .unwrap_or(&self.source_name);
+                let name = format!("{owner_name}.{}", info.synthetic_name);
                 self.routines.push(ClosureRoutine {
                     expression,
                     id,
-                    name: info.synthetic_name.clone(),
+                    name,
                     captures,
                     owner,
                 });

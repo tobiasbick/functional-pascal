@@ -1,18 +1,33 @@
 # Compiler and semantic findings
 
-See [scope, priorities and verification](README.md). These are confirmed current-contract defects; package attribution is not a historical introduction bisect. Commands run from the repository root. Complete minimal sources are included where practical; save them under the named ignored scratch path to repeat the checks. The copied executable used for audit is identical to the freshly built `target/debug/fpas.exe`; either can be used with `--std-lib lib`.
+See [scope, priorities and verification](README.md). These are confirmed audit findings; the finding index tracks completed repairs, and resolved entries describe their implemented behavior and coverage. Package attribution is not a historical introduction bisect. Commands run from the repository root. Complete minimal sources are included where practical; save them under the named ignored scratch path to repeat the checks. The copied executable used for audit is identical to the freshly built `target/debug/fpas.exe`; either can be used with `--std-lib lib`.
 
 <a id="c01"></a>
 
-## C01 — P1: enum comparison patterns are lowered by spelling instead of resolved constant identity
+## C01 — P1: enum comparison patterns use resolved constant identity
 
 Packages: AP20.2 and AP20.3.
 
-Code: [crates/fpas-compiler/src/lowering/case/patterns.rs:150-165](../../../../crates/fpas-compiler/src/lowering/case/patterns.rs), especially 152-153. `lower_value_test` takes the last identifier of an enum-typed designator and turns it into a variant test whenever that spelling occurs in the enum. It never checks whether semantic resolution selected an enum member or a nearer constant with that same name. The normal constant-expression comparison at 167-178 is bypassed.
+Status: resolved. See [repair verification](README.md#repair-verification) for
+checks and independent workspace validation blockers.
 
-Contract: [docs/pascal/language/pattern-matching/syntax.md:40-42](../../../../docs/pascal/language/pattern-matching/syntax.md) says a plain identifier compares with the constant or member it names. [docs/pascal/language/pattern-matching/exhaustiveness.md:113](../../../../docs/pascal/language/pattern-matching/exhaustiveness.md) gives named simple-enum constants their evaluated coverage. [docs/pascal/language/pattern-matching/is-test.md:23-26](../../../../docs/pascal/language/pattern-matching/is-test.md) reuses the case pattern rules.
+Implemented behavior: semantic analysis records which full designators resolve
+to enum-member symbols. Both ordinary expression lowering and fieldless variant
+tests use that identity. Constants, parameters, and record fields with a variant's
+name retain their resolved values. Simple enums compare their backing integers;
+actual fieldless variants of data enums retain variant tests.
 
-Reproduction: `pattern_shadowed_enum_constant.fpas`:
+Owners:
+
+- [Semantic designator resolution](../../../../crates/fpas-sema/src/check/expr/designator.rs)
+  and [analysis metadata](../../../../crates/fpas-sema/src/check/context.rs).
+- [Expression lowering](../../../../crates/fpas-compiler/src/lowering/expr/designators.rs),
+  [pattern tests](../../../../crates/fpas-compiler/src/lowering/case/patterns.rs),
+  and [lowering context](../../../../crates/fpas-compiler/src/lowering/context/mod.rs).
+
+Contract: [Pattern syntax](../../../../docs/pascal/language/pattern-matching/syntax.md) says a plain identifier compares with the constant or member it names. [Exhaustiveness](../../../../docs/pascal/language/pattern-matching/exhaustiveness.md) gives named simple-enum constants their evaluated coverage. [Is-test patterns](../../../../docs/pascal/language/pattern-matching/is-test.md) reuses the case pattern rules.
+
+Runtime control: save as `.temp-data/pattern_shadowed_enum_constant.fpas`:
 
 ```pascal
 program PatternShadow;
@@ -44,25 +59,59 @@ end.
 Commands:
 
 ```text
-.temp-data/syntax-review/bin/fpas.exe check --std-lib lib .temp-data/syntax-review-semantics/pattern_shadowed_enum_constant.fpas
-.temp-data/syntax-review/bin/fpas.exe run --std-lib lib .temp-data/syntax-review-semantics/pattern_shadowed_enum_constant.fpas
+fpas check --std-lib lib .temp-data/pattern_shadowed_enum_constant.fpas
+fpas run --std-lib lib .temp-data/pattern_shadowed_enum_constant.fpas
 ```
 
-Observed: check succeeds (exit 0); run prints `missed` and fails with FP5010 `panic: exhaustive case reached no variant` (exit 2). Expected: `matched`, then `blue`, exit 0. Semantic coverage correctly treats the local `Red` as `Shade.Blue`, while runtime matching treats it as `Shade.Red`, so the checker and emitted program disagree.
+The control checks successfully and prints `matched`, then `blue`, with exit 0.
+The local `Red` constant denotes `Shade.Blue` in both coverage and emitted
+comparisons; qualified `Shade.Red` still denotes the actual red member.
 
-Missing regression: [crates/fpas-compiler/src/tests/control_flow/pattern_bindings.rs](../../../../crates/fpas-compiler/src/tests/control_flow/pattern_bindings.rs) covers integer comparison shadowing and nested matching but not a simple-enum constant shadowing a variant name. Add both `is` and nested case tests; include parenthesized/qualified constant controls and an actually named enum member.
+Regression coverage:
+[enum comparisons](../../../../crates/fpas-compiler/src/tests/control_flow/enum_comparisons.rs)
+contains five execution tests covering plain and parenthesized shadowing constants
+in `is` and exhaustive nested `case`, case-insensitive names, nonsequential
+backing values, constant copies, parameters, record fields, actual fieldless data
+variants, and qualified/import-aliased constants after interface serialization
+and linking. Each comparison has matching and nonmatching controls.
 
 <a id="c02"></a>
 
-## C02 — P2: sibling nested calls lose transitive reference captures and trigger an internal compiler error
+## C02 — P2: sibling nested calls preserve transitive captures
 
 Package: AP17.1, with closure/capture infrastructure.
 
-Code: [crates/fpas-sema/src/check/closures/capture/mod.rs:100-104](../../../../crates/fpas-sema/src/check/closures/capture/mod.rs) ignores Function/Procedure symbols. `capture/traversal.rs:325-328` only calls `consider_name` for a call target. Transitive captures are imported for nested declarations (`traversal.rs:39-60`) but not for a sibling routine referenced by a call. Consequently `Second` has no capture for the enclosing `var Value` even though calling `First` needs it. The reference escape checker ([crates/fpas-sema/src/check/references/escapes.rs:52-68](../../../../crates/fpas-sema/src/check/references/escapes.rs)) also relies on the incomplete capture metadata.
+Status: resolved. See [repair verification](README.md#c02) for checks and
+independent workspace validation blockers.
 
-Contract: [docs/pascal/language/functions/var-parameters.md:101-108](../../../../docs/pascal/language/functions/var-parameters.md) permits direct named nested calls using an enclosing reference and rejects escaping routine values with FP3030.
+Implemented behavior: references to named nested routines import their analyzed
+captures transitively. Capture identity, type, reference storage, shared mutable
+cells, task-bound status, and discard proofs retain the original declaration.
+Repeated references are deduplicated by name and source declaration; same-named
+captures from different enclosing scopes remain distinct, with the nearest binding visible to
+ordinary name lookup. Parameters and locals in a wrapper retain their own bindings.
+Anonymous wrappers keep their lexical routine path when resolving named calls.
 
-Valid direct-call reproduction: `reference_indirect_direct.fpas`:
+Named wrappers that directly or indirectly use an enclosing `var` parameter
+can be called by name during the enclosing call. Returning, assigning, passing,
+spawning, or capturing such wrappers in an anonymous closure reports FP3030.
+
+Owners:
+
+- [Lexical capture lookup](../../../../crates/fpas-sema/src/scope/captures.rs),
+  [routine registration](../../../../crates/fpas-sema/src/check/decl/routines.rs),
+  and [capture analysis](../../../../crates/fpas-sema/src/check/closures/capture/mod.rs).
+- [Transitive capture traversal](../../../../crates/fpas-sema/src/check/closures/capture/traversal.rs)
+  and [reference escape checks](../../../../crates/fpas-sema/src/check/references/escapes.rs).
+- [Capture storage forwarding](../../../../crates/fpas-compiler/src/lowering/context/captures.rs),
+  [named-routine capture typing](../../../../crates/fpas-compiler/src/lowering/routines.rs),
+  and [anonymous-closure discovery](../../../../crates/fpas-compiler/src/lowering/closures/discover.rs).
+
+Contract: [Reference-parameter lifetimes](../../../../docs/pascal/language/functions/var-parameters.md#lifetime)
+and [named nested closures](../../../../docs/pascal/language/functions/closures.md#named-nested-routines)
+apply capture and escape rules throughout the call chain.
+
+Runtime control: save as `.temp-data/reference_indirect_direct.fpas`:
 
 ```pascal
 program ReferenceIndirect;
@@ -86,29 +135,69 @@ begin
 end.
 ```
 
-Command:
+Commands:
 
 ```text
-.temp-data/syntax-review/bin/fpas.exe check --std-lib lib .temp-data/syntax-review-semantics/reference_indirect_direct.fpas
+fpas check --std-lib lib .temp-data/reference_indirect_direct.fpas
+fpas run --std-lib lib .temp-data/reference_indirect_direct.fpas
 ```
 
-Observed: FP9001 `Local Value was not present in register-lowering scope metadata` at `First()` inside `Second`, exit 1. Expected: check succeeds, runtime prints 1.
+The control checks successfully and prints `1`, with exit 0. Changing the enclosing
+routine to `function Make(var Value: integer): procedure()` and returning `Second`
+is rejected with FP3030.
 
-Additional reproduction `reference_indirect_escape.fpas` changes the enclosing routine to `function Make(var Value: integer): procedure()` and returns `Second`. That invalid escape should report FP3030, but check and run both reach the same FP9001 instead. No unsafe execution was observed: compilation stops.
+Regression coverage:
 
-Missing regression: sema's `nested_routines_may_use_enclosing_var_parameters_while_the_call_runs` and compiler's `var_parameters_forward_and_reach_nested_routines_and_function_values` cover direct captures, not sibling-call transitivity. Need a valid direct sibling chain and rejection of returned/spawned wrappers.
+- [Compiler execution tests](../../../../crates/fpas-compiler/src/tests/functions/var_parameters/transitive_captures.rs)
+  cover multi-hop sibling calls, recursion, parameter/local/block shadowing,
+  same-named captures from different ancestors, immutable captures through returned
+  routines and anonymous wrappers, and shared mutable cells after the parent returns.
+- [Semantic tests](../../../../crates/fpas-sema/src/tests/expr/var_parameters/transitive_captures.rs)
+  cover deduplication and declaration identity, FP3030 for returned/assigned/passed/
+  spawned/anonymous wrappers, local callable shadowing, and retained task/discard
+  restrictions.
 
 <a id="c03"></a>
 
-## C03 — P2: pattern bindings discard callable capability metadata
+## C03 — P2: pattern bindings preserve callable capability metadata
 
 Packages: AP20 with AP16/AP04.
 
-Code: [crates/fpas-sema/src/check/stmt/control_flow/conditions.rs:74-85](../../../../crates/fpas-sema/src/check/stmt/control_flow/conditions.rs) creates every `is` binding with `task_bound: false`, and `if_case/mod.rs:128-140` does the same for case payload bindings. Neither path propagates the matched value's discard proof. The bindings retain only names and types.
+Status: resolved. See [repair verification](README.md#c03) for checks and
+independent workspace validation blockers.
 
-Contract: [docs/pascal/language/functions/closures.md:105-108,117-129](../../../../docs/pascal/language/functions/closures.md) forbids mutable-capturing callables crossing a task boundary and labels this a compile-time error. [docs/pascal/language/functions/discard.md:81-86](../../../../docs/pascal/language/functions/discard.md) promises known capture information through immutable bindings and aggregates.
+Implemented behavior: `is` bindings and all `case` binding paths use one
+binding definition that retains the matched expression's task-bound state and
+known discard proof. The same definition serves `if`, `elsif`, `while`, guards,
+scalar case bindings, and nested payload patterns. Scalar types, including
+`Numeric`/`Comparable` generic parameters, keep their own guarantees; binding a
+scalar does not make it task-bound because another payload contains a callable.
+Unknown or mutable callable contents do not gain a discard proof from extraction.
+Task-freedom and task-bound state remain independent: a mutable-capturing callable
+with no task handles can be discarded but cannot be spawned or sent to another task.
 
-Reproduction `pattern_task_escape.fpas`:
+Capture identity uses the binding's name and source declaration. Lowered `is`
+bindings use the same pattern declaration as semantic analysis. Multiple bindings
+from one pattern remain distinct in closure captures and debugger provenance.
+Recursive enum inspection terminates with the same cycle protection as records.
+
+Owners:
+
+- [Pattern binding capabilities](../../../../crates/fpas-sema/src/check/stmt/control_flow/pattern_capabilities.rs),
+  [condition checking](../../../../crates/fpas-sema/src/check/stmt/control_flow/conditions.rs),
+  and [case checking](../../../../crates/fpas-sema/src/check/stmt/control_flow/if_case/mod.rs).
+- [Callable-containing type checks](../../../../crates/fpas-sema/src/check/expr/task_bound.rs)
+  and the existing [discard proof checks](../../../../crates/fpas-sema/src/check/discard/mod.rs).
+- [Pattern declaration lowering](../../../../crates/fpas-compiler/src/lowering/control_flow/conditions.rs),
+  [capture collection](../../../../crates/fpas-sema/src/check/closures/capture/mod.rs),
+  and [debugger capture provenance](../../../../crates/fpas-compiler/src/lowering/debug/capture_sources.rs).
+
+Contract: [Pattern bindings](../../../../docs/pascal/language/pattern-matching/syntax.md#pattern-bindings),
+[closure task restrictions](../../../../docs/pascal/language/functions/closures.md#concurrency),
+and [discard capture proofs](../../../../docs/pascal/language/functions/discard.md#channels-and-callable-captures)
+apply to extracted callable values.
+
+Rejected control: save as `.temp-data/pattern_task_escape.fpas`:
 
 ```pascal
 program PatternTask;
@@ -134,15 +223,54 @@ end.
 Commands:
 
 ```text
-.temp-data/syntax-review/bin/fpas.exe check --std-lib lib .temp-data/syntax-review-semantics/pattern_task_escape.fpas
-.temp-data/syntax-review/bin/fpas.exe run --std-lib lib .temp-data/syntax-review-semantics/pattern_task_escape.fpas
+fpas check --std-lib lib .temp-data/pattern_task_escape.fpas
+fpas run --std-lib lib .temp-data/pattern_task_escape.fpas
 ```
 
-Observed: check succeeds (exit 0); run fails at `go F()` with FP5018 (exit 2). `case_task_escape.fpas`, using `case Wrapped of when Some(const F): ... when None: null; end case;`, has the same behavior. `direct_task_escape.fpas`, changing the callee to the known `Change`, correctly fails checking with FP3016. Expected: FP3016 during checking for all three forms. Runtime protection prevents the task-bound closure from actually crossing the boundary, so this is a missing static guarantee rather than an observed data race.
+The control is rejected during checking with FP3016. Equivalent `case` and
+`while` extraction controls are also rejected during checking. The captured
+mutable local remains task-bound after extraction.
 
-The opposite direction also fails: `pattern_discard_proof.fpas` wraps capture-free `Work` in `const Wrapped: Option of function(): integer := Some(Work);`. `discard Wrapped` is accepted, but inside `if Wrapped is Some(const F) then discard F; end if`, the extracted callable is rejected with FP3021 because its proof was dropped. This is a precision gap from the same metadata-loss site; it is not evidence of unsafe discard.
+Accepted control: save as `.temp-data/pattern_task_free.fpas`:
 
-Missing regression: combine case/is payload extraction with task-bound callables and discard-proven callables. Existing AP20 tests predominantly bind scalar/record values; existing discard tests exercise aggregate construction and returns but not extraction through pattern bindings. Include `while`, nested payloads, and task-free controls when repairing the metadata propagation.
+```pascal
+program PatternTaskFree;
+uses Std.Console, Std.Tasks;
+function Work(): integer;
+begin
+  return 42;
+end function;
+procedure Main();
+begin
+  const Wrapped: Option of function(): integer := Some(Work);
+  if Wrapped is Some(const F) then
+    discard F;
+    const Job: task := go F();
+    WriteLn(Wait(Job));
+  end if;
+end procedure;
+begin
+  Main();
+end.
+```
+
+The same check/run commands with this filename succeed; runtime prints `42`.
+The extracted capture-free callable keeps both its discard proof and permission
+to run in another task.
+
+Regression coverage:
+
+- [Semantic tests](../../../../crates/fpas-sema/src/tests/stmt/pattern_capabilities.rs)
+  cover task-bound rejection through `if`, `elsif`, `while`, nested Result/Option
+  payloads, guards, channel sends, and enclosing closures; accepted immutable and
+  task-free captures; conservative rejection of unknown, mutable, or task-handle
+  captures; scalar and generic guarantees; records; and binding-name shadowing.
+- [Compiler execution tests](../../../../crates/fpas-compiler/src/tests/control_flow/pattern_capabilities.rs)
+  cover accepted task spawning and discard, closures over extracted callables,
+  discard without invocation, scalar fields of task-bound records, and distinct
+  captures for multiple bindings from one enum pattern.
+- Existing recursive-type and exhaustiveness tests cover the cycle-safe type
+  inspection used by the shared binding definition.
 
 <a id="c04"></a>
 
@@ -152,7 +280,7 @@ Packages: AP20.2 with AP16/AP10.
 
 Code: [crates/fpas-sema/src/check/decl/consts/scalar.rs:18-22](../../../../crates/fpas-sema/src/check/decl/consts/scalar.rs) only looks up the full designator as a symbol and cannot evaluate record field selections. Such constants still get compile-time classification, but no scalar value. [crates/fpas-sema/src/check/stmt/control_flow/if_case/patterns/values.rs:85-98](../../../../crates/fpas-sema/src/check/stmt/control_flow/if_case/patterns/values.rs) therefore represents them as `Pat::Other` instead of a Boolean constructor.
 
-Contract: [docs/pascal/language/basics/constants.md:33-36](../../../../docs/pascal/language/basics/constants.md) retains compile-time-known aggregate/constant forms. [docs/pascal/language/pattern-matching/exhaustiveness.md:113](../../../../docs/pascal/language/pattern-matching/exhaustiveness.md) says named compile-time Boolean and simple-enum constants contribute the same coverage as their values. Existing sema test `computed_constructor_defaults_participate_in_const_classification` explicitly accepts a record constant field as a case label.
+Contract: [docs/pascal/language/basics/constants.md:33-36](../../../../docs/pascal/language/basics/constants.md) retains compile-time-known aggregate/constant forms. [Exhaustiveness](../../../../docs/pascal/language/pattern-matching/exhaustiveness.md) says named compile-time Boolean and simple-enum constants contribute the same coverage as their values. Existing sema test `computed_constructor_defaults_participate_in_const_classification` explicitly accepts a record constant field as a case label.
 
 Reproduction `pattern_record_constant.fpas`:
 

@@ -32,7 +32,7 @@ export async function verifyTaskLifecycle(
     "  var Value: integer := 40;",
     "  Value := Value + 2;",
     "  return Value;",
-    "end;",
+    "end function;",
     "",
     "begin",
     "  const Pending: task := go Work();",

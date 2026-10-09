@@ -211,6 +211,8 @@ impl DebugSession {
             .worker(task_id)
             .ok_or_else(|| unknown_task(task_id))?;
         let mut sandbox = LazyCallSandbox::new(
+            inspection,
+            frame_id,
             Arc::clone(&self.executable),
             Arc::clone(&worker.layouts),
             Arc::clone(&worker.globals),
@@ -243,6 +245,8 @@ impl DebugSession {
             .worker(task_id)
             .ok_or_else(|| unknown_task(task_id))?;
         let mut sandbox = LazyCallSandbox::new(
+            inspection,
+            frame_id,
             Arc::clone(&self.executable),
             Arc::clone(&worker.layouts),
             Arc::clone(&worker.globals),
@@ -277,6 +281,8 @@ impl DebugSession {
             .worker(task_id)
             .ok_or_else(|| unknown_task(task_id))?;
         let mut sandbox = LazyCallSandbox::new(
+            inspection,
+            frame_id,
             Arc::clone(&self.executable),
             Arc::clone(&worker.layouts),
             Arc::clone(&worker.globals),
@@ -314,6 +320,8 @@ impl DebugSession {
             .worker(task_id)
             .ok_or_else(|| unknown_task(task_id))?;
         let mut sandbox = LazyCallSandbox::new(
+            inspection,
+            frame_id,
             Arc::clone(&self.executable),
             Arc::clone(&worker.layouts),
             Arc::clone(&worker.globals),

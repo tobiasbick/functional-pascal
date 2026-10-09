@@ -243,6 +243,7 @@ fn record_layout_changes_are_rejected() {
     let current = pair_executable();
     let mut image = current.clone().into_unverified();
     image.records.push(RecordLayout {
+        construction: None,
         name: StringId::new(3),
         fields: vec![RecordField {
             name: StringId::new(1),
@@ -583,6 +584,7 @@ fn incompatible_replace_is_rejected_before_the_live_image_changes() {
     let current = pair_executable();
     let mut image = current.clone().into_unverified();
     image.records.push(RecordLayout {
+        construction: None,
         name: StringId::new(3),
         fields: vec![RecordField {
             name: StringId::new(1),

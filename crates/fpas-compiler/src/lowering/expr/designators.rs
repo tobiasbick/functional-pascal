@@ -10,6 +10,9 @@ use super::super::context::{LoweringContext, unsupported};
 use super::super::types;
 
 impl LoweringContext {
+    /// Lowers enum members only when semantic name resolution selected that symbol kind.
+    ///
+    /// **Documentation:** `docs/pascal/language/pattern-matching/syntax.md`
     pub(super) fn lower_designator_expression(
         &mut self,
         designator: &Designator,
@@ -29,6 +32,7 @@ impl LoweringContext {
             .collect::<Option<Vec<_>>>()
             .map(|parts| parts.join("."));
         if let Ok(Ty::Enum(enumeration)) = self.expression_type(expression)
+            && self.enum_members.contains(&designator_key)
             && enumeration.has_data()
             && let Some(name) = designator.parts.last().and_then(|part| match part {
                 DesignatorPart::Ident(name, _) => Some(name),
@@ -52,6 +56,7 @@ impl LoweringContext {
             }
         }
         if let Ok(Ty::Enum(enumeration)) = self.expression_type(expression)
+            && self.enum_members.contains(&designator_key)
             && !enumeration.has_data()
             && let Some(name) = designator.parts.last().and_then(|part| match part {
                 DesignatorPart::Ident(name, _) => Some(name),
@@ -113,7 +118,7 @@ impl LoweringContext {
             let captures = callable
                 .captures
                 .iter()
-                .map(|capture| self.read_capture(&capture.name, designator.span))
+                .map(|capture| self.read_capture(capture, designator.span))
                 .collect::<Result<Vec<_>, _>>()?;
             self.emit_value(
                 Operation::MakeClosure {

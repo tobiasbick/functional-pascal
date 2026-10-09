@@ -16,6 +16,7 @@ fn positional_record_clones_share_layout_and_detach_values() {
         4,
     );
     image.records = vec![RecordLayout {
+        construction: None,
         name: StringId::new(2),
         fields: vec![RecordField {
             name: StringId::new(3),
@@ -50,6 +51,7 @@ fn store_field_reuses_unique_storage() {
         2,
     );
     image.records = vec![RecordLayout {
+        construction: None,
         name: StringId::new(2),
         fields: vec![RecordField {
             name: StringId::new(3),
@@ -87,6 +89,7 @@ fn point_image(
         register_count,
     );
     image.records = vec![RecordLayout {
+        construction: None,
         name: StringId::new(2),
         fields: vec![RecordField {
             name: StringId::new(3),

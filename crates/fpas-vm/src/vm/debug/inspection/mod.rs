@@ -5,6 +5,7 @@ mod capture_sources;
 mod handles;
 mod model;
 mod mutation_targets;
+mod references;
 mod render;
 mod snapshot;
 mod targets;

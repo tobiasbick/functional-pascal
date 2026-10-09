@@ -68,6 +68,41 @@ pub(super) fn validate_tables(executable: &crate::Executable) -> Result<(), Vali
         for field in &record.fields {
             validate_string(executable, field.name, "record field name")?;
         }
+        if let Some(info) = &record.construction {
+            if info.defaults.len() != record.fields.len()
+                || (info.requires_owner && info.owner_unit.is_none())
+                || info.aliases.len() > limits::MAX_STRINGS
+            {
+                return Err(ValidationError::executable(
+                    ValidationErrorKind::TableReference {
+                        table: "record construction",
+                        operand: "default slots",
+                        actual: info.defaults.len() as u64,
+                        length: record.fields.len(),
+                    },
+                ));
+            }
+            if let Some(owner) = info.owner_unit {
+                validate_string(executable, owner, "record owner unit")?;
+            }
+            for alias in &info.aliases {
+                validate_string(executable, alias.name, "record type alias")?;
+                validate_string(executable, alias.unit, "record alias unit")?;
+                if alias.source.get() as usize >= executable.source_map.sources.len() {
+                    return Err(ValidationError::executable(
+                        ValidationErrorKind::TableReference {
+                            table: "sources",
+                            operand: "record alias source",
+                            actual: alias.source.get() as u64,
+                            length: executable.source_map.sources.len(),
+                        },
+                    ));
+                }
+            }
+            for default in info.defaults.iter().flatten() {
+                validate_string(executable, *default, "record default routine")?;
+            }
+        }
         for method in &record.methods {
             validate_string(executable, method.name, "record method name")?;
             validate_string(executable, method.routine, "record method routine")?;

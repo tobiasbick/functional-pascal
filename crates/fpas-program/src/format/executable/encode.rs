@@ -157,6 +157,7 @@ pub(super) fn encode_records(executable: &Executable) -> Result<EncodedSection, 
             write_u32(&mut bytes, method.name.get());
             write_u32(&mut bytes, method.routine.get());
         }
+        super::record_construction::encode(record.construction.as_ref(), &mut bytes)?;
     }
     Ok(EncodedSection {
         tag: TAGS[4],

@@ -106,7 +106,7 @@ function sourceWithValue(value: number): string[] {
     "function Value(): integer;",
     "begin",
     `  return ${value};`,
-    "end;",
+    "end function;",
     "",
     "begin",
     "  WriteLn(Value());",

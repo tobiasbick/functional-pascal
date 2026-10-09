@@ -14,6 +14,7 @@ mod globals;
 mod imports;
 mod intrinsic_signatures;
 mod members;
+mod record_defaults;
 mod routines;
 mod stmt;
 mod type_names;
@@ -50,6 +51,7 @@ pub fn lower(program: &AstProgram) -> Result<Program, Vec<CompileError>> {
     }
     lower_analyzed_root(
         &program.name,
+        &program.uses,
         &program.declarations,
         &program.body,
         program.span,
@@ -60,6 +62,8 @@ pub fn lower(program: &AstProgram) -> Result<Program, Vec<CompileError>> {
     .map(|lowered| lowered.program)
 }
 
+/// Lowers a unit with its direct imports and transitive type support.
+/// See `docs/pascal/program-structure/units.md`.
 pub(crate) fn lower_unit(
     unit: &Unit,
     interfaces: &[fpas_unit::interface::UnitInterface],
@@ -80,6 +84,7 @@ pub(crate) fn lower_unit(
     }
     lower_analyzed_root(
         &unit.name.parts.join("."),
+        &unit.uses,
         &unit.declarations,
         &[],
         unit.span,
@@ -89,6 +94,8 @@ pub(crate) fn lower_unit(
     )
 }
 
+/// Lowers a program with its source imports and available dependency interfaces.
+/// See `docs/pascal/program-structure/units.md`.
 pub(crate) fn lower_program_with_support(
     program: &AstProgram,
     interfaces: &[fpas_unit::interface::UnitInterface],
@@ -112,6 +119,7 @@ pub(crate) fn lower_program_with_support(
     }
     lower_analyzed_root(
         &program.name,
+        &program.uses,
         &program.declarations,
         &program.body,
         program.span,
@@ -123,6 +131,7 @@ pub(crate) fn lower_program_with_support(
 
 fn lower_analyzed_root(
     name: &str,
+    uses: &[fpas_parser::Import],
     declarations: &[Decl],
     body: &[Stmt],
     span: fpas_lexer::Span,
@@ -158,6 +167,7 @@ fn lower_analyzed_root(
     let (imports, imported_stubs) = imports::install(
         imports::InterfaceSet {
             aliases: &metadata.import_aliases,
+            uses,
             direct: interfaces,
             supporting: supporting_interfaces,
         },
@@ -323,6 +333,43 @@ fn lower_analyzed_root(
                 &constants,
             )
             .map_err(|error| vec![error])?;
+        type_table = updated_types;
+        functions.push(function);
+    }
+    let defaults = type_table.prepare_record_defaults(&metadata, name, declarations);
+    let mut next_default_id = functions
+        .iter()
+        .map(|function| function.id.get())
+        .max()
+        .unwrap_or(0);
+    for default in defaults {
+        next_default_id = next_default_id.checked_add(1).ok_or_else(|| {
+            vec![context::unsupported(
+                span,
+                "record default function identifier overflow",
+            )]
+        })?;
+        let (function, updated_types) = record_defaults::lower(
+            FunctionInput {
+                name: &default.name,
+                source_name: name,
+                id: FunctionId::new(next_default_id),
+                result: default.ty,
+                parameters: &[],
+                captures: &[],
+                globals: global_bindings.clone(),
+                constants: constants.clone(),
+                metadata: &metadata,
+                callables: callables.clone(),
+                closure_targets: closures.targets.clone(),
+                bound_method_targets: closures.bound_targets.clone(),
+                intrinsic_task_targets: closures.intrinsic_task_targets.clone(),
+                cell_names: Default::default(),
+                type_table: type_table.clone(),
+            },
+            &default.expression,
+        )
+        .map_err(|error| vec![error])?;
         type_table = updated_types;
         functions.push(function);
     }

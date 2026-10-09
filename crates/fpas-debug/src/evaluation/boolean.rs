@@ -100,7 +100,7 @@ fn kind(expression: &DebugExpression) -> Kind {
         | DebugExpression::String(_)
         | DebugExpression::Array(_)
         | DebugExpression::Dictionary(_)
-        | DebugExpression::Record(_)
+        | DebugExpression::Record { .. }
         | DebugExpression::RecordUpdate { .. }
         | DebugExpression::ResultOk(_)
         | DebugExpression::ResultError(_)

@@ -115,7 +115,8 @@ fn structurally_equivalent_inner(
         | (ObjectDebugType::Option(left), ObjectDebugType::Option(right))
         | (ObjectDebugType::Cell(left), ObjectDebugType::Cell(right))
         | (ObjectDebugType::Task(left), ObjectDebugType::Task(right))
-        | (ObjectDebugType::Channel(left), ObjectDebugType::Channel(right)) => {
+        | (ObjectDebugType::Channel(left), ObjectDebugType::Channel(right))
+        | (ObjectDebugType::Reference(left), ObjectDebugType::Reference(right)) => {
             child(*left, *right, visited)
         }
         (
@@ -212,7 +213,8 @@ fn reachable_types(object: &RelocatableObject) -> Vec<bool> {
             | ObjectDebugType::Option(inner)
             | ObjectDebugType::Cell(inner)
             | ObjectDebugType::Task(inner)
-            | ObjectDebugType::Channel(inner) => pending.push(*inner),
+            | ObjectDebugType::Channel(inner)
+            | ObjectDebugType::Reference(inner) => pending.push(*inner),
             ObjectDebugType::Dictionary { key, value }
             | ObjectDebugType::Result {
                 ok: key,
@@ -294,6 +296,7 @@ fn relocate_type(
         ObjectDebugType::Cell(inner) => DebugType::Cell(child(*inner)?),
         ObjectDebugType::Task(inner) => DebugType::Task(child(*inner)?),
         ObjectDebugType::Channel(inner) => DebugType::Channel(child(*inner)?),
+        ObjectDebugType::Reference(inner) => DebugType::Reference(child(*inner)?),
     })
 }
 

@@ -1,12 +1,13 @@
 //! Effect-checked detached worker invocation and aggregate construction.
 
+use std::collections::HashMap;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, RwLock};
 use std::time::Instant;
 
 use fpas_bytecode::{
-    DebugEffectSet, FunctionId, Intrinsic, SharedRecord, Value, VerifiedExecutable,
-    analyze_debug_effects, intrinsic_debug_effects,
+    DebugEffectSet, Intrinsic, Value, VerifiedExecutable, analyze_debug_effects,
+    intrinsic_debug_effects,
 };
 
 use super::detach::{ValueDetacher, error};
@@ -14,28 +15,34 @@ use super::enum_constructor;
 use super::resolution::{NamedTarget, resolve_named};
 use crate::vm::debug::evaluation::{DebugCallTarget, DebugEvaluationLimits};
 use crate::vm::debug::types::{DebugErrorKind, DebugSessionError};
-use crate::vm::dispatch::DispatchStep;
 use crate::vm::hosted::HostedState;
 use crate::vm::layouts::RuntimeLayouts;
 use crate::vm::worker::Worker;
 
+/// Bounded, effect-checked detached call state. See `docs/pascal/tools/debugger.md`.
 pub(in crate::vm::debug) struct CallSandbox {
-    executable: Arc<VerifiedExecutable>,
-    layouts: Arc<RuntimeLayouts>,
-    globals: Arc<RwLock<Vec<Option<Value>>>>,
-    effects: Vec<DebugEffectSet>,
-    detacher: ValueDetacher,
-    limits: DebugEvaluationLimits,
+    pub(super) executable: Arc<VerifiedExecutable>,
+    pub(super) layouts: Arc<RuntimeLayouts>,
+    pub(super) source: fpas_bytecode::SourceId,
+    pub(super) globals: Arc<RwLock<Vec<Option<Value>>>>,
+    pub(super) effects: Vec<DebugEffectSet>,
+    pub(super) detacher: ValueDetacher,
+    pub(super) limits: DebugEvaluationLimits,
     started: Instant,
     calls: usize,
-    instructions: u64,
+    pub(super) instructions: u64,
+    pub(super) reference_types: HashMap<usize, fpas_bytecode::DebugTypeId>,
+    pub(super) local_cells: HashMap<usize, Arc<std::sync::Mutex<Value>>>,
     cancelled: Arc<AtomicBool>,
 }
 
 impl CallSandbox {
+    /// Snapshots globals without sharing mutable storage with the live program.
+    /// See `docs/pascal/tools/debugger.md`.
     pub(in crate::vm::debug) fn new(
         executable: Arc<VerifiedExecutable>,
         layouts: Arc<RuntimeLayouts>,
+        source: fpas_bytecode::SourceId,
         source_globals: &Arc<RwLock<Vec<Option<Value>>>>,
         limits: DebugEvaluationLimits,
         cancelled: Arc<AtomicBool>,
@@ -65,6 +72,7 @@ impl CallSandbox {
         Ok(Self {
             executable,
             layouts,
+            source,
             globals: Arc::new(RwLock::new(globals)),
             effects,
             detacher,
@@ -72,17 +80,44 @@ impl CallSandbox {
             started: Instant::now(),
             calls: 0,
             instructions: 0,
+            reference_types: HashMap::new(),
+            local_cells: HashMap::new(),
             cancelled,
         })
     }
 
+    /// Invokes one resolved callable or typed constructor under shared call limits.
+    /// See `docs/pascal/tools/debugger.md`.
     pub(in crate::vm::debug) fn invoke(
         &mut self,
-        target: DebugCallTarget,
-        arguments: Vec<Value>,
+        mut target: DebugCallTarget,
+        mut arguments: Vec<Value>,
     ) -> Result<Value, DebugSessionError> {
         self.check_boundary()?;
+        if let DebugCallTarget::NamedArguments {
+            target: inner,
+            names,
+        } = target
+        {
+            if let DebugCallTarget::Named(name) = inner.as_ref()
+                && let Some(record) = self.record_type(name)?
+            {
+                return self.construct_record(record, name, &names, arguments);
+            }
+            arguments = self.order_named_arguments(&inner, &names, arguments)?;
+            target = *inner;
+        }
         match target {
+            DebugCallTarget::Reference(_) => Err(error(
+                DebugErrorKind::EvaluationType,
+                "unresolved debugger reference",
+                "Resolve the designator in a stopped frame before invoking a call.",
+            )),
+            DebugCallTarget::NamedArguments { .. } => Err(error(
+                DebugErrorKind::EvaluationType,
+                "debug call contains nested argument-name metadata",
+                "Supply argument names only on the call itself.",
+            )),
             DebugCallTarget::Named(name) => self.invoke_named(&name, arguments),
             DebugCallTarget::Value(Value::Function(function)) => self.invoke_function(
                 function.function,
@@ -102,7 +137,16 @@ impl CallSandbox {
             DebugCallTarget::Method { receiver, name } => {
                 self.invoke_member(receiver, &name, arguments)
             }
-            DebugCallTarget::Record { fields } => self.construct_record(&fields, arguments),
+            DebugCallTarget::Record { name, fields } => {
+                let record = self.record_type(&name)?.ok_or_else(|| {
+                    error(
+                        DebugErrorKind::UnknownCallable,
+                        format!("debug record type `{name}` is not visible in this source"),
+                        "Use a visible record type name.",
+                    )
+                })?;
+                self.construct_record(record, &name, &fields, arguments)
+            }
         }
     }
 
@@ -118,7 +162,8 @@ impl CallSandbox {
         self.check_running()
     }
 
-    fn check_running(&self) -> Result<(), DebugSessionError> {
+    /// Enforces cancellation and the shared deadline. See `docs/pascal/tools/debugger.md`.
+    pub(super) fn check_running(&self) -> Result<(), DebugSessionError> {
         if self.cancelled.load(Ordering::Acquire) {
             return Err(error(
                 DebugErrorKind::CallCancelled,
@@ -144,6 +189,9 @@ impl CallSandbox {
         name: &str,
         arguments: Vec<Value>,
     ) -> Result<Value, DebugSessionError> {
+        if let Some(record) = self.record_type(name)? {
+            return self.construct_record(record, name, &[], arguments);
+        }
         match resolve_named(&self.executable, &self.layouts, name)? {
             NamedTarget::Function(function) => {
                 self.invoke_function(function, None, &[], arguments, name)
@@ -188,7 +236,19 @@ impl CallSandbox {
         member: &str,
         mut arguments: Vec<Value>,
     ) -> Result<Value, DebugSessionError> {
-        let Value::Record(record) = &receiver else {
+        let name = self.member_name(&receiver, member)?;
+        arguments.insert(0, receiver);
+        self.invoke_named(&name, arguments)
+    }
+
+    /// Resolves a record method through its canonical executable routine mapping.
+    /// See `docs/pascal/language/types/records.md`.
+    pub(super) fn member_name(
+        &self,
+        receiver: &Value,
+        member: &str,
+    ) -> Result<String, DebugSessionError> {
+        let Value::Record(record) = receiver else {
             return Err(error(
                 DebugErrorKind::EvaluationType,
                 format!(
@@ -198,131 +258,38 @@ impl CallSandbox {
                 "Call instance members on record values.",
             ));
         };
-        let name = format!("{}.{}", record.body().layout.type_name, member);
-        arguments.insert(0, receiver);
-        self.invoke_named(&name, arguments)
-    }
-
-    fn invoke_function(
-        &mut self,
-        function: FunctionId,
-        bound_receiver: Option<&Value>,
-        captures: &[Value],
-        mut arguments: Vec<Value>,
-        display_name: &str,
-    ) -> Result<Value, DebugSessionError> {
-        let info = self
-            .executable
-            .executable()
-            .functions
-            .get(usize::from(function.get()))
+        let image = self.executable.executable();
+        image
+            .records
+            .get(record.body().layout.record.get() as usize)
+            .and_then(|layout| {
+                layout.methods.iter().find(|method| {
+                    image
+                        .strings
+                        .get(method.name)
+                        .is_some_and(|name| name.eq_ignore_ascii_case(member))
+                })
+            })
+            .and_then(|method| image.strings.get(method.routine))
+            .map(str::to_owned)
             .ok_or_else(|| {
                 error(
                     DebugErrorKind::UnknownCallable,
-                    format!("debug callable `{display_name}` references a missing function"),
-                    "Rebuild the executable with the current compiler.",
-                )
-            })?;
-        let visible_arity = usize::from(info.arity)
-            .checked_sub(usize::from(bound_receiver.is_some()))
-            .ok_or_else(|| {
-                error(
-                    DebugErrorKind::CallArity,
-                    format!("debug callable `{display_name}` has no receiver parameter"),
-                    "Rebuild the executable with current bound-method metadata.",
-                )
-            })?;
-        if visible_arity != arguments.len() {
-            return Err(error(
-                DebugErrorKind::CallArity,
-                format!(
-                    "debug callable `{display_name}` expects {} arguments, received {}",
-                    visible_arity,
-                    arguments.len()
-                ),
-                "Pass the exact declared argument count.",
-            ));
-        }
-        if usize::from(info.capture_count) != captures.len() {
-            return Err(error(
-                DebugErrorKind::CallArity,
-                format!(
-                    "debug callable `{display_name}` expects {} captures, received {}",
-                    info.capture_count,
-                    captures.len()
-                ),
-                "Invoke nested routines through their visible first-class function value.",
-            ));
-        }
-        let effects = self
-            .effects
-            .get(usize::from(function.get()))
-            .copied()
-            .unwrap_or(DebugEffectSet::UNKNOWN);
-        self.require_safe(display_name, effects)?;
-        if let Some(receiver) = bound_receiver {
-            arguments.insert(0, receiver.clone());
-        }
-        let arguments = self.detach_values(&arguments)?;
-        let captures = self.detach_values(captures)?;
-        let mut worker = Worker::for_function_with_captures(
-            Arc::clone(&self.executable),
-            function,
-            &arguments,
-            &captures,
-            Arc::clone(&self.globals),
-            Arc::clone(&self.layouts),
-            Arc::new(HostedState::new(fpas_std::Console::new(), Vec::new())),
-        )
-        .map_err(|diagnostic| runtime_error(*diagnostic))?;
-        loop {
-            self.check_running()?;
-            if self.instructions >= self.limits.max_call_instructions {
-                return Err(error(
-                    DebugErrorKind::CallLimit,
                     format!(
-                        "debug call instruction count exceeds limit {}",
-                        self.limits.max_call_instructions
+                        "debug record `{}` has no method `{member}`",
+                        record.body().layout.type_name
                     ),
-                    "Use a smaller bounded callable.",
-                ));
-            }
-            match worker
-                .dispatch_one()
-                .map_err(|diagnostic| runtime_error(*diagnostic))?
-            {
-                DispatchStep::Continue => {}
-                DispatchStep::Return(value) => return Ok(value),
-                DispatchStep::Suspend => {
-                    return Err(error(
-                        DebugErrorKind::ForbiddenCallEffect,
-                        "debug call attempted to suspend on task scheduling",
-                        "Remove task and scheduler operations from debugger-call targets.",
-                    ));
-                }
-            }
-            self.instructions = self.instructions.saturating_add(1);
-            if worker.call_stack.len() > self.limits.max_call_depth {
-                return Err(error(
-                    DebugErrorKind::CallLimit,
-                    format!(
-                        "debug call depth exceeds limit {}",
-                        self.limits.max_call_depth
-                    ),
-                    "Use a shallower call chain or recursion depth.",
-                ));
-            }
-        }
+                    "Call a declared instance method on this record type.",
+                )
+            })
     }
 
-    fn detach_values(&mut self, values: &[Value]) -> Result<Vec<Value>, DebugSessionError> {
-        values
-            .iter()
-            .map(|value| self.detacher.detach(value))
-            .collect()
-    }
-
-    fn require_safe(&self, name: &str, effects: DebugEffectSet) -> Result<(), DebugSessionError> {
+    /// Rejects effects that may escape detached evaluation. See `docs/pascal/tools/debugger.md`.
+    pub(super) fn require_safe(
+        &self,
+        name: &str,
+        effects: DebugEffectSet,
+    ) -> Result<(), DebugSessionError> {
         if effects.is_debug_safe() {
             return Ok(());
         }
@@ -332,59 +299,11 @@ impl CallSandbox {
             "Use a deterministic callable without host I/O, time, randomness, tasks, blocking, or unknown dynamic calls.",
         ))
     }
-
-    fn construct_record(
-        &self,
-        fields: &[String],
-        values: Vec<Value>,
-    ) -> Result<Value, DebugSessionError> {
-        let mut candidates = self.layouts.records.iter().filter(|layout| {
-            layout.fields.len() == fields.len()
-                && layout.fields.iter().all(|candidate| {
-                    fields
-                        .iter()
-                        .any(|field| field.eq_ignore_ascii_case(candidate))
-                })
-        });
-        let Some(layout) = candidates.next() else {
-            return Err(error(
-                DebugErrorKind::UnknownCallable,
-                "debug record literal does not match an executable record layout",
-                "Use the complete exact stored-field set of one visible record type.",
-            ));
-        };
-        if candidates.next().is_some() {
-            return Err(error(
-                DebugErrorKind::AmbiguousCallable,
-                "debug record literal matches multiple executable record layouts",
-                "Pass an existing typed record value or use a uniquely shaped record literal.",
-            ));
-        }
-        let ordered = layout
-            .fields
-            .iter()
-            .map(|candidate| {
-                fields
-                    .iter()
-                    .position(|field| field.eq_ignore_ascii_case(candidate))
-                    .and_then(|index| values.get(index).cloned())
-                    .ok_or_else(|| {
-                        error(
-                            DebugErrorKind::CallRuntime,
-                            "debug record literal field ordering failed",
-                            "Re-enter the record literal with each field exactly once.",
-                        )
-                    })
-            })
-            .collect::<Result<Vec<_>, _>>()?;
-        Ok(Value::Record(SharedRecord::new(
-            Arc::clone(layout),
-            ordered,
-        )))
-    }
 }
 
-fn runtime_error(diagnostic: fpas_diagnostics::Diagnostic) -> DebugSessionError {
+/// Converts detached worker diagnostics to debugger call errors.
+/// See `docs/pascal/tools/debugger.md`.
+pub(super) fn runtime_error(diagnostic: fpas_diagnostics::Diagnostic) -> DebugSessionError {
     let fpas_diagnostics::Diagnostic { message, help, .. } = diagnostic;
     error(
         DebugErrorKind::CallRuntime,

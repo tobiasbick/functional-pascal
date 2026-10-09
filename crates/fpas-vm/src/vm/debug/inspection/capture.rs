@@ -96,6 +96,13 @@ impl InspectionSnapshot {
                 .base
                 .saturating_add(usize::from(binding.register.get()));
             let initialized = worker.register_is_initialized(register);
+            let raw_value = initialized
+                .then(|| worker.registers.get(register))
+                .flatten();
+            let referent_type = match image.debug_types.get(binding.ty.get() as usize) {
+                Some(fpas_bytecode::DebugType::Reference(inner)) => Some(*inner),
+                _ => None,
+            };
             // A `var` parameter shows the caller's current value, not its reference.
             let value = initialized
                 .then(|| worker.registers.get(register).cloned())
@@ -136,6 +143,22 @@ impl InspectionSnapshot {
                         instruction,
                     }),
             );
+            let mutation = if let Some(expected) = referent_type {
+                match raw_value {
+                    Some(Value::Reference(reference)) if value.is_some() => {
+                        super::references::mutation(
+                            image,
+                            reference,
+                            expected,
+                            self.generation,
+                            frame_id,
+                        )
+                    }
+                    _ => MutationAccess::Unavailable,
+                }
+            } else {
+                mutation
+            };
             let retained = RetainedValue {
                 name: name.to_string(),
                 value,
@@ -143,7 +166,7 @@ impl InspectionSnapshot {
                 presentation_hint: binding.cell_backed.then(|| "captured mutable".to_string()),
                 depth: 0,
                 visited_cells: HashSet::new(),
-                debug_type: Some(binding.ty),
+                debug_type: Some(referent_type.unwrap_or(binding.ty)),
                 mutation,
             };
             retained_bindings.push((binding.scope, retained.clone()));

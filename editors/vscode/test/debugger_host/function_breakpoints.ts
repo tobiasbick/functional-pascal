@@ -23,7 +23,7 @@ export async function verifyFunctionBreakpoints(
     "function Helper(Value: integer): integer;",
     "begin",
     "  return Value + 1;",
-    "end;",
+    "end function;",
     "",
     "begin",
     "  const First: integer := Helper(1);",

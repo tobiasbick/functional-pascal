@@ -19,3 +19,6 @@ workspace = true
 
 [dev-dependencies]
 fpas-compiler = { path = "../fpas-compiler" }
+fpas-linker = { path = "../fpas-linker" }
+fpas-unit = { path = "../fpas-unit" }
+fpas-program = { path = "../fpas-program" }

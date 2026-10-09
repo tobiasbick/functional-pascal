@@ -14,6 +14,19 @@ use fpas_vm::{
     SourceBreakpoint,
 };
 
+#[path = "call_evaluation/named_arguments.rs"]
+mod named_arguments;
+#[path = "call_evaluation/portable_metadata.rs"]
+mod portable_metadata;
+#[path = "call_evaluation/record_visibility.rs"]
+mod record_visibility;
+#[path = "call_evaluation/records.rs"]
+mod records;
+#[path = "call_evaluation/references.rs"]
+mod references;
+#[path = "call_evaluation/var_parameters.rs"]
+mod var_parameters;
+
 fn compile(source: &str) -> fpas_bytecode::VerifiedExecutable {
     let (program, diagnostics) = fpas_parser::parse(source);
     assert!(diagnostics.is_empty(), "parse diagnostics: {diagnostics:?}");

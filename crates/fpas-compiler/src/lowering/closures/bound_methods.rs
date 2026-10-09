@@ -59,7 +59,7 @@ impl ClosureRegistry<'_> {
             cell_names: BTreeSet::new(),
             type_table: types.clone(),
         })?;
-        let receiver = context.read_capture("__bound_self", routine.span)?;
+        let receiver = context.read_capture(&captures[0], routine.span)?;
         let mut arguments = vec![receiver];
         for parameter in &parameters {
             arguments.push(context.read_named_local(&parameter.name, routine.span)?);

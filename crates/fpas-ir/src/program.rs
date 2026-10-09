@@ -165,6 +165,24 @@ pub struct RecordLayout {
     pub fields: Vec<RecordField>,
     /// Instance methods and their exact compiler-resolved routine names.
     pub methods: Vec<RecordMethod>,
+    /// Typed debugger construction; see `docs/pascal/language/types/records.md`.
+    pub construction: Option<RecordConstructionInfo>,
+}
+
+/// Declaration-bound defaults and visible names retained for debugger construction.
+/// See `docs/pascal/language/types/records.md`.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct RecordConstructionInfo {
+    /// Declaring unit, absent for program-owned records.
+    pub owner_unit: Option<String>,
+    /// Whether any field restricts construction to the declaring unit.
+    pub requires_owner: bool,
+    /// Visible type names and aliases in the compiling source.
+    pub aliases: Vec<String>,
+    /// Compiling source's unit or program name.
+    pub scope_unit: String,
+    /// Zero-argument field-default routines in field declaration order.
+    pub defaults: Vec<Option<String>>,
 }
 
 /// Instance-method mapping retained for debugger-side bound receiver values.

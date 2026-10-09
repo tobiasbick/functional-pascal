@@ -159,6 +159,7 @@ fn resolve_owner_binding(
         .enumerate()
         .filter(|(_, candidate)| {
             !candidate.hidden
+                && candidate.name.eq_ignore_ascii_case(&binding.name)
                 && candidate.declaration == Some(declaration)
                 && candidate.ty == binding.ty
                 && match kind {

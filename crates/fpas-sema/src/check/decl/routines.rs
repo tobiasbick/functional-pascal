@@ -47,6 +47,10 @@ impl Checker {
             task_bound: false,
         };
         self.register_routine_symbol(&f.name, symbol, &f.body, f.span);
+        if is_nested {
+            self.scopes
+                .set_routine_capture_key(&f.name, crate::function_decl_lookup_key(f));
+        }
         let captures = self.check_routine_body_collecting_captures(
             &f.name,
             &f.type_params,
@@ -95,6 +99,10 @@ impl Checker {
             task_bound: false,
         };
         self.register_routine_symbol(&p.name, symbol, &p.body, p.span);
+        if is_nested {
+            self.scopes
+                .set_routine_capture_key(&p.name, crate::procedure_decl_lookup_key(p));
+        }
         let captures = self.check_routine_body_collecting_captures(
             &p.name,
             &p.type_params,

@@ -167,6 +167,7 @@ pub(super) fn decode_records(
             name,
             fields,
             methods,
+            construction: super::record_construction::decode(&mut reader)?,
         });
     }
     reader.finish()?;

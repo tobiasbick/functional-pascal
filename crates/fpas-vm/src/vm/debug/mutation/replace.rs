@@ -14,6 +14,7 @@ pub(in crate::vm::debug) fn descendant(
     Ok(root)
 }
 
+/// Reads a concretized descendant without changing its root; see `docs/pascal/tools/debugger.md`.
 pub(in crate::vm::debug) fn resolve<'a>(
     mut value: &'a Value,
     path: &[MutationPath],

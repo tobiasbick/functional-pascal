@@ -2,6 +2,7 @@
 
 mod decode;
 mod encode;
+mod record_construction;
 
 use fpas_bytecode::{Executable, SourceMap, VerifiedExecutable};
 

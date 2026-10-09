@@ -211,6 +211,7 @@ fn record_and_enum_slots_are_positional() {
         6,
     );
     image.records = vec![RecordLayout {
+        construction: None,
         name: StringId::new(2),
         fields: vec![RecordField {
             name: StringId::new(3),

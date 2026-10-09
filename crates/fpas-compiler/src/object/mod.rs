@@ -138,7 +138,33 @@ fn qualify_unit_definitions(
             global.name = format!("{owner}.{}", global.name);
         }
     }
+    let foreign_records = object
+        .records
+        .iter()
+        .enumerate()
+        .filter_map(|(index, record)| {
+            record
+                .construction
+                .as_ref()
+                .and_then(|info| info.owner_unit.as_deref())
+                .is_some_and(|unit| !unit.eq_ignore_ascii_case(owner))
+                .then_some(index as u32)
+        })
+        .collect::<BTreeSet<_>>();
     for record in &mut object.records {
+        if let Some(info) = &mut record.construction
+            && info
+                .owner_unit
+                .as_deref()
+                .is_some_and(|unit| unit.eq_ignore_ascii_case(owner))
+        {
+            for default in info.defaults.iter_mut().flatten() {
+                if !default.starts_with(&format!("{owner}.")) {
+                    *default = format!("{owner}.{default}");
+                }
+            }
+        }
+
         if let Some(qualified) = owned_layouts.get(&record.name.to_ascii_lowercase()) {
             record.name = qualified.clone();
         } else if !record.name.contains('.') {
@@ -153,6 +179,11 @@ fn qualify_unit_definitions(
         }
     }
     object.define_all_private()?;
+    object.definitions.retain(|definition| {
+        !matches!(definition.target,
+        fpas_unit::object::DefinitionTarget::Record(index) if foreign_records.contains(&index))
+    });
+
     let mut public = BTreeSet::new();
     for symbol in &interface.symbols {
         if matches!(

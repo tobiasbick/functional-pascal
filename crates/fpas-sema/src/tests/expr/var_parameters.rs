@@ -11,6 +11,7 @@ use fpas_diagnostics::codes::{
 
 mod mutating_intrinsics;
 mod named_arguments;
+mod transitive_captures;
 
 const DECLARATIONS: &str = r#"
 type Point = record

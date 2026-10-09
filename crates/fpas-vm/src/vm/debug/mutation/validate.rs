@@ -10,7 +10,17 @@ pub(super) fn value(
     value: &Value,
     max_depth: usize,
 ) -> Result<(), DebugSessionError> {
-    validate(executable, expected, value, max_depth, 0)
+    validate(executable, expected, value, max_depth, 0, false)
+}
+
+/// Validates call values with portable signatures for nested first-class functions.
+pub(super) fn call_value(
+    executable: &Executable,
+    expected: DebugTypeId,
+    value: &Value,
+    max_depth: usize,
+) -> Result<(), DebugSessionError> {
+    validate(executable, expected, value, max_depth, 0, true)
 }
 
 fn validate(
@@ -19,6 +29,7 @@ fn validate(
     value: &Value,
     max_depth: usize,
     depth: usize,
+    call: bool,
 ) -> Result<(), DebugSessionError> {
     if depth > max_depth {
         return Err(type_error(
@@ -40,22 +51,22 @@ fn validate(
         (DebugType::Dynamic, value) => validate_dynamic(value, max_depth, depth),
         (DebugType::Array(inner), Value::Array(values)) => values
             .iter()
-            .try_for_each(|value| validate(executable, *inner, value, max_depth, depth + 1)),
+            .try_for_each(|value| validate(executable, *inner, value, max_depth, depth + 1, call)),
         (DebugType::Dictionary { key, value }, Value::Dict(entries)) => {
             for (entry_key, entry_value) in entries {
-                validate(executable, *key, entry_key, max_depth, depth + 1)?;
-                validate(executable, *value, entry_value, max_depth, depth + 1)?;
+                validate(executable, *key, entry_key, max_depth, depth + 1, call)?;
+                validate(executable, *value, entry_value, max_depth, depth + 1, call)?;
             }
             Ok(())
         }
         (DebugType::Result { ok, .. }, Value::ResultOk(inner)) => {
-            validate(executable, *ok, inner, max_depth, depth + 1)
+            validate(executable, *ok, inner, max_depth, depth + 1, call)
         }
         (DebugType::Result { error, .. }, Value::ResultError(inner)) => {
-            validate(executable, *error, inner, max_depth, depth + 1)
+            validate(executable, *error, inner, max_depth, depth + 1, call)
         }
         (DebugType::Option(inner), Value::OptionSome(value)) => {
-            validate(executable, *inner, value, max_depth, depth + 1)
+            validate(executable, *inner, value, max_depth, depth + 1, call)
         }
         (DebugType::Option(_), Value::OptionNone) => Ok(()),
         (DebugType::Record(record), Value::Record(runtime))
@@ -63,7 +74,7 @@ fn validate(
         {
             let layout = &executable.records[usize::from(record.get())];
             for (field, value) in layout.fields.iter().zip(&runtime.body().values) {
-                validate(executable, field.ty, value, max_depth, depth + 1)?;
+                validate(executable, field.ty, value, max_depth, depth + 1, call)?;
             }
             Ok(())
         }
@@ -128,9 +139,24 @@ fn validate(
                 }
             }
             for (field_type, field_value) in variant.field_types.iter().zip(&body.values) {
-                validate(executable, *field_type, field_value, max_depth, depth + 1)?;
+                validate(
+                    executable,
+                    *field_type,
+                    field_value,
+                    max_depth,
+                    depth + 1,
+                    call,
+                )?;
             }
             Ok(())
+        }
+        (DebugType::Function { .. }, Value::Function(function)) if call => {
+            super::function_value::validate_call_signature(
+                executable,
+                function,
+                expected,
+                max_depth.saturating_sub(depth),
+            )
         }
         (DebugType::Function { .. }, Value::Function(function)) if depth == 0 => {
             super::function_value::validate_root(function, max_depth, 65_536)

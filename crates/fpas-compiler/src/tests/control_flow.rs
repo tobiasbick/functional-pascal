@@ -2,8 +2,10 @@ use super::*;
 
 mod boolean;
 mod counting;
+mod enum_comparisons;
 mod ordinal;
 mod pattern_bindings;
+mod pattern_capabilities;
 mod repetition;
 
 #[test]

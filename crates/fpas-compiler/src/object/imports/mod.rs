@@ -158,7 +158,18 @@ pub(super) fn apply_imports(
     )?;
     let function_map = retained_map(object.functions.len(), planned_functions.iter().copied())?;
     let global_map = retained_map(object.globals.len(), planned_globals.iter().copied())?;
-    let record_map = retained_map(object.records.len(), planned_records.iter().copied())?;
+    // Retain imported layouts when their visible names are needed by debugger construction.
+    let removed_records = planned_records
+        .iter()
+        .copied()
+        .filter(|index| {
+            object.records[*index as usize]
+                .construction
+                .as_ref()
+                .is_none_or(|info| info.aliases.is_empty())
+        })
+        .collect::<BTreeSet<_>>();
+    let record_map = retained_map(object.records.len(), removed_records.iter().copied())?;
     let enum_map = retained_map(object.enums.len(), planned_enums.iter().copied())?;
 
     object.functions = object
@@ -188,7 +199,7 @@ pub(super) fn apply_imports(
         .records
         .iter()
         .enumerate()
-        .filter(|(index, _)| !planned_records.contains(&u32::try_from(*index).unwrap_or(u32::MAX)))
+        .filter(|(index, _)| !removed_records.contains(&u32::try_from(*index).unwrap_or(u32::MAX)))
         .map(|(_, record)| record.clone())
         .collect();
     object.enums = object
@@ -207,7 +218,9 @@ pub(super) fn apply_imports(
             DefinitionTarget::Global(index) => global_map[index as usize]
                 .map(|mapped| definition.target = DefinitionTarget::Global(mapped))
                 .is_some(),
-            DefinitionTarget::Record(index) => record_map[index as usize]
+            DefinitionTarget::Record(index) => (!planned_records.contains(&index))
+                .then(|| record_map[index as usize])
+                .flatten()
                 .map(|mapped| definition.target = DefinitionTarget::Record(mapped))
                 .is_some(),
             DefinitionTarget::Enum(index) => enum_map[index as usize]

@@ -30,9 +30,20 @@ impl CaptureCollector<'_> {
         }
     }
 
-    fn collect_transitive_captures(&mut self, captures: &[CaptureBinding]) {
+    /// Import enclosing declarations required by another closure or named routine.
+    pub(super) fn collect_transitive_captures(&mut self, captures: &[CaptureBinding]) {
         for capture in captures {
-            self.consider_name(&capture.name);
+            if self
+                .scopes
+                .capture_scope_index(&capture.name, capture.declaration)
+                .is_some_and(|scope| scope > 0 && scope < self.closure_scope_index)
+                && !self.captures.iter().any(|existing| {
+                    existing.declaration == capture.declaration
+                        && existing.name.eq_ignore_ascii_case(&capture.name)
+                })
+            {
+                self.captures.push(capture.clone());
+            }
         }
     }
 

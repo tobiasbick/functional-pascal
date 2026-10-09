@@ -59,6 +59,15 @@ pub enum DebugExpression {
     Name(String),
     /// Exact compiler-visible callable name, resolved only at invocation.
     Callable(String),
+    /// Named call argument in written order; see `docs/pascal/language/functions/parameters.md`.
+    NamedArgument {
+        /// Declared parameter or constructor field name.
+        name: String,
+        /// Argument value evaluated before reordering the call.
+        value: Box<Self>,
+    },
+    /// Explicit writable call argument; see `docs/pascal/language/functions/var-parameters.md`.
+    VarArgument(crate::vm::debug::mutation::DebugAssignmentTarget),
     /// Unary runtime-value operation.
     Unary {
         /// Requested operator.
@@ -109,8 +118,13 @@ pub enum DebugExpression {
     Array(Vec<Self>),
     /// Side-effect-free dictionary construction.
     Dictionary(Vec<(Self, Self)>),
-    /// Record construction inferred from an exact executable layout field set.
-    Record(Vec<(String, Self)>),
+    /// Typed record construction; see `docs/pascal/language/types/records.md`.
+    Record {
+        /// Visible nominal type name or alias.
+        name: String,
+        /// Supplied stored fields in written order.
+        fields: Vec<(String, Self)>,
+    },
     /// Copy-on-write record update in the detached result graph.
     RecordUpdate {
         /// Existing record expression.
@@ -133,6 +147,15 @@ pub enum DebugExpression {
 /// Runtime-resolved controlled call target supplied to the sandbox boundary.
 #[derive(Debug, Clone)]
 pub(in crate::vm::debug) enum DebugCallTarget {
+    /// Resolve a writable designator in the current stopped frame.
+    Reference(crate::vm::debug::mutation::DebugAssignmentTarget),
+    /// Fully named arguments, evaluated in written order.
+    NamedArguments {
+        /// Resolved callable before parameter-name mapping.
+        target: Box<Self>,
+        /// Argument names in the same order as the supplied values.
+        names: Vec<String>,
+    },
     /// Exact executable or intrinsic name.
     Named(String),
     /// First-class callable value.
@@ -144,8 +167,10 @@ pub(in crate::vm::debug) enum DebugCallTarget {
         /// Source member name.
         name: String,
     },
-    /// Construct a record whose layout exactly matches these field names.
+    /// Construct an exact nominal record type visible in the selected source.
     Record {
+        /// Visible type name.
+        name: String,
         /// Field names in source order.
         fields: Vec<String>,
     },

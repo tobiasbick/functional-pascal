@@ -321,6 +321,7 @@ fn typed_executable(consume_pending: bool) -> VerifiedExecutable {
             initializer: None,
         }],
         records: vec![RecordLayout {
+            construction: None,
             name: StringId::new(27),
             fields: vec![RecordField {
                 name: StringId::new(26),

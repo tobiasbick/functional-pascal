@@ -1,5 +1,6 @@
 //! Compact semantic-to-IR scalar type mapping.
 
+mod debug_records;
 mod expressions;
 mod layouts;
 mod task;
@@ -22,6 +23,8 @@ pub(super) const STRING: TypeId = TypeId::new(4);
 pub(super) const DYNAMIC: TypeId = TypeId::new(5);
 
 #[derive(Debug, Clone)]
+/// Interned semantic types and source-visible nominal layout metadata.
+/// See `docs/pascal/language/types/records.md`.
 pub(super) struct TypeTable {
     definitions: Vec<TypeDefinition>,
     record_layouts: Vec<RecordLayout>,
@@ -30,6 +33,7 @@ pub(super) struct TypeTable {
     filled_enum_layouts: BTreeSet<EnumLayoutId>,
     simple_enums: BTreeSet<String>,
     named: BTreeMap<String, TypeId>,
+    imported_record_names: BTreeSet<String>,
 }
 
 impl TypeTable {
@@ -42,6 +46,7 @@ impl TypeTable {
             filled_enum_layouts: BTreeSet::new(),
             simple_enums: BTreeSet::new(),
             named: BTreeMap::new(),
+            imported_record_names: BTreeSet::new(),
         };
         for (name, ty) in &metadata.named_types {
             let id = match ty {

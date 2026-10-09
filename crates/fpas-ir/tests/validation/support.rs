@@ -136,6 +136,7 @@ pub fn scalar_program() -> Program {
         types: types(),
         globals: Vec::new(),
         record_layouts: vec![RecordLayout {
+            construction: None,
             id: RecordLayoutId::new(0),
             name: "Point".to_string(),
             fields: vec![RecordField {

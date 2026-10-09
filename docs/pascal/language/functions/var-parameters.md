@@ -104,7 +104,8 @@ A `var` parameter refers to the caller's variable only while the call runs:
   into a local first.
 - A named nested routine can use an enclosing `var` parameter when it is called
   directly. It cannot be used as a routine value or started with `go` while it
-  uses one (FP3030).
+  uses one (FP3030). These rules also apply when it uses the reference indirectly
+  through another named nested routine; an anonymous wrapper cannot capture it.
 - `go` cannot pass a `var` argument (FP3030).
 
 ## Function types

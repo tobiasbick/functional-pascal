@@ -29,7 +29,7 @@ export async function verifyFrameRestart(
     "  var Local: integer := Value + 10;",
     "  WriteLn('effect');",
     "  return Local;",
-    "end;",
+    "end function;",
     "",
     "begin",
     "  WriteLn(Branch(1));",

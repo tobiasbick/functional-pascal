@@ -23,8 +23,15 @@ Runtime initialization and immutable global imports support computed constants;
 unit interfaces retain static/computed classification. Subrange bounds are
 planned in AP18.1; arrays have dynamic sizes.
 
+Known scalar fields of static records are retained through copies, updates,
+nested projections and derived constants. Unit interfaces preserve these fields
+for constant checks in imported and transitive consumers while aggregate values
+remain immutable runtime globals. Record defaults retain their declaration-scope
+values.
+
 ## Regression coverage
 
 Tests cover reachability, call counts/order, loops, skipped branches, early
 returns, failures, captures, transitive/imported dependencies and constant-label
-rejection. See [constants](../../../pascal/language/basics/constants.md).
+rejection, record-field pattern coverage and duplicate labels.
+See [constants](../../../pascal/language/basics/constants.md).

@@ -77,6 +77,11 @@ impl Checker {
             let compile_time = self.const_initializer_is_compile_time_known(&expression, expected);
             self.record_default_constants
                 .insert(Self::expr_lookup_key(&expression), compile_time);
+            let value = compile_time
+                .then(|| self.constant_field_value(&expression))
+                .flatten();
+            self.record_default_values
+                .insert(Self::expr_lookup_key(&expression), value);
         }
     }
 }

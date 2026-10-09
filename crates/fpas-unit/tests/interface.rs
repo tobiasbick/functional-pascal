@@ -12,11 +12,15 @@ use fpas_unit::interface::{
     SymbolKind, TypeConstraint, UnitInterface, decode_interface, encode_interface,
 };
 
+#[path = "interface/record_constants.rs"]
+mod record_constants;
+
 fn sample_interface() -> UnitInterface {
     UnitInterface {
         unit_name: "Demo.Api".to_string(),
         symbols: vec![
             InterfaceSymbol {
+                constant_record: None,
                 discard: Default::default(),
                 name: "Transform".to_string(),
                 qualified_name: "Demo.Api.Transform".to_string(),
@@ -45,6 +49,7 @@ fn sample_interface() -> UnitInterface {
                 kind: SymbolKind::Function,
             },
             InterfaceSymbol {
+                constant_record: None,
                 discard: Default::default(),
                 name: "State".to_string(),
                 qualified_name: "Demo.Api.State".to_string(),
@@ -70,6 +75,7 @@ fn sample_interface() -> UnitInterface {
                 kind: SymbolKind::Type,
             },
             InterfaceSymbol {
+                constant_record: None,
                 discard: Default::default(),
                 name: "Limit".to_string(),
                 qualified_name: "Demo.Api.Limit".to_string(),
@@ -77,6 +83,7 @@ fn sample_interface() -> UnitInterface {
                 kind: SymbolKind::Constant(Some(ConstantValue::Integer(10))),
             },
             InterfaceSymbol {
+                constant_record: None,
                 discard: Default::default(),
                 name: "Counter".to_string(),
                 qualified_name: "Demo.Api.Counter".to_string(),

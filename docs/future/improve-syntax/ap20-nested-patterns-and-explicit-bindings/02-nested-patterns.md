@@ -58,6 +58,8 @@ None; existing flat patterns remain valid.
   FP3033. `patterns/values.rs` uses the existing scalar constant evaluator to
   normalize comparisons: named boolean and simple-enum constants count as
   their finite values, and equal integer or string comparisons are duplicates.
+  Static record-field projections and derived constants contribute the same
+  values, including nested records, copies, updates and compiled-unit imports.
   Comparisons of open types never complete coverage. `patterns/constructors.rs`
   resolves the complete constructor name through ordinary lexical and qualified
   lookup and checks that it belongs to the matched enum. Unit and type aliases

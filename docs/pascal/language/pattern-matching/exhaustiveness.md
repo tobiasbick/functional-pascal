@@ -107,6 +107,30 @@ Repeated comparisons are also unreachable: a second unguarded `Some(1)` or
 constant expressions are compared by their evaluated values, so `Some(Limit)`
 and `Some(1 + 2)` overlap completely when `Limit` is `3`.
 
+The same value comparison applies to known fields of static record constants,
+including nested fields and constants derived from them. For example:
+
+```pascal
+type Flags = record
+  Enabled: boolean;
+end record;
+const Settings: Flags := Flags(Enabled := true);
+const Enabled: boolean := Settings.Enabled;
+case Candidate of
+  when Some(Enabled):
+    null;
+  when Some(false):
+    null;
+  when None:
+    null;
+end case;
+```
+
+For `Candidate: Option of boolean`, these arms are exhaustive. Replacing
+`Some(false)` with `Some(Settings.Enabled)` produces a duplicate label (FP3033).
+Boolean and simple-enum field values also contribute coverage after record copies
+or updates and across compiled-unit imports.
+
 ## Rules
 
 - Enum, `Result`, and `Option` types: every value must match an **unguarded** arm, or `else` must be present. This includes nested payloads; `when Ok(Some(_)):` does not cover `Ok(None)`.

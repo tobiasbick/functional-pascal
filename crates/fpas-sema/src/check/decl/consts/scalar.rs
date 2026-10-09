@@ -16,6 +16,11 @@ impl Checker {
             Expr::Bool(value, _) => Some(Value::Boolean(*value)),
             Expr::Paren(inner, _) => self.scalar_constant_value(inner),
             Expr::Designator(designator) => {
+                if let Some(fpas_unit::interface::RecordConstantField::Scalar(value)) =
+                    self.constant_designator_field(designator)
+                {
+                    return Some(value);
+                }
                 let name = Self::resolve_designator_name(designator);
                 let symbol = self.scopes.lookup(&name)?;
                 if let Some(info) = &symbol.constant {

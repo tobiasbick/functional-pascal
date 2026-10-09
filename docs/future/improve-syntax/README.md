@@ -132,8 +132,9 @@ named calls, typed record construction, explicit reference calls, and live
 reference assignment is complete in the
 [compiler follow-ups](../compiler-panic-followups.md#scheduling), as specified in
 the agreed [review repair order](review/README.md#repair-order).
-Continue with the remaining review findings; C04 is the next open compiler
-finding.
+C04 is complete: static record fields contribute evaluated pattern values,
+including across compiled units. Continue with the remaining review findings;
+C05 is the next open compiler finding.
 Completed package checkboxes remain the implementation status; these
 repairs are tracked by their review findings and follow-up entries.
 Use the review's Done column to skip completed repairs.

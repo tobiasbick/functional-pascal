@@ -35,6 +35,11 @@ existing operator, array, dictionary, record, `Some`, `None`, `Ok`, and `Error`
 forms remain compile-time known when all their inputs are known. Omitted record
 field defaults also participate in this classification.
 
+Known scalar fields of static records retain their values through nested field
+selection, record copies, record updates, and constants derived from those
+fields. Omitted defaults retain the values from the record declaration's scope.
+These values participate in [pattern coverage and duplicate-label checks](../pattern-matching/exhaustiveness.md).
+
 Every function or method call is computed at runtime, including standard-library,
 intrinsic, and native type-operation calls. A call stays computed even if it
 returns a literal. References to computed constants and expressions derived from
@@ -57,6 +62,8 @@ end case;
 Exported constants retain this distinction across compiled units. Static scalar
 values can be embedded in consumers; computed constants and aggregate constants
 are read from immutable unit globals after initialization.
+Compiled-unit interfaces also retain known fields of static record constants
+for semantic checks in consumers, including imports through aliases and facades.
 
 ## See also
 

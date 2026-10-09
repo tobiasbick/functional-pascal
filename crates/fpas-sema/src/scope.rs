@@ -10,11 +10,13 @@ pub(crate) fn canonical_symbol_name(name: &str) -> String {
     name.to_ascii_lowercase()
 }
 
-/// Classification and optional scalar value of a constant binding.
+/// Classification and known scalar or record-field values of a constant binding.
 ///
 /// **Documentation:** `docs/pascal/language/basics/constants.md`
 #[derive(Debug, Clone)]
 pub struct ConstantInfo {
+    /// Known static record fields used by constant projections and pattern coverage.
+    pub record: Option<std::sync::Arc<fpas_unit::interface::RecordConstant>>,
     /// True only for the language's compile-time constant-expression forms.
     pub compile_time: bool,
     /// Scalar value that can be embedded in a compiled-unit interface.

@@ -6,6 +6,7 @@ mod enum_comparisons;
 mod ordinal;
 mod pattern_bindings;
 mod pattern_capabilities;
+mod record_constants;
 mod repetition;
 
 #[test]

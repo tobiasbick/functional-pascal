@@ -249,6 +249,9 @@ pub struct Checker {
     pub(crate) record_default_discard: HashMap<(String, String), bool>,
     /// Default expression identity → constant classification in the declaration environment.
     pub(crate) record_default_constants: HashMap<usize, bool>,
+    /// Known default fields evaluated in their original declaration environment.
+    pub(crate) record_default_values:
+        HashMap<usize, Option<fpas_unit::interface::RecordConstantField>>,
     /// Closure expression identity → capture / capability metadata.
     ///
     /// **Documentation:** `docs/pascal/language/functions/closures.md`
@@ -315,6 +318,7 @@ impl Checker {
             record_constructions: HashSet::new(),
             record_default_discard: HashMap::new(),
             record_default_constants: HashMap::new(),
+            record_default_values: HashMap::new(),
             closure_infos: ClosureInfoMap::new(),
             nested_routine_captures: NestedRoutineCaptureMap::new(),
             bound_methods: BoundMethodMap::new(),

@@ -34,14 +34,17 @@ pub(crate) fn interface_symbol_to_sema(
             artifact::SymbolKind::Constant(value) => Some(crate::scope::ConstantInfo {
                 compile_time: true,
                 value: value.clone(),
+                record: exported.constant_record.clone(),
             }),
             artifact::SymbolKind::ComputedConstant => Some(crate::scope::ConstantInfo {
                 compile_time: false,
                 value: None,
+                record: None,
             }),
             artifact::SymbolKind::EnumMember(value) => Some(crate::scope::ConstantInfo {
                 compile_time: true,
                 value: Some(value.clone()),
+                record: None,
             }),
             _ => None,
         },

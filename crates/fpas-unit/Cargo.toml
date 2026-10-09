@@ -10,7 +10,7 @@ repository.workspace = true
 atomic-write-file = "0.3.0"
 fpas-binary = { path = "../fpas-binary" }
 fpas-bytecode = { path = "../fpas-bytecode" }
-serde = { workspace = true }
+serde = { workspace = true, features = ["rc"] }
 serde_json = { workspace = true }
 
 [lints]

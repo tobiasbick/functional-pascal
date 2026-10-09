@@ -45,6 +45,9 @@ impl Checker {
         let constant_info = constant.then(|| {
             let compile_time = self.const_initializer_is_compile_time_known(value, &stored_ty);
             crate::scope::ConstantInfo {
+                record: compile_time
+                    .then(|| self.record_constant_value(value))
+                    .flatten(),
                 compile_time,
                 value: if compile_time {
                     self.scalar_constant_value(value)

@@ -48,6 +48,9 @@ belong to [AP24.2](../ap24-generic-data-structures/02-generic-records.md).
   contextual field validation; call resolution and construction metadata.
 - `crates/fpas-sema/src/check/decl/types/records/defaults.rs`: retained defaults;
   constant, discard, and task-bound classification use the checked fields.
+- `crates/fpas-sema/src/check/decl/consts/records.rs`: known static record fields,
+  including defaults evaluated in their declaration scope, support scalar
+  projections and pattern coverage.
 - `crates/fpas-sema/src/interface/export.rs`: scalar defaults in exported aliases.
 - `crates/fpas-compiler/src/lowering/aggregates/record_construction.rs`: ordered
   field evaluation; `context/expressions.rs` retains default declaration scope.

@@ -93,18 +93,9 @@ impl Checker {
             Expr::Designator(designator) => {
                 let full_name = Self::resolve_designator_name(designator);
                 self.ensure_fq_std_unit_loaded(&full_name);
-                let known = designator
-                    .parts
-                    .iter()
-                    .all(|part| matches!(part, DesignatorPart::Ident(..)))
-                    && self
-                        .scopes
-                        .lookup(&full_name)
-                        .or_else(|| match designator.parts.first()? {
-                            DesignatorPart::Ident(name, _) => self.scopes.lookup(name),
-                            _ => None,
-                        })
-                        .is_some_and(|symbol| {
+                let known =
+                    self.constant_designator_binding(designator)
+                        .is_some_and(|(symbol, _)| {
                             symbol.kind == SymbolKind::EnumMember
                                 || (symbol.kind == SymbolKind::Const
                                     && symbol
@@ -121,20 +112,14 @@ impl Checker {
                 ),
                 expr.span(),
             )),
-            Expr::Call { args, .. }
-                if self
-                    .record_constructions
-                    .contains(&Self::expr_lookup_key(expr)) =>
-            {
+            Expr::Call { args, .. } if self.constant_record_type(expr).is_some() => {
                 if let Some(part) = args
                     .iter()
                     .find_map(|argument| self.non_constant_part(argument.argument_value()))
                 {
                     return Some(part);
                 }
-                let Some(Ty::Record(record)) =
-                    self.expr_types.get(&Self::expr_lookup_key(expr)).cloned()
-                else {
+                let Some(record) = self.constant_record_type(expr) else {
                     return Some(("record construction".into(), expr.span()));
                 };
                 let defaults = self

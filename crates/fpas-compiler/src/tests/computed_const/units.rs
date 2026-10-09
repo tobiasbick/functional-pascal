@@ -99,3 +99,34 @@ fn writable_exports_and_value_parameters_survive_interface_round_trip() {
     let linked = fpas_linker::link_objects(&[state.object], &root).expect("link");
     fpas_vm::Vm::new(linked).run().expect("execution");
 }
+
+#[test]
+fn static_record_patterns_link_while_aggregate_values_remain_runtime_globals() {
+    let original = unit("unit Original;
+        public type Color = enum Red; Green; end enum;
+        public type Flags = record public Enabled: boolean; public Color: Color; end record;
+        public type Settings = record public Flags: Flags; public Values: array of integer; end record;
+        public const Config: Settings := Settings(Flags := Flags(Enabled := true, Color := Color.Red), Values := [1, 2]);
+        end unit;", &[]);
+    let facade = unit("unit Facade; uses Original as O;
+        public const Copy: O.Settings := O.Config;
+        public const Other: O.Flags := Copy.Flags with Enabled := false; Color := O.Color.Green; end with;
+        public const Enabled: boolean := Copy.Flags.Enabled;
+        end unit;", std::slice::from_ref(&original.interface));
+    let interfaces = [original.interface.clone(), facade.interface.clone()];
+    let root = crate::compile_program_object_with_support(&parse_ok(
+        "program Consumer; uses Original as O, Facade as F;
+        function Score(B: Option of boolean): integer;
+        begin case B of when Some(F.Enabled): return 1;
+        when Some(F.Other.Enabled): return 2; when None: return 4; end case; end function;
+        function ColorScore(C: Option of O.Color): integer;
+        begin case C of when Some(F.Copy.Flags.Color): return 8;
+        when Some(F.Other.Color): return 16; when None: return 32; end case; end function;
+        begin if Score(Some(true)) + Score(Some(false)) + Score(None) <> 7 then panic('imported bool dispatch'); end if;
+        if ColorScore(Some(O.Color.Red)) + ColorScore(Some(O.Color.Green)) + ColorScore(None) <> 56 then panic('imported enum dispatch'); end if;
+        if F.Copy.Values[1] <> 2 or F.Other.Enabled then panic('record globals'); end if;
+        end."
+    ), &interfaces, &interfaces).expect("consumer object");
+    let linked = fpas_linker::link_objects(&[original.object, facade.object], &root).expect("link");
+    fpas_vm::Vm::new(linked).run().expect("execution");
+}

@@ -10,6 +10,8 @@ use super::conversion::{
     InterfaceConversionError, ty_to_interface_reference, ty_to_interface_type,
 };
 
+mod record_constants;
+
 impl check::Checker {
     /// Extract the canonical public interface of an analyzed source unit.
     pub(super) fn extract_unit_interface(
@@ -63,6 +65,12 @@ impl check::Checker {
                 *enum_name = qualify_owned_name(enum_name, &unit_name, &own_types);
             }
             symbols.push(artifact::InterfaceSymbol {
+                constant_record: symbol
+                    .constant
+                    .as_ref()
+                    .filter(|info| info.compile_time)
+                    .and_then(|info| info.record.as_ref())
+                    .map(|record| record_constants::qualify(record, &unit_name, &own_types)),
                 discard: self.scopes.discard_info(name),
                 name: name.to_string(),
                 qualified_name: format!("{unit_name}.{name}"),

@@ -65,8 +65,8 @@ priorities; this sequence does not close or reclassify them.
 
 ## Finding index
 
-**Repair status: C01-C03 and H01/H02 are resolved; 17 findings remain open.
-The debugger follow-ups are complete. The next open compiler finding is C04.** The Done column
+**Repair status: C01-C04 and H01/H02 are resolved; 16 findings remain open.
+The debugger follow-ups are complete. The next open compiler finding is C05.** The Done column
 tracks repairs, independently of package-completion checkboxes and the audit's
 original severity counts.
 
@@ -75,7 +75,7 @@ original severity counts.
 | [x] | [C01](compiler-and-semantics.md#c01) | P1 | resolved: enum comparison patterns use resolved constant identity |
 | [x] | [C02](compiler-and-semantics.md#c02) | P2 | resolved: sibling nested calls preserve transitive captures and reference lifetimes |
 | [x] | [C03](compiler-and-semantics.md#c03) | P2 | resolved: pattern bindings preserve callable task restrictions and discard proofs |
-| [ ] | [C04](compiler-and-semantics.md#c04) | P2 | record-derived compile-time constants do not contribute their values to pattern coverage |
+| [x] | [C04](compiler-and-semantics.md#c04) | P2 | resolved: static record fields and derived constants contribute evaluated pattern values across units |
 | [ ] | [C05](compiler-and-semantics.md#c05) | P2 | Finite construction checking expands a shared type graph exponentially |
 | [ ] | [C06](compiler-and-semantics.md#c06) | P2 | A valid program sharing its name with a declaration fails object compilation |
 | [ ] | [T01](tooling-and-tests.md#t01) | P2 | LSP project failures discard the stable diagnostic record |
@@ -262,6 +262,36 @@ All named-call, typed-construction, reference-call, and C01-C03 regressions pass
 The two unchanged VM socket assertions described under [C02](#c02) fail with
 the same observations. The Rust LSP watcher test remains excluded after its
 previously confirmed timeouts. The complete Rust workspace is not green.
+
+### C04
+
+C04 corrects the existing constant-expression and pattern-coverage contract.
+Known record fields retain declaration-scope default values, survive copies and
+updates, and project through nested fields or derived constants. Unit interfaces
+preserve these values through aliases and facades while aggregate constants
+remain immutable runtime globals. The constants and exhaustiveness handbooks,
+AP10.1, AP16.1 and AP20.2 describe the implemented behavior.
+
+| Check | C04 repair result |
+| --- | --- |
+| `cargo fmt --all --check` | Passed |
+| `cargo build --offline` | Passed |
+| `cargo test --offline -p fpas-sema -p fpas-unit -p fpas-compiler --no-fail-fast -- --test-threads=1` | Passed: 884 tests, including 13 new C04 regression tests |
+| C04 control through the built CLI | Check and run exit 0 |
+| Independent two-unit CLI project | Fresh and reused sidecar runs both exit 0 and print `matched`; both unit sidecars remain unchanged on reuse |
+| `fpas fmt --check lib apps examples tests` | Passed |
+| `fpas test --std-lib lib tests/suite.fpasprj` | Passed: 488 passed, 1 intentional skip, 0 failed |
+| Rust workspace, serial verification | 3,838 passed and 1 failed across 202 result groups; the known LSP watcher hang was excluded |
+| Changed Markdown documents | All local links and anchors resolve; whitespace check passed |
+
+The workspace command was
+`cargo test --offline --workspace --no-fail-fast -- --skip initialized_registers_source_and_manifest_file_watchers --test-threads=1`.
+All C01-C04 regressions pass. The unchanged VM socket assertion
+`write_deadline_is_not_reset_by_retries_and_preserves_socket_timeouts` observes
+32 ms instead of the expected 30 ms, as recorded under [C02](#c02).
+The previously failing backpressure control passes in this run. The LSP watcher
+test remains excluded after its previously confirmed timeouts. The complete
+Rust workspace is not green.
 
 ## Verification
 

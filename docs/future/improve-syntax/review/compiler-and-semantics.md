@@ -274,15 +274,44 @@ Regression coverage:
 
 <a id="c04"></a>
 
-## C04 — P2: record-derived compile-time constants do not contribute their values to pattern coverage
+## C04 — P2: record-derived compile-time constants contribute their values to pattern coverage
 
 Packages: AP20.2 with AP16/AP10.
 
-Code: [crates/fpas-sema/src/check/decl/consts/scalar.rs:18-22](../../../../crates/fpas-sema/src/check/decl/consts/scalar.rs) only looks up the full designator as a symbol and cannot evaluate record field selections. Such constants still get compile-time classification, but no scalar value. [crates/fpas-sema/src/check/stmt/control_flow/if_case/patterns/values.rs:85-98](../../../../crates/fpas-sema/src/check/stmt/control_flow/if_case/patterns/values.rs) therefore represents them as `Pat::Other` instead of a Boolean constructor.
+Status: resolved. See [repair verification](README.md#c04) for checks and
+independent workspace validation blockers.
 
-Contract: [docs/pascal/language/basics/constants.md:33-36](../../../../docs/pascal/language/basics/constants.md) retains compile-time-known aggregate/constant forms. [Exhaustiveness](../../../../docs/pascal/language/pattern-matching/exhaustiveness.md) says named compile-time Boolean and simple-enum constants contribute the same coverage as their values. Existing sema test `computed_constructor_defaults_participate_in_const_classification` explicitly accepts a record constant field as a case label.
+Implemented behavior: static record constants retain known scalar and nested
+record fields. The scalar evaluator follows the longest visible binding prefix
+and then projects its fields. Copies, updates, omitted defaults and transitive
+constants preserve these values; defaults use their declaration scope.
+Boolean and simple-enum values participate in finite pattern coverage and
+duplicate comparisons. Mutable and computed records remain invalid constant
+labels.
 
-Reproduction `pattern_record_constant.fpas`:
+Compiled-unit interfaces preserve these known fields, including qualified
+names, aliases and facade exports. Owned enum identities are qualified and
+canonicalized. Aggregate constants retain immutable runtime-global storage.
+The `.fpascu` envelope version is 11; incompatible sidecars are rebuilt through
+the normal unit-build validation.
+
+Owners:
+
+- [Record evaluation and field projection](../../../../crates/fpas-sema/src/check/decl/consts/records.rs)
+  and [scalar evaluation](../../../../crates/fpas-sema/src/check/decl/consts/scalar.rs).
+- [Default values](../../../../crates/fpas-sema/src/check/decl/types/records/defaults.rs)
+  and [constant binding metadata](../../../../crates/fpas-sema/src/scope.rs).
+- [Interface export](../../../../crates/fpas-sema/src/interface/export/record_constants.rs),
+  [import](../../../../crates/fpas-sema/src/interface/conversion/from_interface.rs),
+  and [portable record constants](../../../../crates/fpas-unit/src/interface/record_constants.rs).
+
+Contract: [Constants](../../../../docs/pascal/language/basics/constants.md)
+retains static record values and their known scalar fields.
+[Exhaustiveness](../../../../docs/pascal/language/pattern-matching/exhaustiveness.md)
+uses evaluated Boolean and simple-enum values for coverage and reports
+comparisons already covered by earlier unguarded labels.
+
+Runtime control: save as `.temp-data/pattern_record_constant.fpas`:
 
 ```pascal
 program PatternConstant;
@@ -304,15 +333,32 @@ begin
 end.
 ```
 
-Command:
+Commands:
 
 ```text
-.temp-data/syntax-review/bin/fpas.exe check --std-lib lib .temp-data/syntax-review-semantics/pattern_record_constant.fpas
+fpas check --std-lib lib .temp-data/pattern_record_constant.fpas
+fpas run --std-lib lib .temp-data/pattern_record_constant.fpas
 ```
 
-Observed: FP3011 `Non-exhaustive case: missing Some(true)`, exit 1. Expected: accepted exhaustive match; `Enabled` is a compile-time constant equal to true. This may likewise miss duplicate/unreachable comparisons when values are obtained from static aggregate fields; that consequence follows the same evaluator path but was not separately reproduced.
+Both commands exit 0. `Enabled` denotes `true` and contributes `Some(true)`
+to coverage. A repeated `Some(Settings.Enabled)` is unreachable and reports
+FP3033; omitting `Some(false)` reports that missing pattern.
 
-Missing regression: cross AP10/AP16 compile-time record fields with AP20 coverage, rather than testing classification and scalar literal folding separately. Tests should cover direct field labels, transitive named constants, enum fields, and duplicate comparisons.
+Regression coverage:
+
+- [Semantic coverage](../../../../crates/fpas-sema/src/tests/stmt/record_constants.rs):
+  direct, nested, parenthesized and case-insensitive field paths; scalar aliases;
+  Boolean and simple-enum duplicates; defaults, copies and updates; enclosing
+  hoisted constants; missing values and computed/mutable rejection.
+- [Unit interfaces](../../../../crates/fpas-sema/src/interface/tests/constants.rs):
+  transitive projections, aliases, enum identity, duplicates and computed controls.
+- [Compiler dispatch](../../../../crates/fpas-compiler/src/tests/control_flow/record_constants.rs)
+  and [linked unit execution](../../../../crates/fpas-compiler/src/tests/computed_const/units.rs):
+  Boolean and enum branches, nested Result/Option patterns, `is`, and aggregate
+  globals containing arrays.
+- [Portable encoding](../../../../crates/fpas-unit/tests/interface/record_constants.rs):
+  canonical identities, shared nested records, deterministic round trips and
+  interface hashes that include known field values.
 
 <a id="c05"></a>
 

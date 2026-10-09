@@ -118,3 +118,109 @@ fn scalar_exports_fold_operators_and_owned_enum_values() {
         }))
     );
 }
+
+#[test]
+fn record_constants_preserve_nested_fields_and_enum_identity_across_units() {
+    let original = interface(
+        "unit Demo.Original;
+        public type Color = enum Red; Green; end enum;
+        public type Flags = record public Enabled: boolean; public Color: Color; end record;
+        public type Settings = record public Flags: Flags; public Values: array of integer; end record;
+        public const Config: Settings := Settings(Flags := Flags(Enabled := true, Color := Color.Red), Values := [1]);
+        end unit;", &[],
+    );
+    let facade = interface(
+        "unit Demo.Facade; uses Demo.Original as O;
+        public const Copy: O.Settings := O.Config;
+        public const Enabled: boolean := Copy.Flags.Enabled;
+        public const Selected: O.Color := Copy.Flags.Color;
+        end unit;",
+        std::slice::from_ref(&original),
+    );
+    let copy = facade
+        .symbols
+        .iter()
+        .find(|symbol| symbol.name == "Copy")
+        .expect("copy");
+    assert_eq!(copy.kind, SymbolKind::Constant(None));
+    let fields = &copy.constant_record.as_ref().expect("record values").fields;
+    assert!(
+        !fields.contains_key("values"),
+        "non-scalar aggregates stay runtime values"
+    );
+    let selected = facade
+        .symbols
+        .iter()
+        .find(|symbol| symbol.name == "Selected")
+        .expect("enum projection");
+    assert_eq!(
+        selected.kind,
+        SymbolKind::Constant(Some(ConstantValue::EnumValue {
+            enum_name: "demo.original.color".into(),
+            variant_name: "red".into(),
+            backing_value: 0,
+        }))
+    );
+    let consumer = analyze_unit(&parse_unit(
+        "unit Consumer; uses Demo.Original as O, Demo.Facade as F;
+        procedure Check(B: Option of boolean; C: Option of O.Color);
+        begin case B of when Some(F.Copy.Flags.Enabled): null; when Some(false): null; when None: null; end case;
+        case C of when Some(F.Selected): null; when Some(O.Color.Green): null; when None: null; end case;
+        end procedure; end unit;"
+    ), &[original, facade]).expect("consumer");
+    assert!(
+        consumer.metadata.errors.is_empty(),
+        "{:#?}",
+        consumer.metadata.errors
+    );
+}
+
+#[test]
+fn imported_record_patterns_detect_duplicates_and_reject_computed_fields() {
+    let original = interface(
+        "unit Flags;
+        public type Config = record public Enabled: boolean; end record;
+        function ReadFlag(): boolean; begin return true; end function;
+        public const Fixed: Config := Config(Enabled := true);
+        public const Dynamic: Config := Config(Enabled := ReadFlag()); end unit;",
+        &[],
+    );
+    assert!(
+        original
+            .symbols
+            .iter()
+            .find(|symbol| symbol.name == "Dynamic")
+            .expect("dynamic")
+            .constant_record
+            .is_none()
+    );
+    for (label, rest, expected) in [
+        (
+            "Flags.Fixed.Enabled",
+            "when Some(true): null; when Some(false): null;",
+            fpas_diagnostics::codes::SEMA_UNREACHABLE_CASE_LABEL,
+        ),
+        (
+            "Flags.Dynamic.Enabled",
+            "when Some(_): null;",
+            fpas_diagnostics::codes::SEMA_NON_CONSTANT_EXPRESSION,
+        ),
+    ] {
+        let source = format!(
+            "unit Consumer; uses Flags;
+            procedure Check(B: Option of boolean); begin case B of
+            when Some({label}): null; {rest} when None: null; end case; end procedure; end unit;"
+        );
+        let consumer =
+            analyze_unit(&parse_unit(&source), std::slice::from_ref(&original)).expect("consumer");
+        assert!(
+            consumer
+                .metadata
+                .errors
+                .iter()
+                .any(|error| error.code == expected),
+            "{:#?}",
+            consumer.metadata.errors
+        );
+    }
+}

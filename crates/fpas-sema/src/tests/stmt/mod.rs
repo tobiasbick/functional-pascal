@@ -13,5 +13,6 @@ mod misc;
 mod nested_patterns;
 mod pattern_bindings;
 mod pattern_capabilities;
+mod record_constants;
 mod unused_results;
 mod while_repeat;

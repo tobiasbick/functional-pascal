@@ -3,6 +3,7 @@
 //! **Documentation:** `docs/pascal/language/basics/constants.md`
 
 mod classification;
+mod records;
 mod scalar;
 
 use super::Checker;

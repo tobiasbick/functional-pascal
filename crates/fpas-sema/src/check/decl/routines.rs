@@ -252,6 +252,9 @@ impl Checker {
                 let compile_time =
                     self.const_initializer_is_compile_time_known(&variable.value, &ty);
                 crate::scope::ConstantInfo {
+                    record: compile_time
+                        .then(|| self.record_constant_value(&variable.value))
+                        .flatten(),
                     compile_time,
                     value: if compile_time {
                         self.scalar_constant_value(&variable.value)

@@ -61,6 +61,10 @@ pub enum SymbolKind {
 /// One public symbol exported by a source unit.
 #[derive(Debug, Clone, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 pub struct InterfaceSymbol {
+    /// Known static record fields for semantic projection, independent of runtime storage.
+    /// See `docs/pascal/language/basics/constants.md`.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub constant_record: Option<std::sync::Arc<super::RecordConstant>>,
     /// Compile-time task-freedom guarantees, independent of the callable signature.
     #[serde(default)]
     pub discard: DiscardInfo,
@@ -92,6 +96,9 @@ impl UnitInterface {
         for symbol in &mut self.symbols {
             canonicalize_type(&mut symbol.ty);
             canonicalize_symbol_kind(&mut symbol.kind);
+            if let Some(record) = &mut symbol.constant_record {
+                *record = super::record_constants::canonicalize_record(record);
+            }
         }
         self.symbols.sort_by(|left, right| {
             canonical_name(&left.name)
@@ -176,7 +183,9 @@ fn canonicalize_symbol_kind(kind: &mut SymbolKind) {
     }
 }
 
-fn canonicalize_constant(value: &mut ConstantValue) {
+/// Normalize enum identities stored as scalar or record-field constants.
+/// See `docs/pascal/language/basics/constants.md`.
+pub(super) fn canonicalize_constant(value: &mut ConstantValue) {
     if let ConstantValue::EnumValue {
         enum_name,
         variant_name,

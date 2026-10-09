@@ -8,7 +8,9 @@ Status: complete (Q05). Effort: medium. Package completion is tracked in the
 - A dot call selects a declared record member or one operation from the
   [native catalog](catalog.md), by static receiver type and case-insensitive
   name. Results may return Self, a new record, or another type that continues
-  the chain. Callable record fields/properties remain actual member calls.
+  the chain. Callable record fields remain actual member calls. Computed
+  properties were removed by [AP14](../ap14-remove-computed-properties/README.md);
+  callers invoke declared accessor methods with parentheses.
 - String, array, dictionary, Option and Result operations are available without
   imports. Instance calls use `Value.Operation(...)`. The five retired helper
   units have no public imports, ordinary calls or free routine references.
@@ -43,8 +45,8 @@ Status: complete (Q05). Effort: medium. Package completion is tracked in the
 `Items.Push(Value)` and `Items.Pop()` require writable storage. Their implicit
 receiver needs neither a `var` marker nor extra parentheses. Valid receivers
 include `var` bindings, writable fields/array elements, imported variables and
-forwarded reference parameters. Constants, read-only parameters, temporaries,
-properties and dictionary entries are rejected.
+forwarded reference parameters. Constants, read-only parameters, dictionary
+entries and computed receivers are rejected.
 
 ```pascal
 var Items: array of integer := [1, 2];

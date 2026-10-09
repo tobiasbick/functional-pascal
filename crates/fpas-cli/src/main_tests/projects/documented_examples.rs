@@ -8,7 +8,7 @@ use super::*;
 fn documented_first_program_checks_and_runs_with_source_stdlib() {
     let text = include_str!("../../../../../docs/pascal/getting-started/first-program.md");
     let source = text
-        .split_once("```pascal\n")
+        .split_once("```pascal")
         .expect("Pascal example")
         .1
         .split_once("```")

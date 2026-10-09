@@ -18,6 +18,12 @@
       "sourceType": "github",
       "skillPath": "skills/rust-refactor-helper/SKILL.md",
       "computedHash": "0dcbec9380651de430ce900f95e5ebcd93bb85cd371911df9f098a5baf29c50e"
+    },
+    "test-audit": {
+      "source": "openclaw/openclaw",
+      "sourceType": "github",
+      "skillPath": ".agents/skills/test-audit/SKILL.md",
+      "computedHash": "1c493e8f99f4c5ac2b1d9e2928a88312cf72d823f1486106d9edfebf08d20c27"
     }
   }
 }

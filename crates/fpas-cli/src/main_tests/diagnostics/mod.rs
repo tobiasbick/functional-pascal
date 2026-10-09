@@ -1,7 +1,9 @@
 use super::*;
 
+mod imported_patterns;
 mod imports;
 mod json;
+mod string_bounds;
 mod unused_results;
 
 #[test]

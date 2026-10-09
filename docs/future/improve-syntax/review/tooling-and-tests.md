@@ -12,7 +12,8 @@ The [language-service error transport](../../../../crates/fpas-language-service/
 retains the original `ProjectError` and exposes all `FileDiagnostic` records in
 producer order. Project discovery, dependency and standard-library loading, and
 graph resolution preserve codes, severity, paths, spans, hints and expected/found
-details. Source-read failures carry FP4101 and their available path.
+details. Source-read failures carry FP4101; invalid UTF-8 carries FP4102 and an
+encoding correction hint. Both retain their available path without a position.
 
 The [LSP project adapter](../../../../crates/fpas-lsp/src/diagnostics/project.rs)
 publishes located records at the actual source URI using that source's snapshot.

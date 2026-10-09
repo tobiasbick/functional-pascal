@@ -35,7 +35,7 @@ type KeyEvent = record
   shift: boolean;
   ctrl: boolean;
   alt: boolean;
-  meta: boolean
+  meta: boolean;
 end record;
 ```
 
@@ -142,7 +142,7 @@ type ConsoleEvent = record
   shift: boolean;
   ctrl: boolean;
   alt: boolean;
-  meta: boolean
+  meta: boolean;
 end record;
 ```
 

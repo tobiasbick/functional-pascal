@@ -25,7 +25,7 @@ WriteLn('');
 ```pascal
 WriteLn('Hello, World!');
 WriteLn(1, ' ', true);
-WriteLn;
+WriteLn();
 ```
 
 ---

@@ -105,7 +105,7 @@ const C: Counter := Counter( Base := 10 );
 const AddTen: function(Value: integer): integer := C.Add;
 
 begin
-  WriteLn(AddTen(5))  // 15 — Counter.Add(C, 5)
+  WriteLn(AddTen(5));  // 15 — Counter.Add(C, 5)
 end.
 ```
 

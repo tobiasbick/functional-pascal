@@ -2,6 +2,8 @@
 
 use super::{repo_root, support};
 
+mod task_calls;
+
 #[test]
 fn example_worker_pipeline_collects_every_square() {
     let (exit, stdout, stderr) = support::run_cli_args_and_capture_output(

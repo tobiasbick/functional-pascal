@@ -21,6 +21,13 @@ Current implemented behavior belongs under `docs/pascal/`, not here.
   hardware information; recorded as an idea only.
 - [Graphics and 3D rendering](graphics.md): runtime, standard-library, build, and language gaps
   for windowing and GPU rendering; recorded as an idea only.
+- [Rewrite in C](c-rewrite.md): the human overlord's intent to rewrite the implementation in pure
+  C because of Rust build times and disk usage; the language stays unchanged; recorded as an idea
+  only.
+- [Agent wishes](agent-wishes.md): the agent's wish list — writing FPAS without training data,
+  shared wins for humans and agents (tested documentation examples, richer diagnostics), and CLI
+  tools with JSON output for debugging (replacing the JSONL protocol) and code navigation; DAP and
+  LSP stay for humans; the human is still undecided; recorded as an idea only.
 
 ## Architecture records and development intake
 

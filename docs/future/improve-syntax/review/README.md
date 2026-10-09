@@ -60,13 +60,13 @@ verification:
    `var` argument passing, with the coverage specified in those entries.
 
 The initial repair sequence, including the debugger follow-ups, is complete.
-The remaining findings retain their listed
-priorities; this sequence does not close or reclassify them.
+The finding index records the completed repairs and retains their original
+priorities. Independent validation blockers remain separate from finding status.
 
 ## Finding index
 
-**Repair status: C01-C06, T01-T03 and H01/H02 are resolved; 11 findings remain open.
-The debugger follow-ups are complete. The next open finding is D01.** The Done column
+**Repair status: all 22 findings are resolved, including the local documentation,
+grammar and runtime-hint repairs. The debugger follow-ups are complete.** The Done column
 tracks repairs, independently of package-completion checkboxes and the audit's
 original severity counts.
 
@@ -83,17 +83,17 @@ original severity counts.
 | [x] | [T03](tooling-and-tests.md#t03) | P3 | resolved: incomplete native chains preserve recursive types, declaration-local aliases and callback results |
 | [x] | [H01](tooling-and-tests.md#h01) | P2 | resolved: workflow fixtures verify the exact diagnostic token range |
 | [x] | [H02](tooling-and-tests.md#h02) | P2 | resolved: debugger-host fixtures use current syntax and pass the full host suite |
-| [ ] | [D01](documentation-and-specs.md#d01) | P2 | The AP13 documentation migration leaves invalid positive examples and corrections |
-| [ ] | [D02](documentation-and-specs.md#d02) | P2 | AP11 grouped declarations remain in current language and formatter documentation |
-| [ ] | [D03](documentation-and-specs.md#d03) | P2 | The formatter's complete control-flow example mutates a const binding |
-| [ ] | [D04](documentation-and-specs.md#d04) | P2 | The current formatter specification advertises unimplemented generic record types |
-| [ ] | [D05](documentation-and-specs.md#d05) | P3 | The documented long-import golden is not formatter output |
-| [ ] | [D06](documentation-and-specs.md#d06) | P2 | Two complete introductory examples omit required Console imports |
-| [ ] | [G01](documentation-and-specs.md#g01) | P2 | The formal keyword set omits reserved discard |
-| [ ] | [G02](documentation-and-specs.md#g02) | P2 | The formal task-call grammar excludes supported postfix targets |
-| [ ] | [P01](documentation-and-specs.md#p01) | P3 | Completed package result text describes features already removed by other completed packages |
-| [ ] | [T04](documentation-and-specs.md#t04) | P3 | Runtime string bounds hints still recommend a removed free-call spelling |
-| [ ] | [L01](documentation-and-specs.md#l01) | P3 | Cryptography index links outside the documentation tree |
+| [x] | [D01](documentation-and-specs.md#d01) | P2 | resolved: positive examples and diagnostic corrections use implemented AP13 syntax |
+| [x] | [D02](documentation-and-specs.md#d02) | P2 | resolved: current handbook snippets repeat the keyword for each type declaration |
+| [x] | [D03](documentation-and-specs.md#d03) | P2 | resolved: the formatter control-flow example uses a mutable loop binding |
+| [x] | [D04](documentation-and-specs.md#d04) | P2 | resolved: the formatter documents implemented built-in generic forms |
+| [x] | [D05](documentation-and-specs.md#d05) | P3 | resolved: the long-import example matches canonical formatter output |
+| [x] | [D06](documentation-and-specs.md#d06) | P2 | resolved: complete introductory examples import Std.Console |
+| [x] | [G01](documentation-and-specs.md#g01) | P2 | resolved: the formal keyword set matches the implemented reserved words |
+| [x] | [G02](documentation-and-specs.md#g02) | P2 | resolved: the formal task-call grammar includes supported postfix targets |
+| [x] | [P01](documentation-and-specs.md#p01) | P3 | resolved: completed package descriptions agree with the final implemented forms |
+| [x] | [T04](documentation-and-specs.md#t04) | P3 | resolved: string bounds hints use native calls and account for empty strings |
+| [x] | [L01](documentation-and-specs.md#l01) | P3 | resolved: the cryptography index links to the existing future-work page |
 
 The architecture recommendation in the standards report is not an additional
 finding. L01 is an incidental broken documentation link found in the wider sweep;
@@ -455,6 +455,52 @@ socket assertions described under [C02](#c02) fail: cancellation observes
 is 32 ms instead of the expected 30 ms. The LSP watcher remains excluded after
 its previously confirmed timeouts. These independent validation blockers
 remain open; the complete Rust workspace is not green.
+
+### Local/cloud reconciliation
+
+The combined checkout uses cloud commit `743152b5` as its base and retains its
+C01-C06, T01-T03 and debugger implementations. The original local commit
+`0cf6d2cb` is preserved on `codex/local-syntax-backup-2026-10-10`. Only missing
+local repairs and distinct regression boundaries were carried forward.
+
+D01-D06, G01/G02, P01, T04 and L01 retain their corrected handbooks, formal
+grammar, package descriptions and executable regression coverage. Local planning
+documents, the test-audit skill and its lock entry are preserved unchanged.
+Language rules, compiled-unit format and debugger behavior are unchanged by
+this reconciliation.
+
+Source-read diagnostics distinguish missing files (FP4101) from invalid UTF-8
+(FP4102), preserving correction hints through the cloud's positionless LSP log
+transport. The existing real LSP lifecycle test covers failure and recovery for
+both cases. The invalid-UTF-8 case failed before the classification repair.
+Two additional [CLI tests](../../../../crates/fpas-cli/src/main_tests/diagnostics/imported_patterns.rs)
+exercise callable pattern proofs and record constants across fresh and reused
+compiled-unit sidecars, without replacing cloud metadata representations.
+
+Five cloud LSP path assertions compare native path components so equivalent
+Windows separators retain the source identity check. The existing first-program
+documentation test accepts CRLF code fences; its original LF-only extraction
+failed on the combined checkout before this test-fixture repair.
+
+| Check | Combined checkout result |
+| --- | --- |
+| `cargo fmt --all --check` | Passed |
+| `cargo build` | Passed |
+| `cargo test --workspace --no-fail-fast` | Passed: 3,961 Rust tests/doc-tests, 0 failed, 0 ignored across 203 result groups; no test exclusions |
+| Real LSP diagnostic process tests | Passed: all 21 cases, including missing-source and invalid-UTF-8 recovery |
+| Parser documentation tests | Passed: all 18 cases |
+| CLI tests | Passed: all 570 cases, including handbook, formatter, task-call, string-hint and persisted-unit checks |
+| `cargo run -p fpas-sema --example export_intrinsic_std_api` | Passed; intrinsic editor declarations have no content changes |
+| Local Markdown targets, Rust handbook references and skill metadata | Passed |
+| `cargo clippy --all-targets --all-features --locked -- -D warnings` | Blocked by the unchanged cloud `clippy::collapsible_if` lint in `crates/fpas-unit/src/object/mod.rs:174` |
+
+The watcher and VM socket tests excluded or failing in historical cloud runs
+pass in this complete workspace run. Those earlier observations remain in their
+repair-time entries; they do not describe the combined checkout's current test
+result. The independent Clippy blocker remains open.
+
+The next open work package is
+[AP03.1: Migrate closed-enum catch-alls](../ap03-explicit-closed-enum-cases/01-migrate-closed-enum-catch-alls.md).
 
 ## Verification
 

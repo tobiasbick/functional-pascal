@@ -20,10 +20,7 @@ fn missing_root_unit_publishes_its_original_code_and_exclusive_name_range() {
     );
     assert_eq!(diagnostic["severity"], json!(1));
     assert_eq!(diagnostic["data"]["source_id"], json!(0));
-    assert_eq!(
-        diagnostic["data"]["source"],
-        temp.path().join("src/main.fpas").to_string_lossy().as_ref()
-    );
+    super::project_errors::assert_diagnostic_source(diagnostic, &temp.path().join("src/main.fpas"));
     assert!(diagnostic["data"]["hint"].is_string());
     assert!(
         !notifications(&transcript.messages, "window/logMessage")
@@ -53,10 +50,7 @@ fn private_root_unit_publishes_on_the_program_instead_of_the_library_source() {
         diagnostic["range"],
         json!({"start":{"line":1,"character":5},"end":{"line":1,"character":19}})
     );
-    assert_eq!(
-        diagnostic["data"]["source"],
-        temp.path().join("src/main.fpas").to_string_lossy().as_ref()
-    );
+    super::project_errors::assert_diagnostic_source(diagnostic, &temp.path().join("src/main.fpas"));
     assert!(
         diagnostic["data"]["hint"]
             .as_str()

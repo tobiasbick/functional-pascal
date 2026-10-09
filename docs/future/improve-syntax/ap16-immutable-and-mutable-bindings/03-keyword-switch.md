@@ -22,5 +22,10 @@ linking behavior.
 
 Tests cover keyword use, reassignment, constants, parameters, captures, field/
 element writes, imported variables, diagnostics and formatting.
+The [formatter handbook tests](../../../../crates/fpas-cli/src/main_tests/examples/formatter_handbook.rs)
+extract the complete control-flow program directly from Markdown. CLI checks
+and execution validate the mutable loop binding and expected output, and
+formatter output must match the documented block. Restoring the original
+immutable binding reproduces FP3005 without executing the invalid program.
 See [variables](../../../pascal/language/basics/variables.md) and
 [parameters](../../../pascal/language/functions/parameters.md).

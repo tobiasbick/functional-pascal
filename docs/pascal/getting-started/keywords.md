@@ -52,6 +52,8 @@ Keywords and identifiers are case-insensitive:
 ```pascal
 PROGRAM KeywordDemo;
 
+USES Std.Console;
+
 BEGIN
   writeln('same keywords, different casing');
 END.

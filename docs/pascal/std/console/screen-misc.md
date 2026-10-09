@@ -68,7 +68,7 @@ begin
   TextMode(C80);
   CursorOff();
   Delay(100);
-  CursorOn()
+  CursorOn();
 end.
 ```
 

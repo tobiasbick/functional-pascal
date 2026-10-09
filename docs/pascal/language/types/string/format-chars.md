@@ -27,6 +27,11 @@ WriteLn('─'.FromChar(40));
 
 Returns the character at the 0-based `Index`. **Runtime error** if out of bounds.
 
+Indices count Unicode scalars. For a nonempty string, valid indices are
+`0..S.Length()-1`. Empty strings have no valid character index. Invalid indices
+report FP5021; the hint uses `S.Length()` for nonempty strings and recommends
+checking `S.IsEmpty()` for empty strings.
+
 ```pascal
 const C: string := 'Hello'.CharAt(0);
 WriteLn(C);  // H
@@ -37,6 +42,8 @@ WriteLn(C);  // H
 ## `Text.SetCharAt(Index: integer; C: string): string`
 
 Returns a **new** string that is identical to `S` except the character at `Index` is replaced with `C`. `C` must contain exactly one Unicode scalar value. **Runtime error** if `Index` is out of bounds or `C` is empty or contains multiple characters.
+
+`Index` follows the same scalar bounds and empty-string checks as `CharAt`.
 
 ```pascal
 WriteLn('Hello'.SetCharAt(0, 'J'));  // Jello

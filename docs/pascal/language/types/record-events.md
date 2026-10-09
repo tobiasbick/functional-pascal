@@ -26,7 +26,7 @@ file.
 type
   ClickHandler = procedure(Sender: Button);
 
-  Button = record
+  type Button = record
     function ReadOnClick(Self: Button): Option of ClickHandler;
     procedure WriteOnClick(Self: Button; Handler: Option of ClickHandler);
 

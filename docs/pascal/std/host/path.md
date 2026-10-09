@@ -78,7 +78,7 @@ Trailing separators follow host `std::path::Path` rules and may differ between W
 Returns the parent path without the final component.
 
 ```pascal
-WriteLn(DirName('dir/nested/file.txt'))  // dir/nested
+WriteLn(DirName('dir/nested/file.txt'));  // dir/nested
 WriteLn(DirName('file.txt'));             // ''
 ```
 
@@ -89,7 +89,7 @@ WriteLn(DirName('file.txt'));             // ''
 Returns the final extension without a leading dot.
 
 ```pascal
-WriteLn(Extension('archive.tar.gz'))  // gz
+WriteLn(Extension('archive.tar.gz'));  // gz
 WriteLn(Extension('README'));            // ''
 ```
 
@@ -105,13 +105,13 @@ Parent components cannot climb above a rooted path's root, including a Windows U
 
 ```pascal
 // Windows examples:
-WriteLn(Normalize('D:/projects/demo'))       // D:\projects\demo
-WriteLn(Normalize('D:\projects\..\demo'))   // D:\demo
+WriteLn(Normalize('D:/projects/demo'));       // D:\projects\demo
+WriteLn(Normalize('D:\projects\..\demo'));   // D:\demo
 WriteLn(Normalize('D:projects\..\demo'));     // D:demo (drive-relative)
 ```
 
 ```pascal
-WriteLn(Normalize('a/b/../c'))
+WriteLn(Normalize('a/b/../c'));
 WriteLn(BaseName(Normalize('dir/nested/../file.txt')));
 ```
 

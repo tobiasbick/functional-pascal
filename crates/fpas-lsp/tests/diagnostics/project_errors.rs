@@ -4,6 +4,12 @@
 
 use super::*;
 
+/// Compares source identity independently of the platform's path separators.
+pub(super) fn assert_diagnostic_source(diagnostic: &Value, expected: &std::path::Path) {
+    let source = diagnostic["data"]["source"].as_str().expect("source path");
+    assert_eq!(std::path::Path::new(source), expected);
+}
+
 /// Creates the common program-project fixture for protocol diagnostic tests.
 pub(super) fn program_project(temp: &TempDirectory, source: &str) {
     temp.write(
@@ -96,10 +102,7 @@ fn missing_unit_in_a_dependency_publishes_its_own_uri_and_import_range() {
     );
     assert_eq!(diagnostic["severity"], json!(1));
     assert_eq!(diagnostic["data"]["source_id"], json!(1));
-    assert_eq!(
-        diagnostic["data"]["source"],
-        dependency.to_string_lossy().as_ref()
-    );
+    assert_diagnostic_source(diagnostic, &dependency);
     assert!(diagnostic["message"].as_str().is_some_and(|message| message.starts_with("Unknown unit") && message.contains("Help:")), "{diagnostic:?}");
     assert!(diagnostic["data"]["hint"].is_string());
     assert_eq!(diagnostic["data"]["expected"], Value::Null);
@@ -115,10 +118,7 @@ fn dependency_parser_records_preserve_expected_found_and_the_source_range() {
     let transcript = analyze_project(&temp, source);
     assert_success(&transcript);
     let diagnostic = located_diagnostic(&transcript, &temp.uri("src/dep.fpas"), "FP2001");
-    assert_eq!(
-        diagnostic["data"]["source"],
-        dependency.to_string_lossy().as_ref()
-    );
+    assert_diagnostic_source(diagnostic, &dependency);
     assert_eq!(diagnostic["data"]["expected"], json!(";"));
     assert_eq!(diagnostic["data"]["found"], json!("end"));
     assert_eq!(
@@ -149,10 +149,7 @@ fn nonexported_dependency_import_preserves_code_source_and_range() {
         diagnostic["range"],
         json!({"start":{"line":1,"character":5},"end":{"line":1,"character":19}})
     );
-    assert_eq!(
-        diagnostic["data"]["source"],
-        dependency.to_string_lossy().as_ref()
-    );
+    assert_diagnostic_source(diagnostic, &dependency);
     assert!(
         diagnostic["data"]["hint"]
             .as_str()

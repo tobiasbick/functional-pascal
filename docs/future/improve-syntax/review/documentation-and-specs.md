@@ -2,145 +2,337 @@
 
 See [scope and verification](README.md). These findings concern current documentation and completed-package result text. Drafts in open packages are not treated as missing implementations. Each grouped migration finding lists its confirmed affected locations.
 
+Finding-specific test results below describe the original local repairs. The
+[local/cloud reconciliation](README.md#localcloud-reconciliation) records checks
+against the combined checkout.
+
 <a id="d01"></a>
 
-## D01 — P2 — The AP13 documentation migration leaves invalid positive examples and corrections
+## D01 — P2 — AP13 documentation examples and corrections (resolved)
 
-AP13's accepted rule requires every statement/declaration to terminate with `;` and every case arm to start with `when`. Its completed README still asserts that all repository docs use the new syntax ([docs/future/improve-syntax/ap13-explicit-block-boundaries/README.md:191-196](../../../../docs/future/improve-syntax/ap13-explicit-block-boundaries/README.md)). The following current examples still violate it:
+**Status: resolved.** The affected handbook examples use the implemented AP13
+terminators, named closers, and `when` case arms. This repair changes documentation
+and regression coverage; language, parser, runtime, and standard-library behavior
+are unchanged.
 
-| Current file | Lines | Defect |
-| --- | --- | --- |
-| [docs/pascal/std/text/conv.md](../../../../docs/pascal/std/text/conv.md) | 94 | `WriteLn(BoolToStr(true))` lacks `;` before the following statement. |
-| [docs/pascal/std/numeric/math.md](../../../../docs/pascal/std/numeric/math.md) | 261 | `WriteLn(Frac(3.14))` lacks `;`. |
-| [docs/pascal/std/host/path.md](../../../../docs/pascal/std/host/path.md) | 81, 92, 108, 109, 114 | Five example call statements lack `;`. |
-| [docs/pascal/std/console/types.md](../../../../docs/pascal/std/console/types.md) | 38, 145 | Both shown record definitions omit the last field's semicolon (`meta: boolean`). |
-| [docs/pascal/std/console/screen-misc.md](../../../../docs/pascal/std/console/screen-misc.md) | 71 | `CursorOn()` lacks `;` before final `end.`. |
-| [docs/pascal/language/types/record-methods.md](../../../../docs/pascal/language/types/record-methods.md) | 108 | The complete bound-method example omits `;` after `WriteLn(AddTen(5))`. |
-| [docs/pascal/std/tui/application.md](../../../../docs/pascal/std/tui/application.md) | 20, 63 | `TuiMsg.QuitRequested:` and `TuiMsg.Started:` case-arm examples omit `when`. |
-| [docs/pascal/tools/diagnostics.md](../../../../docs/pascal/tools/diagnostics.md) | 224, 227 | The suggested **corrections** for FP2003/FP2006 still omit the last statement's `;`. |
-| [docs/pascal/tools/diagnostics.md](../../../../docs/pascal/tools/diagnostics.md) | 233, 234 | The suggested **corrections** for FP2012/FP2013 still close enums with `end;` instead of `end enum;`. |
+| Current file | Corrected examples |
+| --- | --- |
+| [docs/pascal/std/text/conv.md](../../../../docs/pascal/std/text/conv.md) | The Boolean conversion call ends with `;`. |
+| [docs/pascal/std/numeric/math.md](../../../../docs/pascal/std/numeric/math.md) | Both fractional-part calls end with `;`. |
+| [docs/pascal/std/host/path.md](../../../../docs/pascal/std/host/path.md) | Every example call statement ends with `;`. |
+| [docs/pascal/std/console/types.md](../../../../docs/pascal/std/console/types.md) | Both conceptual records terminate their final `meta` field. |
+| [docs/pascal/std/console/screen-misc.md](../../../../docs/pascal/std/console/screen-misc.md) | `CursorOn();` terminates before `end.`. |
+| [docs/pascal/language/types/record-methods.md](../../../../docs/pascal/language/types/record-methods.md) | The bound-method example terminates `WriteLn(AddTen(5));`. |
+| [docs/pascal/std/tui/application.md](../../../../docs/pascal/std/tui/application.md) | The quit and startup case arms begin with `when`. |
+| [docs/pascal/tools/diagnostics.md](../../../../docs/pascal/tools/diagnostics.md) | FP2003/FP2006 corrections terminate statements; FP2004 uses a typed loop variable and `end for;`; FP2012/FP2013 use `end enum;`. Negative examples isolate their catalogued error, including an invalid statement start for FP2003. |
+| [docs/pascal/std/console/output.md](../../../../docs/pascal/std/console/output.md) | The zero-argument call is `WriteLn();`. |
 
-An additional stale call-form example is [docs/pascal/std/console/output.md:28](../../../../docs/pascal/std/console/output.md): `WriteLn;` produces FP2006; the supported zero-argument form is `WriteLn();`.
+Regression ownership:
 
-The missing terminators/closers are parser failures (FP2001), not formatting differences. The code-fence parser pass rejects these snippets when wrapped in the necessary program/case context. Do not flag intentional API signature lists or incomplete context fragments merely for lacking a standalone entrypoint.
-
-Needed coverage: extract compilable/parseable documentation examples and validate their syntax; include positive correction examples in the diagnostics catalog. Current Rust/fpas suites can pass while these Markdown literals are stale.
+- [Handbook examples](../../../../crates/fpas-parser/tests/documentation/examples.rs)
+  extract Pascal fences directly from the affected pages and parse them with the
+  necessary program, declaration, statement, or case context. Coverage includes
+  both final record fields, the last calls before `end.`, and the TUI tick arm
+  alongside quit and startup. Schematic API signatures are excluded.
+- [Diagnostic examples](../../../../crates/fpas-parser/tests/documentation/corrections.rs)
+  extract catalog pairs for FP2001–FP2006 and FP2012/FP2013. Positive corrections
+  must parse without errors; negative examples must emit their catalogued code.
+- [Markdown extraction](../../../../crates/fpas-parser/tests/documentation/markdown.rs)
+  preserves source comments and line numbers and ignores non-Pascal fences.
 
 <a id="d02"></a>
 
-## D02 — P2 — AP11 grouped declarations remain in current language and formatter documentation
+## D02 — P2 — AP11 documentation uses individual type declarations (resolved)
 
-- [docs/pascal/tools/fmt-style.md:464-478](../../../../docs/pascal/tools/fmt-style.md): `type Color = ...; Shape = ...;` still inherits the `type` keyword for the second type. `Shape` at line 471 requires its own `type`.
-- [docs/pascal/language/types/record-events.md:26-29](../../../../docs/pascal/language/types/record-events.md): `type ClickHandler = ...; Button = record ...` repeats the same removed grouped-declaration form at line 29. Method headers in that fragment are schematic, but its declaration form is still wrong independently of those omitted bodies.
-- Actual parser diagnostic is FP2015 for missing declaration keyword. Repeating `type` is required by the completed AP11.2 work package and current declarations grammar.
-- Needed coverage: documentation migration scan/parse checks that include snippets, not just complete programs and `.fpas` files.
+**Status: resolved.** Both affected handbook snippets repeat `type` on the
+second declaration, following the implemented AP11.2 rule.
+
+- [Formatter reference](../../../../docs/pascal/tools/fmt-style.md): `Shape`
+  starts with `type`, independently of the preceding `Color` declaration.
+- [Record events](../../../../docs/pascal/language/types/record-events.md):
+  `Button` starts with `type`, independently of the preceding `ClickHandler`.
+- [Handbook declaration tests](../../../../crates/fpas-parser/tests/documentation/declarations.rs)
+  extract both examples from Markdown. Positive cases parse without errors and
+  retain every declaration; removing the second keyword reproduces exactly one
+  FP2015 diagnostic. The schematic event accessor signatures receive bodies in
+  the test context. The formatter check covers the complete type snippet,
+  including its built-in option alias after D04.
+
+Language and parser behavior are unchanged. Regression coverage is also recorded
+in [AP11.2](../ap11-individual-declarations/02-one-keyword-per-declaration.md).
 
 <a id="d03"></a>
 
-## D03 — P2 — The formatter's complete control-flow example mutates a const binding
+## D03 — P2 — The formatter control-flow example uses a mutable loop binding (resolved)
 
-- [docs/pascal/tools/fmt-style.md:73](../../../../docs/pascal/tools/fmt-style.md) declares `const X: integer := 5;`, then line 115 executes `X := X + 1;`.
-- Checking the complete claimed golden file (fence begins at line 67) fails FP3005: `Cannot assign to X`, with the `const`/`var` correction hint.
-- This is a missed immutable/mutable migration in an example presented as a complete program. It needs `var X`, preserving the loop's behavior.
-- Evidence: `.temp-data/syntax-review-syntax/docs/fmt-style-2.fpas` and `.temp-data/syntax-review-syntax/docs/results.json`.
+**Status: resolved.** The complete `ControlFlowDemo` program in the
+[formatter reference](../../../../docs/pascal/tools/fmt-style.md) declares
+`var X: integer := 5;`, permitting the documented `X := X + 1;` loop update.
+The initial value and control-flow behavior are preserved.
+
+The [formatter handbook tests](../../../../crates/fpas-cli/src/main_tests/examples/formatter_handbook.rs)
+extract the complete program directly from Markdown and verify:
+
+- `fpas check` accepts the complete example.
+- `fpas run` terminates with the expected branch and loop output.
+- `fpas fmt --stdout` matches the documented canonical block.
+- Restoring `const X` produces exactly one FP3005 diagnostic during checking;
+  the invalid program is not executed.
+
+[AP16.3](../ap16-immutable-and-mutable-bindings/03-keyword-switch.md) records this
+regression coverage. Language, compiler, and runtime behavior are unchanged.
 
 <a id="d04"></a>
 
-## D04 — P2 — The current formatter specification advertises unimplemented generic record types
+## D04 — P2 — The formatter documents implemented generic forms (resolved)
 
-- [docs/pascal/tools/fmt-style.md:478](../../../../docs/pascal/tools/fmt-style.md) presents `type IntBox = Box of integer;` as formatter output; line 485 lists `Box<T>`, `Box of string` and `Pair of integer, string` as supported generics.
-- Current parser explicitly rejects user-defined generic type applications in [crates/fpas-parser/src/parser/decl/type_expr.rs:108-127](../../../../crates/fpas-parser/src/parser/decl/type_expr.rs) (FP2001); type declarations also do not accept user type parameters. AP24 remains open and its approved draft spelling is different.
-- The current grammar permits `of` only for built-in generic forms, and [docs/pascal/language/types/generics.md](../../../../docs/pascal/language/types/generics.md) documents that boundary. Unimplemented syntax belongs only under [docs/future/](../../../../docs/future/).
-- Expected: current formatter reference describes existing built-in generics and generic routines; keep AP24 examples in its plan until implemented.
+**Status: resolved.** The [formatter reference](../../../../docs/pascal/tools/fmt-style.md)
+uses `type IntOption = option of integer;` in its complete type snippet, which
+now matches canonical formatter output. The summary lists the six implemented
+built-in generic forms and a generic routine signature with inferred call
+arguments, linked to the current [Generics reference](../../../../docs/pascal/language/types/generics.md).
+
+Regression ownership:
+
+- [Handbook declaration tests](../../../../crates/fpas-parser/tests/documentation/declarations.rs)
+  parse the entire type snippet, including the option alias; no declaration is
+  excluded from the check.
+- [Generic spelling tests](../../../../crates/fpas-parser/tests/documentation/generics.rs)
+  parse all six forms extracted from the summary. Restoring `Box of integer`,
+  `Box of string`, or `Pair of integer, string` in the alias produces exactly
+  one FP2001 diagnostic for each unsupported application.
+- [CLI handbook tests](../../../../crates/fpas-cli/src/main_tests/examples/formatter_generics.rs)
+  extract the type snippet and routine signature directly from Markdown. With
+  the necessary program and routine-body context, `fpas check` accepts them,
+  `fpas run` verifies integer and string argument inference, and
+  `fpas fmt --stdout` matches the documented type snippet.
+
+This repair changes documentation and regression coverage only. Language,
+parser, formatter, compiler, and runtime behavior are unchanged.
+[AP24](../ap24-generic-data-structures/README.md) remains open; its draft examples
+stay in the future plan.
 
 <a id="d05"></a>
 
-## D05 — P3 — The documented long-import golden is not formatter output
+## D05 — P3 — The documented long-import golden matches formatter output (resolved)
 
-- [docs/pascal/tools/fmt-style.md:436-443](../../../../docs/pascal/tools/fmt-style.md) is explicitly labeled golden output but keeps the long `uses ...;` on one line at line 439.
-- Running `fpas fmt --stdout .temp-data/syntax-review-syntax/fmt-golden-12.fpas` instead emits:
+**Status: resolved.** The complete `LongUses` program in the
+[formatter reference](../../../../docs/pascal/tools/fmt-style.md) matches the
+existing [formatter golden](../../../../crates/fpas-fmt/tests/golden/long_uses.expected.fpas).
+The wrapping table and example explanation describe the implemented rule:
+when the complete import clause exceeds 100 columns, `uses` occupies its own
+line and the import list is indented by two spaces. Additional list wrapping
+occurs after commas when needed.
 
-```pascal
-uses
-  Std.Console, Std.Conv, Std.Crypto, MyApp.Very.Long.Namespace.One, MyApp.Very.Long.Namespace.Two;
-```
+The [CLI handbook tests](../../../../crates/fpas-cli/src/main_tests/fmt/handbook_imports.rs)
+extract the complete program directly from Markdown and verify:
 
-- The other complete program/unit fences in that formatter page match `fmt --stdout`. This example drift is separate from semantic errors in D03/D06 and parser errors in D02/D04.
-- Needed coverage: compare documented canonical golden blocks against actual formatter output or reuse the tested golden sources in documentation generation.
+- The handbook block agrees with the existing golden and `fpas fmt --stdout`.
+- `fpas fmt --check` accepts the documented block without changing the file.
+- Restoring the original single-line clause returns the formatter's
+  would-change exit code without changing the file; formatting that source
+  produces exactly the documented output.
+
+This repair changes documentation and regression coverage only. Formatter,
+parser, compiler, and runtime behavior are unchanged.
 
 <a id="d06"></a>
 
-## D06 — P2 — Two complete introductory examples omit required Console imports
+## D06 — P2 — Complete introductory examples import Console (resolved)
 
-- [docs/pascal/getting-started/keywords.md:52-58](../../../../docs/pascal/getting-started/keywords.md) is a complete `PROGRAM KeywordDemo` using `writeln` without `uses Std.Console;`.
-- [docs/pascal/tools/fmt-style.md:43-48](../../../../docs/pascal/tools/fmt-style.md) is a complete `program Hello` using `WriteLn` without the same import.
-- Both fail FP3003, unknown procedure. Imports are required even for standard-library calls under the documented current import model. These are not isolated multi-file examples or expected negative cases.
-- Evidence: `.temp-data/syntax-review-syntax/docs/keywords-0.fpas` and `.temp-data/syntax-review-syntax/docs/fmt-style-0.fpas` with `fpas check --std-lib lib`.
+**Status: resolved.** Both complete programs import `Std.Console` before their
+output call:
+
+- The [keyword example](../../../../docs/pascal/getting-started/keywords.md)
+  uses `USES Std.Console;`, preserving its mixed keyword and identifier casing.
+- The [minimal formatter program](../../../../docs/pascal/tools/fmt-style.md)
+  uses canonical `uses Std.Console;` and retains its hello-world output.
+
+The [CLI handbook tests](../../../../crates/fpas-cli/src/main_tests/examples/introductory_handbook.rs)
+extract both complete programs directly from Markdown and verify:
+
+- `fpas check` accepts both examples.
+- `fpas run` prints their documented messages, including the case-insensitive
+  keyword and procedure names in `KeywordDemo`.
+- Removing the import from either example produces exactly one FP3003
+  diagnostic for the unknown procedure; negative cases are checked only.
+- `fpas fmt --stdout` matches the complete minimal formatter program.
+
+This repair changes documentation and regression coverage only. The explicit
+[unit import model](../../../../docs/pascal/program-structure/units.md#using-units),
+compiler, and runtime behavior are unchanged.
 
 <a id="g01"></a>
 
-## G01 — P2: The formal keyword set omits reserved discard
+## G01 — P2 — The formal keyword set matches the implemented reserved words (resolved)
 
-[docs/specs/grammar.ebnf:82-99](../../../../docs/specs/grammar.ebnf) omits `discard` from `keyword`, so its lexical grammar classifies it as an identifier. However, `discard_stmt` at line 361 requires it as a terminal and [crates/fpas-lexer/src/token/keywords.rs:16](../../../../crates/fpas-lexer/src/token/keywords.rs) reserves it. [docs/pascal/getting-started/keywords.md](../../../../docs/pascal/getting-started/keywords.md) correctly lists it. Add it to the formal keyword production and keep the lists mechanically consistent.
+**Status: resolved.** The `keyword` production in the
+[formal grammar](../../../../docs/specs/grammar.ebnf) includes `discard`, agreeing
+with the existing lexer and [handbook table](../../../../docs/pascal/getting-started/keywords.md).
+The statement production and implemented keyword behavior are unchanged.
 
-This is a specification discrepancy, not a request to change language behavior. Add keyword-set parity coverage.
+The [keyword documentation tests](../../../../crates/fpas-lexer/src/tests/keywords/documentation.rs)
+extract spellings directly from the existing
+[lexer mapping](../../../../crates/fpas-lexer/src/token/keywords.rs), the EBNF
+production, and the handbook table. They verify:
+
+- Both documented sets match all 65 implemented reserved words, reporting
+  missing or unexpected entries; empty and duplicate inventories fail too.
+- Every keyword is tokenized as reserved in lowercase, uppercase, and mixed case.
+- `discard` remains reserved after a dot, while longer identifiers, strings,
+  and comments preserve their existing token behavior.
+
+Before the correction, the parity test reported exactly the missing `discard`
+entry and no unexpected words. This repair aligns the syntax annex with the
+current language; lexer, parser, compiler, and runtime behavior are unchanged.
 
 <a id="g02"></a>
 
-## G02 — P2: The formal task-call grammar excludes supported postfix targets
+## G02 — P2 — The formal task-call grammar includes supported postfix targets (resolved)
 
-[docs/specs/grammar.ebnf:463-470](../../../../docs/specs/grammar.ebnf) says `go_call = designator '(' [ arg_list ] ')'` and explicitly describes that restriction. The implemented parser at [crates/fpas-parser/src/parser/stmt/mod.rs:102-119](../../../../crates/fpas-parser/src/parser/stmt/mod.rs) accepts a postfix expression ending in a method call. The valid current example `const Job: task := go Make().Answer();` cannot be derived from that production. `fpas run --std-lib lib .temp-data/syntax-review-syntax/go-postfix.fpas` prints `42` and exits 0. A grammar based on valid final-call expressions should reflect this existing behavior without broadening it to arbitrary expressions.
+**Status: resolved.** The `go_call` production in the
+[formal grammar](../../../../docs/specs/grammar.ebnf) describes direct calls,
+the existing keyword-owned array factory call form, and postfix chains whose
+final suffix is a call. It reuses `call_args`, `primary_atom`, and `postfix_suffix`,
+so `const Job: task := go Make().Answer();` and intervening field/index/method
+suffixes are represented. The accompanying constraint still requires the
+expression parsed after `go` to have a call as its outermost shape. The
+[task-call reference](../../../../docs/pascal/language/concurrency/go.md) and
+implemented language behavior are unchanged.
 
-This is a specification discrepancy, not approval to broaden callable targets beyond current behavior. Add grammar conformance fixtures for normal and postfix task targets.
+The [parser fixtures](../../../../crates/fpas-parser/tests/documentation/task_calls.rs)
+and [CLI/VM regressions](../../../../crates/fpas-cli/src/main_tests/examples/concurrency/task_calls.rs)
+verify:
+
+- The formal production retains direct-call alternatives and requires a call
+  as the final postfix suffix, rather than accepting an arbitrary expression.
+- Both retained and detached forms parse ordinary, qualified, indexed, and
+  callable-variable targets, as well as final calls after factories, constructors,
+  fields, indexes, earlier methods, and parenthesized primary expressions.
+- Bare values, final fields/indexes, outer operators, record updates, and a
+  parenthesized whole call produce exactly one FP2005; parser recovery preserves
+  the following statement.
+- Eleven ordinary and postfix targets pass `fpas check` and return `42` through
+  `Wait` when run. A detached postfix function delivers its side effect through
+  a channel.
+- A direct record constructor and a final call on a non-callable field still
+  produce FP3006 during CLI checking.
+
+Before the correction, the formal-production regression failed while all three
+parser fixture groups passed. This repair changes the syntax annex and adds
+nine regression tests; parser, semantic checker, compiler, and runtime are unchanged.
+
+**Separate follow-up observed during validation:** for a declared record procedure
+`Report`, the detached statement `go Make().Report();` parses but produces FP3006
+(the procedure does not return a value). The
+[statement checker](../../../../crates/fpas-sema/src/check/stmt/mod.rs) checks this
+postfix target as a value expression. This existing semantic limitation is outside
+the G02 grammar correction and remains open.
 
 <a id="p01"></a>
 
-## P01 — P3 — Completed package result text describes features already removed by other completed packages
+## P01 — P3 — Completed package text describes the final implemented forms (resolved)
 
-- [docs/future/improve-syntax/ap10-typed-record-construction/01-typed-construction.md:37-40](../../../../docs/future/improve-syntax/ap10-typed-record-construction/01-typed-construction.md) states the contextual `record ... end` literal remains valid and its anonymous labels are still outside editor rename.
-- [docs/future/improve-syntax/ap10-typed-record-construction/02-migrate-record-literals.md:9-10](../../../../docs/future/improve-syntax/ap10-typed-record-construction/02-migrate-record-literals.md) says the parser/compiler still accept the literal until AP10.3, although AP10.3 is marked complete and current parser emits FP2017.
-- [docs/future/improve-syntax/ap06-dot-call-targets/README.md:11](../../../../docs/future/improve-syntax/ap06-dot-call-targets/README.md) says callable record properties remain actual member calls, although AP14 removed properties. Line 47 also discusses properties as rejected mutable receivers despite there being no current property declaration form.
-- AP10.1 line 20 also lists properties among constructor non-fields; it should not imply a currently available member category.
-- The central README says completed packages describe current implemented behavior. Remove the superseded intermediate-state claims and describe the final implemented forms. This does not imply that removed syntax should return; package checkbox changes are outside this report's scope.
+**Status: resolved.** The completed-package pages now agree with the implemented
+AP10.3 and AP14 removals:
+
+- [AP10.1](../../../../docs/future/improve-syntax/ap10-typed-record-construction/01-typed-construction.md)
+  describes typed construction as the only record-construction form and links
+  the completed migration and removal packages. The old expression form reports
+  FP2017 with a typed-construction hint. The obsolete anonymous-label editor
+  claim and property member category are removed; the sema owner describes
+  named-field validation and construction metadata.
+- [AP10.2](../../../../docs/future/improve-syntax/ap10-typed-record-construction/02-migrate-record-literals.md)
+  records the completed AP10.3 removal after migration, rather than claiming an
+  active compatibility window for record literals.
+- [AP06](../../../../docs/future/improve-syntax/ap06-dot-call-targets/README.md)
+  describes callable record fields and declared accessor methods, with a link
+  to the completed AP14 removal. Its writable-receiver rules reject dictionary
+  entries and computed receivers without implying that property declarations
+  remain available.
+
+Existing regression coverage was checked:
+
+- Nine [removed-literal](../../../../crates/fpas-parser/src/tests/errors/removed_record_literals.rs)
+  and [removed-property](../../../../crates/fpas-parser/src/tests/errors/removed_properties.rs)
+  parser tests pass, including replacement hints, ordinary `property` identifiers,
+  empty/nested literal positions, and recovery of subsequent statements/members.
+- Two [writable-receiver tests](../../../../crates/fpas-sema/src/tests/expr/var_parameters/mutating_intrinsics.rs)
+  pass for writable fields/elements and forwarded parameters, and rejection of
+  read-only, dictionary, and computed storage.
+- The [compiler/VM callable-field test](../../../../crates/fpas-compiler/src/tests/aggregates/record_construction.rs)
+  passes for callable defaults and explicitly supplied callable fields.
+- The [typed-construction FPAS test](../../../../tests/stdlib/records/typed_construction_test.fpas)
+  passes through `fpas test --std-lib lib tests/stdlib/records/typed_construction_test.fpas`.
+
+This is a documentation-only correction. No new tests or language changes are
+needed, and the package-completion checkboxes are unchanged.
 
 <a id="t04"></a>
 
-## T04 — P3: Runtime string bounds hints still recommend a removed free-call spelling
+## T04 — P3 — String bounds hints use native calls and handle empty strings (resolved)
 
 **Packages:** AP06 migration and AP02 actionable diagnostics.
 
-**Requirement:** AP06 removes free type-helper calls and makes `S.Length()` the canonical string length form. AP02's cross-package rule requires canonical replacement spellings in diagnostics.
+**Status: resolved.** The [string runtime](../../../../crates/fpas-std/src/str/mod.rs)
+uses the native call spellings in FP5021 hints:
 
-**Implementation:** [crates/fpas-std/src/str/mod.rs:195](../../../../crates/fpas-std/src/str/mod.rs) and `213` tell users to use `0..Length(S)-1`; `248` gives `0..Length(S)`. `Length(S)` no longer resolves to a native operation.
+- `CharAt` and `SetCharAt` name `0..S.Length()-1` for nonempty strings.
+- For empty strings, both operations report that no character index is valid
+  and recommend checking `S.IsEmpty()`, without suggesting an invalid interval.
+- `Insert` names the inclusive `0..S.Length()` range. Index `0` remains valid
+  for an empty string, and the end position remains valid for nonempty strings.
 
-**Reproduction:**
+The character operations share their hint selection. Error codes, messages,
+source locations, argument validation, and valid scalar-index behavior are
+unchanged. Private intrinsic IDs and callable targets are unchanged.
 
-```pascal
-program Demo;
-begin
-  discard 'a'.CharAt(1);
-end.
-```
+The [runtime tests](../../../../crates/fpas-std/src/str/tests/index_diagnostics.rs)
+and [CLI diagnostics tests](../../../../crates/fpas-cli/src/main_tests/diagnostics/string_bounds.rs)
+add ten regression tests covering:
 
-Run with `--diagnostics json`.
+- Negative, first-invalid, and extreme integer indices; ASCII, Unicode scalar
+  counts, empty strings, valid first/last character indices, and start/end
+  insertion positions.
+- Exact FP5021 hints directly from the runtime and through text/JSON CLI
+  output, with runtime exit status, source file/line, and empty stdout.
+- Real `fpas check` and `fpas run` use of `S.Length()` and `S.IsEmpty()` in
+  corrected programs, including guarded empty-string access and insertion.
 
-**Actual (confirmed):** `FP5021` includes `"hint":"Ensure the index is within 0..Length(S)-1."`. The same old spelling occurs for `SetCharAt` and `Insert` bounds errors.
+Before the correction, three runtime and four CLI tests failed on the old hint
+text while valid-boundary tests passed. All 23 string runtime tests and five
+new CLI tests now pass, as does the full workspace suite (3827 passed, zero
+failed or ignored).
 
-**Expected:** Use the canonical `S.Length()` spelling in these hints, and ensure the empty-string case is described accurately when providing an interval.
-
-**Impact:** Following the correction hint introduces a removed API spelling and triggers another semantic error. This is a diagnostic/documentation migration issue, not a string-indexing runtime defect.
-
-**Tests needed:** Negative runtime native-operation tests that assert canonical helper spellings in hints. Do not blindly flag every private `Std.*` implementation ID: the confirmed problem here is user-directed replacement syntax.
-
-**Evidence:** `.temp-data/syntax-review-tooling/catalog-results.json`, entries 44 and 45. Source owner lines above.
+The [character reference](../../../../docs/pascal/language/types/string/format-chars.md),
+[editing reference](../../../../docs/pascal/language/types/string/edit.md), and
+[FP5021 catalog entry](../../../../docs/pascal/tools/diagnostics.md) describe the
+implemented bounds and hints. Formatting, build, Clippy, Rust documentation
+targets, and relative Markdown links pass. The editor declaration exporter runs
+successfully and produces no content changes.
 
 <a id="l01"></a>
 
-## L01 — P3: Cryptography index links outside the documentation tree
+## L01 — P3 — Cryptography index resolves the future-work link (resolved)
 
-[docs/pascal/std/cryptography/README.md:12](../../../../docs/pascal/std/cryptography/README.md) links to `../../../../future/networked-applications/cryptography.md`. That resolves to a nonexistent top-level `future/` directory. The existing target is [docs/future/networked-applications/cryptography.md](../../../../docs/future/networked-applications/cryptography.md), requiring `../../../future/networked-applications/cryptography.md` from the index.
+**Status: resolved.**
+[docs/pascal/std/cryptography/README.md:12](../../../../docs/pascal/std/cryptography/README.md)
+uses `../../../future/networked-applications/cryptography.md`, which resolves to
+the existing
+[docs/future/networked-applications/cryptography.md](../../../../docs/future/networked-applications/cryptography.md).
+The previous path traversed one directory too far upward and targeted a
+nonexistent top-level `future/` directory.
 
-This incidental documentation defect was found during the broad link sweep; it is not attributed to a syntax package. It was the only missing relative file target among 1,490 checked Markdown links. Correct the relative path and keep link validation in the documentation checks.
+This incidental documentation defect was found during the broad link sweep; its
+origin is not attributed to a syntax package. It was the only missing relative
+file target among the 1,490 links checked during the original audit.
+
+**Verification:** The repair-time scan reproduces L01 as the only missing target
+across 283 Markdown files and 1,651 relative links before the correction. After
+the correction, all 1,651 relative links and 889 literal Rust handbook references
+resolve. A direct path check confirms the exact intended planning document, and
+`git diff --check` passes. This documentation-only repair requires no new Rust or
+FPAS tests; link validation is the applicable check.
 
 
 ## Documentation validation coverage

@@ -91,7 +91,7 @@ keyword         = 'program'   | 'unit'      | 'uses'      | 'const'
                 | 'enum'      | 'array'     | 'panic'
                 | 'break'     | 'continue'  | 'result'    | 'option'
                 | 'ok'        | 'error'     | 'some'      | 'none'
-                | 'try'       | 'public'
+                | 'try'       | 'public'    | 'discard'
                 | 'go'        | 'dict'      | 'with'      | 'static'
                 | 'event'     | 'read'      | 'write'     | 'comparable'
                 | 'numeric'   | 'printable' | 'self'      | 'nil'
@@ -460,13 +460,17 @@ break_stmt          = 'break' ;
 continue_stmt       = 'continue' ;
 
 (* -- Go (spawn task) -- *)
-(* Syntax: same call shape as call_stmt — designator '(' args ')'. *)
-(* The parser requires the expression after `go` to be a call (not   *)
-(* a bare designator or other expression). Semantics: statement     *)
-(* `go` … is fire-and-forget (no handle); expression `go` … has type *)
-(* `task` and retains the result for `Std.Tasks.Wait`. See           *)
-(* docs/pascal/language/concurrency/README.md.                                   *)
-go_call             = designator '(' [ arg_list ] ')' ;
+(* The parser reads the expression after `go` and requires a direct call *)
+(* or a postfix chain whose final suffix is `.Method(args)`. Earlier     *)
+(* suffixes may be fields, indexes, or calls: `go Make().Answer()`.       *)
+(* Bare values and outer operators/record updates are not task calls.    *)
+(* Semantic analysis requires a callable target, not a constructor.      *)
+(* Statement `go` is fire-and-forget; expression `go` returns a retained *)
+(* task handle for `Std.Tasks.Wait`.                                    *)
+(* Documentation: docs/pascal/language/concurrency/go.md                *)
+go_call             = designator call_args
+                    | native_array_factory
+                    | primary_atom { postfix_suffix } '.' identifier call_args ;
 go_stmt             = 'go' go_call ;
 
 (* -- Procedure Call (statement position) -- *)

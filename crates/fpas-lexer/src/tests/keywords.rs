@@ -1,6 +1,8 @@
 use super::toks;
 use crate::Token;
 
+mod documentation;
+
 #[test]
 fn reserved_keywords_and_ordinary_mutable_and_property_identifiers() {
     let input = "program unit uses const var mutable function procedure begin end return discard \

@@ -258,7 +258,7 @@ WriteLn(Trunc(-3.7));    // -3
 Fractional part: `Frac(R) = R - Trunc(R)`.
 
 ```pascal
-WriteLn(Frac(3.14))   // 0.14
+WriteLn(Frac(3.14));   // 0.14
 WriteLn(Frac(-3.14));  // -0.14
 ```
 

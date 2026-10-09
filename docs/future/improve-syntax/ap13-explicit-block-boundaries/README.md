@@ -169,6 +169,11 @@ AP21 and AP26.
 - Tests: positive parser and formatter cases for each implemented block-table
   row; negative cases for missing `;` and mismatched closers; parse, format,
   parse equality and identical second formatting; repository consumer checks.
+- [Handbook syntax tests](../../../../crates/fpas-parser/tests/documentation.rs)
+  parse the affected Markdown code fences in program, declaration, statement,
+  and case-arm contexts. They also check positive parser corrections and the
+  corresponding negative diagnostic examples from the catalog. Schematic API
+  signature lists are excluded from program parsing.
 - No legacy parser mode is shipped.
 
 ## Dependencies

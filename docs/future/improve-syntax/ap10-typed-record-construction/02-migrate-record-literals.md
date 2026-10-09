@@ -7,7 +7,9 @@ Status: Complete.
 ## Scope
 
 Positive record-construction consumers use `TypeName(Field := Value, ...)`.
-The parser and compiler still support the literal form until AP10.3.
+[AP10.3](03-remove-record-literals.md) removed the literal form after this
+migration. Current expression parsing rejects `record ... end` with FP2017;
+semantic analysis and lowering use typed construction.
 
 ## Prerequisites
 

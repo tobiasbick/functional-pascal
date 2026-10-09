@@ -21,6 +21,9 @@ mod format;
 mod substring;
 
 /// Runs a `Std.Str` intrinsic if `intrinsic` matches; leaves stack unchanged and returns `Ok(None)` otherwise.
+///
+/// **Documentation:** `docs/pascal/language/types/string/format-chars.md`,
+/// `docs/pascal/language/types/string/edit.md`.
 pub(crate) fn run(
     intrinsic: Intrinsic,
     call: &mut IntrinsicCall<'_>,
@@ -192,7 +195,7 @@ pub(crate) fn run(
                 return Err(std_runtime_error(
                     RUNTIME_STRING_INDEX_OUT_OF_BOUNDS,
                     format!("CharAt index {idx} out of range (length {length})"),
-                    "Ensure the index is within 0..Length(S)-1.",
+                    character_index_hint(length),
                     location,
                 ));
             };
@@ -210,7 +213,7 @@ pub(crate) fn run(
                         "SetCharAt index {idx} out of range (length {})",
                         chars.len()
                     ),
-                    "Ensure the index is within 0..Length(S)-1.",
+                    character_index_hint(chars.len()),
                     location,
                 ));
             }
@@ -245,7 +248,7 @@ pub(crate) fn run(
                 return Err(std_runtime_error(
                     RUNTIME_STRING_INDEX_OUT_OF_BOUNDS,
                     format!("Insert index {idx} out of range (length {})", chars.len()),
-                    "Ensure the index is within 0..Length(S).",
+                    "Ensure the index is within 0..S.Length().",
                     location,
                 ));
             }
@@ -324,6 +327,14 @@ pub(crate) fn run(
         _ => return Ok(None),
     }
     Ok(Some(()))
+}
+
+fn character_index_hint(length: usize) -> &'static str {
+    if length == 0 {
+        "An empty string has no valid character index. Check S.IsEmpty() before calling this operation."
+    } else {
+        "Ensure the index is within 0..S.Length()-1."
+    }
 }
 
 fn checked_pad_width(

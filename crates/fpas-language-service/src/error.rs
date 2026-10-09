@@ -5,7 +5,9 @@
 use std::fmt;
 use std::path::{Path, PathBuf};
 
-use fpas_diagnostics::codes::{INTERNAL_PROJECT_INVARIANT_FAILURE, PROJECT_SOURCE_READ_FAILED};
+use fpas_diagnostics::codes::{
+    INTERNAL_PROJECT_INVARIANT_FAILURE, PROJECT_SOURCE_INVALID_UTF8, PROJECT_SOURCE_READ_FAILED,
+};
 use fpas_diagnostics::{Diagnostic, FileDiagnostic};
 use fpas_project::ProjectError;
 
@@ -20,8 +22,8 @@ pub enum LanguageServiceError {
     SourceRead {
         /// Source path that could not be read.
         path: PathBuf,
-        /// Underlying filesystem error text.
-        message: String,
+        /// Coded read failure with its original message and correction hint.
+        diagnostic: Box<Diagnostic>,
     },
     /// An editor update did not advance the open document version.
     StaleDocumentVersion {
@@ -64,11 +66,12 @@ impl LanguageServiceError {
                     .collect();
             }
             Self::Cancelled => return Vec::new(),
-            Self::SourceRead { path, message } => (
-                PROJECT_SOURCE_READ_FAILED,
-                format!("Cannot read source: {message}"),
-                Some(path.clone()),
-            ),
+            Self::SourceRead { path, diagnostic } => {
+                return vec![FileDiagnostic::new(
+                    diagnostic.as_ref().clone(),
+                    Some(path.clone()),
+                )];
+            }
             Self::Analysis { path, message } => (
                 INTERNAL_PROJECT_INVARIANT_FAILURE,
                 message.clone(),
@@ -86,10 +89,26 @@ impl LanguageServiceError {
         )]
     }
 
-    pub(crate) fn source_read(path: &Path, error: impl fmt::Display) -> Self {
+    /// Classifies filesystem and encoding failures without discarding their hints.
+    pub(crate) fn source_read(path: &Path, error: std::io::Error) -> Self {
+        let (code, hint) = if error.kind() == std::io::ErrorKind::InvalidData {
+            (
+                PROJECT_SOURCE_INVALID_UTF8,
+                "Save the source file as UTF-8.",
+            )
+        } else {
+            (
+                PROJECT_SOURCE_READ_FAILED,
+                "Check that the source file exists and is readable.",
+            )
+        };
         Self::SourceRead {
             path: path.to_path_buf(),
-            message: error.to_string(),
+            diagnostic: Box::new(Diagnostic::error_without_source(
+                code,
+                format!("Cannot read source: {error}"),
+                Some(hint.to_string()),
+            )),
         }
     }
 
@@ -112,12 +131,8 @@ impl fmt::Display for LanguageServiceError {
         match self {
             Self::Project(error) => error.fmt(formatter),
             Self::Cancelled => formatter.write_str("Language-service operation was cancelled."),
-            Self::SourceRead { path, message } => {
-                write!(
-                    formatter,
-                    "Cannot read source `{}`: {message}",
-                    path.display()
-                )
+            Self::SourceRead { path, diagnostic } => {
+                write!(formatter, "{}: {}", path.display(), diagnostic.message)
             }
             Self::StaleDocumentVersion {
                 path,

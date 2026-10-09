@@ -155,7 +155,8 @@ records as JSON with `--diagnostics json`.
 in producer order, including source attribution, spans, hints and expected/found
 details. Project discovery, dependency manifests, graph analysis and source
 standard-library loading use this transport. Editor source-read failures carry
-FP4101 and their file path without an invented position.
+FP4101, while invalid source UTF-8 carries FP4102 with a UTF-8 correction hint.
+Both retain their file path without an invented position.
 
 The LSP publishes a located project record at its authoritative source URI,
 using that source's snapshot to convert the range to UTF-16. Project graph IDs
@@ -259,17 +260,17 @@ bugs rather than adding a workaround to the program.
 |---|---|---|---|
 | FP2001 | Expected token | `program Demo begin end.` | `program Demo; begin end.` |
 | FP2002 | Expected identifier | `program ; begin end.` | `program Demo; begin end.` |
-| FP2003 | Invalid statement start | `begin 42 end.` | `begin const N: integer := 42 end.` |
-| FP2004 | Missing loop direction | `for I := 1 10 do WriteLn(I)` | `for I := 1 to 10 do WriteLn(I)` |
+| FP2003 | Invalid statement start | `begin := 42; end.` | `begin const N: integer := 42; end.` |
+| FP2004 | Missing loop direction | `for I: integer := 1 10 do WriteLn(I); end for;` | `for I: integer := 1 to 10 do WriteLn(I); end for;` |
 | FP2005 | Expected expression | `const N: integer := ;` | `const N: integer := 1;` |
-| FP2006 | Invalid call/assignment | `begin Name end.` | `begin Name() end.` when Name is a procedure. |
+| FP2006 | Invalid call/assignment | `begin Name; end.` | `begin Name(); end.` when Name is a procedure. |
 | FP2007 | Invalid visibility | `program P; public const N: integer := 1; begin end.` | Remove `public` in a program. |
 | FP2008 | Invalid static placement | Top-level `static function F(): integer;` | Top-level `function F(): integer;` |
 | FP2009 | Nesting limit | Thousands of nested parentheses around `1` | Split the expression into shallow local bindings. |
 | FP2010 | Empty record update | `P with end with` | `P with X := 1; end with` |
 | FP2011 | Event accessor order | `event E: procedure() write Add read Get;` | `event E: procedure() read Get write Add;` |
-| FP2012 | Empty enum data list | `type E = enum A(); end;` | `type E = enum A; end;` |
-| FP2013 | Trailing enum field separator | `type E = enum A(X: integer;); end;` | `type E = enum A(X: integer); end;` |
+| FP2012 | Empty enum data list | `type E = enum A(); end enum;` | `type E = enum A; end enum;` |
+| FP2013 | Trailing enum field separator | `type E = enum A(X: integer;); end enum;` | `type E = enum A(X: integer); end enum;` |
 | FP2014 | Comma/grouped parameters | `function Add(A: integer, B: integer): integer;` or `function Add(A, B: integer): integer;` | `function Add(A: integer; B: integer): integer;` |
 | FP2015 | Missing declaration keyword | `const A: integer := 1; B: integer := 2;` | `const A: integer := 1; const B: integer := 2;` |
 | FP2016 | Mixed positional and named arguments | `Move(1, Dy := 2)` | `Move(Dx := 1, Dy := 2)` or `Move(1, 2)` |
@@ -440,7 +441,7 @@ can describe a structural restriction and leave those fields null.
 | FP5018 | Invalid task | Wait on an absent/invalid task handle | Retain and use a valid handle from the spawned task. |
 | FP5019 | Missing dictionary key | Index an absent key | Check membership or insert the key first. |
 | FP5020 | VM shutdown | Execute a task after VM shutdown | Keep execution within the live VM lifecycle. |
-| FP5021 | String index | Index beyond the string's scalar length | Check the scalar length before indexing. |
+| FP5021 | String index | Index beyond the string's scalar length | Check `S.Length()`; empty strings have no character index. `Insert` accepts index `S.Length()`. |
 | FP5022 | Format mismatch | Format specifiers and arguments have different counts/types | Match each specifier with an argument of its required type. |
 | FP5023 | Test assertion | `AssertTrue(false)` | `AssertTrue(true)` after fixing the behavior under test. |
 | FP5024 | Unsupported recording effect | Record a host effect that cannot be replayed | Perform the effect outside the recording session. |

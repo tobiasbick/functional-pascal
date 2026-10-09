@@ -1,3 +1,4 @@
+mod index_diagnostics;
 mod search;
 mod substring;
 

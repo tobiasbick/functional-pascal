@@ -19,6 +19,11 @@ declarations while preserving names, scope, exports and initialization order.
 
 Parser, formatter, compiler, CLI and editor tests cover each keyword, recovery,
 visibility, local scope, imports, initialization effects and round trips.
+The [handbook declaration tests](../../../../crates/fpas-parser/tests/documentation/declarations.rs)
+extract the formatter's complete type snippet and the record-event type declarations
+directly from Markdown. Both examples parse with individual keywords; removing
+the second keyword reproduces FP2015. Schematic accessor bodies are supplied by
+the test context. The formatter snippet includes its built-in option alias.
 See [constants](../../../pascal/language/basics/constants.md),
 [variables](../../../pascal/language/basics/variables.md) and
 [formatter style](../../../pascal/tools/fmt-style.md).

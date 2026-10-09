@@ -9,6 +9,9 @@ use super::support;
 use std::path::{Path, PathBuf};
 
 mod concurrency;
+mod formatter_generics;
+mod formatter_handbook;
+mod introductory_handbook;
 
 fn repo_root() -> PathBuf {
     Path::new(env!("CARGO_MANIFEST_DIR"))

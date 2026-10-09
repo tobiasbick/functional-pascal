@@ -9,4 +9,4 @@ Security-oriented standard-library operations.
 ## See also
 
 - [Standard library index](../README.md)
-- [Future cryptography work](../../../../future/networked-applications/cryptography.md)
+- [Future cryptography work](../../../future/networked-applications/cryptography.md)

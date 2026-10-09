@@ -144,7 +144,13 @@ complete: missing and nonexported root imports retain the actual main or test-en
 path and the original unit-name span in CLI, build and editor diagnostics.
 T03 is complete: incomplete native chains preserve recursive receiver types,
 declaration-local aliases and callback results using the shared parser grammar.
-Continue with D01, the next open review finding.
+D01-D06, G01/G02, P01, T04 and L01 are complete: the missing local documentation,
+grammar and string-diagnostic repairs are reconciled with the cloud implementation.
+All 22 review findings are resolved. Continue with
+[AP03.1: Migrate closed-enum catch-alls](ap03-explicit-closed-enum-cases/01-migrate-closed-enum-catch-alls.md),
+the next open work package. See the
+[reconciliation verification](review/README.md#localcloud-reconciliation) for the
+combined checkout's checks and independent Clippy blocker.
 Completed package checkboxes remain the implementation status; these
 repairs are tracked by their review findings and follow-up entries.
 Use the review's Done column to skip completed repairs.

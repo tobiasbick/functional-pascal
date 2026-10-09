@@ -43,6 +43,8 @@ Visual checklist:
 ```pascal
 program Hello;
 
+uses Std.Console;
+
 begin
   WriteLn('Hello, World!');
 end.
@@ -70,7 +72,7 @@ program ControlFlowDemo;
 uses Std.Console, Std.Conv;
 
 begin
-  const X: integer := 5;
+  var X: integer := 5;
   if X > 0 then
     begin
       WriteLn('positive');
@@ -237,7 +239,7 @@ end unit;
 
 | Construct | Break rule |
 |-----------|------------|
-| `uses` clause | After commas; continuation lines indented **2 spaces** from column 0 |
+| `uses` clause | After `uses`, then after commas as needed; import lines indented **2 spaces** from column 0 |
 | `function` / `procedure` formal lists | After `;` between parameters |
 | Record construction | Named call arguments; wrap after commas when over width |
 | Array literals | Multi-line when over width |
@@ -431,12 +433,14 @@ Config(Host := 'api', Port := 443, Retries := 5)
 
 ### Long `uses` (wrapped, v2 golden)
 
-When the `uses` line exceeds 100 columns, break after commas:
+When the complete `uses ...;` line exceeds 100 columns, put `uses` on its own
+line. Indent the import list by two spaces and wrap after commas when needed:
 
 ```pascal
 program LongUses;
 
-uses Std.Console, Std.Conv, Std.Crypto, MyApp.Very.Long.Namespace.One, MyApp.Very.Long.Namespace.Two;
+uses
+  Std.Console, Std.Conv, Std.Crypto, MyApp.Very.Long.Namespace.One, MyApp.Very.Long.Namespace.Two;
 
 begin
   WriteLn('ok');
@@ -461,28 +465,27 @@ const Remote: NetworkConfig := NetworkConfig(Host := 'api.example.com', Port := 
 ## More examples — other types (snippet)
 
 ```pascal
-type
-  Color = enum
-    Red;
-    Green;
-    Blue;
-  end enum;
+type Color = enum
+  Red;
+  Green;
+  Blue;
+end enum;
 
-  Shape = enum
-    Circle(Radius: real);
-    Rectangle(Width: real; Height: real);
-    Point;
-  end enum;
+type Shape = enum
+  Circle(Radius: real);
+  Rectangle(Width: real; Height: real);
+  Point;
+end enum;
 
-  type IntBox = Box of integer;
+type IntOption = option of integer;
 ```
 
 ---
 
 ## Types (summary)
 
-- `array of T`, `channel of T`, `task of T`, `dict of K to V`, `Result of T, E`, `Option of T`.
-- Generics: `Box<T>`, usage `Box of string`, multiple params `Pair of integer, string`.
+- Built-in generic types: `array of T`, `channel of T`, `task of T`, `dict of K to V`, `result of T, E`, `option of T`.
+- Generic routines: `function Identity<T>(Value: T): T;` declares a type parameter; calls such as `Identity(42)` infer its type from the arguments. See [Generics](../language/types/generics.md).
 - Enum variants with data: `Circle(Radius: real);`
 
 ## Expressions (summary)

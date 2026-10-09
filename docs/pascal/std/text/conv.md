@@ -91,7 +91,7 @@ WriteLn(StrToReal('2.25'));
 Returns `'true'` or `'false'`.
 
 ```pascal
-WriteLn(BoolToStr(true))   // true
+WriteLn(BoolToStr(true));   // true
 WriteLn(BoolToStr(false));  // false
 ```
 

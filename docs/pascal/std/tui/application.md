@@ -17,7 +17,7 @@ function View(State: AppModel): TuiElement;
 Set a command explicitly when needed:
 
 ```pascal
-TuiMsg.QuitRequested:
+when TuiMsg.QuitRequested:
 begin
   Cmd.Set(TuiCmd.Quit);
   return State;
@@ -60,7 +60,7 @@ The initial frame is rendered before the background-enabled host delivers `TuiMs
 `Update` can use that message to queue initial work:
 
 ```pascal
-TuiMsg.Started:
+when TuiMsg.Started:
 begin
   Cmd.StartBackground(1, LoadData);
 end;

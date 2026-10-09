@@ -86,10 +86,7 @@ fn context_owning_source(
     }
     let manifests = direct_project_manifests(directory)?;
     if let Some(workspace_path) = discover_workspace_file(directory)
-        .map_err(|error| WorkspaceIssue {
-            path: directory.to_path_buf(),
-            message: error.to_string(),
-        })
+        .map_err(|error| WorkspaceIssue::from_project(directory, error))
         .map_err(DiscoveryError::Metadata)?
     {
         let context = WorkspaceContext::load_workspace_manifest(&normalized_path(&workspace_path));
@@ -168,21 +165,21 @@ fn ambiguous_source_issue(source: &Path, manifests: &[&PathBuf]) -> WorkspaceIss
         .collect::<Vec<_>>();
     names.sort();
     names.dedup();
-    WorkspaceIssue {
-        path: source.to_path_buf(),
-        message: format!(
+    WorkspaceIssue::new(
+        source,
+        format!(
             "Source belongs directly to multiple FPAS projects: {}.\n  help: Adjust `[sources]` so exactly one nearest project owns this file.",
             names.join(", ")
         ),
-    }
+    )
 }
 
 fn direct_project_manifests(directory: &Path) -> Result<Vec<PathBuf>, DiscoveryError> {
     let directory_error = |error| {
-        DiscoveryError::Directory(WorkspaceIssue {
-            path: directory.to_path_buf(),
-            message: format!("Cannot inspect editor workspace directory: {error}"),
-        })
+        DiscoveryError::Directory(WorkspaceIssue::new(
+            directory,
+            format!("Cannot inspect editor workspace directory: {error}"),
+        ))
     };
     let mut projects = Vec::new();
     for entry in std::fs::read_dir(directory).map_err(directory_error)? {
@@ -272,10 +269,10 @@ mod tests {
             if directory == child {
                 Ok(None)
             } else {
-                Err(DiscoveryError::Directory(WorkspaceIssue {
-                    path: directory.to_path_buf(),
-                    message: "injected access denied".to_string(),
-                }))
+                Err(DiscoveryError::Directory(WorkspaceIssue::new(
+                    directory,
+                    "injected access denied",
+                )))
             }
         });
         assert_eq!(context.kind(), WorkspaceKind::Loose);
@@ -297,10 +294,10 @@ mod tests {
             if directory == child {
                 context_owning_source(directory, &source)
             } else {
-                Err(DiscoveryError::Directory(WorkspaceIssue {
-                    path: directory.to_path_buf(),
-                    message: "injected access denied".to_string(),
-                }))
+                Err(DiscoveryError::Directory(WorkspaceIssue::new(
+                    directory,
+                    "injected access denied",
+                )))
             }
         });
         assert_eq!(context.kind(), WorkspaceKind::Project);

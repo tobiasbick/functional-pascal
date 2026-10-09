@@ -139,6 +139,19 @@ pub fn parse_expression(source: &str) -> (Expr, Vec<ParseDiagnostic>) {
     (expression, append_parser_errors(errors, parse_errors))
 }
 
+/// Parses exactly one type expression using the compilation-unit type grammar.
+///
+/// Lexer diagnostics precede parser diagnostics, including errors for trailing tokens. Editor
+/// callers must reject non-empty diagnostics before interpreting the recovered type tree.
+///
+/// **Documentation:** `docs/pascal/tools/editor-integration.md`.
+#[must_use]
+pub fn parse_type_expression(source: &str) -> (TypeExpr, Vec<ParseDiagnostic>) {
+    let (tokens, errors) = tokenize(source);
+    let (type_expr, parse_errors) = parser::Parser::new(tokens).parse_standalone_type();
+    (type_expr, append_parser_errors(errors, parse_errors))
+}
+
 /// Parses exactly one Functional Pascal expression from a pre-lexed token stream.
 ///
 /// Prefer a stream ending in [`fpas_lexer::Token::Eof`]. If `Eof` is missing, the parser appends

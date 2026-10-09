@@ -23,6 +23,9 @@ end.
 
 Every Functional Pascal program starts with a `program` declaration, optional `uses` clauses, then declarations and the main block:
 
+The program heading names the program. Declarations inside it can share that name,
+as `program Greet` and `function Greet` do in the first example.
+
 ```pascal
 program MyApp;
 

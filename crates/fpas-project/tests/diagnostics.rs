@@ -10,6 +10,9 @@
 use std::path::{Path, PathBuf};
 use std::sync::atomic::{AtomicU64, Ordering};
 
+#[path = "diagnostics/root_imports.rs"]
+mod root_imports;
+
 use fpas_diagnostics::{
     DiagnosticCode, DiagnosticStage,
     codes::{

@@ -254,6 +254,20 @@ diagnostics. Diagnostic delivery uses one ordered publication lane, so a slow
 editor connection does not block document changes or shutdown while an older
 diagnostic message is waiting to be sent.
 
+Project and dependency failures retain the producer's code and file attribution.
+Located records appear on the actual failing source, including a closed dependency
+file. Diagnostic `data` carries the original source path and ID, primary message,
+hint and expected/found details. Failures without a usable range appear in the
+language-server output through `window/logMessage`, with their original code and
+available source path. Correcting or closing an origin clears its related markers
+while retaining records from other active origins. Snapshot revisions distinguish
+reopened buffers that reuse an editor version. See
+[editor project diagnostics](diagnostics.md#editor-project-diagnostics).
+
+Missing and nonexported imports in a main program carry FP4115 and FP4116 at
+the imported unit name, excluding an optional alias suffix. These markers use
+the current editor text and clear after the import is corrected.
+
 The opened editor folder does not have to be an FPAS project. At startup, the
 server recursively builds a deterministic catalog of `.fpasprj` and `.fpasworkspace`
 manifests inside that folder. It asks the normal project loader for the authoritative
@@ -409,6 +423,20 @@ declarations. After a value receiver and `.`, completion lists public record
 members and the fixed native operations of its built-in type. Chains continue
 on each result's type. Definition, hover, and signature help follow the resolved
 record method or native operation; explicit parameters exclude the implicit receiver.
+
+Incomplete native chains retain recursive receiver types. For example,
+`Value.Unwrap().Unwrap().` offers string operations when `Value` has type
+`Result of Result of string, integer, boolean`. Nested success and error types,
+mixed containers, and named or anonymous callback results remain distinct.
+Type aliases are resolved in their declaring unit's import environment,
+including aliases inside container and callable types. Native suggestions
+include catalog documentation and do not require an import edit.
+
+Recovered type fragments use the parser's `parse_type_expression` entry point
+and the same recursive grammar as compilation units. The entry point returns
+a type tree and ordered diagnostics, with lexer errors before parser errors,
+and rejects trailing tokens. The language service rejects malformed fragments;
+recursive alias resolution shares the receiver lookup's bounded depth.
 
 When one unresolved identifier maps to exactly one public declaration in one
 accessible unit, completion can add that unit to the compilation unit's `uses`

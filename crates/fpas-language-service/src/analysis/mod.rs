@@ -12,3 +12,5 @@ pub use service::LanguageService;
 mod collection_diagnostics;
 #[cfg(test)]
 mod disk_reads;
+#[cfg(test)]
+mod project_diagnostics;

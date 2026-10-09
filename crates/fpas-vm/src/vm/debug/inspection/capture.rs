@@ -11,6 +11,7 @@ use super::snapshot::{FrameSnapshot, InspectionSnapshot, item_id};
 use super::targets::{MutationAccess, MutationRoot, MutationTarget};
 use crate::vm::debug::breakpoints;
 use crate::vm::debug::initializer_suppression::SourceInitializerTarget;
+use crate::vm::debug::routines::display_name;
 use crate::vm::debug::types::SourceLocation;
 use crate::vm::worker::Worker;
 
@@ -212,7 +213,7 @@ impl InspectionSnapshot {
         self.frames.push(FrameSnapshot {
             frame: DebugFrame {
                 id: frame_id,
-                name: name.to_string(),
+                name: display_name(name).to_string(),
                 location,
                 depth,
             },

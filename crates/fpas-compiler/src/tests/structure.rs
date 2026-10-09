@@ -1,5 +1,7 @@
 use super::*;
 
+mod program_names;
+
 #[test]
 fn identical_source_produces_deterministic_ir_and_bytecode() {
     let source = "\

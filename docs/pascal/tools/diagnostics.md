@@ -123,6 +123,14 @@ path and the span of the imported name. The workspace discovery functions
 `load_workspace`, `discover_workspace_file`, `discover_run_project_in_workspace`
 and `discover_test_projects_in_workspace` return the same `ProjectError`.
 
+`resolve_program_units(graph, root_uses, root_path)` retains the original
+unit-name span for missing (FP4115) and nonexported (FP4116) root imports. The
+range ends before an optional `as Alias` suffix. CLI commands and editor
+analysis supply the main program's authoritative path; test entries supply
+their own path even when they share a prepared unit graph. With `root_path = None`,
+the original span and source ID remain available without assigning a
+unit or manifest path to the program.
+
 A successfully loaded project reports non-fatal findings in
 `LoadedProject::warnings` as `fpas_diagnostics::FileDiagnostic` records: the
 shared `Diagnostic` with warning severity and the file it concerns. FP4135 marks a
@@ -140,6 +148,33 @@ src/util.fpas: warning[FP4135]: Duplicate source file was ignored; the first occ
 adapters explicitly convert to their text interfaces; the CLI writes the same
 records as JSON with `--diagnostics json`.
 
+## Editor project diagnostics
+
+`fpas_language_service::LanguageServiceError::Project` retains the original
+`ProjectError`. Its `diagnostics()` accessor returns `FileDiagnostic` records
+in producer order, including source attribution, spans, hints and expected/found
+details. Project discovery, dependency manifests, graph analysis and source
+standard-library loading use this transport. Editor source-read failures carry
+FP4101 and their file path without an invented position.
+
+The LSP publishes a located project record at its authoritative source URI,
+using that source's snapshot to convert the range to UTF-16. Project graph IDs
+remain producer-local; file attribution identifies the snapshot for conversion.
+The standard diagnostic fields preserve code, severity and the displayed message
+with help. `Diagnostic.data` retains the original `source`, `source_id`, primary
+`message`, `hint`, `expected` and `found` fields.
+
+LSP document diagnostics require a range. Records without a usable source range
+are rendered through `window/logMessage` with their original code, severity,
+available file path and help. They produce no document marker. Correcting or
+closing an analysis origin removes its related markers; records still supplied
+by another active origin are retained. Editor versions and snapshot revisions
+prevent stale records from being applied to a newer version or a reopened buffer.
+
+Root-import errors appear on the main program's imported unit name. Their
+positions follow the current editor buffer, and correcting the import clears
+the previous marker.
+
 ## Build error transport
 
 `fpas_build::BuildError::diagnostics()` exposes the original compiler or parser
@@ -150,7 +185,10 @@ source IDs are not assigned the current file.
 
 Program-artifact parsing retains all lexer/parser diagnostics when parsing fails,
 including expected/found details. Program-artifact compilation retains its
-supplied main-source path. The AST-based `build_program` and `check_program` APIs
+supplied main-source path. Root-import failures likewise retain the first
+source path supplied in `ProgramArtifactTarget` and the imported name's original
+span. Without a supplied path, the span remains available with no file attribution.
+The AST-based `build_program` and `check_program` APIs
 do not receive an authoritative path for the supplied AST; their root compiler
 errors retain their source IDs and positions with no path.
 

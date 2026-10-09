@@ -1,4 +1,6 @@
 //! AST and semantic-metadata lowering to typed IR.
+//!
+//! **Documentation:** `docs/pascal/getting-started/first-program.md`
 
 mod aggregates;
 mod builtin_constants;
@@ -257,7 +259,9 @@ fn lower_analyzed_root(
             .lower_statement(statement)
             .map_err(|error| vec![error])?;
     }
-    let (root, updated_types) = context.finish(span).map_err(|error| vec![error])?;
+    let (mut root, updated_types) = context.finish(span).map_err(|error| vec![error])?;
+    // Preserve the source scope during lowering, then isolate the generated root symbol.
+    root.name = format!("$entry_{}", name.to_ascii_lowercase());
     for (global, location) in global_initializers {
         let declaration = globals
             .get_mut(global.get() as usize)

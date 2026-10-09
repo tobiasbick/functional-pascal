@@ -434,31 +434,39 @@ Regression coverage:
 
 <a id="c06"></a>
 
-## C06 — P2 — A valid program sharing its name with a declaration fails object compilation
+## C06 — P2 — Program headings and declarations compile independently
 
-- Owner: [crates/fpas-compiler/src/lowering/context/mod.rs:217](../../../../crates/fpas-compiler/src/lowering/context/mod.rs), [crates/fpas-compiler/src/lowering/context/blocks.rs:129-132](../../../../crates/fpas-compiler/src/lowering/context/blocks.rs), [crates/fpas-unit/src/object/mod.rs:80-114,178](../../../../crates/fpas-unit/src/object/mod.rs), and [crates/fpas-compiler/src/object/mod.rs:105-106](../../../../crates/fpas-compiler/src/object/mod.rs).
-- The generated entry function is named using the source program name. `define_all_private` exports it into the same object-definition namespace as source functions, globals and record/enum layouts. Object validation then reports a duplicate, even though semantic analysis permits the program heading and a declaration to share a name.
-- User-visible current example: [docs/pascal/getting-started/first-program.md:6-18](../../../../docs/pascal/getting-started/first-program.md) declares both `program Greet;` and `function Greet(...)`. Its first tutorial cannot be checked through the object build path.
-- Minimal reproduction:
+**Status: resolved.**
 
-```pascal
-program Demo;
-procedure Demo();
-begin
-  null;
-end procedure;
-begin
-  Demo();
-end.
-```
+Owner: [root lowering](../../../../crates/fpas-compiler/src/lowering/mod.rs).
+Generated root functions use `$entry_<canonical heading>`, outside the source
+identifier namespace. The name is assigned after lowering the root body, so
+lexical lookup continues to use the source scope. The object owner retains the
+program heading; entry selection, global initializers and closure ownership use
+function IDs. Unit initialization retains its existing qualified object name.
+The [shared debugger display mapping](../../../../crates/fpas-vm/src/vm/debug/routines.rs)
+keeps the source program name in stackframes and recording identity while
+routine lookup uses the distinct executable symbols.
 
-- `fpas check --std-lib lib .temp-data/syntax-review-syntax/program-name-collision.fpas` fails with FP9001: `Register object construction failed: invalid register object: DuplicateName("demo").`
-- Also reproduced for `program Counter; var Counter: integer := 0; ...` and `program Point; type Point = record ... end record; ...`.
-- The copied CLI without source-stdlib discovery/`--std-lib` takes the direct path and accepts the same source. This difference explains why a direct compiler-only regression test would miss it. The normal repository CLI discovers the source standard library; explicitly passing `--std-lib lib` makes the reproduction independent of executable location.
-- Expected: generated entry symbols must not collide with legal source declaration names; this should not require a language-name restriction.
-- Needed coverage: real CLI/project object compilation for same-name program/function, program/global and program/type, including case variations. Include the first-program tutorial in executable documentation validation.
-- Evidence under `.temp-data/syntax-review-syntax/`: `program-name-collision.fpas`, `program-global-name.fpas`, `program-type-name.fpas`, and `docs/first-program-0.fpas`.
-- Attribution: discovered in the current snapshot through documentation verification; not proven to have been introduced by a syntax package.
+The [first-program tutorial](../../../../docs/pascal/getting-started/first-program.md)
+declares both `program Greet` and `function Greet`. It checks and runs through the
+object/linker path with source standard-library discovery explicitly selected by
+`--std-lib lib`, and prints `Hello, Pascal!`.
+
+Regression coverage:
+
+- [Compiler and linker tests](../../../../crates/fpas-compiler/src/tests/structure/program_names.rs):
+  same-name functions, procedures, initialized globals, records and enums;
+  case variations, recursive calls, object encode/decode and linked execution;
+  preserved source bindings and closure capture provenance; unambiguous routine
+  calls in the debugger, with preserved frame names and recording identity.
+- [CLI path tests](../../../../crates/fpas-cli/src/main_tests/projects/edge_cases/program_names.rs):
+  all five declaration categories with matching and differently cased headings,
+  standalone source and project `check`/`run`, project `build`, and execution of
+  the persisted compiled program.
+- [Executable documentation test](../../../../crates/fpas-cli/src/main_tests/projects/documented_examples.rs):
+  extracts the actual tutorial fence and verifies project checking and its exact
+  runtime output with the source standard library.
 
 ## Successful cross-package probes
 
@@ -500,4 +508,4 @@ Positive main was restored afterward. The probe sources were formatted successfu
 
 ## Scope limits
 
-The concrete failures above were reproduced, but arbitrary nesting, generic substitutions, concurrency schedules and corrupt persisted artifacts were not exhaustively enumerated. No fixes or permanent regression tests were added. Known debugger limitations are separate from these compiler findings.
+The audit reproduced concrete failures, but arbitrary nesting, generic substitutions, concurrency schedules and corrupt persisted artifacts were not exhaustively enumerated. The resolved entries record implemented repairs and their permanent regression tests. Known debugger limitations are separate from these compiler findings.

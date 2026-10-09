@@ -135,8 +135,16 @@ the agreed [review repair order](review/README.md#repair-order).
 C04 is complete: static record fields contribute evaluated pattern values,
 including across compiled units.
 C05 is complete: finite construction uses a shared graph and bounded worklist
-propagation. Continue with the remaining review findings; C06 is the next open
-compiler finding.
+propagation. C06 is complete: generated entry symbols are isolated from source
+declarations, with source program identity retained in debugger displays and
+recordings. All six compiler findings are resolved. T01 is complete: editor
+project failures retain original diagnostic records, publish located errors at
+their source URI, and log positionless errors without invented ranges. T02 is
+complete: missing and nonexported root imports retain the actual main or test-entry
+path and the original unit-name span in CLI, build and editor diagnostics.
+T03 is complete: incomplete native chains preserve recursive receiver types,
+declaration-local aliases and callback results using the shared parser grammar.
+Continue with D01, the next open review finding.
 Completed package checkboxes remain the implementation status; these
 repairs are tracked by their review findings and follow-up entries.
 Use the review's Done column to skip completed repairs.

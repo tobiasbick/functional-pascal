@@ -264,9 +264,13 @@ fn malformed_project_unit_returns_structured_analysis_error_for_valid_main() {
         .expect("invalid dependency source must prevent project analysis");
 
     assert!(matches!(
-        error,
-        fpas_language_service::LanguageServiceError::Analysis { .. }
+        &error,
+        fpas_language_service::LanguageServiceError::Project(_)
     ));
+    assert_eq!(
+        error.diagnostics()[0].diagnostic.code,
+        fpas_diagnostics::codes::PROJECT_UNKNOWN_UNIT
+    );
 }
 
 #[test]

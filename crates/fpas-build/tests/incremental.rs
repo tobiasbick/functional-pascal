@@ -96,10 +96,11 @@ include = ["src/**/*.fpas"]
         let graph =
             build_unit_graph(&project.source_files, &project.link_meta).expect("unit graph");
         let main = project.main.expect("program main");
-        let source = fs::read_to_string(main).expect("main source");
+        let source = fs::read_to_string(&main).expect("main source");
         let (program, diagnostics) = fpas_parser::parse(&source);
         assert!(diagnostics.is_empty(), "{diagnostics:#?}");
-        let selection = resolve_program_units(&graph, &program.uses).expect("reachable units");
+        let selection =
+            resolve_program_units(&graph, &program.uses, Some(&main)).expect("reachable units");
         build_program(&graph, &selection, &program, options)
     }
 
@@ -283,10 +284,11 @@ units = ["Demo.Base", "Demo.Consumer"]
     let graph =
         build_unit_graph(&project.source_files, &project.link_meta).expect("workspace graph");
     let main = project.main.expect("workspace program main");
-    let source = fs::read_to_string(main).expect("workspace program source");
+    let source = fs::read_to_string(&main).expect("workspace program source");
     let (program, diagnostics) = fpas_parser::parse(&source);
     assert!(diagnostics.is_empty(), "{diagnostics:#?}");
-    let selection = resolve_program_units(&graph, &program.uses).expect("workspace selection");
+    let selection =
+        resolve_program_units(&graph, &program.uses, Some(&main)).expect("workspace selection");
     let built = build_program(&graph, &selection, &program, &BuildOptions::default())
         .expect("workspace register build");
 
@@ -325,10 +327,11 @@ include = ["src/**/*.fpas"]
     let project = load_project(&manifest).expect("enum project loading");
     let graph = build_unit_graph(&project.source_files, &project.link_meta).expect("enum graph");
     let main = project.main.expect("enum program main");
-    let source = fs::read_to_string(main).expect("enum main source");
+    let source = fs::read_to_string(&main).expect("enum main source");
     let (program, diagnostics) = fpas_parser::parse(&source);
     assert!(diagnostics.is_empty(), "{diagnostics:#?}");
-    let selection = resolve_program_units(&graph, &program.uses).expect("enum selection");
+    let selection =
+        resolve_program_units(&graph, &program.uses, Some(&main)).expect("enum selection");
     let built = build_program(&graph, &selection, &program, &BuildOptions::default())
         .expect("enum register build");
 

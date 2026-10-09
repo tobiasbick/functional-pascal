@@ -4,6 +4,7 @@
 
 use fpas_bytecode::{BYTECODE_VERSION, VerifiedExecutable};
 
+use super::super::routines::display_name;
 use super::super::types::{DebugErrorKind, DebugSessionError};
 
 /// Envelope schema version for debugger recordings.
@@ -57,6 +58,7 @@ impl DebugRecordingEnvelope {
             .functions
             .get(usize::from(image.entry.get()))
             .and_then(|function| image.strings.get(function.name))
+            .map(display_name)
             .unwrap_or_default()
             .to_owned();
         Ok(Self {

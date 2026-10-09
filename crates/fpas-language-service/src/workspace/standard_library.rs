@@ -1,4 +1,6 @@
 //! Source-standard-library composition for editor analysis.
+//!
+//! **Documentation:** `docs/pascal/tools/diagnostics.md`
 
 use std::collections::HashSet;
 use std::path::{Path, PathBuf};
@@ -9,6 +11,7 @@ use fpas_project::{
 };
 
 use super::ProjectContext;
+use crate::LanguageServiceError;
 use crate::document::normalized_path;
 
 #[cfg(test)]
@@ -21,10 +24,12 @@ pub(crate) struct StandardLibraryContext {
 }
 
 impl StandardLibraryContext {
-    pub(crate) fn load(root: &Path) -> Result<Self, String> {
-        let project = load_standard_library_project(root).map_err(|error| error.to_string())?;
+    /// Loads the standard library while preserving project records on failure.
+    pub(crate) fn load(root: &Path) -> Result<Self, LanguageServiceError> {
+        let project = load_standard_library_project(root).map_err(LanguageServiceError::from)?;
         let mut editor_api_sources = Vec::new();
-        collect_editor_api_sources(&root.join("api/Std"), &mut editor_api_sources)?;
+        collect_editor_api_sources(&root.join("api/Std"), &mut editor_api_sources)
+            .map_err(|message| LanguageServiceError::analysis(root, message))?;
         editor_api_sources.sort();
         Ok(Self {
             project: ProjectContext::new_standard_library(&root.join("stdlib.fpasprj"), project),

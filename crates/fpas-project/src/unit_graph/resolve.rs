@@ -1,4 +1,6 @@
 //! Reachability and project export rules for source units.
+//!
+//! **Documentation:** `docs/pascal/tools/diagnostics.md`
 
 use std::collections::HashSet;
 use std::path::Path;
@@ -22,9 +24,11 @@ impl<'a> ImportPolicy<'a> {
         Self { graph }
     }
 
+    /// Checks root export rules while preserving the imported name and optional root path.
     pub(crate) fn validate_root_uses(
         &self,
         uses: &[fpas_parser::Import],
+        root_path: Option<&Path>,
     ) -> Result<(), ProjectError> {
         if !self.graph.link_meta().enforces_export_rules() {
             return Ok(());
@@ -32,7 +36,9 @@ impl<'a> ImportPolicy<'a> {
         for used in uses {
             let target_key = canonical_unit_key(&used.unit);
             if !self.can_import(&SourceOrigin::Own, &target_key) {
-                return Err(self.not_exported_error(&target_key));
+                return Err(self
+                    .not_exported_error(&target_key)
+                    .at_source(root_path, used.unit.span));
             }
         }
         Ok(())
@@ -138,27 +144,32 @@ impl<'a> ImportPolicy<'a> {
     }
 }
 
+/// Resolves program reachability without discarding root import provenance.
 pub(super) fn resolve_reachable(
     root_uses: &[fpas_parser::Import],
     graph: &UnitGraph,
     policy: &ImportPolicy<'_>,
+    root_path: Option<&Path>,
 ) -> Result<HashSet<String>, ProjectError> {
-    policy.validate_root_uses(root_uses)?;
-    let mut queue = Vec::<String>::new();
+    policy.validate_root_uses(root_uses, root_path)?;
+    let mut queue = Vec::<&fpas_parser::Import>::new();
     let mut reachable = HashSet::<String>::new();
 
     for used in root_uses {
         if !is_intrinsic_std_unit(used, graph) {
-            queue.push(canonical_unit_key(&used.unit));
+            queue.push(used);
         }
     }
 
-    while let Some(next) = queue.pop() {
+    while let Some(used) = queue.pop() {
+        let next = canonical_unit_key(&used.unit);
         if !reachable.insert(next.clone()) {
             continue;
         }
         let Some(node) = graph.get(&next) else {
-            return Err(unknown_unit_error(&next, graph, "program"));
+            return Err(
+                unknown_unit_error(&next, graph, "program").at_source(root_path, used.unit.span)
+            );
         };
         for used in node.direct_uses() {
             if is_intrinsic_std_unit(used, graph) {
@@ -171,14 +182,14 @@ pub(super) fn resolve_reachable(
                     graph,
                     &format!("unit `{}`", node.display_name()),
                 )
-                .at_source(node.path(), used.span));
+                .at_source(Some(node.path()), used.span));
             }
             if !policy.can_import_for_unit(&next, &dependency_key) {
                 return Err(policy
                     .not_exported_error(&dependency_key)
-                    .at_source(node.path(), used.span));
+                    .at_source(Some(node.path()), used.span));
             }
-            queue.push(dependency_key);
+            queue.push(used);
         }
     }
 
@@ -203,12 +214,12 @@ pub(super) fn all_library_units(graph: &UnitGraph) -> Result<HashSet<String>, Pr
                     graph,
                     &format!("unit `{}`", node.display_name()),
                 )
-                .at_source(node.path(), used.span));
+                .at_source(Some(node.path()), used.span));
             }
             if !policy.can_import_for_unit(key, &dependency_key) {
                 return Err(policy
                     .not_exported_error(&dependency_key)
-                    .at_source(node.path(), used.span));
+                    .at_source(Some(node.path()), used.span));
             }
         }
     }

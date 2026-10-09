@@ -74,6 +74,7 @@ pub(crate) fn build_program_artifact(
     })
 }
 
+/// Builds a test entry with its own authoritative import-diagnostic path.
 pub(crate) fn build_test_program(
     main: &Path,
     source_files: &[PathBuf],
@@ -82,23 +83,25 @@ pub(crate) fn build_test_program(
 ) -> Result<ProjectProgram, CliFailure> {
     let (_, program) = parse_program(main)?;
     let graph = test_program_graph(main, source_files, link_meta, standard_library)?;
-    build_graph_program(&graph, &program)
+    build_graph_program(main, &graph, &program)
 }
 
+/// Builds one entry against shared units while retaining the entry's source identity.
 pub(crate) fn build_test_program_with_graph(
     main: &Path,
     program_graph: &fpas_project::ProgramUnitGraph,
 ) -> Result<ProjectProgram, CliFailure> {
     let (_, program) = parse_program(main)?;
     let graph = program_graph.instantiate(main);
-    build_graph_program(&graph, &program)
+    build_graph_program(main, &graph, &program)
 }
 
 fn build_graph_program(
+    main: &Path,
     graph: &UnitGraph,
     program: &fpas_parser::Program,
 ) -> Result<ProjectProgram, CliFailure> {
-    let selection = fpas_project::resolve_program_units(graph, &program.uses)?;
+    let selection = fpas_project::resolve_program_units(graph, &program.uses, Some(main))?;
     let built = fpas_build::build_program(
         graph,
         &selection,
@@ -121,7 +124,7 @@ pub(crate) fn check_source_program(
 ) -> Result<(), CliFailure> {
     let (_, program) = parse_program(main)?;
     let graph = test_program_graph(main, source_files, link_meta, standard_library)?;
-    let selection = fpas_project::resolve_program_units(&graph, &program.uses)?;
+    let selection = fpas_project::resolve_program_units(&graph, &program.uses, Some(main))?;
     fpas_build::check_program(
         &graph,
         &selection,
@@ -251,7 +254,7 @@ fn prepare_program<'a>(
     let main = loaded.main.as_deref().ok_or_else(missing_main)?;
     let (source, program) = parse_program(main)?;
     let graph = program_graph(main, loaded, standard_library)?;
-    let selection = fpas_project::resolve_program_units(&graph, &program.uses)?;
+    let selection = fpas_project::resolve_program_units(&graph, &program.uses, Some(main))?;
     Ok(PreparedProgram {
         main,
         source,

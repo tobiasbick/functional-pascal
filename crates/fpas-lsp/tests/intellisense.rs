@@ -6,6 +6,8 @@
     reason = "protocol fixtures use explicit source offsets and JSON assertions"
 )]
 
+#[path = "intellisense/native_chains.rs"]
+mod native_chains;
 mod support;
 
 use serde_json::{Value, json};

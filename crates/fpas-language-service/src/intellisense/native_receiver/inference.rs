@@ -1,48 +1,9 @@
 //! Catalog result inference for syntactically recovered receiver chains.
 
-use super::receiver_type;
+use super::{receiver_type, types};
 use crate::navigation::NavigationDocument;
 use fpas_parser::Expr;
 use fpas_sema::Ty;
-
-pub(super) fn shape(text: &str) -> Option<Ty> {
-    let text = text.trim();
-    let lower = text.to_ascii_lowercase();
-    if lower == "string" {
-        return Some(Ty::String);
-    }
-    for (prefix, constructor) in [
-        ("array of ", Ty::Array as fn(Box<Ty>) -> Ty),
-        ("option of ", Ty::Option),
-    ] {
-        if lower.starts_with(prefix) {
-            return Some(constructor(Box::new(
-                shape(&text[prefix.len()..])
-                    .unwrap_or_else(|| Ty::Named(text[prefix.len()..].into())),
-            )));
-        }
-    }
-    if lower.starts_with("dict of ") {
-        let split = lower.find(" to ")?;
-        return Some(Ty::Dict(
-            Box::new(shape(&text[8..split]).unwrap_or(Ty::Error)),
-            Box::new(shape(&text[split + 4..]).unwrap_or(Ty::Error)),
-        ));
-    }
-    if lower.starts_with("result of ") {
-        let (ok, error) = text[10..].split_once(',')?;
-        return Some(Ty::Result(
-            Box::new(shape(ok).unwrap_or(Ty::Error)),
-            Box::new(shape(error).unwrap_or(Ty::Error)),
-        ));
-    }
-    match lower.as_str() {
-        "integer" => Some(Ty::Integer),
-        "boolean" => Some(Ty::Boolean),
-        "real" => Some(Ty::Real),
-        _ => None,
-    }
-}
 
 /// Document context for nested receiver-type lookups.
 pub(super) struct ReceiverLookup<'a> {
@@ -52,6 +13,8 @@ pub(super) struct ReceiverLookup<'a> {
     pub(super) depth: usize,
 }
 
+/// Infers catalog result types, including callback return types in recovered chains.
+/// See `docs/pascal/tools/editor-integration.md`.
 pub(super) fn operation_result(
     lookup: &ReceiverLookup<'_>,
     receiver_ty: &Ty,
@@ -94,7 +57,9 @@ pub(super) fn operation_result(
         )
     } else if let Some(callback) = argument("F") {
         let result = match callback {
-            Expr::Closure(closure) => shape(type_span(closure.return_type.as_ref()?).text(source)?),
+            Expr::Closure(closure) => {
+                types::from_syntax(documents, target, closure.return_type.as_ref()?, depth + 1)
+            }
             _ => receiver_type(
                 documents,
                 target,
@@ -103,6 +68,10 @@ pub(super) fn operation_result(
                 depth + 1,
             ),
         };
+        let result = result.map(|ty| match ty {
+            Ty::Function(function) => *function.return_type,
+            ty => ty,
+        });
         match (name.to_ascii_lowercase().as_str(), result) {
             ("flatmap", Some(Ty::Array(inner))) | ("andthen", Some(Ty::Option(inner))) => {
                 Some(*inner)
@@ -134,20 +103,5 @@ fn substitute_result(ty: &Ty, inferred: Option<&Ty>) -> Ty {
         ),
         Ty::Dict(key, value) => Ty::Dict(key.clone(), Box::new(substitute_result(value, inferred))),
         _ => ty.clone(),
-    }
-}
-
-fn type_span(ty: &fpas_parser::TypeExpr) -> fpas_lexer::Span {
-    use fpas_parser::TypeExpr;
-    match ty {
-        TypeExpr::Named { span, .. }
-        | TypeExpr::FunctionType { span, .. }
-        | TypeExpr::ProcedureType { span, .. }
-        | TypeExpr::Result { span, .. }
-        | TypeExpr::Option { span, .. }
-        | TypeExpr::Dict { span, .. }
-        | TypeExpr::Array(_, span)
-        | TypeExpr::Channel(_, span)
-        | TypeExpr::Task(_, span) => *span,
     }
 }

@@ -8,6 +8,7 @@ mod individual;
 mod program;
 mod routines;
 mod type_expr;
+mod type_fragments;
 mod types;
 mod unit;
 mod visibility;

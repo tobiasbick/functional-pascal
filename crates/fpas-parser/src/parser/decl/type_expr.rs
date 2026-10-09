@@ -1,9 +1,27 @@
 use super::super::Parser;
 use crate::ast::*;
+use crate::error::ParseError;
 use fpas_diagnostics::codes::PARSE_EXPECTED_TOKEN;
 use fpas_lexer::Token;
 
 impl Parser {
+    /// Parses one editor type fragment with the grammar in `docs/specs/grammar.ebnf`.
+    pub(crate) fn parse_standalone_type(mut self) -> (TypeExpr, Vec<ParseError>) {
+        let type_expr = self.parse_type_expr();
+        if !self.at_end() {
+            self.error_with_code(
+                PARSE_EXPECTED_TOKEN,
+                &format!(
+                    "Expected end of type expression, found `{}`",
+                    super::super::token_display(self.current_token())
+                ),
+                "Remove trailing tokens so the fragment contains exactly one type expression.",
+                self.current_span(),
+            );
+        }
+        (type_expr, self.errors)
+    }
+
     pub(crate) fn parse_type_expr(&mut self) -> TypeExpr {
         self.with_nesting(Self::parse_type_expr_inner)
     }

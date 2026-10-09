@@ -65,8 +65,8 @@ priorities; this sequence does not close or reclassify them.
 
 ## Finding index
 
-**Repair status: C01-C05 and H01/H02 are resolved; 15 findings remain open.
-The debugger follow-ups are complete. The next open compiler finding is C06.** The Done column
+**Repair status: C01-C06, T01-T03 and H01/H02 are resolved; 11 findings remain open.
+The debugger follow-ups are complete. The next open finding is D01.** The Done column
 tracks repairs, independently of package-completion checkboxes and the audit's
 original severity counts.
 
@@ -77,10 +77,10 @@ original severity counts.
 | [x] | [C03](compiler-and-semantics.md#c03) | P2 | resolved: pattern bindings preserve callable task restrictions and discard proofs |
 | [x] | [C04](compiler-and-semantics.md#c04) | P2 | resolved: static record fields and derived constants contribute evaluated pattern values across units |
 | [x] | [C05](compiler-and-semantics.md#c05) | P2 | resolved: shared finite type graphs use one worklist solution with bounded dependency work |
-| [ ] | [C06](compiler-and-semantics.md#c06) | P2 | A valid program sharing its name with a declaration fails object compilation |
-| [ ] | [T01](tooling-and-tests.md#t01) | P2 | LSP project failures discard the stable diagnostic record |
-| [ ] | [T02](tooling-and-tests.md#t02) | P2 | Root-program import failures lose an available path and source span |
-| [ ] | [T03](tooling-and-tests.md#t03) | P3 | Native completion fails for an incomplete chain over nested Result success types |
+| [x] | [C06](compiler-and-semantics.md#c06) | P2 | resolved: generated entry symbols are isolated from source declarations while debugger names retain program identity |
+| [x] | [T01](tooling-and-tests.md#t01) | P2 | resolved: LSP project failures retain original records, source attribution and absent positions |
+| [x] | [T02](tooling-and-tests.md#t02) | P2 | resolved: root-program import failures retain the authoritative path and unit-name span |
+| [x] | [T03](tooling-and-tests.md#t03) | P3 | resolved: incomplete native chains preserve recursive types, declaration-local aliases and callback results |
 | [x] | [H01](tooling-and-tests.md#h01) | P2 | resolved: workflow fixtures verify the exact diagnostic token range |
 | [x] | [H02](tooling-and-tests.md#h02) | P2 | resolved: debugger-host fixtures use current syntax and pass the full host suite |
 | [ ] | [D01](documentation-and-specs.md#d01) | P2 | The AP13 documentation migration leaves invalid positive examples and corrections |
@@ -320,6 +320,141 @@ under [C02](#c02) fail with the same observations: the cancelled backpressure
 write completes with 65,536 bytes, and the socket timeout is 32 ms instead of
 the expected 30 ms. The LSP watcher test remains excluded after its previously
 confirmed timeouts. The complete Rust workspace is not green.
+
+### C06
+
+C06 gives generated roots compiler-only executable names after lexical lowering.
+Source routines, globals and types retain their own object symbols. Program
+headings remain the object owner and the debugger's frame/recording name.
+The first-program handbook explains name reuse, and its actual tutorial is
+extracted for executable documentation validation.
+
+Thirteen new regressions cover direct compilation, object encoding, linking,
+CLI source/project/artifact paths, case variations, recursion, root captures,
+debugger routine resolution and the tutorial. Existing DAP/JSONL frame and
+recording expectations pass; the bundle golden includes the generated entry name.
+
+| Check | C06 repair result |
+| --- | --- |
+| `cargo fmt --all --check` | Passed |
+| `cargo build --offline --workspace` | Passed |
+| `cargo test --offline -p fpas-compiler -p fpas-bundle -p fpas-debug --no-fail-fast -- --test-threads=1` | Passed: 555 tests |
+| C06 CLI regression groups | Passed: 5 tests, covering source/project checking and execution plus persisted artifacts for all declaration categories and case variants |
+| Executable first-program documentation | Passed: extracted Markdown tutorial checks and runs with the source standard library; exact output is `Hello, Pascal!` |
+| Built CLI same-name routine/global/record and tutorial controls | All check and run commands exit 0 |
+| `fpas fmt --check lib apps examples tests` | Passed |
+| `fpas test --std-lib lib tests/suite.fpasprj` | Passed: 488 passed, 1 intentional skip, 0 failed |
+| Rust workspace, serial verification | 3,858 passed and 1 failed across 202 result groups; the known LSP watcher hang was excluded |
+| Changed Markdown documents | All local links and anchors resolve; Rust handbook references and whitespace checks passed |
+
+The workspace command was
+`cargo test --offline --workspace --no-fail-fast -- --skip initialized_registers_source_and_manifest_file_watchers --test-threads=1`.
+All C01-C06 regressions pass. Compiler, CLI, bundle and debugger groups are green.
+The unchanged VM socket-timeout assertion described under [C02](#c02) observes
+32 ms instead of the expected 30 ms. The cancellation/backpressure test passes
+in this run. The LSP watcher remains excluded after its previously confirmed
+timeouts. These independent validation blockers remain open; the complete Rust
+workspace is not green.
+
+### T01
+
+T01 preserves original project diagnostics through discovery, standard-library
+loading and analysis. The LSP converts located records against their own source
+snapshot and URI, retains producer details in `Diagnostic.data`, and logs
+positionless failures with their original code. Related publications share
+origin tracking, version checks and snapshot revisions. The diagnostics and
+editor-integration handbooks describe the implemented behavior.
+
+Fourteen new regressions include three language-service record-preservation
+tests, one conversion test and ten real LSP process tests. They cover graph
+source IDs, parser details, missing and nonexported dependencies, cycles,
+manifest failures, correction, closing, shared origins and reopened buffers.
+Root-program import attribution is implemented under [T02](tooling-and-tests.md#t02).
+
+| Check | T01 repair result |
+| --- | --- |
+| `cargo fmt --all --check` | Passed |
+| `cargo build --offline --workspace` | Passed |
+| Targeted language-service and LSP verification | Passed: 219 distinct tests, including all 14 new regressions; the known watcher hang was excluded |
+| Real LSP diagnostic process coverage | Passed: all 19 tests, including 10 new project-error cases |
+| Rust workspace, serial verification | 3,871 passed and 2 failed across 202 result groups; the known LSP watcher hang was excluded |
+| Changed Markdown documents | All local links and anchors resolve; Rust handbook references and whitespace checks passed |
+
+The workspace command was
+`cargo test --offline --workspace --no-fail-fast -- --skip initialized_registers_source_and_manifest_file_watchers --test-threads=1`.
+All T01 and C01-C06 regressions pass. Language-service, LSP, compiler, CLI and
+debugger groups are green. The two unchanged VM socket assertions described under
+[C02](#c02) fail: cancellation observes `Ok(65536)` instead of
+`Err("Network write cancelled")`, and the socket timeout is 32 ms instead of
+the expected 30 ms. The LSP watcher remains excluded after its previously
+confirmed timeouts. These independent validation blockers remain open; the
+complete Rust workspace is not green.
+
+### T02
+
+T02 preserves root-import provenance in the project resolver. Root failures
+retain the imported unit name's original range and an explicitly supplied main
+or test-entry path. CLI and editor callers supply their authoritative source;
+the artifact API retains its supplied source metadata. Absent paths and original
+source IDs are preserved. The diagnostics and editor-integration handbooks
+describe the implemented behavior.
+
+Fifteen new regressions and one updated existing LSP case cover missing and
+nonexported roots, source/project/workspace commands, standard-library exports,
+alias ranges, CRLF and Unicode, text/JSON parity, shared serial and parallel
+test entries, disk and parsed graphs, absent paths, transitive controls,
+artifact transport and current editor buffers.
+
+| Check | T02 repair result |
+| --- | --- |
+| `cargo fmt --all --check` | Passed |
+| `cargo build --offline --workspace` | Passed |
+| `cargo test --offline -p fpas-project -p fpas-cli -p fpas-lsp -p fpas-build root_import --no-fail-fast -- --test-threads=1` | Passed: all 16 root-import cases, including 15 new regressions |
+| Real LSP diagnostic process coverage | Passed: all 21 tests, including all three root-import cases |
+| Rust workspace, serial verification | 3,886 passed and 2 failed across 202 result groups; the known LSP watcher hang was excluded |
+| Changed Markdown documents | All local links and anchors resolve; Rust handbook references and whitespace checks passed |
+
+The workspace command was
+`cargo test --offline --workspace --no-fail-fast -- --skip initialized_registers_source_and_manifest_file_watchers --test-threads=1`.
+All T01/T02 and C01-C06 regressions pass. Project, build, CLI, language-service,
+LSP, compiler and debugger groups are green. The two unchanged VM socket
+assertions described under [C02](#c02) fail: cancellation observes `Ok(65536)`
+instead of `Err("Network write cancelled")`, and the socket timeout is 32 ms
+instead of the expected 30 ms. The LSP watcher remains excluded after its
+previously confirmed timeouts. These independent validation blockers remain
+open; the complete Rust workspace is not green.
+
+### T03
+
+T03 uses the shared recursive parser type grammar for incomplete native chains.
+Nested success and error types remain distinct, aliases resolve in the declaring
+unit's environment, and named or anonymous callbacks preserve their result type.
+The editor integration handbook describes the completed behavior.
+
+Sixteen new regressions comprise five parser, nine language-service and two real
+LSP process tests. Coverage includes mixed containers, multiple Result levels,
+local/imported/callable aliases, declaration-local private and imported types,
+consumer name conflicts, named arguments, error-type signatures, malformed
+fragments, cyclic aliases, parser nesting limits, ordered diagnostics, changed
+buffers and exact UTF-16 ranges.
+
+| Check | T03 repair result |
+| --- | --- |
+| `cargo fmt --all --check` | Passed |
+| `cargo build --offline --workspace` | Passed |
+| `cargo test --offline -p fpas-parser -p fpas-language-service -p fpas-lsp --test intellisense --lib --no-fail-fast -- --test-threads=1` | Passed: all 405 tests, including all 16 new regressions |
+| Rust workspace, serial verification | 3,902 passed and 2 failed across 202 result groups; the known LSP watcher hang was excluded |
+| Changed Markdown documents | All local links and anchors resolve; Rust handbook references and whitespace checks passed |
+
+The workspace command was
+`cargo test --offline --workspace --no-fail-fast -- --skip initialized_registers_source_and_manifest_file_watchers --test-threads=1`.
+All T01-T03 and C01-C06 regressions pass. Parser, language-service, LSP, CLI,
+project, build, compiler and debugger groups are green. The two unchanged VM
+socket assertions described under [C02](#c02) fail: cancellation observes
+`Ok(65536)` instead of `Err("Network write cancelled")`, and the socket timeout
+is 32 ms instead of the expected 30 ms. The LSP watcher remains excluded after
+its previously confirmed timeouts. These independent validation blockers
+remain open; the complete Rust workspace is not green.
 
 ## Verification
 

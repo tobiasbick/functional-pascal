@@ -1,4 +1,6 @@
 //! Public build/check APIs preserve diagnostics until the caller renders them.
+//!
+//! **Documentation:** `docs/pascal/tools/diagnostics.md`
 
 #![allow(
     clippy::expect_used,
@@ -54,7 +56,8 @@ fn root_build_and_check_preserve_multiple_compiler_diagnostics() {
     let graph =
         build_unit_graph_for_program(Path::new("main.fpas"), &[], &ProjectLinkMeta::default())
             .expect("empty graph");
-    let selection = resolve_program_units(&graph, &program.uses).expect("selection");
+    let selection = resolve_program_units(&graph, &program.uses, Some(Path::new("main.fpas")))
+        .expect("selection");
     for result in [
         build_program(&graph, &selection, &program, &BuildOptions::default()),
         check_program(&graph, &selection, &program, &BuildOptions::default()),
@@ -205,6 +208,43 @@ fn artifact_compiler_errors_keep_the_supplied_main_path() {
         .collect::<Vec<_>>()
         .join("\n");
     assert_eq!(error.to_string(), expected);
+}
+
+#[test]
+fn artifact_root_import_errors_keep_the_supplied_main_path_and_original_name_span() {
+    let fixture = Fixture::new();
+    let source = "program Demo;\nuses Demo.Missing as Missing;\nbegin\nend.\n";
+    let main = fixture.write("main.fpas", source);
+    let graph = build_unit_graph_for_program(&main, &[], &ProjectLinkMeta::default())
+        .expect("program graph");
+    let artifact = fixture.0.join("main.fpascp");
+    for paths in [vec!["portable/main.fpas".to_owned()], vec![]] {
+        let error = build_program_artifact(
+            &graph,
+            ProgramArtifactTarget {
+                path: &artifact,
+                source: source.as_bytes(),
+                source_paths: &paths,
+            },
+            &BuildOptions::default(),
+        )
+        .err()
+        .expect("missing root import");
+        let records = error.diagnostics();
+        assert_eq!(records.len(), 1);
+        let record = &records[0];
+        assert_eq!(record.path.as_deref(), paths.first().map(Path::new));
+        assert_eq!(
+            record.diagnostic.code,
+            fpas_diagnostics::codes::PROJECT_UNKNOWN_UNIT
+        );
+        assert!(record.diagnostic.help.is_some());
+        let span = record.diagnostic.span.expect("original name span");
+        assert_eq!(span.source_id(), 0);
+        assert_eq!((span.line(), span.column()), (2, 6));
+        assert_eq!(&source[span.offset()..span.end()], "Demo.Missing");
+        assert!(!artifact.exists());
+    }
 }
 
 #[test]

@@ -1,12 +1,17 @@
 //! Static receiver shapes for catalog completion, including recovered expressions.
 
 use crate::SymbolKind;
-use crate::navigation::{NavigationDocument, find_type, resolve_qualified, resolve_unqualified};
+use crate::navigation::{NavigationDocument, resolve_qualified, resolve_unqualified};
 use fpas_parser::{Expr, PostfixOperation};
 use fpas_sema::Ty;
 mod inference;
-use inference::{ReceiverLookup, operation_result, shape};
+mod types;
+use inference::{ReceiverLookup, operation_result};
 
+const MAX_RECEIVER_DEPTH: usize = 16;
+
+/// Infers catalog receiver types for complete and recovered expressions.
+/// See `docs/pascal/tools/editor-integration.md`.
 pub(super) fn receiver_type(
     documents: &[NavigationDocument],
     target: usize,
@@ -14,7 +19,7 @@ pub(super) fn receiver_type(
     offset: usize,
     depth: usize,
 ) -> Option<Ty> {
-    if depth > 16 {
+    if depth > MAX_RECEIVER_DEPTH {
         return None;
     }
     let receiver = receiver.trim();
@@ -299,17 +304,5 @@ pub(super) fn receiver_type(
     {
         return Some(ty.clone());
     }
-    if let Some(ty) = shape(&name) {
-        return Some(ty);
-    }
-    let (alias_index, alias) = find_type(documents, target, index, &name)?;
-    let declaration = documents[alias_index]
-        .snapshot
-        .source()
-        .get(alias.full_span.offset()..alias.full_span.end())?;
-    shape(
-        declaration
-            .split_once('=')
-            .map_or(declaration, |(_, ty)| ty.trim().trim_end_matches(';')),
-    )
+    types::from_text(documents, index, &name, depth + 1)
 }

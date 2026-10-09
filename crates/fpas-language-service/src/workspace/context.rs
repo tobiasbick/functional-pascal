@@ -3,11 +3,11 @@
 use std::collections::{BTreeMap, BTreeSet};
 use std::path::{Path, PathBuf};
 
-use fpas_project::{load_project, load_standard_library_project, load_workspace};
+use fpas_project::{ProjectError, load_project, load_standard_library_project, load_workspace};
 
-use super::ProjectContext;
 use super::catalog::load_folder;
 use super::discovery::{discover_initial_context, discover_source_context, has_extension};
+use super::{ProjectContext, WorkspaceIssue};
 use crate::CancellationToken;
 use crate::document::normalized_path;
 
@@ -24,15 +24,6 @@ pub enum WorkspaceKind {
     Folder,
     /// A requested manifest existed but could not be loaded.
     Unavailable,
-}
-
-/// A recoverable context-loading problem that does not panic or terminate the service.
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub struct WorkspaceIssue {
-    /// Manifest or discovery path associated with the problem.
-    pub path: PathBuf,
-    /// Actionable error returned by the authoritative project loader.
-    pub message: String,
 }
 
 /// Loaded editor context with recoverable manifest problems.
@@ -57,10 +48,7 @@ impl WorkspaceContext {
                 manifest_path: None,
                 kind: WorkspaceKind::Unavailable,
                 projects: Vec::new(),
-                issues: vec![WorkspaceIssue {
-                    path: normalized_path(input),
-                    message: error.to_string(),
-                }],
+                issues: vec![WorkspaceIssue::new(input, error.to_string())],
             }
         })
     }
@@ -192,6 +180,7 @@ impl WorkspaceContext {
         Ok(changed)
     }
 
+    /// Loads one editor project and retains original loader failures.
     pub(super) fn load_project_manifest(path: &Path) -> Self {
         match load_editor_project(path) {
             Ok(project) => Self {
@@ -208,20 +197,18 @@ impl WorkspaceContext {
         }
     }
 
+    /// Loads workspace members and retains each failing member's project records.
     pub(super) fn load_workspace_manifest(path: &Path) -> Self {
         let workspace = match load_workspace(path) {
             Ok(workspace) => workspace,
-            Err(error) => return Self::unavailable(path, error.to_string()),
+            Err(error) => return Self::unavailable(path, error),
         };
         let mut projects = Vec::new();
         let mut issues = Vec::new();
         for member in workspace.member_projects {
             match load_editor_project(&member) {
                 Ok(project) => projects.push(project),
-                Err(message) => issues.push(WorkspaceIssue {
-                    path: normalized_path(&member),
-                    message,
-                }),
+                Err(error) => issues.push(WorkspaceIssue::from_project(&member, error)),
             }
         }
         Self {
@@ -236,7 +223,8 @@ impl WorkspaceContext {
         }
     }
 
-    pub(super) fn unavailable(path: &Path, message: String) -> Self {
+    /// Retains a loader failure in an unavailable editor context.
+    pub(super) fn unavailable(path: &Path, error: ProjectError) -> Self {
         Self {
             root: path
                 .parent()
@@ -245,10 +233,7 @@ impl WorkspaceContext {
             manifest_path: Some(path.to_path_buf()),
             kind: WorkspaceKind::Unavailable,
             projects: Vec::new(),
-            issues: vec![WorkspaceIssue {
-                path: path.to_path_buf(),
-                message,
-            }],
+            issues: vec![WorkspaceIssue::from_project(path, error)],
         }
     }
 
@@ -283,16 +268,16 @@ fn ambiguous_source_issue(source: &Path, manifests: &[&Path]) -> WorkspaceIssue 
         .collect::<Vec<_>>();
     names.sort();
     names.dedup();
-    WorkspaceIssue {
-        path: normalized_path(source),
-        message: format!(
+    WorkspaceIssue::new(
+        source,
+        format!(
             "Source belongs directly to multiple FPAS projects: {}.\n  help: Adjust `[sources]` so exactly one nearest project owns this file.",
             names.join(", ")
         ),
-    }
+    )
 }
 
-fn load_editor_project(path: &Path) -> Result<ProjectContext, String> {
+fn load_editor_project(path: &Path) -> Result<ProjectContext, ProjectError> {
     let is_standard_library = path
         .file_name()
         .and_then(|name| name.to_str())
@@ -300,11 +285,8 @@ fn load_editor_project(path: &Path) -> Result<ProjectContext, String> {
     if is_standard_library {
         let root = path.parent().unwrap_or(path);
         load_standard_library_project(root)
-            .map_err(|error| error.to_string())
             .map(|project| ProjectContext::new_standard_library(path, project))
     } else {
-        load_project(path)
-            .map_err(|error| error.to_string())
-            .map(|project| ProjectContext::new(path, project))
+        load_project(path).map(|project| ProjectContext::new(path, project))
     }
 }

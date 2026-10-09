@@ -1,8 +1,15 @@
-//! Shared ASCII-case-insensitive matching of executable routine names.
+//! Shared matching and display of executable routine names.
 //!
 //! **Documentation:** `docs/pascal/tools/debugger.md`
 
 use fpas_bytecode::{FunctionId, VerifiedExecutable};
+
+/// Show the source heading for generated roots and the stored name for other routines.
+///
+/// **Documentation:** `docs/pascal/tools/debugger.md`
+pub(in crate::vm::debug) fn display_name(name: &str) -> &str {
+    name.strip_prefix("$entry_").unwrap_or(name)
+}
 
 /// Return every executable function whose canonical or unique-short name matches `name`.
 pub(in crate::vm::debug) fn matching_functions(

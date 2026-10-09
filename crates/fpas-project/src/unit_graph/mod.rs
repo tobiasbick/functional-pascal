@@ -202,12 +202,18 @@ fn insert_unit(
 }
 
 /// Resolves units reachable from a program or test entry `uses` clause.
+///
+/// Root failures retain the imported name's original span. Supply `root_path` when the caller
+/// knows its source file; `None` retains the span without assigning a unit or manifest path.
+///
+/// **Documentation:** `docs/pascal/tools/diagnostics.md`
 pub fn resolve_program_units(
     graph: &UnitGraph,
     root_uses: &[fpas_parser::Import],
+    root_path: Option<&Path>,
 ) -> Result<ResolvedUnitGraph, crate::ProjectError> {
     let policy = ImportPolicy::new(graph);
-    let reachable = resolve_reachable(root_uses, graph, &policy)?;
+    let reachable = resolve_reachable(root_uses, graph, &policy, root_path)?;
     resolve_order(&reachable, graph)
 }
 

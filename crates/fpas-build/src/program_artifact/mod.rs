@@ -1,4 +1,6 @@
 //! Reuse and publication of linked `.fpascp` program images.
+//!
+//! **Documentation:** `docs/pascal/tools/diagnostics.md`
 
 mod atomic;
 mod identity;
@@ -36,6 +38,8 @@ pub struct ProgramArtifactTarget<'a> {
 /// The main program is parsed and its reachable units are resolved internally
 /// from [`ProgramArtifactTarget::source`], so an unrelated AST cannot be cached
 /// under that source identity.
+/// Root import failures retain the imported name's range and the first supplied source path,
+/// when available; they do not use a unit's path as a substitute for the main file.
 ///
 /// # Errors
 ///
@@ -56,8 +60,12 @@ fn build_program_artifact_before_publish(
     before_publish: impl FnOnce(),
 ) -> Result<BuiltProgram, BuildError> {
     let program = source::parse(target.source, target.source_paths)?;
-    let selection =
-        fpas_project::resolve_program_units(graph, &program.uses).map_err(BuildError::from)?;
+    let selection = fpas_project::resolve_program_units(
+        graph,
+        &program.uses,
+        target.source_paths.first().map(Path::new),
+    )
+    .map_err(BuildError::from)?;
     let units = build_library_units(graph, &selection, options)?;
     let expected = identity::expected(target.source, &units, options);
     let source_hashes = source_hashes(graph, target.source, target.source_paths.len())?;

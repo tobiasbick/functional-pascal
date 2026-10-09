@@ -113,7 +113,8 @@ fn import_aliases_keep_canonical_dependencies_and_source_ids() {
     let graph = build_unit_graph(&project.source_files, &project.link_meta).expect("graph");
     let imports =
         uses_from_program("program App; uses Demo.Left as Left, Demo.Right as Right; begin end.");
-    let resolved = resolve_program_units(&graph, &imports).expect("canonical dependency graph");
+    let resolved =
+        resolve_program_units(&graph, &imports, None).expect("canonical dependency graph");
     assert_eq!(resolved.order(), ["demo.shared", "demo.left", "demo.right"]);
     let left = graph.get("demo.left").expect("left unit");
     let import = &left.parsed_unit().uses[0];
@@ -147,7 +148,7 @@ fn program_resolution_excludes_unreachable_units_and_orders_dependencies_first()
         build_unit_graph(&loaded.source_files, &loaded.link_meta).expect("graph must build");
     let root_uses = uses_from_program("program App;\nuses Demo.Feature;\nbegin\nend.\n");
 
-    let resolved = resolve_program_units(&graph, &root_uses).expect("graph must resolve");
+    let resolved = resolve_program_units(&graph, &root_uses, None).expect("graph must resolve");
 
     assert_eq!(
         resolved.order(),
@@ -206,7 +207,7 @@ fn graph_resolution_reports_complete_unit_cycle() {
         build_unit_graph(&loaded.source_files, &loaded.link_meta).expect("graph must build");
     let root_uses = uses_from_program("program App;\nuses Demo.A;\nbegin\nend.\n");
 
-    let error = resolve_program_units(&graph, &root_uses).expect_err("cycle must fail");
+    let error = resolve_program_units(&graph, &root_uses, None).expect_err("cycle must fail");
 
     assert!(
         error
@@ -264,8 +265,8 @@ include = ["src/**/*.fpas"]
         build_unit_graph(&loaded.source_files, &loaded.link_meta).expect("graph must build");
     let root_uses = uses_from_program("program App;\nuses Lib.Internal;\nbegin\nend.\n");
 
-    let error =
-        resolve_program_units(&graph, &root_uses).expect_err("internal unit must be rejected");
+    let error = resolve_program_units(&graph, &root_uses, loaded.main.as_deref())
+        .expect_err("internal unit must be rejected");
 
     assert!(error.to_string().contains("Lib.Internal"));
     assert!(error.to_string().contains("not exported"));
@@ -289,7 +290,8 @@ fn unknown_transitive_unit_diagnostic_names_owner_and_known_units() {
         build_unit_graph(&loaded.source_files, &loaded.link_meta).expect("graph must build");
     let root_uses = uses_from_program("program App;\nuses Demo.Feature;\nbegin\nend.\n");
 
-    let error = resolve_program_units(&graph, &root_uses).expect_err("missing unit must fail");
+    let error =
+        resolve_program_units(&graph, &root_uses, None).expect_err("missing unit must fail");
 
     assert!(error.to_string().contains("Demo.Missing"));
     assert!(error.to_string().contains("unit `Demo.Feature`"));

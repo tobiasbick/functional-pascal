@@ -59,7 +59,8 @@ fn unknown_root_std_unit_is_rejected() {
     let graph = build_unit_graph(&[], &ProjectLinkMeta::default()).expect("empty graph");
     let root_uses = uses("program App;\nuses Std.DoesNotExist;\nbegin\nend.\n");
 
-    let error = resolve_program_units(&graph, &root_uses).expect_err("unknown Unit must fail");
+    let error =
+        resolve_program_units(&graph, &root_uses, None).expect_err("unknown Unit must fail");
 
     assert!(
         error
@@ -80,7 +81,8 @@ fn unknown_transitive_std_unit_is_rejected() {
     let graph = build_unit_graph(&[source], &ProjectLinkMeta::default()).expect("graph");
     let root_uses = uses("program App;\nuses Demo.Feature;\nbegin\nend.\n");
 
-    let error = resolve_program_units(&graph, &root_uses).expect_err("unknown Unit must fail");
+    let error =
+        resolve_program_units(&graph, &root_uses, None).expect_err("unknown Unit must fail");
 
     assert!(error.to_string().contains("unit `Demo.Feature`"), "{error}");
     fs::remove_dir_all(dir).ok();
@@ -91,7 +93,7 @@ fn known_intrinsic_std_unit_needs_no_source_node() {
     let graph = build_unit_graph(&[], &ProjectLinkMeta::default()).expect("empty graph");
     let root_uses = uses("program App;\nuses Std.Console;\nbegin\nend.\n");
 
-    let resolved = resolve_program_units(&graph, &root_uses).expect("intrinsic Unit");
+    let resolved = resolve_program_units(&graph, &root_uses, None).expect("intrinsic Unit");
 
     assert!(resolved.is_empty());
 }
@@ -101,7 +103,7 @@ fn source_defined_std_tui_must_be_present() {
     let graph = build_unit_graph(&[], &ProjectLinkMeta::default()).expect("empty graph");
     let root_uses = uses("program App;\nuses Std.Tui;\nbegin\nend.\n");
 
-    let error = resolve_program_units(&graph, &root_uses).expect_err("missing source Unit");
+    let error = resolve_program_units(&graph, &root_uses, None).expect_err("missing source Unit");
 
     assert!(
         error.to_string().contains("Unknown unit `Std.Tui`"),
@@ -123,7 +125,7 @@ fn source_defined_std_tui_resolves_from_standard_library() {
             .expect("graph");
     let root_uses = uses("program App;\nuses Std.Tui;\nbegin\nend.\n");
 
-    let resolved = resolve_program_units(&graph, &root_uses).expect("source Unit");
+    let resolved = resolve_program_units(&graph, &root_uses, None).expect("source Unit");
 
     assert_eq!(resolved.order(), &["std.tui".to_string()]);
     fs::remove_dir_all(dir).ok();
@@ -188,7 +190,7 @@ fn lexical_aliases_preserve_library_exports() {
         "program App; uses Lib.Internal as Internal; begin end.",
     ] {
         let error =
-            resolve_program_units(&graph, &uses(source)).expect_err("private Unit must fail");
+            resolve_program_units(&graph, &uses(source), None).expect_err("private Unit must fail");
         assert!(error.to_string().contains("not exported"), "{error}");
     }
     fs::remove_dir_all(dir).ok();
@@ -237,7 +239,8 @@ fn symlink_alias_preserves_library_origin() {
     let graph = build_unit_graph(&[source], &link_meta).expect("graph");
     let root_uses = uses("program App;\nuses Lib.Internal;\nbegin\nend.\n");
 
-    let error = resolve_program_units(&graph, &root_uses).expect_err("private Unit must fail");
+    let error =
+        resolve_program_units(&graph, &root_uses, None).expect_err("private Unit must fail");
 
     assert!(error.to_string().contains("not exported"), "{error}");
     fs::remove_dir_all(dir).ok();

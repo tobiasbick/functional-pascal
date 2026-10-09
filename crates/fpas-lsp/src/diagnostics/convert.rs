@@ -3,13 +3,16 @@
 use std::fmt;
 
 use fpas_diagnostics::{
-    Diagnostic as FpasDiagnostic, DiagnosticSeverity as FpasDiagnosticSeverity,
+    Diagnostic as FpasDiagnostic, DiagnosticSeverity as FpasDiagnosticSeverity, FileDiagnostic,
 };
 use fpas_language_service::DocumentSnapshot;
 use tower_lsp_server::ls_types::{Diagnostic, DiagnosticSeverity, NumberOrString, Range};
 
 use crate::convert::{PositionConversionError, byte_offset_to_position};
 
+/// Converts a located record while retaining producer details in diagnostic data.
+///
+/// **Documentation:** `docs/pascal/tools/diagnostics.md`
 pub(crate) fn diagnostic_to_lsp(
     snapshot: &DocumentSnapshot,
     diagnostic: &FpasDiagnostic,
@@ -22,6 +25,29 @@ pub(crate) fn diagnostic_to_lsp(
             source_id: span.source_id(),
         });
     }
+    located_diagnostic_to_lsp(snapshot, diagnostic)
+}
+
+/// Converts a file-attributed project record with its producer-local source ID intact.
+///
+/// **Documentation:** `docs/pascal/tools/diagnostics.md`
+pub(crate) fn file_diagnostic_to_lsp(
+    snapshot: &DocumentSnapshot,
+    record: &FileDiagnostic,
+) -> Result<Diagnostic, DiagnosticConversionError> {
+    if record.path.as_deref() != Some(snapshot.path()) {
+        return Err(DiagnosticConversionError::ForeignFile);
+    }
+    located_diagnostic_to_lsp(snapshot, &record.diagnostic)
+}
+
+fn located_diagnostic_to_lsp(
+    snapshot: &DocumentSnapshot,
+    diagnostic: &FpasDiagnostic,
+) -> Result<Diagnostic, DiagnosticConversionError> {
+    let span = diagnostic
+        .span
+        .ok_or(DiagnosticConversionError::MissingLocation)?;
     let start_offset = start_offset(snapshot, diagnostic)?;
     let end_offset = start_offset
         .checked_add(if span.is_synthetic() {
@@ -54,6 +80,14 @@ pub(crate) fn diagnostic_to_lsp(
         code: Some(NumberOrString::String(diagnostic.code.to_string())),
         source: Some("fpas".to_owned()),
         message,
+        data: Some(serde_json::json!({
+            "source": snapshot.path().to_string_lossy(),
+            "source_id": span.source_id(),
+            "message": diagnostic.message,
+            "hint": diagnostic.help,
+            "expected": diagnostic.expected,
+            "found": diagnostic.found,
+        })),
         ..Diagnostic::default()
     })
 }
@@ -81,6 +115,7 @@ fn start_offset(
 pub(crate) enum DiagnosticConversionError {
     MissingLocation,
     ForeignSource { source_id: u32 },
+    ForeignFile,
     InvalidSpan,
     Position(PositionConversionError),
 }
@@ -93,6 +128,7 @@ impl fmt::Display for DiagnosticConversionError {
                 formatter,
                 "diagnostic belongs to source id {source_id}, not the published document"
             ),
+            Self::ForeignFile => formatter.write_str("diagnostic belongs to another source file"),
             Self::InvalidSpan => formatter.write_str("diagnostic span is outside the document"),
             Self::Position(error) => error.fmt(formatter),
         }
@@ -113,11 +149,11 @@ impl From<PositionConversionError> for DiagnosticConversionError {
 mod tests {
     use std::path::Path;
 
-    use fpas_diagnostics::{Diagnostic, DiagnosticCode, SourceSpan};
+    use fpas_diagnostics::{Diagnostic, DiagnosticCode, FileDiagnostic, SourceSpan};
     use fpas_language_service::DocumentStore;
     use tower_lsp_server::ls_types::{DiagnosticSeverity, NumberOrString, Position, Range};
 
-    use super::diagnostic_to_lsp;
+    use super::{diagnostic_to_lsp, file_diagnostic_to_lsp};
 
     fn snapshot(source: &str) -> std::sync::Arc<fpas_language_service::DocumentSnapshot> {
         DocumentStore::new()
@@ -185,6 +221,31 @@ mod tests {
         assert!(matches!(
             diagnostic_to_lsp(&snapshot, &missing),
             Err(super::DiagnosticConversionError::MissingLocation)
+        ));
+    }
+
+    #[test]
+    fn project_record_requires_its_own_file_and_retains_producer_details() {
+        let snapshot = snapshot("program Demo; begin end.");
+        let mut diagnostic = Diagnostic::error(
+            DiagnosticCode::new(2001),
+            "Expected semicolon",
+            Some("Insert `;`.".into()),
+            SourceSpan::new_with_source(0, 7, 1, 1, 37),
+        );
+        diagnostic.expected = Some(";".into());
+        diagnostic.found = Some("begin".into());
+        let record = FileDiagnostic::new(diagnostic, Some(snapshot.path().to_path_buf()));
+        let converted = file_diagnostic_to_lsp(&snapshot, &record).expect("attributed record");
+        let data = converted.data.expect("original producer data");
+        assert_eq!(data["source_id"], serde_json::json!(37));
+        assert_eq!(data["expected"], serde_json::json!(";"));
+        assert_eq!(data["found"], serde_json::json!("begin"));
+        assert_eq!(data["hint"], serde_json::json!("Insert `;`."));
+        let foreign = FileDiagnostic::new(record.diagnostic, Some("other.fpas".into()));
+        assert!(matches!(
+            file_diagnostic_to_lsp(&snapshot, &foreign),
+            Err(super::DiagnosticConversionError::ForeignFile)
         ));
     }
 }

@@ -63,7 +63,9 @@ fn parsed_program_graph_reserves_main_source_and_resolves_dependencies() {
         &ProjectLinkMeta::default(),
     )
     .expect("in-memory program graph");
-    let resolved = resolve_program_units(&graph, &program.uses).expect("resolved graph");
+    let resolved =
+        resolve_program_units(&graph, &program.uses, Some(Path::new("virtual/main.fpas")))
+            .expect("resolved graph");
 
     assert_eq!(graph.source_paths()[0], Path::new("virtual/main.fpas"));
     assert_eq!(

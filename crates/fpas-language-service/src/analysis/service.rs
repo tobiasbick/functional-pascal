@@ -87,7 +87,7 @@ impl LanguageService {
     ///
     /// # Errors
     ///
-    /// Returns an analysis error when the standard-library root or manifest is invalid.
+    /// Returns the original project failure when the standard-library root or manifest is invalid.
     pub fn load_with_standard_library(
         input: &Path,
         standard_library_root: &Path,
@@ -106,8 +106,7 @@ impl LanguageService {
         cancellation: &crate::CancellationToken,
     ) -> Result<Self, LanguageServiceError> {
         cancellation.check()?;
-        let standard_library = StandardLibraryContext::load(standard_library_root)
-            .map_err(|message| LanguageServiceError::analysis(standard_library_root, message))?;
+        let standard_library = StandardLibraryContext::load(standard_library_root)?;
         cancellation.check()?;
         Ok(Self {
             standard_library: Some(standard_library),
@@ -206,11 +205,24 @@ impl LanguageService {
             self.analyze_document(path)
         })();
         match result {
-            Ok(document) => Ok(DiagnosticAnalysis::from_outcome(document, None)),
-            Err(failure) => Ok(DiagnosticAnalysis::from_outcome(
-                self.cached_syntax_only(target)?,
-                Some(failure),
-            )),
+            Ok(document) => Ok(DiagnosticAnalysis::from_outcome(document, None, None)),
+            Err(failure) => {
+                let failure_snapshot = failure
+                    .diagnostics()
+                    .iter()
+                    .filter(|record| record.diagnostic.span.is_some())
+                    .find_map(|record| {
+                        record
+                            .path
+                            .as_deref()
+                            .and_then(|path| self.documents.snapshot(path).ok())
+                    });
+                Ok(DiagnosticAnalysis::from_outcome(
+                    self.cached_syntax_only(target)?,
+                    Some(failure),
+                    failure_snapshot,
+                ))
+            }
         }
     }
 
@@ -266,6 +278,7 @@ impl LanguageService {
             .collect()
     }
 
+    /// Resolves editor project ownership while retaining discovery failure records.
     pub(crate) fn ensure_source_context(
         &mut self,
         path: &Path,
@@ -275,16 +288,7 @@ impl LanguageService {
         }
         self.workspace
             .discover_project_for_source(path)
-            .map_err(|issue| {
-                LanguageServiceError::analysis(
-                    path,
-                    format!(
-                        "Cannot resolve the FPAS project from `{}`: {}",
-                        issue.path.display(),
-                        issue.message
-                    ),
-                )
-            })
+            .map_err(crate::WorkspaceIssue::into_analysis_error)
     }
 
     pub(crate) fn analysis_project_for(

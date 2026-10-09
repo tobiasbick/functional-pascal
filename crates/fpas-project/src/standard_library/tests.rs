@@ -50,7 +50,7 @@ include = ["Std/**/*.fpas"]
         let source = fs::read_to_string(&program).expect("program source");
         let (program, diagnostics) = fpas_parser::parse(&source);
         assert!(diagnostics.is_empty());
-        resolve_program_units(&graph, &program.uses).map(|_| ())
+        resolve_program_units(&graph, &program.uses, Some(&dir.join("main.fpas"))).map(|_| ())
     });
     remove_dir(&dir);
 
@@ -162,7 +162,7 @@ include = ["Std/**/*.fpas"]
         let source = fs::read_to_string(&program).expect("program source");
         let (program, diagnostics) = fpas_parser::parse(&source);
         assert!(diagnostics.is_empty());
-        resolve_program_units(&graph, &program.uses).map(|_| ())
+        resolve_program_units(&graph, &program.uses, Some(&dir.join("main.fpas"))).map(|_| ())
     });
     remove_dir(&dir);
 

@@ -6,13 +6,21 @@ No independent hard structural defect was confirmed in this slice. The new nativ
 
 A repository-wide scan of literal `docs/pascal/*.md` paths in Rust found no nonexistent target files. The scan checks file existence, not anchors, prose accuracy, or dynamically assembled links. Public documentation comments and small-module organization were inspected in the AP02/AP06 implementation owners; this is not a complete rustdoc audit of every public symbol.
 
-One **judgement call**, tied to spec finding [T03](tooling-and-tests.md#t03) rather than counted as an independent defect: possible **Duplicated Code / Repeated Switches** in [crates/fpas-language-service/src/intellisense/native_receiver/inference.rs:8-46](../../../../crates/fpas-language-service/src/intellisense/native_receiver/inference.rs). `shape()` reconstructs the language's type grammar with string prefixes and separators while the parser already represents recursive `TypeExpr` structures. The first-comma split has produced a confirmed nested-type bug. Prefer a reusable recursive syntax-to-editor-type mapping when fixing [T03](tooling-and-tests.md#t03); avoid introducing a second full type grammar just for incomplete completion. This is an architectural recommendation, not a hard violation based on file size.
+The architectural recommendation tied to [T03](tooling-and-tests.md#t03) is
+implemented. The language service reuses the parser's
+[type-fragment entry point](../../../../crates/fpas-parser/src/lib.rs) and maps
+recursive `TypeExpr` structures in a focused
+[editor type module](../../../../crates/fpas-language-service/src/intellisense/native_receiver/types.rs).
+Alias declarations and anonymous callback return types use their existing AST;
+aliases resolve in the declaring unit's import environment. There is no second
+text-based type grammar in native receiver inference. This repair preserves the
+current language contract and is counted once as T03.
 
 ## Confirmed result and limits
 
 - **Independent hard standards findings: 0.** This does not negate the confirmed Rust correctness defects in C01–C06.
-- **Architectural recommendation: 1**, the duplicate text-based type interpretation underlying T03. It is counted once as the concrete completion defect, not again as a separate bug.
-- Build, format checking, Clippy with warnings denied, and the full Rust workspace suite passed. Existing large test files and a file just over the approximate size target are not defects by themselves.
+- **Architectural recommendation: 1, resolved under T03.** The shared parser grammar and recursive editor mapping replace the duplicate text-based interpretation; it is not counted as a separate finding.
+- At the reviewed revision, build, format checking, Clippy with warnings denied, and the full Rust workspace suite passed. Existing large test files and a file just over the approximate size target are not defects by themselves.
 - The review inspected ownership boundaries of completed-package implementation modules and focused on changed production code. It did not perform a line-by-line proof of every Rust file, a release performance benchmark, or a portability run on other operating systems.
 
-No refactoring was performed. Repair recommendations preserve the current language contracts and do not approve any syntax or semantic change.
+Current repair checks and independent validation blockers are recorded in [repair verification](README.md#repair-verification). No syntax or semantic change is part of the T03 repair.

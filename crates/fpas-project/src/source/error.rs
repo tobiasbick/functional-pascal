@@ -12,7 +12,7 @@ use fpas_diagnostics::{Diagnostic, DiagnosticCode, SourceSpan};
 /// Every failure carries at least one coded diagnostic. Source reading, lexing
 /// and parsing failures retain the failing source path. Manifest failures retain
 /// the owning manifest path without inventing positions. Graph failures may
-/// concern several files; `uses` failures are located at the importing unit.
+/// concern several files; `uses` failures retain the importing program or unit's range.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ProjectError {
     path: Option<PathBuf>,
@@ -45,16 +45,16 @@ impl ProjectError {
         self
     }
 
-    /// Places a validation failure at a known range inside one source file.
+    /// Places a validation failure at its original range and optional authoritative file.
     ///
     /// The range is omitted when the parser span cannot form a diagnostic span.
     #[must_use]
-    pub(crate) fn at_source(mut self, path: &Path, span: fpas_lexer::Span) -> Self {
+    pub(crate) fn at_source(mut self, path: Option<&Path>, span: fpas_lexer::Span) -> Self {
         let span = SourceSpan::try_from(span).ok();
         for diagnostic in &mut self.diagnostics {
             diagnostic.span = span;
         }
-        self.path = Some(path.to_path_buf());
+        self.path = path.map(Path::to_path_buf);
         self
     }
 

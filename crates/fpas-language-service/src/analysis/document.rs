@@ -1,4 +1,6 @@
 //! Parse, semantic, and diagnostic results for one source snapshot.
+//!
+//! **Documentation:** `docs/pascal/tools/diagnostics.md`
 
 use std::sync::Arc;
 
@@ -33,14 +35,21 @@ pub struct DocumentAnalysis {
 pub struct DiagnosticAnalysis {
     document: Arc<DocumentAnalysis>,
     failure: Option<LanguageServiceError>,
+    failure_snapshot: Option<Arc<DocumentSnapshot>>,
 }
 
 impl DiagnosticAnalysis {
+    /// Binds current syntax diagnostics to an optional attributed project failure.
     pub(super) fn from_outcome(
         document: Arc<DocumentAnalysis>,
         failure: Option<LanguageServiceError>,
+        failure_snapshot: Option<Arc<DocumentSnapshot>>,
     ) -> Self {
-        Self { document, failure }
+        Self {
+            document,
+            failure,
+            failure_snapshot,
+        }
     }
 
     /// Returns syntax or full semantic diagnostics for the current snapshot.
@@ -53,6 +62,14 @@ impl DiagnosticAnalysis {
     #[must_use]
     pub fn failure(&self) -> Option<&LanguageServiceError> {
         self.failure.as_ref()
+    }
+
+    /// Returns the authoritative failing source snapshot when range conversion is possible.
+    ///
+    /// **Documentation:** `docs/pascal/tools/diagnostics.md`
+    #[must_use]
+    pub fn failure_snapshot(&self) -> Option<&Arc<DocumentSnapshot>> {
+        self.failure_snapshot.as_ref()
     }
 }
 

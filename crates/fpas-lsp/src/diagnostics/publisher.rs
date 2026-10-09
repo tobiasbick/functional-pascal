@@ -1,20 +1,25 @@
 //! Debounced, version-safe push-diagnostic publication.
+//!
+//! **Documentation:** `docs/pascal/tools/editor-integration.md`
 
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 use std::time::Duration;
 
-use fpas_language_service::{LanguageServiceError, diagnostics_for_document};
+use fpas_language_service::diagnostics_for_document;
 use tokio::sync::{Mutex, OwnedSemaphorePermit, Semaphore, mpsc};
 use tower_lsp_server::Client;
-use tower_lsp_server::ls_types::{Diagnostic, DiagnosticSeverity, NumberOrString, Range, Uri};
+use tower_lsp_server::ls_types::Uri;
 
 use super::convert::diagnostic_to_lsp;
+use super::project::project_diagnostics;
+use super::publication::{DiagnosticBatch, Publication, dispatch_publications};
 use crate::documents::{SynchronizedDocument, SynchronizedDocuments};
 
 const ANALYSIS_DEBOUNCE: Duration = Duration::from_millis(120);
 
+/// Coordinates debounced analysis with ordered, version-safe diagnostic delivery.
 pub(crate) struct DiagnosticPublisher {
     documents: Arc<SynchronizedDocuments>,
     generations: Arc<Mutex<GenerationState>>,
@@ -23,12 +28,14 @@ pub(crate) struct DiagnosticPublisher {
 }
 
 impl DiagnosticPublisher {
+    /// Starts the publication lane for this editor session.
     pub(crate) fn new(client: Client, documents: Arc<SynchronizedDocuments>) -> Self {
         let generations = Arc::new(Mutex::new(GenerationState::default()));
         let (publications, receiver) = mpsc::unbounded_channel();
         tokio::spawn(dispatch_publications(
             client,
             Arc::clone(&generations),
+            Arc::clone(&documents),
             receiver,
         ));
         Self {
@@ -43,6 +50,7 @@ impl DiagnosticPublisher {
         self.generations.lock().await.invalidate(path)
     }
 
+    /// Schedules current-buffer analysis and preserves project failure attribution.
     pub(crate) fn schedule(&self, document: SynchronizedDocument, generation: u64) {
         let documents = Arc::clone(&self.documents);
         let generations = Arc::clone(&self.generations);
@@ -88,13 +96,18 @@ impl DiagnosticPublisher {
                     ),
                 }
             }
-            if let Some(failure) = analysis.failure() {
-                diagnostics.push(analysis_failure_diagnostic(failure));
-            }
+            let (mut batches, unlocated) = project_diagnostics(&analysis);
+            batches.push(DiagnosticBatch {
+                uri: document.uri.clone(),
+                version: Some(document.version),
+                revision: analysis.document().snapshot().revision(),
+                diagnostics,
+            });
             let _ = publications.send(Publication::Diagnostics {
                 document,
                 generation,
-                diagnostics,
+                batches,
+                unlocated,
             });
         });
     }
@@ -113,22 +126,12 @@ impl DiagnosticPublisher {
     }
 }
 
-fn analysis_failure_diagnostic(error: &LanguageServiceError) -> Diagnostic {
-    let code = match error {
-        LanguageServiceError::SourceRead { .. } => "FPAS_PROJECT_IO",
-        _ => "FPAS_ANALYSIS",
-    };
-    Diagnostic {
-        range: Range::default(),
-        severity: Some(DiagnosticSeverity::ERROR),
-        code: Some(NumberOrString::String(code.to_string())),
-        source: Some("fpas".to_string()),
-        message: error.to_string(),
-        ..Diagnostic::default()
-    }
-}
-
-async fn is_current(generations: &Mutex<GenerationState>, path: &Path, generation: u64) -> bool {
+/// Returns whether an origin's analysis generation is still publishable.
+pub(super) async fn is_current(
+    generations: &Mutex<GenerationState>,
+    path: &Path,
+    generation: u64,
+) -> bool {
     generations.lock().await.is_current(path, generation)
 }
 
@@ -147,45 +150,9 @@ async fn acquire_current_analysis_slot(
         .then_some(permit)
 }
 
-async fn dispatch_publications(
-    client: Client,
-    generations: Arc<Mutex<GenerationState>>,
-    mut receiver: mpsc::UnboundedReceiver<Publication>,
-) {
-    while let Some(publication) = receiver.recv().await {
-        match publication {
-            Publication::Diagnostics {
-                document,
-                generation,
-                diagnostics,
-            } => {
-                if !is_current(&generations, &document.path, generation).await {
-                    continue;
-                }
-                client
-                    .publish_diagnostics(document.uri.clone(), diagnostics, Some(document.version))
-                    .await;
-            }
-            Publication::Clear { uri } => {
-                client.publish_diagnostics(uri, Vec::new(), None).await;
-            }
-        }
-    }
-}
-
-enum Publication {
-    Diagnostics {
-        document: SynchronizedDocument,
-        generation: u64,
-        diagnostics: Vec<Diagnostic>,
-    },
-    Clear {
-        uri: Uri,
-    },
-}
-
+/// Current origin generations and shutdown state.
 #[derive(Default)]
-struct GenerationState {
+pub(super) struct GenerationState {
     next: u64,
     current: HashMap<PathBuf, u64>,
     stopped: bool,

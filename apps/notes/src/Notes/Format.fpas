@@ -14,16 +14,15 @@ begin
   case Fields.Get(Name) of
     when Some(const Value):
       begin
-        case Value of
-          when TomlValue.String(const Text):
-            begin
-              return Ok(Text);
-            end;
-          else
-            begin
-              return Error(('Note field `' + Name) + '` must be a string');
-            end;
-        end case;
+        if Value is TomlValue.String(const Text) then
+          begin
+            return Ok(Text);
+          end;
+        else
+          begin
+            return Error(('Note field `' + Name) + '` must be a string');
+          end;
+        end if;
       end;
     when None:
       begin
@@ -37,16 +36,15 @@ begin
   case Fields.Get(Name) of
     when Some(const Value):
       begin
-        case Value of
-          when TomlValue.Integer(const Number):
-            begin
-              return Ok(Number);
-            end;
-          else
-            begin
-              return Error(('Note field `' + Name) + '` must be an integer');
-            end;
-        end case;
+        if Value is TomlValue.Integer(const Number) then
+          begin
+            return Ok(Number);
+          end;
+        else
+          begin
+            return Error(('Note field `' + Name) + '` must be an integer');
+          end;
+        end if;
       end;
     when None:
       begin
@@ -60,16 +58,15 @@ begin
   case Fields.Get(Name) of
     when Some(const Value):
       begin
-        case Value of
-          when TomlValue.Boolean(const Flag):
-            begin
-              return Ok(Flag);
-            end;
-          else
-            begin
-              return Error(('Note field `' + Name) + '` must be a boolean');
-            end;
-        end case;
+        if Value is TomlValue.Boolean(const Flag) then
+          begin
+            return Ok(Flag);
+          end;
+        else
+          begin
+            return Error(('Note field `' + Name) + '` must be a boolean');
+          end;
+        end if;
       end;
     when None:
       begin
@@ -83,32 +80,30 @@ begin
   case Fields.Get('tags') of
     when Some(const Value):
       begin
-        case Value of
-          when TomlValue.ArrayValue(const Items):
-            begin
-              var Tags: array of string := [];
-              for Index: integer := 0 to Items.Length() - 1 do
-                begin
-                  case Items[Index] of
-                    when TomlValue.String(const Tag):
-                      begin
-                        Tags.Push(Tag);
-                      end;
-                    else
-                      begin
-                        return Error('Every note tag must be a string');
-                      end;
-                  end case;
-                end;
-              end for;
+        if Value is TomlValue.ArrayValue(const Items) then
+          begin
+            var Tags: array of string := [];
+            for Index: integer := 0 to Items.Length() - 1 do
+              begin
+                if Items[Index] is TomlValue.String(const Tag) then
+                  begin
+                    Tags.Push(Tag);
+                  end;
+                else
+                  begin
+                    return Error('Every note tag must be a string');
+                  end;
+                end if;
+              end;
+            end for;
 
-              return Ok(Tags);
-            end;
-          else
-            begin
-              return Error('Note field `tags` must be an array');
-            end;
-        end case;
+            return Ok(Tags);
+          end;
+        else
+          begin
+            return Error('Note field `tags` must be an array');
+          end;
+        end if;
       end;
     when None:
       begin
@@ -169,16 +164,15 @@ begin
   case Std.Toml.Parse(Header) of
     when Ok(const Value):
       begin
-        case Value of
-          when TomlValue.Table(const Fields):
-            begin
-              return ParseFields(Fields, Body);
-            end;
-          else
-            begin
-              return Error('The .note metadata root must be a TOML table');
-            end;
-        end case;
+        if Value is TomlValue.Table(const Fields) then
+          begin
+            return ParseFields(Fields, Body);
+          end;
+        else
+          begin
+            return Error('The .note metadata root must be a TOML table');
+          end;
+        end if;
       end;
     when Error(const Message):
       begin

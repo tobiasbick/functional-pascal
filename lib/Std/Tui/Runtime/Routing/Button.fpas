@@ -23,15 +23,11 @@ begin
         var ModalIndex: integer := -1;
         for Index: integer := 0 to Children.Length() - 1 do
           begin
-            case Children[Index] of
-              when TuiElement.Overlay(const Title, const OverlayChildren):
-                begin
-                  ModalIndex := Index;
-                end;
-              else
-                begin
-                end;
-            end case;
+            if Children[Index] is TuiElement.Overlay(const Title, const OverlayChildren) then
+              begin
+                ModalIndex := Index;
+              end;
+            end if;
           end;
         end for;
 
@@ -165,7 +161,7 @@ begin
 
         return None;
       end;
-    else
+    when TuiElement.Empty, TuiElement.Label(_), TuiElement.Input(_), TuiElement.TextArea(_, _, _, _, _), TuiElement.CheckBox(_, _, _, _), TuiElement.List(_, _, _, _), TuiElement.MenuBar(_), TuiElement.Menu(_, _, _, _), TuiElement.StatusLine(_), TuiElement.CellGrid(_), TuiElement.Rule(_), TuiElement.Gauge(_), TuiElement.Spacer(_):
       begin
         return None;
       end;

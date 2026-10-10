@@ -116,38 +116,35 @@ begin
                                                                  TuiElementBuilders.MakeLabel('A'),
                                                                  TuiElementBuilders.MakeLabel('B')
                                                                ], 2);
-  case Spaced of
-    when TuiElement.Row(const Children, const Spacing):
-      begin
-        AssertEquals(2, Spacing);
-        AssertEquals(2, Children.Length());
-      end;
-    else
-      begin
-        Fail('expected spaced row');
-      end;
-  end case;
+  if Spaced is TuiElement.Row(const Children, const Spacing) then
+    begin
+      AssertEquals(2, Spacing);
+      AssertEquals(2, Children.Length());
+    end;
+  else
+    begin
+      Fail('expected spaced row');
+    end;
+  end if;
   const Wrapped: TuiElement := TuiElementBuilders.MakeLayout(Settings, TuiElementBuilders.MakeLabel('X'));
-  case Wrapped of
-    when TuiElement.Layout(const WrappedSettings, const WrappedChildren):
-      begin
-        AssertEquals(1, WrappedChildren.Length());
-        AssertEquals(0, WrappedSettings.Stretch);
-      end;
-    else
-      begin
-        Fail('expected layout wrapper');
-      end;
-  end case;
+  if Wrapped is TuiElement.Layout(const WrappedSettings, const WrappedChildren) then
+    begin
+      AssertEquals(1, WrappedChildren.Length());
+      AssertEquals(0, WrappedSettings.Stretch);
+    end;
+  else
+    begin
+      Fail('expected layout wrapper');
+    end;
+  end if;
   const SpacerElement: TuiElement := TuiElementBuilders.MakeSpacer(FixedSpacer);
-  case SpacerElement of
-    when TuiElement.Spacer(const Value):
-      begin
-        AssertEquals(3, Value.MinimumExtent);
-      end;
-    else
-      begin
-        Fail('expected spacer element');
-      end;
-  end case;
+  if SpacerElement is TuiElement.Spacer(const Value) then
+    begin
+      AssertEquals(3, Value.MinimumExtent);
+    end;
+  else
+    begin
+      Fail('expected spacer element');
+    end;
+  end if;
 end.

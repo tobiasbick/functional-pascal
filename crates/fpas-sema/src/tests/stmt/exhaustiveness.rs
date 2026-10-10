@@ -22,8 +22,8 @@ fn case_enum_missing_variant_is_non_exhaustive() {
 }
 
 #[test]
-fn case_enum_else_branch_skips_exhaustiveness_check() {
-    check_ok(
+fn case_enum_else_branch_is_rejected() {
+    let errors = check_errors(
         "program T; \
          type Light = enum Red; Yellow; Green; end enum; \
          begin \
@@ -35,6 +35,13 @@ fn case_enum_else_branch_skips_exhaustiveness_check() {
            end case; \
          end.",
     );
+    assert_eq!(errors.len(), 1, "{errors:#?}");
+    assert_eq!(
+        errors[0].code,
+        fpas_diagnostics::codes::SEMA_CLOSED_ENUM_ELSE
+    );
+    assert!(errors[0].message.contains("Light.Yellow"));
+    assert!(errors[0].message.contains("Light.Green"));
 }
 
 #[test]

@@ -204,6 +204,10 @@ define_codes!(SEMA_ALLOCATED_CODES => {
     ///
     /// Documentation: `docs/pascal/tools/diagnostics.md` (FP3034).
     SEMA_MISPLACED_IS_TEST = 3034;
+    /// A closed-enum, Option, or Result case contains an `else` branch.
+    ///
+    /// Documentation: `docs/pascal/tools/diagnostics.md` (FP3035).
+    SEMA_CLOSED_ENUM_ELSE = 3035;
 });
 
 define_codes!(COMPILE_ALLOCATED_CODES => {

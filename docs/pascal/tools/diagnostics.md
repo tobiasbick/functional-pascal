@@ -315,7 +315,7 @@ Call arguments still use commas; commas inside types such as
 | FP3008 | Non-boolean condition | `if 1 then Work()` | `if true then Work()` |
 | FP3009 | Invalid panic value | `panic(1)` | `panic('failed')` |
 | FP3010 | Break/continue placement | `break` outside a loop | Place `break` inside the loop it exits. |
-| FP3011 | Non-exhaustive case | A boolean case covering only `true` | Add the `false` branch or an `else` branch. |
+| FP3011 | Non-exhaustive case | An `Option` case with only `when Some(_):` | Add `when None: null;`, or use an `is` test when only one variant matters. |
 | FP3012 | Enum data count | Construct `A(1)` when A has two data fields | Construct `A(1, 2)`. |
 | FP3013 | Generic constraint | Use string for T constrained to an arithmetic type | Use integer for that arithmetic operation. |
 | FP3014 | Non-constant value | `when ReadValue():` in a scalar `case` | `when const Value if Value = ReadValue():` |
@@ -336,9 +336,10 @@ Call arguments still use commas; commas inside types such as
 | FP3029 | Aliased `var` arguments | `Swap(var A[I], var A[J])` | `SwapAt(var A, I, J)` |
 | FP3030 | `var` parameter escapes the call | A closure that captures `var` parameter `Total` | Capture a local copy `const Current: integer := Total;` |
 | FP3031 | Implicit pattern binding | `when Some(Value):` or `when N if N > 0:` | `when Some(const Value):` or `when const N if N > 0:` |
-| FP3032 | Misplaced scalar binding | `when const N:` without a guard | `when const N if N > 0:`, or `else` for the remaining values |
+| FP3032 | Misplaced scalar binding | `when const N:` without a guard | Add a condition, for example `when const N if N > 0:` |
 | FP3033 | Unreachable case label | `when Some(_):` before `when Some(1):` | Move `when Some(1):` before `when Some(_):` or remove it |
 | FP3034 | Misplaced `is` test | `const Hit: boolean := X is Some(_);` | `if X is Some(_) then ... end if;` or a `case` |
+| FP3035 | Catch-all on a closed enum | `case Item of when Some(_): null; else null; end case;` | Replace `else` with `when None: null;`, or use `if Item is Some(_) then ... end if;`. |
 
 FP3025 also reports a parameter or enum variant field named twice and a named
 call that omits one; its hint lists the declared names. FP3026 applies to
@@ -360,6 +361,14 @@ in a Result, Option, or data-enum `case`. FP3033 reports a label of an enum,
 Result, or Option `case` that earlier unguarded arms already cover completely.
 FP3034 reports an `is` test outside an `if`, `elsif`, or `while` condition,
 including under `or` or `not` and in a `case` guard.
+
+FP3035 rejects `else` on enums, `Option`, and `Result`, including aliases and
+imported types. With valid labels, it names one missing pattern per uncovered
+variant, including nested payload patterns. Guards do not count as coverage.
+When explicit arms already cover every value, its hint asks to remove the
+redundant `else`. FP3011 also requires explicit arms; it never recommends an
+`else` for these closed types. Scalar `integer`, `string`, and `boolean` cases
+retain `else`, and Boolean coverage is optional.
 
 Ordinary declaration, assignment, return and argument type compatibility checks
 supply type names in `expected` and `found` for FP3006. Other uses of that code

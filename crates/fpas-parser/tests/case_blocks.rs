@@ -36,10 +36,10 @@ fn arms_and_catch_all_accept_scoped_statement_lists() {
 #[test]
 fn nested_cases_and_controls_keep_arm_and_else_ownership() {
     parse_ok(
-        "case X of when 1: case Y of when Some(const V) if V > 0: A(V); when None: null; else B(); end case; C(); when 2: if true then A(); else B(); end if; while false do null; end while; else D(); end case;",
+        "case X of when 1: case Y of when Some(const V) if V > 0: A(V); when None: null; when Some(_): B(); end case; C(); when 2: if true then A(); else B(); end if; while false do null; end while; else D(); end case;",
     );
     parse_ok(
-        "CASE X OF WHEN Shape.Circle(R) IF R > 0: NULL; WHEN Shape.Point: NULL; ELSE NULL; END CASE;",
+        "CASE X OF WHEN Shape.Circle(R) IF R > 0: NULL; WHEN Shape.Point: NULL; WHEN Shape.Circle(_): NULL; END CASE;",
     );
 }
 

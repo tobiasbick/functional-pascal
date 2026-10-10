@@ -4,6 +4,7 @@
 
 mod bindings;
 mod coverage;
+mod exhaustiveness;
 mod labels;
 mod patterns;
 mod scalar_bindings;
@@ -12,8 +13,7 @@ use super::super::super::Checker;
 use crate::types::{EnumTy, Ty};
 use coverage::Pat;
 use fpas_diagnostics::codes::{
-    SEMA_INVALID_PANIC_ARGUMENT, SEMA_NON_EXHAUSTIVE_CASE, SEMA_TYPE_MISMATCH,
-    SEMA_UNREACHABLE_CASE_LABEL,
+    SEMA_INVALID_PANIC_ARGUMENT, SEMA_TYPE_MISMATCH, SEMA_UNREACHABLE_CASE_LABEL,
 };
 use fpas_lexer::Span;
 use fpas_parser::{CaseArm, CaseLabel, Expr, Stmt};
@@ -134,17 +134,7 @@ impl Checker {
             self.scopes.pop_scope();
         }
 
-        if else_body.is_none() && coverage_valid {
-            let missing = self.missing_patterns(&rows, &case_ty);
-            if !missing.is_empty() {
-                self.error_with_code(
-                    SEMA_NON_EXHAUSTIVE_CASE,
-                    format!("Non-exhaustive case: missing {}", missing.join(", ")),
-                    "Add arms for the missing patterns or an else branch. Guarded arms do not count toward coverage.",
-                    span,
-                );
-            }
-        }
+        self.check_case_exhaustiveness(&case_ty, &rows, coverage_valid, else_body.is_some(), span);
     }
 
     fn check_case_expression_type(

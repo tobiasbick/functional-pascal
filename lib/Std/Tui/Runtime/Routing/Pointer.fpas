@@ -42,16 +42,15 @@ function TuiPointerInsideCapturedButton(
   Button: TuiButtonSpec
 ): boolean;
 begin
-  case TuiPointerHitAt(Frame, Root, Position) of
-    when TuiPointerHit.ElementButton(const Hit):
-      begin
-        return Hit.Id.Value = Button.Id.Value;
-      end;
-    else
-      begin
-        return false;
-      end;
-  end case;
+  if TuiPointerHitAt(Frame, Root, Position) is TuiPointerHit.ElementButton(const Hit) then
+    begin
+      return Hit.Id.Value = Button.Id.Value;
+    end;
+  else
+    begin
+      return false;
+    end;
+  end if;
 end function;
 
 // Allocates idle pointer-button state for one application.

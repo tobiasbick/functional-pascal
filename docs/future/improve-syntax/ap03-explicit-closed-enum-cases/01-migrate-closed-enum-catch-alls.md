@@ -2,42 +2,41 @@
 
 Package: [AP03: Explicit closed-enum cases](README.md)
 
-## Scope
+Status: complete.
 
-Replace every `case ... else` over a closed enum in the repository with a full
-variant list or an `is` test, while `else` is still accepted.
+## Result
 
-## Prerequisites
+Repository cases over user enums, `Option`, and `Result` use explicit variant
+arms. Code handling one variant uses `is` where a full case is unnecessary.
+Scalar cases over `integer`, `string`, and `boolean` retain their catch-alls.
 
-- AP20.3 (`is` test) for sites that handle a single variant.
-- AP13.5 (`when` arms with `null;`) so migrated arms are written once in the
-  final syntax.
+Remaining variants are listed in declaration order. Guarded arms and partial
+payload patterns retain an explicit fallback for the same variant when needed.
+Payload wildcards ignore fields, while
+no-action variants share a `null;` arm. Scrutinee evaluation, branch order,
+returns, and local scopes are preserved.
 
-## Implementation
+## Ownership
 
-- Inventory `case ... else` sites over closed enums using semantic type
-  information, not text search. Large enums at planning time: `TuiElement`
-  (43 variants), `TuiMsg` (37), `TuiStyleRole` (34), `KeyKind` (29).
-- Rewrite each site to a full variant list (grouping no-op variants in one
-  `null;` arm) or to an `is` test when only one variant is handled.
-- Preserve behavior: the former `else` body moves to exactly the variants it
-  previously covered.
+- Source consumers: `lib/`, `apps/`, `examples/`, and `tests/`.
+- Rust fixtures: compiler, semantic analysis, parser, formatter, and CLI tests.
+- Handbook examples: [exhaustiveness](../../../pascal/language/pattern-matching/exhaustiveness.md),
+  [scalar labels](../../../pascal/language/pattern-matching/scalar-labels.md),
+  [`Std.Toml`](../../../pascal/std/text/toml.md), and
+  [controlled text areas](../../../pascal/std/tui/text-area.md).
 
-## Affected areas
+Positive examples and fixtures cover every closed-enum variant explicitly;
+negative diagnostic fixtures intentionally exercise rejected catch-alls.
+Compiler enforcement is owned by
+[AP03.2](02-reject-closed-enum-catch-alls.md).
 
-- `.fpas` sources under `lib/`, `apps/`, `examples/`, `tests/`; Rust-embedded
-  fixtures; documentation examples.
+## Regression coverage
 
-## Migration
+Existing Rust and FPAS suites cover nested patterns, constant comparisons,
+invalid variant qualifiers, named-field diagnostics, guard order, single
+scrutinee evaluation, local shadowing and capture, TUI routing, and unchanged
+app results. Case-specific fixtures retain cases with explicit fallback arms.
 
-This work package is the migration.
-
-## Documentation
-
-Update documentation examples that use `else` over a closed enum. Language
-rules are unchanged.
-
-## Verification
-
-- A temporary semantic check on the branch reports zero closed-enum catch-alls.
-- `fpas test tests/suite.fpasprj` and example/app checks pass unchanged.
+Verification includes Rust and FPAS formatting, workspace build/tests, the
+FPAS suite, affected app/example checks, and compilation of the changed
+handbook examples.

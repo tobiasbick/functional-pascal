@@ -62,7 +62,7 @@ public type TuiInputPalette = record
         begin
           return Self.Scroll;
         end;
-      else
+      when TuiStyleRole.Normal, TuiStyleRole.Disabled, TuiStyleRole.Focused, TuiStyleRole.Selected, TuiStyleRole.Shortcut, TuiStyleRole.Frame, TuiStyleRole.Title, TuiStyleRole.MenuNormal, TuiStyleRole.MenuDisabled, TuiStyleRole.MenuShortcut, TuiStyleRole.MenuSelected, TuiStyleRole.MenuSelectedShortcut, TuiStyleRole.StatusNormal, TuiStyleRole.StatusDisabled, TuiStyleRole.StatusShortcut, TuiStyleRole.StatusSelected, TuiStyleRole.ButtonNormal, TuiStyleRole.ButtonDefault, TuiStyleRole.ButtonSelected, TuiStyleRole.ButtonDisabled, TuiStyleRole.ButtonShortcut, TuiStyleRole.ButtonDefaultShortcut, TuiStyleRole.ButtonSelectedShortcut, TuiStyleRole.Rule, TuiStyleRole.GaugeTrack, TuiStyleRole.GaugeFill, TuiStyleRole.Failure, TuiStyleRole.Warning, TuiStyleRole.Accent:
         begin
           panic('Tui input palette requires an input style role');
         end;
@@ -99,7 +99,7 @@ public type TuiInputPalette = record
         begin
           Updated.Scroll := Style;
         end;
-      else
+      when TuiStyleRole.Normal, TuiStyleRole.Disabled, TuiStyleRole.Focused, TuiStyleRole.Selected, TuiStyleRole.Shortcut, TuiStyleRole.Frame, TuiStyleRole.Title, TuiStyleRole.MenuNormal, TuiStyleRole.MenuDisabled, TuiStyleRole.MenuShortcut, TuiStyleRole.MenuSelected, TuiStyleRole.MenuSelectedShortcut, TuiStyleRole.StatusNormal, TuiStyleRole.StatusDisabled, TuiStyleRole.StatusShortcut, TuiStyleRole.StatusSelected, TuiStyleRole.ButtonNormal, TuiStyleRole.ButtonDefault, TuiStyleRole.ButtonSelected, TuiStyleRole.ButtonDisabled, TuiStyleRole.ButtonShortcut, TuiStyleRole.ButtonDefaultShortcut, TuiStyleRole.ButtonSelectedShortcut, TuiStyleRole.Rule, TuiStyleRole.GaugeTrack, TuiStyleRole.GaugeFill, TuiStyleRole.Failure, TuiStyleRole.Warning, TuiStyleRole.Accent:
         begin
           panic('Tui input palette requires an input style role');
         end;

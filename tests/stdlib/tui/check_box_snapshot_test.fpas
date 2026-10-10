@@ -19,16 +19,15 @@ end function;
 function UpdateCheck(State: CheckModel; Msg: TuiMsg; Cmd: TuiCmdOutput): CheckModel;
 begin
   Cmd.Set(TuiCmd.NoCommand);
-  case Msg of
-    when TuiMsg.CheckChanged(const Source, const Action, const Checked):
-      begin
-        return CheckModel(Focus := State.Focus, Checked := Checked);
-      end;
-    else
-      begin
-        return State;
-      end;
-  end case;
+  if Msg is TuiMsg.CheckChanged(const Source, const Action, const Checked) then
+    begin
+      return CheckModel(Focus := State.Focus, Checked := Checked);
+    end;
+  else
+    begin
+      return State;
+    end;
+  end if;
 end function;
 
 begin

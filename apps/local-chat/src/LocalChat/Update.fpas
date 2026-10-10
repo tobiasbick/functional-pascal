@@ -178,7 +178,7 @@ begin
       begin
         return State;
       end;
-    else
+    when TuiMsg.Started, TuiMsg.BackgroundFailed(_, _, _, _, _, _):
       begin
         return State;
       end;

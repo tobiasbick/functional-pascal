@@ -4,14 +4,13 @@ uses Std.Tui, Std.Test;
 
 begin
   const Node: TuiElement := TuiElementBuilders.MakeLabel('hi');
-  case Node of
-    when TuiElement.Label(const Text):
-      begin
-        AssertEquals('hi', Text);
-      end;
-    else
-      begin
-        panic('expected label element');
-      end;
-  end case;
+  if Node is TuiElement.Label(const Text) then
+    begin
+      AssertEquals('hi', Text);
+    end;
+  else
+    begin
+      panic('expected label element');
+    end;
+  end if;
 end.

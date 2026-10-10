@@ -7,42 +7,51 @@ use super::assert_succeeds;
 #[test]
 fn task_free_pattern_callables_can_be_spawned_and_discarded() {
     assert_succeeds(
-        r#"
-program PatternTasks;
+        r#"program PatternTasks;
+
 uses Std.Tasks;
+
 function Work(): integer;
 begin
   return 42;
 end function;
+
 procedure Main();
 begin
-  const Wrapped: Option of function(): integer := Some(Work);
+  const Wrapped: option of function(): integer := Some(Work);
   var Sum: integer := 0;
   if Wrapped is Some(const F) then
     discard F;
     const Alias: function(): integer := function(): integer begin
       return F();
     end function;
+
     discard Alias;
     const Job: task := go Alias();
     Sum := Sum + Wait(Job);
   end if;
+
   while Wrapped is Some(const F) do
     discard F;
     const Job: task := go F();
     Sum := Sum + Wait(Job);
     break;
   end while;
+
   case Some(Ok(Wrapped)) of
     when Some(Ok(Some(const F))):
       discard F;
       const Job: task := go F();
       Sum := Sum + Wait(Job);
-    else
+    when Some(_), None:
       panic('missing payload');
   end case;
-  if Sum <> 126 then panic('pattern task result'); end if;
+
+  if Sum <> 126 then
+    panic('pattern task result');
+  end if;
 end procedure;
+
 begin
   Main();
 end.

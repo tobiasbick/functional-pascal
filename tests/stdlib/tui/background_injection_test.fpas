@@ -9,16 +9,15 @@ end record;
 
 function UpdateFramework(State: InjectionModel; Msg: TuiMsg; Cmd: TuiCmdOutput): InjectionModel;
 begin
-  case Msg of
-    when TuiMsg.Started:
-      begin
-        return InjectionModel(Values := State.Values, Starts := State.Starts + 1);
-      end;
-    else
-      begin
-        return State;
-      end;
-  end case;
+  if Msg is TuiMsg.Started then
+    begin
+      return InjectionModel(Values := State.Values, Starts := State.Starts + 1);
+    end;
+  else
+    begin
+      return State;
+    end;
+  end if;
 end function;
 
 function UpdateApplication(State: InjectionModel; Message: integer; Cmd: TuiCmdOutput): InjectionModel;

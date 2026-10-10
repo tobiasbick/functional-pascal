@@ -46,9 +46,8 @@ begin
       begin
         Descendants := DesktopChildren;
       end;
-    else
-      begin
-      end;
+    when TuiElement.Empty, TuiElement.Label(_), TuiElement.Button(_), TuiElement.Input(_), TuiElement.TextArea(_, _, _, _, _), TuiElement.CheckBox(_, _, _, _), TuiElement.List(_, _, _, _), TuiElement.MenuBar(_), TuiElement.Menu(_, _, _, _), TuiElement.StatusLine(_), TuiElement.CellGrid(_), TuiElement.Rule(_), TuiElement.Gauge(_), TuiElement.Spacer(_):
+      null;
   end case;
 
   for ChildIndex: integer := 0 to Descendants.Length() - 1 do
@@ -151,19 +150,15 @@ begin
         var Controls: array of TuiControlId := [];
         for Index: integer := 0 to Items.Length() - 1 do
           begin
-            case Items[Index] of
-              when TuiStatusItem.Command(const Id, const Text, const Action, const Enabled):
-                begin
-                  if Enabled then
-                    begin
-                      Controls := Controls.Concat([Id]);
-                    end;
-                  end if;
-                end;
-              else
-                begin
-                end;
-            end case;
+            if Items[Index] is TuiStatusItem.Command(const Id, const Text, const Action, const Enabled) then
+              begin
+                if Enabled then
+                  begin
+                    Controls := Controls.Concat([Id]);
+                  end;
+                end if;
+              end;
+            end if;
           end;
         end for;
 
@@ -194,15 +189,11 @@ begin
         var LastOverlay: integer := -1;
         for Index: integer := 0 to Children.Length() - 1 do
           begin
-            case Children[Index] of
-              when TuiElement.Overlay(const Title, const OverlayChildren):
-                begin
-                  LastOverlay := Index;
-                end;
-              else
-                begin
-                end;
-            end case;
+            if Children[Index] is TuiElement.Overlay(const Title, const OverlayChildren) then
+              begin
+                LastOverlay := Index;
+              end;
+            end if;
           end;
         end for;
 
@@ -223,7 +214,7 @@ begin
           end;
         end if;
       end;
-    else
+    when TuiElement.Empty, TuiElement.Label(_), TuiElement.CellGrid(_), TuiElement.Rule(_), TuiElement.Gauge(_), TuiElement.Spacer(_):
       begin
         return [];
       end;
@@ -244,16 +235,15 @@ end function;
 // - `Root`: Root of the element tree.
 public function TuiRootFocus(Root: TuiElement): option of TuiControlId;
 begin
-  case Root of
-    when TuiElement.Desktop(const Focused, const Children):
-      begin
-        return Focused;
-      end;
-    else
-      begin
-        return None;
-      end;
-  end case;
+  if Root is TuiElement.Desktop(const Focused, const Children) then
+    begin
+      return Focused;
+    end;
+  else
+    begin
+      return None;
+    end;
+  end if;
 end function;
 
 // Returns the focusable-list index of a control id, or `-1` when absent.

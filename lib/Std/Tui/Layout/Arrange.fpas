@@ -32,16 +32,15 @@ end function;
 
 function TuiArrangeChildParticipates(Node: TuiElement): boolean;
 begin
-  case Node of
-    when TuiElement.Empty:
-      begin
-        return false;
-      end;
-    else
-      begin
-        return true;
-      end;
-  end case;
+  if Node is TuiElement.Empty then
+    begin
+      return false;
+    end;
+  else
+    begin
+      return true;
+    end;
+  end if;
 end function;
 
 function TuiArrangeMainPreferred(Measured: TuiMeasureResult; Horizontal: boolean): integer;
@@ -137,7 +136,7 @@ begin
 
         return 0;
       end;
-    else
+    when TuiElement.Empty, TuiElement.Label(_), TuiElement.Button(_), TuiElement.Input(_), TuiElement.CheckBox(_, _, _, _), TuiElement.List(_, _, _, _), TuiElement.Scroll(_, _, _, _), TuiElement.MenuBar(_), TuiElement.Menu(_, _, _, _), TuiElement.StatusLine(_), TuiElement.CellGrid(_), TuiElement.Rule(_), TuiElement.Gauge(_), TuiElement.Row(_, _), TuiElement.Column(_, _), TuiElement.Panel(_, _), TuiElement.Overlay(_, _), TuiElement.Desktop(_, _):
       begin
         return 0;
       end;
@@ -415,27 +414,25 @@ begin
         const Spec: TuiMeasureSpec := TuiMeasureSpec.AtMost(TuiSize.Create(NodeBounds.Width, NodeBounds.Height));
         for Index: integer := 0 to Children.Length() - 1 do
           begin
-            case Children[Index] of
-              when TuiElement.Overlay(const Title, const OverlayChildren):
-                begin
-                  const Measured: TuiMeasureResult := TuiMeasure(Children[Index], Spec);
-                  const Width: integer := TuiArrangeMin(Measured.Preferred.Width, NodeBounds.Width);
-                  const Height: integer := TuiArrangeMin(Measured.Preferred.Height, NodeBounds.Height);
-                  const X: integer := NodeBounds.X + ((NodeBounds.Width - Width) div 2);
-                  const Y: integer := NodeBounds.Y + ((NodeBounds.Height - Height) div 2);
-                  ArrangeNode(Children[Index], TuiRect.Create(X, Y, Width, Height), Clip, SelfIndex);
-                end;
-              else
-                begin
-                  ArrangeNode(Children[Index], NodeBounds, Clip, SelfIndex);
-                end;
-            end case;
+            if Children[Index] is TuiElement.Overlay(const Title, const OverlayChildren) then
+              begin
+                const Measured: TuiMeasureResult := TuiMeasure(Children[Index], Spec);
+                const Width: integer := TuiArrangeMin(Measured.Preferred.Width, NodeBounds.Width);
+                const Height: integer := TuiArrangeMin(Measured.Preferred.Height, NodeBounds.Height);
+                const X: integer := NodeBounds.X + ((NodeBounds.Width - Width) div 2);
+                const Y: integer := NodeBounds.Y + ((NodeBounds.Height - Height) div 2);
+                ArrangeNode(Children[Index], TuiRect.Create(X, Y, Width, Height), Clip, SelfIndex);
+              end;
+            else
+              begin
+                ArrangeNode(Children[Index], NodeBounds, Clip, SelfIndex);
+              end;
+            end if;
           end;
         end for;
       end;
-    else
-      begin
-      end;
+    when TuiElement.Empty, TuiElement.Label(_), TuiElement.Button(_), TuiElement.Input(_), TuiElement.TextArea(_, _, _, _, _), TuiElement.CheckBox(_, _, _, _), TuiElement.List(_, _, _, _), TuiElement.MenuBar(_), TuiElement.Menu(_, _, _, _), TuiElement.StatusLine(_), TuiElement.CellGrid(_), TuiElement.Rule(_), TuiElement.Gauge(_), TuiElement.Spacer(_):
+      null;
   end case;
 end procedure;
 begin

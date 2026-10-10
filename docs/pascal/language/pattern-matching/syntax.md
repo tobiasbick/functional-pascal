@@ -17,6 +17,9 @@ Formal syntax: [`grammar.ebnf`](../../../specs/grammar.ebnf) (`case_stmt`, `case
   arm or `end case`. Write `null;` for an arm with no action.
 - The case statement itself ends with `end case;`. A case requires at least
   one `when` arm; the optional `else` must follow all `when` arms.
+- `else` is available only for scalar `integer`, `string`, and `boolean`
+  cases. Closed enum, `Option`, and `Result` cases require explicit variant
+  arms and reject `else`, even when it is redundant (FP3035).
 - `fpas fmt` emits every required terminator.
 - Plain `begin … end;` statements retain an additional nested scope inside an
   arm (see [Scalar labels — block arms](scalar-labels.md#block-arms)).

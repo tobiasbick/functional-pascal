@@ -92,7 +92,7 @@ begin
                                                                                                      Action.Value
                                                                                                    ]));
       end;
-    else
+    when TuiMsg.Started, TuiMsg.Key(_), TuiMsg.Pointer(_), TuiMsg.Tick(_), TuiMsg.Resize(_), TuiMsg.TextChanged(_, _, _, _), TuiMsg.TextAreaChanged(_, _, _, _, _), TuiMsg.CheckChanged(_, _, _), TuiMsg.SelectionChanged(_, _, _), TuiMsg.ScrollChanged(_, _, _), TuiMsg.BackgroundFailed(_, _, _, _, _, _), TuiMsg.QuitRequested:
       begin
         return State;
       end;

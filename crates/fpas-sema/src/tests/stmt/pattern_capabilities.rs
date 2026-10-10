@@ -13,7 +13,7 @@ fn patterns(action: &str) -> Vec<String> {
         format!("case Wrapped of when Some(const F): {action} when None: null; end case;"),
         format!("if Ok(Wrapped) is Ok(Some(const F)) then {action} end if;"),
         format!(
-            "case Some(Ok(Wrapped)) of when Some(Ok(Some(const F))): {action} else null; end case;"
+            "case Some(Ok(Wrapped)) of when Some(Ok(Some(const F))): {action} when Some(_), None: null; end case;"
         ),
         format!("if Change is const F then {action} end if;"),
     ]
@@ -46,7 +46,7 @@ fn pattern_callables_keep_task_bound_flags_in_branches_loops_and_nested_payloads
 fn pattern_callables_keep_task_bound_flags_in_guards_and_channel_sends() {
     for body in [
         "if Wrapped is Some(const F) and Ready(go F()) then null; end if;",
-        "case Wrapped of when Some(const F) if Ready(go F()): null; else null; end case;",
+        "case Wrapped of when Some(const F) if Ready(go F()): null; when Some(_), None: null; end case;",
         "if Wrapped is Some(const F) then const Queue: channel of procedure() := CreateChannel(1); discard Send(Queue, F); end if;",
     ] {
         let errors = check_errors(&program(MUTABLE_CAPTURE, body));

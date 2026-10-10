@@ -56,9 +56,7 @@ impl Checker {
         } else if guard.is_none() {
             Some((
                 format!("`const {name}` requires a guard"),
-                format!(
-                    "Add a condition, for example `when const {name} if {name} > 0:`, or use `else` for the remaining values."
-                ),
+                format!("Add a condition, for example `when const {name} if {name} > 0:`."),
             ))
         } else {
             None
@@ -103,7 +101,7 @@ impl Checker {
         self.error_with_code(
             SEMA_TYPE_MISMATCH,
             "`_` cannot stand for a whole case value",
-            "`_` ignores one payload field, for example `Some(_)`. Use `else` for the remaining values.",
+            "`_` ignores one payload field, for example `Some(_)`. List remaining variants explicitly for closed enums, or use `else` for scalar cases.",
             span,
         );
     }

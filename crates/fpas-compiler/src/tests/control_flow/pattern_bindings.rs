@@ -117,7 +117,7 @@ begin
   begin
     case Value of
       when Pair.Both(const Limit, Limit): return Limit;
-      else return -1;
+      when Pair.Both(_, _), Pair.Empty: return -1;
     end case;
   end function;
 end function;
@@ -137,7 +137,7 @@ begin
   begin
     case Value of
       when Pair.Both(const Limit, 0), Pair.Both(Limit, const Limit): return Limit;
-      else return -1;
+      when Pair.Both(_, _), Pair.Empty: return -1;
     end case;
   end function;
 end function;

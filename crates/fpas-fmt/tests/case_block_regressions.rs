@@ -103,7 +103,7 @@ fn explicit_pattern_bindings_and_wildcards_round_trip() {
 #[test]
 fn nested_patterns_round_trip() {
     let formatted = format(
-        "program T; begin case R of when Ok(Some(Shape.Rect(const W,0))): null; when Ok( None ): null; when Error('x'): null; else null; end case; end.",
+        "program T; begin case R of when Ok(Some(Shape.Rect(const W,0))): null; when Ok( None ): null; when Error('x'): null; when Ok(_), Error(_): null; end case; end.",
     );
     for line in [
         "when Ok(Some(Shape.Rect(const W, 0))):",

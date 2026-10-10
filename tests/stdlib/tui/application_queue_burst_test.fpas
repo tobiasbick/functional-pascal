@@ -9,17 +9,16 @@ end function;
 
 function Update(Value: integer; Msg: TuiMsg; Cmd: TuiCmdOutput): integer;
 begin
-  case Msg of
-    when TuiMsg.Tick(const Delta):
-      begin
-        AssertEquals(Value + 1, Delta);
-        return Delta;
-      end;
-    else
-      begin
-        return Value;
-      end;
-  end case;
+  if Msg is TuiMsg.Tick(const Delta) then
+    begin
+      AssertEquals(Value + 1, Delta);
+      return Delta;
+    end;
+  else
+    begin
+      return Value;
+    end;
+  end if;
 end function;
 
 begin

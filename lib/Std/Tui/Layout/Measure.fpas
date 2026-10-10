@@ -202,16 +202,15 @@ end function;
 
 function TuiMeasureChildParticipates(Node: TuiElement): boolean;
 begin
-  case Node of
-    when TuiElement.Empty:
-      begin
-        return false;
-      end;
-    else
-      begin
-        return true;
-      end;
-  end case;
+  if Node is TuiElement.Empty then
+    begin
+      return false;
+    end;
+  else
+    begin
+      return true;
+    end;
+  end if;
 end function;
 
 // Measures one element under the given constraints.

@@ -177,7 +177,7 @@ fn enum_patterns_stay_positional() {
   const S: Shape := Shape.Rect(1.0, 2.0);
   case S of
     when Shape.Rect(Width := const W, Height := const H): WriteLn(W + H);
-    else WriteLn(0);
+    when Shape.Circle(_), Shape.Rect(_, _): WriteLn(0);
   end case;
 "#,
     ));

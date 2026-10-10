@@ -60,7 +60,7 @@ begin
     case Some(0) of
       when None:
         null;
-      else
+      when Some(_):
         const Value: integer := 200;
         AssertEquals(200, Value);
     end case;

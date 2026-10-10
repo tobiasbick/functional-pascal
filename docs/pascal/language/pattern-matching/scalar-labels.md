@@ -40,11 +40,12 @@ end case;
 
 ## Else branch
 
-Use `else` to handle all remaining cases:
+Use `else` to handle remaining `integer`, `string`, or `boolean` values.
+Closed enum, `Option`, and `Result` cases use explicit variant arms instead:
 
 ```pascal
-case L of
-  when Light.Red:
+case Command of
+  when 'stop':
     WriteLn('Stop');
   else
     WriteLn('Proceed with caution');

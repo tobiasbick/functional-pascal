@@ -7,50 +7,46 @@ begin
   case R of
     when Ok(const V):
       begin
-        case V of
-          when JsonValue.Object(const Fields):
-            begin
-              const NameValue: option of JsonValue := Fields.Get('name');
-              const ScoresValue: option of JsonValue := Fields.Get('scores');
-              const ActiveValue: option of JsonValue := Fields.Get('active');
-              case NameValue.Unwrap() of
-                when JsonValue.String(const Name):
-                  begin
-                    WriteLn(Name);
-                  end;
-                else
-                  begin
-                    WriteLn('bad-name');
-                  end;
-              end case;
+        if V is JsonValue.Object(const Fields) then
+          begin
+            const NameValue: option of JsonValue := Fields.Get('name');
+            const ScoresValue: option of JsonValue := Fields.Get('scores');
+            const ActiveValue: option of JsonValue := Fields.Get('active');
+            if NameValue.Unwrap() is JsonValue.String(const Name) then
+              begin
+                WriteLn(Name);
+              end;
+            else
+              begin
+                WriteLn('bad-name');
+              end;
+            end if;
 
-              case ScoresValue.Unwrap() of
-                when JsonValue.ArrayValue(const Scores):
-                  begin
-                    WriteLn(IntToStr(Scores.Length()));
-                  end;
-                else
-                  begin
-                    WriteLn('bad-scores');
-                  end;
-              end case;
+            if ScoresValue.Unwrap() is JsonValue.ArrayValue(const Scores) then
+              begin
+                WriteLn(IntToStr(Scores.Length()));
+              end;
+            else
+              begin
+                WriteLn('bad-scores');
+              end;
+            end if;
 
-              case ActiveValue.Unwrap() of
-                when JsonValue.Bool(const Active):
-                  begin
-                    WriteLn(Active);
-                  end;
-                else
-                  begin
-                    WriteLn('bad-active');
-                  end;
-              end case;
-            end;
-          else
-            begin
-              WriteLn('not-object');
-            end;
-        end case;
+            if ActiveValue.Unwrap() is JsonValue.Bool(const Active) then
+              begin
+                WriteLn(Active);
+              end;
+            else
+              begin
+                WriteLn('bad-active');
+              end;
+            end if;
+          end;
+        else
+          begin
+            WriteLn('not-object');
+          end;
+        end if;
       end;
     when Error(const E):
       begin

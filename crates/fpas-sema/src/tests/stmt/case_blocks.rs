@@ -46,8 +46,8 @@ fn arms_support_shadowing_and_existing_pattern_guard_bindings() {
 }
 
 #[test]
-fn catch_all_on_closed_types_remains_accepted() {
+fn explicit_arms_on_closed_types_are_accepted() {
     check_ok(
-        "program T; type Light = enum Red; Green; end enum; begin case Light.Red of when Light.Red: null; else null; end case; case Some(1) of when None: null; else null; end case; end.",
+        "program T; type Light = enum Red; Green; end enum; begin case Light.Red of when Light.Red: null; when Light.Green: null; end case; case Some(1) of when None: null; when Some(_): null; end case; end.",
     );
 }

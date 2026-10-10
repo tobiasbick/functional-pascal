@@ -11,16 +11,15 @@ end function;
 
 function Update(Value: integer; Msg: TuiMsg; Cmd: TuiCmdOutput): integer;
 begin
-  case Msg of
-    when TuiMsg.Tick(const Delta):
-      begin
-        return Value + Delta;
-      end;
-    else
-      begin
-        return Value;
-      end;
-  end case;
+  if Msg is TuiMsg.Tick(const Delta) then
+    begin
+      return Value + Delta;
+    end;
+  else
+    begin
+      return Value;
+    end;
+  end if;
 end function;
 
 begin

@@ -136,11 +136,11 @@ fn pattern_diagnostics_reject_duplicate_values_and_invalid_qualifiers() {
     let source = cwd.join("main.fpas");
     for (body, expected_code) in [
         (
-            "case Value of when Some(Shape.Circle(1)): null; when Some(Shape.Circle(1)): null; else null; end case;",
+            "case Value of when Some(Shape.Circle(1)): null; when Some(Shape.Circle(1)): null; when Some(_), None: null; end case;",
             "FP3033",
         ),
         (
-            "case Value of when Some(Other.Point): null; else null; end case;",
+            "case Value of when Some(Other.Point): null; when Some(_), None: null; end case;",
             "FP3006",
         ),
         (

@@ -26,23 +26,22 @@ begin
       case TuiReadConsoleHostInputWithTimeout(TuiResizeSettleMilliseconds) of
         when Some(const Input):
           begin
-            case Input of
-              when TuiHostInput.Resize(const Size):
-                begin
-                  LatestSize := Size;
-                  Sleep(0);
-                end;
-              else
-                begin
-                  if TuiConsoleInputSend(Token, Output, TuiHostInput.Resize(LatestSize)) then
-                    begin
-                      return true;
-                    end;
-                  end if;
+            if Input is TuiHostInput.Resize(const Size) then
+              begin
+                LatestSize := Size;
+                Sleep(0);
+              end;
+            else
+              begin
+                if TuiConsoleInputSend(Token, Output, TuiHostInput.Resize(LatestSize)) then
+                  begin
+                    return true;
+                  end;
+                end if;
 
-                  return TuiConsoleInputSend(Token, Output, Input);
-                end;
-            end case;
+                return TuiConsoleInputSend(Token, Output, Input);
+              end;
+            end if;
           end;
         when None:
           begin
@@ -67,24 +66,23 @@ begin
       case TuiReadConsoleHostInputWithTimeout(TuiResizeSettleMilliseconds) of
         when Some(const Input):
           begin
-            case Input of
-              when TuiHostInput.Resize(const Size):
-                begin
-                  if TuiConsoleInputSettleResize(Token, Output, Size) then
-                    begin
-                      return Ok(true);
-                    end;
-                  end if;
-                end;
-              else
-                begin
-                  if TuiConsoleInputSend(Token, Output, Input) then
-                    begin
-                      return Ok(true);
-                    end;
-                  end if;
-                end;
-            end case;
+            if Input is TuiHostInput.Resize(const Size) then
+              begin
+                if TuiConsoleInputSettleResize(Token, Output, Size) then
+                  begin
+                    return Ok(true);
+                  end;
+                end if;
+              end;
+            else
+              begin
+                if TuiConsoleInputSend(Token, Output, Input) then
+                  begin
+                    return Ok(true);
+                  end;
+                end if;
+              end;
+            end if;
           end;
         when None:
           begin

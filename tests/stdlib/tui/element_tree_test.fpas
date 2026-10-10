@@ -27,39 +27,36 @@ end function;
 
 begin
   const Tree: TuiElement := ViewTree(0);
-  case Tree of
-    when TuiElement.Desktop(const Focused, const DesktopChildren):
-      begin
-        AssertEquals(2, DesktopChildren.Length());
-        case DesktopChildren[0] of
-          when TuiElement.Panel(const Title, const PanelChildren):
-            begin
-              AssertEquals('Dashboard', Title);
-              AssertEquals(1, PanelChildren.Length());
-            end;
-          else
-            begin
-              panic('expected panel element');
-            end;
-        end case;
+  if Tree is TuiElement.Desktop(const Focused, const DesktopChildren) then
+    begin
+      AssertEquals(2, DesktopChildren.Length());
+      if DesktopChildren[0] is TuiElement.Panel(const Title, const PanelChildren) then
+        begin
+          AssertEquals('Dashboard', Title);
+          AssertEquals(1, PanelChildren.Length());
+        end;
+      else
+        begin
+          panic('expected panel element');
+        end;
+      end if;
 
-        case DesktopChildren[1] of
-          when TuiElement.Overlay(const Title, const OverlayChildren):
-            begin
-              AssertEquals('Confirm', Title);
-              AssertEquals(1, OverlayChildren.Length());
-            end;
-          else
-            begin
-              panic('expected overlay element');
-            end;
-        end case;
-      end;
-    else
-      begin
-        panic('expected desktop element');
-      end;
-  end case;
+      if DesktopChildren[1] is TuiElement.Overlay(const Title, const OverlayChildren) then
+        begin
+          AssertEquals('Confirm', Title);
+          AssertEquals(1, OverlayChildren.Length());
+        end;
+      else
+        begin
+          panic('expected overlay element');
+        end;
+      end if;
+    end;
+  else
+    begin
+      panic('expected desktop element');
+    end;
+  end if;
   var App: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(30, 10));
   AssertEquals(0, App.RunIterations(0, UpdateTree, ViewTree, 0, 0));
   App.Close();

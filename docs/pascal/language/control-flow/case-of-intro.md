@@ -66,10 +66,14 @@ end case;
 ```
 
 Guarded arms do not count toward exhaustive variant coverage. The compiler
-checks enum, `Result`, and `Option` coverage unless an `else` arm is present.
+requires complete explicit enum, `Result`, and `Option` coverage. These types
+reject `else` (FP3035), even after complete coverage. Scalar `integer`, `string`,
+and `boolean` cases allow `else`; Boolean coverage is optional. Use an
+[`is` test](../pattern-matching/is-test.md) when handling just one variant.
 See [Pattern matching](../pattern-matching/README.md) for guards, scalar guard
 bindings, data-enum patterns, and exhaustiveness rules. Destructuring keeps
-forms such as `Ok(Value)`, `Error(Reason)`, `Some(Value)`, and `None`.
+forms such as `Ok(const Value)`, `Error(const Reason)`, `Some(const Value)`,
+and `None`.
 
 ## See also
 

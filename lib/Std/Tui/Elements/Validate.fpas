@@ -68,7 +68,7 @@ begin
       begin
         return Children;
       end;
-    else
+    when TuiElement.Empty, TuiElement.Label(_), TuiElement.Button(_), TuiElement.Input(_), TuiElement.TextArea(_, _, _, _, _), TuiElement.CheckBox(_, _, _, _), TuiElement.List(_, _, _, _), TuiElement.MenuBar(_), TuiElement.Menu(_, _, _, _), TuiElement.StatusLine(_), TuiElement.CellGrid(_), TuiElement.Rule(_), TuiElement.Gauge(_), TuiElement.Spacer(_):
       begin
         return [];
       end;
@@ -214,24 +214,20 @@ begin
       begin
         for Index: integer := 0 to Items.Length() - 1 do
           begin
-            case Items[Index] of
-              when TuiStatusItem.Command(const Id, const Text, const Action, const Enabled):
-                begin
-                  TuiElementValidateControl(Id);
-                  TuiElementValidateAction(Action);
-                  if TuiElementControlSeen(Seen, Id.Value) then
-                    begin
-                      panic('Tui control id must be unique in one tree: ' +
-                            Std.Conv.IntToStr(Id.Value));
-                    end;
-                  end if;
+            if Items[Index] is TuiStatusItem.Command(const Id, const Text, const Action, const Enabled) then
+              begin
+                TuiElementValidateControl(Id);
+                TuiElementValidateAction(Action);
+                if TuiElementControlSeen(Seen, Id.Value) then
+                  begin
+                    panic('Tui control id must be unique in one tree: ' +
+                          Std.Conv.IntToStr(Id.Value));
+                  end;
+                end if;
 
-                  Seen.Push(Id.Value);
-                end;
-              else
-                begin
-                end;
-            end case;
+                Seen.Push(Id.Value);
+              end;
+            end if;
           end;
         end for;
       end;
@@ -251,9 +247,8 @@ begin
           end;
         end if;
       end;
-    else
-      begin
-      end;
+    when TuiElement.Empty, TuiElement.Label(_), TuiElement.CellGrid(_), TuiElement.Rule(_), TuiElement.Spacer(_), TuiElement.Panel(_, _), TuiElement.Overlay(_, _), TuiElement.Desktop(_, _):
+      null;
   end case;
   const Children: array of TuiElement := TuiElementChildren(Node);
   for ChildIndex: integer := 0 to Children.Length() - 1 do
@@ -274,28 +269,24 @@ begin
     end;
   end for;
 
-  case Node of
-    when TuiElement.Desktop(const Focused, const DesktopChildren):
-      begin
-        case Focused of
-          when Some(const Id):
-            begin
-              if not TuiElementControlSeen(Seen, Id.Value) then
-                begin
-                  panic('Tui focused control id must exist in the rendered tree: ' +
-                        Std.Conv.IntToStr(Id.Value));
-                end;
-              end if;
-            end;
-          when None:
-            begin
-            end;
-        end case;
-      end;
-    else
-      begin
-      end;
-  end case;
+  if Node is TuiElement.Desktop(const Focused, const DesktopChildren) then
+    begin
+      case Focused of
+        when Some(const Id):
+          begin
+            if not TuiElementControlSeen(Seen, Id.Value) then
+              begin
+                panic('Tui focused control id must exist in the rendered tree: ' +
+                      Std.Conv.IntToStr(Id.Value));
+              end;
+            end if;
+          end;
+        when None:
+          begin
+          end;
+      end case;
+    end;
+  end if;
 
   return Seen;
 end function;

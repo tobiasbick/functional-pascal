@@ -21,7 +21,7 @@ begin
     case Value of
       when Pair.Both(const Limit, Limit):
         return Limit;
-      else
+      when Pair.Both(_, _), Pair.Empty:
         return -1;
     end case;
   end function;

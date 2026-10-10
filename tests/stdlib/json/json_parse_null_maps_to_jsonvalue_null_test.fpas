@@ -7,16 +7,15 @@ begin
   case R of
     when Ok(const V):
       begin
-        case V of
-          when JsonValue.NullValue:
-            begin
-              WriteLn('null');
-            end;
-          else
-            begin
-              WriteLn('not-null');
-            end;
-        end case;
+        if V is JsonValue.NullValue then
+          begin
+            WriteLn('null');
+          end;
+        else
+          begin
+            WriteLn('not-null');
+          end;
+        end if;
       end;
     when Error(const E):
       begin

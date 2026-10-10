@@ -10,28 +10,27 @@ end record;
 
 function UpdateFramework(State: CommandModel; Msg: TuiMsg; Cmd: TuiCmdOutput): CommandModel;
 begin
-  case Msg of
-    when TuiMsg.Started:
-      begin
-        const Target: channel of integer := State.Inbox;
-        const Ready: channel of boolean := State.Ready;
-        Cmd.StartBackground(7, function(Token: CancellationToken): result of boolean, string begin
-          if SendWithCancellation(Target, 42, Token).IsError() then
-            begin
-              return Ok(true);
-            end;
-          end if;
+  if Msg is TuiMsg.Started then
+    begin
+      const Target: channel of integer := State.Inbox;
+      const Ready: channel of boolean := State.Ready;
+      Cmd.StartBackground(7, function(Token: CancellationToken): result of boolean, string begin
+        if SendWithCancellation(Target, 42, Token).IsError() then
+          begin
+            return Ok(true);
+          end;
+        end if;
 
-          discard Send(Ready, true);
-          return Ok(true);
-        end function);
-        return State;
-      end;
-    else
-      begin
-        return State;
-      end;
-  end case;
+        discard Send(Ready, true);
+        return Ok(true);
+      end function);
+      return State;
+    end;
+  else
+    begin
+      return State;
+    end;
+  end if;
 end function;
 
 function UpdateApplication(State: CommandModel; Message: integer; Cmd: TuiCmdOutput): CommandModel;

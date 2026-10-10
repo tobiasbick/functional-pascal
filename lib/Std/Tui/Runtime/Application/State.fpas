@@ -84,16 +84,15 @@ begin
     end;
   end if;
 
-  case Failures[0] of
-    when TuiMsg.BackgroundFailed(const IgnoredId, const Kind, const Message, const Code, const Line, const Column):
-      begin
-        panic(Message);
-      end;
-    else
-      begin
-        panic('Tui background operation failed during shutdown');
-      end;
-  end case;
+  if Failures[0] is TuiMsg.BackgroundFailed(const IgnoredId, const Kind, const Message, const Code, const Line, const Column) then
+    begin
+      panic(Message);
+    end;
+  else
+    begin
+      panic('Tui background operation failed during shutdown');
+    end;
+  end if;
 end procedure;
 
 public function TuiAppRequireHandle(ApplicationId: integer): integer;
@@ -242,15 +241,11 @@ end procedure;
 
 public procedure TuiAppApplyResizeIfNeeded(ApplicationId: integer; Msg: TuiMsg);
 begin
-  case Msg of
-    when TuiMsg.Resize(const Size):
-      begin
-        TuiAppApplyResize(ApplicationId, Size);
-      end;
-    else
-      begin
-      end;
-  end case;
+  if Msg is TuiMsg.Resize(const Size) then
+    begin
+      TuiAppApplyResize(ApplicationId, Size);
+    end;
+  end if;
 end procedure;
 
 public function TuiAppApplyCommand(ApplicationId: integer; Output: TuiCmdOutput): boolean;

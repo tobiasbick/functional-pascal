@@ -44,7 +44,7 @@ an open work package.
 
 ## Package status
 
-AP01, AP02, AP04, AP05, AP06, AP07, AP09, AP10, AP11, AP13, AP14, AP16,
+AP01, AP02, AP03, AP04, AP05, AP06, AP07, AP09, AP10, AP11, AP13, AP14, AP16,
 AP17, and AP20 are complete, including all their work packages. Their READMEs
 and work-package files record implemented behavior, implementation owners, regression coverage,
 and any independent follow-ups. Checkboxes use the
@@ -58,7 +58,7 @@ package are listed in each work package file.
 |------|---------|--------|------------|-----------|
 | [x] | [AP01: Pascal conventions](ap01-pascal-conventions/README.md) | Small | None | Complete |
 | [x] | [AP02: Structured diagnostics](ap02-structured-diagnostics/README.md) | Small | None | Complete (Q01) |
-| [ ] | [AP03: Explicit closed-enum cases](ap03-explicit-closed-enum-cases/README.md) | Small | AP02, AP20 | Agreed direction |
+| [x] | [AP03: Explicit closed-enum cases](ap03-explicit-closed-enum-cases/README.md) | Small | AP02, AP20 | Complete (AP03.1, AP03.2) |
 | [x] | [AP04: Discarded function values](ap04-discarded-function-values/README.md) | Small | AP02 | Complete |
 | [x] | [AP05: Qualified imports](ap05-qualified-imports/README.md) | Medium | AP01, AP02 | Complete: import aliases and alias-aware editor tooling |
 | [x] | [AP06: Fixed dot-call targets](ap06-dot-call-targets/README.md) | Medium | AP09.1, AP17.3 (AP06.3) | Complete (Q05) |
@@ -98,7 +98,7 @@ and transfer conditions are recorded in the owning package README.
 |---------|---------------|
 | AP01 | AP01.1 reference examples; AP01.2 plan spelling review |
 | AP02 | AP02.1 audit and code scheme; AP02.2 shared record; AP02.3 project/build diagnostics; AP02.4 JSON output; AP02.5 reference; AP02.6 parameter declaration diagnostics |
-| AP03 | AP03.1 migrate catch-alls; AP03.2 reject catch-alls |
+| AP03 | AP03.1 explicit variants and `is`; AP03.2 rejects closed-enum catch-alls (both complete) |
 | AP04 | AP04.1 discard statement; AP04.2 require consumed results |
 | AP05 | AP05.1 import aliases; AP05.2 alias-aware tooling |
 | AP06 | AP06.1 catalog/rules; AP06.2 consumer preparation; AP06.3 native type operations and removal of duplicate call forms (all complete) |
@@ -132,19 +132,14 @@ The completed syntax review and its implementation verification are recorded in
 already inspected. The [review plan](review/README.md) is an empty placeholder
 for the next review.
 
-Continue with
-[AP03.1: Migrate closed-enum catch-alls](ap03-explicit-closed-enum-cases/01-migrate-closed-enum-catch-alls.md),
-the next open work package. Completed package checkboxes remain the
-implementation status.
-
 Package numbers group related work; they are not the execution order. The
 completed foundation is listed above. For the remaining work, keep the
 following dependency order; the exact prerequisites and unresolved decisions
 are recorded in each work-package file.
 
-1. AP03 and AP15 use the completed pattern and `is` rules (AP20); AP21 and
-   AP24 follow their required parts of AP03 on top of the completed patterns
-   and typed record construction (AP10).
+1. AP15 uses the completed pattern and `is` rules (AP20). AP21 and AP24 use
+   the completed explicit enum cases (AP03); AP24 also uses the completed
+   patterns and typed record construction (AP10).
 2. AP18 and AP23 use the completed Boolean and binding rules. AP19 uses the
    completed import and binding rules.
 3. AP26 uses the completed block and caller-mutation rules. Reassess AP25

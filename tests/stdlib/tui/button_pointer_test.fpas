@@ -26,7 +26,7 @@ begin
       begin
         return ButtonPointerModel(Actions := State.Actions, PointerEvents := State.PointerEvents + 1);
       end;
-    else
+    when TuiMsg.Started, TuiMsg.Key(_), TuiMsg.Tick(_), TuiMsg.Resize(_), TuiMsg.FocusChanged(_, _), TuiMsg.TextChanged(_, _, _, _), TuiMsg.TextAreaChanged(_, _, _, _, _), TuiMsg.CheckChanged(_, _, _), TuiMsg.SelectionChanged(_, _, _), TuiMsg.ScrollChanged(_, _, _), TuiMsg.MenuChanged(_, _, _), TuiMsg.BackgroundFailed(_, _, _, _, _, _), TuiMsg.QuitRequested:
       begin
         return State;
       end;

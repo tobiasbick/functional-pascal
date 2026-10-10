@@ -20,16 +20,15 @@ end function;
 function UpdateScroll(State: ScrollModel; Msg: TuiMsg; Cmd: TuiCmdOutput): ScrollModel;
 begin
   Cmd.Set(TuiCmd.NoCommand);
-  case Msg of
-    when TuiMsg.ScrollChanged(const Source, const Action, const Offset):
-      begin
-        return ScrollModel(Offset := Offset);
-      end;
-    else
-      begin
-        return State;
-      end;
-  end case;
+  if Msg is TuiMsg.ScrollChanged(const Source, const Action, const Offset) then
+    begin
+      return ScrollModel(Offset := Offset);
+    end;
+  else
+    begin
+      return State;
+    end;
+  end if;
 end function;
 
 begin

@@ -24,22 +24,21 @@ end function;
 function UpdateInput(State: InputPointerModel; Msg: TuiMsg; Cmd: TuiCmdOutput): InputPointerModel;
 begin
   Cmd.Set(TuiCmd.NoCommand);
-  case Msg of
-    when TuiMsg.TextChanged(const Source, const Action, const Text, const Caret):
-      begin
-        if Source.Value = 1 then
-          begin
-            return InputPointerModel(FirstText := Text, FirstCaret := Caret, SecondText := State.SecondText, SecondCaret := State.SecondCaret, LastSource := Source.Value, LastAction := Action.Value);
-          end;
-        end if;
+  if Msg is TuiMsg.TextChanged(const Source, const Action, const Text, const Caret) then
+    begin
+      if Source.Value = 1 then
+        begin
+          return InputPointerModel(FirstText := Text, FirstCaret := Caret, SecondText := State.SecondText, SecondCaret := State.SecondCaret, LastSource := Source.Value, LastAction := Action.Value);
+        end;
+      end if;
 
-        return InputPointerModel(FirstText := State.FirstText, FirstCaret := State.FirstCaret, SecondText := Text, SecondCaret := Caret, LastSource := Source.Value, LastAction := Action.Value);
-      end;
-    else
-      begin
-        return State;
-      end;
-  end case;
+      return InputPointerModel(FirstText := State.FirstText, FirstCaret := State.FirstCaret, SecondText := Text, SecondCaret := Caret, LastSource := Source.Value, LastAction := Action.Value);
+    end;
+  else
+    begin
+      return State;
+    end;
+  end if;
 end function;
 
 function Click(App: TuiApplication; State: InputPointerModel; X: integer; Y: integer): InputPointerModel;

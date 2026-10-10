@@ -7,40 +7,37 @@ begin
   case Parsed of
     when Ok(const Value):
       begin
-        case Value of
-          when JsonValue.Object(const Fields):
-            begin
-              const NameValue: option of JsonValue := Fields.Get('name');
-              const ScoresValue: option of JsonValue := Fields.Get('scores');
-              case NameValue.Unwrap() of
-                when JsonValue.String(const Name):
-                  begin
-                    WriteLn('name = ' + Name);
-                  end;
-                else
-                  begin
-                    WriteLn('missing name');
-                  end;
-              end case;
+        if Value is JsonValue.Object(const Fields) then
+          begin
+            const NameValue: option of JsonValue := Fields.Get('name');
+            const ScoresValue: option of JsonValue := Fields.Get('scores');
+            if NameValue.Unwrap() is JsonValue.String(const Name) then
+              begin
+                WriteLn('name = ' + Name);
+              end;
+            else
+              begin
+                WriteLn('missing name');
+              end;
+            end if;
 
-              case ScoresValue.Unwrap() of
-                when JsonValue.ArrayValue(const Scores):
-                  begin
-                    WriteLn('scores = ' + IntToStr(Scores.Length()));
-                  end;
-                else
-                  begin
-                    WriteLn('missing scores');
-                  end;
-              end case;
+            if ScoresValue.Unwrap() is JsonValue.ArrayValue(const Scores) then
+              begin
+                WriteLn('scores = ' + IntToStr(Scores.Length()));
+              end;
+            else
+              begin
+                WriteLn('missing scores');
+              end;
+            end if;
 
-              WriteLn(Stringify(Value));
-            end;
-          else
-            begin
-              WriteLn('expected object');
-            end;
-        end case;
+            WriteLn(Stringify(Value));
+          end;
+        else
+          begin
+            WriteLn('expected object');
+          end;
+        end if;
       end;
     when Error(const Message):
       begin

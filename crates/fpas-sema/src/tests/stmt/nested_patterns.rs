@@ -125,12 +125,12 @@ fn covered_labels_are_unreachable() {
 #[test]
 fn payload_comparisons_require_compile_time_constants() {
     check_ok(&program(
-        "case R of when Ok(Some(Limit)): null; else null; end case;",
+        "case R of when Ok(Some(Limit)): null; when Ok(_), Error(_): null; end case;",
     ));
     assert_eq!(
         codes(
             &program(
-                "const Computed: integer := ReadValue(); case R of when Ok(Some(Computed)): null; else null; end case;"
+                "const Computed: integer := ReadValue(); case R of when Ok(Some(Computed)): null; when Ok(_), Error(_): null; end case;"
             ),
             SEMA_NON_CONSTANT_EXPRESSION
         ),
@@ -138,14 +138,18 @@ fn payload_comparisons_require_compile_time_constants() {
     );
     assert_eq!(
         codes(
-            &program("case R of when Ok(Some(Missing)): null; else null; end case;"),
+            &program(
+                "case R of when Ok(Some(Missing)): null; when Ok(_), Error(_): null; end case;"
+            ),
             SEMA_IMPLICIT_PATTERN_BINDING
         ),
         1
     );
     assert_eq!(
         codes(
-            &program("case R of when Ok(Some('text')): null; else null; end case;"),
+            &program(
+                "case R of when Ok(Some('text')): null; when Ok(_), Error(_): null; end case;"
+            ),
             SEMA_TYPE_MISMATCH
         ),
         1
@@ -162,7 +166,7 @@ fn explicit_bindings_shadow_constants_and_bare_names_compare() {
          end case;",
     ));
     check_ok(&program(
-        "case O of when Some(Shape.Circle(Limit)): null; else null; end case;",
+        "case O of when Some(Shape.Circle(Limit)): null; when Some(_), None: null; end case;",
     ));
 }
 
@@ -170,13 +174,13 @@ fn explicit_bindings_shadow_constants_and_bare_names_compare() {
 fn variants_must_match_the_payload_type() {
     assert!(
         codes(
-            &program("case R of when Ok(Shape.Point): null; else null; end case;"),
+            &program("case R of when Ok(Shape.Point): null; when Ok(_), Error(_): null; end case;"),
             SEMA_TYPE_MISMATCH
         ) >= 1
     );
     assert!(
         codes(
-            &program("case O of when Some(Some(_)): null; else null; end case;"),
+            &program("case O of when Some(Some(_)): null; when Some(_), None: null; end case;"),
             SEMA_TYPE_MISMATCH
         ) >= 1
     );
@@ -185,10 +189,10 @@ fn variants_must_match_the_payload_type() {
 #[test]
 fn repeated_payload_comparisons_are_unreachable() {
     for body in [
-        "case R of when Ok(Some(1)): null; when Ok(Some(1)): null; else null; end case;",
-        "case R of when Ok(Some(Limit)): null; when Ok(Some(1 + 2)): null; else null; end case;",
-        "case S of when Some('ab'): null; when Some('a' + 'b'): null; else null; end case;",
-        "case O of when Some(Shape.Rect(1, 2)): null; when Some(Shape.Rect(1, 2)): null; else null; end case;",
+        "case R of when Ok(Some(1)): null; when Ok(Some(1)): null; when Ok(_), Error(_): null; end case;",
+        "case R of when Ok(Some(Limit)): null; when Ok(Some(1 + 2)): null; when Ok(_), Error(_): null; end case;",
+        "case S of when Some('ab'): null; when Some('a' + 'b'): null; when Some(_), None: null; end case;",
+        "case O of when Some(Shape.Rect(1, 2)): null; when Some(Shape.Rect(1, 2)): null; when Some(_), None: null; end case;",
     ] {
         assert_eq!(
             codes(&program(body), SEMA_UNREACHABLE_CASE_LABEL),
@@ -197,8 +201,7 @@ fn repeated_payload_comparisons_are_unreachable() {
         );
     }
     check_ok(&program(
-        "case R of when Ok(Some(1)) if true: null; when Ok(Some(1)): null; else null; end case;
-         case O of when Some(Shape.Rect(1, 2)): null; when Some(Shape.Rect(1, 3)): null; when Some(Shape.Rect(2, 2)): null; else null; end case;",
+        "case R of when Ok(Some(1)) if true: null; when Ok(Some(1)): null; when Ok(_), Error(_): null; end case;\n         case O of when Some(Shape.Rect(1, 2)): null; when Some(Shape.Rect(1, 3)): null; when Some(Shape.Rect(2, 2)): null; when Some(_), None: null; end case;",
     ));
 }
 
@@ -216,7 +219,7 @@ fn named_finite_values_complete_nested_coverage() {
     assert_eq!(
         codes(
             &program(
-                "const Yes: boolean := true; case B of when Some(true): null; when Some(Yes): null; else null; end case;"
+                "const Yes: boolean := true; case B of when Some(true): null; when Some(Yes): null; when Some(_), None: null; end case;"
             ),
             SEMA_UNREACHABLE_CASE_LABEL
         ),
@@ -225,7 +228,7 @@ fn named_finite_values_complete_nested_coverage() {
     assert_eq!(
         codes(
             &program(
-                "const RedChoice: Color := Color.Red; case C of when Some(Color.Red): null; when Some(RedChoice): null; else null; end case;"
+                "const RedChoice: Color := Color.Red; case C of when Some(Color.Red): null; when Some(RedChoice): null; when Some(_), None: null; end case;"
             ),
             SEMA_UNREACHABLE_CASE_LABEL
         ),
@@ -247,15 +250,17 @@ fn variant_qualifiers_resolve_to_the_expected_enum() {
         )
     };
     for body in [
-        "case O of when Some(Other.Point): null; else null; end case;",
-        "case O of when Some(Other.Circle(_)): null; else null; end case;",
-        "case S of when Other.Point: null; else null; end case;",
+        "case O of when Some(Other.Point): null; when Some(_), None: null; end case;",
+        "case O of when Some(Other.Circle(_)): null; when Some(_), None: null; end case;",
+        "case S of when Other.Point: null; when Shape.Circle(_), Shape.Point: null; end case;",
     ] {
         assert_eq!(codes(&source(body), SEMA_TYPE_MISMATCH), 1, "{body}");
     }
     assert_eq!(
         codes(
-            &source("case O of when Some(Missing.Point): null; else null; end case;"),
+            &source(
+                "case O of when Some(Missing.Point): null; when Some(_), None: null; end case;"
+            ),
             fpas_diagnostics::codes::SEMA_UNKNOWN_NAME
         ),
         1

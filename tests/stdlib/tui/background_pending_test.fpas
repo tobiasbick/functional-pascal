@@ -56,9 +56,8 @@ begin
         Next.Failures := State.Failures + 1;
         return Next;
       end;
-    else
-      begin
-      end;
+    when TuiMsg.Key(_), TuiMsg.Pointer(_), TuiMsg.Resize(_), TuiMsg.FocusChanged(_, _), TuiMsg.Action(_, _), TuiMsg.TextChanged(_, _, _, _), TuiMsg.TextAreaChanged(_, _, _, _, _), TuiMsg.CheckChanged(_, _, _), TuiMsg.SelectionChanged(_, _, _), TuiMsg.ScrollChanged(_, _, _), TuiMsg.MenuChanged(_, _, _), TuiMsg.QuitRequested:
+      null;
   end case;
 
   return State;

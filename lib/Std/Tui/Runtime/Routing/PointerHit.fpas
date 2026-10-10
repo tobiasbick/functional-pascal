@@ -64,15 +64,11 @@ begin
   var LastOverlay: integer := -1;
   for Index: integer := 0 to Children.Length() - 1 do
     begin
-      case Children[Index] of
-        when TuiElement.Overlay(const Title, const OverlayChildren):
-          begin
-            LastOverlay := Index;
-          end;
-        else
-          begin
-          end;
-      end case;
+      if Children[Index] is TuiElement.Overlay(const Title, const OverlayChildren) then
+        begin
+          LastOverlay := Index;
+        end;
+      end if;
     end;
   end for;
 
@@ -271,9 +267,8 @@ begin
           end;
         end for;
       end;
-    else
-      begin
-      end;
+    when TuiElement.Empty, TuiElement.Label(_), TuiElement.CellGrid(_), TuiElement.Rule(_), TuiElement.Gauge(_), TuiElement.Spacer(_):
+      null;
   end case;
 
   return Next;

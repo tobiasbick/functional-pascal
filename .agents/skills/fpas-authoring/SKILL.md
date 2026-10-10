@@ -50,7 +50,10 @@ Read the pages relevant to the change. For exact productions, consult
   guard binding. `_` ignores one field. Patterns nest (`Ok(Some(const User))`)
   and compare payloads with literals or compile-time constants; a plain
   identifier that names no constant is an error. Coverage is checked
-  recursively, and labels covered by earlier arms are rejected. Test one
+  recursively. Closed enum, Option, and Result cases list every variant
+  explicitly and reject `else`, including a redundant branch. Only scalar
+  integer, string, and boolean cases allow `else`; Boolean coverage is optional.
+  Labels covered by earlier arms are rejected. Test one
   pattern with `if Value is Some(const X) and X > 0 then` or
   `while Value is ... do`; `is` is valid only there, and `is` is reserved.
 - Import every referenced unit with `uses`, including fully qualified `Std.*`

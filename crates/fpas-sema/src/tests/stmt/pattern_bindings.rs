@@ -49,7 +49,7 @@ fn const_bindings_and_wildcards_are_valid_in_every_pattern_kind() {
 fn plain_identifier_in_a_payload_reports_the_const_form() {
     for (source, name) in [
         (
-            format!("program T; {SHAPES} procedure P(S: Shape); begin case S of when Shape.Circle(R): null; else null; end case; end procedure; begin end."),
+            format!("program T; {SHAPES} procedure P(S: Shape); begin case S of when Shape.Circle(R): null; when Shape.Circle(_), Shape.Rect(_, _), Shape.Point: null; end case; end procedure; begin end."),
             "R",
         ),
         (
@@ -76,12 +76,12 @@ fn plain_identifier_in_a_payload_reports_the_const_form() {
 #[test]
 fn duplicate_bindings_real_comparisons_and_named_fields_are_rejected() {
     let duplicate = format!(
-        "program T; {SHAPES} procedure P(S: Shape); begin case S of when Shape.Rect(const A, const A): null; else null; end case; end procedure; begin end."
+        "program T; {SHAPES} procedure P(S: Shape); begin case S of when Shape.Rect(const A, const A): null; when Shape.Circle(_), Shape.Rect(_, _), Shape.Point: null; end case; end procedure; begin end."
     );
     assert_eq!(errors_with(&duplicate, SEMA_DUPLICATE_DECLARATION).len(), 1);
 
     let real = format!(
-        "program T; {SHAPES} procedure P(S: Shape); begin case S of when Shape.Circle(1.0): null; else null; end case; end procedure; begin end."
+        "program T; {SHAPES} procedure P(S: Shape); begin case S of when Shape.Circle(1.0): null; when Shape.Circle(_), Shape.Rect(_, _), Shape.Point: null; end case; end procedure; begin end."
     );
     assert!(
         errors_with(&real, SEMA_TYPE_MISMATCH)
@@ -94,7 +94,7 @@ fn duplicate_bindings_real_comparisons_and_named_fields_are_rejected() {
     );
 
     let named = format!(
-        "program T; {SHAPES} procedure P(S: Shape); begin case S of when Shape.Circle(Radius := const R): null; else null; end case; end procedure; begin end."
+        "program T; {SHAPES} procedure P(S: Shape); begin case S of when Shape.Circle(Radius := const R): null; when Shape.Circle(_), Shape.Rect(_, _), Shape.Point: null; end case; end procedure; begin end."
     );
     assert_eq!(
         errors_with(&named, SEMA_NAMED_ARGUMENTS_NOT_SUPPORTED).len(),
@@ -120,7 +120,7 @@ fn scalar_const_binding_requires_a_guard_and_its_own_arm() {
     for source in [
         "program T; begin case 3 of when const N: null; end case; end.",
         "program T; begin case 3 of when const N, 2 if N > 0: null; else null; end case; end.",
-        "program T; procedure P(O: option of integer); begin case O of when const N if true: null; else null; end case; end procedure; begin end.",
+        "program T; procedure P(O: option of integer); begin case O of when const N if true: null; when Some(_), None: null; end case; end procedure; begin end.",
     ] {
         assert_eq!(
             errors_with(source, SEMA_INVALID_CASE_BINDING).len(),

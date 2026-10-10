@@ -2,50 +2,53 @@
 
 Package: [AP03: Explicit closed-enum cases](README.md)
 
-## Scope
+Status: complete.
 
-Make `else` on a `case` over a closed enum an error and require every variant
-to be listed explicitly. Guarded arms do not count as coverage.
+## Result
 
-## Prerequisites
+FP3035 rejects `else` in a `case` over a user enum, `Option`, or `Result`,
+including aliases and imported types. With valid labels, the diagnostic names
+one missing pattern per uncovered variant, including nested payloads. Its hint
+recommends explicit `when` arms, `null;` for no action, or an `is` test when only
+one variant matters. Complete explicit coverage still rejects `else`, with a
+hint to remove the redundant branch.
 
-- AP03.1 (repository has no closed-enum catch-alls).
-- AP02 (diagnostic code).
+Cases without `else` report FP3011 for missing patterns. Guarded arms do not
+complete coverage. `_` ignores a payload position and cannot cover another
+variant. Invalid labels do not produce misleading redundant-branch hints;
+rejected bodies are checked without leaking their bindings.
 
-## Implementation
+Scalar `integer`, `string`, and `boolean` cases retain `else`. Boolean cases
+do not require both `true` and `false`.
 
-- In the case coverage check, reject `else` when the scrutinee is a closed
-  enum, `Option`, or `Result`. Keep `else` for open domains.
-- Keep scalar `boolean` cases unchanged, including their permitted `else`.
-- Reject `else` even after complete explicit coverage. In that case, suggest
-  removing the redundant branch rather than listing nonexistent missing variants.
-- The diagnostic lists the variants the `else` replaced and suggests a
-  `null;` arm or an `is` test. The AP20.2 pattern matrix
-  (`missing_patterns` in `if_case/coverage.rs`) already computes the missing
-  patterns without the `else`.
-- A guarded arm alone does not cover its variant; a field wildcard `_` does
-  not cover a missing variant.
+## Ownership
 
-## Affected areas
+- `crates/fpas-sema/src/check/stmt/control_flow/if_case/exhaustiveness.rs`
+  owns catch-all and missing-pattern diagnostics, called from `mod.rs`.
+- The existing `if_case/coverage.rs` pattern matrix supplies coverage and
+  missing-pattern witnesses; it is unchanged.
+- `if_case/scalar_bindings.rs` limits replacement hints to valid forms.
+- `crates/fpas-diagnostics/src/codes.rs` allocates FP3035.
+- Sema and CLI `closed_enum_cases.rs` modules own the regression tests.
 
-- `crates/fpas-sema/src/check/stmt/control_flow/if_case/` (`mod.rs` and
-  `coverage.rs`).
-- `crates/fpas-diagnostics/src/codes.rs`.
+## Regression coverage
 
-## Migration
+Tests cover simple and data enums, `Option`, `Result`, aliases, redundant
+catch-alls, guards, nested patterns, payload wildcards, scalar exceptions,
+diagnostic recovery, and CLI text and JSON output. Adding an enum variant
+reports every incomplete case while accepting the extended complete case.
+An imported-enum test verifies the same behavior with an import alias and an
+existing source-adjacent `.fpascu` sidecar.
 
-None beyond AP03.1.
+Verification includes Rust formatting, build and workspace tests, FPAS
+formatting and the complete FPAS suite, affected app/example checks, and
+documentation links.
 
-## Documentation
+## Current documentation
 
-- `docs/pascal/language/pattern-matching/exhaustiveness.md` and
-  `docs/pascal/language/control-flow/case-of-intro.md`.
-- Diagnostics reference entry.
-
-## Verification
-
-- Add a variant to a test enum: every incomplete case reports the missing
-  variant; complete cases remain accepted.
-- Tests for `else` on user enums, `Option`, and `Result`; guarded-only arms;
-  field wildcards; open-domain `else` still valid.
-- Boolean `else` remains accepted; redundant closed-enum `else` is rejected.
+- [Exhaustiveness](../../../pascal/language/pattern-matching/exhaustiveness.md),
+  [`case`](../../../pascal/language/control-flow/case-of-intro.md),
+  [pattern syntax](../../../pascal/language/pattern-matching/syntax.md), and
+  [scalar labels](../../../pascal/language/pattern-matching/scalar-labels.md).
+- [Diagnostics](../../../pascal/tools/diagnostics.md),
+  [grammar](../../../specs/grammar.ebnf), and the FPAS authoring skill.

@@ -24,7 +24,7 @@ begin
         Cmd.Set(TuiCmd.Quit);
         return State;
       end;
-    else
+    when TuiMsg.Started, TuiMsg.Key(_), TuiMsg.Pointer(_), TuiMsg.Resize(_), TuiMsg.FocusChanged(_, _), TuiMsg.Action(_, _), TuiMsg.TextChanged(_, _, _, _), TuiMsg.TextAreaChanged(_, _, _, _, _), TuiMsg.CheckChanged(_, _, _), TuiMsg.SelectionChanged(_, _, _), TuiMsg.ScrollChanged(_, _, _), TuiMsg.BackgroundFailed(_, _, _, _, _, _):
       begin
         return State;
       end;

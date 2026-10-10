@@ -1,6 +1,10 @@
 # Exhaustiveness
 
-The compiler checks that `case` statements on enum, `Result`, and `Option` types cover all variants, including nested payload patterns. A missing variant causes a compile-time error unless an `else` branch is present.
+The compiler checks that `case` statements on enum, `Result`, and `Option`
+types cover every variant explicitly, including nested payload patterns. A
+missing pattern reports FP3011. These closed types do not permit `else`
+(FP3035), even after complete explicit coverage. Scalar `integer`, `string`,
+and `boolean` cases may use `else`; Boolean cases do not require both values.
 
 ## Enum exhaustiveness
 
@@ -35,15 +39,39 @@ case L of
 end case;
 ```
 
-Or by adding `else`:
+Variants with the same behavior can share an arm:
 
 ```pascal
 case L of
   when Light.Red:
     WriteLn('Stop');
-  else
+  when Light.Yellow, Light.Green:
     WriteLn('Proceed with caution');
 end case;
+```
+
+## Closed-enum catch-alls
+
+An enum catch-all hides the cases that need attention when the enum grows.
+FP3035 rejects `else` and names a missing pattern for each uncovered variant.
+Replace it with explicit arms, grouping variants with the same behavior:
+
+```pascal
+case L of
+  when Light.Red:
+    WriteLn('Stop');
+  when Light.Yellow, Light.Green:
+    null;
+end case;
+```
+
+When all values already have explicit coverage, remove the redundant `else`.
+For handling just one variant, use an [`is` test](is-test.md):
+
+```pascal
+if L is Light.Red then
+  WriteLn('Stop');
+end if;
 ```
 
 ## Result and Option exhaustiveness
@@ -133,10 +161,10 @@ or updates and across compiled-unit imports.
 
 ## Rules
 
-- Enum, `Result`, and `Option` types: every value must match an **unguarded** arm, or `else` must be present. This includes nested payloads; `when Ok(Some(_)):` does not cover `Ok(None)`.
+- Enum, `Result`, and `Option` types: every value must match an **unguarded**, explicit variant arm. `else` is rejected, including a redundant branch after complete coverage. This includes nested payloads; `when Ok(Some(_)):` does not cover `Ok(None)`.
 - `_` and `const Name` cover every value of their position. Enum members, `true`/`false`, and nested variants cover their own values. Named compile-time boolean and simple-enum constants contribute the same coverage as their values, including when parenthesized. Literals and constants of other types (integers, strings) never complete coverage on their own.
-- Scalar types (`integer`, `string`, `boolean`): `else` is recommended but not required.
-- Guard clauses do not count toward exhaustiveness — `when Shape.Circle(const R) if R > 0:` does not cover variant `Circle`; add an unguarded `when Shape.Circle(const R):` arm or `else`.
+- Scalar types (`integer`, `string`, `boolean`): `else` is optional. Boolean cases do not require both `true` and `false`.
+- Guard clauses do not count toward exhaustiveness — `when Shape.Circle(const R) if R > 0:` does not cover variant `Circle`; add an unguarded `when Shape.Circle(const R):` arm.
 - Labels already covered by earlier unguarded arms are rejected (FP3033).
 
 ## See also

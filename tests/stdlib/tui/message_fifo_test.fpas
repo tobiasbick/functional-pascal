@@ -48,7 +48,7 @@ begin
       begin
         return PushEvent(State, 'key', ResetOk);
       end;
-    else
+    when TuiMsg.Started, TuiMsg.Pointer(_), TuiMsg.Resize(_), TuiMsg.TextChanged(_, _, _, _), TuiMsg.TextAreaChanged(_, _, _, _, _), TuiMsg.CheckChanged(_, _, _), TuiMsg.SelectionChanged(_, _, _), TuiMsg.ScrollChanged(_, _, _), TuiMsg.MenuChanged(_, _, _), TuiMsg.BackgroundFailed(_, _, _, _, _, _), TuiMsg.QuitRequested:
       begin
         return State;
       end;

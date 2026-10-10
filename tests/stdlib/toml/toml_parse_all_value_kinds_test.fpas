@@ -8,100 +8,91 @@ begin
   case Parsed of
     when Ok(const Value):
       begin
-        case Value of
-          when TomlValue.Table(const Fields):
-            begin
-              case Fields.Get('title').Unwrap() of
-                when TomlValue.String(const Text):
-                  begin
-                    AssertEquals('TOML', Text);
-                  end;
-                else
-                  begin
-                    Fail('Expected string title');
-                  end;
-              end case;
+        if Value is TomlValue.Table(const Fields) then
+          begin
+            if Fields.Get('title').Unwrap() is TomlValue.String(const Text) then
+              begin
+                AssertEquals('TOML', Text);
+              end;
+            else
+              begin
+                Fail('Expected string title');
+              end;
+            end if;
 
-              case Fields.Get('integer').Unwrap() of
-                when TomlValue.Integer(const Number):
-                  begin
-                    AssertEquals(-42, Number);
-                  end;
-                else
-                  begin
-                    Fail('Expected integer value');
-                  end;
-              end case;
+            if Fields.Get('integer').Unwrap() is TomlValue.Integer(const Number) then
+              begin
+                AssertEquals(-42, Number);
+              end;
+            else
+              begin
+                Fail('Expected integer value');
+              end;
+            end if;
 
-              case Fields.Get('float').Unwrap() of
-                when TomlValue.Float(const Number):
-                  begin
-                    AssertEquals(1.5, Number);
-                  end;
-                else
-                  begin
-                    Fail('Expected float value');
-                  end;
-              end case;
+            if Fields.Get('float').Unwrap() is TomlValue.Float(const Number) then
+              begin
+                AssertEquals(1.5, Number);
+              end;
+            else
+              begin
+                Fail('Expected float value');
+              end;
+            end if;
 
-              case Fields.Get('enabled').Unwrap() of
-                when TomlValue.Boolean(const Enabled):
-                  begin
-                    AssertTrue(Enabled);
-                  end;
-                else
-                  begin
-                    Fail('Expected boolean value');
-                  end;
-              end case;
+            if Fields.Get('enabled').Unwrap() is TomlValue.Boolean(const Enabled) then
+              begin
+                AssertTrue(Enabled);
+              end;
+            else
+              begin
+                Fail('Expected boolean value');
+              end;
+            end if;
 
-              case Fields.Get('when').Unwrap() of
-                when TomlValue.Datetime(const Timestamp):
-                  begin
-                    AssertEquals('1979-05-27T07:32:00Z', Timestamp);
-                  end;
-                else
-                  begin
-                    Fail('Expected datetime value');
-                  end;
-              end case;
+            if Fields.Get('when').Unwrap() is TomlValue.Datetime(const Timestamp) then
+              begin
+                AssertEquals('1979-05-27T07:32:00Z', Timestamp);
+              end;
+            else
+              begin
+                Fail('Expected datetime value');
+              end;
+            end if;
 
-              case Fields.Get('items').Unwrap() of
-                when TomlValue.ArrayValue(const Items):
-                  begin
-                    AssertEquals(2, Items.Length());
-                  end;
-                else
-                  begin
-                    Fail('Expected array value');
-                  end;
-              end case;
+            if Fields.Get('items').Unwrap() is TomlValue.ArrayValue(const Items) then
+              begin
+                AssertEquals(2, Items.Length());
+              end;
+            else
+              begin
+                Fail('Expected array value');
+              end;
+            end if;
 
-              case Fields.Get('nested').Unwrap() of
-                when TomlValue.Table(const Nested):
+            if Fields.Get('nested').Unwrap() is TomlValue.Table(const Nested) then
+              begin
+                if Nested.Get('value').Unwrap() is TomlValue.String(const Text) then
                   begin
-                    case Nested.Get('value').Unwrap() of
-                      when TomlValue.String(const Text):
-                        begin
-                          AssertEquals('ok', Text);
-                        end;
-                      else
-                        begin
-                          Fail('Expected nested string value');
-                        end;
-                    end case;
+                    AssertEquals('ok', Text);
                   end;
                 else
                   begin
-                    Fail('Expected nested table');
+                    Fail('Expected nested string value');
                   end;
-              end case;
-            end;
-          else
-            begin
-              Fail('Expected TOML table');
-            end;
-        end case;
+                end if;
+              end;
+            else
+              begin
+                Fail('Expected nested table');
+              end;
+            end if;
+          end;
+        else
+          begin
+            Fail('Expected TOML table');
+          end;
+        end if;
       end;
     when Error(const Message):
       begin

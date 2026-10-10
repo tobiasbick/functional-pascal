@@ -140,20 +140,20 @@ function UpdateTheme(State: integer; Msg: TuiMsg; Cmd: TuiCmdOutput): integer;
 begin
   case Msg of
     when TuiMsg.Resize(const Size):
-    begin
-      Cmd.SetPalette(TuiPalette.Default()
-                       .WithRole(TuiStyleRole.Normal, TuiStyle.FromColors(TuiColor.FromRgb(1, 2, 3), TuiColor.FromRgb(4, 5, 6))));
-      return State + 1;
-    end;
+      begin
+        Cmd.SetPalette(TuiPalette.Default()
+                         .WithRole(TuiStyleRole.Normal, TuiStyle.FromColors(TuiColor.FromRgb(1, 2, 3), TuiColor.FromRgb(4, 5, 6))));
+        return State + 1;
+      end;
     when TuiMsg.QuitRequested:
-    begin
-      Cmd.Set(TuiCmd.Quit);
-      return State;
-    end;
-    else
-    begin
-      return State;
-    end;
+      begin
+        Cmd.Set(TuiCmd.Quit);
+        return State;
+      end;
+    when TuiMsg.Started, TuiMsg.Key(_), TuiMsg.Pointer(_), TuiMsg.Tick(_), TuiMsg.FocusChanged(_, _), TuiMsg.Action(_, _), TuiMsg.TextChanged(_, _, _, _), TuiMsg.TextAreaChanged(_, _, _, _, _), TuiMsg.CheckChanged(_, _, _), TuiMsg.SelectionChanged(_, _, _), TuiMsg.ScrollChanged(_, _, _), TuiMsg.MenuChanged(_, _, _), TuiMsg.BackgroundFailed(_, _, _, _, _, _):
+      begin
+        return State;
+      end;
   end case;
 end function;
 
@@ -164,7 +164,7 @@ end function;
 
 begin
   const Initial: TuiPalette := TuiPalette.Default()
-                               .WithRole(TuiStyleRole.Normal, TuiStyle.FromColors(TuiColor.FromRgb(10, 20, 30), TuiColor.FromRgb(40, 50, 60)));
+                                 .WithRole(TuiStyleRole.Normal, TuiStyle.FromColors(TuiColor.FromRgb(10, 20, 30), TuiColor.FromRgb(40, 50, 60)));
   AssertEquals(1, TuiApplication.RunWithPalette(0, UpdateTheme, ViewTheme, Initial));
   const Painted: Cell := GetCell(1, 1).Unwrap();
   AssertTrue(Painted.foreground.kind = ColorKind.Rgb);
@@ -206,29 +206,24 @@ fn interactive_host_debounces_resize_burst_after_quiet_period() {
 
 uses Std.Console, Std.Tui;
 
-type
-  Model = record
-    ResizeCount: integer;
-    Width: integer;
-    Height: integer;
-  end record;
+type Model = record
+  ResizeCount: integer;
+  Width: integer;
+  Height: integer;
+end record;
 
 function Update(State: Model; Msg: TuiMsg; Cmd: TuiCmdOutput): Model;
 begin
   case Msg of
     when TuiMsg.Resize(const Size):
-    begin
-      Cmd.Set(TuiCmd.Quit);
-      return Model(
-        ResizeCount := State.ResizeCount + 1,
-        Width := Size.Width,
-        Height := Size.Height
-      );
-    end;
-    else
-    begin
-      return State;
-    end;
+      begin
+        Cmd.Set(TuiCmd.Quit);
+        return Model(ResizeCount := State.ResizeCount + 1, Width := Size.Width, Height := Size.Height);
+      end;
+    when TuiMsg.Started, TuiMsg.Key(_), TuiMsg.Pointer(_), TuiMsg.Tick(_), TuiMsg.FocusChanged(_, _), TuiMsg.Action(_, _), TuiMsg.TextChanged(_, _, _, _), TuiMsg.TextAreaChanged(_, _, _, _, _), TuiMsg.CheckChanged(_, _, _), TuiMsg.SelectionChanged(_, _, _), TuiMsg.ScrollChanged(_, _, _), TuiMsg.MenuChanged(_, _, _), TuiMsg.BackgroundFailed(_, _, _, _, _, _), TuiMsg.QuitRequested:
+      begin
+        return State;
+      end;
   end case;
 end function;
 
@@ -238,11 +233,7 @@ begin
 end function;
 
 begin
-  const Final: Model := TuiApplication.Run(Model(
-    ResizeCount := 0,
-    Width := 0,
-    Height := 0
-  ), Update, View);
+  const Final: Model := TuiApplication.Run(Model(ResizeCount := 0, Width := 0, Height := 0), Update, View);
   WriteLn(Final.ResizeCount);
   WriteLn(Final.Width);
   WriteLn(Final.Height);
@@ -274,27 +265,26 @@ fn interactive_host_does_not_emit_ticks_without_explicit_timer_input() {
 
 uses Std.Console, Std.Tui;
 
-type
-  Model = record
-    Ticks: integer;
-  end record;
+type Model = record
+  Ticks: integer;
+end record;
 
 function Update(State: Model; Msg: TuiMsg; Cmd: TuiCmdOutput): Model;
 begin
   case Msg of
     when TuiMsg.Tick(const Delta):
-    begin
-      return Model( Ticks := State.Ticks + 1 );
-    end;
+      begin
+        return Model(Ticks := State.Ticks + 1);
+      end;
     when TuiMsg.QuitRequested:
-    begin
-      Cmd.Set(TuiCmd.Quit);
-      return State;
-    end;
-  else
-  begin
-    return State;
-  end;
+      begin
+        Cmd.Set(TuiCmd.Quit);
+        return State;
+      end;
+    when TuiMsg.Started, TuiMsg.Key(_), TuiMsg.Pointer(_), TuiMsg.Resize(_), TuiMsg.FocusChanged(_, _), TuiMsg.Action(_, _), TuiMsg.TextChanged(_, _, _, _), TuiMsg.TextAreaChanged(_, _, _, _, _), TuiMsg.CheckChanged(_, _, _), TuiMsg.SelectionChanged(_, _, _), TuiMsg.ScrollChanged(_, _, _), TuiMsg.MenuChanged(_, _, _), TuiMsg.BackgroundFailed(_, _, _, _, _, _):
+      begin
+        return State;
+      end;
   end case;
 end function;
 
@@ -304,7 +294,7 @@ begin
 end function;
 
 begin
-  const Final: Model := TuiApplication.Run(Model( Ticks := 0 ), Update, View);
+  const Final: Model := TuiApplication.Run(Model(Ticks := 0), Update, View);
   WriteLn(Final.Ticks);
 end.
 "#,
@@ -343,41 +333,37 @@ fn interactive_background_message_wakes_idle_host_and_repaints() {
 
 uses Std.Console, Std.Tasks, Std.Tui;
 
-type
-  Model = record
-    Inbox: channel of integer;
-    Value: integer;
-  end record;
+type Model = record
+  Inbox: channel of integer;
+  Value: integer;
+end record;
 
 function Update(State: Model; Msg: TuiMsg; Cmd: TuiCmdOutput): Model;
 begin
   case Msg of
     when TuiMsg.Started:
-    begin
-      const Target: channel of integer := State.Inbox;
-      Cmd.StartBackground(1, function(Token: CancellationToken): result of boolean, string begin
-        return SendWithCancellation(Target, 42, Token);
-      end function);
-      return State;
-    end;
+      begin
+        const Target: channel of integer := State.Inbox;
+        Cmd.StartBackground(1, function(Token: CancellationToken): result of boolean, string begin
+          return SendWithCancellation(Target, 42, Token);
+        end function);
+        return State;
+      end;
     when TuiMsg.BackgroundFailed(const Id, const Kind, const Message, const Code, const Line, const Column):
-    begin
-      panic(Message);
-    end;
-    else
-    begin
-      return State;
-    end;
+      begin
+        panic(Message);
+      end;
+    when TuiMsg.Key(_), TuiMsg.Pointer(_), TuiMsg.Tick(_), TuiMsg.Resize(_), TuiMsg.FocusChanged(_, _), TuiMsg.Action(_, _), TuiMsg.TextChanged(_, _, _, _), TuiMsg.TextAreaChanged(_, _, _, _, _), TuiMsg.CheckChanged(_, _, _), TuiMsg.SelectionChanged(_, _, _), TuiMsg.ScrollChanged(_, _, _), TuiMsg.MenuChanged(_, _, _), TuiMsg.QuitRequested:
+      begin
+        return State;
+      end;
   end case;
 end function;
 
 function UpdateApplication(State: Model; Message: integer; Cmd: TuiCmdOutput): Model;
 begin
   Cmd.Set(TuiCmd.Quit);
-  return Model(
-    Inbox := State.Inbox,
-    Value := Message
-  );
+  return Model(Inbox := State.Inbox, Value := Message);
 end function;
 
 function View(State: Model): TuiElement;
@@ -387,10 +373,7 @@ end function;
 
 begin
   const Inbox: channel of integer := CreateChannel(1);
-  const Final: Model := TuiApplication.RunWithBackground(Model(
-    Inbox := Inbox,
-    Value := 0
-  ), Inbox, Update, UpdateApplication, View);
+  const Final: Model := TuiApplication.RunWithBackground(Model(Inbox := Inbox, Value := 0), Inbox, Update, UpdateApplication, View);
   WriteLn(Final.Value);
 end.
 "#,

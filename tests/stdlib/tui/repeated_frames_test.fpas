@@ -5,16 +5,15 @@ uses Std.Tui, Std.Test;
 function UpdateFrames(State: integer; Msg: TuiMsg; Cmd: TuiCmdOutput): integer;
 begin
   Cmd.Set(TuiCmd.NoCommand);
-  case Msg of
-    when TuiMsg.Tick(const Delta):
-      begin
-        return State + 1;
-      end;
-    else
-      begin
-        return State;
-      end;
-  end case;
+  if Msg is TuiMsg.Tick(const Delta) then
+    begin
+      return State + 1;
+    end;
+  else
+    begin
+      return State;
+    end;
+  end if;
 end function;
 
 function ViewFrames(State: integer): TuiElement;

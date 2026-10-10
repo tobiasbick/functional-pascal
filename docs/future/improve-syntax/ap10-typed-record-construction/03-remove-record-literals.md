@@ -53,10 +53,9 @@ assert the replacement diagnostic.
 - Lowering, formatter, closure discovery, source-id remapping, discard and
   task-bound analysis lost their literal paths. Record update lowering moved to
   `crates/fpas-compiler/src/lowering/aggregates/record_update.rs`.
-- The debugger front end no longer lowers literals. The VM-internal structural
-  `DebugExpression::Record` remains for its existing VM tests; replacing it
-  with typed debugger construction is tracked in
-  [compiler and language-limit follow-ups](../../compiler-panic-followups.md).
+- The debugger front end no longer lowers literals. Debugger record construction
+  selects an exact visible nominal type and applies field defaults and visibility
+  checks; see the [debugger handbook](../../../pascal/tools/debugger.md).
 
 Coverage: `crates/fpas-parser/src/tests/errors/removed_record_literals.rs`
 (with and without a declared type, qualified types, nested positions, empty

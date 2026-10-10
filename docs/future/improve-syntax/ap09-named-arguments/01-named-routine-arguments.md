@@ -20,8 +20,8 @@ fields/properties are positional only, as are variadic routines and native
 restrictions where no fixed public signature exists.
 
 Signature help, navigation and rename resolve parameter labels to the callee.
-Debugger named-call evaluation remains tracked in
-[compiler follow-ups](../../compiler-panic-followups.md).
+Debugger evaluation supports fully named calls to declared routines, methods,
+and enum constructors; see the [debugger handbook](../../../pascal/tools/debugger.md).
 
 ## Regression coverage
 

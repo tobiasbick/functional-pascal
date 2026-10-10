@@ -25,8 +25,9 @@ with `go` is rejected (FP3030). Aliasing checks apply to writable arguments of
 one call, rather than every possible access through global names.
 
 Runtime references identify a cell or global plus field/element steps. Modes
-survive unit interfaces, IR, objects and bytecode. Debugger reference writes/calls
-are tracked in [compiler follow-ups](../../compiler-panic-followups.md).
+survive unit interfaces, IR, objects and bytecode. Debugger evaluation supports
+explicit reference calls in its detached sandbox, while assignments write through
+to caller storage; see the [debugger handbook](../../../pascal/tools/debugger.md).
 
 ## Regression coverage
 

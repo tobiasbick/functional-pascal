@@ -32,9 +32,8 @@ semantic analysis and lowering use typed construction.
 - Rust-embedded fixtures, parser/lexer assertions, formatter goldens, editor
   fixtures and generated test sources, documentation examples, and the FPAS
   authoring skill.
-- Debugger expression fixtures use existing positional factories where named
-  construction is unavailable in debugger evaluation. The restriction and
-  workaround are tracked in [compiler-panic-followups.md](../../compiler-panic-followups.md).
+- Debugger expression fixtures cover typed construction with defaults and
+  visibility checks; see the [debugger handbook](../../../pascal/tools/debugger.md).
 - The JSONL breakpoint contract matches the migrated fixture's executable line.
 
 ## Migration

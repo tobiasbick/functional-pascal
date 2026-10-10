@@ -55,8 +55,6 @@ AP09 is complete. These gaps are tracked in the plans that own them:
 
 - Named construction of generic enum variants:
   [AP24.3](../ap24-generic-data-structures/03-generic-enums.md).
-- Named arguments in debugger evaluation:
-  [compiler and language-limit follow-ups](../../compiler-panic-followups.md).
 
 ## Acceptance
 

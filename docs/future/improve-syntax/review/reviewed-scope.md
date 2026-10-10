@@ -68,8 +68,8 @@ finding was confirmed; the parser reuse recommendation is included in T03.
 
 The debugger follow-ups are reviewed and complete: named calls, typed record
 construction, explicit reference calls and live reference assignment. Their
-implemented rules remain in the
-[compiler follow-up record](../../compiler-panic-followups.md#completed-debugger-repairs).
+implemented rules are documented in the
+[debugger handbook](../../../pascal/tools/debugger.md).
 
 ## Completed implementation verification
 

@@ -126,6 +126,19 @@ pub struct EnumType {
     pub variants: Vec<EnumVariant>,
 }
 
+/// Exported distinct domain type identity.
+///
+/// **Documentation:** `docs/pascal/language/types/distinct-types.md`
+#[derive(Debug, Clone, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+pub struct DistinctType {
+    /// Source spelling of the declared type name.
+    pub name: String,
+    /// Canonical source unit that declared the type.
+    pub owner_unit: Option<String>,
+    /// Scalar underlying type.
+    pub underlying: Box<InterfaceType>,
+}
+
 /// Stable type language stored in a compiled-unit interface.
 #[derive(Debug, Clone, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 pub enum InterfaceType {
@@ -159,6 +172,8 @@ pub enum InterfaceType {
     Record(Box<RecordType>),
     /// Complete exported enum descriptor.
     Enum(Box<EnumType>),
+    /// Distinct domain type identity and underlying scalar type.
+    Distinct(Box<DistinctType>),
     /// Reference to a canonical named type, including recursive references.
     Named(String),
     /// Generic parameter with its resolved constraint.

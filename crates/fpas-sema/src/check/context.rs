@@ -126,6 +126,9 @@ pub struct AnalysisMetadata {
     /// Calls resolved to record types, rather than routines returning records.
     /// **Documentation:** `docs/pascal/language/types/records.md`
     pub record_constructions: HashSet<usize>,
+    /// Calls that convert into or out of a distinct type; they lower to their argument.
+    /// **Documentation:** `docs/pascal/language/types/distinct-types.md`
+    pub distinct_conversions: HashSet<usize>,
     /// Fully resolved named types used to construct deterministic runtime layouts.
     pub named_types: NamedTypeMap,
     /// Resolved record method calls keyed by expression or designator identity.
@@ -193,6 +196,8 @@ pub struct Checker {
     pub(crate) record_defaults: RecordDefaultsMap,
     /// Identity keys of calls that construct a concrete record type.
     pub(crate) record_constructions: HashSet<usize>,
+    /// Identity keys of valid conversions into or out of a distinct type.
+    pub(crate) distinct_conversions: HashSet<usize>,
     /// Canonical record and field names → task-freedom of their checked default values.
     pub(crate) record_default_discard: HashMap<(String, String), bool>,
     /// Default expression identity → constant classification in the declaration environment.
@@ -229,6 +234,8 @@ pub struct Checker {
     pub(crate) pending_routine_captures: HashMap<usize, Vec<usize>>,
     /// Capture propagation for recursive targets that finish after their consumers.
     pub(crate) capture_dependencies: super::closures::CaptureDependencies,
+    /// Dictionary key types and their source spans, validated once all types are complete.
+    pub(crate) pending_dictionary_keys: Vec<super::name_resolution::PendingKey>,
 }
 
 impl Checker {
@@ -261,6 +268,7 @@ impl Checker {
             source_short_candidates: HashMap::new(),
             record_defaults: RecordDefaultsMap::new(),
             record_constructions: HashSet::new(),
+            distinct_conversions: HashSet::new(),
             record_default_discard: HashMap::new(),
             record_default_constants: HashMap::new(),
             record_default_values: HashMap::new(),
@@ -272,6 +280,7 @@ impl Checker {
             pending_var_parameter_uses: HashMap::new(),
             pending_routine_captures: HashMap::new(),
             capture_dependencies: Default::default(),
+            pending_dictionary_keys: Vec::new(),
         }
     }
 
@@ -291,6 +300,7 @@ impl Checker {
             member_value_calls: self.member_value_calls,
             record_defaults: self.record_defaults,
             record_constructions: self.record_constructions,
+            distinct_conversions: self.distinct_conversions,
             closure_infos: self.closure_infos,
             nested_routine_captures: self.nested_routine_captures,
             bound_methods: self.bound_methods,

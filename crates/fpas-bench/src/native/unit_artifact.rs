@@ -28,6 +28,7 @@ pub(super) fn run(iterations: usize, depth: usize) -> Result<(), String> {
         records: vec![],
         enums: vec![],
         debug_types: types,
+        distinct_types: Vec::new(),
         sources: vec![],
         definitions: vec![],
         imports: vec![],

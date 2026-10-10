@@ -105,6 +105,34 @@ impl Parser {
         fields
     }
 
+    /// True when a `Name(...)` label is followed by `..`, so it starts a value range
+    /// such as `UserId(1)..UserId(9)`.
+    ///
+    /// **Documentation:** `docs/pascal/language/types/distinct-types.md`
+    pub(in crate::parser) fn at_call_range_start(&self) -> bool {
+        let Some(mut position) = (self.pos..self.tokens.len())
+            .find(|&position| self.token_at(position) == Some(&Token::LParen))
+        else {
+            return false;
+        };
+        let mut depth = 0usize;
+        while let Some(token) = self.token_at(position) {
+            match token {
+                Token::LParen => depth += 1,
+                Token::RParen => {
+                    depth -= 1;
+                    if depth == 0 {
+                        return self.token_at(position + 1) == Some(&Token::DotDot);
+                    }
+                }
+                Token::Eof => return false,
+                _ => {}
+            }
+            position += 1;
+        }
+        false
+    }
+
     fn token_at(&self, position: usize) -> Option<&Token> {
         self.tokens.get(position).map(|token| &token.token)
     }

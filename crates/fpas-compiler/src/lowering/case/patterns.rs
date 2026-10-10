@@ -40,7 +40,12 @@ impl LoweringContext {
                 span,
             } => {
                 let Some(IrType::Enum(layout)) = self.type_kind(ty) else {
-                    return Err(unsupported(*span, "variant pattern type"));
+                    // Sema accepts a non-enum `Name(Value)` only as a distinct conversion label.
+                    // Documentation: docs/pascal/language/types/distinct-types.md
+                    let value = pattern
+                        .conversion_argument()
+                        .ok_or_else(|| unsupported(*span, "variant pattern type"))?;
+                    return self.lower_value_test(source, ty, value, fail);
                 };
                 let name = match constructor.parts.last() {
                     Some(DesignatorPart::Ident(name, _)) => name.as_str(),

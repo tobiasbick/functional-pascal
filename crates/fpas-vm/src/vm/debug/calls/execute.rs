@@ -189,6 +189,9 @@ impl CallSandbox {
         name: &str,
         arguments: Vec<Value>,
     ) -> Result<Value, DebugSessionError> {
+        if let Some(expected) = self.conversion_type(name) {
+            return self.convert(name, expected, arguments);
+        }
         if let Some(record) = self.record_type(name)? {
             return self.construct_record(record, name, &[], arguments);
         }

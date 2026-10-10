@@ -133,7 +133,7 @@ pub(super) fn validate_tables(executable: &crate::Executable) -> Result<(), Vali
     Ok(())
 }
 
-fn validate_string(
+pub(super) fn validate_string(
     executable: &crate::Executable,
     id: StringId,
     owner: &'static str,

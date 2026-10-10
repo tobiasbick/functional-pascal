@@ -324,13 +324,14 @@ consumed, and the function-valued parameter is called positionally (AP09).
 
 ## 10. Subranges and the recorded distinct-type exception
 
-Current forms: type aliases, primitive types, integer literals, the main-body
-terminator, and `null;` (AP13; [grammar](../../../specs/grammar.ebnf),
-`type_def` and `integer_literal`).
+Current forms: type aliases, `distinct` declarations and explicit construction
+(AP19, Q12 and Q13; [distinct types](../../../pascal/language/types/distinct-types.md)),
+primitive types, integer literals, the main-body terminator, and `null;` (AP13;
+[grammar](../../../specs/grammar.ebnf), `type_def`, `distinct_type`, and
+`integer_literal`).
 
 Draft forms: integer subrange declarations and checked conversion (AP18, Q10
-and Q11), and `distinct` declarations and explicit construction (AP19, Q12
-and Q13). Computed `const` is implemented by AP16.
+and Q11). Computed `const` is implemented by AP16.
 
 ```pascal
 program DomainTypes;
@@ -346,7 +347,7 @@ begin
 end.
 ```
 
-AP19 explicitly selects `distinct` instead of Delphi's repeated `type` form.
-This example does not choose its unresolved constraint, dictionary-key, or
-case-label rules. See the [spelling review](spelling-review.md) for decisions
-that remain with the other packages.
+AP19 explicitly selects `distinct` instead of Delphi's repeated `type` form and
+records its constraint, dictionary-key, and case-label rules. See the
+[spelling review](spelling-review.md) for decisions that remain with the other
+packages.

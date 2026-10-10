@@ -25,6 +25,16 @@ impl LoweringContext {
         if self.record_constructions.contains(&call_key) {
             return self.lower_record_construction(arguments, result, span);
         }
+        // Documentation: docs/pascal/language/types/distinct-types.md
+        if self.distinct_conversions.contains(&call_key) {
+            let [argument] = arguments else {
+                return Err(unsupported(
+                    span,
+                    "distinct conversion without one argument",
+                ));
+            };
+            return self.lower_expression(argument);
+        }
         if self.member_value_calls.contains_key(&call_key) {
             return self.lower_member_value_call(designator, arguments, result, span);
         }

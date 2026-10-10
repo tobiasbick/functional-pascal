@@ -157,6 +157,19 @@ pub(super) fn install(
                 ));
             }
             SymbolKind::Type => {
+                if let InterfaceType::Distinct(distinct) = &symbol.ty
+                    && record_names::is_visible(&interfaces, symbol)
+                {
+                    let underlying = interface_type_id(types, &distinct.underlying, span)?;
+                    let short = (plain
+                        && short_type_counts.get(&symbol.name.to_ascii_lowercase()) == Some(&1))
+                    .then_some(symbol.name.as_str());
+                    types.register_imported_distinct_names(
+                        &symbol.qualified_name,
+                        short,
+                        underlying,
+                    );
+                }
                 if let InterfaceType::Record(record) = &symbol.ty {
                     if record_names::is_visible(&interfaces, symbol) {
                         let ty = interface_type_id(types, &symbol.ty, span)?;

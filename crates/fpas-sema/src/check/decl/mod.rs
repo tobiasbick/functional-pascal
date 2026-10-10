@@ -43,11 +43,13 @@ impl Checker {
         let expected = self.resolve_visible_type(expected);
         let actual = self.resolve_visible_type(actual);
         if !expected.assignment_compatible_with(&actual) {
+            let hint = Self::distinct_conversion_hint(&expected, &actual)
+                .unwrap_or_else(|| format!("The {context} must match the declared type."));
             self.errors.push(
                 crate::error::sema_error(
                     SEMA_TYPE_MISMATCH,
                     format!("Type mismatch in {context}: expected `{expected}`, found `{actual}`"),
-                    format!("The {context} must match the declared type."),
+                    hint,
                     span,
                 )
                 .with_expected_found(expected.to_string(), actual.to_string()),

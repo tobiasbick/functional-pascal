@@ -330,6 +330,11 @@ pub enum ValidationErrorKind {
         /// Largest accepted graph depth.
         maximum: usize,
     },
+    /// A distinct type name refers to a non-scalar underlying debug type.
+    DistinctUnderlyingType {
+        /// Invalid underlying debug type identifier.
+        actual: u32,
+    },
     /// Parallel metadata names and type vectors disagree.
     DebugTypeShape {
         /// Metadata relationship with inconsistent vectors.

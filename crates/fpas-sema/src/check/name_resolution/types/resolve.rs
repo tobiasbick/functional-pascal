@@ -62,9 +62,10 @@ impl Checker {
             TypeExpr::Dict {
                 key_type,
                 value_type,
-                ..
+                span,
             } => {
                 let key = self.resolve_type_expr(key_type);
+                self.defer_dictionary_key_check(key.clone(), *span);
                 let value = self.resolve_type_expr(value_type);
                 Ty::Dict(Box::new(key), Box::new(value))
             }

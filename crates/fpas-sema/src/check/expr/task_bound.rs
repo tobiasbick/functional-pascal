@@ -125,6 +125,7 @@ impl Checker {
             | Ty::Real
             | Ty::Boolean
             | Ty::String
+            | Ty::Distinct(_)
             | Ty::Unit
             | Ty::Channel(_)
             | Ty::Named(_)

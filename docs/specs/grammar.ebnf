@@ -95,7 +95,8 @@ keyword         = 'program'   | 'unit'      | 'uses'      | 'const'
                 | 'go'        | 'dict'      | 'with'      | 'static'
                 | 'comparable' | 'numeric'  | 'printable' | 'self'
                 | 'channel'   | 'task'
-                | 'elsif'     | 'when'      | 'null'      | 'is' ;
+                | 'elsif'     | 'when'      | 'null'      | 'is'
+                | 'distinct' ;
 
 (* ---- Symbols --------------------------------------------------- *)
 
@@ -197,7 +198,13 @@ type_declaration        = 'type' type_def ;
 type_def            = identifier '=' type_body ';' ;
 type_body           = record_type
                     | enum_type
+                    | distinct_type
                     | type_expr ;
+
+(* A distinct type has its own identity over integer, real, string,   *)
+(* or boolean (directly or through an alias). `type X = type Y` is    *)
+(* rejected. Documentation: docs/pascal/language/types/distinct-types.md *)
+distinct_type       = 'distinct' type_expr ;
 
 type_params         = '<' type_param { ',' type_param } '>' ;
 type_param          = identifier [ ':' constraint_name ] ;
@@ -376,6 +383,10 @@ case_label          = destructure_pattern                (* Result/Option  *)
                     | enum_pattern                       (* enum with data *)
                     | 'const' identifier                 (* scalar binding *)
                     | expression [ '..' expression ] ;  (* value/range    *)
+(* `Name(...)` before `..` starts a value range, for example          *)
+(* `UserId(1)..UserId(9)`. A single `Name(Value)` label parses as an   *)
+(* enum_pattern; Sema treats it as a value when `Name` is a distinct   *)
+(* type. Documentation: docs/pascal/language/types/distinct-types.md  *)
 
 destructure_pattern = ( 'ok' | 'error' | 'some' ) '(' pattern ')'
                     | 'none' ;
@@ -582,6 +593,13 @@ typed_record_construction = qualified_id '(' [ named_field_argument { ',' named_
 named_field_argument = identifier ':=' expression ;
 (* Zero named_field_arguments is valid when every field of the      *)
 (* target type has a default value: var P: Point := Point();        *)
+
+(* -- Distinct conversion -- *)
+(* A call whose target is a distinct type wraps one positional value of *)
+(* its underlying type; a call whose target is integer, real, string,   *)
+(* or boolean (or an alias of one) unwraps one distinct value.          *)
+(* Documentation: docs/pascal/language/types/distinct-types.md          *)
+distinct_conversion = qualified_id '(' expression ')' ;
 
 (* Field override of a record update.                               *)
 field_init          = identifier ':=' expression ';' ;

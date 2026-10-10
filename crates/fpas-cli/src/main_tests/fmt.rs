@@ -59,6 +59,12 @@ fn fmt_cli_check_reports_unformatted_file() {
 
     assert_eq!(exit_code, EXIT_WOULD_CHANGE, "stderr: {stderr_output}");
     assert!(unchanged.contains("program Hello; uses Std.Console;"));
+    assert!(
+        stderr_output.contains("Formatting would change 1 file:")
+            && stderr_output.contains(&source_path.display().to_string())
+            && stderr_output.contains("help: Run `fpas fmt`"),
+        "stderr: {stderr_output}"
+    );
 }
 
 #[test]
@@ -194,6 +200,7 @@ fn fmt_cli_check_list_prints_dirty_paths_only() {
 
     assert_eq!(exit_code, EXIT_WOULD_CHANGE, "stderr: {stderr_output}");
     assert_eq!(stdout_output.trim(), dirty.display().to_string());
+    assert!(stderr_output.is_empty(), "stderr: {stderr_output}");
 }
 
 #[test]

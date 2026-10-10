@@ -134,3 +134,29 @@ fn empty_graph_and_repeated_function_children_remain_valid() {
         Ok(())
     );
 }
+
+#[test]
+fn distinct_type_names_require_a_scalar_underlying_type_and_valid_source() {
+    let distinct = |source: u32, underlying: u32| {
+        let mut executable = minimal_executable();
+        executable.debug_types = vec![DebugType::Integer, DebugType::Dynamic];
+        executable.distinct_types = vec![fpas_bytecode::DistinctTypeName {
+            source: fpas_bytecode::SourceId::new(source),
+            name: fpas_bytecode::StringId::new(0),
+            underlying: DebugTypeId::new(underlying),
+        }];
+        executable.verify().map(|_| ()).map_err(|error| error.kind)
+    };
+    assert_eq!(distinct(0, 0), Ok(()));
+    assert_eq!(
+        distinct(0, 1),
+        Err(ValidationErrorKind::DistinctUnderlyingType { actual: 1 })
+    );
+    assert!(matches!(
+        distinct(1, 0),
+        Err(ValidationErrorKind::TableReference {
+            operand: "distinct type source",
+            ..
+        })
+    ));
+}

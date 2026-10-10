@@ -182,6 +182,18 @@ pub(super) fn compile_program(
             });
         }
     }
+    // Documentation: docs/pascal/language/types/distinct-types.md
+    let distinct_types = program
+        .distinct_types
+        .iter()
+        .map(|distinct| {
+            Ok(fpas_bytecode::DistinctTypeName {
+                source: fpas_bytecode::SourceId::new(0),
+                name: metadata.intern_string(&distinct.name)?,
+                underlying: fpas_bytecode::DebugTypeId::new(distinct.underlying.get()),
+            })
+        })
+        .collect::<Result<Vec<_>, CompileError>>()?;
     let (constants, strings, source_map) = metadata.finish();
     let debug_types = compile_debug_types(program)?;
     let executable = Executable {
@@ -194,6 +206,7 @@ pub(super) fn compile_program(
         enums,
         enum_variants,
         debug_types,
+        distinct_types,
         source_map,
         entry: FunctionId::new(0),
     };

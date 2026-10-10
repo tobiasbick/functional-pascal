@@ -323,6 +323,17 @@ impl RelocatableObject {
             .iter()
             .map(|ty| object_debug_type(ty, &executable))
             .collect::<Result<Vec<_>, ObjectError>>()?;
+        let distinct_types = executable
+            .distinct_types
+            .iter()
+            .map(|distinct| {
+                Ok(super::ObjectDistinctTypeName {
+                    source: distinct.source.get(),
+                    name: strings(distinct.name)?,
+                    underlying: distinct.underlying.get(),
+                })
+            })
+            .collect::<Result<Vec<_>, ObjectError>>()?;
         let mut object = Self {
             version: OBJECT_VERSION,
             owner: canonical(&owner.into()),
@@ -334,6 +345,7 @@ impl RelocatableObject {
             records,
             enums,
             debug_types,
+            distinct_types,
             sources,
             definitions: Vec::new(),
             imports: Vec::new(),

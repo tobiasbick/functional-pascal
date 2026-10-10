@@ -88,7 +88,7 @@ fn private_type_in_declaration<'a>(
         Decl::Function(function) => private_type_in_function(function, private_types),
         Decl::Procedure(procedure) => private_type_in_parameters(&procedure.params, private_types),
         Decl::TypeDef(definition) => match &definition.body {
-            TypeBody::Alias(ty) => private_type_in(ty, private_types),
+            TypeBody::Alias(ty) | TypeBody::Distinct(ty) => private_type_in(ty, private_types),
             TypeBody::Enum(enumeration) => enumeration
                 .members
                 .iter()

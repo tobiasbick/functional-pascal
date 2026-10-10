@@ -1,7 +1,7 @@
 # AP19: Distinct domain types
 
-Status: agreed direction (Q12, Q13). Effort: large. Completion is tracked in
-the [central README](../README.md); the process is in
+Status: complete (Q12, Q13; AP19.1, AP19.2). Effort: large.
+Completion is tracked in the [central README](../README.md); the process is in
 [development-process.md](../development-process.md).
 
 ## Goal
@@ -33,11 +33,45 @@ inherited. Representation hiding uses existing record visibility.
   Records with non-public fields provide that encapsulation.
 - Distinctness alone does not validate a URL, path, or duration.
 
+### Underlying types and conversions (AP19.1)
+
+- The underlying type of a distinct type is `integer`, `real`, `string`, or
+  `boolean`, written directly or through an alias that resolves to one of
+  them. Records and enums are rejected because they already have nominal
+  identity; arrays, dictionaries, channels, `Option`, `Result`, tasks,
+  function types, generic parameters, and other distinct types are rejected.
+  Each diagnostic names the allowed underlying types.
+- Unwrapping converts only to the exact underlying type; an alias of that
+  type is the same type and is accepted. A direct conversion between two
+  distinct types is rejected with the hint `OrderId(integer(U))`.
+- The built-in type name call form (`integer(X)`, `real(X)`, `string(X)`,
+  `boolean(X)`) only unwraps a distinct value. Every other use, such as
+  `integer(3.5)`, is an error that names the existing conversion routines.
+- `UserId(42)` is a compile-time constant when its argument is a compile-time
+  constant; otherwise the conversion is a computed value.
+- Distinct values are not unwrapped implicitly for `Std.*` routines, console
+  output, or built-in type operations: `Name.Length()` on a
+  `distinct string` requires `string(Name).Length()`, and `WriteLn(Id)`
+  requires `WriteLn(integer(Id))`.
+
+### Comparisons, constraints, keys, and `case` (AP19.2)
+
+- Equality and ordering apply to two operands of the same distinct type when
+  the underlying type supports them. Mixed domains and distinct-versus-underlying
+  comparisons are rejected with a conversion hint.
+- A distinct type satisfies `Comparable` through its underlying type. It does not
+  satisfy `Numeric` (no arithmetic) or `Printable` (no implicit output).
+- A distinct type may be a dictionary key.
+- A distinct value may be a `case` selector when its underlying type is a valid
+  selector type. Value labels and range endpoints are compile-time constants of
+  the same distinct type, such as `UserId(1)` or a `const` of type `UserId`; a
+  plain `1` is a type mismatch.
+- `in` follows equality: `Id in Ids` and `Id in Lookup` accept the same distinct
+  type. Substring `in` stays unavailable for a `distinct string`.
+
 ## Open decisions
 
-- Whether a distinct type satisfies generic constraints such as `Comparable`
-  through its underlying type, and whether it can be a dictionary key or a
-  `case` label. Decide before AP19.2.
+None.
 
 ## Dependencies
 
@@ -52,8 +86,8 @@ comparisons.
 
 ## Work packages
 
-- [ ] [AP19.1: Distinct type declarations and conversions](01-distinct-declarations.md)
-- [ ] [AP19.2: Comparisons on distinct types](02-distinct-comparisons.md)
+- [x] [AP19.1: Distinct type declarations and conversions](01-distinct-declarations.md)
+- [x] [AP19.2: Comparisons on distinct types](02-distinct-comparisons.md)
 
 ## Acceptance
 

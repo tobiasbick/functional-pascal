@@ -111,6 +111,7 @@ pub(super) fn executable(
         enums: Vec::new(),
         enum_variants: Vec::new(),
         debug_types,
+        distinct_types: Vec::new(),
         source_map: SourceMap {
             sources: vec![StringId::new(4)],
             runs: runs

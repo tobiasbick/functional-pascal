@@ -1,6 +1,7 @@
 //! Executable materialization from a validated [`super::plan::LinkPlan`].
 
 mod constants;
+mod distinct_types;
 mod record_construction;
 mod relocation;
 mod source_map;
@@ -230,6 +231,8 @@ pub fn link_objects(
         &mut strings,
         &mut linked_records,
     )?;
+    let distinct_types =
+        distinct_types::merge(&objects, &debug_type_ids, &source_map, &mut strings)?;
     for (function, debug) in linked_functions.iter_mut().zip(function_debug) {
         function.debug = debug;
     }
@@ -243,6 +246,7 @@ pub fn link_objects(
         enums: linked_enums,
         enum_variants: linked_variants,
         debug_types: linked_debug_types,
+        distinct_types,
         source_map,
         entry: fpas_bytecode::FunctionId::new(0),
     };

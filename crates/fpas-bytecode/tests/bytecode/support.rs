@@ -37,6 +37,7 @@ pub fn minimal_executable() -> Executable {
         enums: Vec::new(),
         enum_variants: Vec::new(),
         debug_types: vec![DebugType::Dynamic],
+        distinct_types: Vec::new(),
         source_map: SourceMap {
             sources: vec![StringId::new(1)],
             runs: vec![SourceRun {
@@ -165,6 +166,7 @@ pub fn all_opcodes_executable() -> Executable {
             field_types: vec![DebugTypeId::new(0)],
         }],
         debug_types: vec![DebugType::Dynamic],
+        distinct_types: Vec::new(),
         source_map: SourceMap {
             sources: vec![StringId::new(2)],
             runs: vec![

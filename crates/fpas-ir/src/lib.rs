@@ -38,7 +38,8 @@ pub use id::{
 };
 pub use instruction::{BinaryOperation, Constant, Instruction, Operation, UnaryOperation};
 pub use program::{
-    EnumLayout, EnumVariant, Global, GlobalInitializer, IntrinsicSignature, IrType, Program,
-    RecordConstructionInfo, RecordField, RecordLayout, RecordMethod, TypeDefinition,
+    DistinctTypeName, EnumLayout, EnumVariant, Global, GlobalInitializer, IntrinsicSignature,
+    IrType, Program, RecordConstructionInfo, RecordField, RecordLayout, RecordMethod,
+    TypeDefinition,
 };
 pub use terminator::{BlockTarget, Terminator};

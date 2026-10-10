@@ -9,6 +9,8 @@ mod bound_method;
 mod calls;
 mod closure;
 mod designator;
+mod distinct_conversion;
+mod distinct_operators;
 mod equality;
 mod operators;
 mod postfix;
@@ -113,6 +115,7 @@ impl Checker {
         }
 
         let first_key_ty = self.check_expr(&pairs[0].0);
+        self.defer_dictionary_literal_key_check(first_key_ty.clone(), pairs[0].0.span());
         let first_val_ty = self.check_expr(&pairs[0].1);
         for (key, val) in &pairs[1..] {
             let key_ty = self.check_expr(key);

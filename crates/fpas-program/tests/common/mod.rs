@@ -180,6 +180,11 @@ pub fn program_image() -> ProgramImage {
             fpas_bytecode::DebugType::Cell(fpas_bytecode::DebugTypeId::new(2)),
             fpas_bytecode::DebugType::Task(fpas_bytecode::DebugTypeId::new(2)),
         ],
+        distinct_types: vec![fpas_bytecode::DistinctTypeName {
+            source: SourceId::new(0),
+            name: StringId::new(8),
+            underlying: fpas_bytecode::DebugTypeId::new(2),
+        }],
         source_map: SourceMap {
             sources: vec![StringId::new(1)],
             runs: vec![

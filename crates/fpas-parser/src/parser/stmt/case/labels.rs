@@ -34,7 +34,9 @@ impl Parser {
             Token::Ok | Token::Error | Token::Some | Token::None => {
                 return CaseLabel::Pattern(self.parse_pattern());
             }
-            _ if self.at_variant_pattern() => return CaseLabel::Pattern(self.parse_pattern()),
+            _ if self.at_variant_pattern() && !self.at_call_range_start() => {
+                return CaseLabel::Pattern(self.parse_pattern());
+            }
             _ => {}
         }
 

@@ -1,0 +1,61 @@
+program DistinctTypesTest;
+
+uses Std.Test;
+
+type Raw = integer;
+
+type UserId = distinct integer;
+
+type AccountId = distinct Raw;
+
+type Name = distinct string;
+
+type Price = distinct real;
+
+type Flag = distinct boolean;
+
+type User = record
+  Id: UserId := UserId(0);
+  Label: Name;
+end record;
+
+const Admin: UserId := UserId(7);
+const AdminRaw: integer := integer(Admin);
+
+function NextId(Id: UserId): UserId;
+begin
+  return UserId(integer(Id) + 1);
+end function;
+
+function Same<T>(Value: T): T;
+begin
+  return Value;
+end function;
+
+begin
+  const Next: UserId := NextId(Admin);
+  AssertEquals(8, integer(Next));
+  AssertEquals(8, Raw(Next));
+  AssertEquals(7, AdminRaw);
+  AssertEquals(3, integer(AccountId(3)));
+  AssertEquals('Ada', string(Name('Ada')));
+  AssertEquals(3, string(Name('Ada')).Length());
+  AssertEquals(2.5, real(Price(2.5)));
+  AssertTrue(boolean(Flag(true)));
+  const U: User := User(Label := Name('root'));
+  AssertEquals(0, integer(U.Id));
+  AssertEquals('root', string(U.Label));
+  const Ids: array of UserId := [Admin, Next];
+  AssertEquals(2, Ids.Length());
+  AssertEquals(8, integer(Ids[1]));
+  AssertEquals(7, integer(Same(Admin)));
+  var Current: UserId := Admin;
+  Current := NextId(NextId(Current));
+  AssertEquals(9, integer(Current));
+  case AdminRaw of
+    when 7:
+      AssertTrue(true);
+    else
+      AssertTrue(false);
+  end case;
+end.

@@ -19,12 +19,15 @@ none      try       public    go
 dict      with      static    numeric
 comparable printable self     elsif
 when      null      discard   is
+distinct
 ```
 
 Every word in the table is fully reserved, including after `.` in a qualified name or
 member access. Some keywords are valid only in their dedicated syntax positions:
-the three constraint keywords follow a generic type parameter, and `self` names
-the first receiver parameter and receiver expression of an instance record method.
+the three constraint keywords follow a generic type parameter, `self` names
+the first receiver parameter and receiver expression of an instance record method,
+and `distinct` introduces a [distinct type](../language/types/distinct-types.md)
+body after `type Name =`.
 
 `event`, `nil`, `read`, `write`, and `Assigned` are ordinary identifiers.
 Their declarations and references follow normal case-insensitive name resolution.

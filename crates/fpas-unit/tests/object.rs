@@ -167,6 +167,7 @@ fn candidate() -> Executable {
             ],
         },
         entry: FunctionId::new(0),
+        distinct_types: Vec::new(),
     }
 }
 

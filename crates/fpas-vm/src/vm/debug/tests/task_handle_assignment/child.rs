@@ -209,6 +209,7 @@ pub(super) fn child_task_executable() -> VerifiedExecutable {
             ],
         },
         entry: FunctionId::new(0),
+        distinct_types: Vec::new(),
     }
     .verify()
     .expect("child task-handle assignment executable")

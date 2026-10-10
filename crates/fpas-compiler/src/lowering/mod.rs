@@ -396,12 +396,16 @@ fn lower_analyzed_root(
         owner_map.insert(routine.id, routine.owner);
     }
     debug::attach(&mut functions, &owner_map).map_err(|error| vec![error])?;
+    let distinct_types = type_table
+        .distinct_type_names(&metadata, declarations)
+        .map_err(|error| vec![error])?;
     let ir = Program {
         types: type_table.definitions(),
         globals,
         record_layouts: type_table.record_layouts(),
         enum_layouts: type_table.enum_layouts(),
         intrinsics: collect_intrinsic_signatures(&functions, &type_table),
+        distinct_types,
         functions,
         entry: FunctionId::new(0),
     };

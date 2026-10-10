@@ -4,6 +4,7 @@ mod closed_enum_cases;
 mod concurrency;
 mod control_blocks;
 mod discard;
+mod distinct_case;
 mod exhaustiveness;
 mod flow;
 mod for_loops;

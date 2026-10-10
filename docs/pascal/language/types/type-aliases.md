@@ -25,6 +25,11 @@ type PaletteColor = Color;
 const Value: PaletteColor := PaletteColor.Green;
 ```
 
+An alias is interchangeable with its target type. To give a scalar value its
+own type identity, declare a [distinct type](distinct-types.md) instead:
+`type UserId = distinct integer;`.
+
 ## See also
 
+- [Distinct types](distinct-types.md)
 - [Function types](../functions/function-types.md)

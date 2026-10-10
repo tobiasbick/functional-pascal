@@ -21,9 +21,9 @@ pub use function::{ObjectFunction, ObjectReturn};
 pub use metadata::{
     ObjectCaptureKind, ObjectCaptureSource, ObjectConstant, ObjectDebugBinding,
     ObjectDebugBindingKind, ObjectDebugLocation, ObjectDebugScope, ObjectDebugType,
-    ObjectEnumLayout, ObjectEnumVariant, ObjectFunctionDebugInfo, ObjectGlobal, ObjectInitializer,
-    ObjectRecordConstructionInfo, ObjectRecordLayout, ObjectRecordMethod, ObjectRecordTypeAlias,
-    ObjectSequencePoint, ObjectSourceRun,
+    ObjectDistinctTypeName, ObjectEnumLayout, ObjectEnumVariant, ObjectFunctionDebugInfo,
+    ObjectGlobal, ObjectInitializer, ObjectRecordConstructionInfo, ObjectRecordLayout,
+    ObjectRecordMethod, ObjectRecordTypeAlias, ObjectSequencePoint, ObjectSourceRun,
 };
 pub use relocation::{Relocation, RelocationKind};
 pub use symbol::{
@@ -36,7 +36,7 @@ use validation::{
 };
 
 /// Schema version embedded in every encoded register object payload.
-pub const OBJECT_VERSION: u16 = 11;
+pub const OBJECT_VERSION: u16 = 12;
 
 /// Independently compiled register-bytecode object with symbolic external references.
 #[derive(Debug, Clone, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
@@ -61,6 +61,8 @@ pub struct RelocatableObject {
     pub enums: Vec<ObjectEnumLayout>,
     /// Object-local portable debugger type graph.
     pub debug_types: Vec<ObjectDebugType>,
+    /// Source-visible distinct type names for debugger conversions.
+    pub distinct_types: Vec<ObjectDistinctTypeName>,
     /// Object-local source paths.
     pub sources: Vec<String>,
     /// Ordered definitions supplied by this object.
@@ -193,6 +195,21 @@ impl RelocatableObject {
             &self.records,
             &self.enums,
         )?;
+        if self.distinct_types.iter().any(|distinct| {
+            distinct.source as usize >= self.sources.len()
+                || distinct.name.is_empty()
+                || !matches!(
+                    self.debug_types.get(distinct.underlying as usize),
+                    Some(
+                        ObjectDebugType::Integer
+                            | ObjectDebugType::Real
+                            | ObjectDebugType::String
+                            | ObjectDebugType::Boolean
+                    )
+                )
+        }) {
+            return Err(ObjectError::InvalidTableReference("distinct type metadata"));
+        }
         validate_unique_names(self.definitions.iter().map(|definition| &definition.name))?;
         validate_unique_names(self.imports.iter().map(|import| &import.name))?;
         validate_name_order(

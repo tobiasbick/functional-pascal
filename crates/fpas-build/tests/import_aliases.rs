@@ -13,6 +13,8 @@ use std::path::{Path, PathBuf};
 use fpas_build::{BuildOptions, ProgramArtifactTarget, build_program_artifact};
 use fpas_project::{build_unit_graph_for_program, load_project};
 
+#[path = "distinct_types/mod.rs"]
+mod distinct_types;
 #[path = "record_construction/mod.rs"]
 mod record_construction;
 

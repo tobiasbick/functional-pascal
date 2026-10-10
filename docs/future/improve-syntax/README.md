@@ -45,7 +45,7 @@ an open work package.
 ## Package status
 
 AP01, AP02, AP03, AP04, AP05, AP06, AP07, AP09, AP10, AP11, AP13, AP14, AP15, AP16,
-AP17, and AP20 are complete, including all their work packages. Their READMEs
+AP17, AP19, and AP20 are complete, including all their work packages. Their READMEs
 and work-package files record implemented behavior, implementation owners, regression coverage,
 and any independent follow-ups. Checkboxes use the
 [status-tracking rule](development-process.md#status-tracking).
@@ -74,7 +74,7 @@ package are listed in each work package file.
 | [x] | [AP16: Immutable and mutable bindings](ap16-immutable-and-mutable-bindings/README.md) | Large | AP11 | Complete (AP16.1–AP16.3) |
 | [x] | [AP17: Visible caller mutation](ap17-visible-caller-mutation/README.md) | Large | AP09, AP13, AP16, AP06.2 (AP17.3) | Complete |
 | [ ] | [AP18: Subrange types](ap18-subrange-types/README.md) | Large | AP07, AP16 | Agreed direction (Q10, Q11) |
-| [ ] | [AP19: Distinct domain types](ap19-distinct-domain-types/README.md) | Large | AP05, AP16 | Agreed direction (Q12, Q13) |
+| [x] | [AP19: Distinct domain types](ap19-distinct-domain-types/README.md) | Large | AP05, AP16 | Complete (AP19.1, AP19.2) |
 | [x] | [AP20: Nested patterns and explicit bindings](ap20-nested-patterns-and-explicit-bindings/README.md) | Large | AP07, AP13, AP16 | Complete (AP20.1–AP20.3) |
 | [ ] | [AP21: Decision expressions](ap21-decision-expressions/README.md) | Large | AP03, AP07, AP13 | Agreed direction |
 | [ ] | [AP22: Limited local inference](ap22-limited-local-inference/README.md) | Large | AP02, AP10, AP16 | Agreed direction (Q14) |
@@ -113,7 +113,7 @@ and transfer conditions are recorded in the owning package README.
 | AP16 | AP16.1 computed const; AP16.2 migrate immutable var; AP16.3 keyword switch |
 | AP17 | Complete: var parameters, named var arguments, and shared mutation checks for caller-mutating intrinsics |
 | AP18 | AP18.1 declarations and conversions; AP18.2 membership |
-| AP19 | AP19.1 declarations and conversions; AP19.2 comparisons |
+| AP19 | Complete: AP19.1 declarations and conversions; AP19.2 comparisons |
 | AP20 | AP20.1 explicit bindings; AP20.2 nested patterns; AP20.3 `is` test |
 | AP21 | AP21.1 `if` expressions; AP21.2 `case` expressions |
 | AP22 | AP22.1 literals and conversions; AP22.2 typed construction |
@@ -140,8 +140,7 @@ are recorded in each work-package file.
 1. AP21 and AP24 use
    the completed explicit enum cases (AP03); AP24 also uses the completed
    patterns and typed record construction (AP10).
-2. AP18 and AP23 use the completed Boolean and binding rules. AP19 uses the
-   completed import and binding rules.
+2. AP18 and AP23 use the completed Boolean and binding rules.
 3. AP26 uses the completed block and caller-mutation rules. Reassess AP25
    after AP23 and practical use of its contracts; its AP14 prerequisite is
    complete.

@@ -197,9 +197,15 @@ impl Checker {
         }
         let Some(operation) = crate::std_registry::native_operation(receiver_ty, name) else {
             let hint = if receiver_ty == &Ty::String && name.eq_ignore_ascii_case("Substring") {
-                "Use `.Slice(Start, Len)` for a checked Unicode-scalar range."
+                "Use `.Slice(Start, Len)` for a checked Unicode-scalar range.".to_string()
+            } else if let Ty::Distinct(distinct) = receiver_ty {
+                // Documentation: docs/pascal/language/types/distinct-types.md
+                format!(
+                    "Distinct types do not inherit operations of `{0}`. Unwrap explicitly, for example `{0}(Value).{name}()`.",
+                    distinct.underlying
+                )
             } else {
-                "Use a declared record member or a built-in catalog operation. Call your own free functions ordinarily, for example `Name(Value, …)`."
+                "Use a declared record member or a built-in catalog operation. Call your own free functions ordinarily, for example `Name(Value, …)`.".to_string()
             };
             self.error_with_code(
                 SEMA_UNKNOWN_NAME,

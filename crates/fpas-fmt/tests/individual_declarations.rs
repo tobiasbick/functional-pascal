@@ -57,3 +57,20 @@ fn every_declaration_retains_its_complete_prefix_and_source_order() {
          end unit;\n",
     );
 }
+
+#[test]
+fn distinct_type_bodies_use_the_lowercase_keyword() {
+    let source = "unit Ids;
+        public type UserId = DISTINCT integer; // identity
+        type Key = distinct   Ids.Raw;
+        end unit;";
+    common::assert_round_trip("distinct types", source);
+    common::assert_golden(
+        "distinct types",
+        source,
+        "unit Ids;\n\n\
+         public type UserId = distinct integer; // identity\n\n\
+         type Key = distinct Ids.Raw;\n\
+         end unit;\n",
+    );
+}

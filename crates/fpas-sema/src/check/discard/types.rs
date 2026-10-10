@@ -110,9 +110,13 @@ impl Checker {
                         })
                     })
             }
-            Ty::Integer | Ty::Real | Ty::Boolean | Ty::String | Ty::Unit | Ty::Error => {
-                TaskSafety::Safe
-            }
+            Ty::Integer
+            | Ty::Real
+            | Ty::Boolean
+            | Ty::String
+            | Ty::Distinct(_)
+            | Ty::Unit
+            | Ty::Error => TaskSafety::Safe,
         }
     }
 }

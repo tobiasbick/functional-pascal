@@ -8,6 +8,7 @@ use std::sync::Arc;
 
 /// Whole-unit structural type collection and recursive construction checks.
 pub(crate) mod collection;
+mod distinct;
 mod enums;
 mod records;
 
@@ -26,6 +27,7 @@ impl Checker {
             TypeBody::Record(record) => self.check_record_type_def(td, record),
             TypeBody::Enum(enum_ty) => self.check_enum_type_def(td, enum_ty),
             TypeBody::Alias(type_expr) => self.check_alias_type_def(td, type_expr),
+            TypeBody::Distinct(type_expr) => self.check_distinct_type_def(td, type_expr),
         }
     }
 

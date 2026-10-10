@@ -34,6 +34,11 @@ pub fn ty_to_interface_type(ty: &Ty) -> Result<artifact::InterfaceType, Interfac
         Ty::Procedure(procedure) => Output::Procedure(procedure_to_interface(procedure)?),
         Ty::Record(record) => Output::Record(Box::new(record_to_interface(record)?)),
         Ty::Enum(enum_ty) => Output::Enum(Box::new(enum_to_interface(enum_ty)?)),
+        Ty::Distinct(distinct) => Output::Distinct(Box::new(artifact::DistinctType {
+            name: distinct.name.clone(),
+            owner_unit: distinct.owner_unit.clone(),
+            underlying: Box::new(ty_to_interface_type(&distinct.underlying)?),
+        })),
         Ty::Named(name) => Output::Named(name.clone()),
         Ty::GenericParam(name, constraint) => {
             Output::GenericParameter(name.clone(), constraint.map(constraint_to_interface))

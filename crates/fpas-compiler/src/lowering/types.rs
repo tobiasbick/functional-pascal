@@ -1,5 +1,6 @@
 //! Compact semantic-to-IR scalar type mapping.
 
+mod debug_distinct;
 mod debug_records;
 mod expressions;
 mod layouts;
@@ -34,6 +35,8 @@ pub(super) struct TypeTable {
     simple_enums: BTreeSet<String>,
     named: BTreeMap<String, TypeId>,
     imported_record_names: BTreeSet<String>,
+    /// Explicitly imported distinct type names and their scalar underlying types.
+    imported_distinct_names: BTreeMap<String, TypeId>,
 }
 
 impl TypeTable {
@@ -47,6 +50,7 @@ impl TypeTable {
             simple_enums: BTreeSet::new(),
             named: BTreeMap::new(),
             imported_record_names: BTreeSet::new(),
+            imported_distinct_names: BTreeMap::new(),
         };
         for (name, ty) in &metadata.named_types {
             let id = match ty {
@@ -147,6 +151,8 @@ impl TypeTable {
             Ty::Named(name) => {
                 return Ok(self.named_type(name).unwrap_or(DYNAMIC));
             }
+            // Distinct identity is checked by Sema; runtime values use the underlying type.
+            Ty::Distinct(distinct) => return self.intern(&distinct.underlying, line, column),
             Ty::Error => return Ok(DYNAMIC),
             Ty::Function(function) => IrType::Function {
                 parameters: function
@@ -419,6 +425,7 @@ pub(super) fn lower(ty: &Ty, line: u32, column: u32) -> Result<TypeId, CompileEr
         Ty::String => Ok(STRING),
         Ty::GenericParam(..) => Ok(DYNAMIC),
         Ty::Enum(enumeration) if !enumeration.has_data() => Ok(INTEGER),
+        Ty::Distinct(distinct) => lower(&distinct.underlying, line, column),
         Ty::Error | Ty::Named(_) => Ok(DYNAMIC),
         other => Err(internal_compiler_error(
             format!("The compiler could not lower type `{other}`."),

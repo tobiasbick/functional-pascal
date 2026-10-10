@@ -210,6 +210,7 @@ fn payload_executable() -> VerifiedExecutable {
             ],
         },
         entry: FunctionId::new(0),
+        distinct_types: Vec::new(),
     }
     .verify()
     .expect("payload executable")

@@ -262,6 +262,7 @@ pub(super) fn variant_executable() -> VerifiedExecutable {
             ],
         },
         entry: FunctionId::new(0),
+        distinct_types: Vec::new(),
     }
     .verify()
     .expect("variant executable")
@@ -379,6 +380,7 @@ pub(super) fn collision_executable() -> VerifiedExecutable {
             field_types: vec![DebugTypeId::new(0), DebugTypeId::new(0)],
         }],
         debug_types: vec![DebugType::Integer, DebugType::Enum(EnumTypeId::new(0))],
+        distinct_types: Vec::new(),
         source_map: SourceMap {
             sources: vec![StringId::new(2)],
             runs: vec![

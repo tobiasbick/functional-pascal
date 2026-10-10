@@ -88,6 +88,18 @@ pub struct ObjectRecordTypeAlias {
     pub unit: String,
 }
 
+/// Object-local source visibility of one distinct type name.
+/// See `docs/pascal/language/types/distinct-types.md`.
+#[derive(Debug, Clone, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+pub struct ObjectDistinctTypeName {
+    /// Object-local source index.
+    pub source: u32,
+    /// Visible type name.
+    pub name: String,
+    /// Object-local scalar debugger type.
+    pub underlying: u32,
+}
+
 /// Relocatable method-to-routine mapping.
 #[derive(Debug, Clone, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 pub struct ObjectRecordMethod {

@@ -205,6 +205,9 @@ impl Parser {
             Token::Is => Some(
                 "`is` is a reserved keyword for pattern tests. Rename the identifier, for example to `IsValue`.",
             ),
+            Token::Distinct => Some(
+                "`distinct` is a reserved keyword for distinct type declarations. Rename the identifier, for example to `Unique`.",
+            ),
             _ => None,
         }
     }

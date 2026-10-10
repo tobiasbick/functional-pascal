@@ -110,7 +110,7 @@ pub(super) fn type_children(
                 symbol
             })
             .collect(),
-        TypeBody::Alias(_) => Vec::new(),
+        TypeBody::Alias(_) | TypeBody::Distinct(_) => Vec::new(),
     }
 }
 

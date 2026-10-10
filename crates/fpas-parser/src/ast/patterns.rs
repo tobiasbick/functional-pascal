@@ -53,6 +53,28 @@ impl Pattern {
             Self::Value(expr) => expr.span(),
         }
     }
+
+    /// Returns the value of a `Name(Value)` pattern with exactly one unlabeled value field.
+    ///
+    /// Semantic analysis decides whether `Name` is a distinct type conversion label,
+    /// such as `when UserId(1):`, or an enum variant.
+    ///
+    /// **Documentation:** `docs/pascal/language/types/distinct-types.md`
+    #[must_use]
+    pub fn conversion_argument(&self) -> Option<&Expr> {
+        let Self::Variant { fields, .. } = self else {
+            return None;
+        };
+        match fields.as_slice() {
+            [
+                PatternField {
+                    label: None,
+                    pattern: Self::Value(value),
+                },
+            ] => Some(value),
+            _ => None,
+        }
+    }
 }
 
 /// One positional payload field of a variant pattern.

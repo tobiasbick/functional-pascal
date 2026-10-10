@@ -15,6 +15,14 @@ impl Checker {
             Expr::Str(value, _) => Some(Value::String(value.clone())),
             Expr::Bool(value, _) => Some(Value::Boolean(*value)),
             Expr::Paren(inner, _) => self.scalar_constant_value(inner),
+            // Distinct conversions keep the underlying value.
+            Expr::Call { args, .. }
+                if self
+                    .distinct_conversions
+                    .contains(&Self::expr_lookup_key(expr)) =>
+            {
+                self.scalar_constant_value(args.first()?)
+            }
             Expr::Designator(designator) => {
                 if let Some(fpas_unit::interface::RecordConstantField::Scalar(value)) =
                     self.constant_designator_field(designator)

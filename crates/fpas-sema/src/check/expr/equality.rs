@@ -9,12 +9,13 @@ use crate::types::{Ty, TypeConstraint};
 impl Checker {
     /// True when values of `ty` compare with `=` and `<>`.
     ///
-    /// Scalars, strings, enums, options, and results always compare. Records and enums with
-    /// payloads compare structurally when every field compares: the same variant with pairwise
-    /// equal payloads, or pairwise equal fields. Arrays, dictionaries, callables, tasks, and
-    /// channels never compare, so neither does an aggregate that contains one.
+    /// Scalars, strings, distinct types, and simple enums always compare. Options, results,
+    /// records, and enums with payloads compare structurally when every payload or field
+    /// compares: the same variant with pairwise equal payloads, or pairwise equal fields.
+    /// Arrays, dictionaries, callables, tasks, and channels never compare, so neither does an
+    /// aggregate that contains one. This also decides valid dictionary key types.
     pub(crate) fn supports_equality(&self, ty: &Ty) -> bool {
-        if matches!(ty, Ty::Option(_) | Ty::Result(..)) || ty.is_comparable() || ty.is_ordinal() {
+        if ty.is_comparable() || ty.is_ordinal() {
             return true;
         }
         self.supports_structural_equality(ty, &mut Vec::new())
@@ -22,7 +23,8 @@ impl Checker {
 
     fn supports_structural_equality(&self, ty: &Ty, visiting: &mut Vec<String>) -> bool {
         match self.resolve_visible_type(ty) {
-            Ty::Integer | Ty::Real | Ty::Boolean | Ty::String => true,
+            // An unresolved type was already reported; do not cascade.
+            Ty::Integer | Ty::Real | Ty::Boolean | Ty::String | Ty::Distinct(_) | Ty::Error => true,
             Ty::GenericParam(_, constraint) => matches!(
                 constraint,
                 Some(TypeConstraint::Comparable | TypeConstraint::Numeric)

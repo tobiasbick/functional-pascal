@@ -196,7 +196,7 @@
         },
         {
           "name": "storage.type.composite.fpas",
-          "match": "(?i:\\b(record|enum|array|channel|task|dict|result|option)\\b)"
+          "match": "(?i:\\b(record|enum|distinct|array|channel|task|dict|result|option)\\b)"
         }
       ]
     },

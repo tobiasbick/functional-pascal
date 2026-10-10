@@ -222,7 +222,9 @@ impl Checker {
                 var_roots.extend(root);
                 ty
             } else {
-                self.check_expr(arg)
+                let ty = self.check_expr(arg);
+                self.reject_implicit_distinct_unwrap(name, &ty, arg.span());
+                ty
             };
             arg_types[index] = arg_ty;
         }

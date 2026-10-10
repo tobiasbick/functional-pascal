@@ -59,6 +59,7 @@ const KEYWORDS: &[&str] = &[
     "printable",
     "self",
     "null",
+    "distinct",
 ];
 
 #[test]

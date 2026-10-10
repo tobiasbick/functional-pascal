@@ -38,15 +38,12 @@ pub(crate) fn format_cli(
     }
 
     let mut exit_code = 0;
-    let mut would_change = false;
+    let mut changed_paths = Vec::new();
 
     for path in &paths {
         match format_source_file(path, &config, stdout, stderr) {
-            Ok(changed) => {
-                if changed {
-                    would_change = true;
-                }
-            }
+            Ok(true) => changed_paths.push(path),
+            Ok(false) => {}
             Err(code) => exit_code = code,
         }
     }
@@ -54,11 +51,27 @@ pub(crate) fn format_cli(
     if exit_code != 0 {
         return exit_code;
     }
-    if config.check_only && would_change {
+    if config.check_only && !changed_paths.is_empty() {
+        if !config.list_changed {
+            report_unformatted(&changed_paths, stderr);
+        }
         return EXIT_WOULD_CHANGE;
     }
 
     0
+}
+
+/// Names every file `--check` would change, so the exit code is never the only signal.
+fn report_unformatted(paths: &[&std::path::PathBuf], stderr: &mut dyn Write) {
+    let noun = if paths.len() == 1 { "file" } else { "files" };
+    let _ = writeln!(stderr, "Formatting would change {} {noun}:", paths.len());
+    for path in paths {
+        let _ = writeln!(stderr, "  {}", path.display());
+    }
+    let _ = writeln!(
+        stderr,
+        "  help: Run `fpas fmt` with the same paths to rewrite them, or add `--list` to print only the paths on stdout."
+    );
 }
 
 fn format_source_file(

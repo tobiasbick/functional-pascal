@@ -139,6 +139,15 @@ impl Checker {
                     }
                 })
             }
+            // Documentation: docs/pascal/language/types/distinct-types.md
+            Expr::Call { args, .. }
+                if self
+                    .distinct_conversions
+                    .contains(&Self::expr_lookup_key(expr)) =>
+            {
+                args.iter()
+                    .find_map(|argument| self.non_constant_part(argument))
+            }
             Expr::Call { designator, .. } => Some((
                 format!("call `{}`", Self::resolve_designator_name(designator)),
                 expr.span(),

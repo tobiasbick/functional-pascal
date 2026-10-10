@@ -56,6 +56,8 @@ pub(super) struct LoweringContext {
     pub(super) named_argument_orders: fpas_sema::NamedArgumentOrderMap,
     pub(super) record_defaults: fpas_sema::RecordDefaultsMap,
     pub(super) record_constructions: std::collections::HashSet<usize>,
+    /// Identity conversions into or out of distinct types.
+    pub(super) distinct_conversions: std::collections::HashSet<usize>,
     pub(super) method_calls: fpas_sema::MethodCallMap,
     pub(super) fluent_calls: fpas_sema::FluentCallMap,
     pub(super) member_value_calls: fpas_sema::MemberValueCallMap,
@@ -251,6 +253,7 @@ impl LoweringContext {
             named_argument_orders: metadata.named_argument_orders.clone(),
             record_defaults: metadata.record_defaults.clone(),
             record_constructions: metadata.record_constructions.clone(),
+            distinct_conversions: metadata.distinct_conversions.clone(),
             method_calls: metadata.method_calls.clone(),
             fluent_calls: metadata.fluent_calls.clone(),
             member_value_calls: metadata.member_value_calls.clone(),

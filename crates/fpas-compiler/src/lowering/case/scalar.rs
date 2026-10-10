@@ -142,8 +142,19 @@ impl LoweringContext {
                 span,
             );
         }
-        let CaseLabel::Value { start, end, .. } = label else {
-            return Err(unsupported(span, "destructuring case label"));
+        let (start, end) = match label {
+            CaseLabel::Value { start, end, .. } => (start, end.as_ref()),
+            // Sema accepts `Name(Value)` in a scalar case only as a distinct conversion label.
+            // Documentation: docs/pascal/language/types/distinct-types.md
+            CaseLabel::Pattern(pattern) => (
+                pattern
+                    .conversion_argument()
+                    .ok_or_else(|| unsupported(span, "destructuring case label"))?,
+                None,
+            ),
+            CaseLabel::Binding { .. } => {
+                return Err(unsupported(span, "destructuring case label"));
+            }
         };
         let left = self.emit_value(Operation::ReadLocal(case_local), case_ir_ty, span)?;
         let left = self.save_value(left);

@@ -375,6 +375,7 @@ fn typed_executable(consume_pending: bool) -> VerifiedExecutable {
             .collect(),
         },
         entry: FunctionId::new(0),
+        distinct_types: Vec::new(),
     }
     .verify()
     .expect("task-handle assignment executable")

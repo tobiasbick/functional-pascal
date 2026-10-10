@@ -229,8 +229,8 @@ Usage:
 With no path, discovers a `.fpasworkspace` or `.fpasprj` in the current directory.
 
 Options:
-  --check          Exit 2 when formatting would change a file
-  --list           With --check, print only paths that would change
+  --check          Report files formatting would change on stderr and exit 2
+  --list           With --check, print only those paths on stdout
   --stdout          Print one formatted file to stdout without modifying it
   -h, --help       Print this help
   -V, --version    Print version

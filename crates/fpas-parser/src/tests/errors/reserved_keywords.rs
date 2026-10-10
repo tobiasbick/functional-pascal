@@ -5,7 +5,7 @@ use fpas_diagnostics::codes::PARSE_EXPECTED_IDENTIFIER;
 
 const RESERVED: &[&str] = &[
     "discard", "DISCARD", "DiScArD", "elsif", "when", "null", "ELSIF", "WHEN", "NULL", "ElSiF",
-    "WhEn", "NuLl",
+    "WhEn", "NuLl", "distinct", "DISTINCT", "DiStInCt",
 ];
 
 #[test]

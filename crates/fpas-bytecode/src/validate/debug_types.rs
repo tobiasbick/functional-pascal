@@ -43,12 +43,44 @@ pub(super) fn validate_debug_types(executable: &crate::Executable) -> Result<(),
             validate_type_reference(executable, *ty, "enum field type")?;
         }
     }
+    validate_distinct_types(executable)?;
     for function in &executable.functions {
         for binding in &function.debug.bindings {
             validate_type_reference(executable, binding.ty, "debug binding type")?;
         }
         if let Some(result_type) = function.debug.result_type {
             validate_type_reference(executable, result_type, "function result type")?;
+        }
+    }
+    Ok(())
+}
+
+/// Distinct names need a valid source, name, and scalar underlying type.
+/// See `docs/pascal/language/types/distinct-types.md`.
+fn validate_distinct_types(executable: &crate::Executable) -> Result<(), ValidationError> {
+    super::limit(
+        "distinct type names",
+        executable.distinct_types.len(),
+        crate::limits::MAX_STRINGS,
+    )?;
+    for distinct in &executable.distinct_types {
+        super::layouts::validate_string(executable, distinct.name, "distinct type name")?;
+        validate_layout_reference(
+            "sources",
+            "distinct type source",
+            u64::from(distinct.source.get()),
+            executable.source_map.sources.len(),
+        )?;
+        validate_type_reference(executable, distinct.underlying, "distinct underlying type")?;
+        if !matches!(
+            executable.debug_types[distinct.underlying.get() as usize],
+            DebugType::Integer | DebugType::Real | DebugType::String | DebugType::Boolean
+        ) {
+            return Err(ValidationError::executable(
+                ValidationErrorKind::DistinctUnderlyingType {
+                    actual: distinct.underlying.get(),
+                },
+            ));
         }
     }
     Ok(())

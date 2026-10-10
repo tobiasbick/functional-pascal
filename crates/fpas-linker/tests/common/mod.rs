@@ -53,6 +53,7 @@ pub fn unit(public: bool) -> RelocatableObject {
         records: Vec::new(),
         enums: Vec::new(),
         debug_types: vec![fpas_unit::object::ObjectDebugType::Dynamic],
+        distinct_types: Vec::new(),
         sources: vec!["library.fpas".to_string()],
         definitions: vec![
             ObjectDefinition {
@@ -104,6 +105,7 @@ pub fn program() -> RelocatableObject {
         records: Vec::new(),
         enums: Vec::new(),
         debug_types: vec![fpas_unit::object::ObjectDebugType::Dynamic],
+        distinct_types: Vec::new(),
         sources: vec!["program.fpas".to_string()],
         definitions: vec![ObjectDefinition {
             name: "demo".to_string(),

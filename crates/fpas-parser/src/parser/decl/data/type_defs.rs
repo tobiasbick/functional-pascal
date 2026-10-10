@@ -1,6 +1,7 @@
-//! Individual type declarations and enum bodies.
+//! Individual type declarations, distinct type bodies, and enum bodies.
 //!
-//! **Documentation:** `docs/pascal/language/types/declaration-order.md`
+//! **Documentation:** `docs/pascal/language/types/declaration-order.md` and
+//! `docs/pascal/language/types/distinct-types.md`
 
 use crate::ast::*;
 use crate::parser::Parser;
@@ -71,6 +72,20 @@ impl Parser {
         match self.current_token() {
             Token::Record => TypeBody::Record(self.parse_record_type(allow_member_visibility)),
             Token::Enum => TypeBody::Enum(self.parse_enum_type()),
+            Token::Distinct => {
+                self.advance();
+                TypeBody::Distinct(self.parse_type_expr())
+            }
+            Token::Type => {
+                self.error_with_code(
+                    PARSE_EXPECTED_TOKEN,
+                    "`type X = type Y` is not a type declaration form",
+                    "Write `type UserId = distinct integer;` for a distinct type, or `type UserId = integer;` for an alias.",
+                    self.current_span(),
+                );
+                self.advance();
+                TypeBody::Distinct(self.parse_type_expr())
+            }
             _ => TypeBody::Alias(self.parse_type_expr()),
         }
     }

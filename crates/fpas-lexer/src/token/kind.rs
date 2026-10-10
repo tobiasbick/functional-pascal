@@ -102,6 +102,10 @@ pub enum Token {
     ///
     /// **Documentation:** `docs/pascal/language/pattern-matching/is-test.md`
     Is,
+    /// Declares a distinct domain type: `type UserId = distinct integer;`.
+    ///
+    /// **Documentation:** `docs/pascal/language/types/distinct-types.md`
+    Distinct,
     // Literals
     Integer(i64),
     Real(f64),

@@ -55,7 +55,7 @@ pub(super) fn collect_decls(decls: &[Decl], begins: &[usize], out: &mut Collecte
                             push_span(member.span, out);
                         }
                     }
-                    TypeBody::Alias(_) => {}
+                    TypeBody::Alias(_) | TypeBody::Distinct(_) => {}
                 }
             }
             Decl::Function(function) => collect_routine(function.span, &function.body, begins, out),

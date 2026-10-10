@@ -18,6 +18,8 @@ pub struct Program {
     pub enum_layouts: Vec<EnumLayout>,
     /// Intrinsic signatures in explicit deterministic order.
     pub intrinsics: Vec<IntrinsicSignature>,
+    /// Distinct type names visible in the compiling source, for debugger conversions.
+    pub distinct_types: Vec<DistinctTypeName>,
     /// Functions in explicit deterministic order.
     pub functions: Vec<Function>,
     /// The function selected as the root entry point.
@@ -167,6 +169,16 @@ pub struct RecordLayout {
     pub methods: Vec<RecordMethod>,
     /// Typed debugger construction; see `docs/pascal/language/types/records.md`.
     pub construction: Option<RecordConstructionInfo>,
+}
+
+/// One distinct type name visible in the compiling source and its scalar underlying type.
+/// See `docs/pascal/language/types/distinct-types.md`.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct DistinctTypeName {
+    /// Source-visible type name, including a uses alias when applicable.
+    pub name: String,
+    /// Scalar underlying type.
+    pub underlying: TypeId,
 }
 
 /// Declaration-bound defaults and visible names retained for debugger construction.

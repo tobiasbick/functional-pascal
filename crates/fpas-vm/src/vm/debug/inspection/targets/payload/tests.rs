@@ -33,6 +33,7 @@ fn image(debug_types: Vec<DebugType>, enum_variants: Vec<EnumVariant>) -> Execut
         }],
         enum_variants,
         debug_types,
+        distinct_types: Vec::new(),
         source_map: SourceMap {
             sources: vec![StringId::new(1)],
             runs: vec![SourceRun {

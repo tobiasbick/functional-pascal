@@ -16,9 +16,10 @@ initializer is a literal or an explicit conversion.
 ## Implementation
 
 - Parser: optional type annotation on local bindings only.
-- Sema: infer from the agreed literal forms and from explicit conversions
-  available at the time; subrange and distinct conversions join when AP18 and
-  AP19 land (their work packages add the inference test cases).
+- Sema: infer from the agreed literal forms and from explicit conversions,
+  including distinct conversions such as `UserId(42)` (AP19); subrange
+  conversions join when AP18 lands (its work packages add the inference test
+  cases).
 - Reject other initializers, empty collections, and ambiguous literals with a
   diagnostic asking for an annotation and showing the inferred candidates
   where useful.

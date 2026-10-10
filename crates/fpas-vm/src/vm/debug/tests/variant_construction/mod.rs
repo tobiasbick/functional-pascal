@@ -163,6 +163,7 @@ pub(super) fn order_executable() -> VerifiedExecutable {
             },
         ],
         debug_types: vec![DebugType::Integer, DebugType::Enum(EnumTypeId::new(0))],
+        distinct_types: Vec::new(),
         source_map: SourceMap {
             sources: vec![StringId::new(2)],
             runs: vec![

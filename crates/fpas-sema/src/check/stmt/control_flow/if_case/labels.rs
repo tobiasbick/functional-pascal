@@ -67,10 +67,18 @@ impl Checker {
                     pat,
                 }
             }
-            CaseLabel::Pattern(Pattern::Variant {
-                constructor, span, ..
-            }) if !is_pattern_case => {
-                // In a scalar case, `Name(...)` is a call, which is never a constant.
+            CaseLabel::Pattern(
+                pattern @ Pattern::Variant {
+                    constructor, span, ..
+                },
+            ) if !is_pattern_case => {
+                if let Some(pat) = self.check_distinct_label(case_ty, constructor, pattern, *span) {
+                    return CheckedLabel {
+                        bindings: PatternBindings::new(),
+                        pat,
+                    };
+                }
+                // In a scalar case, any other `Name(...)` is a call, which is never a constant.
                 self.require_case_constant_call(constructor, *span);
                 CheckedLabel::wild()
             }

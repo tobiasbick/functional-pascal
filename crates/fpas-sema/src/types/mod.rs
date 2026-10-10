@@ -40,9 +40,14 @@ impl TypeConstraint {
     /// Check whether a concrete type satisfies this constraint.
     pub fn satisfied_by(self, ty: &Ty) -> bool {
         match self {
-            Self::Comparable => matches!(ty, Ty::Integer | Ty::Real | Ty::Boolean | Ty::String),
+            // Distinct types inherit comparisons from their scalar underlying type.
+            // Documentation: docs/pascal/language/types/distinct-types.md
+            Self::Comparable => matches!(
+                ty,
+                Ty::Integer | Ty::Real | Ty::Boolean | Ty::String | Ty::Distinct(_)
+            ),
             Self::Numeric => matches!(ty, Ty::Integer | Ty::Real),
-            Self::Printable => !matches!(ty, Ty::Function(_) | Ty::Procedure(_)),
+            Self::Printable => !matches!(ty, Ty::Function(_) | Ty::Procedure(_) | Ty::Distinct(_)),
         }
     }
 }
@@ -81,6 +86,10 @@ pub enum Ty {
     Record(Arc<RecordTy>),
     /// Shared descriptor for an enum type.
     Enum(Arc<EnumTy>),
+    /// Distinct domain type with its own identity over a scalar underlying type.
+    ///
+    /// **Documentation:** `docs/pascal/language/types/distinct-types.md`
+    Distinct(Arc<DistinctTy>),
     /// Function signature.
     Function(FunctionTy),
     /// Procedure signature.
@@ -134,6 +143,31 @@ pub struct RecordTy {
 pub enum MethodKind {
     Function(FunctionTy),
     Procedure(ProcedureTy),
+}
+
+/// Nominal identity and underlying scalar type of a distinct domain type.
+///
+/// **Documentation:** `docs/pascal/language/types/distinct-types.md`
+#[derive(Debug, Clone, PartialEq)]
+pub struct DistinctTy {
+    /// Case-preserving declared type name.
+    pub name: String,
+    /// Exact source unit that declared the type, or `None` for program-local types.
+    pub owner_unit: Option<String>,
+    /// Underlying `integer`, `real`, `string`, or `boolean` type.
+    pub underlying: Ty,
+}
+
+impl DistinctTy {
+    /// Whether both descriptors name the same declaration.
+    pub fn same_declaration(&self, other: &DistinctTy) -> bool {
+        self.name.eq_ignore_ascii_case(&other.name)
+            && match (&self.owner_unit, &other.owner_unit) {
+                (Some(left), Some(right)) => left.eq_ignore_ascii_case(right),
+                (None, None) => true,
+                _ => false,
+            }
+    }
 }
 
 /// **Documentation:** `docs/pascal/language/types/enums.md`
@@ -239,6 +273,7 @@ impl std::fmt::Display for Ty {
             Ty::Channel(inner) => write!(f, "channel of {inner}"),
             Ty::Record(r) => write!(f, "{}", r.name),
             Ty::Enum(e) => write!(f, "{}", e.name),
+            Ty::Distinct(d) => write!(f, "{}", d.name),
             Ty::Function(ft) => {
                 write!(f, "function(")?;
                 for (i, p) in ft.params.iter().enumerate() {
@@ -317,6 +352,9 @@ impl Ty {
                         _ => false,
                     }
             }
+            // Distinct types are nominal and never mix with their underlying type.
+            // Documentation: docs/pascal/language/types/distinct-types.md
+            (Ty::Distinct(a), Ty::Distinct(b)) => a.same_declaration(b),
             // Enums: same name is sufficient (type-erased generics).
             (Ty::Enum(a), Ty::Enum(b)) => a.name.eq_ignore_ascii_case(&b.name),
             (Ty::Unit, Ty::Unit) => true,

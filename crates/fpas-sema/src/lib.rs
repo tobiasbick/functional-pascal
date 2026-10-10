@@ -48,7 +48,7 @@ pub use std_registry::{
     native_operation, native_operation_by_implementation, native_operations,
     validate_native_catalog,
 };
-pub use types::{EnumTy, FunctionTy, ParamMode, ParamTy, ProcedureTy, RecordTy, Ty};
+pub use types::{DistinctTy, EnumTy, FunctionTy, ParamMode, ParamTy, ProcedureTy, RecordTy, Ty};
 
 use fpas_parser::Program;
 

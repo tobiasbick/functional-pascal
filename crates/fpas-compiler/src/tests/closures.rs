@@ -136,6 +136,7 @@ fn closure_cells_compile_and_execute_through_register_bytecode() {
         intrinsics: Vec::new(),
         functions: vec![root_function(), increment_function()],
         entry: FunctionId::new(0),
+        distinct_types: Vec::new(),
     };
     let executable = crate::bytecode::compile_program(program).expect("closure IR should compile");
     fpas_vm::Vm::new(executable)

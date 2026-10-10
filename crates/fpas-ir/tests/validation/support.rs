@@ -159,6 +159,7 @@ pub fn scalar_program() -> Program {
         intrinsics: Vec::new(),
         functions: vec![root(vec![return_unit_block()])],
         entry: FunctionId::new(0),
+        distinct_types: Vec::new(),
     }
 }
 

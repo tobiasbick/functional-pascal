@@ -4,6 +4,7 @@
 
 mod bindings;
 mod coverage;
+mod distinct_labels;
 mod exhaustiveness;
 mod labels;
 mod patterns;
@@ -145,13 +146,29 @@ impl Checker {
         is_simple_enum: bool,
         span: Span,
     ) {
+        let selector_ty = distinct_labels::comparison_type(case_ty);
         if is_result_or_option
             || is_data_enum
             || is_simple_enum
-            || case_ty.is_ordinal()
-            || case_ty.compatible_with(&Ty::String)
-            || case_ty.is_error()
+            || selector_ty.is_ordinal()
+            || selector_ty.compatible_with(&Ty::String)
+            || selector_ty.is_error()
         {
+            return;
+        }
+        if let Ty::Distinct(distinct) = case_ty {
+            self.error_with_code(
+                SEMA_TYPE_MISMATCH,
+                format!(
+                    "Distinct type `{}` cannot be a case selector because its underlying type `{}` is not ordinal or string",
+                    distinct.name, distinct.underlying
+                ),
+                format!(
+                    "Compare the value with `if`, for example `if Value < {}(1.0) then`.",
+                    distinct.name
+                ),
+                span,
+            );
             return;
         }
 

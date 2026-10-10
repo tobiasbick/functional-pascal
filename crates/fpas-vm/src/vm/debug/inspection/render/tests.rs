@@ -232,6 +232,7 @@ fn payload_executable() -> fpas_bytecode::Executable {
             }],
         },
         entry: FunctionId::new(0),
+        distinct_types: Vec::new(),
     }
 }
 

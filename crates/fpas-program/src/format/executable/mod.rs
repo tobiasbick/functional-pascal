@@ -1,6 +1,7 @@
 //! Explicit little-endian register executable section conversion.
 
 mod decode;
+mod distinct_types;
 mod encode;
 mod record_construction;
 
@@ -33,6 +34,7 @@ pub(super) fn encode(executable: &Executable) -> Result<Vec<u8>, FormatError> {
         encode::encode_source_runs(executable)?,
         encode::encode_entry(executable),
         debug_types::encode(&executable.debug_types, TAGS[10])?,
+        distinct_types::encode(executable)?,
     ];
     sections::encode(sections)
 }
@@ -51,6 +53,7 @@ pub(super) fn decode(payload: &[u8]) -> Result<VerifiedExecutable, FormatError> 
     let runs = decode::decode_source_runs(section(&sections, 8))?;
     let entry = decode::decode_entry(section(&sections, 9))?;
     let debug_types = debug_types::decode(section(&sections, 10))?;
+    let distinct_types = distinct_types::decode(section(&sections, 11))?;
     Executable {
         code,
         functions,
@@ -61,6 +64,7 @@ pub(super) fn decode(payload: &[u8]) -> Result<VerifiedExecutable, FormatError> 
         enums,
         enum_variants,
         debug_types,
+        distinct_types,
         source_map: SourceMap { sources, runs },
         entry,
     }

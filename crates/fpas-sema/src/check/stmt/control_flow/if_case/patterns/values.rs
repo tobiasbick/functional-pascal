@@ -63,10 +63,11 @@ impl Checker {
             return Pat::Wild;
         }
         self.require_case_constant(expr);
+        let compared_ty = super::super::distinct_labels::comparison_type(expected_ty);
         let comparable = self.resolve_enum_ty(expected_ty).is_some()
-            || expected_ty.is_ordinal()
-            || expected_ty.compatible_with(&Ty::String)
-            || expected_ty.is_error();
+            || compared_ty.is_ordinal()
+            || compared_ty.compatible_with(&Ty::String)
+            || compared_ty.is_error();
         if !comparable {
             self.error_with_code(
                 SEMA_TYPE_MISMATCH,

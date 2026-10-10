@@ -41,7 +41,9 @@ fn apply_type_def_source_id(type_def: &mut TypeDef, source_id: u32) {
             }
             apply_span(&mut enum_type.span, source_id);
         }
-        TypeBody::Alias(type_expr) => apply_type_expr_source_id(type_expr, source_id),
+        TypeBody::Alias(type_expr) | TypeBody::Distinct(type_expr) => {
+            apply_type_expr_source_id(type_expr, source_id)
+        }
     }
     apply_span(&mut type_def.span, source_id);
 }

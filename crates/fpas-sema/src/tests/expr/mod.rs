@@ -4,6 +4,8 @@ use crate::analyze_with_types;
 mod boolean;
 mod bound_methods;
 mod closures;
+mod distinct_comparisons;
+mod distinct_conversions;
 mod equality;
 mod fluent;
 mod handler_fields;
@@ -229,6 +231,7 @@ fn analysis_metadata_exposes_all_named_results() {
         member_value_calls,
         record_defaults,
         record_constructions,
+        distinct_conversions,
         closure_infos,
         nested_routine_captures,
         bound_methods,
@@ -236,6 +239,7 @@ fn analysis_metadata_exposes_all_named_results() {
 
     assert_eq!(named_types.len(), 4);
     assert!(record_constructions.is_empty());
+    assert!(distinct_conversions.is_empty());
     assert_eq!(
         [
             errors.len(),

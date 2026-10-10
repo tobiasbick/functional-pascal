@@ -29,6 +29,14 @@ impl Checker {
     /// Checks arithmetic negation or Boolean-only logical negation.
     pub(super) fn check_unary_expr(&mut self, op: UnaryOp, operand: &Expr, span: Span) -> Ty {
         let operand_ty = self.check_expr(operand);
+        if let Ty::Distinct(distinct) = self.resolve_visible_type(&operand_ty) {
+            let symbol = match op {
+                UnaryOp::Negate => "-",
+                UnaryOp::Not => "not",
+            };
+            self.report_distinct_operator(symbol, op == UnaryOp::Negate, &distinct, span);
+            return Ty::Error;
+        }
 
         match op {
             UnaryOp::Negate => {
@@ -66,6 +74,9 @@ impl Checker {
     fn check_binary_op(&mut self, op: BinaryOp, left: &Ty, right: &Ty, span: Span) -> Ty {
         if left.is_error() || right.is_error() {
             return Ty::Error;
+        }
+        if matches!(left, Ty::Distinct(_)) || matches!(right, Ty::Distinct(_)) {
+            return self.check_distinct_binary_op(op, binary_op_symbol(op), left, right, span);
         }
 
         match op {
@@ -123,7 +134,7 @@ impl Checker {
                     self.error_with_code(
                         SEMA_TYPE_MISMATCH,
                         "Equality requires compatible operands whose values all compare",
-                        "Compare scalars, strings, enums, options, results, or records and enums whose fields all compare; arrays, dictionaries, callables, tasks, and channels do not compare.",
+                        "Compare scalars, strings, enums, distinct types, or options, results, records, and enums whose payloads and fields all compare; arrays, dictionaries, callables, tasks, and channels do not compare.",
                         span,
                     );
                     return Ty::Error;

@@ -55,6 +55,7 @@ fn host_path_executable(source: &str) -> VerifiedExecutable {
         enums: Vec::new(),
         enum_variants: Vec::new(),
         debug_types: vec![fpas_bytecode::DebugType::Dynamic],
+        distinct_types: Vec::new(),
         source_map: SourceMap {
             sources: vec![StringId::new(2)],
             runs: vec![SourceRun {

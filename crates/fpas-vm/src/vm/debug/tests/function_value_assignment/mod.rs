@@ -401,6 +401,7 @@ pub(super) fn assignment_executable() -> VerifiedExecutable {
             ],
         },
         entry: FunctionId::new(0),
+        distinct_types: Vec::new(),
     }
     .verify()
     .expect("function-value assignment executable")

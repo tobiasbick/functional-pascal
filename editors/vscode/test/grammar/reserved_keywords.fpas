@@ -6,9 +6,11 @@ begin
   when WHEN WhEn
   null NULL NuLl
   discard DISCARD DiScArD
+  distinct DISTINCT DiStInCt
   const NullValue: string := 'elsif WHEN NuLl';
   const WhenValue: integer := 1;
   const ElsifValue: integer := 2;
+  const DistinctValue: integer := 3;
   const JsonText: string := '{"value":null}';
   // ELSIF WHEN NULL
 end.

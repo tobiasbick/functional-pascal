@@ -119,6 +119,16 @@ impl Parser {
                     span: self.span_from(start),
                 }
             }
+            Token::Distinct => {
+                self.error_with_code(
+                    PARSE_EXPECTED_TOKEN,
+                    "`distinct` is only valid in a type declaration",
+                    "Declare a named type such as `type UserId = distinct integer;` and use `UserId` here.",
+                    self.current_span(),
+                );
+                self.advance();
+                self.parse_type_expr()
+            }
             _ => self.parse_named_type_expr(),
         }
     }

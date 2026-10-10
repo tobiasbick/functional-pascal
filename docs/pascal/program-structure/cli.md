@@ -52,8 +52,9 @@ the source debugger and in-process test hosts do not grant this authority automa
   features come from the same toolchain as builds, runs, and debugging.
 - `fpas fmt [<path> ...]` — format source files, directories, projects, or
   workspaces. A program project includes its `project.main` source as well as
-  unit sources. `--check` reports formatting drift without changing files;
-  `--list` prints changed paths with `--check`. `--stdout <file.fpas>` formats
+  unit sources. `--check` changes no files; when formatting would change any,
+  it names them on stderr with a hint and exits with status 2. `--list` with
+  `--check` prints only those paths on stdout instead. `--stdout <file.fpas>` formats
   one source file to stdout without modifying it and cannot be combined with
   `--check`.
 - `fpas -h` / `fpas --help` — prints the short command overview to stdout and exits successfully.

@@ -104,6 +104,10 @@ pub enum TypeBody {
     Enum(EnumType),
     /// An alias of another type expression.
     Alias(TypeExpr),
+    /// A distinct domain type over an underlying type: `distinct integer`.
+    ///
+    /// **Documentation:** `docs/pascal/language/types/distinct-types.md`
+    Distinct(TypeExpr),
 }
 
 /// A parsed record type body and its members.

@@ -270,7 +270,13 @@ async function verifyReservedKeywordScopes(grammar) {
       );
     }
   }
-  for (const identifier of ["NullValue", "WhenValue", "ElsifValue"]) {
+  for (const spelling of ["distinct", "DISTINCT", "DiStInCt"]) {
+    assertScope(
+      tokenAt(fixture, "distinct DISTINCT DiStInCt", spelling),
+      "storage.type.composite.fpas"
+    );
+  }
+  for (const identifier of ["NullValue", "WhenValue", "ElsifValue", "DistinctValue"]) {
     assertNoKeywordScope(tokenAt(fixture, `const ${identifier}`, identifier));
   }
   for (const keyword of ["elsif", "WHEN", "NuLl"]) {

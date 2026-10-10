@@ -7,7 +7,7 @@ pub(super) use fpas_binary::{write_i64, write_u8, write_u16, write_u32, write_u6
 
 use super::{FormatError, check_limit, checked_u32};
 
-pub(super) const TAGS: [u16; 11] = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11];
+pub(super) const TAGS: [u16; 12] = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
 const _: () = assert!(TAGS.len() <= fpas_bytecode::limits::MAX_SECTIONS);
 const DIRECTORY_PREFIX_BYTES: usize = 4;
 const DIRECTORY_ENTRY_BYTES: usize = 16;

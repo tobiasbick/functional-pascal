@@ -192,6 +192,7 @@ pub(super) fn inspection_executable() -> VerifiedExecutable {
             ],
         },
         entry: FunctionId::new(0),
+        distinct_types: Vec::new(),
     }
     .verify()
     .expect("inspection executable")

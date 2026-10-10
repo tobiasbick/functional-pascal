@@ -28,7 +28,12 @@ impl LoweringContext {
     ) -> Result<Ty, CompileError> {
         self.expr_types
             .get(&fpas_sema::expr_lookup_key(expression))
-            .cloned()
+            // Distinct identity is checked by Sema; operations use the underlying type.
+            // Documentation: docs/pascal/language/types/distinct-types.md
+            .map(|ty| match ty {
+                Ty::Distinct(distinct) => distinct.underlying.clone(),
+                other => other.clone(),
+            })
             .ok_or_else(|| {
                 let span = expression.span();
                 internal_compiler_error(
@@ -50,7 +55,9 @@ impl LoweringContext {
         let span = expression.span();
         if let fpas_parser::Expr::Call { designator, .. } = expression {
             let key = fpas_sema::expr_lookup_key(expression);
-            if !self.intrinsic_calls.contains_key(&key) && !self.record_constructions.contains(&key)
+            if !self.intrinsic_calls.contains_key(&key)
+                && !self.record_constructions.contains(&key)
+                && !self.distinct_conversions.contains(&key)
             {
                 if let Some(result) = self.member_call_result(key) {
                     return Ok(result);

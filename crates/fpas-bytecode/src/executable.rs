@@ -3,9 +3,9 @@
 use std::sync::Arc;
 
 use crate::{
-    Constant, DebugType, DecodedInstruction, EnumLayout, EnumVariant, FunctionId, FunctionInfo,
-    GlobalInfo, Instruction, InstructionAddress, RecordLayout, SharedStr, SourceMap, StringTable,
-    ValidationError, ValidationErrorKind,
+    Constant, DebugType, DecodedInstruction, DistinctTypeName, EnumLayout, EnumVariant, FunctionId,
+    FunctionInfo, GlobalInfo, Instruction, InstructionAddress, RecordLayout, SharedStr, SourceMap,
+    StringTable, ValidationError, ValidationErrorKind,
 };
 
 /// Complete untrusted register-bytecode candidate produced by a compiler or decoder.
@@ -29,6 +29,8 @@ pub struct Executable {
     pub enum_variants: Vec<EnumVariant>,
     /// Portable type graph used only by debugger tooling.
     pub debug_types: Vec<DebugType>,
+    /// Source-visible distinct type names used only by debugger conversions.
+    pub distinct_types: Vec<DistinctTypeName>,
     /// Sparse diagnostic source locations.
     pub source_map: SourceMap,
     /// Root initializer and entry function, required to be function zero.

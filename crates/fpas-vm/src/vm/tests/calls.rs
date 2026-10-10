@@ -64,6 +64,7 @@ pub(super) fn image(
         enums: Vec::new(),
         enum_variants: Vec::new(),
         debug_types: vec![fpas_bytecode::DebugType::Dynamic],
+        distinct_types: Vec::new(),
         source_map: SourceMap {
             sources: vec![StringId::try_from_index(specs.len()).expect("source name id must fit")],
             runs: specs

@@ -1,6 +1,7 @@
 //! Detached, effect-checked execution of debugger-side calls.
 
 mod detach;
+mod distinct_conversion;
 mod enum_constructor;
 mod execute;
 mod function;

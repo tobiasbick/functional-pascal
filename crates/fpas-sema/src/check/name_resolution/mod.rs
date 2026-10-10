@@ -5,6 +5,8 @@ use fpas_parser::{Designator, DesignatorPart};
 mod std_names;
 mod types;
 
+pub(super) use types::PendingKey;
+
 impl Checker {
     pub(crate) fn hint_unknown_callable(&self, name: &str) -> String {
         if let Some(hint) = self.scopes.imports.hidden_path_hint(name) {

@@ -118,6 +118,15 @@ private stored field can be constructed only in its declaring unit. Defaults
 execute in their declaration scope under the same detached-call effect policy
 and resource limits as other debugger calls.
 
+[Distinct type](../language/types/distinct-types.md) conversions use the source
+spelling: `UserId(41)` wraps and `integer(Id)` unwraps, and both take exactly one
+positional value. A distinct type name is available when it is declared in the
+evaluated frame's source or imported there, for example `I.UserId(7)` after
+`uses Ids as I;`. Distinct values keep their underlying runtime representation,
+so the debugger checks only that the value has the underlying scalar type:
+`UserId('x')` is rejected, but inspection shows a `UserId` value as `integer`
+and the debugger does not reject a plain `integer` where a `UserId` is expected.
+
 Reference parameters require explicit `var` arguments, for example
 `Add(Item := var Count, Amount := 2)`. The designator must name initialized,
 writable storage with the exact declared type. Stored record fields and array

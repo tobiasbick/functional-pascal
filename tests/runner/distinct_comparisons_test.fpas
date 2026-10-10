@@ -1,0 +1,90 @@
+program DistinctComparisonsTest;
+
+uses Std.Test;
+
+type UserId = distinct integer;
+
+type Name = distinct string;
+
+type User = record
+  Id: UserId;
+end record;
+
+const Admin: UserId := UserId(1);
+const Low: UserId := UserId(10);
+const High: UserId := UserId(20);
+
+function Max<T: Comparable>(Left: T; Right: T): T;
+begin
+  if Left > Right then
+    return Left;
+  end if;
+
+  return Right;
+end function;
+
+function Describe(Id: UserId): string;
+begin
+  case Id of
+    when Admin:
+      return 'admin';
+    when UserId(2), UserId(3):
+      return 'staff';
+    when UserId(4)..UserId(9):
+      return 'early';
+    when Low..High:
+      return 'range';
+    when const Other if Other > UserId(100):
+      return 'large';
+    else
+      return 'other';
+  end case;
+end function;
+
+function Lookup(Value: option of UserId): string;
+begin
+  case Value of
+    when Some(UserId(1)):
+      return 'admin';
+    when Some(Low):
+      return 'low';
+    when Some(_):
+      return 'some';
+    when None:
+      return 'none';
+  end case;
+end function;
+
+begin
+  const A: UserId := UserId(1);
+  const B: UserId := UserId(2);
+  AssertTrue(A = Admin);
+  AssertTrue(A <> B);
+  AssertTrue(A < B);
+  AssertTrue(B >= A);
+  AssertTrue(Name('a') < Name('b'));
+  AssertTrue(User(Id := A) = User(Id := A));
+  AssertEquals(2, integer(Max(A, B)));
+  AssertEquals('b', string(Max(Name('a'), Name('b'))));
+  AssertTrue(B in [A, B]);
+  const Owners: dict of UserId to string := [A: 'root'];
+  AssertTrue(A in Owners);
+  AssertFalse(B in Owners);
+  AssertEquals('root', Owners[A]);
+  AssertEquals('admin', Describe(UserId(1)));
+  AssertEquals('staff', Describe(UserId(3)));
+  AssertEquals('early', Describe(UserId(5)));
+  AssertEquals('range', Describe(UserId(15)));
+  AssertEquals('large', Describe(UserId(500)));
+  AssertEquals('other', Describe(UserId(50)));
+  AssertEquals('admin', Lookup(Some(UserId(1))));
+  AssertEquals('low', Lookup(Some(Low)));
+  AssertEquals('some', Lookup(Some(UserId(7))));
+  AssertEquals('none', Lookup(None));
+  var Matched: boolean := false;
+  if Some(A) is Some(UserId(1)) then
+    Matched := true;
+  end if;
+
+  AssertTrue(Matched);
+end.

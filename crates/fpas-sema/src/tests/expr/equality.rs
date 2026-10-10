@@ -1,4 +1,5 @@
-//! `=` and `<>` accept records and payload enums whose fields all compare, and nothing else.
+//! `=` and `<>` accept options, results, records, and payload enums whose payloads and fields
+//! all compare, and nothing else.
 
 use super::{check_errors, check_ok};
 use fpas_diagnostics::codes::SEMA_TYPE_MISMATCH;
@@ -78,4 +79,63 @@ fn records_of_different_types_and_ordering_stay_rejected() {
     assert_eq!(different.len(), 1, "{different:#?}");
     let ordered = errors_for("const A: Point := Point( X := 1, Y := 2.0 );", "A < A");
     assert_eq!(ordered.len(), 1, "{ordered:#?}");
+}
+
+#[test]
+fn options_and_results_compare_only_when_their_payloads_compare() {
+    for (declarations, condition) in [
+        ("const O: option of integer := Some(1);", "O = None"),
+        (
+            "const O: option of Point := None;",
+            "O <> Some(Point( X := 1, Y := 2.0 ))",
+        ),
+        (
+            "const R: result of integer, string := Ok(1);",
+            "R = Error('x')",
+        ),
+    ] {
+        check_ok(&format!(
+            "{TYPES}{declarations}
+begin
+  const Same: boolean := {condition};
+end."
+        ));
+    }
+    for (declarations, condition) in [
+        ("const O: option of array of integer := Some([1]);", "O = O"),
+        ("const O: option of Bag := None;", "O = None"),
+        (
+            "const R: result of integer, array of string := Ok(1);",
+            "R = R",
+        ),
+        (
+            "const O: option of function(): integer := None;",
+            "O = None",
+        ),
+    ] {
+        let errors = errors_for(declarations, condition);
+        assert_eq!(errors.len(), 1, "{condition}: {errors:#?}");
+        assert!(
+            errors[0].message.contains("Equality requires"),
+            "{condition}: {errors:#?}"
+        );
+    }
+}
+
+#[test]
+fn generic_option_payloads_compare_only_with_a_comparable_constraint() {
+    check_ok(
+        "program T;
+         function IsEmpty<T: Comparable>(Value: option of T): boolean;
+         begin return Value = None; end function;
+         begin end.",
+    );
+    let errors = check_errors(
+        "program T;
+         function IsEmpty<T>(Value: option of T): boolean;
+         begin return Value = None; end function;
+         begin end.",
+    );
+    assert_eq!(errors.len(), 1, "{errors:#?}");
+    assert_eq!(errors[0].code, SEMA_TYPE_MISMATCH, "{errors:#?}");
 }

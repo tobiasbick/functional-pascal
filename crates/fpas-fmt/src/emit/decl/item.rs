@@ -72,6 +72,10 @@ fn emit_type_def(emitter: &mut Emitter, def: &TypeDef, comments: &CommentMap) {
 fn emit_type_body(emitter: &mut Emitter, body: &TypeBody, comments: &CommentMap) {
     match body {
         TypeBody::Alias(type_expr) => emit_type_expr(emitter, type_expr),
+        TypeBody::Distinct(type_expr) => {
+            emitter.write("distinct ");
+            emit_type_expr(emitter, type_expr);
+        }
         TypeBody::Record(record) => emit_record_type(emitter, record, comments),
         TypeBody::Enum(enum_type) => emit_enum_type(emitter, enum_type, comments),
     }

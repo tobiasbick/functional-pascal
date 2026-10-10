@@ -370,7 +370,7 @@ fn native_arguments_reject_names_counts_types_and_receiver_markers_without_fallb
 #[test]
 fn known_generic_container_shapes_keep_native_operations() {
     check_ok(
-        "program T; function Count<T>(A: array of T): integer; begin return A.Length(); end function; function Empty<K, V>(D: dict of K to V): boolean; begin return D.IsEmpty(); end function; function Has<T>(O: Option of T): boolean; begin return O.IsSome(); end function; function Good<T, E>(R: Result of T, E): boolean; begin return R.IsOk(); end function; begin const N: integer := Count([1]); end.",
+        "program T; function Count<T>(A: array of T): integer; begin return A.Length(); end function; function Empty<K: Comparable, V>(D: dict of K to V): boolean; begin return D.IsEmpty(); end function; function Has<T>(O: Option of T): boolean; begin return O.IsSome(); end function; function Good<T, E>(R: Result of T, E): boolean; begin return R.IsOk(); end function; begin const N: integer := Count([1]); end.",
     );
     let errors = check_errors(
         "program T; function Count<T>(A: T): integer; begin return A.Length(); end function; begin end.",

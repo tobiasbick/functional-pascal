@@ -6,8 +6,8 @@ use fpas_unit::interface as artifact;
 
 use crate::scope::{Symbol, SymbolKind as SemaSymbolKind};
 use crate::types::{
-    EnumTy, EnumVariantTy, FunctionTy, GenericParamDef, MethodKind, ParamTy, ProcedureTy, RecordTy,
-    Ty, TypeConstraint,
+    DistinctTy, EnumTy, EnumVariantTy, FunctionTy, GenericParamDef, MethodKind, ParamTy,
+    ProcedureTy, RecordTy, Ty, TypeConstraint,
 };
 
 use super::InterfaceConversionError;
@@ -80,6 +80,11 @@ pub fn interface_type_to_ty(ty: &artifact::InterfaceType) -> Result<Ty, Interfac
         Input::Procedure(procedure) => Ty::Procedure(interface_to_procedure(procedure)?),
         Input::Record(record) => Ty::Record(Arc::new(interface_to_record(record)?)),
         Input::Enum(enum_ty) => Ty::Enum(Arc::new(interface_to_enum(enum_ty)?)),
+        Input::Distinct(distinct) => Ty::Distinct(Arc::new(DistinctTy {
+            name: distinct.name.clone(),
+            owner_unit: distinct.owner_unit.clone(),
+            underlying: interface_type_to_ty(&distinct.underlying)?,
+        })),
         Input::Named(name) => Ty::Named(name.clone()),
         Input::GenericParameter(name, constraint) => {
             Ty::GenericParam(name.clone(), constraint.map(constraint_from_interface))

@@ -35,12 +35,12 @@ impl Checker {
                     && self.supports_structural_equality(&error, visiting)
             }
             Ty::Record(record) => self.all_fields_compare(
-                &record.name,
+                &Ty::Record(record.clone()).to_string(),
                 record.fields.iter().map(|(_, field)| field),
                 visiting,
             ),
             Ty::Enum(enum_ty) => self.all_fields_compare(
-                &enum_ty.name,
+                &Ty::Enum(enum_ty.clone()).to_string(),
                 enum_ty
                     .variants
                     .iter()

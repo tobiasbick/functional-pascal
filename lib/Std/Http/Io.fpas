@@ -12,7 +12,7 @@ begin
 end function;
 
 // Reads within the remaining response budget, probing only for EOF at its boundary.
-public function ReadResponseBytes(Connection: Std.Net.Connection; Available: integer): result of array of integer, string;
+public function ReadResponseBytes(Connection: Std.Net.Connection; Available: integer): result of (array of integer, string);
 begin
   if Available < 0 then
     begin
@@ -55,7 +55,7 @@ end function;
 // Parameters:
 // - `Connection`: Open TCP or TLS connection.
 // - `Bytes`: Complete byte sequence to write.
-public function WriteAll(Connection: Std.Net.Connection; Bytes: array of integer): result of boolean, string;
+public function WriteAll(Connection: Std.Net.Connection; Bytes: array of integer): result of (boolean, string);
 begin
   var Offset: integer := 0;
   while Offset < Bytes.Length() do

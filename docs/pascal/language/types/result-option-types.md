@@ -1,13 +1,17 @@
 # Result and Option types
 
-`Result of T, E` represents either a successful value of type `T` or an error value of type `E`.
+`Result of (T, E)` represents either a successful value of type `T` or an error value of type `E`.
 `Option of T` represents either a present value of type `T` or the absence of a value.
+
+`Result` always takes two parenthesized type arguments. Nested types use the
+same form, for example `Result of (Option of integer, Result of (integer, string))`.
+Single-argument `Option` types do not put parentheses around their type argument.
 
 Formal syntax: [`grammar.ebnf`](../../../specs/grammar.ebnf) (`type_expr` — `result` / `option`).
 
 ```pascal
-const Success: Result of integer, string := Ok(42);
-const Failure: Result of integer, string := Error('not found');
+const Success: Result of (integer, string) := Ok(42);
+const Failure: Result of (integer, string) := Error('not found');
 
 const Present: Option of integer := Some(7);
 const Missing: Option of integer := None;

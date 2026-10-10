@@ -10,8 +10,8 @@ begin
   return IntToStr(V * 2);
 end function;
 
-const R: Result of integer, string := Ok(21);
-const M: Result of string, string := R.Map(DoubleToString);
+const R: Result of (integer, string) := Ok(21);
+const M: Result of (string, string) := R.Map(DoubleToString);
 // M = Ok('42')
 ```
 

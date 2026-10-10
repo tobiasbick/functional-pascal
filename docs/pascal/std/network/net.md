@@ -24,22 +24,22 @@ end case;
 | type | `Connection` | opaque VM-owned TCP or TLS connection |
 | type | `Listener` | opaque VM-owned TCP or TLS listener |
 | type | `NetworkAddress` | record with `Host: string` and `Port: integer` |
-| function | `Connect(Host: string; Port: integer; TimeoutMillis: integer): Result of Connection, string` | resolves and connects |
-| function | `ConnectTls(Host: string; Port: integer; TimeoutMillis: integer): Result of Connection, string` | resolves, connects, and completes a verified TLS handshake |
-| function | `ConnectWithCancellation(Host: string; Port: integer; TimeoutMillis: integer; Token: Std.Tasks.CancellationToken): Result of Connection, string` | cancellable TCP attempts; OS DNS checked on return |
-| function | `ConnectTlsWithCancellation(Host: string; Port: integer; TimeoutMillis: integer; Token: Std.Tasks.CancellationToken): Result of Connection, string` | also observes cancellation during TLS handshake I/O |
-| function | `Listen(Host: string; Port: integer): Result of Listener, string` | binds one TCP listener |
-| function | `ListenTls(Host: string; Port: integer; CertificatePath: string; PrivateKeyPath: string; HandshakeTimeoutMillis: integer): Result of Listener, string` | loads PEM credentials and binds one TLS listener |
-| function | `Accept(Listener): Result of Connection, string` | blocks until one client connects |
-| function | `AcceptWithCancellation(Listener; Token: Std.Tasks.CancellationToken): Result of Connection, string` | blocks until one client connects or cancellation is requested |
-| function | `CloseListener(Listener): Result of boolean, string` | invalidates the listener handle |
-| function | `ListenerLocalAddress(Listener): Result of NetworkAddress, string` | returns the bound numeric IP address and port |
-| function | `SetTimeout(Connection; TimeoutMillis: integer): Result of boolean, string` | sets read/write timeout; zero disables it |
-| function | `ReceiveBytes(Connection; MaxBytes: integer): Result of array of integer, string` | empty array means EOF |
-| function | `ReceiveBytesWithCancellation(Connection; MaxBytes: integer; Token: Std.Tasks.CancellationToken): Result of array of integer, string` | reads a chunk or reports cancellation; leaves the connection open |
-| function | `SendBytes(Connection; Data: array of integer): Result of integer, string` | returns bytes written; partial writes are possible |
-| function | `SendBytesWithCancellation(Connection; Data: array of integer; Token: Std.Tasks.CancellationToken): Result of integer, string` | returns accepted bytes or reports cancellation before progress |
-| function | `Close(Connection): Result of boolean, string` | invalidates the handle |
+| function | `Connect(Host: string; Port: integer; TimeoutMillis: integer): Result of (Connection, string)` | resolves and connects |
+| function | `ConnectTls(Host: string; Port: integer; TimeoutMillis: integer): Result of (Connection, string)` | resolves, connects, and completes a verified TLS handshake |
+| function | `ConnectWithCancellation(Host: string; Port: integer; TimeoutMillis: integer; Token: Std.Tasks.CancellationToken): Result of (Connection, string)` | cancellable TCP attempts; OS DNS checked on return |
+| function | `ConnectTlsWithCancellation(Host: string; Port: integer; TimeoutMillis: integer; Token: Std.Tasks.CancellationToken): Result of (Connection, string)` | also observes cancellation during TLS handshake I/O |
+| function | `Listen(Host: string; Port: integer): Result of (Listener, string)` | binds one TCP listener |
+| function | `ListenTls(Host: string; Port: integer; CertificatePath: string; PrivateKeyPath: string; HandshakeTimeoutMillis: integer): Result of (Listener, string)` | loads PEM credentials and binds one TLS listener |
+| function | `Accept(Listener): Result of (Connection, string)` | blocks until one client connects |
+| function | `AcceptWithCancellation(Listener; Token: Std.Tasks.CancellationToken): Result of (Connection, string)` | blocks until one client connects or cancellation is requested |
+| function | `CloseListener(Listener): Result of (boolean, string)` | invalidates the listener handle |
+| function | `ListenerLocalAddress(Listener): Result of (NetworkAddress, string)` | returns the bound numeric IP address and port |
+| function | `SetTimeout(Connection; TimeoutMillis: integer): Result of (boolean, string)` | sets read/write timeout; zero disables it |
+| function | `ReceiveBytes(Connection; MaxBytes: integer): Result of (array of integer, string)` | empty array means EOF |
+| function | `ReceiveBytesWithCancellation(Connection; MaxBytes: integer; Token: Std.Tasks.CancellationToken): Result of (array of integer, string)` | reads a chunk or reports cancellation; leaves the connection open |
+| function | `SendBytes(Connection; Data: array of integer): Result of (integer, string)` | returns bytes written; partial writes are possible |
+| function | `SendBytesWithCancellation(Connection; Data: array of integer; Token: Std.Tasks.CancellationToken): Result of (integer, string)` | returns accepted bytes or reports cancellation before progress |
+| function | `Close(Connection): Result of (boolean, string)` | invalidates the handle |
 
 `ConnectTls` verifies the server certificate and requested hostname through the operating system's
 trust policy. It does not expose an insecure certificate bypass. The returned `Connection` uses the
@@ -86,7 +86,7 @@ The port remains reserved by the listener; there is no separate probe-and-rebind
 An address queried after `CloseListener` returns `Error`.
 
 ```pascal
-function InspectListener(): Result of NetworkAddress, string;
+function InspectListener(): Result of (NetworkAddress, string);
 begin
   const Server: Listener := try Listen('127.0.0.1', 0);
   const Address: NetworkAddress := try ListenerLocalAddress(Server);

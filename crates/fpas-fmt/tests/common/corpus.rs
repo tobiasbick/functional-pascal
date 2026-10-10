@@ -85,7 +85,7 @@ pub const SOURCES: &[(&str, &str)] = &[
     ),
     (
         "nested_option_result",
-        "program T; begin const Value: result of option of array of integer, string := Ok(Some([])); end.",
+        "program T; begin const Value: result of (option of array of integer, string) := Ok(Some([])); end.",
     ),
     (
         "case_destructure_with_guard",

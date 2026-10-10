@@ -6,7 +6,7 @@ Formal syntax: [`grammar.ebnf`](../../../specs/grammar.ebnf) (`type_expr` for `R
 
 | Topic | Description |
 |-------|-------------|
-| [Result](result.md) | `Result of T, E`, `Ok`, `Error` |
+| [Result](result.md) | `Result of (T, E)`, `Ok`, `Error` |
 | [Option](option.md) | `Option of T`, `Some`, `None` |
 | [Try operator](try.md) | Early propagation with `try` |
 | [Combinators](combinators.md) | `Map`, `AndThen`, `OrElse` overview |

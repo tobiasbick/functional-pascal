@@ -8,7 +8,7 @@ begin
   const Outcomes: channel of boolean := CreateChannel(2);
   discard Send(Outcomes, false);
   discard Send(Outcomes, true);
-  const Worker: task := StartSupervisedTask(Workers, function(Token: CancellationToken): result of string, string begin
+  const Worker: task := StartSupervisedTask(Workers, function(Token: CancellationToken): result of (string, string) begin
     WriteLn('Starting an attempt');
     if not Receive(Outcomes).Unwrap() then
       begin

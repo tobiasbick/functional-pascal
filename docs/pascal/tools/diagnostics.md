@@ -300,7 +300,7 @@ the complete canonical header in its hint. Recovery stops before the list's
 closing parenthesis, retaining the following result type and body. The same check
 applies to procedures, record methods, anonymous routines and callable types.
 Call arguments still use commas; commas inside types such as
-`Result of integer, string` remain valid.
+`Result of (integer, string)` remain valid.
 
 ### Semantic analysis
 

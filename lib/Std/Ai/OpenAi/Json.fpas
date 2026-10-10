@@ -46,7 +46,7 @@ end function;
 // Parameters:
 // - `Fields`: JSON object fields to inspect.
 // - `Name`: Required field name.
-function RequiredField(Fields: dict of string to JsonValue; Name: string): result of JsonValue, string;
+function RequiredField(Fields: dict of string to JsonValue; Name: string): result of (JsonValue, string);
 begin
   case Fields.Get(Name) of
     when Some(const Value):
@@ -64,7 +64,7 @@ end function;
 //
 // Parameters:
 // - `Text`: Complete JSON response text.
-public function DecodeResponse(Text: string): result of string, string;
+public function DecodeResponse(Text: string): result of (string, string);
 begin
   case Std.Json.Parse(Text) of
     when Ok(const Root):

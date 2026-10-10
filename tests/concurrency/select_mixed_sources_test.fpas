@@ -8,10 +8,10 @@ begin
   discard Send(Numbers, 42);
   discard Send(Words, 'retained');
   var Seen: integer := 0;
-  const First: WaitCase := ReceiveCase(Numbers, procedure(Outcome: result of integer, string) begin
+  const First: WaitCase := ReceiveCase(Numbers, procedure(Outcome: result of (integer, string)) begin
     Seen := Outcome.Unwrap();
   end procedure);
-  const Second: WaitCase := ReceiveCase(Words, procedure(Outcome: result of string, string) begin
+  const Second: WaitCase := ReceiveCase(Words, procedure(Outcome: result of (string, string)) begin
     panic('losing callback ran');
   end procedure);
   AssertEquals(0, Select([First, Second]));

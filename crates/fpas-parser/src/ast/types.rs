@@ -11,6 +11,15 @@ pub enum TypeExpr {
         /// The source span covering the type expression.
         span: Span,
     },
+    /// A generic record or enum application: `Box of T` or `Choice of (L, R)`.
+    Application {
+        /// The qualified generic type name.
+        id: QualifiedId,
+        /// Type arguments in declaration order.
+        arguments: Vec<TypeExpr>,
+        /// The source span covering the complete application.
+        span: Span,
+    },
     /// An `array of T` type, together with its source span.
     Array(Box<TypeExpr>, Span),
     /// A `channel of T` type, together with its source span.
@@ -39,7 +48,7 @@ pub enum TypeExpr {
         /// The source span covering the type expression.
         span: Span,
     },
-    /// `Result of T, E`
+    /// `Result of (T, E)`
     Result {
         /// The type carried by an `Ok` value.
         ok_type: Box<TypeExpr>,

@@ -54,7 +54,7 @@ fn unwrap_result_ok(c: &mut Checker, name: &str, ty: Ty, span: Span) -> Ty {
             c.error_with_code(
                 SEMA_TYPE_MISMATCH,
                 format!("`{name}` first argument must be a Result"),
-                "Pass a `Result of T, E` value. For `Option of T`, use `Std.Options.Unwrap` or `Std.Options.UnwrapOr`.",
+                "Pass a `Result of (T, E)` value. For `Option of T`, use `Std.Options.Unwrap` or `Std.Options.UnwrapOr`.",
                 span,
             );
             Ty::Error
@@ -70,7 +70,7 @@ fn unwrap_option(c: &mut Checker, name: &str, ty: Ty, span: Span) -> Ty {
             c.error_with_code(
                 SEMA_TYPE_MISMATCH,
                 format!("`{name}` first argument must be an Option"),
-                "Pass an `Option of T` value. For `Result of T, E`, use `Std.Results.Unwrap` or `Std.Results.UnwrapOr`.",
+                "Pass an `Option of T` value. For `Result of (T, E)`, use `Std.Results.Unwrap` or `Std.Results.UnwrapOr`.",
                 span,
             );
             Ty::Error
@@ -119,7 +119,7 @@ fn check_two_args(
     derive(c, ty1, ty2)
 }
 
-/// `R.Map(F)` -> `Result of U, E` where `F: function(V: T): U`.
+/// `R.Map(F)` -> `Result of (U, E)` where `F: function(V: T): U`.
 fn check_result_map(c: &mut Checker, args: &[&Expr], span: Span) -> Ty {
     if args.len() != 2 {
         c.error_with_code(
@@ -143,7 +143,7 @@ fn check_result_map(c: &mut Checker, args: &[&Expr], span: Span) -> Ty {
             c.error_with_code(
                 SEMA_TYPE_MISMATCH,
                 format!("`{}` first argument must be a Result", s::STD_RESULT_MAP),
-                "Pass a `Result of T, E` value.",
+                "Pass a `Result of (T, E)` value.",
                 span,
             );
             return Ty::Error;
@@ -165,13 +165,13 @@ fn check_result_map(c: &mut Checker, args: &[&Expr], span: Span) -> Ty {
     }
 }
 
-/// `R.AndThen(F)` -> `Result of U, E` where `F: function(V: T): Result of U, E`.
+/// `R.AndThen(F)` -> `Result of (U, E)` where `F: function(V: T): Result of (U, E)`.
 fn check_result_and_then(c: &mut Checker, args: &[&Expr], span: Span) -> Ty {
     if args.len() != 2 {
         c.error_with_code(
             SEMA_WRONG_ARGUMENT_COUNT,
             format!("`{}` expects 2 arguments, got {}", s::STD_RESULT_AND_THEN, args.len()),
-            "Example: R.AndThen(function(V: integer): Result of string, string begin return Ok(IntToStr(V)); end function).",
+            "Example: R.AndThen(function(V: integer): Result of (string, string) begin return Ok(IntToStr(V)); end function).",
             span,
         );
         return Ty::Error;
@@ -184,7 +184,7 @@ fn check_result_and_then(c: &mut Checker, args: &[&Expr], span: Span) -> Ty {
                 "`{}` first argument must be a Result",
                 s::STD_RESULT_AND_THEN
             ),
-            "Pass a `Result of T, E` value.",
+            "Pass a `Result of (T, E)` value.",
             span,
         );
         return Ty::Error;
@@ -199,7 +199,7 @@ fn check_result_and_then(c: &mut Checker, args: &[&Expr], span: Span) -> Ty {
                     "`{}` second argument must be a function",
                     s::STD_RESULT_AND_THEN
                 ),
-                "Pass a function(V: T): Result of U, E.",
+                "Pass a function(V: T): Result of (U, E).",
                 span,
             );
             Ty::Error
@@ -207,13 +207,13 @@ fn check_result_and_then(c: &mut Checker, args: &[&Expr], span: Span) -> Ty {
     }
 }
 
-/// `R.OrElse(F)` -> `Result of T, F` where `F: function(E: E): Result of T, F`.
+/// `R.OrElse(F)` -> `Result of (T, F)` where `F: function(E: E): Result of (T, F)`.
 fn check_result_or_else(c: &mut Checker, args: &[&Expr], span: Span) -> Ty {
     if args.len() != 2 {
         c.error_with_code(
             SEMA_WRONG_ARGUMENT_COUNT,
             format!("`{}` expects 2 arguments, got {}", s::STD_RESULT_OR_ELSE, args.len()),
-            "Example: R.OrElse(function(E: string): Result of integer, string begin return Ok(0); end function).",
+            "Example: R.OrElse(function(E: string): Result of (integer, string) begin return Ok(0); end function).",
             span,
         );
         return Ty::Error;
@@ -226,7 +226,7 @@ fn check_result_or_else(c: &mut Checker, args: &[&Expr], span: Span) -> Ty {
                 "`{}` first argument must be a Result",
                 s::STD_RESULT_OR_ELSE
             ),
-            "Pass a `Result of T, E` value.",
+            "Pass a `Result of (T, E)` value.",
             span,
         );
         return Ty::Error;
@@ -241,7 +241,7 @@ fn check_result_or_else(c: &mut Checker, args: &[&Expr], span: Span) -> Ty {
                     "`{}` second argument must be a function",
                     s::STD_RESULT_OR_ELSE
                 ),
-                "Pass a function(E: E): Result of T, F.",
+                "Pass a function(E: E): Result of (T, F).",
                 span,
             );
             Ty::Error

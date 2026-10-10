@@ -91,6 +91,18 @@ impl Checker {
             let procedure_result_is_discarded =
                 allow_final_procedure && index + 1 == operations.len();
             ty = self.check_postfix_operation(&ty, operation, procedure_result_is_discarded);
+            let span = match operation {
+                PostfixOperation::Field { span, .. }
+                | PostfixOperation::Index { span, .. }
+                | PostfixOperation::MethodCall { span, .. } => span,
+            };
+            if matches!(operation, PostfixOperation::MethodCall { .. }) {
+                self.postfix_types
+                    .insert((span.source_id, span.offset), ty.clone());
+            } else {
+                self.path_types
+                    .insert((span.source_id, span.offset), ty.clone());
+            }
         }
         ty
     }
@@ -169,6 +181,8 @@ impl Checker {
             .any(|(name, _)| name.eq_ignore_ascii_case(method_name))
         {
             let member_ty = self.check_record_member_access(receiver_ty, method_name, span, None);
+            self.path_types
+                .insert((span.source_id, span.offset), member_ty.clone());
             return self.check_member_value_call(
                 op_key,
                 method_name,

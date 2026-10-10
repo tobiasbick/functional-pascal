@@ -26,7 +26,7 @@ public function ReadFinal(
   Connection: Std.Net.Connection;
   MaxHeaderBytes: integer;
   MaxResponseBytes: integer
-): result of FinalHead, string;
+): result of (FinalHead, string);
 begin
   var Buffer: array of integer := [];
   var BytesReceived: integer := 0;

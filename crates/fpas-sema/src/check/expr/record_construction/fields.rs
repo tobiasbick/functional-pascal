@@ -23,7 +23,7 @@ impl Checker {
                 .iter()
                 .find(|(candidate, _)| candidate.eq_ignore_ascii_case(name))
             {
-                let value_ty = self.check_expr(value);
+                let value_ty = self.check_expr_with_expected(value, Some(field_ty));
                 self.check_type_compat(
                     field_ty,
                     &value_ty,

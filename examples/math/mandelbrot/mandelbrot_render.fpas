@@ -262,7 +262,7 @@ public function RunBackgroundRender(
   Request: MandelbrotRenderRequest;
   Inbox: channel of MandelbrotRenderFrame;
   HostToken: CancellationToken
-): result of boolean, string;
+): result of (boolean, string);
 begin
   const Group: TaskGroup := CreateTaskGroup();
   var Tasks: array of task := [];

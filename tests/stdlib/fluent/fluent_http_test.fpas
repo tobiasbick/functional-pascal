@@ -2,7 +2,7 @@ program FluentHttpTest;
 
 uses Std.Conv, Std.Http, Std.Net, Std.Net.Utf8, Std.Tasks, Std.Test;
 
-function FetchText(Url: string): result of string, string;
+function FetchText(Url: string): result of (string, string);
 begin
   return Std.Http.Send(Request.Get(Url)).AndThen(BodyText);
 end function;
@@ -21,7 +21,7 @@ begin
   return ResponseValue;
 end function;
 
-function ExerciseHttp(): result of boolean, string;
+function ExerciseHttp(): result of (boolean, string);
 begin
   const ListenerValue: Listener := try Listen('127.0.0.1', 0);
   const Address: NetworkAddress := try ListenerLocalAddress(ListenerValue);

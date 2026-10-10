@@ -26,6 +26,7 @@ pub(super) fn validate(unit: &Unit) -> Vec<SemaError> {
             })
             .collect(),
         unit_name: &unit.name.parts,
+        parameters: HashSet::new(),
     };
 
     unit.declarations
@@ -59,13 +60,30 @@ struct PrivateTypeReference<'a> {
 struct PrivateTypes<'a> {
     names: HashSet<String>,
     unit_name: &'a [String],
+    parameters: HashSet<String>,
 }
 
 impl PrivateTypes<'_> {
+    fn with_parameters(&self, parameters: &[fpas_parser::TypeParam]) -> PrivateTypes<'_> {
+        let mut names = self.parameters.clone();
+        names.extend(
+            parameters
+                .iter()
+                .map(|parameter| canonical_symbol_name(&parameter.name)),
+        );
+        PrivateTypes {
+            names: self.names.clone(),
+            unit_name: self.unit_name,
+            parameters: names,
+        }
+    }
     fn contains(&self, id: &fpas_parser::QualifiedId) -> bool {
         let Some(name) = id.parts.last() else {
             return false;
         };
+        if id.parts.len() == 1 && self.parameters.contains(&canonical_symbol_name(name)) {
+            return false;
+        }
         if !self.names.contains(&canonical_symbol_name(name)) {
             return false;
         }
@@ -86,31 +104,41 @@ fn private_type_in_declaration<'a>(
         Decl::Const(definition) => private_type_in(&definition.type_expr, private_types),
         Decl::Var(definition) => private_type_in(&definition.type_expr, private_types),
         Decl::Function(function) => private_type_in_function(function, private_types),
-        Decl::Procedure(procedure) => private_type_in_parameters(&procedure.params, private_types),
-        Decl::TypeDef(definition) => match &definition.body {
-            TypeBody::Alias(ty) | TypeBody::Distinct(ty) => private_type_in(ty, private_types),
-            TypeBody::Enum(enumeration) => enumeration
-                .members
-                .iter()
-                .flat_map(|variant| &variant.fields)
-                .find_map(|field| private_type_in(&field.type_expr, private_types)),
-            TypeBody::Record(record) => record
-                .fields
-                .iter()
-                .find_map(|field| private_type_in(&field.type_expr, private_types))
-                .or_else(|| {
-                    record.methods.iter().find_map(|method| match method {
-                        RecordMethod::Function(function)
-                        | RecordMethod::StaticFunction(function) => {
-                            private_type_in_function(function, private_types)
-                        }
-                        RecordMethod::Procedure(procedure)
-                        | RecordMethod::StaticProcedure(procedure) => {
-                            private_type_in_parameters(&procedure.params, private_types)
-                        }
-                    })
-                }),
-        },
+        Decl::Procedure(procedure) => private_type_in_parameters(
+            &procedure.params,
+            &private_types.with_parameters(&procedure.type_params),
+        ),
+        Decl::TypeDef(definition) => {
+            let private_types = private_types.with_parameters(&definition.type_params);
+            let private_types = &private_types;
+            match &definition.body {
+                TypeBody::Alias(ty) | TypeBody::Distinct(ty) => private_type_in(ty, private_types),
+                TypeBody::Enum(enumeration) => enumeration
+                    .members
+                    .iter()
+                    .flat_map(|variant| &variant.fields)
+                    .find_map(|field| private_type_in(&field.type_expr, private_types)),
+                TypeBody::Record(record) => record
+                    .fields
+                    .iter()
+                    .find_map(|field| private_type_in(&field.type_expr, private_types))
+                    .or_else(|| {
+                        record.methods.iter().find_map(|method| match method {
+                            RecordMethod::Function(function)
+                            | RecordMethod::StaticFunction(function) => {
+                                private_type_in_function(function, private_types)
+                            }
+                            RecordMethod::Procedure(procedure)
+                            | RecordMethod::StaticProcedure(procedure) => {
+                                private_type_in_parameters(
+                                    &procedure.params,
+                                    &private_types.with_parameters(&procedure.type_params),
+                                )
+                            }
+                        })
+                    }),
+            }
+        }
     }
 }
 
@@ -118,6 +146,8 @@ fn private_type_in_function<'a>(
     function: &'a fpas_parser::FunctionDecl,
     private_types: &PrivateTypes<'_>,
 ) -> Option<PrivateTypeReference<'a>> {
+    let private_types = private_types.with_parameters(&function.type_params);
+    let private_types = &private_types;
     private_type_in_parameters(&function.params, private_types)
         .or_else(|| private_type_in(&function.return_type, private_types))
 }
@@ -136,6 +166,21 @@ fn private_type_in<'a>(
     private_types: &PrivateTypes<'_>,
 ) -> Option<PrivateTypeReference<'a>> {
     match ty {
+        TypeExpr::Application {
+            id,
+            arguments,
+            span,
+        } => {
+            let name = id.parts.last()?;
+            private_types
+                .contains(id)
+                .then_some(PrivateTypeReference { name, span: *span })
+                .or_else(|| {
+                    arguments
+                        .iter()
+                        .find_map(|argument| private_type_in(argument, private_types))
+                })
+        }
         TypeExpr::Named { id, span } => {
             let name = id.parts.last()?;
             private_types

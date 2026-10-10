@@ -12,7 +12,7 @@ public type ProcessOutput = record
 end record;
 
 // Returns the absolute path of the running FPAS host executable.
-public function CurrentExecutable(): result of string, string;
+public function CurrentExecutable(): result of (string, string);
 begin
   panic('Intrinsic API declaration');
 end function;
@@ -22,7 +22,7 @@ end function;
 // Parameters:
 // - `Command`: Executable name or path to start.
 // - `Args`: Command-line arguments in invocation order.
-public function Run(Command: string; Args: array of string): result of integer, string;
+public function Run(Command: string; Args: array of string): result of (integer, string);
 begin
   panic('Intrinsic API declaration');
 end function;
@@ -32,7 +32,7 @@ end function;
 // Parameters:
 // - `Command`: Executable name or path to start.
 // - `Args`: Command-line arguments in invocation order.
-public function RunCapture(Command: string; Args: array of string): result of Std.Proc.ProcessOutput, string;
+public function RunCapture(Command: string; Args: array of string): result of (Std.Proc.ProcessOutput, string);
 begin
   panic('Intrinsic API declaration');
 end function;

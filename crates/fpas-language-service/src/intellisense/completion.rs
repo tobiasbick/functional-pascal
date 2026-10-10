@@ -58,10 +58,20 @@ fn complete(
         .into_iter()
         .filter(|(_, symbol)| starts_with(&symbol.name, &context.prefix))
         .map(|(document_index, symbol)| {
+            let mut symbol = symbol.clone();
+            if let Some(receiver) = &context.receiver {
+                super::record_members::instantiate_member(
+                    documents,
+                    target_index,
+                    receiver,
+                    offset,
+                    &mut symbol,
+                );
+            }
             declaration_candidate(
                 documents,
                 document_index,
-                symbol,
+                &symbol,
                 context.replacement,
                 CompletionSource::Declaration,
                 0,

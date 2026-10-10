@@ -1,0 +1,43 @@
+program ParenthesizedTypeArgumentsTest;
+
+uses Std.Test;
+
+type Payload = result of (option of array of integer, result of (integer, string));
+
+function Nested(Succeed: boolean): Payload;
+begin
+  if Succeed then
+    return Ok(Some([3, 5]));
+  else
+    return Error(Error('failed'));
+  end if;
+end function;
+
+function Apply(F: function(Value: integer): result of (integer, string); Value: integer): result of (integer, string);
+begin
+  return F(Value);
+end function;
+
+function Increment(Value: integer): result of (integer, string);
+begin
+  return Ok(Value + 1);
+end function;
+
+begin
+  const Success: Payload := Nested(true);
+  AssertEquals(5, Success.Unwrap().Unwrap()[1]);
+  const Failure: Payload := Nested(false);
+  case Failure of
+    when Ok(_):
+      AssertTrue(false);
+    when Error(const Inner):
+      case Inner of
+        when Ok(_):
+          AssertTrue(false);
+        when Error(const Message):
+          AssertEquals('failed', Message);
+      end case;
+  end case;
+  const Values: dict of string to result of (integer, string) := ['key': Apply(Increment, 8)];
+  AssertEquals(9, Values['key'].Unwrap());
+end.

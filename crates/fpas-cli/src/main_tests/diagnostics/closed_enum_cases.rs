@@ -20,7 +20,7 @@ fn check_and_run_reject_enum_option_and_result_else_branches() {
             "None",
         ),
         (
-            "program T; const R: result of integer, string := Ok(1);
+            "program T; const R: result of (integer, string) := Ok(1);
              begin case R of when Ok(_): null; else null; end case; end.",
             "Error(_)",
         ),

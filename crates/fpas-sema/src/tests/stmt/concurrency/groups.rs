@@ -26,7 +26,7 @@ fn group_operations_reject_wrong_handles_and_worker_signatures() {
         "StartTaskInGroup(G, procedure(T: integer) begin end procedure)",
         "StartTaskInGroup(G, procedure(T: CancellationSource) begin end procedure)",
         "StartTaskInGroup(G, procedure(T: CancellationToken; Extra: integer) begin end procedure)",
-        "StartTaskInGroup(G, function(T: CancellationToken): result of integer, integer begin return Error(1); end function)",
+        "StartTaskInGroup(G, function(T: CancellationToken): result of (integer, integer) begin return Error(1); end function)",
     ] {
         let source = format!(
             "program T; uses Std.Tasks; procedure Work(Token: CancellationToken); begin end procedure; begin const G: TaskGroup := CreateTaskGroup(); {call}; end."
@@ -64,7 +64,7 @@ fn group_worker_preserves_unit_value_and_result_task_types() {
 uses Std.Tasks;
 procedure NoValue(Token: CancellationToken); begin end procedure;
 function Number(Token: CancellationToken): integer; begin return 42; end function;
-function Outcome(Token: CancellationToken): result of integer, string; begin return Error('failed'); end function;
+function Outcome(Token: CancellationToken): result of (integer, string); begin return Error('failed'); end function;
 begin
   const G: TaskGroup := CreateTaskGroup();
   const A: task := StartTaskInGroup(G, NoValue);
@@ -72,7 +72,7 @@ begin
   const C: task := StartTaskInGroup(G, Outcome);
   Wait(A);
   const N: integer := Wait(B);
-  const R: result of integer, string := Wait(C);
+  const R: result of (integer, string) := Wait(C);
   discard CloseTaskGroup(G);
 end."#,
     );
@@ -96,7 +96,7 @@ end."#,
 #[test]
 fn timed_group_close_preserves_result_and_failure_record_types() {
     check_ok(
-        "program T; uses Std.Tasks; begin const G: TaskGroup := CreateTaskGroup(); const R: result of array of TaskFailure, string := CloseTaskGroupWithTimeout(G, 0); const Reports: array of TaskFailure := R.Unwrap(); end.",
+        "program T; uses Std.Tasks; begin const G: TaskGroup := CreateTaskGroup(); const R: result of (array of TaskFailure, string) := CloseTaskGroupWithTimeout(G, 0); const Reports: array of TaskFailure := R.Unwrap(); end.",
     );
     assert!(!check_errors("program T; uses Std.Tasks; begin const G: TaskGroup := CreateTaskGroup(); const Wrong: boolean := CloseTaskGroupWithTimeout(G, 0); end.").is_empty());
 }

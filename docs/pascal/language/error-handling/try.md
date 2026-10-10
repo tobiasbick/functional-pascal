@@ -5,7 +5,7 @@
 Formal syntax: [`grammar.ebnf`](../../../specs/grammar.ebnf) (`try` expression).
 
 ```pascal
-function Process(A: integer; B: integer): Result of string, string;
+function Process(A: integer; B: integer): Result of (string, string);
 begin
   const Quotient: integer := try Divide(A, B);
   return Ok(IntToStr(Quotient));

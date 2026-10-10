@@ -3,6 +3,7 @@
 //! **Documentation:** `docs/pascal/language/types/declaration-order.md`
 
 mod finite;
+mod generic_recursion;
 mod resolution;
 
 use super::Checker;
@@ -51,7 +52,23 @@ impl Checker {
                 &definition.name,
                 Symbol {
                     constant: None,
-                    ty: Ty::Named(definition.name.clone()),
+                    ty: if definition.type_params.is_empty() {
+                        Ty::Named(definition.name.clone())
+                    } else if matches!(definition.body, TypeBody::Enum(_)) {
+                        Ty::Enum(std::sync::Arc::new(crate::types::EnumTy::header(
+                            definition.name.clone(),
+                            Self::resolve_type_params(&definition.type_params),
+                        )))
+                    } else {
+                        Ty::Record(std::sync::Arc::new(crate::types::RecordTy::header(
+                            definition.name.clone(),
+                            self.scopes
+                                .function_ctx
+                                .as_ref()
+                                .and_then(|context| context.owner_unit.clone()),
+                            Self::resolve_type_params(&definition.type_params),
+                        )))
+                    },
                     mutable: false,
                     kind: SymbolKind::Type,
                     task_bound: false,
@@ -101,6 +118,7 @@ impl Checker {
                 self.register_enum_alias_variant_symbols(definition, &enumeration);
             }
         }
+        self.validate_generic_recursion(declarations);
         self.validate_finite_types(declarations);
     }
 

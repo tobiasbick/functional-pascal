@@ -9,7 +9,7 @@ Non-streaming chat completions for configurable OpenAI-compatible HTTP endpoints
 | type | `ChatMessage` | role and text content; `System`, `User`, and `Assistant` constructors |
 | type | `Client` | base URL, model, optional API key, timeout, and response limit |
 | type | `ChatOptions` | optional temperature and maximum token count |
-| function | `Complete(Client; Messages; Options): Result of string, string` | returns the first text choice |
+| function | `Complete(Client; Messages; Options): Result of (string, string)` | returns the first text choice |
 
 ```pascal
 const ClientValue: Client := Client.Create('http://127.0.0.1:8080/v1', 'local-model');

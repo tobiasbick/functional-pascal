@@ -60,7 +60,7 @@ impl Checker {
             else {
                 continue;
             };
-            let actual = self.check_expr(&expression);
+            let actual = self.check_expr_with_expected(&expression, Some(expected));
             self.check_type_compat(
                 expected,
                 &actual,

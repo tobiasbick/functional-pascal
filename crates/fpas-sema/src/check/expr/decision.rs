@@ -15,16 +15,27 @@ use fpas_parser::{Expr, IfExprBranch};
 
 impl Checker {
     /// Checks every condition and branch value and returns their shared type.
-    pub(super) fn check_if_expr(&mut self, branches: &[IfExprBranch], else_value: &Expr) -> Ty {
+    pub(super) fn check_if_expr(
+        &mut self,
+        branches: &[IfExprBranch],
+        else_value: &Expr,
+        expected: Option<&Ty>,
+    ) -> Ty {
         let mut values = Vec::with_capacity(branches.len() + 1);
         for branch in branches {
             // `is` bindings in this condition are visible only in this branch's value.
             self.scopes.push_scope();
             self.check_branch_condition(&branch.condition, "if", branch.condition.span());
-            values.push((self.check_expr(&branch.value), branch.value.span()));
+            values.push((
+                self.check_expr_with_expected(&branch.value, expected),
+                branch.value.span(),
+            ));
             self.scopes.pop_scope();
         }
-        values.push((self.check_expr(else_value), else_value.span()));
+        values.push((
+            self.check_expr_with_expected(else_value, expected),
+            else_value.span(),
+        ));
         self.shared_branch_type(values, "`if` expression branches")
     }
 

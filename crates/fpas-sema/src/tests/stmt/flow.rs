@@ -103,7 +103,7 @@ fn case_result_multi_label_shared_binding_valid() {
     check_ok(
         "program T; uses Std.Console; \
          begin \
-           const R: Result of string, string := Ok('hello'); \
+           const R: Result of (string, string) := Ok('hello'); \
            case R of \
              when Ok(const Msg), Error(const Msg): WriteLn(Msg); \
            end case; \
@@ -116,7 +116,7 @@ fn case_result_multi_label_binding_names_are_case_insensitive() {
     check_ok(
         "program T; uses Std.Console; \
          begin \
-           const R: Result of string, string := Ok('hello'); \
+           const R: Result of (string, string) := Ok('hello'); \
            case R of \
              when Ok(const Message), Error(const message): WriteLn(Message); \
            end case; \
@@ -129,7 +129,7 @@ fn case_result_multi_label_checks_shared_body_once() {
     let errors = check_errors(
         "program T; \
          begin \
-           const R: Result of string, string := Ok('hello'); \
+           const R: Result of (string, string) := Ok('hello'); \
            case R of \
              when Ok(const Message), Error(const message): \
                const Invalid: integer := 'not an integer'; \
@@ -151,7 +151,7 @@ fn case_result_multi_label_rejects_incompatible_binding_types() {
     let errors = check_errors(
         "program T; \
          begin \
-           const R: Result of integer, string := Ok(1); \
+           const R: Result of (integer, string) := Ok(1); \
            case R of \
              when Ok(const Value), Error(const Value): return; \
            end case; \
@@ -171,7 +171,7 @@ fn case_result_multi_label_rejects_different_binding_names() {
     let errors = check_errors(
         "program T; \
          begin \
-           const R: Result of string, string := Ok('value'); \
+           const R: Result of (string, string) := Ok('value'); \
            case R of \
              when Ok(const Value), Error(const Message): return; \
            end case; \

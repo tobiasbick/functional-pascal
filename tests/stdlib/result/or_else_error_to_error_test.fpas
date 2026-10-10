@@ -2,13 +2,13 @@ program T;
 
 uses Std.Console;
 
-function ReplaceError(E: string): result of integer, string;
+function ReplaceError(E: string): result of (integer, string);
 begin
   return Error('second');
 end function;
 
 begin
-  const R: result of integer, string := Error('first');
-  const M: result of integer, string := R.OrElse(ReplaceError);
+  const R: result of (integer, string) := Error('first');
+  const M: result of (integer, string) := R.OrElse(ReplaceError);
   WriteLn(M.IsError());
 end.

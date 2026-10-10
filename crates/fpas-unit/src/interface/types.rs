@@ -11,10 +11,10 @@ pub enum TypeConstraint {
     Printable,
 }
 
-/// One generic parameter in a callable signature.
+/// One generic parameter in a callable, record, or enum declaration.
 #[derive(Debug, Clone, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 pub struct GenericParameter {
-    /// Source spelling of the parameter name.
+    /// Case-preserving parameter identity, qualified for record method parameters.
     pub name: String,
     /// Optional built-in constraint.
     pub constraint: Option<TypeConstraint>,
@@ -96,6 +96,10 @@ pub struct RecordType {
     pub name: String,
     /// Canonical source unit that owns private members.
     pub owner_unit: Option<String>,
+    /// Generic parameters in declaration order.
+    pub type_parameters: Vec<GenericParameter>,
+    /// Actual arguments; empty for a generic declaration.
+    pub type_arguments: Vec<InterfaceType>,
     /// Names of record members not declared `public`.
     pub private_members: Vec<String>,
     /// Fields in layout order.
@@ -122,6 +126,10 @@ pub struct EnumVariant {
 pub struct EnumType {
     /// Canonical qualified enum name.
     pub name: String,
+    /// Generic parameters in declaration order.
+    pub type_parameters: Vec<GenericParameter>,
+    /// Actual arguments; empty for a declaration.
+    pub type_arguments: Vec<InterfaceType>,
     /// Variants in declaration/backing-value order.
     pub variants: Vec<EnumVariant>,
 }
@@ -176,6 +184,22 @@ pub enum InterfaceType {
     Distinct(Box<DistinctType>),
     /// Reference to a canonical named type, including recursive references.
     Named(String),
+    /// Reference to a generic record with concrete or enclosing generic arguments.
+    Application {
+        /// Canonical declaration name.
+        name: String,
+        /// Unit owning the declaration and its private members.
+        owner_unit: Option<String>,
+        /// Arguments in declaration order.
+        arguments: Vec<Self>,
+    },
+    /// Reference to a generic enum without expanding recursive payloads.
+    EnumApplication {
+        /// Canonical declaration name.
+        name: String,
+        /// Arguments in declaration order.
+        arguments: Vec<Self>,
+    },
     /// Generic parameter with its resolved constraint.
     GenericParameter(String, Option<TypeConstraint>),
 }

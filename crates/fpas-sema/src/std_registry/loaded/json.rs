@@ -51,6 +51,8 @@ pub(super) fn register_std_json(checker: &mut Checker) {
     ];
     let json_ty = Ty::Enum(Arc::new(EnumTy {
         name: s::STD_JSON_VALUE.into(),
+        type_params: Vec::new(),
+        type_args: Vec::new(),
         variants: variants.clone(),
     }));
 

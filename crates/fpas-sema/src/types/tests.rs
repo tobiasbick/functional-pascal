@@ -5,6 +5,8 @@ use super::{EnumTy, FunctionTy, ParamMode, ParamTy, ProcedureTy, RecordTy, Ty};
 #[test]
 fn cloning_record_type_shares_immutable_descriptor() {
     let ty = Ty::Record(Arc::new(RecordTy {
+        type_params: Vec::new(),
+        type_args: Vec::new(),
         name: "Point".to_string(),
         owner_unit: None,
         private_members: Vec::new(),
@@ -26,6 +28,8 @@ fn cloning_record_type_shares_immutable_descriptor() {
 fn cloning_enum_type_shares_immutable_descriptor() {
     let ty = Ty::Enum(Arc::new(EnumTy {
         name: "Direction".to_string(),
+        type_params: Vec::new(),
+        type_args: Vec::new(),
         variants: Vec::new(),
     }));
 

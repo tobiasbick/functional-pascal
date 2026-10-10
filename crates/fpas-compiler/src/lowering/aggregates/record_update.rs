@@ -32,6 +32,7 @@ impl LoweringContext {
                 // Overrides take the field type as their expected type,
                 // so context-typed values such as `[]` get the field's element type.
                 let value = self.lower_expression_as(&field.value, field_ty)?;
+                let value = self.value_as(value, field_ty, field.span)?;
                 Ok((id, self.save_value(value)))
             })
             .collect::<Result<Vec<_>, CompileError>>()?;

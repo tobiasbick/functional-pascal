@@ -54,7 +54,7 @@ begin
   return Tick;
 end function;
 
-function ResultValue(Item: result of integer, string): integer;
+function ResultValue(Item: result of (integer, string)): integer;
 begin
   case Item of
     when Ok(const Value):
@@ -68,7 +68,7 @@ begin
   end case;
 end function;
 
-function WrappedChoiceValue(Item: result of Choice, string): integer;
+function WrappedChoiceValue(Item: result of (Choice, string)): integer;
 begin
   case Item of
     when Ok(const Value):
@@ -98,15 +98,15 @@ begin
   var PairValue: Choice := Choice.Pair(2, 3);
   var EmptyValue: Choice := Choice.Empty;
   var NestedValue: Choice := Choice.Nested(Origin);
-  var Outcome: result of integer, string := Ok(6);
-  var Failed: result of integer, string := Error('old');
+  var Outcome: result of (integer, string) := Ok(6);
+  var Failed: result of (integer, string) := Error('old');
   var Optional: option of integer := Some(7);
   var Missing: option of integer := None;
   var PackedHolder: Holder := Holder(Item := Choice.Empty);
   var Items: array of Choice := [Choice.Empty];
   var Scores: dict of string to Choice := ['blue': Choice.Empty];
-  var WrappedChoice: result of Choice, string := Ok(Choice.Empty);
-  var WrappedChoices: array of result of Choice, string := [Ok(Choice.Empty)];
+  var WrappedChoice: result of (Choice, string) := Ok(Choice.Empty);
+  var WrappedChoices: array of result of (Choice, string) := [Ok(Choice.Empty)];
   var OuterValue: Outer := Outer.First(Choice.Empty);
   const Fixed: Choice := Choice.Count(99);
   const StopMarker: integer := 0;

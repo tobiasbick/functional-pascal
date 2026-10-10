@@ -1,28 +1,70 @@
 //! Record method signature and body checking.
+//! See `docs/pascal/language/types/record-methods.md` and `generics.md` in the same directory.
 
 use super::Checker;
 use crate::scope::{FunctionCtx, Symbol, SymbolKind};
-use crate::types::{ParamTy, Ty, TypeConstraint};
+use crate::types::{GenericParamDef, ParamTy, Ty};
 use fpas_diagnostics::codes::SEMA_TYPE_MISMATCH;
 use fpas_parser::{FuncBody, TypeParam};
 
 impl Checker {
+    /// Give method parameters a stable identity distinct from enclosing parameters.
+    pub(super) fn record_method_type_params(
+        &self,
+        qualified_name: &str,
+        parameters: &[TypeParam],
+    ) -> Vec<GenericParamDef> {
+        let owner = self
+            .scopes
+            .function_ctx
+            .as_ref()
+            .and_then(|context| context.owner_unit.as_deref());
+        let routine = owner.map_or_else(
+            || qualified_name.to_owned(),
+            |unit| format!("{unit}.{qualified_name}"),
+        );
+        Self::resolve_type_params(parameters)
+            .into_iter()
+            .map(|parameter| GenericParamDef {
+                name: format!("{routine}.{}", parameter.name),
+                ..parameter
+            })
+            .collect()
+    }
+
     /// Require an instance record routine to declare the canonical `Self` receiver first.
     pub(super) fn validate_record_method_signature(
         &mut self,
         type_name: &str,
+        record_ty: &Ty,
         method_name: &str,
         params: &[ParamTy],
         span: fpas_lexer::Span,
     ) -> bool {
+        let receiver = match record_ty {
+            Ty::Record(record) if !record.type_params.is_empty() => {
+                Ty::Record(std::sync::Arc::new(
+                    record.instantiate(
+                        record
+                            .type_params
+                            .iter()
+                            .map(|parameter| {
+                                Ty::GenericParam(parameter.name.clone(), parameter.constraint)
+                            })
+                            .collect(),
+                    ),
+                ))
+            }
+            _ => record_ty.clone(),
+        };
         let Some(self_param) = params.first() else {
             self.error_with_code(
                 SEMA_TYPE_MISMATCH,
                 format!(
-                    "Record method `{type_name}.{method_name}` must declare `Self: {type_name}` as its first parameter"
+                    "Record method `{type_name}.{method_name}` must declare `Self: {receiver}` as its first parameter"
                 ),
                 format!(
-                    "Use `{method_name}(Self: {type_name}; ...)` so calls like `Value.{method_name}(...)` can pass the receiver implicitly."
+                    "Use `{method_name}(Self: {receiver}; ...)` so calls like `Value.{method_name}(...)` can pass the receiver implicitly."
                 ),
                 span,
             );
@@ -30,15 +72,15 @@ impl Checker {
         };
 
         if !self_param.name.eq_ignore_ascii_case("Self")
-            || !matches!(&self_param.ty, Ty::Record(record) if record.name.eq_ignore_ascii_case(type_name))
+            || !receiver.assignment_compatible_with(&self_param.ty)
         {
             self.error_with_code(
                 SEMA_TYPE_MISMATCH,
                 format!(
-                    "Record method `{type_name}.{method_name}` must declare `Self: {type_name}` as its first parameter"
+                    "Record method `{type_name}.{method_name}` must declare `Self: {receiver}` as its first parameter"
                 ),
                 format!(
-                    "Use `{method_name}(Self: {type_name}; ...)` so calls like `Value.{method_name}(...)` can pass the receiver implicitly."
+                    "Use `{method_name}(Self: {receiver}; ...)` so calls like `Value.{method_name}(...)` can pass the receiver implicitly."
                 ),
                 span,
             );
@@ -93,16 +135,13 @@ impl Checker {
 
         // Introduce method-level generic type parameters as `GenericParam` types
         // so that expressions in the body can reference them.
-        for type_param in type_params {
-            let constraint = type_param
-                .constraint
-                .as_ref()
-                .and_then(|constraint| TypeConstraint::from_name(constraint));
+        let resolved = self.record_method_type_params(qualified_name, type_params);
+        for (type_param, resolved) in type_params.iter().zip(resolved) {
             self.scopes.define(
                 &type_param.name,
                 Symbol {
                     constant: None,
-                    ty: Ty::GenericParam(type_param.name.clone(), constraint),
+                    ty: Ty::GenericParam(resolved.name, resolved.constraint),
                     mutable: false,
                     kind: SymbolKind::Type,
                     task_bound: false,

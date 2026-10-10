@@ -107,10 +107,21 @@ impl Checker {
     ) -> Option<MethodKind> {
         self.check_unique_formal_param_names(routine.params);
 
-        let type_param_defs = Self::resolve_type_params(routine.type_params);
+        let mut type_param_defs = match record_ty {
+            Ty::Record(record) => record.type_params.clone(),
+            _ => Vec::new(),
+        };
+        let qualified = format!("{type_name}.{}", routine.name);
+        let method_type_params = self.record_method_type_params(&qualified, routine.type_params);
+        type_param_defs.extend(method_type_params.iter().cloned());
 
         let (return_ty, params) =
             self.with_type_params(routine.type_params, routine.span, |checker| {
+                for (source, resolved) in routine.type_params.iter().zip(&method_type_params) {
+                    if let Some(symbol) = checker.scopes.lookup_mut(&source.name) {
+                        symbol.ty = Ty::GenericParam(resolved.name.clone(), resolved.constraint);
+                    }
+                }
                 let return_ty = routine.return_type.map(|return_type| {
                     checker.resolve_method_param_type(return_type, type_name, record_ty)
                 });
@@ -133,6 +144,7 @@ impl Checker {
         let valid = match dispatch {
             RoutineDispatch::Instance => self.validate_record_method_signature(
                 type_name,
+                record_ty,
                 routine.name,
                 &params,
                 routine.span,
@@ -181,8 +193,7 @@ impl Checker {
             }
         };
 
-        let qualified = format!("{type_name}.{}", routine.name);
-        self.scopes.define(
+        self.scopes.define_in_root(
             &qualified,
             Symbol {
                 constant: None,

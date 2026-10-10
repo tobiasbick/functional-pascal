@@ -2,7 +2,7 @@ program TomlFieldsTypedAccessTest;
 
 uses Std.Toml, Std.Toml.Fields, Std.Test;
 
-function ErrorText<T>(Value: result of T, string): string;
+function ErrorText<T>(Value: result of (T, string)): string;
 begin
   case Value of
     when Ok(_):

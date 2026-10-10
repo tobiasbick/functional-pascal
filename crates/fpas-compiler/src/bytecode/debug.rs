@@ -223,7 +223,7 @@ fn type_name(program: &Program, ty: TypeId, depth: usize) -> String {
             type_name(program, *value, depth + 1)
         ),
         IrType::Result { ok, error } => format!(
-            "result of {}, {}",
+            "result of ({}, {})",
             type_name(program, *ok, depth + 1),
             type_name(program, *error, depth + 1)
         ),

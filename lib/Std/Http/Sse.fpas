@@ -56,7 +56,7 @@ end procedure;
 //
 // Parameters:
 // - `Decoder`: Decoder handle to resolve.
-function DecoderIndex(Decoder: Std.Http.Types.SseDecoder): result of integer, string;
+function DecoderIndex(Decoder: Std.Http.Types.SseDecoder): result of (integer, string);
 begin
   const Slot: integer := Std.Http.Handles.SseDecoderSlot(Decoder);
   if (Slot < 1) or (not HasState(Slot)) then
@@ -142,7 +142,7 @@ end function;
 //
 // Parameters:
 // - `State`: Decoder state updated while parsing buffered lines.
-function Process(State: DecoderState; Final: boolean): result of DecoderProcess, string;
+function Process(State: DecoderState; Final: boolean): result of (DecoderProcess, string);
 begin
   var LocalState: DecoderState := State;
   var Events: array of SseEvent := [];
@@ -248,7 +248,7 @@ end function;
 //
 // Parameters:
 // - `MaxEventBytes`: Maximum buffered bytes for one incomplete event.
-public function Create(MaxEventBytes: integer): result of Std.Http.Types.SseDecoder, string;
+public function Create(MaxEventBytes: integer): result of (Std.Http.Types.SseDecoder, string);
 begin
   if MaxEventBytes < 1 then
     begin
@@ -265,7 +265,7 @@ end function;
 // Parameters:
 // - `Decoder`: Open incremental SSE decoder.
 // - `Bytes`: Next response-body byte fragment.
-public function Feed(Decoder: Std.Http.Types.SseDecoder; Bytes: array of integer): result of array of SseEvent, string;
+public function Feed(Decoder: Std.Http.Types.SseDecoder; Bytes: array of integer): result of (array of SseEvent, string);
 begin
   case DecoderIndex(Decoder) of
     when Ok(const Index):
@@ -331,7 +331,7 @@ end function;
 //
 // Parameters:
 // - `Decoder`: Open incremental SSE decoder to finish.
-public function Finish(Decoder: Std.Http.Types.SseDecoder): result of array of SseEvent, string;
+public function Finish(Decoder: Std.Http.Types.SseDecoder): result of (array of SseEvent, string);
 begin
   case DecoderIndex(Decoder) of
     when Ok(const Index):

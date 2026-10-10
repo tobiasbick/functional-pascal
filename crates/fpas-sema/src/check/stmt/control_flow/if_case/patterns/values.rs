@@ -27,7 +27,7 @@ impl Checker {
             self.reject_whole_value_wildcard(expr.span());
             return Pat::Wild;
         }
-        if let Some(enum_ty) = self.resolve_enum_ty(expected_ty).cloned()
+        if let Some(enum_ty) = self.resolve_enum_ty(expected_ty)
             && enum_ty.has_data()
         {
             let Expr::Designator(designator) = expr else {
@@ -56,7 +56,7 @@ impl Checker {
             return self.implicit_binding(name, expected_ty, expr.span(), bindings);
         }
 
-        let value_ty = self.check_expr(expr);
+        let value_ty = self.check_expr_with_expected(expr, Some(expected_ty));
         let errors_before = self.errors.len();
         self.check_type_compat(expected_ty, &value_ty, "pattern value", expr.span());
         if value_ty.is_error() || self.errors.len() != errors_before {

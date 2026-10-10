@@ -7,6 +7,7 @@ use fpas_sema::{IntrinsicStdSymbol, IntrinsicStdSymbolKind, Ty};
 
 use super::DocumentationRow;
 
+/// Renders the handbook summary and documented routine parameters.
 pub(super) fn render_documentation(
     output: &mut String,
     unit: &str,
@@ -132,6 +133,7 @@ pub(super) fn parameter_description(parameter: &str, routine: &str, ty: Option<&
     format!("{description}.")
 }
 
+/// Finds the handbook row for an intrinsic declaration.
 pub(super) fn documentation_row<'a>(
     unit: &str,
     name: &str,
@@ -142,31 +144,30 @@ pub(super) fn documentation_row<'a>(
 
 fn parameter_names(signature: &str) -> Option<Vec<String>> {
     let start = signature.find('(')? + 1;
-    let end = signature.rfind(')')?;
-    let value = signature.get(start..end)?;
-    if value.trim().is_empty() || value.trim() == "..." {
-        return Some(Vec::new());
-    }
+    let value = signature.get(start..)?;
     let mut names = Vec::new();
     let mut depth = 0;
     let mut start = 0;
     for (index, character) in value.char_indices() {
         match character {
             '(' => depth += 1,
-            ')' => depth -= 1,
-            ';' if depth == 0 => {
-                if let Some(name) = parameter_name(&value[start..index]) {
+            ')' if depth > 0 => depth -= 1,
+            ';' | ')' if depth == 0 => {
+                let parameter = value[start..index].trim();
+                if parameter != "..."
+                    && let Some(name) = parameter_name(parameter)
+                {
                     names.push(name);
                 }
                 start = index + 1;
+                if character == ')' {
+                    return Some(names);
+                }
             }
             _ => {}
         }
     }
-    if let Some(name) = parameter_name(&value[start..]) {
-        names.push(name);
-    }
-    Some(names)
+    None
 }
 
 fn parameter_name(parameter: &str) -> Option<String> {
@@ -190,6 +191,20 @@ mod tests {
                 "Reduce(D: dict of K to V; Init: U; F: function(Acc: U; Key: K; Value: V): U): U"
             ),
             Some(vec!["D".to_owned(), "Init".to_owned(), "F".to_owned()])
+        );
+    }
+
+    #[test]
+    fn parenthesized_result_types_do_not_extend_the_parameter_list() {
+        assert_eq!(
+            parameter_names("CurrentExecutable(): Result of (string, string)"),
+            Some(Vec::new())
+        );
+        assert_eq!(
+            parameter_names(
+                "Apply(F: function(Value: integer): Result of (integer, string); Value: integer): Result of (integer, string)"
+            ),
+            Some(vec!["F".to_owned(), "Value".to_owned()])
         );
     }
 }
@@ -216,6 +231,7 @@ fn fallback_summary(name: &str, kind: IntrinsicStdSymbolKind) -> String {
     }
 }
 
+/// Provides a placeholder value for generated intrinsic constants.
 pub(super) fn default_value(ty: &Ty) -> &'static str {
     match ty {
         Ty::Real => "0.0",

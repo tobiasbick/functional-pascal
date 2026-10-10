@@ -14,7 +14,7 @@ impl Parser {
     /// A named declared type lets the removed-literal diagnostic name the constructor.
     pub(in crate::parser) fn parse_initializer(&mut self, type_expr: &TypeExpr) -> Expr {
         let outer = self.initializer_type.take();
-        if let TypeExpr::Named { id, .. } = type_expr {
+        if let TypeExpr::Named { id, .. } | TypeExpr::Application { id, .. } = type_expr {
             self.initializer_type = Some((self.pos, id.parts.join(".")));
         }
         let value = self.parse_expression();

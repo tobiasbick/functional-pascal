@@ -22,7 +22,7 @@ end function;
 //
 // Parameters:
 // - `Text`: JSON document text.
-public function ParseObject(Text: string): result of dict of string to JsonValue, string;
+public function ParseObject(Text: string): result of (dict of string to JsonValue, string);
 begin
   if try Std.Json.Parse(Text) is JsonValue.Object(const Fields) then
     begin
@@ -40,7 +40,7 @@ end function;
 // Parameters:
 // - `Fields`: Object fields.
 // - `Name`: Required field name.
-public function Field(Fields: dict of string to JsonValue; Name: string): result of JsonValue, string;
+public function Field(Fields: dict of string to JsonValue; Name: string): result of (JsonValue, string);
 begin
   case Fields.Get(Name) of
     when Some(const Value):
@@ -59,7 +59,7 @@ end function;
 // Parameters:
 // - `Fields`: Object fields.
 // - `Name`: Required field name.
-public function StringField(Fields: dict of string to JsonValue; Name: string): result of string, string;
+public function StringField(Fields: dict of string to JsonValue; Name: string): result of (string, string);
 begin
   if try Field(Fields, Name) is JsonValue.String(const Value) then
     begin
@@ -77,7 +77,7 @@ end function;
 // Parameters:
 // - `Fields`: Object fields.
 // - `Name`: Required field name.
-public function BooleanField(Fields: dict of string to JsonValue; Name: string): result of boolean, string;
+public function BooleanField(Fields: dict of string to JsonValue; Name: string): result of (boolean, string);
 begin
   if try Field(Fields, Name) is JsonValue.Bool(const Value) then
     begin
@@ -95,7 +95,7 @@ end function;
 // Parameters:
 // - `Fields`: Object fields.
 // - `Name`: Required field name.
-public function NumberField(Fields: dict of string to JsonValue; Name: string): result of real, string;
+public function NumberField(Fields: dict of string to JsonValue; Name: string): result of (real, string);
 begin
   if try Field(Fields, Name) is JsonValue.Number(const Value) then
     begin
@@ -114,7 +114,7 @@ end function;
 // Parameters:
 // - `Fields`: Object fields.
 // - `Name`: Required field name.
-public function IntegerField(Fields: dict of string to JsonValue; Name: string): result of integer, string;
+public function IntegerField(Fields: dict of string to JsonValue; Name: string): result of (integer, string);
 begin
   const Value: real := try NumberField(Fields, Name);
   if (Value < IntegerLowerBound) or (Value >= IntegerUpperBound) then
@@ -137,7 +137,7 @@ end function;
 // Parameters:
 // - `Fields`: Object fields.
 // - `Name`: Required field name.
-public function ObjectField(Fields: dict of string to JsonValue; Name: string): result of dict of string to JsonValue, string;
+public function ObjectField(Fields: dict of string to JsonValue; Name: string): result of (dict of string to JsonValue, string);
 begin
   if try Field(Fields, Name) is JsonValue.Object(const Value) then
     begin
@@ -155,7 +155,7 @@ end function;
 // Parameters:
 // - `Fields`: Object fields.
 // - `Name`: Required field name.
-public function ArrayField(Fields: dict of string to JsonValue; Name: string): result of array of JsonValue, string;
+public function ArrayField(Fields: dict of string to JsonValue; Name: string): result of (array of JsonValue, string);
 begin
   if try Field(Fields, Name) is JsonValue.ArrayValue(const Items) then
     begin
@@ -173,7 +173,7 @@ end function;
 // Parameters:
 // - `Fields`: Object fields.
 // - `Name`: Required field name.
-public function StringArrayField(Fields: dict of string to JsonValue; Name: string): result of array of string, string;
+public function StringArrayField(Fields: dict of string to JsonValue; Name: string): result of (array of string, string);
 begin
   var Values: array of string := [];
   for Item: JsonValue in try ArrayField(Fields, Name) do
@@ -198,7 +198,7 @@ end function;
 // Parameters:
 // - `Fields`: Object fields.
 // - `Allowed`: Every permitted field name.
-public function RequireOnlyFields(Fields: dict of string to JsonValue; Allowed: array of string): result of boolean, string;
+public function RequireOnlyFields(Fields: dict of string to JsonValue; Allowed: array of string): result of (boolean, string);
 begin
   for Name: string in Fields.Keys() do
     begin

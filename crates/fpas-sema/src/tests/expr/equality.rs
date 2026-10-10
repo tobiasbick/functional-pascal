@@ -90,7 +90,7 @@ fn options_and_results_compare_only_when_their_payloads_compare() {
             "O <> Some(Point( X := 1, Y := 2.0 ))",
         ),
         (
-            "const R: result of integer, string := Ok(1);",
+            "const R: result of (integer, string) := Ok(1);",
             "R = Error('x')",
         ),
     ] {
@@ -105,7 +105,7 @@ end."
         ("const O: option of array of integer := Some([1]);", "O = O"),
         ("const O: option of Bag := None;", "O = None"),
         (
-            "const R: result of integer, array of string := Ok(1);",
+            "const R: result of (integer, array of string) := Ok(1);",
             "R = R",
         ),
         (

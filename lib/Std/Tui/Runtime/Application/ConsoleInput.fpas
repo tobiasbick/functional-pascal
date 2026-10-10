@@ -59,7 +59,7 @@ end function;
 // Parameters:
 // - `Token`: Cancellation token owned by the interactive application.
 // - `Output`: Destination for normalized host input.
-public function TuiConsoleInputPump(Token: CancellationToken; Output: channel of TuiHostInput): result of boolean, string;
+public function TuiConsoleInputPump(Token: CancellationToken; Output: channel of TuiHostInput): result of (boolean, string);
 begin
   while not IsCancellationRequested(Token) do
     begin

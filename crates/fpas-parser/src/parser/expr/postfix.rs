@@ -3,9 +3,34 @@ use crate::ast::*;
 use fpas_lexer::Token;
 
 impl Parser {
+    /// Parses a value designator or call, rejecting constructor type arguments.
     pub(super) fn parse_designator_or_call(&mut self) -> Expr {
         let start = self.current_span();
         let designator = self.parse_designator();
+        if self.check(&Token::Of)
+            && matches!(
+                self.peek_token(),
+                Token::LParen
+                    | Token::Ident(_)
+                    | Token::Array
+                    | Token::OptionKw
+                    | Token::Result
+                    | Token::Dict
+                    | Token::Channel
+                    | Token::Task
+                    | Token::Function
+                    | Token::Procedure
+            )
+        {
+            self.advance();
+            self.error_with_code(
+                fpas_diagnostics::codes::PARSE_EXPECTED_TOKEN,
+                "Constructor calls do not accept explicit type arguments",
+                "Put type arguments in an annotation, for example `const P: Pair of (integer, string) := Pair(Key := 1, Value := 'one');`.",
+                start,
+            );
+            self.parse_named_type_arguments();
+        }
 
         if self.check(&Token::LParen) {
             self.advance();

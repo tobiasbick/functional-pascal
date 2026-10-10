@@ -126,7 +126,7 @@ fn positional_only_targets_reject_named_arguments() {
   const A: integer := F(Value := 1);"#,
         "  const A: integer := Abs(Value := -1);",
         "  WriteLn(Text := 'x');",
-        "  const R: result of integer, string := Ok(Value := 1);",
+        "  const R: result of (integer, string) := Ok(Value := 1);",
         "  const S: string := '%d'.Format(Value := 1);",
     ] {
         assert_eq!(

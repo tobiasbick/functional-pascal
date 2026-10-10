@@ -14,7 +14,7 @@ impl Checker {
     /// **Documentation:** `docs/pascal/language/basics/variables.md`
     pub(crate) fn check_assign_stmt(&mut self, target: &Designator, value: &Expr, span: Span) {
         let target_ty = self.check_designator_expr(target);
-        let value_ty = self.check_expr(value);
+        let value_ty = self.check_expr_with_expected(value, Some(&target_ty));
 
         if !target_ty.is_error() {
             self.check_type_compat(&target_ty, &value_ty, "assignment", span);

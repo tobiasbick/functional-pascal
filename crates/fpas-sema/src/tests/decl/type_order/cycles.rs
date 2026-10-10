@@ -8,7 +8,7 @@ fn alias_only_cycles_report_the_participating_names() {
         "type A = B; type B = A;",
         "type A = array of B; type B = Option of A;",
         "type A = function(Value: Node): A; type Node = record Callback: A; end record;",
-        "type A = Result of Node, A; type Node = record Next: Option of A; end record;",
+        "type A = Result of (Node, A); type Node = record Next: Option of A; end record;",
     ] {
         let errors = check_errors(&format!("program T; {definitions} begin end."));
         let error = errors
@@ -41,7 +41,7 @@ fn mandatory_record_cycles_report_fields_and_types() {
 fn diagnostics_name_the_mandatory_cycle_after_a_finite_recursive_field() {
     let errors = check_errors(
         "program T;
-      type Root = record First: Result of Root, string; Required: Bad; end record;
+      type Root = record First: Result of (Root, string); Required: Bad; end record;
       type Bad = record Next: Bad; end record;
       begin end.",
     );
@@ -97,13 +97,13 @@ fn optional_containers_and_callable_signatures_end_layout_recursion() {
 
 #[test]
 fn result_recursion_can_end_in_either_branch() {
-    for payload in ["Result of Node, string", "Result of string, Node"] {
+    for payload in ["Result of (Node, string)", "Result of (string, Node)"] {
         check_ok(&format!(
             "program T; type Node = record Next: {payload}; end record; begin end."
         ));
     }
     let errors = check_errors(
-        "program T; type Node = record Next: Result of Node, Node; end record; begin end.",
+        "program T; type Node = record Next: Result of (Node, Node); end record; begin end.",
     );
     assert!(
         errors

@@ -19,7 +19,7 @@ begin
   return Wait(Job) * 2;
 end function;
 
-const Jobs: array of task of result of boolean, string := [go Connect(), go Serve()];
+const Jobs: array of task of result of (boolean, string) := [go Connect(), go Serve()];
 ```
 
 `Std.Tasks.StartTaskInGroup` and `StartSupervisedTask` also return typed task handles. Their explicit

@@ -33,13 +33,13 @@ begin
   return Sum;
 end function;
 
-function StopNumber(): result of integer, string;
+function StopNumber(): result of (integer, string);
 begin
   Trace := Trace + 'L';
   return Error('stopped');
 end function;
 
-function SliceAfterFailure(): result of string, string;
+function SliceAfterFailure(): result of (string, string);
 begin
   return Ok(Text().Slice(Len := try StopNumber(), Start := Number('S', 1)));
 end function;
@@ -75,7 +75,7 @@ begin
   AssertEquals(6, Folded);
   AssertEquals('FI', Trace);
   Trace := '';
-  const Failed: result of string, string := SliceAfterFailure();
+  const Failed: result of (string, string) := SliceAfterFailure();
   AssertTrue(Failed.IsError());
   AssertEquals('RL', Trace);
   Trace := '';

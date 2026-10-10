@@ -83,7 +83,7 @@ Writes that completed before a runtime failure or an early `try` exit remain in
 the caller's variable; nothing is rolled back:
 
 ```pascal
-function Partial(var Value: integer): Result of integer, string;
+function Partial(var Value: integer): Result of (integer, string);
 begin
   Value := 1;
   return Error('stopped');

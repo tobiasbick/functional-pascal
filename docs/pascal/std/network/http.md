@@ -11,17 +11,17 @@ An HTTP/1.1 and HTTPS client plus bounded HTTP/1.x server helpers, implemented i
 | type | `Request` | method, URL, headers, byte body, timeout, header/response limits, and redirect limit |
 | static function | `Request.Get/Post/Put/Patch/Delete/Head/Options(Url)` | standard-method request constructors |
 | type | `Response` | status, reason, headers, and byte body |
-| function | `Send(Request): Result of Response, string` | sends and buffers one response |
+| function | `Send(Request): Result of (Response, string)` | sends and buffers one response |
 | type | `StreamResponse` | status, reason, headers, and a `BodyStream` handle |
-| function | `OpenStream(Request): Result of StreamResponse, string` | returns after the response headers are available |
-| function | `ReadStream(BodyStream; MaxBytes): Result of array of integer, string` | pulls decoded body bytes; an empty array means EOF |
-| function | `CloseStream(BodyStream): Result of boolean, string` | closes a response before EOF |
+| function | `OpenStream(Request): Result of (StreamResponse, string)` | returns after the response headers are available |
+| function | `ReadStream(BodyStream; MaxBytes): Result of (array of integer, string)` | pulls decoded body bytes; an empty array means EOF |
+| function | `CloseStream(BodyStream): Result of (boolean, string)` | closes a response before EOF |
 | type | `SseDecoder`, `SseEvent` | bounded incremental Server-Sent Events decoding |
 | function | `CreateSseDecoder(MaxEventBytes)` | creates a decoder with a per-event byte limit |
 | function | `FeedSse(Decoder; Bytes)` | returns all complete events in one fragment |
 | function | `FinishSse(Decoder)` | flushes the final line and finishes the decoder |
 | function | `HeaderValue(Response; Name: string): Option of string` | case-insensitive first match |
-| function | `BodyText(Response): Result of string, string` | validated UTF-8 decoding |
+| function | `BodyText(Response): Result of (string, string)` | validated UTF-8 decoding |
 | type | `ServerRequest` | accepted method, origin-form target, headers, and body |
 | type | `ServerResponse` | status, reason, headers, body, and `Create` constructor |
 | type | `ServerOptions` | request limits, connection timeout, concurrency, and optional request count |
@@ -58,7 +58,7 @@ unwrapping implicitly:
 ```pascal
 uses Std.Http;
 
-const TextResult: result of string, string :=
+const TextResult: result of (string, string) :=
   Std.Http.Send(Request.Get('https://example.test/items')).AndThen(BodyText);
 ```
 

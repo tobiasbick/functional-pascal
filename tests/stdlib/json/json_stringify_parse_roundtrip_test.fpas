@@ -3,7 +3,7 @@ program T;
 uses Std.Console, Std.Json;
 
 begin
-  const R: result of JsonValue, string := Parse('[false,null,"x"]');
+  const R: result of (JsonValue, string) := Parse('[false,null,"x"]');
   case R of
     when Ok(const V):
       begin

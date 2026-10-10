@@ -2,7 +2,7 @@ program T;
 
 uses Std.Console;
 
-function PositiveOk(V: integer): result of string, string;
+function PositiveOk(V: integer): result of (string, string);
 begin
   if V > 0 then
     begin
@@ -16,7 +16,7 @@ begin
 end function;
 
 begin
-  const R: result of integer, string := Ok(-1);
-  const M: result of string, string := R.AndThen(PositiveOk);
+  const R: result of (integer, string) := Ok(-1);
+  const M: result of (string, string) := R.AndThen(PositiveOk);
   WriteLn(M.IsError());
 end.

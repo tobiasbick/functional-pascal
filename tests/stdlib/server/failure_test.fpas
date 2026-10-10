@@ -2,11 +2,11 @@ program ServerFailureTest;
 
 uses Std.Server, Std.Net, Std.Tasks, Std.Test;
 
-function BindListener(): result of Std.Net.Listener, string;
+function BindListener(): result of (Std.Net.Listener, string);
 begin
   for Port: integer := 28200 to 28299 do
     begin
-      const Opened: result of Std.Net.Listener, string := Listen('127.0.0.1', Port);
+      const Opened: result of (Std.Net.Listener, string) := Listen('127.0.0.1', Port);
       if Opened.IsOk() then
         begin
           return Opened;
@@ -21,7 +21,7 @@ end function;
 begin
   const Life: ServerLifetime := CreateLifetime(1000, false).Unwrap();
   const Group: TaskGroup := GetWorkGroup(Life);
-  const Worker: task := StartTaskInGroup(Group, function(Token: CancellationToken): result of boolean, string begin
+  const Worker: task := StartTaskInGroup(Group, function(Token: CancellationToken): result of (boolean, string) begin
     return Error('session failed');
   end function);
   const Listener: Std.Net.Listener := BindListener().Unwrap();

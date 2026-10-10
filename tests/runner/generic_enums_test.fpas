@@ -1,0 +1,54 @@
+program GenericEnumsTest;
+
+uses Std.Test;
+
+type List of T = enum
+  Empty;
+  Cons(Head: T; Tail: List of T);
+end enum;
+
+type Lookup of T = enum
+  Found(Value: T);
+  Missing;
+end enum;
+
+function Length<T>(Values: List of T): integer;
+begin
+  return case Values of
+    when List.Empty: 0;
+    when List.Cons(_, const Tail): 1 + Length(Tail);
+  end case;
+end function;
+
+function Sum(Values: List of integer): integer;
+begin
+  return case Values of
+    when List.Empty: 0;
+    when List.Cons(const Head, const Tail): Head + Sum(Tail);
+  end case;
+end function;
+
+begin
+  const Numbers: List of integer := List.Cons(Tail := List.Cons(2, List.Empty), Head := 1);
+  const Words: List of string := List.Cons('one', List.Empty);
+  AssertEquals(2, Length(Numbers));
+  AssertEquals(1, Length(Words));
+  AssertEquals(3, Sum(Numbers));
+  const Wrapped: Lookup of List of integer := Lookup.Found(Numbers);
+  case Wrapped of
+    when Lookup.Found(List.Cons(const Head, const Tail)):
+      AssertEquals(1, Head);
+      AssertEquals(2, Sum(Tail));
+    when Lookup.Found(List.Empty):
+      Fail('Expected a nonempty list');
+    when Lookup.Missing:
+      Fail('Expected a list value');
+  end case;
+  const Missing: Lookup of string := Lookup.Missing;
+  var Matched: boolean := false;
+  if Missing is Lookup.Missing then
+    Matched := true;
+  end if;
+
+  AssertTrue(Matched);
+end.

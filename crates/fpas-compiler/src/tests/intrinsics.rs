@@ -35,7 +35,7 @@ fn object_retains_layouts_constructed_by_runtime_intrinsics() {
 program RuntimeLayouts;
 uses Std.Json;
 begin
-  const Parsed: result of JsonValue, string := Parse('null');
+  const Parsed: result of (JsonValue, string) := Parse('null');
 end.",
     );
     let object = crate::compile_program_object_with_support(&program, &[], &[])

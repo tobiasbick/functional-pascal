@@ -107,6 +107,12 @@ fn record_to_interface(
     record: &RecordTy,
 ) -> Result<artifact::RecordType, InterfaceConversionError> {
     Ok(artifact::RecordType {
+        type_parameters: generic_parameters_to_interface(&record.type_params),
+        type_arguments: record
+            .type_args
+            .iter()
+            .map(ty_to_interface_reference)
+            .collect::<Result<_, _>>()?,
         name: record.name.clone(),
         owner_unit: record.owner_unit.clone(),
         private_members: record.private_members.clone(),
@@ -165,6 +171,12 @@ fn method_to_interface(
 fn enum_to_interface(enum_ty: &EnumTy) -> Result<artifact::EnumType, InterfaceConversionError> {
     Ok(artifact::EnumType {
         name: enum_ty.name.clone(),
+        type_parameters: generic_parameters_to_interface(&enum_ty.type_params),
+        type_arguments: enum_ty
+            .type_args
+            .iter()
+            .map(ty_to_interface_reference)
+            .collect::<Result<_, _>>()?,
         variants: enum_ty
             .variants
             .iter()
@@ -195,7 +207,52 @@ pub(crate) fn ty_to_interface_reference(
 ) -> Result<artifact::InterfaceType, InterfaceConversionError> {
     use artifact::InterfaceType as Output;
     Ok(match ty {
+        Ty::Record(record) if !record.type_params.is_empty() => Output::Application {
+            name: record.name.clone(),
+            owner_unit: record.owner_unit.clone(),
+            arguments: if record.type_args.is_empty() {
+                record
+                    .type_params
+                    .iter()
+                    .map(|parameter| {
+                        ty_to_interface_reference(&Ty::GenericParam(
+                            parameter.name.clone(),
+                            parameter.constraint,
+                        ))
+                    })
+                    .collect::<Result<_, _>>()?
+            } else {
+                record
+                    .type_args
+                    .iter()
+                    .map(ty_to_interface_reference)
+                    .collect::<Result<_, _>>()?
+            },
+        },
         Ty::Record(record) => Output::Named(record.name.clone()),
+        Ty::Enum(enum_ty) if !enum_ty.type_params.is_empty() || !enum_ty.type_args.is_empty() => {
+            Output::EnumApplication {
+                name: enum_ty.name.clone(),
+                arguments: if enum_ty.type_args.is_empty() {
+                    enum_ty
+                        .type_params
+                        .iter()
+                        .map(|parameter| {
+                            ty_to_interface_reference(&Ty::GenericParam(
+                                parameter.name.clone(),
+                                parameter.constraint,
+                            ))
+                        })
+                        .collect::<Result<_, _>>()?
+                } else {
+                    enum_ty
+                        .type_args
+                        .iter()
+                        .map(ty_to_interface_reference)
+                        .collect::<Result<_, _>>()?
+                },
+            }
+        }
         Ty::Enum(enum_ty) => Output::Named(enum_ty.name.clone()),
         Ty::Array(inner) => Output::Array(Box::new(ty_to_interface_reference(inner)?)),
         Ty::Channel(inner) => Output::Channel(Box::new(ty_to_interface_reference(inner)?)),

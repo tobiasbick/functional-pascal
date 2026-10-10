@@ -13,7 +13,7 @@ begin
   var Count: integer := 0;
   const Work: procedure() := procedure() begin Count := Count + 1; end procedure;
   const Q: channel of procedure() := CreateChannel(1);
-  SendCase(Q, Work, procedure(R: result of boolean, string) begin end procedure);
+  SendCase(Q, Work, procedure(R: result of (boolean, string)) begin end procedure);
 end."#,
     );
     assert!(
@@ -27,9 +27,9 @@ end."#,
 #[test]
 fn selection_cases_reject_wrong_payload_callback_and_control_types() {
     for call in [
-        "ReceiveCase(Q, procedure(R: result of string, string) begin end procedure)",
-        "SendCase(Q, 'wrong', procedure(R: result of boolean, string) begin end procedure)",
-        "SendCase(Q, 1, procedure(R: result of integer, string) begin end procedure)",
+        "ReceiveCase(Q, procedure(R: result of (string, string)) begin end procedure)",
+        "SendCase(Q, 'wrong', procedure(R: result of (boolean, string)) begin end procedure)",
+        "SendCase(Q, 1, procedure(R: result of (integer, string)) begin end procedure)",
         "TimerCase(0, function(): integer begin return 1; end function)",
         "TimerCase('wrong', procedure() begin end procedure)",
         "TaskCase(1, procedure() begin end procedure)",
@@ -218,8 +218,8 @@ program T;
 uses Std.Tasks;
 begin
   const Messages: channel of integer := CreateChannel(1);
-  const Sent: result of boolean, string := Send(Messages, 42);
-  const Received: result of integer, string := Receive(Messages);
+  const Sent: result of (boolean, string) := Send(Messages, 42);
+  const Received: result of (integer, string) := Receive(Messages);
   discard CloseChannel(Messages);
 end.",
     );
@@ -253,7 +253,7 @@ program T;
 uses Std.Tasks;
 begin
   const Messages: channel of integer := CreateChannel(1);
-  const Pending: result of option of integer, string := TryReceive(Messages);
+  const Pending: result of (option of integer, string) := TryReceive(Messages);
   TrySend(Messages, 'wrong');
   SendWithTimeout(Messages, 1, 'soon');
   ReceiveWithTimeout(Messages, 'soon');
@@ -306,7 +306,7 @@ begin
   const Work: procedure() := procedure() begin Count := Count + 1; end procedure;
   const ArrayQueue: channel of array of procedure() := CreateChannel(1);
   const RecordQueue: channel of WorkBox := CreateChannel(1);
-  const ResultQueue: channel of result of procedure(), string := CreateChannel(1);
+  const ResultQueue: channel of result of (procedure(), string) := CreateChannel(1);
   const OptionQueue: channel of option of procedure() := CreateChannel(1);
   Send(ArrayQueue, [Work]);
   Send(RecordQueue, WorkBox( Work := Work ));

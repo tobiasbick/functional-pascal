@@ -1,6 +1,7 @@
 # Types
 
-Composite and built-in type forms: records, enums, arrays, dictionaries, aliases, distinct types, and generic routines.
+Composite and built-in type forms: records, enums, arrays, dictionaries, aliases,
+distinct types, generic records and enums, and generic routines.
 
 Formal syntax: [`grammar.ebnf`](../../../specs/grammar.ebnf) (`type_declaration`, `type_def`, `type_expr`, `record_type`, `enum_type`, `distinct_type`).
 
@@ -11,7 +12,7 @@ Formal syntax: [`grammar.ebnf`](../../../specs/grammar.ebnf) (`type_declaration`
 | [Record methods](record-methods.md) | Instance methods with implicit `Self`; bound method values; static functions and procedures via the type |
 | [Optional handlers](../functions/first-class.md#optional-handlers) | Ordinary optional callable fields |
 | [Record update](record-update.md) | `with` copy-and-override expressions |
-| [Result and Option types](result-option-types.md) | `Result of T, E` and `Option of T` type forms |
+| [Result and Option types](result-option-types.md) | `Result of (T, E)` and `Option of T` type forms |
 | [Enumerations](enums.md) | Plain, backed, and data-carrying enums |
 | [String operations](string/README.md) | Unicode scalar operations, `Slice`, `IsEmpty`, and `string.Chr` |
 | [Array operations](array/README.md) | Eager callbacks, `Length`, `IsEmpty`, writable `Push`/`Pop`, and `array.Fill` |
@@ -24,7 +25,7 @@ Formal syntax: [`grammar.ebnf`](../../../specs/grammar.ebnf) (`type_declaration`
 | [Dictionaries](dictionaries.md) | `dict of K to V` |
 | [Type aliases](type-aliases.md) | Semantic names for existing types |
 | [Distinct types](distinct-types.md) | Scalar domain types with their own identity and explicit conversions |
-| [Generics](generics.md) | Type parameters on routines and record methods |
+| [Generics](generics.md) | Generic records and enums, constructor inference, recursion, and type parameters on routines and record methods |
 
 ## See also
 

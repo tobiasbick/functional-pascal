@@ -1,65 +1,22 @@
 pub use fpas_parser::ParamMode;
 use std::sync::Arc;
 
-/// Built-in type constraints for generic parameters.
-///
-/// **Documentation:** `docs/pascal/language/types/generics.md` (Generics — Constraints)
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum TypeConstraint {
-    /// Supports comparison operators: `=`, `<>`, `<`, `>`, `<=`, `>=`.
-    Comparable,
-    /// Supports arithmetic operators: `+`, `-`, `*`, `/`, `div`, `mod`.
-    Numeric,
-    /// Can be converted to a string representation.
-    Printable,
-}
-
-impl TypeConstraint {
-    /// Resolve a constraint name (case-insensitive) to a built-in constraint.
-    pub fn from_name(name: &str) -> Option<Self> {
-        if name.eq_ignore_ascii_case("comparable") {
-            Some(Self::Comparable)
-        } else if name.eq_ignore_ascii_case("numeric") {
-            Some(Self::Numeric)
-        } else if name.eq_ignore_ascii_case("printable") {
-            Some(Self::Printable)
-        } else {
-            None
-        }
-    }
-
-    /// Human-readable name for diagnostics.
-    pub fn display_name(self) -> &'static str {
-        match self {
-            Self::Comparable => "Comparable",
-            Self::Numeric => "Numeric",
-            Self::Printable => "Printable",
-        }
-    }
-
-    /// Check whether a concrete type satisfies this constraint.
-    pub fn satisfied_by(self, ty: &Ty) -> bool {
-        match self {
-            // Distinct types inherit comparisons from their scalar underlying type.
-            // Documentation: docs/pascal/language/types/distinct-types.md
-            Self::Comparable => matches!(
-                ty,
-                Ty::Integer | Ty::Real | Ty::Boolean | Ty::String | Ty::Distinct(_)
-            ),
-            Self::Numeric => matches!(ty, Ty::Integer | Ty::Real),
-            Self::Printable => !matches!(ty, Ty::Function(_) | Ty::Procedure(_) | Ty::Distinct(_)),
-        }
-    }
-}
-
-/// A resolved generic type parameter with optional constraint.
-///
-/// **Documentation:** `docs/pascal/language/types/generics.md` (Generics — Constraints)
-#[derive(Debug, Clone, PartialEq)]
-pub struct GenericParamDef {
-    pub name: String,
-    pub constraint: Option<TypeConstraint>,
-}
+/// Enum identities, generic arguments, and resolved payloads.
+mod enums;
+/// Generic parameter identities and built-in constraints.
+mod generic_parameters;
+/// Partial type evidence collected from generic arguments.
+mod inference;
+/// Record identities, generic arguments, and resolved members.
+mod records;
+/// Substitution shared by generic routines and record instantiation.
+mod substitution;
+pub use enums::{EnumTy, EnumVariantTy};
+pub(crate) use generic_parameters::parameter_name;
+pub use generic_parameters::{GenericParamDef, TypeConstraint};
+pub(crate) use inference::{has_inference_holes, merge_inferred_types, needs_expected_type};
+pub use records::{MethodKind, RecordTy};
+pub(crate) use substitution::substitute_type_parameters;
 
 /// Resolved type representation used during semantic analysis.
 ///
@@ -96,7 +53,7 @@ pub enum Ty {
     Procedure(ProcedureTy),
     /// A named type not yet resolved or unknown.
     Named(String),
-    /// `Result of T, E`.
+    /// `Result of (T, E)`.
     Result(Box<Ty>, Box<Ty>),
     /// `Option of T`.
     Option(Box<Ty>),
@@ -113,36 +70,6 @@ pub enum Ty {
     Task(Box<Ty>),
     /// Placeholder for errors — compatible with anything to avoid cascading.
     Error,
-}
-
-/// Resolved record shape, ownership, members, and callable metadata.
-#[derive(Debug, Clone, PartialEq)]
-pub struct RecordTy {
-    /// Case-preserving qualified record name.
-    pub name: String,
-    /// Exact source unit that declared the record, or `None` for local and intrinsic records.
-    pub owner_unit: Option<String>,
-    /// Case-preserving names of members not declared `public`.
-    pub private_members: Vec<String>,
-    /// Declared record fields in source order.
-    pub fields: Vec<(String, Ty)>,
-    /// Instance methods (require implicit `Self`).
-    pub methods: Vec<(String, MethodKind)>,
-    /// Static functions called through the type name (no receiver).
-    ///
-    /// **Documentation:** `docs/pascal/language/types/record-methods.md`
-    pub static_functions: Vec<(String, FunctionTy)>,
-    /// Static procedures called through the type name (no receiver).
-    ///
-    /// **Documentation:** `docs/pascal/language/types/record-methods.md`
-    pub static_procedures: Vec<(String, ProcedureTy)>,
-}
-
-/// Whether a record method is a function (returns a value) or a procedure.
-#[derive(Debug, Clone, PartialEq)]
-pub enum MethodKind {
-    Function(FunctionTy),
-    Procedure(ProcedureTy),
 }
 
 /// Nominal identity and underlying scalar type of a distinct domain type.
@@ -167,33 +94,6 @@ impl DistinctTy {
                 (None, None) => true,
                 _ => false,
             }
-    }
-}
-
-/// **Documentation:** `docs/pascal/language/types/enums.md`
-#[derive(Debug, Clone, PartialEq)]
-pub struct EnumTy {
-    /// Case-preserving qualified enum name.
-    pub name: String,
-    /// Declared variants in source order.
-    pub variants: Vec<EnumVariantTy>,
-}
-
-/// A single variant in an enum type. Simple variants have an empty `fields` vec.
-///
-/// **Documentation:** `docs/pascal/language/types/enums.md`
-#[derive(Debug, Clone, PartialEq)]
-pub struct EnumVariantTy {
-    pub name: String,
-    pub fields: Vec<(String, Ty)>,
-    /// Declared or implicit integer value for a simple enum member.
-    pub backing_value: Option<i64>,
-}
-
-impl EnumTy {
-    /// True when at least one variant carries associated data.
-    pub fn has_data(&self) -> bool {
-        self.variants.iter().any(|v| !v.fields.is_empty())
     }
 }
 
@@ -271,8 +171,44 @@ impl std::fmt::Display for Ty {
             Ty::Unit => write!(f, "unit"),
             Ty::Array(inner) => write!(f, "array of {inner}"),
             Ty::Channel(inner) => write!(f, "channel of {inner}"),
-            Ty::Record(r) => write!(f, "{}", r.name),
-            Ty::Enum(e) => write!(f, "{}", e.name),
+            Ty::Record(r) => {
+                write!(f, "{}", r.name)?;
+                if !r.type_args.is_empty() {
+                    write!(f, " of ")?;
+                    if r.type_args.len() > 1 {
+                        write!(f, "(")?;
+                    }
+                    for (index, argument) in r.type_args.iter().enumerate() {
+                        if index > 0 {
+                            write!(f, ", ")?;
+                        }
+                        write!(f, "{argument}")?;
+                    }
+                    if r.type_args.len() > 1 {
+                        write!(f, ")")?;
+                    }
+                }
+                Ok(())
+            }
+            Ty::Enum(e) => {
+                write!(f, "{}", e.name)?;
+                if !e.type_args.is_empty() {
+                    write!(f, " of ")?;
+                    if e.type_args.len() > 1 {
+                        write!(f, "(")?;
+                    }
+                    for (index, argument) in e.type_args.iter().enumerate() {
+                        if index > 0 {
+                            write!(f, ", ")?;
+                        }
+                        write!(f, "{argument}")?;
+                    }
+                    if e.type_args.len() > 1 {
+                        write!(f, ")")?;
+                    }
+                }
+                Ok(())
+            }
             Ty::Distinct(d) => write!(f, "{}", d.name),
             Ty::Function(ft) => {
                 write!(f, "function(")?;
@@ -295,9 +231,9 @@ impl std::fmt::Display for Ty {
                 write!(f, ")")
             }
             Ty::Named(n) => write!(f, "{n}"),
-            Ty::Result(ok, err) => write!(f, "Result of {ok}, {err}"),
+            Ty::Result(ok, err) => write!(f, "Result of ({ok}, {err})"),
             Ty::Option(inner) => write!(f, "Option of {inner}"),
-            Ty::GenericParam(name, _) => write!(f, "{name}"),
+            Ty::GenericParam(name, _) => write!(f, "{}", parameter_name(name)),
             Ty::Dict(k, v) => write!(f, "dict of {k} to {v}"),
             Ty::Task(inner) => write!(f, "task of {inner}"),
             Ty::Error => write!(f, "<error>"),
@@ -346,6 +282,11 @@ impl Ty {
             // Documentation: docs/pascal/language/types/records.md
             (Ty::Record(a), Ty::Record(b)) => {
                 a.name.eq_ignore_ascii_case(&b.name)
+                    && a.type_args.len() == b.type_args.len()
+                    && a.type_args
+                        .iter()
+                        .zip(&b.type_args)
+                        .all(|(left, right)| left.compatible_with_mode(right, generic_wildcard))
                     && match (&a.owner_unit, &b.owner_unit) {
                         (Some(a_owner), Some(b_owner)) => a_owner.eq_ignore_ascii_case(b_owner),
                         (None, None) => true,
@@ -355,8 +296,16 @@ impl Ty {
             // Distinct types are nominal and never mix with their underlying type.
             // Documentation: docs/pascal/language/types/distinct-types.md
             (Ty::Distinct(a), Ty::Distinct(b)) => a.same_declaration(b),
-            // Enums: same name is sufficient (type-erased generics).
-            (Ty::Enum(a), Ty::Enum(b)) => a.name.eq_ignore_ascii_case(&b.name),
+            // Enum applications preserve their nominal identity and arguments.
+            // Documentation: docs/pascal/language/types/generics.md
+            (Ty::Enum(a), Ty::Enum(b)) => {
+                a.name.eq_ignore_ascii_case(&b.name)
+                    && a.type_args.len() == b.type_args.len()
+                    && a.type_args
+                        .iter()
+                        .zip(&b.type_args)
+                        .all(|(left, right)| left.compatible_with_mode(right, generic_wildcard))
+            }
             (Ty::Unit, Ty::Unit) => true,
             // Result covariance
             (Ty::Result(ok1, err1), Ty::Result(ok2, err2)) => {

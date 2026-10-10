@@ -5,7 +5,7 @@ fn ordinary_result_option_and_alias_results_require_consumption() {
     for (ty, value) in [
         ("integer", "42"),
         ("string", "'hello'"),
-        ("result of integer, string", "Error('failure')"),
+        ("result of (integer, string)", "Error('failure')"),
         ("Option of integer", "None"),
         ("array of integer", "[]"),
     ] {
@@ -51,9 +51,9 @@ fn consumption_forms_and_explicit_discard_remain_valid() {
     check_ok(
         "program T;
       function Value(): integer; begin return 1; end function;
-      function Fallible(): result of integer, string; begin return Ok(1); end function;
+      function Fallible(): result of (integer, string); begin return Ok(1); end function;
       procedure Consume(Value: integer); begin end procedure;
-      function Forward(): result of integer, string;
+      function Forward(): result of (integer, string);
       begin return Ok(try Fallible()); end function;
       begin const A: integer := Value(); var B: integer := 0;
       B := Value(); Consume(Value()); discard Value(); discard Fallible();

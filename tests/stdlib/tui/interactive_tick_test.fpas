@@ -21,7 +21,7 @@ begin
         Cmd.RequestTick(600000);
         Next.Started := MonotonicMillis();
         const Inbox: channel of integer := State.Inbox;
-        Cmd.StartBackground(1, function(Token: CancellationToken): result of boolean, string begin
+        Cmd.StartBackground(1, function(Token: CancellationToken): result of (boolean, string) begin
           return SendWithCancellation(Inbox, 1, Token);
         end function);
       end;

@@ -8,7 +8,7 @@ begin
 end function;
 
 begin
-  const R: result of integer, string := Error('fail');
-  const M: result of string, string := R.Map(AlwaysOk);
+  const R: result of (integer, string) := Error('fail');
+  const M: result of (string, string) := R.Map(AlwaysOk);
   WriteLn(M.IsError());
 end.

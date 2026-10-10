@@ -9,7 +9,7 @@ begin
   return 'Missing required note field `' + Name + '`';
 end function;
 
-function FieldString(Fields: dict of string to TomlValue; Name: string): result of string, string;
+function FieldString(Fields: dict of string to TomlValue; Name: string): result of (string, string);
 begin
   case Fields.Get(Name) of
     when Some(const Value):
@@ -31,7 +31,7 @@ begin
   end case;
 end function;
 
-function FieldInteger(Fields: dict of string to TomlValue; Name: string): result of integer, string;
+function FieldInteger(Fields: dict of string to TomlValue; Name: string): result of (integer, string);
 begin
   case Fields.Get(Name) of
     when Some(const Value):
@@ -53,7 +53,7 @@ begin
   end case;
 end function;
 
-function FieldBoolean(Fields: dict of string to TomlValue; Name: string): result of boolean, string;
+function FieldBoolean(Fields: dict of string to TomlValue; Name: string): result of (boolean, string);
 begin
   case Fields.Get(Name) of
     when Some(const Value):
@@ -75,7 +75,7 @@ begin
   end case;
 end function;
 
-function FieldTags(Fields: dict of string to TomlValue): result of array of string, string;
+function FieldTags(Fields: dict of string to TomlValue): result of (array of string, string);
 begin
   case Fields.Get('tags') of
     when Some(const Value):
@@ -112,7 +112,7 @@ begin
   end case;
 end function;
 
-function ParseFields(Fields: dict of string to TomlValue; Body: string): result of Note, string;
+function ParseFields(Fields: dict of string to TomlValue; Body: string): result of (Note, string);
 begin
   const Version: integer := try FieldInteger(Fields, 'format');
   if Version <> NoteFormatVersion then
@@ -139,7 +139,7 @@ begin
 end function;
 
 // Parses one UTF-8 `.note` document with TOML frontmatter.
-public function NoteParse(Text: string): result of Note, string;
+public function NoteParse(Text: string): result of (Note, string);
 begin
   const NewLine: string := string.Chr(10);
   const Source: string := Text.Replace(string.Chr(13) + NewLine, NewLine)

@@ -29,45 +29,54 @@ impl Checker {
 
         let backing_values = self.enum_backing_values(&td.name, enum_ty);
 
-        let mut seen_variants = HashSet::new();
-        let mut variants = Vec::new();
-        let mut variant_spans = Vec::new();
-        for (member, backing_value) in enum_ty.members.iter().zip(backing_values) {
-            if !seen_variants.insert(canonical_symbol_name(&member.name)) {
-                self.error_with_code(
-                    SEMA_DUPLICATE_DECLARATION,
-                    format!("Duplicate enum member `{}`", member.name),
-                    "Each enum member name must be unique within the enum.",
-                    member.span,
-                );
-                continue;
-            }
+        let (variants, variant_spans) =
+            self.with_type_params(&td.type_params, td.span, |checker| {
+                let mut seen_variants = HashSet::new();
+                let mut variants = Vec::new();
+                let mut variant_spans = Vec::new();
+                for (member, backing_value) in enum_ty.members.iter().zip(backing_values) {
+                    if !seen_variants.insert(canonical_symbol_name(&member.name)) {
+                        checker.error_with_code(
+                            SEMA_DUPLICATE_DECLARATION,
+                            format!("Duplicate enum member `{}`", member.name),
+                            "Each enum member name must be unique within the enum.",
+                            member.span,
+                        );
+                        continue;
+                    }
 
-            let mut seen_fields = HashSet::new();
-            let mut fields = Vec::new();
-            for field in &member.fields {
-                if !seen_fields.insert(canonical_symbol_name(&field.name)) {
-                    self.error_with_code(
+                    let mut seen_fields = HashSet::new();
+                    let mut fields = Vec::new();
+                    for field in &member.fields {
+                        if !seen_fields.insert(canonical_symbol_name(&field.name)) {
+                            checker.error_with_code(
                         SEMA_DUPLICATE_DECLARATION,
                         format!("Duplicate enum field `{}`", field.name),
                         "Each associated-data field name must be unique within the enum member.",
                         field.span,
                     );
-                    continue;
-                }
-                fields.push((field.name.clone(), self.resolve_type_expr(&field.type_expr)));
-            }
+                            continue;
+                        }
+                        fields.push((
+                            field.name.clone(),
+                            checker.resolve_type_expr(&field.type_expr),
+                        ));
+                    }
 
-            variants.push(EnumVariantTy {
-                name: member.name.clone(),
-                fields,
-                backing_value,
+                    variants.push(EnumVariantTy {
+                        name: member.name.clone(),
+                        fields,
+                        backing_value,
+                    });
+                    variant_spans.push(member.span);
+                }
+                (variants, variant_spans)
             });
-            variant_spans.push(member.span);
-        }
 
         let ty = Ty::Enum(Arc::new(EnumTy {
             name: td.name.clone(),
+            type_params: Self::resolve_type_params(&td.type_params),
+            type_args: Vec::new(),
             variants: variants.clone(),
         }));
 

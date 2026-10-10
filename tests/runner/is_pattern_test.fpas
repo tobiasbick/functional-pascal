@@ -35,7 +35,7 @@ begin
   return Total;
 end function;
 
-function Nested(R: result of option of integer, string): integer;
+function Nested(R: result of (option of integer, string)): integer;
 begin
   if R is Ok(Some(const Value)) and Value > 0 then
     return Value;

@@ -13,7 +13,7 @@ begin
     when TuiMsg.Started:
       begin
         const Ready: channel of boolean := State.Ready;
-        Cmd.StartBackground(19, function(Token: CancellationToken): result of boolean, string begin
+        Cmd.StartBackground(19, function(Token: CancellationToken): result of (boolean, string) begin
           discard Send(Ready, true);
           return Error('expected background failure');
         end function);

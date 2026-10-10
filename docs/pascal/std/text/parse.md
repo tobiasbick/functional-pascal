@@ -6,7 +6,7 @@ Structured parsing helpers for text input. `Std.Parse` is for callers that want 
 program Example;
 uses Std.Console, Std.Parse;
 begin
-  const Parsed: Result of integer, string := TryInt('42');
+  const Parsed: Result of (integer, string) := TryInt('42');
   WriteLn(Parsed.UnwrapOr(0));
 end.
 ```
@@ -22,40 +22,40 @@ After `uses Std.Parse;` use short names (`TryInt`, `TryReal`, `TryBool`) or qual
 
 | Kind | Name | Notes |
 |------|------|-------|
-| function | `TryInt(Text: string): Result of integer, string` | trims whitespace; accepts Pascal integer text with `_` digit separators |
-| function | `TryReal(Text: string): Result of real, string` | trims whitespace; requires a decimal point, for example `3.14` or `1.0e3` |
-| function | `TryBool(Text: string): Result of boolean, string` | trims whitespace; accepts `true` and `false` case-insensitively |
+| function | `TryInt(Text: string): Result of (integer, string)` | trims whitespace; accepts Pascal integer text with `_` digit separators |
+| function | `TryReal(Text: string): Result of (real, string)` | trims whitespace; requires a decimal point, for example `3.14` or `1.0e3` |
+| function | `TryBool(Text: string): Result of (boolean, string)` | trims whitespace; accepts `true` and `false` case-insensitively |
 
 ---
 
-## `function TryInt(Text: string): Result of integer, string`
+## `function TryInt(Text: string): Result of (integer, string)`
 
 Parses Pascal integer text. Returns `Ok(Value)` on success or `Error(Message)` on invalid text or overflow.
 
 ```pascal
-const R: Result of integer, string := TryInt(' +1_024 ');
+const R: Result of (integer, string) := TryInt(' +1_024 ');
 WriteLn(R.UnwrapOr(0));                       // 1024
 ```
 
 ---
 
-## `function TryReal(Text: string): Result of real, string`
+## `function TryReal(Text: string): Result of (real, string)`
 
 Parses Pascal real text. The text must include a fractional part; `1.0`, `-2.5`, and `1_024.0e-2` are valid, while `1e3`, `5.`, `NaN`, and `inf` are not.
 
 ```pascal
-const R: Result of real, string := TryReal('1_024.0e-2');
+const R: Result of (real, string) := TryReal('1_024.0e-2');
 WriteLn(R.UnwrapOr(0.0));                     // 10.24
 ```
 
 ---
 
-## `function TryBool(Text: string): Result of boolean, string`
+## `function TryBool(Text: string): Result of (boolean, string)`
 
 Parses boolean text. Leading and trailing whitespace is ignored; casing does not matter.
 
 ```pascal
-const R: Result of boolean, string := TryBool(' FALSE ');
+const R: Result of (boolean, string) := TryBool(' FALSE ');
 WriteLn(R.UnwrapOr(true));                    // false
 ```
 

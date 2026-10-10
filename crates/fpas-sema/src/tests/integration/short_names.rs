@@ -114,7 +114,7 @@ fn ambiguous_call_hint_suggests_the_method_form() {
     assert!(hint.contains("`Value.Unwrap(…)`"), "{hint}");
     // The suggested method form resolves by the receiver's type.
     check_ok(
-        "program T;\n\nbegin\n  const O: option of integer := Some(3);\n  const R: result of integer, string := Ok(4);\n  const X: integer := O.Unwrap() + R.Unwrap();\nend.",
+        "program T;\n\nbegin\n  const O: option of integer := Some(3);\n  const R: result of (integer, string) := Ok(4);\n  const X: integer := O.Unwrap() + R.Unwrap();\nend.",
     );
 }
 

@@ -36,7 +36,7 @@ on the host task.
 - Application payloads stay in a separate generic channel rather than extending the closed
   framework message with application-specific variants.
 - Framework lifecycle and failures use `Started` and `BackgroundFailed` variants on `TuiMsg`.
-- Work uses the fixed `function(Token): result of boolean, string` shape. Its success value is
+- Work uses the fixed `function(Token): result of (boolean, string)` shape. Its success value is
   ignored; errors are normalized through task-group failure records.
 - Subscription replacement requests cancellation without blocking the host. The host joins completed
   sources and starts only the latest pending replacement, preserving stop-before-start ordering.

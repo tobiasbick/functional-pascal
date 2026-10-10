@@ -54,6 +54,8 @@ fn sample_interface() -> UnitInterface {
                 name: "State".to_string(),
                 qualified_name: "Demo.Api.State".to_string(),
                 ty: InterfaceType::Enum(Box::new(EnumType {
+                    type_parameters: Vec::new(),
+                    type_arguments: Vec::new(),
                     name: "Demo.Api.State".to_string(),
                     variants: vec![
                         EnumVariant {
@@ -88,6 +90,8 @@ fn sample_interface() -> UnitInterface {
                 name: "Counter".to_string(),
                 qualified_name: "Demo.Api.Counter".to_string(),
                 ty: InterfaceType::Record(Box::new(RecordType {
+                    type_parameters: Vec::new(),
+                    type_arguments: Vec::new(),
                     name: "Demo.Api.Counter".to_string(),
                     owner_unit: Some("Demo.Api".to_string()),
                     private_members: vec!["CreateHidden".to_string(), "Value".to_string()],

@@ -10,6 +10,12 @@ use std::collections::HashSet;
 impl Checker {
     /// Check original AST expressions only after preceding value declarations are in scope.
     pub(crate) fn check_record_values(&mut self, definition: &TypeDef, record: &RecordType) {
+        self.with_type_params(&definition.type_params, definition.span, |checker| {
+            checker.check_record_values_in_scope(definition, record)
+        });
+    }
+
+    fn check_record_values_in_scope(&mut self, definition: &TypeDef, record: &RecordType) {
         self.check_record_defaults(definition, record);
         let mut seen = HashSet::new();
         for method in &record.methods {

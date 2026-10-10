@@ -53,10 +53,10 @@ This uncompiled draft combines [AP03](ap03-explicit-closed-enum-cases/README.md)
 [AP21](ap21-decision-expressions/README.md),
 [AP24](ap24-generic-data-structures/README.md), and
 [AP25](ap25-conservative-purity/README.md).
-AP13 block boundaries and AP20 pattern bindings are implemented. Closed-enum
-`else` rejection, decision expressions, generic data declarations, and purity
-remain drafts owned by AP03, AP21, AP24, and AP25. Settle their remaining rules
-before implementation; this example does not request a combined implementation.
+AP03 closed-enum cases, AP13 block boundaries, AP20 pattern bindings, AP21
+decision expressions, and AP24 generic data declarations are implemented.
+Purity remains a draft owned by AP25, so this example is not a runnable
+program and does not request a combined implementation.
 
 ```pascal
 type Lookup of T = enum

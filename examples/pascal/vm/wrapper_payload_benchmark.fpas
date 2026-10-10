@@ -13,7 +13,7 @@ begin
   var Total: integer := 0;
   for Index: integer := 1 to Iterations do
     begin
-      const ResultValue: result of integer, string := Ok(Index);
+      const ResultValue: result of (integer, string) := Ok(Index);
       const OptionValue: option of integer := Some(ResultValue.Unwrap());
       Total := Total + OptionValue.Unwrap();
     end;

@@ -5,6 +5,8 @@
     reason = "IntelliSense fixtures use explicit source offsets and readable assertions"
 )]
 
+#[path = "intellisense/generic_records.rs"]
+mod generic_records;
 #[path = "intellisense/native_chains.rs"]
 mod native_chains;
 mod support;

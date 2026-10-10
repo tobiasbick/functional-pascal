@@ -32,11 +32,11 @@ begin
   const T: task := go Parent();
   const Q: channel of integer := CreateChannel(1);
   var Seen: integer := 0;
-  const S: WaitCase := SendCase(Q, 42, procedure(R: result of boolean, string)
+  const S: WaitCase := SendCase(Q, 42, procedure(R: result of (boolean, string))
   begin
     if not R.Unwrap() then panic('send result'); end if;
     Sleep(1);
-    const Receive: WaitCase := ReceiveCase(Q, procedure(V: result of integer, string)
+    const Receive: WaitCase := ReceiveCase(Q, procedure(V: result of (integer, string))
     begin Seen := V.Unwrap(); end procedure);
     if Select([Receive]) <> 0 then panic('nested selection'); end if;
   end procedure);
@@ -44,13 +44,13 @@ begin
   if Seen <> 42 then panic('callback did not complete'); end if;
   if Wait(T) <> 7 then panic('task value lost'); end if;
   const Producer: task := go Produce(Q);
-  const Pending: WaitCase := ReceiveCase(Q, procedure(R: result of integer, string)
+  const Pending: WaitCase := ReceiveCase(Q, procedure(R: result of (integer, string))
   begin Seen := R.Unwrap(); end procedure);
   const Fallback: WaitCase := TimerCase(1000, procedure() begin panic('pending receive timed out'); end procedure);
   if Select([Pending, Fallback]) <> 0 then panic('pending receive index'); end if;
   if Seen <> 123 then panic('pending receive value'); end if;
   if Wait(Producer) <> 1 then panic('producer result'); end if;
-  const Closed: WaitCase := ReceiveCase(Q, procedure(R: result of integer, string)
+  const Closed: WaitCase := ReceiveCase(Q, procedure(R: result of (integer, string))
   begin
     case R of
       when Ok(_): panic('closed channel delivered');

@@ -6,7 +6,7 @@
 
 use super::Checker;
 use super::coverage::Pat;
-use crate::types::{EnumTy, Ty};
+use crate::types::Ty;
 use fpas_diagnostics::codes::SEMA_UNREACHABLE_CASE_LABEL;
 use fpas_lexer::Span;
 use fpas_parser::{CaseLabel, Expr};
@@ -39,7 +39,9 @@ impl Checker {
     ) -> CaseArms {
         let case_ty = self.check_expr(expr);
         let is_result_or_option = matches!(&case_ty, Ty::Result(_, _) | Ty::Option(_) | Ty::Error);
-        let is_data_enum = self.resolve_enum_ty(&case_ty).is_some_and(EnumTy::has_data);
+        let is_data_enum = self
+            .resolve_enum_ty(&case_ty)
+            .is_some_and(|enumeration| enumeration.has_data());
         let is_simple_enum = self
             .resolve_enum_ty(&case_ty)
             .is_some_and(|enum_ty| !enum_ty.has_data());

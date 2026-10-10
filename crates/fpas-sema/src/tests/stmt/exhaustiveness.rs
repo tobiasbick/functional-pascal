@@ -49,7 +49,7 @@ fn case_result_missing_variant_is_non_exhaustive() {
     let errors = check_errors(
         "program T; \
          begin \
-           const R: Result of integer, string := Ok(1); \
+           const R: Result of (integer, string) := Ok(1); \
            case R of \
              when Ok(const V): return; \
            end case; \

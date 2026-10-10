@@ -194,6 +194,9 @@ fn qualify_owned_type(
             qualify_callable(callable, unit_name, own_types);
         }
         Record(record) => {
+            for argument in &mut record.type_arguments {
+                qualify_owned_type(argument, unit_name, own_types);
+            }
             // Transparent aliases retain their declaration owner, including member visibility.
             // Documentation: docs/pascal/language/types/type-aliases.md
             let owned = own_types.contains(&canonical_symbol_name(&record.name));
@@ -214,6 +217,9 @@ fn qualify_owned_type(
         }
         Enum(enum_ty) => {
             enum_ty.name = qualify_owned_name(&enum_ty.name, unit_name, own_types);
+            for argument in &mut enum_ty.type_arguments {
+                qualify_owned_type(argument, unit_name, own_types);
+            }
             for variant in &mut enum_ty.variants {
                 for field in &mut variant.fields {
                     qualify_owned_type(&mut field.ty, unit_name, own_types);
@@ -221,6 +227,25 @@ fn qualify_owned_type(
             }
         }
         Named(name) => *name = qualify_owned_name(name, unit_name, own_types),
+        artifact::InterfaceType::EnumApplication { name, arguments } => {
+            *name = qualify_owned_name(name, unit_name, own_types);
+            for argument in arguments {
+                qualify_owned_type(argument, unit_name, own_types);
+            }
+        }
+        artifact::InterfaceType::Application {
+            name,
+            owner_unit,
+            arguments,
+        } => {
+            if own_types.contains(&canonical_symbol_name(name)) {
+                *owner_unit = Some(unit_name.to_owned());
+            }
+            *name = qualify_owned_name(name, unit_name, own_types);
+            for argument in arguments {
+                qualify_owned_type(argument, unit_name, own_types);
+            }
+        }
         GenericParameter(_, _) => {}
         _ => {}
     }

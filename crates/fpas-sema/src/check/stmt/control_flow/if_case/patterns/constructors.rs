@@ -24,7 +24,7 @@ impl Checker {
             );
             return None;
         };
-        let Some(enum_ty) = self.resolve_enum_ty(expected_ty).cloned() else {
+        let Some(enum_ty) = self.resolve_enum_ty(expected_ty) else {
             if !expected_ty.is_error() {
                 self.error_with_code(
                     SEMA_TYPE_MISMATCH,
@@ -36,7 +36,7 @@ impl Checker {
             return None;
         };
 
-        let resolved_ty = self.check_designator_expr(constructor);
+        let mut resolved_ty = self.check_designator_expr(constructor);
         if resolved_ty.is_error() {
             return None;
         }
@@ -58,6 +58,15 @@ impl Checker {
                 constructor.span,
             );
             return None;
+        }
+        if let Ty::Enum(declaration) = &resolved_ty
+            && declaration.name.eq_ignore_ascii_case(&enum_ty.name)
+            && !declaration.type_params.is_empty()
+            && declaration.type_args.is_empty()
+        {
+            resolved_ty = Ty::Enum(std::sync::Arc::new(
+                declaration.instantiate(enum_ty.type_args.clone()),
+            ));
         }
         let errors_before = self.errors.len();
         self.check_type_compat(

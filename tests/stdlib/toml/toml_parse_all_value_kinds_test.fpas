@@ -3,8 +3,8 @@ program TomlParseAllValueKindsTest;
 uses Std.Test, Std.Toml;
 
 begin
-  const Parsed: result of TomlValue, string := Parse('title = ''TOML''' + string.Chr(10) + 'integer = -42' + string.Chr(10) + 'float = 1.5' + string.Chr(10) + 'enabled = true' + string.Chr(10) + 'when = 1979-05-27T07:32:00Z' + string.Chr(10) + 'items = [''a'', 2]' + string.Chr(10) + '[nested]' + string.Chr(10) +
-                                                     'value = ''ok''');
+  const Parsed: result of (TomlValue, string) := Parse('title = ''TOML''' + string.Chr(10) + 'integer = -42' + string.Chr(10) + 'float = 1.5' + string.Chr(10) + 'enabled = true' + string.Chr(10) + 'when = 1979-05-27T07:32:00Z' + string.Chr(10) + 'items = [''a'', 2]' + string.Chr(10) + '[nested]' + string.Chr(10) +
+                                                       'value = ''ok''');
   case Parsed of
     when Ok(const Value):
       begin

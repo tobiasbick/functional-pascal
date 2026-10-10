@@ -71,7 +71,7 @@ pub struct VarDef {
 
 /// A generic type parameter with optional constraint: `T` or `T: Comparable`.
 ///
-/// Used on function and procedure headings: `function Foo<T>(x: T): T`.
+/// Used on routine headings and generic record and enum declarations.
 ///
 /// **Documentation:** `docs/pascal/language/functions/generic-routines.md`
 #[derive(Debug, Clone, PartialEq)]
@@ -87,6 +87,8 @@ pub struct TypeParam {
 pub struct TypeDef {
     /// The defined type name.
     pub name: String,
+    /// Generic parameters declared by a record or enum type, in source order.
+    pub type_params: Vec<TypeParam>,
     /// The type body assigned to the name.
     pub body: TypeBody,
     /// The declaration visibility.

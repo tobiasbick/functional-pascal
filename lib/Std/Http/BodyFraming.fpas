@@ -15,7 +15,7 @@ end record;
 //
 // Parameters:
 // - `Headers`: Parsed message fields used to determine framing.
-public function Select(Headers: array of Header): result of Framing, string;
+public function Select(Headers: array of Header): result of (Framing, string);
 begin
   var TransferEncoding: string := '';
   var TransferEncodingCount: integer := 0;

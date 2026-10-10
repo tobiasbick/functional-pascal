@@ -374,7 +374,7 @@ mod tests {
             "Point(X := 1, Y := 2)"
         );
         assert_eq!(
-            expr_from_body("program T; begin const X: result of integer, string := Ok(42); end."),
+            expr_from_body("program T; begin const X: result of (integer, string) := Ok(42); end."),
             "Ok(42)"
         );
         assert_eq!(

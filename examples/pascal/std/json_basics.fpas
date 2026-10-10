@@ -3,7 +3,7 @@ program JsonBasics;
 uses Std.Console, Std.Json, Std.Conv;
 
 begin
-  const Parsed: result of JsonValue, string := Parse('{"name":"Ada","scores":[10,20],"active":true}');
+  const Parsed: result of (JsonValue, string) := Parse('{"name":"Ada","scores":[10,20],"active":true}');
   case Parsed of
     when Ok(const Value):
       begin

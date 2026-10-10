@@ -2,11 +2,11 @@ program ServerListenerTest;
 
 uses Std.Server, Std.Net, Std.Tasks, Std.Test;
 
-function BindListener(): result of Std.Net.Listener, string;
+function BindListener(): result of (Std.Net.Listener, string);
 begin
   for Port: integer := 28100 to 28199 do
     begin
-      const Opened: result of Std.Net.Listener, string := Listen('127.0.0.1', Port);
+      const Opened: result of (Std.Net.Listener, string) := Listen('127.0.0.1', Port);
       if Opened.IsOk() then
         begin
           return Opened;

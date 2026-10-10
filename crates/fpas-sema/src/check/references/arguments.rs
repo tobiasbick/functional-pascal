@@ -87,7 +87,7 @@ impl Checker {
                 );
                 (self.check_designator_expr(designator), None)
             }
-            (false, _) => (self.check_expr(arg), None),
+            (false, _) => (self.check_expr_with_expected(arg, Some(&param.ty)), None),
         }
     }
 

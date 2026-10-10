@@ -14,7 +14,7 @@ begin
   const Generation: integer := State.Generation;
   const Gate: channel of boolean := State.Gate;
   const Started: channel of integer := State.Started;
-  Cmd.ReplaceSubscription(1, function(Token: CancellationToken): result of boolean, string begin
+  Cmd.ReplaceSubscription(1, function(Token: CancellationToken): result of (boolean, string) begin
     discard Send(Started, Generation);
     if Generation = 0 then
       begin
@@ -71,7 +71,7 @@ end function;
 function ReleaseAfterPaint(Painted: channel of integer; Gate: channel of boolean): boolean;
 begin
   // A timeout releases the gate even on the old blocking implementation.
-  const Paint: result of integer, string := ReceiveWithTimeout(Painted, 3000);
+  const Paint: result of (integer, string) := ReceiveWithTimeout(Painted, 3000);
   discard Send(Gate, true);
   return Paint.IsOk();
 end function;
@@ -94,7 +94,7 @@ begin
   end for;
 
   AssertTrue(Wait(Observer));
-  var Replacement: result of integer, string := ReceiveWithTimeout(Started, 0);
+  var Replacement: result of (integer, string) := ReceiveWithTimeout(Started, 0);
   const Deadline: integer := MonotonicMillis() + 5000;
   while Replacement.IsError() and (MonotonicMillis() < Deadline) do
     begin

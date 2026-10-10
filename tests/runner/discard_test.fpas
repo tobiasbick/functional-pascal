@@ -4,7 +4,7 @@ uses Std.Test;
 
 var Calls: integer := 0;
 
-function Produce(): result of integer, string;
+function Produce(): result of (integer, string);
 begin
   Calls := Calls + 1;
   return Error('ignored result');

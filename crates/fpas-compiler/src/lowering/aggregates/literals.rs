@@ -128,7 +128,11 @@ impl LoweringContext {
         expression: &Expr,
         expected: TypeId,
     ) -> Result<ValueId, CompileError> {
-        match expression {
+        if expected == super::super::types::DYNAMIC {
+            let value = self.lower_expression(expression)?;
+            return self.value_as(value, expected, expression.span());
+        }
+        let value = match expression {
             Expr::Paren(inner, _) => self.lower_expression_as(inner, expected),
             Expr::ArrayLiteral(values, span) => {
                 self.lower_array_literal_as(values, expected, *span)
@@ -162,7 +166,8 @@ impl LoweringContext {
                 )
             }
             _ => self.lower_expression(expression),
-        }
+        }?;
+        self.value_as(value, expected, expression.span())
     }
 
     pub(in crate::lowering) fn lower_try(

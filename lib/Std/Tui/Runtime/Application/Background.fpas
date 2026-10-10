@@ -3,7 +3,7 @@ unit Std.Tui.Runtime.Application.Background;
 uses Std.Tasks, Std.Tui.Runtime.Msg;
 
 // Cooperative function executed as host-owned background work.
-public type TuiBackgroundWork = function(Token: CancellationToken): result of boolean, string;
+public type TuiBackgroundWork = function(Token: CancellationToken): result of (boolean, string);
 
 // Work requested by one completed Update callback.
 public type TuiBackgroundCommand = enum

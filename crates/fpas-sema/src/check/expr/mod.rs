@@ -8,10 +8,12 @@ mod boolean;
 mod bound_method;
 mod calls;
 mod closure;
+mod construction_inference;
 mod decision;
 mod designator;
 mod distinct_conversion;
 mod distinct_operators;
+mod enum_construction;
 mod equality;
 mod operators;
 mod postfix;
@@ -27,7 +29,13 @@ use fpas_parser::*;
 pub(in crate::check) use calls::MethodCallSite;
 
 impl Checker {
+    /// Check an expression without an expected result type.
     pub(crate) fn check_expr(&mut self, expr: &Expr) -> Ty {
+        self.check_expr_with_expected(expr, None)
+    }
+
+    /// Check an expression with context for underdetermined record constructors.
+    pub(crate) fn check_expr_with_expected(&mut self, expr: &Expr, expected: Option<&Ty>) -> Ty {
         if let Some(ty) = self.prechecked_receivers.get(&Self::expr_lookup_key(expr)) {
             return ty.clone();
         }
@@ -38,13 +46,23 @@ impl Checker {
             Expr::Bool(_, _) => Ty::Boolean,
             Expr::Designator(designator) => {
                 self.reject_var_parameter_routine_value(designator);
-                self.check_designator_expr(designator)
+                let ty = self.check_designator_expr(designator);
+                let name = Self::resolve_designator_name(designator);
+                if self
+                    .scopes
+                    .lookup(&name)
+                    .is_some_and(|symbol| symbol.kind == crate::scope::SymbolKind::EnumMember)
+                {
+                    self.check_enum_construction(&name, &ty, &[], designator.span, expected)
+                } else {
+                    ty
+                }
             }
             Expr::Call {
                 designator,
                 args,
                 span,
-            } => self.check_call_expr(expr, designator, args, *span),
+            } => self.check_call_expr(expr, designator, args, *span, expected),
             Expr::UnaryOp { op, operand, span } => self.check_unary_expr(*op, operand, *span),
             Expr::BinaryOp {
                 op,
@@ -52,19 +70,31 @@ impl Checker {
                 right,
                 span,
             } => self.check_binary_expr(*op, left, right, *span),
-            Expr::Paren(inner, _) => self.check_expr(inner),
-            Expr::ArrayLiteral(elements, _) => self.check_array_literal(elements),
-            Expr::DictLiteral(pairs, _) => self.check_dict_literal(pairs),
+            Expr::Paren(inner, _) => self.check_expr_with_expected(inner, expected),
+            Expr::ArrayLiteral(elements, _) => self.check_array_literal(elements, expected),
+            Expr::DictLiteral(pairs, _) => self.check_dict_literal(pairs, expected),
             Expr::ResultOk(inner, _) => {
-                let inner_ty = self.check_expr(inner);
+                let inner_expected = match expected {
+                    Some(Ty::Result(ok, _)) => Some(ok.as_ref()),
+                    _ => None,
+                };
+                let inner_ty = self.check_expr_with_expected(inner, inner_expected);
                 Ty::Result(Box::new(inner_ty), Box::new(Ty::Error))
             }
             Expr::ResultError(inner, _) => {
-                let inner_ty = self.check_expr(inner);
+                let inner_expected = match expected {
+                    Some(Ty::Result(_, error)) => Some(error.as_ref()),
+                    _ => None,
+                };
+                let inner_ty = self.check_expr_with_expected(inner, inner_expected);
                 Ty::Result(Box::new(Ty::Error), Box::new(inner_ty))
             }
             Expr::OptionSome(inner, _) => {
-                let inner_ty = self.check_expr(inner);
+                let inner_expected = match expected {
+                    Some(Ty::Option(value)) => Some(value.as_ref()),
+                    _ => None,
+                };
+                let inner_ty = self.check_expr_with_expected(inner, inner_expected);
                 Ty::Option(Box::new(inner_ty))
             }
             Expr::OptionNone(_) => Ty::Option(Box::new(Ty::Error)),
@@ -91,14 +121,19 @@ impl Checker {
                 branches,
                 else_value,
                 ..
-            } => self.check_if_expr(branches, else_value),
+            } => self.check_if_expr(branches, else_value, expected),
             Expr::Case {
                 selector,
                 arms,
                 else_arm,
                 span,
-            } => self.check_case_expr(selector, arms, else_arm.as_deref(), *span),
+            } => self.check_case_expr(selector, arms, else_arm.as_deref(), *span, expected),
             Expr::Error(_) => Ty::Error,
+        };
+        let ty = if let Some(expected) = expected {
+            self.specialize_expected_callable(ty, expected, expr.span())
+        } else {
+            ty
         };
         let key = Self::expr_lookup_key(expr);
         self.expr_types.insert(key, ty.clone());
@@ -107,32 +142,40 @@ impl Checker {
         ty
     }
 
-    fn check_array_literal(&mut self, elements: &[Expr]) -> Ty {
+    fn check_array_literal(&mut self, elements: &[Expr], expected: Option<&Ty>) -> Ty {
+        let element_expected = match expected {
+            Some(Ty::Array(element)) => Some(element.as_ref()),
+            _ => None,
+        };
         if elements.is_empty() {
             return Ty::Array(Box::new(Ty::Error));
         }
 
-        let first_ty = self.check_expr(&elements[0]);
+        let first_ty = self.check_expr_with_expected(&elements[0], element_expected);
         for element in &elements[1..] {
-            let element_ty = self.check_expr(element);
+            let element_ty = self.check_expr_with_expected(element, element_expected);
             self.check_type_compat(&first_ty, &element_ty, "array element", element.span());
         }
 
         Ty::Array(Box::new(first_ty))
     }
 
-    fn check_dict_literal(&mut self, pairs: &[(Expr, Expr)]) -> Ty {
+    fn check_dict_literal(&mut self, pairs: &[(Expr, Expr)], expected: Option<&Ty>) -> Ty {
+        let (key_expected, value_expected) = match expected {
+            Some(Ty::Dict(key, value)) => (Some(key.as_ref()), Some(value.as_ref())),
+            _ => (None, None),
+        };
         if pairs.is_empty() {
             return Ty::Dict(Box::new(Ty::Error), Box::new(Ty::Error));
         }
 
-        let first_key_ty = self.check_expr(&pairs[0].0);
+        let first_key_ty = self.check_expr_with_expected(&pairs[0].0, key_expected);
         self.defer_dictionary_literal_key_check(first_key_ty.clone(), pairs[0].0.span());
-        let first_val_ty = self.check_expr(&pairs[0].1);
+        let first_val_ty = self.check_expr_with_expected(&pairs[0].1, value_expected);
         for (key, val) in &pairs[1..] {
-            let key_ty = self.check_expr(key);
+            let key_ty = self.check_expr_with_expected(key, key_expected);
             self.check_type_compat(&first_key_ty, &key_ty, "dict key", key.span());
-            let val_ty = self.check_expr(val);
+            let val_ty = self.check_expr_with_expected(val, value_expected);
             self.check_type_compat(&first_val_ty, &val_ty, "dict value", val.span());
         }
 
@@ -189,7 +232,7 @@ impl Checker {
                 .iter()
                 .find(|(name, _)| name.eq_ignore_ascii_case(&field_init.name))
             {
-                let value_ty = self.check_expr(&field_init.value);
+                let value_ty = self.check_expr_with_expected(&field_init.value, Some(field_ty));
                 self.check_type_compat(
                     field_ty,
                     &value_ty,
@@ -246,7 +289,7 @@ impl Checker {
             self.error_with_code(
                 fpas_diagnostics::codes::SEMA_TYPE_MISMATCH,
                 "`try` can only be used inside a function that returns Result or Option",
-                "Wrap the expression in a function that returns `Result of T, E` or `Option of T`.",
+                "Wrap the expression in a function that returns `Result of (T, E)` or `Option of T`.",
                 span,
             );
             return;
@@ -259,7 +302,7 @@ impl Checker {
                     "Procedure `{}` cannot use `try` because it does not return a value",
                     function_ctx.name
                 ),
-                "Use `try` inside a function that returns `Result of T, E` or `Option of T`.",
+                "Use `try` inside a function that returns `Result of (T, E)` or `Option of T`.",
                 span,
             );
             return;
@@ -278,7 +321,7 @@ impl Checker {
                             "`try` propagates `{inner_ty}`, but function `{}` returns `{return_ty}`",
                             function_ctx.name
                         ),
-                        "Make the enclosing function return `Result of <value>, <same error type>`.",
+                        "Make the enclosing function return `Result of (ValueType, ErrorType)` with the same error type.",
                         span,
                     );
                 }
@@ -291,7 +334,7 @@ impl Checker {
                         "`try` propagates `{inner_ty}`, but function `{}` returns `{return_ty}`",
                         function_ctx.name
                     ),
-                    "Use `try` on `Result` only inside a function that returns `Result of T, E` with a compatible error type.",
+                    "Use `try` on `Result` only inside a function that returns `Result of (T, E)` with a compatible error type.",
                     span,
                 );
             }

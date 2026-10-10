@@ -6,6 +6,8 @@ mod context;
 pub(crate) mod native;
 mod native_receiver;
 mod record_construction;
+/// Instantiated record member descriptions shared by completion and navigation.
+pub(crate) mod record_members;
 mod signature_help;
 
 use std::path::PathBuf;

@@ -75,7 +75,7 @@ program NestedUpdate;
 
 type Holder = record
   Values: option of array of integer;
-  Lookup: result of dict of string to integer, string;
+  Lookup: result of (dict of string to integer, string);
 end record;
 begin
   const Original: Holder := Holder(

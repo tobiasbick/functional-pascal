@@ -9,7 +9,7 @@ use crate::comments::{CommentMap, emit_leading_comments, emit_trailing_comments}
 
 use super::super::Emitter;
 use super::super::expr::emit_expr;
-use super::super::types::emit_type_expr;
+use super::super::types::{emit_type_expr, emit_type_param};
 use super::routines::{
     emit_func_body, emit_function_decl, emit_function_header, emit_procedure_decl,
     emit_procedure_header, finish_routine_header_line,
@@ -64,6 +64,21 @@ fn emit_type_def(emitter: &mut Emitter, def: &TypeDef, comments: &CommentMap) {
     emit_visibility(emitter, def.visibility);
     emitter.write("type ");
     emitter.write(&def.name);
+    if !def.type_params.is_empty() {
+        emitter.write(" of ");
+        if def.type_params.len() > 1 {
+            emitter.write("(");
+        }
+        for (index, param) in def.type_params.iter().enumerate() {
+            if index > 0 {
+                emitter.write(", ");
+            }
+            emit_type_param(emitter, param);
+        }
+        if def.type_params.len() > 1 {
+            emitter.write(")");
+        }
+    }
     emitter.write(" = ");
     emit_type_body(emitter, &def.body, comments);
     finish_decl_line(emitter, comments, def.span.offset);

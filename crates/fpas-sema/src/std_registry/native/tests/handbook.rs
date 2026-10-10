@@ -51,11 +51,8 @@ fn handbook_tables_match_every_native_signature_and_factory() {
             format!(": {}", signature.return_type)
         };
         let row = format!("| `{owner}.{}({parameters}){result}` |", entry.name);
-        let normalized = source
-            .replace("Result of (U, E)", "Result of U, E")
-            .replace("Result of (T, E2)", "Result of T, E2");
         assert_eq!(
-            normalized.matches(&row).count(),
+            source.matches(&row).count(),
             1,
             "missing or duplicate {row}"
         );

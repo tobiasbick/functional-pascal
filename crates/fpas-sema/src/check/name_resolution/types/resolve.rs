@@ -10,6 +10,11 @@ impl Checker {
     pub(crate) fn resolve_type_expr(&mut self, type_expr: &TypeExpr) -> Ty {
         match type_expr {
             TypeExpr::Named { id, .. } => self.resolve_named_type(id),
+            TypeExpr::Application {
+                id,
+                arguments,
+                span,
+            } => self.resolve_type_application(id, arguments, *span),
             TypeExpr::Array(inner, _) => Ty::Array(Box::new(self.resolve_type_expr(inner))),
             TypeExpr::Channel(inner, _) => Ty::Channel(Box::new(self.resolve_type_expr(inner))),
             TypeExpr::Task(inner, _) => Ty::Task(Box::new(self.resolve_type_expr(inner))),
@@ -73,7 +78,39 @@ impl Checker {
     }
 
     fn resolve_named_type(&mut self, qid: &QualifiedId) -> Ty {
+        let ty = self.resolve_type_name(qid);
+        if let Ty::Enum(enumeration) = &ty
+            && !enumeration.type_params.is_empty()
+            && enumeration.type_args.is_empty()
+        {
+            self.error_with_code(fpas_diagnostics::codes::SEMA_TYPE_MISMATCH,
+                format!("Generic enum `{}` requires type arguments", enumeration.name),
+                "Write a type annotation such as `Lookup of string` or `Choice of (integer, string)`.", qid.span);
+            return Ty::Error;
+        }
+        if let Ty::Record(record) = &ty
+            && !record.type_params.is_empty()
+            && record.type_args.is_empty()
+        {
+            self.error_with_code(
+                fpas_diagnostics::codes::SEMA_TYPE_MISMATCH,
+                format!("Generic record `{}` requires type arguments", record.name),
+                "Write a type annotation such as `Box of integer` or `Pair of (integer, string)`.",
+                qid.span,
+            );
+            return Ty::Error;
+        }
+        ty
+    }
+
+    /// Resolve a type declaration without requiring an application of its parameters.
+    pub(super) fn resolve_type_name(&mut self, qid: &QualifiedId) -> Ty {
         let name = qid.parts.join(".");
+        if let Some(symbol) = self.scopes.lookup(&name)
+            && matches!(symbol.ty, Ty::GenericParam(..))
+        {
+            return symbol.ty.clone();
+        }
         match canonical_symbol_name(&name).as_str() {
             "integer" => Ty::Integer,
             "real" => Ty::Real,

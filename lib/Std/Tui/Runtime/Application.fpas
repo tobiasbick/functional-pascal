@@ -102,7 +102,7 @@ public type TuiApplication = record
   Self: TuiApplication;
   Inbox: channel of TMessage;
   Message: TMessage
-): result of boolean, string;
+): result of (boolean, string);
   begin
     discard TuiAppRequireOpen(Self.Id);
     return TrySend(Inbox, Message);

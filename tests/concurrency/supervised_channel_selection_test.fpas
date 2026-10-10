@@ -21,7 +21,7 @@ begin
           const Attempts: channel of boolean := CreateChannel(2);
           discard Send(Attempts, false);
           discard Send(Attempts, true);
-          Children.Push(StartSupervisedTask(Group, function(WorkerToken: CancellationToken): result of integer, string begin
+          Children.Push(StartSupervisedTask(Group, function(WorkerToken: CancellationToken): result of (integer, string) begin
             if not Receive(Attempts).Unwrap() then
               begin
                 return Error('transient startup failure');
@@ -32,7 +32,7 @@ begin
             for Item: integer := 0 to 31 do
               begin
                 discard Select([
-                                 SendCase(Output, Producer * 32 + Item, procedure(Outcome: result of boolean, string) begin
+                                 SendCase(Output, Producer * 32 + Item, procedure(Outcome: result of (boolean, string)) begin
                                    AssertTrue(Outcome.Unwrap());
                                  end procedure),
                                  CancellationCase(WorkerToken, procedure() begin
@@ -50,7 +50,7 @@ begin
       for Item: integer := 0 to 255 do
         begin
           AssertEquals(0, Select([
-                                   ReceiveCase(Output, procedure(Outcome: result of integer, string) begin
+                                   ReceiveCase(Output, procedure(Outcome: result of (integer, string)) begin
                                      const Number: integer := Outcome.Unwrap();
                                      AssertTrue((Number >= 0) and (Number < 256));
                                      Seen[Number] := Seen[Number] + 1;

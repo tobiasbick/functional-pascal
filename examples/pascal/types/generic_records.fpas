@@ -1,0 +1,19 @@
+program GenericRecords;
+
+uses Std.Console;
+
+type Pair of (K: Comparable, V) = record
+  Key: K;
+  Value: V;
+end record;
+
+type Optional of T = record
+  Value: option of T := None;
+end record;
+
+begin
+  const Entry: Pair of (integer, string) := Pair(Key := 1, Value := 'one');
+  const EmptyValue: Optional of string := Optional();
+  WriteLn(Entry.Key, ': ', Entry.Value);
+  WriteLn(EmptyValue.Value.IsNone());
+end.

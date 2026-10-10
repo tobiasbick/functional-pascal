@@ -45,6 +45,10 @@ The first parameter must be the reserved word `Self`, typed as the record.
 inside an instance method. Callers use value dot notation; `Self` is passed
 implicitly.
 
+For a generic record, the receiver forwards the record's parameters in declaration
+order, such as `Self: Box of T`. A different concrete instantiation or reordered
+parameters cannot replace that receiver. See [generic records](generics.md#generic-records).
+
 ```pascal
 type Point = record
   X: real;

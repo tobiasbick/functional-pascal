@@ -8,7 +8,7 @@ unit Std.Parse;
 //
 // Parameters:
 // - `Text`: UTF-8 text processed by the operation.
-public function TryBool(Text: string): result of boolean, string;
+public function TryBool(Text: string): result of (boolean, string);
 begin
   panic('Intrinsic API declaration');
 end function;
@@ -17,7 +17,7 @@ end function;
 //
 // Parameters:
 // - `Text`: UTF-8 text processed by the operation.
-public function TryInt(Text: string): result of integer, string;
+public function TryInt(Text: string): result of (integer, string);
 begin
   panic('Intrinsic API declaration');
 end function;
@@ -26,7 +26,7 @@ end function;
 //
 // Parameters:
 // - `Text`: UTF-8 text processed by the operation.
-public function TryReal(Text: string): result of real, string;
+public function TryReal(Text: string): result of (real, string);
 begin
   panic('Intrinsic API declaration');
 end function;

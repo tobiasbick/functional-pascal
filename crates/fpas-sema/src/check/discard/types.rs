@@ -36,7 +36,8 @@ impl Checker {
                 TaskSafety::Safe
             }
             Ty::GenericParam(name, _) => TaskSafety::Forbidden(format!(
-                "{path} uses generic parameter `{name}` whose constraint does not exclude task handles"
+                "{path} uses generic parameter `{}` whose constraint does not exclude task handles",
+                crate::types::parameter_name(name)
             )),
             Ty::Function(_) | Ty::Procedure(_) => TaskSafety::Captures,
             Ty::Channel(inner) if inner.is_error() => {
@@ -67,18 +68,14 @@ impl Checker {
                 // Recursive field types can retain the empty descriptor installed
                 // before the record's fields were checked. Inspect the completed
                 // declaration while preserving already resolved field types.
-                let record = if record.fields.is_empty() {
-                    self.scopes
-                        .lookup_type(&record.name)
-                        .and_then(|symbol| match &symbol.ty {
-                            Ty::Record(canonical) => Some(canonical),
-                            _ => None,
-                        })
-                        .unwrap_or(record)
-                } else {
-                    record
+                let resolved = self.resolve_visible_type(&Ty::Record(record.clone()));
+                let Ty::Record(record) = resolved else {
+                    return TaskSafety::Safe;
                 };
-                let key = format!("record:{:p}", std::sync::Arc::as_ptr(record));
+                let key = format!(
+                    "record:{}",
+                    Ty::Record(record.clone()).to_string().to_ascii_lowercase()
+                );
                 if !visited.insert(key.clone()) {
                     return TaskSafety::Safe;
                 }
@@ -97,18 +94,34 @@ impl Checker {
                 result
             }
             Ty::Enum(enumeration) => {
-                enumeration
-                    .variants
-                    .iter()
-                    .fold(TaskSafety::Safe, |safety, variant| {
-                        variant.fields.iter().fold(safety, |safety, (name, field)| {
-                            safety.combine(self.task_safety_inner(
-                                field,
-                                visited,
-                                &format!("{path}.{}.{name}", variant.name),
-                            ))
-                        })
-                    })
+                let resolved = self.resolve_visible_type(&Ty::Enum(enumeration.clone()));
+                let Ty::Enum(enumeration) = resolved else {
+                    return TaskSafety::Safe;
+                };
+                let key = format!(
+                    "enum:{}",
+                    Ty::Enum(enumeration.clone())
+                        .to_string()
+                        .to_ascii_lowercase()
+                );
+                if !visited.insert(key.clone()) {
+                    return TaskSafety::Safe;
+                }
+                let result =
+                    enumeration
+                        .variants
+                        .iter()
+                        .fold(TaskSafety::Safe, |safety, variant| {
+                            variant.fields.iter().fold(safety, |safety, (name, field)| {
+                                safety.combine(self.task_safety_inner(
+                                    field,
+                                    visited,
+                                    &format!("{path}.{}.{name}", variant.name),
+                                ))
+                            })
+                        });
+                visited.remove(&key);
+                result
             }
             Ty::Integer
             | Ty::Real

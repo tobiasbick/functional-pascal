@@ -4,7 +4,7 @@ use super::*;
 fn result_hint_names_case_try_and_safe_discard() {
     let error = unused(
         "program T;
-      function Value(): result of integer, string; begin return Error('failed'); end function;
+      function Value(): result of (integer, string); begin return Error('failed'); end function;
       begin Value(); end.",
     );
     let help = error.help.unwrap();
@@ -19,7 +19,7 @@ fn task_results_and_aggregates_never_suggest_discard_as_a_fix() {
         ("task of integer", "go Worker()"),
         ("Option of task of integer", "None"),
         ("array of task of integer", "[]"),
-        ("result of integer, task of integer", "Ok(1)"),
+        ("result of (integer, task of integer)", "Ok(1)"),
         ("channel of task of integer", "CreateChannel(1)"),
     ] {
         let error = unused(&format!(

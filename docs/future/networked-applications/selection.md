@@ -13,8 +13,8 @@ operation and its completion callback; constructing it does not send, receive, o
 
 | Operation | Constructor inputs | Completion callback |
 |-----------|-----------------------------|---------------------|
-| Channel receive | `ReceiveCase`: channel of T, callback | procedure accepting result of T, string |
-| Channel send | `SendCase`: channel of T, value of T, callback | procedure accepting result of boolean, string |
+| Channel receive | `ReceiveCase`: channel of T, callback | procedure accepting result of (T, string) |
+| Channel send | `SendCase`: channel of T, value of T, callback | procedure accepting result of (boolean, string) |
 | Task completion | `TaskCase`: retained task, callback | procedure with no arguments |
 | Relative timer | `TimerCase`: non-negative milliseconds, callback | procedure with no arguments |
 | Cancellation | `CancellationCase`: cancellation token, callback | procedure with no arguments |

@@ -39,7 +39,7 @@ This first slice does not satisfy the mixed-source acceptance requirement by its
 ## Second slice: deadlines and cancellation
 
 `WaitAnyWithTimeout(Tasks, TimeoutMillis)` and `WaitAnyWithCancellation(Tasks, Token)` are
-implemented with `Result of integer, string` outcomes. Task failure still retains its diagnostic.
+implemented with `Result of (integer, string)` outcomes. Task failure still retains its diagnostic.
 The current [Task reference](../../pascal/std/concurrency/task.md) owns their exact contract,
 including the cooperative scheduler-helping limitation.
 

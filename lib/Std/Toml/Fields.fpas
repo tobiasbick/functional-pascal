@@ -18,7 +18,7 @@ end function;
 //
 // Parameters:
 // - `Text`: TOML document text.
-public function ParseTable(Text: string): result of dict of string to TomlValue, string;
+public function ParseTable(Text: string): result of (dict of string to TomlValue, string);
 begin
   if try Std.Toml.Parse(Text) is TomlValue.Table(const Fields) then
     begin
@@ -36,7 +36,7 @@ end function;
 // Parameters:
 // - `Fields`: Table entries.
 // - `Name`: Required key name.
-public function Field(Fields: dict of string to TomlValue; Name: string): result of TomlValue, string;
+public function Field(Fields: dict of string to TomlValue; Name: string): result of (TomlValue, string);
 begin
   case Fields.Get(Name) of
     when Some(const Value):
@@ -55,7 +55,7 @@ end function;
 // Parameters:
 // - `Fields`: Table entries.
 // - `Name`: Required key name.
-public function StringField(Fields: dict of string to TomlValue; Name: string): result of string, string;
+public function StringField(Fields: dict of string to TomlValue; Name: string): result of (string, string);
 begin
   if try Field(Fields, Name) is TomlValue.String(const Value) then
     begin
@@ -73,7 +73,7 @@ end function;
 // Parameters:
 // - `Fields`: Table entries.
 // - `Name`: Required key name.
-public function IntegerField(Fields: dict of string to TomlValue; Name: string): result of integer, string;
+public function IntegerField(Fields: dict of string to TomlValue; Name: string): result of (integer, string);
 begin
   if try Field(Fields, Name) is TomlValue.Integer(const Value) then
     begin
@@ -91,7 +91,7 @@ end function;
 // Parameters:
 // - `Fields`: Table entries.
 // - `Name`: Required key name.
-public function FloatField(Fields: dict of string to TomlValue; Name: string): result of real, string;
+public function FloatField(Fields: dict of string to TomlValue; Name: string): result of (real, string);
 begin
   if try Field(Fields, Name) is TomlValue.Float(const Value) then
     begin
@@ -109,7 +109,7 @@ end function;
 // Parameters:
 // - `Fields`: Table entries.
 // - `Name`: Required key name.
-public function BooleanField(Fields: dict of string to TomlValue; Name: string): result of boolean, string;
+public function BooleanField(Fields: dict of string to TomlValue; Name: string): result of (boolean, string);
 begin
   if try Field(Fields, Name) is TomlValue.Boolean(const Value) then
     begin
@@ -127,7 +127,7 @@ end function;
 // Parameters:
 // - `Fields`: Table entries.
 // - `Name`: Required key name.
-public function TableField(Fields: dict of string to TomlValue; Name: string): result of dict of string to TomlValue, string;
+public function TableField(Fields: dict of string to TomlValue; Name: string): result of (dict of string to TomlValue, string);
 begin
   if try Field(Fields, Name) is TomlValue.Table(const Value) then
     begin
@@ -145,7 +145,7 @@ end function;
 // Parameters:
 // - `Fields`: Table entries.
 // - `Name`: Required key name.
-public function ArrayField(Fields: dict of string to TomlValue; Name: string): result of array of TomlValue, string;
+public function ArrayField(Fields: dict of string to TomlValue; Name: string): result of (array of TomlValue, string);
 begin
   if try Field(Fields, Name) is TomlValue.ArrayValue(const Items) then
     begin
@@ -163,7 +163,7 @@ end function;
 // Parameters:
 // - `Fields`: Table entries.
 // - `Name`: Required key name.
-public function StringArrayField(Fields: dict of string to TomlValue; Name: string): result of array of string, string;
+public function StringArrayField(Fields: dict of string to TomlValue; Name: string): result of (array of string, string);
 begin
   var Values: array of string := [];
   for Item: TomlValue in try ArrayField(Fields, Name) do
@@ -188,7 +188,7 @@ end function;
 // Parameters:
 // - `Fields`: Table entries.
 // - `Allowed`: Every permitted key name.
-public function RequireOnlyFields(Fields: dict of string to TomlValue; Allowed: array of string): result of boolean, string;
+public function RequireOnlyFields(Fields: dict of string to TomlValue; Allowed: array of string): result of (boolean, string);
 begin
   for Name: string in Fields.Keys() do
     begin

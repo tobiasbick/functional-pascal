@@ -8,7 +8,7 @@ the string bytes; decoding validates scalars and joins the resulting text once.
 | Kind | Name | Notes |
 |------|------|-------|
 | function | `Encode(Text: string): array of integer` | produces UTF-8 bytes in `0..255` |
-| function | `Decode(Bytes: array of integer): Result of string, string` | rejects malformed, overlong, surrogate, and out-of-range sequences |
+| function | `Decode(Bytes: array of integer): Result of (string, string)` | rejects malformed, overlong, surrogate, and out-of-range sequences |
 
 ## Implementation (contributors)
 

@@ -61,7 +61,7 @@ fn comma_and_grouped_parameters_have_one_actionable_diagnostic() {
 fn canonical_parameters_and_commas_inside_types_remain_valid() {
     for params in [
         "A: integer; B: integer",
-        "A: Result of integer, string; B: integer",
+        "A: Result of (integer, string); B: integer",
         "",
     ] {
         for source in routine_sources(params) {

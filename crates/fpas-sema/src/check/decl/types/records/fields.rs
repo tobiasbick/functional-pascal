@@ -53,6 +53,8 @@ impl Checker {
         };
         RecordTy {
             name: definition.name.clone(),
+            type_params: Self::resolve_type_params(&definition.type_params),
+            type_args: Vec::new(),
             owner_unit,
             private_members,
             fields,

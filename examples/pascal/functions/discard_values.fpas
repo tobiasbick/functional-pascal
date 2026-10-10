@@ -2,7 +2,7 @@ program DiscardValues;
 
 uses Std.Console;
 
-function Report(): result of integer, string;
+function Report(): result of (integer, string);
 begin
   WriteLn('Report was evaluated once.');
   return Error('deliberately ignored');

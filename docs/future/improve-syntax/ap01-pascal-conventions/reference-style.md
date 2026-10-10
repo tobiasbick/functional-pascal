@@ -289,7 +289,7 @@ end.
 It is not an angle-bracket type application. Built-in examples keep the same
 rules: `array of string`, `Option of string`, `Result of (integer, string)`,
 and `dict of string to integer`. Only the multi-argument `Result` spelling
-changes from today's `Result of integer, string` in AP24.1.
+changes from today's `Result of (integer, string)` in AP24.1.
 
 ## 9. Anonymous routine as an argument
 

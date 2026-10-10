@@ -24,7 +24,7 @@ function BlockingRead(ListenerValue: Listener; Token: CancellationToken): boolea
 begin
   const Client: Connection := Accept(ListenerValue).Unwrap();
   const Configured: boolean := SetTimeout(Client, 1500).Unwrap();
-  const Ignored: result of array of integer, string := ReceiveBytesWithCancellation(Client, 1, Token);
+  const Ignored: result of (array of integer, string) := ReceiveBytesWithCancellation(Client, 1, Token);
   const Closed: boolean := Close(Client).Unwrap();
   return true;
 end function;
@@ -39,12 +39,12 @@ begin
   const Second: task := go BlockingRead(SecondListener, Token);
   const Events: channel of integer := CreateChannel(1);
   var Started: integer := TimestampMillis();
-  const Outcome: result of integer, string := ReceiveWithTimeout(Events, 100);
+  const Outcome: result of (integer, string) := ReceiveWithTimeout(Events, 100);
   if TimestampMillis() - Started > 1000 then panic('timed receive ran a blocking task inline'); end if;
   if Outcome.IsOk() then panic('nothing was sent'); end if;
   Started := TimestampMillis();
   const Full: boolean := SendWithTimeout(Events, 1, 100).Unwrap();
-  const Blocked: result of boolean, string := SendWithTimeout(Events, 2, 100);
+  const Blocked: result of (boolean, string) := SendWithTimeout(Events, 2, 100);
   if TimestampMillis() - Started > 1000 then panic('timed send ran a blocking task inline'); end if;
   if Blocked.IsOk() then panic('the channel was full'); end if;
   if not Wait(First) then panic('first'); end if;
@@ -96,7 +96,7 @@ function Busy(ListenerValue: Listener; Token: CancellationToken): boolean;
 begin
   const Client: Connection := Accept(ListenerValue).Unwrap();
   const Configured: boolean := SetTimeout(Client, 1000).Unwrap();
-  const Ignored: result of array of integer, string := ReceiveBytesWithCancellation(Client, 1, Token);
+  const Ignored: result of (array of integer, string) := ReceiveBytesWithCancellation(Client, 1, Token);
   return true;
 end function;
 function Reader(ListenerValue: Listener; Token: CancellationToken): boolean;

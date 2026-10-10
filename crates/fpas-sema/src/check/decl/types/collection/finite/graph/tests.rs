@@ -7,6 +7,8 @@ use std::sync::Arc;
 
 fn record(name: &str, fields: Vec<(String, Ty)>) -> Ty {
     Ty::Record(Arc::new(RecordTy {
+        type_params: Vec::new(),
+        type_args: Vec::new(),
         name: name.into(),
         fields,
         owner_unit: None,
@@ -74,6 +76,8 @@ fn shared_recursive_alternatives_terminate_from_a_single_seed() {
         .map(|i| {
             Ty::Enum(Arc::new(EnumTy {
                 name: format!("E{i}"),
+                type_params: Vec::new(),
+                type_args: Vec::new(),
                 variants: vec![
                     EnumVariantTy {
                         name: "More".into(),
@@ -114,6 +118,8 @@ fn repeated_non_terminating_alternatives_do_not_expand_failure_paths() {
         .map(|i| {
             Ty::Enum(Arc::new(EnumTy {
                 name: format!("E{i}"),
+                type_params: Vec::new(),
+                type_args: Vec::new(),
                 variants: ["Left", "Right"]
                     .into_iter()
                     .map(|name| EnumVariantTy {

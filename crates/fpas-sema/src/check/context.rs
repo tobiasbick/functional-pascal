@@ -116,6 +116,12 @@ pub struct AnalysisMetadata {
     pub errors: Vec<SemaError>,
     /// Inferred expression types keyed by expression identity.
     pub expr_types: ExprTypeMap,
+    /// Concrete field and index result types, keyed by source id and suffix offset.
+    pub path_types: HashMap<(u32, usize), Ty>,
+    /// Concrete postfix call results, keyed by source id and suffix offset.
+    pub postfix_types: HashMap<(u32, usize), Ty>,
+    /// Instantiated pattern types keyed by source id and pattern offset.
+    pub pattern_types: HashMap<(u32, usize), Ty>,
     /// Designators resolved to enum members, keyed by full designator identity.
     /// **Documentation:** `docs/pascal/language/pattern-matching/syntax.md`
     pub enum_members: HashSet<usize>,
@@ -157,6 +163,11 @@ pub struct Checker {
     pub(crate) scopes: ScopeStack,
     pub(crate) errors: Vec<SemaError>,
     pub(crate) expr_types: ExprTypeMap,
+    pub(crate) path_types: HashMap<(u32, usize), Ty>,
+    pub(crate) postfix_types: HashMap<(u32, usize), Ty>,
+    pub(crate) pattern_types: HashMap<(u32, usize), Ty>,
+    /// Nested constructors may retain holes until all enclosing fields are checked.
+    pub(crate) deferred_constructor_inference: usize,
     /// Full designators whose resolved symbol is an enum member.
     pub(crate) enum_members: HashSet<usize>,
     /// Canonical standard-library calls keyed by expression or designator identity.
@@ -249,6 +260,10 @@ impl Checker {
             scopes: ScopeStack::new(),
             errors: Vec::new(),
             expr_types: ExprTypeMap::new(),
+            path_types: HashMap::new(),
+            postfix_types: HashMap::new(),
+            pattern_types: HashMap::new(),
+            deferred_constructor_inference: 0,
             enum_members: HashSet::new(),
             intrinsic_calls: IntrinsicCallMap::new(),
             named_argument_orders: NamedArgumentOrderMap::new(),
@@ -291,6 +306,9 @@ impl Checker {
             import_aliases: self.scopes.imports.aliases.clone(),
             errors: self.errors,
             expr_types: self.expr_types,
+            path_types: self.path_types,
+            postfix_types: self.postfix_types,
+            pattern_types: self.pattern_types,
             enum_members: self.enum_members,
             intrinsic_calls: self.intrinsic_calls,
             named_argument_orders: self.named_argument_orders,

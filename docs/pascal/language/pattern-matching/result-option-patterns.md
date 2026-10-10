@@ -1,6 +1,6 @@
 # Result and Option patterns
 
-Destructuring `case` arms for `Result of T, E` and `Option of T`:
+Destructuring `case` arms for `Result of (T, E)` and `Option of T`:
 
 ```pascal
 case Success of

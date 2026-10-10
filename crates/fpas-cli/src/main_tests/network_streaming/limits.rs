@@ -49,7 +49,7 @@ fn close_delimited_response_limit_includes_exact_boundary_and_empty_body() {
             r#"
 program HttpExactLimit;
 uses Std.Http, Std.Test;
-function Fetch(RequestValue: Request; Streaming: boolean): result of integer, string;
+function Fetch(RequestValue: Request; Streaming: boolean): result of (integer, string);
 begin
   if not Streaming then
   begin
@@ -77,7 +77,7 @@ begin
         var RequestValue: Request := Request.Get('http://127.0.0.1:{port}/');
         RequestValue.MaxResponseBytes := {head_len} + BodyIndex * 3 + Delta;
         RequestValue.TimeoutMillis := 1000;
-        const Received: result of integer, string := Fetch(RequestValue, Streaming);
+        const Received: result of (integer, string) := Fetch(RequestValue, Streaming);
         AssertEquals(Delta >= 0, Received.IsOk());
         if Delta >= 0 then AssertEquals(BodyIndex * 3, Received.Unwrap()); end if;
       end; end for;

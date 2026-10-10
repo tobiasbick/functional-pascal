@@ -5,7 +5,7 @@ use fpas_diagnostics::codes::{SEMA_DISCARD_REQUIRES_VALUE, SEMA_UNSAFE_DISCARD};
 fn discard_accepts_ordinary_values_and_explicitly_ignored_calls() {
     check_ok(
         "program T;
-      function Value(): result of integer, string; begin return Ok(1); end function;
+      function Value(): result of (integer, string); begin return Ok(1); end function;
       begin discard 42; discard 'hello'; discard Value(); discard Some(1);
       discard [1, 2]; discard ['key': 1]; discard Value(); end.",
     );
@@ -28,7 +28,7 @@ fn task_aggregate_types_are_checked_even_when_empty_or_inactive() {
     for (declarations, ty, initializer) in [
         ("", "array of task of integer", "[]"),
         ("", "Option of task of integer", "None"),
-        ("", "result of integer, task of integer", "Ok(1)"),
+        ("", "result of (integer, task of integer)", "Ok(1)"),
         ("", "dict of string to array of task of integer", "[:]"),
         (
             "type Box = record Job: Option of task of integer; end record;",

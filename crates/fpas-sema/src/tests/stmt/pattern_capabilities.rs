@@ -120,7 +120,7 @@ begin if Wrapped is Some(const F) then discard F; end if; end procedure; begin e
 #[test]
 fn scalar_pattern_bindings_keep_type_based_discard_proofs() {
     check_ok(&program(
-        "const Job: task := go Work(); const Wrapped: Result of integer, task of integer := Ok(7);",
+        "const Job: task := go Work(); const Wrapped: Result of (integer, task of integer) := Ok(7);",
         "if Wrapped is Ok(const N) then discard N; end if;
 while Wrapped is Ok(const N) do discard N; break; end while;
 case Wrapped of when Ok(const N): discard N; when Error(const Job): const N: integer := Wait(Job); end case;
@@ -137,7 +137,7 @@ fn scalar_bindings_do_not_inherit_another_payloads_task_bound_state() {
     ] {
         check_ok(&program(
             &format!(
-                "{MUTABLE_CAPTURE} const Mixed: Result of integer, procedure() := Error(Change);"
+                "{MUTABLE_CAPTURE} const Mixed: Result of (integer, procedure()) := Error(Change);"
             ),
             body,
         ));
@@ -153,7 +153,7 @@ procedure Main<T: {constraint}>(Value: T);
 begin
 var Count: integer := 0;
 const Change: procedure() := procedure() begin Count := Count + 1; end procedure;
-const Mixed: Result of T, procedure() := Error(Change);
+const Mixed: Result of (T, procedure()) := Error(Change);
 if Mixed is Ok(const N) then
   const Get: function(): T := function(): T begin return N; end function;
   const Job: task := go Get();

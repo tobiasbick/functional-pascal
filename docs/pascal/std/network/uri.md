@@ -7,7 +7,7 @@ Pure FPAS parsing of absolute HTTP and HTTPS URIs.
 | Kind | Name | Notes |
 |------|------|-------|
 | type | `Uri` | `Scheme`, `Host`, `Port`, and request `Path` |
-| function | `Parse(Text: string): Result of Uri, string` | parses an absolute URI |
+| function | `Parse(Text: string): Result of (Uri, string)` | parses an absolute URI |
 
 `Parse` recognizes `http` and `https`, applies default ports 80 and 443, accepts bracketed IPv6
 hosts, retains query text in `Path`, discards URI fragments before producing an HTTP request

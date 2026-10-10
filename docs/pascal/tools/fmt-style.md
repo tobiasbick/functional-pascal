@@ -493,8 +493,10 @@ type IntOption = option of integer;
 
 ## Types (summary)
 
-- Built-in generic types: `array of T`, `channel of T`, `task of T`, `dict of K to V`, `result of T, E`, `option of T`.
+- Built-in generic types: `array of T`, `channel of T`, `task of T`, `dict of K to V`, `result of (T, E)`, `option of T`.
 - Generic routines: `function Identity<T>(Value: T): T;` declares a type parameter; calls such as `Identity(42)` infer its type from the arguments. See [Generics](../language/types/generics.md).
+- Generic records: `type Box of T = record ... end record;` uses no argument parentheses for one parameter; `type Pair of (K, V) = record ... end record;` uses parentheses for multiple parameters. Type annotations use `Box of integer` and `Pair of (integer, string)`.
+- Generic enums follow the same form: `type Lookup of T = enum ... end enum;` and `type Choice of (L, R) = enum ... end enum;`. Constructors and patterns use ordinary variant names, such as `Lookup.Found(...)`.
 - Enum variants with data: `Circle(Radius: real);`
 
 ## Expressions (summary)

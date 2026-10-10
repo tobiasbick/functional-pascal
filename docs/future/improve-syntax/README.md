@@ -45,7 +45,7 @@ an open work package.
 ## Package status
 
 AP01, AP02, AP03, AP04, AP05, AP06, AP07, AP09, AP10, AP11, AP13, AP14, AP15, AP16,
-AP17, AP19, AP20, and AP21 are complete, including all their work packages. Their READMEs
+AP17, AP19, AP20, AP21, and AP24 are complete, including all their work packages. Their READMEs
 and work-package files record implemented behavior, implementation owners, regression coverage,
 and any independent follow-ups. Checkboxes use the
 [status-tracking rule](development-process.md#status-tracking).
@@ -79,11 +79,11 @@ package are listed in each work package file.
 | [x] | [AP21: Decision expressions](ap21-decision-expressions/README.md) | Large | AP03, AP07, AP13 | Complete (AP21.1, AP21.2) |
 | [ ] | [AP22: Limited local inference](ap22-limited-local-inference/README.md) | Large | AP02, AP10, AP16 | Agreed direction (Q14) |
 | [ ] | [AP23: Preconditions and postconditions](ap23-preconditions-and-postconditions/README.md) | Large | AP07, AP13, AP16 | Agreed direction (Q15–Q17) |
-| [ ] | [AP24: Generic data structures](ap24-generic-data-structures/README.md) | Very large | AP03, AP10, AP11, AP20 | Agreed direction |
+| [x] | [AP24: Generic data structures](ap24-generic-data-structures/README.md) | Very large | AP03, AP10, AP11, AP20 | Complete (AP24.1, AP24.2, AP24.3) |
 | [ ] | [AP25: Conservative purity](ap25-conservative-purity/README.md) | Very large | AP14, AP16, AP17; AP23 reassessment | Retained; low priority; reassess after AP23 (Q18) |
 | [ ] | [AP26: Structured task scopes](ap26-structured-task-scopes/README.md) | Large | AP13, AP17 | Agreed direction (Q19, Q20) |
 | [ ] | [AP27: Typed placeholders](ap27-typed-placeholders/README.md) | Very large | AP02, AP22 | Retained as optional (Q21); AP22 implementation required |
-| — | [AP28: Structured editing](ap28-structured-editing/README.md) | — | AP13, AP24 | Outside language plan; transfer to editor/LSP planning afterward (Q23) |
+| — | [AP28: Structured editing](ap28-structured-editing/README.md) | — | AP13, AP24 | Transferred to [editor/LSP planning](../editor-structured-editing.md) (Q23) |
 | — | [AP29: Bounded derivation](ap29-bounded-derivation/README.md) | — | — | Rejected; closed (Q22) |
 
 A package's Done cell becomes `[x]` only when every work package in its own
@@ -118,7 +118,7 @@ and transfer conditions are recorded in the owning package README.
 | AP21 | Complete: AP21.1 `if` expressions; AP21.2 `case` expressions |
 | AP22 | AP22.1 literals and conversions; AP22.2 typed construction |
 | AP23 | AP23.1 preconditions; AP23.2 postconditions |
-| AP24 | AP24.1 parenthesized type arguments; AP24.2 generic records; AP24.3 generic enums |
+| AP24 | Complete: AP24.1 parenthesized type arguments; AP24.2 generic records; AP24.3 generic enums |
 | AP25 | AP25.1 priority reassessment; AP25.2 pure function checker; AP25.3 std purity metadata |
 | AP26 | AP26.1 scope blocks; AP26.2 failure propagation; AP26.3 handle escape restrictions |
 | AP27 | AP27.1 spelling decision; AP27.2 placeholder analysis |
@@ -137,10 +137,8 @@ completed foundation is listed above. For the remaining work, keep the
 following dependency order; the exact prerequisites and unresolved decisions
 are recorded in each work-package file.
 
-1. AP24 uses the completed explicit enum cases (AP03), patterns, and typed
-   record construction (AP10).
-2. AP18 and AP23 use the completed Boolean and binding rules.
-3. AP26 uses the completed block and caller-mutation rules. Reassess AP25
+1. AP18 and AP23 use the completed Boolean and binding rules.
+2. AP26 uses the completed block and caller-mutation rules. Reassess AP25
    after AP23 and practical use of its contracts; its AP14 prerequisite is
    complete.
 
@@ -149,8 +147,9 @@ accept/reject decision now that AP06 is complete; its implementation still
 requires that decision. AP22 uses the completed diagnostic, binding, and typed
 record construction rules.
 
-AP27 is optional and follows AP22. AP28 is editor/LSP work outside this
-language plan; AP24 remains its transfer prerequisite. AP08 and AP29 are
+AP27 is optional and follows AP22. AP28 is transferred to the
+[editor/LSP plan](../editor-structured-editing.md) after completion of AP13
+and AP24. AP08 and AP29 are
 rejected and closed.
 
 ## Decision gates

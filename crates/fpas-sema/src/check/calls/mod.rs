@@ -2,6 +2,7 @@
 //!
 //! **Documentation:** `docs/pascal/language/functions/parameters.md`
 
+mod contextual;
 mod inference;
 mod named;
 
@@ -215,9 +216,13 @@ impl Checker {
         }
         let mut arg_types = vec![Ty::Error; args.len()];
         let mut var_roots = Vec::new();
+        let contextual = contextual::contextual_parameters(type_params, params, &HashMap::new());
+        if !type_params.is_empty() {
+            self.deferred_constructor_inference += 1;
+        }
         for index in argument_indices {
             let arg = args[index];
-            let arg_ty = if let Some(param) = params.get(index) {
+            let arg_ty = if let Some(param) = contextual.get(index) {
                 let (ty, root) = self.check_argument_for_param(name, param, arg, named);
                 var_roots.extend(root);
                 ty
@@ -228,9 +233,16 @@ impl Checker {
             };
             arg_types[index] = arg_ty;
         }
+        if !type_params.is_empty() {
+            self.deferred_constructor_inference -= 1;
+        }
         self.reject_var_argument_aliases(&var_roots, span);
 
         let inferred = self.validate_routine_constraints(type_params, params, &arg_types, span);
+        if !type_params.is_empty() {
+            let contextual = contextual::contextual_parameters(type_params, params, &inferred);
+            self.complete_constructor_arguments(&contextual, &args, &mut arg_types);
+        }
         for (index, (param, actual)) in params.iter().zip(&arg_types).enumerate() {
             let expected = Self::substitute_type_params(&param.ty, &inferred);
             let role = if named {

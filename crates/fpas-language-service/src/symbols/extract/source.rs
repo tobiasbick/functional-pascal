@@ -115,7 +115,7 @@ pub(crate) fn type_callable_signature(
 
 pub(crate) fn named_type(value: &TypeExpr) -> Option<String> {
     match value {
-        TypeExpr::Named { id, .. } => Some(id.parts.join(".")),
+        TypeExpr::Named { id, .. } | TypeExpr::Application { id, .. } => Some(id.parts.join(".")),
         _ => None,
     }
 }
@@ -182,6 +182,7 @@ fn empty_span(full_span: SourceSpan) -> SourceSpan {
 fn type_span(value: &TypeExpr) -> Span {
     match value {
         TypeExpr::Named { span, .. }
+        | TypeExpr::Application { span, .. }
         | TypeExpr::Array(_, span)
         | TypeExpr::Channel(_, span)
         | TypeExpr::Task(_, span)

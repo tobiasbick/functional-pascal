@@ -209,7 +209,7 @@ begin
   discard TuiAppRequireOpen(ApplicationId);
   const ConsoleInputs: channel of TuiHostInput := CreateChannel(32);
   const InputGroup: TaskGroup := CreateTaskGroup();
-  const InputTask: task := StartTaskInGroup(InputGroup, function(Token: CancellationToken): result of boolean, string begin
+  const InputTask: task := StartTaskInGroup(InputGroup, function(Token: CancellationToken): result of (boolean, string) begin
     return TuiConsoleInputPump(Token, ConsoleInputs);
   end function);
   var Model: TModel := InitialModel;
@@ -265,7 +265,7 @@ begin
       var ConsoleInput: option of TuiHostInput := None;
       var ApplicationInput: option of TMessage := None;
       var Cases: array of WaitCase := [];
-      const ConsoleCase: WaitCase := ReceiveCase(ConsoleInputs, procedure(Outcome: result of TuiHostInput, string) begin
+      const ConsoleCase: WaitCase := ReceiveCase(ConsoleInputs, procedure(Outcome: result of (TuiHostInput, string)) begin
         case Outcome of
           when Ok(const Input):
             begin
@@ -278,7 +278,7 @@ begin
       end procedure);
       if BackgroundEnabled then
         begin
-          const ApplicationCase: WaitCase := ReceiveCase(Inbox, procedure(Outcome: result of TMessage, string) begin
+          const ApplicationCase: WaitCase := ReceiveCase(Inbox, procedure(Outcome: result of (TMessage, string)) begin
             case Outcome of
               when Ok(const Message):
                 begin

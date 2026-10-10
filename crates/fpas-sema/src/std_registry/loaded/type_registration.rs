@@ -24,6 +24,8 @@ pub(super) fn register_enum_type(
         .collect();
     let enum_ty = Ty::Enum(Arc::new(EnumTy {
         name: qualified_name.into(),
+        type_params: Vec::new(),
+        type_args: Vec::new(),
         variants: variants.clone(),
     }));
     checker.scopes.define(
@@ -61,6 +63,8 @@ pub(super) fn register_record_type(
     fields: Vec<(String, Ty)>,
 ) -> Ty {
     let record_ty = Ty::Record(Arc::new(RecordTy {
+        type_params: Vec::new(),
+        type_args: Vec::new(),
         name: qualified_name.into(),
         owner_unit: None,
         private_members: Vec::new(),

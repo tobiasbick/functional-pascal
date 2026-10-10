@@ -9,7 +9,7 @@ use std::collections::BTreeSet;
 fn nested_result_success_chain_completes_every_string_operation() {
     assert_string_chain(
         "",
-        "Result of Result of string, integer, boolean",
+        "Result of (Result of (string, integer), boolean)",
         "Ok(Ok('x'))",
         "Value.Unwrap().Unwrap()",
     );
@@ -19,7 +19,7 @@ fn nested_result_success_chain_completes_every_string_operation() {
 fn nested_result_error_type_preserves_success_completion() {
     assert_string_chain(
         "",
-        "Result of string, Result of integer, boolean",
+        "Result of (string, Result of (integer, boolean))",
         "Ok('x')",
         "Value.Unwrap()",
     );
@@ -29,22 +29,22 @@ fn nested_result_error_type_preserves_success_completion() {
 fn multiple_result_levels_and_mixed_containers_preserve_completion() {
     for (ty, value, receiver) in [
         (
-            "Result of Result of Result of string, integer, boolean, real",
+            "Result of (Result of (Result of (string, integer), boolean), real)",
             "Ok(Ok(Ok('x')))",
             "Value.Unwrap().Unwrap().Unwrap()",
         ),
         (
-            "Result of Option of string, integer",
+            "Result of (Option of string, integer)",
             "Ok(Some('x'))",
             "Value.Unwrap().Unwrap()",
         ),
         (
-            "array of Result of Result of string, integer, boolean",
+            "array of Result of (Result of (string, integer), boolean)",
             "[Ok(Ok('x'))]",
             "Value[0].Unwrap().Unwrap()",
         ),
         (
-            "dict of string to Result of Result of string, integer, boolean",
+            "dict of string to Result of (Result of (string, integer), boolean)",
             "['key': Ok(Ok('x'))]",
             "Value['key'].Unwrap().Unwrap()",
         ),
@@ -56,7 +56,7 @@ fn multiple_result_levels_and_mixed_containers_preserve_completion() {
 #[test]
 fn aliases_resolve_at_each_container_level() {
     assert_string_chain(
-        "type Text = string; type Inner = Result of Text, integer; type Outer = Result of Inner, boolean; type Alias = Outer;",
+        "type Text = string; type Inner = Result of (Text, integer); type Outer = Result of (Inner, boolean); type Alias = Outer;",
         "Alias",
         "Ok(Ok('x'))",
         "Value.Unwrap().Unwrap()",
@@ -65,11 +65,11 @@ fn aliases_resolve_at_each_container_level() {
 
 #[test]
 fn named_and_anonymous_callbacks_keep_nested_result_outputs() {
-    let declarations = "function Wrap(X: integer): Result of Result of string, integer, boolean; begin return Ok(Ok('x')); end function;";
+    let declarations = "function Wrap(X: integer): Result of (Result of (string, integer), boolean); begin return Ok(Ok('x')); end function;";
     for callback in [
         "Wrap",
         "F := Wrap",
-        "function(X: integer): Result of Result of string, integer, boolean begin return Ok(Ok('x')); end function",
+        "function(X: integer): Result of (Result of (string, integer), boolean) begin return Ok(Ok('x')); end function",
     ] {
         let receiver = format!("Value.Map({callback})[0].Unwrap().Unwrap()");
         assert_string_chain(declarations, "array of integer", "[1]", &receiver);
@@ -79,7 +79,7 @@ fn named_and_anonymous_callbacks_keep_nested_result_outputs() {
 #[test]
 fn callback_type_aliases_keep_nested_result_outputs() {
     assert_string_chain(
-        "type Callback = function(X: integer): Result of Result of string, integer, boolean; function Wrap(X: integer): Result of Result of string, integer, boolean; begin return Ok(Ok('x')); end function; const Transform: Callback := Wrap;",
+        "type Callback = function(X: integer): Result of (Result of (string, integer), boolean); function Wrap(X: integer): Result of (Result of (string, integer), boolean); begin return Ok(Ok('x')); end function; const Transform: Callback := Wrap;",
         "array of integer",
         "[1]",
         "Value.Map(Transform)[0].Unwrap().Unwrap()",
@@ -88,7 +88,7 @@ fn callback_type_aliases_keep_nested_result_outputs() {
 
 #[test]
 fn callable_receivers_distinguish_function_values_from_call_results() {
-    let declarations = "type Nested = Result of Result of string, integer, boolean; type Reader = function(): Nested; function Fetch(): Nested; begin return Ok(Ok('x')); end function; function Build(X: integer): Reader; begin return Fetch; end function;";
+    let declarations = "type Nested = Result of (Result of (string, integer), boolean); type Reader = function(): Nested; function Fetch(): Nested; begin return Ok(Ok('x')); end function; function Build(X: integer): Reader; begin return Fetch; end function;";
     for (receiver, string_result) in [
         ("Fetch().Unwrap().Unwrap()", true),
         ("Alias().Unwrap().Unwrap()", true),
@@ -137,7 +137,7 @@ fn imported_aliases_resolve_in_their_own_unit_with_private_and_imported_types() 
         "types.fpas",
         "unit Demo.Types; public type Text = string; end unit;",
     );
-    temp.write("facade.fpas", "unit Demo.Facade; uses Demo.Types as T; type Inner = Result of T.Text, integer; public type Outer = Result of Inner, boolean; public function Make(): Outer; begin return Ok(Ok('x')); end function; end unit;");
+    temp.write("facade.fpas", "unit Demo.Facade; uses Demo.Types as T; type Inner = Result of (T.Text, integer); public type Outer = Result of (Inner, boolean); public function Make(): Outer; begin return Ok(Ok('x')); end function; end unit;");
     let source = "program Demo; uses Demo.Facade as F; type Inner = integer; begin const Value: F.Outer := F.Make(); discard Value.Unwrap().Unwrap().\nend.";
     let path = temp.write(
         "main.fpas",
@@ -155,7 +155,7 @@ fn imported_aliases_resolve_in_their_own_unit_with_private_and_imported_types() 
 #[test]
 fn nested_error_types_are_retained_in_signature_help() {
     let temp = TempDirectory::new("native-result-error-signature");
-    let source = "program Demo; begin const Value: Result of string, Result of string, integer := Ok('x'); discard Value.OrElse(\nend.";
+    let source = "program Demo; begin const Value: Result of (string, Result of (string, integer)) := Ok('x'); discard Value.OrElse(\nend.";
     let path = temp.write("main.fpas", source);
     let mut service = LanguageService::new(WorkspaceContext::loose(temp.path()));
     let cursor = source.find("OrElse(").expect("call") + "OrElse(".len();
@@ -165,7 +165,7 @@ fn nested_error_types_are_retained_in_signature_help() {
         .value
         .expect("signature");
     assert!(
-        help.signature.parameters[0].contains("Err: Result of string, integer"),
+        help.signature.parameters[0].contains("Err: Result of (string, integer)"),
         "{help:#?}"
     );
 }
@@ -174,7 +174,7 @@ fn nested_error_types_are_retained_in_signature_help() {
 fn cyclic_aliases_and_malformed_type_fragments_return_no_native_candidates() {
     for declarations in [
         "type A = B; type B = A; const Value: A := 1;",
-        "const Value: Result of string, := Ok('x');",
+        "const Value: Result of (string,) := Ok('x');",
     ] {
         let temp = TempDirectory::new("native-invalid-receiver");
         let source = format!("program Demo; {declarations} begin discard Value.\nend.");

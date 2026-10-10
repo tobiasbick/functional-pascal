@@ -2,7 +2,7 @@ program ResultExample;
 
 uses Std.Console, Std.Conv;
 
-function Divide(A: integer; B: integer): result of integer, string;
+function Divide(A: integer; B: integer): result of (integer, string);
 begin
   if B = 0 then
     begin
@@ -15,17 +15,17 @@ begin
   end if;
 end function;
 
-function Stringify(A: integer; B: integer): result of string, string;
+function Stringify(A: integer; B: integer): result of (string, string);
 begin
   const Quotient: integer := try Divide(A, B);
   return Ok(IntToStr(A) + ' / ' + IntToStr(B) + ' = ' + IntToStr(Quotient));
 end function;
 
 begin
-  const R1: result of integer, string := Divide(10, 3);
+  const R1: result of (integer, string) := Divide(10, 3);
   WriteLn('IsOk: ', R1.IsOk());
   WriteLn('Value: ', R1.Unwrap());
-  const R2: result of integer, string := Divide(5, 0);
+  const R2: result of (integer, string) := Divide(5, 0);
   WriteLn('IsError: ', R2.IsError());
   WriteLn('UnwrapOr: ', R2.UnwrapOr(-1));
   case Divide(42, 6) of

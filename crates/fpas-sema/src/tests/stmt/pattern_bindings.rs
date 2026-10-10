@@ -30,7 +30,7 @@ fn const_bindings_and_wildcards_are_valid_in_every_pattern_kind() {
             when Shape.Point: return 0.0;
           end case;
         end function;
-        function Describe(R: result of integer, string; O: option of integer): integer;
+        function Describe(R: result of (integer, string); O: option of integer): integer;
         begin
           case R of
             when Ok(const Value): return Value;

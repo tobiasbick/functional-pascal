@@ -3,6 +3,6 @@ program T;
 uses Std.Console;
 
 begin
-  const R: result of integer, string := Ok(99);
+  const R: result of (integer, string) := Ok(99);
   WriteLn(R.Unwrap());
 end.

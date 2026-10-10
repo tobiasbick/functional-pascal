@@ -8,6 +8,7 @@ mod declaration_closers;
 mod expression_closers;
 mod handbook_imports;
 mod terminators;
+mod type_arguments;
 #[cfg(unix)]
 use std::os::unix::ffi::OsStringExt;
 

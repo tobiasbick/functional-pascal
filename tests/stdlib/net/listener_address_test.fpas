@@ -2,7 +2,7 @@ program ListenerAddressTest;
 
 uses Std.Net, Std.Test;
 
-function ExerciseListener(): result of boolean, string;
+function ExerciseListener(): result of (boolean, string);
 begin
   const First: Listener := try Listen('127.0.0.1', 0);
   const Second: Listener := try Listen('127.0.0.1', 0);

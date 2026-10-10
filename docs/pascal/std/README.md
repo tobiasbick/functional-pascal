@@ -82,7 +82,7 @@ Fullscreen code can batch explicit cells with `BeginFrame`, `WriteCells`, and `P
 ```pascal
 
 
-const R: Result of integer, string := Ok(42);
+const R: Result of (integer, string) := Ok(42);
 WriteLn(R.Unwrap());
 ```
 

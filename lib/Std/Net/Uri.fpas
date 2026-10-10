@@ -19,7 +19,7 @@ end record;
 //
 // Parameters:
 // - `Scheme`: Lowercase URI scheme.
-function DefaultPort(Scheme: string): result of integer, string;
+function DefaultPort(Scheme: string): result of (integer, string);
 begin
   if Scheme = 'http' then
     begin
@@ -40,7 +40,7 @@ end function;
 //
 // Parameters:
 // - `Text`: Decimal port text.
-function ParsePort(Text: string): result of integer, string;
+function ParsePort(Text: string): result of (integer, string);
 begin
   case Std.Net.Decimal.Parse(Text, 65535) of
     when Ok(const Port):
@@ -66,7 +66,7 @@ end function;
 // - `Scheme`: Lowercase supported URI scheme.
 // - `Authority`: Host and optional port text.
 // - `Path`: Origin-form path including an optional query.
-function BuildUri(Scheme: string; Authority: string; Path: string): result of Uri, string;
+function BuildUri(Scheme: string; Authority: string; Path: string): result of (Uri, string);
 begin
   if Authority = '' then
     begin
@@ -139,7 +139,7 @@ end function;
 //
 // Parameters:
 // - `Text`: Absolute URI text to parse.
-public function Parse(Text: string): result of Uri, string;
+public function Parse(Text: string): result of (Uri, string);
 begin
   const SchemeEnd: integer := Text.IndexOf('://');
   if SchemeEnd <= 0 then

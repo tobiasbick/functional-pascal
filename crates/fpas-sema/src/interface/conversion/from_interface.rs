@@ -86,6 +86,26 @@ pub fn interface_type_to_ty(ty: &artifact::InterfaceType) -> Result<Ty, Interfac
             underlying: interface_type_to_ty(&distinct.underlying)?,
         })),
         Input::Named(name) => Ty::Named(name.clone()),
+        Input::EnumApplication { name, arguments } => {
+            let mut enumeration = EnumTy::header(name.clone(), Vec::new());
+            enumeration.type_args = arguments
+                .iter()
+                .map(interface_type_to_ty)
+                .collect::<Result<_, _>>()?;
+            Ty::Enum(Arc::new(enumeration))
+        }
+        Input::Application {
+            name,
+            owner_unit,
+            arguments,
+        } => {
+            let mut record = RecordTy::header(name.clone(), owner_unit.clone(), Vec::new());
+            record.type_args = arguments
+                .iter()
+                .map(interface_type_to_ty)
+                .collect::<Result<_, _>>()?;
+            Ty::Record(Arc::new(record))
+        }
         Input::GenericParameter(name, constraint) => {
             Ty::GenericParam(name.clone(), constraint.map(constraint_from_interface))
         }
@@ -179,6 +199,12 @@ fn interface_to_record(
         }
     }
     Ok(RecordTy {
+        type_params: generic_parameters_from_interface(&record.type_parameters),
+        type_args: record
+            .type_arguments
+            .iter()
+            .map(interface_type_to_ty)
+            .collect::<Result<_, _>>()?,
         name: record.name.clone(),
         owner_unit: record.owner_unit.clone(),
         private_members: record.private_members.clone(),
@@ -206,6 +232,12 @@ fn callable_to_method_kind(
 fn interface_to_enum(enum_ty: &artifact::EnumType) -> Result<EnumTy, InterfaceConversionError> {
     Ok(EnumTy {
         name: enum_ty.name.clone(),
+        type_params: generic_parameters_from_interface(&enum_ty.type_parameters),
+        type_args: enum_ty
+            .type_arguments
+            .iter()
+            .map(interface_type_to_ty)
+            .collect::<Result<_, _>>()?,
         variants: enum_ty
             .variants
             .iter()

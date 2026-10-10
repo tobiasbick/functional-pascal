@@ -96,7 +96,7 @@ impl Checker {
     fn type_can_contain_callable_inner(
         &self,
         ty: &Ty,
-        visited_types: &mut std::collections::HashSet<usize>,
+        visited_types: &mut std::collections::HashSet<String>,
     ) -> bool {
         match self.resolve_visible_type(ty) {
             Ty::GenericParam(_, Some(TypeConstraint::Numeric | TypeConstraint::Comparable)) => {
@@ -111,8 +111,11 @@ impl Checker {
                     || self.type_can_contain_callable_inner(&error, visited_types)
             }
             Ty::Record(record) => {
-                let identity = std::sync::Arc::as_ptr(&record) as usize;
-                if !visited_types.insert(identity) {
+                let identity = format!(
+                    "record:{}",
+                    Ty::Record(record.clone()).to_string().to_ascii_lowercase()
+                );
+                if !visited_types.insert(identity.clone()) {
                     return false;
                 }
                 let contains_callable = record
@@ -123,8 +126,17 @@ impl Checker {
                 contains_callable
             }
             Ty::Enum(enumeration) => {
-                let identity = std::sync::Arc::as_ptr(&enumeration) as usize;
-                if !visited_types.insert(identity) {
+                let resolved = self.resolve_visible_type(&Ty::Enum(enumeration.clone()));
+                let Ty::Enum(enumeration) = resolved else {
+                    return false;
+                };
+                let identity = format!(
+                    "enum:{}",
+                    Ty::Enum(enumeration.clone())
+                        .to_string()
+                        .to_ascii_lowercase()
+                );
+                if !visited_types.insert(identity.clone()) {
                     return false;
                 }
                 let contains_callable = enumeration.variants.iter().any(|variant| {

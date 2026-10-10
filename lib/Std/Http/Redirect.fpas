@@ -118,7 +118,7 @@ end function;
 // Parameters:
 // - `Base`: Parsed URI of the current request.
 // - `Location`: Location field value from the redirect response.
-function Resolve(Base: Uri; Location: string): result of string, string;
+function Resolve(Base: Uri; Location: string): result of (string, string);
 begin
   if Std.Http.Headers.ContainsUnsafeText(Location) then
     begin
@@ -240,7 +240,7 @@ end function;
 // - `Current`: Request that received the redirect response.
 // - `StatusCode`: Redirect response status code.
 // - `Location`: Location field value from the redirect response.
-public function NextRequest(Current: Request; StatusCode: integer; Location: string): result of Request, string;
+public function NextRequest(Current: Request; StatusCode: integer; Location: string): result of (Request, string);
 begin
   var Base: Uri := std.net.uri.uri(Scheme := '', Host := '', Port := 0, Path := '');
   case Std.Net.Uri.Parse(Current.Url) of

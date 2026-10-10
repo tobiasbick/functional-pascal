@@ -137,6 +137,11 @@ impl Checker {
                             self.check_index_access(&ty, index_expr, *span)
                         }
                     };
+                    let span = match part {
+                        DesignatorPart::Ident(_, span) | DesignatorPart::Index(_, span) => span,
+                    };
+                    self.path_types
+                        .insert((span.source_id, span.offset), ty.clone());
                 }
                 ty
             }

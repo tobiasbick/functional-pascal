@@ -17,7 +17,9 @@ use std::sync::Arc;
 impl Checker {
     /// Collect record fields and defaults without checking executable expressions.
     pub(super) fn check_record_type_def(&mut self, definition: &TypeDef, record: &RecordType) {
-        let fields = self.collect_record_fields(definition, record);
+        let fields = self.with_type_params(&definition.type_params, definition.span, |checker| {
+            checker.collect_record_fields(definition, record)
+        });
         self.register_record_defaults(definition, record);
         self.define_type_symbol(definition, Ty::Record(Arc::new(fields)));
     }
@@ -34,8 +36,9 @@ impl Checker {
             .iter()
             .map(|(name, _)| name.to_ascii_lowercase())
             .collect();
-        let members =
-            self.check_record_methods(&definition.name, &ty, &record.methods, &mut seen_members);
+        let members = self.with_type_params(&definition.type_params, definition.span, |checker| {
+            checker.check_record_methods(&definition.name, &ty, &record.methods, &mut seen_members)
+        });
         if let Ty::Record(shape) = &mut ty {
             let shape = Arc::make_mut(shape);
             shape.methods = members.instance_methods;

@@ -24,6 +24,11 @@ type Point = record
 end record;
 ```
 
+Records may declare parameters with `of`, such as `type Box of T = record ...`
+or `type Pair of (K: Comparable, V) = record ...`. Use `Box of integer` and
+`Pair of (integer, string)` in annotations. See [Generics](generics.md#generic-records)
+for constraints, substitution, inference, defaults, and recursive records.
+
 ## Creating a record
 
 Call the record type with named fields:
@@ -61,11 +66,18 @@ its meaning; an invalid call does not fall back to an outer record type.
 Types and routines cannot share a case-insensitive name in the same scope.
 Concrete record construction also works inside generic routines.
 
+Generic records use the same calls. Type arguments are inferred jointly from
+supplied fields, with an expected type completing missing arguments. Defaults
+do not determine arguments. Explicit constructor applications are rejected;
+write `const B: Box of integer := Box(Value := 1);`.
+
 ## Type identity and compatibility
 
 Each named record declaration defines a distinct type. Two records are not compatible merely
 because they contain fields with the same names and types. Assignments, arguments, and return
 values must use the same record declaration or an alias of that declaration.
+Generic records must also have compatible arguments: `Box of integer` cannot
+be assigned to `Box of string`.
 
 ```pascal
 type Point = record

@@ -18,7 +18,7 @@ begin
         const Gate: channel of boolean := State.Gate;
         const Ready: channel of boolean := State.Ready;
         const FailOld: boolean := State.FailOld;
-        Cmd.ReplaceSubscription(1, function(Token: CancellationToken): result of boolean, string begin
+        Cmd.ReplaceSubscription(1, function(Token: CancellationToken): result of (boolean, string) begin
           discard Send(Ready, true);
           if FailOld then
             begin
@@ -36,7 +36,7 @@ begin
         if Delta = 1 then
           begin
             const Started: channel of boolean := State.Started;
-            Cmd.ReplaceSubscription(1, function(Token: CancellationToken): result of boolean, string begin
+            Cmd.ReplaceSubscription(1, function(Token: CancellationToken): result of (boolean, string) begin
               discard Send(Started, true);
               return Ok(true);
             end function);

@@ -3,6 +3,7 @@
 //! **Documentation:** `docs/pascal/language/types/records.md`
 
 mod fields;
+mod inference;
 
 use super::Checker;
 use crate::types::{RecordTy, Ty};
@@ -19,6 +20,7 @@ impl Checker {
         record: &Arc<RecordTy>,
         args: &[Expr],
         span: Span,
+        expected: Option<&Ty>,
     ) -> Ty {
         self.record_constructions.insert(key);
         let fields: Vec<_> = args.iter().filter_map(|argument| {
@@ -38,8 +40,13 @@ impl Checker {
             fields.iter().map(|&(name, _, span)| (name, span)),
             "record construction",
         );
-        self.validate_typed_record_fields(&fields, record, span);
-        let ty = Ty::Record(record.clone());
+        let record = self.infer_record_construction(record, &fields, expected, span);
+        self.validate_typed_record_fields(&fields, &record, span);
+        for (_, value, _) in &fields {
+            self.prechecked_receivers
+                .remove(&Self::expr_lookup_key(value));
+        }
+        let ty = Ty::Record(record);
         let task_free = self.record_fields_are_task_free(
             fields
                 .iter()

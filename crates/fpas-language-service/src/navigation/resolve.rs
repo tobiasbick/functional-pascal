@@ -57,8 +57,19 @@ pub(crate) fn resolve(
             .map(|(index, symbol)| (index, symbol, range));
     }
 
-    resolve_qualified(documents, target_index, &parts[..=selected_part], offset)
-        .map(|(index, symbol)| (index, symbol, range))
+    resolve_qualified(documents, target_index, &parts[..=selected_part], offset).map(
+        |(index, mut symbol)| {
+            let receiver = parts[..selected_part].join(".");
+            crate::intellisense::record_members::instantiate_member(
+                documents,
+                target_index,
+                &receiver,
+                offset,
+                &mut symbol,
+            );
+            (index, symbol, range)
+        },
+    )
 }
 
 fn identifier_at(
@@ -194,6 +205,8 @@ pub(crate) fn resolve_qualified(
                     index,
                     symbol.clone(),
                     &parts[owner_parts + 1..],
+                    parts[..owner_parts + 1].join("."),
+                    offset,
                 )
             })
             .collect::<Vec<_>>();
@@ -201,7 +214,15 @@ pub(crate) fn resolve_qualified(
     }
 
     let (base_index, base) = resolve_unqualified(documents, target_index, first, offset)?;
-    resolve_members(documents, target_index, base_index, base, &parts[1..])
+    resolve_members(
+        documents,
+        target_index,
+        base_index,
+        base,
+        &parts[1..],
+        first.clone(),
+        offset,
+    )
 }
 
 fn resolve_members(
@@ -210,6 +231,8 @@ fn resolve_members(
     mut base_index: usize,
     mut base: DocumentSymbol,
     members: &[String],
+    mut receiver: String,
+    offset: usize,
 ) -> Option<(usize, DocumentSymbol)> {
     for member_name in members {
         let owner_type = if matches!(base.kind, SymbolKind::Type | SymbolKind::Enum) {
@@ -223,6 +246,15 @@ fn resolve_members(
                 && (type_index == target_index || member.visibility == SymbolVisibility::Public)
         })?;
         base = member.clone();
+        crate::intellisense::record_members::instantiate_member(
+            documents,
+            target_index,
+            &receiver,
+            offset,
+            &mut base,
+        );
+        receiver.push('.');
+        receiver.push_str(member_name);
         base_index = type_index;
     }
     Some((base_index, base))

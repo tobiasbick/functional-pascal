@@ -30,6 +30,10 @@ The extension and native language server live under
 extension and Language Server Protocol APIs; no compiler behavior is
 reimplemented in TypeScript.
 
+Hover and field completion substitute the arguments of generic record values.
+For `Value: Box of string`, the `Value.Item` field shows `string` when `Box`
+declares `Item: T`. This also applies to imported records and nested record fields.
+
 ## Source debugging and variable editing
 
 The contributed `fpas` debug type launches the selected installed CLI's DAP adapter.
@@ -434,7 +438,7 @@ record method or native operation; explicit parameters exclude the implicit rece
 
 Incomplete native chains retain recursive receiver types. For example,
 `Value.Unwrap().Unwrap().` offers string operations when `Value` has type
-`Result of Result of string, integer, boolean`. Nested success and error types,
+`Result of (Result of (string, integer), boolean)`. Nested success and error types,
 mixed containers, and named or anonymous callback results remain distinct.
 Type aliases are resolved in their declaring unit's import environment,
 including aliases inside container and callable types. Native suggestions

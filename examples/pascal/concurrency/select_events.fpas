@@ -6,7 +6,7 @@ uses Std.Tasks, Std.Console;
 begin
   const Messages: channel of string := CreateChannel(4);
   discard Send(Messages, 'hello from the queue');
-  const Message: WaitCase := ReceiveCase(Messages, procedure(Outcome: result of string, string) begin
+  const Message: WaitCase := ReceiveCase(Messages, procedure(Outcome: result of (string, string)) begin
     case Outcome of
       when Ok(const Text):
         begin

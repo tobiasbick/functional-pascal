@@ -8,7 +8,7 @@ begin
   discard Send(Attempts, 0);
   discard Send(Attempts, 1);
   discard Send(Attempts, 2);
-  const Child: task := StartSupervisedTask(Group, function(Token: CancellationToken): result of integer, string begin
+  const Child: task := StartSupervisedTask(Group, function(Token: CancellationToken): result of (integer, string) begin
     const Attempt: integer := Receive(Attempts).Unwrap();
     if Attempt = 0 then
       begin

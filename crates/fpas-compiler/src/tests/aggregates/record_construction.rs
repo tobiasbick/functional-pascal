@@ -76,10 +76,10 @@ fn try_preserves_earlier_fields_and_stops_before_later_arguments_or_defaults() {
     assert_succeeds("program T;
       var Trace: integer := 0;
       function Mark(Value: integer): integer; begin Trace := Trace * 10 + Value; return Value; end function;
-      function GetValue(Value: integer; FailAt: integer): result of integer, string;
+      function GetValue(Value: integer; FailAt: integer): result of (integer, string);
       begin discard Mark(Value); if Value = FailAt then return Error('failed'); end if; return Ok(Value); end function;
       type Pair = record X: integer; Y: integer; Z: integer := Mark(3); end record;
-      function Probe(FailAt: integer): result of integer, string;
+      function Probe(FailAt: integer): result of (integer, string);
       begin const P: Pair := Pair(Y := try GetValue(1, FailAt), X := try GetValue(2, FailAt)); return Ok(P.X * 10 + P.Y); end function;
       begin
         if (Probe(0) <> Ok(21)) or (Trace <> 123) then panic('success order'); end if;

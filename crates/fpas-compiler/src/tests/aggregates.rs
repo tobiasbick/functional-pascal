@@ -1,5 +1,7 @@
 use super::*;
 
+mod generic_enums;
+mod generic_records;
 mod handler_fields;
 mod mutating_arrays;
 mod record_construction;
@@ -95,7 +97,7 @@ type
     Empty;
   end enum;
 begin
-  const A: Result of integer, string := Ok(5);
+  const A: Result of (integer, string) := Ok(5);
   const B: Option of integer := Some(6);
   const C: Option of integer := None;
   const D: Choice := Choice.Number(7);
@@ -129,7 +131,7 @@ fn try_unwraps_and_returns_early_for_result_and_option() {
     assert_succeeds(
         "\
 program RegisterTry;
-function ResultValue(Input: Result of integer, string): Result of integer, string;
+function ResultValue(Input: Result of (integer, string)): Result of (integer, string);
 begin
   const Value: integer := try Input;
   return Ok(Value + 1);
@@ -159,11 +161,11 @@ type
     Second: integer;
     Third: integer;
   end record;
-function ReadValue(Value: Result of integer, string): Result of integer, string;
+function ReadValue(Value: Result of (integer, string)): Result of (integer, string);
 begin
   return Value;
 end function;
-function Build(Second: Result of integer, string): Result of Triple, string;
+function Build(Second: Result of (integer, string)): Result of (Triple, string);
 begin
   return Ok(Triple(
     First := 1,
@@ -196,7 +198,7 @@ type
   end enum;
 begin
   var Sum: integer := 0;
-  const ResultValue: Result of integer, string := Ok(3);
+  const ResultValue: Result of (integer, string) := Ok(3);
   case ResultValue of
     when Ok(const Value): Sum := Sum + Value;
     when Error(const Message): Sum := 99;

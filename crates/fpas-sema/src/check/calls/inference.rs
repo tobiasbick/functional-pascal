@@ -36,6 +36,12 @@ impl Checker {
             );
         }
 
+        inferred.retain(|name, _| {
+            type_params
+                .iter()
+                .any(|parameter| parameter.name.eq_ignore_ascii_case(name))
+        });
+
         // Build a Vec<GenericParamDef> + Vec<Ty> for only the params we inferred.
         let mut check_params = Vec::new();
         let mut check_args = Vec::new();
@@ -53,52 +59,13 @@ impl Checker {
         inferred
     }
 
-    /// Replace routine-level generic parameters with their call-site inferred types.
+    /// Substitute generic arguments using the shared type model.
     pub(crate) fn substitute_type_params(ty: &Ty, inferred: &HashMap<String, Ty>) -> Ty {
-        match ty {
-            Ty::GenericParam(name, _) => inferred
-                .get(&name.to_ascii_lowercase())
-                .cloned()
-                .unwrap_or_else(|| ty.clone()),
-            Ty::Array(inner) => Ty::Array(Box::new(Self::substitute_type_params(inner, inferred))),
-            Ty::Channel(inner) => {
-                Ty::Channel(Box::new(Self::substitute_type_params(inner, inferred)))
-            }
-            Ty::Result(ok, err) => Ty::Result(
-                Box::new(Self::substitute_type_params(ok, inferred)),
-                Box::new(Self::substitute_type_params(err, inferred)),
-            ),
-            Ty::Option(inner) => {
-                Ty::Option(Box::new(Self::substitute_type_params(inner, inferred)))
-            }
-            Ty::Dict(key, value) => Ty::Dict(
-                Box::new(Self::substitute_type_params(key, inferred)),
-                Box::new(Self::substitute_type_params(value, inferred)),
-            ),
-            Ty::Task(inner) => Ty::Task(Box::new(Self::substitute_type_params(inner, inferred))),
-            Ty::Function(function_ty) => {
-                let mut substituted = function_ty.clone();
-                for param in &mut substituted.params {
-                    param.ty = Self::substitute_type_params(&param.ty, inferred);
-                }
-                substituted.return_type = Box::new(Self::substitute_type_params(
-                    &substituted.return_type,
-                    inferred,
-                ));
-                Ty::Function(substituted)
-            }
-            Ty::Procedure(procedure_ty) => {
-                let mut substituted = procedure_ty.clone();
-                for param in &mut substituted.params {
-                    param.ty = Self::substitute_type_params(&param.ty, inferred);
-                }
-                Ty::Procedure(substituted)
-            }
-            _ => ty.clone(),
-        }
+        crate::types::substitute_type_parameters(ty, inferred)
     }
 
-    fn collect_type_param_bindings(
+    /// Collect consistent bindings from one supplied value or expected type.
+    pub(in crate::check) fn collect_type_param_bindings(
         &mut self,
         declared: &Ty,
         actual: &Ty,
@@ -110,12 +77,12 @@ impl Checker {
         let actual_visible = self.resolve_visible_type(actual);
 
         match (&declared_visible, &actual_visible) {
-            (Ty::GenericParam(name, _), actual_ty)
-                if !actual_ty.is_error() && !matches!(actual_ty, Ty::GenericParam(..)) =>
-            {
+            (Ty::GenericParam(name, _), actual_ty) if !actual_ty.is_error() => {
                 let key = name.to_ascii_lowercase();
+                let name = crate::types::parameter_name(name);
                 if let Some(previous) = inferred.get(&key) {
-                    if !previous.compatible_with(actual_ty) || !actual_ty.compatible_with(previous)
+                    if !previous.assignment_compatible_with(actual_ty)
+                        || !actual_ty.assignment_compatible_with(previous)
                     {
                         self.error_with_code(
                             SEMA_TYPE_MISMATCH,
@@ -127,6 +94,9 @@ impl Checker {
                             ),
                             span,
                         );
+                    } else {
+                        let merged = crate::types::merge_inferred_types(previous, actual_ty);
+                        inferred.insert(key, merged);
                     }
                 } else {
                     inferred.insert(key, actual_ty.clone());
@@ -192,7 +162,62 @@ impl Checker {
                     span,
                 );
             }
+            (Ty::Enum(declared), Ty::Enum(actual))
+                if declared.name.eq_ignore_ascii_case(&actual.name) =>
+            {
+                let arguments = if declared.type_args.is_empty() {
+                    declared
+                        .type_params
+                        .iter()
+                        .map(|parameter| {
+                            Ty::GenericParam(parameter.name.clone(), parameter.constraint)
+                        })
+                        .collect()
+                } else {
+                    declared.type_args.clone()
+                };
+                for (declared, actual) in arguments.iter().zip(&actual.type_args) {
+                    self.collect_type_param_bindings(
+                        declared,
+                        actual,
+                        inferred,
+                        visited_record_pairs,
+                        span,
+                    );
+                }
+            }
             (Ty::Record(declared_record), Ty::Record(actual_record)) => {
+                if !declared_record.type_params.is_empty() {
+                    if !declared_record
+                        .name
+                        .eq_ignore_ascii_case(&actual_record.name)
+                    {
+                        return;
+                    }
+                    let declared_arguments = if declared_record.type_args.is_empty() {
+                        declared_record
+                            .type_params
+                            .iter()
+                            .map(|parameter| {
+                                Ty::GenericParam(parameter.name.clone(), parameter.constraint)
+                            })
+                            .collect()
+                    } else {
+                        declared_record.type_args.clone()
+                    };
+                    for (declared, actual) in
+                        declared_arguments.iter().zip(&actual_record.type_args)
+                    {
+                        self.collect_type_param_bindings(
+                            declared,
+                            actual,
+                            inferred,
+                            visited_record_pairs,
+                            span,
+                        );
+                    }
+                    return;
+                }
                 // Recursive fields can resolve back to the same descriptor pair.
                 // Documentation: docs/pascal/language/types/records.md
                 let record_pair = (Arc::as_ptr(declared_record), Arc::as_ptr(actual_record));
@@ -216,32 +241,45 @@ impl Checker {
                 }
             }
             (Ty::Function(declared_fn), Ty::Function(actual_fn)) => {
+                let unknown = actual_fn
+                    .type_params
+                    .iter()
+                    .map(|parameter| (parameter.name.to_ascii_lowercase(), Ty::Error))
+                    .collect();
                 for (declared_param, actual_param) in
                     declared_fn.params.iter().zip(actual_fn.params.iter())
                 {
+                    let actual = Self::substitute_type_params(&actual_param.ty, &unknown);
                     self.collect_type_param_bindings(
                         &declared_param.ty,
-                        &actual_param.ty,
+                        &actual,
                         inferred,
                         visited_record_pairs,
                         span,
                     );
                 }
+                let actual = Self::substitute_type_params(&actual_fn.return_type, &unknown);
                 self.collect_type_param_bindings(
                     &declared_fn.return_type,
-                    &actual_fn.return_type,
+                    &actual,
                     inferred,
                     visited_record_pairs,
                     span,
                 );
             }
             (Ty::Procedure(declared_proc), Ty::Procedure(actual_proc)) => {
+                let unknown = actual_proc
+                    .type_params
+                    .iter()
+                    .map(|parameter| (parameter.name.to_ascii_lowercase(), Ty::Error))
+                    .collect();
                 for (declared_param, actual_param) in
                     declared_proc.params.iter().zip(actual_proc.params.iter())
                 {
+                    let actual = Self::substitute_type_params(&actual_param.ty, &unknown);
                     self.collect_type_param_bindings(
                         &declared_param.ty,
-                        &actual_param.ty,
+                        &actual,
                         inferred,
                         visited_record_pairs,
                         span,

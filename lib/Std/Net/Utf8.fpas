@@ -21,7 +21,7 @@ end function;
 // Parameters:
 // - `Index`: Byte offset where validation failed.
 // - `Message`: Reason the byte sequence is invalid.
-function Invalid(Index: integer; Message: string): result of string, string;
+function Invalid(Index: integer; Message: string): result of (string, string);
 begin
   return Error('Invalid UTF-8 at byte ' + Std.Conv.IntToStr(Index) + ': ' + Message);
 end function;
@@ -39,7 +39,7 @@ end function;
 //
 // Parameters:
 // - `Bytes`: Integer byte values in `0..255`.
-public function Decode(Bytes: array of integer): result of string, string;
+public function Decode(Bytes: array of integer): result of (string, string);
 begin
   var Parts: array of string := [];
   var Index: integer := 0;

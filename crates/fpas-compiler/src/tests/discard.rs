@@ -5,7 +5,7 @@ fn discard_evaluates_once_without_unwrapping_result_or_invoking_callable() {
     assert_succeeds(
         "program T;
       var Calls: integer := 0;
-      function Produce(): result of integer, string;
+      function Produce(): result of (integer, string);
       begin Calls := Calls + 1; return Error('ignored'); end function;
       begin discard Produce();
       discard function(): integer begin Calls := Calls + 10; return 1; end function;

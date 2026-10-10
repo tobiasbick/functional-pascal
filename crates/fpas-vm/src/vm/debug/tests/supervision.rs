@@ -73,7 +73,7 @@ begin
   const Group: TaskGroup := CreateTaskGroup();
   const Attempts: channel of boolean := CreateChannel(2);
   discard Send(Attempts, false); discard Send(Attempts, true);
-  const Parent: task := StartSupervisedTask(Group, function(Token: CancellationToken): result of integer, string
+  const Parent: task := StartSupervisedTask(Group, function(Token: CancellationToken): result of (integer, string)
   begin
     if Receive(Attempts).Unwrap() then return Ok(42); end if;
     const Child: task := StartTaskInGroup(Group, procedure(ChildToken: CancellationToken)
@@ -102,11 +102,11 @@ begin
   const Child: task := StartTaskInGroup(Group, procedure(Token: CancellationToken)
   begin
     for Item: integer := 1 to 2 do
-      discard Select([SendCase(Queue, Item, procedure(Outcome: result of boolean, string) begin end procedure)]); end for;
+      discard Select([SendCase(Queue, Item, procedure(Outcome: result of (boolean, string)) begin end procedure)]); end for;
   end procedure);
   var Total: integer := 0;
   for Item: integer := 1 to 2 do
-    discard Select([ReceiveCase(Queue, procedure(Outcome: result of integer, string)
+    discard Select([ReceiveCase(Queue, procedure(Outcome: result of (integer, string))
       begin Total := Total + Outcome.Unwrap(); end procedure)]); end for;
   Wait(Child);
   if Total <> 3 then panic('delivery lost'); end if;
@@ -133,7 +133,7 @@ begin
   const G: TaskGroup := CreateTaskGroup();
   const Steps: channel of boolean := CreateChannel(2);
   discard Send(Steps, false); discard Send(Steps, true);
-  const Parent: task := StartSupervisedTask(G, function(Token: CancellationToken): result of integer, string
+  const Parent: task := StartSupervisedTask(G, function(Token: CancellationToken): result of (integer, string)
   begin
     const Child: task := StartTaskInGroup(G, function(ChildToken: CancellationToken): integer
     begin Sleep(1); return 42; end function);
@@ -194,7 +194,7 @@ begin
   const Steps: channel of integer := CreateChannel(3);
   discard Send(Steps, 0); discard Send(Steps, 1); discard Send(Steps, 2);
   const Original: array of integer := [0];
-  const Child: task := StartSupervisedTask(G, function(Token: CancellationToken): result of integer, string
+  const Child: task := StartSupervisedTask(G, function(Token: CancellationToken): result of (integer, string)
   begin
     var Local: array of integer := Original;
     Local[0] := Local[0] + 1;
@@ -224,7 +224,7 @@ uses Std.Tasks;
 begin
   const G: TaskGroup := CreateTaskGroup();
   const Attempts: channel of integer := CreateChannel(3);
-  const Child: task := StartSupervisedTask(G, function(Token: CancellationToken): result of integer, string
+  const Child: task := StartSupervisedTask(G, function(Token: CancellationToken): result of (integer, string)
   begin discard Send(Attempts, 1); return Error('last failure'); end function, 2, 0);
   case Wait(Child) of
     when Ok(_): panic('unexpected success');
@@ -267,7 +267,7 @@ uses Std.Tasks;
 begin
   const G: TaskGroup := CreateTaskGroup();
   const Attempts: channel of boolean := CreateChannel(1);
-  const WorkerTask: task := StartSupervisedTask(G, function(Token: CancellationToken): result of integer, string
+  const WorkerTask: task := StartSupervisedTask(G, function(Token: CancellationToken): result of (integer, string)
   begin discard Send(Attempts, true); return Error('retry later'); end function, 3, 60000);
   discard Receive(Attempts).Unwrap();
   discard Select([TimerCase(2, procedure() begin end procedure)]);
@@ -306,7 +306,7 @@ fn supervision_zero_retry_limit_keeps_an_ordinary_cancelled_message_as_error() {
 uses Std.Tasks;
 begin
   const G: TaskGroup := CreateTaskGroup();
-  const Child: task := StartSupervisedTask(G, function(Token: CancellationToken): result of integer, string
+  const Child: task := StartSupervisedTask(G, function(Token: CancellationToken): result of (integer, string)
   begin return Error('cancelled'); end function, 0, 60000);
   case Wait(Child) of when Ok(_): panic('unexpected success'); when Error(_): begin end; end case;
   const Failures: array of TaskFailure := CloseTaskGroup(G);

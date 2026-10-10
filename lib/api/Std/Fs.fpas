@@ -8,7 +8,7 @@ unit Std.Fs;
 //
 // Parameters:
 // - `Path`: File or directory path processed by the operation.
-public function CreateDir(Path: string): result of boolean, string;
+public function CreateDir(Path: string): result of (boolean, string);
 begin
   panic('Intrinsic API declaration');
 end function;
@@ -17,7 +17,7 @@ end function;
 //
 // Parameters:
 // - `Path`: File or directory path processed by the operation.
-public function CreateDirAll(Path: string): result of boolean, string;
+public function CreateDirAll(Path: string): result of (boolean, string);
 begin
   panic('Intrinsic API declaration');
 end function;
@@ -26,7 +26,7 @@ end function;
 //
 // Parameters:
 // - `Path`: File or directory path processed by the operation.
-public function DeleteFile(Path: string): result of boolean, string;
+public function DeleteFile(Path: string): result of (boolean, string);
 begin
   panic('Intrinsic API declaration');
 end function;
@@ -44,7 +44,7 @@ end function;
 //
 // Parameters:
 // - `Pattern`: Glob or matching pattern evaluated by the operation.
-public function Glob(Pattern: string): result of array of string, string;
+public function Glob(Pattern: string): result of (array of string, string);
 begin
   panic('Intrinsic API declaration');
 end function;
@@ -71,7 +71,7 @@ end function;
 //
 // Parameters:
 // - `Path`: File or directory path processed by the operation.
-public function ReadDir(Path: string): result of array of string, string;
+public function ReadDir(Path: string): result of (array of string, string);
 begin
   panic('Intrinsic API declaration');
 end function;
@@ -80,7 +80,7 @@ end function;
 //
 // Parameters:
 // - `Path`: File or directory path processed by the operation.
-public function ReadText(Path: string): result of string, string;
+public function ReadText(Path: string): result of (string, string);
 begin
   panic('Intrinsic API declaration');
 end function;
@@ -90,7 +90,7 @@ end function;
 // Parameters:
 // - `Path`: File or directory path processed by the operation.
 // - `Text`: UTF-8 text processed by the operation.
-public function WriteText(Path: string; Text: string): result of boolean, string;
+public function WriteText(Path: string; Text: string): result of (boolean, string);
 begin
   panic('Intrinsic API declaration');
 end function;
@@ -100,7 +100,7 @@ end function;
 // Parameters:
 // - `Path`: File or directory path processed by the operation.
 // - `Text`: UTF-8 text processed by the operation.
-public function WriteTextAtomic(Path: string; Text: string): result of boolean, string;
+public function WriteTextAtomic(Path: string; Text: string): result of (boolean, string);
 begin
   panic('Intrinsic API declaration');
 end function;

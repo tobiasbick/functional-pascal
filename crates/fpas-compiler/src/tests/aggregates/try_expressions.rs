@@ -21,7 +21,7 @@ type
   type Message = enum Move(X: integer; Y: integer); end enum;
   type Pair = record First: integer; Second: integer; end record;
 var Trace: integer := 0;
-function ReadValue(Value: integer; FailAt: integer): result of integer, string;
+function ReadValue(Value: integer; FailAt: integer): result of (integer, string);
 begin
   Trace := Trace * 10 + Value;
   if Value = FailAt then return Error('expected'); end if;
@@ -31,13 +31,13 @@ function Combine(X: integer; Y: integer): integer;
 begin
   return X * 10 + Y;
 end function;
-function ReadHandler(FailAt: integer): result of Binary, string;
+function ReadHandler(FailAt: integer): result of (Binary, string);
 begin
   const X: integer := try ReadValue(1, FailAt);
   const Y: integer := try ReadValue(2, FailAt);
   return Ok(Combine);
 end function;
-function Probe(FailAt: integer): result of integer, string;
+function Probe(FailAt: integer): result of (integer, string);
 begin
   {body}
 end function;
@@ -234,16 +234,16 @@ fn saved_operands_retain_snapshots_across_mutation_and_loop_iterations() {
         r#"
 program Snapshots;
 var Values: array of integer := [12, 99];
-function Change(): result of integer, string;
+function Change(): result of (integer, string);
 begin Values := [77, 88]; return Ok(0); end function;
-function Probe(): result of integer, string;
+function Probe(): result of (integer, string);
 begin
   for I: integer := 1 to 3 do
   begin
     Values := [12, 99];
     if Values[try Change()] <> 12 then panic('collection snapshot'); end if;
     var X: integer := I;
-    const Update: function(): result of integer, string := function(): result of integer, string
+    const Update: function(): result of (integer, string) := function(): result of (integer, string)
     begin X := 99; return Ok(10); end function;
     if X + (try Update()) <> I + 10 then panic('local snapshot'); end if;
     if X <> 99 then panic('mutation missing'); end if;
@@ -260,21 +260,21 @@ fn result_try_unwraps_generic_callee_to_concrete_payloads() {
     assert_succeeds(
         r#"
 program GenericResultTry;
-function Tagged<T>(Value: result of T, string): result of T, string;
+function Tagged<T>(Value: result of (T, string)): result of (T, string);
 begin
   case Value of
     when Ok(const Content): return Ok(Content);
     when Error(const Message): return Error('tagged ' + Message);
   end case;
 end function;
-function MakeInt(Fail: boolean): result of integer, string;
+function MakeInt(Fail: boolean): result of (integer, string);
 begin
   if Fail then return Error('int'); end if;
   return Ok(7);
 end function;
-function MakeValues(): result of array of integer, string;
+function MakeValues(): result of (array of integer, string);
 begin return Ok([2, 3]); end function;
-function Probe(Fail: boolean): result of integer, string;
+function Probe(Fail: boolean): result of (integer, string);
 begin
   const Values: array of integer := try Tagged(MakeValues());
   const Number: integer := try Tagged(MakeInt(Fail));

@@ -56,7 +56,7 @@ export async function verifyVariantReplacement(
     "",
     "begin",
     "  var Selected: Choice := Choice.Count(1);",
-    "  var Outcome: Result of integer, string := Ok(2);",
+    "  var Outcome: Result of (integer, string) := Ok(2);",
     "  var Optional: Option of integer := Some(3);",
     "  const Fixed: Choice := Choice.Count(9);",
     "  const StopMarker: integer := 0;",

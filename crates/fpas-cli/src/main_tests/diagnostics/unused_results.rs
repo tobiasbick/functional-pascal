@@ -2,7 +2,7 @@ use super::*;
 
 #[test]
 fn unused_function_result_reports_code_location_and_result_fixes() {
-    let source = "program T;\nfunction Value(): result of integer, string;\nbegin return Error('failed'); end function;\nbegin\n  Value();\nend.\n";
+    let source = "program T;\nfunction Value(): result of (integer, string);\nbegin return Error('failed'); end function;\nbegin\n  Value();\nend.\n";
     let (exit, stderr) = support::run_and_capture_stderr("unused.fpas", source);
     assert_eq!(exit, 1);
     assert!(
@@ -51,7 +51,7 @@ fn explicit_discard_runs_postfix_result_once_and_procedure_calls_still_run() {
     let source = "program T; uses Std.Console;
       var Count: integer := 0;
       type Box = record Value: integer;
-        function Get(Self: Box): result of integer, string;
+        function Get(Self: Box): result of (integer, string);
         begin Count := Count + 1; return Error('ignored'); end function;
         procedure Show(Self: Box); begin WriteLn(Self.Value); end procedure;
       end record;

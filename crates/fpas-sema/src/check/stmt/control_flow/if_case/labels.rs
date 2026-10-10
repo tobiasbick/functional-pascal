@@ -107,16 +107,10 @@ impl Checker {
         }
     }
 
-    pub(super) fn resolve_enum_ty<'a>(&'a self, ty: &'a Ty) -> Option<&'a EnumTy> {
-        match ty {
+    /// Resolve recursive enum payloads while preserving the concrete application.
+    pub(super) fn resolve_enum_ty(&self, ty: &Ty) -> Option<std::sync::Arc<EnumTy>> {
+        match self.resolve_visible_type(ty) {
             Ty::Enum(enum_ty) => Some(enum_ty),
-            Ty::Named(name) => {
-                let sym = self.scopes.lookup(name)?;
-                match &sym.ty {
-                    Ty::Enum(enum_ty) => Some(enum_ty),
-                    _ => None,
-                }
-            }
             _ => None,
         }
     }

@@ -16,8 +16,8 @@ impl Checker {
         span: Span,
     ) {
         for (param, arg) in type_params.iter().zip(args.iter()) {
-            // Skip validation for error types and unresolved generic params.
-            if arg.is_error() || matches!(arg, Ty::GenericParam(..)) {
+            // Error types do not create secondary constraint diagnostics.
+            if arg.is_error() {
                 continue;
             }
             if let Some(constraint) = param.constraint
@@ -28,7 +28,7 @@ impl Checker {
                     format!(
                         "Type `{arg}` does not satisfy constraint `{}` on parameter `{}`",
                         constraint.display_name(),
-                        param.name,
+                        param.display_name(),
                     ),
                     format!(
                         "The `{}` constraint requires a type that supports {}.",

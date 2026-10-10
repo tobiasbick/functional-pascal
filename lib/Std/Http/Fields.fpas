@@ -28,7 +28,7 @@ end function;
 // Parameters:
 // - `Text`: Complete decoded message head.
 // - `MessageKind`: Message label used in diagnostics.
-public function Parse(Text: string; MessageKind: string): result of array of Header, string;
+public function Parse(Text: string; MessageKind: string): result of (array of Header, string);
 begin
   const Lines: array of string := Text.Split(#13 + #10);
   var Headers: array of Header := [];

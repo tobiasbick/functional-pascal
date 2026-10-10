@@ -72,9 +72,9 @@ fn named_var_writes_to_variables_fields_and_elements_survive_try_exit() {
         r#"
 program NamedVarTry;
 type Point = record X: integer; end record;
-function Partial(var Value: integer): Result of integer, string;
+function Partial(var Value: integer): Result of (integer, string);
 begin Value := 7; return Error('stopped'); end function;
-function Run(var Target: integer): Result of integer, string;
+function Run(var Target: integer): Result of (integer, string);
 begin
   const Ignored: integer := try Partial(Value := var Target);
   Target := 99; return Ok(Ignored);
@@ -83,9 +83,9 @@ begin
   var Value: integer := 0;
   var P: Point := Point( X := 0 );
   var Items: array of integer := [0];
-  const A: Result of integer, string := Run(Target := var Value);
-  const B: Result of integer, string := Run(Target := var P.X);
-  const C: Result of integer, string := Run(Target := var Items[0]);
+  const A: Result of (integer, string) := Run(Target := var Value);
+  const B: Result of (integer, string) := Run(Target := var P.X);
+  const C: Result of (integer, string) := Run(Target := var Items[0]);
   if (Value <> 7) or (P.X <> 7) or (Items[0] <> 7) then panic('writes before try exit'); end if;
 end.
 "#,

@@ -200,7 +200,7 @@ pub(super) fn format_debug_type(
             format_debug_type(executable, *value)?
         )),
         Some(DebugType::Result { ok, error }) => Ok(format!(
-            "result of {}, {}",
+            "result of ({}, {})",
             format_debug_type(executable, *ok)?,
             format_debug_type(executable, *error)?
         )),

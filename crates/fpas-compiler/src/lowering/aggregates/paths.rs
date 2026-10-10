@@ -97,7 +97,7 @@ impl LoweringContext {
                     .ok_or_else(|| unsupported(*part_span, "assignment field"))?;
                 let saved_aggregate = self.save_value(aggregate);
                 let value = if tail.is_empty() {
-                    replacement
+                    self.value_as(replacement, field_ty, span)?
                 } else {
                     let child = self.emit_value(
                         Operation::LoadField {
@@ -108,7 +108,11 @@ impl LoweringContext {
                         field_ty,
                         *part_span,
                     )?;
-                    self.lower_path_update(child, field_ty, tail, replacement, span)?
+                    let concrete_ty = self.path_result_type(*part_span, field_ty)?;
+                    let child = self.value_as(child, concrete_ty, *part_span)?;
+                    let updated =
+                        self.lower_path_update(child, concrete_ty, tail, replacement, span)?;
+                    self.value_as(updated, field_ty, span)?
                 };
                 let aggregate = self.restore_value(saved_aggregate, span)?;
                 self.emit_value(
@@ -223,8 +227,13 @@ impl LoweringContext {
         let mut ty = self.expression_ir_type(base)?;
         for operation in operations {
             if let Some((member_value, member_ty)) = self.lower_postfix_member(value, operation)? {
-                value = member_value;
-                ty = member_ty;
+                let part_span = match operation {
+                    PostfixOperation::Field { span, .. }
+                    | PostfixOperation::Index { span, .. }
+                    | PostfixOperation::MethodCall { span, .. } => *span,
+                };
+                ty = self.postfix_result_type(part_span, member_ty)?;
+                value = self.value_as(member_value, ty, part_span)?;
                 continue;
             }
             match operation {
@@ -271,7 +280,9 @@ impl LoweringContext {
                     field_ty,
                     *span,
                 )?;
-                Ok((result, field_ty))
+                let concrete_ty = self.path_result_type(*span, field_ty)?;
+                let result = self.value_as(result, concrete_ty, *span)?;
+                Ok((result, concrete_ty))
             }
             DesignatorPart::Index(index, span) => {
                 let result_ty = match self.type_kind(ty) {

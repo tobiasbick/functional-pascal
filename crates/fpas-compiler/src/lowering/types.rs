@@ -4,6 +4,8 @@ mod debug_distinct;
 mod debug_records;
 mod expressions;
 mod layouts;
+/// Stable scalar ids and erased generic values.
+mod scalars;
 mod task;
 
 use fpas_ir::{
@@ -16,12 +18,8 @@ use std::collections::{BTreeMap, BTreeSet};
 use crate::CompileError;
 use crate::error::internal_compiler_error;
 
-pub(super) const UNIT: TypeId = TypeId::new(0);
-pub(super) const BOOLEAN: TypeId = TypeId::new(1);
-pub(super) const INTEGER: TypeId = TypeId::new(2);
-pub(super) const REAL: TypeId = TypeId::new(3);
-pub(super) const STRING: TypeId = TypeId::new(4);
-pub(super) const DYNAMIC: TypeId = TypeId::new(5);
+pub(super) use scalars::{BOOLEAN, DYNAMIC, INTEGER, REAL, STRING, UNIT};
+use scalars::{lower, scalar_type_table};
 
 #[derive(Debug, Clone)]
 /// Interned semantic types and source-visible nominal layout metadata.
@@ -32,6 +30,7 @@ pub(super) struct TypeTable {
     enum_layouts: Vec<EnumLayout>,
     filled_record_layouts: BTreeSet<RecordLayoutId>,
     filled_enum_layouts: BTreeSet<EnumLayoutId>,
+    generic_templates: BTreeMap<String, Ty>,
     simple_enums: BTreeSet<String>,
     named: BTreeMap<String, TypeId>,
     imported_record_names: BTreeSet<String>,
@@ -40,6 +39,8 @@ pub(super) struct TypeTable {
 }
 
 impl TypeTable {
+    /// Reserve canonical layouts and intern the concrete semantic types used in lowering.
+    /// See `docs/pascal/language/types/generics.md`.
     pub fn from_metadata(metadata: &fpas_sema::AnalysisMetadata) -> Result<Self, CompileError> {
         let mut table = Self {
             definitions: scalar_type_table(),
@@ -47,6 +48,27 @@ impl TypeTable {
             enum_layouts: Vec::new(),
             filled_record_layouts: BTreeSet::new(),
             filled_enum_layouts: BTreeSet::new(),
+            generic_templates: metadata
+                .named_types
+                .values()
+                .filter_map(|ty| {
+                    let name = match ty {
+                        Ty::Record(record)
+                            if !record.type_params.is_empty() && record.type_args.is_empty() =>
+                        {
+                            &record.name
+                        }
+                        Ty::Enum(enumeration)
+                            if !enumeration.type_params.is_empty()
+                                && enumeration.type_args.is_empty() =>
+                        {
+                            &enumeration.name
+                        }
+                        _ => return None,
+                    };
+                    Some((name.to_ascii_lowercase(), ty.clone()))
+                })
+                .collect(),
             simple_enums: BTreeSet::new(),
             named: BTreeMap::new(),
             imported_record_names: BTreeSet::new(),
@@ -72,6 +94,20 @@ impl TypeTable {
             };
             table.named.insert(name.to_ascii_lowercase(), id);
         }
+        // Generic declarations establish erased field layouts before concrete aliases.
+        // Documentation: docs/pascal/language/types/generics.md
+        for (_, ty) in &metadata.named_types {
+            let is_template = match ty {
+                Ty::Record(record) => !record.type_params.is_empty() && record.type_args.is_empty(),
+                Ty::Enum(enumeration) => {
+                    !enumeration.type_params.is_empty() && enumeration.type_args.is_empty()
+                }
+                _ => false,
+            };
+            if is_template {
+                table.intern(ty, 1, 1)?;
+            }
+        }
         for (name, ty) in &metadata.named_types {
             if matches!(ty, Ty::Error | Ty::Named(_)) {
                 continue;
@@ -79,7 +115,13 @@ impl TypeTable {
             let id = table.intern(ty, 1, 1)?;
             table.named.insert(name.to_ascii_lowercase(), id);
         }
-        for ty in metadata.expr_types.values() {
+        for ty in metadata
+            .expr_types
+            .values()
+            .chain(metadata.path_types.values())
+            .chain(metadata.postfix_types.values())
+            .chain(metadata.pattern_types.values())
+        {
             if matches!(ty, Ty::Error | Ty::Named(_)) {
                 continue;
             }
@@ -121,6 +163,7 @@ impl TypeTable {
         Ok(table)
     }
 
+    /// Intern a semantic type using the canonical layout for nominal applications.
     pub fn intern(&mut self, ty: &Ty, line: u32, column: u32) -> Result<TypeId, CompileError> {
         let kind = match ty {
             Ty::Array(element) => IrType::Array(self.intern(element, line, column)?),
@@ -139,7 +182,13 @@ impl TypeTable {
                 let layout = self.intern_record(record, line, column)?;
                 IrType::Record(layout)
             }
-            Ty::Enum(enumeration) if enumeration.has_data() => {
+            Ty::Enum(enumeration)
+                if enumeration.has_data()
+                    || self
+                        .enum_layouts
+                        .iter()
+                        .any(|layout| layout.name.eq_ignore_ascii_case(&enumeration.name)) =>
+            {
                 let layout = self.intern_enum(enumeration, line, column)?;
                 IrType::Enum(layout)
             }
@@ -403,41 +452,6 @@ fn type_error(construct: &str, span: fpas_lexer::Span) -> CompileError {
         span.line,
         span.column,
     )
-}
-
-pub(super) fn scalar_type_table() -> Vec<TypeDefinition> {
-    vec![
-        definition(UNIT, IrType::Unit),
-        definition(BOOLEAN, IrType::Boolean),
-        definition(INTEGER, IrType::Integer),
-        definition(REAL, IrType::Real),
-        definition(STRING, IrType::String),
-        definition(DYNAMIC, IrType::Dynamic),
-    ]
-}
-
-pub(super) fn lower(ty: &Ty, line: u32, column: u32) -> Result<TypeId, CompileError> {
-    match ty {
-        Ty::Unit => Ok(UNIT),
-        Ty::Boolean => Ok(BOOLEAN),
-        Ty::Integer => Ok(INTEGER),
-        Ty::Real => Ok(REAL),
-        Ty::String => Ok(STRING),
-        Ty::GenericParam(..) => Ok(DYNAMIC),
-        Ty::Enum(enumeration) if !enumeration.has_data() => Ok(INTEGER),
-        Ty::Distinct(distinct) => lower(&distinct.underlying, line, column),
-        Ty::Error | Ty::Named(_) => Ok(DYNAMIC),
-        other => Err(internal_compiler_error(
-            format!("The compiler could not lower type `{other}`."),
-            "This is an internal compiler error. Re-run compilation and report the source program.",
-            line,
-            column,
-        )),
-    }
-}
-
-fn definition(id: TypeId, kind: IrType) -> TypeDefinition {
-    TypeDefinition { id, kind }
 }
 
 fn synthetic_span(line: u32, column: u32) -> fpas_lexer::Span {

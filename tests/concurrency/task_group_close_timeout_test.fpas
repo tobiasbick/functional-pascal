@@ -9,7 +9,7 @@ begin
   const Group: TaskGroup := CreateTaskGroup();
   const Token: CancellationToken := GetTaskGroupToken(Group);
   const Gate: channel of integer := CreateChannel(1);
-  const Child: task := StartTaskInGroup(Group, function(Stop: CancellationToken): result of integer, string begin
+  const Child: task := StartTaskInGroup(Group, function(Stop: CancellationToken): result of (integer, string) begin
     discard Receive(Gate).Unwrap();
     if not IsCancellationRequested(Stop) then
       begin
@@ -19,7 +19,7 @@ begin
 
     return Error('retained worker failure');
   end function);
-  const First: result of array of TaskFailure, string := CloseTaskGroupWithTimeout(Group, 2);
+  const First: result of (array of TaskFailure, string) := CloseTaskGroupWithTimeout(Group, 2);
   case First of
     when Error(const Message):
       begin

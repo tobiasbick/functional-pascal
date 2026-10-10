@@ -1,0 +1,23 @@
+program GenericEnums;
+
+uses Std.Console;
+
+type List of T = enum
+  Empty;
+  Cons(Head: T; Tail: List of T);
+end enum;
+
+function Length<T>(Values: List of T): integer;
+begin
+  return case Values of
+    when List.Empty: 0;
+    when List.Cons(_, const Tail): 1 + Length(Tail);
+  end case;
+end function;
+
+begin
+  const Numbers: List of integer := List.Cons(1, List.Cons(2, List.Empty));
+  const Words: List of string := List.Cons('one', List.Empty);
+  WriteLn(Length(Numbers));
+  WriteLn(Length(Words));
+end.

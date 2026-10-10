@@ -20,7 +20,7 @@ begin
     when Shape.Point: return 0;
   end case;
 end function;
-function Unwrap(R: result of integer, string): integer;
+function Unwrap(R: result of (integer, string)): integer;
 begin
   case R of
     when Ok(const Value): return Value;
@@ -55,7 +55,7 @@ type Shape = enum
   Rect(Width: integer; Height: integer);
   Point;
 end enum;
-function Classify(R: result of option of Shape, string): integer;
+function Classify(R: result of (option of Shape, string)): integer;
 begin
   case R of
     when Ok(Some(Shape.Rect(0, _))): return 1;

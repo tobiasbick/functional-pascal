@@ -42,12 +42,13 @@ impl Parser {
     ) -> TypeDef {
         let start = self.current_span();
         let (name, _) = self.expect_ident_or_error(start);
+        let type_params = self.parse_data_type_params();
         if self.check(&Token::Less) {
             let span = self.current_span();
             self.error_with_code(
                 PARSE_EXPECTED_TOKEN,
-                "Generic type definitions are not supported. Only generic functions and procedures support type parameters.",
-                "Remove `<...>` and use a generic function instead: `function Foo<T>(x: T): T`.",
+                "Type parameters use `of`, not angle brackets",
+                "Write `type Box of T = record ...` or `type Lookup of T = enum ...`.",
                 span,
             );
             // consume to recover
@@ -55,6 +56,14 @@ impl Parser {
         }
         self.expect(&Token::Equal);
         let body = self.parse_type_body(allow_member_visibility);
+        if !type_params.is_empty() && !matches!(body, TypeBody::Record(_) | TypeBody::Enum(_)) {
+            self.error_with_code(
+                PARSE_EXPECTED_TOKEN,
+                "Type parameters are supported only on record and enum declarations",
+                "Declare a generic record or enum, such as `type Lookup of T = enum Found(Value: T); Missing; end enum;`.",
+                start,
+            );
+        }
         if !matches!(body, TypeBody::Record(_) | TypeBody::Enum(_))
             || !self.at_enclosing_block_end()
         {
@@ -62,6 +71,7 @@ impl Parser {
         }
         TypeDef {
             name,
+            type_params,
             body,
             visibility,
             span: self.span_from(start),

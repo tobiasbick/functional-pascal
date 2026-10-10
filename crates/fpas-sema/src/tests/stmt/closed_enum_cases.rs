@@ -27,7 +27,7 @@ fn catch_alls_name_missing_variants_of_closed_types_and_aliases() {
             "None",
         ),
         (
-            "program T; const R: result of integer, string := Ok(1);
+            "program T; const R: result of (integer, string) := Ok(1);
              begin case R of when Ok(_): null; else null; end case; end.",
             "Error(_)",
         ),
@@ -43,7 +43,7 @@ fn catch_alls_name_missing_variants_of_closed_types_and_aliases() {
             "Some(_)",
         ),
         (
-            "program T; type Answer = result of integer, string; const Value: Answer := Ok(1);
+            "program T; type Answer = result of (integer, string); const Value: Answer := Ok(1);
              begin case Value of when Error(_): null; else null; end case; end.",
             "Ok(_)",
         ),
@@ -67,7 +67,7 @@ fn redundant_catch_alls_only_suggest_removing_the_branch() {
         "program T; type Shape = enum Circle(Radius: integer); Point; end enum;
          begin case Shape.Point of when Shape.Circle(_), Shape.Point: null; else null; end case; end.",
         "program T; begin case Some(1) of when Some(_), None: null; else null; end case; end.",
-        "program T; const R: result of integer, string := Ok(1);
+        "program T; const R: result of (integer, string) := Ok(1);
          begin case R of when Ok(_), Error(_): null; else null; end case; end.",
     ] {
         let error = closed_else(source);
@@ -89,7 +89,7 @@ fn guarded_and_partial_payload_arms_leave_missing_patterns() {
             "Shape.Circle(_)",
         ),
         (
-            "program T; const R: result of option of integer, string := Ok(None);
+            "program T; const R: result of (option of integer, string) := Ok(None);
              begin case R of when Ok(Some(_)): null; when Error(_): null; else null; end case; end.",
             "Ok(None)",
         ),

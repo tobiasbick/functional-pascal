@@ -13,7 +13,7 @@ fn program(body: &str) -> String {
     format!(
         "program T;
         type Shape = enum Circle(Radius: integer); Point; end enum;
-        procedure P(S: Shape; O: option of integer; R: result of option of integer, string);
+        procedure P(S: Shape; O: option of integer; R: result of (option of integer, string));
         begin
           {body}
         end procedure;

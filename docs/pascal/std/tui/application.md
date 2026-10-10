@@ -69,7 +69,7 @@ end;
 The fixed work signature is:
 
 ```pascal
-function Work(Token: CancellationToken): result of boolean, string
+function Work(Token: CancellationToken): result of (boolean, string)
 ```
 
 The success value is not interpreted. `Cmd.StartBackground(Id, Work)` starts an independent

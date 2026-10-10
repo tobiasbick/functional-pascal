@@ -45,9 +45,9 @@ Requires `uses Std.Proc;`.
 | Kind | Name | Notes |
 |------|------|-------|
 | record | `ProcessOutput` | captured `ExitCode`, `Stdout`, and `Stderr` |
-| function | `CurrentExecutable(): Result of string, string` | returns the absolute path of the running FPAS host executable |
-| function | `Run(Command: string; Args: array of string): Result of integer, string` | starts a process, waits for completion, and returns the exit code |
-| function | `RunCapture(Command: string; Args: array of string): Result of ProcessOutput, string` | starts a process and captures its exit code and output |
+| function | `CurrentExecutable(): Result of (string, string)` | returns the absolute path of the running FPAS host executable |
+| function | `Run(Command: string; Args: array of string): Result of (integer, string)` | starts a process, waits for completion, and returns the exit code |
+| function | `RunCapture(Command: string; Args: array of string): Result of (ProcessOutput, string)` | starts a process and captures its exit code and output |
 
 Fallible operations return `Error(message)` with a host error string instead of raising a runtime panic.
 
@@ -66,7 +66,7 @@ with the Unicode replacement character so process completion remains observable.
 
 ---
 
-## `function CurrentExecutable(): Result of string, string`
+## `function CurrentExecutable(): Result of (string, string)`
 
 Returns the absolute path of the executable hosting the running FPAS program.
 This allows a tool launched by `fpas` to invoke that same compiler binary.
@@ -83,12 +83,12 @@ Combine a process call in `go` with `Std.Tasks.Wait` for task-based workflows.
 
 ---
 
-## `function Run(Command: string; Args: array of string): Result of integer, string`
+## `function Run(Command: string; Args: array of string): Result of (integer, string)`
 
 Starts `Command` with `Args`, waits for the process to exit, and returns `Ok(exitCode)`.
 
 ```pascal
-const Status: result of integer, string := Run('fpas', ['--version']);
+const Status: result of (integer, string) := Run('fpas', ['--version']);
 if Status.IsError() then
   WriteLn(Status.UnwrapOr(-1));
 end if;
@@ -103,7 +103,7 @@ stderr line becomes a JSON program-output record; see
 
 ---
 
-## `function RunCapture(Command: string; Args: array of string): Result of ProcessOutput, string`
+## `function RunCapture(Command: string; Args: array of string): Result of (ProcessOutput, string)`
 
 Starts `Command` with `Args`, waits for it to finish, and returns
 `Ok(ProcessOutput)` without writing the child's stdout or stderr to the parent

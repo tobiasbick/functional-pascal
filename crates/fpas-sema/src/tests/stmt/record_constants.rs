@@ -45,7 +45,7 @@ fn direct_nested_default_updated_and_transitive_boolean_fields_complete_coverage
 fn simple_enum_fields_complete_nested_result_option_coverage() {
     for label in ["Updated.Color", "Selected"] {
         check_ok(&program(&format!(
-            "const Candidate: result of Option of Color, string := Ok(Some(Color.Red));
+            "const Candidate: result of (Option of Color, string) := Ok(Some(Color.Red));
             case Candidate of when Ok(Some(Original.Color)): null;
             when Ok(Some({label})): null; when Ok(None): null; when Error(_): null; end case;"
         )));

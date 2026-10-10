@@ -19,7 +19,7 @@ type Holder = record
   Items: array of integer;
   Scores: dict of string to integer;
   Item: Choice;
-  Outcome: result of integer, string;
+  Outcome: result of (integer, string);
   Optional: option of integer;
 end record;
 
@@ -53,7 +53,7 @@ begin
   var Items: array of integer := [1, 2, 3];
   var Scores: dict of string to integer := ['red': 1];
   var Selected: Choice := Choice.Empty;
-  var Outcome: result of integer, string := Ok(1);
+  var Outcome: result of (integer, string) := Ok(1);
   var Optional: option of integer := Some(1);
   var Boxed: BoxFn := BoxFn(Action := Identity);
   const Frozen: integer := 1;

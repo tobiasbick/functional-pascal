@@ -289,32 +289,32 @@ fn every_catalog_entry_accepts_positional_and_fully_named_explicit_arguments() {
             "program T; begin var Receiver: Option of integer := Some(1); const Output: integer := Receiver.UnwrapOr(Default := 1); end.",
         ),
         (
-            "program T; begin var Receiver: Result of integer, string := Ok(1); const Output: boolean := Receiver.IsOk(); end.",
-            "program T; begin var Receiver: Result of integer, string := Ok(1); const Output: boolean := Receiver.IsOk(); end.",
+            "program T; begin var Receiver: Result of (integer, string) := Ok(1); const Output: boolean := Receiver.IsOk(); end.",
+            "program T; begin var Receiver: Result of (integer, string) := Ok(1); const Output: boolean := Receiver.IsOk(); end.",
         ),
         (
-            "program T; begin var Receiver: Result of integer, string := Ok(1); const Output: boolean := Receiver.IsError(); end.",
-            "program T; begin var Receiver: Result of integer, string := Ok(1); const Output: boolean := Receiver.IsError(); end.",
+            "program T; begin var Receiver: Result of (integer, string) := Ok(1); const Output: boolean := Receiver.IsError(); end.",
+            "program T; begin var Receiver: Result of (integer, string) := Ok(1); const Output: boolean := Receiver.IsError(); end.",
         ),
         (
-            "program T; begin var Receiver: Result of integer, string := Ok(1); const Output: Result of integer, string := Receiver.Map(function(integer: integer): integer begin return 1; end function); end.",
-            "program T; begin var Receiver: Result of integer, string := Ok(1); const Output: Result of integer, string := Receiver.Map(F := function(integer: integer): integer begin return 1; end function); end.",
+            "program T; begin var Receiver: Result of (integer, string) := Ok(1); const Output: Result of (integer, string) := Receiver.Map(function(integer: integer): integer begin return 1; end function); end.",
+            "program T; begin var Receiver: Result of (integer, string) := Ok(1); const Output: Result of (integer, string) := Receiver.Map(F := function(integer: integer): integer begin return 1; end function); end.",
         ),
         (
-            "program T; begin var Receiver: Result of integer, string := Ok(1); const Output: Result of integer, string := Receiver.AndThen(function(integer: integer): Result of integer, string begin return Ok(1); end function); end.",
-            "program T; begin var Receiver: Result of integer, string := Ok(1); const Output: Result of integer, string := Receiver.AndThen(F := function(integer: integer): Result of integer, string begin return Ok(1); end function); end.",
+            "program T; begin var Receiver: Result of (integer, string) := Ok(1); const Output: Result of (integer, string) := Receiver.AndThen(function(integer: integer): Result of (integer, string) begin return Ok(1); end function); end.",
+            "program T; begin var Receiver: Result of (integer, string) := Ok(1); const Output: Result of (integer, string) := Receiver.AndThen(F := function(integer: integer): Result of (integer, string) begin return Ok(1); end function); end.",
         ),
         (
-            "program T; begin var Receiver: Result of integer, string := Ok(1); const Output: Result of integer, integer := Receiver.OrElse(function(Err: string): Result of integer, integer begin return Ok(1); end function); end.",
-            "program T; begin var Receiver: Result of integer, string := Ok(1); const Output: Result of integer, integer := Receiver.OrElse(F := function(Err: string): Result of integer, integer begin return Ok(1); end function); end.",
+            "program T; begin var Receiver: Result of (integer, string) := Ok(1); const Output: Result of (integer, integer) := Receiver.OrElse(function(Err: string): Result of (integer, integer) begin return Ok(1); end function); end.",
+            "program T; begin var Receiver: Result of (integer, string) := Ok(1); const Output: Result of (integer, integer) := Receiver.OrElse(F := function(Err: string): Result of (integer, integer) begin return Ok(1); end function); end.",
         ),
         (
-            "program T; begin var Receiver: Result of integer, string := Ok(1); const Output: integer := Receiver.Unwrap(); end.",
-            "program T; begin var Receiver: Result of integer, string := Ok(1); const Output: integer := Receiver.Unwrap(); end.",
+            "program T; begin var Receiver: Result of (integer, string) := Ok(1); const Output: integer := Receiver.Unwrap(); end.",
+            "program T; begin var Receiver: Result of (integer, string) := Ok(1); const Output: integer := Receiver.Unwrap(); end.",
         ),
         (
-            "program T; begin var Receiver: Result of integer, string := Ok(1); const Output: integer := Receiver.UnwrapOr(1); end.",
-            "program T; begin var Receiver: Result of integer, string := Ok(1); const Output: integer := Receiver.UnwrapOr(Default := 1); end.",
+            "program T; begin var Receiver: Result of (integer, string) := Ok(1); const Output: integer := Receiver.UnwrapOr(1); end.",
+            "program T; begin var Receiver: Result of (integer, string) := Ok(1); const Output: integer := Receiver.UnwrapOr(Default := 1); end.",
         ),
     ];
     assert_eq!(cases.len(), crate::native_operations().count());
@@ -370,7 +370,7 @@ fn native_arguments_reject_names_counts_types_and_receiver_markers_without_fallb
 #[test]
 fn known_generic_container_shapes_keep_native_operations() {
     check_ok(
-        "program T; function Count<T>(A: array of T): integer; begin return A.Length(); end function; function Empty<K: Comparable, V>(D: dict of K to V): boolean; begin return D.IsEmpty(); end function; function Has<T>(O: Option of T): boolean; begin return O.IsSome(); end function; function Good<T, E>(R: Result of T, E): boolean; begin return R.IsOk(); end function; begin const N: integer := Count([1]); end.",
+        "program T; function Count<T>(A: array of T): integer; begin return A.Length(); end function; function Empty<K: Comparable, V>(D: dict of K to V): boolean; begin return D.IsEmpty(); end function; function Has<T>(O: Option of T): boolean; begin return O.IsSome(); end function; function Good<T, E>(R: Result of (T, E)): boolean; begin return R.IsOk(); end function; begin const N: integer := Count([1]); end.",
     );
     let errors = check_errors(
         "program T; function Count<T>(A: T): integer; begin return A.Length(); end function; begin end.",

@@ -37,7 +37,7 @@ fn exhaustive_nested_cases_use_shadowing_enum_constant_values() {
         assert_succeeds(&format!(
             "program EnumConstantCase;
 type Shade = enum Red = 7; Blue = 42; end enum;
-function Classify(Value: result of option of Shade, string): integer;
+function Classify(Value: result of (option of Shade, string)): integer;
 begin
   const Red: Shade := Shade.Blue;
   case Value of

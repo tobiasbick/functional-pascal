@@ -2,7 +2,7 @@ program JsonFieldsTypedAccessTest;
 
 uses Std.Json, Std.Json.Fields, Std.Test;
 
-function ErrorText<T>(Value: result of T, string): string;
+function ErrorText<T>(Value: result of (T, string)): string;
 begin
   case Value of
     when Ok(_):

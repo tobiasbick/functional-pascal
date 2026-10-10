@@ -195,7 +195,8 @@ var_def             = identifier ':' type_expr ':=' expression ';' ;
 
 (* -- Type definitions -- *)
 type_declaration        = 'type' type_def ;
-type_def            = identifier '=' type_body ';' ;
+type_def            = identifier '=' type_body ';'
+                    | identifier data_type_params '=' (record_type | enum_type) ';' ;
 type_body           = record_type
                     | enum_type
                     | distinct_type
@@ -207,6 +208,8 @@ type_body           = record_type
 distinct_type       = 'distinct' type_expr ;
 
 type_params         = '<' type_param { ',' type_param } '>' ;
+data_type_params    = 'of' type_param
+                    | 'of' '(' type_param ',' type_param { ',' type_param } ')' ;
 type_param          = identifier [ ':' constraint_name ] ;
 constraint_name     = 'Comparable' | 'Numeric' | 'Printable' ;
 
@@ -221,11 +224,20 @@ type_expr           = 'array' 'of' type_expr            (* array type     *)
                     | 'channel' 'of' type_expr          (* channel type   *)
                     | 'task' [ 'of' type_expr ]         (* task handle    *)
                     | 'dict' 'of' type_expr 'to' type_expr (* dict type    *)
-                    | 'result' 'of' type_expr ',' type_expr  (* result type *)
+                    | 'result' 'of' '(' type_expr ',' type_expr ')' (* result type *)
                     | 'option' 'of' type_expr            (* option type    *)
                     | function_type                      (* function type  *)
                     | procedure_type                     (* procedure type *)
-                    | qualified_id ;   (* named / built-in / user type     *)
+                    | qualified_id [ data_type_arguments ] ;
+
+data_type_arguments = 'of' type_expr
+                      | 'of' '(' type_expr ',' type_expr { ',' type_expr } ')' ;
+
+(* Record constructors use ordinary type names and named fields.    *)
+(* Enum constructors use ordinary variant names and positional or   *)
+(* fully named payloads.                                            *)
+(* Explicit constructor type applications are rejected; arguments   *)
+(* belong in annotations and aliases, not constructor expressions. *)
 
 function_type       = 'function' '(' [ formal_type_list ] ')' ':' type_expr ;
 procedure_type      = 'procedure' '(' [ formal_type_list ] ')' ;

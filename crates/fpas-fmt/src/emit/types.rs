@@ -31,9 +31,26 @@ pub(crate) fn format_type_params(params: &[TypeParam]) -> String {
     emitter.finish()
 }
 
+/// Emits the canonical type spelling, including parenthesized `Result` arguments.
 pub(crate) fn emit_type_expr(emitter: &mut Emitter, ty: &TypeExpr) {
     match ty {
         TypeExpr::Named { id, .. } => emit_qualified_id(emitter, id),
+        TypeExpr::Application { id, arguments, .. } => {
+            emit_qualified_id(emitter, id);
+            emitter.write(" of ");
+            if arguments.len() > 1 {
+                emitter.write("(");
+            }
+            for (index, argument) in arguments.iter().enumerate() {
+                if index > 0 {
+                    emitter.write(", ");
+                }
+                emit_type_expr(emitter, argument);
+            }
+            if arguments.len() > 1 {
+                emitter.write(")");
+            }
+        }
         TypeExpr::Array(inner, ..) => {
             emitter.write("array of ");
             emit_type_expr(emitter, inner);
@@ -60,10 +77,11 @@ pub(crate) fn emit_type_expr(emitter: &mut Emitter, ty: &TypeExpr) {
         TypeExpr::Result {
             ok_type, err_type, ..
         } => {
-            emitter.write("result of ");
+            emitter.write("result of (");
             emit_type_expr(emitter, ok_type);
             emitter.write(", ");
             emit_type_expr(emitter, err_type);
+            emitter.write(")");
         }
         TypeExpr::Option { inner_type, .. } => {
             emitter.write("option of ");
@@ -157,8 +175,8 @@ mod tests {
     #[test]
     fn result_option_dict_types() {
         assert_eq!(
-            type_from_const("program T; begin const X: result of integer, string := Ok(0); end."),
-            "result of integer, string"
+            type_from_const("program T; begin const X: result of (integer, string) := Ok(0); end."),
+            "result of (integer, string)"
         );
         assert_eq!(
             type_from_const("program T; begin const X: option of integer := None; end."),
@@ -174,9 +192,9 @@ mod tests {
         );
         assert_eq!(
             type_from_const(
-                "program T; begin const X: array of TASK OF result of integer, string := []; end."
+                "program T; begin const X: array of TASK OF result of (integer, string) := []; end."
             ),
-            "array of task of result of integer, string"
+            "array of task of result of (integer, string)"
         );
         assert_eq!(
             type_from_const("program T; begin const X: task := Value; end."),

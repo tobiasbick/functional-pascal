@@ -4,12 +4,13 @@ use fpas_lexer::Span;
 use fpas_parser::Expr;
 
 impl Checker {
+    /// Check a return against the enclosing routine's declared result type.
     pub(in super::super) fn check_return_stmt(&mut self, expr: Option<&Expr>, span: Span) {
         let function_ctx = self.scopes.function_ctx.clone();
         match function_ctx {
             Some(ref function_ctx) => match (&function_ctx.return_type, expr) {
                 (Some(expected), Some(expr)) => {
-                    let actual = self.check_expr(expr);
+                    let actual = self.check_expr_with_expected(expr, Some(expected));
                     self.check_type_compat(expected, &actual, "return value", span);
                     self.record_discard_return(expr);
                 }

@@ -9,7 +9,7 @@ program Example;
 
 uses Std.Console, Std.Json, Std.Json.Fields;
 
-function ReadPort(Text: string): result of integer, string;
+function ReadPort(Text: string): result of (integer, string);
 begin
   const Fields: dict of string to JsonValue := try ParseObject(Text);
   const Allowed: boolean := try RequireOnlyFields(Fields, ['host', 'port']);
@@ -35,16 +35,16 @@ end.
 
 | Kind | Name | Notes |
 |------|------|-------|
-| function | `ParseObject(Text: string): Result of dict of string to JsonValue, string` | parses text whose root must be an object |
-| function | `Field(Fields; Name: string): Result of JsonValue, string` | any present field |
-| function | `StringField(Fields; Name: string): Result of string, string` | string field |
-| function | `BooleanField(Fields; Name: string): Result of boolean, string` | boolean field |
-| function | `NumberField(Fields; Name: string): Result of real, string` | number field |
-| function | `IntegerField(Fields; Name: string): Result of integer, string` | exact integer in the 64-bit range |
-| function | `ObjectField(Fields; Name: string): Result of dict of string to JsonValue, string` | nested object |
-| function | `ArrayField(Fields; Name: string): Result of array of JsonValue, string` | array with any element kinds |
-| function | `StringArrayField(Fields; Name: string): Result of array of string, string` | array whose elements are all strings |
-| function | `RequireOnlyFields(Fields; Allowed: array of string): Result of boolean, string` | rejects unlisted field names |
+| function | `ParseObject(Text: string): Result of (dict of string to JsonValue, string)` | parses text whose root must be an object |
+| function | `Field(Fields; Name: string): Result of (JsonValue, string)` | any present field |
+| function | `StringField(Fields; Name: string): Result of (string, string)` | string field |
+| function | `BooleanField(Fields; Name: string): Result of (boolean, string)` | boolean field |
+| function | `NumberField(Fields; Name: string): Result of (real, string)` | number field |
+| function | `IntegerField(Fields; Name: string): Result of (integer, string)` | exact integer in the 64-bit range |
+| function | `ObjectField(Fields; Name: string): Result of (dict of string to JsonValue, string)` | nested object |
+| function | `ArrayField(Fields; Name: string): Result of (array of JsonValue, string)` | array with any element kinds |
+| function | `StringArrayField(Fields; Name: string): Result of (array of string, string)` | array whose elements are all strings |
+| function | `RequireOnlyFields(Fields; Allowed: array of string): Result of (boolean, string)` | rejects unlisted field names |
 
 `Fields` is always `dict of string to JsonValue`.
 

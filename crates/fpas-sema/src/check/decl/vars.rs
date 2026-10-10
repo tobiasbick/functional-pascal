@@ -24,7 +24,7 @@ impl Checker {
         }
         let declared_ty = self.resolve_type_expr(type_expr);
 
-        let value_ty = self.check_expr(value);
+        let value_ty = self.check_expr_with_expected(value, Some(&declared_ty));
         let context = if constant {
             "const initializer"
         } else {

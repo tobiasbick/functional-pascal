@@ -39,7 +39,7 @@ end enum;
 //
 // Parameters:
 // - `Text`: UTF-8 text processed by the operation.
-public function Parse(Text: string): result of Std.Json.JsonValue, string;
+public function Parse(Text: string): result of (Std.Json.JsonValue, string);
 begin
   panic('Intrinsic API declaration');
 end function;

@@ -2,7 +2,7 @@ program TaskGroupWorkers;
 
 uses Std.Tasks, Std.Console;
 
-function CheckConfiguration(Token: CancellationToken): result of boolean, string;
+function CheckConfiguration(Token: CancellationToken): result of (boolean, string);
 begin
   return Error('A required setting is missing');
 end function;

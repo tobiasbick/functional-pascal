@@ -10,7 +10,7 @@ uses
 // Parameters:
 // - `Connection`: Accepted TCP or TLS connection.
 // - `Maximum`: Maximum request-head size in bytes.
-function ReadHead(Connection: Std.Net.Connection; Maximum: integer): result of array of integer, string;
+function ReadHead(Connection: Std.Net.Connection; Maximum: integer): result of (array of integer, string);
 begin
   var Bytes: array of integer := [];
   while Std.Http.Wire.FindSeparator(Bytes, 0) < 0 do
@@ -53,7 +53,7 @@ end function;
 //
 // Parameters:
 // - `Line`: Decoded request line.
-function ParseRequestLine(Line: string): result of array of string, string;
+function ParseRequestLine(Line: string): result of (array of string, string);
 begin
   const Parts: array of string := Line.Split(' ');
   if Parts.Length() <> 3 then
@@ -111,7 +111,7 @@ end function;
 // - `Connection`: Accepted TCP or TLS connection.
 // - `Initial`: Body bytes already read with the request head.
 // - `Length`: Declared complete body length.
-function ReadBody(Connection: Std.Net.Connection; Initial: array of integer; Length: integer): result of array of integer, string;
+function ReadBody(Connection: Std.Net.Connection; Initial: array of integer; Length: integer): result of (array of integer, string);
 begin
   var InitialLength: integer := Initial.Length();
   if Length < InitialLength then
@@ -159,7 +159,7 @@ end function;
 // - `Connection`: Accepted TCP or TLS connection.
 // - `MaxHeaderBytes`: Maximum request-head size in bytes.
 // - `MaxBodyBytes`: Maximum request-body size in bytes.
-public function ReadRequest(Connection: Std.Net.Connection; MaxHeaderBytes: integer; MaxBodyBytes: integer): result of ServerRequest, string;
+public function ReadRequest(Connection: Std.Net.Connection; MaxHeaderBytes: integer; MaxBodyBytes: integer): result of (ServerRequest, string);
 begin
   if MaxHeaderBytes < 1 then
     begin
@@ -295,7 +295,7 @@ end function;
 //
 // Parameters:
 // - `ResponseValue`: Complete response to encode.
-function EncodeResponse(ResponseValue: ServerResponse): result of array of integer, string;
+function EncodeResponse(ResponseValue: ServerResponse): result of (array of integer, string);
 begin
   if (ResponseValue.StatusCode < 100) or (ResponseValue.StatusCode > 599) then
     begin
@@ -342,7 +342,7 @@ end function;
 // Parameters:
 // - `Connection`: Accepted TCP or TLS connection.
 // - `ResponseValue`: Complete response to serialize and write.
-public function WriteResponse(Connection: Std.Net.Connection; ResponseValue: ServerResponse): result of boolean, string;
+public function WriteResponse(Connection: Std.Net.Connection; ResponseValue: ServerResponse): result of (boolean, string);
 begin
   case EncodeResponse(ResponseValue) of
     when Ok(const Bytes):

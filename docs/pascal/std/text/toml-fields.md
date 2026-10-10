@@ -9,7 +9,7 @@ program Example;
 
 uses Std.Console, Std.Toml, Std.Toml.Fields;
 
-function ReadPort(Text: string): result of integer, string;
+function ReadPort(Text: string): result of (integer, string);
 begin
   const Fields: dict of string to TomlValue := try ParseTable(Text);
   const Allowed: boolean := try RequireOnlyFields(Fields, ['host', 'port']);
@@ -35,16 +35,16 @@ end.
 
 | Kind | Name | Notes |
 |------|------|-------|
-| function | `ParseTable(Text: string): Result of dict of string to TomlValue, string` | parses a document and returns its root table |
-| function | `Field(Fields; Name: string): Result of TomlValue, string` | any present key |
-| function | `StringField(Fields; Name: string): Result of string, string` | string key |
-| function | `IntegerField(Fields; Name: string): Result of integer, string` | integer key; floats are rejected |
-| function | `FloatField(Fields; Name: string): Result of real, string` | float key; integers are rejected |
-| function | `BooleanField(Fields; Name: string): Result of boolean, string` | boolean key |
-| function | `TableField(Fields; Name: string): Result of dict of string to TomlValue, string` | nested or inline table |
-| function | `ArrayField(Fields; Name: string): Result of array of TomlValue, string` | array with any element kinds |
-| function | `StringArrayField(Fields; Name: string): Result of array of string, string` | array whose elements are all strings |
-| function | `RequireOnlyFields(Fields; Allowed: array of string): Result of boolean, string` | rejects unlisted key names |
+| function | `ParseTable(Text: string): Result of (dict of string to TomlValue, string)` | parses a document and returns its root table |
+| function | `Field(Fields; Name: string): Result of (TomlValue, string)` | any present key |
+| function | `StringField(Fields; Name: string): Result of (string, string)` | string key |
+| function | `IntegerField(Fields; Name: string): Result of (integer, string)` | integer key; floats are rejected |
+| function | `FloatField(Fields; Name: string): Result of (real, string)` | float key; integers are rejected |
+| function | `BooleanField(Fields; Name: string): Result of (boolean, string)` | boolean key |
+| function | `TableField(Fields; Name: string): Result of (dict of string to TomlValue, string)` | nested or inline table |
+| function | `ArrayField(Fields; Name: string): Result of (array of TomlValue, string)` | array with any element kinds |
+| function | `StringArrayField(Fields; Name: string): Result of (array of string, string)` | array whose elements are all strings |
+| function | `RequireOnlyFields(Fields; Allowed: array of string): Result of (boolean, string)` | rejects unlisted key names |
 
 `Fields` is always `dict of string to TomlValue`. Date/time values are read with `Field`
 and matched as `TomlValue.Datetime`.

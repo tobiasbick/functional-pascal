@@ -9,7 +9,7 @@ pub(in crate::check) use methods::MethodCallSite;
 use super::super::Checker;
 use crate::check::calls::CallTarget;
 use crate::scope::SymbolKind;
-use crate::types::{ParamTy, Ty};
+use crate::types::Ty;
 use fpas_diagnostics::codes::{
     SEMA_AMBIGUOUS_IMPORTED_NAME, SEMA_TYPE_MISMATCH, SEMA_UNKNOWN_NAME,
 };
@@ -125,12 +125,14 @@ impl Checker {
         CallResolution::Failed
     }
 
+    /// Check an ordinary call, passing expected types to record constructors.
     pub(super) fn check_call_expr(
         &mut self,
         call_expr: &Expr,
         designator: &Designator,
         args: &[Expr],
         span: Span,
+        expected: Option<&Ty>,
     ) -> Ty {
         match self.resolve_call_target(call_expr, designator, args, span, false) {
             CallResolution::Symbol { kind, ty } => {
@@ -142,6 +144,7 @@ impl Checker {
                     ty,
                     args,
                     span,
+                    expected,
                 )
             }
             CallResolution::MethodResult(ty) => ty,
@@ -157,14 +160,15 @@ impl Checker {
         symbol_ty: Ty,
         args: &[Expr],
         span: Span,
+        expected: Option<&Ty>,
     ) -> Ty {
         if symbol_kind == SymbolKind::EnumVariantConstructor {
-            return self.check_enum_variant_constructor_call(name, &symbol_ty, args, span);
+            return self.check_enum_construction(name, &symbol_ty, args, span, expected);
         }
         if symbol_kind == SymbolKind::Type
             && let Ty::Record(record) = self.resolve_visible_type(&symbol_ty)
         {
-            return self.check_record_construction(call_key, &record, args, span);
+            return self.check_record_construction(call_key, &record, args, span, expected);
         }
         if symbol_kind == SymbolKind::Type
             && let Some(ty) = self.try_check_type_conversion(call_key, name, &symbol_ty, args, span)
@@ -298,81 +302,5 @@ impl Checker {
             return Ty::Error;
         }
         crate::std_registry::check_builtin_std_call(self, dispatch, args, span)
-    }
-
-    /// Checks variant construction with positional or named field arguments.
-    ///
-    /// **Documentation:** `docs/pascal/language/types/enums.md`
-    fn check_enum_variant_constructor_call(
-        &mut self,
-        name: &str,
-        enum_ty: &Ty,
-        args: &[Expr],
-        span: Span,
-    ) -> Ty {
-        if let Ty::Enum(enum_def) = enum_ty {
-            let variant_name = name.rsplit('.').next().unwrap_or(name);
-            if let Some(variant) = enum_def
-                .variants
-                .iter()
-                .find(|v| v.name.eq_ignore_ascii_case(variant_name))
-            {
-                let fields = variant
-                    .fields
-                    .iter()
-                    .map(|(field_name, field_ty)| {
-                        ParamTy::value(field_name.clone(), field_ty.clone())
-                    })
-                    .collect::<Vec<_>>();
-                let Some(args) = self.order_call_arguments(
-                    name,
-                    CallTarget::EnumVariant,
-                    &fields,
-                    false,
-                    &args.iter().collect::<Vec<_>>(),
-                ) else {
-                    return enum_ty.clone();
-                };
-                if args.len() != variant.fields.len() {
-                    self.error_with_code(
-                        SEMA_TYPE_MISMATCH,
-                        format!(
-                            "`{name}` expects {} argument(s), got {}",
-                            variant.fields.len(),
-                            args.len()
-                        ),
-                        format!(
-                            "Provide values for: {}",
-                            variant
-                                .fields
-                                .iter()
-                                .map(|(field_name, _)| field_name.as_str())
-                                .collect::<Vec<_>>()
-                                .join(", ")
-                        ),
-                        span,
-                    );
-                }
-
-                for (arg, (_field_name, field_ty)) in args.iter().zip(variant.fields.iter()) {
-                    let arg_ty = self.check_expr(arg);
-                    self.check_type_compat(
-                        field_ty,
-                        &arg_ty,
-                        &format!("`{name}` argument"),
-                        arg.span(),
-                    );
-                }
-
-                for arg in args.iter().skip(variant.fields.len()) {
-                    self.check_expr(arg.argument_value());
-                }
-
-                return enum_ty.clone();
-            }
-        }
-
-        self.check_args_only(args);
-        enum_ty.clone()
     }
 }

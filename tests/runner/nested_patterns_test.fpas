@@ -16,7 +16,7 @@ end enum;
 
 const Limit: integer := 3;
 
-function Describe(R: result of option of integer, string): string;
+function Describe(R: result of (option of integer, string)): string;
 begin
   case R of
     when Ok(Some(0)):

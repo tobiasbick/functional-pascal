@@ -9,6 +9,17 @@ pub(super) fn apply_formal_param_source_id(param: &mut FormalParam, source_id: u
 
 pub(super) fn apply_type_expr_source_id(type_expr: &mut TypeExpr, source_id: u32) {
     match type_expr {
+        TypeExpr::Application {
+            id,
+            arguments,
+            span,
+        } => {
+            apply_qualified_id_source_id(id, source_id);
+            for argument in arguments {
+                apply_type_expr_source_id(argument, source_id);
+            }
+            apply_span(span, source_id);
+        }
         TypeExpr::Named { id, span } => {
             apply_qualified_id_source_id(id, source_id);
             apply_span(span, source_id);

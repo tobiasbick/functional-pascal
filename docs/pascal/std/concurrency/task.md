@@ -59,10 +59,10 @@ After `uses Std.Tasks;` use short names (`Wait`, `Cancel`, …) or qualified (`S
 | function | `GetTaskGroupToken(Group: TaskGroup): CancellationToken` | returns the group-owned cancellation token |
 | function | `CancelTaskGroup(Group: TaskGroup): boolean` | requests cancellation without joining; true only for the first request |
 | function | `CloseTaskGroup(Group: TaskGroup): array of TaskFailure` | cancels, joins registered children, releases their results, and returns failures |
-| function | `CloseTaskGroupWithTimeout(Group: TaskGroup; TimeoutMillis: integer): result of array of TaskFailure, string` | attempts cooperative close with a waiting budget; timeout retains group ownership |
+| function | `CloseTaskGroupWithTimeout(Group: TaskGroup; TimeoutMillis: integer): result of (array of TaskFailure, string)` | attempts cooperative close with a waiting budget; timeout retains group ownership |
 | function | `TryCloseCompletedTaskGroup(Group: TaskGroup): option of array of TaskFailure` | closes without cancellation only when every child is already terminal |
-| function | `ReceiveCase(Queue: channel of T; Callback: procedure(Outcome: result of T, string)): WaitCase` | describes one receive and its typed delivery callback |
-| function | `SendCase(Queue: channel of T; Value: T; Callback: procedure(Outcome: result of boolean, string)): WaitCase` | describes one send without enqueueing its value |
+| function | `ReceiveCase(Queue: channel of T; Callback: procedure(Outcome: result of (T, string))): WaitCase` | describes one receive and its typed delivery callback |
+| function | `SendCase(Queue: channel of T; Value: T; Callback: procedure(Outcome: result of (boolean, string))): WaitCase` | describes one send without enqueueing its value |
 | function | `TaskCase(Handle: task; Callback: procedure()): WaitCase` | describes non-consuming task completion |
 | function | `TimerCase(Milliseconds: integer; Callback: procedure()): WaitCase` | describes a timer relative to `Select` entry |
 | function | `CancellationCase(Token: CancellationToken; Callback: procedure()): WaitCase` | describes observation of cancellation |
@@ -73,20 +73,20 @@ After `uses Std.Tasks;` use short names (`Wait`, `Cancel`, …) or qualified (`S
 | function | `Cancel(Source: CancellationSource): boolean` | requests cancellation; true only for the first request |
 | function | `IsCancellationRequested(Token: CancellationToken): boolean` | reads the shared cancellation state |
 | function | `CreateChannel(Capacity: integer): channel of T` | creates a VM-owned bounded channel; capacity is `1..=1048576` |
-| function | `Send(Queue: channel of T; Value: T): result of boolean, string` | blocks while full; returns an error after close |
-| function | `TrySend(Queue: channel of T; Value: T): result of boolean, string` | sends immediately; `Ok(false)` means the open channel is full |
-| function | `SendWithCancellation(Queue: channel of T; Value: T; Token: CancellationToken): result of boolean, string` | send that also observes cancellation |
-| function | `SendWithTimeout(Queue: channel of T; Value: T; TimeoutMillis: integer): result of boolean, string` | sends before a relative monotonic deadline |
-| function | `Receive(Queue: channel of T): result of T, string` | blocks while empty and open |
-| function | `TryReceive(Queue: channel of T): result of option of T, string` | receives immediately; `Ok(None)` means the open channel is empty |
-| function | `ReceiveWithCancellation(Queue: channel of T; Token: CancellationToken): result of T, string` | receive that also observes cancellation |
-| function | `ReceiveWithTimeout(Queue: channel of T; TimeoutMillis: integer): result of T, string` | receives before a relative monotonic deadline |
+| function | `Send(Queue: channel of T; Value: T): result of (boolean, string)` | blocks while full; returns an error after close |
+| function | `TrySend(Queue: channel of T; Value: T): result of (boolean, string)` | sends immediately; `Ok(false)` means the open channel is full |
+| function | `SendWithCancellation(Queue: channel of T; Value: T; Token: CancellationToken): result of (boolean, string)` | send that also observes cancellation |
+| function | `SendWithTimeout(Queue: channel of T; Value: T; TimeoutMillis: integer): result of (boolean, string)` | sends before a relative monotonic deadline |
+| function | `Receive(Queue: channel of T): result of (T, string)` | blocks while empty and open |
+| function | `TryReceive(Queue: channel of T): result of (option of T, string)` | receives immediately; `Ok(None)` means the open channel is empty |
+| function | `ReceiveWithCancellation(Queue: channel of T; Token: CancellationToken): result of (T, string)` | receive that also observes cancellation |
+| function | `ReceiveWithTimeout(Queue: channel of T; TimeoutMillis: integer): result of (T, string)` | receives before a relative monotonic deadline |
 | function | `CloseChannel(Queue: channel of T): boolean` | closes and wakes waiters; true only for the first close |
 | function | `Wait(Handle: task): T` | blocks until the task finishes; **consumes** the handle’s result once |
 | procedure | `WaitAll(Tasks: array of task)` | blocks until every task has completed; does **not** consume results — you may still `Wait` each handle afterward |
 | function | `WaitAny(Tasks: array of task): integer` | returns the lowest completed input index without consuming results |
-| function | `WaitAnyWithTimeout(Tasks: array of task; TimeoutMillis: integer): result of integer, string` | completion index or a distinct timeout error |
-| function | `WaitAnyWithCancellation(Tasks: array of task; Token: CancellationToken): result of integer, string` | completion index or a distinct cancellation error |
+| function | `WaitAnyWithTimeout(Tasks: array of task; TimeoutMillis: integer): result of (integer, string)` | completion index or a distinct timeout error |
+| function | `WaitAnyWithCancellation(Tasks: array of task; Token: CancellationToken): result of (integer, string)` | completion index or a distinct cancellation error |
 
 ---
 
@@ -127,7 +127,7 @@ to see cooperative stop and an ordinary error collected by the same group.
 one child before publishing its task handle. The worker receives the group's `CancellationToken`
 as its only argument and may be a procedure or a function. Captures must be immutable. The task
 retains the routine's result type, so `Wait` retrieves its value using the existing task rules.
-A worker returning a top-level `result of T, E` must use `string` for `E`.
+A worker returning a top-level `result of (T, E)` must use `string` for `E`.
 
 The creator and registered children may start children in an open group. Unrelated tasks may not.
 Ordinary `go` does not implicitly register with a group. Discarding a child's handle does not

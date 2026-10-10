@@ -45,6 +45,14 @@ Rules:
 - A pattern variant must belong to the scrutinee enum type (`Shape.Circle` when matching `Shape`). The complete name follows ordinary name resolution, including unit and type aliases. An unknown qualifier is an error; a variant from another enum cannot match merely because it has the same short name.
 - Use an `if` guard for constraints a pattern cannot express, such as ranges or comparisons with computed values.
 
+Generic enum patterns use the same ordinary variant names. When matching a
+`Lookup of integer`, `Lookup.Found(const Value)` binds `Value` as `integer`.
+Nested patterns retain the arguments at each payload position, including
+recursive enums and Result or Option payloads. A variant from an alias fixed to
+different arguments is rejected. All alternatives remain subject to
+[exhaustiveness checking](exhaustiveness.md); see
+[generic enums](../types/generics.md#generic-enums).
+
 ## See also
 
 - [Types — enums](../types/enums.md)

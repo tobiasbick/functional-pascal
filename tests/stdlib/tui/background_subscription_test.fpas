@@ -15,7 +15,7 @@ begin
   const Started: channel of integer := State.Started;
   const Stopped: channel of integer := State.Stopped;
   const Generation: integer := State.Generation;
-  Cmd.ReplaceSubscription(1, function(Token: CancellationToken): result of boolean, string begin
+  Cmd.ReplaceSubscription(1, function(Token: CancellationToken): result of (boolean, string) begin
     discard Send(Started, Generation);
     if ReceiveWithCancellation(Gate, Token).IsError() then
       begin

@@ -24,7 +24,7 @@ end function;
 // - `ClientValue`: Endpoint, model, authorization, and response-limit settings.
 // - `Messages`: Conversation messages sent in order.
 // - `Options`: Optional generation controls for this completion.
-public function Complete(ClientValue: Client; Messages: array of ChatMessage; Options: ChatOptions): result of string, string;
+public function Complete(ClientValue: Client; Messages: array of ChatMessage; Options: ChatOptions): result of (string, string);
 begin
   if ClientValue.BaseUrl = '' then
     begin

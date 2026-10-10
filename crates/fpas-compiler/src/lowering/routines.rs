@@ -4,7 +4,7 @@ use std::collections::BTreeMap;
 
 use fpas_ir::{Function, FunctionId, TypeId};
 use fpas_parser::{
-    Decl, FormalParam, FuncBody, FunctionDecl, ProcedureDecl, RecordMethod, TypeBody,
+    Decl, FormalParam, FuncBody, FunctionDecl, ProcedureDecl, RecordMethod, TypeBody, TypeDef,
 };
 use fpas_sema::AnalysisMetadata;
 
@@ -13,13 +13,15 @@ use crate::CompileError;
 use super::context::{Callable, FunctionInput, LoweringContext, ParameterInput, unsupported};
 use super::types;
 
+/// A named routine and its enclosing record type parameters, when applicable.
 pub(super) enum Routine<'a> {
     Function(&'a FunctionDecl),
     Procedure(&'a ProcedureDecl),
-    RecordFunction(&'a str, &'a FunctionDecl),
-    RecordProcedure(&'a str, &'a ProcedureDecl),
+    RecordFunction(&'a TypeDef, &'a FunctionDecl),
+    RecordProcedure(&'a TypeDef, &'a ProcedureDecl),
 }
 
+/// Resolved bindings and captures required to lower a named routine.
 pub(super) struct LoweringInput<'a> {
     pub id: FunctionId,
     pub runtime_name: &'a str,
@@ -49,13 +51,21 @@ impl Routine<'_> {
         }
     }
 
-    fn type_params(&self) -> &[fpas_parser::TypeParam] {
-        match self {
+    fn type_params(&self) -> Vec<fpas_parser::TypeParam> {
+        let routine_parameters = match self {
             Self::Function(function) | Self::RecordFunction(_, function) => &function.type_params,
             Self::Procedure(procedure) | Self::RecordProcedure(_, procedure) => {
                 &procedure.type_params
             }
-        }
+        };
+        let mut parameters = match self {
+            Self::RecordFunction(owner, _) | Self::RecordProcedure(owner, _) => {
+                owner.type_params.clone()
+            }
+            _ => Vec::new(),
+        };
+        parameters.extend_from_slice(routine_parameters);
+        parameters
     }
 
     fn body(&self) -> &FuncBody {
@@ -65,6 +75,7 @@ impl Routine<'_> {
         }
     }
 
+    /// Executable statements used by closure and capture discovery.
     pub fn statements(&self) -> &[fpas_parser::Stmt] {
         let FuncBody::Block { stmts, .. } = self.body();
         stmts
@@ -73,7 +84,7 @@ impl Routine<'_> {
     fn result(&self, types: &mut types::TypeTable) -> Result<TypeId, CompileError> {
         match self {
             Self::Function(function) | Self::RecordFunction(_, function) => {
-                types.type_expr_with_params(&function.return_type, &function.type_params)
+                types.type_expr_with_params(&function.return_type, &self.type_params())
             }
             Self::Procedure(_) | Self::RecordProcedure(_, _) => Ok(types::UNIT),
         }
@@ -88,8 +99,8 @@ impl Routine<'_> {
 
     fn runtime_name(&self) -> String {
         match self {
-            Self::RecordFunction(owner, function) => format!("{owner}.{}", function.name),
-            Self::RecordProcedure(owner, procedure) => format!("{owner}.{}", procedure.name),
+            Self::RecordFunction(owner, function) => format!("{}.{}", owner.name, function.name),
+            Self::RecordProcedure(owner, procedure) => format!("{}.{}", owner.name, procedure.name),
             _ => self.name().to_string(),
         }
     }
@@ -106,6 +117,7 @@ impl Routine<'_> {
     }
 }
 
+/// Discover named routines in declaration order, retaining record ownership.
 pub(super) fn collect<'a>(
     declarations: &'a [Decl],
     routines: &mut Vec<Routine<'a>>,
@@ -144,14 +156,13 @@ pub(super) fn collect<'a>(
                         match method {
                             RecordMethod::Function(function)
                             | RecordMethod::StaticFunction(function) => {
-                                routines.push(Routine::RecordFunction(&definition.name, function));
+                                routines.push(Routine::RecordFunction(definition, function));
                                 owners.push(parent);
                                 names.push(format!("{}.{}", definition.name, function.name));
                             }
                             RecordMethod::Procedure(procedure)
                             | RecordMethod::StaticProcedure(procedure) => {
-                                routines
-                                    .push(Routine::RecordProcedure(&definition.name, procedure));
+                                routines.push(Routine::RecordProcedure(definition, procedure));
                                 owners.push(parent);
                                 names.push(format!("{}.{}", definition.name, procedure.name));
                             }
@@ -172,6 +183,7 @@ fn nested_runtime_name(parent_name: &str, name: &str) -> String {
     }
 }
 
+/// Lower routine signatures and their captures into the callable table.
 pub(super) fn callable_table(
     routines: &[Routine<'_>],
     owners: &[FunctionId],
@@ -187,10 +199,11 @@ pub(super) fn callable_table(
                 .map_err(|_| unsupported(routine.span(), "function identifier overflow"))?,
         );
         let parent = owners.get(index).copied().unwrap_or(FunctionId::new(0));
+        let type_parameters = routine.type_params();
         let parameters = routine
             .params()
             .iter()
-            .map(|parameter| types.formal_param_type(parameter, routine.type_params()))
+            .map(|parameter| types.formal_param_type(parameter, &type_parameters))
             .collect::<Result<Vec<_>, _>>()?;
         let result = routine.result(types)?;
         let value_type = types.function_type(parameters.clone(), result, routine.span())?;
@@ -247,6 +260,7 @@ pub(super) fn callable_table(
     Ok(table)
 }
 
+/// Lower the body of one named routine with its resolved runtime bindings.
 pub(super) fn lower(
     routine: &Routine<'_>,
     types: &mut types::TypeTable,
@@ -270,12 +284,13 @@ pub(super) fn lower(
         .get(&runtime_name.to_ascii_lowercase())
         .map(|callable| callable.captures.clone())
         .unwrap_or_default();
+    let type_parameters = routine.type_params();
     let parameters = routine
         .params()
         .iter()
         .map(|parameter| {
             types
-                .formal_param_type(parameter, routine.type_params())
+                .formal_param_type(parameter, &type_parameters)
                 .map(|ty| ParameterInput {
                     name: parameter.name.clone(),
                     ty,

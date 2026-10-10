@@ -10,7 +10,7 @@ uses
 // Parameters:
 // - `UriValue`: Parsed absolute request URI.
 // - `TimeoutMillis`: Connection and TLS handshake timeout.
-function OpenConnection(UriValue: Uri; TimeoutMillis: integer): result of Std.Net.Connection, string;
+function OpenConnection(UriValue: Uri; TimeoutMillis: integer): result of (Std.Net.Connection, string);
 begin
   if UriValue.Scheme = 'http' then
     begin
@@ -47,7 +47,7 @@ end procedure;
 //
 // Parameters:
 // - `RequestValue`: Complete request and its transport limits.
-function OpenOnce(RequestValue: Request): result of StreamResponse, string;
+function OpenOnce(RequestValue: Request): result of (StreamResponse, string);
 begin
   const UriValue: Uri := try Std.Net.Uri.Parse(RequestValue.Url);
   const Encoded: array of integer := try Std.Http.Wire.EncodeRequest(RequestValue, UriValue);
@@ -114,7 +114,7 @@ end function;
 //
 // Parameters:
 // - `RequestValue`: Complete request and its transport limits.
-public function OpenStream(RequestValue: Request): result of StreamResponse, string;
+public function OpenStream(RequestValue: Request): result of (StreamResponse, string);
 begin
   if RequestValue.MaxHeaderBytes < 1 then
     begin
@@ -219,7 +219,7 @@ end function;
 //
 // Parameters:
 // - `RequestValue`: Complete request and its transport limits.
-public function Send(RequestValue: Request): result of Response, string;
+public function Send(RequestValue: Request): result of (Response, string);
 begin
   case OpenStream(RequestValue) of
     when Ok(const StreamResponseValue):

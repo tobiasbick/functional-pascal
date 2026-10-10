@@ -3,7 +3,7 @@ program T;
 uses Std.Console, Std.Json, Std.Conv;
 
 begin
-  const R: result of JsonValue, string := Parse('{"name":"Ada","scores":[1,2],"active":true}');
+  const R: result of (JsonValue, string) := Parse('{"name":"Ada","scores":[1,2],"active":true}');
   case R of
     when Ok(const V):
       begin

@@ -10,6 +10,8 @@ mod enum_variants;
 mod errors;
 mod exports;
 mod generic_aliases;
+mod generic_enums;
+mod generic_records;
 mod handler_fields;
 mod indexed_callables;
 mod individual_declarations;

@@ -2,13 +2,13 @@ program T;
 
 uses Std.Console;
 
-function RecoverZero(E: string): result of integer, string;
+function RecoverZero(E: string): result of (integer, string);
 begin
   return Ok(0);
 end function;
 
 begin
-  const R: result of integer, string := Error('oops');
-  const M: result of integer, string := R.OrElse(RecoverZero);
+  const R: result of (integer, string) := Error('oops');
+  const M: result of (integer, string) := R.OrElse(RecoverZero);
   WriteLn(M.Unwrap());
 end.

@@ -47,7 +47,7 @@ end enum;
 //
 // Parameters:
 // - `Text`: UTF-8 text processed by the operation.
-public function Parse(Text: string): result of Std.Toml.TomlValue, string;
+public function Parse(Text: string): result of (Std.Toml.TomlValue, string);
 begin
   panic('Intrinsic API declaration');
 end function;

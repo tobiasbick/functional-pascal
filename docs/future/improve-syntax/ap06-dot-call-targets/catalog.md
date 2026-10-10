@@ -10,7 +10,7 @@ catalog and its type-handbook signatures.
 ## Scope and conventions
 
 - The catalog covers `string`, `array of T`, `dict of K to V`, `Option of T`,
-  and `Result of T, E`. Their operations are available without `uses`.
+  and `Result of (T, E)`. Their operations are available without `uses`.
 - Every operation has one canonical public name. Operations with different
   semantics, constraints, or errors remain distinct.
 - The private implementation IDs in the tables identify runtime ownership,
@@ -240,15 +240,15 @@ Receiver: `Option of T`. Type documentation: [Option operations](../../../pascal
 
 ## Result
 
-Receiver: `Result of T, E`. Type documentation: [Result operations](../../../pascal/language/types/result-operations.md).
+Receiver: `Result of (T, E)`. Type documentation: [Result operations](../../../pascal/language/types/result-operations.md).
 
 | Dot call and remaining arguments | Private implementation | Result type | Meaning |
 | --- | --- | --- | --- |
 | `IsOk()` | `Std.Results.IsOk` | `boolean` | Whether the result is successful |
 | `IsError()` | `Std.Results.IsError` | `boolean` | Whether the result is an error |
-| `Map(F: function(V: T): U)` | `Std.Results.Map` | `Result of U, E` | Transform the successful value |
-| `AndThen(F: function(V: T): Result of U, E)` | `Std.Results.AndThen` | `Result of U, E` | Chain an operation with the same error type |
-| `OrElse(F: function(Err: E): Result of T, E2)` | `Std.Results.OrElse` | `Result of T, E2` | Invoke error recovery; may change the error type |
+| `Map(F: function(V: T): U)` | `Std.Results.Map` | `Result of (U, E)` | Transform the successful value |
+| `AndThen(F: function(V: T): Result of (U, E))` | `Std.Results.AndThen` | `Result of (U, E)` | Chain an operation with the same error type |
+| `OrElse(F: function(Err: E): Result of (T, E2))` | `Std.Results.OrElse` | `Result of (T, E2)` | Invoke error recovery; may change the error type |
 | `Unwrap()` | `Std.Results.Unwrap` | `T` | Extract the value; panic for `Error` |
 | `UnwrapOr(Default: T)` | `Std.Results.UnwrapOr` | `T` | Extract the value or use the default |
 

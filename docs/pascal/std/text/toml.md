@@ -8,7 +8,7 @@ program Example;
 uses Std.Console, Std.Toml;
 
 begin
-  const Parsed: result of TomlValue, string := Parse('[project]' + string.Chr(10) + 'name = ''demo''');
+  const Parsed: result of (TomlValue, string) := Parse('[project]' + string.Chr(10) + 'name = ''demo''');
   case Parsed of
     when Ok(const Value):
       WriteLn(Stringify(Value));
@@ -29,7 +29,7 @@ After `uses Std.Toml;` use short names (`TomlValue`, `Parse`, `Stringify`) or qu
 | Kind | Name | Notes |
 | --- | --- | --- |
 | type | `TomlValue` | TOML value tree |
-| function | `Parse(Text: string): Result of TomlValue, string` | Parses one TOML document |
+| function | `Parse(Text: string): Result of (TomlValue, string)` | Parses one TOML document |
 | function | `Stringify(Value: TomlValue): string` | Encodes a TOML value tree |
 
 ### `TomlValue`
@@ -51,7 +51,7 @@ end enum;
 ## `Parse`
 
 ```pascal
-function Parse(Text: string): Result of TomlValue, string;
+function Parse(Text: string): Result of (TomlValue, string);
 ```
 
 Parses a TOML document. Valid input returns `Ok(TomlValue)`; syntax errors return `Error(Message)` rather than aborting the program. TOML documents are tables at the root, so successful `Parse` results always have the `TomlValue.Table` variant.
@@ -59,7 +59,7 @@ Parses a TOML document. Valid input returns `Ok(TomlValue)`; syntax errors retur
 All TOML 1.0 value kinds are represented: strings, signed 64-bit integers, floating-point values (including `inf` and `nan`), booleans, date/time values, arrays, tables, inline tables, and arrays of tables.
 
 ```pascal
-const Parsed: result of TomlValue, string := Parse('title = ''example''' + string.Chr(10) + 'enabled = true' + string.Chr(10) + '[server]' + string.Chr(10) +
+const Parsed: result of (TomlValue, string) := Parse('title = ''example''' + string.Chr(10) + 'enabled = true' + string.Chr(10) + '[server]' + string.Chr(10) +
                                                  'port = 8080');
 case Parsed of
   when Ok(const Value):

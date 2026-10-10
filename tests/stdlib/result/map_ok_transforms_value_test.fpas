@@ -8,7 +8,7 @@ begin
 end function;
 
 begin
-  const R: result of integer, string := Ok(21);
-  const M: result of string, string := R.Map(DoubleToStr);
+  const R: result of (integer, string) := Ok(21);
+  const M: result of (string, string) := R.Map(DoubleToStr);
   WriteLn(M.Unwrap());
 end.

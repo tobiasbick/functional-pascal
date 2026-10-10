@@ -4,7 +4,7 @@ uses Std.Test;
 
 var Trace: integer := 0;
 
-function ReadResult(Value: boolean; Fail: boolean; Digit: integer): result of boolean, string;
+function ReadResult(Value: boolean; Fail: boolean; Digit: integer): result of (boolean, string);
 begin
   Trace := Trace * 10 + Digit;
   if Fail then
@@ -14,7 +14,7 @@ begin
   return Ok(Value);
 end function;
 
-function ProbeResult(Left: boolean; IsAnd: boolean; FailLeft: boolean; FailRight: boolean): result of boolean, string;
+function ProbeResult(Left: boolean; IsAnd: boolean; FailLeft: boolean; FailRight: boolean): result of (boolean, string);
 begin
   if IsAnd then
     return Ok((try ReadResult(Left, FailLeft, 1)) and (try ReadResult(true, FailRight, 2)));

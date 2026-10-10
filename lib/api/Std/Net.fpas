@@ -26,7 +26,7 @@ end record;
 //
 // Parameters:
 // - `Listener`: `Std.Net.Listener` input value used by `Accept`.
-public function Accept(Listener: Std.Net.Listener): result of Std.Net.Connection, string;
+public function Accept(Listener: Std.Net.Listener): result of (Std.Net.Connection, string);
 begin
   panic('Intrinsic API declaration');
 end function;
@@ -36,7 +36,7 @@ end function;
 // Parameters:
 // - `Listener`: `Std.Net.Listener` input value used by `AcceptWithCancellation`.
 // - `Token`: `Std.Tasks.CancellationToken` input value used by `AcceptWithCancellation`.
-public function AcceptWithCancellation(Listener: Std.Net.Listener; Token: Std.Tasks.CancellationToken): result of Std.Net.Connection, string;
+public function AcceptWithCancellation(Listener: Std.Net.Listener; Token: Std.Tasks.CancellationToken): result of (Std.Net.Connection, string);
 begin
   panic('Intrinsic API declaration');
 end function;
@@ -45,7 +45,7 @@ end function;
 //
 // Parameters:
 // - `Connection`: `Std.Net.Connection` input value used by `Close`.
-public function Close(Connection: Std.Net.Connection): result of boolean, string;
+public function Close(Connection: Std.Net.Connection): result of (boolean, string);
 begin
   panic('Intrinsic API declaration');
 end function;
@@ -54,7 +54,7 @@ end function;
 //
 // Parameters:
 // - `Listener`: `Std.Net.Listener` input value used by `CloseListener`.
-public function CloseListener(Listener: Std.Net.Listener): result of boolean, string;
+public function CloseListener(Listener: Std.Net.Listener): result of (boolean, string);
 begin
   panic('Intrinsic API declaration');
 end function;
@@ -65,7 +65,7 @@ end function;
 // - `Host`: `string` input value used by `Connect`.
 // - `Port`: `integer` input value used by `Connect`.
 // - `TimeoutMillis`: `integer` input value used by `Connect`.
-public function Connect(Host: string; Port: integer; TimeoutMillis: integer): result of Std.Net.Connection, string;
+public function Connect(Host: string; Port: integer; TimeoutMillis: integer): result of (Std.Net.Connection, string);
 begin
   panic('Intrinsic API declaration');
 end function;
@@ -76,7 +76,7 @@ end function;
 // - `Host`: `string` input value used by `ConnectTls`.
 // - `Port`: `integer` input value used by `ConnectTls`.
 // - `TimeoutMillis`: `integer` input value used by `ConnectTls`.
-public function ConnectTls(Host: string; Port: integer; TimeoutMillis: integer): result of Std.Net.Connection, string;
+public function ConnectTls(Host: string; Port: integer; TimeoutMillis: integer): result of (Std.Net.Connection, string);
 begin
   panic('Intrinsic API declaration');
 end function;
@@ -93,7 +93,7 @@ public function ConnectTlsWithCancellation(
   Port: integer;
   TimeoutMillis: integer;
   Token: Std.Tasks.CancellationToken
-): result of Std.Net.Connection, string;
+): result of (Std.Net.Connection, string);
 begin
   panic('Intrinsic API declaration');
 end function;
@@ -110,7 +110,7 @@ public function ConnectWithCancellation(
   Port: integer;
   TimeoutMillis: integer;
   Token: Std.Tasks.CancellationToken
-): result of Std.Net.Connection, string;
+): result of (Std.Net.Connection, string);
 begin
   panic('Intrinsic API declaration');
 end function;
@@ -120,7 +120,7 @@ end function;
 // Parameters:
 // - `Host`: `string` input value used by `Listen`.
 // - `Port`: `integer` input value used by `Listen`.
-public function Listen(Host: string; Port: integer): result of Std.Net.Listener, string;
+public function Listen(Host: string; Port: integer): result of (Std.Net.Listener, string);
 begin
   panic('Intrinsic API declaration');
 end function;
@@ -139,7 +139,7 @@ public function ListenTls(
   CertificatePath: string;
   PrivateKeyPath: string;
   HandshakeTimeoutMillis: integer
-): result of Std.Net.Listener, string;
+): result of (Std.Net.Listener, string);
 begin
   panic('Intrinsic API declaration');
 end function;
@@ -148,7 +148,7 @@ end function;
 //
 // Parameters:
 // - `Listener`: `Std.Net.Listener` input value used by `ListenerLocalAddress`.
-public function ListenerLocalAddress(Listener: Std.Net.Listener): result of Std.Net.NetworkAddress, string;
+public function ListenerLocalAddress(Listener: Std.Net.Listener): result of (Std.Net.NetworkAddress, string);
 begin
   panic('Intrinsic API declaration');
 end function;
@@ -158,7 +158,7 @@ end function;
 // Parameters:
 // - `Connection`: `Std.Net.Connection` input value used by `ReceiveBytes`.
 // - `MaxBytes`: `integer` input value used by `ReceiveBytes`.
-public function ReceiveBytes(Connection: Std.Net.Connection; MaxBytes: integer): result of array of integer, string;
+public function ReceiveBytes(Connection: Std.Net.Connection; MaxBytes: integer): result of (array of integer, string);
 begin
   panic('Intrinsic API declaration');
 end function;
@@ -173,7 +173,7 @@ public function ReceiveBytesWithCancellation(
   Connection: Std.Net.Connection;
   MaxBytes: integer;
   Token: Std.Tasks.CancellationToken
-): result of array of integer, string;
+): result of (array of integer, string);
 begin
   panic('Intrinsic API declaration');
 end function;
@@ -183,7 +183,7 @@ end function;
 // Parameters:
 // - `Connection`: `Std.Net.Connection` input value used by `SendBytes`.
 // - `Data`: `array of integer` input value used by `SendBytes`.
-public function SendBytes(Connection: Std.Net.Connection; Data: array of integer): result of integer, string;
+public function SendBytes(Connection: Std.Net.Connection; Data: array of integer): result of (integer, string);
 begin
   panic('Intrinsic API declaration');
 end function;
@@ -198,7 +198,7 @@ public function SendBytesWithCancellation(
   Connection: Std.Net.Connection;
   Data: array of integer;
   Token: Std.Tasks.CancellationToken
-): result of integer, string;
+): result of (integer, string);
 begin
   panic('Intrinsic API declaration');
 end function;
@@ -208,7 +208,7 @@ end function;
 // Parameters:
 // - `Connection`: `Std.Net.Connection` input value used by `SetTimeout`.
 // - `TimeoutMillis`: `integer` input value used by `SetTimeout`.
-public function SetTimeout(Connection: Std.Net.Connection; TimeoutMillis: integer): result of boolean, string;
+public function SetTimeout(Connection: Std.Net.Connection; TimeoutMillis: integer): result of (boolean, string);
 begin
   panic('Intrinsic API declaration');
 end function;

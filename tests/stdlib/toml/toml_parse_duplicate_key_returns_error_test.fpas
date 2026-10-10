@@ -3,7 +3,7 @@ program TomlParseDuplicateKeyReturnsErrorTest;
 uses Std.Test, Std.Toml;
 
 begin
-  const Parsed: result of TomlValue, string := Parse('name = ''one''' + string.Chr(10) +
-                                                     'name = ''two''');
+  const Parsed: result of (TomlValue, string) := Parse('name = ''one''' + string.Chr(10) +
+                                                       'name = ''two''');
   AssertTrue(Parsed.IsError());
 end.

@@ -32,7 +32,7 @@ end procedure;
 //
 // Parameters:
 // - `StreamValue`: Body-stream handle to resolve.
-function StateIndex(StreamValue: Std.Http.Types.BodyStream): result of integer, string;
+function StateIndex(StreamValue: Std.Http.Types.BodyStream): result of (integer, string);
 begin
   const Slot: integer := Std.Http.Handles.BodyStreamSlot(StreamValue);
   if (Slot < 1) or (not HasState(Slot)) then
@@ -74,7 +74,7 @@ end procedure;
 //
 // Parameters:
 // - `Index`: One-based stream-state slot.
-function ReadNetwork(Index: integer): result of boolean, string;
+function ReadNetwork(Index: integer): result of (boolean, string);
 begin
   var State: StreamState := LoadState(Index);
   if not State.Open then
@@ -110,7 +110,7 @@ end function;
 // Parameters:
 // - `Index`: One-based stream-state slot.
 // - `Count`: Required buffered byte count.
-function EnsureBytes(Index: integer; Count: integer): result of boolean, string;
+function EnsureBytes(Index: integer; Count: integer): result of (boolean, string);
 begin
   while LoadState(Index).Buffer.Length() < Count do
     begin
@@ -159,7 +159,7 @@ end function;
 // Parameters:
 // - `Index`: One-based stream-state slot.
 // - `Maximum`: Maximum decoded bytes to return.
-function ReadFixed(Index: integer; Maximum: integer): result of array of integer, string;
+function ReadFixed(Index: integer; Maximum: integer): result of (array of integer, string);
 begin
   if LoadState(Index).Remaining = 0 then
     begin
@@ -211,7 +211,7 @@ end function;
 // Parameters:
 // - `Index`: One-based stream-state slot.
 // - `Maximum`: Maximum decoded bytes to return.
-function ReadUntilClose(Index: integer; Maximum: integer): result of array of integer, string;
+function ReadUntilClose(Index: integer; Maximum: integer): result of (array of integer, string);
 begin
   if LoadState(Index).Buffer.Length() = 0 then
     begin
@@ -240,7 +240,7 @@ end function;
 //
 // Parameters:
 // - `Index`: One-based stream-state slot.
-function ReadChunkSize(Index: integer): result of integer, string;
+function ReadChunkSize(Index: integer): result of (integer, string);
 begin
   var LineEnd: integer := Std.Http.Wire.FindLineEnd(LoadState(Index).Buffer, 0);
   while LineEnd < 0 do
@@ -285,7 +285,7 @@ end function;
 // Parameters:
 // - `Index`: One-based stream-state slot.
 // - `Maximum`: Maximum decoded bytes to return.
-function ReadChunked(Index: integer; Maximum: integer): result of array of integer, string;
+function ReadChunked(Index: integer; Maximum: integer): result of (array of integer, string);
 begin
   while true do
     begin
@@ -410,7 +410,7 @@ public function CreateBody(
   HasBody: boolean;
   BytesReceived: integer;
   Maximum: integer
-): result of Std.Http.Types.BodyStream, string;
+): result of (Std.Http.Types.BodyStream, string);
 begin
   var Mode: integer := 0;
   var Remaining: integer := 0;
@@ -454,7 +454,7 @@ end function;
 // Parameters:
 // - `StreamValue`: Open response-body handle.
 // - `MaxBytes`: Maximum decoded bytes to return.
-public function ReadBody(StreamValue: Std.Http.Types.BodyStream; MaxBytes: integer): result of array of integer, string;
+public function ReadBody(StreamValue: Std.Http.Types.BodyStream; MaxBytes: integer): result of (array of integer, string);
 begin
   if MaxBytes < 1 then
     begin
@@ -496,7 +496,7 @@ end function;
 //
 // Parameters:
 // - `StreamValue`: Open response-body handle to close.
-public function CloseBody(StreamValue: Std.Http.Types.BodyStream): result of boolean, string;
+public function CloseBody(StreamValue: Std.Http.Types.BodyStream): result of (boolean, string);
 begin
   case StateIndex(StreamValue) of
     when Ok(const Index):

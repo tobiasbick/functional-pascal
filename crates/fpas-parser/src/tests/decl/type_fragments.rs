@@ -7,7 +7,7 @@ use crate::parse_type_expression;
 #[test]
 fn result_fragments_preserve_nested_success_and_error_types() {
     let (ty, diagnostics) =
-        parse_type_expression("Result of Result of string, integer, Result of boolean, real");
+        parse_type_expression("Result of (Result of (string, integer), Result of (boolean, real))");
     assert!(diagnostics.is_empty(), "{diagnostics:#?}");
     let TypeExpr::Result {
         ok_type, err_type, ..
@@ -32,7 +32,7 @@ fn result_fragments_preserve_nested_success_and_error_types() {
 
 #[test]
 fn type_fragments_preserve_mixed_containers_and_callable_parameters() {
-    let source = "function(var Value: array of Result of string, integer): dict of string to Option of Result of string, boolean";
+    let source = "function(var Value: array of Result of (string, integer)): dict of string to Option of Result of (string, boolean)";
     let (ty, diagnostics) = parse_type_expression(source);
     assert!(diagnostics.is_empty(), "{diagnostics:#?}");
     let TypeExpr::FunctionType {
@@ -100,13 +100,27 @@ fn type_fragment_diagnostics_keep_lexer_errors_before_parser_errors() {
 fn excessive_type_fragment_nesting_uses_the_shared_parser_limit() {
     use crate::parser::MAX_PARSER_NESTING_DEPTH;
     use fpas_diagnostics::codes::PARSE_NESTING_LIMIT_EXCEEDED;
-    let source = format!("{}string", "array of ".repeat(MAX_PARSER_NESTING_DEPTH + 1));
-    let (_, diagnostics) = parse_type_expression(&source);
-    assert_eq!(diagnostics.len(), 1);
-    assert_eq!(
-        diagnostics[0].as_diagnostic().code,
-        PARSE_NESTING_LIMIT_EXCEEDED
-    );
+    let depth = MAX_PARSER_NESTING_DEPTH + 1;
+    for source in [
+        format!("{}string", "array of ".repeat(depth)),
+        format!(
+            "{}string{}",
+            "Result of (".repeat(depth),
+            ", string)".repeat(depth)
+        ),
+        format!(
+            "{}string{}",
+            "Result<".repeat(depth),
+            ", string>".repeat(depth)
+        ),
+    ] {
+        let (_, diagnostics) = parse_type_expression(&source);
+        assert_eq!(diagnostics.len(), 1, "{diagnostics:#?}");
+        assert_eq!(
+            diagnostics[0].as_diagnostic().code,
+            PARSE_NESTING_LIMIT_EXCEEDED
+        );
+    }
 }
 
 fn assert_named(ty: &TypeExpr, expected: &str) {

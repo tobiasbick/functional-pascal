@@ -18,8 +18,8 @@ After `uses Std.Crypto;` use **`RandomBytes`** and **`RandomInt`**, or the fully
 
 | Kind | Name | Notes |
 |------|------|-------|
-| function | `RandomBytes(Count: integer): result of array of integer, string` | `Count` secure bytes, each in `0..255` |
-| function | `RandomInt(Lo: integer; Hi: integer): result of integer, string` | Unbiased secure value in inclusive `[Lo, Hi]` |
+| function | `RandomBytes(Count: integer): result of (array of integer, string)` | `Count` secure bytes, each in `0..255` |
+| function | `RandomInt(Lo: integer; Hi: integer): result of (integer, string)` | Unbiased secure value in inclusive `[Lo, Hi]` |
 
 Both functions request randomness from the operating system. Failure is returned as `Error(Message)` and never falls back to `Std.Random`.
 

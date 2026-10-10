@@ -3,7 +3,7 @@ program ParallelTcpEchoServer;
 
 uses Std.Args, Std.Conv, Std.Console, Std.Net, Std.Tasks, Std.Time, Std.Server;
 
-function Echo(Client: Connection; Token: CancellationToken): result of boolean, string;
+function Echo(Client: Connection; Token: CancellationToken): result of (boolean, string);
 begin
   const Configured: boolean := try SetTimeout(Client, 5000);
   while not IsCancellationRequested(Token) do
@@ -67,13 +67,13 @@ begin
   const Workers: TaskGroup := GetWorkGroup(Life);
   for Index: integer := 1 to 4 do
     begin
-      const ConnectionTask: task := StartTaskInGroup(Workers, function(Token: CancellationToken): result of boolean, string begin
+      const ConnectionTask: task := StartTaskInGroup(Workers, function(Token: CancellationToken): result of (boolean, string) begin
         while not IsCancellationRequested(Token) do
           begin
             case AcceptWithCancellation(ListenerValue, Token) of
               when Ok(const Client):
                 begin
-                  const Outcome: result of boolean, string := Echo(Client, Token);
+                  const Outcome: result of (boolean, string) := Echo(Client, Token);
                   // Close even on read/write failure. One failed client does not stop admission.
                   const Closed: boolean := try Close(Client);
                   case Outcome of

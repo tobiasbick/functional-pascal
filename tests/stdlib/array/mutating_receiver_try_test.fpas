@@ -6,12 +6,12 @@ type Holder = record
   Items: array of integer;
 end record;
 
-function Stop(): result of integer, string;
+function Stop(): result of (integer, string);
 begin
   return Error('stopped');
 end function;
 
-function Change(var H: Holder): result of integer, string;
+function Change(var H: Holder): result of (integer, string);
 begin
   H.Items.Push(2);
   const Last: integer := H.Items.Pop();
@@ -24,7 +24,7 @@ end function;
 begin
   var H: Holder := Holder(Items := [1]);
   const Original: Holder := H;
-  const Outcome: result of integer, string := Change(var H);
+  const Outcome: result of (integer, string) := Change(var H);
   case Outcome of
     when Error(const Message):
       AssertEquals('stopped', Message);

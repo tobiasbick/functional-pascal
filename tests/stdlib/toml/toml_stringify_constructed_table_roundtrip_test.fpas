@@ -8,7 +8,7 @@ begin
                                                                                                                                                                                                                                                                    TomlValue.String('windows')
                                                                                                                                                                                                                                                                  ])]);
   const Encoded: string := Stringify(Source);
-  const Parsed: result of TomlValue, string := Parse(Encoded);
+  const Parsed: result of (TomlValue, string) := Parse(Encoded);
   case Parsed of
     when Ok(const Value):
       begin

@@ -14,7 +14,7 @@ begin
     begin
       const Target: channel of integer := State.Inbox;
       const Ready: channel of boolean := State.Ready;
-      Cmd.StartBackground(7, function(Token: CancellationToken): result of boolean, string begin
+      Cmd.StartBackground(7, function(Token: CancellationToken): result of (boolean, string) begin
         if SendWithCancellation(Target, 42, Token).IsError() then
           begin
             return Ok(true);

@@ -3,6 +3,6 @@ program TomlParseInvalidTomlReturnsErrorTest;
 uses Std.Test, Std.Toml;
 
 begin
-  const Parsed: result of TomlValue, string := Parse('answer = [1,');
+  const Parsed: result of (TomlValue, string) := Parse('answer = [1,');
   AssertTrue(Parsed.IsError());
 end.

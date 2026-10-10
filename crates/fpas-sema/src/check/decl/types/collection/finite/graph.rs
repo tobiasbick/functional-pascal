@@ -118,8 +118,8 @@ impl FiniteGraph {
     fn type_node(&mut self, checker: &Checker, ty: &Ty) -> usize {
         let resolved = checker.resolve_visible_type(ty);
         let (name, requirement) = match &resolved {
-            Ty::Record(record) => (Some(record.name.clone()), Requirement::All),
-            Ty::Enum(enumeration) => (Some(enumeration.name.clone()), Requirement::Any),
+            Ty::Record(_) => (Some(resolved.to_string()), Requirement::All),
+            Ty::Enum(_) => (Some(resolved.to_string()), Requirement::Any),
             Ty::Result(..) => (None, Requirement::Any),
             _ => return 0,
         };

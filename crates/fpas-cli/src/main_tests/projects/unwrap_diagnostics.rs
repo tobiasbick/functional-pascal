@@ -13,7 +13,7 @@ fn native_unwrap_chains_and_retired_namespace_diagnostics() {
         .expect("repository root");
     for (container, constructor) in [
         ("option of TuiStyle", "Some"),
-        ("result of TuiStyle, string", "Ok"),
+        ("result of (TuiStyle, string)", "Ok"),
     ] {
         for function in ["Unwrap", "UnwrapOr"] {
             for namespace in [None, Some("Options"), Some("Results")] {

@@ -56,6 +56,8 @@ pub(super) fn register_std_toml(checker: &mut Checker) {
     ];
     let toml_ty = Ty::Enum(Arc::new(EnumTy {
         name: s::STD_TOML_VALUE.into(),
+        type_params: Vec::new(),
+        type_args: Vec::new(),
         variants: variants.clone(),
     }));
 

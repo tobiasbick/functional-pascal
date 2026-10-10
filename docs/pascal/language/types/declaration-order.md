@@ -102,6 +102,12 @@ path produce `FP3024`, naming the participating types and fields or payloads.
 Recursive public types retain their identities and member visibility across
 compiled-unit interfaces.
 
+Generic records and enums follow these rules after type substitution. On every
+reference in a recursive generic cycle, pass the declaring parameters unchanged
+and in the same positions. Different parameter names in mutually recursive
+declarations are allowed; wrapping, replacing, or reordering parameters is an
+error. See [generic data types](generics.md).
+
 ## See also
 
 - [Records](records.md)

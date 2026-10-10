@@ -29,7 +29,7 @@ fn built_in_and_callable_type_forms_parse() {
         "array of integer",
         "channel of string",
         "option of array of integer",
-        "result of integer, string",
+        "result of (integer, string)",
         "dict of string to array of integer",
         "function(X: integer): integer",
         "procedure(X: integer)",

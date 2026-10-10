@@ -6,8 +6,8 @@ use super::*;
 #[test]
 fn nested_result_completion_and_buffer_edits_use_exact_utf16_ranges() {
     let temp = TempDirectory::new("native-result-completion");
-    let source = "program Demo;\nbegin\n  const Value: Result of Result of string, integer, boolean := Ok(Ok('x'));\n  discard Value.Unwrap().Unwrap().\nend.\n";
-    let edited = "program Demo;\nbegin\n  const Value: Result of Result of string, integer, boolean := Ok(Ok('x'));\n  const Music: string := '𝄞'; discard Value.Unwrap().Unwrap().LeTail;\nend.\n";
+    let source = "program Demo;\nbegin\n  const Value: Result of (Result of (string, integer), boolean) := Ok(Ok('x'));\n  discard Value.Unwrap().Unwrap().\nend.\n";
+    let edited = "program Demo;\nbegin\n  const Value: Result of (Result of (string, integer), boolean) := Ok(Ok('x'));\n  const Music: string := '𝄞'; discard Value.Unwrap().Unwrap().LeTail;\nend.\n";
     temp.write("main.fpas", source);
     let uri = temp.uri("main.fpas");
     let dot = source.find("Unwrap().\n").expect("dot") + "Unwrap().".len();
@@ -54,7 +54,7 @@ fn nested_result_completion_and_buffer_edits_use_exact_utf16_ranges() {
 #[test]
 fn nested_result_callback_completion_uses_the_string_catalog() {
     let temp = TempDirectory::new("native-result-callback");
-    let source = "program Demo;\nbegin\n  const Items: array of integer := [1];\n  discard Items.Map(F := function(X: integer): Result of Result of string, integer, boolean begin return Ok(Ok('x')); end function)[0].Unwrap().Unwrap().\nend.\n";
+    let source = "program Demo;\nbegin\n  const Items: array of integer := [1];\n  discard Items.Map(F := function(X: integer): Result of (Result of (string, integer), boolean) begin return Ok(Ok('x')); end function)[0].Unwrap().Unwrap().\nend.\n";
     temp.write("main.fpas", source);
     let uri = temp.uri("main.fpas");
     let cursor = source.find("Unwrap().\n").expect("dot") + "Unwrap().".len();

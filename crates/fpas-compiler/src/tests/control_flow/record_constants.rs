@@ -16,7 +16,7 @@ fn record_constant_patterns_dispatch_boolean_and_enum_values() {
         function BooleanScore(Value: Option of boolean): integer;
         begin case Value of when Some(Enabled): return 1;
         when Some(Updated.Enabled): return 2; when None: return 4; end case; end function;
-        function ColorScore(Value: result of Option of Color, string): integer;
+        function ColorScore(Value: result of (Option of Color, string)): integer;
         begin case Value of when Ok(Some(Config.Flags.Color)): return 8;
         when Ok(Some(Selected)): return 16; when Ok(None): return 32;
         when Error(_): return 64; end case; end function;

@@ -9,7 +9,7 @@ begin
   const Gate: channel of boolean := CreateChannel(1);
   const Ready: channel of boolean := CreateChannel(1);
   const Returned: TaskGroup := CreateTaskGroup();
-  const ReturnedTask: task := StartTaskInGroup(Returned, function(Token: CancellationToken): result of boolean, string begin
+  const ReturnedTask: task := StartTaskInGroup(Returned, function(Token: CancellationToken): result of (boolean, string) begin
     discard Send(Ready, true);
     case ReceiveWithCancellation(Gate, Token) of
       when Ok(_):

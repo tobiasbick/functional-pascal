@@ -1,16 +1,16 @@
 # Result
 
-`Result of T, E` represents either a success (`Ok`) or a failure (`Error`):
+`Result of (T, E)` represents either a success (`Ok`) or a failure (`Error`):
 
 ```pascal
-const R: Result of integer, string := Ok(42);
-const E: Result of integer, string := Error('not found');
+const R: Result of (integer, string) := Ok(42);
+const E: Result of (integer, string) := Error('not found');
 ```
 
 ## Returning errors
 
 ```pascal
-function Divide(A: integer; B: integer): result of integer, string;
+function Divide(A: integer; B: integer): result of (integer, string);
 begin
   if B = 0 then
     return Error('Division by zero');
@@ -25,7 +25,7 @@ end function;
 Use `case of` with destructuring to handle both branches:
 
 ```pascal
-const R: result of integer, string := Divide(10, 0);
+const R: result of (integer, string) := Divide(10, 0);
 case R of
   when Ok(const V):
     WriteLn('Value: ' + IntToStr(V));

@@ -10,7 +10,7 @@ const LIFECYCLE: &str =
 
 const SOURCE: &str = r#"program GroupFailures;
 uses Std.Tasks, Std.Time;
-function Ordinary(Token: CancellationToken): result of integer, string;
+function Ordinary(Token: CancellationToken): result of (integer, string);
 begin
   Sleep(1);
   return Error('ordinary');

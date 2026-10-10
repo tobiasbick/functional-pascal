@@ -71,8 +71,13 @@ impl LoweringContext {
                     DesignatorPart::Index(_, _) => None,
                 })
                 .ok_or_else(|| unsupported(designator.span, "enum constructor"))?;
-            if let Some((variant, _)) = self.enum_variant(layout, name) {
-                let fields = self.lower_call_arguments(arguments, span)?;
+            if let Some((variant, field_types)) = self.enum_variant(layout, name) {
+                let values = self.lower_call_arguments(arguments, span)?;
+                let fields = values
+                    .into_iter()
+                    .zip(field_types)
+                    .map(|(value, ty)| self.value_as(value, ty, span))
+                    .collect::<Result<Vec<_>, _>>()?;
                 return self.emit_value(
                     Operation::MakeEnum {
                         layout,

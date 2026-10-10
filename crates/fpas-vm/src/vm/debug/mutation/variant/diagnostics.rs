@@ -11,7 +11,7 @@ pub(in crate::vm::debug) fn not_a_wrapper(type_name: &str) -> DebugSessionError 
         message: format!(
             "debug variant target type `{type_name}` is not an enum, Result, or Option"
         ),
-        hint: "Select a mutable enum, `result of T, E`, or `option of T` target such as `Selected` or `Outcome`."
+        hint: "Select a mutable enum, `result of (T, E)`, or `option of T` target such as `Selected` or `Outcome`."
             .to_string(),
     }
 }

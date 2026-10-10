@@ -7,7 +7,7 @@ uses Std.Http.Server, Std.Http.Types, Std.Net, Std.Tasks;
 //
 // Parameters:
 // - `Options`: Server-loop limits to validate.
-function ValidateOptions(Options: ServerOptions): result of boolean, string;
+function ValidateOptions(Options: ServerOptions): result of (boolean, string);
 begin
   if Options.MaxHeaderBytes < 1 then
     begin
@@ -144,7 +144,7 @@ end function;
 // - `Listener`: Open TCP or TLS listener.
 // - `Options`: Request limits and server-loop bounds.
 // - `Handler`: Callback that maps each accepted request to a response.
-public function Serve(Listener: Std.Net.Listener; Options: ServerOptions; Handler: RequestHandler): result of boolean, string;
+public function Serve(Listener: Std.Net.Listener; Options: ServerOptions; Handler: RequestHandler): result of (boolean, string);
 begin
   case ValidateOptions(Options) of
     when Ok(_):

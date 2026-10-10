@@ -64,6 +64,11 @@ impl Checker {
         pattern: &Pattern,
         bindings: &mut PatternBindings,
     ) -> Pat {
+        let expected_ty = self.resolve_visible_type(expected_ty);
+        let span = pattern.span();
+        self.pattern_types
+            .insert((span.source_id, span.offset), expected_ty.clone());
+        let expected_ty = &expected_ty;
         match pattern {
             Pattern::Binding { name, .. } => {
                 bindings.push((name.clone(), expected_ty.clone()));

@@ -1,7 +1,6 @@
 //! Generic type spellings documented in `docs/pascal/tools/fmt-style.md`.
 
-use super::declarations::formatter_type_example;
-use fpas_diagnostics::codes::PARSE_EXPECTED_TOKEN;
+use super::markdown::pascal_blocks;
 use fpas_parser::parse;
 
 #[test]
@@ -22,23 +21,17 @@ fn documented_builtin_generic_type_forms_parse() {
 }
 
 #[test]
-fn original_user_defined_generic_type_applications_report_fp2001() {
-    let example = formatter_type_example();
-    assert!(
-        example.contains("type IntOption = option of integer;"),
-        "documented built-in alias"
-    );
-    for application in ["Box of integer", "Box of string", "Pair of integer, string"] {
-        let source = example.replacen("option of integer", application, 1);
+fn documented_generic_record_and_routine_examples_parse() {
+    let markdown = include_str!("../../../../docs/pascal/language/types/generics.md");
+    let blocks = pascal_blocks(markdown);
+    assert!(!blocks.is_empty(), "generic examples");
+    for block in blocks {
+        let source = format!("program Doc;\n{}\nbegin end.", block.source);
         let (_, errors) = parse(&source);
-        assert_eq!(errors.len(), 1, "{source}\n{errors:#?}");
-        let diagnostic = errors[0].as_diagnostic();
-        assert_eq!(diagnostic.code, PARSE_EXPECTED_TOKEN, "{source}");
         assert!(
-            diagnostic
-                .message
-                .contains("User-defined generic type arguments"),
-            "{source}\n{diagnostic:#?}"
+            errors.is_empty(),
+            "generics.md:{}\n{source}\n{errors:#?}",
+            block.line
         );
     }
 }

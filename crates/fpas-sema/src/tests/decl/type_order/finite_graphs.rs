@@ -53,7 +53,7 @@ fn mandatory_failure_skips_shared_finite_recursive_alternatives_in_its_witness()
     let errors = check_errors(
         "program T;
         type Root = record Left: Good; Right: Good; Required: Bad; end record;
-        type Good = enum Recursive(Next: Root); Stop(Value: Result of Good, string); end enum;
+        type Good = enum Recursive(Next: Root); Stop(Value: Result of (Good, string)); end enum;
         type Bad = record Next: Bad; end record;
         begin end.",
     );
@@ -83,7 +83,7 @@ fn mandatory_failure_skips_shared_finite_recursive_alternatives_in_its_witness()
 #[test]
 fn mandatory_result_and_shared_enum_cycles_report_each_declared_type() {
     for definitions in [
-        "type A = record Value: Result of B, B; end record;
+        "type A = record Value: Result of (B, B); end record;
         type B = enum Left(Next: A); Right(Next: A); end enum;",
         "type A = enum Left(Next: B); Right(Next: B); end enum;
         type B = record Left: A; Right: A; end record;",

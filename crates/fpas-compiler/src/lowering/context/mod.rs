@@ -9,6 +9,7 @@ mod descriptors;
 mod expressions;
 mod references;
 mod saved_values;
+mod value_conversion;
 
 #[cfg(test)]
 mod block_order_tests;
@@ -50,6 +51,9 @@ pub(super) struct LoweringContext {
     constants: BTreeMap<String, fpas_ir::Constant>,
     pub(super) type_table: types::TypeTable,
     pub(super) expr_types: ExprTypeMap,
+    pub(super) path_types: HashMap<(u32, usize), fpas_sema::Ty>,
+    pub(super) postfix_types: HashMap<(u32, usize), fpas_sema::Ty>,
+    pub(super) pattern_types: HashMap<(u32, usize), fpas_sema::Ty>,
     /// Full designators resolved to enum members by semantic analysis.
     pub(super) enum_members: std::collections::HashSet<usize>,
     pub(super) intrinsic_calls: fpas_sema::IntrinsicCallMap,
@@ -248,6 +252,9 @@ impl LoweringContext {
             constants,
             type_table,
             expr_types: metadata.expr_types.clone(),
+            path_types: metadata.path_types.clone(),
+            postfix_types: metadata.postfix_types.clone(),
+            pattern_types: metadata.pattern_types.clone(),
             enum_members: metadata.enum_members.clone(),
             intrinsic_calls: metadata.intrinsic_calls.clone(),
             named_argument_orders: metadata.named_argument_orders.clone(),

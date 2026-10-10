@@ -30,7 +30,7 @@ After `uses Std.Fs;` use **`ReadText`**, **`WriteText`**, **`WriteTextAtomic`**,
 
 ---
 
-## `DeleteFile(Path: string): result of boolean, string`
+## `DeleteFile(Path: string): result of (boolean, string)`
 
 Deletes one file entry and returns `Ok(true)`. Missing paths, directories, permission failures, and other OS errors return `Error(message)`. It does not recursively delete directories. On Windows and POSIX, a symbolic link is removed without deleting its target; directory links follow the platform file-removal rules and may be rejected. Open files can be unlinked on POSIX, while Windows may reject deletion when a handle does not permit delete sharing. Error messages come from the host OS.
 
@@ -40,17 +40,17 @@ Requires `uses Std.Fs;`.
 
 | Kind | Name | Notes |
 |------|------|-------|
-| function | `ReadText(Path: string): Result of string, string` | reads UTF-8 text |
-| function | `WriteText(Path: string; Text: string): Result of boolean, string` | writes UTF-8 text, returns `Ok(true)` |
-| function | `WriteTextAtomic(Path: string; Text: string): Result of boolean, string` | publishes complete UTF-8 text through a same-directory temporary file |
-| function | `DeleteFile(Path: string): Result of boolean, string` | removes one file entry, returns `Ok(true)` |
+| function | `ReadText(Path: string): Result of (string, string)` | reads UTF-8 text |
+| function | `WriteText(Path: string; Text: string): Result of (boolean, string)` | writes UTF-8 text, returns `Ok(true)` |
+| function | `WriteTextAtomic(Path: string; Text: string): Result of (boolean, string)` | publishes complete UTF-8 text through a same-directory temporary file |
+| function | `DeleteFile(Path: string): Result of (boolean, string)` | removes one file entry, returns `Ok(true)` |
 | function | `Exists(Path: string): boolean` | `true` when the path exists |
 | function | `IsFile(Path: string): boolean` | `true` for a regular file |
 | function | `IsDir(Path: string): boolean` | `true` for a directory |
-| function | `CreateDir(Path: string): Result of boolean, string` | creates one directory, returns `Ok(true)` |
-| function | `CreateDirAll(Path: string): Result of boolean, string` | creates a directory and missing parents; an existing directory is `Ok(true)` |
-| function | `Glob(Pattern: string): Result of array of string, string` | expands a glob pattern to matching file paths |
-| function | `ReadDir(Path: string): Result of array of string, string` | sorted immediate entries, including files and directories |
+| function | `CreateDir(Path: string): Result of (boolean, string)` | creates one directory, returns `Ok(true)` |
+| function | `CreateDirAll(Path: string): Result of (boolean, string)` | creates a directory and missing parents; an existing directory is `Ok(true)` |
+| function | `Glob(Pattern: string): Result of (array of string, string)` | expands a glob pattern to matching file paths |
+| function | `ReadDir(Path: string): Result of (array of string, string)` | sorted immediate entries, including files and directories |
 
 Fallible operations return `Error(message)` with a host error string instead of raising a runtime panic.
 
@@ -62,14 +62,14 @@ Filesystem calls block the thread that executes them. When a call runs inside `g
 
 ---
 
-## `function ReadText(Path: string): Result of string, string`
+## `function ReadText(Path: string): Result of (string, string)`
 
 Reads the entire file at `Path` as UTF-8 text.
 
 Files larger than 64 MiB return `Error(message)` instead of loading into memory.
 
 ```pascal
-const Content: result of string, string := ReadText('notes.txt');
+const Content: result of (string, string) := ReadText('notes.txt');
 if Content.IsOk() then
   WriteLn(Content.Unwrap());
 end if;
@@ -77,7 +77,7 @@ end if;
 
 ---
 
-## `function WriteText(Path: string; Text: string): Result of boolean, string`
+## `function WriteText(Path: string; Text: string): Result of (boolean, string)`
 
 Writes UTF-8 text to `Path`, creating or replacing the file.
 
@@ -89,7 +89,7 @@ end if;
 
 ---
 
-## `function WriteTextAtomic(Path: string; Text: string): Result of boolean, string`
+## `function WriteTextAtomic(Path: string; Text: string): Result of (boolean, string)`
 
 Writes all UTF-8 bytes to a collision-resistant temporary sibling, flushes that
 file, and then atomically replaces `Path`. The previous file remains at `Path`
@@ -145,7 +145,7 @@ WriteLn(IsDir('src'));
 
 ---
 
-## `function CreateDir(Path: string): Result of boolean, string`
+## `function CreateDir(Path: string): Result of (boolean, string)`
 
 Creates a single directory at `Path`. Parent directories must already exist. An existing entry at `Path`, including an existing directory, returns `Error(message)`.
 
@@ -157,7 +157,7 @@ end if;
 
 ---
 
-## `function CreateDirAll(Path: string): Result of boolean, string`
+## `function CreateDirAll(Path: string): Result of (boolean, string)`
 
 Creates the directory at `Path` together with every missing parent directory and returns `Ok(true)`. The call is idempotent: when `Path` already is a directory, including one created concurrently by another task or process, it also returns `Ok(true)`. A path component that exists but is not a directory, permission failures, and other OS errors return `Error(message)`. Directories created before a failure are not removed.
 
@@ -172,7 +172,7 @@ end case;
 
 ---
 
-## `function Glob(Pattern: string): Result of array of string, string`
+## `function Glob(Pattern: string): Result of (array of string, string)`
 
 Expands `Pattern` against the host filesystem and returns every matching **file** path in stable sorted order. Directory entries are never included.
 
@@ -204,7 +204,7 @@ Platform notes: `Glob` follows the host OS filesystem and the Rust `glob` crate.
 
 ---
 
-## `function ReadDir(Path: string): Result of array of string, string`
+## `function ReadDir(Path: string): Result of (array of string, string)`
 
 Returns all immediate entry paths, including files, empty directories, and links,
 in stable lexical order with `/` separators. Relative inputs produce relative

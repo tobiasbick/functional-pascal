@@ -110,6 +110,14 @@ Variant names must be ordinary identifiers. Reserved words remain reserved after
 qualifier, so declarations such as `None` and member expressions such as `KeyKind.End` are
 not valid. Choose an identifier-safe API name such as `NoCommand`, `Empty`, or `EndKey`.
 
+## Generic enums
+
+Generic enums declare parameters after `of`, for example `type Lookup of T =
+enum ... end enum;`. Variant payloads and the expected type jointly determine
+their arguments; payloadless variants need context. Applications retain those
+arguments in assignments, imports, and nested patterns. See
+[generic enums](generics.md#generic-enums) for construction and recursive types.
+
 ## See also
 
 - [Pattern matching](../pattern-matching/README.md)

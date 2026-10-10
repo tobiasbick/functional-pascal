@@ -27,6 +27,23 @@ impl LoweringContext {
         fail: BlockId,
         bindings: &mut Vec<PatternBinding>,
     ) -> Result<(), CompileError> {
+        let span = pattern.span();
+        let (source, ty) = if let Some(expected) = self
+            .pattern_types
+            .get(&(span.source_id, span.offset))
+            .cloned()
+        {
+            let expected = self.type_table.intern(&expected, span.line, span.column)?;
+            if expected == ty {
+                (source, ty)
+            } else {
+                let value = self.emit_value(Operation::ReadLocal(source), ty, span)?;
+                let value = self.value_as(value, expected, span)?;
+                (self.store_matched(value, expected, span)?, expected)
+            }
+        } else {
+            (source, ty)
+        };
         match pattern {
             Pattern::Binding { name, .. } => {
                 bindings.push((name.clone(), ty, source));

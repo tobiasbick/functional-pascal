@@ -7,7 +7,7 @@ begin
   return V * 2;
 end function;
 
-function PositiveToStr(V: integer): result of string, string;
+function PositiveToStr(V: integer): result of (string, string);
 begin
   if V > 0 then
     begin
@@ -21,8 +21,8 @@ begin
 end function;
 
 begin
-  const R: result of integer, string := Ok(5);
-  const Doubled: result of integer, string := R.Map(Double);
-  const Final: result of string, string := Doubled.AndThen(PositiveToStr);
+  const R: result of (integer, string) := Ok(5);
+  const Doubled: result of (integer, string) := R.Map(Double);
+  const Final: result of (string, string) := Doubled.AndThen(PositiveToStr);
   WriteLn(Final.Unwrap());
 end.

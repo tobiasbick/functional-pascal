@@ -132,12 +132,12 @@ fn writes_before_a_try_exit_remain_visible() {
     assert_succeeds(
         r#"
 program VarTry;
-function Partial(var Value: integer): Result of integer, string;
+function Partial(var Value: integer): Result of (integer, string);
 begin
   Value := 1;
   return Error('stopped');
 end function;
-function Run(var Value: integer): Result of integer, string;
+function Run(var Value: integer): Result of (integer, string);
 begin
   const Ignored: integer := try Partial(var Value);
   Value := 99;
@@ -145,7 +145,7 @@ begin
 end function;
 begin
   var Value: integer := 0;
-  const Outcome: Result of integer, string := Run(var Value);
+  const Outcome: Result of (integer, string) := Run(var Value);
   if Value <> 1 then
     panic('write before try exit'); end if;
 end.

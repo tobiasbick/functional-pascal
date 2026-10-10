@@ -17,7 +17,7 @@ fn program(body: &str) -> String {
         "program T; {TYPES}
         const Limit: integer := 3;
         function ReadValue(): integer; begin return 1; end function;
-        procedure P(R: result of option of integer, string; O: option of Shape; C: option of Color; B: option of boolean; S: option of string);
+        procedure P(R: result of (option of integer, string); O: option of Shape; C: option of Color; B: option of boolean; S: option of string);
         begin
           {body}
         end procedure;

@@ -1,0 +1,49 @@
+program GenericRecordsTest;
+
+uses Std.Test;
+
+type Box of T = record
+  Value: T;
+
+  function Get(Self: Box of T): T;
+  begin
+    return Self.Value;
+  end function;
+end record;
+
+type Pair of (K: Comparable, V) = record
+  Key: K;
+  Value: V;
+end record;
+
+type Optional of T = record
+  Value: option of T := None;
+end record;
+
+type Node of T = record
+  Value: T;
+  Next: option of Node of T := None;
+end record;
+
+function Make<T>(Value: T): Box of T;
+begin
+  return Box(Value := Value);
+end function;
+
+begin
+  var Number: Box of integer := Make(7);
+  Number.Value := 8;
+  const Text: Box of string := Box(Value := 'eight');
+  const Nested: Box of Box of integer := Box(Value := Number);
+  const Entry: Pair of (integer, string) := Pair(Value := Text.Get(), Key := Number.Get());
+  const EmptyValue: Optional of integer := Optional();
+  const Updated: Box of string := Text with Value := 'updated'; end with;
+  const Root: Node of integer := Node(Value := 2, Next := Some(Node(Value := 1)));
+  AssertEquals(8, Nested.Value.Get());
+  AssertEquals(8, Entry.Key);
+  AssertEquals('eight', Entry.Value);
+  AssertEquals('updated', Updated.Value);
+  AssertFalse(EmptyValue.Value.IsSome());
+  AssertTrue(Number = Make(8));
+  AssertEquals(1, Root.Next.Unwrap().Value);
+end.

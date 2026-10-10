@@ -8,7 +8,7 @@ program Example;
 uses Std.Console, Std.Json;
 
 begin
-  const R: result of JsonValue, string := Parse('{"ok":true}');
+  const R: result of (JsonValue, string) := Parse('{"ok":true}');
   case R of
     when Ok(const Value):
       WriteLn(Stringify(Value));
@@ -32,7 +32,7 @@ After `uses Std.Json;` use short names (`JsonValue`, `Parse`, `Stringify`) or qu
 | Kind | Name | Notes |
 |------|------|-------|
 | type | `JsonValue` | JSON tree representation |
-| function | `Parse(Text: string): Result of JsonValue, string` | parses JSON text; parse failures are `Error(Message)` |
+| function | `Parse(Text: string): Result of (JsonValue, string)` | parses JSON text; parse failures are `Error(Message)` |
 | function | `Stringify(Value: JsonValue): string` | serializes a JSON value to compact JSON text |
 
 ### `JsonValue`
@@ -59,7 +59,7 @@ Arrays use `array of JsonValue`.
 ### `Parse`
 
 ```pascal
-function Parse(Text: string): Result of JsonValue, string;
+function Parse(Text: string): Result of (JsonValue, string);
 ```
 
 Object members become dictionary entries in document order. Rejects duplicate object member names with `Error(Message)` identifying the name and its location. Names are compared after decoding escapes and are case-sensitive. Each object has its own name set, including objects nested in arrays.
@@ -67,7 +67,7 @@ Object members become dictionary entries in document order. Rejects duplicate ob
 Parses JSON text. Accepted JSON returns `Ok(JsonValue)`. Invalid JSON returns `Error(Message)` instead of aborting the program.
 
 ```pascal
-const R: result of JsonValue, string := Std.Json.Parse('[1, true, null]');
+const R: result of (JsonValue, string) := Std.Json.Parse('[1, true, null]');
 case R of
   when Ok(const Value):
     WriteLn(Std.Json.Stringify(Value));

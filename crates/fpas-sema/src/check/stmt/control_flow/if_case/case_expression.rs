@@ -19,6 +19,7 @@ impl Checker {
         arms: &[CaseExprArm],
         else_arm: Option<&CaseExprElse>,
         span: Span,
+        expected: Option<&Ty>,
     ) -> Ty {
         let heads = arms
             .iter()
@@ -31,10 +32,16 @@ impl Checker {
         let mut values = Vec::with_capacity(arms.len() + 1);
         let checked = self.check_case_arms(selector, &heads, span, |checker, index| {
             let value = &arms[index].value;
-            values.push((checker.check_expr(value), value.span()));
+            values.push((
+                checker.check_expr_with_expected(value, expected),
+                value.span(),
+            ));
         });
         if let Some(else_arm) = else_arm {
-            values.push((self.check_expr(&else_arm.value), else_arm.value.span()));
+            values.push((
+                self.check_expr_with_expected(&else_arm.value, expected),
+                else_arm.value.span(),
+            ));
         }
         self.check_case_expression_coverage(&checked, else_arm.is_some(), span);
         self.shared_branch_type(values, "`case` expression arms")

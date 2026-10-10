@@ -14,7 +14,7 @@ fn tls_listener_reports_an_os_assigned_address() {
         &source,
         &"program TlsListenerAddress;
 uses Std.Net, Std.Test;
-function ExerciseListener(): result of boolean, string;
+function ExerciseListener(): result of (boolean, string);
 begin
   const Server: Listener := try ListenTls('127.0.0.1', 0, 'cert.pem', 'key.pem', 2000);
   const Address: NetworkAddress := try ListenerLocalAddress(Server);

@@ -12,7 +12,7 @@ A modern, function-first programming language built on Pascal's readable syntax.
 - **Immutable by default** — All bindings are immutable unless declared with `var`.
 - **Pattern matching** — Exhaustive `case` statements with enum, `Result`, and `Option` destructuring.
 - **First-class functions** — Pass named functions as values, store them in variables, and use them with higher-order APIs.
-- **Error handling** — Built-in `Result of T, E` and `Option of T` types with a `try` operator for propagation.
+- **Error handling** — Built-in `Result of (T, E)` and `Option of T` types with a `try` operator for propagation.
 - **Concurrency** — `go` tasks, typed bounded channels, cooperative cancellation, mixed-source `Select`, task groups, and supervised retries. [Std.Tasks](docs/pascal/std/concurrency/task.md) includes timed group close; timeout retains unfinished work rather than forcibly terminating it.
 - **Standard library** — Built-in `Std.*` units for console I/O, TUI, strings, math, arrays, tasks, and more.
 - **Server lifetime** — [Std.Server](docs/pascal/std/network/server.md) owns worker groups and listeners, handles stop signals, and supports explicitly authorized process escalation after a common grace period.

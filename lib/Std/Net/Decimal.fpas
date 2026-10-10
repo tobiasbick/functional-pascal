@@ -3,7 +3,7 @@ unit Std.Net.Decimal;
 
 // Parses ASCII digits without signs, separators, whitespace, or overflow.
 // See docs/pascal/std/network/uri.md and docs/pascal/std/network/http.md.
-public function Parse(Text: string; Maximum: integer): result of integer, string;
+public function Parse(Text: string; Maximum: integer): result of (integer, string);
 begin
   if Text = '' then
     begin

@@ -10,12 +10,21 @@ use crate::CompileError;
 use super::{TypeTable, synthetic_span, type_error};
 
 impl TypeTable {
+    /// Populate the canonical record layout, using erased declaration fields for generics.
     pub(super) fn intern_record(
         &mut self,
         record: &fpas_sema::RecordTy,
         line: u32,
         column: u32,
     ) -> Result<RecordLayoutId, CompileError> {
+        let template = self
+            .generic_templates
+            .get(&record.name.to_ascii_lowercase())
+            .and_then(|ty| match ty {
+                fpas_sema::Ty::Record(record) => Some(record.clone()),
+                _ => None,
+            });
+        let record = template.as_deref().unwrap_or(record);
         let id = if let Some(layout) = self
             .record_layouts
             .iter()
@@ -92,12 +101,21 @@ impl TypeTable {
         Ok(id)
     }
 
+    /// Populate the canonical enum layout, including recursive generic payloads.
     pub(super) fn intern_enum(
         &mut self,
         enumeration: &fpas_sema::EnumTy,
         line: u32,
         column: u32,
     ) -> Result<EnumLayoutId, CompileError> {
+        let template = self
+            .generic_templates
+            .get(&enumeration.name.to_ascii_lowercase())
+            .and_then(|ty| match ty {
+                fpas_sema::Ty::Enum(enumeration) => Some(enumeration.clone()),
+                _ => None,
+            });
+        let enumeration = template.as_deref().unwrap_or(enumeration);
         let id = if let Some(layout) = self
             .enum_layouts
             .iter()

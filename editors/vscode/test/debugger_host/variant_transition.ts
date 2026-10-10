@@ -56,7 +56,7 @@ export async function verifyVariantTransition(
     "",
     "begin",
     "  var Selected: Choice := Choice.Empty;",
-    "  var Outcome: Result of integer, string := Ok(2);",
+    "  var Outcome: Result of (integer, string) := Ok(2);",
     "  var Optional: Option of integer := None;",
     "  const Fixed: Choice := Choice.Count(9);",
     "  const StopMarker: integer := 0;",

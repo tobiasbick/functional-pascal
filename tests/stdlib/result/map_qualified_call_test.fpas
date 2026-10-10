@@ -8,7 +8,7 @@ begin
 end function;
 
 begin
-  const R: result of integer, string := Ok(5);
-  const M: result of string, string := R.Map(ToStr);
+  const R: result of (integer, string) := Ok(5);
+  const M: result of (string, string) := R.Map(ToStr);
   WriteLn(M.Unwrap());
 end.

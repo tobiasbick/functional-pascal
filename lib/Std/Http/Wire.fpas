@@ -52,7 +52,7 @@ end function;
 //
 // Parameters:
 // - `Line`: Decoded response status line.
-function ParseStatus(Line: string): result of array of string, string;
+function ParseStatus(Line: string): result of (array of string, string);
 begin
   if (not Line.StartsWith('HTTP/1.0 ')) and (not Line.StartsWith('HTTP/1.1 ')) then
     begin
@@ -131,7 +131,7 @@ end function;
 //
 // Parameters:
 // - `Line`: Decoded chunk-size line.
-public function ParseChunkSize(Line: string): result of integer, string;
+public function ParseChunkSize(Line: string): result of (integer, string);
 begin
   var SizeText: string := Line;
   const Extension: integer := SizeText.IndexOf(';');
@@ -175,7 +175,7 @@ end function;
 //
 // Parameters:
 // - `Bytes`: Complete chunked body bytes.
-function DecodeChunked(Bytes: array of integer): result of array of integer, string;
+function DecodeChunked(Bytes: array of integer): result of (array of integer, string);
 begin
   var Position: integer := 0;
   var Body: array of integer := [];
@@ -262,7 +262,7 @@ end function;
 // - `Headers`: Parsed response fields.
 // - `Bytes`: Raw bytes following the response head.
 // - `HasBody`: Whether response semantics permit a body.
-function ResponseBody(Headers: array of Header; Bytes: array of integer; HasBody: boolean): result of array of integer, string;
+function ResponseBody(Headers: array of Header; Bytes: array of integer; HasBody: boolean): result of (array of integer, string);
 begin
   if not HasBody then
     begin
@@ -304,7 +304,7 @@ end function;
 //
 // Parameters:
 // - `Bytes`: Response bytes containing a complete head.
-public function ParseResponseHead(Bytes: array of integer): result of ResponseHead, string;
+public function ParseResponseHead(Bytes: array of integer): result of (ResponseHead, string);
 begin
   const Separator: integer := FindSeparator(Bytes, 0);
   if Separator < 0 then
@@ -379,7 +379,7 @@ end function;
 // Parameters:
 // - `Bytes`: Complete HTTP response bytes.
 // - `RequestMethod`: Method used by the matching request.
-public function ParseResponse(Bytes: array of integer; RequestMethod: string): result of Response, string;
+public function ParseResponse(Bytes: array of integer; RequestMethod: string): result of (Response, string);
 begin
   case ParseResponseHead(Bytes) of
     when Ok(const Head):
@@ -437,7 +437,7 @@ end function;
 // Parameters:
 // - `RequestValue`: Complete request to encode.
 // - `UriValue`: Parsed absolute request URI.
-public function EncodeRequest(RequestValue: Request; UriValue: Uri): result of array of integer, string;
+public function EncodeRequest(RequestValue: Request; UriValue: Uri): result of (array of integer, string);
 begin
   if not Std.Http.Method.IsValidToken(RequestValue.Method) then
     begin

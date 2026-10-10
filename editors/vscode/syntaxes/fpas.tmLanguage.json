@@ -176,7 +176,7 @@
         },
         {
           "name": "constant.language.fpas",
-          "match": "(?i:\\b(true|false|ok|error|some|none|nil)\\b)"
+          "match": "(?i:\\b(true|false|ok|error|some|none)\\b)"
         }
       ]
     },
@@ -184,7 +184,7 @@
       "patterns": [
         {
           "name": "keyword.declaration.fpas",
-          "match": "(?i:\\b(program|unit|uses|const|var|function|procedure|type|public|static|event)\\b)"
+          "match": "(?i:\\b(program|unit|uses|const|var|function|procedure|type|public|static)\\b)"
         },
         {
           "name": "keyword.control.fpas",

@@ -42,11 +42,6 @@ impl Checker {
             shape.static_functions = members.static_functions;
             shape.static_procedures = members.static_procedures;
         }
-        let events =
-            self.check_record_events(&definition.name, &ty, &record.events, &mut seen_members);
-        if let Ty::Record(shape) = &mut ty {
-            Arc::make_mut(shape).events = events;
-        }
         self.define_type_symbol(definition, ty);
     }
 }

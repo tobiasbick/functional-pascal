@@ -46,11 +46,6 @@ pub(super) fn collect_decls(decls: &[Decl], begins: &[usize], out: &mut Collecte
                                 }
                             }
                         }
-                        for event in &record.events {
-                            out.leading.push(event.span.offset);
-                            out.declarations.insert(event.span.offset);
-                            push_span(event.span, out);
-                        }
                     }
                     TypeBody::Enum(enum_type) => {
                         collect_closer(enum_type.span, out);

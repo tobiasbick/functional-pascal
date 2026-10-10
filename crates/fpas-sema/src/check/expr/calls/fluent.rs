@@ -82,10 +82,6 @@ impl Checker {
                 || record
                     .static_procedures
                     .iter()
-                    .any(|(member, _)| member.eq_ignore_ascii_case(name))
-                || record
-                    .events
-                    .iter()
                     .any(|(member, _)| member.eq_ignore_ascii_case(name));
             if has_member {
                 if record

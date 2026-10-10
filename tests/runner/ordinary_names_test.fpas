@@ -1,0 +1,31 @@
+program OrdinaryNamesTest;
+
+uses Std.Test;
+
+type Event = record
+  Nil: integer;
+
+  function Read(Self: Event): integer;
+  begin
+    return Self.Nil;
+  end function;
+
+  function Write(Self: Event; Assigned: integer): Event;
+  begin
+    return Event(Nil := Assigned);
+  end function;
+end record;
+
+function Assigned(Read: integer; Write: integer): integer;
+begin
+  return Read + Write;
+end function;
+
+begin
+  var Value: Event := Event(Nil := 1);
+  Value.NIL := 2;
+  AssertEquals(2, Value.READ());
+  const Copy: Event := Value.WRITE(aSsIgNeD(3, 4));
+  AssertEquals(7, Copy.Read());
+  AssertEquals(2, Value.Read());
+end.

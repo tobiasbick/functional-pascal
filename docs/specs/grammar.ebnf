@@ -93,8 +93,7 @@ keyword         = 'program'   | 'unit'      | 'uses'      | 'const'
                 | 'ok'        | 'error'     | 'some'      | 'none'
                 | 'try'       | 'public'    | 'discard'
                 | 'go'        | 'dict'      | 'with'      | 'static'
-                | 'event'     | 'read'      | 'write'     | 'comparable'
-                | 'numeric'   | 'printable' | 'self'      | 'nil'
+                | 'comparable' | 'numeric'  | 'printable' | 'self'
                 | 'channel'   | 'task'
                 | 'elsif'     | 'when'      | 'null'      | 'is' ;
 
@@ -233,7 +232,7 @@ record_type         = 'record'
                       { record_member }
                       'end' 'record' ;
 record_member       = [ public_modifier ]
-                      ( field_def | record_method | record_event ) ;
+                      ( field_def | record_method ) ;
 field_def           = identifier ':' type_expr [ ':=' expression ] ';' ;
 
 (* ':= expression' is an optional default value for the field.      *)
@@ -256,7 +255,7 @@ instance_param_list = instance_first_param { ';' param_group } ;
 instance_first_param = ( 'self' | identifier ) ':' type_expr ;
 
 (* Record member visibility is available only in unit files. The    *)
-(* modifier is written before each field, event, or routine;          *)
+(* modifier is written before each field or routine;                *)
 (* there are no visibility sections.                                 *)
 
 (* Instance record methods must declare Self as the first parameter, *)
@@ -269,13 +268,6 @@ instance_first_param = ( 'self' | identifier ) ':' type_expr ;
 (* Static and instance names share one case-insensitive name set.    *)
 (* Record methods may declare their own type_params via the shared   *)
 (* function_decl / procedure_decl grammar.                           *)
-
-(* Event accessors are instance methods; `read` and `write` are       *)
-(* reserved keywords. Both accessors deal in Option of HandlerType.   *)
-(* See docs/pascal/language/types/record-events.md.                    *)
-(* Events require both accessors in fixed read-then-write order.     *)
-record_event        = 'event' identifier ':' type_expr
-                      'read' identifier 'write' identifier ';' ;
 
 enum_type           = 'enum' enum_member { enum_member } 'end' 'enum' ;
 enum_member         = identifier [ enum_fields | '=' integer_literal ] ';' ;
@@ -554,7 +546,6 @@ primary_atom        = native_array_factory
                     | 'error' '(' expression ')'        (* Result Error   *)
                     | 'some' '(' expression ')'          (* Option Some    *)
                     | 'none'                             (* Option None    *)
-                    | 'nil'                              (* event clear only; see record-events.md *)
                     | '(' expression ')'
                     | array_literal
                     | dict_literal

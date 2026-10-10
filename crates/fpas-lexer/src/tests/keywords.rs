@@ -4,7 +4,31 @@ use crate::Token;
 mod documentation;
 
 #[test]
-fn reserved_keywords_and_ordinary_mutable_and_property_identifiers() {
+fn ordinary_names_preserve_every_ascii_letter_case() {
+    for name in ["event", "nil", "read", "write", "assigned"] {
+        for mask in 0..(1 << name.len()) {
+            let spelling = name
+                .bytes()
+                .enumerate()
+                .map(|(index, byte)| {
+                    char::from(if mask & (1 << index) == 0 {
+                        byte
+                    } else {
+                        byte.to_ascii_uppercase()
+                    })
+                })
+                .collect::<String>();
+            assert_eq!(
+                toks(&spelling),
+                vec![Token::Ident(spelling.clone())],
+                "{spelling}"
+            );
+        }
+    }
+}
+
+#[test]
+fn reserved_keywords_and_ordinary_identifiers() {
     let input = "program unit uses const var mutable function procedure begin end return discard \
                  if then else elsif case when of for to downto in in do while \
                  repeat until and or not xor div mod \
@@ -73,14 +97,14 @@ fn reserved_keywords_and_ordinary_mutable_and_property_identifiers() {
             Token::With,
             Token::Static,
             Token::Ident("property".into()),
-            Token::Event,
-            Token::Read,
-            Token::Write,
+            Token::Ident("event".into()),
+            Token::Ident("read".into()),
+            Token::Ident("write".into()),
             Token::Comparable,
             Token::Numeric,
             Token::Printable,
             Token::SelfKw,
-            Token::Nil,
+            Token::Ident("nil".into()),
             Token::Null,
             Token::Is,
         ]

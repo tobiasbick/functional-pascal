@@ -109,12 +109,6 @@ fn private_type_in_declaration<'a>(
                             private_type_in_parameters(&procedure.params, private_types)
                         }
                     })
-                })
-                .or_else(|| {
-                    record
-                        .events
-                        .iter()
-                        .find_map(|event| private_type_in(&event.type_expr, private_types))
                 }),
         },
     }

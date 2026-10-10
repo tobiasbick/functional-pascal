@@ -2,38 +2,20 @@ program EventsExample;
 
 uses Std.Console, Std.Conv;
 
-// In-memory handler slot standing in for a live registry.
-var ClickSlot: option of procedure(Sender: integer) := None;
-
 type ClickHandler = procedure(Sender: integer);
 
 type Button = record
   Id: integer;
-
-  function ReadOnClick(Self: Button): option of ClickHandler;
-  begin
-    return ClickSlot;
-  end function;
-
-  procedure WriteOnClick(Self: Button; Handler: option of ClickHandler);
-  begin
-    ClickSlot := Handler;
-  end procedure;
+  OnClick: option of ClickHandler := None;
 
   procedure Click(Self: Button);
   begin
-    if Assigned(Self.OnClick) then
-      begin
-        Self.OnClick(Self.Id);
-      end;
+    if Self.OnClick is Some(const Handler) then
+      Handler(Self.Id);
     else
-      begin
-        WriteLn('no handler');
-      end;
+      WriteLn('no handler');
     end if;
   end procedure;
-
-  event OnClick: ClickHandler read ReadOnClick write WriteOnClick;
 end record;
 
 procedure HandleClick(Sender: integer);
@@ -42,10 +24,10 @@ begin
 end procedure;
 
 begin
-  const B: Button := Button(Id := 1);
+  var B: Button := Button(Id := 1);
   B.Click();
-  B.OnClick := HandleClick;
+  B.OnClick := Some(HandleClick);
   B.Click();
-  B.OnClick := nil;
+  B.OnClick := None;
   B.Click();
 end.

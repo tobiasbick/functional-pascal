@@ -3,6 +3,7 @@ unit Demo.Counter;
 public type Counter = record
   Value: integer;
   public Step: integer;
+  public Changed: option of procedure() := None;
 
   public function Hidden(Self: Counter): integer;
   begin
@@ -13,7 +14,5 @@ public type Counter = record
   begin
     return Counter(Value := 0, Step := 1);
   end function;
-
-  public event Changed: procedure() read ReadChanged write WriteChanged;
 end record;
 end unit;

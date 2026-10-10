@@ -125,11 +125,6 @@ fn lower(
             budget,
         )?))),
         Expr::OptionNone(_) => Ok(DebugExpression::OptionNone),
-        Expr::Nil(_) => Err(unsupported(
-            expression,
-            "event-handler `nil`",
-            "Use `None` for an Option value; debugger evaluation cannot assign event handlers.",
-        )),
         Expr::Try(value, _) => Ok(DebugExpression::Try(Box::new(lower(
             value,
             depth + 1,

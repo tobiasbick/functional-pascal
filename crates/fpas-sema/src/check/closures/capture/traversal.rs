@@ -249,7 +249,6 @@ impl CaptureCollector<'_> {
             | Expr::Str(..)
             | Expr::Bool(..)
             | Expr::OptionNone(_)
-            | Expr::Nil(_)
             | Expr::Error(_) => {}
             Expr::Designator(designator) | Expr::VarArgument { designator, .. } => {
                 self.collect_from_designator(designator);

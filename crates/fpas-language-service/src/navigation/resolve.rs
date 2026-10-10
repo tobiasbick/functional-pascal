@@ -305,7 +305,7 @@ fn imported_top_level(
 pub(crate) fn unqualified_kind(kind: SymbolKind) -> bool {
     !matches!(
         kind,
-        SymbolKind::Program | SymbolKind::Unit | SymbolKind::Field | SymbolKind::Event
+        SymbolKind::Program | SymbolKind::Unit | SymbolKind::Field
     )
 }
 

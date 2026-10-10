@@ -17,7 +17,6 @@ pub(super) fn apply_expr_source_id(expr: &mut Expr, source_id: u32) {
         | Expr::ResultError(_, span)
         | Expr::OptionSome(_, span)
         | Expr::OptionNone(span)
-        | Expr::Nil(span)
         | Expr::Try(_, span)
         | Expr::Go(_, span)
         | Expr::Error(span) => {

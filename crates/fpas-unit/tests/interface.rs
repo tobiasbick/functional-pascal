@@ -7,9 +7,9 @@
 )]
 
 use fpas_unit::interface::{
-    CallableType, ConstantValue, EnumType, EnumVariant, FieldType, GenericParameter,
-    InterfaceSymbol, InterfaceType, MethodType, ParameterMode, ParameterType, RecordType,
-    SymbolKind, TypeConstraint, UnitInterface, decode_interface, encode_interface,
+    CallableType, ConstantValue, EnumType, EnumVariant, FieldDefaultValue, FieldType,
+    GenericParameter, InterfaceSymbol, InterfaceType, MethodType, ParameterMode, ParameterType,
+    RecordType, SymbolKind, TypeConstraint, UnitInterface, decode_interface, encode_interface,
 };
 
 #[path = "interface/record_constants.rs"]
@@ -91,11 +91,27 @@ fn sample_interface() -> UnitInterface {
                     name: "Demo.Api.Counter".to_string(),
                     owner_unit: Some("Demo.Api".to_string()),
                     private_members: vec!["CreateHidden".to_string(), "Value".to_string()],
-                    fields: vec![FieldType {
-                        name: "Value".to_string(),
-                        ty: InterfaceType::Integer,
-                        default_value: Some(ConstantValue::Integer(0)),
-                    }],
+                    fields: vec![
+                        FieldType {
+                            name: "Value".to_string(),
+                            ty: InterfaceType::Integer,
+                            default_value: Some(FieldDefaultValue::Scalar(ConstantValue::Integer(
+                                0,
+                            ))),
+                        },
+                        FieldType {
+                            name: "OnChange".to_string(),
+                            ty: InterfaceType::Option(Box::new(InterfaceType::Procedure(
+                                CallableType {
+                                    type_parameters: Vec::new(),
+                                    parameters: Vec::new(),
+                                    result: None,
+                                    variadic: false,
+                                },
+                            ))),
+                            default_value: Some(FieldDefaultValue::OptionNone),
+                        },
+                    ],
                     methods: Vec::new(),
                     static_routines: vec![MethodType {
                         discard: Default::default(),
@@ -109,7 +125,6 @@ fn sample_interface() -> UnitInterface {
                             variadic: false,
                         },
                     }],
-                    events: Vec::new(),
                 })),
                 kind: SymbolKind::Type,
             },

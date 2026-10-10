@@ -11,6 +11,23 @@ use super::{
 };
 
 #[test]
+fn ordinary_names_parse_as_debugger_names_and_field_targets() {
+    for name in ["event", "NiL", "read", "WRITE", "Assigned"] {
+        let expression = parse_debug_expression(name, DebugEvaluationLimits::default())
+            .expect("ordinary expression name");
+        assert!(matches!(expression, DebugExpression::Name(value) if value == name));
+        let target = parse_debug_assignment_target(
+            &format!("State.{name}"),
+            DebugEvaluationLimits::default(),
+        )
+        .expect("ordinary field name");
+        assert!(
+            matches!(target.selectors.as_slice(), [DebugAssignmentSelector::Field(value)] if value == name)
+        );
+    }
+}
+
+#[test]
 fn assignment_target_parser_preserves_named_stored_selector_order() {
     let target = parse_debug_assignment_target(
         "State.Items[Selected + 1].Value",
@@ -273,7 +290,6 @@ fn validator_lowers_qualified_enum_constructors_to_call_and_field_forms() {
 #[test]
 fn validator_rejects_every_effectful_or_constructing_category() {
     let expressions = [
-        "nil",
         "go Work()",
         "function(): integer begin return 1; end function",
     ];

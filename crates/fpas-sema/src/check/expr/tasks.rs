@@ -74,7 +74,6 @@ impl Checker {
         }
         let inner_key = Self::expr_lookup_key(inner);
         self.expr_types.insert(inner_key, inner_ty.clone());
-        self.reject_spawned_event_raise(inner_key, span);
         if self.callable_expr_is_task_bound(inner) {
             self.error_with_code(
                 fpas_diagnostics::codes::SEMA_TASK_BOUND_CALLABLE,

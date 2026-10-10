@@ -1,7 +1,8 @@
 use super::*;
 
 mod enums;
-mod record_events;
+mod handler_fields;
+mod ordinary_members;
 mod record_methods;
 mod records;
 mod restrictions;

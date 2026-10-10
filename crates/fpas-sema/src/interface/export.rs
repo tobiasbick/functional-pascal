@@ -81,7 +81,9 @@ impl check::Checker {
         Ok(artifact::UnitInterface { unit_name, symbols }.canonicalized())
     }
 
-    /// Preserve the original record's scalar defaults when exporting concrete types or aliases.
+    /// Preserve the original record's constant defaults when exporting concrete types or aliases.
+    ///
+    /// **Documentation:** `docs/pascal/language/types/records.md`
     fn apply_record_defaults(
         &self,
         declaration: &Decl,
@@ -98,7 +100,7 @@ impl check::Checker {
                     .iter()
                     .find(|(name, _)| name.eq_ignore_ascii_case(&field.name))
                     .and_then(|(_, value)| value.as_deref())
-                    .map(interface_constant_value)
+                    .map(interface_field_default)
                     .transpose()?;
             }
         }
@@ -154,14 +156,21 @@ fn constant_value(expression: &Expr) -> Option<artifact::ConstantValue> {
     }
 }
 
-fn interface_constant_value(
+fn interface_field_default(
     expression: &Expr,
-) -> Result<artifact::ConstantValue, InterfaceConversionError> {
-    constant_value(expression).ok_or_else(|| {
-        InterfaceConversionError::new(
-            "exported record field defaults must be scalar constant expressions",
-        )
-    })
+) -> Result<artifact::FieldDefaultValue, InterfaceConversionError> {
+    match expression {
+        Expr::OptionNone(_) => return Ok(artifact::FieldDefaultValue::OptionNone),
+        Expr::Paren(inner, _) => return interface_field_default(inner),
+        _ => {}
+    }
+    constant_value(expression)
+        .map(artifact::FieldDefaultValue::Scalar)
+        .ok_or_else(|| {
+            InterfaceConversionError::new(
+                "exported record field defaults must be scalar constant expressions or None",
+            )
+        })
 }
 
 fn qualify_owned_type(
@@ -185,7 +194,7 @@ fn qualify_owned_type(
             qualify_callable(callable, unit_name, own_types);
         }
         Record(record) => {
-            // Transparent aliases retain their declaration owner, including event visibility.
+            // Transparent aliases retain their declaration owner, including member visibility.
             // Documentation: docs/pascal/language/types/type-aliases.md
             let owned = own_types.contains(&canonical_symbol_name(&record.name));
             record.name = qualify_owned_name(&record.name, unit_name, own_types);
@@ -201,14 +210,6 @@ fn qualify_owned_type(
                 .chain(record.static_routines.iter_mut())
             {
                 qualify_callable(&mut method.callable, unit_name, own_types);
-            }
-            for event in &mut record.events {
-                qualify_owned_type(&mut event.handler, unit_name, own_types);
-                event.getter = qualify_member_name(&event.getter, unit_name, own_types);
-                event.setter = qualify_member_name(&event.setter, unit_name, own_types);
-                if owned {
-                    event.owner_unit = Some(unit_name.to_string());
-                }
             }
         }
         Enum(enum_ty) => {
@@ -244,19 +245,6 @@ fn qualify_owned_name(
     own_types: &std::collections::HashSet<String>,
 ) -> String {
     if own_types.contains(&canonical_symbol_name(name)) {
-        format!("{unit_name}.{name}")
-    } else {
-        name.to_string()
-    }
-}
-
-fn qualify_member_name(
-    name: &str,
-    unit_name: &str,
-    own_types: &std::collections::HashSet<String>,
-) -> String {
-    let owner = name.split('.').next().unwrap_or(name);
-    if own_types.contains(&canonical_symbol_name(owner)) {
         format!("{unit_name}.{name}")
     } else {
         name.to_string()

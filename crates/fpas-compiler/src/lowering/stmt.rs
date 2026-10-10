@@ -32,10 +32,6 @@ impl LoweringContext {
                 value,
                 span,
             } => {
-                let key = fpas_sema::designator_lookup_key(target);
-                if let Some(info) = self.event_writes.get(&key).cloned() {
-                    return self.lower_event_write(target, value, &info, *span);
-                }
                 let value = match self.designator_type(target) {
                     Some(expected) => self.lower_expression_as(value, expected)?,
                     None => self.lower_expression(value)?,
@@ -82,10 +78,6 @@ impl LoweringContext {
                 span,
             } => {
                 let call_key = fpas_sema::designator_lookup_key(designator);
-                if let Some(info) = self.event_raises.get(&call_key).cloned() {
-                    let _ = self.lower_event_raise(designator, args, &info, *span)?;
-                    return Ok(());
-                }
                 let result = if self.intrinsic_calls.contains_key(&call_key) {
                     Some(super::types::UNIT)
                 } else {

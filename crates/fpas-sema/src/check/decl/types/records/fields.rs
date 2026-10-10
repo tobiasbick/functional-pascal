@@ -22,7 +22,7 @@ impl Checker {
                 self.error_with_code(
                     SEMA_DUPLICATE_DECLARATION,
                     format!("Duplicate record member `{}`", field.name),
-                    "Each field, method, static routine, and event name must be unique within the record type.",
+                    "Each field, method, and static routine name must be unique within the record type.",
                     field.span,
                 );
                 continue;
@@ -47,13 +47,6 @@ impl Checker {
                         .filter(|method| method.visibility() == Visibility::Private)
                         .map(|method| method.name().to_string()),
                 )
-                .chain(
-                    record
-                        .events
-                        .iter()
-                        .filter(|event| event.visibility == Visibility::Private)
-                        .map(|event| event.name.clone()),
-                )
                 .collect()
         } else {
             Vec::new()
@@ -66,7 +59,6 @@ impl Checker {
             methods: Vec::new(),
             static_functions: Vec::new(),
             static_procedures: Vec::new(),
-            events: Vec::new(),
         }
     }
 }

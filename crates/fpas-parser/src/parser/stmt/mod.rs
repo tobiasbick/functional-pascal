@@ -140,7 +140,6 @@ impl Parser {
                     | Token::Error
                     | Token::Some
                     | Token::None
-                    | Token::Nil
                     | Token::Try
                     | Token::Go
             )

@@ -274,7 +274,6 @@ bugs rather than adding a workaround to the program.
 | FP2008 | Invalid static placement | Top-level `static function F(): integer;` | Top-level `function F(): integer;` |
 | FP2009 | Nesting limit | Thousands of nested parentheses around `1` | Split the expression into shallow local bindings. |
 | FP2010 | Empty record update | `P with end with` | `P with X := 1; end with` |
-| FP2011 | Event accessor order | `event E: procedure() write Add read Get;` | `event E: procedure() read Get write Add;` |
 | FP2012 | Empty enum data list | `type E = enum A(); end enum;` | `type E = enum A; end enum;` |
 | FP2013 | Trailing enum field separator | `type E = enum A(X: integer;); end enum;` | `type E = enum A(X: integer); end enum;` |
 | FP2014 | Comma/grouped parameters | `function Add(A: integer, B: integer): integer;` or `function Add(A, B: integer): integer;` | `function Add(A: integer; B: integer): integer;` |

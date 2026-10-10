@@ -9,13 +9,11 @@ Status: complete (AP14.1, AP14.2). Effort: small. Completion is tracked in the
 Computation and state changes are visible as calls, and no property grammar
 remains.
 
-Properties are used only in examples and one formatter golden file at planning
-time; no library or app API depends on them.
-
 ## Decisions
 
-- `property` is removed without replacement grammar. `read` and `write` stay
-  reserved while event declarations use them; AP15.2 releases them.
+- `property` is an ordinary identifier; property declarations are rejected
+  with FP2018 and a method-call hint. `read` and `write` are ordinary
+  identifiers, as specified by [AP15](../ap15-remove-event-declarations/README.md).
 - No getter or setter is generated and no naming rule applies. Accessors are
   ordinary record methods that the author declares deliberately; callers use
   them directly with parentheses (`Cam.GetZoom()`, `C.SetBase(20)`).
@@ -30,8 +28,8 @@ AP25 depends on this package.
 
 ## Order
 
-AP14.1 migrates property uses while properties still work. AP14.2 removes the
-grammar.
+AP14.1 owns the explicit accessor calls in repository consumers. AP14.2 owns
+the ordinary `property` identifier and rejection of property declarations.
 
 ## Work packages
 

@@ -120,12 +120,16 @@ impl LoweringContext {
         self.emit_value(operation, ty, span)
     }
 
+    /// Lowers literals with their target type, retaining it through parentheses.
+    ///
+    /// **Documentation:** `docs/pascal/language/types/records.md`
     pub(in crate::lowering) fn lower_expression_as(
         &mut self,
         expression: &Expr,
         expected: TypeId,
     ) -> Result<ValueId, CompileError> {
         match expression {
+            Expr::Paren(inner, _) => self.lower_expression_as(inner, expected),
             Expr::ArrayLiteral(values, span) => {
                 self.lower_array_literal_as(values, expected, *span)
             }

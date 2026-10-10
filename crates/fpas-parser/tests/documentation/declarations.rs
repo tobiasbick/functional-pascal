@@ -19,31 +19,15 @@ pub(super) fn formatter_type_example() -> String {
     format!("program Doc;\n{}\nbegin end.", blocks[0].source)
 }
 
-fn record_event_example() -> String {
-    let markdown = include_str!("../../../../docs/pascal/language/types/record-events.md");
+fn optional_handler_example() -> String {
+    let markdown = include_str!("../../../../docs/pascal/language/functions/first-class.md");
     let section = markdown
-        .split("## Declaration")
+        .split("## Optional handlers")
         .nth(1)
-        .expect("event declaration section")
-        .split("## Assignment")
-        .next()
-        .expect("event declaration section body");
+        .expect("optional handler section");
     let blocks = pascal_blocks(section);
-    assert_eq!(blocks.len(), 1, "event declaration example fence");
-    // Supply bodies for the schematic accessors without altering declaration prefixes.
-    let declarations = blocks[0]
-        .source
-        .replace(
-            "function ReadOnClick(Self: Button): Option of ClickHandler;",
-            "function ReadOnClick(Self: Button): Option of ClickHandler;\n\
-             begin return None; end function;",
-        )
-        .replace(
-            "procedure WriteOnClick(Self: Button; Handler: Option of ClickHandler);",
-            "procedure WriteOnClick(Self: Button; Handler: Option of ClickHandler);\n\
-             begin null; end procedure;",
-        );
-    format!("program Doc;\n{declarations}begin end.")
+    assert_eq!(blocks.len(), 1, "optional handler example fence");
+    blocks[0].source.clone()
 }
 
 #[test]
@@ -59,14 +43,14 @@ fn formatter_enums_each_have_their_own_type_keyword() {
 }
 
 #[test]
-fn record_event_types_each_have_their_own_type_keyword() {
-    let source = record_event_example();
+fn optional_handler_types_each_have_their_own_type_keyword() {
+    let source = optional_handler_example();
     let (program, errors) = parse(&source);
-    assert!(errors.is_empty(), "record-events.md\n{source}\n{errors:#?}");
+    assert!(errors.is_empty(), "first-class.md\n{source}\n{errors:#?}");
     assert_eq!(
         program.declarations.len(),
-        2,
-        "ClickHandler and Button declarations"
+        3,
+        "ClickHandler, Button, and HandleClick declarations"
     );
 }
 
@@ -84,8 +68,8 @@ fn original_grouped_formatter_enum_reports_fp2015() {
 }
 
 #[test]
-fn original_grouped_event_record_reports_fp2015() {
-    let source = record_event_example();
+fn grouped_optional_handler_record_reports_fp2015() {
+    let source = optional_handler_example();
     assert!(
         source.contains("type Button"),
         "explicit Button declaration"

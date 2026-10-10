@@ -31,29 +31,16 @@ impl Checker {
                     field_span,
                 );
             } else {
-                if self.find_record_event_on_type(record_ty, name).is_some() {
-                    self.error_with_code(
-                        SEMA_UNKNOWN_NAME,
-                        format!(
-                            "Record type `{}` event `{}` cannot be initialized in record construction",
-                            record_ty.name, name
-                        ),
-                        "Events are not record fields. Assign a handler after construction.",
-                        field_span,
-                    );
-                } else {
-                    let known: Vec<&str> =
-                        record_ty.fields.iter().map(|(n, _)| n.as_str()).collect();
-                    self.error_with_code(
-                        SEMA_UNKNOWN_NAME,
-                        format!("Record type `{}` has no field `{}`", record_ty.name, name),
-                        format!(
-                            "Known fields: {}. Remove the unknown field or fix the name.",
-                            known.join(", ")
-                        ),
-                        field_span,
-                    );
-                }
+                let known: Vec<&str> = record_ty.fields.iter().map(|(n, _)| n.as_str()).collect();
+                self.error_with_code(
+                    SEMA_UNKNOWN_NAME,
+                    format!("Record type `{}` has no field `{}`", record_ty.name, name),
+                    format!(
+                        "Known fields: {}. Remove the unknown field or fix the name.",
+                        known.join(", ")
+                    ),
+                    field_span,
+                );
                 // Still check sub-expressions to collect further errors.
                 let _ = self.check_expr(value);
             }

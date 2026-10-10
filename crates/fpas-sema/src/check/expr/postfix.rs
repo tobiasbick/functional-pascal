@@ -197,22 +197,6 @@ impl Checker {
         }
 
         let Some(method_kind) = self.resolve_method_kind(record_ty, method_name, &qualified) else {
-            if record_ty
-                .events
-                .iter()
-                .any(|(name, _)| name.eq_ignore_ascii_case(method_name))
-            {
-                self.error_with_code(
-                    SEMA_TYPE_MISMATCH,
-                    format!(
-                        "Record member `{method_name}` takes priority over receiver-call lookup"
-                    ),
-                    "Call the member with its declared arguments or use a qualified free routine.",
-                    span,
-                );
-                self.check_args_only(args);
-                return Ty::Error;
-            }
             let receiver = Expr::Error(span);
             return self.check_fluent_call(FluentCall {
                 call_key: op_key,

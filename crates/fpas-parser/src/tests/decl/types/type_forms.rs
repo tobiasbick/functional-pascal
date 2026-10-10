@@ -13,9 +13,9 @@ fn type_alias() {
 }
 
 #[test]
-fn event_keyword_cannot_be_a_type_name() {
+fn event_is_an_ordinary_type_name() {
     let (_, errors) = parse_with_errors("program T; type Event = string; begin end.");
-    assert!(!errors.is_empty());
+    assert!(errors.is_empty(), "{errors:#?}");
 }
 
 #[test]

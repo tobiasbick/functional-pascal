@@ -494,7 +494,7 @@ for the new state.
 
 The server emits full-document semantic tokens for resolved units, types,
 enums, type parameters, functions, procedures, methods, parameters, variables,
-fields, events, enum members, and constants. Declaration,
+fields, enum members, and constants. Declaration,
 read-only, and public modifiers are emitted only when the resolved declaration
 proves them. Token ranges use UTF-16 positions, preserve lexical ordering, and
 remain non-overlapping. Recovered malformed source can return a safe partial

@@ -14,7 +14,6 @@ fn record(name: &str, fields: Vec<(String, Ty)>) -> Ty {
         methods: Vec::new(),
         static_functions: Vec::new(),
         static_procedures: Vec::new(),
-        events: Vec::new(),
     }))
 }
 

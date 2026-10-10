@@ -1,8 +1,8 @@
-//! Lowering for semantically resolved record methods and events.
+//! Lowering for semantically resolved record methods and callable fields.
 
-use fpas_ir::{IrType, Operation, TypeId, ValueId};
+use fpas_ir::{Operation, TypeId, ValueId};
 use fpas_parser::{Designator, DesignatorPart, Expr, PostfixOperation};
-use fpas_sema::{EventAssignedInfo, EventRaiseInfo, EventWriteInfo, MethodCallTarget};
+use fpas_sema::MethodCallTarget;
 
 use crate::CompileError;
 
@@ -32,90 +32,6 @@ impl LoweringContext {
             },
             target.value_type,
             designator.span,
-        )
-    }
-
-    /// Retains the event receiver while evaluating the assigned handler.
-    pub(super) fn lower_event_write(
-        &mut self,
-        target: &Designator,
-        value: &Expr,
-        info: &EventWriteInfo,
-        span: fpas_lexer::Span,
-    ) -> Result<(), CompileError> {
-        let (receiver, _) = self.lower_member_receiver(target, info.receiver_part_count)?;
-        let receiver = self.save_value(receiver);
-        let callable = self.member_callable(&info.setter_name, target.span, "event setter")?;
-        let option_ty = callable
-            .parameters
-            .get(1)
-            .copied()
-            .ok_or_else(|| unsupported(target.span, "event setter signature"))?;
-        let handler = if info.clear {
-            self.emit_value(Operation::MakeNone, option_ty, span)?
-        } else {
-            let value = self.lower_expression(value)?;
-            self.emit_value(Operation::MakeSome(value), option_ty, span)?
-        };
-        let receiver = self.restore_value(receiver, span)?;
-        let _ = self.emit_member_call(&callable, vec![receiver, handler], span)?;
-        Ok(())
-    }
-
-    pub(super) fn lower_event_assigned(
-        &mut self,
-        arguments: &[Expr],
-        info: &EventAssignedInfo,
-        span: fpas_lexer::Span,
-    ) -> Result<ValueId, CompileError> {
-        let Some(Expr::Designator(designator)) = arguments.first() else {
-            return Err(unsupported(span, "Assigned event argument"));
-        };
-        let option = self.lower_event_getter(
-            designator,
-            info.receiver_part_count,
-            &info.getter_name,
-            span,
-        )?;
-        self.emit_value(Operation::IsOptionSome(option), super::types::BOOLEAN, span)
-    }
-
-    /// Retains the event handler and earlier arguments across continuations.
-    pub(super) fn lower_event_raise(
-        &mut self,
-        designator: &Designator,
-        arguments: &[Expr],
-        info: &EventRaiseInfo,
-        span: fpas_lexer::Span,
-    ) -> Result<ValueId, CompileError> {
-        let option = self.lower_event_getter(
-            designator,
-            info.receiver_part_count,
-            &info.getter_name,
-            span,
-        )?;
-        let getter = self.member_callable(&info.getter_name, span, "event getter")?;
-        let option_ty = getter.result;
-        let handler_ty = match self.type_kind(option_ty) {
-            Some(IrType::Option(handler)) => handler,
-            _ => return Err(unsupported(span, "event getter result")),
-        };
-        let handler = self.emit_value(Operation::UnwrapSome(option), handler_ty, span)?;
-        let handler = self.save_value(handler);
-        let values = self.lower_argument_values(arguments, span)?;
-        let handler = self.restore_value(handler, span)?;
-        self.record_call_arguments(values.len(), span)?;
-        let result = match self.type_kind(handler_ty) {
-            Some(IrType::Function { result, .. }) => result,
-            _ => return Err(unsupported(span, "event handler type")),
-        };
-        self.emit_value(
-            Operation::CallValue {
-                callee: handler,
-                arguments: values,
-            },
-            result,
-            span,
         )
     }
 
@@ -214,16 +130,6 @@ impl LoweringContext {
                 .resolve_callable(target.qualified_name())
                 .map(|item| item.result);
         }
-        if let Some(info) = self.event_raises.get(&key) {
-            let getter = self.resolve_callable(&info.getter_name)?;
-            let IrType::Option(handler) = self.type_kind(getter.result)? else {
-                return None;
-            };
-            let IrType::Function { result, .. } = self.type_kind(handler)? else {
-                return None;
-            };
-            return Some(result);
-        }
         None
     }
 
@@ -279,18 +185,6 @@ impl LoweringContext {
             result,
             span,
         )
-    }
-
-    fn lower_event_getter(
-        &mut self,
-        designator: &Designator,
-        receiver_part_count: usize,
-        getter_name: &str,
-        span: fpas_lexer::Span,
-    ) -> Result<ValueId, CompileError> {
-        let (receiver, _) = self.lower_member_receiver(designator, receiver_part_count)?;
-        let getter = self.member_callable(getter_name, span, "event getter")?;
-        self.emit_member_call(&getter, vec![receiver], span)
     }
 
     pub(in crate::lowering) fn lower_member_receiver(

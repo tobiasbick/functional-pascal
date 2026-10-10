@@ -60,7 +60,7 @@ fn ensure_edited_references_still_bind(
     references: &[ReferenceLocation],
     cancellation: &CancellationToken,
 ) -> Result<(), RenameError> {
-    // Fields and events bind through their owner, never lexically.
+    // Fields bind through their owner, never lexically.
     if !unqualified_kind(target.symbol.kind) {
         return Ok(());
     }

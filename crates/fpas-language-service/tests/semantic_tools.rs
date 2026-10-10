@@ -7,6 +7,9 @@
 
 mod support;
 
+#[path = "semantic_tools/ordinary_names.rs"]
+mod ordinary_names;
+
 use fpas_diagnostics::codes::{SEMA_UNKNOWN_NAME, SEMA_UNKNOWN_TYPE};
 use fpas_language_service::{
     DiagnosticIdentity, LanguageService, SemanticTokenKind, WorkspaceContext,
@@ -16,7 +19,7 @@ use fpas_parser::parse_compilation_unit;
 use support::TempDirectory;
 
 #[test]
-fn semantic_tokens_classify_every_supported_symbol_kind_and_modifier() {
+fn semantic_tokens_classify_symbol_kinds_and_modifiers() {
     let temp = TempDirectory::new("semantic-token-kinds");
     let source = r#"unit Semantic.Sample;
 
@@ -29,7 +32,7 @@ public type
   end enum;
   public type Counter = record
     public Value: integer;
-    public event Changed: procedure() read ReadChanged write WriteChanged;
+    public Changed: Option of procedure() := None;
     public function Add<T>(Self: Counter; Amount: T): integer;
     begin
       return Self.Value;
@@ -73,7 +76,7 @@ end unit;
         ("Local", SemanticTokenKind::Constant),
         ("CopyText", SemanticTokenKind::Variable),
         ("Value", SemanticTokenKind::Field),
-        ("Changed", SemanticTokenKind::Event),
+        ("Changed", SemanticTokenKind::Field),
         ("First", SemanticTokenKind::EnumMember),
         ("Identity", SemanticTokenKind::Function),
         ("Notify", SemanticTokenKind::Procedure),

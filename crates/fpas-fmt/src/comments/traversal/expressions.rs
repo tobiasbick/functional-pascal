@@ -93,7 +93,6 @@ pub(super) fn collect_expr(expr: &Expr, begins: &[usize], out: &mut CollectedAnc
         | Expr::Str(..)
         | Expr::Bool(..)
         | Expr::OptionNone(..)
-        | Expr::Nil(..)
         | Expr::Error(..) => {}
     }
 }

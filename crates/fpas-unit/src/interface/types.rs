@@ -53,6 +53,17 @@ pub struct CallableType {
     pub variadic: bool,
 }
 
+/// An exported field's constant default.
+///
+/// **Documentation:** `docs/pascal/language/types/records.md`
+#[derive(Debug, Clone, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+pub enum FieldDefaultValue {
+    /// Scalar constant expression.
+    Scalar(super::ConstantValue),
+    /// `None` for an optional field, including an optional callable.
+    OptionNone,
+}
+
 /// One record field.
 #[derive(Debug, Clone, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 pub struct FieldType {
@@ -60,8 +71,10 @@ pub struct FieldType {
     pub name: String,
     /// Resolved field type.
     pub ty: InterfaceType,
-    /// Canonical scalar default value, when the field may be omitted.
-    pub default_value: Option<super::ConstantValue>,
+    /// Canonical constant default, when the field may be omitted.
+    ///
+    /// **Documentation:** `docs/pascal/language/types/records.md`
+    pub default_value: Option<FieldDefaultValue>,
 }
 
 /// An instance method and its callable signature.
@@ -74,21 +87,6 @@ pub struct MethodType {
     pub name: String,
     /// Callable signature including the explicit `Self` parameter used internally.
     pub callable: CallableType,
-}
-
-/// A record event.
-#[derive(Debug, Clone, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
-pub struct EventType {
-    /// Source spelling of the event.
-    pub name: String,
-    /// Declared handler callable type.
-    pub handler: InterfaceType,
-    /// Qualified getter definition.
-    pub getter: String,
-    /// Qualified setter definition.
-    pub setter: String,
-    /// Canonical unit owning the declaring record.
-    pub owner_unit: Option<String>,
 }
 
 /// Exported record layout and members.
@@ -106,8 +104,6 @@ pub struct RecordType {
     pub methods: Vec<MethodType>,
     /// Static routines in canonical name order.
     pub static_routines: Vec<MethodType>,
-    /// Events in canonical name order.
-    pub events: Vec<EventType>,
 }
 
 /// One enum variant.

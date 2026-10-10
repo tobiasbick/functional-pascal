@@ -43,12 +43,6 @@ impl LoweringContext {
                 span,
             } => {
                 let call_key = fpas_sema::expr_lookup_key(expression);
-                if let Some(info) = self.event_assigned.get(&call_key).cloned() {
-                    return self.lower_event_assigned(args, &info, *span);
-                }
-                if let Some(info) = self.event_raises.get(&call_key).cloned() {
-                    return self.lower_event_raise(designator, args, &info, *span);
-                }
                 let result = self.expression_ir_type(expression)?;
                 self.lower_call(designator, args, result, *span, call_key)
             }

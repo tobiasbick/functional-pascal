@@ -49,26 +49,6 @@ pub(super) fn type_children(
                     .iter()
                     .map(|method| method_symbol(snapshot, owner, method, type_span)),
             );
-            children.extend(record.events.iter().map(|event| {
-                let mut symbol = member_symbol(
-                    snapshot,
-                    owner,
-                    &event.name,
-                    SymbolKind::Event,
-                    event.span,
-                    event.visibility,
-                    named_type(&event.type_expr),
-                    format!(
-                        "event {}: {}",
-                        event.name,
-                        type_text(snapshot, &event.type_expr)
-                    ),
-                    type_span,
-                    Vec::new(),
-                );
-                symbol.callable = type_callable_signature(snapshot, &event.name, &event.type_expr);
-                symbol
-            }));
             children.sort_by_key(|symbol| symbol.full_span.offset());
             children
         }

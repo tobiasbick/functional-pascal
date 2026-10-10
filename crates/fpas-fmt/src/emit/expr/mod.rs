@@ -157,7 +157,6 @@ pub(super) fn emit_expr_impl(
             emitter.write(")");
         }
         Expr::OptionNone(..) => emitter.write("None"),
-        Expr::Nil(..) => emitter.write("nil"),
         Expr::Try(inner, ..) => {
             emitter.write("try ");
             emit_expr(emitter, inner, PREFIX_PREC, comments);

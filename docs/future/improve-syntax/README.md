@@ -44,7 +44,7 @@ an open work package.
 
 ## Package status
 
-AP01, AP02, AP03, AP04, AP05, AP06, AP07, AP09, AP10, AP11, AP13, AP14, AP16,
+AP01, AP02, AP03, AP04, AP05, AP06, AP07, AP09, AP10, AP11, AP13, AP14, AP15, AP16,
 AP17, and AP20 are complete, including all their work packages. Their READMEs
 and work-package files record implemented behavior, implementation owners, regression coverage,
 and any independent follow-ups. Checkboxes use the
@@ -70,7 +70,7 @@ package are listed in each work package file.
 | [ ] | [AP12: Callable expressions](ap12-callable-expressions/README.md) | Medium | AP06 | Proposal |
 | [x] | [AP13: Explicit block boundaries](ap13-explicit-block-boundaries/README.md) | Large | AP01, AP02 | Complete (Q08, Q09) |
 | [x] | [AP14: Remove computed properties](ap14-remove-computed-properties/README.md) | Small | AP06 | Complete (AP14.1, AP14.2) |
-| [ ] | [AP15: Remove event declarations](ap15-remove-event-declarations/README.md) | Small | AP20 | Agreed direction |
+| [x] | [AP15: Remove event declarations](ap15-remove-event-declarations/README.md) | Small | AP20 | Complete (AP15.1, AP15.2) |
 | [x] | [AP16: Immutable and mutable bindings](ap16-immutable-and-mutable-bindings/README.md) | Large | AP11 | Complete (AP16.1–AP16.3) |
 | [x] | [AP17: Visible caller mutation](ap17-visible-caller-mutation/README.md) | Large | AP09, AP13, AP16, AP06.2 (AP17.3) | Complete |
 | [ ] | [AP18: Subrange types](ap18-subrange-types/README.md) | Large | AP07, AP16 | Agreed direction (Q10, Q11) |
@@ -109,7 +109,7 @@ and transfer conditions are recorded in the owning package README.
 | AP12 | AP12.1 decision; AP12.2 callable targets |
 | AP13 | AP13.1 reserve keywords; AP13.2 terminators; AP13.3 declaration closers; AP13.4 conditionals and loops; AP13.5 case arms; AP13.6 expression closers |
 | AP14 | AP14.1 migrate properties; AP14.2 remove declarations |
-| AP15 | AP15.1 migrate events; AP15.2 remove declarations |
+| AP15 | AP15.1 optional handler fields; AP15.2 ordinary names and field/method model (both complete) |
 | AP16 | AP16.1 computed const; AP16.2 migrate immutable var; AP16.3 keyword switch |
 | AP17 | Complete: var parameters, named var arguments, and shared mutation checks for caller-mutating intrinsics |
 | AP18 | AP18.1 declarations and conversions; AP18.2 membership |
@@ -137,7 +137,7 @@ completed foundation is listed above. For the remaining work, keep the
 following dependency order; the exact prerequisites and unresolved decisions
 are recorded in each work-package file.
 
-1. AP15 uses the completed pattern and `is` rules (AP20). AP21 and AP24 use
+1. AP21 and AP24 use
    the completed explicit enum cases (AP03); AP24 also uses the completed
    patterns and typed record construction (AP10).
 2. AP18 and AP23 use the completed Boolean and binding rules. AP19 uses the

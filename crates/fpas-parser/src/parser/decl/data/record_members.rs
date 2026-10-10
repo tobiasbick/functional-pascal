@@ -1,10 +1,8 @@
-//! Record field, routine, and event parsing.
+//! Record field and routine parsing.
 
 use crate::ast::*;
 use crate::parser::Parser;
-use fpas_diagnostics::codes::{
-    PARSE_EXPECTED_TOKEN, PARSE_INVALID_EVENT_ACCESSOR_ORDER, PARSE_INVALID_STATIC_PLACEMENT,
-};
+use fpas_diagnostics::codes::PARSE_INVALID_STATIC_PLACEMENT;
 use fpas_lexer::Token;
 
 impl Parser {
@@ -20,7 +18,6 @@ impl Parser {
         self.advance();
         let mut fields = Vec::new();
         let mut methods = Vec::new();
-        let mut events = Vec::new();
         while !self.check(&Token::End) && !self.at_end() {
             let visibility = self.parse_visibility(allow_member_visibility);
             match self.current_token() {
@@ -39,9 +36,6 @@ impl Parser {
                         methods.push(method);
                     }
                 }
-                Token::Event => {
-                    events.push(self.parse_record_event(visibility));
-                }
                 _ if self.at_removed_property() => self.reject_removed_property(),
                 _ => fields.push(self.parse_field_def(visibility)),
             }
@@ -50,82 +44,6 @@ impl Parser {
         RecordType {
             fields,
             methods,
-            events,
-            span: self.span_from(start),
-        }
-    }
-
-    /// Parse `event Name: HandlerType read Getter write Setter;`.
-    ///
-    /// **Documentation:** `docs/pascal/language/types/record-events.md`
-    fn parse_record_event(&mut self, visibility: Visibility) -> RecordEvent {
-        let start = self.current_span();
-        self.advance();
-        let (name, _) = self
-            .expect_ident()
-            .unwrap_or_else(|| self.error_ident(start));
-        self.expect(&Token::Colon);
-        let type_expr = self.parse_type_expr();
-
-        let mut read = None;
-        let mut write = None;
-        while matches!(self.current_token(), Token::Read | Token::Write) {
-            let kw_span = self.current_span();
-            if self.eat(&Token::Read) {
-                let (getter, _) = self
-                    .expect_ident()
-                    .unwrap_or_else(|| self.error_ident(kw_span));
-                if read.is_some() {
-                    self.error_with_code(
-                        PARSE_EXPECTED_TOKEN,
-                        "Duplicate `read` clause on event",
-                        "Write `event Name: HandlerType read Getter write Setter;`.",
-                        kw_span,
-                    );
-                } else {
-                    read = Some(getter);
-                }
-            } else if self.eat(&Token::Write) {
-                if read.is_none() && write.is_none() {
-                    self.error_with_code(
-                        PARSE_INVALID_EVENT_ACCESSOR_ORDER,
-                        "Event accessors must be ordered `read` then `write`",
-                        "Write `event Name: HandlerType read Getter write Setter;`.",
-                        kw_span,
-                    );
-                }
-                let (setter, _) = self
-                    .expect_ident()
-                    .unwrap_or_else(|| self.error_ident(kw_span));
-                if write.is_some() {
-                    self.error_with_code(
-                        PARSE_EXPECTED_TOKEN,
-                        "Duplicate `write` clause on event",
-                        "Write `event Name: HandlerType read Getter write Setter;`.",
-                        kw_span,
-                    );
-                } else {
-                    write = Some(setter);
-                }
-            }
-        }
-
-        if read.is_none() || write.is_none() {
-            self.error_with_code(
-                PARSE_EXPECTED_TOKEN,
-                "Event requires both `read` and `write` accessors",
-                "Write `event Name: HandlerType read Getter write Setter;`.",
-                self.current_span(),
-            );
-        }
-
-        self.expect_semi();
-        RecordEvent {
-            name,
-            type_expr,
-            visibility,
-            read: read.unwrap_or_default(),
-            write: write.unwrap_or_default(),
             span: self.span_from(start),
         }
     }

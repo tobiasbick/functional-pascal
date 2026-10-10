@@ -6,12 +6,13 @@ mod bound_methods;
 mod closures;
 mod equality;
 mod fluent;
+mod handler_fields;
 mod named_arguments;
 mod native;
+mod ordinary_names;
 mod postfix;
 mod record_construction;
 mod record_context;
-mod record_events;
 mod record_updates;
 mod std_shadowing;
 mod var_parameters;
@@ -231,9 +232,6 @@ fn analysis_metadata_exposes_all_named_results() {
         closure_infos,
         nested_routine_captures,
         bound_methods,
-        event_writes,
-        event_assigned,
-        event_raises,
     } = analyze_with_types(&program);
 
     assert_eq!(named_types.len(), 4);
@@ -253,11 +251,8 @@ fn analysis_metadata_exposes_all_named_results() {
             closure_infos.len(),
             nested_routine_captures.len(),
             bound_methods.len(),
-            event_writes.len(),
-            event_assigned.len(),
-            event_raises.len(),
         ],
-        [0; 16]
+        [0; 13]
     );
 }
 

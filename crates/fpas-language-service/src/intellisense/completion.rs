@@ -265,8 +265,8 @@ pub(super) fn declaration_candidate(
 fn keyword_candidates(context: &super::context::CompletionContext) -> Vec<CompletionCandidate> {
     let keywords: &[&str] = if context.statements {
         &[
-            "begin", "case", "discard", "false", "for", "go", "if", "nil", "panic", "repeat",
-            "true", "var", "while",
+            "begin", "case", "discard", "false", "for", "go", "if", "panic", "repeat", "true",
+            "var", "while",
         ]
     } else {
         &["const", "function", "procedure", "public", "type", "var"]
@@ -310,7 +310,7 @@ fn starts_with(name: &str, prefix: &str) -> bool {
 fn unqualified_kind(kind: SymbolKind) -> bool {
     !matches!(
         kind,
-        SymbolKind::Program | SymbolKind::Unit | SymbolKind::Field | SymbolKind::Event
+        SymbolKind::Program | SymbolKind::Unit | SymbolKind::Field
     )
 }
 

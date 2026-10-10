@@ -1,5 +1,6 @@
 use super::*;
 
+mod handler_fields;
 mod mutating_arrays;
 mod record_construction;
 mod record_updates;
@@ -253,56 +254,6 @@ end.",
 }
 
 #[test]
-fn record_methods_and_events_execute() {
-    assert_succeeds(
-        "\
-program RegisterMembers;
-var LastValue: integer := 0;
-var Handler: Option of procedure(Value: integer) := None;
-
-type
-  Counter = record
-    Value: integer;
-    function Double(Self: Counter): integer;
-    begin
-      return Self.Value * 2;
-    end function;
-  end record;
-
-  type Button = record
-    function ReadOnValue(Self: Button): Option of procedure(Value: integer);
-    begin
-      return Handler;
-    end function;
-    procedure WriteOnValue(Self: Button; Value: Option of procedure(Value: integer));
-    begin
-      Handler := Value;
-    end procedure;
-    event OnValue: procedure(Value: integer) read ReadOnValue write WriteOnValue;
-  end record;
-
-procedure Remember(Value: integer);
-begin
-  LastValue := Value;
-end procedure;
-
-begin
-  const C: Counter := Counter( Value := 6 );
-  if C.Double() <> 12 then panic('method mismatch'); end if;
-
-  const B: Button := Button( );
-  if Assigned(B.OnValue) then panic('unexpected handler'); end if;
-  B.OnValue := Remember;
-  if not Assigned(B.OnValue) then panic('missing handler'); end if;
-  B.OnValue(17);
-  if LastValue <> 17 then panic('event raise mismatch'); end if;
-  B.OnValue := (nil);
-  if Assigned(B.OnValue) then panic('handler was not cleared'); end if;
-end.",
-    );
-}
-
-#[test]
 fn string_indexing_and_membership_execute() {
     assert_succeeds(
         "\
@@ -434,43 +385,6 @@ begin
   const C: Counter := Counter( Base := 10 );
   const AddToCounter: function(Value: integer): integer := C.Add;
   if AddToCounter(7) <> 17 then panic('bound method mismatch'); end if;
-end.",
-    );
-}
-
-#[test]
-fn event_handlers_accept_bound_record_methods() {
-    assert_succeeds(
-        "\
-program RegisterBoundEvent;
-var Handler: Option of function(Value: integer): integer := None;
-type
-  Counter = record
-    Base: integer;
-    function Add(Self: Counter; Value: integer): integer;
-    begin
-      return Self.Base + Value;
-    end function;
-  end record;
-  type Source = record
-    function ReadValue(Self: Source): Option of function(Value: integer): integer;
-    begin
-      return Handler;
-    end function;
-    procedure WriteValue(
-      Self: Source;
-      Value: Option of function(Value: integer): integer
-    );
-    begin
-      Handler := Value;
-    end procedure;
-    event OnValue: function(Value: integer): integer read ReadValue write WriteValue;
-  end record;
-begin
-  const C: Counter := Counter( Base := 12 );
-  const S: Source := Source( );
-  S.OnValue := C.Add;
-  if S.OnValue(8) <> 20 then panic('bound event mismatch'); end if;
 end.",
     );
 }

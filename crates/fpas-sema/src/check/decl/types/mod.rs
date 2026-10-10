@@ -9,8 +9,6 @@ use std::sync::Arc;
 /// Whole-unit structural type collection and recursive construction checks.
 pub(crate) mod collection;
 mod enums;
-mod record_event_accessors;
-mod record_events;
 mod records;
 
 impl Checker {

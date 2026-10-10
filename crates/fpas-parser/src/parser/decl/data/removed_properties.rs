@@ -22,8 +22,9 @@ impl Parser {
         }
         let mut read = None;
         let mut write = None;
-        while matches!(self.current_token(), Token::Read | Token::Write) {
-            let is_read = self.check(&Token::Read);
+        while matches!(self.current_token(), Token::Ident(word) if word.eq_ignore_ascii_case("read") || word.eq_ignore_ascii_case("write"))
+        {
+            let is_read = matches!(self.current_token(), Token::Ident(word) if word.eq_ignore_ascii_case("read"));
             self.advance();
             let accessor = self.expect_ident().map(|(accessor, _)| accessor);
             if is_read {

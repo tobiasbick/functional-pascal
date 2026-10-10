@@ -7,7 +7,6 @@ program TryExpressions;
 uses Std.Tasks;
 var Written: integer := 0;
 var Grid: array of array of integer := [[0, 0, 0], [0, 0, 0]];
-var Handler: Option of function(X: integer; Y: integer): integer := None;
 type
   Binary = function(X: integer; Y: integer): integer;
   type Bucket = record Items: array of integer; end record;
@@ -17,11 +16,7 @@ type
     begin return Self.Base + X * 10 + Y; end function;
     procedure WriteNumber(Self: Counter; Value: integer);
     begin Written := Self.Base + Value; end procedure;
-    function ReadHandler(Self: Counter): Option of Binary;
-    begin return Handler; end function;
-    procedure WriteHandler(Self: Counter; Value: Option of Binary);
-    begin Handler := Value; end procedure;
-    event OnValue: function(X: integer; Y: integer): integer read ReadHandler write WriteHandler;
+    OnValue: Option of Binary := None;
   end record;
   type Message = enum Move(X: integer; Y: integer); end enum;
   type Pair = record First: integer; Second: integer; end record;
@@ -183,16 +178,16 @@ fn procedure_method_preserves_receiver_across_try() {
 }
 
 #[test]
-fn event_raise_preserves_handler_and_arguments_across_try() {
+fn optional_handler_preserves_callee_and_arguments_across_try() {
     check_expression(
-        "const C: Counter := Counter( Base := 0 ); C.OnValue := Combine; return Ok(C.OnValue(try ReadValue(1, FailAt), try ReadValue(2, FailAt)));",
+        "var C: Counter := Counter(Base := 0); C.OnValue := Some(Combine); const Selected: Binary := C.OnValue.Unwrap(); return Ok(Selected(try ReadValue(1, FailAt), try ReadValue(2, FailAt)));",
     );
 }
 
 #[test]
-fn event_write_preserves_receiver_across_try() {
+fn handler_field_assignment_preserves_try_propagation() {
     check_expression(
-        "const C: Counter := Counter( Base := 0 ); C.OnValue := try ReadHandler(FailAt); return Ok(C.OnValue(1, 2));",
+        "var C: Counter := Counter(Base := 0); C.OnValue := Some(try ReadHandler(FailAt)); const Selected: Binary := C.OnValue.Unwrap(); return Ok(Selected(1, 2));",
     );
 }
 

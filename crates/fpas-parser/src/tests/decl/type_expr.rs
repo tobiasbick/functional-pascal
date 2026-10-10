@@ -34,7 +34,7 @@ fn built_in_and_callable_type_forms_parse() {
         "function(X: integer): integer",
         "procedure(X: integer)",
     ] {
-        let source = format!("program T; var Value: {type_expr} := nil; begin end.");
+        let source = format!("program T; var Value: {type_expr} := MakeValue(); begin end.");
         let (_, errors) = parse_with_errors(&source);
         assert!(errors.is_empty(), "{type_expr}: {errors:#?}");
     }
@@ -52,7 +52,7 @@ fn built_in_and_callable_type_forms_require_their_separators() {
         "function(X: integer) integer",
         "procedure(X: integer",
     ] {
-        let source = format!("program T; var Value: {type_expr} := nil; begin end.");
+        let source = format!("program T; var Value: {type_expr} := MakeValue(); begin end.");
         let (_, errors) = parse_with_errors(&source);
         assert!(
             errors.iter().any(|error| error

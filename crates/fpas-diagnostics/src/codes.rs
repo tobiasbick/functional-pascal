@@ -75,10 +75,6 @@ define_codes!(PARSE_ALLOCATED_CODES => {
     ///
     /// **Documentation:** `docs/pascal/language/types/record-update.md`
     PARSE_EMPTY_RECORD_UPDATE = 2010;
-    /// An event declaration places its `write` accessor before its `read` accessor.
-    ///
-    /// **Documentation:** `docs/pascal/language/types/record-events.md`
-    PARSE_INVALID_EVENT_ACCESSOR_ORDER = 2011;
     /// An enum variant declares an empty associated-data field list.
     ///
     /// **Documentation:** `docs/pascal/language/types/enums.md`

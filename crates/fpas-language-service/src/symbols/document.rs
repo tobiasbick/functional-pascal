@@ -34,8 +34,6 @@ pub enum SymbolKind {
     Parameter,
     /// Record field.
     Field,
-    /// Record event.
-    Event,
     /// Enum member.
     EnumMember,
     /// Loop-local binding.

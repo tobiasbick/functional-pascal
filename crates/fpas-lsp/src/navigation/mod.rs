@@ -77,7 +77,6 @@ pub(crate) fn symbol_kind(kind: SymbolKind) -> tower_lsp_server::ls_types::Symbo
         SymbolKind::TypeParameter => Lsp::TYPE_PARAMETER,
         SymbolKind::Parameter => Lsp::VARIABLE,
         SymbolKind::Field => Lsp::FIELD,
-        SymbolKind::Event => Lsp::EVENT,
         SymbolKind::EnumMember => Lsp::ENUM_MEMBER,
     }
 }

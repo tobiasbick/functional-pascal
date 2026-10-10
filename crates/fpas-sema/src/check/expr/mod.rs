@@ -10,7 +10,6 @@ mod calls;
 mod closure;
 mod designator;
 mod equality;
-mod event_access;
 mod operators;
 mod postfix;
 mod record_construction;
@@ -66,15 +65,6 @@ impl Checker {
                 Ty::Option(Box::new(inner_ty))
             }
             Expr::OptionNone(_) => Ty::Option(Box::new(Ty::Error)),
-            Expr::Nil(span) => {
-                self.error_with_code(
-                    fpas_diagnostics::codes::SEMA_TYPE_MISMATCH,
-                    "`nil` is only valid when clearing an event",
-                    "Write `Event := nil` to clear a handler, or use `None` for an `Option`.",
-                    *span,
-                );
-                Ty::Error
-            }
             Expr::Try(inner, span) => self.check_try_expr(inner, *span),
             Expr::Go(inner, span) => self.check_go_expr(inner, *span),
             Expr::RecordUpdate { base, fields, span } => {
@@ -191,20 +181,6 @@ impl Checker {
                     &format!("field update `{}`", field_init.name),
                     span,
                 );
-            } else if self
-                .find_record_event_on_type(&record_ty, &field_init.name)
-                .is_some()
-            {
-                self.error_with_code(
-                    fpas_diagnostics::codes::SEMA_UNKNOWN_NAME,
-                    format!(
-                        "Record type `{}` event `{}` cannot be set in a `with` update",
-                        record_ty.name, field_init.name
-                    ),
-                    "Events are not record fields. Assign with `Value.Event := Handler` or `:= nil`.",
-                    span,
-                );
-                let _ = self.check_expr(&field_init.value);
             } else {
                 let known: Vec<&str> = record_ty.fields.iter().map(|(n, _)| n.as_str()).collect();
                 self.error_with_code(

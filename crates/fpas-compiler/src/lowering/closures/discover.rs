@@ -345,7 +345,6 @@ impl<'a> ClosureRegistry<'a> {
             | Expr::Str(..)
             | Expr::Bool(..)
             | Expr::OptionNone(_)
-            | Expr::Nil(_)
             | Expr::Error(_) => {}
         }
         Ok(())

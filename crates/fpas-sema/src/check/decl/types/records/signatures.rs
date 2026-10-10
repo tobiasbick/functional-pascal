@@ -130,7 +130,7 @@ impl Checker {
             .and_then(|context| context.owner_unit.clone())
             .or_else(|| {
                 qualified_name.rsplit_once('.').and_then(|(type_name, _)| {
-                    super::super::record_events::owner_unit_from_type_name(type_name)
+                    type_name.rsplit_once('.').map(|(unit, _)| unit.to_string())
                 })
             });
         self.scopes.function_ctx = Some(FunctionCtx {

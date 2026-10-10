@@ -177,12 +177,9 @@ impl Checker {
                     .iter()
                     .find_map(|field| self.non_constant_part(&field.value))
             }),
-            Expr::Try(..)
-            | Expr::Go(..)
-            | Expr::Closure(_)
-            | Expr::Nil(_)
-            | Expr::Is { .. }
-            | Expr::Error(_) => Some(("expression".to_string(), expr.span())),
+            Expr::Try(..) | Expr::Go(..) | Expr::Closure(_) | Expr::Is { .. } | Expr::Error(_) => {
+                Some(("expression".to_string(), expr.span()))
+            }
         }
     }
 }

@@ -469,6 +469,18 @@ export async function verifyGrammar() {
   await verifyNegativeScopes(grammar);
   await verifyEdgeScopes(grammar);
   await verifyReservedKeywordScopes(grammar);
+  const ordinaryNames = await tokenizeFixture(grammar, "ordinary_names.fpas");
+  for (const [line, name] of [
+    ["type Event", "Event"], ["Nil: integer", "Nil"],
+    ["function Assigned", "Assigned"], ["function Assigned", "Read"],
+    ["function Assigned", "Write"], ["return Read", "Read"],
+    ["return Read", "Write"], ["Item.NIL", "NIL"]
+  ]) {
+    const token = tokenAt(ordinaryNames, line, name);
+    assertNoKeywordScope(token);
+    assert.ok(!token.scopes.some(scope => scope.startsWith("constant.language.")),
+      `ordinary name ${name}: ${token.scopes.join(", ")}`);
+  }
 }
 
 if (process.argv[1] === fileURLToPath(import.meta.url)) {

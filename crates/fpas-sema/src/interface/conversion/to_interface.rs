@@ -139,19 +139,6 @@ fn record_to_interface(
                 })
             }))
             .collect::<Result<_, InterfaceConversionError>>()?,
-        events: record
-            .events
-            .iter()
-            .map(|(name, event)| {
-                Ok(artifact::EventType {
-                    name: name.clone(),
-                    handler: ty_to_interface_reference(&event.handler_ty)?,
-                    getter: event.getter.clone(),
-                    setter: event.setter.clone(),
-                    owner_unit: event.owner_unit.clone(),
-                })
-            })
-            .collect::<Result<_, InterfaceConversionError>>()?,
     })
 }
 

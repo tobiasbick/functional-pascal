@@ -136,7 +136,7 @@ fn canonicalize_type(ty: &mut InterfaceType) {
             record.private_members.dedup();
             for field in &mut record.fields {
                 canonicalize_type(&mut field.ty);
-                if let Some(value) = &mut field.default_value {
+                if let Some(super::FieldDefaultValue::Scalar(value)) = &mut field.default_value {
                     canonicalize_constant(value);
                 }
             }
@@ -147,22 +147,16 @@ fn canonicalize_type(ty: &mut InterfaceType) {
             {
                 canonicalize_callable(&mut method.callable);
             }
-            for event in &mut record.events {
-                canonicalize_type(&mut event.handler);
-                event.getter = canonical_name(&event.getter);
-                event.setter = canonical_name(&event.setter);
-                event.owner_unit = event.owner_unit.as_deref().map(canonical_name);
-            }
             sort_named(&mut record.methods, |value| &value.name);
             sort_named(&mut record.static_routines, |value| &value.name);
-            sort_named(&mut record.events, |value| &value.name);
         }
         Enum(enum_ty) => {
             enum_ty.name = canonical_name(&enum_ty.name);
             for variant in &mut enum_ty.variants {
                 for field in &mut variant.fields {
                     canonicalize_type(&mut field.ty);
-                    if let Some(value) = &mut field.default_value {
+                    if let Some(super::FieldDefaultValue::Scalar(value)) = &mut field.default_value
+                    {
                         canonicalize_constant(value);
                     }
                 }

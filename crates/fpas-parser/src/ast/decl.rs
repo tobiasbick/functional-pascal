@@ -113,30 +113,7 @@ pub struct RecordType {
     pub fields: Vec<FieldDef>,
     /// The record's instance and static routines.
     pub methods: Vec<RecordMethod>,
-    /// Event members backed by `Option of Handler` accessors.
-    ///
-    /// **Documentation:** `docs/pascal/language/types/record-events.md`
-    pub events: Vec<RecordEvent>,
     /// The source span covering the complete `record ... end` body.
-    pub span: Span,
-}
-
-/// An event declared inside a `record … end` block.
-///
-/// **Documentation:** `docs/pascal/language/types/record-events.md`
-#[derive(Debug, Clone, PartialEq)]
-pub struct RecordEvent {
-    /// The event name.
-    pub name: String,
-    /// The handler type exposed by the event.
-    pub type_expr: TypeExpr,
-    /// Member visibility; private when no modifier was written.
-    pub visibility: Visibility,
-    /// Instance getter returning `Option of` the handler type.
-    pub read: String,
-    /// Instance setter accepting `Option of` the handler type.
-    pub write: String,
-    /// The source span covering the event declaration.
     pub span: Span,
 }
 

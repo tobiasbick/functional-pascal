@@ -43,10 +43,10 @@ visibility is not inherited.
 
 The modifier applies to `function`, `procedure`, `type`, `const`, `var`, and
 `var` declarations in units. On records declared in units it also
-applies directly to individual fields, functions, procedures, and events. Every such record member is private unless it is declared `public`.
+applies directly to individual fields, functions, and procedures. Every such record member is private unless it is declared `public`.
 See [Records](../language/types/records.md#field-visibility),
 [Record methods](../language/types/record-methods.md#routine-visibility), and
-[Record events](../language/types/record-events.md#visibility).
+[optional handlers](../language/functions/first-class.md#optional-handlers).
 
 Every type referenced by a public unit declaration must also be public when it
 is declared in that unit. This applies recursively to parameters, results,

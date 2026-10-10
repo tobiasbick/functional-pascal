@@ -86,7 +86,6 @@ fn semantic_tokens_and_quick_fixes_use_utf16_and_reject_stale_diagnostics() {
             "parameter",
             "variable",
             "field",
-            "event",
             "enumMember",
             "function",
             "procedure",
@@ -137,7 +136,7 @@ fn semantic_tokens_and_quick_fixes_use_utf16_and_reject_stale_diagnostics() {
         &decoded,
         utf16_position,
         "ExistingText".encode_utf16().count(),
-        12,
+        11,
     );
     assert!(
         decoded.windows(2).all(|pair| pair[0].0 < pair[1].0
@@ -203,7 +202,7 @@ fn import_modifier_and_alias_named_as_use_keyword_and_namespace_legend_entries()
         &tokens,
         position(source, source.find("as As").expect("modifier")),
         2,
-        13,
+        12,
     );
     assert_token(
         &tokens,
@@ -221,7 +220,7 @@ fn import_modifier_and_alias_named_as_use_keyword_and_namespace_legend_entries()
         &tokens,
         position(source, source.find("Answer()").expect("function")),
         6,
-        9,
+        8,
     );
 }
 

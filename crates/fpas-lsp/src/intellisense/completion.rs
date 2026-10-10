@@ -130,7 +130,6 @@ fn symbol_completion_kind(kind: SymbolKind) -> CompletionItemKind {
         SymbolKind::Method => CompletionItemKind::METHOD,
         SymbolKind::TypeParameter => CompletionItemKind::TYPE_PARAMETER,
         SymbolKind::Field => CompletionItemKind::FIELD,
-        SymbolKind::Event => CompletionItemKind::EVENT,
         SymbolKind::EnumMember => CompletionItemKind::ENUM_MEMBER,
     }
 }

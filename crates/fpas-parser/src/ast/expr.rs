@@ -37,7 +37,6 @@ impl Expr {
             | Self::ResultError(_, span)
             | Self::OptionSome(_, span)
             | Self::OptionNone(span)
-            | Self::Nil(span)
             | Self::Try(_, span)
             | Self::Go(_, span)
             | Self::Error(span) => *span,
@@ -133,10 +132,6 @@ pub enum Expr {
     OptionSome(Box<Expr>, Span),
     /// `None` — Option::None literal.
     OptionNone(Span),
-    /// `nil` — clears an event handler (valid only on event assignment RHS).
-    ///
-    /// **Documentation:** `docs/pascal/language/types/record-events.md`
-    Nil(Span),
     /// `try expr` — unwrap Result/Option or propagate error.
     Try(Box<Expr>, Span),
 

@@ -1,0 +1,15 @@
+program OrdinaryNames;
+
+type Event = record
+  Nil: integer;
+end record;
+
+function Assigned(Read: integer; Write: integer): integer;
+begin
+  return Read + Write;
+end function;
+
+begin
+  var Item: Event := Event(Nil := Assigned(1, 2));
+  Item.NIL := 3;
+end.

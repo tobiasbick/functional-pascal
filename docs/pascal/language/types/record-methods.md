@@ -35,7 +35,7 @@ type
 The declaring unit may call `ReadValue`; importing units cannot. `Create` and
 `Current` are public. Visibility applies to
 instance functions, instance procedures, static functions, and static
-procedures. It is valid only in unit files. Record fields and events use the
+procedures. It is valid only in unit files. Record fields use the
 same rule.
 
 ## Instance methods
@@ -174,8 +174,8 @@ Rules:
   not return a value.
 - Do not call a static routine through a value (`Value.Create(...)` is an error).
 - Do not call an instance method through the type (`TypeName.Sum(...)` is an error).
-- Static and instance members share one case-insensitive name set with fields and
-  events; duplicates are rejected.
+- Static and instance members share one case-insensitive name set with fields;
+  duplicates are rejected.
 - FPAS has no routine overloading: static routines in one record need distinct names.
 - Static fields and special constructors are not part of this feature.
 - A public type alias whose resolved type is a record exposes the same static routines
@@ -216,6 +216,6 @@ Method-level type parameters are documented in [Generics](generics.md#generic-re
 
 - [Records](records.md)
 - [Generics](generics.md)
-- [Record events](record-events.md)
+- [Optional handlers](../functions/first-class.md#optional-handlers)
 - [First-class functions](../functions/first-class.md)
 - [Capturing closures](../functions/closures.md)

@@ -96,52 +96,6 @@ pub struct BoundMethodInfo {
 /// Maps designator or postfix-operation identity to [`BoundMethodInfo`].
 pub type BoundMethodMap = HashMap<usize, BoundMethodInfo>;
 
-/// Semantic metadata for an event setter assignment (`B.OnClick := …` / `:= nil`).
-///
-/// **Documentation:** `docs/pascal/language/types/record-events.md`
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub struct EventWriteInfo {
-    /// Qualified setter name (e.g. `Button.WriteOnClick`).
-    pub setter_name: String,
-    /// Number of designator parts forming the receiver before the event name.
-    pub receiver_part_count: usize,
-    /// When `true`, the RHS is `nil` and lowers to `None`; otherwise wrap as `Some`.
-    pub clear: bool,
-}
-
-/// Maps assignment-target designator identity to [`EventWriteInfo`].
-pub type EventWriteMap = HashMap<usize, EventWriteInfo>;
-
-/// Semantic metadata for `Assigned(event)`.
-///
-/// **Documentation:** `docs/pascal/language/types/record-events.md`
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub struct EventAssignedInfo {
-    /// Qualified getter name returning `Option of Handler`.
-    pub getter_name: String,
-    /// Number of designator parts forming the receiver before the event name.
-    pub receiver_part_count: usize,
-}
-
-/// Maps `Assigned(...)` call-expression identity to [`EventAssignedInfo`].
-pub type EventAssignedMap = HashMap<usize, EventAssignedInfo>;
-
-/// Semantic metadata for owner-only event invocation (`B.OnClick(…)`).
-///
-/// **Documentation:** `docs/pascal/language/types/record-events.md`
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub struct EventRaiseInfo {
-    /// Qualified getter name returning `Option of Handler`.
-    pub getter_name: String,
-    /// Number of designator parts forming the receiver before the event name.
-    pub receiver_part_count: usize,
-    /// Handler argument count (not counting the event receiver).
-    pub arity: u8,
-}
-
-/// Maps event call identity (expression or statement designator) to [`EventRaiseInfo`].
-pub type EventRaiseMap = HashMap<usize, EventRaiseInfo>;
-
 /// Maps a named record type to its ordered field list, each entry carrying an optional
 /// shared default expression. Stable allocation retains checked expression identity;
 /// the order matches the type definition.
@@ -188,12 +142,6 @@ pub struct AnalysisMetadata {
     pub nested_routine_captures: NestedRoutineCaptureMap,
     /// Bound instance-method values keyed by designator identity.
     pub bound_methods: BoundMethodMap,
-    /// Event setter assignments keyed by assignment-target identity.
-    pub event_writes: EventWriteMap,
-    /// `Assigned(event)` calls keyed by call-expression identity.
-    pub event_assigned: EventAssignedMap,
-    /// Event raise calls keyed by expression or designator identity.
-    pub event_raises: EventRaiseMap,
 }
 
 /// Semantic checking state for whole-unit types and ordered executable declarations.
@@ -264,18 +212,6 @@ pub struct Checker {
     ///
     /// **Documentation:** `docs/pascal/language/types/record-methods.md`
     pub(crate) bound_methods: BoundMethodMap,
-    /// Assignment-target designator identity → event setter metadata.
-    ///
-    /// **Documentation:** `docs/pascal/language/types/record-events.md`
-    pub(crate) event_writes: EventWriteMap,
-    /// `Assigned(event)` call identity → getter metadata.
-    ///
-    /// **Documentation:** `docs/pascal/language/types/record-events.md`
-    pub(crate) event_assigned: EventAssignedMap,
-    /// Event raise call identity → getter / arity metadata.
-    ///
-    /// **Documentation:** `docs/pascal/language/types/record-events.md`
-    pub(crate) event_raises: EventRaiseMap,
     /// Expression keys whose value is a task-bound callable.
     ///
     /// **Documentation:** `docs/pascal/language/functions/closures.md`
@@ -331,9 +267,6 @@ impl Checker {
             closure_infos: ClosureInfoMap::new(),
             nested_routine_captures: NestedRoutineCaptureMap::new(),
             bound_methods: BoundMethodMap::new(),
-            event_writes: EventWriteMap::new(),
-            event_assigned: EventAssignedMap::new(),
-            event_raises: EventRaiseMap::new(),
             task_bound_exprs: HashSet::new(),
             var_parameter_routines: HashMap::new(),
             pending_var_parameter_uses: HashMap::new(),
@@ -361,9 +294,6 @@ impl Checker {
             closure_infos: self.closure_infos,
             nested_routine_captures: self.nested_routine_captures,
             bound_methods: self.bound_methods,
-            event_writes: self.event_writes,
-            event_assigned: self.event_assigned,
-            event_raises: self.event_raises,
         }
     }
 

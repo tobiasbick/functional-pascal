@@ -1,8 +1,8 @@
 //! Individual declaration emission (const, var, type, routines).
 
 use fpas_parser::{
-    ConstDef, Decl, EnumMember, EnumType, FieldDef, RecordEvent, RecordMethod, RecordType,
-    TypeBody, TypeDef, VarDef, Visibility,
+    ConstDef, Decl, EnumMember, EnumType, FieldDef, RecordMethod, RecordType, TypeBody, TypeDef,
+    VarDef, Visibility,
 };
 
 use crate::comments::{CommentMap, emit_leading_comments, emit_trailing_comments};
@@ -91,14 +91,6 @@ fn emit_record_type(emitter: &mut Emitter, record: &RecordType, comments: &Comme
                 inner.write("\n");
             }
             emit_record_method(inner, method, comments);
-        }
-        let need_event_gap =
-            (!record.fields.is_empty() || !record.methods.is_empty()) && !record.events.is_empty();
-        if need_event_gap {
-            inner.write("\n");
-        }
-        for event in &record.events {
-            emit_record_event(inner, event, comments);
         }
     });
     if let Some(anchor) = comments.closer_anchor(record.span.offset) {
@@ -207,21 +199,6 @@ fn emit_record_method(emitter: &mut Emitter, method: &RecordMethod, comments: &C
             );
         }
     }
-}
-
-fn emit_record_event(emitter: &mut Emitter, event: &RecordEvent, comments: &CommentMap) {
-    emit_leading_comments(emitter, comments, event.span.offset, false);
-    emitter.write_current_indent();
-    emit_visibility(emitter, event.visibility);
-    emitter.write("event ");
-    emitter.write(&event.name);
-    emitter.write(": ");
-    emit_type_expr(emitter, &event.type_expr);
-    emitter.write(" read ");
-    emitter.write(&event.read);
-    emitter.write(" write ");
-    emitter.write(&event.write);
-    finish_decl_line(emitter, comments, event.span.offset);
 }
 
 fn emit_enum_type(emitter: &mut Emitter, enum_type: &EnumType, comments: &CommentMap) {

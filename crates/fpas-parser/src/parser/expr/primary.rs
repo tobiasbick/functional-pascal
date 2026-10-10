@@ -75,11 +75,6 @@ impl Parser {
                 self.advance();
                 Expr::OptionNone(span)
             }
-            Token::Nil => {
-                let span = self.current_span();
-                self.advance();
-                Expr::Nil(span)
-            }
             Token::Go => {
                 let start = self.current_span();
                 self.advance();

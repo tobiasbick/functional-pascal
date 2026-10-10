@@ -60,15 +60,7 @@ fn apply_record_type_source_id(record: &mut RecordType, source_id: u32) {
             }
         }
     }
-    for event in &mut record.events {
-        apply_record_event_source_id(event, source_id);
-    }
     apply_span(&mut record.span, source_id);
-}
-
-fn apply_record_event_source_id(event: &mut fpas_parser::RecordEvent, source_id: u32) {
-    apply_type_expr_source_id(&mut event.type_expr, source_id);
-    apply_span(&mut event.span, source_id);
 }
 
 fn apply_field_def_source_id(field: &mut FieldDef, source_id: u32) {

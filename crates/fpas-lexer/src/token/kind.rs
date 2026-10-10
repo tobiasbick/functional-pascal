@@ -88,14 +88,6 @@ pub enum Token {
     ///
     /// **Documentation:** `docs/pascal/language/types/record-methods.md`
     Static,
-    /// Marks a record event: `event OnClick: Handler read Get write Set`.
-    ///
-    /// **Documentation:** `docs/pascal/language/types/record-events.md`
-    Event,
-    /// Introduces an event's read accessor.
-    Read,
-    /// Introduces an event's write accessor.
-    Write,
     /// Restricts a generic type parameter to comparable types.
     Comparable,
     /// Restricts a generic type parameter to numeric types.
@@ -110,11 +102,6 @@ pub enum Token {
     ///
     /// **Documentation:** `docs/pascal/language/pattern-matching/is-test.md`
     Is,
-    /// Clears an event handler: `Button.OnClick := nil`.
-    ///
-    /// **Documentation:** `docs/pascal/language/types/record-events.md`
-    Nil,
-
     // Literals
     Integer(i64),
     Real(f64),

@@ -37,7 +37,7 @@ Typed construction is the only way to create a record value; there is no
 `Point(0.0, 5.0)` is an error. Unknown,
 duplicate, missing required, and incorrectly typed fields are errors. Names
 are case-insensitive. Fields may be supplied in any order. Methods
-and events are not stored fields and cannot be initialized here.
+are not stored fields and cannot be initialized here.
 Field values are copied; `var` arguments are not accepted.
 
 Supplied values are evaluated once, in written order. Missing defaults run
@@ -122,7 +122,7 @@ They may copy received values and use record updates for public fields; private
 fields are preserved and cannot be named in an update.
 
 Record member visibility is valid only for records declared in unit files.
-Functions, procedures, and events use the same private-default rule.
+Functions and procedures use the same private-default rule.
 
 ## Immutability
 
@@ -145,8 +145,10 @@ program. Later values and free routines remain unavailable.
 A field declaration may include a default value using `:=`. Construction
 substitutes omitted defaults automatically. Defaults retain their
 declaration environment when a caller shadows names. Fields without a default
-must always be supplied. Defaults exported through unit interfaces must be
-scalar constant expressions; transparent exported aliases preserve them.
+must always be supplied. Defaults exported through unit interfaces may be
+scalar constant expressions or `None` for an optional field; transparent
+exported aliases preserve them. `None` also supports optional callable fields
+such as [handlers](../functions/first-class.md#optional-handlers).
 
 ```pascal
 type Config = record
@@ -187,6 +189,6 @@ const V: Vertex := Vertex(
 
 - [Record methods](record-methods.md)
 - [Visibility](../../program-structure/visibility.md)
-- [Record events](record-events.md)
+- [Optional handlers](../functions/first-class.md#optional-handlers)
 - [Record update](record-update.md)
 - [Read-only parameters](../functions/parameters.md)

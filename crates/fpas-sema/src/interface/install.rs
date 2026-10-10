@@ -125,7 +125,7 @@ impl check::Checker {
                     field
                         .default_value
                         .as_ref()
-                        .map(constant_value_to_expr)
+                        .map(field_default_to_expr)
                         .map(std::sync::Arc::new),
                 )
             })
@@ -181,7 +181,7 @@ impl check::Checker {
     }
 }
 
-fn constant_value_to_expr(value: &artifact::ConstantValue) -> Expr {
+fn field_default_to_expr(value: &artifact::FieldDefaultValue) -> Expr {
     let span = fpas_lexer::Span {
         offset: 0,
         length: 0,
@@ -190,21 +190,24 @@ fn constant_value_to_expr(value: &artifact::ConstantValue) -> Expr {
         source_id: 0,
     };
     match value {
-        artifact::ConstantValue::Integer(value) => Expr::Integer(*value, span),
-        artifact::ConstantValue::Real(bits) => Expr::Real(f64::from_bits(*bits), span),
-        artifact::ConstantValue::Boolean(value) => Expr::Bool(*value, span),
-        artifact::ConstantValue::String(value) => Expr::Str(value.clone(), span),
-        artifact::ConstantValue::EnumValue {
-            enum_name,
-            variant_name,
-            ..
-        } => Expr::Designator(fpas_parser::Designator {
-            parts: enum_name
-                .split('.')
-                .chain(std::iter::once(variant_name.as_str()))
-                .map(|part| fpas_parser::DesignatorPart::Ident(part.to_string(), span))
-                .collect(),
-            span,
-        }),
+        artifact::FieldDefaultValue::OptionNone => Expr::OptionNone(span),
+        artifact::FieldDefaultValue::Scalar(value) => match value {
+            artifact::ConstantValue::Integer(value) => Expr::Integer(*value, span),
+            artifact::ConstantValue::Real(bits) => Expr::Real(f64::from_bits(*bits), span),
+            artifact::ConstantValue::Boolean(value) => Expr::Bool(*value, span),
+            artifact::ConstantValue::String(value) => Expr::Str(value.clone(), span),
+            artifact::ConstantValue::EnumValue {
+                enum_name,
+                variant_name,
+                ..
+            } => Expr::Designator(fpas_parser::Designator {
+                parts: enum_name
+                    .split('.')
+                    .chain(std::iter::once(variant_name.as_str()))
+                    .map(|part| fpas_parser::DesignatorPart::Ident(part.to_string(), span))
+                    .collect(),
+                span,
+            }),
+        },
     }
 }

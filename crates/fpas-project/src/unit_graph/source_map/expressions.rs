@@ -75,6 +75,44 @@ pub(super) fn apply_expr_source_id(expr: &mut Expr, source_id: u32) {
             apply_expr_source_id(value, source_id);
             apply_span(span, source_id);
         }
+        Expr::If {
+            branches,
+            else_value,
+            else_span,
+            span,
+        } => {
+            for branch in branches {
+                apply_expr_source_id(&mut branch.condition, source_id);
+                apply_expr_source_id(&mut branch.value, source_id);
+                apply_span(&mut branch.span, source_id);
+            }
+            apply_expr_source_id(else_value, source_id);
+            apply_span(else_span, source_id);
+            apply_span(span, source_id);
+        }
+        Expr::Case {
+            selector,
+            arms,
+            else_arm,
+            span,
+        } => {
+            apply_expr_source_id(selector, source_id);
+            for arm in arms {
+                for label in &mut arm.labels {
+                    super::statements::apply_case_label_source_id(label, source_id);
+                }
+                if let Some(guard) = &mut arm.guard {
+                    apply_expr_source_id(guard, source_id);
+                }
+                apply_expr_source_id(&mut arm.value, source_id);
+                apply_span(&mut arm.span, source_id);
+            }
+            if let Some(else_arm) = else_arm {
+                apply_expr_source_id(&mut else_arm.value, source_id);
+                apply_span(&mut else_arm.span, source_id);
+            }
+            apply_span(span, source_id);
+        }
         Expr::Is {
             value,
             pattern,

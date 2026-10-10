@@ -65,7 +65,7 @@ begin
       return Error('HTTP response status line is missing a status code');
     end;
   end if;
-  const Remainder: string := Line.Slice(FirstSpace + 1, (Line.Length() - FirstSpace) - 1).Trim();
+  const Remainder: string := Line.Slice(FirstSpace + 1, Line.Length() - FirstSpace - 1).Trim();
   const SecondSpace: integer := Remainder.IndexOf(' ');
   if SecondSpace < 0 then
     begin
@@ -75,7 +75,7 @@ begin
 
   return Ok([
               Remainder.Slice(0, SecondSpace),
-              Remainder.Slice(SecondSpace + 1, (Remainder.Length() - SecondSpace) - 1).Trim()
+              Remainder.Slice(SecondSpace + 1, Remainder.Length() - SecondSpace - 1).Trim()
             ]);
 end function;
 
@@ -218,7 +218,7 @@ begin
         end;
       end if;
 
-      if (Position + Size) + 2 > Bytes.Length() then
+      if Position + Size + 2 > Bytes.Length() then
         begin
           return Error('HTTP chunk body is incomplete');
         end;
@@ -413,7 +413,7 @@ begin
   var Host: string := UriValue.Host;
   if Host.Contains(':') then
     begin
-      Host := ('[' + Host) + ']';
+      Host := '[' + Host + ']';
     end;
   end if;
 
@@ -429,7 +429,7 @@ begin
     end;
   end if;
 
-  return (Host + ':') + Std.Conv.IntToStr(UriValue.Port);
+  return Host + ':' + Std.Conv.IntToStr(UriValue.Port);
 end function;
 
 // Validates and serializes one HTTP/1.1 request.
@@ -450,7 +450,7 @@ begin
       return Error('HTTP request target contains CR or LF');
     end;
   end if;
-  var Head: string := (((((((((((((((RequestValue.Method + ' ') + UriValue.Path) + ' HTTP/1.1') + #13) + #10) + 'Host: ') + HostHeader(UriValue)) + #13) + #10) + 'Connection: close') + #13) + #10) + 'Content-Length: ') + Std.Conv.IntToStr(RequestValue.Body.Length())) + #13) +
+  var Head: string := RequestValue.Method + ' ' + UriValue.Path + ' HTTP/1.1' + #13 + #10 + 'Host: ' + HostHeader(UriValue) + #13 + #10 + 'Connection: close' + #13 + #10 + 'Content-Length: ' + Std.Conv.IntToStr(RequestValue.Body.Length()) + #13 +
                       #10;
   for Index: integer := 0 to RequestValue.Headers.Length() - 1 do
     begin
@@ -469,11 +469,11 @@ begin
         end;
       end if;
 
-      Head := ((((Head + HeaderValue.Name) + ': ') + HeaderValue.Value) + #13) + #10;
+      Head := Head + HeaderValue.Name + ': ' + HeaderValue.Value + #13 + #10;
     end;
   end for;
 
-  Head := (Head + #13) + #10;
+  Head := Head + #13 + #10;
   return Ok(Std.Net.Utf8.Encode(Head).Concat(RequestValue.Body));
 end function;
 end unit;

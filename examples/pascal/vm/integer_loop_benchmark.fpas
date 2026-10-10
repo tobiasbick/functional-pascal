@@ -13,7 +13,7 @@ begin
   var Acc: integer := 0;
   for Index: integer := 1 to Iterations do
     begin
-      Acc := (Acc + Index) - (Index div 3);
+      Acc := Acc + Index - (Index div 3);
     end;
   end for;
 
@@ -50,15 +50,15 @@ begin
   var OpsPerSecond: integer := 0;
   if Elapsed > 0 then
     begin
-      OpsPerSecond := (Iterations * 1000) div Elapsed;
+      OpsPerSecond := Iterations * 1000 div Elapsed;
     end;
   end if;
 
-  WriteLn((('iterations: ' + IntToStr(Iterations)) + ', warm-up: ') + IntToStr(WarmupIterations));
-  WriteLn(('elapsed: ' + IntToStr(Elapsed)) + ' ms');
+  WriteLn('iterations: ' + IntToStr(Iterations) + ', warm-up: ' + IntToStr(WarmupIterations));
+  WriteLn('elapsed: ' + IntToStr(Elapsed) + ' ms');
   if Elapsed > 0 then
     begin
-      WriteLn(('throughput: ' + IntToStr(OpsPerSecond)) + ' iters/s');
+      WriteLn('throughput: ' + IntToStr(OpsPerSecond) + ' iters/s');
     end;
   else
     begin
@@ -69,7 +69,7 @@ begin
   WriteLn('accumulator: ' + IntToStr(Acc));
   if (MaxMillis > 0) and (Elapsed > MaxMillis) then
     begin
-      panic(((('integer-loop benchmark regression: ' + IntToStr(Elapsed)) + ' ms exceeds limit ') + IntToStr(MaxMillis)) +
+      panic('integer-loop benchmark regression: ' + IntToStr(Elapsed) + ' ms exceeds limit ' + IntToStr(MaxMillis) +
             ' ms');
     end;
   end if;

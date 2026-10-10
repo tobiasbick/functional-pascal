@@ -100,7 +100,7 @@ begin
   AssertTrue(DirtyQuit.Overlay = NotesOverlay.QuitConfirmation);
   var NoteValue: Note := NoteCreate('tui-workflow', 1700000000000);
   NoteValue.Title := 'A very long note title that must never resize the notes sidebar';
-  NoteValue.Body := ((('first off-screen line' + string.Chr(10)) + 'second off-screen line') + string.Chr(10)) +
+  NoteValue.Body := 'first off-screen line' + string.Chr(10) + 'second off-screen line' + string.Chr(10) +
                     (string.Chr(65279) + 'visible body text');
   const Issue: NoteIssue := notes.model.noteissue(Path := 'broken.note', Message := 'invalid header');
   const Loaded: NotesLoad := notes.model.notesload(Notes := [NoteValue], Issues := [Issue]);

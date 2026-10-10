@@ -28,7 +28,7 @@ end procedure;
 
 begin
   const App: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(8, 4));
-  const Text: string := ((((('e' + string.Chr(769)) + '界') + string.Chr(10)) + string.Chr(10)) + 'x') +
+  const Text: string := 'e' + string.Chr(769) + '界' + string.Chr(10) + string.Chr(10) + 'x' +
                         string.Chr(10);
   CheckCaret(App, Text, 0, 0, 0);
   CheckCaret(App, Text, 2, 1, 0);

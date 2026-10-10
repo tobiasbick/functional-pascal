@@ -120,26 +120,7 @@ impl CaptureCollector<'_> {
                 self.collect_from_expr(expr);
                 for arm in arms {
                     self.push_bound_scope();
-                    for label in &arm.labels {
-                        match label {
-                            CaseLabel::Value { start, end, .. } => {
-                                self.collect_from_expr(start);
-                                if let Some(end) = end {
-                                    self.collect_from_expr(end);
-                                }
-                            }
-                            CaseLabel::Binding { .. } => {}
-                            CaseLabel::Pattern(pattern) => self.collect_pattern_values(pattern),
-                        }
-                    }
-                    // Comparisons in every label resolve before the arm's names are bound.
-                    for label in &arm.labels {
-                        match label {
-                            CaseLabel::Binding { name, .. } => self.bind_name(name),
-                            CaseLabel::Pattern(pattern) => self.bind_pattern(pattern),
-                            CaseLabel::Value { .. } => {}
-                        }
-                    }
+                    self.collect_case_labels(&arm.labels);
                     if let Some(guard) = &arm.guard {
                         self.collect_from_expr(guard);
                     }
@@ -242,6 +223,30 @@ impl CaptureCollector<'_> {
         }
     }
 
+    /// Collects label comparisons, then binds the arm's names in the current scope.
+    fn collect_case_labels(&mut self, labels: &[CaseLabel]) {
+        for label in labels {
+            match label {
+                CaseLabel::Value { start, end, .. } => {
+                    self.collect_from_expr(start);
+                    if let Some(end) = end {
+                        self.collect_from_expr(end);
+                    }
+                }
+                CaseLabel::Binding { .. } => {}
+                CaseLabel::Pattern(pattern) => self.collect_pattern_values(pattern),
+            }
+        }
+        // Comparisons in every label resolve before the arm's names are bound.
+        for label in labels {
+            match label {
+                CaseLabel::Binding { name, .. } => self.bind_name(name),
+                CaseLabel::Pattern(pattern) => self.bind_pattern(pattern),
+                CaseLabel::Value { .. } => {}
+            }
+        }
+    }
+
     fn collect_from_expr(&mut self, expr: &Expr) {
         match expr {
             Expr::Integer(..)
@@ -277,6 +282,40 @@ impl CaptureCollector<'_> {
             Expr::BinaryOp { left, right, .. } => {
                 self.collect_from_expr(left);
                 self.collect_from_expr(right);
+            }
+            Expr::If {
+                branches,
+                else_value,
+                ..
+            } => {
+                // `is` bindings in a condition are visible only in that branch's value.
+                for branch in branches {
+                    self.push_bound_scope();
+                    self.collect_from_expr(&branch.condition);
+                    self.collect_from_expr(&branch.value);
+                    self.pop_bound_scope();
+                }
+                self.collect_from_expr(else_value);
+            }
+            Expr::Case {
+                selector,
+                arms,
+                else_arm,
+                ..
+            } => {
+                self.collect_from_expr(selector);
+                for arm in arms {
+                    self.push_bound_scope();
+                    self.collect_case_labels(&arm.labels);
+                    if let Some(guard) = &arm.guard {
+                        self.collect_from_expr(guard);
+                    }
+                    self.collect_from_expr(&arm.value);
+                    self.pop_bound_scope();
+                }
+                if let Some(else_arm) = else_arm {
+                    self.collect_from_expr(&else_arm.value);
+                }
             }
             Expr::ArrayLiteral(elements, _) => {
                 for element in elements {

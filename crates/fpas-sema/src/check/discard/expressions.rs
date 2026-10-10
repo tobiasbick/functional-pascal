@@ -41,6 +41,26 @@ impl Checker {
                     result: self.discard_exprs.get(&key).is_some_and(|info| info.result),
                 })
                 .unwrap_or_default(),
+            Expr::If {
+                branches,
+                else_value,
+                ..
+            } => DiscardInfo {
+                value: branches
+                    .iter()
+                    .map(|branch| &branch.value)
+                    .chain(std::iter::once(else_value.as_ref()))
+                    .all(|value| self.discard_info(value).value),
+                ..Default::default()
+            },
+            Expr::Case { arms, else_arm, .. } => DiscardInfo {
+                value: arms
+                    .iter()
+                    .map(|arm| &arm.value)
+                    .chain(else_arm.iter().map(|else_arm| &else_arm.value))
+                    .all(|value| self.discard_info(value).value),
+                ..Default::default()
+            },
             Expr::ArrayLiteral(elements, _) => DiscardInfo {
                 value: !elements.is_empty()
                     && elements.iter().all(|expr| self.discard_info(expr).value),

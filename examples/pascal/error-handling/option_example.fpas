@@ -20,7 +20,7 @@ end function;
 function DoubleFirst(Items: array of integer; Min: integer): option of string;
 begin
   const V: integer := try FindFirst(Items, Min);
-  return Some((IntToStr(V) + ' x 2 = ') + IntToStr(V * 2));
+  return Some(IntToStr(V) + ' x 2 = ' + IntToStr(V * 2));
 end function;
 
 begin

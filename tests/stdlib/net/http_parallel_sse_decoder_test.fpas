@@ -11,7 +11,7 @@ begin
       end;
     when Error(const Message):
       begin
-        panic((('decoder ' + IntToStr(Index)) + ' failed: ') + Message);
+        panic('decoder ' + IntToStr(Index) + ' failed: ' + Message);
       end;
   end case;
 end function;
@@ -35,7 +35,7 @@ begin
   for Index: integer := 0 to Decoders.Length() - 1 do
     begin
       const Expected: string := IntToStr(Index);
-      case FeedSse(Decoders[Index], Std.Net.Utf8.Encode((('data: ' + Expected) + #10) + #10)) of
+      case FeedSse(Decoders[Index], Std.Net.Utf8.Encode('data: ' + Expected + #10 + #10)) of
         when Ok(const Events):
           begin
             AssertEquals(1, Events.Length());

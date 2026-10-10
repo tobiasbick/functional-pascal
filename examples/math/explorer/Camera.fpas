@@ -21,7 +21,7 @@ public type ExplorerCamera = record
   begin
     const SafeWidth: integer := Max(Width, 1);
     const SafeHeight: integer := Max(Height, 1);
-    return (Self.SpanY * (IntToReal(SafeWidth) / IntToReal(SafeHeight))) * 0.5;
+    return Self.SpanY * (IntToReal(SafeWidth) / IntToReal(SafeHeight)) * 0.5;
   end function;
 
   // Left viewport boundary.

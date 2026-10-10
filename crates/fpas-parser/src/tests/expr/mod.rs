@@ -3,8 +3,10 @@ use crate::ast::*;
 
 mod aggregates;
 mod calls;
+mod case_expressions;
 mod closures;
 mod designators;
+mod if_expressions;
 mod is_tests;
 mod logical;
 mod operators;

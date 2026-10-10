@@ -2,7 +2,7 @@
 //!
 //! Documentation: `docs/pascal/language/control-flow/while-repeat.md`.
 
-mod conditions;
+pub(in crate::lowering) mod conditions;
 mod counting;
 
 use fpas_ir::{BinaryOperation, Constant, IntrinsicId, IrType, Operation, Terminator};

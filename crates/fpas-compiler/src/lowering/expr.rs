@@ -1,6 +1,7 @@
 //! Scalar expression lowering with source-order evaluation.
 
 mod boolean;
+mod decision;
 mod designators;
 
 use fpas_ir::{BinaryOperation as IrBinary, Constant, Operation, UnaryOperation, ValueId};
@@ -93,6 +94,17 @@ impl LoweringContext {
             } => self.lower_postfix(base, operations, *span),
             Expr::NamedArgument { value, .. } => self.lower_expression(value),
             Expr::VarArgument { designator, .. } => self.lower_var_argument(designator),
+            Expr::If {
+                branches,
+                else_value,
+                ..
+            } => self.lower_if_expression(branches, else_value, expression),
+            Expr::Case {
+                selector,
+                arms,
+                else_arm,
+                ..
+            } => self.lower_case_expression(selector, arms, else_arm.as_deref(), expression),
             _ => Err(unsupported(expression.span(), "expression")),
         }
     }

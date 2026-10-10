@@ -18,7 +18,7 @@ public type ExplorerState = record
 
   public function SpanX(Self: ExplorerState; Width: integer; Height: integer): real;
   begin
-    return (Self.SpanY * (IntToReal(Max(Width, 1)) / IntToReal(Max(Height, 1)))) * 0.5;
+    return Self.SpanY * (IntToReal(Max(Width, 1)) / IntToReal(Max(Height, 1))) * 0.5;
   end function;
 
   public function XMin(Self: ExplorerState; Width: integer; Height: integer): real;

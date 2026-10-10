@@ -1,0 +1,51 @@
+program IfExpressionsTest;
+
+uses Std.Test;
+
+const Debug: boolean := true;
+const Limit: integer := if Debug then 10 else 100 end if;
+
+var Calls: integer := 0;
+
+function Count(Value: integer): integer;
+begin
+  Calls := Calls + 1;
+  return Value;
+end function;
+
+function Grade(Points: integer): string;
+begin
+  return if Points >= 90 then 'A' elsif Points >= 50 then 'B' else 'C' end if;
+end function;
+
+function Describe(Value: option of integer): string;
+begin
+  return if Value is Some(const N) and N > 0 then 'positive'
+    elsif Value is Some(_) then 'other'
+    else 'none'
+    end if;
+end function;
+
+begin
+  AssertEquals('A', Grade(95));
+  AssertEquals('B', Grade(60));
+  AssertEquals('C', Grade(10));
+  AssertEquals(3, 1 + if Grade(95) = 'A' then 2 else 5 end if);
+  AssertEquals('positive', Describe(Some(3)));
+  AssertEquals('other', Describe(Some(-3)));
+  AssertEquals('none', Describe(None));
+  const Picked: option of integer := if Debug then None else Some(1) end if;
+  AssertFalse(Picked.IsSome());
+  const Items: array of integer := if Debug then [] else [1, 2] end if;
+  AssertEquals(0, Items.Length());
+  AssertEquals(1, if Debug then Count(1) else Count(2) end if);
+  AssertEquals(1, Calls);
+  const Nested: integer := if Debug then if Limit = 10 then 7 else 8 end if else 9 end if;
+  AssertEquals(7, Nested);
+  case 10 of
+    when Limit:
+      AssertTrue(true);
+    else
+      AssertTrue(false);
+  end case;
+end.

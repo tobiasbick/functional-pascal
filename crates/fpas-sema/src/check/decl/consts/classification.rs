@@ -174,6 +174,24 @@ impl Checker {
             Expr::BinaryOp { left, right, .. } => self
                 .non_constant_part(left)
                 .or_else(|| self.non_constant_part(right)),
+            Expr::Case {
+                selector,
+                arms,
+                else_arm,
+                ..
+            } => self.non_constant_case_part(selector, arms, else_arm.as_deref()),
+            // Documentation: docs/pascal/language/control-flow/if-then-else.md
+            Expr::If {
+                branches,
+                else_value,
+                ..
+            } => branches
+                .iter()
+                .find_map(|branch| {
+                    self.non_constant_part(&branch.condition)
+                        .or_else(|| self.non_constant_part(&branch.value))
+                })
+                .or_else(|| self.non_constant_part(else_value)),
             Expr::ArrayLiteral(elements, _) => elements
                 .iter()
                 .find_map(|element| self.non_constant_part(element)),
@@ -190,5 +208,47 @@ impl Checker {
                 Some(("expression".to_string(), expr.span()))
             }
         }
+    }
+
+    /// A `case` expression is constant when its selector, plain labels, and values are;
+    /// guards, bindings, and destructuring patterns are evaluated at runtime.
+    ///
+    /// **Documentation:** `docs/pascal/language/control-flow/case-of-intro.md`
+    fn non_constant_case_part(
+        &mut self,
+        selector: &Expr,
+        arms: &[fpas_parser::CaseExprArm],
+        else_arm: Option<&fpas_parser::CaseExprElse>,
+    ) -> Option<(String, fpas_lexer::Span)> {
+        if let Some(part) = self.non_constant_part(selector) {
+            return Some(part);
+        }
+        for arm in arms {
+            if let Some(guard) = &arm.guard {
+                return Some(("case guard".to_string(), guard.span()));
+            }
+            for label in &arm.labels {
+                let part = match label {
+                    fpas_parser::CaseLabel::Value { start, end, .. } => self
+                        .non_constant_part(start)
+                        .or_else(|| end.as_ref().and_then(|end| self.non_constant_part(end))),
+                    fpas_parser::CaseLabel::Pattern(pattern) => match pattern.conversion_argument()
+                    {
+                        Some(argument) => self.non_constant_part(argument),
+                        None => Some(("pattern label".to_string(), pattern.span())),
+                    },
+                    fpas_parser::CaseLabel::Binding { span, .. } => {
+                        Some(("case binding".to_string(), *span))
+                    }
+                };
+                if part.is_some() {
+                    return part;
+                }
+            }
+            if let Some(part) = self.non_constant_part(&arm.value) {
+                return Some(part);
+            }
+        }
+        else_arm.and_then(|else_arm| self.non_constant_part(&else_arm.value))
     }
 }

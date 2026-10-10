@@ -1,5 +1,7 @@
 mod arguments;
+mod case_expression;
 mod closure;
+mod conditional;
 mod logical;
 mod postfix;
 mod precedence;

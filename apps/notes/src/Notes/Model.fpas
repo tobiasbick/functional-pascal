@@ -223,7 +223,7 @@ begin
         end;
       end if;
 
-      Items.Push(ClipListText((Prefix + NoteValue.Title) + Tags, MaximumWidth));
+      Items.Push(ClipListText(Prefix + NoteValue.Title + Tags, MaximumWidth));
     end;
   end for;
 

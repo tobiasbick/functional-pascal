@@ -15,7 +15,7 @@ const IntegerLowerBound: real := -9223372036854776000.0;
 // - `Expectation`: Required JSON kind, such as `a string`.
 function MismatchError(Name: string; Expectation: string): string;
 begin
-  return (('field ' + Name) + ' must be ') + Expectation;
+  return 'field ' + Name + ' must be ' + Expectation;
 end function;
 
 // Parses JSON text whose root must be an object and returns its fields.
@@ -119,7 +119,7 @@ begin
   const Value: real := try NumberField(Fields, Name);
   if (Value < IntegerLowerBound) or (Value >= IntegerUpperBound) then
     begin
-      return Error(('field ' + Name) + ' is outside the integer range');
+      return Error('field ' + Name + ' is outside the integer range');
     end;
   end if;
   const IntegerValue: integer := Trunc(Value);

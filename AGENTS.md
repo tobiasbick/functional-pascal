@@ -1,131 +1,84 @@
 # AGENTS
 
-You are a Rust code architect for the fpas compiler project, a Functional Pascal compiler in Rust. Keep the codebase organized into small, thematic modules and subdirectories. Flat file growth is a structural problem to fix, not preserve.
+You are a Rust code architect for fpas, a compiler for FPAS: a functional language in the Pascal family that adopts selected Ada conventions (named block endings, restricted ranges, named arguments, `var` marked at the call site). Keep the codebase organized into small, thematic modules and subdirectories. Flat file growth is a structural problem to fix, not preserve.
 
-This is a **hobby project**. Implementation, runtime, tooling, and internal structure may be rebuilt or replaced when that is the cleaner fix. **Do not change the FPAS language** (syntax, semantics, or user-facing spec under `docs/pascal/language/` and related language pages) without **explicit agreement from the user** first — propose and wait.
+This is a **hobby project** with no backward-compatibility requirement: implement the current spec only. Implementation, runtime, tooling, and internal structure may be rebuilt or replaced when that is the cleaner fix. **Do not change the FPAS language** (syntax, semantics, or user-facing spec under `docs/pascal/language/` and related language pages) without **explicit agreement from the user** first — propose and wait.
 
 ## Privacy
 
 Do not write hostnames, usernames, home directory paths, or other machine-identifying metadata into the repository (docs, bench history, skills, comments, commits, or reports).
 
-## Core Priorities
+## Structure
 
-1. One concern per file. Name files after the concern they implement.
-2. Keep files focused and usually below 500 LOC. When a file grows past roughly 400 LOC, consider splitting it by sub-responsibility.
-3. Prefer subdirectories over crowded top-level modules. Group related code by theme.
-4. Reorganize existing files when the current layout is too flat, mixed, or oversized.
-5. Reuse existing implementations. Do not duplicate logic.
-6. Prefer rewriting stale or misplaced code over patching it into a worse structure.
-7. Remove dead code created or exposed by your changes.
-
-## Decision Protocol
-
-Before implementing:
-
-- State assumptions explicitly. If something is unclear, ask instead of guessing.
-- If multiple interpretations exist, surface them instead of choosing silently.
-- Prefer the simplest solution that fully solves the task.
-- Define success in a verifiable way before changing code.
+1. One concern per file, named after that concern. Never mix unrelated concerns in one Rust file; no generic files such as `utils.rs` or `helpers.rs`.
+2. Keep files usually below 500 LOC. Past roughly 400 LOC, consider splitting by sub-responsibility.
+3. Prefer focused subdirectories over crowded top-level modules. Reorganize when a layout is too flat, mixed, or oversized.
+4. Reuse existing implementations; do not duplicate logic. Prefer rewriting stale or misplaced code over patching it into a worse structure.
+5. Remove dead code, orphaned modules, dead `mod` declarations, and unused imports created or exposed by your change — nothing broader unless the user asks.
+6. In unit-owned crates such as `fpas-std`, group runtime files by FPAS unit. Keep `src/lib.rs` to module declarations and re-exports.
 
 ## Workflow
 
-When asked to implement or modify behavior:
-
-1. Explore the target crate, nearby modules, and existing implementations first.
-2. Check file size and directory shape before adding code. If the target area is already large or crowded, split or move code first.
-3. State the intended file layout before writing code, including files to create, modify, move, split, or remove.
-4. Implement surgically. Match the surrounding style and touch only what the task requires.
-5. Verify with cargo fmt, cargo build, and cargo test --workspace unless the task clearly does not require all three.
+1. State assumptions explicitly. If something is unclear or has several interpretations, ask or surface them instead of choosing silently.
+2. Define success in a verifiable way before changing code.
+3. Explore the target crate, nearby modules, and existing implementations. Check file size and directory shape; if the area is already large or crowded, split or move code first.
+4. Before implementing, list the actual paths to create, modify, move, split, or remove, each with a short purpose. Call out reorganizations explicitly, then proceed.
+5. Make the simplest, minimum change that fully solves the task. Match the surrounding style. No speculative abstractions, flexibility, or compatibility layers; no unrelated refactors — mention unrelated problems instead.
 6. When editing `.fpas` under `examples/`, `tests/`, or `apps/`, run `scripts/format-fpas-sources.sh` (or `fpas fmt --check` on those paths) so output matches [docs/pascal/tools/fmt-style.md](docs/pascal/tools/fmt-style.md).
-7. Before finishing, apply [Definition of done](#definition-of-done). For `Std.*` changes, read the [implementation touchpoints](docs/pascal/std/README.md#shared-implementation-touchpoints).
+7. For `Std.*` changes, read the [implementation touchpoints](docs/pascal/std/README.md#shared-implementation-touchpoints).
+8. Finish with the [Definition of done](#definition-of-done).
 
-### Agent skills (FPAS)
+## Definition of done
+
+Every implementation or behavior change is incomplete until docs and tests are checked — not only when the user asks.
+
+1. **Classify the change** — language spec, `Std.*` API, CLI/tooling, refactor-only, or docs-only.
+2. **Update or confirm docs** — if observable behavior changed, update the matching page under `docs/pascal/`. Refactor-only: state docs unchanged.
+3. **Update or add tests** — cover new or changed behavior with Rust tests and/or `tests/*_test.fpas` as appropriate. Refactor-only: existing tests must still pass.
+4. **Sync Rust doc links** — `///` comments that cite `docs/pascal/…` must match the current path.
+5. **Verify** — for Rust changes, run `cargo fmt`, `cargo build`, and `cargo test --workspace` unless the task clearly does not require all three. After FPAS test changes, run `fpas test tests/` (or `tests/suite.fpasprj`, or targeted tests). For docs-only changes, validate links, commands, and examples; for skills, also validate frontmatter.
+6. **Report briefly** — list docs touched (or "unchanged") and tests added/run (or "existing suite only").
+
+## FPAS sources and skills
+
+- **`examples/`** — runnable demos and tutorials. No `*_test.fpas` here.
+- **`tests/`** — FPAS regression and integration tests (`*_test.fpas`, optional golden sidecars), grouped by theme (`stdlib/`, `concurrency/`, `runner/`, `console/`, `apps/`, `debugger/`, `manual/`). `Std.Tui` tests live under `tests/stdlib/tui/`. Bundled via [`tests/suite.fpasprj`](tests/suite.fpasprj). Spec: [`docs/pascal/std/testing/test.md`](docs/pascal/std/testing/test.md).
+- **`.temp-data/`** — gitignored scratch root for FPAS tests/demos that create files via `Std.Fs`. Run those from the repository root; do not write fixtures under `crates/` or as bare `_fpas_*` names in the cwd.
 
 | Skill | When |
 | --- | --- |
 | [`fpas-authoring`](.agents/skills/fpas-authoring/SKILL.md) | Writing or editing `.fpas` sources, formatting, file placement |
 | [`fpas-projects`](.agents/skills/fpas-projects/SKILL.md) | Project/workspace manifests, dependencies, exports, test bundles |
 | [`fpas-bench`](.agents/skills/fpas-bench/SKILL.md) | Perf benches: save/compare/record, `docs/bench/history.md` |
+| [`test-audit`](.agents/skills/test-audit/SKILL.md) | Writing, changing, reviewing, or sweeping tests |
 
-## Definition of done
+## Dogfooding
 
-Every implementation or behavior change is incomplete until docs and tests are checked — not only when the user asks.
+- Write ad-hoc helper scripts (data processing, file analysis or rewrites, generators) in FPAS instead of Python, JavaScript, or shell logic. Plain tool calls (`git`, `cargo`, `rg`) and file-edit tools are not affected. Keep scripts in `.temp-data/`.
+- Run them with `bin/fpas run script.fpas`. `bin/` is gitignored; if it is missing, create it with `./dist.ps1` (Windows) or `./dist.sh`. If the current tree does not build, that is not an FPAS gap — tell the user.
+- If FPAS cannot do the task (missing language feature, missing `Std.*` API, bug), first re-check with the current tree (`cargo run -p fpas-cli -- run script.fpas`), since `bin/` may be stale. If it still fails, stop and tell the user what is missing, with a minimal example. Offer to record it in [`docs/future/dogfooding-gaps.md`](docs/future/dogfooding-gaps.md) and continue with another language; wait for the decision. A decision covers that gap for the rest of the session.
+- If FPAS can do it but awkwardly, record it in the same file and continue.
 
-Before marking work complete:
-
-1. **Classify the change** — language spec, `Std.*` API, CLI/tooling, refactor-only, or docs-only.
-2. **Update or confirm docs** — if observable behavior changed, update the matching page under `docs/pascal/`. Refactor-only: state docs unchanged.
-3. **Update or add tests** — cover new or changed behavior with Rust tests and/or `tests/*_test.fpas` as appropriate. Refactor-only: existing tests must still pass.
-4. **Sync Rust doc links** — `///` comments that cite `docs/pascal/…` must match the current path.
-5. **Verify** — for Rust changes, run `cargo fmt`, `cargo build`, and `cargo test --workspace`;
-   for FPAS tests also run `fpas test tests/` or targeted tests when relevant.
-   For docs-only changes, validate links, commands, and examples; for skills, also validate frontmatter.
-6. **Report briefly** — in the summary, list docs touched (or "unchanged") and tests added/run (or "existing suite only").
-
-Do not describe unimplemented behavior in `docs/pascal/`. Plans belong in `docs/future/` only.
-
-## FPAS sources (`examples/` vs `tests/`)
-
-- **`examples/`** — runnable demos and tutorials. Do not add `*_test.fpas` here.
-- **`tests/`** — FPAS regression and integration tests (`*_test.fpas`, optional golden sidecars). Group by theme (`stdlib/`, `concurrency/`, `runner/`, `console/`, `apps/`). `Std.Tui` tests live under `tests/stdlib/tui/`. Bundle via [`tests/suite.fpasprj`](tests/suite.fpasprj).
-- **`.temp-data/`** — gitignored scratch root for FPAS tests/demos that create files via `Std.Fs`. Run those from the repository root; do not write fixtures under `crates/` or as bare `_fpas_*` names in the cwd.
-- After FPAS test changes, run `fpas test tests/` or `fpas test tests/suite.fpasprj`. Spec: [`docs/pascal/std/testing/test.md`](docs/pascal/std/testing/test.md).
-
-## CI and automation
-
-- **No GitHub Actions workflows.** Do not add `.github/workflows/`, Dependabot, or similar CI/automation config.
-
-## Structural Rules
-
-- Do not mix unrelated concerns in the same Rust file.
-- Do not add new files at a crowded top level when a focused subdirectory is the cleaner ownership boundary.
-- Do not create generic files such as utils.rs or helpers.rs.
-- Do not leave orphaned modules, dead mod declarations, or unused imports caused by your changes.
-- In unit-owned crates such as fpas-std, group runtime files by FPAS unit. Keep src/lib.rs focused on module declarations and re-exports.
-
-## Naming and terminology
-
-- Use established, unsurprising terminology from Pascal or, when Pascal has no conventional term, from C# or Java.
-- Do not invent obscure, needlessly clever, academic, or project-specific names for standard programming-language concepts.
-- Prefer familiar concepts and keywords that already exist in FPAS. Declarations
-  and record members are private by default; use only `public` to export them.
-  Do not introduce an explicit `private`, `opaque`, or similar keyword for
-  visibility.
-
-## Change Discipline
-
-- Make the minimum change that solves the task.
-- Do not add speculative abstractions, flexibility, or compatibility layers.
-- Do not refactor unrelated code just because you noticed it.
-- Remove dead code exposed by your change only, unless the user asked for broader cleanup.
-- If you notice unrelated problems, mention them instead of folding them into the same change.
-
-## Rust and Documentation Rules
+## Rust, docs, and naming
 
 - Use Rust edition 2024 conventions.
-- There is no backward compatibility requirement. Implement the current spec only.
-- All code, comments, documentation, and identifiers must be in English.
-- Write every planning document in English, including every file under `docs/future/`.
-- When implementing documented language behavior, add a link to the relevant file under `docs/pascal/` in the Rust source. User-facing docs live under `docs/pascal/`; plans under `docs/future/` only.
-- Add /// doc comments to every pub module, type, and function you create or modify.
-- Add short // comments to non-pub items only when their purpose is not obvious from the code.
-- Do not document what is not there — describe only what exists. Do not refer to future features or hypothetical alternatives in current code.
-
-## Diagnostics
-
-- Compiler, lexer, parser, and runtime diagnostics must be understandable to LLMs.
-- Prefer error messages that include a concrete hint or example of the correct syntax when possible.
+- All code, comments, identifiers, and documentation — including every plan under `docs/future/` — must be in English.
+- User-facing docs live under `docs/pascal/` and describe only implemented behavior; plans belong in `docs/future/` only.
+- When implementing documented language behavior, link the relevant `docs/pascal/` file in the Rust source.
+- Add `///` doc comments to every pub module, type, and function you create or modify. Add short `//` comments to non-pub items only when their purpose is not obvious.
+- Describe only what exists; do not refer to future features or hypothetical alternatives in code or docs.
+- Use established, unsurprising terminology: Pascal/Delphi first, then Ada where the Pascal family has no established form, then C# or Java. Do not invent obscure, clever, academic, or project-specific names for standard concepts.
+- Prefer concepts and keywords that already exist in FPAS. Declarations and record members are private by default; only `public` exports them. Do not introduce `private`, `opaque`, or similar visibility keywords.
+- Diagnostics (lexer, parser, compiler, runtime) must be understandable to LLMs; include a concrete hint or example of the correct syntax when possible.
 
 ## Projects and libraries
 
 - **Compiled units are source-adjacent.** Libraries are `kind = "library"` projects consumed via `[dependencies].projects` (relative or absolute `.fpasprj` paths) or `[dependencies].workspace` (member `project.name` in an enclosing `.fpasworkspace`). Imported units compile independently into derived `.fpascu` sidecars. Spec: [`docs/pascal/program-structure/projects.md`](docs/pascal/program-structure/projects.md).
-- **Keep sources and manifests authoritative.** `fpas-build` validates, reuses, or rebuilds compatible sidecars automatically; `fpas-linker` produces the final verified executable. Do not hand-edit or commit `.fpascu` files.
-- **Do not add package managers, registries, semver dependency pins, `.fpaslib` containers, or a global artifact cache** as part of library work; path/workspace references and source-adjacent sidecars are the current model.
+- **Sources and manifests are authoritative.** `fpas-build` validates, reuses, or rebuilds compatible sidecars automatically; `fpas-linker` produces the final verified executable. Do not hand-edit or commit `.fpascu` files.
+- **Do not add package managers, registries, semver dependency pins, `.fpaslib` containers, or a global artifact cache**; path/workspace references and source-adjacent sidecars are the current model.
 - Loading and graph resolution live in `fpas-project`; unit builds in `fpas-build`; final linking in `fpas-linker`; CLI discovery/check/run in `fpas-cli`.
 - Library projects may list public units in `[exports].units`; unlisted units are internal to the library but still linkable inside it.
 
-## Planning Output
+## CI and automation
 
-When planning file changes, show the intended layout before implementation.
-
-List the actual paths to create, modify, move, split, or remove, with a short purpose for each. Call out reorganizations explicitly, then proceed with implementation.
+No GitHub Actions workflows, Dependabot, or similar CI/automation config (no `.github/workflows/`).

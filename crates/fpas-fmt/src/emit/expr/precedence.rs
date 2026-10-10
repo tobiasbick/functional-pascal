@@ -31,7 +31,8 @@ pub(super) fn unary_prec(op: UnaryOp) -> u8 {
     }
 }
 
-/// Requires parentheses for mixed logical operands and nested comparisons.
+/// Requires parentheses for mixed logical operands, nested comparisons, and right
+/// operands of left-associative arithmetic at the same binding strength.
 pub(super) fn operand_prec(parent: BinaryOp, child: &Expr, right: bool) -> u8 {
     let prec = binary_prec(parent);
     if prec == 1 {
@@ -41,6 +42,10 @@ pub(super) fn operand_prec(parent: BinaryOp, child: &Expr, right: bool) -> u8 {
     } else if prec == 3 {
         prec + 1
     } else {
-        prec + u8::from(!right)
+        // `A - B - C` groups as `(A - B) - C`, so only the right operand needs parentheses.
+        prec + u8::from(right)
     }
 }
+
+#[cfg(test)]
+mod tests;

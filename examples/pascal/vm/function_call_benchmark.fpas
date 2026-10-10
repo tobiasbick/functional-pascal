@@ -65,15 +65,15 @@ begin
   var OpsPerSecond: integer := 0;
   if Elapsed > 0 then
     begin
-      OpsPerSecond := (Calls * 1000) div Elapsed;
+      OpsPerSecond := Calls * 1000 div Elapsed;
     end;
   end if;
 
-  WriteLn((('iterations: ' + IntToStr(Iterations)) + ', calls: ') + IntToStr(Calls));
-  WriteLn(('elapsed: ' + IntToStr(Elapsed)) + ' ms');
+  WriteLn('iterations: ' + IntToStr(Iterations) + ', calls: ' + IntToStr(Calls));
+  WriteLn('elapsed: ' + IntToStr(Elapsed) + ' ms');
   if Elapsed > 0 then
     begin
-      WriteLn(('throughput: ' + IntToStr(OpsPerSecond)) + ' calls/s');
+      WriteLn('throughput: ' + IntToStr(OpsPerSecond) + ' calls/s');
     end;
   else
     begin
@@ -84,7 +84,7 @@ begin
   WriteLn('final value: ' + IntToStr(Value));
   if (MaxMillis > 0) and (Elapsed > MaxMillis) then
     begin
-      panic(((('function-call benchmark regression: ' + IntToStr(Elapsed)) + ' ms exceeds limit ') + IntToStr(MaxMillis)) +
+      panic('function-call benchmark regression: ' + IntToStr(Elapsed) + ' ms exceeds limit ' + IntToStr(MaxMillis) +
             ' ms');
     end;
   end if;

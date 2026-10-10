@@ -14,7 +14,7 @@ function TuiColorRequireRange(Value: integer; Minimum: integer; Maximum: integer
 begin
   if (Value < Minimum) or (Value > Maximum) then
     begin
-      panic(('Tui ' + Name) + ' is outside its supported range');
+      panic('Tui ' + Name + ' is outside its supported range');
     end;
   end if;
 

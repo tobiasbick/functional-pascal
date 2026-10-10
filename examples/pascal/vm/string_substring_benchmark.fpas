@@ -84,6 +84,6 @@ begin
     end;
   end if;
 
-  WriteLn(('elapsed: ' + IntToStr(Elapsed)) + ' ms');
+  WriteLn('elapsed: ' + IntToStr(Elapsed) + ' ms');
   WriteLn('matches: ' + IntToStr(Matches));
 end.

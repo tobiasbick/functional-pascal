@@ -14,7 +14,7 @@ begin
   LocalValues[0] := 7;
   LocalValues.Push(9);
   LocalItem.Value := 5;
-  return (LocalValues[0] + LocalValues.Pop()) + LocalItem.Value;
+  return LocalValues[0] + LocalValues.Pop() + LocalItem.Value;
 end function;
 
 function Capture(Value: integer): function(): integer;

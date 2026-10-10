@@ -76,7 +76,7 @@ begin
 
   if Focused then
     begin
-      var CursorX: integer := (Bounds.X + 1) + Viewport.CaretColumn;
+      var CursorX: integer := Bounds.X + 1 + Viewport.CaretColumn;
       if CursorX >= Bounds.Right() - 1 then
         begin
           CursorX := Bounds.Right() - 2;

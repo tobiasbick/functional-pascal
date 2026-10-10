@@ -57,15 +57,15 @@ begin
   var OpsPerSecond: integer := 0;
   if Elapsed > 0 then
     begin
-      OpsPerSecond := (FieldAccesses * 1000) div Elapsed;
+      OpsPerSecond := FieldAccesses * 1000 div Elapsed;
     end;
   end if;
 
-  WriteLn((('iterations: ' + IntToStr(Iterations)) + ', field accesses: ') + IntToStr(FieldAccesses));
-  WriteLn(('elapsed: ' + IntToStr(Elapsed)) + ' ms');
+  WriteLn('iterations: ' + IntToStr(Iterations) + ', field accesses: ' + IntToStr(FieldAccesses));
+  WriteLn('elapsed: ' + IntToStr(Elapsed) + ' ms');
   if Elapsed > 0 then
     begin
-      WriteLn(('throughput: ' + IntToStr(OpsPerSecond)) + ' field accesses/s');
+      WriteLn('throughput: ' + IntToStr(OpsPerSecond) + ' field accesses/s');
     end;
   else
     begin
@@ -76,7 +76,7 @@ begin
   WriteLn('checksum: ' + IntToStr(Checksum));
   if (MaxMillis > 0) and (Elapsed > MaxMillis) then
     begin
-      panic(((('record-field-access benchmark regression: ' + IntToStr(Elapsed)) + ' ms exceeds limit ') + IntToStr(MaxMillis)) +
+      panic('record-field-access benchmark regression: ' + IntToStr(Elapsed) + ' ms exceeds limit ' + IntToStr(MaxMillis) +
             ' ms');
     end;
   end if;

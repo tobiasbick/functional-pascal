@@ -80,11 +80,11 @@ begin
 
         if TuiPaintFocused(Focused, Id) then
           begin
-            TuiPaintTextInBounds(Clipped, Entry.Bounds, (('>[' + Mark) + '] ') + Text, TuiStyleRole.Focused);
+            TuiPaintTextInBounds(Clipped, Entry.Bounds, '>[' + Mark + '] ' + Text, TuiStyleRole.Focused);
           end;
         else
           begin
-            TuiPaintTextInBounds(Clipped, Entry.Bounds, ((' [' + Mark) + '] ') + Text, TuiStyleRole.Normal);
+            TuiPaintTextInBounds(Clipped, Entry.Bounds, ' [' + Mark + '] ' + Text, TuiStyleRole.Normal);
           end;
         end if;
       end;
@@ -127,7 +127,7 @@ begin
                 Role := TuiStyleRole.MenuDisabled;
               end;
             end if;
-            const ItemText: string := (' ' + Items[ItemIndex].Text) + ' ';
+            const ItemText: string := ' ' + Items[ItemIndex].Text + ' ';
             Clipped.WriteText(TuiPoint.Create(X, Entry.Bounds.Y), ItemText, Role);
             X := X + Std.Console.DisplayWidth(ItemText);
           end;

@@ -103,6 +103,14 @@ define_codes!(PARSE_ALLOCATED_CODES => {
     ///
     /// Documentation: `docs/pascal/tools/diagnostics.md` (FP2018).
     PARSE_REMOVED_PROPERTY = 2018;
+    /// An `if` expression has no `else` branch.
+    ///
+    /// Documentation: `docs/pascal/tools/diagnostics.md` (FP2019).
+    PARSE_IF_EXPRESSION_WITHOUT_ELSE = 2019;
+    /// A decision expression branch contains a statement instead of one expression.
+    ///
+    /// Documentation: `docs/pascal/tools/diagnostics.md` (FP2020).
+    PARSE_STATEMENT_IN_EXPRESSION_BRANCH = 2020;
 });
 
 define_codes!(SEMA_ALLOCATED_CODES => {

@@ -38,6 +38,49 @@ pub(super) fn collect_expr(expr: &Expr, begins: &[usize], out: &mut CollectedAnc
             collect_expr(left, begins, out);
             collect_expr(right, begins, out);
         }
+        Expr::If {
+            branches,
+            else_value,
+            else_span,
+            span,
+        } => {
+            collect_expression_closer(*span, out);
+            for (index, branch) in branches.iter().enumerate() {
+                // Comments before the first branch belong to the enclosing statement.
+                if index > 0 {
+                    out.leading.push(branch.span.offset);
+                }
+                push_span(branch.span, out);
+                collect_expr(&branch.condition, begins, out);
+                collect_expr(&branch.value, begins, out);
+            }
+            out.leading.push(else_span.offset);
+            push_span(*else_span, out);
+            collect_expr(else_value, begins, out);
+        }
+        Expr::Case {
+            selector,
+            arms,
+            else_arm,
+            span,
+        } => {
+            collect_expression_closer(*span, out);
+            collect_expr(selector, begins, out);
+            for arm in arms {
+                out.leading.push(arm.span.offset);
+                push_span(arm.span, out);
+                super::collect_case_labels(&arm.labels, begins, out);
+                if let Some(guard) = &arm.guard {
+                    collect_expr(guard, begins, out);
+                }
+                collect_expr(&arm.value, begins, out);
+            }
+            if let Some(else_arm) = else_arm {
+                out.leading.push(else_arm.span.offset);
+                push_span(else_arm.span, out);
+                collect_expr(&else_arm.value, begins, out);
+            }
+        }
         Expr::ArrayLiteral(elements, _) => {
             for element in elements {
                 collect_expr(element, begins, out);

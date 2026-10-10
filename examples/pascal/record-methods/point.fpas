@@ -20,7 +20,7 @@ type Point = record
 
   procedure Print(Self: Point);
   begin
-    WriteLn(((('(' + IntToStr(Self.X)) + ', ') + IntToStr(Self.Y)) + ')');
+    WriteLn('(' + IntToStr(Self.X) + ', ' + IntToStr(Self.Y) + ')');
   end procedure;
 end record;
 

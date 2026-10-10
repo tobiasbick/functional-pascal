@@ -34,19 +34,19 @@ begin
   case S of
     when Shape.Circle(const R) if R > 10.0:
       begin
-        return ('Large circle (radius ' + RealToStr(R)) + ')';
+        return 'Large circle (radius ' + RealToStr(R) + ')';
       end;
     when Shape.Circle(const R):
       begin
-        return ('Small circle (radius ' + RealToStr(R)) + ')';
+        return 'Small circle (radius ' + RealToStr(R) + ')';
       end;
     when Shape.Rectangle(const W, const H) if W = H:
       begin
-        return ('Square (' + RealToStr(W)) + ')';
+        return 'Square (' + RealToStr(W) + ')';
       end;
     when Shape.Rectangle(const W, const H):
       begin
-        return ((('Rectangle (' + RealToStr(W)) + ' x ') + RealToStr(H)) + ')';
+        return 'Rectangle (' + RealToStr(W) + ' x ' + RealToStr(H) + ')';
       end;
     when Shape.Point:
       begin

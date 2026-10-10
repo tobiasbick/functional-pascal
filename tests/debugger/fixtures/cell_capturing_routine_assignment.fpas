@@ -45,7 +45,7 @@ function Mix(Base: integer): Handler;
 function MixBoth(Value: integer): integer;
 begin
   Cell := Cell + 1;
-  return (Value + Base) + Cell;
+  return Value + Base + Cell;
 end function;
 begin
   var Cell: integer := 1;

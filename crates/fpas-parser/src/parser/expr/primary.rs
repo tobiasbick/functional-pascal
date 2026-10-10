@@ -81,6 +81,8 @@ impl Parser {
                 let inner = self.parse_go_call_expression(start);
                 Expr::Go(Box::new(inner), self.span_from(start))
             }
+            Token::If => self.parse_if_expression(),
+            Token::Case => self.parse_case_expression(),
             Token::Function | Token::Procedure if self.at_closure_expr_start() => {
                 self.parse_closure_expr()
             }

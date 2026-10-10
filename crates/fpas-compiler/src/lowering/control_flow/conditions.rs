@@ -17,7 +17,7 @@ impl LoweringContext {
     /// Lowers a condition with `is` tests; falls through on success, branches to `fail` otherwise.
     ///
     /// The caller opens the scope that holds the bindings.
-    pub(super) fn lower_pattern_condition(
+    pub(in crate::lowering) fn lower_pattern_condition(
         &mut self,
         condition: &Expr,
         fail: BlockId,
@@ -52,7 +52,7 @@ impl LoweringContext {
 }
 
 /// True when a top-level `and` condition contains an `is` test.
-pub(super) fn has_pattern_test(condition: &Expr) -> bool {
+pub(in crate::lowering) fn has_pattern_test(condition: &Expr) -> bool {
     let mut conjuncts = Vec::new();
     condition.collect_conjuncts(&mut conjuncts);
     conjuncts

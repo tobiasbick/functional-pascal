@@ -1,0 +1,90 @@
+program CaseExpressionsTest;
+
+uses Std.Test;
+
+type Shape = enum
+  Circle(Radius: real);
+  Rectangle(Width: real; Height: real);
+end enum;
+
+type Tint = enum
+  Red;
+  Green;
+end enum;
+
+type UserId = distinct integer;
+
+const Mode: integer := 2;
+const Limit: integer := case Mode of
+  when 1: 10;
+  when 2..5: 20;
+  else 30;
+end case;
+
+var Calls: integer := 0;
+
+function Count(Value: integer): integer;
+begin
+  Calls := Calls + 1;
+  return Value;
+end function;
+
+function Area(Value: Shape): real;
+begin
+  return case Value of
+    when Shape.Circle(const R): 3.0 * R * R;
+    when Shape.Rectangle(const W, const H): W * H;
+  end case;
+end function;
+
+function Size(N: integer): string;
+begin
+  return case N of
+    when 1..9: 'small';
+    when const Big if Big > 100: 'huge';
+    else 'medium';
+  end case;
+end function;
+
+function Scaled(Value: option of integer): integer;
+begin
+  return case Value of
+    when Some(const V) if V > 3: V * 10;
+    when Some(const V): V;
+    when None: 0;
+  end case;
+end function;
+
+begin
+  AssertEquals(12.0, Area(Shape.Circle(2.0)));
+  AssertEquals(6.0, Area(Shape.Rectangle(2.0, 3.0)));
+  AssertEquals('g', case Tint.Green of
+    when Tint.Red: 'r';
+    when Tint.Green: 'g';
+  end case);
+  AssertEquals('small', Size(5));
+  AssertEquals('medium', Size(50));
+  AssertEquals('huge', Size(500));
+  AssertEquals('yes', case Size(5) = 'small' of
+    when true: 'yes';
+    when false: 'no';
+  end case);
+  AssertEquals(40, Scaled(Some(4)));
+  AssertEquals(2, Scaled(Some(2)));
+  AssertEquals(0, Scaled(None));
+  AssertEquals('admin', case UserId(1) of
+    when UserId(1): 'admin';
+    else 'user';
+  end case);
+  AssertEquals(2, 1 + case Mode of
+    when 2: Count(1);
+    else Count(5);
+  end case);
+  AssertEquals(1, Calls);
+  case 20 of
+    when Limit:
+      AssertTrue(true);
+    else
+      AssertTrue(false);
+  end case;
+end.

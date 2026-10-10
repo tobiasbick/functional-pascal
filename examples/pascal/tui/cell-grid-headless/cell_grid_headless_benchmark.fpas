@@ -60,10 +60,10 @@ begin
     end;
   end if;
 
-  WriteLn(('elapsed: ' + IntToStr(Elapsed)) + ' ms');
+  WriteLn('elapsed: ' + IntToStr(Elapsed) + ' ms');
   if Elapsed > 0 then
     begin
-      WriteLn(('throughput: ' + IntToStr((Iterations * 1000) div Elapsed)) + ' paints/s');
+      WriteLn('throughput: ' + IntToStr(Iterations * 1000 div Elapsed) + ' paints/s');
     end;
   else
     begin

@@ -15,7 +15,7 @@ impl Checker {
     ///
     /// The bindings of an `is` test are visible in later `and` conditions and in the
     /// guarded body; the caller owns that scope.
-    pub(in super::super) fn check_branch_condition(
+    pub(in crate::check) fn check_branch_condition(
         &mut self,
         condition: &Expr,
         keyword: &str,

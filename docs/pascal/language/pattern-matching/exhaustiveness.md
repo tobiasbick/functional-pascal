@@ -163,7 +163,8 @@ or updates and across compiled-unit imports.
 
 - Enum, `Result`, and `Option` types: every value must match an **unguarded**, explicit variant arm. `else` is rejected, including a redundant branch after complete coverage. This includes nested payloads; `when Ok(Some(_)):` does not cover `Ok(None)`.
 - `_` and `const Name` cover every value of their position. Enum members, `true`/`false`, and nested variants cover their own values. Named compile-time boolean and simple-enum constants contribute the same coverage as their values, including when parenthesized. Literals and constants of other types (integers, strings) never complete coverage on their own.
-- Scalar types (`integer`, `string`, `boolean`): `else` is optional. Boolean cases do not require both `true` and `false`.
+- Scalar types (`integer`, `string`, `boolean`): `else` is optional in a `case` statement. Boolean cases do not require both `true` and `false`.
+- A [`case` expression](../control-flow/case-of-intro.md#case-expressions) must produce a value for every input: `boolean` selectors need both `true` and `false` (or `else`), and `integer`, `string`, and distinct selectors need `else`.
 - Guard clauses do not count toward exhaustiveness — `when Shape.Circle(const R) if R > 0:` does not cover variant `Circle`; add an unguarded `when Shape.Circle(const R):` arm.
 - Labels already covered by earlier unguarded arms are rejected (FP3033).
 

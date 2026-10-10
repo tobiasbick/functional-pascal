@@ -8,7 +8,7 @@ use fpas_lexer::Token;
 
 impl Parser {
     /// Parses labels that share a case arm.
-    pub(super) fn parse_case_label_list(&mut self) -> Vec<CaseLabel> {
+    pub(in crate::parser) fn parse_case_label_list(&mut self) -> Vec<CaseLabel> {
         let mut labels = Vec::new();
         labels.push(self.parse_case_label());
         while self.eat(&Token::Comma) {

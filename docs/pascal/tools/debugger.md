@@ -97,12 +97,14 @@ visible names, parentheses, unary `-` and `not`, arithmetic, Boolean,
 comparison and `in` operators, stored record/enum fields, and read-only
 array, dictionary, or string indexes. It also accepts controlled calls,
 instance and static record methods, array/dictionary/record/Result/Option construction, fully qualified enum
-constructors, record updates, and `try`. Names are ASCII
+constructors, record updates, `try`, and `if` expressions, which evaluate only
+the selected branch. Names are ASCII
 case-insensitive; the innermost parameter/local/capture wins, then globals.
 Visible first-class function values and closures may be called when their
 captures can be detached safely. Aggregate results can be expanded like
 ordinary variables and expire on resume. `go`, newly entered closure syntax,
-statements, declarations, and assignments inside `evaluate` remain rejected.
+`is` tests, `case` expressions, statements, declarations, and assignments inside
+`evaluate` remain rejected.
 Declared routines, record methods, and enum constructors accept either fully
 positional or fully named arguments, for example `Sub(Right := 2, Left := 9)`.
 Names match declared parameters case-insensitively; every parameter must occur

@@ -121,7 +121,7 @@ begin
     end;
   end if;
 
-  WriteLn((('mode: ' + Mode) + ', iterations: ') + IntToStr(Iterations));
-  WriteLn(('elapsed: ' + IntToStr(Elapsed)) + ' ms');
+  WriteLn('mode: ' + Mode + ', iterations: ' + IntToStr(Iterations));
+  WriteLn('elapsed: ' + IntToStr(Elapsed) + ' ms');
   WriteLn('checksum: ' + IntToStr(Checksum));
 end.

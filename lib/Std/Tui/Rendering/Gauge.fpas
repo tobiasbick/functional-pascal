@@ -19,17 +19,17 @@ begin
     end;
   end if;
   const LabelWidth: integer := Std.Console.DisplayWidth(Gauge.LabelText);
-  const Percent: integer := (Gauge.Value * 100) div Gauge.Maximum;
+  const Percent: integer := Gauge.Value * 100 div Gauge.Maximum;
   const PercentText: string := Std.Conv.IntToStr(Percent) + '%';
   const PercentWidth: integer := Std.Console.DisplayWidth(PercentText);
-  var BarWidth: integer := ((Bounds.Width - LabelWidth) - PercentWidth) - 4;
+  var BarWidth: integer := Bounds.Width - LabelWidth - PercentWidth - 4;
   if BarWidth < 1 then
     begin
       BarWidth := 1;
     end;
   end if;
-  const BarX: integer := (Bounds.X + LabelWidth) + 2;
-  const FillWidth: integer := (BarWidth * Gauge.Value) div Gauge.Maximum;
+  const BarX: integer := Bounds.X + LabelWidth + 2;
+  const FillWidth: integer := BarWidth * Gauge.Value div Gauge.Maximum;
   Canvas.FillRect(Bounds, TuiCell.Create(' ', TuiStyleRole.Normal));
   Canvas.WriteText(TuiPoint.Create(Bounds.X, Bounds.Y), Gauge.LabelText, TuiStyleRole.Normal);
   Canvas.DrawHorizontalLine(BarX, Bounds.Y, BarWidth, TuiStyleRole.GaugeTrack);

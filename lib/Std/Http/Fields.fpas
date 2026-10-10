@@ -37,22 +37,22 @@ begin
       const Colon: integer := Lines[Index].IndexOf(':');
       if Colon <= 0 then
         begin
-          return Error((('Invalid HTTP ' + MessageKind) + ' header: ') + Lines[Index]);
+          return Error('Invalid HTTP ' + MessageKind + ' header: ' + Lines[Index]);
         end;
       end if;
       const Name: string := (Lines[Index]).Slice(0, Colon);
       const Value: string := (Lines[Index])
-                               .Slice(Colon + 1, (Lines[Index].Length() - Colon) - 1)
+                               .Slice(Colon + 1, Lines[Index].Length() - Colon - 1)
                                .Trim();
       if not Std.Http.Method.IsValidToken(Name) then
         begin
-          return Error((('Invalid HTTP ' + MessageKind) + ' header name: ') + Name);
+          return Error('Invalid HTTP ' + MessageKind + ' header name: ' + Name);
         end;
       end if;
 
       if not IsValidValue(Value) then
         begin
-          return Error(('HTTP ' + MessageKind) + ' header contains an invalid control character');
+          return Error('HTTP ' + MessageKind + ' header contains an invalid control character');
         end;
       end if;
 

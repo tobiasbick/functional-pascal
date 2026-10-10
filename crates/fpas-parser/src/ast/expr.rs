@@ -48,7 +48,9 @@ impl Expr {
             | Self::Postfix { span, .. }
             | Self::NamedArgument { span, .. }
             | Self::VarArgument { span, .. }
-            | Self::Is { span, .. } => *span,
+            | Self::Is { span, .. }
+            | Self::If { span, .. }
+            | Self::Case { span, .. } => *span,
             Self::Closure(closure) => closure.span,
         }
     }
@@ -216,10 +218,74 @@ pub enum Expr {
         /// Source span of the complete test.
         span: Span,
     },
+    /// `if C then A elsif D then B else E end if` producing one of its branch values.
+    ///
+    /// **Documentation:** `docs/pascal/language/control-flow/if-then-else.md`
+    If {
+        /// The `if` branch followed by each `elsif` branch, in source order.
+        branches: Vec<IfExprBranch>,
+        /// Value of the required `else` branch.
+        else_value: Box<Expr>,
+        /// Source span from `else` through its value.
+        else_span: Span,
+        /// Source span of the complete expression including `end if`.
+        span: Span,
+    },
+    /// `case Value of when Labels [if Guard]: Expression; ... [else Expression;] end case`
+    /// producing the value of the first matching arm.
+    ///
+    /// **Documentation:** `docs/pascal/language/control-flow/case-of-intro.md`
+    Case {
+        /// Value matched by the arms.
+        selector: Box<Expr>,
+        /// Arms in source order.
+        arms: Vec<CaseExprArm>,
+        /// Optional `else` arm for selectors whose values are not all listed.
+        else_arm: Option<Box<CaseExprElse>>,
+        /// Source span of the complete expression including `end case`.
+        span: Span,
+    },
     /// Placeholder emitted when the parser fails to parse an expression.
     /// Downstream passes should propagate this as an error rather than
     /// checking or compiling it.
     Error(Span),
+}
+
+/// One condition and its value in an [`Expr::If`].
+///
+/// **Documentation:** `docs/pascal/language/control-flow/if-then-else.md`
+#[derive(Debug, Clone, PartialEq)]
+pub struct IfExprBranch {
+    /// Boolean condition, which may contain `is` pattern tests.
+    pub condition: Expr,
+    /// Value produced when the condition holds.
+    pub value: Expr,
+    /// Source span from `if` or `elsif` through the value.
+    pub span: Span,
+}
+
+/// One `when` arm of an [`Expr::Case`].
+///
+/// **Documentation:** `docs/pascal/language/control-flow/case-of-intro.md`
+#[derive(Debug, Clone, PartialEq)]
+pub struct CaseExprArm {
+    /// Labels that select this arm.
+    pub labels: Vec<super::CaseLabel>,
+    /// Optional condition evaluated after a label matches.
+    pub guard: Option<Expr>,
+    /// Value produced when a label and the optional guard match.
+    pub value: Expr,
+    /// Source span from `when` through the value.
+    pub span: Span,
+}
+
+/// The `else` arm of an [`Expr::Case`].
+#[derive(Debug, Clone, PartialEq)]
+pub struct CaseExprElse {
+    /// Value produced when no arm matches.
+    pub value: Expr,
+    /// Source span from `else` through the value.
+    pub span: Span,
 }
 
 /// Payload for [`Expr::Closure`].

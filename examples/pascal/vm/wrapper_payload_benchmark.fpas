@@ -53,15 +53,15 @@ begin
   var OpsPerSecond: integer := 0;
   if Elapsed > 0 then
     begin
-      OpsPerSecond := (Wrappers * 1000) div Elapsed;
+      OpsPerSecond := Wrappers * 1000 div Elapsed;
     end;
   end if;
 
-  WriteLn((('iterations: ' + IntToStr(Iterations)) + ', wrappers: ') + IntToStr(Wrappers));
-  WriteLn(('elapsed: ' + IntToStr(Elapsed)) + ' ms');
+  WriteLn('iterations: ' + IntToStr(Iterations) + ', wrappers: ' + IntToStr(Wrappers));
+  WriteLn('elapsed: ' + IntToStr(Elapsed) + ' ms');
   if Elapsed > 0 then
     begin
-      WriteLn(('throughput: ' + IntToStr(OpsPerSecond)) + ' wrappers/s');
+      WriteLn('throughput: ' + IntToStr(OpsPerSecond) + ' wrappers/s');
     end;
   else
     begin
@@ -72,7 +72,7 @@ begin
   WriteLn('checksum: ' + IntToStr(Total));
   if (MaxMillis > 0) and (Elapsed > MaxMillis) then
     begin
-      panic(((('wrapper-payload benchmark regression: ' + IntToStr(Elapsed)) + ' ms exceeds limit ') + IntToStr(MaxMillis)) +
+      panic('wrapper-payload benchmark regression: ' + IntToStr(Elapsed) + ' ms exceeds limit ' + IntToStr(MaxMillis) +
             ' ms');
     end;
   end if;

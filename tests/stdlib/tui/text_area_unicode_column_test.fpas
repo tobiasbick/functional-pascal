@@ -61,19 +61,19 @@ end function;
 begin
   const App: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(4, 2));
   for Line: string in [
-                        (string.Chr(9800) + string.Chr(65038)) + 'x',
+                        string.Chr(9800) + string.Chr(65038) + 'x',
                         '',
-                        ('e' + string.Chr(769)) + 'x',
+                        'e' + string.Chr(769) + 'x',
                         '中a',
-                        ('👩' + string.Chr(8205)) + '💻x',
-                        (('1' + string.Chr(65039)) + string.Chr(8419)) + 'x',
+                        '👩' + string.Chr(8205) + '💻x',
+                        '1' + string.Chr(65039) + string.Chr(8419) + 'x',
                         string.Chr(769) + 'a',
                         '🇩🇪x'
                       ] do
     begin
       for Column: integer := 0 to 6 do
         begin
-          const State: TextAreaModel := TextAreaModel(Text := (('xxxxxx' + #10) + Line) + #10, Caret := Column, Offset := TuiPoint.Create(3, 0));
+          const State: TextAreaModel := TextAreaModel(Text := 'xxxxxx' + #10 + Line + #10, Caret := Column, Offset := TuiPoint.Create(3, 0));
           const Moved: TextAreaModel := Press(App, State, TuiKeyKind.Down, '');
           AssertEquals(7 + Expected(Line, Column), Moved.Caret);
         end;

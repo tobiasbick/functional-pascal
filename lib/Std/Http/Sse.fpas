@@ -150,14 +150,14 @@ begin
   while EndValue[0] >= 0 do
     begin
       const LineBytes: array of integer := LocalState.Buffer.Slice(0, EndValue[0]);
-      LocalState.EventBytes := (LocalState.EventBytes + EndValue[0]) + EndValue[1];
+      LocalState.EventBytes := LocalState.EventBytes + EndValue[0] + EndValue[1];
       if LocalState.EventBytes > LocalState.Maximum then
         begin
           return Error('SSE event exceeds MaxEventBytes');
         end;
       end if;
 
-      LocalState.Buffer := LocalState.Buffer.Slice(EndValue[0] + EndValue[1], (LocalState.Buffer.Length() - EndValue[0]) -
+      LocalState.Buffer := LocalState.Buffer.Slice(EndValue[0] + EndValue[1], LocalState.Buffer.Length() - EndValue[0] -
                                                                               EndValue[1]);
       case Std.Net.Utf8.Decode(LineBytes) of
         when Ok(const Line):
@@ -177,7 +177,7 @@ begin
                 if Colon >= 0 then
                   begin
                     Name := Line.Slice(0, Colon);
-                    Value := Line.Slice(Colon + 1, (Line.Length() - Colon) - 1);
+                    Value := Line.Slice(Colon + 1, Line.Length() - Colon - 1);
                     if Value.StartsWith(' ') then
                       begin
                         Value := Value.Slice(1, Value.Length() - 1);
@@ -188,7 +188,7 @@ begin
 
                 if Name = 'data' then
                   begin
-                    LocalState.Data := (LocalState.Data + Value) + #10;
+                    LocalState.Data := LocalState.Data + Value + #10;
                   end;
                 elsif Name = 'event' then
                   begin
@@ -280,7 +280,7 @@ begin
         var Offset: integer := 0;
         while Offset < Bytes.Length() do
           begin
-            const Available: integer := (State.Maximum - State.EventBytes) - State.Buffer.Length();
+            const Available: integer := State.Maximum - State.EventBytes - State.Buffer.Length();
             var Count: integer := Bytes.Length() - Offset;
             if Count > 1024 then
               begin

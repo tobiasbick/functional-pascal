@@ -12,7 +12,7 @@ begin
   var Host: string := UriValue.Host;
   if Host.Contains(':') then
     begin
-      Host := ('[' + Host) + ']';
+      Host := '[' + Host + ']';
     end;
   end if;
 
@@ -23,7 +23,7 @@ begin
     end;
   end if;
 
-  return (Host + ':') + Std.Conv.IntToStr(UriValue.Port);
+  return Host + ':' + Std.Conv.IntToStr(UriValue.Port);
 end function;
 
 // Formats the scheme and authority portion of a URI.
@@ -32,7 +32,7 @@ end function;
 // - `UriValue`: Parsed absolute URI.
 function Origin(UriValue: Uri): string;
 begin
-  return ((UriValue.Scheme + '://') + Authority(UriValue));
+  return (UriValue.Scheme + '://' + Authority(UriValue));
 end function;
 
 // Removes a fragment from a URI reference.
@@ -137,7 +137,7 @@ begin
     end;
   elsif Reference.StartsWith('//') then
     begin
-      Target := (Base.Scheme + ':') + Reference;
+      Target := Base.Scheme + ':' + Reference;
     end;
   elsif Reference.StartsWith('/') then
     begin
@@ -145,7 +145,7 @@ begin
     end;
   elsif Reference.StartsWith('?') then
     begin
-      Target := (Origin(Base) + PathWithoutQuery(Base.Path)) + Reference;
+      Target := Origin(Base) + PathWithoutQuery(Base.Path) + Reference;
     end;
   else
     begin

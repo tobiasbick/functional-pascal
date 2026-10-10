@@ -19,7 +19,7 @@ type ExplorerState = record
   begin
     const SafeWidth: integer := Max(Width, 1);
     const SafeHeight: integer := Max(Height, 1);
-    return (Self.SpanY * (IntToReal(SafeWidth) / IntToReal(SafeHeight))) * 0.5;
+    return Self.SpanY * (IntToReal(SafeWidth) / IntToReal(SafeHeight)) * 0.5;
   end function;
 
   function XMin(Self: ExplorerState; Width: integer; Height: integer): real;
@@ -62,13 +62,13 @@ function ViewportCX(State: ExplorerState; W: integer; H: integer; CellX: integer
 begin
   const Wr: integer := Max(W - 1, 1);
   return State.XMin(W, H) +
-         (IntToReal(CellX - 1) / IntToReal(Wr)) * (State.XMax(W, H) - State.XMin(W, H));
+         IntToReal(CellX - 1) / IntToReal(Wr) * (State.XMax(W, H) - State.XMin(W, H));
 end function;
 
 function ViewportCY(State: ExplorerState; W: integer; H: integer; CellY: integer): real;
 begin
   const Hr: integer := Max(H - 1, 1);
-  return State.YMax() - (IntToReal(CellY - 1) / IntToReal(Hr)) * (State.YMax() - State.YMin());
+  return State.YMax() - IntToReal(CellY - 1) / IntToReal(Hr) * (State.YMax() - State.YMin());
 end function;
 
 procedure WriteHudText(Text: string; Width: integer);

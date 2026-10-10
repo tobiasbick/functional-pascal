@@ -19,13 +19,13 @@ function ViewportCX(State: ExplorerCamera; W: integer; H: integer; CellX: intege
 begin
   const Wr: integer := Max(W - 1, 1);
   return State.XMin(W, H) +
-         (IntToReal(CellX - 1) / IntToReal(Wr)) * (State.XMax(W, H) - State.XMin(W, H));
+         IntToReal(CellX - 1) / IntToReal(Wr) * (State.XMax(W, H) - State.XMin(W, H));
 end function;
 
 function ViewportCY(State: ExplorerCamera; W: integer; H: integer; CellY: integer): real;
 begin
   const Hr: integer := Max(H - 1, 1);
-  return State.YMax() - (IntToReal(CellY - 1) / IntToReal(Hr)) * (State.YMax() - State.YMin());
+  return State.YMax() - IntToReal(CellY - 1) / IntToReal(Hr) * (State.YMax() - State.YMin());
 end function;
 
 procedure WriteHudText(Text: string; Width: integer);

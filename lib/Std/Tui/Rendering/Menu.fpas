@@ -159,7 +159,7 @@ begin
   case TuiMenuNodeShortcut(Node) of
     when Some(const Gesture):
       begin
-        Canvas.WriteText(TuiPoint.Create((Bounds.Right() - 2) -
+        Canvas.WriteText(TuiPoint.Create(Bounds.Right() - 2 -
                                          Std.Console.DisplayWidth(Gesture.Display), Y), Gesture.Display, Role);
       end;
     when None:
@@ -189,7 +189,7 @@ begin
     begin
       if TuiMenuHasParent(Nodes[Index], Some(Popup.Parent)) then
         begin
-          const Y: integer := (Bounds.Y + 1) + Row;
+          const Y: integer := Bounds.Y + 1 + Row;
           case Nodes[Index] of
             when TuiMenuNode.Separator(const Id, const Parent):
               begin

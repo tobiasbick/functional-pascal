@@ -110,12 +110,7 @@ impl<'a> ClosureRegistry<'a> {
                 self.visit_expression(expr, owner, metadata, types)?;
                 for arm in arms {
                     for label in &arm.labels {
-                        if let CaseLabel::Value { start, end, .. } = label {
-                            self.visit_expression(start, owner, metadata, types)?;
-                            if let Some(end) = end {
-                                self.visit_expression(end, owner, metadata, types)?;
-                            }
-                        }
+                        self.visit_case_label(label, owner, metadata, types)?;
                     }
                     if let Some(guard) = &arm.guard {
                         self.visit_expression(guard, owner, metadata, types)?;
@@ -158,6 +153,23 @@ impl<'a> ClosureRegistry<'a> {
                 }
             }
             Stmt::Null(_) | Stmt::Break(_) | Stmt::Continue(_) => {}
+        }
+        Ok(())
+    }
+
+    /// Visits the expressions of a value or range label.
+    fn visit_case_label(
+        &mut self,
+        label: &'a CaseLabel,
+        owner: FunctionId,
+        metadata: &AnalysisMetadata,
+        types: &mut types::TypeTable,
+    ) -> Result<(), CompileError> {
+        if let CaseLabel::Value { start, end, .. } = label {
+            self.visit_expression(start, owner, metadata, types)?;
+            if let Some(end) = end {
+                self.visit_expression(end, owner, metadata, types)?;
+            }
         }
         Ok(())
     }
@@ -299,6 +311,37 @@ impl<'a> ClosureRegistry<'a> {
             Expr::BinaryOp { left, right, .. } => {
                 self.visit_expression(left, owner, metadata, types)?;
                 self.visit_expression(right, owner, metadata, types)?;
+            }
+            Expr::If {
+                branches,
+                else_value,
+                ..
+            } => {
+                for branch in branches {
+                    self.visit_expression(&branch.condition, owner, metadata, types)?;
+                    self.visit_expression(&branch.value, owner, metadata, types)?;
+                }
+                self.visit_expression(else_value, owner, metadata, types)?;
+            }
+            Expr::Case {
+                selector,
+                arms,
+                else_arm,
+                ..
+            } => {
+                self.visit_expression(selector, owner, metadata, types)?;
+                for arm in arms {
+                    for label in &arm.labels {
+                        self.visit_case_label(label, owner, metadata, types)?;
+                    }
+                    if let Some(guard) = &arm.guard {
+                        self.visit_expression(guard, owner, metadata, types)?;
+                    }
+                    self.visit_expression(&arm.value, owner, metadata, types)?;
+                }
+                if let Some(else_arm) = else_arm {
+                    self.visit_expression(&else_arm.value, owner, metadata, types)?;
+                }
             }
             Expr::ArrayLiteral(values, _) => {
                 for value in values {

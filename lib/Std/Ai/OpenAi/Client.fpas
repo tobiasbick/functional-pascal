@@ -73,7 +73,7 @@ begin
             begin
               if (ResponseValue.StatusCode < 200) or (ResponseValue.StatusCode >= 300) then
                 begin
-                  return Error((('OpenAI-compatible endpoint returned HTTP ' + Std.Conv.IntToStr(ResponseValue.StatusCode)) + ': ') +
+                  return Error('OpenAI-compatible endpoint returned HTTP ' + Std.Conv.IntToStr(ResponseValue.StatusCode) + ': ' +
                                Text);
                 end;
               end if;

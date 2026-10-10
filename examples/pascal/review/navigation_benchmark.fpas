@@ -45,7 +45,7 @@ end function;
 begin
   const Size: integer := StrToInt(ParamStr(0));
   const Mode: string := ParamStr(1);
-  var Text: string := ('x'.RepeatStr(Size) + #10) + 'x'.RepeatStr(Size);
+  var Text: string := 'x'.RepeatStr(Size) + #10 + 'x'.RepeatStr(Size);
   var Caret: integer := Size;
   if Mode = 'lines' then
     begin
@@ -67,6 +67,6 @@ begin
     end;
   end for;
 
-  WriteLn(('elapsed: ' + IntToStr(ElapsedMillis(Started))) + ' ms');
+  WriteLn('elapsed: ' + IntToStr(ElapsedMillis(Started)) + ' ms');
   App.Close();
 end.

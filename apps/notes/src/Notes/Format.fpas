@@ -6,7 +6,7 @@ const NoteFormatVersion: integer := 1;
 
 function MissingField(Name: string): string;
 begin
-  return ('Missing required note field `' + Name) + '`';
+  return 'Missing required note field `' + Name + '`';
 end function;
 
 function FieldString(Fields: dict of string to TomlValue; Name: string): result of string, string;
@@ -20,7 +20,7 @@ begin
           end;
         else
           begin
-            return Error(('Note field `' + Name) + '` must be a string');
+            return Error('Note field `' + Name + '` must be a string');
           end;
         end if;
       end;
@@ -42,7 +42,7 @@ begin
           end;
         else
           begin
-            return Error(('Note field `' + Name) + '` must be an integer');
+            return Error('Note field `' + Name + '` must be an integer');
           end;
         end if;
       end;
@@ -64,7 +64,7 @@ begin
           end;
         else
           begin
-            return Error(('Note field `' + Name) + '` must be a boolean');
+            return Error('Note field `' + Name + '` must be a boolean');
           end;
         end if;
       end;
@@ -117,7 +117,7 @@ begin
   const Version: integer := try FieldInteger(Fields, 'format');
   if Version <> NoteFormatVersion then
     begin
-      return Error(('Unsupported note format version ' + IntToStr(Version)) + '; expected 1');
+      return Error('Unsupported note format version ' + IntToStr(Version) + '; expected 1');
     end;
   end if;
   const Id: string := try FieldString(Fields, 'id');
@@ -151,7 +151,7 @@ begin
     end;
   end if;
   const Remaining: string := Source.Slice(Prefix.Length(), Source.Length() - Prefix.Length());
-  const Boundary: string := (NewLine + '+++') + NewLine;
+  const Boundary: string := NewLine + '+++' + NewLine;
   const BoundaryIndex: integer := Remaining.IndexOf(Boundary);
   if BoundaryIndex < 0 then
     begin
@@ -192,7 +192,7 @@ begin
   end for;
   const Header: TomlValue := TomlValue.Table(['format': TomlValue.Integer(NoteFormatVersion), 'id': TomlValue.String(NoteValue.Id), 'title': TomlValue.String(NoteValue.Title), 'created_ms': TomlValue.Integer(NoteValue.CreatedMillis), 'updated_ms': TomlValue.Integer(NoteValue.UpdatedMillis), 'tags': TomlValue.ArrayValue(TagValues), 'pinned': TomlValue.Boolean(NoteValue.Pinned), 'archived': TomlValue.Boolean(NoteValue.Archived)]);
   const NewLine: string := string.Chr(10);
-  return ((((('+++' + NewLine) + Std.Toml.Stringify(Header).TrimRight()) + NewLine) + '+++') + NewLine) +
+  return '+++' + NewLine + Std.Toml.Stringify(Header).TrimRight() + NewLine + '+++' + NewLine +
          NoteValue.Body;
 end function;
 end unit;

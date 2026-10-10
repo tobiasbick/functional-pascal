@@ -24,7 +24,7 @@ begin
     end;
   end for;
 
-  return ((State.A + State.B) + State.C) + State.D;
+  return State.A + State.B + State.C + State.D;
 end function;
 
 begin
@@ -57,15 +57,15 @@ begin
   var OpsPerSecond: integer := 0;
   if Elapsed > 0 then
     begin
-      OpsPerSecond := (Iterations * 1000) div Elapsed;
+      OpsPerSecond := Iterations * 1000 div Elapsed;
     end;
   end if;
 
   WriteLn('iterations: ' + IntToStr(Iterations));
-  WriteLn(('elapsed: ' + IntToStr(Elapsed)) + ' ms');
+  WriteLn('elapsed: ' + IntToStr(Elapsed) + ' ms');
   if Elapsed > 0 then
     begin
-      WriteLn(('throughput: ' + IntToStr(OpsPerSecond)) + ' updates/s');
+      WriteLn('throughput: ' + IntToStr(OpsPerSecond) + ' updates/s');
     end;
   else
     begin
@@ -76,7 +76,7 @@ begin
   WriteLn('checksum: ' + IntToStr(Checksum));
   if (MaxMillis > 0) and (Elapsed > MaxMillis) then
     begin
-      panic(((('record-update benchmark regression: ' + IntToStr(Elapsed)) + ' ms exceeds limit ') + IntToStr(MaxMillis)) +
+      panic('record-update benchmark regression: ' + IntToStr(Elapsed) + ' ms exceeds limit ' + IntToStr(MaxMillis) +
             ' ms');
     end;
   end if;

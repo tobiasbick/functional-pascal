@@ -4,7 +4,7 @@ uses Std.Conv, Std.Test;
 
 function Describe(Acc: string; Key: string; Value: integer): string;
 begin
-  return (((Acc + Key) + ':') + IntToStr(Value)) + ';';
+  return Acc + Key + ':' + IntToStr(Value) + ';';
 end function;
 
 function Sum(Acc: integer; Key: string; Value: integer): integer;
@@ -26,7 +26,7 @@ begin
       end;
     end if;
 
-    return (Acc + Key) + IntToStr(Value);
+    return Acc + Key + IntToStr(Value);
   end function;
 
   AssertEquals('A1B2', Current.Reduce('', Visit));

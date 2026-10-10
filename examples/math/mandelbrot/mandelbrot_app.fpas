@@ -50,13 +50,13 @@ end function;
 function ViewportX(State: ExplorerState; Width: integer; Height: integer; CellX: integer): real;
 begin
   return State.XMin(Width, Height) +
-         (IntToReal(CellX) / IntToReal(Max(Width - 1, 1))) * (State.XMax(Width, Height) - State.XMin(Width, Height));
+         IntToReal(CellX) / IntToReal(Max(Width - 1, 1)) * (State.XMax(Width, Height) - State.XMin(Width, Height));
 end function;
 
 function ViewportY(State: ExplorerState; Height: integer; CellY: integer): real;
 begin
   return State.YMax() -
-         (IntToReal(CellY) / IntToReal(Max(Height - 1, 1))) * (State.YMax() - State.YMin());
+         IntToReal(CellY) / IntToReal(Max(Height - 1, 1)) * (State.YMax() - State.YMin());
 end function;
 
 function UpdateKey(State: MandelbrotModel; Key: TuiKeyEvent; Cmd: TuiCmdOutput): MandelbrotModel;

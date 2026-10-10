@@ -57,7 +57,7 @@ pub(super) fn emit_case_arm(emitter: &mut Emitter, arm: &CaseArm, comments: &Com
 }
 
 /// Emits labels separated by commas in one arm header.
-fn emit_case_labels(emitter: &mut Emitter, labels: &[CaseLabel], comments: &CommentMap) {
+pub(crate) fn emit_case_labels(emitter: &mut Emitter, labels: &[CaseLabel], comments: &CommentMap) {
     for (index, label) in labels.iter().enumerate() {
         if index > 0 {
             emitter.write(", ");

@@ -27,7 +27,7 @@ begin
               end;
             end if;
 
-            X := (X + Std.Console.DisplayWidth(TuiMenuNodeText(Nodes[Index]))) + 2;
+            X := X + Std.Console.DisplayWidth(TuiMenuNodeText(Nodes[Index])) + 2;
           end;
       end case;
     end;
@@ -71,7 +71,7 @@ begin
           case TuiMenuNodeShortcut(Nodes[Index]) of
             when Some(const Shortcut):
               begin
-                ContentWidth := (ContentWidth + Std.Console.DisplayWidth(Shortcut.Display)) + 2;
+                ContentWidth := ContentWidth + Std.Console.DisplayWidth(Shortcut.Display) + 2;
               end;
             when None:
               begin
@@ -196,7 +196,7 @@ begin
         begin
           const Previous: TuiMenuPopup := Popups[Index - 1];
           X := Previous.Bounds.X + Previous.Bounds.Width;
-          Y := (Previous.Bounds.Y + 1) + TuiMenuChildRow(Nodes, Previous.Parent, Parents[Index]);
+          Y := Previous.Bounds.Y + 1 + TuiMenuChildRow(Nodes, Previous.Parent, Parents[Index]);
         end;
       end if;
 
@@ -208,7 +208,7 @@ begin
             end;
           else
             begin
-              X := (PopupBounds.X + PopupBounds.Width) - Size.Width;
+              X := PopupBounds.X + PopupBounds.Width - Size.Width;
             end;
           end if;
         end;
@@ -222,7 +222,7 @@ begin
 
       if Y + Size.Height > PopupBounds.Y + PopupBounds.Height then
         begin
-          Y := (PopupBounds.Y + PopupBounds.Height) - Size.Height;
+          Y := PopupBounds.Y + PopupBounds.Height - Size.Height;
         end;
       end if;
 

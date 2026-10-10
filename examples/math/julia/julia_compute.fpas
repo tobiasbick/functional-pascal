@@ -13,7 +13,7 @@ type Complex = record
 
   public function Sq(Self: Complex): Complex;
   begin
-    return Complex(Re := Self.Re * Self.Re - Self.Im * Self.Im, Im := (2.0 * Self.Re) * Self.Im);
+    return Complex(Re := Self.Re * Self.Re - Self.Im * Self.Im, Im := 2.0 * Self.Re * Self.Im);
   end function;
 
   public function Add(Self: Complex; Other: Complex): Complex;
@@ -56,7 +56,7 @@ begin
     end;
   end if;
   const MagnitudeSq: real := Max(Z.MagSq(), 4.0);
-  const Smooth: real := (IntToReal(N) + 1.0) - (Log(Log(MagnitudeSq) * 0.5) / Log(2.0));
+  const Smooth: real := IntToReal(N) + 1.0 - (Log(Log(MagnitudeSq) * 0.5) / Log(2.0));
   return PixelSample(IsInside := false, EscapeValue := Smooth);
 end function;
 
@@ -90,7 +90,7 @@ begin
   end if;
   const Wr: real := IntToReal(WidthRange);
   const Hr: real := IntToReal(HeightRange);
-  const cy: real := YMax - (Py / Hr) * (YMax - YMin);
+  const cy: real := YMax - Py / Hr * (YMax - YMin);
   const C: Complex := Complex.Create(Jr, Ji);
   var Row: array of PixelSample := [];
   for Px: integer := 0 to Width - 1 do
@@ -100,7 +100,7 @@ begin
           return [];
         end;
       end if;
-      const cx: real := XMin + (Px / Wr) * (XMax - XMin);
+      const cx: real := XMin + Px / Wr * (XMax - XMin);
       Row.Push(Iterate(Complex.Create(cx, cy), C, MaxIter, Token));
     end;
   end for;

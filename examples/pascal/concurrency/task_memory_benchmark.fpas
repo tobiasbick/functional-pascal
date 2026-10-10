@@ -28,7 +28,7 @@ begin
     end;
   end if;
 
-  WriteLn(('spawning ' + IntToStr(TaskCount)) + ' tasks');
+  WriteLn('spawning ' + IntToStr(TaskCount) + ' tasks');
   const Started: integer := MonotonicMillis();
   var Tasks: array of task := [];
   for I: integer := 1 to TaskCount do
@@ -44,5 +44,5 @@ begin
 
   WriteLn('all tasks spawned; waiting');
   WaitAll(Tasks);
-  WriteLn(('completed in ' + IntToStr(ElapsedMillis(Started))) + ' ms');
+  WriteLn('completed in ' + IntToStr(ElapsedMillis(Started)) + ' ms');
 end.

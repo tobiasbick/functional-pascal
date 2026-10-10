@@ -45,7 +45,7 @@ an open work package.
 ## Package status
 
 AP01, AP02, AP03, AP04, AP05, AP06, AP07, AP09, AP10, AP11, AP13, AP14, AP15, AP16,
-AP17, AP19, and AP20 are complete, including all their work packages. Their READMEs
+AP17, AP19, AP20, and AP21 are complete, including all their work packages. Their READMEs
 and work-package files record implemented behavior, implementation owners, regression coverage,
 and any independent follow-ups. Checkboxes use the
 [status-tracking rule](development-process.md#status-tracking).
@@ -76,7 +76,7 @@ package are listed in each work package file.
 | [ ] | [AP18: Subrange types](ap18-subrange-types/README.md) | Large | AP07, AP16 | Agreed direction (Q10, Q11) |
 | [x] | [AP19: Distinct domain types](ap19-distinct-domain-types/README.md) | Large | AP05, AP16 | Complete (AP19.1, AP19.2) |
 | [x] | [AP20: Nested patterns and explicit bindings](ap20-nested-patterns-and-explicit-bindings/README.md) | Large | AP07, AP13, AP16 | Complete (AP20.1–AP20.3) |
-| [ ] | [AP21: Decision expressions](ap21-decision-expressions/README.md) | Large | AP03, AP07, AP13 | Agreed direction |
+| [x] | [AP21: Decision expressions](ap21-decision-expressions/README.md) | Large | AP03, AP07, AP13 | Complete (AP21.1, AP21.2) |
 | [ ] | [AP22: Limited local inference](ap22-limited-local-inference/README.md) | Large | AP02, AP10, AP16 | Agreed direction (Q14) |
 | [ ] | [AP23: Preconditions and postconditions](ap23-preconditions-and-postconditions/README.md) | Large | AP07, AP13, AP16 | Agreed direction (Q15–Q17) |
 | [ ] | [AP24: Generic data structures](ap24-generic-data-structures/README.md) | Very large | AP03, AP10, AP11, AP20 | Agreed direction |
@@ -115,7 +115,7 @@ and transfer conditions are recorded in the owning package README.
 | AP18 | AP18.1 declarations and conversions; AP18.2 membership |
 | AP19 | Complete: AP19.1 declarations and conversions; AP19.2 comparisons |
 | AP20 | AP20.1 explicit bindings; AP20.2 nested patterns; AP20.3 `is` test |
-| AP21 | AP21.1 `if` expressions; AP21.2 `case` expressions |
+| AP21 | Complete: AP21.1 `if` expressions; AP21.2 `case` expressions |
 | AP22 | AP22.1 literals and conversions; AP22.2 typed construction |
 | AP23 | AP23.1 preconditions; AP23.2 postconditions |
 | AP24 | AP24.1 parenthesized type arguments; AP24.2 generic records; AP24.3 generic enums |
@@ -137,9 +137,8 @@ completed foundation is listed above. For the remaining work, keep the
 following dependency order; the exact prerequisites and unresolved decisions
 are recorded in each work-package file.
 
-1. AP21 and AP24 use
-   the completed explicit enum cases (AP03); AP24 also uses the completed
-   patterns and typed record construction (AP10).
+1. AP24 uses the completed explicit enum cases (AP03), patterns, and typed
+   record construction (AP10).
 2. AP18 and AP23 use the completed Boolean and binding rules.
 3. AP26 uses the completed block and caller-mutation rules. Reassess AP25
    after AP23 and practical use of its contracts; its AP14 prerequisite is

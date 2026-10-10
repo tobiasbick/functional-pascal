@@ -59,7 +59,7 @@ type Point = record
 
   procedure Print(Self: Point);
   begin
-    WriteLn(((('(' + RealToStr(Self.X)) + ', ') + RealToStr(Self.Y)) + ')');
+    WriteLn('(' + RealToStr(Self.X) + ', ' + RealToStr(Self.Y) + ')');
   end procedure;
 end record;
 ```
@@ -147,7 +147,7 @@ type Point = record
 
   static procedure Print(Value: Point);
   begin
-    WriteLn(((('(' + IntToStr(Value.X)) + ', ') + IntToStr(Value.Y)) + ')');
+    WriteLn('(' + IntToStr(Value.X) + ', ' + IntToStr(Value.Y) + ')');
   end procedure;
 
   function Sum(Self: Point): integer;
@@ -206,7 +206,7 @@ built-in type. See [Dot calls](../functions/fluent-calls.md).
 ```pascal
 function PointToString(P: Point): string;
 begin
-  return ((('(' + RealToStr(P.X)) + ', ') + RealToStr(P.Y)) + ')';
+  return '(' + RealToStr(P.X) + ', ' + RealToStr(P.Y) + ')';
 end function;
 ```
 

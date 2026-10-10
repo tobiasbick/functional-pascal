@@ -19,7 +19,7 @@ begin
             end;
           when Error(const FallbackMessage):
             begin
-              Fail((Message + ' / ') + FallbackMessage);
+              Fail(Message + ' / ' + FallbackMessage);
             end;
         end case;
       end;

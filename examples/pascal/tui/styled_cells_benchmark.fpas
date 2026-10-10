@@ -31,7 +31,7 @@ begin
       case Cell.ConcreteStyle of
         when Some(const Style):
           begin
-            Checksum := (Checksum + Style.Foreground.Red) + Style.Background.Green;
+            Checksum := Checksum + Style.Foreground.Red + Style.Background.Green;
           end;
         when None:
           begin
@@ -89,7 +89,7 @@ begin
     end;
   end if;
 
-  WriteLn(('elapsed: ' + IntToStr(Elapsed)) + ' ms');
+  WriteLn('elapsed: ' + IntToStr(Elapsed) + ' ms');
   WriteLn('checksum: ' + IntToStr(Checksum));
   if (MaxMillis > 0) and (Elapsed > MaxMillis) then
     begin

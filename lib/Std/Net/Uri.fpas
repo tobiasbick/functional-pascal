@@ -93,7 +93,7 @@ begin
       end if;
 
       Host := Authority.Slice(1, Closing - 1);
-      const Remainder: string := Authority.Slice(Closing + 1, (Authority.Length() - Closing) - 1);
+      const Remainder: string := Authority.Slice(Closing + 1, Authority.Length() - Closing - 1);
       if Remainder <> '' then
         begin
           if not Remainder.StartsWith(':') then
@@ -114,7 +114,7 @@ begin
         begin
           Host := Authority.Slice(0, Colon);
           HasPort := true;
-          PortText := Authority.Slice(Colon + 1, (Authority.Length() - Colon) - 1);
+          PortText := Authority.Slice(Colon + 1, Authority.Length() - Colon - 1);
         end;
       end if;
     end;
@@ -148,7 +148,7 @@ begin
     end;
   end if;
   const Scheme: string := Text.Slice(0, SchemeEnd).ToLower();
-  var Rest: string := Text.Slice(SchemeEnd + 3, (Text.Length() - SchemeEnd) - 3);
+  var Rest: string := Text.Slice(SchemeEnd + 3, Text.Length() - SchemeEnd - 3);
   const FragmentStart: integer := Rest.IndexOf('#');
   if FragmentStart >= 0 then
     begin

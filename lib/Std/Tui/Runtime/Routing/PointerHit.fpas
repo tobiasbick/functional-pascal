@@ -177,7 +177,7 @@ begin
                 end;
               when TuiStatusItem.KeyHint(const KeyText, const Text):
                 begin
-                  Cursor := ((Cursor + Std.Console.DisplayWidth(KeyText)) + Std.Console.DisplayWidth(Text)) +
+                  Cursor := Cursor + Std.Console.DisplayWidth(KeyText) + Std.Console.DisplayWidth(Text) +
                             1;
                 end;
               when TuiStatusItem.Command(const Id, const Text, const Action, const Enabled):

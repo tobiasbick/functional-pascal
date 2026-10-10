@@ -3,12 +3,14 @@ use crate::analyze_with_types;
 
 mod boolean;
 mod bound_methods;
+mod case_expressions;
 mod closures;
 mod distinct_comparisons;
 mod distinct_conversions;
 mod equality;
 mod fluent;
 mod handler_fields;
+mod if_expressions;
 mod named_arguments;
 mod native;
 mod ordinary_names;

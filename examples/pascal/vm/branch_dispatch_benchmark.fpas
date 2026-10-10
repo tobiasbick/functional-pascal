@@ -58,15 +58,15 @@ begin
   var OpsPerSecond: integer := 0;
   if Elapsed > 0 then
     begin
-      OpsPerSecond := (Iterations * 1000) div Elapsed;
+      OpsPerSecond := Iterations * 1000 div Elapsed;
     end;
   end if;
 
   WriteLn('iterations: ' + IntToStr(Iterations));
-  WriteLn(('elapsed: ' + IntToStr(Elapsed)) + ' ms');
+  WriteLn('elapsed: ' + IntToStr(Elapsed) + ' ms');
   if Elapsed > 0 then
     begin
-      WriteLn(('throughput: ' + IntToStr(OpsPerSecond)) + ' branches/s');
+      WriteLn('throughput: ' + IntToStr(OpsPerSecond) + ' branches/s');
     end;
   else
     begin
@@ -77,7 +77,7 @@ begin
   WriteLn('checksum: ' + IntToStr(Checksum));
   if (MaxMillis > 0) and (Elapsed > MaxMillis) then
     begin
-      panic(((('branch-dispatch benchmark regression: ' + IntToStr(Elapsed)) + ' ms exceeds limit ') + IntToStr(MaxMillis)) +
+      panic('branch-dispatch benchmark regression: ' + IntToStr(Elapsed) + ' ms exceeds limit ' + IntToStr(MaxMillis) +
             ' ms');
     end;
   end if;

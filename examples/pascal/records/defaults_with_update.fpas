@@ -10,7 +10,7 @@ end record;
 
 function ShowConfig(Value: Config): string;
 begin
-  return (((Value.Host + ':') + IntToStr(Value.Port)) + ' retries=') + IntToStr(Value.Retries);
+  return Value.Host + ':' + IntToStr(Value.Port) + ' retries=' + IntToStr(Value.Retries);
 end function;
 
 begin

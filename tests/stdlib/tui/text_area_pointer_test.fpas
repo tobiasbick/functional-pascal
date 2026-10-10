@@ -67,7 +67,7 @@ end function;
 
 begin
   var App: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(6, 3));
-  var Model: PointerModel := PointerModel(Focus := 0, Text := (('zero' + string.Chr(10)) + 'one') +
+  var Model: PointerModel := PointerModel(Focus := 0, Text := 'zero' + string.Chr(10) + 'one' +
                                                               (string.Chr(10) + 'three'), Caret := 0, Offset := TuiPoint.Create(0, 0));
   Model := App.RunIterations(Model, UpdateTextArea, ViewTextArea, 0, 0);
   Model := Click(App, Model, 2, 1, 2);

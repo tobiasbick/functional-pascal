@@ -134,11 +134,11 @@ begin
   end if;
   const Wr: real := IntToReal(WidthRange);
   const Hr: real := IntToReal(HeightRange);
-  const cy: real := YMax - (Py / Hr) * (YMax - YMin);
+  const cy: real := YMax - Py / Hr * (YMax - YMin);
   var Row: array of PixelSample := [];
   for Px: integer := 0 to Width - 1 do
     begin
-      const cx: real := XMin + (Px / Wr) * (XMax - XMin);
+      const cx: real := XMin + Px / Wr * (XMax - XMin);
       Row.Push(Iterate(Complex.Create(cx, cy), MaxIter));
     end;
   end for;

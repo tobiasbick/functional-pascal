@@ -1,7 +1,9 @@
 //! Expressions and designators.
 
 mod binary;
+mod case_expression;
 mod closure;
+mod conditional;
 mod literal;
 mod patterns;
 mod postfix;
@@ -199,6 +201,27 @@ pub(super) fn emit_expr_impl(
             emitter.write(" is ");
             emit_pattern(emitter, pattern, comments);
         }
+        Expr::If {
+            branches,
+            else_value,
+            else_span,
+            span,
+        } => conditional::emit_if_expression(
+            emitter, branches, else_value, *else_span, *span, comments,
+        ),
+        Expr::Case {
+            selector,
+            arms,
+            else_arm,
+            span,
+        } => case_expression::emit_case_expression(
+            emitter,
+            selector,
+            arms,
+            else_arm.as_deref(),
+            *span,
+            comments,
+        ),
         Expr::Error(..) => emitter.write("<error>"),
     }
 }

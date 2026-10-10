@@ -28,5 +28,5 @@ begin
     end;
   end for;
 
-  WriteLn(('elapsed: ' + IntToStr(ElapsedMillis(Started))) + ' ms');
+  WriteLn('elapsed: ' + IntToStr(ElapsedMillis(Started)) + ' ms');
 end.

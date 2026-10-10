@@ -42,7 +42,7 @@ procedure TuiBackgroundRemove(ApplicationId: integer; Index: integer);
 begin
   var Items: array of TuiOwnedWork := TuiBackgroundWorkItems[ApplicationId - 1];
   TuiBackgroundWorkItems[ApplicationId - 1] := Items.Slice(0, Index)
-                                                 .Concat(Items.Slice(Index + 1, (Items.Length() - Index) -
+                                                 .Concat(Items.Slice(Index + 1, Items.Length() - Index -
                                                                                 1));
 end procedure;
 

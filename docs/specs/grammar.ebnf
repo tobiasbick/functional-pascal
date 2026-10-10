@@ -562,7 +562,26 @@ primary_atom        = native_array_factory
                     | dict_literal
                     | 'go' go_call                       (* task handle    *)
                     | closure_expr
+                    | if_expression
+                    | case_expression
                     | designator [ call_args ] ;
+
+(* Value-producing `if`; only reached in expression positions, because *)
+(* a statement that starts with `if` is always if_stmt. Each branch is *)
+(* one expression; `else` is required.                                  *)
+(* Documentation: docs/pascal/language/control-flow/if-then-else.md   *)
+if_expression       = 'if' expression 'then' expression
+                      { 'elsif' expression 'then' expression }
+                      'else' expression 'end' 'if' ;
+
+(* Value-producing `case`; a statement that starts with `case` is     *)
+(* always case_stmt. Each arm is one expression ended by `;`.         *)
+(* Documentation: docs/pascal/language/control-flow/case-of-intro.md *)
+case_expression     = 'case' expression 'of'
+                      case_expression_arm { case_expression_arm }
+                      [ 'else' expression ';' ]
+                      'end' 'case' ;
+case_expression_arm = 'when' case_label_list [ 'if' expression ] ':' expression ';' ;
 
 (* Anonymous function/procedure expression. Parameter and result types are required. *)
 (* Documentation: docs/pascal/language/functions/closures.md *)

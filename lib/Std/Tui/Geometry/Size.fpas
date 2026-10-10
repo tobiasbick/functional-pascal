@@ -4,7 +4,7 @@ function TuiSizeRequireNonNegative(Value: integer; Name: string): integer;
 begin
   if Value < 0 then
     begin
-      panic(('Tui ' + Name) + ' must not be negative');
+      panic('Tui ' + Name + ' must not be negative');
     end;
   end if;
 

@@ -57,7 +57,7 @@ begin
   var Start: integer := 0;
   for Index: integer := 0 to Target - 1 do
     begin
-      Start := (Start + Lines[Index].Length()) + 1;
+      Start := Start + Lines[Index].Length() + 1;
     end;
   end for;
 
@@ -131,7 +131,7 @@ begin
             begin
               if Column + Std.Console.DisplayWidth(Grapheme.Slice(0, Index + 1)) > TargetColumn then
                 begin
-                  return (Start + Characters) + Index;
+                  return Start + Characters + Index;
                 end;
               end if;
             end;
@@ -198,7 +198,7 @@ begin
         end;
       elsif Position.DisplayColumn >= Next.X + Viewport.Width then
         begin
-          Next.X := (Position.DisplayColumn - Viewport.Width) + 1;
+          Next.X := Position.DisplayColumn - Viewport.Width + 1;
         end;
       end if;
     end;
@@ -212,7 +212,7 @@ begin
         end;
       elsif Position.Line >= Next.Y + Viewport.Height then
         begin
-          Next.Y := (Position.Line - Viewport.Height) + 1;
+          Next.Y := Position.Line - Viewport.Height + 1;
         end;
       end if;
     end;

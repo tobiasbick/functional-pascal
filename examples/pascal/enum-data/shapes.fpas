@@ -13,7 +13,7 @@ begin
   case S of
     when Shape.Circle(const R):
       begin
-        return (Pi * R) * R;
+        return Pi * R * R;
       end;
     when Shape.Rectangle(const W, const H):
       begin
@@ -35,7 +35,7 @@ begin
       end;
     when Shape.Rectangle(const W, const H):
       begin
-        return (('Rectangle ' + RealToStr(W)) + ' x ') + RealToStr(H);
+        return 'Rectangle ' + RealToStr(W) + ' x ' + RealToStr(H);
       end;
     when Shape.Point:
       begin
@@ -48,7 +48,7 @@ begin
   const C: Shape := Shape.Circle(5.0);
   const R: Shape := Shape.Rectangle(10.0, 3.0);
   const P: Shape := Shape.Point;
-  WriteLn((Describe(C) + ' -> area = ') + RealToStr(Area(C)));
-  WriteLn((Describe(R) + ' -> area = ') + RealToStr(Area(R)));
-  WriteLn((Describe(P) + ' -> area = ') + RealToStr(Area(P)));
+  WriteLn(Describe(C) + ' -> area = ' + RealToStr(Area(C)));
+  WriteLn(Describe(R) + ' -> area = ' + RealToStr(Area(R)));
+  WriteLn(Describe(P) + ' -> area = ' + RealToStr(Area(P)));
 end.

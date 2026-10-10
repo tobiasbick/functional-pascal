@@ -275,7 +275,7 @@ begin
       return Error('HTTP request body exceeds MaxBodyBytes');
     end;
   end if;
-  const InitialBody: array of integer := Bytes.Slice(Separator + 4, (Bytes.Length() - Separator) - 4);
+  const InitialBody: array of integer := Bytes.Slice(Separator + 4, Bytes.Length() - Separator - 4);
   var Body: array of integer := [];
   case ReadBody(Connection, InitialBody, BodyLength) of
     when Ok(const Value):
@@ -309,11 +309,10 @@ begin
       return Error('HTTP response reason phrase contains an invalid control character');
     end;
   end if;
-  var Head: string := (((('HTTP/1.1 ' + Std.Conv.IntToStr(ResponseValue.StatusCode)) + ' ') + ResponseValue.ReasonPhrase) + #13) +
+  var Head: string := 'HTTP/1.1 ' + Std.Conv.IntToStr(ResponseValue.StatusCode) + ' ' + ResponseValue.ReasonPhrase + #13 +
                       #10;
-  Head := ((Head + 'Connection: close') + #13) + #10;
-  Head := (((Head + 'Content-Length: ') + Std.Conv.IntToStr(ResponseValue.Body.Length())) + #13) +
-          #10;
+  Head := Head + 'Connection: close' + #13 + #10;
+  Head := Head + 'Content-Length: ' + Std.Conv.IntToStr(ResponseValue.Body.Length()) + #13 + #10;
   for Index: integer := 0 to ResponseValue.Headers.Length() - 1 do
     begin
       const Field: Header := ResponseValue.Headers[Index];
@@ -330,11 +329,11 @@ begin
         end;
       end if;
 
-      Head := ((((Head + Field.Name) + ': ') + Field.Value) + #13) + #10;
+      Head := Head + Field.Name + ': ' + Field.Value + #13 + #10;
     end;
   end for;
 
-  Head := (Head + #13) + #10;
+  Head := Head + #13 + #10;
   return Ok(Std.Net.Utf8.Encode(Head).Concat(ResponseValue.Body));
 end function;
 

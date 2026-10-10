@@ -54,12 +54,12 @@ begin
 
   if State.Issues.Length() > 0 then
     begin
-      Issues := ('  ·  ' + IntToStr(State.Issues.Length())) + ' invalid';
+      Issues := '  ·  ' + IntToStr(State.Issues.Length()) + ' invalid';
     end;
   end if;
 
-  return TuiElementBuilders.MakeRule(((((' NOTES  ·  ' + IntToStr(NotesFilteredIndices(State.Notes, '')
-                                                                    .Length())) + ' active') + Issues) + Dirty) +
+  return TuiElementBuilders.MakeRule(' NOTES  ·  ' + IntToStr(NotesFilteredIndices(State.Notes, '')
+                                                                .Length()) + ' active' + Issues + Dirty +
                                      '  ·  Ctrl+K commands ');
 end function;
 

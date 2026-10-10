@@ -15,6 +15,27 @@ impl Checker {
             Expr::Str(value, _) => Some(Value::String(value.clone())),
             Expr::Bool(value, _) => Some(Value::Boolean(*value)),
             Expr::Paren(inner, _) => self.scalar_constant_value(inner),
+            Expr::Case {
+                selector,
+                arms,
+                else_arm,
+                ..
+            } => self.case_constant_value(selector, arms, else_arm.as_deref()),
+            // The first branch whose constant condition holds selects the value.
+            Expr::If {
+                branches,
+                else_value,
+                ..
+            } => {
+                for branch in branches {
+                    match self.scalar_constant_value(&branch.condition)? {
+                        Value::Boolean(true) => return self.scalar_constant_value(&branch.value),
+                        Value::Boolean(false) => {}
+                        _ => return None,
+                    }
+                }
+                self.scalar_constant_value(else_value)
+            }
             // Distinct conversions keep the underlying value.
             Expr::Call { args, .. }
                 if self
@@ -73,6 +94,62 @@ impl Checker {
             }
             _ => None,
         }
+    }
+}
+
+impl Checker {
+    /// Selects the first arm whose plain or conversion label matches the constant selector.
+    ///
+    /// **Documentation:** `docs/pascal/language/control-flow/case-of-intro.md`
+    fn case_constant_value(
+        &self,
+        selector: &Expr,
+        arms: &[fpas_parser::CaseExprArm],
+        else_arm: Option<&fpas_parser::CaseExprElse>,
+    ) -> Option<Value> {
+        let selected = self.scalar_constant_value(selector)?;
+        for arm in arms {
+            for label in &arm.labels {
+                let matched = match label {
+                    fpas_parser::CaseLabel::Value {
+                        start, end: None, ..
+                    } => binary(
+                        BinaryOp::Eq,
+                        selected.clone(),
+                        self.scalar_constant_value(start)?,
+                    )?,
+                    fpas_parser::CaseLabel::Value {
+                        start,
+                        end: Some(end),
+                        ..
+                    } => {
+                        let lower = binary(
+                            BinaryOp::GtEq,
+                            selected.clone(),
+                            self.scalar_constant_value(start)?,
+                        )?;
+                        let upper = binary(
+                            BinaryOp::LtEq,
+                            selected.clone(),
+                            self.scalar_constant_value(end)?,
+                        )?;
+                        Value::Boolean(
+                            lower == Value::Boolean(true) && upper == Value::Boolean(true),
+                        )
+                    }
+                    fpas_parser::CaseLabel::Pattern(pattern) => binary(
+                        BinaryOp::Eq,
+                        selected.clone(),
+                        self.scalar_constant_value(pattern.conversion_argument()?)?,
+                    )?,
+                    fpas_parser::CaseLabel::Binding { .. } => return None,
+                };
+                if matched == Value::Boolean(true) {
+                    return self.scalar_constant_value(&arm.value);
+                }
+            }
+        }
+        self.scalar_constant_value(&else_arm?.value)
     }
 }
 

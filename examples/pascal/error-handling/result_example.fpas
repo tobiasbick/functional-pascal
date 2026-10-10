@@ -18,7 +18,7 @@ end function;
 function Stringify(A: integer; B: integer): result of string, string;
 begin
   const Quotient: integer := try Divide(A, B);
-  return Ok((((IntToStr(A) + ' / ') + IntToStr(B)) + ' = ') + IntToStr(Quotient));
+  return Ok(IntToStr(A) + ' / ' + IntToStr(B) + ' = ' + IntToStr(Quotient));
 end function;
 
 begin

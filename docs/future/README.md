@@ -34,6 +34,7 @@ Current implemented behavior belongs under `docs/pascal/`, not here.
 | Area | Document | Scope |
 |------|----------|-------|
 | Compiler | [Panic and language-limit follow-ups](compiler-panic-followups.md) | Intake for newly discovered compiler panics and language limitations |
+| Dogfooding | [Dogfooding gaps](dogfooding-gaps.md) | Intake for gaps found while writing agent helper scripts in FPAS |
 
 ## Rules
 

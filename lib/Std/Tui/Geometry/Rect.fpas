@@ -9,7 +9,7 @@ function TuiRectRequireNonNegative(Value: integer; Name: string): integer;
 begin
   if Value < 0 then
     begin
-      panic(('Tui ' + Name) + ' must not be negative');
+      panic('Tui ' + Name + ' must not be negative');
     end;
   end if;
 
@@ -20,7 +20,7 @@ function TuiRectCheckedEdge(Origin: integer; Extent: integer; Name: string): int
 begin
   if Origin > TuiRectIntegerMax - Extent then
     begin
-      panic(('Tui ' + Name) + ' edge overflows integer coordinates');
+      panic('Tui ' + Name + ' edge overflows integer coordinates');
     end;
   end if;
 
@@ -31,13 +31,13 @@ function TuiRectExtentFromEdges(Origin: integer; Edge: integer; Name: string): i
 begin
   if Edge < Origin then
     begin
-      panic(('Tui ' + Name) + ' edge precedes its origin');
+      panic('Tui ' + Name + ' edge precedes its origin');
     end;
   end if;
 
   if (Origin < 0) and (Edge > TuiRectIntegerMax + Origin) then
     begin
-      panic(('Tui ' + Name) + ' extent overflows integer coordinates');
+      panic('Tui ' + Name + ' extent overflows integer coordinates');
     end;
   end if;
 

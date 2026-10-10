@@ -142,6 +142,15 @@ pub enum DebugExpression {
     OptionNone,
     /// Unwrap `Result.Ok` or `Option.Some` without propagation outside the expression.
     Try(Box<Self>),
+    /// `if` expression: the first true condition selects its value, otherwise `else_value`.
+    ///
+    /// **Documentation:** `docs/pascal/language/control-flow/if-then-else.md`
+    If {
+        /// Boolean conditions and their values in source order.
+        branches: Vec<(Self, Self)>,
+        /// Value when no condition holds.
+        else_value: Box<Self>,
+    },
 }
 
 /// Runtime-resolved controlled call target supplied to the sandbox boundary.

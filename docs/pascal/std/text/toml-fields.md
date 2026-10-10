@@ -17,7 +17,7 @@ begin
 end function;
 
 begin
-  case ReadPort(('host = ''localhost''' + string.Chr(10)) + 'port = 8080') of
+  case ReadPort('host = ''localhost''' + string.Chr(10) + 'port = 8080') of
     when Ok(const Port):
       WriteLn(Port);
     when Error(const Message):

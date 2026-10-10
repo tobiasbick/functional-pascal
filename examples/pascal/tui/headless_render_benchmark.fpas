@@ -124,15 +124,15 @@ begin
   var FramesPerSecond: integer := 0;
   if Elapsed > 0 then
     begin
-      FramesPerSecond := (Iterations * 1000) div Elapsed;
+      FramesPerSecond := Iterations * 1000 div Elapsed;
     end;
   end if;
 
-  WriteLn((('iterations: ' + IntToStr(Iterations)) + ', warm-up: ') + IntToStr(WarmupIterations));
-  WriteLn(('elapsed: ' + IntToStr(Elapsed)) + ' ms');
+  WriteLn('iterations: ' + IntToStr(Iterations) + ', warm-up: ' + IntToStr(WarmupIterations));
+  WriteLn('elapsed: ' + IntToStr(Elapsed) + ' ms');
   if Elapsed > 0 then
     begin
-      WriteLn(('throughput: ' + IntToStr(FramesPerSecond)) + ' frames/s');
+      WriteLn('throughput: ' + IntToStr(FramesPerSecond) + ' frames/s');
     end;
   else
     begin
@@ -143,7 +143,7 @@ begin
   WriteLn('final state: ' + IntToStr(Model));
   if (MaxMillis > 0) and (Elapsed > MaxMillis) then
     begin
-      panic(((('TUI benchmark regression: ' + IntToStr(Elapsed)) + ' ms exceeds limit ') + IntToStr(MaxMillis)) +
+      panic('TUI benchmark regression: ' + IntToStr(Elapsed) + ' ms exceeds limit ' + IntToStr(MaxMillis) +
             ' ms');
     end;
   end if;

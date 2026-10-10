@@ -79,19 +79,19 @@ begin
   const Started: integer := MonotonicMillis();
   Total := RunCallbacks(Values, Iterations);
   const Elapsed: integer := ElapsedMillis(Started);
-  const Callbacks: integer := (Iterations * ArraySize) * CallbacksPerElement;
+  const Callbacks: integer := Iterations * ArraySize * CallbacksPerElement;
   var OpsPerSecond: integer := 0;
   if Elapsed > 0 then
     begin
-      OpsPerSecond := (Callbacks * 1000) div Elapsed;
+      OpsPerSecond := Callbacks * 1000 div Elapsed;
     end;
   end if;
 
-  WriteLn((('iterations: ' + IntToStr(Iterations)) + ', callbacks: ') + IntToStr(Callbacks));
-  WriteLn(('elapsed: ' + IntToStr(Elapsed)) + ' ms');
+  WriteLn('iterations: ' + IntToStr(Iterations) + ', callbacks: ' + IntToStr(Callbacks));
+  WriteLn('elapsed: ' + IntToStr(Elapsed) + ' ms');
   if Elapsed > 0 then
     begin
-      WriteLn(('throughput: ' + IntToStr(OpsPerSecond)) + ' callbacks/s');
+      WriteLn('throughput: ' + IntToStr(OpsPerSecond) + ' callbacks/s');
     end;
   else
     begin
@@ -102,7 +102,7 @@ begin
   WriteLn('checksum: ' + IntToStr(Total));
   if (MaxMillis > 0) and (Elapsed > MaxMillis) then
     begin
-      panic(((('array-callbacks benchmark regression: ' + IntToStr(Elapsed)) + ' ms exceeds limit ') + IntToStr(MaxMillis)) +
+      panic('array-callbacks benchmark regression: ' + IntToStr(Elapsed) + ' ms exceeds limit ' + IntToStr(MaxMillis) +
             ' ms');
     end;
   end if;

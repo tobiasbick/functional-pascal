@@ -14,6 +14,8 @@ use super::Emitter;
 use super::expr::{emit_arg_list, emit_designator, emit_expr};
 use line::{finish_stmt_after_newline, finish_stmt_line, write_indented};
 
+pub(crate) use case::emit_case_labels;
+
 /// Formats a statement list as it appears inside `begin` … `end`.
 #[must_use]
 pub(crate) fn format_block_stmts(stmts: &[Stmt]) -> String {

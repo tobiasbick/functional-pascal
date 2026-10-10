@@ -21,6 +21,20 @@ impl Checker {
             Expr::ArrayLiteral(elements, _) => elements
                 .iter()
                 .any(|element| self.expr_is_task_bound(Self::expr_lookup_key(element))),
+            Expr::If {
+                branches,
+                else_value,
+                ..
+            } => branches
+                .iter()
+                .map(|branch| &branch.value)
+                .chain(std::iter::once(else_value.as_ref()))
+                .any(|value| self.expr_is_task_bound(Self::expr_lookup_key(value))),
+            Expr::Case { arms, else_arm, .. } => arms
+                .iter()
+                .map(|arm| &arm.value)
+                .chain(else_arm.iter().map(|else_arm| &else_arm.value))
+                .any(|value| self.expr_is_task_bound(Self::expr_lookup_key(value))),
             Expr::DictLiteral(pairs, _) => pairs.iter().any(|(key, value)| {
                 self.expr_is_task_bound(Self::expr_lookup_key(key))
                     || self.expr_is_task_bound(Self::expr_lookup_key(value))

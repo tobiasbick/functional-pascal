@@ -114,6 +114,22 @@ impl Checker {
                 .iter()
                 .flat_map(|value| self.pending_expr_captures(value))
                 .collect(),
+            Expr::If {
+                branches,
+                else_value,
+                ..
+            } => branches
+                .iter()
+                .map(|branch| &branch.value)
+                .chain(std::iter::once(else_value.as_ref()))
+                .flat_map(|value| self.pending_expr_captures(value))
+                .collect(),
+            Expr::Case { arms, else_arm, .. } => arms
+                .iter()
+                .map(|arm| &arm.value)
+                .chain(else_arm.iter().map(|else_arm| &else_arm.value))
+                .flat_map(|value| self.pending_expr_captures(value))
+                .collect(),
             Expr::DictLiteral(values, _) => values
                 .iter()
                 .flat_map(|(key, value)| {

@@ -28,7 +28,7 @@ begin
   var Options: ServerOptions := ServerOptions.Create();
   Options.MaxRequests := 1;
   const ServerTask: task := go Serve(ListenerValue, Options, Handle);
-  const Url: string := ('http://127.0.0.1:' + IntToStr(Address.Port)) + '/fluent';
+  const Url: string := 'http://127.0.0.1:' + IntToStr(Address.Port) + '/fluent';
   const Text: string := try FetchText(Url);
   AssertEquals('hello fluent', Text);
   const Served: boolean := try Wait(ServerTask);

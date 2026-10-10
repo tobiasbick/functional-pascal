@@ -13,7 +13,7 @@ begin
   case BodyText(ResponseValue) of
     when Ok(const Text):
       begin
-        WriteLn((((LabelText + ' ') + IntToStr(ResponseValue.StatusCode)) + ': ') + Text);
+        WriteLn(LabelText + ' ' + IntToStr(ResponseValue.StatusCode) + ': ' + Text);
       end;
     when Error(const Message):
       begin
@@ -104,8 +104,7 @@ begin
   case OpenStream(Request.Get(BaseUrl + '/stream')) of
     when Ok(const ResponseValue):
       begin
-        WriteLn((('STREAM ' + IntToStr(ResponseValue.StatusCode)) + ': ') +
-                ReadAll(ResponseValue.Body));
+        WriteLn('STREAM ' + IntToStr(ResponseValue.StatusCode) + ': ' + ReadAll(ResponseValue.Body));
       end;
     when Error(const Message):
       begin

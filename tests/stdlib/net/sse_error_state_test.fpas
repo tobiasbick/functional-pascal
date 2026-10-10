@@ -6,7 +6,7 @@ procedure Terminal(Decoder: SseDecoder);
 begin
   for Pass: integer := 1 to 3 do
     begin
-      case FeedSse(Decoder, Std.Net.Utf8.Encode(('data: more' + #10) + #10)) of
+      case FeedSse(Decoder, Std.Net.Utf8.Encode('data: more' + #10 + #10)) of
         when Ok(_):
           begin
             Fail('feed after error');
@@ -58,7 +58,7 @@ begin
 
   Terminal(Invalid);
   const Many: SseDecoder := CreateSseDecoder(9).Unwrap();
-  const Events: array of SseEvent := FeedSse(Many, Std.Net.Utf8.Encode(((('data:x' + #13) + #10) + #10)
+  const Events: array of SseEvent := FeedSse(Many, Std.Net.Utf8.Encode(('data:x' + #13 + #10 + #10)
                                                                          .RepeatStr(500)))
                                        .Unwrap();
   AssertEquals(500, Events.Length());

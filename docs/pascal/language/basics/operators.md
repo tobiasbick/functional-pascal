@@ -78,7 +78,10 @@ intended. Parentheses permit a comparison result as an operand, for example
 `(A < B) = Expected`.
 
 Record update (`expr with Field := Value; … end with`) is postfix on the primary
-expression. Parentheses override the table in programs and debugger expressions.
+expression. An [`if` expression](../control-flow/if-then-else.md#if-expressions)
+is a primary operand closed by `end if`, so `1 + if Ready then 2 else 3 end if`
+needs no parentheses. Parentheses override the table in programs and debugger
+expressions.
 
 ## Logical operators
 
@@ -165,7 +168,7 @@ end while;
 ## String concatenation
 
 ```pascal
-const Full: string := ('Hello' + ' ') + 'World'; // 'Hello World'
+const Full: string := 'Hello' + ' ' + 'World'; // 'Hello World'
 ```
 
 ## See also

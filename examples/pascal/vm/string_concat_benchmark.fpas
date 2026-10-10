@@ -15,7 +15,7 @@ begin
   var Total: integer := 0;
   for Index: integer := 1 to Iterations do
     begin
-      const Built: string := (Prefix + IntToStr(Index)) + Suffix;
+      const Built: string := Prefix + IntToStr(Index) + Suffix;
       Total := Total + Built.Length();
     end;
   end for;
@@ -53,15 +53,15 @@ begin
   var OpsPerSecond: integer := 0;
   if Elapsed > 0 then
     begin
-      OpsPerSecond := (Iterations * 1000) div Elapsed;
+      OpsPerSecond := Iterations * 1000 div Elapsed;
     end;
   end if;
 
-  WriteLn((('iterations: ' + IntToStr(Iterations)) + ', warm-up: ') + IntToStr(WarmupIterations));
-  WriteLn(('elapsed: ' + IntToStr(Elapsed)) + ' ms');
+  WriteLn('iterations: ' + IntToStr(Iterations) + ', warm-up: ' + IntToStr(WarmupIterations));
+  WriteLn('elapsed: ' + IntToStr(Elapsed) + ' ms');
   if Elapsed > 0 then
     begin
-      WriteLn(('throughput: ' + IntToStr(OpsPerSecond)) + ' concats/s');
+      WriteLn('throughput: ' + IntToStr(OpsPerSecond) + ' concats/s');
     end;
   else
     begin
@@ -72,7 +72,7 @@ begin
   WriteLn('char total: ' + IntToStr(Total));
   if (MaxMillis > 0) and (Elapsed > MaxMillis) then
     begin
-      panic(((('string-concat benchmark regression: ' + IntToStr(Elapsed)) + ' ms exceeds limit ') + IntToStr(MaxMillis)) +
+      panic('string-concat benchmark regression: ' + IntToStr(Elapsed) + ' ms exceeds limit ' + IntToStr(MaxMillis) +
             ' ms');
     end;
   end if;

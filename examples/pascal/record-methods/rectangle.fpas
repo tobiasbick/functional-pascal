@@ -30,7 +30,7 @@ type Rectangle = record
       end;
     end if;
 
-    WriteLn((((((((Kind + ' ') + IntToStr(Self.W)) + 'x') + IntToStr(Self.H)) + ' area=') + IntToStr(Self.Area())) + ' perimeter=') +
+    WriteLn(Kind + ' ' + IntToStr(Self.W) + 'x' + IntToStr(Self.H) + ' area=' + IntToStr(Self.Area()) + ' perimeter=' +
             IntToStr(Self.Perimeter()));
   end procedure;
 end record;

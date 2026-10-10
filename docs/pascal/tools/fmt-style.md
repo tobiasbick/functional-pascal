@@ -152,7 +152,7 @@ type Point = record
 
   procedure Print(Self: Point);
   begin
-    WriteLn(((('(' + IntToStr(Self.X)) + ', ') + IntToStr(Self.Y)) + ')');
+    WriteLn('(' + IntToStr(Self.X) + ', ' + IntToStr(Self.Y) + ')');
   end procedure;
 end record;
 
@@ -276,6 +276,8 @@ are rejected by the parser and must be written as `null;`.
 | named `function` / `procedure` body | `begin` … `end function;` / `end procedure;` |
 | anonymous `function` / `procedure` expression | `begin` … `end function` / `end procedure`, without its own terminator |
 | record update expression | `Base with Field := Value; end with`, without its own terminator |
+| `if` expression | `if C then A elsif D then B else E end if` on one line, or `elsif`, `else`, and `end if` on indented lines, without its own terminator |
+| `case` expression | `case V of`, one indented `when Labels: Value;` line per arm and `else Value;`, then `end case` without its own terminator |
 | program body | `begin` … `end.` |
 | `repeat` … `until` | statement list directly under `repeat` |
 | `record` / `enum` type | `record` … `end record;` / `enum` … `end enum;` |
@@ -347,7 +349,9 @@ Semicolons are **terminators**:
   terminates the loop.
 - Expressions have no terminator of their own. An anonymous routine body uses
   terminated statements and closes with `end function` or `end procedure`;
-  record updates close with `end with`. In arguments, the named ending is
+  record updates close with `end with`; `if` expressions close with `end if`
+  and `case` expressions with `end case`.
+  In arguments, the named ending is
   followed by `,` or `)` without `;`. An enclosing statement or declaration
   supplies its own terminator. Record-update fields retain every `;`.
 - Formal parameter lists keep `;` between parameters and have no trailing
@@ -367,6 +371,11 @@ comments. With comments, fields are indented one level below `with`, and
 `end with` returns to the expression's enclosing indentation. Comments before,
 inside, and after a named expression ending are preserved. An empty anonymous
 routine stays compact unless comments require separate lines.
+
+An `if` expression stays on one line when it fits and has no attached comments.
+Otherwise the first branch stays after its position, and each `elsif`, the
+`else`, and `end if` start a line indented one level below the enclosing
+statement. Comments stay with the branch they precede or follow.
 
 - One space after keywords that introduce a clause: `if cond then`, `for i := 1 to 10 do`, `while cond do`.
 - No space before `:` in type annotations (`name: integer`).

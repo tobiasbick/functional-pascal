@@ -39,16 +39,16 @@ begin
   const Started: integer := MonotonicMillis();
   Checksum := RewriteValues(Values, Iterations);
   const Elapsed: integer := ElapsedMillis(Started);
-  if Checksum <> ((Iterations * 2) + Size) - 1 then
+  if Checksum <> (Iterations * 2) + Size - 1 then
     begin
       panic('local index write benchmark checksum mismatch');
     end;
   end if;
 
-  WriteLn(('elapsed: ' + IntToStr(Elapsed)) + ' ms');
+  WriteLn('elapsed: ' + IntToStr(Elapsed) + ' ms');
   if Elapsed > 0 then
     begin
-      WriteLn(('throughput: ' + IntToStr(((Iterations * Size) * 1000) div Elapsed)) + ' writes/s');
+      WriteLn('throughput: ' + IntToStr(Iterations * Size * 1000 div Elapsed) + ' writes/s');
     end;
   else
     begin

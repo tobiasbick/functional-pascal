@@ -26,7 +26,7 @@ begin
           end;
         when None:
           begin
-            Width := (Width + Std.Console.DisplayWidth(TuiMenuNodeText(Nodes[Index]))) + 2;
+            Width := Width + Std.Console.DisplayWidth(TuiMenuNodeText(Nodes[Index])) + 2;
           end;
       end case;
     end;
@@ -76,7 +76,7 @@ begin
   var Width: integer := 0;
   for Index: integer := 0 to Items.Length() - 1 do
     begin
-      Width := (Width + Std.Console.DisplayWidth(Items[Index].Text)) + 2;
+      Width := Width + Std.Console.DisplayWidth(Items[Index].Text) + 2;
     end;
   end for;
 
@@ -105,8 +105,7 @@ begin
           end;
         when TuiStatusItem.KeyHint(const KeyText, const Text):
           begin
-            Width := ((Width + Std.Console.DisplayWidth(KeyText)) + Std.Console.DisplayWidth(Text)) +
-                     1;
+            Width := Width + Std.Console.DisplayWidth(KeyText) + Std.Console.DisplayWidth(Text) + 1;
           end;
       end case;
     end;

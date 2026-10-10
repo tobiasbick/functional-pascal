@@ -4,8 +4,8 @@ uses Notes.Format, Std.Test;
 
 begin
   AssertTrue(NoteParse('plain text').IsError());
-  AssertTrue(NoteParse(('+++' + #10) + 'format = 1').IsError());
-  AssertTrue(NoteParse((((((('+++' + #10) + 'format = 2') + #10) + 'id = ''wrong-version''') + #10) + '+++') +
+  AssertTrue(NoteParse('+++' + #10 + 'format = 1').IsError());
+  AssertTrue(NoteParse('+++' + #10 + 'format = 2' + #10 + 'id = ''wrong-version''' + #10 + '+++' +
                        #10)
                .IsError());
 end.

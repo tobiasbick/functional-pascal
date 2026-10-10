@@ -174,7 +174,7 @@ begin
       begin
         const Viewport: TuiInputViewport := TuiInputViewportFor(Input.Text, Input.Caret, Bounds.Width -
                                                                                          2);
-        const Caret: integer := TuiInputCaretAtColumn(Input.Text, Viewport, (PointerPosition.X - Bounds.X) -
+        const Caret: integer := TuiInputCaretAtColumn(Input.Text, Viewport, PointerPosition.X - Bounds.X -
                                                                             1);
         return TuiIdlePointerResult(ApplicationId, TuiRoutePointerFocusMessages(Previous, Input.Id)
                                                      .Concat([

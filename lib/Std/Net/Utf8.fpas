@@ -23,7 +23,7 @@ end function;
 // - `Message`: Reason the byte sequence is invalid.
 function Invalid(Index: integer; Message: string): result of string, string;
 begin
-  return Error((('Invalid UTF-8 at byte ' + Std.Conv.IntToStr(Index)) + ': ') + Message);
+  return Error('Invalid UTF-8 at byte ' + Std.Conv.IntToStr(Index) + ': ' + Message);
 end function;
 
 // Reports whether an integer is a UTF-8 continuation byte.
@@ -91,7 +91,7 @@ begin
             end;
           end if;
 
-          CodePoint := ((First - 192) * 64 + Second) - 128;
+          CodePoint := (First - 192) * 64 + Second - 128;
         end;
       end if;
 
@@ -104,7 +104,7 @@ begin
             end;
           end if;
 
-          CodePoint := (((First - 224) * 4096 + (Bytes[Index + 1] - 128) * 64) + Third) - 128;
+          CodePoint := (First - 224) * 4096 + (Bytes[Index + 1] - 128) * 64 + Third - 128;
           if (CodePoint < 2048) or ((CodePoint >= 55296) and (CodePoint <= 57343)) then
             begin
               return Invalid(Index, 'overlong or surrogate sequence');
@@ -122,8 +122,7 @@ begin
             end;
           end if;
 
-          CodePoint := ((((First - 240) * 262144 + (Bytes[Index + 1] - 128) * 4096) + (Bytes[Index +
-                                                                                             2] - 128) * 64) + Fourth) -
+          CodePoint := (First - 240) * 262144 + (Bytes[Index + 1] - 128) * 4096 + (Bytes[Index + 2] - 128) * 64 + Fourth -
                        128;
           if (CodePoint < 65536) or (CodePoint > 1114111) then
             begin

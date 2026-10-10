@@ -16,7 +16,7 @@ begin
 end function;
 
 begin
-  const TextArea: TuiElement := TuiElementBuilders.MakeTextArea(TuiControlId.Create(1), ('abc' + string.Chr(10)) +
+  const TextArea: TuiElement := TuiElementBuilders.MakeTextArea(TuiControlId.Create(1), 'abc' + string.Chr(10) +
                                                                                         '12345', 0, TuiPoint.Create(0, 0), TuiAction.Create(9));
   const Measured: TuiMeasureResult := TuiMeasure(TextArea, TuiMeasureSpec.Unbounded());
   AssertEquals(1, Measured.Minimum.Width);

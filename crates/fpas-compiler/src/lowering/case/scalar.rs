@@ -4,6 +4,8 @@
 
 use fpas_ir::{BinaryOperation, Constant, Operation, Terminator};
 use fpas_parser::{CaseArm, CaseLabel, Expr, Stmt};
+
+use super::{CaseArmHead, CaseBody, CaseEnding};
 use fpas_sema::Ty;
 
 use crate::CompileError;
@@ -12,7 +14,7 @@ use super::super::context::{LoweringContext, target, unsupported};
 use super::super::types;
 
 impl LoweringContext {
-    /// Lowers scalar case arms in source order and confines catch-all locals to its body.
+    /// Lowers a `case` statement: each arm body is a scoped statement list.
     pub(in crate::lowering) fn lower_case(
         &mut self,
         expression: &Expr,
@@ -20,13 +22,47 @@ impl LoweringContext {
         else_body: Option<&[Stmt]>,
         span: fpas_lexer::Span,
     ) -> Result<(), CompileError> {
+        let heads = arms
+            .iter()
+            .map(|arm| CaseArmHead {
+                labels: &arm.labels,
+                guard: arm.guard.as_ref(),
+                span: arm.span,
+            })
+            .collect::<Vec<_>>();
+        let ending = CaseEnding {
+            has_else: else_body.is_some(),
+            require_match: false,
+        };
+        self.lower_case_arms(
+            expression,
+            &heads,
+            &ending,
+            span,
+            &mut |context, index| match (index, else_body) {
+                (Some(index), _) => context.lower_statement(&arms[index].body),
+                (None, Some(statements)) => context.lower_statements(statements),
+                (None, None) => Ok(()),
+            },
+        )
+    }
+
+    /// Lowers scalar or variant case arms in source order and confines catch-all locals to its body.
+    pub(in crate::lowering) fn lower_case_arms(
+        &mut self,
+        expression: &Expr,
+        arms: &[CaseArmHead<'_>],
+        ending: &CaseEnding,
+        span: fpas_lexer::Span,
+        body: &mut CaseBody<'_>,
+    ) -> Result<(), CompileError> {
         let mut case_ir_ty = self.expression_ir_type(expression)?;
         let case_ty = self.expression_type(expression).ok();
         if matches!(&case_ty, Some(Ty::Enum(enumeration)) if !enumeration.has_data()) {
             case_ir_ty = types::INTEGER;
         }
         let exhaustive_enum = matches!(&case_ty, Some(Ty::Enum(_)))
-            || arms.iter().flat_map(|arm| &arm.labels).any(|label| {
+            || arms.iter().flat_map(|arm| arm.labels).any(|label| {
                 let CaseLabel::Value { start, .. } = label else {
                     return false;
                 };
@@ -37,7 +73,7 @@ impl LoweringContext {
             || matches!(&case_ty, Some(Ty::Enum(enumeration)) if enumeration.has_data())
             || matches!(self.type_kind(case_ir_ty), Some(fpas_ir::IrType::Enum(_)))
         {
-            return self.lower_variant_case(case_value, case_ir_ty, arms, else_body, span);
+            return self.lower_variant_case(case_value, case_ir_ty, arms, ending, span, body);
         }
         let case_ty = case_ty.ok_or_else(|| unsupported(span, "scalar case type"))?;
         self.begin_scope();
@@ -49,8 +85,8 @@ impl LoweringContext {
         self.switch_to(first_test);
         let mut has_merge_predecessor = false;
 
-        for arm in arms {
-            for label in &arm.labels {
+        for (arm_index, arm) in arms.iter().enumerate() {
+            for label in arm.labels {
                 let next_test = self.new_block(arm.span)?;
                 let body_block = self.new_block(arm.span)?;
                 let binding = match label {
@@ -79,7 +115,7 @@ impl LoweringContext {
                     let local = self.declare_local(name, case_ir_ty, false, arm.span)?;
                     self.write_local(local, value, arm.span)?;
                 }
-                if let Some(guard) = &arm.guard {
+                if let Some(guard) = arm.guard {
                     let guard_value = self.lower_expression(guard)?;
                     let guarded_body = self.new_block(arm.span)?;
                     self.terminate(Terminator::Branch {
@@ -89,7 +125,7 @@ impl LoweringContext {
                     })?;
                     self.switch_to(guarded_body);
                 }
-                self.lower_statement(&arm.body)?;
+                body(self, Some(arm_index))?;
                 if !self.is_terminated() {
                     self.jump(merge_block)?;
                     has_merge_predecessor = true;
@@ -101,11 +137,11 @@ impl LoweringContext {
             }
         }
 
-        if let Some(else_body) = else_body {
+        if ending.has_else {
             self.begin_scope();
-            self.lower_statements(else_body)?;
+            body(self, None)?;
             self.end_scope();
-        } else if exhaustive_enum && !self.is_terminated() {
+        } else if (exhaustive_enum || ending.require_match) && !self.is_terminated() {
             let message = self.emit_value(
                 Operation::Const(Constant::String(
                     "exhaustive case reached no enum member".to_string(),

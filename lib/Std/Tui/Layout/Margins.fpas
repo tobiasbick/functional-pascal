@@ -4,7 +4,7 @@ function TuiMarginsRequireNonNegative(Value: integer; Name: string): integer;
 begin
   if Value < 0 then
     begin
-      panic(('Tui layout margin ' + Name) + ' must not be negative');
+      panic('Tui layout margin ' + Name + ' must not be negative');
     end;
   end if;
 

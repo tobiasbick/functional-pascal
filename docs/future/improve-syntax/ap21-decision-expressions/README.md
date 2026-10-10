@@ -1,7 +1,7 @@
 # AP21: Decision expressions
 
-Status: agreed direction. Effort: large. Completion is tracked in the
-[central README](../README.md); the process is in
+Status: complete (AP21.1, AP21.2). Effort: large. Completion is tracked in
+the [central README](../README.md); the process is in
 [development-process.md](../development-process.md).
 
 ## Goal
@@ -35,12 +35,29 @@ return case Shape of
 end case;
 ```
 
+### Branch types, position, conditions, and constants (AP21.1)
+
+- All branches have one type, checked like an assignment. There is no numeric
+  widening: `if C then 1 else 2.5 end if` is an error whose hint names `1.0`
+  or `IntToReal`. Context-typed branches such as `None` and `[]` take the type
+  of the other branches. With an expected type (a declared binding, parameter,
+  field, or return type), every branch is checked against it.
+- `if` (and `case`) at the start of a statement is always the statement form.
+  The expression form appears only in expression positions: after `:=`,
+  `return`, or `discard`, as an argument, an operand, or a condition. Because
+  `end if` closes it, it is a primary operand and needs no parentheses, for
+  example `1 + if C then 2 else 3 end if`.
+- Conditions may use `is` pattern tests with the same rules as the `if`
+  statement; bindings are visible only in the branch they guard.
+- An `if` expression is a compile-time constant when its condition and every
+  branch are compile-time constants (AP16 rules); otherwise it is computed.
+
+AP21.2 applies the same branch-type, position, and constant rules to `case`
+expressions.
+
 ## Open decisions
 
-Before AP21.1, specify branch-type compatibility, including numeric widening
-and expected-type propagation. Also specify how an expression `if` is
-distinguished from a statement `if` at the start of a statement. AP21.1 requires
-these decisions; the agreed forms above do not settle them.
+None.
 
 ## Dependencies
 
@@ -54,8 +71,8 @@ The `if` expression comes first (AP21.1), then the `case` expression (AP21.2).
 
 ## Work packages
 
-- [ ] [AP21.1: if expressions](01-if-expressions.md)
-- [ ] [AP21.2: case expressions](02-case-expressions.md)
+- [x] [AP21.1: if expressions](01-if-expressions.md)
+- [x] [AP21.2: case expressions](02-case-expressions.md)
 
 ## Acceptance
 

@@ -14,8 +14,12 @@ use fpas_vm::{
     SourceBreakpoint,
 };
 
+#[path = "call_evaluation/case_expressions.rs"]
+mod case_expressions;
 #[path = "call_evaluation/distinct_types.rs"]
 mod distinct_types;
+#[path = "call_evaluation/if_expressions.rs"]
+mod if_expressions;
 #[path = "call_evaluation/named_arguments.rs"]
 mod named_arguments;
 #[path = "call_evaluation/portable_metadata.rs"]

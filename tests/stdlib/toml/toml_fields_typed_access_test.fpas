@@ -18,7 +18,7 @@ begin
 end function;
 
 begin
-  const Text: string := ((((((((((((('name = ''demo''' + string.Chr(10)) + 'port = 8080') + string.Chr(10)) + 'ratio = 0.5') + string.Chr(10)) + 'enabled = true') + string.Chr(10)) + 'tags = [''a'', ''b'']') + string.Chr(10)) + 'mixed = [''a'', 1]') + string.Chr(10)) + '[server]') + string.Chr(10)) +
+  const Text: string := 'name = ''demo''' + string.Chr(10) + 'port = 8080' + string.Chr(10) + 'ratio = 0.5' + string.Chr(10) + 'enabled = true' + string.Chr(10) + 'tags = [''a'', ''b'']' + string.Chr(10) + 'mixed = [''a'', 1]' + string.Chr(10) + '[server]' + string.Chr(10) +
                         'host = ''local''';
   const Fields: dict of string to TomlValue := ParseTable(Text).Unwrap();
   AssertEquals('demo', StringField(Fields, 'name').Unwrap());
@@ -36,7 +36,7 @@ begin
   AssertEquals('field name must be a table', ErrorText(TableField(Fields, 'name')));
   AssertEquals('field mixed must be an array of strings', ErrorText(StringArrayField(Fields, 'mixed')));
   AssertTrue(RequireOnlyFields(ParseTable('a = 1').Unwrap(), ['a', 'b']).Unwrap());
-  AssertEquals('unexpected field c', ErrorText(RequireOnlyFields(ParseTable(('a = 1' + string.Chr(10)) +
+  AssertEquals('unexpected field c', ErrorText(RequireOnlyFields(ParseTable('a = 1' + string.Chr(10) +
                                                                             'c = 2')
                                                                    .Unwrap(), ['a', 'b'])));
   AssertTrue(ParseTable('a = ').IsError());

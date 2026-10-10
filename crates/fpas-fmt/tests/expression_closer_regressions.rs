@@ -131,3 +131,52 @@ fn closure_fields_keep_ending_comments_inside_constructor_arguments() {
         );
     }
 }
+
+#[test]
+fn if_expressions_stay_compact_or_break_before_each_branch() {
+    common::assert_golden(
+        "compact if expression",
+        "program T; begin const Noun: string := if Count = 1 then 'item' elsif Count = 0 then 'none' else 'items' end if; end.",
+        "program T;\n\nbegin\n  const Noun: string := if Count = 1 then 'item' elsif Count = 0 then 'none' else 'items' end if;\nend.\n",
+    );
+    let formatted = format(
+        "program T; begin const Long: string := if Mode = 1 then 'a rather long first branch value' elsif Mode = 2 then 'another long branch value here' else 'and the final else branch' end if; end.",
+    );
+    assert!(
+        formatted.contains(
+            "const Long: string := if Mode = 1 then 'a rather long first branch value'\n    elsif Mode = 2 then 'another long branch value here'\n    else 'and the final else branch'\n    end if;"
+        ),
+        "{formatted}"
+    );
+}
+
+#[test]
+fn if_expression_comments_stay_with_their_branches() {
+    let formatted = format(
+        "program T; begin const X: integer := if A then 1 // first\n // before elsif\n elsif B then 2\n else 3 // last\n end if; // after\n end.",
+    );
+    assert!(
+        formatted.contains(
+            "const X: integer := if A then 1 // first\n    // before elsif\n    elsif B then 2\n    else 3 // last\n    end if; // after"
+        ),
+        "{formatted}"
+    );
+}
+
+#[test]
+fn case_expressions_put_each_arm_on_its_own_line() {
+    common::assert_golden(
+        "case expression",
+        "program T; function F(X: integer): string; begin return case X of when 1, 2: 'low'; when 3..9 if X > 4: 'mid'; else 'other'; end case; end function; begin end.",
+        "program T;\n\nfunction F(X: integer): string;\nbegin\n  return case X of\n    when 1, 2: 'low';\n    when 3..9 if X > 4: 'mid';\n    else 'other';\n  end case;\nend function;\n\nbegin\nend.\n",
+    );
+    let formatted = format(
+        "program T; begin const X: integer := case 1 of\n // first arm\n when 1: 10; // ten\n else 20; // other\n end case; // after\n end.",
+    );
+    assert!(
+        formatted.contains(
+            "const X: integer := case 1 of\n    // first arm\n    when 1: 10; // ten\n    else 20; // other\n  end case; // after"
+        ),
+        "{formatted}"
+    );
+}

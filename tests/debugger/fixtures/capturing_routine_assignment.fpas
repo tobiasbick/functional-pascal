@@ -43,7 +43,7 @@ end function;
 function Combine(Left: integer; Right: integer): Handler;
 function AddBoth(Value: integer): integer;
 begin
-  return (Value + Left * 10) + Right;
+  return Value + Left * 10 + Right;
 end function;
 begin
   var Current: Handler := Identity;

@@ -152,7 +152,7 @@ public function LocalChatTranscript(State: LocalChatModel): string;
 begin
   if State.Entries.Length() = 0 then
     begin
-      return ('No messages yet.' + string.Chr(10)) + 'Type below and press Enter.';
+      return 'No messages yet.' + string.Chr(10) + 'Type below and press Enter.';
     end;
   end if;
   var MaximumWidth: integer := State.Width - 6;
@@ -167,11 +167,11 @@ begin
     begin
       if Transcript <> '' then
         begin
-          Transcript := (Transcript + NewLine) + NewLine;
+          Transcript := Transcript + NewLine + NewLine;
         end;
       end if;
 
-      Transcript := ((Transcript + RoleLabel(State.Entries[Index].Role)) + NewLine) +
+      Transcript := Transcript + RoleLabel(State.Entries[Index].Role) + NewLine +
                     WrapText(State.Entries[Index].Text, MaximumWidth);
     end;
   end for;

@@ -266,7 +266,7 @@ begin
   end while;
   var State: StreamState := LoadState(Index);
   const LineBytes: array of integer := State.Buffer.Slice(0, LineEnd);
-  State.Buffer := State.Buffer.Slice(LineEnd + 2, (State.Buffer.Length() - LineEnd) - 2);
+  State.Buffer := State.Buffer.Slice(LineEnd + 2, State.Buffer.Length() - LineEnd - 2);
   StoreState(Index, State);
   case Std.Net.Utf8.Decode(LineBytes) of
     when Ok(const Line):

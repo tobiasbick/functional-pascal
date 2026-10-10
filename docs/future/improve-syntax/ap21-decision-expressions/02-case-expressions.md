@@ -2,42 +2,60 @@
 
 Package: [AP21: Decision expressions](README.md)
 
-## Scope
+Status: complete.
 
-Add `case Value of when Label: Expression; ... end case` as an expression,
-with AP03 coverage rules.
+## Result
 
-## Prerequisites
+`case Value of when Labels [if Guard]: Expression; ... [else Expression;] end case`
+is a primary expression. A statement that starts with `case` stays the `case`
+statement. Each arm is one expression ended by `;`; a statement or `:=` inside an
+arm reports FP2020, and a missing `;` or `end case` uses the existing diagnostics.
 
-- AP21.1 (shared branch-type rules).
-- AP13.5 (`when` arms).
-- AP03.2 (closed-enum coverage without `else`).
+Labels, guards, scalar guard bindings, pattern bindings, arm scopes, distinct
+labels, and unreachable-label checks are shared with the `case` statement. Every
+input must produce a value: enum, `Result`, `Option`, and `boolean` selectors need
+unguarded coverage of every value (FP3011, with expression wording), closed enums
+reject `else` (FP3035), and `integer`, `string`, and distinct selectors need an
+`else` arm. Arm values share one type under the AP21.1 rules. A case whose
+selector, labels, and values are compile-time constants, without guards,
+bindings, or destructuring patterns, is a constant and folds to the selected
+value.
 
-## Implementation
+The compiler reuses the scalar and variant case lowering through an arm-body
+callback and stores the selected value in a hidden local; an expression without
+`else` panics if no arm matches. The formatter writes one arm per line and keeps
+arm comments. Debugger evaluation rejects `case` expressions with a hint.
 
-- Parser: `case` in expression position; each arm is one expression ended by
-  `;`; optional `else` arm for open domains.
-- Sema: coverage and unreachable-label checks as for `case` statements (the
-  AP20.2 pattern matrix in `if_case/coverage.rs`); pattern bindings visible in
-  the arm expression; branch-type compatibility from AP21.1.
-- Compiler: reuse case lowering with a value result.
-- Diagnostics: missing variants, missing `end case`, statements in an arm.
+## Ownership
 
-## Affected areas
+- `crates/fpas-parser/src/parser/expr/case_expression.rs`; `ast/expr.rs`
+  (`Expr::Case`, `CaseExprArm`, `CaseExprElse`).
+- `crates/fpas-sema/src/check/stmt/control_flow/if_case/arms.rs` (shared arm
+  checks), `case_expression.rs` (coverage and arm types), and
+  `exhaustiveness.rs` (`CaseForm` wording); `check/decl/consts/` classify and
+  fold constants.
+- `crates/fpas-compiler/src/lowering/case/` (`CaseArmHead`, `CaseBody`,
+  `CaseEnding`, `expression.rs`).
+- `crates/fpas-fmt/src/emit/expr/case_expression.rs` and the comment traversal.
 
-- Parser expressions, sema decision expression module and exhaustiveness,
-  `crates/fpas-compiler/src/lowering/case/`, `fpas-fmt`.
+## Regression coverage
 
-## Migration
+- Parser tests for arms, guards, patterns, ranges, `else`, operand and `return`
+  positions, statement-start handling, FP2020, missing `;`, and missing
+  `end case`.
+- Sema tests for enums, data enums, `Option`, booleans, scalar ranges, guard
+  bindings, distinct labels, context typing, incomplete coverage, closed-enum
+  `else`, arm type mismatches, expected types, and constants.
+- Formatter golden and comment tests; a debugger rejection test.
+- `tests/runner/case_expressions_test.fpas` runs data enums, simple enums,
+  ranges, guards, `Option`, booleans, distinct labels, single evaluation, and a
+  constant `case` label.
 
-None.
+## Current documentation
 
-## Documentation
-
-- `docs/pascal/language/control-flow/case-of-intro.md`, pattern-matching
-  pages, `docs/specs/grammar.ebnf`.
-
-## Verification
-
-- `case` expressions over enums, `Option`, `Result`, integers, and strings;
-  bindings; guards; missing variants; incompatible results; `return case`.
+- [Case expressions](../../../pascal/language/control-flow/case-of-intro.md#case-expressions),
+  [exhaustiveness rules](../../../pascal/language/pattern-matching/exhaustiveness.md#rules),
+  [formatter style](../../../pascal/tools/fmt-style.md),
+  [debugger](../../../pascal/tools/debugger.md),
+  [diagnostics](../../../pascal/tools/diagnostics.md) (FP2020), and
+  [`grammar.ebnf`](../../../specs/grammar.ebnf) (`case_expression`).

@@ -207,7 +207,7 @@ begin
     begin
       if Popups[PopupIndex].Bounds.Contains(Point) then
         begin
-          const Row: integer := (Point.Y - Popups[PopupIndex].Bounds.Y) - 1;
+          const Row: integer := Point.Y - Popups[PopupIndex].Bounds.Y - 1;
           if (Row < 0) or (Row >= Popups[PopupIndex].Bounds.Height - 2) then
             begin
               return Some([]);

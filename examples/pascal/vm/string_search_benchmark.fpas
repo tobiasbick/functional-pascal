@@ -54,7 +54,7 @@ begin
       end if;
     end;
   end if;
-  const Text: string := ('é' + 'x'.RepeatStr(32768)) + '😀';
+  const Text: string := 'é' + 'x'.RepeatStr(32768) + '😀';
   if RunSearch(Text, 1000) <> 3000 then
     begin
       panic('warmup search mismatch');
@@ -69,7 +69,7 @@ begin
     end;
   end if;
 
-  WriteLn(('elapsed: ' + IntToStr(Elapsed)) + ' ms');
+  WriteLn('elapsed: ' + IntToStr(Elapsed) + ' ms');
   WriteLn('matches: ' + IntToStr(Matches));
   if (MaxMillis > 0) and (Elapsed > MaxMillis) then
     begin

@@ -67,12 +67,12 @@ begin
     end;
   end for;
   const Elapsed: integer := ElapsedMillis(Started);
-  if Checksum <> ((Iterations + 1) * 152) * 35 then
+  if Checksum <> (Iterations + 1) * 152 * 35 then
     begin
       panic('incomplete render');
     end;
   end if;
 
-  WriteLn(('elapsed: ' + IntToStr(Elapsed)) + ' ms');
+  WriteLn('elapsed: ' + IntToStr(Elapsed) + ' ms');
   WriteLn('checksum: ' + IntToStr(Checksum));
 end.

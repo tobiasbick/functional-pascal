@@ -146,7 +146,7 @@ fn apply_case_arm_source_id(arm: &mut CaseArm, source_id: u32) {
     apply_span(&mut arm.span, source_id);
 }
 
-fn apply_case_label_source_id(label: &mut CaseLabel, source_id: u32) {
+pub(super) fn apply_case_label_source_id(label: &mut CaseLabel, source_id: u32) {
     match label {
         CaseLabel::Value { start, end, span } => {
             apply_expr_source_id(start, source_id);

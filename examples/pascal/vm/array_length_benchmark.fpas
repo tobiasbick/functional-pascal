@@ -64,15 +64,15 @@ begin
   var OpsPerSecond: integer := 0;
   if Elapsed > 0 then
     begin
-      OpsPerSecond := (Iterations * 1000) div Elapsed;
+      OpsPerSecond := Iterations * 1000 div Elapsed;
     end;
   end if;
 
-  WriteLn((('iterations: ' + IntToStr(Iterations)) + ', array size: ') + IntToStr(ArraySize));
-  WriteLn(('elapsed: ' + IntToStr(Elapsed)) + ' ms');
+  WriteLn('iterations: ' + IntToStr(Iterations) + ', array size: ' + IntToStr(ArraySize));
+  WriteLn('elapsed: ' + IntToStr(Elapsed) + ' ms');
   if Elapsed > 0 then
     begin
-      WriteLn(('throughput: ' + IntToStr(OpsPerSecond)) + ' lengths/s');
+      WriteLn('throughput: ' + IntToStr(OpsPerSecond) + ' lengths/s');
     end;
   else
     begin
@@ -83,7 +83,7 @@ begin
   WriteLn('length total: ' + IntToStr(Total));
   if (MaxMillis > 0) and (Elapsed > MaxMillis) then
     begin
-      panic(((('array-length benchmark regression: ' + IntToStr(Elapsed)) + ' ms exceeds limit ') + IntToStr(MaxMillis)) +
+      panic('array-length benchmark regression: ' + IntToStr(Elapsed) + ' ms exceeds limit ' + IntToStr(MaxMillis) +
             ' ms');
     end;
   end if;

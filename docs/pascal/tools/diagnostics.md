@@ -281,6 +281,8 @@ bugs rather than adding a workaround to the program.
 | FP2016 | Mixed positional and named arguments | `Move(1, Dy := 2)` | `Move(Dx := 1, Dy := 2)` or `Move(1, 2)` |
 | FP2017 | Removed record literal | `const P: Point := record X := 1; Y := 2; end;` | `const P: Point := Point(X := 1, Y := 2);` |
 | FP2018 | Removed record property | `property Zoom: real read GetZoom;` in a record | Remove the declaration and call `Camera.GetZoom()` |
+| FP2019 | `if` expression without `else` | `const N: integer := if Ready then 1 end if;` | `const N: integer := if Ready then 1 else 0 end if;` |
+| FP2020 | Statement in an expression branch or arm | `const N: integer := if Ready then 1; else 0 end if;` or `case X of when 1: N := 1; end case` | `const N: integer := if Ready then 1 else 0 end if;` or `case X of when 1: 1; else 0; end case` |
 
 FP2017 names the declared type when the literal is the initializer of a typed
 constant, variable, or field default, for example `Point(X := ..., Y := ...)`;

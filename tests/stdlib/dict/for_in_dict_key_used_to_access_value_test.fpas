@@ -6,7 +6,7 @@ begin
   const D: dict of string to integer := ['x': 10, 'y': 20];
   for K: string in D do
     begin
-      WriteLn((K + '=') + IntToStr(D[K]));
+      WriteLn(K + '=' + IntToStr(D[K]));
     end;
   end for;
 end.

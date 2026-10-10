@@ -9,7 +9,7 @@ The expression is evaluated once. Supported expression types are:
 - a [distinct type](../types/distinct-types.md#case) over `integer`, `string`,
   or `boolean`, with labels of the same distinct type
 
-Formal syntax: [`grammar.ebnf`](../../../specs/grammar.ebnf) (`case_stmt`, `case_arm`, `case_label`).
+Formal syntax: [`grammar.ebnf`](../../../specs/grammar.ebnf) (`case_stmt`, `case_arm`, `case_label`, `case_expression`).
 
 Each arm starts with `when Labels [if Guard]:` and contains a nonempty list of
 statements. The next `when`, optional final `else`, or `end case` ends the list.
@@ -76,6 +76,48 @@ See [Pattern matching](../pattern-matching/README.md) for guards, scalar guard
 bindings, data-enum patterns, and exhaustiveness rules. Destructuring keeps
 forms such as `Ok(const Value)`, `Error(const Reason)`, `Some(const Value)`,
 and `None`.
+
+## Case expressions
+
+Where a value is expected, `case` selects the value of the first matching arm:
+
+```pascal
+function Area(Value: Shape): real;
+begin
+  return case Value of
+    when Shape.Circle(const R): 3.14159 * R * R;
+    when Shape.Rectangle(const W, const H): W * H;
+  end case;
+end function;
+
+const Label: string := case Count of
+  when 0: 'none';
+  when 1: 'one';
+  else 'many';
+end case;
+```
+
+- Each arm is `when Labels [if Guard]: Value;` with exactly one expression
+  ended by `;`. An `else` arm is `else Value;`. `end case` closes the
+  expression; the enclosing statement or declaration supplies its terminator.
+- Labels, guards, pattern bindings, and arm scopes follow the statement. Only
+  the selected arm value is evaluated.
+- Every input must produce a value. Enum, `Result`, `Option`, and `boolean`
+  selectors need an unguarded arm for every value, and enum, `Result`, and
+  `Option` selectors reject `else` as in the statement. `integer`, `string`,
+  and distinct selectors need an `else` arm.
+- All arm values have one type, with the same rules as
+  [`if` expressions](if-then-else.md#if-expressions): no numeric widening, and
+  `None` or `[]` take the type of the other arms.
+- When the selector, every label, and every arm value are compile-time constants
+  and no arm uses a guard, binding, or destructuring pattern, the expression is
+  a compile-time constant.
+
+A `case` at the start of a statement is always the `case` statement. The
+expression form appears after `:=`, `return`, or `discard`, as an argument, as
+an operand, or inside a condition. The formatter puts each arm on its own line,
+indented one level, and `end case` at the indentation of the enclosing
+statement.
 
 ## See also
 

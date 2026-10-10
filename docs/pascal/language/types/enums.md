@@ -87,7 +87,7 @@ case S of
   when Shape.Circle(const R):
     WriteLn('Circle with radius ' + RealToStr(R));
   when Shape.Rectangle(const W, const H):
-    WriteLn((('Rectangle ' + RealToStr(W)) + 'x') + RealToStr(H));
+    WriteLn('Rectangle ' + RealToStr(W) + 'x' + RealToStr(H));
   when Shape.Point:
     WriteLn('Point');
 end case;

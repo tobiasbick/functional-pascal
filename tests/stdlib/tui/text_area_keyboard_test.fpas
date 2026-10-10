@@ -69,7 +69,7 @@ begin
   AssertEquals(('ab' + string.Chr(10)), Model.Text);
   AssertEquals(3, Model.Caret);
   Model := Press(App, Model, TuiKeyKind.Character, 'x');
-  AssertEquals((('ab' + string.Chr(10)) + 'x'), Model.Text);
+  AssertEquals(('ab' + string.Chr(10) + 'x'), Model.Text);
   Model := Press(App, Model, TuiKeyKind.Backspace, '');
   Model := Press(App, Model, TuiKeyKind.Backspace, '');
   AssertEquals('ab', Model.Text);
@@ -85,8 +85,8 @@ begin
   Model := Press(App, Model, TuiKeyKind.Delete, '');
   AssertEquals('ab ', Model.Text);
   AssertEquals(3, Model.Caret);
-  Model := TextAreaModel(Text := ((('abcd' + string.Chr(10)) + 'x') + string.Chr(10)) +
-                                 (('wxyz' + string.Chr(10)) + 'last'), Caret := 3, Offset := TuiPoint.Create(0, 0));
+  Model := TextAreaModel(Text := 'abcd' + string.Chr(10) + 'x' + string.Chr(10) +
+                                 ('wxyz' + string.Chr(10) + 'last'), Caret := 3, Offset := TuiPoint.Create(0, 0));
   Model := App.RunIterations(Model, UpdateTextArea, ViewTextArea, 0, 0);
   Model := Press(App, Model, TuiKeyKind.Down, '');
   AssertEquals(6, Model.Caret);
@@ -107,7 +107,7 @@ begin
   Model := Press(App, Model, TuiKeyKind.EndKey, '');
   AssertEquals(6, Model.Caret);
   AssertEquals(3, Model.Offset.X);
-  Model := TextAreaModel(Text := ('one' + string.Chr(10)) + 'abcd', Caret := 6, Offset := TuiPoint.Create(1, 1));
+  Model := TextAreaModel(Text := 'one' + string.Chr(10) + 'abcd', Caret := 6, Offset := TuiPoint.Create(1, 1));
   Model := App.RunIterations(Model, UpdateTextArea, ViewTextArea, 0, 0);
   Model := Press(App, Model, TuiKeyKind.Right, '');
   AssertEquals(7, Model.Caret);

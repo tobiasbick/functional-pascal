@@ -308,7 +308,16 @@ fn collect_stmt_contents(stmt: &Stmt, begins: &[usize], out: &mut CollectedAncho
 fn collect_case_arm(arm: &CaseArm, begins: &[usize], out: &mut CollectedAnchors) {
     out.leading.push(arm.span.offset);
     push_span(arm.span, out);
-    for label in &arm.labels {
+    collect_case_labels(&arm.labels, begins, out);
+    if let Some(guard) = &arm.guard {
+        collect_expr(guard, begins, out);
+    }
+    collect_branch_stmt(&arm.body, begins, out);
+}
+
+/// Collects the expressions and patterns of case labels.
+fn collect_case_labels(labels: &[CaseLabel], begins: &[usize], out: &mut CollectedAnchors) {
+    for label in labels {
         match label {
             CaseLabel::Value { start, end, .. } => {
                 collect_expr(start, begins, out);
@@ -320,10 +329,6 @@ fn collect_case_arm(arm: &CaseArm, begins: &[usize], out: &mut CollectedAnchors)
             CaseLabel::Binding { .. } => {}
         }
     }
-    if let Some(guard) = &arm.guard {
-        collect_expr(guard, begins, out);
-    }
-    collect_branch_stmt(&arm.body, begins, out);
 }
 
 fn collect_pattern(pattern: &Pattern, begins: &[usize], out: &mut CollectedAnchors) {

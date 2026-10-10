@@ -165,6 +165,27 @@ fn lower(
             "named arguments outside a call",
             "Use named arguments in a declared routine, method, or constructor call.",
         )),
+        Expr::If {
+            branches,
+            else_value,
+            ..
+        } => Ok(DebugExpression::If {
+            branches: branches
+                .iter()
+                .map(|branch| {
+                    Ok((
+                        lower(&branch.condition, depth + 1, limits, budget)?,
+                        lower(&branch.value, depth + 1, limits, budget)?,
+                    ))
+                })
+                .collect::<Result<Vec<_>, EvaluationParseError>>()?,
+            else_value: Box::new(lower(else_value, depth + 1, limits, budget)?),
+        }),
+        Expr::Case { .. } => Err(unsupported(
+            expression,
+            "`case` expressions",
+            "Use an `if` expression, or evaluate the selector and inspect it directly.",
+        )),
         Expr::Is { .. } => Err(unsupported(
             expression,
             "`is` pattern tests",

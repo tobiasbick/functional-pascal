@@ -22,7 +22,7 @@ begin
   if (Text <> '') and (Bounds.Width > 4) then
     begin
       Canvas.Child(TuiRect.Create(Bounds.X + 2, Bounds.Y, Bounds.Width - 4, 1))
-        .WriteText(TuiPoint.Create(0, 0), (' ' + Text) + ' ', TuiStyleRole.Title);
+        .WriteText(TuiPoint.Create(0, 0), ' ' + Text + ' ', TuiStyleRole.Title);
     end;
   end if;
 end procedure;

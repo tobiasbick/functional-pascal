@@ -229,6 +229,30 @@ fn evaluate_with_qualified_fallback(
             Value::option_some(evaluate(value, depth + 1, limits, budget, resolve, invoke)?)
         }
         DebugExpression::OptionNone => Value::OptionNone,
+        DebugExpression::If {
+            branches,
+            else_value,
+        } => {
+            // Only the selected branch value is evaluated.
+            for (condition, value) in branches {
+                match evaluate(condition, depth + 1, limits, budget, resolve, invoke)? {
+                    Value::Boolean(true) => {
+                        return evaluate(value, depth + 1, limits, budget, resolve, invoke);
+                    }
+                    Value::Boolean(false) => {}
+                    other => {
+                        return Err(operation_error(ValueOperationError::type_mismatch(
+                            format!(
+                                "debug `if` condition must be boolean, got {}",
+                                other.type_name()
+                            ),
+                            "Use a boolean condition such as `Count > 0`.",
+                        )));
+                    }
+                }
+            }
+            return evaluate(else_value, depth + 1, limits, budget, resolve, invoke);
+        }
         DebugExpression::Try(value) => {
             match evaluate(value, depth + 1, limits, budget, resolve, invoke)? {
                 Value::ResultOk(value) | Value::OptionSome(value) => value.into_inner(),

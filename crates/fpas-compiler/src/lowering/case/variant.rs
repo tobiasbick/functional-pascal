@@ -3,7 +3,9 @@
 //! **Documentation:** `docs/pascal/language/pattern-matching/README.md`.
 
 use fpas_ir::{Constant, Operation, Terminator};
-use fpas_parser::{CaseArm, CaseLabel, Stmt};
+use fpas_parser::CaseLabel;
+
+use super::{CaseArmHead, CaseBody, CaseEnding};
 
 use crate::CompileError;
 
@@ -16,9 +18,10 @@ impl LoweringContext {
         &mut self,
         case_value: fpas_ir::ValueId,
         case_ty: fpas_ir::TypeId,
-        arms: &[CaseArm],
-        else_body: Option<&[Stmt]>,
+        arms: &[CaseArmHead<'_>],
+        ending: &CaseEnding,
         span: fpas_lexer::Span,
+        body: &mut CaseBody<'_>,
     ) -> Result<(), CompileError> {
         let case_local = self.declare_hidden_local(case_ty, span)?;
         self.write_local(case_local, case_value, span)?;
@@ -27,8 +30,8 @@ impl LoweringContext {
         self.jump(first_test)?;
         self.switch_to(first_test);
         let mut has_merge = false;
-        for arm in arms {
-            for label in &arm.labels {
+        for (arm_index, arm) in arms.iter().enumerate() {
+            for label in arm.labels {
                 let next = self.new_block(arm.span)?;
                 let mut bindings = Vec::new();
                 match label {
@@ -46,7 +49,7 @@ impl LoweringContext {
                     let local = self.declare_local(&name, ty, false, arm.span)?;
                     self.write_local(local, value, arm.span)?;
                 }
-                if let Some(guard) = &arm.guard {
+                if let Some(guard) = arm.guard {
                     let condition = self.lower_expression(guard)?;
                     let guarded = self.new_block(arm.span)?;
                     self.terminate(Terminator::Branch {
@@ -56,7 +59,7 @@ impl LoweringContext {
                     })?;
                     self.switch_to(guarded);
                 }
-                self.lower_statement(&arm.body)?;
+                body(self, Some(arm_index))?;
                 if !self.is_terminated() {
                     self.jump(merge)?;
                     has_merge = true;
@@ -65,9 +68,9 @@ impl LoweringContext {
                 self.switch_to(next);
             }
         }
-        if let Some(statements) = else_body {
+        if ending.has_else {
             self.begin_scope();
-            self.lower_statements(statements)?;
+            body(self, None)?;
             self.end_scope();
             if !self.is_terminated() {
                 self.jump(merge)?;

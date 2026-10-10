@@ -38,7 +38,7 @@ begin
     end;
   end for;
 
-  WriteLn(('elapsed: ' + IntToStr(ElapsedMillis(Started))) + ' ms');
+  WriteLn('elapsed: ' + IntToStr(ElapsedMillis(Started)) + ' ms');
   var Visible: integer := Size;
   if Visible > 80 then
     begin

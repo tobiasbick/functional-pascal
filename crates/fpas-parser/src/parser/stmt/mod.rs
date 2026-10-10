@@ -142,6 +142,8 @@ impl Parser {
                     | Token::None
                     | Token::Try
                     | Token::Go
+                    | Token::If
+                    | Token::Case
             )
     }
 }

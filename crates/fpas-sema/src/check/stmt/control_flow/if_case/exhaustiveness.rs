@@ -9,6 +9,15 @@ use fpas_lexer::Span;
 
 const EXPLICIT_ARMS_HINT: &str = "Use explicit `when` arms; write `null;` for variants with no action. If only one variant matters, use `if Value is Pattern then ... end if;`. Guarded arms do not count toward coverage.";
 
+const EXPRESSION_ARMS_HINT: &str = "Add a `when` arm with a value for each missing variant. Guarded arms do not count toward coverage.";
+
+/// Whether coverage diagnostics describe a `case` statement or a `case` expression.
+#[derive(Clone, Copy, PartialEq, Eq)]
+pub(super) enum CaseForm {
+    Statement,
+    Expression,
+}
+
 impl Checker {
     /// Rejects enum catch-alls and checks unguarded coverage without changing scalar cases.
     pub(super) fn check_case_exhaustiveness(
@@ -17,8 +26,13 @@ impl Checker {
         rows: &[Vec<Pat>],
         coverage_valid: bool,
         has_else: bool,
+        form: CaseForm,
         span: Span,
     ) {
+        let (noun, arms_hint) = match form {
+            CaseForm::Statement => ("case", EXPLICIT_ARMS_HINT),
+            CaseForm::Expression => ("case expression", EXPRESSION_ARMS_HINT),
+        };
         let is_closed_enum = self.resolve_enum_ty(case_ty).is_some()
             || matches!(case_ty, Ty::Option(_) | Ty::Result(_, _));
         let missing = if coverage_valid {
@@ -41,14 +55,14 @@ impl Checker {
                         missing.join(", ")
                     )
                 };
-                (message, EXPLICIT_ARMS_HINT)
+                (message, arms_hint)
             };
             self.error_with_code(SEMA_CLOSED_ENUM_ELSE, message, hint, span);
         } else if coverage_valid && !missing.is_empty() {
             self.error_with_code(
                 SEMA_NON_EXHAUSTIVE_CASE,
-                format!("Non-exhaustive case: missing {}", missing.join(", ")),
-                EXPLICIT_ARMS_HINT,
+                format!("Non-exhaustive {noun}: missing {}", missing.join(", ")),
+                arms_hint,
                 span,
             );
         }

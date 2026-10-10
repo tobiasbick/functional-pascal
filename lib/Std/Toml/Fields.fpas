@@ -11,7 +11,7 @@ uses Std.Toml;
 // - `Expectation`: Required TOML kind, such as `a string`.
 function MismatchError(Name: string; Expectation: string): string;
 begin
-  return (('field ' + Name) + ' must be ') + Expectation;
+  return 'field ' + Name + ' must be ' + Expectation;
 end function;
 
 // Parses one TOML document and returns its root table.

@@ -42,7 +42,7 @@ function AppendEscapedPattern(Acc: string; Character: string): string;
 begin
   if (((Character = '[') or (Character = ']')) or (Character = '*')) or (Character = '?') then
     begin
-      return ((Acc + '[') + Character) + ']';
+      return Acc + '[' + Character + ']';
     end;
   end if;
 
@@ -103,7 +103,7 @@ begin
     begin
       if IdCounts[Loaded.Id] > 1 then
         begin
-          Issues.Push(notes.model.noteissue(Path := Loaded.Path, Message := ('Duplicate note ID: ' + Loaded.Id) +
+          Issues.Push(notes.model.noteissue(Path := Loaded.Path, Message := 'Duplicate note ID: ' + Loaded.Id +
                                                                             '. Give each file a unique ID before editing.'));
         end;
       else
@@ -129,7 +129,7 @@ public function NotesCreateId(Directory: string; TimestampMillis: integer): stri
 begin
   var Candidate: string := '';
   repeat
-    Candidate := (IntToStr(TimestampMillis) + '-') + IntToStr(Std.Random.RandomInt(100000, 999999));
+    Candidate := IntToStr(TimestampMillis) + '-' + IntToStr(Std.Random.RandomInt(100000, 999999));
   until not Std.Fs.Exists(Std.Path.Join([Directory, Candidate + '.note']));
   return Candidate;
 end function;

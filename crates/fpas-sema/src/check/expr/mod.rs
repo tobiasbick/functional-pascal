@@ -8,6 +8,7 @@ mod boolean;
 mod bound_method;
 mod calls;
 mod closure;
+mod decision;
 mod designator;
 mod distinct_conversion;
 mod distinct_operators;
@@ -86,6 +87,17 @@ impl Checker {
             Expr::NamedArgument { .. } => self.check_misplaced_named_argument(expr),
             Expr::VarArgument { .. } => self.check_misplaced_var_argument(expr),
             Expr::Is { .. } => self.check_misplaced_is_test(expr),
+            Expr::If {
+                branches,
+                else_value,
+                ..
+            } => self.check_if_expr(branches, else_value),
+            Expr::Case {
+                selector,
+                arms,
+                else_arm,
+                span,
+            } => self.check_case_expr(selector, arms, else_arm.as_deref(), *span),
             Expr::Error(_) => Ty::Error,
         };
         let key = Self::expr_lookup_key(expr);

@@ -16,10 +16,10 @@ begin
   for Index: integer := 1 to NoteCount do
     begin
       var NoteValue: Note := NoteCreate('benchmark-' + IntToStr(Index), 1700000000000 + Index);
-      NoteValue.Title := ('Performance note ' + IntToStr(Index)) + ' with a representative title';
+      NoteValue.Title := 'Performance note ' + IntToStr(Index) + ' with a representative title';
       NoteValue.Tags := ['performance', 'tui', 'benchmark'];
       NoteValue.Pinned := (Index mod 7) = 0;
-      NoteValue.Body := ((('This is a representative note body for frame ' + IntToStr(Index)) + '.') + string.Chr(10)) +
+      NoteValue.Body := 'This is a representative note body for frame ' + IntToStr(Index) + '.' + string.Chr(10) +
                         'It keeps the editor, list, metadata, and layout paths active.';
       Notes.Push(NoteValue);
     end;
@@ -64,15 +64,15 @@ begin
   var FramesPerSecond: integer := 0;
   if Elapsed > 0 then
     begin
-      FramesPerSecond := (Iterations * 1000) div Elapsed;
+      FramesPerSecond := Iterations * 1000 div Elapsed;
     end;
   end if;
 
-  WriteLn((('iterations: ' + IntToStr(Iterations)) + ', warm-up: ') + IntToStr(WarmupIterations));
-  WriteLn(('elapsed: ' + IntToStr(Elapsed)) + ' ms');
+  WriteLn('iterations: ' + IntToStr(Iterations) + ', warm-up: ' + IntToStr(WarmupIterations));
+  WriteLn('elapsed: ' + IntToStr(Elapsed) + ' ms');
   if Elapsed > 0 then
     begin
-      WriteLn(('throughput: ' + IntToStr(FramesPerSecond)) + ' frames/s');
+      WriteLn('throughput: ' + IntToStr(FramesPerSecond) + ' frames/s');
     end;
   else
     begin
@@ -83,7 +83,7 @@ begin
   WriteLn('notes rendered: ' + IntToStr(Model.Notes.Length()));
   if (MaxMillis > 0) and (Elapsed > MaxMillis) then
     begin
-      panic(((('Notes TUI benchmark regression: ' + IntToStr(Elapsed)) + ' ms exceeds limit ') + IntToStr(MaxMillis)) +
+      panic('Notes TUI benchmark regression: ' + IntToStr(Elapsed) + ' ms exceeds limit ' + IntToStr(MaxMillis) +
             ' ms');
     end;
   end if;

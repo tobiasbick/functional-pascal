@@ -4,7 +4,6 @@
 
 use super::super::Checker;
 use super::super::closures::CaptureBinding;
-use crate::scope::SymbolKind;
 use fpas_diagnostics::codes::SEMA_VAR_PARAMETER_ESCAPE;
 use fpas_lexer::Span;
 use fpas_parser::{Designator, DesignatorPart, Expr};
@@ -32,19 +31,29 @@ impl Checker {
     /// Remembers whether a named nested routine uses an enclosing `var` parameter.
     pub(in crate::check) fn record_var_parameter_routine(
         &mut self,
-        name: &str,
-        captures: &[CaptureBinding],
+        key: usize,
+        parameter: Option<String>,
     ) {
-        let Some(key) = self.routine_scope_key(name) else {
-            return;
-        };
-        match captures.iter().find(|capture| capture.reference) {
-            Some(capture) => {
-                self.var_parameter_routines
-                    .insert(key, capture.name.clone());
+        match parameter {
+            Some(parameter) => {
+                self.var_parameter_routines.insert(key, parameter.clone());
+                for usage in self
+                    .pending_var_parameter_uses
+                    .remove(&key)
+                    .unwrap_or_default()
+                {
+                    self.report_pending_routine_use(&usage, &parameter);
+                }
             }
             None => {
                 self.var_parameter_routines.remove(&key);
+                for usage in self
+                    .pending_var_parameter_uses
+                    .remove(&key)
+                    .unwrap_or_default()
+                {
+                    self.check_pending_routine_use(key, usage);
+                }
             }
         }
     }
@@ -55,16 +64,9 @@ impl Checker {
             return;
         };
         if let Some(parameter) = self.var_parameter_routine(name) {
-            self.error_with_code(
-                SEMA_VAR_PARAMETER_ESCAPE,
-                format!(
-                    "`{name}` uses `var` parameter `{parameter}` and cannot be used as a value"
-                ),
-                format!(
-                    "Call `{name}` directly while the enclosing routine runs, or pass `{parameter}` to it as a parameter."
-                ),
-                *span,
-            );
+            self.report_routine_reference_escape(name, &parameter, *span, false);
+        } else {
+            self.defer_routine_reference_use(name, *span, false);
         }
     }
 
@@ -106,25 +108,38 @@ impl Checker {
         }
         if let Some([DesignatorPart::Ident(name, _)]) =
             callee.map(|designator| designator.parts.as_slice())
-            && let Some(parameter) = self.var_parameter_routine(name)
         {
-            self.error_with_code(
-                SEMA_VAR_PARAMETER_ESCAPE,
-                format!("`go` cannot start `{name}` because it uses `var` parameter `{parameter}`"),
-                format!("Call `{name}` directly, or pass `{parameter}` to the task by value."),
-                span,
-            );
+            if let Some(parameter) = self.var_parameter_routine(name) {
+                self.report_routine_reference_escape(name, &parameter, span, true);
+            } else {
+                self.defer_routine_reference_use(name, span, true);
+            }
         }
     }
 
-    fn var_parameter_routine(&self, name: &str) -> Option<String> {
-        let key = self.routine_scope_key(name)?;
-        self.var_parameter_routines.get(&key).cloned()
-    }
-
-    fn routine_scope_key(&self, name: &str) -> Option<String> {
-        let (scope, symbol) = self.scopes.lookup_with_scope(name)?;
-        matches!(symbol.kind, SymbolKind::Function | SymbolKind::Procedure)
-            .then(|| format!("{scope}:{}", name.to_ascii_lowercase()))
+    /// Reports a known reference capture at a routine-value or task use.
+    pub(super) fn report_routine_reference_escape(
+        &mut self,
+        name: &str,
+        parameter: &str,
+        span: Span,
+        task: bool,
+    ) {
+        let (message, hint) = if task {
+            (
+                format!("`go` cannot start `{name}` because it uses `var` parameter `{parameter}`"),
+                format!("Call `{name}` directly, or pass `{parameter}` to the task by value."),
+            )
+        } else {
+            (
+                format!(
+                    "`{name}` uses `var` parameter `{parameter}` and cannot be used as a value"
+                ),
+                format!(
+                    "Call `{name}` directly while the enclosing routine runs, or pass `{parameter}` to it as a parameter."
+                ),
+            )
+        };
+        self.error_with_code(SEMA_VAR_PARAMETER_ESCAPE, message, hint, span);
     }
 }

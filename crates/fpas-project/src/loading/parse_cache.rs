@@ -4,7 +4,7 @@
 //! validation (`[exports]`, unit checks, main validation, merged source validation).
 
 use crate::paths::canonical_source_path;
-use crate::source::parse_compilation_unit_file;
+use crate::source::{parse_compilation_unit_file, parse_compilation_unit_source};
 use fpas_diagnostics::FileDiagnostic;
 use fpas_parser::CompilationUnit;
 use std::collections::HashMap;
@@ -14,6 +14,7 @@ use std::path::{Path, PathBuf};
 #[derive(Debug, Default)]
 pub(crate) struct ParsedSourceCache {
     entries: HashMap<PathBuf, (CompilationUnit, Vec<FileDiagnostic>)>,
+    source_overlays: HashMap<PathBuf, String>,
     parse_misses: usize,
 }
 
@@ -21,6 +22,17 @@ impl ParsedSourceCache {
     /// Creates an empty cache.
     pub fn new() -> Self {
         Self::default()
+    }
+
+    /// Keeps editor sources authoritative during manifest validation.
+    pub(crate) fn with_source_overlays(overlays: &HashMap<PathBuf, String>) -> Self {
+        Self {
+            source_overlays: overlays
+                .iter()
+                .map(|(path, source)| (canonical_source_path(path), source.clone()))
+                .collect(),
+            ..Self::default()
+        }
     }
 
     /// Returns a parsed compilation unit, reusing a prior result for the same file.
@@ -35,7 +47,10 @@ impl ParsedSourceCache {
         }
 
         self.parse_misses += 1;
-        let parsed = parse_compilation_unit_file(path, source_id)?;
+        let parsed = match self.source_overlays.get(&key) {
+            Some(source) => parse_compilation_unit_source(path, source.as_bytes(), source_id)?,
+            None => parse_compilation_unit_file(path, source_id)?,
+        };
         self.entries.insert(key, parsed.clone());
         Ok(parsed)
     }

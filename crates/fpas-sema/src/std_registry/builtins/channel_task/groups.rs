@@ -27,6 +27,8 @@ pub(super) fn check_start(c: &mut Checker, name: &str, args: &[&Expr], span: Spa
             "Use immutable captures for group workers.",
             args[1].span(),
         );
+    } else {
+        c.defer_capture_transfer(args[1], args[1].span());
     }
     let (params, result) = match work {
         Ty::Function(work) => (work.params, *work.return_type),

@@ -70,6 +70,7 @@ impl Checker {
             return;
         }
         if self.discard_info(expr).value {
+            self.defer_capture_discard(expr, span);
             return;
         }
         let reason = match self.task_safety(&ty) {
@@ -97,6 +98,7 @@ impl Checker {
         mutable: bool,
         value: Option<&Expr>,
     ) {
+        self.record_pending_capture_binding(name, value);
         let mut info = value
             .map(|expr| self.discard_info(expr))
             .unwrap_or_default();

@@ -8,6 +8,9 @@
 
 mod support;
 
+#[path = "protocol/lifecycle.rs"]
+mod lifecycle;
+
 use fpas_language_service::DocumentStore;
 use fpas_lsp::convert::{
     PositionConversionError, byte_offset_to_position, file_uri_to_path, position_to_byte_offset,
@@ -304,7 +307,13 @@ fn initialized_registers_source_and_manifest_file_watchers() {
             }
         }
     });
-    let transcript = run(&[initialize, initialized(), shutdown(2), exit()]);
+    let transcript = support::run_script(&[
+        support::TranscriptStep::Message(initialize),
+        support::TranscriptStep::Message(initialized()),
+        support::TranscriptStep::WaitForRequest("client/registerCapability"),
+        support::TranscriptStep::Message(shutdown(2)),
+        support::TranscriptStep::Message(exit()),
+    ]);
 
     assert!(transcript.output.status.success());
     let registration = transcript

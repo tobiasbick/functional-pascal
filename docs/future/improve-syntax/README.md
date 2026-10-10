@@ -127,33 +127,15 @@ AP08, AP28, and AP29 have no work packages.
 
 ## Recommended order
 
-The initial repairs C01-C03 and H01/H02 are complete. Full debugger support for
-named calls, typed record construction, explicit reference calls, and live
-reference assignment is complete in the
-[compiler follow-ups](../compiler-panic-followups.md#scheduling), as specified in
-the agreed [review repair order](review/README.md#repair-order).
-C04 is complete: static record fields contribute evaluated pattern values,
-including across compiled units.
-C05 is complete: finite construction uses a shared graph and bounded worklist
-propagation. C06 is complete: generated entry symbols are isolated from source
-declarations, with source program identity retained in debugger displays and
-recordings. All six compiler findings are resolved. T01 is complete: editor
-project failures retain original diagnostic records, publish located errors at
-their source URI, and log positionless errors without invented ranges. T02 is
-complete: missing and nonexported root imports retain the actual main or test-entry
-path and the original unit-name span in CLI, build and editor diagnostics.
-T03 is complete: incomplete native chains preserve recursive receiver types,
-declaration-local aliases and callback results using the shared parser grammar.
-D01-D06, G01/G02, P01, T04 and L01 are complete: the missing local documentation,
-grammar and string-diagnostic repairs are reconciled with the cloud implementation.
-All 22 review findings are resolved. Continue with
+The completed syntax review and its implementation verification are recorded in
+[reviewed scope](review/reviewed-scope.md), including the packages and points
+already inspected. The [review plan](review/README.md) is an empty placeholder
+for the next review.
+
+Continue with
 [AP03.1: Migrate closed-enum catch-alls](ap03-explicit-closed-enum-cases/01-migrate-closed-enum-catch-alls.md),
-the next open work package. See the
-[reconciliation verification](review/README.md#localcloud-reconciliation) for the
-combined checkout's checks and independent Clippy blocker.
-Completed package checkboxes remain the implementation status; these
-repairs are tracked by their review findings and follow-up entries.
-Use the review's Done column to skip completed repairs.
+the next open work package. Completed package checkboxes remain the
+implementation status.
 
 Package numbers group related work; they are not the execution order. The
 completed foundation is listed above. For the remaining work, keep the

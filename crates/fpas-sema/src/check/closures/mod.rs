@@ -4,11 +4,14 @@
 
 mod capability;
 mod capture;
+mod dependencies;
+mod pending_capabilities;
 
 use std::collections::HashMap;
 
 pub use capability::task_bound_from_captures;
-pub use capture::{CaptureBinding, collect_captures};
+pub use capture::{CaptureAnalysis, CaptureBinding, collect_captures};
+pub(crate) use dependencies::{CaptureDependencies, CaptureOwner};
 
 /// Semantic metadata for one closure expression (keyed by [`crate::expr_lookup_key`]).
 ///

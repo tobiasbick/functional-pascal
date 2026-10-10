@@ -66,12 +66,12 @@ pub(super) fn operation_result(
                 callback.span().text(source)?,
                 offset,
                 depth + 1,
-            ),
+            )
+            .and_then(|ty| match ty {
+                Ty::Function(function) => Some(*function.return_type),
+                _ => None,
+            }),
         };
-        let result = result.map(|ty| match ty {
-            Ty::Function(function) => *function.return_type,
-            ty => ty,
-        });
         match (name.to_ascii_lowercase().as_str(), result) {
             ("flatmap", Some(Ty::Array(inner))) | ("andthen", Some(Ty::Option(inner))) => {
                 Some(*inner)

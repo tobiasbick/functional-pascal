@@ -126,7 +126,9 @@ impl Checker {
         }))
     }
 
-    /// Checks a call through a callable record field.
+    /// Checks a call through a callable record field or indexed value.
+    ///
+    /// **Documentation:** `docs/pascal/language/functions/first-class.md`.
     pub(in crate::check) fn check_member_value_call(
         &mut self,
         call_key: usize,

@@ -5,6 +5,66 @@
 use super::assert_succeeds;
 
 #[test]
+fn recursive_anonymous_wrappers_keep_value_captures_after_the_parent_returns() {
+    assert_succeeds(
+        r#"
+program RecursiveWrappers;
+function Make(Base: integer): function(): integer;
+  function First(Depth: integer): integer;
+  begin
+    const Next: function(): integer := function(): integer begin
+      return First(Depth - 1);
+    end function;
+    if Depth > 0 then return Next() + 1; end if;
+    return Base;
+  end function;
+begin
+  return function(): integer begin return First(2); end function;
+end function;
+begin
+  const Invoke: function(): integer := Make(40);
+  if Invoke() <> 42 then panic('recursive wrapper value capture'); end if;
+end.
+"#,
+    );
+}
+
+#[test]
+fn recursive_wrappers_preserve_capture_shadowing_and_shared_mutable_cells() {
+    assert_succeeds(
+        r#"
+program RecursiveCaptureIdentity;
+function Make(Value: string): function(): integer;
+  function First(Depth: integer): integer;
+    function Bridge(Value: integer): integer;
+    begin
+      const Next: function(): integer := function(): integer begin
+        if Value <> 7 then panic('nearest capture'); end if;
+        return First(Depth - 1);
+      end function;
+      return Next();
+    end function;
+  begin
+    if Depth > 0 then return Bridge(7); end if;
+    if Value <> 'outer' then panic('outer capture'); end if;
+    Count := Count + 1;
+    return Count;
+  end function;
+begin
+  var Count: integer := 0;
+  return function(): integer begin return First(2); end function;
+end function;
+begin
+  const Invoke: function(): integer := Make('outer');
+  const Copy: function(): integer := Invoke;
+  if Invoke() <> 1 then panic('first shared write'); end if;
+  if Copy() <> 2 then panic('second shared write'); end if;
+end.
+"#,
+    );
+}
+
+#[test]
 fn sibling_chains_forward_reference_captures_and_allow_recursion() {
     assert_succeeds(
         r#"

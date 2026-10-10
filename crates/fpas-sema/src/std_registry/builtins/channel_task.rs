@@ -108,6 +108,8 @@ fn check_send(
             "Mutable captures make a value task-bound. Send immutable data or a callable with immutable captures instead.",
             args[1].span(),
         );
+    } else {
+        c.defer_capture_transfer(args[1], args[1].span());
     }
     if let Some(element) = &channel
         && !element.compatible_with(&value)

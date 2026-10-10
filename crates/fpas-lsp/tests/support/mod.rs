@@ -19,10 +19,13 @@ pub struct Transcript {
 
 type MessageFactory = Box<dyn Fn(&[Value]) -> Value>;
 
+/// Client actions and explicit server-message synchronization in a protocol transcript.
 pub enum TranscriptStep {
     Message(Value),
     MessageFrom(MessageFactory),
     Send(Value),
+    /// Reads and answers server requests until the named request has arrived.
+    WaitForRequest(&'static str),
     Action(Box<dyn Fn()>),
     Wait(Duration),
 }
@@ -36,6 +39,7 @@ pub fn run(messages: &[Value]) -> Transcript {
     run_script(&steps)
 }
 
+/// Runs a real server transcript, replying to server requests at read steps.
 pub fn run_script(steps: &[TranscriptStep]) -> Transcript {
     let mut server = RunningServer::start();
     let mut messages = Vec::new();
@@ -55,6 +59,12 @@ pub fn run_script(steps: &[TranscriptStep]) -> Transcript {
                 }
             }
             TranscriptStep::Send(message) => server.send(message),
+            TranscriptStep::WaitForRequest(method) => {
+                server.read_until(&mut messages, |message| {
+                    message.get("method").and_then(Value::as_str) == Some(method)
+                        && message.get("id").is_some()
+                });
+            }
             TranscriptStep::Action(action) => action(),
             TranscriptStep::Wait(duration) => std::thread::sleep(*duration),
         }
@@ -122,10 +132,15 @@ impl RunningServer {
     }
 
     fn read_through_response(&mut self, expected_id: &Value, messages: &mut Vec<Value>) {
+        self.read_until(messages, |message| {
+            message.get("method").is_none() && message.get("id") == Some(expected_id)
+        });
+    }
+
+    fn read_until(&mut self, messages: &mut Vec<Value>, complete: impl Fn(&Value) -> bool) {
         loop {
             let message = self.read_message();
-            let is_response =
-                message.get("method").is_none() && message.get("id") == Some(expected_id);
+            let finished = complete(&message);
             if message.get("method").is_some()
                 && let Some(id) = message.get("id")
             {
@@ -136,7 +151,7 @@ impl RunningServer {
                 }));
             }
             messages.push(message);
-            if is_response {
+            if finished {
                 break;
             }
         }

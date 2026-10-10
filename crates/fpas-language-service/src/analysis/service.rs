@@ -287,7 +287,7 @@ impl LanguageService {
             return Ok(());
         }
         self.workspace
-            .discover_project_for_source(path)
+            .discover_project_for_source(path, &self.documents)
             .map_err(crate::WorkspaceIssue::into_analysis_error)
     }
 

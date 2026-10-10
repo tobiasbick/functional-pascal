@@ -17,6 +17,7 @@ impl Checker {
         }
 
         self.check_program_body(program);
+        self.finish_pending_capture_checks();
     }
 
     /// Install dependency interfaces, collect types, and check an ordered program.
@@ -54,6 +55,7 @@ impl Checker {
         }
 
         self.check_program_body(program);
+        self.finish_pending_capture_checks();
         Ok(())
     }
 
@@ -101,6 +103,7 @@ impl Checker {
             self.check_decl(declaration);
         }
         self.scopes.function_ctx = previous_context;
+        self.finish_pending_capture_checks();
         Ok(())
     }
 

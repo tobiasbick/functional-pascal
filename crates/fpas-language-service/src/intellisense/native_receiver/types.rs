@@ -3,8 +3,45 @@
 
 use super::MAX_RECEIVER_DEPTH;
 use crate::navigation::{NavigationDocument, find_type};
+use crate::{DocumentSymbol, SymbolKind};
 use fpas_parser::{CompilationUnit, Decl, FormalParam, TypeBody, TypeExpr};
 use fpas_sema::{FunctionTy, ParamTy, ProcedureTy, Ty};
+
+/// Resolves a declaration's value type, retaining the signature of a routine value.
+/// See `docs/pascal/tools/editor-integration.md`.
+pub(super) fn from_symbol(
+    documents: &[NavigationDocument],
+    owner: usize,
+    symbol: &DocumentSymbol,
+    depth: usize,
+) -> Option<Ty> {
+    if matches!(
+        symbol.kind,
+        SymbolKind::Function | SymbolKind::Procedure | SymbolKind::Method
+    ) {
+        let signature = &symbol.callable.as_ref()?.label;
+        let kind = signature.split_whitespace().next()?;
+        let parameters = signature.get(signature.find('(')?..)?;
+        return from_text(documents, owner, &format!("{kind}{parameters}"), depth);
+    }
+    let name = symbol
+        .type_name
+        .as_deref()
+        .or_else(|| symbol.detail.split_once(": ").map(|(_, ty)| ty))?;
+    if let Some(semantic) = documents[owner]
+        .analysis
+        .as_ref()
+        .and_then(|analysis| analysis.semantic())
+        && let Some((_, ty)) = semantic
+            .metadata()
+            .named_types
+            .iter()
+            .find(|(key, _)| key.eq_ignore_ascii_case(name))
+    {
+        return Some(ty.clone());
+    }
+    from_text(documents, owner, name, depth)
+}
 
 /// Parses a type fragment with the shared parser before resolving its receiver shape.
 pub(super) fn from_text(

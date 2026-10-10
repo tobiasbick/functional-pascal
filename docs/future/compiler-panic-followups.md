@@ -13,9 +13,10 @@ language or hide the limitation inside a library implementation.
 
 ## Scheduling
 
-The debugger repairs are complete under the agreed
-[syntax review repair order](improve-syntax/review/README.md#repair-order).
-The remaining review findings retain their listed priorities and Done status.
+The debugger repairs are complete and included in the
+[reviewed scope](improve-syntax/review/reviewed-scope.md).
+The [syntax review plan](improve-syntax/review/README.md) is an empty placeholder
+for the next review.
 
 ## Open entries
 

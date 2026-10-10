@@ -4,6 +4,7 @@ use std::path::PathBuf;
 use std::sync::Arc;
 use std::sync::atomic::{AtomicBool, Ordering};
 
+use tokio::sync::watch;
 use tower_lsp_server::jsonrpc::{Error, Result};
 use tower_lsp_server::ls_types::request::{GotoTypeDefinitionParams, GotoTypeDefinitionResponse};
 use tower_lsp_server::ls_types::{
@@ -35,9 +36,11 @@ pub struct Backend {
     diagnostics: DiagnosticPublisher,
     document_changes: AtomicBool,
     watched_files_dynamic_registration: AtomicBool,
+    shutdown_started: watch::Sender<bool>,
 }
 
 impl Backend {
+    /// Creates document state and shutdown-aware editor lifecycle services.
     pub(crate) fn new(initial_root: PathBuf, client: Client) -> Self {
         let documents = Arc::new(SynchronizedDocuments::new(initial_root));
         Self {
@@ -46,6 +49,7 @@ impl Backend {
             documents,
             document_changes: AtomicBool::new(false),
             watched_files_dynamic_registration: AtomicBool::new(false),
+            shutdown_started: watch::channel(false).0,
         }
     }
 
@@ -112,7 +116,8 @@ impl LanguageServer for Backend {
         if self
             .watched_files_dynamic_registration
             .load(Ordering::Acquire)
-            && let Err(error) = watched_files::register(&self.client).await
+            && let Err(error) =
+                watched_files::register(&self.client, self.shutdown_started.subscribe()).await
         {
             tracing::warn!(%error, "cannot register watched Functional Pascal files");
         }
@@ -120,6 +125,7 @@ impl LanguageServer for Backend {
     }
 
     async fn shutdown(&self) -> Result<()> {
+        self.shutdown_started.send_replace(true);
         self.diagnostics.shutdown().await;
         self.documents.barrier().await;
         tracing::info!("language server shutdown requested");

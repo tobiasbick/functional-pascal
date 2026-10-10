@@ -158,6 +158,12 @@ standard-library loading use this transport. Editor source-read failures carry
 FP4101, while invalid source UTF-8 carries FP4102 with a UTF-8 correction hint.
 Both retain their file path without an invented position.
 
+Source-driven project discovery validates open editor buffers before disk text,
+including dependency sources and editable standard-library units. Correcting a
+source parser error without saving restores project analysis; the old disk
+error is not mapped onto the corrected buffer. Manifest loading and source
+selection still use the files on disk.
+
 The LSP publishes a located project record at its authoritative source URI,
 using that source's snapshot to convert the range to UTF-16. Project graph IDs
 remain producer-local; file attribution identifies the snapshot for conversion.

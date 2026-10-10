@@ -16,6 +16,9 @@ to be listed explicitly. Guarded arms do not count as coverage.
 
 - In the case coverage check, reject `else` when the scrutinee is a closed
   enum, `Option`, or `Result`. Keep `else` for open domains.
+- Keep scalar `boolean` cases unchanged, including their permitted `else`.
+- Reject `else` even after complete explicit coverage. In that case, suggest
+  removing the redundant branch rather than listing nonexistent missing variants.
 - The diagnostic lists the variants the `else` replaced and suggests a
   `null;` arm or an `is` test. The AP20.2 pattern matrix
   (`missing_patterns` in `if_case/coverage.rs`) already computes the missing
@@ -45,3 +48,4 @@ None beyond AP03.1.
   variant; complete cases remain accepted.
 - Tests for `else` on user enums, `Option`, and `Result`; guarded-only arms;
   field wildcards; open-domain `else` still valid.
+- Boolean `else` remains accepted; redundant closed-enum `else` is rejected.

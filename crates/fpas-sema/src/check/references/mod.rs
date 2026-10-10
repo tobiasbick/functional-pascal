@@ -4,4 +4,7 @@
 
 mod arguments;
 mod escapes;
+mod pending;
 mod storage;
+
+pub(crate) use pending::PendingRoutineUse;

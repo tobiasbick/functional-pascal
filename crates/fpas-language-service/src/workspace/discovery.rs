@@ -1,5 +1,6 @@
 //! Initial and document-driven FPAS manifest discovery.
 
+use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 
 use fpas_project::discover_workspace_file;
@@ -59,6 +60,7 @@ fn discover_initial_context_with(
 pub(super) fn discover_source_context(
     root: &Path,
     source: &Path,
+    overlays: &HashMap<PathBuf, String>,
 ) -> Result<Option<WorkspaceContext>, WorkspaceIssue> {
     let root = directory_for(&normalized_path(root));
     let source = normalized_path(source);
@@ -66,8 +68,8 @@ pub(super) fn discover_source_context(
     let mut directory = directory_for(&source);
 
     loop {
-        if let Some(context) =
-            context_owning_source(&directory, &source).map_err(DiscoveryError::into_issue)?
+        if let Some(context) = context_owning_source_with_overlays(&directory, &source, overlays)
+            .map_err(DiscoveryError::into_issue)?
         {
             return Ok(Some(context));
         }
@@ -81,6 +83,14 @@ fn context_owning_source(
     directory: &Path,
     source: &Path,
 ) -> Result<Option<WorkspaceContext>, DiscoveryError> {
+    context_owning_source_with_overlays(directory, source, &HashMap::new())
+}
+
+fn context_owning_source_with_overlays(
+    directory: &Path,
+    source: &Path,
+    overlays: &HashMap<PathBuf, String>,
+) -> Result<Option<WorkspaceContext>, DiscoveryError> {
     if !directory.is_dir() {
         return Ok(None);
     }
@@ -89,7 +99,10 @@ fn context_owning_source(
         .map_err(|error| WorkspaceIssue::from_project(directory, error))
         .map_err(DiscoveryError::Metadata)?
     {
-        let context = WorkspaceContext::load_workspace_manifest(&normalized_path(&workspace_path));
+        let context = WorkspaceContext::load_workspace_manifest_with_overlays(
+            &normalized_path(&workspace_path),
+            overlays,
+        );
         if let Some(result) =
             select_context(source, vec![context]).map_err(DiscoveryError::Metadata)?
         {
@@ -99,7 +112,7 @@ fn context_owning_source(
 
     let contexts = manifests
         .iter()
-        .map(|manifest| WorkspaceContext::load_project_manifest(manifest))
+        .map(|manifest| WorkspaceContext::load_project_manifest_with_overlays(manifest, overlays))
         .collect::<Vec<_>>();
     select_context(source, contexts).map_err(DiscoveryError::Metadata)
 }
@@ -235,7 +248,7 @@ mod tests {
         let differently_cased =
             PathBuf::from(root.to_string_lossy().to_ascii_lowercase()).join("src/missing.fpas");
 
-        let discovered = discover_source_context(&root, &differently_cased);
+        let discovered = discover_source_context(&root, &differently_cased, &HashMap::new());
         std::fs::remove_dir_all(&base).ok();
         assert!(matches!(discovered, Ok(None)), "{discovered:?}");
     }
@@ -250,7 +263,8 @@ mod tests {
         std::fs::write(outside.join("broken.fpasprj"), "not valid TOML")
             .expect("outside invalid manifest");
 
-        let discovered = discover_source_context(&root, &outside.join("missing.fpas"));
+        let discovered =
+            discover_source_context(&root, &outside.join("missing.fpas"), &HashMap::new());
         std::fs::remove_dir_all(&base).ok();
         assert!(
             discovered.is_err(),

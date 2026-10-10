@@ -324,3 +324,51 @@ fn reopened_dependency_version_ignores_project_records_from_an_older_snapshot() 
     assert_eq!(last["params"]["version"], json!(1));
     assert_eq!(last["params"]["diagnostics"], json!([]));
 }
+
+#[test]
+fn unsaved_dependency_correction_does_not_republish_disk_parser_errors() {
+    let temp = TempDirectory::new("unsaved-dependency-correction");
+    let main_source =
+        "program Demo;\nuses Demo.Dep;\nbegin\n  const Value: integer := 'wrong';\nend.\n";
+    program_project(&temp, main_source);
+    let broken = "unit Demo.Dep\nend unit;\n";
+    temp.write("src/dep.fpas", broken);
+    let root = temp.uri(".");
+    let main = temp.uri("src/main.fpas");
+    let dependency = temp.uri("src/dep.fpas");
+    let transcript = run_script(&[
+        TranscriptStep::Message(initialize_with_root(1, Some(&root))),
+        TranscriptStep::Message(initialized()),
+        TranscriptStep::Message(open(&dependency, 1, broken)),
+        TranscriptStep::Wait(ANALYSIS_WAIT),
+        TranscriptStep::Message(change(&dependency, 2, "unit Demo.Dep;\nend unit;\n")),
+        TranscriptStep::Wait(ANALYSIS_WAIT),
+        TranscriptStep::Message(open(&main, 1, main_source)),
+        TranscriptStep::Wait(ANALYSIS_WAIT),
+        TranscriptStep::Message(shutdown(2)),
+        TranscriptStep::Message(exit()),
+    ]);
+    assert_success(&transcript);
+    located_diagnostic(&transcript, &dependency, "FP2001");
+    let published = notifications(&transcript.messages, "textDocument/publishDiagnostics");
+    for uri in [&dependency, &main] {
+        let last = published
+            .iter()
+            .rev()
+            .find(|message| message["params"]["uri"] == *uri)
+            .expect("current diagnostic publication");
+        if uri == &dependency {
+            assert_eq!(last["params"]["diagnostics"], json!([]), "{last:?}");
+        } else {
+            let diagnostics = last["params"]["diagnostics"]
+                .as_array()
+                .expect("diagnostics");
+            assert!(
+                diagnostics.iter().any(|diagnostic| diagnostic["code"]
+                    .as_str()
+                    .is_some_and(|code| code.starts_with("FP3"))),
+                "{last:?}"
+            );
+        }
+    }
+}

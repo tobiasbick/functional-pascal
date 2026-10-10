@@ -24,6 +24,21 @@ Call sites pass a **named** function or procedure, a **closure expression**, a
 **bound record method**, or a **variable** whose type is a function or procedure
 type. Qualified routines work the same way: `Std.Console.WriteLn(...)`.
 
+Array elements and dictionary entries with callable types are also called
+through their designators. The indexed callable is selected once before its
+arguments are evaluated:
+
+```pascal
+const Operations: array of function(X: integer): integer := [Double];
+const ByName: dict of string to function(X: integer): integer := ['double': Double];
+const First: integer := Operations[0](7); // 14
+const Named: integer := ByName['double'](7); // 14
+```
+
+These calls use positional arguments, like other first-class callable values.
+Procedure elements may be called as statements. Their `var` parameter modes
+and the restrictions on [task calls](../concurrency/go.md) remain the same.
+
 ```pascal
 type
   Counter = record

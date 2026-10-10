@@ -1,9 +1,12 @@
 //! Manifest-backed workspace context.
 
-use std::collections::{BTreeMap, BTreeSet};
+use std::collections::{BTreeMap, BTreeSet, HashMap};
 use std::path::{Path, PathBuf};
 
-use fpas_project::{ProjectError, load_project, load_standard_library_project, load_workspace};
+use fpas_project::{
+    ProjectError, load_project_with_source_overlays,
+    load_standard_library_project_with_source_overlays, load_workspace,
+};
 
 use super::catalog::load_folder;
 use super::discovery::{discover_initial_context, discover_source_context, has_extension};
@@ -129,9 +132,11 @@ impl WorkspaceContext {
             })
     }
 
+    /// Discovers source ownership using current editor buffers during validation.
     pub(crate) fn discover_project_for_source(
         &mut self,
         path: &Path,
+        documents: &crate::DocumentStore,
     ) -> Result<(), WorkspaceIssue> {
         let owners = self
             .projects
@@ -145,7 +150,12 @@ impl WorkspaceContext {
         if owners.len() == 1 {
             return Ok(());
         }
-        let Some(context) = discover_source_context(&self.root, path)? else {
+        let overlays = documents
+            .open_snapshots()
+            .iter()
+            .map(|snapshot| (snapshot.path().to_path_buf(), snapshot.source().to_owned()))
+            .collect();
+        let Some(context) = discover_source_context(&self.root, path, &overlays)? else {
             return Ok(());
         };
         self.merge_discovered(context);
@@ -182,7 +192,15 @@ impl WorkspaceContext {
 
     /// Loads one editor project and retains original loader failures.
     pub(super) fn load_project_manifest(path: &Path) -> Self {
-        match load_editor_project(path) {
+        Self::load_project_manifest_with_overlays(path, &HashMap::new())
+    }
+
+    /// Loads a project while respecting editor sources during manifest validation.
+    pub(super) fn load_project_manifest_with_overlays(
+        path: &Path,
+        overlays: &HashMap<PathBuf, String>,
+    ) -> Self {
+        match load_editor_project(path, overlays) {
             Ok(project) => Self {
                 root: path
                     .parent()
@@ -199,6 +217,14 @@ impl WorkspaceContext {
 
     /// Loads workspace members and retains each failing member's project records.
     pub(super) fn load_workspace_manifest(path: &Path) -> Self {
+        Self::load_workspace_manifest_with_overlays(path, &HashMap::new())
+    }
+
+    /// Loads workspace members with the same authoritative editor sources.
+    pub(super) fn load_workspace_manifest_with_overlays(
+        path: &Path,
+        overlays: &HashMap<PathBuf, String>,
+    ) -> Self {
         let workspace = match load_workspace(path) {
             Ok(workspace) => workspace,
             Err(error) => return Self::unavailable(path, error),
@@ -206,7 +232,7 @@ impl WorkspaceContext {
         let mut projects = Vec::new();
         let mut issues = Vec::new();
         for member in workspace.member_projects {
-            match load_editor_project(&member) {
+            match load_editor_project(&member, overlays) {
                 Ok(project) => projects.push(project),
                 Err(error) => issues.push(WorkspaceIssue::from_project(&member, error)),
             }
@@ -277,16 +303,20 @@ fn ambiguous_source_issue(source: &Path, manifests: &[&Path]) -> WorkspaceIssue 
     )
 }
 
-fn load_editor_project(path: &Path) -> Result<ProjectContext, ProjectError> {
+fn load_editor_project(
+    path: &Path,
+    overlays: &HashMap<PathBuf, String>,
+) -> Result<ProjectContext, ProjectError> {
     let is_standard_library = path
         .file_name()
         .and_then(|name| name.to_str())
         .is_some_and(|name| name.eq_ignore_ascii_case("stdlib.fpasprj"));
     if is_standard_library {
         let root = path.parent().unwrap_or(path);
-        load_standard_library_project(root)
+        load_standard_library_project_with_source_overlays(root, overlays)
             .map(|project| ProjectContext::new_standard_library(path, project))
     } else {
-        load_project(path).map(|project| ProjectContext::new(path, project))
+        load_project_with_source_overlays(path, overlays)
+            .map(|project| ProjectContext::new(path, project))
     }
 }

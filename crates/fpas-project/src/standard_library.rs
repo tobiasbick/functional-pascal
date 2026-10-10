@@ -9,6 +9,7 @@ use crate::paths::{canonical_project_path, canonical_source_path};
 use crate::{LoadedProject, ProjectError, ProjectKind, ProjectLinkMeta, SourceOrigin};
 use fpas_diagnostics::codes::PROJECT_STANDARD_LIBRARY_INVALID;
 use fpas_std::STD_UNITS_INTRINSIC;
+use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 
 const STANDARD_LIBRARY_MANIFEST: &str = "stdlib.fpasprj";
@@ -34,7 +35,8 @@ impl StandardLibrary {
 
 /// Loads the standard-library manifest below an implementation-owned library root.
 pub fn load_standard_library(root: &Path) -> Result<StandardLibrary, crate::ProjectError> {
-    let (manifest, own, source_files) = load_standard_library_sources(root)?;
+    let (manifest, own, source_files) =
+        load_standard_library_sources(root, &mut ParsedSourceCache::new())?;
     let mut link_meta = ProjectLinkMeta::default();
     link_meta
         .library_export_policies
@@ -60,7 +62,20 @@ pub fn load_standard_library(root: &Path) -> Result<StandardLibrary, crate::Proj
 /// Sources retain their trusted standard-library provenance so overlay-safe
 /// editor graphs accept the reserved `Std.*` namespace.
 pub fn load_standard_library_project(root: &Path) -> Result<LoadedProject, crate::ProjectError> {
-    let (_, own, source_files) = load_standard_library_sources(root)?;
+    load_standard_library_project_with_source_overlays(root, &HashMap::new())
+}
+
+/// Loads the editable standard library with authoritative open source buffers.
+///
+/// **Documentation:** `docs/pascal/tools/editor-integration.md`
+pub fn load_standard_library_project_with_source_overlays(
+    root: &Path,
+    overlays: &HashMap<PathBuf, String>,
+) -> Result<LoadedProject, crate::ProjectError> {
+    let (_, own, source_files) = load_standard_library_sources(
+        root,
+        &mut ParsedSourceCache::with_source_overlays(overlays),
+    )?;
     let mut link_meta = ProjectLinkMeta::default();
     for source_file in &source_files {
         link_meta
@@ -85,6 +100,7 @@ pub fn load_standard_library_project(root: &Path) -> Result<LoadedProject, crate
 
 fn load_standard_library_sources(
     root: &Path,
+    parse_cache: &mut ParsedSourceCache,
 ) -> Result<(PathBuf, crate::loading::own::OwnProject, Vec<PathBuf>), crate::ProjectError> {
     if !root.is_dir() {
         return Err(invalid_standard_library(
@@ -109,8 +125,7 @@ fn load_standard_library_sources(
         ));
     }
 
-    let mut parse_cache = ParsedSourceCache::new();
-    let mut own = load_own_project(&manifest, &mut parse_cache)?;
+    let mut own = load_own_project(&manifest, parse_cache)?;
     if own.kind != ProjectKind::Library {
         return Err(invalid_standard_library(
             format!(
@@ -130,11 +145,9 @@ fn load_standard_library_sources(
         ));
     }
 
-    let source_files = validate_standard_library_source_units(
-        std::mem::take(&mut own.source_files),
-        &mut parse_cache,
-    )?;
-    validate_intrinsic_collisions(&source_files, &mut parse_cache)?;
+    let source_files =
+        validate_standard_library_source_units(std::mem::take(&mut own.source_files), parse_cache)?;
+    validate_intrinsic_collisions(&source_files, parse_cache)?;
     Ok((canonical_project_path(&manifest), own, source_files))
 }
 

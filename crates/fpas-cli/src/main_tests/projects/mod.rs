@@ -10,6 +10,7 @@ mod enum_variants;
 mod errors;
 mod exports;
 mod generic_aliases;
+mod indexed_callables;
 mod individual_declarations;
 mod named_var_arguments;
 mod qualified;

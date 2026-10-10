@@ -4,7 +4,8 @@
 //! `docs/pascal/language/functions/closures.md`
 
 use super::super::closures::{
-    CaptureBinding, NestedRoutineCaptureInfo, collect_captures, task_bound_from_captures,
+    CaptureAnalysis, CaptureOwner, NestedRoutineCaptureInfo, collect_captures,
+    task_bound_from_captures,
 };
 use super::Checker;
 use crate::scope::{FunctionCtx, Symbol, SymbolKind};
@@ -145,7 +146,7 @@ impl Checker {
         source_params: &[fpas_parser::FormalParam],
         return_type: Option<Ty>,
         body: &FuncBody,
-    ) -> Vec<CaptureBinding> {
+    ) -> CaptureAnalysis {
         let FuncBody::Block { nested, stmts } = body;
         self.discard_results.push(true);
 
@@ -213,9 +214,12 @@ impl Checker {
             body,
             &self.closure_infos,
             &self.nested_routine_captures,
+            &self.pending_routine_captures,
+            &self.capture_dependencies.closures,
         );
 
-        self.complete_capture_discard_info(&mut captures);
+        self.complete_capture_discard_info(&mut captures.captures);
+        self.remember_capture_scopes(&captures.captures);
         self.scopes.function_ctx = prev_ctx;
         self.scopes.pop_scope();
         let result = self.discard_results.pop().unwrap_or(false);
@@ -224,7 +228,7 @@ impl Checker {
         self.scopes.set_discard_info(
             name,
             fpas_unit::interface::DiscardInfo {
-                value: captures.iter().all(|capture| capture.task_free),
+                value: captures.captures.iter().all(|capture| capture.task_free),
                 result,
             },
         );
@@ -290,9 +294,20 @@ impl Checker {
         &mut self,
         name: &str,
         key: usize,
-        captures: Vec<CaptureBinding>,
+        analysis: CaptureAnalysis,
     ) {
-        self.record_var_parameter_routine(name, &captures);
+        self.register_capture_dependencies(
+            CaptureOwner::Routine(key),
+            analysis.scope_index,
+            &analysis.pending_routines,
+        );
+        self.pending_routine_captures
+            .insert(key, analysis.pending_routines);
+        let captures = analysis.captures;
+        let reference = captures
+            .iter()
+            .find(|capture| capture.reference)
+            .map(|capture| capture.name.clone());
         let task_bound = task_bound_from_captures(&captures);
         if let Some(symbol) = self.scopes.lookup_mut(name) {
             symbol.task_bound = task_bound;
@@ -304,6 +319,8 @@ impl Checker {
                 task_bound,
             },
         );
+        self.record_var_parameter_routine(key, reference);
+        self.propagate_pending_captures(key);
     }
 
     fn register_routine_symbol(&mut self, name: &str, symbol: Symbol, body: &FuncBody, span: Span) {

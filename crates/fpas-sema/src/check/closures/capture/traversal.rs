@@ -56,20 +56,10 @@ impl CaptureCollector<'_> {
                 self.collect_from_expr(&var.value);
             }
             Decl::Function(function) => {
-                let captures = self
-                    .nested_routine_captures
-                    .get(&crate::function_decl_lookup_key(function))
-                    .map(|info| info.captures.clone())
-                    .unwrap_or_default();
-                self.collect_transitive_captures(&captures);
+                self.collect_routine_captures(crate::function_decl_lookup_key(function));
             }
             Decl::Procedure(procedure) => {
-                let captures = self
-                    .nested_routine_captures
-                    .get(&crate::procedure_decl_lookup_key(procedure))
-                    .map(|info| info.captures.clone())
-                    .unwrap_or_default();
-                self.collect_transitive_captures(&captures);
+                self.collect_routine_captures(crate::procedure_decl_lookup_key(procedure));
             }
             Decl::TypeDef(_) => {}
         }
@@ -329,6 +319,14 @@ impl CaptureCollector<'_> {
                     .map(|info| info.captures.clone())
                     .unwrap_or_default();
                 self.collect_transitive_captures(&captures);
+                if let Some(pending) = self
+                    .pending_closure_captures
+                    .get(&crate::expr_lookup_key(expr))
+                {
+                    for &key in pending {
+                        self.collect_routine_captures(key);
+                    }
+                }
             }
         }
     }

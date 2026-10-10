@@ -87,6 +87,49 @@ fn callback_type_aliases_keep_nested_result_outputs() {
 }
 
 #[test]
+fn callable_receivers_distinguish_function_values_from_call_results() {
+    let declarations = "type Nested = Result of Result of string, integer, boolean; type Reader = function(): Nested; function Fetch(): Nested; begin return Ok(Ok('x')); end function; function Build(X: integer): Reader; begin return Fetch; end function;";
+    for (receiver, string_result) in [
+        ("Fetch().Unwrap().Unwrap()", true),
+        ("Alias().Unwrap().Unwrap()", true),
+        ("Direct().Unwrap().Unwrap()", true),
+        ("Selected().Unwrap().Unwrap()", true),
+        ("Readers[0]().Unwrap().Unwrap()", true),
+        ("Fetch", false),
+        ("Alias", false),
+        ("Direct", false),
+        ("Items.Map(Build)[0]", false),
+        (
+            "Items.Map(function(X: integer): Reader begin return Fetch; end function)[0]",
+            false,
+        ),
+    ] {
+        let temp = TempDirectory::new("callable-receiver");
+        let source = format!(
+            "program Demo; {declarations} begin const Alias: Reader := Fetch; const Direct: function(): Nested := Fetch; const Items: array of integer := [1]; const Readers: array of Reader := Items.Map(Build); const Selected: Reader := Readers[0]; discard {receiver}.\nend."
+        );
+        let (_, diagnostics) =
+            parse_compilation_unit(&source.replace(".\nend.", ".Length();\nend."));
+        assert!(diagnostics.is_empty(), "fixture: {diagnostics:#?}");
+        let path = temp.write("main.fpas", &source);
+        let mut service = LanguageService::new(WorkspaceContext::loose(temp.path()));
+        let cursor = source.find(&format!("{receiver}.\n")).expect("query") + receiver.len() + 1;
+        if string_result {
+            assert_string_candidates(&mut service, &path, &source, cursor);
+        } else {
+            let candidates = service
+                .completions(&path, cursor)
+                .expect("completion")
+                .value;
+            assert!(
+                candidates.is_empty(),
+                "function value {receiver}: {candidates:#?}"
+            );
+        }
+    }
+}
+
+#[test]
 fn imported_aliases_resolve_in_their_own_unit_with_private_and_imported_types() {
     let temp = TempDirectory::new("native-imported-result-chain");
     let manifest = temp.write("demo.fpasprj", "[project]\nname = \"demo\"\nkind = \"program\"\nmain = \"main.fpas\"\n[sources]\ninclude = [\"*.fpas\"]\n");

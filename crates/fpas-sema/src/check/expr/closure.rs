@@ -3,7 +3,7 @@
 //! **Documentation:** `docs/pascal/language/functions/closures.md`
 
 use super::super::Checker;
-use super::super::closures::closure_info_from_captures;
+use super::super::closures::{CaptureOwner, closure_info_from_captures};
 use crate::types::{FunctionTy, ProcedureTy, Ty};
 use fpas_lexer::Span;
 use fpas_parser::{Expr, FormalParam, FuncBody, TypeExpr};
@@ -28,7 +28,7 @@ impl Checker {
         let key = Self::expr_lookup_key(expr);
         let synthetic_name = format!("$closure_{key}");
 
-        let captures = self.check_routine_body_collecting_captures(
+        let analysis = self.check_routine_body_collecting_captures(
             &synthetic_name,
             &[],
             &params_ty,
@@ -48,8 +48,14 @@ impl Checker {
                 result,
             },
         );
-        self.reject_closure_var_captures(&captures, _span);
-        let info = closure_info_from_captures(synthetic_name, captures);
+        self.reject_closure_var_captures(&analysis.captures, _span);
+        self.defer_closure_var_captures(&analysis.pending_routines, _span);
+        self.register_capture_dependencies(
+            CaptureOwner::Closure(key),
+            analysis.scope_index,
+            &analysis.pending_routines,
+        );
+        let info = closure_info_from_captures(synthetic_name, analysis.captures);
         if info.task_bound {
             self.mark_expr_task_bound(key);
         }

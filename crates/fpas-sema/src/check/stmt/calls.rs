@@ -17,6 +17,15 @@ impl Checker {
         args: &[Expr],
         span: Span,
     ) -> Ty {
+        if let Some(result) = self.try_check_indexed_callable(
+            crate::designator_lookup_key(designator),
+            designator,
+            args,
+            span,
+            true,
+        ) {
+            return result;
+        }
         if let Some(result) = self.try_check_native_factory(
             crate::designator_lookup_key(designator),
             designator,

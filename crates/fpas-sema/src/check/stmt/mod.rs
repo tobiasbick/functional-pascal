@@ -91,35 +91,7 @@ impl Checker {
             Stmt::Expression { expr, span } => self.check_postfix_statement(expr, *span),
 
             Stmt::Go { expr, span } => {
-                // `go` accepts both procedure and function calls.
-                if let Expr::Call {
-                    designator,
-                    args,
-                    span: call_span,
-                } = expr
-                {
-                    self.check_call_stmt(designator, args, *call_span);
-                    self.reject_var_references_in_go(
-                        crate::designator_lookup_key(designator),
-                        Some(designator),
-                        args,
-                        *span,
-                    );
-                    self.reject_spawned_event_raise(
-                        crate::designator_lookup_key(designator),
-                        *span,
-                    );
-                    if self.designator_refers_to_task_bound(designator) {
-                        self.error_with_code(
-                            fpas_diagnostics::codes::SEMA_TASK_BOUND_CALLABLE,
-                            "Cannot spawn a task-bound callable across a task boundary",
-                            "Mutable captures make a closure task-bound. Pass immutable values instead, or invoke the closure on the same task.",
-                            *span,
-                        );
-                    }
-                } else {
-                    self.check_expr(expr);
-                }
+                self.check_go_expr(expr, *span);
             }
         }
     }

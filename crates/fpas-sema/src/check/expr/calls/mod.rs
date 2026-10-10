@@ -1,4 +1,5 @@
 mod fluent;
+mod indexed;
 mod methods;
 mod native;
 
@@ -35,6 +36,15 @@ impl Checker {
         span: Span,
         allow_procedure_result: bool,
     ) -> CallResolution {
+        if let Some(result) = self.try_check_indexed_callable(
+            Self::expr_lookup_key(call_expr),
+            designator,
+            args,
+            span,
+            allow_procedure_result,
+        ) {
+            return CallResolution::MethodResult(result);
+        }
         if let Some(result) =
             self.try_check_native_factory(Self::expr_lookup_key(call_expr), designator, args, span)
         {

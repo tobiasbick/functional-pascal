@@ -23,6 +23,15 @@ type Worker = record
     discard Send(Output, Self.Value);
     return Self.Value;
   end function;
+  procedure Report(Self: Worker; Output: channel of integer);
+  begin
+    discard Send(Output, Self.Value);
+  end procedure;
+  function Increment(Self: Worker; var Count: integer): integer;
+  begin
+    Count := Count + Self.Value;
+    return Count;
+  end function;
 end record;
 type Group = record
   Items: array of Worker;
@@ -111,6 +120,42 @@ fn grammar_detached_postfix_call_delivers_its_side_effect() {
     );
     let (exit, stdout, stderr) = cli("run", &source);
     assert_eq!((exit, stdout.as_str(), stderr.as_str()), (0, "42\n", ""));
+}
+
+#[test]
+fn grammar_postfix_procedure_tasks_deliver_their_side_effects() {
+    for spawn in [
+        "go Make().Report(Output);",
+        "const Job: task := go Make().Report(Output); Wait(Job);",
+    ] {
+        let source = program(&format!(
+            "const Output: channel of integer := CreateChannel(1);\n\
+             {spawn}\n\
+             WriteLn(ReceiveWithTimeout(Output, 1000).Unwrap());"
+        ));
+        let (exit, stdout, stderr) = cli("run", &source);
+        assert_eq!(
+            (exit, stdout.as_str(), stderr.as_str()),
+            (0, "42\n", ""),
+            "{spawn}"
+        );
+    }
+}
+
+#[test]
+fn grammar_postfix_tasks_reject_writable_arguments() {
+    for spawn in [
+        "go Make().Increment(var Count);",
+        "const Job: task := go Make().Increment(var Count);",
+    ] {
+        let source = program(&format!("var Count: integer := 0; {spawn}"));
+        let (exit, stdout, stderr) = cli("check", &source);
+        assert_eq!(exit, 1, "{spawn}\n{stderr}");
+        assert!(stdout.is_empty(), "{stdout}");
+        assert!(stderr.contains("error[FP3030]"), "{spawn}\n{stderr}");
+        assert!(stderr.contains("cannot pass a `var` argument"), "{stderr}");
+        assert_eq!(stderr.matches("error[").count(), 1, "{stderr}");
+    }
 }
 
 #[test]

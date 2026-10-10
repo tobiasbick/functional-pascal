@@ -254,6 +254,9 @@ diagnostics. Diagnostic delivery uses one ordered publication lane, so a slow
 editor connection does not block document changes or shutdown while an older
 diagnostic message is waiting to be sent.
 
+Shutdown cancels a pending dynamic file-watch registration. Server exit does
+not wait for the client to reply to that registration request.
+
 Project and dependency failures retain the producer's code and file attribution.
 Located records appear on the actual failing source, including a closed dependency
 file. Diagnostic `data` carries the original source path and ID, primary message,
@@ -263,6 +266,11 @@ available source path. Correcting or closing an origin clears its related marker
 while retaining records from other active origins. Snapshot revisions distinguish
 reopened buffers that reuse an editor version. See
 [editor project diagnostics](diagnostics.md#editor-project-diagnostics).
+
+Source-driven project discovery validates open sources against their editor
+buffers, including dependency and standard-library sources. An unsaved correction
+can restore project analysis; the older disk contents cannot recreate parser
+errors on the corrected buffer.
 
 Missing and nonexported imports in a main program carry FP4115 and FP4116 at
 the imported unit name, excluding an optional alias suffix. These markers use
@@ -431,6 +439,12 @@ mixed containers, and named or anonymous callback results remain distinct.
 Type aliases are resolved in their declaring unit's import environment,
 including aliases inside container and callable types. Native suggestions
 include catalog documentation and do not require an import edit.
+
+Callable values retain their function type until invoked. For example,
+`Readers[0]().Unwrap().Unwrap().` follows the selected function's return type,
+whereas `Readers[0].` does not offer operations from that return type. The same
+distinction applies to named routines, callable aliases and callbacks returning
+another callable.
 
 Recovered type fragments use the parser's `parse_type_expression` entry point
 and the same recursive grammar as compilation units. The entry point returns

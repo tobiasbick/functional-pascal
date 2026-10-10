@@ -238,6 +238,17 @@ pub(super) fn receiver_type(
                         return Some(result);
                     }
                 }
+                let callable = receiver_type(
+                    documents,
+                    target,
+                    designator.span.text(receiver)?,
+                    offset,
+                    depth + 1,
+                )?;
+                return match callable {
+                    Ty::Function(function) => Some(*function.return_type),
+                    _ => None,
+                };
             }
             _ => {}
         }
@@ -279,7 +290,7 @@ pub(super) fn receiver_type(
         }
         return Some(ty);
     }
-    let name = receiver.split_once('(').map_or(receiver, |(name, _)| name);
+    let name = receiver;
     let parts = name.split('.').map(str::to_owned).collect::<Vec<_>>();
     let (index, symbol) = if parts.len() == 1 {
         resolve_unqualified(documents, target, name, offset)?
@@ -289,20 +300,5 @@ pub(super) fn receiver_type(
     if matches!(symbol.kind, SymbolKind::Type | SymbolKind::Enum) {
         return None;
     }
-    let name = symbol
-        .type_name
-        .or_else(|| symbol.detail.rsplit_once(": ").map(|(_, ty)| ty.to_owned()))?;
-    if let Some(semantic) = document
-        .analysis
-        .as_ref()
-        .and_then(|analysis| analysis.semantic())
-        && let Some((_, ty)) = semantic
-            .metadata()
-            .named_types
-            .iter()
-            .find(|(key, _)| key.eq_ignore_ascii_case(&name))
-    {
-        return Some(ty.clone());
-    }
-    types::from_text(documents, index, &name, depth + 1)
+    types::from_symbol(documents, index, &symbol, depth + 1)
 }

@@ -38,7 +38,7 @@ pub struct FluentCallTarget {
 /// Maps call or postfix-operation identity to its selected receiver-call target.
 pub type FluentCallMap = HashMap<usize, FluentCallTarget>;
 
-/// Maps a callable record field call to its checked result type.
+/// Maps a callable field or indexed value call to its checked result type.
 pub type MemberValueCallMap = HashMap<usize, Ty>;
 
 /// Canonical root type name to its fully resolved semantic type.
@@ -280,10 +280,19 @@ pub struct Checker {
     ///
     /// **Documentation:** `docs/pascal/language/functions/closures.md`
     pub(crate) task_bound_exprs: HashSet<usize>,
-    /// Scope-qualified nested routine names → the enclosing `var` parameter they use.
+    /// Nested routine declaration identities → the enclosing `var` parameter they use.
     ///
     /// **Documentation:** `docs/pascal/language/functions/var-parameters.md`
-    pub(crate) var_parameter_routines: HashMap<String, String>,
+    pub(crate) var_parameter_routines: HashMap<usize, String>,
+    /// Routine value/task uses awaiting the referenced routine's capture analysis.
+    /// See `docs/pascal/language/functions/var-parameters.md`.
+    pub(crate) pending_var_parameter_uses:
+        HashMap<usize, Vec<super::references::PendingRoutineUse>>,
+    /// Named routine dependencies whose capture analysis was active when used.
+    /// See `docs/pascal/language/functions/closures.md`.
+    pub(crate) pending_routine_captures: HashMap<usize, Vec<usize>>,
+    /// Capture propagation for recursive targets that finish after their consumers.
+    pub(crate) capture_dependencies: super::closures::CaptureDependencies,
 }
 
 impl Checker {
@@ -327,6 +336,9 @@ impl Checker {
             event_raises: EventRaiseMap::new(),
             task_bound_exprs: HashSet::new(),
             var_parameter_routines: HashMap::new(),
+            pending_var_parameter_uses: HashMap::new(),
+            pending_routine_captures: HashMap::new(),
+            capture_dependencies: Default::default(),
         }
     }
 

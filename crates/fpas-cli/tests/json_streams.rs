@@ -339,3 +339,6 @@ fn malformed_record_initializer_finishes_with_bounded_diagnostics() {
 
 #[path = "json_streams/test_workers.rs"]
 mod test_workers;
+
+#[path = "json_streams/local_inference.rs"]
+mod local_inference;

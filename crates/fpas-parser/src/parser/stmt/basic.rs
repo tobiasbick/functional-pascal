@@ -22,7 +22,7 @@ impl Parser {
         Stmt::Block(stmts, self.span_from(start))
     }
 
-    /// Parses an inline constant with the shared typed-initializer syntax.
+    /// Parses an inline constant with an optional type annotation.
     pub(super) fn parse_const_stmt(&mut self) -> Stmt {
         Stmt::Const(self.parse_local_binding())
     }
@@ -32,15 +32,24 @@ impl Parser {
         Stmt::Var(self.parse_local_binding())
     }
 
-    fn parse_local_binding(&mut self) -> VarDef {
+    fn parse_local_binding(&mut self) -> LocalBinding {
         let start = self.current_span();
         self.advance();
-        let (name, type_expr, value) = self.parse_typed_init_fields(start);
-        VarDef {
+        let (name, _) = self.expect_ident_or_error(start);
+        let type_expr = if self.eat(&Token::Colon) {
+            Some(self.parse_type_expr())
+        } else {
+            None
+        };
+        self.expect(&Token::ColonAssign);
+        let value = match &type_expr {
+            Some(ty) => self.parse_initializer(ty),
+            None => self.parse_expression(),
+        };
+        LocalBinding {
             name,
             type_expr,
             value,
-            visibility: Visibility::default(),
             span: self.span_from(start),
         }
     }

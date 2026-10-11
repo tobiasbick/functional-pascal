@@ -153,7 +153,7 @@ mod tests {
         let Stmt::Const(binding) = &program.body[0] else {
             panic!("expected const stmt");
         };
-        format_type_expr(&binding.type_expr)
+        format_type_expr(binding.type_expr.as_ref().expect("written annotation"))
     }
 
     #[test]

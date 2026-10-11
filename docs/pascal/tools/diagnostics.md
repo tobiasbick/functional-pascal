@@ -341,6 +341,7 @@ Call arguments still use commas; commas inside types such as
 | FP3033 | Unreachable case label | `when Some(_):` before `when Some(1):` | Move `when Some(1):` before `when Some(_):` or remove it |
 | FP3034 | Misplaced `is` test | `const Hit: boolean := X is Some(_);` | `if X is Some(_) then ... end if;` or a `case` |
 | FP3035 | Catch-all on a closed enum | `case Item of when Some(_): null; else null; end case;` | Replace `else` with `when None: null;`, or use `if Item is Some(_) then ... end if;`. |
+| FP3036 | Local type annotation required | `const Value := ReadValue();`, `const Values := [];`, or `const Present := Some(None);` | Add `: Type`, for example `const Values: array of integer := [];`. Inference accepts only complete literals, typed construction, and explicit type conversions. |
 
 FP3025 also reports a parameter or enum variant field named twice and a named
 call that omits one; its hint lists the declared names. FP3026 applies to

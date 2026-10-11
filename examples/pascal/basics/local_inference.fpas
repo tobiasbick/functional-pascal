@@ -1,0 +1,33 @@
+program LocalInference;
+
+uses Std.Console;
+
+type UserId = distinct integer;
+
+type Box of T = record
+  Value: T;
+end record;
+
+type Lookup of T = enum
+  Found(Value: T);
+  Missing;
+end enum;
+
+begin
+  const Count := 42;
+  var Offset := -2;
+  const Names := ['Ada', 'Grace'];
+  const Scores := ['Ada': 42, 'Grace': 7];
+  const Id := UserId(Count);
+  const Raw := integer(Id);
+  Offset := Offset + 1;
+  WriteLn(Raw + Offset, Names.Length(), Scores.Length());
+  const Boxed := Box(Value := 'Ada');
+  const Found := Lookup.Found(Boxed);
+  case Found of
+    when Lookup.Found(const Value):
+      WriteLn(Value.Value);
+    when Lookup.Missing:
+      WriteLn('Missing');
+  end case;
+end.

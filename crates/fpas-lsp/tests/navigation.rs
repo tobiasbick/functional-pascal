@@ -13,6 +13,34 @@ use serde_json::{Value, json};
 use support::{exit, initialize, initialized, response, run, shutdown};
 
 #[test]
+fn local_inference_hover_is_serialized_for_unsaved_declarations_and_uses() {
+    let uri = "file:///local-inference/main.fpas";
+    let source = "program T; begin const Text := '𝄞'; const Values := [1, 2]; discard Values; end.";
+    let declaration = source.find("Values :=").expect("declaration");
+    let usage = source.find("discard Values").expect("use") + "discard ".len();
+    let transcript = run(&[
+        initialize(1),
+        initialized(),
+        open(uri, 1, source),
+        hover(2, uri, position(source, declaration)),
+        hover(3, uri, position(source, usage)),
+        shutdown(4),
+        exit(),
+    ]);
+    assert_success(&transcript);
+    for id in [2, 3] {
+        assert_eq!(
+            response(&transcript.messages, id)["result"]["contents"]["value"],
+            json!("```pascal\nconst Values: array of integer\n```")
+        );
+    }
+    assert_eq!(
+        response(&transcript.messages, 3)["result"]["range"]["start"],
+        position(source, usage)
+    );
+}
+
+#[test]
 fn navigation_capabilities_and_requests_use_utf16_ranges() {
     let uri = "file:///phase6/navigation.fpas";
     let source = "program Nav;\n\n// Adds one **integer** value.\nfunction Add(Value: integer): integer;\nbegin\n  return Value;\nend function;\n\nbegin\n  const Music: string := '𝄞';\n  const Total: integer := Add(1);\nend.\n";

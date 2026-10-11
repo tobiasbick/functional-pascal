@@ -4,35 +4,64 @@ Package: [AP22: Limited local inference](README.md)
 
 ## Scope
 
-Allow local bindings without a type annotation when the initializer is a typed
-record construction, for example `const P := Point(X := 1, Y := 2);`.
+Statement-local bindings can omit a type annotation when the initializer is a
+resolved record or enum construction, for example
+`const P := Point(X := 1, Y := 2);` or `const S := Shape.Circle(2.0);`.
+Ordinary functions and methods returning those types still require annotations.
 
 ## Prerequisites
 
+- AP24 (generic record and enum constructor inference).
 - AP22.1 (local inference rules).
 - AP10.1 (typed construction).
-- The open decision on enum variant constructors in the [package README](README.md).
+- The agreed inclusion of enum variant constructors in the [package README](README.md).
 
 ## Implementation
 
-- Sema: infer the record type from the construction's type name. Generic
-  constructions whose type arguments are not determined by their fields are
-  underconstrained and require an annotation.
-- Apply the recorded decision on enum variant constructors.
+- Sema reuses resolved record-construction metadata and records enum call
+  constructor identity. Payloadless enum members use resolved designator
+  metadata; shadowed type or variant names do not become constructors.
+- Record fields and enum payloads determine generic applications under AP24's
+  rules. Defaults do not infer arguments. A fixed type alias can supply the
+  arguments; otherwise missing arguments require an annotation.
+- Non-generic payloadless enum variants infer their nominal type. `Some(Value)`
+  infers a complete Option payload; `None`, `Ok(Value)`, and `Error(Value)` retain
+  undetermined arguments and require annotations.
+- Imported types and exported enum aliases retain qualified constructor lookup
+  without replacing the original generic type's variant symbols.
+- Checked initializer types feed the existing compiler storage/capture path and
+  semantic binding metadata used by editor hover, completion, and navigation.
 
 ## Affected areas
 
-- `crates/fpas-sema/src/check/decl/vars.rs`, `check/decl/consts/`.
+- `crates/fpas-sema/src/check/decl/local_inference.rs`, `check/context.rs`, and
+  `check/expr/calls/mod.rs`.
+- `crates/fpas-sema/src/interface/install.rs` for exported enum alias variants.
+- Sema, compiler/VM, language-service, CLI, and FPAS runner regression coverage.
 
 ## Migration
 
-None.
+None; explicit annotations remain valid.
 
 ## Documentation
 
-- `local-variables.md`, `records.md`.
+- `docs/pascal/language/basics/local-variables.md`, `constants.md`.
+- `docs/pascal/language/types/records.md`, `enums.md`.
+- `docs/pascal/tools/diagnostics.md` and the runnable inference example.
 
 ## Verification
 
-- Inferred record construction, imported record types, underconstrained
-  generic constructions rejected, variant constructors as decided.
+- Sema covers concrete and generic records/enums, fixed aliases, nested
+  constructors, payloadless variants, Option payloads, rejected ordinary
+  factories and postfix access, shadowing, fixed nominal types, original
+  argument diagnostics, underconstrained constructors, and generic routine
+  payloads that require a concrete callable signature.
+- Inferred aggregates preserve task-handle and callable discard restrictions.
+- Compiler/VM tests cover record capture cells, copied enum captures, nested
+  layouts, written argument order, omitted defaults, and initializer execution
+  at the reached statement.
+- Language-service tests cover concrete imported hover/member completion and
+  nominal type navigation through an import alias.
+- Real CLI builds exercise imported constructors and fixed aliases through
+  fresh, reused, and rebuilt units with explicitly typed public signatures.
+- The FPAS runner and runnable example exercise unannotated constructors.

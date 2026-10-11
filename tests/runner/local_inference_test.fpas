@@ -1,0 +1,68 @@
+program LocalInferenceTest;
+
+uses Std.Test;
+
+type UserId = distinct integer;
+
+type Box of T = record
+  Value: T;
+end record;
+
+type Lookup of T = enum
+  Found(Value: T);
+  Missing;
+end enum;
+
+type IntLookup = Lookup of integer;
+
+function Captured(): integer;
+function Read(): integer;
+begin
+  return Saved + Count;
+end function;
+begin
+  const Saved := 7;
+  var Count := 2;
+  Count := Count + 1;
+  return Read();
+end function;
+
+begin
+  const Whole := 42;
+  const LowerBound := -9223372036854775807;
+  const Fraction := 1.5;
+  const Flag := true;
+  const Text := 'Ada';
+  const Values := [[1, 2], [3, 4]];
+  var Index := ['a': 1, 'b': 2];
+  Index['a'] := 3;
+  const Id := UserId(Whole);
+  const Raw := integer(Id);
+  AssertEquals(42, Raw);
+  AssertTrue(LowerBound < 0);
+  AssertEquals(1.5, Fraction);
+  AssertTrue(Flag);
+  AssertEquals('Ada', Text);
+  AssertEquals(3, Values[1][0]);
+  AssertEquals(3, Index['a']);
+  AssertEquals(10, Captured());
+  const Boxed := Box(Value := 'text');
+  const Found := Lookup.Found(Boxed);
+  var Current := IntLookup.Missing;
+  Current := Lookup.Found(7);
+  case Found of
+    when Lookup.Found(const Value):
+      AssertEquals('text', Value.Value);
+    when Lookup.Missing:
+      Fail('Expected a constructed payload');
+  end case;
+
+  case Current of
+    when Lookup.Found(const Value):
+      AssertEquals(7, Value);
+    when Lookup.Missing:
+      Fail('Expected a reassigned payload');
+  end case;
+  const Present := Some(Boxed);
+  AssertEquals('text', Present.Unwrap().Value);
+end.

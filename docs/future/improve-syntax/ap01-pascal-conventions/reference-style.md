@@ -22,7 +22,7 @@ computed `const` and writable `var` bindings are implemented.
   ([AP11](../ap11-individual-declarations/README.md)). Prefer `const`; use `var`
   for reassignment ([AP16](../ap16-immutable-and-mutable-bindings/README.md)).
   Keep explicit binding types in these examples; local inference is limited
-  and has open details in [AP22](../ap22-limited-local-inference/README.md).
+  to the forms implemented in [AP22](../ap22-limited-local-inference/README.md).
 - End statements and declarations with `;`, including the last statement in
   a body. Keep the program's final `end.`. Use the owning construct's named
   closer, while a plain scoping block keeps `end;`

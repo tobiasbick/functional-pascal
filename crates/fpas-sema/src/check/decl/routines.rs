@@ -197,7 +197,11 @@ impl Checker {
             owner_unit,
         });
 
-        let hoisted = self.hoist_body_locals(stmts);
+        let hoisted = if nested.is_empty() {
+            Vec::new()
+        } else {
+            self.hoist_body_locals(stmts)
+        };
         for decl in nested {
             self.check_decl(decl);
         }
@@ -249,7 +253,17 @@ impl Checker {
                 Stmt::Var(variable) => (variable, true),
                 _ => continue,
             };
-            let ty = self.resolve_type_expr(&variable.type_expr);
+            let ty = match &variable.type_expr {
+                Some(annotation) => self.resolve_type_expr(annotation),
+                None => {
+                    // Probe the capture type now; ordered statement checking reports
+                    // initializer diagnostics and applies the local inference rules.
+                    let diagnostic_count = self.errors.len();
+                    let ty = self.check_expr(&variable.value);
+                    self.errors.truncate(diagnostic_count);
+                    ty
+                }
+            };
             let constant = matches!(stmt, Stmt::Const(_)).then(|| {
                 // Nested routines can use static enclosing constants in labels before
                 // the enclosing statement list is checked in execution order.

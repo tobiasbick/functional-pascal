@@ -1,4 +1,3 @@
-use super::declarations::apply_var_def_source_id;
 use super::expressions::{apply_designator_source_id, apply_expr_source_id};
 use super::support::apply_span;
 use super::types::apply_type_expr_source_id;
@@ -15,7 +14,13 @@ pub(super) fn apply_stmt_source_id(stmt: &mut Stmt, source_id: u32) {
             }
             apply_span(span, source_id);
         }
-        Stmt::Const(var_def) | Stmt::Var(var_def) => apply_var_def_source_id(var_def, source_id),
+        Stmt::Const(binding) | Stmt::Var(binding) => {
+            if let Some(ty) = &mut binding.type_expr {
+                apply_type_expr_source_id(ty, source_id);
+            }
+            apply_expr_source_id(&mut binding.value, source_id);
+            apply_span(&mut binding.span, source_id);
+        }
         Stmt::Assign {
             target,
             value,

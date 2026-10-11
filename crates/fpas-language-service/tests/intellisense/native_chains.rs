@@ -214,10 +214,7 @@ fn assert_string_candidates(
     source: &str,
     cursor: usize,
 ) {
-    let candidates = service
-        .completions(&path, cursor)
-        .expect("completion")
-        .value;
+    let candidates = service.completions(path, cursor).expect("completion").value;
     let expected: BTreeSet<_> = fpas_sema::native_operations()
         .filter(|operation| operation.receiver.accepts(&Ty::String))
         .map(|operation| format!("string.{}", operation.name))

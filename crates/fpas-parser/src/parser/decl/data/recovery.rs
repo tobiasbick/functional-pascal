@@ -2,7 +2,7 @@
 //!
 //! **Documentation:** `docs/pascal/tools/diagnostics.md` (FP2015).
 
-use crate::ast::{Decl, Stmt, Visibility};
+use crate::ast::{Decl, LocalBinding, Stmt, Visibility};
 use crate::parser::Parser;
 use fpas_diagnostics::codes::PARSE_MISSING_DECLARATION_KEYWORD;
 use fpas_lexer::Token;
@@ -47,7 +47,13 @@ impl Parser {
         let constant = matches!(previous, Some(Stmt::Const(_)));
         let keyword = if constant { "const" } else { "var" };
         self.report_missing_declaration_keyword(keyword, false);
-        let definition = self.parse_var_def(Visibility::Private);
+        let recovered = self.parse_var_def(Visibility::Private);
+        let definition = LocalBinding {
+            name: recovered.name,
+            type_expr: Some(recovered.type_expr),
+            value: recovered.value,
+            span: recovered.span,
+        };
         Some(if constant {
             Stmt::Const(definition)
         } else {

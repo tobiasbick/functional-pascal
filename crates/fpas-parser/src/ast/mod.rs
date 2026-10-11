@@ -1,3 +1,4 @@
+mod bindings;
 mod decl;
 mod expr;
 mod imports;
@@ -7,6 +8,7 @@ mod routines;
 mod stmt;
 mod types;
 
+pub use bindings::*;
 pub use decl::*;
 pub use expr::*;
 pub use imports::*;

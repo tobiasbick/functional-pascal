@@ -9,6 +9,7 @@ mod conditionals;
 mod const_defs;
 mod discard;
 mod flow;
+mod local_inference;
 mod loops;
 mod var_defs;
 

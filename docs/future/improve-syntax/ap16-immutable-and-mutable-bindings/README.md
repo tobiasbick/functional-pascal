@@ -53,7 +53,8 @@ read-only unless declared `var`, and `mutable` is an ordinary identifier
 - Closure capture preserves the existing storage behavior: a captured `const`
   or value parameter is copied; a captured `var` shares one mutable cell.
 - Teaching examples prefer `const` and use `var` only for reassignment.
-  Explicit types stay until AP22's limited local inference is implemented.
+  Explicit types remain valid; AP22 implements limited inference for local
+  literals, typed construction, and explicit conversions.
 
 ```pascal
 const Caption: string := MakeCaption();

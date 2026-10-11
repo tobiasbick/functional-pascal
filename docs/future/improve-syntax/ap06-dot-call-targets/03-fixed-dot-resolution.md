@@ -13,7 +13,8 @@ never searched by receiver; ordinary calls retain ordinary name resolution.
 All 78 entries are import-free. Strings use Unicode-scalar `Slice`; `IsEmpty`
 reuses length handling. `Join` belongs to arrays of string. The only factories
 are `string.Chr` and `array.Fill`, with Fill inference from Value even at count
-zero. Binding annotations remain required. Results can change type and continue
+zero. Bindings initialized by dot calls require annotations under
+[AP22](../ap22-limited-local-inference/README.md). Results can change type and continue
 chains. Existing eager processing, ordering and value-returning semantics are
 retained.
 

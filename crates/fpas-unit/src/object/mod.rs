@@ -173,20 +173,19 @@ impl RelocatableObject {
             }
         }
         for record in &self.records {
-            if let Some(info) = &record.construction {
-                if info.defaults.len() != record.fields.len()
+            if let Some(info) = &record.construction
+                && (info.defaults.len() != record.fields.len()
                     || (info.requires_owner && info.owner_unit.is_none())
                     || info.aliases.len() > fpas_bytecode::limits::MAX_STRINGS
                     || info.aliases.iter().any(|alias| {
                         alias.source as usize >= self.sources.len()
                             || alias.name.is_empty()
                             || alias.unit.is_empty()
-                    })
-                {
-                    return Err(ObjectError::InvalidTableReference(
-                        "record construction metadata",
-                    ));
-                }
+                    }))
+            {
+                return Err(ObjectError::InvalidTableReference(
+                    "record construction metadata",
+                ));
             }
         }
         debug_types::validate_debug_types(

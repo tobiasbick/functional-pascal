@@ -22,7 +22,8 @@ Status: complete (Q05). Effort: medium. Package completion is tracked in the
 - The only factories are `string.Chr(N)` and `array.Fill(Value, Count)`, accepting
   positional or fully named arguments. Fill infers its element type from Value,
   even when Count is zero. Typed-array factory spelling and explicit generic
-  arguments are rejected; binding type annotations remain required.
+  arguments are rejected. Bindings initialized by these ordinary calls require
+  annotations under [AP22](../ap22-limited-local-inference/README.md).
 - Fixed signatures accept positional or fully named explicit arguments under
   AP09. Names are stable and case-insensitive; unknown, duplicate, missing and
   mixed names are rejected. The receiver is unnamed and evaluates once before

@@ -1,6 +1,6 @@
 # AP27: Typed placeholders
 
-Status: retained as optional (Q21); AP22 implementation required. Effort: very
+Status: retained as optional (Q21); AP22 dependency implemented. Effort: very
 large. Completion is tracked in the [central README](../README.md); the
 process is in [development-process.md](../development-process.md).
 

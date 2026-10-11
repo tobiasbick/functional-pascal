@@ -3,7 +3,7 @@
 //! **Documentation:** `docs/pascal/language/control-flow/README.md`.
 
 use fpas_ir::{Operation, Terminator};
-use fpas_parser::{DesignatorPart, Stmt, VarDef};
+use fpas_parser::{DesignatorPart, LocalBinding, Stmt};
 
 use crate::CompileError;
 
@@ -112,8 +112,15 @@ impl LoweringContext {
         Ok(())
     }
 
-    fn lower_variable(&mut self, definition: &VarDef, mutable: bool) -> Result<(), CompileError> {
-        let declared = self.declared_type(&definition.type_expr)?;
+    fn lower_variable(
+        &mut self,
+        definition: &LocalBinding,
+        mutable: bool,
+    ) -> Result<(), CompileError> {
+        let declared = match &definition.type_expr {
+            Some(ty) => self.declared_type(ty)?,
+            None => self.expression_ir_type(&definition.value)?,
+        };
         let ty = if self.is_bare_task_binding(declared) {
             let inferred = self.expression_ir_type(&definition.value)?;
             self.specialize_task_binding(declared, inferred)

@@ -122,6 +122,9 @@ pub struct AnalysisMetadata {
     pub postfix_types: HashMap<(u32, usize), Ty>,
     /// Instantiated pattern types keyed by source id and pattern offset.
     pub pattern_types: HashMap<(u32, usize), Ty>,
+    /// Inferred statement-local binding types keyed by source id and declaration offset.
+    /// **Documentation:** `docs/pascal/language/basics/local-variables.md`
+    pub binding_types: HashMap<(u32, usize), Ty>,
     /// Designators resolved to enum members, keyed by full designator identity.
     /// **Documentation:** `docs/pascal/language/pattern-matching/syntax.md`
     pub enum_members: HashSet<usize>,
@@ -166,10 +169,14 @@ pub struct Checker {
     pub(crate) path_types: HashMap<(u32, usize), Ty>,
     pub(crate) postfix_types: HashMap<(u32, usize), Ty>,
     pub(crate) pattern_types: HashMap<(u32, usize), Ty>,
+    /// Inferred statement-local types keyed by source id and declaration offset.
+    pub(crate) binding_types: HashMap<(u32, usize), Ty>,
     /// Nested constructors may retain holes until all enclosing fields are checked.
     pub(crate) deferred_constructor_inference: usize,
     /// Full designators whose resolved symbol is an enum member.
     pub(crate) enum_members: HashSet<usize>,
+    /// Call expressions resolved to enum variant constructors for local inference.
+    pub(crate) enum_constructions: HashSet<usize>,
     /// Canonical standard-library calls keyed by expression or designator identity.
     pub(crate) intrinsic_calls: IntrinsicCallMap,
     /// Parameter order of named calls keyed by the first written argument's identity.
@@ -263,8 +270,10 @@ impl Checker {
             path_types: HashMap::new(),
             postfix_types: HashMap::new(),
             pattern_types: HashMap::new(),
+            binding_types: HashMap::new(),
             deferred_constructor_inference: 0,
             enum_members: HashSet::new(),
+            enum_constructions: HashSet::new(),
             intrinsic_calls: IntrinsicCallMap::new(),
             named_argument_orders: NamedArgumentOrderMap::new(),
             method_calls: MethodCallMap::new(),
@@ -309,6 +318,7 @@ impl Checker {
             path_types: self.path_types,
             postfix_types: self.postfix_types,
             pattern_types: self.pattern_types,
+            binding_types: self.binding_types,
             enum_members: self.enum_members,
             intrinsic_calls: self.intrinsic_calls,
             named_argument_orders: self.named_argument_orders,

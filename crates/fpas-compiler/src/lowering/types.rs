@@ -96,7 +96,7 @@ impl TypeTable {
         }
         // Generic declarations establish erased field layouts before concrete aliases.
         // Documentation: docs/pascal/language/types/generics.md
-        for (_, ty) in &metadata.named_types {
+        for ty in metadata.named_types.values() {
             let is_template = match ty {
                 Ty::Record(record) => !record.type_params.is_empty() && record.type_args.is_empty(),
                 Ty::Enum(enumeration) => {

@@ -1,4 +1,4 @@
-use super::{Designator, Expr, Pattern, TypeExpr, VarDef};
+use super::{Designator, Expr, LocalBinding, Pattern, TypeExpr};
 use fpas_lexer::Span;
 
 impl Stmt {
@@ -47,9 +47,9 @@ pub enum Stmt {
     /// Immutable local constant binding, initialized when execution reaches it.
     ///
     /// **Documentation:** `docs/pascal/language/basics/constants.md`
-    Const(VarDef),
+    Const(LocalBinding),
     /// Reassignable local variable declaration.
-    Var(VarDef),
+    Var(LocalBinding),
     /// Assignment to a variable, field, or indexed element.
     Assign {
         /// Designator that receives the assigned value.

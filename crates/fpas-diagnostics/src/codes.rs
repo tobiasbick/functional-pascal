@@ -212,6 +212,9 @@ define_codes!(SEMA_ALLOCATED_CODES => {
     ///
     /// Documentation: `docs/pascal/tools/diagnostics.md` (FP3035).
     SEMA_CLOSED_ENUM_ELSE = 3035;
+    /// A local initializer requires an explicit type annotation.
+    /// Documentation: `docs/pascal/tools/diagnostics.md` (FP3036).
+    SEMA_TYPE_ANNOTATION_REQUIRED = 3036;
 });
 
 define_codes!(COMPILE_ALLOCATED_CODES => {

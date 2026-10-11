@@ -8,6 +8,21 @@
 mod common;
 
 #[test]
+fn omitted_local_annotations_round_trip_with_comments_and_nested_literals() {
+    let source = "program T; begin const A:=1; // inferred\n var Values := [[1],[2]]; const Index := ['a':1]; const B:integer:=A; begin const C := -2; end; end.";
+    common::assert_round_trip("local inference", source);
+    let (unit, errors) = fpas_parser::parse_compilation_unit(source);
+    assert!(errors.is_empty(), "{errors:?}");
+    let formatted = fpas_fmt::format_source(source, &unit).expect("format");
+    assert!(
+        formatted.contains("const A := 1; // inferred"),
+        "{formatted}"
+    );
+    assert!(formatted.contains("const B: integer := A;"), "{formatted}");
+    assert!(formatted.contains("const C := -2;"), "{formatted}");
+}
+
+#[test]
 fn inline_constants_preserve_comments_closures_and_complete_prefixes() {
     let source = "program Values;
         begin // declaration order

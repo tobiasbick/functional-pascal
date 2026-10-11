@@ -4,6 +4,8 @@ mod computed_const;
 mod const_var;
 mod dictionary_keys;
 mod distinct_types;
+mod local_construction;
+mod local_inference;
 mod record_compatibility;
 mod routines;
 mod type_order;

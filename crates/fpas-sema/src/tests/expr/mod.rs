@@ -227,6 +227,7 @@ fn analysis_metadata_exposes_all_named_results() {
         path_types: _,
         postfix_types: _,
         pattern_types: _,
+        binding_types: _,
         enum_members,
         intrinsic_calls,
         named_argument_orders,

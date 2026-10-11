@@ -28,5 +28,6 @@ mod discard;
 mod functions;
 mod intrinsics;
 mod keyword_switch;
+mod local_inference;
 mod optimization;
 mod structure;

@@ -137,15 +137,7 @@ impl Checker {
         match self.resolve_call_target(call_expr, designator, args, span, false) {
             CallResolution::Symbol { kind, ty } => {
                 let name = Self::resolve_designator_name(designator);
-                self.check_known_call_symbol(
-                    Self::expr_lookup_key(call_expr),
-                    &name,
-                    kind,
-                    ty,
-                    args,
-                    span,
-                    expected,
-                )
+                self.check_known_call_symbol(call_expr, &name, kind, ty, args, expected)
             }
             CallResolution::MethodResult(ty) => ty,
             CallResolution::Failed => Ty::Error,
@@ -154,15 +146,17 @@ impl Checker {
 
     fn check_known_call_symbol(
         &mut self,
-        call_key: usize,
+        call_expr: &Expr,
         name: &str,
         symbol_kind: SymbolKind,
         symbol_ty: Ty,
         args: &[Expr],
-        span: Span,
         expected: Option<&Ty>,
     ) -> Ty {
+        let call_key = Self::expr_lookup_key(call_expr);
+        let span = call_expr.span();
         if symbol_kind == SymbolKind::EnumVariantConstructor {
+            self.enum_constructions.insert(call_key);
             return self.check_enum_construction(name, &symbol_ty, args, span, expected);
         }
         if symbol_kind == SymbolKind::Type

@@ -9,17 +9,26 @@ fn generic_record_fields_show_concrete_hover_and_completion_types() {
     let path = temp.write("main.fpas", source);
     let mut service = LanguageService::new(WorkspaceContext::loose(temp.path()));
     for (receiver, ty) in [("Number", "integer"), ("Text", "string")] {
-        let offset = source.find(&format!("discard {receiver}.Value")).unwrap()
+        let offset = source
+            .find(&format!("discard {receiver}.Value"))
+            .expect("field use")
             + "discard ".len()
             + receiver.len()
             + 1;
-        let hover = service.hover(&path, offset).unwrap().value.unwrap();
+        let hover = service
+            .hover(&path, offset)
+            .expect("field hover")
+            .value
+            .expect("hover contents");
         assert_eq!(hover.contents, format!("field Value: {ty}"));
-        let completions = service.completions(&path, offset + 2).unwrap().value;
+        let completions = service
+            .completions(&path, offset + 2)
+            .expect("field completion")
+            .value;
         let field = completions
             .iter()
             .find(|candidate| candidate.label == "Value")
-            .unwrap();
+            .expect("Value completion");
         assert_eq!(field.detail, format!("field Value: {ty}"));
     }
 }
@@ -30,8 +39,11 @@ fn instantiated_record_fields_preserve_native_string_completion() {
     let source = "program T; type Box of T = record public Value: T; end record; begin const Text: Box of string := Box(Value := 'one'); discard Text.Value.ToUp; end.";
     let path = temp.write("main.fpas", source);
     let mut service = LanguageService::new(WorkspaceContext::loose(temp.path()));
-    let cursor = source.find("ToUp").unwrap() + 4;
-    let completions = service.completions(&path, cursor).unwrap().value;
+    let cursor = source.find("ToUp").expect("native operation prefix") + 4;
+    let completions = service
+        .completions(&path, cursor)
+        .expect("native completion")
+        .value;
     assert!(
         completions
             .iter()
@@ -54,15 +66,22 @@ fn imported_nested_generic_record_fields_keep_concrete_descriptions() {
     let source = "program T; uses Data.Boxes; begin const Nested: Box of Box of string := Box(Value := Box(Value := 'one')); discard Nested.Value.Value; end.";
     let path = temp.write("main.fpas", source);
     let mut service = LanguageService::load(&manifest);
-    let offset = source.rfind(".Value").unwrap() + 1;
-    let hover = service.hover(&path, offset).unwrap().value.unwrap();
+    let offset = source.rfind(".Value").expect("nested field use") + 1;
+    let hover = service
+        .hover(&path, offset)
+        .expect("nested field hover")
+        .value
+        .expect("hover contents");
     assert_eq!(hover.contents, "field Value: string");
-    let candidates = service.completions(&path, offset + 2).unwrap().value;
+    let candidates = service
+        .completions(&path, offset + 2)
+        .expect("nested field completion")
+        .value;
     assert_eq!(
         candidates
             .iter()
             .find(|candidate| candidate.label == "Value")
-            .unwrap()
+            .expect("Value completion")
             .detail,
         "field Value: string"
     );

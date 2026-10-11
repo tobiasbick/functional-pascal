@@ -1,4 +1,5 @@
 //! Installation of compiled-unit interface symbols into semantic scopes.
+//! See `docs/pascal/program-structure/units.md` and `docs/pascal/language/types/generics.md`.
 
 use fpas_parser::{Decl, Expr, Program};
 use fpas_unit::interface as artifact;
@@ -140,6 +141,9 @@ impl check::Checker {
         own_names: &std::collections::HashSet<String>,
         aliased: bool,
     ) -> Result<(), InterfaceConversionError> {
+        if exported.kind != artifact::SymbolKind::Type {
+            return Ok(());
+        }
         let artifact::InterfaceType::Enum(enum_ty) = &exported.ty else {
             return Ok(());
         };
@@ -157,7 +161,7 @@ impl check::Checker {
                 kind,
                 task_bound: false,
             };
-            let fully_qualified = format!("{}.{}", enum_ty.name, variant.name);
+            let fully_qualified = format!("{}.{}", exported.qualified_name, variant.name);
             self.scopes.define_in_root(&fully_qualified, symbol.clone());
             if aliased {
                 continue;
@@ -170,7 +174,9 @@ impl check::Checker {
                     .push((fully_qualified.clone(), symbol.clone()));
             }
             let short = canonical_symbol_name(&variant.name);
-            if !own_names.contains(&short) {
+            if exported.qualified_name.eq_ignore_ascii_case(&enum_ty.name)
+                && !own_names.contains(&short)
+            {
                 short_candidates
                     .entry(short)
                     .or_default()

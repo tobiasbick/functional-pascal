@@ -1,4 +1,4 @@
-use super::{Expr, FunctionDecl, ProcedureDecl, TypeExpr};
+use super::{ConstDef, Expr, FunctionDecl, ProcedureDecl, TypeExpr, VarDef};
 use fpas_lexer::Span;
 
 /// Visibility of a declaration or record member.
@@ -37,36 +37,6 @@ impl Decl {
             Decl::Procedure(p) => p.visibility,
         }
     }
-}
-
-/// A parsed constant definition with an explicit type and initializer.
-#[derive(Debug, Clone, PartialEq)]
-pub struct ConstDef {
-    /// The declared constant name.
-    pub name: String,
-    /// The declared type.
-    pub type_expr: TypeExpr,
-    /// The initializer expression.
-    pub value: Expr,
-    /// The declaration visibility.
-    pub visibility: Visibility,
-    /// The source span covering the definition.
-    pub span: Span,
-}
-
-/// A parsed variable definition with an explicit type and initializer.
-#[derive(Debug, Clone, PartialEq)]
-pub struct VarDef {
-    /// The declared variable name.
-    pub name: String,
-    /// The declared type.
-    pub type_expr: TypeExpr,
-    /// The initializer expression.
-    pub value: Expr,
-    /// The declaration visibility.
-    pub visibility: Visibility,
-    /// The source span covering the definition.
-    pub span: Span,
 }
 
 /// A generic type parameter with optional constraint: `T` or `T: Comparable`.

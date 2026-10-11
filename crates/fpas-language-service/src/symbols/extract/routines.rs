@@ -3,7 +3,7 @@
 use fpas_diagnostics::SourceSpan;
 use fpas_lexer::Span;
 use fpas_parser::{
-    Decl, FormalParam, FuncBody, FunctionDecl, ProcedureDecl, Stmt, TypeParam, Visibility,
+    FormalParam, FuncBody, FunctionDecl, ProcedureDecl, Stmt, TypeParam, Visibility,
 };
 
 use super::{
@@ -51,23 +51,33 @@ pub(super) fn collect_statement_symbols(
     for statement in statements {
         match statement {
             Stmt::Const(value) | Stmt::Var(value) => {
-                let declaration = if matches!(statement, Stmt::Const(_)) {
-                    Decl::Const(fpas_parser::ConstDef {
-                        name: value.name.clone(),
-                        type_expr: value.type_expr.clone(),
-                        value: value.value.clone(),
-                        visibility: value.visibility,
-                        span: value.span,
-                    })
-                } else {
-                    Decl::Var(value.clone())
-                };
-                output.push(declaration_symbol(
+                let constant = matches!(statement, Stmt::Const(_));
+                let keyword = if constant { "const" } else { "var" };
+                let annotation = value
+                    .type_expr
+                    .as_ref()
+                    .map_or_else(String::new, |ty| format!(": {}", type_text(snapshot, ty)));
+                let mut symbol = member_symbol(
                     snapshot,
                     owner,
-                    &declaration,
+                    &value.name,
+                    if constant {
+                        SymbolKind::Constant
+                    } else {
+                        SymbolKind::Variable
+                    },
+                    value.span,
+                    Visibility::Private,
+                    value.type_expr.as_ref().and_then(named_type),
+                    format!("{keyword} {}{annotation}", value.name),
                     scope_span,
-                ));
+                    Vec::new(),
+                );
+                symbol.callable = value
+                    .type_expr
+                    .as_ref()
+                    .and_then(|ty| type_callable_signature(snapshot, &value.name, ty));
+                output.push(symbol);
             }
             Stmt::Block(body, span) => {
                 collect_statement_symbols(

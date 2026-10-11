@@ -18,7 +18,7 @@ fn record_parameters_constraints_and_nested_applications_parse() {
     let Stmt::Const(value) = &program.body[0] else {
         panic!("typed binding")
     };
-    let TypeExpr::Application { arguments, .. } = &value.type_expr else {
+    let Some(TypeExpr::Application { arguments, .. }) = &value.type_expr else {
         panic!("record application")
     };
     assert_eq!(arguments.len(), 2);

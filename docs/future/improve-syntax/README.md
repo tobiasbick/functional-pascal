@@ -77,12 +77,12 @@ package are listed in each work package file.
 | [x] | [AP19: Distinct domain types](ap19-distinct-domain-types/README.md) | Large | AP05, AP16 | Complete (AP19.1, AP19.2) |
 | [x] | [AP20: Nested patterns and explicit bindings](ap20-nested-patterns-and-explicit-bindings/README.md) | Large | AP07, AP13, AP16 | Complete (AP20.1–AP20.3) |
 | [x] | [AP21: Decision expressions](ap21-decision-expressions/README.md) | Large | AP03, AP07, AP13 | Complete (AP21.1, AP21.2) |
-| [ ] | [AP22: Limited local inference](ap22-limited-local-inference/README.md) | Large | AP02, AP10, AP16 | Agreed direction (Q14) |
+| [x] | [AP22: Limited local inference](ap22-limited-local-inference/README.md) | Large | AP02, AP10, AP16, AP19, AP24 | Implemented (Q14) |
 | [ ] | [AP23: Preconditions and postconditions](ap23-preconditions-and-postconditions/README.md) | Large | AP07, AP13, AP16 | Agreed direction (Q15–Q17) |
 | [x] | [AP24: Generic data structures](ap24-generic-data-structures/README.md) | Very large | AP03, AP10, AP11, AP20 | Complete (AP24.1, AP24.2, AP24.3) |
 | [ ] | [AP25: Conservative purity](ap25-conservative-purity/README.md) | Very large | AP14, AP16, AP17; AP23 reassessment | Retained; low priority; reassess after AP23 (Q18) |
 | [ ] | [AP26: Structured task scopes](ap26-structured-task-scopes/README.md) | Large | AP13, AP17 | Agreed direction (Q19, Q20) |
-| [ ] | [AP27: Typed placeholders](ap27-typed-placeholders/README.md) | Very large | AP02, AP22 | Retained as optional (Q21); AP22 implementation required |
+| [ ] | [AP27: Typed placeholders](ap27-typed-placeholders/README.md) | Very large | AP02, AP22 | Retained as optional (Q21); AP22 dependency implemented |
 | — | [AP28: Structured editing](ap28-structured-editing/README.md) | — | AP13, AP24 | Transferred to [editor/LSP planning](../editor-structured-editing.md) (Q23) |
 | — | [AP29: Bounded derivation](ap29-bounded-derivation/README.md) | — | — | Rejected; closed (Q22) |
 
@@ -144,8 +144,8 @@ are recorded in each work-package file.
 
 AP12 can proceed to its
 accept/reject decision now that AP06 is complete; its implementation still
-requires that decision. AP22 uses the completed diagnostic, binding, and typed
-record construction rules.
+requires that decision. AP22 is complete using the diagnostic, binding,
+conversion, and generic typed-construction rules.
 
 AP27 is optional and follows AP22. AP28 is transferred to the
 [editor/LSP plan](../editor-structured-editing.md) after completion of AP13
@@ -168,7 +168,8 @@ blockers, and the next step as described in
 [development-process.md](development-process.md).
 
 AP22 is approved only for literals, typed construction, and explicit
-conversions (Q14); ordinary calls still require annotations. AP27 retains its
+conversions (Q14), including unambiguous non-empty array/dictionary literals
+and enum construction; ordinary calls still require annotations. AP27 retains its
 implementation dependency on AP22 and is retained as optional (Q21). Do not
 broaden inference indirectly through another package.
 

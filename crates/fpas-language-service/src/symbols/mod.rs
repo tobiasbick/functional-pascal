@@ -3,6 +3,7 @@
 mod document;
 mod extract;
 mod index;
+mod inferred;
 mod intrinsic_api;
 
 pub use document::{

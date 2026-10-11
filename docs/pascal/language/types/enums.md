@@ -80,6 +80,12 @@ Named construction follows the [named-argument rules](../functions/parameters.md
 field names match without regard to case, arguments are evaluated in written order, a call is
 fully positional or fully named, and every field is passed exactly once.
 
+Local bindings in statement position may omit the annotation, for example
+`const S := Shape.Circle(5.0);` or `const P := Shape.Point;`. Generic variants
+require all type arguments to be determined by payloads or fixed by a type
+alias. Imported enum types and exported aliases follow the same construction
+rules. See [Limited type inference](../basics/local-variables.md#limited-type-inference).
+
 Destructuring uses `case`:
 
 ```pascal
@@ -114,7 +120,8 @@ not valid. Choose an identifier-safe API name such as `NoCommand`, `Empty`, or `
 
 Generic enums declare parameters after `of`, for example `type Lookup of T =
 enum ... end enum;`. Variant payloads and the expected type jointly determine
-their arguments; payloadless variants need context. Applications retain those
+their arguments; payloadless variants with undetermined arguments need context
+or an alias fixing those arguments. Applications retain those
 arguments in assignments, imports, and nested patterns. See
 [generic enums](generics.md#generic-enums) for construction and recursive types.
 

@@ -102,6 +102,12 @@ impl DocumentSymbols {
         Self { owner, entries }
     }
 
+    /// Adds checked local binding types while preserving written declaration details.
+    pub(crate) fn with_binding_types(mut self, metadata: &fpas_sema::AnalysisMetadata) -> Self {
+        super::inferred::apply_binding_types(&mut self.entries, metadata);
+        self
+    }
+
     pub(crate) fn from_editor_snapshot(snapshot: &DocumentSnapshot) -> Self {
         let mut symbols = Self::from_snapshot(snapshot);
         super::intrinsic_api::add_registry_symbols(snapshot, &mut symbols);

@@ -8,7 +8,7 @@ from the crate after execution. Their inputs and query contracts are below.
 
 ## T01 — P2: generic data type parameters are missing from editor symbols
 
-Status: confirmed; repair open. Owner: AP24 generic type symbol extraction.
+Status: repaired and verified. Owner: AP24 generic type symbol extraction.
 
 ### Requirement and reproduction
 
@@ -38,6 +38,7 @@ they are required repair checks, not separately claimed executed failures.
 
 ### Cause and tasks
 
+At the reviewed revision,
 [symbols/extract/mod.rs](../../../../crates/fpas-language-service/src/symbols/extract/mod.rs),
 lines 166–173, passes only `TypeDef.body` to
 [members.rs](../../../../crates/fpas-language-service/src/symbols/extract/members.rs),
@@ -47,12 +48,23 @@ lines 198–245, is used only for generic routines. The same omission applies to
 generic enum declarations by inspection; the executable failing assertion
 covered the record route.
 
-- [ ] Share parameter-symbol extraction with generic record and enum types,
+The repair shares
+[type_parameters.rs](../../../../crates/fpas-language-service/src/symbols/extract/type_parameters.rs)
+between routines and data types. Source-ordered identifier lookup preserves
+parameter spans even when an owner has the same name. Qualified navigation and
+completion share the symbol model's member filter, so lexical parameters do not
+become fields or enum members.
+[Permanent regressions](../../../../crates/fpas-language-service/tests/semantic_tools/generic_parameters.rs)
+cover record/enum scopes, constraints, equal owner names, rename validity and
+qualified-access exclusion. Each exposed failure was reproduced before repair.
+Current editor handbook rules remain unchanged.
+
+- [x] Share parameter-symbol extraction with generic record and enum types,
   preserving declaration spans, constraints and lexical scopes.
-- [ ] Extend public language-service tests with record and enum definition,
+- [x] Extend public language-service tests with record and enum definition,
   references and rename cases. Include an unrelated outer type of the same name
   and a constrained parameter so scope and token classification are exercised.
-- [ ] Verify rename changes the declaration and its bound uses only, and the
+- [x] Verify rename changes the declaration and its bound uses only, and the
   edited source still checks. Verify semantic tokens mark the parameter as such.
 
 ## T02 — P2: case-expression bindings resolve to a shadowed outer constant

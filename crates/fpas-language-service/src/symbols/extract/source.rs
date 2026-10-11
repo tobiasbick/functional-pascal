@@ -6,10 +6,21 @@ use fpas_parser::{FormalParam, FunctionDecl, ProcedureDecl, TypeExpr};
 
 use crate::{CallableSignature, DocumentSnapshot};
 
+/// Finds the first matching identifier within a declaration span.
 pub(crate) fn name_span(
     snapshot: &DocumentSnapshot,
     full_span: SourceSpan,
     name: &str,
+) -> SourceSpan {
+    name_span_after(snapshot, full_span, name, full_span.offset())
+}
+
+/// Finds a matching identifier at or after an absolute source offset.
+pub(super) fn name_span_after(
+    snapshot: &DocumentSnapshot,
+    full_span: SourceSpan,
+    name: &str,
+    minimum_offset: usize,
 ) -> SourceSpan {
     let source = snapshot.source();
     let end = full_span
@@ -20,9 +31,10 @@ pub(crate) fn name_span(
         return empty_span(full_span);
     };
     let (tokens, _) = lex(fragment);
-    let Some(token) = tokens.into_iter().find(
-        |token| matches!(&token.token, Token::Ident(value) if value.eq_ignore_ascii_case(name)),
-    ) else {
+    let Some(token) = tokens.into_iter().find(|token| {
+        full_span.offset() + token.span.offset >= minimum_offset
+            && matches!(&token.token, Token::Ident(value) if value.eq_ignore_ascii_case(name))
+    }) else {
         return empty_span(full_span);
     };
     let offset = full_span.offset() + token.span.offset;

@@ -195,7 +195,7 @@ fn member_candidates<'a>(
             .namespace_for(&document.owner)
             .is_some_and(|namespace| namespace.eq_ignore_ascii_case(receiver))
     }) {
-        return public_members(document.top_level(), index, target_index);
+        return public_members(document.top_level().iter(), index, target_index);
     }
 
     let parts = receiver.split('.').map(str::to_owned).collect::<Vec<_>>();
@@ -219,16 +219,16 @@ fn member_candidates<'a>(
     else {
         return Vec::new();
     };
-    public_members(&type_symbol.children, type_index, target_index)
+    public_members(type_symbol.type_members(), type_index, target_index)
 }
 
-fn public_members(
-    members: &[DocumentSymbol],
+fn public_members<'a>(
+    members: impl IntoIterator<Item = &'a DocumentSymbol>,
     document_index: usize,
     target_index: usize,
-) -> Vec<(usize, &DocumentSymbol)> {
+) -> Vec<(usize, &'a DocumentSymbol)> {
     members
-        .iter()
+        .into_iter()
         .filter(|member| {
             document_index == target_index || member.visibility == SymbolVisibility::Public
         })

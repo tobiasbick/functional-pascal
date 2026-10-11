@@ -7,6 +7,8 @@
 
 mod support;
 
+#[path = "semantic_tools/generic_parameters.rs"]
+mod generic_parameters;
 #[path = "semantic_tools/ordinary_names.rs"]
 mod ordinary_names;
 

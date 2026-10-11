@@ -2,7 +2,7 @@
 
 This review checks implementation delivered after the
 [earlier completed review](reviewed-scope.md). It records **six confirmed
-findings: one P1, four P2 and one P3**. S01/S02/S03 are repaired and verified; three
+findings: one P1, four P2 and one P3**. S01/S02/S03/T01 are repaired and verified; two
 remaining findings are open. The repaired P1 defect admitted incorrectly typed
 Result payloads in decision expressions.
 
@@ -47,7 +47,7 @@ AP27 were not judged as missing implementations.
 | [x] | S01 | P1 | If/case joins erase Result payload evidence; invalid values reach runtime | [Preserve branch types](compiler-and-semantics.md#s01--p1-decision-expressions-lose-complementary-result-type-information) |
 | [x] | S02 | P2 | Joint record/enum inference omits generic callbacks inside containers | [Complete contextual inference](compiler-and-semantics.md#s02--p2-joint-constructor-inference-stops-at-nested-generic-callables) |
 | [x] | S03 | P2 | Scalar conversions accept type names as values and reach FP9001 | [Validate value positions](compiler-and-semantics.md#s03--p2-scalar-conversions-accept-type-declarations-as-value-arguments) |
-| [ ] | T01 | P2 | Generic data type parameters are absent from editor symbols | [Extract parameter bindings](tooling-and-tests.md#t01--p2-generic-data-type-parameters-are-missing-from-editor-symbols) |
+| [x] | T01 | P2 | Generic data type parameters are absent from editor symbols | [Extract parameter bindings](tooling-and-tests.md#t01--p2-generic-data-type-parameters-are-missing-from-editor-symbols) |
 | [ ] | T02 | P2 | A case-expression binder resolves to an outer constant | [Respect expression scopes](tooling-and-tests.md#t02--p2-case-expression-bindings-resolve-to-a-shadowed-outer-constant) |
 | [ ] | T03 | P3 | Generic callable-field signature help shows template types | [Specialize signatures](tooling-and-tests.md#t03--p3-generic-callable-field-signature-help-remains-unspecialized) |
 

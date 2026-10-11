@@ -1,7 +1,7 @@
 //! Record and enum member symbols.
 
 use fpas_diagnostics::SourceSpan;
-use fpas_parser::{RecordMethod, TypeBody, Visibility};
+use fpas_parser::{RecordMethod, TypeBody, TypeDef, Visibility};
 
 use super::{
     function_children, function_detail, function_signature, member_symbol, named_type,
@@ -9,14 +9,15 @@ use super::{
 };
 use crate::{CallableSignature, DocumentSnapshot, DocumentSymbol, SymbolKind};
 
+/// Extracts type parameters and record/enum members in their declaration scopes.
 pub(super) fn type_children(
     snapshot: &DocumentSnapshot,
     owner: &str,
-    body: &TypeBody,
+    definition: &TypeDef,
     type_span: SourceSpan,
     declaration_scope: SourceSpan,
 ) -> Vec<DocumentSymbol> {
-    match body {
+    let mut children: Vec<_> = match &definition.body {
         TypeBody::Record(record) => {
             let mut children = record
                 .fields
@@ -111,7 +112,17 @@ pub(super) fn type_children(
             })
             .collect(),
         TypeBody::Alias(_) | TypeBody::Distinct(_) | TypeBody::Subrange { .. } => Vec::new(),
-    }
+    };
+    children.splice(
+        0..0,
+        super::type_parameters::type_parameter_symbols(
+            snapshot,
+            owner,
+            &definition.type_params,
+            type_span,
+        ),
+    );
+    children
 }
 
 fn method_symbol(

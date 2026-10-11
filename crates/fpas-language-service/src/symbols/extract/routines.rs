@@ -6,10 +6,9 @@ use fpas_parser::{
     FormalParam, FuncBody, FunctionDecl, ProcedureDecl, Stmt, TypeParam, Visibility,
 };
 
-use super::{
-    declaration_symbol, member_symbol, name_span, named_type, type_callable_signature, type_text,
-};
-use crate::{DocumentSnapshot, DocumentSymbol, SymbolKind, SymbolVisibility};
+use super::type_parameters::type_parameter_symbols;
+use super::{declaration_symbol, member_symbol, named_type, type_callable_signature, type_text};
+use crate::{DocumentSnapshot, DocumentSymbol, SymbolKind};
 
 pub(crate) fn function_children(
     snapshot: &DocumentSnapshot,
@@ -195,9 +194,8 @@ fn routine_children(
     routine_span: Span,
 ) -> Vec<DocumentSymbol> {
     let scope_span = routine_span.diagnostic_span_or_synthetic();
-    let mut children = type_params
-        .iter()
-        .map(|parameter| type_parameter_symbol(snapshot, owner, parameter, scope_span))
+    let mut children = type_parameter_symbols(snapshot, owner, type_params, scope_span)
+        .into_iter()
         .chain(
             params
                 .iter()
@@ -213,33 +211,6 @@ fn routine_children(
     collect_statement_symbols(snapshot, owner, stmts, scope_span, &mut children);
     children.sort_by_key(|symbol| symbol.full_span.offset());
     children
-}
-
-fn type_parameter_symbol(
-    snapshot: &DocumentSnapshot,
-    owner: &str,
-    parameter: &TypeParam,
-    scope_span: SourceSpan,
-) -> DocumentSymbol {
-    let selection_span = name_span(snapshot, scope_span, &parameter.name);
-    let constraint = parameter
-        .constraint
-        .as_deref()
-        .map_or_else(String::new, |value| format!(": {value}"));
-    DocumentSymbol {
-        name: parameter.name.clone(),
-        qualified_name: format!("{owner}.{}", parameter.name),
-        kind: SymbolKind::TypeParameter,
-        full_span: selection_span,
-        selection_span,
-        scope_span,
-        visible_from: scope_span.offset(),
-        visibility: SymbolVisibility::Private,
-        type_name: None,
-        detail: format!("type parameter {}{constraint}", parameter.name),
-        callable: None,
-        children: Vec::new(),
-    }
 }
 
 fn parameter_symbol(

@@ -6,6 +6,7 @@ mod members;
 mod record_construction;
 mod routines;
 mod source;
+mod type_parameters;
 
 use fpas_diagnostics::SourceSpan;
 use fpas_lexer::Span;
@@ -86,6 +87,7 @@ pub(super) fn extract(snapshot: &DocumentSnapshot) -> (String, Vec<DocumentSymbo
     }
 }
 
+/// Builds a declaration symbol and its lexical children.
 pub(super) fn declaration_symbol(
     snapshot: &DocumentSnapshot,
     owner: &str,
@@ -164,13 +166,9 @@ pub(super) fn declaration_symbol(
         }
     };
     let children = match declaration {
-        Decl::TypeDef(value) => members::type_children(
-            snapshot,
-            &qualified_name,
-            &value.body,
-            full_span,
-            scope_span,
-        ),
+        Decl::TypeDef(value) => {
+            members::type_children(snapshot, &qualified_name, value, full_span, scope_span)
+        }
         Decl::Function(value) => function_children(snapshot, &qualified_name, value),
         Decl::Procedure(value) => procedure_children(snapshot, &qualified_name, value),
         _ => Vec::new(),

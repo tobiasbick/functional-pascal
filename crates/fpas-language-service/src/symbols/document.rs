@@ -28,7 +28,7 @@ pub enum SymbolKind {
     Procedure,
     /// Record method declaration.
     Method,
-    /// Generic routine type parameter.
+    /// Generic routine or data type parameter.
     TypeParameter,
     /// Formal routine or closure parameter.
     Parameter,
@@ -85,6 +85,18 @@ pub struct DocumentSymbol {
     pub callable: Option<CallableSignature>,
     /// Nested declarations in source order.
     pub children: Vec<DocumentSymbol>,
+}
+
+impl DocumentSymbol {
+    /// Returns fields, methods and enum members available through qualified access.
+    pub(crate) fn type_members(&self) -> impl Iterator<Item = &Self> {
+        self.children.iter().filter(|child| {
+            matches!(
+                child.kind,
+                SymbolKind::Field | SymbolKind::Method | SymbolKind::EnumMember
+            )
+        })
+    }
 }
 
 /// Symbols extracted from one immutable document snapshot.

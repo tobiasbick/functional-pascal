@@ -9,6 +9,7 @@ mod bound_method;
 mod calls;
 mod closure;
 mod construction_inference;
+mod conversion_argument;
 mod decision;
 mod designator;
 mod distinct_conversion;
@@ -48,7 +49,7 @@ impl Checker {
             Expr::Bool(_, _) => Ty::Boolean,
             Expr::Designator(designator) => {
                 self.reject_var_parameter_routine_value(designator);
-                let ty = self.check_designator_expr(designator);
+                let ty = self.check_value_designator_expr(designator);
                 let name = Self::resolve_designator_name(designator);
                 if self
                     .scopes

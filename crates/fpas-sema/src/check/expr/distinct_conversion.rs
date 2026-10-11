@@ -8,7 +8,7 @@
 
 use super::Checker;
 use crate::types::{DistinctTy, Ty};
-use fpas_diagnostics::codes::{SEMA_TYPE_MISMATCH, SEMA_WRONG_ARGUMENT_COUNT};
+use fpas_diagnostics::codes::SEMA_TYPE_MISMATCH;
 use fpas_lexer::Span;
 use fpas_parser::Expr;
 
@@ -100,43 +100,6 @@ impl Checker {
                 span,
             );
         }
-    }
-
-    /// Accepts exactly one positional value argument.
-    pub(in crate::check::expr) fn single_conversion_argument<'a>(
-        &mut self,
-        name: &str,
-        args: &'a [Expr],
-        span: Span,
-    ) -> Option<&'a Expr> {
-        if args.len() != 1 {
-            self.error_with_code(
-                SEMA_WRONG_ARGUMENT_COUNT,
-                format!(
-                    "Conversion `{name}(...)` expects 1 argument, got {}",
-                    args.len()
-                ),
-                format!("Pass exactly one value, for example `{name}(Value)`."),
-                span,
-            );
-            self.check_args_only(args);
-            return None;
-        }
-        let argument = &args[0];
-        if matches!(
-            argument,
-            Expr::NamedArgument { .. } | Expr::VarArgument { .. }
-        ) {
-            self.error_with_code(
-                SEMA_TYPE_MISMATCH,
-                format!("Conversion `{name}(...)` takes one positional value"),
-                format!("Write `{name}(Value)` without a parameter name or `var` marker."),
-                argument.span(),
-            );
-            self.check_args_only(args);
-            return None;
-        }
-        Some(argument)
     }
 
     /// Wraps a value of the exact underlying type, or keeps a value of the same distinct type.

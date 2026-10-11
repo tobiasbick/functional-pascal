@@ -1,12 +1,65 @@
+//! Resolution and classification of value and type designators.
+//! See `docs/pascal/language/types/subranges.md` and
+//! `docs/pascal/language/types/distinct-types.md`.
+
 use super::super::Checker;
 use crate::scope::SymbolKind;
 use crate::types::Ty;
 use fpas_diagnostics::codes::{
     SEMA_AMBIGUOUS_IMPORTED_NAME, SEMA_TYPE_MISMATCH, SEMA_UNKNOWN_NAME,
 };
-use fpas_parser::{Designator, DesignatorPart};
+use fpas_parser::{Designator, DesignatorPart, Expr};
 
 impl Checker {
+    /// Recognizes a type name, including parentheses, aliases and unit qualification.
+    pub(super) fn is_type_designator(&self, expression: &Expr) -> bool {
+        match expression {
+            Expr::Paren(inner, _) => self.is_type_designator(inner),
+            Expr::Designator(designator) => self.designator_is_type(designator),
+            _ => false,
+        }
+    }
+
+    fn designator_is_type(&self, designator: &Designator) -> bool {
+        designator
+            .parts
+            .iter()
+            .all(|part| matches!(part, DesignatorPart::Ident(..)))
+            && self
+                .scopes
+                .lookup(&Self::resolve_designator_name(designator))
+                .is_some_and(|symbol| symbol.kind == SymbolKind::Type)
+    }
+
+    /// Resolves an expression name and rejects type declarations used as values.
+    pub(super) fn check_value_designator_expr(&mut self, designator: &Designator) -> Ty {
+        let ty = self.check_designator_expr(designator);
+        if !ty.is_error() && self.designator_is_type(designator) {
+            let name = Self::resolve_designator_name(designator);
+            self.error_with_code(
+                SEMA_TYPE_MISMATCH,
+                format!("The type name `{name}` cannot be used as a value"),
+                format!("Use a value expression or a conversion/construction call, such as `{name}(Value)` for a scalar type."),
+                designator.span,
+            );
+            Ty::Error
+        } else {
+            ty
+        }
+    }
+
+    /// Checks an already-classified type operand while retaining expression type metadata.
+    pub(super) fn check_type_operand(&mut self, expression: &Expr) -> Ty {
+        let ty = match expression {
+            Expr::Paren(inner, _) => self.check_type_operand(inner),
+            Expr::Designator(designator) => self.check_designator_expr(designator),
+            _ => Ty::Error,
+        };
+        self.expr_types
+            .insert(Self::expr_lookup_key(expression), ty.clone());
+        ty
+    }
+
     pub(crate) fn check_designator_expr(&mut self, designator: &Designator) -> Ty {
         self.check_designator_prefix_expr(designator, designator.parts.len())
     }

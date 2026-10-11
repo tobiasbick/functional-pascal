@@ -3,10 +3,9 @@
 //! **Documentation:** `docs/pascal/language/types/subranges.md`
 
 use super::Checker;
-use crate::scope::SymbolKind;
 use crate::types::Ty;
 use fpas_diagnostics::codes::SEMA_TYPE_MISMATCH;
-use fpas_parser::{DesignatorPart, Expr};
+use fpas_parser::Expr;
 
 impl Checker {
     /// Checks a type operand of `in`; value operands keep ordinary collection membership.
@@ -43,22 +42,5 @@ impl Checker {
         self.subrange_memberships
             .insert(Self::expr_lookup_key(expression), range.clone());
         Some(Ty::Boolean)
-    }
-
-    fn is_type_designator(&self, expression: &Expr) -> bool {
-        match expression {
-            Expr::Paren(inner, _) => self.is_type_designator(inner),
-            Expr::Designator(designator)
-                if designator
-                    .parts
-                    .iter()
-                    .all(|part| matches!(part, DesignatorPart::Ident(..))) =>
-            {
-                self.scopes
-                    .lookup(&Self::resolve_designator_name(designator))
-                    .is_some_and(|symbol| symbol.kind == SymbolKind::Type)
-            }
-            _ => false,
-        }
     }
 }

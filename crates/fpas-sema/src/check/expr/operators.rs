@@ -69,9 +69,19 @@ impl Checker {
         right: &Expr,
         span: Span,
     ) -> Ty {
-        let left_ty = self.check_expr(left);
+        let type_membership = op == BinaryOp::In && self.is_type_designator(right);
+        // Membership owns the diagnostic for a type name supplied on the left.
+        let left_ty = if type_membership && self.is_type_designator(left) {
+            self.check_type_operand(left)
+        } else {
+            self.check_expr(left)
+        };
         let left_ty = self.resolve_visible_type(&left_ty);
-        let right_ty = self.check_expr(right);
+        let right_ty = if type_membership {
+            self.check_type_operand(right)
+        } else {
+            self.check_expr(right)
+        };
         let right_ty = self.resolve_visible_type(&right_ty);
         if op == BinaryOp::In
             && let Some(result) = self.check_subrange_membership(expression, &left_ty, &right_ty)

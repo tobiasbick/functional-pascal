@@ -5,6 +5,7 @@ mod boolean;
 mod bound_methods;
 mod case_expressions;
 mod closures;
+mod conversion_arguments;
 mod distinct_comparisons;
 mod distinct_conversions;
 mod equality;

@@ -352,6 +352,8 @@ mod test_workers;
 
 #[path = "json_streams/contracts.rs"]
 mod contracts;
+#[path = "json_streams/conversion_arguments.rs"]
+mod conversion_arguments;
 #[path = "json_streams/local_inference.rs"]
 mod local_inference;
 #[path = "json_streams/subranges.rs"]

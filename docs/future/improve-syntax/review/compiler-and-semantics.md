@@ -157,7 +157,18 @@ controls returns `3`.
 
 ## S03 — P2: scalar conversions accept type declarations as value arguments
 
-Status: confirmed; repair open. Owners: AP18.1 and AP19.1 value validation.
+Status: repaired and verified. Owners: AP18.1 and AP19.1 value validation.
+
+The shared conversion-argument validation lives in `conversion_argument.rs`.
+Type-designator classification lives in `designator.rs`, shared by conversions
+and membership. Ordinary expression names must denote values, so type names
+inside computed conversion arguments also fail semantically. `operators.rs`
+checks membership's explicit type operands separately and retains their metadata
+and existing diagnostics. Direct, parenthesized, local/imported aliases and
+qualified type names are covered at the semantic boundary. The CLI regression
+requires FP3006 in the semantic phase for direct and computed arguments, with a
+valid conversion example. Positive value conversions and membership still pass;
+the subrange and distinct-type handbook rules are unchanged.
 
 ### Requirement and reproduction
 
@@ -199,14 +210,14 @@ end.
 
 ### Tasks and acceptance
 
-- [ ] Reject type declarations in conversion value positions during semantic
+- [x] Reject type declarations in conversion value positions during semantic
   analysis. Put the shared value/type-designator distinction at its proper
   owner instead of duplicating the membership predicate.
-- [ ] Extend semantic negative tables for direct, parenthesized, aliased and
+- [x] Extend semantic negative tables for direct, parenthesized, aliased and
   imported-qualified type names, covering both conversion kinds.
-- [ ] Preserve valid values, alias conversions, and `Value in RangeType`.
+- [x] Preserve valid values, alias conversions, and `Value in RangeType`.
   The diagnostic must show a valid conversion example.
-- [ ] Add one CLI regression proving a stable semantic error replaces FP9001.
+- [x] Add one CLI regression proving a stable semantic error replaces FP9001.
   No runtime workaround or language change is needed.
 
 ## Inspected areas without another confirmed finding

@@ -144,7 +144,7 @@ See [pascal/library-deps/README.md](pascal/library-deps/README.md).
 
 ### Monorepo (library dependency + workspace)
 
-When a program lives in one project and reusable units live in another, use `kind = "library"` plus `[dependencies].projects` on the program `.fpasprj`. Optional `.fpasworkspace` lists all projects for `fpas check`:
+This example lists its library, program, and test projects in a `.fpasworkspace`. The program and tests reference the library by its `project.name` through `[dependencies].workspace`; `fpas check` checks every member:
 
 ```sh
 fpas run examples/pascal/monorepo/apps/hello/hello.fpasprj
@@ -167,9 +167,9 @@ See [pascal/monorepo/README.md](pascal/monorepo/README.md) and [docs/pascal/prog
 | `pascal/enum-data/` | Enums with associated data and `case` |
 | `pascal/error-handling/` | `Result`, `Option`, `panic`, and `try` |
 | `pascal/for/for_example.fpas` | Index-based counting `for` with `break` / `continue` |
-| `pascal/for/downto_example.fpas` | `for I := N downto M` |
-| `pascal/for-in/for_in_example.fpas` | `for V in array` |
-| `pascal/for-in/dict_for_in_example.fpas` | `for K in dict` (key iteration) |
+| `pascal/for/downto_example.fpas` | `for I: integer := N downto M do` |
+| `pascal/for-in/for_in_example.fpas` | `for V: integer in Items do` |
+| `pascal/for-in/dict_for_in_example.fpas` | `for Name: string in Ages do` (key iteration) |
 | `pascal/concurrency/go_statement_example.fpas` | Fire-and-forget `go` (no `task` handle) |
 | [`pascal/concurrency/select_events.fpas`](pascal/concurrency/select_events.fpas) | Typed channel delivery selected against a timer |
 | [`pascal/concurrency/task_group_workers.fpas`](pascal/concurrency/task_group_workers.fpas) | Group-owned workers, cooperative cancellation, and collected failures |

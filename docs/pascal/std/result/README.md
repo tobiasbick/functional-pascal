@@ -1,9 +1,10 @@
 # Result and Option helpers
 
-Combinators and accessors for `Result of (T, E)` and `Option of T`.
+Native combinators and accessors for `Result of (T, E)` and `Option of T`;
+no `uses` clause is needed.
 
-| Unit | Description |
-|------|-------------|
+| Topic | Description |
+|-------|-------------|
 | [`Result operations`](../../language/types/result-operations.md) | `Unwrap`, `Map`, `AndThen`, `OrElse` |
 | [`Option operations`](../../language/types/option-operations.md) | `Unwrap`, `Map`, `AndThen`, `OrElse` |
 

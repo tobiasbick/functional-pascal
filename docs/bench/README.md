@@ -201,7 +201,8 @@ Snapshot JSON and committed history are written to a flushed same-directory stag
 Add or adjust entries in [`suite.toml`](suite.toml):
 
 - `id` — short name used in tables and JSON
-- `group` — `mandelbrot`, `vm`, `concurrency`, `tui`, `tooling`, `startup`, or `review` (filter with `--group`)
+- `group` — `mandelbrot`, `vm`, `concurrency`, `tui`, `tooling`, `startup`,
+  `review`, `local-index`, `source-review`, or `source-navigation` (filter with `--group`)
 - `path` — `.fpas` program or `.fpasprj` project relative to the repo root
 - `driver` — defaults to `fpas`; `http-body`, `language-service`, `language-service-project`, `compiler-lowering`, `project-build`, `unit-artifact`, and `program-artifact` run native workloads and omit `path`
 - `args` — arguments after `--` (usually iteration count)

@@ -8,8 +8,9 @@ Status: complete (AP20.1–AP20.3). Effort: large. Completion is tracked in the
 
 Nested patterns have stable resolution and concrete coverage diagnostics
 with recursive exhaustiveness and unreachable-label checks. Bindings remain
-explicit regardless of surrounding names. Rejecting `else` on closed enums is
-the separate, open AP03 package; current cases accept `else`.
+explicit regardless of surrounding names. The separate, completed
+[AP03](../ap03-explicit-closed-enum-cases/README.md) package rejects `else` on closed enums;
+scalar cases retain it.
 
 After AP20.1 and AP20.2, patterns bind with `const Name`, ignore fields with
 `_`, nest, and compare payloads with compile-time constants; coverage is

@@ -2,8 +2,11 @@
 
 Strings, conversions, structured parsing, JSON, and TOML.
 
-| Unit | Description |
-|------|-------------|
+String operations are native and need no `uses` clause. The `Std.*` units below
+require imports.
+
+| Topic | Description |
+|-------|-------------|
 | [`String operations`](../../language/types/string/README.md) | String operations |
 | [`Std.Conv`](conv.md) | Type conversions |
 | [`Std.Parse`](parse.md) | `TryInt`, `TryReal`, `TryBool` |

@@ -22,12 +22,12 @@ From the workspace directory (runs the sole program member `hello`):
 
 ```sh
 cd examples/pascal/monorepo
-fpas
+fpas run
 ```
 
 ## Check
 
-Type-check the whole workspace (library + program):
+Type-check the whole workspace (library, program, and tests):
 
 ```sh
 cd examples/pascal/monorepo

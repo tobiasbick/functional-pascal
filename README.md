@@ -12,14 +12,18 @@ A modern, function-first programming language built on Pascal's readable syntax.
 - **Immutable by default** — All bindings are immutable unless declared with `var`.
 - **Pattern matching** — Exhaustive `case` statements with enum, `Result`, and `Option` destructuring.
 - **First-class functions** — Pass named functions as values, store them in variables, and use them with higher-order APIs.
+- **Contracts** — Declare routine preconditions with `requires` and postconditions with `ensures`.
+- **Generic records and enums** — Declare type parameters with `of` and infer type arguments from supplied constructor fields or payloads.
+- **Subranges and distinct types** — Restrict integer values with checked bounds and give scalar domain types their own identity.
 - **Error handling** — Built-in `Result of (T, E)` and `Option of T` types with a `try` operator for propagation.
 - **Concurrency** — `go` tasks, typed bounded channels, cooperative cancellation, mixed-source `Select`, task groups, and supervised retries. [Std.Tasks](docs/pascal/std/concurrency/task.md) includes timed group close; timeout retains unfinished work rather than forcibly terminating it.
-- **Standard library** — Built-in `Std.*` units for console I/O, TUI, strings, math, arrays, tasks, and more.
+- **Task scopes** — `scope ... end scope;` joins owned child tasks before exit, supports cooperative cancellation, and propagates runtime failures. [Scope-owned handles](docs/pascal/language/concurrency/task-scopes.md#handle-escapes) stay inside their scope.
+- **Standard library** — Built-in `Std.*` units for console I/O, TUI, math, tasks, files, networking, and more. Strings, arrays, dictionaries, `Option`, and `Result` have native operations that need no imports.
 - **Server lifetime** — [Std.Server](docs/pascal/std/network/server.md) owns worker groups and listeners, handles stop signals, and supports explicitly authorized process escalation after a common grace period.
 - **Editor support** — A repository-owned VS Code-compatible extension provides diagnostics, formatting, navigation, completion, project workflows, integrated tests, and source debugging.
 - **Safe by design** — The VM manages memory. No pointers, no manual allocation, no unsafe operations.
 - **Case-insensitive** — Keywords and identifiers are case-insensitive, following Pascal tradition.
-- **Explicit types** — Every variable and parameter declares its type.
+- **Explicit types** — Parameters, routine results, and record fields declare their types. Local bindings allow [limited inference](docs/pascal/language/basics/local-variables.md#limited-type-inference) from literals, typed construction, and explicit type conversions.
 
 ## Quickstart
 
@@ -271,8 +275,9 @@ fpas init workspace my-suite
 fpas run my-app/my-app.fpasprj
 fpas check my-lib/my-lib.fpasprj
 fpas check my-suite/my-suite.fpasworkspace   # check every workspace member
-cd my-suite && fpas check           # discover .fpasworkspace in cwd
-cd my-suite && fpas run             # run the sole program member
+cd my-suite
+fpas check                         # discover .fpasworkspace in cwd
+fpas run                           # run the sole program member
 ```
 
 ## Documentation
@@ -284,7 +289,7 @@ The full language specification lives in [`docs/pascal/`](docs/pascal). Start wi
 | Getting started | [getting-started/](docs/pascal/getting-started/README.md) |
 | Language | [language/](docs/pascal/language/README.md) |
 | Program structure | [program-structure/](docs/pascal/program-structure/README.md) |
-| Standard library | [std/](docs/pascal/std/README.md) — themed subdirs (`host/`, `text/str/`, `console/`, `tui/`, `network/`, …) |
+| Standard library | [std/](docs/pascal/std/README.md) — themed subdirs (`host/`, `text/`, `console/`, `tui/`, `network/`, …) |
 | Tools | [tools/](docs/pascal/tools/README.md) — formatter and editor integration |
 | Formal grammar | [grammar.ebnf](docs/specs/grammar.ebnf) |
 

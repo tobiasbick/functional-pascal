@@ -47,8 +47,8 @@ allows `null` to be reserved as a keyword while JSON text remains unchanged.
 - Expressions take no terminating `;` of their own. Anonymous routines and
   record updates close with their named ending;
   any following `;` terminates the enclosing statement or declaration, as in
-  `const Moved: Point := P with X := 1; end with;`. The planned decision
-  expressions follow this ownership rule under AP21.
+  `const Moved: Point := P with X := 1; end with;`. The decision expressions
+  implemented by AP21 follow this ownership rule.
 - An anonymous routine passed as an argument ends before the call's closing
   parenthesis; no `;` separates its ending from that parenthesis. Its body
   statements still require semicolons.

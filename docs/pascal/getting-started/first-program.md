@@ -37,7 +37,7 @@ const MaxItems: integer := 100;
 
 // variable declarations
 
-const Counter: integer := 0;
+var Counter: integer := 0;
 
 // function declarations
 function Add(A: integer; B: integer): integer;
@@ -47,7 +47,8 @@ end function;
 
 // main block
 begin
-  WriteLn(Add(3, 4));
+  Counter := Add(3, 4);
+  WriteLn(Counter);
 end.
 ```
 

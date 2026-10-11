@@ -39,7 +39,8 @@ the tasks started inside it.
 Their declarations and references follow normal case-insensitive name resolution.
 
 `mutable` is an ordinary identifier. Binding declarations use `const` or
-`var`, and routine parameters are read-only.
+`var`, and routine parameters are read-only unless declared with
+[`var`](../language/functions/var-parameters.md).
 
 `private` is not a keyword. Unit declarations and record members without
 `public` are private by default, so `private` remains available as an ordinary

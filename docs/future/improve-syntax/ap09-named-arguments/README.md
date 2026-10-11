@@ -49,12 +49,10 @@ AP10 and AP17 depend on this package.
 - [x] [AP09.1: Named arguments for routines and methods](01-named-routine-arguments.md)
 - [x] [AP09.2: Named arguments for enum variant constructors](02-named-variant-arguments.md)
 
-## Follow-up work recorded elsewhere
+## Related implemented behavior
 
-AP09 is complete. These gaps are tracked in the plans that own them:
-
-- Named construction of generic enum variants:
-  [AP24.3](../ap24-generic-data-structures/03-generic-enums.md).
+Named construction of generic enum variants is implemented by
+[AP24.3](../ap24-generic-data-structures/03-generic-enums.md).
 
 ## Acceptance
 

@@ -8,7 +8,7 @@ Formal syntax: [`grammar.ebnf`](../../../specs/grammar.ebnf) (`type_declaration`
 | Topic | Description |
 |-------|-------------|
 | [Type declaration order](declaration-order.md) | Whole-unit type/member visibility, ordered values, and finite recursion |
-| [Records](records.md) | Declaration, literals, fields, immutability, default values |
+| [Records](records.md) | Declaration, typed construction, fields, immutability, default values |
 | [Record methods](record-methods.md) | Instance methods with implicit `Self`; bound method values; static functions and procedures via the type |
 | [Optional handlers](../functions/first-class.md#optional-handlers) | Ordinary optional callable fields |
 | [Record update](record-update.md) | `with` copy-and-override expressions |

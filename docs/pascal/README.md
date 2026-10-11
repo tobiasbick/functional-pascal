@@ -11,7 +11,7 @@ Planned features: [`docs/future/`](../future).
 - **Function First** — Functions are the primary abstraction. No classical classes or object hierarchies.
 - **Explicit Binding Mutability** — `const` declares an immutable binding; `var` allows reassignment.
 - **Safe by Design** — No pointers, no unsafe operations. The VM handles memory.
-- **Explicit Types** — Variable and parameter declarations explicitly state their types.
+- **Explicit Types** — Parameters, routine results, and record fields explicitly state their types. Local bindings support [limited type inference](language/basics/local-variables.md#limited-type-inference).
 - **Case-Insensitive** — Keywords and identifiers are case-insensitive, as in classical Pascal.
 - **Familiar Syntax** — Pascal's `begin`, `end`, `:=`, `downto`, and other well-known constructs.
 
@@ -35,11 +35,11 @@ Ordered learning path for newcomers:
 1. [Getting started](getting-started/README.md) — philosophy, hello world, first program
 2. [Basics](language/basics/README.md) — primitives, variables, operators
 3. [Control flow](language/control-flow/README.md) — `if`, loops, `case` intro
-4. [Functions](language/functions/README.md) — routines, first-class calls
-5. [Types](language/types/README.md) — records, enums, arrays, generics
+4. [Functions](language/functions/README.md) — routines, first-class calls, contracts
+5. [Types](language/types/README.md) — records, enums, arrays, generics, subranges, distinct types
 6. [Pattern matching](language/pattern-matching/README.md) — guards, exhaustiveness
 7. [Error handling](language/error-handling/README.md) — `Result`, `Option`, `try`, `panic`
-8. [Concurrency](language/concurrency/README.md) — `go`, tasks, channels, and scheduling; [Std.Tasks](std/concurrency/task.md) covers cancellation, selection, task groups, supervised retries, and timed close
+8. [Concurrency](language/concurrency/README.md) — `go`, task scopes, channels, and scheduling; [Std.Tasks](std/concurrency/task.md) covers cancellation, selection, task groups, supervised retries, and timed close
 9. [Units](program-structure/units.md) — `uses`, namespaces, visibility
 10. [Projects](program-structure/projects.md) — `.fpasprj`, workspaces
 11. [CLI](program-structure/cli.md) — `fpas`, `check`, `test`, `fmt`

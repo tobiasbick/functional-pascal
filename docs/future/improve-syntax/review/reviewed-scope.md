@@ -1,96 +1,88 @@
 # Reviewed scope
 
-This is the coverage record for the earlier completed review. The
-[current review](README.md) records its own revision, scope and open findings.
-Package implementation status remains in the [central plan](../README.md).
-Reviewed coverage records an inspection of the listed areas, not a guarantee
-that later changes need no further review.
+This persistent record covers 22 AP packages inspected across two completed
+reviews. Keep it when clearing the [review plan](README.md). Package
+implementation status remains in the [central plan](../README.md).
 
-## Reviewed packages
+Coverage records an inspection of the listed work packages and areas at the
+recorded revisions. Later changes and untested combinations may need another
+review. Review completion is not merge approval.
 
-The completed review covered the following packages and their completed work
-packages, including implementation, regression coverage and current documentation.
+## Earlier completed review
 
-| Completed package | Inspected/exercised areas | Related findings |
+The earlier review covered the following completed work packages, including
+implementation, regression coverage and current documentation. Its 22
+findings and follow-up repairs were closed by commit
+`5b04c39697f2d57e6390648194ae294ddff614bb`.
+
+| AP | Reviewed work packages | Inspected/exercised areas |
 | --- | --- | --- |
-| AP01 | Current spelling, references, keyword/block consistency | D01, G01 |
-| AP02 | Shared diagnostics, CLI JSON, project errors, real LSP transport | T01, T02, T04, D01 |
-| AP04 | Consumed calls, discard type/capture proofs, unit interfaces | C03, G01 |
-| AP05 | Alias resolution, shadowing, editor migration, import diagnostics | T02; no new alias semantic defect confirmed |
-| AP06 | All 78 catalog entries, both argument forms, lowering/runtime, editor chains | T03, T04, P01 |
-| AP07 | Boolean grammar, precedence, short circuit, Bits and rejection coverage | No new functional defect confirmed in inspected paths |
-| AP09 | Named/generic/variant calls, written evaluation order, callable restrictions | Cross-unit positive/negative probes passed |
-| AP10 | Typed fields/defaults, aliases, visibility, unit reuse, const/capture interaction | C04, P01 |
-| AP11 | Individual declarations, whole-file type collection, finite graphs | C05, D02 |
-| AP13 | Terminators, named closers, case arms, recovery, docs and embedded fixtures | D01, H02 |
-| AP14 | Removed properties, member resolution and migration | P01; no new removal defect confirmed |
-| AP16 | Computed/static const, writable bindings, initialization and captures | C03, C04, D03, H01 |
-| AP17 | Storage roots, aliases, reference modes, forwarding, capture lifetimes | C02 |
-| AP20 | Recursive patterns, coverage, constant identity, is/while bindings, runtime matching | C01, C03, C04, H02 |
+| AP01 | AP01.1, AP01.2 | Current spelling, references, keyword/block consistency |
+| AP02 | AP02.1–AP02.6 | Shared diagnostics, CLI JSON, project errors, real LSP transport |
+| AP04 | AP04.1, AP04.2 | Consumed calls, discard type/capture proofs, unit interfaces |
+| AP05 | AP05.1, AP05.2 | Alias resolution, shadowing, editor migration, import diagnostics |
+| AP06 | AP06.1–AP06.3 | All 78 catalog entries, both argument forms, lowering/runtime, editor chains |
+| AP07 | AP07.1–AP07.4 | Boolean grammar, precedence, short circuit, Bits and rejection coverage |
+| AP09 | AP09.1, AP09.2 | Named/generic/variant calls, written evaluation order, callable restrictions |
+| AP10 | AP10.1–AP10.3 | Typed fields/defaults, aliases, visibility, unit reuse, const/capture interaction |
+| AP11 | AP11.1, AP11.2 | Individual declarations, whole-file type collection, finite graphs |
+| AP13 | AP13.1–AP13.6 | Terminators, named closers, case arms, recovery, docs and embedded fixtures |
+| AP14 | AP14.1, AP14.2 | Removed properties, member resolution and migration |
+| AP16 | AP16.1–AP16.3 | Computed/static const, writable bindings, initialization and captures |
+| AP17 | AP17.1–AP17.3 | Storage roots, aliases, reference modes, forwarding, capture lifetimes |
+| AP20 | AP20.1–AP20.3 | Recursive patterns, coverage, constant identity, `is`/`while` bindings, runtime matching |
 
 Cross-package checks covered independently compiled units, facade aliases,
 fresh and reused sidecars, named argument evaluation, typed record defaults,
 imported mutable routine values, same-root alias rejection, computed constants
 and imported callable discard proofs.
 
-## Completed review points
+The review also covered parser ownership and reuse, public Rust documentation,
+handbook links, debugger scenarios for named calls and typed construction,
+explicit-reference live assignments, unsaved editor corrections, callable
+values versus invoked results, task-handle discard proofs and LSP lifecycle
+and watched-file handling.
 
-All 22 findings from the completed syntax review are resolved.
+## Subsequent completed review
 
-| Reviewed | Finding | Priority | Resolved point |
-| --- | --- | --- | --- |
-| [x] | C01 | P1 | enum comparison patterns use resolved constant identity |
-| [x] | C02 | P2 | sibling nested calls preserve transitive captures and reference lifetimes |
-| [x] | C03 | P2 | pattern bindings preserve callable task restrictions and discard proofs |
-| [x] | C04 | P2 | static record fields and derived constants contribute evaluated pattern values across units |
-| [x] | C05 | P2 | shared finite type graphs use one worklist solution with bounded dependency work |
-| [x] | C06 | P2 | generated entry symbols are isolated from source declarations while debugger names retain program identity |
-| [x] | T01 | P2 | LSP project failures retain original records, source attribution and absent positions |
-| [x] | T02 | P2 | root-program import failures retain the authoritative path and unit-name span |
-| [x] | T03 | P3 | incomplete native chains preserve recursive types, declaration-local aliases and callback results |
-| [x] | H01 | P2 | workflow fixtures verify the exact diagnostic token range |
-| [x] | H02 | P2 | debugger-host fixtures use current syntax and pass the full host suite |
-| [x] | D01 | P2 | positive examples and diagnostic corrections use implemented AP13 syntax |
-| [x] | D02 | P2 | current handbook snippets repeat the keyword for each type declaration |
-| [x] | D03 | P2 | the formatter control-flow example uses a mutable loop binding |
-| [x] | D04 | P2 | the formatter documents implemented built-in generic forms |
-| [x] | D05 | P3 | the long-import example matches canonical formatter output |
-| [x] | D06 | P2 | complete introductory examples import Std.Console |
-| [x] | G01 | P2 | the formal keyword set matches the implemented reserved words |
-| [x] | G02 | P2 | the formal task-call grammar includes supported postfix targets |
-| [x] | P01 | P3 | completed package descriptions agree with the final implemented forms |
-| [x] | T04 | P3 | string bounds hints use native calls and account for empty strings |
-| [x] | L01 | P3 | the cryptography index links to the existing future-work page |
+Fixed implementation review range:
 
-The review also covered Rust module ownership, reuse of the shared parser,
-public documentation and handbook links. No independent hard Rust architecture
-finding was confirmed; the parser reuse recommendation is included in T03.
+- Baseline: `5b04c39697f2d57e6390648194ae294ddff614bb`.
+- Target: `34397373799a5897dfcfc09e754d16fcad3c7386`.
+- All six findings repaired, checked and reviewed again through
+  `5ae28ba59f608b4051b9c247bfd70f43b0091d42`.
 
-The debugger follow-ups are reviewed and complete: named calls, typed record
-construction, explicit reference calls and live reference assignment. Their
-implemented rules are documented in the
-[debugger handbook](../../../pascal/tools/debugger.md).
+| AP | Reviewed work packages | Inspected/exercised areas |
+| --- | --- | --- |
+| AP03 | AP03.1, AP03.2 | Closed-enum coverage, guards, scalar exceptions and case expressions |
+| AP15 | AP15.1, AP15.2 | Optional-handler fields, removed event owners and existing consumer coverage |
+| AP18 | AP18.1, AP18.2 | Subrange bounds, conversions, membership, diagnostics and generic/record use |
+| AP19 | AP19.1, AP19.2 | Distinct identity, conversions, comparisons, constraints and case labels |
+| AP21 | AP21.1, AP21.2 | If/case expression typing, lowering, constants, pattern scope and editor binding |
+| AP22 | AP22.1, AP22.2 | Allowed inference, constructor/conversion evidence and editor integration |
+| AP23 | AP23.1, AP23.2 | Contracts, exits, captures, indirect/generic calls and unit diagnostics |
+| AP24 | AP24.1–AP24.3 | Generic records/enums, joint inference, recursion, callable fields and symbols |
 
-## Completed implementation verification
+Repairs covered decision-expression payload typing, nested generic callback
+inference, type declarations in conversion value positions, generic data type
+parameter identities, lexical decision-pattern bindings and specialized
+callable-field signatures. No independent standards finding was confirmed.
+Repair evidence and detailed checks are retained in the six repair commits
+between the target revision and the closure revision.
 
-The follow-up checked the completed repair implementations and resolved:
+Verification covered the Rust workspace, targeted semantic and language-service
+regressions, real CLI diagnostics, the standalone FPAS suite, source formatting
+and the full VS Code extension-host suite. No benchmark or exhaustive
+feature-combination claim is made. A separately observed postfix-field
+navigation limitation in `Box(...).Value` was outside the six repaired findings.
 
-- Recursive capture metadata, reference lifetimes, task boundaries and discard
-  proofs, including shadowing and shared mutable cells (C02/C03).
-- Unsaved dependency correction and recovery without stale disk diagnostics (T01).
-- Callable values versus invoked results in native completion (T03).
-- Detached postfix procedure calls and reference-argument rejection (G02).
-- Calls through array elements and dictionary entries, including evaluation order
-  and retained/detached tasks.
-- LSP shutdown with an unanswered file-watch registration request.
+## Scope for a later review
 
-Fourteen regression tests cover these repairs. The latest verification passed
-format checking and the build. The complete Rust workspace run had 3,970 passed,
-2 failed and 0 ignored tests across 203 result groups, with no exclusions.
-The two unchanged VM socket-test failures were
-`tcp_backpressure_can_time_out_and_cancel_without_closing` (a successful write
-instead of cancellation) and
-`write_deadline_is_not_reset_by_retries_and_preserves_socket_timeouts`
-(32 ms instead of 30 ms). The watcher and shutdown regressions passed.
-The earlier reconciliation also recorded an independent Clippy blocker in
-`crates/fpas-unit/src/object/mod.rs`; Clippy was not rerun in the follow-up.
+AP12, AP25, AP26 and AP27 were outside these completed implementation reviews;
+their proposal status was not treated as missing implementation. AP08, AP28 and
+AP29 have no work packages in the central plan.
+
+Before starting another review, recheck the current central plan and select a
+fixed revision range. Append the inspected AP work packages, coverage limits
+and closure revision here when that review finishes. Preserve earlier entries
+instead of replacing them with the newest scope.

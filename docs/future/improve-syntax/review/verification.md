@@ -1,61 +1,43 @@
-# Review repair verification
+# Review verification
 
-The [repair index](README.md) tracks six findings from reviewed revision
-`34397373799a5897dfcfc09e754d16fcad3c7386`. Closed items require a demonstrated
-regression, an owner-boundary repair, a second code review and applicable checks.
-Current handbook rules remain unchanged.
+No active review checks or repair results are recorded. This file is ready for
+the [next review](README.md). Completed AP coverage remains in
+[reviewed-scope.md](reviewed-scope.md); earlier check results remain in Git history.
 
-## Required checks
+## Required record
 
-These results cover all six completed repairs. Standalone FPAS checks cover the
-language repairs S01/S02/S03; full editor-host checks cover T01/T02/T03.
+Record the baseline, target and checked revision, selected work packages,
+commands actually run, results and coverage limits. Use repository-relative
+paths and omit machine-identifying metadata.
 
-| Command | Result |
-| --- | --- |
-| `cargo fmt --all` | Passed |
-| `cargo build` | Passed |
-| `cargo test --workspace --no-fail-fast` | 4,192 tests/doc-tests passed; no failures or ignored tests |
-| `cargo clippy -p fpas-sema --all-targets --locked -- -D warnings` | Passed |
-| `cargo clippy -p fpas-language-service --all-targets --locked -- -D warnings` | Passed |
-| `node editors/vscode/scripts/run-tests.mjs` | Full extension-host suite passed, including manifest, contract and grammar checks |
-| `fpas fmt --check lib apps examples tests` | Passed |
-| `fpas test tests/suite.fpasprj --std-lib lib` | 500 passed, 1 intentional skip, no failures |
-| Local Markdown links and heading fragments | Passed |
-| `git diff --check` | Passed |
+During a review, add a check table with the columns `Command or check`,
+`Checked revision/scope` and `Result`. Distinguish passed, failed and not run;
+do not carry earlier green results forward as evidence for a new revision.
 
-CLI checks use the current debug build, copied to `.temp-data/` while running
-the standalone suite to avoid locking Cargo's executable on Windows. Rust and
-standalone FPAS suites run sequentially to avoid concurrent fixture discovery.
-The editor host runs with `ELECTRON_RUN_AS_NODE` unset; an initial environment
-failure launched the host as Node and was resolved without repository changes.
+Select checks according to [AGENTS.md](../../../../AGENTS.md) and the affected
+behavior:
 
-## Regression and second-review evidence
+- Rust changes normally require `cargo fmt --all`, `cargo build` and
+  `cargo test --workspace`; document a justified narrower scope.
+- FPAS test changes require the owning runner tests and source-format checks.
+- Tooling changes require applicable language-service, LSP, formatter, CLI or
+  VS Code checks at the real consumer boundary.
+- Documentation-only changes require link, command and example validation.
+- Run applicable additional checks, such as crate-scoped Clippy, when required
+  by the affected area. Record environmental failures and corrected reruns.
 
-| Finding | Evidence and status |
-| --- | --- |
-| S01 | Both new semantic regressions failed before repair because invalid programs had no errors. All 13 focused decision-expression tests now pass. The real CLI table checks FP3006, expected/found types and semantic phase for check/build/run/test. The runner confirms valid Result values and selected-branch-only evaluation. Second review confirms shared recursive merging, branch-context validation and unchanged no-widening rules. |
-| S02 | All three new semantic regressions and the runtime fixture failed before repair with the documented contextual callback mismatch. All 37 focused generics tests now pass. Record and enum callbacks execute without annotations. Second review confirms shared contextual traversal, retained missing/conflicting-evidence rejection and generic constraints; enclosing generic parameters remain valid evidence. |
-| S03 | New semantic negatives failed before repair because type names were accepted; the CLI regression reported FP9001 instead of FP3006. Direct and computed arguments now produce semantic diagnostics. All three conversion-argument tests, five membership tests and the CLI regression pass. Second review includes type names hidden in decisions, addition and negation, plus local/imported aliases and preserved membership operands. |
-| T01 | Public API regressions failed before repair by selecting an outer type and, on second review, selecting an owner name as the parameter span. All three targeted tests pass: record/enum definition, references, rename and tokens; constrained and same-owner parameters; exclusion from qualified member lookup/completion. Edited positive sources remain valid. Shared extraction and member filtering avoid query-specific fixes. |
-| T02 | Four public identity regressions failed before repair by resolving binders to the outer constant. All five targeted tests pass for case/if expressions, sibling and nested arms, guards, `and` chains, statement patterns and return/initializer/argument/container/closure positions. Second review checks earlier selector and pattern-comparison uses, declaration visibility and independently valid renames of outer and inner bindings. Shared pattern extraction owns both statement and expression routes. |
-| T03 | Both primary regressions failed before repair: direct fields displayed `Item` instead of `string`, and imported record-type aliases had no member signature. All five targeted tests and the 27 existing import-alias/constructor tests pass. Second review covers function/procedure names and modes, return types, active arguments, original definition/rename targets, nested concrete types, parameterless calls, scalar rejection, private fields/construction and recovered alias cycles. Signatures use the shared field-specialization owner; alias traversal is reused by member and constructor consumers. |
+## Per-finding evidence
 
-The original editor probes ran against the reviewed revision through the
-public `LanguageService` API after semantic analysis accepted their inputs.
-Their source inputs and acceptance contracts remain in
-[tooling-and-tests.md](tooling-and-tests.md). Permanent regressions demonstrate
-the failures before their production repairs and verify the corrected behavior.
+Add a table with `Finding`, `Pre-repair failure`, `Post-repair checks`,
+`Second review` and `Commit`. Explain why each regression failed before repair
+and how its assertions establish the intended public behavior afterward.
 
-## Scope and limits
+Record the second review's conclusion and any corrections it required before
+marking an item repaired and verified. Finish applicable checks, update the
+plan and commit each finding before proceeding to the next one.
 
-- No keyword, grammar, highlighting or current handbook rule changed in these repairs.
-  Existing language-service and LSP tests pass in the workspace suite.
-- The full VS Code extension-host suite passes for T01/T02/T03, including navigation,
-  IntelliSense, semantic tools, project workflows, debugger and lifecycle checks.
-- No benchmark or exhaustive feature-combination claim is made.
-- An incidental T02 fixture exposed a separate navigation limitation: a field
-  in `Box(...).Value` can resolve to an outer `Value`. This postfix lookup is
-  outside the six repairs; the binder fixture uses a differently named field
-  to isolate the requested identity checks.
-- Link validation uses an FPAS helper under `.temp-data/`; reports contain no
-  machine-identifying metadata.
+## Coverage limits
+
+List omitted checks, unresolved observations outside the selected scope and
+any limits of the probes. Distinguish review completion from merge approval and
+from claims of exhaustive coverage.

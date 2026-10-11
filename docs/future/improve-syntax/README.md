@@ -127,11 +127,11 @@ AP08, AP28, and AP29 have no work packages.
 
 ## Recommended order
 
-The completed syntax review and its implementation verification are recorded in
-[reviewed scope](review/reviewed-scope.md), including the packages and points
-already inspected. The [review plan](review/README.md) records the subsequent
-implementation review and all six completed repairs for AP03, AP15, AP18, AP19,
-AP21, AP22, AP23, and AP24.
+The two completed syntax implementation reviews are recorded in
+[reviewed scope](review/reviewed-scope.md), including the 22 AP packages and
+work packages already inspected. The [review plan](review/README.md) is empty
+and retains the file structure and workflow for the next review. Completed
+findings and repair evidence remain in Git history.
 
 Package numbers group related work; they are not the execution order. The
 completed foundation is listed above. For the remaining work, keep the

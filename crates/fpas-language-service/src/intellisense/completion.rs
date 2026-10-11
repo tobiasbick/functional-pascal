@@ -149,8 +149,7 @@ pub(super) fn visible_candidates(
         .all_symbols()
         .into_iter()
         .filter(|symbol| unqualified_kind(symbol.kind))
-        .filter(|symbol| contains(symbol.scope_span, offset))
-        .filter(|symbol| symbol.visible_from <= offset)
+        .filter(|symbol| symbol.is_visible_at(offset))
         .collect::<Vec<_>>();
     local.sort_by(|left, right| {
         left.scope_span
@@ -322,8 +321,4 @@ fn unqualified_kind(kind: SymbolKind) -> bool {
         kind,
         SymbolKind::Program | SymbolKind::Unit | SymbolKind::Field
     )
-}
-
-fn contains(span: fpas_diagnostics::SourceSpan, offset: usize) -> bool {
-    span.offset() <= offset && offset < span.end()
 }

@@ -88,6 +88,14 @@ pub struct DocumentSymbol {
 }
 
 impl DocumentSymbol {
+    /// Recognizes the declaration itself and uses within its sequential lexical scope.
+    pub(crate) fn is_visible_at(&self, offset: usize) -> bool {
+        (self.selection_span.offset() <= offset && offset < self.selection_span.end())
+            || (self.scope_span.offset() <= offset
+                && offset < self.scope_span.end()
+                && self.visible_from <= offset)
+    }
+
     /// Returns fields, methods and enum members available through qualified access.
     pub(crate) fn type_members(&self) -> impl Iterator<Item = &Self> {
         self.children.iter().filter(|child| {

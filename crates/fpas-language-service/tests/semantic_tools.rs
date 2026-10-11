@@ -7,6 +7,8 @@
 
 mod support;
 
+#[path = "semantic_tools/decision_bindings.rs"]
+mod decision_bindings;
 #[path = "semantic_tools/generic_parameters.rs"]
 mod generic_parameters;
 #[path = "semantic_tools/ordinary_names.rs"]

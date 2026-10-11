@@ -1,15 +1,17 @@
-//! Routine parameters, nested declarations, and statement-local symbols.
+//! Routine parameters, nested declarations and body scopes.
 
 use fpas_diagnostics::SourceSpan;
 use fpas_lexer::Span;
 use fpas_parser::{
-    FormalParam, FuncBody, FunctionDecl, ProcedureDecl, Stmt, TypeParam, Visibility,
+    ClosureExpr, FormalParam, FuncBody, FunctionDecl, ProcedureDecl, TypeParam, Visibility,
 };
 
+use super::statements::collect_statement_symbols;
 use super::type_parameters::type_parameter_symbols;
 use super::{declaration_symbol, member_symbol, named_type, type_callable_signature, type_text};
 use crate::{DocumentSnapshot, DocumentSymbol, SymbolKind};
 
+/// Extracts function parameters, body declarations and postcondition result names.
 pub(crate) fn function_children(
     snapshot: &DocumentSnapshot,
     owner: &str,
@@ -28,6 +30,7 @@ pub(crate) fn function_children(
     children
 }
 
+/// Extracts procedure parameters and scoped body declarations.
 pub(crate) fn procedure_children(
     snapshot: &DocumentSnapshot,
     owner: &str,
@@ -43,146 +46,20 @@ pub(crate) fn procedure_children(
     )
 }
 
-pub(super) fn collect_statement_symbols(
+/// Extracts closure parameters and declarations within the closure's source scope.
+pub(super) fn closure_children(
     snapshot: &DocumentSnapshot,
     owner: &str,
-    statements: &[Stmt],
-    scope_span: SourceSpan,
-    output: &mut Vec<DocumentSymbol>,
-) {
-    for statement in statements {
-        match statement {
-            Stmt::Const(value) | Stmt::Var(value) => {
-                let constant = matches!(statement, Stmt::Const(_));
-                let keyword = if constant { "const" } else { "var" };
-                let annotation = value
-                    .type_expr
-                    .as_ref()
-                    .map_or_else(String::new, |ty| format!(": {}", type_text(snapshot, ty)));
-                let mut symbol = member_symbol(
-                    snapshot,
-                    owner,
-                    &value.name,
-                    if constant {
-                        SymbolKind::Constant
-                    } else {
-                        SymbolKind::Variable
-                    },
-                    value.span,
-                    Visibility::Private,
-                    value.type_expr.as_ref().and_then(named_type),
-                    format!("{keyword} {}{annotation}", value.name),
-                    scope_span,
-                    Vec::new(),
-                );
-                symbol.callable = value
-                    .type_expr
-                    .as_ref()
-                    .and_then(|ty| type_callable_signature(snapshot, &value.name, ty));
-                output.push(symbol);
-            }
-            Stmt::Block(body, span) => {
-                collect_statement_symbols(
-                    snapshot,
-                    owner,
-                    body,
-                    span.diagnostic_span_or_synthetic(),
-                    output,
-                );
-            }
-            Stmt::If {
-                then_branch,
-                else_branch,
-                ..
-            } => {
-                collect_branch(snapshot, owner, then_branch, output);
-                if let Some(branch) = else_branch {
-                    collect_branch(snapshot, owner, branch, output);
-                }
-            }
-            Stmt::For {
-                var_name,
-                var_type,
-                body,
-                span,
-                ..
-            }
-            | Stmt::ForIn {
-                var_name,
-                var_type,
-                body,
-                span,
-                ..
-            } => {
-                let mut symbol = member_symbol(
-                    snapshot,
-                    owner,
-                    var_name,
-                    SymbolKind::LoopVariable,
-                    *span,
-                    Visibility::Private,
-                    named_type(var_type),
-                    format!(
-                        "loop variable {var_name}: {}",
-                        type_text(snapshot, var_type)
-                    ),
-                    span.diagnostic_span_or_synthetic(),
-                    Vec::new(),
-                );
-                symbol.callable = type_callable_signature(snapshot, var_name, var_type);
-                output.push(symbol);
-                collect_statement_symbols(
-                    snapshot,
-                    owner,
-                    std::slice::from_ref(body.as_ref()),
-                    span.diagnostic_span_or_synthetic(),
-                    output,
-                );
-            }
-            Stmt::While { body, span, .. } => collect_statement_symbols(
-                snapshot,
-                owner,
-                std::slice::from_ref(body.as_ref()),
-                span.diagnostic_span_or_synthetic(),
-                output,
-            ),
-            Stmt::Repeat { body, span, .. } => {
-                collect_statement_symbols(
-                    snapshot,
-                    owner,
-                    body,
-                    span.diagnostic_span_or_synthetic(),
-                    output,
-                );
-            }
-            Stmt::Case {
-                arms,
-                else_body,
-                span,
-                ..
-            } => {
-                for arm in arms {
-                    collect_statement_symbols(
-                        snapshot,
-                        owner,
-                        std::slice::from_ref(&arm.body),
-                        arm.span.diagnostic_span_or_synthetic(),
-                        output,
-                    );
-                }
-                if let Some(body) = else_body {
-                    collect_statement_symbols(
-                        snapshot,
-                        owner,
-                        body,
-                        span.diagnostic_span_or_synthetic(),
-                        output,
-                    );
-                }
-            }
-            _ => {}
-        }
-    }
+    closure: &ClosureExpr,
+) -> Vec<DocumentSymbol> {
+    routine_children(
+        snapshot,
+        owner,
+        &[],
+        &closure.params,
+        &closure.body,
+        closure.span,
+    )
 }
 
 fn routine_children(
@@ -242,19 +119,4 @@ fn parameter_symbol(
     );
     symbol.callable = type_callable_signature(snapshot, &param.name, &param.type_expr);
     symbol
-}
-
-fn collect_branch(
-    snapshot: &DocumentSnapshot,
-    owner: &str,
-    branch: &Stmt,
-    output: &mut Vec<DocumentSymbol>,
-) {
-    collect_statement_symbols(
-        snapshot,
-        owner,
-        std::slice::from_ref(branch),
-        branch.span().diagnostic_span_or_synthetic(),
-        output,
-    );
 }

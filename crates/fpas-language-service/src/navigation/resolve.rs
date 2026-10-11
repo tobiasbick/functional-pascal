@@ -143,8 +143,7 @@ pub(crate) fn resolve_unqualified(
         .into_iter()
         .filter(|symbol| symbol.name.eq_ignore_ascii_case(name))
         .filter(|symbol| unqualified_kind(symbol.kind))
-        .filter(|symbol| contains(symbol.scope_span, offset))
-        .filter(|symbol| symbol.visible_from <= offset)
+        .filter(|symbol| symbol.is_visible_at(offset))
         .collect::<Vec<_>>();
     local.sort_by(|left, right| {
         left.scope_span

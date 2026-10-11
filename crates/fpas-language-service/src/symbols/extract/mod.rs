@@ -1,11 +1,14 @@
 //! Hierarchical symbol extraction from recovered parser ASTs.
 
 mod contracts;
+mod expressions;
 mod imports;
 mod members;
+mod patterns;
 mod record_construction;
 mod routines;
 mod source;
+mod statements;
 mod type_parameters;
 
 use fpas_diagnostics::SourceSpan;
@@ -36,7 +39,7 @@ pub(super) fn extract(snapshot: &DocumentSnapshot) -> (String, Vec<DocumentSymbo
                 0..0,
                 imports::alias_symbols(&owner, &program.uses, full_span),
             );
-            routines::collect_statement_symbols(
+            statements::collect_statement_symbols(
                 snapshot,
                 &owner,
                 &program.body,
@@ -171,7 +174,26 @@ pub(super) fn declaration_symbol(
         }
         Decl::Function(value) => function_children(snapshot, &qualified_name, value),
         Decl::Procedure(value) => procedure_children(snapshot, &qualified_name, value),
-        _ => Vec::new(),
+        Decl::Const(value) => {
+            let mut children = Vec::new();
+            expressions::collect_expression_symbols(
+                snapshot,
+                &qualified_name,
+                &value.value,
+                &mut children,
+            );
+            children
+        }
+        Decl::Var(value) => {
+            let mut children = Vec::new();
+            expressions::collect_expression_symbols(
+                snapshot,
+                &qualified_name,
+                &value.value,
+                &mut children,
+            );
+            children
+        }
     };
     DocumentSymbol {
         name: name.clone(),

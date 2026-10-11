@@ -69,7 +69,7 @@ Current editor handbook rules remain unchanged.
 
 ## T02 — P2: case-expression bindings resolve to a shadowed outer constant
 
-Status: confirmed; repair open. Owner: AP21 expression binding extraction.
+Status: repaired and verified. Owner: AP21 expression binding extraction.
 
 ### Requirement and reproduction
 
@@ -101,6 +101,7 @@ constant. In the compact one-line fixture the returned selection offset was
 
 ### Cause and tasks
 
+At the reviewed revision,
 [symbols/extract/routines.rs](../../../../crates/fpas-language-service/src/symbols/extract/routines.rs),
 lines 47–184, collects statement declarations without descending into expression
 patterns. The return expression's binder never enters the symbol tree, so
@@ -111,13 +112,25 @@ Related missing statement-pattern symbols predate AP21; this finding records
 the newly delivered expression route and does not claim the entire underlying
 limitation was introduced by AP21.
 
-- [ ] Collect expression pattern bindings with branch/arm scopes, including
+The repair separates
+[statements.rs](../../../../crates/fpas-language-service/src/symbols/extract/statements.rs)
+from routine extraction and adds
+[expressions.rs](../../../../crates/fpas-language-service/src/symbols/extract/expressions.rs).
+Both use [patterns.rs](../../../../crates/fpas-language-service/src/symbols/extract/patterns.rs)
+for case and condition binders. Bindings start after the complete matching test
+and end with their branch or arm. The shared symbol visibility predicate also
+recognizes declaration positions without exposing a binder in earlier uses.
+[Public API regressions](../../../../crates/fpas-language-service/tests/semantic_tools/decision_bindings.rs)
+check definitions, references, isolated rename edits and valid edited sources.
+Current pattern and editor handbook rules remain unchanged.
+
+- [x] Collect expression pattern bindings with branch/arm scopes, including
   expressions in returns, initializers, arguments and nested expressions.
   Reuse the same binding owner for statement and expression patterns.
-- [ ] Add a public definition regression for the reproducer and a rename
+- [x] Add a public definition regression for the reproducer and a rename
   isolation test. Renaming either the outer constant or the arm binder must
   leave the other identity untouched and produce valid FPAS.
-- [ ] Cover sibling arms with equal binder names, nested cases and `if`
+- [x] Cover sibling arms with equal binder names, nested cases and `if`
   expressions with `is`. Confirm binders do not leak into later arms or `else`.
 
 ## T03 — P3: generic callable-field signature help remains unspecialized

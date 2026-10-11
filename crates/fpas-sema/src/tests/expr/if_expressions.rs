@@ -73,6 +73,60 @@ fn the_shared_type_is_checked_against_the_expected_type() {
 }
 
 #[test]
+fn complementary_result_branches_preserve_every_payload_type() {
+    for (ty, left, right) in [
+        (
+            "Result of (integer, string)",
+            "Error('reason')",
+            "Ok('wrong')",
+        ),
+        ("Result of (integer, string)", "Ok(1)", "Error(2)"),
+        (
+            "Option of Result of (integer, string)",
+            "Some(Error('reason'))",
+            "Some(Ok('wrong'))",
+        ),
+        (
+            "array of Result of (integer, string)",
+            "[Error('reason')]",
+            "[Ok('wrong')]",
+        ),
+    ] {
+        for (first, second) in [(left, right), (right, left)] {
+            for value in [
+                format!("if N = 1 then {first} else {second} end if"),
+                format!("case N of when 1: {first}; else {second}; end case"),
+            ] {
+                let error = single_error(&format!("const Value: {ty} := {value};"));
+                assert_eq!(error.code, SEMA_TYPE_MISMATCH, "{error:#?}");
+                assert!(
+                    error.expected.is_some() && error.found.is_some(),
+                    "{error:#?}"
+                );
+            }
+        }
+    }
+}
+
+#[test]
+fn complementary_result_evidence_rejects_a_conflicting_third_branch() {
+    for value in [
+        "if N = 1 then Error('reason') elsif N = 2 then Ok(1) else Ok('wrong') end if",
+        "case N of when 1: Error('reason'); when 2: Ok(1); else Ok('wrong'); end case",
+    ] {
+        let error = single_error(&format!(
+            "const Value: Result of (integer, string) := {value};"
+        ));
+        assert_eq!(error.code, SEMA_TYPE_MISMATCH, "{error:#?}");
+    }
+    check_ok(&program(
+        "const A: Result of (integer, string) := if N = 1 then Error('reason') else Ok(1) end if;
+         const B: Result of (integer, string) := case N of when 1: Ok(1); else Error('reason'); end case;
+         const C: Option of Result of (integer, string) := if N = 1 then Some(Error('reason')) else Some(Ok(1)) end if;",
+    ));
+}
+
+#[test]
 fn conditions_are_boolean_and_is_bindings_stay_in_their_branch() {
     let error = single_error("const X: integer := if N then 1 else 2 end if;");
     assert_eq!(error.code, SEMA_NON_BOOLEAN_CONDITION);

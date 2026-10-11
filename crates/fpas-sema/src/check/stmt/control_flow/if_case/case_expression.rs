@@ -44,7 +44,7 @@ impl Checker {
             ));
         }
         self.check_case_expression_coverage(&checked, else_arm.is_some(), span);
-        self.shared_branch_type(values, "`case` expression arms")
+        self.shared_branch_type(values, "`case` expression arms", expected)
     }
 
     /// Every selector value must produce a value: closed types need every variant,

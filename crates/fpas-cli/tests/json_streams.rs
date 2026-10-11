@@ -162,6 +162,10 @@ fn all_four_commands_preserve_source_failures_in_text_and_json() {
             "FP3006",
         ),
         (
+            "program P; begin const Value: Result of (integer, string) := if false then Error('unused') else Ok('wrong') end if; end.",
+            "FP3006",
+        ),
+        (
             "program P; procedure Print(A, B: integer); begin end procedure; begin end.",
             "FP2014",
         ),
@@ -204,8 +208,14 @@ fn all_four_commands_preserve_source_failures_in_text_and_json() {
             assert_eq!(record["location"]["start"]["line"], 1);
             assert!(record["location"]["end"].is_object());
             if expected == "FP3006" {
-                assert_eq!(record["expected"], "integer");
-                assert_eq!(record["found"], "string");
+                if source.contains("Result of") {
+                    assert_eq!(record["expected"], "Result of (integer, string)");
+                    assert_eq!(record["found"], "Result of (string, <error>)");
+                    assert_eq!(record["phase"], "sema");
+                } else {
+                    assert_eq!(record["expected"], "integer");
+                    assert_eq!(record["found"], "string");
+                }
             }
             if expected == "FP2014" {
                 assert_eq!(record["found"], ",");

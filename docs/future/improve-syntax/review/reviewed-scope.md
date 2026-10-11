@@ -1,7 +1,7 @@
 # Reviewed scope
 
-This is the coverage record for completed reviews. The
-[next review](README.md) starts with an empty scope and finding list.
+This is the coverage record for the earlier completed review. The
+[current review](README.md) records its own revision, scope and open findings.
 Package implementation status remains in the [central plan](../README.md).
 Reviewed coverage records an inspection of the listed areas, not a guarantee
 that later changes need no further review.

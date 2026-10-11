@@ -3,12 +3,12 @@
 //!
 //! All branches share one type, checked like an assignment without numeric widening.
 //! Context-typed branches such as `None` or `[]` take the type of the other branches;
-//! the caller then checks the result against any expected type.
+//! each branch is also checked against any expected type.
 //!
 //! **Documentation:** `docs/pascal/language/control-flow/if-then-else.md`
 
 use super::Checker;
-use crate::types::Ty;
+use crate::types::{Ty, merge_inferred_types};
 use fpas_diagnostics::codes::SEMA_TYPE_MISMATCH;
 use fpas_lexer::Span;
 use fpas_parser::{Expr, IfExprBranch};
@@ -36,10 +36,10 @@ impl Checker {
             self.check_expr_with_expected(else_value, expected),
             else_value.span(),
         ));
-        self.shared_branch_type(values, "`if` expression branches")
+        self.shared_branch_type(values, "`if` expression branches", expected)
     }
 
-    /// Joins branch types that are mutually assignable, preferring the most specific one.
+    /// Joins compatible branch evidence and checks each branch against its context.
     ///
     /// `construct` names the branches in the mismatch message, for example
     /// "`case` expression arms".
@@ -47,24 +47,21 @@ impl Checker {
         &mut self,
         values: Vec<(Ty, Span)>,
         construct: &str,
+        expected: Option<&Ty>,
     ) -> Ty {
         let mut shared: Option<Ty> = None;
-        for (ty, span) in values {
+        for (ty, span) in &values {
             if ty.is_error() {
                 continue;
             }
             let Some(current) = shared.take() else {
-                shared = Some(ty);
+                shared = Some(ty.clone());
                 continue;
             };
             let left = self.resolve_visible_type(&current);
-            let right = self.resolve_visible_type(&ty);
+            let right = self.resolve_visible_type(ty);
             if left.assignment_compatible_with(&right) && right.assignment_compatible_with(&left) {
-                shared = Some(if placeholder_count(&right) < placeholder_count(&left) {
-                    ty
-                } else {
-                    current
-                });
+                shared = Some(merge_inferred_types(&left, &right));
                 continue;
             }
             let hint = branch_mismatch_hint(&left, &right);
@@ -73,27 +70,22 @@ impl Checker {
                     SEMA_TYPE_MISMATCH,
                     format!("{construct} have different types: `{left}` and `{right}`"),
                     hint,
-                    span,
+                    *span,
                 )
                 .with_expected_found(left.to_string(), right.to_string()),
             );
             return Ty::Error;
         }
+        if let Some(expected) = expected {
+            for (ty, span) in &values {
+                let before = self.errors.len();
+                self.check_type_compat(expected, ty, construct, *span);
+                if self.errors.len() != before {
+                    return Ty::Error;
+                }
+            }
+        }
         shared.unwrap_or(Ty::Error)
-    }
-}
-
-/// Counts unresolved element types such as the element of `[]` or the payload of `None`.
-fn placeholder_count(ty: &Ty) -> usize {
-    match ty {
-        Ty::Error => 1,
-        Ty::Array(inner) | Ty::Channel(inner) | Ty::Option(inner) | Ty::Task(inner) => {
-            placeholder_count(inner)
-        }
-        Ty::Result(left, right) | Ty::Dict(left, right) => {
-            placeholder_count(left) + placeholder_count(right)
-        }
-        _ => 0,
     }
 }
 

@@ -16,14 +16,17 @@ pub(crate) fn function_children(
     owner: &str,
     declaration: &FunctionDecl,
 ) -> Vec<DocumentSymbol> {
-    routine_children(
+    let mut children = routine_children(
         snapshot,
         owner,
         &declaration.type_params,
         &declaration.params,
         &declaration.body,
         declaration.span,
-    )
+    );
+    super::contracts::collect_result_symbols(snapshot, owner, declaration, &mut children);
+    children.sort_by_key(|symbol| symbol.full_span.offset());
+    children
 }
 
 pub(crate) fn procedure_children(

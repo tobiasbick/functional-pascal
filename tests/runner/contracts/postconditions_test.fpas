@@ -1,0 +1,69 @@
+program PostconditionsTest;
+
+uses Std.Test;
+
+type Box = record
+  Value: integer;
+
+  function Read(Self: Box): integer;
+  ensures (ReadValue) ReadValue = Self.Value;
+  begin
+    return Self.Value;
+  end function;
+end record;
+
+procedure Increase(var Value: integer);
+requires Value = 1;
+ensures Value = 2;
+begin
+  Value := Value + 1;
+end procedure;
+
+function Checked(Value: integer): result of (integer, string);
+ensures (CheckedValue) case CheckedValue of
+  when Ok(const N): N = Value;
+  when Error(const Message): Message = 'negative';
+end case;
+begin
+  const Input: result of (integer, string) := if Value < 0 then Error('negative')
+    else Ok(Value)
+    end if;
+  const N: integer := try Input;
+  return Ok(N);
+end function;
+
+function Optional(Value: integer): option of integer;
+ensures (OptionalValue) case OptionalValue of
+  when Some(const N): N = Value;
+  when None: Value < 0;
+end case;
+begin
+  const Input: option of integer := if Value < 0 then None else Some(Value) end if;
+  const N: integer := try Input;
+  return Some(N);
+end function;
+
+begin
+  var Value := 1;
+  Increase(var Value);
+  AssertEquals(2, Value);
+  const B := Box(Value := 3);
+  const Read: function(): integer := B.Read;
+  AssertEquals(3, Read());
+  AssertTrue(case Checked(3) of
+    when Ok(const N): N = 3;
+    when Error(_): false;
+  end case);
+  AssertTrue(case Checked(-1) of
+    when Ok(_): false;
+    when Error(const Message): Message = 'negative';
+  end case);
+  AssertTrue(case Optional(3) of
+    when Some(const N): N = 3;
+    when None: false;
+  end case);
+  AssertTrue(case Optional(-1) of
+    when Some(_): false;
+    when None: true;
+  end case);
+end.

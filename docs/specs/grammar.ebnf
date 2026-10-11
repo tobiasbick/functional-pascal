@@ -96,7 +96,7 @@ keyword         = 'program'   | 'unit'      | 'uses'      | 'const'
                 | 'comparable' | 'numeric'  | 'printable' | 'self'
                 | 'channel'   | 'task'
                 | 'elsif'     | 'when'      | 'null'      | 'is'
-                | 'distinct' ;
+                | 'distinct' | 'requires' | 'ensures' ;
 
 (* ---- Symbols --------------------------------------------------- *)
 
@@ -267,10 +267,14 @@ record_method       = static_record_method | instance_record_method ;
 static_record_method = 'static' ( function_decl | procedure_decl ) ;
 instance_record_method = instance_function_decl | instance_procedure_decl ;
 instance_function_decl = instance_function_heading ';'
+                         { requires_clause }
+                         { ensures_clause }
                          { nested_decl } 'begin' statement_list 'end' 'function' ';' ;
 instance_function_heading = 'function' identifier [ type_params ]
                             '(' [ instance_param_list ] ')' ':' type_expr ;
 instance_procedure_decl = instance_procedure_heading ';'
+                          { requires_clause }
+                          { ensures_clause }
                           { nested_decl } 'begin' statement_list 'end' 'procedure' ';' ;
 instance_procedure_heading = 'procedure' identifier [ type_params ]
                              '(' [ instance_param_list ] ')' ;
@@ -306,16 +310,26 @@ enum_field          = identifier ':' type_expr ;
 (* ---- 2.5 Functions & Procedures -------------------------------- *)
 
 function_decl       = function_heading ';'
+                      { requires_clause }
+                      { ensures_clause }
                       { nested_decl } 'begin' statement_list 'end' 'function' ';' ;
 
 function_heading    = 'function' identifier [ type_params ]
                       '(' [ param_list ] ')' ':' type_expr ;
 
 procedure_decl      = procedure_heading ';'
+                      { requires_clause }
+                      { ensures_clause }
                       { nested_decl } 'begin' statement_list 'end' 'procedure' ';' ;
 
 procedure_heading   = 'procedure' identifier [ type_params ]
                       '(' [ param_list ] ')' ;
+
+requires_clause     = 'requires' expression ';' ;
+ensures_clause      = 'ensures' [ '(' identifier ')' ] expression ';' ;
+(* Clauses require Boolean, restricted read-only expressions. Entry clauses precede *)
+(* return clauses; procedures cannot name a return value. See                    *)
+(* docs/pascal/language/functions/contracts.md.                                  *)
 
 param_list          = param_group { ';' param_group } ;
 (* `var` declares a parameter that changes the caller's variable.     *)

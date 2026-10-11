@@ -60,27 +60,30 @@ fn truncated_token_stream_without_eof_does_not_hang() {
         "fixture must omit trailing Eof"
     );
 
-    let (unit, errors) = parse_tokens_compilation_unit(tokens);
+    let (unit, errors) = parse_tokens_compilation_unit(tokens, "program T; begin end.");
     assert!(matches!(unit, crate::CompilationUnit::Program(_)));
     // Synthetic Eof lets parsing complete; may or may not have extra diagnostics.
     let _ = errors;
 
     // Also exercise a minimal truncated stream that previously could spin in skip_to_eof.
-    let (unit2, _) = parse_tokens_compilation_unit(vec![SpannedToken {
-        token: Token::Const,
-        span: Span {
-            offset: 0,
-            length: 5,
-            line: 1,
-            column: 1,
-            source_id: 0,
-        },
-        end: SourcePosition {
-            offset: 5,
-            line: 1,
-            column: 6,
-        },
-    }]);
+    let (unit2, _) = parse_tokens_compilation_unit(
+        vec![SpannedToken {
+            token: Token::Const,
+            span: Span {
+                offset: 0,
+                length: 5,
+                line: 1,
+                column: 1,
+                source_id: 0,
+            },
+            end: SourcePosition {
+                offset: 5,
+                line: 1,
+                column: 6,
+            },
+        }],
+        "const",
+    );
     assert!(matches!(unit2, crate::CompilationUnit::Program(_)));
 }
 

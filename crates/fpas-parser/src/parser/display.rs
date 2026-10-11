@@ -13,6 +13,8 @@ pub(super) fn token_display(t: &Token) -> Cow<'static, str> {
         Token::Begin => "begin".into(),
         Token::End => "end".into(),
         Token::Return => "return".into(),
+        Token::Requires => "requires".into(),
+        Token::Ensures => "ensures".into(),
         Token::If => "if".into(),
         Token::Then => "then".into(),
         Token::Else => "else".into(),

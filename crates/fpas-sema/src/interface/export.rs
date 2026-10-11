@@ -10,6 +10,7 @@ use super::conversion::{
     InterfaceConversionError, ty_to_interface_reference, ty_to_interface_type,
 };
 
+mod contracts;
 mod record_constants;
 
 impl check::Checker {
@@ -78,7 +79,12 @@ impl check::Checker {
                 kind,
             });
         }
-        Ok(artifact::UnitInterface { unit_name, symbols }.canonicalized())
+        Ok(artifact::UnitInterface {
+            routine_contracts: contracts::export_contracts(unit),
+            unit_name,
+            symbols,
+        }
+        .canonicalized())
     }
 
     /// Preserve the original record's constant defaults when exporting concrete types or aliases.

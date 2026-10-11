@@ -42,5 +42,6 @@ presenting unresolved grammar as implemented behavior.
 ## Result
 
 The [reference style](reference-style.md) defines ten examples, and the
-[spelling rules](spelling-review.md) apply across the plan. Implemented forms
-link to the current handbook; forms owned by open APs remain identified drafts.
+[spelling rules](spelling-review.md) apply across the plan. All ten reference
+examples use implemented forms and link to the current handbook. Draft examples
+remain in their owning open packages.

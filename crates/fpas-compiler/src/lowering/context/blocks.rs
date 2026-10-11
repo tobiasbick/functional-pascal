@@ -10,6 +10,10 @@ use super::block_order::reverse_postorder;
 use super::{LoopTargets, LoweringContext, target};
 
 impl LoweringContext {
+    /// Returns the construction block to resume after building a routine's exit checks.
+    pub(in crate::lowering) fn current_block_id(&self) -> BlockId {
+        self.current
+    }
     /// Appends a construction block whose ID equals its vector index.
     pub(in crate::lowering) fn new_block(&mut self, span: Span) -> Result<BlockId, CompileError> {
         let id = BlockId::try_from_index(self.blocks.len()).map_err(|error| {
@@ -110,7 +114,7 @@ impl LoweringContext {
         span: Span,
     ) -> Result<(Function, super::types::TypeTable), CompileError> {
         if !self.is_terminated() {
-            self.terminate(Terminator::Return(None))?;
+            self.lower_return(None, span)?;
         }
         let blocks = reverse_postorder(&self.blocks, BlockId::new(0));
         if blocks.is_empty() {

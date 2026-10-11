@@ -1,3 +1,4 @@
+mod contracts;
 mod data;
 mod parameters;
 mod routines;

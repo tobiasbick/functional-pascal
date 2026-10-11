@@ -12,8 +12,9 @@ impl Parser {
     ///
     /// Always ends the stream with [`Token::Eof`]. Empty input gets a synthetic `Eof`; a truncated
     /// non-empty stream without a trailing `Eof` gets one appended so recovery loops cannot hang.
-    pub fn new(tokens: Vec<SpannedToken>) -> Self {
+    pub fn new(tokens: Vec<SpannedToken>, source: &str) -> Self {
         Self {
+            source: source.to_owned(),
             tokens: ensure_trailing_eof(tokens),
             pos: 0,
             errors: Vec::new(),
@@ -185,7 +186,7 @@ impl Parser {
         Some((name, span))
     }
 
-    /// Returns an actionable rename hint for a reserved block keyword used as a name.
+    /// Returns an actionable rename hint for a reserved keyword used as a name.
     ///
     /// **Documentation:** `docs/pascal/getting-started/keywords.md`
     pub(crate) fn reserved_identifier_hint(&self) -> Option<&'static str> {
@@ -207,6 +208,12 @@ impl Parser {
             ),
             Token::Distinct => Some(
                 "`distinct` is a reserved keyword for distinct type declarations. Rename the identifier, for example to `Unique`.",
+            ),
+            Token::Requires => Some(
+                "`requires` is a reserved keyword for preconditions. Rename the identifier, for example to `RequiresValue`.",
+            ),
+            Token::Ensures => Some(
+                "`ensures` is a reserved keyword. Rename the identifier, for example to `EnsuresValue`.",
             ),
             _ => None,
         }

@@ -20,6 +20,7 @@ pub(crate) const ERROR_IDENT: &str = "_error_";
 pub(crate) use nesting::MAX_PARSER_NESTING_DEPTH;
 
 pub struct Parser {
+    source: String,
     tokens: Vec<SpannedToken>,
     pos: usize,
     errors: Vec<ParseError>,

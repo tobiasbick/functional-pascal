@@ -24,6 +24,8 @@ pub(super) fn emit_function_decl(
     emitter.write(": ");
     emit_type_expr(emitter, &function.return_type);
     finish_routine_header_line(emitter, comments, function.span.offset);
+    super::contracts::emit_requires_clauses(emitter, &function.requires, comments);
+    super::contracts::emit_ensures_clauses(emitter, &function.ensures, comments);
     emit_func_body(
         emitter,
         function.span.offset,
@@ -48,6 +50,8 @@ pub(super) fn emit_procedure_decl(
         &procedure.params,
     );
     finish_routine_header_line(emitter, comments, procedure.span.offset);
+    super::contracts::emit_requires_clauses(emitter, &procedure.requires, comments);
+    super::contracts::emit_ensures_clauses(emitter, &procedure.ensures, comments);
     emit_func_body(
         emitter,
         procedure.span.offset,

@@ -167,6 +167,8 @@ pub struct AnalysisMetadata {
 
 /// Semantic checking state for whole-unit types and ordered executable declarations.
 pub struct Checker {
+    /// Entry-clause scope and declaration-resolved reads retained for field defaults.
+    pub(crate) contracts: super::contracts::ContractState,
     /// Whole-unit structural type resolution, separate from ordered value checking.
     pub(crate) type_collection: super::decl::types::collection::TypeCollection,
     pub(crate) discard_exprs: HashMap<usize, fpas_unit::interface::DiscardInfo>,
@@ -273,6 +275,7 @@ impl Checker {
     /// Creates an empty semantic checker and its expression-analysis tables.
     pub fn new() -> Self {
         Self {
+            contracts: Default::default(),
             type_collection: Default::default(),
             discard_exprs: HashMap::new(),
             discard_results: Vec::new(),

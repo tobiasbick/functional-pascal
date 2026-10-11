@@ -34,7 +34,11 @@ impl Checker {
             &params_ty,
             params,
             return_ty.clone(),
-            body,
+            super::super::contracts::RoutineBody {
+                body,
+                requires: &[],
+                ensures: &[],
+            },
         );
         let result = self
             .routine_discard_results

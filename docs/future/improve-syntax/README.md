@@ -45,10 +45,10 @@ an open work package.
 ## Package status
 
 AP01, AP02, AP03, AP04, AP05, AP06, AP07, AP09, AP10, AP11, AP13, AP14, AP15, AP16,
-AP17, AP19, AP20, AP21, and AP24 are complete, including all their work packages. Their READMEs
-and work-package files record implemented behavior, implementation owners, regression coverage,
-and any independent follow-ups. Checkboxes use the
-[status-tracking rule](development-process.md#status-tracking).
+AP17, AP18, AP19, AP20, AP21, AP22, and AP24 are complete, including all their
+work packages. Their READMEs and work-package files record implemented behavior,
+implementation owners, regression coverage, and any independent follow-ups.
+Checkboxes use the [status-tracking rule](development-process.md#status-tracking).
 
 Effort estimates are preliminary, based on the design rather than a code audit.
 Dependencies name the packages a package needs; the real prerequisites per work
@@ -77,8 +77,8 @@ package are listed in each work package file.
 | [x] | [AP19: Distinct domain types](ap19-distinct-domain-types/README.md) | Large | AP05, AP16 | Complete (AP19.1, AP19.2) |
 | [x] | [AP20: Nested patterns and explicit bindings](ap20-nested-patterns-and-explicit-bindings/README.md) | Large | AP07, AP13, AP16 | Complete (AP20.1–AP20.3) |
 | [x] | [AP21: Decision expressions](ap21-decision-expressions/README.md) | Large | AP03, AP07, AP13 | Complete (AP21.1, AP21.2) |
-| [x] | [AP22: Limited local inference](ap22-limited-local-inference/README.md) | Large | AP02, AP10, AP16, AP19, AP24 | Implemented (Q14) |
-| [ ] | [AP23: Preconditions and postconditions](ap23-preconditions-and-postconditions/README.md) | Large | AP07, AP13, AP16 | Agreed direction (Q15–Q17) |
+| [x] | [AP22: Limited local inference](ap22-limited-local-inference/README.md) | Large | AP02, AP10, AP16, AP19, AP24 | Complete (Q14) |
+| [x] | [AP23: Preconditions and postconditions](ap23-preconditions-and-postconditions/README.md) | Large | AP07, AP13, AP16 | Complete: AP23.1 preconditions; AP23.2 postconditions (Q15–Q17) |
 | [x] | [AP24: Generic data structures](ap24-generic-data-structures/README.md) | Very large | AP03, AP10, AP11, AP20 | Complete (AP24.1, AP24.2, AP24.3) |
 | [ ] | [AP25: Conservative purity](ap25-conservative-purity/README.md) | Very large | AP14, AP16, AP17; AP23 reassessment | Retained; low priority; reassess after AP23 (Q18) |
 | [ ] | [AP26: Structured task scopes](ap26-structured-task-scopes/README.md) | Large | AP13, AP17 | Agreed direction (Q19, Q20) |
@@ -117,7 +117,7 @@ and transfer conditions are recorded in the owning package README.
 | AP20 | AP20.1 explicit bindings; AP20.2 nested patterns; AP20.3 `is` test |
 | AP21 | Complete: AP21.1 `if` expressions; AP21.2 `case` expressions |
 | AP22 | AP22.1 literals and conversions; AP22.2 typed construction |
-| AP23 | AP23.1 preconditions; AP23.2 postconditions |
+| AP23 | Complete: AP23.1 preconditions; AP23.2 postconditions |
 | AP24 | Complete: AP24.1 parenthesized type arguments; AP24.2 generic records; AP24.3 generic enums |
 | AP25 | AP25.1 priority reassessment; AP25.2 pure function checker; AP25.3 std purity metadata |
 | AP26 | AP26.1 scope blocks; AP26.2 failure propagation; AP26.3 handle escape restrictions |
@@ -137,10 +137,10 @@ completed foundation is listed above. For the remaining work, keep the
 following dependency order; the exact prerequisites and unresolved decisions
 are recorded in each work-package file.
 
-1. AP18 and AP23 use the completed Boolean and binding rules.
-2. AP26 uses the completed block and caller-mutation rules. Reassess AP25
-   after AP23 and practical use of its contracts; its AP14 prerequisite is
-   complete.
+1. AP26.1 is next, using the completed block and caller-mutation rules. Continue
+   with AP26.2, then resolve the closure-capture limits before AP26.3.
+2. Reassess AP25 after practical use of the completed AP23 contracts; its AP14
+   prerequisite is complete.
 
 AP12 can proceed to its
 accept/reject decision now that AP06 is complete; its implementation still

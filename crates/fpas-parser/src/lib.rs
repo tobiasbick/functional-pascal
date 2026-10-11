@@ -111,7 +111,7 @@ fn parser_diagnostics(parse_errors: Vec<ParseError>) -> Vec<ParseDiagnostic> {
 #[must_use]
 pub fn parse(source: &str) -> (Program, Vec<ParseDiagnostic>) {
     let (tokens, errors) = tokenize(source);
-    let (program, parse_errors) = parser::Parser::new(tokens).parse_program();
+    let (program, parse_errors) = parser::Parser::new(tokens, source).parse_program();
     (program, append_parser_errors(errors, parse_errors))
 }
 
@@ -122,7 +122,7 @@ pub fn parse(source: &str) -> (Program, Vec<ParseDiagnostic>) {
 #[must_use]
 pub fn parse_compilation_unit(source: &str) -> (CompilationUnit, Vec<ParseDiagnostic>) {
     let (tokens, errors) = tokenize(source);
-    let (unit, parse_errors) = parser::Parser::new(tokens).parse_compilation_unit();
+    let (unit, parse_errors) = parser::Parser::new(tokens, source).parse_compilation_unit();
     (unit, append_parser_errors(errors, parse_errors))
 }
 
@@ -135,7 +135,8 @@ pub fn parse_compilation_unit(source: &str) -> (CompilationUnit, Vec<ParseDiagno
 #[must_use]
 pub fn parse_expression(source: &str) -> (Expr, Vec<ParseDiagnostic>) {
     let (tokens, errors) = tokenize(source);
-    let (expression, parse_errors) = parser::Parser::new(tokens).parse_standalone_expression();
+    let (expression, parse_errors) =
+        parser::Parser::new(tokens, source).parse_standalone_expression();
     (expression, append_parser_errors(errors, parse_errors))
 }
 
@@ -148,7 +149,7 @@ pub fn parse_expression(source: &str) -> (Expr, Vec<ParseDiagnostic>) {
 #[must_use]
 pub fn parse_type_expression(source: &str) -> (TypeExpr, Vec<ParseDiagnostic>) {
     let (tokens, errors) = tokenize(source);
-    let (type_expr, parse_errors) = parser::Parser::new(tokens).parse_standalone_type();
+    let (type_expr, parse_errors) = parser::Parser::new(tokens, source).parse_standalone_type();
     (type_expr, append_parser_errors(errors, parse_errors))
 }
 
@@ -157,9 +158,14 @@ pub fn parse_type_expression(source: &str) -> (TypeExpr, Vec<ParseDiagnostic>) {
 /// Prefer a stream ending in [`fpas_lexer::Token::Eof`]. If `Eof` is missing, the parser appends
 /// a synthetic token at the end of the last available token. Lexer diagnostics are not included;
 /// callers that transform tokens must retain and merge the original lexer diagnostics separately.
+/// `source` is the original source snapshot used to retain routine-clause text.
 #[must_use]
-pub fn parse_tokens_expression(tokens: Vec<SpannedToken>) -> (Expr, Vec<ParseDiagnostic>) {
-    let (expression, parse_errors) = parser::Parser::new(tokens).parse_standalone_expression();
+pub fn parse_tokens_expression(
+    tokens: Vec<SpannedToken>,
+    source: &str,
+) -> (Expr, Vec<ParseDiagnostic>) {
+    let (expression, parse_errors) =
+        parser::Parser::new(tokens, source).parse_standalone_expression();
     (expression, parser_diagnostics(parse_errors))
 }
 
@@ -170,12 +176,13 @@ pub fn parse_tokens_expression(tokens: Vec<SpannedToken>) -> (Expr, Vec<ParseDia
 /// recovery cannot hang. Its position is the exact end of the last available token; trailing trivia
 /// cannot be represented after the original `Eof` token has been removed. An empty stream is
 /// accepted and yields a single header diagnostic. Lexer diagnostics are not included; merge them
-/// separately.
+/// separately. `source` is the original source snapshot used to retain routine-clause text.
 #[must_use]
 pub fn parse_tokens_compilation_unit(
     tokens: Vec<SpannedToken>,
+    source: &str,
 ) -> (CompilationUnit, Vec<ParseDiagnostic>) {
-    let (unit, parse_errors) = parser::Parser::new(tokens).parse_compilation_unit();
+    let (unit, parse_errors) = parser::Parser::new(tokens, source).parse_compilation_unit();
     (unit, parser_diagnostics(parse_errors))
 }
 

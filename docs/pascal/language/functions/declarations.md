@@ -24,6 +24,11 @@ end procedure;
 - Calls always include parentheses, including calls without arguments: `Pi()` or
   `SayHello()`. A bare routine name is not call syntax.
 
+Optional [`requires` and `ensures` clauses](contracts.md) follow the heading's
+semicolon, before nested declarations or `begin`. Entry clauses precede return
+clauses. They apply to named routines and record methods; `requires` checks
+every entry and `ensures` checks every ordinary or `try` propagated return.
+
 ## Functions
 
 A function returns a value using `return`:

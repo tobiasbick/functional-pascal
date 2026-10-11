@@ -387,6 +387,12 @@ statement. Comments stay with the branch they precede or follow.
   space on either side, and the written spelling of both names preserved.
   Alias entries follow the same wrapping and comment rules as plain imports.
 
+Routine contracts occupy separate lines after the heading and before any
+nested declarations or `begin`, at the heading's indentation. Emit lowercase
+`requires` or `ensures`, one space before the expression, and a terminating
+semicolon. A named function return is emitted as `ensures (Name) Expression;`.
+Preconditions precede postconditions. Comments before and after clauses are preserved.
+
 ---
 
 ## More examples — `record` types (snippet)

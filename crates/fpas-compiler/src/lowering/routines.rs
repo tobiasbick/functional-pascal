@@ -75,6 +75,20 @@ impl Routine<'_> {
         }
     }
 
+    fn requires(&self) -> &[fpas_parser::RequiresClause] {
+        match self {
+            Self::Function(function) | Self::RecordFunction(_, function) => &function.requires,
+            Self::Procedure(procedure) | Self::RecordProcedure(_, procedure) => &procedure.requires,
+        }
+    }
+
+    fn ensures(&self) -> &[fpas_parser::EnsuresClause] {
+        match self {
+            Self::Function(function) | Self::RecordFunction(_, function) => &function.ensures,
+            Self::Procedure(procedure) | Self::RecordProcedure(_, procedure) => &procedure.ensures,
+        }
+    }
+
     /// Executable statements used by closure and capture discovery.
     pub fn statements(&self) -> &[fpas_parser::Stmt] {
         let FuncBody::Block { stmts, .. } = self.body();
@@ -317,6 +331,16 @@ pub(super) fn lower(
         type_table: types.clone(),
     })?;
     let FuncBody::Block { stmts, .. } = routine.body();
+    context.lower_preconditions(
+        &format!("{source_name}.{runtime_name}"),
+        routine.params(),
+        routine.requires(),
+    )?;
+    context.prepare_postconditions(
+        &format!("{source_name}.{runtime_name}"),
+        routine.params(),
+        routine.ensures(),
+    )?;
     context.lower_statements(stmts)?;
     context.finish(routine.span())
 }

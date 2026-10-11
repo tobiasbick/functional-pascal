@@ -1,6 +1,7 @@
 mod calls;
 pub(crate) mod closures;
 mod context;
+mod contracts;
 mod decl;
 mod discard;
 mod entry;

@@ -7,7 +7,7 @@ use fpas_lexer::{lex, lex_with_source_id};
 
 #[test]
 fn parse_tokens_compilation_unit_accepts_empty_stream_without_panicking() {
-    let (unit, errors) = parse_tokens_compilation_unit(vec![]);
+    let (unit, errors) = parse_tokens_compilation_unit(vec![], "");
     assert_eq!(errors.len(), 1);
     assert_eq!(errors[0].as_diagnostic().code, PARSE_EXPECTED_TOKEN);
     assert!(matches!(unit, CompilationUnit::Program(_)));
@@ -19,7 +19,7 @@ fn parse_tokens_compilation_unit_parses_lexed_unit() {
     let (tokens, _, lex_errors) = lex_with_source_id(source, 7);
     assert!(lex_errors.is_empty());
 
-    let (unit, parse_errors) = parse_tokens_compilation_unit(tokens);
+    let (unit, parse_errors) = parse_tokens_compilation_unit(tokens, source);
     assert!(parse_errors.is_empty());
 
     let CompilationUnit::Unit(unit) = unit else {
@@ -33,7 +33,7 @@ fn parse_tokens_compilation_unit_parses_lexed_unit() {
 fn parse_tokens_compilation_unit_matches_source_api() {
     let source = "program T; begin end.";
     let (tokens, _) = lex(source);
-    let (unit_from_tokens, token_errors) = parse_tokens_compilation_unit(tokens);
+    let (unit_from_tokens, token_errors) = parse_tokens_compilation_unit(tokens, source);
     let (unit_from_source, source_errors) = parse_compilation_unit_with_errors(source);
 
     assert!(token_errors.is_empty());
@@ -48,7 +48,7 @@ fn parse_tokens_expression_parses_caller_adjusted_identifier_tokens() {
     assert!(errors.is_empty());
     tokens[2].token = fpas_lexer::Token::Ident("Some".to_string());
 
-    let (expression, errors) = parse_tokens_expression(tokens);
+    let (expression, errors) = parse_tokens_expression(tokens, source);
 
     assert!(
         errors.is_empty(),

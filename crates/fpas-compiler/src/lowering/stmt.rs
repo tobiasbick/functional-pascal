@@ -38,7 +38,7 @@ impl LoweringContext {
                 };
                 self.lower_designator_write(target, value, *span)
             }
-            Stmt::Return(value, _span) => {
+            Stmt::Return(value, span) => {
                 let value = value
                     .as_ref()
                     .map(|value| match value {
@@ -57,7 +57,7 @@ impl LoweringContext {
                         _ => self.lower_expression(value),
                     })
                     .transpose()?;
-                self.terminate(Terminator::Return(value))
+                self.lower_return(value, *span)
             }
             Stmt::Panic(value, span) => {
                 let value = self.lower_expression(value)?;

@@ -1,0 +1,41 @@
+program PreconditionsTest;
+
+uses Std.Test;
+
+type Box = record
+  Value: integer;
+
+  function Read(Self: Box): integer;
+  requires Self.Value > 0;
+  begin
+    return Self.Value;
+  end function;
+end record;
+
+procedure Increase(var Value: integer);
+requires Value > 0;
+requires Value < 10;
+begin
+  Value := Value + 1;
+end procedure;
+
+function MakeGuard(Minimum: integer): function(Value: integer): integer;
+function Guard(Value: integer): integer;
+requires Value >= Minimum;
+begin
+  return Value;
+end function;
+begin
+  return Guard;
+end function;
+
+begin
+  var Value := 1;
+  Increase(var Value);
+  AssertEquals(2, Value);
+  const B := Box(Value := 3);
+  const Read: function(): integer := B.Read;
+  AssertEquals(3, Read());
+  const Guard: function(Value: integer): integer := MakeGuard(2);
+  AssertEquals(2, Guard(2));
+end.

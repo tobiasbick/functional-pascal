@@ -87,7 +87,7 @@ fn parse_target_ast(
         }
         after_dot = delimiter_depth == 0 && matches!(token.token, Token::Dot);
     }
-    let (expression, parser_diagnostics) = fpas_parser::parse_tokens_expression(tokens);
+    let (expression, parser_diagnostics) = fpas_parser::parse_tokens_expression(tokens, source);
     let diagnostics = lexer_diagnostics
         .into_iter()
         .map(ParseDiagnostic::Lexer)

@@ -1,6 +1,7 @@
 # AP23: Preconditions and postconditions
 
-Status: agreed direction (Q15, Q16, Q17). Effort: large. Completion is tracked
+Status: complete and verified on 2026-10-11 (AP23.1 and AP23.2).
+The direction is agreed (Q15, Q16, Q17). Effort: large. Completion is tracked
 in the [central README](../README.md); the process is in
 [development-process.md](../development-process.md).
 
@@ -41,7 +42,7 @@ contracts cannot substitute for a missing return.
   implemented. AP23 does not depend on that later extension.
 - No automatic proofs.
 
-Draft contract fragment; the body is omitted:
+Contract heading fragment; the body is omitted:
 
 ```pascal
 function Clamp(Value: integer; Lower: integer; Upper: integer): integer;
@@ -49,11 +50,47 @@ requires Lower <= Upper;
 ensures (Clamped) Clamped >= Lower and Clamped <= Upper;
 ```
 
+### Expression and binding boundary
+
+- Permit parameters, including `Self` and the routine's own `var` parameters,
+  and visible initialized immutable values: static or computed `const`
+  bindings and immutable enclosing parameters/captures.
+- Reject reads of mutable globals and mutable captures. Body-local bindings
+  are outside the heading clauses' scope.
+- Permit literals, operators, field/index reads, explicit conversions, typed
+  construction, and `if`/`case` expressions. Apply the same restrictions to
+  every subexpression, including arguments, guards, and omitted field defaults.
+- The native-call allowlist is `Length`, `IsEmpty`, `Contains`, and
+  `ContainsKey`, on their existing string, array, or dictionary receiver types.
+  Resolve the actual native operation; a user routine with the same name is
+  not an allowed call. Membership includes the `in` operator on values and
+  subrange types.
+- Reject ordinary function/method calls, callable-value calls, `try`, `go`,
+  and anonymous routines inside clauses. No contract expression may propagate
+  a return, spawn work, or introduce a callable capture.
+  Initialized callable constants and parameters remain readable as values;
+  forming a routine value or a bound method inside a clause is rejected.
+
+The current [constant classification](../../../pascal/language/basics/constants.md)
+distinguishes computed immutable bindings from compile-time constants.
+[Membership](../../../pascal/language/basics/operators.md#comparison) includes
+values and subrange types. The current [`is` test](../../../pascal/language/pattern-matching/is-test.md#where-is-is-valid)
+retains its existing condition positions; AP23 does not extend its scope.
+
+### Propagated returns (AP23.2)
+
+- Run postconditions on ordinary returns and `try` error exits alike.
+- A clause-local return-value name denotes the complete declared return type,
+  including `Error(...)` for `Result` and `None` for `Option`, not an unwrapped
+  success payload.
+- Observe current parameter values; do not snapshot entry state or roll back
+  writes. Existing
+[`var` parameter semantics](../../../pascal/language/functions/var-parameters.md#evaluation-and-writes)
+  preserve completed writes even if a postcondition panics.
+
 ## Open decisions
 
-Before AP23.2, decide whether a `try` error return runs postconditions and how
-the clause-local return-value name applies to that path. AP23.2 requires
-this rule; Q17 does not explicitly distinguish ordinary and propagated returns.
+None for AP23.1 or AP23.2.
 
 ## Dependencies
 
@@ -65,13 +102,15 @@ AP25 is reassessed after practical use of this package.
 
 ## Order
 
-AP23.1 delivers preconditions with the shared clause machinery; AP23.2 adds
-postconditions with the named return value.
+AP23.1 implements preconditions and shared expression checks. AP23.2 implements
+postconditions with a clause-local return name and checks every ordinary or
+propagated return. Both are documented under
+[preconditions and postconditions](../../../pascal/language/functions/contracts.md).
 
 ## Work packages
 
-- [ ] [AP23.1: Preconditions](01-preconditions.md)
-- [ ] [AP23.2: Postconditions](02-postconditions.md)
+- [x] [AP23.1: Preconditions](01-preconditions.md)
+- [x] [AP23.2: Postconditions](02-postconditions.md)
 
 ## Acceptance
 

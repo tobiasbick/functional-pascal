@@ -1,5 +1,6 @@
 //! Declarations (const, var, type, routines).
 
+mod contracts;
 mod item;
 mod list;
 mod routines;

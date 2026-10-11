@@ -1,11 +1,9 @@
 # Pascal-oriented reference style
 
-This is the reference for [AP01](README.md). The ten reference examples
-distinguish implemented forms from changes owned by open packages. Examples
-that combine planned forms remain uncompiled drafts. The program, unit,
-record, conditional, loop, and callback examples use only implemented forms. A draft
-does not approve an open decision or claim that the current compiler accepts
-it. AP13 statement endings, block closers,
+This is the reference for [AP01](README.md). All ten reference examples use
+implemented forms. Open packages retain their draft examples and decisions
+in their own planning documents; this reference does not approve them.
+AP13 statement endings, block closers,
 `elsif`, `when`, and `null;`, AP11 individual declarations, and AP16
 computed `const` and writable `var` bindings are implemented.
 
@@ -221,9 +219,9 @@ Current forms: enum payloads, qualified variants, `case ... of`, declaration
 closers and statement terminators, `when` arms, and `null;` (AP13;
 [enums](../../../pascal/language/types/enums.md)).
 
-Computed `const` and writable `var` (AP16) and `const` in payload patterns
-(AP20.1) are implemented. Draft form: mandatory explicit coverage without
-`else` for the closed enum (AP03).
+Computed `const` and writable `var` (AP16), `const` in payload patterns
+(AP20.1), and mandatory explicit variant coverage without `else` for closed
+enums (AP03) are implemented. The example uses only implemented forms.
 
 ```pascal
 program Matching;
@@ -234,6 +232,7 @@ type Choice = enum
 end enum;
 
 const Item: Choice := Choice.Present(3);
+
 var Total: integer := 0;
 
 begin
@@ -254,9 +253,9 @@ terminators, and named closers (AP13;
 [grammar](../../../specs/grammar.ebnf), `type_expr`;
 [generic routines](../../../pascal/language/functions/generic-routines.md)).
 
-Draft forms: parenthesized multi-argument type applications and user-defined
-generic records/enums (AP24). Computed `const` bindings (AP16) and named
-record construction (AP10) are implemented.
+Parenthesized multi-argument type applications and user-defined generic
+records/enums (AP24), computed `const` bindings (AP16), and named record
+construction (AP10) are implemented. The example uses only implemented forms.
 
 ```pascal
 program Generics;
@@ -288,8 +287,8 @@ end.
 `Identity<T>` declares a routine type parameter; `Identity(3)` infers it.
 It is not an angle-bracket type application. Built-in examples keep the same
 rules: `array of string`, `Option of string`, `Result of (integer, string)`,
-and `dict of string to integer`. Only the multi-argument `Result` spelling
-changes from today's `Result of (integer, string)` in AP24.1.
+and `dict of string to integer`. The multi-argument `Result` application uses
+the same parenthesized form implemented by AP24.1.
 
 ## 9. Anonymous routine as an argument
 
@@ -339,6 +338,7 @@ is implemented by AP16.
 program DomainTypes;
 
 type Percent = 0..100;
+
 type UserId = distinct integer;
 
 const Level: Percent := Percent(50);

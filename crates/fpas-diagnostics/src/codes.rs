@@ -215,6 +215,8 @@ define_codes!(SEMA_ALLOCATED_CODES => {
     /// A local initializer requires an explicit type annotation.
     /// Documentation: `docs/pascal/tools/diagnostics.md` (FP3036).
     SEMA_TYPE_ANNOTATION_REQUIRED = 3036;
+    /// A contract uses an expression outside its restricted read-only boundary.
+    SEMA_INVALID_CONTRACT_EXPRESSION = 3037;
 });
 
 define_codes!(COMPILE_ALLOCATED_CODES => {

@@ -75,12 +75,16 @@ impl Parser {
     ) -> FunctionDecl {
         let (name, type_params, params, return_type, start) =
             self.parse_function_header(allow_self_receiver);
+        let requires = self.parse_requires_clauses();
+        let ensures = self.parse_ensures_clauses();
         let body = self.parse_func_body(Token::Function);
         FunctionDecl {
             name,
             type_params,
             params,
             return_type,
+            requires,
+            ensures,
             body,
             visibility,
             span: self.span_from(start),
@@ -111,11 +115,15 @@ impl Parser {
         allow_self_receiver: bool,
     ) -> ProcedureDecl {
         let (name, type_params, params, start) = self.parse_procedure_header(allow_self_receiver);
+        let requires = self.parse_requires_clauses();
+        let ensures = self.parse_ensures_clauses();
         let body = self.parse_func_body(Token::Procedure);
         ProcedureDecl {
             name,
             type_params,
             params,
+            requires,
+            ensures,
             body,
             visibility,
             span: self.span_from(start),

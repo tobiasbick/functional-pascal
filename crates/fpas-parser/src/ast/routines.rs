@@ -13,6 +13,10 @@ pub struct FunctionDecl {
     pub params: Vec<FormalParam>,
     /// Declared function result type.
     pub return_type: TypeExpr,
+    /// Preconditions in source order, checked before executing the body.
+    pub requires: Vec<super::RequiresClause>,
+    /// Postconditions in source order, checked before returning the complete result.
+    pub ensures: Vec<super::EnsuresClause>,
     /// Parsed function body.
     pub body: FuncBody,
     /// Visibility specified for the declaration.
@@ -30,6 +34,10 @@ pub struct ProcedureDecl {
     pub type_params: Vec<super::TypeParam>,
     /// Formal parameters in declaration order.
     pub params: Vec<FormalParam>,
+    /// Preconditions in source order, checked before executing the body.
+    pub requires: Vec<super::RequiresClause>,
+    /// Postconditions in source order, checked before returning to the caller.
+    pub ensures: Vec<super::EnsuresClause>,
     /// Parsed procedure body.
     pub body: FuncBody,
     /// Visibility specified for the declaration.

@@ -247,7 +247,7 @@ impl CaptureCollector<'_> {
         }
     }
 
-    fn collect_from_expr(&mut self, expr: &Expr) {
+    pub(super) fn collect_from_expr(&mut self, expr: &Expr) {
         match expr {
             Expr::Integer(..)
             | Expr::Real(..)

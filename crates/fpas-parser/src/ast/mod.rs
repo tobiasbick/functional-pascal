@@ -1,4 +1,5 @@
 mod bindings;
+mod contracts;
 mod decl;
 mod expr;
 mod imports;
@@ -9,6 +10,7 @@ mod stmt;
 mod types;
 
 pub use bindings::*;
+pub use contracts::*;
 pub use decl::*;
 pub use expr::*;
 pub use imports::*;

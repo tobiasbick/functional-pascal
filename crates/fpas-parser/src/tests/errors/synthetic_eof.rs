@@ -17,7 +17,7 @@ fn synthetic_eof_matches_lexer_position_after_unicode_and_line_endings() {
         let real_eof = tokens.pop().expect("lexer must append EOF");
         assert!(matches!(real_eof.token, Token::Eof));
 
-        let (_, errors) = parse_tokens_compilation_unit(tokens);
+        let (_, errors) = parse_tokens_compilation_unit(tokens, source);
         let synthetic_eof_error = errors
             .iter()
             .filter_map(ParseDiagnostic::as_parser_error)

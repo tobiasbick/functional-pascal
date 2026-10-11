@@ -409,6 +409,16 @@ impl TypeTable {
         self.intern_kind(IrType::Array(element), span)
     }
 
+    /// Returns a dictionary type with the given key and value types.
+    pub fn dictionary_type(
+        &mut self,
+        key: TypeId,
+        value: TypeId,
+        span: fpas_lexer::Span,
+    ) -> Result<TypeId, CompileError> {
+        self.intern_kind(IrType::Dictionary { key, value }, span)
+    }
+
     /// Returns the reference type for a `var` argument of type `inner`.
     pub fn reference_type(
         &mut self,

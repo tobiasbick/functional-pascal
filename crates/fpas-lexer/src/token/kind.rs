@@ -34,6 +34,10 @@ pub enum Token {
     Begin,
     End,
     Return,
+    /// Introduces a Boolean routine-entry condition.
+    Requires,
+    /// Introduces a Boolean routine-return condition.
+    Ensures,
     /// Explicitly ignores a value after evaluating it once.
     Discard,
     If,

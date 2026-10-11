@@ -21,6 +21,7 @@ mod call_frames;
 mod closures;
 mod computed_const;
 mod concurrency;
+mod contracts;
 mod control_flow;
 mod debug;
 mod diagnostics;

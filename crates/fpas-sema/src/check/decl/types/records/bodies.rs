@@ -33,16 +33,35 @@ impl Checker {
                 Ty::Procedure(procedure) => (procedure.params.clone(), None),
                 _ => continue,
             };
-            let (type_params, source_params, body) = match method {
-                RecordMethod::Function(routine) | RecordMethod::StaticFunction(routine) => {
-                    (&routine.type_params, &routine.params, &routine.body)
-                }
-                RecordMethod::Procedure(routine) | RecordMethod::StaticProcedure(routine) => {
-                    (&routine.type_params, &routine.params, &routine.body)
-                }
+            let (type_params, source_params, body, requires, ensures) = match method {
+                RecordMethod::Function(routine) | RecordMethod::StaticFunction(routine) => (
+                    &routine.type_params,
+                    &routine.params,
+                    &routine.body,
+                    &routine.requires,
+                    &routine.ensures,
+                ),
+                RecordMethod::Procedure(routine) | RecordMethod::StaticProcedure(routine) => (
+                    &routine.type_params,
+                    &routine.params,
+                    &routine.body,
+                    &routine.requires,
+                    &routine.ensures,
+                ),
             };
             let spans: Vec<_> = source_params.iter().map(|param| param.span).collect();
-            self.check_method_body(&name, type_params, &params, &spans, result, body);
+            self.check_method_body(
+                &name,
+                type_params,
+                &params,
+                &spans,
+                result,
+                crate::check::contracts::RoutineBody {
+                    body,
+                    requires,
+                    ensures,
+                },
+            );
         }
     }
 }

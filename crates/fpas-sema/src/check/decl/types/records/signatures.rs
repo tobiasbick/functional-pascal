@@ -126,8 +126,13 @@ impl Checker {
         params: &[ParamTy],
         param_spans: &[fpas_lexer::Span],
         return_type: Option<Ty>,
-        body: &FuncBody,
+        input: crate::check::contracts::RoutineBody<'_>,
     ) {
+        let crate::check::contracts::RoutineBody {
+            body,
+            requires,
+            ensures,
+        } = input;
         let FuncBody::Block { nested, stmts } = body;
         self.discard_results.push(true);
 
@@ -177,6 +182,8 @@ impl Checker {
             return_type,
             owner_unit,
         });
+        self.check_preconditions(requires);
+        self.check_postconditions(ensures);
         for decl in nested {
             self.check_decl(decl);
         }

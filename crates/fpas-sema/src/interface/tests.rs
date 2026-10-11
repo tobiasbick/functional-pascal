@@ -5,6 +5,7 @@ use super::analyze_unit;
 
 mod aliases;
 mod constants;
+mod contracts;
 mod discard;
 mod distinct_types;
 mod import_aliases;

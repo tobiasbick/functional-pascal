@@ -6,7 +6,6 @@ use std::collections::{HashMap, HashSet};
 
 use crate::scope::{ScopeStack, SymbolKind};
 use crate::types::Ty;
-use fpas_parser::FuncBody;
 
 mod traversal;
 
@@ -61,7 +60,7 @@ pub struct CaptureAnalysis {
 pub fn collect_captures(
     scopes: &ScopeStack,
     closure_scope_index: usize,
-    body: &FuncBody,
+    input: crate::check::contracts::RoutineBody<'_>,
     closure_infos: &ClosureInfoMap,
     nested_routine_captures: &NestedRoutineCaptureMap,
     pending_routine_captures: &HashMap<usize, Vec<usize>>,
@@ -79,7 +78,21 @@ pub fn collect_captures(
         seen_routines: HashSet::new(),
         bound_scopes: Vec::new(),
     };
-    collector.collect_from_body(body);
+    for clause in input.requires {
+        collector.collect_from_expr(&clause.condition);
+    }
+    for clause in input.ensures {
+        collector.bound_scopes.push(
+            clause
+                .result_name
+                .iter()
+                .map(|(name, _)| name.to_ascii_lowercase())
+                .collect(),
+        );
+        collector.collect_from_expr(&clause.condition);
+        collector.bound_scopes.pop();
+    }
+    collector.collect_from_body(input.body);
     // Name lookup in the lowered frame must prefer the nearest captured declaration.
     collector
         .captures

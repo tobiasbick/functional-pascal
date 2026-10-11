@@ -3,6 +3,7 @@ use crate::ParseDiagnostic;
 use crate::ast::*;
 use fpas_diagnostics::codes::PARSE_EXPECTED_TOKEN;
 
+mod contracts;
 mod generic_enums;
 mod generic_records;
 mod import_aliases;

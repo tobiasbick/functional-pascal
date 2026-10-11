@@ -19,6 +19,7 @@ impl Checker {
         self.check_program_body(program);
         self.finish_pending_capture_checks();
         self.validate_dictionary_keys();
+        self.finish_contract_checks();
     }
 
     /// Install dependency interfaces, collect types, and check an ordered program.
@@ -58,6 +59,7 @@ impl Checker {
         self.check_program_body(program);
         self.finish_pending_capture_checks();
         self.validate_dictionary_keys();
+        self.finish_contract_checks();
         Ok(())
     }
 
@@ -107,6 +109,7 @@ impl Checker {
         self.scopes.function_ctx = previous_context;
         self.finish_pending_capture_checks();
         self.validate_dictionary_keys();
+        self.finish_contract_checks();
         Ok(())
     }
 

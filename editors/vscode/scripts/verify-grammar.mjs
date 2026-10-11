@@ -261,7 +261,9 @@ async function verifyReservedKeywordScopes(grammar) {
     ["elsif", "ELSIF", "ElSiF"],
     ["when", "WHEN", "WhEn"],
     ["null", "NULL", "NuLl"],
-    ["discard", "DISCARD", "DiScArD"]
+    ["discard", "DISCARD", "DiScArD"],
+    ["requires", "REQUIRES", "ReQuIrEs"],
+    ["ensures", "ENSURES", "EnSuReS"]
   ]) {
     for (const spelling of spellings) {
       assertScope(

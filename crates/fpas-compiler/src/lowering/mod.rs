@@ -9,6 +9,7 @@ mod case;
 mod closures;
 mod concurrency;
 mod context;
+mod contracts;
 mod control_flow;
 mod debug;
 mod expr;

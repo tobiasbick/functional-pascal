@@ -75,6 +75,8 @@ pub(super) struct LoweringContext {
     locals: Vec<Local>,
     bindings: Vec<Binding>,
     loops: Vec<LoopTargets>,
+    /// Shared postcondition exit, absent for routines without return clauses.
+    pub(super) checked_return: Option<super::contracts::CheckedReturn>,
     scope_depth: u32,
     debug: fpas_ir::FunctionDebugInfo,
     debug_scope: u32,
@@ -276,6 +278,7 @@ impl LoweringContext {
             locals,
             bindings,
             loops: Vec::new(),
+            checked_return: None,
             scope_depth: 0,
             debug,
             debug_scope: 0,

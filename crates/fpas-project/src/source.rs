@@ -90,7 +90,7 @@ pub(super) fn parse_compilation_unit_source(
     })?;
 
     let (tokens, _comments, lex_errors) = lex_with_source_id(source_text, source_id);
-    let (unit, parse_errors) = parse_tokens_compilation_unit(tokens);
+    let (unit, parse_errors) = parse_tokens_compilation_unit(tokens, source_text);
 
     let mut diagnostics: Vec<Diagnostic> = lex_errors;
     diagnostics.extend(

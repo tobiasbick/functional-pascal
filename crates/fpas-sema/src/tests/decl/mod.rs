@@ -2,6 +2,7 @@ use super::{check_errors, check_ok};
 
 mod computed_const;
 mod const_var;
+mod contracts;
 mod dictionary_keys;
 mod distinct_types;
 mod local_construction;

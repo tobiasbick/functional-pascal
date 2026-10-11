@@ -9,10 +9,11 @@ Status: complete.
 [Reference style](reference-style.md) defines ten Pascal-oriented examples,
 two-space indentation, explicit types, declaration keywords, parameter and call
 separators, assignment, block endings, and type application.
-Implemented forms are identified separately from forms owned by open APs.
+All ten examples use implemented forms. Open packages keep their draft examples
+and decisions in their own planning documents.
 
 ## Validation
 
-Examples follow their owning package's decisions. Draft constructions, patterns,
-generic types, and domain types name the AP that defines them. Current syntax
-is documented in the [handbook](../../../pascal/README.md).
+Examples follow their owning completed package's decisions, including typed
+construction, explicit enum coverage, generic data types, and subranges.
+Current syntax is documented in the [handbook](../../../pascal/README.md).

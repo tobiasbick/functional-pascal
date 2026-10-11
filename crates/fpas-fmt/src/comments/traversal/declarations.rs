@@ -38,11 +38,25 @@ pub(super) fn collect_decls(decls: &[Decl], begins: &[usize], out: &mut Collecte
                             match method {
                                 RecordMethod::Function(function)
                                 | RecordMethod::StaticFunction(function) => {
-                                    collect_routine(function.span, &function.body, begins, out);
+                                    collect_routine(
+                                        function.span,
+                                        &function.body,
+                                        &function.requires,
+                                        &function.ensures,
+                                        begins,
+                                        out,
+                                    );
                                 }
                                 RecordMethod::Procedure(procedure)
                                 | RecordMethod::StaticProcedure(procedure) => {
-                                    collect_routine(procedure.span, &procedure.body, begins, out);
+                                    collect_routine(
+                                        procedure.span,
+                                        &procedure.body,
+                                        &procedure.requires,
+                                        &procedure.ensures,
+                                        begins,
+                                        out,
+                                    );
                                 }
                             }
                         }
@@ -62,26 +76,57 @@ pub(super) fn collect_decls(decls: &[Decl], begins: &[usize], out: &mut Collecte
                     TypeBody::Alias(_) | TypeBody::Distinct(_) => {}
                 }
             }
-            Decl::Function(function) => collect_routine(function.span, &function.body, begins, out),
-            Decl::Procedure(procedure) => {
-                collect_routine(procedure.span, &procedure.body, begins, out)
-            }
+            Decl::Function(function) => collect_routine(
+                function.span,
+                &function.body,
+                &function.requires,
+                &function.ensures,
+                begins,
+                out,
+            ),
+            Decl::Procedure(procedure) => collect_routine(
+                procedure.span,
+                &procedure.body,
+                &procedure.requires,
+                &procedure.ensures,
+                begins,
+                out,
+            ),
         }
     }
 }
 
-fn collect_routine(span: Span, body: &FuncBody, begins: &[usize], out: &mut CollectedAnchors) {
+fn collect_routine(
+    span: Span,
+    body: &FuncBody,
+    clauses: &[fpas_parser::RequiresClause],
+    ensures: &[fpas_parser::EnsuresClause],
+    begins: &[usize],
+    out: &mut CollectedAnchors,
+) {
     out.leading.push(span.offset);
     out.declarations.insert(span.offset);
     push_span(span, out);
     collect_closer(span, out);
     let FuncBody::Block { nested, stmts } = body;
+    for clause in clauses {
+        out.leading.push(clause.span.offset);
+        push_span(clause.span, out);
+        collect_expr(&clause.condition, begins, out);
+    }
+    for clause in ensures {
+        out.leading.push(clause.span.offset);
+        push_span(clause.span, out);
+        collect_expr(&clause.condition, begins, out);
+    }
     collect_decls(nested, begins, out);
     collect_stmts(stmts, begins, out);
     collect_body(span.offset, span, nested, stmts, begins, out);
-    let header_boundary = nested
+    let header_boundary = clauses
         .first()
-        .map(crate::span::decl_span)
+        .map(|clause| clause.span.offset)
+        .or_else(|| ensures.first().map(|clause| clause.span.offset))
+        .or_else(|| nested.first().map(crate::span::decl_span))
         .or_else(|| out.bodies.get(&span.offset).copied())
         .unwrap_or_else(|| span_end(span));
     collect_header(span.offset, header_boundary, out);

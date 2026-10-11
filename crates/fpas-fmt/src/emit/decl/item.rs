@@ -153,6 +153,8 @@ fn emit_record_method(emitter: &mut Emitter, method: &RecordMethod, comments: &C
             emitter.write(": ");
             emit_type_expr(emitter, &function.return_type);
             finish_routine_header_line(emitter, comments, function.span.offset);
+            super::contracts::emit_requires_clauses(emitter, &function.requires, comments);
+            super::contracts::emit_ensures_clauses(emitter, &function.ensures, comments);
             emit_func_body(
                 emitter,
                 function.span.offset,
@@ -175,6 +177,8 @@ fn emit_record_method(emitter: &mut Emitter, method: &RecordMethod, comments: &C
             emitter.write(": ");
             emit_type_expr(emitter, &function.return_type);
             finish_routine_header_line(emitter, comments, function.span.offset);
+            super::contracts::emit_requires_clauses(emitter, &function.requires, comments);
+            super::contracts::emit_ensures_clauses(emitter, &function.ensures, comments);
             emit_func_body(
                 emitter,
                 function.span.offset,
@@ -195,6 +199,8 @@ fn emit_record_method(emitter: &mut Emitter, method: &RecordMethod, comments: &C
                 &procedure.params,
             );
             finish_routine_header_line(emitter, comments, procedure.span.offset);
+            super::contracts::emit_requires_clauses(emitter, &procedure.requires, comments);
+            super::contracts::emit_ensures_clauses(emitter, &procedure.ensures, comments);
             emit_func_body(
                 emitter,
                 procedure.span.offset,
@@ -214,6 +220,8 @@ fn emit_record_method(emitter: &mut Emitter, method: &RecordMethod, comments: &C
                 &procedure.params,
             );
             finish_routine_header_line(emitter, comments, procedure.span.offset);
+            super::contracts::emit_requires_clauses(emitter, &procedure.requires, comments);
+            super::contracts::emit_ensures_clauses(emitter, &procedure.ensures, comments);
             emit_func_body(
                 emitter,
                 procedure.span.offset,

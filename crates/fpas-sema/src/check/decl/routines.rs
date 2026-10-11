@@ -58,7 +58,11 @@ impl Checker {
             &params,
             &f.params,
             Some(return_ty),
-            &f.body,
+            super::super::contracts::RoutineBody {
+                body: &f.body,
+                requires: &f.requires,
+                ensures: &f.ensures,
+            },
         );
         if is_nested {
             self.record_nested_routine_captures(
@@ -110,7 +114,11 @@ impl Checker {
             &params,
             &p.params,
             None,
-            &p.body,
+            super::super::contracts::RoutineBody {
+                body: &p.body,
+                requires: &p.requires,
+                ensures: &p.ensures,
+            },
         );
         if is_nested {
             self.record_nested_routine_captures(
@@ -137,7 +145,9 @@ impl Checker {
 
     /// Check a routine body and return lexical captures of the routine itself.
     ///
-    /// **Documentation:** `docs/pascal/language/functions/closures.md`
+    /// Heading clauses are checked and captured before body-local declarations are introduced.
+    /// **Documentation:** `docs/pascal/language/functions/closures.md` and
+    /// `docs/pascal/language/functions/contracts.md`.
     pub(crate) fn check_routine_body_collecting_captures(
         &mut self,
         name: &str,
@@ -145,8 +155,13 @@ impl Checker {
         params: &[ParamTy],
         source_params: &[fpas_parser::FormalParam],
         return_type: Option<Ty>,
-        body: &FuncBody,
+        input: super::super::contracts::RoutineBody<'_>,
     ) -> CaptureAnalysis {
+        let super::super::contracts::RoutineBody {
+            body,
+            requires,
+            ensures,
+        } = input;
         let FuncBody::Block { nested, stmts } = body;
         self.discard_results.push(true);
 
@@ -197,6 +212,26 @@ impl Checker {
             owner_unit,
         });
 
+        self.check_preconditions(requires);
+        self.check_postconditions(ensures);
+        let clause_body = FuncBody::Block {
+            nested: Vec::new(),
+            stmts: Vec::new(),
+        };
+        let clause_captures = collect_captures(
+            &self.scopes,
+            routine_scope_index,
+            super::super::contracts::RoutineBody {
+                body: &clause_body,
+                requires,
+                ensures,
+            },
+            &self.closure_infos,
+            &self.nested_routine_captures,
+            &self.pending_routine_captures,
+            &self.capture_dependencies.closures,
+        );
+
         let hoisted = if nested.is_empty() {
             Vec::new()
         } else {
@@ -215,12 +250,29 @@ impl Checker {
         let mut captures = collect_captures(
             &self.scopes,
             routine_scope_index,
-            body,
+            super::super::contracts::RoutineBody {
+                body,
+                requires: &[],
+                ensures: &[],
+            },
             &self.closure_infos,
             &self.nested_routine_captures,
             &self.pending_routine_captures,
             &self.capture_dependencies.closures,
         );
+
+        for capture in clause_captures.captures {
+            if !captures.captures.iter().any(|existing| {
+                existing.name.eq_ignore_ascii_case(&capture.name)
+                    && existing.declaration == capture.declaration
+            }) {
+                captures.captures.push(capture);
+            }
+        }
+        captures.captures.sort_by_key(|capture| {
+            self.scopes
+                .capture_scope_index(&capture.name, capture.declaration)
+        });
 
         self.complete_capture_discard_info(&mut captures.captures);
         self.remember_capture_scopes(&captures.captures);

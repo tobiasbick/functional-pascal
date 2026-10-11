@@ -219,7 +219,7 @@ impl LoweringContext {
             }
             _ => return Err(unsupported(expression.span(), "try operand")),
         };
-        self.terminate(fpas_ir::Terminator::Return(Some(propagated)))?;
+        self.lower_return(Some(propagated), expression.span())?;
         self.switch_to(success);
         let success_wrapper = self.emit_value(
             Operation::ReadLocal(wrapper_local),

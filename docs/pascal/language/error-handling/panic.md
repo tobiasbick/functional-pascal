@@ -34,6 +34,13 @@ An invalid dynamic [subrange conversion](../types/subranges.md) also causes a
 panic. Its message includes the value and the allowed inclusive bounds; a known
 invalid constant is diagnosed at compile time instead.
 
+A failed [precondition or postcondition](../functions/contracts.md) also panics.
+Its message includes the qualified routine name, original failed clause, and
+current parameter values; function postconditions also include the complete
+return value. Checks run on every entry or ordinary/propagated return in all
+build modes, including calls through callable values and imported routines.
+Completed writes through `var` parameters are preserved when a clause panics.
+
 ## See also
 
 - [Result](result.md)

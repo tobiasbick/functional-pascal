@@ -1,5 +1,6 @@
 //! Hierarchical symbol extraction from recovered parser ASTs.
 
+mod contracts;
 mod imports;
 mod members;
 mod record_construction;

@@ -26,7 +26,7 @@ AP12.1.
 - `crates/fpas-parser/src/parser/expr/postfix.rs`.
 - `crates/fpas-sema/src/check/expr/postfix.rs`, call checking.
 - `crates/fpas-compiler/src/lowering/calls.rs`.
-- `fpas-fmt`, `crates/fpas-language-service/src/intellisense/signature_help/`.
+- `fpas-fmt`, `crates/fpas-language-service/src/intellisense/signature_help.rs`.
 
 ## Migration
 

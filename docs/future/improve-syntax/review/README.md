@@ -7,6 +7,11 @@ The [reviewed scope](reviewed-scope.md) preserves the packages and points alread
 reviewed, their completed implementation verification and the recorded validation
 limits. Package completion remains in the [central plan](../README.md).
 
+AP18, AP22, AP23, and AP24 are complete, but are not included in that recorded review
+scope. Historical check results describe the reviewed revision; they do not
+establish current blockers or validate later changes. Select the packages and
+a fixed target revision explicitly when starting the next review.
+
 ## Review scope
 
 Not yet selected. Set the target revision, packages and review areas when the

@@ -135,7 +135,7 @@ Current pattern and editor handbook rules remain unchanged.
 
 ## T03 — P3: generic callable-field signature help remains unspecialized
 
-Status: confirmed; repair open. Owner: AP24 record-member presentation.
+Status: repaired and verified. Owner: AP24 record-member presentation.
 
 ### Requirement and reproduction
 
@@ -167,6 +167,7 @@ program, so this is stale editor type information rather than failed inference.
 
 ### Cause and tasks
 
+At the reviewed revision,
 [intellisense/record_members.rs](../../../../crates/fpas-language-service/src/intellisense/record_members.rs),
 lines 32–39, specializes `detail` and `type_name` but leaves `callable` unchanged.
 [signature_help.rs](../../../../crates/fpas-language-service/src/intellisense/signature_help.rs),
@@ -174,11 +175,23 @@ line 70, then consumes the original declaration signature installed by
 [symbols/extract/members.rs](../../../../crates/fpas-language-service/src/symbols/extract/members.rs),
 lines 41–42.
 
-- [ ] Update the callable signature from the instantiated semantic field type,
+The shared member specialization now builds `callable` from the instantiated
+function/procedure type, reusing resolved parameter formatting for names and
+`var` modes. The existing transparent alias traversal moved from construction
+into [type_aliases.rs](../../../../crates/fpas-language-service/src/navigation/type_aliases.rs),
+shared by constructor queries, member navigation and completion. It retains
+declaring import environments, cycle rejection and caller-side member visibility.
+[Permanent regressions](../../../../crates/fpas-language-service/tests/intellisense/callable_fields.rs)
+cover concrete signatures, active arguments, original field targets, valid
+cross-document renames, imported/type aliases, nested type arguments, empty
+parameter lists, scalar fields and private-member boundaries. Current editor
+handbook rules remain unchanged.
+
+- [x] Update the callable signature from the instantiated semantic field type,
   retaining parameter names, modes and the original declaration location.
-- [ ] Extend signature-help tests for function and procedure fields, including
+- [x] Extend signature-help tests for function and procedure fields, including
   aliases/imported records and a nested concrete type argument.
-- [ ] Verify both parameter and return type text, active argument selection,
+- [x] Verify both parameter and return type text, active argument selection,
   and unchanged definition/rename targeting. Keep this in the shared member
   specialization owner, not a signature-help-only string replacement.
 
@@ -187,8 +200,9 @@ lines 41–42.
 The formatter preserved the inspected contract/generic comments and was
 idempotent on the scratch fixture. Repository FPAS formatting and TextMate
 grammar verification passed. No independent formatter or current-documentation
-defect was established in this review. The full VS Code extension-host suite
-was not run; public language-service probes do not substitute for that check.
+defect was established in the original review. That review did not run the
+full VS Code extension-host suite. It now passes for each tooling repair;
+see [verification.md](verification.md) for the completed repair checks.
 
 For each repair, extend the existing behavior-owning tests and demonstrate the
 original failure before changing production code. These omissions are not a

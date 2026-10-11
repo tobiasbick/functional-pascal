@@ -9,6 +9,7 @@ mod rename;
 mod resolve;
 mod selection;
 mod service;
+mod type_aliases;
 mod type_definition;
 mod workspace_symbols;
 
@@ -26,6 +27,7 @@ pub use rename::{RenameEdit, RenameError, RenameTarget};
 pub(crate) use rename::{prepare_rename, rename_symbol};
 pub(crate) use resolve::{find_type, resolve, resolve_qualified, resolve_unqualified, token_name};
 pub use selection::SelectionRange;
+pub(crate) use type_aliases::member_type;
 
 /// A query result tied to the exact immutable source snapshot used for positions.
 #[derive(Debug, Clone)]

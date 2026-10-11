@@ -130,7 +130,7 @@ AP08, AP28, and AP29 have no work packages.
 The completed syntax review and its implementation verification are recorded in
 [reviewed scope](review/reviewed-scope.md), including the packages and points
 already inspected. The [review plan](review/README.md) records the subsequent
-implementation review and its open repair work for AP03, AP15, AP18, AP19,
+implementation review and all six completed repairs for AP03, AP15, AP18, AP19,
 AP21, AP22, AP23, and AP24.
 
 Package numbers group related work; they are not the execution order. The

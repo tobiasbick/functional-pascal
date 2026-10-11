@@ -7,13 +7,14 @@ Current handbook rules remain unchanged.
 
 ## Required checks
 
-These results cover the currently completed repairs S01, S02, S03, T01 and T02.
+These results cover all six completed repairs. Standalone FPAS checks cover the
+language repairs S01/S02/S03; full editor-host checks cover T01/T02/T03.
 
 | Command | Result |
 | --- | --- |
 | `cargo fmt --all` | Passed |
 | `cargo build` | Passed |
-| `cargo test --workspace --no-fail-fast` | 4,187 tests/doc-tests passed; no failures or ignored tests |
+| `cargo test --workspace --no-fail-fast` | 4,192 tests/doc-tests passed; no failures or ignored tests |
 | `cargo clippy -p fpas-sema --all-targets --locked -- -D warnings` | Passed |
 | `cargo clippy -p fpas-language-service --all-targets --locked -- -D warnings` | Passed |
 | `node editors/vscode/scripts/run-tests.mjs` | Full extension-host suite passed, including manifest, contract and grammar checks |
@@ -37,19 +38,19 @@ failure launched the host as Node and was resolved without repository changes.
 | S03 | New semantic negatives failed before repair because type names were accepted; the CLI regression reported FP9001 instead of FP3006. Direct and computed arguments now produce semantic diagnostics. All three conversion-argument tests, five membership tests and the CLI regression pass. Second review includes type names hidden in decisions, addition and negation, plus local/imported aliases and preserved membership operands. |
 | T01 | Public API regressions failed before repair by selecting an outer type and, on second review, selecting an owner name as the parameter span. All three targeted tests pass: record/enum definition, references, rename and tokens; constrained and same-owner parameters; exclusion from qualified member lookup/completion. Edited positive sources remain valid. Shared extraction and member filtering avoid query-specific fixes. |
 | T02 | Four public identity regressions failed before repair by resolving binders to the outer constant. All five targeted tests pass for case/if expressions, sibling and nested arms, guards, `and` chains, statement patterns and return/initializer/argument/container/closure positions. Second review checks earlier selector and pattern-comparison uses, declaration visibility and independently valid renames of outer and inner bindings. Shared pattern extraction owns both statement and expression routes. |
-| T03 | Reviewed public signature help reports template types instead of instantiated types. Repair open. |
+| T03 | Both primary regressions failed before repair: direct fields displayed `Item` instead of `string`, and imported record-type aliases had no member signature. All five targeted tests and the 27 existing import-alias/constructor tests pass. Second review covers function/procedure names and modes, return types, active arguments, original definition/rename targets, nested concrete types, parameterless calls, scalar rejection, private fields/construction and recovered alias cycles. Signatures use the shared field-specialization owner; alias traversal is reused by member and constructor consumers. |
 
-The remaining editor probes ran against the reviewed revision through the
+The original editor probes ran against the reviewed revision through the
 public `LanguageService` API after semantic analysis accepted their inputs.
 Their source inputs and acceptance contracts remain in
-[tooling-and-tests.md](tooling-and-tests.md). Permanent regressions must
-demonstrate each failure before its production repair.
+[tooling-and-tests.md](tooling-and-tests.md). Permanent regressions demonstrate
+the failures before their production repairs and verify the corrected behavior.
 
 ## Scope and limits
 
-- No keyword, grammar, highlighting or current handbook rule changed in S01/S02/S03/T01/T02.
+- No keyword, grammar, highlighting or current handbook rule changed in these repairs.
   Existing language-service and LSP tests pass in the workspace suite.
-- The full VS Code extension-host suite passes for T01 and T02, including navigation,
+- The full VS Code extension-host suite passes for T01/T02/T03, including navigation,
   IntelliSense, semantic tools, project workflows, debugger and lifecycle checks.
 - No benchmark or exhaustive feature-combination claim is made.
 - An incidental T02 fixture exposed a separate navigation limitation: a field

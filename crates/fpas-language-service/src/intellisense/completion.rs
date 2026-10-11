@@ -218,6 +218,11 @@ fn member_candidates<'a>(
     else {
         return Vec::new();
     };
+    let Some((type_index, type_symbol)) =
+        crate::navigation::member_type(documents, type_index, type_symbol)
+    else {
+        return Vec::new();
+    };
     public_members(type_symbol.type_members(), type_index, target_index)
 }
 

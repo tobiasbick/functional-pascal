@@ -2,8 +2,8 @@
 
 This review checks implementation delivered after the
 [earlier completed review](reviewed-scope.md). It records **six confirmed
-findings: one P1, four P2 and one P3**. S01/S02/S03/T01/T02 are repaired and verified;
-T03 remains open. The repaired P1 defect admitted incorrectly typed
+findings: one P1, four P2 and one P3**. All six findings are repaired and verified.
+The repaired P1 defect admitted incorrectly typed
 Result payloads in decision expressions.
 
 The [central plan](../README.md) remains the only package-completion index.
@@ -49,7 +49,7 @@ AP27 were not judged as missing implementations.
 | [x] | S03 | P2 | Scalar conversions accept type names as values and reach FP9001 | [Validate value positions](compiler-and-semantics.md#s03--p2-scalar-conversions-accept-type-declarations-as-value-arguments) |
 | [x] | T01 | P2 | Generic data type parameters are absent from editor symbols | [Extract parameter bindings](tooling-and-tests.md#t01--p2-generic-data-type-parameters-are-missing-from-editor-symbols) |
 | [x] | T02 | P2 | A case-expression binder resolves to an outer constant | [Respect expression scopes](tooling-and-tests.md#t02--p2-case-expression-bindings-resolve-to-a-shadowed-outer-constant) |
-| [ ] | T03 | P3 | Generic callable-field signature help shows template types | [Specialize signatures](tooling-and-tests.md#t03--p3-generic-callable-field-signature-help-remains-unspecialized) |
+| [x] | T03 | P3 | Generic callable-field signature help shows template types | [Specialize signatures](tooling-and-tests.md#t03--p3-generic-callable-field-signature-help-remains-unspecialized) |
 
 Each item records its requirement, input/observed failure, production owner,
 repair scope and positive/negative acceptance cases. Unconfirmed suspicions are

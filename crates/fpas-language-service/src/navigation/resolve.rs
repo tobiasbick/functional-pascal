@@ -240,6 +240,7 @@ fn resolve_members(
             base.type_name.as_ref()?
         };
         let (type_index, type_symbol) = find_type(documents, target_index, base_index, owner_type)?;
+        let (type_index, type_symbol) = super::member_type(documents, type_index, type_symbol)?;
         let member = type_symbol.type_members().find(|member| {
             member.name.eq_ignore_ascii_case(member_name)
                 && (type_index == target_index || member.visibility == SymbolVisibility::Public)

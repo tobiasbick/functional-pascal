@@ -7,13 +7,14 @@ Current handbook rules remain unchanged.
 
 ## Required checks
 
-These results cover the currently completed repair S01.
+These results cover the currently completed repairs S01 and S02.
 
 | Command | Result |
 | --- | --- |
 | `cargo fmt --all` | Passed |
 | `cargo build` | Passed |
-| `cargo test --workspace --no-fail-fast` | 4,172 tests/doc-tests passed; no failures or ignored tests |
+| `cargo test --workspace --no-fail-fast` | 4,175 tests/doc-tests passed; no failures or ignored tests |
+| `cargo clippy -p fpas-sema --all-targets --locked -- -D warnings` | Passed |
 | `fpas fmt --check lib apps examples tests` | Passed |
 | `fpas test tests/suite.fpasprj --std-lib lib` | 500 passed, 1 intentional skip, no failures |
 | Local Markdown links and heading fragments | Passed |
@@ -28,7 +29,7 @@ standalone FPAS suites run sequentially to avoid concurrent fixture discovery.
 | Finding | Evidence and status |
 | --- | --- |
 | S01 | Both new semantic regressions failed before repair because invalid programs had no errors. All 13 focused decision-expression tests now pass. The real CLI table checks FP3006, expected/found types and semantic phase for check/build/run/test. The runner confirms valid Result values and selected-branch-only evaluation. Second review confirms shared recursive merging, branch-context validation and unchanged no-widening rules. |
-| S02 | Reviewed probes reject both named-field orders and enum payloads with FP3006. Annotated/direct-field controls run successfully. Repair open. |
+| S02 | All three new semantic regressions and the runtime fixture failed before repair with the documented contextual callback mismatch. All 37 focused generics tests now pass. Record and enum callbacks execute without annotations. Second review confirms shared contextual traversal, retained missing/conflicting-evidence rejection and generic constraints; enclosing generic parameters remain valid evidence. |
 | S03 | Reviewed subrange/distinct type-name arguments reach FP9001. Repair open. |
 | T01 | Reviewed public definition query finds no generic record parameter. Repair open. |
 | T02 | Reviewed public definition query selects the outer constant instead of the arm binder. Repair open. |
@@ -42,10 +43,10 @@ demonstrate each failure before its production repair.
 
 ## Scope and limits
 
-- No keyword, grammar, highlighting or current handbook rule changed in S01.
+- No keyword, grammar, highlighting or current handbook rule changed in S01/S02.
   Existing language-service and LSP tests pass in the workspace suite.
-- The full VS Code extension-host suite and Clippy have not been rerun for
-  these repairs. Affected editor checks belong to the tooling findings.
+- The full VS Code extension-host suite has not been rerun for these repairs.
+  Affected editor checks belong to the tooling findings.
 - No benchmark or exhaustive feature-combination claim is made.
 - Link validation uses an FPAS helper under `.temp-data/`; reports contain no
   machine-identifying metadata.

@@ -81,8 +81,17 @@ the current no-widening rule.
 
 ## S02 — P2: joint constructor inference stops at nested generic callables
 
-Status: confirmed; repair open. Owner: AP24.2/AP24.3 contextual inference.
+Status: repaired and verified. Owner: AP24.2/AP24.3 contextual inference.
 AP22 exposes this through inferred local construction.
+
+`needs_expected_type` traverses container arguments and callable signatures,
+distinguishing a routine's own uninstantiated parameters from valid enclosing
+generic parameters. Both constructor and routine-argument completion reuse it.
+The `contextual_callbacks` semantic module covers record/enum inference in both
+field orders, function/procedure arrays, Option/Result/dictionary nesting,
+missing or conflicting evidence and callback constraints. The generic-record
+runner constructs unannotated record and enum values and invokes their callbacks.
+The current generics handbook rules are unchanged.
 
 ### Requirement and reproduction
 
@@ -134,15 +143,15 @@ controls returns `3`.
 
 ### Tasks and acceptance
 
-- [ ] Traverse supported containers and callable signatures when detecting
+- [x] Traverse supported containers and callable signatures when detecting
   contextual-completion needs. Distinguish an unspecialized routine value
   from a valid enclosing generic parameter; reuse the existing owner.
-- [ ] Extend semantic cases for arrays of generic functions/procedures, both
+- [x] Extend semantic cases for arrays of generic functions/procedures, both
   field orders and enum payloads. Inspect Option/dictionary nesting through
   the same traversal; add cases for distinct risks.
-- [ ] Preserve rejection of missing/conflicting evidence and failed generic
+- [x] Preserve rejection of missing/conflicting evidence and failed generic
   constraints. Do not guess a type for a bare unconstrained generic routine.
-- [ ] Add one runtime regression that constructs the inferred container,
+- [x] Add one runtime regression that constructs the inferred container,
   invokes the callback and checks its result. The example and enum equivalent
   must work without a binding annotation.
 

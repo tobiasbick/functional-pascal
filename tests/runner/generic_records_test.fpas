@@ -30,6 +30,20 @@ begin
   return Box(Value := Value);
 end function;
 
+type Handler of T = record
+  Callbacks: array of function(Value: T): T;
+  Value: T;
+end record;
+
+type CallbackChoice of T = enum
+  Ready(Callbacks: array of function(Value: T): T; Value: T);
+end enum;
+
+function Identity<T>(Value: T): T;
+begin
+  return Value;
+end function;
+
 begin
   var Number: Box of integer := Make(7);
   Number.Value := 8;
@@ -46,4 +60,11 @@ begin
   AssertFalse(EmptyValue.Value.IsSome());
   AssertTrue(Number = Make(8));
   AssertEquals(1, Root.Next.Unwrap().Value);
+  const HandlerValue := Handler(Callbacks := [Identity], Value := 3);
+  AssertEquals(3, HandlerValue.Callbacks[0](HandlerValue.Value));
+  const Choice := CallbackChoice.Ready([Identity], 4);
+  case Choice of
+    when CallbackChoice.Ready(const Callbacks, const Value):
+      AssertEquals(4, Callbacks[0](Value));
+  end case;
 end.

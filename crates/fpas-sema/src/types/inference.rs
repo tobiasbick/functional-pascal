@@ -72,12 +72,34 @@ pub(crate) fn has_inference_holes(ty: &Ty) -> bool {
     }
 }
 
-/// Whether an expected type can complete holes or instantiate a generic routine value.
+/// Whether context can complete unknown payloads or nested generic routine values.
+/// Enclosing generic parameters are valid evidence and do not themselves need context.
 pub(crate) fn needs_expected_type(ty: &Ty) -> bool {
-    has_inference_holes(ty)
-        || match ty {
-            Ty::Function(function) => !function.type_params.is_empty(),
-            Ty::Procedure(procedure) => !procedure.type_params.is_empty(),
-            _ => false,
+    match ty {
+        Ty::Error => true,
+        Ty::Array(inner) | Ty::Channel(inner) | Ty::Option(inner) | Ty::Task(inner) => {
+            needs_expected_type(inner)
         }
+        Ty::Result(left, right) | Ty::Dict(left, right) => {
+            needs_expected_type(left) || needs_expected_type(right)
+        }
+        Ty::Record(record) => record.type_args.iter().any(needs_expected_type),
+        Ty::Enum(enumeration) => enumeration.type_args.iter().any(needs_expected_type),
+        Ty::Function(function) => {
+            !function.type_params.is_empty()
+                || function
+                    .params
+                    .iter()
+                    .any(|param| needs_expected_type(&param.ty))
+                || needs_expected_type(&function.return_type)
+        }
+        Ty::Procedure(procedure) => {
+            !procedure.type_params.is_empty()
+                || procedure
+                    .params
+                    .iter()
+                    .any(|param| needs_expected_type(&param.ty))
+        }
+        _ => false,
+    }
 }

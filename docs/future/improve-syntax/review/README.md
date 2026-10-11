@@ -1,8 +1,8 @@
 # Syntax implementation review and repair plan
 
 This review checks implementation delivered after the
-[earlier completed review](reviewed-scope.md). It records **six confirmed open
-findings: one P1, four P2 and one P3**. S01 is repaired and verified; the five
+[earlier completed review](reviewed-scope.md). It records **six confirmed
+findings: one P1, four P2 and one P3**. S01/S02 are repaired and verified; four
 remaining findings are open. The repaired P1 defect admitted incorrectly typed
 Result payloads in decision expressions.
 
@@ -45,7 +45,7 @@ AP27 were not judged as missing implementations.
 | Done | Finding | Priority | Confirmed problem | Repair and acceptance |
 | --- | --- | --- | --- | --- |
 | [x] | S01 | P1 | If/case joins erase Result payload evidence; invalid values reach runtime | [Preserve branch types](compiler-and-semantics.md#s01--p1-decision-expressions-lose-complementary-result-type-information) |
-| [ ] | S02 | P2 | Joint record/enum inference omits generic callbacks inside containers | [Complete contextual inference](compiler-and-semantics.md#s02--p2-joint-constructor-inference-stops-at-nested-generic-callables) |
+| [x] | S02 | P2 | Joint record/enum inference omits generic callbacks inside containers | [Complete contextual inference](compiler-and-semantics.md#s02--p2-joint-constructor-inference-stops-at-nested-generic-callables) |
 | [ ] | S03 | P2 | Scalar conversions accept type names as values and reach FP9001 | [Validate value positions](compiler-and-semantics.md#s03--p2-scalar-conversions-accept-type-declarations-as-value-arguments) |
 | [ ] | T01 | P2 | Generic data type parameters are absent from editor symbols | [Extract parameter bindings](tooling-and-tests.md#t01--p2-generic-data-type-parameters-are-missing-from-editor-symbols) |
 | [ ] | T02 | P2 | A case-expression binder resolves to an outer constant | [Respect expression scopes](tooling-and-tests.md#t02--p2-case-expression-bindings-resolve-to-a-shadowed-outer-constant) |

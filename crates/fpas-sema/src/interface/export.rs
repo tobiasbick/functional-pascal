@@ -11,6 +11,7 @@ use super::conversion::{
 };
 
 mod contracts;
+mod param_escapes;
 mod record_constants;
 
 impl check::Checker {
@@ -81,6 +82,10 @@ impl check::Checker {
         }
         Ok(artifact::UnitInterface {
             routine_contracts: contracts::export_contracts(unit),
+            routine_param_escapes: param_escapes::export_param_escapes(
+                unit,
+                &self.routine_param_escapes,
+            ),
             unit_name,
             symbols,
         }

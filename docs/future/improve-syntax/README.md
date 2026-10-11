@@ -45,8 +45,8 @@ an open work package.
 ## Package status
 
 AP01, AP02, AP03, AP04, AP05, AP06, AP07, AP09, AP10, AP11, AP13, AP14, AP15, AP16,
-AP17, AP18, AP19, AP20, AP21, AP22, and AP24 are complete, including all their
-work packages. Their READMEs and work-package files record implemented behavior,
+AP17, AP18, AP19, AP20, AP21, AP22, AP23, AP24, and AP26 are complete, including all
+their work packages. Their READMEs and work-package files record implemented behavior,
 implementation owners, regression coverage, and any independent follow-ups.
 Checkboxes use the [status-tracking rule](development-process.md#status-tracking).
 
@@ -81,7 +81,7 @@ package are listed in each work package file.
 | [x] | [AP23: Preconditions and postconditions](ap23-preconditions-and-postconditions/README.md) | Large | AP07, AP13, AP16 | Complete: AP23.1 preconditions; AP23.2 postconditions (Q15–Q17) |
 | [x] | [AP24: Generic data structures](ap24-generic-data-structures/README.md) | Very large | AP03, AP10, AP11, AP20 | Complete (AP24.1, AP24.2, AP24.3) |
 | [ ] | [AP25: Conservative purity](ap25-conservative-purity/README.md) | Very large | AP14, AP16, AP17; AP23 reassessment | Retained; low priority; reassess after AP23 (Q18) |
-| [ ] | [AP26: Structured task scopes](ap26-structured-task-scopes/README.md) | Large | AP13, AP17 | Agreed direction (Q19, Q20) |
+| [x] | [AP26: Structured task scopes](ap26-structured-task-scopes/README.md) | Large | AP13, AP17 | Complete (AP26.1–AP26.3; Q19, Q20, Q24–Q27) |
 | [ ] | [AP27: Typed placeholders](ap27-typed-placeholders/README.md) | Very large | AP02, AP22 | Retained as optional (Q21); AP22 dependency implemented |
 | — | [AP28: Structured editing](ap28-structured-editing/README.md) | — | AP13, AP24 | Transferred to [editor/LSP planning](../editor-structured-editing.md) (Q23) |
 | — | [AP29: Bounded derivation](ap29-bounded-derivation/README.md) | — | — | Rejected; closed (Q22) |
@@ -120,7 +120,7 @@ and transfer conditions are recorded in the owning package README.
 | AP23 | Complete: AP23.1 preconditions; AP23.2 postconditions |
 | AP24 | Complete: AP24.1 parenthesized type arguments; AP24.2 generic records; AP24.3 generic enums |
 | AP25 | AP25.1 priority reassessment; AP25.2 pure function checker; AP25.3 std purity metadata |
-| AP26 | AP26.1 scope blocks; AP26.2 failure propagation; AP26.3 handle escape restrictions |
+| AP26 | Complete: AP26.1 scope blocks; AP26.2 failure propagation; AP26.3 handle escape restrictions |
 | AP27 | AP27.1 spelling decision; AP27.2 placeholder analysis |
 
 AP08, AP28, and AP29 have no work packages.
@@ -138,10 +138,10 @@ completed foundation is listed above. For the remaining work, keep the
 following dependency order; the exact prerequisites and unresolved decisions
 are recorded in each work-package file.
 
-1. AP26.1 is next, using the completed block and caller-mutation rules. Continue
-   with AP26.2, then resolve the closure-capture limits before AP26.3.
-2. Reassess AP25 after practical use of the completed AP23 contracts; its AP14
-   prerequisite is complete.
+AP25.1 is next: reassess conservative purity after practical use of the completed
+AP23 contracts. Collect concrete cases where purity would help, then record the
+user's decision to implement AP25, retain its low priority, or close it. AP25.2
+and AP25.3 require that decision; the AP14 prerequisite is complete.
 
 AP12 can proceed to its
 accept/reject decision now that AP06 is complete; its implementation still
@@ -199,7 +199,7 @@ agreement. Do not add a feature solely because an inspiration language has it.
 - [shared-constraints.md](shared-constraints.md): cross-package rules,
   regression checks, and design inspiration.
 
-All 23 questionnaire decisions are recorded in the owning packages as Q01–Q23.
+All 27 questionnaire decisions are recorded in the owning packages as Q01–Q27.
 These decisions do not mark implementation complete; remaining implementation
 details and explicit decision gates stay in the owning packages.
 Implemented behavior remains in the [current handbook](../../pascal/README.md).

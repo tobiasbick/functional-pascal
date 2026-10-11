@@ -44,10 +44,15 @@ impl Worker {
                 self.suspend_requested = true;
                 return Ok(Some(None));
             }
+            self.check_task_cancellation()?;
             let scheduler = Arc::clone(self.scheduler_ref()?);
             scheduler.fail_pending_batch_if_shutdown(&ids);
             if !scheduler.is_shutdown() {
-                scheduler.wait_for_any(&ids);
+                if self.has_task_scope_ownership() {
+                    self.wait_observing_scopes()?;
+                } else {
+                    scheduler.wait_for_any(&ids);
+                }
             }
         }
     }
@@ -79,7 +84,7 @@ impl Worker {
             TaskAnyPoll::Complete(index) => Ok(Some(Value::Integer(index as i64))),
             TaskAnyPoll::Pending => Ok(None),
             TaskAnyPoll::Unknown(id) => Err(self.invalid_task(id)),
-            TaskAnyPoll::Failed(error) => Err(error),
+            TaskAnyPoll::Failed { id, error } => Err(self.observe_task_failure(id, error)),
         }
     }
 

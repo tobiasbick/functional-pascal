@@ -12,6 +12,7 @@ mod import_aliases;
 mod public_signatures;
 mod record_construction;
 mod short_names;
+mod task_scopes;
 mod type_order;
 
 fn parse_unit(source: &str) -> fpas_parser::Unit {

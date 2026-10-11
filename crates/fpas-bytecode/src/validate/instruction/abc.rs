@@ -250,7 +250,10 @@ pub(super) fn validate_abc(
             }
             validate_window(site, "intrinsic argument window", c, usize::from(auxiliary))
         }
-        Opcode::Yield => {
+        Opcode::Yield
+        | Opcode::EnterTaskScope
+        | Opcode::ExitTaskScope
+        | Opcode::CancelTaskScope => {
             canonical_u16(site, "A", a, 0)?;
             canonical_u16(site, "B", b, 0)?;
             canonical_tail(site, c, auxiliary)

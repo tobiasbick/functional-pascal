@@ -1,4 +1,4 @@
-//! Ordinary go task creation using the shared register-task entry layout.
+//! Ordinary go task creation using the shared register-task entry layout and scope ownership.
 //!
 //! Documentation: `docs/pascal/language/concurrency/README.md`.
 
@@ -90,9 +90,17 @@ impl Worker {
         }
         let arguments = self.clone_window(argument_base, operands.auxiliary)?;
         let id = scheduler.alloc_id();
-        let task = TaskState::entry(id, &function, info, arguments, !detached);
-        if !detached {
+        // A scope observes completion of both `go` forms, so its children always retain results.
+        let owner = self.spawning_scope();
+        let retain_result = !detached || owner.is_some();
+        let mut task = TaskState::entry(id, &function, info, arguments, retain_result);
+        if let Some(scope) = owner {
+            task.owner_scope = scheduler.scopes.enroll(scope, id);
+        }
+        if retain_result {
             scheduler.register_result(id);
+        }
+        if !detached {
             self.write(
                 Register::new(operands.a).map_err(|e| {
                     diagnostics::internal(

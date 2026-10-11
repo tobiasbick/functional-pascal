@@ -167,6 +167,12 @@ pub struct AnalysisMetadata {
 
 /// Semantic checking state for whole-unit types and ordered executable declarations.
 pub struct Checker {
+    /// Open task scopes of the routine body being checked.
+    pub(crate) task_scopes: super::task_scopes::TaskScopeContext,
+    /// Inferred parameter escapes of unit-level routines and record routines by canonical name.
+    ///
+    /// **Documentation:** `docs/pascal/language/concurrency/task-scopes.md#handle-escapes`
+    pub(crate) routine_param_escapes: HashMap<String, Vec<bool>>,
     /// Entry-clause scope and declaration-resolved reads retained for field defaults.
     pub(crate) contracts: super::contracts::ContractState,
     /// Whole-unit structural type resolution, separate from ordered value checking.
@@ -275,6 +281,8 @@ impl Checker {
     /// Creates an empty semantic checker and its expression-analysis tables.
     pub fn new() -> Self {
         Self {
+            task_scopes: Default::default(),
+            routine_param_escapes: HashMap::new(),
             contracts: Default::default(),
             type_collection: Default::default(),
             discard_exprs: HashMap::new(),

@@ -343,6 +343,9 @@ Call arguments still use commas; commas inside types such as
 | FP3035 | Catch-all on a closed enum | `case Item of when Some(_): null; else null; end case;` | Replace `else` with `when None: null;`, or use `if Item is Some(_) then ... end if;`. |
 | FP3036 | Local type annotation required | `const Value := ReadValue();`, `const Values := [];`, or `const Present := Some(None);` | Add `: Type`, for example `const Values: array of integer := [];`. Inference accepts only complete literals, typed construction, and explicit type conversions. |
 | FP3037 | Invalid contract expression | `requires ReadValue() > 0;` or a mutable outer binding in a clause | Use parameters, immutable values, operators, typed construction, and the permitted native receiver queries; see [Preconditions](../language/functions/contracts.md). |
+| FP3038 | `go` outside its owning scope | `scope ForEach(Items, procedure(Item: integer) begin go Work(Item); end procedure); end scope;` | Move the `go` out of the anonymous routine into the scope body, or open a `scope` inside the anonymous routine; see [Task scopes](../language/concurrency/task-scopes.md). |
+| FP3039 | Lost task error | `scope go Load(Path); end scope;` where `Load` returns `result of (string, string)` | Keep the handle and forward the error: `const T: task of result of (string, string) := go Load(Path); const Text: string := try Wait(T);`. |
+| FP3040 | Task handle escape | `return go Fetch(1);` or `Outer := go Fetch(1);` inside a `scope` | Keep scope-owned handles in bindings declared inside the scope and wait for them there; see [Task scopes](../language/concurrency/task-scopes.md#handle-escapes). |
 
 FP3025 also reports a parameter or enum variant field named twice and a named
 call that omits one; its hint lists the declared names. FP3026 applies to
@@ -455,7 +458,7 @@ can describe a structural restriction and leave those fields null.
 | FP5013 | Conversion failure | Convert an out-of-range runtime value | Check the conversion's supported range. |
 | FP5014 | Console state | Use an operation incompatible with the current console state | Select the supported console mode first. |
 | FP5015 | Failed unwrap | Unwrap `None` or an error Result | Match `Some`/`None` or `Ok`/`Error` before accessing the value. |
-| FP5016 | Debugger task cancellation | Resume a task cancelled by the debugger | Start a fresh task rather than resuming the cancelled one. |
+| FP5016 | Task cancellation | A task cancelled by the debugger or by its task scope | Expected when a scope exits early or fails; start a fresh task rather than resuming a cancelled one. |
 | FP5018 | Invalid task | Wait on an absent/invalid task handle | Retain and use a valid handle from the spawned task. |
 | FP5019 | Missing dictionary key | Index an absent key | Check membership or insert the key first. |
 | FP5020 | VM shutdown | Execute a task after VM shutdown | Keep execution within the live VM lifecycle. |

@@ -107,6 +107,8 @@ impl LoweringContext {
         value: Option<ValueId>,
         span: Span,
     ) -> Result<(), CompileError> {
+        // Every open task scope is left before the routine returns or checks postconditions.
+        self.cancel_task_scopes_above(0, span)?;
         if let Some(exit) = self.checked_return {
             match (exit.result, value) {
                 (Some(local), Some(value)) => self.write_local(local, value, span)?,

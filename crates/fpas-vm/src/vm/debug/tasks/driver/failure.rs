@@ -1,8 +1,10 @@
-//! Contain group-owned failures while preserving ordinary debugger failure stops.
+//! Publish group and scope outcomes while preserving ordinary debugger failure stops.
 
 use super::{DebugTaskEvent, DebugTaskEventKind, DebugTaskState, TaskScheduler, TaskSlot};
 use crate::vm::VmError;
+use fpas_diagnostics::codes::RUNTIME_TASK_CANCELLED;
 
+/// Publish a terminal outcome after the task has left all of its open scopes.
 pub(super) fn record(
     slot: &mut TaskSlot,
     task_id: u64,
@@ -14,8 +16,13 @@ pub(super) fn record(
     slot.worker.supervision = None;
     slot.failure = Some(error.clone());
     let owned = slot.worker.retain_result && scheduler.store_failure(task_id, error.clone());
-    if owned && !scheduler.is_aborted() {
-        // A published group outcome is terminal and cannot be resumed by debugger recovery.
+    let cancelled = task_id != 0 && error.code == RUNTIME_TASK_CANCELLED;
+    if (owned || cancelled) && !scheduler.is_aborted() {
+        // Published owned outcomes are terminal and cannot be resumed by debugger recovery.
+        if error.code == RUNTIME_TASK_CANCELLED {
+            slot.state = DebugTaskState::Cancelled;
+            slot.failure = None;
+        }
         slot.worker.task_suspension = None;
         slot.exited = true;
         events.push(DebugTaskEvent {

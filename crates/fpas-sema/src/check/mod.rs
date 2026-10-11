@@ -11,6 +11,7 @@ mod name_resolution;
 mod record_visibility;
 mod references;
 mod stmt;
+mod task_scopes;
 
 pub use closures::CaptureBinding;
 pub use closures::ClosureInfo;

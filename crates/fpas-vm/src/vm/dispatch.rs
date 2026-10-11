@@ -51,6 +51,7 @@ impl Worker {
         &mut self,
         budget: u32,
     ) -> Result<DispatchBatch, VmError> {
+        self.check_task_cancellation()?;
         if !self.callback_continuations.is_empty() && self.resume_callback_continuation()? {
             return Ok(DispatchBatch {
                 step: DispatchStep::Continue,
@@ -59,6 +60,7 @@ impl Worker {
         }
         let mut steps = 0;
         while steps < budget {
+            self.check_task_cancellation()?;
             let Some(&instruction) = self.executable.decoded().get(self.ip) else {
                 return Err(self.invalid_instruction_pointer());
             };

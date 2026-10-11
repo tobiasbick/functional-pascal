@@ -130,7 +130,7 @@ pub enum DebugTaskState {
     Completed,
     /// Raised the runtime failure that stopped the session.
     Failed,
-    /// Was cancelled by root termination, debugger disconnect, or `task.cancel`.
+    /// Was cancelled by its task scope, root termination, debugger disconnect, or `task.cancel`.
     Cancelled,
 }
 

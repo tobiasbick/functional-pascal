@@ -48,6 +48,11 @@ impl Worker {
     }
 
     pub(in crate::vm) fn run_in_place(&mut self) -> Result<Execution, VmError> {
+        self.run_in_place_inner()
+            .map_err(|error| self.unwind_task_scopes_blocking(error))
+    }
+
+    fn run_in_place_inner(&mut self) -> Result<Execution, VmError> {
         loop {
             if self
                 .scheduler

@@ -49,7 +49,7 @@ WaitAll([T1, T2, T3]);
 
 `WaitAll` is a barrier only: it does not consume return values. You may still `Wait` each handle afterward. See [`Std.Tasks`](../../std/concurrency/task.md).
 
-If a retained task fails, `Wait` and `WaitAll` propagate its original runtime or internal diagnostic. If the main task ends while a retained task is still suspended in `Std.Time.Sleep`, teardown cancels that task with a shutdown diagnostic. Wait for required tasks before the main task returns or halts.
+If a retained task fails, `Wait` and `WaitAll` propagate its original runtime or internal diagnostic. A handle of a child owned by a [task scope](task-scopes.md#handle-escapes) cannot leave that scope. If the main task ends while a retained task is still suspended in `Std.Time.Sleep`, teardown cancels that task with a shutdown diagnostic. Wait for required tasks before the main task returns or halts.
 
 ## `Std.Tasks`
 
@@ -68,5 +68,6 @@ For one event across tasks, channels, timers, and cancellation, use [mixed-sourc
 ## See also
 
 - [`go`](go.md)
+- [Task scopes](task-scopes.md)
 - [Fork-join](fork-join.md)
 - [Scheduling](scheduling.md)

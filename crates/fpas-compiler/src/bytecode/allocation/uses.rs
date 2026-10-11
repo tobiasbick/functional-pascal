@@ -11,7 +11,10 @@ pub(super) fn operation_values(operation: &Operation) -> Vec<ValueId> {
         | Operation::LoadGlobal(_)
         | Operation::MakeGlobalReference(_)
         | Operation::MakeNone
-        | Operation::Yield => Vec::new(),
+        | Operation::Yield
+        | Operation::EnterTaskScope
+        | Operation::ExitTaskScope
+        | Operation::CancelTaskScope => Vec::new(),
         Operation::WriteLocal { value, .. }
         | Operation::StoreGlobal { value, .. }
         | Operation::MakeCell(value)

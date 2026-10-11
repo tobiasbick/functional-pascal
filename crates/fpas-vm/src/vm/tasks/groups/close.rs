@@ -28,6 +28,7 @@ impl Worker {
             .begin_close(id, self.task_id)
             .map_err(|e| self.group_error(e))?;
         loop {
+            self.check_task_cancellation()?;
             let signal = WakeSignal::new();
             // Keeps the wake subscription alive while this probe parks.
             let _registration = scheduler.subscribe(&signal);

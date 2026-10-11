@@ -21,6 +21,7 @@ mod record_defaults;
 mod root;
 mod routines;
 mod stmt;
+mod task_scopes;
 mod type_names;
 mod types;
 mod validation;

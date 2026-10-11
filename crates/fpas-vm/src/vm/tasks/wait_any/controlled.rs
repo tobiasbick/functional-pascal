@@ -85,6 +85,7 @@ impl Worker {
             if scheduler.is_shutdown() {
                 continue;
             }
+            self.check_task_cancellation()?;
             let interval = timeout.map_or(POLL_INTERVAL, |timeout| {
                 timeout.saturating_sub(started.elapsed()).min(POLL_INTERVAL)
             });

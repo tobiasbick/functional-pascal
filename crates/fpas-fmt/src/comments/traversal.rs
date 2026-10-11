@@ -52,6 +52,7 @@ pub(crate) fn collect(unit: &CompilationUnit, source: &str) -> CollectedAnchors 
                             | Token::For
                             | Token::While
                             | Token::With
+                            | Token::Scope
                     ))
                 .then_some(EmissionAnchor {
                     start: pair[0].span.offset,
@@ -289,6 +290,10 @@ fn collect_stmt_contents(stmt: &Stmt, begins: &[usize], out: &mut CollectedAncho
         } => {
             collect_stmts(body, begins, out);
             collect_expr(condition, begins, out);
+        }
+        Stmt::Scope { body, span } => {
+            collect_closer(*span, out);
+            collect_stmts(body, begins, out);
         }
         Stmt::Call {
             designator, args, ..

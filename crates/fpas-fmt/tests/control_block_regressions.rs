@@ -94,3 +94,18 @@ fn comments_at_clauses_and_named_endings_are_preserved_once() {
         "{formatted}"
     );
 }
+
+#[test]
+fn task_scopes_indent_their_body_and_keep_comments_at_the_named_ending() {
+    let formatted = format(
+        "program T; begin scope const A: task := go Work(); go Log(); // child
+        // before scope end
+        end scope; Done(); end.",
+    );
+    assert!(
+        formatted.contains(
+            "  scope\n    const A: task := go Work();\n    go Log(); // child\n  // before scope end\n  end scope;\n\n  Done();"
+        ),
+        "{formatted}"
+    );
+}

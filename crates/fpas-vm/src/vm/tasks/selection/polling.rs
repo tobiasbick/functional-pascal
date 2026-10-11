@@ -12,7 +12,7 @@ impl Worker {
     pub(super) fn validate_selection_tasks(&self, ids: &[u64]) -> Result<(), VmError> {
         match self.scheduler_ref()?.poll_batch(ids) {
             TaskBatchPoll::Unknown(id) => Err(self.invalid_task(id)),
-            TaskBatchPoll::Failed(error) => Err(error),
+            TaskBatchPoll::Failed { id, error } => Err(self.observe_task_failure(id, error)),
             _ => Ok(()),
         }
     }
@@ -96,7 +96,9 @@ impl Worker {
                 },
                 CaseSource::Task(id) => match self.scheduler_ref()?.poll_any(&[*id]) {
                     TaskAnyPoll::Complete(_) => None,
-                    TaskAnyPoll::Failed(error) => return Err(error),
+                    TaskAnyPoll::Failed { id, error } => {
+                        return Err(self.observe_task_failure(id, error));
+                    }
                     TaskAnyPoll::Unknown(id) => return Err(self.invalid_task(id)),
                     TaskAnyPoll::Pending => continue,
                 },
@@ -172,6 +174,7 @@ impl Worker {
                 .min()
                 .unwrap_or(Duration::from_millis(10))
                 .min(Duration::from_millis(10));
+            self.check_task_cancellation()?;
             signal.wait(interval);
         }
     }

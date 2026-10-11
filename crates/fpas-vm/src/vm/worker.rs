@@ -44,6 +44,14 @@ pub(super) struct Worker {
     pub(in crate::vm) task_suspension: Option<TaskSuspension>,
     pub(in crate::vm) task_clock: Option<Arc<TaskClock>>,
     pub(in crate::vm) suppressed_initializers: Vec<SourceInitializerTarget>,
+    /// Task scopes opened by this task's call frames, innermost last.
+    pub(in crate::vm) task_scopes: Vec<super::tasks::scopes::OpenScope>,
+    /// Shared control of the task scope that owns this task, if any.
+    pub(in crate::vm) owner_scope: Option<Arc<super::tasks::scopes::ScopeControl>>,
+    /// Cancellation controls inherited by a synchronous callback from its caller.
+    pub(in crate::vm) enclosing_scope_controls: Vec<Arc<super::tasks::scopes::ScopeControl>>,
+    /// Observation identity of the failure propagated by a scope exit or task wait.
+    pub(in crate::vm) scope_failure_sequence: Cell<Option<u64>>,
 }
 
 impl Worker {
@@ -173,6 +181,10 @@ impl Worker {
             task_suspension: None,
             task_clock: Some(Arc::new(TaskClock::realtime())),
             suppressed_initializers: Vec::new(),
+            task_scopes: Vec::new(),
+            owner_scope: None,
+            enclosing_scope_controls: Vec::new(),
+            scope_failure_sequence: Cell::new(None),
         })
     }
 
@@ -229,6 +241,10 @@ impl Worker {
             task_suspension: None,
             task_clock: self.task_clock.clone(),
             suppressed_initializers: Vec::new(),
+            task_scopes: Vec::new(),
+            owner_scope: None,
+            enclosing_scope_controls: Vec::new(),
+            scope_failure_sequence: Cell::new(None),
         }
     }
 
@@ -266,6 +282,10 @@ impl Worker {
             task_suspension: task.suspension,
             task_clock: self.task_clock.clone(),
             suppressed_initializers: task.suppressed_initializers,
+            task_scopes: task.task_scopes,
+            owner_scope: task.owner_scope,
+            enclosing_scope_controls: Vec::new(),
+            scope_failure_sequence: Cell::new(None),
         }
     }
 
@@ -284,6 +304,8 @@ impl Worker {
             instruction_count: self.instruction_count,
             suppressed_initializers: std::mem::take(&mut self.suppressed_initializers),
             callback_continuations: std::mem::take(&mut self.callback_continuations),
+            task_scopes: std::mem::take(&mut self.task_scopes),
+            owner_scope: self.owner_scope.take(),
         }
     }
 

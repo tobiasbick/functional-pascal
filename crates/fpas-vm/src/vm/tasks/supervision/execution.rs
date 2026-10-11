@@ -89,6 +89,7 @@ impl Worker {
         if !self.supervised_ready()? {
             return Ok(DispatchStep::Suspend);
         }
+        self.check_task_cancellation()?;
         let outcome = match self.dispatch_debug_one() {
             Ok(DispatchStep::Return(value)) => Ok(value),
             Err(error) => Err(error),

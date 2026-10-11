@@ -236,6 +236,9 @@ Operation::StoreLocalIndex {
         }
         Operation::SpawnTask { callee, arguments } => validate_spawn(scope, *callee, arguments, result),
         Operation::SpawnDetachedTask { callee, arguments } => validate_call_value(scope, *callee, arguments, None),
-        Operation::Yield => Ok(()),
+        Operation::Yield
+        | Operation::EnterTaskScope
+        | Operation::ExitTaskScope
+        | Operation::CancelTaskScope => Ok(()),
     }
 }

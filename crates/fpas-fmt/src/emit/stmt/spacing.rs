@@ -13,7 +13,8 @@ fn statement_ends_with_end(stmt: &Stmt) -> bool {
         | Stmt::Case { .. }
         | Stmt::For { .. }
         | Stmt::ForIn { .. }
-        | Stmt::While { .. } => true,
+        | Stmt::While { .. }
+        | Stmt::Scope { .. } => true,
         Stmt::Const(var) | Stmt::Var(var) => expression_ends_with_end(&var.value),
         Stmt::Assign { value, .. } => expression_ends_with_end(value),
         Stmt::Return(Some(value), ..)

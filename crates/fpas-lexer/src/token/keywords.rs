@@ -57,6 +57,7 @@ fn keyword_token(raw: &str) -> Option<Token> {
         s if s.eq_ignore_ascii_case("none") => Some(Token::None),
         s if s.eq_ignore_ascii_case("try") => Some(Token::Try),
         s if s.eq_ignore_ascii_case("go") => Some(Token::Go),
+        s if s.eq_ignore_ascii_case("scope") => Some(Token::Scope),
         s if s.eq_ignore_ascii_case("dict") => Some(Token::Dict),
         s if s.eq_ignore_ascii_case("with") => Some(Token::With),
         s if s.eq_ignore_ascii_case("static") => Some(Token::Static),

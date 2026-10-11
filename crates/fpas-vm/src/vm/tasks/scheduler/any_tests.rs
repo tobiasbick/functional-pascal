@@ -56,7 +56,7 @@ fn invalid_identity_precedes_failure_which_precedes_success() {
         TaskAnyPoll::Unknown(99)
     ));
     assert!(
-        matches!(scheduler.poll_any(&[1, 2, 3]), TaskAnyPoll::Failed(actual) if actual == error)
+        matches!(scheduler.poll_any(&[1, 2, 3]), TaskAnyPoll::Failed { id: 2, error: actual } if actual == error)
     );
 }
 
@@ -87,5 +87,8 @@ fn shutdown_releases_pending_wait() {
     let worker = std::thread::spawn(move || waiting.wait_for_any(&[1]));
     scheduler.request_cancel();
     worker.join().expect("join");
-    assert!(matches!(scheduler.poll_any(&[1]), TaskAnyPoll::Failed(_)));
+    assert!(matches!(
+        scheduler.poll_any(&[1]),
+        TaskAnyPoll::Failed { id: 1, .. }
+    ));
 }

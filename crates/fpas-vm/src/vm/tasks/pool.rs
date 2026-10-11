@@ -37,6 +37,14 @@ fn run_to_completion(mut worker: Worker, scheduler: &TaskScheduler) -> Result<()
         }
         worker.run_task()
     })();
+    // A body that ends with open task scopes first waits for their cancelled children.
+    let attempt = match attempt {
+        Err(error) => match worker.begin_scope_unwind(error) {
+            Ok(()) => worker.park_pool_suspension().map(|()| None),
+            Err(error) => Err(error),
+        },
+        other => other,
+    };
     let outcome = match attempt {
         Ok(Some(value)) => worker.supervised_outcome(Ok(value)),
         Err(error) => worker.supervised_outcome(Err(error)),

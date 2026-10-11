@@ -115,3 +115,41 @@ fn go_expression_rejects_non_call_expression() {
 
     assert!(parse_err.is_some(), "expected parser error, got: {errs:#?}");
 }
+
+#[test]
+fn scope_statement_owns_its_statement_list() {
+    let stmts = body_stmts(
+        "program T; begin scope const A: task := go Worker(); go Log(); end scope; null; end.",
+    );
+    let Stmt::Scope { body, .. } = &stmts[0] else {
+        panic!("expected scope statement, got {:?}", stmts[0]);
+    };
+    assert!(matches!(body[0], Stmt::Const(_)));
+    assert!(matches!(body[1], Stmt::Go { .. }));
+    assert!(matches!(stmts[1], Stmt::Null(_)));
+}
+
+#[test]
+fn scope_requires_its_named_ending_and_a_statement() {
+    for (source, expected) in [
+        ("program T; begin scope go Worker(); end; end.", "end scope"),
+        ("program T; begin scope end scope; end.", "null;"),
+        (
+            "program T; begin const Scope: integer := 1; end.",
+            "reserved keyword for task scopes",
+        ),
+    ] {
+        let (_, errors) = parse_with_errors(source);
+        assert!(
+            errors.iter().any(|error| {
+                let diagnostic = error.as_diagnostic();
+                diagnostic.message.contains(expected)
+                    || diagnostic
+                        .help
+                        .as_deref()
+                        .is_some_and(|help| help.contains(expected))
+            }),
+            "{source}\n{errors:#?}"
+        );
+    }
+}

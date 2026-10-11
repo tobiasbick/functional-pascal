@@ -3,12 +3,14 @@
 mod codec;
 mod contracts;
 mod hash;
+mod param_escapes;
 mod record_constants;
 mod symbols;
 mod types;
 
 pub use codec::{InterfaceFormatError, decode_interface, encode_interface};
 pub use contracts::RoutineContract;
+pub use param_escapes::RoutineParamEscapes;
 pub use record_constants::{RecordConstant, RecordConstantField};
 pub use symbols::{ConstantValue, DiscardInfo, InterfaceSymbol, SymbolKind, UnitInterface};
 pub use types::{

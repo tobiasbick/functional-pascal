@@ -167,6 +167,7 @@ impl Checker {
 
         self.scopes.push_scope();
         let routine_scope_index = self.scopes.scope_count() - 1;
+        self.task_scopes.enter_routine();
 
         for tp in type_params {
             let constraint = tp
@@ -276,6 +277,7 @@ impl Checker {
 
         self.complete_capture_discard_info(&mut captures.captures);
         self.remember_capture_scopes(&captures.captures);
+        self.task_scopes.exit_routine();
         self.scopes.function_ctx = prev_ctx;
         self.scopes.pop_scope();
         let result = self.discard_results.pop().unwrap_or(false);

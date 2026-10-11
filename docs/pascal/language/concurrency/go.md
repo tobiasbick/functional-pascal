@@ -33,6 +33,10 @@ A `go` **statement** runs the call concurrently and **does not** produce a handl
 go LogEvent('started');
 ```
 
+Inside a [task scope](task-scopes.md), both forms start a child owned by the scope, which waits
+for it before the scope ends. There, a `go` statement whose call returns `result of ...` is
+rejected (FP3039) because its error would be lost; keep the handle and use `try Wait(Handle)`.
+
 ## What `go` may target
 
 `go` must be followed by a **single call expression** (not a bare designator or arbitrary value). The callee may be:
@@ -51,5 +55,6 @@ and `go Items.Pop()` are rejected. Call these operations on the current task.
 ## See also
 
 - [Task handles](task-handles.md)
+- [Task scopes](task-scopes.md)
 - [Scheduling](scheduling.md)
 - [`Std.Tasks`](../../std/concurrency/task.md)

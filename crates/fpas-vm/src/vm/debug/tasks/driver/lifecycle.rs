@@ -5,6 +5,7 @@ use fpas_diagnostics::codes::RUNTIME_TASK_CANCELLED;
 
 use super::super::super::types::{DebugTaskEvent, DebugTaskEventKind, DebugTaskState};
 use super::{DebugTaskRuntime, TaskSlot};
+use crate::vm::tasks::TaskSuspension;
 use crate::vm::{VmError, runtime_error};
 
 /// Why a debugger cancel cannot change a task's lifecycle state.
@@ -42,12 +43,26 @@ impl DebugTaskRuntime {
                 | DebugTaskState::Waiting
                 | DebugTaskState::Sleeping => {}
             }
+            if matches!(
+                slot.worker.task_suspension,
+                Some(TaskSuspension::ScopeUnwind { .. })
+            ) {
+                return Err(TaskCancelError::Unknown);
+            }
             let retain_result = slot.worker.retain_result;
             let error = cancellation_error(slot, task_id);
+            slot.worker.supervision = None;
+            if !slot.worker.task_scopes.is_empty() {
+                // Joining runs after resume; the stopped command never dispatches child code.
+                if slot.worker.begin_scope_unwind(error.clone()).is_ok() {
+                    slot.state = DebugTaskState::Waiting;
+                    slot.paused = false;
+                    return Ok(());
+                }
+            }
             slot.state = DebugTaskState::Cancelled;
             slot.exited = true;
             slot.worker.task_suspension = None;
-            slot.worker.supervision = None;
             (retain_result, error)
         };
         if retain_result {

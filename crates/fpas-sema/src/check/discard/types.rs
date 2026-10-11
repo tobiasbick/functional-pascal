@@ -24,6 +24,11 @@ impl TaskSafety {
 }
 
 impl Checker {
+    /// Whether a value of this type can hold a task handle, directly or in a payload.
+    pub(in crate::check) fn may_hold_task_handle(&self, ty: &Ty) -> bool {
+        !matches!(self.task_safety(ty), TaskSafety::Safe)
+    }
+
     /// Inspects all stored payload types with cycle protection.
     pub(super) fn task_safety(&self, ty: &Ty) -> TaskSafety {
         self.task_safety_inner(ty, &mut HashSet::new(), "value")

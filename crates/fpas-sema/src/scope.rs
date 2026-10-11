@@ -93,6 +93,8 @@ pub struct ScopeStack {
     pub(crate) imports: imports::ImportNames,
     scopes: Vec<Scope>,
     imported_discard: HashMap<String, fpas_unit::interface::DiscardInfo>,
+    /// Recorded parameter escapes of imported routines and record routines by canonical name.
+    param_escapes: HashMap<String, std::sync::Arc<[bool]>>,
     /// Current loop depth (for break/continue validation).
     pub loop_depth: u32,
     /// Current function context (for return validation).
@@ -116,6 +118,7 @@ impl ScopeStack {
             scopes: vec![Scope::new()],
             imports: Default::default(),
             imported_discard: HashMap::new(),
+            param_escapes: HashMap::new(),
             loop_depth: 0,
             function_ctx: None,
         }
@@ -271,6 +274,21 @@ impl ScopeStack {
     ) {
         self.imported_discard
             .insert(canonical_symbol_name(name), info);
+    }
+
+    /// Records which parameters of an imported routine may outlive a call.
+    ///
+    /// **Documentation:** `docs/pascal/language/concurrency/task-scopes.md#handle-escapes`
+    pub(crate) fn set_param_escapes(&mut self, name: &str, escapes: std::sync::Arc<[bool]>) {
+        self.param_escapes
+            .insert(self.imports.canonical_name(name), escapes);
+    }
+
+    /// Returns recorded parameter escapes of an imported routine, if `name` denotes one.
+    pub(crate) fn param_escapes(&self, name: &str) -> Option<std::sync::Arc<[bool]>> {
+        self.param_escapes
+            .get(&self.imports.canonical_name(name))
+            .cloned()
     }
 
     /// Attaches static capture guarantees to an existing binding.

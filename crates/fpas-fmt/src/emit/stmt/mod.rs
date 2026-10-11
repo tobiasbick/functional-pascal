@@ -4,6 +4,7 @@ mod case;
 mod conditionals;
 mod line;
 mod loops;
+mod scopes;
 mod spacing;
 
 use fpas_parser::Stmt;
@@ -129,6 +130,10 @@ fn emit_stmt_in_block(emitter: &mut Emitter, stmt: &Stmt, comments: &CommentMap)
             emitter.write("go ");
             emit_expr(emitter, expr, 0, comments);
             finish_stmt_line(emitter, comments, stmt);
+        }
+        Stmt::Scope { .. } => {
+            scopes::emit_scope(emitter, stmt, comments);
+            finish_stmt_after_newline(emitter, comments, stmt);
         }
     }
 }

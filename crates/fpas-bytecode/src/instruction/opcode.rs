@@ -244,11 +244,20 @@ pub enum Opcode {
     ReferenceRead = 111,
     /// Write value B through reference A.
     ReferenceWrite = 112,
+    /// Open a task scope owned by the current call frame. All operands are zero.
+    ///
+    /// **Documentation:** `docs/pascal/language/concurrency/task-scopes.md`
+    EnterTaskScope = 113,
+    /// Wait for the innermost task scope's children, then close it. All operands are zero.
+    ExitTaskScope = 114,
+    /// Cancel the innermost task scope's children, wait for them, then close it.
+    /// All operands are zero.
+    CancelTaskScope = 115,
 }
 
 impl Opcode {
     /// Exhaustive opcode inventory used by format and verifier tests.
-    pub const ALL: [Self; 108] = [
+    pub const ALL: [Self; 111] = [
         Self::LoadConstant,
         Self::LoadUnit,
         Self::Move,
@@ -357,6 +366,9 @@ impl Opcode {
         Self::ReferenceElement,
         Self::ReferenceRead,
         Self::ReferenceWrite,
+        Self::EnterTaskScope,
+        Self::ExitTaskScope,
+        Self::CancelTaskScope,
     ];
 
     /// Return the physical payload form assigned to this opcode.

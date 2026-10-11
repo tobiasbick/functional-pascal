@@ -6,8 +6,7 @@ the [central README](../README.md); the process is in
 [development-process.md](../development-process.md).
 
 The statement-ending and block-closing rules, including the complete block
-table, are agreed (Q08, Q09). Task-scope semantics remain subject to the
-decisions in AP26.
+table, are implemented (Q08, Q09). Task-scope semantics are implemented by AP26.
 
 ## Goal
 
@@ -92,8 +91,8 @@ end function;
 
 Methods and nested routines follow the function/procedure rules. Anonymous
 procedures use the corresponding `procedure ... end procedure` expression form.
-Record literals were removed by AP10.3. `if`/`case` expressions remain planned
-in AP21, and task scopes in AP26.
+Record literals were removed by AP10.3. `if`/`case` expressions are implemented
+by AP21, and task scopes by AP26.
 
 The following example passes an anonymous function to a routine named `Apply`.
 The final `;` terminates the call statement, not the anonymous function:

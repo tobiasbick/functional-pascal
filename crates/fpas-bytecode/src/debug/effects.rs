@@ -109,7 +109,12 @@ pub fn analyze_debug_effects(executable: &VerifiedExecutable) -> Vec<FunctionEff
                 | Opcode::StoreGlobalIndexPath => {
                     local[index] = local[index].union(DebugEffectSet::SANDBOX_WRITE);
                 }
-                Opcode::SpawnTask | Opcode::SpawnDetachedTask | Opcode::Yield => {
+                Opcode::SpawnTask
+                | Opcode::SpawnDetachedTask
+                | Opcode::Yield
+                | Opcode::EnterTaskScope
+                | Opcode::ExitTaskScope
+                | Opcode::CancelTaskScope => {
                     local[index] = local[index].union(DebugEffectSet::TASK);
                 }
                 _ => {}

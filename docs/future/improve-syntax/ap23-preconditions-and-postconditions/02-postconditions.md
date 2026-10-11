@@ -84,5 +84,5 @@ None.
 
 ## Remaining work
 
-None for AP23.2 or AP23. The next implementation package is AP26.1; AP25 is
-reassessed after practical use of contracts.
+None for AP23.2 or AP23. AP25.1 reassesses purity after practical use of
+contracts; the next step is tracked in the [central plan](../README.md#recommended-order).

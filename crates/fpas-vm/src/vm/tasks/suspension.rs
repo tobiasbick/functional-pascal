@@ -137,6 +137,14 @@ pub(in crate::vm) enum TaskSuspension {
     },
     /// Resume after the debugger-clock deadline is reached.
     Sleep { deadline_millis: u64 },
+    /// Resume after every child of the innermost task scope has finished.
+    ScopeExit,
+    /// Finish leaving every open task scope after the task body ended with `error`.
+    ScopeUnwind {
+        error: crate::vm::VmError,
+        sequence: u64,
+        failures: Vec<super::scopes::ScopeFailure>,
+    },
 }
 
 impl TaskSuspension {
@@ -171,6 +179,8 @@ impl TaskSuspension {
             } => TaskSuspensionState::Waiting,
             Self::Yield => TaskSuspensionState::Yielded,
             Self::Wait { .. }
+            | Self::ScopeExit
+            | Self::ScopeUnwind { .. }
             | Self::WaitAll { .. }
             | Self::WaitAny { .. }
             | Self::ChannelSend { .. }

@@ -18,6 +18,7 @@ mod record_constants;
 fn sample_interface() -> UnitInterface {
     UnitInterface {
         routine_contracts: Vec::new(),
+        routine_param_escapes: Vec::new(),
         unit_name: "Demo.Api".to_string(),
         symbols: vec![
             InterfaceSymbol {

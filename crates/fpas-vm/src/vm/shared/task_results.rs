@@ -10,8 +10,8 @@ pub(crate) enum TaskAnyPoll {
     Pending,
     /// The lowest completed input position.
     Complete(usize),
-    /// The first failure in input order.
-    Failed(VmError),
+    /// The first failure in input order, with its task identity.
+    Failed { id: u64, error: VmError },
     /// An input does not identify a retained or consumed task.
     Unknown(u64),
 }
@@ -36,8 +36,8 @@ pub(crate) enum TaskBatchPoll {
     Pending,
     /// Every task completed successfully or was already consumed.
     Complete,
-    /// A task completed with its execution diagnostic.
-    Failed(VmError),
+    /// A task completed with its execution diagnostic and identity.
+    Failed { id: u64, error: VmError },
     /// An identifier does not name a retained or consumed task.
     Unknown(u64),
 }

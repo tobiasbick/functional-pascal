@@ -34,6 +34,7 @@ impl Worker {
             if self.channel_scheduler_stopped() {
                 return Ok(error(CLOSED_ERROR));
             }
+            self.check_task_cancellation()?;
             let cancelled = self.channel_cancelled(token)?;
             match self
                 .hosted
@@ -70,6 +71,7 @@ impl Worker {
             if self.channel_scheduler_stopped() {
                 return Ok(error(CLOSED_ERROR));
             }
+            self.check_task_cancellation()?;
             let cancelled = self.channel_cancelled(token)?;
             match self
                 .hosted

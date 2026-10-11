@@ -204,6 +204,9 @@ impl<'a> Selector<'a> {
                 return self.select_spawn(*callee, arguments, result, true);
             }
             Operation::Yield => abc(Opcode::Yield, 0, 0, 0),
+            Operation::EnterTaskScope => abc(Opcode::EnterTaskScope, 0, 0, 0),
+            Operation::ExitTaskScope => abc(Opcode::ExitTaskScope, 0, 0, 0),
+            Operation::CancelTaskScope => abc(Opcode::CancelTaskScope, 0, 0, 0),
             other => Err(selection_error(&format!(
                 "IR operation {other:?} has no bytecode selection"
             ))),

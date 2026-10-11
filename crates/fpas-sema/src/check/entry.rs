@@ -18,6 +18,7 @@ impl Checker {
 
         self.check_program_body(program);
         self.finish_pending_capture_checks();
+        self.check_task_handle_escapes(&program.declarations, Some(&program.body));
         self.validate_dictionary_keys();
         self.finish_contract_checks();
     }
@@ -58,6 +59,7 @@ impl Checker {
 
         self.check_program_body(program);
         self.finish_pending_capture_checks();
+        self.check_task_handle_escapes(&program.declarations, Some(&program.body));
         self.validate_dictionary_keys();
         self.finish_contract_checks();
         Ok(())
@@ -108,6 +110,7 @@ impl Checker {
         }
         self.scopes.function_ctx = previous_context;
         self.finish_pending_capture_checks();
+        self.check_task_handle_escapes(&unit.declarations, None);
         self.validate_dictionary_keys();
         self.finish_contract_checks();
         Ok(())

@@ -52,6 +52,8 @@ impl DebugTaskRuntime {
             instruction_count: 0,
             suppressed_initializers: Vec::new(),
             callback_continuations: Vec::new(),
+            task_scopes: Vec::new(),
+            owner_scope: None,
         });
     }
 }

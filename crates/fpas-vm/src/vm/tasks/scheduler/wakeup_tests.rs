@@ -60,6 +60,8 @@ fn queued_work_wakes_a_registered_helper_without_consuming_the_task() {
         instruction_count: 0,
         suppressed_initializers: vec![],
         callback_continuations: vec![],
+        task_scopes: vec![],
+        owner_scope: None,
     });
     assert!(signal.wait(Duration::ZERO));
     assert_eq!(scheduler.try_dequeue().expect("retained work").id, 9);

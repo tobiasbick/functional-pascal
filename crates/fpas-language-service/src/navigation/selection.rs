@@ -148,7 +148,10 @@ fn collect_statements(statements: &[Stmt], offset: usize, spans: &mut Vec<Source
         }
         spans.push(span);
         match statement {
-            Stmt::Block(statements, _) => collect_statements(statements, offset, spans),
+            Stmt::Block(statements, _)
+            | Stmt::Scope {
+                body: statements, ..
+            } => collect_statements(statements, offset, spans),
             Stmt::If {
                 then_branch,
                 else_branch,

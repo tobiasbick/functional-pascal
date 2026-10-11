@@ -40,10 +40,10 @@ impl DebugSession {
 
     /// Cancel one live non-root task at the current stop.
     ///
-    /// The command marks the task cancelled, publishes a waiter-visible failure
-    /// when the task retains a result, and emits an exit event. It does not
-    /// dispatch bytecode, drain spawns, or wake waiters. Unknown, completed,
-    /// cancelled, failed, and root identities reject without mutation.
+    /// A task with open scopes waits for their cancelled children after resume before
+    /// publishing its cancellation and exit event. Other tasks become cancelled immediately.
+    /// The command does not dispatch bytecode or drain spawns. Unknown, completed,
+    /// cancelled, unwinding, failed, and root identities reject without mutation.
     ///
     /// **Documentation:** `docs/pascal/tools/debugger.md`
     ///

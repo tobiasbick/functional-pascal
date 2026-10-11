@@ -235,7 +235,10 @@ fn valid_instruction(opcode: Opcode, next_address: u32) -> Instruction {
         ),
         Opcode::SpawnTask => abc(opcode, 0, 1, 0, 0),
         Opcode::SpawnDetachedTask => abc(opcode, 0, 0, 0, 0),
-        Opcode::Yield => abc(opcode, 0, 0, 0, 0),
+        Opcode::Yield
+        | Opcode::EnterTaskScope
+        | Opcode::ExitTaskScope
+        | Opcode::CancelTaskScope => abc(opcode, 0, 0, 0, 0),
         Opcode::ArrayPop => abc(opcode, 0, 1, 0, 0),
         Opcode::ArrayPush => abc(opcode, 0, 1, 2, 0),
         Opcode::StoreGlobalIndexPath => abc(opcode, 0, 0, 0, 0),

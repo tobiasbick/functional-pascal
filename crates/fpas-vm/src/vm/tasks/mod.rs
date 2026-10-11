@@ -8,6 +8,7 @@ mod channel;
 pub(in crate::vm) mod groups;
 pub(super) mod pool;
 mod scheduler;
+pub(in crate::vm) mod scopes;
 pub(in crate::vm) mod selection;
 mod spawn;
 mod state;
@@ -91,14 +92,21 @@ impl Worker {
                 loop {
                     match self.scheduler_ref()?.poll_result(*id) {
                         TaskResultPoll::Available(value) => return Ok(Some(Some(value))),
-                        TaskResultPoll::Failed(error) => return Err(error),
+                        TaskResultPoll::Failed(error) => {
+                            return Err(self.observe_task_failure(*id, error));
+                        }
                         TaskResultPoll::Consumed => return Err(self.invalid_task(*id)),
                         TaskResultPoll::Unknown => return Err(self.invalid_task(*id)),
                         TaskResultPoll::Pending => {
+                            self.check_task_cancellation()?;
                             let scheduler = self.scheduler_ref()?;
                             scheduler.fail_pending_result_if_shutdown(*id);
                             if !scheduler.is_shutdown() {
-                                scheduler.wait_for_result(*id);
+                                if self.has_task_scope_ownership() {
+                                    self.wait_observing_scopes()?;
+                                } else {
+                                    scheduler.wait_for_result(*id);
+                                }
                             }
                         }
                     }
@@ -122,13 +130,20 @@ impl Worker {
                 loop {
                     match self.scheduler_ref()?.poll_batch(&ids) {
                         TaskBatchPoll::Complete => return Ok(Some(None)),
-                        TaskBatchPoll::Failed(error) => return Err(error),
+                        TaskBatchPoll::Failed { id, error } => {
+                            return Err(self.observe_task_failure(id, error));
+                        }
                         TaskBatchPoll::Unknown(id) => return Err(self.invalid_task(id)),
                         TaskBatchPoll::Pending => {
+                            self.check_task_cancellation()?;
                             let scheduler = self.scheduler_ref()?;
                             scheduler.fail_pending_batch_if_shutdown(&ids);
                             if !scheduler.is_shutdown() {
-                                scheduler.wait_for_batch(&ids);
+                                if self.has_task_scope_ownership() {
+                                    self.wait_observing_scopes()?;
+                                } else {
+                                    scheduler.wait_for_batch(&ids);
+                                }
                             }
                         }
                     }
@@ -143,9 +158,28 @@ impl Worker {
                 let milliseconds = u64::try_from(*milliseconds).map_err(|_| {
                     self.task_type_error("non-negative integer", &Value::Integer(*milliseconds))
                 })?;
+                if self.has_task_scope_ownership() {
+                    // Polled sleep lets a cancelled scope child stop before the deadline.
+                    self.task_suspension =
+                        Some(TaskSuspension::sleep(milliseconds, self.task_clock_ref()));
+                    self.suspend_requested = true;
+                    return Ok(Some(None));
+                }
                 let state = self.take_task_state();
                 self.scheduler_ref()?.schedule(state, milliseconds);
                 self.suspend_requested = true;
+                Ok(Some(None))
+            }
+            Intrinsic::Time(TimeIntrinsic::Sleep) if self.has_task_scope_ownership() => {
+                let [Value::Integer(milliseconds)] = arguments else {
+                    return Err(
+                        self.task_type_error("integer", arguments.first().unwrap_or(&Value::Unit))
+                    );
+                };
+                let milliseconds = u64::try_from(*milliseconds).map_err(|_| {
+                    self.task_type_error("non-negative integer", &Value::Integer(*milliseconds))
+                })?;
+                self.sleep_observing_scopes(milliseconds)?;
                 Ok(Some(None))
             }
             _ => Ok(None),
@@ -172,7 +206,7 @@ impl Worker {
                 };
                 match self.scheduler_ref()?.poll_result(*id) {
                     TaskResultPoll::Available(value) => Ok(Some(Some(value))),
-                    TaskResultPoll::Failed(error) => Err(error),
+                    TaskResultPoll::Failed(error) => Err(self.observe_task_failure(*id, error)),
                     TaskResultPoll::Consumed | TaskResultPoll::Unknown => {
                         Err(self.invalid_task(*id))
                     }
@@ -203,7 +237,9 @@ impl Worker {
                 ids.dedup();
                 match self.scheduler_ref()?.poll_batch(&ids) {
                     TaskBatchPoll::Complete => Ok(Some(None)),
-                    TaskBatchPoll::Failed(error) => Err(error),
+                    TaskBatchPoll::Failed { id, error } => {
+                        Err(self.observe_task_failure(id, error))
+                    }
                     TaskBatchPoll::Unknown(id) => Err(self.invalid_task(id)),
                     TaskBatchPoll::Pending => {
                         self.task_suspension = Some(TaskSuspension::WaitAll { ids });
@@ -212,7 +248,9 @@ impl Worker {
                     }
                 }
             }
-            Intrinsic::Time(TimeIntrinsic::Sleep) if self.task_id != 0 => {
+            Intrinsic::Time(TimeIntrinsic::Sleep)
+                if self.task_id != 0 || self.has_task_scope_ownership() =>
+            {
                 let [Value::Integer(milliseconds)] = arguments else {
                     return Err(
                         self.task_type_error("integer", arguments.first().unwrap_or(&Value::Unit))
@@ -236,6 +274,9 @@ impl Worker {
             self.suspend_requested = false;
             return Ok(true);
         };
+        if !matches!(suspension, TaskSuspension::ScopeUnwind { .. }) {
+            self.check_task_cancellation()?;
+        }
         let ready = match suspension {
             TaskSuspension::SupervisionBackoff { .. } => self.supervised_ready(),
             TaskSuspension::GroupClose {
@@ -245,6 +286,18 @@ impl Worker {
             } => self.poll_group_close(id, deadline_millis, destination),
             TaskSuspension::Selection(wait) => self.poll_selection(*wait),
             TaskSuspension::Yield => Ok(true),
+            TaskSuspension::ScopeExit => {
+                let ready = self.poll_scope_exit()?;
+                if !ready {
+                    self.task_suspension = Some(TaskSuspension::ScopeExit);
+                }
+                Ok(ready)
+            }
+            TaskSuspension::ScopeUnwind {
+                error,
+                sequence,
+                failures,
+            } => self.poll_scope_unwind(error, sequence, failures),
             TaskSuspension::WaitAnyControlled {
                 ids,
                 token,
@@ -260,7 +313,7 @@ impl Worker {
                         }
                         Ok(true)
                     }
-                    TaskResultPoll::Failed(error) => Err(error),
+                    TaskResultPoll::Failed(error) => Err(self.observe_task_failure(id, error)),
                     TaskResultPoll::Consumed | TaskResultPoll::Unknown => {
                         Err(self.invalid_task(id))
                     }
@@ -272,7 +325,7 @@ impl Worker {
             }
             TaskSuspension::WaitAll { ids } => match self.scheduler_ref()?.poll_batch(&ids) {
                 TaskBatchPoll::Complete => Ok(true),
-                TaskBatchPoll::Failed(error) => Err(error),
+                TaskBatchPoll::Failed { id, error } => Err(self.observe_task_failure(id, error)),
                 TaskBatchPoll::Unknown(id) => Err(self.invalid_task(id)),
                 TaskBatchPoll::Pending => {
                     self.task_suspension = Some(TaskSuspension::WaitAll { ids });

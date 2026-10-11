@@ -23,7 +23,8 @@ impl Stmt {
             | Self::Call { span, .. }
             | Self::Expression { span, .. }
             | Self::Discard { span, .. }
-            | Self::Go { span, .. } => *span,
+            | Self::Go { span, .. }
+            | Self::Scope { span, .. } => *span,
         }
     }
 }
@@ -162,6 +163,15 @@ pub enum Stmt {
         /// Call expression executed as a concurrent task.
         expr: Expr,
         /// Source span of the complete `go` statement.
+        span: Span,
+    },
+    /// `scope ... end scope` block that owns every task started directly inside it.
+    ///
+    /// **Documentation:** `docs/pascal/language/concurrency/task-scopes.md`
+    Scope {
+        /// Statements of the scope body, checked in their own lexical scope.
+        body: Vec<Stmt>,
+        /// Source span from `scope` through `end scope`.
         span: Span,
     },
 }

@@ -48,7 +48,7 @@ pub(super) fn collect_statement_symbols(
                 output.push(symbol);
                 collect_expression_symbols(snapshot, owner, &value.value, output);
             }
-            Stmt::Block(body, span) => {
+            Stmt::Block(body, span) | Stmt::Scope { body, span } => {
                 collect_statement_symbols(
                     snapshot,
                     owner,

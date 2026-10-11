@@ -11,6 +11,7 @@ impl Checker {
     ///
     /// **Documentation:** `docs/pascal/language/concurrency/go.md`.
     pub(in crate::check) fn check_go_expr(&mut self, inner: &Expr, span: fpas_lexer::Span) -> Ty {
+        self.check_go_scope_ownership(span);
         let inner_ty = match inner {
             Expr::Call {
                 designator,

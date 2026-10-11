@@ -84,6 +84,11 @@ pub struct UnitInterface {
     /// Public routine entry and return clauses, independent of callable signatures.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub routine_contracts: Vec<super::RoutineContract>,
+    /// Parameter escapes of public routines and record routines.
+    ///
+    /// **Documentation:** `docs/pascal/language/concurrency/task-scopes.md#handle-escapes`
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub routine_param_escapes: Vec<super::RoutineParamEscapes>,
     /// Canonical unit name.
     pub unit_name: String,
     /// Public symbols in canonical deterministic order.
@@ -97,6 +102,9 @@ impl UnitInterface {
     #[must_use]
     pub fn canonicalized(mut self) -> Self {
         self.routine_contracts.sort_by(|left, right| {
+            canonical_name(&left.qualified_name).cmp(&canonical_name(&right.qualified_name))
+        });
+        self.routine_param_escapes.sort_by(|left, right| {
             canonical_name(&left.qualified_name).cmp(&canonical_name(&right.qualified_name))
         });
         for symbol in &mut self.symbols {

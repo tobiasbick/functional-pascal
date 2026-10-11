@@ -209,6 +209,9 @@ impl Parser {
             Token::Distinct => Some(
                 "`distinct` is a reserved keyword for distinct type declarations. Rename the identifier, for example to `Unique`.",
             ),
+            Token::Scope => Some(
+                "`scope` is a reserved keyword for task scopes. Rename the identifier, for example to `Area`.",
+            ),
             Token::Requires => Some(
                 "`requires` is a reserved keyword for preconditions. Rename the identifier, for example to `RequiresValue`.",
             ),

@@ -78,7 +78,7 @@ impl CaptureCollector<'_> {
 
     fn collect_from_stmt(&mut self, stmt: &Stmt) {
         match stmt {
-            Stmt::Block(stmts, _) => {
+            Stmt::Block(stmts, _) | Stmt::Scope { body: stmts, .. } => {
                 self.push_bound_scope();
                 self.collect_statement_list(stmts);
                 self.pop_bound_scope();

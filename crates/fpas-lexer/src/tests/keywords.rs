@@ -121,6 +121,7 @@ fn block_keywords_are_reserved_in_every_ascii_letter_case() {
         ("discard", Token::Discard),
         ("is", Token::Is),
         ("distinct", Token::Distinct),
+        ("scope", Token::Scope),
     ] {
         for uppercase_mask in 0..(1 << keyword.len()) {
             let spelling = keyword

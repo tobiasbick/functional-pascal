@@ -43,7 +43,7 @@ Do not invent native test syntax for these tests.
 | Records | Typed structural construction versus factory | None; see [AP10](ap10-typed-record-construction/README.md) |
 | Domain types | Subrange restriction versus distinct identity | Decided in [AP18](ap18-subrange-types/README.md) and [AP19](ap19-distinct-domain-types/README.md) (Q10–Q13) |
 | Contracts | Contract violation versus expected domain error (`Result`) | AP23.1 preconditions and AP23.2 postconditions are complete. Q15–Q17 and the implemented expression/propagated-return rules are recorded in [AP23](ap23-preconditions-and-postconditions/README.md#decisions); no open language decision remains |
-| Scopes | Owned child task versus detached work | Q19–Q20 are recorded in [AP26](ap26-structured-task-scopes/README.md); closure-capture limits remain open |
+| Scopes | Owned child task versus detached work | Q19, Q20, and Q24–Q27 are recorded in [AP26](ap26-structured-task-scopes/README.md#decisions); no open language decision remains |
 
 ## Integrated target example
 

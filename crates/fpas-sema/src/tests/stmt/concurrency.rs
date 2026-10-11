@@ -3,6 +3,7 @@ use fpas_diagnostics::codes::SEMA_TASK_BOUND_CALLABLE;
 use fpas_parser::{ParseDiagnostic, parse};
 
 mod groups;
+mod task_scopes;
 
 #[test]
 fn selection_send_rejects_task_bound_values() {

@@ -464,6 +464,7 @@ mod task_control;
 mod task_groups;
 mod task_handle_assignment;
 mod task_lifecycle;
+mod task_scopes;
 mod transport;
 mod uninitialized_assignment;
 mod variant_construction;

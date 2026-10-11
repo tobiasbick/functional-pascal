@@ -102,6 +102,7 @@ impl LoweringContext {
                 self.lower_expression(expr).map(|_| ())
             }
             Stmt::Go { expr, span } => self.lower_go(expr, *span, false).map(|_| ()),
+            Stmt::Scope { body, span } => self.lower_task_scope(body, *span),
         }
     }
 

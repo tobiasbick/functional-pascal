@@ -18,6 +18,12 @@ impl check::Checker {
     ) -> Result<(), InterfaceConversionError> {
         for interface in interfaces {
             self.scopes.imports.note_unit(&interface.unit_name);
+            for routine in &interface.routine_param_escapes {
+                self.scopes.set_param_escapes(
+                    &routine.qualified_name,
+                    std::sync::Arc::from(routine.escapes.as_slice()),
+                );
+            }
             for exported in &interface.symbols {
                 if exported.kind != artifact::SymbolKind::Type {
                     continue;
@@ -61,6 +67,12 @@ impl check::Checker {
                 .imports
                 .aliases
                 .contains_key(&interface.unit_name.to_ascii_lowercase());
+            for routine in &interface.routine_param_escapes {
+                self.scopes.set_param_escapes(
+                    &routine.qualified_name,
+                    std::sync::Arc::from(routine.escapes.as_slice()),
+                );
+            }
             for exported in &interface.symbols {
                 let symbol = interface_symbol_to_sema(exported)?;
                 self.scopes

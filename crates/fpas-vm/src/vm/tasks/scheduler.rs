@@ -7,6 +7,7 @@ mod group_results;
 #[cfg(test)]
 mod group_tests;
 mod result_polling;
+mod scope_results;
 #[cfg(test)]
 mod shutdown_tests;
 #[cfg(test)]
@@ -53,6 +54,7 @@ pub(in crate::vm) struct TaskScheduler {
     results_available: Condvar,
     changes: Arc<WakeSource>,
     pub(in crate::vm) groups: super::groups::GroupRegistry,
+    pub(in crate::vm) scopes: super::scopes::ScopeRegistry,
     next_id: AtomicU64,
     shutdown: AtomicBool,
     abort: AtomicBool,
@@ -72,6 +74,7 @@ impl TaskScheduler {
             results_available: Condvar::new(),
             changes: Arc::default(),
             groups: Default::default(),
+            scopes: Default::default(),
             next_id: AtomicU64::new(1),
             shutdown: AtomicBool::new(false),
             abort: AtomicBool::new(false),
@@ -140,6 +143,7 @@ impl TaskScheduler {
         let mut results = self.results.lock().unwrap_or_else(|e| e.into_inner());
         if matches!(results.get(&id), Some(TaskResultState::Pending)) {
             self.groups.complete(id, failure);
+            self.scopes.complete(id, None);
             results.insert(id, state);
         }
         drop(results);
@@ -150,7 +154,8 @@ impl TaskScheduler {
         let mut results = self.results.lock().unwrap_or_else(|e| e.into_inner());
         let owned = self
             .groups
-            .complete(id, Some(super::groups::GroupFailure::runtime(id, &error)));
+            .complete(id, Some(super::groups::GroupFailure::runtime(id, &error)))
+            | self.scopes.complete(id, Some(&error));
         if matches!(results.get(&id), Some(TaskResultState::Pending)) {
             results.insert(id, TaskResultState::Failed(Box::new(error)));
         }
@@ -294,6 +299,7 @@ impl TaskScheduler {
     /// Cancels sleepers and wakes every waiter before the runtime joins its threads.
     pub fn finish_main(&self) {
         self.groups.shutdown();
+        self.scopes.shutdown();
         self.accepting_timers.store(false, Ordering::Release);
         for task in self.timers.cancel_all() {
             self.cancel(task);
@@ -358,6 +364,7 @@ impl TaskScheduler {
                     *task_id,
                     Some(super::groups::GroupFailure::runtime(*task_id, &error)),
                 );
+                self.scopes.complete(*task_id, Some(&error));
                 *state = TaskResultState::Failed(Box::new(error));
             }
         }

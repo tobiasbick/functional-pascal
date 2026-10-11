@@ -95,7 +95,7 @@ not proof that a closure does or does not capture task handles. Keep both
 properties separate, and perform the discard check at compile time.
 
 Keep these discard rules separate from the scope provenance and escape rules
-planned in [AP26.3](../ap26-structured-task-scopes/03-handle-escape-restrictions.md).
+implemented by [AP26.3](../ap26-structured-task-scopes/03-handle-escape-restrictions.md).
 
 ## Diagnostics
 

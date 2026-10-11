@@ -129,7 +129,12 @@ impl Worker {
             callback.task_id = self.task_id;
             Box::new(callback)
         };
+        callback.inherit_scope_cancellation(self);
         let execution = callback.run_in_place();
+        if execution.is_err() {
+            self.scope_failure_sequence
+                .set(callback.scope_failure_sequence.take());
+        }
         *self.callback_worker.borrow_mut() = Some(callback);
         let execution = execution?;
         self.callback_instruction_count.set(

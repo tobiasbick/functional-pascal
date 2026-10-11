@@ -41,6 +41,11 @@ return value. Checks run on every entry or ordinary/propagated return in all
 build modes, including calls through callable values and imported routines.
 Completed writes through `var` parameters are preserved when a clause panics.
 
+A panic inside a [task scope](../concurrency/task-scopes.md#failures) first cancels and
+waits for the scope's children. A panic or runtime error of a scope child fails its scope: the
+siblings and the scope body are cancelled, and leaving the scope re-raises the child's original
+diagnostic with any further failures listed in its help text.
+
 ## See also
 
 - [Result](result.md)

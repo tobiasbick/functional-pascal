@@ -118,6 +118,10 @@ that VM ends; group-owned token storage is released when the group is closed.
 
 ## Task groups
 
+For ownership bound to one block, use a [task scope](../../language/concurrency/task-scopes.md)
+instead: it cancels without tokens and re-raises child failures when it ends. Task groups cover
+dynamic cases such as passing ownership between routines or supervised retries.
+
 Run the [task-group worker example](../../../../examples/pascal/concurrency/task_group_workers.fpas)
 to see cooperative stop and an ordinary error collected by the same group.
 

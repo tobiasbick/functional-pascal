@@ -33,6 +33,7 @@ impl Parser {
                     | Stmt::For { .. }
                     | Stmt::ForIn { .. }
                     | Stmt::While { .. }
+                    | Stmt::Scope { .. }
             )
             && self.is_stmt_list_end()
         {

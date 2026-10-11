@@ -55,6 +55,7 @@ impl Parser {
                 Stmt::Continue(span)
             }
             Token::Go => self.parse_go_stmt(),
+            Token::Scope => self.parse_scope_stmt(),
             Token::Ident(_) | Token::SelfKw => self.parse_call_or_assign(),
             _ if self.can_start_expression() => self.parse_expression_stmt(),
             _ => self.parse_invalid_statement_start(),
@@ -78,6 +79,7 @@ impl Parser {
                 | Token::Repeat
                 | Token::Break
                 | Token::Continue
+                | Token::Scope
         ) || self.can_start_expression()
     }
 

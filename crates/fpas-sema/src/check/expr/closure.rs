@@ -28,6 +28,7 @@ impl Checker {
         let key = Self::expr_lookup_key(expr);
         let synthetic_name = format!("$closure_{key}");
 
+        self.task_scopes.prepare_anonymous_routine();
         let analysis = self.check_routine_body_collecting_captures(
             &synthetic_name,
             &[],

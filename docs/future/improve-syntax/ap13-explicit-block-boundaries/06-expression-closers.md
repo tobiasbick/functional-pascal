@@ -15,7 +15,7 @@ semicolon; its body statements still require their terminators.
 Diagnostics and recovery distinguish expression endings from declaration and
 statement endings. Formatting preserves nesting, comments and field layout.
 Record literals were later removed by AP10.3.
-Decision expressions and task scopes remain planned in AP21 and AP26.
+Decision expressions and task scopes are implemented by AP21 and AP26.
 
 ## Regression coverage
 

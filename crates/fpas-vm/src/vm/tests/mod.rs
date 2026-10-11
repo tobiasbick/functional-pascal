@@ -14,5 +14,6 @@ mod shutdown;
 mod superinstructions;
 mod support;
 mod task_owned_functions;
+mod task_scopes;
 
 use support::*;

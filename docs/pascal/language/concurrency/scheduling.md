@@ -17,10 +17,11 @@ shutdown and exits; the notification cannot pass between its state check and wai
 
 When the **main task** finishes, the runtime begins **teardown shutdown**. Idle workers wake and exit after draining tasks that were already in the ready queue. Spawned tasks that are still suspended in `Std.Time.Sleep`, and ready tasks that try to sleep after teardown has begun, are canceled instead of delaying program exit. A retained canceled task is completed with a shutdown error; code that needs its result must call `Wait` before the main task finishes. Detached sleeping tasks are canceled without a result because they have no handle.
 
-Teardown is separate from **task failure**: when a task outside an explicit group aborts with a
-runtime error, other spawned work may be stopped cooperatively at the next instruction boundary.
+Teardown is separate from **task failure**: when a task outside an explicit group or
+[task scope](task-scopes.md) aborts with a runtime error, other spawned work may be stopped cooperatively at the next instruction boundary.
 The host surfaces **one** primary diagnostic: if the main task failed, that error wins; otherwise a
-worker error is reported. Explicit groups instead retain their children's failures for close;
+worker error is reported. A task scope re-raises its child's failure when the scope ends, and explicit
+groups instead retain their children's failures for close;
 supervised workers expose only the final outcome after their selected retry policy. An explicit
 `Wait` or `WaitAll` still propagates a failed task's diagnostic. See [Std.Tasks](../../std/concurrency/task.md#task-groups).
 

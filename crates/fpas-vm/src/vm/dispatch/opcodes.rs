@@ -269,6 +269,15 @@ impl Worker {
                 self.yield_task();
                 return Ok(Flow::Boundary);
             }
+            Opcode::EnterTaskScope => self.enter_task_scope()?,
+            Opcode::ExitTaskScope => {
+                self.exit_task_scope(false)?;
+                return Ok(Flow::Boundary);
+            }
+            Opcode::CancelTaskScope => {
+                self.exit_task_scope(true)?;
+                return Ok(Flow::Boundary);
+            }
         }
         Ok(Flow::Next)
     }

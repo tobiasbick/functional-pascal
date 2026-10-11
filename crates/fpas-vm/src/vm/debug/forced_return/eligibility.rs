@@ -110,6 +110,12 @@ pub(in crate::vm::debug) fn prepare_selection(
         .get(new_call_stack_len)
         .copied()
         .ok_or_else(entry_unsupported)?;
+    if worker.has_task_scope_from_depth(new_call_stack_len + 1) {
+        return Err(unsupported(
+            "forced return is not available while a discarded frame has an open task scope",
+            "Step past `end scope` first so the scope can wait for or cancel its child tasks.",
+        ));
+    }
     prove_restore(worker, selected_base, &caller)?;
     Ok(PreparedSelection {
         depth,

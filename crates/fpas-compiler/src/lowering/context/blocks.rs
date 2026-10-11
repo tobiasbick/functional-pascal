@@ -80,7 +80,7 @@ impl LoweringContext {
     }
 
     pub(in crate::lowering) fn push_loop(&mut self, targets: LoopTargets) {
-        self.loops.push(targets);
+        self.loops.push((targets, self.task_scope_depth));
     }
 
     pub(in crate::lowering) fn pop_loop(&mut self) {
@@ -91,14 +91,17 @@ impl LoweringContext {
         &self,
         span: Span,
     ) -> Result<LoopTargets, CompileError> {
-        self.loops.last().copied().ok_or_else(|| {
-            internal_compiler_error(
-                "Loop control reached lowering without an active loop.",
-                "Use `break` or `continue` only inside a loop.",
-                span.line,
-                span.column,
-            )
-        })
+        self.loops
+            .last()
+            .map(|(targets, _)| *targets)
+            .ok_or_else(|| {
+                internal_compiler_error(
+                    "Loop control reached lowering without an active loop.",
+                    "Use `break` or `continue` only inside a loop.",
+                    span.line,
+                    span.column,
+                )
+            })
     }
 
     /// Removes only the final block, preserving dense construction indices.
@@ -173,5 +176,27 @@ impl LoweringContext {
         self.blocks
             .get(id.get() as usize)
             .filter(|block| block.id == id)
+    }
+}
+
+impl LoweringContext {
+    /// Records one more open task scope in the current routine body.
+    pub(in crate::lowering) fn enter_task_scope(&mut self) {
+        self.task_scope_depth += 1;
+    }
+
+    /// Records that the innermost task scope of the current routine body has closed.
+    pub(in crate::lowering) fn exit_task_scope(&mut self) {
+        self.task_scope_depth = self.task_scope_depth.saturating_sub(1);
+    }
+
+    /// Number of task scopes open at the current lowering position.
+    pub(in crate::lowering) fn task_scope_depth(&self) -> u32 {
+        self.task_scope_depth
+    }
+
+    /// Task-scope depth at the entry of the innermost loop, for `break` and `continue`.
+    pub(in crate::lowering) fn loop_task_scope_depth(&self) -> u32 {
+        self.loops.last().map_or(0, |(_, depth)| *depth)
     }
 }

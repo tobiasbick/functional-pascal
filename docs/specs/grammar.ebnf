@@ -96,7 +96,7 @@ keyword         = 'program'   | 'unit'      | 'uses'      | 'const'
                 | 'comparable' | 'numeric'  | 'printable' | 'self'
                 | 'channel'   | 'task'
                 | 'elsif'     | 'when'      | 'null'      | 'is'
-                | 'distinct' | 'requires' | 'ensures' ;
+                | 'distinct' | 'requires' | 'ensures'   | 'scope' ;
 
 (* ---- Symbols --------------------------------------------------- *)
 
@@ -362,6 +362,7 @@ simple_statement    = block
                     | break_stmt
                     | continue_stmt
                     | go_stmt
+                    | scope_stmt
                     | call_stmt
                     | postfix_expr_stmt ;
 
@@ -508,6 +509,13 @@ go_call             = designator call_args
                     | native_array_factory
                     | primary_atom { postfix_suffix } '.' identifier call_args ;
 go_stmt             = 'go' go_call ;
+
+(* -- Task scope -- *)
+(* Every go directly in the body starts a child owned by the scope.   *)
+(* Normal arrival at 'end scope' waits for the children; every other *)
+(* exit cancels them first, then waits.                               *)
+(* Documentation: docs/pascal/language/concurrency/task-scopes.md   *)
+scope_stmt          = 'scope' control_body 'end' 'scope' ;
 
 (* -- Procedure Call (statement position) -- *)
 (* Function results must be consumed or explicitly discarded. *)

@@ -85,6 +85,8 @@ pub enum Token {
     None,
     Try,
     Go,
+    /// Opens a structured task scope that owns the tasks started inside it.
+    Scope,
     Dict,
     With,
     /// Marks a static record routine: `static function Create(...): T` or

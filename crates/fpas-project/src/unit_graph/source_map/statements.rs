@@ -14,6 +14,12 @@ pub(super) fn apply_stmt_source_id(stmt: &mut Stmt, source_id: u32) {
             }
             apply_span(span, source_id);
         }
+        Stmt::Scope { body, span } => {
+            for stmt in body {
+                apply_stmt_source_id(stmt, source_id);
+            }
+            apply_span(span, source_id);
+        }
         Stmt::Const(binding) | Stmt::Var(binding) => {
             if let Some(ty) = &mut binding.type_expr {
                 apply_type_expr_source_id(ty, source_id);

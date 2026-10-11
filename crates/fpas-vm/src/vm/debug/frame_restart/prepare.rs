@@ -37,6 +37,12 @@ pub(in crate::vm::debug) fn prepare(
             "Request stack frames again for the current stop and select one current frame.",
         )
     })?;
+    if worker.has_task_scope_from_depth(new_call_stack_len) {
+        return Err(unsupported(
+            "frame restart is not available while the restarted frame has an open task scope",
+            "Step past `end scope` first so the scope can wait for or cancel its child tasks.",
+        ));
+    }
     let (function, base) = if depth == 0 {
         (worker.function, worker.base)
     } else {

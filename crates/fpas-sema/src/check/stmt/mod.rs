@@ -89,9 +89,8 @@ impl Checker {
 
             Stmt::Expression { expr, span } => self.check_postfix_statement(expr, *span),
 
-            Stmt::Go { expr, span } => {
-                self.check_go_expr(expr, *span);
-            }
+            Stmt::Go { expr, span } => self.check_go_stmt(expr, *span),
+            Stmt::Scope { body, .. } => self.check_scope_stmt(body),
         }
     }
 }

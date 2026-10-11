@@ -217,6 +217,18 @@ define_codes!(SEMA_ALLOCATED_CODES => {
     SEMA_TYPE_ANNOTATION_REQUIRED = 3036;
     /// A contract uses an expression outside its restricted read-only boundary.
     SEMA_INVALID_CONTRACT_EXPRESSION = 3037;
+    /// A `go` in an anonymous routine is lexically inside a task scope that cannot own it.
+    ///
+    /// Documentation: `docs/pascal/tools/diagnostics.md` (FP3038).
+    SEMA_GO_OUTSIDE_OWNING_SCOPE = 3038;
+    /// A `go` statement inside a task scope would lose a returned `Result` error.
+    ///
+    /// Documentation: `docs/pascal/tools/diagnostics.md` (FP3039).
+    SEMA_LOST_TASK_ERROR = 3039;
+    /// A handle of a scope-owned task could outlive its task scope.
+    ///
+    /// Documentation: `docs/pascal/tools/diagnostics.md` (FP3040).
+    SEMA_TASK_HANDLE_ESCAPE = 3040;
 });
 
 define_codes!(COMPILE_ALLOCATED_CODES => {
@@ -250,7 +262,7 @@ define_codes!(RUNTIME_ALLOCATED_CODES => {
     RUNTIME_CONSOLE_STATE_ERROR = 5014;
     RUNTIME_UNWRAP_FAILURE = 5015;
 
-    /// A retained task was cancelled by the debugger without running its remaining body.
+    /// A task was cancelled by the debugger or by its task scope without running its remaining body.
     RUNTIME_TASK_CANCELLED = 5016;
     // Reserved: 5017 (gap before task/runtime codes; do not reuse without audit).
     RUNTIME_INVALID_TASK = 5018;

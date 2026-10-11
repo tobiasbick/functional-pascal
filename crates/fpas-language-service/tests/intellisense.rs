@@ -108,7 +108,7 @@ end.
 #[test]
 fn completion_excludes_shadowed_and_private_declarations_and_adds_keywords() {
     let temp = TempDirectory::new("intellisense-scope");
-    let source = r#"program Scope;
+    let source = r#"program ScopedNames;
 
 const Value: string := 'global';
 

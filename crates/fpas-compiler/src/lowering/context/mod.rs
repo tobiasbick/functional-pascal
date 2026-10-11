@@ -74,7 +74,9 @@ pub(super) struct LoweringContext {
     current: BlockId,
     locals: Vec<Local>,
     bindings: Vec<Binding>,
-    loops: Vec<LoopTargets>,
+    // Each loop with the task-scope depth at its entry.
+    loops: Vec<(LoopTargets, u32)>,
+    task_scope_depth: u32,
     /// Shared postcondition exit, absent for routines without return clauses.
     pub(super) checked_return: Option<super::contracts::CheckedReturn>,
     scope_depth: u32,
@@ -278,6 +280,7 @@ impl LoweringContext {
             locals,
             bindings,
             loops: Vec::new(),
+            task_scope_depth: 0,
             checked_return: None,
             scope_depth: 0,
             debug,

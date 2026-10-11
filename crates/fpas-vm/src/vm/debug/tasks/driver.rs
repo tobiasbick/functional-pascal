@@ -232,7 +232,15 @@ impl DebugTaskRuntime {
         slot.state = DebugTaskState::Running;
         slot.failure = None;
         self.last_dispatched = task_id;
-        let dispatch = match slot.worker.dispatch_supervised_debug_one() {
+        let dispatch = match slot
+            .worker
+            .dispatch_supervised_debug_one()
+            .or_else(|error| {
+                // A body that ends with open task scopes first waits for their children.
+                slot.worker
+                    .begin_scope_unwind(error)
+                    .map(|()| DispatchStep::Suspend)
+            }) {
             Ok(dispatch) => dispatch,
             Err(error) => {
                 if failure::record(slot, task_id, &error, &self.scheduler, &mut self.events) {
@@ -368,6 +376,10 @@ impl DebugTaskRuntime {
                 }
                 Ok(false) => slot.state = state_from_suspension(&slot.worker),
                 Err(error) => {
+                    if slot.worker.begin_scope_unwind(error.clone()).is_ok() {
+                        slot.state = state_from_suspension(&slot.worker);
+                        continue;
+                    }
                     let Err(error) = slot.worker.supervised_outcome(Err(error)) else {
                         slot.state = state_from_suspension(&slot.worker);
                         continue;

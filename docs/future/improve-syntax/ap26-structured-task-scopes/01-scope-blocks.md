@@ -4,9 +4,12 @@ Package: [AP26: Structured task scopes](README.md)
 
 ## Scope
 
-Add `scope ... end scope;`. Every `go` inside a scope starts a child owned by
-the innermost scope; the scope waits for its children on normal exit and
-cancels and waits on every other exit (Q19).
+`scope ... end scope;` owns its directly started tasks. Every `go` inside a
+scope starts a child owned by the innermost scope of the same routine; the
+scope waits for its children on normal exit and cancels and waits on every
+other exit (Q19, Q20). Cancelled
+children stop without a token (Q24); ownership never crosses a routine
+boundary (Q25).
 
 ## Prerequisites
 
@@ -17,21 +20,30 @@ cancels and waits on every other exit (Q19).
 
 - Lexer and parser: reserve `scope`; the scope statement with its own lexical
   scope.
-- Compiler: register children with the innermost scope for both `go` forms;
-  emit scope exit handling on normal completion, `return`, `break`,
-  `continue`, `try` propagation, and panic.
-- VM: lexical scope owner state reusing task-group cancellation and joining
-  where their contracts fit; no child survives a completed exit.
-- A nested routine called inside a scope does not inherit it; `go` there
-  stays detached unless the routine has its own scope.
-- Switching a `go` expression to a statement must not change its lifetime.
+- Sema: reject `go` inside an anonymous routine that is lexically inside a
+  scope and does not open its own scope (Q25).
+- Compiler: enter and leave the scope; leave with cancellation before
+  `return`, `break`, `continue`, and `try` propagation out of the scope.
+- VM: per-task stack of open scopes bound to the call frame that opened them;
+  `go` enrolls its child only in a scope of the current frame, so nested
+  routines and callbacks stay detached. Both `go` forms retain completion for
+  the scope. Normal exit waits; cancelling exit requests cancellation and
+  waits. A panic or runtime error leaving the task cancels and waits for all
+  its open scopes before the task ends.
+- Cancellation (Q24): scope children check their owner at instruction
+  boundaries and wait points and end as `Cancelled`.
+- No child survives a completed exit; its retained result is released.
+- A pending cooperative scope exit retains its suspension until all children
+  finish, both in the pool and in the debugger. Debugger cancellation joins
+  the cancelled task's open scopes before publishing its terminal outcome.
 
 ## Affected areas
 
-- `crates/fpas-lexer/`, parser statements, sema statement checking,
-  `crates/fpas-compiler/src/lowering/concurrency.rs`, control-flow lowering,
-  `crates/fpas-vm/src/vm/tasks/` (a focused scope module), IR/bytecode
-  verification, debugger mappings.
+- `crates/fpas-lexer/`, parser statements, sema statement checking and
+  closures, `crates/fpas-compiler/src/lowering/` (statements, control flow,
+  concurrency), IR and bytecode opcodes with verification,
+  `crates/fpas-vm/src/vm/tasks/` (a focused scopes module), debugger task
+  driver, formatter, language service, editor grammar.
 
 ## Migration
 
@@ -46,6 +58,15 @@ are unchanged.
 ## Verification
 
 - One child first; then normal completion without cancellation, `return`,
-  `break`, error propagation, and panic with cancellation and waiting; nested
-  scopes; both `go` forms; detached `go` outside scopes; no owned child
-  running after exit.
+  `break`, `continue`, `try` propagation, and panic with cancellation and
+  waiting; nested scopes; both `go` forms; detached `go` outside scopes and
+  in routines called inside a scope; rejected `go` in anonymous routines; no
+  owned child running after exit.
+
+Regression ownership: parser concurrency tests cover syntax and recovery;
+formatter and language-service tests cover scope blocks in tooling. Compiler
+`tests/concurrency/task_scopes.rs` covers emitted exit paths and detachment.
+VM `tests/task_scopes.rs` covers cancellation at instruction boundaries;
+debugger `tests/task_scopes.rs` covers cooperative completion and nested
+cancellation. `tests/concurrency/task_scope_lifecycle_test.fpas` covers the
+compiled test-runner lifecycle.

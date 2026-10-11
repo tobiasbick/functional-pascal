@@ -25,6 +25,10 @@ pub(in crate::vm) struct TaskState {
     pub suppressed_initializers: Vec<SourceInitializerTarget>,
     /// Partially completed hosted operations whose callbacks run on this task.
     pub callback_continuations: Vec<CallbackContinuation>,
+    /// Task scopes opened by the saved call frames, innermost last.
+    pub task_scopes: Vec<super::scopes::OpenScope>,
+    /// Shared control of the task scope that owns this task, if any.
+    pub owner_scope: Option<std::sync::Arc<super::scopes::ScopeControl>>,
 }
 
 impl TaskState {
@@ -59,6 +63,8 @@ impl TaskState {
             instruction_count: 0,
             suppressed_initializers: Vec::new(),
             callback_continuations: Vec::new(),
+            task_scopes: Vec::new(),
+            owner_scope: None,
         }
     }
 }

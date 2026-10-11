@@ -51,11 +51,11 @@ impl TaskScheduler {
         {
             return TaskBatchPoll::Unknown(*id);
         }
-        if let Some(error) = ids.iter().find_map(|id| match results.get(id) {
-            Some(TaskResultState::Failed(e)) => Some((**e).clone()),
+        if let Some((id, error)) = ids.iter().find_map(|id| match results.get(id) {
+            Some(TaskResultState::Failed(e)) => Some((*id, (**e).clone())),
             _ => None,
         }) {
-            return TaskBatchPoll::Failed(error);
+            return TaskBatchPoll::Failed { id, error };
         }
         if ids
             .iter()
@@ -77,11 +77,11 @@ impl TaskScheduler {
         {
             return TaskAnyPoll::Unknown(*id);
         }
-        if let Some(error) = ids.iter().find_map(|id| match results.get(id) {
-            Some(TaskResultState::Failed(error)) => Some((**error).clone()),
+        if let Some((id, error)) = ids.iter().find_map(|id| match results.get(id) {
+            Some(TaskResultState::Failed(error)) => Some((*id, (**error).clone())),
             _ => None,
         }) {
-            return TaskAnyPoll::Failed(error);
+            return TaskAnyPoll::Failed { id, error };
         }
         match ids
             .iter()

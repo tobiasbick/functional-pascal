@@ -4,6 +4,7 @@ mod network_connect;
 mod network_read;
 mod network_write;
 mod task_results;
+mod task_scopes;
 mod wait_any;
 
 #[test]

@@ -74,9 +74,11 @@ an explicit per-task resume. Unknown, completed, cancelled, and failed task IDs
 reject without mutation. Newly admitted tasks start unpaused. Stepping a paused
 task rejects. If continue cannot make progress without running a paused task,
 the session stops immediately with pause. A stopped-state per-task cancel names
-one live non-root task, marks it cancelled, and stores runtime diagnostic
-`FP5016` for retained waiters. It does not run bytecode, drain spawns, or wake
-waiters; those waiters observe the stored failure on the next continue. The
+one live non-root task. If that task has open task scopes, it cancels their
+children and remains waiting until the next continue joins them. It then marks
+the task cancelled and stores runtime diagnostic `FP5016` for retained waiters.
+Tasks without open scopes become cancelled immediately. The command does not
+run bytecode or drain spawns; waiters observe cancellation after continue. The
 main task cannot be cancelled this way; disconnect the session instead.
 Debugger task creation and task restart are rejected. Use `go` in the program,
 or restart a selected frame. While stopped, JSONL `io.input` and DAP

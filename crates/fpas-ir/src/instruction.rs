@@ -304,6 +304,14 @@ pub enum Operation {
     },
     /// Cooperatively yields the current task.
     Yield,
+    /// Opens a task scope owned by the current call frame.
+    ///
+    /// **Documentation:** `docs/pascal/language/concurrency/task-scopes.md`
+    EnterTaskScope,
+    /// Leaves the innermost task scope normally: waits for its children without cancelling them.
+    ExitTaskScope,
+    /// Leaves the innermost task scope early: cancels its children, then waits for them.
+    CancelTaskScope,
 }
 
 impl Operation {

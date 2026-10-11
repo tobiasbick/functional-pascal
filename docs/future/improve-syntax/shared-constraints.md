@@ -35,7 +35,7 @@ Do not invent native test syntax for these tests.
 | Concern | Required distinction | Open details |
 |---------|----------------------|--------------|
 | Bindings | Immutable name versus mutable/shared value | Binding, aggregate-write, and capture rules are delivered in [AP16](ap16-immutable-and-mutable-bindings/README.md); shared handles retain their resource semantics |
-| Constants | Computed initialization versus compile-time constant | Case-label rules are delivered in [AP16.1](ap16-immutable-and-mutable-bindings/01-computed-const-bindings.md); subrange bounds follow in [AP18.1](ap18-subrange-types/01-subrange-declarations.md) |
+| Constants | Computed initialization versus compile-time constant | Case-label rules are delivered in [AP16.1](ap16-immutable-and-mutable-bindings/01-computed-const-bindings.md); subrange bounds use the same classification in [AP18.1](ap18-subrange-types/01-subrange-declarations.md) |
 | Parameters | Read-only parameter versus `var` caller mutation | See [AP17](ap17-visible-caller-mutation/README.md) |
 | Patterns | Explicit binding versus literal/constant comparison | Scalar guard bindings, shadowing, constructor lookup, and recursive coverage are delivered in [AP20](ap20-nested-patterns-and-explicit-bindings/README.md#decisions); closed-enum `else` rejection remains in [AP03](ap03-explicit-closed-enum-cases/README.md) |
 | Types | One `of` application form for built-in and user generic types | None; see [AP24](ap24-generic-data-structures/README.md) |

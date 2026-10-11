@@ -51,7 +51,12 @@ impl TypeConstraint {
             // See docs/pascal/language/types/distinct-types.md.
             Self::Comparable => matches!(
                 ty,
-                Ty::Integer | Ty::Real | Ty::Boolean | Ty::String | Ty::Distinct(_)
+                Ty::Integer
+                    | Ty::Subrange(_)
+                    | Ty::Real
+                    | Ty::Boolean
+                    | Ty::String
+                    | Ty::Distinct(_)
             ),
             Self::Numeric => matches!(ty, Ty::Integer | Ty::Real),
             Self::Printable => !matches!(ty, Ty::Function(_) | Ty::Procedure(_) | Ty::Distinct(_)),

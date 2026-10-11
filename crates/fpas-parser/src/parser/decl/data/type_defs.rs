@@ -79,6 +79,13 @@ impl Parser {
     }
 
     fn parse_type_body(&mut self, allow_member_visibility: bool) -> TypeBody {
+        if !matches!(
+            self.current_token(),
+            Token::Record | Token::Enum | Token::Distinct | Token::Type
+        ) && self.is_subrange_body()
+        {
+            return self.parse_subrange_body();
+        }
         match self.current_token() {
             Token::Record => TypeBody::Record(self.parse_record_type(allow_member_visibility)),
             Token::Enum => TypeBody::Enum(self.parse_enum_type()),

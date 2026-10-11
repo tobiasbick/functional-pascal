@@ -11,6 +11,54 @@ use fpas_language_service::{LanguageService, WorkspaceContext};
 use support::TempDirectory;
 
 #[test]
+fn inferred_subranges_retain_the_declared_type_for_hover_and_navigation() {
+    let temp = TempDirectory::new("subrange-inference");
+    let source = "program T; type Percent = 0..100; begin const P := Percent(50); const Found: boolean := P in Percent; discard P; discard Found; end.";
+    let path = temp.write("main.fpas", source);
+    let mut service = LanguageService::new(WorkspaceContext::loose(temp.path()));
+    assert!(
+        service
+            .analyze_document(&path)
+            .expect("analysis")
+            .diagnostics()
+            .is_empty()
+    );
+    let offset = source.find("discard P").expect("use") + "discard ".len();
+    assert_eq!(
+        service
+            .hover(&path, offset)
+            .expect("hover")
+            .value
+            .expect("binding")
+            .contents,
+        "const P: Percent"
+    );
+    let definition = service
+        .type_definitions(&path, offset)
+        .expect("type definition")
+        .value;
+    assert_eq!(definition.len(), 1, "{definition:?}");
+    assert_eq!(definition[0].path, path);
+    let type_offset = source.find("in Percent").expect("membership type") + "in ".len();
+    let membership_definition = service
+        .definitions(&path, type_offset)
+        .expect("membership definition")
+        .value;
+    assert_eq!(membership_definition.len(), 1, "{membership_definition:?}");
+    assert_eq!(membership_definition[0].path, path);
+    let found_offset = source.find("discard Found").expect("Boolean use") + "discard ".len();
+    assert_eq!(
+        service
+            .hover(&path, found_offset)
+            .expect("membership hover")
+            .value
+            .expect("Boolean binding")
+            .contents,
+        "const Found: boolean"
+    );
+}
+
+#[test]
 fn inferred_types_appear_on_declarations_uses_and_completion() {
     let temp = TempDirectory::new("local-inference");
     let source = "program T; type UserId = distinct integer; begin const Number := 42; var Text := 'Ada'; const Values := [1, 2]; const Index := ['a': 1]; const Id := UserId(Number); discard Number; discard Text; discard Values; discard Index; discard Id; end.";

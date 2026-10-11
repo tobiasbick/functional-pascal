@@ -152,6 +152,7 @@ impl Checker {
             | Ty::Boolean
             | Ty::String
             | Ty::Distinct(_)
+            | Ty::Subrange(_)
             | Ty::Unit
             | Ty::Channel(_)
             | Ty::Named(_)

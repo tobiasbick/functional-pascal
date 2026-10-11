@@ -152,6 +152,17 @@ pub struct DistinctType {
 pub enum InterfaceType {
     /// Signed integer.
     Integer,
+    /// Structural integer subrange with inclusive bounds.
+    ///
+    /// **Documentation:** `docs/pascal/language/types/subranges.md`
+    Subrange {
+        /// Source-visible spelling, independent of structural identity.
+        name: String,
+        /// Inclusive minimum.
+        lower: i64,
+        /// Inclusive maximum.
+        upper: i64,
+    },
     /// IEEE real number.
     Real,
     /// Boolean.

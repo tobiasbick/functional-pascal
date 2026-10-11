@@ -77,7 +77,8 @@ impl Checker {
             span);
     }
 
-    fn non_constant_part(&mut self, expr: &Expr) -> Option<(String, fpas_lexer::Span)> {
+    /// Names the first dependency whose value is computed at runtime.
+    pub(crate) fn non_constant_part(&mut self, expr: &Expr) -> Option<(String, fpas_lexer::Span)> {
         if let Some(known) = self
             .record_default_constants
             .get(&Self::expr_lookup_key(expr))
@@ -143,7 +144,10 @@ impl Checker {
             Expr::Call { args, .. }
                 if self
                     .distinct_conversions
-                    .contains(&Self::expr_lookup_key(expr)) =>
+                    .contains(&Self::expr_lookup_key(expr))
+                    || self
+                        .subrange_conversions
+                        .contains_key(&Self::expr_lookup_key(expr)) =>
             {
                 args.iter()
                     .find_map(|argument| self.non_constant_part(argument))
@@ -171,6 +175,13 @@ impl Checker {
             | Expr::ResultError(operand, _)
             | Expr::OptionSome(operand, _)
             | Expr::NamedArgument { value: operand, .. } => self.non_constant_part(operand),
+            Expr::BinaryOp { left, .. }
+                if self
+                    .subrange_memberships
+                    .contains_key(&Self::expr_lookup_key(expr)) =>
+            {
+                self.non_constant_part(left)
+            }
             Expr::BinaryOp { left, right, .. } => self
                 .non_constant_part(left)
                 .or_else(|| self.non_constant_part(right)),

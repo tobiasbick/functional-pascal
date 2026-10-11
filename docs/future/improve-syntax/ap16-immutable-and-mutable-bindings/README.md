@@ -36,8 +36,8 @@ read-only unless declared `var`, and `mutable` is an ordinary identifier
   referenced data.
 - Compile-time constants are preserved: a computed `const` is rejected where a
   compile-time constant is required, including scalar case labels, with a
-  diagnostic that names the non-constant part. Subrange bounds are planned
-  under AP18.
+  diagnostic that names the non-constant part. Subrange bounds use the same
+  classification, delivered in [AP18.1](../ap18-subrange-types/01-subrange-declarations.md).
 - Scalar `case` value labels and both endpoints of a range must be compile-time
   constants. Runtime expressions are rejected in these positions; express
   dynamic conditions with guards. Enum, `Option`, and `Result` patterns keep

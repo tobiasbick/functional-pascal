@@ -26,6 +26,9 @@ impl Checker {
         args: &[Expr],
         span: Span,
     ) -> Option<Ty> {
+        if let Ty::Subrange(range) = self.resolve_visible_type(symbol_ty) {
+            return Some(self.check_subrange_conversion(call_key, name, &range, args, span));
+        }
         let target = match self.resolve_visible_type(symbol_ty) {
             Ty::Named(type_name) => scalar_type_named(&type_name)?,
             Ty::Distinct(distinct) => Ty::Distinct(distinct),
@@ -100,7 +103,7 @@ impl Checker {
     }
 
     /// Accepts exactly one positional value argument.
-    fn single_conversion_argument<'a>(
+    pub(in crate::check::expr) fn single_conversion_argument<'a>(
         &mut self,
         name: &str,
         args: &'a [Expr],

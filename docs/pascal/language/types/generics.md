@@ -254,9 +254,12 @@ Type parameters can be constrained to require specific capabilities from the con
 
 | Constraint | Satisfied by | Description |
 |------------|-------------|-------------|
-| `Comparable` | `integer`, `real`, `boolean`, `string`, [distinct types](distinct-types.md) | Supports comparison operators: `=`, `<>`, `<`, `>`, `<=`, `>=` |
+| `Comparable` | `integer`, `real`, `boolean`, `string`, [distinct types](distinct-types.md), [subranges](subranges.md) | Supports comparison operators: `=`, `<>`, `<`, `>`, `<=`, `>=` |
 | `Numeric` | `integer`, `real` | Supports arithmetic operators: `+`, `-`, `*`, `/`, `div`, `mod` |
 | `Printable` | All types except `function`, `procedure`, and distinct types | Can be converted to a string representation |
+
+Subranges satisfy `Comparable` and `Printable`, but not `Numeric`: arithmetic
+widens to integer values and does not preserve their bounds.
 
 ### Examples
 

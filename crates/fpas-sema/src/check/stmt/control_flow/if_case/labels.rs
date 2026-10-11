@@ -45,13 +45,18 @@ impl Checker {
                     return CheckedLabel::wild();
                 }
                 let label_ty = self.check_expr(start);
-                self.check_type_compat(case_ty, &label_ty, "case label", *span);
+                let comparison_ty = if matches!(case_ty, Ty::Subrange(_)) {
+                    &Ty::Integer
+                } else {
+                    case_ty
+                };
+                self.check_type_compat(comparison_ty, &label_ty, "case label", *span);
                 if !label_ty.is_error() {
                     self.require_case_constant(start);
                 }
                 if let Some(range_end) = end {
                     let end_ty = self.check_expr(range_end);
-                    self.check_type_compat(case_ty, &end_ty, "case label range end", *span);
+                    self.check_type_compat(comparison_ty, &end_ty, "case label range end", *span);
                     if !end_ty.is_error() {
                         self.require_case_constant(range_end);
                     }
@@ -72,7 +77,8 @@ impl Checker {
                     constructor, span, ..
                 },
             ) if !is_pattern_case => {
-                if let Some(pat) = self.check_distinct_label(case_ty, constructor, pattern, *span) {
+                if let Some(pat) = self.check_conversion_label(case_ty, constructor, pattern, *span)
+                {
                     return CheckedLabel {
                         bindings: PatternBindings::new(),
                         pat,

@@ -8,6 +8,18 @@
 mod common;
 
 #[test]
+fn subrange_declarations_round_trip_bounds_comments_and_parentheses() {
+    common::assert_round_trip(
+        "subranges",
+        "program T; const Limit: integer:=100; type Percent=0..Limit; // inclusive\n type Signed=(-10)..(Limit+1); begin const P:=Percent(50); end.",
+    );
+    common::assert_round_trip(
+        "subrange bound comments",
+        "program T; type R = if true then // lower bound\n 0 else 1 end if..case 1 of when 1: // upper bound\n 100; else 50; end case; begin end.",
+    );
+}
+
+#[test]
 fn omitted_local_annotations_round_trip_with_comments_and_nested_literals() {
     let source = "program T; begin const A:=1; // inferred\n var Values := [[1],[2]]; const Index := ['a':1]; const B:integer:=A; begin const C := -2; end; end.";
     common::assert_round_trip("local inference", source);

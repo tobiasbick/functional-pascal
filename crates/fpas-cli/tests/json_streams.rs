@@ -342,3 +342,5 @@ mod test_workers;
 
 #[path = "json_streams/local_inference.rs"]
 mod local_inference;
+#[path = "json_streams/subranges.rs"]
+mod subranges;

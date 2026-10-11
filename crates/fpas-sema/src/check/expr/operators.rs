@@ -29,6 +29,10 @@ impl Checker {
     /// Checks arithmetic negation or Boolean-only logical negation.
     pub(super) fn check_unary_expr(&mut self, op: UnaryOp, operand: &Expr, span: Span) -> Ty {
         let operand_ty = self.check_expr(operand);
+        let operand_ty = self.resolve_visible_type(&operand_ty);
+        if matches!(operand_ty, Ty::Subrange(_)) && op == UnaryOp::Negate {
+            return Ty::Integer;
+        }
         if let Ty::Distinct(distinct) = self.resolve_visible_type(&operand_ty) {
             let symbol = match op {
                 UnaryOp::Negate => "-",
@@ -59,6 +63,7 @@ impl Checker {
     /// Checks binary operands with resolved visible types and Boolean-only logical operators.
     pub(super) fn check_binary_expr(
         &mut self,
+        expression: &Expr,
         op: BinaryOp,
         left: &Expr,
         right: &Expr,
@@ -68,6 +73,11 @@ impl Checker {
         let left_ty = self.resolve_visible_type(&left_ty);
         let right_ty = self.check_expr(right);
         let right_ty = self.resolve_visible_type(&right_ty);
+        if op == BinaryOp::In
+            && let Some(result) = self.check_subrange_membership(expression, &left_ty, &right_ty)
+        {
+            return result;
+        }
         self.check_binary_op(op, &left_ty, &right_ty, span)
     }
 
@@ -78,6 +88,19 @@ impl Checker {
         if matches!(left, Ty::Distinct(_)) || matches!(right, Ty::Distinct(_)) {
             return self.check_distinct_binary_op(op, binary_op_symbol(op), left, right, span);
         }
+
+        let left_integer = Ty::Integer;
+        let right_integer = Ty::Integer;
+        let left = if matches!(left, Ty::Subrange(_)) && op != BinaryOp::In {
+            &left_integer
+        } else {
+            left
+        };
+        let right = if matches!(right, Ty::Subrange(_)) && op != BinaryOp::In {
+            &right_integer
+        } else {
+            right
+        };
 
         match op {
             BinaryOp::Add | BinaryOp::Sub | BinaryOp::Mul | BinaryOp::RealDiv => {
@@ -159,14 +182,14 @@ impl Checker {
             }
 
             BinaryOp::In => match right {
-                Ty::Array(element_ty) if left.compatible_with(element_ty) => Ty::Boolean,
-                Ty::Dict(key_ty, _) if left.compatible_with(key_ty) => Ty::Boolean,
+                Ty::Array(element_ty) if element_ty.assignment_compatible_with(left) => Ty::Boolean,
+                Ty::Dict(key_ty, _) if key_ty.assignment_compatible_with(left) => Ty::Boolean,
                 Ty::String if matches!(left, Ty::String) => Ty::Boolean,
                 _ => {
                     self.error_with_code(
                         SEMA_TYPE_MISMATCH,
-                        "Operator `in` requires a value and a compatible array, dict, or string",
-                        "Use `Item in Array`, `Key in Dict`, or `Substring in String`.",
+                        "Operator `in` requires a compatible array, dict, string, or subrange type on the right",
+                        "Use `Item in Array`, `Key in Dict`, `Substring in String`, or `Value in Percent` where `type Percent = 0..100;`.",
                         span,
                     );
                     Ty::Error

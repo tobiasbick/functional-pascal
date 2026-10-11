@@ -17,6 +17,7 @@ mod scope;
 mod std_registry;
 mod std_units;
 mod types;
+pub use types::SubrangeTy;
 
 pub use check::AnalysisMetadata;
 pub use check::BoundMethodInfo;

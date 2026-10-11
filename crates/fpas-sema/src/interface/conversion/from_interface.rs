@@ -60,6 +60,11 @@ pub fn interface_type_to_ty(ty: &artifact::InterfaceType) -> Result<Ty, Interfac
     use artifact::InterfaceType as Input;
     Ok(match ty {
         Input::Integer => Ty::Integer,
+        Input::Subrange { name, lower, upper } => Ty::Subrange(crate::types::SubrangeTy {
+            name: name.clone(),
+            lower: *lower,
+            upper: *upper,
+        }),
         Input::Real => Ty::Real,
         Input::Boolean => Ty::Boolean,
         Input::String => Ty::String,

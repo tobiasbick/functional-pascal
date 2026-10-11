@@ -56,6 +56,10 @@ Field defaults and record method bodies are checked at the type declaration's
 original source position, with preceding values and routines in scope.
 Parameters and local bindings keep their ordinary lexical scopes.
 
+[Subrange bounds](subranges.md) use compile-time values visible at the type
+declaration's source position. They may reference preceding constants and
+imported static constants; a later local constant is unavailable.
+
 In the example, the `Status` default may reference `InitialState` because it
 precedes `Team`. Moving `InitialState` below `Team` makes that reference invalid.
 A later variable likewise remains unavailable in an earlier method body.

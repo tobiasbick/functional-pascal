@@ -19,6 +19,7 @@ mod record_construction;
 mod record_context;
 mod record_updates;
 mod std_shadowing;
+mod subrange_membership;
 mod var_parameters;
 
 // ── Literals ────────────────────────────────────────────────────
@@ -241,6 +242,9 @@ fn analysis_metadata_exposes_all_named_results() {
         closure_infos,
         nested_routine_captures,
         bound_methods,
+        subrange_conversions: _,
+        subrange_memberships: _,
+        static_bound_declarations: _,
     } = analyze_with_types(&program);
 
     assert_eq!(named_types.len(), 4);

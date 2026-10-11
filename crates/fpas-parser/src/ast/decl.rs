@@ -70,6 +70,15 @@ pub struct TypeDef {
 /// The body of a named type definition.
 #[derive(Debug, Clone, PartialEq)]
 pub enum TypeBody {
+    /// Inclusive integer bounds, for example `0..100`.
+    ///
+    /// **Documentation:** `docs/pascal/language/types/subranges.md`
+    Subrange {
+        /// Compile-time lower bound.
+        lower: Box<super::Expr>,
+        /// Compile-time upper bound.
+        upper: Box<super::Expr>,
+    },
     /// A record type definition.
     Record(RecordType),
     /// An enum type definition.

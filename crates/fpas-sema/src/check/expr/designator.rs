@@ -204,7 +204,7 @@ impl Checker {
 
         match ty {
             Ty::Array(inner) => {
-                if index_ty != Ty::Integer && !index_ty.is_error() {
+                if !Ty::Integer.assignment_compatible_with(&index_ty) {
                     self.error_with_code(
                         SEMA_TYPE_MISMATCH,
                         "Array index must be integer",
@@ -215,7 +215,7 @@ impl Checker {
                 *inner.clone()
             }
             Ty::Dict(key_ty, val_ty) => {
-                if !index_ty.compatible_with(key_ty) && !index_ty.is_error() {
+                if !key_ty.assignment_compatible_with(&index_ty) {
                     self.error_with_code(
                         SEMA_TYPE_MISMATCH,
                         format!("Dict key type mismatch: expected `{key_ty}`, got `{index_ty}`"),
@@ -226,7 +226,7 @@ impl Checker {
                 *val_ty.clone()
             }
             Ty::String => {
-                if index_ty != Ty::Integer && !index_ty.is_error() {
+                if !Ty::Integer.assignment_compatible_with(&index_ty) {
                     self.error_with_code(
                         SEMA_TYPE_MISMATCH,
                         "String index must be an integer",

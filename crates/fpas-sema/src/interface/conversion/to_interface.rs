@@ -14,6 +14,11 @@ pub fn ty_to_interface_type(ty: &Ty) -> Result<artifact::InterfaceType, Interfac
     use artifact::InterfaceType as Output;
     Ok(match ty {
         Ty::Integer => Output::Integer,
+        Ty::Subrange(range) => Output::Subrange {
+            name: range.name.clone(),
+            lower: range.lower,
+            upper: range.upper,
+        },
         Ty::Real => Output::Real,
         Ty::Boolean => Output::Boolean,
         Ty::String => Output::String,

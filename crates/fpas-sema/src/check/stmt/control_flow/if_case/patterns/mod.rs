@@ -81,7 +81,7 @@ impl Checker {
                 fields,
                 span,
             } => self
-                .check_distinct_label(expected_ty, constructor, pattern, *span)
+                .check_conversion_label(expected_ty, constructor, pattern, *span)
                 .unwrap_or_else(|| {
                     self.check_variant_pattern(expected_ty, constructor, fields, *span, bindings)
                 }),

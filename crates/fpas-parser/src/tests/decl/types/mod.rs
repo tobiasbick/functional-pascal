@@ -7,4 +7,5 @@ mod ordinary_members;
 mod record_methods;
 mod records;
 mod restrictions;
+mod subranges;
 mod type_forms;

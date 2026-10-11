@@ -20,8 +20,9 @@ optimization and apparent purity do not change this classification. Dynamic
 conditions use guards. Closures copy captured `const` values.
 
 Runtime initialization and immutable global imports support computed constants;
-unit interfaces retain static/computed classification. Subrange bounds are
-planned in AP18.1; arrays have dynamic sizes.
+unit interfaces retain static/computed classification. Subrange bounds use
+these compile-time rules, delivered in [AP18.1](../ap18-subrange-types/01-subrange-declarations.md);
+arrays have dynamic sizes.
 
 Known scalar fields of static records are retained through copies, updates,
 nested projections and derived constants. Unit interfaces preserve these fields

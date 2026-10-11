@@ -25,6 +25,7 @@ pub(super) fn apply_binding_types(symbols: &mut [DocumentSymbol], metadata: &Ana
                 symbol.type_name = match ty {
                     Ty::Record(record) => Some(record.name.clone()),
                     Ty::Enum(enumeration) => Some(enumeration.name.clone()),
+                    Ty::Subrange(range) => Some(range.name.clone()),
                     Ty::Distinct(distinct) => Some(match distinct.owner_unit.as_deref() {
                         Some(unit) => {
                             let qualifier = metadata

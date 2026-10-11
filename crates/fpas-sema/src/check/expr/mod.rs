@@ -19,6 +19,8 @@ mod operators;
 mod postfix;
 mod record_construction;
 mod record_fields;
+mod subrange_conversion;
+mod subrange_membership;
 mod task_bound;
 mod tasks;
 
@@ -69,7 +71,7 @@ impl Checker {
                 left,
                 right,
                 span,
-            } => self.check_binary_expr(*op, left, right, *span),
+            } => self.check_binary_expr(expr, *op, left, right, *span),
             Expr::Paren(inner, _) => self.check_expr_with_expected(inner, expected),
             Expr::ArrayLiteral(elements, _) => self.check_array_literal(elements, expected),
             Expr::DictLiteral(pairs, _) => self.check_dict_literal(pairs, expected),

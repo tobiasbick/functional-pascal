@@ -55,6 +55,10 @@ pub(super) fn collect_decls(decls: &[Decl], begins: &[usize], out: &mut Collecte
                             push_span(member.span, out);
                         }
                     }
+                    TypeBody::Subrange { lower, upper } => {
+                        collect_expr(lower, begins, out);
+                        collect_expr(upper, begins, out);
+                    }
                     TypeBody::Alias(_) | TypeBody::Distinct(_) => {}
                 }
             }

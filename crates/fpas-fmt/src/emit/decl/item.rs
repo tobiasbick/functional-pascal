@@ -86,6 +86,11 @@ fn emit_type_def(emitter: &mut Emitter, def: &TypeDef, comments: &CommentMap) {
 
 fn emit_type_body(emitter: &mut Emitter, body: &TypeBody, comments: &CommentMap) {
     match body {
+        TypeBody::Subrange { lower, upper } => {
+            emit_expr(emitter, lower, 0, comments);
+            emitter.write("..");
+            emit_expr(emitter, upper, 0, comments);
+        }
         TypeBody::Alias(type_expr) => emit_type_expr(emitter, type_expr),
         TypeBody::Distinct(type_expr) => {
             emitter.write("distinct ");

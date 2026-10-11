@@ -40,7 +40,10 @@ impl Checker {
             Expr::Call { args, .. }
                 if self
                     .distinct_conversions
-                    .contains(&Self::expr_lookup_key(expr)) =>
+                    .contains(&Self::expr_lookup_key(expr))
+                    || self
+                        .subrange_conversions
+                        .contains_key(&Self::expr_lookup_key(expr)) =>
             {
                 self.scalar_constant_value(args.first()?)
             }
@@ -83,6 +86,12 @@ impl Checker {
                 op, left, right, ..
             } => {
                 let left = self.scalar_constant_value(left)?;
+                if let Some(range) = self.subrange_memberships.get(&Self::expr_lookup_key(expr)) {
+                    return match left {
+                        Value::Integer(value) => Some(Value::Boolean(range.contains(value))),
+                        _ => None,
+                    };
+                }
                 // Preserve short-circuit behavior even if the unused operand would fail.
                 if matches!((op, &left), (BinaryOp::And, Value::Boolean(false))) {
                     return Some(Value::Boolean(false));

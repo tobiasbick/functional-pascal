@@ -106,7 +106,8 @@ pub type RecordDefaultsMap = HashMap<String, Vec<(String, Option<std::sync::Arc<
 /// Compiler-facing diagnostics and lowering metadata produced by semantic analysis.
 ///
 /// Identity-keyed maps refer to the immutable source AST or the retained expressions in
-/// `record_defaults`. They remain valid while inspecting those same allocations.
+/// `record_defaults` or `static_bound_declarations`. They remain valid while
+/// inspecting those same allocations.
 #[derive(Debug, Default)]
 pub struct AnalysisMetadata {
     /// Canonical direct unit identities to source-local aliases.
@@ -138,6 +139,11 @@ pub struct AnalysisMetadata {
     /// Calls that convert into or out of a distinct type; they lower to their argument.
     /// **Documentation:** `docs/pascal/language/types/distinct-types.md`
     pub distinct_conversions: HashSet<usize>,
+    /// Checked subrange conversions and their inclusive bounds.
+    pub subrange_conversions: HashMap<usize, crate::types::SubrangeTy>,
+    /// Membership expressions whose right operand names a subrange type.
+    /// **Documentation:** `docs/pascal/language/types/subranges.md`
+    pub subrange_memberships: HashMap<usize, crate::types::SubrangeTy>,
     /// Fully resolved named types used to construct deterministic runtime layouts.
     pub named_types: NamedTypeMap,
     /// Resolved record method calls keyed by expression or designator identity.
@@ -148,6 +154,9 @@ pub struct AnalysisMetadata {
     pub member_value_calls: MemberValueCallMap,
     /// Named record defaults used while lowering record constructions.
     pub record_defaults: RecordDefaultsMap,
+    /// Retained constant and subrange ASTs evaluated during structural type collection.
+    /// Stable allocation keeps their identity keys separate from subsequently checked defaults.
+    pub static_bound_declarations: Vec<std::sync::Arc<fpas_parser::Decl>>,
     /// Capture metadata for anonymous closures.
     pub closure_infos: ClosureInfoMap,
     /// Capture metadata for escaping named nested routines.
@@ -216,6 +225,10 @@ pub struct Checker {
     pub(crate) record_constructions: HashSet<usize>,
     /// Identity keys of valid conversions into or out of a distinct type.
     pub(crate) distinct_conversions: HashSet<usize>,
+    /// Checked subrange conversions retained for constant folding and lowering.
+    pub(crate) subrange_conversions: HashMap<usize, crate::types::SubrangeTy>,
+    /// Subrange membership bounds retained for constant folding and lowering.
+    pub(crate) subrange_memberships: HashMap<usize, crate::types::SubrangeTy>,
     /// Canonical record and field names → task-freedom of their checked default values.
     pub(crate) record_default_discard: HashMap<(String, String), bool>,
     /// Default expression identity → constant classification in the declaration environment.
@@ -293,6 +306,8 @@ impl Checker {
             record_defaults: RecordDefaultsMap::new(),
             record_constructions: HashSet::new(),
             distinct_conversions: HashSet::new(),
+            subrange_conversions: HashMap::new(),
+            subrange_memberships: HashMap::new(),
             record_default_discard: HashMap::new(),
             record_default_constants: HashMap::new(),
             record_default_values: HashMap::new(),
@@ -308,7 +323,7 @@ impl Checker {
         }
     }
 
-    /// Return lowering metadata while retaining the checked default expression allocations.
+    /// Return lowering metadata while retaining checked default and bound-input allocations.
     pub fn finish(self) -> AnalysisMetadata {
         let named_types = self.scopes.root_types();
         AnalysisMetadata {
@@ -327,8 +342,11 @@ impl Checker {
             fluent_calls: self.fluent_calls,
             member_value_calls: self.member_value_calls,
             record_defaults: self.record_defaults,
+            static_bound_declarations: self.type_collection.static_bound_declarations,
             record_constructions: self.record_constructions,
             distinct_conversions: self.distinct_conversions,
+            subrange_conversions: self.subrange_conversions,
+            subrange_memberships: self.subrange_memberships,
             closure_infos: self.closure_infos,
             nested_routine_captures: self.nested_routine_captures,
             bound_methods: self.bound_methods,

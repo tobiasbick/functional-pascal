@@ -3,6 +3,7 @@
 mod arguments;
 mod arrays;
 mod fluent;
+mod subranges;
 mod var_arguments;
 
 use fpas_ir::{Constant, IntrinsicId, Operation, TypeId, ValueId};
@@ -22,6 +23,9 @@ impl LoweringContext {
         span: fpas_lexer::Span,
         call_key: usize,
     ) -> Result<ValueId, CompileError> {
+        if let Some(range) = self.subrange_conversions.get(&call_key).cloned() {
+            return self.lower_subrange_conversion(arguments, &range, span);
+        }
         if self.record_constructions.contains(&call_key) {
             return self.lower_record_construction(arguments, result, span);
         }

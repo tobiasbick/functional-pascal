@@ -67,7 +67,6 @@ None; annotations stay valid.
   reused, and rebuilt compiled units. Private inferred scalar and aggregate
   bodies keep the same explicitly typed exported routine.
 
-## Follow-ups
-
-- AP18 adds subrange conversion inference and its boundary tests when subranges
-  are implemented.
+Subrange conversion inference and its boundary tests are delivered in
+[AP18.1](../ap18-subrange-types/01-subrange-declarations.md), including imported
+types and inferred hover/type navigation.

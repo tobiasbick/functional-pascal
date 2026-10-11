@@ -31,3 +31,4 @@ mod keyword_switch;
 mod local_inference;
 mod optimization;
 mod structure;
+mod subranges;

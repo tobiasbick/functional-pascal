@@ -35,7 +35,7 @@ pub(super) fn lower(ty: &Ty, line: u32, column: u32) -> Result<TypeId, CompileEr
     match ty {
         Ty::Unit => Ok(UNIT),
         Ty::Boolean => Ok(BOOLEAN),
-        Ty::Integer => Ok(INTEGER),
+        Ty::Integer | Ty::Subrange(_) => Ok(INTEGER),
         Ty::Real => Ok(REAL),
         Ty::String => Ok(STRING),
         Ty::GenericParam(..) => Ok(DYNAMIC),

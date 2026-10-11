@@ -3,6 +3,7 @@
 mod boolean;
 mod decision;
 mod designators;
+mod subranges;
 
 use fpas_ir::{BinaryOperation as IrBinary, Constant, Operation, UnaryOperation, ValueId};
 use fpas_parser::{BinaryOp, Expr, UnaryOp};
@@ -55,6 +56,14 @@ impl LoweringContext {
                 right,
                 span,
             } => {
+                if let Some(range) = self
+                    .subrange_memberships
+                    .get(&fpas_sema::expr_lookup_key(expression))
+                    .cloned()
+                {
+                    let value = self.lower_expression(left)?;
+                    return self.lower_subrange_check(value, &range, *span);
+                }
                 let result_ty = self.expression_ir_type(expression)?;
                 self.lower_binary(*op, left, right, result_ty, *span)
             }

@@ -330,8 +330,10 @@ primitive types, integer literals, the main-body terminator, and `null;` (AP13;
 [grammar](../../../specs/grammar.ebnf), `type_def`, `distinct_type`, and
 `integer_literal`).
 
-Draft forms: integer subrange declarations and checked conversion (AP18, Q10
-and Q11). Computed `const` is implemented by AP16.
+Integer subrange declarations and checked conversion are implemented by
+[AP18.1](../ap18-subrange-types/01-subrange-declarations.md) (Q10 and Q11;
+[subrange types](../../../pascal/language/types/subranges.md)). Computed `const`
+is implemented by AP16.
 
 ```pascal
 program DomainTypes;

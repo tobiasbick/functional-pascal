@@ -12,10 +12,13 @@ use crate::types::Ty;
 use fpas_diagnostics::codes::SEMA_DUPLICATE_DECLARATION;
 use fpas_parser::{Decl, TypeBody, TypeDef};
 use std::collections::{HashMap, HashSet};
+use std::sync::Arc;
 
-/// Type headers retained only during structural resolution, never for expression checking.
+/// Whole-unit type headers and static inputs used during structural resolution.
 #[derive(Default)]
 pub(crate) struct TypeCollection {
+    /// Stable declarations used to evaluate bounds before ordered value checking.
+    pub(crate) static_bound_declarations: Vec<Arc<Decl>>,
     pending: HashMap<String, TypeDef>,
     resolving: Vec<(String, bool)>,
     accepted: HashSet<(u32, usize)>,
@@ -28,6 +31,22 @@ pub(crate) struct TypeCollection {
 impl Checker {
     /// Resolve every type and member signature before checking declarations in source order.
     pub(crate) fn collect_unit_types(&mut self, declarations: &[Decl]) {
+        if declarations.iter().any(|declaration| {
+            matches!(
+                declaration,
+                Decl::TypeDef(TypeDef {
+                    body: TypeBody::Subrange { .. },
+                    ..
+                })
+            )
+        }) {
+            self.type_collection.static_bound_declarations = declarations
+                .iter()
+                .filter(|declaration| matches!(declaration, Decl::Const(_)))
+                .cloned()
+                .map(Arc::new)
+                .collect();
+        }
         for declaration in declarations {
             let (name, offset) = match declaration {
                 Decl::Const(value) => (&value.name, value.span.offset),

@@ -24,7 +24,13 @@ impl Checker {
     fn supports_structural_equality(&self, ty: &Ty, visiting: &mut Vec<String>) -> bool {
         match self.resolve_visible_type(ty) {
             // An unresolved type was already reported; do not cascade.
-            Ty::Integer | Ty::Real | Ty::Boolean | Ty::String | Ty::Distinct(_) | Ty::Error => true,
+            Ty::Integer
+            | Ty::Subrange(_)
+            | Ty::Real
+            | Ty::Boolean
+            | Ty::String
+            | Ty::Distinct(_)
+            | Ty::Error => true,
             Ty::GenericParam(_, constraint) => matches!(
                 constraint,
                 Some(TypeConstraint::Comparable | TypeConstraint::Numeric)

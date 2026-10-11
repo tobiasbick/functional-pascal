@@ -34,6 +34,10 @@ pub(super) fn apply_var_def_source_id(var_def: &mut VarDef, source_id: u32) {
 
 fn apply_type_def_source_id(type_def: &mut TypeDef, source_id: u32) {
     match &mut type_def.body {
+        TypeBody::Subrange { lower, upper } => {
+            apply_expr_source_id(lower, source_id);
+            apply_expr_source_id(upper, source_id);
+        }
         TypeBody::Record(record) => apply_record_type_source_id(record, source_id),
         TypeBody::Enum(enum_type) => {
             for member in &mut enum_type.members {

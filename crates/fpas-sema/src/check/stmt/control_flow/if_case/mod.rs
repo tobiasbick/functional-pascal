@@ -5,8 +5,8 @@
 mod arms;
 mod bindings;
 mod case_expression;
+mod conversion_labels;
 mod coverage;
-mod distinct_labels;
 mod exhaustiveness;
 mod labels;
 mod patterns;
@@ -94,7 +94,7 @@ impl Checker {
         is_simple_enum: bool,
         span: Span,
     ) {
-        let selector_ty = distinct_labels::comparison_type(case_ty);
+        let selector_ty = conversion_labels::comparison_type(case_ty);
         if is_result_or_option
             || is_data_enum
             || is_simple_enum

@@ -45,6 +45,9 @@ impl Checker {
         let actual = self.resolve_visible_type(actual);
         if !expected.assignment_compatible_with(&actual) {
             let hint = Self::distinct_conversion_hint(&expected, &actual)
+                .or_else(|| if let Ty::Subrange(range) = &expected {
+                    Some(format!("Subranges require explicit checked conversion, for example `{}(Value)`.", range.name))
+                } else { None })
                 .unwrap_or_else(|| format!("The {context} must match the declared type."));
             self.errors.push(
                 crate::error::sema_error(

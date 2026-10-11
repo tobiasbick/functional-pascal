@@ -183,6 +183,9 @@ fn qualify_owned_type(
         Record, Result, Task,
     };
     match ty {
+        artifact::InterfaceType::Subrange { name, .. } => {
+            *name = qualify_owned_name(name, unit_name, own_types);
+        }
         Array(inner) | Channel(inner) | Option(inner) | Task(inner) => {
             qualify_owned_type(inner, unit_name, own_types);
         }

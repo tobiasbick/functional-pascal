@@ -200,7 +200,11 @@ type_def            = identifier '=' type_body ';'
 type_body           = record_type
                     | enum_type
                     | distinct_type
+                    | subrange_type
                     | type_expr ;
+
+(* Inclusive compile-time integer bounds; no explicit base type. *)
+subrange_type       = expression '..' expression ;
 
 (* A distinct type has its own identity over integer, real, string,   *)
 (* or boolean (directly or through an alias). `type X = type Y` is    *)

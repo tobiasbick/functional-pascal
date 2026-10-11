@@ -13,6 +13,10 @@ Formal syntax: [`grammar.ebnf`](../../../specs/grammar.ebnf) (expression precede
 | `div`    | Integer division | `A div B`   |
 | `mod`    | Modulo           | `A mod B`   |
 
+[Subrange](../types/subranges.md) operands use their integer values for arithmetic
+and comparisons. Integer arithmetic produces `integer`, and `/` produces `real`.
+Logical operators retain their Boolean-only rules.
+
 ## Comparison
 
 | Operator | Description       | Example    |
@@ -30,7 +34,7 @@ simple enums, and [distinct types](../types/distinct-types.md)). `Option` and `R
 records, and enums with associated data compare structurally when every payload or field compares:
 two records are equal when all their fields are equal, two enum values are equal when they have
 the same variant and equal fields, and `Some(A) = Some(B)` compares `A` with `B`. Both operands
-must have the same type. Arrays, dictionaries, callables, tasks, and channels have no whole-value
+of an aggregate comparison must have the same type. Arrays, dictionaries, callables, tasks, and channels have no whole-value
 equality, and neither does an `Option`, `Result`, record, or enum that contains one, such as
 `Option of array of integer`; compare their relevant fields or contents explicitly. Ordering operators (`<`, `>`, `<=`, `>=`) never apply to records or
 enums with data.
@@ -43,6 +47,16 @@ WriteLn('Alice' in ['Alice': 30]);
 WriteLn('a' in 'pascal');
 WriteLn('asc' in 'pascal');
 ```
+
+With a [subrange type](../types/subranges.md#membership) on the right, `in`
+tests its inclusive integer bounds: `0 in Percent` and `100 in Percent` are
+`true` for `type Percent = 0..100;`, while `-1 in Percent` and `101 in Percent`
+are `false`. The left operand must be an integer or subrange value; the right
+operand names the type or a type alias, rather than a subrange value. The value
+is evaluated once, and the test performs no conversion. `Input in Percent and
+Input > 0` uses the existing comparison precedence and Boolean short-circuit
+rules. A successful test still requires explicit `Percent(Input)` conversion
+when a subrange value is needed.
 
 ## Operator precedence
 

@@ -407,6 +407,7 @@ fn contains_error(ty: &Ty) -> bool {
         Ty::Record(_)
         | Ty::Enum(_)
         | Ty::Distinct(_)
+        | Ty::Subrange(_)
         | Ty::Integer
         | Ty::Real
         | Ty::Boolean

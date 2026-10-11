@@ -1,9 +1,9 @@
 # Types
 
 Composite and built-in type forms: records, enums, arrays, dictionaries, aliases,
-distinct types, generic records and enums, and generic routines.
+subranges, distinct types, generic records and enums, and generic routines.
 
-Formal syntax: [`grammar.ebnf`](../../../specs/grammar.ebnf) (`type_declaration`, `type_def`, `type_expr`, `record_type`, `enum_type`, `distinct_type`).
+Formal syntax: [`grammar.ebnf`](../../../specs/grammar.ebnf) (`type_declaration`, `type_def`, `type_expr`, `record_type`, `enum_type`, `subrange_type`, `distinct_type`).
 
 | Topic | Description |
 |-------|-------------|
@@ -25,6 +25,7 @@ Formal syntax: [`grammar.ebnf`](../../../specs/grammar.ebnf) (`type_declaration`
 | [Dictionaries](dictionaries.md) | `dict of K to V` |
 | [Type aliases](type-aliases.md) | Semantic names for existing types |
 | [Distinct types](distinct-types.md) | Scalar domain types with their own identity and explicit conversions |
+| [Subrange types](subranges.md) | Inclusive integer restrictions and checked conversions |
 | [Generics](generics.md) | Generic records and enums, constructor inference, recursion, and type parameters on routines and record methods |
 
 ## See also

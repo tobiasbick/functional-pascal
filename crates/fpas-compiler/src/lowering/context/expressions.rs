@@ -32,6 +32,7 @@ impl LoweringContext {
             // Documentation: docs/pascal/language/types/distinct-types.md
             .map(|ty| match ty {
                 Ty::Distinct(distinct) => distinct.underlying.clone(),
+                Ty::Subrange(_) => Ty::Integer,
                 other => other.clone(),
             })
             .ok_or_else(|| {
@@ -58,6 +59,7 @@ impl LoweringContext {
             if !self.intrinsic_calls.contains_key(&key)
                 && !self.record_constructions.contains(&key)
                 && !self.distinct_conversions.contains(&key)
+                && !self.subrange_conversions.contains_key(&key)
             {
                 if let Some(result) = self.member_call_result(key) {
                     return Ok(result);

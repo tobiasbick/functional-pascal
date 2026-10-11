@@ -42,6 +42,7 @@ impl Checker {
             Expr::Call { .. } => {
                 let key = Self::expr_lookup_key(initializer);
                 self.distinct_conversions.contains(&key)
+                    || self.subrange_conversions.contains_key(&key)
                     || self.record_constructions.contains(&key)
                     || self.enum_constructions.contains(&key)
             }

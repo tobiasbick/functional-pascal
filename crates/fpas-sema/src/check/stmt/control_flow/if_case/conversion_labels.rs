@@ -1,6 +1,7 @@
-//! Distinct conversion labels such as `when UserId(1):` in `case` and `is` patterns.
+//! Checked type-conversion labels such as `when UserId(1):` and `when Percent(1):`.
 //!
-//! **Documentation:** `docs/pascal/language/types/distinct-types.md`
+//! **Documentation:** `docs/pascal/language/types/distinct-types.md`,
+//! `docs/pascal/language/types/subranges.md`
 
 use super::Checker;
 use super::coverage::Pat;
@@ -11,11 +12,11 @@ use fpas_lexer::Span;
 use fpas_parser::{Designator, Pattern};
 
 impl Checker {
-    /// Checks `Name(Value)` as a constant label when `Name` is a distinct type.
+    /// Checks `Name(Value)` as a constant label for distinct and subrange types.
     ///
-    /// Returns `None` when `Name` is not a distinct type, so the caller keeps its
+    /// Returns `None` for other type names, so the caller keeps its
     /// variant or call handling.
-    pub(super) fn check_distinct_label(
+    pub(super) fn check_conversion_label(
         &mut self,
         expected_ty: &Ty,
         constructor: &Designator,
@@ -27,7 +28,34 @@ impl Checker {
         if symbol.kind != SymbolKind::Type {
             return None;
         }
-        let Ty::Distinct(label) = self.resolve_visible_type(&symbol.ty.clone()) else {
+        let symbol_ty = self.resolve_visible_type(&symbol.ty.clone());
+        if let Ty::Subrange(range) = symbol_ty {
+            let Some(argument) = pattern.conversion_argument() else {
+                self.error_with_code(
+                    SEMA_TYPE_MISMATCH,
+                    format!("Case label `{name}(...)` takes exactly one constant value"),
+                    format!("Write `when {name}(1):`."),
+                    span,
+                );
+                return Some(Pat::Wild);
+            };
+            let target = self.check_subrange_conversion(
+                pattern as *const Pattern as usize,
+                &name,
+                &range,
+                std::slice::from_ref(argument),
+                span,
+            );
+            let expected = if matches!(expected_ty, Ty::Subrange(_)) {
+                &Ty::Integer
+            } else {
+                expected_ty
+            };
+            self.check_type_compat(expected, &target, "case label", span);
+            self.require_case_constant(argument);
+            return Some(self.value_constructor(&Ty::Integer, argument));
+        }
+        let Ty::Distinct(label) = symbol_ty else {
             return None;
         };
         let Some(argument) = pattern.conversion_argument() else {

@@ -127,9 +127,10 @@ pub(super) fn declaration_symbol(
             value.visibility,
             match &value.body {
                 TypeBody::Alias(target) => named_type(target),
-                TypeBody::Record(_) | TypeBody::Enum(_) | TypeBody::Distinct(_) => {
-                    Some(value.name.clone())
-                }
+                TypeBody::Record(_)
+                | TypeBody::Enum(_)
+                | TypeBody::Distinct(_)
+                | TypeBody::Subrange { .. } => Some(value.name.clone()),
             },
             format!("type {}", value.name),
         ),

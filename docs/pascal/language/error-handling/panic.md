@@ -30,6 +30,10 @@ end function;
 | `Result` / `Option` | Expected failure conditions (user input, file not found, search miss) |
 | `panic` | Programming logic errors, broken invariants, impossible cases |
 
+An invalid dynamic [subrange conversion](../types/subranges.md) also causes a
+panic. Its message includes the value and the allowed inclusive bounds; a known
+invalid constant is diagnosed at compile time instead.
+
 ## See also
 
 - [Result](result.md)

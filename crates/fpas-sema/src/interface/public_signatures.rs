@@ -112,6 +112,7 @@ fn private_type_in_declaration<'a>(
             let private_types = private_types.with_parameters(&definition.type_params);
             let private_types = &private_types;
             match &definition.body {
+                TypeBody::Subrange { .. } => None,
                 TypeBody::Alias(ty) | TypeBody::Distinct(ty) => private_type_in(ty, private_types),
                 TypeBody::Enum(enumeration) => enumeration
                     .members

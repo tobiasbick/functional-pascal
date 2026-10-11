@@ -94,7 +94,10 @@ fn declarations_write(declarations: &[Decl], span: SourceSpan) -> bool {
                     body_writes(&procedure.body, span)
                 }
             }),
-            TypeBody::Alias(_) | TypeBody::Distinct(_) | TypeBody::Enum(_) => false,
+            TypeBody::Alias(_)
+            | TypeBody::Distinct(_)
+            | TypeBody::Enum(_)
+            | TypeBody::Subrange { .. } => false,
         },
         Decl::Const(_) | Decl::Var(_) => false,
     })

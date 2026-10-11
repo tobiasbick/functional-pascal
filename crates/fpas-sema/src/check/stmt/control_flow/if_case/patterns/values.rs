@@ -58,12 +58,17 @@ impl Checker {
 
         let value_ty = self.check_expr_with_expected(expr, Some(expected_ty));
         let errors_before = self.errors.len();
-        self.check_type_compat(expected_ty, &value_ty, "pattern value", expr.span());
+        let comparison_ty = if matches!(expected_ty, Ty::Subrange(_)) {
+            &Ty::Integer
+        } else {
+            expected_ty
+        };
+        self.check_type_compat(comparison_ty, &value_ty, "pattern value", expr.span());
         if value_ty.is_error() || self.errors.len() != errors_before {
             return Pat::Wild;
         }
         self.require_case_constant(expr);
-        let compared_ty = super::super::distinct_labels::comparison_type(expected_ty);
+        let compared_ty = super::super::conversion_labels::comparison_type(expected_ty);
         let comparable = self.resolve_enum_ty(expected_ty).is_some()
             || compared_ty.is_ordinal()
             || compared_ty.compatible_with(&Ty::String)

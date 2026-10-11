@@ -19,6 +19,10 @@ end function;
 
 ## Limited type inference
 
+Explicit [subrange conversions](../types/subranges.md), such as
+`const Level := Percent(Value);`, infer the range type and retain its checked
+bounds. Ordinary routines returning a subrange still need an annotation.
+
 In statement position, a `const` or `var` binding can omit its type annotation
 for scalar literals, non-empty array and dictionary literals, typed record or
 enum construction, and explicit type conversions. Parentheses and a numeric

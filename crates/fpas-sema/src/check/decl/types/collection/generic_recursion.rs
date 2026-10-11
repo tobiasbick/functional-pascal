@@ -80,6 +80,7 @@ fn references<'a>(definition: &'a TypeDef, names: &HashMap<String, usize>) -> Ve
                 .flat_map(|member| member.fields.iter().map(|field| &field.type_expr)),
         ),
         TypeBody::Alias(ty) | TypeBody::Distinct(ty) => pending.push(ty),
+        TypeBody::Subrange { .. } => {}
     }
     while let Some(ty) = pending.pop() {
         match ty {

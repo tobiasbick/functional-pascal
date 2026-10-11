@@ -228,7 +228,7 @@ impl Checker {
             || (symbol_kind == SymbolKind::Type
                 && matches!(
                     self.resolve_visible_type(&symbol_ty),
-                    Ty::Record(_) | Ty::Distinct(_)
+                    Ty::Record(_) | Ty::Distinct(_) | Ty::Subrange(_)
                 ))
         {
             self.error_with_code(

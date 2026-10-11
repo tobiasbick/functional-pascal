@@ -1,0 +1,59 @@
+program SubrangeTest;
+
+uses Std.Test;
+
+type Percent = 0..100;
+
+type Same = 0..100;
+
+type Small = 0..10;
+
+function ReadValue(Value: integer): integer;
+begin
+  return Value;
+end function;
+
+procedure Change(var Value: Percent);
+begin
+  Value := Percent(10);
+end procedure;
+
+begin
+  const Low := Percent(ReadValue(0));
+  const High := Percent(ReadValue(100));
+  var Level := Same(5);
+  Change(var Level);
+  AssertTrue(Low = 0);
+  AssertTrue(High = 100);
+  AssertTrue(Level = 10);
+  AssertTrue(ReadValue(0) in Percent);
+  AssertTrue(ReadValue(100) in Same);
+  AssertFalse(ReadValue(-1) in Percent);
+  AssertFalse(ReadValue(101) in Percent);
+  AssertTrue(Level in Small);
+  for Input: integer := -1 to 101 do
+    if Input in Percent then
+      const Checked := Percent(Input);
+      AssertTrue(Checked = Input);
+    else
+      AssertTrue(Input = -1 or Input = 101);
+    end if;
+  end for;
+
+  AssertFalse(ReadValue(101) in Percent and Percent(ReadValue(101)) >= 0);
+  const Sum: integer := High + Level;
+  AssertEquals(110, Sum);
+  const Half: real := High / Level;
+  AssertEquals(10.0, Half);
+  const Values: array of Percent := [Low, High];
+  AssertTrue(Values[1] = 100);
+  for I: integer := 0 to 10 do
+    const Current := Small(I);
+    AssertTrue(Current = I);
+  end for;
+  const Label: integer := case Level of
+    when Percent(10): 1;
+    else 0;
+  end case;
+  AssertEquals(1, Label);
+end.

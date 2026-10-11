@@ -62,6 +62,10 @@ pub(super) struct LoweringContext {
     pub(super) record_constructions: std::collections::HashSet<usize>,
     /// Identity conversions into or out of distinct types.
     pub(super) distinct_conversions: std::collections::HashSet<usize>,
+    /// Inclusive bounds of explicit checked conversions.
+    pub(super) subrange_conversions: HashMap<usize, fpas_sema::SubrangeTy>,
+    /// Inclusive bounds of expressions testing membership in a subrange type.
+    pub(super) subrange_memberships: HashMap<usize, fpas_sema::SubrangeTy>,
     pub(super) method_calls: fpas_sema::MethodCallMap,
     pub(super) fluent_calls: fpas_sema::FluentCallMap,
     pub(super) member_value_calls: fpas_sema::MemberValueCallMap,
@@ -261,6 +265,8 @@ impl LoweringContext {
             record_defaults: metadata.record_defaults.clone(),
             record_constructions: metadata.record_constructions.clone(),
             distinct_conversions: metadata.distinct_conversions.clone(),
+            subrange_conversions: metadata.subrange_conversions.clone(),
+            subrange_memberships: metadata.subrange_memberships.clone(),
             method_calls: metadata.method_calls.clone(),
             fluent_calls: metadata.fluent_calls.clone(),
             member_value_calls: metadata.member_value_calls.clone(),

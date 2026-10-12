@@ -31,6 +31,9 @@ Not the syntax. The toolchain:
 - **The FPAS test suite is the contract.** The `*_test.fpas` programs and golden files under
   `tests/` are independent of Rust and would decide whether the C implementation behaves like the
   current one. The Rust unit tests (roughly 110k of about 258k lines of Rust) would not carry over.
+- **Additional FFI capability.** Plan a general C foreign-function interface for applications,
+  separately from preserving the existing language during the rewrite. The intended capability
+  is described below; its FPAS syntax and type rules still need their own design agreement.
 
 ## C standard and target platforms
 
@@ -108,6 +111,46 @@ ARM Linux, Clang builds on Windows, and BSD fall under vcpkg's community support
 bootstraps itself from source. Availability of a package on Windows or Linux x64 does not establish
 that the selected version builds on ARM64 or FreeBSD: verify the actual dependency set on each
 target before adopting it. See [vcpkg supported hosts](https://learn.microsoft.com/en-us/vcpkg/concepts/supported-hosts).
+
+## C libraries in applications through FFI
+
+**Goal: an application can use an additional C library with an already-built FPAS compiler and
+runtime.** A developer who finds functionality missing from FPAS should be able to obtain a
+native library, describe the required functions in a reusable FPAS binding unit, and call them
+from an ordinary FPAS program. Adding those bindings must not require rebuilding or modifying
+FPAS, adding a built-in intrinsic, or waiting for a new FPAS release.
+
+The intended workflow is:
+
+1. Obtain the library as a Windows DLL or a Linux/FreeBSD shared object (`.so`) built for the
+   application's target OS and architecture.
+2. Write or reuse a binding unit describing the library, exported symbol names, and C function
+   signatures. Import that unit through the existing FPAS unit/project model.
+3. Compile and run the FPAS application normally. The runtime loads the native library, resolves
+   its symbols, converts arguments/results, and performs calls using the platform's C ABI.
+4. Deploy the application with its required native libraries, or resolve documented system
+   libraries. Compiled artifacts carry binding metadata; native addresses are resolved at runtime.
+
+**Evaluate libffi as the native-call implementation.** It handles platform calling conventions
+and calls described by runtime signatures. Library loading, symbol resolution, FPAS/C value
+conversion, and ownership remain FPAS responsibilities. It is available as a vcpkg port and is a
+candidate for the implementation's dependencies; application authors would not need vcpkg or a
+C compiler merely to use an existing shared library and its bindings. See
+[libffi](https://github.com/libffi/libffi) and
+[the vcpkg libffi port](https://github.com/microsoft/vcpkg/blob/master/ports/libffi/vcpkg.json).
+
+The binding design must specify C type widths/layouts and calling conventions, string encoding,
+array/buffer representation, pointer and library-handle lifetimes, and who allocates/frees each
+value crossing the boundary. Records passed by value, callbacks into FPAS, variadic functions,
+and interaction with FPAS tasks need explicit support decisions. Native-library discovery and
+deployment rules are also open. Binding units use the existing path/workspace dependencies;
+native libraries do not introduce a new FPAS package manager or compiled-unit format.
+
+This capability is not implemented today and is independent of the C23 choice. Its acceptance
+check should use the same already-built FPAS distribution with a subsequently added binding
+unit and shared library on every target in the platform matrix. Cover supported argument/result
+conversions, ownership/lifetime behavior, and useful errors for missing libraries or symbols.
+Choose and agree on the FPAS API/syntax before implementation or changes to `docs/pascal/`.
 
 ## Open questions
 

@@ -46,13 +46,11 @@ This is separate from the `in` membership operator in expressions. In `for K: st
 ```pascal
 // Print only keys whose value exceeds 10
 for K: string in Ages do
-  begin
-    if Ages[K] <= 10 then
-      continue;
-    end if;
+  if Ages[K] <= 10 then
+    continue;
+  end if;
 
-    WriteLn(K);
-  end;
+  WriteLn(K);
 end for;
 ```
 

@@ -31,12 +31,13 @@ The body is a nonempty statement list with its own local scope, closed by `end s
 
 Every `go` written directly in the scope body starts a child owned by the innermost scope,
 whether it is a `go` expression that returns a handle or a `go` statement. A `go` outside any
-scope starts a detached task as described in [`go`](go.md).
+scope has no lexical scope owner and is not joined automatically. Its expression form still
+returns a handle that can be waited on; its statement form produces no handle. See [`go`](go.md).
 
 Ownership never crosses a routine boundary:
 
-- A routine called inside a scope does not inherit it. A `go` in that routine is detached
-  unless the routine opens its own `scope`.
+- A routine called inside a scope does not inherit it. A `go` in that routine has no lexical
+  scope owner unless the routine opens its own `scope`; handle retention is independent.
 - A `go` in an anonymous routine that is written inside a scope is rejected (FP3038), because
   the anonymous routine may run after the scope has ended. Move the `go` into the scope body,
   or open a `scope` inside the anonymous routine.

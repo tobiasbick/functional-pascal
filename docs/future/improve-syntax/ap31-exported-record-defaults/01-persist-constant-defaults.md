@@ -1,34 +1,56 @@
 # AP31.1: Persist evaluated constant defaults
 
-Package: [AP31](README.md). Status: pending repair; not implemented.
+Package: [AP31](README.md). Status: complete.
 
-## Scope and prerequisites
+## Result
 
-Reproduce literal success and expression/reference failure in independently
-compiled units. Reuse the existing compile-time constant classification and
-evaluation; do not invent a second evaluator in the interface serializer.
-AP10 and AP24 are complete. No dependency on numeric redesign is required:
-preserve currently defined constant evaluation in this repair.
+Exported record defaults use values retained by the existing compile-time
+constant classification and evaluator at the declaration. The interface
+serializer consumes these checked values. Imported defaults preserve the
+same values through aliases and generic instantiation, independent of caller
+names and fresh or reused sidecars.
 
-## Affected areas
+Unsupported computed or aggregate defaults, and constant expressions without
+a valid value, produce FP3014 at the original field expression before interface
+extraction. Transparent aliases share retained expression identities and do
+not duplicate that diagnostic. Local and non-exported defaults keep their
+existing declaration-scope behavior.
 
-Inspect `crates/fpas-sema/src/interface/export.rs`,
-`crates/fpas-sema/src/check/decl/types/records/`, the constant evaluator,
-and `crates/fpas-unit/src/interface/`. Select the concrete evaluation and
-diagnostic owners before editing.
+## Implementation ownership
+
+- `crates/fpas-sema/src/check/decl/types/records/defaults.rs` and
+  `check/decl/consts/` own declaration-scope checking and evaluated constant values.
+- `crates/fpas-sema/src/interface/export/record_defaults.rs` owns source diagnostics
+  and persistence of those values; `interface/analysis.rs` runs validation before
+  interface extraction.
+- `crates/fpas-sema/src/interface/export.rs` qualifies unit-owned enum defaults.
+- `crates/fpas-sema/src/interface/install.rs` retains imported values and stable
+  expression allocations, including optional `None` and canonical enum identity.
+- `crates/fpas-unit/src/interface/types.rs` supplies the existing scalar and
+  optional-`None` field-default representation.
 
 ## Migration and documentation
 
-No source-syntax migration. Update the
+No source-syntax migration. The
 [record default reference](../../../pascal/language/types/records.md#default-field-values)
-only to clarify the existing boundary, and correct the diagnostic guidance.
-Do not narrow its promised constant-expression support to hide the defect.
+describes declaration-evaluated values and their export boundary.
+[Diagnostic guidance](../../../pascal/tools/diagnostics.md) includes exported
+defaults under FP3014.
 
-## Verification
+## Regression coverage
 
-- Compare `3`, `1 + 2`, a preceding scalar constant, parentheses, unary minus,
-  and `None` across local and exported records.
-- Check aliases, generic records where applicable, shadowed caller names,
-  and fresh/reused sidecars with the same execution result.
-- Unsupported dynamic defaults and invalid constants fail at the declaration.
-- Run applicable workspace, project, FPAS, and documentation checks.
+- `crates/fpas-build/tests/record_construction/mod.rs` exercises literal and
+  expression equivalence, preceding and imported constant references, parentheses,
+  unary minus, real/string/Boolean values, defined integer wrapping, short-circuit
+  evaluation, enum values, and optional callable `None`. It checks local defaults,
+  explicit overrides, transparent aliases, generic records, caller shadowing,
+  and identical execution with fresh and reused sidecars.
+- `crates/fpas-build/tests/diagnostics/record_defaults.rs` exercises unsupported
+  routine calls, mutable and computed references, aggregate defaults, and failing
+  integer/real divisions through the public build and check APIs. It checks the
+  diagnostic code, declaring file, source ID, field line, useful hint, and absence
+  of a published invalid sidecar.
+
+## Open follow-ups
+
+None within this work package's scope.

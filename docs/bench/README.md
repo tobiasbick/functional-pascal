@@ -56,6 +56,11 @@ The array drain includes array construction within each timed iteration.
 
 Committed progress over time lives in [`history.md`](history.md). Agent workflow: [`.agents/skills/fpas-bench/SKILL.md`](../../.agents/skills/fpas-bench/SKILL.md).
 
+The current full-suite starting point is the [2026-10-12 baseline](history.md#2026-10-12--full-suite-baseline).
+Its local snapshot is `.temp-data/bench/baseline-2026-10-12.json`. Compare it with
+`cargo bench-fpas compare baseline-2026-10-12`; older history entries and local
+measurement snapshots were removed when this baseline was selected.
+
 `substring_ascii` and `substring_unicode` measure beginning, middle, end, empty,
 and full-range slices of a 32,768-scalar string. Input construction and warmup
 are excluded; each iteration checks all five results through production FPAS calls.

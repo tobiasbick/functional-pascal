@@ -1,30 +1,37 @@
 # AP32.1: Valid diagnostic hints
 
-Package: [AP32](README.md). Status: pending correction.
+Package: [AP32](README.md). Status: complete.
 
-## Scope and prerequisites
+## Result
 
-Repair the general ambiguous-import suggestion without removing valid
-migration hints for actual native operations. AP02 and AP06 are complete.
-Use qualified import candidates for ambiguous free calls; never suggest
-receiver-based free-function lookup that the language does not implement.
+FP3004 lists qualified candidates for ambiguous imported calls. Both expression
+and statement calls use the shared ambiguity hint; free routines are selected
+by name, not by receiver type. Migration hints for removed native free
+operations still recommend the implemented native receiver forms.
 
-## Affected areas
+## Implementation ownership
 
-Inspect `crates/fpas-sema/src/check/name_resolution/std_names.rs`,
-`crates/fpas-sema/src/tests/integration/short_names.rs`, and related diagnostic
-owners. Distinguish the ambiguous-import path from removed-native-helper hints.
+- `crates/fpas-sema/src/check/name_resolution/std_names.rs` owns the qualified
+  candidate hint shared with other ambiguous-name diagnostics.
+- `crates/fpas-sema/src/check/expr/calls/mod.rs` and `check/stmt/calls.rs` use
+  that hint at their respective call-resolution boundaries.
+- `crates/fpas-sema/src/std_registry/native/mod.rs` owns the
+  separate removed-native-operation guidance.
 
 ## Migration and documentation
 
-No language migration. Synchronize the
-[diagnostic reference](../../../pascal/tools/diagnostics.md) and examples that
-quote affected messages. Preserve diagnostic codes where their meaning holds.
+No language migration or diagnostic-code change. The
+[diagnostic reference](../../../pascal/tools/diagnostics.md#ambiguous-imports)
+shows a real `ReadText` conflict and its valid qualified correction.
 
-## Verification
+## Regression coverage
 
-Create a real ambiguous call such as imported `ReadText`; apply the suggested
-qualification and check that it resolves correctly. Verify that equivalent
-receiver syntax is not suggested for a free function. Retain tests showing
-that native-operation migration hints still lead to valid code. Run affected
-diagnostic/CLI tests and required workspace checks for Rust changes.
+`crates/fpas-sema/src/tests/integration/short_names.rs` checks a real
+`Std.Console`/`Std.Fs` `ReadText` ambiguity, FP3004, candidate qualification,
+and a valid qualified call in the original context. It checks the same help
+for statement calls and retains executable native repairs for `Unwrap`,
+`Length`, and `Contains`.
+
+## Open follow-ups
+
+None within this work package's scope.

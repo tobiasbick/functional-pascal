@@ -18,6 +18,9 @@ use fpas_project::{
     ProjectLinkMeta, build_unit_graph_for_program, resolve_library_units, resolve_program_units,
 };
 
+#[path = "diagnostics/record_defaults.rs"]
+mod record_defaults;
+
 struct Fixture(PathBuf);
 
 impl Fixture {

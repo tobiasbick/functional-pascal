@@ -1,6 +1,6 @@
 //! Extraction and qualification of persistent interfaces from analyzed units.
 
-use fpas_parser::{Decl, Expr, Unit, Visibility};
+use fpas_parser::{Decl, Unit, Visibility};
 use fpas_unit::interface as artifact;
 
 use crate::check;
@@ -13,6 +13,7 @@ use super::conversion::{
 mod contracts;
 mod param_escapes;
 mod record_constants;
+mod record_defaults;
 
 impl check::Checker {
     /// Extract the canonical public interface of an analyzed source unit.
@@ -91,32 +92,6 @@ impl check::Checker {
         }
         .canonicalized())
     }
-
-    /// Preserve the original record's constant defaults when exporting concrete types or aliases.
-    ///
-    /// **Documentation:** `docs/pascal/language/types/records.md`
-    fn apply_record_defaults(
-        &self,
-        declaration: &Decl,
-        ty: &mut artifact::InterfaceType,
-    ) -> Result<(), InterfaceConversionError> {
-        if !matches!(declaration, Decl::TypeDef(_)) {
-            return Ok(());
-        }
-        if let artifact::InterfaceType::Record(record) = ty
-            && let Some(defaults) = self.record_defaults.get(&record.name)
-        {
-            for field in &mut record.fields {
-                field.default_value = defaults
-                    .iter()
-                    .find(|(name, _)| name.eq_ignore_ascii_case(&field.name))
-                    .and_then(|(_, value)| value.as_deref())
-                    .map(interface_field_default)
-                    .transpose()?;
-            }
-        }
-        Ok(())
-    }
 }
 
 /// Return the declared source name of a top-level declaration.
@@ -141,47 +116,6 @@ fn exported_symbol_kind(declaration: &Decl, symbol: &crate::scope::Symbol) -> ar
         Decl::Procedure(_) => artifact::SymbolKind::Procedure,
         Decl::TypeDef(_) => artifact::SymbolKind::Type,
     }
-}
-
-fn constant_value(expression: &Expr) -> Option<artifact::ConstantValue> {
-    match expression {
-        Expr::Integer(value, _) => Some(artifact::ConstantValue::Integer(*value)),
-        Expr::Real(value, _) => Some(artifact::ConstantValue::Real(value.to_bits())),
-        Expr::Bool(value, _) => Some(artifact::ConstantValue::Boolean(*value)),
-        Expr::Str(value, _) => Some(artifact::ConstantValue::String(value.clone())),
-        Expr::Paren(inner, _) => constant_value(inner),
-        Expr::UnaryOp {
-            op: fpas_parser::UnaryOp::Negate,
-            operand,
-            ..
-        } => match constant_value(operand)? {
-            artifact::ConstantValue::Integer(value) => {
-                value.checked_neg().map(artifact::ConstantValue::Integer)
-            }
-            artifact::ConstantValue::Real(bits) => Some(artifact::ConstantValue::Real(
-                (-f64::from_bits(bits)).to_bits(),
-            )),
-            _ => None,
-        },
-        _ => None,
-    }
-}
-
-fn interface_field_default(
-    expression: &Expr,
-) -> Result<artifact::FieldDefaultValue, InterfaceConversionError> {
-    match expression {
-        Expr::OptionNone(_) => return Ok(artifact::FieldDefaultValue::OptionNone),
-        Expr::Paren(inner, _) => return interface_field_default(inner),
-        _ => {}
-    }
-    constant_value(expression)
-        .map(artifact::FieldDefaultValue::Scalar)
-        .ok_or_else(|| {
-            InterfaceConversionError::new(
-                "exported record field defaults must be scalar constant expressions or None",
-            )
-        })
 }
 
 fn qualify_owned_type(
@@ -220,6 +154,12 @@ fn qualify_owned_type(
             }
             for field in &mut record.fields {
                 qualify_owned_type(&mut field.ty, unit_name, own_types);
+                if let Some(artifact::FieldDefaultValue::Scalar(
+                    artifact::ConstantValue::EnumValue { enum_name, .. },
+                )) = &mut field.default_value
+                {
+                    *enum_name = qualify_owned_name(enum_name, unit_name, own_types);
+                }
             }
             for method in record
                 .methods

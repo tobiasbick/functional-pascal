@@ -70,7 +70,7 @@ end case;
 Guarded arms do not count toward exhaustive variant coverage. The compiler
 requires complete explicit enum, `Result`, and `Option` coverage. These types
 reject `else` (FP3035), even after complete coverage. Scalar `integer`, `string`,
-and `boolean` cases allow `else`; Boolean coverage is optional. Use an
+and `boolean` cases allow `else`; Boolean statement coverage is optional. Use an
 [`is` test](../pattern-matching/is-test.md) when handling just one variant.
 See [Pattern matching](../pattern-matching/README.md) for guards, scalar guard
 bindings, data-enum patterns, and exhaustiveness rules. Destructuring keeps
@@ -95,6 +95,11 @@ const Label: string := case Count of
   when 1: 'one';
   else 'many';
 end case;
+
+const State: string := case Enabled of
+  when true: 'enabled';
+  else 'disabled';
+end case;
 ```
 
 - Each arm is `when Labels [if Guard]: Value;` with exactly one expression
@@ -102,10 +107,10 @@ end case;
   expression; the enclosing statement or declaration supplies its terminator.
 - Labels, guards, pattern bindings, and arm scopes follow the statement. Only
   the selected arm value is evaluated.
-- Every input must produce a value. Enum, `Result`, `Option`, and `boolean`
-  selectors need an unguarded arm for every value, and enum, `Result`, and
-  `Option` selectors reject `else` as in the statement. `integer`, `string`,
-  and distinct selectors need an `else` arm.
+- Every input must produce a value. Enum, `Result`, and `Option` selectors
+  need unguarded coverage of every variant and reject `else` as in the statement.
+  A `boolean` selector needs unguarded `true` and `false` arms or an `else`
+  fallback. `integer`, `string`, and distinct selectors need an `else` arm.
 - All arm values have one type, with the same rules as
   [`if` expressions](if-then-else.md#if-expressions): no numeric widening, and
   `None` or `[]` take the type of the other arms.

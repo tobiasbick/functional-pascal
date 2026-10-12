@@ -56,6 +56,9 @@ pub fn analyze_unit_with_interface_support(
     checker
         .errors
         .extend(super::public_signatures::validate(unit));
+    if checker.errors.is_empty() {
+        checker.validate_exported_record_defaults(unit);
+    }
     let interface = if checker.errors.is_empty() {
         Some(checker.extract_unit_interface(unit)?)
     } else {

@@ -3,7 +3,9 @@ use crate::scope::canonical_symbol_name;
 use fpas_diagnostics::codes::SEMA_AMBIGUOUS_IMPORTED_NAME;
 
 impl Checker {
-    /// If `name` is an ambiguous short import or enum variant, return a hint listing the candidates.
+    /// Lists qualified candidates for an ambiguous short import or enum variant.
+    ///
+    /// **Documentation:** `docs/pascal/tools/diagnostics.md` (FP3004).
     pub(crate) fn ambiguous_hint(&self, name: &str) -> Option<String> {
         let canonical_name = canonical_symbol_name(name);
         if let Some(candidates) = self.ambiguous_enum_variants.get(&canonical_name) {
@@ -19,20 +21,6 @@ impl Checker {
                 candidates.join(", ")
             )
         })
-    }
-
-    /// Hint for an ambiguous short routine name in a call with `arg_count` arguments.
-    ///
-    /// With at least one argument, the method form on that argument selects the routine by the
-    /// argument's type, for example `Value.Unwrap()` for an option or a result.
-    pub(crate) fn ambiguous_call_hint(&self, name: &str, arg_count: usize) -> Option<String> {
-        let hint = self.ambiguous_hint(name)?;
-        if arg_count == 0 || name.contains('.') {
-            return Some(hint);
-        }
-        Some(format!(
-            "{hint} Or write `{name}(Value, ...)` as `Value.{name}(...)`: the method form selects the routine by the type of `Value`."
-        ))
     }
 
     /// Resolves standard call names while preserving lexical shadowing of imported aliases.

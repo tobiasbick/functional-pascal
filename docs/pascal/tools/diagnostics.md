@@ -41,6 +41,27 @@ names and the number of omitted units.
 Multi-line messages, such as TOML parser excerpts, continue on lines prefixed
 with `message:`.
 
+## Ambiguous imports
+
+FP3004 lists qualified candidates when a short name belongs to multiple imported
+units. For example, this call is ambiguous even though its argument fits one
+candidate:
+
+```pascal
+program ReadFile;
+uses Std.Console, Std.Fs;
+begin
+  const Text: result of (string, string) := ReadText('input.txt');
+end.
+```
+
+The help lists `Std.Console.ReadText` and `Std.Fs.ReadText`. Replace the call with
+`Std.Fs.ReadText('input.txt')` to select the file operation. Free routines are
+selected by name, so the argument's type does not disambiguate them. Dot calls
+resolve declared methods and native operations; see [dot calls](../language/functions/fluent-calls.md).
+Migration hints for removed native free operations, such as `Length(Text)`,
+recommend the implemented `Text.Length()` form.
+
 ## Rust JSON rendering API
 
 `render_json(path, source_text, diagnostic)` serializes one record without a
@@ -309,7 +330,7 @@ Call arguments still use commas; commas inside types such as
 | FP3001 | Unknown type | `const N: Missing := 1;` | `const N: integer := 1;` |
 | FP3002 | Duplicate declaration, repeated import, or conflicting import alias | Two declarations of `N`, `uses Std.Math, std.math;`, or a declaration named like an alias | Keep one import per unit and rename conflicting declarations or aliases. |
 | FP3003 | Unknown name or unlisted dot operation | `Missing()` or `Text.Substring(0, 1)` | Declare the routine or use `Text.Slice(0, 1)`. |
-| FP3004 | Ambiguous imported name | `Send(Value)` with conflicting imported Send routines | `MyApp.Net.Send(Value)` for the intended unit. |
+| FP3004 | Ambiguous imported name | `ReadText('input.txt')` after `uses Std.Console, Std.Fs;` | `Std.Fs.ReadText('input.txt')` for the file operation; use one of the listed qualified names. |
 | FP3005 | Immutable assignment | `const N: integer := 1;` followed by `N := 2` | Declare `var N: integer := 1;`. |
 | FP3006 | Type mismatch | `const N: integer := 'hello';` | `const N: integer := 1;` |
 | FP3007 | Argument count | `Add(1)` for a two-parameter Add | `Add(1, 2)` |
@@ -319,7 +340,7 @@ Call arguments still use commas; commas inside types such as
 | FP3011 | Non-exhaustive case | An `Option` case with only `when Some(_):` | Add `when None: null;`, or use an `is` test when only one variant matters. |
 | FP3012 | Enum data count | Construct `A(1)` when A has two data fields | Construct `A(1, 2)`. |
 | FP3013 | Generic constraint | Use string for T constrained to an arithmetic type | Use integer for that arithmetic operation. |
-| FP3014 | Non-constant value | `when ReadValue():` in a scalar `case` | `when const Value if Value = ReadValue():` |
+| FP3014 | Non-constant or invalid compile-time value | `when ReadValue():` in a scalar `case`, or a computed default in an exported record | Use a guard for a dynamic case condition; use a valid scalar constant expression or optional `None` for an exported default. |
 | FP3015 | Missing record field | Construct a record without required X | Supply `X := 1` in typed record construction. |
 | FP3016 | Task-bound callable | Pass a closure capturing mutable state into another task | Pass a closure with immutable captures. |
 | FP3017 | Private record member | Access another unit's non-public record field | Export the field with `public` or use its public API. |

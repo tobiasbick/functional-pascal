@@ -1,39 +1,37 @@
 # AP31: Exported record constant defaults
 
-Status: Decision pending (repair plan recorded; implementation not started).
+Status: complete (AP31.1).
 Effort: small to medium. Completion is tracked in the [central plan](../README.md).
 
-## Finding
+## Result
 
-The [record specification](../../../pascal/language/types/records.md#default-field-values)
-allows exported scalar constant expressions. An exported default `:= 3`
-works, but `:= 1 + 2` and a reference to a preceding scalar constant fail with
-FP9001 and a misleading dependency-sidecar rebuild hint. The same expression
-works in a program-local record. The interface exporter serializes literal
-syntax rather than all supported constant values.
+Exported record defaults preserve the values promised by the
+[record specification](../../../pascal/language/types/records.md#default-field-values).
+The existing constant evaluator checks them in the declaration environment;
+unit interfaces store the resulting scalar values and optional `None` defaults.
+Literals, expressions, and preceding constant references behave identically
+through independent compilation, transparent aliases, and sidecar reuse.
 
-## Proposed scope
+## Scope
 
-Honor the existing constant-expression contract and report unsupported
-defaults at their source field. Preserve declaration scope, aliases, and
-optional `None` defaults. This is a bounded implementation/spec repair, not
-permission to export arbitrary computed defaults.
+Computed, aggregate, and unsuccessfully evaluated exported defaults produce
+FP3014 at their original source field. Program-local and non-exported defaults
+retain their declaration environment and may use preceding values and routines.
+Scalar fields of generic records follow the same constant-value rule. Optional
+callable fields retain `None`, and enum defaults retain canonical type identity.
 
 ## Open decisions
 
-Confirm the repair scope before selecting implementation. Making dynamic
-defaults portable, restricting all local defaults, or exporting private
-implementation types requires a separate decision and is outside this repair.
+None within the delivered repair scope.
 
 ## Dependencies and work packages
 
-AP10/AP24 provide record construction and unit interfaces. No new language
-decision is needed to fulfill the existing scalar constant-expression rule.
+AP10/AP24 provide the completed record-construction and unit-interface foundations.
 
-- [ ] [AP31.1: Persist evaluated constant defaults](01-persist-constant-defaults.md)
+- [x] [AP31.1: Persist evaluated constant defaults](01-persist-constant-defaults.md)
 
 ## Acceptance
 
 Equivalent literal, constant-reference, and constant-expression defaults
 behave identically before and after independent compilation. Unsupported
-defaults produce a useful source diagnostic rather than FP9001 at the importer.
+defaults produce a useful source diagnostic at the declaring field.

@@ -105,7 +105,33 @@ end.",
 }
 
 #[test]
-fn ambiguous_call_hint_suggests_the_method_form() {
+fn ambiguous_import_hint_leads_to_a_valid_qualified_call() {
+    let source = "program T; uses Std.Console, Std.Fs; begin const Text: result of (string, string) := ReadText('input.txt'); end.";
+    let errors = check_errors(source);
+    assert_eq!(errors.len(), 1, "{errors:#?}");
+    assert_eq!(
+        errors[0].code,
+        fpas_diagnostics::codes::SEMA_AMBIGUOUS_IMPORTED_NAME
+    );
+    let hint = errors[0].help.as_deref().expect("qualification hint");
+    assert_eq!(
+        hint,
+        "`ReadText` exists in multiple imported units: Std.Console.ReadText, Std.Fs.ReadText. Use the fully qualified name to disambiguate."
+    );
+    check_ok(&source.replace(":= ReadText(", ":= Std.Fs.ReadText("));
+
+    let statement_errors =
+        check_errors("program T; uses Std.Console, Std.Fs; begin ReadText('input.txt'); end.");
+    assert_eq!(statement_errors.len(), 1, "{statement_errors:#?}");
+    assert_eq!(statement_errors[0].code, errors[0].code);
+    assert_eq!(statement_errors[0].help, errors[0].help);
+    check_ok(
+        "program T; uses Std.Console, Std.Fs; begin discard Std.Fs.ReadText('input.txt'); end.",
+    );
+}
+
+#[test]
+fn removed_unwrap_free_call_suggests_the_native_method() {
     let errs = check_errors(
         "program T;\n\nbegin\n  const O: option of integer := Some(3);\n  const X: integer := Unwrap(O);\nend.",
     );
@@ -133,9 +159,13 @@ fn old_length_free_call_has_native_migration_hint() {
 
 #[test]
 fn removed_helpers_have_stable_native_hints() {
-    for (name, hint) in [
-        ("Length('hi')", "Value.Length"),
-        ("Contains('hi', 'h')", "Value.Contains"),
+    for (name, hint, corrected) in [
+        ("Length('hi')", "Value.Length", "'hi'.Length()"),
+        (
+            "Contains('hi', 'h')",
+            "Value.Contains",
+            "'hi'.Contains('h')",
+        ),
     ] {
         let errors = check_errors(&format!("program T; begin discard {name}; end."));
         assert_eq!(errors.len(), 1, "{errors:#?}");
@@ -146,6 +176,7 @@ fn removed_helpers_have_stable_native_hints() {
                 .is_some_and(|help| help.contains(hint)),
             "{errors:#?}"
         );
+        check_ok(&format!("program T; begin discard {corrected}; end."));
     }
 }
 

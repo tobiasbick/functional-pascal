@@ -55,8 +55,11 @@ Option, Result, records, enums, and unit interfaces preserve the same
 distinction. `Std.Tasks.StartTaskInGroup`
 and `StartSupervisedTask` return `task of T` for a function worker and `task`
 for a procedure worker. Group ownership is independent of later handle use;
-the [discard restriction](../functions/discard.md#task-handles-and-aggregates)
-still applies. See [Task groups](../../std/concurrency/task.md#task-groups).
+keep the returned handle in a binding even if only the group will observe
+completion. Leaving that binding unused does not detach the child. The
+[`discard` keyword](../functions/discard.md#task-handles-and-aggregates) rejects
+task handles and values containing them, including group-owned handles.
+See [Task groups](../../std/concurrency/task.md#task-groups).
 
 ## Waiting for a task
 

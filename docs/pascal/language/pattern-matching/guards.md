@@ -9,17 +9,11 @@ function Classify(N: integer): string;
 begin
   case N of
     when 0:
-      begin
-        return 'zero';
-      end;
+      return 'zero';
     when const N if N > 0:
-      begin
-        return 'positive';
-      end;
+      return 'positive';
     else
-      begin
-        return 'negative';
-      end;
+      return 'negative';
   end case;
 end function;
 ```
@@ -32,25 +26,15 @@ Guards work with all label types — values, ranges, destructuring, and enum pat
 ```pascal
 case S of
   when Shape.Circle(const R) if R > 10.0:
-    begin
-      WriteLn('Large circle');
-    end;
+    WriteLn('Large circle');
   when Shape.Circle(const R):
-    begin
-      WriteLn('Small circle');
-    end;
+    WriteLn('Small circle');
   when Shape.Rectangle(const W, const H) if W = H:
-    begin
-      WriteLn('Square');
-    end;
+    WriteLn('Square');
   when Shape.Rectangle(const W, const H):
-    begin
-      WriteLn('Rectangle');
-    end;
+    WriteLn('Rectangle');
   when Shape.Point:
-    begin
-      WriteLn('Point');
-    end;
+    WriteLn('Point');
 end case;
 ```
 
@@ -64,17 +48,11 @@ In scalar `case` arms, `const Name` with a guard binds the matched value:
 ```pascal
 case Value of
   when const N if N > 0:
-    begin
-      WriteLn('positive');
-    end;
+    WriteLn('positive');
   when const N if N < 0:
-    begin
-      WriteLn('negative');
-    end;
+    WriteLn('negative');
   else
-    begin
-      WriteLn('zero');
-    end;
+    WriteLn('zero');
 end case;
 ```
 

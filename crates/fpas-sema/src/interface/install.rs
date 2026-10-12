@@ -122,6 +122,10 @@ impl check::Checker {
         let artifact::InterfaceType::Record(record) = &exported.ty else {
             return;
         };
+        // Transparent aliases share one retained allocation for each original default.
+        if self.record_defaults.contains_key(&record.name) {
+            return;
+        }
         if !record
             .fields
             .iter()
@@ -135,11 +139,21 @@ impl check::Checker {
             .map(|field| {
                 (
                     field.name.clone(),
-                    field
-                        .default_value
-                        .as_ref()
-                        .map(field_default_to_expr)
-                        .map(std::sync::Arc::new),
+                    field.default_value.as_ref().map(|value| {
+                        let expression = std::sync::Arc::new(field_default_to_expr(value));
+                        let key = Self::expr_lookup_key(&expression);
+                        self.record_default_constants.insert(key, true);
+                        self.record_default_values.insert(
+                            key,
+                            match value {
+                                artifact::FieldDefaultValue::Scalar(value) => {
+                                    Some(artifact::RecordConstantField::Scalar(value.clone()))
+                                }
+                                artifact::FieldDefaultValue::OptionNone => None,
+                            },
+                        );
+                        expression
+                    }),
                 )
             })
             .collect();
@@ -214,18 +228,10 @@ fn field_default_to_expr(value: &artifact::FieldDefaultValue) -> Expr {
             artifact::ConstantValue::Real(bits) => Expr::Real(f64::from_bits(*bits), span),
             artifact::ConstantValue::Boolean(value) => Expr::Bool(*value, span),
             artifact::ConstantValue::String(value) => Expr::Str(value.clone(), span),
-            artifact::ConstantValue::EnumValue {
-                enum_name,
-                variant_name,
-                ..
-            } => Expr::Designator(fpas_parser::Designator {
-                parts: enum_name
-                    .split('.')
-                    .chain(std::iter::once(variant_name.as_str()))
-                    .map(|part| fpas_parser::DesignatorPart::Ident(part.to_string(), span))
-                    .collect(),
-                span,
-            }),
+            artifact::ConstantValue::EnumValue { backing_value, .. } => {
+                // The cached interface value retains enum identity; lowering needs its scalar.
+                Expr::Integer(*backing_value, span)
+            }
         },
     }
 }

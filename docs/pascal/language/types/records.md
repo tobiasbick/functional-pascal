@@ -168,6 +168,17 @@ scalar constant expressions or `None` for an optional field; transparent
 exported aliases preserve them. `None` also supports optional callable fields
 such as [handlers](../functions/first-class.md#optional-handlers).
 
+Exported scalar defaults are evaluated in their declaration environment and
+stored as values in the unit interface. A literal `3`, `1 + 2`, and a preceding
+scalar constant with value `3` therefore produce the same default in an importing
+program. Renaming an import alias or shadowing the original constant in the caller
+does not change that value. The same rule applies to scalar fields of generic records.
+
+A computed, aggregate, or unsuccessfully evaluated default on an exported record
+produces FP3014 at its source field. Supply such values explicitly at construction.
+Program-local and non-exported record defaults retain their existing declaration
+environment and may use preceding values and routines.
+
 ```pascal
 type Config = record
   Host: string := 'localhost';

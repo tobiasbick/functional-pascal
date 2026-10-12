@@ -193,7 +193,8 @@ Labels and endpoints are compile-time constants; runtime tests belong in `if`
 guards. A scalar binding arm (`when const N if N > 0:`) needs a guard.
 Case expressions produce one expression followed by `;` per arm and must cover
 every possible value. Scalar integer/string expressions need a fallback `else`;
-boolean expressions can enumerate both values. Scalar statements permit `else`
+boolean expressions need unguarded `true` and `false` arms or an `else` fallback.
+Scalar statements permit `else`
 and need not be exhaustive. Closed enum/Option/Result cases have stricter rules below.
 See [control flow](language/control-flow/README.md).
 
@@ -727,8 +728,9 @@ scope cancels and joins outstanding children before leaving. Called routines do 
 inherit the caller's lexical task ownership. Handles cannot escape their owning scope.
 A child's `Error(...)` result is an ordinary value; a child panic fails the scope.
 Inside a scope, a Result-returning child needs a handle so its result is handled;
-it cannot be started as a result-discarding `go` statement. Outside a scope, detached
-tasks have no automatic join: keep and wait for a handle when completion matters.
+it cannot be started as a `go` statement with no handle. A task started by `go`
+outside a scope has no lexical scope owner and no automatic join; its expression
+form still produces a waitable handle. Keep and wait for that handle when completion matters.
 
 Channels carry typed values. `CreateChannel(Capacity)` requires a positive capacity;
 `Send` and `Receive` may block and return Results. Coordinate sends/receives and close

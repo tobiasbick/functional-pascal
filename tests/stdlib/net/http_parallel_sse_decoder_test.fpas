@@ -17,7 +17,7 @@ begin
 end function;
 
 begin
-  var Tasks: array of task := [];
+  var Tasks: array of task of SseDecoder := [];
   for Index: integer := 1 to 128 do
     begin
       Tasks.Push(go CreateDecoder(Index));

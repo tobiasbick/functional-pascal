@@ -8,6 +8,6 @@ begin
 end function;
 
 begin
-  const T: task := go Greet();
+  const T: task of string := go Greet();
   AssertEquals('hello', Std.Tasks.Wait(T));
 end.

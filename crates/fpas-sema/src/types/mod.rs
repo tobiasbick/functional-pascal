@@ -245,6 +245,7 @@ impl std::fmt::Display for Ty {
             Ty::Option(inner) => write!(f, "Option of {inner}"),
             Ty::GenericParam(name, _) => write!(f, "{}", parameter_name(name)),
             Ty::Dict(k, v) => write!(f, "dict of {k} to {v}"),
+            Ty::Task(inner) if matches!(inner.as_ref(), Ty::Unit) => write!(f, "task"),
             Ty::Task(inner) => write!(f, "task of {inner}"),
             Ty::Error => write!(f, "<error>"),
         }

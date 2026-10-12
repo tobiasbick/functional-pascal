@@ -128,7 +128,7 @@ const N: integer := 3;
 const Work: function(): integer := function(): integer begin
   return N * 2;
 end function;
-const Handle: task := go Work();
+const Handle: task of integer := go Work();
 // Rejected: mutable capture
 var Count: integer := 0;
 const Inc: procedure() := procedure() begin

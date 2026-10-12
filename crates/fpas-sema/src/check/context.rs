@@ -190,6 +190,8 @@ pub struct Checker {
     pub(crate) binding_types: HashMap<(u32, usize), Ty>,
     /// Nested constructors may retain holes until all enclosing fields are checked.
     pub(crate) deferred_constructor_inference: usize,
+    /// Spawn argument/result checking, suspended while checking a separate routine body.
+    pub(crate) task_call_depth: usize,
     /// Full designators whose resolved symbol is an enum member.
     pub(crate) enum_members: HashSet<usize>,
     /// Call expressions resolved to enum variant constructors for local inference.
@@ -296,6 +298,7 @@ impl Checker {
             pattern_types: HashMap::new(),
             binding_types: HashMap::new(),
             deferred_constructor_inference: 0,
+            task_call_depth: 0,
             enum_members: HashSet::new(),
             enum_constructions: HashSet::new(),
             intrinsic_calls: IntrinsicCallMap::new(),

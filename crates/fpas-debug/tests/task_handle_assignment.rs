@@ -188,14 +188,14 @@ end function;
 
 function Work(): integer;
 begin
-  const Backup: task := go Seven();
-  var Current: task := go Nine();
+  const Backup: task of integer := go Seven();
+  var Current: task of integer := go Nine();
   const Marker: integer := 0;
   return Wait(Current);
 end function;
 
 begin
-  const Pending: task := go Work();
+  const Pending: task of integer := go Work();
   WriteLn(Wait(Pending));
 end.
 "#;

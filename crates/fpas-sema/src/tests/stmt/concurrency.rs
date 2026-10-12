@@ -4,6 +4,7 @@ use fpas_parser::{ParseDiagnostic, parse};
 
 mod groups;
 mod task_scopes;
+mod task_types;
 
 #[test]
 fn selection_send_rejects_task_bound_values() {
@@ -153,7 +154,7 @@ begin
 end function;
 
 begin
-  const Tsk: task := go Answer();
+  const Tsk: task of integer := go Answer();
   const Value: integer := Std.Tasks.Wait(Tsk);
 end.",
     );
@@ -172,7 +173,7 @@ begin
 end function;
 
 begin
-  const Tsk: task := go Answer();
+  const Tsk: task of integer := go Answer();
   const Value: string := Std.Tasks.Wait(Tsk);
 end.",
     );
@@ -376,8 +377,8 @@ begin
 end function;
 begin
   const Job: task of integer := go Seven();
-  const Inferred: task := go Seven();
-  const Total: integer := Doubled(Job) + First([Inferred]);
+  const Typed: task of integer := go Seven();
+  const Total: integer := Doubled(Job) + First([Typed]);
 end."#,
     );
 }
@@ -386,7 +387,7 @@ end."#,
 fn typed_tasks_reject_a_different_result_type() {
     for source in [
         "program T; uses Std.Tasks; function Seven(): integer; begin return 7; end function; begin const Job: task of string := go Seven(); end.",
-        "program T; uses Std.Tasks; function Seven(): integer; begin return 7; end function; function Name(Job: task of string): string; begin return Wait(Job); end function; begin const Job: task := go Seven(); const Text: string := Name(Job); end.",
+        "program T; uses Std.Tasks; function Seven(): integer; begin return 7; end function; function Name(Job: task of string): string; begin return Wait(Job); end function; begin const Job: task of integer := go Seven(); const Text: string := Name(Job); end.",
         "program T; uses Std.Tasks; function Count(Job: task of integer): string; begin return Wait(Job); end function; begin end.",
     ] {
         assert!(!check_errors(source).is_empty(), "{source}");

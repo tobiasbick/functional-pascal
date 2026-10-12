@@ -35,8 +35,8 @@ begin
   const SecondListener: Listener := Listen('127.0.0.1', 0).Unwrap();
   const FirstClient: Connection := Connect('127.0.0.1', ListenerLocalAddress(FirstListener).Unwrap().Port, 1000).Unwrap();
   const SecondClient: Connection := Connect('127.0.0.1', ListenerLocalAddress(SecondListener).Unwrap().Port, 1000).Unwrap();
-  const First: task := go BlockingRead(FirstListener, Token);
-  const Second: task := go BlockingRead(SecondListener, Token);
+  const First: task of boolean := go BlockingRead(FirstListener, Token);
+  const Second: task of boolean := go BlockingRead(SecondListener, Token);
   const Events: channel of integer := CreateChannel(1);
   var Started: integer := TimestampMillis();
   const Outcome: result of (integer, string) := ReceiveWithTimeout(Events, 100);
@@ -73,7 +73,7 @@ end function;
 begin
   const Requests: channel of integer := CreateChannel(1);
   const Replies: channel of integer := CreateChannel(1);
-  const Worker: task := go Doubler(Requests, Replies);
+  const Worker: task of integer := go Doubler(Requests, Replies);
   for Index: integer := 1 to 50 do
   begin
     const Sent: boolean := Send(Requests, Index).Unwrap();
@@ -135,10 +135,10 @@ begin
   const FirstClient: Connection := Join(FirstBusy);
   const SecondClient: Connection := Join(SecondBusy);
   const ReaderClient: Connection := Join(ReaderListener);
-  const First: task := go Busy(FirstBusy, Token);
-  const Second: task := go Busy(SecondBusy, Token);
-  const ReaderTask: task := go Reader(ReaderListener, Token);
-  const QuickTask: task := go Quick();
+  const First: task of boolean := go Busy(FirstBusy, Token);
+  const Second: task of boolean := go Busy(SecondBusy, Token);
+  const ReaderTask: task of boolean := go Reader(ReaderListener, Token);
+  const QuickTask: task of integer := go Quick();
   const Started: integer := TimestampMillis();
   if Wait(QuickTask) <> 7 then panic('quick'); end if;
   const Sent: integer := SendBytes(ReaderClient, [42]).Unwrap();

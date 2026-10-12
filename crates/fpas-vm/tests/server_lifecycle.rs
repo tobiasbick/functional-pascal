@@ -34,7 +34,7 @@ fn embedding_does_not_implicitly_authorize_process_control() {
 
 #[test]
 fn stop_rejects_new_group_work() {
-    let error = vm("program Test; uses Std.Server, Std.Tasks; begin\n      const Life: ServerLifetime := CreateLifetime(10, false).Unwrap();\n      discard RequestStop(Life);\n      const WorkerTask: task := StartTaskInGroup(GetWorkGroup(Life), function(Token: CancellationToken): boolean begin return true; end function);\n      end.").run().unwrap_err();
+    let error = vm("program Test; uses Std.Server, Std.Tasks; begin\n      const Life: ServerLifetime := CreateLifetime(10, false).Unwrap();\n      discard RequestStop(Life);\n      const WorkerTask: task of boolean := StartTaskInGroup(GetWorkGroup(Life), function(Token: CancellationToken): boolean begin return true; end function);\n      end.").run().unwrap_err();
     assert!(
         error.message.contains("closing or cancelled"),
         "{}",

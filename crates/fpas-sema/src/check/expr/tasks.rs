@@ -11,7 +11,9 @@ impl Checker {
     ///
     /// **Documentation:** `docs/pascal/language/concurrency/go.md`.
     pub(in crate::check) fn check_go_expr(&mut self, inner: &Expr, span: fpas_lexer::Span) -> Ty {
+        let previous_error_count = self.errors.len();
         self.check_go_scope_ownership(span);
+        self.task_call_depth += 1;
         let inner_ty = match inner {
             Expr::Call {
                 designator,
@@ -47,6 +49,17 @@ impl Checker {
                 Ty::Error
             }
         };
+        self.task_call_depth -= 1;
+
+        if self.errors.len() == previous_error_count && crate::types::needs_expected_type(&inner_ty)
+        {
+            self.error_with_code(
+                fpas_diagnostics::codes::SEMA_TYPE_MISMATCH,
+                "Cannot determine the spawned function's result type",
+                "First bind unresolved arguments to explicit types, or use a callable with an explicit result type.",
+                span,
+            );
+        }
 
         match inner {
             Expr::Call {

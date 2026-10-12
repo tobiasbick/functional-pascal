@@ -29,7 +29,7 @@ begin
   return 7;
 end function;
 begin
-  const T: task := go N();
+  const T: task of integer := go N();
   WriteLn(Wait(T));
 end.
 ```
@@ -43,7 +43,10 @@ After `uses Std.Tasks;` use short names (`Wait`, `Cancel`, …) or qualified (`S
 
 ## Quick reference
 
-`T` below is the task result type or the channel element type, depending on the operation.
+T below is the function-task result type or the channel element type.
+Bare `task` means a procedure task with no result. Task-aware operations also
+accept that procedure form as described below; it is never an erased function
+handle. The polymorphic task operations take positional arguments only.
 
 | Kind | Name | Notes |
 |------|------|--------|
@@ -54,8 +57,8 @@ After `uses Std.Tasks;` use short names (`Wait`, `Cancel`, …) or qualified (`S
 | type | `TaskFailureKind` | `ReturnedError`, `Panicked`, `RuntimeError`, or `Cancelled` |
 | type | `TaskFailure` | child identity, failure kind, message, diagnostic code, and source position |
 | function | `CreateTaskGroup(): TaskGroup` | creates a group owned by the calling task |
-| function | `StartTaskInGroup(Group: TaskGroup; Work: function(Token: CancellationToken): T): task` | starts a retained child; also accepts a procedure with the same token parameter |
-| function | `StartSupervisedTask(Group: TaskGroup; Work: function(Token: CancellationToken): T; RetryLimit: integer; BackoffMillis: integer): task` | starts one group-owned task with bounded retries; also accepts a procedure |
+| function | `StartTaskInGroup<T>(Group: TaskGroup; Work: function(Token: CancellationToken): T): task of T` | starts a retained function child; a procedure worker returns task |
+| function | `StartSupervisedTask<T>(Group: TaskGroup; Work: function(Token: CancellationToken): T; RetryLimit: integer; BackoffMillis: integer): task of T` | starts a function task with bounded retries; a procedure worker returns task |
 | function | `GetTaskGroupToken(Group: TaskGroup): CancellationToken` | returns the group-owned cancellation token |
 | function | `CancelTaskGroup(Group: TaskGroup): boolean` | requests cancellation without joining; true only for the first request |
 | function | `CloseTaskGroup(Group: TaskGroup): array of TaskFailure` | cancels, joins registered children, releases their results, and returns failures |
@@ -63,7 +66,7 @@ After `uses Std.Tasks;` use short names (`Wait`, `Cancel`, …) or qualified (`S
 | function | `TryCloseCompletedTaskGroup(Group: TaskGroup): option of array of TaskFailure` | closes without cancellation only when every child is already terminal |
 | function | `ReceiveCase(Queue: channel of T; Callback: procedure(Outcome: result of (T, string))): WaitCase` | describes one receive and its typed delivery callback |
 | function | `SendCase(Queue: channel of T; Value: T; Callback: procedure(Outcome: result of (boolean, string))): WaitCase` | describes one send without enqueueing its value |
-| function | `TaskCase(Handle: task; Callback: procedure()): WaitCase` | describes non-consuming task completion |
+| function | `TaskCase<T>(Handle: task of T; Callback: procedure()): WaitCase` | observes function-task completion; also accepts a procedure-task handle |
 | function | `TimerCase(Milliseconds: integer; Callback: procedure()): WaitCase` | describes a timer relative to `Select` entry |
 | function | `CancellationCase(Token: CancellationToken; Callback: procedure()): WaitCase` | describes observation of cancellation |
 | function | `Select(Cases: array of WaitCase): integer` | commits one operation, runs its callback, then returns its input index |
@@ -82,11 +85,11 @@ After `uses Std.Tasks;` use short names (`Wait`, `Cancel`, …) or qualified (`S
 | function | `ReceiveWithCancellation(Queue: channel of T; Token: CancellationToken): result of (T, string)` | receive that also observes cancellation |
 | function | `ReceiveWithTimeout(Queue: channel of T; TimeoutMillis: integer): result of (T, string)` | receives before a relative monotonic deadline |
 | function | `CloseChannel(Queue: channel of T): boolean` | closes and wakes waiters; true only for the first close |
-| function | `Wait(Handle: task): T` | blocks until the task finishes; **consumes** the handle’s result once |
-| procedure | `WaitAll(Tasks: array of task)` | blocks until every task has completed; does **not** consume results — you may still `Wait` each handle afterward |
-| function | `WaitAny(Tasks: array of task): integer` | returns the lowest completed input index without consuming results |
-| function | `WaitAnyWithTimeout(Tasks: array of task; TimeoutMillis: integer): result of (integer, string)` | completion index or a distinct timeout error |
-| function | `WaitAnyWithCancellation(Tasks: array of task; Token: CancellationToken): result of (integer, string)` | completion index or a distinct cancellation error |
+| function | `Wait<T>(Handle: task of T): T` | consumes a function-task result once; on task it is a procedure call without a value |
+| procedure | `WaitAll<T>(Tasks: array of task of T)` | observes all completions; also accepts array of task; does not consume results |
+| function | `WaitAny<T>(Tasks: array of task of T): integer` | observes the lowest completed index; also accepts array of task |
+| function | `WaitAnyWithTimeout<T>(Tasks: array of task of T; TimeoutMillis: integer): result of (integer, string)` | completion index or timeout; also accepts array of task |
+| function | `WaitAnyWithCancellation<T>(Tasks: array of task of T; Token: CancellationToken): result of (integer, string)` | completion index or cancellation; also accepts array of task |
 
 ---
 
@@ -129,8 +132,13 @@ to see cooperative stop and an ordinary error collected by the same group.
 
 `CreateTaskGroup` creates an empty group owned by the calling task. `StartTaskInGroup` registers
 one child before publishing its task handle. The worker receives the group's `CancellationToken`
-as its only argument and may be a procedure or a function. Captures must be immutable. The task
+as its only by-value argument and may be a procedure or a function. A `var`
+parameter is rejected. The worker's callable type must be fully instantiated;
+bind a generic routine to an explicit `function(Token: CancellationToken): T`
+or `procedure(Token: CancellationToken)` type before starting it. Captures must be immutable. The task
 retains the routine's result type, so `Wait` retrieves its value using the existing task rules.
+Function workers return `task of T`; procedure workers return `task`. Their
+declarations, stored fields, and containers use those same fixed handle types.
 A worker returning a top-level `result of (T, E)` must use `string` for `E`.
 
 The creator and registered children may start children in an open group. Unrelated tasks may not.
@@ -323,12 +331,17 @@ task-bound values with mutable captures cannot cross the channel boundary. See
 
 ---
 
-## `function Wait(Handle: task): T`
+## Waiting for one task
 
 Blocks until the spawned call completes, then returns its value. The task result is **consumed**: calling `Wait` again on the same logical completion is a runtime error.
 
+For a `task of T` handle this is a function returning T. For a `task` handle
+it is a procedure operation: `Wait(Handle);` completes without a value.
+Using that procedure form as an expression is rejected, including inside an
+aggregate or another call's arguments.
+
 ```pascal
-const T: task := go Square(6);
+const T: task of integer := go Square(6);
 WriteLn(Wait(T));
 ```
 
@@ -336,12 +349,17 @@ WriteLn(Wait(T));
 
 ---
 
-## `procedure WaitAll(Tasks: array of task)`
+## Waiting for all tasks
 
 Blocks until every task in the array has finished. This is a **barrier only**; it does not pop return values. Typical use: synchronize before reading results with `Wait`, or when you only need to know that all work finished.
 
+The array is homogeneous: `array of task` for procedures or `array of task of T`
+for functions with one result type. Differently typed function/procedure handles
+cannot share a task array. Use a scope to join differently typed children, or
+wait on separately typed handles outside a shared scope.
+
 ```pascal
-const Ta: task := go Work(1);
+const Ta: task := go Work(1); // Work is a procedure.
 const Tb: task := go Work(2);
 WaitAll([Ta, Tb]);
 // still valid:
@@ -353,11 +371,14 @@ An empty array completes immediately.
 
 ---
 
-## `function WaitAny(Tasks: array of task): integer`
+## Waiting for any task
 
 Waits for at least one successful task completion and returns its zero-based input position.
 The array must contain between 1 and 1,048,576 retained task handles. It follows the same
 task-array typing rules as `WaitAll`; duplicate handles are allowed.
+For mixed-result completion selection, construct TaskCase values and use
+Select. This observes completion without converting the original typed
+handles to an erased task type.
 
 The runtime validates every identity before selecting a result. Invalid identities take precedence
 over task failures; visible failures take precedence over successful completion. Among failures,
@@ -415,6 +436,9 @@ that channel's element type, so one selection can safely combine differently typ
   The value must match the channel type and cannot contain a task-bound callable, as with `Send`.
 - `TaskCase` observes completion without consuming its value. The callback or caller can still use
   `Wait` under its existing single-consumption rule. Consumed successful tasks still count as complete.
+  It accepts both `task` and `task of T`; the callback has no payload. Cases for
+  different task result types may share an array of WaitCase. Keep the original
+  typed handles for Wait, and do not use a case to bypass scope escape rules.
 - `TimerCase` requires non-negative milliseconds. All timers in a selection share the monotonic
   start at `Select` entry; time spent holding an unused case does not count toward its deadline.
 - `CancellationCase` is ready when its token is cancelled. Selecting cancellation does not cancel

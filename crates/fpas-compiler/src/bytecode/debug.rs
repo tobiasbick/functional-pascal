@@ -246,6 +246,13 @@ fn type_name(program: &Program, ty: TypeId, depth: usize) -> String {
             .enum_layout(*layout)
             .map_or_else(|| "enum".to_string(), |layout| layout.name.clone()),
         IrType::Cell(inner) => type_name(program, *inner, depth + 1),
+        IrType::Task(inner)
+            if program
+                .ty(*inner)
+                .is_some_and(|ty| matches!(ty.kind, IrType::Unit)) =>
+        {
+            "task".into()
+        }
         IrType::Task(inner) => format!("task of {}", type_name(program, *inner, depth + 1)),
         IrType::Channel(inner) => format!("channel of {}", type_name(program, *inner, depth + 1)),
         IrType::Reference(inner) => format!("var {}", type_name(program, *inner, depth + 1)),

@@ -53,7 +53,7 @@ end function;
 
 function RunTask(Values: array of integer; Iterations: integer): integer;
 begin
-  const Job: task := go RunCallbacks(Values, Iterations);
+  const Job: task of integer := go RunCallbacks(Values, Iterations);
   return Wait(Job);
 end function;
 

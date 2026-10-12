@@ -45,7 +45,7 @@ uses Std.Tasks;
 begin
   const Group: TaskGroup := CreateTaskGroup();
   const Queue: channel of integer := CreateChannel(1);
-  const Child: task := StartTaskInGroup(Group, function(Token: CancellationToken): integer
+  const Child: task of integer := StartTaskInGroup(Group, function(Token: CancellationToken): integer
   begin
     var Total: integer := 0;
     for Item: integer := 1 to 2 do Total := Total + (RECEIVE_OPERATION).Unwrap(); end for;

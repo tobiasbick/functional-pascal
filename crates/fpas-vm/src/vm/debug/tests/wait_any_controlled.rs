@@ -16,7 +16,7 @@ begin
   return 0;
 end function;
 begin
-  const T: task := go Work();
+  const T: task of integer := go Work();
   case WaitAnyWithTimeout([T], 0) of
     when Ok(_): panic('pending task ready');
     when Error(const Message): if Message <> 'Task wait timed out' then panic(Message); end if;
@@ -26,7 +26,7 @@ begin
     when Error(const Message): if Message <> 'Task wait timed out' then panic(Message); end if;
   end case;
   const Source: CancellationSource := CreateCancellationSource();
-  const Canceller: task := go CancelLater(Source);
+  const Canceller: task of integer := go CancelLater(Source);
   case WaitAnyWithCancellation([T], GetCancellationToken(Source)) of
     when Ok(_): panic('not cancelled');
     when Error(const Message): if Message <> 'Task wait was cancelled' then panic(Message); end if;
@@ -71,7 +71,7 @@ begin
   return 7;
 end function;
 begin
-  const T: task := go Work();
+  const T: task of integer := go Work();
   WaitAll([T]);
   case WaitAnyWithTimeout([T], 0) of
     when Ok(const Index): if Index <> 0 then panic('index'); end if;

@@ -9,7 +9,7 @@ begin
   const Group: TaskGroup := CreateTaskGroup();
   const Token: CancellationToken := GetTaskGroupToken(Group);
   const Gate: channel of integer := CreateChannel(1);
-  const Child: task := StartTaskInGroup(Group, function(Stop: CancellationToken): result of (integer, string) begin
+  const Child: task of result of (integer, string) := StartTaskInGroup(Group, function(Stop: CancellationToken): result of (integer, string) begin
     discard Receive(Gate).Unwrap();
     if not IsCancellationRequested(Stop) then
       begin

@@ -20,12 +20,12 @@ begin
 end function;
 function Parent(): integer;
 begin
-  const T: task := go Child();
+  const T: task of integer := go Child();
   if WaitAny([T]) <> 0 then panic('child index'); end if;
   return Wait(T);
 end function;
 begin
-  const T: task := go Parent();
+  const T: task of integer := go Parent();
   if WaitAny([T]) <> 0 then panic('parent index'); end if;
   if Wait(T) <> 9 then panic('result'); end if;
 end."#,

@@ -12,8 +12,8 @@ begin
   Items.Push(3);
   AssertEquals(3, Items.Pop());
   AssertEquals(2, Items.Length());
-  const Job: task := go Add(20, 22);
+  const Job: task of integer := go Add(20, 22);
   AssertEquals(42, Wait(Job));
-  const IntrinsicTask: task := go Std.Math.Abs(-2);
+  const IntrinsicTask: task of integer := go Std.Math.Abs(-2);
   AssertEquals(2, Wait(IntrinsicTask));
 end.

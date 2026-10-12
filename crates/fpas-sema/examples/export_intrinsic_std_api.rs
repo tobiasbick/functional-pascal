@@ -84,7 +84,7 @@ fn documentation_rows(root: &Path) -> io::Result<HashMap<(String, String), Docum
                 continue;
             };
             let name = signature
-                .split(['(', ':'])
+                .split(['(', ':', '<'])
                 .next()
                 .unwrap_or(signature)
                 .trim()

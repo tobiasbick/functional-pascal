@@ -69,7 +69,7 @@ fn indexed_callables_work_as_retained_and_detached_tasks() {
     let source = program(
         "const Reports: array of Reporter := [Report];
          const Output: channel of integer := CreateChannel(1);
-         const Job: task := go Readers[0](21);
+         const Job: task of integer := go Readers[0](21);
          if Wait(Job) <> 42 then panic('task result'); end if;
          go Reports[0](Output);
          if ReceiveWithTimeout(Output, 1000).Unwrap() <> 42 then panic('detached'); end if;

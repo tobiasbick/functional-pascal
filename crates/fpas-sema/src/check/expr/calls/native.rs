@@ -127,7 +127,12 @@ impl Checker {
             }
             let inferred =
                 self.check_function_call_refs(operation.name, &signature, &all_args, span);
-            Self::substitute_type_params(&signature.return_type, &inferred)
+            self.check_call_result_type(
+                &signature.return_type,
+                &signature.type_params,
+                &inferred,
+                span,
+            )
         };
         for key in cached {
             self.prechecked_receivers.remove(&key);

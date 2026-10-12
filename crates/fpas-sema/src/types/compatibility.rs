@@ -76,8 +76,14 @@ impl Ty {
             }
             // Option covariance
             (Ty::Option(a), Ty::Option(b)) => a.compatible_with_mode(b, generic_wildcard),
-            // Task covariance (inner type may be erased as Error)
-            (Ty::Task(a), Ty::Task(b)) => a.compatible_with_mode(b, generic_wildcard),
+            // Task handles preserve the spawned routine's result type.
+            // Documentation: docs/pascal/language/concurrency/task-handles.md
+            (Ty::Task(a), Ty::Task(b)) => {
+                (a.is_error()
+                    || b.is_error()
+                    || matches!(a.as_ref(), Ty::Unit) == matches!(b.as_ref(), Ty::Unit))
+                    && a.compatible_with_mode(b, generic_wildcard)
+            }
             // Dict covariance
             (Ty::Dict(k1, v1), Ty::Dict(k2, v2)) => {
                 k1.compatible_with_mode(k2, generic_wildcard)

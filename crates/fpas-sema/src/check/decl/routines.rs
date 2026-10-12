@@ -157,6 +157,7 @@ impl Checker {
         return_type: Option<Ty>,
         input: super::super::contracts::RoutineBody<'_>,
     ) -> CaptureAnalysis {
+        let previous_task_call_depth = std::mem::replace(&mut self.task_call_depth, 0);
         let super::super::contracts::RoutineBody {
             body,
             requires,
@@ -281,6 +282,7 @@ impl Checker {
         self.scopes.function_ctx = prev_ctx;
         self.scopes.pop_scope();
         let result = self.discard_results.pop().unwrap_or(false);
+        self.task_call_depth = previous_task_call_depth;
         self.routine_discard_results
             .insert(name.to_string(), result);
         self.scopes.set_discard_info(

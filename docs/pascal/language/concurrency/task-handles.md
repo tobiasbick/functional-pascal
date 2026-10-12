@@ -1,17 +1,38 @@
 # Task handles
 
-The `task` type represents a handle to a running task. Assign the result of a **`go` expression** to capture it. For type checking, the handle carries the spawned call’s result type **`T`** (for a procedure spawn, **`T`** is the empty / unit result); at runtime the value is an opaque task id.
+A retained task handle has one fixed type determined by the spawned routine:
+
+- `task` is a procedure-task handle with no result.
+- `task of T` is a function-task handle whose result has type T.
+
+At runtime both are opaque task identities. Bare `task` never infers a
+function result and is not an erased handle. Use the same annotation for
+bindings, parameters, fields, aliases, containers, and exported signatures.
 
 ```pascal
-const T: task := go ComputeSomething(Data);
+const Calculation: task of integer := go Compute(100);
+const Worker: task := go RunWorker();
+const Value: integer := Wait(Calculation);
+Wait(Worker);
 ```
 
 ## Typed task handles
 
-Write `task of T` where a declaration has no initializer to infer the result type from, such as a
-parameter, a record field, or an array element type. `Wait` on a `task of T` returns `T`, and a handle
-whose spawned call returns another type is rejected. A bare `task` keeps inferring `T` from its
-initializer. `task` is a reserved word, so it cannot name a variable, field, or unit segment.
+The spawned call and calls supplying its arguments must have known result
+types before a handle is created. Inline callback bodies follow their own
+ordinary routine checks.
+If an argument such as `None` leaves that type unknown, first bind the argument
+to an explicit type. A receiving task annotation does not specialize the call.
+Generic parameters appearing in the spawned result must be inferred from
+arguments or bound through an explicit callable type. An enclosing routine's
+own type parameter remains valid when passed as an argument.
+
+In the fragment above, Compute is an integer-returning function and RunWorker
+is a procedure. A function-task handle cannot be assigned to `task`, and a
+procedure-task handle cannot supply a function result. `Wait` on `task of T`
+returns T. The ordinary type checks preserve the result type; no implicit
+conversion occurs through the handle. `task` is reserved and cannot name a
+variable, field, or unit segment.
 
 ```pascal
 function Doubled(Job: task of integer): integer;
@@ -19,11 +40,23 @@ begin
   return Wait(Job) * 2;
 end function;
 
+procedure Join(Job: task);
+begin
+  Wait(Job);
+end procedure;
+
 const Jobs: array of task of result of (boolean, string) := [go Connect(), go Serve()];
 ```
 
-`Std.Tasks.StartTaskInGroup` and `StartSupervisedTask` also return typed task handles. Their explicit
-group retains ownership even when the caller discards a handle; see [Task groups](../../std/concurrency/task.md#task-groups).
+Generic parameters may use `task of T` for function tasks; they cannot infer
+an internal empty result from a procedure task. A generic over the whole
+handle, such as `Identity<T>(Value: T): T`, may still accept `task` as T.
+Option, Result, records, enums, and unit interfaces preserve the same
+distinction. `Std.Tasks.StartTaskInGroup`
+and `StartSupervisedTask` return `task of T` for a function worker and `task`
+for a procedure worker. Group ownership is independent of later handle use;
+the [discard restriction](../functions/discard.md#task-handles-and-aggregates)
+still applies. See [Task groups](../../std/concurrency/task.md#task-groups).
 
 ## Waiting for a task
 
@@ -32,16 +65,20 @@ save their continuation and release the pool thread; the main task waits for sch
 while pool workers run queued work. See [Waiting and execution](../../std/concurrency/task.md#waiting-and-execution).
 
 ```pascal
-const T: task := go Compute(100);
+const T: task of integer := go Compute(100);
 const TaskValue: integer := Wait(T);
 ```
 
-For a **procedure** task, `Wait` completes when the procedure finishes; **`T`** is the unit type in the type system.
+For a procedure task, Wait is a procedure operation: write `Wait(Job);` as
+a statement. It cannot supply a value, including inside Some, Ok, an array,
+or another call's arguments. No public unit/void value type is needed.
 
 ## Waiting for multiple tasks
 
-`Std.Tasks.WaitAll` waits until all tasks in the array complete, using the same cooperative
-child-wait mechanism as `Wait`:
+WaitAll and WaitAny, including controlled WaitAny variants, accept homogeneous
+arrays: either `array of task` or `array of task of T` with one result type.
+They observe completion without consuming results. Mixed task arrays are
+rejected. WaitAll uses the same cooperative child-wait mechanism as Wait:
 
 ```pascal
 WaitAll([T1, T2, T3]);
@@ -57,13 +94,18 @@ Per-symbol reference (parameters, edge cases, `Wait` vs `WaitAll`, runtime error
 
 | Function | Signature | Description |
 |----------|-----------|-------------|
-| `Wait` | `(Handle: task): T` | Wait for a task and return its result |
-| `WaitAll` | `(Tasks: array of task)` | Wait for all tasks to complete |
+| `Wait` | `(Handle: task of T): T` | Consume a function task's result |
+| `Wait` | `(Handle: task)` | Complete a procedure task without a value |
+| `WaitAll` | `(Tasks: array of task of T)` or `(Tasks: array of task)` | Observe all homogeneous task completions |
 
-Here, **`T`** is the return type of the spawned call (unit for a procedure).
+Here T is the function's return type. The procedure form has no value result.
 
-For non-consuming completion observation, use [WaitAny and its controlled variants](../../std/concurrency/task.md#function-waitanytasks-array-of-task-integer).
-For one event across tasks, channels, timers, and cancellation, use [mixed-source selection](../../std/concurrency/task.md#mixed-source-selection).
+For non-consuming completion observation, use [WaitAny and its controlled variants](../../std/concurrency/task.md#waiting-for-any-task).
+For differently typed task results, use [TaskCase and Select](../../std/concurrency/task.md#mixed-source-selection)
+and keep the original typed handles for result retrieval. A task scope joins
+all its children even when they return different types; outside a shared
+scope, wait on the separately typed handles. Observation cannot bypass scope
+ownership or expose an erased task result.
 
 ## See also
 

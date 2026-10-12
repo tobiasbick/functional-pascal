@@ -93,7 +93,7 @@ fn grammar_task_call_targets_pass_cli_check_and_return_results() {
         let source = program(&format!(
             "const Instance: Worker := Make();\n\
              const Callable: function(): integer := Direct;\n\
-             const Job: task := go {target};\n\
+             const Job: task of integer := go {target};\n\
              const Answer: integer := Wait(Job);\nWriteLn(Answer);"
         ));
         let (exit, stdout, stderr) = cli("check", &source);
@@ -146,7 +146,7 @@ fn grammar_postfix_procedure_tasks_deliver_their_side_effects() {
 fn grammar_postfix_tasks_reject_writable_arguments() {
     for spawn in [
         "go Make().Increment(var Count);",
-        "const Job: task := go Make().Increment(var Count);",
+        "const Job: task of integer := go Make().Increment(var Count);",
     ] {
         let source = program(&format!("var Count: integer := 0; {spawn}"));
         let (exit, stdout, stderr) = cli("check", &source);
@@ -168,7 +168,7 @@ fn grammar_non_call_task_targets_fail_cli_check_with_fp2005() {
         "Make().Answer() + 1",
         "(Make().Answer())",
     ] {
-        let source = program(&format!("const Job: task := go {target};"));
+        let source = program(&format!("const Job: task of integer := go {target};"));
         let (exit, stdout, stderr) = cli("check", &source);
         assert_eq!(exit, 1, "{target}\n{stderr}");
         assert!(stdout.is_empty(), "{target}\n{stdout}");

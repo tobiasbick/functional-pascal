@@ -161,7 +161,7 @@ public procedure Render(
   Palette: PaletteKind
 );
 begin
-  var Tasks: array of task := [];
+  var Tasks: array of task of array of PixelSample := [];
   for Py: integer := 0 to Height - 1 do
     begin
       Tasks.Push(go ComputeRow(Py, Width, Height, XMin, XMax, YMin, YMax, MaxIter));

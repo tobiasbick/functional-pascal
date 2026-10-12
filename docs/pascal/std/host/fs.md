@@ -7,7 +7,7 @@ program Example;
 uses Std.Fs, Std.Tasks;
 
 begin
-  const ReadJob: task := go ReadText('input.txt');
+  const ReadJob: task of result of (string, string) := go ReadText('input.txt');
   const Text: string := Std.Tasks.Wait(ReadJob).Unwrap();
 end.
 ```

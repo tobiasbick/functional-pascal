@@ -89,7 +89,10 @@ fn only_direct_go_discard_suggests_fire_and_forget() {
     for (body, suggests_go) in [
         ("discard go Work();", true),
         ("discard (go Work());", true),
-        ("const Job: task := go Work(); discard Job;", false),
+        (
+            "const Job: task of integer := go Work(); discard Job;",
+            false,
+        ),
         ("discard Spawn();", false),
     ] {
         let errors = check_errors(&format!(
@@ -204,7 +207,7 @@ fn direct_and_transitive_task_captures_are_rejected() {
     let errors = check_errors(
         "program T; uses Std.Tasks;
       function Work(): integer; begin return 1; end function;
-      begin const Job: task := go Work();
+      begin const Job: task of integer := go Work();
       const GetValue: function(): integer := function(): integer begin return Wait(Job); end function;
       const Outer: function(): integer := function(): integer begin return GetValue(); end function;
       discard GetValue; discard Outer; discard [Outer]; end.",

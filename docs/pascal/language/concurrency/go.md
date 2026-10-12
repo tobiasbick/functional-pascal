@@ -6,7 +6,8 @@ Formal syntax: [`grammar.ebnf`](../../../specs/grammar.ebnf) (`go_call`, `go_stm
 
 ## Expression form (handle retained)
 
-Use `go` as an expression and assign it to capture a `task` handle:
+Use `go` as an expression and assign it to capture a handle: `task of T` for
+a function returning T, or `task` for a procedure:
 
 ```pascal
 program TaskExample;
@@ -19,7 +20,7 @@ begin
 end function;
 
 begin
-  const T: task := go Worker();
+  const T: task of integer := go Worker();
   const R: integer := Wait(T);
   WriteLn(R);
 end.

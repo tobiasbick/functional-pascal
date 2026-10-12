@@ -10,7 +10,7 @@ mod wait_any;
 #[test]
 fn task_spawn_with_arguments_keeps_loop_branch_addresses_aligned() {
     assert_succeeds(
-        "program RegisterTaskArgumentLoop;\nuses Std.Tasks;\nfunction Worker(Value: integer): integer;\nbegin\n  return Value + 1;\nend function;\nbegin\n  var Tasks: array of task := [];\n  for Index: integer := 1 to 8 do\n  begin\n    Tasks.Push(go Worker(Index));\n  end; end for;\n  WaitAll(Tasks);\n  if Tasks.Length() <> 8 then panic('task loop count mismatch'); end if;\nend.",
+        "program RegisterTaskArgumentLoop;\nuses Std.Tasks;\nfunction Worker(Value: integer): integer;\nbegin\n  return Value + 1;\nend function;\nbegin\n  var Tasks: array of task of integer := [];\n  for Index: integer := 1 to 8 do\n  begin\n    Tasks.Push(go Worker(Index));\n  end; end for;\n  WaitAll(Tasks);\n  if Tasks.Length() <> 8 then panic('task loop count mismatch'); end if;\nend.",
     );
 }
 
@@ -27,7 +27,7 @@ begin
 end function;
 
 begin
-  const T: task := go Add(20, 22);
+  const T: task of integer := go Add(20, 22);
   Std.Console.WriteLn(Std.Tasks.Wait(T));
 end.",
     );
@@ -74,7 +74,7 @@ begin
 end function;
 
 begin
-  const T: task := go Work();
+  const T: task of integer := go Work();
   if Std.Tasks.Wait(T) <> 42 then panic('task state was not restored'); end if;
 end.",
     );
@@ -94,7 +94,7 @@ begin
 end function;
 
 begin
-  const A: task := go Work(42);
+  const A: task of integer := go Work(42);
   discard Std.Tasks.Wait(A);
 end.",
     );
@@ -132,7 +132,7 @@ begin
     begin
       const Source: Std.Tasks.CancellationSource := Std.Tasks.CreateCancellationSource();
       const Token: Std.Tasks.CancellationToken := Std.Tasks.GetCancellationToken(Source);
-      const Waiting: task := go WaitForCancellation(ListenerValue, Token);
+      const Waiting: task of string := go WaitForCancellation(ListenerValue, Token);
       Std.Time.Sleep(50);
       if not Std.Tasks.Cancel(Source) then panic('first cancellation did not change state'); end if;
       if Std.Tasks.Wait(Waiting) <> 'Network accept cancelled' then
@@ -160,8 +160,8 @@ begin
 end function;
 
 begin
-  const A: task := go Work(20);
-  const B: task := go Work(22);
+  const A: task of integer := go Work(20);
+  const B: task of integer := go Work(22);
   Std.Tasks.WaitAll([A, B]);
   discard Std.Tasks.Wait(A);
   discard Std.Tasks.Wait(B);
@@ -187,7 +187,7 @@ end function;
 
 begin
   const Work: function(): integer := Make();
-  const T: task := go Work();
+  const T: task of integer := go Work();
   discard Std.Tasks.Wait(T);
 end.";
     let error = run_program(source).expect_err("runtime must reject task-bound closure");
@@ -224,7 +224,7 @@ end function;
 
 begin
   const Messages: channel of integer := CreateChannel(1);
-  const Producer: task := go Produce(Messages);
+  const Producer: task of boolean := go Produce(Messages);
   if Take(Messages) <> 20 then panic('first channel value was not FIFO'); end if;
   if Take(Messages) <> 22 then panic('second channel value was not FIFO'); end if;
   if not Wait(Producer) then panic('channel close was not first'); end if;
@@ -362,14 +362,14 @@ begin
     when Error(const Message): panic(Message);
   end case;
   const SendSource: CancellationSource := CreateCancellationSource();
-  const Sending: task := go BlockedSend(Full, GetCancellationToken(SendSource));
+  const Sending: task of string := go BlockedSend(Full, GetCancellationToken(SendSource));
   Sleep(20);
   discard Cancel(SendSource);
   if Wait(Sending) <> 'Channel send was cancelled' then panic('send cancellation mismatch'); end if;
 
   const Empty: channel of integer := CreateChannel(1);
   const ReceiveSource: CancellationSource := CreateCancellationSource();
-  const Receiving: task := go BlockedReceive(Empty, GetCancellationToken(ReceiveSource));
+  const Receiving: task of string := go BlockedReceive(Empty, GetCancellationToken(ReceiveSource));
   Sleep(20);
   discard Cancel(ReceiveSource);
   if Wait(Receiving) <> 'Channel receive was cancelled' then

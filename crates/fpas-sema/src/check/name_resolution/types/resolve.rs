@@ -116,7 +116,7 @@ impl Checker {
             "real" => Ty::Real,
             "boolean" => Ty::Boolean,
             "string" => Ty::String,
-            "task" => Ty::Task(Box::new(Ty::Error)),
+            "task" => Ty::Task(Box::new(Ty::Unit)),
             _ => {
                 if let Some(override_ty) = self.resolve_collected_type(&name) {
                     return override_ty;

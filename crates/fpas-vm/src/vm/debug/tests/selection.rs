@@ -17,7 +17,7 @@ begin
 end function;
 function Parent(): integer;
 begin
-  const T: task := go Child();
+  const T: task of integer := go Child();
   var Seen: integer := 0;
   const C: WaitCase := TaskCase(T, procedure()
   begin
@@ -29,7 +29,7 @@ begin
   return Seen;
 end function;
 begin
-  const T: task := go Parent();
+  const T: task of integer := go Parent();
   const Q: channel of integer := CreateChannel(1);
   var Seen: integer := 0;
   const S: WaitCase := SendCase(Q, 42, procedure(R: result of (boolean, string))
@@ -43,7 +43,7 @@ begin
   if Select([S]) <> 0 then panic('send index'); end if;
   if Seen <> 42 then panic('callback did not complete'); end if;
   if Wait(T) <> 7 then panic('task value lost'); end if;
-  const Producer: task := go Produce(Q);
+  const Producer: task of integer := go Produce(Q);
   const Pending: WaitCase := ReceiveCase(Q, procedure(R: result of (integer, string))
   begin Seen := R.Unwrap(); end procedure);
   const Fallback: WaitCase := TimerCase(1000, procedure() begin panic('pending receive timed out'); end procedure);
@@ -95,7 +95,7 @@ function Other(C: WaitCase): integer;
 begin return Select([C]); end function;
 begin
   const C: WaitCase := TimerCase(0, procedure() begin end procedure);
-  const T: task := go Other(C);
+  const T: task of integer := go Other(C);
   discard Wait(T);
 end."#,
     );

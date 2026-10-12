@@ -25,7 +25,7 @@ begin
       discard Std.Net.SetTimeout(ConnectionValue, 1000);
       const Source: Std.Tasks.CancellationSource := Std.Tasks.CreateCancellationSource();
       const Token: Std.Tasks.CancellationToken := Std.Tasks.GetCancellationToken(Source);
-      const Waiting: task := go ReadUntilCancelled(ConnectionValue, Token);
+      const Waiting: task of string := go ReadUntilCancelled(ConnectionValue, Token);
       Std.Time.Sleep(30);
       discard Std.Tasks.Cancel(Source);
       if Std.Tasks.Wait(Waiting) <> 'Network read cancelled' then

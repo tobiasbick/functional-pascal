@@ -78,7 +78,7 @@ begin
     panic('postfix method named arguments'); end if;
   if Pick(Second := 'b', First := 'a') <> 'b' then
     panic('generic named arguments'); end if;
-  const T: task := go Work(Factor := 7, Base := 6);
+  const T: task of integer := go Work(Factor := 7, Base := 6);
   if Std.Tasks.Wait(T) <> 42 then
     panic('go named arguments'); end if;
 end.

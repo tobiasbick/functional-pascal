@@ -60,7 +60,7 @@ end.",
 #[test]
 fn go_as_expression_in_var_decl() {
     let stmts = body_stmts(
-        "program T; function Work(): integer; begin return 1; end function; begin var T: task := go Work(); end.",
+        "program T; function Work(): integer; begin return 1; end function; begin var T: task of integer := go Work(); end.",
     );
 
     match &stmts[0] {
@@ -119,7 +119,7 @@ fn go_expression_rejects_non_call_expression() {
 #[test]
 fn scope_statement_owns_its_statement_list() {
     let stmts = body_stmts(
-        "program T; begin scope const A: task := go Worker(); go Log(); end scope; null; end.",
+        "program T; begin scope const A: task of integer := go Worker(); go Log(); end scope; null; end.",
     );
     let Stmt::Scope { body, .. } = &stmts[0] else {
         panic!("expected scope statement, got {:?}", stmts[0]);

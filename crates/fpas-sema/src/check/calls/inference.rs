@@ -64,6 +64,35 @@ impl Checker {
         crate::types::substitute_type_parameters(ty, inferred)
     }
 
+    /// Resolve a call result without accepting unbound callee parameters as spawn evidence.
+    ///
+    /// Documentation: `docs/pascal/language/concurrency/task-handles.md`.
+    pub(in crate::check) fn check_call_result_type(
+        &mut self,
+        result: &Ty,
+        parameters: &[GenericParamDef],
+        inferred: &HashMap<String, Ty>,
+        span: Span,
+    ) -> Ty {
+        if self.task_call_depth > 0 && !parameters.is_empty() {
+            let mut evidence = inferred.clone();
+            for parameter in parameters {
+                evidence
+                    .entry(parameter.name.to_ascii_lowercase())
+                    .or_insert(Ty::Error);
+            }
+            if crate::types::needs_expected_type(&Self::substitute_type_params(result, &evidence)) {
+                self.error_with_code(
+                    SEMA_TYPE_MISMATCH,
+                    "Cannot determine a call's result type for the spawn",
+                    "Supply explicitly typed arguments, or first bind the routine to an explicit callable type.",
+                    span,
+                );
+            }
+        }
+        Self::substitute_type_params(result, inferred)
+    }
+
     /// Collect consistent bindings from one supplied value or expected type.
     pub(in crate::check) fn collect_type_param_bindings(
         &mut self,
@@ -136,8 +165,23 @@ impl Checker {
                     span,
                 );
             }
-            (Ty::Option(declared_inner), Ty::Option(actual_inner))
-            | (Ty::Task(declared_inner), Ty::Task(actual_inner)) => {
+            (Ty::Option(declared_inner), Ty::Option(actual_inner)) => {
+                self.collect_type_param_bindings(
+                    declared_inner,
+                    actual_inner,
+                    inferred,
+                    visited_record_pairs,
+                    span,
+                );
+            }
+            (Ty::Task(declared_inner), Ty::Task(actual_inner)) => {
+                // `task of T` cannot infer the internal procedure result as T.
+                // Whole-handle inference such as Identity<T>(Value: T) stays valid.
+                if matches!(declared_inner.as_ref(), Ty::Unit)
+                    != matches!(actual_inner.as_ref(), Ty::Unit)
+                {
+                    return;
+                }
                 self.collect_type_param_bindings(
                     declared_inner,
                     actual_inner,

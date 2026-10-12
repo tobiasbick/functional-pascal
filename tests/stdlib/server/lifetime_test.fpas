@@ -8,7 +8,7 @@ begin
   const Life: ServerLifetime := CreateLifetime(20, false).Unwrap();
   const Group: TaskGroup := GetWorkGroup(Life);
   const Gate: channel of boolean := CreateChannel(1);
-  const Worker: task := StartTaskInGroup(Group, function(Token: CancellationToken): boolean begin
+  const Worker: task of boolean := StartTaskInGroup(Group, function(Token: CancellationToken): boolean begin
     return Receive(Gate).Unwrap();
   end function);
   AssertTrue(IsReady(Life));

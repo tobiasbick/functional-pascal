@@ -12,6 +12,8 @@ mod generic_records;
 #[path = "intellisense/native_chains.rs"]
 mod native_chains;
 mod support;
+#[path = "intellisense/task_signatures.rs"]
+mod task_signatures;
 
 use fpas_language_service::{
     CompletionKind, CompletionSource, LanguageService, SymbolKind, WorkspaceContext,

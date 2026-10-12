@@ -67,7 +67,7 @@ begin
   const Workers: TaskGroup := GetWorkGroup(Life);
   for Index: integer := 1 to 4 do
     begin
-      const ConnectionTask: task := StartTaskInGroup(Workers, function(Token: CancellationToken): result of (boolean, string) begin
+      const ConnectionTask: task of result of (boolean, string) := StartTaskInGroup(Workers, function(Token: CancellationToken): result of (boolean, string) begin
         while not IsCancellationRequested(Token) do
           begin
             case AcceptWithCancellation(ListenerValue, Token) of

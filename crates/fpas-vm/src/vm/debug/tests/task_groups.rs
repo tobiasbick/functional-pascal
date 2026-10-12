@@ -24,9 +24,9 @@ function Successful(Token: CancellationToken): integer;
 begin return 42; end function;
 begin
   const G: TaskGroup := CreateTaskGroup();
-  const A: task := StartTaskInGroup(G, Ordinary);
+  const A: task of result of (integer, string) := StartTaskInGroup(G, Ordinary);
   const B: task := StartTaskInGroup(G, Broken);
-  const C: task := StartTaskInGroup(G, Successful);
+  const C: task of integer := StartTaskInGroup(G, Successful);
   if Wait(C) <> 42 then panic('child value'); end if;
   const Failures: array of TaskFailure := CloseTaskGroup(G);
   if Failures.Length() <> 2 then panic('failure count'); end if;

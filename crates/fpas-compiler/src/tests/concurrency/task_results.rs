@@ -49,10 +49,16 @@ end function;
 procedure Work();
 begin
 end procedure;
+function Identity<T>(Value: T): T;
 begin
-  const A: task := go Number();
+  return Value;
+end function;
+begin
+  const A: task of integer := go Number();
   const B: task := go Work();
-  Wait(B);
+  const Nested: task of task := go Identity(B);
+  const Joined: task := Wait(Nested);
+  Wait(Joined);
   if Wait(A) <> 7 then panic('wrong task result'); end if;
 end."#,
     );

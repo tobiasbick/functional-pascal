@@ -12,8 +12,8 @@ begin
   return Value;
 end function;
 begin
-  const A: task := go Work(11);
-  const B: task := go Work(22);
+  const A: task of integer := go Work(11);
+  const B: task of integer := go Work(22);
   const Winner: integer := WaitAny([A, B]);
   if (Winner < 0) or (Winner > 1) then panic('index'); end if;
   WaitAll([A, B]);

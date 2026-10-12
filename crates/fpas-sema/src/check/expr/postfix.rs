@@ -251,7 +251,12 @@ impl Checker {
                     args,
                     span,
                 );
-                Self::substitute_type_params(&func_ty.return_type, &inferred)
+                self.check_call_result_type(
+                    &func_ty.return_type,
+                    &func_ty.type_params,
+                    &inferred,
+                    span,
+                )
             }
             MethodKind::Procedure(proc_ty) => {
                 let Some(visible_params) = proc_ty.params.get(1..) else {

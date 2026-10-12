@@ -48,7 +48,7 @@ begin
                            ] do
     const Server: Listener := Listen('127.0.0.1', 0).Unwrap();
     const Address: NetworkAddress := ListenerLocalAddress(Server).Unwrap();
-    const Parsing: task := go ReadPeer(Server);
+    const Parsing: task of string := go ReadPeer(Server);
     const Peer: Connection := Connect(Address.Host, Address.Port, 1000).Unwrap();
     const Head: string := 'GET / HTTP/1.1' + #13 + #10 + 'Host: 127.0.0.1' + #13 + #10 + 'X-Test: ' + Sample.Raw + #13 + #10 + #13 +
                           #10;

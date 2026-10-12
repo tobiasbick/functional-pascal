@@ -46,7 +46,7 @@ end function;
 
 begin
   const Messages: channel of integer := CreateChannel(1);
-  const Producer: task := go SendValues(Messages);
+  const Producer: task of boolean := go SendValues(Messages);
   AssertEquals(10, ReceiveValue(Messages));
   AssertEquals(20, ReceiveValue(Messages));
   AssertTrue(Wait(Producer));

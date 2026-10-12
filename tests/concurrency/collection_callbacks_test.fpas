@@ -36,8 +36,8 @@ begin
 end function;
 
 begin
-  const StringTask: task := go StringWork();
-  const DictionaryTask: task := go DictionaryWork();
+  const StringTask: task of integer := go StringWork();
+  const DictionaryTask: task of integer := go DictionaryWork();
   AssertEquals(3, Wait(StringTask));
   AssertEquals(7, Wait(DictionaryTask));
 end.

@@ -279,12 +279,12 @@ begin
   return 'nope';
 end function;
 
-const GlobalCurrent: task := go Seven();
-const GlobalWrong: task := go Label();
+const GlobalCurrent: task of integer := go Seven();
+const GlobalWrong: task of string := go Label();
 
 begin
-  const Current: task := go Seven();
-  const Wrong: task := go Label();
+  const Current: task of integer := go Seven();
+  const Wrong: task of string := go Label();
 end.
 "#,
     );

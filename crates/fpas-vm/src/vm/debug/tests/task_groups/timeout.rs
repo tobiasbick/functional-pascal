@@ -48,7 +48,7 @@ begin
   const Group: TaskGroup := CreateTaskGroup();
   const Ready: channel of boolean := CreateChannel(1);
   const Release: channel of boolean := CreateChannel(1);
-  const Child: task := StartTaskInGroup(Group, function(Token: CancellationToken): integer
+  const Child: task of integer := StartTaskInGroup(Group, function(Token: CancellationToken): integer
   begin
     discard Send(Ready, true);
     while TryReceive(Release).Unwrap().IsNone() do begin null; end; end while;
@@ -89,7 +89,7 @@ begin
   const Parent: task := StartTaskInGroup(Outer, procedure(Token: CancellationToken)
   begin
     const Inner: TaskGroup := CreateTaskGroup();
-    const Child: task := StartTaskInGroup(Inner, function(Stop: CancellationToken): integer
+    const Child: task of integer := StartTaskInGroup(Inner, function(Stop: CancellationToken): integer
       begin return Receive(Gate).Unwrap(); end function);
     if not CloseTaskGroupWithTimeout(Inner, 2).IsError() then panic('premature close'); end if;
     discard Send(Ready, true).Unwrap();

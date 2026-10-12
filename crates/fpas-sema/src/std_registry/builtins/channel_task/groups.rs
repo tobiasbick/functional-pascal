@@ -19,6 +19,7 @@ pub(super) fn check_start(c: &mut Checker, name: &str, args: &[&Expr], span: Spa
         .lookup(s::STD_TASK_TASK_GROUP)
         .map_or(Ty::Error, |s| s.ty.clone());
     expect_type(c, args[0], &group, "task group");
+    let previous_error_count = c.errors.len();
     let work = c.check_expr(args[1]);
     if c.expr_is_task_bound(crate::expr_lookup_key(args[1])) {
         c.error_with_code(
@@ -30,31 +31,63 @@ pub(super) fn check_start(c: &mut Checker, name: &str, args: &[&Expr], span: Spa
     } else {
         c.defer_capture_transfer(args[1], args[1].span());
     }
-    let (params, result) = match work {
-        Ty::Function(work) => (work.params, *work.return_type),
-        Ty::Procedure(work) => (work.params, Ty::Unit),
-        Ty::Error => return Ty::Error,
+    let (params, result, generic) = match work {
+        Ty::Function(work) => (work.params, *work.return_type, !work.type_params.is_empty()),
+        Ty::Procedure(work) => (work.params, Ty::Unit, !work.type_params.is_empty()),
+        Ty::Error => {
+            if c.errors.len() == previous_error_count {
+                c.error_with_code(
+                    SEMA_TYPE_MISMATCH,
+                    "Cannot determine the group worker's callable type",
+                    "Pass a routine accepting one by-value CancellationToken.",
+                    args[1].span(),
+                );
+            }
+            return Ty::Error;
+        }
         other => {
             c.error_with_code(
                 SEMA_TYPE_MISMATCH,
                 format!("Expected a worker routine, found `{other}`"),
-                "Pass a routine accepting one CancellationToken.",
+                "Pass a routine accepting one by-value CancellationToken.",
                 args[1].span(),
             );
             return Ty::Error;
         }
     };
+    if generic {
+        c.error_with_code(
+            SEMA_TYPE_MISMATCH,
+            "A group worker must have a fully instantiated callable type",
+            "First bind the generic routine to an explicit function(Token: CancellationToken): T or procedure(Token: CancellationToken) type.",
+            args[1].span(),
+        );
+        return Ty::Error;
+    }
     let token = c
         .scopes
         .lookup(s::STD_TASK_CANCELLATION_TOKEN)
         .map_or(Ty::Error, |s| s.ty.clone());
-    if params.len() != 1 || !params[0].ty.compatible_with(&token) {
+    if params.len() != 1
+        || params[0].mode != crate::types::ParamMode::Value
+        || !params[0].ty.assignment_compatible_with(&token)
+    {
         c.error_with_code(
             SEMA_TYPE_MISMATCH,
-            "A group worker must accept exactly one CancellationToken",
-            "Declare Work(Token: CancellationToken).",
+            "A group worker must accept exactly one by-value CancellationToken",
+            "Declare Work(Token: CancellationToken), without var.",
             args[1].span(),
         );
+        return Ty::Error;
+    }
+    if c.errors.len() == previous_error_count && crate::types::has_inference_holes(&result) {
+        c.error_with_code(
+            SEMA_TYPE_MISMATCH,
+            "Cannot determine the group worker's result type",
+            "Use a worker with an explicit result type.",
+            args[1].span(),
+        );
+        return Ty::Error;
     }
     if let Ty::Result(_, error) = &result
         && !matches!(error.as_ref(), Ty::String | Ty::Error)

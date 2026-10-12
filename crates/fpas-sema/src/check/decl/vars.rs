@@ -61,14 +61,7 @@ impl Checker {
             self.infer_local_binding(name, value, span, mutable)
         };
 
-        let stored_ty = match (&declared_ty, self.ty_of_checked(value)) {
-            (crate::types::Ty::Task(inner), crate::types::Ty::Task(actual))
-                if inner.is_error() && !actual.is_error() =>
-            {
-                crate::types::Ty::Task(actual)
-            }
-            _ => declared_ty.clone(),
-        };
+        let stored_ty = declared_ty;
 
         let task_bound = self.expr_is_task_bound(Self::expr_lookup_key(value));
         let constant_info = constant.then(|| {
@@ -112,14 +105,5 @@ impl Checker {
         }
         self.record_binding_discard_info(name, &stored_ty, mutable, Some(value));
         stored_ty
-    }
-
-    /// Return the already-computed type for an expression (if annotated).
-    fn ty_of_checked(&self, expr: &Expr) -> crate::types::Ty {
-        let key = Self::expr_lookup_key(expr);
-        self.expr_types
-            .get(&key)
-            .cloned()
-            .unwrap_or(crate::types::Ty::Error)
     }
 }

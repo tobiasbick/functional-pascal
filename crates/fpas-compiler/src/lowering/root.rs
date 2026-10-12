@@ -54,7 +54,7 @@ pub(super) fn lower_analyzed_root(
     let mut type_table = types::TypeTable::from_metadata(&metadata).map_err(|error| vec![error])?;
     let mut constants = BTreeMap::new();
     let (mut globals, mut global_bindings) =
-        globals::collect(declarations, &metadata, &mut type_table).map_err(|error| vec![error])?;
+        globals::collect(declarations, &mut type_table).map_err(|error| vec![error])?;
     let mut callables = routines::callable_table(
         &routines,
         &routine_owners,

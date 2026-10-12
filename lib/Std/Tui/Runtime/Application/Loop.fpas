@@ -209,7 +209,7 @@ begin
   discard TuiAppRequireOpen(ApplicationId);
   const ConsoleInputs: channel of TuiHostInput := CreateChannel(32);
   const InputGroup: TaskGroup := CreateTaskGroup();
-  const InputTask: task := StartTaskInGroup(InputGroup, function(Token: CancellationToken): result of (boolean, string) begin
+  const InputTask: task of result of (boolean, string) := StartTaskInGroup(InputGroup, function(Token: CancellationToken): result of (boolean, string) begin
     return TuiConsoleInputPump(Token, ConsoleInputs);
   end function);
   var Model: TModel := InitialModel;

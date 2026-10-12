@@ -22,7 +22,7 @@ begin
   const Request: MandelbrotRenderRequest := mandelbrot.render.mandelbrotrenderrequest(Generation := 1, XMin := -3.355714285714286, XMax := 1.855714285714286, YMin := -1.2, YMax := 1.2, Width := Width, Height := Height, MaxIter := 160, Palette := PaletteKind.DeepOcean);
   const Inbox: channel of MandelbrotRenderFrame := CreateChannel(8);
   const Source: CancellationSource := CreateCancellationSource();
-  const Worker: task := go RunBackgroundRender(Request, Inbox, GetCancellationToken(Source));
+  const Worker: task of result of (boolean, string) := go RunBackgroundRender(Request, Inbox, GetCancellationToken(Source));
   const App: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(Width, Height));
   var Grid: TuiCellGrid := TuiCellGrid.Create(Width, Height, array.Fill(TuiCell.Styled(' ', TuiStyle.FromColors(TuiColor.FromRgb(0, 0, 0), TuiColor.FromRgb(0, 0, 0))), Width *
                                                                                                                                                                         Height));

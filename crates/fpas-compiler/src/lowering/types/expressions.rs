@@ -73,7 +73,7 @@ impl TypeTable {
                     "real" => Ok(REAL),
                     "boolean" => Ok(BOOLEAN),
                     "string" => Ok(STRING),
-                    "task" => self.intern_kind(IrType::Task(DYNAMIC), *span),
+                    "task" => self.intern_kind(IrType::Task(UNIT), *span),
                     _ => {
                         if let Some(layout) = self
                             .record_layouts

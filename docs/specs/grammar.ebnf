@@ -220,8 +220,8 @@ constraint_name     = 'Comparable' | 'Numeric' | 'Printable' ;
 (* ---- 2.3 Type Expressions ------------------------------------- *)
 
 (* Built-in named types (via qualified_id): integer, real, boolean, *)
-(* string. A bare `task` infers its result type from the spawned call; *)
-(* `task of T` declares it. See docs/pascal/language/basics/ and       *)
+(* string. Bare `task` is a procedure-task handle without a result;  *)
+(* `task of T` is a function-task handle returning T. See            *)
 (* docs/pascal/language/concurrency/task-handles.md.                   *)
 
 type_expr           = 'array' 'of' type_expr            (* array type     *)

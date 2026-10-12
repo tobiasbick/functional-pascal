@@ -10,7 +10,7 @@ end function;
 begin
   const Workers: TaskGroup := CreateTaskGroup();
   // Keep the group even when individual task handles are not needed.
-  const ConfigurationTask: task := StartTaskInGroup(Workers, CheckConfiguration);
+  const ConfigurationTask: task of result of (boolean, string) := StartTaskInGroup(Workers, CheckConfiguration);
   const WorkerTask: task := StartTaskInGroup(Workers, procedure(Token: CancellationToken) begin
     const Stop: WaitCase := CancellationCase(Token, procedure() begin
       WriteLn('Background worker stopped');

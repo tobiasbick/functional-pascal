@@ -68,8 +68,8 @@ function Outcome(Token: CancellationToken): result of (integer, string); begin r
 begin
   const G: TaskGroup := CreateTaskGroup();
   const A: task := StartTaskInGroup(G, NoValue);
-  const B: task := StartTaskInGroup(G, Number);
-  const C: task := StartTaskInGroup(G, Outcome);
+  const B: task of integer := StartTaskInGroup(G, Number);
+  const C: task of result of (integer, string) := StartTaskInGroup(G, Outcome);
   Wait(A);
   const N: integer := Wait(B);
   const R: result of (integer, string) := Wait(C);
@@ -86,7 +86,7 @@ uses Std.Tasks;
 function Work(Token: CancellationToken): integer; begin return 7; end function;
 begin
   const G: TaskGroup := CreateTaskGroup();
-  const Child: task := StartTaskInGroup(G, Work);
+  const Child: task of integer := StartTaskInGroup(G, Work);
   const Wrong: string := Wait(Child);
 end."#,
     );

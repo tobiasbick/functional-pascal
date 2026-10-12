@@ -285,7 +285,7 @@ begin
 end function;
 
 begin
-  const Pending: task := go Work();
+  const Pending: task of integer := go Work();
   WriteLn(Wait(Pending));
 end.
 "#;

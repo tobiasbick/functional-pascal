@@ -85,7 +85,7 @@ impl Checker {
             self.error_with_code(
                 SEMA_VAR_PARAMETER_ESCAPE,
                 "`go` cannot pass a `var` argument",
-                "The task could outlive the caller's variable. Pass a value and return the result through the task, for example `const T: task := go Compute(Value);`.",
+                "The task could outlive the caller's variable. Pass a value and return the result through the task, for example `const T: task of integer := go Compute(Value);`.",
                 arg.span(),
             );
             return;

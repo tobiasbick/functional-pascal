@@ -143,7 +143,12 @@ impl Checker {
                     args,
                     span,
                 );
-                Self::substitute_type_params(&signature.return_type, &inferred)
+                self.check_call_result_type(
+                    &signature.return_type,
+                    &signature.type_params,
+                    &inferred,
+                    span,
+                )
             }
             Ty::Procedure(signature) => {
                 self.check_procedure_call_args(

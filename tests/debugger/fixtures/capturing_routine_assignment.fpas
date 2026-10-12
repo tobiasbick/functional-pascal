@@ -139,10 +139,10 @@ begin
   return Current(1);
 end function;
 
-function HoldTask(Pending: task): Handler;
+function HoldTask(Pending: task of integer): Handler;
 function IgnorePending(Value: integer): integer;
 begin
-  const Keep: task := Pending;
+  const Keep: task of integer := Pending;
   return Value;
 end function;
 begin
@@ -161,7 +161,7 @@ begin
   const Mutated: Handler := Mutating();
   const Enclosed: Handler := OuterCell();
   const Late: integer := LateInit();
-  const Pending: task := go Worker(8);
+  const Pending: task of integer := go Worker(8);
   const Held: Handler := HoldTask(Pending);
   const RootStop: integer := 0;
   WriteLn(Wait(Pending));

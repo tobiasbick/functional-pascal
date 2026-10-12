@@ -8,10 +8,10 @@ begin
 end function;
 
 begin
-  const T1: task := go Double(1);
-  const T2: task := go Double(2);
-  const T3: task := go Double(3);
-  const Results: array of task := [T1, T2, T3];
+  const T1: task of integer := go Double(1);
+  const T2: task of integer := go Double(2);
+  const T3: task of integer := go Double(3);
+  const Results: array of task of integer := [T1, T2, T3];
   Std.Tasks.WaitAll(Results);
   WriteLn('done');
 end.

@@ -158,7 +158,7 @@ begin
   var Accepted: integer := 0;
   while (Options.MaxRequests = 0) or (Accepted < Options.MaxRequests) do
     begin
-      var Tasks: array of task := [];
+      var Tasks: array of task of boolean := [];
       while HasCapacity(Options, Accepted, Tasks.Length()) do
         begin
           case Std.Net.Accept(Listener) of

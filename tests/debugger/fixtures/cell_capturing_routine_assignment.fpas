@@ -220,7 +220,7 @@ begin
   const Boxed: integer := NestedBox();
   const CapturedDest: Handler := CaptureDest();
   const Spawned: integer := SpawnProbe();
-  const Child: task := go Worker();
+  const Child: task of Handler := go Worker();
   const Stolen: Handler := Wait(Child);
   const RootStop: integer := 0;
   WriteLn(Stolen(1));

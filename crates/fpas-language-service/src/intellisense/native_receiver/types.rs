@@ -108,7 +108,7 @@ fn from_syntax_in_scope(
                 "integer" => Ty::Integer,
                 "boolean" => Ty::Boolean,
                 "real" => Ty::Real,
-                "task" => Ty::Task(Box::new(Ty::Error)),
+                "task" => Ty::Task(Box::new(Ty::Unit)),
                 _ => return named_type(documents, owner, &name, depth),
             }
         }

@@ -301,14 +301,6 @@ impl LoweringContext {
         })
     }
 
-    pub(super) fn specialize_task_binding(&self, declared: TypeId, inferred: TypeId) -> TypeId {
-        self.type_table.specialize_task_binding(declared, inferred)
-    }
-
-    pub(super) fn is_bare_task_binding(&self, declared: TypeId) -> bool {
-        self.type_table.is_bare_task_binding(declared)
-    }
-
     pub(super) fn task_type(
         &mut self,
         inner: TypeId,

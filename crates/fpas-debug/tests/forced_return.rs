@@ -253,7 +253,7 @@ begin
 end function;
 
 begin
-  const Pending: task := go Work();
+  const Pending: task of integer := go Work();
   const Answer: integer := Compute(41);
   WriteLn(Answer);
 end.

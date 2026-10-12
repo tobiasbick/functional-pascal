@@ -9,6 +9,7 @@ mod record_construction;
 /// Instantiated record member descriptions shared by completion and navigation.
 pub(crate) mod record_members;
 mod signature_help;
+mod task_wait;
 
 use std::path::PathBuf;
 

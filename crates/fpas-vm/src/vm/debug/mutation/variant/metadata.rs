@@ -218,6 +218,11 @@ pub(super) fn format_debug_type(
         }
         Some(DebugType::Enum(enumeration)) => enum_type_name(executable, *enumeration),
         Some(DebugType::Cell(inner)) => format_debug_type(executable, *inner),
+        Some(DebugType::Task(inner))
+            if matches!(debug_type(executable, *inner), Some(DebugType::Unit)) =>
+        {
+            Ok("task".into())
+        }
         Some(DebugType::Task(inner)) => Ok(format!(
             "task of {}",
             format_debug_type(executable, *inner)?

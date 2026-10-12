@@ -174,7 +174,17 @@ impl Checker {
             self.intrinsic_calls.insert(call_key, dispatch.clone());
         }
         if symbol_kind == SymbolKind::BuiltinStd {
-            return self.check_builtin_std_call_positional(name, &dispatch, args, span);
+            let result = self.check_builtin_std_call_positional(name, &dispatch, args, span);
+            if dispatch == fpas_std::std_symbols::STD_TASK_WAIT && matches!(result, Ty::Unit) {
+                self.error_with_code(
+                    SEMA_TYPE_MISMATCH,
+                    "`Wait` on a procedure task does not return a value",
+                    "Call `Wait(Handle);` as a statement. A function result requires a handle of type `task of T`.",
+                    span,
+                );
+                return Ty::Error;
+            }
+            return result;
         }
 
         match &symbol_ty {
@@ -186,7 +196,12 @@ impl Checker {
                     args,
                     span,
                 );
-                Self::substitute_type_params(&func_ty.return_type, &inferred)
+                self.check_call_result_type(
+                    &func_ty.return_type,
+                    &func_ty.type_params,
+                    &inferred,
+                    span,
+                )
             }
             Ty::Procedure(_) => {
                 self.check_args_only(args);
@@ -252,7 +267,12 @@ impl Checker {
                     args,
                     span,
                 );
-                Self::substitute_type_params(&func_ty.return_type, &inferred)
+                self.check_call_result_type(
+                    &func_ty.return_type,
+                    &func_ty.type_params,
+                    &inferred,
+                    span,
+                )
             }
             Ty::Procedure(proc_ty) => {
                 self.check_procedure_call_args(

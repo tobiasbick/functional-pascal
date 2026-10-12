@@ -10,15 +10,15 @@ begin
 end function;
 
 begin
-  const One: task := go Square(6);
+  const One: task of integer := go Square(6);
   WriteLn('wait one: ', IntToStr(Wait(One)));
-  var Jobs: array of task := [];
+  var Jobs: array of task of integer := [];
   Jobs.Push(go Square(3));
   Jobs.Push(go Square(4));
   WriteLn('wait [0]: ', IntToStr(Wait(Jobs[0])));
   WriteLn('wait [1]: ', IntToStr(Wait(Jobs[1])));
-  const Ta: task := go Square(2);
-  const Tb: task := go Square(3);
+  const Ta: task of integer := go Square(2);
+  const Tb: task of integer := go Square(3);
   WaitAll([Ta, Tb]);
   WriteLn('after waitall: ', IntToStr(Wait(Ta) + Wait(Tb)));
 end.

@@ -45,6 +45,15 @@ impl Checker {
         let actual = self.resolve_visible_type(actual);
         if !expected.assignment_compatible_with(&actual) {
             let hint = Self::distinct_conversion_hint(&expected, &actual)
+                .or_else(|| match (&expected, &actual) {
+                    (Ty::Task(expected), Ty::Task(actual)) if matches!(expected.as_ref(), Ty::Unit) => {
+                        Some(format!("`task` is a procedure-task handle. For this function result, write `task of {actual}`. For mixed completion use TaskCase/Select or a scope."))
+                    }
+                    (Ty::Task(_), Ty::Task(_)) if context == "array element" => {
+                        Some("A task array must have one result type. Use TaskCase/Select for mixed completion selection, or a scope to join differently typed children.".into())
+                    }
+                    _ => None,
+                })
                 .or_else(|| if let Ty::Subrange(range) = &expected {
                     Some(format!("Subranges require explicit checked conversion, for example `{}(Value)`.", range.name))
                 } else { None })

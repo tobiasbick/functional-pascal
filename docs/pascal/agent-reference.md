@@ -709,10 +709,16 @@ See [types](language/types/README.md).
 
 ## 12. Tasks, scopes, and channels
 
-`go Routine(Arguments)` starts a task. As an expression it returns a `task of T`
-handle; `task` also permits inferred task results. As a statement it creates no
-handle. `go` is language syntax; `Wait`, channels and cancellation APIs require
-`uses Std.Tasks;`. `Wait(Handle)` consumes the handle once and returns its result.
+`go Routine(Arguments)` starts a task. As an expression it returns `task of T`
+for a function returning T, or `task` for a procedure with no result. Bare
+`task` has that fixed meaning in every annotation and never infers T. As a
+statement `go` creates no handle. `Wait`, channels and cancellation APIs require
+`uses Std.Tasks;`. `Wait(Handle)` consumes the retained result once; procedure
+tasks use `Wait(Handle);` without a value. WaitAll/WaitAny use homogeneous task
+arrays; mixed completion selection uses TaskCase/Select with original typed handles.
+Spawned result types must be known from the call; explicitly type unresolved
+inputs first. Group workers require a fully instantiated callable with exactly
+one by-value CancellationToken parameter.
 Values passed between tasks must meet transfer rules; mutable-capture callables do not.
 
 `scope ... end scope;` owns tasks spawned lexically inside it. Normal exit joins

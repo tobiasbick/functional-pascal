@@ -51,7 +51,8 @@ impl LanguageService {
             }
             let (document_index, symbol, _) =
                 resolve(&context.documents, target_index, callable_token.span.offset)?;
-            let signature = if symbol.kind == crate::SymbolKind::Type {
+            let qualified_name = symbol.qualified_name.clone();
+            let mut signature = if symbol.kind == crate::SymbolKind::Type {
                 let (_, record) = crate::navigation::record_construction::constructor_record(
                     &context.documents,
                     target_index,
@@ -69,6 +70,14 @@ impl LanguageService {
             } else {
                 symbol.callable?
             };
+            super::task_wait::specialize(
+                &context.documents,
+                target_index,
+                frame.parenthesis,
+                offset,
+                &qualified_name,
+                &mut signature,
+            );
             let documentation = preceding_documentation(
                 context.documents[document_index].snapshot.source(),
                 symbol.full_span.offset(),

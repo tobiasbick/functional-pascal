@@ -71,7 +71,7 @@ pub enum Token {
     Array,
     /// Introduces a typed bounded channel: `channel of T`.
     Channel,
-    /// A task handle type: bare `task` infers its result type, `task of T` declares it.
+    /// A procedure-task handle `task`, or a function-task handle `task of T`.
     Task,
     Panic,
     Break,

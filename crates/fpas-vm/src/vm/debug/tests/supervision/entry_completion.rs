@@ -11,7 +11,7 @@ function Work(Token: CancellationToken): result of (integer, string);
 begin panic('worker body must not execute'); end function;
 begin
   const Group: TaskGroup := CreateTaskGroup();
-  const Child: task := StartSupervisedTask(Group, Work, 1023, 0);
+  const Child: task of result of (integer, string) := StartSupervisedTask(Group, Work, 1023, 0);
   case Wait(Child) of
     when Ok(_): panic('forced error lost');
     when Error(const Message): if Message <> 'forced' then panic('wrong forced error'); end if;

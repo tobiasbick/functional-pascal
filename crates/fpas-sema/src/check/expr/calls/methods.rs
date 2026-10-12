@@ -279,9 +279,11 @@ impl Checker {
                     args,
                     span,
                 );
-                return Some(Self::substitute_type_params(
+                return Some(self.check_call_result_type(
                     &func_ty.return_type,
+                    &func_ty.type_params,
                     &inferred,
+                    span,
                 ));
             }
 
@@ -377,9 +379,11 @@ impl Checker {
                     args,
                     span,
                 );
-                Some(Self::substitute_type_params(
+                Some(self.check_call_result_type(
                     &func_ty.return_type,
+                    &func_ty.type_params,
                     &inferred,
+                    span,
                 ))
             }
             MethodKind::Procedure(proc_ty) => {

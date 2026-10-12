@@ -47,7 +47,7 @@ fn read_only_capture_of_a_parameter_copy_stays_task_bound() {
         procedure CheckCopy(Value: integer);
         begin var LocalValue: integer := Value;
           const Reader: function(): integer := function(): integer begin return LocalValue; end function;
-          const Work: task := go Reader();
+          const Work: task of integer := go Reader();
         end procedure;
         begin CheckCopy(1); end.",
     );

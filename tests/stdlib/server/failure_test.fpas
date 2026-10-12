@@ -21,7 +21,7 @@ end function;
 begin
   const Life: ServerLifetime := CreateLifetime(1000, false).Unwrap();
   const Group: TaskGroup := GetWorkGroup(Life);
-  const Worker: task := StartTaskInGroup(Group, function(Token: CancellationToken): result of (boolean, string) begin
+  const Worker: task of result of (boolean, string) := StartTaskInGroup(Group, function(Token: CancellationToken): result of (boolean, string) begin
     return Error('session failed');
   end function);
   const Listener: Std.Net.Listener := BindListener().Unwrap();

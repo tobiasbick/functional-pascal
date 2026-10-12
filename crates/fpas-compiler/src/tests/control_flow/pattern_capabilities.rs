@@ -27,13 +27,13 @@ begin
     end function;
 
     discard Alias;
-    const Job: task := go Alias();
+    const Job: task of integer := go Alias();
     Sum := Sum + Wait(Job);
   end if;
 
   while Wrapped is Some(const F) do
     discard F;
-    const Job: task := go F();
+    const Job: task of integer := go F();
     Sum := Sum + Wait(Job);
     break;
   end while;
@@ -41,7 +41,7 @@ begin
   case Some(Ok(Wrapped)) of
     when Some(Ok(Some(const F))):
       discard F;
-      const Job: task := go F();
+      const Job: task of integer := go F();
       Sum := Sum + Wait(Job);
     when Some(_), None:
       panic('missing payload');
@@ -112,7 +112,7 @@ begin
     const GetNumber: function(): integer := function(): integer begin
       return N;
     end function;
-    const Job: task := go GetNumber();
+    const Job: task of integer := go GetNumber();
     if Wait(Job) <> 42 then panic('scalar capture'); end if;
     Box.Change();
   end if;
@@ -143,7 +143,7 @@ begin
         return A + B;
       end function;
       discard Add;
-      const Job: task := go Add();
+      const Job: task of integer := go Add();
       if Wait(Job) <> 42 then panic('distinct captures'); end if;
   end case;
 end procedure;

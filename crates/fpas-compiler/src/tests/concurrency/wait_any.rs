@@ -68,8 +68,8 @@ begin
   return Value;
 end function;
 begin
-  const A: task := go Work(11);
-  const B: task := go Work(22);
+  const A: task of integer := go Work(11);
+  const B: task of integer := go Work(22);
   WaitAll([A, B]);
   if WaitAny([B, A, B]) <> 0 then panic('wrong index'); end if;
   if Wait(B) <> 22 then panic('result consumed'); end if;
@@ -91,12 +91,12 @@ begin
 end function;
 function Parent(): integer;
 begin
-  const Child: task := go Work();
+  const Child: task of integer := go Work();
   if WaitAny([Child]) <> 0 then panic('index'); end if;
   return Wait(Child);
 end function;
 begin
-  const ParentTask: task := go Parent();
+  const ParentTask: task of integer := go Parent();
   if WaitAny([ParentTask]) <> 0 then panic('parent index'); end if;
   if Wait(ParentTask) <> 7 then panic('value'); end if;
 end."#,

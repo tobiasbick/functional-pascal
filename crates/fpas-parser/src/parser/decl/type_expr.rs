@@ -74,7 +74,7 @@ impl Parser {
                     let inner = self.parse_type_expr();
                     return TypeExpr::Task(Box::new(inner), self.span_from(start));
                 }
-                // A bare `task` infers its result type from the initializer's spawned call.
+                // A bare `task` is a procedure-task handle with no result.
                 TypeExpr::Named {
                     id: QualifiedId {
                         parts: vec!["task".to_owned()],

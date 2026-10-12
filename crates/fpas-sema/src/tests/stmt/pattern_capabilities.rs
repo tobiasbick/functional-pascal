@@ -84,7 +84,9 @@ fn pattern_callables_keep_known_task_free_capture_proofs() {
         for body in patterns("discard F;") {
             check_ok(&program(bindings, &body));
         }
-        for body in patterns("const Job: task := go F(); const Answer: integer := Wait(Job);") {
+        for body in
+            patterns("const Job: task of integer := go F(); const Answer: integer := Wait(Job);")
+        {
             check_ok(&program(bindings, &body));
         }
     }
@@ -100,7 +102,7 @@ fn task_bound_does_not_prevent_discard_of_task_free_pattern_callables() {
 #[test]
 fn unknown_mutable_and_task_capturing_pattern_callables_remain_unsafe_to_discard() {
     for bindings in [
-        "const Job: task := go Work(); const Change: function(): integer := function(): integer begin return Wait(Job); end function; const Wrapped: Option of function(): integer := Some(Change);",
+        "const Job: task of integer := go Work(); const Change: function(): integer := function(): integer begin return Wait(Job); end function; const Wrapped: Option of function(): integer := Some(Change);",
         "const Change: function(): integer := Work; var Wrapped: Option of function(): integer := Some(Change);",
     ] {
         for body in patterns("discard F;").into_iter().take(6) {
@@ -120,7 +122,7 @@ begin if Wrapped is Some(const F) then discard F; end if; end procedure; begin e
 #[test]
 fn scalar_pattern_bindings_keep_type_based_discard_proofs() {
     check_ok(&program(
-        "const Job: task := go Work(); const Wrapped: Result of (integer, task of integer) := Ok(7);",
+        "const Job: task of integer := go Work(); const Wrapped: Result of (integer, task of integer) := Ok(7);",
         "if Wrapped is Ok(const N) then discard N; end if;
 while Wrapped is Ok(const N) do discard N; break; end while;
 case Wrapped of when Ok(const N): discard N; when Error(const Job): const N: integer := Wait(Job); end case;
@@ -131,9 +133,9 @@ case 7 of when const N if N > 0: discard N; else null; end case;",
 #[test]
 fn scalar_bindings_do_not_inherit_another_payloads_task_bound_state() {
     for body in [
-        "if Mixed is Ok(const N) then const Get: function(): integer := function(): integer begin return N; end function; const Job: task := go Get(); const Answer: integer := Wait(Job); end if;",
-        "while Mixed is Ok(const N) do const Get: function(): integer := function(): integer begin return N; end function; const Job: task := go Get(); const Answer: integer := Wait(Job); break; end while;",
-        "case Mixed of when Ok(const N): const Get: function(): integer := function(): integer begin return N; end function; const Job: task := go Get(); const Answer: integer := Wait(Job); when Error(_): null; end case;",
+        "if Mixed is Ok(const N) then const Get: function(): integer := function(): integer begin return N; end function; const Job: task of integer := go Get(); const Answer: integer := Wait(Job); end if;",
+        "while Mixed is Ok(const N) do const Get: function(): integer := function(): integer begin return N; end function; const Job: task of integer := go Get(); const Answer: integer := Wait(Job); break; end while;",
+        "case Mixed of when Ok(const N): const Get: function(): integer := function(): integer begin return N; end function; const Job: task of integer := go Get(); const Answer: integer := Wait(Job); when Error(_): null; end case;",
     ] {
         check_ok(&program(
             &format!(
@@ -156,7 +158,7 @@ const Change: procedure() := procedure() begin Count := Count + 1; end procedure
 const Mixed: Result of (T, procedure()) := Error(Change);
 if Mixed is Ok(const N) then
   const Get: function(): T := function(): T begin return N; end function;
-  const Job: task := go Get();
+  const Job: task of T := go Get();
   const Answer: T := Wait(Job);
 end if;
 end procedure;
@@ -171,7 +173,7 @@ fn extracted_record_callables_keep_capabilities_but_scalar_fields_remain_free() 
         ("go Box.Change();", true),
         ("discard Box.Change;", false),
         (
-            "const N: integer := Box.Number; const ReadNumber: function(): integer := function(): integer begin return N; end function; const Job: task := go ReadNumber(); const Answer: integer := Wait(Job);",
+            "const N: integer := Box.Number; const ReadNumber: function(): integer := function(): integer begin return N; end function; const Job: task of integer := go ReadNumber(); const Answer: integer := Wait(Job);",
             false,
         ),
     ] {

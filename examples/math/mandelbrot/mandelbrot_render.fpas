@@ -265,7 +265,7 @@ public function RunBackgroundRender(
 ): result of (boolean, string);
 begin
   const Group: TaskGroup := CreateTaskGroup();
-  var Tasks: array of task := [];
+  var Tasks: array of task of array of TuiCell := [];
   for Py: integer := 0 to Request.Height - 1 do
     begin
       if IsCancellationRequested(HostToken) then

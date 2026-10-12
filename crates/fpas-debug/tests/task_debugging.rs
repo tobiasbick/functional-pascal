@@ -23,7 +23,7 @@ begin
 end function;
 
 begin
-  const Pending: task := go Work();
+  const Pending: task of integer := go Work();
   WriteLn(Wait(Pending));
 end.
 "#;
@@ -229,7 +229,7 @@ begin
 end function;
 
 begin
-  const Pending: task := go Work();
+  const Pending: task of integer := go Work();
   WriteLn(Wait(Pending));
 end.
 "#;
@@ -289,9 +289,9 @@ end procedure;
 
 begin
   go Detached();
-  const First: task := go Work(20);
-  const Second: task := go Work(22);
-  const Pending: array of task := [First, Second, First];
+  const First: task of integer := go Work(20);
+  const Second: task of integer := go Work(22);
+  const Pending: array of task of integer := [First, Second, First];
   WaitAll(Pending);
   WriteLn(Wait(First));
   WriteLn(Wait(Second));
@@ -308,12 +308,12 @@ end function;
 
 function Parent(): integer;
 begin
-  const Child: task := go Leaf(41);
+  const Child: task of integer := go Leaf(41);
   return Wait(Child) + 1;
 end function;
 
 begin
-  const Pending: task := go Parent();
+  const Pending: task of integer := go Parent();
   WriteLn(Wait(Pending));
 end.
 "#;

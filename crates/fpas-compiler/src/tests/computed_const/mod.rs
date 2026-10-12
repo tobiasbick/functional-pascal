@@ -11,12 +11,12 @@ fn loop_const_captures_keep_each_iterations_value_after_the_loop() {
 }
 
 #[test]
-fn task_const_preserves_inferred_result_type_at_global_and_local_levels() {
+fn task_const_preserves_declared_result_type_at_global_and_local_levels() {
     assert_succeeds(
         "program T; uses Std.Tasks;
         function Work(): integer; begin return 42; end function;
-        const GlobalTask: task := go Work();
-        begin const LocalTask: task := go Work();
+        const GlobalTask: task of integer := go Work();
+        begin const LocalTask: task of integer := go Work();
         const First: integer := Wait(GlobalTask); const Second: integer := Wait(LocalTask);
         if First <> 42 or Second <> 42 then panic('task result'); end if; end.",
     );

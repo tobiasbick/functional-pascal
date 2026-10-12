@@ -18,7 +18,7 @@ operations, mixed-source `Select`, task groups, supervised retries, and cooperat
 
 The compiler lowers `go` to dedicated VM opcodes:
 
-- **`go` as an expression** (e.g. assigned to a `task` variable) emits a **retained** spawn and returns a task handle for later `Wait`.
+- **`go` as an expression** emits a **retained** spawn: `task of T` for a function returning T, or `task` for a procedure, with a handle for later `Wait`.
 - **`go` as a statement** (fire-and-forget) emits a **detached** spawn without retaining a handle for the caller.
 - Inside a [task scope](task-scopes.md), both forms enroll the child in the scope, which retains its completion. Dedicated opcodes enter a scope, leave it normally, and leave it with cancellation.
 

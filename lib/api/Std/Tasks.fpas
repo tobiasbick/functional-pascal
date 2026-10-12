@@ -258,39 +258,39 @@ begin
   panic('Intrinsic API declaration');
 end function;
 
-// Starts one group-owned task with bounded retries; also accepts a procedure.
+// Starts a function task with bounded retries; a procedure worker returns task.
 //
 // Parameters:
 // - `Group`: Input value used by `StartSupervisedTask`.
 // - `Work`: Input value used by `StartSupervisedTask`.
 // - `RetryLimit`: Input value used by `StartSupervisedTask`.
 // - `BackoffMillis`: Input value used by `StartSupervisedTask`.
-public function StartSupervisedTask(
+public function StartSupervisedTask<T>(
   Group: TaskGroup;
   Work: function(Token: CancellationToken): T;
   RetryLimit: integer;
   BackoffMillis: integer
-): task;
+): task of T;
 begin
   panic('Intrinsic API declaration');
 end function;
 
-// Starts a retained child; also accepts a procedure with the same token parameter.
+// Starts a retained function child; a procedure worker returns task.
 //
 // Parameters:
 // - `Group`: Input value used by `StartTaskInGroup`.
 // - `Work`: Input value used by `StartTaskInGroup`.
-public function StartTaskInGroup(Group: TaskGroup; Work: function(Token: CancellationToken): T): task;
+public function StartTaskInGroup<T>(Group: TaskGroup; Work: function(Token: CancellationToken): T): task of T;
 begin
   panic('Intrinsic API declaration');
 end function;
 
-// Describes non-consuming task completion.
+// Observes function-task completion; also accepts a procedure-task handle.
 //
 // Parameters:
 // - `Handle`: Task handle whose completion is observed without consuming its result.
 // - `Callback`: Input value used by `TaskCase`.
-public function TaskCase(Handle: task; Callback: procedure()): WaitCase;
+public function TaskCase<T>(Handle: task of T; Callback: procedure()): WaitCase;
 begin
   panic('Intrinsic API declaration');
 end function;
@@ -333,49 +333,49 @@ begin
   panic('Intrinsic API declaration');
 end function;
 
-// Blocks until the task finishes; **consumes** the handle’s result once.
+// Consumes a function-task result once; on task it is a procedure call without a value.
 //
 // Parameters:
 // - `Handle`: Task handle whose result is consumed.
-public function Wait(Handle: task): T;
+public function Wait<T>(Handle: task of T): T;
 begin
   panic('Intrinsic API declaration');
 end function;
 
-// Blocks until every task has completed; does **not** consume results — you may still `Wait` each handle afterward.
+// Observes all completions; also accepts array of task; does not consume results.
 //
 // Parameters:
 // - `Tasks`: Task handles to wait for.
-public procedure WaitAll(Tasks: array of task);
+public procedure WaitAll<T>(Tasks: array of task of T);
 begin
   panic('Intrinsic API declaration');
 end procedure;
 
-// Returns the lowest completed input index without consuming results.
+// Observes the lowest completed index; also accepts array of task.
 //
 // Parameters:
 // - `Tasks`: Task handles to wait for.
-public function WaitAny(Tasks: array of task): integer;
+public function WaitAny<T>(Tasks: array of task of T): integer;
 begin
   panic('Intrinsic API declaration');
 end function;
 
-// Completion index or a distinct cancellation error.
+// Completion index or cancellation; also accepts array of task.
 //
 // Parameters:
 // - `Tasks`: Task handles to wait for.
 // - `Token`: Input value used by `WaitAnyWithCancellation`.
-public function WaitAnyWithCancellation(Tasks: array of task; Token: CancellationToken): result of (integer, string);
+public function WaitAnyWithCancellation<T>(Tasks: array of task of T; Token: CancellationToken): result of (integer, string);
 begin
   panic('Intrinsic API declaration');
 end function;
 
-// Completion index or a distinct timeout error.
+// Completion index or timeout; also accepts array of task.
 //
 // Parameters:
 // - `Tasks`: Task handles to wait for.
 // - `TimeoutMillis`: Input value used by `WaitAnyWithTimeout`.
-public function WaitAnyWithTimeout(Tasks: array of task; TimeoutMillis: integer): result of (integer, string);
+public function WaitAnyWithTimeout<T>(Tasks: array of task of T; TimeoutMillis: integer): result of (integer, string);
 begin
   panic('Intrinsic API declaration');
 end function;

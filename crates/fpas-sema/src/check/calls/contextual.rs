@@ -72,6 +72,14 @@ impl Checker {
             .map(|parameter| inferred.get(&parameter.name.to_ascii_lowercase()).cloned())
             .collect::<Option<Vec<_>>>()
         else {
+            if !needs_expected_type(expected) {
+                let result = match &actual {
+                    Ty::Function(function) => Some(function.return_type.as_ref()),
+                    _ => None,
+                };
+                self.check_inferred_arguments("callable", type_params, result, &inferred, span);
+                return Ty::Error;
+            }
             return actual;
         };
         if arguments.iter().any(has_inference_holes) {

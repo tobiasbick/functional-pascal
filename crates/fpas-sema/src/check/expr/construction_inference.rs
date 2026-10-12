@@ -5,7 +5,6 @@ use crate::{
     check::Checker,
     types::{GenericParamDef, Ty, has_inference_holes, needs_expected_type},
 };
-use fpas_diagnostics::codes::SEMA_TYPE_MISMATCH;
 use fpas_lexer::Span;
 use fpas_parser::Expr;
 use std::collections::{HashMap, HashSet};
@@ -66,14 +65,11 @@ impl Checker {
         let missing: Vec<_> = parameters
             .iter()
             .zip(&arguments)
-            .filter(|(_, ty)| has_inference_holes(ty))
+            .filter(|(_, ty)| needs_expected_type(ty))
             .map(|(parameter, _)| parameter.display_name())
             .collect();
-        if !missing.is_empty() && self.deferred_constructor_inference == 0 {
-            self.error_with_code(SEMA_TYPE_MISMATCH,
-                format!("Cannot infer type parameter(s) {} for `{name}`", missing.join(", ")),
-                "Add a type annotation, such as `const Value: Lookup of string := Lookup.Missing;`. Record defaults do not infer type arguments.", span);
-        }
+        self.complete_or_defer_type_arguments(name, missing.into_iter().map(str::to_owned).collect(),
+            "Add a type annotation, such as `const Value: Lookup of string := Lookup.Missing;`. Record defaults do not infer type arguments.", span, true);
         self.validate_constraints(parameters, &arguments, span);
         for field in fields {
             let key = Self::expr_lookup_key(field.value);

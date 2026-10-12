@@ -75,7 +75,10 @@ end function;
   `IntToReal(1)`. Values that take their type from context, such as `None` or
   `[]`, take the type of the other branches, for example
   `if Found then Some(Value) else None end if`. The result must then match the
-  expected type of its position.
+  expected type of its position. Branches also complete result-only generic
+  calls: `if Found then Empty() else Some(1) end if` determines integer for
+  `function Empty<T>(): Option of T`. Branch-local pattern bindings remain
+  scoped to their own branch during inference.
 - A condition may use `is` pattern tests with the same rules as the statement;
   their bindings are visible only in that branch's value:
   `if Item is Some(const Value) then Value else 0 end if`.

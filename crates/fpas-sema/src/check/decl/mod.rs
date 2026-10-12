@@ -1,5 +1,7 @@
 mod consts;
 mod local_inference;
+mod routine_body;
+mod routine_type_params;
 mod routines;
 /// Type declarations, whole-unit collection, and record member checking.
 pub(crate) mod types;
@@ -46,6 +48,9 @@ impl Checker {
         if !expected.assignment_compatible_with(&actual) {
             let hint = Self::distinct_conversion_hint(&expected, &actual)
                 .or_else(|| match (&expected, &actual) {
+                    (Ty::GenericParam(expected, _), Ty::GenericParam(actual, _)) => {
+                        Some(format!("`{expected}` and `{actual}` come from different type parameter declarations. Use the parameter declared by this routine; a captured enclosing parameter does not have the same type."))
+                    }
                     (Ty::Task(expected), Ty::Task(actual)) if matches!(expected.as_ref(), Ty::Unit) => {
                         Some(format!("`task` is a procedure-task handle. For this function result, write `task of {actual}`. For mixed completion use TaskCase/Select or a scope."))
                     }

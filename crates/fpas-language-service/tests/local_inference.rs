@@ -61,7 +61,7 @@ fn inferred_subranges_retain_the_declared_type_for_hover_and_navigation() {
 #[test]
 fn inferred_types_appear_on_declarations_uses_and_completion() {
     let temp = TempDirectory::new("local-inference");
-    let source = "program T; type UserId = distinct integer; begin const Number := 42; var Text := 'Ada'; const Values := [1, 2]; const Index := ['a': 1]; const Id := UserId(Number); discard Number; discard Text; discard Values; discard Index; discard Id; end.";
+    let source = "program T; type UserId = distinct integer; function Read(): integer; begin return 42; end function; begin const Number := Read(); var Text := 'Ada'.ToUpper(); const Values := [1, 2]; const Index := ['a': 1]; const Id := UserId(Number); const Sum := Number + 1; const ReadLocal := function(): integer begin return Sum; end function; discard Number; discard Text; discard Values; discard Index; discard Id; discard Sum; discard ReadLocal; end.";
     let path = temp.write("main.fpas", source);
     let mut service = LanguageService::new(WorkspaceContext::loose(temp.path()));
     assert!(
@@ -77,6 +77,8 @@ fn inferred_types_appear_on_declarations_uses_and_completion() {
         ("Values", "const Values: array of integer"),
         ("Index", "const Index: dict of string to integer"),
         ("Id", "const Id: UserId"),
+        ("Sum", "const Sum: integer"),
+        ("ReadLocal", "const ReadLocal: function(): integer"),
     ] {
         for offset in [
             source.find(&format!("{name} :=")).expect("declaration"),
@@ -162,8 +164,8 @@ fn inferred_imported_conversion_retains_its_nominal_type_for_navigation() {
 fn inferred_imported_constructors_keep_concrete_hover_members_and_type_navigation() {
     let temp = TempDirectory::new("inference-constructions");
     let manifest = temp.write("app.fpasprj", "[project]\nname = \"app\"\nkind = \"program\"\nmain = \"main.fpas\"\n[sources]\ninclude = [\"*.fpas\"]\n");
-    let unit = temp.write("Domain.fpas", "unit Domain; public type Box of T = record public Value: T; end record; public type Lookup of T = enum Found(Value: T); Missing; end enum; public type TextLookup = Lookup of string; end unit;");
-    let source = "program T; uses Domain as D; begin const Boxed := D.Box(Value := 'text'); const Found := D.Lookup.Found(Boxed); const Missing := D.TextLookup.Missing; discard Boxed.Value; discard Found; discard Missing; end.";
+    let unit = temp.write("Domain.fpas", "unit Domain; public type Box of T = record public Value: T; end record; public type Lookup of T = enum Found(Value: T); Missing; end enum; public type TextLookup = Lookup of string; public function Make(): Box of string; begin return Box(Value := 'text'); end function; public function MakeMissing<T>(): Lookup of T; begin return Lookup.Missing; end function; end unit;");
+    let source = "program T; uses Domain as D; begin const Boxed := D.Make(); const Found := D.Lookup.Found(Boxed); const Missing := D.TextLookup.Missing; const Contextual: D.Lookup of string := D.MakeMissing(); discard Boxed.Value; discard Found; discard Missing; discard Contextual; end.";
     let path = temp.write("main.fpas", source);
     let mut service = LanguageService::load(&manifest);
     let analysis = service.analyze_document(&path).expect("analysis");
@@ -182,6 +184,11 @@ fn inferred_imported_constructors_keep_concrete_hover_members_and_type_navigatio
         (
             "Missing",
             "const Missing: domain.lookup of string",
+            "Lookup",
+        ),
+        (
+            "Contextual",
+            "const Contextual: D.Lookup of string",
             "Lookup",
         ),
     ] {

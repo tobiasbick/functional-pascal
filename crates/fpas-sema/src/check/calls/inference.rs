@@ -10,9 +10,8 @@ use std::collections::{HashMap, HashSet};
 use std::sync::Arc;
 
 impl Checker {
-    /// Infer type arguments from argument types, enforce consistent reuse, and
-    /// validate constraints.
-    pub(crate) fn validate_routine_constraints(
+    /// Infers generic arguments from supplied values with consistent reuse.
+    pub(crate) fn infer_routine_arguments(
         &mut self,
         type_params: &[GenericParamDef],
         params: &[crate::types::ParamTy],
@@ -41,20 +40,6 @@ impl Checker {
                 .iter()
                 .any(|parameter| parameter.name.eq_ignore_ascii_case(name))
         });
-
-        // Build a Vec<GenericParamDef> + Vec<Ty> for only the params we inferred.
-        let mut check_params = Vec::new();
-        let mut check_args = Vec::new();
-        for tp in type_params {
-            if let Some(arg) = inferred.get(&tp.name.to_ascii_lowercase()) {
-                check_params.push(tp.clone());
-                check_args.push(arg.clone());
-            }
-        }
-
-        if !check_params.is_empty() {
-            self.validate_constraints(&check_params, &check_args, span);
-        }
 
         inferred
     }
@@ -90,7 +75,13 @@ impl Checker {
                 );
             }
         }
-        Self::substitute_type_params(result, inferred)
+        let mut evidence = inferred.clone();
+        for parameter in parameters {
+            evidence
+                .entry(parameter.name.to_ascii_lowercase())
+                .or_insert(Ty::Error);
+        }
+        Self::substitute_type_params(result, &evidence)
     }
 
     /// Collect consistent bindings from one supplied value or expected type.

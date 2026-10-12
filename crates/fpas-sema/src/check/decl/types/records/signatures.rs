@@ -182,6 +182,7 @@ impl Checker {
             return_type,
             owner_unit,
         });
+        self.routine_type_path.push(qualified_name.to_owned());
         self.check_preconditions(requires);
         self.check_postconditions(ensures);
         for decl in nested {
@@ -191,6 +192,7 @@ impl Checker {
             self.check_stmt(stmt);
         }
         self.scopes.function_ctx = previous_ctx;
+        self.routine_type_path.pop();
         self.scopes.pop_scope();
         self.scopes.set_discard_info(
             qualified_name,

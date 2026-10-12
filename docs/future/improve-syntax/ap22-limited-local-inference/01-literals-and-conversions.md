@@ -1,5 +1,8 @@
 # AP22.1: Inference from literals and conversions
 
+AP34 supersedes this package's initializer-form restriction. Current behavior is
+defined by [AP34.2](../ap34-consistent-type-inference/02-inference-rules.md).
+
 Package: [AP22: Limited local inference](README.md)
 
 Status: complete.
@@ -12,8 +15,9 @@ initializer is a literal or a resolved explicit type conversion.
 Literal forms include scalar literals, signed numeric literals, and non-empty
 array and dictionary literals with complete, matching types. Parentheses are
 transparent. Dictionary keys and values supply separate evidence. Empty
-collections, nested empty collections, unresolved generic arguments, and mixed
-element types require annotations; inference does not promote numeric types.
+collections and unresolved generic arguments require context. AP34 allows
+matching sibling elements to complete nested empty collections. Mixed numeric
+elements are rejected even with annotations; inference does not promote types.
 Record and enum construction belong to AP22.2.
 
 ## Prerequisites
@@ -27,10 +31,10 @@ Record and enum construction belong to AP22.2.
 
 - Parser: `LocalBinding` owns the optional annotation; declaration-level
   `ConstDef` and `VarDef` retain mandatory annotations.
-- Sema: `check/decl/local_inference.rs` validates literal evidence and reuses
+- Sema: `check/decl/local_inference.rs` validates complete checked types and reuses
   resolved AP19 conversion metadata for `UserId(Value)` and `integer(Id)`.
-  Ordinary conversion routines such as `IntToReal(...)` remain ordinary calls.
-- Unsupported or ambiguous local initializers report FP3036 with an annotation
+  `IntToReal(...)` remains an ordinary call whose known result is now eligible.
+- Underdetermined local initializers report FP3036 with an annotation
   hint. Invalid expressions retain their original diagnostics.
 - Compiler: unannotated locals use the checked initializer type for storage,
   including mutable capture cells and nested routine captures.
@@ -60,7 +64,7 @@ None; annotations stay valid.
 - Parser coverage for optional local annotations, mandatory declaration-level
   annotations, and recovery after a missing initializer.
 - Sema coverage for each literal kind, nested collection evidence, conversions,
-  shadowed conversion names, fixed mutable types, and rejected initializer forms.
+  shadowed conversion names, fixed mutable types, and unresolved initializers.
 - Compiler/VM and FPAS runner coverage for stored types, static labels, captures,
   and conversion initializer execution order.
 - Formatter round trips, language-service hover/completion with shadowing,

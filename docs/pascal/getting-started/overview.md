@@ -6,7 +6,7 @@ Functional Pascal is a modern, function-first programming language built on Pasc
 
 - **Function first** — Functions are the primary building block. No classical classes.
 - **Explicit binding mutability** — `const` bindings are immutable; `var` bindings permit reassignment.
-- **Explicit types** — Parameters, routine results, and record fields declare their types. Local bindings allow [limited inference](../language/basics/local-variables.md#limited-type-inference) from literals, typed construction, and explicit type conversions.
+- **Explicit types** — Parameters, routine results, and record fields declare their types. Local bindings allow [type inference](../language/basics/local-variables.md#type-inference) whenever the initializer's type is fully determined.
 - **Safe by design** — The VM manages memory. No pointers, no manual allocation.
 - **Familiar syntax** — Pascal's `begin`, `end`, `:=`, `downto` and other well-known keywords.
 - **Case-insensitive** — Keywords and identifiers are case-insensitive, following Pascal tradition.

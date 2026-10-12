@@ -210,7 +210,7 @@ fn all_four_commands_preserve_source_failures_in_text_and_json() {
             if expected == "FP3006" {
                 if source.contains("Result of") {
                     assert_eq!(record["expected"], "Result of (integer, string)");
-                    assert_eq!(record["found"], "Result of (string, <error>)");
+                    assert_eq!(record["found"], "Result of (string, string)");
                     assert_eq!(record["phase"], "sema");
                 } else {
                     assert_eq!(record["expected"], "integer");

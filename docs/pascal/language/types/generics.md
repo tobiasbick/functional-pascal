@@ -196,7 +196,9 @@ begin
 end procedure;
 ```
 
-Type arguments are inferred from the call-site arguments — no explicit instantiation is needed:
+Type arguments are inferred from supplied arguments first. An expected result type
+fills only unresolved parameters, as described in
+[Generic routines](../functions/generic-routines.md). No explicit instantiation is needed:
 
 ```pascal
 const X: integer := Identity(42); // T inferred as integer

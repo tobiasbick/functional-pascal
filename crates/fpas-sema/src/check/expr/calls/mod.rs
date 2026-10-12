@@ -35,6 +35,7 @@ impl Checker {
         args: &[Expr],
         span: Span,
         allow_procedure_result: bool,
+        expected: Option<&Ty>,
     ) -> CallResolution {
         if let Some(result) = self.try_check_indexed_callable(
             Self::expr_lookup_key(call_expr),
@@ -45,9 +46,13 @@ impl Checker {
         ) {
             return CallResolution::MethodResult(result);
         }
-        if let Some(result) =
-            self.try_check_native_factory(Self::expr_lookup_key(call_expr), designator, args, span)
-        {
+        if let Some(result) = self.try_check_native_factory(
+            Self::expr_lookup_key(call_expr),
+            designator,
+            args,
+            span,
+            expected,
+        ) {
             return CallResolution::MethodResult(result);
         }
         let name = Self::resolve_designator_name(designator);
@@ -82,7 +87,7 @@ impl Checker {
             let method_result = if allow_procedure_result {
                 self.try_check_method_go_call(call_expr, designator, args, span)
             } else {
-                self.try_check_method_call(call_expr, designator, args, span)
+                self.try_check_method_call(call_expr, designator, args, span, expected)
             };
             if let Some(result) = method_result {
                 return CallResolution::MethodResult(result);
@@ -98,6 +103,7 @@ impl Checker {
                 args,
                 span,
                 allow_procedure_result,
+                expected,
             ) {
                 return CallResolution::MethodResult(result);
             }
@@ -125,7 +131,7 @@ impl Checker {
         CallResolution::Failed
     }
 
-    /// Check an ordinary call, passing expected types to record constructors.
+    /// Checks a call with context for unresolved generic result parameters.
     pub(super) fn check_call_expr(
         &mut self,
         call_expr: &Expr,
@@ -134,7 +140,7 @@ impl Checker {
         span: Span,
         expected: Option<&Ty>,
     ) -> Ty {
-        match self.resolve_call_target(call_expr, designator, args, span, false) {
+        match self.resolve_call_target(call_expr, designator, args, span, false, expected) {
             CallResolution::Symbol { kind, ty } => {
                 let name = Self::resolve_designator_name(designator);
                 self.check_known_call_symbol(call_expr, &name, kind, ty, args, expected)
@@ -195,6 +201,7 @@ impl Checker {
                     CallTarget::for_symbol(symbol_kind),
                     args,
                     span,
+                    expected,
                 );
                 self.check_call_result_type(
                     &func_ty.return_type,
@@ -226,6 +233,7 @@ impl Checker {
         }
     }
 
+    /// Checks a spawned routine from its arguments without a receiving result context.
     pub(super) fn check_known_go_call_symbol(
         &mut self,
         name: &str,
@@ -266,6 +274,7 @@ impl Checker {
                     CallTarget::for_symbol(symbol_kind),
                     args,
                     span,
+                    None,
                 );
                 self.check_call_result_type(
                     &func_ty.return_type,

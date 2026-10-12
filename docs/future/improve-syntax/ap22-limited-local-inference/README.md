@@ -1,31 +1,34 @@
 # AP22: Limited local inference
 
 Status: complete (Q14). Effort: large.
+AP34 explicitly supersedes Q14's initializer-form restriction; see
+[the current inference rules](../ap34-consistent-type-inference/02-inference-rules.md).
+This package records AP22's delivered scope and remains complete.
 Completion is tracked in the [central README](../README.md); the process is in
 [development-process.md](../development-process.md).
 
 ## Goal
 
-Only the three permitted local initializer forms infer types; ordinary calls
-and ambiguous cases require annotations, and public signatures remain explicit
-and stable.
+Deliver inference for literal, conversion and constructor initializers while
+keeping signatures explicitly typed. These forms remain supported under AP34's
+uniform rule for every fully determined statement-local initializer.
 
 ## Decisions (Q14)
 
-- Allow omitted type annotations on local bindings only for literals, typed
-  construction, and explicit conversions. The type must be evident from the
-  initializer itself.
+Q14's initializer-form whitelist is explicitly replaced by AP34. The retained
+boundaries and supported forms are:
+
+- Local literals, typed construction and explicit conversions infer their checked
+  types. AP34 also admits calls, operators and other fully determined expressions.
 - Literal forms include scalar literals and non-empty array and dictionary
   literals with uniquely determined element, key, and value types. Empty or
   ambiguous collections require an annotation.
 - Enum variant constructors count as typed construction, including payloads
   inferred by AP24. Undetermined type arguments require an annotation.
-- Ordinary function calls and other initializer forms require an explicit
-  type annotation; do not introduce general local inference.
 - Explicit local annotations remain valid. Public parameters, results, and
   fields remain fully annotated.
 - Empty collections and underconstrained constructors are not guessed.
-- Deferred optional AP27 may rely on this implemented limited form if reopened;
+- Deferred optional AP27 may rely on implemented inference if reopened;
   it must not broaden inference implicitly. Value and spelling remain open (Q21).
 
 Local bindings inside a routine or a plain scoping block; the surrounding
@@ -35,7 +38,7 @@ code supplies the referenced types and values:
 const P := Point(X := 1, Y := 2);
 const Limit := 100;
 const Id := UserId(Input);
-const Name: string := Normalize(Input);   // ordinary call: annotation required
+const Name := Normalize(Input);          // known result: current AP34 rule
 ```
 
 ## Open decisions
@@ -64,6 +67,6 @@ construction using the implemented AP10.1 and AP24 constructor rules.
 
 ## Acceptance
 
-Only the three permitted local initializer forms infer types; ordinary calls
-and ambiguous cases require annotations, and public signatures remain explicit
-and stable.
+Literals, conversions and constructors retain complete checked types, fixed
+binding types and unchanged evaluation. Unknown types require context, and
+signatures remain explicit. AP34 owns the broader expression/context rule.

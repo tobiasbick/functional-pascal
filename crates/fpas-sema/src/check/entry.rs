@@ -21,6 +21,7 @@ impl Checker {
         self.check_task_handle_escapes(&program.declarations, Some(&program.body));
         self.validate_dictionary_keys();
         self.finish_contract_checks();
+        self.finish_deferred_type_arguments();
     }
 
     /// Install dependency interfaces, collect types, and check an ordered program.
@@ -62,6 +63,7 @@ impl Checker {
         self.check_task_handle_escapes(&program.declarations, Some(&program.body));
         self.validate_dictionary_keys();
         self.finish_contract_checks();
+        self.finish_deferred_type_arguments();
         Ok(())
     }
 
@@ -113,6 +115,7 @@ impl Checker {
         self.check_task_handle_escapes(&unit.declarations, None);
         self.validate_dictionary_keys();
         self.finish_contract_checks();
+        self.finish_deferred_type_arguments();
         Ok(())
     }
 

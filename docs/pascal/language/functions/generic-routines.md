@@ -16,7 +16,7 @@ begin
 end procedure;
 ```
 
-Type arguments are inferred from the call-site arguments:
+Type arguments are inferred from supplied values first:
 
 ```pascal
 begin
@@ -25,6 +25,44 @@ begin
   PrintValue(3.14);             // T = real
 end.
 ```
+
+An expected result type fills only parameters still unresolved after the
+arguments have contributed. Context comes from an annotation, assignment,
+return, routine argument, constructor field, or typed callable signature.
+Direct calls, record instance/static methods, and callable values use the same
+rule, including imported routines. Named argument order does not change inference.
+
+```pascal
+program ContextualFactory;
+
+function Empty<T>(): Option of T;
+begin
+  return None;
+end function;
+
+function Missing(): Option of integer;
+begin
+  return Empty();
+end function;
+
+begin
+  const Value: Option of integer := Empty();
+  const Factory: function(): Option of integer := Empty;
+  const Copy := Factory();
+  if not Value.IsNone() or not Copy.IsNone() or not Missing().IsNone() then
+    panic('expected empty values');
+  end if;
+end.
+```
+
+An already determined argument type cannot be replaced by the expected result.
+`const Value: real := Identity(1);` is rejected because the argument fixes T to
+integer. Use a real literal or an explicit `Std.Conv.IntToReal` conversion.
+Constraints are checked after inference, including parameters supplied by context.
+Every declared type parameter needs evidence: a result-only factory without context
+and a parameter unused by both arguments and result are rejected before lowering.
+Enclosing generic parameters retain their own identities, even when a nested
+routine declares another parameter with the same source name.
 
 Multiple type parameters are separated by commas:
 
@@ -36,6 +74,10 @@ end function;
 ```
 
 See [Generics](../types/generics.md) for constraints and method-level generics on record methods.
+
+For spawned calls, the receiving task annotation does not specialize the
+callee. Resolve its arguments or use an explicitly typed callable before
+creating the handle; see [Task handles](../concurrency/task-handles.md).
 
 ## See also
 

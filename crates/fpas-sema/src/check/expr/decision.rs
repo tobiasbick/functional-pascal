@@ -8,7 +8,7 @@
 //! **Documentation:** `docs/pascal/language/control-flow/if-then-else.md`
 
 use super::Checker;
-use crate::types::{Ty, merge_inferred_types};
+use crate::types::{Ty, merge_inferred_types, needs_expected_type};
 use fpas_diagnostics::codes::SEMA_TYPE_MISMATCH;
 use fpas_lexer::Span;
 use fpas_parser::{Expr, IfExprBranch};
@@ -21,6 +21,8 @@ impl Checker {
         else_value: &Expr,
         expected: Option<&Ty>,
     ) -> Ty {
+        let previous_errors = self.errors.len();
+        self.deferred_constructor_inference += 1;
         let mut values = Vec::with_capacity(branches.len() + 1);
         for branch in branches {
             // `is` bindings in this condition are visible only in this branch's value.
@@ -36,7 +38,35 @@ impl Checker {
             self.check_expr_with_expected(else_value, expected),
             else_value.span(),
         ));
+        self.deferred_constructor_inference -= 1;
+        if self.errors.len() == previous_errors
+            && let Some(context) = self.branch_completion_context(&values)
+        {
+            return self.check_if_expr(branches, else_value, Some(&context));
+        }
         self.shared_branch_type(values, "`if` expression branches", expected)
+    }
+
+    /// Finds complete sibling evidence for branches needing contextual rechecking.
+    pub(in crate::check) fn branch_completion_context(&self, values: &[(Ty, Span)]) -> Option<Ty> {
+        if !values
+            .iter()
+            .any(|(ty, _)| !ty.is_error() && needs_expected_type(ty))
+        {
+            return None;
+        }
+        if let Some((ty, _)) = values.iter().find(|(ty, _)| !needs_expected_type(ty)) {
+            return Some(ty.clone());
+        }
+        let mut shared = Ty::Error;
+        for (ty, _) in values {
+            let ty = self.resolve_visible_type(ty);
+            if !shared.assignment_compatible_with(&ty) || !ty.assignment_compatible_with(&shared) {
+                return None;
+            }
+            shared = merge_inferred_types(&shared, &ty);
+        }
+        (!needs_expected_type(&shared)).then_some(shared)
     }
 
     /// Joins compatible branch evidence and checks each branch against its context.

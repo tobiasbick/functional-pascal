@@ -17,17 +17,18 @@ begin
 end function;
 ```
 
-## Limited type inference
+## Type inference
 
 Explicit [subrange conversions](../types/subranges.md), such as
 `const Level := Percent(Value);`, infer the range type and retain its checked
-bounds. Ordinary routines returning a subrange still need an annotation.
+bounds. Routines returning a subrange infer the same declared range type.
 
 In statement position, a `const` or `var` binding can omit its type annotation
-for scalar literals, non-empty array and dictionary literals, typed record or
-enum construction, and explicit type conversions. Parentheses and a numeric
-literal's sign do not change this rule. The inferred type is fixed for the
-lifetime of the binding.
+whenever its initializer has a fully determined type. Calls and factories,
+operators, references, field/index access, record updates, closures with complete
+signatures and `if`/`case` expressions follow the same rule as literals,
+constructors and conversions. The inferred type is fixed for the lifetime of
+the binding. Explicit annotations remain valid and supply context when needed.
 
 ```pascal
 type UserId = distinct integer;
@@ -45,9 +46,11 @@ begin
 end function;
 ```
 
-Collection elements must provide complete, matching types; dictionary keys and
-values are checked separately. Nested empty collections and unresolved generic
-arguments require an annotation. Mixed numeric literals such as `[1, 2.0]`
+Collection elements jointly determine their matching type; dictionary keys and
+values infer independently. `[[], [1]]` determines `array of array of integer`,
+and `[None, Some(1)]` determines `array of Option of integer`. An empty collection
+or a collection whose elements still leave a type unknown requires context.
+Mixed numeric literals such as `[1, 2.0]`
 are invalid even with an annotation. Import `Std.Conv` and convert explicitly,
 for example `[IntToReal(1), 2.0]`; inference does not choose a numeric promotion.
 Expressions inside a collection literal can supply known element types.
@@ -83,19 +86,18 @@ end function;
 `None` leaves that type undetermined. `Ok(Value)` and `Error(Value)` leave one
 of the two `Result` arguments undetermined and require an annotation.
 
-Ordinary function and method calls, references to bindings, operator expressions,
-closures, conditional expressions, record updates, and field or index access
-require an annotation. This includes a factory returning a record or enum and
-access following a constructor, such as `Point(X := 1, Y := 2).X`.
-Conversion functions such as `IntToReal(...)` are ordinary calls; explicit type
-conversions use `Type(Value)`, such as `UserId(42)`.
-[FP3036](../../tools/diagnostics.md#semantic-analysis) asks for the missing annotation.
+Generic calls infer from supplied values first; an expected result type fills
+only unresolved parameters. For example, `const Value: Option of integer := Empty();`
+determines T for `function Empty<T>(): Option of T`. Without context that call
+is rejected. See [Generic routines](../functions/generic-routines.md).
+[FP3036](../../tools/diagnostics.md#semantic-analysis) requests an annotation
+when a local initializer still has an incomplete type.
 
 ```pascal
 const Empty: array of integer := [];
 const Mixed: array of real := [IntToReal(1), 2.0];
-const Converted: real := IntToReal(42);
-const Computed: integer := ReadValue();
+const Converted := IntToReal(42);
+const Computed := ReadValue();
 ```
 
 Declarations outside statement lists, including program and unit declarations

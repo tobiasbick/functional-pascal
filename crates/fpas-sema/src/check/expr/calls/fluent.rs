@@ -46,6 +46,7 @@ impl Checker {
         args: &[Expr],
         span: Span,
         allow_procedure_result: bool,
+        expected: Option<&Ty>,
     ) -> Option<Ty> {
         let (last, prefix_parts) = designator.parts.split_last()?;
         let DesignatorPart::Ident(name, name_span) = last else {
@@ -119,6 +120,7 @@ impl Checker {
             span,
             call_span: *name_span,
             allow_procedure_result,
+            expected,
         }))
     }
 
@@ -142,6 +144,7 @@ impl Checker {
                     CallTarget::FunctionValue,
                     args,
                     span,
+                    None,
                 );
                 self.check_call_result_type(
                     &signature.return_type,
@@ -195,6 +198,7 @@ impl Checker {
             span,
             call_span,
             allow_procedure_result,
+            expected,
         } = call;
         if receiver_ty.is_error() {
             self.check_args_only(args);
@@ -223,7 +227,7 @@ impl Checker {
         };
         self.prechecked_receivers
             .insert(Self::expr_lookup_key(receiver), receiver_ty.clone());
-        let result = self.check_native_arguments(operation, Some(receiver), args, span);
+        let result = self.check_native_arguments(operation, Some(receiver), args, span, expected);
         self.prechecked_receivers
             .remove(&Self::expr_lookup_key(receiver));
         if result == Ty::Unit && !allow_procedure_result {
@@ -266,4 +270,6 @@ pub(in crate::check) struct FluentCall<'a> {
     pub(in crate::check) call_span: Span,
     /// Accept procedures (statement position or `go`).
     pub(in crate::check) allow_procedure_result: bool,
+    /// Expected type of the final dot-call result.
+    pub(in crate::check) expected: Option<&'a Ty>,
 }

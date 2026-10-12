@@ -18,8 +18,9 @@ impl Checker {
         &mut self,
         base: &Expr,
         operations: &[PostfixOperation],
+        expected: Option<&Ty>,
     ) -> Ty {
-        self.check_postfix_chain(base, operations, false)
+        self.check_postfix_chain(base, operations, false, expected)
     }
 
     /// Type-check a postfix chain used as a statement.
@@ -47,11 +48,11 @@ impl Checker {
                 "End the statement with `.Method(...)`; fields and indexes are values, not statements.",
                 span,
             );
-            self.check_postfix_chain(base, operations, false);
+            self.check_postfix_chain(base, operations, false, None);
             return;
         }
         let previous_error_count = self.errors.len();
-        let ty = self.check_postfix_chain(base, operations, true);
+        let ty = self.check_postfix_chain(base, operations, true, None);
         self.expr_types
             .insert(Self::expr_lookup_key(expr), ty.clone());
         self.record_discard_info(expr);
@@ -74,10 +75,10 @@ impl Checker {
                 "End the expression with `.Name(...)`.",
                 span,
             );
-            self.check_postfix_chain(base, operations, false);
+            self.check_postfix_chain(base, operations, false, None);
             return Ty::Error;
         }
-        self.check_postfix_chain(base, operations, true)
+        self.check_postfix_chain(base, operations, true, None)
     }
 
     fn check_postfix_chain(
@@ -85,12 +86,23 @@ impl Checker {
         base: &Expr,
         operations: &[PostfixOperation],
         allow_final_procedure: bool,
+        expected: Option<&Ty>,
     ) -> Ty {
         let mut ty = self.check_expr(base);
         for (index, operation) in operations.iter().enumerate() {
             let procedure_result_is_discarded =
                 allow_final_procedure && index + 1 == operations.len();
-            ty = self.check_postfix_operation(&ty, operation, procedure_result_is_discarded);
+            let result_context = if index + 1 == operations.len() {
+                expected
+            } else {
+                None
+            };
+            ty = self.check_postfix_operation(
+                &ty,
+                operation,
+                procedure_result_is_discarded,
+                result_context,
+            );
             let span = match operation {
                 PostfixOperation::Field { span, .. }
                 | PostfixOperation::Index { span, .. }
@@ -112,6 +124,7 @@ impl Checker {
         ty: &Ty,
         operation: &PostfixOperation,
         procedure_result_is_discarded: bool,
+        expected: Option<&Ty>,
     ) -> Ty {
         if ty.is_error() {
             match operation {
@@ -140,10 +153,15 @@ impl Checker {
                 *span,
                 operation,
                 procedure_result_is_discarded,
+                expected,
             ),
         }
     }
 
+    #[expect(
+        clippy::too_many_arguments,
+        reason = "The postfix node supplies call identity and result context."
+    )]
     fn check_postfix_method_call(
         &mut self,
         receiver_ty: &Ty,
@@ -152,6 +170,7 @@ impl Checker {
         span: Span,
         operation: &PostfixOperation,
         procedure_result_is_discarded: bool,
+        expected: Option<&Ty>,
     ) -> Ty {
         let Ty::Record(record_ty) = receiver_ty else {
             let receiver = Expr::Error(span);
@@ -164,6 +183,7 @@ impl Checker {
                 span,
                 call_span: span,
                 allow_procedure_result: procedure_result_is_discarded,
+                expected,
             });
         };
 
@@ -221,6 +241,7 @@ impl Checker {
                 span,
                 call_span: span,
                 allow_procedure_result: procedure_result_is_discarded,
+                expected,
             });
         };
 
@@ -250,6 +271,7 @@ impl Checker {
                     visible_params,
                     args,
                     span,
+                    Some((&func_ty.return_type, expected)),
                 );
                 self.check_call_result_type(
                     &func_ty.return_type,
@@ -276,6 +298,7 @@ impl Checker {
                     visible_params,
                     args,
                     span,
+                    None,
                 );
                 if procedure_result_is_discarded {
                     Ty::Unit

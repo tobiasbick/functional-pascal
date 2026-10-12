@@ -84,7 +84,7 @@ Local bindings in statement position may omit the annotation, for example
 `const S := Shape.Circle(5.0);` or `const P := Shape.Point;`. Generic variants
 require all type arguments to be determined by payloads or fixed by a type
 alias. Imported enum types and exported aliases follow the same construction
-rules. See [Limited type inference](../basics/local-variables.md#limited-type-inference).
+rules. See [Type inference](../basics/local-variables.md#type-inference).
 
 Destructuring uses `case`:
 

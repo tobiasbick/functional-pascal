@@ -36,7 +36,7 @@ bindings can specialize generic workers before starting them.
   enforce the procedure/function distinction, including generic inference,
   and retain error compatibility only for recovery from invalid source.
 - `crates/fpas-sema/src/check/expr/tasks.rs`, the shared call-result checker,
-  and `check/decl/routines.rs` own spawn evidence and separate body contexts.
+  and `check/decl/routine_body.rs` own spawn evidence and separate body contexts.
   `check/expr/calls/mod.rs` rejects procedure Wait in value positions.
 - `crates/fpas-sema/src/std_registry/builtins/channel_task/groups.rs` checks
   group-worker signatures and preserves their result types.

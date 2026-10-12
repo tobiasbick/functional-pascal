@@ -5,6 +5,7 @@
 mod contextual;
 mod inference;
 mod named;
+mod result_inference;
 
 use super::Checker;
 use crate::scope::SymbolKind;
@@ -46,9 +47,11 @@ struct RoutineCallSignature<'a> {
     type_params: &'a [GenericParamDef],
     params: &'a [ParamTy],
     variadic: bool,
+    result: Option<(&'a Ty, Option<&'a Ty>)>,
 }
 
 impl Checker {
+    /// Checks arguments and completes missing generic parameters from a result context.
     pub(crate) fn check_function_call_args(
         &mut self,
         name: &str,
@@ -56,6 +59,7 @@ impl Checker {
         target: CallTarget,
         args: &[Expr],
         span: Span,
+        expected: Option<&Ty>,
     ) -> HashMap<String, Ty> {
         self.check_routine_call_args(
             RoutineCallSignature {
@@ -66,12 +70,14 @@ impl Checker {
                 type_params: &func_ty.type_params,
                 params: &func_ty.params,
                 variadic: func_ty.variadic,
+                result: Some((&func_ty.return_type, expected)),
             },
             &args.iter().collect::<Vec<_>>(),
             span,
         )
     }
 
+    /// Checks procedure arguments without a result type supplying evidence.
     pub(crate) fn check_procedure_call_args(
         &mut self,
         name: &str,
@@ -89,6 +95,7 @@ impl Checker {
                 type_params: &proc_ty.type_params,
                 params: &proc_ty.params,
                 variadic: proc_ty.variadic,
+                result: None,
             },
             &args.iter().collect::<Vec<_>>(),
             span,
@@ -102,6 +109,7 @@ impl Checker {
         func_ty: &FunctionTy,
         args: &[&Expr],
         span: Span,
+        expected: Option<&Ty>,
     ) -> HashMap<String, Ty> {
         self.check_routine_call_args(
             RoutineCallSignature {
@@ -112,6 +120,7 @@ impl Checker {
                 type_params: &func_ty.type_params,
                 params: &func_ty.params,
                 variadic: func_ty.variadic,
+                result: Some((&func_ty.return_type, expected)),
             },
             args,
             span,
@@ -126,6 +135,7 @@ impl Checker {
         visible_params: &[ParamTy],
         args: &[Expr],
         span: Span,
+        result: Option<(&Ty, Option<&Ty>)>,
     ) -> HashMap<String, Ty> {
         self.check_routine_call_args(
             RoutineCallSignature {
@@ -136,6 +146,7 @@ impl Checker {
                 type_params,
                 params: visible_params,
                 variadic: false,
+                result,
             },
             &args.iter().collect::<Vec<_>>(),
             span,
@@ -150,6 +161,7 @@ impl Checker {
         params: &[ParamTy],
         args: &[Expr],
         span: Span,
+        result: Option<(&Ty, Option<&Ty>)>,
     ) -> HashMap<String, Ty> {
         self.check_routine_call_args(
             RoutineCallSignature {
@@ -160,6 +172,7 @@ impl Checker {
                 type_params,
                 params,
                 variadic: false,
+                result,
             },
             &args.iter().collect::<Vec<_>>(),
             span,
@@ -180,6 +193,7 @@ impl Checker {
             type_params,
             params,
             variadic,
+            result,
         } = signature;
         let named = args.iter().any(|arg| arg.argument_name().is_some());
         let Some(args) = self.order_call_arguments(name, target, params, variadic, args) else {
@@ -238,11 +252,19 @@ impl Checker {
         }
         self.reject_var_argument_aliases(&var_roots, span);
 
-        let inferred = self.validate_routine_constraints(type_params, params, &arg_types, span);
+        let mut inferred = self.infer_routine_arguments(type_params, params, &arg_types, span);
+        self.complete_result_arguments(type_params, result, &mut inferred, span);
         if !type_params.is_empty() {
             let contextual = contextual::contextual_parameters(type_params, params, &inferred);
             self.complete_constructor_arguments(&contextual, &args, &mut arg_types);
         }
+        self.check_inferred_arguments(
+            name,
+            type_params,
+            result.map(|(declared, _)| declared),
+            &inferred,
+            span,
+        );
         for (index, (param, actual)) in params.iter().zip(&arg_types).enumerate() {
             let expected = Self::substitute_type_params(&param.ty, &inferred);
             let role = if named {

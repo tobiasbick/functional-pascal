@@ -7,8 +7,8 @@ allowed at program and unit level and inline in statement lists, including
 routine bodies and nested control-flow scopes. Declaration groups are rejected
 with [FP2015](../../tools/diagnostics.md#parser).
 
-In statement position, the annotation can be omitted for the initializer forms
-described in [Limited type inference](local-variables.md#limited-type-inference),
+In statement position, every fully determined initializer can omit its annotation,
+as described in [Type inference](local-variables.md#type-inference),
 for example `const Count := 42;`, `const Id := UserId(42);`, or a typed record
 construction such as `const P := Point(X := 1, Y := 2);`. Program and unit
 declarations remain explicitly typed. Inference does not change initializer

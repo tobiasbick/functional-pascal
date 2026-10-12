@@ -8,6 +8,7 @@ mod boolean;
 mod bound_method;
 mod calls;
 mod closure;
+mod collections;
 mod construction_inference;
 mod conversion_argument;
 mod decision;
@@ -37,7 +38,7 @@ impl Checker {
         self.check_expr_with_expected(expr, None)
     }
 
-    /// Check an expression with context for underdetermined record constructors.
+    /// Checks an expression with context for incomplete generic and collection types.
     pub(crate) fn check_expr_with_expected(&mut self, expr: &Expr, expected: Option<&Ty>) -> Ty {
         if let Some(ty) = self.prechecked_receivers.get(&Self::expr_lookup_key(expr)) {
             return ty.clone();
@@ -82,7 +83,11 @@ impl Checker {
                     _ => None,
                 };
                 let inner_ty = self.check_expr_with_expected(inner, inner_expected);
-                Ty::Result(Box::new(inner_ty), Box::new(Ty::Error))
+                let error = match expected {
+                    Some(Ty::Result(_, error)) => *error.clone(),
+                    _ => Ty::Error,
+                };
+                Ty::Result(Box::new(inner_ty), Box::new(error))
             }
             Expr::ResultError(inner, _) => {
                 let inner_expected = match expected {
@@ -90,7 +95,11 @@ impl Checker {
                     _ => None,
                 };
                 let inner_ty = self.check_expr_with_expected(inner, inner_expected);
-                Ty::Result(Box::new(Ty::Error), Box::new(inner_ty))
+                let ok = match expected {
+                    Some(Ty::Result(ok, _)) => *ok.clone(),
+                    _ => Ty::Error,
+                };
+                Ty::Result(Box::new(ok), Box::new(inner_ty))
             }
             Expr::OptionSome(inner, _) => {
                 let inner_expected = match expected {
@@ -100,7 +109,10 @@ impl Checker {
                 let inner_ty = self.check_expr_with_expected(inner, inner_expected);
                 Ty::Option(Box::new(inner_ty))
             }
-            Expr::OptionNone(_) => Ty::Option(Box::new(Ty::Error)),
+            Expr::OptionNone(_) => match expected {
+                Some(expected @ Ty::Option(_)) => expected.clone(),
+                _ => Ty::Option(Box::new(Ty::Error)),
+            },
             Expr::Try(inner, span) => self.check_try_expr(inner, *span),
             Expr::Go(inner, span) => self.check_go_expr(inner, *span),
             Expr::RecordUpdate { base, fields, span } => {
@@ -108,7 +120,7 @@ impl Checker {
             }
             Expr::Postfix {
                 base, operations, ..
-            } => self.check_postfix_expr(base, operations),
+            } => self.check_postfix_expr(base, operations, expected),
             Expr::Closure(closure) => self.check_closure_expr(
                 expr,
                 closure.is_function,
@@ -138,51 +150,26 @@ impl Checker {
         } else {
             ty
         };
+        if let Expr::Designator(designator) = expr {
+            let parameters = match &ty {
+                Ty::Function(function) => function.type_params.as_slice(),
+                Ty::Procedure(procedure) => procedure.type_params.as_slice(),
+                _ => &[],
+            };
+            let name = format!(
+                "{} (callable value)",
+                Self::resolve_designator_name(designator)
+            );
+            self.complete_or_defer_type_arguments(&name,
+                parameters.iter().map(|parameter| parameter.display_name().to_owned()).collect(),
+                "Supply an explicit callable signature, for example `const F: function(Value: integer): integer := Identity;`. Every declared parameter needs evidence; remove parameters unused by the signature.",
+                expr.span(), true);
+        }
         let key = Self::expr_lookup_key(expr);
         self.expr_types.insert(key, ty.clone());
         self.propagate_task_bound_expr(expr, key);
         self.record_discard_info(expr);
         ty
-    }
-
-    fn check_array_literal(&mut self, elements: &[Expr], expected: Option<&Ty>) -> Ty {
-        let element_expected = match expected {
-            Some(Ty::Array(element)) => Some(element.as_ref()),
-            _ => None,
-        };
-        if elements.is_empty() {
-            return Ty::Array(Box::new(Ty::Error));
-        }
-
-        let first_ty = self.check_expr_with_expected(&elements[0], element_expected);
-        for element in &elements[1..] {
-            let element_ty = self.check_expr_with_expected(element, element_expected);
-            self.check_type_compat(&first_ty, &element_ty, "array element", element.span());
-        }
-
-        Ty::Array(Box::new(first_ty))
-    }
-
-    fn check_dict_literal(&mut self, pairs: &[(Expr, Expr)], expected: Option<&Ty>) -> Ty {
-        let (key_expected, value_expected) = match expected {
-            Some(Ty::Dict(key, value)) => (Some(key.as_ref()), Some(value.as_ref())),
-            _ => (None, None),
-        };
-        if pairs.is_empty() {
-            return Ty::Dict(Box::new(Ty::Error), Box::new(Ty::Error));
-        }
-
-        let first_key_ty = self.check_expr_with_expected(&pairs[0].0, key_expected);
-        self.defer_dictionary_literal_key_check(first_key_ty.clone(), pairs[0].0.span());
-        let first_val_ty = self.check_expr_with_expected(&pairs[0].1, value_expected);
-        for (key, val) in &pairs[1..] {
-            let key_ty = self.check_expr_with_expected(key, key_expected);
-            self.check_type_compat(&first_key_ty, &key_ty, "dict key", key.span());
-            let val_ty = self.check_expr_with_expected(val, value_expected);
-            self.check_type_compat(&first_val_ty, &val_ty, "dict value", val.span());
-        }
-
-        Ty::Dict(Box::new(first_key_ty), Box::new(first_val_ty))
     }
 
     /// Type-check a record update expression: `base with Field := Value; … end`.

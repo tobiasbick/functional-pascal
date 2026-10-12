@@ -13,15 +13,28 @@ type Lookup of T = enum
   Missing;
 end enum;
 
+function ReadCount(): integer;
 begin
-  const Count := 42;
+  return 42;
+end function;
+
+function MakeMissing<T>(): option of T;
+begin
+  return None;
+end function;
+
+begin
+  const Count := ReadCount();
   var Offset := -2;
   const Names := ['Ada', 'Grace'];
   const Scores := ['Ada': 42, 'Grace': 7];
   const Id := UserId(Count);
   const Raw := integer(Id);
+  const Absent: option of integer := MakeMissing();
+  const Options := [Absent, Some(Count)];
   Offset := Offset + 1;
-  WriteLn(Raw + Offset, Names.Length(), Scores.Length());
+  const Total := Raw + Offset;
+  WriteLn(Total, Names.Length(), Scores.Length(), Options.Length());
   const Boxed := Box(Value := 'Ada');
   const Found := Lookup.Found(Boxed);
   case Found of

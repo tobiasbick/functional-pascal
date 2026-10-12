@@ -21,7 +21,7 @@ impl Checker {
                 span: call_span,
             } => {
                 use calls::CallResolution;
-                match self.resolve_call_target(inner, designator, args, *call_span, true) {
+                match self.resolve_call_target(inner, designator, args, *call_span, true, None) {
                     CallResolution::Symbol { kind, ty } => {
                         let name = Self::resolve_designator_name(designator);
                         let dispatch = self.builtin_std_dispatch_name(&name);

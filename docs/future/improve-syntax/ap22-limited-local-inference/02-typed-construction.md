@@ -1,5 +1,8 @@
 # AP22.2: Inference from typed construction
 
+AP34 supersedes the restriction that ordinary factory calls require annotations.
+See [AP34.2](../ap34-consistent-type-inference/02-inference-rules.md) for current rules.
+
 Package: [AP22: Limited local inference](README.md)
 
 Status: complete.
@@ -9,7 +12,7 @@ Status: complete.
 Statement-local bindings can omit a type annotation when the initializer is a
 resolved record or enum construction, for example
 `const P := Point(X := 1, Y := 2);` or `const S := Shape.Circle(2.0);`.
-Ordinary functions and methods returning those types still require annotations.
+AP34 applies the same eligibility rule to their factories and member access.
 
 ## Prerequisites
 
@@ -27,8 +30,8 @@ Ordinary functions and methods returning those types still require annotations.
   rules. Defaults do not infer arguments. A fixed type alias can supply the
   arguments; otherwise missing arguments require an annotation.
 - Non-generic payloadless enum variants infer their nominal type. `Some(Value)`
-  infers a complete Option payload; `None`, `Ok(Value)`, and `Error(Value)` retain
-  undetermined arguments and require annotations.
+  infers a complete Option payload; lone `None`, `Ok(Value)`, and `Error(Value)`
+  require context. AP34 joins matching sibling and expected-type evidence.
 - Imported types and exported enum aliases retain qualified constructor lookup
   without replacing the original generic type's variant symbols.
 - Checked initializer types feed the existing compiler storage/capture path and
@@ -54,8 +57,8 @@ None; explicit annotations remain valid.
 ## Verification
 
 - Sema covers concrete and generic records/enums, fixed aliases, nested
-  constructors, payloadless variants, Option payloads, rejected ordinary
-  factories and postfix access, shadowing, fixed nominal types, original
+  constructors, payloadless variants, Option payloads, ordinary factories and
+  postfix access, shadowing, fixed nominal types, original
   argument diagnostics, underconstrained constructors, and generic routine
   payloads that require a concrete callable signature.
 - Inferred aggregates preserve task-handle and callable discard restrictions.

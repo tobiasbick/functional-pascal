@@ -21,7 +21,7 @@ inheritance, pointers, manual allocation, exceptions with handlers, or preproces
 | Familiar Pascal / Delphi / Ada habit | FPAS spelling or rule |
 | --- | --- |
 | A `var` or `type` section containing several declarations | Repeat `var`, `const`, or `type` for each declaration. |
-| Pascal `const N = 3` | `const N: integer := 3;` (locals may infer some types). |
+| Pascal `const N = 3` | `const N: integer := 3;` (locals may infer known types). |
 | Ada `X : Integer := 1` | `var X: integer := 1;`; use `const` for an immutable binding. |
 | Assign to the function name or Delphi `Result` | `return Value;`; procedures use `return;`. |
 | Pascal `end;` for every block | `end function;`, `end procedure;`, `end if;`, etc.; program `end.`. |
@@ -63,11 +63,13 @@ comment blocks also supply Markdown declaration documentation.
 
 Declarations outside statement lists (including before a routine's `begin`),
 fields, parameters and return types require type annotations.
-Local inference accepts literals, nonempty homogeneous collection literals, typed
-record/enum constructors, `Some` with a known payload type, and explicit conversions.
-Annotate references, ordinary calls, operators, field/index reads, closures, record
-updates and `if`/`case` expressions. Empty arrays/dicts and `None`, `Ok`, `Error`
-need a contextual type; one Result constructor cannot determine both type arguments.
+Every fully determined statement-local initializer can omit its annotation,
+including calls, factories, operators, field/index reads, closures with complete
+signatures and `if`/`case` expressions. Its inferred type stays fixed. Collection
+elements supply joint evidence (`[None, Some(1)]` infers Option elements).
+Decision branches also supply joint evidence. Empty arrays/dicts and lone
+`None`, `Ok`, `Error` need context; a single Result
+constructor cannot determine both type arguments. Inference never promotes numbers.
 
 Precedence, high to low: postfix operations (including record `with`), unary minus
 and `try`, `* / div mod`, `+ -`, comparisons / `in` / condition-only `is`, `not`,
@@ -597,9 +599,13 @@ See [functions](language/functions/README.md).
 Generic type declarations use `of`: `type Box of T = record ... end record;` and
 `type Pair of (K, V) = ...`. Applications use `Box of integer` or
 `Pair of (integer, string)`. Generic routines and record methods declare angle-bracket
-parameters (`function Identity<T>(Value: T): T;`). Routine calls infer from arguments;
-an expected call-result type alone does not determine missing routine parameters.
-A typed callable value can instantiate a generic routine. Explicit angle-bracket
+parameters (`function Identity<T>(Value: T): T;`). Calls infer from supplied values
+first, then fill only missing parameters from the expected result type:
+`const X: Option of integer := Empty();` determines T for an `Empty<T>` factory.
+Annotation, assignment, return, argument, field and callable signatures supply
+context, including native callbacks; conflicts and unresolved parameters are
+errors. A typed callable value
+can instantiate a generic routine. Explicit angle-bracket
 call arguments are unsupported. Constructors use the plain
 type name with ordinary fields/arguments, and infer from arguments or the expected
 type; do not write `Box of integer(Value := 1)` as a constructor expression.
@@ -671,6 +677,11 @@ begin
   return Value * 2;
 end function;
 
+function Missing<T>(): option of T;
+begin
+  return None;
+end function;
+
 function Length(Value: Chain of integer): integer;
 begin
   return case Value of
@@ -684,6 +695,8 @@ begin
   const Entry: Pair of (integer, string) := Pair(Key := 1, Value := 'one');
   const EndOfChain: Chain of integer := Chain.Empty;
   const Values: Chain of integer := Chain.Link(1, EndOfChain);
+  const Absent: option of integer := Missing();
+  AssertTrue(Absent.IsNone());
   AssertEquals(4, Wrapped.Value);
   AssertEquals(8, Wrapped.Map(Double));
   AssertEquals('one', Entry.Value);

@@ -113,7 +113,9 @@ end case;
   fallback. `integer`, `string`, and distinct selectors need an `else` arm.
 - All arm values have one type, with the same rules as
   [`if` expressions](if-then-else.md#if-expressions): no numeric widening, and
-  `None` or `[]` take the type of the other arms.
+  `None`, `[]`, or unresolved generic call results take context from the other
+  arms. The enclosing expected result also supplies context. Pattern bindings
+  remain available only in their own arm during inference.
 - When the selector, every label, and every arm value are compile-time constants
   and no arm uses a guard, binding, or destructuring pattern, the expression is
   a compile-time constant.

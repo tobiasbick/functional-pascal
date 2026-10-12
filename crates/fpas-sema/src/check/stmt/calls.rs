@@ -31,6 +31,7 @@ impl Checker {
             designator,
             args,
             span,
+            None,
         ) {
             return result;
         }
@@ -97,6 +98,7 @@ impl Checker {
                         CallTarget::for_symbol(kind),
                         args,
                         span,
+                        None,
                     );
                     return Self::substitute_type_params(&func_ty.return_type, &inferred);
                 }
@@ -131,6 +133,7 @@ impl Checker {
                 args,
                 span,
                 true,
+                None,
             ) {
                 return ty;
             }

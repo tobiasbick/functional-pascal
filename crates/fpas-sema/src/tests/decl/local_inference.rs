@@ -1,4 +1,4 @@
-//! Literal evidence, resolved conversions, and explicit-annotation boundaries.
+//! Fully determined local expressions and explicit-annotation boundaries.
 
 use super::{check_errors, check_ok};
 use fpas_diagnostics::codes::{SEMA_TYPE_ANNOTATION_REQUIRED, SEMA_TYPE_MISMATCH};
@@ -25,7 +25,7 @@ fn local_literals_and_conversions_have_fixed_types() {
 }
 
 #[test]
-fn other_initializer_forms_require_an_annotation() {
+fn all_fully_determined_initializer_forms_infer() {
     for initializer in [
         "ReadValue()",
         "'x'.ToUpper()",
@@ -34,38 +34,17 @@ fn other_initializer_forms_require_an_annotation() {
         "not true",
         "Whole",
         "if true then 1 else 2 end if",
-        "None",
-        "Ok(1)",
         "function(): integer begin return 1; end function",
     ] {
         let source =
             format!("{PREFIX} begin const Whole: integer := 1; const Value := {initializer}; end.");
-        let errors = check_errors(&source);
-        assert!(
-            errors
-                .iter()
-                .any(|error| error.code == SEMA_TYPE_ANNOTATION_REQUIRED),
-            "{initializer}: {errors:#?}"
-        );
+        check_ok(&source);
     }
 }
 
 #[test]
-fn empty_or_inconsistent_collections_require_an_annotation() {
-    for initializer in [
-        "[]",
-        "[:]",
-        "[1, 2.0]",
-        "[1.0, 2]",
-        "[[1], []]",
-        "[[], [1]]",
-        "['a': []]",
-        "['a': [1], 'b': []]",
-        "['a': 1, 'b': 2.0]",
-        "[1: 'a', 2.0: 'b']",
-        "[None]",
-        "[Ok(1)]",
-    ] {
+fn underdetermined_collections_require_an_annotation() {
+    for initializer in ["[]", "[:]", "['a': []]", "[None]", "[Ok(1)]"] {
         let errors = check_errors(&format!("{PREFIX} begin var Value := {initializer}; end."));
         assert!(
             errors
@@ -75,6 +54,42 @@ fn empty_or_inconsistent_collections_require_an_annotation() {
                         .help
                         .as_deref()
                         .is_some_and(|hint| hint.contains("var Value: Type :="))),
+            "{initializer}: {errors:#?}"
+        );
+    }
+}
+
+#[test]
+fn collection_evidence_completes_missing_elements_without_numeric_promotion() {
+    for initializer in [
+        "[[1], []]",
+        "[[], [1]]",
+        "['a': [1], 'b': []]",
+        "[None, Some(1)]",
+        "[Some(1), None]",
+        "[Ok(1), Error('failed')]",
+    ] {
+        check_ok(&format!(
+            "{PREFIX} begin const Value := {initializer}; end."
+        ));
+    }
+    for initializer in [
+        "[1, 2.0]",
+        "[1.0, 2]",
+        "['a': 1, 'b': 2.0]",
+        "[1: 'a', 2.0: 'b']",
+    ] {
+        let errors = check_errors(&format!(
+            "{PREFIX} begin const Value := {initializer}; end."
+        ));
+        assert!(
+            errors.iter().any(|error| error.code == SEMA_TYPE_MISMATCH),
+            "{initializer}: {errors:#?}"
+        );
+        assert!(
+            !errors
+                .iter()
+                .any(|error| error.code == SEMA_TYPE_ANNOTATION_REQUIRED),
             "{initializer}: {errors:#?}"
         );
     }
@@ -98,15 +113,9 @@ fn inferred_variables_reject_type_changes_and_constants_reject_reassignment() {
 }
 
 #[test]
-fn a_callable_shadowing_a_type_does_not_count_as_a_conversion() {
-    let errors = check_errors(
+fn a_callable_shadowing_a_type_keeps_its_ordinary_result_type() {
+    check_ok(
         "program T; type UserId = distinct integer; begin const UserId: function(Value: integer): integer := function(Value: integer): integer begin return Value; end function; const Id := UserId(1); end.",
-    );
-    assert!(
-        errors
-            .iter()
-            .any(|error| error.code == SEMA_TYPE_ANNOTATION_REQUIRED),
-        "{errors:#?}"
     );
 }
 
@@ -165,9 +174,11 @@ fn generic_callable_collection_elements_require_an_annotation() {
         "program T; function Identity<T>(Value: T): T; begin return Value; end function; begin const Values := [Identity]; end.",
     );
     assert!(
-        errors
-            .iter()
-            .any(|error| error.code == SEMA_TYPE_ANNOTATION_REQUIRED),
+        errors.iter().any(|error| error.code == SEMA_TYPE_MISMATCH
+            && error
+                .help
+                .as_deref()
+                .is_some_and(|hint| hint.contains("callable signature"))),
         "{errors:#?}"
     );
 }

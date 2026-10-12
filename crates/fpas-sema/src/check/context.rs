@@ -277,12 +277,21 @@ pub struct Checker {
     pub(crate) capture_dependencies: super::closures::CaptureDependencies,
     /// Dictionary key types and their source spans, validated once all types are complete.
     pub(crate) pending_dictionary_keys: Vec<super::name_resolution::PendingKey>,
+    /// Full lexical routine path distinguishing nested generic parameter declarations.
+    pub(crate) routine_type_path: Vec<String>,
+    /// Deferred call and constructor sites that must resolve before lowering.
+    pub(crate) pending_type_arguments: std::collections::BTreeMap<
+        (u32, usize, String),
+        super::inference_completion::PendingTypeArguments,
+    >,
 }
 
 impl Checker {
     /// Creates an empty semantic checker and its expression-analysis tables.
     pub fn new() -> Self {
         Self {
+            routine_type_path: Vec::new(),
+            pending_type_arguments: Default::default(),
             task_scopes: Default::default(),
             routine_param_escapes: HashMap::new(),
             contracts: Default::default(),

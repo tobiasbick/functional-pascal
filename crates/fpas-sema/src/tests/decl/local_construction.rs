@@ -43,20 +43,14 @@ fn complete_local_record_and_enum_constructions_infer_their_nominal_types() {
 }
 
 #[test]
-fn factories_and_constructor_results_followed_by_access_still_need_annotations() {
+fn factories_and_constructor_results_followed_by_access_infer() {
     for initializer in [
         "MakePoint()",
         "MakeShape()",
         "Point(X := 1).X",
         "Point(X := 1) with X := 2; end with",
     ] {
-        let errors = check_errors(&format!("{TYPES} begin const Value := {initializer}; end."));
-        assert!(
-            errors
-                .iter()
-                .any(|error| error.code == SEMA_TYPE_ANNOTATION_REQUIRED),
-            "{initializer}: {errors:#?}"
-        );
+        check_ok(&format!("{TYPES} begin const Value := {initializer}; end."));
     }
 }
 
@@ -66,16 +60,10 @@ fn callable_shadowing_a_record_or_variant_is_an_ordinary_call() {
         ("Point", "Point", "Point(X := 1)"),
         ("Found", "Lookup of integer", "Lookup.Found(1)"),
     ] {
-        let errors = check_errors(&format!("{TYPES} begin
+        check_ok(&format!("{TYPES} begin
             const Factory: function(): {result} := function(): {result} begin return {value}; end function;
             begin const {name}: function(): {result} := Factory; const Value := {name}(); end;
             end."));
-        assert!(
-            errors
-                .iter()
-                .any(|error| error.code == SEMA_TYPE_ANNOTATION_REQUIRED),
-            "{name}: {errors:#?}"
-        );
     }
 }
 
@@ -154,7 +142,8 @@ fn generic_callable_constructor_payloads_require_a_concrete_signature() {
         assert!(
             errors
                 .iter()
-                .any(|error| error.code == SEMA_TYPE_ANNOTATION_REQUIRED),
+                .any(|error| error.code == SEMA_TYPE_MISMATCH
+                    && error.message.contains("Cannot infer")),
             "{initializer}: {errors:#?}"
         );
     }

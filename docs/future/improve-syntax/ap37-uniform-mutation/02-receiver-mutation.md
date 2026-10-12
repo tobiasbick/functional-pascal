@@ -5,7 +5,7 @@ Package: [AP37](README.md). Status: blocked by AP37.1.
 ## Scope and affected areas
 
 Implement the chosen receiver model without weakening storage/lifetime checks.
-Inspect `crates/fpas-sema/src/check/expr/calls/methods.rs`,
+Inspect `crates/fpas-sema/src/check/expr/calls/methods/mod.rs` and `lookup.rs`,
 `check/decl/types/records/signatures.rs`, native catalogs, shared var-argument
 checking, compiler reference lowering, and formatter/LSP handling. Enumerate
 concrete files before editing.

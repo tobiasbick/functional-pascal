@@ -30,9 +30,9 @@ same rule. Imported signatures provide the same evidence as local signatures.
 Defaults do not infer generic arguments. No common numeric type, implicit value
 conversion or default concrete type is selected; AP33's numeric contract applies.
 
-## Predicted behavior
+## Verified behavior
 
-These are AP34.2 target rules, rather than claims of current compiler support.
+These rules are implemented by AP34.2.
 Examples are local statements with their referenced routines/types declared.
 
 | Case | Selected result |
@@ -68,13 +68,12 @@ fixtures, updates diagnostic repairs, and aligns local/generic documentation
 and language-service type display. It preserves existing evaluation order,
 constraints and independently compiled unit behavior.
 
-The recorded decision completes AP34.1. This update changes planning files
-only; AP34.2 has not been implemented.
+The recorded decision and AP34.2 implementation are complete.
 
 ## Documentation and verification
 
-The current local/generic handbook remains unchanged until AP34.2. Its
-implementation must verify the table through normal checking and execution,
+The local/generic handbook and compact reference describe these implemented
+rules. Regression coverage verifies the table through checking and execution,
 including direct/callable/member contexts, named arguments, imported signatures,
 conflicts and unresolved types. Rejections identify the missing or conflicting
 type and show a concrete annotation or explicit conversion that repairs it.

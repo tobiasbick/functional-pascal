@@ -7,6 +7,7 @@ mod discard;
 mod entry;
 mod expr;
 mod imports;
+mod inference_completion;
 mod name_resolution;
 mod record_visibility;
 mod references;

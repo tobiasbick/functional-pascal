@@ -67,7 +67,7 @@ impl TypeConstraint {
 /// A resolved parameter identity and its optional constraint.
 #[derive(Debug, Clone, PartialEq)]
 pub struct GenericParamDef {
-    /// Case-preserving identity, qualified by the declaring routine for record methods.
+    /// Case-preserving identity, qualified by the declaring routine for routine parameters.
     pub name: String,
     /// Capabilities guaranteed for every permitted argument.
     pub constraint: Option<TypeConstraint>,

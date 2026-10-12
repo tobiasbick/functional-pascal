@@ -40,8 +40,8 @@ const P: Point := Point(X := 0.0, Y := 5.0);
 In statement position, typed construction also permits an omitted local
 annotation: `const P := Point(X := 0.0, Y := 5.0);`. Generic records require
 every argument to be determined by supplied fields or fixed by a type alias;
-defaults do not supply inference evidence. Ordinary factory calls still require
-an annotation. See [Limited type inference](../basics/local-variables.md#limited-type-inference).
+defaults do not supply inference evidence. A factory's fully determined result
+also permits an omitted annotation. See [Type inference](../basics/local-variables.md#type-inference).
 
 Typed construction is the only way to create a record value; there is no
 `record ... end` literal (FP2017). Construction requires named fields;

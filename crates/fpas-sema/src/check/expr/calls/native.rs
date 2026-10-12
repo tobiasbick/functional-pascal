@@ -3,9 +3,10 @@
 use super::super::super::Checker;
 use crate::check::calls::CallTarget;
 use crate::std_registry::{NativeLowering, NativeOperation};
-use crate::types::{ParamTy, Ty};
+use crate::types::{FunctionTy, GenericParamDef, Ty};
 use fpas_lexer::Span;
 use fpas_parser::{Designator, DesignatorPart, Expr};
+use std::collections::{HashMap, HashSet};
 
 impl Checker {
     /// Checks a keyword-owned factory without adding a lexical callable symbol.
@@ -15,6 +16,7 @@ impl Checker {
         designator: &Designator,
         args: &[Expr],
         span: Span,
+        expected: Option<&Ty>,
     ) -> Option<Ty> {
         let [
             DesignatorPart::Ident(owner, _),
@@ -36,7 +38,7 @@ impl Checker {
             self.check_args_only(args);
             return Some(Ty::Error);
         };
-        let result = self.check_native_arguments(operation, None, args, span);
+        let result = self.check_native_arguments(operation, None, args, span, expected);
         self.intrinsic_calls
             .insert(key, operation.implementation.into());
         Some(result)
@@ -49,8 +51,9 @@ impl Checker {
         receiver: Option<&Expr>,
         args: &[Expr],
         span: Span,
+        expected: Option<&Ty>,
     ) -> Ty {
-        let mut signature = (operation.signature)();
+        let signature = self.native_call_signature(operation, receiver, span);
         if !signature.variadic
             && args.iter().all(|arg| arg.argument_name().is_none())
             && args.len() != signature.params.len()
@@ -78,18 +81,28 @@ impl Checker {
         ) else {
             return Ty::Error;
         };
-        // Type-check named argument values in written order before the implementation
-        // inspects them in parameter order. Retain their original AST identities.
-        let named = args.iter().any(|arg| arg.argument_name().is_some());
+        let inferred = self.check_function_call_refs(
+            operation.name,
+            &signature,
+            &args.iter().collect::<Vec<_>>(),
+            span,
+            expected,
+        );
+        let checked_result = self.check_call_result_type(
+            &signature.return_type,
+            &signature.type_params,
+            &inferred,
+            span,
+        );
+        // Existing operation-specific validation consumes the checked original expressions.
         let mut cached = Vec::new();
-        if named {
-            for arg in args {
-                let value = arg.argument_value();
-                if matches!(value, Expr::VarArgument { .. }) {
-                    continue;
-                }
-                let ty = self.check_expr(value);
-                let key = Self::expr_lookup_key(value);
+        for arg in args {
+            let value = arg.argument_value();
+            if matches!(value, Expr::VarArgument { .. }) {
+                continue;
+            }
+            let key = Self::expr_lookup_key(value);
+            if let Some(ty) = self.expr_types.get(&key).cloned() {
                 self.expr_types
                     .insert(Self::expr_lookup_key(arg), ty.clone());
                 self.prechecked_receivers.insert(key, ty);
@@ -107,32 +120,20 @@ impl Checker {
             operation.implementation.into()
         };
         let result = if operation.polymorphic() {
-            crate::std_registry::check_builtin_std_call_refs(
+            let validated = crate::std_registry::check_builtin_std_call_refs(
                 self,
                 &dispatch,
                 &all_args,
                 receiver.is_some(),
                 span,
-            )
+            );
+            if validated.is_error() {
+                Ty::Error
+            } else {
+                checked_result
+            }
         } else {
-            if let Some(receiver) = receiver {
-                let receiver_ty = self.check_expr(receiver);
-                signature
-                    .params
-                    .insert(0, ParamTy::value("Self", receiver_ty));
-            }
-            // IsEmpty reuses Length with an integer result before returning boolean.
-            if operation.lowering == NativeLowering::IsEmpty {
-                *signature.return_type = Ty::Integer;
-            }
-            let inferred =
-                self.check_function_call_refs(operation.name, &signature, &all_args, span);
-            self.check_call_result_type(
-                &signature.return_type,
-                &signature.type_params,
-                &inferred,
-                span,
-            )
+            checked_result
         };
         for key in cached {
             self.prechecked_receivers.remove(&key);
@@ -142,5 +143,40 @@ impl Checker {
         } else {
             result
         }
+    }
+
+    fn native_call_signature(
+        &mut self,
+        operation: &NativeOperation,
+        receiver: Option<&Expr>,
+        span: Span,
+    ) -> FunctionTy {
+        let receiver_ty = receiver.map(|value| self.check_expr(value));
+        let mut signature = operation.signature_for(receiver_ty.as_ref());
+        let raw = Ty::Function((operation.signature)());
+        let mut parameters = HashMap::new();
+        self.collect_type_param_bindings(&raw, &raw, &mut parameters, &mut HashSet::new(), span);
+        let fixed: &[&str] = match receiver_ty {
+            Some(Ty::Array(_) | Ty::Option(_)) => &["t"],
+            Some(Ty::Dict(_, _)) => &["k", "v"],
+            Some(Ty::Result(_, _)) => &["t", "e"],
+            _ => &[],
+        };
+        signature.type_params = parameters
+            .into_iter()
+            .filter_map(|(key, ty)| {
+                if fixed.contains(&key.as_str()) {
+                    return None;
+                }
+                let Ty::GenericParam(name, constraint) = ty else {
+                    return None;
+                };
+                Some(GenericParamDef { name, constraint })
+            })
+            .collect();
+        signature
+            .type_params
+            .sort_by(|left, right| left.name.cmp(&right.name));
+        signature
     }
 }

@@ -21,6 +21,8 @@ impl Checker {
         span: Span,
         expected: Option<&Ty>,
     ) -> Ty {
+        let previous_errors = self.errors.len();
+        self.deferred_constructor_inference += 1;
         let heads = arms
             .iter()
             .map(|arm| CaseArmHead {
@@ -43,7 +45,13 @@ impl Checker {
                 else_arm.value.span(),
             ));
         }
+        self.deferred_constructor_inference -= 1;
         self.check_case_expression_coverage(&checked, else_arm.is_some(), span);
+        if self.errors.len() == previous_errors
+            && let Some(context) = self.branch_completion_context(&values)
+        {
+            return self.check_case_expr(selector, arms, else_arm, span, Some(&context));
+        }
         self.shared_branch_type(values, "`case` expression arms", expected)
     }
 

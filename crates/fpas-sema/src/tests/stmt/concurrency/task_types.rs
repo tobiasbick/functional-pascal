@@ -172,7 +172,7 @@ function Fetch<T>(Job: task of T): T; begin return Wait(Job); end function;
 function Identity<T>(Value: T): T; begin return Value; end function;
 function Spawn<T>(Value: T): task of T; begin return go Identity(Value); end function;
 function GenericWorker<T>(Token: T): integer; begin return 42; end function;
-function Answer<T>(): integer; begin return 42; end function;
+function Answer(): integer; begin return 42; end function;
 function Invoke(Callback: function(): integer): integer; begin return Callback(); end function;
 procedure Join(Job: task); begin Wait(Job); end procedure;
 begin

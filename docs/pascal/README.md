@@ -11,7 +11,7 @@ Planned features: [`docs/future/`](../future).
 - **Function First** — Functions are the primary abstraction. No classical classes or object hierarchies.
 - **Explicit Binding Mutability** — `const` declares an immutable binding; `var` allows reassignment.
 - **Safe by Design** — No pointers, no unsafe operations. The VM handles memory.
-- **Explicit Types** — Parameters, routine results, and record fields explicitly state their types. Local bindings support [limited type inference](language/basics/local-variables.md#limited-type-inference).
+- **Explicit Types** — Parameters, routine results, and record fields explicitly state their types. Local bindings support [type inference](language/basics/local-variables.md#type-inference) for fully determined initializers.
 - **Case-Insensitive** — Keywords and identifiers are case-insensitive, as in classical Pascal.
 - **Familiar Syntax** — Pascal's `begin`, `end`, `:=`, `downto`, and other well-known constructs.
 

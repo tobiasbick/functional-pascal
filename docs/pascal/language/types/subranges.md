@@ -32,7 +32,7 @@ inclusive bounds. Conversion does not return `Option` or `Result`.
 
 An integer never implicitly narrows to a subrange, including initializers,
 assignments, arguments, and return values. Write `Percent(Value)` explicitly.
-Local [type inference](../basics/local-variables.md#limited-type-inference) accepts
+Local [type inference](../basics/local-variables.md#type-inference) accepts
 these conversions, for example `const Level := Percent(50);`.
 
 ## Membership

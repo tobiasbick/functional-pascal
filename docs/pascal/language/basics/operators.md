@@ -17,6 +17,55 @@ Formal syntax: [`grammar.ebnf`](../../../specs/grammar.ebnf) (expression precede
 and comparisons. Integer arithmetic produces `integer`, and `/` produces `real`.
 Logical operators retain their Boolean-only rules.
 
+Both numeric operands must have the same type. FPAS does not implicitly mix
+`integer` and `real` in arithmetic, equality, ordering, assignment, return
+values, or call arguments. Import `Std.Conv` and convert explicitly:
+
+```pascal
+const Sum: real := IntToReal(1) + 0.5;
+const Before: boolean := IntToReal(1) < 1.5;
+const Half: real := 1 / 2;
+```
+
+`/` is real division: two integer operands also produce a real result. Use
+`div` for an integer quotient. Generic `Numeric` operands must use the same
+type parameter; `/` returns real even in a generic body. See
+[generics](../types/generics.md#built-in-constraints).
+
+### Integer bounds and division
+
+Integers are signed 64-bit values. `+`, `-`, `*`, and unary `-` reject a result
+outside `-9223372036854775808..9223372036854775807` with a numeric-domain
+diagnostic. Ordinary arithmetic does not wrap. Negating the minimum integer
+and dividing it by `-1` overflow. Bit operations retain their separate
+[Std.Bits](../../std/numeric/bits.md) rules.
+
+`div` truncates toward zero. `mod` has the dividend's sign, and its absolute
+value is smaller than the divisor's absolute value:
+
+| Expression | Value |
+| --- | --- |
+| `-7 div 3` | `-2` |
+| `-7 mod 3` | `-1` |
+| `7 mod (-3)` | `1` |
+| `-9223372036854775808 mod (-1)` | `0` |
+
+Both integer operators reject a zero divisor. The minimum modulo `-1` is zero
+because that remainder is representable even though the quotient is not.
+
+### Real bounds
+
+Real arithmetic uses binary64 rounding and gradual underflow. A computation
+may produce a subnormal value or signed zero, but NaN and infinity are rejected
+as operands or results. `/` rejects both `+0.0` and `-0.0` as divisors. Real
+equality treats both signs of zero as equal; formatting preserves the sign.
+Nonzero [literal](number-literals.md) or numeric input text that rounds to zero
+is out of range; the arithmetic underflow rule does not change that input rule.
+
+Constant evaluation, optimization, execution, and debugger evaluation follow
+these same rules. A failing operation is not optimized away, including under
+`discard`; an unselected branch or skipped short-circuit operand is not executed.
+
 ## Comparison
 
 | Operator | Description       | Example    |

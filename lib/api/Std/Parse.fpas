@@ -13,7 +13,7 @@ begin
   panic('Intrinsic API declaration');
 end function;
 
-// Trims whitespace; accepts Pascal integer text with `_` digit separators.
+// Signed decimal or `$` hex with `_` separators; trims whitespace and checks signed 64-bit bounds.
 //
 // Parameters:
 // - `Text`: UTF-8 text processed by the operation.
@@ -22,7 +22,7 @@ begin
   panic('Intrinsic API declaration');
 end function;
 
-// Trims whitespace; requires a decimal point, for example `3.14` or `1.0e3`.
+// Finite fractional/exponent text; preserves signed zero and rejects nonzero underflow to zero.
 //
 // Parameters:
 // - `Text`: UTF-8 text processed by the operation.

@@ -129,6 +129,11 @@ impl Parser {
 
         if self.check(&Token::Minus) {
             self.advance();
+            if matches!(self.current_token(), Token::Integer(value) if *value == fpas_numeric::text::MINIMUM_INTEGER_MAGNITUDE)
+            {
+                self.advance();
+                return Expr::Integer(i64::MIN, self.span_from(start));
+            }
             let operand = self.parse_unary();
             return Expr::UnaryOp {
                 op: UnaryOp::Negate,

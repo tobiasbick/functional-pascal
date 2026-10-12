@@ -2,6 +2,13 @@
 
 Elementary math: constant `Pi`, roots, powers, trig, rounding, log, and polymorphic `Abs` / `Min` / `Max`. This page is the **full API** for the unit.
 
+Real operands and results must be finite. Operations that would produce NaN
+or infinity, such as `Pow(-1.0, 0.5)` or `Exp(1000.0)`, report a numeric-domain
+error. Ordinary binary64 rounding, subnormals, and signed zero remain valid.
+Rounding operations also check that their integer result fits the signed 64-bit
+range. Integer arguments are not implicitly converted for a real parameter;
+use `Std.Conv.IntToReal` explicitly.
+
 ```pascal
 program Example;
 uses Std.Console, Std.Math;
@@ -30,7 +37,7 @@ Requires `uses Std.Math;`.
 | function | `Pow(Base: real; Exp: real): real` | power |
 | function | `Floor(R: real): integer` | toward −∞ |
 | function | `Ceil(R: real): integer` | toward +∞ |
-| function | `Round(R: real): integer` | nearest |
+| function | `Round(R: real): integer` | nearest integer, ties to even; checked signed 64-bit result |
 | function | `Sin(R: real): real` | radians |
 | function | `Cos(R: real): real` | radians |
 | function | `Log(R: real): real` | natural log; error if `R ≤ 0` |
@@ -111,7 +118,9 @@ WriteLn(Ceil(2.1));
 
 ## `function Round(R: real): integer`
 
-Nearest integer (implementation-defined tie-breaking for half values follows the runtime).
+Nearest integer, with exact half values rounded to the even integer:
+`Round(2.5)` is 2, `Round(3.5)` is 4, and `Round(-2.5)` is -2.
+The result must fit the signed 64-bit range. `Trunc` remains truncation toward zero.
 
 ```pascal
 WriteLn(Round(Pi));
@@ -295,7 +304,7 @@ WriteLn(Clamp(1.5, 0.0, 1.0));   // 1.0
 
 | Concern | Location |
 |---------|-----------|
-| Runtime intrinsics | [`math.rs`](../../../../crates/fpas-std/src/math.rs) |
+| Runtime intrinsics | [`math/mod.rs`](../../../../crates/fpas-std/src/math/mod.rs), shared [`numeric bounds`](../../../../crates/fpas-numeric/src/real.rs) |
 | Compiler intrinsic catalog | [`intrinsic_catalog.rs`](../../../../crates/fpas-compiler/src/intrinsic_catalog.rs) |
 | Registration | [`std_registry/mod.rs`](../../../../crates/fpas-sema/src/std_registry/mod.rs) |
 

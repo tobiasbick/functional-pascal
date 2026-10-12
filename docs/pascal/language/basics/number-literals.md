@@ -21,7 +21,26 @@ const W: real := 0.5; // Leading zero is required
 
 `.5` and `5.` are **not** valid — always write `0.5` or `5.0`. Integer literals must fit in a signed 64-bit range (`9223372036854775807` max). Real literals that overflow to infinity **or underflow a non-zero mantissa to zero** (for example `1.0e-9999`) are rejected as out of range; a zero mantissa such as `0.0e-9999` is fine.
 
-Negative numbers are parsed as unary minus + literal: `-42` is `-(42)`.
+Negative numbers normally use unary minus: `-42` is `-(42)`. In an expression,
+the direct forms `-9223372036854775808` and `-$8000000000000000` represent the
+minimum integer. Their positive magnitudes cannot be used as integer values.
+The minimum form is recognized immediately after `-`; a parenthesized positive
+magnitude such as `-(9223372036854775808)` remains invalid.
+
+```pascal
+const Minimum: integer := -9223372036854775808;
+const HexMinimum: integer := -$8000000000000000;
+const Maximum: integer := 9223372036854775807;
+```
+
+Hexadecimal literals denote mathematical magnitudes, not unsigned bit patterns
+reinterpreted as signed integers. `$FFFFFFFFFFFFFFFF` is out of range.
+
+`Std.Conv.StrToInt` and `Std.Parse.TryInt` accept the same decimal and `$` hex
+bodies with an optional sign and surrounding whitespace. Their real counterparts
+accept the same fractional/exponent forms and reject nonfinite values and nonzero
+underflow to zero. Representable subnormal reals remain valid. See
+[parsing](../../std/text/parse.md) and [conversion](../../std/text/conv.md).
 
 Identifiers use ASCII letters, digits, and `_` only (see the grammar `identifier` rule). A UTF-8 BOM
 (`U+FEFF`) is ignored only when it is the first scalar in a source file. A later `U+FEFF` is an

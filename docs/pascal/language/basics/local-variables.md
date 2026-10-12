@@ -48,7 +48,8 @@ end function;
 Collection elements must provide complete, matching types; dictionary keys and
 values are checked separately. Nested empty collections and unresolved generic
 arguments require an annotation. Mixed numeric literals such as `[1, 2.0]`
-require an annotation too; inference does not choose a numeric promotion.
+are invalid even with an annotation. Import `Std.Conv` and convert explicitly,
+for example `[IntToReal(1), 2.0]`; inference does not choose a numeric promotion.
 Expressions inside a collection literal can supply known element types.
 
 Typed construction uses the resolved record type or enum variant, including

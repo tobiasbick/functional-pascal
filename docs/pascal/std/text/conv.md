@@ -24,10 +24,10 @@ Requires `uses Std.Conv;`.
 | Kind | Name | Notes |
 |------|------|--------|
 | function | `IntToStr(N: integer): string` | decimal text |
-| function | `StrToInt(S: string): integer` | parse; error if invalid |
-| function | `IntToReal(N: integer): real` | widen |
-| function | `RealToStr(R: real): string` | text form |
-| function | `StrToReal(S: string): real` | parse; error if invalid |
+| function | `StrToInt(S: string): integer` | signed decimal or `$` hex text; checked signed 64-bit range |
+| function | `IntToReal(N: integer): real` | explicit binary64 rounding; may lose integer precision |
+| function | `RealToStr(R: real): string` | finite real text with a bit-preserving parsing round-trip; integral reals include `.0` |
+| function | `StrToReal(S: string): real` | finite real literal text; rejects nonzero underflow to zero |
 | function | `BoolToStr(B: boolean): string` | `'true'` or `'false'` |
 | function | `StrToBool(S: string): boolean` | parse; case-insensitive; error if invalid |
 | function | `IntToHex(N: integer; Digits: integer): string` | uppercase hex, zero-padded |
@@ -47,7 +47,11 @@ WriteLn(IntToStr(42));
 
 ## `function StrToInt(S: string): integer`
 
-Parses an integer. Surrounding **whitespace is ignored**. **Runtime error** if the text is not a valid integer.
+Parses signed decimal or `$` hexadecimal integer text with single `_` separators
+between digits. Surrounding whitespace is ignored. The result must fit the signed
+64-bit range, including `-9223372036854775808` and `-$8000000000000000`.
+Invalid text or overflow is a runtime error. `Std.Parse.TryInt` uses the same
+grammar and returns a Result.
 
 ```pascal
 WriteLn(StrToInt('  -7  '));
@@ -57,7 +61,11 @@ WriteLn(StrToInt('  -7  '));
 
 ## `function IntToReal(N: integer): real`
 
-Converts integer to `real` (exact for integers in the representable range).
+Converts integer to binary64 using rounding to nearest, with ties to even.
+All integer values fit the real value range, but conversion may lose precision.
+Every integer between `-9007199254740992` and `9007199254740992` is exact;
+larger values are exact only when representable at binary64's spacing.
+This is the explicit conversion used before mixing integer and real calculations.
 
 ```pascal
 const X: real := IntToReal(3);
@@ -68,7 +76,9 @@ WriteLn(X);
 
 ## `function RealToStr(R: real): string`
 
-Returns a string representation of `R` (format follows the runtime).
+Returns locale-independent real text that `StrToReal` and `TryReal` parse back
+to the identical binary64 bits. Integral reals include `.0`, so `RealToStr(1.0)`
+is `'1.0'`. Negative zero is `'-0.0'`. Nonfinite values are rejected.
 
 ```pascal
 WriteLn(RealToStr(1.5));
@@ -78,7 +88,11 @@ WriteLn(RealToStr(1.5));
 
 ## `function StrToReal(S: string): real`
 
-Parses a floating-point value. Surrounding **whitespace is ignored**. **Runtime error** if invalid.
+Parses the real literal forms: digits on both sides of `.`, an optional exponent,
+and single `_` digit separators. A leading sign and surrounding whitespace are
+accepted. NaN, infinity, overflow, and nonzero input rounded to zero are invalid;
+representable subnormals remain valid. Invalid input is a runtime error.
+`Std.Parse.TryReal` uses the same grammar and returns a Result.
 
 ```pascal
 WriteLn(StrToReal('2.25'));
@@ -123,7 +137,10 @@ WriteLn(IntToHex(255, 4));     // 00FF
 
 ## `function HexToInt(S: string): integer`
 
-Parses a hexadecimal string. Accepts optional `$` or `0x` prefix. **Runtime error** if the string is not valid hex.
+Parses signed hexadecimal text with single `_` separators and an optional `$`,
+`0x`, or `0X` prefix. The sign precedes the prefix. Bare hex such as `'FF'`
+is accepted by this explicit hex helper; general integer parsers require `$`
+for hex. Values must fit the signed 64-bit range; invalid text is a runtime error.
 
 ```pascal
 WriteLn(HexToInt('FF'));     // 255
@@ -137,7 +154,7 @@ WriteLn(HexToInt('0xFF'));    // 255
 
 | Concern | Location |
 |---------|-----------|
-| Implementations | [`conv.rs`](../../../../crates/fpas-std/src/conv.rs) |
+| Implementations | [`conv/mod.rs`](../../../../crates/fpas-std/src/conv/mod.rs), shared [`numeric text`](../../../../crates/fpas-numeric/src/text.rs) |
 | Registration | [`std_registry/mod.rs`](../../../../crates/fpas-sema/src/std_registry/mod.rs) |
 
 ## See also

@@ -73,7 +73,7 @@ fn evaluated_defaults_match_local_values_through_aliases_generics_and_reused_sid
         public Ratio: real := 5 / 2;
         public Caption: string := 'a' + 'b';
         public Flag: boolean := not false and (Base = 3);
-        public Wrapped: integer := 9223372036854775807 + 1;
+        public Minimum: integer := -9223372036854775808;
         public ShortCircuit: boolean := false and ((1 div 0) = 0);
         public Current: State := State.Ready;
         public Missing: Option of integer := (None);
@@ -112,7 +112,7 @@ fn evaluated_defaults_match_local_values_through_aliases_generics_and_reused_sid
         const B: F.IntegerBox := F.IntegerBox(Value := 5);
         const G: M.Box of string := M.Box(Value := 'x');
         WriteLn(P.Literal, ':', P.Expression, ':', P.Reference, ':', P.Parenthesized, ':', P.Negative);
-        WriteLn(P.Ratio, ':', P.Caption, ':', P.Flag, ':', P.Wrapped, ':', P.ShortCircuit);
+        WriteLn(P.Ratio, ':', P.Caption, ':', P.Flag, ':', P.Minimum, ':', P.ShortCircuit);
         WriteLn(P.Current = M.State.Ready, ':', P.Missing.IsNone(), ':', P.Handler.IsNone());
         WriteLn(Q.Expression, ':', Q.Reference, ':', L.Literal, ':', L.Expression, ':', L.Reference, ':', L.Dynamic);
         WriteLn(B.Value, ':', B.Count, ':', B.Optional.IsNone(), ':', G.Value, ':', G.Count, ':', G.Optional.IsNone());

@@ -17,8 +17,8 @@ pub(super) fn binary(
         return super::integer::binary(operation, *left, *right);
     }
     let result = match operation {
-        BinaryOperation::Equal => equality(left, right),
-        BinaryOperation::NotEqual => !equality(left, right),
+        BinaryOperation::Equal => equality(left, right)?,
+        BinaryOperation::NotEqual => !equality(left, right)?,
         BinaryOperation::Less => ordering(left, right)?.is_lt(),
         BinaryOperation::LessEqual => ordering(left, right)?.is_le(),
         BinaryOperation::Greater => ordering(left, right)?.is_gt(),
@@ -29,22 +29,34 @@ pub(super) fn binary(
     Ok(Value::Boolean(result))
 }
 
-fn equality(left: &Value, right: &Value) -> bool {
+fn equality(left: &Value, right: &Value) -> Result<bool, ValueOperationError> {
     match (left, right) {
-        (Value::Real(left), Value::Real(right)) => left == right,
-        (Value::Integer(left), Value::Real(right)) => (*left as f64) == *right,
-        (Value::Real(left), Value::Integer(right)) => *left == (*right as f64),
-        _ => left == right,
+        (Value::Real(left), Value::Real(right)) => {
+            fpas_numeric::real::finite(*left).map_err(ValueOperationError::from)?;
+            fpas_numeric::real::finite(*right).map_err(ValueOperationError::from)?;
+            Ok(left == right)
+        }
+        (Value::Integer(_), Value::Real(_)) | (Value::Real(_), Value::Integer(_)) => {
+            Err(numeric_mixture())
+        }
+        _ => Ok(left == right),
     }
 }
 
 fn ordering(left: &Value, right: &Value) -> Result<Ordering, ValueOperationError> {
+    if let Value::Real(value) = left {
+        fpas_numeric::real::finite(*value).map_err(ValueOperationError::from)?;
+    }
+    if let Value::Real(value) = right {
+        fpas_numeric::real::finite(*value).map_err(ValueOperationError::from)?;
+    }
     match (left, right) {
         (Value::Integer(left), Value::Integer(right)) => Some(left.cmp(right)),
         (Value::Boolean(left), Value::Boolean(right)) => Some(left.cmp(right)),
         (Value::Str(left), Value::Str(right)) => Some(left.cmp(right)),
-        (Value::Integer(left), Value::Real(right)) => (*left as f64).partial_cmp(right),
-        (Value::Real(left), Value::Integer(right)) => left.partial_cmp(&(*right as f64)),
+        (Value::Integer(_), Value::Real(_)) | (Value::Real(_), Value::Integer(_)) => {
+            return Err(numeric_mixture());
+        }
         (Value::Real(left), Value::Real(right)) => left.partial_cmp(right),
         _ => None,
     }
@@ -58,6 +70,13 @@ fn ordering(left: &Value, right: &Value) -> Result<Ordering, ValueOperationError
             "Compare two numeric, Boolean, or string values.",
         )
     })
+}
+
+fn numeric_mixture() -> ValueOperationError {
+    ValueOperationError::type_mismatch(
+        "Numeric operands must have the same type",
+        "Use Std.Conv.IntToReal explicitly before comparing integer and real values.",
+    )
 }
 
 fn membership(needle: &Value, aggregate: &Value) -> Result<bool, ValueOperationError> {

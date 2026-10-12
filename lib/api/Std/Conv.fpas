@@ -32,7 +32,7 @@ begin
   panic('Intrinsic API declaration');
 end function;
 
-// Widen.
+// Explicit binary64 rounding; may lose integer precision.
 //
 // Parameters:
 // - `N`: `integer` input value used by `IntToReal`.
@@ -50,7 +50,7 @@ begin
   panic('Intrinsic API declaration');
 end function;
 
-// Text form.
+// Finite real text with a bit-preserving parsing round-trip; integral reals include `.0`.
 //
 // Parameters:
 // - `R`: `real` input value used by `RealToStr`.
@@ -68,7 +68,7 @@ begin
   panic('Intrinsic API declaration');
 end function;
 
-// Parse; error if invalid.
+// Signed decimal or `$` hex text; checked signed 64-bit range.
 //
 // Parameters:
 // - `S`: UTF-8 text processed by the operation.
@@ -77,7 +77,7 @@ begin
   panic('Intrinsic API declaration');
 end function;
 
-// Parse; error if invalid.
+// Finite real literal text; rejects nonzero underflow to zero.
 //
 // Parameters:
 // - `S`: UTF-8 text processed by the operation.

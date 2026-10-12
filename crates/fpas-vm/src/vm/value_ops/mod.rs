@@ -5,6 +5,8 @@ mod index;
 mod integer;
 mod scalar;
 
+pub(crate) use scalar::real_binary;
+
 use fpas_bytecode::Value;
 use fpas_diagnostics::DiagnosticCode;
 use fpas_diagnostics::codes::{
@@ -73,6 +75,19 @@ impl ValueOperationError {
             code,
             message: message.into(),
             hint: hint.into(),
+        }
+    }
+}
+
+impl From<fpas_numeric::NumericError> for ValueOperationError {
+    fn from(error: fpas_numeric::NumericError) -> Self {
+        use fpas_numeric::NumericError;
+        match error {
+            NumericError::DivisionByZero => Self::division_by_zero(error.message(), error.hint()),
+            NumericError::ModuloByZero => Self::modulo_by_zero(error.message(), error.hint()),
+            NumericError::IntegerOverflow | NumericError::NonFiniteReal => {
+                Self::domain(error.message(), error.hint())
+            }
         }
     }
 }

@@ -11,7 +11,7 @@ the try matrix alone does not authorize changing propagation semantics.
 
 ## Affected areas
 
-Inspect `crates/fpas-std/src/conv.rs`, `parse.rs`, `result_option.rs`, standard
+Inspect `crates/fpas-std/src/conv/mod.rs`, `parse.rs`, `result_option.rs`, standard
 registry signatures, generated declarations, and
 `crates/fpas-sema/src/check/expr/mod.rs` for try compatibility. Update diagnostic
 suggestions that currently teach a repeated predicate-plus-Unwrap access.

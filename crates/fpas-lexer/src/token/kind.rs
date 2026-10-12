@@ -113,7 +113,8 @@ pub enum Token {
     /// **Documentation:** `docs/pascal/language/types/distinct-types.md`
     Distinct,
     // Literals
-    Integer(i64),
+    /// Unsigned literal magnitude; the parser applies the sign and signed 64-bit bound.
+    Integer(u64),
     Real(f64),
     Str(String),
 

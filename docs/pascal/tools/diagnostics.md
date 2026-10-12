@@ -273,8 +273,8 @@ bugs rather than adding a workaround to the program.
 | FP1004 | Unterminated string | `'hello` | `'hello'` |
 | FP1005 | Invalid character code | `#999999999999999999999` | `#65` |
 | FP1006 | Invalid hexadecimal literal | `$` | `$FF` |
-| FP1007 | Integer overflow | `9223372036854775808` | `9223372036854775807` |
-| FP1008 | Real overflow | `1e9999` | `1e2` |
+| FP1007 | Integer literal magnitude overflow | `9223372036854775809` | Use `9223372036854775807` or the direct signed minimum `-9223372036854775808`. |
+| FP1008 | Real literal out of range | `1.0e9999` or nonzero `1.0e-9999` | Use a representable finite real, such as `1.0e2`. |
 | FP1009 | Invalid exponent | `1e+` | `1e+2` |
 | FP1010 | Compiler directive | `{$MODE DELPHI}` | Remove the directive. |
 | FP1011 | Invalid digit separator | `1__2` | `1_2` |
@@ -304,6 +304,7 @@ bugs rather than adding a workaround to the program.
 | FP2018 | Removed record property | `property Zoom: real read GetZoom;` in a record | Remove the declaration and call `Camera.GetZoom()` |
 | FP2019 | `if` expression without `else` | `const N: integer := if Ready then 1 end if;` | `const N: integer := if Ready then 1 else 0 end if;` |
 | FP2020 | Statement in an expression branch or arm | `const N: integer := if Ready then 1; else 0 end if;` or `case X of when 1: N := 1; end case` | `const N: integer := if Ready then 1 else 0 end if;` or `case X of when 1: 1; else 0; end case` |
+| FP2021 | Positive integer literal outside signed range | `const N: integer := 9223372036854775808;` | Use at most `9223372036854775807`, or write `-9223372036854775808` for the minimum. |
 
 FP2017 names the declared type when the literal is the initializer of a typed
 constant, variable, or field default, for example `Point(X := ..., Y := ...)`;
@@ -476,7 +477,7 @@ can describe a structural restriction and leave those fields null.
 | FP5009 | Intrinsic stack/precondition | Intrinsic receives an incomplete argument stack | Supply the registered intrinsic's checked arguments. |
 | FP5010 | Program panic | `panic('boom')` | Remove the intentional panic or handle the failing condition. |
 | FP5011 | Console input failure | Read fails after a host input error | Restore the input source or handle input through a result API. |
-| FP5012 | Numeric domain | Integer computation exceeds its checked domain | Check limits before the computation. |
+| FP5012 | Numeric domain | Integer arithmetic overflows, or a real operation produces NaN/infinity | Keep integer results within signed 64-bit bounds and real operands/results finite; ordinary arithmetic does not wrap. |
 | FP5013 | Conversion failure | Convert an out-of-range runtime value | Check the conversion's supported range. |
 | FP5014 | Console state | Use an operation incompatible with the current console state | Select the supported console mode first. |
 | FP5015 | Failed unwrap | Unwrap `None` or an error Result | Match `Some`/`None` or `Ok`/`Error` before accessing the value. |

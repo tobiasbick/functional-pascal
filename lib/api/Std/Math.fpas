@@ -166,7 +166,7 @@ begin
   panic('Intrinsic API declaration');
 end function;
 
-// Nearest.
+// Nearest integer, ties to even; checked signed 64-bit result.
 //
 // Parameters:
 // - `R`: `real` input value used by `Round`.

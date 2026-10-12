@@ -100,9 +100,17 @@ pub(crate) fn pop_int(v: &Value, location: SourceLocation) -> Result<i64, StdErr
     }
 }
 
+/// Decodes a real argument and rejects nonfinite values at the intrinsic boundary.
 pub(crate) fn pop_real(v: &Value, location: SourceLocation) -> Result<f64, StdError> {
     match v {
-        Value::Real(n) => Ok(*n),
+        Value::Real(n) => fpas_numeric::real::finite(*n).map_err(|error| {
+            std_runtime_error(
+                fpas_diagnostics::codes::RUNTIME_NUMERIC_DOMAIN_ERROR,
+                error.message(),
+                error.hint(),
+                location,
+            )
+        }),
         other => Err(type_error("real", other, location)),
     }
 }

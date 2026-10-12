@@ -115,13 +115,13 @@ impl Checker {
         match op {
             BinaryOp::Add | BinaryOp::Sub | BinaryOp::Mul | BinaryOp::RealDiv => {
                 if left.is_numeric() && right.is_numeric() {
-                    // When both sides are GenericParam, return the left param type.
-                    if matches!(left, Ty::GenericParam(..)) {
-                        left.clone()
-                    } else if *left == Ty::Real || *right == Ty::Real || op == BinaryOp::RealDiv {
+                    if !self.check_same_numeric_operands(left, right, span) {
+                        return Ty::Error;
+                    }
+                    if op == BinaryOp::RealDiv {
                         Ty::Real
                     } else {
-                        Ty::Integer
+                        left.clone()
                     }
                 } else if op == BinaryOp::Add
                     && matches!(left, Ty::String)
@@ -161,6 +161,11 @@ impl Checker {
             }
 
             BinaryOp::Eq | BinaryOp::NotEq => {
+                if (left.is_numeric() || right.is_numeric())
+                    && !self.check_same_numeric_operands(left, right, span)
+                {
+                    return Ty::Error;
+                }
                 let supports_equality =
                     self.supports_equality(left) && self.supports_equality(right);
                 if !left.compatible_with(right) || !supports_equality {
@@ -176,6 +181,11 @@ impl Checker {
             }
 
             BinaryOp::Lt | BinaryOp::Gt | BinaryOp::LtEq | BinaryOp::GtEq => {
+                if (left.is_numeric() || right.is_numeric())
+                    && !self.check_same_numeric_operands(left, right, span)
+                {
+                    return Ty::Error;
+                }
                 if (left.is_comparable() && right.is_comparable() && left.compatible_with(right))
                     || (left.is_numeric() && right.is_numeric())
                 {
@@ -206,5 +216,25 @@ impl Checker {
                 }
             },
         }
+    }
+
+    fn check_same_numeric_operands(&mut self, left: &Ty, right: &Ty, span: Span) -> bool {
+        // Generic wildcards do not permit operations on unrelated numeric types.
+        let same = match (left, right) {
+            (Ty::GenericParam(left, _), Ty::GenericParam(right, _)) => {
+                left.eq_ignore_ascii_case(right)
+            }
+            _ => left == right,
+        };
+        if same {
+            return true;
+        }
+        self.error_with_code(
+            SEMA_TYPE_MISMATCH,
+            "Numeric operands must have the same type",
+            "Import Std.Conv and convert integer explicitly, for example IntToReal(1) + 0.5; generic operands must use the same Numeric type parameter.",
+            span,
+        );
+        false
     }
 }

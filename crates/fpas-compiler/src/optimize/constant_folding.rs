@@ -1,8 +1,7 @@
 //! Constant folding: replace operations on constant operands by their constant result.
 //!
-//! Folding follows the VM's runtime semantics exactly: integer `+`, `-`, and `*` wrap, and any
-//! operation that would raise a runtime error (division or modulo by zero, integer overflow in
-//! `div`, `mod`, or negation, real division by zero) is left in place so the error still occurs.
+//! Folding uses the shared checked numeric operations. Integer overflow, zero divisors, and
+//! nonfinite real results remain instructions so their errors occur on the executed path.
 //! A folded instruction keeps its index, so debugger sequence points stay valid.
 //! Boolean short-circuiting is already lowered to branches before this pass; folding an
 //! instruction never evaluates it or moves it out of its guarded block.
@@ -47,19 +46,37 @@ fn fold_binary(operation: BinaryOperation, left: &Constant, right: &Constant) ->
     use BinaryOperation as Op;
     use Constant::{Boolean, Integer, Real, String};
     Some(match (operation, left, right) {
-        (Op::AddInteger, Integer(left), Integer(right)) => Integer(left.wrapping_add(*right)),
-        (Op::SubtractInteger, Integer(left), Integer(right)) => Integer(left.wrapping_sub(*right)),
-        (Op::MultiplyInteger, Integer(left), Integer(right)) => Integer(left.wrapping_mul(*right)),
-        (Op::DivideInteger, Integer(left), Integer(right)) => Integer(left.checked_div(*right)?),
-        (Op::RemainderInteger, Integer(left), Integer(right)) => Integer(left.checked_rem(*right)?),
+        (Op::AddInteger, Integer(left), Integer(right)) => {
+            integer_binary(fpas_numeric::integer::Operation::Add, *left, *right)?
+        }
+        (Op::SubtractInteger, Integer(left), Integer(right)) => {
+            integer_binary(fpas_numeric::integer::Operation::Subtract, *left, *right)?
+        }
+        (Op::MultiplyInteger, Integer(left), Integer(right)) => {
+            integer_binary(fpas_numeric::integer::Operation::Multiply, *left, *right)?
+        }
+        (Op::DivideInteger, Integer(left), Integer(right)) => {
+            integer_binary(fpas_numeric::integer::Operation::Divide, *left, *right)?
+        }
+        (Op::RemainderInteger, Integer(left), Integer(right)) => {
+            integer_binary(fpas_numeric::integer::Operation::Remainder, *left, *right)?
+        }
         (Op::LessThanInteger, Integer(left), Integer(right)) => Boolean(left < right),
         (Op::GreaterThanInteger, Integer(left), Integer(right)) => Boolean(left > right),
         (Op::LessEqualInteger, Integer(left), Integer(right)) => Boolean(left <= right),
         (Op::GreaterEqualInteger, Integer(left), Integer(right)) => Boolean(left >= right),
-        (Op::AddReal, Real(left), Real(right)) => Real(left + right),
-        (Op::SubtractReal, Real(left), Real(right)) => Real(left - right),
-        (Op::MultiplyReal, Real(left), Real(right)) => Real(left * right),
-        (Op::DivideReal, Real(left), Real(right)) if *right != 0.0 => Real(left / right),
+        (Op::AddReal, Real(left), Real(right)) => {
+            real_binary(fpas_numeric::real::Operation::Add, *left, *right)?
+        }
+        (Op::SubtractReal, Real(left), Real(right)) => {
+            real_binary(fpas_numeric::real::Operation::Subtract, *left, *right)?
+        }
+        (Op::MultiplyReal, Real(left), Real(right)) => {
+            real_binary(fpas_numeric::real::Operation::Multiply, *left, *right)?
+        }
+        (Op::DivideReal, Real(left), Real(right)) => {
+            real_binary(fpas_numeric::real::Operation::Divide, *left, *right)?
+        }
         (Op::Equal | Op::NotEqual, left, right) => {
             let equal = match (left, right) {
                 (Integer(left), Integer(right)) => left == right,
@@ -80,13 +97,35 @@ fn fold_binary(operation: BinaryOperation, left: &Constant, right: &Constant) ->
 fn fold_unary(operation: UnaryOperation, operand: &Constant) -> Option<Constant> {
     Some(match (operation, operand) {
         (UnaryOperation::NegateInteger, Constant::Integer(value)) => {
-            Constant::Integer(value.checked_neg()?)
+            Constant::Integer(fpas_numeric::integer::negate(*value).ok()?)
         }
-        (UnaryOperation::NegateReal, Constant::Real(value)) => Constant::Real(-value),
+        (UnaryOperation::NegateReal, Constant::Real(value)) => {
+            Constant::Real(fpas_numeric::real::finite(-value).ok()?)
+        }
         (UnaryOperation::NotBoolean, Constant::Boolean(value)) => Constant::Boolean(!value),
         (UnaryOperation::IntegerToReal, Constant::Integer(value)) => Constant::Real(*value as f64),
         _ => return None,
     })
+}
+
+fn integer_binary(
+    operation: fpas_numeric::integer::Operation,
+    left: i64,
+    right: i64,
+) -> Option<Constant> {
+    fpas_numeric::integer::binary(operation, left, right)
+        .ok()
+        .map(Constant::Integer)
+}
+
+fn real_binary(
+    operation: fpas_numeric::real::Operation,
+    left: f64,
+    right: f64,
+) -> Option<Constant> {
+    fpas_numeric::real::binary(operation, left, right)
+        .ok()
+        .map(Constant::Real)
 }
 
 #[cfg(test)]
@@ -98,8 +137,8 @@ mod tests {
         use Constant::{Boolean, Integer, Real, String};
         assert_eq!(
             fold_binary(BinaryOperation::AddInteger, &Integer(i64::MAX), &Integer(1)),
-            Some(Integer(i64::MIN)),
-            "integer addition wraps like the VM"
+            None,
+            "integer overflow must remain an executed instruction"
         );
         assert_eq!(
             fold_binary(BinaryOperation::DivideInteger, &Integer(7), &Integer(0)),

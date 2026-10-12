@@ -41,7 +41,7 @@ defaults under FP3014.
 
 - `crates/fpas-build/tests/record_construction/mod.rs` exercises literal and
   expression equivalence, preceding and imported constant references, parentheses,
-  unary minus, real/string/Boolean values, defined integer wrapping, short-circuit
+  unary minus, real/string/Boolean values, signed integer boundaries, short-circuit
   evaluation, enum values, and optional callable `None`. It checks local defaults,
   explicit overrides, transparent aliases, generic records, caller shadowing,
   and identical execution with fresh and reused sidecars.

@@ -4,13 +4,15 @@
 //! **Maintenance:** Keep that Markdown file aligned with this file, `intrinsics.rs`,
 //! `fpas-bytecode::Intrinsic`, `fpas-compiler`, and `fpas-sema` `std_registry.rs`.
 
+use crate::boolean_text::parse_bool_text;
 use crate::error::{StdError, std_runtime_error};
 use crate::intrinsic_args::{IntrinsicCall, expect_str, pop_bool, pop_int, pop_real, pop_value};
 use crate::limits::checked_collection_len;
-use crate::numeric_text::{parse_bool_text, parse_pascal_integer, parse_pascal_real};
 use fpas_bytecode::{ConvIntrinsic, Intrinsic, SourceLocation, Value};
 use fpas_diagnostics::codes::RUNTIME_CONVERSION_FAILURE;
+use fpas_numeric::text::{integer as parse_pascal_integer, real as parse_pascal_real};
 
+/// Executes existing conversion APIs with the shared numeric grammar and bounds.
 pub(crate) fn run(
     intrinsic: Intrinsic,
     call: &mut IntrinsicCall<'_>,
@@ -35,7 +37,15 @@ pub(crate) fn run(
         }
         Intrinsic::Conv(ConvIntrinsic::RealToStr) => {
             let r = pop_real(pop_value(call, location)?, location)?;
-            call.push(Value::Str(format!("{r}").into()));
+            let text = fpas_numeric::text::format_real(r).map_err(|error| {
+                std_runtime_error(
+                    fpas_diagnostics::codes::RUNTIME_NUMERIC_DOMAIN_ERROR,
+                    error.message(),
+                    error.hint(),
+                    location,
+                )
+            })?;
+            call.push(Value::Str(text.into()));
         }
         Intrinsic::Conv(ConvIntrinsic::StrToReal) => {
             let s = expect_str(pop_value(call, location)?, location)?;
@@ -51,7 +61,7 @@ pub(crate) fn run(
         }
         Intrinsic::Conv(ConvIntrinsic::IntToReal) => {
             let n = pop_int(pop_value(call, location)?, location)?;
-            call.push(Value::Real(n as f64));
+            call.push(Value::Real(fpas_numeric::real::from_integer(n)));
         }
         Intrinsic::Conv(ConvIntrinsic::BoolToStr) => {
             let b = pop_bool(pop_value(call, location)?, location)?;
@@ -99,13 +109,7 @@ pub(crate) fn run(
         }
         Intrinsic::Conv(ConvIntrinsic::HexToInt) => {
             let s = expect_str(pop_value(call, location)?, location)?;
-            let trimmed = s.trim();
-            let trimmed = trimmed
-                .strip_prefix("0x")
-                .or_else(|| trimmed.strip_prefix("0X"))
-                .or_else(|| trimmed.strip_prefix('$'))
-                .unwrap_or(trimmed);
-            let n = i64::from_str_radix(trimmed, 16).map_err(|_| {
+            let n = fpas_numeric::text::hex_integer(s).ok_or_else(|| {
                 std_runtime_error(
                     RUNTIME_CONVERSION_FAILURE,
                     format!("HexToInt: invalid hex `{s}`"),

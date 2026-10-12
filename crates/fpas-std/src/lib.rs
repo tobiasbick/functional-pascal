@@ -17,6 +17,7 @@ mod aggregate_factory;
 mod array;
 /// Shared `Std.Bits` primitives; see `docs/pascal/std/numeric/bits.md`.
 pub mod bits;
+mod boolean_text;
 mod console;
 mod console_event;
 mod conv;
@@ -30,7 +31,6 @@ mod json;
 pub mod key_event;
 mod limits;
 mod math;
-mod numeric_text;
 mod parse;
 mod path;
 mod proc;

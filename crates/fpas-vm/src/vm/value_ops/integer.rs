@@ -10,12 +10,9 @@ use super::{BinaryOperation, UnaryOperation, ValueOperationError};
 /// Applies numeric negation to an integer.
 pub(super) fn unary(operation: UnaryOperation, value: i64) -> Result<Value, ValueOperationError> {
     match operation {
-        UnaryOperation::Negate => value.checked_neg().map(Value::Integer).ok_or_else(|| {
-            ValueOperationError::domain(
-                "Integer negation overflow",
-                "Avoid negating the minimum integer value.",
-            )
-        }),
+        UnaryOperation::Negate => fpas_numeric::integer::negate(value)
+            .map(Value::Integer)
+            .map_err(Into::into),
         UnaryOperation::Not => unreachable!("Boolean operation routed to integer value operations"),
     }
 }
@@ -28,11 +25,19 @@ pub(super) fn binary(
     right: i64,
 ) -> Result<Value, ValueOperationError> {
     match operation {
-        BinaryOperation::Add => Ok(Value::Integer(left.wrapping_add(right))),
-        BinaryOperation::Subtract => Ok(Value::Integer(left.wrapping_sub(right))),
-        BinaryOperation::Multiply => Ok(Value::Integer(left.wrapping_mul(right))),
-        BinaryOperation::IntegerDivide => integer_divide(left, right),
-        BinaryOperation::Modulo => modulo(left, right),
+        BinaryOperation::Add => arithmetic(fpas_numeric::integer::Operation::Add, left, right),
+        BinaryOperation::Subtract => {
+            arithmetic(fpas_numeric::integer::Operation::Subtract, left, right)
+        }
+        BinaryOperation::Multiply => {
+            arithmetic(fpas_numeric::integer::Operation::Multiply, left, right)
+        }
+        BinaryOperation::IntegerDivide => {
+            arithmetic(fpas_numeric::integer::Operation::Divide, left, right)
+        }
+        BinaryOperation::Modulo => {
+            arithmetic(fpas_numeric::integer::Operation::Remainder, left, right)
+        }
         BinaryOperation::Equal => Ok(Value::Boolean(left == right)),
         BinaryOperation::NotEqual => Ok(Value::Boolean(left != right)),
         BinaryOperation::Less => Ok(Value::Boolean(left < right)),
@@ -49,32 +54,12 @@ pub(super) fn binary(
     }
 }
 
-fn integer_divide(left: i64, right: i64) -> Result<Value, ValueOperationError> {
-    if right == 0 {
-        return Err(ValueOperationError::division_by_zero(
-            "Division by zero",
-            "Check the right-hand side before using `div` or `/`.",
-        ));
-    }
-    left.checked_div(right).map(Value::Integer).ok_or_else(|| {
-        ValueOperationError::domain(
-            "Integer division overflow",
-            "Avoid dividing the minimum integer value by `-1`.",
-        )
-    })
-}
-
-fn modulo(left: i64, right: i64) -> Result<Value, ValueOperationError> {
-    if right == 0 {
-        return Err(ValueOperationError::modulo_by_zero(
-            "Modulo by zero",
-            "Check the right-hand side before using `mod`.",
-        ));
-    }
-    left.checked_rem(right).map(Value::Integer).ok_or_else(|| {
-        ValueOperationError::domain(
-            "Integer modulo overflow",
-            "Avoid applying `mod` with the minimum integer value and `-1`.",
-        )
-    })
+fn arithmetic(
+    operation: fpas_numeric::integer::Operation,
+    left: i64,
+    right: i64,
+) -> Result<Value, ValueOperationError> {
+    fpas_numeric::integer::binary(operation, left, right)
+        .map(Value::Integer)
+        .map_err(Into::into)
 }

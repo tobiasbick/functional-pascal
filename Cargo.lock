@@ -485,6 +485,7 @@ dependencies = [
  "fpas-ir",
  "fpas-lexer",
  "fpas-linker",
+ "fpas-numeric",
  "fpas-parser",
  "fpas-sema",
  "fpas-std",
@@ -550,6 +551,7 @@ name = "fpas-lexer"
 version = "0.0.1"
 dependencies = [
  "fpas-diagnostics",
+ "fpas-numeric",
 ]
 
 [[package]]
@@ -580,11 +582,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "fpas-numeric"
+version = "0.0.1"
+
+[[package]]
 name = "fpas-parser"
 version = "0.0.1"
 dependencies = [
  "fpas-diagnostics",
  "fpas-lexer",
+ "fpas-numeric",
 ]
 
 [[package]]
@@ -620,6 +627,7 @@ dependencies = [
  "fpas-diagnostics",
  "fpas-fmt",
  "fpas-lexer",
+ "fpas-numeric",
  "fpas-parser",
  "fpas-std",
  "fpas-unit",
@@ -634,6 +642,7 @@ dependencies = [
  "crossterm",
  "fpas-bytecode",
  "fpas-diagnostics",
+ "fpas-numeric",
  "glob",
  "serde",
  "serde_json",
@@ -662,6 +671,7 @@ dependencies = [
  "fpas-bytecode",
  "fpas-compiler",
  "fpas-diagnostics",
+ "fpas-numeric",
  "fpas-parser",
  "fpas-std",
  "getrandom 0.3.4",

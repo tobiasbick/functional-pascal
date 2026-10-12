@@ -11,6 +11,7 @@ use fpas_diagnostics::codes::{RUNTIME_NUMERIC_DOMAIN_ERROR, RUNTIME_VM_OPERAND_T
 
 const INTEGER_RANGE_HINT: &str = "Use a finite value whose rounded result fits in the integer range -9223372036854775808..9223372036854775807.";
 
+/// Executes Std.Math operations with finite operands and checked numeric results.
 pub(crate) fn run(
     intrinsic: Intrinsic,
     call: &mut IntrinsicCall<'_>,
@@ -27,12 +28,12 @@ pub(crate) fn run(
                     location,
                 ));
             }
-            call.push(Value::Real(r.sqrt()));
+            call.push(Value::Real(ensure_finite(r.sqrt(), location)?));
         }
         Intrinsic::Math(MathIntrinsic::Pow) => {
             let exp = pop_real(pop_value(call, location)?, location)?;
             let base = pop_real(pop_value(call, location)?, location)?;
-            call.push(Value::Real(base.powf(exp)));
+            call.push(Value::Real(ensure_finite(base.powf(exp), location)?));
         }
         Intrinsic::Math(MathIntrinsic::Floor) => {
             let r = pop_real(pop_value(call, location)?, location)?;
@@ -53,18 +54,18 @@ pub(crate) fn run(
         Intrinsic::Math(MathIntrinsic::Round) => {
             let r = pop_real(pop_value(call, location)?, location)?;
             call.push(Value::Integer(checked_real_to_int(
-                r.round(),
+                r.round_ties_even(),
                 "Round",
                 location,
             )?));
         }
         Intrinsic::Math(MathIntrinsic::Sin) => {
             let r = pop_real(pop_value(call, location)?, location)?;
-            call.push(Value::Real(r.sin()));
+            call.push(Value::Real(ensure_finite(r.sin(), location)?));
         }
         Intrinsic::Math(MathIntrinsic::Cos) => {
             let r = pop_real(pop_value(call, location)?, location)?;
-            call.push(Value::Real(r.cos()));
+            call.push(Value::Real(ensure_finite(r.cos(), location)?));
         }
         Intrinsic::Math(MathIntrinsic::Log) => {
             let r = pop_real(pop_value(call, location)?, location)?;
@@ -76,7 +77,7 @@ pub(crate) fn run(
                     location,
                 ));
             }
-            call.push(Value::Real(r.ln()));
+            call.push(Value::Real(ensure_finite(r.ln(), location)?));
         }
         Intrinsic::Math(MathIntrinsic::Min) => {
             let b = pop_value(call, location)?;
@@ -94,7 +95,7 @@ pub(crate) fn run(
         }
         Intrinsic::Math(MathIntrinsic::Tan) => {
             let r = pop_real(pop_value(call, location)?, location)?;
-            call.push(Value::Real(r.tan()));
+            call.push(Value::Real(ensure_finite(r.tan(), location)?));
         }
         Intrinsic::Math(MathIntrinsic::ArcSin) => {
             let r = pop_real(pop_value(call, location)?, location)?;
@@ -106,7 +107,7 @@ pub(crate) fn run(
                     location,
                 ));
             }
-            call.push(Value::Real(r.asin()));
+            call.push(Value::Real(ensure_finite(r.asin(), location)?));
         }
         Intrinsic::Math(MathIntrinsic::ArcCos) => {
             let r = pop_real(pop_value(call, location)?, location)?;
@@ -118,20 +119,20 @@ pub(crate) fn run(
                     location,
                 ));
             }
-            call.push(Value::Real(r.acos()));
+            call.push(Value::Real(ensure_finite(r.acos(), location)?));
         }
         Intrinsic::Math(MathIntrinsic::ArcTan) => {
             let r = pop_real(pop_value(call, location)?, location)?;
-            call.push(Value::Real(r.atan()));
+            call.push(Value::Real(ensure_finite(r.atan(), location)?));
         }
         Intrinsic::Math(MathIntrinsic::ArcTan2) => {
             let x = pop_real(pop_value(call, location)?, location)?;
             let y = pop_real(pop_value(call, location)?, location)?;
-            call.push(Value::Real(y.atan2(x)));
+            call.push(Value::Real(ensure_finite(y.atan2(x), location)?));
         }
         Intrinsic::Math(MathIntrinsic::Exp) => {
             let r = pop_real(pop_value(call, location)?, location)?;
-            call.push(Value::Real(r.exp()));
+            call.push(Value::Real(ensure_finite(r.exp(), location)?));
         }
         Intrinsic::Math(MathIntrinsic::Log10) => {
             let r = pop_real(pop_value(call, location)?, location)?;
@@ -143,7 +144,7 @@ pub(crate) fn run(
                     location,
                 ));
             }
-            call.push(Value::Real(r.log10()));
+            call.push(Value::Real(ensure_finite(r.log10(), location)?));
         }
         Intrinsic::Math(MathIntrinsic::Log2) => {
             let r = pop_real(pop_value(call, location)?, location)?;
@@ -155,7 +156,7 @@ pub(crate) fn run(
                     location,
                 ));
             }
-            call.push(Value::Real(r.log2()));
+            call.push(Value::Real(ensure_finite(r.log2(), location)?));
         }
         Intrinsic::Math(MathIntrinsic::Trunc) => {
             let r = pop_real(pop_value(call, location)?, location)?;
@@ -167,7 +168,7 @@ pub(crate) fn run(
         }
         Intrinsic::Math(MathIntrinsic::Frac) => {
             let r = pop_real(pop_value(call, location)?, location)?;
-            call.push(Value::Real(r.fract()));
+            call.push(Value::Real(ensure_finite(r.fract(), location)?));
         }
         Intrinsic::Math(MathIntrinsic::Sign) => {
             let v = pop_value(call, location)?;
@@ -194,7 +195,7 @@ fn abs_value(v: Value, location: SourceLocation) -> Result<Value, StdError> {
                 location,
             )
         }),
-        Value::Real(x) => Ok(Value::Real(x.abs())),
+        Value::Real(x) => Ok(Value::Real(ensure_finite(x, location)?.abs())),
         other => Err(std_runtime_error(
             RUNTIME_VM_OPERAND_TYPE_MISMATCH,
             format!("Abs expects numeric value, got {}", other.type_name()),
@@ -209,17 +210,14 @@ fn checked_real_to_int(
     intrinsic_name: &str,
     location: SourceLocation,
 ) -> Result<i64, StdError> {
-    // The positive bound is exclusive: i64::MAX rounds up to 2^63 as f64.
-    if !value.is_finite() || value < i64::MIN as f64 || value >= -(i64::MIN as f64) {
-        return Err(std_runtime_error(
+    fpas_numeric::real::to_integer(value).map_err(|_| {
+        std_runtime_error(
             RUNTIME_NUMERIC_DOMAIN_ERROR,
             format!("{intrinsic_name} result {value} is outside the integer range"),
             INTEGER_RANGE_HINT,
             location,
-        ));
-    }
-
-    Ok(value as i64)
+        )
+    })
 }
 
 fn minmax_value(
@@ -234,11 +232,15 @@ fn minmax_value(
         } else {
             Value::Integer(*x.max(y))
         }),
-        (Value::Real(x), Value::Real(y)) => Ok(if min {
-            Value::Real(x.min(*y))
-        } else {
-            Value::Real(x.max(*y))
-        }),
+        (Value::Real(x), Value::Real(y)) => {
+            ensure_finite(*x, location)?;
+            ensure_finite(*y, location)?;
+            Ok(if min {
+                Value::Real(x.min(*y))
+            } else {
+                Value::Real(x.max(*y))
+            })
+        }
         _ => Err(std_runtime_error(
             RUNTIME_VM_OPERAND_TYPE_MISMATCH,
             format!(
@@ -256,6 +258,7 @@ fn sign_value(v: Value, location: SourceLocation) -> Result<Value, StdError> {
     match v {
         Value::Integer(n) => Ok(Value::Integer(n.signum())),
         Value::Real(x) => {
+            ensure_finite(x, location)?;
             if x > 0.0 {
                 Ok(Value::Integer(1))
             } else if x < 0.0 {
@@ -284,6 +287,9 @@ fn clamp_value(
         return Ok(Value::Integer((*v).clamp(*a, *b)));
     }
     if let (Value::Real(v), Value::Real(a), Value::Real(b)) = (&x, &lo, &hi) {
+        ensure_finite(*v, location)?;
+        ensure_finite(*a, location)?;
+        ensure_finite(*b, location)?;
         ensure_valid_clamp_bounds(*a, *b, location)?;
         return Ok(Value::Real(v.clamp(*a, *b)));
     }
@@ -313,3 +319,14 @@ where
 
 #[cfg(test)]
 mod tests;
+
+fn ensure_finite(value: f64, location: SourceLocation) -> Result<f64, StdError> {
+    fpas_numeric::real::finite(value).map_err(|error| {
+        std_runtime_error(
+            RUNTIME_NUMERIC_DOMAIN_ERROR,
+            error.message(),
+            error.hint(),
+            location,
+        )
+    })
+}

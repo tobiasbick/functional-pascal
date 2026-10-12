@@ -111,6 +111,10 @@ define_codes!(PARSE_ALLOCATED_CODES => {
     ///
     /// Documentation: `docs/pascal/tools/diagnostics.md` (FP2020).
     PARSE_STATEMENT_IN_EXPRESSION_BRANCH = 2020;
+    /// A lexical integer magnitude cannot be used as a positive signed 64-bit value.
+    ///
+    /// Documentation: `docs/pascal/tools/diagnostics.md` (FP2021).
+    PARSE_INTEGER_LITERAL_OVERFLOW = 2021;
 });
 
 define_codes!(SEMA_ALLOCATED_CODES => {

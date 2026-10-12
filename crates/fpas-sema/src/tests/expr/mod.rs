@@ -14,6 +14,7 @@ mod handler_fields;
 mod if_expressions;
 mod named_arguments;
 mod native;
+mod numeric;
 mod ordinary_names;
 mod postfix;
 mod record_construction;
@@ -86,12 +87,6 @@ fn analyze_with_types_records_expression_types() {
         metadata.expr_types.len() >= 3,
         "expected types for literals and binary expression"
     );
-}
-
-#[test]
-fn mixed_numeric() {
-    // integer + real → real (promotion)
-    check_ok("program T; const X: real := 1 + 2.0; begin end.");
 }
 
 #[test]

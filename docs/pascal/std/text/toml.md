@@ -56,7 +56,10 @@ function Parse(Text: string): Result of (TomlValue, string);
 
 Parses a TOML document. Valid input returns `Ok(TomlValue)`; syntax errors return `Error(Message)` rather than aborting the program. TOML documents are tables at the root, so successful `Parse` results always have the `TomlValue.Table` variant.
 
-All TOML 1.0 value kinds are represented: strings, signed 64-bit integers, floating-point values (including `inf` and `nan`), booleans, date/time values, arrays, tables, inline tables, and arrays of tables.
+Strings, signed 64-bit integers, finite floating-point values, booleans, date/time
+values, arrays, tables, inline tables, and arrays of tables are represented.
+TOML `inf` and `nan` values, including nested ones, return Error because FPAS
+real values must be finite. Stringify also rejects nonfinite real payloads.
 
 ```pascal
 const Parsed: result of (TomlValue, string) := Parse('title = ''example''' + string.Chr(10) + 'enabled = true' + string.Chr(10) + '[server]' + string.Chr(10) +
@@ -104,7 +107,7 @@ programmer errors and raise a runtime diagnostic with a construction hint.
 | Concern | Location |
 | --- | --- |
 | Registration | [`loaded/toml.rs`](../../../../crates/fpas-sema/src/std_registry/loaded/toml.rs) |
-| Runtime | [`toml.rs`](../../../../crates/fpas-std/src/toml.rs) |
+| Runtime | [`toml/mod.rs`](../../../../crates/fpas-std/src/toml/mod.rs) |
 | Compiler intrinsic catalog | [`intrinsic_catalog.rs`](../../../../crates/fpas-compiler/src/intrinsic_catalog.rs) |
 | Intrinsics | [`intrinsic/toml.rs`](../../../../crates/fpas-bytecode/src/intrinsic/toml.rs) |
 

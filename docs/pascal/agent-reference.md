@@ -75,6 +75,15 @@ logical operators, e.g. `(A and B) or C`; repeated `A and B and C` is allowed.
 `/` performs real division; `div` and `mod` take integers. Use `=` and `<>` for
 equality and inequality. Arithmetic does not implicitly convert a `real` to `integer`.
 
+Numeric operands must have the same type; use `Std.Conv.IntToReal` explicitly
+before mixing integer and real calculations or comparisons. `/` on two integers
+still produces real. Integer `+`, `-`, `*`, and negation reject overflow. Real
+operands and results must be finite; division by either sign of zero is an error.
+`div` truncates toward zero and `mod` follows the dividend's sign; the minimum
+integer modulo -1 is zero. The direct minimum literal is `-9223372036854775808`.
+`Round` uses ties to even, and `RealToStr` preserves a finite real's parsing
+round-trip, including `1.0` and `-0.0`.
+
 Records, data enums, Option and Result support structural equality when all payloads
 are comparable. Whole arrays, dicts, callables, tasks and channels do not support
 equality. Ordering is scalar. `in` tests array values, dict keys, string substrings,

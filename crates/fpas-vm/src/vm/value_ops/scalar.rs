@@ -13,7 +13,9 @@ pub(super) fn unary(
 ) -> Result<Value, ValueOperationError> {
     match (operation, value) {
         (UnaryOperation::Negate, Value::Integer(value)) => super::integer::unary(operation, *value),
-        (UnaryOperation::Negate, Value::Real(value)) => Ok(Value::Real(-value)),
+        (UnaryOperation::Negate, Value::Real(value)) => fpas_numeric::real::finite(-value)
+            .map(Value::Real)
+            .map_err(Into::into),
         (UnaryOperation::Not, Value::Boolean(value)) => Ok(Value::Boolean(!value)),
         (UnaryOperation::Negate, actual) => Err(ValueOperationError::type_mismatch(
             format!(
@@ -67,31 +69,23 @@ fn arithmetic(
         (Value::Integer(left), Value::Integer(right)) => {
             super::integer::binary(operation, *left, *right)
         }
-        _ => {
-            let (Some(left), Some(right)) = (numeric(left), numeric(right)) else {
-                return Err(numeric_type_error(left, right));
-            };
-            Ok(Value::Real(match operation {
-                BinaryOperation::Add => left + right,
-                BinaryOperation::Subtract => left - right,
-                BinaryOperation::Multiply => left * right,
-                _ => unreachable!("arithmetic operation checked by caller"),
-            }))
-        }
+        (Value::Real(left), Value::Real(right)) => real_binary(operation, *left, *right),
+        _ => Err(numeric_type_error(left, right)),
     }
 }
 
 fn real_divide(left: &Value, right: &Value) -> Result<Value, ValueOperationError> {
-    let (Some(left), Some(right)) = (numeric(left), numeric(right)) else {
-        return Err(numeric_type_error(left, right));
-    };
-    if right == 0.0 {
-        return Err(ValueOperationError::division_by_zero(
-            "Division by zero",
-            "Check the right-hand side before using `/`.",
-        ));
+    match (left, right) {
+        (Value::Integer(left), Value::Integer(right)) => real_binary(
+            BinaryOperation::RealDivide,
+            fpas_numeric::real::from_integer(*left),
+            fpas_numeric::real::from_integer(*right),
+        ),
+        (Value::Real(left), Value::Real(right)) => {
+            real_binary(BinaryOperation::RealDivide, *left, *right)
+        }
+        _ => Err(numeric_type_error(left, right)),
     }
-    Ok(Value::Real(left / right))
 }
 
 fn integer_divide(left: &Value, right: &Value) -> Result<Value, ValueOperationError> {
@@ -144,22 +138,33 @@ fn boolean(
     }
 }
 
-fn numeric(value: &Value) -> Option<f64> {
-    match value {
-        Value::Integer(value) => Some(*value as f64),
-        Value::Real(value) => Some(*value),
-        _ => None,
-    }
+/// Applies typed real arithmetic with the same bounds as dynamic execution.
+pub(crate) fn real_binary(
+    operation: BinaryOperation,
+    left: f64,
+    right: f64,
+) -> Result<Value, ValueOperationError> {
+    use fpas_numeric::real::{self, Operation};
+    let operation = match operation {
+        BinaryOperation::Add => Operation::Add,
+        BinaryOperation::Subtract => Operation::Subtract,
+        BinaryOperation::Multiply => Operation::Multiply,
+        BinaryOperation::RealDivide => Operation::Divide,
+        _ => unreachable!("real arithmetic operation checked by caller"),
+    };
+    real::binary(operation, left, right)
+        .map(Value::Real)
+        .map_err(Into::into)
 }
 
 fn numeric_type_error(left: &Value, right: &Value) -> ValueOperationError {
     ValueOperationError::type_mismatch(
         format!(
-            "Numeric operation requires numeric operands, got {} and {}",
+            "Numeric operation requires two integers or two reals, got {} and {}",
             left.type_name(),
             right.type_name()
         ),
-        "Ensure both operands are integer or real values.",
+        "Use the same numeric type; import Std.Conv and use IntToReal explicitly to combine an integer with a real.",
     )
 }
 

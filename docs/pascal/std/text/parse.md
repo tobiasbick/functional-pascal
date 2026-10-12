@@ -22,15 +22,20 @@ After `uses Std.Parse;` use short names (`TryInt`, `TryReal`, `TryBool`) or qual
 
 | Kind | Name | Notes |
 |------|------|-------|
-| function | `TryInt(Text: string): Result of (integer, string)` | trims whitespace; accepts Pascal integer text with `_` digit separators |
-| function | `TryReal(Text: string): Result of (real, string)` | trims whitespace; requires a decimal point, for example `3.14` or `1.0e3` |
+| function | `TryInt(Text: string): Result of (integer, string)` | signed decimal or `$` hex with `_` separators; trims whitespace and checks signed 64-bit bounds |
+| function | `TryReal(Text: string): Result of (real, string)` | finite fractional/exponent text; preserves signed zero and rejects nonzero underflow to zero |
 | function | `TryBool(Text: string): Result of (boolean, string)` | trims whitespace; accepts `true` and `false` case-insensitively |
 
 ---
 
 ## `function TryInt(Text: string): Result of (integer, string)`
 
-Parses Pascal integer text. Returns `Ok(Value)` on success or `Error(Message)` on invalid text or overflow.
+Parses signed decimal or `$` hexadecimal integer text with single `_` separators.
+Surrounding whitespace is ignored. The complete signed 64-bit range is accepted,
+including `-9223372036854775808` and `-$8000000000000000`. Hex is a mathematical
+magnitude, not an unsigned bit-pattern reinterpretation. Returns `Ok(Value)` on
+success or `Error(Message)` on invalid text or overflow. `StrToInt` uses the same
+grammar with a runtime error instead of Result.
 
 ```pascal
 const R: Result of (integer, string) := TryInt(' +1_024 ');
@@ -41,7 +46,15 @@ WriteLn(R.UnwrapOr(0));                       // 1024
 
 ## `function TryReal(Text: string): Result of (real, string)`
 
-Parses Pascal real text. The text must include a fractional part; `1.0`, `-2.5`, and `1_024.0e-2` are valid, while `1e3`, `5.`, `NaN`, and `inf` are not.
+Parses Pascal real text with an optional sign and surrounding whitespace. The
+text must include a fractional part; `1.0`, `-2.5`, and `1_024.0e-2` are valid,
+while `1e3`, `5.`, `NaN`, and `inf` are not. Overflow and nonzero input rounded
+to zero return Error; representable subnormals remain valid. Negative zero is
+preserved. `StrToReal` uses the same grammar with a runtime error instead of Result.
+
+For every finite R, `TryReal(RealToStr(R))` returns the identical binary64 bits,
+including integral reals and either sign of zero. See
+[RealToStr](conv.md#function-realtostrr-real-string).
 
 ```pascal
 const R: Result of (real, string) := TryReal('1_024.0e-2');

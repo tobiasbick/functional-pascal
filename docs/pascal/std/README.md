@@ -98,6 +98,7 @@ When changing a `Std.*` API, update its handbook and every applicable layer:
 | Types, signatures, and `uses` registration | [`fpas-sema/src/std_registry/`](../../../crates/fpas-sema/src/std_registry/mod.rs) |
 | Compiler catalog and lowering | [`intrinsic_catalog.rs`](../../../crates/fpas-compiler/src/intrinsic_catalog.rs), [`lowering/calls.rs`](../../../crates/fpas-compiler/src/lowering/calls.rs), [`selection/intrinsics.rs`](../../../crates/fpas-compiler/src/bytecode/selection/intrinsics.rs) |
 | Intrinsic IDs and metadata | [`fpas-bytecode/src/intrinsic/`](../../../crates/fpas-bytecode/src/intrinsic/mod.rs) |
+| Numeric arithmetic and text rules | [`fpas-numeric/src/`](../../../crates/fpas-numeric/src/lib.rs), shared by checking, folding, execution, and Std numeric operations |
 | Runtime dispatch and execution | [`fpas-std/src/intrinsics.rs`](../../../crates/fpas-std/src/intrinsics.rs), [`fpas-vm/src/vm/`](../../../crates/fpas-vm/src/vm) |
 | Source standard-library API | [`lib/Std/`](../../../lib/Std), [`lib/stdlib.fpasprj`](../../../lib/stdlib.fpasprj) |
 | Regression coverage | Owning crate tests and [`tests/stdlib/`](../../../tests/stdlib) or the relevant runner, console, concurrency, or app tests |

@@ -105,8 +105,8 @@ pub const fn binary_categories(operation: BinaryOperation) -> (TypeCategory, Typ
         | BinaryOperation::DivideReal => (TypeCategory::Real, TypeCategory::Real),
         BinaryOperation::AddDynamic
         | BinaryOperation::SubtractDynamic
-        | BinaryOperation::MultiplyDynamic
-        | BinaryOperation::DivideDynamic => (TypeCategory::Dynamic, TypeCategory::Dynamic),
+        | BinaryOperation::MultiplyDynamic => (TypeCategory::Dynamic, TypeCategory::Dynamic),
+        BinaryOperation::DivideDynamic => (TypeCategory::Dynamic, TypeCategory::Real),
         BinaryOperation::Equal | BinaryOperation::NotEqual => {
             (TypeCategory::Same, TypeCategory::Boolean)
         }

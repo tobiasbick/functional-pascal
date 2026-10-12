@@ -10,12 +10,12 @@ use crate::intrinsic_args::{
     pop_value, value_as_string_for_join,
 };
 use crate::limits::checked_collection_len;
-use crate::numeric_text::is_pascal_numeric;
 use fpas_bytecode::{Intrinsic, SourceLocation, StrIntrinsic, Value};
 use fpas_diagnostics::codes::{
     RUNTIME_INTRINSIC_STACK_STATE_ERROR, RUNTIME_NUMERIC_DOMAIN_ERROR,
     RUNTIME_STRING_INDEX_OUT_OF_BOUNDS,
 };
+use fpas_numeric::text::is_numeric as is_pascal_numeric;
 
 mod format;
 mod substring;

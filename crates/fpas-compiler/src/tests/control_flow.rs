@@ -28,7 +28,7 @@ begin
   var S: string := 'ab';
   var B: boolean := true;
   I := ((I * 3) - 1) div 2;
-  R := (R + 2) / 2;
+  R := (R + 2.0) / 2.0;
   S := S + 'cd';
   B := (B and not false) xor false;
   if (I <> 10) or (R <> 1.75) or (S <> 'abcd') or (not B) then
@@ -100,19 +100,19 @@ end.",
 }
 
 #[test]
-fn mixed_numeric_comparisons_and_integer_edges_execute() {
+fn explicit_numeric_comparisons_and_integer_edges_execute() {
     assert_succeeds(
         "\
 program RegisterNumeric;
-uses Std.Bits;
+uses Std.Bits, Std.Conv;
 begin
   var X: integer := 9223372036854775807;
-  X := X + 1;
+  X := X - 1;
   const Bits: integer := BitOr(BitAnd(12, 10), BitXor(3, 1));
   const Shifted: integer := ShiftRight(ShiftLeft(1, 5), 2);
-  if (X <> -9223372036854775807 - 1) or (Bits <> 10) or (Shifted <> 8) then
+  if (X <> 9223372036854775806) or (Bits <> 10) or (Shifted <> 8) then
     panic('integer mismatch'); end if;
-  if not (2 < 2.5) then panic('mixed comparison mismatch'); end if;
+  if not (IntToReal(2) < 2.5) then panic('explicit comparison mismatch'); end if;
 end.",
     );
 }

@@ -1,0 +1,19 @@
+program NumericTextContractsTest;
+
+uses Std.Conv, Std.Parse, Std.Test;
+
+begin
+  AssertEquals(255, StrToInt(' $FF '));
+  AssertEquals(-9223372036854775808, StrToInt('-$8000000000000000'));
+  AssertEquals(-9223372036854775808, TryInt('-9223372036854775808').Unwrap());
+  AssertEquals(-9223372036854775808, HexToInt(IntToHex(-9223372036854775808, 16)));
+  AssertTrue(TryInt('$8000000000000000').IsError());
+  AssertTrue(TryInt('1__0').IsError());
+  AssertTrue(TryReal('1.0e-9999').IsError());
+  AssertTrue(TryReal('inf').IsError());
+  AssertEquals(1.0, StrToReal(RealToStr(1.0)));
+  AssertEquals('-0.0', RealToStr(StrToReal('-0.0')));
+  AssertEquals('-0.0', RealToStr(TryReal('-0.0').Unwrap()));
+  AssertTrue('$FF'.IsNumeric());
+  AssertFalse('1.0e-9999'.IsNumeric());
+end.

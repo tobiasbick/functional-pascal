@@ -1,6 +1,6 @@
 use super::super::Parser;
 use crate::ast::*;
-use fpas_diagnostics::codes::PARSE_EXPECTED_EXPRESSION;
+use fpas_diagnostics::codes::{PARSE_EXPECTED_EXPRESSION, PARSE_INTEGER_LITERAL_OVERFLOW};
 use fpas_lexer::Token;
 
 impl Parser {
@@ -27,7 +27,17 @@ impl Parser {
             Token::Integer(v) => {
                 let span = self.current_span();
                 self.advance();
-                Expr::Integer(v, span)
+                if let Some(value) = fpas_numeric::text::signed_integer(v, false) {
+                    Expr::Integer(value, span)
+                } else {
+                    self.error_with_code(
+                        PARSE_INTEGER_LITERAL_OVERFLOW,
+                        "Positive integer literal is outside the signed 64-bit range",
+                        "Use at most 9223372036854775807; write -9223372036854775808 for the minimum integer.",
+                        span,
+                    );
+                    Expr::Error(span)
+                }
             }
             Token::Real(v) => {
                 let span = self.current_span();

@@ -205,8 +205,18 @@ impl Parser {
     fn parse_enum_member_value(&mut self) -> Option<i64> {
         if let Token::Integer(value) = self.current_token() {
             let value = *value;
+            let span = self.current_span();
             self.advance();
-            Some(value)
+            let result = fpas_numeric::text::signed_integer(value, false);
+            if result.is_none() {
+                self.error_with_code(
+                    fpas_diagnostics::codes::PARSE_INTEGER_LITERAL_OVERFLOW,
+                    "Enum backing literal is outside the signed 64-bit range",
+                    "Use an integer literal up to 9223372036854775807.",
+                    span,
+                );
+            }
+            result
         } else {
             let span = self.current_span();
             self.error_with_code(

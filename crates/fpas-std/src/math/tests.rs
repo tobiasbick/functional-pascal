@@ -56,7 +56,7 @@ fn abs_reports_overflow_for_min_integer() {
 }
 
 #[test]
-fn floor_rejects_non_finite_values() {
+fn floor_rejects_non_finite_operands() {
     let mut stack = vec![Value::Real(f64::INFINITY)];
 
     let error = crate::execute_test_intrinsic(
@@ -66,7 +66,10 @@ fn floor_rejects_non_finite_values() {
     )
     .expect_err("Floor must reject a non-finite result");
 
-    assert!(error.message.contains("Floor result"), "{}", error.message);
+    assert_eq!(
+        error.code,
+        fpas_diagnostics::codes::RUNTIME_NUMERIC_DOMAIN_ERROR
+    );
 }
 
 #[test]

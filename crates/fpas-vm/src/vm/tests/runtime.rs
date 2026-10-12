@@ -132,7 +132,6 @@ fn dynamic_type_mismatch_is_a_runtime_diagnostic() {
 fn integer_domain_edges_fail_without_panicking() {
     for opcode in [
         Opcode::DivideInteger,
-        Opcode::RemainderInteger,
         Opcode::NegateInteger,
         Opcode::NegateDynamic,
     ] {

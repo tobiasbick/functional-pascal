@@ -3,6 +3,7 @@
 mod boolean;
 mod decision;
 mod designators;
+mod numeric;
 mod subranges;
 
 use fpas_ir::{BinaryOperation as IrBinary, Constant, Operation, UnaryOperation, ValueId};
@@ -238,7 +239,7 @@ impl LoweringContext {
             BinaryOp::And | BinaryOp::Or | BinaryOp::Xor => {
                 self.lower_boolean(operation, left, right, result_ty, span)
             }
-            BinaryOp::Eq | BinaryOp::NotEq => self.lower_numeric_comparison(
+            BinaryOp::Eq | BinaryOp::NotEq => self.lower_direct_binary(
                 if operation == BinaryOp::Eq {
                     IrBinary::Equal
                 } else {
@@ -246,8 +247,7 @@ impl LoweringContext {
                 },
                 left,
                 right,
-                &left_ty,
-                &right_ty,
+                types::BOOLEAN,
                 span,
             ),
             BinaryOp::Lt | BinaryOp::Gt | BinaryOp::LtEq | BinaryOp::GtEq => {
@@ -280,130 +280,6 @@ impl LoweringContext {
                     span,
                 )
             }
-        }
-    }
-
-    fn lower_numeric_comparison(
-        &mut self,
-        operation: IrBinary,
-        left: &Expr,
-        right: &Expr,
-        left_ty: &Ty,
-        right_ty: &Ty,
-        span: fpas_lexer::Span,
-    ) -> Result<ValueId, CompileError> {
-        if matches!(
-            (left_ty, right_ty),
-            (Ty::Integer, Ty::Real) | (Ty::Real, Ty::Integer)
-        ) {
-            let (left_value, right_value) =
-                self.lower_numeric_operands(left, right, left_ty, right_ty, span)?;
-            return self.emit_binary(operation, left_value, right_value, types::BOOLEAN, span);
-        }
-        self.lower_direct_binary(operation, left, right, types::BOOLEAN, span)
-    }
-
-    #[expect(
-        clippy::too_many_arguments,
-        reason = "numeric selection keeps all typed choices explicit"
-    )]
-    fn lower_numeric_binary(
-        &mut self,
-        integer: IrBinary,
-        real: IrBinary,
-        dynamic: IrBinary,
-        left: &Expr,
-        right: &Expr,
-        left_ty: &Ty,
-        right_ty: &Ty,
-        result_ty: fpas_ir::TypeId,
-        span: fpas_lexer::Span,
-    ) -> Result<ValueId, CompileError> {
-        let left_value = self.lower_expression(left)?;
-        let left_value = self.save_value(left_value);
-        let right_value = self.lower_expression(right)?;
-        let left_value = self.restore_value(left_value, span)?;
-        let left_lowered = self
-            .lowered_value_type(left_value)
-            .ok_or_else(|| unsupported(span, "missing lowered left operand type"))?;
-        let right_lowered = self
-            .lowered_value_type(right_value)
-            .ok_or_else(|| unsupported(span, "missing lowered right operand type"))?;
-        if left_lowered == types::DYNAMIC || right_lowered == types::DYNAMIC {
-            let output = if result_ty == types::BOOLEAN {
-                types::BOOLEAN
-            } else {
-                types::DYNAMIC
-            };
-            return self.emit_binary(dynamic, left_value, right_value, output, span);
-        }
-        if matches!(left_ty, Ty::Real)
-            || matches!(right_ty, Ty::Real)
-            || integer == IrBinary::DivideReal
-        {
-            let left_value =
-                self.convert_lowered_integer_to_real(left_value, left_lowered, span)?;
-            let right_value =
-                self.convert_lowered_integer_to_real(right_value, right_lowered, span)?;
-            return self.emit_binary(real, left_value, right_value, result_ty, span);
-        }
-        self.emit_binary(integer, left_value, right_value, result_ty, span)
-    }
-
-    fn convert_lowered_integer_to_real(
-        &mut self,
-        value: ValueId,
-        ty: fpas_ir::TypeId,
-        span: fpas_lexer::Span,
-    ) -> Result<ValueId, CompileError> {
-        if ty == types::INTEGER {
-            self.emit_value(
-                Operation::Unary {
-                    operation: UnaryOperation::IntegerToReal,
-                    operand: value,
-                },
-                types::REAL,
-                span,
-            )
-        } else {
-            Ok(value)
-        }
-    }
-
-    fn lower_numeric_operands(
-        &mut self,
-        left: &Expr,
-        right: &Expr,
-        left_ty: &Ty,
-        right_ty: &Ty,
-        span: fpas_lexer::Span,
-    ) -> Result<(ValueId, ValueId), CompileError> {
-        let left_value = self.lower_expression(left)?;
-        let left_value = self.convert_integer_to_real(left_value, left_ty, span)?;
-        let left_value = self.save_value(left_value);
-        let right_value = self.lower_expression(right)?;
-        let left_value = self.restore_value(left_value, span)?;
-        let right_value = self.convert_integer_to_real(right_value, right_ty, span)?;
-        Ok((left_value, right_value))
-    }
-
-    fn convert_integer_to_real(
-        &mut self,
-        value: ValueId,
-        ty: &Ty,
-        span: fpas_lexer::Span,
-    ) -> Result<ValueId, CompileError> {
-        if matches!(ty, Ty::Integer) {
-            self.emit_value(
-                Operation::Unary {
-                    operation: UnaryOperation::IntegerToReal,
-                    operand: value,
-                },
-                types::REAL,
-                span,
-            )
-        } else {
-            Ok(value)
         }
     }
 

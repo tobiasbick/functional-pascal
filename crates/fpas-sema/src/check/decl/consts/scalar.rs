@@ -75,9 +75,13 @@ impl Checker {
                 None
             }
             Expr::UnaryOp { op, operand, .. } => match (op, self.scalar_constant_value(operand)?) {
-                (UnaryOp::Negate, Value::Integer(value)) => value.checked_neg().map(Value::Integer),
+                (UnaryOp::Negate, Value::Integer(value)) => fpas_numeric::integer::negate(value)
+                    .ok()
+                    .map(Value::Integer),
                 (UnaryOp::Negate, Value::Real(bits)) => {
-                    Some(Value::Real((-f64::from_bits(bits)).to_bits()))
+                    fpas_numeric::real::finite(-f64::from_bits(bits))
+                        .ok()
+                        .map(|value| Value::Real(value.to_bits()))
                 }
                 (UnaryOp::Not, Value::Boolean(value)) => Some(Value::Boolean(!value)),
                 _ => None,
@@ -166,15 +170,24 @@ fn binary(op: BinaryOp, left: Value, right: Value) -> Option<Value> {
     use BinaryOp as Op;
     use Value::{Boolean, Integer, Real, String};
     match (op, left, right) {
-        (Op::Add, Integer(a), Integer(b)) => Some(Integer(a.wrapping_add(b))),
-        (Op::Sub, Integer(a), Integer(b)) => Some(Integer(a.wrapping_sub(b))),
-        (Op::Mul, Integer(a), Integer(b)) => Some(Integer(a.wrapping_mul(b))),
-        (Op::IntDiv, Integer(a), Integer(b)) => a.checked_div(b).map(Integer),
-        (Op::Mod, Integer(a), Integer(b)) => a.checked_rem(b).map(Integer),
+        (Op::Add, Integer(a), Integer(b)) => {
+            integer_binary(fpas_numeric::integer::Operation::Add, a, b)
+        }
+        (Op::Sub, Integer(a), Integer(b)) => {
+            integer_binary(fpas_numeric::integer::Operation::Subtract, a, b)
+        }
+        (Op::Mul, Integer(a), Integer(b)) => {
+            integer_binary(fpas_numeric::integer::Operation::Multiply, a, b)
+        }
+        (Op::IntDiv, Integer(a), Integer(b)) => {
+            integer_binary(fpas_numeric::integer::Operation::Divide, a, b)
+        }
+        (Op::Mod, Integer(a), Integer(b)) => {
+            integer_binary(fpas_numeric::integer::Operation::Remainder, a, b)
+        }
         (Op::RealDiv, Integer(a), Integer(b)) => real_binary(op, a as f64, b as f64),
         (op, Real(a), Real(b)) => real_binary(op, f64::from_bits(a), f64::from_bits(b)),
-        (op, Real(a), Integer(b)) => real_binary(op, f64::from_bits(a), b as f64),
-        (op, Integer(a), Real(b)) => real_binary(op, a as f64, f64::from_bits(b)),
+        (_, Real(_), Integer(_)) | (_, Integer(_), Real(_)) => None,
         (Op::Add, String(a), String(b)) => Some(String(a + &b)),
         (Op::And, Boolean(a), Boolean(b)) => Some(Boolean(a && b)),
         (Op::Or, Boolean(a), Boolean(b)) => Some(Boolean(a || b)),
@@ -204,14 +217,27 @@ fn binary(op: BinaryOp, left: Value, right: Value) -> Option<Value> {
 }
 
 fn real_binary(op: BinaryOp, a: f64, b: f64) -> Option<Value> {
-    let result = match op {
-        BinaryOp::Add => a + b,
-        BinaryOp::Sub => a - b,
-        BinaryOp::Mul => a * b,
-        BinaryOp::RealDiv if b != 0.0 => a / b,
-        _ => return compare(op, a.partial_cmp(&b)).map(Value::Boolean),
+    use fpas_numeric::real::{self, Operation};
+    let operation = match op {
+        BinaryOp::Add => Operation::Add,
+        BinaryOp::Sub => Operation::Subtract,
+        BinaryOp::Mul => Operation::Multiply,
+        BinaryOp::RealDiv => Operation::Divide,
+        _ => {
+            real::finite(a).ok()?;
+            real::finite(b).ok()?;
+            return compare(op, a.partial_cmp(&b)).map(Value::Boolean);
+        }
     };
-    Some(Value::Real(result.to_bits()))
+    real::binary(operation, a, b)
+        .ok()
+        .map(|value| Value::Real(value.to_bits()))
+}
+
+fn integer_binary(operation: fpas_numeric::integer::Operation, a: i64, b: i64) -> Option<Value> {
+    fpas_numeric::integer::binary(operation, a, b)
+        .ok()
+        .map(Value::Integer)
 }
 
 fn compare(op: BinaryOp, order: Option<std::cmp::Ordering>) -> Option<bool> {

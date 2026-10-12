@@ -2,11 +2,13 @@
 //!
 //! **Documentation:** `docs/pascal/std/text/parse.md` (from the repository root).
 
+use crate::boolean_text::parse_bool_text;
 use crate::error::StdError;
 use crate::intrinsic_args::{IntrinsicCall, expect_str, pop_value};
-use crate::numeric_text::{parse_bool_text, parse_pascal_integer, parse_pascal_real};
 use fpas_bytecode::{Intrinsic, ParseIntrinsic, SourceLocation, Value};
+use fpas_numeric::text::{integer as parse_pascal_integer, real as parse_pascal_real};
 
+/// Executes Result-returning parsing APIs with the shared numeric grammar and bounds.
 pub(crate) fn run(
     intrinsic: Intrinsic,
     call: &mut IntrinsicCall<'_>,

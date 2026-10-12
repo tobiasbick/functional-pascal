@@ -3,6 +3,9 @@
 ## `Text.IsNumeric(): boolean`
 
 `true` if the string (after trim) parses as an **integer** or **real**, otherwise `false`.
+It uses the same bounded grammar as `Std.Parse.TryInt` and `TryReal`, including
+signed `$` hex, digit separators, and finite real values. Nonzero real input
+that rounds to zero is not numeric. See [numeric parsing](../../../std/text/parse.md).
 
 ```pascal
 WriteLn('42'.IsNumeric());

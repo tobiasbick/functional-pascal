@@ -76,7 +76,8 @@ fn scalar_exports_fold_operators_and_owned_enum_values() {
         public const Ratio: real := 5 / 2;
         public const Caption: string := 'Hello' + ' World';
         public const Flag: boolean := not false and (3 < 4);
-        public const Wrapped: integer := 9223372036854775807 + 1;
+        public const Overflow: integer := 9223372036854775807 + 1;
+        public const Minimum: integer := -9223372036854775808;
         end unit;",
         &[],
     );
@@ -105,8 +106,9 @@ fn scalar_exports_fold_operators_and_owned_enum_values() {
         value("Flag"),
         SymbolKind::Constant(Some(ConstantValue::Boolean(true)))
     );
+    assert_eq!(value("Overflow"), SymbolKind::Constant(None));
     assert_eq!(
-        value("Wrapped"),
+        value("Minimum"),
         SymbolKind::Constant(Some(ConstantValue::Integer(i64::MIN)))
     );
     assert_eq!(

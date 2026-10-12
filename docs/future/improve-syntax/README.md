@@ -45,21 +45,21 @@ an open work package.
 ## Package status
 
 AP01, AP02, AP03, AP04, AP05, AP06, AP07, AP09, AP10, AP11, AP13, AP14, AP15, AP16,
-AP17, AP18, AP19, AP20, AP21, AP22, AP23, AP24, AP26, AP30, AP31, and AP32 are complete, including all
+AP17, AP18, AP19, AP20, AP21, AP22, AP23, AP24, AP26, AP30, AP31, AP32, and AP33 are complete, including all
 their work packages. Their READMEs and work-package files record implemented behavior,
 implementation owners, regression coverage, and any independent follow-ups.
 Checkboxes use the [status-tracking rule](development-process.md#status-tracking).
 
-Of the 43 packages, 26 are implemented, AP08/AP25/AP29 are rejected and closed,
+Of the 43 packages, 27 are implemented, AP08/AP25/AP29 are rejected and closed,
 AP12 and AP27 are deferred with their proposals retained, AP28 is transferred
-to editor/LSP planning, and the 11 packages AP33–AP43 are Decision pending.
+to editor/LSP planning. The 10 packages AP34–AP43 are Decision pending.
 They record the language-consistency audit: concrete defects, underspecified
 contracts, context-dependent rules, and redundant public forms. Adding a
 proposal by itself does not approve its language changes or implementation.
 AP30 and AP31 implement their selected contracts; AP32 corrects diagnostic
-hints and language guidance against current implemented behavior. AP33–AP43
-remain proposals. The next recommended work packages are the independent
-AP33.1 numeric decisions and AP34.1 inference decision.
+hints and language guidance against current implemented behavior. AP33 delivers
+explicit numeric compatibility, checked arithmetic, and shared numeric text rules.
+AP34–AP43 remain separate packages; AP34.1 is an independent inference decision.
 Reopening either deferred package requires a new explicit user decision.
 
 Completed APs retain their delivered scope and status. A new package that
@@ -123,7 +123,7 @@ package are listed in each work package file.
 | [x] | [AP30: Sound task result types](ap30-task-result-types/README.md) | Medium | AP26 | Complete (AP30.1, AP30.2): fixed procedure/function task types |
 | [x] | [AP31: Exported record constant defaults](ap31-exported-record-defaults/README.md) | Small–medium | AP10, AP24 | Complete (AP31.1): evaluated constant defaults and source diagnostics |
 | [x] | [AP32: Actionable language guidance](ap32-actionable-language-guidance/README.md) | Small | AP02, AP06, AP13, AP26 | Complete: valid hints, examples and terminology |
-| [ ] | [AP33: Consistent numeric contracts](ap33-numeric-contracts/README.md) | Large | AP07, AP18, AP19 | Decision pending; arithmetic, literals, conversion and text |
+| [x] | [AP33: Consistent numeric contracts](ap33-numeric-contracts/README.md) | Large | AP07, AP18, AP19 | Complete |
 | [ ] | [AP34: Consistent type inference](ap34-consistent-type-inference/README.md) | Large | AP22, AP24 | Decision pending; Q14 reassessment must be explicit |
 | [ ] | [AP35: Predictable condition composition](ap35-condition-composition/README.md) | Medium–large | AP20, AP23 | Decision pending; pattern contexts and postcondition binder |
 | [ ] | [AP36: Consistent calls and construction](ap36-call-and-construction-conventions/README.md) | Large | AP09, AP10, AP20 | Decision pending; labels, callable values and construction |
@@ -177,7 +177,7 @@ its dependent implementation complete or approved.
 | AP30 | Complete: AP30.1 task type contract; AP30.2 sound result typing |
 | AP31 | Complete: AP31.1 evaluated constant defaults in unit interfaces |
 | AP32 | Complete: AP32.1 valid diagnostic hints; AP32.2 current examples and terminology |
-| AP33 | AP33.1 numeric decisions; AP33.2 arithmetic/literals; AP33.3 number text |
+| AP33 | Complete: AP33.1 numeric decisions; AP33.2 arithmetic/literals; AP33.3 number text |
 | AP34 | AP34.1 inference decision; AP34.2 binding and generic inference |
 | AP35 | AP35.1 condition decisions; AP35.2 pattern conditions; AP35.3 postcondition binder |
 | AP36 | AP36.1 argument conventions; AP36.2 call/construction rules |
@@ -208,16 +208,16 @@ the work-package files state actual dependencies.
 | Stage | Recommended sequence | Result required before moving dependent work forward |
 |-------|----------------------|-----------------------------------------------------|
 | 1. Correctness and trustworthy guidance | Complete: AP30, AP31, and AP32 | Sound task result types and exported constant defaults are delivered; hints and examples show valid current syntax |
-| 2. Numeric and inference foundations | AP33.1 → AP33.2/AP33.3; AP34.1 → AP34.2 | One numeric contract and a recorded binding/generic inference rule; AP34 need not wait for arithmetic implementation unless its chosen design requires it |
+| 2. Numeric and inference foundations | Complete: AP33; AP34.1 → AP34.2 | Numeric contracts are delivered; binding/generic inference requires AP34.1's explicit decision |
 | 3. Conditions and call composition | AP35.1 → AP35.2/AP35.3; AP36.1 → AP36.2 | Transparent condition grouping, an unambiguous postcondition binder, and consistent argument roles, subject to each decision |
 | 4. Mutation, declarations and matching | AP37.1 → AP37.2; AP38.1 → AP38.2; AP39.1 → AP39.2 | A native/user mutation model, safe signature visibility, and a complete coverage matrix; these are independent except for explicitly shared syntax choices |
 | 5. Concurrency contracts | AP40.1 → AP40.2/AP40.3 | Explicit ownership/shared-state rules and defined wait priorities; may start after the relevant AP30 work instead of waiting for stages 2–4 |
 | 6. Canonical public forms | AP41.1 → AP41.2; AP42.1 → AP42.2; AP43.1 → AP43.2 | Qualified-name policy, reduced collection aliases, consistent absence/parsing APIs, and canonical error-handling guidance |
 
-Next select [AP33.1](ap33-numeric-contracts/01-numeric-decisions.md)
-and/or [AP34.1](ap34-consistent-type-inference/01-inference-decision.md).
-These independent decision packages require explicit choices before their
-dependent implementations. AP32.1/AP32.2 retain current syntax and semantics
+The next decision package is
+[AP34.1](ap34-consistent-type-inference/01-inference-decision.md).
+AP33's arithmetic, literal, and number-text contracts are complete.
+AP32.1/AP32.2 retain current syntax and semantics
 and are complete. AP31.1 preserves documented scalar constant defaults through
 independently compiled units and is complete.
 AP30 supplies fixed meanings for bare `task` and `task of T`, homogeneous task

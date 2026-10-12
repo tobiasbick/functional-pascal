@@ -103,41 +103,39 @@ fn typed_scalar_families_execute_with_aliasing_destinations() {
 }
 
 #[test]
-fn dynamic_numeric_operations_accept_mixed_integer_and_real_values() {
-    let mut code = vec![
-        abx(Opcode::LoadConstant, 0, 0),
-        abx(Opcode::LoadConstant, 1, 1),
-        abc(Opcode::AddDynamic, 2, 0, 1),
-        abc(Opcode::SubtractDynamic, 3, 0, 1),
-        abc(Opcode::MultiplyDynamic, 4, 0, 1),
-        abc(Opcode::DivideDynamic, 5, 0, 1),
-        abc(Opcode::NegateDynamic, 6, 0, 0),
-        abc(Opcode::LessDynamic, 7, 1, 0),
-        abc(Opcode::GreaterEqualDynamic, 8, 0, 1),
-        abc(Opcode::NotEqualDynamic, 9, 0, 1),
-        abc(Opcode::EqualDynamic, 10, 0, 0),
-        abc(Opcode::GreaterDynamic, 11, 0, 1),
-        abc(Opcode::LessEqualDynamic, 12, 1, 0),
-    ];
-    code.push(return_unit());
-    let (_, registers, _) = execute(verified(
-        code,
-        vec![Constant::Integer(7), Constant::Real(2.5_f64.to_bits())],
-        vec!["root", "test.fpas"],
-        13,
-    ))
-    .expect("dynamic numeric program should execute");
-
-    assert_eq!(registers[2], Value::Real(9.5));
-    assert_eq!(registers[3], Value::Real(4.5));
-    assert_eq!(registers[4], Value::Real(17.5));
-    assert_eq!(registers[5], Value::Real(2.8));
-    assert_eq!(registers[6], Value::Integer(-7));
-    assert!(
-        registers[7..=12]
-            .iter()
-            .all(|value| value == &Value::Boolean(true))
-    );
+fn dynamic_numeric_operations_reject_mixed_integer_and_real_values() {
+    for opcode in [
+        Opcode::AddDynamic,
+        Opcode::SubtractDynamic,
+        Opcode::MultiplyDynamic,
+        Opcode::DivideDynamic,
+        Opcode::LessDynamic,
+        Opcode::GreaterEqualDynamic,
+        Opcode::EqualDynamic,
+        Opcode::NotEqualDynamic,
+        Opcode::GreaterDynamic,
+        Opcode::LessEqualDynamic,
+    ] {
+        for (left, right) in [(0, 1), (1, 0)] {
+            let error = execute(verified(
+                vec![
+                    abx(Opcode::LoadConstant, 0, 0),
+                    abx(Opcode::LoadConstant, 1, 1),
+                    abc(opcode, 2, left, right),
+                    return_unit(),
+                ],
+                vec![Constant::Integer(7), Constant::Real(2.5_f64.to_bits())],
+                vec!["root", "test.fpas"],
+                3,
+            ))
+            .expect_err("mixed numeric operands must fail");
+            assert_eq!(
+                error.code,
+                fpas_diagnostics::codes::RUNTIME_VM_OPERAND_TYPE_MISMATCH,
+                "{opcode:?}"
+            );
+        }
+    }
 }
 
 #[test]
@@ -199,7 +197,10 @@ fn typed_real_ordering_retains_nan_diagnostic() {
         3,
     );
     let error = execute(executable).expect_err("NaN ordering must fail");
-    assert!(error.message.contains("Ordered comparison"));
+    assert_eq!(
+        error.code,
+        fpas_diagnostics::codes::RUNTIME_NUMERIC_DOMAIN_ERROR
+    );
 }
 
 #[test]

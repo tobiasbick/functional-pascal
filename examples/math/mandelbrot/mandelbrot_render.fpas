@@ -126,11 +126,11 @@ public function ComputeRow(
 begin
   const WidthRange: integer := Max(Width - 1, 1);
   const HeightRange: integer := Max(Height - 1, 1);
-  const Cy: real := YMax - Py / IntToReal(HeightRange) * (YMax - YMin);
+  const Cy: real := YMax - IntToReal(Py) / IntToReal(HeightRange) * (YMax - YMin);
   var Row: array of PixelSample := [];
   for Px: integer := 0 to Width - 1 do
     begin
-      const Cx: real := XMin + Px / IntToReal(WidthRange) * (XMax - XMin);
+      const Cx: real := XMin + IntToReal(Px) / IntToReal(WidthRange) * (XMax - XMin);
       Row.Push(Iterate(Complex.Create(Cx, Cy), MaxIter));
     end;
   end for;
@@ -153,7 +153,7 @@ function ComputeRowCancellable(
 begin
   const WidthRange: integer := Max(Width - 1, 1);
   const HeightRange: integer := Max(Height - 1, 1);
-  const Cy: real := YMax - Py / IntToReal(HeightRange) * (YMax - YMin);
+  const Cy: real := YMax - IntToReal(Py) / IntToReal(HeightRange) * (YMax - YMin);
   var Row: array of PixelSample := [];
   var NextYield: integer := MonotonicMillis() + 8;
   for Px: integer := 0 to Width - 1 do
@@ -171,7 +171,7 @@ begin
           return [];
         end;
       end if;
-      const Cx: real := XMin + Px / IntToReal(WidthRange) * (XMax - XMin);
+      const Cx: real := XMin + IntToReal(Px) / IntToReal(WidthRange) * (XMax - XMin);
       Row.Push(IterateCancellable(Complex.Create(Cx, Cy), MaxIter, HostToken, WorkerToken));
     end;
   end for;

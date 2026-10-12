@@ -36,3 +36,30 @@ fn standalone_expression_orders_lexer_diagnostics_first() {
         Some(ParseDiagnostic::Lexer(_))
     ));
 }
+
+#[test]
+fn unsigned_minimum_magnitude_requires_direct_negative_sign() {
+    use fpas_diagnostics::codes::PARSE_INTEGER_LITERAL_OVERFLOW;
+
+    for source in [
+        "9223372036854775808",
+        "$8000000000000000",
+        "-(9223372036854775808)",
+        "-($8000000000000000)",
+    ] {
+        let (_, diagnostics) = parse_expression(source);
+        assert_eq!(diagnostics.len(), 1, "{source}: {diagnostics:?}");
+        assert_eq!(
+            diagnostics[0].as_diagnostic().code,
+            PARSE_INTEGER_LITERAL_OVERFLOW,
+            "{source}"
+        );
+        assert!(
+            diagnostics[0]
+                .as_diagnostic()
+                .help
+                .as_ref()
+                .is_some_and(|help| help.contains("-9223372036854775808"))
+        );
+    }
+}

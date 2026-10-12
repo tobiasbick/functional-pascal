@@ -23,7 +23,10 @@ fn integer_underscores() {
 
 #[test]
 fn integer_max() {
-    assert_eq!(toks("9223372036854775807"), vec![Token::Integer(i64::MAX)]);
+    assert_eq!(
+        toks("9223372036854775807"),
+        vec![Token::Integer(i64::MAX as u64)]
+    );
 }
 
 // ── Hex Integers ────────────────────────────────────────────────
@@ -153,7 +156,10 @@ fn leading_zeros_integer() {
 
 #[test]
 fn hex_max_i64() {
-    assert_eq!(toks("$7FFFFFFFFFFFFFFF"), vec![Token::Integer(i64::MAX)]);
+    assert_eq!(
+        toks("$7FFFFFFFFFFFFFFF"),
+        vec![Token::Integer(i64::MAX as u64)]
+    );
 }
 
 #[test]

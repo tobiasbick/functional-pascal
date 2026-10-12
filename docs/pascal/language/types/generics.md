@@ -261,6 +261,22 @@ Type parameters can be constrained to require specific capabilities from the con
 Subranges satisfy `Comparable` and `Printable`, but not `Numeric`: arithmetic
 widens to integer values and does not preserve their bounds.
 
+Numeric operators require the same operand type. In a generic body, `A + B`
+is valid when both operands have the same `T: Numeric`; combining T with another
+type parameter or a concrete integer/real is rejected. Call-site inference
+also rejects mixed integer/real arguments instead of promoting them.
+`+`, `-`, and `*` return T, while `/` always returns real:
+
+```pascal
+function Divide<T: Numeric>(A: T; B: T): real;
+begin
+  return A / B;
+end function;
+```
+
+Integer and real instantiations use the same checked arithmetic rules as
+ordinary [numeric operators](../basics/operators.md#arithmetic).
+
 ### Examples
 
 ```pascal

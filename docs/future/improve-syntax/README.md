@@ -50,10 +50,21 @@ their work packages. Their READMEs and work-package files record implemented beh
 implementation owners, regression coverage, and any independent follow-ups.
 Checkboxes use the [status-tracking rule](development-process.md#status-tracking).
 
-Of the 29 packages, 23 are implemented, AP08/AP25/AP29 are rejected and closed,
-AP12 and AP27 are deferred with their proposals retained, and AP28 is
-transferred to editor/LSP planning hosted in its AP28 directory. There is no active language work package
-next. Reopening either deferred package requires a new explicit user decision.
+Of the 43 packages, 23 are implemented, AP08/AP25/AP29 are rejected and closed,
+AP12 and AP27 are deferred with their proposals retained, AP28 is transferred
+to editor/LSP planning, and the 14 new packages AP30–AP43 are Decision pending.
+They record the language-consistency audit: concrete defects, underspecified
+contracts, context-dependent rules, and redundant public forms. Recording
+these plans approves neither their proposed language changes nor implementation.
+The next recommended work package is AP30.1, the task result type decision.
+Reopening either deferred package requires a new explicit user decision.
+
+Completed APs retain their delivered scope and status. A new package that
+reassesses an earlier decision must name and explicitly replace that decision
+before changing behavior; it does not retroactively mark the original package
+unfinished. AP31 and AP32 are bounded repairs to existing contracts/guidance;
+their pending status records selection of future work, not an invented need
+for a new language rule to correct a defect.
 
 The Done cell tracks delivery; the Status column tracks the current decision.
 Use these labels consistently:
@@ -107,6 +118,20 @@ package are listed in each work package file.
 | [ ] | [AP27: Typed placeholders](ap27-typed-placeholders/README.md) | Very large if reopened | AP02, AP22; renewed user decision | Deferred; proposal retained, value and spelling unresolved |
 | — | [AP28: Structured editing](ap28-structured-editing/README.md) | — | AP13, AP24 | Tooling scope transferred to the [AP28 editor/LSP plan](ap28-structured-editing/structured-editing.md) (Q23) |
 | — | [AP29: Bounded derivation](ap29-bounded-derivation/README.md) | — | — | Rejected; closed (Q22) |
+| [ ] | [AP30: Sound task result types](ap30-task-result-types/README.md) | Medium | AP26 | Decision pending; confirmed type-checking defect, handle contract unresolved |
+| [ ] | [AP31: Exported record constant defaults](ap31-exported-record-defaults/README.md) | Small–medium | AP10, AP24 | Decision pending; bounded repair to the documented contract |
+| [ ] | [AP32: Actionable language guidance](ap32-actionable-language-guidance/README.md) | Small | AP02, AP06, AP13, AP26 | Decision pending; current-behavior corrections |
+| [ ] | [AP33: Consistent numeric contracts](ap33-numeric-contracts/README.md) | Large | AP07, AP18, AP19 | Decision pending; arithmetic, literals, conversion and text |
+| [ ] | [AP34: Consistent type inference](ap34-consistent-type-inference/README.md) | Large | AP22, AP24 | Decision pending; Q14 reassessment must be explicit |
+| [ ] | [AP35: Predictable condition composition](ap35-condition-composition/README.md) | Medium–large | AP20, AP23 | Decision pending; pattern contexts and postcondition binder |
+| [ ] | [AP36: Consistent calls and construction](ap36-call-and-construction-conventions/README.md) | Large | AP09, AP10, AP20 | Decision pending; labels, callable values and construction |
+| [ ] | [AP37: Uniform mutation visibility](ap37-uniform-mutation/README.md) | Large | AP06, AP17; coordinate AP36.1 | Decision pending; shared native/user receiver model |
+| [ ] | [AP38: Routine declaration visibility](ap38-routine-declaration-visibility/README.md) | Medium–large | AP11, AP24 | Decision pending; signature visibility versus initialization |
+| [ ] | [AP39: Consistent case coverage](ap39-consistent-case-coverage/README.md) | Large | AP03, AP20, AP21 | Decision pending; coverage and unreachable-arm rules |
+| [ ] | [AP40: Explicit task lifetimes and shared state](ap40-explicit-task-lifetimes/README.md) | Large | AP26, AP30 (by work package) | Decision pending; ownership, globals and wait contracts |
+| [ ] | [AP41: Canonical qualified names](ap41-canonical-qualified-names/README.md) | Medium | AP05, AP20, AP24 | Decision pending; style versus mandatory qualification |
+| [ ] | [AP42: Canonical collection operations](ap42-canonical-collection-operations/README.md) | Medium–large | AP06; coordinate AP33/AP37 decisions | Decision pending; aliases, absence and static sortability |
+| [ ] | [AP43: Consistent error handling and parsing APIs](ap43-consistent-error-handling/README.md) | Medium | AP33.3; AP35/AP39 only where required | Decision pending; parser APIs and handling conventions |
 
 A package's Done cell becomes `[x]` only when every work package in its own
 checklist is done. This table is the only package-completion index; do not
@@ -147,6 +172,20 @@ its dependent implementation complete or approved.
 | AP25 | AP25.1 reassessment complete: decision to close; AP25.2 and AP25.3 removed |
 | AP26 | Complete: AP26.1 scope blocks; AP26.2 failure propagation; AP26.3 handle escape restrictions |
 | AP27 | AP27.1 spelling decision and AP27.2 analysis retained as deferred drafts |
+| AP30 | AP30.1 task type contract; AP30.2 sound result typing |
+| AP31 | AP31.1 evaluated constant defaults in unit interfaces |
+| AP32 | AP32.1 valid diagnostic hints; AP32.2 current examples and terminology |
+| AP33 | AP33.1 numeric decisions; AP33.2 arithmetic/literals; AP33.3 number text |
+| AP34 | AP34.1 inference decision; AP34.2 binding and generic inference |
+| AP35 | AP35.1 condition decisions; AP35.2 pattern conditions; AP35.3 postcondition binder |
+| AP36 | AP36.1 argument conventions; AP36.2 call/construction rules |
+| AP37 | AP37.1 mutation model; AP37.2 receiver mutation |
+| AP38 | AP38.1 visibility decision; AP38.2 routine signatures |
+| AP39 | AP39.1 coverage decision; AP39.2 coverage checks |
+| AP40 | AP40.1 concurrency contract; AP40.2 ownership/shared state; AP40.3 waits |
+| AP41 | AP41.1 qualification decision; AP41.2 qualified-name rules |
+| AP42 | AP42.1 collection contract; AP42.2 collection operations |
+| AP43 | AP43.1 error conventions; AP43.2 error APIs and guidance |
 
 AP08, AP28, and AP29 have no work packages.
 
@@ -159,9 +198,38 @@ and retains the file structure and workflow for the next review. Completed
 findings and repair evidence remain in Git history.
 
 Package numbers group related work; they are not the execution order. The
-completed foundation is listed above. For the remaining work, keep the
-following dependency order; the exact prerequisites and unresolved decisions
-are recorded in each work-package file.
+completed foundation is listed above. The order below prioritizes correctness
+before language simplification. It is a proposed execution order, not approval
+of unresolved syntax or semantics. Independent work may proceed separately;
+the work-package files state actual dependencies.
+
+| Stage | Recommended sequence | Result required before moving dependent work forward |
+|-------|----------------------|-----------------------------------------------------|
+| 1. Correctness and trustworthy guidance | **AP30.1 → AP30.2**; independently AP31.1 and AP32.1/AP32.2 | Sound task result types; exported defaults honor the existing contract; hints and examples show valid current syntax |
+| 2. Numeric and inference foundations | AP33.1 → AP33.2/AP33.3; AP34.1 → AP34.2 | One numeric contract and a recorded binding/generic inference rule; AP34 need not wait for arithmetic implementation unless its chosen design requires it |
+| 3. Conditions and call composition | AP35.1 → AP35.2/AP35.3; AP36.1 → AP36.2 | Transparent condition grouping, an unambiguous postcondition binder, and consistent argument roles, subject to each decision |
+| 4. Mutation, declarations and matching | AP37.1 → AP37.2; AP38.1 → AP38.2; AP39.1 → AP39.2 | A native/user mutation model, safe signature visibility, and a complete coverage matrix; these are independent except for explicitly shared syntax choices |
+| 5. Concurrency contracts | AP40.1 → AP40.2/AP40.3 | Explicit ownership/shared-state rules and defined wait priorities; may start after the relevant AP30 work instead of waiting for stages 2–4 |
+| 6. Canonical public forms | AP41.1 → AP41.2; AP42.1 → AP42.2; AP43.1 → AP43.2 | Qualified-name policy, reduced collection aliases, consistent absence/parsing APIs, and canonical error-handling guidance |
+
+Start with [AP30.1](ap30-task-result-types/01-type-contract.md): the current
+checker accepts an integer task result as a string through a bare `task`
+parameter. Decide procedure-task and erased-observation types before fixing
+the hole so the repair does not remove legitimate completion operations.
+AP31 and AP32 can be selected independently without waiting for that decision.
+
+Within stage 6, AP43.2 requires AP33.3's selected number-text contract. It
+requires AP35/AP39 implementation only for changes relying on their new
+pattern rules. AP42 must preserve the chosen mutation and numeric ordering
+contracts; removing aliases also requires preserving evaluation order and
+contract-expression capabilities. Later stages are priority guidance, not
+artificial dependencies on every earlier package.
+
+Do not remove constructs solely because they can express similar algorithms:
+alias/distinct/subrange types, copy/mutation, propagation/panic, and lexical
+scopes/dynamic task groups have different contracts. API or syntax removal
+requires a canonical replacement and behavior-preserving migration unless a
+semantic change is explicitly selected.
 
 AP25 is rejected and closed after its reassessment and geometry pilot; the
 user's decision and rationale are retained in its package. No purity
@@ -183,7 +251,7 @@ Only after renewed approval would
 [AP27.1: Placeholder spelling](ap27-typed-placeholders/01-placeholder-spelling-decision.md)
 precede AP27.2.
 
-There is no next active work package in the syntax plan. AP28's separate
+The deferred and closed packages are outside the sequence above. AP28's separate
 [editor/LSP plan](ap28-structured-editing/structured-editing.md)
 starts by inspecting existing editing facilities and selecting one bounded
 operation; AP13 and AP24 satisfy its completed language prerequisites.
@@ -204,9 +272,11 @@ status, decisions, affected files, evidence, checks and results, remaining
 blockers, and the next step as described in
 [development-process.md](development-process.md).
 
-AP22 is approved only for literals, typed construction, and explicit
+AP22 remains approved only for literals, typed construction, and explicit
 conversions (Q14), including unambiguous non-empty array/dictionary literals
-and enum construction; ordinary calls still require annotations. Deferred AP27
+and enum construction; ordinary calls still require annotations. AP34 may
+reassess Q14 through its explicit decision work package, but merely adding
+AP34 to this plan does not broaden inference. Deferred AP27
 retains its implementation dependency on AP22 and its optional scope (Q21). Do not
 broaden inference indirectly through another package.
 

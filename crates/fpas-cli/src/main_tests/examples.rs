@@ -8,9 +8,11 @@
 use super::support;
 use std::path::{Path, PathBuf};
 
+mod agent_reference;
 mod concurrency;
 mod formatter_generics;
 mod formatter_handbook;
+mod handbook;
 mod introductory_handbook;
 
 fn repo_root() -> PathBuf {

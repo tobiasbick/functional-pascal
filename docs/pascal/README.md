@@ -21,6 +21,7 @@ Topic-based layout (Microsoft Learn style).
 
 | Area | Hub | Topics |
 |------|-----|--------|
+| Compact reference | [agent-reference.md](agent-reference.md) | Whole-language authoring guide, Pascal/Delphi/Ada comparison, tested examples |
 | Getting started | [getting-started/](getting-started/README.md) | Overview, hello world, keywords |
 | Language | [language/](language/README.md) | Types, basics, control flow, functions, pattern matching, errors, concurrency |
 | Program structure | [program-structure/](program-structure/README.md) | Units, projects, CLI, workspaces |
@@ -29,6 +30,8 @@ Topic-based layout (Microsoft Learn style).
 | Formal grammar | [../specs/grammar.ebnf](../specs/grammar.ebnf) | Lexer and parser syntax |
 
 ## Start here
+
+For a single-file authoring reference, start with [Compact FPAS language reference](agent-reference.md).
 
 Ordered learning path for newcomers:
 

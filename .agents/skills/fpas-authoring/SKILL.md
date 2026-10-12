@@ -5,8 +5,10 @@ description: Write, fix, or format Functional Pascal .fpas sources, including pr
 
 # FPAS authoring
 
-Use the current [language reference](../../../docs/pascal/README.md) and nearby
-working sources. Repository placement and shared completion checks live in
+Start with the [compact language reference](../../../docs/pascal/agent-reference.md)
+for syntax, common Pascal/Delphi/Ada pitfalls, and complete tested examples. Use the
+[topic reference](../../../docs/pascal/README.md) and nearby working sources for
+details. Repository placement and shared completion checks live in
 [AGENTS.md](../../../AGENTS.md).
 
 ## Read for the task

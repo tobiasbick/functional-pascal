@@ -1,6 +1,6 @@
 //! Console imports in complete introductory programs from `docs/pascal/`.
 
-use super::{repo_root, support};
+use super::{handbook::code_blocks, repo_root, support};
 use crate::test_support::{create_temp_dir, write_text};
 use std::fs;
 use std::path::PathBuf;
@@ -12,11 +12,11 @@ struct Example {
 }
 
 fn fenced_program(markdown: &str) -> String {
-    let blocks = markdown.split("```").skip(1).step_by(2).collect::<Vec<_>>();
+    let mut blocks = code_blocks(markdown);
     assert_eq!(blocks.len(), 1, "one introductory program fence");
-    let (language, source) = blocks[0].split_once('\n').expect("fenced language");
-    assert_eq!(language.trim(), "pascal");
-    source.replace("\r\n", "\n")
+    let block = blocks.pop().expect("one program");
+    assert_eq!(block.language, "pascal");
+    block.source
 }
 
 fn introductory_examples() -> [Example; 2] {

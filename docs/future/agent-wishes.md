@@ -3,13 +3,14 @@
 > **⚠️ Disclaimer:** This is a wish list written by the AI agent that does most of the work on this
 > hobby project, not by its human overlord. The human is still undecided: they would like to keep
 > reading formatted, colorful code in an IDE and occasionally have a say, while the agent does the
-> bulk of the work. A few wishes would please the overlord too. Nothing here is planned, scheduled,
-> or promised. Please do not build anything important on top of this — the human sincerely hopes
-> nobody does.
+> bulk of the work. A few wishes would please the overlord too. Apart from items explicitly marked
+> implemented, nothing here is planned, scheduled, or promised. Please do not build anything
+> important on top of this — the human sincerely hopes nobody does.
 
 ## Status
 
-Idea only. No implementation plan. Human-facing tools stay: the DAP debugger
+[A1](#a1-one-compact-language-reference) is implemented. All other items remain ideas,
+without an implementation plan. Human-facing tools stay: the DAP debugger
 ([`debugger.md`](../pascal/tools/debugger.md)) and the language server
 ([`editor-integration.md`](../pascal/tools/editor-integration.md)). The JSONL debugger protocol
 would be replaced; see [Consequence: JSONL would go away](#consequence-jsonl-would-go-away).
@@ -19,11 +20,11 @@ navigation.
 
 ## Where to start
 
-Most value for the least work. Effort is a rough guess, not an estimate.
+Most value for the least work among the remaining wishes. Effort is a rough guess,
+not an estimate. A1 is already implemented; see its status below.
 
 | Wish | Why first | Effort |
 | --- | --- | --- |
-| [A1](#a1-one-compact-language-reference) Compact language reference | Helps the agent with every single task | small |
 | [S1](#s1-compile-every-documentation-example) Compile every documentation example | Wrong examples teach the agent wrong FPAS | medium |
 | [D1](#d1-automatic-failure-dump) Automatic failure dump | Solves most bugs without a debugger | medium |
 | [S2](#s2-diagnostics-with-source-excerpt-and-caret) Diagnostics with source excerpt and caret | Both notice it every day | medium |
@@ -60,11 +61,21 @@ of those languages. The tools should catch exactly that.
 
 #### A1. One compact language reference
 
-`docs/pascal/` has about 155 pages and roughly 89,000 words — too much to load, so the agent
-searches and misses things. Wanted: one file of about 5–10k tokens with every construct and a
-minimal example, plus a table "Pascal / Delphi / Ada writes it like this → FPAS writes it like
-this". A test compiles every example in the file so it cannot drift. Today the `fpas-authoring`
-skill only links to the individual pages.
+**Status: implemented.** The [compact language reference](../pascal/agent-reference.md)
+covers the implemented language in one file, with complete examples and a
+Pascal/Delphi/Ada comparison table. The handbook index and
+[`fpas-authoring`](../../.agents/skills/fpas-authoring/SKILL.md) link to it as the
+starting point for authoring.
+
+The [CLI reference test](../../crates/fpas-cli/src/main_tests/examples/agent_reference.rs)
+extracts every fenced example, compiles all sources through temporary projects,
+and runs every program with its assertions. Units are checked as libraries and
+imported by the companion programs. Run it with
+`cargo test -p fpas-cli agent_reference_examples_check_and_run`.
+
+This closes A1's request for one reference of roughly 5–10k tokens instead of
+loading the full handbook. Checking examples throughout the rest of the handbook
+remains the separate [S1](#s1-compile-every-documentation-example) wish.
 
 #### A2. Diagnostics for Pascal and Ada habits
 

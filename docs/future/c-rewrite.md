@@ -2,13 +2,14 @@
 
 > **⚠️ Disclaimer:** The human overlord has spoken. Everyone else is rewriting their programs in
 > Rust; this hobby project intends to go the other way and rewrite its implementation in pure C.
-> This is a statement of intent, not a plan: no schedule, no design, no promise. If you depend on
-> this project, please reconsider your life choices — the human sincerely hopes nobody does.
+> This is a statement of intent, not a plan: no schedule, no detailed migration plan, no promise.
+> If you depend on this project, please reconsider your life choices — the human sincerely hopes
+> nobody does.
 
 ## Status
 
-Idea only. No implementation plan. Recorded at the human's request; the Rust implementation remains
-the current one until something replaces it.
+Idea only. No implementation plan. C23 and CMake/Ninja with vcpkg are selected tooling for a
+prospective rewrite; the Rust implementation remains the current one until something replaces it.
 
 ## Motivation
 
@@ -31,10 +32,87 @@ Not the syntax. The toolchain:
   `tests/` are independent of Rust and would decide whether the C implementation behaves like the
   current one. The Rust unit tests (roughly 110k of about 258k lines of Rust) would not carry over.
 
+## C standard and target platforms
+
+**Target C23 for the implementation.** It is the highest published C revision available as a
+compiler language mode across the target configurations below. Select it explicitly rather than
+relying on compiler defaults. C2Y is still a draft and is outside the target.
+
+This is a language-mode decision, not a claim of complete C23 compiler and standard-library
+conformance. Use features supported by the selected compiler/runtime combinations. The
+[GCC C status](https://gcc.gnu.org/projects/c-status.html) and
+[Clang C status](https://clang.llvm.org/c_status.html) tables document the remaining gaps.
+
+Documentation checked on **2026-10-12**. Assumptions: maintained operating-system versions and the
+ability to install a recent GCC or Clang. Installed toolchains were not inspected, and no target
+builds were run. For the Raspberry Pi 3, the initial target is 64-bit Linux (ARM64); this is an
+explicit choice of OS architecture, not a hardware requirement for C23.
+
+| Target | Compiler route for C23 | Constraints |
+| --- | --- | --- |
+| Windows 11 x64 | Recent Clang/LLVM targeting the MSVC ABI, with the Windows SDK/UCRT. Clang accepts `-std=c23` from version 18. | Native MSVC `cl.exe` documents C17 as its highest fixed C standard mode; `/std:clatest` enables experimental features. Choose Clang for the C23 target and check runtime/header availability separately. |
+| Linux x64 | GCC 14 or newer, or Clang 18 or newer, with `-std=c23`. | These versions accept the mode but do not implement every C23 feature. GCC 15 adds features such as `#embed`; the chosen distribution's libc also determines library availability. |
+| Linux on Raspberry Pi 3 | Raspberry Pi OS 64-bit based on Debian Trixie is a concrete route. Debian Trixie provides GCC 14 and Clang 19 for ARM64, both with C23 mode. | The Pi 3 supports this OS. Use the implemented feature set of the chosen compiler; 32-bit Linux would require a separate ARM build/dependency check. |
+| FreeBSD x64 (amd64) | Base-system or packaged Clang with C23 mode. FreeBSD 15.0 ships LLVM 19.1.7. | FreeBSD 15.1 documents expanded but incomplete C23 library support. A newer compiler does not replace missing system-library APIs. |
+
+Sources: [MSVC C standard modes](https://learn.microsoft.com/en-us/cpp/build/reference/std-specify-language-standard-version),
+[Clang on Windows](https://learn.microsoft.com/en-us/cpp/build/clang-support-cmake),
+[GCC 14 language modes](https://gcc.gnu.org/onlinedocs/gcc-14.3.0/gcc/C-Dialect-Options.html),
+[Raspberry Pi OS compatibility](https://www.raspberrypi.com/software/operating-systems/),
+[Debian Trixie GCC](https://packages.debian.org/trixie/gcc),
+[Debian Trixie Clang](https://packages.debian.org/trixie/clang),
+[FreeBSD 15.0 toolchain](https://www.freebsd.org/releases/15.0R/relnotes/), and
+[FreeBSD 15.1 library support](https://www.freebsd.org/releases/15.1R/relnotes/).
+
+For example, C23 `constexpr` requires Clang 19, and enhanced enums require Clang 20; GCC 14 does not
+support `#embed`. Accepting `-std=c23` alone is therefore insufficient to select every C23 feature.
+Before implementation, define the actual feature requirements and check their compilation and
+any required library linkage on all four targets. Raise compiler requirements when a needed
+feature demands it. Keep platform-dependent runtime operations in focused platform modules.
+
+The prospective CMake build should require C23 (`C_STANDARD 23`, `C_STANDARD_REQUIRED ON`) and
+request the ISO dialect rather than the GNU dialect (`C_EXTENSIONS OFF`) for project targets.
+Requiring the standard prevents CMake from silently selecting an older mode; it does not verify
+complete conformance.
+See [CMake C_STANDARD](https://cmake.org/cmake/help/latest/prop_tgt/C_STANDARD.html).
+
+## Build and dependency management
+
+**Use CMake with Ninja and vcpkg in manifest mode.** vcpkg manages the implementation's external
+C libraries, such as TLS, JSON, and hashing. It does not change FPAS project dependencies or the
+source-adjacent `.fpascu` model.
+
+- Install vcpkg separately outside the repository and locate it through `VCPKG_ROOT`. No Git
+  submodule or vendored dependency sources are required in the FPAS repository.
+- Track `vcpkg.json` with a fixed registry baseline, `CMakeLists.txt`, and `CMakePresets.json`.
+  Keep machine-specific paths in environment variables or an ignored `CMakeUserPresets.json`.
+  Record the selected vcpkg/toolchain versions when establishing the build.
+- Ignore build output and `vcpkg_installed/`. CMake's vcpkg integration installs manifest
+  dependencies during configuration and makes them available to normal CMake library discovery.
+- Reuse installed dependencies during ordinary FPAS edits. Ninja rebuilds changed C sources and
+  sources affected by changed headers, then relinks affected targets. Dependency packages need
+  rebuilding when their inputs/configuration change and no matching binary cache entry exists.
+- Keep the separate vcpkg binary cache enabled. Deleting the project build directory can remove
+  its installed libraries, but matching cached packages can be restored without recompiling
+  them. Temporary package build files can be removed with `--clean-after-build`; binary archives
+  still consume space. Measure build time and disk usage rather than assuming a reduction.
+
+See [vcpkg installation](https://learn.microsoft.com/en-us/vcpkg/get_started/get-started),
+[manifest mode](https://learn.microsoft.com/en-us/vcpkg/concepts/manifest-mode),
+[CMake integration](https://learn.microsoft.com/en-us/vcpkg/users/buildsystems/cmake-integration),
+[binary caching](https://learn.microsoft.com/en-us/vcpkg/users/binarycaching),
+[cleanup options](https://learn.microsoft.com/en-us/vcpkg/commands/install#--clean-after-build), and
+[Ninja incremental builds](https://ninja-build.org/manual.html).
+
+ARM Linux, Clang builds on Windows, and BSD fall under vcpkg's community support. On BSD, vcpkg
+bootstraps itself from source. Availability of a package on Windows or Linux x64 does not establish
+that the selected version builds on ARM64 or FreeBSD: verify the actual dependency set on each
+target before adopting it. See [vcpkg supported hosts](https://learn.microsoft.com/en-us/vcpkg/concepts/supported-hosts).
+
 ## Open questions
 
-- **C standard and toolchain.** Which standard (C11, C17, C23) and which compilers on Windows and
-  Linux. Which build system — ideally one that needs nothing beyond a C compiler.
+- **Exact toolchain and library requirements.** Select compiler versions and the C23 features/APIs
+  actually used, Windows runtime/linkage settings, and dependency versions for the target matrix.
 - **Memory safety.** The Rust workspace forbids `unsafe` code; in C that guarantee moves from the
   compiler to discipline and tooling. Sanitizers (ASan, UBSan) and fuzzing of lexer, parser,
   bytecode verifier, and `.fpascu` loading would need to be part of the normal test run.

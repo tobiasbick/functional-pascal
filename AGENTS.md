@@ -33,7 +33,7 @@ Do not write hostnames, usernames, home directory paths, or other machine-identi
 Every implementation or behavior change is incomplete until docs and tests are checked — not only when the user asks.
 
 1. **Classify the change** — language spec, `Std.*` API, CLI/tooling, refactor-only, or docs-only.
-2. **Update or confirm docs** — if observable behavior changed, update the matching page under `docs/pascal/`. Refactor-only: state docs unchanged.
+2. **Update or confirm docs** — if observable behavior changed, update the matching page under `docs/pascal/`. Language and authoring changes also update or confirm [agent-reference.md](docs/pascal/agent-reference.md) under its [maintenance guide](docs/pascal/agent-reference-maintenance.md). Refactor-only: state docs unchanged.
 3. **Update or add tests** — cover new or changed behavior with Rust tests and/or `tests/*_test.fpas` as appropriate. Refactor-only: existing tests must still pass.
 4. **Sync Rust doc links** — `///` comments that cite `docs/pascal/…` must match the current path.
 5. **Verify** — for Rust changes, run `cargo fmt`, `cargo build`, and `cargo test --workspace` unless the task clearly does not require all three. After FPAS test changes, run `fpas test tests/` (or `tests/suite.fpasprj`, or targeted tests). For docs-only changes, validate links, commands, and examples; for skills, also validate frontmatter.

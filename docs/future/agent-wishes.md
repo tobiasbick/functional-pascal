@@ -73,9 +73,12 @@ and runs every program with its assertions. Units are checked as libraries and
 imported by the companion programs. Run it with
 `cargo test -p fpas-cli agent_reference_examples_check_and_run`.
 
-This closes A1's request for one reference of roughly 5–10k tokens instead of
+This closes A1's request for one compact language reference instead of
 loading the full handbook. Checking examples throughout the rest of the handbook
 remains the separate [S1](#s1-compile-every-documentation-example) wish.
+
+Purpose and upkeep live in the permanent
+[maintenance guide](../pascal/agent-reference-maintenance.md) beside the reference.
 
 #### A2. Diagnostics for Pascal and Ada habits
 

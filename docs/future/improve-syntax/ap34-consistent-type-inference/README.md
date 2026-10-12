@@ -1,8 +1,9 @@
 # AP34: Consistent type inference
 
-Status: Decision pending. Effort: large. Completion is tracked in the
-[central plan](../README.md). AP22 remains complete under Q14 until a new
-explicit decision changes its implemented rule.
+Status: Agreed direction; AP34.1 complete, AP34.2 not implemented. Effort: large.
+Completion is tracked in the [central plan](../README.md). The selected rules
+are recorded in [AP34.1](01-inference-decision.md). Current compiler and handbook
+behavior remains Q14 until AP34.2 delivers its replacement; AP22 remains complete.
 
 ## Findings
 
@@ -18,23 +19,29 @@ contexts expose different inference rules. See
 [generic routines](../../../pascal/language/functions/generic-routines.md) and
 [constructor inference](../../../pascal/language/types/generics.md#constructor-inference).
 
-## Proposed direction and open decisions
+## Selected decisions
 
-- Reassess Q14 explicitly: require annotations on all bindings, or infer every
-  fully determined local initializer. Keeping Q14 is also a valid decision;
-  the tradeoff must be recorded instead of silently broadening inference.
-- Align missing generic argument inference across constructors, routine
-  calls, and callable values; prefer arguments first, expected type filling
-  only unresolved parameters, with conflicts rejected.
-- Keep public signatures explicit, unknown types rejected, and generic
-  defaults separate from inference unless expressly decided otherwise.
+- Infer every fully determined initializer for local bindings in statement
+  lists, regardless of expression form. Calls, operators, field/index access,
+  factories and literals follow the same rule. Explicit annotations remain valid.
+  This replaces Q14's initializer-form whitelist within that scope.
+- Infer generic arguments from supplied values first. An expected type fills
+  only unresolved parameters; it cannot override arguments already determined.
+  Reject conflicts and unresolved parameters. Apply the same rule to direct
+  routine/member calls, constructors and callable values.
+- Keep parameters, routine results and record fields explicitly typed, along
+  with declarations outside statement lists, including those before `begin`.
+  Preserve constraints, nominal type identity and AP33's explicit numeric
+  conversion rule. Defaults do not determine generic arguments.
+
+The decision is recorded; this planning update does not implement AP34.2.
 
 ## Dependencies and work packages
 
 AP22/AP24 are complete. AP34.1 precedes AP34.2. Do not wait for AP27 or reopen
 it. Numeric promotion policy belongs to AP33; inference must not invent it.
 
-- [ ] [AP34.1: Inference decision](01-inference-decision.md)
+- [x] [AP34.1: Inference decision](01-inference-decision.md)
 - [ ] [AP34.2: Consistent inference rules](02-inference-rules.md)
 
 ## Acceptance
@@ -42,3 +49,7 @@ it. Numeric promotion policy belongs to AP33; inference must not invent it.
 One recorded rule explains when annotations may be omitted and how generic
 arguments are determined. Equivalent direct/callable/constructor contexts
 follow that rule or have an explicitly retained semantic distinction.
+
+## Open decisions
+
+None within the selected scope. AP34.2 remains the implementation work package.

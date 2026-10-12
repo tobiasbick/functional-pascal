@@ -4,6 +4,7 @@ Read this file first when writing Functional Pascal. It covers the implemented
 language in one place; follow the topic links for detailed rules and library APIs.
 The [formal grammar](../specs/grammar.ebnf) describes syntax. The
 [handbook](README.md) explains behavior. Planned features belong in `docs/future/`.
+Purpose and upkeep are recorded in the [maintenance guide](agent-reference-maintenance.md).
 
 Every fenced example below is a complete program or unit. The CLI test
 `agent_reference_examples_check_and_run` extracts all fences, checks every source,
@@ -60,7 +61,8 @@ values use `string.Chr`. String indexing returns one scalar as a string, not a b
 grapheme cluster, or terminal cell. Comments begin with `//`; adjacent standalone
 comment blocks also supply Markdown declaration documentation.
 
-Global bindings, fields, parameters and return types require type annotations.
+Declarations outside statement lists (including before a routine's `begin`),
+fields, parameters and return types require type annotations.
 Local inference accepts literals, nonempty homogeneous collection literals, typed
 record/enum constructors, `Some` with a known payload type, and explicit conversions.
 Annotate references, ordinary calls, operators, field/index reads, closures, record
@@ -80,9 +82,15 @@ before mixing integer and real calculations or comparisons. `/` on two integers
 still produces real. Integer `+`, `-`, `*`, and negation reject overflow. Real
 operands and results must be finite; division by either sign of zero is an error.
 `div` truncates toward zero and `mod` follows the dividend's sign; the minimum
-integer modulo -1 is zero. The direct minimum literal is `-9223372036854775808`.
-`Round` uses ties to even, and `RealToStr` preserves a finite real's parsing
-round-trip, including `1.0` and `-0.0`.
+integer modulo -1 is zero. Direct minimum literals are `-9223372036854775808`
+and `-$8000000000000000`; their positive magnitudes are invalid integer values.
+Arithmetic permits subnormal values and signed zero; nonzero literal/text input
+rounded to zero is rejected. `IntToReal` can lose integer precision. `Std.Math.Round`
+uses ties to even; Trunc uses truncation toward zero, with checked integer bounds.
+`RealToStr` preserves the identical binary64 parsing round-trip, including `1.0`
+and `-0.0`. `Std.Conv` number parsers and `Std.Parse.TryInt`/`TryReal` share literal
+bodies, adding an optional sign and surrounding whitespace; real text needs a
+fractional part. See [conversion](std/text/conv.md) and [parsing](std/text/parse.md).
 
 Records, data enums, Option and Result support structural equality when all payloads
 are comparable. Whole arrays, dicts, callables, tasks and channels do not support
@@ -92,7 +100,7 @@ or subrange bounds. Boolean conditions never accept an integer as truthy.
 ```pascal
 program ReferenceBasics;
 
-uses Std.Test;
+uses Std.Conv, Std.Math, Std.Parse, Std.Test;
 
 const Limit: integer := 1000;
 
@@ -115,6 +123,14 @@ begin
   AssertEquals(2, 7 div 3);
   AssertEquals(1, 7 mod 3);
   AssertEquals(2.5, 5 / 2);
+  const Minimum: integer := -9223372036854775808;
+  AssertEquals(0, Minimum mod (-1));
+  AssertEquals(-2, -7 div 3);
+  AssertEquals(1.5, IntToReal(1) + 0.5);
+  AssertEquals(2, Round(2.5));
+  AssertEquals(255, TryInt('$FF').Unwrap());
+  AssertEquals('-0.0', RealToStr(StrToReal('-0.0')));
+  AssertTrue(TryReal('1.0e-9999').IsError());
 end.
 ```
 
@@ -581,14 +597,18 @@ See [functions](language/functions/README.md).
 Generic type declarations use `of`: `type Box of T = record ... end record;` and
 `type Pair of (K, V) = ...`. Applications use `Box of integer` or
 `Pair of (integer, string)`. Generic routines and record methods declare angle-bracket
-parameters (`function Identity<T>(Value: T): T;`). Calls infer type arguments;
-explicit angle-bracket call arguments are unsupported. Constructors use the plain
+parameters (`function Identity<T>(Value: T): T;`). Routine calls infer from arguments;
+an expected call-result type alone does not determine missing routine parameters.
+A typed callable value can instantiate a generic routine. Explicit angle-bracket
+call arguments are unsupported. Constructors use the plain
 type name with ordinary fields/arguments, and infer from arguments or the expected
 type; do not write `Box of integer(Value := 1)` as a constructor expression.
 
 Constraints are `Numeric`, `Comparable`, and `Printable`, written `T: Numeric`.
 `Numeric` allows integer/real arithmetic and implies the other two; `div` and `mod`
 are not valid generic Numeric operations because real is also a possible type.
+Numeric operands must use the same type parameter; `+`, `-`, `*` retain it,
+while `/` returns real for both integer and real instantiations.
 `Comparable` permits scalar ordering; `Printable` expresses printable values.
 Aliases preserve the underlying constraints; distinct types and subranges have
 specific rules below. Unconstrained type parameters still permit storage/passing.
@@ -631,6 +651,11 @@ begin
   return Left + Right;
 end function;
 
+function Divide<T: Numeric>(Left: T; Right: T): real;
+begin
+  return Left / Right;
+end function;
+
 function Smaller<T: Comparable>(Left: T; Right: T): T;
 begin
   return if Left < Right then Left else Right end if;
@@ -664,6 +689,8 @@ begin
   AssertEquals('one', Entry.Value);
   AssertEquals(5, Add(2, 3));
   AssertEquals(4.0, Add(1.5, 2.5));
+  AssertEquals(0.5, Divide(1, 2));
+  AssertEquals(0.5, Divide(1.0, 2.0));
   AssertEquals('a', Smaller('b', 'a'));
   AssertEquals(1, Length(Values));
   PrintValue(Wrapped.Value);

@@ -1,6 +1,6 @@
 # AP23: Preconditions and postconditions
 
-Status: complete and verified on 2026-10-11 (AP23.1 and AP23.2).
+Status: complete (AP23.1 and AP23.2).
 The direction is agreed (Q15, Q16, Q17). Effort: large. Completion is tracked
 in the [central README](../README.md); the process is in
 [development-process.md](../development-process.md).
@@ -38,8 +38,8 @@ contracts cannot substitute for a missing return.
 - Initially provide no `old` values or entry-state snapshots.
 - Contract expressions may use parameters, constants, operators, and built-in
   length/membership checks; postconditions may also use their named return
-  value. Further function calls require a `pure` annotation once AP25 is
-  implemented. AP23 does not depend on that later extension.
+  value. Ordinary function and method calls remain unavailable in clauses.
+  AP25 was closed without a purity extension.
 - No automatic proofs.
 
 Contract heading fragment; the body is omitted:
@@ -98,7 +98,7 @@ None for AP23.1 or AP23.2.
 - AP13 (routine declaration syntax with named closers).
 - AP16 (constant classification for clause expressions).
 
-AP25 is reassessed after practical use of this package.
+AP25's reassessment is complete; the package is closed without implementation.
 
 ## Order
 

@@ -77,7 +77,8 @@ const Last: integer := Items.Pop();
 - AP16 (binding mutability).
 
 [AP06](../ap06-dot-call-targets/README.md) supplies native catalog resolution
-and signatures using the shared mutation checks. AP25 and AP26 depend on AP17.
+and signatures using the shared mutation checks. AP26 depends on AP17;
+AP25's proposed dependency is inactive because AP25 is closed.
 
 ## Work packages
 

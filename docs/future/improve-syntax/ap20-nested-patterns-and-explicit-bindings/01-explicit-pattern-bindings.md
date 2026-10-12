@@ -2,6 +2,8 @@
 
 Package: [AP20: Nested patterns and explicit bindings](README.md)
 
+Status: complete.
+
 ## Scope
 
 Replace plain-identifier pattern bindings with `const Name` and add `_` for an

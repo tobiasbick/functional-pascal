@@ -2,6 +2,8 @@
 
 Package: [AP10: Typed record construction](README.md)
 
+Status: complete.
+
 ## Scope
 
 Remove the contextually typed `record ... end` literal and diagnose it with the

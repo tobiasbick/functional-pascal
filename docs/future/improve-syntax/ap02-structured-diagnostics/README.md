@@ -45,7 +45,8 @@ There are no remaining open decisions for AP02.
 
 ## Dependencies
 
-None. AP03, AP04, AP05, AP07, AP09, AP13, AP22, and AP27 depend on this package.
+None. AP03, AP04, AP05, AP07, AP09, AP13, and AP22 depend on this package.
+Deferred AP27 retains this dependency if reopened.
 
 ## Work packages
 

@@ -25,8 +25,8 @@ and stable.
 - Explicit local annotations remain valid. Public parameters, results, and
   fields remain fully annotated.
 - Empty collections and underconstrained constructors are not guessed.
-- AP27 may rely on this limited form after its implementation; it must not
-  broaden inference implicitly. AP27 is retained as optional (Q21).
+- Deferred optional AP27 may rely on this implemented limited form if reopened;
+  it must not broaden inference implicitly. Value and spelling remain open (Q21).
 
 Local bindings inside a routine or a plain scoping block; the surrounding
 code supplies the referenced types and values:
@@ -50,7 +50,7 @@ None for the scope above.
 - AP10.1 for the typed-construction form (AP22.2).
 - AP24 for generic constructor inference (AP22.2).
 
-AP27 depends on this package.
+AP27 retains this dependency if its deferred proposal is reopened.
 
 ## Order
 

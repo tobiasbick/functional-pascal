@@ -149,8 +149,8 @@ end with;
 
 ## Open decisions
 
-None for AP13. Decision-expression and task-scope decisions belong to
-AP21 and AP26.
+None for AP13. Decision-expression and task-scope decisions are recorded in
+the completed AP21 and AP26 packages.
 
 ## Implementation and regression coverage
 

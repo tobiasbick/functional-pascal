@@ -1,58 +1,31 @@
 # AP25: Conservative purity
 
-Status: retained; low priority; reassess after AP23 (Q18). Effort: very large.
-Completion is tracked in the [central README](../README.md); the process is in
-[development-process.md](../development-process.md).
+Status: rejected and closed after the AP25.1 reassessment; removed from the
+active plan. Completion is tracked in the [central README](../README.md).
 
-An effect system is excluded from this plan; see the [central README](../README.md#excluded-and-deferred).
+## Decision (Q18, reassessed)
 
-## Goal
+Do not implement conservative purity. The user accepted closure after the
+[assessment and geometry pilot](01-priority-reassessment.md#assessment).
+This supersedes Q18's earlier decision to retain the package at low priority.
 
-The checker enforces an explicit, explainable boundary and cannot infer purity
-merely from immutable variable names.
+The demonstrated benefit is reuse of a few predicates in contracts. Existing
+AP23 rules already support useful constructor invariants and reject unsafe
+calls and mutable-state reads. No concrete production defect was identified
+that a purity checker would prevent. Checking transitive calls, callable types,
+captures, shared handles, imported interfaces, and standard-library metadata
+would impose substantial implementation and ongoing maintenance costs.
 
-## Decisions (Q18)
+Do not add `pure function`, purity annotations, or purity metadata under this
+plan. AP23's implemented contract restrictions remain unchanged. AP25.2 and
+AP25.3 are removed without implementation; their removal does not claim that
+their proposed behavior was delivered.
 
-- Retain this package at low priority. Reassess implementation after AP23
-  contracts have been used in practice; their initial form does not require
-  this checker.
-- Support `pure function` only, not pure procedures. Pure functions have no
-  `var` parameters and may call only other pure functions.
-- Captures must be immutable. Local `var` bindings are allowed only when their
-  mutation cannot be observed externally.
-- Panics are allowed; purity does not imply termination or freedom from errors.
-- Standard-library routines carry purity metadata for checked calls.
-- The initial contract is conservative: no I/O, no observation of globally
-  mutable state, and no externally observable mutation. Ordinary functions
-  and procedures keep their side effects.
+## Decision work package
 
-## Open decisions
+- [x] [AP25.1: Priority reassessment](01-priority-reassessment.md)
 
-AP25.1 remains the priority gate. Before AP25.2, specify aliasing rules for
-shared handles and the proof required from imported APIs, including which local
-mutations can be proven unobservable outside the call. AP25.2 requires
-these details; immutable binding names alone do not establish purity.
-
-## Dependencies
-
-- AP14 (no computed properties hiding calls).
-- AP16 (binding keywords).
-- AP17 (`var` parameters).
-- AP23 complete and used in repository code (AP25.1 reassessment gate).
-
-## Order
-
-AP25.1 is the reassessment gate. AP25.2 delivers the checker for user code;
-AP25.3 adds verified standard-library metadata so pure functions can call
-standard routines.
-
-## Work packages
-
-- [ ] [AP25.1: Priority reassessment](01-priority-reassessment.md)
-- [ ] [AP25.2: Pure function checker](02-pure-function-checker.md)
-- [ ] [AP25.3: Standard-library purity metadata](03-std-purity-metadata.md)
-
-## Acceptance
-
-The checker enforces an explicit, explainable boundary and cannot infer purity
-merely from immutable variable names.
+The assessment is retained as the rationale for closure. Reopening requires
+concrete demand from application or library contracts and a new explicit user
+decision; it is not a scheduled follow-up. An effect system remains excluded
+from the [syntax plan](../README.md#excluded-and-deferred).

@@ -2,6 +2,8 @@
 
 Package: [AP20: Nested patterns and explicit bindings](README.md)
 
+Status: complete.
+
 ## Scope
 
 Allow patterns inside patterns, with literals and named constants as

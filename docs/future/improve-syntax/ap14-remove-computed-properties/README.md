@@ -24,7 +24,7 @@ remains.
 - AP06 (complete): getters and setters become record methods, which use
   declared-member dot calls.
 
-AP25 depends on this package.
+AP25's proposed dependency on this package is inactive; AP25 is closed.
 
 ## Order
 

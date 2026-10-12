@@ -2,6 +2,8 @@
 
 Package: [AP22: Limited local inference](README.md)
 
+Status: complete.
+
 ## Scope
 
 Statement-local `const` and `var` bindings can omit a type annotation when the

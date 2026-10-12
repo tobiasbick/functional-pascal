@@ -70,7 +70,7 @@ end for;
 
 - AP11 (one keyword per declaration).
 
-AP17, AP18, AP19, AP22, AP23, and AP25 depend on this package.
+AP17, AP18, AP19, AP22, and AP23 depend on this package. AP25 is closed.
 
 ## Work packages
 

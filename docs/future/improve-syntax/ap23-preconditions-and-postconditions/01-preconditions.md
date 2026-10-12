@@ -2,7 +2,7 @@
 
 Package: [AP23: Preconditions and postconditions](README.md)
 
-Status: complete and verified on 2026-10-11.
+Status: complete.
 
 ## Scope
 
@@ -71,20 +71,6 @@ suggest replacements such as `RequiresValue` and `EnsuresValue`.
 - Independently compiled imported routines and bound methods, fresh/reused/
   rebuilt sidecars, public interface round trips and clause hashes, native bundles,
   formatter comment/idempotence checks, and `tests/runner/contracts/preconditions_test.fpas`.
-
-## Checks and results
-
-| Check | Result |
-|-------|--------|
-| `cargo fmt --all`, `cargo build --workspace` | Passed |
-| `cargo clippy --workspace --all-targets -- -D warnings` | Passed |
-| `cargo test --workspace` | 4159 passed; 0 failed |
-| `cargo test -p fpas-compiler --release contracts` | 6 passed; 0 failed |
-| `fpas fmt --check lib apps examples tests` | Passed |
-| `fpas test --std-lib lib tests/suite.fpasprj` | 499 passed; 1 skipped; 0 failed |
-| `fpas check` for the notes app and Pascal monorepo workspace | Passed |
-| `node editors/vscode/scripts/verify-grammar.mjs` | Passed |
-| Relative links, ten AP01 reference examples, and `git diff --check` | Passed |
 
 ## Remaining work
 

@@ -1,19 +1,29 @@
 # AP27: Typed placeholders
 
-Status: retained as optional (Q21); AP22 dependency implemented. Effort: very
-large. Completion is tracked in the [central README](../README.md); the
+Status: deferred by user decision; optional proposal retained for possible
+later reassessment. No work is scheduled. AP02 and AP22 dependencies are
+complete, but no spelling or implementation is approved. Effort if reopened:
+very large. Completion is tracked in the [central README](../README.md); the
 process is in [development-process.md](../development-process.md).
 
 ## Goal
 
-Incomplete routines produce useful analysis but cannot accidentally become
-executable programs.
+The retained proposal would let incomplete routines produce useful analysis
+without accidentally becoming executable programs. This is an inactive goal,
+not implemented behavior.
 
 ## Decisions (Q21)
 
-- Retain this package as optional, after AP22's limited local inference is
-  implemented. Preserve its annotation requirements and inference limits; do
-  not broaden inference.
+- Defer this package. The user does not currently want to pursue its editor
+  convenience and analysis cost; whether it is worth implementing remains open.
+  Retain the optional proposal from Q21 for possible later use.
+- Reopening requires a new explicit user decision supported by concrete demand
+  for incomplete-code analysis. Technical prerequisites alone do not restart it.
+
+## Retained proposal (inactive)
+
+- Preserve AP22's annotation requirements and inference limits; do not broaden
+  inference.
 - Report expected types and suitable available values/functions for incomplete
   code; reject unresolved placeholders in executable programs.
 - The placeholder spelling still requires an explicit decision before language
@@ -21,6 +31,7 @@ executable programs.
 
 ## Open decisions
 
+- Whether the benefit justifies reopening and implementing the package.
 - The single fixed placeholder spelling (AP27.1).
 
 ## Dependencies
@@ -30,14 +41,18 @@ executable programs.
 
 ## Order
 
-AP27.1 records the spelling; AP27.2 implements analysis and rejection.
+No active next step. If reopened by explicit agreement, AP27.1 records the
+spelling before AP27.2 implements analysis and rejection. Both drafts remain
+unimplemented and unscheduled.
 
 ## Work packages
 
-- [ ] [AP27.1: Placeholder spelling decision](01-placeholder-spelling-decision.md)
-- [ ] [AP27.2: Placeholder analysis](02-placeholder-analysis.md)
+- [ ] [AP27.1: Placeholder spelling decision (deferred)](01-placeholder-spelling-decision.md)
+- [ ] [AP27.2: Placeholder analysis (deferred)](02-placeholder-analysis.md)
 
 ## Acceptance
 
-Incomplete routines produce useful analysis but cannot accidentally become
-executable programs.
+For the current decision: retain the proposal, record deferral and unresolved
+details, and leave current language behavior unchanged. If reopened, the agreed
+scope must ensure incomplete routines provide useful analysis while unresolved
+placeholders cannot become executable programs.

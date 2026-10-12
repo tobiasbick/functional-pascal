@@ -2,6 +2,8 @@
 
 Package: [AP20: Nested patterns and explicit bindings](README.md)
 
+Status: complete.
+
 ## Scope
 
 Add `Value is Pattern` as the condition of `if`, `elsif`, and `while`, with

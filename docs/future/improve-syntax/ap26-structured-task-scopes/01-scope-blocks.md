@@ -2,6 +2,8 @@
 
 Package: [AP26: Structured task scopes](README.md)
 
+Status: complete.
+
 ## Scope
 
 `scope ... end scope;` owns its directly started tasks. Every `go` inside a

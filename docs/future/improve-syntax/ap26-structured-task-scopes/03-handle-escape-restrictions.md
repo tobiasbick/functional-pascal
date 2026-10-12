@@ -2,6 +2,8 @@
 
 Package: [AP26: Structured task scopes](README.md)
 
+Status: complete.
+
 ## Scope
 
 Reject task handles of scope-owned children escaping their scope (Q20, Q27).

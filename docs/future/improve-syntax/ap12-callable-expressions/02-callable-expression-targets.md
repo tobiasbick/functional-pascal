@@ -2,17 +2,22 @@
 
 Package: [AP12: Callable expressions](README.md)
 
+Status: deferred, inactive implementation sketch. Retained for possible later
+reassessment; none of the additional syntax below is approved for implementation.
+
 ## Scope
 
-Allow any correctly typed function expression as a call target, as decided in
-AP12.1.
+The retained proposal would allow any correctly typed function expression as
+a call target. Its scope must be reassessed if reopened; AP12.1 currently
+records deferral, not acceptance.
 
 ## Prerequisites
 
-- AP12.1 (accepted decision).
+- A new explicit user decision to reopen AP12, accepting specific call targets
+  and evaluation order. The completed AP12.1 deferral does not satisfy this gate.
 - AP06.3 (fixed dot-call resolution).
 
-## Implementation
+## Retained implementation sketch
 
 - Parser: a call suffix after any primary or postfix expression.
 - Sema: one value-call check for all callable targets; reject non-callable
@@ -30,7 +35,8 @@ AP12.1.
 
 ## Migration
 
-None; the change is additive.
+None while deferred. Any future implementation would be additive and require
+an audit of the then-current supported targets.
 
 ## Documentation
 

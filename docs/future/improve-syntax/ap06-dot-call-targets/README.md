@@ -103,7 +103,8 @@ None.
 
 AP09 provides named-argument mapping. AP17 provides shared caller-mutation
 checks. Native availability does not depend on AP05 import aliases.
-AP12 and AP14 depend on the fixed member/catalog rule.
+AP14 depends on the fixed member/catalog rule. AP12 retains that dependency
+only if its deferred proposal is reopened; no AP12 implementation is scheduled.
 
 ## Work packages
 

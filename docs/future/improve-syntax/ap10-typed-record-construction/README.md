@@ -58,10 +58,11 @@ inference are owned by AP24.2.
 
 AP22 and AP24 depend on this package.
 
-## Order
+## Completed work
 
-AP10.1 adds typed construction next to literals. AP10.2 migrates literals.
-AP10.3 removes the literal form.
+AP10.1 owns typed construction, AP10.2 the migrated consumers, and AP10.3 the
+removed literal form and its diagnostics. Only named typed construction
+remains; there is no pending migration or supported literal form.
 
 ## Work packages
 

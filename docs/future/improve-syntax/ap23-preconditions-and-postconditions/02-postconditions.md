@@ -2,7 +2,7 @@
 
 Package: [AP23: Preconditions and postconditions](README.md)
 
-Status: complete and verified on 2026-10-11.
+Status: complete.
 
 ## Scope
 
@@ -67,22 +67,8 @@ None.
 - `tests/runner/contracts/postconditions_test.fpas` exercises successful ordinary,
   bound-method, current-`var`, and `try` propagated `Result`/`Option` returns.
 
-## Checks and results
-
-| Check | Result |
-|-------|--------|
-| `cargo fmt --all -- --check`, `cargo build --workspace` | Passed |
-| `cargo clippy --workspace --all-targets -- -D warnings` | Passed |
-| `cargo test --workspace` | 4170 passed; 0 failed |
-| `cargo test -p fpas-compiler --release contracts` | 13 passed; 0 failed |
-| `cargo test -p fpas-cli --test json_streams contracts` | 3 passed; 0 failed |
-| `fpas fmt --check lib apps examples tests` | Passed |
-| `fpas test --std-lib lib tests/suite.fpasprj` | 500 passed; 1 skipped; 0 failed |
-| `fpas check` for the notes app and Pascal monorepo workspace | Passed |
-| `node editors/vscode/scripts/verify-grammar.mjs` | Passed |
-| Relative links, ten AP01 examples, three contract examples, and `git diff --check` | Passed |
-
 ## Remaining work
 
-None for AP23.2 or AP23. AP25.1 reassesses purity after practical use of
-contracts; the next step is tracked in the [central plan](../README.md#recommended-order).
+None for AP23.2 or AP23. AP25.1 completed its assessment and the user closed
+AP25 without implementation. The next optional decision is tracked in the
+[central plan](../README.md#recommended-order).

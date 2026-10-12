@@ -47,16 +47,15 @@ Do not invent native test syntax for these tests.
 
 ## Integrated target example
 
-This uncompiled draft combines [AP03](ap03-explicit-closed-enum-cases/README.md),
+This example combines [AP03](ap03-explicit-closed-enum-cases/README.md),
 [AP13](ap13-explicit-block-boundaries/README.md),
 [AP20](ap20-nested-patterns-and-explicit-bindings/README.md),
 [AP21](ap21-decision-expressions/README.md),
-[AP24](ap24-generic-data-structures/README.md), and
-[AP25](ap25-conservative-purity/README.md).
+[AP24](ap24-generic-data-structures/README.md).
 AP03 closed-enum cases, AP13 block boundaries, AP20 pattern bindings, AP21
 decision expressions, and AP24 generic data declarations are implemented.
-Purity remains a draft owned by AP25, so this example is not a runnable
-program and does not request a combined implementation.
+The fragment uses implemented syntax and omits its containing program.
+AP25 is closed; this example uses an ordinary function without a purity claim.
 
 ```pascal
 type Lookup of T = enum
@@ -65,7 +64,7 @@ type Lookup of T = enum
   Failed(Message: string);
 end enum;
 
-pure function Describe(Response: Lookup of string): string;
+function Describe(Response: Lookup of string): string;
 begin
   return case Response of
     when Lookup.Found(const Text): 'Found: ' + Text;

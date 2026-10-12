@@ -18,6 +18,13 @@ directory, in addition to the repository rules in [AGENTS.md](../../../AGENTS.md
 
 ## Status tracking
 
+- The central Status column distinguishes decision from delivery: `Decision
+  pending` means a proposal or design choice is unresolved; `Deferred` means
+  the user has parked it, with no scheduled work. Uncertainty alone is not
+  approval or rejection. A deferred package may retain unresolved decisions;
+  its README records the rationale and reopening gate. Optional scope and low
+  priority are qualifiers, not decision statuses. Use the central README's
+  status legend for the remaining labels.
 - The [central README](README.md) is the only package-completion index.
   A package's Done cell becomes `[x]` only when every work package in its
   checklist is done.
@@ -33,7 +40,13 @@ directory, in addition to the repository rules in [AGENTS.md](../../../AGENTS.md
   may be marked complete once the applicable verification is complete.
 - Rejected packages use `—` in the Done column and keep their recorded
   decision. Work transferred to another plan also uses `—`; its README records
-  the destination and transfer conditions. Neither has work packages.
+  the destination and transfer conditions. Neither retains active
+  implementation work packages.
+- Deferred proposals retained in this plan keep `[ ]` for the package and
+  unimplemented work. Their decision work package may be complete when deferral
+  is recorded; retained implementation sketches remain unscheduled and require
+  renewed explicit approval. A closed package may retain a completed decision
+  assessment as rationale, without retaining implementation work packages.
 - Do not add dates, personal or machine metadata, or a chronological change
   log. Evidence (commands run, results, notable findings) belongs in the pull
   request description. Completed work-package files state current behavior,

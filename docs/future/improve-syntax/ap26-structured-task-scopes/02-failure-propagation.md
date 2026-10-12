@@ -2,6 +2,8 @@
 
 Package: [AP26: Structured task scopes](README.md)
 
+Status: complete.
+
 ## Scope
 
 A child panic or runtime error fails its scope: siblings and body are

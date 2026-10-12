@@ -50,11 +50,33 @@ their work packages. Their READMEs and work-package files record implemented beh
 implementation owners, regression coverage, and any independent follow-ups.
 Checkboxes use the [status-tracking rule](development-process.md#status-tracking).
 
+Of the 29 packages, 23 are implemented, AP08/AP25/AP29 are rejected and closed,
+AP12 and AP27 are deferred with their proposals retained, and AP28 is
+transferred to editor/LSP planning. There is no active language work package
+next. Reopening either deferred package requires a new explicit user decision.
+
+The Done cell tracks delivery; the Status column tracks the current decision.
+Use these labels consistently:
+
+| Status | Meaning |
+|--------|---------|
+| Complete | Implemented and verified within the package's scope. |
+| Agreed direction | The feature direction is accepted; named open details may still block implementation. |
+| Decision pending | Whether to pursue the proposal, or a required design choice, is still under consideration; implementation is not approved. |
+| Deferred | Deliberately parked with its proposal retained; no work is scheduled and reopening requires a new decision. |
+| Rejected; closed | The proposal will not be implemented under this plan; its rationale is retained. |
+| Transferred | Work is owned by another linked plan. |
+
+Uncertainty about whether a feature is wanted belongs under `Decision pending`.
+If the user deliberately parks that unresolved question, use `Deferred` and
+list the unresolved details in the package's Open decisions section. Optional
+scope and low priority are qualifiers, not substitutes for a decision status.
+
 Effort estimates are preliminary, based on the design rather than a code audit.
 Dependencies name the packages a package needs; the real prerequisites per work
 package are listed in each work package file.
 
-| Done | Package | Effort | Depends on | Direction |
+| Done | Package | Effort | Depends on | Status |
 |------|---------|--------|------------|-----------|
 | [x] | [AP01: Pascal conventions](ap01-pascal-conventions/README.md) | Small | None | Complete |
 | [x] | [AP02: Structured diagnostics](ap02-structured-diagnostics/README.md) | Small | None | Complete (Q01) |
@@ -67,7 +89,7 @@ package are listed in each work package file.
 | [x] | [AP09: Named arguments](ap09-named-arguments/README.md) | Medium | AP02 | Complete (AP09.1, AP09.2) |
 | [x] | [AP10: Typed record construction](ap10-typed-record-construction/README.md) | Medium | AP09 | Complete (AP10.1–AP10.3) |
 | [x] | [AP11: Individual declarations](ap11-individual-declarations/README.md) | Medium | AP01 | Complete (Q07) |
-| [ ] | [AP12: Callable expressions](ap12-callable-expressions/README.md) | Medium | AP06 | Proposal |
+| [ ] | [AP12: Callable expressions](ap12-callable-expressions/README.md) | Medium if reopened | AP06; renewed user decision | Deferred; proposal retained, no implementation scheduled |
 | [x] | [AP13: Explicit block boundaries](ap13-explicit-block-boundaries/README.md) | Large | AP01, AP02 | Complete (Q08, Q09) |
 | [x] | [AP14: Remove computed properties](ap14-remove-computed-properties/README.md) | Small | AP06 | Complete (AP14.1, AP14.2) |
 | [x] | [AP15: Remove event declarations](ap15-remove-event-declarations/README.md) | Small | AP20 | Complete (AP15.1, AP15.2) |
@@ -80,9 +102,9 @@ package are listed in each work package file.
 | [x] | [AP22: Limited local inference](ap22-limited-local-inference/README.md) | Large | AP02, AP10, AP16, AP19, AP24 | Complete (Q14) |
 | [x] | [AP23: Preconditions and postconditions](ap23-preconditions-and-postconditions/README.md) | Large | AP07, AP13, AP16 | Complete: AP23.1 preconditions; AP23.2 postconditions (Q15–Q17) |
 | [x] | [AP24: Generic data structures](ap24-generic-data-structures/README.md) | Very large | AP03, AP10, AP11, AP20 | Complete (AP24.1, AP24.2, AP24.3) |
-| [ ] | [AP25: Conservative purity](ap25-conservative-purity/README.md) | Very large | AP14, AP16, AP17; AP23 reassessment | Retained; low priority; reassess after AP23 (Q18) |
+| — | [AP25: Conservative purity](ap25-conservative-purity/README.md) | — | — | Rejected; closed after AP25.1 reassessment (Q18 superseded) |
 | [x] | [AP26: Structured task scopes](ap26-structured-task-scopes/README.md) | Large | AP13, AP17 | Complete (AP26.1–AP26.3; Q19, Q20, Q24–Q27) |
-| [ ] | [AP27: Typed placeholders](ap27-typed-placeholders/README.md) | Very large | AP02, AP22 | Retained as optional (Q21); AP22 dependency implemented |
+| [ ] | [AP27: Typed placeholders](ap27-typed-placeholders/README.md) | Very large if reopened | AP02, AP22; renewed user decision | Deferred; proposal retained, value and spelling unresolved |
 | — | [AP28: Structured editing](ap28-structured-editing/README.md) | — | AP13, AP24 | Transferred to [editor/LSP planning](../editor-structured-editing.md) (Q23) |
 | — | [AP29: Bounded derivation](ap29-bounded-derivation/README.md) | — | — | Rejected; closed (Q22) |
 
@@ -90,7 +112,10 @@ A package's Done cell becomes `[x]` only when every work package in its own
 checklist is done. This table is the only package-completion index; do not
 create a second backlog. Rejected packages use `—` and are closed without
 implementation. Work deferred to another plan also uses `—`; its destination
-and transfer conditions are recorded in the owning package README.
+and transfer conditions are recorded in the owning package README. A proposal
+retained in this plan but deferred, such as AP12 or AP27, keeps `[ ]`: this means
+unimplemented, not scheduled. A completed decision work package does not make
+its dependent implementation complete or approved.
 
 ## Work package index
 
@@ -106,7 +131,7 @@ and transfer conditions are recorded in the owning package README.
 | AP09 | AP09.1 routine arguments; AP09.2 variant constructors |
 | AP10 | AP10.1 typed construction; AP10.2 migrate literals; AP10.3 remove literals |
 | AP11 | AP11.1 order-independent types; AP11.2 one keyword per declaration |
-| AP12 | AP12.1 decision; AP12.2 callable targets |
+| AP12 | AP12.1 decision to defer complete; AP12.2 retained as an inactive sketch |
 | AP13 | AP13.1 reserve keywords; AP13.2 terminators; AP13.3 declaration closers; AP13.4 conditionals and loops; AP13.5 case arms; AP13.6 expression closers |
 | AP14 | AP14.1 migrate properties; AP14.2 remove declarations |
 | AP15 | AP15.1 optional handler fields; AP15.2 ordinary names and field/method model (both complete) |
@@ -119,9 +144,9 @@ and transfer conditions are recorded in the owning package README.
 | AP22 | AP22.1 literals and conversions; AP22.2 typed construction |
 | AP23 | Complete: AP23.1 preconditions; AP23.2 postconditions |
 | AP24 | Complete: AP24.1 parenthesized type arguments; AP24.2 generic records; AP24.3 generic enums |
-| AP25 | AP25.1 priority reassessment; AP25.2 pure function checker; AP25.3 std purity metadata |
+| AP25 | AP25.1 reassessment complete: decision to close; AP25.2 and AP25.3 removed |
 | AP26 | Complete: AP26.1 scope blocks; AP26.2 failure propagation; AP26.3 handle escape restrictions |
-| AP27 | AP27.1 spelling decision; AP27.2 placeholder analysis |
+| AP27 | AP27.1 spelling decision and AP27.2 analysis retained as deferred drafts |
 
 AP08, AP28, and AP29 have no work packages.
 
@@ -138,20 +163,31 @@ completed foundation is listed above. For the remaining work, keep the
 following dependency order; the exact prerequisites and unresolved decisions
 are recorded in each work-package file.
 
-AP25.1 is next: reassess conservative purity after practical use of the completed
-AP23 contracts. Collect concrete cases where purity would help, then record the
-user's decision to implement AP25, retain its low priority, or close it. AP25.2
-and AP25.3 require that decision; the AP14 prerequisite is complete.
+AP25 is rejected and closed after its reassessment and geometry pilot; the
+user's decision and rationale are retained in its package. No purity
+implementation is scheduled.
 
-AP12 can proceed to its
-accept/reject decision now that AP06 is complete; its implementation still
-requires that decision. AP22 is complete using the diagnostic, binding,
+AP12 is deferred by user decision. Its proposal and implementation sketch are
+retained for possible later reassessment, with no scheduled implementation.
+Direct calls such as `MakeAdder(3)(5)` do not fit the preferred readability;
+existing callable bindings and record-method chains remain available.
+Reopening requires a new explicit decision and an inventory of actual gaps.
+AP22 is complete using the diagnostic, binding,
 conversion, and generic typed-construction rules.
 
-AP27 is optional and follows AP22. AP28 is transferred to the
-[editor/LSP plan](../editor-structured-editing.md) after completion of AP13
-and AP24. AP08 and AP29 are
-rejected and closed.
+AP27 is also deferred by user decision. Its benefit does not currently justify
+pursuing typed placeholders; the proposal and both work-package drafts remain
+for later reassessment. Whether to implement it and its spelling remain open.
+AP02 and AP22 are complete, but technical readiness does not override deferral.
+Only after renewed approval would
+[AP27.1: Placeholder spelling](ap27-typed-placeholders/01-placeholder-spelling-decision.md)
+precede AP27.2.
+
+There is no next active work package in the syntax plan. AP28's separate
+[editor/LSP plan](../editor-structured-editing.md)
+starts by inspecting existing editing facilities and selecting one bounded
+operation; AP13 and AP24 satisfy its completed language prerequisites.
+AP08, AP25, and AP29 are closed without implementation.
 
 ## Decision gates
 
@@ -170,8 +206,8 @@ blockers, and the next step as described in
 
 AP22 is approved only for literals, typed construction, and explicit
 conversions (Q14), including unambiguous non-empty array/dictionary literals
-and enum construction; ordinary calls still require annotations. AP27 retains its
-implementation dependency on AP22 and is retained as optional (Q21). Do not
+and enum construction; ordinary calls still require annotations. Deferred AP27
+retains its implementation dependency on AP22 and its optional scope (Q21). Do not
 broaden inference indirectly through another package.
 
 ## Excluded and deferred

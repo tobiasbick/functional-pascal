@@ -2,17 +2,21 @@
 
 Package: [AP27: Typed placeholders](README.md)
 
+Status: deferred by user decision; inactive implementation sketch. Requires
+renewed approval and the unresolved AP27.1 spelling decision.
+
 ## Scope
 
-Accept the agreed placeholder in incomplete code for analysis, report expected
+If reopened, accept the agreed placeholder in incomplete code for analysis, report expected
 types, local values, and matching signatures, and reject unresolved
 placeholders when compiling an executable.
 
 ## Prerequisites
 
+- New explicit approval to reopen the deferred optional package.
 - AP27.1 (spelling), AP22 complete, AP02.4 (JSON diagnostics for tools).
 
-## Implementation
+## Retained implementation sketch
 
 - Parser: the placeholder as an expression.
 - Sema: compute the expected type at the placeholder and list local values and

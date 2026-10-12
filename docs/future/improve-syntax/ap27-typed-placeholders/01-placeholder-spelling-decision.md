@@ -5,15 +5,20 @@ Package: [AP27: Typed placeholders](README.md)
 This is a decision work package. It is complete when the user's decision is
 recorded; it changes no code.
 
+Status: deferred by user decision; inactive decision draft. The spelling is
+unresolved. Deferring the package does not complete this spelling work package.
+
 ## Scope
 
-Choose one fixed placeholder form for incomplete code.
+If the package is reopened, choose one fixed placeholder form for incomplete
+code. No spelling decision is scheduled now.
 
 ## Prerequisites
 
-- AP22 complete (the package is optional; start only if the user wants it).
+- New explicit approval to reopen the deferred optional package.
+- AP22 complete.
 
-## Implementation
+## Retained decision workflow
 
 - Propose candidate spellings that do not collide with existing or planned
   keywords and identifiers, with their lexer impact.

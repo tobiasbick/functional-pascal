@@ -76,8 +76,13 @@ assigned one complete value. Nested combinations use the same
 operation. Complete-value replacements use constructor expressions such as
 `Choice.Pair(1, 2)`, `Ok(3)`, or `None`. The entered value is an FPAS debugger expression and can include a
 controlled deterministic call. Successful edits refresh the Variables view;
-continuing the program observes the new value. If execution later reaches the
-source initializer, that store overwrites the debugger-provided value.
+continuing the program observes the new value. When a complete assignment
+initializes an empty mutable root, the debugger suppresses its exact pending
+declaration store if the executable retains that metadata. Registering this
+suppression does not evaluate the source initializer. Only the identified store
+is skipped; pending initializer computation and unrelated instructions still
+execute on continue. Executables without exact
+initializer metadata allow a later source store to overwrite the debugger value.
 
 The adapter also implements standard DAP `setExpression` for editor clients
 that edit a textual expression rather than a Variables child. Targets such as
@@ -107,15 +112,19 @@ bytes. Character replacement requires exactly one different character. The
 commands share the stopped frame, atomic commit, error, and refresh behavior of
 dictionary commands.
 
-**Debug: Force Return** completes the selected ordinary callee of the task that
-caused the current non-failure stop. The command uses the currently selected
+**Debug: Force Return** completes the selected callee or program/task entry of
+the task that caused the current stop. The command uses the currently selected
 stack frame, including an older frame in the same stopped task. Procedures
 return immediately; functions prompt for one FPAS expression when the command
 is invoked without an expression. The custom DAP request `fpas/forceReturn`
-writes the validated result into that frame's caller, discards every younger
+writes the validated result into an existing caller, discards every younger
 frame, and refreshes stack and variable views without resuming the program.
-Program and task entry frames, peer tasks, runtime-error stops, and unsupported
-result types are rejected without changing live state.
+Completing the program entry terminates the session and cancels remaining tasks.
+Completing a spawned task entry publishes its retained result when applicable
+and leaves the session stopped on another inspectable task. At a runtime-error
+stop, the command can recover the exact failed callee or entry after the usual
+type checks; the original diagnostic remains in the event history. Peer tasks,
+other retained failures, and unsupported result types are rejected atomically.
 
 **Restart Frame** is the standard DAP `restartFrame` action. It reconstructs
 the selected live frame of the stop-owning task at that function's entry,

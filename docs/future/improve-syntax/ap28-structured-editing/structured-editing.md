@@ -2,16 +2,15 @@
 
 Status: planning only; implementation has not started.
 
-This plan receives the tooling scope from
-[AP28](improve-syntax/ap28-structured-editing/README.md). It is separate from
+This plan contains the tooling scope of [AP28](README.md). It is separate from
 the language plan and changes no FPAS syntax or semantics.
 
 ## Prerequisites
 
-- [AP13: Explicit block boundaries](improve-syntax/ap13-explicit-block-boundaries/README.md).
-- [AP24: Generic data structures](improve-syntax/ap24-generic-data-structures/README.md).
+- [AP13: Explicit block boundaries](../ap13-explicit-block-boundaries/README.md).
+- [AP24: Generic data structures](../ap24-generic-data-structures/README.md).
 - Reuse the import rules from
-  [AP05](improve-syntax/ap05-qualified-imports/README.md).
+  [AP05](../ap05-qualified-imports/README.md).
 
 ## Agreed scope
 

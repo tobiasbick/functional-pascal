@@ -39,6 +39,17 @@ begin
   const Empty: TuiRect := Bounds.Intersect(TuiRect.Create(10, 3, 2, 2));
   AssertTrue(Empty.IsEmpty());
   AssertFalse(Bounds.Intersects(TuiRect.Create(10, 3, 2, 2)));
+  const EmptyWidth: TuiRect := TuiRect.Create(5, 5, 0, 1);
+  const EmptyHeight: TuiRect := TuiRect.Create(5, 5, 1, 0);
+  const EmptyPoint: TuiRect := TuiRect.Create(5, 5, 0, 0);
+  for InteriorEmpty: TuiRect in [EmptyWidth, EmptyHeight, EmptyPoint] do
+    AssertTrue(InteriorEmpty.IsEmpty());
+    AssertFalse(Bounds.Intersects(InteriorEmpty));
+    AssertFalse(InteriorEmpty.Intersects(Bounds));
+    AssertFalse(InteriorEmpty.Intersects(InteriorEmpty));
+    AssertTrue(Bounds.Intersect(InteriorEmpty).IsEmpty());
+    AssertTrue(InteriorEmpty.Intersect(Bounds).IsEmpty());
+  end for;
   const Inset: TuiRect := Bounds.Inset();
   AssertEquals(3, Inset.X);
   AssertEquals(4, Inset.Y);

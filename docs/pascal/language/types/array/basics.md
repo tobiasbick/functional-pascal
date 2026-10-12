@@ -15,6 +15,12 @@ WriteLn(A.Length());
 
 Returns a **new** sorted array. **`A` is not modified.**
 
+Sorting supports integer, real, string, and Boolean runtime values, including
+simple enum values represented by integer ordinals. Unsupported nonempty
+arrays, such as arrays of records or `Option`, raise FP5008 at runtime even
+when the call passes type checking. Empty arrays return an empty array without
+inspecting their component type.
+
 ```pascal
 const A: array of integer := [3, 1, 2];
 const B: array of integer := A.Sort();

@@ -211,7 +211,7 @@ begin
       end if;
 
       if DropBody and
-         (Std.Http.Headers.IsName(Name, 'Content-Type') or Std.Http.Headers.IsName(Name, 'Content-Encoding')) then
+         ((Std.Http.Headers.IsName(Name, 'Content-Type') or Std.Http.Headers.IsName(Name, 'Content-Encoding')) or (Std.Http.Headers.IsName(Name, 'Content-Language') or Std.Http.Headers.IsName(Name, 'Content-Location'))) then
         begin
           continue;
         end;

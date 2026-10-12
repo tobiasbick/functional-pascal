@@ -34,7 +34,7 @@ Requires `uses Std.Test;`.
 | procedure | `Skip(Msg: string)` | mark the current test skipped; runner reports `SKIP` (exit `0` unless `fpas test --strict`) |
 | procedure | `PushReadLn(Line: string)` | queue one line for the next `Std.Console.ReadLn` (native tests) |
 | function | `ScratchDir(): string` | runner-owned empty directory for this test |
-| procedure | `AssertScreenLine(Expected: string; Y: integer)` | fail when CRT row `Y` text differs (headless/TUI back buffer) |
+| procedure | `AssertScreenLine(Expected: string; Y: integer)` | compare CRT row text after trimming trailing Unicode whitespace from both values |
 | procedure | `AssertScreenCell(X, Y: integer; Ch: string; Fg, Bg: integer)` | fail when one CRT cell differs (`Fg`/`Bg` are packed colors `0..=15`) |
 
 ---
@@ -74,7 +74,11 @@ directly with `fpas run` receives `.temp-data` as the fallback and manages its o
 
 ### `procedure AssertScreenLine(Expected: string; Y: integer)`
 
-Fail with **FP5023** when row `Y` (one-based) of the virtual CRT back buffer does not equal `Expected`. Use after drawing with `Std.Console`. Requires `uses Std.Console`.
+Fail with **FP5023** when row `Y` (one-based) of the virtual CRT back buffer does
+not equal `Expected` after trailing Unicode whitespace is removed from both
+strings. This includes more than padding spaces. Use `AssertScreenCell` when
+exact whitespace positions or cell colors matter. Use after drawing with
+`Std.Console`. Requires `uses Std.Console`.
 
 ### `procedure AssertScreenCell(X, Y: integer; Ch: string; Fg, Bg: integer)`
 
@@ -91,7 +95,28 @@ When tests run via `fpas test` inside a `kind = "test"` project, the runner may 
 | `Setup` | Before each test program (at most one per project) |
 | `Teardown` | After each test program, even if the test failed (at most one per project) |
 
-Hooks must be parameterless procedures. Names are matched case-insensitively. Use `uses Std.Test` in the helper unit if hooks need assertions.
+Hooks must be **public, parameterless procedures**. The runner calls them from
+a separate program importing the helper unit; a private procedure is not
+accessible there. Names are matched case-insensitively. Use `uses Std.Test` in
+the helper unit if hooks need assertions.
+
+For example, include this helper unit as a source in the test project:
+
+```pascal
+unit TestHooks;
+
+public procedure Setup();
+begin
+  null;
+end procedure;
+
+public procedure Teardown();
+begin
+  null;
+end procedure;
+
+end unit;
+```
 
 See [Projects](../../program-structure/projects.md) for `kind = "test"` manifests.
 

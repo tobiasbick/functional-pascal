@@ -36,7 +36,7 @@ type EditorModel = record
   Offset: TuiPoint;
 end record;
 
-function Update(Model: EditorModel; Msg: TuiMsg): EditorModel;
+function Update(Model: EditorModel; Msg: TuiMsg; Cmd: TuiCmdOutput): EditorModel;
 begin
   if Msg is TuiMsg.TextAreaChanged(const Source, const Action, const Text, const Caret, const Offset) then
     return EditorModel(Text := Text, Caret := Caret, Offset := Offset);
@@ -45,6 +45,9 @@ begin
   return Model;
 end function;
 ```
+
+`Cmd` is required by the application callback signature. This example leaves it
+unused because accepting the proposed state does not enqueue a command.
 
 The host stores no editable text, caret, or scroll state between frames.
 

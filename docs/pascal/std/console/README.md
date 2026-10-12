@@ -118,7 +118,13 @@ Everything below requires `uses Std.Console;`.
 | const | `Blink` | text-attribute blink bit (`128`) |
 | const | `BW40`, `C40`, `BW80`, `C80`, `CO40`, `CO80`, `Mono`, `Font8x8` | text-mode constants |
 
-Extended color procedures (`TextColorRGB`, `TextBackgroundRGB`, `TextColor256`, `TextBackground256`) send terminal ANSI color escapes directly. They do not update the packed 16-color CRT attribute returned by `TextAttr()`. Calling `TextColor`, `TextBackground`, `HighVideo`, `LowVideo`, `NormVideo`, or `SetTextAttr` afterwards switches back to the packed CRT attribute path and overrides the extended color.
+Extended color procedures (`TextColorRGB`, `TextBackgroundRGB`, `TextColor256`,
+`TextBackground256`) select colors for subsequent text writes. In streaming mode they
+emit ANSI color escapes directly; in CRT mode they update retained color state, and
+an active frame defers presentation until the outermost `Present`. They do not update
+the packed 16-color CRT attribute returned by `TextAttr()`. Calling `TextColor`,
+`TextBackground`, `HighVideo`, `LowVideo`, `NormVideo`, or `SetTextAttr` afterwards
+restores packed CRT colors and overrides the extended color.
 
 ## Topics
 

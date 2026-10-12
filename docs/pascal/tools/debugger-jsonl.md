@@ -121,9 +121,13 @@ qualified by their task snapshot and cannot alias across tasks. Completed or
 cancelled tasks are catalog-visible for lifecycle reporting but reject stack
 inspection. `task.pause` and `task.resume` name a current runtime `task_id` and
 change only that hold; they do not dispatch or expire inspection IDs.
-`task.cancel` names a current non-root `task_id`, marks it `cancelled`, emits
-`task`/`exited`, and stores `FP5016` when the task retains a result. It does not
-dispatch or wake waiters. Root, unknown, completed, cancelled, and failed
+`task.cancel` names a current non-root `task_id`. Without open task scopes, it
+marks the task `cancelled`, emits `task`/`exited`, and stores `FP5016` when the
+task retains a result. With open task scopes, it cancels their children and
+starts scope unwind, leaving the parent `waiting`; the next continue joins the
+children before completion, the exit event, and retained-result failure are
+published. Request acceptance therefore does not always mean task completion.
+The command does not dispatch bytecode or wake waiters. Root, unknown, completed, cancelled, and failed
 identities reject without mutation. `task.create` and `task.restart` always
 fail with `task_create_unsupported` and `task_restart_unsupported`.
 
@@ -252,22 +256,32 @@ uses the normal five rendered fields and adds `index`; removal also adds
 All inputs run once under one shared budget before an atomic commit. Initialize
 advertises `array_insert`, `array_remove`, and `string_replace_character`.
 
-`frame.return` completes a selected ordinary callee without resuming the
+`frame.return` completes a selected callee or program/task entry without resuming the
 program:
 
 ```json
 {"type":"request","id":17,"command":"frame.return","arguments":{"frame_id":4294967297,"expression":"42"}}
-{"type":"response","request_id":17,"command":"frame.return","success":true,"body":{"task_id":0,"result":"42","type_name":"integer","variables_reference":0,"named_variables":0,"indexed_variables":0,"unwound_frames":1,"frame":{"frame_id":8589934593,"name":"main","depth":0}}}
+{"type":"response","request_id":17,"command":"frame.return","success":true,"body":{"task_id":0,"result":"42","type_name":"integer","variables_reference":0,"named_variables":0,"indexed_variables":0,"unwound_frames":1,"frame":{"frame_id":8589934593,"name":"main","depth":0},"terminated":false}}
 ```
 
 `frame_id` must be a current-generation frame for the task that caused the
-current non-failure stop, and that frame must have a saved caller. Depth zero
+current stop. Depth zero
 unwinds one frame; a deeper selected frame unwinds that frame plus every
 younger frame. Functions require `expression` evaluated in the selected frame;
 procedures omit it. Convention and portable result type come from the selected
 function. Success returns the rendered result fields, `unwound_frames` (selected
-depth plus one), and the fresh caller `frame`, remains stopped, and refreshes
-every stopped-task snapshot. Failure is atomic. Initialize advertises
+depth plus one), a nullable `frame`, and `terminated`. With an existing caller,
+the fresh caller frame is returned, execution remains stopped, and every
+stopped-task snapshot is refreshed. Completing the program entry returns
+`frame: null` and `terminated: true`, then emits `terminated` with completed
+status and cancels remaining tasks. Completing a spawned task entry publishes
+its retained result when applicable, emits its task-exit event, and keeps the
+session stopped on another inspectable task. At a runtime-error stop, only the
+exact failed callee or entry can be recovered after normal result type checks;
+the original diagnostic stays in the event history. A recovered callee can be
+continued; entry recovery follows the same completion rules. Peer tasks,
+different retained failures, and unsupported result types are rejected.
+Failure is atomic. Initialize advertises
 `frame_return`. Procedures render as `()` with `type_name` `unit`.
 
 `frame.restart` reconstructs one selected live frame of the stop-owning task
@@ -342,8 +356,16 @@ The returned `target` substitutes evaluated indexes; string keys use escaped
 FPAS string-literal syntax such as `Scores['it''s']`.
 An already initialized root fails with `storage_already_initialized` and does
 not become ordinary mutation. Failure leaves empty storage and inspection
-handles unchanged. A later source initializer still overwrites the debugger
-value. Initialize advertises `storage_initialize`.
+handles unchanged. If the compiler retained the exact declaration store and
+it is still pending in the selected live frame, success suppresses that one
+store. This also applies to complete-root `variable.set` and `expression.set`
+assignments that initialize empty mutable storage. Registering suppression does
+not evaluate the source initializer. Only the identified store is skipped;
+pending initializer computation and unrelated instructions still execute on
+continue. Suppression identifies the
+verified function, live frame, and exact `Move` or `StoreGlobal` instruction.
+Executables without this metadata permit a later source store to overwrite the
+debugger value. Initialize advertises `storage_initialize`.
 
 `evaluate` may call exact executable routines, record methods, visible
 first-class functions, and deterministic `Std.*`

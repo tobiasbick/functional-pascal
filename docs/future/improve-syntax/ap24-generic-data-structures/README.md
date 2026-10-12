@@ -112,7 +112,7 @@ AP24.2 and AP24.3 implement the constructor, default, and recursion rules.
 - AP11.1 (finite construction of recursive records and enums).
 
 AP28's tooling scope is transferred to
-[editor/LSP planning](../../editor-structured-editing.md).
+[editor/LSP planning](../ap28-structured-editing/structured-editing.md).
 
 ## Order
 

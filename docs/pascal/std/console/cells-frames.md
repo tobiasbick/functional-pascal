@@ -139,8 +139,13 @@ cell updates; outside a frame they take effect immediately.
 
 ## Saved regions
 
-`SaveRegion` captures the clipped cells in `Bounds` and returns an opaque `SavedRegion`. The
-rectangle must overlap the screen and have positive dimensions.
+`SaveRegion` clips `Bounds` to the screen and returns an opaque `SavedRegion`. The
+rectangle must overlap the screen and have positive dimensions. The captured rectangle
+can expand horizontally at wide glyphs: the left edge moves one column left if any
+captured row starts at a continuation column; the right edge moves one column right if
+any captured row ends at a wide glyph's first cell. Each check considers all captured
+rows and expands the whole rectangle once on that side. Newly included columns are
+not checked again for further expansion.
 
 Each handle is one-shot:
 
@@ -150,10 +155,12 @@ FillRect(Rect(x := 10, y := 4, width := 24, height := 5), Cell(glyph := ' ', for
 RestoreRegion(Underlay);
 ```
 
-`RestoreRegion` restores the captured cells and consumes the handle. `DiscardRegion` consumes it
-without changing the screen. Reusing an already restored or discarded handle is a runtime error.
-Restoring after a resize that made the captured rectangle unavailable is also an error. Restore
-inside a frame when the overlay removal should be part of the next atomic presentation.
+`RestoreRegion` restores the entire captured rectangle, including expanded columns outside
+the requested `Bounds`, and consumes the handle. Later edits in those columns are overwritten.
+`DiscardRegion` consumes it without changing the screen. Reusing an already restored or
+discarded handle is a runtime error. Restoring after a resize that made any part of the
+captured rectangle unavailable is also an error, including an expanded boundary column.
+Restore inside a frame when the overlay removal should be part of the next atomic presentation.
 
 ## Fullscreen redraw pattern
 

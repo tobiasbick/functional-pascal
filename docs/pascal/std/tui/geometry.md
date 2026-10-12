@@ -3,6 +3,8 @@
 `TuiPoint`, `TuiSize`, and `TuiRect` are immutable value records. Coordinates
 are zero-based. Sizes and rectangle extents must be non-negative. Rectangles
 are half-open: `right = x + width` and `bottom = y + height`.
+An empty rectangle shares no cells with any rectangle, so `Intersects` returns
+false whenever either operand is empty.
 
 ```pascal
 const Bounds: TuiRect := TuiRect.FromEdges(2, 3, 10, 8);

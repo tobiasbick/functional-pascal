@@ -12,10 +12,12 @@ begin
 end function;
 ```
 
-`try` also works with `Option`:
+`try` also works with `Option`. Using the `FindIndex` helper from the
+[Option example](option.md), this function returns the first occurrence of one,
+or propagates `None` when one is absent:
 
 ```pascal
-function FirstPositive(Items: array of integer): Option of integer;
+function FindOne(Items: array of integer): Option of integer;
 begin
   const Idx: integer := try FindIndex(Items, 1);
   return Some(Items[Idx]);

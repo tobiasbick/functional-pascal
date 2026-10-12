@@ -34,9 +34,9 @@ const M: Option of string := O.AndThen(PositiveToString);
 
 | Combinator | Result | Option |
 |------------|--------|--------|
-| `Map(V, F)` | Transform `Ok` value | Transform `Some` value |
-| `AndThen(V, F)` | Chain fallible operation | Chain optional lookup |
-| `OrElse(V, F)` | Recover from `Error` | Provide fallback for `None` |
+| `V.Map(F)` | Transform `Ok` value | Transform `Some` value |
+| `V.AndThen(F)` | Chain fallible operation | Chain optional lookup |
+| `V.OrElse(F)` | Recover from `Error` | Provide fallback for `None` |
 
 ## See also
 

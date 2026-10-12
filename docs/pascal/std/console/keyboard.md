@@ -8,11 +8,19 @@ Keyboard input is **separate** from the `ReadText` / `ReadLn` buffer. Enabling r
 
 - **Parameters:** none.
 - **Returns:** one character from the keyboard queue.
-- **Notes:** does not wait for Enter. **Extended keys** (arrows, function keys, etc.) may appear as a **two-step** sequence: first `''`, then a second `string` encoding the physical key (Turbo Pascal–style).
+- **Notes:** does not wait for Enter. **Extended keys** (arrows, function keys,
+  etc.) may appear as a **two-step** sequence: first the one-character NUL
+  string `string.Chr(0)`, then a second `string` encoding the physical key
+  (Turbo Pascal–style). The prefix has length one and is not `''`.
 
 ```pascal
 const C: string := ReadKey();
-WriteLn(C);
+if C = string.Chr(0) then
+  const ScanCode: string := ReadKey();
+  WriteLn('Extended key: ', ScanCode.Ord());
+else
+  WriteLn(C);
+end if;
 ```
 
 ---

@@ -27,7 +27,7 @@ source list therefore remains reusable when all retained path-to-content binding
 
 The payload is a deterministic sectioned binary representation of the verified register
 executable. All integers use explicit little-endian encoding; no native pointers, host `usize`
-values, target triples, object code, or host ABI layouts are stored. The ten sections have a fixed
+values, target triples, object code, or host ABI layouts are stored. The twelve sections have a fixed
 order:
 
 1. strings;
@@ -39,7 +39,9 @@ order:
 7. function metadata;
 8. packed 64-bit register instructions;
 9. sparse source-map runs;
-10. the entry function.
+10. the entry function;
+11. portable debugger types;
+12. source-visible distinct type names.
 
 The directory requires every section exactly once, in canonical order, with contiguous ranges and
 no trailing bytes. This keeps byte output stable for the same identity and executable.
@@ -72,9 +74,10 @@ layouts, source maps, and the entry function before the VM can execute the image
 
 ## Format validation
 
-The sectioned envelope uses program format version 18 and register-bytecode version 18. A producer
-that changes either wire contract must increment the corresponding version; related program and
-bytecode changes use matching versions. Readers reject unsupported versions before execution, and
+The sectioned envelope uses program format version 18 and register-bytecode version 19.
+These formats are versioned independently: a producer that changes a wire contract must
+increment its corresponding version; the two version numbers need not match.
+Readers reject unsupported versions before execution, and
 `fpas run` tells the user to rebuild from project sources. Source-backed project builds replace
 incompatible artifacts automatically. A source-less incompatible `.fpascp` cannot run and must be
 rebuilt from its sources.

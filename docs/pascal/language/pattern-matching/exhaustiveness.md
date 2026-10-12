@@ -170,7 +170,9 @@ or updates and across compiled-unit imports.
 - Scalar types (`integer`, `string`, `boolean`): `else` is optional in a `case` statement. Boolean cases do not require both `true` and `false`.
 - A [`case` expression](../control-flow/case-of-intro.md#case-expressions) must produce a value for every input: `boolean` selectors need both `true` and `false` (or `else`), and `integer`, subrange, `string`, and distinct selectors need `else`.
 - Guard clauses do not count toward exhaustiveness — `when Shape.Circle(const R) if R > 0:` does not cover variant `Circle`; add an unguarded `when Shape.Circle(const R):` arm.
-- Labels already covered by earlier unguarded arms are rejected (FP3033).
+- In enum, `Result`, and `Option` pattern cases, labels already covered by
+  earlier unguarded arms are rejected (FP3033). Scalar cases do not use this
+  pattern-coverage diagnostic.
 
 ## See also
 

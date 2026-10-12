@@ -172,6 +172,10 @@ public type TuiRect = record
   // - `Other`: Other rectangle or value used for comparison.
   public function Intersects(Self: TuiRect; Other: TuiRect): boolean;
   begin
+    if Self.IsEmpty() or Other.IsEmpty() then
+      return false;
+    end if;
+
     return (((Self.X < Other.Right()) and (Other.X < Self.Right())) and (Self.Y < Other.Bottom())) and
            (Other.Y < Self.Bottom());
   end function;

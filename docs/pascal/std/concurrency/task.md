@@ -467,7 +467,7 @@ Runnable example: [`select_events.fpas`](../../../../examples/pascal/concurrency
 ## Runtime errors
 
 - **`Wait` after the result was already taken:** wait each task handle at most once for its return value (see VM hint: do not double-await the same completion).
-- **Unknown or detached task handle:** `Wait`, `WaitAll`, and `WaitAny` accept only handles returned by retained `go` expressions in the current VM. Forged handles and statement-form detached tasks produce an invalid-task diagnostic instead of waiting indefinitely.
+- **Unknown or detached task handle:** `Wait`, `WaitAll`, and `WaitAny` accept retained task handles created in the current VM by a `go` expression, `StartTaskInGroup`, or `StartSupervisedTask`. Forged handles and statement-form detached tasks produce an invalid-task diagnostic instead of waiting indefinitely.
 - **Invalid wait-any size:** `WaitAny` requires between 1 and 1,048,576 task handles.
 - **Task failure:** `Wait` and `WaitAll` propagate the spawned task's original diagnostic, including its code and source location. The runtime also enters its **failure** path so other spawned work can stop cooperatively. Fix the reported fault in the spawned task.
 - **Main-task teardown:** retained tasks still suspended in `Std.Time.Sleep` are completed with a shutdown diagnostic when the main task finishes. Wait for every required result before leaving the main task. See [Scheduling](../../language/concurrency/scheduling.md).

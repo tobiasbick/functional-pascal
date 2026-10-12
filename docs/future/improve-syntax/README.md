@@ -52,7 +52,7 @@ Checkboxes use the [status-tracking rule](development-process.md#status-tracking
 
 Of the 29 packages, 23 are implemented, AP08/AP25/AP29 are rejected and closed,
 AP12 and AP27 are deferred with their proposals retained, and AP28 is
-transferred to editor/LSP planning. There is no active language work package
+transferred to editor/LSP planning hosted in its AP28 directory. There is no active language work package
 next. Reopening either deferred package requires a new explicit user decision.
 
 The Done cell tracks delivery; the Status column tracks the current decision.
@@ -105,7 +105,7 @@ package are listed in each work package file.
 | — | [AP25: Conservative purity](ap25-conservative-purity/README.md) | — | — | Rejected; closed after AP25.1 reassessment (Q18 superseded) |
 | [x] | [AP26: Structured task scopes](ap26-structured-task-scopes/README.md) | Large | AP13, AP17 | Complete (AP26.1–AP26.3; Q19, Q20, Q24–Q27) |
 | [ ] | [AP27: Typed placeholders](ap27-typed-placeholders/README.md) | Very large if reopened | AP02, AP22; renewed user decision | Deferred; proposal retained, value and spelling unresolved |
-| — | [AP28: Structured editing](ap28-structured-editing/README.md) | — | AP13, AP24 | Transferred to [editor/LSP planning](../editor-structured-editing.md) (Q23) |
+| — | [AP28: Structured editing](ap28-structured-editing/README.md) | — | AP13, AP24 | Tooling scope transferred to the [AP28 editor/LSP plan](ap28-structured-editing/structured-editing.md) (Q23) |
 | — | [AP29: Bounded derivation](ap29-bounded-derivation/README.md) | — | — | Rejected; closed (Q22) |
 
 A package's Done cell becomes `[x]` only when every work package in its own
@@ -184,7 +184,7 @@ Only after renewed approval would
 precede AP27.2.
 
 There is no next active work package in the syntax plan. AP28's separate
-[editor/LSP plan](../editor-structured-editing.md)
+[editor/LSP plan](ap28-structured-editing/structured-editing.md)
 starts by inspecting existing editing facilities and selecting one bounded
 operation; AP13 and AP24 satisfy its completed language prerequisites.
 AP08, AP25, and AP29 are closed without implementation.

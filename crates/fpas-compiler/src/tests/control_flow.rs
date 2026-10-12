@@ -3,6 +3,7 @@ use super::*;
 mod boolean;
 mod counting;
 mod enum_comparisons;
+mod missing_returns;
 mod ordinal;
 mod pattern_bindings;
 mod pattern_capabilities;

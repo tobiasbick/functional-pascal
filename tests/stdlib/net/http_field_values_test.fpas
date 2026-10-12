@@ -1,0 +1,78 @@
+// Validates raw HTTP field values and SP/HTAB normalization at both public readers.
+program HttpFieldValuesTest;
+
+uses Std.Conv, Std.Http, Std.Net, Std.Net.Utf8, Std.Tasks, Std.Test;
+
+type FieldCase = record
+  Raw: string;
+  Valid: boolean;
+  Expected: string;
+end record;
+
+function ReadPeer(Server: Listener): string;
+begin
+  const Peer: Connection := Accept(Server).Unwrap();
+  discard SetTimeout(Peer, 1000);
+  const Parsed: result of (ServerRequest, string) := ReadRequest(Peer, 65536, 1024);
+  discard Std.Net.Close(Peer);
+  case Parsed of
+    when Ok(const Incoming):
+      return 'accepted: ' + Incoming.Headers[1].Value;
+    when Error(const Message):
+      return Message;
+  end case;
+end function;
+
+procedure ServeResponse(Server: Listener; Value: string);
+begin
+  const Peer: Connection := Accept(Server).Unwrap();
+  discard SetTimeout(Peer, 1000);
+  discard ReadRequest(Peer, 65536, 1024).Unwrap();
+  const Head: string := 'HTTP/1.1 200 OK' + #13 + #10 + 'X-Test: ' + Value + #13 + #10 + 'Content-Length: 0' + #13 + #10 + #13 +
+                        #10;
+  discard SendBytes(Peer, Std.Net.Utf8.Encode(Head)).Unwrap();
+  discard Std.Net.Close(Peer);
+end procedure;
+
+begin
+  for Sample: FieldCase in [
+                             FieldCase(Raw := '  ' + #9 + 'value' + #9 + ' ', Valid := true, Expected := 'value'),
+                             FieldCase(Raw := #9 + ' ' + #9, Valid := true, Expected := ''),
+                             FieldCase(Raw := 'a' + #9 + 'b', Valid := true, Expected := 'a' + #9 + 'b'),
+                             FieldCase(Raw := string.Chr(160) + 'value' + string.Chr(160), Valid := true, Expected := string.Chr(160) + 'value' +
+                                                                                                                      string.Chr(160)),
+                             FieldCase(Raw := #11 + 'value', Valid := false, Expected := ''),
+                             FieldCase(Raw := 'value' + #12, Valid := false, Expected := ''),
+                             FieldCase(Raw := 'a' + #11 + 'b', Valid := false, Expected := ''),
+                             FieldCase(Raw := #127 + 'value', Valid := false, Expected := '')
+                           ] do
+    const Server: Listener := Listen('127.0.0.1', 0).Unwrap();
+    const Address: NetworkAddress := ListenerLocalAddress(Server).Unwrap();
+    const Parsing: task := go ReadPeer(Server);
+    const Peer: Connection := Connect(Address.Host, Address.Port, 1000).Unwrap();
+    const Head: string := 'GET / HTTP/1.1' + #13 + #10 + 'Host: 127.0.0.1' + #13 + #10 + 'X-Test: ' + Sample.Raw + #13 + #10 + #13 +
+                          #10;
+    discard SendBytes(Peer, Std.Net.Utf8.Encode(Head)).Unwrap();
+    discard Std.Net.Close(Peer);
+    const Parsed: string := Wait(Parsing);
+    if Sample.Valid then
+      AssertEquals('accepted: ' + Sample.Expected, Parsed);
+    else
+      AssertTrue(Parsed.Contains('invalid control character'));
+    end if;
+    const Serving: task := go ServeResponse(Server, Sample.Raw);
+    var Outgoing: Request := Request.Get('http://127.0.0.1:' + IntToStr(Address.Port) + '/');
+    Outgoing.TimeoutMillis := 1000;
+    const Received: result of (Response, string) := Std.Http.Send(Outgoing);
+    Wait(Serving);
+    discard CloseListener(Server);
+    case Received of
+      when Ok(const Incoming):
+        AssertTrue(Sample.Valid);
+        AssertEquals(Sample.Expected, Incoming.Headers[0].Value);
+      when Error(const Message):
+        AssertFalse(Sample.Valid);
+        AssertTrue(Message.Contains('invalid control character'));
+    end case;
+  end for;
+end.

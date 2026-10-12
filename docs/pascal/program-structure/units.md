@@ -158,7 +158,9 @@ build products and are excluded from source discovery and formatting.
 Before reuse, the compiler limits a complete sidecar to 136 MiB and each semantic-interface or
 relocatable-object payload to 64 MiB. It verifies payload hashes, requires the envelope,
 interface, and object to identify the same unit, rejects duplicate public symbols under Pascal's
-ASCII case-insensitive name rules, and validates that the object has exactly one final `Halt`.
+ASCII case-insensitive name rules, and validates register-function metadata, instruction
+operands, and references to the optional unit initializer. Functions are encoded separately;
+there is no terminal `Halt` instruction in a unit object.
 Any failure classifies the derived sidecar as corrupt and rebuilds it from the authoritative
 source.
 
@@ -181,6 +183,9 @@ public or no longer exporting the declaration.
 The final executable bytecode image links only reachable unit objects in dependency order.
 Existing top-level constant and variable initializers run in that same dependency order before
 the program body. Units do not have separate initialization or finalization syntax.
+Their top-level initialization code is represented by an optional initializer function.
+The linker checks that it takes no parameters or captures and returns `unit`, and arranges
+startup calls before the program body. Normal completion uses `Return`.
 
 A `const` initializer may call a routine or read an earlier binding. It executes
 once in declaration order for each initialized unit. Consumers read exported
@@ -190,8 +195,9 @@ computed; calls and references to computed constants cannot be used as `case`
 value labels, including through an imported or transitive binding.
 
 Before returning that image, the linker requires every callable definition to have a matching
-function-table entry in the same object, verifies that Unit function entries remain valid after
-the Unit's terminal `Halt` is removed, and applies the complete executable-bytecode validator.
+function-table entry in the same object, resolves relocations into the final function table,
+and applies the complete executable-bytecode validator. Function bodies occupy disjoint
+verified instruction ranges; branches and fallthrough cannot escape a function's range.
 Malformed relocations, callable metadata, startup control flow, or opcode operands therefore fail
 during linking rather than being deferred to execution.
 

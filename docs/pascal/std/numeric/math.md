@@ -204,7 +204,10 @@ WriteLn(ArcTan(1.0));  // Pi/4
 
 ## `function ArcTan2(Y: real; X: real): real`
 
-Two-argument arctangent — angle of the vector `(X, Y)` in the correct quadrant. Result in `(-Pi, Pi]`.
+Two-argument arctangent — angle of the vector `(X, Y)` in the correct quadrant.
+For finite inputs the result is in `[-Pi, Pi]`. Signed zero selects the boundary
+on the negative X-axis: `ArcTan2(0.0, -1.0)` is `Pi`, while
+`ArcTan2(-0.0, -1.0)` is `-Pi`.
 
 ```pascal
 WriteLn(ArcTan2(1.0, 1.0));  // Pi/4

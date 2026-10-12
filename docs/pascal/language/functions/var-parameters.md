@@ -132,7 +132,8 @@ See [Function types](function-types.md).
   parentheses and uses the same storage, aliasing, evaluation, and lifetime
   checks. Fields, array elements, and forwarded `var` parameters are accepted;
   `const` and computed receivers are rejected. Explicit ordinary-call arguments
-  retain `var`, for example `Push(var Items, Value)`. See
+  retain `var`, for example `Increase(var Counter)`; native array operations
+  have no free `Push` or `Pop` call form. See
   [Mutating arrays](../types/array/mutating.md).
 
 ## See also

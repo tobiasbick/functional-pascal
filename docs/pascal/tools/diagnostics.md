@@ -391,6 +391,7 @@ can describe a structural restriction and leave those fields null.
 | FP4005 | Invalid mutable array target | Mutable-array lowering receives a non-addressable expression | Supply its checked mutable array binding. |
 | FP4006 | Invalid go expression | Direct compiler input uses `go` with no callable invocation | Supply a checked call such as `go Work()`. |
 | FP4007 | Bytecode operand overflow | A constant/function table index exceeds its encoded width | Reduce the table or split the generated program. |
+| FP4008 | Function can finish without a return value | `function F(X: integer): integer; begin if X > 0 then return X; end if; end function;` | Add an `else` arm or a final `return Value;` so every normal path returns. |
 
 ### Project, build, linker, CLI and test runner
 
@@ -436,7 +437,7 @@ can describe a structural restriction and leave those fields null.
 | FP4138 | Unsupported command input | `fpas run library.fpasprj` | Run a program project that depends on the library. |
 | FP4139 | CLI output failure | Write a report into an unwritable directory | Use a writable report destination. |
 | FP4140 | Golden stdout mismatch | Test prints `actual` but sidecar expects `expected` | Fix the output or update the sidecar to the approved output. |
-| FP4141 | Test timeout | Test exceeds `--timeout-ms 1` | Fix the hang or set a suitable timeout. |
+| FP4141 | Test timeout | Test exceeds `fpas test --timeout 1 slow_test.fpas` (one second) | Fix the hang or set a suitable timeout in seconds. |
 | FP4142 | Runner failure | Test worker cannot be started | Restore the runner executable and its required access. |
 
 ### Runtime

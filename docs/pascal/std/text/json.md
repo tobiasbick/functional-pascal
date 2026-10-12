@@ -101,7 +101,12 @@ WriteLn(Std.Json.Stringify(Value));  // [true,null,"hi",1.5]
 
 Malformed runtime payloads, such as an enum value pretending to be `JsonValue`, raise a runtime error. Normal parse failures should be handled through the `Result` returned by `Parse`.
 
-Nesting deeper than **256** levels is rejected: `Parse` returns `Error(Message)` and `Stringify` raises a runtime error.
+FPAS value conversion and `Stringify` have a **256-level** nesting limit;
+conversion failures make `Parse` return `Error(Message)`, and stringification
+failures raise a runtime error. This is not the effective JSON parser limit:
+`Parse` also uses serde_json's default **128-step recursion budget** and may
+reject nested arrays or objects before reaching the FPAS conversion limit.
+Those parser failures also return `Error(Message)`.
 
 ## Implementation (contributors)
 

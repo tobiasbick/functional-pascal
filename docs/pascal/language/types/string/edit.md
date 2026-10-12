@@ -26,7 +26,13 @@ WriteLn('─'.RepeatStr(40)); // ───────────────�
 
 ## `Text.PadLeft(Width: integer; PadChar: string): string`
 
-If `S.Length() < Width`, prepends `Fill` characters until length equals `Width`. Otherwise returns `S` unchanged.
+If `Text.Length() < Width`, prepends copies of the first Unicode scalar in
+`PadChar` until length equals `Width`. Otherwise returns `Text` unchanged after
+validating the arguments.
+
+All three padding operations require a nonempty `PadChar`; an empty string
+raises FP5008 even when no padding is needed. Only the first Unicode scalar is
+used; additional characters are ignored.
 
 `Width` must be at most **1_000_000**. Larger widths raise a runtime error.
 
@@ -38,7 +44,8 @@ WriteLn('42'.PadLeft(5, '0'));  // 00042
 
 ## `Text.PadRight(Width: integer; PadChar: string): string`
 
-Like `PadLeft` but appends `Fill` on the right.
+Like `PadLeft` but appends padding on the right. The same nonempty `PadChar`
+validation and first-scalar rules apply, including when no padding is needed.
 
 `Width` must be at most **1_000_000**. Larger widths raise a runtime error.
 
@@ -50,7 +57,9 @@ WriteLn('Hi'.PadRight(6, '.'));  // Hi....
 
 ## `Text.PadCenter(Width: integer; PadChar: string): string`
 
-Centers `S` within `Width` characters of `Fill`. When the remaining space is odd, the extra character goes on the right.
+Centers `Text` within `Width` characters using the first Unicode scalar in
+`PadChar`. When the remaining space is odd, the extra character goes on the
+right. The same nonempty `PadChar` validation applies even when no padding is needed.
 
 `Width` must be at most **1_000_000**. Larger widths raise a runtime error.
 

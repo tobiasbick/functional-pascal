@@ -117,6 +117,20 @@ impl LoweringContext {
         span: Span,
     ) -> Result<(Function, super::types::TypeTable), CompileError> {
         if !self.is_terminated() {
+            if self.result_type != super::super::types::UNIT
+                && reverse_postorder(&self.blocks, BlockId::new(0))
+                    .iter()
+                    .any(|block| block.id == self.current)
+            {
+                return Err(fpas_diagnostics::Diagnostic::error(
+                    fpas_diagnostics::codes::COMPILE_FUNCTION_MISSING_RETURN,
+                    format!("Function `{}` can finish without returning a value", self.program_name),
+                    Some("Return a value on every normal path; add an `else` arm or a final `return Value;`.".into()),
+                    fpas_diagnostics::SourceSpan::synthetic_from_location(
+                        fpas_diagnostics::SourceLocation::new(span.line, span.column),
+                    ),
+                ));
+            }
             self.lower_return(None, span)?;
         }
         let blocks = reverse_postorder(&self.blocks, BlockId::new(0));

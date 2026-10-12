@@ -15,11 +15,12 @@ begin
 end.
 ```
 
-`Parts.Length()` selects the array operation by the receiver's type even with `String operations` also imported.
+`Parts.Length()` selects the native array operation by the receiver's type.
+Native string and array operations require no imports.
 
 ---
 
-## `function Join(Parts: array of string; Delim: string): string`
+## `Parts.Join(Delim: string): string`
 
 Concatenates every element of `Parts`, inserting `Delim` between elements.
 

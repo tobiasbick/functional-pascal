@@ -23,6 +23,31 @@ begin
   return true;
 end function;
 
+function TrimOptionalWhitespace(Value: string): string;
+begin
+  var First: integer := 0;
+  var Last: integer := Value.Length();
+  while First < Last do
+    const Character: string := Value.CharAt(First);
+    if (Character <> ' ') and (Character <> #9) then
+      break;
+    end if;
+
+    First := First + 1;
+  end while;
+
+  while Last > First do
+    const Character: string := Value.CharAt(Last - 1);
+    if (Character <> ' ') and (Character <> #9) then
+      break;
+    end if;
+
+    Last := Last - 1;
+  end while;
+
+  return Value.Slice(First, Last - First);
+end function;
+
 // Parses validated HTTP fields after the first start-line in a text block.
 //
 // Parameters:
@@ -41,9 +66,7 @@ begin
         end;
       end if;
       const Name: string := (Lines[Index]).Slice(0, Colon);
-      const Value: string := (Lines[Index])
-                               .Slice(Colon + 1, Lines[Index].Length() - Colon - 1)
-                               .Trim();
+      const Value: string := (Lines[Index]).Slice(Colon + 1, Lines[Index].Length() - Colon - 1);
       if not Std.Http.Method.IsValidToken(Name) then
         begin
           return Error('Invalid HTTP ' + MessageKind + ' header name: ' + Name);
@@ -56,7 +79,7 @@ begin
         end;
       end if;
 
-      Headers.Push(Header.Create(Name, Value));
+      Headers.Push(Header.Create(Name, TrimOptionalWhitespace(Value)));
     end;
   end for;
 

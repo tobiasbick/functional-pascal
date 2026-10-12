@@ -1,6 +1,7 @@
 # Formatter style rules
 
-Canonical output rules for the AST pretty-printer. These are **normative for `fpas fmt`** once implemented. The emitter encodes them; this file is the human-readable spec.
+Canonical output rules for the AST pretty-printer. These describe the implemented
+behavior of `fpas fmt`; the emitter encodes them.
 
 **Status:** **complete** (2026-06). Normative for [`fpas fmt`](../../../crates/fpas-cli/src/cli_fmt) and the [editor formatter](editor-integration.md#formatting). Edit golden examples when the style changes; both entry points must match them.
 
@@ -12,7 +13,10 @@ Canonical output rules for the AST pretty-printer. These are **normative for `fp
 | [More examples — snippets](#more-examples--record-types-snippet) | **After `fpas fmt`** — same rules, but only a `type` slice (not a full file). |
 | Rules below (indent, semicolons, …) | Textual spec; if a rule disagrees with a golden example, **fix the example or the rule**, then implement. |
 
-There is **no** “messy input” column in this doc yet. Source before formatting may omit `begin` / `end`, use `WRITELN`, or extra blank lines — those are normalized in the golden blocks. Comments are preserved (see [Comments](#comments)).
+There is **no** “messy input” column in this doc yet. Formatting normalizes valid
+source, including keyword casing and extra blank lines. Required block boundaries
+must already be present; malformed source produces parser diagnostics instead of
+repaired output. Comments are preserved (see [Comments](#comments)).
 
 Spec links: [`language/basics/README.md`](../language/basics/README.md), [`language/control-flow/README.md`](../language/control-flow/README.md), [`.agents/skills/fpas-authoring/SKILL.md`](../../../.agents/skills/fpas-authoring/SKILL.md).
 
@@ -20,7 +24,8 @@ Spec links: [`language/basics/README.md`](../language/basics/README.md), [`langu
 
 ## Formatted output (`fpas fmt`)
 
-**Golden output.** Each block below is a **complete file** as written to disk after `fpas fmt` — including every `begin` / `end` the formatter inserts.
+**Golden output.** Each block below is a **complete file** as written to disk after
+`fpas fmt`, with the required block boundaries preserved from valid input.
 
 Visual checklist:
 
@@ -230,20 +235,20 @@ end unit;
 
 ## Line width (v2)
 
-- **Maximum line length: 100 columns** (`MAX_LINE_WIDTH` in `crates/fpas-fmt/src/style.rs`).
+- **Wrapping target: 100 columns** (`MAX_LINE_WIDTH` in `crates/fpas-fmt/src/style.rs`). This is not a hard maximum for every construct.
 - Count includes leading indentation and uses terminal-style Unicode display columns: combining
   marks have width zero and wide characters have width two.
-- Lines at or below [`MAX_LINE_WIDTH`](../../../crates/fpas-fmt/src/style.rs) stay on one line; wrapping applies only when the rendered line would exceed the limit.
+- The width checks for the supported wrapping constructs below use [`MAX_LINE_WIDTH`](../../../crates/fpas-fmt/src/style.rs). Ordinary call argument lists, including named record arguments, are not wrapped at commas; these and indivisible tokens such as string literals may leave lines above the target.
 
-### Wrapping (v2, when over max width)
+### Wrapping (v2, supported width checks)
 
 | Construct | Break rule |
 |-----------|------------|
 | `uses` clause | After `uses`, then after commas as needed; import lines indented **2 spaces** from column 0 |
 | `function` / `procedure` formal lists | After `;` between parameters |
-| Record construction | Named call arguments; wrap after commas when over width |
+| Calls / record construction | Argument separators remain `, `; no width-based comma wrapping. Individual argument expressions may wrap according to their own rules. |
 | Array literals | Multi-line when over width |
-| Long binary chains / calls | Break at lowest-precedence operator; never inside string literals |
+| Long binary chains | Break at lowest-precedence operator; never inside string literals |
 | Postfix chains (`.Field` / `[Index]` / `.Method(...)`) | Break before each suffix; indent continuations **2 spaces** from the expression base column |
 
 ## Indentation
@@ -431,8 +436,9 @@ end record;
 
 ### Record construction (expression)
 
-Record construction follows named-call formatting. Short calls stay on one line;
-long calls wrap after commas. Empty construction has no spaces inside parentheses:
+Record construction follows named-call formatting. Argument separators remain
+`, ` even when the line exceeds the wrapping target; there is no width-based
+comma wrapping. Empty construction has no spaces inside parentheses:
 
 ```pascal
 Empty()
@@ -463,6 +469,8 @@ end.
 ```
 
 ### Record construction (v2 golden)
+
+The construction remains on one line even though it exceeds the wrapping target.
 
 ```pascal
 type NetworkConfig = record

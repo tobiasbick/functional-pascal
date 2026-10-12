@@ -325,8 +325,10 @@ already initialized, the command fails and points the client to `expression.set`
 / `setExpression`. When the compiler retained the exact declaration store and
 that store is still pending in the selected live frame, successful debugger
 initialization suppresses that one store. This applies equally to complete-root
-`setVariable` / `setExpression` and seeded `storage.initialize`; initializer
-expressions are not re-evaluated and unrelated stores still execute. The
+`setVariable` / `setExpression` and seeded `storage.initialize`. Registering
+suppression does not evaluate the source initializer. Only the identified store
+is skipped; pending initializer computation and unrelated instructions still
+execute on continue. The
 suppression identity is the verified function, live frame, and exact `Move` or
 `StoreGlobal` instruction, never a source-name, line, or register scan. A write
 to an old payload-child handle never selects a different

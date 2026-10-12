@@ -91,7 +91,13 @@ WriteLn(Stringify(Value));
 
 ## Limits and errors
 
-`Parse` and `Stringify` reject value trees deeper than **256** levels. Parse failures return `Error(Message)`. Invalid `TomlValue` payloads passed to `Stringify` are programmer errors and raise a runtime diagnostic with a construction hint.
+FPAS value conversion and `Stringify` reject value trees deeper than **256**
+levels. Before conversion, `Parse` uses the TOML dependency parser's separate,
+shape-dependent recursion budget. Deeply nested arrays can exhaust that budget
+well below 256 levels; the conversion limit is not a promise that every
+shallower TOML input can be parsed. Parser and conversion failures both return
+`Error(Message)`. Invalid `TomlValue` payloads passed to `Stringify` are
+programmer errors and raise a runtime diagnostic with a construction hint.
 
 ## Implementation (contributors)
 

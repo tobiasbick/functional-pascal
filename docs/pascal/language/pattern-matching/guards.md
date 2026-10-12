@@ -16,13 +16,16 @@ begin
       begin
         return 'positive';
       end;
-    when const N if N < 0:
+    else
       begin
         return 'negative';
       end;
   end case;
 end function;
 ```
+
+The final `else` supplies an explicit return for every remaining input. The
+compiler does not prove that arbitrary guards cover all possible scalar values.
 
 Guards work with all label types — values, ranges, destructuring, and enum patterns:
 
@@ -81,8 +84,10 @@ Rules:
 
 - `const Name` must be the arm's only label and requires a guard; use `else`
   for the remaining values (FP3032).
-- It is valid only in scalar `case` statements. Result, Option, and data-enum
-  patterns bind inside the pattern, for example `Some(const Value)`.
+- It is valid in scalar `case` statements and expressions. A case expression
+  must produce a value for every input; use an `else` fallback for remaining
+  values. Result, Option, and data-enum patterns bind inside the pattern,
+  for example `Some(const Value)`.
 - A bare identifier label is always a value comparison. It must name a
   compile-time constant or an enum member; a computed `const` is rejected. A
   name that resolves to nothing reports FP3031 with the `const Name` form.

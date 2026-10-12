@@ -35,7 +35,7 @@ functions with the same name do not affect this selection.
 | `Items.FindIndex(F: function(X: T): boolean): integer` | First matching index, or `-1` |
 | `Items.Any(F: function(X: T): boolean): boolean` | Whether any element satisfies the predicate |
 | `Items.All(F: function(X: T): boolean): boolean` | Whether every element satisfies the predicate |
-| `Items.Sort(): array of T` | Return a sorted value |
+| `Items.Sort(): array of T` | Return sorted scalar values; see [element restrictions](basics.md#itemssort-array-of-t) |
 | `Items.Reverse(): array of T` | Return a reversed value |
 | `Items.Slice(Start: integer; Len: integer): array of T` | Return the checked subrange |
 | `Items.Concat(B: array of T): array of T` | Append the second array's elements to the result |

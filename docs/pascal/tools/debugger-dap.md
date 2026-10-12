@@ -196,11 +196,18 @@ They map directly to the corresponding JSONL operations.
 `fpas/forceReturn` is the DAP mapping of JSONL `frame.return`. Arguments are
 `frameId` and optional `expression`. A successful body contains `value`,
 `type`, `variablesReference`, `namedVariables`, `indexedVariables`,
-`unwoundFrames`, `taskId`, and the fresh caller `frame`. `unwoundFrames` is the
+`unwoundFrames`, `taskId`, a nullable `frame`, and `terminated`. `unwoundFrames` is the
 selected depth plus one. The adapter does not advertise a DAP capability flag
-for this custom request. After a successful forced return, clients that
+for this custom request. The request accepts the stop-owning task's callee or
+entry, including the exact failed callee or entry at a runtime-error stop.
+Result type checks still apply, and the original diagnostic remains in event
+history. Completing the program entry returns `frame: null`, `terminated: true`,
+and termination events. Completing a spawned task entry publishes its retained
+result when applicable and leaves another inspectable task stopped.
+After a successful forced return that leaves the session stopped, clients that
 initialized with `supportsInvalidatedEvent: true` receive one `invalidated`
-event whose `areas` are `stacks` and `variables`. Failure emits no invalidation
+event whose `areas` are `stacks` and `variables`. A terminated session receives
+no invalidation. Failure emits no invalidation
 and leaves the current stop unchanged.
 
 `restartFrame` is the DAP mapping of JSONL `frame.restart`. Arguments are
@@ -226,8 +233,12 @@ custom request.
 `task.pause` and `task.resume`. A successful body contains `taskId` and
 `paused`. Continue and pause remain whole-session; these requests only change
 the hold flag. `fpas/cancelTask` maps a known `threadId` onto JSONL
-`task.cancel`. A successful body contains `taskId` and `state`, and the adapter
-emits `thread`/`exited`. `fpas/createTask` and `fpas/restartTask` map onto the
+`task.cancel`. A successful body contains `taskId` and the resulting `state`.
+Tasks without open scopes become cancelled immediately and emit `thread`/`exited`.
+With open task scopes the parent remains `waiting` while its children are
+cancelled; after continue joins them, completion emits `thread`/`exited`.
+Success accepts cancellation and does not guarantee immediate thread exit.
+`fpas/createTask` and `fpas/restartTask` map onto the
 JSONL rejections. `fpas/input` maps onto JSONL `io.input` with required `text`
 and returns `bytes` plus `sessionBytes`. `fpas/eof` and `fpas/cancelInput` map
 onto `io.eof` and `io.cancel`. Protocol stdin is never debuggee stdin. The adapter does not advertise

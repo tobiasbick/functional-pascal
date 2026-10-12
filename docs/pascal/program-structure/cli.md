@@ -184,10 +184,11 @@ fpas run
 sources authoritative and rebuilds a missing, stale, incompatible, or corrupt
 `.fpascp` before execution. A directly passed `.fpascp` has no source input to
 rebuild from, so invalid images fail with an actionable diagnostic. Validation
-checks constant and jump operands, requires root control flow to reach `Halt`
-or a root-level `Return` without falling into callable bodies, verifies
-that name operands are strings, and resolves direct calls and closure targets
-against the callable table (including direct-call arity) before the VM starts.
+checks register operands, constants, layout references, and jump targets. Function bodies
+occupy disjoint instruction ranges; branches and fallthrough cannot escape those ranges.
+The entry function takes no parameters or captures and uses the `unit` return convention;
+normal completion uses `Return`. Direct calls and closure targets are checked against the
+function table, including direct-call arity, before the VM starts.
 
 ## Checking without running
 

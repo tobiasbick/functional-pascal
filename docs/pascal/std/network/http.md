@@ -86,8 +86,9 @@ The client follows `301`, `302`, `303`, `307`, and `308` when a `Location` heade
 Absolute, network-path, absolute-path, query-only, and relative references are resolved against the
 current URL. Dot-segment removal preserves repeated and trailing slashes; query-only and
 fragment-only references retain the existing path. `303` changes every method except `HEAD` to `GET`; `301` and `302` change `POST` to
-`GET`; `307` and `308` preserve the method and body. A method change drops body representation
-headers. Redirects to another scheme, host, or port also drop `Authorization`,
+`GET`; `307` and `308` preserve the method and body. When this policy changes the method
+to `GET`, it clears the body and drops `Content-Type`, `Content-Encoding`,
+`Content-Language`, and `Content-Location`. Redirects to another scheme, host, or port also drop `Authorization`,
 `Proxy-Authorization`, and `Cookie`.
 
 ## Streaming responses
@@ -162,6 +163,9 @@ Create a TCP listener with `Std.Net.Listen` or a TLS listener with `Std.Net.List
 connection, and pass that connection to `ReadRequest`. The helper accepts HTTP/1.0 and HTTP/1.1
 origin-form requests, requires exactly one `Host` field for HTTP/1.1, validates field names and
 values, and reads a `Content-Length` body.
+Request and response readers validate raw field values before removing leading and
+trailing SP/HTAB. Other control characters, including VT and FF, are rejected;
+permitted characters other than SP/HTAB are preserved at the boundaries.
 `MaxHeaderBytes` and `MaxBodyBytes` are caller-selected protection limits. Chunked request bodies,
 ambiguous framing, unsupported transfer codings, and truncated bodies are rejected.
 

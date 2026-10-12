@@ -116,7 +116,8 @@ end.
 Rules:
 
 - The designator must resolve to one instance function or procedure (not a field).
-- Fields take priority over methods when both share a name.
+- Fields and methods share one case-insensitive member namespace; duplicate
+  names are rejected, so there is no field-versus-method priority rule.
 - The receiver is evaluated once and captured by value at the binding site.
   Later assignment to the source variable does not change the bound callable.
 - A procedure method yields a procedure value; a function method yields a

@@ -12,7 +12,11 @@ const TruecolorCell: TuiCell := TuiCell.Styled('▓', Style);
 ```
 
 `TuiStyle.Create` additionally accepts `Bold`, `Dim`, `Underline`, and
-`Inverse` flags. `TuiCell.Create` requires exactly one non-zero-width extended
+`Inverse` flags. These flags are retained in style values, but the current
+interactive terminal renderer transfers only glyphs and foreground/background
+colors to `Std.Console`. The flags have no visible terminal effect.
+
+`TuiCell.Create` requires exactly one non-zero-width extended
 grapheme cluster and stores its terminal column width (`1` or `2`).
 `Width()` returns that stored value.
 

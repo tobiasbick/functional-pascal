@@ -5,17 +5,17 @@ Integers support decimal and hexadecimal notation. Underscores are allowed as vi
 Formal syntax: [`grammar.ebnf`](../../../specs/grammar.ebnf) (`integer_literal`, `real_literal`).
 
 ```pascal
-const A: integer := 1000000; // One million
-const B: integer := 255; // 255 hexadecimal
-const C: integer := 65535; // 65535 hexadecimal
+const A: integer := 1_000_000; // One million with digit separators
+const B: integer := $FF; // Hexadecimal notation for 255
+const C: integer := $FFFF; // Hexadecimal notation for 65535
 ```
 
 Real literals require digits on both sides of the decimal point. Scientific notation is supported:
 
 ```pascal
 const X: real := 3.14;
-const Y: real := 15000000000.0; // Scientific notation
-const Z: real := 0.0003; // 0.0003
+const Y: real := 1.5e10; // Scientific notation for 15000000000.0
+const Z: real := 3.0e-4; // Scientific notation for 0.0003
 const W: real := 0.5; // Leading zero is required
 ```
 

@@ -116,6 +116,14 @@ fn cross_origin_303_redirect_changes_post_to_get_and_strips_credentials() {
         let request = read_request(&mut stream);
         assert!(request.starts_with("POST /submit HTTP/1.1\r\n"));
         assert!(request.contains("Authorization: Bearer secret\r\n"));
+        for header in [
+            "content-type",
+            "content-encoding",
+            "content-language",
+            "content-location",
+        ] {
+            assert!(request.to_ascii_lowercase().contains(&format!("{header}:")));
+        }
         write!(
             stream,
             "HTTP/1.1 303 See Other\r\nLocation: http://127.0.0.1:{target_port}/result\r\nContent-Length: 0\r\nConnection: close\r\n\r\n"
@@ -129,6 +137,9 @@ fn cross_origin_303_redirect_changes_post_to_get_and_strips_credentials() {
         assert!(!request.contains("Authorization:"));
         assert!(!request.contains("Cookie:"));
         assert!(!request.contains("Content-Type:"));
+        for header in ["content-encoding", "content-language", "content-location"] {
+            assert!(!request.to_ascii_lowercase().contains(&format!("{header}:")));
+        }
         assert!(request.contains("Content-Length: 0\r\n"));
         stream
             .write_all(b"HTTP/1.1 200 OK\r\nContent-Length: 2\r\nConnection: close\r\n\r\nok")
@@ -147,7 +158,10 @@ begin
   RequestValue.Headers := [
     Header.Create('Authorization', 'Bearer secret'),
     Header.Create('Cookie', 'session=secret'),
-    Header.Create('Content-Type', 'text/plain')
+    Header.Create('Content-Type', 'text/plain'),
+    Header.Create('Content-Encoding', 'identity'),
+    Header.Create('content-language', 'en'),
+    Header.Create('Content-Location', '/submit')
   ];
   RequestValue.Body := Std.Net.Utf8.Encode('payload');
   case Send(RequestValue) of

@@ -1,6 +1,14 @@
 # Colors and attributes
 
-Extended color procedures (`TextColorRGB`, `TextBackgroundRGB`, `TextColor256`, `TextBackground256`) send terminal ANSI color escapes directly. They do not update the packed 16-color CRT attribute returned by `TextAttr()`. Calling `TextColor`, `TextBackground`, `HighVideo`, `LowVideo`, `NormVideo`, or `SetTextAttr` afterwards switches back to the packed CRT attribute path and overrides the extended color.
+Extended color procedures (`TextColorRGB`, `TextBackgroundRGB`, `TextColor256`,
+`TextBackground256`) select colors for subsequent text writes. Streaming mode emits
+ANSI color escapes directly. In CRT mode these procedures update retained color
+state; subsequent writes store those colors in cells for rendering and redraw.
+An active [frame](cells-frames.md#frames) defers presentation until the outermost
+`Present`. The procedures do not update the packed 16-color CRT attribute returned
+by `TextAttr()`. Calling `TextColor`, `TextBackground`, `HighVideo`, `LowVideo`,
+`NormVideo`, or `SetTextAttr` afterwards restores packed CRT colors and overrides
+the extended color.
 
 ---
 
@@ -90,7 +98,7 @@ Additional text-mode constants:
 
 - **Parameters:** three integers `R`, `G`, `B` (0–255 each).
 - **Result:** none.
-- **Effect:** applies a 24-bit truecolor ANSI escape for the foreground / background. Takes effect immediately for subsequent `WriteText`/`WriteLn` calls.
+- **Effect:** selects a 24-bit foreground / background for subsequent `WriteText`/`WriteLn` calls. Streaming mode emits ANSI directly; CRT mode retains the color, and active frames defer presentation.
 - **State interaction:** does not change the packed value returned by `TextAttr()`. A later call to `TextColor`, `TextBackground`, `HighVideo`, `LowVideo`, `NormVideo`, or `SetTextAttr` overrides the RGB color.
 - **Errors:** runtime error if any channel is outside `0..255`.
 
@@ -108,7 +116,7 @@ WriteLn('truecolor text');
 
 - **Parameters:** one integer index (0–255).
 - **Result:** none.
-- **Effect:** applies a 256-color ANSI palette escape for the foreground / background. Takes effect immediately for subsequent `WriteText`/`WriteLn` calls.
+- **Effect:** selects a 256-color foreground / background for subsequent `WriteText`/`WriteLn` calls. Streaming mode emits ANSI directly; CRT mode retains the color, and active frames defer presentation.
 - **State interaction:** does not change the packed value returned by `TextAttr()`. A later call to `TextColor`, `TextBackground`, `HighVideo`, `LowVideo`, `NormVideo`, or `SetTextAttr` overrides the 256-color selection.
 - **Errors:** runtime error if the index is outside `0..255`.
 

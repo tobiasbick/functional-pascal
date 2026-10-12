@@ -18,7 +18,7 @@ Formal syntax: [`grammar.ebnf`](../../../specs/grammar.ebnf) (`function_decl`, `
 | [Discarding values](discard.md) | Explicit discard and static task-handle restrictions |
 | [Early return](early-return.md) | `return` exits immediately |
 | [Postfix chaining](postfix-chaining.md) | `.Field`, `[Index]`, and `.Method(args)` on expression results |
-| [Receiver calls](fluent-calls.md) | Call a visible routine with the receiver as its first argument |
+| [Receiver calls](fluent-calls.md) | Call declared record members or fixed native type operations |
 
 ## Runtime recursion limit
 
@@ -26,9 +26,12 @@ The VM bounds both intermediate value storage and active function call frames. E
 recursion therefore stops with a `Call stack overflow` runtime diagnostic instead of exhausting
 host memory. Reduce the recursion depth or rewrite the processing as a loop when this occurs.
 
-A direct call whose result the routine returns immediately (`return F(X)`, or a procedure ending
-with a call to another procedure) reuses the current frame and does not count toward this limit.
-The debugger keeps such frames visible and therefore still applies the limit.
+An eligible direct tail call (`return F(X)`, or a procedure ending with a call
+to another procedure) reuses the current frame and does not add a frame toward
+this limit. Pending exit work can prevent that conversion: an `ensures` clause
+must check the returned value, and an active task scope must complete its exit.
+The return syntax alone therefore does not guarantee frame reuse. The debugger
+keeps tail-call frames visible and still applies the limit.
 
 ## See also
 

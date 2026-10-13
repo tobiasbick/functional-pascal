@@ -110,6 +110,10 @@ pub type RecordDefaultsMap = HashMap<String, Vec<(String, Option<std::sync::Arc<
 /// inspecting those same allocations.
 #[derive(Debug, Default)]
 pub struct AnalysisMetadata {
+    /// Unqualified identifier offsets to their selected source declaration identities.
+    /// Compiler and editor resolution retain lexical shadowing and later enclosing bindings.
+    /// **Documentation:** `docs/pascal/language/types/declaration-order.md`
+    pub binding_references: HashMap<(u32, usize), (u32, usize)>,
     /// Canonical direct unit identities to source-local aliases.
     /// **Documentation:** `docs/pascal/program-structure/units.md`
     pub import_aliases: BTreeMap<String, String>,
@@ -167,6 +171,10 @@ pub struct AnalysisMetadata {
 
 /// Semantic checking state for whole-unit types and ordered executable declarations.
 pub struct Checker {
+    /// Declaration-resolved dependencies used to prove ordered initialization safe.
+    pub(crate) initialization: super::initialization::InitializationState,
+    /// Value headers replaced when their ordered initializer is checked.
+    pub(crate) predeclared_bindings: HashSet<(u32, usize)>,
     /// Open task scopes of the routine body being checked.
     pub(crate) task_scopes: super::task_scopes::TaskScopeContext,
     /// Inferred parameter escapes of unit-level routines and record routines by canonical name.
@@ -290,6 +298,8 @@ impl Checker {
     /// Creates an empty semantic checker and its expression-analysis tables.
     pub fn new() -> Self {
         Self {
+            initialization: Default::default(),
+            predeclared_bindings: HashSet::new(),
             routine_type_path: Vec::new(),
             pending_type_arguments: Default::default(),
             task_scopes: Default::default(),
@@ -350,6 +360,7 @@ impl Checker {
     pub fn finish(self) -> AnalysisMetadata {
         let named_types = self.scopes.root_types();
         AnalysisMetadata {
+            binding_references: self.initialization.binding_references(),
             import_aliases: self.scopes.imports.aliases.clone(),
             errors: self.errors,
             expr_types: self.expr_types,

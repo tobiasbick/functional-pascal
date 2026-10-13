@@ -1,0 +1,193 @@
+program RoutineVisibility;
+
+uses Std.Test, Std.Tasks;
+
+const Initial: integer := Twice(3);
+
+var Read: function(): integer := GlobalRead;
+var InitializationOrder: string := '';
+
+const First: integer := Mark('first');
+const Second: integer := Mark('second');
+
+function Twice<T: Numeric>(Value: T): T;
+begin
+  return Value + Value;
+end function;
+
+function Mark(Name: string): integer;
+begin
+  InitializationOrder := InitializationOrder + Name + ';';
+  return InitializationOrder.Length();
+end function;
+
+function IsEven(Value: integer): boolean;
+begin
+  return if Value = 0 then true else IsOdd(Value - 1) end if;
+end function;
+
+function IsOdd(Value: integer): boolean;
+begin
+  return if Value = 0 then false else IsEven(Value - 1) end if;
+end function;
+
+function GlobalRead(): integer;
+begin
+  return 1;
+end function;
+
+function Outer(): integer;
+function Use(): integer;
+begin
+  const Selected: function(): integer := Read;
+  const Running: task of integer := go Read();
+  return Read() + Selected() + Std.Tasks.Wait(Running);
+end function;
+function Read(): integer;
+begin
+  return 2;
+end function;
+begin
+  return Use();
+end function;
+
+function Apply(GlobalRead: function(): integer): integer;
+begin
+  const Running: task of integer := go GlobalRead();
+  return GlobalRead() + Std.Tasks.Wait(Running);
+end function;
+
+function CreateAnonymous(): function(Value: integer): integer;
+function Call(Value: integer): integer;
+begin
+  return Stored(Value);
+end function;
+begin
+  const Stored := function(Value: integer): integer
+  function Before(Input: integer): integer;
+  begin
+    return After(Input);
+  end function;
+  function After(Input: integer): integer;
+  begin
+    return Input + 7;
+  end function;
+  begin
+    return Before(Value);
+  end function;
+
+  return Call;
+end function;
+
+function CaptureSiblings(): integer;
+function FirstHelper(Value: integer): integer;
+begin
+  return SecondHelper(Value);
+end function;
+function SecondHelper(Value: integer): integer;
+begin
+  return Value + Offset;
+end function;
+begin
+  const Offset := 7;
+  return FirstHelper(Initial);
+end function;
+
+function ProcedureHelpers(): integer;
+procedure FirstHelper();
+begin
+  SecondHelper();
+end procedure;
+procedure SecondHelper();
+begin
+  Count := Count + 1;
+end procedure;
+begin
+  var Count := 40;
+  FirstHelper();
+  SecondHelper();
+  return Count;
+end function;
+
+function PassThrough<T>(Input: T): T;
+function FirstHelper(Value: T): T;
+begin
+  return SecondHelper(Value);
+end function;
+function SecondHelper(Value: T): T;
+begin
+  return Value;
+end function;
+begin
+  return FirstHelper(Input);
+end function;
+
+type Box = record
+  Value: integer := ReadLater();
+
+  static function Forward(): Box;
+  begin
+    return Box.Create();
+  end function;
+
+  static function Create(): Box;
+  begin
+    return Box();
+  end function;
+
+  function ReadValue(Self: Box): integer;
+  function FirstHelper(): integer;
+  begin
+    return SecondHelper();
+  end function;
+  function SecondHelper(): integer;
+  begin
+    return Self.Value;
+  end function;
+  begin
+    return FirstHelper();
+  end function;
+end record;
+
+function ReadLater(): integer;
+begin
+  return Later;
+end function;
+
+const Later: integer := 9;
+const Constructed: Box := Box.Forward();
+
+begin
+  const Anonymous: function(Value: integer): integer := function(Value: integer): integer
+  function Before(Input: integer): integer;
+  begin
+    return After(Input);
+  end function;
+  function After(Input: integer): integer;
+  begin
+    return Input + 7;
+  end function;
+  begin
+    return Before(Value);
+  end function;
+
+  AssertEquals(12, Anonymous(5));
+  const Inferred := CreateAnonymous();
+  AssertEquals(12, Inferred(5));
+  AssertEquals(6, Initial);
+  AssertEquals('first;second;', InitializationOrder);
+  AssertEquals(6, First);
+  AssertEquals(13, Second);
+  AssertTrue(IsEven(8));
+  AssertTrue(IsOdd(9));
+  AssertEquals(6, Outer());
+  AssertEquals(1, Read());
+  AssertEquals(2, Apply(Read));
+  const GlobalTask: task of integer := go Read();
+  AssertEquals(1, Std.Tasks.Wait(GlobalTask));
+  AssertEquals(13, CaptureSiblings());
+  AssertEquals(42, ProcedureHelpers());
+  AssertEquals(42, PassThrough(42));
+  AssertEquals('text', PassThrough('text'));
+  AssertEquals(9, Constructed.ReadValue());
+end.

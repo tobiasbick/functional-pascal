@@ -29,6 +29,12 @@ semicolon, before nested declarations or `begin`. Entry clauses precede return
 clauses. They apply to named routines and record methods; `requires` checks
 every entry and `ensures` checks every ordinary or `try` propagated return.
 
+Named signatures are visible throughout their lexical declaration scope,
+including before the declaration and across mutually recursive siblings.
+The same rule applies to free routines, methods, and nested helpers. Values
+still initialize in source order; calls must not reach uninitialized bindings.
+See [declaration order](../types/declaration-order.md).
+
 ## Functions
 
 A function returns a value using `return`:

@@ -368,6 +368,7 @@ Call arguments still use commas; commas inside types such as
 | FP3038 | `go` outside its owning scope | `scope ForEach(Items, procedure(Item: integer) begin go Work(Item); end procedure); end scope;` | Move the `go` out of the anonymous routine into the scope body, or open a `scope` inside the anonymous routine; see [Task scopes](../language/concurrency/task-scopes.md). |
 | FP3039 | Lost task error | `scope go Load(Path); end scope;` where `Load` returns `result of (string, string)` | Keep the handle and forward the error: `const T: task of result of (string, string) := go Load(Path); const Text: string := try Wait(T);`. |
 | FP3040 | Task handle escape | `return go Fetch(1);` or `Outer := go Fetch(1);` inside a `scope` | Keep scope-owned handles in bindings declared inside the scope and wait for them there; see [Task scopes](../language/concurrency/task-scopes.md#handle-escapes). |
+| FP3041 | Uninitialized or unprovable dependency | An initializer calls a helper that reads a later binding, directly or through a callback/default, or captures an unavailable local. | Initialize the dependency before use or pass initialized data explicitly; see [Declaration order](../language/types/declaration-order.md). |
 
 FP3025 also reports a parameter or payload field named twice and a named
 call or pattern that omits one; its hint lists the visible static names.

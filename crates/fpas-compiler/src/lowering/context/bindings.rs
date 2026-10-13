@@ -175,18 +175,18 @@ impl LoweringContext {
         self.type_table.array_type(element, span)
     }
 
+    /// Select the nearest lexical routine before considering root or imported signatures.
     pub(in crate::lowering) fn resolve_callable(&self, name: &str) -> Option<Callable> {
         let canonical = name.to_ascii_lowercase();
-        if let Some(callable) = self.callables.get(&canonical) {
-            return Some(callable.clone());
-        }
         let mut scope = self.program_name.as_str();
         loop {
             let child = format!("{scope}.{canonical}");
             if let Some(callable) = self.callables.get(&child) {
                 return Some(callable.clone());
             }
-            let (parent, tail) = scope.rsplit_once('.')?;
+            let Some((parent, tail)) = scope.rsplit_once('.') else {
+                break;
+            };
             if tail == canonical
                 && let Some(callable) = self.callables.get(scope)
             {
@@ -194,6 +194,20 @@ impl LoweringContext {
             }
             scope = parent;
         }
+        self.callables.get(&canonical).cloned()
+    }
+
+    /// Preserve semantic declaration selection when values and routines share a name.
+    pub(in crate::lowering) fn selected_callable(
+        &self,
+        name: &str,
+        span: Span,
+    ) -> Option<Callable> {
+        let callable = self.resolve_callable(name)?;
+        if let Some(declaration) = self.binding_references.get(&(span.source_id, span.offset)) {
+            return (callable.declaration == Some(*declaration)).then_some(callable);
+        }
+        (!self.has_binding(name) && !self.has_global(name)).then_some(callable)
     }
 
     pub(in crate::lowering) fn has_binding(&self, name: &str) -> bool {

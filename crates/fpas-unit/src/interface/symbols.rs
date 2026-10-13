@@ -81,6 +81,9 @@ pub struct InterfaceSymbol {
 /// Complete public semantic surface of one source unit.
 #[derive(Debug, Clone, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 pub struct UnitInterface {
+    /// Conservative callback dependencies of exported routines and record methods.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub routine_initialization: Vec<super::RoutineInitialization>,
     /// Public routine entry and return clauses, independent of callable signatures.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub routine_contracts: Vec<super::RoutineContract>,
@@ -101,6 +104,14 @@ impl UnitInterface {
     /// Source spelling of unit and symbol names is retained for diagnostics.
     #[must_use]
     pub fn canonicalized(mut self) -> Self {
+        self.routine_initialization
+            .sort_by_key(|routine| canonical_name(&routine.qualified_name));
+        for routine in &mut self.routine_initialization {
+            routine.called_parameters.sort_unstable();
+            routine.called_parameters.dedup();
+            routine.returned_parameters.sort_unstable();
+            routine.returned_parameters.dedup();
+        }
         self.routine_contracts.sort_by(|left, right| {
             canonical_name(&left.qualified_name).cmp(&canonical_name(&right.qualified_name))
         });

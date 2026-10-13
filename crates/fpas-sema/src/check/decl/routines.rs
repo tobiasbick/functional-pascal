@@ -16,6 +16,36 @@ use fpas_parser::{FuncBody, FunctionDecl, ProcedureDecl};
 impl Checker {
     /// Check function declarations against `docs/pascal/language/functions/README.md`.
     pub(super) fn check_function_decl(&mut self, f: &FunctionDecl) {
+        if !self.has_routine_signature(&f.name, f.span) {
+            self.collect_function_signature(f);
+        }
+        let Some(Ty::Function(function)) = self.scopes.lookup(&f.name).map(|s| s.ty.clone()) else {
+            return;
+        };
+        let is_nested = self.scopes.scope_count() > 1;
+        let captures = self.check_routine_body_collecting_captures(
+            &f.name,
+            &f.type_params,
+            &function.params,
+            &f.params,
+            Some(*function.return_type),
+            super::super::contracts::RoutineBody {
+                body: &f.body,
+                requires: &f.requires,
+                ensures: &f.ensures,
+            },
+        );
+        if is_nested {
+            self.record_nested_routine_captures(
+                &f.name,
+                crate::function_decl_lookup_key(f),
+                captures,
+            );
+        }
+    }
+
+    /// Resolve and install a named function before checking any sibling body.
+    pub(super) fn collect_function_signature(&mut self, f: &FunctionDecl) {
         self.check_unique_formal_param_names(&f.params);
 
         let has_type_params = !f.type_params.is_empty();
@@ -51,29 +81,41 @@ impl Checker {
             self.scopes
                 .set_routine_capture_key(&f.name, crate::function_decl_lookup_key(f));
         }
+    }
+
+    /// Check procedure declarations against `docs/pascal/language/functions/README.md`.
+    pub(super) fn check_procedure_decl(&mut self, p: &ProcedureDecl) {
+        if !self.has_routine_signature(&p.name, p.span) {
+            self.collect_procedure_signature(p);
+        }
+        let Some(Ty::Procedure(procedure)) = self.scopes.lookup(&p.name).map(|s| s.ty.clone())
+        else {
+            return;
+        };
+        let is_nested = self.scopes.scope_count() > 1;
         let captures = self.check_routine_body_collecting_captures(
-            &f.name,
-            &f.type_params,
-            &params,
-            &f.params,
-            Some(return_ty),
+            &p.name,
+            &p.type_params,
+            &procedure.params,
+            &p.params,
+            None,
             super::super::contracts::RoutineBody {
-                body: &f.body,
-                requires: &f.requires,
-                ensures: &f.ensures,
+                body: &p.body,
+                requires: &p.requires,
+                ensures: &p.ensures,
             },
         );
         if is_nested {
             self.record_nested_routine_captures(
-                &f.name,
-                crate::function_decl_lookup_key(f),
+                &p.name,
+                crate::procedure_decl_lookup_key(p),
                 captures,
             );
         }
     }
 
-    /// Check procedure declarations against `docs/pascal/language/functions/README.md`.
-    pub(super) fn check_procedure_decl(&mut self, p: &ProcedureDecl) {
+    /// Resolve and install a named procedure before checking any sibling body.
+    pub(super) fn collect_procedure_signature(&mut self, p: &ProcedureDecl) {
         self.check_unique_formal_param_names(&p.params);
 
         let has_type_params = !p.type_params.is_empty();
@@ -106,25 +148,6 @@ impl Checker {
         if is_nested {
             self.scopes
                 .set_routine_capture_key(&p.name, crate::procedure_decl_lookup_key(p));
-        }
-        let captures = self.check_routine_body_collecting_captures(
-            &p.name,
-            &p.type_params,
-            &params,
-            &p.params,
-            None,
-            super::super::contracts::RoutineBody {
-                body: &p.body,
-                requires: &p.requires,
-                ensures: &p.ensures,
-            },
-        );
-        if is_nested {
-            self.record_nested_routine_captures(
-                &p.name,
-                crate::procedure_decl_lookup_key(p),
-                captures,
-            );
         }
     }
 
@@ -177,7 +200,7 @@ impl Checker {
 
     fn register_routine_symbol(&mut self, name: &str, symbol: Symbol, body: &FuncBody, span: Span) {
         match body {
-            FuncBody::Block { .. } => match self.install_routine_symbol(name, symbol) {
+            FuncBody::Block { .. } => match self.install_routine_symbol(name, symbol, span) {
                 RoutineInstall::Installed => {}
                 RoutineInstall::Duplicate => {
                     self.error_with_code(
@@ -191,8 +214,11 @@ impl Checker {
         }
     }
 
-    fn install_routine_symbol(&mut self, name: &str, symbol: Symbol) -> RoutineInstall {
-        if self.scopes.define(name, symbol.clone()) {
+    fn install_routine_symbol(&mut self, name: &str, symbol: Symbol, span: Span) -> RoutineInstall {
+        if self
+            .scopes
+            .define_with_declaration(name, symbol.clone(), span)
+        {
             return RoutineInstall::Installed;
         }
 
@@ -206,6 +232,7 @@ impl Checker {
 
         if let Some(existing) = self.scopes.lookup_mut(name) {
             *existing = symbol;
+            self.scopes.set_declaration(name, span);
             if self.scopes.scope_count() == 1 {
                 // Alias refresh must not remove a routine that replaced an imported builtin.
                 let canonical = crate::scope::canonical_symbol_name(name);

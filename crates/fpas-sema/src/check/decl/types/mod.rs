@@ -14,7 +14,7 @@ mod records;
 mod subranges;
 
 impl Checker {
-    /// Collect a structural definition or check its values at the source position.
+    /// Collect a structural definition or check its defaults and bodies in the lexical scope.
     pub(super) fn check_type_def(&mut self, td: &TypeDef) {
         if !self.type_collection.collecting {
             if self.has_collected_type(td)

@@ -7,6 +7,7 @@ use fpas_lexer::{SpannedToken, lex};
 use fpas_parser::{CompilationUnit, Import};
 
 mod imports;
+mod visibility;
 
 use crate::{DocumentAnalysis, DocumentSnapshot, DocumentSymbol, DocumentSymbols};
 

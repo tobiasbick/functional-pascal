@@ -1,6 +1,7 @@
 # Nested functions
 
-Functions can be declared inside other functions. Use nested declarations for local helpers and mutual recursion:
+Functions and procedures can be declared inside other routines. Use nested
+declarations for local helpers and access to enclosing parameters or locals:
 
 ```pascal
 function Hypotenuse(A: real; B: real): real;
@@ -17,10 +18,19 @@ end function;
 
 ## Mutual recursion
 
-Declare callees before callers when only one direction of call is needed. For mutual recursion, nest the helper in the outer routine so both names are in scope when bodies are checked:
+All named sibling signatures are available throughout their lexical scope.
+Mutually recursive routines may stand beside each other:
 
 ```pascal
 function IsEven(N: integer): boolean;
+begin
+  if N = 0 then
+    return true;
+  else
+    return IsOdd(N - 1);
+  end if;
+end function;
+
 function IsOdd(X: integer): boolean;
 begin
   if X = 0 then
@@ -29,17 +39,16 @@ begin
     return IsEven(X - 1);
   end if;
 end function;
-begin
-  if N = 0 then
-    return true;
-  else
-    return IsOdd(N - 1);
-  end if;
-end function;
 ```
 
 Nested routines that escape as first-class values capture their enclosing environment.
 See [Capturing closures](closures.md).
+
+An inner named routine shadows an outer name throughout the inner scope.
+Named helpers may refer to later enclosing locals, but call or capture the
+helper only after its dependencies have initialized. The compiler also checks
+indirect dependencies through other helpers. See
+[declaration order](../types/declaration-order.md).
 
 ## See also
 

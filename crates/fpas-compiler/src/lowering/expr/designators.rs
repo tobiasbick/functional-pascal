@@ -110,11 +110,12 @@ impl LoweringContext {
         let Some(name) = qualified.as_deref() else {
             return self.lower_designator_read(designator);
         };
-        if self.has_binding(name) {
+        let selected = self.selected_callable(name, designator.span);
+        if selected.is_none() && self.has_binding(name) {
             self.read_named_local(name, designator.span)
-        } else if self.has_global(name) {
+        } else if selected.is_none() && self.has_global(name) {
             self.read_global(name, designator.span)
-        } else if let Some(callable) = self.resolve_callable(name) {
+        } else if let Some(callable) = selected {
             let captures = callable
                 .captures
                 .iter()

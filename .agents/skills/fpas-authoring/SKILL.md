@@ -69,6 +69,12 @@ Read the pages relevant to the change. For exact productions, consult
   parameters, loop variables, or pattern bindings. `as` remains contextual in `uses`.
 - Functions return with `return`. Consume function results or use an allowed
   explicit [discard](../../../docs/pascal/language/functions/discard.md).
+- Named free, member, and nested routine signatures are available throughout
+  their lexical scope, including mutually recursive siblings. Values initialize
+  in source order. Call or capture a helper only after its direct and transitive
+  dependencies are initialized; FP3041 rejects unsafe or unprovable use.
+  Callable bindings remain ordinary initialized values. Record defaults run
+  at construction in their declaring environment.
 - Native collection mutation requires InPlace: Items.PushInPlace(Value),
   Items.SortInPlace(), or Values.RemoveInPlace(Key). Without InPlace, operations
   preserve receivers: Push returns a new array; Pop returns ArrayPopResult of T

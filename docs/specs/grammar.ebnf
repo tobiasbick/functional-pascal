@@ -181,6 +181,12 @@ public_modifier     = 'public' ;
 (* declaration only. Local statement bindings repeat `var`   *)
 (* in full. Local const bindings are allowed; local types are not.  *)
 
+(* Named free/member/nested routine signatures are visible throughout *)
+(* their lexical scope, including mutually recursive siblings.       *)
+(* Values initialize in source order. Calls, captures and construction *)
+(* require initialized direct/transitive dependencies; unsafe or      *)
+(* unprovable uses are compile-time errors (FP3041).                    *)
+
 (* -- Constants -- *)
 const_declaration       = 'const' const_def ;
 const_def           = identifier ':' type_expr ':=' expression ';' ;

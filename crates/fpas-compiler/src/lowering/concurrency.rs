@@ -170,33 +170,39 @@ impl LoweringContext {
             return Err(unsupported(designator.span, "task call target"));
         };
         let name = name.as_str();
-        let (callee, output) = if self.has_binding(name) {
-            let callee_ty = self
-                .binding_type(name)
-                .ok_or_else(|| unsupported(designator.span, "task callable binding"))?;
-            let output = self
-                .function_result_type(callee_ty)
-                .ok_or_else(|| unsupported(designator.span, "task callable type"))?;
-            (self.read_named_local(name, designator.span)?, output)
-        } else {
-            let callable = self
-                .resolve_callable(name)
-                .ok_or_else(|| unsupported(designator.span, "unresolved task call"))?;
-            let captures = callable
-                .captures
-                .iter()
-                .map(|capture| self.read_capture(capture, span))
-                .collect::<Result<Vec<_>, _>>()?;
-            let callee = self.emit_value(
-                Operation::MakeClosure {
-                    function: callable.function,
-                    captures,
-                },
-                callable.value_type,
-                span,
-            )?;
-            (callee, callable.result)
-        };
+        let selected = self.selected_callable(name, designator.span);
+        let (callee, output) =
+            if selected.is_none() && (self.has_binding(name) || self.has_global(name)) {
+                let callee_ty = self
+                    .root_type(name)
+                    .ok_or_else(|| unsupported(designator.span, "task callable binding"))?;
+                let output = self
+                    .function_result_type(callee_ty)
+                    .ok_or_else(|| unsupported(designator.span, "task callable type"))?;
+                let callee = if self.has_binding(name) {
+                    self.read_named_local(name, designator.span)?
+                } else {
+                    self.read_global(name, designator.span)?
+                };
+                (callee, output)
+            } else {
+                let callable =
+                    selected.ok_or_else(|| unsupported(designator.span, "unresolved task call"))?;
+                let captures = callable
+                    .captures
+                    .iter()
+                    .map(|capture| self.read_capture(capture, span))
+                    .collect::<Result<Vec<_>, _>>()?;
+                let callee = self.emit_value(
+                    Operation::MakeClosure {
+                        function: callable.function,
+                        captures,
+                    },
+                    callable.value_type,
+                    span,
+                )?;
+                (callee, callable.result)
+            };
         self.spawn_callable_value(callee, output, args, span, retain_result)
     }
 

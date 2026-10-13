@@ -154,5 +154,5 @@ pub fn hint_for_unknown_std_name(name: &str, loaded: &HashSet<String>) -> String
         }
     }
 
-    "Declare the function or procedure before use, or check the spelling.".to_string()
+    "Declare the function or procedure in this lexical scope, check the spelling, or import its public unit. Named routine signatures are available before their declarations.".to_string()
 }

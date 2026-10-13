@@ -28,7 +28,7 @@ impl Checker {
         }
     }
 
-    /// Check retained defaults with stable identity and only preceding values in scope.
+    /// Check retained defaults with stable identity in the declaring lexical environment.
     pub(super) fn check_record_defaults(&mut self, definition: &TypeDef, record: &RecordType) {
         let Some(symbol) = self.scopes.lookup_type(&definition.name) else {
             return;

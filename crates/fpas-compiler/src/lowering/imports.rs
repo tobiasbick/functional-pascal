@@ -284,6 +284,7 @@ fn install_callable(
     );
     let value_type = types.function_type(parameters.clone(), result, span)?;
     let callable = Callable {
+        declaration: None,
         function,
         parameters: parameters.clone(),
         result,

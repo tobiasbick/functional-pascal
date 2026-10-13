@@ -584,6 +584,12 @@ A `var` parameter cannot be captured. Globals are resolved normally rather than
 captured into closure storage. A closure with mutable captures belongs to its task:
 it cannot be sent through a channel, returned across tasks, or passed to `go`.
 
+Named sibling signatures are visible throughout their lexical scope; free
+routines, methods, and nested helpers follow the same rule and may be mutually
+recursive. The nearest lexical declaration wins, including before its source
+position. Calls and capture creation require initialized dependencies, including
+through callbacks and defaults; unsafe or unprovable uses produce FP3041.
+
 ```pascal
 program ReferenceCallables;
 
@@ -647,7 +653,9 @@ Generic field defaults must work for every instantiation: `Option of T := None`
 is useful, whereas an integer default cannot stand in for arbitrary `T`.
 
 Types are visible throughout their program or unit, including before their declaration.
-Values and free routines retain declaration-order visibility; put them before use.
+Named routine signatures are also scope-wide. Values initialize in source order;
+routine bodies may refer to later enclosing values, but uses must be proved safe
+at the call/capture/construction point. Callable bindings initialize as values.
 Recursive types must have finite values. A recursive enum needs a base variant;
 recursive records can break the cycle through an Option. Generic recursive
 references preserve the same type parameters. Functions can recurse and return

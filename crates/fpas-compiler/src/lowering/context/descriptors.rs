@@ -27,7 +27,10 @@ pub(super) enum BindingStorage {
 }
 
 #[derive(Debug, Clone)]
+/// A lowered routine signature with its source declaration identity.
 pub(crate) struct Callable {
+    /// Local source identity; imported signatures have no local declaration.
+    pub declaration: Option<(u32, usize)>,
     pub function: FunctionId,
     pub parameters: Vec<TypeId>,
     pub result: TypeId,

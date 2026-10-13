@@ -9,6 +9,7 @@ mod contracts;
 mod discard;
 mod distinct_types;
 mod import_aliases;
+mod initialization;
 mod public_signatures;
 mod record_construction;
 mod short_names;

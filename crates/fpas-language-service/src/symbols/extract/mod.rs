@@ -216,7 +216,14 @@ pub(super) fn declaration_symbol(
         selection_span: name_span(snapshot, full_span, name),
         full_span,
         scope_span,
-        visible_from: span.offset,
+        visible_from: if matches!(
+            declaration,
+            Decl::Function(_) | Decl::Procedure(_) | Decl::TypeDef(_)
+        ) {
+            scope_span.offset()
+        } else {
+            span.offset
+        },
         visibility: visibility(decl_visibility),
         type_name,
         detail,

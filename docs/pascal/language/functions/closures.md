@@ -91,6 +91,13 @@ end function;
 Non-escaping nested helpers that are only called by name while their parent frame is
 active keep the existing nested-function behavior.
 
+Named helpers are visible throughout their lexical scope, including mutually
+recursive siblings. Captured bindings must be initialized when the callable
+environment is created; calls must also have initialized direct and transitive
+dependencies. An unsafe or unprovable use produces `FP3041`. A callable stored
+in `const` or `var` retains ordinary source-order initialization. See
+[declaration order](../types/declaration-order.md).
+
 A routine's captures include the captures needed by the named sibling routines
 it calls or uses as values. Each capture retains its original lexical binding,
 even when the caller has a parameter or local with the same name. Shared mutable

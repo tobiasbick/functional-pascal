@@ -36,7 +36,7 @@ pub(super) struct LoweringInput<'a> {
     pub cell_names: std::collections::BTreeSet<String>,
 }
 
-impl Routine<'_> {
+impl<'a> Routine<'a> {
     fn name(&self) -> &str {
         match self {
             Self::Function(function) | Self::RecordFunction(_, function) => &function.name,
@@ -68,7 +68,7 @@ impl Routine<'_> {
         parameters
     }
 
-    fn body(&self) -> &FuncBody {
+    fn body(&self) -> &'a FuncBody {
         match self {
             Self::Function(function) | Self::RecordFunction(_, function) => &function.body,
             Self::Procedure(procedure) | Self::RecordProcedure(_, procedure) => &procedure.body,
@@ -90,7 +90,7 @@ impl Routine<'_> {
     }
 
     /// Executable statements used by closure and capture discovery.
-    pub fn statements(&self) -> &[fpas_parser::Stmt] {
+    pub fn statements(&self) -> &'a [fpas_parser::Stmt] {
         let FuncBody::Block { stmts, .. } = self.body();
         stmts
     }
@@ -139,30 +139,33 @@ pub(super) fn collect<'a>(
     names: &mut Vec<String>,
     parent: FunctionId,
     parent_name: &str,
+    id_offset: usize,
 ) {
     for declaration in declarations {
         match declaration {
             Decl::Function(function) => {
                 let id = FunctionId::new(
-                    u32::try_from(routines.len().saturating_add(1)).unwrap_or(u32::MAX),
+                    u32::try_from(id_offset.saturating_add(routines.len()).saturating_add(1))
+                        .unwrap_or(u32::MAX),
                 );
                 let name = nested_runtime_name(parent_name, &function.name);
                 routines.push(Routine::Function(function));
                 owners.push(parent);
                 names.push(name.clone());
                 let FuncBody::Block { nested, .. } = &function.body;
-                collect(nested, routines, owners, names, id, &name);
+                collect(nested, routines, owners, names, id, &name, id_offset);
             }
             Decl::Procedure(procedure) => {
                 let id = FunctionId::new(
-                    u32::try_from(routines.len().saturating_add(1)).unwrap_or(u32::MAX),
+                    u32::try_from(id_offset.saturating_add(routines.len()).saturating_add(1))
+                        .unwrap_or(u32::MAX),
                 );
                 let name = nested_runtime_name(parent_name, &procedure.name);
                 routines.push(Routine::Procedure(procedure));
                 owners.push(parent);
                 names.push(name.clone());
                 let FuncBody::Block { nested, .. } = &procedure.body;
-                collect(nested, routines, owners, names, id, &name);
+                collect(nested, routines, owners, names, id, &name, id_offset);
             }
             Decl::TypeDef(definition) => {
                 if let TypeBody::Record(record) = &definition.body {
@@ -170,15 +173,33 @@ pub(super) fn collect<'a>(
                         match method {
                             RecordMethod::Function(function)
                             | RecordMethod::StaticFunction(function) => {
+                                let id = FunctionId::new(
+                                    u32::try_from(
+                                        id_offset.saturating_add(routines.len()).saturating_add(1),
+                                    )
+                                    .unwrap_or(u32::MAX),
+                                );
+                                let name = format!("{}.{}", definition.name, function.name);
                                 routines.push(Routine::RecordFunction(definition, function));
                                 owners.push(parent);
-                                names.push(format!("{}.{}", definition.name, function.name));
+                                names.push(name.clone());
+                                let FuncBody::Block { nested, .. } = &function.body;
+                                collect(nested, routines, owners, names, id, &name, id_offset);
                             }
                             RecordMethod::Procedure(procedure)
                             | RecordMethod::StaticProcedure(procedure) => {
+                                let id = FunctionId::new(
+                                    u32::try_from(
+                                        id_offset.saturating_add(routines.len()).saturating_add(1),
+                                    )
+                                    .unwrap_or(u32::MAX),
+                                );
+                                let name = format!("{}.{}", definition.name, procedure.name);
                                 routines.push(Routine::RecordProcedure(definition, procedure));
                                 owners.push(parent);
-                                names.push(format!("{}.{}", definition.name, procedure.name));
+                                names.push(name.clone());
+                                let FuncBody::Block { nested, .. } = &procedure.body;
+                                collect(nested, routines, owners, names, id, &name, id_offset);
                             }
                         }
                     }
@@ -204,12 +225,16 @@ pub(super) fn callable_table(
     names: &[String],
     types: &mut types::TypeTable,
     metadata: &AnalysisMetadata,
+    first_id: u32,
+    inherited_owner: FunctionId,
+    inherited_captures: &[super::context::CaptureInput],
 ) -> Result<BTreeMap<String, Callable>, CompileError> {
     let mut table = BTreeMap::new();
     let mut captures_by_function = BTreeMap::<FunctionId, Vec<super::context::CaptureInput>>::new();
+    captures_by_function.insert(inherited_owner, inherited_captures.to_vec());
     for (index, routine) in routines.iter().enumerate() {
         let function = FunctionId::new(
-            u32::try_from(index.saturating_add(1))
+            u32::try_from(index.saturating_add(first_id as usize))
                 .map_err(|_| unsupported(routine.span(), "function identifier overflow"))?,
         );
         let parent = owners.get(index).copied().unwrap_or(FunctionId::new(0));
@@ -263,6 +288,7 @@ pub(super) fn callable_table(
         table.insert(
             runtime_name.to_ascii_lowercase(),
             Callable {
+                declaration: Some((routine.span().source_id, routine.span().offset)),
                 function,
                 parameters,
                 result,

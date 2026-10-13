@@ -1,4 +1,4 @@
-# Type declaration order
+# Declaration order
 
 Types declared in the same program or unit are visible throughout that program
 or unit, regardless of declaration order. This includes aliases, enum variants,
@@ -49,22 +49,60 @@ Every type declaration starts with its own `type` keyword; in a unit, repeat
 `public type` for every exported type. Record fields and enum members keep
 their existing syntax inside the type body.
 
-## Values and executable bodies
+## Named routines
 
-Constants, variables, and free routines retain declaration-order visibility.
-Field defaults and record method bodies are checked at the type declaration's
-original source position, with preceding values and routines in scope.
-Parameters and local bindings keep their ordinary lexical scopes.
+Named function and procedure signatures are visible throughout their lexical
+declaration scope. The same rule applies to free routines, record methods,
+and nested named helpers. Calls may precede declarations, and sibling routines
+may call each other recursively. No `forward` declaration is needed.
+
+The nearest lexical scope determines the selected declaration. An inner named
+routine shadows an outer name throughout its scope, including in an earlier
+sibling body. Duplicate names in one scope are errors. Imports and member
+visibility retain their ordinary boundaries.
+
+## Values and initialization
+
+Values initialize in source order. A routine body may refer to later values
+in its enclosing lexical environment, but a use is accepted only when the
+compiler can prove that the bindings it may access are initialized. This covers
+direct and transitive calls, callbacks, captures, and omitted record defaults.
+An ordinary expression cannot read or write a binding before initialization.
+Initializers are never reordered to satisfy dependencies.
+
+```pascal
+const Initial: integer := Twice(3);
+
+function Twice(Value: integer): integer;
+begin
+  return Value * 2;
+end function;
+```
+
+This initializer is valid because `Twice` uses only its argument. If a helper
+reads a later binding, call it after that binding has initialized, or pass
+already initialized data as an explicit argument. Unsafe or unprovable uses
+produce `FP3041`; unknown callable dependencies do not imply safety.
+
+`const` and `var` follow the same availability rule, including callable values
+stored in bindings. An anonymous function is a value initialized where its
+expression is evaluated, rather than a scope-wide named routine signature.
+Creating a capturing callable requires its captured bindings to be available.
+Existing value snapshots, shared mutable cells, and reference lifetimes remain
+in force.
 
 [Subrange bounds](subranges.md) use compile-time values visible at the type
 declaration's source position. They may reference preceding constants and
 imported static constants; a later local constant is unavailable.
 
-In the example, the `Status` default may reference `InitialState` because it
-precedes `Team`. Moving `InitialState` below `Team` makes that reference invalid.
-A later variable likewise remains unavailable in an earlier method body.
-Collecting types does not reorder value initialization or its effects. Field
-defaults are substituted when a record is constructed.
+Field defaults retain the record's declaring lexical environment and run when
+the record is constructed. Their dependencies must be initialized at that
+construction point. Supplying a field explicitly does not evaluate its default.
+In the example, `Status` may reference `InitialState` even if that binding is
+declared below `Team`, provided construction happens after initialization.
+Collecting types or routine signatures does not reorder initialization or effects.
+Dependency units initialize before consumers; compiled interfaces retain
+callback dependencies needed by the same checks.
 
 ## Finite recursive values
 

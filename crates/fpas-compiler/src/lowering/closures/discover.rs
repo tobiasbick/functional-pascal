@@ -257,11 +257,12 @@ impl<'a> ClosureRegistry<'a> {
                 self.routines.push(ClosureRoutine {
                     expression,
                     id,
-                    name,
-                    captures,
+                    name: name.clone(),
+                    captures: captures.clone(),
                     owner,
                 });
-                let FuncBody::Block { stmts, .. } = &closure.body;
+                let FuncBody::Block { nested, stmts } = &closure.body;
+                self.collect_named_helpers(nested, id, &name, &captures, metadata, types)?;
                 self.discover_statements(stmts, id, metadata, types)?;
             }
             Expr::Designator(designator) => {

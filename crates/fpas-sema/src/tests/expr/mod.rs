@@ -241,6 +241,7 @@ fn analysis_metadata_exposes_all_named_results() {
         subrange_conversions: _,
         subrange_memberships: _,
         static_bound_declarations: _,
+        binding_references: _,
     } = analyze_with_types(&program);
 
     assert_eq!(named_types.len(), 5);

@@ -14,6 +14,9 @@ use fpas_build::{BuildOptions, build_library_units, build_program};
 use fpas_project::{build_unit_graph, load_project, resolve_library_units, resolve_program_units};
 use fpas_unit::{Digest, decode, encode};
 
+#[path = "incremental/initialization.rs"]
+mod initialization;
+
 fn temp_dir() -> PathBuf {
     static NEXT: AtomicU64 = AtomicU64::new(1);
     let id = NEXT.fetch_add(1, Ordering::Relaxed);

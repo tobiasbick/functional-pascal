@@ -4,6 +4,7 @@ mod bound_methods;
 mod discover;
 mod intrinsic_tasks;
 mod mutating_receivers;
+mod named_routines;
 
 use std::collections::{BTreeMap, BTreeSet, HashMap};
 
@@ -51,6 +52,8 @@ pub(super) struct IntrinsicTaskRoutine {
 }
 
 pub(super) struct ClosureRegistry<'a> {
+    /// Named helpers whose lexical owner is an anonymous callable.
+    pub named_routines: Vec<named_routines::NamedClosureRoutine<'a>>,
     pub routines: Vec<ClosureRoutine<'a>>,
     pub targets: HashMap<usize, ClosureTarget>,
     pub bound_routines: Vec<BoundMethodRoutine>,
@@ -58,7 +61,7 @@ pub(super) struct ClosureRegistry<'a> {
     pub intrinsic_task_routines: Vec<IntrinsicTaskRoutine>,
     pub intrinsic_task_targets: HashMap<usize, BoundMethodTarget>,
     pub cell_names: HashMap<FunctionId, BTreeSet<String>>,
-    callables: BTreeMap<String, Callable>,
+    pub(super) callables: BTreeMap<String, Callable>,
     source_name: String,
     pub(super) next_id: u32,
 }
@@ -66,6 +69,7 @@ pub(super) struct ClosureRegistry<'a> {
 impl<'a> ClosureRegistry<'a> {
     pub fn new(first_id: u32, callables: BTreeMap<String, Callable>, source_name: &str) -> Self {
         Self {
+            named_routines: Vec::new(),
             routines: Vec::new(),
             targets: HashMap::new(),
             bound_routines: Vec::new(),

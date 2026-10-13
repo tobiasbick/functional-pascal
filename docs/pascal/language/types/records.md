@@ -156,9 +156,11 @@ end.
 
 ## Default field values
 
-Defaults are checked at the record declaration's source position. They may
-use preceding values and routines, and types declared anywhere in the unit or
-program. Later values and free routines remain unavailable.
+Defaults resolve in the record's lexical declaration environment. They may
+use later named routines or bindings, provided every dependency has initialized
+when construction evaluates the default. The compiler checks direct and
+transitive dependencies; unsafe or unprovable construction produces `FP3041`.
+See [declaration order](declaration-order.md).
 
 A field declaration may include a default value using `:=`. Construction
 substitutes omitted defaults automatically. Defaults retain their
@@ -176,8 +178,8 @@ does not change that value. The same rule applies to scalar fields of generic re
 
 A computed, aggregate, or unsuccessfully evaluated default on an exported record
 produces FP3014 at its source field. Supply such values explicitly at construction.
-Program-local and non-exported record defaults retain their existing declaration
-environment and may use preceding values and routines.
+Program-local and non-exported record defaults retain their declaring lexical
+environment and follow the initialization checks described above.
 
 ```pascal
 type Config = record

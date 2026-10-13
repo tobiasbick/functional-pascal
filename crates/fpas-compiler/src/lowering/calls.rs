@@ -65,7 +65,7 @@ impl LoweringContext {
             .map(|parts| parts.join("."));
         let resolves_callable = qualified
             .as_deref()
-            .is_some_and(|name| self.resolve_callable(name).is_some());
+            .is_some_and(|name| self.selected_callable(name, designator.span).is_some());
         if !resolves_callable && let Some(fpas_ir::IrType::Enum(layout)) = self.type_kind(result) {
             let name = designator
                 .parts
@@ -96,7 +96,7 @@ impl LoweringContext {
         let qualified =
             qualified.ok_or_else(|| unsupported(designator.span, "method or qualified call"))?;
         let name = qualified.as_str();
-        if self.has_binding(name) || self.has_global(name) {
+        if !resolves_callable && (self.has_binding(name) || self.has_global(name)) {
             let callee = if self.has_binding(name) {
                 self.read_named_local(name, designator.span)?
             } else {

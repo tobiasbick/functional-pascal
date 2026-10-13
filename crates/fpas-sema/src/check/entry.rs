@@ -7,14 +7,12 @@ use fpas_parser::{Program, Unit};
 use fpas_unit::interface::UnitInterface;
 
 impl Checker {
-    /// Collect whole-program types before checking ordered declarations and the body.
+    /// Collect lexical signatures, check ordered initialization, and validate the program body.
     pub fn check_program(&mut self, program: &Program) {
         self.prepare_program(program);
         self.collect_unit_types(&program.declarations);
 
-        for decl in &program.declarations {
-            self.check_decl(decl);
-        }
+        self.check_scope_declarations(&program.declarations);
 
         self.check_program_body(program);
         self.finish_pending_capture_checks();
@@ -22,9 +20,10 @@ impl Checker {
         self.validate_dictionary_keys();
         self.finish_contract_checks();
         self.finish_deferred_type_arguments();
+        self.check_initialization(&program.declarations, Some(&program.body));
     }
 
-    /// Install dependency interfaces, collect types, and check an ordered program.
+    /// Install dependency interfaces and check scope-wide signatures with ordered values.
     pub(crate) fn check_program_with_interfaces(
         &mut self,
         program: &Program,
@@ -54,9 +53,7 @@ impl Checker {
         self.install_interfaces(program, interfaces)?;
         self.collect_unit_types(&program.declarations);
 
-        for decl in &program.declarations {
-            self.check_decl(decl);
-        }
+        self.check_scope_declarations(&program.declarations);
 
         self.check_program_body(program);
         self.finish_pending_capture_checks();
@@ -64,10 +61,11 @@ impl Checker {
         self.validate_dictionary_keys();
         self.finish_contract_checks();
         self.finish_deferred_type_arguments();
+        self.check_initialization(&program.declarations, Some(&program.body));
         Ok(())
     }
 
-    /// Check a unit with whole-unit type visibility and source-order values.
+    /// Check a unit with scope-wide signatures and proved source-order initialization.
     pub(crate) fn check_unit_with_interfaces(
         &mut self,
         unit: &Unit,
@@ -107,15 +105,14 @@ impl Checker {
             owner_unit: Some(unit.name.parts.join(".")),
         });
         self.collect_unit_types(&unit.declarations);
-        for declaration in &unit.declarations {
-            self.check_decl(declaration);
-        }
+        self.check_scope_declarations(&unit.declarations);
         self.scopes.function_ctx = previous_context;
         self.finish_pending_capture_checks();
         self.check_task_handle_escapes(&unit.declarations, None);
         self.validate_dictionary_keys();
         self.finish_contract_checks();
         self.finish_deferred_type_arguments();
+        self.check_initialization(&unit.declarations, None);
         Ok(())
     }
 

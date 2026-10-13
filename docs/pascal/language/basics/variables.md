@@ -34,6 +34,10 @@ declaration. Initializers execute in source order, including consecutive
 individual declarations. A `const` initializer may compute a value at runtime;
 see [Constants](constants.md).
 
+Later named routine signatures are available to initializers. The compiler
+rejects direct or indirect access to values that are not yet initialized;
+initializers are never reordered. See [declaration order](../types/declaration-order.md).
+
 Loop variables are immutable inside each iteration. A captured local `var`
 shares one mutable cell; a captured `const` copies its value. See
 [Closures](../functions/closures.md).

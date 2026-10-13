@@ -3,6 +3,7 @@ mod local_inference;
 mod routine_body;
 mod routine_type_params;
 mod routines;
+mod signatures;
 /// Type declarations, whole-unit collection, and record member checking.
 pub(crate) mod types;
 mod vars;

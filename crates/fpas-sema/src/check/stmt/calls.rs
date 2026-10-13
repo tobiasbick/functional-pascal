@@ -17,6 +17,7 @@ impl Checker {
         args: &[Expr],
         span: Span,
     ) -> Ty {
+        self.record_initialization_reference(designator);
         if let Some(result) = self.try_check_indexed_callable(
             crate::designator_lookup_key(designator),
             designator,

@@ -185,8 +185,15 @@ impl Checker {
         self.routine_type_path.push(qualified_name.to_owned());
         self.check_preconditions(requires);
         self.check_postconditions(ensures);
-        for decl in nested {
-            self.check_decl(decl);
+        self.collect_routine_signatures(nested);
+        let hoisted = if nested.is_empty() {
+            Vec::new()
+        } else {
+            self.hoist_body_locals(stmts)
+        };
+        self.check_scope_declarations(nested);
+        for name in hoisted {
+            self.scopes.remove_from_current(&name);
         }
         for stmt in stmts {
             self.check_stmt(stmt);

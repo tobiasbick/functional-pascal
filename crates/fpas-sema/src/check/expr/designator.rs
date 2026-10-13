@@ -85,6 +85,7 @@ impl Checker {
         part_count: usize,
     ) -> Ty {
         let parts = &designator.parts[..part_count.min(designator.parts.len())];
+        self.record_initialization_reference(designator);
         self.record_contract_read(designator, parts);
         let only_ident_chain = parts
             .iter()

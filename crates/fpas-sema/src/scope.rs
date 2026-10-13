@@ -13,7 +13,7 @@ pub(crate) fn canonical_symbol_name(name: &str) -> String {
 /// Classification and known scalar or record-field values of a constant binding.
 ///
 /// **Documentation:** `docs/pascal/language/basics/constants.md`
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct ConstantInfo {
     /// Known static record fields used by constant projections and pattern coverage.
     pub record: Option<std::sync::Arc<fpas_unit::interface::RecordConstant>>,
@@ -197,6 +197,17 @@ impl ScopeStack {
             },
         );
         true
+    }
+
+    /// Retains source identity when a declaration replaces an imported builtin.
+    pub(crate) fn set_declaration(&mut self, name: &str, declaration: Span) {
+        let name = canonical_symbol_name(name);
+        for scope in self.scopes.iter_mut().rev() {
+            if let Some(symbol) = scope.symbols.get_mut(&name) {
+                symbol.declaration = Some(declaration);
+                return;
+            }
+        }
     }
 
     /// Remove a symbol from the program root scope. Used when rebuilding `Std` short aliases.

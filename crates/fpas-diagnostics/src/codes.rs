@@ -233,6 +233,9 @@ define_codes!(SEMA_ALLOCATED_CODES => {
     ///
     /// Documentation: `docs/pascal/tools/diagnostics.md` (FP3040).
     SEMA_TASK_HANDLE_ESCAPE = 3040;
+    /// A direct or indirect use may reach a binding before its initialization.
+    /// Documentation: `docs/pascal/tools/diagnostics.md` (FP3041).
+    SEMA_UNINITIALIZED_DEPENDENCY = 3041;
 });
 
 define_codes!(COMPILE_ALLOCATED_CODES => {

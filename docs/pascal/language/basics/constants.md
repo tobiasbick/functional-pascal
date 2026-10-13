@@ -35,6 +35,11 @@ before consuming units and the program body. See [Units](../../program-structure
 Closures copy captured local constants. Immutability applies to the binding;
 shared resource handles retain their own operations.
 
+An initializer may call a later named routine, but all bindings that routine
+may access must already be initialized, including through callbacks or other
+calls. Unsafe or unprovable uses produce `FP3041`. See
+[declaration order](../types/declaration-order.md).
+
 ## Compile-time constants
 
 Literal values, references to compile-time constants or enum members, and

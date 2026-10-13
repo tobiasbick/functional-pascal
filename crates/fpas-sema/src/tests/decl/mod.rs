@@ -8,6 +8,7 @@ mod distinct_types;
 mod local_construction;
 mod local_inference;
 mod record_compatibility;
+mod routine_initialization;
 mod routines;
 mod subranges;
 mod type_order;

@@ -37,6 +37,7 @@ impl Checker {
         allow_procedure_result: bool,
         expected: Option<&Ty>,
     ) -> CallResolution {
+        self.record_initialization_reference(designator);
         if let Some(result) = self.try_check_indexed_callable(
             Self::expr_lookup_key(call_expr),
             designator,

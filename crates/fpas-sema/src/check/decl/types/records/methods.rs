@@ -203,6 +203,7 @@ impl Checker {
                 task_bound: false,
             },
         );
+        self.scopes.set_declaration(&qualified, routine.span);
 
         Some(kind)
     }

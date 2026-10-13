@@ -82,6 +82,16 @@ impl check::Checker {
             });
         }
         Ok(artifact::UnitInterface {
+            routine_initialization: self
+                .initialization
+                .exported
+                .iter()
+                .map(|(name, summary)| {
+                    let mut summary = summary.clone();
+                    summary.qualified_name = format!("{unit_name}.{name}");
+                    summary
+                })
+                .collect(),
             routine_contracts: contracts::export_contracts(unit),
             routine_param_escapes: param_escapes::export_param_escapes(
                 unit,

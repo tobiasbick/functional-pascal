@@ -194,6 +194,14 @@ The public interface preserves whether a constant is compile-time known or
 computed; calls and references to computed constants cannot be used as `case`
 value labels, including through an imported or transitive binding.
 
+Named routine signatures are available throughout the declaring unit, including
+mutually recursive siblings. Bodies may reference later values, but calls and
+captures must not access bindings before initialization. Interfaces retain
+conservative callback dependencies for imported routines and record methods;
+the same checks apply when a source-adjacent sidecar is reused. Missing or
+unknown callable dependency information cannot prove an initializer safe.
+See [declaration order](../language/types/declaration-order.md).
+
 Before returning that image, the linker requires every callable definition to have a matching
 function-table entry in the same object, resolves relocations into the final function table,
 and applies the complete executable-bytecode validator. Function bodies occupy disjoint

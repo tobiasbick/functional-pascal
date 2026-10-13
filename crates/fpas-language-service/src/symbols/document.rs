@@ -73,7 +73,7 @@ pub struct DocumentSymbol {
     pub selection_span: SourceSpan,
     /// Source scope in which the declaration can be referenced.
     pub scope_span: SourceSpan,
-    /// First byte offset at which sequential lookup can see the declaration.
+    /// First byte offset at which lexical lookup can see the declaration.
     pub visible_from: usize,
     /// Cross-document visibility.
     pub visibility: SymbolVisibility,
@@ -88,7 +88,7 @@ pub struct DocumentSymbol {
 }
 
 impl DocumentSymbol {
-    /// Recognizes the declaration itself and uses within its sequential lexical scope.
+    /// Recognizes the declaration itself and uses within its visible lexical scope.
     pub(crate) fn is_visible_at(&self, offset: usize) -> bool {
         (self.selection_span.offset() <= offset && offset < self.selection_span.end())
             || (self.scope_span.offset() <= offset

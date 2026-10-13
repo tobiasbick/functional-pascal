@@ -4,9 +4,10 @@ Records can declare functions and procedures that operate on their data, and
 **static functions and procedures** that belong to the type itself.
 
 Member signatures are available throughout the declaring unit or program,
-including before the record declaration. Method bodies are checked at the
-record declaration's source position, so values and free routines must precede
-that declaration. See [type declaration order](declaration-order.md).
+including before the record declaration. Free and nested named routines have
+the same scope-wide signature rule. Method bodies may refer to later values;
+the compiler checks that their direct and transitive dependencies have
+initialized when the method is invoked. See [declaration order](declaration-order.md).
 
 Formal syntax: [`grammar.ebnf`](../../../specs/grammar.ebnf) (`record_method`,
 `function_decl`, `procedure_decl`).

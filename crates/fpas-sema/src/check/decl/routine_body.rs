@@ -118,14 +118,13 @@ impl Checker {
             &self.capture_dependencies.closures,
         );
 
+        self.collect_routine_signatures(nested);
         let hoisted = if nested.is_empty() {
             Vec::new()
         } else {
             self.hoist_body_locals(stmts)
         };
-        for decl in nested {
-            self.check_decl(decl);
-        }
+        self.check_scope_declarations(nested);
         for name in &hoisted {
             self.scopes.remove_from_current(name);
         }
@@ -181,12 +180,12 @@ impl Checker {
     }
 
     /// Make function-body locals visible to nested routine bodies without changing
-    /// sequential sibling visibility in the enclosing body.
+    /// source-order value visibility in the enclosing body.
     ///
     /// Nested declarations are checked before body statements, but
     /// `docs/pascal/language/functions/closures.md` lets named nested routines capture
     /// enclosing locals. Locals nested inside inner `begin` blocks stay hidden.
-    fn hoist_body_locals(&mut self, stmts: &[Stmt]) -> Vec<String> {
+    pub(crate) fn hoist_body_locals(&mut self, stmts: &[Stmt]) -> Vec<String> {
         let mut names = Vec::new();
         for stmt in stmts {
             let (variable, mutable) = match stmt {

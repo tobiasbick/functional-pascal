@@ -1,4 +1,4 @@
-//! Record defaults and method bodies retain source-order value visibility.
+//! Record defaults and method bodies resolve their complete lexical environment.
 //!
 //! **Documentation:** `docs/pascal/language/types/declaration-order.md`
 
@@ -8,7 +8,7 @@ use fpas_parser::{RecordMethod, RecordType, TypeDef};
 use std::collections::HashSet;
 
 impl Checker {
-    /// Check original AST expressions only after preceding value declarations are in scope.
+    /// Check retained expressions after lexical values and routine signatures are collected.
     pub(crate) fn check_record_values(&mut self, definition: &TypeDef, record: &RecordType) {
         self.with_type_params(&definition.type_params, definition.span, |checker| {
             checker.check_record_values_in_scope(definition, record)

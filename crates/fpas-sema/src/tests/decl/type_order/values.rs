@@ -1,5 +1,5 @@
 use super::{check_errors, check_ok};
-use fpas_diagnostics::codes::{SEMA_AMBIGUOUS_IMPORTED_NAME, SEMA_UNKNOWN_NAME};
+use fpas_diagnostics::codes::{SEMA_AMBIGUOUS_IMPORTED_NAME, SEMA_UNINITIALIZED_DEPENDENCY};
 
 #[test]
 fn defaults_and_method_bodies_keep_preceding_values_visible() {
@@ -13,17 +13,23 @@ fn defaults_and_method_bodies_keep_preceding_values_visible() {
 }
 
 #[test]
-fn collection_does_not_expose_later_values_in_defaults_or_bodies() {
+fn later_values_are_available_in_deferred_bodies_but_not_earlier_initializers() {
     for declarations in [
         "type Box = record Value: integer := Later; end record; const Later: integer := 10;",
         "type Box = record function GetValue(Self: Box): integer; begin return Later; end function; end record; const Later: integer := 10;",
-        "const Earlier: integer := Later; const Later: integer := 10;",
-        "const Earlier: integer := Later; const Later: integer := 10;",
         "function GetValue(): integer; begin return Later; end function; const Later: integer := 10;",
+    ] {
+        check_ok(&format!("program T; {declarations} begin end."));
+    }
+    for declarations in [
+        "const Earlier: integer := Later; const Later: integer := 10;",
+        "const Earlier: integer := GetValue(); function GetValue(): integer; begin return Later; end function; const Later: integer := 10;",
     ] {
         let errors = check_errors(&format!("program T; {declarations} begin end."));
         assert!(
-            errors.iter().any(|error| error.code == SEMA_UNKNOWN_NAME),
+            errors
+                .iter()
+                .any(|error| error.code == SEMA_UNINITIALIZED_DEPENDENCY),
             "{errors:?}"
         );
     }
@@ -58,14 +64,13 @@ fn preceding_values_keep_priority_over_optional_enum_short_names() {
 }
 
 #[test]
-fn types_do_not_make_free_routines_visible_before_their_declarations() {
-    let errors = check_errors(
+fn field_defaults_can_call_later_named_routines() {
+    check_ok(
         "program T;
       type Box = record Value: integer := Later(); end record;
       function Later(): integer; begin return 10; end function;
       begin end.",
     );
-    assert!(errors.iter().any(|error| error.code == SEMA_UNKNOWN_NAME));
 }
 
 #[test]

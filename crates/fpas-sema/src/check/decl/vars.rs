@@ -64,35 +64,30 @@ impl Checker {
         let stored_ty = declared_ty;
 
         let task_bound = self.expr_is_task_bound(Self::expr_lookup_key(value));
-        let constant_info = constant.then(|| {
-            let compile_time = self.const_initializer_is_compile_time_known(value, &stored_ty);
-            crate::scope::ConstantInfo {
-                record: compile_time
-                    .then(|| self.record_constant_value(value))
-                    .flatten(),
-                compile_time,
-                value: if compile_time {
-                    self.scalar_constant_value(value)
-                } else {
-                    None
-                },
-            }
-        });
-        if !self.scopes.define_with_declaration(
-            name,
-            Symbol {
-                constant: constant_info,
-                ty: stored_ty.clone(),
-                mutable,
-                kind: if constant {
-                    SymbolKind::Const
-                } else {
-                    SymbolKind::Var
-                },
-                task_bound,
+        let constant_info = constant.then(|| self.binding_constant_info(value, &stored_ty));
+        let symbol = Symbol {
+            constant: constant_info,
+            ty: stored_ty.clone(),
+            mutable,
+            kind: if constant {
+                SymbolKind::Const
+            } else {
+                SymbolKind::Var
             },
-            span,
-        ) {
+            task_bound,
+        };
+        let installed = if self
+            .predeclared_bindings
+            .remove(&(span.source_id, span.offset))
+        {
+            if let Some(existing) = self.scopes.lookup_mut(name) {
+                *existing = symbol;
+            }
+            true
+        } else {
+            self.scopes.define_with_declaration(name, symbol, span)
+        };
+        if !installed {
             self.error_with_code(
                 SEMA_DUPLICATE_DECLARATION,
                 format!(
@@ -105,5 +100,25 @@ impl Checker {
         }
         self.record_binding_discard_info(name, &stored_ty, mutable, Some(value));
         stored_ty
+    }
+
+    /// Classify static inputs without evaluating or reordering their runtime initializers.
+    pub(crate) fn binding_constant_info(
+        &mut self,
+        value: &Expr,
+        ty: &crate::types::Ty,
+    ) -> crate::scope::ConstantInfo {
+        let compile_time = self.const_initializer_is_compile_time_known(value, ty);
+        crate::scope::ConstantInfo {
+            record: compile_time
+                .then(|| self.record_constant_value(value))
+                .flatten(),
+            compile_time,
+            value: if compile_time {
+                self.scalar_constant_value(value)
+            } else {
+                None
+            },
+        }
     }
 }

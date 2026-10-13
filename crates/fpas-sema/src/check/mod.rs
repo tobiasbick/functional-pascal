@@ -8,6 +8,7 @@ mod entry;
 mod expr;
 mod imports;
 mod inference_completion;
+mod initialization;
 mod name_resolution;
 mod record_visibility;
 mod references;

@@ -50,6 +50,7 @@ pub(super) fn lower_analyzed_root(
         &mut runtime_names,
         FunctionId::new(0),
         "",
+        0,
     );
     let mut type_table = types::TypeTable::from_metadata(&metadata).map_err(|error| vec![error])?;
     let mut constants = BTreeMap::new();
@@ -61,6 +62,9 @@ pub(super) fn lower_analyzed_root(
         &runtime_names,
         &mut type_table,
         &metadata,
+        1,
+        FunctionId::new(0),
+        &[],
     )
     .map_err(|error| vec![error])?;
     let first_import_id = u32::try_from(routines.len().saturating_add(1))
@@ -111,6 +115,7 @@ pub(super) fn lower_analyzed_root(
             .discover_statements(routine.statements(), id, &metadata, &mut type_table)
             .map_err(|error| vec![error])?;
     }
+    callables = closures.callables.clone();
     let mut context = LoweringContext::new(FunctionInput {
         name,
         source_name: name,
@@ -199,6 +204,32 @@ pub(super) fn lower_analyzed_root(
         functions.push(function);
     }
     functions.extend(imported_stubs);
+    for routine in &closures.named_routines {
+        let (function, updated_types) = routines::lower(
+            &routine.routine,
+            &mut type_table,
+            routines::LoweringInput {
+                id: routine.id,
+                runtime_name: &routine.name,
+                source_name: name,
+                metadata: &metadata,
+                callables: &callables,
+                globals: &global_bindings,
+                constants: &constants,
+                closure_targets: closures.targets.clone(),
+                bound_method_targets: closures.bound_targets.clone(),
+                intrinsic_task_targets: closures.intrinsic_task_targets.clone(),
+                cell_names: closures
+                    .cell_names
+                    .get(&routine.id)
+                    .cloned()
+                    .unwrap_or_default(),
+            },
+        )
+        .map_err(|error| vec![error])?;
+        type_table = updated_types;
+        functions.push(function);
+    }
     for routine in &closures.routines {
         let (function, updated_types) = closures
             .lower(
@@ -286,6 +317,9 @@ pub(super) fn lower_analyzed_root(
         owner_map.insert(id, owner);
     }
     for routine in &closures.routines {
+        owner_map.insert(routine.id, routine.owner);
+    }
+    for routine in &closures.named_routines {
         owner_map.insert(routine.id, routine.owner);
     }
     for routine in &closures.bound_routines {

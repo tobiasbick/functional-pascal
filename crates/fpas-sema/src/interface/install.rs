@@ -17,6 +17,11 @@ impl check::Checker {
         interfaces: &[artifact::UnitInterface],
     ) -> Result<(), InterfaceConversionError> {
         for interface in interfaces {
+            for summary in &interface.routine_initialization {
+                self.initialization
+                    .imported
+                    .insert(summary.qualified_name.to_ascii_lowercase(), summary.clone());
+            }
             self.scopes.imports.note_unit(&interface.unit_name);
             for routine in &interface.routine_param_escapes {
                 self.scopes.set_param_escapes(
@@ -62,6 +67,11 @@ impl check::Checker {
         let mut short_candidates = HashMap::<String, Vec<(String, Symbol)>>::new();
 
         for interface in interfaces {
+            for summary in &interface.routine_initialization {
+                self.initialization
+                    .imported
+                    .insert(summary.qualified_name.to_ascii_lowercase(), summary.clone());
+            }
             let aliased = self
                 .scopes
                 .imports

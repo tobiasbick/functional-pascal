@@ -2,18 +2,6 @@
 
 use super::InterfaceType;
 
-/// Static task-freedom guarantees for a stored value and its callable result.
-///
-/// Missing interface information conservatively provides neither guarantee.
-/// **Documentation:** `docs/pascal/language/functions/discard.md`
-#[derive(Debug, Default, Clone, Copy, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
-pub struct DiscardInfo {
-    /// The value's reachable captures are statically free of task handles.
-    pub value: bool,
-    /// Invoking the value returns a value with task-free captures.
-    pub result: bool,
-}
-
 /// Compile-time value needed by a consuming unit.
 #[derive(Debug, Clone, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 pub enum ConstantValue {
@@ -65,9 +53,6 @@ pub struct InterfaceSymbol {
     /// See `docs/pascal/language/basics/constants.md`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub constant_record: Option<std::sync::Arc<super::RecordConstant>>,
-    /// Compile-time task-freedom guarantees, independent of the callable signature.
-    #[serde(default)]
-    pub discard: DiscardInfo,
     /// Public spelling used for a short import.
     pub name: String,
     /// Canonical fully qualified definition name.
@@ -109,6 +94,10 @@ impl UnitInterface {
         for routine in &mut self.routine_initialization {
             routine.called_parameters.sort_unstable();
             routine.called_parameters.dedup();
+            routine.started_parameters.sort_unstable();
+            routine.started_parameters.dedup();
+            routine.mutable_globals.sort();
+            routine.mutable_globals.dedup();
             routine.returned_parameters.sort_unstable();
             routine.returned_parameters.dedup();
         }

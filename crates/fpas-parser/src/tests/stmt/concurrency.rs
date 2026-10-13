@@ -3,25 +3,31 @@ use super::body_stmts;
 use crate::{ParseDiagnostic, ast::*};
 
 #[test]
-fn go_statement_parses_call_expression() {
-    let stmts = body_stmts("program T; begin go Worker(); end.");
+fn discarded_go_parses_call_expression() {
+    let stmts = body_stmts("program T; begin discard go Worker(); end.");
     match &stmts[0] {
-        Stmt::Go { expr, .. } => assert!(matches!(expr, Expr::Call { .. })),
-        _ => panic!("expected Go statement"),
+        Stmt::Discard {
+            expr: Expr::Go(expr, _),
+            ..
+        } => assert!(matches!(expr.as_ref(), Expr::Call { .. })),
+        _ => panic!("expected discarded go expression"),
     }
 }
 
 #[test]
-fn go_statement_parses_qualified_call_expression() {
-    let stmts = body_stmts("program T; begin go Std.Console.WriteLn('hi'); end.");
+fn discarded_go_parses_qualified_call_expression() {
+    let stmts = body_stmts("program T; begin discard go Std.Console.WriteLn('hi'); end.");
     match &stmts[0] {
-        Stmt::Go { expr, .. } => match expr {
+        Stmt::Discard {
+            expr: Expr::Go(expr, _),
+            ..
+        } => match expr.as_ref() {
             Expr::Call { designator, .. } => {
                 assert_eq!(designator.parts.len(), 3);
             }
             _ => panic!("expected call expression"),
         },
-        _ => panic!("expected Go statement"),
+        _ => panic!("expected discarded go expression"),
     }
 }
 
@@ -119,13 +125,19 @@ fn go_expression_rejects_non_call_expression() {
 #[test]
 fn scope_statement_owns_its_statement_list() {
     let stmts = body_stmts(
-        "program T; begin scope const A: task of integer := go Worker(); go Log(); end scope; null; end.",
+        "program T; begin scope const A: task of integer := go Worker(); discard go Log(); end scope; null; end.",
     );
     let Stmt::Scope { body, .. } = &stmts[0] else {
         panic!("expected scope statement, got {:?}", stmts[0]);
     };
     assert!(matches!(body[0], Stmt::Const(_)));
-    assert!(matches!(body[1], Stmt::Go { .. }));
+    assert!(matches!(
+        body[1],
+        Stmt::Discard {
+            expr: Expr::Go(_, _),
+            ..
+        }
+    ));
     assert!(matches!(stmts[1], Stmt::Null(_)));
 }
 

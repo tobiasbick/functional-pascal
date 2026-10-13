@@ -10,7 +10,9 @@ begin
 end procedure;
 
 begin
-  go LogLine('from spawned task');
-  WriteLn('main continues immediately');
-  Sleep(50);
+  scope
+    discard go LogLine('from spawned task');
+    WriteLn('main continues immediately');
+    Sleep(50);
+  end scope;
 end.

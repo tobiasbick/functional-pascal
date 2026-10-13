@@ -7,8 +7,9 @@ use super::{DebugTaskEvent, DebugTaskEventKind, DebugTaskRuntime, DebugTaskState
 impl DebugTaskRuntime {
     /// Complete an exactly matching runnable entry frame without dispatching work.
     ///
-    /// Returns whether the completed entry was the root. A mismatch leaves the
-    /// runtime and scheduler unchanged.
+    /// Returns whether the root completed immediately. Pending group cleanup
+    /// leaves the task inspectable and completes after debugger resume.
+    /// A mismatch leaves the runtime and scheduler unchanged.
     pub(in crate::vm::debug) fn complete_entry(
         &mut self,
         task_id: u64,
@@ -35,6 +36,20 @@ impl DebugTaskRuntime {
         let retain_result = slot.worker.retain_result;
         let root = task_id == 0;
         let slot = self.tasks.get_mut(&task_id)?;
+        let value = match slot.worker.finish_owned_groups(Ok(value)) {
+            Ok(Some(value)) => value,
+            Ok(None) => {
+                slot.state = DebugTaskState::Waiting;
+                slot.worker.supervision = None;
+                return Some(false);
+            }
+            Err(error) => {
+                slot.worker.pending_completion = Some(Err(error));
+                slot.state = DebugTaskState::Runnable;
+                slot.worker.supervision = None;
+                return Some(false);
+            }
+        };
         slot.state = DebugTaskState::Completed;
         slot.worker.supervision = None;
         if retain_result {

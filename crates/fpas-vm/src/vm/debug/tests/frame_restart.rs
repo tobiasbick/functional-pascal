@@ -255,10 +255,10 @@ begin
   return 7;
 end function;
 
-begin
+begin scope
   const Pending: task of integer := go Work();
   discard Wait(Pending);
-end.
+ end scope; end.
 "#;
     let mut session = session(SOURCE);
     session

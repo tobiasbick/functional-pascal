@@ -15,15 +15,17 @@ end function;
 
 function RunTasks(Iterations: integer): integer;
 begin
-  var Tasks: array of task of integer := [];
-  for Index: integer := 1 to Iterations do
-    begin
-      Tasks.PushInPlace(go Worker(Index));
-    end;
-  end for;
+  scope
+    var Tasks: array of task of integer := [];
+    for Index: integer := 1 to Iterations do
+      begin
+        Tasks.PushInPlace(go Worker(Index));
+      end;
+    end for;
 
-  WaitAll(Tasks);
-  return Tasks.Length();
+    WaitAll(Tasks);
+    return Tasks.Length();
+  end scope;
 end function;
 
 begin

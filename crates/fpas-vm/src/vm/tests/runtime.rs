@@ -51,7 +51,9 @@ fn task_image(
         })
         .collect();
     executable.functions = functions;
-    executable.verify().expect("task fixture must verify")
+    super::task_images::scope_owned(executable)
+        .verify()
+        .expect("task fixture must verify")
 }
 
 #[test]
@@ -279,6 +281,45 @@ fn shutdown_while_waiting_on_pending_task_returns_in_bounded_time() {
 }
 
 #[test]
+fn unowned_spawn_bytecode_cannot_enqueue_a_child() {
+    let mut image = unverified(
+        vec![
+            abx(Opcode::LoadConstant, 0, 0),
+            abc_aux(Opcode::SpawnTask, 1, 0, 0, 0),
+            return_unit(),
+            return_unit(),
+        ],
+        vec![Constant::Function {
+            function: FunctionId::new(1),
+            task_bound: false,
+        }],
+        vec!["root", "test.fpas", "child"],
+        2,
+    );
+    image.functions = vec![
+        task_function(0, 0, 3, 2, true),
+        task_function(2, 3, 4, 0, false),
+    ];
+    image.source_map.runs.push(SourceRun {
+        instruction_start: InstructionAddress::new(3),
+        line: 2,
+        column: 1,
+        ..image.source_map.runs[0].clone()
+    });
+    let mut vm = Vm::new(image.verify().unwrap());
+    let scheduler = vm.scheduler.clone();
+    let error = vm
+        .run()
+        .expect_err("unowned go is invalid even outside the source compiler");
+    assert_eq!(error.code, fpas_diagnostics::codes::RUNTIME_INVALID_TASK);
+    assert!(error.help.unwrap().contains("scope"));
+    assert!(matches!(
+        scheduler.poll_result(1),
+        crate::vm::TaskResultPoll::Unknown
+    ));
+}
+
+#[test]
 fn callback_sleep_suspends_its_owner_and_releases_the_only_worker() {
     run_callback_suspension(
         abx(Opcode::LoadConstant, 1, 4),
@@ -434,7 +475,7 @@ fn callback_failure_is_retained_for_the_owner_without_a_ghost_task() {
     assert_eq!(error.code, fpas_diagnostics::codes::RUNTIME_PROGRAM_PANIC);
     assert!(matches!(
         scheduler.poll_result(1),
-        crate::vm::TaskResultPoll::Failed(retained) if retained == error
+        crate::vm::TaskResultPoll::Consumed
     ));
     assert!(matches!(
         scheduler.poll_result(2),

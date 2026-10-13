@@ -5,35 +5,35 @@ use super::*;
 #[test]
 fn standard_type_operation_tasks_preserve_results() {
     assert_succeeds(
-        "program IntrinsicTasks; uses Std.Tasks, Std.Math; begin if Wait(go 'abc'.Length()) <> 3 then panic('type operation result'); end if; if Wait(go Abs(-7)) <> 7 then panic('short result'); end if; if Wait(go '%d:%s'.Format(4, 'x')) <> '4:x' then panic('variadic result'); end if; end.",
+        "program IntrinsicTasks; uses Std.Tasks, Std.Math; begin scope  if Wait(go 'abc'.Length()) <> 3 then panic('type operation result'); end if; if Wait(go Abs(-7)) <> 7 then panic('short result'); end if; if Wait(go '%d:%s'.Format(4, 'x')) <> '4:x' then panic('variadic result'); end if;  end scope; end.",
     );
 }
 
 #[test]
 fn intrinsic_procedure_tasks_support_empty_and_variadic_output() {
     assert_succeeds(
-        "program IntrinsicProcedures; uses Std.Tasks, Std.Console; begin Wait(go WriteLn()); Wait(go Std.Console.WriteLn('value:', 7)); end.",
+        "program IntrinsicProcedures; uses Std.Tasks, Std.Console; begin scope  Wait(go WriteLn()); Wait(go Std.Console.WriteLn('value:', 7));  end scope; end.",
     );
 }
 
 #[test]
 fn source_routine_shadowing_does_not_become_an_intrinsic_task() {
     assert_succeeds(
-        "program ShadowTask; uses Std.Tasks; function Abs(Value: integer): integer; begin return Value + 10; end function; begin if Wait(go Abs(-7)) <> 3 then panic('shadowed task'); end if; end.",
+        "program ShadowTask; uses Std.Tasks; function Abs(Value: integer): integer; begin return Value + 10; end function; begin scope  if Wait(go Abs(-7)) <> 3 then panic('shadowed task'); end if;  end scope; end.",
     );
 }
 
 #[test]
 fn wait_preserves_integer_before_procedure_task_results() {
     assert_succeeds(
-        "program Reversed; uses Std.Tasks; function Number(): integer; begin return 7; end function; procedure Work(); begin end procedure; begin if Wait(go Number()) <> 7 then panic('wrong result'); end if; Wait(go Work()); end.",
+        "program Reversed; uses Std.Tasks; function Number(): integer; begin return 7; end function; procedure Work(); begin end procedure; begin scope  if Wait(go Number()) <> 7 then panic('wrong result'); end if; Wait(go Work());  end scope; end.",
     );
 }
 
 #[test]
 fn wait_preserves_mixed_direct_spawn_results() {
     assert_succeeds(
-        "program MixedDirect; uses Std.Tasks; function Number(): integer; begin return 7; end function; procedure Work(); begin end procedure; begin Wait(go Work()); if Wait(go Number()) <> 7 then panic('wrong result'); end if; end.",
+        "program MixedDirect; uses Std.Tasks; function Number(): integer; begin return 7; end function; procedure Work(); begin end procedure; begin scope  Wait(go Work()); if Wait(go Number()) <> 7 then panic('wrong result'); end if;  end scope; end.",
     );
 }
 
@@ -53,14 +53,15 @@ function Identity<T>(Value: T): T;
 begin
   return Value;
 end function;
-begin
+begin scope
   const A: task of integer := go Number();
-  const B: task := go Work();
+  const Group := CreateTaskGroup();
+  const B: task := StartTaskInGroup(Group, procedure(Token: CancellationToken) begin Work(); end procedure);
   const Nested: task of task := go Identity(B);
   const Joined: task := Wait(Nested);
   Wait(Joined);
   if Wait(A) <> 7 then panic('wrong task result'); end if;
-end."#,
+ end scope; end."#,
     );
 }
 
@@ -77,18 +78,18 @@ procedure Work();
 begin
 end procedure;
 procedure WaitForWork();
-begin
+begin scope
   Wait(go Work());
   for Index: integer := 1 to 3 do
   begin
     Wait(go Work());
     if Index < 1 then panic('wrong loop branch'); end if;
   end; end for;
-end procedure;
+ end scope; end procedure;
 function WaitForNumber(): integer;
-begin
+begin scope
   return Wait(go Number());
-end function;
+ end scope; end function;
 begin
   WaitForWork();
   if WaitForNumber() <> 7 then panic('wrong task result'); end if;
@@ -99,7 +100,7 @@ end."#,
 #[test]
 fn wait_signature_merges_unit_and_value_without_erasing_call_types() {
     let ast = parse_ok(
-        "program MixedSignature; uses Std.Tasks; function Number(): integer; begin return 7; end function; procedure Work(); begin end procedure; begin Wait(go Work()); if Wait(go Number()) <> 7 then panic('wrong result'); end if; end.",
+        "program MixedSignature; uses Std.Tasks; function Number(): integer; begin return 7; end function; procedure Work(); begin end procedure; begin scope  Wait(go Work()); if Wait(go Number()) <> 7 then panic('wrong result'); end if;  end scope; end.",
     );
     let ir = crate::lower(&ast).expect("mixed task result IR");
     let wait = fpas_ir::IntrinsicId::new(u32::from(u16::from(fpas_bytecode::Intrinsic::Task(
@@ -121,7 +122,7 @@ fn wait_signature_merges_unit_and_value_without_erasing_call_types() {
 #[test]
 fn wait_signature_keeps_unit_for_procedure_only_calls() {
     let ast = parse_ok(
-        "program UnitSignature; uses Std.Tasks; procedure Work(); begin end procedure; begin Wait(go Work()); Wait(go Work()); end.",
+        "program UnitSignature; uses Std.Tasks; procedure Work(); begin end procedure; begin scope  Wait(go Work()); Wait(go Work());  end scope; end.",
     );
     let ir = crate::lower(&ast).expect("procedure task result IR");
     let wait = fpas_ir::IntrinsicId::new(u32::from(u16::from(fpas_bytecode::Intrinsic::Task(

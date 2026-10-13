@@ -134,7 +134,6 @@ impl Checker {
             ensures,
         } = input;
         let FuncBody::Block { nested, stmts } = body;
-        self.discard_results.push(true);
 
         self.scopes.push_scope();
 
@@ -166,7 +165,6 @@ impl Checker {
                 },
                 *span,
             );
-            self.record_binding_discard_info(&param.name, &param.ty, false, None);
         }
         let previous_ctx = self.scopes.function_ctx.take();
         let owner_unit = previous_ctx
@@ -201,13 +199,6 @@ impl Checker {
         self.scopes.function_ctx = previous_ctx;
         self.routine_type_path.pop();
         self.scopes.pop_scope();
-        self.scopes.set_discard_info(
-            qualified_name,
-            fpas_unit::interface::DiscardInfo {
-                value: true,
-                result: self.discard_results.pop().unwrap_or(false),
-            },
-        );
     }
 
     /// Resolve a method parameter type, treating the type name as the record type (for `Self`).

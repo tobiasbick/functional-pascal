@@ -18,6 +18,7 @@ enum ResolvedIndex {
 impl Worker {
     /// Replaces one value below a global aggregate snapshot without rebuilding its path.
     pub fn store_global_index_path(&mut self, o: AbcOperands) -> Result<(), VmError> {
+        self.check_global_task_access(u32::from(o.b))?;
         let index_count = usize::from(o.auxiliary);
         let window = self.window(o.c, index_count.saturating_add(1))?;
         let Some((value, indexes)) = window.split_last() else {

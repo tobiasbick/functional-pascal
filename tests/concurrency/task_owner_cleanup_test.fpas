@@ -1,0 +1,57 @@
+program TaskOwnerCleanupTest;
+
+uses Std.Tasks, Std.Test;
+
+function Parent(Ready: channel of boolean; Done: channel of boolean): integer;
+begin
+  const Group := CreateTaskGroup();
+  const Gate: channel of boolean := CreateChannel(1);
+  discard StartTaskInGroup(Group, procedure(Token: CancellationToken) begin
+    discard Send(Ready, true);
+    AssertTrue(ReceiveWithCancellation(Gate, Token).IsError());
+    AssertTrue(IsCancellationRequested(Token));
+    discard Send(Done, true);
+  end procedure);
+  AssertTrue(Receive(Ready).Unwrap());
+  return 42;
+end function;
+
+procedure Produce(Queue: channel of integer);
+begin
+  discard Send(Queue, 7);
+end procedure;
+
+begin
+  const Ready: channel of boolean := CreateChannel(1);
+  const Done: channel of boolean := CreateChannel(1);
+  scope
+    const Job := go Parent(Ready, Done);
+    AssertEquals(42, Wait(Job));
+    AssertTrue(ReceiveWithTimeout(Done, 0).Unwrap());
+    WaitAll([Job]);
+    AssertEquals(0, WaitAnyWithTimeout([Job], 0).Unwrap());
+  end scope;
+  const Queue: channel of integer := CreateChannel(1);
+  scope
+    const Job := go Produce(Queue);
+    discard Job;
+    discard [Job];
+  end scope;
+
+  AssertEquals(7, ReceiveWithTimeout(Queue, 0).Unwrap());
+  const Group := CreateTaskGroup();
+  const Data := StartTaskInGroup(Group, function(Token: CancellationToken): result of (integer, integer) begin
+    return Error(7);
+  end function);
+  case Wait(Data) of
+    when Error(const Number):
+      AssertEquals(7, Number);
+    when Ok(_):
+      panic('expected ordinary integer Result error data');
+  end case;
+
+  AssertEquals(0, CloseTaskGroup(Group).Length());
+  discard CloseChannel(Ready);
+  discard CloseChannel(Done);
+  discard CloseChannel(Queue);
+end.

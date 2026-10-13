@@ -372,7 +372,9 @@ impl DebugTaskRuntime {
             match slot.worker.poll_task_suspension() {
                 Ok(true) => {
                     slot.state = DebugTaskState::Runnable;
-                    self.resumed_at_boundary.insert(task_id);
+                    if slot.worker.pending_completion.is_none() {
+                        self.resumed_at_boundary.insert(task_id);
+                    }
                 }
                 Ok(false) => slot.state = state_from_suspension(&slot.worker),
                 Err(error) => {
@@ -380,14 +382,10 @@ impl DebugTaskRuntime {
                         slot.state = state_from_suspension(&slot.worker);
                         continue;
                     }
-                    let Err(error) = slot.worker.supervised_outcome(Err(error)) else {
-                        slot.state = state_from_suspension(&slot.worker);
-                        continue;
-                    };
-                    if failure::record(slot, task_id, &error, &self.scheduler, &mut self.events) {
-                        continue;
-                    }
-                    return Err((task_id, error));
+                    // Complete group cleanup and supervision through the same
+                    // terminal boundary as ordinary instruction dispatch.
+                    slot.worker.pending_completion = Some(Err(error));
+                    slot.state = DebugTaskState::Runnable;
                 }
             }
         }

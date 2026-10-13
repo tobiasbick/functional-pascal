@@ -1,10 +1,12 @@
 # `go`
 
-Launch a concurrent task with the `go` keyword.
+`go Call(...)` starts one child in the innermost lexical `scope` of the same
+routine. It is an expression returning `task of T` for a function returning T,
+or `task` for a procedure. Bind the handle or explicitly discard it.
 
-Formal syntax: [`grammar.ebnf`](../../../specs/grammar.ebnf) (`go_call`, `go_stmt`, and the `go` alternative in `primary_atom`).
+Formal syntax: [`grammar.ebnf`](../../../specs/grammar.ebnf) (`go_call` and the `go` alternative in `primary_atom`).
 
-## Expression form (handle retained)
+## Starting owned work
 
 Use `go` as an expression and assign it to capture a handle: `task of T` for
 a function returning T, or `task` for a procedure:
@@ -20,23 +22,25 @@ begin
 end function;
 
 begin
-  const T: task of integer := go Worker();
-  const R: integer := Wait(T);
-  WriteLn(R);
+  scope
+    const T: task of integer := go Worker();
+    const R: integer := Wait(T);
+    WriteLn(R);
+    discard go Worker();
+  end scope;
 end.
 ```
 
-## Statement form (fire-and-forget)
+Standalone `go Work();` is an unused-value error (FP3022). Use
+`const Job := go Work();` or `discard go Work();` inside a scope. Discard
+does not cancel, detach, join, or consume the result; the scope retains the child
+and monitors panic/runtime failures. Returned `Error` values are ordinary data.
 
-A `go` **statement** runs the call concurrently and **does not** produce a handle (the compiler discards the task result at the bytecode level). Use this when you only need side effects:
-
-```pascal
-go LogEvent('started');
-```
-
-Inside a [task scope](task-scopes.md), both forms start a child owned by the scope, which waits
-for it before the scope ends. There, a `go` statement whose call returns `result of ...` is
-rejected (FP3039) because its error would be lost; keep the handle and use `try Wait(Handle)`.
+Starting outside a same-routine scope is FP3038. Named and anonymous helpers
+do not inherit the caller's scope. A helper opens its own scope for work that
+finishes there, or receives an explicit TaskGroup and uses StartTaskInGroup
+for caller-owned dynamic work. See [task scopes](task-scopes.md) and
+[groups](../../std/concurrency/task.md#task-groups).
 
 ## What `go` may target
 
@@ -53,6 +57,13 @@ A `go` call cannot pass a `var` argument, and cannot start a nested routine that
 variable. Implicit writable collection InPlace receivers follow the same rule: `go Items.PushInPlace(Value)`
 and `go Items.PopInPlace()` are rejected. Call these operations on the current task.
 Value operations, including Push and Pop, may run in tasks and preserve the receiver.
+
+Workers cannot read or write foreign mutable variables, including program/unit
+globals through helpers and callbacks (FP3042 for statically known access).
+Inputs are evaluated on the starting task: pass values and mutate worker-local
+copies, or communicate through channels. Dynamic callable targets retain the
+VM's mandatory foreign-global and task-bound-capture checks. Mutable globals
+never become permitted merely because a callable's dependencies are unknown.
 
 ## See also
 

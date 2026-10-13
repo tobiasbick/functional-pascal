@@ -238,7 +238,7 @@ fn typed_executable(consume_pending: bool) -> VerifiedExecutable {
         flags,
         debug,
     };
-    Executable {
+    crate::vm::tests::task_images::scope_owned(Executable {
         code,
         functions: vec![
             routine(
@@ -376,7 +376,7 @@ fn typed_executable(consume_pending: bool) -> VerifiedExecutable {
         },
         entry: FunctionId::new(0),
         distinct_types: Vec::new(),
-    }
+    })
     .verify()
     .expect("task-handle assignment executable")
 }

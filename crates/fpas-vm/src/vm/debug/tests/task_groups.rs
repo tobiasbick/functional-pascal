@@ -3,6 +3,7 @@
 use super::*;
 use crate::DebugTaskEventKind;
 
+mod owner_cleanup;
 mod timeout;
 
 const LIFECYCLE: &str =
@@ -28,12 +29,14 @@ begin
   const B: task := StartTaskInGroup(G, Broken);
   const C: task of integer := StartTaskInGroup(G, Successful);
   if Wait(C) <> 42 then panic('child value'); end if;
+  case Wait(A) of
+    when Error(const Message): if Message <> 'ordinary' then panic('ordinary result lost'); end if;
+    when Ok(_): panic('ordinary result changed');
+  end case;
   const Failures: array of TaskFailure := CloseTaskGroup(G);
-  if Failures.Length() <> 2 then panic('failure count'); end if;
-  if Failures[0].Kind <> TaskFailureKind.ReturnedError then panic('ordinary kind'); end if;
-  if Failures[0].Message <> 'ordinary' then panic('ordinary message'); end if;
-  if Failures[1].Kind <> TaskFailureKind.Panicked then panic('panic kind'); end if;
-  if Failures[1].Line <= 0 then panic('panic location'); end if;
+  if Failures.Length() <> 1 then panic('failure count'); end if;
+  if Failures[0].Kind <> TaskFailureKind.Panicked then panic('panic kind'); end if;
+  if Failures[0].Line <= 0 then panic('panic location'); end if;
   if CloseTaskGroup(G).Length() <> 0 then panic('repeat close'); end if;
 end."#;
 

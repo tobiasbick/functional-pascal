@@ -81,8 +81,7 @@ impl Walker<'_, '_> {
             }
             Stmt::Panic(value, _)
             | Stmt::Expression { expr: value, .. }
-            | Stmt::Discard { expr: value, .. }
-            | Stmt::Go { expr: value, .. } => {
+            | Stmt::Discard { expr: value, .. } => {
                 let _ = self.expr(value);
             }
             Stmt::Call {

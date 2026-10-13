@@ -142,29 +142,16 @@ fn invalid_conversions_keep_the_original_diagnostic() {
 }
 
 #[test]
-fn inferred_aggregates_preserve_task_and_callable_discard_restrictions() {
+fn inferred_aggregates_allow_discard_without_losing_task_escape_checks() {
     for initializer in [
         "[Job]",
-        "[function(): integer begin return Wait(Job); end function]",
         "Some(Job)",
         "Holder(Value := Job)",
         "Envelope.Held(Job)",
     ] {
-        let errors = check_errors(&format!(
-            "program T; uses Std.Tasks; type Holder = record Value: task of integer; end record; type Envelope of T = enum Held(Value: T); end enum; function Work(): integer; begin return 1; end function; begin const Job: task of integer := go Work(); const Values := {initializer}; discard Values; end."
+        check_ok(&format!(
+            "program T; uses Std.Tasks; type Holder = record Value: task of integer; end record; type Envelope of T = enum Held(Value: T); end enum; function Work(): integer; begin return 1; end function; begin scope  const Job: task of integer := go Work(); const Values := {initializer}; discard Values;  end scope; end."
         ));
-        assert!(
-            errors
-                .iter()
-                .any(|error| error.code == fpas_diagnostics::codes::SEMA_UNSAFE_DISCARD),
-            "{initializer}: {errors:#?}"
-        );
-        assert!(
-            !errors
-                .iter()
-                .any(|error| error.code == SEMA_TYPE_ANNOTATION_REQUIRED),
-            "{initializer}: {errors:#?}"
-        );
     }
 }
 

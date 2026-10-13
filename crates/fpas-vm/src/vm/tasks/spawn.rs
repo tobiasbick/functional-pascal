@@ -8,28 +8,14 @@ use fpas_bytecode::{AbcOperands, Register, Value};
 use fpas_diagnostics::codes::{RUNTIME_INVALID_TASK, RUNTIME_WRONG_CALL_ARITY};
 
 impl Worker {
-    /// Decode ordinary go operands and publish a retained or detached task.
-    pub(in crate::vm) fn spawn_task(
-        &mut self,
-        operands: AbcOperands,
-        detached: bool,
-    ) -> Result<(), VmError> {
+    /// Decode a go expression and enroll its retained child in the current routine's scope.
+    pub(in crate::vm) fn spawn_task(&mut self, operands: AbcOperands) -> Result<(), VmError> {
         let scheduler = self
             .scheduler
             .as_ref()
-            .ok_or_else(|| {
-                self.unavailable_opcode(if detached {
-                    fpas_bytecode::Opcode::SpawnDetachedTask
-                } else {
-                    fpas_bytecode::Opcode::SpawnTask
-                })
-            })?
+            .ok_or_else(|| self.unavailable_opcode(fpas_bytecode::Opcode::SpawnTask))?
             .clone();
-        let (callee_register, argument_base) = if detached {
-            (operands.a, operands.b)
-        } else {
-            (operands.b, operands.c)
-        };
+        let (callee_register, argument_base) = (operands.b, operands.c);
         let callee = self
             .read(Register::new(callee_register).map_err(|e| {
                 diagnostics::internal(
@@ -90,17 +76,17 @@ impl Worker {
         }
         let arguments = self.clone_window(argument_base, operands.auxiliary)?;
         let id = scheduler.alloc_id();
-        // A scope observes completion of both `go` forms, so its children always retain results.
-        let owner = self.spawning_scope();
-        let retain_result = !detached || owner.is_some();
-        let mut task = TaskState::entry(id, &function, info, arguments, retain_result);
-        if let Some(scope) = owner {
-            task.owner_scope = scheduler.scopes.enroll(scope, id);
-        }
-        if retain_result {
-            scheduler.register_result(id);
-        }
-        if !detached {
+        let scope = self.spawning_scope().ok_or_else(|| {
+            self.runtime_error(
+                RUNTIME_INVALID_TASK,
+                "Go requires an owning scope in the same routine",
+                "Open `scope ... end scope;` around the start, or pass an explicit TaskGroup and use StartTaskInGroup.",
+            )
+        })?;
+        let mut task = TaskState::entry(id, &function, info, arguments);
+        task.owner_scope = scheduler.scopes.enroll(scope, id);
+        scheduler.register_result(id);
+        if operands.a != u16::MAX {
             self.write(
                 Register::new(operands.a).map_err(|e| {
                     diagnostics::internal(

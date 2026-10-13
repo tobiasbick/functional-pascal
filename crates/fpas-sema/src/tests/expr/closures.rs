@@ -67,7 +67,7 @@ end.",
 fn closure_scalar_case_guard_binding_does_not_capture_shadowed_outer() {
     let (program, parse_errors) = fpas_parser::parse(
         "program T;
-begin
+begin scope
   var M: integer := 0;
   const N: integer := 1;
   const F: procedure() :=
@@ -78,8 +78,8 @@ begin
         else null;
       end case;
     end procedure;
-  go F();
-end.",
+  discard go F();
+ end scope; end.",
     );
     assert!(parse_errors.is_empty(), "{parse_errors:#?}");
 
@@ -104,7 +104,7 @@ end.",
 fn nested_closure_capturing_task_bound_callable_is_task_bound() {
     let (program, parse_errors) = fpas_parser::parse(
         "program T;
-begin
+begin scope
   var Count: integer := 0;
   const Inc: procedure() :=
     procedure()
@@ -116,8 +116,8 @@ begin
     begin
       Inc();
     end procedure;
-  go Outer();
-end.",
+  discard go Outer();
+ end scope; end.",
     );
     assert!(parse_errors.is_empty(), "{parse_errors:#?}");
 

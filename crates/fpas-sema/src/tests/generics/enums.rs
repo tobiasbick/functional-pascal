@@ -1,7 +1,7 @@
 //! Generic enum inference, nominal applications, recursive payloads, and patterns.
 
 use crate::tests::{check_errors, check_ok};
-use fpas_diagnostics::codes::{SEMA_CONSTRAINT_VIOLATION, SEMA_TYPE_MISMATCH, SEMA_UNSAFE_DISCARD};
+use fpas_diagnostics::codes::{SEMA_CONSTRAINT_VIOLATION, SEMA_TYPE_MISMATCH};
 
 const ENUMS: &str = "
 type Lookup of T = enum Found(Value: T); Missing; end enum;
@@ -188,11 +188,7 @@ fn nested_instances_do_not_hide_noncomparable_or_task_payloads() {
         errors.iter().any(|error| error.code == SEMA_TYPE_MISMATCH),
         "{errors:?}"
     );
-    let errors = check_errors(&format!(
+    check_ok(&format!(
         "program T; {ENUMS} begin const X: Lookup of Lookup of task of integer := Lookup.Missing; discard X; end."
     ));
-    assert!(
-        errors.iter().any(|error| error.code == SEMA_UNSAFE_DISCARD),
-        "{errors:?}"
-    );
 }

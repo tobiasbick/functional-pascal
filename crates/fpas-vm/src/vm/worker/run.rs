@@ -12,6 +12,9 @@ const ABORT_CHECK_INTERVAL: u32 = 256;
 
 impl Worker {
     pub(in crate::vm) fn run_task(&mut self) -> Result<Option<Value>, VmError> {
+        if let Some(outcome) = self.pending_completion.take() {
+            return outcome.map(Some);
+        }
         loop {
             if self
                 .scheduler
@@ -44,7 +47,14 @@ impl Worker {
     }
 
     pub fn run(mut self) -> Result<Execution, VmError> {
-        self.run_in_place()
+        let outcome = self.run_in_place().map(|execution| execution.value);
+        let value = self.finish_owned_groups_blocking(outcome)?;
+        Ok(Execution {
+            value,
+            instruction_count: self
+                .instruction_count
+                .saturating_add(self.callback_instruction_count.get()),
+        })
     }
 
     pub(in crate::vm) fn run_in_place(&mut self) -> Result<Execution, VmError> {

@@ -17,45 +17,47 @@ begin
 end function;
 
 begin
-  var Tasks: array of task of SseDecoder := [];
-  for Index: integer := 1 to 128 do
-    begin
-      Tasks.PushInPlace(go CreateDecoder(Index));
-    end;
-  end for;
+  scope
+    var Tasks: array of task of SseDecoder := [];
+    for Index: integer := 1 to 128 do
+      begin
+        Tasks.PushInPlace(go CreateDecoder(Index));
+      end;
+    end for;
 
-  WaitAll(Tasks);
-  var Decoders: array of SseDecoder := [];
-  for Index: integer := 0 to Tasks.Length() - 1 do
-    begin
-      Decoders.PushInPlace(Wait(Tasks[Index]));
-    end;
-  end for;
+    WaitAll(Tasks);
+    var Decoders: array of SseDecoder := [];
+    for Index: integer := 0 to Tasks.Length() - 1 do
+      begin
+        Decoders.PushInPlace(Wait(Tasks[Index]));
+      end;
+    end for;
 
-  for Index: integer := 0 to Decoders.Length() - 1 do
-    begin
-      const Expected: string := IntToStr(Index);
-      case FeedSse(Decoders[Index], Std.Net.Utf8.Encode('data: ' + Expected + #10 + #10)) of
-        when Ok(const Events):
-          begin
-            AssertEquals(1, Events.Length());
-            AssertEquals(Expected, Events[0].Data);
-          end;
-        when Error(const Message):
-          begin
-            panic(Message);
-          end;
-      end case;
+    for Index: integer := 0 to Decoders.Length() - 1 do
+      begin
+        const Expected: string := IntToStr(Index);
+        case FeedSse(Decoders[Index], Std.Net.Utf8.Encode('data: ' + Expected + #10 + #10)) of
+          when Ok(const Events):
+            begin
+              AssertEquals(1, Events.Length());
+              AssertEquals(Expected, Events[0].Data);
+            end;
+          when Error(const Message):
+            begin
+              panic(Message);
+            end;
+        end case;
 
-      case FinishSse(Decoders[Index]) of
-        when Ok(_):
-          begin
-          end;
-        when Error(const Message):
-          begin
-            panic(Message);
-          end;
-      end case;
-    end;
-  end for;
+        case FinishSse(Decoders[Index]) of
+          when Ok(_):
+            begin
+            end;
+          when Error(const Message):
+            begin
+              panic(Message);
+            end;
+        end case;
+      end;
+    end for;
+  end scope;
 end.

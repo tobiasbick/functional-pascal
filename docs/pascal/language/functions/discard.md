@@ -1,7 +1,10 @@
 # Discarding values
 
-`discard Expression;` evaluates an expression exactly once and explicitly
-ignores its value. `discard` is a reserved, case-insensitive keyword.
+`discard Expression;` evaluates an expression exactly once and drops its value.
+`discard` is a reserved, case-insensitive keyword. Every value type is accepted,
+including task handles, aliases, aggregates, channels, unconstrained generic
+values, and callables with captures. No task-free proof or generic constraint
+is required for discard.
 
 ```pascal
 discard 42;
@@ -9,16 +12,16 @@ discard Some('unused');
 discard Error('deliberately ignored');
 ```
 
-A discarded `Result` or `Option` is not unwrapped. Expression side effects
-and runtime failures still occur. Discarding a function or procedure value
-does not invoke it. A procedure call produces no value and cannot be used
-as the operand; call the procedure directly.
+A discarded Result or Option is not unwrapped. Expression side effects and
+runtime failures still occur. Discarding a function or procedure value does
+not invoke it. A procedure call produces no value and is rejected as an
+operand (FP3020); call the procedure directly.
 
 Every function result must be consumed: assign it, return it, pass it to another
-call, inspect it with `case`, or explicitly discard it. A function call used as
-a statement without `discard` is an error (`FP3022`), including the final
-function call of a postfix chain. Procedure calls and `go` statements remain
-valid standalone statements.
+call, inspect it with `case`, or explicitly discard it. An unused result is
+FP3022, including the final function call of a postfix chain and a standalone
+go expression. The repair is valid independently of the returned value's type
+or captures.
 
 ```pascal
 const Value: integer := Compute();
@@ -26,71 +29,34 @@ discard Compute();
 discard Factory.Create().Compute();
 ```
 
-An unused `Result` is also an error. Handle its branches with `case`, or use
-`try` to propagate failure while consuming the success value. Explicit discard
-deliberately ignores both branches. For results containing task handles or
-unverified callable captures, retain and consume the value; the unused-result
-diagnostic does not recommend an invalid discard.
-
-Formal syntax: [`grammar.ebnf`](../../../specs/grammar.ebnf) (`discard_stmt`).
+Use `case` when the branches of a Result matter, or `try` to propagate an
+error while consuming the success value. Explicit discard deliberately drops
+both branches.
 
 ## Task handles and aggregates
 
-A task handle cannot be discarded. The compiler also rejects types with
-task handles nested in arrays, dictionary keys or values, stored record fields,
-enum payloads, `Option`, or either branch of `Result`. Named and recursive
-types follow the same rules. Record method signatures are not stored fields.
-
-The declared type determines this restriction: an empty array of task handles
-or `None` of an option containing a task handle is still rejected. The compiler
-checks every enum variant and both `Result` branches.
+Discarding a handle does not cancel, detach, join, or consume its task result.
+The lexical scope or explicit TaskGroup retains the child independently of
+user handles. Panic/runtime failures remain monitored by that owner; returned
+Error values remain ordinary Result data. Retrieve required results with Wait
+before the owner releases them.
 
 ```pascal
-discard go Worker(); // error: use the statement go Worker();
-go Worker();         // fire-and-forget task
+scope
+  const Job := go Worker();
+  discard Job;
+  discard [Job];
+  discard go Worker();
+end scope;
 ```
 
-For an existing handle or a function returning a handle, retain and consume
-the handle. Spawning a new task is not a replacement for handling that value.
+The scope still joins both children. Discard does not relax ordinary expression
+typing, [scope-handle escape rules](../concurrency/task-scopes.md), initialization,
+or cross-task restrictions on foreign mutable state and task-bound captures.
+Discarding a callable is ordinary disposal; transferring or invoking it across
+a task boundary remains separately checked.
 
-## Generics
-
-In a generic body, the declared constraints must exclude task handles for
-every permitted type argument. `Numeric` and `Comparable` provide this
-guarantee; an unconstrained `T` and `Printable` do not. The same check applies
-inside aggregate types. Observed call sites do not relax the body check.
-
-At a call site with a concrete result type, ordinary discard rules apply:
-a generic call returning `integer` can be discarded. The check uses the
-existing constraints and runs at compile time.
-
-## Channels and callable captures
-
-Channels recursively follow the rules for their element type. A
-`channel of integer` can be discarded; a channel whose element type contains
-task handles cannot. Queue contents and other references do not affect the
-check. Channels with unknown callable captures in their element type are
-also rejected.
-
-A function or procedure value can be discarded only when its captures are
-statically proven free of task handles. This includes captured containers,
-channels, other closures, and the receiver of a bound record method. Merely
-accepting or returning a task in the callable signature is not a stored
-capture.
-
-The compiler preserves known capture information through immutable bindings,
-aggregate construction, pattern bindings in `is` and `case`, routine results,
-and compiled-unit interfaces. This includes `while` conditions and nested
-Result/Option patterns. Extracting a callable retains the matched value's known
-proof; extraction does not establish a proof for unknown or mutable callable
-contents. Scalar payloads are checked by their own type.
-Record construction also checks captures in omitted fields' default values.
-Callable parameters and values lacking capture information are rejected.
-Mutable storage with callable contents is conservatively treated as having
-unknown captures, since later assignments can change those contents.
-
-Task-freedom is independent of the task-bound restriction on closures with
-mutable state. Capturing a mutable `integer` does not introduce a task handle.
+Formal syntax: [`grammar.ebnf`](../../../specs/grammar.ebnf) (`discard_stmt`).
 
 ## See also
 

@@ -125,12 +125,6 @@ fn emit_stmt_in_block(emitter: &mut Emitter, stmt: &Stmt, comments: &CommentMap)
             emit_expr(emitter, expr, 0, comments);
             finish_stmt_line(emitter, comments, stmt);
         }
-        Stmt::Go { expr, .. } => {
-            write_indented(emitter);
-            emitter.write("go ");
-            emit_expr(emitter, expr, 0, comments);
-            finish_stmt_line(emitter, comments, stmt);
-        }
         Stmt::Scope { .. } => {
             scopes::emit_scope(emitter, stmt, comments);
             finish_stmt_after_newline(emitter, comments, stmt);

@@ -13,6 +13,8 @@ begin
 end function;
 
 begin
-  const Job: task of string := go Work();
-  const Mapped: string := Wait(Job);
+  scope
+    const Job: task of string := go Work();
+    const Mapped: string := Wait(Job);
+  end scope;
 end.

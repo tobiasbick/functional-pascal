@@ -135,14 +135,13 @@ impl TaskScheduler {
     }
     /// Publish a child outcome before exposing its consumable successful result.
     pub fn store_result(&self, id: u64, value: Value) {
-        let failure = super::groups::GroupFailure::returned(id, &value);
         let state = match value {
             Value::Unit => TaskResultState::Unit,
             value => TaskResultState::Value(Box::new(value)),
         };
         let mut results = self.results.lock().unwrap_or_else(|e| e.into_inner());
         if matches!(results.get(&id), Some(TaskResultState::Pending)) {
-            self.groups.complete(id, failure);
+            self.groups.complete(id, None);
             self.scopes.complete(id, None);
             results.insert(id, state);
         }

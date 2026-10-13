@@ -10,14 +10,15 @@ begin
   discard Send(Q, 123);
   return 1;
 end function;
-function Child(): integer;
+function Child(Token: CancellationToken): integer;
 begin
   Sleep(2);
   return 7;
 end function;
 function Parent(): integer;
-begin
-  const T: task of integer := go Child();
+begin scope
+  const Group := CreateTaskGroup();
+  const T: task of integer := StartTaskInGroup(Group, Child);
   var Seen: integer := 0;
   const C: WaitCase := TaskCase(T, procedure()
   begin
@@ -26,9 +27,10 @@ begin
     Seen := Wait(T);
   end procedure);
   if Select([C]) <> 0 then panic('task index'); end if;
+  discard CloseTaskGroup(Group);
   return Seen;
-end function;
-begin
+ end scope; end function;
+begin scope
   const T: task of integer := go Parent();
   const Q: channel of integer := CreateChannel(1);
   var Seen: integer := 0;
@@ -62,7 +64,7 @@ begin
   const Timer: WaitCase := TimerCase(2, procedure() begin Seen := 99; end procedure);
   if Select([Timer]) <> 0 then panic('timer index'); end if;
   if Seen <> 99 then panic('timer callback'); end if;
-end."#;
+ end scope; end."#;
 
 #[test]
 fn selection_callbacks_resume_nested_waits_with_one_worker() {
@@ -93,11 +95,11 @@ fn selection_rejects_a_case_moved_to_another_task() {
 uses Std.Tasks;
 function Other(C: WaitCase): integer;
 begin return Select([C]); end function;
-begin
+begin scope
   const C: WaitCase := TimerCase(0, procedure() begin end procedure);
   const T: task of integer := go Other(C);
   discard Wait(T);
-end."#,
+ end scope; end."#,
     );
     assert!(errors.is_empty(), "{errors:?}");
     let mut vm = crate::vm::Vm::new(fpas_compiler::compile(&program).unwrap());

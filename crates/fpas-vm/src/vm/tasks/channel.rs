@@ -6,6 +6,8 @@ mod suspension;
 mod timeout;
 
 #[cfg(test)]
+mod controlled_tests;
+#[cfg(test)]
 mod tests;
 
 use fpas_bytecode::{Intrinsic, Register, TaskIntrinsic, Value};

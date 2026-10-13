@@ -29,7 +29,6 @@ fn fixture() -> UnitInterface {
         qualified_name: "Demo.Api.Config".into(),
         ty: InterfaceType::Named("Demo.Api.Settings".into()),
         kind: SymbolKind::Constant(None),
-        discard: Default::default(),
         constant_record: Some(Arc::new(RecordConstant {
             fields: BTreeMap::from([
                 (

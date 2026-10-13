@@ -121,7 +121,9 @@ fn named_var_calls_keep_static_labels_and_task_restrictions() {
     ));
     assert!(error_codes("var Counter: integer := 0; const F: procedure(var Slot: integer) := Increase; F(Value := var Counter);").contains(&SEMA_INVALID_NAMED_ARGUMENT));
     assert_eq!(
-        error_codes("var Counter: integer := 0; go Increase(Value := var Counter);"),
+        error_codes(
+            "scope var Counter: integer := 0; discard go Increase(Value := var Counter); end scope;"
+        ),
         [SEMA_VAR_PARAMETER_ESCAPE]
     );
 }

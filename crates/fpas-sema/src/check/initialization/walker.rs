@@ -14,6 +14,7 @@ use std::collections::{BTreeSet, HashMap, HashSet};
 pub(super) enum Origin {
     Routine(Owner),
     Imported(BindingId),
+    BoundMethod(usize, BindingId),
     Parameter(usize),
     Binding(BindingId),
     Unknown,
@@ -27,6 +28,10 @@ pub(super) struct Summary {
     pub dependencies: BTreeSet<BindingId>,
     pub called_parameters: BTreeSet<usize>,
     pub called_bindings: BTreeSet<BindingId>,
+    pub started_parameters: BTreeSet<usize>,
+    pub started_bindings: BTreeSet<BindingId>,
+    pub mutable_globals: BTreeSet<String>,
+    pub unknown_worker: bool,
     pub writes: BTreeSet<BindingId>,
     pub returned: Value,
     pub unknown: bool,
@@ -50,6 +55,9 @@ pub(super) struct Walker<'c, 'a> {
     pub invoking: BTreeSet<Origin>,
     pub summary: Summary,
     pub errors: Vec<Failure>,
+    pub task_errors: Vec<Failure>,
+    pub worker: bool,
+    pub worker_start: Option<usize>,
     pub validate: bool,
 }
 
@@ -73,6 +81,9 @@ impl<'c, 'a> Walker<'c, 'a> {
             invoking: BTreeSet::new(),
             summary: Summary::default(),
             errors: Vec::new(),
+            task_errors: Vec::new(),
+            worker: false,
+            worker_start: None,
             validate,
         }
     }
@@ -116,6 +127,9 @@ impl<'c, 'a> Walker<'c, 'a> {
         let Some(info) = self.model.bindings.get(&binding) else {
             return;
         };
+        if info.owner == super::collection::Owner::Root && info.mutable {
+            self.summary.mutable_globals.insert(info.name.clone());
+        }
         if info.owner == self.owner {
             if !self.ready.contains(&binding) && self.validate {
                 self.errors.push(Failure {
@@ -131,6 +145,9 @@ impl<'c, 'a> Walker<'c, 'a> {
     /// Reject unprovable startup calls and retain uncertainty in routine summaries.
     pub fn unknown(&mut self, span: Span) {
         self.summary.unknown = true;
+        if self.worker {
+            self.worker_unknown(span);
+        }
         if self.validate
             && self.owner == Owner::Root
             && self
@@ -185,6 +202,9 @@ impl<'c, 'a> Walker<'c, 'a> {
         else {
             return Value::new();
         };
+        if reference.declaration.is_none() && reference.kind == SymbolKind::Var {
+            self.summary.mutable_globals.insert(reference.name.clone());
+        }
         if let Some(declaration) = reference.declaration {
             if matches!(reference.kind, SymbolKind::Function | SymbolKind::Procedure) {
                 let owner = Owner::Routine(declaration);

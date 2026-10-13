@@ -31,7 +31,6 @@ impl Checker {
         } = input;
         let FuncBody::Block { nested, stmts } = body;
         self.routine_type_path.push(name.to_owned());
-        self.discard_results.push(true);
 
         self.scopes.push_scope();
         let routine_scope_index = self.scopes.scope_count() - 1;
@@ -83,7 +82,6 @@ impl Checker {
                 },
                 source.span,
             );
-            self.record_binding_discard_info(&p.name, &p.ty, false, None);
         }
 
         let prev_ctx = self.scopes.function_ctx.take();
@@ -159,23 +157,12 @@ impl Checker {
                 .capture_scope_index(&capture.name, capture.declaration)
         });
 
-        self.complete_capture_discard_info(&mut captures.captures);
         self.remember_capture_scopes(&captures.captures);
         self.task_scopes.exit_routine();
         self.scopes.function_ctx = prev_ctx;
         self.routine_type_path.pop();
         self.scopes.pop_scope();
-        let result = self.discard_results.pop().unwrap_or(false);
         self.task_call_depth = previous_task_call_depth;
-        self.routine_discard_results
-            .insert(name.to_string(), result);
-        self.scopes.set_discard_info(
-            name,
-            fpas_unit::interface::DiscardInfo {
-                value: captures.captures.iter().all(|capture| capture.task_free),
-                result,
-            },
-        );
         captures
     }
 
@@ -237,7 +224,6 @@ impl Checker {
                 variable.span,
             );
             if defined {
-                self.record_binding_discard_info(&variable.name, &ty, mutable, None);
                 names.push(variable.name.clone());
             }
         }

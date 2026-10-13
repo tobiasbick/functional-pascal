@@ -156,6 +156,7 @@ impl Worker {
 
     /// Preserve the identity of a child failure raised by a task wait.
     pub(in crate::vm) fn observe_task_failure(&self, id: u64, error: VmError) -> VmError {
+        self.observed_task_failure.set(Some(id));
         self.scope_failure_sequence.set(
             self.scheduler
                 .as_ref()

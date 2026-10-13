@@ -34,7 +34,7 @@ fn group_report_survives_wait_and_close_discards_every_child_result() {
             .iter()
             .map(|failure| failure.task)
             .collect::<Vec<_>>(),
-        vec![1, 2]
+        vec![2]
     );
     assert!(scheduler.results.lock().expect("results").is_empty());
     for task in 1..=3 {

@@ -1,9 +1,9 @@
-//! Pattern bindings preserve static capture proofs and task restrictions.
+//! Pattern bindings preserve cross-task restrictions; discard accepts every value.
 //!
 //! Documentation: `docs/pascal/language/functions/discard.md`
 
 use super::super::{check_errors, check_ok};
-use fpas_diagnostics::codes::{SEMA_TASK_BOUND_CALLABLE, SEMA_UNSAFE_DISCARD};
+use fpas_diagnostics::codes::SEMA_TASK_BOUND_CALLABLE;
 
 fn patterns(action: &str) -> Vec<String> {
     vec![
@@ -18,11 +18,12 @@ fn patterns(action: &str) -> Vec<String> {
 }
 
 fn program(bindings: &str, body: &str) -> String {
+    let bindings = bindings.replace("const Job: task of integer := go Work();", "const Group := CreateTaskGroup(); const Job := StartTaskInGroup(Group, function(Token: CancellationToken): integer begin return Work(); end function);");
     format!(
         "program T; uses Std.Tasks;
 function Work(): integer; begin return 42; end function;
 function Ready(Job: task): boolean; begin return true; end function;
-procedure Main(); begin {bindings} {body} end procedure;
+procedure Main(); begin scope {bindings} {body} end scope; end procedure;
 begin Main(); end."
     )
 }
@@ -32,7 +33,7 @@ const Change: procedure() := procedure() begin Count := Count + 1; end procedure
 const Wrapped: Option of procedure() := Some(Change);";
 
 #[test]
-fn named_payload_constructors_preserve_callable_capture_proofs() {
+fn named_payload_constructors_preserve_task_bound_callables() {
     for (ty, constructor, other) in [
         ("option of function(): integer", "Some", "None"),
         (
@@ -71,7 +72,7 @@ fn named_payload_constructors_preserve_callable_capture_proofs() {
 
 #[test]
 fn pattern_callables_keep_task_bound_flags_in_branches_loops_and_nested_payloads() {
-    for body in patterns("go F();") {
+    for body in patterns("discard go F();") {
         let errors = check_errors(&program(MUTABLE_CAPTURE, &body));
         assert_eq!(errors.len(), 1, "{body}: {errors:#?}");
         assert_eq!(errors[0].code, SEMA_TASK_BOUND_CALLABLE, "{body}");
@@ -91,10 +92,10 @@ fn pattern_callables_keep_task_bound_flags_in_guards_and_channel_sends() {
 }
 
 #[test]
-fn closures_capturing_pattern_callables_keep_task_and_discard_metadata() {
-    for body in
-        patterns("const Alias: procedure() := procedure() begin F(); end procedure; go Alias();")
-    {
+fn closures_capturing_pattern_callables_keep_task_bound_metadata() {
+    for body in patterns(
+        "const Alias: procedure() := procedure() begin F(); end procedure; discard go Alias();",
+    ) {
         let errors = check_errors(&program(MUTABLE_CAPTURE, &body));
         assert_eq!(errors.len(), 1, "{body}: {errors:#?}");
         assert_eq!(errors[0].code, SEMA_TASK_BOUND_CALLABLE, "{body}");
@@ -111,7 +112,7 @@ const Wrapped: Option of function(): integer := Some(Change);",
 }
 
 #[test]
-fn pattern_callables_keep_known_task_free_capture_proofs() {
+fn immutable_pattern_callables_can_be_spawned_and_discarded() {
     for bindings in [
         "const Change: function(): integer := Work; const Wrapped: Option of function(): integer := Some(Change);",
         "const Base: integer := 40; const Change: function(): integer := function(): integer begin return Base + 2; end function; const Wrapped: Option of function(): integer := Some(Change);",
@@ -128,34 +129,28 @@ fn pattern_callables_keep_known_task_free_capture_proofs() {
 }
 
 #[test]
-fn task_bound_does_not_prevent_discard_of_task_free_pattern_callables() {
+fn task_bound_does_not_prevent_discard_of_pattern_callables() {
     for body in patterns("discard F;") {
         check_ok(&program(MUTABLE_CAPTURE, &body));
     }
 }
 
 #[test]
-fn unknown_mutable_and_task_capturing_pattern_callables_remain_unsafe_to_discard() {
+fn pattern_callable_discard_is_independent_of_captures_and_mutability() {
     for bindings in [
         "const Job: task of integer := go Work(); const Change: function(): integer := function(): integer begin return Wait(Job); end function; const Wrapped: Option of function(): integer := Some(Change);",
         "const Change: function(): integer := Work; var Wrapped: Option of function(): integer := Some(Change);",
     ] {
-        for body in patterns("discard F;").into_iter().take(3) {
-            let errors = check_errors(&program(bindings, &body));
-            assert_eq!(errors.len(), 1, "{body}: {errors:#?}");
-            assert_eq!(errors[0].code, SEMA_UNSAFE_DISCARD, "{body}");
+        for body in patterns("discard F;") {
+            check_ok(&program(bindings, &body));
         }
     }
-    let errors = check_errors(
-        "program T; procedure Main(Wrapped: Option of function(): integer);
-begin case Wrapped of when Some(const F): discard F; when None: null; end case; end procedure; begin end.",
-    );
-    assert_eq!(errors.len(), 1, "{errors:#?}");
-    assert_eq!(errors[0].code, SEMA_UNSAFE_DISCARD);
+    check_ok("program T; procedure Main(Wrapped: Option of function(): integer);
+        begin case Wrapped of when Some(const F): discard F; when None: null; end case; end procedure; begin end.");
 }
 
 #[test]
-fn scalar_pattern_bindings_keep_type_based_discard_proofs() {
+fn scalar_pattern_bindings_accept_ordinary_discard() {
     check_ok(&program(
         "const Job: task of integer := go Work(); const Wrapped: Result of (integer, task of integer) := Ok(7);",
         "case Wrapped of when Ok(const N): discard N; when Error(const Job): const N: integer := Wait(Job); end case;
@@ -184,7 +179,7 @@ fn generic_scalar_constraints_exclude_callable_capture_capabilities() {
         check_ok(&format!(
             "program T; uses Std.Tasks;
 procedure Main<T: {constraint}>(Value: T);
-begin
+begin scope
 var Count: integer := 0;
 const Change: procedure() := procedure() begin Count := Count + 1; end procedure;
 const Mixed: Result of (T, procedure()) := Error(Change);
@@ -193,7 +188,7 @@ case Mixed of when Ok(const N):
   const Job: task of T := go Get();
   const Answer: T := Wait(Job);
 when Error(_): null; end case;
-end procedure;
+ end scope; end procedure;
 begin Main(42); end."
         ));
     }
@@ -202,7 +197,7 @@ begin Main(42); end."
 #[test]
 fn extracted_record_callables_keep_capabilities_but_scalar_fields_remain_free() {
     for (body, rejects) in [
-        ("go Box.Change();", true),
+        ("discard go Box.Change();", true),
         ("discard Box.Change;", false),
         (
             "const N: integer := Box.Number; const ReadNumber: function(): integer := function(): integer begin return N; end function; const Job: task of integer := go ReadNumber(); const Answer: integer := Wait(Job);",
@@ -212,12 +207,12 @@ fn extracted_record_callables_keep_capabilities_but_scalar_fields_remain_free() 
         let source = format!(
             "program T; uses Std.Tasks;
 type WorkBox = record Change: procedure(); Number: integer; end record;
-procedure Main(); begin
+procedure Main(); begin scope
 var Count: integer := 0;
 const Change: procedure() := procedure() begin Count := Count + 1; end procedure;
 const Wrapped: Option of WorkBox := Some(WorkBox(Change := Change, Number := 7));
 case Wrapped of when Some(const Box): {body} when None: null; end case;
-end procedure; begin Main(); end."
+end scope; end procedure; begin Main(); end."
         );
         if rejects {
             let errors = check_errors(&source);

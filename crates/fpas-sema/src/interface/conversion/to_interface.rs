@@ -142,14 +142,12 @@ fn record_to_interface(
             .iter()
             .map(|(name, function)| {
                 Ok(artifact::MethodType {
-                    discard: Default::default(),
                     name: name.clone(),
                     callable: function_to_interface(function)?,
                 })
             })
             .chain(record.static_procedures.iter().map(|(name, procedure)| {
                 Ok(artifact::MethodType {
-                    discard: Default::default(),
                     name: name.clone(),
                     callable: procedure_to_interface(procedure)?,
                 })
@@ -167,7 +165,6 @@ fn method_to_interface(
         MethodKind::Procedure(procedure) => procedure_to_interface(procedure)?,
     };
     Ok(artifact::MethodType {
-        discard: Default::default(),
         name: name.to_string(),
         callable,
     })

@@ -8,10 +8,10 @@ uses Std.Tasks;
 procedure Work();
 begin
 end procedure;
-begin
+begin scope
   const T: task := go Work();
   discard WaitAnyWithTimeout([T], -1);
-end."#,
+ end scope; end."#,
     )
     .expect_err("negative timeout");
     assert!(error.message.contains("non-negative timeout"));
@@ -24,7 +24,7 @@ fn controlled_wait_any_preserves_worker_failure() {
         "WithCancellation([T], GetCancellationToken(CreateCancellationSource()))",
     ] {
         let source = format!(
-            "program Failure; uses Std.Tasks; procedure Work(); begin panic('original failure'); end procedure; begin const T: task := go Work(); discard WaitAny{control}; end."
+            "program Failure; uses Std.Tasks; procedure Work(); begin panic('original failure'); end procedure; begin scope  const T: task := go Work(); discard WaitAny{control};  end scope; end."
         );
         let error = run_program(&source).expect_err("task failure");
         assert_eq!(error.code, fpas_diagnostics::codes::RUNTIME_PROGRAM_PANIC);
@@ -48,10 +48,10 @@ procedure Work();
 begin
   panic('original worker failure');
 end procedure;
-begin
+begin scope
   const T: task := go Work();
   discard WaitAny([T]);
-end."#,
+ end scope; end."#,
     )
     .expect_err("worker failure");
     assert_eq!(error.code, fpas_diagnostics::codes::RUNTIME_PROGRAM_PANIC);
@@ -67,7 +67,7 @@ function Work(Value: integer): integer;
 begin
   return Value;
 end function;
-begin
+begin scope
   const A: task of integer := go Work(11);
   const B: task of integer := go Work(22);
   WaitAll([A, B]);
@@ -75,7 +75,7 @@ begin
   if Wait(B) <> 22 then panic('result consumed'); end if;
   if WaitAny([B, A]) <> 0 then panic('consumed completion lost'); end if;
   if Wait(A) <> 11 then panic('losing result consumed'); end if;
-end."#,
+ end scope; end."#,
     );
 }
 
@@ -90,15 +90,15 @@ begin
   return 7;
 end function;
 function Parent(): integer;
-begin
+begin scope
   const Child: task of integer := go Work();
   if WaitAny([Child]) <> 0 then panic('index'); end if;
   return Wait(Child);
-end function;
-begin
+ end scope; end function;
+begin scope
   const ParentTask: task of integer := go Parent();
   if WaitAny([ParentTask]) <> 0 then panic('parent index'); end if;
   if Wait(ParentTask) <> 7 then panic('value'); end if;
-end."#,
+ end scope; end."#,
     );
 }

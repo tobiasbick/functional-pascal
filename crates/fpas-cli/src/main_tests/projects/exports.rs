@@ -133,7 +133,7 @@ include = ["src/**/*.fpas"]
     );
     write_text(
         &app_dir.join("src/main.fpas"),
-        "program App;\nuses Sessions.Outcome, Std.Console, Std.Tasks;\nfunction Session(): result of (boolean, string);\nbegin\n  return Error('session failed');\nend function;\nprocedure Work();\nbegin\n  null;\nend procedure;\nbegin\n  const State: Jobs := Jobs(Values := [go Session()], Worker := go Work());\n  Join(State.Worker);\n  WriteLn(Describe(State.Values[0]));\nend.\n",
+        "program App;\nuses Sessions.Outcome, Std.Console, Std.Tasks;\nfunction Session(): result of (boolean, string);\nbegin\n  return Error('session failed');\nend function;\nprocedure Work();\nbegin\n  null;\nend procedure;\nbegin scope \n  const State: Jobs := Jobs(Values := [go Session()], Worker := go Work());\n  Join(State.Worker);\n  WriteLn(Describe(State.Values[0]));\n end scope; end.\n",
     );
 
     for _ in 0..2 {
@@ -144,7 +144,7 @@ include = ["src/**/*.fpas"]
     }
     write_text(
         &app_dir.join("src/main.fpas"),
-        "program App; uses Sessions.Outcome, Std.Tasks; function Number(): integer; begin return 42; end function; begin Join(go Number()); end.",
+        "program App; uses Sessions.Outcome, Std.Tasks; function Number(): integer; begin return 42; end function; begin scope  Join(go Number());  end scope; end.",
     );
     let (exit_code, _, stderr_output) = support::run_cli_args_and_capture_output(
         &["check".into(), app_project.to_string_lossy().into_owned()],

@@ -372,14 +372,6 @@ pub fn all_operations_program() -> Program {
         Instruction {
             source: None,
             result: None,
-            operation: Operation::SpawnDetachedTask {
-                callee: ValueId::new(7),
-                arguments: vec![ValueId::new(1)],
-            },
-        },
-        Instruction {
-            source: None,
-            result: None,
             operation: Operation::Yield,
         },
         Instruction {

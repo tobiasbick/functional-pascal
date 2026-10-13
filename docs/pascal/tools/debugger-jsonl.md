@@ -315,7 +315,7 @@ without executing bytecode:
 expression in that current frame; omitting it searches globals only. The task
 must have completed successfully with a still-unconsumed retained handle.
 Repeated replacement before `Wait` is allowed. Consumed, pending, failed,
-detached, unknown, or unsupported results are rejected atomically. Initialize
+unknown or unsupported results are rejected atomically. Initialize
 advertises `task_result_replacement`.
 
 `variant.describe` returns the constructible variants for one textual mutable

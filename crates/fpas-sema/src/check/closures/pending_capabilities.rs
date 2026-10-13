@@ -4,7 +4,7 @@
 
 use std::collections::HashMap;
 
-use fpas_diagnostics::codes::{SEMA_TASK_BOUND_CALLABLE, SEMA_UNSAFE_DISCARD};
+use fpas_diagnostics::codes::SEMA_TASK_BOUND_CALLABLE;
 use fpas_lexer::Span;
 use fpas_parser::{Designator, DesignatorPart, Expr};
 
@@ -17,7 +17,7 @@ type BindingKey = (String, u32, usize, usize);
 #[derive(Default)]
 pub(super) struct PendingCapabilities {
     bindings: HashMap<BindingKey, Vec<usize>>,
-    checks: Vec<(Vec<usize>, Span, bool)>,
+    checks: Vec<(Vec<usize>, Span)>,
 }
 
 impl Checker {
@@ -48,26 +48,21 @@ impl Checker {
             Expr::Postfix { base, .. } => self.pending_expr_captures(base),
             _ => Vec::new(),
         };
-        self.defer_capture_boundary(targets, span, true);
-    }
-
-    /// Rechecks a provisional discard proof once all reachable captures are known.
-    pub(in crate::check) fn defer_capture_discard(&mut self, expr: &Expr, span: Span) {
-        self.defer_capture_boundary(self.pending_expr_captures(expr), span, false);
+        self.defer_capture_boundary(targets, span);
     }
 
     /// Rechecks a callable transferred through a channel or task-group boundary.
     /// See `docs/pascal/language/functions/closures.md#concurrency`.
     pub(crate) fn defer_capture_transfer(&mut self, expr: &Expr, span: Span) {
-        self.defer_capture_boundary(self.pending_expr_captures(expr), span, true);
+        self.defer_capture_boundary(self.pending_expr_captures(expr), span);
     }
 
-    fn defer_capture_boundary(&mut self, targets: Vec<usize>, span: Span, task: bool) {
+    fn defer_capture_boundary(&mut self, targets: Vec<usize>, span: Span) {
         if !targets.is_empty() {
             self.capture_dependencies
                 .capabilities
                 .checks
-                .push((targets, span, task));
+                .push((targets, span));
         }
     }
 
@@ -193,7 +188,7 @@ impl Checker {
             .unwrap_or_default()
     }
 
-    /// Completes captured callable proofs and diagnoses provisional task/discard uses.
+    /// Completes captured callable dependencies and diagnoses provisional task transfers.
     pub(in crate::check) fn finish_pending_capture_checks(&mut self) {
         loop {
             let states: HashMap<_, _> = self
@@ -207,12 +202,7 @@ impl Checker {
                             .get(key)
                             .is_some_and(|info| info.task_bound)
                     });
-                    let task_free = targets.iter().all(|key| {
-                        self.nested_routine_captures.get(key).is_some_and(|info| {
-                            info.captures.iter().all(|capture| capture.task_free)
-                        })
-                    });
-                    (binding.clone(), (task_bound, task_free))
+                    (binding.clone(), task_bound)
                 })
                 .collect();
             let mut changed = false;
@@ -229,47 +219,24 @@ impl Checker {
             }
         }
         for (&key, info) in &self.nested_routine_captures {
-            self.scopes.update_routine_capture_capabilities(
-                key,
-                info.task_bound,
-                info.captures.iter().all(|capture| capture.task_free),
-            );
+            self.scopes
+                .update_routine_capture_capabilities(key, info.task_bound);
         }
         for (&key, info) in &self.closure_infos {
             if info.task_bound {
                 self.task_bound_exprs.insert(key);
             }
-            if let Some(discard) = self.discard_exprs.get_mut(&key) {
-                discard.value = info.captures.iter().all(|capture| capture.task_free);
-            }
         }
-        for (targets, span, task) in
-            std::mem::take(&mut self.capture_dependencies.capabilities.checks)
-        {
+        for (targets, span) in std::mem::take(&mut self.capture_dependencies.capabilities.checks) {
             let invalid = targets.iter().any(|key| {
-                self.nested_routine_captures.get(key).is_some_and(|info| {
-                    if task {
-                        info.task_bound
-                    } else {
-                        info.captures.iter().any(|capture| !capture.task_free)
-                    }
-                })
+                self.nested_routine_captures
+                    .get(key)
+                    .is_some_and(|info| info.task_bound)
             });
             if invalid {
-                let (code, message, hint) = if task {
-                    (
-                        SEMA_TASK_BOUND_CALLABLE,
-                        "Cannot transfer a task-bound callable across a task boundary",
-                        "Mutable captures make a closure task-bound. Pass immutable values instead, or invoke the closure on the same task.",
-                    )
-                } else {
-                    (
-                        SEMA_UNSAFE_DISCARD,
-                        "Cannot discard callable captures containing task handles",
-                        "Retain and consume task handles. Capture only statically task-free values in a discarded callable.",
-                    )
-                };
-                self.error_with_code(code, message, hint, span);
+                self.error_with_code(SEMA_TASK_BOUND_CALLABLE,
+                    "Cannot transfer a task-bound callable across a task boundary",
+                    "Mutable captures make a closure task-bound. Pass immutable values instead, or invoke the closure on the same task.", span);
             }
         }
     }
@@ -277,18 +244,14 @@ impl Checker {
 
 fn complete_capabilities(
     captures: &mut [CaptureBinding],
-    states: &HashMap<BindingKey, (bool, bool)>,
+    states: &HashMap<BindingKey, bool>,
 ) -> bool {
     let mut changed = false;
     for capture in captures {
-        if let Some(&(task_bound, task_free)) =
-            states.get(&binding_key(&capture.name, capture.declaration))
-        {
+        if let Some(&task_bound) = states.get(&binding_key(&capture.name, capture.declaration)) {
             let next_bound = capture.task_bound || task_bound;
-            let next_free = capture.task_free && task_free;
-            changed |= capture.task_bound != next_bound || capture.task_free != next_free;
+            changed |= capture.task_bound != next_bound;
             capture.task_bound = next_bound;
-            capture.task_free = next_free;
         }
     }
     changed

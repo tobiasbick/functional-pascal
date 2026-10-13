@@ -14,7 +14,7 @@ pub use contracts::RoutineContract;
 pub use initialization::RoutineInitialization;
 pub use param_escapes::RoutineParamEscapes;
 pub use record_constants::{RecordConstant, RecordConstantField};
-pub use symbols::{ConstantValue, DiscardInfo, InterfaceSymbol, SymbolKind, UnitInterface};
+pub use symbols::{ConstantValue, InterfaceSymbol, SymbolKind, UnitInterface};
 pub use types::{
     CallableType, DistinctType, EnumType, EnumVariant, FieldDefaultValue, FieldType,
     GenericParameter, InterfaceType, MethodType, ParameterMode, ParameterType, RecordType,

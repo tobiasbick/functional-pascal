@@ -54,7 +54,10 @@ interactive DAP terminal events, output, and structured runtime failures. Execut
 bounded by `--timeout`, `--instruction-limit`, and `--output-limit`. Queued
 program input is also bounded by the advertised `debuggee_input_bytes` limit
 (default 1,048,576). Programs
-may spawn retained and detached tasks. Attach, non-stop task execution, reverse
+may start owned tasks through scopes and explicit groups. Task completion, failure,
+cancellation, and forced entry completion close remaining creating-task groups
+before publishing terminal outcomes. Pending cleanup remains inspectable until
+resume completes it. Attach, non-stop task execution, reverse
 execution, replay, debugger task creation, task restart, retained execution history, and arbitrary instruction-pointer changes remain unsupported. Recording is off until JSONL `record` or DAP `fpas/record`; those commands capture later all-stop events and queued `ReadText`/`ReadLn` lines without resuming or enabling reverse playback. Capture stays in session memory, keeps at most 4,096 events, writes no recording files, and retains no recording snapshots. Later events are dropped and `recording.describe` / `fpas/recordingDescribe` report `truncated`. JSONL `recording.describe` and DAP `fpas/recordingDescribe` name the current program, portable sources, whether capture is on, the event ceiling, captured events, and `replayable: false`. While capturing, `Std.Random`, wall-clock `Std.Time` other than `Sleep`, `Std.Fs`, `Std.Env`, `Std.Proc`, `Std.Args`, and console host effects other than `ReadText`/`ReadLn`/`WriteText`/`WriteLn` stop with runtime diagnostic `FP5024` before the intrinsic runs. Execution without `record` is unchanged. JSONL `reload` / `image.replace` and DAP `fpas/reload` rebuild the exact launch target and atomically install changes limited to inactive function bodies. Unchanged candidates do nothing; active bodies, layouts, globals, captures, task identity, function sets, entry points, anonymous closures, and incompatible debug metadata are rejected before the live image changes. Each successful commit increments a monotonic image version, rebinds breakpoints and source content, invalidates stale inspections, and retains exactly one preceding image. JSONL `image.rollback` and DAP `fpas/reloadRollback` restore that image as another version. Recording capture rejects real commits and is not a live-image snapshot store. JSONL `reload.classify` and DAP `fpas/reloadClassify` rebuild and classify without applying. VS Code exposes **Debug: Reload Compatible Changes** and **Debug: Roll Back Last Reload**. This is FPAS source-level reload inside the owned debug session; it does not debug or hot-swap the native Rust VM implementation. Frame
 restart reconstructs a selected live frame at its function entry; it is not a
 general `goto`.
@@ -406,7 +409,7 @@ completed successfully, have a retained handle, and still expose an unconsumed
 result. The expression is evaluated and checked against the task entry
 function's portable result type before the scheduler result changes. Replacing
 the same result repeatedly before `Wait` is allowed; the last replacement is
-what the waiter consumes. Consumed, pending, failed, detached, unknown, or
+what the waiter consumes. Consumed, pending, failed, unknown, or
 unsupported result categories are rejected atomically. The command executes no
 program instruction and invalidates only stopped variable snapshots. Ordinary
 callee results whose frames have already been removed have no retained

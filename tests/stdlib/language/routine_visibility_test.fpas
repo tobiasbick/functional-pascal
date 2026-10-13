@@ -39,9 +39,11 @@ end function;
 function Outer(): integer;
 function Use(): integer;
 begin
-  const Selected: function(): integer := Read;
-  const Running: task of integer := go Read();
-  return Read() + Selected() + Std.Tasks.Wait(Running);
+  scope
+    const Selected: function(): integer := Read;
+    const Running: task of integer := go Read();
+    return Read() + Selected() + Std.Tasks.Wait(Running);
+  end scope;
 end function;
 function Read(): integer;
 begin
@@ -53,8 +55,10 @@ end function;
 
 function Apply(GlobalRead: function(): integer): integer;
 begin
-  const Running: task of integer := go GlobalRead();
-  return GlobalRead() + Std.Tasks.Wait(Running);
+  scope
+    const Running: task of integer := go GlobalRead();
+    return GlobalRead() + Std.Tasks.Wait(Running);
+  end scope;
 end function;
 
 function CreateAnonymous(): function(Value: integer): integer;
@@ -158,36 +162,38 @@ const Later: integer := 9;
 const Constructed: Box := Box.Forward();
 
 begin
-  const Anonymous: function(Value: integer): integer := function(Value: integer): integer
-  function Before(Input: integer): integer;
-  begin
-    return After(Input);
-  end function;
-  function After(Input: integer): integer;
-  begin
-    return Input + 7;
-  end function;
-  begin
-    return Before(Value);
-  end function;
+  scope
+    const Anonymous: function(Value: integer): integer := function(Value: integer): integer
+    function Before(Input: integer): integer;
+    begin
+      return After(Input);
+    end function;
+    function After(Input: integer): integer;
+    begin
+      return Input + 7;
+    end function;
+    begin
+      return Before(Value);
+    end function;
 
-  AssertEquals(12, Anonymous(5));
-  const Inferred := CreateAnonymous();
-  AssertEquals(12, Inferred(5));
-  AssertEquals(6, Initial);
-  AssertEquals('first;second;', InitializationOrder);
-  AssertEquals(6, First);
-  AssertEquals(13, Second);
-  AssertTrue(IsEven(8));
-  AssertTrue(IsOdd(9));
-  AssertEquals(6, Outer());
-  AssertEquals(1, Read());
-  AssertEquals(2, Apply(Read));
-  const GlobalTask: task of integer := go Read();
-  AssertEquals(1, Std.Tasks.Wait(GlobalTask));
-  AssertEquals(13, CaptureSiblings());
-  AssertEquals(42, ProcedureHelpers());
-  AssertEquals(42, PassThrough(42));
-  AssertEquals('text', PassThrough('text'));
-  AssertEquals(9, Constructed.ReadValue());
+    AssertEquals(12, Anonymous(5));
+    const Inferred := CreateAnonymous();
+    AssertEquals(12, Inferred(5));
+    AssertEquals(6, Initial);
+    AssertEquals('first;second;', InitializationOrder);
+    AssertEquals(6, First);
+    AssertEquals(13, Second);
+    AssertTrue(IsEven(8));
+    AssertTrue(IsOdd(9));
+    AssertEquals(6, Outer());
+    AssertEquals(1, Read());
+    AssertEquals(2, Apply(Read));
+    const GlobalTask: task of integer := go Read();
+    AssertEquals(1, Std.Tasks.Wait(GlobalTask));
+    AssertEquals(13, CaptureSiblings());
+    AssertEquals(42, ProcedureHelpers());
+    AssertEquals(42, PassThrough(42));
+    AssertEquals('text', PassThrough('text'));
+    AssertEquals(9, Constructed.ReadValue());
+  end scope;
 end.

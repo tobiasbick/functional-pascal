@@ -45,7 +45,6 @@ impl Worker {
         } else {
             None
         };
-        let mut initial = true;
         loop {
             // Main-task waits register before probing. Suspended children use the shared clock
             // and timer driver instead of keeping the caller's stack while helping other tasks.
@@ -66,10 +65,9 @@ impl Worker {
             } else {
                 timeout.is_some_and(|timeout| started.elapsed() >= timeout)
             };
-            if let Some(value) = self.controlled_wait_result(&ids, token, expired, initial)? {
+            if let Some(value) = self.controlled_wait_result(&ids, token, expired)? {
                 return Ok(Some(Some(value)));
             }
-            initial = false;
             if self.debug_tasks || self.task_id != 0 {
                 self.task_suspension = Some(TaskSuspension::WaitAnyControlled {
                     ids,
@@ -109,15 +107,11 @@ impl Worker {
         ids: &[u64],
         token: Option<u64>,
         expired: bool,
-        initial: bool,
     ) -> Result<Option<Value>, VmError> {
         // Validate every identity and preserve task failures before considering control outcomes.
         let result = self.wait_any_result(ids)?;
         if self.wait_token_cancelled(token)? {
             return Ok(Some(control_error(CANCELLED)));
-        }
-        if expired && !initial {
-            return Ok(Some(control_error(TIMED_OUT)));
         }
         if let Some(value) = result {
             return Ok(Some(Value::result_ok(value)));
@@ -135,7 +129,7 @@ impl Worker {
     ) -> Result<bool, VmError> {
         let expired =
             deadline_millis.is_some_and(|deadline| self.task_clock_ref().now_millis() >= deadline);
-        if let Some(value) = self.controlled_wait_result(&ids, token, expired, false)? {
+        if let Some(value) = self.controlled_wait_result(&ids, token, expired)? {
             if let Some(destination) = destination {
                 self.write(destination, value)?;
             }

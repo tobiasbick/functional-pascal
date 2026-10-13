@@ -152,18 +152,20 @@ begin
 end function;
 
 begin
-  var Current: Handler := Identity;
-  var Job: Action := Noop;
-  const First: Handler := MakeAdder(10);
-  const Both: Handler := Combine(3, 4);
-  const Shadowed: integer := Outer(7);
-  const Recursed: integer := Walk(2, 1);
-  const Mutated: Handler := Mutating();
-  const Enclosed: Handler := OuterCell();
-  const Late: integer := LateInit();
-  const Pending: task of integer := go Worker(8);
-  const Held: Handler := HoldTask(Pending);
-  const RootStop: integer := 0;
-  WriteLn(Wait(Pending));
-  WriteLn(First(1));
+  scope
+    var Current: Handler := Identity;
+    var Job: Action := Noop;
+    const First: Handler := MakeAdder(10);
+    const Both: Handler := Combine(3, 4);
+    const Shadowed: integer := Outer(7);
+    const Recursed: integer := Walk(2, 1);
+    const Mutated: Handler := Mutating();
+    const Enclosed: Handler := OuterCell();
+    const Late: integer := LateInit();
+    const Pending: task of integer := go Worker(8);
+    const Held: Handler := HoldTask(Pending);
+    const RootStop: integer := 0;
+    WriteLn(Wait(Pending));
+    WriteLn(First(1));
+  end scope;
 end.

@@ -255,8 +255,7 @@ impl<'a> Model<'a> {
             Stmt::Return(Some(value), _)
             | Stmt::Panic(value, _)
             | Stmt::Discard { expr: value, .. }
-            | Stmt::Expression { expr: value, .. }
-            | Stmt::Go { expr: value, .. } => self.expression(value, owner),
+            | Stmt::Expression { expr: value, .. } => self.expression(value, owner),
             Stmt::Call {
                 designator, args, ..
             } => {

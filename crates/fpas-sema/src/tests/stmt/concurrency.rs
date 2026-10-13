@@ -5,6 +5,7 @@ use fpas_parser::{ParseDiagnostic, parse};
 mod groups;
 mod task_scopes;
 mod task_types;
+mod worker_state;
 
 #[test]
 fn selection_send_rejects_task_bound_values() {
@@ -113,10 +114,10 @@ procedure LogAnswer();
 begin
 end procedure;
 
-begin
+begin scope
   const Tsk: task := go LogAnswer();
   Std.Tasks.Wait(Tsk);
-end.",
+ end scope; end.",
     );
 }
 
@@ -125,9 +126,9 @@ fn go_requires_a_call_expression() {
     let (_, errors) = parse(
         "\
 program T;
-begin
+begin scope
   const Tsk: task := go 1;
-end.",
+ end scope; end.",
     );
 
     assert!(
@@ -153,10 +154,10 @@ begin
   return 42;
 end function;
 
-begin
+begin scope
   const Tsk: task of integer := go Answer();
   const Value: integer := Std.Tasks.Wait(Tsk);
-end.",
+ end scope; end.",
     );
 }
 
@@ -172,10 +173,10 @@ begin
   return 42;
 end function;
 
-begin
+begin scope
   const Tsk: task of integer := go Answer();
   const Value: string := Std.Tasks.Wait(Tsk);
-end.",
+ end scope; end.",
     );
 
     assert!(
@@ -192,15 +193,15 @@ fn go_rejects_task_bound_mutable_closure() {
         "\
 program T;
 uses Std.Tasks;
-begin
+begin scope
   var Count: integer := 0;
   const Inc: procedure() :=
     procedure()
     begin
       Count := Count + 1;
     end procedure;
-  go Inc();
-end.",
+  discard go Inc();
+ end scope; end.",
     );
 
     assert!(
@@ -375,19 +376,19 @@ function First(Jobs: array of task of integer): integer;
 begin
   return Wait(Jobs[WaitAny(Jobs)]);
 end function;
-begin
+begin scope
   const Job: task of integer := go Seven();
   const Typed: task of integer := go Seven();
   const Total: integer := Doubled(Job) + First([Typed]);
-end."#,
+ end scope; end."#,
     );
 }
 
 #[test]
 fn typed_tasks_reject_a_different_result_type() {
     for source in [
-        "program T; uses Std.Tasks; function Seven(): integer; begin return 7; end function; begin const Job: task of string := go Seven(); end.",
-        "program T; uses Std.Tasks; function Seven(): integer; begin return 7; end function; function Name(Job: task of string): string; begin return Wait(Job); end function; begin const Job: task of integer := go Seven(); const Text: string := Name(Job); end.",
+        "program T; uses Std.Tasks; function Seven(): integer; begin return 7; end function; begin scope  const Job: task of string := go Seven();  end scope; end.",
+        "program T; uses Std.Tasks; function Seven(): integer; begin return 7; end function; function Name(Job: task of string): string; begin return Wait(Job); end function; begin scope  const Job: task of integer := go Seven(); const Text: string := Name(Job);  end scope; end.",
         "program T; uses Std.Tasks; function Count(Job: task of integer): string; begin return Wait(Job); end function; begin end.",
     ] {
         assert!(!check_errors(source).is_empty(), "{source}");

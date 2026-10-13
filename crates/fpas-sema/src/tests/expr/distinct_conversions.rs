@@ -183,7 +183,7 @@ fn std_output_and_builtin_operations_do_not_unwrap_implicitly() {
 #[test]
 fn distinct_conversions_are_values_not_spawnable_calls() {
     assert_rejected(
-        "go UserId(1);",
+        "scope discard go UserId(1); end scope;",
         SEMA_TYPE_MISMATCH,
         "`go` requires a function or procedure call, but `UserId` constructs a value",
         "Spawn a named function",

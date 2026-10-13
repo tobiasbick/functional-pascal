@@ -73,7 +73,6 @@ impl Worker {
             &supervision.function,
             info,
             [Value::OpaqueHandle(supervision.token)],
-            true,
         );
         task.instruction_count = self
             .instruction_count
@@ -89,11 +88,24 @@ impl Worker {
         if !self.supervised_ready()? {
             return Ok(DispatchStep::Suspend);
         }
-        self.check_task_cancellation()?;
-        let outcome = match self.dispatch_debug_one() {
+        let step = if let Some(outcome) = self.pending_completion.take() {
+            outcome.map(DispatchStep::Return)
+        } else {
+            self.check_task_cancellation()
+                .and_then(|()| self.dispatch_debug_one())
+        };
+        let outcome = match step {
             Ok(DispatchStep::Return(value)) => Ok(value),
-            Err(error) => Err(error),
+            Err(error) => match self.begin_scope_unwind(error) {
+                Ok(()) => return Ok(DispatchStep::Suspend),
+                Err(error) => Err(error),
+            },
             other => return other,
+        };
+        let outcome = match self.finish_owned_groups(outcome) {
+            Ok(Some(value)) => Ok(value),
+            Err(error) => Err(error),
+            Ok(None) => return Ok(DispatchStep::Suspend),
         };
         self.supervised_outcome(outcome)
             .map(|value| value.map_or(DispatchStep::Suspend, DispatchStep::Return))

@@ -21,12 +21,7 @@ impl Worker {
         timeout: Duration,
     ) -> Result<Value, VmError> {
         let started = Instant::now();
-        let mut first_attempt = true;
         loop {
-            if !first_attempt && remaining(timeout, started).is_none() {
-                return Ok(error(SEND_TIMEOUT_ERROR));
-            }
-            first_attempt = false;
             match self
                 .hosted
                 .channels
@@ -73,12 +68,7 @@ impl Worker {
         timeout: Duration,
     ) -> Result<Value, VmError> {
         let started = Instant::now();
-        let mut first_attempt = true;
         loop {
-            if !first_attempt && remaining(timeout, started).is_none() {
-                return Ok(error(RECEIVE_TIMEOUT_ERROR));
-            }
-            first_attempt = false;
             match self
                 .hosted
                 .channels
@@ -192,9 +182,6 @@ impl Worker {
         deadline_millis: u64,
         destination: Option<Register>,
     ) -> Result<bool, VmError> {
-        if self.channel_deadline_reached(deadline_millis) {
-            return self.finish_channel_poll(Some(error(SEND_TIMEOUT_ERROR)), destination);
-        }
         let result = match self
             .hosted
             .channels
@@ -203,6 +190,9 @@ impl Worker {
         {
             SendState::Sent => Some(ok(Value::Boolean(true))),
             SendState::Closed => Some(error(CLOSED_ERROR)),
+            SendState::Pending(_) if self.channel_deadline_reached(deadline_millis) => {
+                Some(error(SEND_TIMEOUT_ERROR))
+            }
             SendState::Pending(value) => {
                 self.task_suspension = Some(TaskSuspension::ChannelSendTimeout {
                     handle,
@@ -224,9 +214,6 @@ impl Worker {
         deadline_millis: u64,
         destination: Option<Register>,
     ) -> Result<bool, VmError> {
-        if self.channel_deadline_reached(deadline_millis) {
-            return self.finish_channel_poll(Some(error(RECEIVE_TIMEOUT_ERROR)), destination);
-        }
         let result = match self
             .hosted
             .channels
@@ -235,6 +222,9 @@ impl Worker {
         {
             ReceiveState::Received(value) => Some(ok(value)),
             ReceiveState::Closed => Some(error(CLOSED_ERROR)),
+            ReceiveState::Pending if self.channel_deadline_reached(deadline_millis) => {
+                Some(error(RECEIVE_TIMEOUT_ERROR))
+            }
             ReceiveState::Pending => {
                 self.task_suspension = Some(TaskSuspension::ChannelReceiveTimeout {
                     handle,

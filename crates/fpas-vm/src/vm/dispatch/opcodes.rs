@@ -258,11 +258,7 @@ impl Worker {
                 return Ok(Flow::Boundary);
             }
             Opcode::SpawnTask => {
-                self.spawn_task(instruction.abc(), false)?;
-                return Ok(Flow::Boundary);
-            }
-            Opcode::SpawnDetachedTask => {
-                self.spawn_task(instruction.abc(), true)?;
+                self.spawn_task(instruction.abc())?;
                 return Ok(Flow::Boundary);
             }
             Opcode::Yield => {

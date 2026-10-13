@@ -15,6 +15,7 @@ mod record_construction;
 mod short_names;
 mod task_scopes;
 mod type_order;
+mod worker_state;
 
 fn parse_unit(source: &str) -> fpas_parser::Unit {
     let (parsed, errors) = parse_compilation_unit(source);

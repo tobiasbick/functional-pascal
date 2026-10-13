@@ -12,9 +12,11 @@ begin
 end function;
 
 begin
-  const T1: task of integer := go Compute(3);
-  const T2: task of integer := go Compute(4);
-  WriteLn(Wait(T1) + Wait(T2));
+  scope
+    const T1: task of integer := go Compute(3);
+    const T2: task of integer := go Compute(4);
+    WriteLn(Wait(T1) + Wait(T2));
+  end scope;
 end.
 ```
 

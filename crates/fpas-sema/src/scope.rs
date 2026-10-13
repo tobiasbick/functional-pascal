@@ -72,7 +72,6 @@ struct Scope {
 
 #[derive(Debug)]
 struct ScopedSymbol {
-    discard: fpas_unit::interface::DiscardInfo,
     original_name: String,
     symbol: Symbol,
     declaration: Option<Span>,
@@ -92,7 +91,6 @@ impl Scope {
 pub struct ScopeStack {
     pub(crate) imports: imports::ImportNames,
     scopes: Vec<Scope>,
-    imported_discard: HashMap<String, fpas_unit::interface::DiscardInfo>,
     /// Recorded parameter escapes of imported routines and record routines by canonical name.
     param_escapes: HashMap<String, std::sync::Arc<[bool]>>,
     /// Current loop depth (for break/continue validation).
@@ -117,7 +115,6 @@ impl ScopeStack {
         Self {
             scopes: vec![Scope::new()],
             imports: Default::default(),
-            imported_discard: HashMap::new(),
             param_escapes: HashMap::new(),
             loop_depth: 0,
             function_ctx: None,
@@ -189,7 +186,6 @@ impl ScopeStack {
         scope.symbols.insert(
             canonical_name,
             ScopedSymbol {
-                discard: Default::default(),
                 original_name: name.to_string(),
                 symbol,
                 declaration,
@@ -265,28 +261,6 @@ impl ScopeStack {
             .map(|entry| &entry.symbol)
     }
 
-    /// Looks up static value and result guarantees at the same lexical binding as its type.
-    pub(crate) fn discard_info(&self, name: &str) -> fpas_unit::interface::DiscardInfo {
-        let canonical = self.imports.canonical_name(name);
-        self.scopes
-            .iter()
-            .rev()
-            .find_map(|scope| scope.symbols.get(&canonical))
-            .map(|entry| entry.discard)
-            .or_else(|| self.imported_discard.get(&canonical).copied())
-            .unwrap_or_default()
-    }
-
-    /// Installs guarantees for qualified record members from a unit interface.
-    pub(crate) fn set_imported_discard_info(
-        &mut self,
-        name: &str,
-        info: fpas_unit::interface::DiscardInfo,
-    ) {
-        self.imported_discard
-            .insert(canonical_symbol_name(name), info);
-    }
-
     /// Records which parameters of an imported routine may outlive a call.
     ///
     /// **Documentation:** `docs/pascal/language/concurrency/task-scopes.md#handle-escapes`
@@ -300,17 +274,6 @@ impl ScopeStack {
         self.param_escapes
             .get(&self.imports.canonical_name(name))
             .cloned()
-    }
-
-    /// Attaches static capture guarantees to an existing binding.
-    pub(crate) fn set_discard_info(&mut self, name: &str, info: fpas_unit::interface::DiscardInfo) {
-        let canonical = self.imports.canonical_name(name);
-        for scope in self.scopes.iter_mut().rev() {
-            if let Some(entry) = scope.symbols.get_mut(&canonical) {
-                entry.discard = info;
-                break;
-            }
-        }
     }
 
     /// Look up the original stored spelling for a symbol name.

@@ -235,7 +235,6 @@ Operation::StoreLocalIndex {
             validate_reference_write(scope, *reference, *value)
         }
         Operation::SpawnTask { callee, arguments } => validate_spawn(scope, *callee, arguments, result),
-        Operation::SpawnDetachedTask { callee, arguments } => validate_call_value(scope, *callee, arguments, None),
         Operation::Yield
         | Operation::EnterTaskScope
         | Operation::ExitTaskScope

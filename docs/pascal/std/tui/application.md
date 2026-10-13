@@ -83,8 +83,9 @@ operations or overlap the old source. Input, updates, and paint continue while c
 when that id is not active. Each application may own at most 256 simultaneous operations, including
 sources awaiting cancellation. Each source has at most one pending replacement.
 
-Completed successful operations are reaped silently. A returned `Error`, panic, or runtime error is
-delivered on the main application thread as:
+Returned Result values, including Error, are ordinary data and are reaped
+silently. Send required application outcomes through the typed inbox explicitly.
+A panic or runtime error is delivered on the main application thread as:
 
 ```pascal
 TuiMsg.BackgroundFailed(Id, Kind, Message, Code, Line, Column);

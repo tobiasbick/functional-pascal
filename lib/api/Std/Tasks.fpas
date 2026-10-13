@@ -26,10 +26,8 @@ public type TaskFailure = record
   public Column: integer;
 end record;
 
-// `ReturnedError`, `Panicked`, `RuntimeError`, or `Cancelled`.
+// `Panicked`, `RuntimeError`, or `Cancelled`.
 public type TaskFailureKind = enum
-  // `ReturnedError` enum member.
-  ReturnedError;
   // `Panicked` enum member.
   Panicked;
   // `RuntimeError` enum member.

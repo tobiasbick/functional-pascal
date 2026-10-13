@@ -187,17 +187,17 @@ begin
 end function;
 
 function Work(): integer;
-begin
+begin scope
   const Backup: task of integer := go Seven();
   var Current: task of integer := go Nine();
   const Marker: integer := 0;
   return Wait(Current);
-end function;
+ end scope; end function;
 
-begin
+begin scope
   const Pending: task of integer := go Work();
   WriteLn(Wait(Pending));
-end.
+ end scope; end.
 "#;
     let mut server = server_for(TASK_SOURCE);
     let mut id = 0;

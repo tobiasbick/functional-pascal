@@ -13,6 +13,8 @@ mod scalar;
 mod shutdown;
 mod superinstructions;
 mod support;
+/// Ownership-aware assembler for hand-built task fixtures.
+pub(in crate::vm) mod task_images;
 mod task_owned_functions;
 mod task_scopes;
 

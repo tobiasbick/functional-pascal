@@ -19,10 +19,10 @@ begin
   return Value;
 end function;
 
-begin
+begin scope
   const Pending: task of integer := go Work();
   discard Wait(Pending);
-end.
+ end scope; end.
 "#;
 
 fn server() -> DapServer {

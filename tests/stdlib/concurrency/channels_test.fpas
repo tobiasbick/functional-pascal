@@ -45,21 +45,23 @@ begin
 end function;
 
 begin
-  const Messages: channel of integer := CreateChannel(1);
-  const Producer: task of boolean := go SendValues(Messages);
-  AssertEquals(10, ReceiveValue(Messages));
-  AssertEquals(20, ReceiveValue(Messages));
-  AssertTrue(Wait(Producer));
-  case Receive(Messages) of
-    when Ok(_):
-      begin
-        Fail('closed channel returned an extra value');
-      end;
-    when Error(const Message):
-      begin
-        AssertEquals('Channel is closed', Message);
-      end;
-  end case;
+  scope
+    const Messages: channel of integer := CreateChannel(1);
+    const Producer: task of boolean := go SendValues(Messages);
+    AssertEquals(10, ReceiveValue(Messages));
+    AssertEquals(20, ReceiveValue(Messages));
+    AssertTrue(Wait(Producer));
+    case Receive(Messages) of
+      when Ok(_):
+        begin
+          Fail('closed channel returned an extra value');
+        end;
+      when Error(const Message):
+        begin
+          AssertEquals('Channel is closed', Message);
+        end;
+    end case;
 
-  AssertFalse(CloseChannel(Messages));
+    AssertFalse(CloseChannel(Messages));
+  end scope;
 end.

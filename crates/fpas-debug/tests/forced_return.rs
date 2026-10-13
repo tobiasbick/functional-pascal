@@ -252,11 +252,11 @@ begin
   return Value + 1;
 end function;
 
-begin
+begin scope
   const Pending: task of integer := go Work();
   const Answer: integer := Compute(41);
   WriteLn(Answer);
-end.
+ end scope; end.
 "#;
     let (program, diagnostics) = fpas_parser::parse(TASK_SOURCE);
     assert!(diagnostics.is_empty(), "{diagnostics:?}");

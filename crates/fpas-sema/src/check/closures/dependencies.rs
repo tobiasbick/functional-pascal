@@ -105,14 +105,13 @@ impl Checker {
                     continue;
                 }
                 let task_bound = task_bound_from_captures(captures);
-                let task_free = captures.iter().all(|capture| capture.task_free);
                 match consumer.owner {
                     CaptureOwner::Routine(key) => {
                         if let Some(info) = self.nested_routine_captures.get_mut(&key) {
                             info.task_bound = task_bound;
                         }
                         self.scopes
-                            .update_routine_capture_capabilities(key, task_bound, task_free);
+                            .update_routine_capture_capabilities(key, task_bound);
                         pending.push_back(key);
                     }
                     CaptureOwner::Closure(key) => {
@@ -121,9 +120,6 @@ impl Checker {
                         }
                         if task_bound {
                             self.mark_expr_task_bound(key);
-                        }
-                        if let Some(info) = self.discard_exprs.get_mut(&key) {
-                            info.value = task_free;
                         }
                     }
                 }
@@ -161,10 +157,8 @@ fn merge_captures(
             .find(|existing| identity(existing) == key)
         {
             let task_bound = existing.task_bound || capture.task_bound;
-            let task_free = existing.task_free && capture.task_free;
-            changed |= existing.task_bound != task_bound || existing.task_free != task_free;
+            changed |= existing.task_bound != task_bound;
             existing.task_bound = task_bound;
-            existing.task_free = task_free;
         } else {
             captures.push(capture.clone());
             changed = true;

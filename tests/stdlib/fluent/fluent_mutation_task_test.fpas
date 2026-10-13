@@ -8,12 +8,14 @@ begin
 end function;
 
 begin
-  var Items: array of integer := [1, 2];
-  Items.PushInPlace(3);
-  AssertEquals(3, Items.PopInPlace());
-  AssertEquals(2, Items.Length());
-  const Job: task of integer := go Add(20, 22);
-  AssertEquals(42, Wait(Job));
-  const IntrinsicTask: task of integer := go Std.Math.Abs(-2);
-  AssertEquals(2, Wait(IntrinsicTask));
+  scope
+    var Items: array of integer := [1, 2];
+    Items.PushInPlace(3);
+    AssertEquals(3, Items.PopInPlace());
+    AssertEquals(2, Items.Length());
+    const Job: task of integer := go Add(20, 22);
+    AssertEquals(42, Wait(Job));
+    const IntrinsicTask: task of integer := go Std.Math.Abs(-2);
+    AssertEquals(2, Wait(IntrinsicTask));
+  end scope;
 end.

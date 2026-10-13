@@ -167,21 +167,23 @@ fn panic_without_sequence_point_executable() -> VerifiedExecutable {
 }
 
 fn task_executable() -> VerifiedExecutable {
-    let mut root = function("root", 0, 3, 1, debug(&[(0, 1)]));
+    let mut root = function("root", 0, 5, 1, debug(&[(0, 1)]));
     root.flags.uses_spawn_tasks = true;
     executable(
         vec![
+            abc(Opcode::EnterTaskScope, 0, 0, 0),
             Instruction::abx(Opcode::LoadConstant, 0, 0).expect("function constant"),
-            abc(Opcode::SpawnDetachedTask, 0, 0, 0),
+            abc(Opcode::SpawnTask, 0, 0, 0),
+            abc(Opcode::ExitTaskScope, 0, 0, 0),
             abc(Opcode::Return, NO_REGISTER, 0, 0),
             abc(Opcode::Return, NO_REGISTER, 0, 0),
         ],
-        vec![root, function("task", 3, 4, 0, debug(&[(3, 10)]))],
+        vec![root, function("task", 5, 6, 0, debug(&[(5, 10)]))],
         vec![Constant::Function {
             function: FunctionId::new(1),
             task_bound: false,
         }],
-        vec![(0, 1), (3, 10)],
+        vec![(0, 1), (5, 10)],
     )
 }
 
@@ -346,26 +348,28 @@ fn yield_precedence_executable() -> VerifiedExecutable {
 }
 
 fn unreachable_task_executable() -> VerifiedExecutable {
-    let mut spawner = function("spawner", 1, 4, 1, debug(&[(1, 10)]));
+    let mut spawner = function("spawner", 1, 6, 1, debug(&[(1, 10)]));
     spawner.flags.uses_spawn_tasks = true;
     executable(
         vec![
             abc(Opcode::Return, NO_REGISTER, 0, 0),
+            abc(Opcode::EnterTaskScope, 0, 0, 0),
             Instruction::abx(Opcode::LoadConstant, 0, 0).expect("function constant"),
-            abc(Opcode::SpawnDetachedTask, 0, 0, 0),
+            abc(Opcode::SpawnTask, 0, 0, 0),
+            abc(Opcode::ExitTaskScope, 0, 0, 0),
             abc(Opcode::Return, NO_REGISTER, 0, 0),
             abc(Opcode::Return, NO_REGISTER, 0, 0),
         ],
         vec![
             function("root", 0, 1, 0, debug(&[(0, 1)])),
             spawner,
-            function("task", 4, 5, 0, debug(&[(4, 20)])),
+            function("task", 6, 7, 0, debug(&[(6, 20)])),
         ],
         vec![Constant::Function {
             function: FunctionId::new(2),
             task_bound: false,
         }],
-        vec![(0, 1), (1, 10), (4, 20)],
+        vec![(0, 1), (1, 10), (6, 20)],
     )
 }
 
@@ -394,7 +398,7 @@ fn executable(
     constants: Vec<Constant>,
     runs: Vec<(u32, u32)>,
 ) -> VerifiedExecutable {
-    Executable {
+    crate::vm::tests::task_images::scope_owned(Executable {
         code,
         functions,
         constants,
@@ -423,7 +427,7 @@ fn executable(
                 .collect(),
         },
         entry: FunctionId::new(0),
-    }
+    })
     .verify()
     .expect("debug fixture executable")
 }

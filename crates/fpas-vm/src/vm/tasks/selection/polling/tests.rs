@@ -19,13 +19,7 @@ fn root_selection_leaves_queued_computation_for_pool_workers() {
     let function = SharedFunction::unbound(FunctionId::new(0), "queued computation", vec![]);
     let info = &worker.executable.executable().functions[0];
     scheduler.register_result(1);
-    scheduler.enqueue(crate::vm::tasks::TaskState::entry(
-        1,
-        &function,
-        info,
-        [],
-        true,
-    ));
+    scheduler.enqueue(crate::vm::tasks::TaskState::entry(1, &function, info, []));
     worker
         .run_selection(wait(vec![CaseSource::Timer(20)]))
         .unwrap();

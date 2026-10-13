@@ -67,13 +67,6 @@ impl Checker {
                 &format!("default value for field `{}`", field.name),
                 field.span,
             );
-            self.record_default_discard.insert(
-                (
-                    definition.name.to_ascii_lowercase(),
-                    field.name.to_ascii_lowercase(),
-                ),
-                self.discard_info(&expression).value,
-            );
             let compile_time = self.const_initializer_is_compile_time_known(&expression, expected);
             self.record_default_constants
                 .insert(Self::expr_lookup_key(&expression), compile_time);

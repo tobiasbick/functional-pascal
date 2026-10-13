@@ -31,15 +31,15 @@ uses Std.Tasks;
 
 var Shared: integer := 0;
 
-procedure Writer();
+function Writer(): integer;
 begin
-  Shared := 1;
-end procedure;
+  return 1;
+end function;
 
-begin
-  const Pending: task := go Writer();
-  Wait(Pending);
-end.
+begin scope
+  const Pending: task of integer := go Writer();
+  Shared := Wait(Pending);
+ end scope; end.
 "#;
     let (program, diagnostics) = fpas_parser::parse(SOURCE);
     assert!(diagnostics.is_empty(), "parse diagnostics: {diagnostics:?}");
@@ -230,7 +230,7 @@ fn pause_then_resume_then_continue_runs_the_held_task() {
         if stored == "1" {
             break;
         }
-        match session.step_into_task(1) {
+        match session.step_into_task(0) {
             Ok(result) => {
                 let _ = stopped(result);
             }

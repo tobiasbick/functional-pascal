@@ -18,6 +18,8 @@ use fpas_unit::{Digest, decode, encode};
 mod coverage;
 #[path = "incremental/initialization.rs"]
 mod initialization;
+#[path = "incremental/worker_state.rs"]
+mod worker_state;
 
 fn temp_dir() -> PathBuf {
     static NEXT: AtomicU64 = AtomicU64::new(1);

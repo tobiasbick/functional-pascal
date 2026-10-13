@@ -26,7 +26,6 @@ fn group_operations_reject_wrong_handles_and_worker_signatures() {
         "StartTaskInGroup(G, procedure(T: integer) begin end procedure)",
         "StartTaskInGroup(G, procedure(T: CancellationSource) begin end procedure)",
         "StartTaskInGroup(G, procedure(T: CancellationToken; Extra: integer) begin end procedure)",
-        "StartTaskInGroup(G, function(T: CancellationToken): result of (integer, integer) begin return Error(1); end function)",
     ] {
         let source = format!(
             "program T; uses Std.Tasks; procedure Work(Token: CancellationToken); begin end procedure; begin const G: TaskGroup := CreateTaskGroup(); {call}; end."

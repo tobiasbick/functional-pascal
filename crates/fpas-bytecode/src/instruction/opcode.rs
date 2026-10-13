@@ -191,8 +191,6 @@ pub enum Opcode {
     LoadEnumField = 89,
     /// Spawn a retained task.
     SpawnTask = 90,
-    /// Spawn a detached task.
-    SpawnDetachedTask = 91,
     /// Cooperatively yield the current task.
     Yield = 92,
     /// Append one value to an array using copy-on-write storage.
@@ -257,7 +255,7 @@ pub enum Opcode {
 
 impl Opcode {
     /// Exhaustive opcode inventory used by format and verifier tests.
-    pub const ALL: [Self; 111] = [
+    pub const ALL: [Self; 110] = [
         Self::LoadConstant,
         Self::LoadUnit,
         Self::Move,
@@ -344,7 +342,6 @@ impl Opcode {
         Self::TestVariant,
         Self::LoadEnumField,
         Self::SpawnTask,
-        Self::SpawnDetachedTask,
         Self::Yield,
         Self::ArrayPush,
         Self::StoreGlobalIndexPath,

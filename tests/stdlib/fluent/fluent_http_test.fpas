@@ -23,17 +23,19 @@ end function;
 
 function ExerciseHttp(): result of (boolean, string);
 begin
-  const ListenerValue: Listener := try Listen('127.0.0.1', 0);
-  const Address: NetworkAddress := try ListenerLocalAddress(ListenerValue);
-  var Options: ServerOptions := ServerOptions.Create();
-  Options.MaxRequests := 1;
-  const ServerTask: task of result of (boolean, string) := go Serve(ListenerValue, Options, Handle);
-  const Url: string := 'http://127.0.0.1:' + IntToStr(Address.Port) + '/fluent';
-  const Text: string := try FetchText(Url);
-  AssertEquals('hello fluent', Text);
-  const Served: boolean := try Wait(ServerTask);
-  const Closed: boolean := try CloseListener(ListenerValue);
-  return Ok(Served and Closed);
+  scope
+    const ListenerValue: Listener := try Listen('127.0.0.1', 0);
+    const Address: NetworkAddress := try ListenerLocalAddress(ListenerValue);
+    var Options: ServerOptions := ServerOptions.Create();
+    Options.MaxRequests := 1;
+    const ServerTask: task of result of (boolean, string) := go Serve(ListenerValue, Options, Handle);
+    const Url: string := 'http://127.0.0.1:' + IntToStr(Address.Port) + '/fluent';
+    const Text: string := try FetchText(Url);
+    AssertEquals('hello fluent', Text);
+    const Served: boolean := try Wait(ServerTask);
+    const Closed: boolean := try CloseListener(ListenerValue);
+    return Ok(Served and Closed);
+  end scope;
 end function;
 
 begin

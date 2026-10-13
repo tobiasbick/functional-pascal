@@ -11,7 +11,7 @@ begin
   Sleep(10);
   return Value;
 end function;
-begin
+begin scope
   const A: task of integer := go Work(11);
   const B: task of integer := go Work(22);
   const Winner: integer := WaitAny([A, B]);
@@ -21,7 +21,7 @@ begin
   if Wait(B) <> 22 then panic('consumed B'); end if;
   if WaitAny([B, A]) <> 0 then panic('consumed identity'); end if;
   if Wait(A) <> 11 then panic('consumed A'); end if;
-end."#;
+ end scope; end."#;
     let (program, diagnostics) = fpas_parser::parse(source);
     assert!(diagnostics.is_empty(), "{diagnostics:?}");
     let mut session =

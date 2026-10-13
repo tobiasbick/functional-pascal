@@ -158,30 +158,24 @@ fn runtime_error_callee_recovery_is_typed_atomic_and_resumable() {
 }
 
 #[test]
-fn retained_child_failure_entry_recovery_replaces_the_exact_result() {
+fn scope_owned_child_failure_is_terminal_and_reaches_its_owner() {
     let mut session = DebugSession::new(spawn_failing_task_executable()).expect("debug session");
     let _compute = stop_in_callee(&mut session, "compute");
     let _ = stopped(session.step_into_task(1).expect("child entry"));
     let _ = stopped(session.step_into_task(1).expect("child failure"));
-    assert_eq!(session.state(), DebugSessionState::Failed);
-    assert_eq!(session.last_stop().task_id, 1);
+    assert_eq!(session.state(), DebugSessionState::Stopped);
     assert!(matches!(
         session.test_poll_task_result(1),
         crate::vm::TaskResultPoll::Failed(_)
     ));
-    let child = session.stack(0, 1).expect("failed child").items[0].id;
-    let instructions = session.test_instruction_count();
-    let result = session
-        .force_return(child, None)
-        .expect("recover child entry");
-    assert!(!result.terminated);
-    assert_eq!(session.state(), DebugSessionState::Stopped);
+    let stop = stopped(
+        session
+            .continue_execution()
+            .expect("owner observes failure"),
+    );
+    assert_eq!(stop.reason, DebugStopReason::RuntimeError);
+    assert_eq!(session.state(), DebugSessionState::Failed);
     assert_eq!(session.last_stop().task_id, 0);
-    assert_eq!(session.test_instruction_count(), instructions);
-    assert!(matches!(
-        session.test_poll_task_result(1),
-        crate::vm::TaskResultPoll::Available(fpas_bytecode::Value::Unit)
-    ));
     assert!(matches!(
         session.test_poll_task_result(1),
         crate::vm::TaskResultPoll::Consumed

@@ -5,6 +5,7 @@
 mod close;
 mod registry;
 mod spawn;
+mod teardown;
 pub(in crate::vm) use registry::{ClosedGroup, GroupFailure, GroupRegistry};
 
 use crate::vm::{VmError, worker::Worker};

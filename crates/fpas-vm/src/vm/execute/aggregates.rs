@@ -17,7 +17,9 @@ use super::super::worker::Worker;
 use super::super::{VmError, diagnostics};
 
 impl Worker {
+    /// Load a global snapshot after checking the task's storage ownership.
     pub fn load_global(&mut self, o: AbxOperands) -> Result<(), VmError> {
+        self.check_global_task_access(o.bx)?;
         let index = usize::try_from(o.bx).map_err(|_| self.bad_slot("global", o.bx))?;
         let value = self
             .global_slots()
@@ -33,7 +35,9 @@ impl Worker {
         self.write(register(o.a)?, value)
     }
 
+    /// Store a global value only on the task that owns its mutable storage.
     pub fn store_global(&mut self, o: AbxOperands) -> Result<(), VmError> {
+        self.check_global_task_access(o.bx)?;
         let value = self.read(register(o.a)?)?.clone();
         let index = usize::try_from(o.bx).map_err(|_| self.bad_slot("global", o.bx))?;
         let mutable = self
@@ -70,6 +74,24 @@ impl Worker {
             StoreOutcome::Missing => return Err(self.bad_slot("global", o.bx)),
         }
         self.note_debug_global_store(index);
+        Ok(())
+    }
+
+    /// Reject foreign mutable globals, including bytecode and debugger-edited targets.
+    pub(in crate::vm) fn check_global_task_access(&self, slot: u32) -> Result<(), VmError> {
+        let global = self
+            .executable
+            .executable()
+            .globals
+            .get(slot as usize)
+            .ok_or_else(|| self.bad_slot("global", slot))?;
+        if self.task_id != 0 && global.mutable {
+            return Err(self.aggregate_error_code(
+                fpas_diagnostics::codes::RUNTIME_INVALID_TASK,
+                "Worker task cannot access a mutable program or unit global",
+                "Pass a value to the worker, use worker-local variables, or communicate through channels.",
+            ));
+        }
         Ok(())
     }
 

@@ -47,17 +47,6 @@ impl check::Checker {
                 ty_to_interface_reference(&symbol.ty)?
             };
             self.apply_record_defaults(declaration, &mut ty)?;
-            if let artifact::InterfaceType::Record(record) = &mut ty {
-                for method in record
-                    .methods
-                    .iter_mut()
-                    .chain(record.static_routines.iter_mut())
-                {
-                    method.discard = self
-                        .scopes
-                        .discard_info(&format!("{}.{}", record.name, method.name));
-                }
-            }
             qualify_owned_type(&mut ty, &unit_name, &own_types);
             let mut kind = exported_symbol_kind(declaration, symbol);
             if let artifact::SymbolKind::Constant(Some(artifact::ConstantValue::EnumValue {
@@ -74,7 +63,6 @@ impl check::Checker {
                     .filter(|info| info.compile_time)
                     .and_then(|info| info.record.as_ref())
                     .map(|record| record_constants::qualify(record, &unit_name, &own_types)),
-                discard: self.scopes.discard_info(name),
                 name: name.to_string(),
                 qualified_name: format!("{unit_name}.{name}"),
                 ty,

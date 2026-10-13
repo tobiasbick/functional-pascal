@@ -274,10 +274,16 @@ impl Worker {
             self.suspend_requested = false;
             return Ok(true);
         };
-        if !matches!(suspension, TaskSuspension::ScopeUnwind { .. }) {
+        if !matches!(
+            suspension,
+            TaskSuspension::ScopeUnwind { .. } | TaskSuspension::OwnerCleanup { .. }
+        ) {
             self.check_task_cancellation()?;
         }
         let ready = match suspension {
+            TaskSuspension::OwnerCleanup { groups, outcome } => {
+                self.poll_owned_groups(groups, outcome)
+            }
             TaskSuspension::SupervisionBackoff { .. } => self.supervised_ready(),
             TaskSuspension::GroupClose {
                 id,

@@ -160,9 +160,7 @@ define_codes!(SEMA_ALLOCATED_CODES => {
     /// Explicit discard requires a value rather than a procedure result.
     /// Documentation: `docs/pascal/language/functions/discard.md`.
     SEMA_DISCARD_REQUIRES_VALUE = 3020;
-    /// Explicit discard could lose a task handle or unverified callable captures.
-    /// Documentation: `docs/pascal/language/functions/discard.md`.
-    SEMA_UNSAFE_DISCARD = 3021;
+    // Reserved: 3021 (removed discard-specific task/capture restriction).
     /// A function result in statement position is neither consumed nor explicitly discarded.
     /// Documentation: `docs/pascal/language/functions/discard.md`.
     SEMA_UNUSED_FUNCTION_RESULT = 3022;
@@ -221,14 +219,11 @@ define_codes!(SEMA_ALLOCATED_CODES => {
     SEMA_TYPE_ANNOTATION_REQUIRED = 3036;
     /// A contract uses an expression outside its restricted read-only boundary.
     SEMA_INVALID_CONTRACT_EXPRESSION = 3037;
-    /// A `go` in an anonymous routine is lexically inside a task scope that cannot own it.
+    /// A go expression has no lexical task scope in its own routine.
     ///
     /// Documentation: `docs/pascal/tools/diagnostics.md` (FP3038).
     SEMA_GO_OUTSIDE_OWNING_SCOPE = 3038;
-    /// A `go` statement inside a task scope would lose a returned `Result` error.
-    ///
-    /// Documentation: `docs/pascal/tools/diagnostics.md` (FP3039).
-    SEMA_LOST_TASK_ERROR = 3039;
+    // Reserved: 3039 (removed special classification of returned Result errors).
     /// A handle of a scope-owned task could outlive its task scope.
     ///
     /// Documentation: `docs/pascal/tools/diagnostics.md` (FP3040).
@@ -236,6 +231,9 @@ define_codes!(SEMA_ALLOCATED_CODES => {
     /// A direct or indirect use may reach a binding before its initialization.
     /// Documentation: `docs/pascal/tools/diagnostics.md` (FP3041).
     SEMA_UNINITIALIZED_DEPENDENCY = 3041;
+    /// A worker's known callable dependencies access foreign mutable variables.
+    /// Documentation: `docs/pascal/tools/diagnostics.md` (FP3042).
+    SEMA_FOREIGN_TASK_STATE = 3042;
 });
 
 define_codes!(COMPILE_ALLOCATED_CODES => {

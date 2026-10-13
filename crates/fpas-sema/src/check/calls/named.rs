@@ -31,7 +31,6 @@ impl Checker {
         let ty = self.check_expr_with_expected(argument.argument_value(), expected);
         self.expr_types
             .insert(Self::expr_lookup_key(argument), ty.clone());
-        self.record_discard_info(argument);
         self.propagate_task_bound_expr(argument, Self::expr_lookup_key(argument));
         ty
     }

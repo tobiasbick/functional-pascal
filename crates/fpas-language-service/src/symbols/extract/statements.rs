@@ -195,8 +195,7 @@ pub(super) fn collect_statement_symbols(
             Stmt::Return(Some(value), _)
             | Stmt::Panic(value, _)
             | Stmt::Expression { expr: value, .. }
-            | Stmt::Discard { expr: value, .. }
-            | Stmt::Go { expr: value, .. } => {
+            | Stmt::Discard { expr: value, .. } => {
                 collect_expression_symbols(snapshot, owner, value, output);
             }
             Stmt::Return(None, _) | Stmt::Null(_) | Stmt::Break(_) | Stmt::Continue(_) => {}

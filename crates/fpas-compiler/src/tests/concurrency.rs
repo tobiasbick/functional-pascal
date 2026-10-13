@@ -10,7 +10,7 @@ mod wait_any;
 #[test]
 fn task_spawn_with_arguments_keeps_loop_branch_addresses_aligned() {
     assert_succeeds(
-        "program RegisterTaskArgumentLoop;\nuses Std.Tasks;\nfunction Worker(Value: integer): integer;\nbegin\n  return Value + 1;\nend function;\nbegin\n  var Tasks: array of task of integer := [];\n  for Index: integer := 1 to 8 do\n  begin\n    Tasks.PushInPlace(go Worker(Index));\n  end; end for;\n  WaitAll(Tasks);\n  if Tasks.Length() <> 8 then panic('task loop count mismatch'); end if;\nend.",
+        "program RegisterTaskArgumentLoop;\nuses Std.Tasks;\nfunction Worker(Value: integer): integer;\nbegin\n  return Value + 1;\nend function;\nbegin scope \n  var Tasks: array of task of integer := [];\n  for Index: integer := 1 to 8 do\n  begin\n    Tasks.PushInPlace(go Worker(Index));\n  end; end for;\n  WaitAll(Tasks);\n  if Tasks.Length() <> 8 then panic('task loop count mismatch'); end if;\n end scope; end.",
     );
 }
 
@@ -26,10 +26,10 @@ begin
   return A + B;
 end function;
 
-begin
+begin scope
   const T: task of integer := go Add(20, 22);
   Std.Console.WriteLn(Std.Tasks.Wait(T));
-end.",
+ end scope; end.",
     );
     assert_eq!(execution.value, fpas_bytecode::Value::Unit);
 }
@@ -46,9 +46,9 @@ begin
   Std.Console.WriteLn('worker');
 end procedure;
 
-begin
-  go Work();
-end.",
+begin scope
+  discard go Work();
+ end scope; end.",
     );
 }
 
@@ -73,10 +73,10 @@ begin
   return Burn(700) - 700 + Values[0] + Values[1];
 end function;
 
-begin
+begin scope
   const T: task of integer := go Work();
   if Std.Tasks.Wait(T) <> 42 then panic('task state was not restored'); end if;
-end.",
+ end scope; end.",
     );
 }
 
@@ -93,10 +93,10 @@ begin
   return Value;
 end function;
 
-begin
+begin scope
   const A: task of integer := go Work(42);
   discard Std.Tasks.Wait(A);
-end.",
+ end scope; end.",
     );
 }
 
@@ -126,7 +126,7 @@ begin
   end case;
 end function;
 
-begin
+begin scope
   case Std.Net.Listen('127.0.0.1', {port}) of
     when Ok(const ListenerValue):
     begin
@@ -141,7 +141,7 @@ begin
     end;
     when Error(const Message): panic(Message);
   end case;
-end."
+ end scope; end."
     );
 
     assert_succeeds(&source);
@@ -159,13 +159,13 @@ begin
   return Value;
 end function;
 
-begin
+begin scope
   const A: task of integer := go Work(20);
   const B: task of integer := go Work(22);
   Std.Tasks.WaitAll([A, B]);
   discard Std.Tasks.Wait(A);
   discard Std.Tasks.Wait(B);
-end.",
+ end scope; end.",
     );
 }
 
@@ -185,11 +185,11 @@ begin
   end function;
 end function;
 
-begin
+begin scope
   const Work: function(): integer := Make();
   const T: task of integer := go Work();
   discard Std.Tasks.Wait(T);
-end.";
+ end scope; end.";
     let error = run_program(source).expect_err("runtime must reject task-bound closure");
     assert!(error.message.contains("task-bound"));
 }
@@ -222,7 +222,7 @@ begin
   end case;
 end function;
 
-begin
+begin scope
   const Messages: channel of integer := CreateChannel(1);
   const Producer: task of boolean := go Produce(Messages);
   if Take(Messages) <> 20 then panic('first channel value was not FIFO'); end if;
@@ -234,7 +234,7 @@ begin
       if Message <> 'Channel is closed' then panic(Message); end if;
   end case;
   if CloseChannel(Messages) then panic('channel close was not idempotent'); end if;
-end.",
+ end scope; end.",
     );
 }
 
@@ -355,7 +355,7 @@ begin
   end case;
 end function;
 
-begin
+begin scope
   const Full: channel of integer := CreateChannel(1);
   case Send(Full, 1) of
     when Ok(_): begin end;
@@ -374,6 +374,6 @@ begin
   discard Cancel(ReceiveSource);
   if Wait(Receiving) <> 'Channel receive was cancelled' then
     panic('receive cancellation mismatch'); end if;
-end.",
+ end scope; end.",
     );
 }

@@ -83,7 +83,7 @@ pub(super) fn executable(
     runs: Vec<(u32, u32)>,
     debug_types: Vec<DebugType>,
 ) -> VerifiedExecutable {
-    Executable {
+    crate::vm::tests::task_images::scope_owned(Executable {
         code,
         functions,
         constants,
@@ -125,7 +125,7 @@ pub(super) fn executable(
                 .collect(),
         },
         entry: FunctionId::new(0),
-    }
+    })
     .verify()
     .expect("forced-return fixture executable")
 }

@@ -3,8 +3,15 @@
 use super::*;
 use crate::vm::cancellation::CancellationRegistry;
 
-fn returned(task: u64, message: &str) -> Option<GroupFailure> {
-    GroupFailure::returned(task, &Value::result_error(Value::Str(message.into())))
+fn runtime_failure(task: u64, message: &str) -> Option<GroupFailure> {
+    Some(GroupFailure::runtime(
+        task,
+        &Box::new(fpas_diagnostics::Diagnostic::error_without_source(
+            fpas_diagnostics::codes::RUNTIME_DIVISION_BY_ZERO,
+            message,
+            None,
+        )),
+    ))
 }
 
 #[test]
@@ -42,9 +49,9 @@ fn reports_keep_registration_order_and_first_terminal_outcome() {
     for task in 1..=3 {
         groups.enroll(group, 0, task).expect("child");
     }
-    groups.complete(3, returned(3, "third"));
-    groups.complete(1, returned(1, "cancelled"));
-    groups.complete(1, returned(1, "replacement"));
+    groups.complete(3, runtime_failure(3, "third"));
+    groups.complete(1, runtime_failure(1, "cancelled"));
+    groups.complete(1, runtime_failure(1, "replacement"));
     groups.complete(2, None);
     assert!(
         !cancellations
@@ -61,8 +68,8 @@ fn reports_keep_registration_order_and_first_terminal_outcome() {
     assert_eq!(
         reports,
         vec![
-            (1, GroupFailureKind::ReturnedError, "cancelled"),
-            (3, GroupFailureKind::ReturnedError, "third")
+            (1, GroupFailureKind::RuntimeError, "cancelled"),
+            (3, GroupFailureKind::RuntimeError, "third")
         ]
     );
 }
@@ -118,7 +125,7 @@ fn completed_probe_neither_cancels_nor_seals_pending_work() {
     groups.enroll(group, 0, 2).expect("admission remains open");
     assert!(groups.try_take_completed(group, 9).is_err());
     assert!(groups.complete(1, None));
-    assert!(groups.complete(2, returned(2, "reported")));
+    assert!(groups.complete(2, runtime_failure(2, "reported")));
     let closed = groups
         .try_take_completed(group, 0)
         .expect("completed probe")
@@ -216,11 +223,10 @@ fn shutdown_cancels_all_groups_without_pretending_pending_children_completed() {
 }
 
 #[test]
-fn returned_failure_messages_are_bounded_by_unicode_characters() {
-    let failure = returned(1, &"ä".repeat(5000)).expect("failure");
+fn runtime_failure_messages_are_bounded_by_unicode_characters() {
+    let failure = runtime_failure(1, &"ä".repeat(5000)).expect("failure");
     assert_eq!(failure.message.chars().count(), 4096);
-    assert_eq!(failure.code, 0);
-    assert!(GroupFailure::returned(1, &Value::Integer(7)).is_none());
+    assert_eq!(failure.code, 5001);
 }
 
 #[test]

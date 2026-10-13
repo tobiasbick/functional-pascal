@@ -89,15 +89,5 @@ pub(super) fn check_start(c: &mut Checker, name: &str, args: &[&Expr], span: Spa
         );
         return Ty::Error;
     }
-    if let Ty::Result(_, error) = &result
-        && !matches!(error.as_ref(), Ty::String | Ty::Error)
-    {
-        c.error_with_code(
-            SEMA_TYPE_MISMATCH,
-            "A group worker's Result error type must be string",
-            "Use result of (T, string) for an ordinary worker error.",
-            args[1].span(),
-        );
-    }
     Ty::Task(Box::new(result))
 }

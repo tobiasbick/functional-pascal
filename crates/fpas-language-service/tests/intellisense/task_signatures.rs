@@ -22,7 +22,7 @@ fn task_wait_signature_uses_the_handle_result_type() {
     ] {
         let temp = TempDirectory::new("task-signature");
         let source = format!(
-            "program T; uses Std.Tasks as Tasks; {routine} begin const Job: {annotation} := go Work(); {call} end."
+            "program T; uses Std.Tasks as Tasks; {routine} begin scope  const Job: {annotation} := go Work(); {call}  end scope; end."
         );
         let path = temp.write("task.fpas", &source);
         let mut service =

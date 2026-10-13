@@ -45,10 +45,10 @@ fn read_only_capture_of_a_parameter_copy_stays_task_bound() {
     let program = parse_ok(
         "program T;
         procedure CheckCopy(Value: integer);
-        begin var LocalValue: integer := Value;
+        begin scope  var LocalValue: integer := Value;
           const Reader: function(): integer := function(): integer begin return LocalValue; end function;
           const Work: task of integer := go Reader();
-        end procedure;
+         end scope; end procedure;
         begin CheckCopy(1); end.",
     );
     let errors = crate::compile(&program).expect_err("shared cell cannot cross task boundary");

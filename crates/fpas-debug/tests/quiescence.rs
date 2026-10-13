@@ -22,10 +22,10 @@ begin
   return Value;
 end function;
 
-begin
+begin scope
   const Pending: task of integer := go Work();
   WriteLn(Wait(Pending));
-end.
+ end scope; end.
 "#;
 
 fn server() -> JsonlServer {
@@ -134,10 +134,10 @@ begin
   panic('child boom');
 end procedure;
 
-begin
+begin scope
   const Pending: task := go Explode();
   Wait(Pending);
-end.
+ end scope; end.
 "#;
     let (program, diagnostics) = fpas_parser::parse(FAILURE);
     assert!(diagnostics.is_empty(), "parse diagnostics: {diagnostics:?}");
@@ -150,11 +150,11 @@ end.
     assert!(
         failed
             .iter()
-            .any(|record| { record["event"] == "runtime_error" && record["body"]["task_id"] == 1 })
+            .any(|record| { record["event"] == "runtime_error" && record["body"]["task_id"] == 0 })
     );
     assert!(stopped_events(&failed).iter().any(|event| {
         event["body"]["reason"] == "runtime_error"
-            && event["body"]["task_id"] == 1
+            && event["body"]["task_id"] == 0
             && event["body"]["all_tasks_stopped"] == true
     }));
     let tasks = server.handle_line(&request(3, "tasks", json!({})));

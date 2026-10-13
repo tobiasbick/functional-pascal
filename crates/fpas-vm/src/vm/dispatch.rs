@@ -2,7 +2,7 @@
 //!
 //! A batch keeps executing instructions without returning to the scheduling loop. Only opcodes
 //! that can suspend the task or advance a hosted callback operation (`Return`, `Intrinsic`,
-//! `SpawnTask`, `SpawnDetachedTask`, `Yield`) are followed by suspension and callback checks.
+//! `SpawnTask`, `Yield`) are followed by suspension and callback checks.
 
 mod opcodes;
 

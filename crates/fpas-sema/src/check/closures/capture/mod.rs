@@ -16,8 +16,6 @@ use super::{ClosureInfoMap, NestedRoutineCaptureMap};
 /// **Documentation:** `docs/pascal/language/functions/closures.md`
 #[derive(Debug, Clone, PartialEq)]
 pub struct CaptureBinding {
-    /// Whether the binding's reachable captures are statically task-free.
-    pub task_free: bool,
     /// Source name of the captured binding.
     pub name: String,
     /// Resolved semantic type at the capture boundary.
@@ -159,7 +157,6 @@ impl CaptureCollector<'_> {
             return;
         }
         self.captures.push(CaptureBinding {
-            task_free: self.scopes.discard_info(name).value,
             name: name.to_string(),
             ty: symbol.ty.clone(),
             mutable: symbol.mutable,

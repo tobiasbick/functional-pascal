@@ -18,7 +18,7 @@ begin
   end case;
 end function;
 
-begin
+begin scope
   case Std.Net.Connect('127.0.0.1', {port}, 1000) of
     when Ok(const ConnectionValue):
     begin
@@ -37,6 +37,6 @@ begin
     end;
     when Error(const Message): panic(Message);
   end case;
-end."
+ end scope; end."
     ));
 }

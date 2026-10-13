@@ -34,10 +34,14 @@ begin
   AssertTrue(IsCancellationRequested(Token));
   AssertTrue(CloseTaskGroupWithTimeout(Group, 0).IsError());
   discard Send(Gate, 1).Unwrap();
+  case Wait(Child) of
+    when Error(const Message):
+      AssertEquals('retained worker failure', Message);
+    when Ok(_):
+      panic('expected an ordinary Result error');
+  end case;
   const Reports: array of TaskFailure := CloseTaskGroupWithTimeout(Group, 1000).Unwrap();
-  AssertEquals(1, Reports.Length());
-  AssertTrue(Reports[0].Kind = TaskFailureKind.ReturnedError);
-  AssertEquals('retained worker failure', Reports[0].Message);
+  AssertEquals(0, Reports.Length());
   AssertEquals(0, CloseTaskGroup(Group).Length());
   discard CloseChannel(Gate);
 end.

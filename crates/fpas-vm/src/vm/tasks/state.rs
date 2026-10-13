@@ -8,6 +8,10 @@ use crate::vm::hosted::callbacks::CallbackContinuation;
 
 /// Complete mutable register-machine state transferable between pool workers.
 pub(in crate::vm) struct TaskState {
+    /// Child failure already observed by this task, retained through cleanup suspension.
+    pub observed_task_failure: Option<u64>,
+    /// Terminal body value/error retained while its owner cleanup suspends.
+    pub pending_completion: Option<Result<Value, crate::vm::VmError>>,
     /// Pending operation resumed before dispatch when a pool task yields its thread.
     pub suspension: Option<super::TaskSuspension>,
     /// Retry ownership, if this is an explicitly supervised child.
@@ -38,7 +42,6 @@ impl TaskState {
         function: &FunctionValue,
         info: &FunctionInfo,
         arguments: impl IntoIterator<Item = Value>,
-        retain_result: bool,
     ) -> Self {
         let (registers, register_initialized) = crate::vm::worker::Worker::register_window(
             usize::from(info.register_count),
@@ -50,6 +53,8 @@ impl TaskState {
                 .chain(function.captures.iter().cloned()),
         );
         Self {
+            observed_task_failure: None,
+            pending_completion: None,
             suspension: None,
             supervision: None,
             id,
@@ -59,7 +64,7 @@ impl TaskState {
             registers,
             register_initialized,
             frames: Vec::new(),
-            retain_result,
+            retain_result: true,
             instruction_count: 0,
             suppressed_initializers: Vec::new(),
             callback_continuations: Vec::new(),

@@ -34,8 +34,10 @@ begin
   return 7;
 end function;
 begin
+  scope
   const T: task of integer := go N();
   WriteLn(Wait(T));
+  end scope;
 end.
 ```
 
@@ -51,7 +53,8 @@ After `uses Std.Tasks;` use short names (`Wait`, `Cancel`, …) or qualified (`S
 T below is the function-task result type or the channel element type.
 Bare `task` means a procedure task with no result. Task-aware operations also
 accept that procedure form as described below; it is never an erased function
-handle. The polymorphic task operations take positional arguments only.
+handle. Fixed-arity task operations accept all positional or all named arguments,
+with no mixture within one call.
 
 | Kind | Name | Notes |
 |------|------|--------|
@@ -59,7 +62,7 @@ handle. The polymorphic task operations take positional arguments only.
 | type | `CancellationToken` | opaque clonable view of one source's state |
 | type | `WaitCase` | opaque single-use selection case owned by its creating task |
 | type | `TaskGroup` | opaque owner of explicitly registered child tasks |
-| type | `TaskFailureKind` | `ReturnedError`, `Panicked`, `RuntimeError`, or `Cancelled` |
+| type | `TaskFailureKind` | `Panicked`, `RuntimeError`, or `Cancelled` |
 | type | `TaskFailure` | child identity, failure kind, message, diagnostic code, and source position |
 | function | `CreateTaskGroup(): TaskGroup` | creates a group owned by the calling task |
 | function | `StartTaskInGroup<T>(Group: TaskGroup; Work: function(Token: CancellationToken): T): task of T` | starts a retained function child; a procedure worker returns task |
@@ -142,14 +145,18 @@ or `procedure(Token: CancellationToken)` type before starting it. Captures must 
 retains the routine's result type, so `Wait` retrieves its value using the existing task rules.
 Function workers return `task of T`; procedure workers return `task`. Their
 declarations, stored fields, and containers use those same fixed handle types.
-A worker returning a top-level `result of (T, E)` must use `string` for `E`.
+Result success and error payloads follow the ordinary type/transfer rules;
+the error payload is not restricted to string.
 
 The creator and registered children may start children in an open group. Unrelated tasks may not.
-Ordinary `go` does not implicitly register with a group. Store the returned child handle in a
-binding, even when completion will be observed only through the group. Leaving that binding
-unused does not detach the child: the group keeps ownership until close. The
-[`discard` keyword](../../language/functions/discard.md#task-handles-and-aggregates) rejects
-task handles, including group-owned handles. Limits are 4096 live groups per VM and 1024
+Ordinary go requires a same-routine lexical scope and does not register with a group.
+Bind a returned child handle when its result is needed, or explicitly discard it.
+The [discard keyword](../../language/functions/discard.md#task-handles-and-aggregates)
+accepts handles without cancelling, detaching, joining, or consuming results.
+The group retains ownership until close. Workers cannot access foreign mutable
+variables, including globals through helpers/callbacks; pass values or channels.
+Known access is FP3042; dynamic targets retain mandatory runtime checks.
+Limits are 4096 live groups per VM and 1024
 total registered children per group, including children that have already finished.
 
 ### StartSupervisedTask
@@ -166,9 +173,10 @@ External effects such as consumed messages or writes are not rolled back. Worker
 for partially completed operations themselves.
 
 The task identity remains stable. `Wait`, `WaitAny`, and `Select` observe only the final outcome.
-Successful recovery leaves no group failure. Exhaustion preserves the final ordinary error or
-panic diagnostic and produces one group failure, not a failure per attempt. With a zero retry
-limit, the first failure is final. Message text such as `'cancelled'` is never used to classify errors.
+Successful recovery leaves no group failure. Exhaustion returns a final Result Error as ordinary
+data without a group failure record. An exhausted panic preserves its original diagnostic and
+produces one `Panicked` failure, rather than a failure per attempt. With a zero retry limit, the
+first outcome is final. Message text such as `'cancelled'` is never used to classify errors.
 
 Cancellation is checked before the initial attempt and each retry. Cancellation before a pending
 attempt produces a `Cancelled` failure and prevents its body from starting. It also interrupts
@@ -261,19 +269,21 @@ collect grouped panic and runtime diagnostics as data without observing a failed
 | `TaskId` | `integer` | identity of the registered child |
 | `Kind` | `TaskFailureKind` | failure category |
 | `Message` | `string` | message truncated to at most 4096 characters |
-| `Code` | `integer` | runtime diagnostic code, or zero for a returned error |
-| `Line` | `integer` | runtime source line, or zero for a returned error |
-| `Column` | `integer` | runtime source column, or zero for a returned error |
+| `Code` | `integer` | runtime diagnostic code |
+| `Line` | `integer` | runtime source line, or zero when unavailable |
+| `Column` | `integer` | runtime source column, or zero when unavailable |
 
-`ReturnedError` means the worker returned a top-level `Error(Message)`. `Panicked` means it
-executed `panic`; `RuntimeError` covers other runtime diagnostics; `Cancelled` identifies runtime
-cancellation. An ordinary `Error('cancelled')` remains `ReturnedError`: message text does not
-determine the category. Successful returns do not produce failure records.
+`Panicked` means the worker executed panic; `RuntimeError` covers other runtime
+diagnostics; `Cancelled` identifies runtime cancellation. Returned Error values
+are ordinary Result data and produce no group failure records. This also applies
+to a supervised worker's final Error after its explicit retry policy is exhausted.
 
 Ordinary error results do not automatically cancel siblings. Group-owned runtime failures are
-collected without aborting unrelated work; nongroup task failure behavior is unchanged. Explicit
-`Wait` on a failed child still propagates its original diagnostic. Consuming an ordinary Result
-with `Wait` does not remove that child's failure from the group's report.
+collected without aborting unrelated work. Explicit Wait on a failed child still
+propagates its original diagnostic. Retrieve ordinary Result data before close;
+explicitly handle its branches with case/try when required. On creating-task
+termination, any open groups are cancelled and fully closed before its value or
+failure is published. Unexpected cleanup failures retain their original diagnostics.
 
 Normal and deterministic debugger execution share these rules. A group-owned debugger failure
 emits a task exit event without stopping the parent. The exited child cannot be resumed through
@@ -318,7 +328,8 @@ blocked senders and receivers.
 The cancellable variants additionally observe a `CancellationToken`. They return
 `Error('Channel send was cancelled')` or `Error('Channel receive was cancelled')`. Cancellation
 does not close the channel. If cancellation is already requested when an operation starts, the
-cancellation result takes precedence.
+cancellation result takes precedence over ready transfer on every probe. Invalid
+arguments remain runtime diagnostics; cancellation never transfers a value.
 
 `TrySend` and `TryReceive` never wait. `TrySend` returns `Ok(false)` when the channel is open but
 full. `TryReceive` returns `Ok(None)` when it is open but empty and `Ok(Some(Value))` after receiving
@@ -328,7 +339,7 @@ temporary full or empty state.
 `SendWithTimeout` and `ReceiveWithTimeout` take a relative, non-negative millisecond duration. The
 runtime converts it to a monotonic deadline once, so wakeups and scheduler work do not restart the
 timeout. A zero timeout performs one immediate attempt. An available slot or buffered value wins
-that attempt; otherwise the operation returns `Error('Channel send timed out')` or
+every probe, including after suspension with an expired deadline; otherwise the operation returns `Error('Channel send timed out')` or
 `Error('Channel receive timed out')`. A timeout does not close or otherwise change the channel.
 
 Channel handles belong to their creating VM. A channel accepts only its declared element type, and
@@ -347,8 +358,10 @@ Using that procedure form as an expression is rejected, including inside an
 aggregate or another call's arguments.
 
 ```pascal
-const T: task of integer := go Square(6);
-WriteLn(Wait(T));
+scope
+  const T: task of integer := go Square(6);
+  WriteLn(Wait(T));
+end scope;
 ```
 
 **Hint:** If you need the result only once, assign `Wait(T)` to a variable and reuse that value.
@@ -365,12 +378,14 @@ cannot share a task array. Use a scope to join differently typed children, or
 wait on separately typed handles outside a shared scope.
 
 ```pascal
+scope
 const Ta: task := go Work(1); // Work is a procedure.
 const Tb: task := go Work(2);
 WaitAll([Ta, Tb]);
 // still valid:
 Wait(Ta);
 Wait(Tb);
+end scope;
 ```
 
 An empty array completes immediately.
@@ -417,8 +432,8 @@ Timeout returns `Error('Task wait timed out')`; cancellation returns
 
 - Timeout milliseconds must be non-negative. One monotonic budget starts after argument validation;
   wakeups and scheduler probes do not reset it. Zero performs one immediate completion observation.
-- In that initial observation, a ready task wins over timeout. In subsequent observations, an
-  expired budget wins over a successful completion, even if it became available while the caller
+- On every observation, including resumed probes, readiness wins over an expired
+  budget, even if completion became available while the caller
   was not observing. Completions are not timestamped.
 - A cancelled token wins over successful completion, including on entry. Invalid task identities
   and task failures are checked first; they remain runtime diagnostics, not ordinary Result errors.
@@ -497,10 +512,10 @@ Runnable example: [`select_events.fpas`](../../../../examples/pascal/concurrency
 ## Runtime errors
 
 - **`Wait` after the result was already taken:** wait each task handle at most once for its return value (see VM hint: do not double-await the same completion).
-- **Unknown task handle:** `Wait`, `WaitAll`, and `WaitAny` accept retained task handles created in the current VM by a `go` expression, `StartTaskInGroup`, or `StartSupervisedTask`. Forged or foreign identities produce an invalid-task diagnostic instead of waiting indefinitely. A `go` statement produces no handle to pass to these operations; a `go` expression outside a scope still produces a waitable handle.
+- **Unknown task handle:** Wait operations accept owned handles created in the current VM by a scoped go expression, StartTaskInGroup, or StartSupervisedTask. Forged or foreign identities produce an invalid-task diagnostic. Owner close releases child results; retrieve required data beforehand.
 - **Invalid wait-any size:** `WaitAny` requires between 1 and 1,048,576 task handles.
 - **Task failure:** `Wait` and `WaitAll` propagate the spawned task's original diagnostic, including its code and source location. The runtime also enters its **failure** path so other spawned work can stop cooperatively. Fix the reported fault in the spawned task.
-- **Main-task teardown:** retained tasks still suspended in `Std.Time.Sleep` are completed with a shutdown diagnostic when the main task finishes. Wait for every required result before leaving the main task. See [Scheduling](../../language/concurrency/scheduling.md).
+- **Creating-task teardown:** remaining groups are cancelled and fully joined before publishing the task's outcome, including on the main task. Cooperative children must observe their cancellation tokens. See [Scheduling](../../language/concurrency/scheduling.md).
 - **Invalid cancellation handle:** sources and tokens must come from the current VM and be passed to
   the function matching their static type.
 - **Invalid channel capacity:** `CreateChannel` accepts only `1..=1048576`.

@@ -145,7 +145,7 @@ include = ["src/**/*.fpas"]
     );
     let source = "program Demo;
         uses Demo.Api as Api, Demo.Types as Model, Other.Helper, Std.Console as Console, Std.Tasks as Jobs;
-        begin
+        begin scope
           var Counter: integer := 1;
           Api.Increase(var Counter);
           Api.Apply(Api.Increase, var Counter);
@@ -163,7 +163,7 @@ include = ["src/**/*.fpas"]
           Console.WriteLn(Api.StateCode(Some(Model.State.Ready)), ' ', Api.StateCode(Some(Model.State.Busy)), ' ', Api.StateCode(None));
           Console.WriteLn(Api.BoolCode(Some(true)), ' ', Api.BoolCode(Some(false)), ' ', Api.BoolCode(None));
           Console.WriteLn(Api.NestedArea(Some(Shape)), ' ', Api.NestedArea(None));
-        end.";
+         end scope; end.";
     write(&main, source);
     let cold = build(&root, &main);
     assert_eq!(cold.counters().compiled, 3);

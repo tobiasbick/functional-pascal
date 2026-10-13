@@ -19,33 +19,22 @@ impl Checker {
         let previous_error_count = self.errors.len();
         let ty = self.check_call_stmt(designator, args, span);
         if self.errors.len() == previous_error_count {
-            let safe = self.call_result_is_task_free(
-                crate::designator_lookup_key(designator),
-                designator,
-                &ty,
-            );
-            self.check_unused_result(&ty, safe, span);
+            self.check_unused_result(&ty, span);
         }
     }
 
-    /// Suggests explicit discard only when the existing operand rules permit it.
-    pub(crate) fn check_unused_result(&mut self, ty: &Ty, safe: bool, span: Span) {
+    /// Suggests ordinary value consumption, including explicit discard.
+    pub(crate) fn check_unused_result(&mut self, ty: &Ty, span: Span) {
         let ty = self.resolve_visible_type(ty);
         if matches!(ty, Ty::Unit | Ty::Error) {
             return;
         }
-        let hint = match (&ty, safe) {
-            (Ty::Result(_, _), true) => {
+        let hint = match &ty {
+            Ty::Result(_, _) => {
                 "Handle the result with `case`, propagate errors with `try` while consuming the success value, or explicitly ignore it with `discard Call();`."
             }
-            (Ty::Result(_, _), false) => {
-                "Handle the result with `case` or propagate errors with `try` while retaining and consuming its task handles or callable captures."
-            }
-            (_, true) => {
+            _ => {
                 "Assign or return the value, pass it to another call, or explicitly ignore it with `discard Call();`."
-            }
-            (_, false) => {
-                "Retain and consume the value; its type or unverified callable captures prevent explicit discard."
             }
         };
         self.error_with_code(

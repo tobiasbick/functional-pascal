@@ -1,6 +1,10 @@
 # AP04: Discarded function values
 
 Status: complete. Effort: small.
+AP40 replaces this package's original task/capture/generic discard restrictions
+and standalone go exception. Discard now accepts every value; owners retain
+tasks independently. Current rules: [discard](../../../pascal/language/functions/discard.md)
+and [AP40](../ap40-explicit-task-lifetimes/README.md). AP04 remains complete.
 Completion is tracked in the
 [central README](../README.md); the process is in
 [development-process.md](../development-process.md).

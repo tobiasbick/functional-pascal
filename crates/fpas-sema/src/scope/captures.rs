@@ -8,12 +8,7 @@ use fpas_lexer::Span;
 impl ScopeStack {
     /// Refreshes live routine bindings after recursive capture metadata is completed.
     /// See `docs/pascal/language/functions/closures.md`.
-    pub(crate) fn update_routine_capture_capabilities(
-        &mut self,
-        key: usize,
-        task_bound: bool,
-        task_free: bool,
-    ) {
+    pub(crate) fn update_routine_capture_capabilities(&mut self, key: usize, task_bound: bool) {
         for binding in self
             .scopes
             .iter_mut()
@@ -21,7 +16,6 @@ impl ScopeStack {
         {
             if binding.routine_capture_key == Some(key) {
                 binding.symbol.task_bound = task_bound;
-                binding.discard.value = task_free;
             }
         }
     }

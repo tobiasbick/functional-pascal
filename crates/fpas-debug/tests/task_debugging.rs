@@ -22,10 +22,10 @@ begin
   return Value;
 end function;
 
-begin
+begin scope
   const Pending: task of integer := go Work();
   WriteLn(Wait(Pending));
-end.
+ end scope; end.
 "#;
 
 fn server() -> JsonlServer {
@@ -228,10 +228,10 @@ begin
   return Scores['Added'] + Marker;
 end function;
 
-begin
+begin scope
   const Pending: task of integer := go Work();
   WriteLn(Wait(Pending));
-end.
+ end scope; end.
 "#;
     let mut server = server_for(DICTIONARY_TASK);
     let _ = server.handle_line(&request(1, "initialize", json!({"version":2})));
@@ -287,15 +287,15 @@ procedure Detached();
 begin
 end procedure;
 
-begin
-  go Detached();
+begin scope
+  discard go Detached();
   const First: task of integer := go Work(20);
   const Second: task of integer := go Work(22);
   const Pending: array of task of integer := [First, Second, First];
   WaitAll(Pending);
   WriteLn(Wait(First));
   WriteLn(Wait(Second));
-end.
+ end scope; end.
 "#;
     const NESTED: &str = r#"program NestedTasks;
 
@@ -307,15 +307,15 @@ begin
 end function;
 
 function Parent(): integer;
-begin
+begin scope
   const Child: task of integer := go Leaf(41);
   return Wait(Child) + 1;
-end function;
+ end scope; end function;
 
-begin
+begin scope
   const Pending: task of integer := go Parent();
   WriteLn(Wait(Pending));
-end.
+ end scope; end.
 "#;
 
     let mut wait_all = server_for(WAIT_ALL);
@@ -363,23 +363,24 @@ begin
   panic('child boom');
 end procedure;
 
-begin
+begin scope
   const Pending: task := go Explode();
   Wait(Pending);
-end.
+ end scope; end.
 "#;
-    const SHUTDOWN: &str = r#"program DetachedShutdown;
+    const SHUTDOWN: &str = r#"program OwnedShutdown;
 
-uses Std.Console, Std.Tasks, Std.Time;
+uses Std.Console, Std.Tasks;
+const Gate: channel of boolean := CreateChannel(1);
 
-procedure Later();
+procedure Later(Token: CancellationToken);
 begin
-  Sleep(1000);
-  WriteLn('too late');
+  if ReceiveWithCancellation(Gate, Token).IsOk() then WriteLn('too late'); end if;
 end procedure;
 
 begin
-  go Later();
+  const Group := CreateTaskGroup();
+  discard StartTaskInGroup(Group, Later);
 end.
 "#;
 
@@ -392,7 +393,7 @@ end.
         .filter(|record| record["event"] == "runtime_error")
         .collect::<Vec<_>>();
     assert_eq!(runtime_errors.len(), 1, "{failed:?}");
-    assert_eq!(runtime_errors[0]["body"]["task_id"], 1);
+    assert_eq!(runtime_errors[0]["body"]["task_id"], 0);
     assert!(
         runtime_errors[0]["body"]["message"]
             .as_str()
@@ -400,8 +401,9 @@ end.
     );
     let disconnected = failure.handle_line(&request(3, "disconnect", json!({})));
     assert_eq!(
-        disconnected
+        failed
             .iter()
+            .chain(disconnected.iter())
             .filter(|record| {
                 record["event"] == "task"
                     && record["body"]["reason"] == "exited"

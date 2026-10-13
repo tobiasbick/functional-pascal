@@ -103,7 +103,7 @@ fn function_value_preserves_callee_across_try() {
 #[test]
 fn task_spawn_preserves_callee_and_arguments_across_try() {
     check_expression(
-        "return Ok(Std.Tasks.Wait(go Combine(try ReadValue(1, FailAt), try ReadValue(2, FailAt))));",
+        "scope return Ok(Std.Tasks.Wait(go Combine(try ReadValue(1, FailAt), try ReadValue(2, FailAt)))); end scope;",
     );
 }
 

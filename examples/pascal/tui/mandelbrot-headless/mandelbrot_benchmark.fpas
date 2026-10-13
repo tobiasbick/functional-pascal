@@ -17,38 +17,40 @@ end function;
 
 function RenderOnce(Paint: boolean): integer;
 begin
-  const Width: integer := 152;
-  const Height: integer := 35;
-  const Request: MandelbrotRenderRequest := mandelbrot.render.mandelbrotrenderrequest(Generation := 1, XMin := -3.355714285714286, XMax := 1.855714285714286, YMin := -1.2, YMax := 1.2, Width := Width, Height := Height, MaxIter := 160, Palette := PaletteKind.DeepOcean);
-  const Inbox: channel of MandelbrotRenderFrame := CreateChannel(8);
-  const Source: CancellationSource := CreateCancellationSource();
-  const Worker: task of result of (boolean, string) := go RunBackgroundRender(Request, Inbox, GetCancellationToken(Source));
-  const App: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(Width, Height));
-  var Grid: TuiCellGrid := TuiCellGrid.Create(Width, Height, array.Fill(TuiCell.Styled(' ', TuiStyle.FromColors(TuiColor.FromRgb(0, 0, 0), TuiColor.FromRgb(0, 0, 0))), Width *
-                                                                                                                                                                        Height));
-  var Count: integer := 0;
-  while Count < Width * Height do
-    begin
-      const Message: MandelbrotRenderFrame := ReceiveWithTimeout(Inbox, 30000).Unwrap();
-      Count := Count + Message.Cells.Length();
-      if Paint then
-        begin
-          Grid := TuiCellGrid.Create(Width, Height, Message.Cells);
-          Grid := App.RunIterations(Grid, Update, View, 1, 0);
-        end;
-      end if;
-    end;
-  end while;
+  scope
+    const Width: integer := 152;
+    const Height: integer := 35;
+    const Request: MandelbrotRenderRequest := mandelbrot.render.mandelbrotrenderrequest(Generation := 1, XMin := -3.355714285714286, XMax := 1.855714285714286, YMin := -1.2, YMax := 1.2, Width := Width, Height := Height, MaxIter := 160, Palette := PaletteKind.DeepOcean);
+    const Inbox: channel of MandelbrotRenderFrame := CreateChannel(8);
+    const Source: CancellationSource := CreateCancellationSource();
+    const Worker: task of result of (boolean, string) := go RunBackgroundRender(Request, Inbox, GetCancellationToken(Source));
+    const App: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(Width, Height));
+    var Grid: TuiCellGrid := TuiCellGrid.Create(Width, Height, array.Fill(TuiCell.Styled(' ', TuiStyle.FromColors(TuiColor.FromRgb(0, 0, 0), TuiColor.FromRgb(0, 0, 0))), Width *
+                                                                                                                                                                          Height));
+    var Count: integer := 0;
+    while Count < Width * Height do
+      begin
+        const Message: MandelbrotRenderFrame := ReceiveWithTimeout(Inbox, 30000).Unwrap();
+        Count := Count + Message.Cells.Length();
+        if Paint then
+          begin
+            Grid := TuiCellGrid.Create(Width, Height, Message.Cells);
+            Grid := App.RunIterations(Grid, Update, View, 1, 0);
+          end;
+        end if;
+      end;
+    end while;
 
-  if not Wait(Worker).IsOk() then
-    begin
-      panic('render failed');
-    end;
-  end if;
+    if not Wait(Worker).IsOk() then
+      begin
+        panic('render failed');
+      end;
+    end if;
 
-  App.Close();
-  discard CloseChannel(Inbox);
-  return Count;
+    App.Close();
+    discard CloseChannel(Inbox);
+    return Count;
+  end scope;
 end function;
 
 begin

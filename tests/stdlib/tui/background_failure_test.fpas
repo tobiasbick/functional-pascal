@@ -15,15 +15,15 @@ begin
         const Ready: channel of boolean := State.Ready;
         Cmd.StartBackground(19, function(Token: CancellationToken): result of (boolean, string) begin
           discard Send(Ready, true);
-          return Error('expected background failure');
+          panic('expected background failure');
         end function);
         return State;
       end;
     when TuiMsg.BackgroundFailed(const Id, const Kind, const Message, const Code, const Line, const Column):
       begin
         AssertEquals(19, Id);
-        AssertTrue(Kind = TaskFailureKind.ReturnedError);
-        AssertEquals('expected background failure', Message);
+        AssertTrue(Kind = TaskFailureKind.Panicked);
+        AssertEquals('panic: expected background failure', Message);
         return FailureModel(Ready := State.Ready, FailureSeen := true);
       end;
     when TuiMsg.Key(_), TuiMsg.Pointer(_), TuiMsg.Tick(_), TuiMsg.Resize(_), TuiMsg.FocusChanged(_, _), TuiMsg.Action(_, _), TuiMsg.TextChanged(_, _, _, _), TuiMsg.TextAreaChanged(_, _, _, _, _), TuiMsg.CheckChanged(_, _, _), TuiMsg.SelectionChanged(_, _, _), TuiMsg.ScrollChanged(_, _, _), TuiMsg.MenuChanged(_, _, _), TuiMsg.QuitRequested:

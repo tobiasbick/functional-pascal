@@ -187,11 +187,13 @@ begin
 end procedure;
 begin
   var Cell: integer := 1;
-  var Current: Action := Noop;
-  const SpawnStop: integer := 0;
-  const Pending: task := go Current();
-  Wait(Pending);
-  return Cell;
+  scope
+    var Current: Action := Noop;
+    const SpawnStop: integer := 0;
+    const Pending: task := go Current();
+    Wait(Pending);
+    return Cell;
+  end scope;
 end function;
 
 function Worker(): Handler;
@@ -207,6 +209,11 @@ begin
   return Current;
 end function;
 
+function GroupWorker(Token: CancellationToken): Handler;
+begin
+  return Worker();
+end function;
+
 begin
   var Current: Handler := Identity;
   const Mutated: Handler := Mutating();
@@ -220,8 +227,10 @@ begin
   const Boxed: integer := NestedBox();
   const CapturedDest: Handler := CaptureDest();
   const Spawned: integer := SpawnProbe();
-  const Child: task of Handler := go Worker();
+  const Group := CreateTaskGroup();
+  const Child: task of Handler := StartTaskInGroup(Group, GroupWorker);
   const Stolen: Handler := Wait(Child);
   const RootStop: integer := 0;
   WriteLn(Stolen(1));
+  discard CloseTaskGroup(Group);
 end.

@@ -25,7 +25,7 @@ fn task_execution_keeps_shared_globals() {
     let mut image = unverified(
         vec![
             abx(Opcode::LoadConstant, 0, 0),
-            abc_aux(Opcode::SpawnDetachedTask, 0, 1, 0, 0),
+            abc_aux(Opcode::SpawnTask, 0, 0, 1, 0),
             return_unit(),
         ],
         vec![Constant::Function {

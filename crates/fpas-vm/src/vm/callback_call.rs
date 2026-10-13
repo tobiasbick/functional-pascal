@@ -134,6 +134,8 @@ impl Worker {
         if execution.is_err() {
             self.scope_failure_sequence
                 .set(callback.scope_failure_sequence.take());
+            self.observed_task_failure
+                .set(callback.observed_task_failure.take());
         }
         *self.callback_worker.borrow_mut() = Some(callback);
         let execution = execution?;
@@ -176,6 +178,7 @@ impl Worker {
         self.instruction_count = 0;
         self.callback_instruction_count.set(0);
         self.current_address = start;
+        self.observed_task_failure.set(None);
         self.task_id = task_id;
         self.retain_result = false;
         self.instructions_until_yield = super::TIMESLICE;

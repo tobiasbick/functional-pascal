@@ -46,8 +46,13 @@ fn run_to_completion(mut worker: Worker, scheduler: &TaskScheduler) -> Result<()
         other => other,
     };
     let outcome = match attempt {
-        Ok(Some(value)) => worker.supervised_outcome(Ok(value)),
-        Err(error) => worker.supervised_outcome(Err(error)),
+        Ok(Some(value)) => worker
+            .finish_owned_groups(Ok(value))
+            .and_then(|value| value.map_or(Ok(None), |value| worker.supervised_outcome(Ok(value)))),
+        Err(error) => match worker.finish_owned_groups(Err(error)) {
+            Err(error) => worker.supervised_outcome(Err(error)),
+            outcome => outcome,
+        },
         Ok(None) => Ok(None),
     };
     match outcome {
@@ -57,7 +62,15 @@ fn run_to_completion(mut worker: Worker, scheduler: &TaskScheduler) -> Result<()
             }
             Ok(())
         }
-        Ok(None) => Ok(()),
+        Ok(None) => {
+            if matches!(
+                worker.task_suspension,
+                Some(super::TaskSuspension::OwnerCleanup { .. })
+            ) {
+                worker.park_pool_suspension()?;
+            }
+            Ok(())
+        }
         Err(error) => {
             if worker.retain_result {
                 let grouped = scheduler.store_failure(worker.task_id, error.clone());

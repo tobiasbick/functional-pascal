@@ -41,8 +41,8 @@ fn intrinsic_calls_require_consumption_and_procedures_remain_valid() {
         "program T; uses Std.Console, Std.Tasks;
       function Value(): integer; begin return 1; end function;
       procedure Work(); begin WriteLn('work'); end procedure;
-      begin Work(); WriteLn('hello'); go Work(); go Value();
-      const Job: task of integer := go Value(); discard Wait(Job); end.",
+      begin scope  Work(); WriteLn('hello'); discard go Work(); discard go Value();
+      const Job: task of integer := go Value(); discard Wait(Job);  end scope; end.",
     );
 }
 

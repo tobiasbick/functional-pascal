@@ -4,8 +4,10 @@
 mod calls;
 mod collection;
 mod expressions;
+mod external_calls;
 mod statements;
 mod walker;
+mod workers;
 
 use crate::check::Checker;
 use crate::scope::SymbolKind;
@@ -134,10 +136,12 @@ impl Checker {
             }
         }
         let mut failures = Vec::new();
+        let mut task_failures = Vec::new();
         for (&key, routine) in &model.routines {
             let mut walk = walker::Walker::new(self, &model, &summaries, key, true);
             walk.routine(routine);
             failures.extend(walk.errors);
+            task_failures.extend(walk.task_errors);
         }
         let mut walk = walker::Walker::new(self, &model, &summaries, collection::Owner::Root, true);
         walk.initializers(declarations);
@@ -145,6 +149,7 @@ impl Checker {
             walk.statements(body);
         }
         failures.extend(walk.errors);
+        task_failures.extend(walk.task_errors);
         let exported = model
             .routines
             .iter()
@@ -156,6 +161,10 @@ impl Checker {
                     fpas_unit::interface::RoutineInitialization {
                         qualified_name: name.clone(),
                         called_parameters: summary.called_parameters.iter().copied().collect(),
+                        started_parameters: summary.started_parameters.iter().copied().collect(),
+                        mutable_globals: summary.mutable_globals.iter().cloned().collect(),
+                        unknown_worker: summary.unknown_worker
+                            || !summary.started_bindings.is_empty(),
                         returned_parameters: summary
                             .returned
                             .iter()
@@ -174,6 +183,19 @@ impl Checker {
             })
             .collect();
         self.initialization.exported = exported;
+        task_failures.sort_by_key(|failure| {
+            (
+                failure.span.source_id,
+                failure.span.offset,
+                failure.name.clone(),
+            )
+        });
+        task_failures.dedup_by(|left, right| left.span == right.span && left.name == right.name);
+        for failure in task_failures {
+            self.error_with_code(fpas_diagnostics::codes::SEMA_FOREIGN_TASK_STATE,
+                format!("Worker task cannot access foreign mutable state: {}", failure.name),
+                "Pass a value from the starting task, use worker-local variables, or communicate through channels. Make callable dependencies explicit; workers cannot read or write mutable program/unit globals.", failure.span);
+        }
         failures.sort_by_key(|failure| {
             (
                 failure.span.source_id,

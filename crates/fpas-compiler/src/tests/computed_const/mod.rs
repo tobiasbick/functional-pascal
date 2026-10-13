@@ -15,10 +15,11 @@ fn task_const_preserves_declared_result_type_at_global_and_local_levels() {
     assert_succeeds(
         "program T; uses Std.Tasks;
         function Work(): integer; begin return 42; end function;
-        const GlobalTask: task of integer := go Work();
-        begin const LocalTask: task of integer := go Work();
+        const Owner: TaskGroup := CreateTaskGroup();
+        const GlobalTask: task of integer := StartTaskInGroup(Owner, function(Token: CancellationToken): integer begin return Work(); end function);
+        begin scope  const LocalTask: task of integer := go Work();
         const First: integer := Wait(GlobalTask); const Second: integer := Wait(LocalTask);
-        if First <> 42 or Second <> 42 then panic('task result'); end if; end.",
+        if First <> 42 or Second <> 42 then panic('task result'); end if;  end scope; end.",
     );
 }
 

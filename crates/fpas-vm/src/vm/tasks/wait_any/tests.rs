@@ -19,16 +19,16 @@ begin
   return 9;
 end function;
 function Parent(): integer;
-begin
+begin scope
   const T: task of integer := go Child();
   if WaitAny([T]) <> 0 then panic('child index'); end if;
   return Wait(T);
-end function;
-begin
+ end scope; end function;
+begin scope
   const T: task of integer := go Parent();
   if WaitAny([T]) <> 0 then panic('parent index'); end if;
   if Wait(T) <> 9 then panic('result'); end if;
-end."#,
+ end scope; end."#,
     );
     assert!(errors.is_empty(), "{errors:?}");
     let mut vm = crate::vm::Vm::new(fpas_compiler::compile(&program).expect("compile"));

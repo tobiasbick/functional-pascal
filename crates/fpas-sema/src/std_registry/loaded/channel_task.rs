@@ -31,7 +31,7 @@ pub fn register_std_task(c: &mut Checker) {
     let kind = type_registration::register_enum_type(
         c,
         s::STD_TASK_TASK_FAILURE_KIND,
-        &["ReturnedError", "Panicked", "RuntimeError", "Cancelled"],
+        &["Panicked", "RuntimeError", "Cancelled"],
     );
     let failure = type_registration::register_record_type(
         c,

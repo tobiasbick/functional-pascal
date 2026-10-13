@@ -284,9 +284,10 @@ end.
 ```
 
 Consume a function result in an expression or explicitly use `discard Call(...);`.
-`discard` cannot throw away a task or an aggregate containing tasks; callable capture
-state also affects whether discarding is allowed. For a task with no handle, use the
-`go` statement subject to scope rules below. Tail calls can reuse frames when no
+`discard` accepts every value type, including task handles, aggregates, generics,
+channels, and captured callables. It does not cancel, detach, join, or consume a
+task result; the owner retains the child. For side-effect work, use the
+`discard go Work();` expression inside a scope. Tail calls can reuse frames when no
 pending contract/scope work prevents it; do not rely on that under the debugger.
 See [functions](language/functions/README.md).
 
@@ -797,8 +798,9 @@ See [types](language/types/README.md).
 
 `go Routine(Arguments)` starts a task. As an expression it returns `task of T`
 for a function returning T, or `task` for a procedure with no result. Bare
-`task` has that fixed meaning in every annotation and never infers T. As a
-statement `go` creates no handle. `Wait`, channels and cancellation APIs require
+`task` has that fixed meaning in every annotation and never infers T. Every go
+requires a scope in the same routine; bind its handle or write `discard go Work();`.
+Standalone go is FP3022; missing ownership is FP3038. `Wait`, channels and cancellation APIs require
 `uses Std.Tasks;`. `Wait(Handle)` consumes the retained result once; procedure
 tasks use `Wait(Handle);` without a value. WaitAll/WaitAny use homogeneous task
 arrays; mixed completion selection uses TaskCase/Select with original typed handles.
@@ -812,10 +814,17 @@ children. `return`, `break`, `continue`, failed `try`, or runtime failure leavin
 scope cancels and joins outstanding children before leaving. Called routines do not
 inherit the caller's lexical task ownership. Handles cannot escape their owning scope.
 A child's `Error(...)` result is an ordinary value; a child panic fails the scope.
-Inside a scope, a Result-returning child needs a handle so its result is handled;
-it cannot be started as a `go` statement with no handle. A task started by `go`
-outside a scope has no lexical scope owner and no automatic join; its expression
-form still produces a waitable handle. Keep and wait for that handle when completion matters.
+Returned Error values are ordinary data for both scope and group children.
+Groups are cancelled and fully closed before their creating task publishes its
+terminal outcome, including main and debugger execution. Retrieve required data
+with Wait before its owner closes; discard does not retrieve it. Wait consumes
+once across aliases; WaitAll, WaitAny, and TaskCase only observe, even after retrieval.
+Workers cannot read or write foreign mutable variables, including globals
+through helpers/callbacks. Pass snapshots, mutate worker-local copies, and use
+channels. Known access is FP3042; dynamic targets retain mandatory runtime checks.
+Controlled waits validate arguments and original failures first, then use
+cancellation, readiness, timeout on every probe. Select instead uses ready-case
+input order, including timer/cancellation cases.
 
 Channels carry typed values. `CreateChannel(Capacity)` requires a positive capacity;
 `Send` and `Receive` may block and return Results. Coordinate sends/receives and close
@@ -844,7 +853,7 @@ begin
     const Answer: integer := Wait(Work);
     AssertEquals(42, Answer);
     const Queue: channel of integer := CreateChannel(1);
-    go Produce(Queue);
+    discard go Produce(Queue);
     const Message: integer := Receive(Queue).Unwrap();
     AssertEquals(9, Message);
     AssertTrue(CloseChannel(Queue));

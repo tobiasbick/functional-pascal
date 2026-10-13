@@ -87,7 +87,7 @@ pub(super) fn assignment_executable() -> VerifiedExecutable {
         sequence_points: vec![point(10, 10)],
         ..Default::default()
     };
-    Executable {
+    crate::vm::tests::task_images::scope_owned(Executable {
         code: vec![
             Instruction::abx(Opcode::LoadConstant, 7, 0).expect("count value"),
             abc(Opcode::Move, 0, 7, 0),
@@ -195,7 +195,7 @@ pub(super) fn assignment_executable() -> VerifiedExecutable {
         },
         entry: FunctionId::new(0),
         distinct_types: Vec::new(),
-    }
+    })
     .verify()
     .expect("uninitialized assignment executable")
 }
@@ -262,7 +262,7 @@ pub(super) fn task_assignment_executable() -> VerifiedExecutable {
             ..Default::default()
         },
     };
-    Executable {
+    crate::vm::tests::task_images::scope_owned(Executable {
         code: vec![
             Instruction::abx(Opcode::LoadConstant, 0, 0).expect("work function"),
             abc_aux(Opcode::SpawnTask, 1, 0, 0, 0),
@@ -310,7 +310,7 @@ pub(super) fn task_assignment_executable() -> VerifiedExecutable {
             ],
         },
         entry: FunctionId::new(0),
-    }
+    })
     .verify()
     .expect("task assignment executable")
 }

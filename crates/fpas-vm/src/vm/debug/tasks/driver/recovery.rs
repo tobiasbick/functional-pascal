@@ -34,6 +34,7 @@ impl DebugTaskRuntime {
             unreachable!("validated failed task remains retained")
         };
         apply_prepared(&mut slot.worker, prepared, value);
+        slot.worker.observed_task_failure.set(None);
         slot.state = DebugTaskState::Runnable;
         slot.failure = None;
         true

@@ -42,6 +42,7 @@ pub(super) struct Worker {
     pub(in crate::vm) debug_tasks: bool,
     pub(in crate::vm) debug_last_global_store: Option<u32>,
     pub(in crate::vm) task_suspension: Option<TaskSuspension>,
+    pub(in crate::vm) pending_completion: Option<Result<Value, VmError>>,
     pub(in crate::vm) task_clock: Option<Arc<TaskClock>>,
     pub(in crate::vm) suppressed_initializers: Vec<SourceInitializerTarget>,
     /// Task scopes opened by this task's call frames, innermost last.
@@ -52,6 +53,8 @@ pub(super) struct Worker {
     pub(in crate::vm) enclosing_scope_controls: Vec<Arc<super::tasks::scopes::ScopeControl>>,
     /// Observation identity of the failure propagated by a scope exit or task wait.
     pub(in crate::vm) scope_failure_sequence: Cell<Option<u64>>,
+    /// Child identity whose failure is already carried by the body's terminal error.
+    pub(in crate::vm) observed_task_failure: Cell<Option<u64>>,
 }
 
 impl Worker {
@@ -179,12 +182,14 @@ impl Worker {
             debug_tasks: false,
             debug_last_global_store: None,
             task_suspension: None,
+            pending_completion: None,
             task_clock: Some(Arc::new(TaskClock::realtime())),
             suppressed_initializers: Vec::new(),
             task_scopes: Vec::new(),
             owner_scope: None,
             enclosing_scope_controls: Vec::new(),
             scope_failure_sequence: Cell::new(None),
+            observed_task_failure: Cell::new(None),
         })
     }
 
@@ -239,12 +244,14 @@ impl Worker {
             debug_tasks: self.debug_tasks,
             debug_last_global_store: None,
             task_suspension: None,
+            pending_completion: None,
             task_clock: self.task_clock.clone(),
             suppressed_initializers: Vec::new(),
             task_scopes: Vec::new(),
             owner_scope: None,
             enclosing_scope_controls: Vec::new(),
             scope_failure_sequence: Cell::new(None),
+            observed_task_failure: Cell::new(None),
         }
     }
 
@@ -280,17 +287,21 @@ impl Worker {
             debug_tasks: self.debug_tasks,
             debug_last_global_store: None,
             task_suspension: task.suspension,
+            pending_completion: task.pending_completion,
             task_clock: self.task_clock.clone(),
             suppressed_initializers: task.suppressed_initializers,
             task_scopes: task.task_scopes,
             owner_scope: task.owner_scope,
             enclosing_scope_controls: Vec::new(),
             scope_failure_sequence: Cell::new(None),
+            observed_task_failure: Cell::new(task.observed_task_failure),
         }
     }
 
     pub(super) fn take_task_state(&mut self) -> TaskState {
         TaskState {
+            observed_task_failure: self.observed_task_failure.take(),
+            pending_completion: self.pending_completion.take(),
             suspension: self.task_suspension.take(),
             supervision: self.supervision.take(),
             id: self.task_id,

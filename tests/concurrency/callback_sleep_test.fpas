@@ -20,8 +20,10 @@ begin
 end function;
 
 begin
-  const Mapper: task of integer := go MapValue();
-  const Peer: task of integer := go PeerValue();
-  AssertEquals(7, Wait(Peer));
-  AssertEquals(42, Wait(Mapper));
+  scope
+    const Mapper: task of integer := go MapValue();
+    const Peer: task of integer := go PeerValue();
+    AssertEquals(7, Wait(Peer));
+    AssertEquals(42, Wait(Mapper));
+  end scope;
 end.

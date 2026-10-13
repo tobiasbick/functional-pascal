@@ -164,7 +164,7 @@ fn validate_function_code(
             address,
             opcode,
         })?;
-        emitted_spawn |= matches!(opcode, Opcode::SpawnTask | Opcode::SpawnDetachedTask);
+        emitted_spawn |= matches!(opcode, Opcode::SpawnTask);
         if opcode == Opcode::Intrinsic {
             // Operand shape and intrinsic identity were checked by validate_instruction.
             emitted_spawn |= executable.code[raw_address as usize]

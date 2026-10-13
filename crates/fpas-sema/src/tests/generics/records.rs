@@ -1,7 +1,7 @@
 //! Observable generic-record typing, inference, and default contracts.
 
 use crate::tests::{check_errors, check_ok};
-use fpas_diagnostics::codes::{SEMA_CONSTRAINT_VIOLATION, SEMA_TYPE_MISMATCH, SEMA_UNSAFE_DISCARD};
+use fpas_diagnostics::codes::{SEMA_CONSTRAINT_VIOLATION, SEMA_TYPE_MISMATCH};
 
 const RECORDS: &str = "
 type Box of T = record Value: T; end record;
@@ -226,11 +226,7 @@ fn nested_instances_do_not_hide_unsupported_equality_or_task_payloads() {
         errors.iter().any(|error| error.code == SEMA_TYPE_MISMATCH),
         "{errors:?}"
     );
-    let errors = check_errors(
-        "program T; type Box of T = record Value: T; end record; function Work(): integer; begin return 1; end function; begin discard Box(Value := Box(Value := go Work())); end.",
-    );
-    assert!(
-        errors.iter().any(|error| error.code == SEMA_UNSAFE_DISCARD),
-        "{errors:?}"
+    check_ok(
+        "program T; type Box of T = record Value: T; end record; function Work(): integer; begin return 1; end function; begin scope  discard Box(Value := Box(Value := go Work()));  end scope; end.",
     );
 }

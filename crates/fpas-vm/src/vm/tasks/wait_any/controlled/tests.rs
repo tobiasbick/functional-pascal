@@ -64,7 +64,7 @@ fn cancellation_is_observed_without_any_task_completion() {
 }
 
 #[test]
-fn expired_budget_beats_late_success_but_zero_timeout_allows_initial_success() {
+fn readiness_beats_expired_budget_on_every_probe() {
     let worker = worker();
     worker
         .scheduler
@@ -73,15 +73,74 @@ fn expired_budget_beats_late_success_but_zero_timeout_allows_initial_success() {
         .store_result(1, Value::Integer(7));
     assert_eq!(
         worker
-            .controlled_wait_result(&[1], None, true, false)
+            .controlled_wait_result(&[1], None, true)
             .expect("expired"),
-        Some(control_error(TIMED_OUT))
+        Some(Value::result_ok(Value::Integer(0)))
     );
+}
+
+#[test]
+fn resumed_wait_observes_late_readiness_without_consuming_the_result() {
+    let mut worker = worker();
+    worker.debug_tasks = true;
+    worker.task_clock = Some(Arc::new(crate::vm::tasks::TaskClock::manual()));
+    worker.registers = vec![Value::Unit];
+    worker.register_initialized = vec![false];
+    let destination = fpas_bytecode::Register::new(0).unwrap();
     assert_eq!(
         worker
-            .controlled_wait_result(&[1], None, true, true)
-            .expect("initial"),
-        Some(Value::result_ok(Value::Integer(0)))
+            .controlled_wait_any(
+                TaskIntrinsic::WaitAnyWithTimeout,
+                &[Value::Array(vec![Value::Task(1)].into()), Value::Integer(5)],
+                Some(destination)
+            )
+            .unwrap(),
+        Some(None)
+    );
+    worker.task_clock_ref().wait(Duration::from_millis(10));
+    let scheduler = worker.scheduler.as_ref().unwrap().clone();
+    scheduler.store_result(1, Value::Integer(42));
+    assert!(worker.poll_task_suspension().unwrap());
+    assert_eq!(
+        worker.read(destination).unwrap(),
+        &Value::result_ok(Value::Integer(0))
+    );
+    assert!(matches!(
+        scheduler.poll_result(1),
+        TaskResultPoll::Available(Value::Integer(42))
+    ));
+}
+
+#[test]
+fn failure_precedes_cancel_and_cancel_precedes_ready_without_consumption() {
+    let worker = worker();
+    let scheduler = worker.scheduler.as_ref().unwrap();
+    scheduler.store_result(1, Value::Integer(42));
+    let source = worker.hosted.cancellations.create_source();
+    let token = worker.hosted.cancellations.token(source).unwrap();
+    worker.hosted.cancellations.cancel(source).unwrap();
+    assert_eq!(
+        worker
+            .controlled_wait_result(&[1], Some(token), true)
+            .unwrap(),
+        Some(control_error(CANCELLED))
+    );
+    assert!(matches!(
+        scheduler.poll_result(1),
+        TaskResultPoll::Available(Value::Integer(42))
+    ));
+    scheduler.register_result(2);
+    let diagnostic = Box::new(fpas_diagnostics::Diagnostic::error_without_source(
+        fpas_diagnostics::codes::RUNTIME_PROGRAM_PANIC,
+        "original panic",
+        Some("original help".into()),
+    ));
+    scheduler.store_failure(2, diagnostic.clone());
+    assert_eq!(
+        worker
+            .controlled_wait_result(&[1, 2], Some(token), true)
+            .unwrap_err(),
+        diagnostic
     );
 }
 
@@ -93,7 +152,7 @@ fn invalid_identity_and_shutdown_failure_are_not_control_errors() {
     worker.hosted.cancellations.cancel(source).expect("cancel");
     assert_eq!(
         worker
-            .controlled_wait_result(&[99], Some(token), true, false)
+            .controlled_wait_result(&[99], Some(token), true)
             .expect_err("identity")
             .code,
         fpas_diagnostics::codes::RUNTIME_INVALID_TASK
@@ -105,7 +164,7 @@ fn invalid_identity_and_shutdown_failure_are_not_control_errors() {
         .request_cancel();
     assert_eq!(
         worker
-            .controlled_wait_result(&[1], Some(token), true, false)
+            .controlled_wait_result(&[1], Some(token), true)
             .expect_err("shutdown")
             .code,
         fpas_diagnostics::codes::RUNTIME_VM_SHUTDOWN

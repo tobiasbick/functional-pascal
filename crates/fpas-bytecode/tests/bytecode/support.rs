@@ -234,7 +234,6 @@ fn valid_instruction(opcode: Opcode, next_address: u32) -> Instruction {
             0,
         ),
         Opcode::SpawnTask => abc(opcode, 0, 1, 0, 0),
-        Opcode::SpawnDetachedTask => abc(opcode, 0, 0, 0, 0),
         Opcode::Yield
         | Opcode::EnterTaskScope
         | Opcode::ExitTaskScope

@@ -3,6 +3,9 @@
 Package: [AP04: Discarded function values](README.md)
 
 Status: complete.
+AP40 supersedes the operand restrictions recorded below: every value may be
+discarded without task/capture proofs. Procedure calls still have no value.
+See [current discard rules](../../../pascal/language/functions/discard.md).
 
 ## Result
 

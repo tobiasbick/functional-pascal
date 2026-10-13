@@ -98,7 +98,7 @@ impl Checker {
                 span,
             );
         }
-        self.record_binding_discard_info(name, &stored_ty, mutable, Some(value));
+        self.record_pending_capture_binding(name, Some(value));
         stored_ty
     }
 

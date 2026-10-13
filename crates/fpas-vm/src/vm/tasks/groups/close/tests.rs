@@ -121,7 +121,10 @@ fn repeated_timeouts_retain_children_results_reports_and_token_until_join() {
     let Value::Array(reports) = report.as_ref() else {
         panic!("failure array")
     };
-    assert_eq!(reports.len(), 1, "consuming a result lost the group report");
+    assert!(
+        reports.is_empty(),
+        "ordinary Result errors became group failures"
+    );
     assert!(scheduler.groups.token(id).is_err());
     assert!(worker.hosted.cancellations.is_cancelled(token).is_err());
     assert!(matches!(scheduler.poll_result(2), TaskResultPoll::Consumed));
@@ -190,7 +193,7 @@ fn timed_root_close_never_executes_queued_child_code_inline() {
     scheduler.register_result(1);
     let info = &worker.executable.executable().functions[0];
     let function = SharedFunction::unbound(FunctionId::new(0), "must remain queued", vec![]);
-    let task = crate::vm::tasks::TaskState::entry(1, &function, info, [], true);
+    let task = crate::vm::tasks::TaskState::entry(1, &function, info, []);
     scheduler.enqueue(task);
     let started = std::time::Instant::now();
     assert_eq!(

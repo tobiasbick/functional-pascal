@@ -28,7 +28,6 @@ impl Checker {
         let key = Self::expr_lookup_key(expr);
         let synthetic_name = format!("$closure_{key}");
 
-        self.task_scopes.prepare_anonymous_routine();
         let analysis = self.check_routine_body_collecting_captures(
             &synthetic_name,
             &[],
@@ -39,18 +38,6 @@ impl Checker {
                 body,
                 requires: &[],
                 ensures: &[],
-            },
-        );
-        let result = self
-            .routine_discard_results
-            .get(&synthetic_name)
-            .copied()
-            .unwrap_or(false);
-        self.discard_exprs.insert(
-            key,
-            fpas_unit::interface::DiscardInfo {
-                value: false,
-                result,
             },
         );
         self.reject_closure_var_captures(&analysis.captures, _span);

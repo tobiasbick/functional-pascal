@@ -113,12 +113,12 @@ fn constant_aggregates_preserve_static_forms_and_hidden_default_dependencies() {
 fn const_initializers_keep_bare_task_and_callable_capture_metadata() {
     check_ok(
         "program T; uses Std.Tasks; function Work(): integer; begin return 7; end function;
-        begin const Pending: task of integer := go Work(); const Value: integer := Wait(Pending); end.",
+        begin scope  const Pending: task of integer := go Work(); const Value: integer := Wait(Pending);  end scope; end.",
     );
     check_ok(
         "program T; begin const ReadValue: function(): integer := function(): integer begin return 7; end function; discard ReadValue; end.",
     );
-    check_errors("program T; begin var X: integer := 0;
+    check_errors("program T; begin scope  var X: integer := 0;
         const Change: function(): integer := function(): integer begin X := X + 1; return X; end function;
-        go Change(); end.");
+        discard go Change();  end scope; end.");
 }

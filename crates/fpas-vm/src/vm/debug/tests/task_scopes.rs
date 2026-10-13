@@ -19,7 +19,7 @@ procedure SendLater(Q: channel of integer; N: integer);
 begin Sleep(2); discard Send(Q, N); end procedure;
 begin
  const Q: channel of integer := CreateChannel(2);
- scope go SendLater(Q, 1); const Child: task := go SendLater(Q, 2); end scope;
+ scope discard go SendLater(Q, 1); const Child: task := go SendLater(Q, 2); end scope;
  for Index: integer := 1 to 2 do
    case TryReceive(Q) of
      when Ok(Some(_)): null;
@@ -43,9 +43,9 @@ uses Std.Tasks, Std.Time;
 procedure Child(Q: channel of integer; Started: channel of integer);
 begin discard Send(Started, 1); discard Receive(Q); end procedure;
 procedure Parent(Q: channel of integer; Started: channel of integer);
-begin scope go Child(Q, Started); discard Receive(Q); end scope; end procedure;
+begin scope discard go Child(Q, Started); discard Receive(Q); end scope; end procedure;
 function Run(Q: channel of integer; Started: channel of integer): integer;
-begin scope go Parent(Q, Started); discard Receive(Started); return 7; end scope; end function;
+begin scope discard go Parent(Q, Started); discard Receive(Started); return 7; end scope; end function;
 procedure Done(); begin Sleep(0); end procedure;
 begin const Q: channel of integer := CreateChannel(1);
  const Started: channel of integer := CreateChannel(1);
@@ -87,13 +87,13 @@ uses Std.Tasks, Std.Time;
 procedure BeforeWait(); begin Sleep(0); end procedure;
 procedure Child(Q: channel of integer); begin discard Receive(Q); end procedure;
 procedure Parent(Q: channel of integer);
-begin scope go Child(Q); BeforeWait(); discard Receive(Q); end scope; end procedure;
-begin const Q: channel of integer := CreateChannel(1); scope go Parent(Q); end scope; end.";
+begin scope discard go Child(Q); BeforeWait(); discard Receive(Q); end scope; end procedure;
+begin const Q: channel of integer := CreateChannel(1); scope discard go Parent(Q); end scope; end.";
     for source in [
         template.to_string(),
         template.replace(
-            "scope go Parent(Q); end scope;",
-            "go Parent(Q); scope Sleep(50); end scope;",
+            "scope discard go Parent(Q); end scope;",
+            "const Group := CreateTaskGroup(); discard StartTaskInGroup(Group, procedure(Token: CancellationToken) begin Parent(Q); end procedure); scope Sleep(50); end scope; discard CloseTaskGroup(Group);",
         ),
     ] {
         let (program, errors) = fpas_parser::parse(&source);
@@ -128,12 +128,8 @@ begin const Q: channel of integer := CreateChannel(1); scope go Parent(Q); end s
             DebugTaskState::Waiting,
             "a parent cannot complete before its scope children"
         );
-        assert!(matches!(
-            session
-                .continue_execution()
-                .expect("join cancelled descendants"),
-            DebugRunResult::Terminated(_)
-        ));
+        let result = session.continue_execution().expect("join cancelled descendants");
+        assert!(matches!(result, DebugRunResult::Terminated(_)), "{result:?}");
     }
 }
 
@@ -144,7 +140,7 @@ fn debugger_reports_original_child_failure_after_scope_unwind() {
 uses Std.Tasks, Std.Time;
 procedure Spin(); begin while true do null; end while; end procedure;
 procedure Fail(); begin panic('child failed'); end procedure;
-begin scope go Spin(); go Fail(); Sleep(100); end scope; end.",
+begin scope discard go Spin(); discard go Fail(); Sleep(100); end scope; end.",
     );
     let result = session.continue_execution().expect("run");
     let DebugRunResult::Stopped(stop) = result else {

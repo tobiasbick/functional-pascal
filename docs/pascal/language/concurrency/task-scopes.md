@@ -29,23 +29,21 @@ The body is a nonempty statement list with its own local scope, closed by `end s
 
 ## Ownership
 
-Every `go` written directly in the scope body starts a child owned by the innermost scope,
-whether it is a `go` expression that returns a handle or a `go` statement. A `go` outside any
-scope has no lexical scope owner and is not joined automatically. Its expression form still
-returns a handle that can be waited on; its statement form produces no handle. See [`go`](go.md).
+Every go expression in the scope body starts a child owned by the innermost
+scope, including `discard go Work();`. A go expression outside a lexical scope
+in the same routine is rejected (FP3038). Bind or discard its exact task handle;
+standalone `go Work();` is FP3022. See [`go`](go.md).
 
 Ownership never crosses a routine boundary:
 
-- A routine called inside a scope does not inherit it. A `go` in that routine has no lexical
-  scope owner unless the routine opens its own `scope`; handle retention is independent.
-- A `go` in an anonymous routine that is written inside a scope is rejected (FP3038), because
-  the anonymous routine may run after the scope has ended. Move the `go` into the scope body,
-  or open a `scope` inside the anonymous routine.
+- Named and anonymous helpers follow the same rule: open a scope in the helper
+  for work that finishes there, or pass an explicit TaskGroup for dynamic work
+  owned by the calling task. A caller's scope is never inherited.
 
 ```pascal
 scope
   for Item: integer in Items do
-    go Process(Item);
+    discard go Process(Item);
   end for;
 end scope;
 ```
@@ -66,7 +64,7 @@ function FirstMatch(Values: array of integer): integer;
 begin
   for Value: integer in Values do
     scope
-      go Audit(Value);
+      discard go Audit(Value);
       if Value > 0 then
         return Value;
       end if;
@@ -126,8 +124,8 @@ end function;
 
 If `try Wait(A)` propagates an error, `B` is cancelled before `LoadBoth` returns.
 
-A `go` statement inside a scope whose call returns `result of ...` is rejected (FP3039): the
-statement form has no handle, so its error would be lost.
+Discarding a handle or Result data is permitted. It deliberately gives up
+retrieval; the scope still monitors unexpected child panic/runtime failures.
 
 ## Handle escapes
 
@@ -135,7 +133,7 @@ A scope ends only after its children, so their handles must stay inside it. A ha
 scope-owned child may appear only:
 
 - in bindings declared inside the scope, including arrays, records, and other values built
-  there;
+  there, including explicit discard of those values;
 - in `Std.Tasks` wait operations such as `Wait`, `WaitAll`, and `WaitAny`;
 - as an argument of a direct call to a routine whose parameter does not escape, including a
   `go` of a sibling task.

@@ -15,7 +15,7 @@ begin
   discard Cancel(Source);
   return 0;
 end function;
-begin
+begin scope
   const T: task of integer := go Work();
   case WaitAnyWithTimeout([T], 0) of
     when Ok(_): panic('pending task ready');
@@ -46,7 +46,7 @@ begin
     when Ok(const Index): if Index <> 0 then panic('index'); end if;
     when Error(const Message): panic(Message);
   end case;
-end."#;
+ end scope; end."#;
 
 #[test]
 fn controlled_wait_any_uses_debugger_deadlines_and_cancellation() {
@@ -70,7 +70,7 @@ function Work(): integer;
 begin
   return 7;
 end function;
-begin
+begin scope
   const T: task of integer := go Work();
   WaitAll([T]);
   case WaitAnyWithTimeout([T], 0) of
@@ -84,7 +84,7 @@ begin
     when Error(const Message): if Message <> 'Task wait was cancelled' then panic(Message); end if;
   end case;
   if Wait(T) <> 7 then panic('result consumed'); end if;
-end."#,
+ end scope; end."#,
     );
     assert!(errors.is_empty(), "{errors:?}");
     let mut vm = crate::vm::Vm::new(fpas_compiler::compile(&program).expect("compile"));

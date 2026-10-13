@@ -240,9 +240,9 @@ fn largest_window(function: &Function) -> usize {
             Operation::CallDirect { arguments, .. } | Operation::CallValue { arguments, .. } => {
                 call_argument_width(arguments)
             }
-            Operation::SpawnTask { arguments, .. }
-            | Operation::SpawnDetachedTask { arguments, .. }
-            | Operation::Intrinsic { arguments, .. } => arguments.len(),
+            Operation::SpawnTask { arguments, .. } | Operation::Intrinsic { arguments, .. } => {
+                arguments.len()
+            }
             Operation::MakeClosure { captures, .. } => captures.len(),
             Operation::MakeRecord { fields, .. } | Operation::MakeEnum { fields, .. } => {
                 fields.len()

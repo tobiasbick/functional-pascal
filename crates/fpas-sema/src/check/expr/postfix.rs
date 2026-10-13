@@ -28,6 +28,19 @@ impl Checker {
     /// The final call must be a procedure; function results require consumption.
     /// **Documentation:** `docs/pascal/language/functions/postfix-chaining.md`
     pub(crate) fn check_postfix_statement(&mut self, expr: &Expr, span: Span) {
+        if matches!(expr, Expr::Go(..)) {
+            let before = self.errors.len();
+            self.check_expr(expr);
+            if self.errors.len() == before {
+                self.error_with_code(
+                    fpas_diagnostics::codes::SEMA_UNUSED_FUNCTION_RESULT,
+                    "A go expression produces a task handle that must be consumed",
+                    "Bind the handle with `const Job := go Work();`, or explicitly ignore it with `discard go Work();` inside a scope.",
+                    span,
+                );
+            }
+            return;
+        }
         let Expr::Postfix {
             base, operations, ..
         } = expr
@@ -55,9 +68,8 @@ impl Checker {
         let ty = self.check_postfix_chain(base, operations, true, None);
         self.expr_types
             .insert(Self::expr_lookup_key(expr), ty.clone());
-        self.record_discard_info(expr);
         if self.errors.len() == previous_error_count {
-            self.check_unused_result(&ty, self.discard_info(expr).value, span);
+            self.check_unused_result(&ty, span);
         }
     }
 

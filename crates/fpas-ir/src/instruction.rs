@@ -295,13 +295,6 @@ pub enum Operation {
         /// Task arguments in evaluation order.
         arguments: Vec<ValueId>,
     },
-    /// Spawns a detached task from a function value.
-    SpawnDetachedTask {
-        /// Callee function value.
-        callee: ValueId,
-        /// Task arguments in evaluation order.
-        arguments: Vec<ValueId>,
-    },
     /// Cooperatively yields the current task.
     Yield,
     /// Opens a task scope owned by the current call frame.

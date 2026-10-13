@@ -140,6 +140,21 @@
     ],
     "description": "Insert an anonymous procedure expression"
   },
+  "Task scope": {
+    "prefix": "scope",
+    "body": ["scope", "  ${0:null;}", "end scope;"],
+    "description": "Own and join child tasks in the current routine"
+  },
+  "Task start": {
+    "prefix": "go task",
+    "body": ["scope", "  const ${1:Job} := go ${2:Work}(${3:Arguments});", "  $0", "end scope;"],
+    "description": "Start an owned task and bind its exact handle type"
+  },
+  "Discard task start": {
+    "prefix": "discard go",
+    "body": ["scope", "  discard go ${1:Work}(${2:Arguments});", "end scope;"],
+    "description": "Start owned work and discard its handle without detaching"
+  },
   "Record update": {
     "prefix": "with",
     "body": [

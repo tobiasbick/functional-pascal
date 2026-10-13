@@ -46,10 +46,9 @@ end case;
   showing `const Name`. Only the explicit `const Name` form binds a value.
 - Bindings are read-only; there is no `var` binding.
 - Pattern bindings retain the matched value's known callable capture metadata.
-  Task-bound callables remain restricted to their task, and known task-free
-  captures remain valid for [explicit discard](../functions/discard.md).
-  Scalar bindings use their own type's guarantees. The same rules apply to
-  nested case patterns. [`is` tests](is-test.md) never bind names.
+  Task-bound callables remain restricted to their task across nested case
+  patterns. [Explicit discard](../functions/discard.md) accepts every value;
+  it does not relax cross-task safety. [`is` tests](is-test.md) never bind names.
 - A scalar `case` binds the matched value with `when const Name if Guard:`
   (see [Guards](guards.md#scalar-guard-bindings)). A bare identifier label is
   always a value comparison.

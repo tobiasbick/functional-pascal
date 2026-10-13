@@ -47,20 +47,6 @@ impl Checker {
                 .remove(&Self::expr_lookup_key(value));
         }
         let ty = Ty::Record(record);
-        let task_free = self.record_fields_are_task_free(
-            fields
-                .iter()
-                .map(|&(name, value, _)| (name, value))
-                .collect(),
-            &ty,
-        );
-        self.discard_exprs.insert(
-            key,
-            fpas_unit::interface::DiscardInfo {
-                value: task_free,
-                ..Default::default()
-            },
-        );
         ty
     }
 }

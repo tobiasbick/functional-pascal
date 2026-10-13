@@ -16,7 +16,7 @@ end procedure;
 procedure Parent(Empty: channel of integer; Ready: channel of integer);
 begin
   scope
-    go Block(Empty, Ready);
+    discard go Block(Empty, Ready);
     discard Receive(Empty);
   end scope;
 end procedure;
@@ -24,7 +24,7 @@ end procedure;
 function ReturnEarly(Empty: channel of integer; Ready: channel of integer): integer;
 begin
   scope
-    go Parent(Empty, Ready);
+    discard go Parent(Empty, Ready);
     AssertEquals(1, Receive(Ready).Unwrap());
     return 7;
   end scope;
@@ -38,7 +38,7 @@ end function;
 begin
   const Queue: channel of integer := CreateChannel(2);
   scope
-    go Produce(Queue, 1);
+    discard go Produce(Queue, 1);
     const Child: task := go Produce(Queue, 2);
   end scope;
 

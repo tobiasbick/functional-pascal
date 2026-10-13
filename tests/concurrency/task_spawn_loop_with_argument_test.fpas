@@ -8,19 +8,21 @@ begin
 end function;
 
 begin
-  var Tasks: array of task of integer := [];
-  for Index: integer := 1 to 8 do
-    begin
-      Tasks.PushInPlace(go Worker(Index));
-    end;
-  end for;
+  scope
+    var Tasks: array of task of integer := [];
+    for Index: integer := 1 to 8 do
+      begin
+        Tasks.PushInPlace(go Worker(Index));
+      end;
+    end for;
 
-  WaitAll(Tasks);
-  AssertEquals(8, Tasks.Length());
-  for Index: integer := 0 to Tasks.Length() - 1 do
-    begin
-      const WorkerResult: integer := Std.Tasks.Wait(Tasks[Index]);
-      AssertEquals(Index + 2, WorkerResult);
-    end;
-  end for;
+    WaitAll(Tasks);
+    AssertEquals(8, Tasks.Length());
+    for Index: integer := 0 to Tasks.Length() - 1 do
+      begin
+        const WorkerResult: integer := Std.Tasks.Wait(Tasks[Index]);
+        AssertEquals(Index + 2, WorkerResult);
+      end;
+    end for;
+  end scope;
 end.

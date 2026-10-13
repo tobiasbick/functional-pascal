@@ -55,7 +55,7 @@ end function;
 ";
 
 fn program(body: &str) -> String {
-    format!("program TaskCalls;\n{DECLARATIONS}\nbegin\n{body}\nend.\n")
+    format!("program TaskCalls;\n{DECLARATIONS}\nbegin scope\n{body}\nend scope; end.\n")
 }
 
 fn cli(command: &str, source: &str) -> (i32, String, String) {
@@ -112,10 +112,10 @@ fn grammar_task_call_targets_pass_cli_check_and_return_results() {
 }
 
 #[test]
-fn grammar_detached_postfix_call_delivers_its_side_effect() {
+fn grammar_discarded_postfix_call_delivers_its_side_effect() {
     let source = program(
         "const Output: channel of integer := CreateChannel(1);\n\
-         go Make().Next().SendAnswer(Output);\n\
+         discard go Make().Next().SendAnswer(Output);\n\
          const Answer: integer := Receive(Output).Unwrap();\nWriteLn(Answer);",
     );
     let (exit, stdout, stderr) = cli("run", &source);
@@ -125,7 +125,7 @@ fn grammar_detached_postfix_call_delivers_its_side_effect() {
 #[test]
 fn grammar_postfix_procedure_tasks_deliver_their_side_effects() {
     for spawn in [
-        "go Make().Report(Output);",
+        "discard go Make().Report(Output);",
         "const Job: task := go Make().Report(Output); Wait(Job);",
     ] {
         let source = program(&format!(
@@ -145,7 +145,7 @@ fn grammar_postfix_procedure_tasks_deliver_their_side_effects() {
 #[test]
 fn grammar_postfix_tasks_reject_writable_arguments() {
     for spawn in [
-        "go Make().Increment(var Count);",
+        "discard go Make().Increment(var Count);",
         "const Job: task of integer := go Make().Increment(var Count);",
     ] {
         let source = program(&format!("var Count: integer := 0; {spawn}"));

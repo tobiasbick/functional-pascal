@@ -185,9 +185,6 @@ pub struct Checker {
     pub(crate) contracts: super::contracts::ContractState,
     /// Whole-unit structural type resolution, separate from ordered value checking.
     pub(crate) type_collection: super::decl::types::collection::TypeCollection,
-    pub(crate) discard_exprs: HashMap<usize, fpas_unit::interface::DiscardInfo>,
-    pub(crate) discard_results: Vec<bool>,
-    pub(crate) routine_discard_results: HashMap<String, bool>,
     pub(crate) scopes: ScopeStack,
     pub(crate) errors: Vec<SemaError>,
     pub(crate) expr_types: ExprTypeMap,
@@ -247,8 +244,6 @@ pub struct Checker {
     pub(crate) subrange_conversions: HashMap<usize, crate::types::SubrangeTy>,
     /// Subrange membership bounds retained for constant folding and lowering.
     pub(crate) subrange_memberships: HashMap<usize, crate::types::SubrangeTy>,
-    /// Canonical record and field names → task-freedom of their checked default values.
-    pub(crate) record_default_discard: HashMap<(String, String), bool>,
     /// Default expression identity → constant classification in the declaration environment.
     pub(crate) record_default_constants: HashMap<usize, bool>,
     /// Known default fields evaluated in their original declaration environment.
@@ -306,9 +301,6 @@ impl Checker {
             routine_param_escapes: HashMap::new(),
             contracts: Default::default(),
             type_collection: Default::default(),
-            discard_exprs: HashMap::new(),
-            discard_results: Vec::new(),
-            routine_discard_results: HashMap::new(),
             scopes: ScopeStack::new(),
             errors: Vec::new(),
             expr_types: ExprTypeMap::new(),
@@ -341,7 +333,6 @@ impl Checker {
             distinct_conversions: HashSet::new(),
             subrange_conversions: HashMap::new(),
             subrange_memberships: HashMap::new(),
-            record_default_discard: HashMap::new(),
             record_default_constants: HashMap::new(),
             record_default_values: HashMap::new(),
             closure_infos: ClosureInfoMap::new(),

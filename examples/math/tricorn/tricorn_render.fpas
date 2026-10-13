@@ -161,22 +161,24 @@ public procedure Render(
   Palette: PaletteKind
 );
 begin
-  var Tasks: array of task of array of PixelSample := [];
-  for Py: integer := 0 to Height - 1 do
-    begin
-      Tasks.PushInPlace(go ComputeRow(Py, Width, Height, XMin, XMax, YMin, YMax, MaxIter));
-    end;
-  end for;
+  scope
+    var Tasks: array of task of array of PixelSample := [];
+    for Py: integer := 0 to Height - 1 do
+      begin
+        Tasks.PushInPlace(go ComputeRow(Py, Width, Height, XMin, XMax, YMin, YMax, MaxIter));
+      end;
+    end for;
 
-  for Py: integer := 0 to Height - 1 do
-    begin
-      const Row: array of PixelSample := Wait(Tasks[Py]);
-      if (Py + 1) <= Max(ScreenHeight() - 2, 1) then
-        begin
-          DrawRow(Row, Width, Py + 1, Palette);
-        end;
-      end if;
-    end;
-  end for;
+    for Py: integer := 0 to Height - 1 do
+      begin
+        const Row: array of PixelSample := Wait(Tasks[Py]);
+        if (Py + 1) <= Max(ScreenHeight() - 2, 1) then
+          begin
+            DrawRow(Row, Width, Py + 1, Palette);
+          end;
+        end if;
+      end;
+    end for;
+  end scope;
 end procedure;
 end unit;

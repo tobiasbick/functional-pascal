@@ -117,8 +117,8 @@ fn go_cannot_receive_implicit_writable_storage() {
     for body in [
         "go A.PushInPlace(2);",
         "go A.SortInPlace();",
-        "var S := 'abc'; go S.TrimInPlace();",
-        "var D: dict of string to integer := ['a': 1]; go D.RemoveInPlace('a');",
+        "var S := 'abc'; discard go S.TrimInPlace();",
+        "var D: dict of string to integer := ['a': 1]; discard go D.RemoveInPlace('a');",
         "go A.PopInPlace();",
         "const T: task of integer := go A.PopInPlace();",
         "const T: task := go A.PushInPlace(2);",

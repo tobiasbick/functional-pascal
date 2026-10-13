@@ -25,6 +25,12 @@ begin
   AssertTrue(ReceiveWithTimeout(Ready, 10000).Unwrap());
   AssertTrue(TryCloseCompletedTaskGroup(Returned).IsNone());
   discard Send(Gate, true);
+  case Wait(ReturnedTask) of
+    when Error(const Message):
+      AssertEquals('expected returned error', Message);
+    when Ok(_):
+      panic('expected an ordinary Result error');
+  end case;
   var ReturnedFailures: option of array of TaskFailure := None;
   while ReturnedFailures.IsNone() do
     begin
@@ -33,9 +39,7 @@ begin
     end;
   end while;
   const ReturnedReport: array of TaskFailure := ReturnedFailures.Unwrap();
-  AssertEquals(1, ReturnedReport.Length());
-  AssertTrue(ReturnedReport[0].Kind = TaskFailureKind.ReturnedError);
-  AssertEquals('expected returned error', ReturnedReport[0].Message);
+  AssertEquals(0, ReturnedReport.Length());
   const PanicReady: channel of boolean := CreateChannel(1);
   const Panicked: TaskGroup := CreateTaskGroup();
   const PanickedTask: task := StartTaskInGroup(Panicked, procedure(Token: CancellationToken) begin

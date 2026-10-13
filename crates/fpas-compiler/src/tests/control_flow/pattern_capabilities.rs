@@ -5,7 +5,7 @@
 use super::assert_succeeds;
 
 #[test]
-fn task_free_pattern_callables_can_be_spawned_and_discarded() {
+fn immutable_pattern_callables_can_be_spawned_and_discarded() {
     assert_succeeds(
         r#"program PatternTasks;
 
@@ -17,7 +17,7 @@ begin
 end function;
 
 procedure Main();
-begin
+begin scope
   const Wrapped: option of function(): integer := Some(Work);
   var Sum: integer := 0;
   case Wrapped of
@@ -56,7 +56,7 @@ begin
   if Sum <> 126 then
     panic('pattern task result');
   end if;
-end procedure;
+ end scope; end procedure;
 
 begin
   Main();
@@ -110,7 +110,7 @@ type WorkBox = record
   Number: integer;
 end record;
 procedure Main();
-begin
+begin scope
   var Calls: integer := 0;
   const Change: procedure() := procedure() begin Calls := Calls + 1; end procedure;
   const Wrapped: Option of WorkBox := Some(WorkBox(Change := Change, Number := 42));
@@ -127,7 +127,7 @@ begin
     when None: null;
   end case;
   if Calls <> 1 then panic('record callable'); end if;
-end procedure;
+ end scope; end procedure;
 begin
   Main();
 end.
@@ -145,7 +145,7 @@ type Pair = enum
   Values(First: integer; Second: integer);
 end enum;
 procedure Main();
-begin
+begin scope
   const Wrapped: Pair := Pair.Values(20, 22);
   case Wrapped of
     when Pair.Values(const A, const B):
@@ -156,7 +156,7 @@ begin
       const Job: task of integer := go Add();
       if Wait(Job) <> 42 then panic('distinct captures'); end if;
   end case;
-end procedure;
+ end scope; end procedure;
 begin
   Main();
 end.

@@ -18,7 +18,12 @@ impl Walker<'_, '_> {
                     .bound_methods
                     .contains_key(&crate::designator_lookup_key(designator))
                 {
-                    [Origin::Unknown].into_iter().collect()
+                    [Origin::BoundMethod(
+                        crate::designator_lookup_key(designator),
+                        identity(designator.span),
+                    )]
+                    .into_iter()
+                    .collect()
                 } else {
                     value
                 }
@@ -41,8 +46,13 @@ impl Walker<'_, '_> {
             | Expr::ResultError(inner, _)
             | Expr::OptionSome(inner, _)
             | Expr::UnaryOp { operand: inner, .. }
-            | Expr::Go(inner, _)
             | Expr::Is { value: inner, .. } => self.expr(inner),
+            Expr::Go(inner, _) => {
+                let previous = self.worker_start.replace(crate::expr_lookup_key(inner));
+                let value = self.expr(inner);
+                self.worker_start = previous;
+                value
+            }
             Expr::BinaryOp { left, right, .. } => self
                 .expr(left)
                 .into_iter()
@@ -80,6 +90,12 @@ impl Walker<'_, '_> {
                                 .collect();
                             self.order_arguments(args, &mut values);
                             self.invalidate_var_arguments(args);
+                            let previous = self.worker;
+                            if self.worker_start == Some(crate::expr_lookup_key(expr))
+                                && std::ptr::eq(operation, operations.last().unwrap())
+                            {
+                                self.worker = true;
+                            }
                             receiver = if let Some(target) = self.checker.method_calls.get(&key) {
                                 if matches!(target, MethodCallTarget::Instance { .. }) {
                                     values.insert(0, receiver);
@@ -91,6 +107,7 @@ impl Walker<'_, '_> {
                             } else {
                                 self.invoke(&receiver, &values, *span)
                             };
+                            self.worker = previous;
                         }
                     }
                 }
@@ -115,9 +132,11 @@ impl Walker<'_, '_> {
                 else_arm,
                 ..
             } => {
-                self.expr(selector);
+                let origins = self.expr(selector);
                 let mut values = Value::new();
                 for arm in arms {
+                    self.values.insert(identity(arm.span), origins.clone());
+                    self.bind_pattern_values(&arm.labels, &origins);
                     self.labels(&arm.labels);
                     if let Some(guard) = &arm.guard {
                         self.expr(guard);

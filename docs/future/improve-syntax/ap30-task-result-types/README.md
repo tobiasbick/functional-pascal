@@ -4,6 +4,11 @@ Status: Complete; all work packages implemented and verified. Effort: medium.
 AP30.1 supplies the selected type contract; AP30.2 owns its implementation.
 Completion is tracked in the [central plan](../README.md).
 
+AP40 retains these fixed types and Wait's single retrieval rule. It adds
+mandatory start ownership, ordinary discard, creating-task group cleanup,
+ordinary Result data, and consistent controlled-wait precedence; see
+[AP40](../ap40-explicit-task-lifetimes/README.md).
+
 ## Scope
 
 The [task reference](../../../pascal/language/concurrency/task-handles.md)

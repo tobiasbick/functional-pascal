@@ -217,7 +217,7 @@ end."#,
 }
 
 #[test]
-fn supervision_error_exhaustion_keeps_the_final_result_and_one_group_report() {
+fn supervision_error_exhaustion_keeps_the_final_result_as_ordinary_data() {
     run_both(
         r#"program ExhaustWorker;
 uses Std.Tasks;
@@ -231,8 +231,7 @@ begin
     when Error(const Message): if Message <> 'last failure' then panic('wrong final error'); end if;
   end case;
   const Failures: array of TaskFailure := CloseTaskGroup(G);
-  if Failures.Length() <> 1 then panic('attempts became children'); end if;
-  if Failures[0].Kind <> TaskFailureKind.ReturnedError then panic('wrong failure kind'); end if;
+  if Failures.Length() <> 0 then panic('result data became a failure'); end if;
   for I: integer := 1 to 3 do if Receive(Attempts).Unwrap() <> 1 then panic('attempt count'); end if; end for;
   discard CloseChannel(Attempts);
 end."#,
@@ -310,8 +309,7 @@ begin
   begin return Error('cancelled'); end function, 0, 60000);
   case Wait(Child) of when Ok(_): panic('unexpected success'); when Error(_): begin end; end case;
   const Failures: array of TaskFailure := CloseTaskGroup(G);
-  if Failures.Length() <> 1 then panic('failure count'); end if;
-  if Failures[0].Kind <> TaskFailureKind.ReturnedError then panic('message guessed cancellation'); end if;
+  if Failures.Length() <> 0 then panic('result data became a cancellation'); end if;
 end."#,
     );
 }

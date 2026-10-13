@@ -39,7 +39,8 @@ fn procedure_task_storage_never_erases_a_function_result() {
             "const Job: task := Identity(go Number());",
         ),
     ] {
-        let source = format!("program T; {DECLARATIONS} {declarations} begin {body} end.");
+        let source =
+            format!("program T; {DECLARATIONS} {declarations} begin scope {body} end scope; end.");
         let errors = check_errors(&source);
         assert!(
             errors.iter().any(|error| error.code == SEMA_TYPE_MISMATCH),
@@ -52,7 +53,7 @@ fn procedure_task_storage_never_erases_a_function_result() {
 fn procedure_wait_cannot_supply_a_value_inside_an_aggregate() {
     for value in ["Some(Wait(Job))", "[Wait(Job)]", "Ok(Wait(Job))"] {
         let source = format!(
-            "program T; {DECLARATIONS} begin const Job: task := go Work(); discard {value}; end."
+            "program T; {DECLARATIONS} begin scope  const Job: task := go Work(); discard {value};  end scope; end."
         );
         let errors = check_errors(&source);
         assert!(
@@ -86,7 +87,8 @@ fn generic_task_arguments_do_not_expose_internal_unit() {
             "const Accept: function(Job: task): integer := Ignore;",
         ),
     ] {
-        let source = format!("program T; {DECLARATIONS} {declarations} begin {body} end.");
+        let source =
+            format!("program T; {DECLARATIONS} {declarations} begin scope {body} end scope; end.");
         let errors = check_errors(&source);
         assert!(
             errors.iter().any(|error| error.code == SEMA_TYPE_MISMATCH),
@@ -131,7 +133,8 @@ fn task_starts_require_resolved_results_and_value_worker_parameters() {
             "const Group: TaskGroup := CreateTaskGroup(); const Job: task := StartSupervisedTask(Group, Worker, 0, 0);",
         ),
     ] {
-        let source = format!("program T; {DECLARATIONS} {declarations} begin {body} end.");
+        let source =
+            format!("program T; {DECLARATIONS} {declarations} begin scope {body} end scope; end.");
         let errors = check_errors(&source);
         assert!(
             errors.iter().any(|error| error.code == SEMA_TYPE_MISMATCH),
@@ -152,7 +155,7 @@ function Invoke(Callback: function(): string): string; begin return Callback(); 
 function Echo(Value: string): string; begin return Value; end function;
 procedure Outer<T>(Value: T);
 function Read<T>(): T; begin return Value; end function;
-begin const Job: task of string := go {call}; discard Wait(Job); end procedure;
+begin scope  const Job: task of string := go {call}; discard Wait(Job);  end scope; end procedure;
 begin Outer(42); end."
         );
         assert!(
@@ -170,16 +173,18 @@ fn typed_and_procedure_handles_support_completion_without_erasure() {
         "program T; {DECLARATIONS}
 function Fetch<T>(Job: task of T): T; begin return Wait(Job); end function;
 function Identity<T>(Value: T): T; begin return Value; end function;
-function Spawn<T>(Value: T): task of T; begin return go Identity(Value); end function;
+function Spawn<T>(Group: TaskGroup; Value: T): task of T;
+begin return StartTaskInGroup(Group, function(Token: CancellationToken): T begin return Value; end function); end function;
 function GenericWorker<T>(Token: T): integer; begin return 42; end function;
 function Answer(): integer; begin return 42; end function;
 function Invoke(Callback: function(): integer): integer; begin return Callback(); end function;
 procedure Join(Job: task); begin Wait(Job); end procedure;
-begin
+begin scope
   const Empty: Option of integer := None;
   const Optional: task of Option of integer := go Identity(Empty);
   discard Wait(Optional);
-  const Generic: task of integer := Spawn(42);
+  const GenericGroup := CreateTaskGroup();
+  const Generic: task of integer := Spawn(GenericGroup, 42);
   discard Wait(Generic);
   const CallbackJob: task of integer := go Invoke(function(): integer begin return Answer(); end function);
   const DirectJob: task of integer := go Answer();
@@ -194,9 +199,10 @@ begin
   const Procedures: array of task := [go Work(), go Work()];
   WaitAll(Numbers); WaitAll(Procedures);
   discard WaitAny(Numbers); discard WaitAny(Procedures);
-  const Answer: integer := Fetch(Numbers[0]);
+  const Answer: integer := Wait(Numbers[0]);
   Join(Procedures[0]);
-  const Nested: task of task := go Identity(Procedures[1]);
+  const GroupProcedure := StartTaskInGroup(GenericGroup, procedure(Token: CancellationToken) begin null; end procedure);
+  const Nested: task of task := go Identity(GroupProcedure);
   const Copy: task := Wait(Nested);
   Join(Copy);
   const Label: task of string := go Text();
@@ -206,6 +212,6 @@ begin
     TaskCase(Procedures[1], procedure() begin null; end procedure)
   ];
   discard Select(Cases);
-end."
+ end scope; end."
     ));
 }

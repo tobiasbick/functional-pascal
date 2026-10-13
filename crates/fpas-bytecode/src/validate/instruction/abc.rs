@@ -196,11 +196,6 @@ pub(super) fn validate_abc(
             validate_register(site, "callee", b)?;
             validate_window(site, "argument window", c, usize::from(auxiliary))
         }
-        Opcode::SpawnDetachedTask => {
-            validate_register(site, "callee", a)?;
-            validate_window(site, "argument window", b, usize::from(auxiliary))?;
-            canonical_u16(site, "C", c, 0)
-        }
         Opcode::MakeClosure => validate_closure(site, a, b, c, auxiliary),
         Opcode::MakeArray => {
             validate_register(site, "destination", a)?;

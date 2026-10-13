@@ -40,6 +40,7 @@ impl Worker {
 
     /// Creates a reference to a mutable global slot.
     pub fn make_global_reference(&mut self, o: AbxOperands) -> Result<(), VmError> {
+        self.check_global_task_access(o.bx)?;
         self.write(
             register(o.a)?,
             Value::Reference(Arc::new(VariableReference {
@@ -96,6 +97,7 @@ impl Worker {
                 resolve_path(&root, &reference.path).cloned()
             }
             ReferenceRoot::Global(slot) => {
+                self.check_global_task_access(*slot)?;
                 let globals = self.global_slots();
                 let root = usize::try_from(*slot)
                     .ok()
@@ -121,6 +123,7 @@ impl Worker {
                     .map_err(|failure| self.path_failure(failure))
             }
             ReferenceRoot::Global(slot) => {
+                self.check_global_task_access(*slot)?;
                 let index = usize::try_from(*slot).map_err(|_| self.uninitialized_global(*slot))?;
                 let mutable = self
                     .executable

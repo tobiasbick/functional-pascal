@@ -1,11 +1,9 @@
-//! Task scope ownership, lost errors, and handle escapes.
+//! Same-routine task ownership, ordinary Result data, and handle escapes.
 //!
 //! **Documentation:** `docs/pascal/language/concurrency/task-scopes.md`
 
 use super::super::super::{check_errors, check_ok};
-use fpas_diagnostics::codes::{
-    SEMA_GO_OUTSIDE_OWNING_SCOPE, SEMA_LOST_TASK_ERROR, SEMA_TASK_HANDLE_ESCAPE,
-};
+use fpas_diagnostics::codes::{SEMA_GO_OUTSIDE_OWNING_SCOPE, SEMA_TASK_HANDLE_ESCAPE};
 
 mod escape_regressions;
 
@@ -57,7 +55,7 @@ end procedure;
 ";
 
 fn program(body: &str) -> String {
-    format!("{PRELUDE}begin\n{body}\nend.")
+    format!("{PRELUDE}begin scope\n{body}\nend scope; end.")
 }
 
 fn assert_code(body: &str, code: fpas_diagnostics::DiagnosticCode) {
@@ -73,7 +71,7 @@ fn go_in_anonymous_routine_inside_scope_is_rejected_unless_it_opens_a_scope() {
     assert_code(
         "scope
   Each([1], procedure(Value: integer) begin
-    go Fetch(Value);
+    discard go Fetch(Value);
   end procedure);
 end scope;",
         SEMA_GO_OUTSIDE_OWNING_SCOPE,
@@ -82,26 +80,25 @@ end scope;",
         "scope
   Each([1], procedure(Value: integer) begin
     scope
-      go Fetch(Value);
+      discard go Fetch(Value);
     end scope;
   end procedure);
 end scope;
-Each([2], procedure(Value: integer) begin
-  go Fetch(Value);
-end procedure);",
+Each([2], procedure(Value: integer) begin scope
+  discard go Fetch(Value);
+ end scope; end procedure);",
     ));
 }
 
 #[test]
-fn go_statement_inside_scope_must_not_drop_a_result_error() {
-    assert_code(
-        "scope
-  go Load(1);
-end scope;",
-        SEMA_LOST_TASK_ERROR,
-    );
+fn discarded_go_may_return_an_ordinary_result_error() {
     check_ok(&program(
-        "go Load(1);
+        "scope
+  discard go Load(1);
+end scope;",
+    ));
+    check_ok(&program(
+        "discard go Load(1);
 scope
   const Job: task of result of (integer, string) := go Load(2);
   case Wait(Job) of

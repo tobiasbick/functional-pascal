@@ -111,7 +111,7 @@ fn types_and_routines_cannot_share_a_case_insensitive_scope_name() {
 #[test]
 fn constructors_cannot_be_spawned_or_pass_var_fields() {
     let errors = check_errors(&format!(
-        "program T; {TYPES} begin const Work: task := go Point(X := 1); end."
+        "program T; {TYPES} begin scope  const Work: task := go Point(X := 1);  end scope; end."
     ));
     assert!(
         errors
@@ -185,10 +185,10 @@ fn typed_construction_retains_task_bound_and_discard_capture_guarantees() {
     let errors = check_errors(
         "program T;
       type Holder = record Callback: procedure(); end record;
-      begin var N: integer := 0;
+      begin scope  var N: integer := 0;
         const H: Holder := Holder(Callback := procedure() begin N := N + 1; end procedure);
-        go H.Callback();
-      end.",
+        discard go H.Callback();
+       end scope; end.",
     );
     assert!(
         errors
@@ -196,18 +196,10 @@ fn typed_construction_retains_task_bound_and_discard_capture_guarantees() {
             .any(|error| error.code == fpas_diagnostics::codes::SEMA_TASK_BOUND_CALLABLE),
         "{errors:#?}"
     );
-    let errors = check_errors("program T; uses Std.Tasks;
-      function Work(): integer; begin return 1; end function;
-      function Make(Job: task of integer): function(): integer; begin return function(): integer begin return Wait(Job); end function; end function;
-      const Callback: function(): integer := Make(go Work());
-      type Holder = record Value: function(): integer := Callback; end record;
+    check_ok("program T; uses Std.Tasks;
+      const Callback: function(Job: task of integer): integer := function(Job: task of integer): integer begin return Wait(Job); end function;
+      type Holder = record Value: function(Job: task of integer): integer := Callback; end record;
       begin discard Holder(); end.");
-    assert!(
-        errors
-            .iter()
-            .any(|error| error.code == fpas_diagnostics::codes::SEMA_UNSAFE_DISCARD),
-        "{errors:#?}"
-    );
 }
 
 #[test]

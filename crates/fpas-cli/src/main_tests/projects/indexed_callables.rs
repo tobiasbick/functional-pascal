@@ -37,11 +37,11 @@ begin discard Send(Output, 42); end procedure;
 
 fn program(body: &str) -> String {
     format!(
-        "program Indexed; {DECLARATIONS} begin
+        "program Indexed; {DECLARATIONS} begin scope
          const Readers: array of Reader := [Double];
          const Mutators: array of Mutator := [Increase];
          var Counter: integer := 0;
-         {body} end."
+         {body} end scope; end."
     )
 }
 
@@ -65,13 +65,13 @@ fn indexed_callables_execute_selected_values_once_and_keep_reference_modes() {
 }
 
 #[test]
-fn indexed_callables_work_as_retained_and_detached_tasks() {
+fn indexed_callables_work_with_bound_and_discarded_handles() {
     let source = program(
         "const Reports: array of Reporter := [Report];
          const Output: channel of integer := CreateChannel(1);
          const Job: task of integer := go Readers[0](21);
          if Wait(Job) <> 42 then panic('task result'); end if;
-         go Reports[0](Output);
+         discard go Reports[0](Output);
          if ReceiveWithTimeout(Output, 1000).Unwrap() <> 42 then panic('detached'); end if;
          const ReportJob: task := go Reports[0](Output);
          Wait(ReportJob);
@@ -98,7 +98,7 @@ fn indexed_callables_reject_invalid_arguments_and_task_escapes() {
             "Expected parameter names: Value",
         ),
         (
-            "go Mutators[0](var Counter);",
+            "discard go Mutators[0](var Counter);",
             "FP3030",
             "cannot pass a `var` argument",
         ),
@@ -114,7 +114,7 @@ fn indexed_callables_reject_invalid_arguments_and_task_escapes() {
         ),
         (
             "const Work: procedure() := procedure() begin Counter := Counter + 1; end procedure;
-          const Jobs: array of procedure() := [Work]; go Jobs[0]();",
+          const Jobs: array of procedure() := [Work]; discard go Jobs[0]();",
             "FP3016",
             "task-bound",
         ),

@@ -119,16 +119,18 @@ fn implicit_and_explicit_procedure_returns_read_current_var_parameters() {
 }
 
 #[test]
-fn writes_remain_visible_to_the_caller_after_a_grouped_postcondition_panic() {
+fn worker_local_var_writes_precede_grouped_postcondition_failure() {
     assert_succeeds(
-        "program T; uses Std.Tasks; var X: integer := 1;
-        procedure Set(var X: integer); ensures X = 1; begin X := 2; end procedure;
+        "program T; uses Std.Tasks;
+        procedure Set(var X: integer; Observed: channel of integer);
+        ensures X = 1; begin X := 2; discard Send(Observed, X); end procedure;
         procedure Verify(); begin
             const Group: TaskGroup := CreateTaskGroup();
+            const Observed: channel of integer := CreateChannel(1);
             const Child: task := StartTaskInGroup(Group, procedure(Token: CancellationToken)
-                begin Set(var X); end procedure);
+                begin var Local := 1; Set(var Local, Observed); end procedure);
             const Failures: array of TaskFailure := CloseTaskGroup(Group);
-            if X <> 2 or Failures.Length() <> 1 then panic('lost write or failure'); end if;
+            if Receive(Observed).Unwrap() <> 2 or Failures.Length() <> 1 then panic('lost write or failure'); end if;
         end procedure; begin Verify(); end.",
     );
 }

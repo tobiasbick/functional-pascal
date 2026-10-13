@@ -52,7 +52,7 @@ pub(super) fn child_task_executable() -> VerifiedExecutable {
         result_type: Some(DebugTypeId::new(0)),
         ..Default::default()
     };
-    Executable {
+    crate::vm::tests::task_images::scope_owned(Executable {
         code: vec![
             Instruction::abx(Opcode::LoadConstant, 0, 0).expect("work"),
             abc_aux(Opcode::SpawnTask, 1, 0, 0, 0),
@@ -210,7 +210,7 @@ pub(super) fn child_task_executable() -> VerifiedExecutable {
         },
         entry: FunctionId::new(0),
         distinct_types: Vec::new(),
-    }
+    })
     .verify()
     .expect("child task-handle assignment executable")
 }

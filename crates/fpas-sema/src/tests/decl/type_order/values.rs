@@ -74,8 +74,8 @@ fn field_defaults_can_call_later_named_routines() {
 }
 
 #[test]
-fn generic_parameters_cannot_hide_task_fields_from_discard_analysis() {
-    let errors = check_errors(
+fn generic_shadowing_keeps_record_identity_for_ordinary_discard() {
+    check_ok(
         "program T;
       type A = record Next: Option of B;
         function Identity<B>(Self: A; Value: B): B;
@@ -83,11 +83,5 @@ fn generic_parameters_cannot_hide_task_fields_from_discard_analysis() {
       end record;
       type B = record Job: task of integer; end record;
       begin end.",
-    );
-    assert!(
-        errors
-            .iter()
-            .any(|error| error.code == fpas_diagnostics::codes::SEMA_UNSAFE_DISCARD),
-        "{errors:?}"
     );
 }

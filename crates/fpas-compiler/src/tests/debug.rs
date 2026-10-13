@@ -279,13 +279,14 @@ begin
   return 'nope';
 end function;
 
-const GlobalCurrent: task of integer := go Seven();
-const GlobalWrong: task of string := go Label();
+const Owner: TaskGroup := CreateTaskGroup();
+const GlobalCurrent: task of integer := StartTaskInGroup(Owner, function(Token: CancellationToken): integer begin return Seven(); end function);
+const GlobalWrong: task of string := StartTaskInGroup(Owner, function(Token: CancellationToken): string begin return Label(); end function);
 
-begin
+begin scope
   const Current: task of integer := go Seven();
   const Wrong: task of string := go Label();
-end.
+ end scope; end.
 "#,
     );
     let executable = crate::compile(&program).expect("task debug types should compile");

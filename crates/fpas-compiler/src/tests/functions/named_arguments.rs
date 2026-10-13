@@ -56,7 +56,7 @@ function Apply(F: function(A: integer; B: integer): integer): integer;
 begin
   return F(B := Mark('b', 2), A := Mark('a', 12));
 end function;
-begin
+begin scope
   const F: function(X: integer; Y: integer): integer := Sub;
   if F(Y := Mark('y', 3), X := Mark('x', 20)) <> 17 then panic('static slots'); end if;
   if Apply(F) <> 10 then panic('callback slots'); end if;
@@ -83,7 +83,7 @@ begin
   discard Send(Value := 7, Queue := Inner).Unwrap();
   if Receive(Queue := Inner).Unwrap() <> 7 then panic('named payload context'); end if;
   discard CloseChannel(Queue := Inner);
-end.
+ end scope; end.
 "#,
     );
 }
@@ -155,7 +155,7 @@ function Work(Base: integer; Factor: integer): integer;
 begin
   return Base * Factor;
 end function;
-begin
+begin scope
   const P: Point := Point.Create(Y := 2, X := 1);
   const Q: Point := P.Moved(Dy := 10, Dx := 100);
   if (Q.X <> 101) or (Q.Y <> 12) then
@@ -171,7 +171,7 @@ begin
   const T: task of integer := go Work(Factor := 7, Base := 6);
   if Std.Tasks.Wait(T) <> 42 then
     panic('go named arguments'); end if;
-end.
+ end scope; end.
 "#,
     );
 }

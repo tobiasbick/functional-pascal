@@ -16,33 +16,35 @@ begin
 end procedure;
 
 begin
-  if ParamCount() <> 1 then
-    begin
-      panic('usage: task_memory_benchmark.fpas -- TASK_COUNT');
-    end;
-  end if;
-  const TaskCount: integer := StrToInt(ParamStr(0));
-  if TaskCount < 1 then
-    begin
-      panic('TASK_COUNT must be positive');
-    end;
-  end if;
+  scope
+    if ParamCount() <> 1 then
+      begin
+        panic('usage: task_memory_benchmark.fpas -- TASK_COUNT');
+      end;
+    end if;
+    const TaskCount: integer := StrToInt(ParamStr(0));
+    if TaskCount < 1 then
+      begin
+        panic('TASK_COUNT must be positive');
+      end;
+    end if;
 
-  WriteLn('spawning ' + IntToStr(TaskCount) + ' tasks');
-  const Started: integer := MonotonicMillis();
-  var Tasks: array of task := [];
-  for I: integer := 1 to TaskCount do
-    begin
-      Tasks.PushInPlace(go Worker());
-      if I mod ProgressEvery = 0 then
-        begin
-          WriteLn('spawned ' + IntToStr(I));
-        end;
-      end if;
-    end;
-  end for;
+    WriteLn('spawning ' + IntToStr(TaskCount) + ' tasks');
+    const Started: integer := MonotonicMillis();
+    var Tasks: array of task := [];
+    for I: integer := 1 to TaskCount do
+      begin
+        Tasks.PushInPlace(go Worker());
+        if I mod ProgressEvery = 0 then
+          begin
+            WriteLn('spawned ' + IntToStr(I));
+          end;
+        end if;
+      end;
+    end for;
 
-  WriteLn('all tasks spawned; waiting');
-  WaitAll(Tasks);
-  WriteLn('completed in ' + IntToStr(ElapsedMillis(Started)) + ' ms');
+    WriteLn('all tasks spawned; waiting');
+    WaitAll(Tasks);
+    WriteLn('completed in ' + IntToStr(ElapsedMillis(Started)) + ' ms');
+  end scope;
 end.

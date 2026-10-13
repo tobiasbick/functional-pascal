@@ -19,7 +19,6 @@ fn statement_ends_with_end(stmt: &Stmt) -> bool {
         Stmt::Assign { value, .. } => expression_ends_with_end(value),
         Stmt::Return(Some(value), ..)
         | Stmt::Expression { expr: value, .. }
-        | Stmt::Go { expr: value, .. }
         | Stmt::Discard { expr: value, .. } => expression_ends_with_end(value),
         Stmt::Return(None, ..)
         | Stmt::Null(..)

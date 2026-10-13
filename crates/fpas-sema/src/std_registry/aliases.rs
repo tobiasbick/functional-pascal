@@ -89,10 +89,8 @@ pub fn register_short_aliases(checker: &mut Checker) {
                     .short_builtin_redirect
                     .insert(short_key.clone(), qualified.clone());
             }
-            let discard = checker.scopes.discard_info(qualified);
             let param_escapes = checker.scopes.param_escapes(qualified);
             if checker.scopes.define_in_root(&short, sym.clone()) {
-                checker.scopes.set_discard_info(&short, discard);
                 if let Some(escapes) = param_escapes {
                     checker.scopes.set_param_escapes(&short, escapes);
                 }

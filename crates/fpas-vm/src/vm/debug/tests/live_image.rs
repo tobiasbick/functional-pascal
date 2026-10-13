@@ -156,15 +156,17 @@ fn one_capture() -> DebugCaptureSource {
 }
 
 fn spawn_pair_executable() -> VerifiedExecutable {
-    let mut spawner = function("helper", 1, 4, 1, debug(&[(1, 10)]));
+    let mut spawner = function("helper", 1, 6, 1, debug(&[(1, 10)]));
     spawner.flags.uses_spawn_tasks = true;
-    let mut task = function("task", 4, 5, 0, debug(&[(4, 20)]));
+    let mut task = function("task", 6, 7, 0, debug(&[(6, 20)]));
     task.name = StringId::new(3);
     executable(
         vec![
             abc(Opcode::Return, NO_REGISTER, 0, 0),
+            abc(Opcode::EnterTaskScope, 0, 0, 0),
             Instruction::abx(Opcode::LoadConstant, 0, 0).expect("function constant"),
-            abc(Opcode::SpawnDetachedTask, 0, 0, 0),
+            abc(Opcode::SpawnTask, 0, 0, 0),
+            abc(Opcode::ExitTaskScope, 0, 0, 0),
             abc(Opcode::Return, NO_REGISTER, 0, 0),
             abc(Opcode::Return, NO_REGISTER, 0, 0),
         ],
@@ -173,7 +175,7 @@ fn spawn_pair_executable() -> VerifiedExecutable {
             function: FunctionId::new(2),
             task_bound: false,
         }],
-        vec![(0, 1), (1, 10), (4, 20)],
+        vec![(0, 1), (1, 10), (6, 20)],
     )
 }
 
@@ -304,7 +306,7 @@ fn capture_count_changes_are_rejected() {
 fn spawn_flag_changes_are_rejected_as_task_identity() {
     let current = spawn_pair_executable();
     let mut image = current.clone().into_unverified();
-    image.code[2] = abc(Opcode::LoadUnit, 0, 0, 0);
+    image.code[3] = abc(Opcode::LoadUnit, 0, 0, 0);
     image.functions[1].flags.uses_spawn_tasks = false;
     let candidate = image.verify().expect("task identity candidate");
     let classification = classify_current(current, candidate);

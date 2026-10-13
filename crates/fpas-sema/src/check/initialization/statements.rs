@@ -29,8 +29,7 @@ impl Walker<'_, '_> {
             }
             Stmt::Panic(value, _)
             | Stmt::Discard { expr: value, .. }
-            | Stmt::Expression { expr: value, .. }
-            | Stmt::Go { expr: value, .. } => {
+            | Stmt::Expression { expr: value, .. } => {
                 self.expr(value);
             }
             Stmt::Assign { target, value, .. } => {
@@ -78,9 +77,11 @@ impl Walker<'_, '_> {
                 else_body,
                 ..
             } => {
-                self.expr(expr);
+                let origins = self.expr(expr);
                 for arm in arms {
                     self.branch(|walk| {
+                        walk.values.insert(identity(arm.span), origins.clone());
+                        walk.bind_pattern_values(&arm.labels, &origins);
                         walk.labels(&arm.labels);
                         if let Some(guard) = &arm.guard {
                             walk.expr(guard);
@@ -99,9 +100,18 @@ impl Walker<'_, '_> {
                 self.expr(end);
                 self.branch(|walk| walk.statement(body));
             }
-            Stmt::ForIn { iterable, body, .. } => {
-                self.expr(iterable);
-                self.branch(|walk| walk.statement(body));
+            Stmt::ForIn {
+                iterable,
+                body,
+                span,
+                ..
+            } => {
+                let origins = self.expr(iterable);
+                self.branch(|walk| {
+                    walk.values.insert(identity(*span), origins);
+                    walk.ready.insert(identity(*span));
+                    walk.statement(body);
+                });
             }
             Stmt::While {
                 condition, body, ..
@@ -128,6 +138,39 @@ impl Walker<'_, '_> {
         self.ready = ready;
         for (binding, before) in values {
             self.values.entry(binding).or_default().extend(before);
+        }
+    }
+
+    /// Preserve callable origins through every payload binding before checking its arm.
+    pub(super) fn bind_pattern_values(
+        &mut self,
+        labels: &[fpas_parser::CaseLabel],
+        origins: &super::walker::Value,
+    ) {
+        for label in labels {
+            if let fpas_parser::CaseLabel::Pattern(pattern) = label {
+                self.bind_pattern_value(pattern, origins);
+            }
+        }
+    }
+
+    fn bind_pattern_value(
+        &mut self,
+        pattern: &fpas_parser::Pattern,
+        origins: &super::walker::Value,
+    ) {
+        match pattern {
+            fpas_parser::Pattern::Binding { span, .. } => {
+                self.values.insert(identity(*span), origins.clone());
+                self.ready.insert(identity(*span));
+            }
+            fpas_parser::Pattern::Variant { fields, .. }
+            | fpas_parser::Pattern::Destructure { fields, .. } => {
+                for field in fields {
+                    self.bind_pattern_value(&field.pattern, origins);
+                }
+            }
+            _ => {}
         }
     }
 

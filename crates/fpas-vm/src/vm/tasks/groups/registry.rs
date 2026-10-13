@@ -6,7 +6,6 @@ use std::sync::atomic::{AtomicU64, Ordering};
 
 use crate::vm::VmError;
 use crate::vm::cancellation::OwnedCancellation;
-use fpas_bytecode::Value;
 use fpas_diagnostics::codes::{RUNTIME_PROGRAM_PANIC, RUNTIME_TASK_CANCELLED, RUNTIME_VM_SHUTDOWN};
 
 const TAG: u64 = 0x4752_0000_0000_0000;
@@ -17,14 +16,12 @@ static NEXT: AtomicU64 = AtomicU64::new(TAG | 1);
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 #[repr(i64)]
 pub(in crate::vm) enum GroupFailureKind {
-    /// A worker returned a top-level Result error.
-    ReturnedError = 0,
     /// A worker executed a Pascal panic.
-    Panicked = 1,
+    Panicked = 0,
     /// A worker failed with another runtime diagnostic.
-    RuntimeError = 2,
+    RuntimeError = 1,
     /// The runtime cancelled a worker.
-    Cancelled = 3,
+    Cancelled = 2,
 }
 
 /// Compact failure report retained independently of a child's consumable task result.
@@ -36,28 +33,10 @@ pub(in crate::vm) struct GroupFailure {
     pub(in crate::vm) code: u16,
     pub(in crate::vm) line: u32,
     pub(in crate::vm) column: u32,
+    pub(in crate::vm) diagnostic: Option<VmError>,
 }
 
 impl GroupFailure {
-    /// Classify an ordinary returned error without guessing cancellation from its message.
-    pub(in crate::vm) fn returned(task: u64, value: &Value) -> Option<Self> {
-        let Value::ResultError(payload) = value else {
-            return None;
-        };
-        let message = match payload.as_ref() {
-            Value::Str(message) => message.chars().take(4096).collect(),
-            _ => "Task returned an invalid non-string error payload".into(),
-        };
-        Some(Self {
-            task,
-            kind: GroupFailureKind::ReturnedError,
-            message,
-            code: 0,
-            line: 0,
-            column: 0,
-        })
-    }
-
     /// Preserve the class and location of a child runtime failure in a bounded report.
     pub(in crate::vm) fn runtime(task: u64, error: &VmError) -> Self {
         let kind = if error.code == RUNTIME_PROGRAM_PANIC {
@@ -74,6 +53,7 @@ impl GroupFailure {
             code: error.code.value(),
             line: error.span.map_or(0, |span| span.line()),
             column: error.span.map_or(0, |span| span.column()),
+            diagnostic: Some(error.clone()),
         }
     }
 }
@@ -109,6 +89,18 @@ pub(in crate::vm) struct GroupRegistry {
 }
 
 impl GroupRegistry {
+    /// Return creating-task groups in deterministic registration order for final cleanup.
+    pub(in crate::vm) fn owned_groups(&self, owner: u64) -> Vec<u64> {
+        let state = self.state.lock().unwrap_or_else(|error| error.into_inner());
+        let mut groups: Vec<_> = state
+            .groups
+            .iter()
+            .filter_map(|(&id, group)| (group.owner == owner).then_some(id))
+            .collect();
+        groups.sort_unstable();
+        groups
+    }
+
     /// Report whether ownership and its child failure reports still require explicit close.
     pub(in crate::vm) fn is_live(&self, id: u64) -> bool {
         self.state

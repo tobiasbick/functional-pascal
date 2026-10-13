@@ -137,21 +137,30 @@ const N: integer := 3;
 const Work: function(): integer := function(): integer begin
   return N * 2;
 end function;
-const Handle: task of integer := go Work();
+scope
+  const Handle: task of integer := go Work();
+  discard Handle;
+end scope;
 // Rejected: mutable capture
 var Count: integer := 0;
 const Inc: procedure() := procedure() begin
   Count := Count + 1;
 end procedure;
 
-go Inc(); // Compile-time error
+scope discard go Inc(); end scope; // Compile-time error
 // Rejected: nested task-bound capture
 const Outer: procedure() := procedure() begin
   Inc();
 end procedure;
 
-go Outer(); // Compile-time error — Outer captures task-bound Inc
+scope discard go Outer(); end scope; // Compile-time error — Outer captures task-bound Inc
 ```
+
+Workers also cannot access mutable program/unit globals through named helpers
+or callbacks. Known dependencies are checked at starts (FP3042). Dynamic targets
+retain mandatory VM access checks. Pass ordinary values into the worker, mutate
+its own local copies, or use channels. Discarding a captured callable is ordinary
+value disposal and does not transfer or invoke it.
 
 ## Panic and cleanup
 

@@ -3,7 +3,7 @@
 ## Thread pool
 
 The runtime starts background workers when any compiled function's verified metadata indicates a
-task-start operation: a retained or detached `go` spawn, `Std.Tasks.StartTaskInGroup`, or
+task-start operation: a scoped go expression, `Std.Tasks.StartTaskInGroup`, or
 `Std.Tasks.StartSupervisedTask`. Without these operations, it does not start a worker pool.
 Creating a channel or task group, waiting, and `Yield` alone do not activate it.
 
@@ -15,10 +15,15 @@ Shutdown notifications synchronize with both the ready-queue and timer-queue
 mutexes. A worker or timer driver entering its wait during teardown still observes
 shutdown and exits; the notification cannot pass between its state check and wait.
 
-When the **main task** finishes, the runtime begins **teardown shutdown**. Idle workers wake and exit after draining tasks that were already in the ready queue. Spawned tasks that are still suspended in `Std.Time.Sleep`, and ready tasks that try to sleep after teardown has begun, are canceled instead of delaying program exit. A retained canceled task is completed with a shutdown error; code that needs its result must call `Wait` before the main task finishes. Detached sleeping tasks are canceled without a result because they have no handle.
+Every task publishes its terminal outcome only after its scopes have ended and
+any remaining groups it created have been cancelled and fully closed. This
+includes main-task return, failure, cancellation, and deterministic debugger
+execution. A worker waiting for group cleanup releases the pool thread. The
+main task waits while pool workers finish its children, then the runtime shuts
+down and joins its worker/timer threads. Retrieve required results before their
+owner closes. Cleanup is cooperative and has no hard wall-clock deadline.
 
-Teardown is separate from **task failure**: when a task outside an explicit group or
-[task scope](task-scopes.md) aborts with a runtime error, other spawned work may be stopped cooperatively at the next instruction boundary.
+On **task failure**, owners preserve unexpected panic/runtime diagnostics.
 The host surfaces **one** primary diagnostic: if the main task failed, that error wins; otherwise a
 worker error is reported. A task scope re-raises its child's failure when the scope ends, and explicit
 groups instead retain their children's failures for close;
@@ -55,6 +60,6 @@ Worker threads and the main execution thread share one runtime state: immutable 
 
 ## See also
 
-- [Concurrency overview](README.md) — bytecode mapping for retained vs detached spawn
+- [Concurrency overview](README.md) — owned task starts
 - [`go`](go.md)
 - [Task handles](task-handles.md)

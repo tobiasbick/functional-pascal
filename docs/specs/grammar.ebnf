@@ -371,7 +371,6 @@ simple_statement    = block
                     | repeat_stmt
                     | break_stmt
                     | continue_stmt
-                    | go_stmt
                     | scope_stmt
                     | call_stmt
                     | postfix_expr_stmt ;
@@ -518,13 +517,12 @@ continue_stmt       = 'continue' ;
 (* suffixes may be fields, indexes, or calls: `go Make().Answer()`.       *)
 (* Bare values and outer operators/record updates are not task calls.    *)
 (* Semantic analysis requires a callable target, not a constructor.      *)
-(* Statement `go` is fire-and-forget; expression `go` returns a retained *)
-(* task handle for `Std.Tasks.Wait`.                                    *)
+(* `go` is one expression returning a retained task handle.              *)
+(* It requires a same-routine lexical scope; bind or discard the value.  *)
 (* Documentation: docs/pascal/language/concurrency/go.md                *)
 go_call             = designator call_args
                     | native_array_factory
                     | primary_atom { postfix_suffix } '.' identifier call_args ;
-go_stmt             = 'go' go_call ;
 
 (* -- Task scope -- *)
 (* Every go directly in the body starts a child owned by the scope.   *)

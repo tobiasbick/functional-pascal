@@ -1,4 +1,4 @@
-//! Register-IR lowering for retained and detached task spawning.
+//! Register-IR lowering for scope-owned task expressions.
 //!
 //! **Documentation:** `docs/pascal/language/concurrency/README.md`.
 
@@ -16,7 +16,6 @@ impl LoweringContext {
         &mut self,
         expression: &Expr,
         span: fpas_lexer::Span,
-        retain_result: bool,
     ) -> Result<ValueId, CompileError> {
         if let Expr::Postfix {
             base, operations, ..
@@ -37,7 +36,7 @@ impl LoweringContext {
             if let Some(result_ty) = self.member_value_calls.get(&key).cloned() {
                 let callee = self.lower_postfix_callable_member(receiver, last)?;
                 let output = self.type_table.id(&result_ty, span.line, span.column)?;
-                return self.spawn_callable_value(callee, output, args, span, retain_result);
+                return self.spawn_callable_value(callee, output, args, span);
             }
             if let Some(target) = self.fluent_calls.get(&key).cloned() {
                 return self.lower_resolved_go(
@@ -49,7 +48,6 @@ impl LoweringContext {
                         result_ty: &target.result_ty,
                     },
                     span,
-                    retain_result,
                 );
             }
             if let Some(target) = self.method_calls.get(&key).cloned() {
@@ -67,7 +65,6 @@ impl LoweringContext {
                         result_ty: &result_ty,
                     },
                     span,
-                    retain_result,
                 );
             }
             return Err(unsupported(span, "task postfix receiver call"));
@@ -94,7 +91,6 @@ impl LoweringContext {
                     result_ty: &result_ty,
                 },
                 span,
-                retain_result,
             );
         }
         if let Some(result_ty) = self
@@ -104,7 +100,7 @@ impl LoweringContext {
         {
             let callee = self.lower_designator_read(designator)?;
             let output = self.type_table.id(&result_ty, span.line, span.column)?;
-            return self.spawn_callable_value(callee, output, args, span, retain_result);
+            return self.spawn_callable_value(callee, output, args, span);
         }
         if let Some(target) = self
             .fluent_calls
@@ -122,7 +118,6 @@ impl LoweringContext {
                     result_ty: &target.result_ty,
                 },
                 span,
-                retain_result,
             );
         }
         if let Some(target) = self
@@ -154,7 +149,6 @@ impl LoweringContext {
                     result_ty: &result_ty,
                 },
                 span,
-                retain_result,
             );
         }
         let Some(name) = designator
@@ -203,7 +197,7 @@ impl LoweringContext {
                 )?;
                 (callee, callable.result)
             };
-        self.spawn_callable_value(callee, output, args, span, retain_result)
+        self.spawn_callable_value(callee, output, args, span)
     }
 
     fn spawn_callable_value(
@@ -212,24 +206,14 @@ impl LoweringContext {
         output: fpas_ir::TypeId,
         args: &[Expr],
         span: fpas_lexer::Span,
-        retain_result: bool,
     ) -> Result<ValueId, CompileError> {
         let callee = self.save_value(callee);
         let arguments = self.lower_argument_values(args, span)?;
         let callee = self.restore_value(callee, span)?;
         self.record_call_arguments(arguments.len(), span)?;
         self.can_spawn_tasks = true;
-        if retain_result {
-            let task = self.task_type(output, span)?;
-            self.emit_value(Operation::SpawnTask { callee, arguments }, task, span)
-        } else {
-            self.emit_effect(Operation::SpawnDetachedTask { callee, arguments }, span)?;
-            self.emit_value(
-                Operation::Const(fpas_ir::Constant::Unit),
-                super::types::UNIT,
-                span,
-            )
-        }
+        let task = self.task_type(output, span)?;
+        self.emit_value(Operation::SpawnTask { callee, arguments }, task, span)
     }
 
     fn lower_resolved_go(
@@ -239,7 +223,6 @@ impl LoweringContext {
         args: &[Expr],
         target: GoTarget<'_>,
         span: fpas_lexer::Span,
-        retain_result: bool,
     ) -> Result<ValueId, CompileError> {
         let GoTarget { name, result_ty } = target;
         let receiver = receiver.map(|value| self.save_value(value));
@@ -293,30 +276,15 @@ impl LoweringContext {
         let callee = self.restore_value(callee, span)?;
         self.record_call_arguments(values.len(), span)?;
         self.can_spawn_tasks = true;
-        if retain_result {
-            let task = self.task_type(output, span)?;
-            self.emit_value(
-                Operation::SpawnTask {
-                    callee,
-                    arguments: values,
-                },
-                task,
-                span,
-            )
-        } else {
-            self.emit_effect(
-                Operation::SpawnDetachedTask {
-                    callee,
-                    arguments: values,
-                },
-                span,
-            )?;
-            self.emit_value(
-                Operation::Const(fpas_ir::Constant::Unit),
-                super::types::UNIT,
-                span,
-            )
-        }
+        let task = self.task_type(output, span)?;
+        self.emit_value(
+            Operation::SpawnTask {
+                callee,
+                arguments: values,
+            },
+            task,
+            span,
+        )
     }
 }
 

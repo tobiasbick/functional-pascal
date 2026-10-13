@@ -63,16 +63,16 @@ fn postfix_callable_hints_agree_with_explicit_discard_rules() {
 }
 
 #[test]
-fn postfix_task_results_do_not_recommend_invalid_discard() {
+fn postfix_task_results_recommend_ordinary_discard() {
     let error = unused(
         "program T;
-      function Work(): integer; begin return 1; end function;
-      type Box = record
+      type Box = record Job: task of integer;
         function Start(Self: Box): task of integer;
-        begin return go Work(); end function;
+        begin return Self.Job; end function;
       end record;
-      function Make(): Box; begin return Box( ); end function;
-      begin Make().Start(); end.",
+      function Make(Job: task of integer): Box; begin return Box(Job := Job); end function;
+      procedure Ignore(Job: task of integer); begin Make(Job).Start(); end procedure;
+      begin end.",
     );
-    assert!(!error.help.unwrap().contains("`discard"));
+    assert!(error.help.unwrap().contains("`discard Call();`"));
 }

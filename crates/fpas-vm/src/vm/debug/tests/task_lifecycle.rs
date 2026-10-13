@@ -36,10 +36,10 @@ begin
   return Value;
 end function;
 
-begin
+begin scope
   const Pending: task of integer := go Work();
   discard Wait(Pending);
-end.
+ end scope; end.
 "#;
     let (program, diagnostics) = fpas_parser::parse(SOURCE);
     assert!(diagnostics.is_empty(), "parse diagnostics: {diagnostics:?}");

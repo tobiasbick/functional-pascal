@@ -3,7 +3,7 @@
 use fpas_bytecode::SourceLocation;
 use fpas_diagnostics::codes::RUNTIME_TASK_CANCELLED;
 
-use super::super::super::types::{DebugTaskEvent, DebugTaskEventKind, DebugTaskState};
+use super::super::super::types::DebugTaskState;
 use super::{DebugTaskRuntime, TaskSlot};
 use crate::vm::tasks::TaskSuspension;
 use crate::vm::{VmError, runtime_error};
@@ -28,7 +28,7 @@ impl DebugTaskRuntime {
         if task_id == 0 {
             return Err(TaskCancelError::Root);
         }
-        let (retain_result, error) = {
+        {
             let slot = self
                 .tasks
                 .get_mut(&task_id)
@@ -45,12 +45,12 @@ impl DebugTaskRuntime {
             }
             if matches!(
                 slot.worker.task_suspension,
-                Some(TaskSuspension::ScopeUnwind { .. })
+                Some(TaskSuspension::ScopeUnwind { .. } | TaskSuspension::OwnerCleanup { .. })
             ) {
                 return Err(TaskCancelError::Unknown);
             }
-            let retain_result = slot.worker.retain_result;
             let error = cancellation_error(slot, task_id);
+            slot.worker.observed_task_failure.set(None);
             slot.worker.supervision = None;
             if !slot.worker.task_scopes.is_empty() {
                 // Joining runs after resume; the stopped command never dispatches child code.
@@ -60,18 +60,24 @@ impl DebugTaskRuntime {
                     return Ok(());
                 }
             }
-            slot.state = DebugTaskState::Cancelled;
-            slot.exited = true;
-            slot.worker.task_suspension = None;
-            (retain_result, error)
-        };
-        if retain_result {
-            self.scheduler.store_failure(task_id, error);
+            match slot.worker.finish_owned_groups(Err(error.clone())) {
+                Ok(None) => {
+                    slot.state = DebugTaskState::Waiting;
+                    slot.paused = false;
+                    return Ok(());
+                }
+                Err(error) => {
+                    super::failure::record(
+                        slot,
+                        task_id,
+                        &error,
+                        &self.scheduler,
+                        &mut self.events,
+                    );
+                }
+                Ok(Some(_)) => unreachable!("cancellation retains an error outcome"),
+            }
         }
-        self.events.push(DebugTaskEvent {
-            task_id,
-            kind: DebugTaskEventKind::Exited,
-        });
         Ok(())
     }
 }

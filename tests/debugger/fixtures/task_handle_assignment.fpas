@@ -18,11 +18,13 @@ begin
 end function;
 
 begin
-  const Pending: task of integer := go Seven();
-  var Current: task of integer := go Nine();
-  const Frozen: task of integer := go Seven();
-  const Wrong: task of string := go Label();
-  var StopMarker: integer := 0;
-  StopMarker := StopMarker + 1;
-  WriteLn(Wait(Current));
+  scope
+    const Pending: task of integer := go Seven();
+    var Current: task of integer := go Nine();
+    const Frozen: task of integer := go Seven();
+    const Wrong: task of string := go Label();
+    var StopMarker: integer := 0;
+    StopMarker := StopMarker + 1;
+    WriteLn(Wait(Current));
+  end scope;
 end.

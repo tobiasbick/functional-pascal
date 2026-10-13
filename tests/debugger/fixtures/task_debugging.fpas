@@ -8,6 +8,8 @@ begin
 end function;
 
 begin
-  const Pending: task of integer := go Work();
-  WriteLn(Wait(Pending));
+  scope
+    const Pending: task of integer := go Work();
+    WriteLn(Wait(Pending));
+  end scope;
 end.

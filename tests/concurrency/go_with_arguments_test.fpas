@@ -8,6 +8,8 @@ begin
 end function;
 
 begin
-  const T: task of integer := go Add(10, 32);
-  AssertEquals(42, Std.Tasks.Wait(T));
+  scope
+    const T: task of integer := go Add(10, 32);
+    AssertEquals(42, Std.Tasks.Wait(T));
+  end scope;
 end.

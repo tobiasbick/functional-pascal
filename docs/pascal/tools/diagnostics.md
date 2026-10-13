@@ -348,7 +348,6 @@ Call arguments still use commas; commas inside types such as
 | FP3018 | Enum backing overflow | Implicit variant after backing value `9223372036854775807` | Assign a smaller unused explicit backing value. |
 | FP3019 | Private type in public signature | Public routine returns a private unit type | Export that type or keep the routine non-public. |
 | FP3020 | Discard requires a value | `discard Work();` when `Work` is a procedure | Call the procedure directly. |
-| FP3021 | Unsafe discard | A task handle, task-containing aggregate, or callable with unverified captures | Retain and consume handles; use task-free captures or constraints. For a direct `discard go Worker();`, use `go Worker();`. |
 | FP3022 | Unused function result | `Compute();` or a postfix chain ending in a function | Consume the value or use `discard` when permitted. For `Result`, handle with `case` or propagate with `try` while consuming the success value. |
 | FP3023 | Cyclic type alias | `type A = B; type B = A;` | End the alias chain at a concrete type; use a record or enum for finite recursion. |
 | FP3024 | No finite recursive value | `type Node = record Next: Node; end record;` | Break the required cycle with `Option`, an empty container, or a finite enum alternative. |
@@ -365,10 +364,10 @@ Call arguments still use commas; commas inside types such as
 | FP3035 | Else on a finite case | `else` on enum/Option/Result/Boolean/subrange selectors, including after full coverage | Write explicit missing finite arms or remove a redundant `else`; use `if` for selective handling. |
 | FP3036 | Local type annotation required | `const Value := None;`, `const Values := [];`, or `const Present := Some(None);` | Add `: Type`, for example `const Values: array of integer := [];`. Every fully determined statement-local initializer can infer its type. |
 | FP3037 | Invalid contract expression | `requires ReadValue() > 0;` or a mutable outer binding in a clause | Use parameters, immutable values, operators, typed construction, and the permitted native receiver queries; see [Preconditions](../language/functions/contracts.md). |
-| FP3038 | `go` outside its owning scope | `scope ForEach(Items, procedure(Item: integer) begin go Work(Item); end procedure); end scope;` | Move the `go` out of the anonymous routine into the scope body, or open a `scope` inside the anonymous routine; see [Task scopes](../language/concurrency/task-scopes.md). |
-| FP3039 | Lost task error | `scope go Load(Path); end scope;` where `Load` returns `result of (string, string)` | Keep the handle and forward the error: `const T: task of result of (string, string) := go Load(Path); const Text: string := try Wait(T);`. |
+| FP3038 | Go outside its owning scope | `const Job := go Work();` without a same-routine scope, including in named/anonymous helpers | Open `scope ... end scope;` in that routine or pass an explicit TaskGroup; see [Task scopes](../language/concurrency/task-scopes.md). |
 | FP3040 | Task handle escape | `return go Fetch(1);` or `Outer := go Fetch(1);` inside a `scope` | Keep scope-owned handles in bindings declared inside the scope and wait for them there; see [Task scopes](../language/concurrency/task-scopes.md#handle-escapes). |
 | FP3041 | Uninitialized or unprovable dependency | An initializer calls a helper that reads a later binding, directly or through a callback/default, or captures an unavailable local. | Initialize the dependency before use or pass initialized data explicitly; see [Declaration order](../language/types/declaration-order.md). |
+| FP3042 | Foreign mutable worker state | A worker reads or writes a mutable program/unit global through a routine, helper, or callback | Pass an input value from the starting task, mutate a worker-local copy, or communicate through channels; see [Go](../language/concurrency/go.md). |
 
 FP3025 also reports a parameter or payload field named twice and a named
 call or pattern that omits one; its hint lists the visible static names.

@@ -29,9 +29,14 @@ begin
   // Deliberate ownership misuse: cleanup must preserve this failure.
   discard CloseListener(Listener);
   discard RequestStop(Life);
+  case Wait(Worker) of
+    when Error(const Message):
+      AssertEquals('session failed', Message);
+    when Ok(_):
+      panic('expected ordinary worker error data');
+  end case;
   const Failures: array of TaskFailure := CloseTaskGroup(Group);
-  AssertEquals(1, Failures.Length());
-  AssertEquals('session failed', Failures[0].Message);
+  AssertEquals(0, Failures.Length());
   AssertEquals(1, ShutdownErrors(Life).Length());
   AssertTrue(FinishShutdown(Life).Unwrap());
 end.

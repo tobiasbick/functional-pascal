@@ -53,7 +53,11 @@ fn opcode_inventory_is_exhaustive() {
         .filter_map(|raw| Opcode::try_from(raw).ok())
         .collect();
     assert_eq!(decoded, Opcode::ALL);
-    assert_eq!(Opcode::ALL.len(), 111);
+    assert_eq!(Opcode::ALL.len(), 110);
+    assert!(
+        Opcode::try_from(91).is_err(),
+        "the removed detached spawn encoding is invalid"
+    );
 }
 
 #[test]

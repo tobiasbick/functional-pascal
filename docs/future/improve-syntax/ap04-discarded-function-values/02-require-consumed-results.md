@@ -3,6 +3,9 @@
 Package: [AP04: Discarded function values](README.md)
 
 Status: complete.
+AP40 retains required result consumption and replaces the standalone-go exception:
+bind or discard the single go expression in a same-routine scope. Every value
+result may use ordinary discard; no capture-specific hint restriction remains.
 
 ## Result
 

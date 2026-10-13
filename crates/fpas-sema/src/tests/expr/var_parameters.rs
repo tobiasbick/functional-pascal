@@ -171,17 +171,17 @@ procedure Outer(var Total: integer);
   begin
     Total := Total + 1;
   end procedure;
-begin
+begin scope
   const Closure: procedure() := procedure() begin
     Total := 0;
   end procedure;
   const RoutineValue: procedure() := Add;
-  go Add();
-end procedure;
-begin
+  discard go Add();
+ end scope; end procedure;
+begin scope
   var Counter: integer := 0;
-  go Increase(var Counter);
-end.",
+  discard go Increase(var Counter);
+ end scope; end.",
     );
     let codes = escapes.iter().map(|error| error.code).collect::<Vec<_>>();
     assert_eq!(

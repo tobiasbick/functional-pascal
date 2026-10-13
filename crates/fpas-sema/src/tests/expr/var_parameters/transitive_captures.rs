@@ -3,9 +3,7 @@
 //! Documentation: `docs/pascal/language/functions/var-parameters.md`
 
 use super::{check_errors, check_ok};
-use fpas_diagnostics::codes::{
-    SEMA_TASK_BOUND_CALLABLE, SEMA_UNSAFE_DISCARD, SEMA_VAR_PARAMETER_ESCAPE,
-};
+use fpas_diagnostics::codes::{SEMA_TASK_BOUND_CALLABLE, SEMA_VAR_PARAMETER_ESCAPE};
 
 const REFERENCE_HELPERS: &str = r#"
   procedure First();
@@ -26,23 +24,21 @@ const REFERENCE_HELPERS: &str = r#"
 fn recursive_capture_completion_preserves_task_and_discard_boundaries() {
     for statement in [
         "go Work();",
-        "const Items: array of procedure() := [Work]; go Items[0]();",
-        "const Wrapped: Option of procedure() := Some(Work); case Wrapped of when Some(const Extracted): go Extracted(); when None: null; end case;",
-        "const Wrapped: Option of procedure() := Some(Work); const Extracted: procedure() := Wrapped.Unwrap(); go Extracted();",
-        "const Wrapped: procedure() := procedure() begin Work(); end procedure; go Wrapped();",
-        "go Alias();",
+        "const Items: array of procedure() := [Work]; discard go Items[0]();",
+        "const Wrapped: Option of procedure() := Some(Work); case Wrapped of when Some(const Extracted): discard go Extracted(); when None: null; end case;",
+        "const Wrapped: Option of procedure() := Some(Work); const Extracted: procedure() := Wrapped.Unwrap(); discard go Extracted();",
+        "const Wrapped: procedure() := procedure() begin Work(); end procedure; discard go Wrapped();",
         "const Queue: channel of procedure() := CreateChannel(1); discard Send(Queue, Work);",
     ] {
         let errors = check_errors(&format!(
             "program T; uses Std.Tasks;
 procedure Outer();
   procedure First();
-    procedure Alias(); begin Work(); end procedure;
-  begin
+  begin scope
     const Work: procedure() := procedure() begin First(); end procedure;
     {statement}
     Value := Value + 1;
-  end procedure;
+  end scope; end procedure;
 begin var Value: integer := 0; end procedure;
 begin end."
         ));
@@ -57,22 +53,18 @@ begin end."
         "discard Work;",
         "const Wrapped: Option of procedure() := Some(Work); discard Wrapped.Unwrap();",
     ] {
-        let errors = check_errors(&format!(
+        check_ok(&format!(
             "program T; uses Std.Tasks;
 procedure Outer(Value: task);
   procedure First();
-  begin
+  begin scope
     const Work: procedure() := procedure() begin First(); end procedure;
     {statement}
     const Snapshot: task := Value;
-  end procedure;
+  end scope; end procedure;
 begin end procedure;
 begin end."
         ));
-        assert!(
-            errors.iter().any(|error| error.code == SEMA_UNSAFE_DISCARD),
-            "{errors:#?}"
-        );
     }
     check_ok(
         "program T; uses Std.Tasks;
@@ -102,10 +94,10 @@ fn recursive_routine_values_and_tasks_cannot_escape_reference_captures() {
             "program T; uses Std.Tasks;
 procedure Outer(var Value: integer);
   procedure First();
-  begin
+  begin scope
     {statement}
     Value := Value + 1;
-  end procedure;
+  end scope; end procedure;
 begin First(); end procedure;
 begin end."
         );
@@ -140,10 +132,10 @@ procedure Outer(var Value: integer);
   procedure First();
     procedure Bridge();
     begin {bridge_body} end procedure;
-  begin
+  begin scope
     {statement}
     Value := Value + 1;
-  end procedure;
+  end scope; end procedure;
 begin First(); end procedure;
 begin end."
         );
@@ -207,7 +199,6 @@ begin Third('local'); Second(); end procedure; begin end."
             let capture = &info.captures[0];
             assert!(capture.reference);
             assert!(capture.mutable);
-            assert!(capture.task_free);
             assert_eq!(capture.ty, crate::Ty::Integer);
             capture.declaration
         })
@@ -281,33 +272,23 @@ end.
 }
 
 #[test]
-fn sibling_wrappers_retain_mutable_and_task_handle_capture_restrictions() {
-    for (binding, value_type, statement, expected) in [
-        (
-            "var Value: integer := 0;",
-            "integer",
-            "go Second();",
-            SEMA_TASK_BOUND_CALLABLE,
-        ),
-        (
-            "const Value: task := go Work();",
-            "task",
-            "discard Second;",
-            SEMA_UNSAFE_DISCARD,
-        ),
-    ] {
-        let source = format!(
-            "program T; uses Std.Tasks;
-procedure Work(); begin end procedure;
-procedure Outer();
-  procedure First(); begin const Copy: {value_type} := Value; end procedure;
-  procedure Second(); begin First(); end procedure;
-begin {binding} {statement} end procedure; begin end."
-        );
-        let errors = check_errors(&source);
-        assert!(
-            errors.iter().any(|error| error.code == expected),
-            "{errors:#?}"
-        );
-    }
+fn sibling_wrappers_reject_mutable_transfer_but_allow_task_capturing_discard() {
+    let errors = check_errors(
+        "program T; procedure Outer();
+        procedure First(); begin const Copy: integer := Value; end procedure;
+        procedure Second(); begin First(); end procedure;
+        begin var Value: integer := 0; scope discard go Second(); end scope;
+        end procedure; begin end.",
+    );
+    assert!(
+        errors
+            .iter()
+            .any(|error| error.code == SEMA_TASK_BOUND_CALLABLE)
+    );
+    check_ok(
+        "program T; procedure Outer(Value: task);
+        procedure First(); begin const Copy: task := Value; end procedure;
+        procedure Second(); begin First(); end procedure;
+        begin discard Second; end procedure; begin end.",
+    );
 }

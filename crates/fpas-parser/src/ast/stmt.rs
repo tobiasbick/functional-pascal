@@ -23,7 +23,6 @@ impl Stmt {
             | Self::Call { span, .. }
             | Self::Expression { span, .. }
             | Self::Discard { span, .. }
-            | Self::Go { span, .. }
             | Self::Scope { span, .. } => *span,
         }
     }
@@ -36,7 +35,7 @@ pub enum Stmt {
     Block(Vec<Stmt>, Span),
     /// Explicit `null` statement that performs no action.
     Null(Span),
-    /// Explicitly evaluates and ignores a non-task value.
+    /// Explicitly evaluates and ignores a value without changing task ownership.
     ///
     /// **Documentation:** `docs/pascal/language/functions/discard.md`
     Discard {
@@ -154,15 +153,6 @@ pub enum Stmt {
         /// Postfix expression evaluated for its side effect.
         expr: Expr,
         /// Source span of the complete statement.
-        span: Span,
-    },
-    /// `go` statement: spawn a concurrent task.
-    ///
-    /// **Documentation:** `docs/pascal/language/concurrency/README.md`
-    Go {
-        /// Call expression executed as a concurrent task.
-        expr: Expr,
-        /// Source span of the complete `go` statement.
         span: Span,
     },
     /// `scope ... end scope` block that owns every task started directly inside it.

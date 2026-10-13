@@ -4,6 +4,7 @@
 
 mod context;
 mod escapes;
+mod handle_types;
 mod ownership;
 
 pub(crate) use context::TaskScopeContext;

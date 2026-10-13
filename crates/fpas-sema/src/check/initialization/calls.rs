@@ -24,6 +24,24 @@ impl Walker<'_, '_> {
             .collect();
         self.order_arguments(args, &mut values);
         self.invalidate_var_arguments(args);
+        let previous = self.worker;
+        if self.worker_start == Some(key) {
+            self.worker = true;
+        }
+        let result = self.call_target(key, designator, args, span, receiver, values);
+        self.worker = previous;
+        result
+    }
+
+    fn call_target(
+        &mut self,
+        key: usize,
+        designator: &Designator,
+        args: &[Expr],
+        span: Span,
+        receiver: Value,
+        mut values: Vec<Value>,
+    ) -> Value {
         if self.checker.record_constructions.contains(&key) {
             self.defaults(key, designator, args, span);
             return values.into_iter().flatten().collect();
@@ -112,6 +130,20 @@ impl Walker<'_, '_> {
                         self.invoking.remove(origin);
                         continue;
                     };
+                    self.worker_globals(summary.mutable_globals.iter().cloned(), span);
+                    for &binding in &summary.started_bindings {
+                        self.worker_binding(binding, span);
+                    }
+                    for &parameter in &summary.started_parameters {
+                        self.invoke_worker(
+                            values.get(parameter).unwrap_or(&Value::new()),
+                            &[],
+                            span,
+                        );
+                    }
+                    if summary.unknown_worker {
+                        self.worker_unknown(span);
+                    }
                     for &binding in &summary.dependencies {
                         self.dependency(binding, span, "routine call");
                     }
@@ -155,12 +187,32 @@ impl Walker<'_, '_> {
                 }
                 Origin::Parameter(index) => {
                     self.summary.called_parameters.insert(index);
+                    if self.worker {
+                        self.summary.started_parameters.insert(index);
+                    }
                     returned.insert(Origin::Unknown);
                 }
                 Origin::Imported(reference) => {
                     if let Some(reference) = self.checker.initialization.references.get(&reference)
                     {
                         returned.extend(self.imported(&reference.name, values, span));
+                    } else {
+                        self.unknown(span);
+                    }
+                }
+                Origin::BoundMethod(key, site) => {
+                    if let Some(method) = self.checker.bound_methods.get(&key) {
+                        let receiver = self
+                            .checker
+                            .initialization
+                            .references
+                            .get(&site)
+                            .and_then(|reference| reference.declaration)
+                            .map(|binding| self.binding_value(binding))
+                            .unwrap_or_default();
+                        let mut arguments = vec![receiver];
+                        arguments.extend_from_slice(values);
+                        returned.extend(self.method(&method.qualified_name, &arguments, span));
                     } else {
                         self.unknown(span);
                     }
@@ -176,6 +228,9 @@ impl Walker<'_, '_> {
                         self.unknown(span);
                     } else {
                         self.summary.called_bindings.insert(binding);
+                        if self.worker {
+                            self.summary.started_bindings.insert(binding);
+                        }
                     }
                     returned.insert(Origin::Unknown);
                 }
@@ -204,62 +259,6 @@ impl Walker<'_, '_> {
                 }
             }
         }
-    }
-
-    fn imported(&mut self, name: &str, values: &[Value], span: Span) -> Value {
-        let canonical = self.checker.scopes.imports.canonical_name(name);
-        let Some(summary) = self.checker.initialization.imported.get(&canonical) else {
-            self.unknown(span);
-            return [Origin::Unknown].into_iter().collect();
-        };
-        for &index in &summary.called_parameters {
-            self.invoke(values.get(index).unwrap_or(&Value::new()), &[], span);
-        }
-        if summary.unknown_call {
-            self.unknown(span);
-        }
-        let mut returned: Value = summary
-            .returned_parameters
-            .iter()
-            .flat_map(|&index| values.get(index).cloned().unwrap_or_default())
-            .collect();
-        if summary.unknown_return {
-            returned.insert(Origin::Unknown);
-        }
-        returned
-    }
-
-    /// Check declared catalog callback roles without invoking ordinary stored values.
-    pub fn standard(&mut self, name: &str, values: &[Value], receiver: Value, span: Span) -> Value {
-        let parameters = crate::std_registry::native_operation_by_implementation(name)
-            .map(|operation| (operation.signature)().params)
-            .or_else(|| {
-                self.checker
-                    .scopes
-                    .lookup(name)
-                    .and_then(|symbol| match &symbol.ty {
-                        crate::types::Ty::Function(function) => Some(function.params.clone()),
-                        crate::types::Ty::Procedure(procedure) => Some(procedure.params.clone()),
-                        _ => None,
-                    })
-            })
-            .unwrap_or_default();
-        for (index, parameter) in parameters.iter().enumerate() {
-            if matches!(
-                parameter.ty,
-                crate::types::Ty::Function(_) | crate::types::Ty::Procedure(_)
-            ) {
-                self.invoke(values.get(index).unwrap_or(&Value::new()), &[], span);
-            }
-        }
-        let mut returned: Value = receiver
-            .into_iter()
-            .chain(values.iter().flatten().copied())
-            .collect();
-        if !returned.is_empty() {
-            returned.insert(Origin::Unknown);
-        }
-        returned
     }
 
     /// Map already evaluated written arguments to their checked parameter positions.

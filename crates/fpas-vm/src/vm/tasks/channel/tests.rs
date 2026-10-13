@@ -28,7 +28,7 @@ begin
   const Closed: boolean := Close(Client).Unwrap();
   return true;
 end function;
-begin
+begin scope
   const Source: CancellationSource := CreateCancellationSource();
   const Token: CancellationToken := GetCancellationToken(Source);
   const FirstListener: Listener := Listen('127.0.0.1', 0).Unwrap();
@@ -49,7 +49,7 @@ begin
   if Blocked.IsOk() then panic('the channel was full'); end if;
   if not Wait(First) then panic('first'); end if;
   if not Wait(Second) then panic('second'); end if;
-end."#,
+ end scope; end."#,
     );
 }
 
@@ -70,7 +70,7 @@ begin
   end; end for;
   return Count;
 end function;
-begin
+begin scope
   const Requests: channel of integer := CreateChannel(1);
   const Replies: channel of integer := CreateChannel(1);
   const Worker: task of integer := go Doubler(Requests, Replies);
@@ -80,7 +80,7 @@ begin
     if Receive(Replies).Unwrap() <> Index * 2 then panic('reply'); end if;
   end; end for;
   if Wait(Worker) <> 50 then panic('count'); end if;
-end."#,
+ end scope; end."#,
     );
 }
 
@@ -126,7 +126,7 @@ function Join(ListenerValue: Listener): Connection;
 begin
   return Connect('127.0.0.1', ListenerLocalAddress(ListenerValue).Unwrap().Port, 1000).Unwrap();
 end function;
-begin
+begin scope
   const Source: CancellationSource := CreateCancellationSource();
   const Token: CancellationToken := GetCancellationToken(Source);
   const FirstBusy: Listener := Open();
@@ -146,7 +146,7 @@ begin
   if TimestampMillis() - Started > 4000 then panic('the wait ran the reader inline'); end if;
   if not Wait(First) then panic('first'); end if;
   if not Wait(Second) then panic('second'); end if;
-end."#,
+ end scope; end."#,
         2,
     );
 }

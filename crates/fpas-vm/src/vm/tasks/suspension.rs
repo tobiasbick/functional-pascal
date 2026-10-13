@@ -78,6 +78,11 @@ impl TaskClock {
 
 /// Work that must complete before a cooperatively suspended task is runnable again.
 pub(in crate::vm) enum TaskSuspension {
+    /// Retain a terminal body outcome until the creating task's groups have joined.
+    OwnerCleanup {
+        groups: Vec<u64>,
+        outcome: Result<Value, crate::vm::VmError>,
+    },
     /// Retried worker admission waits for a cancellable debugger-clock delay.
     SupervisionBackoff { deadline_millis: u64 },
     /// Retain a sealed group until all its children terminate.
@@ -158,6 +163,7 @@ impl TaskSuspension {
     /// Return the current scheduler-visible state using the supplied clock.
     pub(in crate::vm) fn state(&self, clock: &TaskClock) -> TaskSuspensionState {
         match self {
+            Self::OwnerCleanup { .. } => TaskSuspensionState::Waiting,
             Self::GroupClose {
                 deadline_millis: None,
                 ..

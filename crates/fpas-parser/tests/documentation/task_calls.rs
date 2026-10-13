@@ -31,7 +31,7 @@ fn task_call(target: &str, retained: bool) -> Expr {
     let statement = if retained {
         format!("const Job: task := go {target};")
     } else {
-        format!("go {target};")
+        format!("discard go {target};")
     };
     let source = format!("program Doc; begin {statement} end.");
     let (program, errors) = parse(&source);
@@ -41,7 +41,10 @@ fn task_call(target: &str, retained: bool) -> Expr {
         unreachable!("checked statement count");
     };
     match statement {
-        Stmt::Go { expr, .. } if !retained => expr,
+        Stmt::Discard {
+            expr: Expr::Go(inner, _),
+            ..
+        } if !retained => *inner,
         Stmt::Const(binding) if retained => {
             let Expr::Go(inner, _) = binding.value else {
                 unreachable!("expected retained go expression: {source}");
@@ -114,7 +117,7 @@ fn non_call_task_targets_report_fp2005_in_both_go_forms() {
             let statement = if retained {
                 format!("const Job: task := go {target};")
             } else {
-                format!("go {target};")
+                format!("discard go {target};")
             };
             let source = format!("program Doc; begin {statement} null; end.");
             let (program, errors) = parse(&source);

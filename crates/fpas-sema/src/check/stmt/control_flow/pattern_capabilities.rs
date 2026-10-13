@@ -10,7 +10,7 @@ use fpas_lexer::Span;
 use fpas_parser::Expr;
 
 impl Checker {
-    /// Define one pattern binding without losing task-bound state or discard proofs.
+    /// Define one pattern binding without losing task-bound capture state.
     ///
     /// Capture-free scalar types keep their own type-based guarantees. Callable
     /// contents inherit the matched expression's conservative capture metadata.
@@ -35,7 +35,7 @@ impl Checker {
             span,
         );
         if defined {
-            self.record_binding_discard_info(name, ty, false, Some(value));
+            self.record_pending_capture_binding(name, Some(value));
         }
         defined
     }

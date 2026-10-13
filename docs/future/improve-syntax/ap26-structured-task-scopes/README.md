@@ -4,6 +4,13 @@ Status: complete (AP26.1–AP26.3; Q19, Q20, Q24–Q27). Effort: large. Completi
 tracked in the [central README](../README.md); the process is in
 [development-process.md](../development-process.md).
 
+AP40 replaces the original detached/standalone-go and anonymous-only ownership
+decisions recorded below. Every go is a same-routine scoped expression, ordinary
+discard is allowed, and remaining groups join before creating-task completion.
+Scope normal/early exit, failure ordering, and handle escapes remain implemented.
+See [AP40](../ap40-explicit-task-lifetimes/README.md) and the current handbook;
+AP26 remains complete.
+
 Builds on the existing `go` and `task of T` model; it does not introduce
 deferred workflows.
 

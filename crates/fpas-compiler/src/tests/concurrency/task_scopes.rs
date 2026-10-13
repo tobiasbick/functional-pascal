@@ -41,7 +41,7 @@ fn normal_exit_waits_for_both_go_forms() {
         "",
         "const Queue: channel of integer := CreateChannel(2);
 scope
-  go Produce(Queue, 1);
+  discard go Produce(Queue, 1);
   const Second: task := go Produce(Queue, 2);
 end scope;
 for Index: integer := 1 to 2 do
@@ -61,7 +61,7 @@ fn early_exits_cancel_running_and_blocked_children() {
 begin
   for Value: integer in Values do
     scope
-      go Spin();
+      discard go Spin();
       if Value < 0 then
         continue;
       end if;
@@ -98,25 +98,26 @@ end case;",
 }
 
 #[test]
-fn routines_called_inside_a_scope_start_detached_tasks() {
-    // An owned producer would block the scope forever on the closed gate.
+fn helpers_use_an_explicit_group_for_work_that_outlives_the_callers_scope() {
     assert_succeeds(&program(
         "procedure Relay(Gate: channel of integer; Queue: channel of integer);
 begin
   discard Send(Queue, Block(Gate));
 end procedure;
-procedure StartProducer(Gate: channel of integer; Queue: channel of integer);
+procedure StartProducer(Group: TaskGroup; Gate: channel of integer; Queue: channel of integer);
 begin
-  go Relay(Gate, Queue);
+  discard StartTaskInGroup(Group, procedure(Token: CancellationToken) begin Relay(Gate, Queue); end procedure);
 end procedure;
 ",
         "const Gate: channel of integer := CreateChannel(1);
 const Queue: channel of integer := CreateChannel(1);
+const Group := CreateTaskGroup();
 scope
-  StartProducer(Gate, Queue);
+  StartProducer(Group, Gate, Queue);
 end scope;
 discard Send(Gate, 7);
-if Receive(Queue).Unwrap() <> 7 then panic('detached task result'); end if;",
+if Receive(Queue).Unwrap() <> 7 then panic('group task result'); end if;
+discard CloseTaskGroup(Group);",
     ));
 }
 
@@ -141,7 +142,7 @@ fn child_failure_cancels_siblings_and_body_and_is_reraised() {
         // The body waits on a channel that no task will ever fill.
         "const Gate: channel of integer := CreateChannel(1);
 scope
-  go Spin();
+  discard go Spin();
   const Failed: task of integer := go Fail('child failed');
   discard Block(Gate);
 end scope;",
@@ -152,9 +153,9 @@ end scope;",
 end scope;",
         // A failure in a nested scope leaves the outer scope too.
         "scope
-  go Spin();
+  discard go Spin();
   scope
-    go Fail('child failed');
+    discard go Fail('child failed');
     Sleep(5000);
   end scope;
 end scope;",
@@ -174,7 +175,7 @@ fn a_body_panic_cancels_and_waits_for_children() {
     let error = run_program(&program(
         "",
         "scope
-  go Spin();
+  discard go Spin();
   panic('body failed');
 end scope;",
     ))

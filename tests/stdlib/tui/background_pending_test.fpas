@@ -23,7 +23,7 @@ begin
           if FailOld then
             begin
               discard Receive(Gate);
-              return Error('old source failed');
+              panic('old source failed');
             end;
           end if;
 
@@ -50,8 +50,8 @@ begin
     when TuiMsg.BackgroundFailed(const Id, const Kind, const Message, const Code, const Line, const Column):
       begin
         AssertEquals(1, Id);
-        AssertTrue(Kind = TaskFailureKind.ReturnedError);
-        AssertEquals('old source failed', Message);
+        AssertTrue(Kind = TaskFailureKind.Panicked);
+        AssertEquals('panic: old source failed', Message);
         var Next: PendingModel := State;
         Next.Failures := State.Failures + 1;
         return Next;

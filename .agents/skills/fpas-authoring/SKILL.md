@@ -73,6 +73,18 @@ Read the pages relevant to the change. For exact productions, consult
   parameters, loop variables, or pattern bindings. `as` remains contextual in `uses`.
 - Functions return with `return`. Consume function results or use an allowed
   explicit [discard](../../../docs/pascal/language/functions/discard.md).
+- Go is one expression and requires a lexical scope in the same routine.
+  Bind its exact task handle or use `discard go Work();`; named and anonymous
+  helpers never inherit ownership. Pass TaskGroup for dynamic caller-owned work.
+  Discard accepts every value type without task/capture proofs and never cancels,
+  detaches, joins, or consumes a task result. Foreign mutable variables, including
+  globals through helpers/callbacks, are forbidden in workers; pass values,
+  mutate worker-local copies, or use channels. Dynamic targets retain VM checks.
+  Creating tasks cancel and fully close remaining groups before publishing their
+  outcome. Returned Error is Result data; retrieve required results before close.
+  Wait consumes once across aliases; completion observers do not consume.
+  Controlled waits validate arguments/original failures first, then observe
+  cancellation, readiness, timeout on every probe. Select uses ready-case input order.
 - Named free, member, and nested routine signatures are available throughout
   their lexical scope, including mutually recursive siblings. Values initialize
   in source order. Call or capture a helper only after its direct and transitive

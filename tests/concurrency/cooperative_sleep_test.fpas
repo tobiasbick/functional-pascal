@@ -8,16 +8,18 @@ begin
 end procedure;
 
 begin
-  var Tasks: array of task := [];
-  const Started: integer := MonotonicMillis();
-  for I: integer := 1 to 8 do
-    begin
-      Tasks.PushInPlace(go Sleeper());
-    end;
-  end for;
+  scope
+    var Tasks: array of task := [];
+    const Started: integer := MonotonicMillis();
+    for I: integer := 1 to 8 do
+      begin
+        Tasks.PushInPlace(go Sleeper());
+      end;
+    end for;
 
-  WaitAll(Tasks);
-  const Elapsed: integer := ElapsedMillis(Started);
-  AssertTrue(Elapsed >= 40);
-  AssertTrue(Elapsed < 1000);
+    WaitAll(Tasks);
+    const Elapsed: integer := ElapsedMillis(Started);
+    AssertTrue(Elapsed >= 40);
+    AssertTrue(Elapsed < 1000);
+  end scope;
 end.

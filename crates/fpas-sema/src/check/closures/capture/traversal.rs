@@ -91,7 +91,6 @@ impl CaptureCollector<'_> {
             Stmt::Return(Some(expr), _)
             | Stmt::Panic(expr, _)
             | Stmt::Expression { expr, .. }
-            | Stmt::Go { expr, .. }
             | Stmt::Discard { expr, .. } => {
                 self.collect_from_expr(expr);
             }

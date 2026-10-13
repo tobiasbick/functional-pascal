@@ -276,10 +276,10 @@ begin
   end case;
 end function;
 
-begin
+begin scope
   const Pending: task of integer := go Work();
   WriteLn(Wait(Pending));
-end.
+ end scope; end.
 "#;
     let (program, diagnostics) = fpas_parser::parse(TASK_SOURCE);
     assert!(diagnostics.is_empty(), "parse diagnostics: {diagnostics:?}");

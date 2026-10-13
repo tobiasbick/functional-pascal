@@ -62,9 +62,7 @@ pub(super) fn operation_values(operation: &Operation) -> Vec<ValueId> {
         Operation::CallDirect { arguments, .. } | Operation::Intrinsic { arguments, .. } => {
             arguments.clone()
         }
-        Operation::CallValue { callee, arguments }
-        | Operation::SpawnTask { callee, arguments }
-        | Operation::SpawnDetachedTask { callee, arguments } => {
+        Operation::CallValue { callee, arguments } | Operation::SpawnTask { callee, arguments } => {
             let mut values = vec![*callee];
             values.extend(arguments.iter().copied());
             values

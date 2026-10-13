@@ -10,10 +10,12 @@ function result and is not an erased handle. Use the same annotation for
 bindings, parameters, fields, aliases, containers, and exported signatures.
 
 ```pascal
+scope
 const Calculation: task of integer := go Compute(100);
 const Worker: task := go RunWorker();
 const Value: integer := Wait(Calculation);
 Wait(Worker);
+end scope;
 ```
 
 ## Typed task handles
@@ -45,7 +47,10 @@ begin
   Wait(Job);
 end procedure;
 
-const Jobs: array of task of result of (boolean, string) := [go Connect(), go Serve()];
+scope
+  const Jobs: array of task of result of (boolean, string) := [go Connect(), go Serve()];
+  WaitAll(Jobs);
+end scope;
 ```
 
 Generic parameters may use `task of T` for function tasks; they cannot infer
@@ -55,10 +60,10 @@ Option, Result, records, enums, and unit interfaces preserve the same
 distinction. `Std.Tasks.StartTaskInGroup`
 and `StartSupervisedTask` return `task of T` for a function worker and `task`
 for a procedure worker. Group ownership is independent of later handle use;
-keep the returned handle in a binding even if only the group will observe
-completion. Leaving that binding unused does not detach the child. The
-[`discard` keyword](../functions/discard.md#task-handles-and-aggregates) rejects
-task handles and values containing them, including group-owned handles.
+bind the returned handle when its result is required, or explicitly discard it.
+[`discard`](../functions/discard.md#task-handles-and-aggregates) accepts handles
+and values containing them; it does not cancel, detach, join, or consume results.
+Retrieve required data before the owning scope/group releases it.
 See [Task groups](../../std/concurrency/task.md#task-groups).
 
 ## Waiting for a task
@@ -68,8 +73,10 @@ save their continuation and release the pool thread; the main task waits for sch
 while pool workers run queued work. See [Waiting and execution](../../std/concurrency/task.md#waiting-and-execution).
 
 ```pascal
-const T: task of integer := go Compute(100);
-const TaskValue: integer := Wait(T);
+scope
+  const T: task of integer := go Compute(100);
+  const TaskValue: integer := Wait(T);
+end scope;
 ```
 
 For a procedure task, Wait is a procedure operation: write `Wait(Job);` as

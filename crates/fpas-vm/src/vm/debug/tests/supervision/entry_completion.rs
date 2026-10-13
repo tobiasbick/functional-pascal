@@ -17,9 +17,7 @@ begin
     when Error(const Message): if Message <> 'forced' then panic('wrong forced error'); end if;
   end case;
   const Failures: array of TaskFailure := CloseTaskGroup(Group);
-  if Failures.Length() <> 1 then panic('wrong report count'); end if;
-  if Failures[0].Kind <> TaskFailureKind.ReturnedError then panic('wrong report kind'); end if;
-  if Failures[0].Message <> 'forced' then panic('wrong report message'); end if;
+  if Failures.Length() <> 0 then panic('forced result data became a failure'); end if;
 end."#,
     );
     assert!(errors.is_empty(), "{errors:?}");

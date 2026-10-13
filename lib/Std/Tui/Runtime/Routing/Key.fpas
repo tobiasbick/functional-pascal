@@ -405,7 +405,7 @@ begin
     end;
   else
     begin
-      Routed.Push(TuiMsg.FocusChanged(Previous, Some(Target)));
+      Routed.PushInPlace(TuiMsg.FocusChanged(Previous, Some(Target)));
     end;
   end if;
 
@@ -448,7 +448,7 @@ begin
   case TuiRouteTarget(Frame, Root, 0, Target, Key) of
     when Some(const Msg):
       begin
-        Routed.Push(Msg);
+        Routed.PushInPlace(Msg);
       end;
     when None:
       begin
@@ -457,7 +457,7 @@ begin
             case TuiRouteDefaultButtonEnter(Root) of
               when Some(const Msg):
                 begin
-                  Routed.Push(Msg);
+                  Routed.PushInPlace(Msg);
                   return Routed;
                 end;
               when None:
@@ -467,7 +467,7 @@ begin
           end;
         end if;
 
-        Routed.Push(TuiMsg.Key(Key));
+        Routed.PushInPlace(TuiMsg.Key(Key));
       end;
   end case;
 

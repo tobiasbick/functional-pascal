@@ -2,6 +2,10 @@
 
 Package: [AP06: Fixed dot-call targets](README.md)
 
+This is the original AP06 inventory. [AP37](../ap37-uniform-mutation/README.md)
+adds 32 InPlace counterparts and changes Push/Pop to value-producing operations.
+The native registry and current type handbooks contain the complete current catalog.
+
 Status: complete. The catalog defines 78 public native operations. Their
 signatures, naming, import, factory, collision, and mutation rules are enforced
 by `crates/fpas-sema/src/std_registry/native/`. Automatic checks validate the

@@ -192,7 +192,7 @@ begin
   const Index: integer := TuiArrangeBuilding.Length();
   var Entries: array of TuiArrangedEntry := TuiArrangeBuilding;
   TuiArrangeBuilding := [];
-  Entries.Push(std.tui.layout.frame.tuiarrangedentry(ParentIndex := ParentIndex, Bounds := NodeBounds, Clip := Clip));
+  Entries.PushInPlace(std.tui.layout.frame.tuiarrangedentry(ParentIndex := ParentIndex, Bounds := NodeBounds, Clip := Clip));
   TuiArrangeBuilding := Entries;
   return Index;
 end function;
@@ -237,7 +237,7 @@ begin
     begin
       if TuiArrangeChildParticipates(Children[Index]) then
         begin
-          ParticipatingIndices.Push(Index);
+          ParticipatingIndices.PushInPlace(Index);
           const Measured: TuiMeasureResult := TuiMeasure(Children[Index], Spec);
           Assigned[Index] := TuiArrangeMainMinimum(Measured, Horizontal);
           Preferred[Index] := TuiArrangeMainPreferred(Measured, Horizontal);

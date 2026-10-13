@@ -1,5 +1,6 @@
 //! Import-free checking of every catalog signature and native argument diagnostics.
 use super::{check_errors, check_ok};
+mod in_place_calls;
 
 #[test]
 fn every_catalog_entry_accepts_positional_and_fully_named_explicit_arguments() {
@@ -197,12 +198,12 @@ fn every_catalog_entry_accepts_positional_and_fully_named_explicit_arguments() {
             "program T; begin var Receiver: array of integer := [1]; Receiver.ForEach(F := procedure(X: integer) begin end procedure); end.",
         ),
         (
-            "program T; begin var Receiver: array of integer := [1]; Receiver.Push(1); end.",
-            "program T; begin var Receiver: array of integer := [1]; Receiver.Push(Value := 1); end.",
+            "program T; begin var Receiver: array of integer := [1]; const Output: array of integer := Receiver.Push(1); end.",
+            "program T; begin var Receiver: array of integer := [1]; const Output: array of integer := Receiver.Push(Value := 1); end.",
         ),
         (
-            "program T; begin var Receiver: array of integer := [1]; const Output: integer := Receiver.Pop(); end.",
-            "program T; begin var Receiver: array of integer := [1]; const Output: integer := Receiver.Pop(); end.",
+            "program T; begin var Receiver: array of integer := [1]; const Output: ArrayPopResult of integer := Receiver.Pop(); end.",
+            "program T; begin var Receiver: array of integer := [1]; const Output: ArrayPopResult of integer := Receiver.Pop(); end.",
         ),
         (
             "program T; begin var Receiver: array of string := ['a']; const Output: string := Receiver.Join('a'); end.",
@@ -317,7 +318,13 @@ fn every_catalog_entry_accepts_positional_and_fully_named_explicit_arguments() {
             "program T; begin var Receiver: Result of (integer, string) := Ok(1); const Output: integer := Receiver.UnwrapOr(Default := 1); end.",
         ),
     ];
-    assert_eq!(cases.len(), crate::native_operations().count());
+    assert_eq!(
+        cases.len(),
+        crate::native_operations()
+            .filter(|entry| !matches!(entry.lowering, crate::NativeLowering::InPlace(_)))
+            .count()
+    );
+    in_place_calls::check_counterparts(&cases);
     for (positional, named) in cases {
         check_ok(positional);
         check_ok(named);

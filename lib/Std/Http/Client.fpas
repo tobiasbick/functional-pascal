@@ -236,7 +236,7 @@ begin
                     end;
                   end if;
 
-                  Chunks.Push(Bytes);
+                  Chunks.PushInPlace(Bytes);
                 end;
               when Error(const Message):
                 begin

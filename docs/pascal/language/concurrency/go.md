@@ -50,8 +50,9 @@ Bare values, operators, and non-call expressions are rejected by the parser or s
 
 A `go` call cannot pass a `var` argument, and cannot start a nested routine that uses an enclosing
 [`var` parameter](../functions/var-parameters.md) (FP3030): the task could outlive the caller's
-variable. Implicit writable array receivers follow the same rule: `go Items.Push(Value)`
-and `go Items.Pop()` are rejected. Call these operations on the current task.
+variable. Implicit writable collection InPlace receivers follow the same rule: `go Items.PushInPlace(Value)`
+and `go Items.PopInPlace()` are rejected. Call these operations on the current task.
+Value operations, including Push and Pop, may run in tasks and preserve the receiver.
 
 ## See also
 

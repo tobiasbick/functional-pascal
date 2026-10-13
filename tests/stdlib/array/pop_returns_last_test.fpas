@@ -4,7 +4,7 @@ uses Std.Console;
 
 begin
   var A: array of integer := [1, 2, 3];
-  const Last: integer := A.Pop();
+  const Last: integer := A.PopInPlace();
   WriteLn(Last);
   WriteLn(A.Length());
 end.

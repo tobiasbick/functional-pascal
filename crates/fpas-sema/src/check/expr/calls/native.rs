@@ -53,6 +53,26 @@ impl Checker {
         span: Span,
         expected: Option<&Ty>,
     ) -> Ty {
+        if matches!(operation.lowering, NativeLowering::InPlace(_)) {
+            let Some(receiver) = receiver else {
+                return Ty::Error;
+            };
+            let ty = self.check_expr(receiver);
+            let Expr::Designator(designator) = receiver else {
+                self.error_with_code(
+                    fpas_diagnostics::codes::SEMA_INVALID_VAR_ARGUMENT,
+                    format!("`{}` requires a writable receiver", operation.name),
+                    format!("Use a var variable, field or array element, or use the value operation without InPlace: `Value := Value.{}(…)`.", operation.name.trim_end_matches("InPlace")),
+                    receiver.span(),
+                );
+                return Ty::Error;
+            };
+            let (_, root) = self.check_var_storage(designator, ty);
+            let Some(root) = root else {
+                return Ty::Error;
+            };
+            self.reject_var_argument_aliases(&[root], span);
+        }
         let signature = self.native_call_signature(operation, receiver, span);
         if !signature.variadic
             && args.iter().all(|arg| arg.argument_name().is_none())
@@ -114,10 +134,10 @@ impl Checker {
             all_args.push(receiver);
         }
         all_args.extend(ordered);
-        let dispatch = if operation.lowering == NativeLowering::IsEmpty {
-            operation.implementation.replace("IsEmpty", "Length")
-        } else {
-            operation.implementation.into()
+        let dispatch = match operation.lowering {
+            NativeLowering::IsEmpty => operation.implementation.replace("IsEmpty", "Length"),
+            NativeLowering::InPlace(base) => base.into(),
+            _ => operation.implementation.into(),
         };
         let result = if operation.polymorphic() {
             let validated = crate::std_registry::check_builtin_std_call_refs(
@@ -130,6 +150,20 @@ impl Checker {
             if validated.is_error() {
                 Ty::Error
             } else {
+                if matches!(operation.lowering, NativeLowering::InPlace(_))
+                    && matches!(operation.name, "MapInPlace" | "FlatMapInPlace")
+                    && receiver.is_some_and(|receiver| {
+                        !validated.compatible_with(&self.check_expr(receiver))
+                    })
+                {
+                    self.error_with_code(
+                        fpas_diagnostics::codes::SEMA_TYPE_MISMATCH,
+                        "InPlace callbacks must preserve the receiver's exact type",
+                        "Use Map or FlatMap without InPlace when changing the element or value type.",
+                        span,
+                    );
+                    return Ty::Error;
+                }
                 checked_result
             }
         } else {

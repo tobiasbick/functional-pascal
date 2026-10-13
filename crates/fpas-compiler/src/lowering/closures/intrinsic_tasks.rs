@@ -53,11 +53,8 @@ impl ClosureRegistry<'_> {
         };
         let (intrinsic, result_ty, receiver_ty) =
             if let Some(target) = metadata.fluent_calls.get(&key) {
-                let Some(intrinsic) =
-                    crate::intrinsic_catalog::resolve(&target.name, Some(&target.receiver_ty))
-                else {
-                    return Ok(());
-                };
+                let intrinsic =
+                    crate::intrinsic_catalog::resolve(&target.name, Some(&target.receiver_ty));
                 (intrinsic, &target.result_ty, Some(&target.receiver_ty))
             } else if let Some(name) = metadata.intrinsic_calls.get(&key) {
                 let first_ty = ordered_args.first().and_then(|arg| {
@@ -72,15 +69,10 @@ impl ClosureRegistry<'_> {
                     .expr_types
                     .get(&fpas_sema::expr_lookup_key(expression))
                     .ok_or_else(|| unsupported(span, "intrinsic task result type"))?;
-                (intrinsic, result_ty, None)
+                (Some(intrinsic), result_ty, None)
             } else {
                 return Ok(());
             };
-        let is_empty = metadata
-            .fluent_calls
-            .get(&key)
-            .and_then(|target| fpas_sema::native_operation_by_implementation(&target.name))
-            .is_some_and(|entry| entry.lowering == fpas_sema::NativeLowering::IsEmpty);
         let mut parameters = Vec::new();
         if let Some(receiver_ty) = receiver_ty {
             parameters.push(types.intern(receiver_ty, span.line, span.column)?);
@@ -111,7 +103,7 @@ impl ClosureRegistry<'_> {
             id,
             name: format!("$intrinsic_task_{}", id.get()),
             intrinsic,
-            is_empty,
+            native: metadata.fluent_calls.get(&key).cloned(),
             parameters,
             result,
             span,
@@ -161,8 +153,28 @@ impl ClosureRegistry<'_> {
             .iter()
             .map(|parameter| context.read_named_local(&parameter.name, routine.span))
             .collect::<Result<Vec<_>, _>>()?;
+        if let Some(native) = &routine.native {
+            let count = arguments.len().saturating_sub(1);
+            let result = context.lower_native_values(
+                &native.name,
+                &native.receiver_ty,
+                arguments,
+                routine.result,
+                count,
+                routine.span,
+            )?;
+            context.terminate(if routine.result == types::UNIT {
+                Terminator::Return(None)
+            } else {
+                Terminator::Return(Some(result))
+            })?;
+            return context.finish(routine.span);
+        }
+        let selected = routine
+            .intrinsic
+            .ok_or_else(|| unsupported(routine.span, "task intrinsic"))?;
         if matches!(
-            routine.intrinsic,
+            selected,
             fpas_bytecode::Intrinsic::Console(
                 fpas_bytecode::ConsoleIntrinsic::Write | fpas_bytecode::ConsoleIntrinsic::WriteLn
             )
@@ -170,7 +182,7 @@ impl ClosureRegistry<'_> {
             let write = fpas_bytecode::Intrinsic::Console(fpas_bytecode::ConsoleIntrinsic::Write);
             let write_ln =
                 fpas_bytecode::Intrinsic::Console(fpas_bytecode::ConsoleIntrinsic::WriteLn);
-            if arguments.is_empty() && routine.intrinsic == write_ln {
+            if arguments.is_empty() && selected == write_ln {
                 arguments.push(context.emit_value(
                     Operation::Const(Constant::String(String::new())),
                     types::STRING,
@@ -179,7 +191,7 @@ impl ClosureRegistry<'_> {
             }
             let last = arguments.len().saturating_sub(1);
             for (index, argument) in arguments.into_iter().enumerate() {
-                let intrinsic = if index == last && routine.intrinsic == write_ln {
+                let intrinsic = if index == last && selected == write_ln {
                     write_ln
                 } else {
                     write
@@ -197,9 +209,9 @@ impl ClosureRegistry<'_> {
             context.terminate(Terminator::Return(None))?;
             return context.finish(routine.span);
         }
-        context.can_spawn_tasks |= routine.intrinsic.starts_task();
+        context.can_spawn_tasks |= selected.starts_task();
         if matches!(
-            routine.intrinsic,
+            selected,
             fpas_bytecode::Intrinsic::Str(fpas_bytecode::StrIntrinsic::Format)
         ) {
             let count = i64::try_from(arguments.len().saturating_sub(1))
@@ -213,21 +225,12 @@ impl ClosureRegistry<'_> {
         context.record_call_arguments(arguments.len(), routine.span)?;
         let result = context.emit_value(
             Operation::Intrinsic {
-                intrinsic: IntrinsicId::new(u32::from(u16::from(routine.intrinsic))),
+                intrinsic: IntrinsicId::new(u32::from(u16::from(selected))),
                 arguments,
             },
-            if routine.is_empty {
-                types::INTEGER
-            } else {
-                routine.result
-            },
+            routine.result,
             routine.span,
         )?;
-        let result = if routine.is_empty {
-            context.lower_native_is_empty(result, routine.span)?
-        } else {
-            result
-        };
         if routine.result == types::UNIT {
             context.terminate(Terminator::Return(None))?;
         } else {

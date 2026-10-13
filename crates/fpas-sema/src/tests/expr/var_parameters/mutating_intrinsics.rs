@@ -17,15 +17,15 @@ fn writable_receivers_accept_fields_elements_and_forwarded_parameters() {
 type Holder = record Items: array of integer; end record;
 procedure Change(var H: Holder; var Rows: array of array of integer);
 begin
-  H.Items.Push(3);
-  Rows[0].Push(4);
-  const Last: integer := H.Items.Pop();
+  H.Items.PushInPlace(3);
+  Rows[0].PushInPlace(4);
+  const Last: integer := H.Items.PopInPlace();
 end procedure;
 procedure Add(var Items: array of integer);
 begin
-  Items.Push(5);
-  const Last: integer := Items.Pop();
-  Items.Push(Last);
+  Items.PushInPlace(5);
+  const Last: integer := Items.PopInPlace();
+  Items.PushInPlace(Last);
 end procedure;
 begin
   var H: Holder := Holder( Items := [1] );
@@ -39,12 +39,16 @@ end."#,
 #[test]
 fn writable_receivers_reject_readonly_and_computed_storage() {
     for body in [
-        "const A: array of integer := [1]; A.Push(2);",
-        "const A: array of integer := [1]; const N: integer := A.Pop();",
-        "var D: dict of string to array of integer := ['a': [1]]; D['a'].Push(2);",
-        "[1].Push(2);",
-        "var A: array of integer := [1]; (A).Push(2);",
-        "for A: array of integer in [[1]] do A.Push(2); end for;",
+        "const A: array of integer := [1]; A.SortInPlace();",
+        "const S: string := 'abc'; S.ReverseInPlace();",
+        "const D: dict of string to integer := ['a': 1]; D.RemoveInPlace('a');",
+        "var D: dict of string to string := ['a': 'x']; D['a'].TrimInPlace();",
+        "const A: array of integer := [1]; A.PushInPlace(2);",
+        "const A: array of integer := [1]; const N: integer := A.PopInPlace();",
+        "var D: dict of string to array of integer := ['a': [1]]; D['a'].PushInPlace(2);",
+        "[1].PushInPlace(2);",
+        "var A: array of integer := [1]; (A).PushInPlace(2);",
+        "for A: array of integer in [[1]] do A.PushInPlace(2); end for;",
     ] {
         let errors = check_errors(&program(body));
         assert!(
@@ -53,14 +57,14 @@ fn writable_receivers_reject_readonly_and_computed_storage() {
         );
     }
     let errors = check_errors(
-        "program T;  procedure Add(Items: array of integer); begin Items.Push(1); end procedure; begin end.",
+        "program T;  procedure Add(Items: array of integer); begin Items.PushInPlace(1); end procedure; begin end.",
     );
     assert!(
         errors.iter().any(|e| e.code == SEMA_INVALID_VAR_ARGUMENT),
         "{errors:#?}"
     );
     let errors = check_errors(
-        "program T;  function Make(): array of integer; begin return [1]; end function; begin Make().Push(2); end.",
+        "program T;  function Make(): array of integer; begin return [1]; end function; begin Make().PushInPlace(2); end.",
     );
     assert!(
         errors.iter().any(|e| e.code == SEMA_INVALID_VAR_ARGUMENT),
@@ -71,11 +75,12 @@ fn writable_receivers_reject_readonly_and_computed_storage() {
 #[test]
 fn written_arguments_keep_var_markers_and_readonly_value_mode() {
     check_ok(&program(
-        "var A: array of integer := [1]; A.Push(Value := 2); const N: integer := A.Pop(); A.Push(A[0]);",
+        "var A: array of integer := [1]; A.PushInPlace(Value := 2); const N: integer := A.PopInPlace(); A.PushInPlace(A[0]);",
     ));
     for body in [
-        "var A: array of integer := [1]; var N: integer := 2; A.Push(var N);",
-        "var A: array of integer := [1]; var N: integer := 2; A.Push(Value := var N);",
+        "var S: string := 'abc'; var N: integer := 0; S.SliceInPlace(Start := var N, Len := 1);",
+        "var A: array of integer := [1]; var N: integer := 2; A.PushInPlace(var N);",
+        "var A: array of integer := [1]; var N: integer := 2; A.PushInPlace(Value := var N);",
     ] {
         let errors = check_errors(&program(body));
         assert!(
@@ -86,12 +91,37 @@ fn written_arguments_keep_var_markers_and_readonly_value_mode() {
 }
 
 #[test]
+fn in_place_callbacks_preserve_types_and_mutators_cannot_chain() {
+    for body in [
+        "var A := [1]; A.MapInPlace(function(X: integer): string begin return 'x'; end function);",
+        "var A := [1]; A.FlatMapInPlace(function(X: integer): array of string begin return ['x']; end function);",
+        "var D: dict of string to integer := ['a': 1]; D.MapInPlace(function(X: integer): string begin return 'x'; end function);",
+        "var A := [1]; const N := A.SortInPlace().Length();",
+        "var S := 'abc'; const N := S.TrimInPlace().Length();",
+    ] {
+        let errors = check_errors(&program(body));
+        assert!(
+            errors
+                .iter()
+                .any(|e| e.code == fpas_diagnostics::codes::SEMA_TYPE_MISMATCH),
+            "{body}: {errors:#?}"
+        );
+    }
+    check_ok(&program(
+        "const A := [1]; const B := A.Map(function(X: integer): string begin return 'x'; end function); const P: ArrayPopResult of string := B.Pop();",
+    ));
+}
+
+#[test]
 fn go_cannot_receive_implicit_writable_storage() {
     for body in [
-        "go A.Push(2);",
-        "go A.Pop();",
-        "const T: task of integer := go A.Pop();",
-        "const T: task := go A.Push(2);",
+        "go A.PushInPlace(2);",
+        "go A.SortInPlace();",
+        "var S := 'abc'; go S.TrimInPlace();",
+        "var D: dict of string to integer := ['a': 1]; go D.RemoveInPlace('a');",
+        "go A.PopInPlace();",
+        "const T: task of integer := go A.PopInPlace();",
+        "const T: task := go A.PushInPlace(2);",
         "go Push(var A, 2);",
     ] {
         let errors = check_errors(&program(&format!("var A: array of integer := [1]; {body}")));
@@ -109,13 +139,13 @@ fn go_cannot_receive_implicit_writable_storage() {
 #[test]
 fn closure_lifetime_rules_apply_to_unmarked_receivers() {
     let errors = check_errors(
-        "program T;  procedure Add(var A: array of integer); begin const F: procedure() := procedure() begin A.Push(1); end procedure; end procedure; begin end.",
+        "program T;  procedure Add(var A: array of integer); begin const F: procedure() := procedure() begin A.PushInPlace(1); end procedure; end procedure; begin end.",
     );
     assert!(
         errors.iter().any(|e| e.code == SEMA_VAR_PARAMETER_ESCAPE),
         "{errors:#?}"
     );
     check_ok(
-        "program T;  procedure Add(var A: array of integer); procedure Local(); begin A.Push(1); end procedure; begin Local(); end procedure; begin end.",
+        "program T;  procedure Add(var A: array of integer); procedure Local(); begin A.PushInPlace(1); end procedure; begin Local(); end procedure; begin end.",
     );
 }

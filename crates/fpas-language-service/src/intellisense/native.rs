@@ -8,6 +8,42 @@ use fpas_sema::{
     NativeOperation, Ty, native_factory, native_operation_by_implementation, native_operations,
 };
 
+/// Describes import-free Pop result fields without requiring a source declaration.
+pub(crate) fn pop_field_hover(
+    documents: &[NavigationDocument],
+    target: usize,
+    offset: usize,
+) -> Option<crate::navigation::HoverInfo> {
+    let document = &documents[target];
+    let (index, token) = document.tokens.iter().enumerate().find(|(_, token)| {
+        token.span.offset <= offset && offset < token.span.offset + token.span.length
+    })?;
+    let name = token_name(document, index)?;
+    let receiver = super::context::receiver_before(document.snapshot.source(), token.span.offset)?;
+    let Ty::Record(record) = receiver_type(documents, target, &receiver, offset, 0)? else {
+        return None;
+    };
+    if record.owner_unit.is_some() || !record.name.eq_ignore_ascii_case("ArrayPopResult") {
+        return None;
+    }
+    let (name, ty) = record
+        .fields
+        .iter()
+        .find(|(field, _)| field.eq_ignore_ascii_case(&name))?;
+    Some(crate::navigation::HoverInfo {
+        contents: format!("field {name}: {ty}"),
+        documentation: Some(
+            if name == "Remaining" {
+                "New array without the last element"
+            } else {
+                "Removed last element"
+            }
+            .into(),
+        ),
+        range: token.span.diagnostic_span_or_synthetic(),
+    })
+}
+
 /// Finds a resolved native operation at its source name, independent of imports.
 pub(crate) fn native_at(
     documents: &[NavigationDocument],
@@ -98,6 +134,37 @@ pub(super) fn completions(
     replacement: fpas_diagnostics::SourceSpan,
 ) -> Vec<CompletionCandidate> {
     let ty = receiver_type(documents, target, receiver, offset, 0);
+    if let Some(Ty::Record(record)) = &ty
+        && record.owner_unit.is_none()
+        && record.name.eq_ignore_ascii_case("ArrayPopResult")
+    {
+        return record
+            .fields
+            .iter()
+            .map(|(name, ty)| CompletionCandidate {
+                label: name.clone(),
+                kind: CompletionKind::Symbol(SymbolKind::Field),
+                detail: format!("field {name}: {ty}"),
+                owner: Some(record.name.clone()),
+                qualified_name: format!("{}.{name}", record.name),
+                sort_text: format!("00:{}", name.to_ascii_lowercase()),
+                filter_text: name.clone(),
+                insert_text: name.clone(),
+                replacement_span: replacement,
+                source: CompletionSource::Declaration,
+                inline_documentation: Some(
+                    if name == "Remaining" {
+                        "New array without the last element"
+                    } else {
+                        "Removed last element"
+                    }
+                    .into(),
+                ),
+                documentation: None,
+                additional_edit: None,
+            })
+            .collect();
+    }
     native_operations()
         .filter(|entry| {
             ty.as_ref().is_some_and(|ty| entry.receiver.accepts(ty))

@@ -13,11 +13,11 @@ end function;
 
 function Change(var H: Holder): result of (integer, string);
 begin
-  H.Items.Push(2);
-  const Last: integer := H.Items.Pop();
-  H.Items.Push(Last + 1);
+  H.Items.PushInPlace(2);
+  const Last: integer := H.Items.PopInPlace();
+  H.Items.PushInPlace(Last + 1);
   const Ignored: integer := try Stop();
-  H.Items.Push(99);
+  H.Items.PushInPlace(99);
   return Ok(Ignored);
 end function;
 

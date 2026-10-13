@@ -130,8 +130,8 @@ begin
         end;
       end if;
 
-      LocalEvents.Push(std.http.types.sseevent(EventType := EventType, Data := State.Data.Slice(0, State.Data.Length() -
-                                                                                                   1), Id := State.LastEventId));
+      LocalEvents.PushInPlace(std.http.types.sseevent(EventType := EventType, Data := State.Data.Slice(0, State.Data.Length() -
+                                                                                                          1), Id := State.LastEventId));
     end;
   end if;
 
@@ -302,7 +302,7 @@ begin
                   State := Output.State;
                   for Item: SseEvent in Output.Events do
                     begin
-                      Events.Push(Item);
+                      Events.PushInPlace(Item);
                     end;
                   end for;
                 end;

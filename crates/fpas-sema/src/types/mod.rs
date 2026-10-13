@@ -1,7 +1,9 @@
 pub use fpas_parser::ParamMode;
 use std::sync::Arc;
+mod array_pop;
 /// Type equality, assignment compatibility, and scalar capabilities.
 mod compatibility;
+pub use array_pop::{array_pop_result, array_pop_result_declaration};
 
 /// Enum identities, generic arguments, and resolved payloads.
 mod enums;
@@ -40,7 +42,7 @@ pub enum Ty {
     Boolean,
     /// UTF-8 string value.
     String,
-    /// Procedure / void result (e.g. `Std.Arrays.Push`).
+    /// Procedure / void result (e.g. array PushInPlace).
     Unit,
     /// An array whose elements have the enclosed type.
     Array(Box<Ty>),

@@ -10,7 +10,7 @@ var Global: Holder := Holder(Items := [1]);
 
 procedure Append(var Items: array of integer; Value: integer);
 begin
-  Items.Push(Value);
+  Items.PushInPlace(Value);
 end procedure;
 
 procedure Forward(var Items: array of integer; Value: integer);
@@ -20,9 +20,9 @@ end procedure;
 
 procedure Change(var H: Holder; var Rows: array of array of integer);
 begin
-  H.Items.Push(4);
-  Rows[0].Push(5);
-  AssertEquals(5, Rows[0].Pop());
+  H.Items.PushInPlace(4);
+  Rows[0].PushInPlace(5);
+  AssertEquals(5, Rows[0].PopInPlace());
 end procedure;
 
 begin
@@ -32,30 +32,30 @@ begin
   const OldRows: array of array of integer := Rows;
   Change(var H, var Rows);
   Forward(var H.Items, 6);
-  AssertEquals(6, H.Items.Pop());
-  AssertEquals(4, H.Items.Pop());
+  AssertEquals(6, H.Items.PopInPlace());
+  AssertEquals(4, H.Items.PopInPlace());
   AssertEquals(1, Original.Items.Length());
   AssertEquals(2, Original.Items[0]);
   AssertEquals(1, OldRows[0].Length());
-  Global.Items.Push(7);
-  AssertEquals(7, Global.Items.Pop());
+  Global.Items.PushInPlace(7);
+  AssertEquals(7, Global.Items.PopInPlace());
   var Holders: array of Holder := [H];
-  Holders[0].Items.Push(8);
-  AssertEquals(8, Holders[0].Items.Pop());
+  Holders[0].Items.PushInPlace(8);
+  AssertEquals(8, Holders[0].Items.PopInPlace());
   AssertEquals(1, H.Items.Length());
   var Local: Holder := Holder(Items := [9]);
   const AddCaptured: procedure() := procedure() begin
-    Local.Items.Push(10);
+    Local.Items.PushInPlace(10);
   end procedure;
 
   AddCaptured();
-  AssertEquals(10, Local.Items.Pop());
+  AssertEquals(10, Local.Items.PopInPlace());
   const TakeCaptured: function(): integer := function(): integer begin
-    return Local.Items.Pop();
+    return Local.Items.PopInPlace();
   end function;
 
   AssertEquals(9, TakeCaptured());
   var Lists: array of array of integer := [[11, 12]];
-  AssertEquals(2, Lists.Pop().Length());
+  AssertEquals(2, Lists.PopInPlace().Length());
   AssertEquals(0, Lists.Length());
 end.

@@ -9,9 +9,9 @@ impl LoweringContext {
         &mut self,
         target: &Designator,
         value: &Expr,
+        array_ty: TypeId,
         span: fpas_lexer::Span,
     ) -> Result<ValueId, CompileError> {
-        let array_ty = self.mutable_array_target_type(target)?;
         let element_ty = match self.type_kind(array_ty) {
             Some(fpas_ir::IrType::Array(element)) => element,
             _ => return Err(unsupported(target.span, "mutable array target type")),
@@ -39,7 +39,7 @@ impl LoweringContext {
             reference.ok_or_else(|| unsupported(span, "array receiver reference"))?,
             span,
         )?;
-        let array = self.emit_value(Operation::ReferenceRead(reference), array_ty, span)?;
+        let (array, storage_ty) = self.read_collection_reference(reference, array_ty, span)?;
         let appended = self.emit_value(Operation::MakeArray(vec![value]), array_ty, span)?;
         self.record_call_arguments(2, span)?;
         let updated = self.emit_intrinsic_value(
@@ -48,6 +48,7 @@ impl LoweringContext {
             array_ty,
             span,
         )?;
+        let updated = self.value_as(updated, storage_ty, span)?;
         self.emit_effect(
             Operation::ReferenceWrite {
                 reference,
@@ -67,58 +68,25 @@ impl LoweringContext {
         &mut self,
         target: &Designator,
         result: TypeId,
+        array_ty: TypeId,
         span: fpas_lexer::Span,
     ) -> Result<ValueId, CompileError> {
-        let array_ty = self.mutable_array_target_type(target)?;
         let (root, root_parts) = self.designator_root(target)?;
+        let Some(fpas_ir::IrType::Array(element)) = self.type_kind(array_ty) else {
+            return Err(unsupported(span, "PopInPlace element type"));
+        };
         if root_parts == target.parts.len()
             && let Some(local) = self.direct_local(&root)
         {
-            return self.emit_value(Operation::ArrayPop { local }, result, span);
+            let popped = self.emit_value(Operation::ArrayPop { local }, element, span)?;
+            return self.value_as(popped, result, span);
         }
         let reference = self.lower_var_argument(target)?;
-        let array = self.emit_value(Operation::ReferenceRead(reference), array_ty, span)?;
-        self.record_call_arguments(1, span)?;
-        let length = self.emit_intrinsic_value(
-            fpas_bytecode::Intrinsic::Array(fpas_bytecode::ArrayIntrinsic::Length),
-            vec![array],
-            super::super::types::INTEGER,
-            span,
-        )?;
-        let one = self.emit_value(
-            Operation::Const(Constant::Integer(1)),
-            super::super::types::INTEGER,
-            span,
-        )?;
-        let last_index = self.emit_value(
-            Operation::Binary {
-                operation: fpas_ir::BinaryOperation::SubtractInteger,
-                left: length,
-                right: one,
-            },
-            super::super::types::INTEGER,
-            span,
-        )?;
-        let popped = self.emit_value(
-            Operation::IndexGet {
-                collection: array,
-                index: last_index,
-            },
-            result,
-            span,
-        )?;
-        let zero = self.emit_value(
-            Operation::Const(Constant::Integer(0)),
-            super::super::types::INTEGER,
-            span,
-        )?;
-        self.record_call_arguments(3, span)?;
-        let shortened = self.emit_intrinsic_value(
-            fpas_bytecode::Intrinsic::Array(fpas_bytecode::ArrayIntrinsic::Slice),
-            vec![array, zero, last_index],
-            array_ty,
-            span,
-        )?;
+        let (array, storage_ty) = self.read_collection_reference(reference, array_ty, span)?;
+        let reference = self.save_value(reference);
+        let (shortened, popped) = self.lower_array_pop_copy(array, array_ty, element, span)?;
+        let reference = self.restore_value(reference, span)?;
+        let shortened = self.value_as(shortened, storage_ty, span)?;
         self.emit_effect(
             Operation::ReferenceWrite {
                 reference,
@@ -126,11 +94,21 @@ impl LoweringContext {
             },
             span,
         )?;
-        Ok(popped)
+        self.value_as(popped, result, span)
     }
 
-    fn mutable_array_target_type(&self, target: &Designator) -> Result<TypeId, CompileError> {
-        self.designator_type(target)
-            .ok_or_else(|| unsupported(target.span, "mutable array target type"))
+    /// Pops a private value copy using the same checked VM operation as local mutation.
+    pub(super) fn lower_array_pop_copy(
+        &mut self,
+        array: ValueId,
+        array_ty: TypeId,
+        element: TypeId,
+        span: fpas_lexer::Span,
+    ) -> Result<(ValueId, ValueId), CompileError> {
+        let local = self.declare_hidden_local(array_ty, span)?;
+        self.write_local(local, array, span)?;
+        let popped = self.emit_value(Operation::ArrayPop { local }, element, span)?;
+        let remaining = self.emit_value(Operation::ReadLocal(local), array_ty, span)?;
+        Ok((remaining, popped))
     }
 }

@@ -18,7 +18,7 @@ begin
   var Tasks: array of task of integer := [];
   for Index: integer := 1 to Iterations do
     begin
-      Tasks.Push(go Worker(Index));
+      Tasks.PushInPlace(go Worker(Index));
     end;
   end for;
 

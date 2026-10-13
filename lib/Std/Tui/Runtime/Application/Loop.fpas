@@ -291,31 +291,31 @@ begin
           end procedure);
           if PreferApplication then
             begin
-              Cases.Push(ApplicationCase);
-              Cases.Push(ConsoleCase);
+              Cases.PushInPlace(ApplicationCase);
+              Cases.PushInPlace(ConsoleCase);
             end;
           else
             begin
-              Cases.Push(ConsoleCase);
-              Cases.Push(ApplicationCase);
+              Cases.PushInPlace(ConsoleCase);
+              Cases.PushInPlace(ApplicationCase);
             end;
           end if;
         end;
       else
         begin
-          Cases.Push(ConsoleCase);
+          Cases.PushInPlace(ConsoleCase);
         end;
       end if;
 
       if TuiBackgroundHasWork(ApplicationId) then
         begin
-          Cases.Push(TimerCase(50, procedure() begin end procedure));
+          Cases.PushInPlace(TimerCase(50, procedure() begin end procedure));
         end;
       end if;
 
       if TickWait > 0 then
         begin
-          Cases.Push(TimerCase(TickWait, procedure() begin end procedure));
+          Cases.PushInPlace(TimerCase(TickWait, procedure() begin end procedure));
         end;
       end if;
 

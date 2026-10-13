@@ -30,7 +30,7 @@ impl Worker {
                 return Err(self.aggregate_error_code(
                     RUNTIME_ARRAY_INDEX_OUT_OF_BOUNDS,
                     "Array index -1 out of bounds (len 0)",
-                    "Check Items.IsEmpty() before calling Items.Pop().",
+                    "Check Items.IsEmpty() before calling Pop or PopInPlace.",
                 ));
             }
             other => return Err(self.type_mismatch("array", other)),

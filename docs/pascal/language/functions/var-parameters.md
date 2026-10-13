@@ -127,14 +127,14 @@ See [Function types](function-types.md).
 - The record receiver `Self` cannot be a `var` parameter.
 - A receiver call such as `Counter.Increase()` cannot supply a `var` first
   parameter; write `Increase(var Counter)`.
-- Array `Push` and `Pop` accept an implicit writable receiver:
-  `Items.Push(Value)` and `Items.Pop()`. It has no receiver marker or additional
+- Native collection `InPlace` operations accept an implicit writable receiver:
+  `Items.PushInPlace(Value)` and `Items.PopInPlace()`. It has no receiver marker or additional
   parentheses and uses the same storage, aliasing, evaluation, and lifetime
   checks. Fields, array elements, and forwarded `var` parameters are accepted;
   `const` and computed receivers are rejected. Explicit ordinary-call arguments
-  retain `var`, for example `Increase(var Counter)`; native array operations
-  have no free `Push` or `Pop` call form. See
-  [Mutating arrays](../types/array/mutating.md).
+  retain `var`, for example `Increase(var Counter)`. Native operations have no
+  parallel free call forms. Without InPlace, transformations preserve their
+  receiver. See [Collection mutation](../types/collection-mutation.md).
 
 ## See also
 

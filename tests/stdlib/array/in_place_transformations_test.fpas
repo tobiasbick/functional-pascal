@@ -1,0 +1,70 @@
+program InPlaceTransformations;
+
+uses Std.Test;
+
+type Storage = record
+  Items: array of integer;
+  Text: string;
+  Values: dict of string to integer;
+end record;
+
+function Double(X: integer): integer;
+begin
+  return X * 2;
+end function;
+
+function Positive(X: integer): boolean;
+begin
+  return X > 0;
+end function;
+
+function Expand(X: integer): array of integer;
+begin
+  return [X, X + 1];
+end function;
+
+procedure Update(var Items: array of integer);
+begin
+  Items.SortInPlace();
+  Items.ReverseInPlace();
+end procedure;
+
+begin
+  const Original := [3, -1, 2];
+  var Items := Original;
+  Update(var Items);
+  AssertEquals(3, Items[0]);
+  AssertEquals(-1, Items[2]);
+  Items.FilterInPlace(F := Positive);
+  Items.MapInPlace(F := Double);
+  AssertEquals(6, Items[0]);
+  AssertEquals(4, Items[1]);
+  Items.FlatMapInPlace(F := Expand);
+  AssertEquals(4, Items.Length());
+  Items.SliceInPlace(Len := 2, Start := 1);
+  Items.ConcatInPlace(B := [8]);
+  AssertEquals(7, Items[0]);
+  AssertEquals(4, Items[1]);
+  AssertEquals(8, Items[2]);
+  AssertEquals(-1, Original[1]);
+  var Rows := [[3, 1]];
+  Rows[0].SortInPlace();
+  AssertEquals(1, Rows[0][0]);
+  var State := Storage(Items := [2, 1], Text := 'abc', Values := ['a': 1, 'b': 2]);
+  const Copy := State;
+  State.Items.SortInPlace();
+  State.Text.ReverseInPlace();
+  State.Values.RemoveInPlace(Key := 'a');
+  State.Values.MergeInPlace(D2 := ['c': 3, 'b': 5]);
+  State.Values.MapInPlace(F := Double);
+  State.Values.FilterInPlace(F := function(K: string; V: integer): boolean begin
+    return V > 6;
+  end function);
+  AssertEquals(1, State.Items[0]);
+  AssertEquals('cba', State.Text);
+  AssertEquals(1, State.Values.Length());
+  AssertEquals(10, State.Values['b']);
+  AssertEquals(2, Copy.Items[0]);
+  AssertEquals('abc', Copy.Text);
+  AssertEquals(1, Copy.Values['a']);
+end.

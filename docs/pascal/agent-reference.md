@@ -238,7 +238,7 @@ name does not return. Procedures may exit early with `return;`.
 
 Ordinary parameters are read-only values. A `var` parameter aliases writable caller
 storage and requires `var` at the call site too. Native mutating methods such as
-`Items.Push(Value)` pass their receiver mutably without an explicit `var` receiver.
+`Items.PushInPlace(Value)` pass their receiver mutably without an explicit `var` receiver.
 User record methods have read-only `Self`; they do not provide mutating receivers.
 
 Contracts follow the routine header: zero or more `requires`, then `ensures` clauses,
@@ -505,11 +505,14 @@ channels and aggregates containing them are not. Generic key parameters require
 `Comparable`. Reading an out-of-range index or missing dict key fails at runtime;
 `Lookup.Get(Key)` returns an Option for a possibly absent key.
 
-Native operations use dot syntax: `Items.Length()`, `Items.Push(Value)`,
+Native operations use dot syntax: `Items.Length()`, `Items.PushInPlace(Value)`,
 `Text.Split(',')`, `Parts.Join(',')`. Native methods/factories do not need `uses`.
-Mutators require a writable receiver and operate on that binding. Old free-function
-spellings such as `Push(var Items, Value)` are not native aliases. String operations
-return new strings; string elements are not mutable character slots. Higher-order
+InPlace mutators require a writable receiver and operate on that binding. Other
+transformations return new values: Push returns an array; Pop returns the built-in
+ArrayPopResult of T record with Remaining: array of T and Value: T. PopInPlace
+returns only T. Both Pop forms fail with FP5003 on empty arrays. Old free-function
+spellings such as `Push(var Items, Value)` are not native aliases. String InPlace
+operations replace writable string variables; string elements remain read-only. Higher-order
 methods take ordinary callable values; define a named function or an anonymous one.
 String formatting uses Pascal specifiers (`'%d'.Format(7)`, `'%s'.Format('text')`),
 with positional arguments; `{}` is ordinary text.
@@ -527,7 +530,7 @@ end function;
 begin
   var Items: array of integer := [1, 2];
   const Before: array of integer := Items;
-  Items.Push(3);
+  Items.PushInPlace(3);
   Items[0] := 5;
   const Doubled: array of integer := Items.Map(Double);
   AssertEquals(2, Before.Length());

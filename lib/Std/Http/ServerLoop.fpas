@@ -164,7 +164,7 @@ begin
           case Std.Net.Accept(Listener) of
             when Ok(const Connection):
               begin
-                Tasks.Push(go ServeConnection(Connection, Options, Handler));
+                Tasks.PushInPlace(go ServeConnection(Connection, Options, Handler));
                 Accepted := Accepted + 1;
               end;
             when Error(const Message):

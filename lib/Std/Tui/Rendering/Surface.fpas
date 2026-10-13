@@ -109,8 +109,8 @@ public type TuiWorkingSurface = record
     var ContinuationRows: array of array of boolean := [];
     for Y: integer := 0 to Size.Height - 1 do
       begin
-        Rows.Push(TuiSurfaceBlankRow(Size.Width));
-        ContinuationRows.Push(TuiSurfaceBlankContinuationRow(Size.Width));
+        Rows.PushInPlace(TuiSurfaceBlankRow(Size.Width));
+        ContinuationRows.PushInPlace(TuiSurfaceBlankContinuationRow(Size.Width));
       end;
     end for;
 
@@ -134,8 +134,8 @@ public type TuiWorkingSurface = record
     var ContinuationRows: array of array of boolean := [];
     for Y: integer := 0 to Size.Height - 1 do
       begin
-        Rows.Push(TuiSurfaceBlankRow(Size.Width));
-        ContinuationRows.Push(TuiSurfaceBlankContinuationRow(Size.Width));
+        Rows.PushInPlace(TuiSurfaceBlankRow(Size.Width));
+        ContinuationRows.PushInPlace(TuiSurfaceBlankContinuationRow(Size.Width));
       end;
     end for;
 
@@ -253,11 +253,11 @@ public type TuiWorkingSurface = record
           begin
             if TuiSurfaceContinuations[Slot - 1][Y][X] then
               begin
-                Cells.Push(TuiSurfaceBlank());
+                Cells.PushInPlace(TuiSurfaceBlank());
               end;
             else
               begin
-                Cells.Push(TuiSurfaceCells[Slot - 1][Y][X]);
+                Cells.PushInPlace(TuiSurfaceCells[Slot - 1][Y][X]);
               end;
             end if;
           end;
@@ -349,9 +349,9 @@ begin
             end;
           elsif FirstX >= 0 then
             begin
-              Damage.Push(TuiSurfaceDamageForRange(TuiSurfaceCells[Slot - 1][Y], TuiSurfaceContinuations[Slot -
-                                                                                                         1][Y], Y, FirstX, X -
-                                                                                                                           1));
+              Damage.PushInPlace(TuiSurfaceDamageForRange(TuiSurfaceCells[Slot - 1][Y], TuiSurfaceContinuations[Slot -
+                                                                                                                1][Y], Y, FirstX, X -
+                                                                                                                                  1));
               FirstX := -1;
             end;
           end if;
@@ -360,9 +360,9 @@ begin
 
       if FirstX >= 0 then
         begin
-          Damage.Push(TuiSurfaceDamageForRange(TuiSurfaceCells[Slot - 1][Y], TuiSurfaceContinuations[Slot -
-                                                                                                     1][Y], Y, FirstX, Size.Width -
-                                                                                                                       1));
+          Damage.PushInPlace(TuiSurfaceDamageForRange(TuiSurfaceCells[Slot - 1][Y], TuiSurfaceContinuations[Slot -
+                                                                                                            1][Y], Y, FirstX, Size.Width -
+                                                                                                                              1));
         end;
       end if;
     end;

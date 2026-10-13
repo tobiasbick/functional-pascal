@@ -42,6 +42,11 @@ impl TypeTable {
     /// Reserve canonical layouts and intern the concrete semantic types used in lowering.
     /// See `docs/pascal/language/types/generics.md`.
     pub fn from_metadata(metadata: &fpas_sema::AnalysisMetadata) -> Result<Self, CompileError> {
+        // The import-free result template is materialized only when a program uses it.
+        let named_types = metadata
+            .named_types
+            .iter()
+            .filter(|(name, _)| !name.eq_ignore_ascii_case("ArrayPopResult"));
         let mut table = Self {
             definitions: scalar_type_table(),
             record_layouts: Vec::new(),
@@ -74,7 +79,7 @@ impl TypeTable {
             imported_record_names: BTreeSet::new(),
             imported_distinct_names: BTreeMap::new(),
         };
-        for (name, ty) in &metadata.named_types {
+        for (name, ty) in named_types.clone() {
             let id = match ty {
                 Ty::Record(record) => {
                     let layout = table.reserve_record(record, 1, 1)?;
@@ -96,7 +101,7 @@ impl TypeTable {
         }
         // Generic declarations establish erased field layouts before concrete aliases.
         // Documentation: docs/pascal/language/types/generics.md
-        for ty in metadata.named_types.values() {
+        for (_, ty) in named_types.clone() {
             let is_template = match ty {
                 Ty::Record(record) => !record.type_params.is_empty() && record.type_args.is_empty(),
                 Ty::Enum(enumeration) => {
@@ -108,7 +113,7 @@ impl TypeTable {
                 table.intern(ty, 1, 1)?;
             }
         }
-        for (name, ty) in &metadata.named_types {
+        for (name, ty) in named_types {
             if matches!(ty, Ty::Error | Ty::Named(_)) {
                 continue;
             }

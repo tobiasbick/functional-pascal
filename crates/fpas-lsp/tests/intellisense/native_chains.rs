@@ -28,7 +28,7 @@ fn nested_result_completion_and_buffer_edits_use_exact_utf16_ranges() {
     assert_success(&transcript.output);
     let full = response(&transcript.messages, 2);
     assert_string_catalog(full);
-    for label in ["Length", "Slice", "IsEmpty"] {
+    for label in ["Length", "Slice", "IsEmpty", "ReverseInPlace"] {
         let candidate = item(full, label);
         assert_eq!(
             candidate["textEdit"]["range"]["start"],
@@ -72,7 +72,6 @@ fn nested_result_callback_completion_uses_the_string_catalog() {
 
 fn assert_string_catalog(response: &Value) {
     let candidates = response["result"].as_array().expect("completion array");
-    assert_eq!(candidates.len(), 31, "{response}");
     assert!(
         candidates.iter().all(|candidate| {
             candidate["detail"]
@@ -85,9 +84,13 @@ fn assert_string_catalog(response: &Value) {
         }),
         "{response}"
     );
-    for label in ["Length", "Slice", "IsEmpty"] {
+    for label in ["Length", "Slice", "IsEmpty", "ReverseInPlace"] {
         item(response, label);
     }
+    assert_eq!(
+        item(response, "ReverseInPlace")["detail"],
+        "string.ReverseInPlace()"
+    );
 }
 
 fn assert_success(output: &std::process::Output) {

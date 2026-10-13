@@ -6,6 +6,38 @@ use fpas_sema::Ty;
 use std::collections::BTreeSet;
 
 #[test]
+fn pop_result_fields_retain_element_types_in_recovered_chains() {
+    assert_string_chain(
+        "",
+        "ArrayPopResult of string",
+        "['x'].Pop()",
+        "Value.Remaining[0]",
+    );
+    assert_string_chain("", "array of string", "['x']", "Value.Pop().Remaining[0]");
+    assert_string_chain("", "array of string", "['x']", "Value.Pop().Value");
+}
+
+#[test]
+fn pop_result_completion_exposes_named_fields_with_specialized_types() {
+    let temp = TempDirectory::new("native-pop-fields");
+    let source = "program Demo; begin const Popped := ['x'].Pop(); discard Popped.\nend.";
+    let path = temp.write("main.fpas", source);
+    let mut service = LanguageService::new(WorkspaceContext::loose(temp.path()));
+    let cursor = source.find("Popped.\n").expect("result") + "Popped.".len();
+    let candidates = service
+        .completions(&path, cursor)
+        .expect("completion")
+        .value;
+    assert_eq!(
+        candidates
+            .iter()
+            .map(|candidate| candidate.detail.as_str())
+            .collect::<BTreeSet<_>>(),
+        BTreeSet::from(["field Remaining: array of string", "field Value: string"])
+    );
+}
+
+#[test]
 fn nested_result_success_chain_completes_every_string_operation() {
     assert_string_chain(
         "",

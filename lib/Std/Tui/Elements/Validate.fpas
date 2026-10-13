@@ -95,7 +95,7 @@ begin
           end;
         end if;
 
-        Seen.Push(Button.Id.Value);
+        Seen.PushInPlace(Button.Id.Value);
       end;
     when TuiElement.Input(const Input):
       begin
@@ -107,7 +107,7 @@ begin
           end;
         end if;
 
-        Seen.Push(Input.Id.Value);
+        Seen.PushInPlace(Input.Id.Value);
       end;
     when TuiElement.TextArea(const Id, const Text, const Caret, const Offset, const ChangeAction):
       begin
@@ -125,13 +125,13 @@ begin
           end;
         end if;
 
-        Seen.Push(Id.Value);
+        Seen.PushInPlace(Id.Value);
       end;
     when TuiElement.CheckBox(const Id, const Text, const Checked, const ChangeAction):
       begin
         TuiElementValidateControl(Id);
         TuiElementValidateAction(ChangeAction);
-        Seen.Push(Id.Value);
+        Seen.PushInPlace(Id.Value);
       end;
     when TuiElement.List(const Id, const Items, const Selected, const ChangeAction):
       begin
@@ -152,7 +152,7 @@ begin
           end;
         end if;
 
-        Seen.Push(Id.Value);
+        Seen.PushInPlace(Id.Value);
       end;
     when TuiElement.Scroll(const Id, const Offset, const ChangeAction, const Children):
       begin
@@ -170,7 +170,7 @@ begin
           end;
         end if;
 
-        Seen.Push(Id.Value);
+        Seen.PushInPlace(Id.Value);
       end;
     when TuiElement.MenuBar(const Items):
       begin
@@ -185,7 +185,7 @@ begin
               end;
             end if;
 
-            Seen.Push(Items[Index].Id.Value);
+            Seen.PushInPlace(Items[Index].Id.Value);
           end;
         end for;
       end;
@@ -194,7 +194,7 @@ begin
         TuiElementValidateControl(Id);
         TuiElementValidateAction(ChangeAction);
         TuiMenuValidate(Nodes, State);
-        Seen.Push(Id.Value);
+        Seen.PushInPlace(Id.Value);
       end;
     when TuiElement.Gauge(const Gauge):
       begin
@@ -226,7 +226,7 @@ begin
                     end;
                   end if;
 
-                  Seen.Push(Id.Value);
+                  Seen.PushInPlace(Id.Value);
                 end;
               when TuiStatusItem.Hint(_), TuiStatusItem.KeyHint(_, _):
                 null;
@@ -266,7 +266,7 @@ begin
             end;
           end if;
 
-          Seen.Push(ChildIds[IdIndex]);
+          Seen.PushInPlace(ChildIds[IdIndex]);
         end;
       end for;
     end;

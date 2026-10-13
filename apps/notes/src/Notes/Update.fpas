@@ -144,7 +144,7 @@ begin
     when Ok(const Written):
       begin
         var Notes: array of Note := Next.Notes;
-        Notes.Push(Draft);
+        Notes.PushInPlace(Draft);
         Next.Notes := Notes;
         Next := ResortSelected(Next, Draft.Id);
         Next := WithEditorFields(Next, Next.Selected);

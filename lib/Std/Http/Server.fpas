@@ -139,7 +139,7 @@ begin
               end;
             end if;
 
-            Chunks.Push(Chunk);
+            Chunks.PushInPlace(Chunk);
             Received := Received + Chunk.Length();
           end;
         when Error(const Message):

@@ -53,7 +53,7 @@ end.
 
 #[test]
 fn array_push_uses_direct_opcode_and_preserves_value_aliases() {
-    let source = "program RegisterArrayPush;\n\nbegin\n  var A: array of integer := [1];\n  const Original: array of integer := A;\n  A.Push(2);\n  if Original.Length() <> 1 then panic('array alias changed'); end if;\n  if A.Length() <> 2 then panic('array push length mismatch'); end if;\n  if A[1] <> 2 then panic('array push value mismatch'); end if;\nend.";
+    let source = "program RegisterArrayPush;\n\nbegin\n  var A: array of integer := [1];\n  const Original: array of integer := A;\n  A.PushInPlace(2);\n  if Original.Length() <> 1 then panic('array alias changed'); end if;\n  if A.Length() <> 2 then panic('array push length mismatch'); end if;\n  if A[1] <> 2 then panic('array push value mismatch'); end if;\nend.";
     assert_succeeds(source);
 
     let program = super::parse_ok(source);
@@ -76,17 +76,17 @@ var Global: array of integer := [4, 5];
 begin
   var A: array of integer := [1, 2];
   const Original: array of integer := A;
-  if A.Pop() <> 2 then panic('last value'); end if;
+  if A.PopInPlace() <> 2 then panic('last value'); end if;
   if Original.Length() <> 2 then panic('alias length'); end if;
   if Original[1] <> 2 then panic('alias value'); end if;
-  if A.Pop() <> 1 then panic('first value'); end if;
+  if A.PopInPlace() <> 1 then panic('first value'); end if;
   if A.Length() <> 0 then panic('empty length'); end if;
-  if Global.Pop() <> 5 then panic('global value'); end if;
+  if Global.PopInPlace() <> 5 then panic('global value'); end if;
   if Global.Length() <> 1 then panic('global length'); end if;
   var Captured: array of integer := [7, 8];
   const Take: function(): integer := function(): integer
   begin
-    return Captured.Pop();
+    return Captured.PopInPlace();
   end function;
   if Take() <> 8 then panic('capture value'); end if;
   if Captured.Length() <> 1 then panic('capture length'); end if;

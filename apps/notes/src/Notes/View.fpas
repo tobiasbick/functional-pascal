@@ -346,7 +346,7 @@ begin
                                        ];
   if State.Overlay <> NotesOverlay.Closed then
     begin
-      Children.Push(Overlay(State));
+      Children.PushInPlace(Overlay(State));
     end;
   end if;
 

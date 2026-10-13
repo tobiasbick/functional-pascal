@@ -243,7 +243,11 @@ fn analysis_metadata_exposes_all_named_results() {
         static_bound_declarations: _,
     } = analyze_with_types(&program);
 
-    assert_eq!(named_types.len(), 4);
+    assert_eq!(named_types.len(), 5);
+    assert!(matches!(
+        named_types.get("arraypopresult"),
+        Some(crate::Ty::Record(_))
+    ));
     assert!(record_constructions.is_empty());
     assert!(distinct_conversions.is_empty());
     assert_eq!(

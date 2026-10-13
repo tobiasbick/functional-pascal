@@ -5,6 +5,10 @@ Status: complete (Q05). Effort: medium. Package completion is tracked in the
 
 ## Implemented behavior
 
+This package records its original delivery. [AP37](../ap37-uniform-mutation/README.md)
+extends the catalog with InPlace counterparts and replaces native mutating
+Push/Pop with PushInPlace/PopInPlace. Current signatures are in the type handbooks.
+
 - A dot call selects a declared record member or one operation from the
   [native catalog](catalog.md), by static receiver type and case-insensitive
   name. Results may return Self, a new record, or another type that continues

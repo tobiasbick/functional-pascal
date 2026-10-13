@@ -30,7 +30,7 @@ begin
   var Notes: array of Note := [];
   for I: integer := 1 to Size do
     begin
-      Notes.Push(NoteCreate(IntToStr(I), I));
+      Notes.PushInPlace(NoteCreate(IntToStr(I), I));
     end;
   end for;
   const App: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(1, 1));

@@ -187,7 +187,7 @@ begin
       case Item of
         when JsonValue.String(const Value):
           begin
-            Values.Push(Value);
+            Values.PushInPlace(Value);
           end;
         when JsonValue.NullValue, JsonValue.Bool(_), JsonValue.Number(_), JsonValue.ArrayValue(_), JsonValue.Object(_):
           begin

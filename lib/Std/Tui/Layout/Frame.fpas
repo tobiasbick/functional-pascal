@@ -62,7 +62,7 @@ public type TuiArrangedFrame = record
     var Entries: array of TuiArrangedEntry := TuiFrameEntries[Slot - 1];
     const Index: integer := Entries.Length();
     TuiFrameEntries[Slot - 1] := [];
-    Entries.Push(TuiArrangedEntry(ParentIndex := ParentIndex, Bounds := Bounds, Clip := Clip));
+    Entries.PushInPlace(TuiArrangedEntry(ParentIndex := ParentIndex, Bounds := Bounds, Clip := Clip));
     TuiFrameEntries[Slot - 1] := Entries;
     return Index;
   end function;

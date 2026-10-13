@@ -98,8 +98,8 @@ begin
   AssertTrue(not ['a': 1].IsEmpty());
   var Items: array of integer := [1];
   const Original: array of integer := Items;
-  Items.Push(Value := 3);
-  AssertEquals(3, Items.Pop());
+  Items.PushInPlace(Value := 3);
+  AssertEquals(3, Items.PopInPlace());
   AssertEquals(1, Items.Length());
   AssertEquals(1, Original.Length());
   AssertEquals('x: 3', '%s: %d'.Format('x', 3));

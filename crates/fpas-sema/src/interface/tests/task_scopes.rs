@@ -14,7 +14,7 @@ public function Read(H: task of integer): integer;
   function Take(): integer; begin return Wait(H); end function;
 begin return Take(); end function;
 public procedure Save(H: task of integer);
-  procedure Store(); begin Kept.Push(H); end procedure;
+  procedure Store(); begin Kept.PushInPlace(H); end procedure;
 begin Store(); end procedure;
 public type Reader = record
   public Value: integer;
@@ -88,7 +88,7 @@ end unit;"
         analysis.interface.expect("interface")
     };
     let safe = interface("discard Wait(H);");
-    let escaping = interface("Kept.Push(H);");
+    let escaping = interface("Kept.PushInPlace(H);");
     assert_ne!(
         safe.digest().expect("digest"),
         escaping.digest().expect("digest")

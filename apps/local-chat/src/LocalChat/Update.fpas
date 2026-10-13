@@ -21,7 +21,7 @@ function AppendEntry(State: LocalChatModel; Entry: ChatEntry): LocalChatModel;
 begin
   var Next: LocalChatModel := State;
   var Entries: array of ChatEntry := Next.Entries;
-  Entries.Push(Entry);
+  Entries.PushInPlace(Entry);
   Next.Entries := Entries;
   return Next;
 end function;

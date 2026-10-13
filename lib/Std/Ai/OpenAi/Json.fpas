@@ -14,7 +14,7 @@ begin
   var MessageValues: array of JsonValue := [];
   for Index: integer := 0 to Messages.Length() - 1 do
     begin
-      MessageValues.Push(JsonValue.Object(['role': JsonValue.String(Messages[Index].Role), 'content': JsonValue.String(Messages[Index].Content)]));
+      MessageValues.PushInPlace(JsonValue.Object(['role': JsonValue.String(Messages[Index].Role), 'content': JsonValue.String(Messages[Index].Content)]));
     end;
   end for;
   var Fields: dict of string to JsonValue := ['model': JsonValue.String(Model), 'messages': JsonValue.ArrayValue(MessageValues), 'stream': JsonValue.Bool(false)];

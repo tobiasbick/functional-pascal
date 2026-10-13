@@ -93,21 +93,25 @@ Other standard-library units still require `uses`.
 ## Procedures, mutation, and tasks
 
 A procedure may finish a statement chain; it produces no value for a later step.
-`Items.Push(Value)` and `Items.Pop()` require writable array storage without a
+Native InPlace operations require writable array, dictionary or string storage without a
 receiver marker or additional parentheses. Fields, array elements, and forwarded
 `var` parameters use the shared storage checks. Constants, read-only parameters,
 dictionary entries, and computed receivers are rejected (FP3028).
-`Items.Push(Value := 3)` applies the same checks. Explicit written `var` arguments
-retain their markers; `Push`'s `Value` parameter is read-only.
+`Items.PushInPlace(Value := 3)` applies the same checks. Explicit written `var` arguments
+retain their markers; native explicit arguments remain read-only.
 
 The receiver's root and indices are determined once before arguments. Mutation
 reads and writes that storage after argument evaluation, and copy-on-write
 preserves other values sharing it. Completed writes survive failures and early
-`try` exits. `Pop` returns the removed element, which can continue a chain.
+`try` exits. `PopInPlace` returns the removed element, which can continue a chain.
+Other InPlace operations return no value. Without the suffix, transformations
+return new values: Push returns an array, and Pop returns ArrayPopResult with
+Remaining and Value. See [collection mutation](../types/collection-mutation.md)
+for callback snapshot and commit behavior.
 
 `go` can spawn an eligible read-only native call and evaluates its receiver and
 arguments before spawning. Writable receivers cannot cross a task boundary
-(FP3030), so `go Items.Push(Value)` and `go Items.Pop()` are rejected.
+(FP3030), so `go Items.PushInPlace(Value)` and `go Items.PopInPlace()` are rejected.
 
 ## See also
 

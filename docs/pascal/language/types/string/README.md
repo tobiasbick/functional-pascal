@@ -52,11 +52,34 @@ functions with the same name do not affect this selection.
 | `Text.TrimLeft(): string` | Remove leading whitespace |
 | `Text.TrimRight(): string` | Remove trailing whitespace |
 | `Text.Format(Arguments...): string` | Use the receiver as the format template; heterogeneous variadic arguments are positional only |
+| `Text.TrimInPlace()` | Trim writable receiver |
+| `Text.TrimLeftInPlace()` | Trim leading whitespace in writable receiver |
+| `Text.TrimRightInPlace()` | Trim trailing whitespace in writable receiver |
+| `Text.ToUpperInPlace()` | Uppercase writable receiver |
+| `Text.ToLowerInPlace()` | Lowercase writable receiver |
+| `Text.ReplaceInPlace(Old: string; New: string)` | Replace occurrences in writable receiver |
+| `Text.MapInPlace(F: function(C: string): string)` | Transform scalars in writable receiver |
+| `Text.FilterInPlace(F: function(C: string): boolean)` | Keep matching scalars in writable receiver |
+| `Text.SliceInPlace(Start: integer; Len: integer)` | Replace writable receiver with checked scalar range |
+| `Text.RepeatStrInPlace(N: integer)` | Repeat writable receiver |
+| `Text.PadLeftInPlace(Width: integer; PadChar: string)` | Pad writable receiver on the left |
+| `Text.PadRightInPlace(Width: integer; PadChar: string)` | Pad writable receiver on the right |
+| `Text.PadCenterInPlace(Width: integer; PadChar: string)` | Center writable receiver within padded width |
+| `Text.FromCharInPlace(N: integer)` | Repeat writable single-scalar receiver |
+| `Text.SetCharAtInPlace(Index: integer; C: string)` | Replace scalar in writable receiver |
+| `Text.InsertInPlace(Index: integer; Sub: string)` | Insert into writable receiver |
+| `Text.DeleteInPlace(Index: integer; Len: integer)` | Delete scalar range in writable receiver |
+| `Text.ReverseInPlace()` | Reverse writable receiver |
+| `Text.FormatInPlace(Arguments...)` | Format writable template; positional arguments only |
 | `string.Chr(N: integer): string` | Construct one scalar from a valid Unicode codepoint |
 
 `Length()` and `IsEmpty()` use the same canonical names for strings, arrays, and dictionaries.
 
 `Format(Arguments...)` is positional only. Its string receiver supplies the template.
+
+InPlace operations return no value and obey [collection mutation](../collection-mutation.md).
+They retain the value operation's Unicode, validation and callback rules. Other
+string copies remain unchanged; character slots do not become writable.
 
 
 ## Topics

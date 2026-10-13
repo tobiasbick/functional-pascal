@@ -29,7 +29,19 @@ pub(super) fn from_symbol(
         .detail
         .split_once(": ")
         .map(|(_, ty)| ty)
-        .or(symbol.type_name.as_deref())?;
+        .or(symbol.type_name.as_deref());
+    let Some(name) = name else {
+        if !matches!(symbol.kind, SymbolKind::Constant | SymbolKind::Variable) {
+            return None;
+        }
+        // Recover an inferred local's initializer while its following member access is incomplete.
+        let start = symbol.full_span.offset();
+        let end = start.checked_add(symbol.full_span.length())?;
+        let declaration = documents[owner].snapshot.source().get(start..end)?;
+        let (_, initializer) = declaration.split_once(":=")?;
+        let initializer = initializer.trim().trim_end_matches(';').trim();
+        return super::receiver_type(documents, owner, initializer, end, depth + 1);
+    };
     if let Some(semantic) = documents[owner]
         .analysis
         .as_ref()
@@ -173,6 +185,9 @@ fn named_type(
     name: &str,
     depth: usize,
 ) -> Option<Ty> {
+    if name.eq_ignore_ascii_case("ArrayPopResult") {
+        return Some(fpas_sema::array_pop_result_declaration());
+    }
     let Some((index, symbol)) = find_type(documents, owner, owner, name) else {
         return Some(Ty::Named(name.to_owned()));
     };

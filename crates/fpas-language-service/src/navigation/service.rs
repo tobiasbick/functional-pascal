@@ -49,6 +49,13 @@ impl LanguageService {
     ) -> Result<NavigationResult<Option<HoverInfo>>, LanguageServiceError> {
         let context = self.navigation_context(path)?;
         let value = context.target_index.and_then(|target_index| {
+            if let Some(hover) = crate::intellisense::native::pop_field_hover(
+                &context.documents,
+                target_index,
+                offset,
+            ) {
+                return Some(hover);
+            }
             if let Some((entry, receiver)) =
                 crate::intellisense::native::native_at(&context.documents, target_index, offset)
             {

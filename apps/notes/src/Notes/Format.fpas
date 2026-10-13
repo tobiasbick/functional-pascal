@@ -92,7 +92,7 @@ begin
                   case Items[Index] of
                     when TomlValue.String(const Tag):
                       begin
-                        Tags.Push(Tag);
+                        Tags.PushInPlace(Tag);
                       end;
                     when TomlValue.Integer(_), TomlValue.Float(_), TomlValue.Boolean(_), TomlValue.Datetime(_), TomlValue.ArrayValue(_), TomlValue.Table(_):
                       begin
@@ -193,7 +193,7 @@ begin
   var TagValues: array of TomlValue := [];
   for Index: integer := 0 to NoteValue.Tags.Length() - 1 do
     begin
-      TagValues.Push(TomlValue.String(NoteValue.Tags[Index]));
+      TagValues.PushInPlace(TomlValue.String(NoteValue.Tags[Index]));
     end;
   end for;
   const Header: TomlValue := TomlValue.Table(['format': TomlValue.Integer(NoteFormatVersion), 'id': TomlValue.String(NoteValue.Id), 'title': TomlValue.String(NoteValue.Title), 'created_ms': TomlValue.Integer(NoteValue.CreatedMillis), 'updated_ms': TomlValue.Integer(NoteValue.UpdatedMillis), 'tags': TomlValue.ArrayValue(TagValues), 'pinned': TomlValue.Boolean(NoteValue.Pinned), 'archived': TomlValue.Boolean(NoteValue.Archived)]);

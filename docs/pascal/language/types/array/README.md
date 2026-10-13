@@ -1,6 +1,7 @@
 # Array operations
 
-Non-mutating array helpers (length, sort, search, slice, …) plus **in-place** `Push` and `Pop`. This page lists every operation in the native array catalog.
+Value-producing array operations and explicitly mutating InPlace counterparts.
+This page lists every operation in the native array catalog.
 
 ```pascal
 program Example;
@@ -41,12 +42,26 @@ functions with the same name do not affect this selection.
 | `Items.Concat(B: array of T): array of T` | Append the second array's elements to the result |
 | `Items.FlatMap(F: function(X: T): array of U): array of U` | Map each element, then flatten the results |
 | `Items.ForEach(F: procedure(X: T))` | Invoke a procedure per element; only a final chain step |
-| `Items.Push(Value: T)` | Append to the caller's array; requires a writable receiver, with no call-site receiver marker |
-| `Items.Pop(): T` | Remove and return the last element; requires a writable receiver, with no call-site receiver marker |
+| `Items.Push(Value: T): array of T` | Return a new appended array; preserve the receiver |
+| `Items.Pop(): ArrayPopResult of T` | Return Remaining and Value; preserve receiver; empty arrays raise FP5003 |
+| `Items.SortInPlace()` | Replace writable receiver with sorted values |
+| `Items.ReverseInPlace()` | Reverse writable receiver |
+| `Items.FilterInPlace(F: function(X: T): boolean)` | Replace writable receiver with matching elements |
+| `Items.SliceInPlace(Start: integer; Len: integer)` | Replace writable receiver with checked subrange |
+| `Items.ConcatInPlace(B: array of T)` | Append argument's elements to writable receiver |
+| `Items.PushInPlace(Value: T)` | Append one element to writable receiver |
+| `Items.PopInPlace(): T` | Remove and return last element; empty arrays raise FP5003 |
+| `Items.MapInPlace(F: function(X: T): T)` | Transform writable receiver without changing element type |
+| `Items.FlatMapInPlace(F: function(X: T): array of T)` | Map and flatten writable receiver without changing element type |
 | `Items.Join(Delim: string): string` | Join the receiver's strings with the delimiter |
 | `array.Fill(Value: T; Count: integer): array of T` | Construct an array of repeated values |
 
 `Length()` and `IsEmpty()` use the same canonical names for strings, arrays, and dictionaries.
+
+See [collection mutation](../collection-mutation.md) for storage, evaluation,
+callbacks and failure rules. InPlace transformations return no value except
+PopInPlace. ArrayPopResult is an import-free generic record with Remaining:
+array of T and Value: T; see [stack operations](mutating.md).
 
 
 ## Topics
@@ -54,7 +69,7 @@ functions with the same name do not affect this selection.
 | Topic | Description |
 |-------|-------------|
 | [Basics](basics.md) | `Length`, `Sort`, `Reverse`, search, `Slice` |
-| [Mutating](mutating.md) | `Push`, `Pop` |
+| [Stack operations](mutating.md) | Value and InPlace `Push`/`Pop` |
 | [Higher-order](higher-order.md) | `Map`, `Filter`, `Reduce`, `Find`, `Any`, `All` |
 | [Combine and iterate](combine.md) | `Concat`, `FlatMap`, `Fill`, `ForEach` |
 
@@ -62,7 +77,7 @@ functions with the same name do not affect this selection.
 
 | Concern | Location |
 |---------|-----------|
-| Pure helpers | [`array.rs`](../../../../../crates/fpas-std/src/array.rs) |
+| Value algorithms | [`array.rs`](../../../../../crates/fpas-std/src/array.rs) |
 | `Push` / `Pop` | [`vm/mod.rs`](../../../../../crates/fpas-vm/src/vm/mod.rs), [`lowering/calls.rs`](../../../../../crates/fpas-compiler/src/lowering/calls.rs) |
 | Registration | [`std_registry/mod.rs`](../../../../../crates/fpas-sema/src/std_registry/mod.rs) |
 

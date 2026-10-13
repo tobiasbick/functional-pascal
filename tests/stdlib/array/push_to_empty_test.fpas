@@ -4,7 +4,7 @@ uses Std.Console;
 
 begin
   var A: array of integer := [];
-  A.Push(42);
+  A.PushInPlace(42);
   WriteLn(A.Length());
   WriteLn(A[0]);
 end.

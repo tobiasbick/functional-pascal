@@ -117,7 +117,7 @@ begin
       const Tag: string := Parts[Index].Trim();
       if (Tag <> '') and (not Tags.Contains(Tag)) then
         begin
-          Tags.Push(Tag);
+          Tags.PushInPlace(Tag);
         end;
       end if;
     end;
@@ -154,7 +154,7 @@ begin
     begin
       if NoteMatches(Notes[Index], Search) then
         begin
-          Indices.Push(Index);
+          Indices.PushInPlace(Index);
         end;
       end if;
     end;
@@ -223,7 +223,7 @@ begin
         end;
       end if;
 
-      Items.Push(ClipListText(Prefix + NoteValue.Title + Tags, MaximumWidth));
+      Items.PushInPlace(ClipListText(Prefix + NoteValue.Title + Tags, MaximumWidth));
     end;
   end for;
 

@@ -1,4 +1,5 @@
-//! `Std.Arrays.*` intrinsic implementations (non-mutating; `Push`/`Pop` use dedicated VM opcodes).
+//! Non-mutating array intrinsic implementations reused by InPlace lowering.
+//! Stack operations are composed by the compiler and use dedicated VM opcodes.
 //!
 //! **Documentation:** `docs/pascal/language/types/array/README.md` (from the repository root).
 //! **Maintenance:** Keep that Markdown file aligned with this file, `intrinsics.rs`,

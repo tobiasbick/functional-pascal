@@ -12,7 +12,7 @@ begin
       var Seen: array of integer := [];
       for Item: integer := 0 to 255 do
         begin
-          Seen.Push(0);
+          Seen.PushInPlace(0);
         end;
       end for;
 
@@ -21,7 +21,7 @@ begin
           const Attempts: channel of boolean := CreateChannel(2);
           discard Send(Attempts, false);
           discard Send(Attempts, true);
-          Children.Push(StartSupervisedTask(Group, function(WorkerToken: CancellationToken): result of (integer, string) begin
+          Children.PushInPlace(StartSupervisedTask(Group, function(WorkerToken: CancellationToken): result of (integer, string) begin
             if not Receive(Attempts).Unwrap() then
               begin
                 return Error('transient startup failure');

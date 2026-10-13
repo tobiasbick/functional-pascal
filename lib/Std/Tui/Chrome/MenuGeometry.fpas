@@ -129,7 +129,7 @@ begin
         while Remaining > 0 do
           begin
             Remaining := Remaining - 1;
-            Reversed.Push(Current);
+            Reversed.PushInPlace(Current);
             CurrentIndex := TuiMenuFind(Nodes, Current);
             case TuiMenuNodeParent(Nodes[CurrentIndex]) of
               when Some(const Parent):
@@ -151,7 +151,7 @@ begin
   var Index: integer := Reversed.Length() - 1;
   while Index >= 0 do
     begin
-      Opened.Push(Reversed[Index]);
+      Opened.PushInPlace(Reversed[Index]);
       Index := Index - 1;
     end;
   end while;
@@ -232,7 +232,7 @@ begin
         end;
       end if;
 
-      Popups.Push(TuiMenuPopup(Parent := Parents[Index], Bounds := TuiRect.Create(X, Y, Size.Width, Size.Height)));
+      Popups.PushInPlace(TuiMenuPopup(Parent := Parents[Index], Bounds := TuiRect.Create(X, Y, Size.Width, Size.Height)));
     end;
   end for;
 

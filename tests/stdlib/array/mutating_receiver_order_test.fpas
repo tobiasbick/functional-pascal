@@ -20,14 +20,14 @@ end function;
 begin
   var Rows: array of array of integer := [[1], [2]];
   const Original: array of array of integer := Rows;
-  Rows[Index()].Push(Replace(var Rows));
+  Rows[Index()].PushInPlace(Replace(var Rows));
   AssertEquals('iv', Trace);
   AssertEquals(2, Rows[0].Length());
   AssertEquals(5, Rows[0][0]);
   AssertEquals(9, Rows[0][1]);
   AssertEquals(1, Original[0][0]);
   Trace := '';
-  AssertEquals(9, Rows[Index()].Pop());
+  AssertEquals(9, Rows[Index()].PopInPlace());
   AssertEquals('i', Trace);
   AssertEquals(1, Rows[0].Length());
 end.

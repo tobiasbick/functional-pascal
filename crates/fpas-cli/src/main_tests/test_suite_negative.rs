@@ -152,10 +152,13 @@ fn dictionary_reduce_propagates_callback_failure() {
 
 #[test]
 fn pop_empty_is_runtime_error() {
-    run_file_expect_failure(
+    for path in [
         "tests/stdlib/array/pop_empty_is_runtime_error_runtime_error.fpas",
-        None,
-    );
+        "tests/stdlib/array/value_pop_empty_runtime_error.fpas",
+        "tests/stdlib/array/nested_pop_empty_runtime_error.fpas",
+    ] {
+        run_file_expect_failure(path, Some("error[FP5003]"));
+    }
 }
 
 #[test]

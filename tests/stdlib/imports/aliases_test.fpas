@@ -8,7 +8,7 @@ begin
   AssertEquals('42', Numbers.IntToStr(42));
   AssertEquals('value', ' value '.Trim());
   var Items: array of integer := [1];
-  Items.Push(2);
+  Items.PushInPlace(2);
   AssertEquals(2, Items.Length());
   const Pending: task of real := go Math.Sqrt(16.0);
   AssertEquals(4.0, Jobs.Wait(Pending));

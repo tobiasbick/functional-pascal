@@ -5,7 +5,7 @@ uses Std.Test;
 begin
   var Updated: array of integer := [1];
   const Original: array of integer := Updated;
-  Updated.Push(2);
+  Updated.PushInPlace(2);
   AssertEquals(1, Original.Length());
   AssertEquals(1, Original[0]);
   AssertEquals(2, Updated.Length());

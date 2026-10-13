@@ -98,13 +98,13 @@ begin
         end;
       elsif Part <> '.' then
         begin
-          Segments.Push(Part);
+          Segments.PushInPlace(Part);
         end;
       end if;
 
       if ((Part = '.') or (Part = '..')) and (Index = Parts.Length() - 1) then
         begin
-          Segments.Push('');
+          Segments.PushInPlace('');
         end;
       end if;
     end;
@@ -217,7 +217,7 @@ begin
         end;
       end if;
 
-      Output.Push(Headers[Index]);
+      Output.PushInPlace(Headers[Index]);
     end;
   end for;
 

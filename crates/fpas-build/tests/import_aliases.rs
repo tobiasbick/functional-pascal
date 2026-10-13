@@ -150,7 +150,7 @@ include = ["src/**/*.fpas"]
           Api.Increase(var Counter);
           Api.Apply(Api.Increase, var Counter);
           Api.Increase(var Api.Total);
-          Api.Items.Push(2);
+          Api.Items.PushInPlace(2);
           const Shape: Model.Shape := Model.Shape.Rect(Height := 3, Width := 4);
           const Point: Model.Point := Api.Make(Value := 10);
           const Bound: function(Value: integer): integer := Point.Add;

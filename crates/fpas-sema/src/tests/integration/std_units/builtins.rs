@@ -84,7 +84,7 @@ fn native_format_requires_string_receiver() {
 #[test]
 fn std_array_push_requires_mutable_array() {
     let errs = check_errors(
-        "program T;\n\nbegin\n  const A: array of integer := [1];\n  A.Push(2);\nend.",
+        "program T;\n\nbegin\n  const A: array of integer := [1];\n  A.PushInPlace(2);\nend.",
     );
     assert!(errs.iter().any(|e| e.message.contains("var")), "{errs:#?}");
 }

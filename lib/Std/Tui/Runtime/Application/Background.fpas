@@ -57,7 +57,7 @@ begin
     begin
       if IncludeCancellation or (Failure.Kind <> TaskFailureKind.Cancelled) then
         begin
-          Messages.Push(TuiMsg.BackgroundFailed(Id, Failure.Kind, Failure.Message, Failure.Code, Failure.Line, Failure.Column));
+          Messages.PushInPlace(TuiMsg.BackgroundFailed(Id, Failure.Kind, Failure.Message, Failure.Code, Failure.Line, Failure.Column));
         end;
       end if;
     end;
@@ -105,7 +105,7 @@ begin
   end if;
   const Group: TaskGroup := CreateTaskGroup();
   const WorkerTask: task of result of (boolean, string) := StartTaskInGroup(Group, Work);
-  Items.Push(TuiOwnedWork(Id := Id, Subscription := Subscription, Group := Group, Cancelling := false, Replacement := None));
+  Items.PushInPlace(TuiOwnedWork(Id := Id, Subscription := Subscription, Group := Group, Cancelling := false, Replacement := None));
   TuiBackgroundWorkItems[ApplicationId - 1] := Items;
 end procedure;
 

@@ -40,7 +40,7 @@ begin
 end function;
 procedure Keep(Handle: task of integer);
 begin
-  Kept.Push(Handle);
+  Kept.PushInPlace(Handle);
 end procedure;
 procedure KeepLater(Handle: task of integer);
 begin
@@ -125,7 +125,7 @@ end scope;",
         (
             "var Outer: array of task of integer := [];
 scope
-  Outer.Push(go Fetch(1));
+  Outer.PushInPlace(go Fetch(1));
 end scope;",
             "storage in `Outer`",
         ),
@@ -224,8 +224,8 @@ fn scope_owned_handles_stay_usable_inside_their_scope() {
     check_ok(&program(
         "scope
   var Jobs: array of task of integer := [];
-  Jobs.Push(go Fetch(1));
-  Jobs.Push(go Fetch(2));
+  Jobs.PushInPlace(go Fetch(1));
+  Jobs.PushInPlace(go Fetch(2));
   const Pair: array of task of integer := [Jobs[0], Jobs[1]];
   discard Total(Pair);
   discard TotalTwice(Jobs);

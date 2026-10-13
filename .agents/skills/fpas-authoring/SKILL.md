@@ -69,6 +69,12 @@ Read the pages relevant to the change. For exact productions, consult
   parameters, loop variables, or pattern bindings. `as` remains contextual in `uses`.
 - Functions return with `return`. Consume function results or use an allowed
   explicit [discard](../../../docs/pascal/language/functions/discard.md).
+- Native collection mutation requires InPlace: Items.PushInPlace(Value),
+  Items.SortInPlace(), or Values.RemoveInPlace(Key). Without InPlace, operations
+  preserve receivers: Push returns a new array; Pop returns ArrayPopResult of T
+  with Remaining and Value. PopInPlace returns the removed element. Both Pop forms
+  fail on empty arrays. InPlace needs writable storage and retains its static type;
+  MapInPlace/FlatMapInPlace cannot change element/value types. User Self stays read-only.
 - Statements end with `;`. Use each construct's named closer, such as
   `end function;`, `end if;`, and `end unit;`; programs end with `end.`.
   Expression closers receive their terminator from the enclosing statement.

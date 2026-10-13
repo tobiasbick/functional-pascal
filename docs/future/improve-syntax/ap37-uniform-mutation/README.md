@@ -1,35 +1,56 @@
 # AP37: Uniform mutation visibility
 
-Status: Decision pending. Effort: large. Completion is tracked in the
-[central plan](../README.md).
+Status: Complete. Effort: large.
+Completion is tracked in the [central plan](../README.md).
+AP37.1 and AP37.2 are complete, including independent review and migrations.
 
-## Finding
+## Agreed contract
 
-[Var arguments](../../../pascal/language/functions/var-parameters.md) make
-caller mutation visible, but native `Items.Push(Value)` and `Items.Pop()`
-mutate an implicit writable receiver without a marker. User record Self is
-always read-only. Similar native calls such as Sort and dictionary Remove
-return copies. These are documented distinctions, not implementation bugs.
+Native collection operations without InPlace do not directly mutate their
+receiver. Mutating counterparts require the InPlace suffix, writable storage,
+and an unchanged receiver type. Apply this rule consistently to eligible array,
+dictionary and string transformations. Keep Sort/SortInPlace and
+Reverse/ReverseInPlace, without Sorted/Reversed or additional free/dot aliases.
 
-## Proposed direction and open decisions
+Push returns a new appended array. PushInPlace appends to caller storage and
+returns no value. Pop returns a named result with Remaining (the shortened new
+array) and Value (the removed last element); the original array is unchanged.
+PopInPlace shortens caller storage and returns only the removed element.
+Both Pop forms retain the existing runtime error on empty arrays.
 
-Prefer one explicit write-reference mechanism for native and user operations.
-Choose receiver syntax and whether user methods may mutate Self. Alternatives
-are a general mutating-method model or exclusively value-producing collection
-operations; assess readability and copying cost before choosing. Preserve
-copy versus mutation as a meaningful distinction, not an alias to eliminate.
+User-defined mutation retains explicit var parameters and call-site markers.
+Record Self remains read-only; bound methods capture values. Preserve exact var
+types, writable-root/alias/lifetime checks, single evaluation in written order,
+failure protections, go restrictions and AP36's complete positional-or-named lists.
+No mutating user Self, bound writable receiver or new receiver grammar is added.
 
-## Dependencies and work packages
+InPlace preserves collection value semantics; it does not promise zero allocation.
+Callbacks may have separate side effects, so value operations are not necessarily
+pure. Both assignment of a transformed value and InPlace calls are intentionally
+available. The earlier recommendation against paired APIs is superseded.
 
-AP06/AP17 are complete. AP37.1 precedes AP37.2. Coordinate argument conventions
-with AP36.1 before selecting syntax; AP36 implementation is not automatically
-a prerequisite. AP40 retains task-boundary restrictions on writable references.
+## Dependencies and migration
 
-- [ ] [AP37.1: Mutation model](01-mutation-model.md)
-- [ ] [AP37.2: Receiver mutation](02-receiver-mutation.md)
+AP06/AP17/AP36 remain completed. AP37 explicitly replaces AP06/AP17's unmarked
+native mutating Push/Pop exception. Existing mutating calls were migrated to
+PushInPlace/PopInPlace; their behavior was preserved. Push and Pop now have the
+agreed value-returning contracts.
+AP40 retains shared-state/task ownership. AP42 retains alias, absence and static
+sortability work outside this contract; preserve the agreed Pop empty-array error.
+
+- [x] [AP37.1: Mutation model](01-mutation-model.md)
+- [x] [AP37.2: Receiver mutation](02-receiver-mutation.md)
 
 ## Acceptance
 
-The caller can identify mutation by one documented rule across native and
-user-defined operations. Writable-root, aliasing, single-evaluation, and
-lifetime protections remain intact.
+The compiler, native catalog, runtime, formatter, editor, API exporter and handbook
+implement the agreed contracts. Storage and value-semantics protections remain
+intact. There are 32 InPlace counterparts: nine array, four dictionary and
+19 string operations. Queries and type-changing conversions remain value-only.
+
+Verification: 508 FPAS tests passed, one skipped; all 22 example/app manifests
+checked; release binaries and 111 standard-library units built. The independent
+review found generic field/reference type-erasure defects, all repaired and
+rechecked with tracked regressions, including nested and imported result types.
+The Rust workspace passes with two unchanged network tests excluded; both failures
+were reproduced on baseline commit 03b98038. Details are in AP37.2.

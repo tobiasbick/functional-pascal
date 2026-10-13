@@ -46,15 +46,16 @@ an open work package.
 
 AP01, AP02, AP03, AP04, AP05, AP06, AP07, AP09, AP10, AP11, AP13, AP14, AP15, AP16,
 AP17, AP18, AP19, AP20, AP21, AP22, AP23, AP24, AP26, AP30, AP31, AP32, AP33, AP34,
-AP35, and AP36 are complete, including all their work packages. Their READMEs and
+AP35, AP36, and AP37 are complete, including all their work packages. Their READMEs and
 work-package files record implemented behavior,
 implementation owners, regression coverage, and any independent follow-ups.
 Checkboxes use the [status-tracking rule](development-process.md#status-tracking).
 
-Of the 43 packages, 30 are implemented, AP08/AP25/AP29 are rejected and closed,
+Of the 43 packages, 31 are implemented, AP08/AP25/AP29 are rejected and closed,
 AP12 and AP27 are deferred with their proposals retained, AP28 is transferred
 to editor/LSP planning. AP36 implements its recorded call, construction, and
-pattern contracts. AP37–AP43 are Decision pending.
+pattern contracts. AP37 implements its value/InPlace contract, named Pop result,
+consumer migration and editor support. AP38–AP43 are Decision pending.
 They record the language-consistency audit: concrete defects, underspecified
 contracts, context-dependent rules, and redundant public forms. Adding a
 proposal by itself does not approve its language changes or implementation.
@@ -69,7 +70,10 @@ callable-value support through visible static signatures. Its delivered contract
 preserves both enum construction forms and named record defaults, adds fully
 named enum/Option/Result patterns, and gives named Some/Ok/Error forms the payload
 label Value. Every pattern field remains explicit; styles cannot mix within a
-field list. AP37–AP43 remain separate proposals.
+field list. AP37 retains explicit var arguments, read-only Self and value-producing
+transformations; native mutation uses InPlace counterparts. Pop returns Remaining
+and Value; PopInPlace updates storage and returns the element. AP38–AP43 remain
+separate proposals.
 Reopening either deferred package requires a new explicit user decision.
 
 Completed APs retain their delivered scope and status. A new package that
@@ -137,7 +141,7 @@ package are listed in each work package file.
 | [x] | [AP34: Consistent type inference](ap34-consistent-type-inference/README.md) | Large | AP22, AP24 | Complete (AP34.1–AP34.2; Q14 restriction replaced) |
 | [x] | [AP35: Predictable condition composition](ap35-condition-composition/README.md) | Medium–large | AP20, AP23 | Complete (AP35.1–AP35.3) |
 | [x] | [AP36: Consistent calls and construction](ap36-call-and-construction-conventions/README.md) | Large | AP09, AP10, AP20 | Implemented |
-| [ ] | [AP37: Uniform mutation visibility](ap37-uniform-mutation/README.md) | Large | AP06, AP17; coordinate AP36.1 | Decision pending; shared native/user receiver model |
+| [x] | [AP37: Uniform mutation visibility](ap37-uniform-mutation/README.md) | Large | AP06, AP17, AP36 | Complete (AP37.1–AP37.2; native Push/Pop exception replaced) |
 | [ ] | [AP38: Routine declaration visibility](ap38-routine-declaration-visibility/README.md) | Medium–large | AP11, AP24 | Decision pending; signature visibility versus initialization |
 | [ ] | [AP39: Consistent case coverage](ap39-consistent-case-coverage/README.md) | Large | AP03, AP20, AP21 | Decision pending; coverage and unreachable-arm rules |
 | [ ] | [AP40: Explicit task lifetimes and shared state](ap40-explicit-task-lifetimes/README.md) | Large | AP26, AP30 (by work package) | Decision pending; ownership, globals and wait contracts |
@@ -191,7 +195,7 @@ its dependent implementation complete or approved.
 | AP34 | AP34.1/AP34.2 complete: uniform binding, generic result and callable inference |
 | AP35 | Complete: nonbinding Boolean is tests, case-only pattern bindings, and explicit postcondition return binders |
 | AP36 | Complete: AP36.1 call/construction/pattern decisions; AP36.2 compiler, tooling, documentation, and regressions |
-| AP37 | AP37.1 mutation model; AP37.2 receiver mutation |
+| AP37 | Complete: value/InPlace pairs, ArrayPopResult with Remaining/Value, migrated consumers and verified storage/editor behavior |
 | AP38 | AP38.1 visibility decision; AP38.2 routine signatures |
 | AP39 | AP39.1 coverage decision; AP39.2 coverage checks |
 | AP40 | AP40.1 concurrency contract; AP40.2 ownership/shared state; AP40.3 waits |
@@ -225,9 +229,13 @@ the work-package files state actual dependencies.
 | 6. Canonical public forms | AP41.1 → AP41.2; AP42.1 → AP42.2; AP43.1 → AP43.2 | Qualified-name policy, reduced collection aliases, consistent absence/parsing APIs, and canonical error-handling guidance |
 
 The next recommended work package is
-[AP37.1](ap37-uniform-mutation/01-mutation-model.md).
-Its mutation model is Decision pending; record the receiver syntax and shared
-native/user rules before AP37.2 implementation. AP36 is complete: calls use
+[AP38.1](ap38-routine-declaration-visibility/01-visibility-decision.md).
+AP37 is complete: value/InPlace pairs retain collection value semantics and exact
+writable-storage rules. Pop returns ArrayPopResult with Remaining and Value;
+PopInPlace returns the removed element. Both retain the empty-array runtime error.
+AP38's declaration-visibility decision is next; its implementation remains gated
+on an explicit contract decision.
+AP36 is complete: calls use
 visible static labels and written evaluation order, enum construction keeps
 both forms, records keep named defaults, and patterns accept complete named
 fields. Some/Ok/Error use Value for their named payload. Nested field lists

@@ -35,7 +35,7 @@ const CHANNEL_SENDS: [&str; 5] = [
 ];
 
 impl Walker<'_, '_> {
-    /// Origins of a call written as a designator, such as `Helper(A)` or `Items.Push(A)`.
+    /// Origins of a call written as a designator, such as `Helper(A)` or `Items.PushInPlace(A)`.
     pub(super) fn designator_call(
         &mut self,
         key: usize,

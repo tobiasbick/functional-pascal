@@ -33,12 +33,12 @@ begin
     begin
       if Before(Right[R], Left[L]) then
         begin
-          Output.Push(Right[R]);
+          Output.PushInPlace(Right[R]);
           R := R + 1;
         end;
       else
         begin
-          Output.Push(Left[L]);
+          Output.PushInPlace(Left[L]);
           L := L + 1;
         end;
       end if;
@@ -47,14 +47,14 @@ begin
 
   while L < Left.Length() do
     begin
-      Output.Push(Left[L]);
+      Output.PushInPlace(Left[L]);
       L := L + 1;
     end;
   end while;
 
   while R < Right.Length() do
     begin
-      Output.Push(Right[R]);
+      Output.PushInPlace(Right[R]);
       R := R + 1;
     end;
   end while;

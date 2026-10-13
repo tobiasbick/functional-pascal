@@ -12,9 +12,9 @@ begin
   var LocalValues: array of integer := Values;
   var LocalItem: State := Item;
   LocalValues[0] := 7;
-  LocalValues.Push(9);
+  LocalValues.PushInPlace(9);
   LocalItem.Value := 5;
-  return LocalValues[0] + LocalValues.Pop() + LocalItem.Value;
+  return LocalValues[0] + LocalValues.PopInPlace() + LocalItem.Value;
 end function;
 
 function Capture(Value: integer): function(): integer;

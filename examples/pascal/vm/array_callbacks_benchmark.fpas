@@ -30,7 +30,7 @@ begin
   var Values: array of integer := [];
   for Index: integer := 1 to ArraySize do
     begin
-      Values.Push(Index);
+      Values.PushInPlace(Index);
     end;
   end for;
 

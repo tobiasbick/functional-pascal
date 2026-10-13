@@ -295,20 +295,52 @@ pub(super) fn receiver_type(
                     Ty::String => Ty::String,
                     _ => return None,
                 },
-                PostfixOperation::Field { .. } => return None,
+                PostfixOperation::Field { name, .. } => field_type(&ty, name, &document.owner)?,
             };
         }
         return Some(ty);
     }
     let name = receiver;
     let parts = name.split('.').map(str::to_owned).collect::<Vec<_>>();
-    let (index, symbol) = if parts.len() == 1 {
-        resolve_unqualified(documents, target, name, offset)?
+    let resolved = if parts.len() == 1 {
+        resolve_unqualified(documents, target, name, offset)
     } else {
-        resolve_qualified(documents, target, &parts, offset)?
+        resolve_qualified(documents, target, &parts, offset)
+    };
+    let (index, symbol) = if let Some(resolved) = resolved {
+        resolved
+    } else {
+        let (field, prefix) = parts.split_last()?;
+        if prefix.is_empty() {
+            return None;
+        }
+        let ty = receiver_type(documents, target, &prefix.join("."), offset, depth + 1)?;
+        return field_type(&ty, field, &document.owner);
     };
     if matches!(symbol.kind, SymbolKind::Type | SymbolKind::Enum) {
         return None;
     }
     types::from_symbol(documents, index, &symbol, depth + 1)
+}
+
+fn field_type(ty: &Ty, name: &str, owner: &str) -> Option<Ty> {
+    let Ty::Record(record) = ty else {
+        return None;
+    };
+    if record
+        .private_members
+        .iter()
+        .any(|field| field.eq_ignore_ascii_case(name))
+        && record
+            .owner_unit
+            .as_ref()
+            .is_some_and(|unit| !unit.eq_ignore_ascii_case(owner))
+    {
+        return None;
+    }
+    record
+        .fields
+        .iter()
+        .find(|(field, _)| field.eq_ignore_ascii_case(name))
+        .map(|(_, ty)| ty.clone())
 }

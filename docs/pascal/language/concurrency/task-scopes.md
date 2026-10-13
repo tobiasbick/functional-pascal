@@ -165,8 +165,8 @@ end function;
 begin
   scope
     var Jobs: array of task of integer := [];
-    Jobs.Push(go Fetch(1));
-    Jobs.Push(go Fetch(2));
+    Jobs.PushInPlace(go Fetch(1));
+    Jobs.PushInPlace(go Fetch(2));
     WriteLn(Total(Jobs));
   end scope;
 end.

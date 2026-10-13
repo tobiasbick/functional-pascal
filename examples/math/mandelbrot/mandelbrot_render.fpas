@@ -131,7 +131,7 @@ begin
   for Px: integer := 0 to Width - 1 do
     begin
       const Cx: real := XMin + IntToReal(Px) / IntToReal(WidthRange) * (XMax - XMin);
-      Row.Push(Iterate(Complex.Create(Cx, Cy), MaxIter));
+      Row.PushInPlace(Iterate(Complex.Create(Cx, Cy), MaxIter));
     end;
   end for;
 
@@ -172,7 +172,7 @@ begin
         end;
       end if;
       const Cx: real := XMin + IntToReal(Px) / IntToReal(WidthRange) * (XMax - XMin);
-      Row.Push(IterateCancellable(Complex.Create(Cx, Cy), MaxIter, HostToken, WorkerToken));
+      Row.PushInPlace(IterateCancellable(Complex.Create(Cx, Cy), MaxIter, HostToken, WorkerToken));
     end;
   end for;
 
@@ -211,7 +211,7 @@ begin
   var Cells: array of TuiCell := [];
   for Sample: PixelSample in Samples do
     begin
-      Cells.Push(RenderCell(Sample, Palette));
+      Cells.PushInPlace(RenderCell(Sample, Palette));
     end;
   end for;
 
@@ -274,7 +274,7 @@ begin
         end;
       end if;
 
-      Tasks.Push(StartTaskInGroup(Group, function(WorkerToken: CancellationToken): array of TuiCell begin
+      Tasks.PushInPlace(StartTaskInGroup(Group, function(WorkerToken: CancellationToken): array of TuiCell begin
         return RenderRowCellsCancellable(Request, Py, HostToken, WorkerToken);
       end function));
     end;

@@ -42,8 +42,8 @@ pub(super) struct BoundMethodRoutine {
 pub(super) struct IntrinsicTaskRoutine {
     pub id: FunctionId,
     name: String,
-    intrinsic: fpas_bytecode::Intrinsic,
-    is_empty: bool,
+    intrinsic: Option<fpas_bytecode::Intrinsic>,
+    native: Option<fpas_sema::FluentCallTarget>,
     parameters: Vec<fpas_ir::TypeId>,
     result: fpas_ir::TypeId,
     span: fpas_lexer::Span,

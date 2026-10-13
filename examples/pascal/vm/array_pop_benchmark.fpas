@@ -22,7 +22,7 @@ begin
       var Values: array of integer := array.Fill(7, Size);
       for Index: integer := 1 to Size do
         begin
-          if Values.Pop() <> 7 then
+          if Values.PopInPlace() <> 7 then
             begin
               panic('popped value');
             end;

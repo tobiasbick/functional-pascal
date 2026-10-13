@@ -12,7 +12,7 @@ begin
   const Started: integer := MonotonicMillis();
   for I: integer := 1 to 8 do
     begin
-      Tasks.Push(go Sleeper());
+      Tasks.PushInPlace(go Sleeper());
     end;
   end for;
 

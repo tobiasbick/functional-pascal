@@ -37,13 +37,13 @@ begin
       if Prompt <> '' then
         begin
           var RequestMessages: array of ChatMessage := Messages;
-          RequestMessages.Push(ChatMessage.User(Prompt));
+          RequestMessages.PushInPlace(ChatMessage.User(Prompt));
           case Complete(ClientValue, RequestMessages, Options) of
             when Ok(const Content):
               begin
                 WriteLn('assistant> ' + Content);
-                Messages.Push(ChatMessage.User(Prompt));
-                Messages.Push(ChatMessage.Assistant(Content));
+                Messages.PushInPlace(ChatMessage.User(Prompt));
+                Messages.PushInPlace(ChatMessage.Assistant(Content));
               end;
             when Error(const Message):
               begin

@@ -10,6 +10,23 @@ use crate::CompileError;
 use super::super::context::{LoweringContext, unsupported};
 
 impl LoweringContext {
+    /// Reads the physical reference type, then specializes an erased generic collection field.
+    pub(super) fn read_collection_reference(
+        &mut self,
+        reference: ValueId,
+        requested: fpas_ir::TypeId,
+        span: fpas_lexer::Span,
+    ) -> Result<(ValueId, fpas_ir::TypeId), CompileError> {
+        let reference_ty = self
+            .lowered_value_type(reference)
+            .ok_or_else(|| unsupported(span, "receiver reference type"))?;
+        let Some(IrType::Reference(storage)) = self.type_kind(reference_ty) else {
+            return Err(unsupported(span, "receiver storage type"));
+        };
+        let value = self.emit_value(Operation::ReferenceRead(reference), storage, span)?;
+        Ok((self.value_as(value, requested, span)?, storage))
+    }
+
     /// Lowers `var Designator` to a reference; the root and indices are evaluated once, now.
     pub(in crate::lowering) fn lower_var_argument(
         &mut self,
@@ -66,6 +83,16 @@ impl LoweringContext {
                     )?;
                     ty = element;
                 }
+            }
+            let part_span = match part {
+                DesignatorPart::Ident(_, span) | DesignatorPart::Index(_, span) => *span,
+            };
+            let specialized = self.path_result_type(part_span, ty)?;
+            if specialized != ty {
+                // Retag the reference itself; preserve its path to caller storage.
+                let reference_ty = self.type_table.reference_type(specialized, part_span)?;
+                reference = self.value_as(reference, reference_ty, part_span)?;
+                ty = specialized;
             }
         }
         Ok(reference)

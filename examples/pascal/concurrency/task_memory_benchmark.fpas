@@ -33,7 +33,7 @@ begin
   var Tasks: array of task := [];
   for I: integer := 1 to TaskCount do
     begin
-      Tasks.Push(go Worker());
+      Tasks.PushInPlace(go Worker());
       if I mod ProgressEvery = 0 then
         begin
           WriteLn('spawned ' + IntToStr(I));

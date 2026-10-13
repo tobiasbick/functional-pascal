@@ -15,7 +15,8 @@ Formal syntax: [`grammar.ebnf`](../../../specs/grammar.ebnf) (`type_declaration`
 | [Result and Option types](result-option-types.md) | `Result of (T, E)` and `Option of T` type forms |
 | [Enumerations](enums.md) | Plain, backed, and data-carrying enums |
 | [String operations](string/README.md) | Unicode scalar operations, `Slice`, `IsEmpty`, and `string.Chr` |
-| [Array operations](array/README.md) | Eager callbacks, `Length`, `IsEmpty`, writable `Push`/`Pop`, and `array.Fill` |
+| [Array operations](array/README.md) | Eager callbacks, value `Push`/`Pop`, InPlace counterparts and `array.Fill` |
+| [Collection mutation](collection-mutation.md) | Value/InPlace naming, writable receivers, callback and failure rules |
 | [Dictionary operations](dictionary-operations.md) | Lookup, insertion-order callbacks, `Length`, and `IsEmpty` |
 | [Option operations](option-operations.md) | Presence, mapping, fallbacks, and unwrapping |
 | [Result operations](result-operations.md) | Success/error mapping, recovery, and unwrapping |

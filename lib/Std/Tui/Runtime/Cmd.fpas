@@ -95,7 +95,7 @@ public type TuiCmdOutput = record
       end;
     end if;
     var Commands: array of TuiBackgroundCommand := TuiCommandBackground[Slot - 1];
-    Commands.Push(TuiBackgroundCommand.Start(Id, Work));
+    Commands.PushInPlace(TuiBackgroundCommand.Start(Id, Work));
     TuiCommandBackground[Slot - 1] := Commands;
   end procedure;
 
@@ -109,7 +109,7 @@ public type TuiCmdOutput = record
       end;
     end if;
     var Commands: array of TuiBackgroundCommand := TuiCommandBackground[Slot - 1];
-    Commands.Push(TuiBackgroundCommand.ReplaceSubscription(Id, Work));
+    Commands.PushInPlace(TuiBackgroundCommand.ReplaceSubscription(Id, Work));
     TuiCommandBackground[Slot - 1] := Commands;
   end procedure;
 
@@ -123,7 +123,7 @@ public type TuiCmdOutput = record
       end;
     end if;
     var Commands: array of TuiBackgroundCommand := TuiCommandBackground[Slot - 1];
-    Commands.Push(TuiBackgroundCommand.CancelSubscription(Id));
+    Commands.PushInPlace(TuiBackgroundCommand.CancelSubscription(Id));
     TuiCommandBackground[Slot - 1] := Commands;
   end procedure;
 

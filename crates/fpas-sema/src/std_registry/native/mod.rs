@@ -5,6 +5,7 @@
 mod array;
 mod dictionary;
 mod factory;
+mod in_place;
 mod option;
 mod result;
 mod string;
@@ -40,6 +41,12 @@ pub enum NativeLowering {
     Intrinsic,
     /// Compare the existing length intrinsic result with zero.
     IsEmpty,
+    /// Append an element and return a new array value.
+    ArrayPush,
+    /// Return the shortened array and removed element as a named record.
+    ArrayPop,
+    /// Compute a same-type value operation and commit it to writable storage.
+    InPlace(&'static str),
 }
 
 /// One case-insensitive public name and signature for a static receiver shape.
@@ -92,7 +99,11 @@ impl NativeOperation {
     /// Receiver mode required by this operation; explicit parameters remain read-only.
     #[must_use]
     pub fn receiver_mode(self) -> ParamMode {
-        super::intrinsic_std_receiver_mode(self.implementation)
+        if matches!(self.lowering, NativeLowering::InPlace(_)) {
+            ParamMode::Var
+        } else {
+            ParamMode::Value
+        }
     }
 
     /// Returns an editor signature specialized with the receiver's known type arguments.
@@ -125,7 +136,10 @@ impl NativeOperation {
     /// Whether operation-specific checking supplies generic callback constraints.
     pub(crate) fn polymorphic(self) -> bool {
         !self.implementation.starts_with("Std.Str.")
-            || matches!(self.name, "Map" | "Filter" | "Reduce")
+            || matches!(
+                self.name,
+                "Map" | "Filter" | "Reduce" | "MapInPlace" | "FilterInPlace"
+            )
     }
 }
 
@@ -138,6 +152,7 @@ pub fn native_operations() -> impl Iterator<Item = &'static NativeOperation> {
         option::OPERATIONS,
         result::OPERATIONS,
         factory::OPERATIONS,
+        in_place::OPERATIONS,
     ]
     .into_iter()
     .flatten()

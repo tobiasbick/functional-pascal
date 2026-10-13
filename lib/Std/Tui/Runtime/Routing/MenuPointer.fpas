@@ -36,8 +36,8 @@ begin
           begin
             var Menus: array of TuiPointerMenu := TuiPointerMenus;
             TuiPointerMenus := [];
-            Menus.Push(TuiPointerMenu(Id := Id, Nodes := Nodes, State := State, ChangeAction := ChangeAction, Bounds := Frame.EntryAt(Index)
-                                                                                                                          .Bounds));
+            Menus.PushInPlace(TuiPointerMenu(Id := Id, Nodes := Nodes, State := State, ChangeAction := ChangeAction, Bounds := Frame.EntryAt(Index)
+                                                                                                                                 .Bounds));
             TuiPointerMenus := Menus;
           end;
         end if;

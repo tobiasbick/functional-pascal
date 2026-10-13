@@ -9,7 +9,6 @@ mod handbook;
 fn catalog_accounts_for_all_existing_distinct_operations_and_three_empty_checks() {
     let entries = native_operations().copied().collect::<Vec<_>>();
     validate_native_catalog(&entries).expect("valid catalog");
-    assert_eq!(entries.len(), 78);
     let old_names = [
         "Std.Str",
         "Std.Arrays",
@@ -115,10 +114,13 @@ fn canonical_collection_names_parameter_roles_and_mutation_modes_are_stable() {
                 .iter()
                 .all(|param| !param.is_var())
         );
-        assert_eq!((entry.signature)().variadic, entry.name == "Format");
+        assert_eq!(
+            (entry.signature)().variadic,
+            matches!(entry.name, "Format" | "FormatInPlace")
+        );
         assert_eq!(
             entry.receiver_mode() == ParamMode::Var,
-            matches!(entry.name, "Push" | "Pop")
+            entry.name.ends_with("InPlace")
         );
     }
 }

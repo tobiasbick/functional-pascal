@@ -414,9 +414,9 @@ fn intrinsic_std_editor_api_is_valid_syntax_without_runtime_analysis() {
 
 #[test]
 fn mutating_native_signatures_expose_only_explicit_parameters() {
-    let source = "program T; begin var Items: array of integer := [1]; Items.Push(Value := 2); const Last: integer := Items.Pop(); end.";
+    let source = "program T; begin var Items: array of integer := [1]; Items.PushInPlace(Value := 2); const Last: integer := Items.PopInPlace(); end.";
     let (_temp, path, mut service) = intrinsic_std_fixture(source);
-    let dot = source.find("Push(").expect("dot call") + "Push(".len();
+    let dot = source.find("PushInPlace(").expect("dot call") + "PushInPlace(".len();
     let help = service
         .signature_help(&path, dot)
         .expect("signature query")
@@ -429,13 +429,32 @@ fn mutating_native_signatures_expose_only_explicit_parameters() {
             .is_some_and(|doc| doc.contains("writable receiver")),
         "{help:#?}"
     );
-    let pop = source.find("Pop()").expect("pop call") + "Pop(".len();
+    let pop = source.find("PopInPlace()").expect("pop call") + "PopInPlace(".len();
     let help = service
         .signature_help(&path, pop)
         .expect("signature query")
         .value
         .expect("native signature");
     assert!(help.signature.parameters.is_empty(), "{help:#?}");
+}
+
+#[test]
+fn inferred_pop_fields_hover_with_their_concrete_types() {
+    let source = "program T; begin const Popped := ['abc'].Pop(); const N := Popped.Remaining.Length(); const Text := Popped.Value; end.";
+    let (_temp, path, mut service) = intrinsic_std_fixture(source);
+    for (field, expected) in [
+        ("Remaining", "field Remaining: array of string"),
+        ("Value", "field Value: string"),
+    ] {
+        let offset = source.find(&format!("Popped.{field}")).expect("field") + "Popped.".len();
+        let hover = service
+            .hover(&path, offset)
+            .expect("hover query")
+            .value
+            .expect("Pop field hover");
+        assert_eq!(hover.contents, expected);
+        assert!(hover.documentation.is_some());
+    }
 }
 
 #[test]

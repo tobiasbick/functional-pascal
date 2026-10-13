@@ -172,7 +172,7 @@ public type Holder = record public Items: array of integer; end record;
 public var Items: array of integer := [1];
 public var State: Holder := Holder( Items := [2] );
 public procedure Append(var Target: array of integer; Value: integer);
-begin Target.Push(Value); end procedure;
+begin Target.PushInPlace(Value); end procedure;
 end unit;"#,
     );
     write(
@@ -180,12 +180,12 @@ end unit;"#,
         r#"program Demo;
 uses Demo.State, Std.Console;
 begin
-  Demo.State.Items.Push(3);
-  Demo.State.State.Items.Push(4);
+  Demo.State.Items.PushInPlace(3);
+  Demo.State.State.Items.PushInPlace(4);
   Append(var Demo.State.Items, 5);
   Append(var State.Items, 6);
-  WriteLn(Demo.State.Items.Pop(), ' ', Demo.State.Items.Pop(), ' ', Demo.State.Items[0]);
-  WriteLn(State.Items.Pop(), ' ', Demo.State.State.Items.Pop(), ' ', State.Items[0]);
+  WriteLn(Demo.State.Items.PopInPlace(), ' ', Demo.State.Items.PopInPlace(), ' ', Demo.State.Items[0]);
+  WriteLn(State.Items.PopInPlace(), ' ', Demo.State.State.Items.PopInPlace(), ' ', State.Items[0]);
 end."#,
     );
     assert_eq!(run(build(&root, &main)), ["5 3 1", "6 4 2"]);

@@ -279,7 +279,7 @@ begin
     begin
       if TuiMenuHasParent(Nodes[Index], Parent) and TuiMenuNodeSelectable(Nodes[Index]) then
         begin
-          Siblings.Push(TuiMenuNodeIdOf(Nodes[Index]));
+          Siblings.PushInPlace(TuiMenuNodeIdOf(Nodes[Index]));
         end;
       end if;
     end;

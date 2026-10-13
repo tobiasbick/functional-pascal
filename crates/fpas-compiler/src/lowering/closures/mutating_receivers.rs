@@ -18,7 +18,17 @@ impl ClosureRegistry<'_> {
         owner: FunctionId,
         metadata: &AnalysisMetadata,
     ) {
-        if designator.parts.len() <= 2 {
+        let operation = metadata
+            .fluent_calls
+            .get(&key)
+            .and_then(|target| fpas_sema::native_operation_by_implementation(&target.name));
+        let direct_array_mutation = operation.is_some_and(|operation| {
+            matches!(
+                operation.lowering,
+                fpas_sema::NativeLowering::InPlace("Std.Arrays.Push" | "Std.Arrays.Pop")
+            )
+        });
+        if designator.parts.len() <= 2 && direct_array_mutation {
             return;
         }
         if metadata

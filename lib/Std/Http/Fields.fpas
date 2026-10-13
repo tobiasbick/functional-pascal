@@ -79,7 +79,7 @@ begin
         end;
       end if;
 
-      Headers.Push(Header.Create(Name, TrimOptionalWhitespace(Value)));
+      Headers.PushInPlace(Header.Create(Name, TrimOptionalWhitespace(Value)));
     end;
   end for;
 

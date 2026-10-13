@@ -101,7 +101,7 @@ impl Checker {
             self.error_with_code(
                 SEMA_VAR_PARAMETER_ESCAPE,
                 "`go` cannot pass an implicit writable receiver",
-                "Call `Items.Push(Value)` or `Items.Pop()` on the current task. A writable receiver follows the same lifetime rules as an explicit `var` argument.",
+                "Call collection InPlace operations on the current task. A writable receiver follows the same lifetime rules as an explicit var argument; use the value operation when spawning a task.",
                 span,
             );
             return;

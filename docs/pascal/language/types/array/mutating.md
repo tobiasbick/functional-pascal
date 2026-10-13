@@ -1,84 +1,50 @@
-# Mutating
+# Array stack operations
 
-## `Items.Push(Value: T)`
+Push appends at the end; Pop removes the last element. Value forms preserve the
+original array. InPlace forms update writable caller storage.
 
-Appends `Value` to the end of **`A`** (mutates `A`).
+## Value operations
 
-```pascal
-var A: array of integer := [1, 2];
-A.Push(3);
-A.Push(4);
-WriteLn(A.Length());
-```
+Items.Push(Value: T): array of T returns the appended array. Items.Pop():
+ArrayPopResult of T returns a named generic record with public fields:
 
----
+| Field | Type | Meaning |
+| --- | --- | --- |
+| Remaining | array of T | New array without the last element. |
+| Value | T | Removed last element. |
 
-## `Items.Pop(): T`
-
-Removes the **last** element and returns it. **`A` becomes shorter.** **Runtime error** if `A` is empty.
-
-```pascal
-var A: array of integer := [1, 2, 3];
-const Last: integer := A.Pop();
-const Next: integer := A.Pop();
-WriteLn(Last);
-WriteLn(A.Length());
-```
-
-For a directly stored local array, `Pop` reuses uniquely owned storage. If another
-value shares that array, copy-on-write preserves the other value. Global, captured, field, element, and forwarded receivers use reference reads
-and writes.
-## Writable receivers
-
-No import is required for these operations. Dot calls select the
-receiver implicitly: `Items.Push(Value)` and `Items.Pop()` have no receiver
-`var` marker or additional parentheses. Both require the same writable storage
-as a [`var` argument](../../functions/var-parameters.md):
-
-- a local, program, or unit `var` array, including an imported public variable;
-- an array field of a writable record, `State.Items.Push(Value)`;
-- an array element of writable storage, `Rows[Index].Pop()`;
-- a forwarded `var` parameter, including its fields or elements.
-
-Constants, read-only parameters, loop variables, dictionary entries,
-and computed or returned arrays are rejected (FP3028). Parenthesized values are
-expressions rather than writable receiver designators.
+ArrayPopResult needs no import and supports annotations and generic signatures.
+Its fields follow ordinary record access and construction rules.
 
 ```pascal
-procedure Append(var Items: array of integer; Value: integer);
-begin
-  Items.Push(Value);
-end procedure;
-
-var Items: array of integer := [1, 2];
-Append(var Items, 3);
-const Last: integer := Items.Pop();
+const Items := [10, 20, 30];
+const Extended := Items.Push(Value := 40);
+const Popped: ArrayPopResult of integer := Items.Pop();
+// Extended is [10, 20, 30, 40].
+// Popped.Remaining is [10, 20]; Popped.Value is 30.
+// Items remains [10, 20, 30].
 ```
 
-The receiver's root and indices are determined once before the explicit
-arguments, in written order. Mutation then reads and writes that storage through
-the same reference used by `var` parameters. Changes performed while evaluating
-an argument remain visible; the receiver is not an earlier array snapshot.
-Copy-on-write preserves other array or record values sharing its storage.
+## Mutating operations
 
-Explicit arguments keep their declared modes: `Value` is read-only, so
-`Items.Push(var Value)` is invalid (FP3027). `Items.Push(Value := Value)` is also accepted. The receiver cannot be named;
-there are no parallel free `Push` or `Pop` routines.
+Items.PushInPlace(Value: T) updates the receiver and returns no value.
+Items.PopInPlace(): T updates it and returns only the removed element.
 
-A writable receiver follows the shared aliasing and lifetime rules even though
-it has no marker. Two writable arguments of one call cannot share a root
-(FP3029); `Push`'s value argument may read the receiver, as in
-`Items.Push(Items[0])`. A closure cannot capture a `var` parameter, and neither
-`go Items.Push(Value)` nor `go Items.Pop()` can pass writable storage to another
-task (FP3030). Call the operation on the current task instead.
+```pascal
+var Items := [10, 20];
+Items.PushInPlace(30);
+const Last := Items.PopInPlace();
+// Last is 30; Items is [10, 20].
+```
 
-Writes completed before a failure or early `try` exit remain visible. A failed
-`Pop` on an empty array does not shorten it. `Push` is a procedure and can only
-end a statement chain; `Pop` returns the removed element and that value can
-continue a chain or initialize a `const` binding.
+Both Pop forms retain FP5003 on empty arrays. Failed empty PopInPlace does not
+alter storage. Check IsEmpty first when emptiness is expected.
 
-## See also
+Positional and fully named arguments are supported. Value is read-only;
+Items.PushInPlace(var Value) is rejected. Native stack operations have no free
+routines or bound routine values. Use wrappers when a callback is needed.
 
-- [Array overview](README.md)
-- [Higher-order](higher-order.md)
-- [Collections index](../../../std/README.md)
+Storage, path evaluation, aliases, callback/failure rules and go restrictions
+are specified in [collection mutation](../collection-mutation.md). Direct local
+PushInPlace/PopInPlace can reuse unique storage, but allocation is not guaranteed
+to be avoided. Other value copies always remain unchanged.

@@ -35,7 +35,7 @@ end scope;"
 fn nested_routine_captures_contribute_to_parameter_escapes() {
     let declarations = "procedure Leak(Handle: task of integer);
   procedure Save();
-  begin Kept.Push(Handle); end procedure;
+  begin Kept.PushInPlace(Handle); end procedure;
 begin Save(); end procedure;
 function Read(Handle: task of integer): integer;
   function Take(): integer;
@@ -113,7 +113,7 @@ function Read(Handle: task of integer): integer;
 begin
   const Box: CallbackBox := CallbackBox(Work := Take);
   var Callbacks: array of function(): integer := [];
-  Callbacks.Push(Box.Work);
+  Callbacks.PushInPlace(Box.Work);
   return Wait(Handle);
 end function;
 begin scope discard Read(go Fetch(1)); end scope; end."

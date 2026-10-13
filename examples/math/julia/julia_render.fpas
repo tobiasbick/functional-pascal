@@ -46,7 +46,7 @@ begin
   var Cells: array of Cell := [];
   for Px: integer := 0 to DrawWidth - 1 do
     begin
-      Cells.Push(RenderCell(Row[Px], Palette));
+      Cells.PushInPlace(RenderCell(Row[Px], Palette));
     end;
   end for;
 

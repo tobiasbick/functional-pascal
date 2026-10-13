@@ -21,7 +21,7 @@ const First: integer := Numbers[0];     // 1
 var Items: array of integer := [1, 2];
 
 begin
-  Items.Push(3);  // [1, 2, 3]
+  Items.PushInPlace(3);  // [1, 2, 3]
 end.
 ```
 

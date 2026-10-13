@@ -11,10 +11,14 @@ written arguments, and the recorded implicit-receiver exception. Aliasing
 between writable arguments is rejected, and local reassignment cannot become
 a caller-visible change during migration.
 
-Current behavior: value parameters are read-only, `var` parameters reference
+Behavior delivered by AP17: value parameters are read-only, `var` parameters reference
 writable caller storage, and explicitly written reference arguments carry a
 `var` marker. Native Push/Pop use the same storage checks with an unmarked
 implicit receiver, including fully named `Push(Value := V)` calls.
+
+[AP37](../ap37-uniform-mutation/README.md) supersedes this native naming exception:
+InPlace counterparts require writable receivers, while Push/Pop now return new
+values. Explicit user var arguments and the storage/lifetime protections remain.
 
 ## Decisions
 

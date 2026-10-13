@@ -137,7 +137,7 @@ fn constrained_generic_receiver_matches_only_valid_type() {
 #[test]
 fn array_mutation_rejects_parenthesized_receiver() {
     let errors =
-        check_errors("program T;  begin var A: array of integer := [1]; (A).Push(2); end.");
+        check_errors("program T;  begin var A: array of integer := [1]; (A).PushInPlace(2); end.");
     assert!(
         errors
             .iter()

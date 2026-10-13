@@ -20,7 +20,7 @@ begin
   var Tasks: array of task of SseDecoder := [];
   for Index: integer := 1 to 128 do
     begin
-      Tasks.Push(go CreateDecoder(Index));
+      Tasks.PushInPlace(go CreateDecoder(Index));
     end;
   end for;
 
@@ -28,7 +28,7 @@ begin
   var Decoders: array of SseDecoder := [];
   for Index: integer := 0 to Tasks.Length() - 1 do
     begin
-      Decoders.Push(Wait(Tasks[Index]));
+      Decoders.PushInPlace(Wait(Tasks[Index]));
     end;
   end for;
 

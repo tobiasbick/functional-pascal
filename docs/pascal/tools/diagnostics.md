@@ -469,8 +469,8 @@ can describe a structural restriction and leave those fields null.
 |---|---|---|---|
 | FP5001 | Division by zero | Divide by a runtime value equal to zero | Check the divisor or supply a nonzero value. |
 | FP5002 | Modulo by zero | Apply modulo with a runtime zero divisor | Check the divisor or supply a nonzero value. |
-| FP5003 | Array index | Index 1 in a one-element array | Use index 0, or check the array length. |
-| FP5004 | Pop empty array | Pop an empty array | Check that the array is nonempty before popping. |
+| FP5003 | Array index or empty Pop/PopInPlace | Index 1 in a one-element array, or pop an empty array | Check array bounds or IsEmpty before popping. |
+| FP5004 | Reserved empty-pop code; current array Pop uses FP5003 | — | Check that the array is nonempty before popping. |
 | FP5005 | Undefined global | Bytecode addresses an absent global | Rebuild a verified executable with the matching globals. |
 | FP5006 | Undefined function | Bytecode calls a missing function ID | Rebuild a verified executable with the matching functions. |
 | FP5007 | Wrong call arity | Dynamic call frame has fewer arguments than its signature | Rebuild with the matching callable ABI. |

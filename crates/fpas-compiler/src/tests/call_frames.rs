@@ -48,7 +48,7 @@ fn value_returning_callees_are_not_tail_called_from_procedures() {
 
 #[test]
 fn multi_argument_calls_keep_caller_state_and_array_values() {
-    let source = "program Windows; \nfunction Combine(A: integer; B: integer; C: integer): integer; begin return A * 100 + B * 10 + C; end function;\nfunction Grow(Values: array of integer; Extra: integer): array of integer;\nbegin\n  var Local: array of integer := Values;\n  Local.Push(Extra);\n  return Local;\nend function;\nbegin\n  const Keep: integer := 7;\n  const Original: array of integer := [1, 2];\n  const Grown: array of integer := Grow(Original, 3);\n  if Combine(1, 2, 3) + Combine(4, 5, 6) <> 579 then panic('arguments'); end if;\n  if Keep <> 7 then panic('caller register'); end if;\n  if Original.Length() <> 2 then panic('caller array changed'); end if;\n  if Grown.Length() <> 3 then panic('callee array'); end if;\nend.";
+    let source = "program Windows; \nfunction Combine(A: integer; B: integer; C: integer): integer; begin return A * 100 + B * 10 + C; end function;\nfunction Grow(Values: array of integer; Extra: integer): array of integer;\nbegin\n  var Local: array of integer := Values;\n  Local.PushInPlace(Extra);\n  return Local;\nend function;\nbegin\n  const Keep: integer := 7;\n  const Original: array of integer := [1, 2];\n  const Grown: array of integer := Grow(Original, 3);\n  if Combine(1, 2, 3) + Combine(4, 5, 6) <> 579 then panic('arguments'); end if;\n  if Keep <> 7 then panic('caller register'); end if;\n  if Original.Length() <> 2 then panic('caller array changed'); end if;\n  if Grown.Length() <> 3 then panic('callee array'); end if;\nend.";
     assert_succeeds(source);
 }
 

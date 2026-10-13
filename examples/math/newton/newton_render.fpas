@@ -139,7 +139,7 @@ begin
   for Px: integer := 0 to Width - 1 do
     begin
       const cx: real := XMin + IntToReal(Px) / Wr * (XMax - XMin);
-      Row.Push(Iterate(Complex.Create(cx, cy), MaxIter));
+      Row.PushInPlace(Iterate(Complex.Create(cx, cy), MaxIter));
     end;
   end for;
 
@@ -184,7 +184,7 @@ begin
   var Cells: array of Cell := [];
   for Px: integer := 0 to DrawWidth - 1 do
     begin
-      Cells.Push(RenderCell(Row[Px]));
+      Cells.PushInPlace(RenderCell(Row[Px]));
     end;
   end for;
 
@@ -204,7 +204,7 @@ begin
   var Tasks: array of task of array of PixelSample := [];
   for Py: integer := 0 to Height - 1 do
     begin
-      Tasks.Push(go ComputeRow(Py, Width, Height, XMin, XMax, YMin, YMax, MaxIter));
+      Tasks.PushInPlace(go ComputeRow(Py, Width, Height, XMin, XMax, YMin, YMax, MaxIter));
     end;
   end for;
 

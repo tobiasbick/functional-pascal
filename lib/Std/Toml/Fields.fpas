@@ -178,7 +178,7 @@ begin
       case Item of
         when TomlValue.String(const Value):
           begin
-            Values.Push(Value);
+            Values.PushInPlace(Value);
           end;
         when TomlValue.Integer(_), TomlValue.Float(_), TomlValue.Boolean(_), TomlValue.Datetime(_), TomlValue.ArrayValue(_), TomlValue.Table(_):
           begin

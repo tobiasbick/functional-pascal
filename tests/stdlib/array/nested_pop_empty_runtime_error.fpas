@@ -1,0 +1,10 @@
+program NestedPopEmpty;
+
+type Holder = record
+  Items: array of integer;
+end record;
+
+begin
+  var State := Holder(Items := []);
+  const Value := State.Items.PopInPlace();
+end.

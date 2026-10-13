@@ -185,6 +185,16 @@ impl Checker {
     }
 
     fn register_primitive_types(&mut self) {
+        self.scopes.define(
+            "ArrayPopResult",
+            Symbol {
+                constant: None,
+                ty: crate::types::array_pop_result_declaration(),
+                mutable: false,
+                kind: SymbolKind::Type,
+                task_bound: false,
+            },
+        );
         for name in &["integer", "real", "boolean", "string"] {
             self.scopes.define(
                 name,

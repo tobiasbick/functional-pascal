@@ -132,7 +132,7 @@ begin
         end;
       end if;
 
-      Parts.Push(string.Chr(CodePoint));
+      Parts.PushInPlace(string.Chr(CodePoint));
       Index := Index + Width;
     end;
   end while;

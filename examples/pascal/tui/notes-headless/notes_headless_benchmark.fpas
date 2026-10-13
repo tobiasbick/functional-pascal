@@ -21,7 +21,7 @@ begin
       NoteValue.Pinned := (Index mod 7) = 0;
       NoteValue.Body := 'This is a representative note body for frame ' + IntToStr(Index) + '.' + string.Chr(10) +
                         'It keeps the editor, list, metadata, and layout paths active.';
-      Notes.Push(NoteValue);
+      Notes.PushInPlace(NoteValue);
     end;
   end for;
 

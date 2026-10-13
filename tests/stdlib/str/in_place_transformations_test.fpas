@@ -1,0 +1,49 @@
+program StringInPlaceTransformations;
+
+uses Std.Test;
+
+begin
+  const Original := '  a😀b  ';
+  var Text := Original;
+  Text.TrimLeftInPlace();
+  AssertEquals('a😀b  ', Text);
+  Text.TrimRightInPlace();
+  AssertEquals('a😀b', Text);
+  Text.ToUpperInPlace();
+  AssertEquals('A😀B', Text);
+  Text.ToLowerInPlace();
+  Text.ReplaceInPlace(New := 'é', Old := '😀');
+  AssertEquals('aéb', Text);
+  Text.SetCharAtInPlace(C := '😀', Index := 1);
+  Text.InsertInPlace(Sub := '!', Index := 2);
+  AssertEquals('a😀!b', Text);
+  Text.DeleteInPlace(Len := 1, Index := 2);
+  Text.ReverseInPlace();
+  Text.SliceInPlace(Len := 1, Start := 1);
+  AssertEquals('😀', Text);
+  Text.FromCharInPlace(N := 2);
+  Text.RepeatStrInPlace(N := 2);
+  AssertEquals('😀😀😀😀', Text);
+  Text := 'a';
+  Text.PadLeftInPlace(PadChar := '-', Width := 3);
+  Text.PadRightInPlace(PadChar := '+', Width := 5);
+  AssertEquals('--a++', Text);
+  Text := 'a';
+  Text.PadCenterInPlace(PadChar := '-', Width := 3);
+  AssertEquals('-a-', Text);
+  Text := ' a ';
+  Text.TrimInPlace();
+  Text.MapInPlace(F := function(C: string): string begin
+    return C.ToUpper();
+  end function);
+  AssertEquals('A', Text);
+  Text := 'A B';
+  Text.FilterInPlace(F := function(C: string): boolean begin
+    return C <> ' ';
+  end function);
+  AssertEquals('AB', Text);
+  Text := '%s:%d';
+  Text.FormatInPlace('ok', 7);
+  AssertEquals('ok:7', Text);
+  AssertEquals('  a😀b  ', Original);
+end.

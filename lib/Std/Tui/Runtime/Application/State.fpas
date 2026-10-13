@@ -25,8 +25,8 @@ public var TuiAppTickDueAt: array of integer := [];
 // Opens application-owned state and returns its stable identifier.
 public function TuiAppOpenApplication(Size: TuiSize; Palette: TuiPalette; Interactive: boolean): integer;
 begin
-  TuiAppInputHead.Push(0);
-  TuiAppMessageHead.Push(0);
+  TuiAppInputHead.PushInPlace(0);
+  TuiAppMessageHead.PushInPlace(0);
   TuiAppOpen := TuiAppOpen.Concat([true]);
   TuiAppInputs := TuiAppInputs.Concat([[]]);
   TuiAppMessages := TuiAppMessages.Concat([[]]);
@@ -182,7 +182,7 @@ begin
   TuiAppMessages[ApplicationId - 1] := [];
   for Item: TuiMsg in Messages do
     begin
-      Queue.Push(Item);
+      Queue.PushInPlace(Item);
     end;
   end for;
 
@@ -194,7 +194,7 @@ public procedure TuiAppPushInput(ApplicationId: integer; Input: TuiHostInput);
 begin
   var Queue: array of TuiHostInput := TuiAppInputs[ApplicationId - 1];
   TuiAppInputs[ApplicationId - 1] := [];
-  Queue.Push(Input);
+  Queue.PushInPlace(Input);
   TuiAppInputs[ApplicationId - 1] := Queue;
 end procedure;
 

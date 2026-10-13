@@ -77,13 +77,13 @@ begin
   var Children: array of TuiElement := [TuiElementBuilders.MakeLabel('frame ' + IntToStr(State))];
   for Index: integer := 2 to 32 do
     begin
-      Children.Push(TuiElementBuilders.MakeLabel('row'));
+      Children.PushInPlace(TuiElementBuilders.MakeLabel('row'));
     end;
   end for;
   const SharedAction: TuiAction := TuiAction.Create(100);
   for Index: integer := 1 to 8 do
     begin
-      Children.Push(TuiElementBuilders.MakeButton(TuiControlId.Create(Index), 'action', SharedAction));
+      Children.PushInPlace(TuiElementBuilders.MakeButton(TuiControlId.Create(Index), 'action', SharedAction));
     end;
   end for;
 

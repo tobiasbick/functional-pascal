@@ -308,20 +308,26 @@ pub(super) const OPERATIONS: &[NativeOperation] = &[
         signature: || {
             function(
                 vec![p("Value", Ty::GenericParam("T".into(), None))],
-                Ty::Unit,
+                Ty::Array(Box::new(Ty::GenericParam("T".into(), None))),
                 false,
             )
         },
-        lowering: NativeLowering::Intrinsic,
-        documentation: "Append to the caller's array; requires a writable receiver, with no call-site receiver marker",
+        lowering: NativeLowering::ArrayPush,
+        documentation: "Return a new appended array; preserve the receiver",
     },
     NativeOperation {
         receiver: NativeReceiver::Array,
         name: "Pop",
         implementation: "Std.Arrays.Pop",
-        signature: || function(vec![], Ty::GenericParam("T".into(), None), false),
-        lowering: NativeLowering::Intrinsic,
-        documentation: "Remove and return the last element; requires a writable receiver, with no call-site receiver marker",
+        signature: || {
+            function(
+                vec![],
+                crate::types::array_pop_result(Ty::GenericParam("T".into(), None)),
+                false,
+            )
+        },
+        lowering: NativeLowering::ArrayPop,
+        documentation: "Return Remaining and Value; preserve the receiver; empty arrays raise a runtime error",
     },
     NativeOperation {
         receiver: NativeReceiver::StringArray,

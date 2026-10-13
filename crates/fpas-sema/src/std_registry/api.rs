@@ -128,7 +128,7 @@ mod mutation_tests {
 
     #[test]
     fn array_mutation_catalog_preserves_writable_mode() {
-        for name in ["Push", "Pop"] {
+        for name in ["PushInPlace", "PopInPlace"] {
             let operation = crate::native_operation(&Ty::Array(Box::new(Ty::Integer)), name)
                 .expect("native operation");
             assert_eq!(operation.receiver_mode(), crate::ParamMode::Var);
@@ -140,6 +140,14 @@ mod mutation_tests {
             );
         }
         assert!(intrinsic_std_symbols("Std.Arrays").is_empty());
+        for name in ["Push", "Pop"] {
+            assert_eq!(
+                crate::native_operation(&Ty::Array(Box::new(Ty::Integer)), name)
+                    .expect("value operation")
+                    .receiver_mode(),
+                crate::ParamMode::Value
+            );
+        }
         assert_eq!(
             crate::intrinsic_std_receiver_mode("Std.Arrays.Sort"),
             crate::ParamMode::Value

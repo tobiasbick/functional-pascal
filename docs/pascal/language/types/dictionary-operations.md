@@ -37,8 +37,15 @@ functions with the same name do not affect this selection.
 | `Values.Reduce(Init: U; F: function(Acc: U; Key: K; Value: V): U): U` | Fold entries in insertion order |
 | `Values.Merge(D2: dict of K to V): dict of K to V` | Combine values; the argument wins on key conflicts |
 | `Values.Remove(Key: K): dict of K to V` | Return a value without the key |
+| `Values.RemoveInPlace(Key: K)` | Remove key in writable storage; absent keys leave it unchanged |
+| `Values.MergeInPlace(D2: dict of K to V)` | Merge into writable storage; argument wins on conflicts |
+| `Values.FilterInPlace(F: function(K: K; V: V): boolean)` | Keep matching entries in writable storage |
+| `Values.MapInPlace(F: function(V: V): V)` | Transform writable values without changing their type |
 
 `Length()` and `IsEmpty()` use the same canonical names for strings, arrays, and dictionaries.
+
+InPlace operations return no value and obey [collection mutation](collection-mutation.md).
+Keys retain their type and insertion order; MapInPlace also retains the value type.
 
 
 ## Detailed reference

@@ -52,7 +52,7 @@ begin
       begin
         if Value <> '' then
           begin
-            Headers.Push(Header.Create('Authorization', 'Bearer ' + Value));
+            Headers.PushInPlace(Header.Create('Authorization', 'Bearer ' + Value));
           end;
         end if;
       end;

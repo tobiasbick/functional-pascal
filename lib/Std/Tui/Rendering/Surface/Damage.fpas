@@ -107,7 +107,7 @@ begin
     begin
       if not Continuations[X] then
         begin
-          ChangedCells.Push(Cells[X]);
+          ChangedCells.PushInPlace(Cells[X]);
         end;
       end if;
     end;

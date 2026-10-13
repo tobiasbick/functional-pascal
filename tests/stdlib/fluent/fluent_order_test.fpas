@@ -6,7 +6,7 @@ var Visits: array of integer := [];
 
 function Visit(Value: integer): integer;
 begin
-  Visits.Push(Value);
+  Visits.PushInPlace(Value);
   return Value;
 end function;
 

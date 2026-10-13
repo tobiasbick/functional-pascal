@@ -43,7 +43,7 @@ begin
   var Row: array of Std.Console.Cell := [];
   for Cell: TuiCell in Damage.Cells do
     begin
-      Row.Push(TuiCellToConsole(Cell, Palette));
+      Row.PushInPlace(TuiCellToConsole(Cell, Palette));
     end;
   end for;
 

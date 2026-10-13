@@ -31,17 +31,17 @@ fn native_and_forwarded_receivers_use_the_same_storage_paths() {
 type Holder = record Items: array of integer; end record;
 procedure Add(var Items: array of integer);
 begin
-  Items.Push(3);
+  Items.PushInPlace(3);
 end procedure;
 begin
   var H: Holder := Holder( Items := [1] );
-  H.Items.Push(2);
+  H.Items.PushInPlace(2);
   Add(var H.Items);
-  if H.Items.Pop() <> 3 then panic('forwarded write'); end if;
-  if H.Items.Pop() <> 2 then panic('field write'); end if;
+  if H.Items.PopInPlace() <> 3 then panic('forwarded write'); end if;
+  if H.Items.PopInPlace() <> 2 then panic('field write'); end if;
   var Rows: array of array of integer := [[1]];
-  Rows[0].Push(4);
-  if Rows[0].Pop() <> 4 then panic('element write'); end if;
+  Rows[0].PushInPlace(4);
+  if Rows[0].PopInPlace() <> 4 then panic('element write'); end if;
 end."#,
     );
 }
@@ -50,11 +50,14 @@ end."#,
 fn writes_before_panic_and_failed_pop_remain_in_caller_storage() {
     use fpas_vm::{DebugExpression, DebugRunResult, DebugSession, DebugStopReason};
 
-    for tail in ["panic('stopped');", "const N: integer := H.Items.Pop();"] {
+    for tail in [
+        "panic('stopped');",
+        "const N: integer := H.Items.PopInPlace();",
+    ] {
         let mutation = if tail.starts_with("panic") {
-            "H.Items.Push(2); const Last: integer := H.Items.Pop(); H.Items.Push(Last + 1);"
+            "H.Items.PushInPlace(2); const Last: integer := H.Items.PopInPlace(); H.Items.PushInPlace(Last + 1);"
         } else {
-            "const Last: integer := H.Items.Pop();"
+            "const Last: integer := H.Items.PopInPlace();"
         };
         let source = format!(
             r#"program T;
@@ -96,6 +99,46 @@ begin Change(var Global); end."#
             assert_eq!(value.indexed_variables, 0);
         }
     }
+}
+
+#[test]
+fn failed_callback_does_not_commit_a_partial_in_place_result() {
+    use fpas_vm::{DebugExpression, DebugRunResult, DebugSession, DebugStopReason};
+    let program = super::super::parse_ok(
+        r#"program T;
+var Items: array of integer := [1, 2];
+function Change(X: integer): integer;
+begin
+  if X = 2 then panic('callback stopped'); end if;
+  Items := [99];
+  return X * 10;
+end function;
+begin Items.MapInPlace(Change); end."#,
+    );
+    let mut session =
+        DebugSession::new(crate::compile(&program).expect("compile")).expect("session");
+    let DebugRunResult::Stopped(stop) = session.continue_execution().expect("failure") else {
+        panic!("expected callback failure")
+    };
+    assert_eq!(stop.reason, DebugStopReason::RuntimeError);
+    let item = DebugExpression::Index {
+        base: Box::new(DebugExpression::Name("Items".into())),
+        index: Box::new(DebugExpression::Integer(0)),
+    };
+    assert_eq!(
+        session
+            .evaluate(&item, None)
+            .expect("completed callback write")
+            .value,
+        "99"
+    );
+    assert_eq!(
+        session
+            .evaluate(&DebugExpression::Name("Items".into()), None)
+            .expect("receiver state")
+            .indexed_variables,
+        1
+    );
 }
 
 #[test]

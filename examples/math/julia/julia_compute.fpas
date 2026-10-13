@@ -101,7 +101,7 @@ begin
         end;
       end if;
       const cx: real := XMin + IntToReal(Px) / Wr * (XMax - XMin);
-      Row.Push(Iterate(Complex.Create(cx, cy), C, MaxIter, Token));
+      Row.PushInPlace(Iterate(Complex.Create(cx, cy), C, MaxIter, Token));
     end;
   end for;
 

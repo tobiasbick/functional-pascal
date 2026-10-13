@@ -1,0 +1,56 @@
+program InPlaceEvaluation;
+
+uses Std.Test;
+
+type Holder = record
+  Items: array of integer;
+end record;
+
+begin
+  var Rows := [Holder(Items := [3, 2, 1])];
+  var Calls := '';
+  const SelectRow: function(): integer := function(): integer begin
+    Calls := Calls + 'R';
+    return 0;
+  end function;
+  const LengthArgument: function(): integer := function(): integer begin
+    Calls := Calls + 'L';
+    Rows[0].Items := [9, 8, 7, 6];
+    return 2;
+  end function;
+  const StartArgument: function(): integer := function(): integer begin
+    Calls := Calls + 'S';
+    return 1;
+  end function;
+
+  Rows[SelectRow()].Items.SliceInPlace(Len := LengthArgument(), Start := StartArgument());
+  AssertEquals('RLS', Calls);
+  AssertEquals(2, Rows[0].Items.Length());
+  AssertEquals(8, Rows[0].Items[0]);
+  AssertEquals(7, Rows[0].Items[1]);
+  var Items := [1, 2];
+  var Seen := '';
+  const Copy := Items;
+  Items.MapInPlace(function(X: integer): integer begin
+    if X = 1 then
+      Seen := Seen + '1';
+    else
+      Seen := Seen + '2';
+    end if;
+
+    Items := [99];
+    return X * 10;
+  end function);
+  AssertEquals('12', Seen);
+  AssertEquals(2, Items.Length());
+  AssertEquals(10, Items[0]);
+  AssertEquals(20, Items[1]);
+  AssertEquals(1, Copy[0]);
+  var Local := [2, 1];
+  const Change: procedure() := procedure() begin
+    Local.SortInPlace();
+  end procedure;
+
+  Change();
+  AssertEquals(1, Local[0]);
+end.

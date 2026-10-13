@@ -189,11 +189,11 @@ begin
         var Messages: array of TuiMsg := [];
         if not TuiFocusMatches(Previous, Menu.Id) then
           begin
-            Messages.Push(TuiMsg.FocusChanged(Previous, Some(Menu.Id)));
+            Messages.PushInPlace(TuiMsg.FocusChanged(Previous, Some(Menu.Id)));
           end;
         end if;
 
-        Messages.Push(TuiMenuChange(Menu, TuiMenuState.OpenAt(First)));
+        Messages.PushInPlace(TuiMenuChange(Menu, TuiMenuState.OpenAt(First)));
         return Messages;
       end;
     when None:
@@ -489,7 +489,7 @@ begin
                   var FocusMessages: array of TuiMsg := [];
                   if not TuiFocusMatches(TuiRootFocus(Root), Menu.Id) then
                     begin
-                      FocusMessages.Push(TuiMsg.FocusChanged(TuiRootFocus(Root), Some(Menu.Id)));
+                      FocusMessages.PushInPlace(TuiMsg.FocusChanged(TuiRootFocus(Root), Some(Menu.Id)));
                     end;
                   end if;
 

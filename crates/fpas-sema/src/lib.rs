@@ -51,7 +51,7 @@ pub use std_registry::{
 };
 pub use types::{
     DistinctTy, EnumTy, FunctionTy, GenericParamDef, ParamMode, ParamTy, ProcedureTy, RecordTy, Ty,
-    TypeConstraint,
+    TypeConstraint, array_pop_result, array_pop_result_declaration,
 };
 
 use fpas_parser::Program;

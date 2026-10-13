@@ -75,6 +75,7 @@ begin
     begin
       case N of
         when const M if M > 0: return;
+        else null;
       end case;
     end procedure;
   go F();

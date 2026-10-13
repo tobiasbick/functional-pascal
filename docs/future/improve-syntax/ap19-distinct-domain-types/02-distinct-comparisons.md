@@ -24,6 +24,10 @@ form; Sema treats it as a value when `Name` is a distinct type, at the top level
 and nested in patterns such as `Some(UserId(1))` or `is` tests. A
 `distinct real` selector has its own diagnostic.
 
+[AP39](../ap39-consistent-case-coverage/README.md) preserves typed labels and
+applies the base selector's coverage policy in statements and expressions:
+distinct Boolean is finite without `else`; distinct integer/string needs `else`.
+
 The compiler uses the underlying type for every operation on a distinct value,
 so comparisons, ranges, and membership lower like their scalar counterparts.
 The debugger evaluates comparisons on runtime values without additional

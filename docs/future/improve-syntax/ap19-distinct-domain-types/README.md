@@ -66,6 +66,9 @@ inherited. Representation hiding uses existing record visibility.
   selector type. Value labels and range endpoints are compile-time constants of
   the same distinct type, such as `UserId(1)` or a `const` of type `UserId`; a
   plain `1` is a type mismatch.
+- [AP39](../ap39-consistent-case-coverage/README.md) applies the supported base
+  type's coverage policy in both positions: distinct Boolean needs both typed
+  values and forbids `else`; distinct integer/string requires `else`.
 - `in` follows equality: `Id in Ids` and `Id in Lookup` accept the same distinct
   type. Substring `in` stays unavailable for a `distinct string`.
 

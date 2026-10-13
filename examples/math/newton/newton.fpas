@@ -207,6 +207,8 @@ begin
             RequestRedraw();
             return true;
           end;
+        else
+          null;
       end case;
     end;
   end if;

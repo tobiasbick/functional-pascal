@@ -1,5 +1,6 @@
 mod assignment;
 mod case_blocks;
+mod case_coverage;
 mod closed_enum_cases;
 mod concurrency;
 mod control_blocks;

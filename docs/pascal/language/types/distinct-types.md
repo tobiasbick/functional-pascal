@@ -135,6 +135,12 @@ A plain `1` label is a type mismatch, as is a label of another distinct type.
 The same typed values work inside patterns, for example `when Some(UserId(1)):`
 or `if Found is Some(Admin) then`. A `distinct real` is not a `case` selector.
 
+Coverage follows the supported underlying type in both statements and
+expressions. Distinct Boolean requires both typed Boolean values and forbids
+`else`; distinct integer/string requires `else`. Type identity remains explicit:
+use `Flag(true)` and `Flag(false)` for a distinct Boolean `Flag`, rather than
+plain Boolean labels. Duplicate and fully covered typed labels are errors.
+
 ## Other operations
 
 A distinct type inherits no other operators, built-in type operations, or generic

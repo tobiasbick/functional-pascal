@@ -8,7 +8,8 @@ Status: complete.
 
 Repository cases over user enums, `Option`, and `Result` use explicit variant
 arms. AP35.2 confines `is` to nonbinding Boolean tests; payload extraction uses case arms.
-Scalar cases over `integer`, `string`, and `boolean` retain their catch-alls.
+Under [AP39](../ap39-consistent-case-coverage/README.md), integer/string cases
+require their catch-alls, while Boolean/subrange cases use explicit finite arms.
 
 Remaining variants are listed in declaration order. Guarded arms and partial
 payload patterns retain an explicit fallback for the same variant when needed.

@@ -10,7 +10,8 @@ Nested patterns have stable resolution and concrete coverage diagnostics
 with recursive exhaustiveness and unreachable-label checks. Bindings remain
 explicit regardless of surrounding names. The separate, completed
 [AP03](../ap03-explicit-closed-enum-cases/README.md) package rejects `else` on closed enums;
-scalar cases retain it.
+[AP39](../ap39-consistent-case-coverage/README.md) applies one exhaustive matrix
+to both positions, with required integer/string `else` and forbidden finite `else`.
 
 After AP20.1 and AP20.2, patterns bind with `const Name`, ignore fields with
 `_`, nest, and compare payloads with compile-time constants; coverage is
@@ -35,7 +36,8 @@ replaces AP20.3's original binding and condition-only rules.
   value comparison and must name a compile-time constant or enum member; an
   unknown name reports a diagnostic showing `const N`. The existing limits
   stay: exactly one label in the arm and a required guard, so
-  `when const N:` without a guard is rejected in favour of `else`.
+  `when const N:` without a guard is rejected. Use explicit finite arms or the
+  required integer/string `else` according to AP39.
 - A bare identifier in a payload position (AP20.2), for example
   `Some(MaxValue)`, is a comparison. Like scalar labels it must be a
   compile-time constant; computed `const` values belong in the guard. A name
@@ -84,6 +86,11 @@ with every field explicit and mixing rejected per nesting level. Some/Ok/Error
 use Value as their named payload label. AP36.2 replaces only the positional-only
 field restriction, preserving comparisons, immutable case bindings, coverage,
 and AP35's nonbinding is. The rules above include this delivered extension.
+
+[AP39](../ap39-consistent-case-coverage/README.md) extends the shared pattern
+matrix with exact finite subrange coverage and uniform duplicate/reachability
+checks. Guards never count toward coverage; partially overlapping labels remain
+legal. This replaces the former scalar position distinctions; AP20 stays complete.
 
 ## Dependencies
 

@@ -78,7 +78,7 @@ impl Checker {
         self.check_case_exhaustiveness(
             &checked.case_ty,
             &checked.rows,
-            checked.pattern_coverage,
+            checked.labels_valid,
             else_body.is_some(),
             exhaustiveness::CaseForm::Statement,
             span,

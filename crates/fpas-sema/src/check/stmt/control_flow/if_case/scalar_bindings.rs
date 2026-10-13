@@ -101,7 +101,7 @@ impl Checker {
         self.error_with_code(
             SEMA_TYPE_MISMATCH,
             "`_` cannot stand for a whole matched value",
-            "`_` ignores one payload field, for example `Some(_)`. List remaining variants explicitly for closed enums, or use `else` for scalar cases.",
+            "`_` ignores one payload field, for example `Some(_)`. List all variants for enum/Option/Result and all values for Boolean/subrange cases; use `else` for integer/string cases.",
             span,
         );
     }

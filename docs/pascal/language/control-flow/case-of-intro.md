@@ -3,7 +3,7 @@
 A `case` statement selects the first arm whose label and optional guard match.
 The expression is evaluated once. Supported expression types are:
 
-- ordinal types: `integer`, `boolean`, or an `enum`
+- ordinal types: `integer`, `boolean`, an `enum`, or an integer subrange
 - `string`
 - `Result of (T, E)` or `Option of T`
 - a [distinct type](../types/distinct-types.md#case) over `integer`, `string`,
@@ -16,6 +16,21 @@ statements. The next `when`, optional final `else`, or `end case` ends the list.
 Every statement ends with `;`, including the last statement in each arm; the
 whole case ends with `end case;`. Use `null;` for an arm with no action.
 A case requires at least one `when` arm. Arms do not fall through.
+
+Statements and expressions must cover every possible input. Use `if` for
+selective handling. The same rules apply in both positions:
+
+| Selector | Required coverage | `else` |
+|----------|-------------------|--------|
+| Enum, Option, Result | Every variant explicitly, including nested patterns | Forbidden |
+| Boolean | Both true and false | Forbidden |
+| Subrange | All declared values, using values or ranges | Forbidden |
+| Integer, string | Explicit labels or guarded arms plus a fallback | Required |
+| Distinct | The rules of its supported underlying type, with typed labels | Follows the underlying type |
+
+Guards never contribute coverage, even constant-true guards. Duplicate labels
+within an arm and labels fully covered by earlier unguarded arms are errors.
+Partial overlaps are allowed and follow written order.
 
 ```pascal
 case Day of
@@ -44,6 +59,8 @@ case Score of
     Grade := 'B';
   when 90..100:
     Grade := 'A';
+  else
+    Grade := '?';
 end case;
 ```
 
@@ -67,11 +84,9 @@ case Items of
 end case;
 ```
 
-Guarded arms do not count toward exhaustive variant coverage. The compiler
-requires complete explicit enum, `Result`, and `Option` coverage. These types
-reject `else` (FP3035), even after complete coverage. Scalar `integer`, `string`,
-and `boolean` cases allow `else`; Boolean statement coverage is optional. Use an
-[`is` test](../pattern-matching/is-test.md) when handling just one variant.
+Guarded arms do not count toward coverage. Missing coverage reports FP3011;
+`else` on a finite selector reports FP3035, even after complete coverage.
+Use an [`is` test](../pattern-matching/is-test.md) for selective variant checks.
 See [Pattern matching](../pattern-matching/README.md) for guards, scalar guard
 bindings, data-enum patterns, and exhaustiveness rules. Destructuring keeps
 forms such as `Ok(const Value)`, `Error(const Reason)`, `Some(const Value)`,
@@ -98,7 +113,7 @@ end case;
 
 const State: string := case Enabled of
   when true: 'enabled';
-  else 'disabled';
+  when false: 'disabled';
 end case;
 ```
 
@@ -107,10 +122,9 @@ end case;
   expression; the enclosing statement or declaration supplies its terminator.
 - Labels, guards, pattern bindings, and arm scopes follow the statement. Only
   the selected arm value is evaluated.
-- Every input must produce a value. Enum, `Result`, and `Option` selectors
-  need unguarded coverage of every variant and reject `else` as in the statement.
-  A `boolean` selector needs unguarded `true` and `false` arms or an `else`
-  fallback. `integer`, `string`, and distinct selectors need an `else` arm.
+- Every input must produce a value, using the same coverage and `else` matrix
+  as a statement. Boolean and subrange expressions use explicit finite coverage;
+  integer/string expressions require `else`. Distinct follows its underlying type.
 - All arm values have one type, with the same rules as
   [`if` expressions](if-then-else.md#if-expressions): no numeric widening, and
   `None`, `[]`, or unresolved generic call results take context from the other

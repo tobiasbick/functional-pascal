@@ -15,8 +15,9 @@ nonbinding single-variant checks use the `is` test. Payload extraction uses case
 - A `case` over a closed enum (`Option`, `Result`, user enums) lists every
   variant explicitly; `else` is not allowed there. Open domains such as
   `integer` or `string` keep `else`.
-- `boolean` remains a scalar case domain: `else` stays allowed and AP03 does
-  not introduce mandatory `true`/`false` coverage.
+- [AP39](../ap39-consistent-case-coverage/README.md) retains these closed-variant
+  rules and extends explicit finite coverage to Boolean and subrange selectors
+  in both positions. Integer/string cases require `else`; finite cases forbid it.
 - The closed-enum `else` prohibition also applies when explicit arms already
   cover every variant; remove a redundant `else` instead of keeping it.
 - A guarded arm alone does not cover its variant. Ignoring payload fields

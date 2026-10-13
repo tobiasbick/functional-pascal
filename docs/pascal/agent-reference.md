@@ -219,10 +219,13 @@ share an arm. Scalar integer labels also allow inclusive `Low..High` ranges.
 Labels and endpoints are compile-time constants; runtime tests belong in `if`
 guards. A scalar binding arm (`when const N if N > 0:`) needs a guard.
 Case expressions produce one expression followed by `;` per arm and must cover
-every possible value. Scalar integer/string expressions need a fallback `else`;
-boolean expressions need unguarded `true` and `false` arms or an `else` fallback.
-Scalar statements permit `else`
-and need not be exhaustive. Closed enum/Option/Result cases have stricter rules below.
+every possible value. Statements use the same coverage rules. Integer/string
+selectors require a fallback `else`; Boolean needs unguarded true and false,
+and subranges need their entire declared interval. Boolean/subrange and closed
+enum/Option/Result forbid `else`. Distinct follows its supported base type.
+Guards never contribute coverage, even constant true. Duplicate labels within
+an arm and labels fully covered by earlier unguarded arms are errors; partial
+overlaps retain written-order matching. Use `if` for selective handling.
 See [control flow](language/control-flow/README.md).
 
 ## 4. Routines, parameters, contracts, and discarded results

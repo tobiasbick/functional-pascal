@@ -3,7 +3,7 @@
 //! Documentation: `docs/pascal/language/control-flow/case-of-intro.md`
 
 use fpas_diagnostics::codes::{
-    SEMA_CLOSED_ENUM_ELSE, SEMA_NON_CONSTANT_EXPRESSION, SEMA_NON_EXHAUSTIVE_CASE,
+    SEMA_CASE_ELSE_FORBIDDEN, SEMA_NON_CONSTANT_EXPRESSION, SEMA_NON_EXHAUSTIVE_CASE,
     SEMA_TYPE_MISMATCH,
 };
 
@@ -71,7 +71,7 @@ fn incomplete_cases_are_rejected() {
 fn closed_enums_reject_else_like_the_statement() {
     let error =
         single_error("const S: string := case Tint.Red of when Tint.Red: 'r'; else 'x'; end case;");
-    assert_eq!(error.code, SEMA_CLOSED_ENUM_ELSE);
+    assert_eq!(error.code, SEMA_CASE_ELSE_FORBIDDEN);
 }
 
 #[test]

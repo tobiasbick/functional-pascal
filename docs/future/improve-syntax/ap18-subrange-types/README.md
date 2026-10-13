@@ -52,9 +52,10 @@ explicit conversion.
   their Boolean-only rules. Containers preserve their declared element types.
 - Subranges satisfy `Comparable` and `Printable`, but not `Numeric`: arithmetic
   cannot promise a result of the original subrange type.
-- Subrange case selectors follow the existing integer case rules. Statements
-  may omit `else`; expressions require it. Finite bounds do not introduce a new
-  coverage analysis. Labels and endpoints remain compile-time constants.
+- [AP39](../ap39-consistent-case-coverage/README.md) requires complete subrange
+  case coverage in statements and expressions and forbids `else`. Exact
+  interval reasoning checks the declared bounds without enumerating values.
+  Labels and endpoints remain compile-time constants.
 
 ```pascal
 if Input in Percent then

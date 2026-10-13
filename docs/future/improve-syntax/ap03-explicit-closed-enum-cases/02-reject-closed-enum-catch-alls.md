@@ -18,15 +18,16 @@ complete coverage. `_` ignores a payload position and cannot cover another
 variant. Invalid labels do not produce misleading redundant-branch hints;
 rejected bodies are checked without leaking their bindings.
 
-Scalar `integer`, `string`, and `boolean` cases retain `else`. Boolean cases
-do not require both `true` and `false`.
+[AP39](../ap39-consistent-case-coverage/README.md) extends this diagnostic to
+Boolean/subrange selectors and requires explicit finite coverage in both
+positions. Integer/string cases require `else`. AP03 remains complete.
 
 ## Ownership
 
 - `crates/fpas-sema/src/check/stmt/control_flow/if_case/exhaustiveness.rs`
   owns catch-all and missing-pattern diagnostics, called from `mod.rs`.
-- The existing `if_case/coverage.rs` pattern matrix supplies coverage and
-  missing-pattern witnesses; it is unchanged.
+- The `if_case/coverage/` pattern matrix supplies coverage and missing-pattern
+  witnesses; AP39 adds exact scalar interval reasoning.
 - `if_case/scalar_bindings.rs` limits replacement hints to valid forms.
 - `crates/fpas-diagnostics/src/codes.rs` allocates FP3035.
 - Sema and CLI `closed_enum_cases.rs` modules own the regression tests.

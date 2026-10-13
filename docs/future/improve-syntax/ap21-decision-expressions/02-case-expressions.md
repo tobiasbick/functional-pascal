@@ -13,10 +13,11 @@ arm reports FP2020, and a missing `;` or `end case` uses the existing diagnostic
 
 Labels, guards, scalar guard bindings, pattern bindings, arm scopes, distinct
 labels, and unreachable-label checks are shared with the `case` statement. Every
-input must produce a value: enum, `Result`, `Option`, and `boolean` selectors need
-unguarded coverage of every value (FP3011, with expression wording), closed enums
-reject `else` (FP3035), and `integer`, `string`, and distinct selectors need an
-`else` arm. Arm values share one type under the AP21.1 rules. A case whose
+input must produce a value. [AP39](../ap39-consistent-case-coverage/README.md)
+requires unguarded finite coverage for enum, Result, Option, Boolean and subrange
+selectors (FP3011), forbids their `else` (FP3035), and requires `else` for
+integer/string selectors. Distinct follows its supported base type. Arm values
+share one type under the AP21.1 rules. A case whose
 selector, labels, and values are compile-time constants, without guards,
 bindings, or destructuring patterns, is a constant and folds to the selected
 value.
@@ -31,8 +32,8 @@ arm comments. Debugger evaluation rejects `case` expressions with a hint.
 - `crates/fpas-parser/src/parser/expr/case_expression.rs`; `ast/expr.rs`
   (`Expr::Case`, `CaseExprArm`, `CaseExprElse`).
 - `crates/fpas-sema/src/check/stmt/control_flow/if_case/arms.rs` (shared arm
-  checks), `case_expression.rs` (coverage and arm types), and
-  `exhaustiveness.rs` (`CaseForm` wording); `check/decl/consts/` classify and
+  checks), `case_expression.rs` (arm types), and shared `coverage/` and
+  `exhaustiveness.rs` (coverage and `CaseForm` wording); `check/decl/consts/` classify and
   fold constants.
 - `crates/fpas-compiler/src/lowering/case/` (`CaseArmHead`, `CaseBody`,
   `CaseEnding`, `expression.rs`).

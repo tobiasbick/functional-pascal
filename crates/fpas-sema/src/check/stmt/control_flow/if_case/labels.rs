@@ -60,7 +60,17 @@ impl Checker {
                     if !end_ty.is_error() {
                         self.require_case_constant(range_end);
                     }
-                    return CheckedLabel::other();
+                    let pat = match (
+                        self.scalar_constant_value(start),
+                        self.scalar_constant_value(range_end),
+                    ) {
+                        (Some(start), Some(end)) => Pat::Range(start, end),
+                        _ => Pat::Other,
+                    };
+                    return CheckedLabel {
+                        bindings: PatternBindings::new(),
+                        pat,
+                    };
                 }
                 let pat = if label_ty.is_error() {
                     Pat::Wild
@@ -127,13 +137,6 @@ impl CheckedLabel {
         Self {
             bindings: PatternBindings::new(),
             pat: Pat::Wild,
-        }
-    }
-
-    fn other() -> Self {
-        Self {
-            bindings: PatternBindings::new(),
-            pat: Pat::Other,
         }
     }
 }

@@ -32,7 +32,6 @@ impl LoweringContext {
             .collect::<Vec<_>>();
         let ending = CaseEnding {
             has_else: else_arm.is_some(),
-            require_match: true,
         };
         self.lower_case_arms(selector, &heads, &ending, span, &mut |context, index| {
             let value = match (index, else_arm) {

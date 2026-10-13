@@ -15,8 +15,9 @@ Formal syntax: [`grammar.ebnf`](../../../specs/grammar.ebnf) (`if_stmt`, `case_s
 
 Advanced `case` patterns: [Pattern matching](../pattern-matching/README.md).
 
-`case` arms start with `when` and contain scoped statement lists. An optional
-final `else` also has its own scope; the statement closes with `end case;`.
+`case` arms start with `when` and contain scoped statement lists. Every case is
+exhaustive. Integer/string requires a final `else`; finite selectors forbid it.
+Every arm has its own scope; the statement closes with `end case;`.
 Every arm needs a statement, using `null;` for no action.
 
 An `if` branch or loop body contains a nonempty statement list with its own

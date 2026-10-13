@@ -338,7 +338,7 @@ Call arguments still use commas; commas inside types such as
 | FP3008 | Non-boolean condition | `if 1 then Work()` | `if true then Work()` |
 | FP3009 | Invalid panic value | `panic(1)` | `panic('failed')` |
 | FP3010 | Break/continue placement | `break` outside a loop | Place `break` inside the loop it exits. |
-| FP3011 | Non-exhaustive case | An `Option` case with only `when Some(_):` | Add `when None: null;`, or use an `is` test when only one variant matters. |
+| FP3011 | Non-exhaustive case | Missing a variant, Boolean value, subrange value, or integer/string fallback | Add explicit missing finite arms or the required scalar `else`; use `if` for selective handling. |
 | FP3012 | Enum data count | Construct `A(1)` when A has two data fields | Construct `A(1, 2)`. |
 | FP3013 | Generic constraint | Use string for T constrained to an arithmetic type | Use integer for that arithmetic operation. |
 | FP3014 | Non-constant or invalid compile-time value | `when ReadValue():` in a scalar `case`, or a computed default in an exported record | Use a guard for a dynamic case condition; use a valid scalar constant expression or optional `None` for an exported default. |
@@ -360,9 +360,9 @@ Call arguments still use commas; commas inside types such as
 | FP3030 | `var` parameter escapes the call | A closure that captures `var` parameter `Total` | Capture a local copy `const Current: integer := Total;` |
 | FP3031 | Implicit pattern binding | `when Some(Value):` or `when N if N > 0:` | `when Some(const Value):` or `when const N if N > 0:` |
 | FP3032 | Misplaced scalar binding | `when const N:` without a guard | Add a condition, for example `when const N if N > 0:` |
-| FP3033 | Unreachable case label | `when Some(_):` before `when Some(1):` | Move `when Some(1):` before `when Some(_):` or remove it |
+| FP3033 | Duplicate or unreachable case label | A repeated constant, an empty range, or a label fully covered by preceding unguarded arms | Remove the redundant label, fix the range, or place a special case before broader coverage. |
 | FP3034 | Binding in an `is` test | `X is Some(const Value)` | Use `Some(_)` to test presence or a `case` arm to bind `Value`. |
-| FP3035 | Catch-all on a closed enum | `case Item of when Some(_): null; else null; end case;` | Replace `else` with `when None: null;`, or use `if Item is Some(_) then ... end if;`. |
+| FP3035 | Else on a finite case | `else` on enum/Option/Result/Boolean/subrange selectors, including after full coverage | Write explicit missing finite arms or remove a redundant `else`; use `if` for selective handling. |
 | FP3036 | Local type annotation required | `const Value := None;`, `const Values := [];`, or `const Present := Some(None);` | Add `: Type`, for example `const Values: array of integer := [];`. Every fully determined statement-local initializer can infer its type. |
 | FP3037 | Invalid contract expression | `requires ReadValue() > 0;` or a mutable outer binding in a clause | Use parameters, immutable values, operators, typed construction, and the permitted native receiver queries; see [Preconditions](../language/functions/contracts.md). |
 | FP3038 | `go` outside its owning scope | `scope ForEach(Items, procedure(Item: integer) begin go Work(Item); end procedure); end scope;` | Move the `go` out of the anonymous routine into the scope body, or open a `scope` inside the anonymous routine; see [Task scopes](../language/concurrency/task-scopes.md). |
@@ -387,18 +387,20 @@ parameter outlive its call.
 FP3031 reports a plain identifier in a pattern field and a bare scalar label
 that names no constant; its hint shows the `const Name` form. FP3032 reports a
 scalar `const Name` label without a guard, next to other labels in its arm, or
-in a Result, Option, or data-enum `case`. FP3033 reports a label of an enum,
-Result, or Option `case` that earlier unguarded arms already cover completely.
+in a Result, Option, or data-enum `case`. FP3033 reports duplicate labels within
+an arm, labels fully covered by earlier unguarded arms, and labels that match no
+value. It applies to every supported selector type, including scalars and ranges.
 FP3034 rejects every `const Name` inside an `is` pattern, including nested
 bindings. Nonbinding `is` tests are ordinary Boolean expressions.
 
-FP3035 rejects `else` on enums, `Option`, and `Result`, including aliases and
-imported types. With valid labels, it names one missing pattern per uncovered
-variant, including nested payload patterns. Guards do not count as coverage.
+FP3035 rejects `else` on enums, `Option`, `Result`, Boolean, and subranges,
+including aliases and imported types. Distinct follows its supported base type.
+With valid labels, it names missing finite values or variants, including nested
+payload patterns. Guards never count as coverage, even constant-true guards.
 When explicit arms already cover every value, its hint asks to remove the
 redundant `else`. FP3011 also requires explicit arms; it never recommends an
-`else` for these closed types. Scalar `integer`, `string`, and `boolean` cases
-retain `else`, and Boolean coverage is optional.
+`else` for finite types. Integer/string cases require `else`, in statements and
+expressions alike. Subrange coverage uses intervals without enumerating values.
 
 Ordinary declaration, assignment, return and argument type compatibility checks
 supply type names in `expected` and `found` for FP3006. Other uses of that code

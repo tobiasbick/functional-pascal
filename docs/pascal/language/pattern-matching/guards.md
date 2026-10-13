@@ -2,6 +2,10 @@
 
 Add conditions to case arms with `if`. The guard is evaluated after the label matches; the arm executes only when the guard is `true`:
 
+Labels are tried in written order. If several overlapping labels in one arm
+match, a false guard continues to the next label and can be evaluated again.
+The selector is evaluated once; bindings come from the label being tried.
+
 Formal syntax: [`grammar.ebnf`](../../../specs/grammar.ebnf) (guarded `case_label`).
 
 ```pascal
@@ -20,6 +24,8 @@ end function;
 
 The final `else` supplies an explicit return for every remaining input. The
 compiler does not prove that arbitrary guards cover all possible scalar values.
+Guards never contribute coverage, even constant-true guards. Boolean and
+subrange cases require unguarded finite coverage and forbid `else`.
 
 Guards work with all label types — values, ranges, destructuring, and enum patterns:
 
@@ -60,11 +66,12 @@ end case;
 
 Rules:
 
-- `const Name` must be the arm's only label and requires a guard; use `else`
-  for the remaining values (FP3032).
+- `const Name` must be the arm's only label and requires a guard (FP3032).
+  Integer/string cases use `else` for remaining values; finite selectors use
+  explicit unguarded arms according to the [coverage matrix](exhaustiveness.md).
 - It is valid in scalar `case` statements and expressions. A case expression
-  must produce a value for every input; use an `else` fallback for remaining
-  values. Result, Option, and data-enum patterns bind inside the pattern,
+  must produce a value for every input, using the same coverage rules as a
+  statement. Result, Option, and data-enum patterns bind inside the pattern,
   for example `Some(const Value)`.
 - A bare identifier label is always a value comparison. It must name a
   compile-time constant or an enum member; a computed `const` is rejected. A

@@ -6,18 +6,18 @@ fn static_labels_ranges_and_dynamic_guards_remain_valid() {
     check_ok(
         "program T; function ReadValue(): integer; begin return 2; end function;
         begin const First: integer := 1; const Last: integer := First + 2;
-        case 2 of when First..Last: null; when const V if V = ReadValue(): null; end case; end.",
+        case 2 of when First..Last: null; when const V if V = ReadValue(): null; else null; end case; end.",
     );
 }
 
 #[test]
 fn named_nested_routines_preserve_enclosing_const_classification() {
     check_ok("program T; function Outer(): integer;
-        function Inner(): integer; begin case 42 of when Fixed: return 42; end case; return 0; end function;
+        function Inner(): integer; begin case 42 of when Fixed: return 42; else null; end case; return 0; end function;
         begin const Fixed: integer := 6 * 7; return Inner(); end function; begin end.");
     let errors = check_errors("program T; function Value(): integer; begin return 42; end function;
         function Outer(): integer;
-        function Inner(): integer; begin case 42 of when Computed: return 42; end case; return 0; end function;
+        function Inner(): integer; begin case 42 of when Computed: return 42; else null; end case; return 0; end function;
         begin const Computed: integer := Value(); return Inner(); end function; begin end.");
     assert!(
         errors
@@ -60,7 +60,7 @@ fn runtime_dependencies_are_named_in_value_and_range_diagnostics() {
 fn computed_constant_with_guard_does_not_become_a_pattern_binding() {
     let errors = check_errors(
         "program T; function ReadValue(): integer; begin return 1; end function;
-        begin const C: integer := ReadValue(); case 1 of when C if C > 0: null; end case; end.",
+        begin const C: integer := ReadValue(); case 1 of when C if C > 0: null; else null; end case; end.",
     );
     assert!(
         errors
@@ -92,14 +92,14 @@ fn constant_aggregates_preserve_static_forms_and_hidden_default_dependencies() {
         const Answer: result of (integer, string) := Ok(3);
         const P: Point := Point( );
         const Updated: Point := P with X := 2; end with;
-        begin case 1 of when P.X: null; end case; end.",
+        begin case 1 of when P.X: null; else null; end case; end.",
     );
     let errors = check_errors(
         "program T;
         function Value(): integer; begin return 1; end function;
         type Point = record X: integer := Value(); end record;
         const P: Point := Point( );
-        begin case 1 of when P.X: null; end case; end.",
+        begin case 1 of when P.X: null; else null; end case; end.",
     );
     assert!(
         errors

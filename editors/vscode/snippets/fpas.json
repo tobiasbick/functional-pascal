@@ -102,9 +102,23 @@
       "case ${1:Value} of",
       "  when ${2:0}:",
       "    ${0:null;}",
+      "  else",
+      "    null;",
       "end case;"
     ],
-    "description": "Insert a case statement"
+    "description": "Insert an integer or string case with its required fallback"
+  },
+  "Boolean case statement": {
+    "prefix": "casebool",
+    "body": [
+      "case ${1:true} of",
+      "  when true:",
+      "    ${0:null;}",
+      "  when false:",
+      "    null;",
+      "end case;"
+    ],
+    "description": "Insert a complete Boolean case without else"
   },
   "Anonymous function": {
     "prefix": "function expression",

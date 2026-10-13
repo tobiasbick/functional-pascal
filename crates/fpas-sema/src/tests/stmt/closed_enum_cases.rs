@@ -4,13 +4,13 @@
 
 use super::super::{check_errors, check_ok};
 use fpas_diagnostics::codes::{
-    SEMA_CLOSED_ENUM_ELSE, SEMA_NON_EXHAUSTIVE_CASE, SEMA_TYPE_MISMATCH, SEMA_UNKNOWN_NAME,
+    SEMA_CASE_ELSE_FORBIDDEN, SEMA_NON_EXHAUSTIVE_CASE, SEMA_TYPE_MISMATCH, SEMA_UNKNOWN_NAME,
 };
 
 fn closed_else(source: &str) -> crate::SemaError {
     let errors = check_errors(source);
     assert_eq!(errors.len(), 1, "{errors:#?}");
-    assert_eq!(errors[0].code, SEMA_CLOSED_ENUM_ELSE, "{errors:#?}");
+    assert_eq!(errors[0].code, SEMA_CASE_ELSE_FORBIDDEN, "{errors:#?}");
     errors.into_iter().next().expect("closed-enum diagnostic")
 }
 
@@ -142,19 +142,6 @@ fn enum_extension_reports_every_incomplete_case_and_accepts_complete_cases() {
 }
 
 #[test]
-fn scalar_catch_alls_and_partial_boolean_cases_remain_valid() {
-    check_ok(
-        "program T; type Flag = boolean; const Value: Flag := true; begin
-           case 42 of when 1: null; else null; end case;
-           case 'unknown' of when 'known': null; else null; end case;
-           case Value of when true: null; else null; end case;
-           case true of when true, false: null; else null; end case;
-           case false of when true: null; end case;
-         end.",
-    );
-}
-
-#[test]
 fn label_errors_do_not_produce_a_misleading_redundant_else_hint() {
     let errors = check_errors(
         "program T; begin case Some(1) of when Some('wrong'): null; else null; end case; end.",
@@ -162,7 +149,7 @@ fn label_errors_do_not_produce_a_misleading_redundant_else_hint() {
     assert!(errors.iter().any(|error| error.code == SEMA_TYPE_MISMATCH));
     let error = errors
         .iter()
-        .find(|error| error.code == SEMA_CLOSED_ENUM_ELSE)
+        .find(|error| error.code == SEMA_CASE_ELSE_FORBIDDEN)
         .expect("catch-all rejection even after an invalid label");
     assert!(!error.help.as_deref().expect("hint").contains("redundant"));
 }
@@ -186,7 +173,7 @@ fn rejected_else_bodies_are_checked_without_leaking_their_locals() {
     assert!(
         errors
             .iter()
-            .any(|error| error.code == SEMA_CLOSED_ENUM_ELSE)
+            .any(|error| error.code == SEMA_CASE_ELSE_FORBIDDEN)
     );
     assert!(errors.iter().any(|error| error.code == SEMA_UNKNOWN_NAME));
 }

@@ -1,0 +1,129 @@
+program CaseCoverage;
+
+uses Std.Test;
+
+type Digit = 1..3;
+
+type Flag = distinct boolean;
+
+type PairDigit = 1..2;
+
+type Pair = enum
+  Item(Left: PairDigit; Right: PairDigit);
+end enum;
+
+var Selectors: integer := 0;
+var Guards: string := '';
+
+function Select(Value: integer): integer;
+begin
+  Selectors := Selectors + 1;
+  return Value;
+end function;
+
+function Guard(Name: string; Accepted: boolean): boolean;
+begin
+  Guards := Guards + Name;
+  return Accepted;
+end function;
+
+function Finite(Value: Digit): integer;
+begin
+  case Value of
+    when 1..2:
+      return 10;
+    when 3:
+      return 20;
+  end case;
+end function;
+
+function Truth(Value: boolean): integer;
+begin
+  case Value of
+    when true:
+      return 1;
+    when false:
+      return 0;
+  end case;
+end function;
+
+begin
+  var Picked: integer := 0;
+  case Select(4) of
+    when 1..5 if Guard('a', false):
+      Picked := 1;
+    when 3..8 if Guard('b', true):
+      Picked := 2;
+    when 4:
+      Picked := 3;
+    else
+      Picked := 4;
+  end case;
+
+  AssertEquals(2, Picked);
+  AssertEquals('ab', Guards);
+  AssertEquals(1, Selectors);
+  Guards := '';
+  const Selected := case Select(7) of
+    when 1..5 if Guard('c', true): 1;
+    when 3..8 if Guard('d', true): 2;
+    else 3;
+  end case;
+  AssertEquals(2, Selected);
+  AssertEquals('d', Guards);
+  AssertEquals(2, Selectors);
+  AssertEquals(10, Finite(Digit(1)));
+  AssertEquals(20, Finite(Digit(3)));
+  AssertEquals(1, Truth(true));
+  AssertEquals(0, Truth(false));
+  const FiniteValue := case Digit(3) of
+    when 1..2: 'small';
+    when 3: 'last';
+  end case;
+  AssertEquals('last', FiniteValue);
+  const Typed := case Flag(false) of
+    when Flag(true): 10;
+    when Flag(false): 20;
+  end case;
+  AssertEquals(20, Typed);
+  const Correlated := case Pair.Item(PairDigit(2), PairDigit(2)) of
+    when Pair.Item(1, _): 10;
+    when Pair.Item(2, 1): 20;
+    when Pair.Item(2, 2): 30;
+  end case;
+  AssertEquals(30, Correlated);
+  const Response: result of (integer, string) := Ok(7);
+  const Payload := case Response of
+    when Ok(0): 0;
+    when Ok(const Value): Value;
+    when Error(_): -1;
+  end case;
+  AssertEquals(7, Payload);
+  case Select(99) of
+    when 1:
+      Picked := 99;
+    else
+      null;
+  end case;
+
+  AssertEquals(2, Picked);
+  AssertEquals(3, Selectors);
+  Guards := '';
+  case Select(2) of
+    when 1..2, 2..3 if Guard('e', Guards = 'e'):
+      Picked := 7;
+    else
+      Picked := 0;
+  end case;
+
+  AssertEquals(7, Picked);
+  AssertEquals('ee', Guards);
+  Guards := '';
+  const WithinArm := case Select(2) of
+    when 1..2, 2..3 if Guard('f', Guards = 'f'): 8;
+    else 0;
+  end case;
+  AssertEquals(8, WithinArm);
+  AssertEquals('ff', Guards);
+  AssertEquals(5, Selectors);
+end.

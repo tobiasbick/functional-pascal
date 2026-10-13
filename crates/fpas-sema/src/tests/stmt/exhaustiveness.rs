@@ -38,7 +38,7 @@ fn case_enum_else_branch_is_rejected() {
     assert_eq!(errors.len(), 1, "{errors:#?}");
     assert_eq!(
         errors[0].code,
-        fpas_diagnostics::codes::SEMA_CLOSED_ENUM_ELSE
+        fpas_diagnostics::codes::SEMA_CASE_ELSE_FORBIDDEN
     );
     assert!(errors[0].message.contains("Light.Yellow"));
     assert!(errors[0].message.contains("Light.Green"));

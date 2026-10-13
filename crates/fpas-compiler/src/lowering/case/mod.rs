@@ -29,6 +29,4 @@ pub(in crate::lowering) type CaseBody<'a> =
 pub(in crate::lowering) struct CaseEnding {
     /// Whether an `else` arm follows the `when` arms.
     pub(in crate::lowering) has_else: bool,
-    /// Whether reaching the end without a matching arm must panic, as for an expression.
-    pub(in crate::lowering) require_match: bool,
 }

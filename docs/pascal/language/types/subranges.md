@@ -99,11 +99,23 @@ but not `Numeric`: an arithmetic result cannot promise the original bounds.
 
 ## Cases and units
 
-A subrange selector follows the integer `case` rules. Labels and range endpoints
-must be compile-time constants; integer labels and checked constant conversions
-are accepted. A statement may omit `else`; a value-producing expression needs
-it even when labels cover the declared bounds. There is no finite-range coverage
-analysis.
+A subrange `case` must explicitly cover every value within the declared bounds,
+in statements and expressions alike. `else` is forbidden. Labels and range
+endpoints must be compile-time constants; integer labels and checked constant
+conversions are accepted. The compiler combines inclusive intervals without
+enumerating their values, including inside nested patterns. Extending the bounds
+reveals uncovered values at cases that listed only the former domain.
+
+```pascal
+const Category: string := case Level of
+  when 0..49: 'low';
+  when 50..100: 'high';
+end case;
+```
+
+Here `Level: Percent` is covered completely. Labels outside the declared domain
+and empty ranges match no value and are rejected. See
+[exhaustiveness](../pattern-matching/exhaustiveness.md).
 
 Public subrange types and constants retain their bounds across compiled units,
 aliases, and generic signatures. Qualified conversions such as `Domain.Percent(Value)`

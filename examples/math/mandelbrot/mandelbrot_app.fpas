@@ -132,6 +132,8 @@ begin
           begin
             return ToggleHelp(State);
           end;
+        else
+          null;
       end case;
     end;
   end if;

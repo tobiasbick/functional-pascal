@@ -9,7 +9,7 @@ Status: complete.
 Integer subrange declarations `type Percent = 0..100;` with checked
 conversion `Percent(X)`, implicit widening to `integer`, and integer
 arithmetic results (`/` produces `real`) are implemented. The package's structural
-range identity, exact `var` compatibility, generic constraints, and integer case
+range identity, exact `var` compatibility, generic constraints, and subrange case
 rules apply. Membership is covered by [AP18.2](02-subrange-membership.md).
 
 ## Prerequisites
@@ -32,7 +32,8 @@ rules apply. Membership is covered by [AP18.2](02-subrange-membership.md).
 - Unit interfaces export subrange types.
 - `var` parameters and container/callable components retain exact types.
 - Subranges satisfy `Comparable` and `Printable`, reject `Numeric`, and retain
-  integer case rules without finite-range coverage analysis.
+  [AP39's finite coverage rules](../ap39-consistent-case-coverage/README.md)
+  without `else`, in statements and expressions.
 
 ## Affected areas
 
@@ -68,7 +69,7 @@ None.
 - Local inference from the explicit conversion, including imported types.
 - Equal and different bounds, aliases and cross-unit compatibility; exact `var`
   parameters; invariant container/callable types; `/` result type; generic
-  constraints; scalar case labels and required `else` in case expressions.
+  constraints; scalar case labels and explicit finite coverage in both positions.
 - Singleton and full-width integer bounds; static record fields and conditional
   expressions; declaration-order visibility; arity and positional-only calls;
   scalar indices and container membership; evaluation once, skipped branches,

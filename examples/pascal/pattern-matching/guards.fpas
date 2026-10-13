@@ -24,6 +24,8 @@ begin
       begin
         return 'negative';
       end;
+    else
+      null;
   end case;
 
   return 'unknown';

@@ -53,7 +53,7 @@ begin
   end for;
   const Label: integer := case Level of
     when Percent(10): 1;
-    else 0;
+    when 0..9, 11..100: 0;
   end case;
   AssertEquals(1, Label);
 end.

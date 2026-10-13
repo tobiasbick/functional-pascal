@@ -142,10 +142,10 @@ fn record_calls_and_record_returning_routines_have_distinct_metadata() {
 #[test]
 fn computed_constructor_defaults_participate_in_const_classification() {
     check_ok(
-        "program T; type Point = record X: integer := 2; end record; begin const P: Point := Point(); case 2 of when P.X: null; end case; end.",
+        "program T; type Point = record X: integer := 2; end record; begin const P: Point := Point(); case 2 of when P.X: null; else null; end case; end.",
     );
     let errors = check_errors(
-        "program T; function GetValue(): integer; begin return 2; end function; type Point = record X: integer := GetValue(); end record; begin const P: Point := Point(); case 2 of when P.X: null; end case; end.",
+        "program T; function GetValue(): integer; begin return 2; end function; type Point = record X: integer := GetValue(); end record; begin const P: Point := Point(); case 2 of when P.X: null; else null; end case; end.",
     );
     assert!(
         errors
@@ -162,13 +162,13 @@ fn constant_defaults_are_classified_in_their_declaration_environment() {
       const Seed: integer := 2;
       type Point = record X: integer := Seed; end record;
       procedure Probe(Seed: integer);
-      begin const P: Point := Point(); case 2 of when P.X: null; end case; end procedure;
+      begin const P: Point := Point(); case 2 of when P.X: null; else null; end case; end procedure;
       begin Probe(99); end.",
     );
     let errors = check_errors("program T;
       var Seed: integer := 2;
       type Point = record X: integer := Seed; end record;
-      begin const Seed: integer := 1; const P: Point := Point(); case 2 of when P.X: null; end case; end.");
+      begin const Seed: integer := 1; const P: Point := Point(); case 2 of when P.X: null; else null; end case; end.");
     assert!(
         errors
             .iter()

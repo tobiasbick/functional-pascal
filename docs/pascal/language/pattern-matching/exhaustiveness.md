@@ -1,14 +1,21 @@
 # Exhaustiveness
 
-The compiler checks that `case` statements on enum, `Result`, and `Option`
-types cover every variant explicitly, including nested payload patterns. A
-missing pattern reports FP3011. These closed types do not permit `else`
-(FP3035), even after complete explicit coverage. Scalar `integer`, `string`,
-and `boolean` cases may use `else`; Boolean cases do not require both values.
+Every `case` is exhaustive, with the same rules for statements and expressions.
+Use `if` for selective handling. A missing value or variant reports FP3011;
+a forbidden `else` reports FP3035, including after complete explicit coverage.
 
-[Subranges](../types/subranges.md) follow the integer rules: statements may omit
-`else`, and expressions require it even when the labels cover every declared
-value. Subrange bounds do not change nested integer-pattern coverage.
+| Selector | Required unguarded coverage | `else` |
+|----------|-----------------------------|--------|
+| Enum, Result, Option | Every variant explicitly, including nested payloads | Forbidden |
+| Boolean | Both true and false | Forbidden |
+| Subrange | Every value within the declared bounds | Forbidden |
+| Integer, string | Labels or guarded arms plus a fallback | Required |
+| Distinct | Same as its supported underlying type, with typed labels | Same as the underlying type |
+
+Aliases preserve their type's rules. Subrange coverage uses interval boundaries,
+so large ranges do not require enumerating their values. Supported ranges may
+overlap partially; only completely covered labels are unreachable. Ordinary
+integer selectors still require `else`, even with a machine-wide range label.
 
 ## Enum exhaustiveness
 
@@ -118,8 +125,8 @@ The diagnostic names one missing pattern per uncovered variant, such as
 
 ## Unreachable labels
 
-A label of an enum, `Result`, or `Option` case is unreachable when earlier
-unguarded arms already match every value it matches. It is an error (FP3033):
+A label is unreachable when earlier unguarded arms already match every value
+it matches, for scalar and variant cases alike. It is an error (FP3033):
 
 ```pascal
 case Item of
@@ -133,6 +140,13 @@ end case;
 ```
 
 Guarded arms never make later labels unreachable.
+
+Duplicate labels within one arm are errors even when that arm has a guard.
+Separate guarded arms may repeat a label: a failed guard permits later matches.
+Fully covered labels can be covered by the union of several earlier ranges.
+Empty ranges and labels outside a subrange's domain match no possible value
+and are also rejected. Partial overlap remains useful for special cases followed
+by a more general pattern, such as `Ok(0)` followed by `Ok(const Value)`.
 
 Repeated comparisons are also unreachable: a second unguarded `Some(1)` or
 `Error('timeout')` matches no new value. Named compile-time constants and
@@ -166,13 +180,12 @@ or updates and across compiled-unit imports.
 ## Rules
 
 - Enum, `Result`, and `Option` types: every value must match an **unguarded**, explicit variant arm. `else` is rejected, including a redundant branch after complete coverage. This includes nested payloads; `when Ok(Some(_)):` does not cover `Ok(None)`.
-- `_` and `const Name` cover every value of their position. Enum members, `true`/`false`, and nested variants cover their own values. Named compile-time boolean and simple-enum constants contribute the same coverage as their values, including when parenthesized. Literals and constants of other types (integers, strings) never complete coverage on their own.
-- Scalar types (`integer`, `string`, `boolean`): `else` is optional in a `case` statement. Boolean cases do not require both `true` and `false`.
-- A [`case` expression](../control-flow/case-of-intro.md#case-expressions) must produce a value for every input: `boolean` selectors need both `true` and `false` (or `else`), and `integer`, subrange, `string`, and distinct selectors need `else`.
+- `_` and `const Name` cover every value of their payload position. Enum members, `true`/`false`, and nested variants cover their own values. Named compile-time constants contribute the same coverage as their values, including when parenthesized and across units. Subrange values cover their declared finite domain; open integer/string literals alone never complete coverage.
+- Boolean and subrange cases require explicit finite coverage and reject `else`. Integer/string cases require `else`. Distinct Boolean follows Boolean rules; distinct integer/string follows the open scalar rules. Distinct real remains unsupported.
+- A [`case` expression](../control-flow/case-of-intro.md#case-expressions) must produce a value for every input and follows the statement's same coverage matrix.
 - Guard clauses do not count toward exhaustiveness — `when Shape.Circle(const R) if R > 0:` does not cover variant `Circle`; add an unguarded `when Shape.Circle(const R):` arm.
-- In enum, `Result`, and `Option` pattern cases, labels already covered by
-  earlier unguarded arms are rejected (FP3033). Scalar cases do not use this
-  pattern-coverage diagnostic.
+- Duplicate or fully covered labels are rejected for every supported selector
+  type (FP3033). Partial overlaps are legal and select the first successful match.
 
 ## See also
 

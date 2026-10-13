@@ -54,8 +54,12 @@ Read the pages relevant to the change. For exact productions, consult
   identifier that names no constant is an error. Coverage is checked
   recursively. Closed enum, Option, and Result cases list every variant
   explicitly and reject `else`, including a redundant branch. Only scalar
-  integer, string, and boolean cases allow `else`; Boolean coverage is optional.
-  Labels covered by earlier arms are rejected. `Value is Some(_)` is a normal
+  integer/string cases require `else`; Boolean and subrange cases cover their
+  complete finite domain and forbid `else`. Statements and expressions share
+  these rules; distinct follows its supported base type. Guards never count
+  toward coverage. Duplicate labels within an arm and labels fully covered by
+  earlier unguarded arms are rejected; partial overlaps remain legal.
+  `Value is Some(_)` is a normal
   Boolean expression supporting grouping, logical operators, guards, loops,
   arguments and returns. It never binds names; `const Name` is rejected at any
   depth. Use case arms to extract payloads. `is` is reserved. Return binders

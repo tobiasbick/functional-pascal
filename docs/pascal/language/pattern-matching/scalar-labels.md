@@ -40,8 +40,10 @@ end case;
 
 ## Else branch
 
-Use `else` to handle remaining `integer`, `string`, or `boolean` values.
-Closed enum, `Option`, and `Result` cases use explicit variant arms instead:
+Integer and string selectors require `else` for remaining values, in statements
+and expressions alike. Boolean and subrange selectors cover their finite domain
+explicitly and forbid `else`. Closed enum, `Option`, and `Result` cases use
+explicit variant arms instead:
 
 ```pascal
 case Command of
@@ -51,6 +53,10 @@ case Command of
     WriteLn('Proceed with caution');
 end case;
 ```
+
+Equivalent compile-time labels count as the same value. Duplicate labels within
+an arm and labels fully covered by earlier unguarded arms are rejected (FP3033).
+Partial overlaps are allowed; a failed guard permits later matching labels.
 
 ## Block arms
 

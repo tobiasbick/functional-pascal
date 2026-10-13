@@ -200,12 +200,12 @@ fn subranges_have_comparison_and_printing_constraints_without_numeric_closure() 
 }
 
 #[test]
-fn subrange_cases_keep_integer_labels_and_require_else_in_expressions() {
+fn subrange_cases_keep_integer_labels_and_use_explicit_finite_coverage() {
     check_ok(&format!("{TYPES} begin const P := Percent(5); case P of when 0..100: null; end case;
-        const N: integer := case P of when Percent(5): 1; else 2; end case;
+        const N: integer := case P of when Percent(5): 1; when 0..4, 6..100: 2; end case;
         const Box := Some(P); case Box of when Some(5): null; when Some(_): null; when None: null; end case; end."));
     let errors = check_errors(&format!(
-        "{TYPES} begin const P := Percent(5); const N: integer := case P of when 0..100: 1; end case; end."
+        "{TYPES} begin const P := Percent(5); const N: integer := case P of when 0..99: 1; end case; end."
     ));
     assert!(
         errors

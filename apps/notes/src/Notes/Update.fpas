@@ -332,6 +332,8 @@ begin
           begin
             return RequestQuit(State, Cmd);
           end;
+        else
+          null;
       end case;
     end;
   end if;
@@ -380,6 +382,8 @@ begin
         Next.Pane := NotesPane.Editor;
         return Next;
       end;
+    else
+      null;
   end case;
 
   return State;

@@ -22,7 +22,7 @@ fn subrange_conversions_preserve_written_evaluation_and_nested_control_flow() {
         if false then const Bad := Percent(Next(101)); end if;
         if Calls <> 5 or Low <> 0 or High <> 100 or P <> 10 or Half <> 50.0 or Read() <> 10 or Values[1] <> 2 then panic('range runtime'); end if;
         for I: integer := 0 to 10 do const Current := Small(I); end for;
-        case P of when 0..9: panic('case'); when Percent(10): null; else panic('case else'); end case;
+        case P of when 0..9: panic('case'); when Percent(10): null; when 11..100: panic('case remaining'); end case;
         case Some(P) of when Some(Percent(10)): null; when Some(_): panic('nested label'); when None: panic('nested option'); end case;
         end.");
 }

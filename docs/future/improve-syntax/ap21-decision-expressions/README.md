@@ -15,8 +15,10 @@ value-producing paths.
   with the named closer like every other block form. `else` is required; each
   branch is a single expression.
 - A `case` expression has the form `case Value of when Label: Expression; ...
-  end case`. Each arm is a single expression ended by `;`; open domains may
-  have an `else` arm. AP03 coverage rules apply.
+  end case`. Each arm is a single expression ended by `;`.
+  [AP39](../ap39-consistent-case-coverage/README.md) gives statements and
+  expressions one exhaustive matrix: integer/string requires `else`;
+  enum/Option/Result/Boolean/subrange forbids it. Distinct follows its base type.
 - All branches must have a compatible type. There is no implicit return from a
   final statement and no statement list inside an expression branch.
 

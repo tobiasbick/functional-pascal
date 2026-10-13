@@ -32,7 +32,6 @@ impl LoweringContext {
             .collect::<Vec<_>>();
         let ending = CaseEnding {
             has_else: else_body.is_some(),
-            require_match: false,
         };
         self.lower_case_arms(
             expression,
@@ -61,13 +60,6 @@ impl LoweringContext {
         if matches!(&case_ty, Some(Ty::Enum(enumeration)) if !enumeration.has_data()) {
             case_ir_ty = types::INTEGER;
         }
-        let exhaustive_enum = matches!(&case_ty, Some(Ty::Enum(_)))
-            || arms.iter().flat_map(|arm| arm.labels).any(|label| {
-                let CaseLabel::Value { start, .. } = label else {
-                    return false;
-                };
-                matches!(self.expression_type(start), Ok(Ty::Enum(_)))
-            });
         let case_value = self.lower_expression(expression)?;
         if matches!(case_ty, Some(Ty::Result(..) | Ty::Option(..)))
             || matches!(&case_ty, Some(Ty::Enum(enumeration)) if enumeration.has_data())
@@ -141,10 +133,10 @@ impl LoweringContext {
             self.begin_scope();
             body(self, None)?;
             self.end_scope();
-        } else if (exhaustive_enum || ending.require_match) && !self.is_terminated() {
+        } else if !self.is_terminated() {
             let message = self.emit_value(
                 Operation::Const(Constant::String(
-                    "exhaustive case reached no enum member".to_string(),
+                    "exhaustive case reached no matching value".to_string(),
                 )),
                 types::STRING,
                 span,

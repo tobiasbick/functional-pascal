@@ -14,6 +14,8 @@ use fpas_build::{BuildOptions, build_library_units, build_program};
 use fpas_project::{build_unit_graph, load_project, resolve_library_units, resolve_program_units};
 use fpas_unit::{Digest, decode, encode};
 
+#[path = "incremental/coverage.rs"]
+mod coverage;
 #[path = "incremental/initialization.rs"]
 mod initialization;
 

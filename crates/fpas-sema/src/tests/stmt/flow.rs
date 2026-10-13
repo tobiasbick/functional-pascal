@@ -6,7 +6,7 @@ fn case_ordinal_valid() {
         "program T; begin \
          case 1 of \
            when 1: return; when \
-           2: return; \
+           2: return; else null; \
          end case; \
          end.",
     );

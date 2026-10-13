@@ -59,7 +59,7 @@ bindings, comparisons, capture proofs and coverage rules are preserved.
   patterns, binds names once per label, and accepts comparisons with literals,
   compile-time constants, and enum members of ordinal, enum, and string types
   (other types: SEMA_TYPE_MISMATCH; computed constants: FP3014; unknown
-  names: FP3031). `coverage.rs` implements a pattern-matrix check:
+  names: FP3031). `coverage/` implements a pattern-matrix check:
   exhaustiveness names one missing pattern per uncovered variant (for example
   `Ok(None)`), and labels already covered by earlier unguarded arms report
   FP3033. `patterns/values.rs` uses the existing scalar constant evaluator to
@@ -72,6 +72,9 @@ bindings, comparisons, capture proofs and coverage rules are preserved.
   lookup and checks that it belongs to the matched enum. Unit and type aliases
   work; unknown or wrong qualifiers are rejected. Scalar guard bindings are
   checked in `scalar_bindings.rs`.
+  [AP39](../ap39-consistent-case-coverage/README.md) extends this matrix to
+  nested finite subrange domains and uniform scalar duplicate/reachability
+  checks, using the same coverage rules in statements and expressions.
 - Compiler (`lowering/case/patterns.rs`): recursive tests branch to the next
   label on a mismatch and keep matched payloads in hidden locals, so nested
   tests and bindings read them after earlier branches.

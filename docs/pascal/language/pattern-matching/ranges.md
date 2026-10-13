@@ -20,8 +20,15 @@ case Score of
     Grade := 'B';
   when 90..100:
     Grade := 'A';
+  else
+    Grade := '?';
 end case;
 ```
+
+Integer selectors require `else`. For a subrange selector, cover the entire
+declared interval explicitly and omit `else`, which is forbidden. The compiler
+checks interval coverage without enumerating values. Empty ranges and fully
+covered later labels are errors; partial overlaps remain legal in written order.
 
 ## See also
 

@@ -29,17 +29,18 @@ end function;
 function UpdateScroll(State: ScrollModel; Msg: TuiMsg; Cmd: TuiCmdOutput): ScrollModel;
 begin
   Cmd.Set(TuiCmd.NoCommand);
-  if Msg is TuiMsg.ScrollChanged(const Source, const Action, const Offset) then
-    begin
-      AssertEquals(1, Source.Value);
-      AssertEquals(7, Action.Value);
-      return ScrollModel(Offset := Offset, Changes := State.Changes.Concat([Offset.Y]));
-    end;
-  else
-    begin
-      return State;
-    end;
-  end if;
+  case Msg of
+    when TuiMsg.ScrollChanged(const Source, const Action, const Offset):
+      begin
+        AssertEquals(1, Source.Value);
+        AssertEquals(7, Action.Value);
+        return ScrollModel(Offset := Offset, Changes := State.Changes.Concat([Offset.Y]));
+      end;
+    when TuiMsg.Started, TuiMsg.Key(_), TuiMsg.Pointer(_), TuiMsg.Tick(_), TuiMsg.Resize(_), TuiMsg.FocusChanged(_, _), TuiMsg.Action(_, _), TuiMsg.TextChanged(_, _, _, _), TuiMsg.TextAreaChanged(_, _, _, _, _), TuiMsg.CheckChanged(_, _, _), TuiMsg.SelectionChanged(_, _, _), TuiMsg.MenuChanged(_, _, _), TuiMsg.BackgroundFailed(_, _, _, _, _, _), TuiMsg.QuitRequested:
+      begin
+        return State;
+      end;
+  end case;
 end function;
 
 begin

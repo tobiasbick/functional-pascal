@@ -10,26 +10,31 @@ end enum;
 
 function Describe(S: Shape): string;
 begin
-  if S is Shape.Circle(const R) and R > 10 then
-    return 'large circle';
-  elsif S is Shape.Circle(_) then
-    return 'circle';
-  elsif S is Shape.Rect(const W, const H) and W = H then
-    return 'square';
-  elsif S is Shape.Point then
-    return 'point';
-  else
-    return 'other';
-  end if;
+  return case S of
+    when Shape.Circle(const R) if R > 10: 'large circle';
+    when Shape.Circle(_): 'circle';
+    when Shape.Rect(const W, const H) if W = H: 'square';
+    when Shape.Rect(_, _): 'other';
+    when Shape.Point: 'point';
+  end case;
 end function;
 
 function SumUntilNone(Values: array of option of integer): integer;
 begin
   var Index: integer := 0;
   var Total: integer := 0;
-  while Index < Values.Length() and Values[Index] is Some(const Value) do
-    Total := Total + Value;
-    Index := Index + 1;
+  while Index < Values.Length() do
+    case Values[Index] of
+      when Some(const Value):
+        Index := Index + 1;
+        if Value = 0 then
+          continue;
+        end if;
+
+        Total := Total + Value;
+      when None:
+        break;
+    end case;
   end while;
 
   return Total;
@@ -37,15 +42,12 @@ end function;
 
 function Nested(R: result of (option of integer, string)): integer;
 begin
-  if R is Ok(Some(const Value)) and Value > 0 then
-    return Value;
-  end if;
-
-  if R is Error('stop') then
-    return -1;
-  end if;
-
-  return 0;
+  return case R of
+    when Ok(Some(const Value)) if Value > 0: Value;
+    when Ok(_): 0;
+    when Error('stop'): -1;
+    when Error(_): 0;
+  end case;
 end function;
 
 begin
@@ -55,8 +57,12 @@ begin
   AssertEquals('other', Describe(Shape.Rect(3, 4)));
   AssertEquals('point', Describe(Shape.Point));
   AssertEquals(6, SumUntilNone([Some(1), Some(2), Some(3), None, Some(9)]));
+  AssertEquals(-2, SumUntilNone([Some(1), Some(-5), Some(2), None]));
+  AssertEquals(3, SumUntilNone([Some(1), Some(0), Some(2), None]));
+  AssertEquals(0, SumUntilNone([]));
   AssertEquals(5, Nested(Ok(Some(5))));
   AssertEquals(0, Nested(Ok(Some(-5))));
   AssertEquals(0, Nested(Ok(None)));
   AssertEquals(-1, Nested(Error('stop')));
+  AssertEquals(0, Nested(Error('other')));
 end.

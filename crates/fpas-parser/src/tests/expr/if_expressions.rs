@@ -65,8 +65,7 @@ fn if_expressions_are_primary_operands_and_nest() {
 
 #[test]
 fn conditions_accept_is_tests() {
-    let Expr::If { branches, .. } =
-        parse_expr("if X is Some(const V) and V > 0 then V else 0 end if")
+    let Expr::If { branches, .. } = parse_expr("if X is Some(_) and Ready then 1 else 0 end if")
     else {
         panic!("expected an if expression");
     };

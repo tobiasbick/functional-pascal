@@ -7,7 +7,6 @@ use fpas_parser::{Expr, IfExprBranch};
 
 use crate::CompileError;
 use crate::lowering::context::LoweringContext;
-use crate::lowering::control_flow::conditions;
 
 impl LoweringContext {
     /// Stores the selected branch value in a hidden local and reads it after the merge.
@@ -23,17 +22,10 @@ impl LoweringContext {
         let merge = self.new_block(span)?;
         for branch in branches {
             let next = self.new_block(span)?;
-            // `is` bindings in this condition are visible only in this branch's value.
-            self.begin_scope();
-            if conditions::has_pattern_test(&branch.condition) {
-                self.lower_pattern_condition(&branch.condition, next)?;
-            } else {
-                let condition = self.lower_expression(&branch.condition)?;
-                self.continue_if(condition, next, branch.condition.span())?;
-            }
+            let condition = self.lower_expression(&branch.condition)?;
+            self.continue_if(condition, next, branch.condition.span())?;
             let value = self.lower_expression_as(&branch.value, result_ty)?;
             self.write_local(result, value, span)?;
-            self.end_scope();
             self.jump(merge)?;
             self.switch_to(next);
         }

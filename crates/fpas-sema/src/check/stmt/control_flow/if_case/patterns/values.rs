@@ -14,7 +14,7 @@ impl Checker {
         &mut self,
         expected_ty: &Ty,
         expr: &Expr,
-        bindings: &mut PatternBindings,
+        bindings: Option<&mut PatternBindings>,
     ) -> Pat {
         let bare_name = match expr {
             Expr::Designator(designator) => match designator.parts.as_slice() {

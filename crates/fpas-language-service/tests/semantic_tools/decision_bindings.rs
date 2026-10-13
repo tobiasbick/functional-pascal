@@ -86,19 +86,12 @@ fn pattern_bindings_start_after_the_tested_value_and_complete_pattern() {
         type Pair = enum Both(First: integer; Second: integer); end enum;
         function Read(Input: Pair): integer;
         begin return case Input of when Pair.Both(const Value, Value): Value; when Pair.Both(_, _): Value; end case; end function;
-        function Choose(): integer;
-        begin return if Some(Value) is Some(const Value) and Value > 0 then Value else Value end if; end function;
         const Answer: integer := case Some(Value) of when Some(const Value): Value; when None: Value; end case;
-        begin discard Read(Pair.Both(1, 9)); discard Choose(); discard Answer; discard Value; end.";
+        begin discard Read(Pair.Both(1, 9)); discard Answer; discard Value; end.";
     assert_identity(
         source,
         "Pair.Both(const Value,",
         &["Pair.Both(const Value, Value): Value;"],
-    );
-    assert_identity(
-        source,
-        "is Some(const Value)",
-        &["and Value >", "then Value else"],
     );
     assert_identity(
         source,
@@ -111,8 +104,6 @@ fn pattern_bindings_start_after_the_tested_value_and_complete_pattern() {
         &[
             "Pair.Both(const Value, Value)",
             "when Pair.Both(_, _): Value;",
-            "if Some(Value)",
-            "else Value end if",
             "case Some(Value)",
             "when None: Value;",
             "discard Value;",
@@ -160,9 +151,9 @@ fn sibling_and_nested_case_arms_keep_distinct_binding_identities() {
 }
 
 #[test]
-fn if_expression_bindings_are_extracted_in_every_value_position() {
-    let decision = "if Input is Some(const Value) and Value > 0 then Value
-        elsif Input is Some(const Value) then Value else Value end if";
+fn case_expression_bindings_are_extracted_in_every_value_position() {
+    let decision = "case Input of when Some(const Value) if Value > 0: Value;
+        when Some(const Value): Value; when None: Value; end case";
     let statements = [
         format!("return {decision};"),
         format!("const Chosen: integer := {decision}; return Chosen;"),
@@ -186,30 +177,30 @@ fn if_expression_bindings_are_extracted_in_every_value_position() {
         );
         assert_identity(
             &source,
-            "if Input is Some(const Value)",
-            &["and Value >", "then Value\n"],
+            "Some(const Value) if",
+            &["if Value >", "if Value > 0: Value;"],
         );
         assert_identity(
             &source,
-            "elsif Input is Some(const Value)",
-            &["then Value else"],
+            "when Some(const Value):",
+            &["when Some(const Value): Value;"],
         );
         assert_identity(
             &source,
             "const Value: integer",
-            &["else Value end if", "discard Value;"],
+            &["when None: Value;", "discard Value;"],
         );
     }
 }
 
 #[test]
-fn statement_patterns_share_case_and_condition_binding_scopes() {
+fn statement_case_patterns_and_nonbinding_conditions_keep_distinct_scopes() {
     let source = "program T; const Value: integer := 9;
         begin const Input: Option of integer := Some(1);
           case Input of when Some(const Value): discard Value; when None: discard Value; end case;
-          if Input is Some(const Value) and Value > 0 then discard Value;
-          elsif Input is Some(const Value) then discard Value; else discard Value; end if;
-          while Input is Some(const Value) and Value > 0 do discard Value; break; end while;
+          if Input is Some(_) and Value > 0 then discard Value;
+          elsif Input is Some(_) then discard Value; else discard Value; end if;
+          while Input is Some(_) and Value > 0 do discard Value; break; end while;
           discard Value;
         end.";
     assert_identity(
@@ -219,26 +210,64 @@ fn statement_patterns_share_case_and_condition_binding_scopes() {
     );
     assert_identity(
         source,
-        "if Input is Some(const Value)",
-        &["and Value > 0 then", "then discard Value;\n"],
-    );
-    assert_identity(
-        source,
-        "elsif Input is Some(const Value)",
-        &["then discard Value; else"],
-    );
-    assert_identity(
-        source,
-        "while Input is Some(const Value)",
-        &["and Value > 0 do", "do discard Value;"],
-    );
-    assert_identity(
-        source,
         "const Value: integer",
         &[
             "when None: discard Value;",
+            "and Value > 0 then",
+            "then discard Value;\n",
+            "then discard Value; else",
             "else discard Value;",
+            "and Value > 0 do",
+            "do discard Value;",
             "end while;\n          discard Value;",
         ],
     );
+}
+
+#[test]
+fn rejected_is_patterns_never_create_editor_bindings() {
+    for statements in [
+        "if Input is Some(const Ghost) then discard Ghost; end if;",
+        "while Input is Some(const Ghost) do discard Ghost; break; end while;",
+        "const Hit: boolean := Input is Some(const Ghost); discard Ghost;",
+        "const Hit: boolean := if Input is Some(const Ghost) then true else false end if; discard Ghost;",
+    ] {
+        let source = format!(
+            "program T; begin const Input: Option of integer := Some(1); {statements} end."
+        );
+        let temp = TempDirectory::new("rejected-is-binding");
+        let path = temp.write("main.fpas", &source);
+        let mut service = LanguageService::new(WorkspaceContext::loose(temp.path()));
+        let analysis = service.analyze_document(&path).expect("analysis");
+        assert!(
+            analysis
+                .diagnostics()
+                .iter()
+                .any(|error| error.code == fpas_diagnostics::codes::SEMA_IS_PATTERN_BINDING)
+        );
+        for offset in [
+            source.find("Ghost").expect("pattern name"),
+            source.rfind("Ghost").expect("use"),
+        ] {
+            assert!(
+                service
+                    .definitions(&path, offset)
+                    .expect("definition")
+                    .value
+                    .is_empty()
+            );
+            assert!(matches!(
+                service.rename(&path, offset, "Renamed"),
+                Err(fpas_language_service::RenameError::NoSymbol)
+            ));
+            assert!(
+                !service
+                    .completions(&path, offset)
+                    .expect("completion")
+                    .value
+                    .iter()
+                    .any(|candidate| candidate.label == "Ghost")
+            );
+        }
+    }
 }

@@ -102,7 +102,7 @@ impl CaptureCollector<'_> {
                 else_branch,
                 ..
             } => {
-                // `is` bindings in the condition are visible only in the then-branch.
+                // Collect branch-local declarations independently of the other branch.
                 self.push_bound_scope();
                 self.collect_from_expr(condition);
                 self.collect_from_stmt(then_branch);
@@ -277,7 +277,6 @@ impl CaptureCollector<'_> {
             Expr::Is { value, pattern, .. } => {
                 self.collect_from_expr(value);
                 self.collect_pattern_values(pattern);
-                self.bind_pattern(pattern);
             }
             Expr::BinaryOp { left, right, .. } => {
                 self.collect_from_expr(left);
@@ -288,7 +287,6 @@ impl CaptureCollector<'_> {
                 else_value,
                 ..
             } => {
-                // `is` bindings in a condition are visible only in that branch's value.
                 for branch in branches {
                     self.push_bound_scope();
                     self.collect_from_expr(&branch.condition);

@@ -67,7 +67,7 @@ parameters. See [Record methods](../types/record-methods.md#bound-methods-as-val
 
 A callback can be an ordinary record field of type `Option of HandlerType`.
 Its `None` default represents the absence of a handler; `Some(...)` stores a
-named routine, closure, or bound method. Use an `is` test when the callback
+named routine, closure, or bound method. Use a `case` arm when the callback
 should run only when present:
 
 ```pascal
@@ -82,9 +82,10 @@ type Button = record
 
   procedure Click(Self: Button);
   begin
-    if Self.OnClick is Some(const Handler) then
-      Handler(Self.Id);
-    end if;
+    case Self.OnClick of
+      when Some(const Handler): Handler(Self.Id);
+      when None: null;
+    end case;
   end procedure;
 end record;
 

@@ -69,80 +69,85 @@ begin
   case Std.Json.Parse(Text) of
     when Ok(const Root):
       begin
-        if Root is JsonValue.Object(const RootFields) then
-          begin
-            case RequiredField(RootFields, 'choices') of
-              when Ok(const ChoicesValue):
-                begin
-                  if ChoicesValue is JsonValue.ArrayValue(const Choices) then
-                    begin
-                      if Choices.Length() = 0 then
+        case Root of
+          when JsonValue.Object(const RootFields):
+            begin
+              case RequiredField(RootFields, 'choices') of
+                when Ok(const ChoicesValue):
+                  begin
+                    case ChoicesValue of
+                      when JsonValue.ArrayValue(const Choices):
                         begin
-                          return Error('OpenAI-compatible response contains no choices');
-                        end;
-                      end if;
+                          if Choices.Length() = 0 then
+                            begin
+                              return Error('OpenAI-compatible response contains no choices');
+                            end;
+                          end if;
 
-                      if Choices[0] is JsonValue.Object(const ChoiceFields) then
-                        begin
-                          case RequiredField(ChoiceFields, 'message') of
-                            when Ok(const MessageValue):
+                          case Choices[0] of
+                            when JsonValue.Object(const ChoiceFields):
                               begin
-                                if MessageValue is JsonValue.Object(const MessageFields) then
-                                  begin
-                                    case RequiredField(MessageFields, 'content') of
-                                      when Ok(const ContentValue):
-                                        begin
-                                          if ContentValue is JsonValue.String(const Content) then
-                                            begin
-                                              return Ok(Content);
-                                            end;
-                                          else
-                                            begin
-                                              return Error('OpenAI-compatible message content is not text');
-                                            end;
-                                          end if;
-                                        end;
-                                      when Error(const Message):
-                                        begin
-                                          return Error(Message);
-                                        end;
-                                    end case;
-                                  end;
-                                else
-                                  begin
-                                    return Error('OpenAI-compatible choice message is not an object');
-                                  end;
-                                end if;
+                                case RequiredField(ChoiceFields, 'message') of
+                                  when Ok(const MessageValue):
+                                    begin
+                                      case MessageValue of
+                                        when JsonValue.Object(const MessageFields):
+                                          begin
+                                            case RequiredField(MessageFields, 'content') of
+                                              when Ok(const ContentValue):
+                                                begin
+                                                  case ContentValue of
+                                                    when JsonValue.String(const Content):
+                                                      begin
+                                                        return Ok(Content);
+                                                      end;
+                                                    when JsonValue.NullValue, JsonValue.Bool(_), JsonValue.Number(_), JsonValue.ArrayValue(_), JsonValue.Object(_):
+                                                      begin
+                                                        return Error('OpenAI-compatible message content is not text');
+                                                      end;
+                                                  end case;
+                                                end;
+                                              when Error(const Message):
+                                                begin
+                                                  return Error(Message);
+                                                end;
+                                            end case;
+                                          end;
+                                        when JsonValue.NullValue, JsonValue.Bool(_), JsonValue.Number(_), JsonValue.String(_), JsonValue.ArrayValue(_):
+                                          begin
+                                            return Error('OpenAI-compatible choice message is not an object');
+                                          end;
+                                      end case;
+                                    end;
+                                  when Error(const Message):
+                                    begin
+                                      return Error(Message);
+                                    end;
+                                end case;
                               end;
-                            when Error(const Message):
+                            when JsonValue.NullValue, JsonValue.Bool(_), JsonValue.Number(_), JsonValue.String(_), JsonValue.ArrayValue(_):
                               begin
-                                return Error(Message);
+                                return Error('OpenAI-compatible choice is not an object');
                               end;
                           end case;
                         end;
-                      else
+                      when JsonValue.NullValue, JsonValue.Bool(_), JsonValue.Number(_), JsonValue.String(_), JsonValue.Object(_):
                         begin
-                          return Error('OpenAI-compatible choice is not an object');
+                          return Error('OpenAI-compatible choices field is not an array');
                         end;
-                      end if;
-                    end;
-                  else
-                    begin
-                      return Error('OpenAI-compatible choices field is not an array');
-                    end;
-                  end if;
-                end;
-              when Error(const Message):
-                begin
-                  return Error(Message);
-                end;
-            end case;
-          end;
-        else
-          begin
-            return Error('OpenAI-compatible response root is not an object');
-          end;
-        end if;
+                    end case;
+                  end;
+                when Error(const Message):
+                  begin
+                    return Error(Message);
+                  end;
+              end case;
+            end;
+          when JsonValue.NullValue, JsonValue.Bool(_), JsonValue.Number(_), JsonValue.String(_), JsonValue.ArrayValue(_):
+            begin
+              return Error('OpenAI-compatible response root is not an object');
+            end;
+        end case;
       end;
     when Error(const Message):
       begin

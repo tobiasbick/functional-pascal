@@ -21,9 +21,11 @@ type Button = record
   OnValue: Option of procedure(Value: integer) := None;
   procedure Notify(Self: Button; Value: integer);
   begin
-    if Self.OnValue is Some(const Handler) then
-      Handler(Value);
-    end if;
+    case Self.OnValue of
+      when Some(const Handler):
+        Handler(Value);
+      when None: null;
+    end case;
   end procedure;
 end record;
 procedure Remember(Value: integer);

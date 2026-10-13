@@ -198,22 +198,25 @@ begin
       begin
         for ItemIndex: integer := 0 to Items.Length() - 1 do
           begin
-            if Items[ItemIndex] is TuiStatusItem.Command(const Id, const Text, const Action, const Enabled) then
-              begin
-                if (Id.Value = Target.Value) and Enabled then
-                  begin
-                    if (Key.kind = Std.Console.KeyKind.Enter) or
-                       (Key.kind = Std.Console.KeyKind.Space) then
-                      begin
-                        return Some(TuiMsg.Action(Id, Action));
-                      end;
-                    end if;
+            case Items[ItemIndex] of
+              when TuiStatusItem.Command(const Id, const Text, const Action, const Enabled):
+                begin
+                  if (Id.Value = Target.Value) and Enabled then
+                    begin
+                      if (Key.kind = Std.Console.KeyKind.Enter) or
+                         (Key.kind = Std.Console.KeyKind.Space) then
+                        begin
+                          return Some(TuiMsg.Action(Id, Action));
+                        end;
+                      end if;
 
-                    return None;
-                  end;
-                end if;
-              end;
-            end if;
+                      return None;
+                    end;
+                  end if;
+                end;
+              when TuiStatusItem.Hint(_), TuiStatusItem.KeyHint(_, _):
+                null;
+            end case;
           end;
         end for;
 

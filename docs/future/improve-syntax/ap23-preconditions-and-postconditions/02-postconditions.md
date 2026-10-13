@@ -16,7 +16,8 @@ value are checked on every ordinary or propagated return in all build modes.
 
 ## Implementation
 
-- Parser: `ensures [(Name)] Expression;`.
+- Parser: `ensures [(Name):] Expression;`. AP35.3 requires the colon to
+  distinguish a result binder from a normal grouped Boolean condition.
 - Sema: the name has the routine's return type and is visible only in its
   clause; rejected in the body and other clauses and in procedures. Same
   expression restrictions as AP23.1.

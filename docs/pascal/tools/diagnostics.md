@@ -361,7 +361,7 @@ Call arguments still use commas; commas inside types such as
 | FP3031 | Implicit pattern binding | `when Some(Value):` or `when N if N > 0:` | `when Some(const Value):` or `when const N if N > 0:` |
 | FP3032 | Misplaced scalar binding | `when const N:` without a guard | Add a condition, for example `when const N if N > 0:` |
 | FP3033 | Unreachable case label | `when Some(_):` before `when Some(1):` | Move `when Some(1):` before `when Some(_):` or remove it |
-| FP3034 | Misplaced `is` test | `const Hit: boolean := X is Some(_);` | `if X is Some(_) then ... end if;` or a `case` |
+| FP3034 | Binding in an `is` test | `X is Some(const Value)` | Use `Some(_)` to test presence or a `case` arm to bind `Value`. |
 | FP3035 | Catch-all on a closed enum | `case Item of when Some(_): null; else null; end case;` | Replace `else` with `when None: null;`, or use `if Item is Some(_) then ... end if;`. |
 | FP3036 | Local type annotation required | `const Value := None;`, `const Values := [];`, or `const Present := Some(None);` | Add `: Type`, for example `const Values: array of integer := [];`. Every fully determined statement-local initializer can infer its type. |
 | FP3037 | Invalid contract expression | `requires ReadValue() > 0;` or a mutable outer binding in a clause | Use parameters, immutable values, operators, typed construction, and the permitted native receiver queries; see [Preconditions](../language/functions/contracts.md). |
@@ -387,8 +387,8 @@ that names no constant; its hint shows the `const Name` form. FP3032 reports a
 scalar `const Name` label without a guard, next to other labels in its arm, or
 in a Result, Option, or data-enum `case`. FP3033 reports a label of an enum,
 Result, or Option `case` that earlier unguarded arms already cover completely.
-FP3034 reports an `is` test outside an `if`, `elsif`, or `while` condition,
-including under `or` or `not` and in a `case` guard.
+FP3034 rejects every `const Name` inside an `is` pattern, including nested
+bindings. Nonbinding `is` tests are ordinary Boolean expressions.
 
 FP3035 rejects `else` on enums, `Option`, and `Result`, including aliases and
 imported types. With valid labels, it names one missing pattern per uncovered

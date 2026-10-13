@@ -330,7 +330,7 @@ procedure_heading   = 'procedure' identifier [ type_params ]
                       '(' [ param_list ] ')' ;
 
 requires_clause     = 'requires' expression ';' ;
-ensures_clause      = 'ensures' [ '(' identifier ')' ] expression ';' ;
+ensures_clause      = 'ensures' [ '(' identifier ')' ':' ] expression ';' ;
 (* Clauses require Boolean, restricted read-only expressions. Entry clauses precede *)
 (* return clauses; procedures cannot name a return value. See                    *)
 (* docs/pascal/language/functions/contracts.md.                                  *)
@@ -556,9 +556,10 @@ comparison_expr     = additive_expr [ comparison_op additive_expr
                                     | 'is' pattern ] ;
 comparison_op       = '=' | '<>' | '<' | '>' | '<=' | '>=' | 'in' ;
 
-(* `Value is Pattern` is valid only as an if, elsif, or while condition, *)
-(* alone or within a top-level `and` chain; its bindings are visible in  *)
-(* later conditions of that chain and in the guarded body (FP3034).      *)
+(* `Value is Pattern` is a nonbinding Boolean expression. Grouping and   *)
+(* logical operators follow the ordinary expression rules. Every       *)
+(* `const Name` inside an is pattern is rejected (FP3034); case arms     *)
+(* introduce pattern names. Contracts retain their operand restrictions.*)
 (* In a pattern, a compared value is an additive_expr.                   *)
 (* Documentation: docs/pascal/language/pattern-matching/is-test.md       *)
 

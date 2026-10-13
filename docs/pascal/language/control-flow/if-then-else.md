@@ -45,8 +45,8 @@ else
 end if;
 ```
 
-A condition may test a pattern and bind its names for the branch, for example
-`if Item is Some(const Value) and Value > 0 then`; see
+A condition may test a pattern without binding names, for example
+`if Item is Some(_) and Ready then`; see
 [Pattern test with `is`](../pattern-matching/is-test.md).
 
 An empty branch is an error; write `null;` to state that no action is needed.
@@ -77,11 +77,10 @@ end function;
   `if Found then Some(Value) else None end if`. The result must then match the
   expected type of its position. Branches also complete result-only generic
   calls: `if Found then Empty() else Some(1) end if` determines integer for
-  `function Empty<T>(): Option of T`. Branch-local pattern bindings remain
-  scoped to their own branch during inference.
-- A condition may use `is` pattern tests with the same rules as the statement;
-  their bindings are visible only in that branch's value:
-  `if Item is Some(const Value) then Value else 0 end if`.
+  `function Empty<T>(): Option of T`.
+- A condition may use nonbinding `is` pattern tests with the same rules as the
+  statement: `if Item is Some(_) then 'present' else 'absent' end if`.
+  To extract a payload, use a [case expression](case-of-intro.md#case-expressions).
 - When every condition and branch is a compile-time constant, the expression is
   one too, so `const Limit: integer := if Debug then 10 else 100 end if;` can be
   used as a `case` label.

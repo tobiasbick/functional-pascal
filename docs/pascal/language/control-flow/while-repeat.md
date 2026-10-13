@@ -16,12 +16,15 @@ while Count < 10 do
 end while;
 ```
 
-A `while` condition may test a pattern; its bindings are visible in the body
-and are evaluated again before every iteration:
+A loop condition may use a nonbinding `is` test. To process a payload,
+use `case` inside the loop; the selector is evaluated once per iteration:
 
 ```pascal
-while Queue.Next() is Some(const Job) do
-  Run(Job);
+while true do
+  case Queue.Next() of
+    when Some(const Job): Run(Job);
+    when None: break;
+  end case;
 end while;
 ```
 

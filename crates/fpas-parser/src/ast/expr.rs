@@ -2,26 +2,6 @@ use super::{FormalParam, FuncBody, Pattern, TypeExpr};
 use fpas_lexer::Span;
 
 impl Expr {
-    /// Appends the conditions of a top-level `and` chain in evaluation order.
-    ///
-    /// Parentheses and other operators remain single conditions. Semantic checking
-    /// and lowering use this same boundary for pattern-test bindings.
-    /// **Documentation:** `docs/pascal/language/pattern-matching/is-test.md`
-    pub fn collect_conjuncts<'a>(&'a self, out: &mut Vec<&'a Self>) {
-        match self {
-            Self::BinaryOp {
-                op: BinaryOp::And,
-                left,
-                right,
-                ..
-            } => {
-                left.collect_conjuncts(out);
-                right.collect_conjuncts(out);
-            }
-            other => out.push(other),
-        }
-    }
-
     /// Returns the source span that covers this expression.
     #[must_use]
     pub fn span(&self) -> Span {
@@ -204,10 +184,7 @@ pub enum Expr {
         /// Source span of the complete argument including `var`.
         span: Span,
     },
-    /// `Value is Pattern`: tests one pattern and binds its names.
-    ///
-    /// Valid only as an `if`, `elsif`, or `while` condition, optionally joined
-    /// with later conditions by `and`.
+    /// `Value is Pattern`: a Boolean pattern test that introduces no names.
     ///
     /// **Documentation:** `docs/pascal/language/pattern-matching/is-test.md`
     Is {

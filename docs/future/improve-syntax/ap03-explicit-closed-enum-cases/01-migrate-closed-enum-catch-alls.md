@@ -7,7 +7,7 @@ Status: complete.
 ## Result
 
 Repository cases over user enums, `Option`, and `Result` use explicit variant
-arms. Code handling one variant uses `is` where a full case is unnecessary.
+arms. AP35.2 confines `is` to nonbinding Boolean tests; payload extraction uses case arms.
 Scalar cases over `integer`, `string`, and `boolean` retain their catch-alls.
 
 Remaining variants are listed in declaration order. Guarded arms and partial

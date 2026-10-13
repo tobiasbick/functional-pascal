@@ -11,7 +11,7 @@ type Button = record
   OnClick: Option of procedure(Sender: Button) := None;
   procedure RaiseClick(Self: Button);
   begin
-    if Self.OnClick is Some(const Handler) then Handler(Self); end if;
+    case Self.OnClick of when Some(const Handler): Handler(Self); when None: null; end case;
   end procedure;
 end record;
 procedure Handle(Sender: Button); begin null; end procedure;

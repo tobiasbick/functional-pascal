@@ -104,7 +104,6 @@ impl Checker {
     }
 
     pub(in super::super) fn check_while_stmt(&mut self, condition: &Expr, body: &Stmt, span: Span) {
-        // `is` bindings live in the condition and the loop body only.
         self.scopes.push_scope();
         self.check_branch_condition(condition, "while", span);
         self.scopes.loop_depth += 1;

@@ -8,7 +8,7 @@ use crate::{ParseDiagnostic, Pattern};
 
 #[test]
 fn is_test_binds_tighter_than_and() {
-    let expr = parse_expr("X is Some(const V) and V > 0");
+    let expr = parse_expr("X is Some(_) and Ready");
     let Expr::BinaryOp {
         op: BinaryOp::And,
         left,
@@ -43,7 +43,7 @@ fn is_value_patterns_stop_before_logical_operators() {
 
 #[test]
 fn is_test_accepts_nested_and_qualified_variant_patterns() {
-    let expr = parse_expr("Msg is TuiMsg.Resize(const W, _)");
+    let expr = parse_expr("Msg is TuiMsg.Resize(0, _)");
     let Expr::Is { pattern, .. } = expr else {
         panic!("expected `is`");
     };

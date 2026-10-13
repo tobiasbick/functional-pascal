@@ -25,7 +25,6 @@ impl Checker {
         self.deferred_constructor_inference += 1;
         let mut values = Vec::with_capacity(branches.len() + 1);
         for branch in branches {
-            // `is` bindings in this condition are visible only in this branch's value.
             self.scopes.push_scope();
             self.check_branch_condition(&branch.condition, "if", branch.condition.span());
             values.push((

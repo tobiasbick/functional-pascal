@@ -5,6 +5,47 @@
 use super::super::assert_succeeds;
 
 #[test]
+fn nonbinding_is_produces_boolean_values_with_single_evaluation_and_short_circuiting() {
+    assert_succeeds(
+        "program BooleanPatterns;
+        type Shape = enum Circle(Radius: integer); Point; end enum;
+        var Calls: integer := 0;
+        function Next(): Option of integer;
+        begin Calls := Calls + 1; return if Calls < 3 then Some(Calls) else None end if; end function;
+        function Nested(Value: Result of (Option of Shape, string)): boolean;
+        begin return Value is Ok(Some(Shape.Circle(7))); end function;
+        function Identity(Flag: boolean): boolean;
+        ensures (Returned): Returned = Flag;
+        ensures (Flag) or not Flag;
+        begin return Flag; end function;
+        function Has(Value: Option of integer): boolean;
+        requires Value is Some(_);
+        ensures (Returned): Returned = (Value is Some(_));
+        begin return Value is Some(_); end function;
+        begin
+          const Hit: boolean := Next() is Some(1);
+          if not Hit or Calls <> 1 then panic('stored boolean and single evaluation'); end if;
+          if false and (Next() is Some(_)) then panic('and'); end if;
+          if true or (Next() is None) then null; else panic('or'); end if;
+          if Calls <> 1 then panic('skipped operands'); end if;
+          if not Identity((Next() is Some(2)) xor false) then panic('argument and xor'); end if;
+          if Calls <> 2 then panic('xor evaluation'); end if;
+          const Flags: array of boolean := [Nested(Ok(Some(Shape.Circle(7)))), Nested(Ok(Some(Shape.Circle(8)))), Nested(Ok(None)), Nested(Error('stop'))];
+          if not Flags[0] or Flags[1] or Flags[2] or Flags[3] then panic('nested comparisons'); end if;
+          if not Has(Some(9)) then panic('restricted contract'); end if;
+          Calls := 0;
+          while Next() is Some(_) do null; end while;
+          if Calls <> 3 then panic('while reevaluation'); end if;
+          Calls := 0;
+          repeat null; until Next() is None;
+          if Calls <> 3 then panic('until reevaluation'); end if;
+          case 1 of when 1 if Next() is None: null; else panic('case guard'); end case;
+          if Calls <> 4 then panic('guard evaluation'); end if;
+        end.",
+    );
+}
+
+#[test]
 fn explicit_bindings_wildcards_and_scalar_bindings_execute() {
     assert_succeeds(
         "\
@@ -78,10 +119,13 @@ end.",
 }
 
 #[test]
-fn is_tests_short_circuit_and_bind_for_later_conditions() {
+fn case_guards_preserve_conditional_chain_evaluation() {
     assert_succeeds(
         "program IsTests;
 var Calls: integer := 0;
+var Receivers: integer := 0;
+function Read(O: Option of integer): Option of integer;
+begin Receivers := Receivers + 1; return O; end function;
 function Check(Value: integer): boolean;
 begin
   Calls := Calls + 1;
@@ -89,18 +133,18 @@ begin
 end function;
 function Probe(O: option of integer): integer;
 begin
-  if O is Some(const Value) and Check(Value) then
-    return Value;
-  elsif O is Some(_) then
-    return 0;
-  end if;
-  return -1;
+  return case Read(O) of
+    when Some(const Value) if Check(Value): Value;
+    when Some(_): 0;
+    when None: -1;
+  end case;
 end function;
 begin
   if Probe(Some(5)) <> 5 then panic('bound value'); end if;
   if Probe(Some(1)) <> 0 then panic('failed later condition'); end if;
   if Probe(None) <> -1 then panic('failed pattern'); end if;
   if Calls <> 2 then panic('short circuit'); end if;
+  if Receivers <> 3 then panic('selector evaluated again to retrieve payload'); end if;
 end.",
     );
 }
@@ -126,8 +170,7 @@ begin
   const Limit: integer := 3;
   return function(Value: Pair): integer
   begin
-    if Value is Pair.Both(const Limit, Limit) and Limit > 0 then return Limit; end if;
-    return -1;
+    return if Value is Pair.Both(_, Limit) then 1 else -1 end if;
   end function;
 end function;
 function MakeMany(): function(Value: Pair): integer;
@@ -147,7 +190,7 @@ begin
   const MatchMany: function(Value: Pair): integer := MakeMany();
   if MatchCase(Pair.Both(8, 3)) <> 8 then panic('case capture'); end if;
   if MatchCase(Pair.Both(3, 8)) <> -1 then panic('case outer comparison'); end if;
-  if MatchIs(Pair.Both(8, 3)) <> 8 then panic('is capture'); end if;
+  if MatchIs(Pair.Both(8, 3)) <> 1 then panic('is capture'); end if;
   if MatchIs(Pair.Both(3, 8)) <> -1 then panic('is outer comparison'); end if;
   if MatchMany(Pair.Both(8, 0)) <> 8 then panic('first label binding'); end if;
   if MatchMany(Pair.Both(3, 8)) <> 8 then panic('later label capture'); end if;

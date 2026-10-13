@@ -14,24 +14,25 @@ end function;
 function UpdateDemo(State: DemoModel; Msg: TuiMsg; Cmd: TuiCmdOutput): DemoModel;
 begin
   Cmd.Set(TuiCmd.NoCommand);
-  if Msg is TuiMsg.FocusChanged(const Previous, const Current) then
-    begin
-      case Current of
-        when Some(const Id):
-          begin
-            return DemoModel(Focus := Id.Value);
-          end;
-        when None:
-          begin
-            return State;
-          end;
-      end case;
-    end;
-  else
-    begin
-      return State;
-    end;
-  end if;
+  case Msg of
+    when TuiMsg.FocusChanged(const Previous, const Current):
+      begin
+        case Current of
+          when Some(const Id):
+            begin
+              return DemoModel(Focus := Id.Value);
+            end;
+          when None:
+            begin
+              return State;
+            end;
+        end case;
+      end;
+    when TuiMsg.Started, TuiMsg.Key(_), TuiMsg.Pointer(_), TuiMsg.Tick(_), TuiMsg.Resize(_), TuiMsg.Action(_, _), TuiMsg.TextChanged(_, _, _, _), TuiMsg.TextAreaChanged(_, _, _, _, _), TuiMsg.CheckChanged(_, _, _), TuiMsg.SelectionChanged(_, _, _), TuiMsg.ScrollChanged(_, _, _), TuiMsg.MenuChanged(_, _, _), TuiMsg.BackgroundFailed(_, _, _, _, _, _), TuiMsg.QuitRequested:
+      begin
+        return State;
+      end;
+  end case;
 end function;
 
 function ViewDemo(State: DemoModel): TuiElement;

@@ -23,7 +23,7 @@ pub(super) fn emit_requires_clauses(
     }
 }
 
-/// Emit postconditions with an optional clause-local return name.
+/// Emit postconditions with an optional clause-local return name and its required colon.
 pub(super) fn emit_ensures_clauses(
     emitter: &mut Emitter,
     clauses: &[EnsuresClause],
@@ -36,7 +36,7 @@ pub(super) fn emit_ensures_clauses(
         if let Some((name, _)) = &clause.result_name {
             emitter.write("(");
             emitter.write(name);
-            emitter.write(") ");
+            emitter.write("): ");
         }
         emit_expr(emitter, &clause.condition, 0, comments);
         emitter.write(";");

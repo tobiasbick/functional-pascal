@@ -7,15 +7,13 @@ use fpas_diagnostics::codes::{SEMA_TASK_BOUND_CALLABLE, SEMA_UNSAFE_DISCARD};
 
 fn patterns(action: &str) -> Vec<String> {
     vec![
-        format!("if Wrapped is Some(const F) then {action} end if;"),
-        format!("if false then null; elsif Wrapped is Some(const F) then {action} end if;"),
-        format!("while Wrapped is Some(const F) do {action} break; end while;"),
         format!("case Wrapped of when Some(const F): {action} when None: null; end case;"),
-        format!("if Ok(Wrapped) is Ok(Some(const F)) then {action} end if;"),
+        format!(
+            "while true do case Wrapped of when Some(const F): {action} break; when None: break; end case; end while;"
+        ),
         format!(
             "case Some(Ok(Wrapped)) of when Some(Ok(Some(const F))): {action} when Some(_), None: null; end case;"
         ),
-        format!("if Change is const F then {action} end if;"),
     ]
 }
 
@@ -45,9 +43,8 @@ fn pattern_callables_keep_task_bound_flags_in_branches_loops_and_nested_payloads
 #[test]
 fn pattern_callables_keep_task_bound_flags_in_guards_and_channel_sends() {
     for body in [
-        "if Wrapped is Some(const F) and Ready(go F()) then null; end if;",
         "case Wrapped of when Some(const F) if Ready(go F()): null; when Some(_), None: null; end case;",
-        "if Wrapped is Some(const F) then const Queue: channel of procedure() := CreateChannel(1); discard Send(Queue, F); end if;",
+        "case Wrapped of when Some(const F): const Queue: channel of procedure() := CreateChannel(1); discard Send(Queue, F); when None: null; end case;",
     ] {
         let errors = check_errors(&program(MUTABLE_CAPTURE, body));
         assert_eq!(errors.len(), 1, "{body}: {errors:#?}");
@@ -105,7 +102,7 @@ fn unknown_mutable_and_task_capturing_pattern_callables_remain_unsafe_to_discard
         "const Job: task of integer := go Work(); const Change: function(): integer := function(): integer begin return Wait(Job); end function; const Wrapped: Option of function(): integer := Some(Change);",
         "const Change: function(): integer := Work; var Wrapped: Option of function(): integer := Some(Change);",
     ] {
-        for body in patterns("discard F;").into_iter().take(6) {
+        for body in patterns("discard F;").into_iter().take(3) {
             let errors = check_errors(&program(bindings, &body));
             assert_eq!(errors.len(), 1, "{body}: {errors:#?}");
             assert_eq!(errors[0].code, SEMA_UNSAFE_DISCARD, "{body}");
@@ -113,7 +110,7 @@ fn unknown_mutable_and_task_capturing_pattern_callables_remain_unsafe_to_discard
     }
     let errors = check_errors(
         "program T; procedure Main(Wrapped: Option of function(): integer);
-begin if Wrapped is Some(const F) then discard F; end if; end procedure; begin end.",
+begin case Wrapped of when Some(const F): discard F; when None: null; end case; end procedure; begin end.",
     );
     assert_eq!(errors.len(), 1, "{errors:#?}");
     assert_eq!(errors[0].code, SEMA_UNSAFE_DISCARD);
@@ -123,9 +120,7 @@ begin if Wrapped is Some(const F) then discard F; end if; end procedure; begin e
 fn scalar_pattern_bindings_keep_type_based_discard_proofs() {
     check_ok(&program(
         "const Job: task of integer := go Work(); const Wrapped: Result of (integer, task of integer) := Ok(7);",
-        "if Wrapped is Ok(const N) then discard N; end if;
-while Wrapped is Ok(const N) do discard N; break; end while;
-case Wrapped of when Ok(const N): discard N; when Error(const Job): const N: integer := Wait(Job); end case;
+        "case Wrapped of when Ok(const N): discard N; when Error(const Job): const N: integer := Wait(Job); end case;
 case 7 of when const N if N > 0: discard N; else null; end case;",
     ));
 }
@@ -133,8 +128,7 @@ case 7 of when const N if N > 0: discard N; else null; end case;",
 #[test]
 fn scalar_bindings_do_not_inherit_another_payloads_task_bound_state() {
     for body in [
-        "if Mixed is Ok(const N) then const Get: function(): integer := function(): integer begin return N; end function; const Job: task of integer := go Get(); const Answer: integer := Wait(Job); end if;",
-        "while Mixed is Ok(const N) do const Get: function(): integer := function(): integer begin return N; end function; const Job: task of integer := go Get(); const Answer: integer := Wait(Job); break; end while;",
+        "while true do case Mixed of when Ok(const N): const Get: function(): integer := function(): integer begin return N; end function; const Job: task of integer := go Get(); const Answer: integer := Wait(Job); break; when Error(_): break; end case; end while;",
         "case Mixed of when Ok(const N): const Get: function(): integer := function(): integer begin return N; end function; const Job: task of integer := go Get(); const Answer: integer := Wait(Job); when Error(_): null; end case;",
     ] {
         check_ok(&program(
@@ -156,11 +150,11 @@ begin
 var Count: integer := 0;
 const Change: procedure() := procedure() begin Count := Count + 1; end procedure;
 const Mixed: Result of (T, procedure()) := Error(Change);
-if Mixed is Ok(const N) then
+case Mixed of when Ok(const N):
   const Get: function(): T := function(): T begin return N; end function;
   const Job: task of T := go Get();
   const Answer: T := Wait(Job);
-end if;
+when Error(_): null; end case;
 end procedure;
 begin Main(42); end."
         ));
@@ -184,7 +178,7 @@ procedure Main(); begin
 var Count: integer := 0;
 const Change: procedure() := procedure() begin Count := Count + 1; end procedure;
 const Wrapped: Option of WorkBox := Some(WorkBox(Change := Change, Number := 7));
-if Wrapped is Some(const Box) then {body} end if;
+case Wrapped of when Some(const Box): {body} when None: null; end case;
 end procedure; begin Main(); end."
         );
         if rejects {
@@ -199,10 +193,9 @@ end procedure; begin Main(); end."
 
 #[test]
 fn binding_names_may_shadow_the_source_without_changing_its_proof() {
-    for body in [
-        "if Wrapped is Some(const Wrapped) then discard Wrapped; end if;",
-        "case Wrapped of when Some(const Wrapped): discard Wrapped; when None: null; end case;",
-    ] {
+    for body in
+        ["case Wrapped of when Some(const Wrapped): discard Wrapped; when None: null; end case;"]
+    {
         check_ok(&program(
             "const Wrapped: Option of function(): integer := Some(Work);",
             body,

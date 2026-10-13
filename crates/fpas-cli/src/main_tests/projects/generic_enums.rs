@@ -60,8 +60,8 @@ begin
   case I of when Values.Lookup.Found(const Value): if Value <> 6 then panic('integer payload'); end if; when IntLookup.Missing: panic('integer missing'); end case;
   case S of when Values.Lookup.Found(const Value): if Value <> 'six' then panic('string payload'); end if; when Values.Lookup.Missing: panic('string missing'); end case;
   case P of when Values.Pair.Both(const K, const V): if (K <> 7) or (V <> 'seven') then panic('named mapping'); end if; when Values.Pair.Empty: panic('pair missing'); end case;
-  if N is Values.Lookup.Found(Values.Lookup.Found(const Value)) and Value = 9 then begin end; else panic('nested imported pattern'); end if;
-  if E.Value is Values.Lookup.Found(const Value) and Value = 8 then begin end; else panic('record enum payload'); end if;
+  if N is Values.Lookup.Found(Values.Lookup.Found(9)) then null; else panic('nested imported pattern'); end if;
+  if E.Value is Values.Lookup.Found(8) then null; else panic('record enum payload'); end if;
   if Missing is Values.Lookup.Missing then begin end; else panic('fieldless imported enum'); end if;
 end.
 "#,
@@ -81,10 +81,11 @@ program T;
 uses Data.Facade;
 begin
   const P: IntParcel := IntParcel.Packed(IntBox(Value := 7));
-  if P is IntParcel.Packed(const BoxValue) then
+  case P of
+    when IntParcel.Packed(const BoxValue):
     const N: integer := BoxValue.Value;
     if N <> 7 then panic('transitive record argument'); end if;
-  else panic('transitive parcel variant'); end if;
+  when IntParcel.Empty: panic('transitive parcel variant'); end case;
 end.
 "#,
     );

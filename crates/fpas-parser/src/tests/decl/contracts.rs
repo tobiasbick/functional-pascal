@@ -60,17 +60,64 @@ fn contract_keywords_are_reserved_in_every_identifier_position() {
 }
 
 #[test]
+fn postcondition_binders_require_a_colon_and_grouped_names_are_conditions() {
+    let (program, errors) = parse_with_errors(
+        "program T; function F(Flag: boolean): boolean;
+         ensures (Flag); ensures (Returned): Returned = Flag;
+         ensures (Flag and true); ensures (Flag) or false;
+         begin return Flag; end function; begin end.",
+    );
+    assert!(errors.is_empty(), "{errors:?}");
+    let Decl::Function(function) = &program.declarations[0] else {
+        panic!("function");
+    };
+    assert!(function.ensures[0].result_name.is_none());
+    assert!(matches!(function.ensures[0].condition, Expr::Paren(..)));
+    assert_eq!(
+        function.ensures[1]
+            .result_name
+            .as_ref()
+            .map(|(name, _)| name.as_str()),
+        Some("Returned")
+    );
+    assert!(function.ensures[2].result_name.is_none());
+    assert!(function.ensures[3].result_name.is_none());
+    for condition in [
+        "Returned > 0",
+        "Some(1) is Some(_)",
+        "Ok(1) is Ok(_)",
+        "Error(1) is Error(_)",
+        "None is None",
+        "array.Fill(1, 0).Length() > 0",
+        "string.Chr(65).Length() = 1",
+    ] {
+        let (_, errors) = parse_with_errors(&format!(
+            "program T; function F(): integer; ensures (Returned) {condition}; begin return 1; end function; begin end."
+        ));
+        assert!(!errors.is_empty(), "legacy return binder was accepted");
+        assert!(
+            errors.iter().any(|error| error
+                .as_diagnostic()
+                .help
+                .as_deref()
+                .is_some_and(|hint| hint.contains("ensures (Returned):"))),
+            "{condition}: {errors:#?}"
+        );
+    }
+}
+
+#[test]
 fn postconditions_parse_names_parenthesized_conditions_and_source_text() {
     let source = "program T; function F(X: integer): integer;
-        requires X >= 0; EnSuReS (Value) Value > X;
-        ensures (X >= 0); ensures (Other) Other > 0;
+        requires X >= 0; EnSuReS (Value): Value > X;
+        ensures (X >= 0); ensures (Other): Other > 0;
         begin return X + 1; end function; begin end.";
     let (program, errors) = parse_with_errors(source);
     assert!(errors.is_empty(), "{errors:?}");
     let Decl::Function(function) = &program.declarations[0] else {
         panic!("function");
     };
-    assert_eq!(function.ensures[0].text, "EnSuReS (Value) Value > X;");
+    assert_eq!(function.ensures[0].text, "EnSuReS (Value): Value > X;");
     assert_eq!(
         function.ensures[0]
             .result_name

@@ -8,88 +8,97 @@ begin
   case Parsed of
     when Ok(const Value):
       begin
-        if Value is TomlValue.Table(const Fields) then
-          begin
-            if Fields.Get('empty').Unwrap() is TomlValue.ArrayValue(const Items) then
-              begin
-                AssertEquals(0, Items.Length());
-              end;
-            else
-              begin
-                Fail('Expected empty array');
-              end;
-            end if;
-
-            if Fields.Get('special').Unwrap() is TomlValue.Float(const Number) then
-              begin
-                AssertEquals(0.0, Number);
-              end;
-            else
-              begin
-                Fail('Expected finite float');
-              end;
-            end if;
-
-            if Fields.Get('point').Unwrap() is TomlValue.Table(const Point) then
-              begin
-                AssertEquals(2, Point.Length());
-              end;
-            else
-              begin
-                Fail('Expected point table');
-              end;
-            end if;
-
-            if Fields.Get('products').Unwrap() is TomlValue.ArrayValue(const Products) then
-              begin
-                AssertEquals(2, Products.Length());
-                if Products[0] is TomlValue.Table(const Product) then
+        case Value of
+          when TomlValue.Table(const Fields):
+            begin
+              case Fields.Get('empty').Unwrap() of
+                when TomlValue.ArrayValue(const Items):
                   begin
-                    if Product.Get('name').Unwrap() is TomlValue.String(const Name) then
-                      begin
-                        AssertEquals('Hammer', Name);
-                      end;
-                    else
-                      begin
-                        Fail('Expected product name string');
-                      end;
-                    end if;
+                    AssertEquals(0, Items.Length());
                   end;
-                else
+                when TomlValue.String(_), TomlValue.Integer(_), TomlValue.Float(_), TomlValue.Boolean(_), TomlValue.Datetime(_), TomlValue.Table(_):
                   begin
-                    Fail('Expected first product table');
+                    Fail('Expected empty array');
                   end;
-                end if;
+              end case;
 
-                if Products[1] is TomlValue.Table(const Product) then
+              case Fields.Get('special').Unwrap() of
+                when TomlValue.Float(const Number):
                   begin
-                    if Product.Get('name').Unwrap() is TomlValue.String(const Name) then
-                      begin
-                        AssertEquals('Nail', Name);
-                      end;
-                    else
-                      begin
-                        Fail('Expected product name string');
-                      end;
-                    end if;
+                    AssertEquals(0.0, Number);
                   end;
-                else
+                when TomlValue.String(_), TomlValue.Integer(_), TomlValue.Boolean(_), TomlValue.Datetime(_), TomlValue.ArrayValue(_), TomlValue.Table(_):
                   begin
-                    Fail('Expected second product table');
+                    Fail('Expected finite float');
                   end;
-                end if;
-              end;
-            else
-              begin
-                Fail('Expected products array');
-              end;
-            end if;
-          end;
-        else
-          begin
-            Fail('Expected TOML table');
-          end;
-        end if;
+              end case;
+
+              case Fields.Get('point').Unwrap() of
+                when TomlValue.Table(const Point):
+                  begin
+                    AssertEquals(2, Point.Length());
+                  end;
+                when TomlValue.String(_), TomlValue.Integer(_), TomlValue.Float(_), TomlValue.Boolean(_), TomlValue.Datetime(_), TomlValue.ArrayValue(_):
+                  begin
+                    Fail('Expected point table');
+                  end;
+              end case;
+
+              case Fields.Get('products').Unwrap() of
+                when TomlValue.ArrayValue(const Products):
+                  begin
+                    AssertEquals(2, Products.Length());
+                    case Products[0] of
+                      when TomlValue.Table(const Product):
+                        begin
+                          case Product.Get('name').Unwrap() of
+                            when TomlValue.String(const Name):
+                              begin
+                                AssertEquals('Hammer', Name);
+                              end;
+                            when TomlValue.Integer(_), TomlValue.Float(_), TomlValue.Boolean(_), TomlValue.Datetime(_), TomlValue.ArrayValue(_), TomlValue.Table(_):
+                              begin
+                                Fail('Expected product name string');
+                              end;
+                          end case;
+                        end;
+                      when TomlValue.String(_), TomlValue.Integer(_), TomlValue.Float(_), TomlValue.Boolean(_), TomlValue.Datetime(_), TomlValue.ArrayValue(_):
+                        begin
+                          Fail('Expected first product table');
+                        end;
+                    end case;
+
+                    case Products[1] of
+                      when TomlValue.Table(const Product):
+                        begin
+                          case Product.Get('name').Unwrap() of
+                            when TomlValue.String(const Name):
+                              begin
+                                AssertEquals('Nail', Name);
+                              end;
+                            when TomlValue.Integer(_), TomlValue.Float(_), TomlValue.Boolean(_), TomlValue.Datetime(_), TomlValue.ArrayValue(_), TomlValue.Table(_):
+                              begin
+                                Fail('Expected product name string');
+                              end;
+                          end case;
+                        end;
+                      when TomlValue.String(_), TomlValue.Integer(_), TomlValue.Float(_), TomlValue.Boolean(_), TomlValue.Datetime(_), TomlValue.ArrayValue(_):
+                        begin
+                          Fail('Expected second product table');
+                        end;
+                    end case;
+                  end;
+                when TomlValue.String(_), TomlValue.Integer(_), TomlValue.Float(_), TomlValue.Boolean(_), TomlValue.Datetime(_), TomlValue.Table(_):
+                  begin
+                    Fail('Expected products array');
+                  end;
+              end case;
+            end;
+          when TomlValue.String(_), TomlValue.Integer(_), TomlValue.Float(_), TomlValue.Boolean(_), TomlValue.Datetime(_), TomlValue.ArrayValue(_):
+            begin
+              Fail('Expected TOML table');
+            end;
+        end case;
       end;
     when Error(const Message):
       begin

@@ -1,10 +1,10 @@
 //! Local declarations and decision scopes in statement bodies.
 
 use fpas_diagnostics::SourceSpan;
-use fpas_parser::{Expr, Stmt, Visibility};
+use fpas_parser::{Stmt, Visibility};
 
 use super::expressions::{collect_designator_symbols, collect_expression_symbols};
-use super::patterns::{collect_case_bindings, collect_condition_bindings};
+use super::patterns::collect_case_bindings;
 use super::{member_symbol, named_type, type_callable_signature, type_text};
 use crate::{DocumentSnapshot, DocumentSymbol, SymbolKind};
 
@@ -63,11 +63,6 @@ pub(super) fn collect_statement_symbols(
                 else_branch,
                 ..
             } => {
-                let branch_scope = condition_scope(
-                    condition,
-                    then_branch.span().diagnostic_span_or_synthetic().end(),
-                );
-                collect_condition_bindings(snapshot, owner, condition, branch_scope, output);
                 collect_expression_symbols(snapshot, owner, condition, output);
                 collect_branch(snapshot, owner, then_branch, output);
                 if let Some(branch) = else_branch {
@@ -128,13 +123,6 @@ pub(super) fn collect_statement_symbols(
                 body,
                 span,
             } => {
-                collect_condition_bindings(
-                    snapshot,
-                    owner,
-                    condition,
-                    condition_scope(condition, body.span().diagnostic_span_or_synthetic().end()),
-                    output,
-                );
                 collect_expression_symbols(snapshot, owner, condition, output);
                 collect_statement_symbols(
                     snapshot,
@@ -211,17 +199,6 @@ pub(super) fn collect_statement_symbols(
             Stmt::Return(None, _) | Stmt::Null(_) | Stmt::Break(_) | Stmt::Continue(_) => {}
         }
     }
-}
-
-fn condition_scope(condition: &Expr, end: usize) -> SourceSpan {
-    let start = condition.span().diagnostic_span_or_synthetic();
-    SourceSpan::new_with_source(
-        start.offset(),
-        end.saturating_sub(start.offset()),
-        start.line(),
-        start.column(),
-        start.source_id(),
-    )
 }
 
 fn collect_branch(

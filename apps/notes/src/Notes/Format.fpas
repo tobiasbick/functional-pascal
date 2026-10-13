@@ -14,15 +14,16 @@ begin
   case Fields.Get(Name) of
     when Some(const Value):
       begin
-        if Value is TomlValue.String(const Text) then
-          begin
-            return Ok(Text);
-          end;
-        else
-          begin
-            return Error('Note field `' + Name + '` must be a string');
-          end;
-        end if;
+        case Value of
+          when TomlValue.String(const Text):
+            begin
+              return Ok(Text);
+            end;
+          when TomlValue.Integer(_), TomlValue.Float(_), TomlValue.Boolean(_), TomlValue.Datetime(_), TomlValue.ArrayValue(_), TomlValue.Table(_):
+            begin
+              return Error('Note field `' + Name + '` must be a string');
+            end;
+        end case;
       end;
     when None:
       begin
@@ -36,15 +37,16 @@ begin
   case Fields.Get(Name) of
     when Some(const Value):
       begin
-        if Value is TomlValue.Integer(const Number) then
-          begin
-            return Ok(Number);
-          end;
-        else
-          begin
-            return Error('Note field `' + Name + '` must be an integer');
-          end;
-        end if;
+        case Value of
+          when TomlValue.Integer(const Number):
+            begin
+              return Ok(Number);
+            end;
+          when TomlValue.String(_), TomlValue.Float(_), TomlValue.Boolean(_), TomlValue.Datetime(_), TomlValue.ArrayValue(_), TomlValue.Table(_):
+            begin
+              return Error('Note field `' + Name + '` must be an integer');
+            end;
+        end case;
       end;
     when None:
       begin
@@ -58,15 +60,16 @@ begin
   case Fields.Get(Name) of
     when Some(const Value):
       begin
-        if Value is TomlValue.Boolean(const Flag) then
-          begin
-            return Ok(Flag);
-          end;
-        else
-          begin
-            return Error('Note field `' + Name + '` must be a boolean');
-          end;
-        end if;
+        case Value of
+          when TomlValue.Boolean(const Flag):
+            begin
+              return Ok(Flag);
+            end;
+          when TomlValue.String(_), TomlValue.Integer(_), TomlValue.Float(_), TomlValue.Datetime(_), TomlValue.ArrayValue(_), TomlValue.Table(_):
+            begin
+              return Error('Note field `' + Name + '` must be a boolean');
+            end;
+        end case;
       end;
     when None:
       begin
@@ -80,30 +83,32 @@ begin
   case Fields.Get('tags') of
     when Some(const Value):
       begin
-        if Value is TomlValue.ArrayValue(const Items) then
-          begin
-            var Tags: array of string := [];
-            for Index: integer := 0 to Items.Length() - 1 do
-              begin
-                if Items[Index] is TomlValue.String(const Tag) then
-                  begin
-                    Tags.Push(Tag);
-                  end;
-                else
-                  begin
-                    return Error('Every note tag must be a string');
-                  end;
-                end if;
-              end;
-            end for;
+        case Value of
+          when TomlValue.ArrayValue(const Items):
+            begin
+              var Tags: array of string := [];
+              for Index: integer := 0 to Items.Length() - 1 do
+                begin
+                  case Items[Index] of
+                    when TomlValue.String(const Tag):
+                      begin
+                        Tags.Push(Tag);
+                      end;
+                    when TomlValue.Integer(_), TomlValue.Float(_), TomlValue.Boolean(_), TomlValue.Datetime(_), TomlValue.ArrayValue(_), TomlValue.Table(_):
+                      begin
+                        return Error('Every note tag must be a string');
+                      end;
+                  end case;
+                end;
+              end for;
 
-            return Ok(Tags);
-          end;
-        else
-          begin
-            return Error('Note field `tags` must be an array');
-          end;
-        end if;
+              return Ok(Tags);
+            end;
+          when TomlValue.String(_), TomlValue.Integer(_), TomlValue.Float(_), TomlValue.Boolean(_), TomlValue.Datetime(_), TomlValue.Table(_):
+            begin
+              return Error('Note field `tags` must be an array');
+            end;
+        end case;
       end;
     when None:
       begin
@@ -164,15 +169,16 @@ begin
   case Std.Toml.Parse(Header) of
     when Ok(const Value):
       begin
-        if Value is TomlValue.Table(const Fields) then
-          begin
-            return ParseFields(Fields, Body);
-          end;
-        else
-          begin
-            return Error('The .note metadata root must be a TOML table');
-          end;
-        end if;
+        case Value of
+          when TomlValue.Table(const Fields):
+            begin
+              return ParseFields(Fields, Body);
+            end;
+          when TomlValue.String(_), TomlValue.Integer(_), TomlValue.Float(_), TomlValue.Boolean(_), TomlValue.Datetime(_), TomlValue.ArrayValue(_):
+            begin
+              return Error('The .note metadata root must be a TOML table');
+            end;
+        end case;
       end;
     when Error(const Message):
       begin

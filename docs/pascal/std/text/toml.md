@@ -66,7 +66,7 @@ const Parsed: result of (TomlValue, string) := Parse('title = ''example''' + str
                                                  'port = 8080');
 case Parsed of
   when Ok(const Value):
-    if Value is TomlValue.Table(const Fields) then
+    if Value is TomlValue.Table(_) then
       WriteLn('parsed');
     end if;
   when Error(const Message):

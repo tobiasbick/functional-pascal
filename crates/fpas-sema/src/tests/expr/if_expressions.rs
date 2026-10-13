@@ -1,4 +1,4 @@
-//! Branch types, conditions, `is` bindings, and constants of `if` expressions.
+//! Branch types, Boolean conditions, and constants of `if` expressions.
 //!
 //! Documentation: `docs/pascal/language/control-flow/if-then-else.md`
 
@@ -127,16 +127,16 @@ fn complementary_result_evidence_rejects_a_conflicting_third_branch() {
 }
 
 #[test]
-fn conditions_are_boolean_and_is_bindings_stay_in_their_branch() {
+fn conditions_are_boolean_and_case_bindings_stay_in_their_arm() {
     let error = single_error("const X: integer := if N then 1 else 2 end if;");
     assert_eq!(error.code, SEMA_NON_BOOLEAN_CONDITION);
     check_ok(&program(
         "const Found: option of integer := Some(N);
-         const X: integer := if Found is Some(const V) and V > 0 then V elsif N = 0 then 0 else -1 end if;",
+         const X: integer := if Found is Some(_) then N elsif N = 0 then 0 else -1 end if;",
     ));
     let error = single_error(
         "const Found: option of integer := Some(N);
-         const X: integer := if Found is Some(const V) then V else V end if;",
+         const X: integer := case Found of when Some(const V): V; when None: V; end case;",
     );
     assert_eq!(error.code, SEMA_UNKNOWN_NAME, "{error:#?}");
 }

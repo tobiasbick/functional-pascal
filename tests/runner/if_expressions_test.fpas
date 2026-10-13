@@ -20,10 +20,10 @@ end function;
 
 function Describe(Value: option of integer): string;
 begin
-  return if Value is Some(const N) and N > 0 then 'positive'
-    elsif Value is Some(_) then 'other'
-    else 'none'
-    end if;
+  return case Value of
+    when Some(const N): if N > 0 then 'positive' else 'other' end if;
+    when None: 'none';
+  end case;
 end function;
 
 begin

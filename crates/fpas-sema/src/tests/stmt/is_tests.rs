@@ -1,12 +1,11 @@
-//! `Value is Pattern` tests in `if`, `elsif`, and `while` conditions.
+//! Nonbinding `Value is Pattern` Boolean expressions and rejected bindings.
 //!
 //! **Documentation:** `docs/pascal/language/pattern-matching/is-test.md`
 
 use super::super::{check_errors, check_ok};
 use fpas_diagnostics::DiagnosticCode;
 use fpas_diagnostics::codes::{
-    SEMA_DUPLICATE_DECLARATION, SEMA_IMPLICIT_PATTERN_BINDING, SEMA_MISPLACED_IS_TEST,
-    SEMA_TYPE_MISMATCH, SEMA_UNKNOWN_NAME,
+    SEMA_IMPLICIT_PATTERN_BINDING, SEMA_IS_PATTERN_BINDING, SEMA_TYPE_MISMATCH, SEMA_UNKNOWN_NAME,
 };
 
 fn program(body: &str) -> String {
@@ -29,45 +28,70 @@ fn codes(source: &str, code: DiagnosticCode) -> usize {
 }
 
 #[test]
-fn is_tests_bind_in_conditions_and_bodies() {
+fn nonbinding_is_is_boolean_in_all_expression_contexts() {
     check_ok(&program(
-        "if S is Shape.Circle(const Radius) and Radius > 0 then
-           const Area: integer := Radius * Radius;
-         elsif S is Shape.Point then
-           null;
-         end if;
-         while O is Some(const Value) and Value < 10 do
-           break;
-         end while;
-         if R is Ok(Some(const Value)) and O is Some(const Other) and Value = Other then
-           null;
-         end if;
-         if S is Shape.Circle(_) then null; end if;",
+        "const Present: boolean := (O is Some(_));
+         const Flags: array of boolean := [O is Some(_), not (O is Some(_)), (O is None) xor true];
+         if (R is Ok(Some(_))) or (O is None) then null; end if;
+         while (O is Some(_)) and false do break; end while;
+         repeat null; until O is None;
+         case 1 of when 1 if O is Some(_): null; else null; end case;",
     ));
+    check_ok(
+        "program T;
+         function Has(Value: Option of integer): boolean;
+         requires Value is Some(_);
+         ensures (Present): Present;
+         begin return Value is Some(_); end function;
+         procedure Accept(Flag: boolean); ensures (Flag); begin null; end procedure;
+         begin Accept(Has(Some(1))); end.",
+    );
 }
 
 #[test]
-fn bindings_are_not_visible_outside_the_guarded_body() {
+fn is_never_accepts_bindings_in_any_expression_context() {
+    for body in [
+        "if O is Some(const Value) then null; end if;",
+        "if false then null; elsif O is Some(const Value) then null; end if;",
+        "while O is Some(const Value) do break; end while;",
+        "repeat null; until O is Some(const Value);",
+        "const Hit: boolean := (O is Some(const Value));",
+        "const Hit: boolean := not (R is Ok(Some(const Value)));",
+        "const Hit: boolean := (O is Some(const Value)) or true;",
+        "const Hit: boolean := true xor (O is Some(const Value));",
+        "case 1 of when 1 if O is Some(const Value): null; else null; end case;",
+        "const Hit: boolean := if true then O is Some(const Value) else false end if;",
+        "const Hit: boolean := S is Shape.Circle(const Radius);",
+        "const Hit: boolean := O is const Value;",
+    ] {
+        let errors = check_errors(&program(body));
+        assert_eq!(errors.len(), 1, "{body}: {errors:#?}");
+        assert_eq!(errors[0].code, SEMA_IS_PATTERN_BINDING, "{body}");
+        assert!(
+            errors[0]
+                .help
+                .as_deref()
+                .is_some_and(|hint| hint.contains("case arm"))
+        );
+    }
+    for clause in ["requires", "ensures"] {
+        let source = format!(
+            "program T; function Has(O: Option of integer): boolean;
+            {clause} O is Some(const Value); begin return true; end function; begin end."
+        );
+        assert_eq!(codes(&source, SEMA_IS_PATTERN_BINDING), 1, "{clause}");
+    }
+}
+
+#[test]
+fn rejected_is_bindings_never_introduce_names() {
     for body in [
         "if O is Some(const Value) then null; else const Copy: integer := Value; end if;",
         "if O is Some(const Value) then null; end if; const Copy: integer := Value;",
         "while O is Some(const Value) do break; end while; const Copy: integer := Value;",
     ] {
-        assert!(codes(&program(body), SEMA_UNKNOWN_NAME) >= 1, "{body}");
-    }
-}
-
-#[test]
-fn is_outside_a_branch_condition_is_rejected() {
-    for body in [
-        "const Hit: boolean := O is Some(_);",
-        "if O is Some(_) or true then null; end if;",
-        "if not (O is Some(_)) then null; end if;",
-        "if true and (O is Some(_)) then null; end if;",
-        "repeat null; until O is None;",
-        "case 1 of when 1 if O is Some(_): null; else null; end case;",
-    ] {
-        assert_eq!(codes(&program(body), SEMA_MISPLACED_IS_TEST), 1, "{body}");
+        assert_eq!(codes(&program(body), SEMA_IS_PATTERN_BINDING), 1, "{body}");
+        assert_eq!(codes(&program(body), SEMA_UNKNOWN_NAME), 1, "{body}");
     }
 }
 
@@ -90,14 +114,19 @@ fn is_patterns_follow_case_pattern_rules() {
     assert_eq!(
         codes(
             &program("if O is Some(const V) and R is Ok(Some(const V)) then null; end if;"),
-            SEMA_DUPLICATE_DECLARATION
+            SEMA_IS_PATTERN_BINDING
         ),
-        1
+        2
     );
-    assert_eq!(
-        codes(&program("if O is _ then null; end if;"), SEMA_TYPE_MISMATCH),
-        1
-    );
+    for body in [
+        "if O is _ then null; end if;",
+        "const Hit: boolean := (O is _);",
+        "const Hit: Option of boolean := Some(O is _);",
+        "const Hits: array of boolean := [O is _];",
+        "const Hit: boolean := (S is _);",
+    ] {
+        assert_eq!(codes(&program(body), SEMA_TYPE_MISMATCH), 1, "{body}");
+    }
 }
 
 #[test]

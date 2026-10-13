@@ -2,7 +2,7 @@
 
 use fpas_parser::{Designator, DesignatorPart, Expr, PostfixOperation};
 
-use super::patterns::{collect_case_bindings, collect_condition_bindings};
+use super::patterns::collect_case_bindings;
 use crate::{DocumentSnapshot, DocumentSymbol};
 
 /// Descends through every expression container to collect scoped declarations.
@@ -19,13 +19,6 @@ pub(super) fn collect_expression_symbols(
             ..
         } => {
             for branch in branches {
-                collect_condition_bindings(
-                    snapshot,
-                    owner,
-                    &branch.condition,
-                    branch.span.diagnostic_span_or_synthetic(),
-                    output,
-                );
                 collect_expression_symbols(snapshot, owner, &branch.condition, output);
                 collect_expression_symbols(snapshot, owner, &branch.value, output);
             }

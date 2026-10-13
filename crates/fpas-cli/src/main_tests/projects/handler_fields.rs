@@ -37,8 +37,11 @@ public type
     public OnClick: Option of procedure(Value: integer) := (None);
     public procedure Click(Self: Button);
     begin
-      if Self.OnClick is Some(const Handler) then
-        Handler(Self.Id); end if;
+      case Self.OnClick of
+        when Some(const Handler):
+          Handler(Self.Id);
+        when None: null;
+      end case;
     end procedure;
     public static function Make(Id: integer): Button;
     begin

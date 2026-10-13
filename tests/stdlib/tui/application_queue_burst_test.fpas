@@ -9,16 +9,17 @@ end function;
 
 function Update(Value: integer; Msg: TuiMsg; Cmd: TuiCmdOutput): integer;
 begin
-  if Msg is TuiMsg.Tick(const Delta) then
-    begin
-      AssertEquals(Value + 1, Delta);
-      return Delta;
-    end;
-  else
-    begin
-      return Value;
-    end;
-  end if;
+  case Msg of
+    when TuiMsg.Tick(const Delta):
+      begin
+        AssertEquals(Value + 1, Delta);
+        return Delta;
+      end;
+    when TuiMsg.Started, TuiMsg.Key(_), TuiMsg.Pointer(_), TuiMsg.Resize(_), TuiMsg.FocusChanged(_, _), TuiMsg.Action(_, _), TuiMsg.TextChanged(_, _, _, _), TuiMsg.TextAreaChanged(_, _, _, _, _), TuiMsg.CheckChanged(_, _, _), TuiMsg.SelectionChanged(_, _, _), TuiMsg.ScrollChanged(_, _, _), TuiMsg.MenuChanged(_, _, _), TuiMsg.BackgroundFailed(_, _, _, _, _, _), TuiMsg.QuitRequested:
+      begin
+        return Value;
+      end;
+  end case;
 end function;
 
 begin

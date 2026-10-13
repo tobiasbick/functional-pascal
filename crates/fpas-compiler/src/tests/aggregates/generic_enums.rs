@@ -25,7 +25,7 @@ begin return case Value of when Tree.Leaf(const N): N; when Tree.Node(const L, c
 function First<T>(Value: Tree of T): Option of T;
 begin return case Value of when Tree.Leaf(const Item): Some(Item); when Tree.Node(const L, _): First(L); when Tree.Empty: None; end case; end function;
 function Make<T>(Value: T): Lookup of T; begin return Lookup.Found(Value); end function;
-procedure Accept<T>(Value: Lookup of T; Evidence: T); begin if Value is Lookup.Found(const Item) then panic('expected missing'); end if; end procedure;
+procedure Accept<T>(Value: Lookup of T; Evidence: T); begin if Value is Lookup.Found(_) then panic('expected missing'); end if; end procedure;
 begin
   const I: IntLookup := IntLookup.Found(6);
   const S: Lookup of string := Make('six');
@@ -51,7 +51,7 @@ begin
   const Partial: Choice of (integer, string) := Choice.Left(5);
   case Partial of when Choice.Left(const L): if L <> 5 then panic('partial inference'); end if; when Choice.Right(_): panic('right'); when Choice.Neither: panic('neither'); end case;
   const Numbers: Lookup of array of integer := Lookup.Found([1, 2]);
-  if Numbers is Lookup.Found(const Values) and Values[1] <> 2 then panic('array payload'); end if;
+  case Numbers of when Lookup.Found(const Values): if Values[1] <> 2 then panic('array payload'); end if; when Lookup.Missing: null; end case;
   if Apply(Mapper.Build(Input := 1, Transform := GenericText)) <> 'generic' then panic('generic callable payload'); end if;
   if Apply(Mapper.Build(Transform := GenericText, Input := 1)) <> 'generic' then panic('reordered generic callable payload'); end if;
 end.
@@ -95,7 +95,7 @@ begin
   const Root: A of integer := A.Next(B.Next(A.Stop));
   if Root is A.Next(B.Next(A.Stop)) then begin end; else panic('mutual enum pattern'); end if;
   const E: Entry of integer := Entry(Value := 2, Next := Link.More(Entry(Value := 1, Next := Link.Stop)));
-  if E.Next is Link.More(const Tail) and Tail.Value = 1 then begin end; else panic('record enum recursion'); end if;
+  case E.Next of when Link.More(const Tail): if Tail.Value <> 1 then panic('record enum recursion'); end if; when Link.Stop: panic('record enum recursion'); end case;
 end.
 "#,
     );

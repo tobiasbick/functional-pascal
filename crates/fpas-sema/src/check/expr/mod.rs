@@ -17,6 +17,7 @@ mod distinct_conversion;
 mod distinct_operators;
 mod enum_construction;
 mod equality;
+mod is_test;
 mod operators;
 mod postfix;
 mod record_construction;
@@ -131,7 +132,7 @@ impl Checker {
             ),
             Expr::NamedArgument { .. } => self.check_misplaced_named_argument(expr),
             Expr::VarArgument { .. } => self.check_misplaced_var_argument(expr),
-            Expr::Is { .. } => self.check_misplaced_is_test(expr),
+            Expr::Is { value, pattern, .. } => self.check_is_test(value, pattern),
             Expr::If {
                 branches,
                 else_value,

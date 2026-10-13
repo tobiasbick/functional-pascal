@@ -9,13 +9,15 @@ REQUIRES X>0; // positive
 requires if X<10 then true else false end if;
 // exit
 ENSURES X>0; // current
+ensures (Ready);
+ensures (X>0);
 // helper
 procedure Q(); ensures true; begin null; end procedure;
 begin Q(); end procedure;
 public type Box=record public Value:integer;
 public function Read(Self:Box):integer;
 requires Self.Value>0;
-ensures (Value) Value=Self.Value;
+ensures (Value): Value=Self.Value;
 begin return Self.Value; end function;
 public static procedure Check(X:integer); requires X>0; ensures X>0; begin null; end procedure;
 end record; end unit;";
@@ -32,7 +34,9 @@ end record; end unit;";
         "requires X > 0;",
         "requires Self.Value > 0;",
         "ensures X > 0;",
-        "ensures (Value) Value = Self.Value;",
+        "ensures (Ready);",
+        "ensures (X > 0);",
+        "ensures (Value): Value = Self.Value;",
     ] {
         assert!(formatted.contains(text), "{formatted}");
     }

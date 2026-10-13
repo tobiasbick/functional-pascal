@@ -19,7 +19,7 @@ pub struct RequiresClause {
 /// A Boolean `ensures` clause checked on every ordinary or propagated return.
 #[derive(Debug, Clone, PartialEq)]
 pub struct EnsuresClause {
-    /// Optional clause-local name and declaration span of the complete return value.
+    /// Optional clause-local name and declaration span, introduced by `(Name):`.
     pub result_name: Option<(String, Span)>,
     /// Parsed Boolean condition.
     pub condition: Expr,

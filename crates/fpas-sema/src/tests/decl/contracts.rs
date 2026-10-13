@@ -17,6 +17,8 @@ fn clauses_accept_immutable_values_parameters_construction_and_native_queries() 
         requires D.Length() > 0 and not D.IsEmpty() and D.ContainsKey('a') and D['a'] = X;
         requires Box().Value = 1 and [X].Contains(X);
         requires [Callback].Length() = 1;
+        requires Some(X) is Some(_);
+        requires (Ok(Some(X)) is Ok(Some(_))) and (None is None);
         requires if X > 0 then true else false end if;
         requires case Some(X) of when Some(const N) if N > 0: true; when Some(_): false; when None: false; end case;
         begin null; end procedure; begin end.");
@@ -25,23 +27,23 @@ fn clauses_accept_immutable_values_parameters_construction_and_native_queries() 
 #[test]
 fn postcondition_names_have_the_complete_result_type_and_only_clause_scope() {
     check_ok("program T;
-        function Identity<T: Comparable>(X: T): T; ensures (Value) Value = X; begin return X; end function;
+        function Identity<T: Comparable>(X: T): T; ensures (Value): Value = X; begin return X; end function;
         function Read(X: integer): Result of (integer, string);
-        ensures (Value) case Value of when Ok(const N): N = X; when Error(const Message): Message.Length() > 0; end case;
-        ensures (Other) case Other of when Ok(_): true; when Error(_): true; end case;
+        ensures (Value): case Value of when Ok(const N): N = X; when Error(const Message): Message.Length() > 0; end case;
+        ensures (Other): case Other of when Ok(_): true; when Error(_): true; end case;
         begin return Ok(X); end function;
         procedure Set(var X: integer); ensures X = 2; begin X := 2; end procedure; begin end.");
     for (source, code) in [
         (
-            "function F(): integer; ensures (Value) Value = 'text'; begin return 1; end function;",
+            "function F(): integer; ensures (Value): Value = 'text'; begin return 1; end function;",
             SEMA_TYPE_MISMATCH,
         ),
         (
-            "function F(): integer; ensures (Value) Value > 0; ensures Value > 0; begin return 1; end function;",
+            "function F(): integer; ensures (Value): Value > 0; ensures Value > 0; begin return 1; end function;",
             SEMA_UNKNOWN_NAME,
         ),
         (
-            "function F(): integer; ensures (Value) Value > 0; begin return Value; end function;",
+            "function F(): integer; ensures (Value): Value > 0; begin return Value; end function;",
             SEMA_UNKNOWN_NAME,
         ),
         (
@@ -49,7 +51,7 @@ fn postcondition_names_have_the_complete_result_type_and_only_clause_scope() {
             SEMA_UNKNOWN_NAME,
         ),
         (
-            "function F(): Option of integer; ensures (Value) Value > 0; begin return Some(1); end function;",
+            "function F(): Option of integer; ensures (Value): Value > 0; begin return Some(1); end function;",
             SEMA_TYPE_MISMATCH,
         ),
         (
@@ -65,7 +67,7 @@ fn postcondition_names_have_the_complete_result_type_and_only_clause_scope() {
         );
     }
     let errors = check_errors(
-        "program T; procedure P(); ensures (Value) true; begin null; end procedure; begin end.",
+        "program T; procedure P(); ensures (Value): true; begin null; end procedure; begin end.",
     );
     assert!(
         errors
@@ -75,7 +77,7 @@ fn postcondition_names_have_the_complete_result_type_and_only_clause_scope() {
     );
     let errors = check_errors(
         "program T; uses Std.Console as C; function F(): integer;
-        ensures (C) true; begin return 1; end function; begin end.",
+        ensures (C): true; begin return 1; end function; begin end.",
     );
     assert!(
         errors
@@ -138,6 +140,9 @@ fn clauses_reject_effects_and_mutable_state_recursively_by_resolved_identity() {
         "[B.Length].Length() > 0",
         "[Box().Length].Length() > 0",
         "if true then Read() > 0 else false end if",
+        "Some(Read()) is Some(_)",
+        "Some(Global) is Some(_)",
+        "Some(Callback()) is Some(_)",
         "case X of when const N if Read() > 0: true; else false; end case",
         "try Some(true)",
         "old(X) > 0",

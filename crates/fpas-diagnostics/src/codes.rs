@@ -208,10 +208,10 @@ define_codes!(SEMA_ALLOCATED_CODES => {
     ///
     /// Documentation: `docs/pascal/tools/diagnostics.md` (FP3033).
     SEMA_UNREACHABLE_CASE_LABEL = 3033;
-    /// An `is` pattern test appears outside an `if`, `elsif`, or `while` condition.
+    /// An `is` pattern attempts to introduce a bound name.
     ///
     /// Documentation: `docs/pascal/tools/diagnostics.md` (FP3034).
-    SEMA_MISPLACED_IS_TEST = 3034;
+    SEMA_IS_PATTERN_BINDING = 3034;
     /// A closed-enum, Option, or Result case contains an `else` branch.
     ///
     /// Documentation: `docs/pascal/tools/diagnostics.md` (FP3035).

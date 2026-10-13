@@ -9,7 +9,7 @@ fn reachable_missing_returns_report_a_user_diagnostic() {
         "if Value > 0 then return Value; end if;",
         "case Value of when 0: return 0; when const N if N > 0: return N; when const N if N < 0: return N; end case;",
     ] {
-        for contract in ["", "ensures (Returned) Returned > 0;"] {
+        for contract in ["", "ensures (Returned): Returned > 0;"] {
             let program = parse_ok(&format!(
                 "program T; function Checked(Value: integer): integer;
                  {contract} begin {body} end function;

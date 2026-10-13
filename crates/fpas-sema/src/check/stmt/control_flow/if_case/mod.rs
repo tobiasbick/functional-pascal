@@ -38,7 +38,6 @@ impl Checker {
         else_branch: Option<&Stmt>,
         span: Span,
     ) {
-        // `is` bindings live in the condition and the then-branch only.
         self.scopes.push_scope();
         self.check_branch_condition(condition, "if", span);
         self.check_stmt(then_branch);

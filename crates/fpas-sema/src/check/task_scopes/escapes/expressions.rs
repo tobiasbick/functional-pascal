@@ -97,9 +97,8 @@ impl Walker<'_, '_> {
                     DesignatorPart::Index(..) => Vec::new(),
                 })
                 .unwrap_or_default(),
-            Expr::Is { value, pattern, .. } => {
-                let owners = self.expr(value);
-                self.bind_pattern(pattern, &owners);
+            Expr::Is { value, .. } => {
+                let _ = self.expr(value);
                 Vec::new()
             }
             Expr::If {

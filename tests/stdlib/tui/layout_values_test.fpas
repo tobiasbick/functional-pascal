@@ -116,35 +116,38 @@ begin
                                                                  TuiElementBuilders.MakeLabel('A'),
                                                                  TuiElementBuilders.MakeLabel('B')
                                                                ], 2);
-  if Spaced is TuiElement.Row(const Children, const Spacing) then
-    begin
-      AssertEquals(2, Spacing);
-      AssertEquals(2, Children.Length());
-    end;
-  else
-    begin
-      Fail('expected spaced row');
-    end;
-  end if;
+  case Spaced of
+    when TuiElement.Row(const Children, const Spacing):
+      begin
+        AssertEquals(2, Spacing);
+        AssertEquals(2, Children.Length());
+      end;
+    when TuiElement.Empty, TuiElement.Label(_), TuiElement.Button(_), TuiElement.Input(_), TuiElement.TextArea(_, _, _, _, _), TuiElement.CheckBox(_, _, _, _), TuiElement.List(_, _, _, _), TuiElement.Scroll(_, _, _, _), TuiElement.MenuBar(_), TuiElement.Menu(_, _, _, _), TuiElement.StatusLine(_), TuiElement.CellGrid(_), TuiElement.Rule(_), TuiElement.Gauge(_), TuiElement.Column(_, _), TuiElement.Layout(_, _), TuiElement.Spacer(_), TuiElement.Panel(_, _), TuiElement.Overlay(_, _), TuiElement.Desktop(_, _):
+      begin
+        Fail('expected spaced row');
+      end;
+  end case;
   const Wrapped: TuiElement := TuiElementBuilders.MakeLayout(Settings, TuiElementBuilders.MakeLabel('X'));
-  if Wrapped is TuiElement.Layout(const WrappedSettings, const WrappedChildren) then
-    begin
-      AssertEquals(1, WrappedChildren.Length());
-      AssertEquals(0, WrappedSettings.Stretch);
-    end;
-  else
-    begin
-      Fail('expected layout wrapper');
-    end;
-  end if;
+  case Wrapped of
+    when TuiElement.Layout(const WrappedSettings, const WrappedChildren):
+      begin
+        AssertEquals(1, WrappedChildren.Length());
+        AssertEquals(0, WrappedSettings.Stretch);
+      end;
+    when TuiElement.Empty, TuiElement.Label(_), TuiElement.Button(_), TuiElement.Input(_), TuiElement.TextArea(_, _, _, _, _), TuiElement.CheckBox(_, _, _, _), TuiElement.List(_, _, _, _), TuiElement.Scroll(_, _, _, _), TuiElement.MenuBar(_), TuiElement.Menu(_, _, _, _), TuiElement.StatusLine(_), TuiElement.CellGrid(_), TuiElement.Rule(_), TuiElement.Gauge(_), TuiElement.Row(_, _), TuiElement.Column(_, _), TuiElement.Spacer(_), TuiElement.Panel(_, _), TuiElement.Overlay(_, _), TuiElement.Desktop(_, _):
+      begin
+        Fail('expected layout wrapper');
+      end;
+  end case;
   const SpacerElement: TuiElement := TuiElementBuilders.MakeSpacer(FixedSpacer);
-  if SpacerElement is TuiElement.Spacer(const Value) then
-    begin
-      AssertEquals(3, Value.MinimumExtent);
-    end;
-  else
-    begin
-      Fail('expected spacer element');
-    end;
-  end if;
+  case SpacerElement of
+    when TuiElement.Spacer(const Value):
+      begin
+        AssertEquals(3, Value.MinimumExtent);
+      end;
+    when TuiElement.Empty, TuiElement.Label(_), TuiElement.Button(_), TuiElement.Input(_), TuiElement.TextArea(_, _, _, _, _), TuiElement.CheckBox(_, _, _, _), TuiElement.List(_, _, _, _), TuiElement.Scroll(_, _, _, _), TuiElement.MenuBar(_), TuiElement.Menu(_, _, _, _), TuiElement.StatusLine(_), TuiElement.CellGrid(_), TuiElement.Rule(_), TuiElement.Gauge(_), TuiElement.Row(_, _), TuiElement.Column(_, _), TuiElement.Layout(_, _), TuiElement.Panel(_, _), TuiElement.Overlay(_, _), TuiElement.Desktop(_, _):
+      begin
+        Fail('expected spacer element');
+      end;
+  end case;
 end.

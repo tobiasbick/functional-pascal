@@ -127,10 +127,10 @@ include = ["src/**/*.fpas"]
         end function;
         public function NestedArea(Value: option of Model.Shape): integer;
         begin
-          if Value is Some(Model.Shape.Rect(const W, const H)) and W > 0 then
-            return W * H;
-          end if;
-          return 0;
+          return case Value of
+            when Some(Model.Shape.Rect(const W, const H)) if W > 0: W * H;
+            when Some(_), None: 0;
+          end case;
         end function;
         public function Make(Value: integer): Model.Point;
         begin return Model.Point.Create(Value); end function;

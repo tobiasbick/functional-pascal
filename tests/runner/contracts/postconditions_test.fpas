@@ -6,7 +6,7 @@ type Box = record
   Value: integer;
 
   function Read(Self: Box): integer;
-  ensures (ReadValue) ReadValue = Self.Value;
+  ensures (ReadValue): ReadValue = Self.Value;
   begin
     return Self.Value;
   end function;
@@ -20,7 +20,7 @@ begin
 end procedure;
 
 function Checked(Value: integer): result of (integer, string);
-ensures (CheckedValue) case CheckedValue of
+ensures (CheckedValue): case CheckedValue of
   when Ok(const N): N = Value;
   when Error(const Message): Message = 'negative';
 end case;
@@ -33,7 +33,7 @@ begin
 end function;
 
 function Optional(Value: integer): option of integer;
-ensures (OptionalValue) case OptionalValue of
+ensures (OptionalValue): case OptionalValue of
   when Some(const N): N = Value;
   when None: Value < 0;
 end case;

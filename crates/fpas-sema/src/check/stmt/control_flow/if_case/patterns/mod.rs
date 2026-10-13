@@ -11,7 +11,7 @@ use crate::scope::canonical_symbol_name;
 use crate::types::Ty;
 use fpas_diagnostics::codes::{
     SEMA_DUPLICATE_DECLARATION, SEMA_ENUM_FIELD_COUNT_MISMATCH, SEMA_IMPLICIT_PATTERN_BINDING,
-    SEMA_NAMED_ARGUMENTS_NOT_SUPPORTED, SEMA_TYPE_MISMATCH,
+    SEMA_IS_PATTERN_BINDING, SEMA_NAMED_ARGUMENTS_NOT_SUPPORTED, SEMA_TYPE_MISMATCH,
 };
 use fpas_lexer::Span;
 use fpas_parser::{Designator, DestructureVariant, Pattern, PatternField};
@@ -20,15 +20,15 @@ use fpas_parser::{Designator, DestructureVariant, Pattern, PatternField};
 pub(super) type PatternBindings = Vec<(String, Ty)>;
 
 impl Checker {
-    /// Checks the pattern of an `is` test and returns the names it binds.
+    /// Checks a nonbinding pattern predicate using the same value and variant rules as case.
     ///
     /// **Documentation:** `docs/pascal/language/pattern-matching/is-test.md`
-    pub(in crate::check::stmt::control_flow) fn check_is_pattern(
-        &mut self,
-        value_ty: &Ty,
-        pattern: &Pattern,
-    ) -> PatternBindings {
-        self.check_label_pattern(value_ty, pattern).0
+    pub(in crate::check) fn check_is_pattern(&mut self, value_ty: &Ty, pattern: &Pattern) {
+        if let Pattern::Wildcard(span) = pattern {
+            self.reject_whole_value_wildcard(*span);
+            return;
+        }
+        self.check_pattern(value_ty, pattern, None);
     }
 
     /// Checks a complete label pattern and rejects a name bound twice inside it.
@@ -38,7 +38,7 @@ impl Checker {
         pattern: &Pattern,
     ) -> (PatternBindings, Pat) {
         let mut bindings = PatternBindings::new();
-        let pat = self.check_pattern(expected_ty, pattern, &mut bindings);
+        let pat = self.check_pattern(expected_ty, pattern, Some(&mut bindings));
         let mut unique = PatternBindings::with_capacity(bindings.len());
         for (name, ty) in bindings {
             if unique.iter().any(|(existing, _)| {
@@ -62,7 +62,7 @@ impl Checker {
         &mut self,
         expected_ty: &Ty,
         pattern: &Pattern,
-        bindings: &mut PatternBindings,
+        mut bindings: Option<&mut PatternBindings>,
     ) -> Pat {
         let expected_ty = self.resolve_visible_type(expected_ty);
         let span = pattern.span();
@@ -71,7 +71,16 @@ impl Checker {
         let expected_ty = &expected_ty;
         match pattern {
             Pattern::Binding { name, .. } => {
-                bindings.push((name.clone(), expected_ty.clone()));
+                if let Some(bindings) = bindings {
+                    bindings.push((name.clone(), expected_ty.clone()));
+                } else {
+                    self.error_with_code(
+                        SEMA_IS_PATTERN_BINDING,
+                        format!("`is` cannot bind the name `{name}`"),
+                        "Use a case arm to bind data, for example `when Some(const Value): Use(Value);`. Use `Some(_)` when only testing presence.",
+                        span,
+                    );
+                }
                 Pat::Wild
             }
             Pattern::Wildcard(_) => Pat::Wild,
@@ -83,7 +92,13 @@ impl Checker {
             } => self
                 .check_conversion_label(expected_ty, constructor, pattern, *span)
                 .unwrap_or_else(|| {
-                    self.check_variant_pattern(expected_ty, constructor, fields, *span, bindings)
+                    self.check_variant_pattern(
+                        expected_ty,
+                        constructor,
+                        fields,
+                        *span,
+                        bindings.as_deref_mut(),
+                    )
                 }),
             Pattern::Destructure {
                 variant,
@@ -111,7 +126,7 @@ impl Checker {
         constructor: &Designator,
         fields: &[PatternField],
         span: Span,
-        bindings: &mut PatternBindings,
+        mut bindings: Option<&mut PatternBindings>,
     ) -> Pat {
         let Some((variant_name, field_types)) = self.variant_field_types(expected_ty, constructor)
         else {
@@ -128,7 +143,7 @@ impl Checker {
                     if fields.len() == 1 { "was" } else { "were" },
                 ),
                 format!(
-                    "Write {} pattern{} such as `const Name` or `_` to match all fields of '{variant_name}'.",
+                    "Write {} pattern{} such as `_` or a literal to match all fields of '{variant_name}'. Bind payloads with `const Name` only in case arms.",
                     field_types.len(),
                     if field_types.len() == 1 { "" } else { "s" },
                 ),
@@ -147,7 +162,9 @@ impl Checker {
         let args = fields
             .iter()
             .zip(&field_types)
-            .map(|(field, field_ty)| self.check_pattern(field_ty, &field.pattern, bindings))
+            .map(|(field, field_ty)| {
+                self.check_pattern(field_ty, &field.pattern, bindings.as_deref_mut())
+            })
             .collect();
         Pat::Ctor(variant_name.to_ascii_lowercase(), args)
     }
@@ -157,17 +174,19 @@ impl Checker {
         name: &str,
         expected_ty: &Ty,
         span: Span,
-        bindings: &mut PatternBindings,
+        bindings: Option<&mut PatternBindings>,
     ) -> Pat {
         self.error_with_code(
             SEMA_IMPLICIT_PATTERN_BINDING,
             format!("Pattern binding `{name}` must be written `const {name}`"),
             format!(
-                "Write `const {name}` to bind the value, `_` to ignore it, or name a constant to compare with."
+                "Bind the value in a case arm with `const {name}`, use `_` to ignore a field, or name a compile-time constant to compare with."
             ),
             span,
         );
-        bindings.push((name.to_string(), expected_ty.clone()));
+        if let Some(bindings) = bindings {
+            bindings.push((name.to_string(), expected_ty.clone()));
+        }
         Pat::Wild
     }
 
@@ -190,10 +209,10 @@ impl Checker {
         if !valid {
             let hint = match variant {
                 DestructureVariant::Ok | DestructureVariant::Error => {
-                    "Use `Ok(const Value)` and `Error(const Value)` with `Result`."
+                    "Use `Ok(_)` and `Error(_)` with `Result`. Bind payloads with `const Name` only in case arms."
                 }
                 DestructureVariant::Some | DestructureVariant::None => {
-                    "Use `Some(const Value)` and `None` with `Option`."
+                    "Use `Some(_)` and `None` with `Option`. Bind payloads with `const Name` only in case arms."
                 }
             };
             self.error_with_code(

@@ -31,17 +31,18 @@ end function;
 function UpdateTextArea(State: TextAreaModel; Msg: TuiMsg; Cmd: TuiCmdOutput): TextAreaModel;
 begin
   Cmd.Set(TuiCmd.NoCommand);
-  if Msg is TuiMsg.TextAreaChanged(const Source, const Action, const Text, const Caret, const Offset) then
-    begin
-      AssertEquals(1, Source.Value);
-      AssertEquals(9, Action.Value);
-      return TextAreaModel(Text := Text, Caret := Caret, Offset := Offset);
-    end;
-  else
-    begin
-      return State;
-    end;
-  end if;
+  case Msg of
+    when TuiMsg.TextAreaChanged(const Source, const Action, const Text, const Caret, const Offset):
+      begin
+        AssertEquals(1, Source.Value);
+        AssertEquals(9, Action.Value);
+        return TextAreaModel(Text := Text, Caret := Caret, Offset := Offset);
+      end;
+    when TuiMsg.Started, TuiMsg.Key(_), TuiMsg.Pointer(_), TuiMsg.Tick(_), TuiMsg.Resize(_), TuiMsg.FocusChanged(_, _), TuiMsg.Action(_, _), TuiMsg.TextChanged(_, _, _, _), TuiMsg.CheckChanged(_, _, _), TuiMsg.SelectionChanged(_, _, _), TuiMsg.ScrollChanged(_, _, _), TuiMsg.MenuChanged(_, _, _), TuiMsg.BackgroundFailed(_, _, _, _, _, _), TuiMsg.QuitRequested:
+      begin
+        return State;
+      end;
+  end case;
 end function;
 
 function Press(App: TuiApplication; State: TextAreaModel; Kind: TuiKeyKind; Character: string): TextAreaModel;

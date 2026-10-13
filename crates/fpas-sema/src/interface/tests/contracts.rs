@@ -7,7 +7,7 @@ fn public_clause_identity_order_and_interface_hash_survive_roundtrip() {
         public procedure Guard(X: integer); requires X > 0; requires X < 10; ensures X > 0; ensures X < 10; begin null; end procedure;
         procedure Hidden(); requires false; begin null; end procedure;
         public type Box = record public Value: integer;
-            public function Check(Self: Box): integer; ensures (Checked) Checked = Self.Value; begin return Self.Value; end function;
+            public function Check(Self: Box): integer; ensures (Checked): Checked = Self.Value; begin return Self.Value; end function;
             static procedure Hidden(); requires false; begin null; end procedure;
         end record;
         public type Original = record public Value: integer;
@@ -35,7 +35,7 @@ fn public_clause_identity_order_and_interface_hash_survive_roundtrip() {
     );
     assert_eq!(
         interface.routine_contracts[0].ensures,
-        ["ensures (Checked) Checked = Self.Value;"]
+        ["ensures (Checked): Checked = Self.Value;"]
     );
     assert_eq!(
         interface.routine_contracts[1].ensures,

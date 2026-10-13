@@ -21,8 +21,9 @@ contracts cannot substitute for a missing return.
 
 ### Return-value naming (Q16)
 
-- An `ensures` clause may name the return value explicitly, for example
-  `ensures (Clamped) Clamped >= Lower and Clamped <= Upper;`.
+- An `ensures` clause may name the return value explicitly with the required
+  `(Name):` prefix (AP35.3), for example
+  `ensures (Clamped): Clamped >= Lower and Clamped <= Upper;`.
 - The name denotes the routine's return value and is visible only in that
   clause. It does not introduce a binding in the body or in other clauses.
 - Do not use the routine name or `return` as a special return-value reference.
@@ -47,7 +48,7 @@ Contract heading fragment; the body is omitted:
 ```pascal
 function Clamp(Value: integer; Lower: integer; Upper: integer): integer;
 requires Lower <= Upper;
-ensures (Clamped) Clamped >= Lower and Clamped <= Upper;
+ensures (Clamped): Clamped >= Lower and Clamped <= Upper;
 ```
 
 ### Expression and binding boundary
@@ -75,7 +76,7 @@ The current [constant classification](../../../pascal/language/basics/constants.
 distinguishes computed immutable bindings from compile-time constants.
 [Membership](../../../pascal/language/basics/operators.md#comparison) includes
 values and subrange types. The current [`is` test](../../../pascal/language/pattern-matching/is-test.md#where-is-is-valid)
-retains its existing condition positions; AP23 does not extend its scope.
+is a nonbinding Boolean expression whose operands obey the same restrictions (AP35.2).
 
 ### Propagated returns (AP23.2)
 
@@ -117,3 +118,13 @@ propagated return. Both are documented under
 Contracts are typed and restricted to side-effect-free expressions; checks
 remain active in release builds, violations panic with the agreed details, and
 contracts cannot substitute for a missing return.
+
+## Independent follow-up
+
+[AP35.1](../ap35-condition-composition/01-condition-decisions.md) selects
+`ensures (Name): Expression;` to disambiguate a return binder from a grouped
+condition. [AP35.3](../ap35-condition-composition/03-postcondition-binding.md)
+owns the replacement for Q16's binder spelling and its repository migration;
+return-value type, clause scope, and timing remain as specified here.
+AP35.2 enables nonbinding is tests under the existing contract expression
+restrictions. These replacements preserve AP23's contract scope and timing.

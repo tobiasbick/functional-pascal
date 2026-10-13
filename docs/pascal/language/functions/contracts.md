@@ -30,7 +30,7 @@ every build mode, including release builds.
 
 ```pascal
 function Increment(Value: integer): integer;
-ensures (Incremented) Incremented = Value + 1;
+ensures (Incremented): Incremented = Value + 1;
 begin
   return Value + 1;
 end function;
@@ -42,12 +42,15 @@ begin
 end procedure;
 ```
 
-A function clause can name its complete return value with `(Name)` immediately
+A function clause can name its complete return value with `(Name):` immediately
 after `ensures`. The name has the declared return type and is visible only in
 that clause. Each clause introduces its own name independently; it is unavailable
 in the body and other clauses. Procedures have no return value to name. A leading
-parenthesized identifier denotes this binding; parenthesized Boolean expressions
-such as `ensures (Value > 0);` remain ordinary conditions.
+parenthesized identifier followed by `:` denotes this binding. The colon is
+required: `ensures (Returned): Returned > 0;`. Without that complete prefix,
+the clause is a normal expression: `ensures (Flag);` and
+`ensures (Value > 0);` are ordinary Boolean conditions. There is no automatic
+return-value name.
 
 Postconditions run after the return expression is evaluated once, before the
 value leaves the routine. They apply to early and final function returns,
@@ -57,7 +60,7 @@ than an unwrapped success payload. For example:
 
 ```pascal
 function Read(Input: Result of (integer, string)): Result of (integer, string);
-ensures (Returned) case Returned of
+ensures (Returned): case Returned of
   when Ok(const Value): Value >= 0;
   when Error(const Message): Message.Length() > 0;
 end case;
@@ -84,7 +87,8 @@ its own named return value. Body-local declarations are
 outside the clause's scope. Mutable globals and mutable captures cannot be read.
 
 Allowed forms are literals, operators, field and index reads, explicit type
-conversions, typed construction, record updates, and `if`/`case` expressions.
+conversions, typed construction, record updates, nonbinding `is` tests, and
+`if`/`case` expressions.
 Membership with `in` includes existing collection and subrange membership.
 Every subexpression has the same restrictions, including arguments, guards,
 indexes, and omitted record-field defaults. Defaults retain the binding scope

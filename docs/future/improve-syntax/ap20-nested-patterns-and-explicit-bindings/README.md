@@ -16,8 +16,8 @@ After AP20.1 and AP20.2, patterns bind with `const Name`, ignore fields with
 `_`, nest, and compare payloads with compile-time constants; coverage is
 checked recursively and covered labels are rejected. Scalar guard bindings use
 `when const N if Guard:`, and a bare scalar label is always a value
-comparison. `Value is Pattern` tests one pattern as an `if`, `elsif`, or
-`while` condition (AP20.3).
+comparison. `Value is Pattern` is a nonbinding Boolean expression; AP35.2
+replaces AP20.3's original binding and condition-only rules.
 
 ## Decisions
 
@@ -25,11 +25,10 @@ comparison. `Value is Pattern` tests one pattern as an `if`, `elsif`, or
   named constants compare; `_` ignores a field. `_` never ignores a whole
   closed-enum variant.
 - Patterns nest: `when Ok(Some(const User)):`.
-- `Value is Pattern` tests one variant and binds its fields. It is valid as the
-  condition of `if`, `elsif`, and `while`; the bindings are visible only in the
-  branch or loop body. It may be followed by `and` conditions that use the
-  bindings; it cannot appear under `or` or `not`. It is not a `case` and has no
-  exhaustiveness check. `is` is not a free boolean value.
+- `Value is Pattern` is a nonbinding Boolean expression with ordinary grouping
+  and logical operators. It accepts nested patterns, wildcards, and compile-time
+  comparisons, and has no exhaustiveness check. Every `const Name` inside it
+  is rejected; only case arms introduce pattern names (AP35.2).
 - `is` becomes a reserved keyword.
 - Scalar guard bindings use the same explicit form:
   `when const N if N > 0:`. A bare identifier in a scalar label is always a
@@ -63,21 +62,20 @@ case Response of
     Retry();
 end case;
 
-if Msg is TuiMsg.Resize(const W, const H) and W > 0 then
-  Relayout(W, H);
-end if;
-
-while Queue.Next() is Some(const Job) do
-  Run(Job);
-end while;
-
-const Hit: boolean := X is Some(_);   // error: 'is' only in if, elsif, while
+const Hit: boolean := X is Some(_);
+if not Hit then ReportMissing(); end if;
 ```
 
 ## Open decisions
 
 None. The scalar guard-binding migration and the pattern details above were
 agreed before AP20.1.
+
+## Independent follow-up
+
+[AP35.2](../ap35-condition-composition/02-pattern-conditions.md) replaces
+AP20.3's original context and binding rules and owns the consumer migration.
+The rules above describe the resulting language. AP20 remains complete.
 
 ## Dependencies
 

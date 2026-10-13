@@ -3,7 +3,7 @@
 
 use fpas_diagnostics::SourceSpan;
 use fpas_lexer::Span;
-use fpas_parser::{CaseLabel, Expr, Pattern, Visibility};
+use fpas_parser::{CaseLabel, Pattern, Visibility};
 
 use super::member_symbol;
 use crate::{DocumentSnapshot, DocumentSymbol, SymbolKind};
@@ -43,30 +43,6 @@ pub(super) fn collect_case_bindings(
                 collect_pattern(snapshot, owner, pattern, scope_span, visible_from, output);
             }
             CaseLabel::Value { .. } => {}
-        }
-    }
-}
-
-/// Extracts top-level `is` binders for later conjuncts and their guarded body.
-pub(super) fn collect_condition_bindings(
-    snapshot: &DocumentSnapshot,
-    owner: &str,
-    condition: &Expr,
-    scope_span: SourceSpan,
-    output: &mut Vec<DocumentSymbol>,
-) {
-    let mut conjuncts = Vec::new();
-    condition.collect_conjuncts(&mut conjuncts);
-    for conjunct in conjuncts {
-        if let Expr::Is { pattern, span, .. } = conjunct {
-            collect_pattern(
-                snapshot,
-                owner,
-                pattern,
-                scope_span,
-                span.diagnostic_span_or_synthetic().end(),
-                output,
-            );
         }
     }
 }

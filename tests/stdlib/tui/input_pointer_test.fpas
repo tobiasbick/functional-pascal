@@ -24,21 +24,22 @@ end function;
 function UpdateInput(State: InputPointerModel; Msg: TuiMsg; Cmd: TuiCmdOutput): InputPointerModel;
 begin
   Cmd.Set(TuiCmd.NoCommand);
-  if Msg is TuiMsg.TextChanged(const Source, const Action, const Text, const Caret) then
-    begin
-      if Source.Value = 1 then
-        begin
-          return InputPointerModel(FirstText := Text, FirstCaret := Caret, SecondText := State.SecondText, SecondCaret := State.SecondCaret, LastSource := Source.Value, LastAction := Action.Value);
-        end;
-      end if;
+  case Msg of
+    when TuiMsg.TextChanged(const Source, const Action, const Text, const Caret):
+      begin
+        if Source.Value = 1 then
+          begin
+            return InputPointerModel(FirstText := Text, FirstCaret := Caret, SecondText := State.SecondText, SecondCaret := State.SecondCaret, LastSource := Source.Value, LastAction := Action.Value);
+          end;
+        end if;
 
-      return InputPointerModel(FirstText := State.FirstText, FirstCaret := State.FirstCaret, SecondText := Text, SecondCaret := Caret, LastSource := Source.Value, LastAction := Action.Value);
-    end;
-  else
-    begin
-      return State;
-    end;
-  end if;
+        return InputPointerModel(FirstText := State.FirstText, FirstCaret := State.FirstCaret, SecondText := Text, SecondCaret := Caret, LastSource := Source.Value, LastAction := Action.Value);
+      end;
+    when TuiMsg.Started, TuiMsg.Key(_), TuiMsg.Pointer(_), TuiMsg.Tick(_), TuiMsg.Resize(_), TuiMsg.FocusChanged(_, _), TuiMsg.Action(_, _), TuiMsg.TextAreaChanged(_, _, _, _, _), TuiMsg.CheckChanged(_, _, _), TuiMsg.SelectionChanged(_, _, _), TuiMsg.ScrollChanged(_, _, _), TuiMsg.MenuChanged(_, _, _), TuiMsg.BackgroundFailed(_, _, _, _, _, _), TuiMsg.QuitRequested:
+      begin
+        return State;
+      end;
+  end case;
 end function;
 
 function Click(App: TuiApplication; State: InputPointerModel; X: integer; Y: integer): InputPointerModel;

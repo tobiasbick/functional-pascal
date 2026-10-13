@@ -45,14 +45,15 @@ an open work package.
 ## Package status
 
 AP01, AP02, AP03, AP04, AP05, AP06, AP07, AP09, AP10, AP11, AP13, AP14, AP15, AP16,
-AP17, AP18, AP19, AP20, AP21, AP22, AP23, AP24, AP26, AP30, AP31, AP32, AP33, and AP34 are complete, including all
-their work packages. Their READMEs and work-package files record implemented behavior,
+AP17, AP18, AP19, AP20, AP21, AP22, AP23, AP24, AP26, AP30, AP31, AP32, AP33, AP34,
+and AP35 are complete, including all their work packages. Their READMEs and
+work-package files record implemented behavior,
 implementation owners, regression coverage, and any independent follow-ups.
 Checkboxes use the [status-tracking rule](development-process.md#status-tracking).
 
-Of the 43 packages, 28 are implemented, AP08/AP25/AP29 are rejected and closed,
+Of the 43 packages, 29 are implemented, AP08/AP25/AP29 are rejected and closed,
 AP12 and AP27 are deferred with their proposals retained, AP28 is transferred
-to editor/LSP planning. The nine packages AP35–AP43 are Decision pending.
+to editor/LSP planning. The eight packages AP36–AP43 are Decision pending.
 They record the language-consistency audit: concrete defects, underspecified
 contracts, context-dependent rules, and redundant public forms. Adding a
 proposal by itself does not approve its language changes or implementation.
@@ -60,7 +61,9 @@ AP30 and AP31 implement their selected contracts; AP32 corrects diagnostic
 hints and language guidance against current implemented behavior. AP33 delivers
 explicit numeric compatibility, checked arithmetic, and shared numeric text rules.
 AP34 delivers uniform local/contextual inference, including native callbacks and
-rejection of unresolved inner sites. AP35–AP43 remain separate proposals.
+rejection of unresolved inner sites. AP35 delivers nonbinding Boolean is tests,
+case-only pattern bindings, and `ensures (Name):` return binders.
+AP36–AP43 remain separate proposals.
 Reopening either deferred package requires a new explicit user decision.
 
 Completed APs retain their delivered scope and status. A new package that
@@ -126,7 +129,7 @@ package are listed in each work package file.
 | [x] | [AP32: Actionable language guidance](ap32-actionable-language-guidance/README.md) | Small | AP02, AP06, AP13, AP26 | Complete: valid hints, examples and terminology |
 | [x] | [AP33: Consistent numeric contracts](ap33-numeric-contracts/README.md) | Large | AP07, AP18, AP19 | Complete |
 | [x] | [AP34: Consistent type inference](ap34-consistent-type-inference/README.md) | Large | AP22, AP24 | Complete (AP34.1–AP34.2; Q14 restriction replaced) |
-| [ ] | [AP35: Predictable condition composition](ap35-condition-composition/README.md) | Medium–large | AP20, AP23 | Decision pending; pattern contexts and postcondition binder |
+| [x] | [AP35: Predictable condition composition](ap35-condition-composition/README.md) | Medium–large | AP20, AP23 | Complete (AP35.1–AP35.3) |
 | [ ] | [AP36: Consistent calls and construction](ap36-call-and-construction-conventions/README.md) | Large | AP09, AP10, AP20 | Decision pending; labels, callable values and construction |
 | [ ] | [AP37: Uniform mutation visibility](ap37-uniform-mutation/README.md) | Large | AP06, AP17; coordinate AP36.1 | Decision pending; shared native/user receiver model |
 | [ ] | [AP38: Routine declaration visibility](ap38-routine-declaration-visibility/README.md) | Medium–large | AP11, AP24 | Decision pending; signature visibility versus initialization |
@@ -180,7 +183,7 @@ its dependent implementation complete or approved.
 | AP32 | Complete: AP32.1 valid diagnostic hints; AP32.2 current examples and terminology |
 | AP33 | Complete: AP33.1 numeric decisions; AP33.2 arithmetic/literals; AP33.3 number text |
 | AP34 | AP34.1/AP34.2 complete: uniform binding, generic result and callable inference |
-| AP35 | AP35.1 condition decisions; AP35.2 pattern conditions; AP35.3 postcondition binder |
+| AP35 | Complete: nonbinding Boolean is tests, case-only pattern bindings, and explicit postcondition return binders |
 | AP36 | AP36.1 argument conventions; AP36.2 call/construction rules |
 | AP37 | AP37.1 mutation model; AP37.2 receiver mutation |
 | AP38 | AP38.1 visibility decision; AP38.2 routine signatures |
@@ -210,13 +213,16 @@ the work-package files state actual dependencies.
 |-------|----------------------|-----------------------------------------------------|
 | 1. Correctness and trustworthy guidance | Complete: AP30, AP31, and AP32 | Sound task result types and exported constant defaults are delivered; hints and examples show valid current syntax |
 | 2. Numeric and inference foundations | Complete: AP33 and AP34 | Numeric contracts and uniform local/contextual inference are delivered; unresolved sites are rejected before lowering |
-| 3. Conditions and call composition | AP35.1 → AP35.2/AP35.3; AP36.1 → AP36.2 | Transparent condition grouping, an unambiguous postcondition binder, and consistent argument roles, subject to each decision |
+| 3. Conditions and call composition | AP35 complete; **AP36.1** → AP36.2 | AP35 supplies regular nonbinding Boolean tests and explicit return binders; AP36 first requires decisions about consistent argument roles |
 | 4. Mutation, declarations and matching | AP37.1 → AP37.2; AP38.1 → AP38.2; AP39.1 → AP39.2 | A native/user mutation model, safe signature visibility, and a complete coverage matrix; these are independent except for explicitly shared syntax choices |
 | 5. Concurrency contracts | AP40.1 → AP40.2/AP40.3 | Explicit ownership/shared-state rules and defined wait priorities; may start after the relevant AP30 work instead of waiting for stages 2–4 |
 | 6. Canonical public forms | AP41.1 → AP41.2; AP42.1 → AP42.2; AP43.1 → AP43.2 | Qualified-name policy, reduced collection aliases, consistent absence/parsing APIs, and canonical error-handling guidance |
 
-The next recommended work package is the decision package
-[AP35.1](ap35-condition-composition/01-condition-decisions.md).
+The next recommended work package is
+[AP36.1](ap36-call-and-construction-conventions/01-argument-conventions.md).
+AP36 remains Decision pending; its argument-role choices require a user decision
+before language implementation. AP35 is complete: it replaces AP20.3's
+binding/context rules and AP23/Q16's binder punctuation with the recorded forms.
 AP34's binding and generic inference contracts are complete.
 AP33's arithmetic, literal, and number-text contracts are complete.
 AP32.1/AP32.2 retain current syntax and semantics

@@ -104,7 +104,7 @@ pub enum Token {
     SelfKw,
     /// Reserved keyword `null`; unavailable as an identifier.
     Null,
-    /// Pattern test `Value is Pattern` in `if`, `elsif`, and `while` conditions.
+    /// Nonbinding Boolean pattern test `Value is Pattern`.
     ///
     /// **Documentation:** `docs/pascal/language/pattern-matching/is-test.md`
     Is,

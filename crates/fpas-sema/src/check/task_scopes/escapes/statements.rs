@@ -103,7 +103,7 @@ impl Walker<'_, '_> {
                 else_branch,
                 ..
             } => {
-                // `is` bindings of the condition are visible only in the then-branch.
+                // Branch-local declarations remain in their own frame.
                 self.in_frame(|walker| {
                     let _ = walker.expr(condition);
                     walker.walk_statement(then_branch);

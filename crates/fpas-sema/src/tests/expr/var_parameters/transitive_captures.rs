@@ -27,7 +27,7 @@ fn recursive_capture_completion_preserves_task_and_discard_boundaries() {
     for statement in [
         "go Work();",
         "const Items: array of procedure() := [Work]; go Items[0]();",
-        "const Wrapped: Option of procedure() := Some(Work); if Wrapped is Some(const Extracted) then go Extracted(); end if;",
+        "const Wrapped: Option of procedure() := Some(Work); case Wrapped of when Some(const Extracted): go Extracted(); when None: null; end case;",
         "const Wrapped: Option of procedure() := Some(Work); const Extracted: procedure() := Wrapped.Unwrap(); go Extracted();",
         "const Wrapped: procedure() := procedure() begin Work(); end procedure; go Wrapped();",
         "go Alias();",

@@ -34,10 +34,12 @@ end unit;
 program Consumer;
 uses CallableLibrary, Std.Console;
 begin
-  if Make() is Some(const F) then
-    discard F;
-    WriteLn(F());
-  end if;
+  case Make() of
+    when Some(const F):
+      discard F;
+      WriteLn(F());
+    when None: null;
+  end case;
 end.
 "#,
     );

@@ -12,15 +12,26 @@ use support::TempDirectory;
 #[test]
 fn postcondition_result_names_support_hover_definition_and_clause_local_scope() {
     let temp = TempDirectory::new("contracts");
-    let source = "program T; const Value: integer := 1;
+    let source = "program T; const Value: integer := 1; const Flag: boolean := true;
         function F(X: integer): integer;
-        ensures (Value) Value = X;
-        ensures (Value) Value > 0;
+        ensures (Value): Value = X;
+        ensures (Value): Value > 0;
         ensures Value = 1;
+        ensures (Flag);
         begin return Value; end function;
         begin const N: integer := F(1); end.";
     let path = temp.write("main.fpas", source);
     let mut service = LanguageService::new(WorkspaceContext::loose(temp.path()));
+    let grouped = source.find("(Flag)").expect("grouped condition") + 1;
+    let definitions = service
+        .definitions(&path, grouped)
+        .expect("grouped definition")
+        .value;
+    assert_eq!(definitions.len(), 1);
+    assert_eq!(
+        definitions[0].symbol.selection_span.offset(),
+        source.find("Flag:").expect("outer Boolean")
+    );
     for (read, declaration) in [
         ("Value = X", source.find("(Value)").expect("first name") + 1),
         (

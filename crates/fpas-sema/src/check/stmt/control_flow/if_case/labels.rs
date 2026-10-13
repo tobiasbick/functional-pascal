@@ -37,7 +37,7 @@ impl Checker {
                         return CheckedLabel::wild();
                     }
                     let mut bindings = PatternBindings::new();
-                    let pat = self.check_value_pattern(case_ty, start, &mut bindings);
+                    let pat = self.check_value_pattern(case_ty, start, Some(&mut bindings));
                     return CheckedLabel { bindings, pat };
                 }
 

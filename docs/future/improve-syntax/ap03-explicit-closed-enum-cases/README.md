@@ -8,7 +8,7 @@ Status: complete (AP03.1, AP03.2). Effort: small. Completion is tracked in the
 
 Adding a variant to a closed enum exposes every `case` that does not handle it.
 Field wildcards do not silently bypass explicit top-level variant coverage, and
-single-variant handling uses the `is` test.
+nonbinding single-variant checks use the `is` test. Payload extraction uses case arms.
 
 ## Decisions
 
@@ -21,8 +21,8 @@ single-variant handling uses the `is` test.
   cover every variant; remove a redundant `else` instead of keeping it.
 - A guarded arm alone does not cover its variant. Ignoring payload fields
   (`_`, AP20) is distinct from ignoring a whole variant.
-- Code that handles a single variant uses the `is` test from AP20 instead of a
-  full `case`.
+- Code testing a single variant without extracting fields uses nonbinding
+  `is` (AP35.2). Code that extracts fields uses exhaustive case arms.
 - Variants that need no action are listed in an arm containing `null;` (AP13).
 
 ```pascal
@@ -39,8 +39,8 @@ case Msg of
     null;
 end case;
 
-if Msg is Message.Key(const Code) then
-  HandleKey(Code);
+if Msg is Message.Key(_) then
+  ReportKeyPresent();
 end if;
 ```
 

@@ -12,51 +12,56 @@ begin
   case Parsed of
     when Ok(const Value):
       begin
-        if Value is TomlValue.Table(const Fields) then
-          begin
-            if Fields.Get('project').Unwrap() is TomlValue.Table(const Project) then
-              begin
-                if Project.Get('name').Unwrap() is TomlValue.String(const Name) then
+        case Value of
+          when TomlValue.Table(const Fields):
+            begin
+              case Fields.Get('project').Unwrap() of
+                when TomlValue.Table(const Project):
                   begin
-                    AssertEquals('demo', Name);
-                  end;
-                else
-                  begin
-                    Fail('Expected project name string');
-                  end;
-                end if;
+                    case Project.Get('name').Unwrap() of
+                      when TomlValue.String(const Name):
+                        begin
+                          AssertEquals('demo', Name);
+                        end;
+                      when TomlValue.Integer(_), TomlValue.Float(_), TomlValue.Boolean(_), TomlValue.Datetime(_), TomlValue.ArrayValue(_), TomlValue.Table(_):
+                        begin
+                          Fail('Expected project name string');
+                        end;
+                    end case;
 
-                if Project.Get('released').Unwrap() is TomlValue.Datetime(const Date) then
-                  begin
-                    AssertEquals('2026-07-14', Date);
+                    case Project.Get('released').Unwrap() of
+                      when TomlValue.Datetime(const Date):
+                        begin
+                          AssertEquals('2026-07-14', Date);
+                        end;
+                      when TomlValue.String(_), TomlValue.Integer(_), TomlValue.Float(_), TomlValue.Boolean(_), TomlValue.ArrayValue(_), TomlValue.Table(_):
+                        begin
+                          Fail('Expected project released datetime');
+                        end;
+                    end case;
                   end;
-                else
+                when TomlValue.String(_), TomlValue.Integer(_), TomlValue.Float(_), TomlValue.Boolean(_), TomlValue.Datetime(_), TomlValue.ArrayValue(_):
                   begin
-                    Fail('Expected project released datetime');
+                    Fail('Expected project table');
                   end;
-                end if;
-              end;
-            else
-              begin
-                Fail('Expected project table');
-              end;
-            end if;
+              end case;
 
-            if Fields.Get('targets').Unwrap() is TomlValue.ArrayValue(const Targets) then
-              begin
-                AssertEquals(2, Targets.Length());
-              end;
-            else
-              begin
-                Fail('Expected targets array');
-              end;
-            end if;
-          end;
-        else
-          begin
-            Fail('Expected TOML table');
-          end;
-        end if;
+              case Fields.Get('targets').Unwrap() of
+                when TomlValue.ArrayValue(const Targets):
+                  begin
+                    AssertEquals(2, Targets.Length());
+                  end;
+                when TomlValue.String(_), TomlValue.Integer(_), TomlValue.Float(_), TomlValue.Boolean(_), TomlValue.Datetime(_), TomlValue.Table(_):
+                  begin
+                    Fail('Expected targets array');
+                  end;
+              end case;
+            end;
+          when TomlValue.String(_), TomlValue.Integer(_), TomlValue.Float(_), TomlValue.Boolean(_), TomlValue.Datetime(_), TomlValue.ArrayValue(_):
+            begin
+              Fail('Expected TOML table');
+            end;
+        end case;
       end;
     when Error(const Message):
       begin

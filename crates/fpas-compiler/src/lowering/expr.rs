@@ -3,6 +3,7 @@
 mod boolean;
 mod decision;
 mod designators;
+mod is_test;
 mod numeric;
 mod subranges;
 
@@ -50,6 +51,11 @@ impl LoweringContext {
                 self.lower_call(designator, args, result, *span, call_key)
             }
             Expr::Paren(inner, _) => self.lower_expression(inner),
+            Expr::Is {
+                value,
+                pattern,
+                span,
+            } => self.lower_is_test(value, pattern, *span),
             Expr::UnaryOp { op, operand, span } => self.lower_unary(*op, operand, *span),
             Expr::BinaryOp {
                 op,

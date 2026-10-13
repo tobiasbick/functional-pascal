@@ -10,11 +10,12 @@ type Button = record
 
   procedure Click(Self: Button);
   begin
-    if Self.OnClick is Some(const Handler) then
-      Handler(Self.Id);
-    else
-      WriteLn('no handler');
-    end if;
+    case Self.OnClick of
+      when Some(const Handler):
+        Handler(Self.Id);
+      when None:
+        WriteLn('no handler');
+    end case;
   end procedure;
 end record;
 

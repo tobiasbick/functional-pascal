@@ -88,11 +88,11 @@ fn native_bundle_checks_before_body_output_and_argument_expressions_run_once() {
         ),
         (
             "function Returned(): integer; begin WriteLn('return'); return 0; end function;
-          function Guard(var X: integer; Input: integer): integer; ensures (Value) Value > 0;
+          function Guard(var X: integer; Input: integer): integer; ensures (Value): Value > 0;
           begin X := 2; WriteLn('body'); return Returned(); end function;",
             "const Value: integer := Guard(var X, Read());",
             "argument\nbody\nreturn\n",
-            "ensures (Value) Value > 0;",
+            "ensures (Value): Value > 0;",
         ),
     ] {
         let root = temp_dir();
@@ -142,7 +142,7 @@ fn imported_postconditions_check_try_returns_and_rebuild_changed_clauses() {
     );
     let unit = root.join("Api.fpas");
     let source = "unit Api; public function Guard(Input: Result of (integer, string)): Result of (integer, string);
-        ensures (Value) case Value of when Ok(const N): N > 0; when Error(_): false; end case;
+        ensures (Value): case Value of when Ok(const N): N > 0; when Error(_): false; end case;
         begin const N: integer := try Input; return Ok(N); end function; end unit;";
     write(&unit, source);
     write(&root.join("main.fpas"), "program T; uses Api as A;

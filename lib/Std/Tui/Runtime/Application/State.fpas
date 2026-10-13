@@ -84,15 +84,16 @@ begin
     end;
   end if;
 
-  if Failures[0] is TuiMsg.BackgroundFailed(const IgnoredId, const Kind, const Message, const Code, const Line, const Column) then
-    begin
-      panic(Message);
-    end;
-  else
-    begin
-      panic('Tui background operation failed during shutdown');
-    end;
-  end if;
+  case Failures[0] of
+    when TuiMsg.BackgroundFailed(const IgnoredId, const Kind, const Message, const Code, const Line, const Column):
+      begin
+        panic(Message);
+      end;
+    when TuiMsg.Started, TuiMsg.Key(_), TuiMsg.Pointer(_), TuiMsg.Tick(_), TuiMsg.Resize(_), TuiMsg.FocusChanged(_, _), TuiMsg.Action(_, _), TuiMsg.TextChanged(_, _, _, _), TuiMsg.TextAreaChanged(_, _, _, _, _), TuiMsg.CheckChanged(_, _, _), TuiMsg.SelectionChanged(_, _, _), TuiMsg.ScrollChanged(_, _, _), TuiMsg.MenuChanged(_, _, _), TuiMsg.QuitRequested:
+      begin
+        panic('Tui background operation failed during shutdown');
+      end;
+  end case;
 end procedure;
 
 public function TuiAppRequireHandle(ApplicationId: integer): integer;
@@ -241,11 +242,14 @@ end procedure;
 
 public procedure TuiAppApplyResizeIfNeeded(ApplicationId: integer; Msg: TuiMsg);
 begin
-  if Msg is TuiMsg.Resize(const Size) then
-    begin
-      TuiAppApplyResize(ApplicationId, Size);
-    end;
-  end if;
+  case Msg of
+    when TuiMsg.Resize(const Size):
+      begin
+        TuiAppApplyResize(ApplicationId, Size);
+      end;
+    when TuiMsg.Started, TuiMsg.Key(_), TuiMsg.Pointer(_), TuiMsg.Tick(_), TuiMsg.FocusChanged(_, _), TuiMsg.Action(_, _), TuiMsg.TextChanged(_, _, _, _), TuiMsg.TextAreaChanged(_, _, _, _, _), TuiMsg.CheckChanged(_, _, _), TuiMsg.SelectionChanged(_, _, _), TuiMsg.ScrollChanged(_, _, _), TuiMsg.MenuChanged(_, _, _), TuiMsg.BackgroundFailed(_, _, _, _, _, _), TuiMsg.QuitRequested:
+      null;
+  end case;
 end procedure;
 
 public function TuiAppApplyCommand(ApplicationId: integer; Output: TuiCmdOutput): boolean;

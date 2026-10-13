@@ -121,12 +121,14 @@ fn nested_patterns_round_trip() {
 #[test]
 fn is_tests_round_trip_with_comparison_precedence() {
     let formatted = format(
-        "program T; begin if X is Some( const V ) and V>0 then null; elsif not (X is None) then null; end if; while Q.Next() is Some(const Job) do null; end while; end.",
+        "program T; begin const Hit:boolean := (X is Some( _ )) or not (X is None); if X is Some( _ ) and Ready then null; elsif not (X is None) then null; end if; while Q.Next() is Some(_) do null; end while; repeat null; until Q.Next() is None; end.",
     );
     for line in [
-        "if X is Some(const V) and V > 0 then",
+        "if X is Some(_) and Ready then",
         "elsif not (X is None) then",
-        "while Q.Next() is Some(const Job) do",
+        "while Q.Next() is Some(_) do",
+        "const Hit: boolean := (X is Some(_)) or not (X is None);",
+        "until Q.Next() is None;",
     ] {
         assert!(
             formatted.contains(line),

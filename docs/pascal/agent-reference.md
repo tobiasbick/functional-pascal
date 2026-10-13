@@ -72,7 +72,7 @@ Decision branches also supply joint evidence. Empty arrays/dicts and lone
 constructor cannot determine both type arguments. Inference never promotes numbers.
 
 Precedence, high to low: postfix operations (including record `with`), unary minus
-and `try`, `* / div mod`, `+ -`, comparisons / `in` / condition-only `is`, `not`,
+and `try`, `* / div mod`, `+ -`, comparisons / `in` / nonbinding `is`, `not`,
 then `and or xor`. Comparisons do not chain. Parenthesize mixtures of different
 logical operators, e.g. `(A and B) or C`; repeated `A and B and C` is allowed.
 `and` and `or` short-circuit left to right; `xor` evaluates both operands.
@@ -239,8 +239,9 @@ storage and requires `var` at the call site too. Native mutating methods such as
 User record methods have read-only `Self`; they do not provide mutating receivers.
 
 Contracts follow the routine header: zero or more `requires`, then `ensures` clauses,
-then optional nested declarations and `begin`. `ensures (Returned)` names the
-returned value. Contract expressions are read-only booleans with restricted calls:
+then optional nested declarations and `begin`. `ensures (Returned): Expression;`
+names the returned value; the colon is required. `ensures (Flag);` is an ordinary
+grouped Boolean condition. Contract expressions are read-only booleans with restricted calls:
 selected native queries such as `Length`, `IsEmpty`, string/array `Contains`, and
 dict `ContainsKey` are permitted; arbitrary function calls are not. There is no
 old-value snapshot, access to body locals, or mutable global state in contracts.
@@ -255,7 +256,7 @@ uses Std.Test;
 function AddPositive(Left: integer; Right: integer): integer;
 requires Left > 0;
 requires Right > 0;
-ensures (Answer) Answer > Left;
+ensures (Answer): Answer > Left;
 begin
   return Left + Right;
 end function;
@@ -390,23 +391,32 @@ begin
   AssertEquals(6, Size(Shape.Rect(Width := 2, Height := 3)));
   AssertEquals(4, Size(Shape.Circle(4)));
   const Nested: option of option of integer := Some(Some(7));
-  if Nested is Some(Some(const Value)) and Value > 0 then
-    AssertEquals(7, Value);
-  else
-    AssertTrue(false);
-  end if;
+  AssertTrue(Nested is Some(Some(7)));
+  case Nested of
+    when Some(Some(const Value)) if Value > 0:
+      AssertEquals(7, Value);
+    when Some(_), None:
+      AssertTrue(false);
+  end case;
   var Next: option of integer := Some(1);
-  while Next is Some(const Value) do
-    AssertEquals(1, Value);
-    Next := None;
+  while true do
+    case Next of
+      when Some(const Value):
+        AssertEquals(1, Value);
+        Next := None;
+      when None:
+        break;
+    end case;
   end while;
 end.
 ```
 
-`is` is a pattern test only in `if`/`elsif`/`while` conditions, alone or in an `and`
-chain. Its bindings are available in later conjuncts and the successful body.
-It is not a general boolean expression: no `or`, `not`, parenthesized `is` clause,
-assignment, `repeat` condition or case guard containing `is`.
+`Value is Pattern` is a nonbinding Boolean expression: it accepts grouping,
+Boolean operators, guards, loop conditions, arguments, stored values, and returns.
+Every `const Name` inside an `is` pattern is rejected, including nested bindings.
+Use `case` arms to bind names. The selector is evaluated once; ordinary Boolean
+short-circuit and logical-chain grouping rules apply. Contracts accept tests
+with their usual operand restrictions.
 See [pattern matching](language/pattern-matching/README.md).
 
 ## 7. Result, Option, propagation, and panic

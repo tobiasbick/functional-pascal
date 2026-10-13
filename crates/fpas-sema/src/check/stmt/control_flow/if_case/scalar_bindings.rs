@@ -93,14 +93,14 @@ impl Checker {
         true
     }
 
-    /// `_` ignores one payload field; it never stands for a whole case value.
+    /// `_` ignores one payload field; it never stands for a whole matched value.
     pub(in crate::check::stmt::control_flow) fn reject_whole_value_wildcard(
         &mut self,
         span: fpas_lexer::Span,
     ) {
         self.error_with_code(
             SEMA_TYPE_MISMATCH,
-            "`_` cannot stand for a whole case value",
+            "`_` cannot stand for a whole matched value",
             "`_` ignores one payload field, for example `Some(_)`. List remaining variants explicitly for closed enums, or use `else` for scalar cases.",
             span,
         );

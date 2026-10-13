@@ -55,9 +55,12 @@ Read the pages relevant to the change. For exact productions, consult
   recursively. Closed enum, Option, and Result cases list every variant
   explicitly and reject `else`, including a redundant branch. Only scalar
   integer, string, and boolean cases allow `else`; Boolean coverage is optional.
-  Labels covered by earlier arms are rejected. Test one
-  pattern with `if Value is Some(const X) and X > 0 then` or
-  `while Value is ... do`; `is` is valid only there, and `is` is reserved.
+  Labels covered by earlier arms are rejected. `Value is Some(_)` is a normal
+  Boolean expression supporting grouping, logical operators, guards, loops,
+  arguments and returns. It never binds names; `const Name` is rejected at any
+  depth. Use case arms to extract payloads. `is` is reserved. Return binders
+  require the colon in `ensures (Returned): Expression;`; `ensures (Flag);`
+  is an ordinary grouped Boolean condition.
 - Import every referenced unit with `uses`, including fully qualified `Std.*`
   calls. Qualify ambiguous short names with the current unit name from its handbook.
   Import each unit only once per file, comparing names case-insensitively.

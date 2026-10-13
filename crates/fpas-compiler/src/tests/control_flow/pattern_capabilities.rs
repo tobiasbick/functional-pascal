@@ -20,7 +20,8 @@ procedure Main();
 begin
   const Wrapped: option of function(): integer := Some(Work);
   var Sum: integer := 0;
-  if Wrapped is Some(const F) then
+  case Wrapped of
+    when Some(const F):
     discard F;
     const Alias: function(): integer := function(): integer begin
       return F();
@@ -29,13 +30,18 @@ begin
     discard Alias;
     const Job: task of integer := go Alias();
     Sum := Sum + Wait(Job);
-  end if;
+    when None: panic('missing payload');
+  end case;
 
-  while Wrapped is Some(const F) do
-    discard F;
-    const Job: task of integer := go F();
-    Sum := Sum + Wait(Job);
-    break;
+  while true do
+    case Wrapped of
+      when Some(const F):
+        discard F;
+        const Job: task of integer := go F();
+        Sum := Sum + Wait(Job);
+        break;
+      when None: break;
+    end case;
   end while;
 
   case Some(Ok(Wrapped)) of
@@ -71,10 +77,12 @@ begin
     Calls := Calls + 1;
   end procedure;
   const Wrapped: Option of procedure() := Some(Change);
-  if Wrapped is Some(const F) then discard F; end if;
-  while Wrapped is Some(const F) do
-    discard F;
-    break;
+  case Wrapped of when Some(const F): discard F; when None: null; end case;
+  while true do
+    case Wrapped of
+      when Some(const F): discard F; break;
+      when None: break;
+    end case;
   end while;
   case Wrapped of
     when Some(const F): discard F;
@@ -106,7 +114,8 @@ begin
   var Calls: integer := 0;
   const Change: procedure() := procedure() begin Calls := Calls + 1; end procedure;
   const Wrapped: Option of WorkBox := Some(WorkBox(Change := Change, Number := 42));
-  if Wrapped is Some(const Box) then
+  case Wrapped of
+    when Some(const Box):
     discard Box.Change;
     const N: integer := Box.Number;
     const GetNumber: function(): integer := function(): integer begin
@@ -115,7 +124,8 @@ begin
     const Job: task of integer := go GetNumber();
     if Wait(Job) <> 42 then panic('scalar capture'); end if;
     Box.Change();
-  end if;
+    when None: null;
+  end case;
   if Calls <> 1 then panic('record callable'); end if;
 end procedure;
 begin

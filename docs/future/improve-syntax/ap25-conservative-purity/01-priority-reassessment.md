@@ -80,8 +80,8 @@ It uses current syntax, for example:
 
 ```pascal
 function FromEdgesChecked(Left: integer; Top: integer; Right: integer; Bottom: integer): TuiRect;
-ensures (Bounds) Bounds.X = Left and Bounds.Y = Top;
-ensures (Bounds) Bounds.X + Bounds.Width = Right and Bounds.Y + Bounds.Height = Bottom;
+ensures (Bounds): Bounds.X = Left and Bounds.Y = Top;
+ensures (Bounds): Bounds.X + Bounds.Width = Right and Bounds.Y + Bounds.Height = Bottom;
 begin
   return TuiRect.FromEdges(Left, Top, Right, Bottom);
 end function;

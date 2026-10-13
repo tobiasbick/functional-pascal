@@ -31,11 +31,7 @@ function MakeIs(): function(Value: Pair): integer;
 begin
   const Limit: integer := 3;
   return function(Value: Pair): integer begin
-    if Value is PairAlias.Both(const Limit, Limit) and Limit > 0 then
-      return Limit;
-    end if;
-
-    return -1;
+    return if Value is PairAlias.Both(_, Limit) then 1 else -1 end if;
   end function;
 end function;
 
@@ -73,7 +69,7 @@ begin
   AssertEquals(8, MatchCase(Pair.Both(8, 3)));
   AssertEquals(-1, MatchCase(Pair.Both(3, 8)));
   AssertEquals(-1, MatchCase(Pair.Empty));
-  AssertEquals(8, MatchIs(Pair.Both(8, 3)));
+  AssertEquals(1, MatchIs(Pair.Both(8, 3)));
   AssertEquals(-1, MatchIs(Pair.Both(3, 8)));
   AssertEquals(-1, MatchIs(Pair.Empty));
   AssertEquals(1, BoolCode(Some(true)));

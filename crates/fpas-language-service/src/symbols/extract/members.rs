@@ -41,6 +41,8 @@ pub(super) fn type_children(
                     );
                     symbol.callable =
                         type_callable_signature(snapshot, &field.name, &field.type_expr);
+                    symbol.children =
+                        super::source::callable_type_children(snapshot, owner, &field.type_expr);
                     symbol
                 })
                 .collect::<Vec<_>>();
@@ -57,15 +59,14 @@ pub(super) fn type_children(
             .members
             .iter()
             .map(|member| {
-                // Fields are named only by `Name := Value` construction arguments, so their
-                // lexical scope is the variant declaration itself.
+                // Fields own constructor/pattern labels; their names are not lexical bindings.
                 let variant_owner = format!("{owner}.{}", member.name);
                 let variant_scope = member.span.diagnostic_span_or_synthetic();
                 let fields = member
                     .fields
                     .iter()
                     .map(|field| {
-                        member_symbol(
+                        let mut symbol = member_symbol(
                             snapshot,
                             &variant_owner,
                             &field.name,
@@ -79,8 +80,15 @@ pub(super) fn type_children(
                                 type_text(snapshot, &field.type_expr)
                             ),
                             variant_scope,
-                            Vec::new(),
-                        )
+                            super::source::callable_type_children(
+                                snapshot,
+                                &variant_owner,
+                                &field.type_expr,
+                            ),
+                        );
+                        symbol.callable =
+                            type_callable_signature(snapshot, &field.name, &field.type_expr);
+                        symbol
                     })
                     .collect();
                 let mut symbol = member_symbol(
@@ -111,7 +119,8 @@ pub(super) fn type_children(
                 symbol
             })
             .collect(),
-        TypeBody::Alias(_) | TypeBody::Distinct(_) | TypeBody::Subrange { .. } => Vec::new(),
+        TypeBody::Alias(ty) => super::source::callable_type_children(snapshot, owner, ty),
+        TypeBody::Distinct(_) | TypeBody::Subrange { .. } => Vec::new(),
     };
     children.splice(
         0..0,

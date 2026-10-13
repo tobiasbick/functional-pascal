@@ -21,7 +21,9 @@ impl Checker {
         let key = Self::expr_lookup_key(expr);
         let ty = self.expr_types.get(&key).cloned().unwrap_or(Ty::Error);
         let mut info = match expr {
-            Expr::Paren(inner, _) | Expr::Try(inner, _) => self.discard_info(inner),
+            Expr::Paren(inner, _)
+            | Expr::Try(inner, _)
+            | Expr::NamedArgument { value: inner, .. } => self.discard_info(inner),
             Expr::ResultOk(inner, _) | Expr::ResultError(inner, _) | Expr::OptionSome(inner, _) => {
                 DiscardInfo {
                     value: self.discard_info(inner).value,

@@ -41,7 +41,7 @@ Requires `uses Std.Math;`.
 | function | `Sin(R: real): real` | radians |
 | function | `Cos(R: real): real` | radians |
 | function | `Log(R: real): real` | natural log; error if `R ≤ 0` |
-| function | `Abs(N)` | `integer` or `real` — result matches `N` |
+| function | `Abs(N)` | `integer` or `real` — result matches `N`; also `Abs(N := -3)` |
 | function | `Min(A; B)` | both `integer` or both `real` |
 | function | `Max(A; B)` | both `integer` or both `real` |
 | function | `Tan(R: real): real` | tangent (radians) |
@@ -289,6 +289,12 @@ WriteLn(Sign(3.14));   // 1
 ---
 
 ## `function Clamp(V; Lo; Hi)` (integer or real)
+
+Fixed-arity polymorphic operations accept their published labels, just like
+ordinary routines: `Clamp(Hi := 10, V := 20, Lo := 0)`. Every argument is
+positional or every argument is named; values evaluate once in written order.
+Polymorphic operations are called directly. Use a typed wrapper to pass one
+as a callable value, for example `function(N: integer): integer begin return Abs(N); end function`.
 
 Returns `V` constrained to `[Lo, Hi]`. All three arguments must be the same numeric kind. Result matches the input kind.
 

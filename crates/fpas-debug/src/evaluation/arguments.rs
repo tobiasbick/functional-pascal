@@ -1,6 +1,26 @@
 //! Call argument validation. See `docs/pascal/language/functions/parameters.md`.
 
 use fpas_parser::Expr;
+
+/// Validates and unwraps a positional or canonical named single-payload constructor.
+/// See `docs/pascal/language/types/result-option-types.md`.
+pub(super) fn payload_value(argument: &Expr) -> Result<&Expr, EvaluationParseError> {
+    if let Expr::NamedArgument {
+        name, name_span, ..
+    } = argument
+        && !name.eq_ignore_ascii_case("Value")
+    {
+        return Err(EvaluationParseError {
+            code: "evaluation_type",
+            message: format!("constructor has no field `{name}`"),
+            hint: "Supply one positional payload or `Value := …`, for example `Some(Value := 3)`."
+                .into(),
+            offset: name_span.offset,
+            length: name_span.length,
+        });
+    }
+    Ok(argument.argument_value())
+}
 use fpas_vm::DebugExpression;
 
 use super::parse::EvaluationParseError;

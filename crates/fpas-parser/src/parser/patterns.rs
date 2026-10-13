@@ -4,6 +4,7 @@
 
 use super::Parser;
 use crate::ast::*;
+use fpas_diagnostics::codes::PARSE_MIXED_CALL_ARGUMENTS;
 use fpas_lexer::Token;
 
 impl Parser {
@@ -51,17 +52,14 @@ impl Parser {
                     _ => DestructureVariant::None,
                 };
                 self.advance();
-                let payload = if variant == DestructureVariant::None {
-                    None
+                let fields = if variant == DestructureVariant::None {
+                    Vec::new()
                 } else {
-                    self.expect(&Token::LParen);
-                    let payload = self.with_nesting(Self::parse_pattern);
-                    self.expect(&Token::RParen);
-                    Some(Box::new(payload))
+                    self.parse_pattern_fields()
                 };
                 Pattern::Destructure {
                     variant,
-                    payload,
+                    fields,
                     span: self.span_from(start),
                 }
             }
@@ -102,6 +100,18 @@ impl Parser {
             }
         }
         self.expect(&Token::RParen);
+        if let Some(first) = fields.first()
+            && let Some(mismatch) = fields
+                .iter()
+                .find(|field| field.label.is_some() != first.label.is_some())
+        {
+            self.error_with_code(
+                PARSE_MIXED_CALL_ARGUMENTS,
+                "A pattern cannot mix positional and named fields",
+                "Write all fields by position, such as `Pair.Values(_, const B)`, or all by name, such as `Pair.Values(First := _, Second := const B)`.",
+                mismatch.pattern.span(),
+            );
+        }
         fields
     }
 

@@ -2,7 +2,7 @@
 //!
 //! **Documentation:** `docs/pascal/tools/fmt-style.md`.
 
-use fpas_parser::{DestructureVariant, Pattern};
+use fpas_parser::{DestructureVariant, Pattern, PatternField};
 
 use crate::comments::CommentMap;
 
@@ -24,21 +24,10 @@ pub(crate) fn emit_pattern(emitter: &mut Emitter, pattern: &Pattern, comments: &
             ..
         } => {
             emit_designator(emitter, constructor, comments);
-            emitter.write("(");
-            for (index, field) in fields.iter().enumerate() {
-                if index > 0 {
-                    emitter.write(", ");
-                }
-                if let Some((label, _)) = &field.label {
-                    emitter.write(label);
-                    emitter.write(" := ");
-                }
-                emit_pattern(emitter, &field.pattern, comments);
-            }
-            emitter.write(")");
+            emit_fields(emitter, fields, comments);
         }
         Pattern::Destructure {
-            variant, payload, ..
+            variant, fields, ..
         } => {
             emitter.write(match variant {
                 DestructureVariant::Ok => "Ok",
@@ -46,11 +35,24 @@ pub(crate) fn emit_pattern(emitter: &mut Emitter, pattern: &Pattern, comments: &
                 DestructureVariant::Some => "Some",
                 DestructureVariant::None => "None",
             });
-            if let Some(payload) = payload {
-                emitter.write("(");
-                emit_pattern(emitter, payload, comments);
-                emitter.write(")");
+            if *variant != DestructureVariant::None {
+                emit_fields(emitter, fields, comments);
             }
         }
     }
+}
+
+fn emit_fields(emitter: &mut Emitter, fields: &[PatternField], comments: &CommentMap) {
+    emitter.write("(");
+    for (index, field) in fields.iter().enumerate() {
+        if index > 0 {
+            emitter.write(", ");
+        }
+        if let Some((label, _)) = &field.label {
+            emitter.write(label);
+            emitter.write(" := ");
+        }
+        emit_pattern(emitter, &field.pattern, comments);
+    }
+    emitter.write(")");
 }

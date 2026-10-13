@@ -13,16 +13,16 @@ mappings receive concrete diagnostics.
 
 - Named arguments use `Name := Value`, for example
   `CopyFile(Source := InputPath, Destination := BackupPath, Overwrite := false)`.
-- A call is fully positional or fully named. Names are the public parameter
-  names; there are no separate internal/external labels, so renaming a
-  parameter changes the API.
+- A call is fully positional or fully named. Names come from the visible static
+  signature; there are no separate internal/external labels. Renaming a public
+  signature parameter changes named calls through that signature.
 - Parameters have no default values; every parameter is passed. Optional
   settings use an options record with field defaults (AP10).
-- Named arguments apply to declared routines, methods, enum variant
-  constructors, and fixed-signature native operations. Native receivers are
-  unnamed; variadic `Format` is positional. Function values (closures, variables,
-  or parameters of a function type) are called positionally only, because
-  function-type compatibility ignores parameter names.
+- Named arguments apply to declared routines, methods, callable values, enum
+  variant constructors, and fixed-signature native operations, including
+  fixed-arity polymorphic operations (AP36). Native receivers are unnamed;
+  variadic routines, including `Format`, remain positional. Callable assignment
+  compatibility ignores names; calls use the receiving static signature.
 - Arguments are evaluated in written left-to-right order, even when named
   arguments reorder parameters.
 
@@ -31,12 +31,22 @@ CopyFile(Source := InputPath, Destination := BackupPath, Overwrite := false);
 
 const F: function(Value: integer): integer := Double;
 const Answer: integer := F(3);         // valid: result consumed
-const Bad: integer := F(Value := 3);   // error: named arguments need a declared routine
+const NamedAnswer: integer := F(Value := 3); // valid: F's static label
 ```
 
 Function results are consumed here to match
-[AP04](../ap04-discarded-function-values/README.md); the invalid call isolates
-the named-argument restriction.
+[AP04](../ap04-discarded-function-values/README.md).
+
+## Independent follow-up
+
+[AP36](../ap36-call-and-construction-conventions/README.md#recorded-routine-call-decisions)
+retains AP09's complete positional-or-named call rule and implements named support
+for callable values using their visible static signature. Differently named
+compatible signatures remain positionally compatible; variadic calls stay
+positional. AP36 also implements named fixed-arity polymorphic operations,
+Some/Ok/Error constructors, and complete named field patterns. AP09.2's two
+enum construction forms remain supported. The rules above include these
+delivered extensions; AP09 remains complete.
 
 ## Dependencies
 

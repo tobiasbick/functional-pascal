@@ -15,7 +15,7 @@ pub use aliases::register_short_aliases;
 pub use api::{
     IntrinsicStdSymbol, IntrinsicStdSymbolKind, intrinsic_std_symbols, intrinsic_std_units,
 };
-pub use builtins::{check_builtin_std_call, check_builtin_std_call_refs};
+pub use builtins::check_builtin_std_call_refs;
 pub use loaded::{register_loaded_std, register_single_std_unit};
 pub use native::{
     NativeLowering, NativeOperation, NativeReceiver, native_factory, native_migration_hint,
@@ -97,7 +97,16 @@ fn define_const(c: &mut Checker, q: &str, ty: Ty) {
     );
 }
 
-fn define_builtin_std(c: &mut Checker, q: &str, placeholder: Ty) {
+fn define_builtin_std(c: &mut Checker, q: &str, mut placeholder: Ty) {
+    let params = builtins::parameter_names(q)
+        .iter()
+        .map(|name| p(name, Ty::Error))
+        .collect();
+    match &mut placeholder {
+        Ty::Function(function) => function.params = params,
+        Ty::Procedure(procedure) => procedure.params = params,
+        _ => unreachable!("polymorphic operation must be callable"),
+    }
     c.scopes.define(
         q,
         Symbol {

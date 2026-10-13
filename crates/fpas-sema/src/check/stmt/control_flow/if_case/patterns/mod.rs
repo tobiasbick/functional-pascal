@@ -5,13 +5,14 @@
 use super::Checker;
 use super::coverage::Pat;
 mod constructors;
+mod fields;
 mod values;
 
 use crate::scope::canonical_symbol_name;
 use crate::types::Ty;
 use fpas_diagnostics::codes::{
     SEMA_DUPLICATE_DECLARATION, SEMA_ENUM_FIELD_COUNT_MISMATCH, SEMA_IMPLICIT_PATTERN_BINDING,
-    SEMA_IS_PATTERN_BINDING, SEMA_NAMED_ARGUMENTS_NOT_SUPPORTED, SEMA_TYPE_MISMATCH,
+    SEMA_IS_PATTERN_BINDING, SEMA_TYPE_MISMATCH,
 };
 use fpas_lexer::Span;
 use fpas_parser::{Designator, DestructureVariant, Pattern, PatternField};
@@ -92,6 +93,21 @@ impl Checker {
             } => self
                 .check_conversion_label(expected_ty, constructor, pattern, *span)
                 .unwrap_or_else(|| {
+                    if fields.is_empty()
+                        && let Some(enumeration) = self.resolve_enum_ty(expected_ty)
+                        && let Some(fpas_parser::DesignatorPart::Ident(name, _)) =
+                            constructor.parts.last()
+                        && enumeration.variants.iter().any(|variant| {
+                            variant.name.eq_ignore_ascii_case(name) && variant.fields.is_empty()
+                        })
+                    {
+                        self.error_with_code(
+                            SEMA_ENUM_FIELD_COUNT_MISMATCH,
+                            format!("Fieldless variant `{name}` does not take parentheses"),
+                            format!("Write `{name}` without `()` to match a fieldless variant."),
+                            *span,
+                        );
+                    }
                     self.check_variant_pattern(
                         expected_ty,
                         constructor,
@@ -102,19 +118,24 @@ impl Checker {
                 }),
             Pattern::Destructure {
                 variant,
-                payload,
+                fields,
                 span,
             } => {
                 if !self.destructure_matches(expected_ty, *variant, *span) {
                     return Pat::Wild;
                 }
                 let key = destructure_key(*variant).to_string();
-                let Some(payload) = payload else {
+                if *variant == DestructureVariant::None {
                     return Pat::Ctor(key, Vec::new());
-                };
+                }
                 let payload_ty = super::labels::binding_type_for_variant(expected_ty, variant);
-                let inner = self.check_pattern(&payload_ty, payload, bindings);
-                Pat::Ctor(key, vec![inner])
+                let declared = if *variant == DestructureVariant::None {
+                    Vec::new()
+                } else {
+                    vec![("Value".into(), payload_ty)]
+                };
+                let args = self.check_pattern_fields(&key, fields, &declared, *span, bindings);
+                Pat::Ctor(key, args)
             }
         }
     }
@@ -126,46 +147,13 @@ impl Checker {
         constructor: &Designator,
         fields: &[PatternField],
         span: Span,
-        mut bindings: Option<&mut PatternBindings>,
+        bindings: Option<&mut PatternBindings>,
     ) -> Pat {
         let Some((variant_name, field_types)) = self.variant_field_types(expected_ty, constructor)
         else {
             return Pat::Wild;
         };
-        if fields.len() != field_types.len() {
-            self.error_with_code(
-                SEMA_ENUM_FIELD_COUNT_MISMATCH,
-                format!(
-                    "Variant '{variant_name}' expects {} field{}, but {} {} supplied.",
-                    field_types.len(),
-                    if field_types.len() == 1 { "" } else { "s" },
-                    fields.len(),
-                    if fields.len() == 1 { "was" } else { "were" },
-                ),
-                format!(
-                    "Write {} pattern{} such as `_` or a literal to match all fields of '{variant_name}'. Bind payloads with `const Name` only in case arms.",
-                    field_types.len(),
-                    if field_types.len() == 1 { "" } else { "s" },
-                ),
-                span,
-            );
-            return Pat::Wild;
-        }
-        if let Some((_, name_span)) = fields.iter().find_map(|field| field.label.as_ref()) {
-            self.error_with_code(
-                SEMA_NAMED_ARGUMENTS_NOT_SUPPORTED,
-                "Enum patterns match variant fields by position",
-                "Write one pattern per field in declaration order, for example `when Shape.Circle(const R):`; binding names need not match field names.",
-                *name_span,
-            );
-        }
-        let args = fields
-            .iter()
-            .zip(&field_types)
-            .map(|(field, field_ty)| {
-                self.check_pattern(field_ty, &field.pattern, bindings.as_deref_mut())
-            })
-            .collect();
+        let args = self.check_pattern_fields(&variant_name, fields, &field_types, span, bindings);
         Pat::Ctor(variant_name.to_ascii_lowercase(), args)
     }
 

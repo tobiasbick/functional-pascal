@@ -42,6 +42,15 @@ impl ClosureRegistry<'_> {
             _ => return Ok(()),
         };
         let span = expression.span();
+        let ordered_args = if let Some(order) = args.first().and_then(|arg| {
+            metadata
+                .named_argument_orders
+                .get(&fpas_sema::expr_lookup_key(arg))
+        }) {
+            order.iter().map(|&index| &args[index]).collect::<Vec<_>>()
+        } else {
+            args.iter().collect::<Vec<_>>()
+        };
         let (intrinsic, result_ty, receiver_ty) =
             if let Some(target) = metadata.fluent_calls.get(&key) {
                 let Some(intrinsic) =
@@ -51,9 +60,11 @@ impl ClosureRegistry<'_> {
                 };
                 (intrinsic, &target.result_ty, Some(&target.receiver_ty))
             } else if let Some(name) = metadata.intrinsic_calls.get(&key) {
-                let first_ty = args
-                    .first()
-                    .and_then(|arg| metadata.expr_types.get(&fpas_sema::expr_lookup_key(arg)));
+                let first_ty = ordered_args.first().and_then(|arg| {
+                    metadata
+                        .expr_types
+                        .get(&fpas_sema::expr_lookup_key(arg.argument_value()))
+                });
                 let Some(intrinsic) = crate::intrinsic_catalog::resolve(name, first_ty) else {
                     return Ok(());
                 };
@@ -74,15 +85,6 @@ impl ClosureRegistry<'_> {
         if let Some(receiver_ty) = receiver_ty {
             parameters.push(types.intern(receiver_ty, span.line, span.column)?);
         }
-        let ordered_args = if let Some(order) = args.first().and_then(|arg| {
-            metadata
-                .named_argument_orders
-                .get(&fpas_sema::expr_lookup_key(arg))
-        }) {
-            order.iter().map(|&index| &args[index]).collect::<Vec<_>>()
-        } else {
-            args.iter().collect::<Vec<_>>()
-        };
         for argument in ordered_args {
             let argument = argument.argument_value();
             let ty = metadata

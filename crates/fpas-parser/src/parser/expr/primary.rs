@@ -155,7 +155,7 @@ impl Parser {
         let start = self.current_span();
         self.advance();
         self.expect(&Token::LParen);
-        // A named value is kept so semantic analysis can explain the positional-only form.
+        // Preserve `Value := …` and its source span for semantic validation and formatting.
         let inner = self.parse_argument();
         self.expect(&Token::RParen);
         (inner, self.span_from(start))

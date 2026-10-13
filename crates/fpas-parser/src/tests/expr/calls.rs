@@ -104,6 +104,28 @@ fn mixed_positional_and_named_arguments_are_rejected_and_recovered() {
 }
 
 #[test]
+fn pattern_field_lists_reject_mixing_at_each_nesting_level() {
+    for pattern in [
+        "Pair.Values(First := _, _)",
+        "Pair.Values(_, Second := _)",
+        "Some(Value := Pair.Values(First := _, _))",
+        "Pair.Values(Some(Value := _), Second := _)",
+    ] {
+        let (_, errors) = super::super::parse_with_errors(&format!(
+            "program T; begin discard Item is {pattern}; end."
+        ));
+        assert!(
+            errors
+                .iter()
+                .any(|error| error.as_parser_error().is_some_and(
+                    |error| error.code == fpas_diagnostics::codes::PARSE_MIXED_CALL_ARGUMENTS
+                )),
+            "{pattern}: {errors:#?}"
+        );
+    }
+}
+
+#[test]
 fn named_value_inside_ok_is_kept_for_semantic_diagnostics() {
     match parse_expr("Ok(Value := 1)") {
         Expr::ResultOk(inner, _) => assert_eq!(inner.argument_name(), Some("Value")),

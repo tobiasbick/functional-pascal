@@ -177,12 +177,22 @@ pub(super) fn receiver_type(
                         (fpas_parser::DesignatorPart::Index(_, _), Ty::Array(inner)) => *inner,
                         (fpas_parser::DesignatorPart::Index(_, _), Ty::Dict(_, value)) => *value,
                         (fpas_parser::DesignatorPart::Index(_, _), Ty::String) => Ty::String,
-                        (fpas_parser::DesignatorPart::Ident(name, _), Ty::Record(record)) => record
-                            .fields
-                            .iter()
-                            .find(|(field, _)| field.eq_ignore_ascii_case(name))?
-                            .1
-                            .clone(),
+                        (fpas_parser::DesignatorPart::Ident(name, _), Ty::Record(record))
+                            if !record
+                                .private_members
+                                .iter()
+                                .any(|member| member.eq_ignore_ascii_case(name))
+                                || record.owner_unit.as_ref().is_none_or(|owner| {
+                                    owner.eq_ignore_ascii_case(&document.owner)
+                                }) =>
+                        {
+                            record
+                                .fields
+                                .iter()
+                                .find(|(field, _)| field.eq_ignore_ascii_case(name))?
+                                .1
+                                .clone()
+                        }
                         _ => return None,
                     };
                 }

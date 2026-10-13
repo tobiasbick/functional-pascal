@@ -5,7 +5,7 @@
 use super::super::{check_errors, check_ok};
 use fpas_diagnostics::codes::{
     SEMA_DUPLICATE_DECLARATION, SEMA_IMPLICIT_PATTERN_BINDING, SEMA_INVALID_CASE_BINDING,
-    SEMA_NAMED_ARGUMENTS_NOT_SUPPORTED, SEMA_TYPE_MISMATCH, SEMA_UNKNOWN_NAME,
+    SEMA_TYPE_MISMATCH, SEMA_UNKNOWN_NAME,
 };
 
 const SHAPES: &str =
@@ -74,7 +74,7 @@ fn plain_identifier_in_a_payload_reports_the_const_form() {
 }
 
 #[test]
-fn duplicate_bindings_real_comparisons_and_named_fields_are_rejected() {
+fn duplicate_bindings_and_real_comparisons_are_rejected() {
     let duplicate = format!(
         "program T; {SHAPES} procedure P(S: Shape); begin case S of when Shape.Rect(const A, const A): null; when Shape.Circle(_), Shape.Rect(_, _), Shape.Point: null; end case; end procedure; begin end."
     );
@@ -91,14 +91,6 @@ fn duplicate_bindings_real_comparisons_and_named_fields_are_rejected() {
                 .contains("cannot compare values of type `real`")),
         "{:#?}",
         check_errors(&real)
-    );
-
-    let named = format!(
-        "program T; {SHAPES} procedure P(S: Shape); begin case S of when Shape.Circle(Radius := const R): null; when Shape.Circle(_), Shape.Rect(_, _), Shape.Point: null; end case; end procedure; begin end."
-    );
-    assert_eq!(
-        errors_with(&named, SEMA_NAMED_ARGUMENTS_NOT_SUPPORTED).len(),
-        1
     );
 }
 

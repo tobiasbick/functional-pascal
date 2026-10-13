@@ -14,7 +14,7 @@ impl Checker {
         &mut self,
         expected_ty: &Ty,
         constructor: &Designator,
-    ) -> Option<(String, Vec<Ty>)> {
+    ) -> Option<(String, Vec<(String, Ty)>)> {
         let Some(DesignatorPart::Ident(variant_name, _)) = constructor.parts.last() else {
             self.error_with_code(
                 SEMA_TYPE_MISMATCH,
@@ -82,9 +82,6 @@ impl Checker {
             .variants
             .iter()
             .find(|variant| variant.name.eq_ignore_ascii_case(variant_name))?;
-        Some((
-            variant.name.clone(),
-            variant.fields.iter().map(|(_, ty)| ty.clone()).collect(),
-        ))
+        Some((variant.name.clone(), variant.fields.clone()))
     }
 }

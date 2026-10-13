@@ -61,6 +61,22 @@ fn nested_result_option_and_enum_patterns_are_exhaustive_without_else() {
 }
 
 #[test]
+fn named_field_mapping_normalizes_coverage_before_reachability_checks() {
+    let definitions = "program T; type Bits = enum Pair(First: boolean; Second: boolean); end enum; procedure P(B: Bits); begin";
+    let covered = format!(
+        "{definitions} case B of when Bits.Pair(Second := true, First := _): null; when Bits.Pair(false, false): null; when Bits.Pair(First := true, Second := false): null; end case; end procedure; begin null; end."
+    );
+    check_ok(&covered);
+    let duplicate = covered.replace(
+        "end case;",
+        "when Bits.Pair(First := true, Second := true): null; end case;",
+    );
+    assert_eq!(codes(&duplicate, SEMA_UNREACHABLE_CASE_LABEL), 1);
+    let missing = covered.replace("when Bits.Pair(First := true, Second := false): null;", "");
+    assert_eq!(codes(&missing, SEMA_NON_EXHAUSTIVE_CASE), 1);
+}
+
+#[test]
 fn missing_nested_patterns_are_named_in_the_diagnostic() {
     let errors = check_errors(&program(
         "case R of

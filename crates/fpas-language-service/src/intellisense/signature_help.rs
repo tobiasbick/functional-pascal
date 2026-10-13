@@ -23,6 +23,14 @@ impl LanguageService {
             let document = &context.documents[target_index];
             let frame = active_call(document, offset)?;
             let callable_token = &document.tokens[frame.callable_token];
+            if let Some(signature) = payload_signature(&callable_token.token) {
+                return Some(SignatureHelp {
+                    parameter_documentation: vec![None],
+                    signature,
+                    documentation: None,
+                    active_parameter: Some(0),
+                });
+            }
             if let Some((entry, receiver)) = super::native::native_at(
                 &context.documents,
                 target_index,
@@ -49,10 +57,70 @@ impl LanguageService {
                     active_parameter,
                 });
             }
-            let (document_index, symbol, _) =
-                resolve(&context.documents, target_index, callable_token.span.offset)?;
+            let Some((mut document_index, mut symbol, _)) =
+                resolve(&context.documents, target_index, callable_token.span.offset)
+            else {
+                let signature = super::callable_values::signature(
+                    &context.documents,
+                    target_index,
+                    frame.callable_token,
+                    frame.parenthesis,
+                    offset,
+                )?;
+                let active_parameter = frame
+                    .argument_name
+                    .and_then(|token| token_name(document, token))
+                    .and_then(|name| {
+                        signature.parameters.iter().position(|parameter| {
+                            parameter_name(parameter)
+                                .is_some_and(|declared| declared.eq_ignore_ascii_case(&name))
+                        })
+                    })
+                    .or_else(|| {
+                        (!signature.parameters.is_empty())
+                            .then(|| frame.active_argument.min(signature.parameters.len() - 1))
+                    });
+                return Some(SignatureHelp {
+                    parameter_documentation: vec![None; signature.parameters.len()],
+                    signature,
+                    documentation: None,
+                    active_parameter,
+                });
+            };
+            let called_name = symbol.name.clone();
+            let static_signature = (!matches!(
+                symbol.kind,
+                crate::SymbolKind::Function
+                    | crate::SymbolKind::Procedure
+                    | crate::SymbolKind::Method
+            ))
+            .then(|| {
+                super::callable_values::signature(
+                    &context.documents,
+                    target_index,
+                    frame.callable_token,
+                    frame.parenthesis,
+                    offset,
+                )
+            })
+            .flatten();
+            if symbol.callable.is_none() {
+                if let Some(owner) = crate::navigation::named_arguments::callable_type_owner(
+                    &context.documents,
+                    target_index,
+                    document_index,
+                    &symbol,
+                ) {
+                    (document_index, symbol) = owner;
+                }
+            }
             let qualified_name = symbol.qualified_name.clone();
-            let mut signature = if symbol.kind == crate::SymbolKind::Type {
+            let mut signature = if symbol.kind == crate::SymbolKind::Type
+                && symbol
+                    .children
+                    .iter()
+                    .any(|child| child.kind == crate::SymbolKind::Field)
+            {
                 let (_, record) = crate::navigation::record_construction::constructor_record(
                     &context.documents,
                     target_index,
@@ -62,13 +130,13 @@ impl LanguageService {
                 let mut signature = record.callable?;
                 signature.label = format!(
                     "{}({}): {}",
-                    symbol.name,
+                    called_name,
                     signature.parameters.join("; "),
-                    symbol.name
+                    called_name
                 );
                 signature
             } else {
-                symbol.callable?
+                static_signature.or(symbol.callable)?
             };
             super::task_wait::specialize(
                 &context.documents,
@@ -112,6 +180,25 @@ impl LanguageService {
             value,
         })
     }
+}
+
+/// Describes the canonical payload label of built-in construction and patterns.
+pub(super) fn payload_signature(token: &Token) -> Option<crate::CallableSignature> {
+    let (name, result) = match token {
+        Token::Some => ("Some", "option of T"),
+        Token::Ok => ("Ok", "result of (T, E)"),
+        Token::Error => ("Error", "result of (T, E)"),
+        _ => return None,
+    };
+    let payload = if matches!(token, Token::Error) {
+        "E"
+    } else {
+        "T"
+    };
+    Some(crate::CallableSignature {
+        label: format!("{name}(Value: {payload}): {result}"),
+        parameters: vec![format!("Value: {payload}")],
+    })
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -184,9 +271,7 @@ pub(super) fn active_call(document: &NavigationDocument, offset: usize) -> Optio
 }
 
 fn callable_before(document: &NavigationDocument, parenthesis: usize) -> Option<usize> {
-    parenthesis
-        .checked_sub(1)
-        .filter(|index| token_name(document, *index).is_some())
+    crate::navigation::callable_labels::callable_before(document, parenthesis)
 }
 
 fn pop_parenthesis(delimiters: &mut Vec<Delimiter>) {

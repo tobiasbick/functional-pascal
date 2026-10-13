@@ -93,6 +93,7 @@ impl LoweringContext {
         self.lower_wrapper_as(operand, kind, ty, expression.span())
     }
 
+    /// Constructs an Option or Result while retaining the receiving payload type.
     pub(in crate::lowering) fn lower_wrapper_as(
         &mut self,
         operand: Option<&Expr>,
@@ -120,7 +121,7 @@ impl LoweringContext {
         self.emit_value(operation, ty, span)
     }
 
-    /// Lowers literals with their target type, retaining it through parentheses.
+    /// Lowers literals with their target type, retaining it through grouping and named arguments.
     ///
     /// **Documentation:** `docs/pascal/language/types/records.md`
     pub(in crate::lowering) fn lower_expression_as(
@@ -133,7 +134,9 @@ impl LoweringContext {
             return self.value_as(value, expected, expression.span());
         }
         let value = match expression {
-            Expr::Paren(inner, _) => self.lower_expression_as(inner, expected),
+            Expr::Paren(inner, _) | Expr::NamedArgument { value: inner, .. } => {
+                self.lower_expression_as(inner, expected)
+            }
             Expr::ArrayLiteral(values, span) => {
                 self.lower_array_literal_as(values, expected, *span)
             }

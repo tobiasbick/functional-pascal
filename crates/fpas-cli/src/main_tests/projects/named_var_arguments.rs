@@ -14,8 +14,10 @@ fn run_cli_named_var_arguments_reach_imported_storage_and_reuse_units() {
         &cwd.join("src/counter.fpas"),
         "unit App.Counter;
 public var Total: integer := 10;
+public type Action = procedure(var Destination: integer; Amount: integer);
 public procedure Add(var Value: integer; Step: integer);
 begin Value := Value + Step; end procedure;
+public const Edit: Action := Add;
 public procedure Forward(var Target: integer);
 begin Add(Step := 3, Value := var Target); end procedure;
 end unit;",
@@ -29,6 +31,9 @@ begin
   Add(Step := 2, Value := var Value);
   Forward(Target := var Value);
   Add(Value := var App.Counter.Total, Step := 4);
+  Edit(Amount := 2, Destination := var Value);
+  const Renamed: procedure(var Slot: integer; Delta: integer) := Edit;
+  Renamed(Delta := 1, Slot := var Value);
   WriteLn(Value); WriteLn(App.Counter.Total);
 end.",
     );
@@ -36,7 +41,7 @@ end.",
     for _ in 0..2 {
         let (code, stdout, stderr) = support::run_cli_and_capture_output(&project, &cwd);
         assert_eq!(code, 0, "{stderr}");
-        assert_eq!(stdout, "6\n14\n");
+        assert_eq!(stdout, "9\n14\n");
         assert!(stderr.is_empty(), "{stderr}");
         let modified = fs::metadata(cwd.join("src/counter.fpascu"))
             .expect("compiled unit")
@@ -57,8 +62,8 @@ fn run_cli_named_var_arguments_report_marker_alias_and_lifetime_errors() {
         ("Swap(B := var Counter, A := var Counter);", "FP3029"),
         ("go Increase(Value := var Counter);", "FP3030"),
         (
-            "const F: procedure(var Value: integer) := Increase; F(Value := var Counter);",
-            "FP3026",
+            "const F: procedure(var Slot: integer) := Increase; F(Value := var Counter);",
+            "FP3025",
         ),
         ("Swap(A := var Counter, var Other);", "FP2016"),
     ] {

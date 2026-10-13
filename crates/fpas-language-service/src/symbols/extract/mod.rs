@@ -165,7 +165,11 @@ pub(super) fn declaration_symbol(
         Decl::Function(value) => Some(function_signature(snapshot, value, 0)),
         Decl::Procedure(value) => Some(procedure_signature(snapshot, value, 0)),
         Decl::TypeDef(definition) => {
-            record_construction::constructor_signature(snapshot, definition)
+            if let TypeBody::Alias(ty) = &definition.body {
+                type_callable_signature(snapshot, name, ty)
+            } else {
+                record_construction::constructor_signature(snapshot, definition)
+            }
         }
     };
     let children = match declaration {
@@ -182,6 +186,11 @@ pub(super) fn declaration_symbol(
                 &value.value,
                 &mut children,
             );
+            children.extend(source::callable_type_children(
+                snapshot,
+                &qualified_name,
+                &value.type_expr,
+            ));
             children
         }
         Decl::Var(value) => {
@@ -192,6 +201,11 @@ pub(super) fn declaration_symbol(
                 &value.value,
                 &mut children,
             );
+            children.extend(source::callable_type_children(
+                snapshot,
+                &qualified_name,
+                &value.type_expr,
+            ));
             children
         }
     };

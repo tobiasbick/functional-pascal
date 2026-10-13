@@ -107,19 +107,19 @@ fn lower(
                 .collect::<Result<Vec<_>, EvaluationParseError>>()?,
         )),
         Expr::ResultOk(value, _) => Ok(DebugExpression::ResultOk(Box::new(lower(
-            value,
+            super::arguments::payload_value(value)?,
             depth + 1,
             limits,
             budget,
         )?))),
         Expr::ResultError(value, _) => Ok(DebugExpression::ResultError(Box::new(lower(
-            value,
+            super::arguments::payload_value(value)?,
             depth + 1,
             limits,
             budget,
         )?))),
         Expr::OptionSome(value, _) => Ok(DebugExpression::OptionSome(Box::new(lower(
-            value,
+            super::arguments::payload_value(value)?,
             depth + 1,
             limits,
             budget,

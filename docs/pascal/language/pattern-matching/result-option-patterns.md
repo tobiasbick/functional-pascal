@@ -1,5 +1,12 @@
 # Result and Option patterns
 
+`Some`, `Ok`, and `Error` match one explicit payload, either by position or
+with the case-insensitive label `Value`: `Some(Value := const N)`,
+`Ok(Value := _)`, or `Error(Value := 'timeout')`. Error payloads use their
+declared error type. Nested patterns choose their own positional or named
+field list. Unknown, repeated or missing fields are errors; `_` explicitly
+ignores a payload. `None` has no payload and uses no parentheses.
+
 Destructuring `case` arms for `Result of (T, E)` and `Option of T`:
 
 ```pascal

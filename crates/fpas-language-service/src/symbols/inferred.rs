@@ -4,15 +4,20 @@
 
 use fpas_sema::{AnalysisMetadata, Ty};
 
-use super::{DocumentSymbol, SymbolKind};
+use super::{CallableSignature, DocumentSymbol, SymbolKind};
 
-/// Enriches unannotated local symbols with the semantic checker's inferred types.
+/// Enriches inferred local and case binding symbols with their checked receiving types.
 pub(super) fn apply_binding_types(symbols: &mut [DocumentSymbol], metadata: &AnalysisMetadata) {
     for symbol in symbols {
         let span = symbol.full_span;
         if let Some(ty) = metadata
             .binding_types
             .get(&(span.source_id(), span.offset()))
+            .or_else(|| {
+                metadata
+                    .pattern_types
+                    .get(&(span.source_id(), span.offset()))
+            })
             && !ty.is_error()
         {
             let keyword = match symbol.kind {
@@ -22,6 +27,44 @@ pub(super) fn apply_binding_types(symbols: &mut [DocumentSymbol], metadata: &Ana
             };
             if let Some(keyword) = keyword {
                 symbol.detail = format!("{keyword} {}: {ty}", symbol.name);
+                let callable = match ty {
+                    Ty::Function(function) => {
+                        Some((&function.params, Some(function.return_type.as_ref())))
+                    }
+                    Ty::Procedure(procedure) => Some((&procedure.params, None)),
+                    _ => None,
+                };
+                if let Some((params, result)) = callable {
+                    let parameters = params
+                        .iter()
+                        .map(|param| {
+                            format!(
+                                "{}{}: {}",
+                                if param.mode == fpas_parser::ParamMode::Var {
+                                    "var "
+                                } else {
+                                    ""
+                                },
+                                param.name,
+                                param.ty
+                            )
+                        })
+                        .collect::<Vec<_>>();
+                    symbol.callable = Some(CallableSignature {
+                        label: format!(
+                            "{} {}({}){}",
+                            if result.is_some() {
+                                "function"
+                            } else {
+                                "procedure"
+                            },
+                            symbol.name,
+                            parameters.join("; "),
+                            result.map_or_else(String::new, |ty| format!(": {ty}"))
+                        ),
+                        parameters,
+                    });
+                }
                 symbol.type_name = match ty {
                     Ty::Record(record) => Some(record.name.clone()),
                     Ty::Enum(enumeration) => Some(enumeration.name.clone()),

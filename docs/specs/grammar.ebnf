@@ -423,11 +423,17 @@ case_label          = destructure_pattern                (* Result/Option  *)
 (* enum_pattern; Sema treats it as a value when `Name` is a distinct   *)
 (* type. Documentation: docs/pascal/language/types/distinct-types.md  *)
 
-destructure_pattern = ( 'ok' | 'error' | 'some' ) '(' pattern ')'
+destructure_pattern = ( 'ok' | 'error' | 'some' ) '(' payload_pattern ')'
                     | 'none' ;
 
-enum_pattern        = qualified_id '(' pattern { ',' pattern } ')'
+enum_pattern        = qualified_id '(' pattern_list ')'
                     | qualified_id ;                     (* fieldless variant *)
+pattern_list        = pattern { ',' pattern }
+                    | named_pattern { ',' named_pattern } ;
+named_pattern       = identifier ':=' pattern ;
+payload_pattern     = pattern | 'Value' ':=' pattern ;
+(* Labels are case-insensitive; each field is present exactly once. *)
+(* Each nested list independently uses positional or named fields.  *)
 
 pattern             = 'const' identifier                 (* binding        *)
                     | '_'                                (* ignored value  *)
@@ -453,8 +459,8 @@ pattern             = 'const' identifier                 (* binding        *)
 (* scrutinee to `Name`. It must be the arm's only label and needs a *)
 (* guard. A bare identifier label is always a value comparison.     *)
 (* Destructure labels bind the inner value of Result/Option.        *)
-(* Enum patterns match a variant and bind its fields positionally:  *)
-(* Shape.Circle(const R) binds Radius to R.                         *)
+(* Enum patterns match every field positionally or by declared name.*)
+(* Shape.Circle(Radius := const R) binds Radius to R.               *)
 (*                                                                  *)
 (* Guard clause ('if' expression) on an arm: the arm matches only   *)
 (* when the label matches AND the guard evaluates to true. The      *)
@@ -596,9 +602,9 @@ primary_atom        = native_array_factory
                     | string_literal
                     | 'true'
                     | 'false'
-                    | 'ok' '(' expression ')'            (* Result Ok      *)
-                    | 'error' '(' expression ')'        (* Result Error   *)
-                    | 'some' '(' expression ')'          (* Option Some    *)
+                    | 'ok' '(' payload_argument ')'      (* Result Ok      *)
+                    | 'error' '(' payload_argument ')'   (* Result Error   *)
+                    | 'some' '(' payload_argument ')'    (* Option Some    *)
                     | 'none'                             (* Option None    *)
                     | '(' expression ')'
                     | array_literal
@@ -672,6 +678,9 @@ arg_list            = positional_arg { ',' positional_arg }
                     | named_arg { ',' named_arg } ;
 positional_arg      = expression | var_arg ;
 named_arg           = identifier ':=' ( expression | var_arg ) ;
+payload_argument    = expression | 'Value' ':=' expression ;
+(* Fixed-signature calls use the visible static parameter labels.   *)
+(* Callable compatibility ignores labels; variadic calls are positional.*)
 (* Argument for a `var` parameter: a variable, field, or element.     *)
 (* Documentation: docs/pascal/language/functions/var-parameters.md    *)
 var_arg             = 'var' designator ;

@@ -26,6 +26,11 @@ pub(crate) fn function_children(
         declaration.span,
     );
     super::contracts::collect_result_symbols(snapshot, owner, declaration, &mut children);
+    children.extend(super::source::callable_type_children(
+        snapshot,
+        owner,
+        &declaration.return_type,
+    ));
     children.sort_by_key(|symbol| symbol.full_span.offset());
     children
 }
@@ -52,14 +57,22 @@ pub(super) fn closure_children(
     owner: &str,
     closure: &ClosureExpr,
 ) -> Vec<DocumentSymbol> {
-    routine_children(
+    let mut children = routine_children(
         snapshot,
         owner,
         &[],
         &closure.params,
         &closure.body,
         closure.span,
-    )
+    );
+    if let Some(return_type) = &closure.return_type {
+        children.extend(super::source::callable_type_children(
+            snapshot,
+            owner,
+            return_type,
+        ));
+    }
+    children
 }
 
 fn routine_children(
@@ -90,7 +103,8 @@ fn routine_children(
     children
 }
 
-fn parameter_symbol(
+/// Builds a source-owned parameter, including its callable type labels.
+pub(super) fn parameter_symbol(
     snapshot: &DocumentSnapshot,
     owner: &str,
     param: &FormalParam,
@@ -118,5 +132,6 @@ fn parameter_symbol(
         Vec::new(),
     );
     symbol.callable = type_callable_signature(snapshot, &param.name, &param.type_expr);
+    symbol.children = super::source::callable_type_children(snapshot, owner, &param.type_expr);
     symbol
 }

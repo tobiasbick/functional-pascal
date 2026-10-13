@@ -1,6 +1,8 @@
 //! Protocol-independent completion and signature assistance.
 
 mod auto_import;
+/// Concrete receiving signatures for callable values and indexed elements.
+pub(crate) mod callable_values;
 mod completion;
 mod context;
 pub(crate) mod native;

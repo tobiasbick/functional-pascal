@@ -5,6 +5,8 @@
     reason = "IntelliSense fixtures use explicit source offsets and readable assertions"
 )]
 
+#[path = "intellisense/call_conventions.rs"]
+mod call_conventions;
 #[path = "intellisense/callable_fields.rs"]
 mod callable_fields;
 #[path = "intellisense/generic_records.rs"]

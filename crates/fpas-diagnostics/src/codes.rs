@@ -170,7 +170,7 @@ define_codes!(SEMA_ALLOCATED_CODES => {
     SEMA_CYCLIC_TYPE_ALIAS = 3023;
     /// Recursive required fields or payloads provide no finite construction.
     SEMA_NO_FINITE_TYPE_VALUE = 3024;
-    /// A named argument is unknown or duplicated, or a named call omits a parameter.
+    /// A call or pattern label is unknown or duplicated, or a named list omits a parameter or payload field.
     ///
     /// Documentation: `docs/pascal/tools/diagnostics.md` (FP3025).
     SEMA_INVALID_NAMED_ARGUMENT = 3025;

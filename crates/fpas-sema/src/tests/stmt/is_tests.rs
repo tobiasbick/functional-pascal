@@ -32,17 +32,17 @@ fn nonbinding_is_is_boolean_in_all_expression_contexts() {
     check_ok(&program(
         "const Present: boolean := (O is Some(_));
          const Flags: array of boolean := [O is Some(_), not (O is Some(_)), (O is None) xor true];
-         if (R is Ok(Some(_))) or (O is None) then null; end if;
-         while (O is Some(_)) and false do break; end while;
+         if (R is Ok(Value := Some(Value := _))) or (O is None) then null; end if;
+         while (O is Some(Value := _)) and false do break; end while;
          repeat null; until O is None;
          case 1 of when 1 if O is Some(_): null; else null; end case;",
     ));
     check_ok(
         "program T;
          function Has(Value: Option of integer): boolean;
-         requires Value is Some(_);
+         requires Value is Some(Value := _);
          ensures (Present): Present;
-         begin return Value is Some(_); end function;
+         begin return Value is Some(Value := _); end function;
          procedure Accept(Flag: boolean); ensures (Flag); begin null; end procedure;
          begin Accept(Has(Some(1))); end.",
     );

@@ -41,6 +41,9 @@ pub(super) fn specialize(
     let Some(argument) = document.snapshot.source().get(start.span.offset..end) else {
         return;
     };
+    let argument = argument
+        .split_once(":=")
+        .map_or(argument, |(_, value)| value.trim());
     let Some(handle @ Ty::Task(_)) =
         super::native_receiver::receiver_type(documents, target, argument, offset, 0)
     else {

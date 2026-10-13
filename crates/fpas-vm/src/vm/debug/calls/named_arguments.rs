@@ -24,7 +24,7 @@ impl CallSandbox {
                 return Err(error(
                     DebugErrorKind::EvaluationType,
                     "debug function values accept only positional arguments",
-                    "Call function values positionally; their types do not retain parameter names.",
+                    "Call this debugger value positionally. Debugger evaluation does not retain its static signature labels.",
                 ));
             }
         };

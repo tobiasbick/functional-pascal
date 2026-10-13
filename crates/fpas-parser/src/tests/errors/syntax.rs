@@ -107,6 +107,6 @@ fn trailing_dot_real_literal_is_rejected() {
 #[test]
 fn destructure_pattern_requires_binding_identifier() {
     let (_, errs) =
-        parse_with_errors("program T; begin case R of when Ok(): X := 1; end case; end.");
+        parse_with_errors("program T; begin case R of when Ok(const): X := 1; end case; end.");
     assert!(!errs.is_empty());
 }

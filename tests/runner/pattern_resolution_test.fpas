@@ -19,7 +19,7 @@ begin
   const Limit: integer := 3;
   return function(Value: Pair): integer begin
     case Value of
-      when Pair.Both(const Limit, Limit):
+      when Pair.Both(Right := Limit, Left := const Limit):
         return Limit;
       when Pair.Both(_, _), Pair.Empty:
         return -1;
@@ -31,7 +31,7 @@ function MakeIs(): function(Value: Pair): integer;
 begin
   const Limit: integer := 3;
   return function(Value: Pair): integer begin
-    return if Value is PairAlias.Both(_, Limit) then 1 else -1 end if;
+    return if Value is PairAlias.Both(Right := Limit, Left := _) then 1 else -1 end if;
   end function;
 end function;
 

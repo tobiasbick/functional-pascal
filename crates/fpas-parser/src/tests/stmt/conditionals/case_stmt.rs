@@ -101,12 +101,10 @@ fn case_with_destructure_pattern() {
     match &stmts[0] {
         Stmt::Case { arms, .. } => match &arms[0].labels[0] {
             CaseLabel::Pattern(Pattern::Destructure {
-                variant, payload, ..
+                variant, fields, ..
             }) => {
                 assert_eq!(*variant, DestructureVariant::Ok);
-                assert!(
-                    matches!(payload.as_deref(), Some(Pattern::Binding { name, .. }) if name == "V")
-                );
+                assert!(matches!(&fields[0].pattern, Pattern::Binding { name, .. } if name == "V"));
             }
             _ => panic!("expected destructure label"),
         },
@@ -147,9 +145,9 @@ fn case_patterns_parse_bindings_wildcards_and_scalar_bindings() {
         &arms[0].labels[0],
         CaseLabel::Pattern(Pattern::Destructure {
             variant: DestructureVariant::Error,
-            payload: Some(payload),
+            fields,
             ..
-        }) if matches!(**payload, Pattern::Wildcard(_))
+        }) if matches!(fields[0].pattern, Pattern::Wildcard(_))
     ));
 }
 
@@ -162,9 +160,9 @@ fn plain_payload_identifier_is_kept_for_the_semantic_diagnostic() {
     assert!(matches!(
         &arms[0].labels[0],
         CaseLabel::Pattern(Pattern::Destructure {
-            payload: Some(payload),
+            fields,
             ..
-        }) if matches!(**payload, Pattern::Value(Expr::Designator(_)))
+        }) if matches!(fields[0].pattern, Pattern::Value(Expr::Designator(_)))
     ));
 }
 
@@ -178,7 +176,7 @@ fn nested_patterns_parse_recursively() {
     };
     let CaseLabel::Pattern(Pattern::Destructure {
         variant: DestructureVariant::Ok,
-        payload: Some(some),
+        fields: outer,
         ..
     }) = &arms[0].labels[0]
     else {
@@ -186,13 +184,13 @@ fn nested_patterns_parse_recursively() {
     };
     let Pattern::Destructure {
         variant: DestructureVariant::Some,
-        payload: Some(inner),
+        fields: middle,
         ..
-    } = &**some
+    } = &outer[0].pattern
     else {
         panic!("expected nested Some pattern");
     };
-    let Pattern::Variant { fields, .. } = &**inner else {
+    let Pattern::Variant { fields, .. } = &middle[0].pattern else {
         panic!("expected nested variant pattern");
     };
     assert!(matches!(&fields[0].pattern, Pattern::Binding { name, .. } if name == "W"));

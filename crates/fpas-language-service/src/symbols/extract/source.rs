@@ -93,6 +93,7 @@ pub(crate) fn procedure_signature(
     }
 }
 
+/// Describes the visible labels and result of a written callable type.
 pub(crate) fn type_callable_signature(
     snapshot: &DocumentSnapshot,
     name: &str,
@@ -123,6 +124,41 @@ pub(crate) fn type_callable_signature(
         }
         _ => None,
     }
+}
+
+/// Retains callable type labels as declarations independent from implementation parameters.
+pub(super) fn callable_type_children(
+    snapshot: &DocumentSnapshot,
+    owner: &str,
+    value: &TypeExpr,
+) -> Vec<super::DocumentSymbol> {
+    let params = match value {
+        TypeExpr::FunctionType { params, .. } | TypeExpr::ProcedureType { params, .. } => params,
+        TypeExpr::Array(inner, _)
+        | TypeExpr::Option {
+            inner_type: inner, ..
+        } => return callable_type_children(snapshot, owner, inner),
+        TypeExpr::Dict { value_type, .. } => {
+            return callable_type_children(snapshot, owner, value_type);
+        }
+        TypeExpr::Result {
+            ok_type, err_type, ..
+        } => {
+            let mut children = callable_type_children(snapshot, owner, ok_type);
+            children.extend(callable_type_children(snapshot, owner, err_type));
+            return children;
+        }
+        _ => return Vec::new(),
+    };
+    let scope = type_span(value).diagnostic_span_or_synthetic();
+    let mut children = params
+        .iter()
+        .map(|param| super::routines::parameter_symbol(snapshot, owner, param, scope))
+        .collect::<Vec<_>>();
+    if let TypeExpr::FunctionType { return_type, .. } = value {
+        children.extend(callable_type_children(snapshot, owner, return_type));
+    }
+    children
 }
 
 pub(crate) fn named_type(value: &TypeExpr) -> Option<String> {

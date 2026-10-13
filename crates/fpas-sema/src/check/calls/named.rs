@@ -9,6 +9,32 @@ use fpas_diagnostics::codes::{SEMA_INVALID_NAMED_ARGUMENT, SEMA_NAMED_ARGUMENTS_
 use fpas_parser::Expr;
 
 impl Checker {
+    /// Checks the single positional or `Value := …` payload of Some, Ok, or Error.
+    pub(in crate::check) fn check_payload_argument(
+        &mut self,
+        constructor: &str,
+        argument: &Expr,
+        expected: Option<&Ty>,
+    ) -> Ty {
+        if let Expr::NamedArgument {
+            name, name_span, ..
+        } = argument
+            && !name.eq_ignore_ascii_case("Value")
+        {
+            self.error_with_code(
+                SEMA_INVALID_NAMED_ARGUMENT,
+                format!("`{constructor}` has no field `{name}`"),
+                format!("Write `{constructor}(Value := …)` or `{constructor}(…)`."),
+                *name_span,
+            );
+        }
+        let ty = self.check_expr_with_expected(argument.argument_value(), expected);
+        self.expr_types
+            .insert(Self::expr_lookup_key(argument), ty.clone());
+        self.record_discard_info(argument);
+        self.propagate_task_bound_expr(argument, Self::expr_lookup_key(argument));
+        ty
+    }
     /// Returns argument values in parameter order.
     ///
     /// Positional calls keep their written order. A fully named call is mapped
@@ -26,14 +52,12 @@ impl Checker {
         if !args.iter().any(|arg| arg.argument_name().is_some()) {
             return Some(args.to_vec());
         }
-        let hint = match target {
-            CallTarget::Routine if variadic => Some(format!(
+        let hint = if variadic {
+            Some(format!(
                 "`{name}` takes a variable number of arguments; pass them by position."
-            )),
-            CallTarget::Routine | CallTarget::EnumVariant => None,
-            CallTarget::FunctionValue => Some(format!(
-                "`{name}` is a function value; call it positionally, for example `{name}(…)`. Function types do not carry parameter names."
-            )),
+            ))
+        } else {
+            None
         };
         if let Some(hint) = hint {
             self.reject_named_arguments(args.iter().copied(), name, &hint);
@@ -157,7 +181,7 @@ impl Checker {
         self.error_with_code(
             SEMA_NAMED_ARGUMENTS_NOT_SUPPORTED,
             format!("Named argument `{name} := …` is not supported here"),
-            "Named arguments are valid in calls of declared routines, record methods, and enum variant constructors. Pass the value by position, for example `Ok(Value)`.",
+            "Use a named argument in a fixed-signature call, or `Value := …` in Some, Ok, or Error construction.",
             *name_span,
         );
         let _ = self.check_expr(value);

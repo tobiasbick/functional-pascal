@@ -34,6 +34,11 @@ comparisons, for example `when Ok(Some(const User)):`.
 
 None; existing flat patterns remain valid.
 
+[AP36](../ap36-call-and-construction-conventions/README.md) also accepts complete
+named field lists. Labels select declared positions before coverage checking;
+every nested list independently uses positional or named fields. Existing
+bindings, comparisons, capture proofs and coverage rules are preserved.
+
 ## Documentation
 
 - `docs/pascal/language/pattern-matching/` (syntax, exhaustiveness, guards).

@@ -9,8 +9,10 @@ Status: complete.
 Current non-generic enum variants accept positional or fully named arguments
 using declared payload-field names, including short, qualified and imported
 constructors. Mapping is case-insensitive; written evaluation order is retained.
-Patterns remain positional. `Ok`, `Error`, and `Some` have no declared field
-names and accept positional arguments only (FP3026).
+[AP36](../ap36-call-and-construction-conventions/README.md) extends both complete
+forms to enum/Option/Result patterns and Some/Ok/Error constructors. Their
+single canonical payload label is `Value`; user enum labels remain their
+declared field names. Every pattern field is explicit, with no mixing per list.
 
 Variant fields are document symbols. Navigation, signature help and rename
 cover named labels. Registry-only keyword-named variants lack navigable field

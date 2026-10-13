@@ -1,5 +1,11 @@
 # Result and Option types
 
+`Some`, `Ok` and `Error` accept one positional payload or the case-insensitive
+label `Value`, for example `Some(Value := 3)` and `Error(Value := 'missing')`.
+The error payload uses the declared error type. These labels also work in
+patterns. `None` has no payload and uses no parentheses. Named payload labels
+do not add field-access operations.
+
 `Result of (T, E)` represents either a successful value of type `T` or an error value of type `E`.
 `Option of T` represents either a present value of type `T` or the absence of a value.
 

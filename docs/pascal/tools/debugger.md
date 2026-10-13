@@ -111,7 +111,12 @@ Declared routines, record methods, and enum constructors accept either fully
 positional or fully named arguments, for example `Sub(Right := 2, Left := 9)`.
 Names match declared parameters case-insensitively; every parameter must occur
 once. Argument expressions run in written order before parameter reordering.
-Visible function values and debugger intrinsics use positional arguments.
+Visible function values and debugger intrinsics use positional arguments in
+debugger evaluation, whose callable-value metadata does not retain the visible
+static signature labels. Ordinary compiled FPAS calls accept fully named
+callable values; this remains a restriction of the debugger's expression subset.
+Single-payload construction supports `Some(Value := …)`, `Ok(Value := …)` and
+`Error(Value := …)` as well as their positional forms.
 
 Record construction names an exact visible nominal type or alias, for example
 `Point(Y := 2)`. Supplied field expressions run in written order, followed by

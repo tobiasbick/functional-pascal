@@ -180,7 +180,7 @@ impl Checker {
             self.intrinsic_calls.insert(call_key, dispatch.clone());
         }
         if symbol_kind == SymbolKind::BuiltinStd {
-            let result = self.check_builtin_std_call_positional(name, &dispatch, args, span);
+            let result = self.check_builtin_std_call(name, &dispatch, args, span);
             if dispatch == fpas_std::std_symbols::STD_TASK_WAIT && matches!(result, Ty::Unit) {
                 self.error_with_code(
                     SEMA_TYPE_MISMATCH,
@@ -244,7 +244,7 @@ impl Checker {
     ) -> Ty {
         if symbol_kind == SymbolKind::BuiltinStd {
             let dispatch = self.builtin_std_dispatch_name(name);
-            return self.check_builtin_std_call_positional(name, &dispatch, args, span);
+            return self.check_builtin_std_call(name, &dispatch, args, span);
         }
 
         if symbol_kind == SymbolKind::EnumVariantConstructor
@@ -308,22 +308,31 @@ impl Checker {
         }
     }
 
-    /// Checks a polymorphic standard-library call, which takes positional arguments only.
-    pub(in crate::check) fn check_builtin_std_call_positional(
+    /// Checks a fixed-arity polymorphic standard operation using its static parameter labels.
+    pub(in crate::check) fn check_builtin_std_call(
         &mut self,
         name: &str,
         dispatch: &str,
         args: &[Expr],
         span: Span,
     ) -> Ty {
-        if self.reject_named_arguments(
-            args,
-            name,
-            "This standard-library operation has no declared parameter names; pass its arguments by position.",
-        ) {
-            self.check_args_only(args);
+        let Some(symbol) = self.scopes.lookup(name) else {
             return Ty::Error;
-        }
-        crate::std_registry::check_builtin_std_call(self, dispatch, args, span)
+        };
+        let params = match &symbol.ty {
+            Ty::Function(function) => function.params.clone(),
+            Ty::Procedure(procedure) => procedure.params.clone(),
+            _ => return Ty::Error,
+        };
+        let Some(ordered) = self.order_call_arguments(
+            name,
+            CallTarget::Routine,
+            &params,
+            false,
+            &args.iter().collect::<Vec<_>>(),
+        ) else {
+            return Ty::Error;
+        };
+        crate::std_registry::check_builtin_std_call_refs(self, dispatch, &ordered, false, span)
     }
 }

@@ -7,7 +7,7 @@ unit Std.Math;
 // Intrinsic `Pi` constant.
 public const Pi: real := 0.0;
 
-// `integer` or `real` — result matches `N`.
+// `integer` or `real` — result matches `N`; also `Abs(N := -3)`.
 //
 // Parameters:
 // - `N`: Input value used by `Abs`.

@@ -171,6 +171,7 @@ pub(super) fn apply_case_label_source_id(label: &mut CaseLabel, source_id: u32) 
     }
 }
 
+/// Remaps pattern values, bindings and declared field-label spans to their unit source.
 pub(super) fn apply_pattern_source_id(pattern: &mut Pattern, source_id: u32) {
     match pattern {
         Pattern::Binding { span, .. } | Pattern::Wildcard(span) => apply_span(span, source_id),
@@ -189,9 +190,12 @@ pub(super) fn apply_pattern_source_id(pattern: &mut Pattern, source_id: u32) {
             }
             apply_span(span, source_id);
         }
-        Pattern::Destructure { payload, span, .. } => {
-            if let Some(payload) = payload {
-                apply_pattern_source_id(payload, source_id);
+        Pattern::Destructure { fields, span, .. } => {
+            for field in fields {
+                if let Some((_, label_span)) = &mut field.label {
+                    apply_span(label_span, source_id);
+                }
+                apply_pattern_source_id(&mut field.pattern, source_id);
             }
             apply_span(span, source_id);
         }

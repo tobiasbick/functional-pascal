@@ -168,15 +168,11 @@ impl Checker {
     fn check_contract_pattern(&mut self, pattern: &Pattern, span: Span) {
         match pattern {
             Pattern::Value(value) => self.check_contract_expression(value, span),
-            Pattern::Variant { fields, .. } => {
+            Pattern::Variant { fields, .. } | Pattern::Destructure { fields, .. } => {
                 for field in fields {
                     self.check_contract_pattern(&field.pattern, span);
                 }
             }
-            Pattern::Destructure {
-                payload: Some(payload),
-                ..
-            } => self.check_contract_pattern(payload, span),
             _ => {}
         }
     }

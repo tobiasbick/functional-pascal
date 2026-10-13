@@ -339,16 +339,12 @@ fn collect_case_labels(labels: &[CaseLabel], begins: &[usize], out: &mut Collect
 fn collect_pattern(pattern: &Pattern, begins: &[usize], out: &mut CollectedAnchors) {
     match pattern {
         Pattern::Value(expr) => collect_expr(expr, begins, out),
-        Pattern::Variant { fields, .. } => {
+        Pattern::Variant { fields, .. } | Pattern::Destructure { fields, .. } => {
             for field in fields {
                 collect_pattern(&field.pattern, begins, out);
             }
         }
-        Pattern::Destructure {
-            payload: Some(payload),
-            ..
-        } => collect_pattern(payload, begins, out),
-        Pattern::Binding { .. } | Pattern::Wildcard(_) | Pattern::Destructure { .. } => {}
+        Pattern::Binding { .. } | Pattern::Wildcard(_) => {}
     }
 }
 

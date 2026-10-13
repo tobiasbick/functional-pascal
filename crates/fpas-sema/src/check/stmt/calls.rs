@@ -77,7 +77,7 @@ impl Checker {
                     .insert(crate::designator_lookup_key(designator), dispatch.clone());
             }
             if kind == SymbolKind::BuiltinStd {
-                return self.check_builtin_std_call_positional(&name, &dispatch, args, span);
+                return self.check_builtin_std_call(&name, &dispatch, args, span);
             }
 
             match ty {

@@ -229,7 +229,10 @@ See [control flow](language/control-flow/README.md).
 
 Declare `function Name(Parameters): ResultType;` or `procedure Name(Parameters);`.
 Separate parameters with semicolons and call arguments with commas. Calls are
-either entirely positional or entirely named. Routine overloading is unavailable.
+either entirely positional or entirely named. Fixed-signature callable values,
+methods, native operations and polymorphic Std operations follow this rule;
+variadic calls are entirely positional. Named calls use the visible static
+signature's labels. Routine overloading is unavailable.
 Functions explicitly `return Value;` on every normal path; assigning to the function
 name does not return. Procedures may exit early with `return;`.
 
@@ -353,7 +356,11 @@ add typed payload fields to variants; constructors accept positional or named
 arguments. Payload fields use semicolons in declarations, commas in calls.
 
 Patterns compare literals or named compile-time constants. Bind new names explicitly
-with `const Name`; `_` ignores a payload. Patterns may nest. Guards follow the
+with `const Name`; `_` ignores a payload. Each payload list is all positional or
+all named, every field once; labels are case-insensitive and independent of
+binding names. Lists may reorder fields and nest with either form independently.
+`Some`, `Ok` and `Error` use the canonical payload label `Value` in construction
+and patterns. `None` and fieldless user variants have no parentheses. Guards follow the
 whole pattern (`when Shape.Circle(const R) if R > 0:`). Enum, Option and Result
 cases must be exhaustive, even in statement form, and forbid `else`, including
 a redundant one. Guarded arms do not establish exhaustiveness. Coverage checks
@@ -381,7 +388,7 @@ begin
     when Shape.Dot: 0;
     when Shape.Circle(const Radius) if Radius > 0: Radius;
     when Shape.Circle(_): 0;
-    when Shape.Rect(const Width, const Height): Width * Height;
+    when Shape.Rect(Height := const Height, Width := const Width): Width * Height;
   end case;
 end function;
 
@@ -390,8 +397,8 @@ begin
   AssertTrue(Selected <> Mode.Off);
   AssertEquals(6, Size(Shape.Rect(Width := 2, Height := 3)));
   AssertEquals(4, Size(Shape.Circle(4)));
-  const Nested: option of option of integer := Some(Some(7));
-  AssertTrue(Nested is Some(Some(7)));
+  const Nested: option of option of integer := Some(Value := Some(7));
+  AssertTrue(Nested is Some(Value := Some(Value := 7)));
   case Nested of
     when Some(Some(const Value)) if Value > 0:
       AssertEquals(7, Value);
@@ -555,7 +562,12 @@ and [string](language/types/string/README.md) for exact native signatures.
 
 ## 9. Callable values, anonymous routines, and captures
 
-A callable type is `function(X: T): R` or `procedure(X: T)`. Pass a named routine
+A callable type is `function(X: T): R` or `procedure(X: T)`. Parameter names are
+required, case-insensitively unique and retained as static call labels; they do
+not affect positional type/mode compatibility. A routine with parameter `N`
+may implement `function(Value: integer): integer`, but the receiving value is
+called with `Value := …`. Inference retains the inferred signature's labels;
+compatible decision branches retain the first branch's labels. Pass a named routine
 without `@`, store it in a typed binding, then call that binding. Anonymous routines
 use a full `function(...)...begin...end function` or `procedure(...)...begin...end procedure`
 expression. There is no expression-only arrow syntax. A returned callable must be
@@ -584,8 +596,8 @@ begin
 end function;
 
 begin
-  const AddThree: function(Value: integer): integer := MakeAdder(3);
-  AssertEquals(8, AddThree(5));
+  const AddThree: function(Input: integer): integer := MakeAdder(3);
+  AssertEquals(8, AddThree(Input := 5));
   var Count := 0;
   const Tick: procedure() := procedure() begin
     Count := Count + 1;

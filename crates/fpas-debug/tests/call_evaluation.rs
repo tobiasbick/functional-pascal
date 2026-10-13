@@ -93,7 +93,7 @@ end.";
         ("Counter.Create(8).Double()", "16"),
         ("Std.Math.Abs(-9)", "9"),
         ("Touch()", "()"),
-        ("try Some(11)", "11"),
+        ("try Some(Value := 11)", "11"),
         ("[1, 2, 3][1]", "2"),
     ];
     for (index, (expression, expected)) in cases.into_iter().enumerate() {

@@ -15,7 +15,7 @@ use fpas_lexer::Span;
 use fpas_parser::Expr;
 use std::collections::HashMap;
 
-/// Call target kinds that differ in named-argument support.
+/// Call target categories used for diagnostic wording and enum field labels.
 ///
 /// **Documentation:** `docs/pascal/language/functions/parameters.md`
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]

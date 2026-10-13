@@ -98,6 +98,7 @@ impl Checker {
         }
     }
 
+    /// Requires distinct case-insensitive labels in declarations and callable types.
     pub(crate) fn check_unique_formal_param_names(&mut self, params: &[FormalParam]) {
         let mut seen = HashSet::new();
         for param in params {

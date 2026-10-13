@@ -37,7 +37,9 @@ call forms and evaluation order.
   values, and function-typed record fields.
 - Keep call parentheses explicit. Do not add automatic partial application,
   currying, or a second lambda shorthand; retain existing anonymous functions.
-- Calls on function values are positional only (AP09).
+- Calls on function values accept complete positional or named arguments using
+  their visible static signature (AP36). Direct returned-callable chaining
+  remains outside that implementation and deferred under AP12.
 - Preserve current capture storage: captured `const` and value parameters are
   copied; captured local `var` bindings share mutable cells.
 

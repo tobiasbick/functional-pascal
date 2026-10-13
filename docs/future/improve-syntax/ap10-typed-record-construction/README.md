@@ -18,7 +18,8 @@ without guessing between literals and factories.
 - Omitted fields take their declared default; fields without a default are
   required.
 - Enum variants with data are constructor calls and follow AP09: fully
-  positional or fully named. Patterns stay positional.
+  positional or fully named. AP36 extends both forms to patterns, with every
+  field explicit and no mixing per nested list.
 - A record with private fields can still be constructed only inside its
   declaring unit; importers use public factory functions.
 - Call targets follow normal lexical and qualified name resolution. When the
@@ -51,6 +52,15 @@ const B: Shape := Shape.Rectangle(Width := 3.0, Height := 4.0);
 
 None for AP10. Generic record declarations and constructor type-argument
 inference are owned by AP24.2.
+
+## Independent follow-up
+
+[AP36](../ap36-call-and-construction-conventions/README.md#recorded-construction-and-pattern-decisions)
+preserves named record construction, omitted field defaults, visibility, and
+aliases, as well as both enum construction forms. It implements complete named
+enum/Option/Result patterns and named Some/Ok/Error payloads alongside the
+positional forms. The rules above include these delivered extensions;
+AP10's named record construction remains unchanged.
 
 ## Dependencies
 

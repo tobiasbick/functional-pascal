@@ -1,4 +1,4 @@
-//! Named call arguments: mapping, ordering metadata, and rejected targets.
+//! Named call arguments and pattern fields: static labels and complete mappings.
 //!
 //! Documentation: `docs/pascal/language/functions/parameters.md`
 
@@ -120,13 +120,7 @@ fn invalid_named_mappings_list_the_parameters() {
 #[test]
 fn positional_only_targets_reject_named_arguments() {
     for body in [
-        r#"  const F: function(Value: integer): integer := function(Value: integer): integer begin
-    return Value;
-  end function;
-  const A: integer := F(Value := 1);"#,
-        "  const A: integer := Abs(Value := -1);",
         "  WriteLn(Text := 'x');",
-        "  const R: result of (integer, string) := Ok(Value := 1);",
         "  const S: string := '%d'.Format(Value := 1);",
     ] {
         assert_eq!(
@@ -171,16 +165,110 @@ fn invalid_named_variant_fields_use_field_wording() {
 }
 
 #[test]
-fn enum_patterns_stay_positional() {
-    let errors = check_errors(&program(
+fn enum_patterns_accept_named_fields() {
+    check_ok(&program(
         r#"
   const S: Shape := Shape.Rect(1.0, 2.0);
   case S of
     when Shape.Rect(Width := const W, Height := const H): WriteLn(W + H);
-    when Shape.Circle(_), Shape.Rect(_, _): WriteLn(0);
+    when Shape.Circle(_): WriteLn(0);
   end case;
 "#,
     ));
-    assert_eq!(errors.len(), 1, "{errors:#?}");
-    assert_eq!(errors[0].code, SEMA_NAMED_ARGUMENTS_NOT_SUPPORTED);
+}
+
+#[test]
+fn callable_labels_come_from_the_visible_signature() {
+    check_ok(&program(
+        r#"
+      const F: function(A: integer; B: integer): integer := Sub;
+      const N := F(B := 1, A := 9);
+      const G := Sub;
+      const M := G(Right := 1, Left := 9);
+      const R: result of (integer, string) := Ok(Value := Abs(N := -1));
+      const O := Some(value := 3);
+    "#,
+    ));
+    for call in ["F(Left := 1, Right := 2)", "F(A := 1, a := 2)", "F(B := 2)"] {
+        let errors = check_errors(&program(&format!(
+            "const F: function(A: integer; B: integer): integer := Sub; const N := {call};"
+        )));
+        assert!(
+            errors
+                .iter()
+                .any(|error| error.code == SEMA_INVALID_NAMED_ARGUMENT),
+            "{call}: {errors:#?}"
+        );
+    }
+    for definition in [
+        "function(A: integer; a: integer): integer",
+        "procedure(A: integer; a: integer)",
+    ] {
+        let errors = check_errors(&format!(
+            "program T; type Duplicate = {definition}; begin null; end."
+        ));
+        assert!(
+            errors
+                .iter()
+                .any(|error| error.code == fpas_diagnostics::codes::SEMA_DUPLICATE_DECLARATION),
+            "{errors:#?}"
+        );
+    }
+}
+
+#[test]
+fn named_payloads_and_pattern_fields_require_complete_unique_labels() {
+    for (body, code) in [
+        ("const R := Some(Wrong := 1);", SEMA_INVALID_NAMED_ARGUMENT),
+        (
+            "const R: result of (integer, string) := Error(Message := 'x');",
+            SEMA_INVALID_NAMED_ARGUMENT,
+        ),
+        (
+            "const R: result of (integer, string) := Ok(Wrong := 1);",
+            SEMA_INVALID_NAMED_ARGUMENT,
+        ),
+        (
+            "const S := Some(1); const B := S is Some(Wrong := _);",
+            SEMA_INVALID_NAMED_ARGUMENT,
+        ),
+        (
+            "const S := Some(1); const B := S is Some(Value := _, value := _);",
+            SEMA_INVALID_NAMED_ARGUMENT,
+        ),
+        (
+            "const S: Shape := Circle(1.0); const B := S is Shape.Rect(Width := _);",
+            SEMA_INVALID_NAMED_ARGUMENT,
+        ),
+        (
+            "const S: Shape := Circle(1.0); const B := S is Shape.Rect(Width := _, width := _);",
+            SEMA_INVALID_NAMED_ARGUMENT,
+        ),
+        (
+            "const S: Shape := Circle(1.0); const B := S is Shape.Rect(Width := _, Wrong := _);",
+            SEMA_INVALID_NAMED_ARGUMENT,
+        ),
+        (
+            "const S := Some(1); const B := S is Some(Value := const N);",
+            fpas_diagnostics::codes::SEMA_IS_PATTERN_BINDING,
+        ),
+    ] {
+        let errors = check_errors(&program(body));
+        assert!(
+            errors.iter().any(|error| error.code == code),
+            "{body}: {errors:#?}"
+        );
+    }
+}
+
+#[test]
+fn polymorphic_labels_do_not_make_unspecialized_intrinsics_callable_values() {
+    let errors = check_errors(&program(
+        "const F: function(N: integer): integer := Abs; const A := F(N := -1);",
+    ));
+    assert!(
+        errors.iter().any(|error| error.code == SEMA_TYPE_MISMATCH
+            && error.message.contains("must be called directly")),
+        "{errors:#?}"
+    );
 }

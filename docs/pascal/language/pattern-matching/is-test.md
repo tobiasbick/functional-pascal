@@ -36,6 +36,12 @@ end case;
 
 Pattern names are introduced only by `case` arms, in statements and expressions.
 
+Named fields follow the same complete-list rules as case patterns:
+`Item is Some(Value := _)` and
+`ShapeValue is Shape.Rect(Height := 3, Width := _)` are valid.
+Labels denote declared fields; they introduce no variables. Nested `const`
+bindings remain forbidden, including `Some(Value := const N)`.
+
 ## Where `is` is valid
 
 - `is` has comparison precedence: `X is Some(_) and Ready` means

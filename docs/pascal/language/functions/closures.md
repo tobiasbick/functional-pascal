@@ -33,7 +33,9 @@ end function;
 ```
 
 Closures may be stored in variables and records, passed as arguments, returned from
-routines, and invoked through ordinary call syntax.
+routines, and invoked through ordinary positional or fully named call syntax.
+Calls use the receiving static signature's labels, which may differ from the
+closure's own parameter names; see [function types](function-types.md).
 
 Formal syntax: [`grammar.ebnf`](../../../specs/grammar.ebnf) (`closure_expr`).
 

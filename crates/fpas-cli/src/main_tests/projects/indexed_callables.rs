@@ -92,7 +92,11 @@ fn indexed_callables_reject_invalid_arguments_and_task_escapes() {
         ),
         ("discard Readers[0]('bad');", "FP3006", "Type mismatch"),
         ("Mutators[0](Counter);", "FP3027", "var"),
-        ("discard Readers[0](Value := 1);", "FP3026", "named"),
+        (
+            "discard Readers[0](Unknown := 1);",
+            "FP3025",
+            "Expected parameter names: Value",
+        ),
         (
             "go Mutators[0](var Counter);",
             "FP3030",

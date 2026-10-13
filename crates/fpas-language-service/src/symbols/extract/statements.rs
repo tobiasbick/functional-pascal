@@ -45,6 +45,9 @@ pub(super) fn collect_statement_symbols(
                     .type_expr
                     .as_ref()
                     .and_then(|ty| type_callable_signature(snapshot, &value.name, ty));
+                symbol.children = value.type_expr.as_ref().map_or_else(Vec::new, |ty| {
+                    super::source::callable_type_children(snapshot, owner, ty)
+                });
                 output.push(symbol);
                 collect_expression_symbols(snapshot, owner, &value.value, output);
             }

@@ -4,9 +4,8 @@
 
 use super::{check_errors, check_ok, error_codes, program};
 use fpas_diagnostics::codes::{
-    SEMA_INVALID_NAMED_ARGUMENT, SEMA_INVALID_VAR_ARGUMENT, SEMA_NAMED_ARGUMENTS_NOT_SUPPORTED,
-    SEMA_TYPE_MISMATCH, SEMA_VAR_ARGUMENT_ALIAS, SEMA_VAR_ARGUMENT_MARKER,
-    SEMA_VAR_PARAMETER_ESCAPE,
+    SEMA_INVALID_NAMED_ARGUMENT, SEMA_INVALID_VAR_ARGUMENT, SEMA_TYPE_MISMATCH,
+    SEMA_VAR_ARGUMENT_ALIAS, SEMA_VAR_ARGUMENT_MARKER, SEMA_VAR_PARAMETER_ESCAPE,
 };
 
 #[test]
@@ -106,7 +105,7 @@ begin end.",
 }
 
 #[test]
-fn named_var_calls_keep_name_mapping_and_callable_restrictions() {
+fn named_var_calls_keep_static_labels_and_task_restrictions() {
     for body in [
         "var Counter: integer := 0; Increase(Unknown := var Counter);",
         "var Counter: integer := 0; Increase(Value := var Counter, VALUE := var Counter);",
@@ -117,7 +116,10 @@ fn named_var_calls_keep_name_mapping_and_callable_restrictions() {
             "{body}"
         );
     }
-    assert!(error_codes("var Counter: integer := 0; const F: procedure(var Value: integer) := Increase; F(Value := var Counter);").contains(&SEMA_NAMED_ARGUMENTS_NOT_SUPPORTED));
+    check_ok(&program(
+        "var Counter: integer := 0; const F: procedure(var Slot: integer) := Increase; F(Slot := var Counter);",
+    ));
+    assert!(error_codes("var Counter: integer := 0; const F: procedure(var Slot: integer) := Increase; F(Value := var Counter);").contains(&SEMA_INVALID_NAMED_ARGUMENT));
     assert_eq!(
         error_codes("var Counter: integer := 0; go Increase(Value := var Counter);"),
         [SEMA_VAR_PARAMETER_ESCAPE]

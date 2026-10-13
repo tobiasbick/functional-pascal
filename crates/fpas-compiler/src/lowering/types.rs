@@ -378,6 +378,7 @@ impl TypeTable {
         }
     }
 
+    /// Returns the declared variant and payload types in declaration order.
     pub fn enum_variant(
         &self,
         layout: EnumLayoutId,
@@ -390,6 +391,24 @@ impl TypeTable {
             .iter()
             .find(|variant| variant.name.eq_ignore_ascii_case(name))
             .map(|variant| (variant.id, variant.fields.clone()))
+    }
+
+    /// Resolves a named pattern field to its position in the enum layout.
+    pub fn enum_field_index(
+        &self,
+        layout: EnumLayoutId,
+        variant: VariantId,
+        name: &str,
+    ) -> Option<usize> {
+        self.enum_layouts
+            .iter()
+            .find(|item| item.id == layout)?
+            .variants
+            .iter()
+            .find(|item| item.id == variant)?
+            .field_names
+            .iter()
+            .position(|field| field.eq_ignore_ascii_case(name))
     }
 
     pub fn function_type(

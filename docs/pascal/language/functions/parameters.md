@@ -87,20 +87,34 @@ imported and `Std.*` routines with declared signatures, record methods
 act as parameter names (`Shape.Rectangle(Width := 10.0, Height := 20.0)`; see
 [Enums](../types/enums.md)). Fixed-signature native type operations and the
 `string.Chr` / `array.Fill` factories also support named explicit arguments;
-the implicit receiver cannot be named. The following forms take positional arguments only
-and reject names (FP3026):
+the implicit receiver cannot be named. Callable bindings, parameters, fields,
+closures and bound methods also accept names from their visible static signature.
+Fixed-arity polymorphic standard operations use their published labels, for
+example `Abs(N := -3)` and `Clamp(Hi := 10, V := 20, Lo := 0)`.
 
-- function values: closures, callable bindings and parameters, and callable
-  record fields, because function types do not carry parameter names;
-- `Ok(…)`, `Error(…)`, and `Some(…)`, and enum patterns in `case` labels;
-- variadic routines such as `WriteLn` and `Format`, and polymorphic
-  standard-library operations such as `Abs`.
+Variadic calls such as `WriteLn` and `Format` are entirely positional and reject
+names (FP3026), including a named prefix followed by a positional tail (FP2016).
+`Some`, `Ok`, and `Error` accept their single payload by position or with the
+canonical field label `Value`, for example `Some(Value := 3)`.
 
 ```pascal
+function Double(N: integer): integer;
+begin
+  return N * 2;
+end function;
 const F: function(Value: integer): integer := Double;
-const Answer: integer := F(3);          // valid
-const Bad: integer := F(Value := 3);    // FP3026: F is a function value
+const Answer: integer := F(Value := 3);
+const Same: integer := F(3);
 ```
+
+Here `Double(N := 3)` and `F(Value := 3)` are valid; `F(N := 3)` is rejected
+(FP3025). Assignment and callback compatibility compare parameter positions,
+types and modes, result types, and variadic status; names do not affect
+compatibility and never reorder arguments during assignment. Inferred callable
+bindings retain their inferred signature's labels, including labels inside
+collections and decision expressions. When compatible branches differ only in
+labels, the inferred signature retains the first branch's labels. An explicit
+receiving signature determines the labels of calls through that receiving value.
 
 ## See also
 

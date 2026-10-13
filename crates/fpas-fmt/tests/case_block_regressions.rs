@@ -87,17 +87,36 @@ fn comments_between_arms_and_inside_named_endings_survive_once() {
 #[test]
 fn explicit_pattern_bindings_and_wildcards_round_trip() {
     let formatted = format(
-        "program T; begin case S of when Shape.Rect(const W,_): A(W); when Shape.Circle(Radius:=const R): null; end case; case N of when const V if V>0: null; else null; end case; case O of when Error( _ ): null; when Ok(const Value): null; end case; end.",
+        "program T; begin case S of when Shape.Rect(const W,_): A(W); when Shape.Circle(Radius:=const R): null; end case; case N of when const V if V>0: null; else null; end case; case O of when Error( Value := Some(Value:=const E) ): null; when Ok(Value := const Value): null; end case; discard O is Ok(Value:=_); end.",
     );
     for line in [
         "when Shape.Rect(const W, _):",
         "when Shape.Circle(Radius := const R):",
         "when const V if V > 0:",
-        "when Error(_):",
-        "when Ok(const Value):",
+        "when Error(Value := Some(Value := const E)):",
+        "when Ok(Value := const Value):",
+        "discard O is Ok(Value := _);",
     ] {
         assert!(formatted.contains(line), "missing `{line}`:\n{formatted}");
     }
+}
+
+#[test]
+fn named_nested_pattern_comments_survive_formatting_once() {
+    let formatted = format(
+        "program T; begin case Item of\n when Pair.Both(Second := Some(Value := const V), // second payload\n First := _): // first ignored\n discard V;\n end case; end.",
+    );
+    assert_eq!(
+        formatted.matches("// second payload").count(),
+        1,
+        "{formatted}"
+    );
+    assert_eq!(
+        formatted.matches("// first ignored").count(),
+        1,
+        "{formatted}"
+    );
+    assert_eq!(format(&formatted), formatted);
 }
 
 #[test]

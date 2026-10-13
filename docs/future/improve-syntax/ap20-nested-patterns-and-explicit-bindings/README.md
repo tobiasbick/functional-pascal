@@ -43,9 +43,10 @@ replaces AP20.3's original binding and condition-only rules.
 - `_` ignores exactly one field. When that field has an enum type,
   `Some(_)` covers all of its variants. Only `_` in place of a whole variant
   (`when _:`) is rejected.
-- Pattern bindings are `const` only; there is no `var` binding. Patterns stay
-  positional; named fields such as `Shape.Circle(Radius := const R)` remain
-  rejected (FP3026).
+- Pattern bindings are `const` only; there is no `var` binding. AP36 adds
+  fully named field lists alongside positional ones, for example
+  `Shape.Circle(Radius := const R)`. Every field occurs exactly once; mixing
+  is rejected independently at each nesting level. Some/Ok/Error use `Value`.
 - One arm may list several labels with the same binding names and compatible
   types, for example `when Ok(const Msg), Error(const Msg):`.
 - Exhaustiveness is computed recursively for nested patterns: `Ok(Some(_))`,
@@ -76,6 +77,13 @@ agreed before AP20.1.
 [AP35.2](../ap35-condition-composition/02-pattern-conditions.md) replaces
 AP20.3's original context and binding rules and owns the consumer migration.
 The rules above describe the resulting language. AP20 remains complete.
+
+[AP36](../ap36-call-and-construction-conventions/README.md#recorded-construction-and-pattern-decisions)
+implements fully named field lists alongside positional enum/Option/Result patterns,
+with every field explicit and mixing rejected per nesting level. Some/Ok/Error
+use Value as their named payload label. AP36.2 replaces only the positional-only
+field restriction, preserving comparisons, immutable case bindings, coverage,
+and AP35's nonbinding is. The rules above include this delivered extension.
 
 ## Dependencies
 

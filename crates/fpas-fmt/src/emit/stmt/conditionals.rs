@@ -46,7 +46,7 @@ fn emit_clause(emitter: &mut Emitter, stmt: &Stmt, keyword: &str, comments: &Com
 
 /// Emits the implicit body scope, leaving explicit inner blocks intact.
 pub(super) fn emit_control_body(emitter: &mut Emitter, body: &Stmt, comments: &CommentMap) {
-    emit_leading_comments(emitter, comments, stmt_start(body), false);
+    emitter.with_indent(|inner| emit_leading_comments(inner, comments, stmt_start(body), false));
     emit_body_statements(emitter, body, comments);
 }
 

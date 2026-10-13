@@ -95,6 +95,7 @@ end.",
         ("Fail(Left := 1)", "missing `right`"),
         ("Fail(Left := 1, left := 2)", "more than once"),
         ("Fail(Left := 1, 2)", "mix positional and named"),
+        ("Some(Wrong := 1)", "no field `Wrong`"),
     ] {
         let response = evaluate(&mut server, expression);
         assert_eq!(response["success"], false, "{response}");

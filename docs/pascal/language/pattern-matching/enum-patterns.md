@@ -25,7 +25,8 @@ begin
 end function;
 ```
 
-Enum patterns bind variant fields positionally with `const Name`, or ignore them with `_`:
+Enum patterns match all fields either positionally or by their declared names.
+Use `const Name` to bind a value or `_` to ignore it:
 
 ```pascal
 case S of
@@ -40,7 +41,9 @@ end case;
 
 Rules:
 
-- Each field position holds a pattern: `const Name` binds the field, `_` ignores it, a literal or constant compares with it, and a nested variant or Result/Option pattern matches its structure, for example `Shape.Tinted(Color.Red, const Size)`. Fields match positionally; binding names need not match field names. A plain identifier that names no constant, such as `Shape.Circle(R)`, is rejected (FP3031). Named fields such as `when Shape.Circle(Radius := const R):` are rejected (FP3026), although [construction](../types/enums.md) accepts them.
+- Each field holds a pattern: `const Name` binds the field, `_` ignores it, a literal or constant compares with it, and a nested variant or Result/Option pattern matches its structure. `Shape.Rectangle(Height := const H, Width := const W)` is equivalent to `Shape.Rectangle(const W, const H)`. Labels are case-insensitive and may reorder fields; binding names are independent of field labels. A plain identifier naming no constant, such as `Shape.Circle(R)`, is rejected (FP3031).
+- Every field is supplied exactly once. Unknown, duplicated or missing named fields report FP3025; mixed positional/named lists report FP2016. Ignore an unused field explicitly with `_`; fields have no pattern defaults or rest form. Every nested list chooses its own complete positional or named form.
+- A fieldless variant uses no parentheses, for example `Shape.Point`.
 - A binding name may appear only once per pattern.
 - A pattern variant must belong to the scrutinee enum type (`Shape.Circle` when matching `Shape`). The complete name follows ordinary name resolution, including unit and type aliases. An unknown qualifier is an error; a variant from another enum cannot match merely because it has the same short name.
 - Use an `if` guard for constraints a pattern cannot express, such as ranges or comparisons with computed values.

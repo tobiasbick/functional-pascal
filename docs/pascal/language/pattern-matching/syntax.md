@@ -55,6 +55,16 @@ end case;
 
 ## Nested patterns and comparisons
 
+Each enum, Option or Result payload list is entirely positional or entirely
+named. Named fields use their declared labels, are case-insensitive, and may
+appear in any order. Every field is supplied once; `_` explicitly ignores a
+field. There are no omitted pattern fields, defaults, or rest patterns.
+Nested lists choose independently, so `Some(Value := Pair.Values(_, const B))`
+and `Some(Pair.Values(Second := const B, First := _))` are both valid.
+`Some`, `Ok`, and `Error` have one canonical field label, `Value`.
+`None` and fieldless user variants use no parentheses. These rules also apply
+to nonbinding [`is` tests](is-test.md).
+
 Patterns nest inside payload positions, and a payload may compare with a
 literal, a named compile-time constant, or an enum member:
 

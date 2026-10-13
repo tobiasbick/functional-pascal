@@ -23,6 +23,7 @@ impl Checker {
                 return_type,
                 ..
             } => {
+                self.check_unique_formal_param_names(params);
                 let param_tys = params
                     .iter()
                     .map(|param| ParamTy {
@@ -40,6 +41,7 @@ impl Checker {
                 })
             }
             TypeExpr::ProcedureType { params, .. } => {
+                self.check_unique_formal_param_names(params);
                 let param_tys = params
                     .iter()
                     .map(|param| ParamTy {

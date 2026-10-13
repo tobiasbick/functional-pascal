@@ -1,5 +1,7 @@
 //! Protocol-independent editor navigation queries.
 
+/// Source owners of static callable parameter labels.
+pub(crate) mod callable_labels;
 mod document;
 mod highlights;
 pub(crate) mod named_arguments;

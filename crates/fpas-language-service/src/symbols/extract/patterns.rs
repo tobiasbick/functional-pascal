@@ -67,7 +67,7 @@ fn collect_pattern(
                 output,
             );
         }
-        Pattern::Variant { fields, .. } => {
+        Pattern::Variant { fields, .. } | Pattern::Destructure { fields, .. } => {
             for field in fields {
                 collect_pattern(
                     snapshot,
@@ -79,13 +79,7 @@ fn collect_pattern(
                 );
             }
         }
-        Pattern::Destructure {
-            payload: Some(payload),
-            ..
-        } => {
-            collect_pattern(snapshot, owner, payload, scope_span, visible_from, output);
-        }
-        Pattern::Wildcard(_) | Pattern::Value(_) | Pattern::Destructure { payload: None, .. } => {}
+        Pattern::Wildcard(_) | Pattern::Value(_) => {}
     }
 }
 

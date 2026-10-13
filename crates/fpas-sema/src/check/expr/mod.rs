@@ -83,7 +83,7 @@ impl Checker {
                     Some(Ty::Result(ok, _)) => Some(ok.as_ref()),
                     _ => None,
                 };
-                let inner_ty = self.check_expr_with_expected(inner, inner_expected);
+                let inner_ty = self.check_payload_argument("Ok", inner, inner_expected);
                 let error = match expected {
                     Some(Ty::Result(_, error)) => *error.clone(),
                     _ => Ty::Error,
@@ -95,7 +95,7 @@ impl Checker {
                     Some(Ty::Result(_, error)) => Some(error.as_ref()),
                     _ => None,
                 };
-                let inner_ty = self.check_expr_with_expected(inner, inner_expected);
+                let inner_ty = self.check_payload_argument("Error", inner, inner_expected);
                 let ok = match expected {
                     Some(Ty::Result(ok, _)) => *ok.clone(),
                     _ => Ty::Error,
@@ -107,7 +107,7 @@ impl Checker {
                     Some(Ty::Option(value)) => Some(value.as_ref()),
                     _ => None,
                 };
-                let inner_ty = self.check_expr_with_expected(inner, inner_expected);
+                let inner_ty = self.check_payload_argument("Some", inner, inner_expected);
                 Ty::Option(Box::new(inner_ty))
             }
             Expr::OptionNone(_) => match expected {

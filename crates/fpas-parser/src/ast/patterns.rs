@@ -23,7 +23,7 @@ pub enum Pattern {
     Variant {
         /// Variant name, optionally qualified by its enum type.
         constructor: Designator,
-        /// Payload fields in declaration order.
+        /// Payload fields in written order, with optional declared field labels.
         fields: Vec<PatternField>,
         /// Source span of the complete pattern.
         span: Span,
@@ -34,8 +34,8 @@ pub enum Pattern {
     Destructure {
         /// Result or option variant matched by the pattern.
         variant: DestructureVariant,
-        /// Payload pattern, absent for `None`.
-        payload: Option<Box<Pattern>>,
+        /// Payload fields in written order, empty for `None`.
+        fields: Vec<PatternField>,
         /// Source span of the complete pattern.
         span: Span,
     },
@@ -77,12 +77,12 @@ impl Pattern {
     }
 }
 
-/// One positional payload field of a variant pattern.
+/// One positional or named payload field of a variant pattern.
 ///
 /// **Documentation:** `docs/pascal/language/pattern-matching/enum-patterns.md`
 #[derive(Debug, Clone, PartialEq)]
 pub struct PatternField {
-    /// Field name written as `Name := Pattern`, which patterns reject.
+    /// Declared field name written as `Name := Pattern`.
     pub label: Option<(String, Span)>,
     /// Pattern for the field value.
     pub pattern: Pattern,

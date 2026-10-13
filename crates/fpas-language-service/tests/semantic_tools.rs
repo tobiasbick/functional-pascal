@@ -7,6 +7,9 @@
 
 mod support;
 
+#[path = "semantic_tools/callable_labels.rs"]
+mod callable_labels;
+
 #[path = "semantic_tools/decision_bindings.rs"]
 mod decision_bindings;
 #[path = "semantic_tools/generic_parameters.rs"]

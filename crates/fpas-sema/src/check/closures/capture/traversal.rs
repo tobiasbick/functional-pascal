@@ -189,18 +189,12 @@ impl CaptureCollector<'_> {
     fn collect_pattern_values(&mut self, pattern: &Pattern) {
         match pattern {
             Pattern::Value(expr) => self.collect_from_expr(expr),
-            Pattern::Variant { fields, .. } => {
+            Pattern::Variant { fields, .. } | Pattern::Destructure { fields, .. } => {
                 for field in fields {
                     self.collect_pattern_values(&field.pattern);
                 }
             }
-            Pattern::Destructure {
-                payload: Some(payload),
-                ..
-            } => {
-                self.collect_pattern_values(payload);
-            }
-            Pattern::Binding { .. } | Pattern::Wildcard(_) | Pattern::Destructure { .. } => {}
+            Pattern::Binding { .. } | Pattern::Wildcard(_) => {}
         }
     }
 
@@ -210,14 +204,9 @@ impl CaptureCollector<'_> {
             Pattern::Binding { name, .. } => self.bind_name(name),
             Pattern::Wildcard(_) => {}
             Pattern::Value(_) => {}
-            Pattern::Variant { fields, .. } => {
+            Pattern::Variant { fields, .. } | Pattern::Destructure { fields, .. } => {
                 for field in fields {
                     self.bind_pattern(&field.pattern);
-                }
-            }
-            Pattern::Destructure { payload, .. } => {
-                if let Some(payload) = payload {
-                    self.bind_pattern(payload);
                 }
             }
         }

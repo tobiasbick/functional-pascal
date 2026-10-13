@@ -82,10 +82,17 @@ impl LoweringContext {
                     *span,
                 )?;
                 self.continue_if(matched, fail, *span)?;
-                for (index, field) in fields.iter().enumerate() {
+                for (written, field) in fields.iter().enumerate() {
                     if matches!(field.pattern, Pattern::Wildcard(_)) {
                         continue;
                     }
+                    let index = if let Some((label, _)) = &field.label {
+                        self.type_table
+                            .enum_field_index(layout, variant, label)
+                            .ok_or_else(|| unsupported(*span, "named pattern field"))?
+                    } else {
+                        written
+                    };
                     let field_ty = field_types
                         .get(index)
                         .copied()
@@ -110,7 +117,7 @@ impl LoweringContext {
             }
             Pattern::Destructure {
                 variant,
-                payload,
+                fields,
                 span,
             } => {
                 let value = self.emit_value(Operation::ReadLocal(source), ty, *span)?;
@@ -141,10 +148,10 @@ impl LoweringContext {
                     )?;
                 }
                 self.continue_if(matched, fail, *span)?;
-                let Some(payload) = payload else {
+                let Some(payload) = fields.first().map(|field| &field.pattern) else {
                     return Ok(());
                 };
-                if matches!(**payload, Pattern::Wildcard(_)) {
+                if matches!(payload, Pattern::Wildcard(_)) {
                     return Ok(());
                 }
                 let value = self.emit_value(Operation::ReadLocal(source), ty, *span)?;

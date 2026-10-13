@@ -103,7 +103,10 @@ Values of an enum with data compare with `=` and `<>`: they are equal when they 
 variant and equal fields, so `Shape.Circle(5.0) = Shape.Circle(5.0)` is `true`. This requires every
 field of every variant to compare; see [Operators](../basics/operators.md).
 
-Each `const Name` binding in the pattern is positional — it corresponds to the field at that position in the variant declaration; `_` ignores a field. Patterns do not accept `Field := const Binding` (FP3026), and binding names need not match field names. A variant without fields (like `Point` above) uses no parentheses.
+Pattern fields are either all positional or all named with `Field := Pattern`.
+Labels are case-insensitive and may reorder fields; `const Binding` names are
+independent of field labels. Every field is explicit, using `_` for ignored
+values. A variant without fields (like `Point` above) uses no parentheses.
 Each field position may also compare with a literal, compile-time constant, or enum member, or contain a nested enum, Result, or Option pattern. See [nested patterns and comparisons](../pattern-matching/syntax.md#nested-patterns-and-comparisons); use an `if` guard on the `case` arm for constraints the pattern cannot express.
 
 Parentheses in a variant declaration must contain at least one field, and semicolons

@@ -31,9 +31,23 @@ impl Checker {
                 .is_some_and(|symbol| symbol.kind == SymbolKind::Type)
     }
 
-    /// Resolves an expression name and rejects type declarations used as values.
+    /// Resolves a value name, rejecting type declarations and unspecialized polymorphic intrinsics.
     pub(super) fn check_value_designator_expr(&mut self, designator: &Designator) -> Ty {
         let ty = self.check_designator_expr(designator);
+        let name = Self::resolve_designator_name(designator);
+        if self
+            .scopes
+            .lookup(&name)
+            .is_some_and(|symbol| symbol.kind == SymbolKind::BuiltinStd)
+        {
+            self.error_with_code(
+                SEMA_TYPE_MISMATCH,
+                format!("Polymorphic operation `{name}` must be called directly"),
+                "Use a typed wrapper when a callable value is required, for example `function(N: integer): integer begin return Abs(N); end function`.",
+                designator.span,
+            );
+            return Ty::Error;
+        }
         if !ty.is_error() && self.designator_is_type(designator) {
             let name = Self::resolve_designator_name(designator);
             self.error_with_code(

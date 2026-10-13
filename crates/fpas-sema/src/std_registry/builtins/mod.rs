@@ -3,10 +3,12 @@ mod callbacks;
 mod channel_task;
 mod dict;
 mod math;
+mod parameters;
 mod result_option;
 mod str_ops;
 mod test;
 
+pub(super) use parameters::parameter_names;
 pub(super) use test::register_assert_equals_builtin;
 
 use crate::check::Checker;
@@ -14,11 +16,6 @@ use crate::types::Ty;
 use fpas_diagnostics::codes::{INTERNAL_COMPILER_INVARIANT_FAILURE, SEMA_WRONG_ARGUMENT_COUNT};
 use fpas_lexer::Span;
 use fpas_parser::Expr;
-
-/// Checks a positional intrinsic call with explicitly written arguments.
-pub fn check_builtin_std_call(c: &mut Checker, name: &str, args: &[Expr], span: Span) -> Ty {
-    check_builtin_std_call_refs(c, name, &args.iter().collect::<Vec<_>>(), false, span)
-}
 
 /// Check an intrinsic using the original argument nodes, including an implicit receiver.
 pub fn check_builtin_std_call_refs(

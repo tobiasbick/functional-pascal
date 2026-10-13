@@ -182,19 +182,15 @@ impl Walker<'_, '_> {
     fn bind_pattern(&mut self, pattern: &Pattern, owners: &Owners) {
         match pattern {
             Pattern::Binding { name, .. } => self.declare(name, owners.clone()),
-            Pattern::Variant { fields, .. } => {
+            Pattern::Variant { fields, .. } | Pattern::Destructure { fields, .. } => {
                 for field in fields {
                     self.bind_pattern(&field.pattern, owners);
                 }
             }
-            Pattern::Destructure {
-                payload: Some(payload),
-                ..
-            } => self.bind_pattern(payload, owners),
             Pattern::Value(value) => {
                 let _ = self.expr(value);
             }
-            Pattern::Wildcard(_) | Pattern::Destructure { payload: None, .. } => {}
+            Pattern::Wildcard(_) => {}
         }
     }
 

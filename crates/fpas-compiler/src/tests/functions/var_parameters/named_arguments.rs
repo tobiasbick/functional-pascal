@@ -24,6 +24,10 @@ begin
   var Other: array of integer := [0];
   Assign(Right := var Items[Mark('r', 1)], Value := Mark('v', 40), Left := var Other[Mark('l', 0)]);
   if (Trace <> 'rvl') or (Other[0] <> 40) or (Items[1] <> 41) then panic('reference mapping'); end if;
+  Trace := '';
+  const Setter: procedure(One: integer; var Slot: integer; Two: integer) := Store;
+  Setter(Two := Mark('t', 4), Slot := var Items[Mark('s', 0)], One := Mark('o', 2));
+  if (Trace <> 'tso') or (Items[0] <> 24) then panic('static reference signature'); end if;
 end.
 "#,
     );

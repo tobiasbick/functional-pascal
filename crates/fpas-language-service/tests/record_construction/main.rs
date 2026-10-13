@@ -15,6 +15,10 @@ const UNIT: &str = "unit Demo.Model;
   public type Point = record public X: integer; public Y: integer := 2; end record;
   public type Location = Point;
   public type Hidden = record public X: integer; Secret: integer := 0; end record;
+  public type HiddenAlias = Hidden;
+  public type Box = record Callback: function(Input: integer): integer; end record;
+  function Double(N: integer): integer; begin return N * 2; end function;
+  public function CreateBox(): Box; begin return Box(Callback := Double); end function;
   public function Origin(): Point; begin return Point(X := 0); end function;
 end unit;";
 
@@ -36,6 +40,46 @@ fn fixture(source: &str) -> Fixture {
         main,
         unit,
     }
+}
+
+#[test]
+fn imported_private_indexed_callable_fields_expose_no_signature_or_label_owner() {
+    let source = "program App; uses Demo.Model as M; begin const Boxes: array of M.Box := [M.CreateBox()]; discard Boxes[0].Callback(Input := 1); end.";
+    let mut f = fixture(source);
+    assert!(
+        !f.service
+            .analyze_document(&f.main)
+            .expect("analysis")
+            .diagnostics()
+            .is_empty()
+    );
+    let label = source.find("Input :=").expect("private call label");
+    assert!(
+        f.service
+            .signature_help(&f.main, label + "Input := 1".len())
+            .expect("help")
+            .value
+            .is_none()
+    );
+    assert!(
+        f.service
+            .definitions(&f.main, label)
+            .expect("definitions")
+            .value
+            .is_empty()
+    );
+    assert!(f.service.rename(&f.main, label, "Value").is_err());
+    let candidates = f
+        .service
+        .completions(&f.main, label)
+        .expect("completion")
+        .value;
+    assert!(
+        candidates
+            .iter()
+            .all(|candidate| candidate.label != "Input" && candidate.insert_text != "Input := "),
+        "{candidates:#?}"
+    );
 }
 
 #[test]
@@ -145,23 +189,37 @@ fn completion_on_existing_field_label_preserves_assignment_and_excludes_other_la
 
 #[test]
 fn private_record_construction_does_not_expose_labels_or_signature_outside_its_unit() {
-    let source =
-        "program App; uses Demo.Model as M; begin const P: M.Hidden := M.Hidden(X := 1); end.";
-    let mut f = fixture(source);
-    assert!(
-        f.service
-            .definitions(&f.main, source.find("X :=").expect("field"))
-            .expect("private constructor")
-            .value
-            .is_empty()
-    );
-    assert!(
-        f.service
-            .signature_help(&f.main, source.find("1);").expect("value") + 1)
-            .expect("private signature")
-            .value
-            .is_none()
-    );
+    for source in [
+        "program App; uses Demo.Model as M; begin const P: M.Hidden := M.Hidden(X := 1); end.",
+        "program App; uses Demo.Model as M; begin const P: M.HiddenAlias := M.HiddenAlias(X := 1); end.",
+    ] {
+        let mut f = fixture(source);
+        assert!(
+            f.service
+                .definitions(&f.main, source.find("X :=").expect("field"))
+                .expect("private constructor")
+                .value
+                .is_empty()
+        );
+        assert!(
+            f.service
+                .signature_help(&f.main, source.find("1);").expect("value") + 1)
+                .expect("private signature")
+                .value
+                .is_none()
+        );
+        let completions = f
+            .service
+            .completions(&f.main, source.find("X :=").expect("label"))
+            .expect("completion")
+            .value;
+        assert!(
+            !completions
+                .iter()
+                .any(|candidate| candidate.insert_text == "X := " || candidate.label == "Secret"),
+            "{completions:#?}"
+        );
+    }
 }
 
 #[test]

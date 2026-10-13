@@ -353,7 +353,7 @@ Call arguments still use commas; commas inside types such as
 | FP3023 | Cyclic type alias | `type A = B; type B = A;` | End the alias chain at a concrete type; use a record or enum for finite recursion. |
 | FP3024 | No finite recursive value | `type Node = record Next: Node; end record;` | Break the required cycle with `Option`, an empty container, or a finite enum alternative. |
 | FP3025 | Invalid named argument | `Sub(Left := 1, Rigth := 2)` | `Sub(Left := 1, Right := 2)` |
-| FP3026 | Named arguments not supported | `F(Value := 3)` for a function value `F` | `F(3)` |
+| FP3026 | Named arguments not supported | `WriteLn(Text := 'hello')` for a variadic routine | `WriteLn('hello')` |
 | FP3027 | `var` marker mismatch | `Increase(Counter)` for `procedure Increase(var Value: integer)` | `Increase(var Counter)` |
 | FP3028 | Invalid `var` argument | `Increase(var Fixed)` for a `const` binding `Fixed` | Declare `var Fixed: integer := 1;` and pass `var Fixed`. |
 | FP3029 | Aliased `var` arguments | `Swap(var A[I], var A[J])` | `SwapAt(var A, I, J)` |
@@ -369,11 +369,12 @@ Call arguments still use commas; commas inside types such as
 | FP3039 | Lost task error | `scope go Load(Path); end scope;` where `Load` returns `result of (string, string)` | Keep the handle and forward the error: `const T: task of result of (string, string) := go Load(Path); const Text: string := try Wait(T);`. |
 | FP3040 | Task handle escape | `return go Fetch(1);` or `Outer := go Fetch(1);` inside a `scope` | Keep scope-owned handles in bindings declared inside the scope and wait for them there; see [Task scopes](../language/concurrency/task-scopes.md#handle-escapes). |
 
-FP3025 also reports a parameter or enum variant field named twice and a named
-call that omits one; its hint lists the declared names. FP3026 applies to
-function values, receiver calls, variadic routines, polymorphic
-standard-library operations, `Ok`/`Error`/`Some`, and enum patterns, which take
-positional arguments.
+FP3025 also reports a parameter or payload field named twice and a named
+call or pattern that omits one; its hint lists the visible static names.
+Some/Ok/Error use the payload label `Value`. FP3026 applies to variadic
+calls such as `WriteLn` and native `Format`, and misplaced named arguments.
+Fixed-signature callable values, receiver operations and fixed-arity
+polymorphic Std operations accept fully named calls.
 
 FP3027 hints show the marked argument, for example `var Counter`, or ask to
 remove `var` for a read-only parameter. FP3028 names the reason a `var`

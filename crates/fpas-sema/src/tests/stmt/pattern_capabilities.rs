@@ -32,6 +32,44 @@ const Change: procedure() := procedure() begin Count := Count + 1; end procedure
 const Wrapped: Option of procedure() := Some(Change);";
 
 #[test]
+fn named_payload_constructors_preserve_callable_capture_proofs() {
+    for (ty, constructor, other) in [
+        ("option of function(): integer", "Some", "None"),
+        (
+            "result of (function(): integer, string)",
+            "Ok",
+            "Error(Value := _)",
+        ),
+        (
+            "result of (integer, function(): integer)",
+            "Error",
+            "Ok(Value := _)",
+        ),
+    ] {
+        check_ok(&program(
+            &format!(
+                "const Wrapped: {ty} := {constructor}(Value := function(): integer begin return 1; end function);"
+            ),
+            "discard Wrapped;",
+        ));
+        let errors = check_errors(&program(
+            &format!(
+                "var Count: integer := 0; const Wrapped: {ty} := {constructor}(Value := function(): integer begin Count := Count + 1; return Count; end function);"
+            ),
+            &format!(
+                "case Wrapped of when {constructor}(Value := const F): const Job := go F(); discard Wait(Job); when {other}: null; end case;"
+            ),
+        ));
+        assert!(
+            errors
+                .iter()
+                .any(|error| error.code == SEMA_TASK_BOUND_CALLABLE),
+            "{constructor}: {errors:#?}"
+        );
+    }
+}
+
+#[test]
 fn pattern_callables_keep_task_bound_flags_in_branches_loops_and_nested_payloads() {
     for body in patterns("go F();") {
         let errors = check_errors(&program(MUTABLE_CAPTURE, &body));

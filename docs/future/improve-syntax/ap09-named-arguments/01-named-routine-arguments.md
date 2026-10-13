@@ -14,10 +14,11 @@ once per argument in written order, followed by parameter-order passing.
 
 Fixed-signature native type operations also accept names through
 [AP06.3](../ap06-dot-call-targets/03-fixed-dot-resolution.md). Their implicit
-receiver is unnamed and evaluated first. Function values and callable record
-fields/properties are positional only, as are variadic routines and native
-`Format` (FP3026). Ordinary polymorphic Std routines retain their positional-only
-restrictions where no fixed public signature exists.
+receiver is unnamed and evaluated first. [AP36](../ap36-call-and-construction-conventions/README.md)
+extends both complete forms to function values, callable fields and fixed-arity
+polymorphic operations. Labels come from the visible static signature;
+assignment compatibility remains positional. Variadic routines and native
+`Format` remain positional (FP3026).
 
 Signature help, navigation and rename resolve parameter labels to the callee.
 Debugger evaluation supports fully named calls to declared routines, methods,

@@ -46,13 +46,22 @@ struct Child {
 struct Scope {
     control: Arc<ScopeControl>,
     children: Vec<Child>,
+    /// Children that have not reached a terminal outcome yet.
+    running: usize,
     failures: Vec<ScopeFailure>,
+}
+
+/// Owning scope of a child and the child's position among that scope's started children.
+#[derive(Clone, Copy)]
+struct Membership {
+    scope: u64,
+    start_order: usize,
 }
 
 #[derive(Default)]
 struct State {
     scopes: HashMap<u64, Scope>,
-    membership: HashMap<u64, u64>,
+    membership: HashMap<u64, Membership>,
 }
 
 /// A scope whose children have all finished, ready to release their retained results.
@@ -88,6 +97,7 @@ impl ScopeRegistry {
             Scope {
                 control: Arc::clone(&control),
                 children: Vec::new(),
+                running: 0,
                 failures: Vec::new(),
             },
         );
@@ -98,12 +108,16 @@ impl ScopeRegistry {
     pub(in crate::vm) fn enroll(&self, scope: u64, task: u64) -> Option<Arc<ScopeControl>> {
         let mut state = self.lock();
         let entry = state.scopes.get_mut(&scope)?;
+        let start_order = entry.children.len();
         entry.children.push(Child {
             id: task,
             done: false,
         });
+        entry.running += 1;
         let control = Arc::clone(&entry.control);
-        state.membership.insert(task, scope);
+        state
+            .membership
+            .insert(task, Membership { scope, start_order });
         Some(control)
     }
 
@@ -113,19 +127,20 @@ impl ScopeRegistry {
     pub(in crate::vm) fn complete(&self, task: u64, failure: Option<&VmError>) -> bool {
         let sequence = self.next_sequence();
         let mut state = self.lock();
-        let Some(scope) = state.membership.get(&task).copied() else {
+        let Some(Membership { scope, start_order }) = state.membership.get(&task).copied() else {
             return false;
         };
         let Some(entry) = state.scopes.get_mut(&scope) else {
             return true;
         };
-        let Some(start_order) = entry.children.iter().position(|child| child.id == task) else {
+        let Some(child) = entry.children.get_mut(start_order) else {
             return true;
         };
-        if entry.children[start_order].done {
+        if child.done {
             return true;
         }
-        entry.children[start_order].done = true;
+        child.done = true;
+        entry.running -= 1;
         if let Some(error) = failure.filter(|error| !is_cancellation(error)) {
             entry.failures.push(ScopeFailure {
                 sequence,
@@ -147,9 +162,10 @@ impl ScopeRegistry {
     /// Observation identity of the failure recorded for an owned child.
     pub(in crate::vm) fn failure_sequence(&self, task: u64) -> Option<u64> {
         let state = self.lock();
-        let scope = state.scopes.get(state.membership.get(&task)?)?;
-        let start_order = scope.children.iter().position(|child| child.id == task)?;
-        scope
+        let Membership { scope, start_order } = *state.membership.get(&task)?;
+        state
+            .scopes
+            .get(&scope)?
             .failures
             .iter()
             .find(|failure| failure.start_order == start_order)
@@ -165,7 +181,7 @@ impl ScopeRegistry {
                 failures: Vec::new(),
             });
         };
-        if entry.children.iter().any(|child| !child.done) {
+        if entry.running > 0 {
             return None;
         }
         let entry = state.scopes.remove(&scope)?;
@@ -196,3 +212,6 @@ impl ScopeRegistry {
         self.state.lock().unwrap_or_else(|e| e.into_inner())
     }
 }
+
+#[cfg(test)]
+mod tests;

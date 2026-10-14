@@ -14,6 +14,16 @@ cargo bench-fpas record "vm-only note" --group vm
 
 Newest entries are prepended below this header.
 
+## 2026-10-14 — Constant-time task scope child completion
+
+- Group: `concurrency`
+- Suite: [`suite.toml`](suite.toml)
+
+| bench | elapsed_ms | throughput |
+|-------|------------|------------|
+| task_spawn_wait | 504 | throughput: 198412 tasks/s |
+| task_array_callbacks | 713 | throughput: 5385694 callbacks/s |
+
 ## 2026-10-12 — Full-suite baseline
 
 - Group: `all`

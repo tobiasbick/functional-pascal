@@ -358,9 +358,12 @@ expressions and `None`; consult the record page before exposing computed default
 ## 6. Enums, data variants, and patterns
 
 Plain enums list semicolon-terminated members, optionally with explicit integer
-backing values. Use qualified members (`Mode.On`) without parentheses. Data enums
-add typed payload fields to variants; constructors accept positional or named
-arguments. Payload fields use semicolons in declarations, commas in calls.
+backing values. Every resulting value must be unique, including automatically
+assigned successors. Use qualified members (`Mode.On`) without parentheses.
+Data enums add typed payload fields to variants and forbid explicit backing
+values anywhere in the enum, including fieldless alternatives. Constructors
+accept positional or named arguments. Payload fields use semicolons in
+declarations, commas in calls.
 
 Patterns compare literals or named compile-time constants. Bind new names explicitly
 with `const Name`; `_` ignores a payload. Each payload list is all positional or

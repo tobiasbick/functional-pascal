@@ -239,6 +239,12 @@ define_codes!(SEMA_ALLOCATED_CODES => {
     /// An imported name or user enum variant omitted its required source qualifier.
     /// Documentation: `docs/pascal/tools/diagnostics.md` (FP3043).
     SEMA_UNQUALIFIED_NAME = 3043;
+    /// Two simple-enum variants resolve to the same integer backing value.
+    /// Documentation: `docs/pascal/language/types/enums.md`.
+    SEMA_DUPLICATE_ENUM_BACKING_VALUE = 3044;
+    /// An enum with associated data declares an explicit integer backing value.
+    /// Documentation: `docs/pascal/language/types/enums.md`.
+    SEMA_BACKING_VALUE_IN_DATA_ENUM = 3045;
 });
 
 define_codes!(COMPILE_ALLOCATED_CODES => {

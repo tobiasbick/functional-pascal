@@ -312,9 +312,11 @@ enum_field          = identifier ':' type_expr ;
 
 (* Parentheses require at least one field, and ';' separates fields. *)
 (* Empty field lists and trailing field separators are invalid.     *)
-(* Variants may carry associated data (enum_fields) OR an explicit  *)
-(* backing value, but not both. Fieldless variants in a data enum   *)
-(* are constructed without parentheses: Shape.Point.                *)
+(* All explicit and implicit backing values in a simple enum must  *)
+(* be unique, including nonadjacent collisions (FP3044). If any      *)
+(* variant has associated data, no variant in that enum may declare *)
+(* an explicit backing value (FP3045). Fieldless variants remain    *)
+(* valid and are constructed without parentheses: Shape.Point.      *)
 
 (* ---- 2.5 Functions & Procedures -------------------------------- *)
 

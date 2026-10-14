@@ -16,6 +16,8 @@ use fpas_unit::{Digest, decode, encode};
 
 #[path = "incremental/coverage.rs"]
 mod coverage;
+#[path = "incremental/enum_values.rs"]
+mod enum_values;
 #[path = "incremental/initialization.rs"]
 mod initialization;
 #[path = "incremental/worker_state.rs"]

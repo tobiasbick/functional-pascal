@@ -5,6 +5,7 @@ mod const_var;
 mod contracts;
 mod dictionary_keys;
 mod distinct_types;
+mod enum_values;
 mod local_construction;
 mod local_inference;
 mod qualified_names;

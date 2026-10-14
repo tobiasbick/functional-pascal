@@ -41,8 +41,8 @@ They keep their existing spellings and require no import or type qualifier.
 
 Enums without payload fields satisfy `Comparable`. Ordered comparisons and
 array `Sort`/`SortInPlace` use their integer backing values, including explicit
-values. Equal backing values keep their input order when sorting. Enums with
-payload fields do not support ordering or satisfy `Comparable`.
+values. Every variant has a distinct backing value; sorting remains stable.
+Enums with payload fields do not support ordering or satisfy `Comparable`.
 
 ## Enum with backing values
 
@@ -61,6 +61,18 @@ one. An explicit value restarts that sequence. The signed 64-bit maximum
 `9223372036854775807` is valid as an explicit final value, but it has no implicit successor. If a
 later member needs an implicit value, the compiler reports an error; assign that member an explicit
 value to restart the sequence.
+
+All resulting backing values must be unique within the enum, whether written
+explicitly or assigned automatically. Nonadjacent collisions are also errors.
+For example, `First = 1; Restart = 0; Second;` is invalid because `Second`
+automatically receives the value 1 already used by `First`. FP3044 identifies
+both variants and the conflicting value. Assign an unused explicit value or
+change the preceding value that determines the implicit sequence.
+
+Equality and case matching therefore identify the same distinct variants that
+the exhaustiveness checker counts. Different enums remain nominally distinct,
+even when their backing values coincide. A type alias retains the original
+enum's identity and values.
 
 ```pascal
 type Limit = enum
@@ -129,7 +141,11 @@ Parentheses in a variant declaration must contain at least one field, and semico
 separate fields rather than terminate the list. Consequently, `Point()` and
 `Rectangle(Width: real; Height: real;)` are invalid.
 
-A variant uses either backing values or associated data fields, not both on the same variant.
+If any variant has associated-data fields, no variant in that enum may have an
+explicit integer backing value (FP3045). This includes fieldless alternatives:
+write `Empty;`, not `Empty = 7;`, alongside `Number(Value: integer);`.
+The restriction applies regardless of declaration order and also to generic
+enums. Fieldless alternatives remain ordinary distinct variants.
 
 Variant names must be ordinary identifiers. Reserved words remain reserved after a type
 qualifier, so declarations such as `None` and member expressions such as `KeyKind.End` are

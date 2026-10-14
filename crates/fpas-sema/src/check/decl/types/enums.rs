@@ -2,14 +2,19 @@ use super::Checker;
 use crate::scope::canonical_symbol_name;
 use crate::scope::{Symbol, SymbolKind};
 use crate::types::{EnumTy, EnumVariantTy, Ty};
-use fpas_diagnostics::codes::{SEMA_DUPLICATE_DECLARATION, SEMA_ENUM_BACKING_VALUE_EXHAUSTED};
+use fpas_diagnostics::codes::{
+    SEMA_BACKING_VALUE_IN_DATA_ENUM, SEMA_DUPLICATE_DECLARATION, SEMA_DUPLICATE_ENUM_BACKING_VALUE,
+    SEMA_ENUM_BACKING_VALUE_EXHAUSTED,
+};
 use fpas_lexer::Span;
 use fpas_parser::{EnumType, TypeDef};
-use std::collections::HashSet;
+use std::collections::{HashMap, HashSet};
 use std::sync::Arc;
 
 impl Checker {
     /// Collect enum payloads and register qualified variants before ordered bodies.
+    ///
+    /// **Documentation:** `docs/pascal/language/types/enums.md`
     pub(super) fn check_enum_type_def(&mut self, td: &TypeDef, enum_ty: &EnumType) {
         if !self.has_collected_type(td)
             && !self.scopes.define(
@@ -107,17 +112,35 @@ impl Checker {
         }
     }
 
+    // One integer identifies each simple variant; data variants use their tags instead.
     fn enum_backing_values(&mut self, enum_name: &str, enum_ty: &EnumType) -> Vec<Option<i64>> {
         if enum_ty
             .members
             .iter()
             .any(|member| !member.fields.is_empty())
         {
+            for member in &enum_ty.members {
+                if let Some(value) = member.value {
+                    self.error_with_code(
+                        SEMA_BACKING_VALUE_IN_DATA_ENUM,
+                        format!(
+                            "Enum member `{enum_name}.{}` declares backing value {value} in an enum with associated data",
+                            member.name
+                        ),
+                        format!(
+                            "Remove the backing value: write `{};`. Only enums without associated-data fields may declare integer backing values.",
+                            member.name
+                        ),
+                        member.span,
+                    );
+                }
+            }
             return vec![None; enum_ty.members.len()];
         }
 
         let mut next_value = Some(0_i64);
         let mut values = Vec::with_capacity(enum_ty.members.len());
+        let mut seen_values = HashMap::new();
         for member in &enum_ty.members {
             let backing = match member.value {
                 Some(value) => value,
@@ -138,6 +161,19 @@ impl Checker {
                     value
                 }
             };
+            if let Some(previous) = seen_values.get(&backing) {
+                self.error_with_code(
+                    SEMA_DUPLICATE_ENUM_BACKING_VALUE,
+                    format!(
+                        "Enum members `{enum_name}.{previous}` and `{enum_name}.{}` have the same backing value {backing}",
+                        member.name
+                    ),
+                    "Assign an unused integer backing value. For an implicit member, change the preceding explicit value or assign this member an unused explicit value.",
+                    member.span,
+                );
+            } else {
+                seen_values.insert(backing, member.name.as_str());
+            }
             values.push(Some(backing));
             next_value = backing.checked_add(1);
         }

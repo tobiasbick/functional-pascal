@@ -1,0 +1,235 @@
+program ForInSnapshot;
+
+uses Std.Conv as Conv, Std.Test as Test, Std.Tasks as Tasks;
+
+procedure CheckArrayMutation(Mode: integer);
+begin
+  var Items := [1, 2, 3];
+  var Seen := '';
+  var Visits := 0;
+  for Item: integer in Items do
+    Visits := Visits + 1;
+    if Visits > 3 then
+      panic('Array iteration visited added elements');
+    end if;
+
+    Seen := Seen + Conv.IntToStr(Item);
+    if Visits = 1 then
+      case Mode of
+        when 0:
+          Items.PushInPlace(9);
+        when 1:
+          discard Items.PopInPlace();
+        when 2:
+          Items[1] := 99;
+        when 3:
+          Items := [8];
+        else
+          panic('Invalid array mutation mode');
+      end case;
+    end if;
+  end for;
+
+  Test.AssertEquals('123', Seen);
+  case Mode of
+    when 0:
+      Test.AssertEquals(4, Items.Length());
+    when 1:
+      Test.AssertEquals(2, Items.Length());
+    when 2:
+      Test.AssertEquals(99, Items[1]);
+    when 3:
+      Test.AssertEquals(8, Items[0]);
+    else
+      panic('Invalid array mutation mode');
+  end case;
+end procedure;
+
+procedure CheckDictionaryMutation(Mode: integer);
+begin
+  var Values: dict of string to integer := ['a': 1, 'b': 2, 'c': 3];
+  var Seen := '';
+  var Read := '';
+  var Visits := 0;
+  for Key: string in Values do
+    Visits := Visits + 1;
+    if Visits > 3 then
+      panic('Dictionary iteration visited added keys');
+    end if;
+
+    Seen := Seen + Key;
+    if Visits = 1 then
+      case Mode of
+        when 0:
+          Values['d'] := 4;
+        when 1:
+          Values.RemoveInPlace('b');
+        when 2:
+          Values.RemoveInPlace('b');
+          Values['b'] := 20;
+        when 3:
+          Values := ['x': 9];
+        when 4:
+          Values['b'] := 20;
+        else
+          panic('Invalid dictionary mutation mode');
+      end case;
+    end if;
+
+    Read := Read + case Values.Get(Key) of
+      when Some(const Found): Conv.IntToStr(Found);
+      when None: '-';
+    end case;
+  end for;
+
+  Test.AssertEquals('abc', Seen);
+  case Mode of
+    when 0:
+      Test.AssertEquals('123', Read);
+      Test.AssertEquals(4, Values.Length());
+    when 1:
+      Test.AssertEquals('1-3', Read);
+      Test.AssertEquals(2, Values.Length());
+    when 2:
+      Test.AssertEquals('1203', Read);
+      const Keys := Values.Keys();
+      Test.AssertEquals('c', Keys[1]);
+      Test.AssertEquals('b', Keys[2]);
+    when 3:
+      Test.AssertEquals('---', Read);
+      Test.AssertEquals(9, Values['x']);
+    when 4:
+      Test.AssertEquals('1203', Read);
+      Test.AssertEquals(20, Values['b']);
+    else
+      panic('Invalid dictionary mutation mode');
+  end case;
+end procedure;
+
+procedure CheckIterableEvaluation();
+function ArrayValues(): array of integer;
+begin
+  Calls := Calls + 1;
+  return [1, 2];
+end function;
+function DictionaryValues(): dict of string to integer;
+begin
+  Calls := Calls + 1;
+  return ['a': 1, 'b': 2];
+end function;
+function EmptyArray(): array of integer;
+begin
+  Calls := Calls + 1;
+  return [];
+end function;
+function EmptyDictionary(): dict of string to integer;
+begin
+  Calls := Calls + 1;
+  return [:];
+end function;
+begin
+  var Calls := 0;
+  var Sum := 0;
+  for Round: integer := 1 to 2 do
+    for Item: integer in ArrayValues() do
+      Sum := Sum + Item;
+    end for;
+
+    for Key: string in DictionaryValues() do
+      Sum := Sum + Key.Length();
+    end for;
+  end for;
+
+  Test.AssertEquals(4, Calls);
+  Test.AssertEquals(10, Sum);
+  for Item: integer in EmptyArray() do
+    panic('Empty array entered its loop body');
+  end for;
+
+  for Key: string in EmptyDictionary() do
+    panic('Empty dictionary entered its loop body');
+  end for;
+
+  Test.AssertEquals(6, Calls);
+end procedure;
+
+procedure CheckNestedControlFlow();
+begin
+  var Outer := [1, 2, 3, 4];
+  var Inner := [10, 20, 30];
+  var Seen := '';
+  var OuterVisits := 0;
+  for Item: integer in Outer do
+    OuterVisits := OuterVisits + 1;
+    if OuterVisits > 4 then
+      panic('Outer iteration did not terminate');
+    end if;
+
+    Outer := [];
+    if Item = 2 then
+      continue;
+    end if;
+    var InnerVisits := 0;
+    for Other: integer in Inner do
+      InnerVisits := InnerVisits + 1;
+      if InnerVisits > 3 then
+        panic('Inner iteration did not terminate');
+      end if;
+
+      Inner := [40, 50];
+      if Other = 20 then
+        continue;
+      end if;
+
+      if Other = 50 then
+        break;
+      end if;
+
+      Seen := Seen + Conv.IntToStr(Item) + ':' + Conv.IntToStr(Other) + ',';
+    end for;
+  end for;
+
+  Test.AssertEquals('1:10,1:30,3:40,4:40,', Seen);
+  Test.AssertEquals(4, OuterVisits);
+end procedure;
+
+procedure CheckSharedResources();
+begin
+  var Count := 0;
+  const Increment: procedure() := procedure() begin
+    Count := Count + 1;
+  end procedure;
+  var Callbacks: array of procedure() := [Increment, Increment];
+  for Callback: procedure() in Callbacks do
+    Callbacks := [];
+    Callback();
+  end for;
+
+  Test.AssertEquals(2, Count);
+  Increment();
+  Test.AssertEquals(3, Count);
+
+  const Messages: channel of integer := Tasks.CreateChannel(1);
+  var Channels: array of channel of integer := [Messages];
+  for Copy: channel of integer in Channels do
+    Channels := [];
+    Test.AssertTrue(Tasks.TrySend(Copy, 7).Unwrap());
+  end for;
+
+  Test.AssertTrue(Tasks.TryReceive(Messages).Unwrap() = Some(7));
+  discard Tasks.CloseChannel(Messages);
+end procedure;
+
+begin
+  for Mode: integer := 0 to 3 do
+    CheckArrayMutation(Mode);
+  end for;
+
+  for Mode: integer := 0 to 4 do
+    CheckDictionaryMutation(Mode);
+  end for;
+
+  CheckIterableEvaluation();
+  CheckNestedControlFlow();
+  CheckSharedResources();
+end.

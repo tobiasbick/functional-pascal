@@ -1,6 +1,22 @@
 use super::{assert_succeeds, run_program};
 
 #[test]
+fn discarded_in_place_pop_updates_local_and_field_storage() {
+    assert_succeeds(
+        "program DiscardedPop;
+        type Holder = record Items: array of integer; end record;
+        begin
+          var Direct := [1, 2];
+          var Nested := Holder(Items := [3, 4]);
+          discard Direct.PopInPlace();
+          discard (Nested.Items.PopInPlace());
+          if (Direct.Length() <> 1) or (Nested.Items.Length() <> 1) or
+             (Nested.Items[0] <> 3) then panic('discarded mutation'); end if;
+        end.",
+    );
+}
+
+#[test]
 fn discard_evaluates_once_without_unwrapping_result_or_invoking_callable() {
     assert_succeeds(
         "program T;

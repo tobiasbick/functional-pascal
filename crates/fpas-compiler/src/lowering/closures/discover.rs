@@ -1,4 +1,5 @@
 //! Nested closure and bound-method discovery over statements and expressions.
+//! See `docs/pascal/language/functions/discard.md` for ordinary value disposal.
 
 use fpas_ir::{CaptureKind, FunctionId};
 use fpas_parser::{CaseLabel, Decl, DesignatorPart, Expr, FuncBody, PostfixOperation, Stmt};
@@ -85,12 +86,10 @@ impl<'a> ClosureRegistry<'a> {
                     self.visit_expression(value, owner, metadata, types)?;
                 }
             }
-            Stmt::Panic(value, _) | Stmt::Expression { expr: value, .. } => {
+            Stmt::Panic(value, _)
+            | Stmt::Expression { expr: value, .. }
+            | Stmt::Discard { expr: value, .. } => {
                 self.visit_expression(value, owner, metadata, types)?;
-            }
-            Stmt::Discard { expr, .. } => {
-                self.register_intrinsic_task(expr, owner, metadata, types)?;
-                self.visit_expression(expr, owner, metadata, types)?;
             }
             Stmt::If {
                 condition,

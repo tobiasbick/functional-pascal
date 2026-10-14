@@ -48,6 +48,14 @@ Value copies remain independent. InPlace describes caller storage updates, not
 an allocation-free guarantee; copy-on-write and runtime algorithms may allocate.
 String InPlace calls replace the variable; character slots remain read-only.
 
+## For-in iteration
+
+[For-in loops](../control-flow/for-in.md) evaluate their iterable once per loop
+entry. They visit the captured array values or dictionary keys even if the source
+binding changes in the body. Dictionary lookups in the body still read the
+current dictionary and retain ordinary missing-key failures. Copied resource
+handles and callable environments retain their sharing semantics.
+
 ## User routines and tasks
 
 User mutation uses ordinary explicit var parameters, including Name := var Storage

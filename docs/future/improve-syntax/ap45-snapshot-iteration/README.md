@@ -1,17 +1,17 @@
 # AP45: Explicit snapshot iteration
 
-Status: agreed direction; specification and regression work pending.
+Status: complete (AP45.1).
 Effort: small. Completion is tracked in the [central plan](../README.md).
 
-## Problem
+## Design boundary
 
 The [for-in specification](../../../pascal/language/control-flow/for-in.md)
-does not define what happens when a loop changes or replaces its source
+defines snapshot iteration even when the body changes or replaces its source
 collection. Existing lowering captures the iterable and its length once;
-dictionary iteration first obtains the keys. Collection value semantics give
-this snapshot behavior, but authors should not have to infer it from lowering.
+dictionary iteration first obtains the keys. AP45 makes that behavior explicit
+and protects it with execution regressions.
 
-## Agreed contract
+## Implemented contract
 
 - Evaluate the iterable expression once on entering each execution of the loop.
 - Array iteration visits the original element values in order. Mutating or
@@ -26,22 +26,26 @@ this snapshot behavior, but authors should not have to infer it from lowering.
   A snapshot of values is not a deep clone of channels or closure environments.
 - No live-iteration mode, new keyword, collection API or concurrency guarantee.
 
-This freezes the existing behavior; it does not replace AP37's value semantics
-or callback snapshot contract. Current handbook wording is updated with the
-verification work, not merely by recording this plan.
+This freezes the existing behavior and retains AP37's value semantics and
+callback snapshot contract. The handbook, collection-mutation guidance and
+compact reference describe the verified contract. The loop lowering and source
+grammar remain unchanged.
 
 ## Dependencies and work packages
 
 AP37's collection semantics are complete. AP44 and AP46 are independent.
 
-- [ ] [AP45.1: Specify and verify snapshot iteration](01-iteration-contract.md)
+- [x] [AP45.1: Specify and verify snapshot iteration](01-iteration-contract.md)
 
 ## Open decisions
 
-None within the selected contract.
+No selected AP45 decisions or implementation work remain open.
 
 ## Acceptance
 
 The handbook and compact reference state what is captured and what remains an
 ordinary body lookup. Focused execution tests establish single evaluation,
-stable visit order, and mutation/reassignment behavior for arrays and dictionaries.
+stable visit order, mutation/reassignment behavior and shared-resource semantics
+for arrays and dictionaries. Independent subagent review found no blocking
+issues. [AP45.1](01-iteration-contract.md) records implementation ownership,
+regression coverage and independent baseline verification exceptions.

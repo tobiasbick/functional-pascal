@@ -151,9 +151,14 @@ per branch. Their closing `end if` gets its terminator from the surrounding expr
 
 `while` tests before the body; `repeat ... until Condition;` tests after it.
 Counting `for` loops include both bounds, use `to` or `downto`, and declare a typed,
-read-only variable. `for Item: T in Values do` iterates array values or dict keys
-(dict keys follow insertion order). `break;` exits the innermost loop; `continue;`
-starts its next iteration. Do not change the loop variable yourself.
+read-only variable. `for Item: T in Values do` evaluates Values once per loop
+entry and visits a snapshot of array values in their current order or dict keys
+in insertion order.
+Source mutation or reassignment does not change that sequence. Separate dict
+lookups in the body read current values and may fail for removed keys. Snapshots
+retain the sharing of channel handles and closure environments. `break;` exits
+the innermost loop; `continue;` starts its next iteration. Do not change the loop
+variable yourself. See [for-in](language/control-flow/for-in.md).
 
 ```pascal
 program ReferenceControl;
@@ -177,10 +182,16 @@ begin
   for I: integer := 2 downto 1 do
     Sum := Sum + I;
   end for;
-  const Values := [1, 2];
+  var Values := [1, 2];
   for Value: integer in Values do
     Sum := Sum + Value;
+    if Value = 1 then
+      Values.PushInPlace(9);
+    end if;
   end for;
+
+  Test.AssertEquals(3, Values.Length());
+  Test.AssertEquals(10, Sum); // The appended 9 is not visited.
 
   while Sum < 11 do
     Sum := Sum + 1;

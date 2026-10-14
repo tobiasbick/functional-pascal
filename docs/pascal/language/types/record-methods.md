@@ -98,21 +98,20 @@ Reading an instance method without calling it produces a callable value with the
 receiver bound. The resulting type omits the implicit `Self` parameter:
 
 ```pascal
-type
-  Counter = record
-    Base: integer;
+type Counter = record
+  Base: integer;
 
-    function Add(Self: Counter; Value: integer): integer;
-    begin
-      return Self.Base + Value;
-    end function;
-  end record;
+  function Add(Self: Counter; Value: integer): integer;
+  begin
+    return Self.Base + Value;
+  end function;
+end record;
 
-const C: Counter := Counter( Base := 10 );
+const C: Counter := Counter(Base := 10);
 const AddTen: function(Value: integer): integer := C.Add;
 
 begin
-  Console.WriteLn(AddTen(5));  // 15: the bound receiver supplies Self, and Value is 5.
+  Console.WriteLn(AddTen(5)); // 15: the bound receiver supplies Self, and Value is 5.
 end.
 ```
 
@@ -166,12 +165,12 @@ end record;
 ```
 
 ```pascal
-const
-  P: Point := Point.Create(3, 4);
-  const O: Point := Point.Origin();
+const P: Point := Point.Create(3, 4);
+const O: Point := Point.Origin();
+
 begin
   Point.Print(P);
-  Console.WriteLn(P.Sum());  // 7
+  Console.WriteLn(P.Sum()); // 7
 end.
 ```
 

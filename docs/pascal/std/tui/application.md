@@ -20,10 +20,10 @@ Set a command explicitly when needed:
 
 ```pascal
 when TuiMsg.QuitRequested:
-begin
-  Cmd.Set(TuiCmd.Quit);
-  return State;
-end;
+  begin
+    Cmd.Set(TuiCmd.Quit);
+    return State;
+  end;
 ```
 
 `TuiCmdOutput` is a host-owned output capability. The host resets it to
@@ -63,9 +63,9 @@ The initial frame is rendered before the background-enabled host delivers `TuiMs
 
 ```pascal
 when TuiMsg.Started:
-begin
-  Cmd.StartBackground(1, LoadData);
-end;
+  begin
+    Cmd.StartBackground(1, LoadData);
+  end;
 ```
 
 The fixed work signature is:
@@ -159,12 +159,12 @@ paint continue while a tick is pending. A negative delay is a runtime error.
 
 ```pascal
 when TuiMsg.Tick(const Elapsed):
-begin
-  Next.Animation := Advance(State.Animation, Elapsed);
-  if Next.Animation.Running then
-    Cmd.RequestTick(40);
-  end if;
-end;
+  begin
+    Next.Animation := Advance(State.Animation, Elapsed);
+    if Next.Animation.Running then
+      Cmd.RequestTick(40);
+    end if;
+  end;
 ```
 
 Headless runs keep their deterministic time steps: `RunIterations` and

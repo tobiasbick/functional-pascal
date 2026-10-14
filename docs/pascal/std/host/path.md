@@ -68,7 +68,7 @@ Console.WriteLn(Path.BaseName(Path.Join(Parts)));
 Returns the final component of `Path`.
 
 ```pascal
-Console.WriteLn(Path.BaseName('dir/nested/file.txt'));  // file.txt
+Console.WriteLn(Path.BaseName('dir/nested/file.txt')); // file.txt
 ```
 
 Trailing separators follow host `std::path::Path` rules and may differ between Windows and Unix.
@@ -80,8 +80,8 @@ Trailing separators follow host `std::path::Path` rules and may differ between W
 Returns the parent path without the final component.
 
 ```pascal
-Console.WriteLn(Path.DirName('dir/nested/file.txt'));  // dir/nested
-Console.WriteLn(Path.DirName('file.txt'));             // ''
+Console.WriteLn(Path.DirName('dir/nested/file.txt')); // dir/nested
+Console.WriteLn(Path.DirName('file.txt')); // ''
 ```
 
 ---
@@ -91,8 +91,8 @@ Console.WriteLn(Path.DirName('file.txt'));             // ''
 Returns the final extension without a leading dot.
 
 ```pascal
-Console.WriteLn(Path.Extension('archive.tar.gz'));  // gz
-Console.WriteLn(Path.Extension('README'));            // ''
+Console.WriteLn(Path.Extension('archive.tar.gz')); // gz
+Console.WriteLn(Path.Extension('README')); // ''
 ```
 
 ---
@@ -107,9 +107,9 @@ Parent components cannot climb above a rooted path's root, including a Windows U
 
 ```pascal
 // Windows examples:
-Console.WriteLn(Path.Normalize('D:/projects/demo'));       // D:\projects\demo
-Console.WriteLn(Path.Normalize('D:\projects\..\demo'));   // D:\demo
-Console.WriteLn(Path.Normalize('D:projects\..\demo'));     // D:demo (drive-relative)
+Console.WriteLn(Path.Normalize('D:/projects/demo')); // D:\projects\demo
+Console.WriteLn(Path.Normalize('D:\projects\..\demo')); // D:\demo
+Console.WriteLn(Path.Normalize('D:projects\..\demo')); // D:demo (drive-relative)
 ```
 
 ```pascal

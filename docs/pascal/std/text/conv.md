@@ -76,8 +76,8 @@ Console.WriteLn(Conv.RealToStr(1.5));
 Returns `'true'` or `'false'`.
 
 ```pascal
-Console.WriteLn(Conv.BoolToStr(true));   // true
-Console.WriteLn(Conv.BoolToStr(false));  // false
+Console.WriteLn(Conv.BoolToStr(true)); // true
+Console.WriteLn(Conv.BoolToStr(false)); // false
 ```
 
 ---
@@ -89,8 +89,8 @@ Returns `N` as an uppercase hexadecimal string, zero-padded to at least `Digits`
 `Digits` must be at most **1_000_000**. Larger values raise a runtime error.
 
 ```pascal
-Console.WriteLn(Conv.IntToHex(255, 2));    // FF
-Console.WriteLn(Conv.IntToHex(255, 4));     // 00FF
+Console.WriteLn(Conv.IntToHex(255, 2)); // FF
+Console.WriteLn(Conv.IntToHex(255, 4)); // 00FF
 ```
 
 ---

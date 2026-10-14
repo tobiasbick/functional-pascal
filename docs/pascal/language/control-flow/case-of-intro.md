@@ -110,7 +110,6 @@ const Label: string := case Count of
   when 1: 'one';
   else 'many';
 end case;
-
 const State: string := case Enabled of
   when true: 'enabled';
   when false: 'disabled';

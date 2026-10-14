@@ -58,8 +58,9 @@ unwrapping implicitly:
 ```pascal
 uses Std.Http as Http;
 
-const TextResult: result of (string, string) :=
-  Http.Send(Http.Request.Get('https://example.test/items')).AndThen(Http.BodyText);
+const TextResult: result of (string, string) := Http.Send(
+  Http.Request.Get('https://example.test/items')
+).AndThen(Http.BodyText);
 ```
 
 `Method` deliberately remains a string so extension methods are not excluded. For example, a
@@ -172,7 +173,6 @@ ambiguous framing, unsupported transfer codings, and truncated bodies are reject
 ```pascal
 uses Std.Http as Http, Std.Net as Net, Std.Net.Utf8 as Utf8;
 
-
 case Net.Listen('127.0.0.1', 8080) of
   when Ok(const ListenerValue):
     begin
@@ -236,7 +236,6 @@ begin
   ResponseValue.Body := Utf8.Encode('Path: ' + RequestValue.Target);
   return ResponseValue;
 end function;
-
 
 case Net.Listen('127.0.0.1', 8080) of
   when Ok(const ListenerValue):

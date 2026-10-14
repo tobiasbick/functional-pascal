@@ -39,14 +39,12 @@ end record;
 function Update(Model: EditorModel; Msg: TuiMsg; Cmd: TuiCmdOutput): EditorModel;
 begin
   return case Msg of
-    when TuiMsg.TextAreaChanged(_, _, const Text, const Caret, const Offset):
-      EditorModel(Text := Text, Caret := Caret, Offset := Offset);
-    when TuiMsg.Started, TuiMsg.Key(_), TuiMsg.Pointer(_), TuiMsg.Tick(_), TuiMsg.Resize(_),
-         TuiMsg.FocusChanged(_, _), TuiMsg.Action(_, _), TuiMsg.TextChanged(_, _, _, _),
-         TuiMsg.CheckChanged(_, _, _), TuiMsg.SelectionChanged(_, _, _),
-         TuiMsg.ScrollChanged(_, _, _), TuiMsg.MenuChanged(_, _, _),
-         TuiMsg.BackgroundFailed(_, _, _, _, _, _), TuiMsg.QuitRequested:
-      Model;
+    when TuiMsg.TextAreaChanged(_, _, const Text, const Caret, const Offset): EditorModel(
+      Text := Text,
+      Caret := Caret,
+      Offset := Offset
+    );
+    when TuiMsg.Started, TuiMsg.Key(_), TuiMsg.Pointer(_), TuiMsg.Tick(_), TuiMsg.Resize(_), TuiMsg.FocusChanged(_, _), TuiMsg.Action(_, _), TuiMsg.TextChanged(_, _, _, _), TuiMsg.CheckChanged(_, _, _), TuiMsg.SelectionChanged(_, _, _), TuiMsg.ScrollChanged(_, _, _), TuiMsg.MenuChanged(_, _, _), TuiMsg.BackgroundFailed(_, _, _, _, _, _), TuiMsg.QuitRequested: Model;
   end case;
 end function;
 ```

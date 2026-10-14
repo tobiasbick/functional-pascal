@@ -20,7 +20,7 @@ end procedure;
 
 begin
   var Counter: integer := 0;
-  Increase(var Counter);   // Counter is 1
+  Increase(var Counter); // Counter is 1
 end.
 ```
 
@@ -63,8 +63,8 @@ Two `var` arguments of one call must not refer to the same variable, including
 different fields or elements of it (FP3029):
 
 ```pascal
-Swap(var A[I], var A[J]);   // FP3029: both arguments refer to `A`
-SwapAt(var A, I, J);        // pass the array once instead
+Swap(var A[I], var A[J]); // FP3029: both arguments refer to `A`
+SwapAt(var A, I, J); // pass the array once instead
 ```
 
 The check covers the arguments of one call. A routine that also changes the
@@ -83,7 +83,7 @@ Writes that completed before a runtime failure or an early `try` exit remain in
 the caller's variable; nothing is rolled back:
 
 ```pascal
-function Partial(var Value: integer): Result of (integer, string);
+function Partial(var Value: integer): result of (integer, string);
 begin
   Value := 1;
   return Error('stopped');

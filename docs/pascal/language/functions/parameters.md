@@ -22,7 +22,7 @@ begin
 end function;
 
 begin
-  const R: integer := Clamp(150, 0, 100);  // 100
+  const R: integer := Clamp(150, 0, 100); // 100
 end.
 ```
 
@@ -102,6 +102,7 @@ function Double(N: integer): integer;
 begin
   return N * 2;
 end function;
+
 const F: function(Value: integer): integer := Double;
 const Answer: integer := F(Value := 3);
 const Same: integer := F(3);

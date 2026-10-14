@@ -5,8 +5,8 @@ The code fragments use `uses Std.Conv as Conv, Std.Console as Console;`.
 `Result of (T, E)` represents either a success (`Ok`) or a failure (`Error`):
 
 ```pascal
-const R: Result of (integer, string) := Ok(42);
-const E: Result of (integer, string) := Error('not found');
+const R: result of (integer, string) := Ok(42);
+const E: result of (integer, string) := Error('not found');
 ```
 
 ## Returning errors

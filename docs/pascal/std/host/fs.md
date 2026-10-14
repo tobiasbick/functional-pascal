@@ -72,8 +72,10 @@ Files larger than 64 MiB return `Error(message)` instead of loading into memory.
 ```pascal
 const Content: result of (string, string) := Fs.ReadText('notes.txt');
 case Content of
-  when Ok(const Text): Console.WriteLn(Text);
-  when Error(_): null;
+  when Ok(const Text):
+    Console.WriteLn(Text);
+  when Error(_):
+    null;
 end case;
 ```
 

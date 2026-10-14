@@ -53,8 +53,8 @@ begin
   return 100;
 end function;
 
-const A: integer := Length('hi');    // Your free function: 100
-const B: integer := 'hi'.Length();   // Built-in string operation: 2
+const A: integer := Length('hi'); // Your free function: 100
+const B: integer := 'hi'.Length(); // Built-in string operation: 2
 ```
 
 `Length()` and `IsEmpty()` are shared by strings, arrays, and dictionaries.

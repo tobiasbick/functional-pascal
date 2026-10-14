@@ -24,7 +24,11 @@ The [cell drawing API](cells-frames.md) stores foreground and background colors 
 | `RgbColor(Red, Green, Blue)` | each channel `0..255` | `Rgb` |
 
 ```pascal
-const Value: Console.Cell := Console.Cell(glyph := 'X', foreground := Console.RgbColor(255, 128, 0), background := Console.Ansi256Color(17));
+const Value: Console.Cell := Console.Cell(
+  glyph := 'X',
+  foreground := Console.RgbColor(255, 128, 0),
+  background := Console.Ansi256Color(17)
+);
 Console.PutCell(1, 1, Value);
 ```
 
@@ -105,8 +109,8 @@ Additional text-mode constants:
 ```pascal
 uses Std.Console as Console;
 
-Console.TextColorRGB(255, 128, 0);       // orange foreground
-Console.TextBackgroundRGB(0, 0, 64);     // dark-blue background
+Console.TextColorRGB(255, 128, 0); // orange foreground
+Console.TextBackgroundRGB(0, 0, 64); // dark-blue background
 Console.WriteLn('truecolor text');
 ```
 
@@ -123,7 +127,7 @@ Console.WriteLn('truecolor text');
 ```pascal
 uses Std.Console as Console;
 
-Console.TextColor256(196);        // bright red in xterm-256color
+Console.TextColor256(196); // bright red in xterm-256color
 Console.WriteLn('256-color text');
 ```
 

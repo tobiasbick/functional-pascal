@@ -32,7 +32,7 @@ begin
   return C <> ' ';
 end function;
 
-const Compact: string := 'a b c'.Filter(NotSpace);  // 'abc'
+const Compact: string := 'a b c'.Filter(NotSpace); // 'abc'
 ```
 
 ## `Text.Reduce(Init: U; F: function(Acc: U; C: string): U): U`

@@ -5,7 +5,6 @@ Hosted blocking TCP/TLS listeners and connections with explicit timeouts and byt
 ```pascal
 uses Std.Net as Net;
 
-
 case Net.Connect('127.0.0.1', 8080, 5000) of
   when Ok(const Connection):
     begin
@@ -86,7 +85,7 @@ The port remains reserved by the listener; there is no separate probe-and-rebind
 An address queried after `CloseListener` returns `Error`.
 
 ```pascal
-function InspectListener(): Result of (Net.NetworkAddress, string);
+function InspectListener(): result of (Net.NetworkAddress, string);
 begin
   const Server: Net.Listener := try Net.Listen('127.0.0.1', 0);
   const Address: Net.NetworkAddress := try Net.ListenerLocalAddress(Server);

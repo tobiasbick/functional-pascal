@@ -14,9 +14,11 @@ assignment, or `return` statement supplies its terminator. As a call argument,
 the named ending is followed by `,` or `)` without an intervening `;`:
 
 ```pascal
-Apply(function(Value: integer): integer begin
-  return Value * 2;
-end function);
+Apply(
+  function(Value: integer): integer begin
+    return Value * 2;
+  end function
+);
 ```
 
 Here the `;` after `)` terminates the call statement.
@@ -137,6 +139,7 @@ const N: integer := 3;
 const Work: function(): integer := function(): integer begin
   return N * 2;
 end function;
+
 scope
   const Handle: task of integer := go Work();
   discard Handle;
@@ -147,13 +150,17 @@ const Inc: procedure() := procedure() begin
   Count := Count + 1;
 end procedure;
 
-scope discard go Inc(); end scope; // Compile-time error
+scope
+  discard go Inc();
+end scope; // Compile-time error
 // Rejected: nested task-bound capture
 const Outer: procedure() := procedure() begin
   Inc();
 end procedure;
 
-scope discard go Outer(); end scope; // Compile-time error — Outer captures task-bound Inc
+scope
+  discard go Outer();
+end scope; // Compile-time error — Outer captures task-bound Inc
 ```
 
 Workers also cannot access mutable program/unit globals through named helpers

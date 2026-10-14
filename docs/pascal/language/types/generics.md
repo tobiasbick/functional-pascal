@@ -78,7 +78,7 @@ search for a common type. Parameters left undetermined require a type annotation
 
 ```pascal
 type Optional of T = record
-  Value: Option of T := None;
+  Value: option of T := None;
 end record;
 
 const EmptyValue: Optional of string := Optional(); // Annotation determines T.
@@ -98,7 +98,7 @@ in declaration order.
 ```pascal
 type Node of T = record
   Value: T;
-  Next: Option of Node of T := None;
+  Next: option of Node of T := None;
 end record;
 ```
 

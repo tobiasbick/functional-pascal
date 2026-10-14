@@ -40,15 +40,14 @@ Procedure elements may be called as statements. Their `var` parameter modes
 and the restrictions on [task calls](../concurrency/go.md) remain the same.
 
 ```pascal
-type
-  Counter = record
-    Base: integer;
+type Counter = record
+  Base: integer;
 
-    function Add(Self: Counter; Value: integer): integer;
-    begin
-      return Self.Base + Value;
-    end function;
-  end record;
+  function Add(Self: Counter; Value: integer): integer;
+  begin
+    return Self.Base + Value;
+  end function;
+end record;
 
 begin
   const C: Counter := Counter(

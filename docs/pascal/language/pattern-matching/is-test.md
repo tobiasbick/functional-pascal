@@ -8,6 +8,7 @@ const Present: boolean := Item is Some(_);
 if (Item is None) or not Present then
   ReportMissing();
 end if;
+
 return Response is Ok(Some(_));
 ```
 

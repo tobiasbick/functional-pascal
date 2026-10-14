@@ -19,7 +19,7 @@ User APIs needing exactly one scalar declare an explicit precondition such as
 `requires Text.Length() = 1;` before using repetition.
 
 ```pascal
-Console.WriteLn('ab'.RepeatStr(3));  // ababab
+Console.WriteLn('ab'.RepeatStr(3)); // ababab
 Console.WriteLn('─'.RepeatStr(40)); // ────────────────────────────────────────
 ```
 
@@ -40,7 +40,7 @@ used; additional characters are ignored.
 `Width` must be at most **1_000_000**. Larger widths raise a runtime error.
 
 ```pascal
-Console.WriteLn('42'.PadLeft(5, '0'));  // 00042
+Console.WriteLn('42'.PadLeft(5, '0')); // 00042
 ```
 
 ---
@@ -53,7 +53,7 @@ validation and first-scalar rules apply, including when no padding is needed.
 `Width` must be at most **1_000_000**. Larger widths raise a runtime error.
 
 ```pascal
-Console.WriteLn('Hi'.PadRight(6, '.'));  // Hi....
+Console.WriteLn('Hi'.PadRight(6, '.')); // Hi....
 ```
 
 ---
@@ -67,7 +67,7 @@ right. The same nonempty `PadChar` validation applies even when no padding is ne
 `Width` must be at most **1_000_000**. Larger widths raise a runtime error.
 
 ```pascal
-Console.WriteLn('Hi'.PadCenter(6, '-'));  // --Hi--
+Console.WriteLn('Hi'.PadCenter(6, '-')); // --Hi--
 ```
 
 ---
@@ -82,7 +82,7 @@ raise a runtime error. Check `S.IsEmpty()` before reading an empty string.
 
 ```pascal
 const C: string := 'Hello'[0];
-Console.WriteLn(C);  // H
+Console.WriteLn(C); // H
 ```
 
 ---
@@ -94,7 +94,7 @@ Returns a **new** string that is identical to `S` except the character at `Index
 `Index` follows the same scalar bounds and empty-string checks as scalar indexing.
 
 ```pascal
-Console.WriteLn('Hello'.SetCharAt(0, 'J'));  // Jello
+Console.WriteLn('Hello'.SetCharAt(0, 'J')); // Jello
 ```
 
 ---
@@ -104,7 +104,7 @@ Console.WriteLn('Hello'.SetCharAt(0, 'J'));  // Jello
 Returns the Unicode codepoint (integer value) of `C`. `C` must contain exactly one Unicode scalar value; empty or multi-character strings are runtime errors.
 
 ```pascal
-Console.WriteLn('A'.Ord());  // 65
+Console.WriteLn('A'.Ord()); // 65
 ```
 
 ---
@@ -114,7 +114,7 @@ Console.WriteLn('A'.Ord());  // 65
 Returns the character with Unicode codepoint `N`. **Runtime error** if `N` is not a valid Unicode scalar value.
 
 ```pascal
-Console.WriteLn(string.Chr(65));  // A
+Console.WriteLn(string.Chr(65)); // A
 ```
 
 ---
@@ -128,7 +128,7 @@ For an empty string, index `0` is valid. Invalid indices report FP5021 with a
 hint naming the inclusive `0..S.Length()` range.
 
 ```pascal
-Console.WriteLn('Hllo'.Insert(1, 'e'));  // Hello
+Console.WriteLn('Hllo'.Insert(1, 'e')); // Hello
 ```
 
 ---
@@ -138,7 +138,7 @@ Console.WriteLn('Hllo'.Insert(1, 'e'));  // Hello
 Returns a new string with `Len` characters removed starting at `Start`. **Runtime error** if the range is out of bounds.
 
 ```pascal
-Console.WriteLn('Hello'.Delete(1, 3));  // Ho
+Console.WriteLn('Hello'.Delete(1, 3)); // Ho
 ```
 
 ---
@@ -148,7 +148,7 @@ Console.WriteLn('Hello'.Delete(1, 3));  // Ho
 Returns a new string with characters in reverse order.
 
 ```pascal
-Console.WriteLn('abc'.Reverse());  // cba
+Console.WriteLn('abc'.Reverse()); // cba
 ```
 
 ## See also

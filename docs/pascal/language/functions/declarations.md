@@ -68,7 +68,7 @@ Procedures use bare `return` to exit early without a value:
 procedure LogIfPositive(Count: integer; Value: integer);
 begin
   var LocalCount: integer := Count;
-if Value <= 0 then
+  if Value <= 0 then
     return;
   end if;
 

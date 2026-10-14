@@ -13,10 +13,10 @@ bindings, parameters, fields, aliases, containers, and exported signatures.
 
 ```pascal
 scope
-const Calculation: task of integer := go Compute(100);
-const Worker: task := go RunWorker();
-const Value: integer := Tasks.Wait(Calculation);
-Tasks.Wait(Worker);
+  const Calculation: task of integer := go Compute(100);
+  const Worker: task := go RunWorker();
+  const Value: integer := Tasks.Wait(Calculation);
+  Tasks.Wait(Worker);
 end scope;
 ```
 

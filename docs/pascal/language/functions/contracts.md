@@ -59,7 +59,7 @@ also checks them: the named value is the complete `Error(...)` or `None`, rather
 than an unwrapped success payload. For example:
 
 ```pascal
-function Read(Input: Result of (integer, string)): Result of (integer, string);
+function Read(Input: result of (integer, string)): result of (integer, string);
 ensures (Returned): case Returned of
   when Ok(const Value): Value >= 0;
   when Error(const Message): Message.Length() > 0;

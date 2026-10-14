@@ -75,8 +75,10 @@ or `None` if absent. An empty array returns `None`.
 
 ```pascal
 case [10, 20, 30].IndexOf(20) of
-  when Some(const Index): Console.WriteLn(Index);  // 1
-  when None: Console.WriteLn('absent');
+  when Some(const Index):
+    Console.WriteLn(Index); // 1
+  when None:
+    Console.WriteLn('absent');
 end case;
 ```
 

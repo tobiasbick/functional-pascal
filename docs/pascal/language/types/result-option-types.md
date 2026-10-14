@@ -18,11 +18,10 @@ Single-argument `Option` types do not put parentheses around their type argument
 Formal syntax: [`grammar.ebnf`](../../../specs/grammar.ebnf) (`type_expr` — `result` / `option`).
 
 ```pascal
-const Success: Result of (integer, string) := Ok(42);
-const Failure: Result of (integer, string) := Error('not found');
-
-const Present: Option of integer := Some(7);
-const Missing: Option of integer := None;
+const Success: result of (integer, string) := Ok(42);
+const Failure: result of (integer, string) := Error('not found');
+const Present: option of integer := Some(7);
+const Missing: option of integer := None;
 ```
 
 Use `case` destructuring to handle both forms:

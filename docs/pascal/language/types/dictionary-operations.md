@@ -61,8 +61,8 @@ Returns the number of key-value pairs in the dict.
 
 ```pascal
 const D: dict of string to integer := ['A': 1, 'B': 2];
-Console.WriteLn(D.Length());  // 2
-Console.WriteLn([:].Length());  // 0
+Console.WriteLn(D.Length()); // 2
+Console.WriteLn([:].Length()); // 0
 ```
 
 ### Key membership with `in`
@@ -75,8 +75,8 @@ Returns `true` if the dict contains the given key, `false` otherwise.
 
 ```pascal
 const D: dict of string to integer := ['Alice': 30];
-Console.WriteLn('Alice' in D);    // true
-Console.WriteLn('Bob' in D);      // false
+Console.WriteLn('Alice' in D); // true
+Console.WriteLn('Bob' in D); // false
 ```
 
 ### `Keys`
@@ -89,7 +89,7 @@ Returns an array of all keys in insertion order.
 
 ```pascal
 const D: dict of string to integer := ['Alice': 30, 'Bob': 25];
-Console.WriteLn(D.Keys());  // [Alice, Bob]
+Console.WriteLn(D.Keys()); // [Alice, Bob]
 ```
 
 ### `Values`
@@ -102,7 +102,7 @@ Returns an array of all values in insertion order.
 
 ```pascal
 const D: dict of string to integer := ['Alice': 30, 'Bob': 25];
-Console.WriteLn(D.Values());  // [30, 25]
+Console.WriteLn(D.Values()); // [30, 25]
 ```
 
 ### `Remove`
@@ -116,7 +116,7 @@ Returns a new dict without the given key. If the key does not exist, the origina
 ```pascal
 const D: dict of string to integer := ['A': 1, 'B': 2, 'C': 3];
 const D2: dict of string to integer := D.Remove('B');
-Console.WriteLn(D2);  // {A: 1, C: 3}
+Console.WriteLn(D2); // {A: 1, C: 3}
 ```
 
 ---
@@ -130,11 +130,9 @@ Values.Get(Key: K): Option of V
 Safe lookup. Returns `Some(value)` if the key exists, `None` otherwise. The `Option` result needs no import.
 
 ```pascal
-
-
 const D: dict of string to integer := ['Alice': 30, 'Bob': 25];
-const Age: Option of integer := D.Get('Alice');    // Some(30)
-const Missing: Option of integer := D.Get('Eve');  // None
+const Age: option of integer := D.Get('Alice'); // Some(30)
+const Missing: option of integer := D.Get('Eve'); // None
 ```
 
 ---
@@ -172,7 +170,7 @@ end function;
 
 const Prices: dict of string to real := ['Apple': 1.0, 'Banana': 0.5];
 const Doubled: dict of string to real := Prices.Map(DoublePrice);
-Console.WriteLn(Doubled);  // {Apple: 2.0, Banana: 1.0}
+Console.WriteLn(Doubled); // {Apple: 2.0, Banana: 1.0}
 ```
 
 ---
@@ -193,7 +191,7 @@ end function;
 
 const Scores: dict of string to integer := ['Alice': 90, 'Bob': 55, 'Carol': 80];
 const Passing: dict of string to integer := Scores.Filter(IsPassingScore);
-Console.WriteLn(Passing);  // {Alice: 90, Carol: 80}
+Console.WriteLn(Passing); // {Alice: 90, Carol: 80}
 ```
 
 ---
@@ -236,10 +234,10 @@ Indexing uses bracket syntax (same as arrays):
 
 ```pascal
 const D: dict of string to integer := ['Alice': 30, 'Bob': 25];
-const Age: integer := D['Alice'];       // read
+const Age: integer := D['Alice']; // read
 var M: dict of string to integer := ['A': 1];
-M['A'] := 2;                          // update existing key
-M['B'] := 3;                           // insert new key
+M['A'] := 2; // update existing key
+M['B'] := 3; // insert new key
 ```
 
 Accessing a non-existent key raises a runtime error. Use `Key in Values` to check

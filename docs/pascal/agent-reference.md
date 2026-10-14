@@ -681,9 +681,11 @@ begin
   Tick();
   Tick();
   const Values: array of integer := [1, 2];
-  const Shifted: array of integer := Values.Map(function(Value: integer): integer begin
-    return Value + 10;
-  end function);
+  const Shifted: array of integer := Values.Map(
+    function(Value: integer): integer begin
+      return Value + 10;
+    end function
+  );
   Test.AssertEquals(2, Count);
   Test.AssertEquals(12, Shifted[1]);
 end.
@@ -1013,6 +1015,13 @@ exact signatures. Native methods are described under their type pages. Do not in
 a library API from Delphi or an old example using free collection helper functions.
 
 Run `fpas fmt file.fpas`, then `fpas check file.fpas` and `fpas run file.fpas`.
+
+Formatting uses two-space structural indentation and a fixed 100-column expression
+target. It retains authored line groups and expands long calls automatically.
+Multiline statement conditions place `then` on a separate line; wrapped `and`,
+`or`, and `xor` occupy separate continuation lines. Follow the
+[formatter style](tools/fmt-style.md) for complete layout rules.
+
 Use `fpas test tests/` or the owning `.fpasprj` for tests; `*_test.fpas` programs
 with assertions are discovered by the runner. `--std-lib lib` selects this checkout's
 standard library when invoking the repository build directly. For machine-readable

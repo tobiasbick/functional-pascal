@@ -382,12 +382,12 @@ wait on separately typed handles outside a shared scope.
 
 ```pascal
 scope
-const Ta: task := go Work(1); // Work is a procedure.
-const Tb: task := go Work(2);
-Tasks.WaitAll([Ta, Tb]);
-// still valid:
-Tasks.Wait(Ta);
-Tasks.Wait(Tb);
+  const Ta: task := go Work(1); // Work is a procedure.
+  const Tb: task := go Work(2);
+  Tasks.WaitAll([Ta, Tb]);
+  // still valid:
+  Tasks.Wait(Ta);
+  Tasks.Wait(Tb);
 end scope;
 ```
 

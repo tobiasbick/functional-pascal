@@ -5,15 +5,13 @@ The code fragments use `uses Std.Conv as Conv, Std.Console as Console;`.
 `Option of T` represents a value that may be absent:
 
 ```pascal
-const O: Option of integer := Some(42);
-const N: Option of integer := None;
+const O: option of integer := Some(42);
+const N: option of integer := None;
 ```
 
 ## Using Option
 
 ```pascal
-
-
 function FindIndex(Items: array of integer; Target: integer): option of integer;
 begin
   for I: integer := 0 to Items.Length() - 1 do

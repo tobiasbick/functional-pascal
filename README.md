@@ -81,16 +81,22 @@ fpas run hello.fpas
 `.fpas` sources under `examples/`, `tests/`, and `apps/` follow the official formatter style ([`docs/pascal/tools/fmt-style.md`](docs/pascal/tools/fmt-style.md)). Format in place:
 
 ```sh
-scripts/format-fpas-sources.sh          # Unix
+bash scripts/format-fpas-sources.sh     # Unix
 scripts/format-fpas-sources.ps1         # Windows
-# or: cargo run -p fpas-cli -- fmt examples tests apps
+# include standard-library sources: cargo run -p fpas-cli -- fmt examples tests apps lib
 ```
 
 Check without writing:
 
 ```sh
-cargo run -p fpas-cli -- fmt --check examples tests apps
+cargo run -p fpas-cli -- fmt --check examples tests apps lib
 ```
+
+The CLI and editor use one fixed style: two-space structural indentation and a
+100-column target for expressions. The formatter keeps authored line groups,
+expands long calls and collections automatically, and keeps postfix chains
+attached. Multiline statement conditions put `then` on its own line; wrapped
+`and`, `or`, and `xor` also occupy separate continuation lines.
 
 Run `fpas fmt` manually for command-line workflows. The repository's
 [VS Code-compatible editor integration](docs/pascal/tools/editor-integration.md)

@@ -332,6 +332,10 @@ editor analysis does not write compiled-unit sidecars.
 `fpas-fmt` implementation as `fpas fmt`. Formatting is canonical: editor tab
 size or indentation preferences do not create a second style.
 
+The shared style uses two-space structural indentation and a fixed 100-column
+expression target. It preserves authored line groups and automatically expands
+long calls and collections, including nested calls in the unsaved buffer.
+
 The language server returns a whole-document edit when the text changes and no
 edit when it is already canonical. Parser errors return no edit, preventing a
 recovered or partial syntax tree from destructively replacing the source.

@@ -51,10 +51,13 @@ grapheme clusters. An empty substring returns `Some(0)`, even for an empty Text.
 
 ```pascal
 case 'aé😀'.IndexOf('😀') of
-  when Some(const Index): Console.WriteLn(Index);  // 2
-  when None: Console.WriteLn('absent');
+  when Some(const Index):
+    Console.WriteLn(Index); // 2
+  when None:
+    Console.WriteLn('absent');
 end case;
-Console.WriteLn('aba'.IndexOf('z'));  // None
+
+Console.WriteLn('aba'.IndexOf('z')); // None
 ```
 
 ---
@@ -66,8 +69,8 @@ not found. Indexes count Unicode scalars. An empty substring returns
 `Some(Text.Length())`; an empty receiver and empty substring return `Some(0)`.
 
 ```pascal
-Console.WriteLn('abcabc'.LastIndexOf('abc'));  // Some(3)
-Console.WriteLn('abc'.LastIndexOf('z'));       // None
+Console.WriteLn('abcabc'.LastIndexOf('abc')); // Some(3)
+Console.WriteLn('abc'.LastIndexOf('z')); // None
 ```
 
 ## See also

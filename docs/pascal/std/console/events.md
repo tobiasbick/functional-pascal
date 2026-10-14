@@ -35,7 +35,6 @@ deadline reaches zero.
 ```pascal
 uses Std.Console as Console;
 
-
 Console.EnableRawMode();
 const MaybeEvent: option of Console.ConsoleEvent := Console.ReadEventTimeout(100);
 case MaybeEvent of
@@ -62,7 +61,6 @@ returned by the same call.
 
 ```pascal
 uses Std.Console as Console;
-
 
 Console.EnableRawMode();
 const MaybeE: option of Console.ConsoleEvent := Console.PollEvent();

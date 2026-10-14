@@ -148,6 +148,13 @@ Read the pages relevant to the change. For exact productions, consult
 
 Use [formatter output](../../../docs/pascal/tools/fmt-style.md) as the style authority:
 
+Use two-space structural indentation. Keep meaningful argument and expression
+groups with authored line breaks, then run the formatter. It uses a fixed
+100-column expression target, automatically expands long calls and collections,
+and keeps postfix suffixes attached. Multiline statement conditions put `then`
+on a separate line; wrapped `and`, `or`, and `xor` use separate continuation lines.
+CLI and editor formatting share this style without configuration.
+
 ```text
 fpas fmt <paths>
 fpas fmt --check <paths>

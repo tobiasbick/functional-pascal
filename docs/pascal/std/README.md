@@ -78,9 +78,7 @@ Fullscreen code can batch explicit cells with `BeginFrame`, `WriteCells`, and `P
 ### Error handling helpers
 
 ```pascal
-
-
-const R: Result of (integer, string) := Ok(42);
+const R: result of (integer, string) := Ok(42);
 Console.WriteLn(R.Unwrap());
 ```
 

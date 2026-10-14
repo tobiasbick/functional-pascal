@@ -4,7 +4,9 @@ A subrange restricts an `integer` to inclusive compile-time bounds:
 
 ```pascal
 type Percent = 0..100;
+
 type Signed = -10..10;
+
 type Single = 1..1;
 ```
 

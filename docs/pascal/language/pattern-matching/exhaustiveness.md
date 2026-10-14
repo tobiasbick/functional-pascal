@@ -22,15 +22,13 @@ integer selectors still require `else`, even with a machine-wide range label.
 ## Enum exhaustiveness
 
 ```pascal
-type
-  Light = enum
-    Red;
-    Yellow;
-    Green;
-  end enum;
+type Light = enum
+  Red;
+  Yellow;
+  Green;
+end enum;
 
 // ERROR: non-exhaustive match — missing Light.Yellow
-
 case L of
   when Light.Red:
     Console.WriteLn('Stop');
@@ -134,7 +132,8 @@ it matches, for scalar and variant cases alike. It is an error (FP3033):
 case Item of
   when Some(_):
     Use();
-  when Some(0): // ERROR: unreachable after Some(_)
+  when Some(0):
+    // ERROR: unreachable after Some(_)
     Test.Skip();
   when None:
     null;
@@ -162,6 +161,7 @@ including nested fields and constants derived from them. For example:
 type Flags = record
   Enabled: boolean;
 end record;
+
 const Settings: Flags := Flags(Enabled := true);
 const Enabled: boolean := Settings.Enabled;
 case Candidate of

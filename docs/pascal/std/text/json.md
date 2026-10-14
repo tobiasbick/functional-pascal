@@ -96,7 +96,7 @@ const Value: Json.JsonValue := Json.JsonValue.ArrayValue([
   Json.JsonValue.String('hi'),
   Json.JsonValue.Number(1.5)
 ]);
-Console.WriteLn(Json.Stringify(Value));  // [true,null,"hi",1.5]
+Console.WriteLn(Json.Stringify(Value)); // [true,null,"hi",1.5]
 ```
 
 Malformed runtime payloads, such as an enum value pretending to be `JsonValue`, raise a runtime error. Normal parse failures should be handled through the `Result` returned by `Parse`.

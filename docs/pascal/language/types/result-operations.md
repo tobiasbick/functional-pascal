@@ -40,8 +40,8 @@ Use Unwrap when abort is intended; handle expected errors with case or propagate
 them with try inside a compatible Result-returning function.
 
 ```pascal
-const R: Result of (integer, string) := Ok(42);
-Console.WriteLn(R.Unwrap());                             // 42
+const R: result of (integer, string) := Ok(42);
+Console.WriteLn(R.Unwrap()); // 42
 ```
 
 ---
@@ -56,8 +56,8 @@ begin
   return Conv.IntToStr(V * 2);
 end function;
 
-const R: Result of (integer, string) := Ok(21);
-const M: Result of (string, string) := R.Map(DoubleToString);
+const R: result of (integer, string) := Ok(21);
+const M: result of (string, string) := R.Map(DoubleToString);
 // M = Ok('42')
 ```
 
@@ -89,13 +89,13 @@ const M: result of (string, string) := R.AndThen(PositiveToResult);
 Calls `F` with the `Error` value to attempt recovery. If `R` is `Ok`, returns it unchanged.
 
 ```pascal
-function RecoverToZero(E: string): Result of (integer, string);
+function RecoverToZero(E: string): result of (integer, string);
 begin
   return Ok(0);
 end function;
 
-const R: Result of (integer, string) := Error('oops');
-const M: Result of (integer, string) := R.OrElse(RecoverToZero);
+const R: result of (integer, string) := Error('oops');
+const M: result of (integer, string) := R.OrElse(RecoverToZero);
 // M = Ok(0)
 ```
 

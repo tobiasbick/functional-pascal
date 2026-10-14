@@ -70,6 +70,7 @@ begin
       end if;
     end scope;
   end for;
+
   return 0;
 end function;
 ```
@@ -157,6 +158,7 @@ begin
   for Job: task of integer in Jobs do
     Sum := Sum + Tasks.Wait(Job);
   end for;
+
   return Sum;
 end function;
 

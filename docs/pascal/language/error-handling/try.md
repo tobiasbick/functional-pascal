@@ -7,7 +7,7 @@ The code fragments use `uses Std.Conv as Conv;`.
 Formal syntax: [`grammar.ebnf`](../../../specs/grammar.ebnf) (`try` expression).
 
 ```pascal
-function Process(A: integer; B: integer): Result of (string, string);
+function Process(A: integer; B: integer): result of (string, string);
 begin
   const Quotient: integer := try Divide(A, B);
   return Ok(Conv.IntToStr(Quotient));
@@ -18,7 +18,7 @@ end function;
 or propagates `None` when one is absent:
 
 ```pascal
-function FindOne(Items: array of integer): Option of integer;
+function FindOne(Items: array of integer): option of integer;
 begin
   const Idx: integer := try Items.IndexOf(1);
   return Some(Items[Idx]);

@@ -88,7 +88,7 @@ fn tui_case_arm_examples_start_with_when() {
     // Signature lists and constructor fragments are schematic, not complete case arms.
     let arms = blocks
         .iter()
-        .filter(|block| block.source.lines().nth(1) == Some("begin"))
+        .filter(|block| block.source.trim_start().starts_with("when "))
         .collect::<Vec<_>>();
     assert_eq!(
         arms.len(),

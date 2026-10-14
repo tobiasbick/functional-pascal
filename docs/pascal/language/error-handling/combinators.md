@@ -10,15 +10,15 @@ begin
   return Conv.IntToStr(V * 2);
 end function;
 
-const R: Result of (integer, string) := Ok(21);
-const M: Result of (string, string) := R.Map(DoubleToString);
+const R: result of (integer, string) := Ok(21);
+const M: result of (string, string) := R.Map(DoubleToString);
 // M = Ok('42')
 ```
 
 ```pascal
 uses Std.Conv as Conv;
 
-function PositiveToString(V: integer): Option of string;
+function PositiveToString(V: integer): option of string;
 begin
   if V > 0 then
     return Some(Conv.IntToStr(V));
@@ -27,8 +27,8 @@ begin
   end if;
 end function;
 
-const O: Option of integer := Some(5);
-const M: Option of string := O.AndThen(PositiveToString);
+const O: option of integer := Some(5);
+const M: option of string := O.AndThen(PositiveToString);
 // M = Some('5')
 ```
 

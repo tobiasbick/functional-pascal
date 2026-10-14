@@ -39,8 +39,8 @@ Extracts the value from `Some(value)`. **Runtime error** if `O` is `None`.
 Use Unwrap when abort is intended; handle expected absence with case.
 
 ```pascal
-const O: Option of integer := Some(7);
-Console.WriteLn(O.Unwrap());                             // 7
+const O: option of integer := Some(7);
+Console.WriteLn(O.Unwrap()); // 7
 ```
 
 ---
@@ -52,7 +52,7 @@ Case binds the payload and handles absence locally. A plain default is evaluated
 only in its selected arm:
 
 ```pascal
-const O: Option of integer := None;
+const O: option of integer := None;
 const Value: integer := case O of
   when Some(const Present): Present;
   when None: -1;
@@ -74,8 +74,8 @@ begin
   return Conv.IntToStr(V * 3);
 end function;
 
-const O: Option of integer := Some(7);
-const M: Option of string := O.Map(TripleToString);
+const O: option of integer := Some(7);
+const M: option of string := O.Map(TripleToString);
 // M = Some('21')
 ```
 
@@ -110,13 +110,13 @@ eager argument and is evaluated once even for Some. OrElse returns Option of T;
 use case for a plain replacement value. Callback runtime failures propagate.
 
 ```pascal
-function Fallback99(): Option of integer;
+function Fallback99(): option of integer;
 begin
   return Some(99);
 end function;
 
-const O: Option of integer := None;
-const M: Option of integer := O.OrElse(Fallback99);
+const O: option of integer := None;
+const M: option of integer := O.OrElse(Fallback99);
 // M = Some(99)
 ```
 

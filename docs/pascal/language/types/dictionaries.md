@@ -7,7 +7,6 @@ Formal syntax: [`grammar.ebnf`](../../../specs/grammar.ebnf) (`type_expr` — `d
 ```pascal
 const Ages: dict of string to integer := ['Alice': 30, 'Bob': 25];
 const Empty: dict of string to integer := [:];
-
 const AliceAge: integer := Ages['Alice'];
 ```
 
@@ -22,8 +21,7 @@ key type parameter needs the `Comparable` constraint, for example
 Dictionary writes require a mutable binding:
 
 ```pascal
-var
-  Counts: dict of string to integer := ['A': 1];
+var Counts: dict of string to integer := ['A': 1];
 
 begin
   Counts['A'] := 2;

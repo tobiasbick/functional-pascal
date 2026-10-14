@@ -6,7 +6,7 @@ Returns a **new** array containing all elements of `A` followed by all elements 
 
 ```pascal
 const C: array of integer := [1, 2].Concat([3, 4]);
-Console.WriteLn(C.Length());  // 4
+Console.WriteLn(C.Length()); // 4
 ```
 
 ---
@@ -33,7 +33,7 @@ Creates a new array containing `Count` copies of `Value`.
 
 ```pascal
 const Zeros: array of integer := array.Fill(0, 5);
-Console.WriteLn(Zeros.Length());  // 5
+Console.WriteLn(Zeros.Length()); // 5
 ```
 
 `Count` must be non-negative and at most **1_000_000**. Larger counts raise a runtime error instead of allocating unbounded memory.

@@ -46,7 +46,7 @@ Console.WriteLn('  x  '.Trim());
 Strips leading whitespace only.
 
 ```pascal
-Console.WriteLn('  hi  '.TrimLeft());  // 'hi  '
+Console.WriteLn('  hi  '.TrimLeft()); // 'hi  '
 ```
 
 ---
@@ -56,7 +56,7 @@ Console.WriteLn('  hi  '.TrimLeft());  // 'hi  '
 Strips trailing whitespace only.
 
 ```pascal
-Console.WriteLn('  hi  '.TrimRight());  // '  hi'
+Console.WriteLn('  hi  '.TrimRight()); // '  hi'
 ```
 
 ## See also

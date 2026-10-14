@@ -24,8 +24,10 @@ use `case` inside the loop; the selector is evaluated once per iteration:
 ```pascal
 while true do
   case Queue.Next() of
-    when Some(const Job): Proc.Run(Job);
-    when None: break;
+    when Some(const Job):
+      Proc.Run(Job);
+    when None:
+      break;
   end case;
 end while;
 ```

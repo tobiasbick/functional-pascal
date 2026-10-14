@@ -24,7 +24,7 @@ raise a runtime error. Check `S.IsEmpty()` before reading an empty string.
 
 ```pascal
 const C: string := 'Hello'[0];
-Console.WriteLn(C);  // H
+Console.WriteLn(C); // H
 ```
 
 ---
@@ -36,7 +36,7 @@ Returns a **new** string that is identical to `S` except the character at `Index
 `Index` follows the same scalar bounds and empty-string checks as scalar indexing.
 
 ```pascal
-Console.WriteLn('Hello'.SetCharAt(0, 'J'));  // Jello
+Console.WriteLn('Hello'.SetCharAt(0, 'J')); // Jello
 ```
 
 ---
@@ -46,7 +46,7 @@ Console.WriteLn('Hello'.SetCharAt(0, 'J'));  // Jello
 Returns the Unicode codepoint (integer value) of the receiver. The receiver must contain exactly one Unicode scalar value; empty or multi-character strings are runtime errors.
 
 ```pascal
-Console.WriteLn('A'.Ord());  // 65
+Console.WriteLn('A'.Ord()); // 65
 ```
 
 ---
@@ -56,7 +56,7 @@ Console.WriteLn('A'.Ord());  // 65
 Returns the character with Unicode codepoint `N`. **Runtime error** if `N` is not a valid Unicode scalar value.
 
 ```pascal
-Console.WriteLn(string.Chr(65));  // A
+Console.WriteLn(string.Chr(65)); // A
 ```
 
 ---
@@ -74,8 +74,8 @@ const CY: real := -0.5;
 const Index: integer := 3;
 const Name: string := 'sample';
 const Status: string := 'Zoom: %fx Center: (%f, %f)'.Format(Zoom, CX, CY);
-const Msg: string    := 'Item %d: %s'.Format(Index, Name);
-const Pct: string    := '100%%'.Format();  // '100%'
+const Msg: string := 'Item %d: %s'.Format(Index, Name);
+const Pct: string := '100%%'.Format(); // '100%'
 ```
 
 ### Specifiers

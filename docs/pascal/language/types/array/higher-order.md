@@ -59,7 +59,7 @@ begin
 end function;
 
 const Nums: array of integer := [1, 2, 3, 4, 5];
-const First: Option of integer := Nums.Find(IsAboveThree);
+const First: option of integer := Nums.Find(IsAboveThree);
 // Some(4)
 ```
 
@@ -77,10 +77,12 @@ begin
   return X > 15;
 end function;
 
-const Idx: Option of integer := [10, 20, 30].FindIndex(IsAboveFifteen);
+const Idx: option of integer := [10, 20, 30].FindIndex(IsAboveFifteen);
 case Idx of
-  when Some(const Index): Console.WriteLn(Index);  // 1
-  when None: Console.WriteLn('absent');
+  when Some(const Index):
+    Console.WriteLn(Index); // 1
+  when None:
+    Console.WriteLn('absent');
 end case;
 ```
 
@@ -97,7 +99,7 @@ begin
 end function;
 
 const HasNeg: boolean := [1, -2, 3].Any(IsNegative);
-Console.WriteLn(HasNeg);  // true
+Console.WriteLn(HasNeg); // true
 ```
 
 ---
@@ -113,7 +115,7 @@ begin
 end function;
 
 const AllPos: boolean := [1, 2, 3].All(IsPositive);
-Console.WriteLn(AllPos);  // true
+Console.WriteLn(AllPos); // true
 ```
 
 ## See also

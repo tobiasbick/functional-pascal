@@ -3,8 +3,6 @@
 `return` both sets the return value and exits the function immediately:
 
 ```pascal
-
-
 function IndexOf(Items: array of string; Target: string): integer;
 begin
   for I: integer := 0 to Items.Length() - 1 do

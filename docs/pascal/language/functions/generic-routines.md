@@ -20,9 +20,9 @@ Type arguments are inferred from supplied values first:
 
 ```pascal
 begin
-  Console.WriteLn(Identity(42));       // T = integer
-  Console.WriteLn(Identity('hello'));  // T = string
-  PrintValue(3.14);             // T = real
+  Console.WriteLn(Identity(42)); // T = integer
+  Console.WriteLn(Identity('hello')); // T = string
+  PrintValue(3.14); // T = real
 end.
 ```
 

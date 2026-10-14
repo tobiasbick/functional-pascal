@@ -7,12 +7,10 @@ declarations for local helpers and access to enclosing parameters or locals:
 
 ```pascal
 function Hypotenuse(A: real; B: real): real;
-
-  function Square(X: real): real;
-  begin
-    return X * X;
-  end function;
-
+function Square(X: real): real;
+begin
+  return X * X;
+end function;
 begin
   return Math.Sqrt(Square(A) + Square(B));
 end function;

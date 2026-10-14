@@ -67,9 +67,20 @@ See [Records](../types/records.md), [Enums](../types/enums.md), and
 [constructor inference](../types/generics.md#generic-records).
 
 ```pascal
-type Point = record X: integer; Y: integer; end record;
-type Box of T = record Value: T; end record;
-type Lookup of T = enum Found(Value: T); Missing; end enum;
+type Point = record
+  X: integer;
+  Y: integer;
+end record;
+
+type Box of T = record
+  Value: T;
+end record;
+
+type Lookup of T = enum
+  Found(Value: T);
+  Missing;
+end enum;
+
 type IntLookup = Lookup of integer;
 
 function Construct(): integer;

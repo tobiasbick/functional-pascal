@@ -12,8 +12,10 @@ uses Std.Console as Console, Std.Parse as Parse;
 begin
   const Parsed: result of (integer, string) := Parse.Int('42');
   case Parsed of
-    when Ok(const Value): Console.WriteLn(Value);
-    when Error(const Message): Console.WriteLn(Message);
+    when Ok(const Value):
+      Console.WriteLn(Value);
+    when Error(const Message):
+      Console.WriteLn(Message);
   end case;
 end.
 ```
@@ -45,10 +47,12 @@ success or `Error(Message)` on invalid text or overflow. A deliberate abort is
 `Parse.Int(Text).Unwrap()`.
 
 ```pascal
-const R: Result of (integer, string) := Parse.Int(' +1_024 ');
+const R: result of (integer, string) := Parse.Int(' +1_024 ');
 case R of
-  when Ok(const Value): Console.WriteLn(Value);       // 1024
-  when Error(const Message): Console.WriteLn(Message);
+  when Ok(const Value):
+    Console.WriteLn(Value); // 1024
+  when Error(const Message):
+    Console.WriteLn(Message);
 end case;
 ```
 
@@ -67,10 +71,12 @@ including integral reals and either sign of zero. See
 [RealToStr](conv.md#function-realtostrr-real-string).
 
 ```pascal
-const R: Result of (real, string) := Parse.Real('1_024.0e-2');
+const R: result of (real, string) := Parse.Real('1_024.0e-2');
 case R of
-  when Ok(const Value): Console.WriteLn(Value);       // 10.24
-  when Error(const Message): Console.WriteLn(Message);
+  when Ok(const Value):
+    Console.WriteLn(Value); // 10.24
+  when Error(const Message):
+    Console.WriteLn(Message);
 end case;
 ```
 
@@ -81,10 +87,12 @@ end case;
 Parses boolean text. Leading and trailing whitespace is ignored; casing does not matter.
 
 ```pascal
-const R: Result of (boolean, string) := Parse.Bool(' FALSE ');
+const R: result of (boolean, string) := Parse.Bool(' FALSE ');
 case R of
-  when Ok(const Value): Console.WriteLn(Value);       // false
-  when Error(const Message): Console.WriteLn(Message);
+  when Ok(const Value):
+    Console.WriteLn(Value); // false
+  when Error(const Message):
+    Console.WriteLn(Message);
 end case;
 ```
 
@@ -105,8 +113,10 @@ for hex and rejects the `0x`/`0X` prefix.
 ```pascal
 const R := Parse.HexInt('-0x8000000000000000');
 case R of
-  when Ok(const Value): Console.WriteLn(Value);       // -9223372036854775808
-  when Error(const Message): Console.WriteLn(Message);
+  when Ok(const Value):
+    Console.WriteLn(Value); // -9223372036854775808
+  when Error(const Message):
+    Console.WriteLn(Message);
 end case;
 ```
 
@@ -140,7 +150,7 @@ All four parsers have the named parameter Text, accept positional or fully named
 calls, and can be used as ordinary callable values with matching signatures:
 
 ```pascal
-const Read: function(Text: string): Result of (integer, string) := Parse.Int;
+const Read: function(Text: string): result of (integer, string) := Parse.Int;
 const Value := Read(Text := '42');
 ```
 

@@ -90,8 +90,10 @@ Starts `Command` with `Args`, waits for the process to exit, and returns `Ok(exi
 ```pascal
 const Status: result of (integer, string) := Proc.Run('fpas', ['--version']);
 case Status of
-  when Ok(_): null;
-  when Error(_): Console.WriteLn(-1);
+  when Ok(_):
+    null;
+  when Error(_):
+    Console.WriteLn(-1);
 end case;
 ```
 

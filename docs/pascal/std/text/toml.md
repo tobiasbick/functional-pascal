@@ -8,8 +8,10 @@ program Example;
 uses Std.Console as Console, Std.Toml as Toml;
 
 begin
-  const Parsed: result of (Toml.TomlValue, string) := Toml.Parse('[project]' + string.Chr(10) +
-                                                                 'name = ''demo''');
+  const Parsed: result of (Toml.TomlValue, string) := Toml.Parse(
+    '[project]' + string.Chr(10) +
+    'name = ''demo'''
+  );
   case Parsed of
     when Ok(const Value):
       Console.WriteLn(Toml.Stringify(Value));
@@ -63,8 +65,11 @@ TOML `inf` and `nan` values, including nested ones, return Error because FPAS
 real values must be finite. Stringify also rejects nonfinite real payloads.
 
 ```pascal
-const Parsed: result of (Toml.TomlValue, string) := Toml.Parse('title = ''example''' + string.Chr(10) + 'enabled = true' + string.Chr(10) + '[server]' + string.Chr(10) +
-                                                 'port = 8080');
+const Parsed: result of (Toml.TomlValue, string) := Toml.Parse(
+  'title = ''example''' + string.Chr(10) + 'enabled = true' + string.Chr(10) + '[server]' +
+  string.Chr(10) +
+  'port = 8080'
+);
 case Parsed of
   when Ok(const Value):
     if Value is Toml.TomlValue.Table(_) then

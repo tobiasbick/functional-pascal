@@ -189,7 +189,7 @@ Console.WriteLn(Math.Tan(0.0));
 Inverse sine (arc sine). **Runtime error** if `R` is outside `[-1, 1]`.
 
 ```pascal
-Console.WriteLn(Math.ArcSin(1.0));  // Pi/2
+Console.WriteLn(Math.ArcSin(1.0)); // Pi/2
 ```
 
 ---
@@ -199,7 +199,7 @@ Console.WriteLn(Math.ArcSin(1.0));  // Pi/2
 Inverse cosine. **Runtime error** if `R` is outside `[-1, 1]`.
 
 ```pascal
-Console.WriteLn(Math.ArcCos(1.0));  // 0.0
+Console.WriteLn(Math.ArcCos(1.0)); // 0.0
 ```
 
 ---
@@ -209,7 +209,7 @@ Console.WriteLn(Math.ArcCos(1.0));  // 0.0
 Inverse tangent (classic Pascal `ArcTan`).
 
 ```pascal
-Console.WriteLn(Math.ArcTan(1.0));  // Pi/4
+Console.WriteLn(Math.ArcTan(1.0)); // Pi/4
 ```
 
 ---
@@ -222,7 +222,7 @@ on the negative X-axis: `ArcTan2(0.0, -1.0)` is `Pi`, while
 `ArcTan2(-0.0, -1.0)` is `-Pi`.
 
 ```pascal
-Console.WriteLn(Math.ArcTan2(1.0, 1.0));  // Pi/4
+Console.WriteLn(Math.ArcTan2(1.0, 1.0)); // Pi/4
 ```
 
 ---
@@ -232,7 +232,7 @@ Console.WriteLn(Math.ArcTan2(1.0, 1.0));  // Pi/4
 Returns e^R. Inverse of `Log`.
 
 ```pascal
-Console.WriteLn(Math.Exp(1.0));  // ~2.718
+Console.WriteLn(Math.Exp(1.0)); // ~2.718
 ```
 
 ---
@@ -242,7 +242,7 @@ Console.WriteLn(Math.Exp(1.0));  // ~2.718
 Base-10 logarithm. **Runtime error** if `R ≤ 0`.
 
 ```pascal
-Console.WriteLn(Math.Log10(100.0));  // 2.0
+Console.WriteLn(Math.Log10(100.0)); // 2.0
 ```
 
 ---
@@ -252,7 +252,7 @@ Console.WriteLn(Math.Log10(100.0));  // 2.0
 Base-2 logarithm. **Runtime error** if `R ≤ 0`.
 
 ```pascal
-Console.WriteLn(Math.Log2(8.0));  // 3.0
+Console.WriteLn(Math.Log2(8.0)); // 3.0
 ```
 
 ---
@@ -262,8 +262,8 @@ Console.WriteLn(Math.Log2(8.0));  // 3.0
 Truncates toward zero (classic Pascal `Trunc`). Unlike `Floor`, `Trunc(-3.7)` yields `-3`, not `-4`.
 
 ```pascal
-Console.WriteLn(Math.Trunc(3.9));    // 3
-Console.WriteLn(Math.Trunc(-3.7));    // -3
+Console.WriteLn(Math.Trunc(3.9)); // 3
+Console.WriteLn(Math.Trunc(-3.7)); // -3
 ```
 
 ---
@@ -273,8 +273,8 @@ Console.WriteLn(Math.Trunc(-3.7));    // -3
 Fractional part: `Frac(R) = R - Trunc(R)`.
 
 ```pascal
-Console.WriteLn(Math.Frac(3.14));   // 0.14
-Console.WriteLn(Math.Frac(-3.14));  // -0.14
+Console.WriteLn(Math.Frac(3.14)); // 0.14
+Console.WriteLn(Math.Frac(-3.14)); // -0.14
 ```
 
 ---
@@ -284,9 +284,9 @@ Console.WriteLn(Math.Frac(-3.14));  // -0.14
 Returns `-1`, `0`, or `1` depending on the sign of `N`. `N` may be `integer` or `real`; result is always `integer`.
 
 ```pascal
-Console.WriteLn(Math.Sign(-42));   // -1
-Console.WriteLn(Math.Sign(0));     // 0
-Console.WriteLn(Math.Sign(3.14));   // 1
+Console.WriteLn(Math.Sign(-42)); // -1
+Console.WriteLn(Math.Sign(0)); // 0
+Console.WriteLn(Math.Sign(3.14)); // 1
 ```
 
 ---
@@ -302,9 +302,9 @@ as a callable value, for example `function(N: integer): integer begin return Abs
 Returns `V` constrained to `[Lo, Hi]`. All three arguments must be the same numeric kind. Result matches the input kind.
 
 ```pascal
-Console.WriteLn(Math.Clamp(150, 0, 100));     // 100
-Console.WriteLn(Math.Clamp(-5, 0, 100));      // 0
-Console.WriteLn(Math.Clamp(1.5, 0.0, 1.0));   // 1.0
+Console.WriteLn(Math.Clamp(150, 0, 100)); // 100
+Console.WriteLn(Math.Clamp(-5, 0, 100)); // 0
+Console.WriteLn(Math.Clamp(1.5, 0.0, 1.0)); // 1.0
 ```
 
 ---

@@ -62,6 +62,7 @@ visibility rules:
 
 ```pascal
 type Position = Point;
+
 const Q: Position := Position(Y := 2.0, X := 1.0);
 ```
 

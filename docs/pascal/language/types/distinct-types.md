@@ -69,8 +69,8 @@ begin
   Console.WriteLn('banned ', integer(Id));
 end procedure;
 
-Ban(UserId(42));  // valid
-Ban(42);          // error: expected `UserId`, found `integer`
+Ban(UserId(42)); // valid
+Ban(42); // error: expected `UserId`, found `integer`
 Ban(OrderId(42)); // error: expected `UserId`, found `OrderId`
 ```
 
@@ -89,9 +89,8 @@ Two values of the same distinct type compare with `=`, `<>`, `<`, `>`, `<=`, and
 ```pascal
 const First: UserId := UserId(1);
 const Second: UserId := UserId(2);
-
-const Earlier: boolean := First < Second;   // true
-const Same: boolean := First = UserId(1);   // true
+const Earlier: boolean := First < Second; // true
+const Same: boolean := First = UserId(1); // true
 ```
 
 Comparing different distinct types, or a distinct value with its underlying type,

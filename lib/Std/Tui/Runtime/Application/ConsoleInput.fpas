@@ -35,7 +35,12 @@ begin
                 end;
               when RuntimeInput.TuiHostInput.Message(_), RuntimeInput.TuiHostInput.Key(_), RuntimeInput.TuiHostInput.Pointer(_):
                 begin
-                  if TuiConsoleInputSend(Token, Output, RuntimeInput.TuiHostInput.Resize(LatestSize)) then
+                  if TuiConsoleInputSend(
+                    Token,
+                    Output,
+                    RuntimeInput.TuiHostInput.Resize(LatestSize)
+                  )
+                  then
                     begin
                       return true;
                     end;

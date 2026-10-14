@@ -92,8 +92,9 @@ begin
     Test.AssertTrue(Optional = Some(if Missing then 9 else 7 end if));
     Test.AssertEquals(if Missing then 'OCB' else 'OC' end if, Trace);
     Trace := '';
-    const Recovered: result of (integer, integer) := ResultInput(Missing)
-                                                       .OrElse(F := ResultCallback());
+    const Recovered: result of (integer, integer) := ResultInput(
+      Missing
+    ).OrElse(F := ResultCallback());
     Test.AssertTrue(Recovered = Ok(if Missing then 9 else 7 end if));
     Test.AssertEquals(if Missing then 'RCB' else 'RC' end if, Trace);
   end for;
@@ -111,18 +112,31 @@ begin
   Test.AssertTrue(ForwardOption(OptionInput(true)) = None);
   Test.AssertEquals('O', Trace);
   Trace := '';
-  Test.AssertFalse(false and
-                   (case OptionInput(true) of
-    when Some(_): true;
-    when None: DefaultValue() > 0;
-  end case));
+  Test.AssertFalse(
+    false
+    and
+    (
+      case OptionInput(true) of
+        when Some(_): true;
+        when None: DefaultValue() > 0;
+      end case
+    )
+  );
   Test.AssertEquals('', Trace);
-  Test.AssertTrue(Parse.Int('1').Map(function(Value: integer): integer begin
-    return Value + 1;
-  end function) =
-                  Ok(2));
-  Test.AssertTrue(Parse.Int('1').AndThen(function(Value: integer): result of (integer, string) begin
-    return Ok(Value + 1);
-  end function) =
-                  Ok(2));
+  Test.AssertTrue(
+    Parse.Int('1').Map(
+      function(Value: integer): integer begin
+        return Value + 1;
+      end function
+    ) =
+    Ok(2)
+  );
+  Test.AssertTrue(
+    Parse.Int('1').AndThen(
+      function(Value: integer): result of (integer, string) begin
+        return Ok(Value + 1);
+      end function
+    ) =
+    Ok(2)
+  );
 end.

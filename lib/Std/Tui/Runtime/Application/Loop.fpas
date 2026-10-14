@@ -11,13 +11,21 @@ uses
 
 procedure TuiLoopRender(ApplicationId: integer; Tree: Element.TuiElement; Present: boolean);
 begin
-  Frame.TuiRenderFrame(ApplicationState.TuiAppSurfaces[ApplicationId - 1], ApplicationState.TuiAppFrames[ApplicationId -
-                                                                                                         1], Tree, Pointer.TuiPointerRoutingPressed(ApplicationId));
+  Frame.TuiRenderFrame(
+    ApplicationState.TuiAppSurfaces[ApplicationId - 1], ApplicationState.TuiAppFrames[
+      ApplicationId -
+      1
+    ], Tree, Pointer.TuiPointerRoutingPressed(ApplicationId)
+  );
   ApplicationState.TuiAppTrees[ApplicationId - 1] := Tree;
   if Present then
     begin
-      TerminalRenderer.TuiFlushSurface(ApplicationState.TuiAppSurfaces[ApplicationId - 1], ApplicationState.TuiAppPalettes[ApplicationId -
-                                                                                                                           1]);
+      TerminalRenderer.TuiFlushSurface(
+        ApplicationState.TuiAppSurfaces[ApplicationId - 1], ApplicationState.TuiAppPalettes[
+          ApplicationId -
+          1
+        ]
+      );
     end;
   end if;
 end procedure;
@@ -67,12 +75,16 @@ end function;
 
 procedure TuiLoopClose(ApplicationId: integer);
 begin
-  ApplicationState.TuiAppRaiseShutdownFailure(ApplicationState.TuiAppCloseApplication(ApplicationId));
+  ApplicationState.TuiAppRaiseShutdownFailure(
+    ApplicationState.TuiAppCloseApplication(ApplicationId)
+  );
 end procedure;
 
 procedure TuiLoopCloseWithInbox<TMessage>(ApplicationId: integer; Inbox: channel of TMessage);
 begin
-  const Failures: array of RuntimeMsg.TuiMsg := ApplicationState.TuiAppCloseApplication(ApplicationId);
+  const Failures: array of RuntimeMsg.TuiMsg := ApplicationState.TuiAppCloseApplication(
+    ApplicationId
+  );
   discard Tasks.CloseChannel(Inbox);
   ApplicationState.TuiAppRaiseShutdownFailure(Failures);
 end procedure;
@@ -118,11 +130,19 @@ begin
         end;
       end if;
 
-      ApplicationState.TuiAppPushMessages(ApplicationId, Background.TuiBackgroundReap(ApplicationId));
-      if (ApplicationState.TuiAppMessageCount(ApplicationId) = 0) and
-         (ApplicationState.TuiAppInputCount(ApplicationId) > 0) then
+      ApplicationState.TuiAppPushMessages(
+        ApplicationId,
+        Background.TuiBackgroundReap(ApplicationId)
+      );
+      if (ApplicationState.TuiAppMessageCount(ApplicationId) = 0)
+        and
+        (ApplicationState.TuiAppInputCount(ApplicationId) > 0)
+      then
         begin
-          ApplicationState.TuiAppRouteInput(ApplicationId, ApplicationState.TuiAppPopInput(ApplicationId));
+          ApplicationState.TuiAppRouteInput(
+            ApplicationId,
+            ApplicationState.TuiAppPopInput(ApplicationId)
+          );
           if ApplicationState.TuiAppMessageCount(ApplicationId) = 0 then
             begin
               continue;
@@ -134,7 +154,12 @@ begin
       if ApplicationState.TuiAppMessageCount(ApplicationId) > 0 then
         begin
           Remaining := Remaining - 1;
-          Model := TuiLoopApplyFramework(ApplicationId, Model, ApplicationState.TuiAppPopMessage(ApplicationId), Update);
+          Model := TuiLoopApplyFramework(
+            ApplicationId,
+            Model,
+            ApplicationState.TuiAppPopMessage(ApplicationId),
+            Update
+          );
           if TuiLoopFinishUpdate(ApplicationId, Model, View, false) then
             begin
               if BackgroundEnabled then
@@ -170,7 +195,12 @@ begin
                 Remaining := Remaining - 1;
                 // The deterministic tick also answers a pending tick request.
                 ApplicationState.TuiAppClearTick(ApplicationId);
-                Model := TuiLoopApplyFramework(ApplicationId, Model, RuntimeMsg.TuiMsg.Tick(DeltaMilliseconds), Update);
+                Model := TuiLoopApplyFramework(
+                  ApplicationId,
+                  Model,
+                  RuntimeMsg.TuiMsg.Tick(DeltaMilliseconds),
+                  Update
+                );
                 if TuiLoopFinishUpdate(ApplicationId, Model, View, false) then
                   begin
                     TuiLoopCloseWithInbox(ApplicationId, Inbox);
@@ -185,7 +215,12 @@ begin
           Remaining := Remaining - 1;
           // The deterministic tick also answers a pending tick request.
           ApplicationState.TuiAppClearTick(ApplicationId);
-          Model := TuiLoopApplyFramework(ApplicationId, Model, RuntimeMsg.TuiMsg.Tick(DeltaMilliseconds), Update);
+          Model := TuiLoopApplyFramework(
+            ApplicationId,
+            Model,
+            RuntimeMsg.TuiMsg.Tick(DeltaMilliseconds),
+            Update
+          );
           if TuiLoopFinishUpdate(ApplicationId, Model, View, false) then
             begin
               TuiLoopClose(ApplicationId);
@@ -214,9 +249,11 @@ begin
   discard ApplicationState.TuiAppRequireOpen(ApplicationId);
   const ConsoleInputs: channel of RuntimeInput.TuiHostInput := Tasks.CreateChannel(32);
   const InputGroup: Tasks.TaskGroup := Tasks.CreateTaskGroup();
-  const InputTask: task of result of (boolean, string) := Tasks.StartTaskInGroup(InputGroup, function(Token: Tasks.CancellationToken): result of (boolean, string) begin
-    return ApplicationConsoleInput.TuiConsoleInputPump(Token, ConsoleInputs);
-  end function);
+  const InputTask: task of result of (boolean, string) := Tasks.StartTaskInGroup(
+    InputGroup, function(Token: Tasks.CancellationToken): result of (boolean, string) begin
+      return ApplicationConsoleInput.TuiConsoleInputPump(Token, ConsoleInputs);
+    end function
+  );
   var Model: TModel := InitialModel;
   TuiLoopRender(ApplicationId, View(Model), true);
   if BackgroundEnabled then
@@ -227,10 +264,18 @@ begin
   var PreferApplication: boolean := false;
   while ApplicationState.TuiAppOpen[ApplicationId - 1] do
     begin
-      ApplicationState.TuiAppPushMessages(ApplicationId, Background.TuiBackgroundReap(ApplicationId));
+      ApplicationState.TuiAppPushMessages(
+        ApplicationId,
+        Background.TuiBackgroundReap(ApplicationId)
+      );
       if ApplicationState.TuiAppMessageCount(ApplicationId) > 0 then
         begin
-          Model := TuiLoopApplyFramework(ApplicationId, Model, ApplicationState.TuiAppPopMessage(ApplicationId), Update);
+          Model := TuiLoopApplyFramework(
+            ApplicationId,
+            Model,
+            ApplicationState.TuiAppPopMessage(ApplicationId),
+            Update
+          );
           if TuiLoopFinishUpdate(ApplicationId, Model, View, true) then
             begin
               discard Tasks.CloseTaskGroup(InputGroup);
@@ -255,7 +300,10 @@ begin
 
       if ApplicationState.TuiAppInputCount(ApplicationId) > 0 then
         begin
-          ApplicationState.TuiAppRouteInput(ApplicationId, ApplicationState.TuiAppPopInput(ApplicationId));
+          ApplicationState.TuiAppRouteInput(
+            ApplicationId,
+            ApplicationState.TuiAppPopInput(ApplicationId)
+          );
           continue;
         end;
       end if;
@@ -263,39 +311,45 @@ begin
       const TickWait: integer := ApplicationState.TuiAppTickWait(ApplicationId);
       if TickWait = 0 then
         begin
-          ApplicationState.TuiAppPushMessages(ApplicationId, [
-                                                               ApplicationState.TuiAppTakeTick(ApplicationId)
-                                                             ]);
+          ApplicationState.TuiAppPushMessages(
+            ApplicationId, [
+              ApplicationState.TuiAppTakeTick(ApplicationId)
+            ]
+          );
           continue;
         end;
       end if;
       var ConsoleInput: option of RuntimeInput.TuiHostInput := None;
       var ApplicationInput: option of TMessage := None;
       var Cases: array of Tasks.WaitCase := [];
-      const ConsoleCase: Tasks.WaitCase := Tasks.ReceiveCase(ConsoleInputs, procedure(Outcome: result of (RuntimeInput.TuiHostInput, string)) begin
-        case Outcome of
-          when Ok(const Input):
-            begin
-              ConsoleInput := Some(Input);
-            end;
-          when Error(const Message):
-            begin
-            end;
-        end case;
-      end procedure);
+      const ConsoleCase: Tasks.WaitCase := Tasks.ReceiveCase(
+        ConsoleInputs, procedure(Outcome: result of (RuntimeInput.TuiHostInput, string)) begin
+          case Outcome of
+            when Ok(const Input):
+              begin
+                ConsoleInput := Some(Input);
+              end;
+            when Error(const Message):
+              begin
+              end;
+          end case;
+        end procedure
+      );
       if BackgroundEnabled then
         begin
-          const ApplicationCase: Tasks.WaitCase := Tasks.ReceiveCase(Inbox, procedure(Outcome: result of (TMessage, string)) begin
-            case Outcome of
-              when Ok(const Message):
-                begin
-                  ApplicationInput := Some(Message);
-                end;
-              when Error(const Failure):
-                begin
-                end;
-            end case;
-          end procedure);
+          const ApplicationCase: Tasks.WaitCase := Tasks.ReceiveCase(
+            Inbox, procedure(Outcome: result of (TMessage, string)) begin
+              case Outcome of
+                when Ok(const Message):
+                  begin
+                    ApplicationInput := Some(Message);
+                  end;
+                when Error(const Failure):
+                  begin
+                  end;
+              end case;
+            end procedure
+          );
           if PreferApplication then
             begin
               Cases.PushInPlace(ApplicationCase);

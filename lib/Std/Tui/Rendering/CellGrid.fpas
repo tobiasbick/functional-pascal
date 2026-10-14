@@ -33,8 +33,12 @@ begin
 
   for Y: integer := 0 to Height - 1 do
     begin
-      RenderingCanvas.TuiCanvasPutCells(Canvas, Point.TuiPoint.Create(Bounds.X, Bounds.Y + Y), Grid.Cells.Slice(Y *
-                                                                                                                Grid.Width, Width));
+      RenderingCanvas.TuiCanvasPutCells(
+        Canvas, Point.TuiPoint.Create(Bounds.X, Bounds.Y + Y), Grid.Cells.Slice(
+          Y *
+          Grid.Width, Width
+        )
+      );
     end;
   end for;
 end procedure;

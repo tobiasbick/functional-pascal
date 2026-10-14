@@ -37,10 +37,10 @@ public type TuiMeasureResult = record
   // - `Preferred`: Preferred size or focus identifier.
   // - `Maximum`: Maximum accepted value or extent.
   public static function Create(
-  Minimum: GeometrySize.TuiSize;
-  Preferred: GeometrySize.TuiSize;
-  Maximum: GeometrySize.TuiSize
-): TuiMeasureResult;
+    Minimum: GeometrySize.TuiSize;
+    Preferred: GeometrySize.TuiSize;
+    Maximum: GeometrySize.TuiSize
+  ): TuiMeasureResult;
   begin
     TuiMeasureResultRequireOrdered(Minimum, Preferred, Maximum);
     return TuiMeasureResult(Minimum := Minimum, Preferred := Preferred, Maximum := Maximum);

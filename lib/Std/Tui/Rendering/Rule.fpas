@@ -22,8 +22,9 @@ begin
   Canvas.DrawHorizontalLine(Bounds.X, Bounds.Y, Bounds.Width, StyleRole.TuiStyleRole.Rule);
   if (Text <> '') and (Bounds.Width > 4) then
     begin
-      Canvas.Child(Rect.TuiRect.Create(Bounds.X + 2, Bounds.Y, Bounds.Width - 4, 1))
-        .WriteText(Point.TuiPoint.Create(0, 0), ' ' + Text + ' ', StyleRole.TuiStyleRole.Title);
+      Canvas.Child(
+        Rect.TuiRect.Create(Bounds.X + 2, Bounds.Y, Bounds.Width - 4, 1)
+      ).WriteText(Point.TuiPoint.Create(0, 0), ' ' + Text + ' ', StyleRole.TuiStyleRole.Title);
     end;
   end if;
 end procedure;

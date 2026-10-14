@@ -10,22 +10,45 @@ end record;
 
 function MakeKey(Kind: Tui.TuiKeyKind; Character: string): Tui.TuiKeyEvent;
 begin
-  return Tui.TuiKeyEvent(kind := Kind, ch := Character, shift := false, ctrl := false, alt := false, meta := false);
+  return Tui.TuiKeyEvent(
+    kind := Kind,
+    ch := Character,
+    shift := false,
+    ctrl := false,
+    alt := false,
+    meta := false
+  );
 end function;
 
 function ViewTextArea(State: TextAreaModel): Tui.TuiElement;
 begin
-  return Tui.TuiElementBuilders.MakeDesktop(Some(Tui.TuiControlId.Create(1)), [
-                                                                                Tui.TuiElementBuilders.MakeTextArea(Tui.TuiControlId.Create(1), State.Text, State.Caret, State.Offset, Tui.TuiAction.Create(9))
-                                                                              ]);
+  return Tui.TuiElementBuilders.MakeDesktop(
+    Some(Tui.TuiControlId.Create(1)), [
+      Tui.TuiElementBuilders.MakeTextArea(
+        Tui.TuiControlId.Create(1),
+        State.Text,
+        State.Caret,
+        State.Offset,
+        Tui.TuiAction.Create(9)
+      )
+    ]
+  );
 end function;
 
 function ViewWindowedTextArea(State: TextAreaModel): Tui.TuiElement;
 begin
-  const Editor: Tui.TuiElement := Tui.TuiElementBuilders.MakeTextArea(Tui.TuiControlId.Create(1), State.Text, State.Caret, State.Offset, Tui.TuiAction.Create(9));
-  return Tui.TuiElementBuilders.MakeDesktop(Some(Tui.TuiControlId.Create(1)), [
-                                                                                Tui.TuiElementBuilders.MakePanel('Editor', [Editor])
-                                                                              ]);
+  const Editor: Tui.TuiElement := Tui.TuiElementBuilders.MakeTextArea(
+    Tui.TuiControlId.Create(1),
+    State.Text,
+    State.Caret,
+    State.Offset,
+    Tui.TuiAction.Create(9)
+  );
+  return Tui.TuiElementBuilders.MakeDesktop(
+    Some(Tui.TuiControlId.Create(1)), [
+      Tui.TuiElementBuilders.MakePanel('Editor', [Editor])
+    ]
+  );
 end function;
 
 function UpdateTextArea(State: TextAreaModel; Msg: Tui.TuiMsg; Cmd: Tui.TuiCmdOutput): TextAreaModel;
@@ -69,7 +92,11 @@ end function;
 
 begin
   var App: Tui.TuiApplication := Tui.TuiApplication.OpenForTest(Tui.TuiSize.Create(6, 2));
-  var Model: TextAreaModel := TextAreaModel(Text := 'ab', Caret := 2, Offset := Tui.TuiPoint.Create(0, 0));
+  var Model: TextAreaModel := TextAreaModel(
+    Text := 'ab',
+    Caret := 2,
+    Offset := Tui.TuiPoint.Create(0, 0)
+  );
   Model := App.RunIterations(Model, UpdateTextArea, ViewTextArea, 0, 0);
   Model := Press(App, Model, Tui.TuiKeyKind.Enter, '');
   Test.AssertEquals(('ab' + string.Chr(10)), Model.Text);
@@ -91,8 +118,10 @@ begin
   Model := Press(App, Model, Tui.TuiKeyKind.Delete, '');
   Test.AssertEquals('ab ', Model.Text);
   Test.AssertEquals(3, Model.Caret);
-  Model := TextAreaModel(Text := 'abcd' + string.Chr(10) + 'x' + string.Chr(10) +
-                                 ('wxyz' + string.Chr(10) + 'last'), Caret := 3, Offset := Tui.TuiPoint.Create(0, 0));
+  Model := TextAreaModel(
+    Text := 'abcd' + string.Chr(10) + 'x' + string.Chr(10) +
+    ('wxyz' + string.Chr(10) + 'last'), Caret := 3, Offset := Tui.TuiPoint.Create(0, 0)
+  );
   Model := App.RunIterations(Model, UpdateTextArea, ViewTextArea, 0, 0);
   Model := Press(App, Model, Tui.TuiKeyKind.Down, '');
   Test.AssertEquals(6, Model.Caret);
@@ -113,13 +142,25 @@ begin
   Model := Press(App, Model, Tui.TuiKeyKind.EndKey, '');
   Test.AssertEquals(6, Model.Caret);
   Test.AssertEquals(3, Model.Offset.X);
-  Model := TextAreaModel(Text := 'one' + string.Chr(10) + 'abcd', Caret := 6, Offset := Tui.TuiPoint.Create(1, 1));
+  Model := TextAreaModel(
+    Text := 'one' + string.Chr(10) + 'abcd',
+    Caret := 6,
+    Offset := Tui.TuiPoint.Create(1, 1)
+  );
   Model := App.RunIterations(Model, UpdateTextArea, ViewTextArea, 0, 0);
   Model := Press(App, Model, Tui.TuiKeyKind.Right, '');
   Test.AssertEquals(7, Model.Caret);
   Test.AssertEquals(1, Model.Offset.X);
   Test.AssertEquals(1, Model.Offset.Y);
-  App.Inject(Tui.TuiMsgTextAreaChanged(Tui.TuiControlId.Create(1), Tui.TuiAction.Create(9), 'done', 4, Tui.TuiPoint.Create(0, 0)));
+  App.Inject(
+    Tui.TuiMsgTextAreaChanged(
+      Tui.TuiControlId.Create(1),
+      Tui.TuiAction.Create(9),
+      'done',
+      4,
+      Tui.TuiPoint.Create(0, 0)
+    )
+  );
   Model := App.RunIterations(Model, UpdateTextArea, ViewTextArea, 1, 0);
   Test.AssertEquals('done', Model.Text);
   Test.AssertEquals(4, Model.Caret);

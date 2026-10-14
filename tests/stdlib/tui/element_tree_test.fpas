@@ -4,19 +4,32 @@ uses Std.Test as Test, Std.Tui as Tui;
 
 function ViewTree(Value: integer): Tui.TuiElement;
 begin
-  return Tui.TuiElementBuilders.MakeDesktop(None, [
-                                                    Tui.TuiElementBuilders.MakePanel('Dashboard', [
-                                                                                                    Tui.TuiElementBuilders.MakeColumnSpaced([
-                                                                                                                                              Tui.TuiElementBuilders.MakeRule('Metrics'),
-                                                                                                                                              Tui.TuiElementBuilders.MakeGauge('Load', 3, 4),
-                                                                                                                                              Tui.TuiElementBuilders.MakeCellGrid(Tui.TuiCellGrid.Create(2, 1, [
-                                                                                                                                                                                                                 Tui.TuiCell.Create('A', Tui.TuiStyleRole.Normal),
-                                                                                                                                                                                                                 Tui.TuiCell.Create('B', Tui.TuiStyleRole.Accent)
-                                                                                                                                                                                                               ]))
-                                                                                                                                            ], 1)
-                                                                                                  ]),
-                                                    Tui.TuiElementBuilders.MakeOverlay('Confirm', [Tui.TuiElementBuilders.MakeLabel('Continue?')])
-                                                  ]);
+  return Tui.TuiElementBuilders.MakeDesktop(
+    None, [
+      Tui.TuiElementBuilders.MakePanel(
+        'Dashboard', [
+          Tui.TuiElementBuilders.MakeColumnSpaced(
+            [
+              Tui.TuiElementBuilders.MakeRule('Metrics'),
+              Tui.TuiElementBuilders.MakeGauge('Load', 3, 4),
+              Tui.TuiElementBuilders.MakeCellGrid(
+                Tui.TuiCellGrid.Create(
+                  2, 1, [
+                    Tui.TuiCell.Create('A', Tui.TuiStyleRole.Normal),
+                    Tui.TuiCell.Create('B', Tui.TuiStyleRole.Accent)
+                  ]
+                )
+              )
+            ], 1
+          )
+        ]
+      ),
+      Tui.TuiElementBuilders.MakeOverlay(
+        'Confirm',
+        [Tui.TuiElementBuilders.MakeLabel('Continue?')]
+      )
+    ]
+  );
 end function;
 
 function UpdateTree(State: integer; Msg: Tui.TuiMsg; Cmd: Tui.TuiCmdOutput): integer;

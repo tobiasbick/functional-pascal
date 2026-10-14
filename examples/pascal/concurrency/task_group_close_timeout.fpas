@@ -6,10 +6,12 @@ uses Std.Tasks as Tasks, Std.Console as Console;
 begin
   const Release: channel of integer := Tasks.CreateChannel(1);
   const Group: Tasks.TaskGroup := Tasks.CreateTaskGroup();
-  const WorkerTask: task := Tasks.StartTaskInGroup(Group, procedure(Token: Tasks.CancellationToken) begin
-    // Intentionally not cancellable: the owner must release this cleanup gate.
-    discard Tasks.Receive(Release).Unwrap();
-  end procedure);
+  const WorkerTask: task := Tasks.StartTaskInGroup(
+    Group, procedure(Token: Tasks.CancellationToken) begin
+      // Intentionally not cancellable: the owner must release this cleanup gate.
+      discard Tasks.Receive(Release).Unwrap();
+    end procedure
+  );
   case Tasks.CloseTaskGroupWithTimeout(Group, 0) of
     when Error(const Message):
       begin

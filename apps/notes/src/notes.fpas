@@ -25,7 +25,12 @@ begin
         var Initial: Model.NotesModel := Model.NotesModelCreate(Directory, Loaded);
         Initial.Width := Console.ScreenWidth();
         Initial.Height := Console.ScreenHeight();
-        discard Tui.TuiApplication.RunWithPalette(Initial, Update.NotesUpdate, View.NotesView, Theme.NotesPalette());
+        discard Tui.TuiApplication.RunWithPalette(
+          Initial,
+          Update.NotesUpdate,
+          View.NotesView,
+          Theme.NotesPalette()
+        );
       end;
     when Error(const Message):
       begin

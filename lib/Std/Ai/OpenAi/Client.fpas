@@ -50,9 +50,9 @@ begin
     end;
   end if;
   var Headers: array of Http.Header := [
-                                         Http.Header.Create('Content-Type', 'application/json'),
-                                         Http.Header.Create('Accept', 'application/json')
-                                       ];
+    Http.Header.Create('Content-Type', 'application/json'),
+    Http.Header.Create('Accept', 'application/json')
+  ];
   case ClientValue.ApiKey of
     when Some(const Value):
       begin
@@ -79,8 +79,11 @@ begin
             begin
               if (ResponseValue.StatusCode < 200) or (ResponseValue.StatusCode >= 300) then
                 begin
-                  return Error('OpenAI-compatible endpoint returned HTTP ' + Conv.IntToStr(ResponseValue.StatusCode) + ': ' +
-                               Text);
+                  return Error(
+                    'OpenAI-compatible endpoint returned HTTP ' +
+                    Conv.IntToStr(ResponseValue.StatusCode) + ': ' +
+                    Text
+                  );
                 end;
               end if;
 

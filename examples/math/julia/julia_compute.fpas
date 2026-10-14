@@ -57,7 +57,7 @@ begin
   end if;
   const MagnitudeSq: real := Math.Max(Z.MagSq(), 4.0);
   const Smooth: real := Conv.IntToReal(N) + 1.0 -
-                        (Math.Log(Math.Log(MagnitudeSq) * 0.5) / Math.Log(2.0));
+    (Math.Log(Math.Log(MagnitudeSq) * 0.5) / Math.Log(2.0));
   return PixelSample(IsInside := false, EscapeValue := Smooth);
 end function;
 

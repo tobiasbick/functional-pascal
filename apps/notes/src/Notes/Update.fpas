@@ -315,8 +315,10 @@ begin
     end;
   end if;
 
-  if ((Key.kind = Console.KeyKind.Enter) and (State.Focus = Actions.ListControl)) and
-     Editing.NotesHasSelection(State) then
+  if ((Key.kind = Console.KeyKind.Enter) and (State.Focus = Actions.ListControl))
+    and
+    Editing.NotesHasSelection(State)
+  then
     begin
       var Next: Model.NotesModel := State;
       Next.Focus := Actions.BodyControl;

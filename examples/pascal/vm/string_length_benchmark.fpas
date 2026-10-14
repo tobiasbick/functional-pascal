@@ -69,8 +69,10 @@ begin
     end;
   end if;
 
-  Console.WriteLn('iterations: ' + Conv.IntToStr(Iterations) + ', string size: ' +
-                  Conv.IntToStr(StringSize));
+  Console.WriteLn(
+    'iterations: ' + Conv.IntToStr(Iterations) + ', string size: ' +
+    Conv.IntToStr(StringSize)
+  );
   Console.WriteLn('elapsed: ' + Conv.IntToStr(Elapsed) + ' ms');
   if Elapsed > 0 then
     begin
@@ -85,8 +87,11 @@ begin
   Console.WriteLn('length total: ' + Conv.IntToStr(Total));
   if (MaxMillis > 0) and (Elapsed > MaxMillis) then
     begin
-      panic('string-length benchmark regression: ' + Conv.IntToStr(Elapsed) + ' ms exceeds limit ' + Conv.IntToStr(MaxMillis) +
-            ' ms');
+      panic(
+        'string-length benchmark regression: ' + Conv.IntToStr(Elapsed) + ' ms exceeds limit ' +
+        Conv.IntToStr(MaxMillis) +
+        ' ms'
+      );
     end;
   end if;
 end.

@@ -34,7 +34,15 @@ end function;
 
 function MakeInitialState(): Holder;
 begin
-  return Holder(Count := 1, Nested := Point(X := 2, Y := 3), Items := [10, 20, 30], Scores := ['blue': 4], Item := Choice.Count(5), Outcome := Ok(6), Optional := Some(7));
+  return Holder(
+    Count := 1,
+    Nested := Point(X := 2, Y := 3),
+    Items := [10, 20, 30],
+    Scores := ['blue': 4],
+    Item := Choice.Count(5),
+    Outcome := Ok(6),
+    Optional := Some(7)
+  );
 end function;
 
 var Tick: integer := 0;

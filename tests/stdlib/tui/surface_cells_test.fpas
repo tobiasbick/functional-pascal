@@ -11,8 +11,10 @@ begin
   Test.AssertEquals('A', Surface.TryCellAt(Tui.TuiPoint.Create(1, 0)).Unwrap().Glyph);
   Surface.PutCell(Tui.TuiPoint.Create(2, 1), Tui.TuiCell.Create('B', Tui.TuiStyleRole.Focused));
   Test.AssertEquals('B', Surface.TryCellAt(Tui.TuiPoint.Create(2, 1)).Unwrap().Glyph);
-  Test.AssertTrue(Surface.TryCellAt(Tui.TuiPoint.Create(2, 1)).Unwrap().Role =
-                  Tui.TuiStyleRole.Focused);
+  Test.AssertTrue(
+    Surface.TryCellAt(Tui.TuiPoint.Create(2, 1)).Unwrap().Role =
+    Tui.TuiStyleRole.Focused
+  );
   Surface.PutGlyph(-1, 0, 'Z');
   Surface.PutGlyph(4, 0, 'Z');
   Surface.PutGlyph(0, -1, 'Z');

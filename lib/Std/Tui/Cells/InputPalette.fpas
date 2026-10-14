@@ -24,14 +24,20 @@ public type TuiInputPalette = record
   // - `Cursor`: Current layout or drawing cursor.
   // - `Scroll`: Whether scrolling behavior is enabled.
   public static function Create(
-  Normal: CellsStyle.TuiStyle;
-  Focused: CellsStyle.TuiStyle;
-  Hint: CellsStyle.TuiStyle;
-  Cursor: CellsStyle.TuiStyle;
-  Scroll: CellsStyle.TuiStyle
-): TuiInputPalette;
+    Normal: CellsStyle.TuiStyle;
+    Focused: CellsStyle.TuiStyle;
+    Hint: CellsStyle.TuiStyle;
+    Cursor: CellsStyle.TuiStyle;
+    Scroll: CellsStyle.TuiStyle
+  ): TuiInputPalette;
   begin
-    return TuiInputPalette(Normal := Normal, Focused := Focused, Hint := Hint, Cursor := Cursor, Scroll := Scroll);
+    return TuiInputPalette(
+      Normal := Normal,
+      Focused := Focused,
+      Hint := Hint,
+      Cursor := Cursor,
+      Scroll := Scroll
+    );
   end function;
 
   // Resolves one input role.

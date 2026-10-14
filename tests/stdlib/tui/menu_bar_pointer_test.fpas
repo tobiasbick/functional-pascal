@@ -25,13 +25,15 @@ end function;
 
 function ViewMenu(State: MenuModel): Tui.TuiElement;
 begin
-  return Tui.TuiElementBuilders.MakeDesktop(Some(Tui.TuiControlId.Create(State.Focus)), [
-                                                                                          Tui.TuiElementBuilders.MakeMenuBar([
-                                                                                                                               Tui.TuiMenuItem.Create(Tui.TuiControlId.Create(1), 'Open', Tui.TuiAction.Create(10)),
-                                                                                                                               Tui.TuiMenuItem.Disabled(Tui.TuiControlId.Create(2), 'Save', Tui.TuiAction.Create(20)),
-                                                                                                                               Tui.TuiMenuItem.Create(Tui.TuiControlId.Create(3), 'Quit', Tui.TuiAction.Create(30))
-                                                                                                                             ])
-                                                                                        ]);
+  return Tui.TuiElementBuilders.MakeDesktop(
+    Some(Tui.TuiControlId.Create(State.Focus)), [
+      Tui.TuiElementBuilders.MakeMenuBar([
+        Tui.TuiMenuItem.Create(Tui.TuiControlId.Create(1), 'Open', Tui.TuiAction.Create(10)),
+        Tui.TuiMenuItem.Disabled(Tui.TuiControlId.Create(2), 'Save', Tui.TuiAction.Create(20)),
+        Tui.TuiMenuItem.Create(Tui.TuiControlId.Create(3), 'Quit', Tui.TuiAction.Create(30))
+      ])
+    ]
+  );
 end function;
 
 function UpdateMenu(State: MenuModel; Msg: Tui.TuiMsg; Cmd: Tui.TuiCmdOutput): MenuModel;
@@ -67,13 +69,17 @@ begin
   var Model: MenuModel := MenuModel(Focus := 3, Actions := []);
   Model := App.RunIterations(Model, UpdateMenu, ViewMenu, 0, 0);
   const OpenAt: Tui.TuiPoint := FindGlyph(App.SurfaceSnapshot(), 'Open');
-  App.InjectPointerForTest(Tui.TuiPointerEvent.Create(Tui.TuiPointerAction.Down, Tui.TuiPointerButton.Left, OpenAt));
+  App.InjectPointerForTest(
+    Tui.TuiPointerEvent.Create(Tui.TuiPointerAction.Down, Tui.TuiPointerButton.Left, OpenAt)
+  );
   Model := App.RunIterations(Model, UpdateMenu, ViewMenu, 2, 0);
   Test.AssertEquals(1, Model.Focus);
   Test.AssertEquals(1, Model.Actions.Length());
   Test.AssertEquals(10, Model.Actions[0]);
   const SaveAt: Tui.TuiPoint := FindGlyph(App.SurfaceSnapshot(), 'Save');
-  App.InjectPointerForTest(Tui.TuiPointerEvent.Create(Tui.TuiPointerAction.Down, Tui.TuiPointerButton.Left, SaveAt));
+  App.InjectPointerForTest(
+    Tui.TuiPointerEvent.Create(Tui.TuiPointerAction.Down, Tui.TuiPointerButton.Left, SaveAt)
+  );
   Model := App.RunIterations(Model, UpdateMenu, ViewMenu, 1, 0);
   Test.AssertEquals(1, Model.Actions.Length());
   App.Close();

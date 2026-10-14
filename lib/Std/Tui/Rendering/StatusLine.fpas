@@ -64,7 +64,13 @@ begin
           end;
         when StatusItem.TuiStatusItem.KeyHint(const KeyText, const Text):
           begin
-            X := TuiStatusWrite(Canvas, X, Bounds.Y, KeyText, StyleRole.TuiStyleRole.StatusShortcut);
+            X := TuiStatusWrite(
+              Canvas,
+              X,
+              Bounds.Y,
+              KeyText,
+              StyleRole.TuiStyleRole.StatusShortcut
+            );
             X := TuiStatusWrite(Canvas, X, Bounds.Y, ' ', StyleRole.TuiStyleRole.StatusNormal);
             X := TuiStatusWrite(Canvas, X, Bounds.Y, Text, StyleRole.TuiStyleRole.StatusNormal);
           end;

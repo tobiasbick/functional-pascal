@@ -10,9 +10,17 @@ end record;
 
 function ViewInput(State: InputSnapshotModel): Tui.TuiElement;
 begin
-  return Tui.TuiElementBuilders.MakeDesktop(Some(Tui.TuiControlId.Create(1)), [
-                                                                                Tui.TuiElementBuilders.MakeInputWithHint(Tui.TuiControlId.Create(1), State.Text, State.Caret, State.Hint, Tui.TuiAction.Create(1))
-                                                                              ]);
+  return Tui.TuiElementBuilders.MakeDesktop(
+    Some(Tui.TuiControlId.Create(1)), [
+      Tui.TuiElementBuilders.MakeInputWithHint(
+        Tui.TuiControlId.Create(1),
+        State.Text,
+        State.Caret,
+        State.Hint,
+        Tui.TuiAction.Create(1)
+      )
+    ]
+  );
 end function;
 
 function UpdateInput(State: InputSnapshotModel; Msg: Tui.TuiMsg; Cmd: Tui.TuiCmdOutput): InputSnapshotModel;

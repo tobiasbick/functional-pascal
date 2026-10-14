@@ -19,14 +19,14 @@ function ViewportCX(State: Camera.ExplorerCamera; W: integer; H: integer; CellX:
 begin
   const Wr: integer := Math.Max(W - 1, 1);
   return State.XMin(W, H) +
-         Conv.IntToReal(CellX - 1) / Conv.IntToReal(Wr) * (State.XMax(W, H) - State.XMin(W, H));
+    Conv.IntToReal(CellX - 1) / Conv.IntToReal(Wr) * (State.XMax(W, H) - State.XMin(W, H));
 end function;
 
 function ViewportCY(State: Camera.ExplorerCamera; W: integer; H: integer; CellY: integer): real;
 begin
   const Hr: integer := Math.Max(H - 1, 1);
   return State.YMax() -
-         Conv.IntToReal(CellY - 1) / Conv.IntToReal(Hr) * (State.YMax() - State.YMin());
+    Conv.IntToReal(CellY - 1) / Conv.IntToReal(Hr) * (State.YMax() - State.YMin());
 end function;
 
 procedure WriteHudText(Text: string; Width: integer);
@@ -60,14 +60,28 @@ begin
   Console.TextColorRGB(255, 220, 120);
   WriteHudText(Title, Width);
   Console.TextColorRGB(156, 204, 255);
-  WriteHudText('  tasks | units | records | truecolor | mouse | focus | paste', Math.Max(Width -
-                                                                                         Title.Length(), 0));
+  WriteHudText(
+    '  tasks | units | records | truecolor | mouse | focus | paste', Math.Max(
+      Width -
+      Title.Length(), 0
+    )
+  );
   if Console.ScreenHeight() >= 2 then
     begin
       Console.GotoXY(1, 2);
       Console.NormVideo();
-      WriteHudText('size=%dx%d  center=(%f, %f)  zoom=%f  iter=%d  palette=%s'
-                     .Format(Width, Height, S.CenterX, S.CenterY, S.GetZoom(), S.MaxIter, PaletteLabel(S.Palette)), Width);
+      WriteHudText(
+        'size=%dx%d  center=(%f, %f)  zoom=%f  iter=%d  palette=%s'.Format(
+          Width,
+          Height,
+          S.CenterX,
+          S.CenterY,
+          S.GetZoom(),
+          S.MaxIter,
+          PaletteLabel(S.Palette)
+        ),
+        Width
+      );
     end;
   end if;
 
@@ -75,7 +89,10 @@ begin
     begin
       Console.GotoXY(1, 3);
       Console.NormVideo();
-      WriteHudText('click center  wheel zoom  M middle=reset  arrows  +/-  PgUp/Dn  1/2/3  R  Esc', Width);
+      WriteHudText(
+        'click center  wheel zoom  M middle=reset  arrows  +/-  PgUp/Dn  1/2/3  R  Esc',
+        Width
+      );
     end;
   end if;
 
@@ -83,7 +100,13 @@ begin
   Console.Window(1, 1, Width, Height);
 end procedure;
 
-var ResetCamera: Camera.ExplorerCamera := Camera.ExplorerCamera(CenterX := 0.0, CenterY := 0.0, SpanY := 2.8, MaxIter := 160, Palette := 1);
+var ResetCamera: Camera.ExplorerCamera := Camera.ExplorerCamera(
+  CenterX := 0.0,
+  CenterY := 0.0,
+  SpanY := 2.8,
+  MaxIter := 160,
+  Palette := 1
+);
 var State: Camera.ExplorerCamera := ResetCamera;
 var RenderW: integer := 1;
 var RenderH: integer := 1;
@@ -98,23 +121,39 @@ end procedure;
 procedure PaintFrame(
   Title: string;
   RenderFrame: procedure(
-  XMin: real;
-  XMax: real;
-  YMin: real;
-  YMax: real;
-  Width: integer;
-  Height: integer;
-  MaxIter: integer;
-  Palette: integer
-);
+    XMin: real;
+    XMax: real;
+    YMin: real;
+    YMax: real;
+    Width: integer;
+    Height: integer;
+    MaxIter: integer;
+    Palette: integer
+  );
   PaletteLabel: function(Value: integer): string
 );
 begin
   RenderW := RenderWidth();
   RenderH := RenderHeight();
   Console.BeginFrame();
-  Console.FillRect(Console.Rect(x := 1, y := 1, width := Console.ScreenWidth(), height := Console.ScreenHeight()), Console.Cell(glyph := ' ', foreground := Console.RgbColor(0, 0, 0), background := Console.RgbColor(0, 0, 0)));
-  RenderFrame(State.XMin(RenderW, RenderH), State.XMax(RenderW, RenderH), State.YMin(), State.YMax(), RenderW, RenderH, State.MaxIter, State.Palette);
+  Console.FillRect(
+    Console.Rect(x := 1, y := 1, width := Console.ScreenWidth(), height := Console.ScreenHeight()),
+    Console.Cell(
+      glyph := ' ',
+      foreground := Console.RgbColor(0, 0, 0),
+      background := Console.RgbColor(0, 0, 0)
+    )
+  );
+  RenderFrame(
+    State.XMin(RenderW, RenderH),
+    State.XMax(RenderW, RenderH),
+    State.YMin(),
+    State.YMax(),
+    RenderW,
+    RenderH,
+    State.MaxIter,
+    State.Palette
+  );
   DrawHud(State, RenderW, RenderH, Title, PaletteLabel);
   Console.Present();
 end procedure;
@@ -214,8 +253,11 @@ end function;
 
 procedure HandleMouse(InputEvent: Console.ConsoleEvent);
 begin
-  const InView: boolean := (((InputEvent.mouse_x >= 1) and (InputEvent.mouse_x <= RenderW)) and (InputEvent.mouse_y >= 1)) and
-                           (InputEvent.mouse_y <= RenderH);
+  const InView: boolean := (
+    ((InputEvent.mouse_x >= 1) and (InputEvent.mouse_x <= RenderW)) and (InputEvent.mouse_y >= 1)
+  )
+    and
+    (InputEvent.mouse_y <= RenderH);
   if InputEvent.mouse_action = Console.MouseAction.ScrollUp then
     begin
       State.SpanY := Math.Max(State.SpanY * 0.88, 0.000001);
@@ -289,15 +331,15 @@ public procedure RunExplorer(
   Title: string;
   Initial: Camera.ExplorerCamera;
   RenderFrame: procedure(
-  XMin: real;
-  XMax: real;
-  YMin: real;
-  YMax: real;
-  Width: integer;
-  Height: integer;
-  MaxIter: integer;
-  Palette: integer
-);
+    XMin: real;
+    XMax: real;
+    YMin: real;
+    YMax: real;
+    Width: integer;
+    Height: integer;
+    MaxIter: integer;
+    Palette: integer
+  );
   PaletteLabel: function(Value: integer): string
 );
 begin

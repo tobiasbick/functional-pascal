@@ -6,6 +6,14 @@ uses
   LocalChat.View as View, Std.Console as Console, Std.Tui as Tui;
 
 begin
-  const Initial: Model.LocalChatModel := Model.LocalChatModelCreate(Console.ScreenWidth(), Console.ScreenHeight());
-  discard Tui.TuiApplication.RunWithPalette(Initial, Update.LocalChatUpdate, View.LocalChatView, Theme.LocalChatPalette());
+  const Initial: Model.LocalChatModel := Model.LocalChatModelCreate(
+    Console.ScreenWidth(),
+    Console.ScreenHeight()
+  );
+  discard Tui.TuiApplication.RunWithPalette(
+    Initial,
+    Update.LocalChatUpdate,
+    View.LocalChatView,
+    Theme.LocalChatPalette()
+  );
 end.

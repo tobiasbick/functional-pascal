@@ -90,31 +90,58 @@ end function;
 
 function ViewDemo(State: DemoModel): Tui.TuiElement;
 begin
-  const Input: Tui.TuiElement := Tui.TuiElementBuilders.MakeInput(Tui.TuiControlId.Create(1), State.Text, State.Caret, Tui.TuiAction.Create(1));
-  const Confirm: Tui.TuiElement := Tui.TuiElementBuilders.MakeButton(Tui.TuiControlId.Create(2), 'Confirm', Tui.TuiAction.Create(2));
-  const Quit: Tui.TuiElement := Tui.TuiElementBuilders.MakeButton(Tui.TuiControlId.Create(3), 'Quit', Tui.TuiAction.Create(3));
+  const Input: Tui.TuiElement := Tui.TuiElementBuilders.MakeInput(
+    Tui.TuiControlId.Create(1),
+    State.Text,
+    State.Caret,
+    Tui.TuiAction.Create(1)
+  );
+  const Confirm: Tui.TuiElement := Tui.TuiElementBuilders.MakeButton(
+    Tui.TuiControlId.Create(2),
+    'Confirm',
+    Tui.TuiAction.Create(2)
+  );
+  const Quit: Tui.TuiElement := Tui.TuiElementBuilders.MakeButton(
+    Tui.TuiControlId.Create(3),
+    'Quit',
+    Tui.TuiAction.Create(3)
+  );
   var Content: array of Tui.TuiElement := [Input, Confirm, Quit];
   var Focused: option of Tui.TuiControlId := Some(Tui.TuiControlId.Create(1));
   if State.Confirming then
     begin
       Content := [
-                   Tui.TuiElementBuilders.MakeOverlay('Confirm', [Tui.TuiElementBuilders.MakeLabel(State.Text), Quit])
-                 ];
+        Tui.TuiElementBuilders.MakeOverlay(
+          'Confirm',
+          [Tui.TuiElementBuilders.MakeLabel(State.Text), Quit]
+        )
+      ];
       Focused := Some(Tui.TuiControlId.Create(3));
     end;
   end if;
 
-  return Tui.TuiElementBuilders.MakeDesktop(Focused, [
-                                                       Tui.TuiElementBuilders.MakeMenuBar([
-                                                                                            Tui.TuiMenuItem.WithShortcut(Tui.TuiControlId.Create(4), 'File', Tui.TuiAction.Create(3), 'F')
-                                                                                          ]),
-                                                       Tui.TuiElementBuilders.MakePanel('Tui interactive demo', Content),
-                                                       Tui.TuiElementBuilders.MakeStatusLine([
-                                                                                               Tui.TuiStatusItemBuilders.MakeHint('Type, confirm, then quit')
-                                                                                             ])
-                                                     ]);
+  return Tui.TuiElementBuilders.MakeDesktop(
+    Focused, [
+      Tui.TuiElementBuilders.MakeMenuBar([
+        Tui.TuiMenuItem.WithShortcut(
+          Tui.TuiControlId.Create(4),
+          'File',
+          Tui.TuiAction.Create(3),
+          'F'
+        )
+      ]),
+      Tui.TuiElementBuilders.MakePanel('Tui interactive demo', Content),
+      Tui.TuiElementBuilders.MakeStatusLine([
+        Tui.TuiStatusItemBuilders.MakeHint('Type, confirm, then quit')
+      ])
+    ]
+  );
 end function;
 
 begin
-  discard Tui.TuiApplication.Run(DemoModel(Text := '', Caret := 0, Confirming := false), UpdateDemo, ViewDemo);
+  discard Tui.TuiApplication.Run(
+    DemoModel(Text := '', Caret := 0, Confirming := false),
+    UpdateDemo,
+    ViewDemo
+  );
 end.

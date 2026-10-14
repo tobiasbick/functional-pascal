@@ -8,7 +8,14 @@ end record;
 
 function Key(Kind: Tui.TuiKeyKind): Tui.TuiKeyEvent;
 begin
-  return Tui.TuiKeyEvent(kind := Kind, ch := '', shift := false, ctrl := false, alt := false, meta := false);
+  return Tui.TuiKeyEvent(
+    kind := Kind,
+    ch := '',
+    shift := false,
+    ctrl := false,
+    alt := false,
+    meta := false
+  );
 end function;
 
 function UpdateDemo(State: DemoModel; Msg: Tui.TuiMsg; Cmd: Tui.TuiCmdOutput): DemoModel;
@@ -37,15 +44,34 @@ end function;
 
 function ViewDemo(State: DemoModel): Tui.TuiElement;
 begin
-  return Tui.TuiElementBuilders.MakeDesktop(Some(Tui.TuiControlId.Create(State.Focus)), [
-                                                                                          Tui.TuiElementBuilders.MakePanel('Host', [
-                                                                                                                                     Tui.TuiElementBuilders.MakeInput(Tui.TuiControlId.Create(1), '', 0, Tui.TuiAction.Create(1))
-                                                                                                                                   ]),
-                                                                                          Tui.TuiElementBuilders.MakeOverlay('Confirm', [
-                                                                                                                                          Tui.TuiElementBuilders.MakeButton(Tui.TuiControlId.Create(2), 'Yes', Tui.TuiAction.Create(2)),
-                                                                                                                                          Tui.TuiElementBuilders.MakeButton(Tui.TuiControlId.Create(3), 'No', Tui.TuiAction.Create(3))
-                                                                                                                                        ])
-                                                                                        ]);
+  return Tui.TuiElementBuilders.MakeDesktop(
+    Some(Tui.TuiControlId.Create(State.Focus)), [
+      Tui.TuiElementBuilders.MakePanel(
+        'Host', [
+          Tui.TuiElementBuilders.MakeInput(
+            Tui.TuiControlId.Create(1),
+            '',
+            0,
+            Tui.TuiAction.Create(1)
+          )
+        ]
+      ),
+      Tui.TuiElementBuilders.MakeOverlay(
+        'Confirm', [
+          Tui.TuiElementBuilders.MakeButton(
+            Tui.TuiControlId.Create(2),
+            'Yes',
+            Tui.TuiAction.Create(2)
+          ),
+          Tui.TuiElementBuilders.MakeButton(
+            Tui.TuiControlId.Create(3),
+            'No',
+            Tui.TuiAction.Create(3)
+          )
+        ]
+      )
+    ]
+  );
 end function;
 
 begin

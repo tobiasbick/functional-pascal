@@ -14,17 +14,19 @@ begin
   const Generation: integer := State.Generation;
   const Gate: channel of boolean := State.Gate;
   const Started: channel of integer := State.Started;
-  Cmd.ReplaceSubscription(1, function(Token: Tasks.CancellationToken): result of (boolean, string) begin
-    discard Tasks.Send(Started, Generation);
-    if Generation = 0 then
-      begin
-        // Deliberately defer cooperation to prove that the host remains responsive.
-        discard Tasks.Receive(Gate);
-      end;
-    end if;
+  Cmd.ReplaceSubscription(
+    1, function(Token: Tasks.CancellationToken): result of (boolean, string) begin
+      discard Tasks.Send(Started, Generation);
+      if Generation = 0 then
+        begin
+          // Deliberately defer cooperation to prove that the host remains responsive.
+          discard Tasks.Receive(Gate);
+        end;
+      end if;
 
-    return Ok(true);
-  end function);
+      return Ok(true);
+    end function
+  );
 end procedure;
 
 function Update(State: Model; Msg: Tui.TuiMsg; Cmd: Tui.TuiCmdOutput): Model;
@@ -83,7 +85,15 @@ begin
     const Started: channel of integer := Tasks.CreateChannel(4);
     const Painted: channel of integer := Tasks.CreateChannel(1);
     const App: Tui.TuiApplication := Tui.TuiApplication.OpenForTest(Tui.TuiSize.Create(20, 4));
-    var State: Model := App.RunBackgroundIterations(Model(Generation := 0, Gate := Gate, Started := Started, Painted := Painted), Inbox, Update, UpdateMessage, View, 1, 0);
+    var State: Model := App.RunBackgroundIterations(
+      Model(Generation := 0, Gate := Gate, Started := Started, Painted := Painted),
+      Inbox,
+      Update,
+      UpdateMessage,
+      View,
+      1,
+      0
+    );
     Test.AssertEquals(0, Tasks.ReceiveWithTimeout(Started, 5000).Unwrap());
     const Observer: task of boolean := go ReleaseAfterPaint(Painted, Gate);
     for Index: integer := 1 to 3 do

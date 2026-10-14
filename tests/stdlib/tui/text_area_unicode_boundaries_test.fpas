@@ -9,9 +9,17 @@ end record;
 
 function View(State: Model): Tui.TuiElement;
 begin
-  return Tui.TuiElementBuilders.MakeDesktop(Some(Tui.TuiControlId.Create(1)), [
-                                                                                Tui.TuiElementBuilders.MakeTextArea(Tui.TuiControlId.Create(1), State.Text, State.Caret, Tui.TuiPoint.Create(0, 0), Tui.TuiAction.Create(1))
-                                                                              ]);
+  return Tui.TuiElementBuilders.MakeDesktop(
+    Some(Tui.TuiControlId.Create(1)), [
+      Tui.TuiElementBuilders.MakeTextArea(
+        Tui.TuiControlId.Create(1),
+        State.Text,
+        State.Caret,
+        Tui.TuiPoint.Create(0, 0),
+        Tui.TuiAction.Create(1)
+      )
+    ]
+  );
 end function;
 
 function Update(State: Model; Msg: Tui.TuiMsg; Cmd: Tui.TuiCmdOutput): Model;
@@ -29,7 +37,7 @@ end procedure;
 begin
   const App: Tui.TuiApplication := Tui.TuiApplication.OpenForTest(Tui.TuiSize.Create(8, 4));
   const Text: string := 'e' + string.Chr(769) + '界' + string.Chr(10) + string.Chr(10) + 'x' +
-                        string.Chr(10);
+    string.Chr(10);
   CheckCaret(App, Text, 0, 0, 0);
   CheckCaret(App, Text, 2, 1, 0);
   CheckCaret(App, Text, 3, 3, 0);

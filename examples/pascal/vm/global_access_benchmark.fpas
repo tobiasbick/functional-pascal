@@ -72,8 +72,11 @@ begin
   Console.WriteLn('checksum: ' + Conv.IntToStr(Checksum));
   if (MaxMillis > 0) and (Elapsed > MaxMillis) then
     begin
-      panic('global-access benchmark regression: ' + Conv.IntToStr(Elapsed) + ' ms exceeds limit ' + Conv.IntToStr(MaxMillis) +
-            ' ms');
+      panic(
+        'global-access benchmark regression: ' + Conv.IntToStr(Elapsed) + ' ms exceeds limit ' +
+        Conv.IntToStr(MaxMillis) +
+        ' ms'
+      );
     end;
   end if;
 end.

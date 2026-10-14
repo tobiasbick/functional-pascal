@@ -97,7 +97,12 @@ begin
         return false;
       end;
   end case;
-  var RequestValue: Types.ServerRequest := Types.ServerRequest(Method := '', Target := '', Headers := [], Body := []);
+  var RequestValue: Types.ServerRequest := Types.ServerRequest(
+    Method := '',
+    Target := '',
+    Headers := [],
+    Body := []
+  );
   case Server.ReadRequest(Connection, Options.MaxHeaderBytes, Options.MaxBodyBytes) of
     when Ok(const Value):
       begin
@@ -134,8 +139,9 @@ end function;
 // - `BatchLength`: Connections already present in the current batch.
 function HasCapacity(Options: Types.ServerOptions; Accepted: integer; BatchLength: integer): boolean;
 begin
-  return (BatchLength < Options.MaxConcurrentRequests) and
-         ((Options.MaxRequests = 0) or (Accepted < Options.MaxRequests));
+  return (BatchLength < Options.MaxConcurrentRequests)
+    and
+    ((Options.MaxRequests = 0) or (Accepted < Options.MaxRequests));
 end function;
 
 // Accepts requests in bounded concurrent batches and dispatches each one to Handler.

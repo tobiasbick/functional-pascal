@@ -8,9 +8,11 @@ begin
   const Life: Server.ServerLifetime := Server.CreateLifetime(20, false).Unwrap();
   const Group: Tasks.TaskGroup := Server.GetWorkGroup(Life);
   const Gate: channel of boolean := Tasks.CreateChannel(1);
-  const Worker: task of boolean := Tasks.StartTaskInGroup(Group, function(Token: Tasks.CancellationToken): boolean begin
-    return Tasks.Receive(Gate).Unwrap();
-  end function);
+  const Worker: task of boolean := Tasks.StartTaskInGroup(
+    Group, function(Token: Tasks.CancellationToken): boolean begin
+      return Tasks.Receive(Gate).Unwrap();
+    end function
+  );
   Test.AssertTrue(Server.IsReady(Life));
   Test.AssertTrue(not Tasks.IsCancellationRequested(Server.GetStopToken(Life)));
   Test.AssertTrue((Server.FinishShutdown(Life) is Error(_)));
@@ -18,7 +20,9 @@ begin
   Test.AssertTrue(not Server.IsReady(Life));
   Test.AssertTrue(Tasks.IsCancellationRequested(Server.GetStopToken(Life)));
   Test.AssertTrue(not Server.RequestStop(Life));
-  Test.AssertTrue((Tasks.CloseTaskGroupWithTimeout(Group, Server.RemainingMillis(Life)) is Error(_)));
+  Test.AssertTrue(
+    (Tasks.CloseTaskGroupWithTimeout(Group, Server.RemainingMillis(Life)) is Error(_))
+  );
   Test.AssertEquals(0, Server.RemainingMillis(Life));
   Test.AssertTrue((Server.FinishShutdown(Life) is Error(_)));
   Test.AssertTrue(not Server.RequestStop(Life));

@@ -27,10 +27,14 @@ begin
   Console.WriteLn('Value: ', R1.Unwrap());
   const R2: result of (integer, string) := Divide(5, 0);
   Console.WriteLn('Error variant: ', (R2 is Error(_)));
-  Console.WriteLn('Default value: ', (case R2 of
-    when Ok(const AP43Value): AP43Value;
-    when Error(_): -1;
-  end case));
+  Console.WriteLn(
+    'Default value: ', (
+      case R2 of
+        when Ok(const AP43Value): AP43Value;
+        when Error(_): -1;
+      end case
+    )
+  );
   case Divide(42, 6) of
     when Ok(const V):
       begin

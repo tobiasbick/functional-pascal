@@ -37,9 +37,17 @@ begin
   const BarX: integer := Bounds.X + LabelWidth + 2;
   const FillWidth: integer := BarWidth * Gauge.Value div Gauge.Maximum;
   Canvas.FillRect(Bounds, Cell.TuiCell.Create(' ', StyleRole.TuiStyleRole.Normal));
-  Canvas.WriteText(Point.TuiPoint.Create(Bounds.X, Bounds.Y), Gauge.LabelText, StyleRole.TuiStyleRole.Normal);
+  Canvas.WriteText(
+    Point.TuiPoint.Create(Bounds.X, Bounds.Y),
+    Gauge.LabelText,
+    StyleRole.TuiStyleRole.Normal
+  );
   Canvas.DrawHorizontalLine(BarX, Bounds.Y, BarWidth, StyleRole.TuiStyleRole.GaugeTrack);
   Canvas.DrawHorizontalLine(BarX, Bounds.Y, FillWidth, StyleRole.TuiStyleRole.GaugeFill);
-  Canvas.WriteText(Point.TuiPoint.Create(Bounds.Right() - PercentWidth, Bounds.Y), PercentText, StyleRole.TuiStyleRole.Accent);
+  Canvas.WriteText(
+    Point.TuiPoint.Create(Bounds.Right() - PercentWidth, Bounds.Y),
+    PercentText,
+    StyleRole.TuiStyleRole.Accent
+  );
 end procedure;
 end unit;

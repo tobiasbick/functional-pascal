@@ -55,8 +55,10 @@ begin
     end;
   end if;
 
-  Console.WriteLn('iterations: ' + Conv.IntToStr(Iterations) + ', warm-up: ' +
-                  Conv.IntToStr(WarmupIterations));
+  Console.WriteLn(
+    'iterations: ' + Conv.IntToStr(Iterations) + ', warm-up: ' +
+    Conv.IntToStr(WarmupIterations)
+  );
   Console.WriteLn('elapsed: ' + Conv.IntToStr(Elapsed) + ' ms');
   if Elapsed > 0 then
     begin
@@ -71,8 +73,11 @@ begin
   Console.WriteLn('accumulator: ' + Conv.IntToStr(Acc));
   if (MaxMillis > 0) and (Elapsed > MaxMillis) then
     begin
-      panic('integer-loop benchmark regression: ' + Conv.IntToStr(Elapsed) + ' ms exceeds limit ' + Conv.IntToStr(MaxMillis) +
-            ' ms');
+      panic(
+        'integer-loop benchmark regression: ' + Conv.IntToStr(Elapsed) + ' ms exceeds limit ' +
+        Conv.IntToStr(MaxMillis) +
+        ' ms'
+      );
     end;
   end if;
 end.

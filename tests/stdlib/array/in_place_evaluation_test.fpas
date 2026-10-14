@@ -31,16 +31,18 @@ begin
   var Items := [1, 2];
   var Seen := '';
   const Copy := Items;
-  Items.MapInPlace(function(X: integer): integer begin
-    if X = 1 then
-      Seen := Seen + '1';
-    else
-      Seen := Seen + '2';
-    end if;
+  Items.MapInPlace(
+    function(X: integer): integer begin
+      if X = 1 then
+        Seen := Seen + '1';
+      else
+        Seen := Seen + '2';
+      end if;
 
-    Items := [99];
-    return X * 10;
-  end function);
+      Items := [99];
+      return X * 10;
+    end function
+  );
   Test.AssertEquals('12', Seen);
   Test.AssertEquals(2, Items.Length());
   Test.AssertEquals(10, Items[0]);

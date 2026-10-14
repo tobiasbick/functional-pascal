@@ -105,10 +105,10 @@ public type TuiApplication = record
 
   // Tries to inject one application-defined message without waiting for queue capacity.
   public function InjectBackgroundForTest<TMessage>(
-  Self: TuiApplication;
-  Inbox: channel of TMessage;
-  Message: TMessage
-): result of (boolean, string);
+    Self: TuiApplication;
+    Inbox: channel of TMessage;
+    Message: TMessage
+  ): result of (boolean, string);
   begin
     discard ApplicationState.TuiAppRequireOpen(Self.Id);
     return Tasks.TrySend(Inbox, Message);
@@ -147,33 +147,53 @@ public type TuiApplication = record
   // - `IterationCount`: Number of application iterations to execute.
   // - `DeltaMilliseconds`: Elapsed time in milliseconds.
   public function RunIterations<TModel>(
-  Self: TuiApplication;
-  InitialModel: TModel;
-  Update: function(State: TModel; Msg: RuntimeMsg.TuiMsg; Cmd: RuntimeCmd.TuiCmdOutput): TModel;
-  View: function(State: TModel): Element.TuiElement;
-  IterationCount: integer;
-  DeltaMilliseconds: integer
-): TModel;
+    Self: TuiApplication;
+    InitialModel: TModel;
+    Update: function(State: TModel; Msg: RuntimeMsg.TuiMsg; Cmd: RuntimeCmd.TuiCmdOutput): TModel;
+    View: function(State: TModel): Element.TuiElement;
+    IterationCount: integer;
+    DeltaMilliseconds: integer
+  ): TModel;
   begin
     const Inbox: channel of boolean := Tasks.CreateChannel(1);
-    const Model: TModel := Loop.TuiRunHeadless(Self.Id, InitialModel, Inbox, Update, TuiIgnoreApplicationMessage, View, IterationCount, DeltaMilliseconds, false);
+    const Model: TModel := Loop.TuiRunHeadless(
+      Self.Id,
+      InitialModel,
+      Inbox,
+      Update,
+      TuiIgnoreApplicationMessage,
+      View,
+      IterationCount,
+      DeltaMilliseconds,
+      false
+    );
     discard Tasks.CloseChannel(Inbox);
     return Model;
   end function;
 
   // Runs deterministic framework and application-defined message iterations.
   public function RunBackgroundIterations<TModel, TMessage>(
-  Self: TuiApplication;
-  InitialModel: TModel;
-  Inbox: channel of TMessage;
-  Update: function(State: TModel; Msg: RuntimeMsg.TuiMsg; Cmd: RuntimeCmd.TuiCmdOutput): TModel;
-  UpdateApplication: function(State: TModel; Message: TMessage; Cmd: RuntimeCmd.TuiCmdOutput): TModel;
-  View: function(State: TModel): Element.TuiElement;
-  IterationCount: integer;
-  DeltaMilliseconds: integer
-): TModel;
+    Self: TuiApplication;
+    InitialModel: TModel;
+    Inbox: channel of TMessage;
+    Update: function(State: TModel; Msg: RuntimeMsg.TuiMsg; Cmd: RuntimeCmd.TuiCmdOutput): TModel;
+    UpdateApplication: function(State: TModel; Message: TMessage; Cmd: RuntimeCmd.TuiCmdOutput): TModel;
+    View: function(State: TModel): Element.TuiElement;
+    IterationCount: integer;
+    DeltaMilliseconds: integer
+  ): TModel;
   begin
-    return Loop.TuiRunHeadless(Self.Id, InitialModel, Inbox, Update, UpdateApplication, View, IterationCount, DeltaMilliseconds, true);
+    return Loop.TuiRunHeadless(
+      Self.Id,
+      InitialModel,
+      Inbox,
+      Update,
+      UpdateApplication,
+      View,
+      IterationCount,
+      DeltaMilliseconds,
+      true
+    );
   end function;
 
   // Runs one interactive Tui application until Update returns `TuiCmd.Quit`.
@@ -186,12 +206,17 @@ public type TuiApplication = record
   // - `Update`: Callback that updates the application model and command output.
   // - `View`: Callback that renders the current application model.
   public static function Run<TModel>(
-  InitialModel: TModel;
-  Update: function(State: TModel; Msg: RuntimeMsg.TuiMsg; Cmd: RuntimeCmd.TuiCmdOutput): TModel;
-  View: function(State: TModel): Element.TuiElement
-): TModel;
+    InitialModel: TModel;
+    Update: function(State: TModel; Msg: RuntimeMsg.TuiMsg; Cmd: RuntimeCmd.TuiCmdOutput): TModel;
+    View: function(State: TModel): Element.TuiElement
+  ): TModel;
   begin
-    return TuiApplication.RunWithPalette(InitialModel, Update, View, CellsPalette.TuiPalette.Default());
+    return TuiApplication.RunWithPalette(
+      InitialModel,
+      Update,
+      View,
+      CellsPalette.TuiPalette.Default()
+    );
   end function;
 
   // Runs one interactive Tui application with a caller-defined initial palette.
@@ -205,11 +230,11 @@ public type TuiApplication = record
   // - `View`: Callback that renders the current application model.
   // - `Palette`: Palette used to resolve semantic style roles.
   public static function RunWithPalette<TModel>(
-  InitialModel: TModel;
-  Update: function(State: TModel; Msg: RuntimeMsg.TuiMsg; Cmd: RuntimeCmd.TuiCmdOutput): TModel;
-  View: function(State: TModel): Element.TuiElement;
-  Palette: CellsPalette.TuiPalette
-): TModel;
+    InitialModel: TModel;
+    Update: function(State: TModel; Msg: RuntimeMsg.TuiMsg; Cmd: RuntimeCmd.TuiCmdOutput): TModel;
+    View: function(State: TModel): Element.TuiElement;
+    Palette: CellsPalette.TuiPalette
+  ): TModel;
   begin
     TerminalSession.TuiTerminalSessionAcquire();
     var Width: integer := Console.ScreenWidth();
@@ -226,34 +251,51 @@ public type TuiApplication = record
       end;
     end if;
     const Size: GeometrySize.TuiSize := GeometrySize.TuiSize.Create(Width, Height);
-    const App: TuiApplication := TuiApplication(Id := ApplicationState.TuiAppOpenApplication(Size, Palette, true));
+    const App: TuiApplication := TuiApplication(
+      Id := ApplicationState.TuiAppOpenApplication(Size, Palette, true)
+    );
     const Inbox: channel of boolean := Tasks.CreateChannel(1);
-    const Model: TModel := Loop.TuiRunInteractive(App.Id, InitialModel, Inbox, Update, TuiIgnoreApplicationMessage, View, false);
+    const Model: TModel := Loop.TuiRunInteractive(
+      App.Id,
+      InitialModel,
+      Inbox,
+      Update,
+      TuiIgnoreApplicationMessage,
+      View,
+      false
+    );
     discard Tasks.CloseChannel(Inbox);
     return Model;
   end function;
 
   // Runs one interactive application with a bounded typed background inbox.
   public static function RunWithBackground<TModel, TMessage>(
-  InitialModel: TModel;
-  Inbox: channel of TMessage;
-  Update: function(State: TModel; Msg: RuntimeMsg.TuiMsg; Cmd: RuntimeCmd.TuiCmdOutput): TModel;
-  UpdateApplication: function(State: TModel; Message: TMessage; Cmd: RuntimeCmd.TuiCmdOutput): TModel;
-  View: function(State: TModel): Element.TuiElement
-): TModel;
+    InitialModel: TModel;
+    Inbox: channel of TMessage;
+    Update: function(State: TModel; Msg: RuntimeMsg.TuiMsg; Cmd: RuntimeCmd.TuiCmdOutput): TModel;
+    UpdateApplication: function(State: TModel; Message: TMessage; Cmd: RuntimeCmd.TuiCmdOutput): TModel;
+    View: function(State: TModel): Element.TuiElement
+  ): TModel;
   begin
-    return TuiApplication.RunWithBackgroundAndPalette(InitialModel, Inbox, Update, UpdateApplication, View, CellsPalette.TuiPalette.Default());
+    return TuiApplication.RunWithBackgroundAndPalette(
+      InitialModel,
+      Inbox,
+      Update,
+      UpdateApplication,
+      View,
+      CellsPalette.TuiPalette.Default()
+    );
   end function;
 
   // Runs one interactive background-enabled application with a caller-defined palette.
   public static function RunWithBackgroundAndPalette<TModel, TMessage>(
-  InitialModel: TModel;
-  Inbox: channel of TMessage;
-  Update: function(State: TModel; Msg: RuntimeMsg.TuiMsg; Cmd: RuntimeCmd.TuiCmdOutput): TModel;
-  UpdateApplication: function(State: TModel; Message: TMessage; Cmd: RuntimeCmd.TuiCmdOutput): TModel;
-  View: function(State: TModel): Element.TuiElement;
-  Palette: CellsPalette.TuiPalette
-): TModel;
+    InitialModel: TModel;
+    Inbox: channel of TMessage;
+    Update: function(State: TModel; Msg: RuntimeMsg.TuiMsg; Cmd: RuntimeCmd.TuiCmdOutput): TModel;
+    UpdateApplication: function(State: TModel; Message: TMessage; Cmd: RuntimeCmd.TuiCmdOutput): TModel;
+    View: function(State: TModel): Element.TuiElement;
+    Palette: CellsPalette.TuiPalette
+  ): TModel;
   begin
     TerminalSession.TuiTerminalSessionAcquire();
     var Width: integer := Console.ScreenWidth();
@@ -269,8 +311,22 @@ public type TuiApplication = record
         Height := 1;
       end;
     end if;
-    const App: TuiApplication := TuiApplication(Id := ApplicationState.TuiAppOpenApplication(GeometrySize.TuiSize.Create(Width, Height), Palette, true));
-    return Loop.TuiRunInteractive(App.Id, InitialModel, Inbox, Update, UpdateApplication, View, true);
+    const App: TuiApplication := TuiApplication(
+      Id := ApplicationState.TuiAppOpenApplication(
+        GeometrySize.TuiSize.Create(Width, Height),
+        Palette,
+        true
+      )
+    );
+    return Loop.TuiRunInteractive(
+      App.Id,
+      InitialModel,
+      Inbox,
+      Update,
+      UpdateApplication,
+      View,
+      true
+    );
   end function;
 end record;
 end unit;

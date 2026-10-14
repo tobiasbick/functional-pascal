@@ -22,7 +22,12 @@ public type TuiCell = record
   // - `Role`: Semantic style role used by the operation.
   public static function Create(Glyph: string; Role: StyleRole.TuiStyleRole): TuiCell;
   begin
-    return TuiCell(Glyph := Glyph, Role := Role, ConcreteStyle := None, Columns := CellsGlyph.TuiGlyphWidth(Glyph));
+    return TuiCell(
+      Glyph := Glyph,
+      Role := Role,
+      ConcreteStyle := None,
+      Columns := CellsGlyph.TuiGlyphWidth(Glyph)
+    );
   end function;
 
   // Creates a cell with a concrete style that bypasses theme lookup.
@@ -32,7 +37,12 @@ public type TuiCell = record
   // - `Style`: Concrete terminal style.
   public static function Styled(Glyph: string; Style: CellsStyle.TuiStyle): TuiCell;
   begin
-    return TuiCell(Glyph := Glyph, Role := StyleRole.TuiStyleRole.Normal, ConcreteStyle := Some(Style), Columns := CellsGlyph.TuiGlyphWidth(Glyph));
+    return TuiCell(
+      Glyph := Glyph,
+      Role := StyleRole.TuiStyleRole.Normal,
+      ConcreteStyle := Some(Style),
+      Columns := CellsGlyph.TuiGlyphWidth(Glyph)
+    );
   end function;
 
   // Returns the terminal-column width of the cell glyph (`1` or `2`).

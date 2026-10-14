@@ -28,25 +28,37 @@ end function;
 // Creates the Alt+X key event used by the application quit shortcut.
 function QuitKey(): Tui.TuiKeyEvent;
 begin
-  return Tui.TuiKeyEvent(kind := Tui.TuiKeyKind.Character, ch := 'x', shift := false, ctrl := false, alt := true, meta := false);
+  return Tui.TuiKeyEvent(
+    kind := Tui.TuiKeyKind.Character,
+    ch := 'x',
+    shift := false,
+    ctrl := false,
+    alt := true,
+    meta := false
+  );
 end function;
 
 begin
   var Model: LocalChatModel.LocalChatModel := LocalChatModel.LocalChatModelCreate(80, 24);
-  const App: Tui.TuiApplication := Tui.TuiApplication.OpenForTestWithPalette(Tui.TuiSize.Create(80, 24), Theme.LocalChatPalette());
+  const App: Tui.TuiApplication := Tui.TuiApplication.OpenForTestWithPalette(
+    Tui.TuiSize.Create(80, 24),
+    Theme.LocalChatPalette()
+  );
   Model := App.RunIterations(Model, Update.LocalChatUpdate, View.LocalChatView, 0, 0);
   const Initial: Tui.TuiSurfaceSnapshot := App.SurfaceSnapshot();
   Test.AssertTrue(ScreenContains(Initial, 'LOCAL CHAT'));
   Test.AssertTrue(ScreenContains(Initial, 'No messages yet.'));
   Test.AssertTrue(ScreenContains(Initial, 'Message the local model'));
-  App.Inject(Tui.TuiMsgTextChanged(Tui.TuiControlId.Create(1), Tui.TuiAction.Create(1), 'hello', 5));
+  App.Inject(
+    Tui.TuiMsgTextChanged(Tui.TuiControlId.Create(1), Tui.TuiAction.Create(1), 'hello', 5)
+  );
   Model := App.RunIterations(Model, Update.LocalChatUpdate, View.LocalChatView, 1, 0);
   Test.AssertEquals('hello', Model.Draft);
   Test.AssertEquals(5, Model.DraftCaret);
   Model.Entries := [
-                     LocalChatModel.ChatEntry.User('A deliberately long user line for wrapping'),
-                     LocalChatModel.ChatEntry.Assistant('Local answer')
-                   ];
+    LocalChatModel.ChatEntry.User('A deliberately long user line for wrapping'),
+    LocalChatModel.ChatEntry.Assistant('Local answer')
+  ];
   Model := LocalChatModel.LocalChatScrollToEnd(Model);
   Test.AssertTrue(('YOU' in LocalChatModel.LocalChatTranscript(Model)));
   Test.AssertTrue(('ASSISTANT' in LocalChatModel.LocalChatTranscript(Model)));

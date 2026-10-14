@@ -86,12 +86,20 @@ begin
   elsif Key.kind = Console.KeyKind.Up then
     begin
       const TargetLine: integer := TuiTextAreaClampLine(Text, Position.Line - 1);
-      NextCaret := TextArea.TuiTextAreaCaretAtDisplayColumn(Text, TargetLine, Position.DisplayColumn);
+      NextCaret := TextArea.TuiTextAreaCaretAtDisplayColumn(
+        Text,
+        TargetLine,
+        Position.DisplayColumn
+      );
     end;
   elsif Key.kind = Console.KeyKind.Down then
     begin
       const TargetLine: integer := TuiTextAreaClampLine(Text, Position.Line + 1);
-      NextCaret := TextArea.TuiTextAreaCaretAtDisplayColumn(Text, TargetLine, Position.DisplayColumn);
+      NextCaret := TextArea.TuiTextAreaCaretAtDisplayColumn(
+        Text,
+        TargetLine,
+        Position.DisplayColumn
+      );
     end;
   elsif Key.kind = Console.KeyKind.Home then
     begin
@@ -110,7 +118,11 @@ begin
         end;
       end if;
       const TargetLine: integer := TuiTextAreaClampLine(Text, Position.Line - Page);
-      NextCaret := TextArea.TuiTextAreaCaretAtDisplayColumn(Text, TargetLine, Position.DisplayColumn);
+      NextCaret := TextArea.TuiTextAreaCaretAtDisplayColumn(
+        Text,
+        TargetLine,
+        Position.DisplayColumn
+      );
     end;
   elsif Key.kind = Console.KeyKind.PageDown then
     begin
@@ -121,7 +133,11 @@ begin
         end;
       end if;
       const TargetLine: integer := TuiTextAreaClampLine(Text, Position.Line + Page);
-      NextCaret := TextArea.TuiTextAreaCaretAtDisplayColumn(Text, TargetLine, Position.DisplayColumn);
+      NextCaret := TextArea.TuiTextAreaCaretAtDisplayColumn(
+        Text,
+        TargetLine,
+        Position.DisplayColumn
+      );
     end;
   else
     begin
@@ -134,9 +150,16 @@ begin
       return None;
     end;
   end if;
-  const NextOffset: GeometryPoint.TuiPoint := TextArea.TuiTextAreaEnsureCaretVisible(NextText, NextCaret, Offset, Size.TuiSize.Create(Viewport.Width, Viewport.Height));
-  if (((NextText = Text) and (NextCaret = Caret)) and (NextOffset.X = Offset.X)) and
-     (NextOffset.Y = Offset.Y) then
+  const NextOffset: GeometryPoint.TuiPoint := TextArea.TuiTextAreaEnsureCaretVisible(
+    NextText,
+    NextCaret,
+    Offset,
+    Size.TuiSize.Create(Viewport.Width, Viewport.Height)
+  );
+  if (((NextText = Text) and (NextCaret = Caret)) and (NextOffset.X = Offset.X))
+    and
+    (NextOffset.Y = Offset.Y)
+  then
     begin
       return None;
     end;
@@ -166,7 +189,12 @@ begin
   const Line: integer := TuiTextAreaClampLine(Text, Offset.Y + (Point.Y - Viewport.Y));
   const Column: integer := Offset.X + (Point.X - Viewport.X);
   const Caret: integer := TextArea.TuiTextAreaCaretAtDisplayColumn(Text, Line, Column);
-  const NextOffset: GeometryPoint.TuiPoint := TextArea.TuiTextAreaEnsureCaretVisible(Text, Caret, Offset, Size.TuiSize.Create(Viewport.Width, Viewport.Height));
+  const NextOffset: GeometryPoint.TuiPoint := TextArea.TuiTextAreaEnsureCaretVisible(
+    Text,
+    Caret,
+    Offset,
+    Size.TuiSize.Create(Viewport.Width, Viewport.Height)
+  );
   return Msg.TuiMsg.TextAreaChanged(Id, ChangeAction, Text, Caret, NextOffset);
 end function;
 end unit;

@@ -7,10 +7,12 @@ uses
 begin
   const Blocked: string := Test.ScratchDir() + '/blocked';
   Test.AssertTrue(Fs.WriteText(Blocked, 'file, not directory').Unwrap());
-  const Loaded: Model.NotesLoad := Model.NotesLoad(Notes := [
-                                                              Model.NoteCreate('one', 1),
-                                                              Model.NoteCreate('two', 2)
-                                                            ], Issues := []);
+  const Loaded: Model.NotesLoad := Model.NotesLoad(
+    Notes := [
+      Model.NoteCreate('one', 1),
+      Model.NoteCreate('two', 2)
+    ], Issues := []
+  );
   var State: Model.NotesModel := Model.NotesModelCreate(Blocked, Loaded);
   State.Dirty := true;
   State := Update.NotesPersistCurrent(State);
@@ -23,9 +25,17 @@ begin
   Test.AssertTrue(State.Overlay = Model.NotesOverlay.Closed);
   Test.AssertEquals('', State.ErrorMessage);
   const Cmd: Tui.TuiCmdOutput := Tui.TuiCmdOutput.Create();
-  State := Update.NotesUpdate(State, Tui.TuiMsgSelectionChanged(Tui.TuiControlId.Create(2), Tui.TuiAction.Create(2), 1), Cmd);
+  State := Update.NotesUpdate(
+    State,
+    Tui.TuiMsgSelectionChanged(Tui.TuiControlId.Create(2), Tui.TuiAction.Create(2), 1),
+    Cmd
+  );
   Test.AssertEquals('two', State.Notes[State.Selected].Id);
-  State := Update.NotesUpdate(State, Tui.TuiMsgAction(Tui.TuiControlId.Create(27), Tui.TuiAction.Create(17)), Cmd);
+  State := Update.NotesUpdate(
+    State,
+    Tui.TuiMsgAction(Tui.TuiControlId.Create(27), Tui.TuiAction.Create(17)),
+    Cmd
+  );
   Test.AssertTrue(Cmd.Command() = Tui.TuiCmd.Quit);
   State.Dirty := true;
   State.Overlay := Model.NotesOverlay.Help;

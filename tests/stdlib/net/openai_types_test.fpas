@@ -4,7 +4,10 @@ program OpenAiTypesTest;
 uses Std.Ai.OpenAi as OpenAi, Std.Test as Test;
 
 begin
-  const ClientValue: OpenAi.Client := OpenAi.Client.Create('http://localhost:8080/v1', 'local-model');
+  const ClientValue: OpenAi.Client := OpenAi.Client.Create(
+    'http://localhost:8080/v1',
+    'local-model'
+  );
   Test.AssertEquals('http://localhost:8080/v1', ClientValue.BaseUrl);
   Test.AssertEquals('local-model', ClientValue.Model);
   const MessageValue: OpenAi.ChatMessage := OpenAi.ChatMessage.User('Hello');

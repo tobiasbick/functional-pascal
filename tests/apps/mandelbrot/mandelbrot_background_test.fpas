@@ -47,7 +47,14 @@ end procedure;
 
 function MakeKey(Kind: Tui.TuiKeyKind; Character: string): Tui.TuiKeyEvent;
 begin
-  return Console.KeyEvent(kind := Kind, ch := Character, shift := false, ctrl := false, alt := false, meta := false);
+  return Console.KeyEvent(
+    kind := Kind,
+    ch := Character,
+    shift := false,
+    ctrl := false,
+    alt := false,
+    meta := false
+  );
 end function;
 
 begin
@@ -56,20 +63,42 @@ begin
     var Model: MandelbrotModel.MandelbrotModel := MandelbrotModel.NewMandelbrotModel(Inbox, 9, 15);
     const Request: Render.MandelbrotRenderRequest := MandelbrotModel.MandelbrotRequest(Model);
     const Cmd: Tui.TuiCmdOutput := Tui.TuiCmdOutput.Create();
-    const Stale: Render.MandelbrotRenderFrame := Render.MandelbrotRenderFrame(Generation := Model.Generation -
-                                                                                            1, Cells := Render.RenderGrid(Request.XMin, Request.XMax, Request.YMin, Request.YMax, Request.Width, Request.Height, Request.MaxIter, Request.Palette)
-                                                                                                          .Cells);
+    const Stale: Render.MandelbrotRenderFrame := Render.MandelbrotRenderFrame(
+      Generation := Model.Generation -
+      1,
+      Cells := Render.RenderGrid(
+        Request.XMin,
+        Request.XMax,
+        Request.YMin,
+        Request.YMax,
+        Request.Width,
+        Request.Height,
+        Request.MaxIter,
+        Request.Palette
+      ).Cells
+    );
     Model := App.UpdateMandelbrotFrame(Model, Stale, Cmd);
     Test.AssertEquals(0, Model.RowsRendered);
     const Source: Tasks.CancellationSource := Tasks.CreateCancellationSource();
-    Test.AssertTrue((Render.RunBackgroundRender(Request, Inbox, Tasks.GetCancellationToken(Source)) is Ok(_)));
+    Test.AssertTrue(
+      (Render.RunBackgroundRender(Request, Inbox, Tasks.GetCancellationToken(Source)) is Ok(_))
+    );
     const Frame: Render.MandelbrotRenderFrame := Tasks.ReceiveWithTimeout(Inbox, 5000).Unwrap();
     Test.AssertEquals(Request.Generation, Frame.Generation);
     Test.AssertEquals(Request.Width * Request.Height, Frame.Cells.Length());
     Test.AssertTrue((Tasks.ReceiveWithTimeout(Inbox, 0) is Error(_)));
     Model := App.UpdateMandelbrotFrame(Model, Frame, Cmd);
     Test.AssertEquals(Request.Height, Model.RowsRendered);
-    const Expected: Tui.TuiCellGrid := Render.RenderGrid(Request.XMin, Request.XMax, Request.YMin, Request.YMax, Request.Width, Request.Height, Request.MaxIter, Request.Palette);
+    const Expected: Tui.TuiCellGrid := Render.RenderGrid(
+      Request.XMin,
+      Request.XMax,
+      Request.YMin,
+      Request.YMax,
+      Request.Width,
+      Request.Height,
+      Request.MaxIter,
+      Request.Palette
+    );
     for CellIndex: integer := 0 to Expected.Cells.Length() - 1 do
       begin
         AssertCellEquals(Expected.Cells[CellIndex], Model.Grid.Cells[CellIndex]);
@@ -93,11 +122,25 @@ begin
     Test.AssertEquals(1, Cmd.ReadBackground().Length());
     const CancelInbox: channel of Render.MandelbrotRenderFrame := Tasks.CreateChannel(1);
     const CancelSource: Tasks.CancellationSource := Tasks.CreateCancellationSource();
-    const CancelRequest: Render.MandelbrotRenderRequest := Render.MandelbrotRenderRequest(Generation := 99, XMin := 0.0, XMax := 0.0, YMin := 0.0, YMax := 0.0, Width := 8, Height := 100, MaxIter := 2048, Palette := Color.PaletteKind.DeepOcean);
+    const CancelRequest: Render.MandelbrotRenderRequest := Render.MandelbrotRenderRequest(
+      Generation := 99,
+      XMin := 0.0,
+      XMax := 0.0,
+      YMin := 0.0,
+      YMax := 0.0,
+      Width := 8,
+      Height := 100,
+      MaxIter := 2048,
+      Palette := Color.PaletteKind.DeepOcean
+    );
     const CancelToken: Tasks.CancellationToken := Tasks.GetCancellationToken(CancelSource);
     // Fill the output queue so publication must wait until cancellation.
     discard Tasks.Send(CancelInbox, Frame);
-    const Background: task of result of (boolean, string) := go Render.RunBackgroundRender(CancelRequest, CancelInbox, CancelToken);
+    const Background: task of result of (boolean, string) := go Render.RunBackgroundRender(
+      CancelRequest,
+      CancelInbox,
+      CancelToken
+    );
     Test.AssertTrue((Tasks.WaitAnyWithTimeout([Background], 1) is Error(_)));
     Test.AssertTrue(Tasks.Cancel(CancelSource));
     Test.AssertTrue((Tasks.Wait(Background) is Ok(_)));

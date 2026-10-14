@@ -140,15 +140,29 @@ begin
     end;
   end if;
 
-  return Ok(Model.Note(Id := Id, Title := Title, CreatedMillis := Created, UpdatedMillis := Updated, Tags := try FieldTags(Fields), Pinned := try FieldBoolean(Fields, 'pinned'), Archived := try FieldBoolean(Fields, 'archived'), Body := Body, Path := ''));
+  return Ok(
+    Model.Note(
+      Id := Id,
+      Title := Title,
+      CreatedMillis := Created,
+      UpdatedMillis := Updated,
+      Tags := try FieldTags(Fields),
+      Pinned := try FieldBoolean(Fields, 'pinned'),
+      Archived := try FieldBoolean(Fields, 'archived'),
+      Body := Body,
+      Path := ''
+    )
+  );
 end function;
 
 // Parses one UTF-8 `.note` document with TOML frontmatter.
 public function NoteParse(Text: string): result of (Model.Note, string);
 begin
   const NewLine: string := string.Chr(10);
-  const Source: string := Text.Replace(string.Chr(13) + NewLine, NewLine)
-                            .Replace(string.Chr(13), NewLine);
+  const Source: string := Text.Replace(
+    string.Chr(13) + NewLine,
+    NewLine
+  ).Replace(string.Chr(13), NewLine);
   const Prefix: string := '+++' + NewLine;
   if not Source.StartsWith(Prefix) then
     begin
@@ -196,9 +210,18 @@ begin
       TagValues.PushInPlace(Toml.TomlValue.String(NoteValue.Tags[Index]));
     end;
   end for;
-  const Header: Toml.TomlValue := Toml.TomlValue.Table(['format': Toml.TomlValue.Integer(NoteFormatVersion), 'id': Toml.TomlValue.String(NoteValue.Id), 'title': Toml.TomlValue.String(NoteValue.Title), 'created_ms': Toml.TomlValue.Integer(NoteValue.CreatedMillis), 'updated_ms': Toml.TomlValue.Integer(NoteValue.UpdatedMillis), 'tags': Toml.TomlValue.ArrayValue(TagValues), 'pinned': Toml.TomlValue.Boolean(NoteValue.Pinned), 'archived': Toml.TomlValue.Boolean(NoteValue.Archived)]);
+  const Header: Toml.TomlValue := Toml.TomlValue.Table([
+    'format': Toml.TomlValue.Integer(NoteFormatVersion),
+    'id': Toml.TomlValue.String(NoteValue.Id),
+    'title': Toml.TomlValue.String(NoteValue.Title),
+    'created_ms': Toml.TomlValue.Integer(NoteValue.CreatedMillis),
+    'updated_ms': Toml.TomlValue.Integer(NoteValue.UpdatedMillis),
+    'tags': Toml.TomlValue.ArrayValue(TagValues),
+    'pinned': Toml.TomlValue.Boolean(NoteValue.Pinned),
+    'archived': Toml.TomlValue.Boolean(NoteValue.Archived)
+  ]);
   const NewLine: string := string.Chr(10);
   return '+++' + NewLine + Toml.Stringify(Header).TrimRight() + NewLine + '+++' + NewLine +
-         NoteValue.Body;
+    NoteValue.Body;
 end function;
 end unit;

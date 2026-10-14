@@ -10,16 +10,32 @@ end record;
 
 function MakeKey(Kind: Tui.TuiKeyKind): Tui.TuiKeyEvent;
 begin
-  return Tui.TuiKeyEvent(kind := Kind, ch := '', shift := false, ctrl := false, alt := false, meta := false);
+  return Tui.TuiKeyEvent(
+    kind := Kind,
+    ch := '',
+    shift := false,
+    ctrl := false,
+    alt := false,
+    meta := false
+  );
 end function;
 
 function ViewList(State: ListModel): Tui.TuiElement;
 begin
-  return Tui.TuiElementBuilders.MakeDesktop(Some(Tui.TuiControlId.Create(State.Focus)), [
-                                                                                          Tui.TuiElementBuilders.MakePanel('Host', [
-                                                                                                                                     Tui.TuiElementBuilders.MakeList(Tui.TuiControlId.Create(1), ['Alpha', 'Beta', 'Gamma'], State.Selected, Tui.TuiAction.Create(5))
-                                                                                                                                   ])
-                                                                                        ]);
+  return Tui.TuiElementBuilders.MakeDesktop(
+    Some(Tui.TuiControlId.Create(State.Focus)), [
+      Tui.TuiElementBuilders.MakePanel(
+        'Host', [
+          Tui.TuiElementBuilders.MakeList(
+            Tui.TuiControlId.Create(1),
+            ['Alpha', 'Beta', 'Gamma'],
+            State.Selected,
+            Tui.TuiAction.Create(5)
+          )
+        ]
+      )
+    ]
+  );
 end function;
 
 function UpdateList(State: ListModel; Msg: Tui.TuiMsg; Cmd: Tui.TuiCmdOutput): ListModel;
@@ -30,9 +46,11 @@ begin
       begin
         Test.AssertEquals(1, Source.Value);
         Test.AssertEquals(5, Action.Value);
-        return ListModel(Focus := State.Focus, Selected := Selected, Changes := State.Changes.Concat([
-                                                                                                       Selected
-                                                                                                     ]));
+        return ListModel(
+          Focus := State.Focus, Selected := Selected, Changes := State.Changes.Concat([
+            Selected
+          ])
+        );
       end;
     when Tui.TuiMsg.Started, Tui.TuiMsg.Key(_), Tui.TuiMsg.Pointer(_), Tui.TuiMsg.Tick(_), Tui.TuiMsg.Resize(_), Tui.TuiMsg.FocusChanged(_, _), Tui.TuiMsg.Action(_, _), Tui.TuiMsg.TextChanged(_, _, _, _), Tui.TuiMsg.TextAreaChanged(_, _, _, _, _), Tui.TuiMsg.CheckChanged(_, _, _), Tui.TuiMsg.ScrollChanged(_, _, _), Tui.TuiMsg.MenuChanged(_, _, _), Tui.TuiMsg.BackgroundFailed(_, _, _, _, _, _), Tui.TuiMsg.QuitRequested:
       begin

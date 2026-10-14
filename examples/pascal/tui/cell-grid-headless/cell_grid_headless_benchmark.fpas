@@ -36,11 +36,20 @@ begin
       panic('ITERATIONS must be positive');
     end;
   end if;
-  const Style: Tui.TuiStyle := Tui.TuiStyle.FromColors(Tui.TuiColor.FromRgb(214, 218, 224), Tui.TuiColor.FromRgb(18, 22, 28));
+  const Style: Tui.TuiStyle := Tui.TuiStyle.FromColors(
+    Tui.TuiColor.FromRgb(214, 218, 224),
+    Tui.TuiColor.FromRgb(18, 22, 28)
+  );
   const Cell: Tui.TuiCell := Tui.TuiCell.Styled('#', Style);
-  var Grid: Tui.TuiCellGrid := Tui.TuiCellGrid.Create(GridWidth, GridHeight, array.Fill(Cell, GridWidth *
-                                                                                              GridHeight));
-  const App: Tui.TuiApplication := Tui.TuiApplication.OpenForTest(Tui.TuiSize.Create(GridWidth, GridHeight));
+  var Grid: Tui.TuiCellGrid := Tui.TuiCellGrid.Create(
+    GridWidth, GridHeight, array.Fill(
+      Cell, GridWidth *
+      GridHeight
+    )
+  );
+  const App: Tui.TuiApplication := Tui.TuiApplication.OpenForTest(
+    Tui.TuiSize.Create(GridWidth, GridHeight)
+  );
   for Warmup: integer := 1 to WarmupIterations do
     begin
       Grid := PaintOnce(App, Grid);
@@ -55,8 +64,10 @@ begin
   const Elapsed: integer := Time.ElapsedMillis(Started);
   const Snapshot: Tui.TuiSurfaceSnapshot := App.SurfaceSnapshot();
   App.Close();
-  if ((Snapshot.Width <> GridWidth) or (Snapshot.Height <> GridHeight)) or
-     (Snapshot.CellAt(GridWidth - 1, GridHeight - 1).Glyph <> '#') then
+  if ((Snapshot.Width <> GridWidth) or (Snapshot.Height <> GridHeight))
+    or
+    (Snapshot.CellAt(GridWidth - 1, GridHeight - 1).Glyph <> '#')
+  then
     begin
       panic('cell grid headless benchmark snapshot mismatch');
     end;

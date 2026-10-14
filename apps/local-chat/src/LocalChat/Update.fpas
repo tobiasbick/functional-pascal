@@ -67,8 +67,11 @@ end function;
 // - `Key`: Key event to inspect.
 function IsQuitShortcut(Key: Tui.TuiKeyEvent): boolean;
 begin
-  return ((((Key.kind = Console.KeyKind.Character) and Key.alt) and (not Key.ctrl)) and (not Key.meta)) and
-         ((Key.ch = 'x') or (Key.ch = 'X'));
+  return (
+    (((Key.kind = Console.KeyKind.Character) and Key.alt) and (not Key.ctrl)) and (not Key.meta)
+  )
+    and
+    ((Key.ch = 'x') or (Key.ch = 'X'));
 end function;
 
 // Applies one routed TUI message to the Local Chat application model.

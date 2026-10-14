@@ -78,8 +78,11 @@ begin
   Console.WriteLn('checksum: ' + Conv.IntToStr(Checksum));
   if (MaxMillis > 0) and (Elapsed > MaxMillis) then
     begin
-      panic('branch-dispatch benchmark regression: ' + Conv.IntToStr(Elapsed) + ' ms exceeds limit ' + Conv.IntToStr(MaxMillis) +
-            ' ms');
+      panic(
+        'branch-dispatch benchmark regression: ' + Conv.IntToStr(Elapsed) + ' ms exceeds limit ' +
+        Conv.IntToStr(MaxMillis) +
+        ' ms'
+      );
     end;
   end if;
 end.

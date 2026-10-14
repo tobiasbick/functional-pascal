@@ -7,8 +7,10 @@ begin
   const Wide: Tui.TuiCell := Tui.TuiCell.Create('中', Tui.TuiStyleRole.Accent);
   Surface.PutCell(Tui.TuiPoint.Create(1, 0), Wide);
   Test.AssertEquals('中', Surface.TryCellAt(Tui.TuiPoint.Create(1, 0)).Unwrap().Glyph);
-  Test.AssertTrue(Surface.TryCellAt(Tui.TuiPoint.Create(1, 0)).Unwrap().Role =
-                  Tui.TuiStyleRole.Accent);
+  Test.AssertTrue(
+    Surface.TryCellAt(Tui.TuiPoint.Create(1, 0)).Unwrap().Role =
+    Tui.TuiStyleRole.Accent
+  );
   Test.AssertTrue((Surface.TryCellAt(Tui.TuiPoint.Create(2, 0)) is None));
   Test.AssertEquals('中', Surface.Snapshot().CellAt(1, 0).Glyph);
   Test.AssertEquals(' ', Surface.Snapshot().CellAt(2, 0).Glyph);
@@ -32,20 +34,34 @@ begin
   Surface.PutCell(Tui.TuiPoint.Create(2, 1), Tui.TuiCell.Create('é', Tui.TuiStyleRole.Normal));
   Test.AssertEquals(1, Surface.TryCellAt(Tui.TuiPoint.Create(2, 1)).Unwrap().Width());
   Test.AssertEquals('é', Surface.TryCellAt(Tui.TuiPoint.Create(2, 1)).Unwrap().Glyph);
-  const FillSurface: Tui.TuiWorkingSurface := Tui.TuiWorkingSurface.Create(Tui.TuiSize.Create(5, 1));
-  const FillCanvas: Tui.TuiCanvas := Tui.TuiCanvas.Create(FillSurface, Tui.TuiRect.Create(0, 0, 5, 1));
+  const FillSurface: Tui.TuiWorkingSurface := Tui.TuiWorkingSurface.Create(
+    Tui.TuiSize.Create(5, 1)
+  );
+  const FillCanvas: Tui.TuiCanvas := Tui.TuiCanvas.Create(
+    FillSurface,
+    Tui.TuiRect.Create(0, 0, 5, 1)
+  );
   FillSurface.PutCell(Tui.TuiPoint.Create(1, 0), Wide);
-  FillCanvas.FillRect(Tui.TuiRect.Create(2, 0, 2, 1), Tui.TuiCell.Create('#', Tui.TuiStyleRole.Accent));
+  FillCanvas.FillRect(
+    Tui.TuiRect.Create(2, 0, 2, 1),
+    Tui.TuiCell.Create('#', Tui.TuiStyleRole.Accent)
+  );
   Test.AssertEquals(' ', FillSurface.TryCellAt(Tui.TuiPoint.Create(1, 0)).Unwrap().Glyph);
   Test.AssertEquals('#', FillSurface.TryCellAt(Tui.TuiPoint.Create(2, 0)).Unwrap().Glyph);
   Test.AssertEquals('#', FillSurface.TryCellAt(Tui.TuiPoint.Create(3, 0)).Unwrap().Glyph);
   FillSurface.PutCell(Tui.TuiPoint.Create(3, 0), Wide);
-  FillCanvas.FillRect(Tui.TuiRect.Create(2, 0, 2, 1), Tui.TuiCell.Create('@', Tui.TuiStyleRole.Title));
+  FillCanvas.FillRect(
+    Tui.TuiRect.Create(2, 0, 2, 1),
+    Tui.TuiCell.Create('@', Tui.TuiStyleRole.Title)
+  );
   Test.AssertEquals('@', FillSurface.TryCellAt(Tui.TuiPoint.Create(2, 0)).Unwrap().Glyph);
   Test.AssertEquals('@', FillSurface.TryCellAt(Tui.TuiPoint.Create(3, 0)).Unwrap().Glyph);
   Test.AssertEquals(' ', FillSurface.TryCellAt(Tui.TuiPoint.Create(4, 0)).Unwrap().Glyph);
   FillSurface.PutCell(Tui.TuiPoint.Create(1, 0), Wide);
-  FillCanvas.FillRect(Tui.TuiRect.Create(0, 0, 5, 1), Tui.TuiCell.Create('*', Tui.TuiStyleRole.Accent));
+  FillCanvas.FillRect(
+    Tui.TuiRect.Create(0, 0, 5, 1),
+    Tui.TuiCell.Create('*', Tui.TuiStyleRole.Accent)
+  );
   Test.AssertEquals('*', FillSurface.TryCellAt(Tui.TuiPoint.Create(0, 0)).Unwrap().Glyph);
   Test.AssertEquals('*', FillSurface.TryCellAt(Tui.TuiPoint.Create(1, 0)).Unwrap().Glyph);
   Test.AssertEquals('*', FillSurface.TryCellAt(Tui.TuiPoint.Create(2, 0)).Unwrap().Glyph);

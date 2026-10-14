@@ -65,7 +65,7 @@ begin
   end if;
   const MagnitudeSq: real := Math.Max(Z.MagSq(), 4.0);
   const Smooth: real := Conv.IntToReal(N) + 1.0 -
-                        (Math.Log(Math.Log(MagnitudeSq) * 0.5) / Math.Log(2.0));
+    (Math.Log(Math.Log(MagnitudeSq) * 0.5) / Math.Log(2.0));
   return PixelSample(IsInside := false, EscapeValue := Smooth);
 end function;
 
@@ -125,7 +125,11 @@ begin
     end;
   end if;
 
-  return Console.Cell(glyph := EscapeGlyph(Sample.EscapeValue), foreground := Color.EscapeColor(Palette, Sample.EscapeValue), background := Console.RgbColor(0, 0, 0));
+  return Console.Cell(
+    glyph := EscapeGlyph(Sample.EscapeValue),
+    foreground := Color.EscapeColor(Palette, Sample.EscapeValue),
+    background := Console.RgbColor(0, 0, 0)
+  );
 end function;
 
 procedure DrawRow(Row: array of PixelSample; Width: integer; Y: integer; Palette: Color.PaletteKind);

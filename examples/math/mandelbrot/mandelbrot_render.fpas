@@ -67,8 +67,10 @@ begin
     end;
   end if;
   const MagnitudeSq: real := Math.Max(Z.MagSq(), 4.0);
-  return PixelSample(IsInside := false, EscapeValue := Conv.IntToReal(Iterations) + 1.0 -
-                                                       (Math.Log(Math.Log(MagnitudeSq) * 0.5) / Math.Log(2.0)));
+  return PixelSample(
+    IsInside := false, EscapeValue := Conv.IntToReal(Iterations) + 1.0 -
+    (Math.Log(Math.Log(MagnitudeSq) * 0.5) / Math.Log(2.0))
+  );
 end function;
 
 function Iterate(C: Complex; MaxIter: integer): PixelSample;
@@ -96,8 +98,10 @@ begin
   var N: integer := 0;
   while (N < MaxIter) and (Z.MagSq() <= 256.0) do
     begin
-      if StdTasks.IsCancellationRequested(HostToken) or
-         StdTasks.IsCancellationRequested(WorkerToken) then
+      if StdTasks.IsCancellationRequested(HostToken)
+        or
+        StdTasks.IsCancellationRequested(WorkerToken)
+      then
         begin
           break;
         end;
@@ -169,8 +173,10 @@ begin
         end;
       end if;
 
-      if StdTasks.IsCancellationRequested(HostToken) or
-         StdTasks.IsCancellationRequested(WorkerToken) then
+      if StdTasks.IsCancellationRequested(HostToken)
+        or
+        StdTasks.IsCancellationRequested(WorkerToken)
+      then
         begin
           return [];
         end;
@@ -193,8 +199,12 @@ function EscapeGlyph(EscapeValue: real): string;
 begin
   const Ramp: string := ' ░▒▓█';
   const Count: integer := Ramp.Length();
-  const Index: integer := Math.Clamp(Math.Trunc(Math.Frac(EscapeValue * 0.08) *
-                                                Conv.IntToReal(Count)), 0, Count - 1);
+  const Index: integer := Math.Clamp(
+    Math.Trunc(
+      Math.Frac(EscapeValue * 0.08) *
+      Conv.IntToReal(Count)
+    ), 0, Count - 1
+  );
   return Ramp[Index];
 end function;
 
@@ -208,7 +218,10 @@ begin
     end;
   end if;
 
-  return Tui.TuiCell.Styled(EscapeGlyph(Sample.EscapeValue), Tui.TuiStyle.FromColors(Color.EscapeColor(Palette, Sample.EscapeValue), Background));
+  return Tui.TuiCell.Styled(
+    EscapeGlyph(Sample.EscapeValue),
+    Tui.TuiStyle.FromColors(Color.EscapeColor(Palette, Sample.EscapeValue), Background)
+  );
 end function;
 
 function RenderSamples(Samples: array of PixelSample; Palette: Color.PaletteKind): array of Tui.TuiCell;
@@ -225,7 +238,19 @@ end function;
 
 function RenderRowCells(Request: MandelbrotRenderRequest; Py: integer): array of Tui.TuiCell;
 begin
-  return RenderSamples(ComputeRow(Py, Request.Width, Request.Height, Request.XMin, Request.XMax, Request.YMin, Request.YMax, Request.MaxIter), Request.Palette);
+  return RenderSamples(
+    ComputeRow(
+      Py,
+      Request.Width,
+      Request.Height,
+      Request.XMin,
+      Request.XMax,
+      Request.YMin,
+      Request.YMax,
+      Request.MaxIter
+    ),
+    Request.Palette
+  );
 end function;
 
 function RenderRowCellsCancellable(
@@ -235,7 +260,21 @@ function RenderRowCellsCancellable(
   WorkerToken: StdTasks.CancellationToken
 ): array of Tui.TuiCell;
 begin
-  return RenderSamples(ComputeRowCancellable(Py, Request.Width, Request.Height, Request.XMin, Request.XMax, Request.YMin, Request.YMax, Request.MaxIter, HostToken, WorkerToken), Request.Palette);
+  return RenderSamples(
+    ComputeRowCancellable(
+      Py,
+      Request.Width,
+      Request.Height,
+      Request.XMin,
+      Request.XMax,
+      Request.YMin,
+      Request.YMax,
+      Request.MaxIter,
+      HostToken,
+      WorkerToken
+    ),
+    Request.Palette
+  );
 end function;
 
 // Computes a flat row-major grid synchronously as a reference implementation.
@@ -250,7 +289,17 @@ public function RenderGrid(
   Palette: Color.PaletteKind
 ): Tui.TuiCellGrid;
 begin
-  const Request: MandelbrotRenderRequest := MandelbrotRenderRequest(Generation := 0, XMin := XMin, XMax := XMax, YMin := YMin, YMax := YMax, Width := Width, Height := Height, MaxIter := MaxIter, Palette := Palette);
+  const Request: MandelbrotRenderRequest := MandelbrotRenderRequest(
+    Generation := 0,
+    XMin := XMin,
+    XMax := XMax,
+    YMin := YMin,
+    YMax := YMax,
+    Width := Width,
+    Height := Height,
+    MaxIter := MaxIter,
+    Palette := Palette
+  );
   var Cells: array of Tui.TuiCell := [];
   for Py: integer := 0 to Height - 1 do
     begin
@@ -279,9 +328,13 @@ begin
         end;
       end if;
 
-      Tasks.PushInPlace(StdTasks.StartTaskInGroup(Group, function(WorkerToken: StdTasks.CancellationToken): array of Tui.TuiCell begin
-        return RenderRowCellsCancellable(Request, Py, HostToken, WorkerToken);
-      end function));
+      Tasks.PushInPlace(
+        StdTasks.StartTaskInGroup(
+          Group, function(WorkerToken: StdTasks.CancellationToken): array of Tui.TuiCell begin
+            return RenderRowCellsCancellable(Request, Py, HostToken, WorkerToken);
+          end function
+        )
+      );
     end;
   end for;
   var Cells: array of Tui.TuiCell := [];
@@ -302,7 +355,14 @@ begin
       Cells := Cells.Concat(Row);
       if Py = Request.Height - 1 then
         begin
-          if (StdTasks.SendWithCancellation(Inbox, MandelbrotRenderFrame(Generation := Request.Generation, Cells := Cells), HostToken) is Error(_)) then
+          if (
+            StdTasks.SendWithCancellation(
+              Inbox,
+              MandelbrotRenderFrame(Generation := Request.Generation, Cells := Cells),
+              HostToken
+            ) is Error(_)
+          )
+          then
             begin
               break;
             end;

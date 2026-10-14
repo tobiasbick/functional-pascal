@@ -24,8 +24,10 @@ end function;
 
 begin
   scope
-    const PartTask: task of string := go Text()
-                                           .Slice(Len := Number('L', 2), Start := Number('S', 1));
+    const PartTask: task of string := go Text().Slice(
+      Len := Number('L', 2),
+      Start := Number('S', 1)
+    );
     Test.AssertEquals('RLS', Trace);
     Test.AssertEquals('😀a', Tasks.Wait(PartTask));
     const EmptyTask: task of boolean := go Empty().IsEmpty();

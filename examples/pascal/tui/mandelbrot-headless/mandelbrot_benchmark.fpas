@@ -20,18 +20,43 @@ begin
   scope
     const Width: integer := 152;
     const Height: integer := 35;
-    const Request: Render.MandelbrotRenderRequest := Render.MandelbrotRenderRequest(Generation := 1, XMin := -3.355714285714286, XMax := 1.855714285714286, YMin := -1.2, YMax := 1.2, Width := Width, Height := Height, MaxIter := 160, Palette := Color.PaletteKind.DeepOcean);
+    const Request: Render.MandelbrotRenderRequest := Render.MandelbrotRenderRequest(
+      Generation := 1,
+      XMin := -3.355714285714286,
+      XMax := 1.855714285714286,
+      YMin := -1.2,
+      YMax := 1.2,
+      Width := Width,
+      Height := Height,
+      MaxIter := 160,
+      Palette := Color.PaletteKind.DeepOcean
+    );
     const Inbox: channel of Render.MandelbrotRenderFrame := Tasks.CreateChannel(8);
     const Source: Tasks.CancellationSource := Tasks.CreateCancellationSource();
-    const Worker: task of result of (boolean, string) := go Render.RunBackgroundRender(Request, Inbox, Tasks.GetCancellationToken(Source));
-    const App: Tui.TuiApplication := Tui.TuiApplication.OpenForTest(Tui.TuiSize.Create(Width, Height));
-    var Grid: Tui.TuiCellGrid := Tui.TuiCellGrid.Create(Width, Height, array.Fill(Tui.TuiCell.Styled(' ', Tui.TuiStyle.FromColors(Tui.TuiColor.FromRgb(0, 0, 0), Tui.TuiColor.FromRgb(0, 0, 0))), Width *
-                                                                                                                                                                                                  Height));
+    const Worker: task of result of (boolean, string) := go Render.RunBackgroundRender(
+      Request,
+      Inbox,
+      Tasks.GetCancellationToken(Source)
+    );
+    const App: Tui.TuiApplication := Tui.TuiApplication.OpenForTest(
+      Tui.TuiSize.Create(Width, Height)
+    );
+    var Grid: Tui.TuiCellGrid := Tui.TuiCellGrid.Create(
+      Width, Height, array.Fill(
+        Tui.TuiCell.Styled(
+          ' ',
+          Tui.TuiStyle.FromColors(Tui.TuiColor.FromRgb(0, 0, 0), Tui.TuiColor.FromRgb(0, 0, 0))
+        ), Width *
+        Height
+      )
+    );
     var Count: integer := 0;
     while Count < Width * Height do
       begin
-        const Message: Render.MandelbrotRenderFrame := Tasks.ReceiveWithTimeout(Inbox, 30000)
-                                                         .Unwrap();
+        const Message: Render.MandelbrotRenderFrame := Tasks.ReceiveWithTimeout(
+          Inbox,
+          30000
+        ).Unwrap();
         Count := Count + Message.Cells.Length();
         if Paint then
           begin

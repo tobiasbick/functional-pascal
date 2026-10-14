@@ -122,8 +122,9 @@ begin
             end;
           end if;
 
-          CodePoint := (First - 240) * 262144 + (Bytes[Index + 1] - 128) * 4096 + (Bytes[Index + 2] - 128) * 64 + Fourth -
-                       128;
+          CodePoint := (First - 240) * 262144 + (Bytes[Index + 1] - 128) * 4096 +
+            (Bytes[Index + 2] - 128) * 64 + Fourth -
+            128;
           if (CodePoint < 65536) or (CodePoint > 1114111) then
             begin
               return Invalid(Index, 'overlong or out-of-range sequence');

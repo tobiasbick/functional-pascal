@@ -15,9 +15,11 @@ begin
   Test.AssertEquals('HEAD', Http.Request.Head('http://localhost/head').Method);
   Test.AssertEquals('OPTIONS', Http.Request.Options('http://localhost/options').Method);
   Test.AssertEquals('PROPFIND', Http.Request.Create('PROPFIND', 'http://localhost/webdav').Method);
-  const ResponseValue: Http.Response := Http.Response(StatusCode := 200, ReasonPhrase := 'OK', Headers := [
-                                                                                                            Http.Header.Create('Content-Type', 'application/json')
-                                                                                                          ], Body := Utf8.Encode('{"ok":true}'));
+  const ResponseValue: Http.Response := Http.Response(
+    StatusCode := 200, ReasonPhrase := 'OK', Headers := [
+      Http.Header.Create('Content-Type', 'application/json')
+    ], Body := Utf8.Encode('{"ok":true}')
+  );
   case Http.BodyText(ResponseValue) of
     when Ok(const Text):
       begin

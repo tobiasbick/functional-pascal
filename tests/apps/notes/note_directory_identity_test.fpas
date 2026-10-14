@@ -19,7 +19,10 @@ begin
   Test.AssertTrue(Repository.NotesSave(Directory, Inside).Unwrap());
   const Loaded: Model.NotesLoad := Repository.NotesLoadDirectory(Directory).Unwrap();
   Test.AssertEquals(1, Loaded.Notes.Length());
-  Test.AssertEquals(Repository.NoteFilePath(Directory, Inside).Replace('\', '/'), Loaded.Notes[0].Path.Replace('\', '/'));
+  Test.AssertEquals(
+    Repository.NoteFilePath(Directory, Inside).Replace('\', '/'),
+    Loaded.Notes[0].Path.Replace('\', '/')
+  );
   Inside := Loaded.Notes[0];
   Inside.Title := 'edited';
   Test.AssertTrue(Repository.NotesSave(Directory, Inside).Unwrap());
@@ -50,11 +53,19 @@ begin
   Test.AssertTrue((Loaded.Issues[0].Path = Second.Path) or (Loaded.Issues[1].Path = Second.Path));
   var State: Model.NotesModel := Model.NotesModelCreate(Directory, Loaded);
   const Cmd: Tui.TuiCmdOutput := Tui.TuiCmdOutput.Create();
-  State := Update.NotesUpdate(State, Tui.TuiMsgSelectionChanged(Tui.TuiControlId.Create(2), Tui.TuiAction.Create(2), 0), Cmd);
+  State := Update.NotesUpdate(
+    State,
+    Tui.TuiMsgSelectionChanged(Tui.TuiControlId.Create(2), Tui.TuiAction.Create(2), 0),
+    Cmd
+  );
   State.Dirty := true;
   State := Update.NotesPersistCurrent(State);
   Test.AssertFalse(State.Dirty);
-  State := Update.NotesUpdate(State, Tui.TuiMsgAction(Tui.TuiControlId.Create(23), Tui.TuiAction.Create(13)), Cmd);
+  State := Update.NotesUpdate(
+    State,
+    Tui.TuiMsgAction(Tui.TuiControlId.Create(23), Tui.TuiAction.Create(13)),
+    Cmd
+  );
   Test.AssertEquals(-1, State.Selected);
   Test.AssertEquals(FirstText, Fs.ReadText(First.Path).Unwrap());
   Test.AssertEquals(SecondText, Fs.ReadText(Second.Path).Unwrap());

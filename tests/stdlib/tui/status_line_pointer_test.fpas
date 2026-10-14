@@ -25,13 +25,23 @@ end function;
 
 function ViewStatus(State: StatusModel): Tui.TuiElement;
 begin
-  return Tui.TuiElementBuilders.MakeDesktop(Some(Tui.TuiControlId.Create(State.Focus)), [
-                                                                                          Tui.TuiElementBuilders.MakeStatusLine([
-                                                                                                                                  Tui.TuiStatusItemBuilders.MakeHint('Ready'),
-                                                                                                                                  Tui.TuiStatusItemBuilders.MakeCommand(Tui.TuiControlId.Create(1), 'Save', Tui.TuiAction.Create(10)),
-                                                                                                                                  Tui.TuiStatusItemBuilders.MakeDisabledCommand(Tui.TuiControlId.Create(2), 'Quit', Tui.TuiAction.Create(20))
-                                                                                                                                ])
-                                                                                        ]);
+  return Tui.TuiElementBuilders.MakeDesktop(
+    Some(Tui.TuiControlId.Create(State.Focus)), [
+      Tui.TuiElementBuilders.MakeStatusLine([
+        Tui.TuiStatusItemBuilders.MakeHint('Ready'),
+        Tui.TuiStatusItemBuilders.MakeCommand(
+          Tui.TuiControlId.Create(1),
+          'Save',
+          Tui.TuiAction.Create(10)
+        ),
+        Tui.TuiStatusItemBuilders.MakeDisabledCommand(
+          Tui.TuiControlId.Create(2),
+          'Quit',
+          Tui.TuiAction.Create(20)
+        )
+      ])
+    ]
+  );
 end function;
 
 function UpdateStatus(State: StatusModel; Msg: Tui.TuiMsg; Cmd: Tui.TuiCmdOutput): StatusModel;
@@ -67,12 +77,16 @@ begin
   var Model: StatusModel := StatusModel(Focus := 1, Actions := []);
   Model := App.RunIterations(Model, UpdateStatus, ViewStatus, 0, 0);
   const SaveAt: Tui.TuiPoint := FindGlyph(App.SurfaceSnapshot(), 'Save');
-  App.InjectPointerForTest(Tui.TuiPointerEvent.Create(Tui.TuiPointerAction.Down, Tui.TuiPointerButton.Left, SaveAt));
+  App.InjectPointerForTest(
+    Tui.TuiPointerEvent.Create(Tui.TuiPointerAction.Down, Tui.TuiPointerButton.Left, SaveAt)
+  );
   Model := App.RunIterations(Model, UpdateStatus, ViewStatus, 1, 0);
   Test.AssertEquals(1, Model.Actions.Length());
   Test.AssertEquals(10, Model.Actions[0]);
   const QuitAt: Tui.TuiPoint := FindGlyph(App.SurfaceSnapshot(), 'Quit');
-  App.InjectPointerForTest(Tui.TuiPointerEvent.Create(Tui.TuiPointerAction.Down, Tui.TuiPointerButton.Left, QuitAt));
+  App.InjectPointerForTest(
+    Tui.TuiPointerEvent.Create(Tui.TuiPointerAction.Down, Tui.TuiPointerButton.Left, QuitAt)
+  );
   Model := App.RunIterations(Model, UpdateStatus, ViewStatus, 1, 0);
   Test.AssertEquals(1, Model.Actions.Length());
   App.Close();

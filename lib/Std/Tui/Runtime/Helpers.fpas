@@ -60,7 +60,10 @@ end function;
 // - `Available`: Available terminal size.
 public function TuiLayoutFitFor(Root: Element.TuiElement; Available: Size.TuiSize): LayoutFit.TuiLayoutFit;
 begin
-  const Measured: MeasureResult.TuiMeasureResult := Measure.TuiMeasure(Root, MeasureSpec.TuiMeasureSpec.Unbounded());
+  const Measured: MeasureResult.TuiMeasureResult := Measure.TuiMeasure(
+    Root,
+    MeasureSpec.TuiMeasureSpec.Unbounded()
+  );
   return LayoutFit.TuiLayoutFit.Create(Measured.Minimum, Available);
 end function;
 end unit;

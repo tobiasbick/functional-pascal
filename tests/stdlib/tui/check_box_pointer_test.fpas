@@ -10,7 +10,11 @@ end record;
 
 function MakePointer(X: integer; Y: integer): Tui.TuiPointerEvent;
 begin
-  return Tui.TuiPointerEvent.Create(Tui.TuiPointerAction.Down, Tui.TuiPointerButton.Left, Tui.TuiPoint.Create(X, Y));
+  return Tui.TuiPointerEvent.Create(
+    Tui.TuiPointerAction.Down,
+    Tui.TuiPointerButton.Left,
+    Tui.TuiPoint.Create(X, Y)
+  );
 end function;
 
 function FindGlyph(Snapshot: Tui.TuiSurfaceSnapshot; Glyph: string): Tui.TuiPoint;
@@ -32,14 +36,27 @@ end function;
 
 function ViewCheck(State: CheckModel): Tui.TuiElement;
 begin
-  return Tui.TuiElementBuilders.MakeDesktop(Some(Tui.TuiControlId.Create(State.Focus)), [
-                                                                                          Tui.TuiElementBuilders.MakePanel('Host', [
-                                                                                                                                     Tui.TuiElementBuilders.MakeColumn([
-                                                                                                                                                                         Tui.TuiElementBuilders.MakeButton(Tui.TuiControlId.Create(2), 'Other', Tui.TuiAction.Create(2)),
-                                                                                                                                                                         Tui.TuiElementBuilders.MakeCheckBox(Tui.TuiControlId.Create(1), 'Flag', State.Checked, Tui.TuiAction.Create(9))
-                                                                                                                                                                       ])
-                                                                                                                                   ])
-                                                                                        ]);
+  return Tui.TuiElementBuilders.MakeDesktop(
+    Some(Tui.TuiControlId.Create(State.Focus)), [
+      Tui.TuiElementBuilders.MakePanel(
+        'Host', [
+          Tui.TuiElementBuilders.MakeColumn([
+            Tui.TuiElementBuilders.MakeButton(
+              Tui.TuiControlId.Create(2),
+              'Other',
+              Tui.TuiAction.Create(2)
+            ),
+            Tui.TuiElementBuilders.MakeCheckBox(
+              Tui.TuiControlId.Create(1),
+              'Flag',
+              State.Checked,
+              Tui.TuiAction.Create(9)
+            )
+          ])
+        ]
+      )
+    ]
+  );
 end function;
 
 function UpdateCheck(State: CheckModel; Msg: Tui.TuiMsg; Cmd: Tui.TuiCmdOutput): CheckModel;
@@ -51,7 +68,11 @@ begin
         case Current of
           when Some(const Id):
             begin
-              return CheckModel(Focus := Id.Value, Checked := State.Checked, Changes := State.Changes);
+              return CheckModel(
+                Focus := Id.Value,
+                Checked := State.Checked,
+                Changes := State.Changes
+              );
             end;
           when None:
             begin
@@ -63,9 +84,11 @@ begin
       begin
         Test.AssertEquals(1, Source.Value);
         Test.AssertEquals(9, Action.Value);
-        return CheckModel(Focus := State.Focus, Checked := Checked, Changes := State.Changes.Concat([
-                                                                                                      Checked
-                                                                                                    ]));
+        return CheckModel(
+          Focus := State.Focus, Checked := Checked, Changes := State.Changes.Concat([
+            Checked
+          ])
+        );
       end;
     when Tui.TuiMsg.Started, Tui.TuiMsg.Key(_), Tui.TuiMsg.Pointer(_), Tui.TuiMsg.Tick(_), Tui.TuiMsg.Resize(_), Tui.TuiMsg.Action(_, _), Tui.TuiMsg.TextChanged(_, _, _, _), Tui.TuiMsg.TextAreaChanged(_, _, _, _, _), Tui.TuiMsg.SelectionChanged(_, _, _), Tui.TuiMsg.ScrollChanged(_, _, _), Tui.TuiMsg.MenuChanged(_, _, _), Tui.TuiMsg.BackgroundFailed(_, _, _, _, _, _), Tui.TuiMsg.QuitRequested:
       begin

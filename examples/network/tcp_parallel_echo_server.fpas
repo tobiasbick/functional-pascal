@@ -19,8 +19,12 @@ begin
       var Offset: integer := 0;
       while Offset < Bytes.Length() do
         begin
-          const Count: integer := try Net.SendBytesWithCancellation(Client, Bytes.Slice(Offset, Bytes.Length() -
-                                                                                                Offset), Token);
+          const Count: integer := try Net.SendBytesWithCancellation(
+            Client, Bytes.Slice(
+              Offset, Bytes.Length() -
+              Offset
+            ), Token
+          );
           if Count <= 0 then
             begin
               return Error('TCP write made no progress');
@@ -69,46 +73,48 @@ begin
   const Workers: Tasks.TaskGroup := Server.GetWorkGroup(Life);
   for Index: integer := 1 to 4 do
     begin
-      const ConnectionTask: task of result of (boolean, string) := Tasks.StartTaskInGroup(Workers, function(Token: Tasks.CancellationToken): result of (boolean, string) begin
-        while not Tasks.IsCancellationRequested(Token) do
-          begin
-            case Net.AcceptWithCancellation(ListenerValue, Token) of
-              when Ok(const Client):
-                begin
-                  const Outcome: result of (boolean, string) := Echo(Client, Token);
-                  // Close even on read/write failure. One failed client does not stop admission.
-                  const Closed: boolean := try Net.Close(Client);
-                  case Outcome of
-                    when Error(const Message):
+      const ConnectionTask: task of result of (boolean, string) := Tasks.StartTaskInGroup(
+        Workers, function(Token: Tasks.CancellationToken): result of (boolean, string) begin
+          while not Tasks.IsCancellationRequested(Token) do
+            begin
+              case Net.AcceptWithCancellation(ListenerValue, Token) of
+                when Ok(const Client):
+                  begin
+                    const Outcome: result of (boolean, string) := Echo(Client, Token);
+                    // Close even on read/write failure. One failed client does not stop admission.
+                    const Closed: boolean := try Net.Close(Client);
+                    case Outcome of
+                      when Error(const Message):
+                        begin
+                          if not Tasks.IsCancellationRequested(Token) then
+                            begin
+                              Console.WriteLn(Message);
+                            end;
+                          end if;
+                        end;
+                      when Ok(_):
+                        begin
+                        end;
+                    end case;
+                  end;
+                when Error(const Message):
+                  begin
+                    if Tasks.IsCancellationRequested(Token) then
                       begin
-                        if not Tasks.IsCancellationRequested(Token) then
-                          begin
-                            Console.WriteLn(Message);
-                          end;
-                        end if;
+                        return Ok(true);
                       end;
-                    when Ok(_):
-                      begin
-                      end;
-                  end case;
-                end;
-              when Error(const Message):
-                begin
-                  if Tasks.IsCancellationRequested(Token) then
-                    begin
-                      return Ok(true);
-                    end;
-                  end if;
+                    end if;
 
-                  discard Server.RequestStop(Life);
-                  return Error(Message);
-                end;
-            end case;
-          end;
-        end while;
+                    discard Server.RequestStop(Life);
+                    return Error(Message);
+                  end;
+              end case;
+            end;
+          end while;
 
-        return Ok(true);
-      end function);
+          return Ok(true);
+        end function
+      );
     end;
   end for;
 

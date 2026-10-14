@@ -6,9 +6,11 @@ uses Std.Net as Net;
 // Materializes ordered response or request fragments as one byte array.
 public function JoinChunks(Chunks: array of array of integer): array of integer;
 begin
-  return Chunks.FlatMap(function(Chunk: array of integer): array of integer begin
-    return Chunk;
-  end function);
+  return Chunks.FlatMap(
+    function(Chunk: array of integer): array of integer begin
+      return Chunk;
+    end function
+  );
 end function;
 
 // Reads within the remaining response budget, probing only for EOF at its boundary.

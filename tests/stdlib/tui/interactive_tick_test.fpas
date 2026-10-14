@@ -21,9 +21,11 @@ begin
         Cmd.RequestTick(600000);
         Next.Started := Time.MonotonicMillis();
         const Inbox: channel of integer := State.Inbox;
-        Cmd.StartBackground(1, function(Token: Tasks.CancellationToken): result of (boolean, string) begin
-          return Tasks.SendWithCancellation(Inbox, 1, Token);
-        end function);
+        Cmd.StartBackground(
+          1, function(Token: Tasks.CancellationToken): result of (boolean, string) begin
+            return Tasks.SendWithCancellation(Inbox, 1, Token);
+          end function
+        );
       end;
     when Tui.TuiMsg.Tick(const Elapsed):
       begin
@@ -64,7 +66,13 @@ end function;
 
 begin
   const Inbox: channel of integer := Tasks.CreateChannel(1);
-  const Final: TickModel := Tui.TuiApplication.RunWithBackground(TickModel(Inbox := Inbox, Ticks := 0, ShortestTick := -1, Started := 0, Replaced := false), Inbox, Update, UpdateMessage, View);
+  const Final: TickModel := Tui.TuiApplication.RunWithBackground(
+    TickModel(Inbox := Inbox, Ticks := 0, ShortestTick := -1, Started := 0, Replaced := false),
+    Inbox,
+    Update,
+    UpdateMessage,
+    View
+  );
   Test.AssertTrue(Final.Replaced);
   Test.AssertEquals(3, Final.Ticks);
   // Every tick waited at least its requested delay.

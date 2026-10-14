@@ -42,8 +42,10 @@ begin
     const Child: task := go Produce(Queue, 2);
   end scope;
 
-  Test.AssertEquals(3, Tasks.TryReceive(Queue).Unwrap().Unwrap() +
-                       Tasks.TryReceive(Queue).Unwrap().Unwrap());
+  Test.AssertEquals(
+    3, Tasks.TryReceive(Queue).Unwrap().Unwrap() +
+    Tasks.TryReceive(Queue).Unwrap().Unwrap()
+  );
   const Empty: channel of integer := Tasks.CreateChannel(1);
   const Ready: channel of integer := Tasks.CreateChannel(1);
   Test.AssertEquals(7, ReturnEarly(Empty, Ready));

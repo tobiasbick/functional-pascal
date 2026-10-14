@@ -3,8 +3,12 @@ program TomlParseArraysOfTablesAndEdgeValuesTest;
 uses Std.Test as Test, Std.Toml as Toml;
 
 begin
-  const Parsed: result of (Toml.TomlValue, string) := Toml.Parse('empty = []' + string.Chr(10) + 'special = -0.0' + string.Chr(10) + 'point.x = 1' + string.Chr(10) + 'point.y = 2' + string.Chr(10) + '[[products]]' + string.Chr(10) + 'name = ''Hammer''' + string.Chr(10) + '[[products]]' + string.Chr(10) +
-                                                                 'name = ''Nail''');
+  const Parsed: result of (Toml.TomlValue, string) := Toml.Parse(
+    'empty = []' + string.Chr(10) + 'special = -0.0' + string.Chr(10) + 'point.x = 1' +
+    string.Chr(10) + 'point.y = 2' + string.Chr(10) + '[[products]]' + string.Chr(10) +
+    'name = ''Hammer''' + string.Chr(10) + '[[products]]' + string.Chr(10) +
+    'name = ''Nail'''
+  );
   case Parsed of
     when Ok(const Value):
       begin

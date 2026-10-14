@@ -30,8 +30,11 @@ type Rectangle = record
       end;
     end if;
 
-    Console.WriteLn(Kind + ' ' + Conv.IntToStr(Self.W) + 'x' + Conv.IntToStr(Self.H) + ' area=' + Conv.IntToStr(Self.Area()) + ' perimeter=' +
-                    Conv.IntToStr(Self.Perimeter()));
+    Console.WriteLn(
+      Kind + ' ' + Conv.IntToStr(Self.W) + 'x' + Conv.IntToStr(Self.H) + ' area=' +
+      Conv.IntToStr(Self.Area()) + ' perimeter=' +
+      Conv.IntToStr(Self.Perimeter())
+    );
   end procedure;
 end record;
 

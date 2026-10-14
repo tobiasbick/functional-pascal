@@ -38,13 +38,20 @@ public type TuiLayoutSettings = record
   // - `Alignment`: Alignment applied within the available area.
   // - `Stretch`: Whether the element stretches across the available extent.
   public static function Create(
-  Margins: LayoutMargins.TuiMargins;
-  SizePolicy: LayoutSizePolicy.TuiSizePolicy;
-  Alignment: LayoutAlignment.TuiAlignment;
-  Stretch: integer
-): TuiLayoutSettings;
+    Margins: LayoutMargins.TuiMargins;
+    SizePolicy: LayoutSizePolicy.TuiSizePolicy;
+    Alignment: LayoutAlignment.TuiAlignment;
+    Stretch: integer
+  ): TuiLayoutSettings;
   begin
-    return TuiLayoutSettings(Margins := Margins, SizePolicy := SizePolicy, Alignment := Alignment, Stretch := TuiLayoutSettingsRequireNonNegativeStretch(Stretch), Width := None, Height := None);
+    return TuiLayoutSettings(
+      Margins := Margins,
+      SizePolicy := SizePolicy,
+      Alignment := Alignment,
+      Stretch := TuiLayoutSettingsRequireNonNegativeStretch(Stretch),
+      Width := None,
+      Height := None
+    );
   end function;
 
   // Returns a copy constrained to one total width; negative widths panic.
@@ -60,7 +67,14 @@ public type TuiLayoutSettings = record
       end;
     end if;
 
-    return TuiLayoutSettings(Margins := Self.Margins, SizePolicy := Self.SizePolicy, Alignment := Self.Alignment, Stretch := Self.Stretch, Width := Some(Width), Height := Self.Height);
+    return TuiLayoutSettings(
+      Margins := Self.Margins,
+      SizePolicy := Self.SizePolicy,
+      Alignment := Self.Alignment,
+      Stretch := Self.Stretch,
+      Width := Some(Width),
+      Height := Self.Height
+    );
   end function;
 
   // Returns a copy constrained to one total height; negative heights panic.
@@ -76,13 +90,25 @@ public type TuiLayoutSettings = record
       end;
     end if;
 
-    return TuiLayoutSettings(Margins := Self.Margins, SizePolicy := Self.SizePolicy, Alignment := Self.Alignment, Stretch := Self.Stretch, Width := Self.Width, Height := Some(Height));
+    return TuiLayoutSettings(
+      Margins := Self.Margins,
+      SizePolicy := Self.SizePolicy,
+      Alignment := Self.Alignment,
+      Stretch := Self.Stretch,
+      Width := Self.Width,
+      Height := Some(Height)
+    );
   end function;
 
   // Zero margins, preferred policy, fill alignment, and stretch zero.
   public static function Default(): TuiLayoutSettings;
   begin
-    return TuiLayoutSettings.Create(LayoutMargins.TuiMargins.Uniform(0), LayoutSizePolicy.TuiSizePolicy.Preferred(), LayoutAlignment.TuiAlignment.Fill(), 0);
+    return TuiLayoutSettings.Create(
+      LayoutMargins.TuiMargins.Uniform(0),
+      LayoutSizePolicy.TuiSizePolicy.Preferred(),
+      LayoutAlignment.TuiAlignment.Fill(),
+      0
+    );
   end function;
 end record;
 end unit;

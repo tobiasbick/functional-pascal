@@ -39,7 +39,13 @@ end function;
 
 begin
   var App: Tui.TuiApplication := Tui.TuiApplication.OpenForTest(Tui.TuiSize.Create(40, 12));
-  const FinalModel: CounterModel := App.RunIterations(CounterModel(Value := 0), UpdateCounter, ViewCounter, 3, 16);
+  const FinalModel: CounterModel := App.RunIterations(
+    CounterModel(Value := 0),
+    UpdateCounter,
+    ViewCounter,
+    3,
+    16
+  );
   Test.AssertEquals(3, FinalModel.Value);
   App.Close();
 end.

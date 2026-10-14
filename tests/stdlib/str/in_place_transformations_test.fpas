@@ -32,14 +32,18 @@ begin
   Test.AssertEquals('-a-', Text);
   Text := ' a ';
   Text.TrimInPlace();
-  Text.MapInPlace(F := function(C: string): string begin
-    return C.ToUpper();
-  end function);
+  Text.MapInPlace(
+    F := function(C: string): string begin
+      return C.ToUpper();
+    end function
+  );
   Test.AssertEquals('A', Text);
   Text := 'A B';
-  Text.FilterInPlace(F := function(C: string): boolean begin
-    return C <> ' ';
-  end function);
+  Text.FilterInPlace(
+    F := function(C: string): boolean begin
+      return C <> ' ';
+    end function
+  );
   Test.AssertEquals('AB', Text);
   Text := '%s:%d';
   Text.FormatInPlace('ok', 7);

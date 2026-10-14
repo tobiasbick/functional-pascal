@@ -72,9 +72,48 @@ public type TuiPalette = record
     const NormalStyle: CellsStyle.TuiStyle := CellsStyle.TuiStyle.FromColors(Text, Background);
     const SelectedStyle: CellsStyle.TuiStyle := CellsStyle.TuiStyle.FromColors(Text, Selected);
     const AccentStyle: CellsStyle.TuiStyle := CellsStyle.TuiStyle.FromColors(Accent, Background);
-    const Buttons: ButtonPalette.TuiButtonPalette := ButtonPalette.TuiButtonPalette.Create(CellsStyle.TuiStyle.FromColors(Text, Surface), CellsStyle.TuiStyle.FromColors(Background, Accent), SelectedStyle, CellsStyle.TuiStyle.FromColors(Muted, Surface), CellsStyle.TuiStyle.FromColors(Accent, Surface), CellsStyle.TuiStyle.FromColors(Background, Accent), CellsStyle.TuiStyle.FromColors(Text, Selected));
-    const Inputs: InputPalette.TuiInputPalette := InputPalette.TuiInputPalette.Create(CellsStyle.TuiStyle.FromColors(Text, Surface), CellsStyle.TuiStyle.FromColors(Text, Color.TuiColor.FromRgb(30, 36, 44)), CellsStyle.TuiStyle.FromColors(Muted, Surface), CellsStyle.TuiStyle.FromColors(Background, Accent), CellsStyle.TuiStyle.FromColors(Accent, Surface));
-    return TuiPalette(Normal := NormalStyle, Disabled := CellsStyle.TuiStyle.FromColors(Muted, Background), Focused := SelectedStyle, Selected := SelectedStyle, Shortcut := AccentStyle, Frame := CellsStyle.TuiStyle.FromColors(Border, Background), Title := CellsStyle.TuiStyle.FromColors(Text, Background), MenuNormal := CellsStyle.TuiStyle.FromColors(Text, Surface), MenuDisabled := CellsStyle.TuiStyle.FromColors(Muted, Surface), MenuShortcut := CellsStyle.TuiStyle.FromColors(Accent, Surface), MenuSelected := SelectedStyle, MenuSelectedShortcut := CellsStyle.TuiStyle.FromColors(Text, Selected), StatusNormal := CellsStyle.TuiStyle.FromColors(Text, Surface), StatusDisabled := CellsStyle.TuiStyle.FromColors(Muted, Surface), StatusShortcut := CellsStyle.TuiStyle.FromColors(Accent, Surface), StatusSelected := SelectedStyle, Buttons := Buttons, Inputs := Inputs, Rule := CellsStyle.TuiStyle.FromColors(Border, Background), GaugeTrack := CellsStyle.TuiStyle.FromColors(Border, Background), GaugeFill := CellsStyle.TuiStyle.FromColors(Success, Background), Failure := CellsStyle.TuiStyle.FromColors(Failure, Background), Warning := CellsStyle.TuiStyle.FromColors(Warning, Background), Accent := AccentStyle);
+    const Buttons: ButtonPalette.TuiButtonPalette := ButtonPalette.TuiButtonPalette.Create(
+      CellsStyle.TuiStyle.FromColors(Text, Surface),
+      CellsStyle.TuiStyle.FromColors(Background, Accent),
+      SelectedStyle,
+      CellsStyle.TuiStyle.FromColors(Muted, Surface),
+      CellsStyle.TuiStyle.FromColors(Accent, Surface),
+      CellsStyle.TuiStyle.FromColors(Background, Accent),
+      CellsStyle.TuiStyle.FromColors(Text, Selected)
+    );
+    const Inputs: InputPalette.TuiInputPalette := InputPalette.TuiInputPalette.Create(
+      CellsStyle.TuiStyle.FromColors(Text, Surface),
+      CellsStyle.TuiStyle.FromColors(Text, Color.TuiColor.FromRgb(30, 36, 44)),
+      CellsStyle.TuiStyle.FromColors(Muted, Surface),
+      CellsStyle.TuiStyle.FromColors(Background, Accent),
+      CellsStyle.TuiStyle.FromColors(Accent, Surface)
+    );
+    return TuiPalette(
+      Normal := NormalStyle,
+      Disabled := CellsStyle.TuiStyle.FromColors(Muted, Background),
+      Focused := SelectedStyle,
+      Selected := SelectedStyle,
+      Shortcut := AccentStyle,
+      Frame := CellsStyle.TuiStyle.FromColors(Border, Background),
+      Title := CellsStyle.TuiStyle.FromColors(Text, Background),
+      MenuNormal := CellsStyle.TuiStyle.FromColors(Text, Surface),
+      MenuDisabled := CellsStyle.TuiStyle.FromColors(Muted, Surface),
+      MenuShortcut := CellsStyle.TuiStyle.FromColors(Accent, Surface),
+      MenuSelected := SelectedStyle,
+      MenuSelectedShortcut := CellsStyle.TuiStyle.FromColors(Text, Selected),
+      StatusNormal := CellsStyle.TuiStyle.FromColors(Text, Surface),
+      StatusDisabled := CellsStyle.TuiStyle.FromColors(Muted, Surface),
+      StatusShortcut := CellsStyle.TuiStyle.FromColors(Accent, Surface),
+      StatusSelected := SelectedStyle,
+      Buttons := Buttons,
+      Inputs := Inputs,
+      Rule := CellsStyle.TuiStyle.FromColors(Border, Background),
+      GaugeTrack := CellsStyle.TuiStyle.FromColors(Border, Background),
+      GaugeFill := CellsStyle.TuiStyle.FromColors(Success, Background),
+      Failure := CellsStyle.TuiStyle.FromColors(Failure, Background),
+      Warning := CellsStyle.TuiStyle.FromColors(Warning, Background),
+      Accent := AccentStyle
+    );
   end function;
 
   // Resolves the concrete style for one semantic role.

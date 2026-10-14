@@ -12,9 +12,11 @@ begin
   if Msg is Tui.TuiMsg.Started then
     begin
       const Inbox: channel of integer := State.Inbox;
-      Cmd.StartBackground(1, function(Token: Tasks.CancellationToken): result of (boolean, string) begin
-        return Tasks.SendWithCancellation(Inbox, 42, Token);
-      end function);
+      Cmd.StartBackground(
+        1, function(Token: Tasks.CancellationToken): result of (boolean, string) begin
+          return Tasks.SendWithCancellation(Inbox, 42, Token);
+        end function
+      );
     end;
   end if;
 
@@ -36,7 +38,13 @@ end function;
 
 begin
   const Inbox: channel of integer := Tasks.CreateChannel(1);
-  const Final: InteractiveModel := Tui.TuiApplication.RunWithBackground(InteractiveModel(Inbox := Inbox, Received := 0), Inbox, Update, UpdateMessage, View);
+  const Final: InteractiveModel := Tui.TuiApplication.RunWithBackground(
+    InteractiveModel(Inbox := Inbox, Received := 0),
+    Inbox,
+    Update,
+    UpdateMessage,
+    View
+  );
   Test.AssertEquals(42, Final.Received);
   Test.AssertTrue((Tasks.TrySend(Inbox, 1) is Error(_)));
 end.

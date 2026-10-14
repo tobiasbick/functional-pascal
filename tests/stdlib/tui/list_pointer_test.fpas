@@ -9,7 +9,11 @@ end record;
 
 function MakePointer(X: integer; Y: integer): Tui.TuiPointerEvent;
 begin
-  return Tui.TuiPointerEvent.Create(Tui.TuiPointerAction.Down, Tui.TuiPointerButton.Left, Tui.TuiPoint.Create(X, Y));
+  return Tui.TuiPointerEvent.Create(
+    Tui.TuiPointerAction.Down,
+    Tui.TuiPointerButton.Left,
+    Tui.TuiPoint.Create(X, Y)
+  );
 end function;
 
 function FindGlyph(Snapshot: Tui.TuiSurfaceSnapshot; Glyph: string): Tui.TuiPoint;
@@ -31,11 +35,20 @@ end function;
 
 function ViewList(State: ListModel): Tui.TuiElement;
 begin
-  return Tui.TuiElementBuilders.MakeDesktop(Some(Tui.TuiControlId.Create(State.Focus)), [
-                                                                                          Tui.TuiElementBuilders.MakePanel('Host', [
-                                                                                                                                     Tui.TuiElementBuilders.MakeList(Tui.TuiControlId.Create(1), ['Alpha', 'Beta', 'Gamma'], State.Selected, Tui.TuiAction.Create(5))
-                                                                                                                                   ])
-                                                                                        ]);
+  return Tui.TuiElementBuilders.MakeDesktop(
+    Some(Tui.TuiControlId.Create(State.Focus)), [
+      Tui.TuiElementBuilders.MakePanel(
+        'Host', [
+          Tui.TuiElementBuilders.MakeList(
+            Tui.TuiControlId.Create(1),
+            ['Alpha', 'Beta', 'Gamma'],
+            State.Selected,
+            Tui.TuiAction.Create(5)
+          )
+        ]
+      )
+    ]
+  );
 end function;
 
 function UpdateList(State: ListModel; Msg: Tui.TuiMsg; Cmd: Tui.TuiCmdOutput): ListModel;

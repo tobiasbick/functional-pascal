@@ -4,7 +4,11 @@ uses Std.Console as Console, Std.Test as Test;
 
 function CellWith(Glyph: string; Foreground: Console.Color): Console.Cell;
 begin
-  return Console.Cell(glyph := Glyph, foreground := Foreground, background := Console.CrtColor(Console.Black));
+  return Console.Cell(
+    glyph := Glyph,
+    foreground := Foreground,
+    background := Console.CrtColor(Console.Black)
+  );
 end function;
 
 begin
@@ -13,7 +17,9 @@ begin
   Console.BeginFrame();
   Console.PutCell(2, 1, CellWith('中', Console.CrtColor(Console.Yellow)));
   Console.Present();
-  const Region: Console.SavedRegion := Console.SaveRegion(Console.Rect(x := 3, y := 1, width := 1, height := 1));
+  const Region: Console.SavedRegion := Console.SaveRegion(
+    Console.Rect(x := 3, y := 1, width := 1, height := 1)
+  );
   Console.PutCell(3, 1, CellWith('X', Console.CrtColor(Console.White)));
   Console.RestoreRegion(Region);
   Console.Present();

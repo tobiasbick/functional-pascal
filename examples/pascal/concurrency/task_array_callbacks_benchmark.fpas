@@ -97,8 +97,10 @@ begin
     end;
   end if;
 
-  Console.WriteLn('iterations: ' + Conv.IntToStr(Iterations) + ', callbacks: ' +
-                  Conv.IntToStr(Callbacks));
+  Console.WriteLn(
+    'iterations: ' + Conv.IntToStr(Iterations) + ', callbacks: ' +
+    Conv.IntToStr(Callbacks)
+  );
   Console.WriteLn('elapsed: ' + Conv.IntToStr(Elapsed) + ' ms');
   if Elapsed > 0 then
     begin
@@ -113,8 +115,11 @@ begin
   Console.WriteLn('checksum: ' + Conv.IntToStr(Total));
   if (MaxMillis > 0) and (Elapsed > MaxMillis) then
     begin
-      panic('task-array-callbacks benchmark regression: ' + Conv.IntToStr(Elapsed) + ' ms exceeds limit ' + Conv.IntToStr(MaxMillis) +
-            ' ms');
+      panic(
+        'task-array-callbacks benchmark regression: ' + Conv.IntToStr(Elapsed) +
+        ' ms exceeds limit ' + Conv.IntToStr(MaxMillis) +
+        ' ms'
+      );
     end;
   end if;
 end.

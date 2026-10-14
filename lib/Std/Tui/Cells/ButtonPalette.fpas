@@ -30,16 +30,24 @@ public type TuiButtonPalette = record
   // - `DefaultShortcut`: Fallback shortcut displayed for the item.
   // - `SelectedShortcut`: Shortcut displayed for the selected item.
   public static function Create(
-  Normal: CellsStyle.TuiStyle;
-  Default: CellsStyle.TuiStyle;
-  Selected: CellsStyle.TuiStyle;
-  Disabled: CellsStyle.TuiStyle;
-  Shortcut: CellsStyle.TuiStyle;
-  DefaultShortcut: CellsStyle.TuiStyle;
-  SelectedShortcut: CellsStyle.TuiStyle
-): TuiButtonPalette;
+    Normal: CellsStyle.TuiStyle;
+    Default: CellsStyle.TuiStyle;
+    Selected: CellsStyle.TuiStyle;
+    Disabled: CellsStyle.TuiStyle;
+    Shortcut: CellsStyle.TuiStyle;
+    DefaultShortcut: CellsStyle.TuiStyle;
+    SelectedShortcut: CellsStyle.TuiStyle
+  ): TuiButtonPalette;
   begin
-    return TuiButtonPalette(Normal := Normal, Default := Default, Selected := Selected, Disabled := Disabled, Shortcut := Shortcut, DefaultShortcut := DefaultShortcut, SelectedShortcut := SelectedShortcut);
+    return TuiButtonPalette(
+      Normal := Normal,
+      Default := Default,
+      Selected := Selected,
+      Disabled := Disabled,
+      Shortcut := Shortcut,
+      DefaultShortcut := DefaultShortcut,
+      SelectedShortcut := SelectedShortcut
+    );
   end function;
 
   // Resolves one button role.

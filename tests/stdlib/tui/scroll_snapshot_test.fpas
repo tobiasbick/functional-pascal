@@ -8,13 +8,18 @@ end record;
 
 function ViewScroll(State: ScrollModel): Tui.TuiElement;
 begin
-  return Tui.TuiElementBuilders.MakeDesktop(Some(Tui.TuiControlId.Create(1)), [
-                                                                                Tui.TuiElementBuilders.MakeScroll(Tui.TuiControlId.Create(1), State.Offset, Tui.TuiAction.Create(7), Tui.TuiElementBuilders.MakeColumn([
-                                                                                                                                                                                                                         Tui.TuiElementBuilders.MakeLabel('First'),
-                                                                                                                                                                                                                         Tui.TuiElementBuilders.MakeLabel('Second'),
-                                                                                                                                                                                                                         Tui.TuiElementBuilders.MakeLabel('Third')
-                                                                                                                                                                                                                       ]))
-                                                                              ]);
+  return Tui.TuiElementBuilders.MakeDesktop(
+    Some(Tui.TuiControlId.Create(1)), [
+      Tui.TuiElementBuilders.MakeScroll(
+        Tui.TuiControlId.Create(1), State.Offset, Tui.TuiAction.Create(7),
+        Tui.TuiElementBuilders.MakeColumn([
+          Tui.TuiElementBuilders.MakeLabel('First'),
+          Tui.TuiElementBuilders.MakeLabel('Second'),
+          Tui.TuiElementBuilders.MakeLabel('Third')
+        ])
+      )
+    ]
+  );
 end function;
 
 function UpdateScroll(State: ScrollModel; Msg: Tui.TuiMsg; Cmd: Tui.TuiCmdOutput): ScrollModel;
@@ -37,7 +42,13 @@ begin
   var Model: ScrollModel := ScrollModel(Offset := Tui.TuiPoint.Create(0, 0));
   Model := App.RunIterations(Model, UpdateScroll, ViewScroll, 0, 0);
   Test.AssertTrue(('First' in App.SurfaceSnapshot().LineAt(0)));
-  App.Inject(Tui.TuiMsgScrollChanged(Tui.TuiControlId.Create(1), Tui.TuiAction.Create(7), Tui.TuiPoint.Create(0, 1)));
+  App.Inject(
+    Tui.TuiMsgScrollChanged(
+      Tui.TuiControlId.Create(1),
+      Tui.TuiAction.Create(7),
+      Tui.TuiPoint.Create(0, 1)
+    )
+  );
   Model := App.RunIterations(Model, UpdateScroll, ViewScroll, 1, 0);
   Test.AssertTrue(('Second' in App.SurfaceSnapshot().LineAt(0)));
   Test.AssertFalse(('First' in App.SurfaceSnapshot().LineAt(0)));

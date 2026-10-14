@@ -22,8 +22,12 @@ begin
   case Http.CreateSseDecoder(1024) of
     when Ok(const Decoder):
       begin
-        case Http.FeedSse(Decoder, Utf8.Encode('id: 42' + #10 + 'event: greeting' + #10 +
-                                               'data: hel')) of
+        case Http.FeedSse(
+          Decoder, Utf8.Encode(
+            'id: 42' + #10 + 'event: greeting' + #10 +
+            'data: hel'
+          )
+        ) of
           when Ok(const Events):
             begin
               PrintEvents(Events);

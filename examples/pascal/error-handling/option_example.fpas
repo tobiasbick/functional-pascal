@@ -30,10 +30,14 @@ begin
   Console.WriteLn('Value: ', Found.Unwrap());
   const Missing: option of integer := FindFirst(Data, 100);
   Console.WriteLn('None variant: ', (Missing is None));
-  Console.WriteLn('Default value: ', (case Missing of
-    when Some(const AP43Value): AP43Value;
-    when None: 0;
-  end case));
+  Console.WriteLn(
+    'Default value: ', (
+      case Missing of
+        when Some(const AP43Value): AP43Value;
+        when None: 0;
+      end case
+    )
+  );
   case FindFirst(Data, 40) of
     when Some(const V):
       begin

@@ -9,8 +9,14 @@ begin
   case Node of
     when Element.TuiElement.Button(const Button):
       begin
-        if Button.Enabled and
-           ((RequireDefault and Button.Default) or ((Mnemonic <> '') and (Button.Mnemonic.ToLower() = Mnemonic.ToLower()))) then
+        if Button.Enabled
+          and
+          (
+            (RequireDefault and Button.Default)
+            or
+            ((Mnemonic <> '') and (Button.Mnemonic.ToLower() = Mnemonic.ToLower()))
+          )
+        then
           begin
             return Some(Button);
           end;

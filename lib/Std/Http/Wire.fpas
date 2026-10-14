@@ -17,8 +17,10 @@ public function FindSeparator(Bytes: array of integer; Start: integer): integer;
 begin
   for Index: integer := Start to Bytes.Length() - 4 do
     begin
-      if (((Bytes[Index] = 13) and (Bytes[Index + 1] = 10)) and (Bytes[Index + 2] = 13)) and
-         (Bytes[Index + 3] = 10) then
+      if (((Bytes[Index] = 13) and (Bytes[Index + 1] = 10)) and (Bytes[Index + 2] = 13))
+        and
+        (Bytes[Index + 3] = 10)
+      then
         begin
           return Index;
         end;
@@ -71,9 +73,9 @@ begin
           return Ok([Remainder, '']);
         when Some(const SecondSpace):
           return Ok([
-                      Remainder.Slice(0, SecondSpace),
-                      Remainder.Slice(SecondSpace + 1, Remainder.Length() - SecondSpace - 1).Trim()
-                    ]);
+            Remainder.Slice(0, SecondSpace),
+            Remainder.Slice(SecondSpace + 1, Remainder.Length() - SecondSpace - 1).Trim()
+          ]);
       end case;
   end case;
 end function;
@@ -156,8 +158,10 @@ begin
         end;
       end if;
 
-      if (Size > MaximumChunkSize div 16) or
-         ((Size = MaximumChunkSize div 16) and (Digit > MaximumChunkSize mod 16)) then
+      if (Size > MaximumChunkSize div 16)
+        or
+        ((Size = MaximumChunkSize div 16) and (Digit > MaximumChunkSize mod 16))
+      then
         begin
           return Error('HTTP chunk size exceeds the integer range: ' + SizeText);
         end;
@@ -251,8 +255,9 @@ begin
     end;
   end if;
 
-  return ((StatusCode < 100) or (StatusCode > 199)) and
-         ((StatusCode <> 204) and (StatusCode <> 304));
+  return ((StatusCode < 100) or (StatusCode > 199))
+    and
+    ((StatusCode <> 204) and (StatusCode <> 304));
 end function;
 
 // Applies selected framing to one complete raw response body.
@@ -369,8 +374,13 @@ begin
       end;
   end case;
 
-  return Ok(Types.ResponseHead(StatusCode := StatusCode, ReasonPhrase := Status[1], Headers := Headers, BodyOffset := Separator +
-                                                                                                                      4));
+  return Ok(
+    Types.ResponseHead(
+      StatusCode := StatusCode, ReasonPhrase := Status[1], Headers := Headers,
+      BodyOffset := Separator +
+      4
+    )
+  );
 end function;
 
 // Parses one complete buffered HTTP response.
@@ -383,12 +393,21 @@ begin
   case ParseResponseHead(Bytes) of
     when Ok(const Head):
       begin
-        const RawBody: array of integer := Bytes.Slice(Head.BodyOffset, Bytes.Length() -
-                                                                        Head.BodyOffset);
+        const RawBody: array of integer := Bytes.Slice(
+          Head.BodyOffset, Bytes.Length() -
+          Head.BodyOffset
+        );
         case ResponseBody(Head.Headers, RawBody, ResponseHasBody(RequestMethod, Head.StatusCode)) of
           when Ok(const Body):
             begin
-              return Ok(Types.Response(StatusCode := Head.StatusCode, ReasonPhrase := Head.ReasonPhrase, Headers := Head.Headers, Body := Body));
+              return Ok(
+                Types.Response(
+                  StatusCode := Head.StatusCode,
+                  ReasonPhrase := Head.ReasonPhrase,
+                  Headers := Head.Headers,
+                  Body := Body
+                )
+              );
             end;
           when Error(const Message):
             begin
@@ -449,22 +468,40 @@ begin
       return Error('HTTP request target contains CR or LF');
     end;
   end if;
-  var Head: string := RequestValue.Method + ' ' + UriValue.Path + ' HTTP/1.1' + #13 + #10 + 'Host: ' + HostHeader(UriValue) + #13 + #10 + 'Connection: close' + #13 + #10 + 'Content-Length: ' + Conv.IntToStr(RequestValue.Body.Length()) + #13 +
-                      #10;
+  var Head: string := RequestValue.Method + ' ' + UriValue.Path + ' HTTP/1.1' + #13 + #10 +
+    'Host: ' + HostHeader(UriValue) + #13 + #10 + 'Connection: close' + #13 + #10 +
+    'Content-Length: ' + Conv.IntToStr(RequestValue.Body.Length()) + #13 +
+    #10;
   for Index: integer := 0 to RequestValue.Headers.Length() - 1 do
     begin
       const HeaderValue: Types.Header := RequestValue.Headers[Index];
-      if (not Method.IsValidToken(HeaderValue.Name)) or
-         (HttpHeaders.ContainsUnsafeText(HeaderValue.Value) or (not Fields.IsValidValue(HeaderValue.Value))) then
+      if (not Method.IsValidToken(HeaderValue.Name))
+        or
+        (
+          HttpHeaders.ContainsUnsafeText(HeaderValue.Value)
+          or
+          (not Fields.IsValidValue(HeaderValue.Value))
+        )
+      then
         begin
           return Error('HTTP request contains an invalid header');
         end;
       end if;
 
-      if ((HttpHeaders.IsName(HeaderValue.Name, 'Host') or HttpHeaders.IsName(HeaderValue.Name, 'Content-Length')) or HttpHeaders.IsName(HeaderValue.Name, 'Connection')) or
-         HttpHeaders.IsName(HeaderValue.Name, 'Transfer-Encoding') then
+      if (
+        (
+          HttpHeaders.IsName(HeaderValue.Name, 'Host')
+          or
+          HttpHeaders.IsName(HeaderValue.Name, 'Content-Length')
+        ) or HttpHeaders.IsName(HeaderValue.Name, 'Connection')
+      )
+        or
+        HttpHeaders.IsName(HeaderValue.Name, 'Transfer-Encoding')
+      then
         begin
-          return Error('Host, Content-Length, Transfer-Encoding, and Connection headers are managed by Std.Http');
+          return Error(
+            'Host, Content-Length, Transfer-Encoding, and Connection headers are managed by Std.Http'
+          );
         end;
       end if;
 

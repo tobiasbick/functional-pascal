@@ -17,7 +17,15 @@ type ExplorerState = record
 
   static function Default(): ExplorerState;
   begin
-    return ExplorerState(CenterX := 0.0, CenterY := 0.0, SpanY := 2.4, Jr := -0.8, Ji := 0.156, MaxIter := 96, Palette := Color.PaletteKind.DeepOcean);
+    return ExplorerState(
+      CenterX := 0.0,
+      CenterY := 0.0,
+      SpanY := 2.4,
+      Jr := -0.8,
+      Ji := 0.156,
+      MaxIter := 96,
+      Palette := Color.PaletteKind.DeepOcean
+    );
   end function;
 
   function SpanX(Self: ExplorerState; Width: integer; Height: integer): real;
@@ -67,14 +75,14 @@ function ViewportCX(State: ExplorerState; W: integer; H: integer; CellX: integer
 begin
   const Wr: integer := Math.Max(W - 1, 1);
   return State.XMin(W, H) +
-         Conv.IntToReal(CellX - 1) / Conv.IntToReal(Wr) * (State.XMax(W, H) - State.XMin(W, H));
+    Conv.IntToReal(CellX - 1) / Conv.IntToReal(Wr) * (State.XMax(W, H) - State.XMin(W, H));
 end function;
 
 function ViewportCY(State: ExplorerState; W: integer; H: integer; CellY: integer): real;
 begin
   const Hr: integer := Math.Max(H - 1, 1);
   return State.YMax() -
-         Conv.IntToReal(CellY - 1) / Conv.IntToReal(Hr) * (State.YMax() - State.YMin());
+    Conv.IntToReal(CellY - 1) / Conv.IntToReal(Hr) * (State.YMax() - State.YMin());
 end function;
 
 procedure WriteHudText(Text: string; Width: integer);
@@ -103,13 +111,28 @@ begin
   const Title: string := 'Functional Pascal Julia';
   WriteHudText(Title, Width);
   Console.TextColorRGB(156, 204, 255);
-  WriteHudText('  tasks | units | records | postfix | truecolor', Math.Max(Width - Title.Length(), 0));
+  WriteHudText(
+    '  tasks | units | records | postfix | truecolor',
+    Math.Max(Width - Title.Length(), 0)
+  );
   if Console.ScreenHeight() >= 2 then
     begin
       Console.GotoXY(1, 2);
       Console.NormVideo();
-      WriteHudText('size=%dx%d  c=(%f,%f)  jr=%f  ji=%f  zoom=%f  iter=%d  pal=%s'
-                     .Format(Width, Height, S.CenterX, S.CenterY, S.Jr, S.Ji, S.GetZoom(), S.MaxIter, Color.PaletteName(S.Palette)), Width);
+      WriteHudText(
+        'size=%dx%d  c=(%f,%f)  jr=%f  ji=%f  zoom=%f  iter=%d  pal=%s'.Format(
+          Width,
+          Height,
+          S.CenterX,
+          S.CenterY,
+          S.Jr,
+          S.Ji,
+          S.GetZoom(),
+          S.MaxIter,
+          Color.PaletteName(S.Palette)
+        ),
+        Width
+      );
     end;
   end if;
 
@@ -152,8 +175,28 @@ begin
   RenderW := RenderWidth();
   RenderH := RenderHeight();
   Console.BeginFrame();
-  Console.FillRect(Console.Rect(x := 1, y := 1, width := Console.ScreenWidth(), height := Console.ScreenHeight()), Console.Cell(glyph := ' ', foreground := Console.RgbColor(0, 0, 0), background := Console.RgbColor(0, 0, 0)));
-  ActiveRender := Some(Render.StartRender(State.XMin(RenderW, RenderH), State.XMax(RenderW, RenderH), State.YMin(), State.YMax(), RenderW, RenderH, State.MaxIter, State.Palette, State.Jr, State.Ji));
+  Console.FillRect(
+    Console.Rect(x := 1, y := 1, width := Console.ScreenWidth(), height := Console.ScreenHeight()),
+    Console.Cell(
+      glyph := ' ',
+      foreground := Console.RgbColor(0, 0, 0),
+      background := Console.RgbColor(0, 0, 0)
+    )
+  );
+  ActiveRender := Some(
+    Render.StartRender(
+      State.XMin(RenderW, RenderH),
+      State.XMax(RenderW, RenderH),
+      State.YMin(),
+      State.YMax(),
+      RenderW,
+      RenderH,
+      State.MaxIter,
+      State.Palette,
+      State.Jr,
+      State.Ji
+    )
+  );
   DrawHud(State, RenderW, RenderH);
   Console.Present();
 end procedure;
@@ -277,8 +320,11 @@ end function;
 
 procedure HandleMouse(InputEvent: Console.ConsoleEvent);
 begin
-  const InView: boolean := (((InputEvent.mouse_x >= 1) and (InputEvent.mouse_x <= RenderW)) and (InputEvent.mouse_y >= 1)) and
-                           (InputEvent.mouse_y <= RenderH);
+  const InView: boolean := (
+    ((InputEvent.mouse_x >= 1) and (InputEvent.mouse_x <= RenderW)) and (InputEvent.mouse_y >= 1)
+  )
+    and
+    (InputEvent.mouse_y <= RenderH);
   if InputEvent.mouse_action = Console.MouseAction.ScrollUp then
     begin
       State.SpanY := Math.Max(State.SpanY * 0.88, 0.000001);

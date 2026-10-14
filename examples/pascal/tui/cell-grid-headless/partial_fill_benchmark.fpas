@@ -34,8 +34,14 @@ begin
   end for;
   const Elapsed: integer := Time.ElapsedMillis(Started);
   const Snapshot: Tui.TuiSurfaceSnapshot := Surface.Snapshot();
-  if (((Snapshot.CellAt(4, 3).Glyph <> '#') or (Snapshot.CellAt(93, 28).Glyph <> '#')) or (Snapshot.CellAt(3, 3).Glyph <> ' ')) or
-     (Snapshot.CellAt(94, 28).Glyph <> ' ') then
+  if (
+    ((Snapshot.CellAt(4, 3).Glyph <> '#') or (Snapshot.CellAt(93, 28).Glyph <> '#'))
+    or
+    (Snapshot.CellAt(3, 3).Glyph <> ' ')
+  )
+    or
+    (Snapshot.CellAt(94, 28).Glyph <> ' ')
+  then
     begin
       panic('partial fill snapshot mismatch');
     end;

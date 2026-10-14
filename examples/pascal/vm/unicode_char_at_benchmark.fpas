@@ -75,8 +75,10 @@ begin
     end;
   end if;
 
-  Console.WriteLn('iterations: ' + Conv.IntToStr(Iterations) + ', text length: ' +
-                  Conv.IntToStr(TextLength));
+  Console.WriteLn(
+    'iterations: ' + Conv.IntToStr(Iterations) + ', text length: ' +
+    Conv.IntToStr(TextLength)
+  );
   Console.WriteLn('elapsed: ' + Conv.IntToStr(Elapsed) + ' ms');
   if Elapsed > 0 then
     begin
@@ -91,8 +93,11 @@ begin
   Console.WriteLn('matches: ' + Conv.IntToStr(Matches));
   if (MaxMillis > 0) and (Elapsed > MaxMillis) then
     begin
-      panic('unicode-char-at benchmark regression: ' + Conv.IntToStr(Elapsed) + ' ms exceeds limit ' + Conv.IntToStr(MaxMillis) +
-            ' ms');
+      panic(
+        'unicode-char-at benchmark regression: ' + Conv.IntToStr(Elapsed) + ' ms exceeds limit ' +
+        Conv.IntToStr(MaxMillis) +
+        ' ms'
+      );
     end;
   end if;
 end.

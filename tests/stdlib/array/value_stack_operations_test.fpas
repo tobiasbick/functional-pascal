@@ -56,9 +56,9 @@ begin
   Test.AssertEquals(1, NestedRecord.Value.Items[0]);
   Test.AssertEquals('ABC', NestedRecord.Value.Text);
   const Records := [
-                     Holder(Items := [9, 8], Text := 'first'),
-                     Holder(Items := [3, 2], Text := 'last')
-                   ];
+    Holder(Items := [9, 8], Text := 'first'),
+    Holder(Items := [3, 2], Text := 'last')
+  ];
   var RecordList := Records.Pop();
   RecordList.Remaining[0].Items.SortInPlace();
   Test.AssertEquals(8, RecordList.Remaining[0].Items[0]);

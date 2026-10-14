@@ -27,7 +27,11 @@ begin
     end;
   end if;
 
-  return Console.Cell(glyph := EscapeGlyph(Sample.EscapeValue), foreground := Color.EscapeColor(Palette, Sample.EscapeValue), background := Console.RgbColor(0, 0, 0));
+  return Console.Cell(
+    glyph := EscapeGlyph(Sample.EscapeValue),
+    foreground := Color.EscapeColor(Palette, Sample.EscapeValue),
+    background := Console.RgbColor(0, 0, 0)
+  );
 end function;
 
 procedure DrawRow(
@@ -86,27 +90,41 @@ begin
   const Rows: channel of RenderRow := Tasks.CreateChannel(4);
   for Worker: integer := 0 to 3 do
     begin
-      const WorkerTask: task := Tasks.StartTaskInGroup(Group, procedure(Token: Tasks.CancellationToken) begin
-        var Py: integer := Worker;
-        while (Py < Height) and not Tasks.IsCancellationRequested(Token) do
-          begin
-            const Samples: array of Compute.PixelSample := Compute.ComputeRow(Py, Width, Height, XMin, XMax, YMin, YMax, MaxIter, Jr, Ji, Token);
-            if Tasks.IsCancellationRequested(Token) then
-              begin
-                return;
-              end;
-            end if;
-            const Row: RenderRow := RenderRow(Y := Py, Samples := Samples);
-            if (Tasks.SendWithCancellation(Rows, Row, Token) is Error(_)) then
-              begin
-                return;
-              end;
-            end if;
+      const WorkerTask: task := Tasks.StartTaskInGroup(
+        Group, procedure(Token: Tasks.CancellationToken) begin
+          var Py: integer := Worker;
+          while (Py < Height) and not Tasks.IsCancellationRequested(Token) do
+            begin
+              const Samples: array of Compute.PixelSample := Compute.ComputeRow(
+                Py,
+                Width,
+                Height,
+                XMin,
+                XMax,
+                YMin,
+                YMax,
+                MaxIter,
+                Jr,
+                Ji,
+                Token
+              );
+              if Tasks.IsCancellationRequested(Token) then
+                begin
+                  return;
+                end;
+              end if;
+              const Row: RenderRow := RenderRow(Y := Py, Samples := Samples);
+              if (Tasks.SendWithCancellation(Rows, Row, Token) is Error(_)) then
+                begin
+                  return;
+                end;
+              end if;
 
-            Py := Py + 4;
-          end;
-        end while;
-      end procedure);
+              Py := Py + 4;
+            end;
+          end while;
+        end procedure
+      );
     end;
   end for;
 

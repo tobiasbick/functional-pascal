@@ -57,17 +57,19 @@ public type TuiArrangedFrame = record
   // - `Bounds`: Rectangle affected by the operation.
   // - `Clip`: Clipping rectangle for drawing.
   public function Push(
-  Self: TuiArrangedFrame;
-  ParentIndex: integer;
-  Bounds: Rect.TuiRect;
-  Clip: Rect.TuiRect
-): integer;
+    Self: TuiArrangedFrame;
+    ParentIndex: integer;
+    Bounds: Rect.TuiRect;
+    Clip: Rect.TuiRect
+  ): integer;
   begin
     const Slot: integer := TuiFrameRequire(Self.Slot);
     var Entries: array of TuiArrangedEntry := TuiFrameEntries[Slot - 1];
     const Index: integer := Entries.Length();
     TuiFrameEntries[Slot - 1] := [];
-    Entries.PushInPlace(TuiArrangedEntry(ParentIndex := ParentIndex, Bounds := Bounds, Clip := Clip));
+    Entries.PushInPlace(
+      TuiArrangedEntry(ParentIndex := ParentIndex, Bounds := Bounds, Clip := Clip)
+    );
     TuiFrameEntries[Slot - 1] := Entries;
     return Index;
   end function;

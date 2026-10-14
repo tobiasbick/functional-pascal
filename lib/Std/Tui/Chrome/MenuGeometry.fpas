@@ -77,7 +77,9 @@ begin
       if MenuQuery.TuiMenuHasParent(Nodes[Index], Some(Parent)) then
         begin
           Height := Height + 1;
-          var ContentWidth: integer := Console.DisplayWidth(MenuQuery.TuiMenuNodeText(Nodes[Index]));
+          var ContentWidth: integer := Console.DisplayWidth(
+            MenuQuery.TuiMenuNodeText(Nodes[Index])
+          );
           case MenuQuery.TuiMenuNodeShortcut(Nodes[Index]) of
             when Some(const Shortcut):
               begin
@@ -242,7 +244,12 @@ begin
         end;
       end if;
 
-      Popups.PushInPlace(TuiMenuPopup(Parent := Parents[Index], Bounds := Rect.TuiRect.Create(X, Y, Size.Width, Size.Height)));
+      Popups.PushInPlace(
+        TuiMenuPopup(
+          Parent := Parents[Index],
+          Bounds := Rect.TuiRect.Create(X, Y, Size.Width, Size.Height)
+        )
+      );
     end;
   end for;
 

@@ -14,14 +14,30 @@ end record;
 
 function TuiSurfaceColorEqual(Left: Color.TuiColor; Right: Color.TuiColor): boolean;
 begin
-  return ((((Left.Kind = Right.Kind) and (Left.Index = Right.Index)) and (Left.Red = Right.Red)) and (Left.Green = Right.Green)) and
-         (Left.Blue = Right.Blue);
+  return (
+    (((Left.Kind = Right.Kind) and (Left.Index = Right.Index)) and (Left.Red = Right.Red))
+    and
+    (Left.Green = Right.Green)
+  )
+    and
+    (Left.Blue = Right.Blue);
 end function;
 
 function TuiSurfaceStyleEqual(Left: Style.TuiStyle; Right: Style.TuiStyle): boolean;
 begin
-  return ((((TuiSurfaceColorEqual(Left.Foreground, Right.Foreground) and TuiSurfaceColorEqual(Left.Background, Right.Background)) and (Left.Bold = Right.Bold)) and (Left.Dim = Right.Dim)) and (Left.Underline = Right.Underline)) and
-         (Left.Inverse = Right.Inverse);
+  return (
+    (
+      (
+        (
+          TuiSurfaceColorEqual(Left.Foreground, Right.Foreground)
+          and
+          TuiSurfaceColorEqual(Left.Background, Right.Background)
+        ) and (Left.Bold = Right.Bold)
+      ) and (Left.Dim = Right.Dim)
+    ) and (Left.Underline = Right.Underline)
+  )
+    and
+    (Left.Inverse = Right.Inverse);
 end function;
 
 function TuiSurfaceConcreteStyleEqual(
@@ -85,8 +101,9 @@ begin
     end;
   end if;
 
-  return ((CurrentCell.Glyph <> PresentedCell.Glyph) or (CurrentCell.Role <> PresentedCell.Role)) or
-         not TuiSurfaceConcreteStyleEqual(CurrentCell.ConcreteStyle, PresentedCell.ConcreteStyle);
+  return ((CurrentCell.Glyph <> PresentedCell.Glyph) or (CurrentCell.Role <> PresentedCell.Role))
+    or
+    not TuiSurfaceConcreteStyleEqual(CurrentCell.ConcreteStyle, PresentedCell.ConcreteStyle);
 end function;
 
 // Builds one terminal-damage range from a working-surface row.

@@ -77,7 +77,17 @@ end record;
 // - `Height`: Initial terminal height in cells.
 public function LocalChatModelCreate(Width: integer; Height: integer): LocalChatModel;
 begin
-  return LocalChatModel(Entries := [], Draft := '', DraftCaret := 0, TranscriptCaret := 0, TranscriptOffset := Tui.TuiPoint.Create(0, 0), Focus := 1, Status := 'Ready', Width := Width, Height := Height);
+  return LocalChatModel(
+    Entries := [],
+    Draft := '',
+    DraftCaret := 0,
+    TranscriptCaret := 0,
+    TranscriptOffset := Tui.TuiPoint.Create(0, 0),
+    Focus := 1,
+    Status := 'Ready',
+    Width := Width,
+    Height := Height
+  );
 end function;
 
 // Wraps text at grapheme boundaries for a cell-width limit.
@@ -172,7 +182,7 @@ begin
       end if;
 
       Transcript := Transcript + RoleLabel(State.Entries[Index].Role) + NewLine +
-                    WrapText(State.Entries[Index].Text, MaximumWidth);
+        WrapText(State.Entries[Index].Text, MaximumWidth);
     end;
   end for;
 

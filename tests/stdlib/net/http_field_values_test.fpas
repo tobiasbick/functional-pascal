@@ -30,8 +30,9 @@ begin
   const Peer: Net.Connection := Net.Accept(Server).Unwrap();
   discard Net.SetTimeout(Peer, 1000);
   discard Http.ReadRequest(Peer, 65536, 1024).Unwrap();
-  const Head: string := 'HTTP/1.1 200 OK' + #13 + #10 + 'X-Test: ' + Value + #13 + #10 + 'Content-Length: 0' + #13 + #10 + #13 +
-                        #10;
+  const Head: string := 'HTTP/1.1 200 OK' + #13 + #10 + 'X-Test: ' + Value + #13 + #10 +
+    'Content-Length: 0' + #13 + #10 + #13 +
+    #10;
   discard Net.SendBytes(Peer, Utf8.Encode(Head)).Unwrap();
   discard Net.Close(Peer);
 end procedure;
@@ -39,22 +40,26 @@ end procedure;
 begin
   scope
     for Sample: FieldCase in [
-                               FieldCase(Raw := '  ' + #9 + 'value' + #9 + ' ', Valid := true, Expected := 'value'),
-                               FieldCase(Raw := #9 + ' ' + #9, Valid := true, Expected := ''),
-                               FieldCase(Raw := 'a' + #9 + 'b', Valid := true, Expected := 'a' + #9 + 'b'),
-                               FieldCase(Raw := string.Chr(160) + 'value' + string.Chr(160), Valid := true, Expected := string.Chr(160) + 'value' +
-                                                                                                                        string.Chr(160)),
-                               FieldCase(Raw := #11 + 'value', Valid := false, Expected := ''),
-                               FieldCase(Raw := 'value' + #12, Valid := false, Expected := ''),
-                               FieldCase(Raw := 'a' + #11 + 'b', Valid := false, Expected := ''),
-                               FieldCase(Raw := #127 + 'value', Valid := false, Expected := '')
-                             ] do
+      FieldCase(Raw := '  ' + #9 + 'value' + #9 + ' ', Valid := true, Expected := 'value'),
+      FieldCase(Raw := #9 + ' ' + #9, Valid := true, Expected := ''),
+      FieldCase(Raw := 'a' + #9 + 'b', Valid := true, Expected := 'a' + #9 + 'b'),
+      FieldCase(
+        Raw := string.Chr(160) + 'value' + string.Chr(160), Valid := true,
+        Expected := string.Chr(160) + 'value' +
+        string.Chr(160)
+      ),
+      FieldCase(Raw := #11 + 'value', Valid := false, Expected := ''),
+      FieldCase(Raw := 'value' + #12, Valid := false, Expected := ''),
+      FieldCase(Raw := 'a' + #11 + 'b', Valid := false, Expected := ''),
+      FieldCase(Raw := #127 + 'value', Valid := false, Expected := '')
+    ] do
       const Server: Net.Listener := Net.Listen('127.0.0.1', 0).Unwrap();
       const Address: Net.NetworkAddress := Net.ListenerLocalAddress(Server).Unwrap();
       const Parsing: task of string := go ReadPeer(Server);
       const Peer: Net.Connection := Net.Connect(Address.Host, Address.Port, 1000).Unwrap();
-      const Head: string := 'GET / HTTP/1.1' + #13 + #10 + 'Host: 127.0.0.1' + #13 + #10 + 'X-Test: ' + Sample.Raw + #13 + #10 + #13 +
-                            #10;
+      const Head: string := 'GET / HTTP/1.1' + #13 + #10 + 'Host: 127.0.0.1' + #13 + #10 +
+        'X-Test: ' + Sample.Raw + #13 + #10 + #13 +
+        #10;
       discard Net.SendBytes(Peer, Utf8.Encode(Head)).Unwrap();
       discard Net.Close(Peer);
       const Parsed: string := Tasks.Wait(Parsing);
@@ -64,8 +69,10 @@ begin
         Test.AssertTrue(('invalid control character' in Parsed));
       end if;
       const Serving: task := go ServeResponse(Server, Sample.Raw);
-      var Outgoing: Http.Request := Http.Request.Get('http://127.0.0.1:' + Conv.IntToStr(Address.Port) +
-                                                     '/');
+      var Outgoing: Http.Request := Http.Request.Get(
+        'http://127.0.0.1:' + Conv.IntToStr(Address.Port) +
+        '/'
+      );
       Outgoing.TimeoutMillis := 1000;
       const Received: result of (Http.Response, string) := Http.Send(Outgoing);
       Tasks.Wait(Serving);

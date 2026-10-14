@@ -48,10 +48,12 @@ begin
   const Failure: result of (integer, string) := if Debug then Error('reason')
     else Ok(Count(8))
     end if;
-  Test.AssertEquals('reason', case Failure of
-    when Ok(_): 'unexpected success';
-    when Error(const Reason): Reason;
-  end case);
+  Test.AssertEquals(
+    'reason', case Failure of
+      when Ok(_): 'unexpected success';
+      when Error(const Reason): Reason;
+    end case
+  );
   Test.AssertEquals(2, Calls);
   const Nested: integer := if Debug then if Limit = 10 then 7 else 8 end if else 9 end if;
   Test.AssertEquals(7, Nested);

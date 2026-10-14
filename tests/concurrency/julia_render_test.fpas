@@ -5,7 +5,18 @@ uses
   Std.Test as Test;
 
 begin
-  const Job: Render.RenderJob := Render.StartRender(-1.0, 1.0, -1.0, 1.0, 7, 9, 32, Color.PaletteKind.DeepOcean, -0.8, 0.156);
+  const Job: Render.RenderJob := Render.StartRender(
+    -1.0,
+    1.0,
+    -1.0,
+    1.0,
+    7,
+    9,
+    32,
+    Color.PaletteKind.DeepOcean,
+    -0.8,
+    0.156
+  );
   var Seen: array of boolean := [false, false, false, false, false, false, false, false, false];
   for Index: integer := 1 to 9 do
     begin
@@ -13,7 +24,19 @@ begin
       Test.AssertTrue((Row.Y >= 0) and (Row.Y < 9));
       Test.AssertFalse(Seen[Row.Y]);
       Seen[Row.Y] := true;
-      const Expected: array of Compute.PixelSample := Compute.ComputeRow(Row.Y, 7, 9, -1.0, 1.0, -1.0, 1.0, 32, -0.8, 0.156, Tasks.GetTaskGroupToken(Job.Group));
+      const Expected: array of Compute.PixelSample := Compute.ComputeRow(
+        Row.Y,
+        7,
+        9,
+        -1.0,
+        1.0,
+        -1.0,
+        1.0,
+        32,
+        -0.8,
+        0.156,
+        Tasks.GetTaskGroupToken(Job.Group)
+      );
       Test.AssertEquals(7, Row.Samples.Length());
       for X: integer := 0 to 6 do
         begin

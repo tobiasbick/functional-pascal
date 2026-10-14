@@ -99,8 +99,15 @@ begin
           end;
         end if;
 
-        return TextArea.TuiRouteTextAreaKey(Id, Text, Caret, Offset, ChangeAction, Frame.EntryAt(Index)
-                                                                                     .Bounds, Key);
+        return TextArea.TuiRouteTextAreaKey(
+          Id,
+          Text,
+          Caret,
+          Offset,
+          ChangeAction,
+          Frame.EntryAt(Index).Bounds,
+          Key
+        );
       end;
     when Element.TuiElement.CheckBox(const Id, const Text, const Checked, const ChangeAction):
       begin
@@ -180,7 +187,9 @@ begin
               begin
                 if (Key.kind = Console.KeyKind.Enter) or (Key.kind = Console.KeyKind.Space) then
                   begin
-                    return Some(RuntimeMsg.TuiMsg.Action(Items[ItemIndex].Id, Items[ItemIndex].Action));
+                    return Some(
+                      RuntimeMsg.TuiMsg.Action(Items[ItemIndex].Id, Items[ItemIndex].Action)
+                    );
                   end;
                 end if;
 
@@ -230,8 +239,10 @@ begin
             var Content: Size.TuiSize := Size.TuiSize.Create(0, 0);
             if Children.Length() = 1 then
               begin
-                Content := Measure.TuiMeasure(Children[0], MeasureSpec.TuiMeasureSpec.Unbounded())
-                             .Preferred;
+                Content := Measure.TuiMeasure(
+                  Children[0],
+                  MeasureSpec.TuiMeasureSpec.Unbounded()
+                ).Preferred;
               end;
             end if;
             const Viewport: LayoutFrame.TuiArrangedEntry := Frame.EntryAt(Index);

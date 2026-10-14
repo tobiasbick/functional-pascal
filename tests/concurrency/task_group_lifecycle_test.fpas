@@ -9,23 +9,27 @@ begin
   const Empty: channel of integer := Tasks.CreateChannel(1);
   const Finished: channel of boolean := Tasks.CreateChannel(1);
   // Discard both handles: group ownership must retain the child and grandchild.
-  const ParentTask: task := Tasks.StartTaskInGroup(Group, procedure(Token: Tasks.CancellationToken) begin
-    const ChildTask: task := Tasks.StartTaskInGroup(Group, procedure(ChildToken: Tasks.CancellationToken) begin
-      case Tasks.ReceiveWithCancellation(Empty, ChildToken) of
-        when Ok(_):
-          begin
-            panic('empty channel unexpectedly delivered');
-          end;
-        when Error(_):
-          begin
-            Test.AssertTrue(Tasks.IsCancellationRequested(ChildToken));
-          end;
-      end case;
+  const ParentTask: task := Tasks.StartTaskInGroup(
+    Group, procedure(Token: Tasks.CancellationToken) begin
+      const ChildTask: task := Tasks.StartTaskInGroup(
+        Group, procedure(ChildToken: Tasks.CancellationToken) begin
+          case Tasks.ReceiveWithCancellation(Empty, ChildToken) of
+            when Ok(_):
+              begin
+                panic('empty channel unexpectedly delivered');
+              end;
+            when Error(_):
+              begin
+                Test.AssertTrue(Tasks.IsCancellationRequested(ChildToken));
+              end;
+          end case;
 
-      discard Tasks.Send(Finished, true);
-    end procedure);
-    discard Tasks.Send(Ready, true);
-  end procedure);
+          discard Tasks.Send(Finished, true);
+        end procedure
+      );
+      discard Tasks.Send(Ready, true);
+    end procedure
+  );
   Test.AssertTrue(Tasks.Receive(Ready).Unwrap());
   if RequestFirst then
     begin

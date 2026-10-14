@@ -7,12 +7,14 @@ end record;
 
 function ViewMenu(State: MenuModel): Tui.TuiElement;
 begin
-  return Tui.TuiElementBuilders.MakeDesktop(Some(Tui.TuiControlId.Create(1)), [
-                                                                                Tui.TuiElementBuilders.MakeMenuBar([
-                                                                                                                     Tui.TuiMenuItem.Create(Tui.TuiControlId.Create(1), 'Open', Tui.TuiAction.Create(10)),
-                                                                                                                     Tui.TuiMenuItem.Disabled(Tui.TuiControlId.Create(2), 'Save', Tui.TuiAction.Create(20))
-                                                                                                                   ])
-                                                                              ]);
+  return Tui.TuiElementBuilders.MakeDesktop(
+    Some(Tui.TuiControlId.Create(1)), [
+      Tui.TuiElementBuilders.MakeMenuBar([
+        Tui.TuiMenuItem.Create(Tui.TuiControlId.Create(1), 'Open', Tui.TuiAction.Create(10)),
+        Tui.TuiMenuItem.Disabled(Tui.TuiControlId.Create(2), 'Save', Tui.TuiAction.Create(20))
+      ])
+    ]
+  );
 end function;
 
 function UpdateMenu(State: MenuModel; Msg: Tui.TuiMsg; Cmd: Tui.TuiCmdOutput): MenuModel;

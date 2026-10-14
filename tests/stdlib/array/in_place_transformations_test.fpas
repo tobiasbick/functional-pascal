@@ -57,9 +57,11 @@ begin
   State.Values.RemoveInPlace(Key := 'a');
   State.Values.MergeInPlace(D2 := ['c': 3, 'b': 5]);
   State.Values.MapInPlace(F := Double);
-  State.Values.FilterInPlace(F := function(K: string; V: integer): boolean begin
-    return V > 6;
-  end function);
+  State.Values.FilterInPlace(
+    F := function(K: string; V: integer): boolean begin
+      return V > 6;
+    end function
+  );
   Test.AssertEquals(1, State.Items[0]);
   Test.AssertEquals('cba', State.Text);
   Test.AssertEquals(1, State.Values.Length());

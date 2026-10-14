@@ -38,8 +38,10 @@ begin
   var Start: integer := 0;
   if Width <= 0 then
     begin
-      return TuiInputViewport(Start := Caret, EndIndex := Caret, LeftClipped := Caret > 0, RightClipped := Caret <
-                                                                                                           Text.Length(), CaretColumn := 0);
+      return TuiInputViewport(
+        Start := Caret, EndIndex := Caret, LeftClipped := Caret > 0, RightClipped := Caret <
+        Text.Length(), CaretColumn := 0
+      );
     end;
   end if;
 
@@ -71,8 +73,10 @@ begin
     end;
   end while;
 
-  return TuiInputViewport(Start := Start, EndIndex := EndIndex, LeftClipped := Start > 0, RightClipped := EndIndex <
-                                                                                                          Text.Length(), CaretColumn := TuiInputWidth(Text, Start, Caret));
+  return TuiInputViewport(
+    Start := Start, EndIndex := EndIndex, LeftClipped := Start > 0, RightClipped := EndIndex <
+    Text.Length(), CaretColumn := TuiInputWidth(Text, Start, Caret)
+  );
 end function;
 
 // Maps one content-relative terminal column to a text caret.

@@ -105,8 +105,12 @@ begin
     begin
       if IdCounts[Loaded.Id] > 1 then
         begin
-          Issues.PushInPlace(Model.noteissue(Path := Loaded.Path, Message := 'Duplicate note ID: ' + Loaded.Id +
-                                                                             '. Give each file a unique ID before editing.'));
+          Issues.PushInPlace(
+            Model.noteissue(
+              Path := Loaded.Path, Message := 'Duplicate note ID: ' + Loaded.Id +
+              '. Give each file a unique ID before editing.'
+            )
+          );
         end;
       else
         begin
@@ -132,7 +136,7 @@ begin
   var Candidate: string := '';
   repeat
     Candidate := Conv.IntToStr(TimestampMillis) + '-' +
-                 Conv.IntToStr(Random.RandomInt(100000, 999999));
+      Conv.IntToStr(Random.RandomInt(100000, 999999));
   until not Fs.Exists(StdPath.Join([Directory, Candidate + '.note']));
   return Candidate;
 end function;

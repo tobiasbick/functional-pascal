@@ -167,8 +167,9 @@ public type TuiWorkingSurface = record
   public function Contains(Self: TuiWorkingSurface; Position: Point.TuiPoint): boolean;
   begin
     const Size: GeometrySize.TuiSize := Self.Size();
-    return (((Position.X >= 0) and (Position.X < Size.Width)) and (Position.Y >= 0)) and
-           (Position.Y < Size.Height);
+    return (((Position.X >= 0) and (Position.X < Size.Width)) and (Position.Y >= 0))
+      and
+      (Position.Y < Size.Height);
   end function;
 
   // Returns the leading cell at a position, or `None` outside the grid or on a continuation.
@@ -237,7 +238,10 @@ public type TuiWorkingSurface = record
   // - `Glyph`: Single renderable grapheme.
   public procedure PutGlyph(Self: TuiWorkingSurface; X: integer; Y: integer; Glyph: string);
   begin
-    Self.PutCell(Point.TuiPoint.Create(X, Y), CellsCell.TuiCell.Create(Glyph, StyleRole.TuiStyleRole.Normal));
+    Self.PutCell(
+      Point.TuiPoint.Create(X, Y),
+      CellsCell.TuiCell.Create(Glyph, StyleRole.TuiStyleRole.Normal)
+    );
   end procedure;
 
   // Copies the current leading glyphs for explicit test inspection.
@@ -267,7 +271,11 @@ public type TuiWorkingSurface = record
       end;
     end for;
 
-    return SurfaceSnapshot.TuiSurfaceSnapshot(Width := Size.Width, Height := Size.Height, Cells := Cells);
+    return SurfaceSnapshot.TuiSurfaceSnapshot(
+      Width := Size.Width,
+      Height := Size.Height,
+      Cells := Cells
+    );
   end function;
 end record;
 
@@ -290,7 +298,9 @@ begin
   end if;
   const Slot: integer := TuiSurfaceRequire(Surface.Slot);
   const Size: GeometrySize.TuiSize := TuiSurfaceSizes[Slot - 1];
-  const Visible: Rect.TuiRect := Bounds.Intersect(Rect.TuiRect.Create(0, 0, Size.Width, Size.Height));
+  const Visible: Rect.TuiRect := Bounds.Intersect(
+    Rect.TuiRect.Create(0, 0, Size.Width, Size.Height)
+  );
   if (Visible.X = 0) and (Visible.Width = Size.Width) then
     begin
       const FilledRow: array of CellsCell.TuiCell := array.Fill(Cell, Size.Width);
@@ -314,8 +324,12 @@ begin
   const Values: array of CellsCell.TuiCell := array.Fill(Cell, Visible.Width);
   for Y: integer := Visible.Y to Visible.Bottom() - 1 do
     begin
-      const Row: SurfaceRow.TuiSurfaceRow := SurfaceRow.TuiSurfaceWriteRow(TuiSurfaceCells[Slot - 1][Y], TuiSurfaceContinuations[Slot -
-                                                                                                                                 1][Y], Visible.X, Values);
+      const Row: SurfaceRow.TuiSurfaceRow := SurfaceRow.TuiSurfaceWriteRow(
+        TuiSurfaceCells[Slot - 1][Y], TuiSurfaceContinuations[
+          Slot -
+          1
+        ][Y], Visible.X, Values
+      );
       TuiSurfaceCells[Slot - 1][Y] := Row.Cells;
       TuiSurfaceContinuations[Slot - 1][Y] := Row.Continuations;
     end;
@@ -337,11 +351,20 @@ begin
       var FirstX: integer := -1;
       for X: integer := 0 to Size.Width - 1 do
         begin
-          const Changed: boolean := not ComparePrevious or
-                                    SurfaceDamage.TuiSurfaceCellChanged(TuiSurfaceCells[Slot - 1][Y][X], TuiSurfaceContinuations[Slot -
-                                                                                                                                 1][Y][X], TuiSurfacePresentedCells[Slot -
-                                                                                                                                                                    1][Y][X], TuiSurfacePresentedContinuations[Slot -
-                                                                                                                                                                                                               1][Y][X]);
+          const Changed: boolean := not ComparePrevious
+            or
+            SurfaceDamage.TuiSurfaceCellChanged(
+              TuiSurfaceCells[Slot - 1][Y][X], TuiSurfaceContinuations[
+                Slot -
+                1
+              ][Y][X], TuiSurfacePresentedCells[
+                Slot -
+                1
+              ][Y][X], TuiSurfacePresentedContinuations[
+                Slot -
+                1
+              ][Y][X]
+            );
           if Changed then
             begin
               if FirstX < 0 then
@@ -351,13 +374,21 @@ begin
               end if;
 
               TuiSurfacePresentedCells[Slot - 1][Y][X] := TuiSurfaceCells[Slot - 1][Y][X];
-              TuiSurfacePresentedContinuations[Slot - 1][Y][X] := TuiSurfaceContinuations[Slot - 1][Y][X];
+              TuiSurfacePresentedContinuations[Slot - 1][Y][X] := TuiSurfaceContinuations[Slot - 1][
+                Y
+              ][X];
             end;
           elsif FirstX >= 0 then
             begin
-              Damage.PushInPlace(SurfaceDamage.TuiSurfaceDamageForRange(TuiSurfaceCells[Slot - 1][Y], TuiSurfaceContinuations[Slot -
-                                                                                                                              1][Y], Y, FirstX, X -
-                                                                                                                                                1));
+              Damage.PushInPlace(
+                SurfaceDamage.TuiSurfaceDamageForRange(
+                  TuiSurfaceCells[Slot - 1][Y], TuiSurfaceContinuations[
+                    Slot -
+                    1
+                  ][Y], Y, FirstX, X -
+                  1
+                )
+              );
               FirstX := -1;
             end;
           end if;
@@ -366,9 +397,15 @@ begin
 
       if FirstX >= 0 then
         begin
-          Damage.PushInPlace(SurfaceDamage.TuiSurfaceDamageForRange(TuiSurfaceCells[Slot - 1][Y], TuiSurfaceContinuations[Slot -
-                                                                                                                          1][Y], Y, FirstX, Size.Width -
-                                                                                                                                            1));
+          Damage.PushInPlace(
+            SurfaceDamage.TuiSurfaceDamageForRange(
+              TuiSurfaceCells[Slot - 1][Y], TuiSurfaceContinuations[
+                Slot -
+                1
+              ][Y], Y, FirstX, Size.Width -
+              1
+            )
+          );
         end;
       end if;
     end;
@@ -428,8 +465,12 @@ begin
     end;
   end if;
   const Values: array of CellsCell.TuiCell := Cells.Slice(SourceX, Count);
-  const Row: SurfaceRow.TuiSurfaceRow := SurfaceRow.TuiSurfaceWriteRow(TuiSurfaceCells[Slot - 1][Position.Y], TuiSurfaceContinuations[Slot -
-                                                                                                                                      1][Position.Y], TargetX, Values);
+  const Row: SurfaceRow.TuiSurfaceRow := SurfaceRow.TuiSurfaceWriteRow(
+    TuiSurfaceCells[Slot - 1][Position.Y], TuiSurfaceContinuations[
+      Slot -
+      1
+    ][Position.Y], TargetX, Values
+  );
   TuiSurfaceCells[Slot - 1][Position.Y] := Row.Cells;
   TuiSurfaceContinuations[Slot - 1][Position.Y] := Row.Continuations;
 end procedure;

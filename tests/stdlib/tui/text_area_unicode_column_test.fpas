@@ -10,14 +10,29 @@ end record;
 
 function MakeKey(Kind: Tui.TuiKeyKind; Character: string): Tui.TuiKeyEvent;
 begin
-  return Console.KeyEvent(kind := Kind, ch := Character, shift := false, ctrl := false, alt := false, meta := false);
+  return Console.KeyEvent(
+    kind := Kind,
+    ch := Character,
+    shift := false,
+    ctrl := false,
+    alt := false,
+    meta := false
+  );
 end function;
 
 function ViewTextArea(State: TextAreaModel): Tui.TuiElement;
 begin
-  return Tui.TuiElementBuilders.MakeDesktop(Some(Tui.TuiControlId.Create(1)), [
-                                                                                Tui.TuiElementBuilders.MakeTextArea(Tui.TuiControlId.Create(1), State.Text, State.Caret, State.Offset, Tui.TuiAction.Create(9))
-                                                                              ]);
+  return Tui.TuiElementBuilders.MakeDesktop(
+    Some(Tui.TuiControlId.Create(1)), [
+      Tui.TuiElementBuilders.MakeTextArea(
+        Tui.TuiControlId.Create(1),
+        State.Text,
+        State.Caret,
+        State.Offset,
+        Tui.TuiAction.Create(9)
+      )
+    ]
+  );
 end function;
 
 function UpdateTextArea(State: TextAreaModel; Msg: Tui.TuiMsg; Cmd: Tui.TuiCmdOutput): TextAreaModel;
@@ -67,19 +82,23 @@ end function;
 begin
   const App: Tui.TuiApplication := Tui.TuiApplication.OpenForTest(Tui.TuiSize.Create(4, 2));
   for Line: string in [
-                        string.Chr(9800) + string.Chr(65038) + 'x',
-                        '',
-                        'e' + string.Chr(769) + 'x',
-                        '中a',
-                        '👩' + string.Chr(8205) + '💻x',
-                        '1' + string.Chr(65039) + string.Chr(8419) + 'x',
-                        string.Chr(769) + 'a',
-                        '🇩🇪x'
-                      ] do
+    string.Chr(9800) + string.Chr(65038) + 'x',
+    '',
+    'e' + string.Chr(769) + 'x',
+    '中a',
+    '👩' + string.Chr(8205) + '💻x',
+    '1' + string.Chr(65039) + string.Chr(8419) + 'x',
+    string.Chr(769) + 'a',
+    '🇩🇪x'
+  ] do
     begin
       for Column: integer := 0 to 6 do
         begin
-          const State: TextAreaModel := TextAreaModel(Text := 'xxxxxx' + #10 + Line + #10, Caret := Column, Offset := Tui.TuiPoint.Create(3, 0));
+          const State: TextAreaModel := TextAreaModel(
+            Text := 'xxxxxx' + #10 + Line + #10,
+            Caret := Column,
+            Offset := Tui.TuiPoint.Create(3, 0)
+          );
           const Moved: TextAreaModel := Press(App, State, Tui.TuiKeyKind.Down, '');
           Test.AssertEquals(7 + Expected(Line, Column), Moved.Caret);
         end;

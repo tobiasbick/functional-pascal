@@ -181,8 +181,10 @@ begin
             TuiElementValidateAction(Items[Index].Action);
             if TuiElementControlSeen(Seen, Items[Index].Id.Value) then
               begin
-                panic('Tui control id must be unique in one tree: ' +
-                      Conv.IntToStr(Items[Index].Id.Value));
+                panic(
+                  'Tui control id must be unique in one tree: ' +
+                  Conv.IntToStr(Items[Index].Id.Value)
+                );
               end;
             end if;
 
@@ -222,7 +224,9 @@ begin
                   TuiElementValidateAction(Action);
                   if TuiElementControlSeen(Seen, Id.Value) then
                     begin
-                      panic('Tui control id must be unique in one tree: ' + Conv.IntToStr(Id.Value));
+                      panic(
+                        'Tui control id must be unique in one tree: ' + Conv.IntToStr(Id.Value)
+                      );
                     end;
                   end if;
 
@@ -261,7 +265,9 @@ begin
         begin
           if TuiElementControlSeen(Seen, ChildIds[IdIndex]) then
             begin
-              panic('Tui control id must be unique in one tree: ' + Conv.IntToStr(ChildIds[IdIndex]));
+              panic(
+                'Tui control id must be unique in one tree: ' + Conv.IntToStr(ChildIds[IdIndex])
+              );
             end;
           end if;
 
@@ -279,8 +285,10 @@ begin
             begin
               if not TuiElementControlSeen(Seen, Id.Value) then
                 begin
-                  panic('Tui focused control id must exist in the rendered tree: ' +
-                        Conv.IntToStr(Id.Value));
+                  panic(
+                    'Tui focused control id must exist in the rendered tree: ' +
+                    Conv.IntToStr(Id.Value)
+                  );
                 end;
               end if;
             end;

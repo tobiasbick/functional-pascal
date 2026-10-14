@@ -21,17 +21,38 @@ end function;
 
 function MakeKey(Kind: Tui.TuiKeyKind): Tui.TuiKeyEvent;
 begin
-  return Tui.TuiKeyEvent(kind := Kind, ch := '', shift := false, ctrl := false, alt := false, meta := false);
+  return Tui.TuiKeyEvent(
+    kind := Kind,
+    ch := '',
+    shift := false,
+    ctrl := false,
+    alt := false,
+    meta := false
+  );
 end function;
 
 function MakeCtrlKey(Character: string): Tui.TuiKeyEvent;
 begin
-  return Tui.TuiKeyEvent(kind := Tui.TuiKeyKind.Character, ch := Character, shift := false, ctrl := true, alt := false, meta := false);
+  return Tui.TuiKeyEvent(
+    kind := Tui.TuiKeyKind.Character,
+    ch := Character,
+    shift := false,
+    ctrl := true,
+    alt := false,
+    meta := false
+  );
 end function;
 
 function MakeAltKey(Character: string): Tui.TuiKeyEvent;
 begin
-  return Tui.TuiKeyEvent(kind := Tui.TuiKeyKind.Character, ch := Character, shift := false, ctrl := false, alt := true, meta := false);
+  return Tui.TuiKeyEvent(
+    kind := Tui.TuiKeyKind.Character,
+    ch := Character,
+    shift := false,
+    ctrl := false,
+    alt := true,
+    meta := false
+  );
 end function;
 
 begin
@@ -58,7 +79,10 @@ begin
   EmptyApp.Close();
   const First: NotesModel.Note := NotesModel.NoteCreate('focus-first', 1);
   const Second: NotesModel.Note := NotesModel.NoteCreate('focus-second', 2);
-  const FocusLoaded: NotesModel.NotesLoad := NotesModel.NotesLoad(Notes := [First, Second], Issues := []);
+  const FocusLoaded: NotesModel.NotesLoad := NotesModel.NotesLoad(
+    Notes := [First, Second],
+    Issues := []
+  );
   var FocusModel: NotesModel.NotesModel := NotesModel.NotesModelCreate(Directory, FocusLoaded);
   const FocusApp: Tui.TuiApplication := Tui.TuiApplication.OpenForTest(Tui.TuiSize.Create(100, 24));
   FocusModel := FocusApp.RunIterations(FocusModel, Update.NotesUpdate, View.NotesView, 0, 0);
@@ -81,31 +105,54 @@ begin
   Test.AssertTrue(FocusModel.Pane = NotesModel.NotesPane.Editor);
   FocusApp.Close();
   const QuitCmd: Tui.TuiCmdOutput := Tui.TuiCmdOutput.Create();
-  const CleanEscape: NotesModel.NotesModel := Update.NotesUpdate(FocusModel, Tui.TuiMsg.QuitRequested, QuitCmd);
+  const CleanEscape: NotesModel.NotesModel := Update.NotesUpdate(
+    FocusModel,
+    Tui.TuiMsg.QuitRequested,
+    QuitCmd
+  );
   Test.AssertTrue(QuitCmd.Command() = Tui.TuiCmd.NoCommand);
   Test.AssertTrue(CleanEscape.Overlay = NotesModel.NotesOverlay.Closed);
   Test.AssertEquals(FocusModel.Focus, CleanEscape.Focus);
   var DirtyEscapeModel: NotesModel.NotesModel := FocusModel;
   DirtyEscapeModel.Dirty := true;
-  const DirtyEscape: NotesModel.NotesModel := Update.NotesUpdate(DirtyEscapeModel, Tui.TuiMsg.QuitRequested, QuitCmd);
+  const DirtyEscape: NotesModel.NotesModel := Update.NotesUpdate(
+    DirtyEscapeModel,
+    Tui.TuiMsg.QuitRequested,
+    QuitCmd
+  );
   Test.AssertTrue(QuitCmd.Command() = Tui.TuiCmd.NoCommand);
   Test.AssertTrue(DirtyEscape.Dirty);
   Test.AssertTrue(DirtyEscape.Overlay = NotesModel.NotesOverlay.Closed);
-  const CleanQuit: NotesModel.NotesModel := Update.NotesUpdate(FocusModel, Tui.TuiMsg.Key(MakeAltKey('x')), QuitCmd);
+  const CleanQuit: NotesModel.NotesModel := Update.NotesUpdate(
+    FocusModel,
+    Tui.TuiMsg.Key(MakeAltKey('x')),
+    QuitCmd
+  );
   Test.AssertTrue(QuitCmd.Command() = Tui.TuiCmd.Quit);
   Test.AssertTrue(CleanQuit.Overlay = NotesModel.NotesOverlay.Closed);
   var DirtyModel: NotesModel.NotesModel := FocusModel;
   DirtyModel.Dirty := true;
   DirtyModel.Overlay := NotesModel.NotesOverlay.Help;
-  const DirtyQuit: NotesModel.NotesModel := Update.NotesUpdate(DirtyModel, Tui.TuiMsg.Key(MakeAltKey('X')), QuitCmd);
+  const DirtyQuit: NotesModel.NotesModel := Update.NotesUpdate(
+    DirtyModel,
+    Tui.TuiMsg.Key(MakeAltKey('X')),
+    QuitCmd
+  );
   Test.AssertTrue(QuitCmd.Command() = Tui.TuiCmd.NoCommand);
   Test.AssertTrue(DirtyQuit.Overlay = NotesModel.NotesOverlay.QuitConfirmation);
   var NoteValue: NotesModel.Note := NotesModel.NoteCreate('tui-workflow', 1700000000000);
   NoteValue.Title := 'A very long note title that must never resize the notes sidebar';
-  NoteValue.Body := 'first off-screen line' + string.Chr(10) + 'second off-screen line' + string.Chr(10) +
-                    (string.Chr(65279) + 'visible body text');
-  const Issue: NotesModel.NoteIssue := NotesModel.NoteIssue(Path := 'broken.note', Message := 'invalid header');
-  const Loaded: NotesModel.NotesLoad := NotesModel.NotesLoad(Notes := [NoteValue], Issues := [Issue]);
+  NoteValue.Body := 'first off-screen line' + string.Chr(10) + 'second off-screen line' +
+    string.Chr(10) +
+    (string.Chr(65279) + 'visible body text');
+  const Issue: NotesModel.NoteIssue := NotesModel.NoteIssue(
+    Path := 'broken.note',
+    Message := 'invalid header'
+  );
+  const Loaded: NotesModel.NotesLoad := NotesModel.NotesLoad(
+    Notes := [NoteValue],
+    Issues := [Issue]
+  );
   var Model: NotesModel.NotesModel := NotesModel.NotesModelCreate(Directory, Loaded);
   var App: Tui.TuiApplication := Tui.TuiApplication.OpenForTest(Tui.TuiSize.Create(100, 24));
   Model := App.RunIterations(Model, Update.NotesUpdate, View.NotesView, 0, 0);
@@ -119,8 +166,23 @@ begin
   Model.BodyOffset := Tui.TuiPoint.Create(0, 2);
   Model := App.RunIterations(Model, Update.NotesUpdate, View.NotesView, 0, 0);
   Test.AssertTrue(ScreenContains(App.SurfaceSnapshot(), 'visible body text'));
-  App.Inject(Tui.TuiMsgTextChanged(Tui.TuiControlId.Create(3), Tui.TuiAction.Create(3), 'Modern terminal notes', 21));
-  App.Inject(Tui.TuiMsgTextAreaChanged(Tui.TuiControlId.Create(5), Tui.TuiAction.Create(5), 'Written through MVU', 19, Tui.TuiPoint.Create(0, 0)));
+  App.Inject(
+    Tui.TuiMsgTextChanged(
+      Tui.TuiControlId.Create(3),
+      Tui.TuiAction.Create(3),
+      'Modern terminal notes',
+      21
+    )
+  );
+  App.Inject(
+    Tui.TuiMsgTextAreaChanged(
+      Tui.TuiControlId.Create(5),
+      Tui.TuiAction.Create(5),
+      'Written through MVU',
+      19,
+      Tui.TuiPoint.Create(0, 0)
+    )
+  );
   Model := App.RunIterations(Model, Update.NotesUpdate, View.NotesView, 2, 0);
   Test.AssertTrue(Model.Dirty);
   App.Inject(Tui.TuiMsgAction(Tui.TuiControlId.Create(21), Tui.TuiAction.Create(11)));

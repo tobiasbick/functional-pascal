@@ -79,8 +79,11 @@ begin
   Console.WriteLn('completed: ' + Conv.IntToStr(Completed));
   if (MaxMillis > 0) and (Elapsed > MaxMillis) then
     begin
-      panic('task-spawn-wait benchmark regression: ' + Conv.IntToStr(Elapsed) + ' ms exceeds limit ' + Conv.IntToStr(MaxMillis) +
-            ' ms');
+      panic(
+        'task-spawn-wait benchmark regression: ' + Conv.IntToStr(Elapsed) + ' ms exceeds limit ' +
+        Conv.IntToStr(MaxMillis) +
+        ' ms'
+      );
     end;
   end if;
 end.

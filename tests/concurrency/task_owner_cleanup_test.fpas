@@ -6,12 +6,14 @@ function Parent(Ready: channel of boolean; Done: channel of boolean): integer;
 begin
   const Group := Tasks.CreateTaskGroup();
   const Gate: channel of boolean := Tasks.CreateChannel(1);
-  discard Tasks.StartTaskInGroup(Group, procedure(Token: Tasks.CancellationToken) begin
-    discard Tasks.Send(Ready, true);
-    Test.AssertTrue((Tasks.ReceiveWithCancellation(Gate, Token) is Error(_)));
-    Test.AssertTrue(Tasks.IsCancellationRequested(Token));
-    discard Tasks.Send(Done, true);
-  end procedure);
+  discard Tasks.StartTaskInGroup(
+    Group, procedure(Token: Tasks.CancellationToken) begin
+      discard Tasks.Send(Ready, true);
+      Test.AssertTrue((Tasks.ReceiveWithCancellation(Gate, Token) is Error(_)));
+      Test.AssertTrue(Tasks.IsCancellationRequested(Token));
+      discard Tasks.Send(Done, true);
+    end procedure
+  );
   Test.AssertTrue(Tasks.Receive(Ready).Unwrap());
   return 42;
 end function;
@@ -40,9 +42,11 @@ begin
 
   Test.AssertEquals(7, Tasks.ReceiveWithTimeout(Queue, 0).Unwrap());
   const Group := Tasks.CreateTaskGroup();
-  const Data := Tasks.StartTaskInGroup(Group, function(Token: Tasks.CancellationToken): result of (integer, integer) begin
-    return Error(7);
-  end function);
+  const Data := Tasks.StartTaskInGroup(
+    Group, function(Token: Tasks.CancellationToken): result of (integer, integer) begin
+      return Error(7);
+    end function
+  );
   case Tasks.Wait(Data) of
     when Error(const Number):
       Test.AssertEquals(7, Number);

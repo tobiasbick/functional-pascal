@@ -4,17 +4,26 @@ uses Std.Test as Test, Std.Tui as Tui;
 
 function ViewDashboard(State: integer): Tui.TuiElement;
 begin
-  const Concrete: Tui.TuiStyle := Tui.TuiStyle.FromColors(Tui.TuiColor.FromRgb(1, 2, 3), Tui.TuiColor.FromRgb(4, 5, 6));
-  return Tui.TuiElementBuilders.MakeDesktop(None, [
-                                                    Tui.TuiElementBuilders.MakeColumn([
-                                                                                        Tui.TuiElementBuilders.MakeCellGrid(Tui.TuiCellGrid.Create(2, 1, [
-                                                                                                                                                           Tui.TuiCell.Styled('A', Concrete),
-                                                                                                                                                           Tui.TuiCell.Create('B', Tui.TuiStyleRole.Accent)
-                                                                                                                                                         ])),
-                                                                                        Tui.TuiElementBuilders.MakeRule('Metrics'),
-                                                                                        Tui.TuiElementBuilders.MakeGauge('Load', 3, 4)
-                                                                                      ])
-                                                  ]);
+  const Concrete: Tui.TuiStyle := Tui.TuiStyle.FromColors(
+    Tui.TuiColor.FromRgb(1, 2, 3),
+    Tui.TuiColor.FromRgb(4, 5, 6)
+  );
+  return Tui.TuiElementBuilders.MakeDesktop(
+    None, [
+      Tui.TuiElementBuilders.MakeColumn([
+        Tui.TuiElementBuilders.MakeCellGrid(
+          Tui.TuiCellGrid.Create(
+            2, 1, [
+              Tui.TuiCell.Styled('A', Concrete),
+              Tui.TuiCell.Create('B', Tui.TuiStyleRole.Accent)
+            ]
+          )
+        ),
+        Tui.TuiElementBuilders.MakeRule('Metrics'),
+        Tui.TuiElementBuilders.MakeGauge('Load', 3, 4)
+      ])
+    ]
+  );
 end function;
 
 function UpdateDashboard(State: integer; Msg: Tui.TuiMsg; Cmd: Tui.TuiCmdOutput): integer;

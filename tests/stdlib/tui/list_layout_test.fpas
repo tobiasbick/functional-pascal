@@ -8,11 +8,20 @@ end record;
 
 function ViewList(State: ListModel): Tui.TuiElement;
 begin
-  return Tui.TuiElementBuilders.MakeDesktop(Some(Tui.TuiControlId.Create(1)), [
-                                                                                Tui.TuiElementBuilders.MakePanel('Host', [
-                                                                                                                           Tui.TuiElementBuilders.MakeList(Tui.TuiControlId.Create(1), ['Alpha', 'Beta', 'Gamma'], State.Selected, Tui.TuiAction.Create(5))
-                                                                                                                         ])
-                                                                              ]);
+  return Tui.TuiElementBuilders.MakeDesktop(
+    Some(Tui.TuiControlId.Create(1)), [
+      Tui.TuiElementBuilders.MakePanel(
+        'Host', [
+          Tui.TuiElementBuilders.MakeList(
+            Tui.TuiControlId.Create(1),
+            ['Alpha', 'Beta', 'Gamma'],
+            State.Selected,
+            Tui.TuiAction.Create(5)
+          )
+        ]
+      )
+    ]
+  );
 end function;
 
 function UpdateList(State: ListModel; Msg: Tui.TuiMsg; Cmd: Tui.TuiCmdOutput): ListModel;
@@ -22,14 +31,21 @@ begin
 end function;
 
 begin
-  const Measured: Tui.TuiMeasureResult := Tui.TuiMeasure(Tui.TuiElementBuilders.MakeList(Tui.TuiControlId.Create(1), [
-                                                                                                                       'Alpha',
-                                                                                                                       'Beta',
-                                                                                                                       'Gamma'
-                                                                                                                     ], 0, Tui.TuiAction.Create(1)), Tui.TuiMeasureSpec.Unbounded());
+  const Measured: Tui.TuiMeasureResult := Tui.TuiMeasure(
+    Tui.TuiElementBuilders.MakeList(
+      Tui.TuiControlId.Create(1), [
+        'Alpha',
+        'Beta',
+        'Gamma'
+      ], 0, Tui.TuiAction.Create(1)
+    ), Tui.TuiMeasureSpec.Unbounded()
+  );
   Test.AssertEquals(7, Measured.Preferred.Width);
   Test.AssertEquals(3, Measured.Preferred.Height);
-  const Empty: Tui.TuiMeasureResult := Tui.TuiMeasure(Tui.TuiElementBuilders.MakeList(Tui.TuiControlId.Create(1), [], -1, Tui.TuiAction.Create(1)), Tui.TuiMeasureSpec.Unbounded());
+  const Empty: Tui.TuiMeasureResult := Tui.TuiMeasure(
+    Tui.TuiElementBuilders.MakeList(Tui.TuiControlId.Create(1), [], -1, Tui.TuiAction.Create(1)),
+    Tui.TuiMeasureSpec.Unbounded()
+  );
   Test.AssertEquals(2, Empty.Preferred.Width);
   Test.AssertEquals(1, Empty.Preferred.Height);
   var App: Tui.TuiApplication := Tui.TuiApplication.OpenForTest(Tui.TuiSize.Create(24, 8));

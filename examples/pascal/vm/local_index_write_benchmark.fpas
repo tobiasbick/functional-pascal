@@ -49,8 +49,10 @@ begin
   Console.WriteLn('elapsed: ' + Conv.IntToStr(Elapsed) + ' ms');
   if Elapsed > 0 then
     begin
-      Console.WriteLn('throughput: ' + Conv.IntToStr(Iterations * Size * 1000 div Elapsed) +
-                      ' writes/s');
+      Console.WriteLn(
+        'throughput: ' + Conv.IntToStr(Iterations * Size * 1000 div Elapsed) +
+        ' writes/s'
+      );
     end;
   else
     begin

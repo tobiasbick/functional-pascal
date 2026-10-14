@@ -115,8 +115,15 @@ begin
 
       for Other: integer := 0 to Index - 1 do
         begin
-          if (TuiMenuSameOptionalId(MenuQuery.TuiMenuNodeParent(Nodes[Other]), MenuQuery.TuiMenuNodeParent(Nodes[Index])) and (Mnemonic <> '')) and
-             (Mnemonic.ToLower() = MenuQuery.TuiMenuNodeMnemonic(Nodes[Other]).ToLower()) then
+          if (
+            TuiMenuSameOptionalId(
+              MenuQuery.TuiMenuNodeParent(Nodes[Other]),
+              MenuQuery.TuiMenuNodeParent(Nodes[Index])
+            ) and (Mnemonic <> '')
+          )
+            and
+            (Mnemonic.ToLower() = MenuQuery.TuiMenuNodeMnemonic(Nodes[Other]).ToLower())
+          then
             begin
               panic('Tui sibling menu mnemonics must be unique');
             end;

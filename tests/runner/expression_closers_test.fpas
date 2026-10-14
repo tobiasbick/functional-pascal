@@ -61,12 +61,18 @@ begin
   Test.AssertEquals(20, Updated.Y);
   Test.AssertEquals(1, Original.X);
   Test.AssertEquals(2, Original.Y);
-  Test.AssertEquals(42, Apply(function(P: Point): integer begin
-    return P.X * 21;
-  end function, Original with X := 2; end with));
-  const Container: Holder := Holder(Child := Original, Reader := function(): integer begin
-    return 0;
-  end function);
+  Test.AssertEquals(
+    42, Apply(
+      function(P: Point): integer begin
+        return P.X * 21;
+      end function, Original with X := 2; end with
+    )
+  );
+  const Container: Holder := Holder(
+    Child := Original, Reader := function(): integer begin
+      return 0;
+    end function
+  );
   const Changed: Holder := Container with Child := Original with X := 7; end with; Reader := function(): integer begin
     return Updated.X;
   end function; end with;
@@ -77,9 +83,11 @@ begin
   Test.AssertEquals(1, Container.Child.X);
   Test.AssertEquals(0, Container.Reader());
   var Captured: integer := 0;
-  Invoke(procedure() begin
-    Captured := Captured + 1;
-  end procedure);
+  Invoke(
+    procedure() begin
+      Captured := Captured + 1;
+    end procedure
+  );
   Test.AssertEquals(1, Captured);
   Invoke(procedure() begin end procedure);
   const Factory: function(Value: integer): function(): integer := MakeFactory();

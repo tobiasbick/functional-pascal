@@ -8,11 +8,20 @@ end record;
 
 function ViewList(State: ListModel): Tui.TuiElement;
 begin
-  return Tui.TuiElementBuilders.MakeDesktop(Some(Tui.TuiControlId.Create(1)), [
-                                                                                Tui.TuiElementBuilders.MakePanel('Host', [
-                                                                                                                           Tui.TuiElementBuilders.MakeList(Tui.TuiControlId.Create(1), ['Alpha', 'Beta', 'Gamma'], State.Selected, Tui.TuiAction.Create(5))
-                                                                                                                         ])
-                                                                              ]);
+  return Tui.TuiElementBuilders.MakeDesktop(
+    Some(Tui.TuiControlId.Create(1)), [
+      Tui.TuiElementBuilders.MakePanel(
+        'Host', [
+          Tui.TuiElementBuilders.MakeList(
+            Tui.TuiControlId.Create(1),
+            ['Alpha', 'Beta', 'Gamma'],
+            State.Selected,
+            Tui.TuiAction.Create(5)
+          )
+        ]
+      )
+    ]
+  );
 end function;
 
 function UpdateList(State: ListModel; Msg: Tui.TuiMsg; Cmd: Tui.TuiCmdOutput): ListModel;

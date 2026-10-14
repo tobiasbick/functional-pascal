@@ -12,14 +12,29 @@ end record;
 
 function MakeKey(Kind: Tui.TuiKeyKind; Character: string): Tui.TuiKeyEvent;
 begin
-  return Console.KeyEvent(kind := Kind, ch := Character, shift := false, ctrl := false, alt := false, meta := false);
+  return Console.KeyEvent(
+    kind := Kind,
+    ch := Character,
+    shift := false,
+    ctrl := false,
+    alt := false,
+    meta := false
+  );
 end function;
 
 function ViewTextArea(State: TextAreaModel): Tui.TuiElement;
 begin
-  return Tui.TuiElementBuilders.MakeDesktop(Some(Tui.TuiControlId.Create(1)), [
-                                                                                Tui.TuiElementBuilders.MakeTextArea(Tui.TuiControlId.Create(1), State.Text, State.Caret, State.Offset, Tui.TuiAction.Create(9))
-                                                                              ]);
+  return Tui.TuiElementBuilders.MakeDesktop(
+    Some(Tui.TuiControlId.Create(1)), [
+      Tui.TuiElementBuilders.MakeTextArea(
+        Tui.TuiControlId.Create(1),
+        State.Text,
+        State.Caret,
+        State.Offset,
+        Tui.TuiAction.Create(9)
+      )
+    ]
+  );
 end function;
 
 function UpdateTextArea(State: TextAreaModel; Msg: Tui.TuiMsg; Cmd: Tui.TuiCmdOutput): TextAreaModel;
@@ -61,7 +76,11 @@ begin
       Caret := Text.Length() - 7;
     end;
   end if;
-  const Initial: TextAreaModel := TextAreaModel(Text := Text, Caret := Caret, Offset := Tui.TuiPoint.Create(0, 0));
+  const Initial: TextAreaModel := TextAreaModel(
+    Text := Text,
+    Caret := Caret,
+    Offset := Tui.TuiPoint.Create(0, 0)
+  );
   const App: Tui.TuiApplication := Tui.TuiApplication.OpenForTest(Tui.TuiSize.Create(20, 4));
   const Started: integer := Time.MonotonicMillis();
   for Pass: integer := 1 to 10 do

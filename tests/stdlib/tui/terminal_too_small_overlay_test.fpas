@@ -3,11 +3,13 @@ program TuiTerminalTooSmallOverlayTest;
 uses Std.Test as Test, Std.Tui as Tui;
 
 begin
-  const Wide: Tui.TuiElement := Tui.TuiElementBuilders.MakePanel('WideTitleWindow', [
-                                                                                      Tui.TuiElementBuilders.MakeLabel('abcdefghijklmnopqrstuvwxyz'),
-                                                                                      Tui.TuiElementBuilders.MakeLabel('ABCDEFGHIJKLMNOPQRSTUVWXYZ'),
-                                                                                      Tui.TuiElementBuilders.MakeLabel('01234567890123456789012345')
-                                                                                    ]);
+  const Wide: Tui.TuiElement := Tui.TuiElementBuilders.MakePanel(
+    'WideTitleWindow', [
+      Tui.TuiElementBuilders.MakeLabel('abcdefghijklmnopqrstuvwxyz'),
+      Tui.TuiElementBuilders.MakeLabel('ABCDEFGHIJKLMNOPQRSTUVWXYZ'),
+      Tui.TuiElementBuilders.MakeLabel('01234567890123456789012345')
+    ]
+  );
   Test.AssertTrue(Tui.TuiLayoutFitFor(Wide, Tui.TuiSize.Create(40, 12)).Fits());
   Test.AssertFalse(Tui.TuiLayoutFitFor(Wide, Tui.TuiSize.Create(8, 3)).Fits());
   const Surface: Tui.TuiWorkingSurface := Tui.TuiWorkingSurface.Create(Tui.TuiSize.Create(24, 5));

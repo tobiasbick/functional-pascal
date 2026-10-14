@@ -9,7 +9,14 @@ uses LocalChat.Config as Config, Std.Ai.OpenAi as OpenAi;
 // - `Prompt`: User prompt sent as the sole chat message.
 public function LocalChatRequest(Prompt: string): result of (string, string);
 begin
-  const ClientValue: OpenAi.Client := OpenAi.Client.Create(Config.LocalChatBaseUrl, Config.LocalChatModelName);
-  return OpenAi.Complete(ClientValue, [OpenAi.ChatMessage.User(Prompt)], OpenAi.ChatOptions.Default());
+  const ClientValue: OpenAi.Client := OpenAi.Client.Create(
+    Config.LocalChatBaseUrl,
+    Config.LocalChatModelName
+  );
+  return OpenAi.Complete(
+    ClientValue,
+    [OpenAi.ChatMessage.User(Prompt)],
+    OpenAi.ChatOptions.Default()
+  );
 end function;
 end unit;

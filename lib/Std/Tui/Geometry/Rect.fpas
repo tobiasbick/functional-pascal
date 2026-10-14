@@ -161,8 +161,9 @@ public type TuiRect = record
   // - `Point`: Point tested by the operation.
   public function Contains(Self: TuiRect; Point: GeometryPoint.TuiPoint): boolean;
   begin
-    return (((Point.X >= Self.X) and (Point.X < Self.Right())) and (Point.Y >= Self.Y)) and
-           (Point.Y < Self.Bottom());
+    return (((Point.X >= Self.X) and (Point.X < Self.Right())) and (Point.Y >= Self.Y))
+      and
+      (Point.Y < Self.Bottom());
   end function;
 
   // Returns whether two rectangles share any cell.
@@ -176,8 +177,9 @@ public type TuiRect = record
       return false;
     end if;
 
-    return (((Self.X < Other.Right()) and (Other.X < Self.Right())) and (Self.Y < Other.Bottom())) and
-           (Other.Y < Self.Bottom());
+    return (((Self.X < Other.Right()) and (Other.X < Self.Right())) and (Self.Y < Other.Bottom()))
+      and
+      (Other.Y < Self.Bottom());
   end function;
 
   // Returns the overlapping rectangle, or an empty rectangle at the clamped origin.

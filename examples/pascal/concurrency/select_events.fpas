@@ -6,21 +6,25 @@ uses Std.Tasks as Tasks, Std.Console as Console;
 begin
   const Messages: channel of string := Tasks.CreateChannel(4);
   discard Tasks.Send(Messages, 'hello from the queue');
-  const Message: Tasks.WaitCase := Tasks.ReceiveCase(Messages, procedure(Outcome: result of (string, string)) begin
-    case Outcome of
-      when Ok(const Text):
-        begin
-          Console.WriteLn(Text);
-        end;
-      when Error(const Reason):
-        begin
-          Console.WriteLn(Reason);
-        end;
-    end case;
-  end procedure);
-  const Timeout: Tasks.WaitCase := Tasks.TimerCase(100, procedure() begin
-    Console.WriteLn('no message before the deadline');
-  end procedure);
+  const Message: Tasks.WaitCase := Tasks.ReceiveCase(
+    Messages, procedure(Outcome: result of (string, string)) begin
+      case Outcome of
+        when Ok(const Text):
+          begin
+            Console.WriteLn(Text);
+          end;
+        when Error(const Reason):
+          begin
+            Console.WriteLn(Reason);
+          end;
+      end case;
+    end procedure
+  );
+  const Timeout: Tasks.WaitCase := Tasks.TimerCase(
+    100, procedure() begin
+      Console.WriteLn('no message before the deadline');
+    end procedure
+  );
   discard Tasks.Select([Message, Timeout]);
   // Both cases are now consumed; a second selection needs new cases.
   discard Tasks.CloseChannel(Messages);

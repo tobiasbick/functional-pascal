@@ -50,20 +50,28 @@ begin
   const B := Box(Value := 3);
   const Read: function(): integer := B.Read;
   Test.AssertEquals(3, Read());
-  Test.AssertTrue(case Checked(3) of
-    when Ok(const N): N = 3;
-    when Error(_): false;
-  end case);
-  Test.AssertTrue(case Checked(-1) of
-    when Ok(_): false;
-    when Error(const Message): Message = 'negative';
-  end case);
-  Test.AssertTrue(case Optional(3) of
-    when Some(const N): N = 3;
-    when None: false;
-  end case);
-  Test.AssertTrue(case Optional(-1) of
-    when Some(_): false;
-    when None: true;
-  end case);
+  Test.AssertTrue(
+    case Checked(3) of
+      when Ok(const N): N = 3;
+      when Error(_): false;
+    end case
+  );
+  Test.AssertTrue(
+    case Checked(-1) of
+      when Ok(_): false;
+      when Error(const Message): Message = 'negative';
+    end case
+  );
+  Test.AssertTrue(
+    case Optional(3) of
+      when Some(const N): N = 3;
+      when None: false;
+    end case
+  );
+  Test.AssertTrue(
+    case Optional(-1) of
+      when Some(_): false;
+      when None: true;
+    end case
+  );
 end.

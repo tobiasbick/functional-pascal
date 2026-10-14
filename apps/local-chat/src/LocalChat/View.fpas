@@ -21,7 +21,15 @@ const SendAction: integer := 10;
 // - `Stretch`: Relative space assigned by the parent layout.
 function Expanding(Child: Tui.TuiElement; Stretch: integer): Tui.TuiElement;
 begin
-  return Tui.TuiElementBuilders.MakeLayout(Tui.TuiLayoutSettings.Create(Tui.TuiMargins.Uniform(0), Tui.TuiSizePolicy.Expanding(), Tui.TuiAlignment.Fill(), Stretch), Child);
+  return Tui.TuiElementBuilders.MakeLayout(
+    Tui.TuiLayoutSettings.Create(
+      Tui.TuiMargins.Uniform(0),
+      Tui.TuiSizePolicy.Expanding(),
+      Tui.TuiAlignment.Fill(),
+      Stretch
+    ),
+    Child
+  );
 end function;
 
 // Builds the application header rule.
@@ -36,7 +44,13 @@ end function;
 // - `State`: Current application state rendered by the panel.
 function Transcript(State: Model.LocalChatModel): Tui.TuiElement;
 begin
-  const Content: Tui.TuiElement := Tui.TuiElementBuilders.MakeTextArea(Tui.TuiControlId.Create(TranscriptControl), Model.LocalChatTranscript(State), State.TranscriptCaret, State.TranscriptOffset, Tui.TuiAction.Create(TranscriptChangedAction));
+  const Content: Tui.TuiElement := Tui.TuiElementBuilders.MakeTextArea(
+    Tui.TuiControlId.Create(TranscriptControl),
+    Model.LocalChatTranscript(State),
+    State.TranscriptCaret,
+    State.TranscriptOffset,
+    Tui.TuiAction.Create(TranscriptChangedAction)
+  );
   return Tui.TuiElementBuilders.MakePanel('Conversation', [Expanding(Content, 1)]);
 end function;
 
@@ -46,11 +60,24 @@ end function;
 // - `State`: Current application state rendered by the composer.
 function Composer(State: Model.LocalChatModel): Tui.TuiElement;
 begin
-  const Prompt: Tui.TuiElement := Tui.TuiElementBuilders.MakeInputWithHint(Tui.TuiControlId.Create(PromptControl), State.Draft, State.DraftCaret, 'Message the local model…', Tui.TuiAction.Create(PromptChangedAction));
-  const Send: Tui.TuiElement := Tui.TuiElementBuilders.MakeDefaultButton(Tui.TuiControlId.Create(3), 'Send', 'S', Tui.TuiAction.Create(SendAction));
-  return Tui.TuiElementBuilders.MakePanel('Message', [
-                                                       Tui.TuiElementBuilders.MakeRow([Expanding(Prompt, 1), Send])
-                                                     ]);
+  const Prompt: Tui.TuiElement := Tui.TuiElementBuilders.MakeInputWithHint(
+    Tui.TuiControlId.Create(PromptControl),
+    State.Draft,
+    State.DraftCaret,
+    'Message the local model…',
+    Tui.TuiAction.Create(PromptChangedAction)
+  );
+  const Send: Tui.TuiElement := Tui.TuiElementBuilders.MakeDefaultButton(
+    Tui.TuiControlId.Create(3),
+    'Send',
+    'S',
+    Tui.TuiAction.Create(SendAction)
+  );
+  return Tui.TuiElementBuilders.MakePanel(
+    'Message', [
+      Tui.TuiElementBuilders.MakeRow([Expanding(Prompt, 1), Send])
+    ]
+  );
 end function;
 
 // Builds the footer status line and keyboard hints.
@@ -60,11 +87,11 @@ end function;
 function Status(State: Model.LocalChatModel): Tui.TuiElement;
 begin
   return Tui.TuiElementBuilders.MakeStatusLine([
-                                                 Tui.TuiStatusItemBuilders.MakeHint(State.Status),
-                                                 Tui.TuiStatusItemBuilders.MakeKeyHint('Enter', 'send'),
-                                                 Tui.TuiStatusItemBuilders.MakeKeyHint('Tab', 'focus'),
-                                                 Tui.TuiStatusItemBuilders.MakeKeyHint('Alt+X', 'quit')
-                                               ]);
+    Tui.TuiStatusItemBuilders.MakeHint(State.Status),
+    Tui.TuiStatusItemBuilders.MakeKeyHint('Enter', 'send'),
+    Tui.TuiStatusItemBuilders.MakeKeyHint('Tab', 'focus'),
+    Tui.TuiStatusItemBuilders.MakeKeyHint('Alt+X', 'quit')
+  ]);
 end function;
 
 // Builds the responsive Local Chat element tree for one model state.
@@ -75,22 +102,28 @@ public function LocalChatView(State: Model.LocalChatModel): Tui.TuiElement;
 begin
   if (State.Width < 50) or (State.Height < 14) then
     begin
-      return Tui.TuiElementBuilders.MakeDesktop(None, [
-                                                        Tui.TuiElementBuilders.MakePanel('Local Chat', [
-                                                                                                         Tui.TuiElementBuilders.MakeLabel('Terminal too small'),
-                                                                                                         Tui.TuiElementBuilders.MakeLabel('Use at least 50 × 14 cells.')
-                                                                                                       ])
-                                                      ]);
+      return Tui.TuiElementBuilders.MakeDesktop(
+        None, [
+          Tui.TuiElementBuilders.MakePanel(
+            'Local Chat', [
+              Tui.TuiElementBuilders.MakeLabel('Terminal too small'),
+              Tui.TuiElementBuilders.MakeLabel('Use at least 50 × 14 cells.')
+            ]
+          )
+        ]
+      );
     end;
   end if;
 
-  return Tui.TuiElementBuilders.MakeDesktop(Some(Tui.TuiControlId.Create(State.Focus)), [
-                                                                                          Tui.TuiElementBuilders.MakeColumn([
-                                                                                                                              Header(),
-                                                                                                                              Expanding(Transcript(State), 1),
-                                                                                                                              Composer(State),
-                                                                                                                              Status(State)
-                                                                                                                            ])
-                                                                                        ]);
+  return Tui.TuiElementBuilders.MakeDesktop(
+    Some(Tui.TuiControlId.Create(State.Focus)), [
+      Tui.TuiElementBuilders.MakeColumn([
+        Header(),
+        Expanding(Transcript(State), 1),
+        Composer(State),
+        Status(State)
+      ])
+    ]
+  );
 end function;
 end unit;

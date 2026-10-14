@@ -9,17 +9,22 @@ begin
   const Group: Tasks.TaskGroup := Tasks.CreateTaskGroup();
   const Token: Tasks.CancellationToken := Tasks.GetTaskGroupToken(Group);
   const Gate: channel of integer := Tasks.CreateChannel(1);
-  const Child: task of result of (integer, string) := Tasks.StartTaskInGroup(Group, function(Stop: Tasks.CancellationToken): result of (integer, string) begin
-    discard Tasks.Receive(Gate).Unwrap();
-    if not Tasks.IsCancellationRequested(Stop) then
-      begin
-        panic('missing cancellation');
-      end;
-    end if;
+  const Child: task of result of (integer, string) := Tasks.StartTaskInGroup(
+    Group, function(Stop: Tasks.CancellationToken): result of (integer, string) begin
+      discard Tasks.Receive(Gate).Unwrap();
+      if not Tasks.IsCancellationRequested(Stop) then
+        begin
+          panic('missing cancellation');
+        end;
+      end if;
 
-    return Error('retained worker failure');
-  end function);
-  const First: result of (array of Tasks.TaskFailure, string) := Tasks.CloseTaskGroupWithTimeout(Group, 2);
+      return Error('retained worker failure');
+    end function
+  );
+  const First: result of (array of Tasks.TaskFailure, string) := Tasks.CloseTaskGroupWithTimeout(
+    Group,
+    2
+  );
   case First of
     when Error(const Message):
       begin
@@ -40,7 +45,10 @@ begin
     when Ok(_):
       panic('expected an ordinary Result error');
   end case;
-  const Reports: array of Tasks.TaskFailure := Tasks.CloseTaskGroupWithTimeout(Group, 1000).Unwrap();
+  const Reports: array of Tasks.TaskFailure := Tasks.CloseTaskGroupWithTimeout(
+    Group,
+    1000
+  ).Unwrap();
   Test.AssertEquals(0, Reports.Length());
   Test.AssertEquals(0, Tasks.CloseTaskGroup(Group).Length());
   discard Tasks.CloseChannel(Gate);

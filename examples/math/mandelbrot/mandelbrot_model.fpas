@@ -15,13 +15,19 @@ public type ExplorerState = record
 
   public static function Default(): ExplorerState;
   begin
-    return ExplorerState(CenterX := -0.75, CenterY := 0.0, SpanY := 2.4, MaxIter := 160, Palette := Color.PaletteKind.DeepOcean);
+    return ExplorerState(
+      CenterX := -0.75,
+      CenterY := 0.0,
+      SpanY := 2.4,
+      MaxIter := 160,
+      Palette := Color.PaletteKind.DeepOcean
+    );
   end function;
 
   public function SpanX(Self: ExplorerState; Width: integer; Height: integer): real;
   begin
     return Self.SpanY * (Conv.IntToReal(Math.Max(Width, 1)) / Conv.IntToReal(Math.Max(Height, 1))) *
-           0.5;
+      0.5;
   end function;
 
   public function XMin(Self: ExplorerState; Width: integer; Height: integer): real;
@@ -92,7 +98,17 @@ begin
   const Height: integer := Math.Max(TerminalHeight, 1);
   const RenderWidth: integer := GridWidth(Width);
   const RenderHeight: integer := GridHeight(Height);
-  return MandelbrotModel(Explorer := Explorer, TerminalWidth := Width, TerminalHeight := Height, Grid := BlankGrid(RenderWidth, RenderHeight), HelpOpen := HelpOpen, Generation := Generation, RowsRendered := 0, FailureMessage := '', Inbox := Inbox);
+  return MandelbrotModel(
+    Explorer := Explorer,
+    TerminalWidth := Width,
+    TerminalHeight := Height,
+    Grid := BlankGrid(RenderWidth, RenderHeight),
+    HelpOpen := HelpOpen,
+    Generation := Generation,
+    RowsRendered := 0,
+    FailureMessage := '',
+    Inbox := Inbox
+  );
 end function;
 
 // Creates the initial blank model; TuiMsg.Started schedules its first render.
@@ -102,11 +118,28 @@ public function NewMandelbrotModel(
   TerminalHeight: integer
 ): MandelbrotModel;
 begin
-  return CreateMandelbrotModel(ExplorerState.Default(), TerminalWidth, TerminalHeight, false, 1, Inbox);
+  return CreateMandelbrotModel(
+    ExplorerState.Default(),
+    TerminalWidth,
+    TerminalHeight,
+    false,
+    1,
+    Inbox
+  );
 end function;
 
 public function MandelbrotRequest(State: MandelbrotModel): Render.MandelbrotRenderRequest;
 begin
-  return Render.MandelbrotRenderRequest(Generation := State.Generation, XMin := State.Explorer.XMin(State.Grid.Width, State.Grid.Height), XMax := State.Explorer.XMax(State.Grid.Width, State.Grid.Height), YMin := State.Explorer.YMin(), YMax := State.Explorer.YMax(), Width := State.Grid.Width, Height := State.Grid.Height, MaxIter := State.Explorer.MaxIter, Palette := State.Explorer.Palette);
+  return Render.MandelbrotRenderRequest(
+    Generation := State.Generation,
+    XMin := State.Explorer.XMin(State.Grid.Width, State.Grid.Height),
+    XMax := State.Explorer.XMax(State.Grid.Width, State.Grid.Height),
+    YMin := State.Explorer.YMin(),
+    YMax := State.Explorer.YMax(),
+    Width := State.Grid.Width,
+    Height := State.Grid.Height,
+    MaxIter := State.Explorer.MaxIter,
+    Palette := State.Explorer.Palette
+  );
 end function;
 end unit;

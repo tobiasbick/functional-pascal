@@ -12,45 +12,78 @@ end record;
 
 function PushEvent(State: PointerModel; InputEvent: string): PointerModel;
 begin
-  return PointerModel(Events := State.Events.Concat([InputEvent]), X := State.X, Y := State.Y, Action := State.Action, Button := State.Button);
+  return PointerModel(
+    Events := State.Events.Concat([InputEvent]),
+    X := State.X,
+    Y := State.Y,
+    Action := State.Action,
+    Button := State.Button
+  );
 end function;
 
 begin
   var App: Tui.TuiApplication := Tui.TuiApplication.OpenForTest(Tui.TuiSize.Create(24, 8));
-  const Pointer: Tui.TuiPointerEvent := Tui.TuiPointerEvent.Create(Tui.TuiPointerAction.Move, Tui.TuiPointerButton.NoButton, Tui.TuiPoint.Create(3, 4));
+  const Pointer: Tui.TuiPointerEvent := Tui.TuiPointerEvent.Create(
+    Tui.TuiPointerAction.Move,
+    Tui.TuiPointerButton.NoButton,
+    Tui.TuiPoint.Create(3, 4)
+  );
   App.Inject(Tui.TuiMsg.Tick(1));
   App.InjectPointerForTest(Pointer);
   App.Inject(Tui.TuiMsg.Tick(2));
-  var Model: PointerModel := PointerModel(Events := [], X := -1, Y := -1, Action := Tui.TuiPointerAction.Unknown, Button := Tui.TuiPointerButton.Left);
-  Model := App.RunIterations(Model, function(State: PointerModel; Msg: Tui.TuiMsg; Cmd: Tui.TuiCmdOutput): PointerModel begin
-    Cmd.Set(Tui.TuiCmd.NoCommand);
-    case Msg of
-      when Tui.TuiMsg.Tick(const Delta):
-        begin
-          if Delta = 1 then
-            begin
-              return PushEvent(State, 'tick-1');
-            end;
-          end if;
+  var Model: PointerModel := PointerModel(
+    Events := [],
+    X := -1,
+    Y := -1,
+    Action := Tui.TuiPointerAction.Unknown,
+    Button := Tui.TuiPointerButton.Left
+  );
+  Model := App.RunIterations(
+    Model,
+    function(State: PointerModel; Msg: Tui.TuiMsg; Cmd: Tui.TuiCmdOutput): PointerModel begin
+      Cmd.Set(Tui.TuiCmd.NoCommand);
+      case Msg of
+        when Tui.TuiMsg.Tick(const Delta):
+          begin
+            if Delta = 1 then
+              begin
+                return PushEvent(State, 'tick-1');
+              end;
+            end if;
 
-          return PushEvent(State, 'tick-2');
-        end;
-      when Tui.TuiMsg.Pointer(const InputEvent):
-        begin
-          return PointerModel(Events := State.Events.Concat(['pointer']), X := InputEvent.Position.X, Y := InputEvent.Position.Y, Action := InputEvent.Action, Button := InputEvent.Button);
-        end;
-      when Tui.TuiMsg.Started, Tui.TuiMsg.Key(_), Tui.TuiMsg.Resize(_), Tui.TuiMsg.FocusChanged(_, _), Tui.TuiMsg.Action(_, _), Tui.TuiMsg.TextChanged(_, _, _, _), Tui.TuiMsg.TextAreaChanged(_, _, _, _, _), Tui.TuiMsg.CheckChanged(_, _, _), Tui.TuiMsg.SelectionChanged(_, _, _), Tui.TuiMsg.ScrollChanged(_, _, _), Tui.TuiMsg.MenuChanged(_, _, _), Tui.TuiMsg.BackgroundFailed(_, _, _, _, _, _), Tui.TuiMsg.QuitRequested:
-        begin
-          return State;
-        end;
-    end case;
-  end function, function(State: PointerModel): Tui.TuiElement begin
-    return Tui.TuiElementBuilders.MakeDesktop(Some(Tui.TuiControlId.Create(1)), [
-                                                                                  Tui.TuiElementBuilders.MakePanel('Host', [
-                                                                                                                             Tui.TuiElementBuilders.MakeButton(Tui.TuiControlId.Create(1), 'Go', Tui.TuiAction.Create(1))
-                                                                                                                           ])
-                                                                                ]);
-  end function, 3, 0);
+            return PushEvent(State, 'tick-2');
+          end;
+        when Tui.TuiMsg.Pointer(const InputEvent):
+          begin
+            return PointerModel(
+              Events := State.Events.Concat(['pointer']),
+              X := InputEvent.Position.X,
+              Y := InputEvent.Position.Y,
+              Action := InputEvent.Action,
+              Button := InputEvent.Button
+            );
+          end;
+        when Tui.TuiMsg.Started, Tui.TuiMsg.Key(_), Tui.TuiMsg.Resize(_), Tui.TuiMsg.FocusChanged(_, _), Tui.TuiMsg.Action(_, _), Tui.TuiMsg.TextChanged(_, _, _, _), Tui.TuiMsg.TextAreaChanged(_, _, _, _, _), Tui.TuiMsg.CheckChanged(_, _, _), Tui.TuiMsg.SelectionChanged(_, _, _), Tui.TuiMsg.ScrollChanged(_, _, _), Tui.TuiMsg.MenuChanged(_, _, _), Tui.TuiMsg.BackgroundFailed(_, _, _, _, _, _), Tui.TuiMsg.QuitRequested:
+          begin
+            return State;
+          end;
+      end case;
+    end function, function(State: PointerModel): Tui.TuiElement begin
+      return Tui.TuiElementBuilders.MakeDesktop(
+        Some(Tui.TuiControlId.Create(1)), [
+          Tui.TuiElementBuilders.MakePanel(
+            'Host', [
+              Tui.TuiElementBuilders.MakeButton(
+                Tui.TuiControlId.Create(1),
+                'Go',
+                Tui.TuiAction.Create(1)
+              )
+            ]
+          )
+        ]
+      );
+    end function, 3, 0
+  );
   Test.AssertEquals(3, Model.Events.Length());
   Test.AssertEquals('tick-1', Model.Events[0]);
   Test.AssertEquals('pointer', Model.Events[1]);

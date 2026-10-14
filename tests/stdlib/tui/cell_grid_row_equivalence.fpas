@@ -35,7 +35,10 @@ begin
     begin
       const Point: Tui.TuiPoint := Tui.TuiPoint.Create(X, 0);
       Test.AssertTrue((Expected.TryCellAt(Point) is None) = (Actual.TryCellAt(Point) is None));
-      Test.AssertEquals(Expected.Snapshot().CellAt(X, 0).Glyph, Actual.Snapshot().CellAt(X, 0).Glyph);
+      Test.AssertEquals(
+        Expected.Snapshot().CellAt(X, 0).Glyph,
+        Actual.Snapshot().CellAt(X, 0).Glyph
+      );
       Test.AssertTrue(Expected.Snapshot().CellAt(X, 0).Role = Actual.Snapshot().CellAt(X, 0).Role);
     end;
   end for;
@@ -57,11 +60,13 @@ begin
                   CompareRow(Expected, Actual, StartX, ClipX, ClipWidth, OriginX, []);
                   CompareRow(Expected, Actual, StartX, ClipX, ClipWidth, OriginX, [Wide]);
                   CompareRow(Expected, Actual, StartX, ClipX, ClipWidth, OriginX, [Narrow, Wide]);
-                  CompareRow(Expected, Actual, StartX, ClipX, ClipWidth, OriginX, [
-                                                                                    Wide,
-                                                                                    Narrow,
-                                                                                    Wide
-                                                                                  ]);
+                  CompareRow(
+                    Expected, Actual, StartX, ClipX, ClipWidth, OriginX, [
+                      Wide,
+                      Narrow,
+                      Wide
+                    ]
+                  );
                 end;
               end for;
             end;

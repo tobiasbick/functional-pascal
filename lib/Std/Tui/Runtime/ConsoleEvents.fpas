@@ -40,9 +40,18 @@ begin
       end;
     when Console.EventKind.Mouse:
       begin
-        return Some(Input.TuiHostInput.Pointer(PointerEvent.TuiPointerEvent.WithModifiers(InputEvent.mouse_action, TuiPointerButtonFromConsole(InputEvent.mouse_button), Point.TuiPoint.Create(InputEvent.mouse_x -
-                                                                                                                                                                                               1, InputEvent.mouse_y -
-                                                                                                                                                                                                  1), InputEvent.shift, InputEvent.ctrl, InputEvent.alt, InputEvent.meta)));
+        return Some(
+          Input.TuiHostInput.Pointer(
+            PointerEvent.TuiPointerEvent.WithModifiers(
+              InputEvent.mouse_action, TuiPointerButtonFromConsole(InputEvent.mouse_button),
+              Point.TuiPoint.Create(
+                InputEvent.mouse_x -
+                1, InputEvent.mouse_y -
+                1
+              ), InputEvent.shift, InputEvent.ctrl, InputEvent.alt, InputEvent.meta
+            )
+          )
+        );
       end;
     when Console.EventKind.Resize:
       begin
@@ -52,7 +61,9 @@ begin
           end;
         end if;
 
-        return Some(Input.TuiHostInput.Resize(Size.TuiSize.Create(InputEvent.width, InputEvent.height)));
+        return Some(
+          Input.TuiHostInput.Resize(Size.TuiSize.Create(InputEvent.width, InputEvent.height))
+        );
       end;
     when Console.EventKind.Paste, Console.EventKind.FocusGained, Console.EventKind.FocusLost:
       begin

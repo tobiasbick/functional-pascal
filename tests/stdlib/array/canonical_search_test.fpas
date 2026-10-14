@@ -21,17 +21,24 @@ begin
   Test.AssertEquals(1, Visits[1]);
   Test.AssertTrue(Empty.FindIndex(Match) = None);
   Test.AssertEquals(2, Visits.Length());
-  Test.AssertTrue(Values.FindIndex(function(Value: integer): boolean begin
-    return Value = 9;
-  end function) =
-                  None);
+  Test.AssertTrue(
+    Values.FindIndex(
+      function(Value: integer): boolean begin
+        return Value = 9;
+      end function
+    ) =
+    None
+  );
   Test.AssertTrue(Values.Find(Match) = Some(1));
-  const Nested := [[3, 1], [4], []]
-                    .Map(function(Items: array of integer): option of integer begin
-    return Items.FindIndex(function(Value: integer): boolean begin
-      return Value = 1;
-    end function);
-  end function);
+  const Nested := [[3, 1], [4], []].Map(
+    function(Items: array of integer): option of integer begin
+      return Items.FindIndex(
+        function(Value: integer): boolean begin
+          return Value = 1;
+        end function
+      );
+    end function
+  );
   Test.AssertTrue(Nested[0] = Some(1));
   Test.AssertTrue(Nested[1] = None);
   Test.AssertTrue(Nested[2] = None);

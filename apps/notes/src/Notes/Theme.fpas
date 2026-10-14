@@ -29,10 +29,22 @@ begin
   Palette.Failure := Tui.TuiStyle.FromColors(Coral, Background);
   Palette.Warning := Tui.TuiStyle.FromColors(Amber, Background);
   Palette.Accent := Tui.TuiStyle.Create(Accent, Background, true, false, false, false);
-  Palette.Inputs := Palette.Inputs.WithRole(Tui.TuiStyleRole.InputNormal, Tui.TuiStyle.FromColors(Text, Surface));
-  Palette.Inputs := Palette.Inputs.WithRole(Tui.TuiStyleRole.InputFocused, Tui.TuiStyle.FromColors(Text, SurfaceFocused));
-  Palette.Inputs := Palette.Inputs.WithRole(Tui.TuiStyleRole.InputHint, Tui.TuiStyle.FromColors(Muted, Surface));
-  Palette.Inputs := Palette.Inputs.WithRole(Tui.TuiStyleRole.InputCursor, Tui.TuiStyle.FromColors(Background, Accent));
+  Palette.Inputs := Palette.Inputs.WithRole(
+    Tui.TuiStyleRole.InputNormal,
+    Tui.TuiStyle.FromColors(Text, Surface)
+  );
+  Palette.Inputs := Palette.Inputs.WithRole(
+    Tui.TuiStyleRole.InputFocused,
+    Tui.TuiStyle.FromColors(Text, SurfaceFocused)
+  );
+  Palette.Inputs := Palette.Inputs.WithRole(
+    Tui.TuiStyleRole.InputHint,
+    Tui.TuiStyle.FromColors(Muted, Surface)
+  );
+  Palette.Inputs := Palette.Inputs.WithRole(
+    Tui.TuiStyleRole.InputCursor,
+    Tui.TuiStyle.FromColors(Background, Accent)
+  );
   return Palette;
 end function;
 end unit;

@@ -13,10 +13,12 @@ begin
     when Tui.TuiMsg.Started:
       begin
         const Ready: channel of boolean := State.Ready;
-        Cmd.StartBackground(19, function(Token: Tasks.CancellationToken): result of (boolean, string) begin
-          discard Tasks.Send(Ready, true);
-          panic('expected background failure');
-        end function);
+        Cmd.StartBackground(
+          19, function(Token: Tasks.CancellationToken): result of (boolean, string) begin
+            discard Tasks.Send(Ready, true);
+            panic('expected background failure');
+          end function
+        );
         return State;
       end;
     when Tui.TuiMsg.BackgroundFailed(const Id, const Kind, const Message, const Code, const Line, const Column):
@@ -47,9 +49,25 @@ begin
   const Inbox: channel of integer := Tasks.CreateChannel(1);
   const Ready: channel of boolean := Tasks.CreateChannel(1);
   const App: Tui.TuiApplication := Tui.TuiApplication.OpenForTest(Tui.TuiSize.Create(24, 4));
-  var Model: FailureModel := App.RunBackgroundIterations(FailureModel(Ready := Ready, FailureSeen := false), Inbox, UpdateFramework, UpdateApplication, View, 1, 0);
+  var Model: FailureModel := App.RunBackgroundIterations(
+    FailureModel(Ready := Ready, FailureSeen := false),
+    Inbox,
+    UpdateFramework,
+    UpdateApplication,
+    View,
+    1,
+    0
+  );
   Test.AssertTrue(Tasks.ReceiveWithTimeout(Ready, 10000).Unwrap());
-  Model := App.RunBackgroundIterations(Model, Inbox, UpdateFramework, UpdateApplication, View, 1, 0);
+  Model := App.RunBackgroundIterations(
+    Model,
+    Inbox,
+    UpdateFramework,
+    UpdateApplication,
+    View,
+    1,
+    0
+  );
   Test.AssertTrue(Model.FailureSeen);
   App.CloseWithBackground(Inbox);
   discard Tasks.CloseChannel(Ready);

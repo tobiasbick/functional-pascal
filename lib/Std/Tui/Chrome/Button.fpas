@@ -25,13 +25,20 @@ public type TuiButtonSpec = record
   // - `Mnemonic`: Keyboard mnemonic used to activate the item.
   // - `Action`: Application action associated with the control or emitted message.
   public static function Normal(
-  Id: ControlId.TuiControlId;
-  Text: string;
-  Mnemonic: string;
-  Action: IdsAction.TuiAction
-): TuiButtonSpec;
+    Id: ControlId.TuiControlId;
+    Text: string;
+    Mnemonic: string;
+    Action: IdsAction.TuiAction
+  ): TuiButtonSpec;
   begin
-    return TuiButtonSpec(Id := Id, Text := Text, Mnemonic := Mnemonic, Action := Action, Default := false, Enabled := true);
+    return TuiButtonSpec(
+      Id := Id,
+      Text := Text,
+      Mnemonic := Mnemonic,
+      Action := Action,
+      Default := false,
+      Enabled := true
+    );
   end function;
 
   // Creates an enabled default button.
@@ -42,13 +49,20 @@ public type TuiButtonSpec = record
   // - `Mnemonic`: Keyboard mnemonic used to activate the item.
   // - `Action`: Application action associated with the control or emitted message.
   public static function DefaultButton(
-  Id: ControlId.TuiControlId;
-  Text: string;
-  Mnemonic: string;
-  Action: IdsAction.TuiAction
-): TuiButtonSpec;
+    Id: ControlId.TuiControlId;
+    Text: string;
+    Mnemonic: string;
+    Action: IdsAction.TuiAction
+  ): TuiButtonSpec;
   begin
-    return TuiButtonSpec(Id := Id, Text := Text, Mnemonic := Mnemonic, Action := Action, Default := true, Enabled := true);
+    return TuiButtonSpec(
+      Id := Id,
+      Text := Text,
+      Mnemonic := Mnemonic,
+      Action := Action,
+      Default := true,
+      Enabled := true
+    );
   end function;
 
   // Creates a disabled normal button.
@@ -59,13 +73,20 @@ public type TuiButtonSpec = record
   // - `Mnemonic`: Keyboard mnemonic used to activate the item.
   // - `Action`: Application action associated with the control or emitted message.
   public static function Disabled(
-  Id: ControlId.TuiControlId;
-  Text: string;
-  Mnemonic: string;
-  Action: IdsAction.TuiAction
-): TuiButtonSpec;
+    Id: ControlId.TuiControlId;
+    Text: string;
+    Mnemonic: string;
+    Action: IdsAction.TuiAction
+  ): TuiButtonSpec;
   begin
-    return TuiButtonSpec(Id := Id, Text := Text, Mnemonic := Mnemonic, Action := Action, Default := false, Enabled := false);
+    return TuiButtonSpec(
+      Id := Id,
+      Text := Text,
+      Mnemonic := Mnemonic,
+      Action := Action,
+      Default := false,
+      Enabled := false
+    );
   end function;
 end record;
 end unit;

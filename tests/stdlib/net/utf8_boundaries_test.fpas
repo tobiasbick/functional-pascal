@@ -17,20 +17,20 @@ end procedure;
 
 begin
   for Text: string in [
-                        '',
-                        #0,
-                        #127,
-                        #128,
-                        string.Chr(2047),
-                        string.Chr(2048),
-                        string.Chr(55295),
-                        string.Chr(57344),
-                        string.Chr(65535),
-                        string.Chr(65536),
-                        string.Chr(1114111),
-                        'e' + string.Chr(769),
-                        ('x' + string.Chr(769)).RepeatStr(2048)
-                      ] do
+    '',
+    #0,
+    #127,
+    #128,
+    string.Chr(2047),
+    string.Chr(2048),
+    string.Chr(55295),
+    string.Chr(57344),
+    string.Chr(65535),
+    string.Chr(65536),
+    string.Chr(1114111),
+    'e' + string.Chr(769),
+    ('x' + string.Chr(769)).RepeatStr(2048)
+  ] do
     begin
       Test.AssertEquals(Text, Utf8.Decode(Utf8.Encode(Text)).Unwrap());
     end;

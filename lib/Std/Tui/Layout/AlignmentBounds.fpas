@@ -88,16 +88,30 @@ public type TuiAlignmentBounds = record
   // - `Alignment`: Alignment applied within the available area.
   // - `Area`: Available layout rectangle.
   public static function Resolve(
-  Measured: MeasureResult.TuiMeasureResult;
-  Alignment: LayoutAlignment.TuiAlignment;
-  Area: Rect.TuiRect
-): Rect.TuiRect;
+    Measured: MeasureResult.TuiMeasureResult;
+    Alignment: LayoutAlignment.TuiAlignment;
+    Area: Rect.TuiRect
+  ): Rect.TuiRect;
   begin
-    const Width: integer := TuiAlignmentBoundsExtent(Measured.Minimum.Width, Measured.Preferred.Width, Measured.Maximum.Width, Area.Width, Alignment.Horizontal);
-    const Height: integer := TuiAlignmentBoundsExtent(Measured.Minimum.Height, Measured.Preferred.Height, Measured.Maximum.Height, Area.Height, Alignment.Vertical);
-    return Rect.TuiRect.Create(Area.X +
-                               TuiAlignmentBoundsOffset(Area.Width, Width, Alignment.Horizontal), Area.Y +
-                                                                                                  TuiAlignmentBoundsOffset(Area.Height, Height, Alignment.Vertical), Width, Height);
+    const Width: integer := TuiAlignmentBoundsExtent(
+      Measured.Minimum.Width,
+      Measured.Preferred.Width,
+      Measured.Maximum.Width,
+      Area.Width,
+      Alignment.Horizontal
+    );
+    const Height: integer := TuiAlignmentBoundsExtent(
+      Measured.Minimum.Height,
+      Measured.Preferred.Height,
+      Measured.Maximum.Height,
+      Area.Height,
+      Alignment.Vertical
+    );
+    return Rect.TuiRect.Create(
+      Area.X +
+      TuiAlignmentBoundsOffset(Area.Width, Width, Alignment.Horizontal), Area.Y +
+      TuiAlignmentBoundsOffset(Area.Height, Height, Alignment.Vertical), Width, Height
+    );
   end function;
 end record;
 end unit;

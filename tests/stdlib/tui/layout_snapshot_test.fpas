@@ -5,19 +5,34 @@ uses Std.Test as Test, Std.Tui as Tui;
 begin
   const App: Tui.TuiApplication := Tui.TuiApplication.OpenForTest(Tui.TuiSize.Create(20, 8));
   const Model: integer := 0;
-  discard App.RunIterations(Model, function(State: integer; Msg: Tui.TuiMsg; Cmd: Tui.TuiCmdOutput): integer begin
-    return State;
-  end function, function(State: integer): Tui.TuiElement begin
-    return Tui.TuiElementBuilders.MakeDesktop(Some(Tui.TuiControlId.Create(1)), [
-                                                                                  Tui.TuiElementBuilders.MakePanel('Win', [
-                                                                                                                            Tui.TuiElementBuilders.MakeColumn([
-                                                                                                                                                                Tui.TuiElementBuilders.MakeLabel('Hello'),
-                                                                                                                                                                Tui.TuiElementBuilders.MakeButton(Tui.TuiControlId.Create(1), 'Go', Tui.TuiAction.Create(1)),
-                                                                                                                                                                Tui.TuiElementBuilders.MakeInput(Tui.TuiControlId.Create(2), 'ab', 2, Tui.TuiAction.Create(2))
-                                                                                                                                                              ])
-                                                                                                                          ])
-                                                                                ]);
-  end function, 0, 0);
+  discard App.RunIterations(
+    Model, function(State: integer; Msg: Tui.TuiMsg; Cmd: Tui.TuiCmdOutput): integer begin
+      return State;
+    end function, function(State: integer): Tui.TuiElement begin
+      return Tui.TuiElementBuilders.MakeDesktop(
+        Some(Tui.TuiControlId.Create(1)), [
+          Tui.TuiElementBuilders.MakePanel(
+            'Win', [
+              Tui.TuiElementBuilders.MakeColumn([
+                Tui.TuiElementBuilders.MakeLabel('Hello'),
+                Tui.TuiElementBuilders.MakeButton(
+                  Tui.TuiControlId.Create(1),
+                  'Go',
+                  Tui.TuiAction.Create(1)
+                ),
+                Tui.TuiElementBuilders.MakeInput(
+                  Tui.TuiControlId.Create(2),
+                  'ab',
+                  2,
+                  Tui.TuiAction.Create(2)
+                )
+              ])
+            ]
+          )
+        ]
+      );
+    end function, 0, 0
+  );
   const Snapshot: Tui.TuiSurfaceSnapshot := App.SurfaceSnapshot();
   Test.AssertTrue(('Win' in Snapshot.LineAt(0)));
   Test.AssertTrue(('Hello' in Snapshot.LineAt(1)));
@@ -25,13 +40,17 @@ begin
   Test.AssertTrue(('ab' in Snapshot.LineAt(3)));
   App.Close();
   const Wide: Tui.TuiApplication := Tui.TuiApplication.OpenForTest(Tui.TuiSize.Create(40, 10));
-  discard Wide.RunIterations(0, function(State: integer; Msg: Tui.TuiMsg; Cmd: Tui.TuiCmdOutput): integer begin
-    return State;
-  end function, function(State: integer): Tui.TuiElement begin
-    return Tui.TuiElementBuilders.MakeDesktop(None, [
-                                                      Tui.TuiElementBuilders.MakeOverlay('Dlg', [Tui.TuiElementBuilders.MakeLabel('Body')])
-                                                    ]);
-  end function, 0, 0);
+  discard Wide.RunIterations(
+    0, function(State: integer; Msg: Tui.TuiMsg; Cmd: Tui.TuiCmdOutput): integer begin
+      return State;
+    end function, function(State: integer): Tui.TuiElement begin
+      return Tui.TuiElementBuilders.MakeDesktop(
+        None, [
+          Tui.TuiElementBuilders.MakeOverlay('Dlg', [Tui.TuiElementBuilders.MakeLabel('Body')])
+        ]
+      );
+    end function, 0, 0
+  );
   const Overlay: Tui.TuiSurfaceSnapshot := Wide.SurfaceSnapshot();
   Test.AssertEquals(18, Overlay.LineAt(3).IndexOf('Dlg').Unwrap());
   Test.AssertEquals(16, Overlay.LineAt(4).IndexOf('Body').Unwrap());

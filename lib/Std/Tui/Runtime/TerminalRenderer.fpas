@@ -36,7 +36,11 @@ begin
       end;
   end case;
 
-  return Console.Cell(glyph := Cell.Glyph, foreground := TuiColorToConsole(Style.Foreground), background := TuiColorToConsole(Style.Background));
+  return Console.Cell(
+    glyph := Cell.Glyph,
+    foreground := TuiColorToConsole(Style.Foreground),
+    background := TuiColorToConsole(Style.Background)
+  );
 end function;
 
 function TuiTerminalDamageRow(
@@ -67,7 +71,9 @@ public procedure TuiFlushSurface(
   Palette: CellsPalette.TuiPalette
 );
 begin
-  const Damage: array of RenderingSurface.TuiSurfaceDamage := RenderingSurface.TuiSurfaceTakeTerminalDamage(Surface);
+  const Damage: array of RenderingSurface.TuiSurfaceDamage := RenderingSurface.TuiSurfaceTakeTerminalDamage(
+    Surface
+  );
   if Damage.Length() = 0 then
     begin
       return;

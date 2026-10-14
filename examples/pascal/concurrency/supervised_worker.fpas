@@ -8,16 +8,18 @@ begin
   const Outcomes: channel of boolean := Tasks.CreateChannel(2);
   discard Tasks.Send(Outcomes, false);
   discard Tasks.Send(Outcomes, true);
-  const Worker: task of result of (string, string) := Tasks.StartSupervisedTask(Workers, function(Token: Tasks.CancellationToken): result of (string, string) begin
-    Console.WriteLn('Starting an attempt');
-    if not Tasks.Receive(Outcomes).Unwrap() then
-      begin
-        return Error('temporary failure');
-      end;
-    end if;
+  const Worker: task of result of (string, string) := Tasks.StartSupervisedTask(
+    Workers, function(Token: Tasks.CancellationToken): result of (string, string) begin
+      Console.WriteLn('Starting an attempt');
+      if not Tasks.Receive(Outcomes).Unwrap() then
+        begin
+          return Error('temporary failure');
+        end;
+      end if;
 
-    return Ok('Worker completed');
-  end function, 2, 10);
+      return Ok('Worker completed');
+    end function, 2, 10
+  );
   // Wait retrieves the final result; intermediate failures remain inside the supervisor.
   Console.WriteLn(Tasks.Wait(Worker).Unwrap());
   discard Tasks.CloseTaskGroup(Workers);

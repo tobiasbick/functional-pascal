@@ -23,7 +23,9 @@ begin
   case Node of
     when Element.TuiElement.Menu(const Id, const Nodes, const State, const ChangeAction):
       begin
-        return Some(TuiRouteMenu(Id := Id, Nodes := Nodes, State := State, ChangeAction := ChangeAction));
+        return Some(
+          TuiRouteMenu(Id := Id, Nodes := Nodes, State := State, ChangeAction := ChangeAction)
+        );
       end;
     when Element.TuiElement.Desktop(const Focused, const Children):
       begin
@@ -213,9 +215,9 @@ begin
         if Menu.State.Open then
           begin
             return [
-                     TuiMenuChange(Menu, MenuNode.TuiMenuState.Closed()),
-                     Msg.TuiMsg.Action(Menu.Id, Action)
-                   ];
+              TuiMenuChange(Menu, MenuNode.TuiMenuState.Closed()),
+              Msg.TuiMsg.Action(Menu.Id, Action)
+            ];
           end;
         end if;
 
@@ -269,14 +271,25 @@ begin
 
   for Index: integer := 0 to Menu.Nodes.Length() - 1 do
     begin
-      if ((MenuQuery.TuiMenuHasParent(Menu.Nodes[Index], Parent) and MenuQuery.TuiMenuNodeSelectable(Menu.Nodes[Index])) and (MenuQuery.TuiMenuNodeMnemonic(Menu.Nodes[Index]) <> '')) and
-         (MenuQuery.TuiMenuNodeMnemonic(Menu.Nodes[Index]).ToLower() = Key.ch.ToLower()) then
+      if (
+        (
+          MenuQuery.TuiMenuHasParent(Menu.Nodes[Index], Parent)
+          and
+          MenuQuery.TuiMenuNodeSelectable(Menu.Nodes[Index])
+        ) and (MenuQuery.TuiMenuNodeMnemonic(Menu.Nodes[Index]) <> '')
+      )
+        and
+        (MenuQuery.TuiMenuNodeMnemonic(Menu.Nodes[Index]).ToLower() = Key.ch.ToLower())
+      then
         begin
           if MenuQuery.TuiMenuNodeIsSubmenu(Menu.Nodes[Index]) then
             begin
               return Some([
-                            TuiMenuChange(Menu, MenuNode.TuiMenuState.OpenAt(MenuQuery.TuiMenuNodeIdOf(Menu.Nodes[Index])))
-                          ]);
+                TuiMenuChange(
+                  Menu,
+                  MenuNode.TuiMenuState.OpenAt(MenuQuery.TuiMenuNodeIdOf(Menu.Nodes[Index]))
+                )
+              ]);
             end;
           end if;
 
@@ -301,7 +314,9 @@ begin
     when Some(const Active):
       begin
         const ActiveIndex: integer := MenuQuery.TuiMenuFind(Menu.Nodes, Active);
-        const Parent: option of MenuNode.TuiMenuNodeId := MenuQuery.TuiMenuNodeParent(Menu.Nodes[ActiveIndex]);
+        const Parent: option of MenuNode.TuiMenuNodeId := MenuQuery.TuiMenuNodeParent(
+          Menu.Nodes[ActiveIndex]
+        );
         case TuiMenuMnemonic(Menu, Key, Parent) of
           when Some(const Messages):
             begin
@@ -335,8 +350,10 @@ begin
 
         if (Key.kind = Console.KeyKind.Down) or (Key.kind = Console.KeyKind.Up) then
           begin
-            if (Key.kind = Console.KeyKind.Down) and
-               MenuQuery.TuiMenuNodeIsSubmenu(Menu.Nodes[ActiveIndex]) then
+            if (Key.kind = Console.KeyKind.Down)
+              and
+              MenuQuery.TuiMenuNodeIsSubmenu(Menu.Nodes[ActiveIndex])
+            then
               begin
                 case MenuQuery.TuiMenuFirstSelectable(Menu.Nodes, Some(Active)) of
                   when Some(const Child):
@@ -422,8 +439,8 @@ begin
                           when Some(const NextRoot):
                             begin
                               return Some([
-                                            TuiMenuChange(Menu, MenuNode.TuiMenuState.OpenAt(NextRoot))
-                                          ]);
+                                TuiMenuChange(Menu, MenuNode.TuiMenuState.OpenAt(NextRoot))
+                              ]);
                             end;
                           when None:
                             begin
@@ -496,7 +513,9 @@ begin
                   var FocusMessages: array of Msg.TuiMsg := [];
                   if not Focus.TuiFocusMatches(Focus.TuiRootFocus(Root), Menu.Id) then
                     begin
-                      FocusMessages.PushInPlace(Msg.TuiMsg.FocusChanged(Focus.TuiRootFocus(Root), Some(Menu.Id)));
+                      FocusMessages.PushInPlace(
+                        Msg.TuiMsg.FocusChanged(Focus.TuiRootFocus(Root), Some(Menu.Id))
+                      );
                     end;
                   end if;
 
@@ -509,8 +528,14 @@ begin
           end;
         end if;
 
-        if Focus.TuiFocusMatches(Focus.TuiRootFocus(Root), Menu.Id) and
-           (((Key.kind = Console.KeyKind.Enter) or (Key.kind = Console.KeyKind.Space)) or (Key.kind = Console.KeyKind.Down)) then
+        if Focus.TuiFocusMatches(Focus.TuiRootFocus(Root), Menu.Id)
+          and
+          (
+            ((Key.kind = Console.KeyKind.Enter) or (Key.kind = Console.KeyKind.Space))
+            or
+            (Key.kind = Console.KeyKind.Down)
+          )
+        then
           begin
             return Some(TuiMenuOpenFirst(Menu, Focus.TuiRootFocus(Root)));
           end;

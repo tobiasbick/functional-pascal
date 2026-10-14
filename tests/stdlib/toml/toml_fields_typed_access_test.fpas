@@ -18,31 +18,52 @@ begin
 end function;
 
 begin
-  const Text: string := 'name = ''demo''' + string.Chr(10) + 'port = 8080' + string.Chr(10) + 'ratio = 0.5' + string.Chr(10) + 'enabled = true' + string.Chr(10) + 'tags = [''a'', ''b'']' + string.Chr(10) + 'mixed = [''a'', 1]' + string.Chr(10) + '[server]' + string.Chr(10) +
-                        'host = ''local''';
+  const Text: string := 'name = ''demo''' + string.Chr(10) + 'port = 8080' + string.Chr(10) +
+    'ratio = 0.5' + string.Chr(10) + 'enabled = true' + string.Chr(10) + 'tags = [''a'', ''b'']' +
+    string.Chr(10) + 'mixed = [''a'', 1]' + string.Chr(10) + '[server]' + string.Chr(10) +
+    'host = ''local''';
   const Fields: dict of string to Toml.TomlValue := TomlFields.ParseTable(Text).Unwrap();
   Test.AssertEquals('demo', TomlFields.StringField(Fields, 'name').Unwrap());
   Test.AssertEquals(8080, TomlFields.IntegerField(Fields, 'port').Unwrap());
   Test.AssertEquals(0.5, TomlFields.FloatField(Fields, 'ratio').Unwrap());
   Test.AssertTrue(TomlFields.BooleanField(Fields, 'enabled').Unwrap());
-  Test.AssertEquals('local', TomlFields.StringField(TomlFields.TableField(Fields, 'server').Unwrap(), 'host')
-                               .Unwrap());
+  Test.AssertEquals(
+    'local',
+    TomlFields.StringField(TomlFields.TableField(Fields, 'server').Unwrap(), 'host').Unwrap()
+  );
   Test.AssertEquals(2, TomlFields.ArrayField(Fields, 'mixed').Unwrap().Length());
   Test.AssertEquals(2, TomlFields.StringArrayField(Fields, 'tags').Unwrap().Length());
   Test.AssertEquals('missing field absent', ErrorText(TomlFields.Field(Fields, 'absent')));
-  Test.AssertEquals('field port must be a string', ErrorText(TomlFields.StringField(Fields, 'port')));
+  Test.AssertEquals(
+    'field port must be a string',
+    ErrorText(TomlFields.StringField(Fields, 'port'))
+  );
   // Integer and float keys are not converted into each other.
-  Test.AssertEquals('field ratio must be an integer', ErrorText(TomlFields.IntegerField(Fields, 'ratio')));
+  Test.AssertEquals(
+    'field ratio must be an integer',
+    ErrorText(TomlFields.IntegerField(Fields, 'ratio'))
+  );
   Test.AssertEquals('field port must be a float', ErrorText(TomlFields.FloatField(Fields, 'port')));
   Test.AssertEquals('field name must be a table', ErrorText(TomlFields.TableField(Fields, 'name')));
-  Test.AssertEquals('field mixed must be an array of strings', ErrorText(TomlFields.StringArrayField(Fields, 'mixed')));
-  Test.AssertTrue(TomlFields.RequireOnlyFields(TomlFields.ParseTable('a = 1').Unwrap(), ['a', 'b'])
-                    .Unwrap());
-  Test.AssertEquals('unexpected field c', ErrorText(TomlFields.RequireOnlyFields(TomlFields.ParseTable('a = 1' + string.Chr(10) +
-                                                                                                       'c = 2')
-                                                                                   .Unwrap(), [
-                                                                                                'a',
-                                                                                                'b'
-                                                                                              ])));
+  Test.AssertEquals(
+    'field mixed must be an array of strings',
+    ErrorText(TomlFields.StringArrayField(Fields, 'mixed'))
+  );
+  Test.AssertTrue(
+    TomlFields.RequireOnlyFields(TomlFields.ParseTable('a = 1').Unwrap(), ['a', 'b']).Unwrap()
+  );
+  Test.AssertEquals(
+    'unexpected field c', ErrorText(
+      TomlFields.RequireOnlyFields(
+        TomlFields.ParseTable(
+          'a = 1' + string.Chr(10) +
+          'c = 2'
+        ).Unwrap(), [
+          'a',
+          'b'
+        ]
+      )
+    )
+  );
   Test.AssertTrue((TomlFields.ParseTable('a = ') is Error(_)));
 end.

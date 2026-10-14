@@ -8,11 +8,20 @@ end record;
 
 function ViewCheck(State: CheckModel): Tui.TuiElement;
 begin
-  return Tui.TuiElementBuilders.MakeDesktop(Some(Tui.TuiControlId.Create(1)), [
-                                                                                Tui.TuiElementBuilders.MakePanel('Host', [
-                                                                                                                           Tui.TuiElementBuilders.MakeCheckBox(Tui.TuiControlId.Create(1), 'Flag', State.Checked, Tui.TuiAction.Create(9))
-                                                                                                                         ])
-                                                                              ]);
+  return Tui.TuiElementBuilders.MakeDesktop(
+    Some(Tui.TuiControlId.Create(1)), [
+      Tui.TuiElementBuilders.MakePanel(
+        'Host', [
+          Tui.TuiElementBuilders.MakeCheckBox(
+            Tui.TuiControlId.Create(1),
+            'Flag',
+            State.Checked,
+            Tui.TuiAction.Create(9)
+          )
+        ]
+      )
+    ]
+  );
 end function;
 
 function UpdateCheck(State: CheckModel; Msg: Tui.TuiMsg; Cmd: Tui.TuiCmdOutput): CheckModel;
@@ -22,11 +31,27 @@ begin
 end function;
 
 begin
-  const Unchecked: Tui.TuiMeasureResult := Tui.TuiMeasure(Tui.TuiElementBuilders.MakeCheckBox(Tui.TuiControlId.Create(1), 'Flag', false, Tui.TuiAction.Create(1)), Tui.TuiMeasureSpec.Unbounded());
+  const Unchecked: Tui.TuiMeasureResult := Tui.TuiMeasure(
+    Tui.TuiElementBuilders.MakeCheckBox(
+      Tui.TuiControlId.Create(1),
+      'Flag',
+      false,
+      Tui.TuiAction.Create(1)
+    ),
+    Tui.TuiMeasureSpec.Unbounded()
+  );
   Test.AssertEquals(8, Unchecked.Preferred.Width);
   Test.AssertEquals(1, Unchecked.Preferred.Height);
   Test.AssertEquals(8, Unchecked.Minimum.Width);
-  const CheckedSize: Tui.TuiMeasureResult := Tui.TuiMeasure(Tui.TuiElementBuilders.MakeCheckBox(Tui.TuiControlId.Create(1), 'Flag', true, Tui.TuiAction.Create(1)), Tui.TuiMeasureSpec.Unbounded());
+  const CheckedSize: Tui.TuiMeasureResult := Tui.TuiMeasure(
+    Tui.TuiElementBuilders.MakeCheckBox(
+      Tui.TuiControlId.Create(1),
+      'Flag',
+      true,
+      Tui.TuiAction.Create(1)
+    ),
+    Tui.TuiMeasureSpec.Unbounded()
+  );
   Test.AssertEquals(8, CheckedSize.Preferred.Width);
   var App: Tui.TuiApplication := Tui.TuiApplication.OpenForTest(Tui.TuiSize.Create(24, 6));
   var Model: CheckModel := CheckModel(Checked := false);

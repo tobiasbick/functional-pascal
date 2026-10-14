@@ -38,7 +38,10 @@ public type TuiMeasureConstraint = record
   // - `Limit`: Upper bound applied by the constraint.
   public static function AtMost(Limit: integer): TuiMeasureConstraint;
   begin
-    return TuiMeasureConstraint(Kind := TuiMeasureConstraintKind.AtMost, Limit := TuiMeasureConstraintRequireNonNegative(Limit));
+    return TuiMeasureConstraint(
+      Kind := TuiMeasureConstraintKind.AtMost,
+      Limit := TuiMeasureConstraintRequireNonNegative(Limit)
+    );
   end function;
 
   // Returns whether the constraint has an upper bound.

@@ -39,8 +39,15 @@ begin
           begin
             var Menus: array of TuiPointerMenu := TuiPointerMenus;
             TuiPointerMenus := [];
-            Menus.PushInPlace(TuiPointerMenu(Id := Id, Nodes := Nodes, State := State, ChangeAction := ChangeAction, Bounds := Frame.EntryAt(Index)
-                                                                                                                                 .Bounds));
+            Menus.PushInPlace(
+              TuiPointerMenu(
+                Id := Id,
+                Nodes := Nodes,
+                State := State,
+                ChangeAction := ChangeAction,
+                Bounds := Frame.EntryAt(Index).Bounds
+              )
+            );
             TuiPointerMenus := Menus;
           end;
         end if;
@@ -63,8 +70,11 @@ begin
 
         for ChildIndex: integer := 0 to Children.Length() - 1 do
           begin
-            Next := TuiPointerMenuWalk(Frame, Children[ChildIndex], Next, AllowMenu and
-                                                                          ((ModalIndex < 0) or (ModalIndex = ChildIndex)));
+            Next := TuiPointerMenuWalk(
+              Frame, Children[ChildIndex], Next, AllowMenu
+              and
+              ((ModalIndex < 0) or (ModalIndex = ChildIndex))
+            );
           end;
         end for;
       end;
@@ -175,21 +185,35 @@ begin
           end;
         when None:
           begin
-            const Width: integer := Console.DisplayWidth(MenuQuery.TuiMenuNodeText(Menu.Nodes[Index])) +
-                                    2;
-            if Rect.TuiRect.Create(X, Menu.Bounds.Y, Width, 1).Contains(Point) and
-               MenuQuery.TuiMenuNodeSelectable(Menu.Nodes[Index]) then
+            const Width: integer := Console.DisplayWidth(
+              MenuQuery.TuiMenuNodeText(Menu.Nodes[Index])
+            ) +
+              2;
+            if Rect.TuiRect.Create(X, Menu.Bounds.Y, Width, 1).Contains(Point)
+              and
+              MenuQuery.TuiMenuNodeSelectable(Menu.Nodes[Index])
+            then
               begin
                 if not Activate then
                   begin
-                    return Some(TuiPointerMenuHover(Menu, MenuQuery.TuiMenuNodeIdOf(Menu.Nodes[Index])));
+                    return Some(
+                      TuiPointerMenuHover(Menu, MenuQuery.TuiMenuNodeIdOf(Menu.Nodes[Index]))
+                    );
                   end;
                 end if;
 
-                return Some(TuiPointerMenuFocus(Root, Menu)
-                              .Concat([
-                                        Msg.TuiMsg.MenuChanged(Menu.Id, Menu.ChangeAction, MenuNode.TuiMenuState.OpenAt(MenuQuery.TuiMenuNodeIdOf(Menu.Nodes[Index])))
-                                      ]));
+                return Some(
+                  TuiPointerMenuFocus(
+                    Root,
+                    Menu
+                  ).Concat([
+                    Msg.TuiMsg.MenuChanged(
+                      Menu.Id,
+                      Menu.ChangeAction,
+                      MenuNode.TuiMenuState.OpenAt(MenuQuery.TuiMenuNodeIdOf(Menu.Nodes[Index]))
+                    )
+                  ])
+                );
               end;
             end if;
 
@@ -209,7 +233,12 @@ function TuiPointerMenuPopupHit(
   Activate: boolean
 ): option of array of Msg.TuiMsg;
 begin
-  const Popups: array of MenuGeometry.TuiMenuPopup := MenuGeometry.TuiMenuPopupGeometry(Menu.Nodes, Menu.State, Menu.Bounds, TerminalBounds);
+  const Popups: array of MenuGeometry.TuiMenuPopup := MenuGeometry.TuiMenuPopupGeometry(
+    Menu.Nodes,
+    Menu.State,
+    Menu.Bounds,
+    TerminalBounds
+  );
   for PopupIndex: integer := Popups.Length() - 1 downto 0 do
     begin
       if Popups[PopupIndex].Bounds.Contains(Point) then
@@ -237,19 +266,32 @@ begin
                         begin
                           if not Activate then
                             begin
-                              return Some(TuiPointerMenuHover(Menu, MenuQuery.TuiMenuNodeIdOf(Menu.Nodes[Index])));
+                              return Some(
+                                TuiPointerMenuHover(
+                                  Menu,
+                                  MenuQuery.TuiMenuNodeIdOf(Menu.Nodes[Index])
+                                )
+                              );
                             end;
                           end if;
 
                           return Some([
-                                        Msg.TuiMsg.MenuChanged(Menu.Id, Menu.ChangeAction, MenuNode.TuiMenuState.OpenAt(MenuQuery.TuiMenuNodeIdOf(Menu.Nodes[Index])))
-                                      ]);
+                            Msg.TuiMsg.MenuChanged(
+                              Menu.Id,
+                              Menu.ChangeAction,
+                              MenuNode.TuiMenuState.OpenAt(
+                                MenuQuery.TuiMenuNodeIdOf(Menu.Nodes[Index])
+                              )
+                            )
+                          ]);
                         end;
                       end if;
 
                       if not Activate then
                         begin
-                          return Some(TuiPointerMenuHover(Menu, MenuQuery.TuiMenuNodeIdOf(Menu.Nodes[Index])));
+                          return Some(
+                            TuiPointerMenuHover(Menu, MenuQuery.TuiMenuNodeIdOf(Menu.Nodes[Index]))
+                          );
                         end;
                       end if;
 
@@ -257,9 +299,13 @@ begin
                         when Some(const Action):
                           begin
                             return Some([
-                                          Msg.TuiMsg.MenuChanged(Menu.Id, Menu.ChangeAction, MenuNode.TuiMenuState.Closed()),
-                                          Msg.TuiMsg.Action(Menu.Id, Action)
-                                        ]);
+                              Msg.TuiMsg.MenuChanged(
+                                Menu.Id,
+                                Menu.ChangeAction,
+                                MenuNode.TuiMenuState.Closed()
+                              ),
+                              Msg.TuiMsg.Action(Menu.Id, Action)
+                            ]);
                           end;
                         when None:
                           begin
@@ -343,8 +389,8 @@ begin
             end if;
 
             return Some([
-                          Msg.TuiMsg.MenuChanged(Menu.Id, Menu.ChangeAction, MenuNode.TuiMenuState.Closed())
-                        ]);
+              Msg.TuiMsg.MenuChanged(Menu.Id, Menu.ChangeAction, MenuNode.TuiMenuState.Closed())
+            ]);
           end;
       end case;
     end;

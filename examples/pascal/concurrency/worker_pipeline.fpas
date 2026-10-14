@@ -7,41 +7,45 @@ begin
   const Jobs: channel of integer := Tasks.CreateChannel(2);
   const Results: channel of integer := Tasks.CreateChannel(2);
   const Group: Tasks.TaskGroup := Tasks.CreateTaskGroup();
-  const ProducerTask: task := Tasks.StartTaskInGroup(Group, procedure(Token: Tasks.CancellationToken) begin
-    for Value: integer := 1 to 12 do
-      begin
-        if (Tasks.SendWithCancellation(Jobs, Value, Token) is Error(_)) then
-          begin
-            return;
-          end;
-        end if;
-      end;
-    end for;
+  const ProducerTask: task := Tasks.StartTaskInGroup(
+    Group, procedure(Token: Tasks.CancellationToken) begin
+      for Value: integer := 1 to 12 do
+        begin
+          if (Tasks.SendWithCancellation(Jobs, Value, Token) is Error(_)) then
+            begin
+              return;
+            end;
+          end if;
+        end;
+      end for;
 
-    discard Tasks.CloseChannel(Jobs);
-  end procedure);
+      discard Tasks.CloseChannel(Jobs);
+    end procedure
+  );
   for Worker: integer := 1 to 3 do
     begin
-      const WorkerTask: task := Tasks.StartTaskInGroup(Group, procedure(Token: Tasks.CancellationToken) begin
-        while not Tasks.IsCancellationRequested(Token) do
-          begin
-            case Tasks.ReceiveWithCancellation(Jobs, Token) of
-              when Ok(const Value):
-                begin
-                  if (Tasks.SendWithCancellation(Results, Value * Value, Token) is Error(_)) then
-                    begin
-                      return;
-                    end;
-                  end if;
-                end;
-              when Error(_):
-                begin
-                  return;
-                end;
-            end case;
-          end;
-        end while;
-      end procedure);
+      const WorkerTask: task := Tasks.StartTaskInGroup(
+        Group, procedure(Token: Tasks.CancellationToken) begin
+          while not Tasks.IsCancellationRequested(Token) do
+            begin
+              case Tasks.ReceiveWithCancellation(Jobs, Token) of
+                when Ok(const Value):
+                  begin
+                    if (Tasks.SendWithCancellation(Results, Value * Value, Token) is Error(_)) then
+                      begin
+                        return;
+                      end;
+                    end if;
+                  end;
+                when Error(_):
+                  begin
+                    return;
+                  end;
+              end case;
+            end;
+          end while;
+        end procedure
+      );
     end;
   end for;
   // Collect while the producer runs: filling Jobs first could deadlock the pipeline.

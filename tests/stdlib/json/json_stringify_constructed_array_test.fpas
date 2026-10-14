@@ -4,10 +4,10 @@ uses Std.Console as Console, Std.Json as Json;
 
 begin
   const V: Json.JsonValue := Json.JsonValue.ArrayValue([
-                                                         Json.JsonValue.Bool(true),
-                                                         Json.JsonValue.NullValue,
-                                                         Json.JsonValue.String('hi'),
-                                                         Json.JsonValue.Number(1.5)
-                                                       ]);
+    Json.JsonValue.Bool(true),
+    Json.JsonValue.NullValue,
+    Json.JsonValue.String('hi'),
+    Json.JsonValue.Number(1.5)
+  ]);
   Console.WriteLn(Json.Stringify(V));
 end.

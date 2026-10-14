@@ -3,7 +3,10 @@ program TuiLayoutValuesTest;
 uses Std.Test as Test, Std.Tui as Tui;
 
 begin
-  const Mixed: Tui.TuiSizePolicy := Tui.TuiSizePolicy.Create(Tui.TuiSizePolicyKind.Expanding, Tui.TuiSizePolicyKind.Fixed);
+  const Mixed: Tui.TuiSizePolicy := Tui.TuiSizePolicy.Create(
+    Tui.TuiSizePolicyKind.Expanding,
+    Tui.TuiSizePolicyKind.Fixed
+  );
   Test.AssertTrue(Mixed.Horizontal = Tui.TuiSizePolicyKind.Expanding);
   Test.AssertTrue(Mixed.Vertical = Tui.TuiSizePolicyKind.Fixed);
   Test.AssertTrue(Tui.TuiSizePolicy.Preferred().Horizontal = Tui.TuiSizePolicyKind.Preferred);
@@ -84,7 +87,12 @@ begin
         Test.Fail('fixed-size layout settings must retain their height');
       end;
   end case;
-  const Custom: Tui.TuiLayoutSettings := Tui.TuiLayoutSettings.Create(Margins, Tui.TuiSizePolicy.Expanding(), Tui.TuiAlignment.Leading(), 3);
+  const Custom: Tui.TuiLayoutSettings := Tui.TuiLayoutSettings.Create(
+    Margins,
+    Tui.TuiSizePolicy.Expanding(),
+    Tui.TuiAlignment.Leading(),
+    3
+  );
   Test.AssertEquals(3, Custom.Stretch);
   Test.AssertTrue(Custom.Alignment.Horizontal = Tui.TuiAlignmentKind.Leading);
   const Unbounded: Tui.TuiMeasureConstraint := Tui.TuiMeasureConstraint.Unbounded();
@@ -95,7 +103,11 @@ begin
   const Spec: Tui.TuiMeasureSpec := Tui.TuiMeasureSpec.AtMost(Tui.TuiSize.Create(40, 10));
   Test.AssertEquals(40, Spec.Width.Limit);
   Test.AssertEquals(10, Spec.Height.Limit);
-  const Measure: Tui.TuiMeasureResult := Tui.TuiMeasureResult.Create(Tui.TuiSize.Create(2, 1), Tui.TuiSize.Create(8, 3), Tui.TuiSize.Create(20, 9));
+  const Measure: Tui.TuiMeasureResult := Tui.TuiMeasureResult.Create(
+    Tui.TuiSize.Create(2, 1),
+    Tui.TuiSize.Create(8, 3),
+    Tui.TuiSize.Create(20, 9)
+  );
   Test.AssertEquals(8, Measure.Preferred.Width);
   Test.AssertEquals(9, Measure.Maximum.Height);
   const Fixed: Tui.TuiMeasureResult := Tui.TuiMeasureResult.Fixed(Tui.TuiSize.Create(5, 4));
@@ -107,15 +119,22 @@ begin
   const ExpandingSpacer: Tui.TuiSpacer := Tui.TuiSpacer.Expanding(1);
   Test.AssertTrue(ExpandingSpacer.Kind = Tui.TuiSpacerKind.Expanding);
   Test.AssertEquals(1, ExpandingSpacer.MinimumExtent);
-  const Fit: Tui.TuiLayoutFit := Tui.TuiLayoutFit.Create(Tui.TuiSize.Create(10, 8), Tui.TuiSize.Create(7, 8));
+  const Fit: Tui.TuiLayoutFit := Tui.TuiLayoutFit.Create(
+    Tui.TuiSize.Create(10, 8),
+    Tui.TuiSize.Create(7, 8)
+  );
   Test.AssertFalse(Fit.Fits());
   Test.AssertEquals(3, Fit.Overflow.Width);
   Test.AssertEquals(0, Fit.Overflow.Height);
-  Test.AssertTrue(Tui.TuiLayoutFit.Create(Tui.TuiSize.Create(4, 4), Tui.TuiSize.Create(5, 5)).Fits());
-  const Spaced: Tui.TuiElement := Tui.TuiElementBuilders.MakeRowSpaced([
-                                                                         Tui.TuiElementBuilders.MakeLabel('A'),
-                                                                         Tui.TuiElementBuilders.MakeLabel('B')
-                                                                       ], 2);
+  Test.AssertTrue(
+    Tui.TuiLayoutFit.Create(Tui.TuiSize.Create(4, 4), Tui.TuiSize.Create(5, 5)).Fits()
+  );
+  const Spaced: Tui.TuiElement := Tui.TuiElementBuilders.MakeRowSpaced(
+    [
+      Tui.TuiElementBuilders.MakeLabel('A'),
+      Tui.TuiElementBuilders.MakeLabel('B')
+    ], 2
+  );
   case Spaced of
     when Tui.TuiElement.Row(const Children, const Spacing):
       begin
@@ -127,7 +146,10 @@ begin
         Test.Fail('expected spaced row');
       end;
   end case;
-  const Wrapped: Tui.TuiElement := Tui.TuiElementBuilders.MakeLayout(Settings, Tui.TuiElementBuilders.MakeLabel('X'));
+  const Wrapped: Tui.TuiElement := Tui.TuiElementBuilders.MakeLayout(
+    Settings,
+    Tui.TuiElementBuilders.MakeLabel('X')
+  );
   case Wrapped of
     when Tui.TuiElement.Layout(const WrappedSettings, const WrappedChildren):
       begin

@@ -12,22 +12,54 @@ begin
   const Cmd: Tui.TuiCmdOutput := Tui.TuiCmdOutput.Create();
   for Caret: integer := 0 to 4 do
     begin
-      State := Update.NotesUpdate(State, Tui.TuiMsgTextChanged(Tui.TuiControlId.Create(3), Tui.TuiAction.Create(3), 'Title', Caret), Cmd);
+      State := Update.NotesUpdate(
+        State,
+        Tui.TuiMsgTextChanged(Tui.TuiControlId.Create(3), Tui.TuiAction.Create(3), 'Title', Caret),
+        Cmd
+      );
       Test.AssertFalse(State.Dirty);
       Test.AssertEquals(Caret, State.TitleCaret);
-      State := Update.NotesUpdate(State, Tui.TuiMsgTextAreaChanged(Tui.TuiControlId.Create(5), Tui.TuiAction.Create(5), 'Body', Caret, Tui.TuiPoint.Create(0, 1)), Cmd);
+      State := Update.NotesUpdate(
+        State,
+        Tui.TuiMsgTextAreaChanged(
+          Tui.TuiControlId.Create(5),
+          Tui.TuiAction.Create(5),
+          'Body',
+          Caret,
+          Tui.TuiPoint.Create(0, 1)
+        ),
+        Cmd
+      );
       Test.AssertFalse(State.Dirty);
       Test.AssertEquals(Caret, State.BodyCaret);
       Test.AssertEquals(1, State.BodyOffset.Y);
     end;
   end for;
 
-  State := Update.NotesUpdate(State, Tui.TuiMsgTextChanged(Tui.TuiControlId.Create(4), Tui.TuiAction.Create(4), 'one', 0), Cmd);
+  State := Update.NotesUpdate(
+    State,
+    Tui.TuiMsgTextChanged(Tui.TuiControlId.Create(4), Tui.TuiAction.Create(4), 'one', 0),
+    Cmd
+  );
   Test.AssertFalse(State.Dirty);
   State := Update.NotesPersistCurrent(State);
   Test.AssertEquals(123, State.Notes[0].UpdatedMillis);
-  State := Update.NotesUpdate(State, Tui.TuiMsgTextChanged(Tui.TuiControlId.Create(3), Tui.TuiAction.Create(3), 'Edited', 6), Cmd);
+  State := Update.NotesUpdate(
+    State,
+    Tui.TuiMsgTextChanged(Tui.TuiControlId.Create(3), Tui.TuiAction.Create(3), 'Edited', 6),
+    Cmd
+  );
   Test.AssertTrue(State.Dirty);
-  State := Update.NotesUpdate(State, Tui.TuiMsgTextAreaChanged(Tui.TuiControlId.Create(5), Tui.TuiAction.Create(5), 'Body', 0, Tui.TuiPoint.Create(0, 0)), Cmd);
+  State := Update.NotesUpdate(
+    State,
+    Tui.TuiMsgTextAreaChanged(
+      Tui.TuiControlId.Create(5),
+      Tui.TuiAction.Create(5),
+      'Body',
+      0,
+      Tui.TuiPoint.Create(0, 0)
+    ),
+    Cmd
+  );
   Test.AssertTrue(State.Dirty);
 end.

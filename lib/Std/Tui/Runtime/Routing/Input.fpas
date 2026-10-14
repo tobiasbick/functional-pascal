@@ -125,7 +125,9 @@ begin
     begin
       if Index < 0 then
         begin
-          return Some(Msg.TuiMsg.TextChanged(Input.Id, Input.ChangeAction, Input.Text, Input.Caret));
+          return Some(
+            Msg.TuiMsg.TextChanged(Input.Id, Input.ChangeAction, Input.Text, Input.Caret)
+          );
         end;
       end if;
 
@@ -136,7 +138,14 @@ begin
         end;
       end if;
 
-      return Some(Msg.TuiMsg.TextChanged(Input.Id, Input.ChangeAction, Input.HistoryDraft, Input.HistoryDraft.Length()));
+      return Some(
+        Msg.TuiMsg.TextChanged(
+          Input.Id,
+          Input.ChangeAction,
+          Input.HistoryDraft,
+          Input.HistoryDraft.Length()
+        )
+      );
     end;
   end if;
 
@@ -163,15 +172,23 @@ begin
 
   if ((Key.kind = Console.KeyKind.Character) and not Key.ctrl) and (not Key.alt and not Key.meta) then
     begin
-      return Some(Msg.TuiMsg.TextChanged(Input.Id, Input.ChangeAction, Input.Text.Insert(Input.Caret, Key.ch), Input.Caret +
-                                                                                                               Key.ch.Length()));
+      return Some(
+        Msg.TuiMsg.TextChanged(
+          Input.Id, Input.ChangeAction, Input.Text.Insert(Input.Caret, Key.ch), Input.Caret +
+          Key.ch.Length()
+        )
+      );
     end;
   end if;
 
   if ((Key.kind = Console.KeyKind.Space) and not Key.ctrl) and (not Key.alt and not Key.meta) then
     begin
-      return Some(Msg.TuiMsg.TextChanged(Input.Id, Input.ChangeAction, Input.Text.Insert(Input.Caret, ' '), Input.Caret +
-                                                                                                            1));
+      return Some(
+        Msg.TuiMsg.TextChanged(
+          Input.Id, Input.ChangeAction, Input.Text.Insert(Input.Caret, ' '), Input.Caret +
+          1
+        )
+      );
     end;
   end if;
 
@@ -184,8 +201,14 @@ begin
         end;
       end if;
 
-      return Some(Msg.TuiMsg.TextChanged(Input.Id, Input.ChangeAction, Input.Text.Delete(Start, Input.Caret -
-                                                                                                Start), Start));
+      return Some(
+        Msg.TuiMsg.TextChanged(
+          Input.Id, Input.ChangeAction, Input.Text.Delete(
+            Start, Input.Caret -
+            Start
+          ), Start
+        )
+      );
     end;
   end if;
 
@@ -198,8 +221,14 @@ begin
         end;
       end if;
 
-      return Some(Msg.TuiMsg.TextChanged(Input.Id, Input.ChangeAction, Input.Text.Delete(Input.Caret, EndIndex -
-                                                                                                      Input.Caret), Input.Caret));
+      return Some(
+        Msg.TuiMsg.TextChanged(
+          Input.Id, Input.ChangeAction, Input.Text.Delete(
+            Input.Caret, EndIndex -
+            Input.Caret
+          ), Input.Caret
+        )
+      );
     end;
   end if;
 
@@ -237,7 +266,9 @@ begin
 
   if Key.kind = Console.KeyKind.EndKey then
     begin
-      return Some(Msg.TuiMsg.TextChanged(Input.Id, Input.ChangeAction, Input.Text, Input.Text.Length()));
+      return Some(
+        Msg.TuiMsg.TextChanged(Input.Id, Input.ChangeAction, Input.Text, Input.Text.Length())
+      );
     end;
   end if;
 

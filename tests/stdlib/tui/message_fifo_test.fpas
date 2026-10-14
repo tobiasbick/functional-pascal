@@ -9,22 +9,40 @@ end record;
 
 function MakeKey(Kind: Tui.TuiKeyKind; Character: string): Tui.TuiKeyEvent;
 begin
-  return Tui.TuiKeyEvent(kind := Kind, ch := Character, shift := false, ctrl := false, alt := false, meta := false);
+  return Tui.TuiKeyEvent(
+    kind := Kind,
+    ch := Character,
+    shift := false,
+    ctrl := false,
+    alt := false,
+    meta := false
+  );
 end function;
 
 function PushEvent(State: FifoModel; InputEvent: string; CmdWasNoCommand: boolean): FifoModel;
 begin
-  return FifoModel(Events := State.Events.Concat([InputEvent]), SeenCmdWasNoCommand := State.SeenCmdWasNoCommand and
-                                                                                       CmdWasNoCommand);
+  return FifoModel(
+    Events := State.Events.Concat([InputEvent]), SeenCmdWasNoCommand := State.SeenCmdWasNoCommand
+    and
+    CmdWasNoCommand
+  );
 end function;
 
 function ViewFifo(State: FifoModel): Tui.TuiElement;
 begin
-  return Tui.TuiElementBuilders.MakeDesktop(Some(Tui.TuiControlId.Create(1)), [
-                                                                                Tui.TuiElementBuilders.MakePanel('Host', [
-                                                                                                                           Tui.TuiElementBuilders.MakeButton(Tui.TuiControlId.Create(1), 'Go', Tui.TuiAction.Create(7))
-                                                                                                                         ])
-                                                                              ]);
+  return Tui.TuiElementBuilders.MakeDesktop(
+    Some(Tui.TuiControlId.Create(1)), [
+      Tui.TuiElementBuilders.MakePanel(
+        'Host', [
+          Tui.TuiElementBuilders.MakeButton(
+            Tui.TuiControlId.Create(1),
+            'Go',
+            Tui.TuiAction.Create(7)
+          )
+        ]
+      )
+    ]
+  );
 end function;
 
 function UpdateFifo(State: FifoModel; Msg: Tui.TuiMsg; Cmd: Tui.TuiCmdOutput): FifoModel;

@@ -4,8 +4,12 @@ uses Std.Console as Console;
 
 begin
   const O: option of string := None;
-  Console.WriteLn((case O of
-    when Some(const AP43Value): AP43Value;
-    when None: 'default';
-  end case));
+  Console.WriteLn(
+    (
+      case O of
+        when Some(const AP43Value): AP43Value;
+        when None: 'default';
+      end case
+    )
+  );
 end.

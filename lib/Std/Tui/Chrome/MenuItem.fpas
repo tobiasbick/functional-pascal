@@ -45,13 +45,19 @@ public type TuiMenuItem = record
   // - `Action`: Application action associated with the control or emitted message.
   // - `Shortcut`: Shortcut gesture or display text.
   public static function WithShortcut(
-  Id: ControlId.TuiControlId;
-  Text: string;
-  Action: IdsAction.TuiAction;
-  Shortcut: string
-): TuiMenuItem;
+    Id: ControlId.TuiControlId;
+    Text: string;
+    Action: IdsAction.TuiAction;
+    Shortcut: string
+  ): TuiMenuItem;
   begin
-    return TuiMenuItem(Id := Id, Text := Text, Action := Action, Enabled := true, Shortcut := Shortcut);
+    return TuiMenuItem(
+      Id := Id,
+      Text := Text,
+      Action := Action,
+      Enabled := true,
+      Shortcut := Shortcut
+    );
   end function;
 end record;
 end unit;

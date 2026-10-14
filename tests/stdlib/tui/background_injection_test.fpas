@@ -36,7 +36,15 @@ begin
   Test.AssertTrue(App.InjectBackgroundForTest(Inbox, 4).Unwrap());
   Test.AssertTrue(App.InjectBackgroundForTest(Inbox, 7).Unwrap());
   Test.AssertFalse(App.InjectBackgroundForTest(Inbox, 9).Unwrap());
-  const Model: InjectionModel := App.RunBackgroundIterations(InjectionModel(Values := [], Starts := 0), Inbox, UpdateFramework, UpdateApplication, View, 3, 0);
+  const Model: InjectionModel := App.RunBackgroundIterations(
+    InjectionModel(Values := [], Starts := 0),
+    Inbox,
+    UpdateFramework,
+    UpdateApplication,
+    View,
+    3,
+    0
+  );
   Test.AssertEquals(1, Model.Starts);
   Test.AssertEquals(2, Model.Values.Length());
   Test.AssertEquals(4, Model.Values[0]);

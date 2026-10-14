@@ -10,13 +10,20 @@ end function;
 begin
   const Workers: Tasks.TaskGroup := Tasks.CreateTaskGroup();
   // Keep the group even when individual task handles are not needed.
-  const ConfigurationTask: task of result of (boolean, string) := Tasks.StartTaskInGroup(Workers, CheckConfiguration);
-  const WorkerTask: task := Tasks.StartTaskInGroup(Workers, procedure(Token: Tasks.CancellationToken) begin
-    const Stop: Tasks.WaitCase := Tasks.CancellationCase(Token, procedure() begin
-      Console.WriteLn('Background worker stopped');
-    end procedure);
-    discard Tasks.Select([Stop]);
-  end procedure);
+  const ConfigurationTask: task of result of (boolean, string) := Tasks.StartTaskInGroup(
+    Workers,
+    CheckConfiguration
+  );
+  const WorkerTask: task := Tasks.StartTaskInGroup(
+    Workers, procedure(Token: Tasks.CancellationToken) begin
+      const Stop: Tasks.WaitCase := Tasks.CancellationCase(
+        Token, procedure() begin
+          Console.WriteLn('Background worker stopped');
+        end procedure
+      );
+      discard Tasks.Select([Stop]);
+    end procedure
+  );
   // Close requests cooperative cancellation and waits for every registered worker.
   const Failures: array of Tasks.TaskFailure := Tasks.CloseTaskGroup(Workers);
   for Failure: Tasks.TaskFailure in Failures do

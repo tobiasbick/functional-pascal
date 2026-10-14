@@ -21,9 +21,11 @@ end function;
 begin
   const Life: Server.ServerLifetime := Server.CreateLifetime(1000, false).Unwrap();
   const Group: Tasks.TaskGroup := Server.GetWorkGroup(Life);
-  const Worker: task of result of (boolean, string) := Tasks.StartTaskInGroup(Group, function(Token: Tasks.CancellationToken): result of (boolean, string) begin
-    return Error('session failed');
-  end function);
+  const Worker: task of result of (boolean, string) := Tasks.StartTaskInGroup(
+    Group, function(Token: Tasks.CancellationToken): result of (boolean, string) begin
+      return Error('session failed');
+    end function
+  );
   const Listener: Net.Listener := BindListener().Unwrap();
   discard Server.OwnListener(Life, Listener);
   // Deliberate ownership misuse: cleanup must preserve this failure.

@@ -63,8 +63,10 @@ public type TuiColor = record
   public static function FromRgb(Red: integer; Green: integer; Blue: integer): TuiColor;
   begin
     // One combined check keeps the per-cell hot path cheap; failures still name the channel.
-    if (((Red < 0) or (Red > 255)) or ((Green < 0) or (Green > 255))) or
-       ((Blue < 0) or (Blue > 255)) then
+    if (((Red < 0) or (Red > 255)) or ((Green < 0) or (Green > 255)))
+      or
+      ((Blue < 0) or (Blue > 255))
+    then
       begin
         discard TuiColorRequireRange(Red, 0, 255, 'red channel');
         discard TuiColorRequireRange(Green, 0, 255, 'green channel');

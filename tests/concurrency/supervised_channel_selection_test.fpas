@@ -21,47 +21,65 @@ begin
           const Attempts: channel of boolean := Tasks.CreateChannel(2);
           discard Tasks.Send(Attempts, false);
           discard Tasks.Send(Attempts, true);
-          Children.PushInPlace(Tasks.StartSupervisedTask(Group, function(WorkerToken: Tasks.CancellationToken): result of (integer, string) begin
-            if not Tasks.Receive(Attempts).Unwrap() then
-              begin
-                return Error('transient startup failure');
-              end;
-            end if;
+          Children.PushInPlace(
+            Tasks.StartSupervisedTask(
+              Group,
+              function(WorkerToken: Tasks.CancellationToken): result of (integer, string) begin
+                if not Tasks.Receive(Attempts).Unwrap() then
+                  begin
+                    return Error('transient startup failure');
+                  end;
+                end if;
 
-            discard Tasks.CloseChannel(Attempts);
-            for Item: integer := 0 to 31 do
-              begin
-                discard Tasks.Select([
-                                       Tasks.SendCase(Output, Producer * 32 + Item, procedure(Outcome: result of (boolean, string)) begin
-                                         Test.AssertTrue(Outcome.Unwrap());
-                                       end procedure),
-                                       Tasks.CancellationCase(WorkerToken, procedure() begin
-                                         panic('producer cancelled before drain');
-                                       end procedure)
-                                     ]);
-              end;
-            end for;
+                discard Tasks.CloseChannel(Attempts);
+                for Item: integer := 0 to 31 do
+                  begin
+                    discard Tasks.Select([
+                      Tasks.SendCase(
+                        Output, Producer * 32 + Item,
+                        procedure(Outcome: result of (boolean, string)) begin
+                          Test.AssertTrue(Outcome.Unwrap());
+                        end procedure
+                      ),
+                      Tasks.CancellationCase(
+                        WorkerToken, procedure() begin
+                          panic('producer cancelled before drain');
+                        end procedure
+                      )
+                    ]);
+                  end;
+                end for;
 
-            return Ok(Producer);
-          end function, 1, 1));
+                return Ok(Producer);
+              end function, 1, 1
+            )
+          );
         end;
       end for;
 
       for Item: integer := 0 to 255 do
         begin
-          Test.AssertEquals(0, Tasks.Select([
-                                              Tasks.ReceiveCase(Output, procedure(Outcome: result of (integer, string)) begin
-                                                const Number: integer := Outcome.Unwrap();
-                                                Test.AssertTrue((Number >= 0) and (Number < 256));
-                                                Seen[Number] := Seen[Number] + 1;
-                                              end procedure),
-                                              Tasks.TimerCase(10000, procedure() begin
-                                                panic('producer drain timed out');
-                                              end procedure),
-                                              Tasks.CancellationCase(Token, procedure() begin
-                                                panic('consumer cancelled before drain');
-                                              end procedure)
-                                            ]));
+          Test.AssertEquals(
+            0, Tasks.Select([
+              Tasks.ReceiveCase(
+                Output, procedure(Outcome: result of (integer, string)) begin
+                  const Number: integer := Outcome.Unwrap();
+                  Test.AssertTrue((Number >= 0) and (Number < 256));
+                  Seen[Number] := Seen[Number] + 1;
+                end procedure
+              ),
+              Tasks.TimerCase(
+                10000, procedure() begin
+                  panic('producer drain timed out');
+                end procedure
+              ),
+              Tasks.CancellationCase(
+                Token, procedure() begin
+                  panic('consumer cancelled before drain');
+                end procedure
+              )
+            ])
+          );
         end;
       end for;
 

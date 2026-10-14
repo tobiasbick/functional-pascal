@@ -31,7 +31,12 @@ public type TuiMargins = record
   // - `Bottom`: Bottom edge or margin.
   public static function Create(Left: integer; Top: integer; Right: integer; Bottom: integer): TuiMargins;
   begin
-    return TuiMargins(Left := TuiMarginsRequireNonNegative(Left, 'left'), Top := TuiMarginsRequireNonNegative(Top, 'top'), Right := TuiMarginsRequireNonNegative(Right, 'right'), Bottom := TuiMarginsRequireNonNegative(Bottom, 'bottom'));
+    return TuiMargins(
+      Left := TuiMarginsRequireNonNegative(Left, 'left'),
+      Top := TuiMarginsRequireNonNegative(Top, 'top'),
+      Right := TuiMarginsRequireNonNegative(Right, 'right'),
+      Bottom := TuiMarginsRequireNonNegative(Bottom, 'bottom')
+    );
   end function;
 
   // Creates equal margins on every side.

@@ -130,8 +130,14 @@ begin
         end;
       end if;
 
-      LocalEvents.PushInPlace(Types.SseEvent(EventType := EventType, Data := State.Data.Slice(0, State.Data.Length() -
-                                                                                                 1), Id := State.LastEventId));
+      LocalEvents.PushInPlace(
+        Types.SseEvent(
+          EventType := EventType, Data := State.Data.Slice(
+            0, State.Data.Length() -
+            1
+          ), Id := State.LastEventId
+        )
+      );
     end;
   end if;
 
@@ -157,8 +163,10 @@ begin
         end;
       end if;
 
-      LocalState.Buffer := LocalState.Buffer.Slice(EndValue[0] + EndValue[1], LocalState.Buffer.Length() - EndValue[0] -
-                                                                              EndValue[1]);
+      LocalState.Buffer := LocalState.Buffer.Slice(
+        EndValue[0] + EndValue[1], LocalState.Buffer.Length() - EndValue[0] -
+        EndValue[1]
+      );
       case Utf8.Decode(LineBytes) of
         when Ok(const Line):
           begin
@@ -255,7 +263,15 @@ begin
       return Error('SSE MaxEventBytes must be positive');
     end;
   end if;
-  const State: DecoderState := DecoderState(Buffer := [], Data := '', EventType := '', LastEventId := '', EventBytes := 0, Maximum := MaxEventBytes, Finished := false);
+  const State: DecoderState := DecoderState(
+    Buffer := [],
+    Data := '',
+    EventType := '',
+    LastEventId := '',
+    EventBytes := 0,
+    Maximum := MaxEventBytes,
+    Finished := false
+  );
   const Slot: integer := ReserveState(State);
   return Ok(Handles.NewSseDecoder(Slot));
 end function;

@@ -8,22 +8,24 @@ begin
   discard Tasks.Send(Attempts, 0);
   discard Tasks.Send(Attempts, 1);
   discard Tasks.Send(Attempts, 2);
-  const Child: task of result of (integer, string) := Tasks.StartSupervisedTask(Group, function(Token: Tasks.CancellationToken): result of (integer, string) begin
-    const Attempt: integer := Tasks.Receive(Attempts).Unwrap();
-    if Attempt = 0 then
-      begin
-        return Error('retryable error');
-      end;
-    end if;
+  const Child: task of result of (integer, string) := Tasks.StartSupervisedTask(
+    Group, function(Token: Tasks.CancellationToken): result of (integer, string) begin
+      const Attempt: integer := Tasks.Receive(Attempts).Unwrap();
+      if Attempt = 0 then
+        begin
+          return Error('retryable error');
+        end;
+      end if;
 
-    if Attempt = 1 then
-      begin
-        panic('retryable panic');
-      end;
-    end if;
+      if Attempt = 1 then
+        begin
+          panic('retryable panic');
+        end;
+      end if;
 
-    return Ok(42);
-  end function, 2, 1);
+      return Ok(42);
+    end function, 2, 1
+  );
   Test.AssertEquals(0, Tasks.WaitAny([Child]));
   Test.AssertEquals(42, Tasks.Wait(Child).Unwrap());
   Test.AssertEquals(0, Tasks.CloseTaskGroup(Group).Length());

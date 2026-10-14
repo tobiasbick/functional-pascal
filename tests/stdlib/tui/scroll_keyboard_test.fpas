@@ -9,21 +9,33 @@ end record;
 
 function MakeKey(Kind: Tui.TuiKeyKind): Tui.TuiKeyEvent;
 begin
-  return Tui.TuiKeyEvent(kind := Kind, ch := '', shift := false, ctrl := false, alt := false, meta := false);
+  return Tui.TuiKeyEvent(
+    kind := Kind,
+    ch := '',
+    shift := false,
+    ctrl := false,
+    alt := false,
+    meta := false
+  );
 end function;
 
 function ViewScroll(State: ScrollModel): Tui.TuiElement;
 begin
-  return Tui.TuiElementBuilders.MakeDesktop(Some(Tui.TuiControlId.Create(1)), [
-                                                                                Tui.TuiElementBuilders.MakeScroll(Tui.TuiControlId.Create(1), State.Offset, Tui.TuiAction.Create(7), Tui.TuiElementBuilders.MakeColumn([
-                                                                                                                                                                                                                         Tui.TuiElementBuilders.MakeLabel('One'),
-                                                                                                                                                                                                                         Tui.TuiElementBuilders.MakeLabel('Two'),
-                                                                                                                                                                                                                         Tui.TuiElementBuilders.MakeLabel('Three'),
-                                                                                                                                                                                                                         Tui.TuiElementBuilders.MakeLabel('Four'),
-                                                                                                                                                                                                                         Tui.TuiElementBuilders.MakeLabel('Five'),
-                                                                                                                                                                                                                         Tui.TuiElementBuilders.MakeLabel('Six')
-                                                                                                                                                                                                                       ]))
-                                                                              ]);
+  return Tui.TuiElementBuilders.MakeDesktop(
+    Some(Tui.TuiControlId.Create(1)), [
+      Tui.TuiElementBuilders.MakeScroll(
+        Tui.TuiControlId.Create(1), State.Offset, Tui.TuiAction.Create(7),
+        Tui.TuiElementBuilders.MakeColumn([
+          Tui.TuiElementBuilders.MakeLabel('One'),
+          Tui.TuiElementBuilders.MakeLabel('Two'),
+          Tui.TuiElementBuilders.MakeLabel('Three'),
+          Tui.TuiElementBuilders.MakeLabel('Four'),
+          Tui.TuiElementBuilders.MakeLabel('Five'),
+          Tui.TuiElementBuilders.MakeLabel('Six')
+        ])
+      )
+    ]
+  );
 end function;
 
 function UpdateScroll(State: ScrollModel; Msg: Tui.TuiMsg; Cmd: Tui.TuiCmdOutput): ScrollModel;

@@ -85,8 +85,11 @@ begin
   Console.WriteLn('final value: ' + Conv.IntToStr(Value));
   if (MaxMillis > 0) and (Elapsed > MaxMillis) then
     begin
-      panic('function-call benchmark regression: ' + Conv.IntToStr(Elapsed) + ' ms exceeds limit ' + Conv.IntToStr(MaxMillis) +
-            ' ms');
+      panic(
+        'function-call benchmark regression: ' + Conv.IntToStr(Elapsed) + ' ms exceeds limit ' +
+        Conv.IntToStr(MaxMillis) +
+        ' ms'
+      );
     end;
   end if;
 end.

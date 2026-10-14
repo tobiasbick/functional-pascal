@@ -6,8 +6,10 @@ begin
   Test.AssertEquals(255, parse.Int(' $FF ').Unwrap());
   Test.AssertEquals(-9223372036854775808, parse.Int('-$8000000000000000').Unwrap());
   Test.AssertEquals(-9223372036854775808, parse.Int('-9223372036854775808').Unwrap());
-  Test.AssertEquals(-9223372036854775808, parse.HexInt(Conv.IntToHex(-9223372036854775808, 16))
-                                            .Unwrap());
+  Test.AssertEquals(
+    -9223372036854775808,
+    parse.HexInt(Conv.IntToHex(-9223372036854775808, 16)).Unwrap()
+  );
   Test.AssertTrue((parse.Int('$8000000000000000') is Error(_)));
   Test.AssertTrue((parse.Int('1__0') is Error(_)));
   Test.AssertTrue((parse.Real('1.0e-9999') is Error(_)));

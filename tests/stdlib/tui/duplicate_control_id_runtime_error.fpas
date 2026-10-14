@@ -12,9 +12,9 @@ begin
   const Id: Tui.TuiControlId := Tui.TuiControlId.Create(1);
   const Action: Tui.TuiAction := Tui.TuiAction.Create(10);
   return Tui.TuiElementBuilders.MakeRow([
-                                          Tui.TuiElementBuilders.MakeButton(Id, 'First', Action),
-                                          Tui.TuiElementBuilders.MakeButton(Id, 'Second', Action)
-                                        ]);
+    Tui.TuiElementBuilders.MakeButton(Id, 'First', Action),
+    Tui.TuiElementBuilders.MakeButton(Id, 'Second', Action)
+  ]);
 end function;
 
 begin

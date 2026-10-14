@@ -27,13 +27,21 @@ public type TuiInputSpec = record
   // - `Caret`: Zero-based character index of the caret.
   // - `ChangeAction`: Application action emitted when the value changes.
   public static function Create(
-  Id: ControlId.TuiControlId;
-  Text: string;
-  Caret: integer;
-  ChangeAction: Action.TuiAction
-): TuiInputSpec;
+    Id: ControlId.TuiControlId;
+    Text: string;
+    Caret: integer;
+    ChangeAction: Action.TuiAction
+  ): TuiInputSpec;
   begin
-    return TuiInputSpec(Id := Id, Text := Text, Caret := Caret, Hint := '', History := [], HistoryDraft := '', ChangeAction := ChangeAction);
+    return TuiInputSpec(
+      Id := Id,
+      Text := Text,
+      Caret := Caret,
+      Hint := '',
+      History := [],
+      HistoryDraft := '',
+      ChangeAction := ChangeAction
+    );
   end function;
 
   // Creates an input that paints a hint while its text is empty.
@@ -45,14 +53,22 @@ public type TuiInputSpec = record
   // - `Hint`: Hint text displayed for an empty input.
   // - `ChangeAction`: Application action emitted when the value changes.
   public static function WithHint(
-  Id: ControlId.TuiControlId;
-  Text: string;
-  Caret: integer;
-  Hint: string;
-  ChangeAction: Action.TuiAction
-): TuiInputSpec;
+    Id: ControlId.TuiControlId;
+    Text: string;
+    Caret: integer;
+    Hint: string;
+    ChangeAction: Action.TuiAction
+  ): TuiInputSpec;
   begin
-    return TuiInputSpec(Id := Id, Text := Text, Caret := Caret, Hint := Hint, History := [], HistoryDraft := '', ChangeAction := ChangeAction);
+    return TuiInputSpec(
+      Id := Id,
+      Text := Text,
+      Caret := Caret,
+      Hint := Hint,
+      History := [],
+      HistoryDraft := '',
+      ChangeAction := ChangeAction
+    );
   end function;
 
   // Creates an input with oldest-to-newest Up/Down history and a restorable draft.
@@ -66,16 +82,24 @@ public type TuiInputSpec = record
   // - `HistoryDraft`: Current editable text retained while browsing history.
   // - `ChangeAction`: Application action emitted when the value changes.
   public static function WithHistory(
-  Id: ControlId.TuiControlId;
-  Text: string;
-  Caret: integer;
-  Hint: string;
-  History: array of string;
-  HistoryDraft: string;
-  ChangeAction: Action.TuiAction
-): TuiInputSpec;
+    Id: ControlId.TuiControlId;
+    Text: string;
+    Caret: integer;
+    Hint: string;
+    History: array of string;
+    HistoryDraft: string;
+    ChangeAction: Action.TuiAction
+  ): TuiInputSpec;
   begin
-    return TuiInputSpec(Id := Id, Text := Text, Caret := Caret, Hint := Hint, History := History, HistoryDraft := HistoryDraft, ChangeAction := ChangeAction);
+    return TuiInputSpec(
+      Id := Id,
+      Text := Text,
+      Caret := Caret,
+      Hint := Hint,
+      History := History,
+      HistoryDraft := HistoryDraft,
+      ChangeAction := ChangeAction
+    );
   end function;
 end record;
 end unit;

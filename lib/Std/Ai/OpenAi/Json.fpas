@@ -18,10 +18,19 @@ begin
   var MessageValues: array of Json.JsonValue := [];
   for Index: integer := 0 to Messages.Length() - 1 do
     begin
-      MessageValues.PushInPlace(Json.JsonValue.Object(['role': Json.JsonValue.String(Messages[Index].Role), 'content': Json.JsonValue.String(Messages[Index].Content)]));
+      MessageValues.PushInPlace(
+        Json.JsonValue.Object([
+          'role': Json.JsonValue.String(Messages[Index].Role),
+          'content': Json.JsonValue.String(Messages[Index].Content)
+        ])
+      );
     end;
   end for;
-  var Fields: dict of string to Json.JsonValue := ['model': Json.JsonValue.String(Model), 'messages': Json.JsonValue.ArrayValue(MessageValues), 'stream': Json.JsonValue.Bool(false)];
+  var Fields: dict of string to Json.JsonValue := [
+    'model': Json.JsonValue.String(Model),
+    'messages': Json.JsonValue.ArrayValue(MessageValues),
+    'stream': Json.JsonValue.Bool(false)
+  ];
   case Options.Temperature of
     when Some(const Value):
       begin
@@ -107,7 +116,9 @@ begin
                                                       end;
                                                     when Json.JsonValue.NullValue, Json.JsonValue.Bool(_), Json.JsonValue.Number(_), Json.JsonValue.ArrayValue(_), Json.JsonValue.Object(_):
                                                       begin
-                                                        return Error('OpenAI-compatible message content is not text');
+                                                        return Error(
+                                                          'OpenAI-compatible message content is not text'
+                                                        );
                                                       end;
                                                   end case;
                                                 end;
@@ -119,7 +130,9 @@ begin
                                           end;
                                         when Json.JsonValue.NullValue, Json.JsonValue.Bool(_), Json.JsonValue.Number(_), Json.JsonValue.String(_), Json.JsonValue.ArrayValue(_):
                                           begin
-                                            return Error('OpenAI-compatible choice message is not an object');
+                                            return Error(
+                                              'OpenAI-compatible choice message is not an object'
+                                            );
                                           end;
                                       end case;
                                     end;

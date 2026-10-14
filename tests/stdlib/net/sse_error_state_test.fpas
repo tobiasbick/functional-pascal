@@ -58,9 +58,10 @@ begin
 
   Terminal(Invalid);
   const Many: Http.SseDecoder := Http.CreateSseDecoder(9).Unwrap();
-  const Events: array of Http.SseEvent := Http.FeedSse(Many, Utf8.Encode(('data:x' + #13 + #10 + #10)
-                                                                           .RepeatStr(500)))
-                                            .Unwrap();
+  const Events: array of Http.SseEvent := Http.FeedSse(
+    Many,
+    Utf8.Encode(('data:x' + #13 + #10 + #10).RepeatStr(500))
+  ).Unwrap();
   Test.AssertEquals(500, Events.Length());
   Test.AssertEquals('x', Events[499].Data);
   const Split: Http.SseDecoder := Http.CreateSseDecoder(9).Unwrap();

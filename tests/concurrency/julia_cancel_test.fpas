@@ -8,7 +8,18 @@ begin
   for Attempt: integer := 1 to 10 do
     begin
       // More rows than queue capacity; deliberately leave the result queue undrained.
-      const Old: Render.RenderJob := Render.StartRender(-1.0, 1.0, -1.0, 1.0, 8, 100, 2048, Color.PaletteKind.DeepOcean, 0.0, 0.0);
+      const Old: Render.RenderJob := Render.StartRender(
+        -1.0,
+        1.0,
+        -1.0,
+        1.0,
+        8,
+        100,
+        2048,
+        Color.PaletteKind.DeepOcean,
+        0.0,
+        0.0
+      );
       discard Tasks.ReceiveWithTimeout(Old.Rows, 5000).Unwrap();
       const Token: Tasks.CancellationToken := Tasks.GetTaskGroupToken(Old.Group);
       const Filler: Render.RenderRow := Render.RenderRow(Y := 0, Samples := []);
@@ -21,10 +32,23 @@ begin
       discard Tasks.CancelTaskGroup(Old.Group);
       Test.AssertTrue(Tasks.IsCancellationRequested(Token));
       // A cancelled CPU row returns no partial result to publish.
-      Test.AssertEquals(0, Compute.ComputeRow(0, 8, 1, -1.0, 1.0, -1.0, 1.0, 2048, 0.0, 0.0, Token)
-                             .Length());
+      Test.AssertEquals(
+        0,
+        Compute.ComputeRow(0, 8, 1, -1.0, 1.0, -1.0, 1.0, 2048, 0.0, 0.0, Token).Length()
+      );
       Render.StopRender(Old);
-      const Fresh: Render.RenderJob := Render.StartRender(0.0, 0.0, 0.0, 0.0, 1, 1, 32, Color.PaletteKind.Ember, 0.0, 0.0);
+      const Fresh: Render.RenderJob := Render.StartRender(
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        1,
+        1,
+        32,
+        Color.PaletteKind.Ember,
+        0.0,
+        0.0
+      );
       const Row: Render.RenderRow := Tasks.ReceiveWithTimeout(Fresh.Rows, 5000).Unwrap();
       Test.AssertEquals(0, Row.Y);
       Test.AssertEquals(1, Row.Samples.Length());

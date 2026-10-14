@@ -51,10 +51,15 @@ begin
       const Position: TextArea.TuiTextAreaPosition := TextArea.TuiTextAreaLocate(Text, Caret);
       const CaretX: integer := Position.DisplayColumn - Offset.X;
       const CaretY: integer := Position.Line - Offset.Y;
-      if (((CaretX >= 0) and (CaretX < Bounds.Width)) and (CaretY >= 0)) and
-         (CaretY < Bounds.Height) then
+      if (((CaretX >= 0) and (CaretX < Bounds.Width)) and (CaretY >= 0))
+        and
+        (CaretY < Bounds.Height)
+      then
         begin
-          Area.PutCell(Point.TuiPoint.Create(CaretX, CaretY), Cell.TuiCell.Create('▏', FocusedRole));
+          Area.PutCell(
+            Point.TuiPoint.Create(CaretX, CaretY),
+            Cell.TuiCell.Create('▏', FocusedRole)
+          );
         end;
       end if;
     end;

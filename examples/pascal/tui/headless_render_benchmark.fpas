@@ -77,8 +77,8 @@ end function;
 function ViewBenchmark(State: integer): Tui.TuiElement;
 begin
   var Children: array of Tui.TuiElement := [
-                                             Tui.TuiElementBuilders.MakeLabel('frame ' + Conv.IntToStr(State))
-                                           ];
+    Tui.TuiElementBuilders.MakeLabel('frame ' + Conv.IntToStr(State))
+  ];
   for Index: integer := 2 to 32 do
     begin
       Children.PushInPlace(Tui.TuiElementBuilders.MakeLabel('row'));
@@ -87,13 +87,20 @@ begin
   const SharedAction: Tui.TuiAction := Tui.TuiAction.Create(100);
   for Index: integer := 1 to 8 do
     begin
-      Children.PushInPlace(Tui.TuiElementBuilders.MakeButton(Tui.TuiControlId.Create(Index), 'action', SharedAction));
+      Children.PushInPlace(
+        Tui.TuiElementBuilders.MakeButton(Tui.TuiControlId.Create(Index), 'action', SharedAction)
+      );
     end;
   end for;
 
-  return Tui.TuiElementBuilders.MakeDesktop(Some(Tui.TuiControlId.Create(1)), [
-                                                                                Tui.TuiElementBuilders.MakePanel('Headless benchmark', [Tui.TuiElementBuilders.MakeColumn(Children)])
-                                                                              ]);
+  return Tui.TuiElementBuilders.MakeDesktop(
+    Some(Tui.TuiControlId.Create(1)), [
+      Tui.TuiElementBuilders.MakePanel(
+        'Headless benchmark',
+        [Tui.TuiElementBuilders.MakeColumn(Children)]
+      )
+    ]
+  );
 end function;
 
 begin
@@ -120,7 +127,13 @@ begin
     end;
   end if;
   var App: Tui.TuiApplication := Tui.TuiApplication.OpenForTest(Tui.TuiSize.Create(120, 40));
-  var Model: integer := App.RunIterations(0, UpdateBenchmark, ViewBenchmark, WarmupIterations, DeltaMillis);
+  var Model: integer := App.RunIterations(
+    0,
+    UpdateBenchmark,
+    ViewBenchmark,
+    WarmupIterations,
+    DeltaMillis
+  );
   const Started: integer := Time.MonotonicMillis();
   Model := App.RunIterations(Model, UpdateBenchmark, ViewBenchmark, Iterations, DeltaMillis);
   const Elapsed: integer := Time.ElapsedMillis(Started);
@@ -132,8 +145,10 @@ begin
     end;
   end if;
 
-  Console.WriteLn('iterations: ' + Conv.IntToStr(Iterations) + ', warm-up: ' +
-                  Conv.IntToStr(WarmupIterations));
+  Console.WriteLn(
+    'iterations: ' + Conv.IntToStr(Iterations) + ', warm-up: ' +
+    Conv.IntToStr(WarmupIterations)
+  );
   Console.WriteLn('elapsed: ' + Conv.IntToStr(Elapsed) + ' ms');
   if Elapsed > 0 then
     begin
@@ -148,8 +163,11 @@ begin
   Console.WriteLn('final state: ' + Conv.IntToStr(Model));
   if (MaxMillis > 0) and (Elapsed > MaxMillis) then
     begin
-      panic('TUI benchmark regression: ' + Conv.IntToStr(Elapsed) + ' ms exceeds limit ' + Conv.IntToStr(MaxMillis) +
-            ' ms');
+      panic(
+        'TUI benchmark regression: ' + Conv.IntToStr(Elapsed) + ' ms exceeds limit ' +
+        Conv.IntToStr(MaxMillis) +
+        ' ms'
+      );
     end;
   end if;
 end.

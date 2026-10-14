@@ -71,19 +71,25 @@ public type TuiMeasureAxis = record
   // - `Maximum`: Maximum accepted value or extent.
   // - `Constraint`: Measurement constraint applied to the axis.
   public static function Apply(
-  Minimum: integer;
-  Preferred: integer;
-  Maximum: integer;
-  Constraint: MeasureConstraint.TuiMeasureConstraint
-): TuiMeasureAxisResult;
+    Minimum: integer;
+    Preferred: integer;
+    Maximum: integer;
+    Constraint: MeasureConstraint.TuiMeasureConstraint
+  ): TuiMeasureAxisResult;
   begin
     if not Constraint.IsBounded() then
       begin
         return TuiMeasureAxisResult(Preferred := Preferred, Maximum := Maximum);
       end;
     end if;
-    const ConstrainedPreferred: integer := TuiMeasureAxis.Max(Minimum, TuiMeasureAxis.Min(Preferred, Constraint.Limit));
-    const ConstrainedMaximum: integer := TuiMeasureAxis.Max(ConstrainedPreferred, TuiMeasureAxis.Min(Maximum, Constraint.Limit));
+    const ConstrainedPreferred: integer := TuiMeasureAxis.Max(
+      Minimum,
+      TuiMeasureAxis.Min(Preferred, Constraint.Limit)
+    );
+    const ConstrainedMaximum: integer := TuiMeasureAxis.Max(
+      ConstrainedPreferred,
+      TuiMeasureAxis.Min(Maximum, Constraint.Limit)
+    );
     return TuiMeasureAxisResult(Preferred := ConstrainedPreferred, Maximum := ConstrainedMaximum);
   end function;
 end record;

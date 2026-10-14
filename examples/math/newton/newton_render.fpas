@@ -27,8 +27,10 @@ type Complex = record
 
   public function Mul(Self: Complex; Other: Complex): Complex;
   begin
-    return Complex(Re := Self.Re * Other.Re - Self.Im * Other.Im, Im := Self.Re * Other.Im +
-                                                                        Self.Im * Other.Re);
+    return Complex(
+      Re := Self.Re * Other.Re - Self.Im * Other.Im, Im := Self.Re * Other.Im +
+      Self.Im * Other.Re
+    );
   end function;
 
   public function Scale(Self: Complex; Factor: real): Complex;
@@ -165,7 +167,11 @@ begin
     end;
   end if;
   const Fg: Console.Color := Color.RootColor(Sample.Root, Sample.Shade);
-  return Console.Cell(glyph := ShadeGlyph(Sample.Shade), foreground := Fg, background := Console.RgbColor(0, 0, 0));
+  return Console.Cell(
+    glyph := ShadeGlyph(Sample.Shade),
+    foreground := Fg,
+    background := Console.RgbColor(0, 0, 0)
+  );
 end function;
 
 procedure DrawRow(Row: array of PixelSample; Width: integer; Y: integer);

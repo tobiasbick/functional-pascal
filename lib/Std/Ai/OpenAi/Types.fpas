@@ -66,7 +66,13 @@ public type Client = record
   // - `Model`: Model identifier sent with chat requests.
   public static function Create(BaseUrl: string; Model: string): Client;
   begin
-    return Client(BaseUrl := BaseUrl, Model := Model, ApiKey := None, TimeoutMillis := 120000, MaxResponseBytes := 16777216);
+    return Client(
+      BaseUrl := BaseUrl,
+      Model := Model,
+      ApiKey := None,
+      TimeoutMillis := 120000,
+      MaxResponseBytes := 16777216
+    );
   end function;
 end record;
 

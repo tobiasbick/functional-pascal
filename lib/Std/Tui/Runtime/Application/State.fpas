@@ -65,7 +65,9 @@ begin
       return [];
     end;
   end if;
-  const BackgroundFailures: array of RuntimeMsg.TuiMsg := Background.TuiBackgroundCloseApplication(ApplicationId);
+  const BackgroundFailures: array of RuntimeMsg.TuiMsg := Background.TuiBackgroundCloseApplication(
+    ApplicationId
+  );
   TuiAppOpen[ApplicationId - 1] := false;
   TuiAppInputHead[ApplicationId - 1] := 0;
   TuiAppMessageHead[ApplicationId - 1] := 0;
@@ -231,14 +233,28 @@ begin
       end;
     when RuntimeInput.TuiHostInput.Key(const Key):
       begin
-        TuiAppPushMessages(ApplicationId, Routing.TuiRouteKey(TuiAppTrees[ApplicationId - 1], TuiAppFrames[ApplicationId -
-                                                                                                           1], Key));
+        TuiAppPushMessages(
+          ApplicationId, Routing.TuiRouteKey(
+            TuiAppTrees[ApplicationId - 1], TuiAppFrames[
+              ApplicationId -
+              1
+            ], Key
+          )
+        );
       end;
     when RuntimeInput.TuiHostInput.Pointer(const Pointer):
       begin
-        TuiAppPushMessages(ApplicationId, RoutingPointer.TuiRouteApplicationPointer(Pointer, ApplicationId, TuiAppTrees[ApplicationId -
-                                                                                                                        1], TuiAppFrames[ApplicationId -
-                                                                                                                                         1]));
+        TuiAppPushMessages(
+          ApplicationId, RoutingPointer.TuiRouteApplicationPointer(
+            Pointer, ApplicationId, TuiAppTrees[
+              ApplicationId -
+              1
+            ], TuiAppFrames[
+              ApplicationId -
+              1
+            ]
+          )
+        );
       end;
     when RuntimeInput.TuiHostInput.Resize(const Size):
       begin
@@ -298,7 +314,10 @@ begin
       end;
   end case;
 
-  TuiAppPushMessages(ApplicationId, Background.TuiBackgroundApply(ApplicationId, Output.ReadBackground()));
+  TuiAppPushMessages(
+    ApplicationId,
+    Background.TuiBackgroundApply(ApplicationId, Output.ReadBackground())
+  );
   return false;
 end function;
 

@@ -356,8 +356,10 @@ begin
             end;
           end if;
 
-          TerminatorState.Buffer := TerminatorState.Buffer.Slice(2, TerminatorState.Buffer.Length() -
-                                                                    2);
+          TerminatorState.Buffer := TerminatorState.Buffer.Slice(
+            2, TerminatorState.Buffer.Length() -
+            2
+          );
           TerminatorState.NeedChunkTerminator := false;
           StoreState(Index, TerminatorState);
         end;
@@ -439,7 +441,18 @@ begin
       end case;
     end;
   end if;
-  const State: Types.StreamState := Types.StreamState(Connection := Connection, Buffer := InitialBody, Mode := Mode, Remaining := Remaining, ChunkRemaining := 0, NeedChunkTerminator := false, BytesReceived := BytesReceived, Maximum := Maximum, Finished := false, Open := true);
+  const State: Types.StreamState := Types.StreamState(
+    Connection := Connection,
+    Buffer := InitialBody,
+    Mode := Mode,
+    Remaining := Remaining,
+    ChunkRemaining := 0,
+    NeedChunkTerminator := false,
+    BytesReceived := BytesReceived,
+    Maximum := Maximum,
+    Finished := false,
+    Open := true
+  );
   const Index: integer := ReserveState(State);
   if (not HasBody) or ((Mode = 1) and (Remaining = 0)) then
     begin

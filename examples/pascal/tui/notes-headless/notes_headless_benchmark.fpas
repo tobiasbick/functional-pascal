@@ -17,13 +17,17 @@ begin
   var Notes: array of NotesModel.Note := [];
   for Index: integer := 1 to NoteCount do
     begin
-      var NoteValue: NotesModel.Note := NotesModel.NoteCreate('benchmark-' + Conv.IntToStr(Index), 1700000000000 +
-                                                                                                   Index);
-      NoteValue.Title := 'Performance note ' + Conv.IntToStr(Index) + ' with a representative title';
+      var NoteValue: NotesModel.Note := NotesModel.NoteCreate(
+        'benchmark-' + Conv.IntToStr(Index), 1700000000000 +
+        Index
+      );
+      NoteValue.Title := 'Performance note ' + Conv.IntToStr(Index) +
+        ' with a representative title';
       NoteValue.Tags := ['performance', 'tui', 'benchmark'];
       NoteValue.Pinned := (Index mod 7) = 0;
-      NoteValue.Body := 'This is a representative note body for frame ' + Conv.IntToStr(Index) + '.' + string.Chr(10) +
-                        'It keeps the editor, list, metadata, and layout paths active.';
+      NoteValue.Body := 'This is a representative note body for frame ' + Conv.IntToStr(Index) +
+        '.' + string.Chr(10) +
+        'It keeps the editor, list, metadata, and layout paths active.';
       Notes.PushInPlace(NoteValue);
     end;
   end for;
@@ -54,12 +58,21 @@ begin
       end if;
     end;
   end if;
-  const Loaded: NotesModel.NotesLoad := NotesModel.NotesLoad(Notes := BenchmarkNotes(), Issues := []);
+  const Loaded: NotesModel.NotesLoad := NotesModel.NotesLoad(
+    Notes := BenchmarkNotes(),
+    Issues := []
+  );
   var Model: NotesModel.NotesModel := NotesModel.NotesModelCreate('.temp-data/bench/notes', Loaded);
   Model.Width := 120;
   Model.Height := 40;
   var App: Tui.TuiApplication := Tui.TuiApplication.OpenForTest(Tui.TuiSize.Create(120, 40));
-  Model := App.RunIterations(Model, Update.NotesUpdate, View.NotesView, WarmupIterations, DeltaMillis);
+  Model := App.RunIterations(
+    Model,
+    Update.NotesUpdate,
+    View.NotesView,
+    WarmupIterations,
+    DeltaMillis
+  );
   const Started: integer := Time.MonotonicMillis();
   Model := App.RunIterations(Model, Update.NotesUpdate, View.NotesView, Iterations, DeltaMillis);
   const Elapsed: integer := Time.ElapsedMillis(Started);
@@ -71,8 +84,10 @@ begin
     end;
   end if;
 
-  Console.WriteLn('iterations: ' + Conv.IntToStr(Iterations) + ', warm-up: ' +
-                  Conv.IntToStr(WarmupIterations));
+  Console.WriteLn(
+    'iterations: ' + Conv.IntToStr(Iterations) + ', warm-up: ' +
+    Conv.IntToStr(WarmupIterations)
+  );
   Console.WriteLn('elapsed: ' + Conv.IntToStr(Elapsed) + ' ms');
   if Elapsed > 0 then
     begin
@@ -87,8 +102,11 @@ begin
   Console.WriteLn('notes rendered: ' + Conv.IntToStr(Model.Notes.Length()));
   if (MaxMillis > 0) and (Elapsed > MaxMillis) then
     begin
-      panic('Notes TUI benchmark regression: ' + Conv.IntToStr(Elapsed) + ' ms exceeds limit ' + Conv.IntToStr(MaxMillis) +
-            ' ms');
+      panic(
+        'Notes TUI benchmark regression: ' + Conv.IntToStr(Elapsed) + ' ms exceeds limit ' +
+        Conv.IntToStr(MaxMillis) +
+        ' ms'
+      );
     end;
   end if;
 end.

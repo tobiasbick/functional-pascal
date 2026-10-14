@@ -99,7 +99,12 @@ begin
             ActiveWidth := 0;
           end;
         end if;
-        const ActiveBounds: Rect.TuiRect := Rect.TuiRect.Create(Entry.Bounds.X, Entry.Bounds.Y, ActiveWidth, 1);
+        const ActiveBounds: Rect.TuiRect := Rect.TuiRect.Create(
+          Entry.Bounds.X,
+          Entry.Bounds.Y,
+          ActiveWidth,
+          1
+        );
         if (Button.Enabled and AllowHits) and Entry.Clip.Intersect(ActiveBounds).Contains(Point) then
           begin
             TuiPointerBestHit := TuiPointerHit.ElementButton(Button);
@@ -118,7 +123,13 @@ begin
       begin
         if AllowHits and Entry.Clip.Contains(Point) then
           begin
-            TuiPointerBestHit := TuiPointerHit.TextArea(Id, ChangeAction, Text, Offset, Entry.Bounds);
+            TuiPointerBestHit := TuiPointerHit.TextArea(
+              Id,
+              ChangeAction,
+              Text,
+              Offset,
+              Entry.Bounds
+            );
           end;
         end if;
       end;
@@ -150,10 +161,15 @@ begin
           begin
             const Width: integer := Console.DisplayWidth(Items[ItemIndex].Text) + 2;
             const ItemBounds: Rect.TuiRect := Rect.TuiRect.Create(Cursor, Entry.Bounds.Y, Width, 1);
-            if (AllowHits and Items[ItemIndex].Enabled) and
-               Entry.Clip.Intersect(ItemBounds).Contains(Point) then
+            if (AllowHits and Items[ItemIndex].Enabled)
+              and
+              Entry.Clip.Intersect(ItemBounds).Contains(Point)
+            then
               begin
-                TuiPointerBestHit := TuiPointerHit.ImmediateButton(Items[ItemIndex].Id, Items[ItemIndex].Action);
+                TuiPointerBestHit := TuiPointerHit.ImmediateButton(
+                  Items[ItemIndex].Id,
+                  Items[ItemIndex].Action
+                );
               end;
             end if;
 
@@ -187,7 +203,12 @@ begin
               when StatusItem.TuiStatusItem.Command(const Id, const Text, const Action, const Enabled):
                 begin
                   const Width: integer := Console.DisplayWidth(Text);
-                  const ItemBounds: Rect.TuiRect := Rect.TuiRect.Create(Cursor, Entry.Bounds.Y, Width, 1);
+                  const ItemBounds: Rect.TuiRect := Rect.TuiRect.Create(
+                    Cursor,
+                    Entry.Bounds.Y,
+                    Width,
+                    1
+                  );
                   if (AllowHits and Enabled) and Entry.Clip.Intersect(ItemBounds).Contains(Point) then
                     begin
                       TuiPointerBestHit := TuiPointerHit.ImmediateButton(Id, Action);

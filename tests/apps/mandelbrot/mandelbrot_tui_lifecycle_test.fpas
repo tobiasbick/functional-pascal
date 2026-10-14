@@ -6,29 +6,67 @@ uses
 
 function MakeLeftKey(): Tui.TuiKeyEvent;
 begin
-  return Tui.TuiKeyEvent(kind := Tui.TuiKeyKind.Left, ch := '', shift := false, ctrl := false, alt := false, meta := false);
+  return Tui.TuiKeyEvent(
+    kind := Tui.TuiKeyKind.Left,
+    ch := '',
+    shift := false,
+    ctrl := false,
+    alt := false,
+    meta := false
+  );
 end function;
 
 begin
   const Inbox: channel of Render.MandelbrotRenderFrame := Tasks.CreateChannel(4);
   const App: Tui.TuiApplication := Tui.TuiApplication.OpenForTest(Tui.TuiSize.Create(9, 15));
   var Model: MandelbrotModel.MandelbrotModel := MandelbrotModel.NewMandelbrotModel(Inbox, 9, 15);
-  Model := App.RunBackgroundIterations(Model, Inbox, MandelbrotApp.UpdateMandelbrot, MandelbrotApp.UpdateMandelbrotFrame, View.ViewMandelbrot, 1, 0);
+  Model := App.RunBackgroundIterations(
+    Model,
+    Inbox,
+    MandelbrotApp.UpdateMandelbrot,
+    MandelbrotApp.UpdateMandelbrotFrame,
+    View.ViewMandelbrot,
+    1,
+    0
+  );
   const InitialGeneration: integer := Model.Generation;
   App.Inject(Tui.TuiMsg.Key(MakeLeftKey()));
-  Model := App.RunBackgroundIterations(Model, Inbox, MandelbrotApp.UpdateMandelbrot, MandelbrotApp.UpdateMandelbrotFrame, View.ViewMandelbrot, 1, 0);
+  Model := App.RunBackgroundIterations(
+    Model,
+    Inbox,
+    MandelbrotApp.UpdateMandelbrot,
+    MandelbrotApp.UpdateMandelbrotFrame,
+    View.ViewMandelbrot,
+    1,
+    0
+  );
   Test.AssertEquals(InitialGeneration + 1, Model.Generation);
   Test.AssertEquals(0, Model.RowsRendered);
   var Attempts: integer := 0;
   while (Model.RowsRendered < Model.Grid.Height) and (Attempts < 500) do
     begin
       Time.Sleep(1);
-      Model := App.RunBackgroundIterations(Model, Inbox, MandelbrotApp.UpdateMandelbrot, MandelbrotApp.UpdateMandelbrotFrame, View.ViewMandelbrot, 1, 0);
+      Model := App.RunBackgroundIterations(
+        Model,
+        Inbox,
+        MandelbrotApp.UpdateMandelbrot,
+        MandelbrotApp.UpdateMandelbrotFrame,
+        View.ViewMandelbrot,
+        1,
+        0
+      );
       Attempts := Attempts + 1;
     end;
   end while;
 
   Test.AssertEquals(Model.Grid.Height, Model.RowsRendered);
   App.CloseWithBackground(Inbox);
-  Test.AssertTrue((Tasks.TrySend(Inbox, Render.MandelbrotRenderFrame(Generation := Model.Generation, Cells := [])) is Error(_)));
+  Test.AssertTrue(
+    (
+      Tasks.TrySend(
+        Inbox,
+        Render.MandelbrotRenderFrame(Generation := Model.Generation, Cells := [])
+      ) is Error(_)
+    )
+  );
 end.

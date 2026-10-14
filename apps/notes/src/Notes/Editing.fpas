@@ -49,7 +49,7 @@ begin
       Next.Search := Text;
       Next.SearchCaret := Caret;
       Next.Status := Conv.IntToStr(Model.NotesFilteredIndices(Next.Notes, Text).Length()) +
-                     ' matching note(s)';
+        ' matching note(s)';
       return Next;
     end;
   end if;

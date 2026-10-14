@@ -58,8 +58,10 @@ begin
     end;
   end if;
 
-  Console.WriteLn('iterations: ' + Conv.IntToStr(Iterations) + ', wrappers: ' +
-                  Conv.IntToStr(Wrappers));
+  Console.WriteLn(
+    'iterations: ' + Conv.IntToStr(Iterations) + ', wrappers: ' +
+    Conv.IntToStr(Wrappers)
+  );
   Console.WriteLn('elapsed: ' + Conv.IntToStr(Elapsed) + ' ms');
   if Elapsed > 0 then
     begin
@@ -74,8 +76,11 @@ begin
   Console.WriteLn('checksum: ' + Conv.IntToStr(Total));
   if (MaxMillis > 0) and (Elapsed > MaxMillis) then
     begin
-      panic('wrapper-payload benchmark regression: ' + Conv.IntToStr(Elapsed) + ' ms exceeds limit ' + Conv.IntToStr(MaxMillis) +
-            ' ms');
+      panic(
+        'wrapper-payload benchmark regression: ' + Conv.IntToStr(Elapsed) + ' ms exceeds limit ' +
+        Conv.IntToStr(MaxMillis) +
+        ' ms'
+      );
     end;
   end if;
 end.

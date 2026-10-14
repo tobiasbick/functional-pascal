@@ -78,14 +78,20 @@ impl Worker {
     }
 
     /// Reject foreign mutable globals, including bytecode and debugger-edited targets.
+    ///
+    /// The main task owns all globals; callers report invalid slots on their own access.
+    #[inline(always)]
     pub(in crate::vm) fn check_global_task_access(&self, slot: u32) -> Result<(), VmError> {
+        if self.task_id == 0 {
+            return Ok(());
+        }
         let global = self
             .executable
             .executable()
             .globals
             .get(slot as usize)
             .ok_or_else(|| self.bad_slot("global", slot))?;
-        if self.task_id != 0 && global.mutable {
+        if global.mutable {
             return Err(self.aggregate_error_code(
                 fpas_diagnostics::codes::RUNTIME_INVALID_TASK,
                 "Worker task cannot access a mutable program or unit global",

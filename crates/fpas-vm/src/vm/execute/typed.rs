@@ -18,7 +18,19 @@ impl Worker {
         let right = self.read_operand(operands.c)?;
         let result = match (left, right) {
             (Value::Real(left), Value::Real(right)) => {
-                value_ops::real_binary(operation, *left, *right)
+                let (left, right) = (*left, *right);
+                let direct = match operation {
+                    BinaryOperation::Add => left + right,
+                    BinaryOperation::Subtract => left - right,
+                    BinaryOperation::Multiply => left * right,
+                    BinaryOperation::RealDivide => left / right,
+                    _ => unreachable!("real arithmetic opcode"),
+                };
+                // Division by zero and overflow yield non-finite values and take the checked path.
+                if left.is_finite() && right.is_finite() && direct.is_finite() {
+                    return self.write_operand(operands.a, Value::Real(direct));
+                }
+                value_ops::real_binary(operation, left, right)
             }
             _ => value_ops::binary(operation, left, right),
         }

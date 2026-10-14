@@ -4,6 +4,7 @@ use fpas_bytecode::{DecodedInstruction, NO_REGISTER, Opcode, Value};
 use fpas_diagnostics::codes::RUNTIME_PROGRAM_PANIC;
 
 use super::super::VmError;
+use super::super::execute::integer::direct_integer_binary;
 use super::super::value_ops::{self, BinaryOperation, UnaryOperation};
 use super::super::worker::Worker;
 use super::{DispatchStep, Flow};
@@ -303,7 +304,12 @@ impl Worker {
         let left = self.read_operand(operands.b)?;
         let immediate = i64::from(operands.c as i16);
         let result = match left {
-            Value::Integer(value) => value_ops::integer_binary(operation, *value, immediate),
+            Value::Integer(value) => {
+                if let Some(result) = direct_integer_binary(operation, *value, immediate) {
+                    return self.write_operand(operands.a, result);
+                }
+                value_ops::integer_binary(operation, *value, immediate)
+            }
             _ => value_ops::binary(operation, left, &Value::Integer(immediate)),
         }
         .map_err(|error| self.runtime_error(error.code, error.message, error.hint))?;

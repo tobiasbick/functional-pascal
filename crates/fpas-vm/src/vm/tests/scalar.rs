@@ -310,3 +310,69 @@ fn function_values_share_the_prepared_name() {
     assert_eq!(&*first.name, "root");
     assert!(std::sync::Arc::ptr_eq(&first.name, &second.name));
 }
+
+#[test]
+fn typed_real_arithmetic_rejects_non_finite_operands_and_results() {
+    for (left, right) in [(f64::MAX, 2.0), (f64::INFINITY, 1.0), (1.0, f64::NAN)] {
+        let executable = verified(
+            vec![
+                abx(Opcode::LoadConstant, 0, 0),
+                abx(Opcode::LoadConstant, 1, 1),
+                abc(Opcode::MultiplyReal, 2, 0, 1),
+                return_unit(),
+            ],
+            vec![
+                Constant::Real(left.to_bits()),
+                Constant::Real(right.to_bits()),
+            ],
+            vec!["root", "test.fpas"],
+            3,
+        );
+        let error = execute(executable).expect_err("non-finite real arithmetic must fail");
+        assert_eq!(
+            error.code,
+            fpas_diagnostics::codes::RUNTIME_NUMERIC_DOMAIN_ERROR
+        );
+    }
+}
+
+#[test]
+fn direct_integer_arithmetic_matches_checked_operations_at_boundaries() {
+    use crate::vm::execute::integer::direct_integer_binary;
+    use crate::vm::value_ops::{BinaryOperation, integer_binary};
+
+    let values = [
+        i64::MIN,
+        i64::MIN + 1,
+        -2,
+        -1,
+        0,
+        1,
+        2,
+        i64::MAX - 1,
+        i64::MAX,
+    ];
+    let operations = [
+        BinaryOperation::Add,
+        BinaryOperation::Subtract,
+        BinaryOperation::Multiply,
+        BinaryOperation::IntegerDivide,
+        BinaryOperation::Modulo,
+        BinaryOperation::Equal,
+        BinaryOperation::NotEqual,
+        BinaryOperation::Less,
+        BinaryOperation::LessEqual,
+        BinaryOperation::Greater,
+        BinaryOperation::GreaterEqual,
+    ];
+    for operation in operations {
+        for left in values {
+            for right in values {
+                if let Some(direct) = direct_integer_binary(operation, left, right) {
+                    let checked = integer_binary(operation, left, right).ok();
+                    assert_eq!(Some(direct), checked, "{operation:?} {left} {right}");
+                }
+            }
+        }
+    }
+}

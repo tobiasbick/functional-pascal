@@ -50,17 +50,13 @@ fn ordering(left: &Value, right: &Value) -> Result<Ordering, ValueOperationError
     if let Value::Real(value) = right {
         fpas_numeric::real::finite(*value).map_err(ValueOperationError::from)?;
     }
-    match (left, right) {
-        (Value::Integer(left), Value::Integer(right)) => Some(left.cmp(right)),
-        (Value::Boolean(left), Value::Boolean(right)) => Some(left.cmp(right)),
-        (Value::Str(left), Value::Str(right)) => Some(left.cmp(right)),
-        (Value::Integer(_), Value::Real(_)) | (Value::Real(_), Value::Integer(_)) => {
-            return Err(numeric_mixture());
-        }
-        (Value::Real(left), Value::Real(right)) => left.partial_cmp(right),
-        _ => None,
+    if matches!(
+        (left, right),
+        (Value::Integer(_), Value::Real(_)) | (Value::Real(_), Value::Integer(_))
+    ) {
+        return Err(numeric_mixture());
     }
-    .ok_or_else(|| {
+    left.scalar_ordering(right).ok_or_else(|| {
         ValueOperationError::type_mismatch(
             format!(
                 "Ordered comparison requires compatible scalar operands, got {} and {}",

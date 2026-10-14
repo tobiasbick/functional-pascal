@@ -36,10 +36,10 @@ begin
   var App: Tui.TuiApplication := Tui.TuiApplication.OpenForTest(Tui.TuiSize.Create(12, 2));
   var Model: ScrollModel := ScrollModel(Offset := Tui.TuiPoint.Create(0, 0));
   Model := App.RunIterations(Model, UpdateScroll, ViewScroll, 0, 0);
-  Test.AssertTrue(App.SurfaceSnapshot().LineAt(0).Contains('First'));
+  Test.AssertTrue(('First' in App.SurfaceSnapshot().LineAt(0)));
   App.Inject(Tui.TuiMsgScrollChanged(Tui.TuiControlId.Create(1), Tui.TuiAction.Create(7), Tui.TuiPoint.Create(0, 1)));
   Model := App.RunIterations(Model, UpdateScroll, ViewScroll, 1, 0);
-  Test.AssertTrue(App.SurfaceSnapshot().LineAt(0).Contains('Second'));
-  Test.AssertFalse(App.SurfaceSnapshot().LineAt(0).Contains('First'));
+  Test.AssertTrue(('Second' in App.SurfaceSnapshot().LineAt(0)));
+  Test.AssertFalse(('First' in App.SurfaceSnapshot().LineAt(0)));
   App.Close();
 end.

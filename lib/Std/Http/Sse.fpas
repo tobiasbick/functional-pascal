@@ -173,9 +173,8 @@ begin
               begin
                 var Name: string := Line;
                 var Value: string := '';
-                const Colon: integer := Line.IndexOf(':');
-                if Colon >= 0 then
-                  begin
+                case Line.IndexOf(':') of
+                  when Some(const Colon):
                     Name := Line.Slice(0, Colon);
                     Value := Line.Slice(Colon + 1, Line.Length() - Colon - 1);
                     if Value.StartsWith(' ') then
@@ -183,8 +182,9 @@ begin
                         Value := Value.Slice(1, Value.Length() - 1);
                       end;
                     end if;
-                  end;
-                end if;
+                  when None:
+                    null;
+                end case;
 
                 if Name = 'data' then
                   begin
@@ -194,7 +194,7 @@ begin
                   begin
                     LocalState.EventType := Value;
                   end;
-                elsif (Name = 'id') and (not Value.Contains(#0)) then
+                elsif (Name = 'id') and (not (#0 in Value)) then
                   begin
                     LocalState.LastEventId := Value;
                   end;

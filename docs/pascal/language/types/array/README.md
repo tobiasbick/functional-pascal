@@ -29,16 +29,15 @@ functions with the same name do not affect this selection.
 | --- | --- |
 | `Items.Length(): integer` | Number of elements |
 | `Items.IsEmpty(): boolean` | Whether the element count is zero |
-| `Items.Contains(Value: T): boolean` | Element membership |
-| `Items.IndexOf(Value: T): integer` | First matching index, or `-1` |
+| `Items.IndexOf(Value: T): Option of integer` | `Some` of first matching index, or `None` |
 | `Items.Map(F: function(X: T): U): array of U` | Transform each element |
 | `Items.Filter(F: function(X: T): boolean): array of T` | Keep matching elements |
 | `Items.Reduce(Init: U; F: function(Acc: U; V: T): U): U` | Fold elements left to right |
 | `Items.Find(F: function(X: T): boolean): Option of T` | First matching element, or `None` |
-| `Items.FindIndex(F: function(X: T): boolean): integer` | First matching index, or `-1` |
+| `Items.FindIndex(F: function(X: T): boolean): Option of integer` | `Some` of first matching index, or `None` |
 | `Items.Any(F: function(X: T): boolean): boolean` | Whether any element satisfies the predicate |
 | `Items.All(F: function(X: T): boolean): boolean` | Whether every element satisfies the predicate |
-| `Items.Sort(): array of T` | Return sorted scalar values; see [element restrictions](basics.md#itemssort-array-of-t) |
+| `Items.Sort(): array of T` | Return stable ascending Comparable elements; see [element restrictions](basics.md#itemssort-array-of-t) |
 | `Items.Reverse(): array of T` | Return a reversed value |
 | `Items.Slice(Start: integer; Len: integer): array of T` | Return the checked subrange |
 | `Items.Concat(B: array of T): array of T` | Append the second array's elements to the result |
@@ -46,7 +45,7 @@ functions with the same name do not affect this selection.
 | `Items.ForEach(F: procedure(X: T))` | Invoke a procedure per element; only a final chain step |
 | `Items.Push(Value: T): array of T` | Return a new appended array; preserve the receiver |
 | `Items.Pop(): ArrayPopResult of T` | Return Remaining and Value; preserve receiver; empty arrays raise FP5003 |
-| `Items.SortInPlace()` | Replace writable receiver with sorted values |
+| `Items.SortInPlace()` | Replace writable receiver with stable ascending Comparable elements |
 | `Items.ReverseInPlace()` | Reverse writable receiver |
 | `Items.FilterInPlace(F: function(X: T): boolean)` | Replace writable receiver with matching elements |
 | `Items.SliceInPlace(Start: integer; Len: integer)` | Replace writable receiver with checked subrange |

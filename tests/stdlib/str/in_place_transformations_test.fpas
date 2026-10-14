@@ -21,9 +21,8 @@ begin
   Text.ReverseInPlace();
   Text.SliceInPlace(Len := 1, Start := 1);
   Test.AssertEquals('😀', Text);
-  Text.FromCharInPlace(N := 2);
   Text.RepeatStrInPlace(N := 2);
-  Test.AssertEquals('😀😀😀😀', Text);
+  Test.AssertEquals('😀😀', Text);
   Text := 'a';
   Text.PadLeftInPlace(PadChar := '-', Width := 3);
   Text.PadRightInPlace(PadChar := '+', Width := 5);

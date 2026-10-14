@@ -26,7 +26,7 @@ begin
   var Model: MenuModel := MenuModel();
   Model := App.RunIterations(Model, UpdateMenu, ViewMenu, 0, 0);
   const Surface: Tui.TuiSurfaceSnapshot := App.SurfaceSnapshot();
-  Test.AssertTrue(Surface.LineAt(0).Contains(' Open  Save '));
+  Test.AssertTrue((' Open  Save ' in Surface.LineAt(0)));
   Test.AssertTrue(Surface.CellAt(0, 0).Role = Tui.TuiStyleRole.MenuSelected);
   Test.AssertTrue(Surface.CellAt(7, 0).Role = Tui.TuiStyleRole.MenuDisabled);
   Test.AssertTrue(Surface.CellAt(19, 0).Role = Tui.TuiStyleRole.MenuNormal);

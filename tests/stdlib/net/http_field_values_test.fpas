@@ -61,7 +61,7 @@ begin
       if Sample.Valid then
         Test.AssertEquals('accepted: ' + Sample.Expected, Parsed);
       else
-        Test.AssertTrue(Parsed.Contains('invalid control character'));
+        Test.AssertTrue(('invalid control character' in Parsed));
       end if;
       const Serving: task := go ServeResponse(Server, Sample.Raw);
       var Outgoing: Http.Request := Http.Request.Get('http://127.0.0.1:' + Conv.IntToStr(Address.Port) +
@@ -76,7 +76,7 @@ begin
           Test.AssertEquals(Sample.Expected, Incoming.Headers[0].Value);
         when Error(const Message):
           Test.AssertFalse(Sample.Valid);
-          Test.AssertTrue(Message.Contains('invalid control character'));
+          Test.AssertTrue(('invalid control character' in Message));
       end case;
     end for;
   end scope;

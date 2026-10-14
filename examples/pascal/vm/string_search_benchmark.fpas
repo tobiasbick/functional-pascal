@@ -20,7 +20,7 @@ begin
         end;
       end if;
 
-      if Text.Contains('é') then
+      if ('é' in Text) then
         begin
           Matches := Matches + 1;
         end;

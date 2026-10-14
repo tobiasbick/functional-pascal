@@ -171,11 +171,13 @@ impl CallbackContinuation {
                 if let Some(value) = self.pending.take()
                     && boolean(value)?
                 {
-                    return Ok(Advance::Complete(Value::Integer((cursor.next - 1) as i64)));
+                    return Ok(Advance::Complete(Value::option_some(Value::Integer(
+                        (cursor.next - 1) as i64,
+                    ))));
                 }
                 Ok(cursor
                     .next()
-                    .map_or(Advance::Complete(Value::Integer(-1)), |value| {
+                    .map_or(Advance::Complete(Value::OptionNone), |value| {
                         Advance::Call(CallbackArguments::one(value))
                     }))
             }

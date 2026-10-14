@@ -22,9 +22,7 @@ pub(super) fn check_array_builtin_std_call(
         s::STD_ARRAY_SORT | s::STD_ARRAY_REVERSE => {
             query::check_sort_or_reverse(c, name, args, span)
         }
-        s::STD_ARRAY_CONTAINS | s::STD_ARRAY_INDEX_OF => {
-            query::check_contains_or_index_of(c, name, args, span)
-        }
+        s::STD_ARRAY_INDEX_OF => query::check_index_of(c, name, args, span),
         s::STD_ARRAY_SLICE => query::check_slice(c, args, span),
         s::STD_ARRAY_PUSH => mutation::check_push(c, name, args, span),
         s::STD_ARRAY_POP => mutation::check_pop(c, name, args, span),

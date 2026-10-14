@@ -1,11 +1,12 @@
 # Search
 
-## `Text.Contains(Sub: string): boolean`
+## Membership with `in`
 
-`true` if `Sub` occurs anywhere in `S`, else `false`.
+`Sub in Text` is `true` if Sub occurs anywhere in Text, else `false`.
+An empty substring belongs to every string, including the empty string.
 
 ```pascal
-if 'abc'.Contains('b') then
+if 'b' in 'abc' then
   Console.WriteLn('yes');
 end if;
 ```
@@ -42,24 +43,31 @@ Console.WriteLn('Hello'.Slice(0, 3));
 
 ---
 
-## `Text.IndexOf(Sub: string): integer`
+## `Text.IndexOf(Sub: string): Option of integer`
 
-Returns the **first** character index of `Sub` in `S`, or **`-1`** if not found.
+Returns `Some(Index)` for the first occurrence of Sub in Text, or `None` if
+not found. Indexes count zero-based Unicode scalars, rather than UTF-8 bytes or
+grapheme clusters. An empty substring returns `Some(0)`, even for an empty Text.
 
 ```pascal
-Console.WriteLn('aba'.IndexOf('a'));
-Console.WriteLn('aba'.IndexOf('z'));
+case 'aé😀'.IndexOf('😀') of
+  when Some(const Index): Console.WriteLn(Index);  // 2
+  when None: Console.WriteLn('absent');
+end case;
+Console.WriteLn('aba'.IndexOf('z'));  // None
 ```
 
 ---
 
-## `Text.LastIndexOf(Sub: string): integer`
+## `Text.LastIndexOf(Sub: string): Option of integer`
 
-Returns the **last** character index of `Sub` in `S`, or **`-1`** if not found.
+Returns `Some(Index)` for the last occurrence of Sub in Text, or `None` if
+not found. Indexes count Unicode scalars. An empty substring returns
+`Some(Text.Length())`; an empty receiver and empty substring return `Some(0)`.
 
 ```pascal
-Console.WriteLn('abcabc'.LastIndexOf('abc'));  // 3
-Console.WriteLn('abc'.LastIndexOf('z'));       // -1
+Console.WriteLn('abcabc'.LastIndexOf('abc'));  // Some(3)
+Console.WriteLn('abc'.LastIndexOf('z'));       // None
 ```
 
 ## See also

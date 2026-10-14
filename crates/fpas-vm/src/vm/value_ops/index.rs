@@ -64,7 +64,7 @@ pub(super) fn index(value: &Value, key: &Value) -> Result<Value, ValueOperationE
                 .ok_or_else(|| {
                     ValueOperationError::array_bounds(
                         format!("String index {index} out of bounds"),
-                        "Check the index is in the range 0 .. Length(S) - 1.",
+                        "Check the index is in the range 0 .. S.Length() - 1.",
                     )
                 })
         }

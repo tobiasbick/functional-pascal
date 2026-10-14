@@ -9,6 +9,6 @@ end function;
 
 begin
   const A: array of integer := [];
-  const Idx: integer := A.FindIndex(AlwaysTrue);
+  const Idx: option of integer := A.FindIndex(AlwaysTrue);
   Console.WriteLn(Idx);
 end.

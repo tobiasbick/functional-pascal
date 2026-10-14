@@ -24,12 +24,12 @@ begin
   for Y: integer := 0 to Snapshot.Height - 1 do
     begin
       const Line: string := Snapshot.LineAt(Y);
-      const Index: integer := Line.IndexOf(Glyph);
-      if Index >= 0 then
-        begin
+      case Line.IndexOf(Glyph) of
+        when Some(const Index):
           return Tui.TuiPoint.Create(Index, Y);
-        end;
-      end if;
+        when None:
+          null;
+      end case;
     end;
   end for;
 

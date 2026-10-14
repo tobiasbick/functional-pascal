@@ -224,7 +224,7 @@ begin
     when Ok(_): panic('oversized response head was accepted');
     when Error(const Message):
     begin
-      if not Message.Contains( 'MaxHeaderBytes') then panic(Message); end if;
+      if not ('MaxHeaderBytes' in Message) then panic(Message); end if;
     end;
   end case;
   var RedirectRequest: Http.Request := Http.Request.Get('http://127.0.0.1:{redirect_port}/');
@@ -233,7 +233,7 @@ begin
     when Ok(_): panic('redirect limit was ignored');
     when Error(const Message):
     begin
-      if not Message.Contains( 'MaxRedirects') then panic(Message); end if;
+      if not ('MaxRedirects' in Message) then panic(Message); end if;
     end;
   end case;
   Console.WriteLn('ok');
@@ -302,7 +302,7 @@ begin
     when Ok(_): panic('hostile HTTP response was accepted');
     when Error(const Message):
     begin
-      if not Message.Contains( Text) then panic(Message); end if;
+      if not (Text in Message) then panic(Message); end if;
     end;
   end case;
 end procedure;
@@ -354,7 +354,7 @@ begin
     when Ok(_): panic('overflowing HTTP chunk size was accepted');
     when Error(const Message):
     begin
-      if not Message.Contains( 'exceeds the integer range') then panic(Message); end if;
+      if not ('exceeds the integer range' in Message) then panic(Message); end if;
     end;
   end case;
 end procedure;

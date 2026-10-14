@@ -18,6 +18,7 @@ fn assert_succeeds(source: &str) -> fpas_vm::Execution {
 
 mod aggregates;
 mod call_frames;
+mod canonical_collections;
 mod closures;
 mod computed_const;
 mod concurrency;

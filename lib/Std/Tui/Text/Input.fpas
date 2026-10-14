@@ -91,7 +91,7 @@ begin
   var Width: integer := 0;
   for Index: integer := Viewport.Start to Viewport.EndIndex - 1 do
     begin
-      const GlyphWidth: integer := Console.DisplayWidth(Text.CharAt(Index));
+      const GlyphWidth: integer := Console.DisplayWidth(Text[Index]);
       if Column < Width + GlyphWidth then
         begin
           return Index;

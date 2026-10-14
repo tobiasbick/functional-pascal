@@ -248,8 +248,8 @@ Contracts follow the routine header: zero or more `requires`, then `ensures` cla
 then optional nested declarations and `begin`. `ensures (Returned): Expression;`
 names the returned value; the colon is required. `ensures (Flag);` is an ordinary
 grouped Boolean condition. Contract expressions are read-only booleans with restricted calls:
-selected native queries such as `Length`, `IsEmpty`, string/array `Contains`, and
-dict `ContainsKey` are permitted; arbitrary function calls are not. There is no
+native `Length` and `IsEmpty` queries and membership through `in` are permitted;
+arbitrary function calls are not. There is no
 old-value snapshot, access to body locals, or mutable global state in contracts.
 Contracts execute in all build modes; a failed contract is a runtime failure.
 Postconditions also run on returns caused by `try` propagation.
@@ -518,6 +518,14 @@ returns only T. Both Pop forms fail with FP5003 on empty arrays. Old free-functi
 spellings such as `Push(var Items, Value)` are not native aliases. String InPlace
 operations replace writable string variables; string elements remain read-only. Higher-order
 methods take ordinary callable values; define a named function or an anonymous one.
+Use `Text[Index]` for scalar reads and `in` for array elements, string substrings,
+dictionary keys, and subrange membership. `RepeatStr`/`RepeatStrInPlace` repeat
+any string; user APIs requiring one scalar declare `requires Text.Length() = 1;`.
+Array `IndexOf`/`FindIndex` and string `IndexOf`/`LastIndexOf` return `Option of integer`:
+`Some(Index)` or `None`. An empty substring matches first at zero and last at
+`Text.Length()`. Indexes count Unicode scalars. `Sort`/`SortInPlace` are ascending
+and stable, using `<`; unsupported element types fail checking even when empty.
+Sorting generics require `T: Comparable` or `T: Numeric`.
 String formatting uses Pascal specifiers (`'%d'.Format(7)`, `'%s'.Format('text')`),
 with positional arguments; `{}` is ordinary text.
 
@@ -561,6 +569,14 @@ begin
   Test.AssertEquals('a-b', Parts.Join('-'));
   Test.AssertTrue('a' in Text);
   Test.AssertEquals('λ', string.Chr(955));
+  Test.AssertTrue(Items.IndexOf(3) = Some(2));
+  Test.AssertTrue(Items.IndexOf(99) = None);
+  const Ordered := Items.Sort();
+  Test.AssertEquals(2, Ordered[0]);
+  Test.AssertTrue('aé😀'.IndexOf('😀') = Some(2));
+  Test.AssertTrue('aé😀'.LastIndexOf('') = Some(3));
+  Test.AssertEquals('😀', 'aé😀'[2]);
+  Test.AssertEquals('abab', 'ab'.RepeatStr(2));
 end.
 ```
 
@@ -650,7 +666,9 @@ Constraints are `Numeric`, `Comparable`, and `Printable`, written `T: Numeric`.
 are not valid generic Numeric operations because real is also a possible type.
 Numeric operands must use the same type parameter; `+`, `-`, `*` retain it,
 while `/` returns real for both integer and real instantiations.
-`Comparable` permits scalar ordering; `Printable` expresses printable values.
+`Comparable` permits scalar ordering and sorting, including enums without payload
+fields, distinct scalars, and subranges; equality-only aggregate types do not
+satisfy it. `Printable` expresses printable values.
 Aliases preserve the underlying constraints; distinct types and subranges have
 specific rules below. Unconstrained type parameters still permit storage/passing.
 Generic field defaults must work for every instantiation: `Option of T := None`

@@ -260,11 +260,18 @@ fn string_indexing_and_membership_execute() {
     assert_succeeds(
         "\
 program RegisterStringAggregateOps;
+function Position(): integer;
+begin return 1; end function;
+function MakeText(): string;
+begin return 'é😀'; end function;
 begin
   const Text: string := 'Hällo';
   if Text[1] <> 'ä' then panic('unicode string index mismatch'); end if;
   if not ('äll' in Text) then panic('substring membership mismatch'); end if;
   if not ('ä' in Text) then panic('character membership mismatch'); end if;
+  if 'é😀'[1 + 0] <> '😀' then panic('compound postfix index'); end if;
+  if ['é', '😀'][Position()] <> '😀' then panic('callable postfix index'); end if;
+  if MakeText()[Position()] <> '😀' then panic('computed string index'); end if;
 end.",
     );
 }

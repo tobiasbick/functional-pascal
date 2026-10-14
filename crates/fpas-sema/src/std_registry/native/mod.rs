@@ -182,6 +182,19 @@ pub fn native_operation_by_implementation(name: &str) -> Option<&'static NativeO
 /// Gives the canonical replacement for a removed public routine or reference.
 #[must_use]
 pub fn native_migration_hint(name: &str) -> Option<String> {
+    let member = name.rsplit('.').next()?.to_ascii_lowercase();
+    let replacement = match member.as_str() {
+        "contains" => Some("Use `Value in Items` or `Substring in Text` for membership."),
+        "containskey" => Some("Use `Key in Values` for dictionary key membership."),
+        "charat" => Some("Use `Text[Index]` to read a zero-based Unicode scalar."),
+        "fromchar" | "fromcharinplace" => Some(
+            "Use `Text.RepeatStr(N)` or writable `Text.RepeatStrInPlace(N)`; express a required single-scalar invariant explicitly with `requires Text.Length() = 1;`.",
+        ),
+        _ => None,
+    };
+    if let Some(replacement) = replacement {
+        return Some(replacement.into());
+    }
     let entry = native_operations().find(|entry| {
         entry.implementation.eq_ignore_ascii_case(name)
             || !name.contains('.')

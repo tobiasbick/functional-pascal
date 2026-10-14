@@ -60,24 +60,22 @@ begin
       return Error('HTTP response has an unsupported status line: ' + Line);
     end;
   end if;
-  const FirstSpace: integer := Line.IndexOf(' ');
-  if FirstSpace < 0 then
-    begin
-      return Error('HTTP response status line is missing a status code');
-    end;
-  end if;
-  const Remainder: string := Line.Slice(FirstSpace + 1, Line.Length() - FirstSpace - 1).Trim();
-  const SecondSpace: integer := Remainder.IndexOf(' ');
-  if SecondSpace < 0 then
-    begin
-      return Ok([Remainder, '']);
-    end;
-  end if;
 
-  return Ok([
-              Remainder.Slice(0, SecondSpace),
-              Remainder.Slice(SecondSpace + 1, Remainder.Length() - SecondSpace - 1).Trim()
-            ]);
+  case Line.IndexOf(' ') of
+    when None:
+      return Error('HTTP response status line is missing a status code');
+    when Some(const FirstSpace):
+      const Remainder := Line.Slice(FirstSpace + 1, Line.Length() - FirstSpace - 1).Trim();
+      case Remainder.IndexOf(' ') of
+        when None:
+          return Ok([Remainder, '']);
+        when Some(const SecondSpace):
+          return Ok([
+                      Remainder.Slice(0, SecondSpace),
+                      Remainder.Slice(SecondSpace + 1, Remainder.Length() - SecondSpace - 1).Trim()
+                    ]);
+      end case;
+  end case;
 end function;
 
 // Reports whether text is exactly three decimal digits.
@@ -94,7 +92,7 @@ begin
 
   for Index: integer := 0 to 2 do
     begin
-      const Code: integer := Text.CharAt(Index).Ord();
+      const Code: integer := Text[Index].Ord();
       if (Code < 48) or (Code > 57) then
         begin
           return false;
@@ -135,12 +133,12 @@ end function;
 public function ParseChunkSize(Line: string): result of (integer, string);
 begin
   var SizeText: string := Line;
-  const Extension: integer := SizeText.IndexOf(';');
-  if Extension >= 0 then
-    begin
+  case SizeText.IndexOf(';') of
+    when Some(const Extension):
       SizeText := SizeText.Slice(0, Extension);
-    end;
-  end if;
+    when None:
+      null;
+  end case;
 
   SizeText := SizeText.Trim();
   if SizeText = '' then
@@ -151,7 +149,7 @@ begin
   var Size: integer := 0;
   for Index: integer := 0 to SizeText.Length() - 1 do
     begin
-      const Digit: integer := HexDigit(SizeText.CharAt(Index));
+      const Digit: integer := HexDigit(SizeText[Index]);
       if Digit < 0 then
         begin
           return Error('Invalid HTTP chunk size: ' + SizeText);
@@ -412,7 +410,7 @@ end function;
 function HostHeader(UriValue: Uri.Uri): string;
 begin
   var Host: string := UriValue.Host;
-  if Host.Contains(':') then
+  if (':' in Host) then
     begin
       Host := '[' + Host + ']';
     end;

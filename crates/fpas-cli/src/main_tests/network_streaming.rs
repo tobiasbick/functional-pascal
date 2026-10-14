@@ -180,7 +180,7 @@ begin
         when Ok(_): panic('truncated Content-Length was accepted');
         when Error(const Message):
         begin
-          if not Message.Contains( 'shorter than Content-Length') then
+          if not ('shorter than Content-Length' in Message) then
           begin
             panic(Message);
           end; end if;

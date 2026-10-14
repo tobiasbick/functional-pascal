@@ -102,6 +102,13 @@ Read the pages relevant to the change. For exact productions, consult
   with Remaining and Value. PopInPlace returns the removed element. Both Pop forms
   fail on empty arrays. InPlace needs writable storage and retains its static type;
   MapInPlace/FlatMapInPlace cannot change element/value types. User Self stays read-only.
+- Read string scalars with `Text[Index]`; use `in` for collection membership.
+  Repetition uses RepeatStr/RepeatStrInPlace with arbitrary strings; an API that
+  requires one scalar states that precondition explicitly. Array IndexOf/FindIndex
+  and string IndexOf/LastIndexOf return Option of integer, so handle Some/None.
+  Sort/SortInPlace are ascending and stable and require Comparable elements,
+  including payload-free enums; typed empty unsupported arrays fail checking.
+  Generic sorting needs T: Comparable or T: Numeric.
 - Statements end with `;`. Use each construct's named closer, such as
   `end function;`, `end if;`, and `end unit;`; programs end with `end.`.
   Expression closers receive their terminator from the enclosing statement.

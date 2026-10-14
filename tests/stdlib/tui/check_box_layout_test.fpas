@@ -31,11 +31,11 @@ begin
   var App: Tui.TuiApplication := Tui.TuiApplication.OpenForTest(Tui.TuiSize.Create(24, 6));
   var Model: CheckModel := CheckModel(Checked := false);
   Model := App.RunIterations(Model, UpdateCheck, ViewCheck, 0, 0);
-  Test.AssertTrue(App.SurfaceSnapshot().LineAt(1).Contains('Flag'));
+  Test.AssertTrue(('Flag' in App.SurfaceSnapshot().LineAt(1)));
   App.InjectResizeForTest(Tui.TuiSize.Create(12, 4));
   Model := App.RunIterations(Model, UpdateCheck, ViewCheck, 1, 0);
   Test.AssertEquals(12, App.SurfaceSnapshot().Width);
   Test.AssertEquals(4, App.SurfaceSnapshot().Height);
-  Test.AssertTrue(App.SurfaceSnapshot().LineAt(1).Contains('Fla'));
+  Test.AssertTrue(('Fla' in App.SurfaceSnapshot().LineAt(1)));
   App.Close();
 end.

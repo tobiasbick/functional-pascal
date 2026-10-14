@@ -14,7 +14,6 @@ pub enum ArrayIntrinsic {
     Length = 80,
     Sort = 81,
     Reverse = 82,
-    Contains = 83,
     IndexOf = 84,
     Slice = 85,
     Map = 86,
@@ -32,7 +31,7 @@ pub enum ArrayIntrinsic {
     ///
     /// **Documentation:** `docs/pascal/language/types/array/README.md`
     Find = 236,
-    /// `Std.Arrays.FindIndex(Arr, Pred)` — index of first match, or -1.
+    /// `Std.Arrays.FindIndex(Arr, Pred)` — Some(index of first match), or None.
     ///
     /// **Documentation:** `docs/pascal/language/types/array/README.md`
     FindIndex = 237,

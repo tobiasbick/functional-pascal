@@ -131,6 +131,6 @@ begin
   Model := App.RunIterations(Model, UpdateTextArea, ViewWindowedTextArea, 0, 0);
   Model := PressWindowed(App, Model, Tui.TuiKeyKind.Enter, '');
   Test.AssertEquals(0, Model.Offset.Y);
-  Test.AssertTrue(App.SurfaceSnapshot().LineAt(1).Contains('first'));
+  Test.AssertTrue(('first' in App.SurfaceSnapshot().LineAt(1)));
   App.Close();
 end.

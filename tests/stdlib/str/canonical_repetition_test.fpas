@@ -1,0 +1,25 @@
+program CanonicalRepetition;
+
+uses Std.Test as Test;
+
+function RepeatScalar(Text: string; Count: integer): string;
+requires Text.Length() = 1;
+begin
+  return Text.RepeatStr(Count);
+end function;
+
+begin
+  Test.AssertEquals('', ''.RepeatStr(3));
+  Test.AssertEquals('ab😀ab😀', 'ab😀'.RepeatStr(N := 2));
+  Test.AssertEquals('😀😀', RepeatScalar('😀', 2));
+  Test.AssertEquals('', 'ab'.RepeatStr(0));
+  Test.AssertEquals('', 'ab'.RepeatStr(-1));
+  Test.AssertEquals(1000000, 'x'.RepeatStr(1000000).Length());
+  const Original := 'ab😀';
+  var Text := Original;
+  Text.RepeatStrInPlace(N := 2);
+  Test.AssertEquals('ab😀ab😀', Text);
+  Test.AssertEquals('ab😀', Original);
+  Text.RepeatStrInPlace(-2);
+  Test.AssertEquals('', Text);
+end.

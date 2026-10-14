@@ -209,7 +209,7 @@ public function RequireOnlyFields(Fields: dict of string to Json.JsonValue; Allo
 begin
   for Name: string in Fields.Keys() do
     begin
-      if not Allowed.Contains(Name) then
+      if not (Name in Allowed) then
         begin
           return Error('unexpected field ' + Name);
         end;

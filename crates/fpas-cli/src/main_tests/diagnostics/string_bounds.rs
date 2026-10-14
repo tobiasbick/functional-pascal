@@ -49,10 +49,7 @@ fn runtime_record(text: &str, call: &str) -> Value {
 #[test]
 fn nonempty_character_string_bounds_json_hints_use_native_length() {
     for index in [-1, 2, i64::MAX] {
-        for call in [
-            format!("CharAt({index})"),
-            format!("SetCharAt({index}, 'z')"),
-        ] {
+        for call in [format!("SetCharAt({index}, 'z')")] {
             let record = runtime_record("é😀", &call);
             assert_eq!(
                 record["hint"],
@@ -71,10 +68,7 @@ fn nonempty_character_string_bounds_json_hints_use_native_length() {
 #[test]
 fn empty_character_string_bounds_json_hints_recommend_is_empty() {
     for index in [-1, 0, 1] {
-        for call in [
-            format!("CharAt({index})"),
-            format!("SetCharAt({index}, 'z')"),
-        ] {
+        for call in [format!("SetCharAt({index}, 'z')")] {
             let record = runtime_record("", &call);
             assert_eq!(
                 record["hint"],
@@ -103,18 +97,8 @@ fn string_bounds_text_hints_match_the_native_and_empty_string_corrections() {
     for (text, call, hint) in [
         (
             "é😀",
-            "CharAt(2)",
-            "Ensure the index is within 0..S.Length()-1.",
-        ),
-        (
-            "é😀",
             "SetCharAt(2, 'z')",
             "Ensure the index is within 0..S.Length()-1.",
-        ),
-        (
-            "",
-            "CharAt(0)",
-            "An empty string has no valid character index. Check S.IsEmpty() before calling this operation.",
         ),
         (
             "",
@@ -143,14 +127,14 @@ program Corrections;
 begin
   const S: string := 'é😀';
   const Empty: string := '';
-  if S.CharAt(S.Length()-1) <> '😀' then
+  if S[S.Length()-1] <> '😀' then
     panic('last scalar');
   end if;
   if S.SetCharAt(S.Length()-1, 'z') <> 'éz' then
     panic('replace last scalar');
   end if;
   if not Empty.IsEmpty() then
-    discard Empty.CharAt(0);
+    discard Empty[0];
     discard Empty.SetCharAt(0, 'z');
   end if;
   if Empty.Insert(Empty.Length(), 'z') <> 'z' then

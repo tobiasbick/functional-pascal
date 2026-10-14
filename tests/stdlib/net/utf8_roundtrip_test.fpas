@@ -25,7 +25,7 @@ begin
       end;
     when Error(const Message):
       begin
-        Test.AssertTrue(Message.Contains('continuation'));
+        Test.AssertTrue(('continuation' in Message));
       end;
   end case;
 end.

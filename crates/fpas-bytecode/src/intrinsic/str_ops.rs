@@ -15,7 +15,6 @@ pub enum StrIntrinsic {
     ToUpper = 21,
     ToLower = 22,
     Trim = 23,
-    Contains = 24,
     StartsWith = 25,
     EndsWith = 26,
     Substring = 27,
@@ -40,14 +39,6 @@ pub enum StrIntrinsic {
     ///
     /// **Documentation:** `docs/pascal/language/types/string/README.md`
     PadCenter = 203,
-    /// `Std.Str.FromChar(C, N)` — create string of N copies of a single-character string `C`.
-    ///
-    /// **Documentation:** `docs/pascal/language/types/string/README.md`
-    FromChar = 204,
-    /// `Std.Str.CharAt(S, Index)` — character at zero-based index.
-    ///
-    /// **Documentation:** `docs/pascal/language/types/string/README.md`
-    CharAt = 205,
     /// `Std.Str.SetCharAt(S, Index, C)` — return new string with one character replaced.
     ///
     /// **Documentation:** `docs/pascal/language/types/string/README.md`
@@ -80,7 +71,7 @@ pub enum StrIntrinsic {
     ///
     /// **Documentation:** `docs/pascal/language/types/string/README.md`
     TrimRight = 213,
-    /// `Std.Str.LastIndexOf(S, Sub)` — last occurrence index or -1.
+    /// `Std.Str.LastIndexOf(S, Sub)` — Some(last scalar index), or None.
     ///
     /// **Documentation:** `docs/pascal/language/types/string/README.md`
     LastIndexOf = 214,

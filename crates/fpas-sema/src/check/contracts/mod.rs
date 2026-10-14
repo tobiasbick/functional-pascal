@@ -109,7 +109,7 @@ impl Checker {
         self.error_with_code(
             SEMA_INVALID_CONTRACT_EXPRESSION,
             format!("Invalid contract expression: {reason}"),
-            "Use parameters, immutable values, operators, construction, and the native Length, IsEmpty, Contains, or ContainsKey operations; do not call user routines or read mutable outer state.",
+            "Use parameters, immutable values, operators (including `in`), construction, and the native Length or IsEmpty operations; do not call user routines or read mutable outer state.",
             span,
         );
     }
@@ -125,13 +125,10 @@ impl Checker {
                 target.name.as_str(),
                 "Std.Str.Length"
                     | "Std.Str.IsEmpty"
-                    | "Std.Str.Contains"
                     | "Std.Arrays.Length"
                     | "Std.Arrays.IsEmpty"
-                    | "Std.Arrays.Contains"
                     | "Std.Dictionaries.Length"
                     | "Std.Dictionaries.IsEmpty"
-                    | "Std.Dictionaries.ContainsKey"
             )
         })
     }

@@ -1,0 +1,57 @@
+program CanonicalSearch;
+
+uses Std.Test as Test;
+
+begin
+  const Values := [3, 1, 3];
+  const Empty: array of integer := [];
+  Test.AssertTrue(Values.IndexOf(Value := 3) = Some(0));
+  Test.AssertTrue(Values.IndexOf(1) = Some(1));
+  Test.AssertTrue(Values.IndexOf(9) = None);
+  Test.AssertTrue(Empty.IndexOf(3) = None);
+  var Visits: array of integer := [];
+  const Match := function(Value: integer): boolean begin
+    Visits.PushInPlace(Value);
+    return Value = 1;
+  end function;
+
+  Test.AssertTrue(Values.FindIndex(F := Match) = Some(1));
+  Test.AssertEquals(2, Visits.Length());
+  Test.AssertEquals(3, Visits[0]);
+  Test.AssertEquals(1, Visits[1]);
+  Test.AssertTrue(Empty.FindIndex(Match) = None);
+  Test.AssertEquals(2, Visits.Length());
+  Test.AssertTrue(Values.FindIndex(function(Value: integer): boolean begin
+    return Value = 9;
+  end function) =
+                  None);
+  Test.AssertTrue(Values.Find(Match) = Some(1));
+  const Nested := [[3, 1], [4], []]
+                    .Map(function(Items: array of integer): option of integer begin
+    return Items.FindIndex(function(Value: integer): boolean begin
+      return Value = 1;
+    end function);
+  end function);
+  Test.AssertTrue(Nested[0] = Some(1));
+  Test.AssertTrue(Nested[1] = None);
+  Test.AssertTrue(Nested[2] = None);
+  const Text := 'aé😀e' + string.Chr(769) + 'é';
+  Test.AssertTrue(Text.IndexOf(Sub := 'é') = Some(1));
+  Test.AssertTrue(Text.LastIndexOf(Sub := 'é') = Some(5));
+  Test.AssertTrue(Text.IndexOf('😀') = Some(2));
+  Test.AssertTrue(Text.IndexOf('e' + string.Chr(769)) = Some(3));
+  Test.AssertTrue(Text.IndexOf('') = Some(0));
+  Test.AssertTrue(Text.LastIndexOf('') = Some(Text.Length()));
+  Test.AssertTrue(Text.IndexOf('missing') = None);
+  Test.AssertTrue(Text.LastIndexOf('missing') = None);
+  Test.AssertTrue(''.IndexOf('') = Some(0));
+  Test.AssertTrue(''.LastIndexOf('') = Some(0));
+  Test.AssertTrue(''.IndexOf('é') = None);
+  Test.AssertEquals('😀', Text[2]);
+  Test.AssertEquals(string.Chr(769), Text[4]);
+  const Dictionary := ['key': 7];
+  Test.AssertTrue('key' in Dictionary);
+  Test.AssertFalse('7' in Dictionary);
+  Test.AssertTrue(Dictionary.Get('key') = Some(7));
+  Test.AssertTrue(Dictionary.Get('missing') = None);
+end.

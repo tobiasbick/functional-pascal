@@ -258,12 +258,18 @@ Type parameters can be constrained to require specific capabilities from the con
 
 | Constraint | Satisfied by | Description |
 |------------|-------------|-------------|
-| `Comparable` | `integer`, `real`, `boolean`, `string`, [distinct types](distinct-types.md), [subranges](subranges.md) | Supports comparison operators: `=`, `<>`, `<`, `>`, `<=`, `>=` |
+| `Comparable` | `integer`, `real`, `boolean`, `string`, [distinct scalar types](distinct-types.md), [subranges](subranges.md), [enums without payload fields](enums.md) | Supports comparison operators: `=`, `<>`, `<`, `>`, `<=`, `>=`, and array sorting |
 | `Numeric` | `integer`, `real` | Supports arithmetic operators: `+`, `-`, `*`, `/`; does not establish integer-only `div`/`mod` operands |
 | `Printable` | All types except `function`, `procedure`, and distinct types | Can be converted to a string representation |
 
 Subranges satisfy `Comparable` and `Printable`, but not `Numeric`: arithmetic
 widens to integer values and does not preserve their bounds.
+
+Comparisons, `Comparable`, and array `Sort`/`SortInPlace` use the same ordering
+capability. Payload-free enums follow their integer backing values. Records, payload-carrying
+enums, Option, and Result may support equality but do not satisfy `Comparable`.
+Arrays, dictionaries, callables, tasks, and channels are also excluded. Generic
+sorting requires `T: Comparable` or `T: Numeric`, including for empty arrays.
 
 Numeric operators require the same operand type. In a generic body, `A + B`
 is valid when both operands have the same `T: Numeric`; combining T with another

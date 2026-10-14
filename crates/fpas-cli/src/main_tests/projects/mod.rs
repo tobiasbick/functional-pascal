@@ -2,6 +2,7 @@ use super::*;
 
 mod bound_methods;
 mod build;
+mod canonical_collections;
 mod check;
 mod dependencies;
 mod documented_examples;

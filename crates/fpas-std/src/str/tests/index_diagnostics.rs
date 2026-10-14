@@ -17,7 +17,7 @@ fn character_arguments(intrinsic: StrIntrinsic, text: &str, index: i64) -> Vec<V
 
 #[test]
 fn nonempty_character_bounds_hints_use_native_length() {
-    for intrinsic in [StrIntrinsic::CharAt, StrIntrinsic::SetCharAt] {
+    for intrinsic in [StrIntrinsic::SetCharAt] {
         for index in [-1, 2, i64::MIN, i64::MAX] {
             let mut arguments = character_arguments(intrinsic, "é😀", index);
             let error = run_str(intrinsic, &mut arguments).expect_err("invalid scalar index");
@@ -36,7 +36,7 @@ fn nonempty_character_bounds_hints_use_native_length() {
 
 #[test]
 fn empty_character_bounds_hints_report_no_valid_index() {
-    for intrinsic in [StrIntrinsic::CharAt, StrIntrinsic::SetCharAt] {
+    for intrinsic in [StrIntrinsic::SetCharAt] {
         for index in [-1, 0, 1, i64::MIN, i64::MAX] {
             let mut arguments = character_arguments(intrinsic, "", index);
             let error = run_str(intrinsic, &mut arguments).expect_err("empty character source");
@@ -77,14 +77,7 @@ fn insertion_bounds_hints_include_the_end_position_for_empty_and_unicode_strings
 
 #[test]
 fn character_operations_keep_valid_first_and_last_scalar_indices() {
-    for (text, index, character, replaced) in [
-        ("a", 0, "a", "z"),
-        ("é😀", 0, "é", "z😀"),
-        ("é😀", 1, "😀", "éz"),
-    ] {
-        let mut arguments = character_arguments(StrIntrinsic::CharAt, text, index);
-        run_str(StrIntrinsic::CharAt, &mut arguments).expect("valid character index");
-        assert_eq!(arguments, [Value::Str(character.into())]);
+    for (text, index, replaced) in [("a", 0, "z"), ("é😀", 0, "z😀"), ("é😀", 1, "éz")] {
         let mut arguments = character_arguments(StrIntrinsic::SetCharAt, text, index);
         run_str(StrIntrinsic::SetCharAt, &mut arguments).expect("valid replacement index");
         assert_eq!(arguments, [Value::Str(replaced.into())]);

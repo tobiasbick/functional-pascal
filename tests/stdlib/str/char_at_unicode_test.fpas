@@ -3,5 +3,5 @@ program CharAtUnicodeTest;
 uses Std.Test as Test;
 
 begin
-  Test.AssertEquals('🙂', 'Aé🙂Z'.CharAt(2));
+  Test.AssertEquals('🙂', 'Aé🙂Z'[2]);
 end.

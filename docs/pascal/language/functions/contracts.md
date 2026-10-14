@@ -98,9 +98,9 @@ The following existing native receiver operations are allowed:
 
 | Receiver | Operations |
 |----------|------------|
-| `string` | `Length`, `IsEmpty`, `Contains` |
-| `array of T` | `Length`, `IsEmpty`, `Contains` |
-| `dict of K to V` | `Length`, `IsEmpty`, `ContainsKey` |
+| `string` | `Length`, `IsEmpty` |
+| `array of T` | `Length`, `IsEmpty` |
+| `dict of K to V` | `Length`, `IsEmpty` |
 
 For example, `requires Text.Length() > 0;` checks a string parameter. Resolution
 must select the actual native operation; a user function or record method named

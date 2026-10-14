@@ -14,8 +14,6 @@ pub enum DictIntrinsic {
     /// **Documentation:** `docs/pascal/language/types/dictionary-operations.md`
     Length = 120,
     /// **Documentation:** `docs/pascal/language/types/dictionary-operations.md`
-    ContainsKey = 121,
-    /// **Documentation:** `docs/pascal/language/types/dictionary-operations.md`
     Keys = 122,
     /// **Documentation:** `docs/pascal/language/types/dictionary-operations.md`
     Values = 123,

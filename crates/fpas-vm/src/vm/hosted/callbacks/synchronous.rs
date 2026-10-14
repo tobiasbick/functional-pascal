@@ -82,14 +82,14 @@ impl Worker {
                 found
             }
             FindIndex => {
-                let mut found = -1;
+                let mut found = Value::OptionNone;
                 for (index, value) in values.iter().enumerate() {
                     if self.callback_is_true(callback, std::slice::from_ref(value))? {
-                        found = index as i64;
+                        found = Value::option_some(Value::Integer(index as i64));
                         break;
                     }
                 }
-                Value::Integer(found)
+                found
             }
             Any => {
                 let mut matched = false;

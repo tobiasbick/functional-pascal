@@ -13,6 +13,11 @@ every type application uses the same `of` form.
 
 ## Decisions
 
+[AP42](../ap42-canonical-collection-operations/README.md) extends `Comparable`
+admissibility to enums without payload fields and shares its ordering capability
+with comparisons and array sorting. AP24 retains its completed status and all
+other delivered generic rules.
+
 - Every type application uses `of`. One type argument is written without
   parentheses; several are always parenthesized: `array of string`,
   `Option of User`, `Result of (User, LoadError)`,

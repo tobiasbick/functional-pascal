@@ -47,11 +47,6 @@ pub(crate) fn run(
             let s = pop_string(pop_value(call, location)?, location)?;
             call.push(Value::Str(s.trim().to_string().into()));
         }
-        Intrinsic::Str(StrIntrinsic::Contains) => {
-            let sub = expect_str(pop_value(call, location)?, location)?;
-            let s = expect_str(pop_value(call, location)?, location)?;
-            call.push(Value::Boolean(s.contains(sub.as_ref())));
-        }
         Intrinsic::Str(StrIntrinsic::StartsWith) => {
             let pre = expect_str(pop_value(call, location)?, location)?;
             let s = expect_str(pop_value(call, location)?, location)?;
@@ -72,11 +67,10 @@ pub(crate) fn run(
         Intrinsic::Str(StrIntrinsic::IndexOf) => {
             let sub = expect_str(pop_value(call, location)?, location)?;
             let s = expect_str(pop_value(call, location)?, location)?;
-            let idx = s
-                .find(sub.as_ref())
-                .map(|b| s[..b].chars().count() as i64)
-                .unwrap_or(-1);
-            call.push(Value::Integer(idx));
+            let idx = s.find(sub.as_ref()).map_or(Value::OptionNone, |b| {
+                Value::option_some(Value::Integer(s[..b].chars().count() as i64))
+            });
+            call.push(idx);
         }
         Intrinsic::Str(StrIntrinsic::Replace) => {
             let new_s = pop_string(pop_value(call, location)?, location)?;
@@ -175,32 +169,6 @@ pub(crate) fn run(
                 call.push(Value::Str(format!("{lp}{s}{rp}").into()));
             }
         }
-        Intrinsic::Str(StrIntrinsic::FromChar) => {
-            let n = pop_int(pop_value(call, location)?, location)?;
-            let c = pop_single_char(pop_value(call, location)?, location)?;
-            let len = if n <= 0 {
-                0
-            } else {
-                checked_collection_len(n, location, "Std.Str.FromChar")?
-            };
-            let s: String = std::iter::repeat_n(c, len).collect();
-            call.push(Value::Str(s.into()));
-        }
-        Intrinsic::Str(StrIntrinsic::CharAt) => {
-            let idx = pop_int(pop_value(call, location)?, location)?;
-            let s = expect_str(pop_value(call, location)?, location)?;
-            let character = usize::try_from(idx).ok().and_then(|index| s.char_at(index));
-            let Some(character) = character else {
-                let length = s.char_len();
-                return Err(std_runtime_error(
-                    RUNTIME_STRING_INDEX_OUT_OF_BOUNDS,
-                    format!("CharAt index {idx} out of range (length {length})"),
-                    character_index_hint(length),
-                    location,
-                ));
-            };
-            call.push(Value::Str(character.to_string().into()));
-        }
         Intrinsic::Str(StrIntrinsic::SetCharAt) => {
             let c = pop_single_char(pop_value(call, location)?, location)?;
             let idx = pop_int(pop_value(call, location)?, location)?;
@@ -292,11 +260,10 @@ pub(crate) fn run(
         Intrinsic::Str(StrIntrinsic::LastIndexOf) => {
             let sub = expect_str(pop_value(call, location)?, location)?;
             let s = expect_str(pop_value(call, location)?, location)?;
-            let idx = s
-                .rfind(sub.as_ref())
-                .map(|b| s[..b].chars().count() as i64)
-                .unwrap_or(-1);
-            call.push(Value::Integer(idx));
+            let idx = s.rfind(sub.as_ref()).map_or(Value::OptionNone, |b| {
+                Value::option_some(Value::Integer(s[..b].chars().count() as i64))
+            });
+            call.push(idx);
         }
         Intrinsic::Str(StrIntrinsic::Utf8Encode) => {
             let text = expect_str(pop_value(call, location)?, location)?;

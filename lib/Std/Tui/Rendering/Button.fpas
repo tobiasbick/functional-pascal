@@ -17,7 +17,7 @@ begin
   var X: integer := Position.X;
   for Index: integer := 0 to Button.Text.Length() - 1 do
     begin
-      const Glyph: string := Button.Text.CharAt(Index);
+      const Glyph: string := Button.Text[Index];
       var GlyphRole: StyleRole.TuiStyleRole := Role;
       if (Button.Mnemonic <> '') and (Glyph.ToLower() = Button.Mnemonic.ToLower()) then
         begin

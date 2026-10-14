@@ -3,5 +3,5 @@ program T;
 uses Std.Console as Console;
 
 begin
-  Console.WriteLn('hello world'.Contains('world'));
+  Console.WriteLn(('world' in 'hello world'));
 end.

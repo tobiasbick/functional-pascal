@@ -207,6 +207,21 @@ impl Checker {
         let Some(operation) = crate::std_registry::native_operation(receiver_ty, name) else {
             let hint = if receiver_ty == &Ty::String && name.eq_ignore_ascii_case("Substring") {
                 "Use `.Slice(Start, Len)` for a checked Unicode-scalar range.".to_string()
+            } else if receiver_ty == &Ty::String && name.eq_ignore_ascii_case("CharAt") {
+                "Use `Text[Index]` to read a zero-based Unicode scalar.".to_string()
+            } else if receiver_ty == &Ty::String
+                && (name.eq_ignore_ascii_case("FromChar")
+                    || name.eq_ignore_ascii_case("FromCharInPlace"))
+            {
+                "Use `Text.RepeatStr(N)` or writable `Text.RepeatStrInPlace(N)`. If your API requires one scalar, state `requires Text.Length() = 1;` explicitly.".to_string()
+            } else if matches!(receiver_ty, Ty::String | Ty::Array(_))
+                && name.eq_ignore_ascii_case("Contains")
+            {
+                "Use `Value in Items` or `Substring in Text`; preserve receiver-before-argument effects with temporary bindings when migrating.".to_string()
+            } else if matches!(receiver_ty, Ty::Dict(_, _))
+                && name.eq_ignore_ascii_case("ContainsKey")
+            {
+                "Use `Key in Values` for dictionary key membership; preserve receiver-before-argument effects with temporary bindings when migrating.".to_string()
             } else if let Ty::Distinct(distinct) = receiver_ty {
                 // Documentation: docs/pascal/language/types/distinct-types.md
                 format!(

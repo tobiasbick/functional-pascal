@@ -25,9 +25,9 @@ begin
   const App: Tui.TuiApplication := Tui.TuiApplication.OpenForTest(Tui.TuiSize.Create(24, 10));
   discard App.RunIterations(0, UpdateButtons, ViewButtons, 0, 0);
   const Surface: Tui.TuiSurfaceSnapshot := App.SurfaceSnapshot();
-  const GoX: integer := Surface.LineAt(1).IndexOf('G');
-  const OkX: integer := Surface.LineAt(2).IndexOf('O');
-  const StopX: integer := Surface.LineAt(3).IndexOf('S');
+  const GoX: integer := Surface.LineAt(1).IndexOf('G').Unwrap();
+  const OkX: integer := Surface.LineAt(2).IndexOf('O').Unwrap();
+  const StopX: integer := Surface.LineAt(3).IndexOf('S').Unwrap();
   Test.AssertTrue(Surface.CellAt(GoX, 1).Role = Tui.TuiStyleRole.ButtonSelectedShortcut);
   Test.AssertTrue(Surface.CellAt(OkX, 2).Role = Tui.TuiStyleRole.ButtonDefaultShortcut);
   Test.AssertTrue(Surface.CellAt(StopX, 3).Role = Tui.TuiStyleRole.ButtonDisabled);

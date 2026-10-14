@@ -35,9 +35,9 @@ begin
   var App: Tui.TuiApplication := Tui.TuiApplication.OpenForTest(Tui.TuiSize.Create(24, 6));
   var Model: CheckModel := CheckModel(Focus := 1, Checked := false);
   Model := App.RunIterations(Model, UpdateCheck, ViewCheck, 0, 0);
-  Test.AssertTrue(App.SurfaceSnapshot().LineAt(1).Contains('>[ ] Flag'));
+  Test.AssertTrue(('>[ ] Flag' in App.SurfaceSnapshot().LineAt(1)));
   Model := CheckModel(Focus := 1, Checked := true);
   Model := App.RunIterations(Model, UpdateCheck, ViewCheck, 0, 0);
-  Test.AssertTrue(App.SurfaceSnapshot().LineAt(1).Contains('>[x] Flag'));
+  Test.AssertTrue(('>[x] Flag' in App.SurfaceSnapshot().LineAt(1)));
   App.Close();
 end.

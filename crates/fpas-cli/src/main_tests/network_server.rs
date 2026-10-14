@@ -270,7 +270,7 @@ begin
             when Ok(_): panic('ambiguous framing was accepted');
             when Error(const Message):
             begin
-              if not Message.Contains('both Transfer-Encoding and Content-Length') then
+              if not ('both Transfer-Encoding and Content-Length' in Message) then
               begin
                 panic(Message);
               end; end if;
@@ -340,7 +340,7 @@ begin
             when Ok(_): panic('oversized request body was accepted');
             when Error(const Message):
             begin
-              if not Message.Contains('MaxBodyBytes') then
+              if not ('MaxBodyBytes' in Message) then
               begin
                 panic(Message);
               end; end if;

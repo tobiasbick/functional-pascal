@@ -20,7 +20,7 @@ begin
   const Started: integer := Time.MonotonicMillis();
   for Iteration: integer := 1 to Iterations do
     begin
-      if Values.Contains(8) then
+      if (8 in Values) then
         begin
           panic('missing scalar');
         end;

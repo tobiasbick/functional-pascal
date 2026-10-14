@@ -8,7 +8,7 @@ function ScreenContains(Snapshot: Tui.TuiSurfaceSnapshot; Text: string): boolean
 begin
   for Row: integer := 0 to Snapshot.Height - 1 do
     begin
-      if Snapshot.LineAt(Row).Contains(Text) then
+      if (Text in Snapshot.LineAt(Row)) then
         begin
           return true;
         end;
@@ -45,7 +45,7 @@ begin
   Test.AssertEquals('╯', EmptySnapshot.CellAt(32, 22).Glyph);
   Test.AssertEquals('╰', EmptySnapshot.CellAt(33, 22).Glyph);
   Test.AssertEquals('╯', EmptySnapshot.CellAt(99, 22).Glyph);
-  Test.AssertTrue(EmptySnapshot.LineAt(22).Contains('╯╰'));
+  Test.AssertTrue(('╯╰' in EmptySnapshot.LineAt(22)));
   EmptyApp.Inject(Tui.TuiMsgAction(Tui.TuiControlId.Create(20), Tui.TuiAction.Create(14)));
   EmptyModel := EmptyApp.RunIterations(EmptyModel, Update.NotesUpdate, View.NotesView, 1, 0);
   Test.AssertTrue(EmptyModel.Overlay = NotesModel.NotesOverlay.Commands);
@@ -115,7 +115,7 @@ begin
   Test.AssertEquals('╯', InitialSnapshot.CellAt(32, 22).Glyph);
   Test.AssertEquals('╰', InitialSnapshot.CellAt(33, 22).Glyph);
   Test.AssertTrue(ScreenContains(InitialSnapshot, '…'));
-  Test.AssertTrue(Model.Notes[0].Body.Contains(string.Chr(65279) + 'visible body text'));
+  Test.AssertTrue((string.Chr(65279) + 'visible body text' in Model.Notes[0].Body));
   Model.BodyOffset := Tui.TuiPoint.Create(0, 2);
   Model := App.RunIterations(Model, Update.NotesUpdate, View.NotesView, 0, 0);
   Test.AssertTrue(ScreenContains(App.SurfaceSnapshot(), 'visible body text'));

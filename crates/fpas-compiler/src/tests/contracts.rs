@@ -100,7 +100,7 @@ fn restricted_if_case_and_native_queries_execute_at_entry() {
     assert_succeeds("program T; type Box = record Value: integer := 1; end record;
         procedure P(X: integer; Text: string; D: dict of string to integer);
         requires X > 0 and 10 div X > 0;
-        requires [X].Contains(X) and Text.Contains('a') and D.ContainsKey('a');
+        requires (X in [X]) and ('a' in Text) and ('a' in D);
         requires Box().Value = 1;
         requires if Text.IsEmpty() then false else Text.Length() > 0 end if;
         requires case Some(X) of when Some(const N) if N > 0: true; when Some(_): false; when None: false; end case;

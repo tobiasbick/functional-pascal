@@ -157,12 +157,11 @@ begin
   end if;
   const Remaining: string := Source.Slice(Prefix.Length(), Source.Length() - Prefix.Length());
   const Boundary: string := NewLine + '+++' + NewLine;
-  const BoundaryIndex: integer := Remaining.IndexOf(Boundary);
-  if BoundaryIndex < 0 then
-    begin
-      return Error('A .note file must close its TOML header with `+++`');
-    end;
+  const HeaderBoundary := Remaining.IndexOf(Boundary);
+  if HeaderBoundary.IsNone() then
+    return Error('A .note file must close its TOML header with `+++`');
   end if;
+  const BoundaryIndex := HeaderBoundary.Unwrap();
   const Header: string := Remaining.Slice(0, BoundaryIndex);
   const BodyStart: integer := BoundaryIndex + Boundary.Length();
   const Body: string := Remaining.Slice(BodyStart, Remaining.Length() - BodyStart);

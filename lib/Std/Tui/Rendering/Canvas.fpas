@@ -131,7 +131,7 @@ public type TuiCanvas = record
     const TextLength: integer := Text.Length();
     for Index: integer := 0 to TextLength - 1 do
       begin
-        const Code: integer := Text.CharAt(Index).Ord();
+        const Code: integer := Text[Index].Ord();
         if (Code <> 10) and ((Code < 32) or (Code > 126)) then
           begin
             AsciiOnly := false;
@@ -144,7 +144,7 @@ public type TuiCanvas = record
       begin
         for Index: integer := 0 to TextLength - 1 do
           begin
-            const Glyph: string := Text.CharAt(Index);
+            const Glyph: string := Text[Index];
             if Glyph = string.Chr(10) then
               begin
                 return;

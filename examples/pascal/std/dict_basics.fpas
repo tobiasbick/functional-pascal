@@ -22,7 +22,7 @@ end function;
 begin
   const Scores: dict of string to integer := ['Ada': 95, 'Bob': 72, 'Cara': 91];
   Console.WriteLn('length: ', Conv.IntToStr(Scores.Length()));
-  Console.WriteLn('has Ada: ', Scores.ContainsKey('Ada'));
+  Console.WriteLn('has Ada: ', ('Ada' in Scores));
   const Merged: dict of string to integer := Scores.Merge(['Bob': 88, 'Dan': 70]);
   Console.WriteLn('merged Bob: ', Conv.IntToStr(Merged['Bob']));
   case Merged.Get('Eve') of

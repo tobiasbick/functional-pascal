@@ -33,7 +33,7 @@ begin
   var MnemonicPainted: boolean := false;
   for Index: integer := 0 to Text.Length() - 1 do
     begin
-      const Glyph: string := Text.CharAt(Index);
+      const Glyph: string := Text[Index];
       var GlyphRole: StyleRole.TuiStyleRole := Role;
       if (not MnemonicPainted and (Mnemonic <> '')) and (Glyph.ToLower() = Mnemonic.ToLower()) then
         begin

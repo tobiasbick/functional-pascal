@@ -130,11 +130,12 @@ impl Ty {
                 | Ty::Real
                 | Ty::Boolean
                 | Ty::String
+                | Ty::Distinct(_)
                 | Ty::GenericParam(
                     _,
                     Some(TypeConstraint::Comparable | TypeConstraint::Numeric)
                 )
-        )
+        ) || matches!(self, Ty::Enum(enumeration) if !enumeration.has_data())
     }
 
     /// True for ordinal types (integer, boolean, simple enum without data).

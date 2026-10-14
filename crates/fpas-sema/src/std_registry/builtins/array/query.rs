@@ -39,7 +39,25 @@ pub(super) fn check_sort_or_reverse(c: &mut Checker, name: &str, args: &[&Expr],
     }
 
     let ty = c.check_expr(args[0]);
-    if array_elem_ty(&ty).is_some() {
+    if let Some(element) = array_elem_ty(&ty) {
+        if name == s::STD_ARRAY_SORT {
+            c.complete_or_defer_type_arguments(
+                "Sort",
+                if element.is_error() { vec!["T: Comparable".into()] } else { vec![] },
+                "Supply a Comparable element type, for example `const Items: array of integer := [].Sort();`; require `T: Comparable` (or `T: Numeric`) for a generic array.",
+                span,
+                true,
+            );
+        }
+        if name == s::STD_ARRAY_SORT && !element.is_error() && !element.is_comparable() {
+            c.error_with_code(
+                SEMA_TYPE_MISMATCH,
+                format!("`Sort` requires Comparable elements, got `{element}`"),
+                "Sort integer, real, Boolean, string, subrange, distinct scalar, or payload-free enum elements. Require `T: Comparable` (or `T: Numeric`) for a generic array; use Reverse for reversal.",
+                span,
+            );
+            return Ty::Error;
+        }
         ty
     } else {
         c.error_with_code(
@@ -52,20 +70,8 @@ pub(super) fn check_sort_or_reverse(c: &mut Checker, name: &str, args: &[&Expr],
     }
 }
 
-pub(super) fn check_contains_or_index_of(
-    c: &mut Checker,
-    name: &str,
-    args: &[&Expr],
-    span: Span,
-) -> Ty {
-    if !check_argument_count(
-        c,
-        name,
-        2,
-        args,
-        "Example: Std.Arrays.Contains(A, V).",
-        span,
-    ) {
+pub(super) fn check_index_of(c: &mut Checker, name: &str, args: &[&Expr], span: Span) -> Ty {
+    if !check_argument_count(c, name, 2, args, "Example: Items.IndexOf(Value).", span) {
         return Ty::Error;
     }
 
@@ -83,11 +89,7 @@ pub(super) fn check_contains_or_index_of(
     let value_ty = c.check_expr(args[1]);
     c.check_type_compat(&elem_ty, &value_ty, "compared value", span);
 
-    if name.eq_ignore_ascii_case(s::STD_ARRAY_CONTAINS) {
-        Ty::Boolean
-    } else {
-        Ty::Integer
-    }
+    Ty::Option(Box::new(Ty::Integer))
 }
 
 pub(super) fn check_slice(c: &mut Checker, args: &[&Expr], span: Span) -> Ty {

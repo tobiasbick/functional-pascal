@@ -15,7 +15,6 @@ pub(super) fn check_dict_builtin_std_call(
 ) -> Option<Ty> {
     let ty = match name {
         s::STD_DICT_LENGTH => check_dict_length(c, args, span),
-        s::STD_DICT_CONTAINS_KEY => check_dict_contains_key(c, args, span),
         s::STD_DICT_KEYS => check_dict_keys(c, args, span),
         s::STD_DICT_VALUES => check_dict_values(c, args, span),
         s::STD_DICT_REMOVE => check_dict_remove(c, args, span),
@@ -69,39 +68,6 @@ fn check_dict_length(c: &mut Checker, args: &[&Expr], span: Span) -> Ty {
         c.error_with_code(
             SEMA_TYPE_MISMATCH,
             format!("`{}` expects a dict", s::STD_DICT_LENGTH),
-            "Pass `dict of K to V`.",
-            span,
-        );
-        Ty::Error
-    }
-}
-
-fn check_dict_contains_key(c: &mut Checker, args: &[&Expr], span: Span) -> Ty {
-    if args.len() != 2 {
-        c.error_with_code(
-            SEMA_WRONG_ARGUMENT_COUNT,
-            format!(
-                "`{}` expects 2 arguments, got {}",
-                s::STD_DICT_CONTAINS_KEY,
-                args.len()
-            ),
-            "Example: D.ContainsKey(Key).",
-            span,
-        );
-        return Ty::Error;
-    }
-    let dict_ty = c.check_expr(args[0]);
-    let key_ty = c.check_expr(args[1]);
-    if let Some((k, _)) = dict_kv_types(&dict_ty) {
-        c.check_type_compat(&k, &key_ty, "dict key", span);
-        Ty::Boolean
-    } else {
-        c.error_with_code(
-            SEMA_TYPE_MISMATCH,
-            format!(
-                "`{}` expects a dict as first argument",
-                s::STD_DICT_CONTAINS_KEY
-            ),
             "Pass `dict of K to V`.",
             span,
         );

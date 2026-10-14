@@ -28,7 +28,7 @@ begin
   var Matches: integer := 0;
   for Index: integer := 1 to Iterations do
     begin
-      if Text.CharAt(Index mod TextLength) = '😀' then
+      if Text[Index mod TextLength] = '😀' then
         begin
           Matches := Matches + 1;
         end;

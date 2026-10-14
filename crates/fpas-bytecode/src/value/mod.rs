@@ -4,6 +4,7 @@ mod display;
 mod equal;
 mod function;
 mod managed_heap;
+mod ordering;
 mod payload;
 mod reference;
 mod string;

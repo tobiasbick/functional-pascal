@@ -21,31 +21,17 @@ pub(super) const OPERATIONS: &[NativeOperation] = &[
     },
     NativeOperation {
         receiver: NativeReceiver::Array,
-        name: "Contains",
-        implementation: "Std.Arrays.Contains",
-        signature: || {
-            function(
-                vec![p("Value", Ty::GenericParam("T".into(), None))],
-                Ty::Boolean,
-                false,
-            )
-        },
-        lowering: NativeLowering::Intrinsic,
-        documentation: "Element membership",
-    },
-    NativeOperation {
-        receiver: NativeReceiver::Array,
         name: "IndexOf",
         implementation: "Std.Arrays.IndexOf",
         signature: || {
             function(
                 vec![p("Value", Ty::GenericParam("T".into(), None))],
-                Ty::Integer,
+                Ty::Option(Box::new(Ty::Integer)),
                 false,
             )
         },
         lowering: NativeLowering::Intrinsic,
-        documentation: "First matching index, or `-1`",
+        documentation: "Some(first matching index), or None",
     },
     NativeOperation {
         receiver: NativeReceiver::Array,
@@ -151,12 +137,12 @@ pub(super) const OPERATIONS: &[NativeOperation] = &[
                         false,
                     )),
                 )],
-                Ty::Integer,
+                Ty::Option(Box::new(Ty::Integer)),
                 false,
             )
         },
         lowering: NativeLowering::Intrinsic,
-        documentation: "First matching index, or `-1`",
+        documentation: "Some(first matching index), or None",
     },
     NativeOperation {
         receiver: NativeReceiver::Array,
@@ -212,7 +198,7 @@ pub(super) const OPERATIONS: &[NativeOperation] = &[
             )
         },
         lowering: NativeLowering::Intrinsic,
-        documentation: "Return a sorted value",
+        documentation: "Return a stable ascending value; elements require Comparable (including payload-free enums)",
     },
     NativeOperation {
         receiver: NativeReceiver::Array,

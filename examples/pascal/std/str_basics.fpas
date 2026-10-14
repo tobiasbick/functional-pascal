@@ -32,7 +32,7 @@ begin
   Console.WriteLn('split+join: ', 'a,b,c'.Split(',').Join('|'));
   const Msg: string := 'n=%d upper=%s'.Format(42, 'ok'.ToUpper());
   Console.WriteLn('format: ', Msg);
-  Console.WriteLn('contains b: ', 'abc'.Contains('b'));
+  Console.WriteLn('contains b: ', ('b' in 'abc'));
   Console.WriteLn('substring: ', 'Hello'.Slice(0, 3));
   Console.WriteLn('replace: ', 'banana'.Replace('na', 'NA'));
   Console.WriteLn('reverse: ', 'draw'.Reverse());

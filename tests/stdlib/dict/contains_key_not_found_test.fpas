@@ -4,5 +4,5 @@ uses Std.Console as Console;
 
 begin
   const D: dict of string to integer := ['Alice': 30];
-  Console.WriteLn(D.ContainsKey('Bob'));
+  Console.WriteLn(('Bob' in D));
 end.

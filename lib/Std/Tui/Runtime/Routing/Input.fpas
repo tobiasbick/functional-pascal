@@ -9,7 +9,7 @@ begin
   var Index: integer := Caret;
   while Index > 0 do
     begin
-      if Text.CharAt(Index - 1) = ' ' then
+      if Text[Index - 1] = ' ' then
         begin
           Index := Index - 1;
         end;
@@ -23,7 +23,7 @@ begin
 
   while Index > 0 do
     begin
-      if Text.CharAt(Index - 1) <> ' ' then
+      if Text[Index - 1] <> ' ' then
         begin
           Index := Index - 1;
         end;
@@ -43,7 +43,7 @@ begin
   var Index: integer := Caret;
   while Index < Text.Length() do
     begin
-      if Text.CharAt(Index) <> ' ' then
+      if Text[Index] <> ' ' then
         begin
           Index := Index + 1;
         end;
@@ -57,7 +57,7 @@ begin
 
   while Index < Text.Length() do
     begin
-      if Text.CharAt(Index) = ' ' then
+      if Text[Index] = ' ' then
         begin
           Index := Index + 1;
         end;

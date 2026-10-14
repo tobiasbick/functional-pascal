@@ -49,15 +49,7 @@ impl TypeConstraint {
         match self {
             // Distinct scalar types inherit comparisons, not arithmetic or printing.
             // See docs/pascal/language/types/distinct-types.md.
-            Self::Comparable => matches!(
-                ty,
-                Ty::Integer
-                    | Ty::Subrange(_)
-                    | Ty::Real
-                    | Ty::Boolean
-                    | Ty::String
-                    | Ty::Distinct(_)
-            ),
+            Self::Comparable => ty.is_comparable(),
             Self::Numeric => matches!(ty, Ty::Integer | Ty::Real),
             Self::Printable => !matches!(ty, Ty::Function(_) | Ty::Procedure(_) | Ty::Distinct(_)),
         }

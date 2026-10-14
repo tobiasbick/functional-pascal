@@ -67,16 +67,7 @@ pub(crate) fn resolve(name: &str, first_argument: Option<&Ty>) -> Option<Intrins
             Dict,
             DictIntrinsic,
             [
-                Length,
-                ContainsKey,
-                Keys,
-                Values,
-                Remove,
-                Get,
-                Merge,
-                Map,
-                Filter,
-                Reduce,
+                Length, Keys, Values, Remove, Get, Merge, Map, Filter, Reduce,
             ]
         ),
         "Env" => family!(member, Env, EnvIntrinsic, [Get, Exists]),
@@ -331,7 +322,6 @@ fn resolve_str(member: &str) -> Option<Intrinsic> {
             ToUpper,
             ToLower,
             Trim,
-            Contains,
             StartsWith,
             EndsWith,
             Substring,
@@ -344,8 +334,6 @@ fn resolve_str(member: &str) -> Option<Intrinsic> {
             PadLeft,
             PadRight,
             PadCenter,
-            FromChar,
-            CharAt,
             SetCharAt,
             Ord,
             Chr,
@@ -381,8 +369,8 @@ fn resolve_array(member: &str) -> Option<Intrinsic> {
         Array,
         ArrayIntrinsic,
         [
-            Length, Sort, Reverse, Contains, IndexOf, Slice, Map, Filter, Reduce, Concat, Fill,
-            Find, FindIndex, Any, All, FlatMap, ForEach,
+            Length, Sort, Reverse, IndexOf, Slice, Map, Filter, Reduce, Concat, Fill, Find,
+            FindIndex, Any, All, FlatMap, ForEach,
         ]
     )
 }

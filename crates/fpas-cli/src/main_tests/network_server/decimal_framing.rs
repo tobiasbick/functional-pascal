@@ -32,8 +32,8 @@ begin
       when Ok(_): begin end;
       when Error(const Message): begin
         if I = {} then
-        begin if not Message.Contains('MaxBodyBytes') then panic(Message); end if; end;
-        else begin if not Message.Contains('Content-Length') then panic(Message); end if; end; end if;
+        begin if not ('MaxBodyBytes' in Message) then panic(Message); end if; end;
+        else begin if not ('Content-Length' in Message) then panic(Message); end if; end; end if;
         Text := 'rejected';
       end;
     end case;

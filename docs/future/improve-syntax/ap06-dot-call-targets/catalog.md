@@ -5,6 +5,11 @@ Package: [AP06: Fixed dot-call targets](README.md)
 This is the original AP06 inventory. [AP37](../ap37-uniform-mutation/README.md)
 adds 32 InPlace counterparts and changes Push/Pop to value-producing operations.
 The native registry and current type handbooks contain the complete current catalog.
+[AP42](../ap42-canonical-collection-operations/README.md) removes native CharAt,
+array/string Contains, dictionary ContainsKey and the FromChar value/InPlace pair;
+index searches return Option and sorting requires Comparable elements statically.
+The tables below preserve the original AP06 inventory, including superseded
+entries and integer/sentinel search results.
 
 Status: complete. The catalog defines 78 public native operations. Their
 signatures, naming, import, factory, collision, and mutation rules are enforced

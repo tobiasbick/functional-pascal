@@ -154,7 +154,7 @@ begin
         when Ok(_): panic('invalid server options were accepted');
         when Error(const Message):
         begin
-          if not Message.Contains('MaxConcurrentRequests') then
+          if not ('MaxConcurrentRequests' in Message) then
           begin
             panic(Message);
           end; end if;

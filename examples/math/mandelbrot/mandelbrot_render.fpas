@@ -195,7 +195,7 @@ begin
   const Count: integer := Ramp.Length();
   const Index: integer := Math.Clamp(Math.Trunc(Math.Frac(EscapeValue * 0.08) *
                                                 Conv.IntToReal(Count)), 0, Count - 1);
-  return Ramp.CharAt(Index);
+  return Ramp[Index];
 end function;
 
 function RenderCell(Sample: PixelSample; Palette: Color.PaletteKind): Tui.TuiCell;

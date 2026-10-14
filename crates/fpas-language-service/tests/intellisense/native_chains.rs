@@ -6,6 +6,62 @@ use fpas_sema::Ty;
 use std::collections::BTreeSet;
 
 #[test]
+fn index_search_chains_offer_option_operations_and_option_signature_results() {
+    for expression in [
+        "[1].IndexOf(1)",
+        "[1].FindIndex(function(X: integer): boolean begin return true; end function)",
+        "'abc'.IndexOf('b')",
+        "'abc'.LastIndexOf('b')",
+    ] {
+        let temp = TempDirectory::new("native-search-option-chain");
+        let source =
+            format!("program Demo; begin const Index := {expression}; discard Index.\nend.");
+        let path = temp.write("main.fpas", &source);
+        let mut service = LanguageService::new(WorkspaceContext::loose(temp.path()));
+        let cursor = source.find("Index.\n").expect("chain") + "Index.".len();
+        let candidates = service
+            .completions(&path, cursor)
+            .expect("completion")
+            .value;
+        let unwrap = candidates
+            .iter()
+            .find(|candidate| candidate.qualified_name == "Option.Unwrap")
+            .expect("Option operations on index-search result");
+        assert!(
+            unwrap.detail.ends_with(": integer"),
+            "{expression}: {unwrap:#?}"
+        );
+        assert!(
+            candidates
+                .iter()
+                .any(|candidate| candidate.qualified_name == "Option.IsNone"),
+            "{expression}: {candidates:#?}"
+        );
+    }
+    for (receiver, method) in [
+        ("[1]", "IndexOf"),
+        ("[1]", "FindIndex"),
+        ("'abc'", "IndexOf"),
+        ("'abc'", "LastIndexOf"),
+    ] {
+        let temp = TempDirectory::new("native-search-option-signature");
+        let source = format!("program Demo; begin discard {receiver}.{method}(\nend.");
+        let path = temp.write("main.fpas", &source);
+        let mut service = LanguageService::new(WorkspaceContext::loose(temp.path()));
+        let cursor = source.find(&format!("{method}(")).expect("call") + method.len() + 1;
+        let help = service
+            .signature_help(&path, cursor)
+            .expect("signature query")
+            .value
+            .expect("native signature");
+        assert!(
+            help.signature.label.ends_with(": Option of integer"),
+            "{help:#?}"
+        );
+    }
+}
+
+#[test]
 fn pop_result_fields_retain_element_types_in_recovered_chains() {
     assert_string_chain(
         "",

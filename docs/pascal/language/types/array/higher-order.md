@@ -65,9 +65,11 @@ const First: Option of integer := Nums.Find(IsAboveThree);
 
 ---
 
-## `Items.FindIndex(F: function(X: T): boolean): integer`
+## `Items.FindIndex(F: function(X: T): boolean): Option of integer`
 
-Returns the **index** of the first element for which `F` returns `true`, or **`-1`** if none matches.
+Returns `Some(Index)` for the first zero-based index whose element makes F return
+`true`, or `None` if none matches. Visits elements in order and stops at the first
+match. Empty arrays return `None` without invoking F; callback failures propagate.
 
 ```pascal
 function IsAboveFifteen(X: integer): boolean;
@@ -75,8 +77,11 @@ begin
   return X > 15;
 end function;
 
-const Idx: integer := [10, 20, 30].FindIndex(IsAboveFifteen);
-Console.WriteLn(Idx);  // 1
+const Idx: Option of integer := [10, 20, 30].FindIndex(IsAboveFifteen);
+case Idx of
+  when Some(const Index): Console.WriteLn(Index);  // 1
+  when None: Console.WriteLn('absent');
+end case;
 ```
 
 ---

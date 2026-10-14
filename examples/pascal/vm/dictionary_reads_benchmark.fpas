@@ -31,7 +31,7 @@ begin
         end;
       end if;
 
-      if not Values.ContainsKey(0) then
+      if not (0 in Values) then
         begin
           panic('first key');
         end;

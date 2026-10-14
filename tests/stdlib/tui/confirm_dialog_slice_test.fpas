@@ -181,8 +181,8 @@ begin
   Test.AssertTrue(Model.ConfirmOpen);
   Test.AssertEquals(YesControlValue, Model.Focused);
   const DialogSurface: Tui.TuiSurfaceSnapshot := App.SurfaceSnapshot();
-  Test.AssertTrue(DialogSurface.LineAt(4).Contains(' Confirm '));
-  Test.AssertTrue(DialogSurface.LineAt(5).Contains('Save changes?'));
+  Test.AssertTrue((' Confirm ' in DialogSurface.LineAt(4)));
+  Test.AssertTrue(('Save changes?' in DialogSurface.LineAt(5)));
   App.InjectKeyForTest(MakeKey(Tui.TuiKeyKind.Enter, ''));
   Model := App.RunIterations(Model, UpdateEditor, ViewEditor, 1, 0);
   Test.AssertFalse(Model.ConfirmOpen);
@@ -193,5 +193,5 @@ begin
   Test.AssertTrue(Model.Quit);
   const AfterQuit: Tui.TuiSurfaceSnapshot := App.SurfaceSnapshot();
   Test.AssertEquals(BeforeQuit.LineAt(2), AfterQuit.LineAt(2));
-  Test.AssertFalse(AfterQuit.LineAt(2).Contains('SHOULD NOT PAINT'));
+  Test.AssertFalse(('SHOULD NOT PAINT' in AfterQuit.LineAt(2)));
 end.

@@ -41,6 +41,6 @@ begin
   Test.AssertEquals('◄', LeftSurface.CellAt(0, 0).Glyph);
   Test.AssertTrue(LeftSurface.CellAt(0, 0).Role = Tui.TuiStyleRole.InputScroll);
   Test.AssertTrue(LeftSurface.CellAt(8, 0).Role = Tui.TuiStyleRole.InputCursor);
-  Test.AssertTrue(LeftSurface.LineAt(0).Contains('efghijk'));
+  Test.AssertTrue(('efghijk' in LeftSurface.LineAt(0)));
   App.Close();
 end.

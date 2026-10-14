@@ -357,7 +357,7 @@ fn unwrap_error_is_runtime_error() {
 fn char_at_out_of_bounds() {
     run_file_expect_failure(
         "tests/stdlib/str/char_at_out_of_bounds_runtime_error.fpas",
-        None,
+        Some("error[FP5003]: String index 5 out of bounds"),
     );
 }
 
@@ -365,7 +365,7 @@ fn char_at_out_of_bounds() {
 fn char_at_negative_index() {
     run_file_expect_failure(
         "tests/stdlib/str/char_at_negative_index_runtime_error.fpas",
-        None,
+        Some("error[FP5012]: Negative string index -1"),
     );
 }
 

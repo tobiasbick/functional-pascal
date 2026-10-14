@@ -74,7 +74,7 @@ begin
     end;
   end if;
 
-  if Authority.Contains('@') then
+  if ('@' in Authority) then
     begin
       return Error('URI user information is not supported');
     end;
@@ -85,13 +85,13 @@ begin
   var PortText: string := '';
   if Authority.StartsWith('[') then
     begin
-      const Closing: integer := Authority.IndexOf(']');
-      if Closing < 0 then
+      const ClosingBracket := Authority.IndexOf(']');
+      if ClosingBracket.IsNone() then
         begin
           return Error('IPv6 URI host is missing closing bracket');
         end;
       end if;
-
+      const Closing := ClosingBracket.Unwrap();
       Host := Authority.Slice(1, Closing - 1);
       const Remainder: string := Authority.Slice(Closing + 1, Authority.Length() - Closing - 1);
       if Remainder <> '' then
@@ -109,14 +109,14 @@ begin
     end;
   else
     begin
-      const Colon: integer := Authority.LastIndexOf(':');
-      if Colon >= 0 then
-        begin
+      case Authority.LastIndexOf(':') of
+        when Some(const Colon):
           Host := Authority.Slice(0, Colon);
           HasPort := true;
           PortText := Authority.Slice(Colon + 1, Authority.Length() - Colon - 1);
-        end;
-      end if;
+        when None:
+          null;
+      end case;
     end;
   end if;
 
@@ -141,31 +141,42 @@ end function;
 // - `Text`: Absolute URI text to parse.
 public function Parse(Text: string): result of (Uri, string);
 begin
-  const SchemeEnd: integer := Text.IndexOf('://');
-  if SchemeEnd <= 0 then
+  const SchemeDelimiter := Text.IndexOf('://');
+  if SchemeDelimiter.IsNone() then
     begin
       return Error('URI must be absolute and include ://');
     end;
   end if;
+  const SchemeEnd := SchemeDelimiter.Unwrap();
+  if SchemeEnd = 0 then
+    return Error('URI must be absolute and include ://');
+  end if;
   const Scheme: string := Text.Slice(0, SchemeEnd).ToLower();
   var Rest: string := Text.Slice(SchemeEnd + 3, Text.Length() - SchemeEnd - 3);
-  const FragmentStart: integer := Rest.IndexOf('#');
-  if FragmentStart >= 0 then
-    begin
+  case Rest.IndexOf('#') of
+    when Some(const FragmentStart):
       Rest := Rest.Slice(0, FragmentStart);
-    end;
-  end if;
-  var PathStart: integer := Rest.IndexOf('/');
-  const QueryStart: integer := Rest.IndexOf('?');
-  if (PathStart < 0) or ((QueryStart >= 0) and (QueryStart < PathStart)) then
-    begin
-      PathStart := QueryStart;
-    end;
-  end if;
+    when None:
+      null;
+  end case;
+  var PathPosition := Rest.IndexOf('/');
+  case Rest.IndexOf('?') of
+    when Some(const QueryStart):
+      case PathPosition of
+        when Some(const PathStart):
+          if QueryStart < PathStart then
+            PathPosition := Some(QueryStart);
+          end if;
+        when None:
+          PathPosition := Some(QueryStart);
+      end case;
+    when None:
+      null;
+  end case;
   var Authority: string := Rest;
   var Path: string := '/';
-  if PathStart >= 0 then
-    begin
+  case PathPosition of
+    when Some(const PathStart):
       Authority := Rest.Slice(0, PathStart);
       Path := Rest.Slice(PathStart, Rest.Length() - PathStart);
       if Path.StartsWith('?') then
@@ -173,8 +184,9 @@ begin
           Path := '/' + Path;
         end;
       end if;
-    end;
-  end if;
+    when None:
+      null;
+  end case;
 
   return BuildUri(Scheme, Authority, Path);
 end function;

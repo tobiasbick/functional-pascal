@@ -17,7 +17,13 @@ end function;
 begin
   const Nums: array of integer := [3, 1, 4, 1, 5];
   Console.WriteLn('length: ', Conv.IntToStr(Nums.Length()));
-  Console.WriteLn('sorted: ', Conv.IntToStr(Nums.Sort().IndexOf(4)));
+  case Nums.Sort().IndexOf(4) of
+    when Some(const Index):
+      Console.WriteLn('sorted index: ', Conv.IntToStr(Index));
+    when None:
+      Console.WriteLn('value absent');
+  end case;
+
   Console.WriteLn('any even: ', Nums.Any(IsEven));
   Console.WriteLn('all positive: ', Nums.All(IsPositive));
 end.

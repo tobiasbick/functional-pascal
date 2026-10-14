@@ -49,10 +49,10 @@ begin
   var App: Tui.TuiApplication := Tui.TuiApplication.OpenForTest(Tui.TuiSize.Create(12, 5));
   var Model: ScrollModel := ScrollModel(Offset := Tui.TuiPoint.Create(0, 4));
   Model := App.RunIterations(Model, UpdateScroll, ViewScroll, 0, 0);
-  Test.AssertTrue(App.SurfaceSnapshot().LineAt(0).Contains('One'));
+  Test.AssertTrue(('One' in App.SurfaceSnapshot().LineAt(0)));
   App.InjectResizeForTest(Tui.TuiSize.Create(12, 2));
   Model := App.RunIterations(Model, UpdateScroll, ViewScroll, 1, 0);
   Test.AssertEquals(12, App.SurfaceSnapshot().Width);
-  Test.AssertTrue(App.SurfaceSnapshot().LineAt(0).Contains('Four'));
+  Test.AssertTrue(('Four' in App.SurfaceSnapshot().LineAt(0)));
   App.Close();
 end.

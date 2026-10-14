@@ -9,6 +9,6 @@ end function;
 
 begin
   const A: array of integer := [10, 20, 30];
-  const Idx: integer := A.FindIndex(IsGreaterThanFifteen);
+  const Idx: option of integer := A.FindIndex(IsGreaterThanFifteen);
   Console.WriteLn(Idx);
 end.

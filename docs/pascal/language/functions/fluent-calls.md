@@ -63,6 +63,11 @@ An unconstrained type parameter, scalar, channel, or task handle has no native
 instance catalog. A free function returning a record or built-in type can
 start a chain: `Build().Next()` or `MakeText().Trim()`.
 
+String scalar reads use `Text[Index]`; collection membership uses `in`.
+Array `IndexOf`/`FindIndex` and string `IndexOf`/`LastIndexOf` return
+`Option of integer`. Sort/SortInPlace require Comparable elements statically,
+including for empty arrays; generic sorting needs `T: Comparable` or `T: Numeric`.
+
 ## Arguments and factories
 
 Fixed-signature operations accept positional or fully named explicit arguments.

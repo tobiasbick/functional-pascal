@@ -100,7 +100,32 @@ impl Checker {
         allow_final_procedure: bool,
         expected: Option<&Ty>,
     ) -> Ty {
-        let mut ty = self.check_expr(base);
+        // Later arguments and the final result may complete an empty receiver.
+        // Keep capability checks pending until that original AST has been rechecked.
+        self.deferred_constructor_inference += 1;
+        let before = self.errors.len();
+        let base_ty = self.check_expr(base);
+        let mut types =
+            self.check_postfix_operations(base_ty, operations, allow_final_procedure, expected);
+        if self.errors.len() == before
+            && let Some(context) = self.infer_postfix_base_context(operations, &types, expected)
+        {
+            let base_ty = self.check_expr_with_expected(base, Some(&context));
+            types =
+                self.check_postfix_operations(base_ty, operations, allow_final_procedure, expected);
+        }
+        self.deferred_constructor_inference -= 1;
+        types.pop().unwrap_or(Ty::Error)
+    }
+
+    fn check_postfix_operations(
+        &mut self,
+        mut ty: Ty,
+        operations: &[PostfixOperation],
+        allow_final_procedure: bool,
+        expected: Option<&Ty>,
+    ) -> Vec<Ty> {
+        let mut types = vec![ty.clone()];
         for (index, operation) in operations.iter().enumerate() {
             let procedure_result_is_discarded =
                 allow_final_procedure && index + 1 == operations.len();
@@ -127,8 +152,9 @@ impl Checker {
                 self.path_types
                     .insert((span.source_id, span.offset), ty.clone());
             }
+            types.push(ty.clone());
         }
-        ty
+        types
     }
 
     fn check_postfix_operation(

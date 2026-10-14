@@ -21,14 +21,6 @@ pub(super) const OPERATIONS: &[NativeOperation] = &[
     },
     NativeOperation {
         receiver: NativeReceiver::String,
-        name: "Contains",
-        implementation: "Std.Str.Contains",
-        signature: || function(vec![p("Sub", Ty::String)], Ty::Boolean, false),
-        lowering: NativeLowering::Intrinsic,
-        documentation: "Substring membership",
-    },
-    NativeOperation {
-        receiver: NativeReceiver::String,
         name: "StartsWith",
         implementation: "Std.Str.StartsWith",
         signature: || function(vec![p("Pre", Ty::String)], Ty::Boolean, false),
@@ -47,9 +39,15 @@ pub(super) const OPERATIONS: &[NativeOperation] = &[
         receiver: NativeReceiver::String,
         name: "IndexOf",
         implementation: "Std.Str.IndexOf",
-        signature: || function(vec![p("Sub", Ty::String)], Ty::Integer, false),
+        signature: || {
+            function(
+                vec![p("Sub", Ty::String)],
+                Ty::Option(Box::new(Ty::Integer)),
+                false,
+            )
+        },
         lowering: NativeLowering::Intrinsic,
-        documentation: "First scalar index, or `-1`",
+        documentation: "Some(first scalar index), or None; an empty substring matches at zero",
     },
     NativeOperation {
         receiver: NativeReceiver::String,
@@ -182,9 +180,15 @@ pub(super) const OPERATIONS: &[NativeOperation] = &[
         receiver: NativeReceiver::String,
         name: "LastIndexOf",
         implementation: "Std.Str.LastIndexOf",
-        signature: || function(vec![p("Sub", Ty::String)], Ty::Integer, false),
+        signature: || {
+            function(
+                vec![p("Sub", Ty::String)],
+                Ty::Option(Box::new(Ty::Integer)),
+                false,
+            )
+        },
         lowering: NativeLowering::Intrinsic,
-        documentation: "Last matching scalar index, or `-1`",
+        documentation: "Some(last scalar index), or None; an empty substring matches at Length()",
     },
     NativeOperation {
         receiver: NativeReceiver::String,
@@ -243,22 +247,6 @@ pub(super) const OPERATIONS: &[NativeOperation] = &[
         },
         lowering: NativeLowering::Intrinsic,
         documentation: "Center within the padded width",
-    },
-    NativeOperation {
-        receiver: NativeReceiver::String,
-        name: "FromChar",
-        implementation: "Std.Str.FromChar",
-        signature: || function(vec![p("N", Ty::Integer)], Ty::String, false),
-        lowering: NativeLowering::Intrinsic,
-        documentation: "Repeat a receiver that must contain exactly one scalar",
-    },
-    NativeOperation {
-        receiver: NativeReceiver::String,
-        name: "CharAt",
-        implementation: "Std.Str.CharAt",
-        signature: || function(vec![p("Index", Ty::Integer)], Ty::String, false),
-        lowering: NativeLowering::Intrinsic,
-        documentation: "Read the scalar at the checked index",
     },
     NativeOperation {
         receiver: NativeReceiver::String,

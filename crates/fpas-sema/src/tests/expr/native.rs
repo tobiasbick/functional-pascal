@@ -1,5 +1,6 @@
 //! Import-free checking of every catalog signature and native argument diagnostics.
 use super::{check_errors, check_ok};
+mod collections;
 mod in_place_calls;
 
 #[test]
@@ -14,10 +15,6 @@ fn every_catalog_entry_accepts_positional_and_fully_named_explicit_arguments() {
             "program T; begin var Receiver: string := 'a'; const Output: boolean := Receiver.IsEmpty(); end.",
         ),
         (
-            "program T; begin var Receiver: string := 'a'; const Output: boolean := Receiver.Contains('a'); end.",
-            "program T; begin var Receiver: string := 'a'; const Output: boolean := Receiver.Contains(Sub := 'a'); end.",
-        ),
-        (
             "program T; begin var Receiver: string := 'a'; const Output: boolean := Receiver.StartsWith('a'); end.",
             "program T; begin var Receiver: string := 'a'; const Output: boolean := Receiver.StartsWith(Pre := 'a'); end.",
         ),
@@ -26,8 +23,8 @@ fn every_catalog_entry_accepts_positional_and_fully_named_explicit_arguments() {
             "program T; begin var Receiver: string := 'a'; const Output: boolean := Receiver.EndsWith(Suf := 'a'); end.",
         ),
         (
-            "program T; begin var Receiver: string := 'a'; const Output: integer := Receiver.IndexOf('a'); end.",
-            "program T; begin var Receiver: string := 'a'; const Output: integer := Receiver.IndexOf(Sub := 'a'); end.",
+            "program T; begin var Receiver: string := 'a'; const Output: Option of integer := Receiver.IndexOf('a'); end.",
+            "program T; begin var Receiver: string := 'a'; const Output: Option of integer := Receiver.IndexOf(Sub := 'a'); end.",
         ),
         (
             "program T; begin var Receiver: string := 'a'; const Output: string := Receiver.Trim(); end.",
@@ -66,8 +63,8 @@ fn every_catalog_entry_accepts_positional_and_fully_named_explicit_arguments() {
             "program T; begin var Receiver: string := 'a'; const Output: string := Receiver.Slice(Len := 1, Start := 1); end.",
         ),
         (
-            "program T; begin var Receiver: string := 'a'; const Output: integer := Receiver.LastIndexOf('a'); end.",
-            "program T; begin var Receiver: string := 'a'; const Output: integer := Receiver.LastIndexOf(Sub := 'a'); end.",
+            "program T; begin var Receiver: string := 'a'; const Output: Option of integer := Receiver.LastIndexOf('a'); end.",
+            "program T; begin var Receiver: string := 'a'; const Output: Option of integer := Receiver.LastIndexOf(Sub := 'a'); end.",
         ),
         (
             "program T; begin var Receiver: string := 'a'; const Output: boolean := Receiver.IsNumeric(); end.",
@@ -88,14 +85,6 @@ fn every_catalog_entry_accepts_positional_and_fully_named_explicit_arguments() {
         (
             "program T; begin var Receiver: string := 'a'; const Output: string := Receiver.PadCenter(1, 'a'); end.",
             "program T; begin var Receiver: string := 'a'; const Output: string := Receiver.PadCenter(PadChar := 'a', Width := 1); end.",
-        ),
-        (
-            "program T; begin var Receiver: string := 'a'; const Output: string := Receiver.FromChar(1); end.",
-            "program T; begin var Receiver: string := 'a'; const Output: string := Receiver.FromChar(N := 1); end.",
-        ),
-        (
-            "program T; begin var Receiver: string := 'a'; const Output: string := Receiver.CharAt(1); end.",
-            "program T; begin var Receiver: string := 'a'; const Output: string := Receiver.CharAt(Index := 1); end.",
         ),
         (
             "program T; begin var Receiver: string := 'a'; const Output: string := Receiver.SetCharAt(1, 'a'); end.",
@@ -138,12 +127,8 @@ fn every_catalog_entry_accepts_positional_and_fully_named_explicit_arguments() {
             "program T; begin var Receiver: array of integer := [1]; const Output: boolean := Receiver.IsEmpty(); end.",
         ),
         (
-            "program T; begin var Receiver: array of integer := [1]; const Output: boolean := Receiver.Contains(1); end.",
-            "program T; begin var Receiver: array of integer := [1]; const Output: boolean := Receiver.Contains(Value := 1); end.",
-        ),
-        (
-            "program T; begin var Receiver: array of integer := [1]; const Output: integer := Receiver.IndexOf(1); end.",
-            "program T; begin var Receiver: array of integer := [1]; const Output: integer := Receiver.IndexOf(Value := 1); end.",
+            "program T; begin var Receiver: array of integer := [1]; const Output: Option of integer := Receiver.IndexOf(1); end.",
+            "program T; begin var Receiver: array of integer := [1]; const Output: Option of integer := Receiver.IndexOf(Value := 1); end.",
         ),
         (
             "program T; begin var Receiver: array of integer := [1]; const Output: array of integer := Receiver.Map(function(X: integer): integer begin return 1; end function); end.",
@@ -162,8 +147,8 @@ fn every_catalog_entry_accepts_positional_and_fully_named_explicit_arguments() {
             "program T; begin var Receiver: array of integer := [1]; const Output: Option of integer := Receiver.Find(F := function(X: integer): boolean begin return true; end function); end.",
         ),
         (
-            "program T; begin var Receiver: array of integer := [1]; const Output: integer := Receiver.FindIndex(function(X: integer): boolean begin return true; end function); end.",
-            "program T; begin var Receiver: array of integer := [1]; const Output: integer := Receiver.FindIndex(F := function(X: integer): boolean begin return true; end function); end.",
+            "program T; begin var Receiver: array of integer := [1]; const Output: Option of integer := Receiver.FindIndex(function(X: integer): boolean begin return true; end function); end.",
+            "program T; begin var Receiver: array of integer := [1]; const Output: Option of integer := Receiver.FindIndex(F := function(X: integer): boolean begin return true; end function); end.",
         ),
         (
             "program T; begin var Receiver: array of integer := [1]; const Output: boolean := Receiver.Any(function(X: integer): boolean begin return true; end function); end.",
@@ -224,10 +209,6 @@ fn every_catalog_entry_accepts_positional_and_fully_named_explicit_arguments() {
         (
             "program T; begin var Receiver: dict of string to integer := ['a': 1]; const Output: boolean := Receiver.IsEmpty(); end.",
             "program T; begin var Receiver: dict of string to integer := ['a': 1]; const Output: boolean := Receiver.IsEmpty(); end.",
-        ),
-        (
-            "program T; begin var Receiver: dict of string to integer := ['a': 1]; const Output: boolean := Receiver.ContainsKey('a'); end.",
-            "program T; begin var Receiver: dict of string to integer := ['a': 1]; const Output: boolean := Receiver.ContainsKey(Key := 'a'); end.",
         ),
         (
             "program T; begin var Receiver: dict of string to integer := ['a': 1]; const Output: Option of integer := Receiver.Get('a'); end.",

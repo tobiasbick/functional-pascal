@@ -17,12 +17,6 @@ pub(crate) fn run(
             let pairs = expect_dict(pop_value(call, location)?, location)?;
             call.push(Value::Integer(pairs.len() as i64));
         }
-        Intrinsic::Dict(DictIntrinsic::ContainsKey) => {
-            let key = pop_value(call, location)?;
-            let pairs = expect_dict(pop_value(call, location)?, location)?;
-            let found = pairs.iter().any(|(k, _)| k == key);
-            call.push(Value::Boolean(found));
-        }
         Intrinsic::Dict(DictIntrinsic::Keys) => {
             let pairs = expect_dict(pop_value(call, location)?, location)?;
             let keys: Vec<Value> = pairs.iter().map(|(k, _)| k.clone()).collect();
@@ -91,16 +85,6 @@ mod tests {
     }
 
     #[test]
-    fn contains_key_reports_presence() {
-        let mut stack = vec![
-            Value::dict(vec![(Value::Str("a".into()), Value::Integer(1))]),
-            Value::Str("missing".into()),
-        ];
-        run_dict(DictIntrinsic::ContainsKey, &mut stack).unwrap();
-        assert_eq!(stack, vec![Value::Boolean(false)]);
-    }
-
-    #[test]
     fn merge_overwrites_and_appends_keys() {
         let mut stack = vec![
             Value::dict(vec![
@@ -137,11 +121,6 @@ mod tests {
         let dictionary = Value::dict(pairs.clone());
         for (intrinsic, key, expected) in [
             (DictIntrinsic::Length, None, Value::Integer(2)),
-            (
-                DictIntrinsic::ContainsKey,
-                Some(Value::Str("a".into())),
-                Value::Boolean(true),
-            ),
             (
                 DictIntrinsic::Get,
                 Some(Value::Str("a".into())),

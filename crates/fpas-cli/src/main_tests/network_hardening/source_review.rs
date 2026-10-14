@@ -123,7 +123,7 @@ begin
     case Http.Send(Http.Request.Get('http://127.0.0.1:{port}/')) of
       when Ok(_): panic('invalid Content-Length accepted');
       when Error(const Message): begin
-        if not Message.Contains('Content-Length') then panic(Message); end if;
+        if not ('Content-Length' in Message) then panic(Message); end if;
       end;
     end case;
   end; end for;

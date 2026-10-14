@@ -54,7 +54,7 @@ pub(crate) fn check_find(c: &mut Checker, args: &[&Expr], span: Span) -> Ty {
     Ty::Option(Box::new(elem_ty))
 }
 
-/// `Arr.FindIndex(Pred)` → `integer`.
+/// `Arr.FindIndex(Pred)` → `Option of integer`.
 pub(crate) fn check_find_index(c: &mut Checker, args: &[&Expr], span: Span) -> Ty {
     if !check_argument_count(
         c,
@@ -94,7 +94,7 @@ pub(crate) fn check_find_index(c: &mut Checker, args: &[&Expr], span: Span) -> T
     {
         return Ty::Error;
     }
-    Ty::Integer
+    Ty::Option(Box::new(Ty::Integer))
 }
 
 /// `Arr.Any(Pred)` → `boolean`.

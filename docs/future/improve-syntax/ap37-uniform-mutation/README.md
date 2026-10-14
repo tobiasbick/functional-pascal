@@ -35,8 +35,11 @@ AP06/AP17/AP36 remain completed. AP37 explicitly replaces AP06/AP17's unmarked
 native mutating Push/Pop exception. Existing mutating calls were migrated to
 PushInPlace/PopInPlace; their behavior was preserved. Push and Pop now have the
 agreed value-returning contracts.
-AP40 retains shared-state/task ownership. AP42 retains alias, absence and static
-sortability work outside this contract; preserve the agreed Pop empty-array error.
+AP40 retains shared-state/task ownership.
+[AP42](../ap42-canonical-collection-operations/README.md) removes the delivered
+FromChar/FromCharInPlace pair in favor of RepeatStr/RepeatStrInPlace, changes
+index-search absence to Option, and enforces static stable sorting. AP37's other
+value/InPlace contracts, Pop empty-array error, and completed status remain intact.
 
 - [x] [AP37.1: Mutation model](01-mutation-model.md)
 - [x] [AP37.2: Receiver mutation](02-receiver-mutation.md)

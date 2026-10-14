@@ -52,7 +52,7 @@ begin
     end;
     when Error(const Message):
     begin
-      if not Message.Contains( 'TLS handshake failed') then
+      if not ('TLS handshake failed' in Message) then
       begin
         panic(Message);
       end; end if;

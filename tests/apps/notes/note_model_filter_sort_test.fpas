@@ -29,7 +29,7 @@ begin
   const Items: array of string := Model.NotesListItems([Newer], '', 14);
   Test.AssertEquals(1, Items.Length());
   Test.AssertEquals(14, Console.DisplayWidth(Items[0]));
-  Test.AssertTrue(Items[0].Contains('👩‍💻'));
+  Test.AssertTrue(('👩‍💻' in Items[0]));
   Test.AssertTrue(Items[0].EndsWith('…'));
   Test.AssertEquals('', Model.NotesListItems([Newer], '', 0)[0]);
 end.

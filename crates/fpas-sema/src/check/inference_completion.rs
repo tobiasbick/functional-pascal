@@ -14,7 +14,7 @@ pub(crate) struct PendingTypeArguments {
 
 impl Checker {
     /// Clears a resolved site or retains its diagnostic until contextual checking finishes.
-    pub(in crate::check) fn complete_or_defer_type_arguments(
+    pub(crate) fn complete_or_defer_type_arguments(
         &mut self,
         name: &str,
         missing: Vec<String>,

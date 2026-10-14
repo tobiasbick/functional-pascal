@@ -38,6 +38,6 @@ begin
   App.InjectResizeForTest(Tui.TuiSize.Create(16, 5));
   Model := App.RunIterations(Model, UpdateList, ViewList, 1, 0);
   Test.AssertEquals(16, App.SurfaceSnapshot().Width);
-  Test.AssertTrue(App.SurfaceSnapshot().LineAt(1).Contains('Alpha'));
+  Test.AssertTrue(('Alpha' in App.SurfaceSnapshot().LineAt(1)));
   App.Close();
 end.

@@ -77,7 +77,7 @@ begin
                   var Loaded: Model.Note := NoteValue;
                   Loaded.Path := Path;
                   Notes.PushInPlace(Loaded);
-                  if IdCounts.ContainsKey(Loaded.Id) then
+                  if (Loaded.Id in IdCounts) then
                     begin
                       IdCounts[Loaded.Id] := IdCounts[Loaded.Id] + 1;
                     end;

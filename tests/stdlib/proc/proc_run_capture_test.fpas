@@ -10,7 +10,7 @@ begin
           when Ok(const Output):
             begin
               Test.AssertEquals(0, Output.ExitCode);
-              Test.AssertTrue(Output.Stdout.Contains('fpas'));
+              Test.AssertTrue(('fpas' in Output.Stdout));
               Test.AssertEquals('', Output.Stderr);
             end;
           when Error(const Message):

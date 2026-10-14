@@ -66,7 +66,7 @@ begin
             end;
           when Error(const Message):
             begin
-              Test.AssertTrue(Message.Contains('already finished'));
+              Test.AssertTrue(('already finished' in Message));
             end;
         end case;
       end;
@@ -86,7 +86,7 @@ begin
             end;
           when Error(const Message):
             begin
-              Test.AssertTrue(Message.Contains('MaxEventBytes'));
+              Test.AssertTrue(('MaxEventBytes' in Message));
             end;
         end case;
       end;

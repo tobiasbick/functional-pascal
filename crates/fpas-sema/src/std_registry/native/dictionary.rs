@@ -21,20 +21,6 @@ pub(super) const OPERATIONS: &[NativeOperation] = &[
     },
     NativeOperation {
         receiver: NativeReceiver::Dictionary,
-        name: "ContainsKey",
-        implementation: "Std.Dictionaries.ContainsKey",
-        signature: || {
-            function(
-                vec![p("Key", Ty::GenericParam("K".into(), None))],
-                Ty::Boolean,
-                false,
-            )
-        },
-        lowering: NativeLowering::Intrinsic,
-        documentation: "Key membership",
-    },
-    NativeOperation {
-        receiver: NativeReceiver::Dictionary,
         name: "Get",
         implementation: "Std.Dictionaries.Get",
         signature: || {

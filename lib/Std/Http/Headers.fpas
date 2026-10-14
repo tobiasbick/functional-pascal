@@ -39,6 +39,6 @@ end function;
 // - `Text`: Text to inspect before writing it into an HTTP head.
 public function ContainsUnsafeText(Text: string): boolean;
 begin
-  return Text.Contains(#13) or Text.Contains(#10);
+  return (#13 in Text) or (#10 in Text);
 end function;
 end unit;

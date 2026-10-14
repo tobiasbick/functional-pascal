@@ -8,6 +8,11 @@ Status: complete (Q05). Effort: medium. Package completion is tracked in the
 This package records its original delivery. [AP37](../ap37-uniform-mutation/README.md)
 extends the catalog with InPlace counterparts and replaces native mutating
 Push/Pop with PushInPlace/PopInPlace. Current signatures are in the type handbooks.
+[AP42](../ap42-canonical-collection-operations/README.md) replaces the original
+CharAt, Contains, ContainsKey and FromChar entries with indexing, `in`, and
+RepeatStr; it replaces integer/sentinel index searches with Option results and
+enforces static sortability. The inventory and decisions below retain AP06's
+original delivered scope; its completed status remains unchanged.
 
 - A dot call selects a declared record member or one operation from the
   [native catalog](catalog.md), by static receiver type and case-insensitive

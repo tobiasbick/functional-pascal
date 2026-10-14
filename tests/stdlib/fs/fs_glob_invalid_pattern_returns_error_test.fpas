@@ -10,7 +10,7 @@ begin
       end;
     when Error(const Message):
       begin
-        Test.AssertTrue(Message.Contains('Invalid glob pattern'));
+        Test.AssertTrue(('Invalid glob pattern' in Message));
       end;
   end case;
 end.

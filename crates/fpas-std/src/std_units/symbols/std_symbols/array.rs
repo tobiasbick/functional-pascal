@@ -3,7 +3,6 @@
 std_symbol!(STD_ARRAY_LENGTH = std_array!("Length"));
 std_symbol!(STD_ARRAY_SORT = std_array!("Sort"));
 std_symbol!(STD_ARRAY_REVERSE = std_array!("Reverse"));
-std_symbol!(STD_ARRAY_CONTAINS = std_array!("Contains"));
 std_symbol!(STD_ARRAY_INDEX_OF = std_array!("IndexOf"));
 std_symbol!(STD_ARRAY_SLICE = std_array!("Slice"));
 std_symbol!(STD_ARRAY_PUSH = std_array!("Push"));
@@ -24,7 +23,6 @@ pub(in crate::std_units) const STD_ARRAY_SYMBOLS: &[&str] = &[
     STD_ARRAY_LENGTH,
     STD_ARRAY_SORT,
     STD_ARRAY_REVERSE,
-    STD_ARRAY_CONTAINS,
     STD_ARRAY_INDEX_OF,
     STD_ARRAY_SLICE,
     STD_ARRAY_PUSH,

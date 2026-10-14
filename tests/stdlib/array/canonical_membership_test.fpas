@@ -1,0 +1,43 @@
+program CanonicalMembership;
+
+uses Std.Test as Test;
+
+var Trace: string := '';
+
+function MakeArray(): array of integer;
+begin
+  Trace := Trace + 'A';
+  return [1, 2];
+end function;
+
+function MakeValue(): integer;
+begin
+  Trace := Trace + 'V';
+  return 2;
+end function;
+
+function ContainsValue(Items: array of integer; Value: integer): boolean;
+requires Value in Items;
+ensures (Found): Found and (Value in Items);
+begin
+  return Value in Items;
+end function;
+
+begin
+  Test.AssertTrue(MakeValue() in MakeArray());
+  Test.AssertEquals('VA', Trace);
+  Trace := '';
+  for Index: integer := 0 to 1 do
+    const Items := MakeArray();
+    const Value := MakeValue();
+    Test.AssertTrue(ContainsValue(Items, Value));
+  end for;
+
+  Test.AssertEquals('AVAV', Trace);
+  Test.AssertFalse(false and (MakeValue() in MakeArray()));
+  Test.AssertTrue(true or (MakeValue() in MakeArray()));
+  Test.AssertEquals('AVAV', Trace);
+  Test.AssertTrue('' in '');
+  Test.AssertTrue('é😀' in 'aé😀b');
+  Test.AssertFalse('x' in 'aé😀b');
+end.

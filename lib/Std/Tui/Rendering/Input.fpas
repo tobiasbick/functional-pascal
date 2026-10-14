@@ -92,7 +92,7 @@ begin
       var CursorGlyph: string := ' ';
       if Input.Caret < Input.Text.Length() then
         begin
-          CursorGlyph := Input.Text.CharAt(Input.Caret);
+          CursorGlyph := Input.Text[Input.Caret];
         end;
       end if;
 

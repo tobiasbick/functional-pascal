@@ -108,11 +108,7 @@ fn old_length_free_call_has_native_migration_hint() {
 fn removed_helpers_have_stable_native_hints() {
     for (name, hint, corrected) in [
         ("Length('hi')", "Value.Length", "'hi'.Length()"),
-        (
-            "Contains('hi', 'h')",
-            "Value.Contains",
-            "'hi'.Contains('h')",
-        ),
+        ("Contains('hi', 'h')", "Substring in Text", "'h' in 'hi'"),
     ] {
         let errors = check_errors(&format!("program T; begin discard {name}; end."));
         assert_eq!(errors.len(), 1, "{errors:#?}");

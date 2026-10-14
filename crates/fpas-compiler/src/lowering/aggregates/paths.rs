@@ -242,8 +242,7 @@ impl LoweringContext {
                     (value, ty) = self.lower_designator_part(value, ty, &part)?;
                 }
                 PostfixOperation::Index { index, span } => {
-                    let part = DesignatorPart::Index((**index).clone(), *span);
-                    (value, ty) = self.lower_designator_part(value, ty, &part)?;
+                    (value, ty) = self.lower_collection_index(value, ty, index, *span)?;
                 }
                 PostfixOperation::MethodCall { .. } => {
                     return Err(unsupported(span, "postfix method call"));
@@ -285,26 +284,37 @@ impl LoweringContext {
                 Ok((result, concrete_ty))
             }
             DesignatorPart::Index(index, span) => {
-                let result_ty = match self.type_kind(ty) {
-                    Some(IrType::Array(element)) => element,
-                    Some(IrType::Dictionary { value, .. }) => value,
-                    Some(IrType::String) => super::super::types::STRING,
-                    _ => return Err(unsupported(*span, "indexing non-collection")),
-                };
-                let value = self.save_value(value);
-                let index = self.lower_expression(index)?;
-                let value = self.restore_value(value, *span)?;
-                let result = self.emit_value(
-                    Operation::IndexGet {
-                        collection: value,
-                        index,
-                    },
-                    result_ty,
-                    *span,
-                )?;
-                Ok((result, result_ty))
+                self.lower_collection_index(value, ty, index, *span)
             }
         }
+    }
+
+    /// Borrows the original index node, whose identity owns checked type/call metadata.
+    fn lower_collection_index(
+        &mut self,
+        value: ValueId,
+        ty: TypeId,
+        index: &Expr,
+        span: fpas_lexer::Span,
+    ) -> Result<(ValueId, TypeId), CompileError> {
+        let result_ty = match self.type_kind(ty) {
+            Some(IrType::Array(element)) => element,
+            Some(IrType::Dictionary { value, .. }) => value,
+            Some(IrType::String) => super::super::types::STRING,
+            _ => return Err(unsupported(span, "indexing non-collection")),
+        };
+        let value = self.save_value(value);
+        let index = self.lower_expression(index)?;
+        let value = self.restore_value(value, span)?;
+        let result = self.emit_value(
+            Operation::IndexGet {
+                collection: value,
+                index,
+            },
+            result_ty,
+            span,
+        )?;
+        Ok((result, result_ty))
     }
 }
 

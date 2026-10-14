@@ -115,7 +115,7 @@ begin
   for Index: integer := 0 to Parts.Length() - 1 do
     begin
       const Tag: string := Parts[Index].Trim();
-      if (Tag <> '') and (not Tags.Contains(Tag)) then
+      if (Tag <> '') and (not (Tag in Tags)) then
         begin
           Tags.PushInPlace(Tag);
         end;
@@ -142,8 +142,8 @@ begin
     end;
   end if;
 
-  return (NoteValue.Title.ToLower().Contains(Query) or NoteValue.Body.ToLower().Contains(Query)) or
-         NoteTagsText(NoteValue).ToLower().Contains(Query);
+  return ((Query in NoteValue.Title.ToLower()) or (Query in NoteValue.Body.ToLower())) or
+         (Query in NoteTagsText(NoteValue).ToLower());
 end function;
 
 // Returns source-array indices for all visible filtered notes.

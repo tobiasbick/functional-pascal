@@ -112,6 +112,27 @@ impl Checker {
             right
         };
 
+        if matches!(
+            op,
+            BinaryOp::Eq
+                | BinaryOp::NotEq
+                | BinaryOp::Lt
+                | BinaryOp::Gt
+                | BinaryOp::LtEq
+                | BinaryOp::GtEq
+        ) && (matches!(left, Ty::Option(inner) if **inner == Ty::Integer)
+            && *right == Ty::Integer
+            || matches!(right, Ty::Option(inner) if **inner == Ty::Integer) && *left == Ty::Integer)
+        {
+            self.error_with_code(
+                SEMA_TYPE_MISMATCH,
+                "Cannot compare Option of integer with integer",
+                "IndexOf, LastIndexOf, and FindIndex return Some(Index) or None. Match those cases, or test IsNone() and then Unwrap(); do not compare the result with an integer sentinel such as -1 or 0.",
+                span,
+            );
+            return Ty::Error;
+        }
+
         match op {
             BinaryOp::Add | BinaryOp::Sub | BinaryOp::Mul | BinaryOp::RealDiv => {
                 if left.is_numeric() && right.is_numeric() {

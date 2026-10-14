@@ -12,10 +12,10 @@ fn clauses_accept_immutable_values_parameters_construction_and_native_queries() 
         const Limit: integer := Read();
         procedure Check(var X: integer; Text: string; Values: array of integer; D: dict of string to integer; Callback: function(): integer);
         requires X >= Limit and X in Small and integer(Tag(X)) = X;
-        requires Text.Length() > 0 and not Text.IsEmpty() and Text.Contains('a');
-        requires Values.Length() > 0 and not Values.IsEmpty() and Values.Contains(X);
-        requires D.Length() > 0 and not D.IsEmpty() and D.ContainsKey('a') and D['a'] = X;
-        requires Box().Value = 1 and [X].Contains(X);
+        requires Text.Length() > 0 and not Text.IsEmpty() and ('a' in Text);
+        requires Values.Length() > 0 and not Values.IsEmpty() and (X in Values);
+        requires D.Length() > 0 and not D.IsEmpty() and ('a' in D) and D['a'] = X;
+        requires Box().Value = 1 and (X in [X]);
         requires [Callback].Length() = 1;
         requires Some(X) is Some(_);
         requires (Ok(Some(X)) is Ok(Some(_))) and (None is None);

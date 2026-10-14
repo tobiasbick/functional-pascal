@@ -10,30 +10,9 @@ use crate::intrinsic_args::{IntrinsicCall, expect_array, pop_array, pop_int, pop
 use crate::limits::checked_collection_len;
 use fpas_bytecode::{ArrayIntrinsic, Intrinsic, SourceLocation, Value};
 use fpas_diagnostics::codes::{
-    RUNTIME_ARRAY_INDEX_OUT_OF_BOUNDS, RUNTIME_VM_OPERAND_TYPE_MISMATCH,
+    RUNTIME_ARRAY_INDEX_OUT_OF_BOUNDS, RUNTIME_NUMERIC_DOMAIN_ERROR,
+    RUNTIME_VM_OPERAND_TYPE_MISMATCH,
 };
-
-fn value_to_sort_key(v: &Value) -> Result<String, String> {
-    Ok(match v {
-        // Offset by i64::MAX so that negative values sort correctly in
-        // lexicographic order:  -3 → 9223372036854775804, -1 → …806, 0 → …807.
-        Value::Integer(n) => format!("i:{:020}", (*n as u128).wrapping_add(i64::MAX as u128 + 1)),
-        Value::Real(x) => {
-            let bits = x.to_bits();
-            // IEEE 754 total-order trick: flip all bits for negatives,
-            // flip only sign bit for positives → monotonic u64 order.
-            let sortable = if bits >> 63 == 1 {
-                !bits
-            } else {
-                bits ^ (1 << 63)
-            };
-            format!("r:{sortable:020}")
-        }
-        Value::Str(s) => format!("s:{s}"),
-        Value::Boolean(b) => format!("b:{b}"),
-        _ => return Err(format!("cannot sort arrays of {}", v.type_name())),
-    })
-}
 
 pub(crate) fn run(
     intrinsic: Intrinsic,
@@ -46,37 +25,40 @@ pub(crate) fn run(
             call.push(Value::Integer(arr.len() as i64));
         }
         Intrinsic::Array(ArrayIntrinsic::Sort) => {
-            let arr = pop_array(pop_value(call, location)?, location)?;
-            if arr.is_empty() {
-                call.push(Value::Array(arr.into()));
-                return Ok(Some(()));
+            let mut arr = pop_array(pop_value(call, location)?, location)?;
+            if let Some(first) = arr.first() {
+                for value in &arr {
+                    if let Value::Real(real) = value {
+                        fpas_numeric::real::finite(*real).map_err(|error| {
+                            std_runtime_error(
+                                RUNTIME_NUMERIC_DOMAIN_ERROR,
+                                error.message(),
+                                error.hint(),
+                                location,
+                            )
+                        })?;
+                    }
+                    if value.scalar_ordering(first).is_none() {
+                        return Err(std_runtime_error(
+                            RUNTIME_VM_OPERAND_TYPE_MISMATCH,
+                            format!("cannot sort arrays of {}", value.type_name()),
+                            "Use a homogeneous array of Comparable elements with Items.Sort().",
+                            location,
+                        ));
+                    }
+                }
             }
-            let mut keys: Vec<String> = Vec::with_capacity(arr.len());
-            for e in &arr {
-                keys.push(value_to_sort_key(e).map_err(|m| {
-                    std_runtime_error(
-                        RUNTIME_VM_OPERAND_TYPE_MISMATCH,
-                        m,
-                        "Use arrays of comparable primitive values (integer, real, string, boolean) with Items.Sort().",
-                        location,
-                    )
-                })?);
-            }
-            let mut idx: Vec<usize> = (0..arr.len()).collect();
-            idx.sort_by(|&i, &j| keys[i].cmp(&keys[j]));
-            let sorted: Vec<Value> = idx.into_iter().map(|i| arr[i].clone()).collect();
-            call.push(Value::Array(sorted.into()));
+            // Stable sort preserves input order for equal values, including signed zeros.
+            arr.sort_by(|left, right| {
+                left.scalar_ordering(right)
+                    .expect("validated scalar elements")
+            });
+            call.push(Value::Array(arr.into()));
         }
         Intrinsic::Array(ArrayIntrinsic::Reverse) => {
             let mut arr = pop_array(pop_value(call, location)?, location)?;
             arr.reverse();
             call.push(Value::Array(arr.into()));
-        }
-        Intrinsic::Array(ArrayIntrinsic::Contains) => {
-            let needle = pop_value(call, location)?;
-            let arr = expect_array(pop_value(call, location)?, location)?;
-            let found = arr.iter().any(|e| e == needle);
-            call.push(Value::Boolean(found));
         }
         Intrinsic::Array(ArrayIntrinsic::IndexOf) => {
             let needle = pop_value(call, location)?;
@@ -84,9 +66,10 @@ pub(crate) fn run(
             let idx = arr
                 .iter()
                 .position(|e| e == needle)
-                .map(|i| i as i64)
-                .unwrap_or(-1);
-            call.push(Value::Integer(idx));
+                .map_or(Value::OptionNone, |i| {
+                    Value::option_some(Value::Integer(i as i64))
+                });
+            call.push(idx);
         }
         Intrinsic::Array(ArrayIntrinsic::Slice) => {
             let len = pop_int(pop_value(call, location)?, location)?;
@@ -154,6 +137,16 @@ mod tests {
         let err = run_array(ArrayIntrinsic::Fill, &mut stack)
             .expect_err("Fill must reject a count above the collection limit");
         assert_eq!(err.code, RUNTIME_ARRAY_INDEX_OUT_OF_BOUNDS);
+    }
+
+    #[test]
+    fn sort_rejects_nonfinite_runtime_elements_even_without_comparison_steps() {
+        for real in [f64::NAN, f64::INFINITY, f64::NEG_INFINITY] {
+            let mut stack = vec![Value::Array(vec![Value::Real(real)].into())];
+            let error = run_array(ArrayIntrinsic::Sort, &mut stack)
+                .expect_err("sorting retains finite-real validation for singleton arrays");
+            assert_eq!(error.code, RUNTIME_NUMERIC_DOMAIN_ERROR);
+        }
     }
 
     #[test]

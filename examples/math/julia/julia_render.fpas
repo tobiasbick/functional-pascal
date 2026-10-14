@@ -15,7 +15,7 @@ begin
   const Count: integer := Ramp.Length();
   const Phase: real := Math.Frac(EscapeValue * 0.08);
   const Index: integer := Math.Clamp(Math.Trunc(Phase * Conv.IntToReal(Count)), 0, Count - 1);
-  return Ramp.CharAt(Index);
+  return Ramp[Index];
 end function;
 
 function RenderCell(Sample: Compute.PixelSample; Palette: Color.PaletteKind): Console.Cell;

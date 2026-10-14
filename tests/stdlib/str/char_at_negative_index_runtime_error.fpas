@@ -3,5 +3,5 @@ program T;
 uses Std.Console as Console;
 
 begin
-  Console.WriteLn('Hi'.CharAt(-1));
+  Console.WriteLn('Hi'[-1]);
 end.

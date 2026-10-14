@@ -69,7 +69,6 @@ operations! {
     string, String, "Std.Str", "PadLeft", "PadLeft";
     string, String, "Std.Str", "PadRight", "PadRight";
     string, String, "Std.Str", "PadCenter", "PadCenter";
-    string, String, "Std.Str", "FromChar", "FromChar";
     string, String, "Std.Str", "SetCharAt", "SetCharAt";
     string, String, "Std.Str", "Insert", "Insert";
     string, String, "Std.Str", "Delete", "Delete";

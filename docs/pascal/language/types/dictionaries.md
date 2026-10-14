@@ -31,7 +31,7 @@ begin
 end.
 ```
 
-Dictionaries provide import-free dot operations such as `Length`, `ContainsKey`, `Get`, `Keys`, `Values`, and `Remove` — see [`Dictionary operations`](dictionary-operations.md).
+Dictionaries provide import-free dot operations such as `Length`, `Get`, `Keys`, `Values`, and `Remove`; use `Key in Values` for key membership — see [`Dictionary operations`](dictionary-operations.md).
 
 ## See also
 

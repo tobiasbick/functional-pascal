@@ -39,6 +39,11 @@ qualify their variants, for example `LocalColor.Red`.
 `Some`, `None`, `Ok`, and `Error` remain reserved Option/Result language forms.
 They keep their existing spellings and require no import or type qualifier.
 
+Enums without payload fields satisfy `Comparable`. Ordered comparisons and
+array `Sort`/`SortInPlace` use their integer backing values, including explicit
+values. Equal backing values keep their input order when sorting. Enums with
+payload fields do not support ordering or satisfy `Comparable`.
+
 ## Enum with backing values
 
 Each member can have an explicit integer value:

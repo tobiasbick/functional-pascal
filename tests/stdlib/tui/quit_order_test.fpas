@@ -43,14 +43,14 @@ begin
   var App: Tui.TuiApplication := Tui.TuiApplication.OpenForTest(Tui.TuiSize.Create(20, 4));
   var Model: QuitModel := QuitModel(LabelText := 'before', Quit := false, Updates := 0);
   Model := App.RunIterations(Model, UpdateQuit, ViewQuit, 0, 0);
-  Test.AssertTrue(App.SurfaceSnapshot().LineAt(0).Contains('before'));
+  Test.AssertTrue(('before' in App.SurfaceSnapshot().LineAt(0)));
   App.Inject(Tui.TuiMsg.QuitRequested);
   App.Inject(Tui.TuiMsg.Tick(1));
   Model := App.RunIterations(Model, UpdateQuit, ViewQuit, 5, 0);
   Test.AssertTrue(Model.Quit);
   Test.AssertEquals(1, Model.Updates);
-  Test.AssertTrue(App.SurfaceSnapshot().LineAt(0).Contains('before'));
-  Test.AssertFalse(App.SurfaceSnapshot().LineAt(0).Contains('SHOULD NOT PAINT'));
-  Test.AssertFalse(App.SurfaceSnapshot().LineAt(0).Contains('after-tick'));
+  Test.AssertTrue(('before' in App.SurfaceSnapshot().LineAt(0)));
+  Test.AssertFalse(('SHOULD NOT PAINT' in App.SurfaceSnapshot().LineAt(0)));
+  Test.AssertFalse(('after-tick' in App.SurfaceSnapshot().LineAt(0)));
   App.Close();
 end.

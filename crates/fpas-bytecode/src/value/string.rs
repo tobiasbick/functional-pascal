@@ -122,7 +122,7 @@ impl SharedStr {
 
     /// Unicode scalar at `index`, or `None` when `index` is not below [`Self::char_len`].
     ///
-    /// **Documentation:** `docs/pascal/language/types/string/format-chars.md` (CharAt).
+    /// **Documentation:** `docs/pascal/language/types/string/format-chars.md` (scalar indexing).
     pub fn char_at(&self, index: usize) -> Option<char> {
         if index >= self.char_len() {
             return None;

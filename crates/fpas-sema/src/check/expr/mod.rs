@@ -20,6 +20,7 @@ mod equality;
 mod is_test;
 mod operators;
 mod postfix;
+mod postfix_inference;
 mod record_construction;
 mod record_fields;
 mod subrange_conversion;

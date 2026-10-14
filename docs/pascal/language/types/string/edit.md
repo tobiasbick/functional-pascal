@@ -13,7 +13,10 @@ Console.WriteLn('aaa'.Replace('a', 'b'));
 ## `Text.RepeatStr(N: integer): string`
 
 Returns `S` concatenated `Count` times. `Count` ≤ 0 yields an empty string.
-
+Empty, single-scalar, and multi-scalar strings are all valid receivers.
+The receiver is preserved; `RepeatStrInPlace` replaces writable storage.
+User APIs needing exactly one scalar declare an explicit precondition such as
+`requires Text.Length() = 1;` before using repetition.
 
 ```pascal
 Console.WriteLn('ab'.RepeatStr(3));  // ababab
@@ -69,29 +72,16 @@ Console.WriteLn('Hi'.PadCenter(6, '-'));  // --Hi--
 
 ---
 
-## `Text.FromChar(N: integer): string`
-
-Builds a string of `Count` copies of `C`. `C` must contain exactly one Unicode scalar value; empty or multi-character strings are runtime errors. `Count` ≤ 0 yields an empty string.
-
-Positive `Count` must be at most **1_000_000**. Larger counts raise a runtime error.
-
-```pascal
-Console.WriteLn('─'.FromChar(40));
-```
-
----
-
-## `Text.CharAt(Index: integer): string`
+## Scalar indexing: `Text[Index]`
 
 Returns the character at the 0-based `Index`. **Runtime error** if out of bounds.
 
 Indices count Unicode scalars. For a nonempty string, valid indices are
 `0..S.Length()-1`. Empty strings have no valid character index. Invalid indices
-report FP5021; the hint uses `S.Length()` for nonempty strings and recommends
-checking `S.IsEmpty()` for empty strings.
+raise a runtime error. Check `S.IsEmpty()` before reading an empty string.
 
 ```pascal
-const C: string := 'Hello'.CharAt(0);
+const C: string := 'Hello'[0];
 Console.WriteLn(C);  // H
 ```
 
@@ -101,7 +91,7 @@ Console.WriteLn(C);  // H
 
 Returns a **new** string that is identical to `S` except the character at `Index` is replaced with `C`. `C` must contain exactly one Unicode scalar value. **Runtime error** if `Index` is out of bounds or `C` is empty or contains multiple characters.
 
-`Index` follows the same scalar bounds and empty-string checks as `CharAt`.
+`Index` follows the same scalar bounds and empty-string checks as scalar indexing.
 
 ```pascal
 Console.WriteLn('Hello'.SetCharAt(0, 'J'));  // Jello

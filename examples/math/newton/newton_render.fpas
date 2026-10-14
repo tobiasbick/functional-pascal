@@ -153,7 +153,7 @@ begin
   const Ramp: string := ' ░▒▓█';
   const Count: integer := Ramp.Length();
   const Index: integer := Math.Clamp(Math.Trunc(Shade * Conv.IntToReal(Count)), 0, Count - 1);
-  return Ramp.CharAt(Index);
+  return Ramp[Index];
 end function;
 
 function RenderCell(Sample: PixelSample): Console.Cell;

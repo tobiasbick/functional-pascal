@@ -13,7 +13,7 @@ begin
           end;
         when Error(const Message):
           begin
-            Test.AssertTrue(Message.Contains('finished'));
+            Test.AssertTrue(('finished' in Message));
           end;
       end case;
 
@@ -24,7 +24,7 @@ begin
           end;
         when Error(const Message):
           begin
-            Test.AssertTrue(Message.Contains('finished'));
+            Test.AssertTrue(('finished' in Message));
           end;
       end case;
     end;

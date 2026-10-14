@@ -70,23 +70,12 @@ fn delete_rejects_overflowing_range() {
 }
 
 #[test]
-fn from_char_returns_empty_for_non_positive_count() {
+fn repeat_returns_empty_for_non_positive_count() {
     for count in [0, -1] {
         let mut stack = vec![Value::Str("x".into()), Value::Integer(count)];
-        run_str(StrIntrinsic::FromChar, &mut stack).unwrap();
+        run_str(StrIntrinsic::Repeat, &mut stack).unwrap();
         assert_eq!(stack, vec![Value::Str("".into())]);
     }
-}
-
-#[test]
-fn from_char_rejects_count_above_limit() {
-    let mut stack = vec![
-        Value::Str("x".into()),
-        Value::Integer(MAX_COLLECTION_LEN + 1),
-    ];
-    let err = run_str(StrIntrinsic::FromChar, &mut stack)
-        .expect_err("FromChar must reject a count above the collection limit");
-    assert_eq!(err.code, RUNTIME_ARRAY_INDEX_OUT_OF_BOUNDS);
 }
 
 #[test]
@@ -103,10 +92,6 @@ fn padding_rejects_width_above_limit() {
 
 #[test]
 fn character_apis_accept_one_unicode_scalar() {
-    let mut from_char = vec![Value::Str("😀".into()), Value::Integer(2)];
-    run_str(StrIntrinsic::FromChar, &mut from_char).unwrap();
-    assert_eq!(from_char, vec![Value::Str("😀😀".into())]);
-
     let mut set_char_at = vec![
         Value::Str("a😀c".into()),
         Value::Integer(1),
@@ -123,14 +108,6 @@ fn character_apis_accept_one_unicode_scalar() {
 #[test]
 fn character_apis_reject_empty_and_multiple_scalars() {
     for (intrinsic, stack) in [
-        (
-            StrIntrinsic::FromChar,
-            vec![Value::Str("".into()), Value::Integer(1)],
-        ),
-        (
-            StrIntrinsic::FromChar,
-            vec![Value::Str("ab".into()), Value::Integer(1)],
-        ),
         (
             StrIntrinsic::SetCharAt,
             vec![

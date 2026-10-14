@@ -13,7 +13,7 @@ begin
   var Value: integer := 0;
   for Index: integer := 0 to Text.Length() - 1 do
     begin
-      const Digit: integer := Text.CharAt(Index).Ord() - 48;
+      const Digit: integer := Text[Index].Ord() - 48;
       if (Digit < 0) or (Digit > 9) then
         begin
           return Error('expected ASCII decimal digits');

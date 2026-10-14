@@ -10,7 +10,7 @@ uses Std.Console as Console;
 begin
   const Ages: dict of string to integer := ['Alice': 30, 'Bob': 25];
   Console.WriteLn(Ages.Length());
-  Console.WriteLn(Ages.ContainsKey('Alice'));
+  Console.WriteLn('Alice' in Ages);
 end.
 ```
 
@@ -30,7 +30,6 @@ functions with the same name do not affect this selection.
 | --- | --- |
 | `Values.Length(): integer` | Number of entries |
 | `Values.IsEmpty(): boolean` | Whether the entry count is zero |
-| `Values.ContainsKey(Key: K): boolean` | Key membership |
 | `Values.Get(Key: K): Option of V` | Safe lookup, or `None` |
 | `Values.Keys(): array of K` | Keys in insertion order |
 | `Values.Values(): array of V` | Values in insertion order |
@@ -66,18 +65,18 @@ Console.WriteLn(D.Length());  // 2
 Console.WriteLn([:].Length());  // 0
 ```
 
-### `ContainsKey`
+### Key membership with `in`
 
 ```text
-Values.ContainsKey(Key: K): boolean
+Key in Values
 ```
 
 Returns `true` if the dict contains the given key, `false` otherwise.
 
 ```pascal
 const D: dict of string to integer := ['Alice': 30];
-Console.WriteLn(D.ContainsKey('Alice'));    // true
-Console.WriteLn(D.ContainsKey('Bob'));       // false
+Console.WriteLn('Alice' in D);    // true
+Console.WriteLn('Bob' in D);      // false
 ```
 
 ### `Keys`
@@ -243,7 +242,9 @@ M['A'] := 2;                          // update existing key
 M['B'] := 3;                           // insert new key
 ```
 
-Accessing a non-existent key raises a runtime error. Use `Values.ContainsKey(Key)` to check first.
+Accessing a non-existent key raises a runtime error. Use `Key in Values` to check
+first, or `Values.Get(Key)` for an Option-valued lookup. Membership checks keys,
+not dictionary values.
 
 The expression operator `Key in D` is shorthand for checking key membership and returns `boolean`.
 

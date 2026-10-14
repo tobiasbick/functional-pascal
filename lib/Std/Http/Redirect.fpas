@@ -10,7 +10,7 @@ uses Std.Conv as Conv, Std.Http.Headers as HttpHeaders, Std.Http.Types as Types,
 function Authority(UriValue: Uri.Uri): string;
 begin
   var Host: string := UriValue.Host;
-  if Host.Contains(':') then
+  if (':' in Host) then
     begin
       Host := '[' + Host + ']';
     end;
@@ -41,14 +41,10 @@ end function;
 // - `Text`: URI reference that may contain a fragment.
 function WithoutFragment(Text: string): string;
 begin
-  const Fragment: integer := Text.IndexOf('#');
-  if Fragment < 0 then
-    begin
-      return Text;
-    end;
-  end if;
-
-  return Text.Slice(0, Fragment);
+  return case Text.IndexOf('#') of
+    when Some(const Fragment): Text.Slice(0, Fragment);
+    when None: Text;
+  end case;
 end function;
 
 // Removes the query from a path-and-query value.
@@ -57,14 +53,10 @@ end function;
 // - `Path`: URI path that may contain a query.
 function PathWithoutQuery(Path: string): string;
 begin
-  const Query: integer := Path.IndexOf('?');
-  if Query < 0 then
-    begin
-      return Path;
-    end;
-  end if;
-
-  return Path.Slice(0, Query);
+  return case Path.IndexOf('?') of
+    when Some(const Query): Path.Slice(0, Query);
+    when None: Path;
+  end case;
 end function;
 
 // Resolves dot segments in an absolute path while preserving its query.
@@ -75,13 +67,13 @@ function NormalizePath(PathAndQuery: string): string;
 begin
   var Path: string := PathAndQuery;
   var Query: string := '';
-  const QueryStart: integer := PathAndQuery.IndexOf('?');
-  if QueryStart >= 0 then
-    begin
+  case PathAndQuery.IndexOf('?') of
+    when Some(const QueryStart):
       Path := PathAndQuery.Slice(0, QueryStart);
       Query := PathAndQuery.Slice(QueryStart, PathAndQuery.Length() - QueryStart);
-    end;
-  end if;
+    when None:
+      null;
+  end case;
   const Parts: array of string := Path.Split('/');
   var Segments: array of string := [];
   // The first empty segment belongs to the absolute root. All others are significant.
@@ -131,7 +123,7 @@ begin
     begin
       Target := Origin(Base) + Base.Path;
     end;
-  elsif Reference.Contains('://') then
+  elsif ('://' in Reference) then
     begin
       Target := Reference;
     end;
@@ -150,13 +142,13 @@ begin
   else
     begin
       const BasePath: string := PathWithoutQuery(Base.Path);
-      const LastSlash: integer := BasePath.LastIndexOf('/');
       var Directory: string := '/';
-      if LastSlash >= 0 then
-        begin
+      case BasePath.LastIndexOf('/') of
+        when Some(const LastSlash):
           Directory := BasePath.Slice(0, LastSlash + 1);
-        end;
-      end if;
+        when None:
+          null;
+      end case;
 
       Target := Origin(Base) + NormalizePath(Directory + Reference);
     end;
@@ -165,7 +157,7 @@ begin
   case Uri.Parse(Target) of
     when Ok(const Parsed):
       begin
-        if Reference.Contains('://') or Reference.StartsWith('//') then
+        if ('://' in Reference) or Reference.StartsWith('//') then
           begin
             return Ok(Origin(Parsed) + NormalizePath(Parsed.Path));
           end;

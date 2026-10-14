@@ -90,7 +90,7 @@ begin
           end;
         end if;
 
-        if (Button.Mnemonic <> '') and not Button.Text.ToLower().Contains(Button.Mnemonic.ToLower()) then
+        if (Button.Mnemonic <> '') and not (Button.Mnemonic.ToLower() in Button.Text.ToLower()) then
           begin
             panic('Tui button mnemonic must occur in its text');
           end;

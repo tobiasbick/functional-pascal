@@ -11,7 +11,7 @@ public function IsValidValue(Value: string): boolean;
 begin
   for Index: integer := 0 to Value.Length() - 1 do
     begin
-      const Code: integer := Value.CharAt(Index).Ord();
+      const Code: integer := Value[Index].Ord();
       if ((Code < 32) and (Code <> 9)) or (Code = 127) then
         begin
           return false;
@@ -28,7 +28,7 @@ begin
   var First: integer := 0;
   var Last: integer := Value.Length();
   while First < Last do
-    const Character: string := Value.CharAt(First);
+    const Character: string := Value[First];
     if (Character <> ' ') and (Character <> #9) then
       break;
     end if;
@@ -37,7 +37,7 @@ begin
   end while;
 
   while Last > First do
-    const Character: string := Value.CharAt(Last - 1);
+    const Character: string := Value[Last - 1];
     if (Character <> ' ') and (Character <> #9) then
       break;
     end if;
@@ -59,11 +59,13 @@ begin
   var Headers: array of Types.Header := [];
   for Index: integer := 1 to Lines.Length() - 1 do
     begin
-      const Colon: integer := Lines[Index].IndexOf(':');
-      if Colon <= 0 then
-        begin
-          return Error('Invalid HTTP ' + MessageKind + ' header: ' + Lines[Index]);
-        end;
+      const Delimiter := Lines[Index].IndexOf(':');
+      if Delimiter.IsNone() then
+        return Error('Invalid HTTP ' + MessageKind + ' header: ' + Lines[Index]);
+      end if;
+      const Colon := Delimiter.Unwrap();
+      if Colon = 0 then
+        return Error('Invalid HTTP ' + MessageKind + ' header: ' + Lines[Index]);
       end if;
       const Name: string := (Lines[Index]).Slice(0, Colon);
       const Value: string := (Lines[Index]).Slice(Colon + 1, Lines[Index].Length() - Colon - 1);

@@ -192,7 +192,7 @@ begin
     end;
     when Error(const Message):
     begin
-      if not Message.Contains( 'RFC 9110 token') then
+      if not ('RFC 9110 token' in Message) then
       begin
         panic(Message);
       end; end if;

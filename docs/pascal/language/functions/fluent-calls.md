@@ -87,8 +87,9 @@ Named arguments still evaluate in written order, then map to declaration order.
 `Format` is the sole variadic native operation and accepts only positional,
 heterogeneously typed arguments. `string.Chr(N)` and `array.Fill(Value, Count)`
 construct values without a receiver. `Fill` infers its element type from
-`Value`, including when `Count` is zero. Binding type annotations remain
-required. Explicit factory generic arguments and `(array of T).Fill` are invalid.
+`Value`, including when `Count` is zero. Statement-local bindings may infer
+the resulting type; declarations outside statement lists require annotations.
+Explicit factory generic arguments and `(array of T).Fill` are invalid.
 
 The former helper units `Std.Str`, `Std.Arrays`, `Std.Dictionaries`,
 `Std.Options`, and `Std.Results`, their free calls, and their free routine

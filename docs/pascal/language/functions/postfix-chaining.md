@@ -27,8 +27,9 @@ const First: string := LoadItems()[0];
 const Scaled: integer := Num.Create(3).Scale(2).Next().Value;
 ```
 
-Qualified root calls such as `Std.Math.Sqrt(4.0)` remain ordinary calls. Only
-suffixes that follow a completed primary become postfix operations:
+Qualified root calls such as `Math.Sqrt(4.0)` after `uses Std.Math as Math;`
+remain ordinary calls. Only suffixes that follow a completed primary become
+postfix operations:
 
 ```pascal
 Factory.Create().Value

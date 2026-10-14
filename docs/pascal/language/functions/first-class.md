@@ -1,5 +1,7 @@
 # First-class functions
 
+The code fragments use `uses Std.Console as Console;`.
+
 Functions can be assigned to variables and passed as arguments:
 
 ```pascal
@@ -22,7 +24,8 @@ end.
 
 Call sites pass a **named** function or procedure, a **closure expression**, a
 **bound record method**, or a **variable** whose type is a function or procedure
-type. Qualified routines work the same way: `Std.Console.WriteLn(...)`.
+type. Imported routines are called through their explicit import alias, for
+example `Console.WriteLn(...)` after `uses Std.Console as Console;`.
 
 Array elements and dictionary entries with callable types are also called
 through their designators. The indexed callable is selected once before its
@@ -35,7 +38,9 @@ const First: integer := Operations[0](7); // 14
 const Named: integer := ByName['double'](7); // 14
 ```
 
-These calls use positional arguments, like other first-class callable values.
+These calls accept positional or fully named arguments from their visible
+static signature, for example `Operations[0](X := 7)`. Each call uses one
+argument style throughout, like other first-class callable values.
 Procedure elements may be called as statements. Their `var` parameter modes
 and the restrictions on [task calls](../concurrency/go.md) remain the same.
 

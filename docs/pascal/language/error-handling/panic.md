@@ -1,6 +1,8 @@
 # Panic
 
-Use `panic` to abort the program when an unrecoverable error occurs:
+Use `panic` when the current execution cannot continue, for example because an
+invariant is broken. An unhandled panic in the main task aborts the program;
+for child tasks, the owner determines how failure is propagated or collected.
 
 Formal syntax: [`grammar.ebnf`](../../../specs/grammar.ebnf) (`panic_stmt`).
 
@@ -45,6 +47,12 @@ A panic inside a [task scope](../concurrency/task-scopes.md#failures) first canc
 waits for the scope's children. A panic or runtime error of a scope child fails its scope: the
 siblings and the scope body are cancelled, and leaving the scope re-raises the child's original
 diagnostic with any further failures listed in its help text.
+
+A [TaskGroup](../../std/concurrency/task.md#task-groups) collects child failures
+without aborting unrelated work. Explicitly waiting for a failed child still
+propagates its failure. Supervised tasks may retry a Pascal panic within their
+configured retry budget; an exhausted panic becomes a group failure. This does
+not provide a general panic handler or convert panic into an ordinary Result.
 
 ## See also
 

@@ -128,10 +128,11 @@ mutable capture is **task-bound** and cannot be used as the callable of `go`, se
 another task, or returned through a task result. Capturing another task-bound callable
 also makes the outer closure task-bound (the mutable cells are still reachable).
 
-Extracting a callable with `const Name` in an `is` or `case` pattern preserves
-the matched value's known task-bound state. This applies in `while` conditions,
-nested payloads, guards, and closures that capture the extracted callable.
-Binding a scalar payload does not make that scalar task-bound.
+Extracting a callable with `const Name` in a `case` pattern preserves the
+matched value's known task-bound state, including nested payloads and uses in
+guards or closures that capture the extracted callable. Binding a scalar
+payload does not make that scalar task-bound. An `is` test never binds names;
+use `case` to extract a payload.
 
 ```pascal
 // Accepted: immutable capture

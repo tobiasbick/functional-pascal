@@ -51,9 +51,13 @@ Their READMEs and work-package files record implemented behavior,
 implementation owners, regression coverage, and any independent follow-ups.
 Checkboxes use the [status-tracking rule](development-process.md#status-tracking).
 
-Of the 43 packages, 37 are implemented, AP08/AP25/AP29 are rejected and closed,
+Of the 46 packages, 37 are implemented, AP08/AP25/AP29 are rejected and closed,
 AP12 and AP27 are deferred with their proposals retained, AP28 is transferred
-to editor/LSP planning. AP36 implements its recorded call, construction, and
+to editor/LSP planning, and AP44–AP46 have agreed directions with delivery pending.
+The FPAS 1 stabilization scope is bounded: unambiguous enum values, an explicit
+snapshot-iteration contract, and Unicode character-code literals. Broader
+[FPAS 2 directions](../fpas2-language-directions.md) are retained separately and
+are not scheduled here. AP36 implements its recorded call, construction, and
 pattern contracts. AP37 implements its value/InPlace contract, named Pop result,
 consumer migration and editor support. AP38 implements scope-wide named routine
 signatures, checked initialization, compiled-unit summaries, and editor identity.
@@ -165,6 +169,9 @@ package are listed in each work package file.
 | [x] | [AP41: Canonical qualified names](ap41-canonical-qualified-names/README.md) | Medium | AP05, AP20, AP24 | Complete: mandatory alias imports, type-qualified user variants, retained reserved Option/Result forms, migrated consumers, and matching diagnostics/editor output |
 | [x] | [AP42: Canonical collection operations](ap42-canonical-collection-operations/README.md) | Medium–large | AP06; extend AP24; preserve AP33/AP37 | Complete (AP42.1–AP42.2): canonical forms, Option search and static stable sorting |
 | [x] | [AP43: Consistent error handling and parsing APIs](ap43-consistent-error-handling/README.md) | Medium | AP33.3, AP35, AP39; preserve AP34/AP36/AP41/AP42 | Complete (AP43.1–AP43.2): Result parsers, canonical handling roles, selected helper removals, migration and tooling |
+| [ ] | [AP44: Unambiguous enum values](ap44-unambiguous-enum-values/README.md) | Small–medium | AP24, AP39, AP41, AP42 | Agreed direction: unique simple-enum values; no backing values in payload enums |
+| [ ] | [AP45: Explicit snapshot iteration](ap45-snapshot-iteration/README.md) | Small | AP37 | Agreed direction: document and verify existing array/dictionary iteration behavior |
+| [ ] | [AP46: Unicode character-code literals](ap46-unicode-character-literals/README.md) | Small | AP33, AP42 | Agreed direction: accept Unicode scalars in decimal character-code literals |
 
 A package's Done cell becomes `[x]` only when every work package in its own
 checklist is done. This table is the only package-completion index; do not
@@ -219,6 +226,9 @@ its dependent implementation complete or approved.
 | AP41 | Complete: AP41.1 mandatory qualification decision; AP41.2 compiler enforcement, semantic consumer migration, alias/enum tooling, documentation, and regressions |
 | AP42 | Complete: canonical collection forms, Option index searches, shared static ordering, stable sorting, migration and tooling |
 | AP43 | Complete: AP43.1 parser/error contract; AP43.2 API enforcement, migration, tooling and guidance |
+| AP44 | AP44.1 enum declaration restrictions, consumer migration and identity/coverage regressions |
+| AP45 | AP45.1 snapshot-iteration specification and mutation/reassignment regressions |
+| AP46 | AP46.1 Unicode scalar lexing, diagnostics, formatter checks and current guidance |
 
 AP08, AP28, and AP29 have no work packages.
 
@@ -244,10 +254,21 @@ the work-package files state actual dependencies.
 | 4. Mutation, declarations and matching | Complete: AP37, AP38, and AP39 | Explicit mutation, scope-wide signatures, checked initialization, and shared exhaustive case coverage are delivered |
 | 5. Concurrency contracts | Complete: AP40.1–AP40.3 | Owned starts, ordinary discard, foreign mutable-state checks, joined owner teardown, and consistent controlled wait priorities are delivered; AP30 types/retrieval and Select case order are retained |
 | 6. Canonical public forms | Complete: AP41, AP42 and AP43 | Qualification, collections and Result parsers are delivered, with canonical handling roles, migrated consumers, diagnostics and editor guidance |
+| 7. FPAS 1 stabilization | Pending: AP44 → AP45 → AP46 | Enum identities agree across equality and case coverage; iteration behavior is explicit and tested; character-code literals use the string scalar model |
 
-No ready implementation work package remains in this plan. AP12 and AP27 stay
-deferred and require a renewed explicit decision; AP28 belongs to editor/LSP
-planning. Reopening a deferred proposal is a separate decision.
+The next recommended work package is AP44.1, followed by AP45.1 and AP46.1.
+Their prerequisites are complete; this order reflects correctness and
+stabilization priority rather than dependencies between the three packages.
+AP44 replaces the permission for duplicate simple-enum backing values from
+AP42 and tightens AP24's mixed backing/payload declarations; those completed
+packages keep their other contracts and status. AP45 freezes existing behavior.
+AP46 replaces only the byte-range restriction on character-code literals.
+The current handbook and grammar change with delivery, not with planning.
+
+AP12 and AP27 stay deferred and require a renewed explicit decision; AP28 belongs
+to editor/LSP planning. Reopening a deferred proposal is a separate decision.
+The broader [FPAS 2 directions](../fpas2-language-directions.md) do not extend
+this FPAS 1 implementation sequence.
 
 AP43 is complete. Its contract uses
 Result-returning Parse.Int/Real/Bool/HexInt, explicit Unwrap for deliberate abort,

@@ -44,8 +44,9 @@ A function returning `Result` cannot be called as a standalone statement.
 Handle the branches with `case`, or use [try](try.md) while consuming the
 success value. If ignoring success and failure is intentional, write
 `discard Divide(10, 0);`. This evaluates the call without unwrapping it.
-Results containing task handles or unverified callable captures cannot be
-discarded; see [discarding values](../functions/discard.md).
+Results containing task handles or callable captures may also be discarded.
+Discard does not cancel, detach, join, or consume a task result; see
+[discarding values](../functions/discard.md).
 
 ## See also
 

@@ -46,7 +46,8 @@ for caller-owned dynamic work. See [task scopes](task-scopes.md) and
 
 `go` must be followed by a **single call expression** (not a bare designator or arbitrary value). The callee may be:
 
-- a **function** or **procedure** (including qualified names such as `Std.Console.WriteLn(...)`),
+- a **function** or **procedure** (including alias-qualified calls such as
+  `Console.WriteLn(...)` after `uses Std.Console as Console;`),
 - a **method** call, or
 - a call through a **callable variable** (function type, procedure type, and similar).
 

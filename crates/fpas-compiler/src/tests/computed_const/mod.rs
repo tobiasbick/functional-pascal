@@ -1,5 +1,6 @@
 use super::*;
 
+mod character_literals;
 mod migration;
 mod units;
 

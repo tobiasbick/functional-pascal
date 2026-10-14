@@ -63,7 +63,10 @@ char_code       = '#' decimal_digits ;
 
 (* Strings may span multiple lines.                                 *)
 (* Doubled apostrophe is the escape for a literal quote: 'It''s'.   *)
-(* Char codes use decimal byte values: #65 = 'A', #13#10 = CR+LF.  *)
+(* Char codes denote Unicode scalars in 0..1114111, excluding      *)
+(* 55296..57343. Invalid scalars and numeric overflow are lexical errors. *)
+(* Decimal digit separators apply: #8_364 = '€', #128512 = '😀'.   *)
+(* #65 = 'A'; #13#10 = CR+LF. Each code denotes one scalar.        *)
 (* Adjacent elements auto-concatenate: 'Hello'#13#10'World'.        *)
 (* No maximum length.                                               *)
 

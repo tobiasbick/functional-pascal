@@ -1,5 +1,6 @@
 use super::super::lex_with_errors;
 use crate::Token;
+use fpas_diagnostics::codes::{LEX_INVALID_CHARACTER_CODE_LITERAL, LEX_INVALID_DIGIT_SEPARATOR};
 
 #[test]
 fn unterminated_string() {
@@ -34,33 +35,49 @@ fn hash_non_digit() {
 }
 
 #[test]
-fn char_code_out_of_range() {
-    let (toks, errs) = lex_with_errors("#256");
-    assert_eq!(errs.len(), 1);
-    assert!(errs[0].message.contains("out of range"));
-    assert_eq!(toks, vec![Token::Str("".into())]);
+fn invalid_character_codes_have_precise_spans_and_recover_without_forging_strings() {
+    let oversized = format!("#{}", "9".repeat(128));
+    for code in [
+        "#55296",
+        "#57343",
+        "#1114112",
+        "#4294967295",
+        "#4294967296",
+        &oversized,
+    ] {
+        let source = format!(" \r\n'😀'{code}'B';");
+        let (tokens, _, errors) = crate::lex_with_source_id(&source, 23);
+        assert_eq!(errors.len(), 1, "{code}: {errors:?}");
+        let error = &errors[0];
+        assert_eq!(error.code, LEX_INVALID_CHARACTER_CODE_LITERAL, "{code}");
+        let span = error.span.expect("invalid character-code span");
+        assert_eq!(span.source_id(), 23);
+        assert_eq!(span.offset(), 9);
+        assert_eq!(span.length(), code.len());
+        assert_eq!((span.line(), span.column()), (2, 4));
+        let hint = error.help.as_deref().expect("scalar repair hint");
+        assert!(hint.contains("0..1114111"), "{hint}");
+        assert!(hint.contains("55296..57343"), "{hint}");
+        assert!(hint.contains("#8364"), "{hint}");
+        assert_eq!(tokens[0].token, Token::Str("😀".into()));
+        assert_eq!(tokens[1].token, Token::Str("B".into()));
+        assert_eq!(tokens[2].token, Token::Semicolon);
+        assert_eq!(tokens[3].token, Token::Eof);
+    }
 }
 
 #[test]
-fn invalid_char_code_stops_string_concatenation() {
-    // After a bad `#` code, later quoted parts are separate tokens — not forged into one string.
-    let (toks, errs) = lex_with_errors("'A'#256'B'");
-    assert_eq!(errs.len(), 1);
-    assert!(errs[0].message.contains("out of range"));
-    assert_eq!(toks, vec![Token::Str("A".into()), Token::Str("B".into())]);
-}
-
-#[test]
-fn char_code_very_large() {
-    let (_, errs) = lex_with_errors("#999999");
-    assert_eq!(errs.len(), 1);
-}
-
-#[test]
-fn char_code_decimal_overflow_u32() {
-    let (_, errs) = lex_with_errors("#99999999999999999999");
-    assert_eq!(errs.len(), 1);
-    assert!(errs[0].message.contains("too large"));
+fn character_codes_retain_digit_separator_rejection() {
+    for source in ["#8__364", "#1__114__111"] {
+        let (_, errors) = lex_with_errors(source);
+        assert!(
+            errors
+                .iter()
+                .all(|error| error.code == LEX_INVALID_DIGIT_SEPARATOR),
+            "{source}: {errors:?}"
+        );
+        assert!(!errors.is_empty(), "{source}");
+    }
 }
 
 #[test]
@@ -71,7 +88,7 @@ fn char_code_error_has_explicit_help() {
         errs[0]
             .help
             .as_deref()
-            .is_some_and(|hint| hint.contains("0..255"))
+            .is_some_and(|hint| hint.contains("0..1114111") && hint.contains("55296..57343"))
     );
 }
 

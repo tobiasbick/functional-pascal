@@ -1,8 +1,13 @@
+//! Quoted strings and decimal Unicode scalar codes share adjacent-element decoding.
+//! See `docs/pascal/language/basics/primitive-types.md`.
+
 use super::Lexer;
 use crate::Token;
 use fpas_diagnostics::codes::{
     LEX_INVALID_CHARACTER_CODE_LITERAL, LEX_UNTERMINATED_STRING_LITERAL,
 };
+
+const CHARACTER_CODE_HINT: &str = "Use a decimal Unicode scalar in 0..1114111, excluding 55296..57343; for example `#65` for `A` or `#8364` for `€`.";
 
 impl Lexer<'_> {
     pub(super) fn scan_string_literal(&mut self) {
@@ -59,7 +64,7 @@ impl Lexer<'_> {
         }
     }
 
-    /// Appends one `#ddd` character. Returns `false` when the code is invalid
+    /// Appends one decimal `#N` Unicode scalar. Returns `false` when the code is invalid
     /// (caller should stop the surrounding string concatenation).
     fn scan_char_code_part(&mut self, buf: &mut String) -> bool {
         let (so, sl, sc) = self.span_here();
@@ -69,7 +74,7 @@ impl Lexer<'_> {
             self.push_err(
                 LEX_INVALID_CHARACTER_CODE_LITERAL,
                 "Expected decimal number after `#`",
-                "Write digits after `#` in the range 0..255, for example `#65` for `A`.",
+                CHARACTER_CODE_HINT,
                 so,
                 sl,
                 sc,
@@ -84,7 +89,7 @@ impl Lexer<'_> {
                 self.push_err(
                     LEX_INVALID_CHARACTER_CODE_LITERAL,
                     "Character code literal is too large to represent",
-                    "Use a decimal value after `#` that fits in 32 bits, for example `#65` for `A`.",
+                    CHARACTER_CODE_HINT,
                     so,
                     sl,
                     sc,
@@ -93,18 +98,18 @@ impl Lexer<'_> {
             }
         };
 
-        if code > 255 {
+        let Some(character) = char::from_u32(code) else {
             self.push_err(
                 LEX_INVALID_CHARACTER_CODE_LITERAL,
-                &format!("Character code {code} is out of range"),
-                "Use a character code between 0 and 255.",
+                &format!("Character code {code} is not a valid Unicode scalar value"),
+                CHARACTER_CODE_HINT,
                 so,
                 sl,
                 sc,
             );
             return false;
-        }
-        buf.push(code as u8 as char);
+        };
+        buf.push(character);
         true
     }
 }

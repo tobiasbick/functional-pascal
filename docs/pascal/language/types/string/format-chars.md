@@ -53,10 +53,16 @@ Console.WriteLn('A'.Ord()); // 65
 
 ## `string.Chr(N: integer): string`
 
-Returns the character with Unicode codepoint `N`. **Runtime error** if `N` is not a valid Unicode scalar value.
+Returns the character with Unicode scalar value `N`: `0..1114111`, excluding
+`55296..57343`. **Runtime error** if `N` is outside this domain. For a valid
+decimal value, the [`#N` literal](../../basics/primitive-types.md#character-codes)
+produces the same one-scalar string at compile time; invalid literals are lexical
+errors. Values such as 255 denote Unicode scalars rather than raw encoded bytes.
 
 ```pascal
 Console.WriteLn(string.Chr(65)); // A
+Console.WriteLn(string.Chr(8364) = #8_364); // true
+Console.WriteLn(#128512.Length()); // 1 (😀)
 ```
 
 ---

@@ -76,7 +76,7 @@ fn char_code_null() {
 }
 
 #[test]
-fn char_code_max() {
+fn char_code_latin1() {
     assert_eq!(toks("#255"), vec![Token::Str("\u{FF}".into())]);
 }
 
@@ -151,9 +151,47 @@ fn char_codes_only() {
 
 #[test]
 fn char_code_boundary_values() {
-    // #0 (null) and #255 (max) — both valid
-    assert_eq!(toks("#0"), vec![Token::Str("\0".into())]);
-    assert_eq!(toks("#255"), vec![Token::Str("\u{FF}".into())]);
+    for (source, expected) in [
+        ("#0", "\0"),
+        ("#255", "\u{ff}"),
+        ("#256", "Ā"),
+        ("#8364", "€"),
+        ("#55295", "\u{d7ff}"),
+        ("#57344", "\u{e000}"),
+        ("#128512", "😀"),
+        ("#1114111", "\u{10ffff}"),
+        ("#8_364", "€"),
+        ("#1_114_111", "\u{10ffff}"),
+    ] {
+        assert_eq!(toks(source), vec![Token::Str(expected.into())], "{source}");
+    }
+}
+
+#[test]
+fn legacy_character_codes_keep_their_scalar_values() {
+    for code in 0_u8..=255 {
+        assert_eq!(
+            toks(&format!("#{code}")),
+            vec![Token::Str(char::from(code).to_string())],
+            "#{code}"
+        );
+    }
+}
+
+#[test]
+fn unicode_character_codes_concatenate_with_exact_source_positions() {
+    let source = " \r\n'😀'#8_364#128512'Z';";
+    let (tokens, _, errors) = crate::lex_with_source_id(source, 17);
+    assert!(errors.is_empty(), "{errors:?}");
+    assert_eq!(tokens[0].token, Token::Str("😀€😀Z".into()));
+    assert_eq!(tokens[0].span.text(source), Some("'😀'#8_364#128512'Z'"));
+    assert_eq!(tokens[0].span.source_id, 17);
+    assert_eq!(tokens[0].span.offset, 3);
+    assert_eq!((tokens[0].span.line, tokens[0].span.column), (2, 1));
+    assert_eq!(tokens[0].end.offset, 25);
+    assert_eq!((tokens[0].end.line, tokens[0].end.column), (2, 20));
+    assert_eq!(tokens[1].token, Token::Semicolon);
+    assert_eq!(tokens[1].span.offset, 25);
 }
 
 #[test]

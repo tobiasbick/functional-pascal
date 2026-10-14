@@ -56,9 +56,11 @@ The primitive types are signed 64-bit `integer`, binary64 `real`, `boolean`, and
 immutable Unicode `string`. There is no separate character type. Decimal integers
 allow single underscores between digits; hexadecimal integers begin with `$`.
 A real literal needs digits on both sides of its decimal point (`1.5e2`, not `1e2`).
-Strings use single quotes and double an embedded apostrophe. Adjacent `#0` through
-`#255` character codes concatenate with string literals. For other Unicode scalar
-values use `string.Chr`. String indexing returns one scalar as a string, not a byte,
+Strings use single quotes and double an embedded apostrophe. Decimal `#N` literals
+denote one Unicode scalar in `0..1114111`, excluding `55296..57343`, and concatenate
+with adjacent string elements. Digit separators apply: `#8_364` is `€` and
+`#128512` is `😀`. Invalid codes fail lexically; `string.Chr(N)` uses the same
+scalar domain with runtime validation. String indexing returns one scalar as a string, not a byte,
 grapheme cluster, or terminal cell. Comments begin with `//`; adjacent standalone
 comment blocks also supply Markdown declaration documentation.
 
@@ -123,6 +125,10 @@ begin
   Test.AssertEquals(150.0, Scale);
   Test.AssertEquals('i', Text[0]);
   Test.AssertEquals(5, Text.Length());
+  const Unicode := '€😀';
+  Test.AssertEquals(2, Unicode.Length());
+  Test.AssertEquals(string.Chr(8364), Unicode[0]);
+  Test.AssertEquals(128512, Unicode[1].Ord());
   Test.AssertTrue((Total < Limit and Total <> 0) or false);
   Test.AssertTrue(not false xor false);
   Test.AssertEquals(2, 7 div 3);

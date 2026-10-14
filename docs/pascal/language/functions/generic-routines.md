@@ -49,7 +49,7 @@ begin
   const Value: option of integer := Empty();
   const Factory: function(): option of integer := Empty;
   const Copy := Factory();
-  if not Value.IsNone() or not Copy.IsNone() or not Missing().IsNone() then
+  if not (Value is None) or not (Copy is None) or not (Missing() is None) then
     panic('expected empty values');
   end if;
 end.

@@ -41,12 +41,12 @@ begin scope
   var Started: integer := Time.TimestampMillis();
   const Outcome: result of (integer, string) := Tasks.ReceiveWithTimeout(Events, 100);
   if Time.TimestampMillis() - Started > 1000 then panic('timed receive ran a blocking task inline'); end if;
-  if Outcome.IsOk() then panic('nothing was sent'); end if;
+  if (Outcome is Ok(_)) then panic('nothing was sent'); end if;
   Started := Time.TimestampMillis();
   const Full: boolean := Tasks.SendWithTimeout(Events, 1, 100).Unwrap();
   const Blocked: result of (boolean, string) := Tasks.SendWithTimeout(Events, 2, 100);
   if Time.TimestampMillis() - Started > 1000 then panic('timed send ran a blocking task inline'); end if;
-  if Blocked.IsOk() then panic('the channel was full'); end if;
+  if (Blocked is Ok(_)) then panic('the channel was full'); end if;
   if not Tasks.Wait(First) then panic('first'); end if;
   if not Tasks.Wait(Second) then panic('second'); end if;
  end scope; end."#,

@@ -10,5 +10,5 @@ end function;
 begin
   const O: option of integer := None;
   const M: option of string := O.AndThen(AlwaysSomeOk);
-  Console.WriteLn(M.IsNone());
+  Console.WriteLn((M is None));
 end.

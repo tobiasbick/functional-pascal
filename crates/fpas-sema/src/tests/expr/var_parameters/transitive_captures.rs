@@ -49,7 +49,7 @@ fn recursive_capture_completion_preserves_task_and_discard_boundaries() {
         ));
     }
     check_ok(
-        "program T; uses Std.Tasks as Tasks;\nprocedure Outer(Value: task);\n  procedure First();\n  begin\n    const Work: procedure() := procedure() begin First(); end procedure;\n    discard Some(Work).IsSome();\n    const Present: boolean := Some(Work).IsSome();\n    discard Present;\n    const Snapshot: task := Value;\n  end procedure;\nbegin end procedure;\nbegin end.",
+        "program T; uses Std.Tasks as Tasks;\nprocedure Outer(Value: task);\n  procedure First();\n  begin\n    const Work: procedure() := procedure() begin First(); end procedure;\n    discard (Some(Work) is Some(_));\n    const Present: boolean := (Some(Work) is Some(_));\n    discard Present;\n    const Snapshot: task := Value;\n  end procedure;\nbegin end procedure;\nbegin end.",
     );
 }
 

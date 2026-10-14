@@ -3,17 +3,18 @@ program NumericTextContractsTest;
 uses Std.Conv as Conv, Std.Parse as Parse, Std.Test as Test;
 
 begin
-  Test.AssertEquals(255, Conv.StrToInt(' $FF '));
-  Test.AssertEquals(-9223372036854775808, Conv.StrToInt('-$8000000000000000'));
-  Test.AssertEquals(-9223372036854775808, Parse.TryInt('-9223372036854775808').Unwrap());
-  Test.AssertEquals(-9223372036854775808, Conv.HexToInt(Conv.IntToHex(-9223372036854775808, 16)));
-  Test.AssertTrue(Parse.TryInt('$8000000000000000').IsError());
-  Test.AssertTrue(Parse.TryInt('1__0').IsError());
-  Test.AssertTrue(Parse.TryReal('1.0e-9999').IsError());
-  Test.AssertTrue(Parse.TryReal('inf').IsError());
-  Test.AssertEquals(1.0, Conv.StrToReal(Conv.RealToStr(1.0)));
-  Test.AssertEquals('-0.0', Conv.RealToStr(Conv.StrToReal('-0.0')));
-  Test.AssertEquals('-0.0', Conv.RealToStr(Parse.TryReal('-0.0').Unwrap()));
+  Test.AssertEquals(255, parse.Int(' $FF ').Unwrap());
+  Test.AssertEquals(-9223372036854775808, parse.Int('-$8000000000000000').Unwrap());
+  Test.AssertEquals(-9223372036854775808, parse.Int('-9223372036854775808').Unwrap());
+  Test.AssertEquals(-9223372036854775808, parse.HexInt(Conv.IntToHex(-9223372036854775808, 16))
+                                            .Unwrap());
+  Test.AssertTrue((parse.Int('$8000000000000000') is Error(_)));
+  Test.AssertTrue((parse.Int('1__0') is Error(_)));
+  Test.AssertTrue((parse.Real('1.0e-9999') is Error(_)));
+  Test.AssertTrue((parse.Real('inf') is Error(_)));
+  Test.AssertEquals(1.0, parse.Real(Conv.RealToStr(1.0)).Unwrap());
+  Test.AssertEquals('-0.0', Conv.RealToStr(parse.Real('-0.0').Unwrap()));
+  Test.AssertEquals('-0.0', Conv.RealToStr(parse.Real('-0.0').Unwrap()));
   Test.AssertTrue('$FF'.IsNumeric());
   Test.AssertFalse('1.0e-9999'.IsNumeric());
 end.

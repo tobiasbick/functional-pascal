@@ -375,7 +375,7 @@ const Gate: channel of boolean := Tasks.CreateChannel(1);
 
 procedure Later(Token: Tasks.CancellationToken);
 begin
-  if Tasks.ReceiveWithCancellation(Gate, Token).IsOk() then Console.WriteLn('too late'); end if;
+  if (Tasks.ReceiveWithCancellation(Gate, Token) is Ok(_)) then Console.WriteLn('too late'); end if;
 end procedure;
 
 begin

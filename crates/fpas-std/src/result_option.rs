@@ -7,6 +7,7 @@ use crate::intrinsic_args::{IntrinsicCall, pop_value};
 use fpas_bytecode::{Intrinsic, OptionIntrinsic, ResultIntrinsic, SourceLocation, Value};
 use fpas_diagnostics::codes::RUNTIME_UNWRAP_FAILURE;
 
+/// Executes explicit unwrapping with runtime failure on Error or None.
 pub(crate) fn run(
     intrinsic: Intrinsic,
     call: &mut IntrinsicCall<'_>,
@@ -20,8 +21,8 @@ pub(crate) fn run(
                 Value::ResultError(e) => {
                     return Err(std_runtime_error(
                         RUNTIME_UNWRAP_FAILURE,
-                        format!("Called Std.Results.Unwrap on Error({e})"),
-                        "Check Value.IsOk() before unwrapping, or use Value.UnwrapOr(Default).",
+                        format!("Called Result.Unwrap on Error({e})"),
+                        "Handle expected errors with `case Value of when Ok(const Item): ...; when Error(const Message): ...; end case;`. Use Unwrap when runtime failure is intended.",
                         location,
                     ));
                 }
@@ -29,7 +30,7 @@ pub(crate) fn run(
                     return Err(std_runtime_error(
                         RUNTIME_UNWRAP_FAILURE,
                         format!(
-                            "Std.Results.Unwrap expects a Result value, got {}",
+                            "Result.Unwrap expects a Result value, got {}",
                             val.type_name()
                         ),
                         "Call Value.Unwrap() on a Result value (Ok or Error).",
@@ -38,33 +39,6 @@ pub(crate) fn run(
                 }
             }
         }
-        Intrinsic::Result(ResultIntrinsic::UnwrapOr) => {
-            let default = pop_value(call, location)?;
-            let val = pop_value(call, location)?;
-            match val {
-                Value::ResultOk(inner) => call.push((**inner).clone()),
-                Value::ResultError(_) => call.push(default.clone()),
-                _ => {
-                    return Err(std_runtime_error(
-                        RUNTIME_UNWRAP_FAILURE,
-                        format!(
-                            "Std.Results.UnwrapOr expects a Result value, got {}",
-                            val.type_name()
-                        ),
-                        "Call Value.UnwrapOr(Default) on a Result value (Ok or Error).",
-                        location,
-                    ));
-                }
-            }
-        }
-        Intrinsic::Result(ResultIntrinsic::IsOk) => {
-            let val = pop_value(call, location)?;
-            call.push(Value::Boolean(matches!(val, Value::ResultOk(_))));
-        }
-        Intrinsic::Result(ResultIntrinsic::IsError) => {
-            let val = pop_value(call, location)?;
-            call.push(Value::Boolean(matches!(val, Value::ResultError(_))));
-        }
         Intrinsic::Option(OptionIntrinsic::Unwrap) => {
             let val = pop_value(call, location)?;
             match val {
@@ -72,8 +46,8 @@ pub(crate) fn run(
                 Value::OptionNone => {
                     return Err(std_runtime_error(
                         RUNTIME_UNWRAP_FAILURE,
-                        "Called Std.Options.Unwrap on None",
-                        "Check Value.IsSome() before unwrapping, or use Value.UnwrapOr(Default).",
+                        "Called Option.Unwrap on None",
+                        "Handle expected absence with `case Value of when Some(const Item): ...; when None: ...; end case;`. Use Unwrap when runtime failure is intended.",
                         location,
                     ));
                 }
@@ -81,7 +55,7 @@ pub(crate) fn run(
                     return Err(std_runtime_error(
                         RUNTIME_UNWRAP_FAILURE,
                         format!(
-                            "Std.Options.Unwrap expects an Option value, got {}",
+                            "Option.Unwrap expects an Option value, got {}",
                             val.type_name()
                         ),
                         "Call Value.Unwrap() on an Option value (Some or None).",
@@ -90,79 +64,7 @@ pub(crate) fn run(
                 }
             }
         }
-        Intrinsic::Option(OptionIntrinsic::UnwrapOr) => {
-            let default = pop_value(call, location)?;
-            let val = pop_value(call, location)?;
-            match val {
-                Value::OptionSome(inner) => call.push((**inner).clone()),
-                Value::OptionNone => call.push(default.clone()),
-                _ => {
-                    return Err(std_runtime_error(
-                        RUNTIME_UNWRAP_FAILURE,
-                        format!(
-                            "Std.Options.UnwrapOr expects an Option value, got {}",
-                            val.type_name()
-                        ),
-                        "Call Value.UnwrapOr(Default) on an Option value (Some or None).",
-                        location,
-                    ));
-                }
-            }
-        }
-        Intrinsic::Option(OptionIntrinsic::IsSome) => {
-            let val = pop_value(call, location)?;
-            call.push(Value::Boolean(matches!(val, Value::OptionSome(_))));
-        }
-        Intrinsic::Option(OptionIntrinsic::IsNone) => {
-            let val = pop_value(call, location)?;
-            call.push(Value::Boolean(matches!(val, Value::OptionNone)));
-        }
         _ => return Ok(None),
     }
     Ok(Some(()))
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    fn test_location() -> SourceLocation {
-        SourceLocation::new(1, 1)
-    }
-
-    #[test]
-    fn result_unwrap_or_rejects_non_result_values() {
-        let mut stack = vec![Value::Integer(1), Value::Integer(99)];
-
-        let error = crate::execute_test_intrinsic(
-            Intrinsic::Result(ResultIntrinsic::UnwrapOr),
-            &mut stack,
-            test_location(),
-        )
-        .expect_err("Result.UnwrapOr must reject a non-Result value");
-
-        assert!(
-            error.message.contains("expects a Result value"),
-            "{}",
-            error.message
-        );
-    }
-
-    #[test]
-    fn option_unwrap_or_rejects_non_option_values() {
-        let mut stack = vec![Value::Integer(1), Value::Integer(99)];
-
-        let error = crate::execute_test_intrinsic(
-            Intrinsic::Option(OptionIntrinsic::UnwrapOr),
-            &mut stack,
-            test_location(),
-        )
-        .expect_err("Option.UnwrapOr must reject a non-Option value");
-
-        assert!(
-            error.message.contains("expects an Option value"),
-            "{}",
-            error.message
-        );
-    }
 }

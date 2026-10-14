@@ -76,7 +76,7 @@ begin
   Test.AssertEquals('FI', Trace);
   Trace := '';
   const Failed: result of (string, string) := SliceAfterFailure();
-  Test.AssertTrue(Failed.IsError());
+  Test.AssertTrue((Failed is Error(_)));
   Test.AssertEquals('RL', Trace);
   Trace := '';
   const Copies: array of string := array.Fill(Count := Number('C', 2), Value := Word());

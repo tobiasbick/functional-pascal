@@ -42,5 +42,5 @@ begin
   Test.AssertEquals(4, Model.Values[0]);
   Test.AssertEquals(7, Model.Values[1]);
   App.CloseWithBackground(Inbox);
-  Test.AssertTrue(Tasks.TrySend(Inbox, 11).IsError());
+  Test.AssertTrue((Tasks.TrySend(Inbox, 11) is Error(_)));
 end.

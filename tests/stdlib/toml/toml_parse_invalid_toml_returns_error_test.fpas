@@ -4,5 +4,5 @@ uses Std.Test as Test, Std.Toml as Toml;
 
 begin
   const Parsed: result of (Toml.TomlValue, string) := Toml.Parse('answer = [1,');
-  Test.AssertTrue(Parsed.IsError());
+  Test.AssertTrue((Parsed is Error(_)));
 end.

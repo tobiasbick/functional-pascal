@@ -13,6 +13,12 @@ impl Ty {
         self.compatible_with_mode(other, true)
     }
 
+    /// Checks propagated error types without treating generic parameters as wildcards.
+    /// See `docs/pascal/language/error-handling/try.md`.
+    pub(crate) fn propagation_compatible_with(&self, other: &Ty) -> bool {
+        self.compatible_with_mode(other, false)
+    }
+
     /// Returns true when ordinary assignment may use `other` as this type.
     pub(crate) fn assignment_compatible_with(&self, other: &Ty) -> bool {
         matches!((self, other), (Ty::Integer, Ty::Subrange(_)))

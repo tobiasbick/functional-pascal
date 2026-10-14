@@ -18,5 +18,5 @@ end function;
 begin
   const R: result of (integer, string) := Ok(-1);
   const M: result of (string, string) := R.AndThen(PositiveOk);
-  Console.WriteLn(M.IsError());
+  Console.WriteLn((M is Error(_)));
 end.

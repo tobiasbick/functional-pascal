@@ -49,7 +49,7 @@ begin
   const O: Boxes.Optional of integer := Boxes.Optional();
   const E: Boxes.Optional of string := Facade.Empty();
   const Root: Boxes.Node of integer := Boxes.Node(Value := 2, Next := Some(Boxes.Node(Value := 1)));
-  if (I.Get() <> 8) or (S.Get() <> 'eight') or (N.Value.Get() <> 9) or O.Value.IsSome() or E.Value.IsSome() then panic('generic unit records'); end if;
+  if (I.Get() <> 8) or (S.Get() <> 'eight') or (N.Value.Get() <> 9) or (O.Value is Some(_)) or (E.Value is Some(_)) then panic('generic unit records'); end if;
   if Root.Next.Unwrap().Value <> 1 then panic('recursive generic unit record'); end if;
 end.
 "#,

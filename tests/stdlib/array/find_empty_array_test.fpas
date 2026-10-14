@@ -10,5 +10,5 @@ end function;
 begin
   const A: array of integer := [];
   const R: option of integer := A.Find(AlwaysTrue);
-  Console.WriteLn(R.IsNone());
+  Console.WriteLn((R is None));
 end.

@@ -38,5 +38,5 @@ begin
   const Inbox: channel of integer := Tasks.CreateChannel(1);
   const Final: InteractiveModel := Tui.TuiApplication.RunWithBackground(InteractiveModel(Inbox := Inbox, Received := 0), Inbox, Update, UpdateMessage, View);
   Test.AssertEquals(42, Final.Received);
-  Test.AssertTrue(Tasks.TrySend(Inbox, 1).IsError());
+  Test.AssertTrue((Tasks.TrySend(Inbox, 1) is Error(_)));
 end.

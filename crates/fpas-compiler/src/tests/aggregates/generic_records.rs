@@ -24,8 +24,8 @@ function Double(Value: integer): integer; begin return Value * 2; end function;
 function TextOf(Value: integer): string; begin return 'value'; end function;
 function GenericText<T>(Value: T): string; begin return 'generic'; end function;
 function Identity<T>(Value: T): T; begin return Value; end function;
-procedure Accept(Value: Optional of integer); begin if Value.Value.IsSome() then panic('expected None'); end if; end procedure;
-procedure AcceptGeneric<T>(Empty: Optional of T; Evidence: T); begin if Empty.Value.IsSome() then panic('expected generic None'); end if; end procedure;
+procedure Accept(Value: Optional of integer); begin if (Value.Value is Some(_)) then panic('expected None'); end if; end procedure;
+procedure AcceptGeneric<T>(Empty: Optional of T; Evidence: T); begin if (Empty.Value is Some(_)) then panic('expected generic None'); end if; end procedure;
 begin
   const I: AIntBox := AIntBox.Create(7);
   const S: Box of string := Box(Value := 'seven');
@@ -45,7 +45,7 @@ begin
   Accept(Optional());
   AcceptGeneric(Optional(), 1);
   AcceptGeneric(Evidence := 1, Empty := Optional());
-  if (I.Get() <> 7) or (S.Get() <> 'seven') or (N.Value.Get() <> 9) or (Changed.Value <> 'changed') or EmptyValue.Value.IsSome() then panic('generic records'); end if;
+  if (I.Get() <> 7) or (S.Get() <> 'seven') or (N.Value.Get() <> 9) or (Changed.Value <> 'changed') or (EmptyValue.Value is Some(_)) then panic('generic records'); end if;
   if I <> Make(7) then panic('generic equality'); end if;
   if (A.Value[0] <> 4) or (Wrapped.Value.Unwrap() <> 3) or (Callback.Value(5) <> 10) then panic('generic field shapes'); end if;
   if (I.Map(TextOf) <> 'value') or (Box.Create(4).Get() <> 4) then panic('generic methods'); end if;

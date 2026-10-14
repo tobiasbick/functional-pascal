@@ -34,7 +34,7 @@ fn index_search_chains_offer_option_operations_and_option_signature_results() {
         assert!(
             candidates
                 .iter()
-                .any(|candidate| candidate.qualified_name == "Option.IsNone"),
+                .any(|candidate| candidate.qualified_name == "Option.OrElse"),
             "{expression}: {candidates:#?}"
         );
     }

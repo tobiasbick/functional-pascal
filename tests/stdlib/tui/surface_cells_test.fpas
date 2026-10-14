@@ -18,8 +18,8 @@ begin
   Surface.PutGlyph(0, -1, 'Z');
   Surface.PutGlyph(0, 2, 'Z');
   Test.AssertEquals(' ', Surface.TryCellAt(Tui.TuiPoint.Create(0, 0)).Unwrap().Glyph);
-  Test.AssertTrue(Surface.TryCellAt(Tui.TuiPoint.Create(-1, 0)).IsNone());
-  Test.AssertTrue(Surface.TryCellAt(Tui.TuiPoint.Create(4, 0)).IsNone());
+  Test.AssertTrue((Surface.TryCellAt(Tui.TuiPoint.Create(-1, 0)) is None));
+  Test.AssertTrue((Surface.TryCellAt(Tui.TuiPoint.Create(4, 0)) is None));
   const FirstSnapshot: Tui.TuiSurfaceSnapshot := Surface.Snapshot();
   Test.AssertEquals('A', FirstSnapshot.CellAt(1, 0).Glyph);
   Test.AssertEquals('B', FirstSnapshot.CellAt(2, 1).Glyph);

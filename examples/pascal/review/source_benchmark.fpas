@@ -3,7 +3,7 @@ program SourceReviewBenchmark;
 
 uses
   Notes.Model as Model, Notes.Repository as Repository, Std.Args as Args, Std.Console as Console,
-  Std.Conv as Conv, Std.Net.Utf8 as Utf8, Std.Time as Time, Std.Tui as Tui;
+  Std.Conv as Conv, Std.Net.Utf8 as Utf8, Std.Time as Time, Std.Tui as Tui, Std.Parse as Parse;
 
 function View(Value: integer): Tui.TuiElement;
 begin
@@ -26,7 +26,7 @@ end function;
 
 begin
   const Mode: string := Args.ParamStr(0);
-  const Size: integer := Conv.StrToInt(Args.ParamStr(1));
+  const Size: integer := Parse.Int(Args.ParamStr(1)).Unwrap();
   const Text: string := Args.ParamStr(2).RepeatStr(Size);
   var Notes: array of Model.Note := [];
   for I: integer := 1 to Size do

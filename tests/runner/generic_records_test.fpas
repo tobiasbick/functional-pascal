@@ -57,7 +57,7 @@ begin
   Test.AssertEquals(8, Entry.Key);
   Test.AssertEquals('eight', Entry.Value);
   Test.AssertEquals('updated', Updated.Value);
-  Test.AssertFalse(EmptyValue.Value.IsSome());
+  Test.AssertFalse((EmptyValue.Value is Some(_)));
   Test.AssertTrue(Number = Make(8));
   Test.AssertEquals(1, Root.Next.Unwrap().Value);
   const HandlerValue := Handler(Callbacks := [Identity], Value := 3);

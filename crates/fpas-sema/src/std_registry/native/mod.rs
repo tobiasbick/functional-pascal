@@ -184,6 +184,21 @@ pub fn native_operation_by_implementation(name: &str) -> Option<&'static NativeO
 pub fn native_migration_hint(name: &str) -> Option<String> {
     let member = name.rsplit('.').next()?.to_ascii_lowercase();
     let replacement = match member.as_str() {
+        "issome" => Some(
+            "Use `Value is Some(_)` for a nonbinding variant test; use case to bind the payload.",
+        ),
+        "isnone" => Some(
+            "Use `Value is None` for a nonbinding absence test; use case to bind a present payload.",
+        ),
+        "isok" => Some(
+            "Use `Value is Ok(_)` for a nonbinding success test; use case to bind the payload.",
+        ),
+        "iserror" => Some(
+            "Use `Value is Error(_)` for a nonbinding error test; use case to bind the error payload.",
+        ),
+        "unwrapor" => Some(
+            "Choose a plain default with `case Value of when Some(const Item): Item; when None: Default; end case` for Option, or `case Value of when Ok(const Item): Item; when Error(_): Default; end case` for Result. Preserve eager evaluation of effectful defaults when migrating.",
+        ),
         "contains" => Some("Use `Value in Items` or `Substring in Text` for membership."),
         "containskey" => Some("Use `Key in Values` for dictionary key membership."),
         "charat" => Some("Use `Text[Index]` to read a zero-based Unicode scalar."),

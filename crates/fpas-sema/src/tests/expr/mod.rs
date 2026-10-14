@@ -9,6 +9,7 @@ mod conversion_arguments;
 mod distinct_comparisons;
 mod distinct_conversions;
 mod equality;
+mod error_conventions;
 mod fluent;
 mod handler_fields;
 mod if_expressions;

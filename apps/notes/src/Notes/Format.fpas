@@ -158,31 +158,32 @@ begin
   const Remaining: string := Source.Slice(Prefix.Length(), Source.Length() - Prefix.Length());
   const Boundary: string := NewLine + '+++' + NewLine;
   const HeaderBoundary := Remaining.IndexOf(Boundary);
-  if HeaderBoundary.IsNone() then
-    return Error('A .note file must close its TOML header with `+++`');
-  end if;
-  const BoundaryIndex := HeaderBoundary.Unwrap();
-  const Header: string := Remaining.Slice(0, BoundaryIndex);
-  const BodyStart: integer := BoundaryIndex + Boundary.Length();
-  const Body: string := Remaining.Slice(BodyStart, Remaining.Length() - BodyStart);
-  case Toml.Parse(Header) of
-    when Ok(const Value):
-      begin
-        case Value of
-          when Toml.TomlValue.Table(const Fields):
-            begin
-              return ParseFields(Fields, Body);
-            end;
-          when Toml.TomlValue.String(_), Toml.TomlValue.Integer(_), Toml.TomlValue.Float(_), Toml.TomlValue.Boolean(_), Toml.TomlValue.Datetime(_), Toml.TomlValue.ArrayValue(_):
-            begin
-              return Error('The .note metadata root must be a TOML table');
-            end;
-        end case;
-      end;
-    when Error(const Message):
-      begin
-        return Error('Invalid .note TOML header: ' + Message);
-      end;
+  case HeaderBoundary of
+    when None:
+      return Error('A .note file must close its TOML header with `+++`');
+    when Some(const BoundaryIndex):
+      const Header: string := Remaining.Slice(0, BoundaryIndex);
+      const BodyStart: integer := BoundaryIndex + Boundary.Length();
+      const Body: string := Remaining.Slice(BodyStart, Remaining.Length() - BodyStart);
+      case Toml.Parse(Header) of
+        when Ok(const Value):
+          begin
+            case Value of
+              when Toml.TomlValue.Table(const Fields):
+                begin
+                  return ParseFields(Fields, Body);
+                end;
+              when Toml.TomlValue.String(_), Toml.TomlValue.Integer(_), Toml.TomlValue.Float(_), Toml.TomlValue.Boolean(_), Toml.TomlValue.Datetime(_), Toml.TomlValue.ArrayValue(_):
+                begin
+                  return Error('The .note metadata root must be a TOML table');
+                end;
+            end case;
+          end;
+        when Error(const Message):
+          begin
+            return Error('Invalid .note TOML header: ' + Message);
+          end;
+      end case;
   end case;
 end function;
 

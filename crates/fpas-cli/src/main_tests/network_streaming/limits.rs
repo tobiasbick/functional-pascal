@@ -78,7 +78,7 @@ begin
         RequestValue.MaxResponseBytes := {head_len} + BodyIndex * 3 + Delta;
         RequestValue.TimeoutMillis := 1000;
         const Received: result of (integer, string) := Fetch(RequestValue, Streaming);
-        Test.AssertEquals(Delta >= 0, Received.IsOk());
+        Test.AssertEquals(Delta >= 0, (Received is Ok(_)));
         if Delta >= 0 then Test.AssertEquals(BodyIndex * 3, Received.Unwrap()); end if;
       end; end for;
     end; end for;

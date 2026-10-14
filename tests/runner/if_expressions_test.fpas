@@ -35,7 +35,7 @@ begin
   Test.AssertEquals('other', Describe(Some(-3)));
   Test.AssertEquals('none', Describe(None));
   const Picked: option of integer := if Debug then None else Some(1) end if;
-  Test.AssertFalse(Picked.IsSome());
+  Test.AssertFalse((Picked is Some(_)));
   const Items: array of integer := if Debug then [] else [1, 2] end if;
   Test.AssertEquals(0, Items.Length());
   Test.AssertEquals(1, if Debug then Count(1) else Count(2) end if);

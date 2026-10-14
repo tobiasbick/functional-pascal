@@ -127,7 +127,7 @@ impl Checker {
             self.error_with_code(
                 SEMA_TYPE_MISMATCH,
                 "Cannot compare Option of integer with integer",
-                "IndexOf, LastIndexOf, and FindIndex return Some(Index) or None. Match those cases, or test IsNone() and then Unwrap(); do not compare the result with an integer sentinel such as -1 or 0.",
+                "IndexOf, LastIndexOf, and FindIndex return Some(Index) or None. Use `case` to bind the index and handle absence; do not compare the result with an integer sentinel such as -1 or 0.",
                 span,
             );
             return Ty::Error;

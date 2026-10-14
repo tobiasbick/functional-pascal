@@ -226,8 +226,7 @@ impl LoweringContext {
     ) -> Result<ValueId, CompileError> {
         let GoTarget { name, result_ty } = target;
         let receiver = receiver.map(|value| self.save_value(value));
-        let (callee, output) = if let Some(target) = self.intrinsic_task_targets.get(&key).cloned()
-        {
+        let (callee, output) = if let Some(target) = self.intrinsic_targets.get(&key).cloned() {
             let output = self.type_table.id(result_ty, span.line, span.column)?;
             let callee = self.emit_value(
                 Operation::MakeClosure {

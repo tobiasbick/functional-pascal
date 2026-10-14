@@ -32,7 +32,7 @@ begin
   end case;
 
   Test.AssertTrue(Tasks.IsCancellationRequested(Token));
-  Test.AssertTrue(Tasks.CloseTaskGroupWithTimeout(Group, 0).IsError());
+  Test.AssertTrue((Tasks.CloseTaskGroupWithTimeout(Group, 0) is Error(_)));
   discard Tasks.Send(Gate, 1).Unwrap();
   case Tasks.Wait(Child) of
     when Error(const Message):

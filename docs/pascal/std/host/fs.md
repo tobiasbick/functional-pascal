@@ -70,10 +70,11 @@ Reads the entire file at `Path` as UTF-8 text.
 Files larger than 64 MiB return `Error(message)` instead of loading into memory.
 
 ```pascal
-const Content: result of (string, string) := ReadText('notes.txt');
-if Content.IsOk() then
-  Console.WriteLn(Content.Unwrap());
-end if;
+const Content: result of (string, string) := Fs.ReadText('notes.txt');
+case Content of
+  when Ok(const Text): Console.WriteLn(Text);
+  when Error(_): null;
+end case;
 ```
 
 ---
@@ -83,7 +84,7 @@ end if;
 Writes UTF-8 text to `Path`, creating or replacing the file.
 
 ```pascal
-if Fs.WriteText('out.txt', 'hello').IsOk() then
+if Fs.WriteText('out.txt', 'hello') is Ok(_) then
   Console.WriteLn('written');
 end if;
 ```
@@ -151,7 +152,7 @@ Console.WriteLn(Fs.IsDir('src'));
 Creates a single directory at `Path`. Parent directories must already exist. An existing entry at `Path`, including an existing directory, returns `Error(message)`.
 
 ```pascal
-if Fs.CreateDir('build/output').IsOk() then
+if Fs.CreateDir('build/output') is Ok(_) then
   Console.WriteLn('directory created');
 end if;
 ```

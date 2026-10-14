@@ -46,5 +46,5 @@ begin
                                                                                                 'b'
                                                                                               ])));
   Test.AssertEquals('JSON root must be an object', ErrorText(JsonFields.ParseObject('[1]')));
-  Test.AssertTrue(JsonFields.ParseObject('{').IsError());
+  Test.AssertTrue((JsonFields.ParseObject('{') is Error(_)));
 end.

@@ -17,8 +17,8 @@ All branches have one type, checked like an assignment without numeric
 widening; integer/real and distinct mismatches name the explicit conversion.
 Context-typed branches such as `None` or `[]` take the type of the other
 branches, and the shared type is checked against the expected type of the
-position. Conditions are boolean and may use `is` tests whose bindings are
-visible only in their branch value. An expression whose conditions and branches
+position. Conditions are boolean and may use AP35's nonbinding `is` tests;
+case binds payloads. An expression whose conditions and branches
 are compile-time constants is itself a constant and folds to the selected value.
 
 The compiler evaluates conditions in order and only the selected branch value,
@@ -48,7 +48,7 @@ comments at each branch and before the ending.
 - Parser tests for `elsif` chains, operand position, nesting, `is` conditions,
   statement-start handling, and FP2019/FP2020/missing `end if`.
 - Sema tests for shared types, context typing, widening and distinct
-  mismatches, expected types, boolean conditions, `is` binding scope, and
+  mismatches, expected types, boolean conditions, nonbinding `is` tests, and
   constant classification.
 - Formatter golden and comment tests; a debugger test for branch selection,
   short-circuiting, and non-boolean conditions.

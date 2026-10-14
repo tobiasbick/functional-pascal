@@ -4,5 +4,5 @@ uses Std.Console as Console;
 
 begin
   const R: result of (integer, string) := Error('fail');
-  Console.WriteLn(R.IsOk());
+  Console.WriteLn((R is Ok(_)));
 end.

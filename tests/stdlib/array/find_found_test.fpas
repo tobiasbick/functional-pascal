@@ -10,6 +10,6 @@ end function;
 begin
   const A: array of integer := [1, 2, 3, 4, 5];
   const R: option of integer := A.Find(IsGreaterThanThree);
-  Console.WriteLn(R.IsSome());
+  Console.WriteLn((R is Some(_)));
   Console.WriteLn(R.Unwrap());
 end.

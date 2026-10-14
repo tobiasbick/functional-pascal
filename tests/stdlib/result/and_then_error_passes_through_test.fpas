@@ -10,5 +10,5 @@ end function;
 begin
   const R: result of (integer, string) := Error('original');
   const M: result of (string, string) := R.AndThen(AlwaysOk);
-  Console.WriteLn(M.IsError());
+  Console.WriteLn((M is Error(_)));
 end.

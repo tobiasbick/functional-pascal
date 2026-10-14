@@ -9,9 +9,9 @@ begin
   Test.AssertTrue(Fs.IsDir(Leaf));
   // An existing directory is success, unlike CreateDir.
   Test.AssertTrue(Fs.CreateDirAll(Leaf).Unwrap());
-  Test.AssertTrue(Fs.CreateDir(Leaf).IsError());
+  Test.AssertTrue((Fs.CreateDir(Leaf) is Error(_)));
   const Blocking: string := Root + '/blocking-file';
   Test.AssertTrue(Fs.WriteText(Blocking, 'not a directory').Unwrap());
-  Test.AssertTrue(Fs.CreateDirAll(Blocking).IsError());
-  Test.AssertTrue(Fs.CreateDirAll(Blocking + '/child').IsError());
+  Test.AssertTrue((Fs.CreateDirAll(Blocking) is Error(_)));
+  Test.AssertTrue((Fs.CreateDirAll(Blocking + '/child') is Error(_)));
 end.

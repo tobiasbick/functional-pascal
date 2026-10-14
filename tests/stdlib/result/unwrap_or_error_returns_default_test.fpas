@@ -4,5 +4,8 @@ uses Std.Console as Console;
 
 begin
   const R: result of (integer, string) := Error('fail');
-  Console.WriteLn(R.UnwrapOr(0));
+  Console.WriteLn((case R of
+    when Ok(const AP43Value): AP43Value;
+    when Error(_): 0;
+  end case));
 end.

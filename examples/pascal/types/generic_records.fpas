@@ -15,5 +15,5 @@ begin
   const Entry: Pair of (integer, string) := Pair(Key := 1, Value := 'one');
   const EmptyValue: Optional of string := Optional();
   Console.WriteLn(Entry.Key, ': ', Entry.Value);
-  Console.WriteLn(EmptyValue.Value.IsNone());
+  Console.WriteLn((EmptyValue.Value is None));
 end.

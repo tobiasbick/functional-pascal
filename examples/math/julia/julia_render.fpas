@@ -97,7 +97,7 @@ begin
               end;
             end if;
             const Row: RenderRow := RenderRow(Y := Py, Samples := Samples);
-            if Tasks.SendWithCancellation(Rows, Row, Token).IsError() then
+            if (Tasks.SendWithCancellation(Rows, Row, Token) is Error(_)) then
               begin
                 return;
               end;

@@ -93,14 +93,14 @@ fn deeply_nested_repeated_routine_names_keep_distinct_parameters() {
 #[test]
 fn complete_outer_types_cannot_hide_unresolved_inner_calls_or_constructors() {
     for initializer in [
-        "if Empty().IsNone() then 1 else 2 end if",
+        "if (Empty() is None) then 1 else 2 end if",
         "case Empty() of when None: 1; when Some(_): 2; end case",
         "[function(): integer begin discard Empty(); return 1; end function]",
-        "[Empty().IsNone()]",
-        "Identity(Empty().IsNone())",
+        "[(Empty() is None)]",
+        "Identity(Empty() is None)",
         "[Defaults().Ready()]",
         "[Holder(Value := Identity).Ready()]",
-        "[Some(Identity).IsSome()]",
+        "[(Some(Identity) is Some(_))]",
     ] {
         let errors = check_errors(&format!(
             "program T; {ROUTINES}

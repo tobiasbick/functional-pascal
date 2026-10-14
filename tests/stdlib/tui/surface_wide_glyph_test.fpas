@@ -9,7 +9,7 @@ begin
   Test.AssertEquals('中', Surface.TryCellAt(Tui.TuiPoint.Create(1, 0)).Unwrap().Glyph);
   Test.AssertTrue(Surface.TryCellAt(Tui.TuiPoint.Create(1, 0)).Unwrap().Role =
                   Tui.TuiStyleRole.Accent);
-  Test.AssertTrue(Surface.TryCellAt(Tui.TuiPoint.Create(2, 0)).IsNone());
+  Test.AssertTrue((Surface.TryCellAt(Tui.TuiPoint.Create(2, 0)) is None));
   Test.AssertEquals('中', Surface.Snapshot().CellAt(1, 0).Glyph);
   Test.AssertEquals(' ', Surface.Snapshot().CellAt(2, 0).Glyph);
   Surface.PutCell(Tui.TuiPoint.Create(2, 0), Tui.TuiCell.Create('X', Tui.TuiStyleRole.Normal));
@@ -17,17 +17,17 @@ begin
   Test.AssertEquals('X', Surface.TryCellAt(Tui.TuiPoint.Create(2, 0)).Unwrap().Glyph);
   Surface.PutCell(Tui.TuiPoint.Create(0, 1), Wide);
   Test.AssertEquals('中', Surface.TryCellAt(Tui.TuiPoint.Create(0, 1)).Unwrap().Glyph);
-  Test.AssertTrue(Surface.TryCellAt(Tui.TuiPoint.Create(1, 1)).IsNone());
+  Test.AssertTrue((Surface.TryCellAt(Tui.TuiPoint.Create(1, 1)) is None));
   Surface.PutCell(Tui.TuiPoint.Create(1, 1), Tui.TuiCell.Create('Y', Tui.TuiStyleRole.Title));
   Test.AssertEquals(' ', Surface.TryCellAt(Tui.TuiPoint.Create(0, 1)).Unwrap().Glyph);
   Test.AssertEquals('Y', Surface.TryCellAt(Tui.TuiPoint.Create(1, 1)).Unwrap().Glyph);
   Surface.PutCell(Tui.TuiPoint.Create(3, 0), Wide);
   Test.AssertEquals(' ', Surface.TryCellAt(Tui.TuiPoint.Create(3, 0)).Unwrap().Glyph);
-  Test.AssertTrue(Surface.TryCellAt(Tui.TuiPoint.Create(4, 0)).IsNone());
+  Test.AssertTrue((Surface.TryCellAt(Tui.TuiPoint.Create(4, 0)) is None));
   Surface.PutCell(Tui.TuiPoint.Create(2, 0), Wide);
   Surface.PutCell(Tui.TuiPoint.Create(1, 0), Wide);
   Test.AssertEquals('中', Surface.TryCellAt(Tui.TuiPoint.Create(1, 0)).Unwrap().Glyph);
-  Test.AssertTrue(Surface.TryCellAt(Tui.TuiPoint.Create(2, 0)).IsNone());
+  Test.AssertTrue((Surface.TryCellAt(Tui.TuiPoint.Create(2, 0)) is None));
   Test.AssertEquals(' ', Surface.TryCellAt(Tui.TuiPoint.Create(3, 0)).Unwrap().Glyph);
   Surface.PutCell(Tui.TuiPoint.Create(2, 1), Tui.TuiCell.Create('é', Tui.TuiStyleRole.Normal));
   Test.AssertEquals(1, Surface.TryCellAt(Tui.TuiPoint.Create(2, 1)).Unwrap().Width());

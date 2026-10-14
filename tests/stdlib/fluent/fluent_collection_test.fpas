@@ -43,10 +43,10 @@ begin
   Test.AssertEquals(4, Double(2));
   const Scores: dict of string to integer := ['A': 2, 'B': 3];
   Test.AssertEquals(5, Scores.Reduce(0, AddEntry));
-  Test.AssertTrue(Scores.Get('A').IsSome());
+  Test.AssertTrue((Scores.Get('A') is Some(_)));
   Test.AssertEquals('AB', ('ab').Map(Upper));
   Test.AssertEquals(2, MakeNumbers().Length());
-  Test.AssertTrue(Json.Parse('1').IsOk());
+  Test.AssertTrue((Json.Parse('1') is Ok(_)));
   const DoubleValue: function(X: integer): integer := Double;
   Test.AssertEquals(6, DoubleValue(3));
   Test.AssertEquals(8, Apply(4, Double));

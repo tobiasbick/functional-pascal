@@ -129,7 +129,7 @@ pub(super) fn lower_analyzed_root(
         callables: callables.clone(),
         closure_targets: closures.targets.clone(),
         bound_method_targets: closures.bound_targets.clone(),
-        intrinsic_task_targets: closures.intrinsic_task_targets.clone(),
+        intrinsic_targets: closures.intrinsic_targets.clone(),
         cell_names: closures
             .cell_names
             .get(&FunctionId::new(0))
@@ -195,7 +195,7 @@ pub(super) fn lower_analyzed_root(
                 constants: &constants,
                 closure_targets: closures.targets.clone(),
                 bound_method_targets: closures.bound_targets.clone(),
-                intrinsic_task_targets: closures.intrinsic_task_targets.clone(),
+                intrinsic_targets: closures.intrinsic_targets.clone(),
                 cell_names: closures.cell_names.get(&id).cloned().unwrap_or_default(),
             },
         )
@@ -218,7 +218,7 @@ pub(super) fn lower_analyzed_root(
                 constants: &constants,
                 closure_targets: closures.targets.clone(),
                 bound_method_targets: closures.bound_targets.clone(),
-                intrinsic_task_targets: closures.intrinsic_task_targets.clone(),
+                intrinsic_targets: closures.intrinsic_targets.clone(),
                 cell_names: closures
                     .cell_names
                     .get(&routine.id)
@@ -257,9 +257,9 @@ pub(super) fn lower_analyzed_root(
         type_table = updated_types;
         functions.push(function);
     }
-    for routine in &closures.intrinsic_task_routines {
+    for routine in &closures.intrinsic_routines {
         let (function, updated_types) = closures
-            .lower_intrinsic_task(
+            .lower_intrinsic_routine(
                 routine,
                 &metadata,
                 &mut type_table,
@@ -297,7 +297,7 @@ pub(super) fn lower_analyzed_root(
                 callables: callables.clone(),
                 closure_targets: closures.targets.clone(),
                 bound_method_targets: closures.bound_targets.clone(),
-                intrinsic_task_targets: closures.intrinsic_task_targets.clone(),
+                intrinsic_targets: closures.intrinsic_targets.clone(),
                 cell_names: Default::default(),
                 type_table: type_table.clone(),
             },
@@ -325,7 +325,7 @@ pub(super) fn lower_analyzed_root(
     for routine in &closures.bound_routines {
         owner_map.insert(routine.id, routine.owner);
     }
-    for routine in &closures.intrinsic_task_routines {
+    for routine in &closures.intrinsic_routines {
         owner_map.insert(routine.id, routine.owner);
     }
     debug::attach(&mut functions, &owner_map).map_err(|error| vec![error])?;

@@ -9,7 +9,7 @@ require imports.
 |-------|-------------|
 | [`String operations`](../../language/types/string/README.md) | String operations |
 | [`Std.Conv`](conv.md) | Type conversions |
-| [`Std.Parse`](parse.md) | `TryInt`, `TryReal`, `TryBool` |
+| [`Std.Parse`](parse.md) | Result-returning `Int`, `Real`, `Bool`, `HexInt` |
 | [`Std.Json`](json.md) | JSON trees |
 | [`Std.Json.Fields`](json-fields.md) | Typed JSON object field access |
 | [`Std.Toml`](toml.md) | TOML trees |

@@ -51,12 +51,12 @@ begin
   const Child: task of integer := Tasks.StartTaskInGroup(Group, function(Token: Tasks.CancellationToken): integer
   begin
     discard Tasks.Send(Ready, true);
-    while Tasks.TryReceive(Release).Unwrap().IsNone() do begin null; end; end while;
+    while (Tasks.TryReceive(Release).Unwrap() is None) do begin null; end; end while;
     if not Tasks.IsCancellationRequested(Token) then panic('cancellation was not retained'); end if;
     return 42;
   end function);
-  while Tasks.TryReceive(Ready).Unwrap().IsNone() do begin null; end; end while;
-  if not Tasks.CloseTaskGroupWithTimeout(Group, 2).IsError() then panic('running worker was lost'); end if;
+  while (Tasks.TryReceive(Ready).Unwrap() is None) do begin null; end; end while;
+  if not (Tasks.CloseTaskGroupWithTimeout(Group, 2) is Error(_)) then panic('running worker was lost'); end if;
   discard Tasks.Send(Release, true);
   if Tasks.Wait(Child) <> 42 then panic('worker could not finish after timeout'); end if;
   if Tasks.CloseTaskGroup(Group).Length() <> 0 then panic('close failed'); end if;
@@ -91,7 +91,7 @@ begin
     const Inner: Tasks.TaskGroup := Tasks.CreateTaskGroup();
     const Child: task of integer := Tasks.StartTaskInGroup(Inner, function(Stop: Tasks.CancellationToken): integer
       begin return Tasks.Receive(Gate).Unwrap(); end function);
-    if not Tasks.CloseTaskGroupWithTimeout(Inner, 2).IsError() then panic('premature close'); end if;
+    if not (Tasks.CloseTaskGroupWithTimeout(Inner, 2) is Error(_)) then panic('premature close'); end if;
     discard Tasks.Send(Ready, true).Unwrap();
     if Tasks.Wait(Child) <> 42 then panic('child result was lost'); end if;
     if Tasks.CloseTaskGroupWithTimeout(Inner, 1000).Unwrap().Length() <> 0 then panic('inner failures'); end if;

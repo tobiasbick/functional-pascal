@@ -7,7 +7,7 @@ begin
   Test.AssertTrue(Fs.WriteTextAtomic(Path, 'obsolete').Unwrap());
   Test.AssertTrue(Fs.DeleteFile(Path).Unwrap());
   Test.AssertFalse(Fs.Exists(Path));
-  Test.AssertTrue(Fs.DeleteFile(Path).IsError());
-  Test.AssertTrue(Fs.DeleteFile(Test.ScratchDir()).IsError());
+  Test.AssertTrue((Fs.DeleteFile(Path) is Error(_)));
+  Test.AssertTrue((Fs.DeleteFile(Test.ScratchDir()) is Error(_)));
   Test.AssertTrue(Fs.IsDir(Test.ScratchDir()));
 end.

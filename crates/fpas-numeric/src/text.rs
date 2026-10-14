@@ -38,7 +38,7 @@ pub fn integer(text: &str) -> Option<i64> {
     signed_integer(integer_magnitude(body)?, negative)
 }
 
-/// Parses the signed hexadecimal text accepted by HexToInt, with an optional $, 0x, or 0X prefix.
+/// Parses the signed hexadecimal text accepted by Parse.HexInt, with an optional $, 0x, or 0X prefix.
 pub fn hex_integer(text: &str) -> Option<i64> {
     let (body, negative) = signed_body(text.trim());
     let digits = body

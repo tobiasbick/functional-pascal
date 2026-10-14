@@ -12,9 +12,6 @@ documented_intrinsic_enum! {
 #[repr(u16)]
 pub enum ResultIntrinsic {
     Unwrap = 90,
-    UnwrapOr = 91,
-    IsOk = 92,
-    IsError = 93,
     /// `Std.Results.Map(R, F)` — `Ok(v)` → `Ok(F(v))`, `Error(e)` passthrough.
     ///
     /// **Documentation:** `docs/pascal/language/types/result-operations.md`

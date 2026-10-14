@@ -32,7 +32,7 @@ fn imported_constructions_conversions_and_private_inference_survive_unit_reuse()
     let root = temp_dir();
     write(
         &root.join("main.fpas"),
-        "program T; uses Domain as D; begin const Id := D.UserId(42); const Raw := integer(Id); const Boxed := D.Box(Value := D.Lookup.Found(Raw)); const Missing := D.IntLookup.Missing; const Read := D.Read(); const Empty: Option of integer := D.Empty(); const Factory: function(): Option of string := D.Empty; if Raw <> 42 or Read <> 3 or not Empty.IsNone() or not Factory().IsNone() then panic('import inference'); end if; case Boxed.Value of when D.Lookup.Found(const Value): if Value <> 42 then panic('payload'); end if; when D.Lookup.Missing: panic('missing'); end case; case Missing of when D.Lookup.Found(_): panic('found'); when D.Lookup.Missing: null; end case; end.",
+        "program T; uses Domain as D; begin const Id := D.UserId(42); const Raw := integer(Id); const Boxed := D.Box(Value := D.Lookup.Found(Raw)); const Missing := D.IntLookup.Missing; const Read := D.Read(); const Empty: Option of integer := D.Empty(); const Factory: function(): Option of string := D.Empty; if Raw <> 42 or Read <> 3 or not (Empty is None) or not (Factory() is None) then panic('import inference'); end if; case Boxed.Value of when D.Lookup.Found(const Value): if Value <> 42 then panic('payload'); end if; when D.Lookup.Missing: panic('missing'); end case; case Missing of when D.Lookup.Found(_): panic('found'); when D.Lookup.Missing: null; end case; end.",
     );
     write(
         &root.join("app.fpasprj"),

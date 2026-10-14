@@ -2,22 +2,19 @@ use super::check_errors;
 
 #[test]
 fn unwrap_rejects_non_containers_without_cascading_argument_errors() {
-    for operation in ["Unwrap", "UnwrapOr"] {
-        for argument in ["42", "MissingValue"] {
-            let fallback = if operation == "UnwrapOr" { "0" } else { "" };
-            let errors = check_errors(&format!(
-                "program T; begin const N: integer := ({argument}).{operation}({fallback}); end."
-            ));
-            assert_eq!(errors.len(), 1, "{errors:#?}");
-            assert!(
-                errors[0].message.contains(if argument == "42" {
-                    "has no dot operation"
-                } else {
-                    "MissingValue"
-                }),
-                "{errors:#?}"
-            );
-        }
+    for argument in ["42", "MissingValue"] {
+        let errors = check_errors(&format!(
+            "program T; begin const N: integer := ({argument}).Unwrap(); end."
+        ));
+        assert_eq!(errors.len(), 1, "{errors:#?}");
+        assert!(
+            errors[0].message.contains(if argument == "42" {
+                "has no dot operation"
+            } else {
+                "MissingValue"
+            }),
+            "{errors:#?}"
+        );
     }
 }
 
@@ -33,9 +30,9 @@ fn std_math_sqrt_wrong_arg_count() {
 }
 
 #[test]
-fn std_conv_str_to_int_type_mismatch() {
+fn std_parse_int_requires_text() {
     let errs = check_errors(
-        "program T;\nuses Std.Conv as Conv;\nbegin\n  const N: integer := Conv.StrToInt(42);\nend.",
+        "program T;\nuses Std.Parse as Parse;\nbegin\n  const N: integer := Parse.Int(42).Unwrap();\nend.",
     );
     assert!(
         errs.iter().any(|e| {

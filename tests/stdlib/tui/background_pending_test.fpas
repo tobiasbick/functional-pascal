@@ -94,7 +94,7 @@ begin
   end while;
 
   Test.AssertEquals(1, State.Failures);
-  Test.AssertTrue(Tasks.ReceiveWithTimeout(Started, 0).IsError());
+  Test.AssertTrue((Tasks.ReceiveWithTimeout(Started, 0) is Error(_)));
   App.CloseWithBackground(Inbox);
   const SecondInbox: channel of integer := Tasks.CreateChannel(1);
   const SecondApp: Tui.TuiApplication := Tui.TuiApplication.OpenForTest(Tui.TuiSize.Create(24, 4));
@@ -104,7 +104,7 @@ begin
   SecondApp.Inject(Tui.TuiMsg.Tick(1));
   State := SecondApp.RunBackgroundIterations(State, SecondInbox, Update, UpdateMessage, View, 1, 0);
   SecondApp.CloseWithBackground(SecondInbox);
-  Test.AssertTrue(Tasks.ReceiveWithTimeout(Started, 0).IsError());
+  Test.AssertTrue((Tasks.ReceiveWithTimeout(Started, 0) is Error(_)));
   discard Tasks.CloseChannel(Gate);
   discard Tasks.CloseChannel(Ready);
   discard Tasks.CloseChannel(Started);

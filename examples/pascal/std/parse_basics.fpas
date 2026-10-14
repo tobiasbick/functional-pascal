@@ -5,7 +5,7 @@ program ParseBasics;
 uses Std.Console as Console, Std.Parse as Parse, Std.Conv as Conv;
 
 begin
-  case Parse.TryInt(' +1_024 ') of
+  case parse.Int(' +1_024 ') of
     when Ok(const N):
       begin
         Console.WriteLn('try int: ', Conv.IntToStr(N));
@@ -16,7 +16,7 @@ begin
       end;
   end case;
 
-  case Parse.TryReal('1_024.0e-2') of
+  case parse.Real('1_024.0e-2') of
     when Ok(const R):
       begin
         Console.WriteLn('try real: ', Conv.RealToStr(R));
@@ -27,7 +27,7 @@ begin
       end;
   end case;
 
-  case Parse.TryBool(' FALSE ') of
+  case parse.Bool(' FALSE ') of
     when Ok(const B):
       begin
         Console.WriteLn('try bool: ', Conv.BoolToStr(B));

@@ -15,7 +15,6 @@ begin
 end.
 ```
 
-
 ## Availability and call forms
 
 These built-in type operations are always available without imports. Use
@@ -29,18 +28,15 @@ functions with the same name do not affect this selection.
 
 | Operation | Result / behavior |
 | --- | --- |
-| `Value.IsSome(): boolean` | Whether a value is present |
-| `Value.IsNone(): boolean` | Whether the option is absent |
 | `Value.Map(F: function(V: T): U): Option of U` | Transform the present value |
 | `Value.AndThen(F: function(V: T): Option of U): Option of U` | Chain an optional operation |
 | `Value.OrElse(F: function(): Option of T): Option of T` | Invoke a fallback only for `None` |
 | `Value.Unwrap(): T` | Extract the value; panic for `None` |
-| `Value.UnwrapOr(Default: T): T` | Extract the value or use the default |
-
 
 ## `Value.Unwrap(): T`
 
 Extracts the value from `Some(value)`. **Runtime error** if `O` is `None`.
+Use Unwrap when abort is intended; handle expected absence with case.
 
 ```pascal
 const O: Option of integer := Some(7);
@@ -49,38 +45,24 @@ Console.WriteLn(O.Unwrap());                             // 7
 
 ---
 
-## `Value.UnwrapOr(Default: T): T`
+## Variant tests and plain defaults
 
-Extracts the value from `Some(value)`, or returns `Default` if `O` is `None`.
-
-```pascal
-const O: Option of integer := None;
-Console.WriteLn(O.UnwrapOr(-1));                      // -1
-```
-
----
-
-## `Value.IsSome(): boolean`
-
-Returns `true` if `O` is a `Some` variant.
-
-```pascal
-const O: Option of integer := Some(7);
-Console.WriteLn(O.IsSome());                             // true
-```
-
----
-
-## `Value.IsNone(): boolean`
-
-Returns `true` if `O` is `None`.
+`Value is Some(_)` and `Value is None` test the variant without binding data.
+Case binds the payload and handles absence locally. A plain default is evaluated
+only in its selected arm:
 
 ```pascal
 const O: Option of integer := None;
-Console.WriteLn(O.IsNone());                             // true
+const Value: integer := case O of
+  when Some(const Present): Present;
+  when None: -1;
+end case;
 ```
 
----
+The selector evaluates once. Ordinary function arguments evaluate eagerly;
+work in a case arm runs only when that arm is selected. To run default work
+unconditionally, compute it before case and refer to the saved value in the
+None arm. Map, AndThen, and OrElse keep Option wrapping.
 
 ## `Value.Map(F: function(V: T): U): Option of U`
 
@@ -123,6 +105,9 @@ const M: option of string := O.AndThen(PositiveToOptionString);
 ## `Value.OrElse(F: function(): Option of T): Option of T`
 
 Calls `F` to provide a fallback when `O` is `None`. If `O` is `Some`, returns it unchanged.
+The callback body runs only for None. The expression supplying F is an ordinary
+eager argument and is evaluated once even for Some. OrElse returns Option of T;
+use case for a plain replacement value. Callback runtime failures propagate.
 
 ```pascal
 function Fallback99(): Option of integer;

@@ -287,7 +287,7 @@ begin
   var Cells: array of Tui.TuiCell := [];
   for Py: integer := 0 to Tasks.Length() - 1 do
     begin
-      if StdTasks.WaitAnyWithCancellation([Tasks[Py]], HostToken).IsError() then
+      if (StdTasks.WaitAnyWithCancellation([Tasks[Py]], HostToken) is Error(_)) then
         begin
           break;
         end;
@@ -302,8 +302,7 @@ begin
       Cells := Cells.Concat(Row);
       if Py = Request.Height - 1 then
         begin
-          if StdTasks.SendWithCancellation(Inbox, MandelbrotRenderFrame(Generation := Request.Generation, Cells := Cells), HostToken)
-               .IsError() then
+          if (StdTasks.SendWithCancellation(Inbox, MandelbrotRenderFrame(Generation := Request.Generation, Cells := Cells), HostToken) is Error(_)) then
             begin
               break;
             end;

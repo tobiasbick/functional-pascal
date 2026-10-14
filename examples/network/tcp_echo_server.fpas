@@ -2,7 +2,8 @@
 program NetworkTcpEchoServer;
 
 uses
-  Std.Args as Args, Std.Conv as Conv, Std.Console as Console, Std.Net as Net, Std.Net.Utf8 as Utf8;
+  Std.Args as Args, Std.Conv as Conv, Std.Console as Console, Std.Net as Net, Std.Net.Utf8 as Utf8,
+  Std.Parse as Parse;
 
 // Returns the first LF delimiter index or minus one.
 //
@@ -106,7 +107,7 @@ begin
   var Port: integer := 18081;
   if Args.ParamCount() = 1 then
     begin
-      Port := Conv.StrToInt(Args.ParamStr(0));
+      Port := Parse.Int(Args.ParamStr(0)).Unwrap();
     end;
   elsif Args.ParamCount() <> 0 then
     begin

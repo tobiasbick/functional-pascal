@@ -2,6 +2,11 @@
 
 Package: [AP33](README.md). Status: complete; decision work package.
 
+[AP43](../ap43-consistent-error-handling/README.md) supersedes this package's
+retained parser names and aborting-wrapper boundary. Current Std.Parse
+Int/Real/Bool/HexInt return Result; explicit Unwrap represents deliberate abort.
+The numeric grammar, range, and arithmetic decisions below remain authoritative.
+
 ## Selected decisions
 
 The user approved the proposed rules for the existing integer and real types.

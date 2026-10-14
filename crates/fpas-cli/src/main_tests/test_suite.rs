@@ -43,6 +43,7 @@ fpas_suite_tests! {
     (fpas_suite_stdlib_json, "tests/stdlib/json/"),
     (fpas_suite_stdlib_math, "tests/stdlib/math/"),
     (fpas_suite_stdlib_option, "tests/stdlib/option/"),
+    (fpas_suite_stdlib_parse, "tests/stdlib/parse/"),
     (fpas_suite_stdlib_random, "tests/stdlib/random/"),
     (fpas_suite_stdlib_result, "tests/stdlib/result/"),
     (fpas_suite_stdlib_server, "tests/stdlib/server/"),

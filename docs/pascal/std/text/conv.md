@@ -1,6 +1,7 @@
 # `Std.Conv`
 
-Explicit conversions between text and numbers (and simple numeric widens). Use this when you need **parsing** or **formatted text**, not silent coercion.
+Formatting of typed values and explicit integer-to-real conversion. Parse input
+text with [Std.Parse](parse.md), whose operations return Result.
 
 ```pascal
 program Example;
@@ -12,10 +13,9 @@ begin
 end.
 ```
 
-
 ## Importing and names
 
-After `uses Std.Conv as Conv;`, call `Conv.IntToStr`, `Conv.StrToInt`, and the
+After `uses Std.Conv as Conv;`, call `Conv.IntToStr`, `Conv.IntToReal`, and the
 other exported routines through that alias.
 
 ---
@@ -27,14 +27,10 @@ Requires `uses Std.Conv as Conv;`.
 | Kind | Name | Notes |
 |------|------|--------|
 | function | `IntToStr(N: integer): string` | decimal text |
-| function | `StrToInt(S: string): integer` | signed decimal or `$` hex text; checked signed 64-bit range |
 | function | `IntToReal(N: integer): real` | explicit binary64 rounding; may lose integer precision |
 | function | `RealToStr(R: real): string` | finite real text with a bit-preserving parsing round-trip; integral reals include `.0` |
-| function | `StrToReal(S: string): real` | finite real literal text; rejects nonzero underflow to zero |
 | function | `BoolToStr(B: boolean): string` | `'true'` or `'false'` |
-| function | `StrToBool(S: string): boolean` | parse; case-insensitive; error if invalid |
 | function | `IntToHex(N: integer; Digits: integer): string` | uppercase hex, zero-padded |
-| function | `HexToInt(S: string): integer` | parse hex; supports `$` / `0x` prefix |
 
 ---
 
@@ -44,20 +40,6 @@ Decimal string representation of `N`.
 
 ```pascal
 Console.WriteLn(Conv.IntToStr(42));
-```
-
----
-
-## `function StrToInt(S: string): integer`
-
-Parses signed decimal or `$` hexadecimal integer text with single `_` separators
-between digits. Surrounding whitespace is ignored. The result must fit the signed
-64-bit range, including `-9223372036854775808` and `-$8000000000000000`.
-Invalid text or overflow is a runtime error. `Std.Parse.TryInt` uses the same
-grammar and returns a Result.
-
-```pascal
-Console.WriteLn(Conv.StrToInt('  -7  '));
 ```
 
 ---
@@ -79,26 +61,12 @@ Console.WriteLn(X);
 
 ## `function RealToStr(R: real): string`
 
-Returns locale-independent real text that `StrToReal` and `TryReal` parse back
+Returns locale-independent real text that `Parse.Real` parses back
 to the identical binary64 bits. Integral reals include `.0`, so `RealToStr(1.0)`
 is `'1.0'`. Negative zero is `'-0.0'`. Nonfinite values are rejected.
 
 ```pascal
 Console.WriteLn(Conv.RealToStr(1.5));
-```
-
----
-
-## `function StrToReal(S: string): real`
-
-Parses the real literal forms: digits on both sides of `.`, an optional exponent,
-and single `_` digit separators. A leading sign and surrounding whitespace are
-accepted. NaN, infinity, overflow, and nonzero input rounded to zero are invalid;
-representable subnormals remain valid. Invalid input is a runtime error.
-`Std.Parse.TryReal` uses the same grammar and returns a Result.
-
-```pascal
-Console.WriteLn(Conv.StrToReal('2.25'));
 ```
 
 ---
@@ -114,17 +82,6 @@ Console.WriteLn(Conv.BoolToStr(false));  // false
 
 ---
 
-## `function StrToBool(S: string): boolean`
-
-Parses `'true'` or `'false'` (case-insensitive). **Runtime error** if `S` is neither.
-
-```pascal
-Console.WriteLn(Conv.StrToBool('True'));    // true
-Console.WriteLn(Conv.StrToBool('FALSE'));    // false
-```
-
----
-
 ## `function IntToHex(N: integer; Digits: integer): string`
 
 Returns `N` as an uppercase hexadecimal string, zero-padded to at least `Digits` characters.
@@ -134,21 +91,6 @@ Returns `N` as an uppercase hexadecimal string, zero-padded to at least `Digits`
 ```pascal
 Console.WriteLn(Conv.IntToHex(255, 2));    // FF
 Console.WriteLn(Conv.IntToHex(255, 4));     // 00FF
-```
-
----
-
-## `function HexToInt(S: string): integer`
-
-Parses signed hexadecimal text with single `_` separators and an optional `$`,
-`0x`, or `0X` prefix. The sign precedes the prefix. Bare hex such as `'FF'`
-is accepted by this explicit hex helper; general integer parsers require `$`
-for hex. Values must fit the signed 64-bit range; invalid text is a runtime error.
-
-```pascal
-Console.WriteLn(Conv.HexToInt('FF'));     // 255
-Console.WriteLn(Conv.HexToInt('$FF'));    // 255
-Console.WriteLn(Conv.HexToInt('0xFF'));    // 255
 ```
 
 ---

@@ -8,7 +8,16 @@ unit Std.Parse;
 //
 // Parameters:
 // - `Text`: UTF-8 text processed by the operation.
-public function TryBool(Text: string): result of (boolean, string);
+public function Bool(Text: string): result of (boolean, string);
+begin
+  panic('Intrinsic API declaration');
+end function;
+
+// Signed hexadecimal text; bare hex or `$`/`0x`/`0X` prefix; checked signed 64-bit bounds.
+//
+// Parameters:
+// - `Text`: UTF-8 text processed by the operation.
+public function HexInt(Text: string): result of (integer, string);
 begin
   panic('Intrinsic API declaration');
 end function;
@@ -17,7 +26,7 @@ end function;
 //
 // Parameters:
 // - `Text`: UTF-8 text processed by the operation.
-public function TryInt(Text: string): result of (integer, string);
+public function Int(Text: string): result of (integer, string);
 begin
   panic('Intrinsic API declaration');
 end function;
@@ -26,7 +35,7 @@ end function;
 //
 // Parameters:
 // - `Text`: UTF-8 text processed by the operation.
-public function TryReal(Text: string): result of (real, string);
+public function Real(Text: string): result of (real, string);
 begin
   panic('Intrinsic API declaration');
 end function;

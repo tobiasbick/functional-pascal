@@ -32,7 +32,7 @@ pub(super) struct LoweringInput<'a> {
     pub constants: &'a BTreeMap<String, fpas_ir::Constant>,
     pub closure_targets: std::collections::HashMap<usize, super::context::ClosureTarget>,
     pub bound_method_targets: std::collections::HashMap<usize, super::context::BoundMethodTarget>,
-    pub intrinsic_task_targets: std::collections::HashMap<usize, super::context::BoundMethodTarget>,
+    pub intrinsic_targets: std::collections::HashMap<usize, super::context::BoundMethodTarget>,
     pub cell_names: std::collections::BTreeSet<String>,
 }
 
@@ -316,7 +316,7 @@ pub(super) fn lower(
         constants,
         closure_targets,
         bound_method_targets,
-        intrinsic_task_targets,
+        intrinsic_targets,
         cell_names,
     } = input;
     let runtime_name = runtime_name.to_string();
@@ -352,7 +352,7 @@ pub(super) fn lower(
         callables: callables.clone(),
         closure_targets,
         bound_method_targets,
-        intrinsic_task_targets,
+        intrinsic_targets,
         cell_names,
         type_table: types.clone(),
     })?;

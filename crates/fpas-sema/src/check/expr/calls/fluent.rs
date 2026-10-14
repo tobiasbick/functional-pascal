@@ -205,7 +205,18 @@ impl Checker {
             return Ty::Error;
         }
         let Some(operation) = crate::std_registry::native_operation(receiver_ty, name) else {
-            let hint = if receiver_ty == &Ty::String && name.eq_ignore_ascii_case("Substring") {
+            let removed_wrapper = match receiver_ty {
+                Ty::Option(_) => ["IsSome", "IsNone", "UnwrapOr"]
+                    .iter()
+                    .any(|old| name.eq_ignore_ascii_case(old)),
+                Ty::Result(_, _) => ["IsOk", "IsError", "UnwrapOr"]
+                    .iter()
+                    .any(|old| name.eq_ignore_ascii_case(old)),
+                _ => false,
+            };
+            let hint = if removed_wrapper {
+                crate::std_registry::native_migration_hint(name).expect("removed wrapper repair")
+            } else if receiver_ty == &Ty::String && name.eq_ignore_ascii_case("Substring") {
                 "Use `.Slice(Start, Len)` for a checked Unicode-scalar range.".to_string()
             } else if receiver_ty == &Ty::String && name.eq_ignore_ascii_case("CharAt") {
                 "Use `Text[Index]` to read a zero-based Unicode scalar.".to_string()

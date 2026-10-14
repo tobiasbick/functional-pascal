@@ -39,13 +39,10 @@ pub(crate) fn resolve(name: &str, first_argument: Option<&Ty>) -> Option<Intrins
             member,
             Conv,
             ConvIntrinsic,
-            [
-                IntToStr, StrToInt, RealToStr, StrToReal, IntToReal, BoolToStr, StrToBool,
-                IntToHex, HexToInt,
-            ]
+            [IntToStr, RealToStr, IntToReal, BoolToStr, IntToHex,]
         ),
         "Crypto" => family!(member, Crypto, CryptoIntrinsic, [RandomBytes, RandomInt]),
-        "Parse" => family!(member, Parse, ParseIntrinsic, [TryInt, TryReal, TryBool]),
+        "Parse" => family!(member, Parse, ParseIntrinsic, [Int, Real, Bool, HexInt]),
         "Math" => resolve_math(member),
         "Bits" => family!(
             member,
@@ -123,13 +120,13 @@ pub(crate) fn resolve(name: &str, first_argument: Option<&Ty>) -> Option<Intrins
             member,
             Result,
             ResultIntrinsic,
-            [Unwrap, UnwrapOr, IsOk, IsError, Map, AndThen, OrElse]
+            [Unwrap, Map, AndThen, OrElse]
         ),
         "Options" => family!(
             member,
             Option,
             OptionIntrinsic,
-            [Unwrap, UnwrapOr, IsSome, IsNone, Map, AndThen, OrElse]
+            [Unwrap, Map, AndThen, OrElse]
         ),
         "Tasks" => family!(
             member,

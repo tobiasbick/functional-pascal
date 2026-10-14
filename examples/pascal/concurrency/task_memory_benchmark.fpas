@@ -7,7 +7,7 @@ program TaskMemoryBenchmark;
 
 uses
   Std.Args as Args, Std.Console as Console, Std.Conv as Conv, Std.Tasks as StdTasks,
-  Std.Time as Time;
+  Std.Time as Time, Std.Parse as Parse;
 
 const SleepMillis: integer := 10000;
 const ProgressEvery: integer := 10000;
@@ -24,7 +24,7 @@ begin
         panic('usage: task_memory_benchmark.fpas -- TASK_COUNT');
       end;
     end if;
-    const TaskCount: integer := Conv.StrToInt(Args.ParamStr(0));
+    const TaskCount: integer := Parse.Int(Args.ParamStr(0)).Unwrap();
     if TaskCount < 1 then
       begin
         panic('TASK_COUNT must be positive');

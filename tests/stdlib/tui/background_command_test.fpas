@@ -15,7 +15,7 @@ begin
       const Target: channel of integer := State.Inbox;
       const Ready: channel of boolean := State.Ready;
       Cmd.StartBackground(7, function(Token: Tasks.CancellationToken): result of (boolean, string) begin
-        if Tasks.SendWithCancellation(Target, 42, Token).IsError() then
+        if (Tasks.SendWithCancellation(Target, 42, Token) is Error(_)) then
           begin
             return Ok(true);
           end;

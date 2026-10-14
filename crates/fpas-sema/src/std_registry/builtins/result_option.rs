@@ -20,24 +20,12 @@ pub(super) fn check_result_option_builtin_std_call(
         s::STD_RESULT_UNWRAP => check_one_arg(c, name, args, span, |c, ty| {
             unwrap_result_ok(c, name, ty, span)
         }),
-        s::STD_RESULT_UNWRAP_OR => check_two_args(c, name, args, span, |c, ty, _| {
-            unwrap_result_ok(c, name, ty, span)
-        }),
-        s::STD_RESULT_IS_OK | s::STD_RESULT_IS_ERR => {
-            check_one_arg(c, name, args, span, |_, _| Ty::Boolean)
-        }
         s::STD_RESULT_MAP => check_result_map(c, args, span),
         s::STD_RESULT_AND_THEN => check_result_and_then(c, args, span),
         s::STD_RESULT_OR_ELSE => check_result_or_else(c, args, span),
         s::STD_OPTION_UNWRAP => check_one_arg(c, name, args, span, |c, ty| {
             unwrap_option(c, name, ty, span)
         }),
-        s::STD_OPTION_UNWRAP_OR => check_two_args(c, name, args, span, |c, ty, _| {
-            unwrap_option(c, name, ty, span)
-        }),
-        s::STD_OPTION_IS_SOME | s::STD_OPTION_IS_NONE => {
-            check_one_arg(c, name, args, span, |_, _| Ty::Boolean)
-        }
         s::STD_OPTION_MAP => check_option_map(c, args, span),
         s::STD_OPTION_AND_THEN => check_option_and_then(c, args, span),
         s::STD_OPTION_OR_ELSE => check_option_or_else(c, args, span),
@@ -54,7 +42,7 @@ fn unwrap_result_ok(c: &mut Checker, name: &str, ty: Ty, span: Span) -> Ty {
             c.error_with_code(
                 SEMA_TYPE_MISMATCH,
                 format!("`{name}` first argument must be a Result"),
-                "Pass a `Result of (T, E)` value. For `Option of T`, use `Std.Options.Unwrap` or `Std.Options.UnwrapOr`.",
+                "Pass a `Result of (T, E)` value; use `case` to handle errors or `Value.Unwrap()` to abort deliberately.",
                 span,
             );
             Ty::Error
@@ -70,7 +58,7 @@ fn unwrap_option(c: &mut Checker, name: &str, ty: Ty, span: Span) -> Ty {
             c.error_with_code(
                 SEMA_TYPE_MISMATCH,
                 format!("`{name}` first argument must be an Option"),
-                "Pass an `Option of T` value. For `Result of (T, E)`, use `Std.Results.Unwrap` or `Std.Results.UnwrapOr`.",
+                "Pass an `Option of T` value; use `case` to handle absence or `Value.Unwrap()` to abort deliberately.",
                 span,
             );
             Ty::Error
@@ -96,27 +84,6 @@ fn check_one_arg(
     }
     let ty = c.check_expr(args[0]);
     derive(c, ty)
-}
-
-fn check_two_args(
-    c: &mut Checker,
-    name: &str,
-    args: &[&Expr],
-    span: Span,
-    derive: impl FnOnce(&mut Checker, Ty, Ty) -> Ty,
-) -> Ty {
-    if args.len() != 2 {
-        c.error_with_code(
-            SEMA_WRONG_ARGUMENT_COUNT,
-            format!("`{name}` expects 2 arguments, got {}", args.len()),
-            format!("Call `{name}` with exactly 2 arguments."),
-            span,
-        );
-        return Ty::Error;
-    }
-    let ty1 = c.check_expr(args[0]);
-    let ty2 = c.check_expr(args[1]);
-    derive(c, ty1, ty2)
 }
 
 /// `R.Map(F)` -> `Result of (U, E)` where `F: function(V: T): U`.

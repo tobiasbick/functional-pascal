@@ -19,5 +19,5 @@ begin
   Console.Present();
   const WideCell: Console.Cell := Console.GetCell(2, 1).Unwrap();
   Test.AssertEquals('中', WideCell.glyph);
-  Test.AssertTrue(Console.GetCell(3, 1).IsNone());
+  Test.AssertTrue((Console.GetCell(3, 1) is None));
 end.

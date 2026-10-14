@@ -12,9 +12,6 @@ documented_intrinsic_enum! {
 #[repr(u16)]
 pub enum OptionIntrinsic {
     Unwrap = 94,
-    UnwrapOr = 95,
-    IsSome = 96,
-    IsNone = 97,
     /// `Std.Options.Map(O, F)` — `Some(v)` → `Some(F(v))`, `None` passthrough.
     ///
     /// **Documentation:** `docs/pascal/language/types/option-operations.md`

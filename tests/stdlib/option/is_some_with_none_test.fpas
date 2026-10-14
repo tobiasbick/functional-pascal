@@ -4,5 +4,5 @@ uses Std.Console as Console;
 
 begin
   const O: option of integer := None;
-  Console.WriteLn(O.IsSome());
+  Console.WriteLn((O is Some(_)));
 end.

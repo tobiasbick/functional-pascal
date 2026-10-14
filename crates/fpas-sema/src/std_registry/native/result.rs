@@ -5,22 +5,6 @@ use crate::types::Ty;
 pub(super) const OPERATIONS: &[NativeOperation] = &[
     NativeOperation {
         receiver: NativeReceiver::Result,
-        name: "IsOk",
-        implementation: "Std.Results.IsOk",
-        signature: || function(vec![], Ty::Boolean, false),
-        lowering: NativeLowering::Intrinsic,
-        documentation: "Whether the result is successful",
-    },
-    NativeOperation {
-        receiver: NativeReceiver::Result,
-        name: "IsError",
-        implementation: "Std.Results.IsError",
-        signature: || function(vec![], Ty::Boolean, false),
-        lowering: NativeLowering::Intrinsic,
-        documentation: "Whether the result is an error",
-    },
-    NativeOperation {
-        receiver: NativeReceiver::Result,
         name: "Map",
         implementation: "Std.Results.Map",
         signature: || {
@@ -104,19 +88,5 @@ pub(super) const OPERATIONS: &[NativeOperation] = &[
         signature: || function(vec![], Ty::GenericParam("T".into(), None), false),
         lowering: NativeLowering::Intrinsic,
         documentation: "Extract the value; panic for `Error`",
-    },
-    NativeOperation {
-        receiver: NativeReceiver::Result,
-        name: "UnwrapOr",
-        implementation: "Std.Results.UnwrapOr",
-        signature: || {
-            function(
-                vec![p("Default", Ty::GenericParam("T".into(), None))],
-                Ty::GenericParam("T".into(), None),
-                false,
-            )
-        },
-        lowering: NativeLowering::Intrinsic,
-        documentation: "Extract the value or use the default",
     },
 ];

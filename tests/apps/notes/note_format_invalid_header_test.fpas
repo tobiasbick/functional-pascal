@@ -3,9 +3,8 @@ program NoteFormatInvalidHeaderTest;
 uses Notes.Format as Format, Std.Test as Test;
 
 begin
-  Test.AssertTrue(Format.NoteParse('plain text').IsError());
-  Test.AssertTrue(Format.NoteParse('+++' + #10 + 'format = 1').IsError());
-  Test.AssertTrue(Format.NoteParse('+++' + #10 + 'format = 2' + #10 + 'id = ''wrong-version''' + #10 + '+++' +
-                                   #10)
-                    .IsError());
+  Test.AssertTrue((Format.NoteParse('plain text') is Error(_)));
+  Test.AssertTrue((Format.NoteParse('+++' + #10 + 'format = 1') is Error(_)));
+  Test.AssertTrue((Format.NoteParse('+++' + #10 + 'format = 2' + #10 + 'id = ''wrong-version''' + #10 + '+++' +
+                                    #10) is Error(_)));
 end.

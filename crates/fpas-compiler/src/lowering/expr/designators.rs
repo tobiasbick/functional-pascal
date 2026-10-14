@@ -18,6 +18,20 @@ impl LoweringContext {
         designator: &Designator,
         expression: &Expr,
     ) -> Result<ValueId, CompileError> {
+        if let Some(target) = self
+            .intrinsic_targets
+            .get(&fpas_sema::expr_lookup_key(expression))
+            .cloned()
+        {
+            return self.emit_value(
+                Operation::MakeClosure {
+                    function: target.function,
+                    captures: Vec::new(),
+                },
+                target.value_type,
+                designator.span,
+            );
+        }
         let designator_key = fpas_sema::designator_lookup_key(designator);
         if self.bound_method_targets.contains_key(&designator_key) {
             return self.lower_bound_method(designator, designator_key);

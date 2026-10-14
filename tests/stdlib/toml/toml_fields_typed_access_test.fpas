@@ -44,5 +44,5 @@ begin
                                                                                                 'a',
                                                                                                 'b'
                                                                                               ])));
-  Test.AssertTrue(TomlFields.ParseTable('a = ').IsError());
+  Test.AssertTrue((TomlFields.ParseTable('a = ') is Error(_)));
 end.

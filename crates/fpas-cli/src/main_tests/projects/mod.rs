@@ -8,6 +8,7 @@ mod dependencies;
 mod documented_examples;
 mod edge_cases;
 mod enum_variants;
+mod error_conventions;
 mod errors;
 mod exports;
 mod generic_aliases;

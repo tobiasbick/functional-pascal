@@ -90,7 +90,7 @@ Arithmetic permits subnormal values and signed zero; nonzero literal/text input
 rounded to zero is rejected. `IntToReal` can lose integer precision. `Std.Math.Round`
 uses ties to even; Trunc uses truncation toward zero, with checked integer bounds.
 `RealToStr` preserves the identical binary64 parsing round-trip, including `1.0`
-and `-0.0`. `Std.Conv` number parsers and `Std.Parse.TryInt`/`TryReal` share literal
+and `-0.0`. `Std.Parse.Int`/`Real` share literal
 bodies, adding an optional sign and surrounding whitespace; real text needs a
 fractional part. See [conversion](std/text/conv.md) and [parsing](std/text/parse.md).
 
@@ -130,9 +130,9 @@ begin
   Test.AssertEquals(-2, -7 div 3);
   Test.AssertEquals(1.5, Conv.IntToReal(1) + 0.5);
   Test.AssertEquals(2, Math.Round(2.5));
-  Test.AssertEquals(255, Parse.TryInt('$FF').Unwrap());
-  Test.AssertEquals('-0.0', Conv.RealToStr(Conv.StrToReal('-0.0')));
-  Test.AssertTrue(Parse.TryReal('1.0e-9999').IsError());
+  Test.AssertEquals(255, Parse.Int('$FF').Unwrap());
+  Test.AssertEquals('-0.0', Conv.RealToStr(Parse.Real('-0.0').Unwrap()));
+  Test.AssertTrue(Parse.Real('1.0e-9999') is Error(_));
 end.
 ```
 
@@ -433,17 +433,25 @@ See [pattern matching](language/pattern-matching/README.md).
 ## 7. Result, Option, propagation, and panic
 
 `Result of (T, E)` has `Ok(T)` and `Error(E)`; `Option of T` has `Some(T)` and `None`.
-They are values, not exceptions. Match them with `case`/`is`, or use native methods
-such as `Map`, `AndThen`, `OrElse`, and `Unwrap` without an extra import.
-`Unwrap` fails at runtime on an error/absent value; prefer matching when absence
-is expected. Callback-based combinators can defer work until their branch is used.
+They are values. Use nonbinding `is` for variant tests, exhaustive `case` for
+payload binding, local handling, or plain defaults, and native `Unwrap` for
+deliberate abort on Error/None. Case evaluates only its selected arm.
+Map transforms wrapped success, AndThen composes wrapped operations, and OrElse
+recovers within a wrapper. Callback argument expressions evaluate eagerly in
+source order; their bodies run only on the selected variant.
+
+`Std.Parse.Int`, `Real`, `Bool`, and `HexInt` each take Text: string and return
+Result of (target type, string). HexInt reads bare/prefixed hexadecimal text;
+Int reads decimal or `$` hex. Std.Conv formats and converts already typed values.
 
 `try Expression` unwraps success or returns a matching failure from the enclosing
-function. Result propagation requires the same error type; the success type may
+function. Result propagation requires compatible error types; the success type may
 change. Option propagation returns `None` from an Option-returning function.
 This is an expression operator, not a `try` statement with a handler.
 `panic(Message)` stops normal execution with a runtime failure; it does not construct
-an `Error` or `None`, and there is no language catch block.
+an `Error` or `None`, and there is no language catch block. `try` does not catch
+panic, failed Unwrap, or other runtime failures. It is forbidden in the program
+body, procedures, and functions returning an incompatible wrapper or ordinary type.
 
 ```pascal
 program ReferenceErrors;
@@ -751,7 +759,7 @@ begin
   const EndOfChain: Chain of integer := Chain.Empty;
   const Values: Chain of integer := Chain.Link(1, EndOfChain);
   const Absent: option of integer := Missing();
-  Test.AssertTrue(Absent.IsNone());
+  Test.AssertTrue(Absent is None);
   Test.AssertEquals(4, Wrapped.Value);
   Test.AssertEquals(8, Wrapped.Map(Double));
   Test.AssertEquals('one', Entry.Value);

@@ -7,7 +7,7 @@ begin
   for Port: integer := 28200 to 28299 do
     begin
       const Opened: result of (Net.Listener, string) := Net.Listen('127.0.0.1', Port);
-      if Opened.IsOk() then
+      if (Opened is Ok(_)) then
         begin
           return Opened;
         end;

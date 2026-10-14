@@ -184,6 +184,7 @@ impl<'a> ClosureRegistry<'a> {
         metadata: &AnalysisMetadata,
         types: &mut types::TypeTable,
     ) -> Result<(), CompileError> {
+        self.register_parser_value(expression, owner, metadata, types)?;
         match expression {
             Expr::Closure(closure) => {
                 let key = fpas_sema::expr_lookup_key(expression);

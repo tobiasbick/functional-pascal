@@ -26,11 +26,14 @@ end function;
 begin
   const Data: array of integer := [3, 7, 15, 42, 8];
   const Found: option of integer := FindFirst(Data, 10);
-  Console.WriteLn('IsSome: ', Found.IsSome());
+  Console.WriteLn('Some variant: ', (Found is Some(_)));
   Console.WriteLn('Value: ', Found.Unwrap());
   const Missing: option of integer := FindFirst(Data, 100);
-  Console.WriteLn('IsNone: ', Missing.IsNone());
-  Console.WriteLn('UnwrapOr: ', Missing.UnwrapOr(0));
+  Console.WriteLn('None variant: ', (Missing is None));
+  Console.WriteLn('Default value: ', (case Missing of
+    when Some(const AP43Value): AP43Value;
+    when None: 0;
+  end case));
   case FindFirst(Data, 40) of
     when Some(const V):
       begin

@@ -4,6 +4,11 @@ Status: complete. Effort: large. Completion is tracked in the
 [central plan](../README.md). The package covers the existing integer and real
 types and public numeric APIs.
 
+[AP43](../ap43-consistent-error-handling/README.md) replaces the original parser
+names and aborting conversion wrappers with Std.Parse Int/Real/Bool/HexInt
+returning Result. Explicit Unwrap represents deliberate abort. AP33's input
+grammars, numeric rules, and completed status remain authoritative.
+
 ## Selected contract
 
 The user selected explicit numeric compatibility, checked integer arithmetic,

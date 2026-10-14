@@ -37,14 +37,14 @@ begin
   if C.Double() <> 12 then panic('method mismatch'); end if;
   var B: Button := Button();
   B.Notify(99);
-  if B.OnValue.IsSome() or LastValue <> 0 then panic('unexpected handler'); end if;
+  if (B.OnValue is Some(_)) or LastValue <> 0 then panic('unexpected handler'); end if;
   B.OnValue := Some(Remember);
-  if not B.OnValue.IsSome() then panic('missing handler'); end if;
+  if not (B.OnValue is Some(_)) then panic('missing handler'); end if;
   B.Notify(17);
   if LastValue <> 17 then panic('handler call mismatch'); end if;
   B.OnValue := (None);
   B.Notify(99);
-  if B.OnValue.IsSome() or LastValue <> 17 then panic('handler was not cleared'); end if;
+  if (B.OnValue is Some(_)) or LastValue <> 17 then panic('handler was not cleared'); end if;
 end.
 "#,
     );
@@ -75,7 +75,7 @@ begin
   C.Base := 99;
   if Call(8) <> 20 then panic('bound handler mismatch'); end if;
   S.OnValue := None;
-  if S.OnValue.IsSome() or Empty.OnValue.IsSome() then panic('record copy changed'); end if;
+  if (S.OnValue is Some(_)) or (Empty.OnValue is Some(_)) then panic('record copy changed'); end if;
   const Retained: function(Value: integer): integer := Installed.OnValue.Unwrap();
   if Retained(8) <> 20 then panic('copied handler changed'); end if;
 end.

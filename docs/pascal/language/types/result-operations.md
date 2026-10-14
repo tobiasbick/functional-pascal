@@ -15,7 +15,6 @@ begin
 end.
 ```
 
-
 ## Availability and call forms
 
 These built-in type operations are always available without imports. Use
@@ -29,55 +28,20 @@ functions with the same name do not affect this selection.
 
 | Operation | Result / behavior |
 | --- | --- |
-| `Value.IsOk(): boolean` | Whether the result is successful |
-| `Value.IsError(): boolean` | Whether the result is an error |
 | `Value.Map(F: function(V: T): U): Result of (U, E)` | Transform the successful value |
 | `Value.AndThen(F: function(V: T): Result of (U, E)): Result of (U, E)` | Chain an operation with the same error type |
 | `Value.OrElse(F: function(Err: E): Result of (T, E2)): Result of (T, E2)` | Invoke error recovery; may change the error type |
 | `Value.Unwrap(): T` | Extract the value; panic for `Error` |
-| `Value.UnwrapOr(Default: T): T` | Extract the value or use the default |
-
 
 ## `Value.Unwrap(): T`
 
 Extracts the value from `Ok(value)`. **Runtime error** if `R` is `Error`.
+Use Unwrap when abort is intended; handle expected errors with case or propagate
+them with try inside a compatible Result-returning function.
 
 ```pascal
 const R: Result of (integer, string) := Ok(42);
 Console.WriteLn(R.Unwrap());                             // 42
-```
-
----
-
-## `Value.UnwrapOr(Default: T): T`
-
-Extracts the value from `Ok(value)`, or returns `Default` if `R` is `Error`.
-
-```pascal
-const R: Result of (integer, string) := Error('oops');
-Console.WriteLn(R.UnwrapOr(0));                       // 0
-```
-
----
-
-## `Value.IsOk(): boolean`
-
-Returns `true` if `R` is an `Ok` variant.
-
-```pascal
-const R: Result of (integer, string) := Ok(42);
-Console.WriteLn(R.IsOk());                               // true
-```
-
----
-
-## `Value.IsError(): boolean`
-
-Returns `true` if `R` is an `Error` variant.
-
-```pascal
-const R: Result of (integer, string) := Error('fail');
-Console.WriteLn(R.IsError());                              // true
 ```
 
 ---

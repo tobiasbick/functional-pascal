@@ -13,15 +13,6 @@ begin
   panic('Intrinsic API declaration');
 end function;
 
-// Parse hex; supports `$` / `0x` prefix.
-//
-// Parameters:
-// - `S`: UTF-8 text processed by the operation.
-public function HexToInt(S: string): integer;
-begin
-  panic('Intrinsic API declaration');
-end function;
-
 // Uppercase hex, zero-padded.
 //
 // Parameters:
@@ -55,33 +46,6 @@ end function;
 // Parameters:
 // - `R`: `real` input value used by `RealToStr`.
 public function RealToStr(R: real): string;
-begin
-  panic('Intrinsic API declaration');
-end function;
-
-// Parse; case-insensitive; error if invalid.
-//
-// Parameters:
-// - `S`: UTF-8 text processed by the operation.
-public function StrToBool(S: string): boolean;
-begin
-  panic('Intrinsic API declaration');
-end function;
-
-// Signed decimal or `$` hex text; checked signed 64-bit range.
-//
-// Parameters:
-// - `S`: UTF-8 text processed by the operation.
-public function StrToInt(S: string): integer;
-begin
-  panic('Intrinsic API declaration');
-end function;
-
-// Finite real literal text; rejects nonzero underflow to zero.
-//
-// Parameters:
-// - `S`: UTF-8 text processed by the operation.
-public function StrToReal(S: string): real;
 begin
   panic('Intrinsic API declaration');
 end function;

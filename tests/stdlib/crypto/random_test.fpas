@@ -31,7 +31,7 @@ begin
       end;
   end case;
 
-  Test.AssertTrue(Crypto.RandomBytes(-1).IsError());
-  Test.AssertTrue(Crypto.RandomBytes(1048577).IsError());
-  Test.AssertTrue(Crypto.RandomInt(2, 1).IsError());
+  Test.AssertTrue((Crypto.RandomBytes(-1) is Error(_)));
+  Test.AssertTrue((Crypto.RandomBytes(1048577) is Error(_)));
+  Test.AssertTrue((Crypto.RandomInt(2, 1) is Error(_)));
 end.

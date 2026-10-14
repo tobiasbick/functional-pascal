@@ -2,9 +2,11 @@
 
 mod bound_methods;
 mod discover;
+mod intrinsic_routines;
 mod intrinsic_tasks;
 mod mutating_receivers;
 mod named_routines;
+mod parser_values;
 
 use std::collections::{BTreeMap, BTreeSet, HashMap};
 
@@ -39,8 +41,8 @@ pub(super) struct BoundMethodRoutine {
     pub owner: FunctionId,
 }
 
-/// A task entry that invokes one selected standard intrinsic.
-pub(super) struct IntrinsicTaskRoutine {
+/// A callable entry that invokes one selected standard intrinsic or native operation.
+pub(super) struct IntrinsicRoutine {
     pub id: FunctionId,
     name: String,
     intrinsic: Option<fpas_bytecode::Intrinsic>,
@@ -51,6 +53,7 @@ pub(super) struct IntrinsicTaskRoutine {
     pub owner: FunctionId,
 }
 
+/// Tracks callable entries, captures, and generated intrinsic wrappers during lowering.
 pub(super) struct ClosureRegistry<'a> {
     /// Named helpers whose lexical owner is an anonymous callable.
     pub named_routines: Vec<named_routines::NamedClosureRoutine<'a>>,
@@ -58,8 +61,8 @@ pub(super) struct ClosureRegistry<'a> {
     pub targets: HashMap<usize, ClosureTarget>,
     pub bound_routines: Vec<BoundMethodRoutine>,
     pub bound_targets: HashMap<usize, BoundMethodTarget>,
-    pub intrinsic_task_routines: Vec<IntrinsicTaskRoutine>,
-    pub intrinsic_task_targets: HashMap<usize, BoundMethodTarget>,
+    pub intrinsic_routines: Vec<IntrinsicRoutine>,
+    pub intrinsic_targets: HashMap<usize, BoundMethodTarget>,
     pub cell_names: HashMap<FunctionId, BTreeSet<String>>,
     pub(super) callables: BTreeMap<String, Callable>,
     source_name: String,
@@ -67,6 +70,7 @@ pub(super) struct ClosureRegistry<'a> {
 }
 
 impl<'a> ClosureRegistry<'a> {
+    /// Creates a registry with generated routine identifiers following the named routines.
     pub fn new(first_id: u32, callables: BTreeMap<String, Callable>, source_name: &str) -> Self {
         Self {
             named_routines: Vec::new(),
@@ -74,8 +78,8 @@ impl<'a> ClosureRegistry<'a> {
             targets: HashMap::new(),
             bound_routines: Vec::new(),
             bound_targets: HashMap::new(),
-            intrinsic_task_routines: Vec::new(),
-            intrinsic_task_targets: HashMap::new(),
+            intrinsic_routines: Vec::new(),
+            intrinsic_targets: HashMap::new(),
             cell_names: HashMap::new(),
             callables,
             source_name: source_name.to_string(),
@@ -160,7 +164,7 @@ impl<'a> ClosureRegistry<'a> {
             callables: callables.clone(),
             closure_targets: self.targets.clone(),
             bound_method_targets: self.bound_targets.clone(),
-            intrinsic_task_targets: self.intrinsic_task_targets.clone(),
+            intrinsic_targets: self.intrinsic_targets.clone(),
             cell_names: self
                 .cell_names
                 .get(&routine.id)

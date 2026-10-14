@@ -43,7 +43,7 @@ begin
     return 'unused';
   end function);
   Test.AssertEquals(0, InferredMap.Length());
-  Test.AssertTrue([].Sort().IndexOf(1).IsNone());
+  Test.AssertTrue(([].Sort().IndexOf(1) is None));
   const Integers := [-1, 3, -9223372036854775808, 0, -3].Sort();
   Test.AssertEquals(-9223372036854775808, Integers[0]);
   Test.AssertEquals(-3, Integers[1]);

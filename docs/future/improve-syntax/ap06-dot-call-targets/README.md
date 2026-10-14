@@ -14,6 +14,10 @@ RepeatStr; it replaces integer/sentinel index searches with Option results and
 enforces static sortability. The inventory and decisions below retain AP06's
 original delivered scope; its completed status remains unchanged.
 
+[AP43](../ap43-consistent-error-handling/README.md) replaces the original native
+Option/Result predicates and UnwrapOr entries with nonbinding is and exhaustive
+case. Map, AndThen, OrElse, and Unwrap remain in the current catalog.
+
 - A dot call selects a declared record member or one operation from the
   [native catalog](catalog.md), by static receiver type and case-insensitive
   name. Results may return Self, a new record, or another type that continues

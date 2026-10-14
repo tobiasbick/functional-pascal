@@ -30,7 +30,8 @@ end.
 ```
 
 Every step receives the previous result. Results may change type, for example
-`Text.Split(',').Map(ParseNumber).Find(IsPositive).UnwrapOr(0)`. Processing is
+`Text.Split(',').Map(ParseNumber).Find(IsPositive)`, producing an Option.
+Use case to bind its payload or choose a plain default. Processing is
 eager. Receivers and explicit arguments are evaluated once; the receiver is
 first, followed by arguments in written order. There is no implicit unwrap or
 conversion.

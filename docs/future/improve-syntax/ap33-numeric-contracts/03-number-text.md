@@ -2,6 +2,10 @@
 
 Package: [AP33](README.md). Status: complete.
 
+[AP43](../ap43-consistent-error-handling/README.md) replaces this package's
+original parser names and aborting wrappers with Std.Parse Int/Real/Bool/HexInt
+returning Result. Numeric grammar and formatting remain unchanged.
+
 ## Scope and dependencies
 
 Source literals and numeric text share decimal/`$` hexadecimal integer bodies
@@ -10,17 +14,17 @@ underscore separators. Input adds an optional leading sign and surrounding
 whitespace. Integer input covers the full signed range. Nonfinite real input,
 overflow and nonzero input rounded to zero are invalid; representable subnormals
 remain valid. Real formatting parses back to identical binary64 bits, including
-integral real values and signed zero. Existing public API names remain; AP43
-owns their Result/error-handling convention.
+integral real values and signed zero. AP43 owns the current public parser names
+and Result/error-handling convention.
 
 ## Implementation ownership
 
 [`Shared numeric text`](../../../../crates/fpas-numeric/src/text.rs) owns body
 grammar, signed input, bounds and finite real formatting. The lexer uses its
-unsigned body parsers. [`Std.Conv`](../../../../crates/fpas-std/src/conv/mod.rs),
-[`Std.Parse`](../../../../crates/fpas-std/src/parse.rs) and
+unsigned body parsers. [`Std.Conv`](../../../../crates/fpas-std/src/conv/mod.rs)
+uses shared formatting. [`Std.Parse`](../../../../crates/fpas-std/src/parse.rs) and
 [`string numeric predicates`](../../../../crates/fpas-std/src/str/mod.rs) use
-the same input parsers. HexToInt additionally accepts bare hex and 0x/0X prefixes
+the same input parsers. Parse.HexInt additionally accepts bare hex and 0x/0X prefixes
 through its explicit hex adapter. Boolean text has its separate owner.
 
 [`TOML conversion`](../../../../crates/fpas-std/src/toml/mod.rs) rejects nonfinite

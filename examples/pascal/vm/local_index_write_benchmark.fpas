@@ -1,7 +1,8 @@
 // Measures repeated direct writes to a local copy-on-write array.
 program LocalIndexWriteBenchmark;
 
-uses Std.Args as Args, Std.Console as Console, Std.Conv as Conv, Std.Time as Time;
+uses
+  Std.Args as Args, Std.Console as Console, Std.Conv as Conv, Std.Time as Time, Std.Parse as Parse;
 
 const WarmupIterations: integer := 100;
 
@@ -27,8 +28,8 @@ begin
       panic('usage: local_index_write_benchmark.fpas -- ITERATIONS SIZE');
     end;
   end if;
-  const Iterations: integer := Conv.StrToInt(Args.ParamStr(0));
-  const Size: integer := Conv.StrToInt(Args.ParamStr(1));
+  const Iterations: integer := Parse.Int(Args.ParamStr(0)).Unwrap();
+  const Size: integer := Parse.Int(Args.ParamStr(1)).Unwrap();
   if (Iterations < 1) or (Size < 1) then
     begin
       panic('ITERATIONS and SIZE must be positive');

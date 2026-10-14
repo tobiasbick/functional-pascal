@@ -18,5 +18,5 @@ end function;
 begin
   const O: option of integer := Some(-1);
   const M: option of string := O.AndThen(PositiveOk);
-  Console.WriteLn(M.IsNone());
+  Console.WriteLn((M is None));
 end.

@@ -2,13 +2,18 @@ use super::Checker;
 use crate::std_units::hint_for_unknown_std_name;
 use fpas_parser::{Designator, DesignatorPart};
 
+mod parser_migration;
 mod std_names;
 mod types;
 
 pub(super) use types::PendingKey;
 
 impl Checker {
+    /// Gives a qualified repair for unresolved calls without exposing hidden unit symbols.
     pub(crate) fn hint_unknown_callable(&self, name: &str) -> String {
+        if let Some(hint) = self.parser_migration_hint(name) {
+            return hint;
+        }
         if let Some(hint) = self.scopes.imports.hidden_path_hint(name) {
             return hint;
         }

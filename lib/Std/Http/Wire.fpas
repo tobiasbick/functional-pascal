@@ -347,7 +347,7 @@ begin
     end;
   end if;
 
-  case Parse.TryInt(Status[0]) of
+  case parse.Int(Status[0]) of
     when Ok(const Value):
       begin
         StatusCode := Value;

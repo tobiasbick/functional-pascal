@@ -42,9 +42,10 @@ Returns the environment variable named `Name`, or `None` when it is missing.
 
 ```pascal
 const Home: option of string := Env.Get('HOME');
-if Home.IsSome() then
-  Console.WriteLn(Home.Unwrap());
-end if;
+case Home of
+  when Some(const Value): Console.WriteLn(Value);
+  when None: null;
+end case;
 ```
 
 ---

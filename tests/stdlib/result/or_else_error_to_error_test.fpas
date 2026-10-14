@@ -10,5 +10,5 @@ end function;
 begin
   const R: result of (integer, string) := Error('first');
   const M: result of (integer, string) := R.OrElse(ReplaceError);
-  Console.WriteLn(M.IsError());
+  Console.WriteLn((M is Error(_)));
 end.

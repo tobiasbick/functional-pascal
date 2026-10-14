@@ -24,80 +24,37 @@ fn determined_local_expressions_execute_once_with_fixed_types() {
 
 #[test]
 fn expected_results_complete_generic_calls_in_value_contexts() {
-    assert_succeeds("program T;
-        function Empty<T>(): Option of T; begin return None; end function;
-        function Choose<T>(Value: Option of T; Evidence: T): Option of T; begin return Value; end function;
-        function Succeed<T, E>(Value: T): Result of (T, E); begin return Ok(Value); end function;
-        function Returned(): Option of integer; begin return Empty(); end function;
-        procedure Accept(Value: Option of integer); begin if not Value.IsNone() then panic('argument'); end if; end procedure;
-        type Holder = record Value: Option of integer; end record;
-        begin const Direct: Option of integer := Empty();
-            var Assigned: Option of integer := Some(1); Assigned := Empty();
-            const Field := Holder(Value := Empty());
-            const Selected: Option of integer := Choose(Empty(), 1);
-            const Reordered: Option of integer := Choose(Evidence := 1, Value := Empty());
-            const Partial: Result of (integer, string) := Succeed(3);
-            const Factory: function(): Option of integer := Empty;
-            Accept(Empty());
-            if not Direct.IsNone() or not Assigned.IsNone() or not Field.Value.IsNone() or not Selected.IsNone() or not Reordered.IsNone() or not Returned().IsNone() or not Factory().IsNone() or Partial.Unwrap() <> 3 then panic('contextual call'); end if;
-        end.");
+    assert_succeeds(
+        "program T;\n        function Empty<T>(): Option of T; begin return None; end function;\n        function Choose<T>(Value: Option of T; Evidence: T): Option of T; begin return Value; end function;\n        function Succeed<T, E>(Value: T): Result of (T, E); begin return Ok(Value); end function;\n        function Returned(): Option of integer; begin return Empty(); end function;\n        procedure Accept(Value: Option of integer); begin if not (Value is None) then panic('argument'); end if; end procedure;\n        type Holder = record Value: Option of integer; end record;\n        begin const Direct: Option of integer := Empty();\n            var Assigned: Option of integer := Some(1); Assigned := Empty();\n            const Field := Holder(Value := Empty());\n            const Selected: Option of integer := Choose(Empty(), 1);\n            const Reordered: Option of integer := Choose(Evidence := 1, Value := Empty());\n            const Partial: Result of (integer, string) := Succeed(3);\n            const Factory: function(): Option of integer := Empty;\n            Accept(Empty());\n            if not (Direct is None) or not (Assigned is None) or not (Field.Value is None) or not (Selected is None) or not (Reordered is None) or not (Returned() is None) or not (Factory() is None) or Partial.Unwrap() <> 3 then panic('contextual call'); end if;\n        end.",
+    );
 }
 
 #[test]
 fn expected_results_complete_static_instance_and_postfix_methods() {
-    assert_succeeds("program T;
-        type Factory = record
-            static function Empty<T>(): Option of T; begin return None; end function;
-            function Missing<T>(Self: Factory): Option of T; begin return None; end function;
-        end record;
-        begin const F := Factory();
-            const StaticValue: Option of integer := Factory.Empty();
-            const Instance: Option of string := F.Missing();
-            const Postfix: Option of integer := Factory().Missing();
-            if not StaticValue.IsNone() or not Instance.IsNone() or not Postfix.IsNone() then panic('contextual method'); end if;
-        end.");
+    assert_succeeds(
+        "program T;\n        type Factory = record\n            static function Empty<T>(): Option of T; begin return None; end function;\n            function Missing<T>(Self: Factory): Option of T; begin return None; end function;\n        end record;\n        begin const F := Factory();\n            const StaticValue: Option of integer := Factory.Empty();\n            const Instance: Option of string := F.Missing();\n            const Postfix: Option of integer := Factory().Missing();\n            if not (StaticValue is None) or not (Instance is None) or not (Postfix is None) then panic('contextual method'); end if;\n        end.",
+    );
 }
 
 #[test]
 fn native_factories_callbacks_and_callable_wrappers_use_result_context() {
-    assert_succeeds("program T;
-        function Empty<T>(): Option of T; begin return None; end function;
-        function Missing<T>(Value: integer): Option of T; begin return None; end function;
-        function Identity<T>(Value: T): T; begin return Value; end function;
-        function Keep<A>(Value: A): A; begin return Value; end function;
-        begin const Values: array of Option of integer := array.Fill(Count := 2, Value := Empty());
-            const Mapped: array of Option of string := [1].Map(Missing);
-            const Items := [1]; const Direct: array of Option of integer := Items.Map(Missing);
-            const F: function(Value: integer): integer := Keep(Identity);
-            const Callbacks: array of function(Value: integer): integer := Keep([Identity]);
-            if Values.Length() <> 2 or not Values[0].IsNone() or not Mapped[0].IsNone() or not Direct[0].IsNone() or F(3) <> 3 or Callbacks[0](4) <> 4 then panic('native or callable context'); end if;
-        end.");
+    assert_succeeds(
+        "program T;\n        function Empty<T>(): Option of T; begin return None; end function;\n        function Missing<T>(Value: integer): Option of T; begin return None; end function;\n        function Identity<T>(Value: T): T; begin return Value; end function;\n        function Keep<A>(Value: A): A; begin return Value; end function;\n        begin const Values: array of Option of integer := array.Fill(Count := 2, Value := Empty());\n            const Mapped: array of Option of string := [1].Map(Missing);\n            const Items := [1]; const Direct: array of Option of integer := Items.Map(Missing);\n            const F: function(Value: integer): integer := Keep(Identity);\n            const Callbacks: array of function(Value: integer): integer := Keep([Identity]);\n            if Values.Length() <> 2 or not (Values[0] is None) or not (Mapped[0] is None) or not (Direct[0] is None) or F(3) <> 3 or Callbacks[0](4) <> 4 then panic('native or callable context'); end if;\n        end.",
+    );
 }
 
 #[test]
 fn decision_siblings_complete_calls_without_repeating_evaluation() {
-    assert_succeeds("program T; var Calls: integer := 0;
-        function Empty<T>(): Option of T; begin Calls := Calls + 1; return None; end function;
-        begin const Selected := if true then Empty() else Some(1) end if;
-            const Outcome := case 1 of when 1: Empty(); else Some(2); end case;
-            const Input := Some(4);
-            const Bound := case Input of when Some(const Value): if Value > 0 then Empty() else Some(Value) end if; when None: Some(0); end case;
-            if not Selected.IsNone() or not Outcome.IsNone() or not Bound.IsNone() or Calls <> 3 then panic('decision context'); end if;
-        end.");
+    assert_succeeds(
+        "program T; var Calls: integer := 0;\n        function Empty<T>(): Option of T; begin Calls := Calls + 1; return None; end function;\n        begin const Selected := if true then Empty() else Some(1) end if;\n            const Outcome := case 1 of when 1: Empty(); else Some(2); end case;\n            const Input := Some(4);\n            const Bound := case Input of when Some(const Value): if Value > 0 then Empty() else Some(Value) end if; when None: Some(0); end case;\n            if not (Selected is None) or not (Outcome is None) or not (Bound is None) or Calls <> 3 then panic('decision context'); end if;\n        end.",
+    );
 }
 
 #[test]
 fn inferred_aggregate_and_scalar_storage_runs_with_the_checked_types() {
-    assert_succeeds("program T; type UserId = distinct integer; begin
-        const Whole := 42; const LowerBound := -9223372036854775807; const Fraction := 1.5;
-        const Flag := true; const Text := 'Ada'; const Values := [[1, 2], [3, 4]];
-        var Index := ['a': 1, 'b': 2]; Index['a'] := 3;
-        const Id := UserId(Whole); const Raw := integer(Id);
-        const Options := [None, Some(Whole)]; const Matrix := [[], [Whole]];
-        const Outcomes := [Ok(Whole), Error('failed')];
-        if not Options[0].IsNone() or Options[1].Unwrap() <> 42 or Matrix[0].Length() <> 0 or Matrix[1][0] <> 42 or Outcomes[0].Unwrap() <> 42 or not Outcomes[1].IsError() then panic('joint collection evidence'); end if;
-        if Raw <> 42 or LowerBound >= 0 or Fraction <> 1.5 or not Flag or Text <> 'Ada' or Values[1][0] <> 3 or Index['a'] <> 3 then panic('inferred types'); end if;
-        case Raw of when Whole: null; else panic('static label'); end case; end.");
+    assert_succeeds(
+        "program T; type UserId = distinct integer; begin\n        const Whole := 42; const LowerBound := -9223372036854775807; const Fraction := 1.5;\n        const Flag := true; const Text := 'Ada'; const Values := [[1, 2], [3, 4]];\n        var Index := ['a': 1, 'b': 2]; Index['a'] := 3;\n        const Id := UserId(Whole); const Raw := integer(Id);\n        const Options := [None, Some(Whole)]; const Matrix := [[], [Whole]];\n        const Outcomes := [Ok(Whole), Error('failed')];\n        if not (Options[0] is None) or Options[1].Unwrap() <> 42 or Matrix[0].Length() <> 0 or Matrix[1][0] <> 42 or Outcomes[0].Unwrap() <> 42 or not (Outcomes[1] is Error(_)) then panic('joint collection evidence'); end if;\n        if Raw <> 42 or LowerBound >= 0 or Fraction <> 1.5 or not Flag or Text <> 'Ada' or Values[1][0] <> 3 or Index['a'] <> 3 then panic('inferred types'); end if;\n        case Raw of when Whole: null; else panic('static label'); end case; end.",
+    );
 }
 
 #[test]

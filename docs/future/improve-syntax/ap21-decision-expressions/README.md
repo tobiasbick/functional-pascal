@@ -4,6 +4,11 @@ Status: complete (AP21.1, AP21.2). Effort: large. Completion is tracked in
 the [central README](../README.md); the process is in
 [development-process.md](../development-process.md).
 
+[AP43](../ap43-consistent-error-handling/README.md) supersedes this package's
+predicate/default helper surface and guidance: nonbinding is tests variants,
+and exhaustive case binds payloads, handles locally, or selects plain defaults.
+The decision-expression implementation and AP21's completed status remain intact.
+
 ## Goal
 
 Every accepted decision expression has an unambiguous result type and complete
@@ -49,8 +54,8 @@ end case;
   `return`, or `discard`, as an argument, an operand, or a condition. Because
   `end if` closes it, it is a primary operand and needs no parentheses, for
   example `1 + if C then 2 else 3 end if`.
-- Conditions may use `is` pattern tests with the same rules as the `if`
-  statement; bindings are visible only in the branch they guard.
+- Conditions use [AP35](../ap35-condition-composition/README.md)'s nonbinding
+  `is` tests with the same rules as the `if` statement; case binds payloads.
 - An `if` expression is a compile-time constant when its condition and every
   branch are compile-time constants (AP16 rules); otherwise it is computed.
 

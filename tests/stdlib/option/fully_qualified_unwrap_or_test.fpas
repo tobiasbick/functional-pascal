@@ -4,5 +4,8 @@ uses Std.Console as Console;
 
 begin
   const O: option of integer := None;
-  Console.WriteLn(O.UnwrapOr(0));
+  Console.WriteLn((case O of
+    when Some(const AP43Value): AP43Value;
+    when None: 0;
+  end case));
 end.

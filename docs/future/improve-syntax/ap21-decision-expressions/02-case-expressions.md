@@ -4,6 +4,11 @@ Package: [AP21: Decision expressions](README.md)
 
 Status: complete.
 
+[AP43](../ap43-consistent-error-handling/README.md) makes exhaustive case the
+canonical form for payload binding, local error/absence handling, and plain
+defaults. Native predicates and UnwrapOr are removed; this package's case
+expression semantics and completed status remain intact.
+
 ## Result
 
 `case Value of when Labels [if Guard]: Expression; ... [else Expression;] end case`

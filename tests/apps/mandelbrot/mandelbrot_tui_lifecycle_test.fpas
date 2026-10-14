@@ -30,6 +30,5 @@ begin
 
   Test.AssertEquals(Model.Grid.Height, Model.RowsRendered);
   App.CloseWithBackground(Inbox);
-  Test.AssertTrue(Tasks.TrySend(Inbox, Render.MandelbrotRenderFrame(Generation := Model.Generation, Cells := []))
-                    .IsError());
+  Test.AssertTrue((Tasks.TrySend(Inbox, Render.MandelbrotRenderFrame(Generation := Model.Generation, Cells := [])) is Error(_)));
 end.

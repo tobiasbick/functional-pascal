@@ -78,6 +78,14 @@ Read the pages relevant to the change. For exact productions, consult
   retain their existing rules.
 - Functions return with `return`. Consume function results or use an allowed
   explicit [discard](../../../docs/pascal/language/functions/discard.md).
+- Parse text with Std.Parse Int/Real/Bool/HexInt, each taking Text: string and
+  returning Result of (target type, string). Std.Conv formats and converts typed
+  values. Use try for propagation, nonbinding is for variant tests, and exhaustive
+  case for payload binding, local handling, or plain defaults. Unwrap deliberately
+  aborts on Error/None; try does not catch runtime failures. Map transforms wrapped
+  success, AndThen composes wrapped operations, and OrElse recovers within a wrapper.
+  Callback argument expressions are eager; callback bodies run only on their
+  selected variant. Case fallback work runs only in its selected arm.
 - Go is one expression and requires a lexical scope in the same routine.
   Bind its exact task handle or use `discard go Work();`; named and anonymous
   helpers never inherit ownership. Pass TaskGroup for dynamic caller-owned work.

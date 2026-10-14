@@ -1,8 +1,8 @@
 program T;
 
-uses Std.Console as Console, Std.Conv as Conv;
+uses Std.Console as Console, Std.Conv as Conv, Std.Parse as Parse;
 
 begin
-  Console.WriteLn(Conv.StrToBool('True'));
-  Console.WriteLn(Conv.StrToBool('FALSE'));
+  Console.WriteLn(Parse.Bool('True').Unwrap());
+  Console.WriteLn(Parse.Bool('FALSE').Unwrap());
 end.

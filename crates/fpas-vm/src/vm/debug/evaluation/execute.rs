@@ -259,13 +259,13 @@ fn evaluate_with_qualified_fallback(
                 Value::ResultError(_) => {
                     return Err(operation_error(ValueOperationError::domain(
                         "debug `try` encountered Result.Error",
-                        "Inspect the error value or guard it with `Value.IsOk()`.",
+                        "Inspect the error value or test `Value is Ok(_)`.",
                     )));
                 }
                 Value::OptionNone => {
                     return Err(operation_error(ValueOperationError::domain(
                         "debug `try` encountered Option.None",
-                        "Inspect the option or guard it with `Value.IsSome()`.",
+                        "Inspect the option or test `Value is Some(_)`.",
                     )));
                 }
                 other => {

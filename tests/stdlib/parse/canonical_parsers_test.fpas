@@ -1,0 +1,61 @@
+program CanonicalParsers;
+
+uses Std.Parse as Parse, Std.Conv as Conv, Std.Test as Test;
+
+procedure Invalid(Value: result of (integer, string); Text: string);
+begin
+  case Value of
+    when Ok(_):
+      panic('Expected an invalid integer');
+    when Error(const Message):
+      Test.AssertTrue(Text in Message);
+  end case;
+end procedure;
+
+begin
+  Test.AssertTrue(Parse.Int(Text := ' +1_024 ') = Ok(1024));
+  Test.AssertTrue(Parse.Int('-9223372036854775808') = Ok(-9223372036854775808));
+  Test.AssertTrue(Parse.Int('-$8000000000000000') = Ok(-9223372036854775808));
+  Test.AssertTrue(Parse.Int('10') = Ok(10));
+  Test.AssertTrue(Parse.HexInt('10') = Ok(16));
+  for Text: string in ['FF', '$FF', '0xFF', '0Xff', ' F_F '] do
+    Test.AssertTrue(Parse.HexInt(Text) = Ok(255));
+  end for;
+
+  Test.AssertTrue(Parse.HexInt('-0x8000000000000000') = Ok(-9223372036854775808));
+  Test.AssertTrue(Parse.HexInt('+7fff_ffff_ffff_ffff') = Ok(9223372036854775807));
+  Invalid(Parse.Int('0xFF'), '0xFF');
+  Invalid(Parse.Int('1__0'), '1__0');
+  Invalid(Parse.Int('9223372036854775808'), '9223372036854775808');
+  Invalid(Parse.HexInt('8000000000000000'), '8000000000000000');
+  Invalid(Parse.HexInt('xyz'), 'xyz');
+  Test.AssertTrue(Parse.Bool(Text := ' TrUe ') = Ok(true));
+  Test.AssertTrue(Parse.Bool(' FALSE ') = Ok(false));
+  Test.AssertTrue(Parse.Bool('1') is Error(_));
+  Test.AssertTrue(Parse.Real('1_024.0e-2') = Ok(10.24));
+  for Value: real in [
+                       -0.0,
+                       0.0,
+                       0.000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000005,
+                       1.0,
+                       179769313486231570000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000.0
+                     ] do
+    const Text := Conv.RealToStr(Value);
+    Test.AssertEquals(Text, Conv.RealToStr(Parse.Real(Text).Unwrap()));
+  end for;
+
+  for Text: string in ['1e3', 'inf', 'NaN', '1.0e-9999', '1.0e9999'] do
+    Test.AssertTrue(Parse.Real(Text) is Error(_));
+  end for;
+  const Read: function(Text: string): result of (integer, string) := Parse.Int;
+  Test.AssertTrue(Read(Text := '42') = Ok(42));
+  const ReadReal: function(Text: string): result of (real, string) := Parse.Real;
+  const ReadBool: function(Text: string): result of (boolean, string) := Parse.Bool;
+  const ReadHex: function(Text: string): result of (integer, string) := Parse.HexInt;
+  Test.AssertTrue(ReadReal('1.0') = Ok(1.0));
+  Test.AssertTrue(ReadBool('false') = Ok(false));
+  Test.AssertTrue(ReadHex('10') = Ok(16));
+  const Parsed := ['1', '2'].Map(Parse.Int);
+  Test.AssertTrue(Parsed[0] = Ok(1));
+  Test.AssertTrue(Parsed[1] = Ok(2));
+end.

@@ -26,7 +26,7 @@ fn vm(source: &str) -> Vm {
 #[test]
 fn embedding_does_not_implicitly_authorize_process_control() {
     vm(
-        "program Test; uses Std.Server as Server, Std.Tasks as Tasks, Std.Test as StdTest; begin\n      StdTest.AssertTrue(Server.CreateLifetime(10, true).IsError());\n      const Life: Server.ServerLifetime := Server.CreateLifetime(10, false).Unwrap();\n      StdTest.AssertTrue(Server.ObserveSignals(Life).IsError());\n      discard Server.RequestStop(Life); discard Tasks.CloseTaskGroup(Server.GetWorkGroup(Life));\n      StdTest.AssertTrue(Server.FinishShutdown(Life).IsOk()); end.",
+        "program Test; uses Std.Server as Server, Std.Tasks as Tasks, Std.Test as StdTest; begin\n      StdTest.AssertTrue((Server.CreateLifetime(10, true) is Error(_)));\n      const Life: Server.ServerLifetime := Server.CreateLifetime(10, false).Unwrap();\n      StdTest.AssertTrue((Server.ObserveSignals(Life) is Error(_)));\n      discard Server.RequestStop(Life); discard Tasks.CloseTaskGroup(Server.GetWorkGroup(Life));\n      StdTest.AssertTrue((Server.FinishShutdown(Life) is Ok(_))); end.",
     )
     .run()
     .unwrap();
@@ -143,9 +143,9 @@ fn server_lifecycle_child() {
         return;
     };
     let body = if mode == "signals" {
-        "Test.AssertTrue(Server.ObserveSignals(Life).Unwrap()); Test.AssertTrue(not Server.ObserveSignals(Life).Unwrap());\n         discard Server.RequestStop(Life); discard Tasks.CloseTaskGroup(Server.GetWorkGroup(Life)); Test.AssertTrue(Server.FinishShutdown(Life).IsOk());"
+        "Test.AssertTrue(Server.ObserveSignals(Life).Unwrap()); Test.AssertTrue(not Server.ObserveSignals(Life).Unwrap());\n         discard Server.RequestStop(Life); discard Tasks.CloseTaskGroup(Server.GetWorkGroup(Life)); Test.AssertTrue(Server.FinishShutdown(Life) is Ok(_));"
     } else if mode == "clean" {
-        "discard Server.RequestStop(Life); discard Tasks.CloseTaskGroup(Server.GetWorkGroup(Life));\n         Test.AssertTrue(Server.FinishShutdown(Life).IsOk()); Time.Sleep(200);"
+        "discard Server.RequestStop(Life); discard Tasks.CloseTaskGroup(Server.GetWorkGroup(Life));\n         Test.AssertTrue(Server.FinishShutdown(Life) is Ok(_)); Time.Sleep(200);"
     } else if mode == "compute" {
         "discard Server.RequestStop(Life); while true do begin null; end; end while;"
     } else {

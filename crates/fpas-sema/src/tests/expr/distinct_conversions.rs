@@ -95,13 +95,13 @@ fn builtin_type_name_calls_only_unwrap_distinct_values() {
         "const Value: integer := integer(3.5);",
         SEMA_TYPE_MISMATCH,
         "`integer(...)` only unwraps a distinct type value",
-        "`Trunc`",
+        "`Math.Trunc`",
     );
     assert_rejected(
         "const Value: integer := Raw(3);",
         SEMA_TYPE_MISMATCH,
         "`Raw(...)` only unwraps a distinct type value",
-        "`IntToReal`",
+        "`Conv.IntToReal`",
     );
 }
 

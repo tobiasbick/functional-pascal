@@ -19,7 +19,7 @@ fn catalog_accounts_for_all_existing_distinct_operations_and_three_empty_checks(
     .into_iter()
     .flat_map(fpas_std::std_unit_symbols)
     .collect::<HashSet<_>>();
-    assert_eq!(old_names.len(), 70);
+    assert_eq!(old_names.len(), 64);
     for old in old_names {
         assert!(
             entries.iter().any(|entry| entry.implementation == *old),

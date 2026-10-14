@@ -8,7 +8,7 @@ begin
   const Gate: channel of boolean := Tasks.CreateChannel(1);
   discard Tasks.StartTaskInGroup(Group, procedure(Token: Tasks.CancellationToken) begin
     discard Tasks.Send(Ready, true);
-    Test.AssertTrue(Tasks.ReceiveWithCancellation(Gate, Token).IsError());
+    Test.AssertTrue((Tasks.ReceiveWithCancellation(Gate, Token) is Error(_)));
     Test.AssertTrue(Tasks.IsCancellationRequested(Token));
     discard Tasks.Send(Done, true);
   end procedure);

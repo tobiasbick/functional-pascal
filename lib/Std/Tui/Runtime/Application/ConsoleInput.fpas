@@ -12,7 +12,7 @@ function TuiConsoleInputSend(
   Input: RuntimeInput.TuiHostInput
 ): boolean;
 begin
-  return Tasks.SendWithCancellation(Output, Input, Token).IsError();
+  return (Tasks.SendWithCancellation(Output, Input, Token) is Error(_));
 end function;
 
 function TuiConsoleInputSettleResize(

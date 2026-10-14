@@ -1,6 +1,8 @@
 # `Std.Parse`
 
-Structured parsing helpers for text input. `Std.Parse` is for callers that want a `Result` instead of the runtime errors raised by direct conversion routines in `Std.Conv`.
+Text parsers returning `Result of (T, string)`. Use `case` to handle input
+locally, `try` to propagate a returned error, or `.Unwrap()` for deliberate abort.
+Formatting and conversions of typed values belong to [Std.Conv](conv.md).
 
 ```pascal
 program Example;
@@ -8,11 +10,13 @@ program Example;
 uses Std.Console as Console, Std.Parse as Parse;
 
 begin
-  const Parsed: result of (integer, string) := Parse.TryInt('42');
-  Console.WriteLn(Parsed.UnwrapOr(0));
+  const Parsed: result of (integer, string) := Parse.Int('42');
+  case Parsed of
+    when Ok(const Value): Console.WriteLn(Value);
+    when Error(const Message): Console.WriteLn(Message);
+  end case;
 end.
 ```
-
 
 ## Importing and names
 
@@ -24,69 +28,120 @@ Import with `uses Std.Parse as Parse;` and access public symbols as `Parse.Name`
 
 | Kind | Name | Notes |
 |------|------|-------|
-| function | `TryInt(Text: string): Result of (integer, string)` | signed decimal or `$` hex with `_` separators; trims whitespace and checks signed 64-bit bounds |
-| function | `TryReal(Text: string): Result of (real, string)` | finite fractional/exponent text; preserves signed zero and rejects nonzero underflow to zero |
-| function | `TryBool(Text: string): Result of (boolean, string)` | trims whitespace; accepts `true` and `false` case-insensitively |
+| function | `Int(Text: string): Result of (integer, string)` | signed decimal or `$` hex with `_` separators; trims whitespace and checks signed 64-bit bounds |
+| function | `Real(Text: string): Result of (real, string)` | finite fractional/exponent text; preserves signed zero and rejects nonzero underflow to zero |
+| function | `Bool(Text: string): Result of (boolean, string)` | trims whitespace; accepts `true` and `false` case-insensitively |
+| function | `HexInt(Text: string): Result of (integer, string)` | signed hexadecimal text; bare hex or `$`/`0x`/`0X` prefix; checked signed 64-bit bounds |
 
 ---
 
-## `function TryInt(Text: string): Result of (integer, string)`
+## `function Int(Text: string): Result of (integer, string)`
 
 Parses signed decimal or `$` hexadecimal integer text with single `_` separators.
 Surrounding whitespace is ignored. The complete signed 64-bit range is accepted,
 including `-9223372036854775808` and `-$8000000000000000`. Hex is a mathematical
 magnitude, not an unsigned bit-pattern reinterpretation. Returns `Ok(Value)` on
-success or `Error(Message)` on invalid text or overflow. `StrToInt` uses the same
-grammar with a runtime error instead of Result.
+success or `Error(Message)` on invalid text or overflow. A deliberate abort is
+`Parse.Int(Text).Unwrap()`.
 
 ```pascal
-const R: Result of (integer, string) := Parse.TryInt(' +1_024 ');
-Console.WriteLn(R.UnwrapOr(0));                       // 1024
+const R: Result of (integer, string) := Parse.Int(' +1_024 ');
+case R of
+  when Ok(const Value): Console.WriteLn(Value);       // 1024
+  when Error(const Message): Console.WriteLn(Message);
+end case;
 ```
 
 ---
 
-## `function TryReal(Text: string): Result of (real, string)`
+## `function Real(Text: string): Result of (real, string)`
 
 Parses Pascal real text with an optional sign and surrounding whitespace. The
 text must include a fractional part; `1.0`, `-2.5`, and `1_024.0e-2` are valid,
 while `1e3`, `5.`, `NaN`, and `inf` are not. Overflow and nonzero input rounded
 to zero return Error; representable subnormals remain valid. Negative zero is
-preserved. `StrToReal` uses the same grammar with a runtime error instead of Result.
+preserved. Invalid text returns Error; `Parse.Real(Text).Unwrap()` aborts deliberately.
 
-For every finite R, `TryReal(RealToStr(R))` returns the identical binary64 bits,
+For every finite R, `Real(RealToStr(R))` returns the identical binary64 bits,
 including integral reals and either sign of zero. See
 [RealToStr](conv.md#function-realtostrr-real-string).
 
 ```pascal
-const R: Result of (real, string) := Parse.TryReal('1_024.0e-2');
-Console.WriteLn(R.UnwrapOr(0.0));                     // 10.24
+const R: Result of (real, string) := Parse.Real('1_024.0e-2');
+case R of
+  when Ok(const Value): Console.WriteLn(Value);       // 10.24
+  when Error(const Message): Console.WriteLn(Message);
+end case;
 ```
 
 ---
 
-## `function TryBool(Text: string): Result of (boolean, string)`
+## `function Bool(Text: string): Result of (boolean, string)`
 
 Parses boolean text. Leading and trailing whitespace is ignored; casing does not matter.
 
 ```pascal
-const R: Result of (boolean, string) := Parse.TryBool(' FALSE ');
-Console.WriteLn(R.UnwrapOr(true));                    // false
+const R: Result of (boolean, string) := Parse.Bool(' FALSE ');
+case R of
+  when Ok(const Value): Console.WriteLn(Value);       // false
+  when Error(const Message): Console.WriteLn(Message);
+end case;
 ```
 
 ---
 
-## Error handling
+## `function HexInt(Text: string): Result of (integer, string)`
 
-`Try*` functions do not raise runtime parse errors. Inspect the result with `.IsOk()` / `.IsError()`, recover with `.UnwrapOr(Default)`, or destructure the result with `case`.
+Parses signed hexadecimal text with single `_` separators and an optional `$`,
+`0x`, or `0X` prefix. Surrounding whitespace is ignored; the sign precedes the
+prefix. Bare hex such as `FF` is accepted. Hex is a mathematical magnitude, not
+an unsigned bit-pattern reinterpretation. The complete signed 64-bit range is
+accepted; invalid text and overflow return Error(Message).
+
+HexInt and Int have distinct interpretations: `Parse.HexInt('10')` returns
+`Ok(16)`, whereas `Parse.Int('10')` returns `Ok(10)`. General Int requires `$`
+for hex and rejects the `0x`/`0X` prefix.
 
 ```pascal
-case Parse.TryInt(Input) of
+const R := Parse.HexInt('-0x8000000000000000');
+case R of
+  when Ok(const Value): Console.WriteLn(Value);       // -9223372036854775808
+  when Error(const Message): Console.WriteLn(Message);
+end case;
+```
+
+## Error handling
+
+Invalid text is a returned Error. Test its variant without binding data using
+`Value is Ok(_)` or `Value is Error(_)`. Use case to bind a payload or handle an
+error locally, and try to propagate an error from a compatible Result-returning
+function. Unwrap is the explicit runtime-failure boundary; try does not catch it.
+
+```pascal
+case Parse.Int(Input) of
   when Ok(const N):
     Console.WriteLn(N);
   when Error(const Message):
     Console.WriteLn(Message);
 end case;
+```
+
+A plain default belongs in a case expression's failure arm, which runs only
+when selected:
+
+```pascal
+const Count: integer := case Parse.Int(Input) of
+  when Ok(const Value): Value;
+  when Error(_): 0;
+end case;
+```
+
+All four parsers have the named parameter Text, accept positional or fully named
+calls, and can be used as ordinary callable values with matching signatures:
+
+```pascal
+const Read: function(Text: string): Result of (integer, string) := Parse.Int;
+const Value := Read(Text := '42');
 ```
 
 ## Implementation (contributors)

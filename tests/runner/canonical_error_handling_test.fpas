@@ -1,0 +1,128 @@
+program CanonicalErrorHandling;
+
+uses Std.Test as Test, Std.Parse as Parse;
+
+var Trace: string := '';
+
+function ResultInput(Missing: boolean): result of (integer, string);
+begin
+  Trace := Trace + 'R';
+  return if Missing then Error('missing') else Ok(7) end if;
+end function;
+
+function OptionInput(Missing: boolean): option of integer;
+begin
+  Trace := Trace + 'O';
+  return if Missing then None else Some(7) end if;
+end function;
+
+function DefaultValue(): integer;
+begin
+  Trace := Trace + 'D';
+  return 9;
+end function;
+
+function ForwardResult(Input: result of (integer, string)): result of (boolean, string);
+begin
+  const Value := try Input;
+  Trace := Trace + 'S';
+  return Ok(Value > 0);
+end function;
+
+function ForwardOption(Input: option of integer): option of boolean;
+begin
+  const Value := try Input;
+  Trace := Trace + 'S';
+  return Some(Value > 0);
+end function;
+
+function RecoverOption(): option of integer;
+begin
+  Trace := Trace + 'B';
+  return Some(9);
+end function;
+
+function OptionCallback(): function(): option of integer;
+begin
+  Trace := Trace + 'C';
+  return RecoverOption;
+end function;
+
+function RecoverResult(Message: string): result of (integer, integer);
+begin
+  Trace := Trace + 'B';
+  return if Message = 'missing' then Ok(9) else Error(1) end if;
+end function;
+
+function ResultCallback(): function(Message: string): result of (integer, integer);
+begin
+  Trace := Trace + 'C';
+  return RecoverResult;
+end function;
+
+begin
+  for Missing: boolean in [false, true] do
+    Trace := '';
+    const SavedResult := ResultInput(Missing);
+    const SavedResultDefault := DefaultValue();
+    const ResultValue := case SavedResult of
+      when Ok(const Value): Value;
+      when Error(_): SavedResultDefault;
+    end case;
+    Test.AssertEquals(if Missing then 9 else 7 end if, ResultValue);
+    Test.AssertEquals('RD', Trace);
+    Trace := '';
+    const SavedOption := OptionInput(Missing);
+    const SavedOptionDefault := DefaultValue();
+    const OptionValue := case SavedOption of
+      when Some(const Value): Value;
+      when None: SavedOptionDefault;
+    end case;
+    Test.AssertEquals(if Missing then 9 else 7 end if, OptionValue);
+    Test.AssertEquals('OD', Trace);
+    Trace := '';
+    const Conditional := case ResultInput(Missing) of
+      when Ok(const Value): Value;
+      when Error(_): DefaultValue();
+    end case;
+    Test.AssertEquals(if Missing then 9 else 7 end if, Conditional);
+    Test.AssertEquals(if Missing then 'RD' else 'R' end if, Trace);
+    Trace := '';
+    const Optional := OptionInput(Missing).OrElse(F := OptionCallback());
+    Test.AssertTrue(Optional = Some(if Missing then 9 else 7 end if));
+    Test.AssertEquals(if Missing then 'OCB' else 'OC' end if, Trace);
+    Trace := '';
+    const Recovered: result of (integer, integer) := ResultInput(Missing)
+                                                       .OrElse(F := ResultCallback());
+    Test.AssertTrue(Recovered = Ok(if Missing then 9 else 7 end if));
+    Test.AssertEquals(if Missing then 'RCB' else 'RC' end if, Trace);
+  end for;
+
+  Trace := '';
+  Test.AssertTrue(ForwardResult(ResultInput(false)) = Ok(true));
+  Test.AssertEquals('RS', Trace);
+  Trace := '';
+  Test.AssertTrue(ForwardResult(ResultInput(true)) = Error('missing'));
+  Test.AssertEquals('R', Trace);
+  Trace := '';
+  Test.AssertTrue(ForwardOption(OptionInput(false)) = Some(true));
+  Test.AssertEquals('OS', Trace);
+  Trace := '';
+  Test.AssertTrue(ForwardOption(OptionInput(true)) = None);
+  Test.AssertEquals('O', Trace);
+  Trace := '';
+  Test.AssertFalse(false and
+                   (case OptionInput(true) of
+    when Some(_): true;
+    when None: DefaultValue() > 0;
+  end case));
+  Test.AssertEquals('', Trace);
+  Test.AssertTrue(Parse.Int('1').Map(function(Value: integer): integer begin
+    return Value + 1;
+  end function) =
+                  Ok(2));
+  Test.AssertTrue(Parse.Int('1').AndThen(function(Value: integer): result of (integer, string) begin
+    return Ok(Value + 1);
+  end function) =
+                  Ok(2));
+end.

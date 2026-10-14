@@ -27,6 +27,7 @@ mod control_flow;
 mod debug;
 mod diagnostics;
 mod discard;
+mod error_conventions;
 mod functions;
 mod intrinsics;
 mod keyword_switch;

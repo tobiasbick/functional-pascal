@@ -11,6 +11,11 @@ index searches return Option and sorting requires Comparable elements statically
 The tables below preserve the original AP06 inventory, including superseded
 entries and integer/sentinel search results.
 
+[AP43](../ap43-consistent-error-handling/README.md) removes the original native
+Option/Result IsSome/IsNone/IsOk/IsError and UnwrapOr entries. Nonbinding is and
+exhaustive case are their current replacements; Map/AndThen/OrElse/Unwrap remain.
+The original inventory below records AP06's completed delivery.
+
 Status: complete. The catalog defines 78 public native operations. Their
 signatures, naming, import, factory, collision, and mutation rules are enforced
 by `crates/fpas-sema/src/std_registry/native/`. Automatic checks validate the

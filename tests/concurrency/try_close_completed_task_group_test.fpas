@@ -23,7 +23,7 @@ begin
     end case;
   end function);
   Test.AssertTrue(Tasks.ReceiveWithTimeout(Ready, 10000).Unwrap());
-  Test.AssertTrue(Tasks.TryCloseCompletedTaskGroup(Returned).IsNone());
+  Test.AssertTrue((Tasks.TryCloseCompletedTaskGroup(Returned) is None));
   discard Tasks.Send(Gate, true);
   case Tasks.Wait(ReturnedTask) of
     when Error(const Message):
@@ -32,7 +32,7 @@ begin
       panic('expected an ordinary Result error');
   end case;
   var ReturnedFailures: option of array of Tasks.TaskFailure := None;
-  while ReturnedFailures.IsNone() do
+  while (ReturnedFailures is None) do
     begin
       Time.Sleep(1);
       ReturnedFailures := Tasks.TryCloseCompletedTaskGroup(Returned);
@@ -48,7 +48,7 @@ begin
   end procedure);
   Test.AssertTrue(Tasks.ReceiveWithTimeout(PanicReady, 10000).Unwrap());
   var PanicFailures: option of array of Tasks.TaskFailure := None;
-  while PanicFailures.IsNone() do
+  while (PanicFailures is None) do
     begin
       Time.Sleep(1);
       PanicFailures := Tasks.TryCloseCompletedTaskGroup(Panicked);

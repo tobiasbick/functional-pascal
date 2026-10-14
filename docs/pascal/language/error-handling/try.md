@@ -14,17 +14,43 @@ begin
 end function;
 ```
 
-`try` also works with `Option`. Using the `FindIndex` helper from the
-[Option example](option.md), this function returns the first occurrence of one,
+`try` also works with `Option`. This function reads the first occurrence of one,
 or propagates `None` when one is absent:
 
 ```pascal
 function FindOne(Items: array of integer): Option of integer;
 begin
-  const Idx: integer := try FindIndex(Items, 1);
+  const Idx: integer := try Items.IndexOf(1);
   return Some(Items[Idx]);
 end function;
 ```
+
+## Compatibility and evaluation
+
+| Operand | Enclosing function return type | Behavior |
+|---------|--------------------------------|----------|
+| `Result of (T, E)` | `Result of (U, F)` with compatible error types | Extract Ok(T), or return Error(E) immediately. T and U may differ. |
+| `Option of T` | `Option of U` | Extract Some(T), or return None immediately. T and U may differ. |
+| Result | Result with an incompatible error type | Rejected statically. |
+| Result | Option | Rejected statically. |
+| Option | Result | Rejected statically. |
+| Result or Option | An ordinary value-returning function, procedure, or program body | Rejected statically. |
+| An ordinary value | Any context | Rejected: try requires Result or Option. |
+
+Aliases preserve compatibility. Distinct error types retain their nominal identity;
+they cannot propagate into their base type. Generic error parameters must preserve
+the same type through the enclosing return signature, including inside aggregates.
+An unconstrained generic E cannot propagate into string, or into another generic F.
+Numeric error types receive no implicit conversion.
+
+The operand evaluates once. On success the expression has the operand's payload
+type; using that payload still requires ordinary type compatibility. Error or None
+exits immediately, applying the function's normal cleanup and postcondition rules.
+
+`try` handles returned Error and None values. It does not catch `panic`, failed
+`Unwrap`, or other runtime failures, and does not convert them into wrapper values.
+Use `is` for a nonbinding variant test, `case` for local handling or payload binding,
+and `Unwrap` for a deliberate runtime failure.
 
 ## See also
 

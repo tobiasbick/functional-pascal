@@ -305,7 +305,7 @@ impl Checker {
 
         match (inner_ty, &return_ty) {
             (Ty::Result(_, inner_err), Ty::Result(_, outer_err)) => {
-                if !outer_err.compatible_with(inner_err) {
+                if !outer_err.propagation_compatible_with(inner_err) {
                     self.error_with_code(
                         fpas_diagnostics::codes::SEMA_TYPE_MISMATCH,
                         format!(

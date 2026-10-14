@@ -36,7 +36,7 @@ const Maximum: integer := 9223372036854775807;
 Hexadecimal literals denote mathematical magnitudes, not unsigned bit patterns
 reinterpreted as signed integers. `$FFFFFFFFFFFFFFFF` is out of range.
 
-`Std.Conv.StrToInt` and `Std.Parse.TryInt` accept the same decimal and `$` hex
+`Std.Parse.Int` accepts the same decimal and `$` hex
 bodies with an optional sign and surrounding whitespace. Their real counterparts
 accept the same fractional/exponent forms and reject nonfinite values and nonzero
 underflow to zero. Representable subnormal reals remain valid. See

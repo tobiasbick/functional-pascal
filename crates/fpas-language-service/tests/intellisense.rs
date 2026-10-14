@@ -9,6 +9,8 @@
 mod call_conventions;
 #[path = "intellisense/callable_fields.rs"]
 mod callable_fields;
+#[path = "intellisense/error_conventions.rs"]
+mod error_conventions;
 #[path = "intellisense/generic_records.rs"]
 mod generic_records;
 #[path = "intellisense/native_chains.rs"]

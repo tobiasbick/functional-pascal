@@ -38,6 +38,15 @@ const M: Option of string := O.AndThen(PositiveToString);
 | `V.AndThen(F)` | Chain fallible operation | Chain optional lookup |
 | `V.OrElse(F)` | Recover from `Error` | Provide fallback for `None` |
 
+Receiver and callback argument expressions evaluate eagerly in source order.
+The callback body runs only for the selected variant: Map and AndThen on Ok/Some,
+OrElse on Error/None. An expression that creates an OrElse callback therefore runs
+even when the receiver succeeds; the callback body still does not run.
+
+Use `case` for payload binding, local handling, or a plain replacement value.
+A case expression evaluates only its selected arm. OrElse returns a Result or
+Option wrapper; its callback provides a wrapped recovery value.
+
 ## See also
 
 - [Result](result.md)

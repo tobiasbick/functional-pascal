@@ -4,7 +4,9 @@
 // Guard: target/release/fpas run this-file.fpas -- 40 MAX_MILLIS
 program TuiStyledCellsBenchmark;
 
-uses Std.Args as Args, Std.Console as Console, Std.Conv as Conv, Std.Time as Time, Std.Tui as Tui;
+uses
+  Std.Args as Args, Std.Console as Console, Std.Conv as Conv, Std.Time as Time, Std.Tui as Tui,
+  Std.Parse as Parse;
 
 // One 128 by 44 cell frame of half-block pixels.
 const FrameWidth: integer := 128;
@@ -62,7 +64,7 @@ begin
       panic('usage: styled_cells_benchmark.fpas -- FRAMES [MAX_MILLIS]');
     end;
   end if;
-  const Frames: integer := Conv.StrToInt(Args.ParamStr(0));
+  const Frames: integer := Parse.Int(Args.ParamStr(0)).Unwrap();
   if Frames < 1 then
     begin
       panic('FRAMES must be positive');
@@ -71,7 +73,7 @@ begin
   var MaxMillis: integer := 0;
   if Args.ParamCount() = 2 then
     begin
-      MaxMillis := Conv.StrToInt(Args.ParamStr(1));
+      MaxMillis := Parse.Int(Args.ParamStr(1)).Unwrap();
       if MaxMillis < 1 then
         begin
           panic('MAX_MILLIS must be positive');

@@ -40,7 +40,7 @@ begin
       end;
     when None:
       begin
-        Test.AssertTrue(Actual.ConcreteStyle.IsNone());
+        Test.AssertTrue((Actual.ConcreteStyle is None));
       end;
   end case;
 end procedure;
@@ -62,12 +62,11 @@ begin
     Model := App.UpdateMandelbrotFrame(Model, Stale, Cmd);
     Test.AssertEquals(0, Model.RowsRendered);
     const Source: Tasks.CancellationSource := Tasks.CreateCancellationSource();
-    Test.AssertTrue(Render.RunBackgroundRender(Request, Inbox, Tasks.GetCancellationToken(Source))
-                      .IsOk());
+    Test.AssertTrue((Render.RunBackgroundRender(Request, Inbox, Tasks.GetCancellationToken(Source)) is Ok(_)));
     const Frame: Render.MandelbrotRenderFrame := Tasks.ReceiveWithTimeout(Inbox, 5000).Unwrap();
     Test.AssertEquals(Request.Generation, Frame.Generation);
     Test.AssertEquals(Request.Width * Request.Height, Frame.Cells.Length());
-    Test.AssertTrue(Tasks.ReceiveWithTimeout(Inbox, 0).IsError());
+    Test.AssertTrue((Tasks.ReceiveWithTimeout(Inbox, 0) is Error(_)));
     Model := App.UpdateMandelbrotFrame(Model, Frame, Cmd);
     Test.AssertEquals(Request.Height, Model.RowsRendered);
     const Expected: Tui.TuiCellGrid := Render.RenderGrid(Request.XMin, Request.XMax, Request.YMin, Request.YMax, Request.Width, Request.Height, Request.MaxIter, Request.Palette);
@@ -99,11 +98,11 @@ begin
     // Fill the output queue so publication must wait until cancellation.
     discard Tasks.Send(CancelInbox, Frame);
     const Background: task of result of (boolean, string) := go Render.RunBackgroundRender(CancelRequest, CancelInbox, CancelToken);
-    Test.AssertTrue(Tasks.WaitAnyWithTimeout([Background], 1).IsError());
+    Test.AssertTrue((Tasks.WaitAnyWithTimeout([Background], 1) is Error(_)));
     Test.AssertTrue(Tasks.Cancel(CancelSource));
-    Test.AssertTrue(Tasks.Wait(Background).IsOk());
+    Test.AssertTrue((Tasks.Wait(Background) is Ok(_)));
     Test.AssertEquals(Frame.Generation, Tasks.Receive(CancelInbox).Unwrap().Generation);
-    Test.AssertTrue(Tasks.ReceiveWithTimeout(CancelInbox, 0).IsError());
+    Test.AssertTrue((Tasks.ReceiveWithTimeout(CancelInbox, 0) is Error(_)));
     discard Tasks.CloseChannel(Inbox);
     discard Tasks.CloseChannel(CancelInbox);
   end scope;

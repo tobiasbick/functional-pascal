@@ -7,18 +7,42 @@ Formal syntax: [`grammar.ebnf`](../../../specs/grammar.ebnf) (`for_in_stmt`).
 The loop body is a nonempty statement list with its own local scope, closed
 by `end for;`. Each statement ends with `;`; use `null;` for no action.
 
-## Evaluation and snapshots
+## Evaluation and source protection
 
 The iterable expression is evaluated exactly once whenever execution enters the
 loop, including for an empty collection. Each new entry into a nested or repeated
-loop captures a new snapshot. `break` and `continue` retain their ordinary
+loop evaluates its source again. `break` and `continue` retain their ordinary
 innermost-loop behavior.
 
-Arrays capture their original element values in order. Dictionaries capture
-their original keys in insertion order. Mutation or reassignment of the source
-binding does not change the visited sequence. The loop binding is read-only.
+Arrays visit element values in order. Dictionaries visit keys in insertion
+order. Both the loop binding and the source's writable storage root are read-only
+throughout the body. FP3046 rejects assignment to the source or its contents,
+reassignment, InPlace receivers and explicit var arguments, including indirect
+writes through helpers, closures, callbacks and imported routines. A callable
+whose write effects cannot be proven safe is rejected while a writable source
+is protected. The diagnostic suggests moving the write after the loop or
+iterating an explicit independent copy.
 
-Snapshots follow ordinary value-copy semantics. Channels still refer to the same
+Parentheses preserve the source root. For a record field or array element,
+the containing root is protected too: iterating `State.Items` protects `State`,
+including ancestor replacement and writes to other parts of that root. Nested
+loops protect every active source root. Lexically shadowed bindings and independent
+value copies have different roots and remain writable. Each protection ends with
+its loop body; creating a closure without invoking it is not a source write.
+
+A var parameter can alias a global, a captured variable or another reference.
+If a write through either root could reach the protected source and their
+disjointness cannot be proven, FP3046 rejects it. Independent local value copies
+remain writable. This rule applies in both directions: iterating a var parameter
+while writing a possible foreign alias, and iterating foreign storage while
+writing a possible var-parameter alias.
+
+Computed iterable values such as `Values.Keys()` or `Items.Filter(Predicate)`
+are independent results, so their input roots are not protected in the body.
+The complete iterable expression, including index selection and its calls, runs
+before that loop's protection begins.
+
+Iteration follows ordinary value-copy semantics. Channels still refer to the same
 resource, and copied closures still share their captured environment. Iteration
 does not deep-clone these resources or provide synchronization between tasks.
 
@@ -42,20 +66,28 @@ for S: integer in Scores do
 end for;
 ```
 
-Source mutation remains visible after the loop, while appended elements are not
-visited by that execution:
+The source can be changed after the loop:
 
 ```pascal
 var Items: array of integer := [1, 2, 3];
 for Item: integer in Items do
   Console.WriteLn(Item);
-  Items.PushInPlace(9);
 end for;
-// Prints 1, 2, 3. Items is now [1, 2, 3, 9, 9, 9].
+Items.PushInPlace(9);
+// Prints 1, 2, 3. Items is now [1, 2, 3, 9].
 ```
 
-Removing elements, replacing element values or assigning a different array to
-`Items` likewise leaves the original visited values unchanged.
+To change one array while visiting its original values, make the source copy
+explicit. The copy retains ordinary value independence:
+
+```pascal
+var Items: array of integer := [1, 2, 3];
+const Source := Items;
+for Item: integer in Source do
+  Items.PushInPlace(Item);
+end for;
+// Source remains [1, 2, 3]. Items is now [1, 2, 3, 1, 2, 3].
+```
 
 ## Dict key iteration
 
@@ -73,24 +105,23 @@ end for;
 
 The loop variable type must match the dict's key type. Iterating an empty dict executes the body zero times. `break` and `continue` work as usual.
 
-Adding, removing or reinserting keys, or replacing the source dictionary, does
-not change the captured key sequence. Separate lookups in the body read the
-current dictionary:
+Adding, removing or reinserting keys, replacing values, or assigning another
+dictionary to the source is a compiler error during the body. Ordinary lookups
+remain readable:
 
 ```pascal
 var Scores: dict of string to integer := ['Ada': 1, 'Grace': 2];
 for Name: string in Scores do
-  Scores['Grace'] := 20;
-  Scores['Linus'] := 3;
   Console.WriteLn(Name + ': ' + Conv.IntToStr(Scores[Name]));
 end for;
-// Prints Ada: 1 and Grace: 20. Linus is not visited.
+Scores['Grace'] := 20;
+// Prints Ada: 1 and Grace: 2. Scores can be changed after the loop.
 ```
 
-Removing a captured key does not remove it from the iteration. A later
-`Scores[Name]` for that key raises the normal missing-key runtime error; use
-`Scores.Get(Name)` when absence is expected. The loop captures keys, not the
-results of future body lookups.
+An explicit dictionary copy or `Scores.Keys()` produces an independent source
+when changes to `Scores` are required. Lookups into that separate, changing
+dictionary retain ordinary missing-key failures; use `Scores.Get(Name)` when
+absence is expected. The protected source itself cannot lose a key in the body.
 
 This is separate from the `in` membership operator in expressions. In `for K: string in Ages`, `in` introduces iteration. In `'Alice' in Ages`, `in` returns whether the dictionary contains that key.
 

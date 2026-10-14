@@ -34,6 +34,7 @@ impl Walker<'_, '_> {
                 self.designator(target, false);
                 let mut origins = self.expr(value);
                 origins.insert(Origin::Unknown);
+                self.write_designator(target, target.span);
                 if let Some(binding) = self
                     .checker
                     .initialization
@@ -41,7 +42,6 @@ impl Walker<'_, '_> {
                     .get(&identity(target.span))
                     .and_then(|reference| reference.declaration)
                 {
-                    self.write(binding);
                     self.values.insert(binding, origins);
                 }
             }
@@ -106,9 +106,15 @@ impl Walker<'_, '_> {
             } => {
                 let origins = self.expr(iterable);
                 self.branch(|walk| {
+                    let protected = walk.iteration_source(iterable);
+                    let count = walk.iteration_sources.len();
+                    if let Some(source) = protected {
+                        walk.iteration_sources.push(source);
+                    }
                     walk.values.insert(identity(*span), origins);
                     walk.ready.insert(identity(*span));
                     walk.statement(body);
+                    walk.iteration_sources.truncate(count);
                 });
             }
             Stmt::While {

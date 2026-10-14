@@ -1,13 +1,14 @@
-program ForInSnapshot;
+program ForInReadOnly;
 
 uses Std.Conv as Conv, Std.Test as Test, Std.Tasks as Tasks;
 
-procedure CheckArrayMutation(Mode: integer);
+procedure CheckArrayCopyMutation(Mode: integer);
 begin
   var Items := [1, 2, 3];
   var Seen := '';
   var Visits := 0;
-  for Item: integer in Items do
+  const Source := Items;
+  for Item: integer in Source do
     Visits := Visits + 1;
     if Visits > 3 then
       panic('Array iteration visited added elements');
@@ -45,13 +46,14 @@ begin
   end case;
 end procedure;
 
-procedure CheckDictionaryMutation(Mode: integer);
+procedure CheckDictionaryCopyMutation(Mode: integer);
 begin
   var Values: dict of string to integer := ['a': 1, 'b': 2, 'c': 3];
   var Seen := '';
   var Read := '';
   var Visits := 0;
-  for Key: string in Values do
+  const Source := Values;
+  for Key: string in Source do
     Visits := Visits + 1;
     if Visits > 3 then
       panic('Dictionary iteration visited added keys');
@@ -159,7 +161,8 @@ begin
   var Inner := [10, 20, 30];
   var Seen := '';
   var OuterVisits := 0;
-  for Item: integer in Outer do
+  const OuterSource := Outer;
+  for Item: integer in OuterSource do
     OuterVisits := OuterVisits + 1;
     if OuterVisits > 4 then
       panic('Outer iteration did not terminate');
@@ -170,7 +173,8 @@ begin
       continue;
     end if;
     var InnerVisits := 0;
-    for Other: integer in Inner do
+    const InnerSource := Inner;
+    for Other: integer in InnerSource do
       InnerVisits := InnerVisits + 1;
       if InnerVisits > 3 then
         panic('Inner iteration did not terminate');
@@ -201,7 +205,6 @@ begin
   end procedure;
   var Callbacks: array of procedure() := [Increment, Increment];
   for Callback: procedure() in Callbacks do
-    Callbacks := [];
     Callback();
   end for;
 
@@ -212,7 +215,6 @@ begin
   const Messages: channel of integer := Tasks.CreateChannel(1);
   var Channels: array of channel of integer := [Messages];
   for Copy: channel of integer in Channels do
-    Channels := [];
     Test.AssertTrue(Tasks.TrySend(Copy, 7).Unwrap());
   end for;
 
@@ -222,11 +224,11 @@ end procedure;
 
 begin
   for Mode: integer := 0 to 3 do
-    CheckArrayMutation(Mode);
+    CheckArrayCopyMutation(Mode);
   end for;
 
   for Mode: integer := 0 to 4 do
-    CheckDictionaryMutation(Mode);
+    CheckDictionaryCopyMutation(Mode);
   end for;
 
   CheckIterableEvaluation();

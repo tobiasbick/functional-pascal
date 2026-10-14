@@ -98,6 +98,8 @@ impl UnitInterface {
             routine.started_parameters.dedup();
             routine.mutable_globals.sort();
             routine.mutable_globals.dedup();
+            routine.written_globals.sort();
+            routine.written_globals.dedup();
             routine.returned_parameters.sort_unstable();
             routine.returned_parameters.dedup();
         }

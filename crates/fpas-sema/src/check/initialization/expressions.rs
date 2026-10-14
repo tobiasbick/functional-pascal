@@ -105,6 +105,22 @@ impl Walker<'_, '_> {
                                 self.method(target.qualified_name(), &values, *span)
                             } else if self.checker.fluent_calls.contains_key(&key) {
                                 let target = &self.checker.fluent_calls[&key];
+                                if crate::std_registry::native_operation_by_implementation(
+                                    &target.name,
+                                )
+                                .is_some_and(|operation| {
+                                    operation.receiver_mode() == crate::types::ParamMode::Var
+                                }) && let Some(source) = self.iteration_source(base)
+                                {
+                                    match source.root {
+                                        super::iteration::Root::Binding(binding) => {
+                                            self.write(binding, *span)
+                                        }
+                                        super::iteration::Root::Imported(name) => {
+                                            self.iteration_global_writes([name], *span)
+                                        }
+                                    }
+                                }
                                 self.standard(&target.name, &values, receiver, *span)
                             } else {
                                 self.invoke(&receiver, &values, *span)

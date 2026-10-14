@@ -161,11 +161,14 @@ per branch. Their closing `end if` gets its terminator from the surrounding expr
 `while` tests before the body; `repeat ... until Condition;` tests after it.
 Counting `for` loops include both bounds, use `to` or `downto`, and declare a typed,
 read-only variable. `for Item: T in Values do` evaluates Values once per loop
-entry and visits a snapshot of array values in their current order or dict keys
-in insertion order.
-Source mutation or reassignment does not change that sequence. Separate dict
-lookups in the body read current values and may fail for removed keys. Snapshots
-retain the sharing of channel handles and closure environments. `break;` exits
+entry and visits array values in order or dict keys in insertion order.
+The source's writable storage root is read-only throughout the body. Assignment,
+InPlace, var arguments and indirect writes through helpers/callbacks are compiler
+errors (FP3046); unknown callable write effects are rejected. Field/element sources
+protect their containing root. Other roots, independent value copies and writes
+after the loop remain legal. Var parameters that may alias a protected foreign
+root are conservatively rejected for writing. Shared channel handles and closure environments
+retain their resource semantics. `break;` exits
 the innermost loop; `continue;` starts its next iteration. Do not change the loop
 variable yourself. See [for-in](language/control-flow/for-in.md).
 
@@ -192,7 +195,8 @@ begin
     Sum := Sum + I;
   end for;
   var Values := [1, 2];
-  for Value: integer in Values do
+  const Source := Values;
+  for Value: integer in Source do
     Sum := Sum + Value;
     if Value = 1 then
       Values.PushInPlace(9);
@@ -200,7 +204,7 @@ begin
   end for;
 
   Test.AssertEquals(3, Values.Length());
-  Test.AssertEquals(10, Sum); // The appended 9 is not visited.
+  Test.AssertEquals(10, Sum); // Source is an independent copy; its values stay [1, 2].
 
   while Sum < 11 do
     Sum := Sum + 1;

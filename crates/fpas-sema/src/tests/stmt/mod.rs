@@ -8,6 +8,7 @@ mod discard;
 mod distinct_case;
 mod exhaustiveness;
 mod flow;
+mod for_in_source_mutation;
 mod for_loops;
 mod if_stmt;
 mod is_tests;

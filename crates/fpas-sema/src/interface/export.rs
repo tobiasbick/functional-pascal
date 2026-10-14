@@ -77,6 +77,11 @@ impl check::Checker {
                 .map(|(name, summary)| {
                     let mut summary = summary.clone();
                     summary.qualified_name = format!("{unit_name}.{name}");
+                    for global in &mut summary.written_globals {
+                        if !global.contains('.') {
+                            *global = format!("{unit_name}.{global}").to_ascii_lowercase();
+                        }
+                    }
                     summary
                 })
                 .collect(),

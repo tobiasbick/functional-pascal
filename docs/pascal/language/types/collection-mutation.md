@@ -51,9 +51,13 @@ String InPlace calls replace the variable; character slots remain read-only.
 ## For-in iteration
 
 [For-in loops](../control-flow/for-in.md) evaluate their iterable once per loop
-entry. They visit the captured array values or dictionary keys even if the source
-binding changes in the body. Dictionary lookups in the body still read the
-current dictionary and retain ordinary missing-key failures. Copied resource
+entry. The source's writable storage root is read-only throughout the body for
+arrays and dictionaries. Assignment, InPlace receivers, var arguments and
+indirect writes through helpers or callbacks are compiler errors (FP3046).
+Unknown callable write effects are rejected while a writable source is protected.
+Field/element sources protect the containing root. Independent value copies and
+other storage roots remain writable; the protection ends with the loop body.
+Computed iterable values are independent of their input storage. Copied resource
 handles and callable environments retain their sharing semantics.
 
 ## User routines and tasks

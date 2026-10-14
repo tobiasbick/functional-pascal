@@ -13,6 +13,7 @@ impl Walker<'_, '_> {
             return [Origin::Unknown].into_iter().collect();
         };
         self.worker_globals(summary.mutable_globals.iter().cloned(), span);
+        self.iteration_global_writes(summary.written_globals.iter().cloned(), span);
         for &index in &summary.started_parameters {
             self.invoke_worker(values.get(index).unwrap_or(&Value::new()), &[], span);
         }

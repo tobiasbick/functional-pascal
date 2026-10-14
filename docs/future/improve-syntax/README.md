@@ -57,7 +57,7 @@ AP12 and AP27 are deferred with their proposals retained, AP28 is transferred
 to editor/LSP planning with its bounded tooling delivery complete. No agreed
 implementation package remains pending.
 The FPAS 1 stabilization scope is bounded: unambiguous enum values, an explicit
-snapshot-iteration contract, and Unicode character-code literals. Broader
+read-only collection iteration, and Unicode character-code literals. Broader
 [FPAS 2 directions](../fpas2-language-directions.md) are retained separately and
 are not scheduled here. AP36 implements its recorded call, construction, and
 pattern contracts. AP37 implements its value/InPlace contract, named Pop result,
@@ -101,9 +101,10 @@ Reopening either deferred package requires a new explicit user decision.
 AP44 enforces unique simple-enum backing values and forbids backing annotations
 anywhere in data enums, with shared declaration diagnostics, cache invalidation
 through the compiler fingerprint, editor checks and regression coverage.
-AP45 specifies and verifies snapshot array-value and dictionary-key iteration,
-single evaluation per loop entry, current dictionary lookups and preserved
-shared-resource semantics. The existing iteration lowering is retained.
+AP45.2 replaces AP45.1's permission to mutate the iterated source with uniform
+compile-time protection of array/dictionary storage, including indirect writes,
+possible var aliases, compiled-unit effects and opaque callable rejection.
+Current guidance, regression coverage and independent review are complete.
 AP46 accepts decimal character-code literals across the Unicode scalar domain,
 with checked lexical decoding, precise diagnostics and shared tooling behavior.
 The runtime character factory and existing literal meanings are preserved.
@@ -181,7 +182,7 @@ package are listed in each work package file.
 | [x] | [AP42: Canonical collection operations](ap42-canonical-collection-operations/README.md) | Medium–large | AP06; extend AP24; preserve AP33/AP37 | Complete (AP42.1–AP42.2): canonical forms, Option search and static stable sorting |
 | [x] | [AP43: Consistent error handling and parsing APIs](ap43-consistent-error-handling/README.md) | Medium | AP33.3, AP35, AP39; preserve AP34/AP36/AP41/AP42 | Complete (AP43.1–AP43.2): Result parsers, canonical handling roles, selected helper removals, migration and tooling |
 | [x] | [AP44: Unambiguous enum values](ap44-unambiguous-enum-values/README.md) | Small–medium | AP24, AP39, AP41, AP42 | Complete: unique simple-enum values; no backing values in payload enums; diagnostics, cache checks and editor regressions |
-| [x] | [AP45: Explicit snapshot iteration](ap45-snapshot-iteration/README.md) | Small | AP37 | Complete: snapshot values/keys, single evaluation, current dictionary lookups and shared-resource regressions |
+| [x] | [AP45: Read-only collection iteration](ap45-snapshot-iteration/README.md) | Medium | AP37, AP38 | Complete: AP45.2 protects arrays/dictionaries and rejects direct/indirect writes, possible aliases and opaque call effects |
 | [x] | [AP46: Unicode character-code literals](ap46-unicode-character-literals/README.md) | Small | AP33, AP42 | Complete: checked scalar literals, diagnostics, formatter roundtrips and compiler/debugger/editor regressions |
 
 A package's Done cell becomes `[x]` only when every work package in its own
@@ -238,7 +239,7 @@ its dependent implementation complete or approved.
 | AP42 | Complete: canonical collection forms, Option index searches, shared static ordering, stable sorting, migration and tooling |
 | AP43 | Complete: AP43.1 parser/error contract; AP43.2 API enforcement, migration, tooling and guidance |
 | AP44 | Complete: AP44.1 enum declaration restrictions, shared diagnostics, current guidance and identity/cache/editor regressions |
-| AP45 | Complete: AP45.1 snapshot-iteration specification, mutation/reassignment and shared-resource regressions |
+| AP45 | Complete: AP45.1 original delivery; AP45.2 read-only sources, transitive write checks, migration, verification and independent review |
 | AP46 | Complete: AP46.1 Unicode scalar lexing, diagnostics, formatter checks and current guidance |
 
 AP08, AP28, and AP29 have no work packages.
@@ -265,16 +266,16 @@ the work-package files state actual dependencies.
 | 4. Mutation, declarations and matching | Complete: AP37, AP38, and AP39 | Explicit mutation, scope-wide signatures, checked initialization, and shared exhaustive case coverage are delivered |
 | 5. Concurrency contracts | Complete: AP40.1–AP40.3 | Owned starts, ordinary discard, foreign mutable-state checks, joined owner teardown, and consistent controlled wait priorities are delivered; AP30 types/retrieval and Select case order are retained |
 | 6. Canonical public forms | Complete: AP41, AP42 and AP43 | Qualification, collections and Result parsers are delivered, with canonical handling roles, migrated consumers, diagnostics and editor guidance |
-| 7. FPAS 1 stabilization | Complete: AP44, AP45 and AP46 | Enum identity is unambiguous; iteration behavior is explicit and tested; character-code literals use the string scalar model |
+| 7. FPAS 1 stabilization | Complete: AP44, AP45 and AP46 | Enum identity is unambiguous; collection iteration rejects source writes; character-code literals use the string scalar model |
 
-No agreed work package remains open in the recommended sequence. AP44.1, AP45.1
+No agreed work package remains open in the recommended sequence. AP44.1, AP45.2
 and AP46.1 complete the selected FPAS 1 stabilization scope.
 AP44 replaces the permission for duplicate simple-enum backing values from
 AP42 and tightens AP24's mixed backing/payload declarations; those completed
-packages keep their other contracts and status. AP45 freezes existing iteration
-behavior with explicit guidance and execution regressions.
+packages keep their other contracts and status. AP45.2 replaces the earlier
+snapshot-source mutation permission with read-only collection iteration.
 AP46 replaces only the byte-range restriction on character-code literals.
-The current handbook describes the delivered AP44, AP45 and AP46 contracts;
+The current handbook describes the delivered AP44, AP45.2 and AP46 contracts;
 the grammar records AP44's enum restrictions and AP46's scalar literal domain.
 AP45 needs no grammar change.
 

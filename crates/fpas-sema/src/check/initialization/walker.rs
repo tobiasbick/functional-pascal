@@ -31,6 +31,7 @@ pub(super) struct Summary {
     pub started_parameters: BTreeSet<usize>,
     pub started_bindings: BTreeSet<BindingId>,
     pub mutable_globals: BTreeSet<String>,
+    pub written_globals: BTreeSet<String>,
     pub unknown_worker: bool,
     pub writes: BTreeSet<BindingId>,
     pub returned: Value,
@@ -56,6 +57,8 @@ pub(super) struct Walker<'c, 'a> {
     pub summary: Summary,
     pub errors: Vec<Failure>,
     pub task_errors: Vec<Failure>,
+    pub iteration_errors: Vec<Failure>,
+    pub iteration_sources: Vec<super::iteration::Source>,
     pub worker: bool,
     pub worker_start: Option<usize>,
     pub validate: bool,
@@ -82,6 +85,8 @@ impl<'c, 'a> Walker<'c, 'a> {
             summary: Summary::default(),
             errors: Vec::new(),
             task_errors: Vec::new(),
+            iteration_errors: Vec::new(),
+            iteration_sources: Vec::new(),
             worker: false,
             worker_start: None,
             validate,
@@ -145,6 +150,7 @@ impl<'c, 'a> Walker<'c, 'a> {
     /// Reject unprovable startup calls and retain uncertainty in routine summaries.
     pub fn unknown(&mut self, span: Span) {
         self.summary.unknown = true;
+        self.iteration_unknown(span);
         if self.worker {
             self.worker_unknown(span);
         }
@@ -284,7 +290,8 @@ impl<'c, 'a> Walker<'c, 'a> {
     }
 
     /// Invalidate callable provenance when a call or assignment may change its storage.
-    pub fn write(&mut self, binding: BindingId) {
+    pub fn write(&mut self, binding: BindingId, span: Span) {
+        self.iteration_binding_write(binding, span);
         self.values
             .insert(binding, [Origin::Unknown].into_iter().collect());
         if self

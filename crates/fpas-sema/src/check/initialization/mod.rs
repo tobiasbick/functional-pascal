@@ -5,6 +5,7 @@ mod calls;
 mod collection;
 mod expressions;
 mod external_calls;
+mod iteration;
 mod statements;
 mod walker;
 mod workers;
@@ -123,11 +124,13 @@ impl Checker {
         }
         let mut failures = Vec::new();
         let mut task_failures = Vec::new();
+        let mut iteration_failures = Vec::new();
         for (&key, routine) in &model.routines {
             let mut walk = walker::Walker::new(self, &model, &summaries, key, true);
             walk.routine(routine);
             failures.extend(walk.errors);
             task_failures.extend(walk.task_errors);
+            iteration_failures.extend(walk.iteration_errors);
         }
         let mut walk = walker::Walker::new(self, &model, &summaries, collection::Owner::Root, true);
         walk.initializers(declarations);
@@ -136,6 +139,7 @@ impl Checker {
         }
         failures.extend(walk.errors);
         task_failures.extend(walk.task_errors);
+        iteration_failures.extend(walk.iteration_errors);
         let exported = model
             .routines
             .iter()
@@ -149,6 +153,7 @@ impl Checker {
                         called_parameters: summary.called_parameters.iter().copied().collect(),
                         started_parameters: summary.started_parameters.iter().copied().collect(),
                         mutable_globals: summary.mutable_globals.iter().cloned().collect(),
+                        written_globals: summary.written_globals.iter().cloned().collect(),
                         unknown_worker: summary.unknown_worker
                             || !summary.started_bindings.is_empty(),
                         returned_parameters: summary
@@ -169,6 +174,20 @@ impl Checker {
             })
             .collect();
         self.initialization.exported = exported;
+        iteration_failures.sort_by_key(|failure| {
+            (
+                failure.span.source_id,
+                failure.span.offset,
+                failure.name.clone(),
+            )
+        });
+        iteration_failures
+            .dedup_by(|left, right| left.span == right.span && left.name == right.name);
+        for failure in iteration_failures {
+            self.error_with_code(fpas_diagnostics::codes::SEMA_ITERATION_SOURCE_WRITE,
+                format!("For-in source is read-only: {}", failure.name),
+                "Move the write after the loop, or first make an independent copy, for example `const Source := Items;`, and iterate Source while changing Items. Helpers, callbacks, InPlace receivers and var arguments must preserve the iterated root; var parameters may alias foreign storage.", failure.span);
+        }
         task_failures.sort_by_key(|failure| {
             (
                 failure.span.source_id,

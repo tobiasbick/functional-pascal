@@ -245,6 +245,9 @@ define_codes!(SEMA_ALLOCATED_CODES => {
     /// An enum with associated data declares an explicit integer backing value.
     /// Documentation: `docs/pascal/language/types/enums.md`.
     SEMA_BACKING_VALUE_IN_DATA_ENUM = 3045;
+    /// A direct, indirect or unprovable call may write protected for-in source storage.
+    /// Documentation: `docs/pascal/tools/diagnostics.md` (FP3046).
+    SEMA_ITERATION_SOURCE_WRITE = 3046;
 });
 
 define_codes!(COMPILE_ALLOCATED_CODES => {

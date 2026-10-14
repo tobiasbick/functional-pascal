@@ -61,14 +61,8 @@ impl Walker<'_, '_> {
         if let Some(target) = self.checker.fluent_calls.get(&key) {
             if crate::std_registry::native_operation_by_implementation(&target.name)
                 .is_some_and(|operation| operation.receiver_mode() == crate::types::ParamMode::Var)
-                && let Some(binding) = self
-                    .checker
-                    .initialization
-                    .references
-                    .get(&identity(designator.span))
-                    .and_then(|reference| reference.declaration)
             {
-                self.write(binding);
+                self.write_designator(designator, span);
             }
             return self.standard(&target.name, &values, receiver, span);
         }
@@ -129,6 +123,7 @@ impl Walker<'_, '_> {
                         continue;
                     };
                     self.worker_globals(summary.mutable_globals.iter().cloned(), span);
+                    self.iteration_global_writes(summary.written_globals.iter().cloned(), span);
                     for &binding in &summary.started_bindings {
                         self.worker_binding(binding, span);
                     }
@@ -146,7 +141,7 @@ impl Walker<'_, '_> {
                         self.dependency(binding, span, "routine call");
                     }
                     for &binding in &summary.writes {
-                        self.write(binding);
+                        self.write(binding, span);
                     }
                     for &binding in &summary.called_bindings {
                         if self
@@ -161,6 +156,7 @@ impl Walker<'_, '_> {
                             self.unknown(span);
                         } else {
                             self.summary.called_bindings.insert(binding);
+                            self.iteration_unknown(span);
                         }
                     }
                     for &parameter in &summary.called_parameters {
@@ -184,6 +180,7 @@ impl Walker<'_, '_> {
                     }
                 }
                 Origin::Parameter(index) => {
+                    self.iteration_unknown(span);
                     self.summary.called_parameters.insert(index);
                     if self.worker {
                         self.summary.started_parameters.insert(index);
@@ -226,6 +223,7 @@ impl Walker<'_, '_> {
                         self.unknown(span);
                     } else {
                         self.summary.called_bindings.insert(binding);
+                        self.iteration_unknown(span);
                         if self.worker {
                             self.summary.started_bindings.insert(binding);
                         }
@@ -245,15 +243,8 @@ impl Walker<'_, '_> {
     /// Invalidate storage passed by reference after evaluating all call arguments.
     pub fn invalidate_var_arguments(&mut self, args: &[Expr]) {
         for arg in args {
-            if let Expr::VarArgument { designator, .. } = arg.argument_value()
-                && let Some(binding) = self
-                    .checker
-                    .initialization
-                    .references
-                    .get(&identity(designator.span))
-                    .and_then(|reference| reference.declaration)
-            {
-                self.write(binding);
+            if let Expr::VarArgument { designator, .. } = arg.argument_value() {
+                self.write_designator(designator, arg.span());
             }
         }
     }

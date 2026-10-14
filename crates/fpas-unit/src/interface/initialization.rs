@@ -12,6 +12,9 @@ pub struct RoutineInitialization {
     pub started_parameters: Vec<usize>,
     /// Mutable program/unit variables accessed directly or through callees.
     pub mutable_globals: Vec<String>,
+    /// Canonical unit variables written directly or through callees, used by for-in protection.
+    /// **Documentation:** `docs/pascal/language/control-flow/for-in.md`.
+    pub written_globals: Vec<String>,
     /// Worker dependencies that cannot be explained by parameter substitution.
     pub unknown_worker: bool,
     /// Parameters whose callable values may be included in the returned value.

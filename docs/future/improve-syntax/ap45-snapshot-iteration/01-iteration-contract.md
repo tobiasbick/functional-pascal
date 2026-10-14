@@ -2,6 +2,10 @@
 
 Package: [AP45](README.md). Status: complete; implemented, verified, and independently reviewed.
 
+The permission to mutate the iterated source in this delivered contract is
+superseded by the agreed [AP45.2 read-only iteration revision](02-read-only-iteration.md).
+The implementation below records the original delivery; AP45.2 owns the revision.
+
 ## Implemented contract
 
 The iterable expression runs once per loop entry, including empty collections.

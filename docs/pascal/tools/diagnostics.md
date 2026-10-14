@@ -375,6 +375,7 @@ Call arguments still use commas; commas inside types such as
 | FP3043 | Required source qualifier | Imported `WriteLn(...)` or user enum variant `Red` | Use `Console.WriteLn(...)`, `Color.Red`, or the applicable `Alias.Type.Variant`. |
 | FP3044 | Duplicate enum backing value | `First = 1; Second = 1;` or `First = 1; Restart = 0; Second;` | Assign an unused value, including for implicitly numbered variants. |
 | FP3045 | Backing value in a data enum | `Empty = 7; Number(Value: integer);` in the same enum | Remove the backing annotation: `Empty; Number(Value: integer);`. |
+| FP3046 | Write to a for-in source | Assignment, InPlace, var forwarding, a helper/callback write or unknown callable write effects while iterating a writable array/dictionary root | Move the write after the loop or iterate an explicit independent copy. Field/element sources protect their containing root; see [For-in](../language/control-flow/for-in.md). |
 
 FP3025 also reports a parameter or payload field named twice and a named
 call or pattern that omits one; its hint lists the visible static names.

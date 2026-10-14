@@ -6,6 +6,7 @@ import * as vscode from "vscode";
 import type { FunctionalPascalExtensionApi } from "../src/extension";
 import { verifyIntelliSense } from "./intellisense";
 import { verifySemanticTools } from "./semantic_tools";
+import { verifyStructuredEditing } from "./structured_editing";
 import { verifyWorkflowHost } from "./workflow/host";
 import { verifyWorkflowUnits } from "./workflow/unit";
 import { verifyProjectIndex } from "./workflow/project_index";
@@ -129,23 +130,6 @@ export async function run(): Promise<void> {
     greetingPosition
   );
   assert.ok(references?.length >= 2);
-  const renameEdit = await vscode.commands.executeCommand<vscode.WorkspaceEdit>(
-    "vscode.executeDocumentRenameProvider",
-    navigationDocument.uri,
-    greetingPosition,
-    "GreetingForEditor"
-  );
-  assert.ok(renameEdit);
-  const renameEntries = renameEdit.entries();
-  assert.equal(
-    renameEntries.reduce((count, [, edits]) => count + edits.length, 0),
-    2
-  );
-  assert.ok(
-    renameEntries.every(([, edits]) =>
-      edits.every((edit) => edit.newText === "GreetingForEditor")
-    )
-  );
   const symbols = await vscode.commands.executeCommand<
     Array<vscode.DocumentSymbol | vscode.SymbolInformation>
   >("vscode.executeDocumentSymbolProvider", navigationDocument.uri);
@@ -163,6 +147,7 @@ export async function run(): Promise<void> {
   await verifyWorkspaceNavigation();
   await verifyIntelliSense(extension.extensionPath);
   await verifySemanticTools(extension);
+  await verifyStructuredEditing();
   await verifyWorkflowHost(api);
   await verifyDebuggerHost();
 

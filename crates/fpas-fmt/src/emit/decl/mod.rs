@@ -3,6 +3,7 @@
 mod contracts;
 mod item;
 mod list;
+mod public_signatures;
 mod routines;
 
 use fpas_parser::Decl;
@@ -13,6 +14,7 @@ use super::Emitter;
 
 pub(crate) use item::emit_decl;
 pub(crate) use list::emit_decls;
+pub(crate) use public_signatures::format_public_signatures;
 
 /// Formats a declaration list (unit declarations or program type / top-level decls).
 #[must_use]

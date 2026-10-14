@@ -15,4 +15,6 @@ tooling boundary; it is not an active language package and changes no syntax.
 
 - AP13 and AP24 are complete.
 - The [editor/LSP plan](structured-editing.md) has
-  taken over the scope. Implementation remains open in that plan.
+  taken over the scope. Its bounded tooling delivery is complete: acceptance of
+  existing symbol-aware rename and a source-derived, read-only public-signature
+  view. Enum-arm insertion remains outside that delivery.

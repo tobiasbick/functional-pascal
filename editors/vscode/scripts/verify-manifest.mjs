@@ -25,6 +25,7 @@ export async function verifyManifest() {
   assert.deepEqual(
     commands.map((value) => value.command),
     [
+      "functionalPascal.showPublicSignatures",
       "functionalPascal.showOutput",
       "functionalPascal.restartLanguageServer",
       "functionalPascal.selectExecutable",

@@ -13,7 +13,7 @@ import { verifyManifest } from "./verify-manifest.mjs";
 const scriptDirectory = path.dirname(fileURLToPath(import.meta.url));
 const extensionRoot = path.resolve(scriptDirectory, "..");
 const fixtureRoot = path.join(extensionRoot, "test", "fixtures");
-const transientFixturePrefixes = [".project-index-", ".workspace-navigation-"];
+const transientFixturePrefixes = [".project-index-", ".workspace-navigation-", ".structured-editing-"];
 
 function cleanupTransientFixtures() {
   for (const entry of readdirSync(fixtureRoot, { withFileTypes: true })) {

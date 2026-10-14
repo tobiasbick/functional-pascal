@@ -75,6 +75,34 @@ fn new_auto_import_qualifies_the_use_and_avoids_a_nested_parameter_collision() {
 }
 
 #[test]
+fn alias_completion_stops_at_enclosing_call_and_index_boundaries() {
+    for expression in [
+        "Sink(M.Ans)",
+        "Sink(0,M.Ans)",
+        "[M.Ans]",
+        "Items[M.Ans]",
+        "Sink(M.Answer(1),M.Ans)",
+    ] {
+        let source =
+            format!("program App;\nuses Demo.Math as M;\nbegin\n  discard {expression};\nend.\n");
+        let mut f = fixture(&source);
+        let offset = source.rfind("M.Ans").expect("qualified prefix") + "M.Ans".len();
+        let candidates = f
+            .service
+            .completions(&f.main, offset)
+            .expect("completion")
+            .value;
+        assert!(
+            candidates
+                .iter()
+                .any(|candidate| candidate.label == "Answer"
+                    && candidate.qualified_name == "Demo.Math.Answer"),
+            "missing alias completion inside {expression}: {candidates:?}"
+        );
+    }
+}
+
+#[test]
 fn alias_members_are_public_and_keep_canonical_metadata() {
     let source = "program App;\nuses dEmO.mAtH as M;\nbegin\n  discard m.Ans;\nend.\n";
     let mut f = fixture(source);

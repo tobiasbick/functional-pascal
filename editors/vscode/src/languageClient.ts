@@ -12,7 +12,7 @@ import { ToolchainResolver } from "./toolchain";
 
 /** Owns exactly one Functional Pascal language-client process. */
 export class LanguageClientController {
-  private client: Pick<LanguageClient, "start" | "stop" | "dispose"> | undefined;
+  private client: Pick<LanguageClient, "start" | "stop" | "dispose" | "sendRequest"> | undefined;
   private operation: Promise<void> = Promise.resolve();
   private executable: string | undefined;
 
@@ -20,7 +20,7 @@ export class LanguageClientController {
     private readonly toolchain: Pick<ToolchainResolver, "resolve">,
     private readonly outputChannel: vscode.LogOutputChannel,
     private readonly createClient = (server: ServerOptions, options: LanguageClientOptions):
-      Pick<LanguageClient, "start" | "stop" | "dispose"> =>
+      Pick<LanguageClient, "start" | "stop" | "dispose" | "sendRequest"> =>
         new LanguageClient("functionalPascal", "Functional Pascal Language Server", server, options)
   ) {}
 
@@ -94,6 +94,17 @@ export class LanguageClientController {
     return this.enqueue(async () => {
       await this.stopClient();
       return this.startClient();
+    });
+  }
+
+  /** Gets public declarations from the same language server that owns the source buffer. */
+  public publicSignatures(uri: vscode.Uri): Promise<{ text: string; version: number }> {
+    return this.enqueue(async () => {
+      await this.startClient();
+      if (this.client === undefined) throw new Error("The language server is not running.");
+      return this.client.sendRequest<{ text: string; version: number }>(
+        "fpas/publicSignatures", { uri: uri.toString() }
+      );
     });
   }
 

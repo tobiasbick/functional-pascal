@@ -22,8 +22,9 @@ export async function verifyLanguageClientLifecycle(): Promise<void> {
     return {
       start: async () => { if (created === 1) await startGate; },
       stop: async () => { stopped += 1; },
-      dispose: async () => { disposed += 1; }
-    } as Pick<LanguageClient, "start" | "stop" | "dispose">;
+      dispose: async () => { disposed += 1; },
+      sendRequest: async () => { throw new Error("unexpected request in lifecycle test"); }
+    } as Pick<LanguageClient, "start" | "stop" | "dispose" | "sendRequest">;
   });
   const first = controller.start();
   const second = controller.start();
@@ -44,8 +45,9 @@ export async function verifyLanguageClientLifecycle(): Promise<void> {
   const recovery = new LanguageClientController(toolchain, output, () => ({
     start: async () => { if (++attempts === 1) throw new Error("startup failed"); },
     stop: async () => undefined,
-    dispose: async () => undefined
-  }) as Pick<LanguageClient, "start" | "stop" | "dispose">);
+    dispose: async () => undefined,
+    sendRequest: async () => { throw new Error("unexpected request in lifecycle test"); }
+  }) as Pick<LanguageClient, "start" | "stop" | "dispose" | "sendRequest">);
   await assert.rejects(recovery.start(), /startup failed/u);
   assert.equal(await recovery.start(), "fpas");
   await recovery.stop();

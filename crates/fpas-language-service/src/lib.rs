@@ -23,6 +23,7 @@ mod error;
 mod formatting;
 mod intellisense;
 mod navigation;
+mod public_signatures;
 mod semantic_tools;
 mod symbols;
 mod workspace;

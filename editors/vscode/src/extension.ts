@@ -2,6 +2,7 @@ import * as vscode from "vscode";
 import { projectIndex } from "./projects/index";
 
 import { LanguageClientController } from "./languageClient";
+import { registerPublicSignatures } from "./publicSignatures";
 import { registerDebugger } from "./debugger/adapter";
 import { EXECUTABLE_PATH_SETTING } from "./cliPath";
 import { ToolchainResolver } from "./toolchain";
@@ -68,6 +69,7 @@ export async function activate(
   context.subscriptions.push(projectIndex);
   const toolchain = new ToolchainResolver();
   languageClient = new LanguageClientController(toolchain, outputChannel);
+  registerPublicSignatures(context, languageClient);
   const workflow = new WorkflowController(context, outputChannel, toolchain);
   registerDebugger(context, toolchain);
   const workflowApi = {

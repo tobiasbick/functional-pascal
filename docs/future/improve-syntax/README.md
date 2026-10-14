@@ -54,7 +54,8 @@ Checkboxes use the [status-tracking rule](development-process.md#status-tracking
 
 Of the 46 packages, 40 are implemented, AP08/AP25/AP29 are rejected and closed,
 AP12 and AP27 are deferred with their proposals retained, AP28 is transferred
-to editor/LSP planning. No agreed implementation package remains pending.
+to editor/LSP planning with its bounded tooling delivery complete. No agreed
+implementation package remains pending.
 The FPAS 1 stabilization scope is bounded: unambiguous enum values, an explicit
 snapshot-iteration contract, and Unicode character-code literals. Broader
 [FPAS 2 directions](../fpas2-language-directions.md) are retained separately and
@@ -163,7 +164,7 @@ package are listed in each work package file.
 | — | [AP25: Conservative purity](ap25-conservative-purity/README.md) | — | — | Rejected; closed after AP25.1 reassessment (Q18 superseded) |
 | [x] | [AP26: Structured task scopes](ap26-structured-task-scopes/README.md) | Large | AP13, AP17 | Complete (AP26.1–AP26.3; Q19, Q20, Q24–Q27) |
 | [ ] | [AP27: Typed placeholders](ap27-typed-placeholders/README.md) | Very large if reopened | AP02, AP22; renewed user decision | Deferred; proposal retained, value and spelling unresolved |
-| — | [AP28: Structured editing](ap28-structured-editing/README.md) | — | AP13, AP24 | Tooling scope transferred to the [AP28 editor/LSP plan](ap28-structured-editing/structured-editing.md) (Q23) |
+| — | [AP28: Structured editing](ap28-structured-editing/README.md) | — | AP13, AP24 | Transferred to the [AP28 editor/LSP plan](ap28-structured-editing/structured-editing.md) (Q23); bounded tooling delivery complete |
 | — | [AP29: Bounded derivation](ap29-bounded-derivation/README.md) | — | — | Rejected; closed (Q22) |
 | [x] | [AP30: Sound task result types](ap30-task-result-types/README.md) | Medium | AP26 | Complete (AP30.1, AP30.2): fixed procedure/function task types |
 | [x] | [AP31: Exported record constant defaults](ap31-exported-record-defaults/README.md) | Small–medium | AP10, AP24 | Complete (AP31.1): evaluated constant defaults and source diagnostics |
@@ -377,9 +378,10 @@ Only after renewed approval would
 precede AP27.2.
 
 The deferred and closed packages are outside the sequence above. AP28's separate
-[editor/LSP plan](ap28-structured-editing/structured-editing.md)
-starts by inspecting existing editing facilities and selecting one bounded
-operation; AP13 and AP24 satisfy its completed language prerequisites.
+[editor/LSP plan](ap28-structured-editing/structured-editing.md) has completed
+acceptance of existing symbol-aware rename and a source-derived, read-only
+public-signature view. Enum-arm insertion is outside that delivery; AP13 and
+AP24 satisfy its completed language prerequisites.
 AP08, AP25, and AP29 are closed without implementation.
 
 ## Decision gates

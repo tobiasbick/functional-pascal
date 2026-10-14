@@ -52,6 +52,8 @@ fn identifier_end(source: &str, offset: usize) -> usize {
     end
 }
 
+/// Finds the dot receiver without including an enclosing call, index or argument.
+/// Balanced receiver calls and indices remain part of the returned expression.
 pub(super) fn receiver_before(source: &str, replacement_start: usize) -> Option<String> {
     let before = source.get(..replacement_start)?;
     let dot = before.strip_suffix('.')?;
@@ -75,7 +77,10 @@ pub(super) fn receiver_before(source: &str, replacement_start: usize) -> Option<
             ch if parentheses == 0
                 && brackets == 0
                 && (ch.is_whitespace()
-                    || matches!(ch, ';' | ':' | '=' | '+' | '-' | '*' | '/')) =>
+                    || matches!(
+                        ch,
+                        '(' | '[' | ',' | ';' | ':' | '=' | '+' | '-' | '*' | '/'
+                    )) =>
             {
                 break;
             }

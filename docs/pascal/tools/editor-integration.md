@@ -12,6 +12,7 @@ desktop editors. The implemented editor features are:
 - workspace symbol search and same-document read/write highlights
 - syntax-aware selection-range expansion
 - validated project-wide symbol rename
+- read-only public signatures for the current unit
 - rich visibility-aware completion with lazy declaration documentation
 - signature help, repository snippets, and unambiguous auto-import completion
 - compiler-backed semantic highlighting with TextMate fallback
@@ -31,8 +32,33 @@ extension and Language Server Protocol APIs; no compiler behavior is
 reimplemented in TypeScript.
 
 Hover and field completion substitute the arguments of generic record values.
+Qualified completion also works inside enclosing call arguments and indices.
 For `Value: Box of string`, the `Value.Item` field shows `string` when `Box`
 declares `Item: T`. This also applies to imported records and nested record fields.
+
+## Public signatures
+
+Open a unit source and run **Functional Pascal: Show Public Signatures** from
+the Command Palette. The read-only document beside the source shows its imports,
+public binding types, public types and record members, routine headings, and
+declared preconditions/postconditions. Routine bodies, binding initializers,
+private declarations/members, and comments are omitted. Public field defaults
+remain visible. The canonical formatter supplies declaration layout.
+
+The view follows unsaved source edits. Incomplete syntax replaces the view with
+an actionable message; program sources have no unit export view. This document
+is a source-derived description, not a compilable interface or a saved file.
+Opening it writes no sources, manifests, or compiled-unit sidecars.
+
+The native LSP request `fpas/publicSignatures` accepts `{ "uri": "file:..." }`
+for an open unit and returns `{ "text": "...", "version": 1 }`, identifying
+the exact editor version used. Closed documents, program sources, and syntax
+errors return an error. The extension discards responses for older source versions.
+
+**Rename Symbol** remains the ordinary F2 operation. It changes resolved
+identifier occurrences while preserving other source text, including comments
+and string literals. Rename does not reformat the source; use normal document
+formatting when a changed identifier requires a different line layout.
 
 ## Source debugging and variable editing
 

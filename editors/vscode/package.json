@@ -125,6 +125,11 @@
     ],
     "commands": [
       {
+        "command": "functionalPascal.showPublicSignatures",
+        "title": "Show Public Signatures",
+        "category": "Functional Pascal"
+      },
+      {
         "command": "functionalPascal.showOutput",
         "title": "Show Output",
         "category": "Functional Pascal"

@@ -198,6 +198,12 @@ library, and **Rename Symbol** (`F2`) to validate and edit a normal declaration
 across those loaded projects. Program/unit renames and declarations outside
 the opened folder are intentionally rejected.
 
+Run **Functional Pascal: Show Public Signatures** from a unit source to open its
+read-only public declarations beside the editor. The view follows unsaved changes
+and includes imports, public types/members, binding types and routine contracts,
+without private declarations or routine bodies. Syntax errors show an actionable
+message. It is derived from source and is not a separately saved interface.
+
 Completion includes parameters, locals, imported declarations, record and enum
 members, and context-appropriate keywords with accurate kinds, owners, types,
 signatures, and replacement ranges. Signature help tracks nested and multiline

@@ -15,6 +15,22 @@ pub(super) fn emit_function_decl(
 ) {
     emitter.write_current_indent();
     emit_visibility(emitter, function.visibility);
+    emit_function_signature(emitter, function, comments);
+    emit_func_body(
+        emitter,
+        function.span.offset,
+        &function.body,
+        "function",
+        comments,
+    );
+}
+
+/// Emits a function heading and its contracts after visibility/static prefixes.
+pub(super) fn emit_function_signature(
+    emitter: &mut Emitter,
+    function: &FunctionDecl,
+    comments: &CommentMap,
+) {
     emit_function_header(
         emitter,
         &function.name,
@@ -26,13 +42,6 @@ pub(super) fn emit_function_decl(
     finish_routine_header_line(emitter, comments, function.span.offset);
     super::contracts::emit_requires_clauses(emitter, &function.requires, comments);
     super::contracts::emit_ensures_clauses(emitter, &function.ensures, comments);
-    emit_func_body(
-        emitter,
-        function.span.offset,
-        &function.body,
-        "function",
-        comments,
-    );
 }
 
 /// Emits a named procedure declaration with its matching ending.
@@ -43,6 +52,22 @@ pub(super) fn emit_procedure_decl(
 ) {
     emitter.write_current_indent();
     emit_visibility(emitter, procedure.visibility);
+    emit_procedure_signature(emitter, procedure, comments);
+    emit_func_body(
+        emitter,
+        procedure.span.offset,
+        &procedure.body,
+        "procedure",
+        comments,
+    );
+}
+
+/// Emits a procedure heading and its contracts after visibility/static prefixes.
+pub(super) fn emit_procedure_signature(
+    emitter: &mut Emitter,
+    procedure: &ProcedureDecl,
+    comments: &CommentMap,
+) {
     emit_procedure_header(
         emitter,
         &procedure.name,
@@ -52,13 +77,6 @@ pub(super) fn emit_procedure_decl(
     finish_routine_header_line(emitter, comments, procedure.span.offset);
     super::contracts::emit_requires_clauses(emitter, &procedure.requires, comments);
     super::contracts::emit_ensures_clauses(emitter, &procedure.ensures, comments);
-    emit_func_body(
-        emitter,
-        procedure.span.offset,
-        &procedure.body,
-        "procedure",
-        comments,
-    );
 }
 
 /// Emits a function signature before its declaration terminator.

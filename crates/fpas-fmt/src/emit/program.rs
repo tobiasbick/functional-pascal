@@ -80,7 +80,8 @@ fn emit_unit(emitter: &mut Emitter, unit: &Unit, comments: &CommentMap) {
     emit_trailing_end_comments(emitter, comments);
 }
 
-fn emit_optional_uses(emitter: &mut Emitter, uses: &[Import], comments: &CommentMap) {
+/// Emits the canonical import list for source and public-signature views.
+pub(super) fn emit_optional_uses(emitter: &mut Emitter, uses: &[Import], comments: &CommentMap) {
     if uses.is_empty() {
         return;
     }

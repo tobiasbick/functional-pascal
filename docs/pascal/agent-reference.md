@@ -6,6 +6,9 @@ The [formal grammar](../specs/grammar.ebnf) describes syntax. The
 [handbook](README.md) explains behavior. Planned features belong in `docs/future/`.
 Purpose and upkeep are recorded in the [maintenance guide](agent-reference-maintenance.md).
 
+The editor command **Functional Pascal: Show Public Signatures** provides a read-only,
+source-derived view of the current unit's public declarations, including unsaved edits.
+
 Every fenced example below is a complete program or unit. The CLI test
 `agent_reference_examples_check_and_run` extracts all fences, checks every source,
 and runs every program, including its assertions. Save a standalone program as a

@@ -11,8 +11,8 @@ use super::super::Emitter;
 use super::super::expr::emit_expr;
 use super::super::types::{emit_type_expr, emit_type_param};
 use super::routines::{
-    emit_func_body, emit_function_decl, emit_function_header, emit_procedure_decl,
-    emit_procedure_header, finish_routine_header_line,
+    emit_func_body, emit_function_decl, emit_function_signature, emit_procedure_decl,
+    emit_procedure_signature,
 };
 
 /// Emit one complete declaration, including its own keyword and visibility.
@@ -60,6 +60,13 @@ fn emit_var_def(emitter: &mut Emitter, keyword: &str, def: &VarDef, comments: &C
 }
 
 fn emit_type_def(emitter: &mut Emitter, def: &TypeDef, comments: &CommentMap) {
+    emit_type_heading(emitter, def);
+    emit_type_body(emitter, &def.body, comments);
+    finish_decl_line(emitter, comments, def.span.offset);
+}
+
+/// Emits a named type's visibility, parameters and assignment prefix.
+pub(super) fn emit_type_heading(emitter: &mut Emitter, def: &TypeDef) {
     emitter.write_current_indent();
     emit_visibility(emitter, def.visibility);
     emitter.write("type ");
@@ -80,8 +87,6 @@ fn emit_type_def(emitter: &mut Emitter, def: &TypeDef, comments: &CommentMap) {
         }
     }
     emitter.write(" = ");
-    emit_type_body(emitter, &def.body, comments);
-    finish_decl_line(emitter, comments, def.span.offset);
 }
 
 fn emit_type_body(emitter: &mut Emitter, body: &TypeBody, comments: &CommentMap) {
@@ -104,18 +109,13 @@ fn emit_type_body(emitter: &mut Emitter, body: &TypeBody, comments: &CommentMap)
 fn emit_record_type(emitter: &mut Emitter, record: &RecordType, comments: &CommentMap) {
     emitter.write("record\n");
     emitter.with_indent(|inner| {
-        for field in &record.fields {
-            emit_field_def(inner, field, comments);
-        }
-        if !record.fields.is_empty() && !record.methods.is_empty() {
-            inner.write("\n");
-        }
-        for (index, method) in record.methods.iter().enumerate() {
-            if index > 0 {
-                inner.write("\n");
-            }
-            emit_record_method(inner, method, comments);
-        }
+        emit_record_members(
+            inner,
+            record.fields.iter(),
+            record.methods.iter(),
+            comments,
+            emit_record_method,
+        );
     });
     if let Some(anchor) = comments.closer_anchor(record.span.offset) {
         emit_leading_comments(emitter, comments, anchor, false);
@@ -124,7 +124,8 @@ fn emit_record_type(emitter: &mut Emitter, record: &RecordType, comments: &Comme
     emitter.write("end record");
 }
 
-fn emit_field_def(emitter: &mut Emitter, field: &FieldDef, comments: &CommentMap) {
+/// Emits a stored field and its declared default with canonical type/expression layout.
+pub(super) fn emit_field_def(emitter: &mut Emitter, field: &FieldDef, comments: &CommentMap) {
     emit_leading_comments(emitter, comments, field.span.offset, false);
     emitter.write_current_indent();
     emit_visibility(emitter, field.visibility);
@@ -138,23 +139,34 @@ fn emit_field_def(emitter: &mut Emitter, field: &FieldDef, comments: &CommentMap
     finish_decl_line(emitter, comments, field.span.offset);
 }
 
+/// Shares record member ordering and separators between source and public views.
+pub(super) fn emit_record_members<'a>(
+    emitter: &mut Emitter,
+    fields: impl Iterator<Item = &'a FieldDef>,
+    methods: impl Iterator<Item = &'a RecordMethod>,
+    comments: &CommentMap,
+    emit_method: impl Fn(&mut Emitter, &RecordMethod, &CommentMap),
+) {
+    let mut has_fields = false;
+    for field in fields {
+        emit_field_def(emitter, field, comments);
+        has_fields = true;
+    }
+    for (index, method) in methods.enumerate() {
+        if has_fields || index > 0 {
+            emitter.write("\n");
+        }
+        emit_method(emitter, method, comments);
+    }
+}
+
 fn emit_record_method(emitter: &mut Emitter, method: &RecordMethod, comments: &CommentMap) {
     match method {
         RecordMethod::Function(function) => {
             emit_leading_comments(emitter, comments, function.span.offset, true);
             emitter.write_current_indent();
             emit_visibility(emitter, function.visibility);
-            emit_function_header(
-                emitter,
-                &function.name,
-                &function.type_params,
-                &function.params,
-            );
-            emitter.write(": ");
-            emit_type_expr(emitter, &function.return_type);
-            finish_routine_header_line(emitter, comments, function.span.offset);
-            super::contracts::emit_requires_clauses(emitter, &function.requires, comments);
-            super::contracts::emit_ensures_clauses(emitter, &function.ensures, comments);
+            emit_function_signature(emitter, function, comments);
             emit_func_body(
                 emitter,
                 function.span.offset,
@@ -168,17 +180,7 @@ fn emit_record_method(emitter: &mut Emitter, method: &RecordMethod, comments: &C
             emitter.write_current_indent();
             emit_visibility(emitter, function.visibility);
             emitter.write("static ");
-            emit_function_header(
-                emitter,
-                &function.name,
-                &function.type_params,
-                &function.params,
-            );
-            emitter.write(": ");
-            emit_type_expr(emitter, &function.return_type);
-            finish_routine_header_line(emitter, comments, function.span.offset);
-            super::contracts::emit_requires_clauses(emitter, &function.requires, comments);
-            super::contracts::emit_ensures_clauses(emitter, &function.ensures, comments);
+            emit_function_signature(emitter, function, comments);
             emit_func_body(
                 emitter,
                 function.span.offset,
@@ -192,15 +194,7 @@ fn emit_record_method(emitter: &mut Emitter, method: &RecordMethod, comments: &C
             emitter.write_current_indent();
             emit_visibility(emitter, procedure.visibility);
             emitter.write("static ");
-            emit_procedure_header(
-                emitter,
-                &procedure.name,
-                &procedure.type_params,
-                &procedure.params,
-            );
-            finish_routine_header_line(emitter, comments, procedure.span.offset);
-            super::contracts::emit_requires_clauses(emitter, &procedure.requires, comments);
-            super::contracts::emit_ensures_clauses(emitter, &procedure.ensures, comments);
+            emit_procedure_signature(emitter, procedure, comments);
             emit_func_body(
                 emitter,
                 procedure.span.offset,
@@ -213,15 +207,7 @@ fn emit_record_method(emitter: &mut Emitter, method: &RecordMethod, comments: &C
             emit_leading_comments(emitter, comments, procedure.span.offset, true);
             emitter.write_current_indent();
             emit_visibility(emitter, procedure.visibility);
-            emit_procedure_header(
-                emitter,
-                &procedure.name,
-                &procedure.type_params,
-                &procedure.params,
-            );
-            finish_routine_header_line(emitter, comments, procedure.span.offset);
-            super::contracts::emit_requires_clauses(emitter, &procedure.requires, comments);
-            super::contracts::emit_ensures_clauses(emitter, &procedure.ensures, comments);
+            emit_procedure_signature(emitter, procedure, comments);
             emit_func_body(
                 emitter,
                 procedure.span.offset,

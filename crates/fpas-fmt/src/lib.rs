@@ -17,6 +17,7 @@ mod comments;
 mod emit;
 mod error;
 mod layout;
+mod public_signatures;
 mod span;
 mod style;
 
@@ -25,6 +26,7 @@ use emit::{format_program as emit_program, format_unit as emit_unit};
 use fpas_parser::{CompilationUnit, Program, Unit};
 
 pub use error::FormatError;
+pub use public_signatures::format_public_signatures;
 
 /// Formats a parsed compilation unit without access to original source.
 ///

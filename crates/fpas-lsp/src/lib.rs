@@ -40,7 +40,9 @@ pub use server::Backend;
 pub fn create_service(
     initial_root: PathBuf,
 ) -> (OrderedLspService, tower_lsp_server::ClientSocket) {
-    let (service, socket) = LspService::new(move |client| Backend::new(initial_root, client));
+    let (service, socket) = LspService::build(move |client| Backend::new(initial_root, client))
+        .custom_method("fpas/publicSignatures", Backend::public_signatures_request)
+        .finish();
     (OrderedLspService::new(service), socket)
 }
 

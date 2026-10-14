@@ -15,6 +15,7 @@ mod stmt;
 mod types;
 mod width;
 
+pub(crate) use decl::format_public_signatures;
 pub(crate) use program::{format_program, format_unit};
 
 use crate::style::{INDENT, MAX_LINE_WIDTH};

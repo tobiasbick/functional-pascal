@@ -28,7 +28,7 @@ impl Worker {
                 };
                 // Division by zero and overflow yield non-finite values and take the checked path.
                 if left.is_finite() && right.is_finite() && direct.is_finite() {
-                    return self.write_operand(operands.a, Value::Real(direct));
+                    return self.write_real_operand(operands.a, direct);
                 }
                 value_ops::real_binary(operation, left, right)
             }

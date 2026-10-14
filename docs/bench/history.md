@@ -14,6 +14,37 @@ cargo bench-fpas record "vm-only note" --group vm
 
 Newest entries are prepended below this header.
 
+## 2026-10-14 — In-place typed real register stores
+
+- Group: `vm`
+- Suite: [`suite.toml`](suite.toml)
+
+| bench | elapsed_ms | throughput |
+|-------|------------|------------|
+| integer_loop | 1024 | throughput: 48828125 iters/s |
+| typed_real | 173 | - |
+| typed_boolean | 287 | - |
+| typed_string | 165 | - |
+| global_access | 132 | throughput: 37878787 global updates/s |
+| record_field_access | 326 | throughput: 46012269 field accesses/s |
+| closure_call | 162 | throughput: 18518518 closure calls/s |
+| mutable_capture | 218 | throughput: 13761467 captured updates/s |
+| branch_dispatch | 535 | throughput: 37383177 branches/s |
+| dynamic_numeric | 301 | throughput: 16611295 dynamic numeric ops/s |
+| array_push | 60 | throughput: 33333333 pushes/s |
+| array_length | 24 | throughput: 20833333 lengths/s |
+| string_concat | 938 | throughput: 5330490 concats/s |
+| string_length | 24 | throughput: 20833333 lengths/s |
+| intrinsic_dispatch | 699 | throughput: 21459227 intrinsic calls/s |
+| function_call | 280 | throughput: 21428571 calls/s |
+| array_callbacks | 871 | throughput: 11021814 callbacks/s |
+| record_update | 87 | throughput: 11494252 updates/s |
+| unicode_char_at | 274 | throughput: 10948905 chars/s |
+| wrapper_payload | 745 | throughput: 13422818 wrappers/s |
+| string_search | 78 | - |
+| substring_ascii | 6 | - |
+| substring_unicode | 11 | - |
+
 ## 2026-10-14 — Direct VM integer, real and global access fast paths
 
 - Group: `vm`

@@ -58,6 +58,22 @@ impl Worker {
         Ok(())
     }
 
+    /// Write a real to an absolute active register, updating an existing real payload in place.
+    ///
+    /// Replacing the whole `Value` builds it on the stack and reloads it as one wide value, which
+    /// puts every preceding check on the arithmetic dependency chain; the in-place path avoids it.
+    #[inline(always)]
+    pub(super) fn store_real_register(&mut self, index: usize, value: f64) -> Result<(), VmError> {
+        if index < self.register_initialized.len()
+            && let Some(Value::Real(slot)) = self.registers.get_mut(index)
+        {
+            *slot = value;
+            self.register_initialized[index] = true;
+            return Ok(());
+        }
+        self.store_register(index, Value::Real(value))
+    }
+
     /// Remove an absolute active register value and mark the slot uninitialized.
     pub(super) fn take_register(&mut self, index: usize) -> Result<Value, VmError> {
         if index >= self.registers.len() || index >= self.register_initialized.len() {

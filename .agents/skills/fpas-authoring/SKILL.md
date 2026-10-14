@@ -45,13 +45,24 @@ Read the pages relevant to the change. For exact productions, consult
   Computed `const` bindings are allowed inline in statement lists;
   their initializer runs whenever execution reaches the declaration. Keep record
   fields and enum members in their existing syntax; local types are not allowed.
+- Statement-local bindings may infer any fully determined initializer type,
+  including calls, operators, field/index reads, and if/case expressions. Empty
+  collections, None, and incomplete Result constructors need context. Inference
+  never promotes integer to real. Declarations before begin, parameters, results,
+  and record fields require annotations.
+- Separate declared parameters with semicolons and call arguments with commas.
+  Calls are fully positional or fully named; fixed-signature callable values use
+  their visible static parameter labels. Arguments evaluate in written order,
+  even when names reorder parameters. Variadic calls are positional.
 - Scalar `case` value labels and both range endpoints require compile-time
   constants. Calls and computed bindings belong in guard conditions.
 - Patterns bind explicitly: `when Some(const Value):`,
   `when Shape.Rect(const W, _):`, and `when const N if N > 0:` for a scalar
   guard binding. `_` ignores one field. Patterns nest (`Ok(Some(const User))`)
   and compare payloads with literals or compile-time constants; a plain
-  identifier that names no constant is an error. Coverage is checked
+  identifier that names no constant is an error. Each payload list is fully
+  positional or fully named, covering every field once; Some/Ok/Error use Value
+  as their payload label. Coverage is checked
   recursively. Closed enum, Option, and Result cases list every variant
   explicitly and reject `else`, including a redundant branch. Only scalar
   integer/string cases require `else`; Boolean and subrange cases cover their
@@ -78,14 +89,18 @@ Read the pages relevant to the change. For exact productions, consult
   retain their existing rules.
 - Functions return with `return`. Consume function results or use an allowed
   explicit [discard](../../../docs/pascal/language/functions/discard.md).
-- Parse text with Std.Parse Int/Real/Bool/HexInt, each taking Text: string and
-  returning Result of (target type, string). Std.Conv formats and converts typed
+- Import `uses Std.Parse as Parse;` and call Parse.Int/Real/Bool/HexInt,
+  each taking Text: string and returning Result of (target type, string).
+  Std.Conv formats and converts typed
   values. Use try for propagation, nonbinding is for variant tests, and exhaustive
   case for payload binding, local handling, or plain defaults. Unwrap deliberately
   aborts on Error/None; try does not catch runtime failures. Map transforms wrapped
   success, AndThen composes wrapped operations, and OrElse recovers within a wrapper.
   Callback argument expressions are eager; callback bodies run only on their
   selected variant. Case fallback work runs only in its selected arm.
+  Try requires the same wrapper family in the enclosing function; success types
+  may differ. Result propagation preserves compatible errors, nominal identity,
+  and the same generic error parameter. Program bodies and procedures cannot use try.
 - Go is one expression and requires a lexical scope in the same routine.
   Bind its exact task handle or use `discard go Work();`; named and anonymous
   helpers never inherit ownership. Pass TaskGroup for dynamic caller-owned work.

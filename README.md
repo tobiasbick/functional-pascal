@@ -15,15 +15,16 @@ A modern, function-first programming language built on Pascal's readable syntax.
 - **Contracts** — Declare routine preconditions with `requires` and postconditions with `ensures`.
 - **Generic records and enums** — Declare type parameters with `of` and infer type arguments from supplied constructor fields or payloads.
 - **Subranges and distinct types** — Restrict integer values with checked bounds and give scalar domain types their own identity.
-- **Error handling** — Built-in `Result of (T, E)` and `Option of T` types with a `try` operator for propagation.
+- **Error handling** — Built-in `Result of (T, E)` and `Option of T`: `try` propagates, nonbinding `is` tests variants, and exhaustive `case` handles payloads and defaults. [Std.Parse](docs/pascal/std/text/parse.md) text parsers return `Result`; `Unwrap` deliberately aborts on failure.
 - **Concurrency** — `go` tasks, typed bounded channels, cooperative cancellation, mixed-source `Select`, task groups, and supervised retries. [Std.Tasks](docs/pascal/std/concurrency/task.md) includes timed group close; timeout retains unfinished work rather than forcibly terminating it.
 - **Task scopes** — `scope ... end scope;` joins owned child tasks before exit, supports cooperative cancellation, and propagates runtime failures. [Scope-owned handles](docs/pascal/language/concurrency/task-scopes.md#handle-escapes) stay inside their scope.
 - **Standard library** — Built-in `Std.*` units for console I/O, TUI, math, tasks, files, networking, and more. Strings, arrays, dictionaries, `Option`, and `Result` have native operations that need no imports.
+- **Visible mutation** — Native collection and string transformations return values; `InPlace` operations update writable receivers.
 - **Server lifetime** — [Std.Server](docs/pascal/std/network/server.md) owns worker groups and listeners, handles stop signals, and supports explicitly authorized process escalation after a common grace period.
 - **Editor support** — A repository-owned VS Code-compatible extension provides diagnostics, formatting, navigation, completion, project workflows, integrated tests, and source debugging.
 - **Safe by design** — The VM manages memory. No pointers, no manual allocation, no unsafe operations.
 - **Case-insensitive** — Keywords and identifiers are case-insensitive, following Pascal tradition.
-- **Explicit types** — Parameters, routine results, and record fields declare their types. Local bindings allow [limited inference](docs/pascal/language/basics/local-variables.md#limited-type-inference) from literals, typed construction, and explicit type conversions.
+- **Explicit types** — Parameters, routine results, and record fields declare their types. Statement-local bindings support [type inference](docs/pascal/language/basics/local-variables.md#type-inference) whenever the initializer's type is determined, including calls and `if`/`case` expressions.
 
 ## Quickstart
 
@@ -246,6 +247,35 @@ begin
 end.
 ```
 
+### Parsing and error propagation
+
+Import `Std.Parse` through an alias. Its `Int`, `Real`, `Bool`, and `HexInt`
+operations take `Text: string` and return `Result of (T, string)`. Use `try`
+inside a compatible function and `case` to handle the result locally:
+
+```pascal
+program ParseExample;
+
+uses Std.Parse as Parse, Std.Console as Console;
+
+function DoubleInput(Text: string): result of (integer, string);
+begin
+  const Value := try Parse.Int(Text := Text);
+  return Ok(Value * 2);
+end function;
+
+begin
+  for Text: string in ['21', 'invalid'] do
+    case DoubleInput(Text := Text) of
+      when Ok(const Value):
+        Console.WriteLn('Doubled: ', Value);
+      when Error(const Message):
+        Console.WriteLn('Input error: ', Message);
+    end case;
+  end for;
+end.
+```
+
 More examples in the [`examples/`](examples) directory.
 
 ### Interactive Mandelbrot TUI
@@ -285,6 +315,9 @@ fpas run                           # run the sole program member
 ## Documentation
 
 The full language specification lives in [`docs/pascal/`](docs/pascal). Start with the [documentation hub](docs/pascal/README.md) for area navigation and the learning path.
+
+For authoring with an LLM, start with the [compact FPAS language reference](docs/pascal/agent-reference.md).
+Its [maintenance guide](docs/pascal/agent-reference-maintenance.md) defines how to keep the rules and executable examples current.
 
 | Area | Hub |
 |------|-----|

@@ -39,6 +39,7 @@ inheritance, pointers, manual allocation, exceptions with handlers, or preproces
 | Pascal `{comment}` / `(*comment*)`, Ada `--comment` | Only `//` comments. |
 | Pascal bitwise `and`, `or`, `xor` on integers | These operators take booleans; use `Std.Bits` for bits. |
 | Delphi `try` / `except` | Return `Result of (T, E)` or `Option of T`; `try Expr` propagates failure. |
+| Delphi `StrToInt(Text)` / `StrToFloat(Text)` | Import `Std.Parse`; use `Parse.Int(Text)` / `Parse.Real(Text)` and handle the Result, or explicitly Unwrap. |
 | Delphi `interface` / `implementation`, Ada package spec/body | One `unit Name; ... end unit;`; mark each export `public`. |
 | An imported unit is automatically available through a dependency | Add `uses`; project dependencies only make sources discoverable. |
 
@@ -79,20 +80,22 @@ logical operators, e.g. `(A and B) or C`; repeated `A and B and C` is allowed.
 `/` performs real division; `div` and `mod` take integers. Use `=` and `<>` for
 equality and inequality. Arithmetic does not implicitly convert a `real` to `integer`.
 
-Numeric operands must have the same type; use `Std.Conv.IntToReal` explicitly
-before mixing integer and real calculations or comparisons. `/` on two integers
-still produces real. Integer `+`, `-`, `*`, and negation reject overflow. Real
-operands and results must be finite; division by either sign of zero is an error.
+Numeric operands must have the same type; import `uses Std.Conv as Conv;` and use
+`Conv.IntToReal` explicitly before mixing integer and real calculations or
+comparisons. `/` on two integers still produces real. Integer `+`, `-`, `*`, and
+negation reject overflow. Real operands and results must be finite; division by
+either sign of zero is an error.
 `div` truncates toward zero and `mod` follows the dividend's sign; the minimum
 integer modulo -1 is zero. Direct minimum literals are `-9223372036854775808`
 and `-$8000000000000000`; their positive magnitudes are invalid integer values.
 Arithmetic permits subnormal values and signed zero; nonzero literal/text input
-rounded to zero is rejected. `IntToReal` can lose integer precision. `Std.Math.Round`
-uses ties to even; Trunc uses truncation toward zero, with checked integer bounds.
-`RealToStr` preserves the identical binary64 parsing round-trip, including `1.0`
-and `-0.0`. `Std.Parse.Int`/`Real` share literal
-bodies, adding an optional sign and surrounding whitespace; real text needs a
-fractional part. See [conversion](std/text/conv.md) and [parsing](std/text/parse.md).
+rounded to zero is rejected. `IntToReal` can lose integer precision. With
+`uses Std.Math as Math;`, `Math.Round` uses ties to even; `Math.Trunc` truncates
+toward zero, with checked integer bounds. `RealToStr` preserves the identical
+binary64 parsing round-trip, including `1.0`
+and `-0.0`. The Int/Real parsers in Std.Parse share literal bodies, adding an
+optional sign and surrounding whitespace; real text needs a fractional part.
+See [conversion](std/text/conv.md) and [parsing](std/text/parse.md).
 
 Records, data enums, Option and Result support structural equality when all payloads
 are comparable. Whole arrays, dicts, callables, tasks and channels do not support
@@ -436,17 +439,33 @@ See [pattern matching](language/pattern-matching/README.md).
 They are values. Use nonbinding `is` for variant tests, exhaustive `case` for
 payload binding, local handling, or plain defaults, and native `Unwrap` for
 deliberate abort on Error/None. Case evaluates only its selected arm.
+The variant tests are `Value is Ok(_)`, `Value is Error(_)`, `Value is Some(_)`,
+and `Value is None`. Compute default work before case when it must run
+unconditionally.
 Map transforms wrapped success, AndThen composes wrapped operations, and OrElse
 recovers within a wrapper. Callback argument expressions evaluate eagerly in
 source order; their bodies run only on the selected variant.
 
-`Std.Parse.Int`, `Real`, `Bool`, and `HexInt` each take Text: string and return
-Result of (target type, string). HexInt reads bare/prefixed hexadecimal text;
-Int reads decimal or `$` hex. Std.Conv formats and converts already typed values.
+Import `uses Std.Parse as Parse;`. Each parser takes `Text: string` and returns
+`Result of (T, string)`:
+
+| Call through Parse | Success type T | Input |
+| --- | --- | --- |
+| `Parse.Int(Text)` | integer | Signed decimal or `$` hexadecimal |
+| `Parse.Real(Text)` | real | Finite real text with a fractional part |
+| `Parse.Bool(Text)` | boolean | Trimmed, case-insensitive true/false |
+| `Parse.HexInt(Text)` | integer | Signed hexadecimal, bare or prefixed with `$`/`0x`/`0X` |
+
+Invalid text returns Error; `Parse.Int(Text).Unwrap()` deliberately aborts.
+The parameter label is Text, including calls through matching callable values.
+Std.Conv formats and converts already typed values. See [parsing](std/text/parse.md).
 
 `try Expression` unwraps success or returns a matching failure from the enclosing
-function. Result propagation requires compatible error types; the success type may
-change. Option propagation returns `None` from an Option-returning function.
+function. The operand evaluates once. Result propagation requires compatible error
+types; the success type may change. Aliases are transparent, distinct errors keep
+their identity, and generic errors preserve the same type parameter recursively.
+There is no implicit numeric error conversion. Option propagation returns `None`
+from an Option-returning function, whose success type may also differ.
 This is an expression operator, not a `try` statement with a handler.
 `panic(Message)` stops normal execution with a runtime failure; it does not construct
 an `Error` or `None`, and there is no language catch block. `try` does not catch
@@ -456,7 +475,7 @@ body, procedures, and functions returning an incompatible wrapper or ordinary ty
 ```pascal
 program ReferenceErrors;
 
-uses Std.Test as Test;
+uses Std.Test as Test, Std.Parse as Parse;
 
 function Positive(Value: integer): result of (integer, string);
 begin
@@ -471,6 +490,12 @@ function Twice(Value: integer): result of (integer, string);
 begin
   const Checked: integer := try Positive(Value);
   return Ok(Checked * 2);
+end function;
+
+function IsPositiveText(Text: string): result of (boolean, string);
+begin
+  const Value := try Parse.Int(Text := Text);
+  return Ok(Value > 0);
 end function;
 
 function Next(Value: option of integer): option of integer;
@@ -497,6 +522,19 @@ begin
     when Error(const Message):
       Test.AssertEquals('positive value required', Message);
   end case;
+  const Read: function(Text: string): result of (integer, string) := Parse.Int;
+  Test.AssertTrue(Read(Text := '42') = Ok(42));
+  Test.AssertTrue(Parse.Int('10') = Ok(10));
+  Test.AssertTrue(Parse.HexInt('10') = Ok(16));
+  Test.AssertTrue(Parse.Bool(' TRUE ') = Ok(true));
+  Test.AssertTrue(IsPositiveText(Text := '3') = Ok(true));
+  Test.AssertTrue(IsPositiveText('-1') = Ok(false));
+  Test.AssertTrue(IsPositiveText('invalid') is Error(_));
+  const Fallback: integer := case Parse.Int('invalid') of
+    when Ok(const Value): Value;
+    when Error(_): 0;
+  end case;
+  Test.AssertEquals(0, Fallback);
   const Missing: option of integer := Next(None);
   Test.AssertTrue(Missing = None);
   Test.AssertEquals(4, Next(Some(3)).Unwrap());
@@ -964,10 +1002,11 @@ services, import the owning unit with `uses Unit.Path as Alias;` and call `Alias
 | --- | --- |
 | Console input/output | `Std.Console` (`WriteLn` needs this import) |
 | Assertions and test fixtures | `Std.Test` |
-| Numeric operations / conversions / bits | `Std.Math`, `Std.Conv`, `Std.Bits` |
+| Numeric operations / bits | `Std.Math`, `Std.Bits` |
+| Text parsing / typed conversion and formatting | `Std.Parse` (Result parsers), `Std.Conv` |
 | Files, paths, environment, arguments, processes | `Std.Fs`, `Std.Path`, `Std.Env`, `Std.Args`, `Std.Proc` |
 | Time, tasks, channels | `Std.Time`, `Std.Tasks` |
-| JSON, parsing, networking, terminal UI | [Standard library index](std/README.md) |
+| JSON, networking, terminal UI | [Standard library index](std/README.md) |
 
 Read the owning unit's handbook page or generated declarations in `lib/api/` for
 exact signatures. Native methods are described under their type pages. Do not infer

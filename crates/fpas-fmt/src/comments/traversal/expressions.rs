@@ -15,26 +15,35 @@ pub(super) fn collect_expr(expr: &Expr, begins: &[usize], out: &mut CollectedAnc
             collect_designator(designator, begins, out);
         }
         Expr::Call {
-            designator, args, ..
+            designator,
+            args,
+            span,
         } => {
             collect_designator(designator, begins, out);
-            for arg in args {
-                collect_expr(arg, begins, out);
-            }
+            collect_list(args, *span, begins, out);
         }
         Expr::UnaryOp { operand, .. }
-        | Expr::Paren(operand, _)
-        | Expr::ResultOk(operand, _)
-        | Expr::ResultError(operand, _)
-        | Expr::OptionSome(operand, _)
         | Expr::Try(operand, _)
         | Expr::Go(operand, _)
         | Expr::NamedArgument { value: operand, .. } => collect_expr(operand, begins, out),
+        Expr::Paren(operand, span)
+        | Expr::ResultOk(operand, span)
+        | Expr::ResultError(operand, span)
+        | Expr::OptionSome(operand, span) => {
+            collect_list(std::slice::from_ref(operand.as_ref()), *span, begins, out);
+        }
         Expr::Is { value, pattern, .. } => {
             collect_expr(value, begins, out);
             super::collect_pattern(pattern, begins, out);
         }
         Expr::BinaryOp { left, right, .. } => {
+            out.leading.push(right.span().offset);
+            if let Some(operator) = out
+                .layout
+                .operator_between(span_end(left.span()), right.span().offset)
+            {
+                push_span(operator, out);
+            }
             collect_expr(left, begins, out);
             collect_expr(right, begins, out);
         }
@@ -81,13 +90,15 @@ pub(super) fn collect_expr(expr: &Expr, begins: &[usize], out: &mut CollectedAnc
                 collect_expr(&else_arm.value, begins, out);
             }
         }
-        Expr::ArrayLiteral(elements, _) => {
-            for element in elements {
-                collect_expr(element, begins, out);
-            }
-        }
-        Expr::DictLiteral(pairs, _) => {
+        Expr::ArrayLiteral(elements, span) => collect_list(elements, *span, begins, out),
+        Expr::DictLiteral(pairs, span) => {
+            out.lists.push(*span);
             for (key, value) in pairs {
+                out.leading.push(key.span().offset);
+                out.emission.push(crate::comments::anchors::EmissionAnchor {
+                    start: key.span().offset,
+                    end: span_end(value.span()),
+                });
                 collect_expr(key, begins, out);
                 collect_expr(value, begins, out);
             }
@@ -107,11 +118,11 @@ pub(super) fn collect_expr(expr: &Expr, begins: &[usize], out: &mut CollectedAnc
             collect_expr(base, begins, out);
             for operation in operations {
                 match operation {
-                    PostfixOperation::Index { index, .. } => collect_expr(index, begins, out),
-                    PostfixOperation::MethodCall { args, .. } => {
-                        for arg in args {
-                            collect_expr(arg, begins, out);
-                        }
+                    PostfixOperation::Index { index, span } => {
+                        collect_list(std::slice::from_ref(index.as_ref()), *span, begins, out)
+                    }
+                    PostfixOperation::MethodCall { args, span, .. } => {
+                        collect_list(args, *span, begins, out)
                     }
                     PostfixOperation::Field { .. } => {}
                 }
@@ -165,8 +176,23 @@ pub(super) fn collect_designator(
     out: &mut CollectedAnchors,
 ) {
     for part in &designator.parts {
-        if let DesignatorPart::Index(index, _) = part {
-            collect_expr(index, begins, out);
+        if let DesignatorPart::Index(index, span) = part {
+            collect_list(std::slice::from_ref(index), *span, begins, out);
         }
+    }
+}
+
+/// Collects list item anchors and the delimiter that owns comments after its last item.
+pub(super) fn collect_list(
+    items: &[Expr],
+    span: Span,
+    begins: &[usize],
+    out: &mut CollectedAnchors,
+) {
+    out.lists.push(span);
+    for item in items {
+        out.leading.push(item.span().offset);
+        push_span(item.span(), out);
+        collect_expr(item, begins, out);
     }
 }

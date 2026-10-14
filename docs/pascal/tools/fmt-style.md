@@ -3,7 +3,7 @@
 Canonical output rules for the AST pretty-printer. These describe the implemented
 behavior of `fpas fmt`; the emitter encodes them.
 
-**Status:** **complete** (2026-06). Normative for [`fpas fmt`](../../../crates/fpas-cli/src/cli_fmt) and the [editor formatter](editor-integration.md#formatting). Edit golden examples when the style changes; both entry points must match them.
+**Status:** **complete**. Normative for [`fpas fmt`](../../../crates/fpas-cli/src/cli_fmt) and the [editor formatter](editor-integration.md#formatting). Edit golden examples when the style changes; both entry points must match them.
 
 **How to read this file**
 
@@ -235,21 +235,52 @@ end unit;
 
 ## Line width (v2)
 
-- **Wrapping target: 100 columns** (`MAX_LINE_WIDTH` in `crates/fpas-fmt/src/style.rs`). This is not a hard maximum for every construct.
-- Count includes leading indentation and uses terminal-style Unicode display columns: combining
-  marks have width zero and wide characters have width two.
-- The width checks for the supported wrapping constructs below use [`MAX_LINE_WIDTH`](../../../crates/fpas-fmt/src/style.rs). Ordinary call argument lists, including named record arguments, are not wrapped at commas; these and indivisible tokens such as string literals may leave lines above the target.
+The formatter automatically wraps long expressions at a **100-column target**.
+The measurement includes indentation and terminal display width: wide characters
+count as two columns and combining marks as zero. There is one fixed style for
+CLI formatting and unsaved editor buffers, with no configuration required.
 
-### Wrapping (v2, supported width checks)
+Long compact calls and collections expand to one argument or element per line.
+Nested calls are measured again at their structural indentation, keeping short
+inner calls compact. Existing line groups are retained; an overlong group gains
+additional breaks between its arguments, elements or binary operands. Closing
+delimiters return to the indentation of the owning line, and trailing commas
+are not introduced.
+
+This is a target rather than a hard maximum. Indivisible literals, names and
+comments may exceed it. The formatter never cuts through a token or changes its
+value. Import and formal parameter lists retain their source line groups.
+
+### Source layout
 
 | Construct | Break rule |
 |-----------|------------|
-| `uses` clause | After `uses`, then after commas as needed; import lines indented **2 spaces** from column 0 |
-| `function` / `procedure` formal lists | After `;` between parameters |
-| Calls / record construction | Argument separators remain `, `; no width-based comma wrapping. Individual argument expressions may wrap according to their own rules. |
-| Array literals | Multi-line when over width |
-| Long binary chains | Break at lowest-precedence operator; never inside string literals |
-| Postfix chains (`.Field` / `[Index]` / `.Method(...)`) | Break before each suffix; indent continuations **2 spaces** from the expression base column |
+| `uses` clause | Compact input stays compact. A list with source breaks starts after `uses`; retain comma-separated line groups at **2 spaces**. |
+| `function` / `procedure` formal lists | Retain semicolon-separated line groups. Expanded lists open and close on separate lines. |
+| Calls / record construction | Retain argument line groups and automatically expand calls over the target width. Expanded lists indent **2 spaces** from the owning line. |
+| Array / dictionary literals | Retain element line groups and automatically expand overlong collections. A sole collection argument may share `([` and `])`. |
+| Binary expressions | Retain operand breaks and add breaks to fit the target. Wrapped `and`, `or`, and `xor` occupy their own continuation line; other operators stay at the end of the preceding line. Continuations in expanded arguments align with the first operand; standalone continuations indent **2 spaces**. |
+| Postfix chains (`.Field` / `[Index]` / `.Method(...)`) | Keep suffixes attached to their base. Index and method argument lists follow the list rules. |
+| `if` expressions | Expand branch lines when over the target width or when source breaks or comments require it. |
+
+A multiline argument or element expands its containing list. Anonymous routine
+bodies and `case` expressions still require structural lines. A literal's internal
+newlines do not act as layout hints; its value remains unchanged. Existing parentheses,
+operator precedence, argument order and evaluation order are preserved.
+
+For example, these authored concatenation groups remain intact:
+
+```pascal
+  return Builders.MakeRule(
+    ' NOTES  ·  ' +
+    Conv.IntToStr(Filtered(State.Notes, '').Length()) +
+    ' active' + Issues + Dirty +
+    '  ·  Ctrl+K commands '
+  );
+```
+
+AST-only formatting APIs have no source layout or comments. They use the same
+automatic expression wrapping and required structural block lines.
 
 ## Indentation
 
@@ -259,7 +290,8 @@ end unit;
   indented one level under the header. `else` aligns with `when`; `end case;`
   aligns with `case`.
 - `record` / `enum` type bodies indent one level.
-- Continuation lines for long `uses` lists: wrap with 2-space indent from the line start (see [Line width](#line-width-v2)).
+- Expanded lists follow structural nesting; a long function name never increases
+  their indentation (see [Line width](#line-width-v2)).
 
 ## Blocks (`begin` / `end`)
 
@@ -268,6 +300,11 @@ indents each body one level without adding `begin` / `end`. Explicit compound
 statements remain as nested scopes. `elsif` continues the same conditional;
 an `if` inside an `else` list keeps its separate ending. Empty control bodies
 are rejected by the parser and must be written as `null;`.
+
+In an `if` or `elsif` statement, a condition that spans multiple output lines
+puts `then` on its own line, aligned with the clause keyword. This applies to
+authored and automatic breaks. Single-line conditions retain `then` on the same
+line. The body keeps its usual additional indentation.
 
 | Construct | Formatter output |
 |-----------|------------------|
@@ -290,7 +327,9 @@ are rejected by the parser and must be written as `null;`.
 
 ## Blank lines
 
-The formatter **inserts and removes** blank lines to match these rules. User-placed blank lines are not preserved.
+The formatter normalizes repeated blank lines to one and retains source sections
+between sibling statements and adjacent simple declarations. The following
+structural separators are also enforced:
 
 | After | Blank lines before next section |
 |-------|----------------------------------|
@@ -436,9 +475,9 @@ end record;
 
 ### Record construction (expression)
 
-Record construction follows named-call formatting. Argument separators remain
-`, ` even when the line exceeds the wrapping target; there is no width-based
-comma wrapping. Empty construction has no spaces inside parentheses:
+Record construction follows named-call formatting. Short constructions stay compact;
+long constructions expand automatically. Authored argument line groups are retained
+with structural indentation. Empty construction has no spaces inside parentheses:
 
 ```pascal
 Empty()
@@ -452,10 +491,10 @@ Point(X := 3, Y := 4)
 Config(Host := 'api', Port := 443, Retries := 5)
 ```
 
-### Long `uses` (wrapped, v2 golden)
+### Long `uses` (authored line groups, golden)
 
-When the complete `uses ...;` line exceeds 100 columns, put `uses` on its own
-line. Indent the import list by two spaces and wrap after commas when needed:
+This source keeps its two authored import groups. Indent the list by two spaces;
+a source written on one line remains on one line regardless of its width:
 
 ```pascal
 program LongUses;
@@ -471,7 +510,7 @@ end.
 
 ### Record construction (v2 golden)
 
-The construction remains on one line even though it exceeds the wrapping target.
+The long construction expands automatically, even from single-line input.
 
 ```pascal
 type NetworkConfig = record
@@ -481,7 +520,12 @@ type NetworkConfig = record
   TimeoutSeconds: integer;
 end record;
 
-const Remote: NetworkConfig := NetworkConfig(Host := 'api.example.com', Port := 443, Retries := 5, TimeoutSeconds := 30);
+const Remote: NetworkConfig := NetworkConfig(
+  Host := 'api.example.com',
+  Port := 443,
+  Retries := 5,
+  TimeoutSeconds := 30
+);
 ```
 
 ---
@@ -516,7 +560,8 @@ type IntOption = option of integer;
 
 ## Expressions (summary)
 
-- Parentheses: omit redundant parens where parser precedence is unambiguous; always emit parens present in `Expr::Paren`.
+- Parentheses: preserve explicit source parentheses. When formatting an AST,
+  add parentheses where required to preserve its operand grouping.
 - Logical expressions follow the [operator table](../language/basics/operators.md#operator-precedence).
   Mixed `and`, `or`, and `xor` operands require parentheses. Comparisons bind
   more tightly than `not`; negated comparison operands and nested comparisons

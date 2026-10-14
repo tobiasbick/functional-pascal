@@ -27,8 +27,14 @@ fn emit_clause(emitter: &mut Emitter, stmt: &Stmt, keyword: &str, comments: &Com
     write_indented(emitter);
     emitter.write(keyword);
     emitter.write(" ");
+    let condition_start = emitter.output_len();
     emit_expr(emitter, condition, 0, comments);
-    emitter.write(" then\n");
+    if emitter.has_newline_since(condition_start) {
+        emitter.start_line();
+        emitter.write("then\n");
+    } else {
+        emitter.write(" then\n");
+    }
     emit_control_body(emitter, then_branch, comments);
     match else_branch.as_deref() {
         Some(branch @ Stmt::If { .. }) => {

@@ -66,7 +66,7 @@ fn documented_long_imports_pass_cli_format_check_without_changes() {
 }
 
 #[test]
-fn original_single_line_imports_fail_check_and_format_to_documented_output() {
+fn uneven_multiline_imports_fail_check_and_format_to_documented_output() {
     let expected = long_import_example();
     assert!(expected.contains("uses\n  "), "wrapped import clause");
     let source = expected.replacen("uses\n  ", "uses ", 1);

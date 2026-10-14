@@ -3,7 +3,6 @@
 use fpas_parser::{FormalParam, ParamMode, QualifiedId, TypeExpr, TypeParam};
 
 use super::Emitter;
-use super::wrap::{emit_wrapped_semicolon_paren_list, measure_emit};
 
 /// Formats a type expression.
 #[must_use]
@@ -68,8 +67,9 @@ pub(crate) fn emit_type_expr(emitter: &mut Emitter, ty: &TypeExpr) {
             return_type,
             ..
         } => {
-            let return_text = format_type_expr(return_type);
-            emit_formal_params_in_parens(emitter, "function(", params, &format!(": {return_text}"));
+            emit_formal_params_in_parens(emitter, "function(", params, "");
+            emitter.write(": ");
+            emit_type_expr(emitter, return_type);
         }
         TypeExpr::ProcedureType { params, .. } => {
             emit_formal_params_in_parens(emitter, "procedure(", params, "");
@@ -117,18 +117,45 @@ pub(crate) fn emit_type_param(emitter: &mut Emitter, param: &TypeParam) {
     }
 }
 
-/// Emits formal parameters inside parentheses, wrapping after `;` when over max width.
+/// Emits formal parameters, preserving their authored semicolon-separated line groups.
 pub(crate) fn emit_formal_params_in_parens(
     emitter: &mut Emitter,
     open_prefix: &str,
     params: &[FormalParam],
     close_suffix: &str,
 ) {
-    let items: Vec<String> = params
-        .iter()
-        .map(|param| measure_emit(|inner| emit_formal_param(inner, param)))
-        .collect();
-    emit_wrapped_semicolon_paren_list(emitter, open_prefix, &items, close_suffix);
+    let group = params
+        .first()
+        .zip(params.last())
+        .and_then(|(first, last)| emitter.layout.enclosing(first.span, last.span));
+    let multiline = group.is_some_and(|g| emitter.layout.breaks_between(g.open, g.close));
+    let base = emitter.line_indent();
+    emitter.write(open_prefix);
+    if multiline {
+        emitter.write_line_end();
+    }
+    emitter.at_indent(base + crate::style::INDENT_WIDTH, |inner| {
+        for (index, param) in params.iter().enumerate() {
+            if index == 0 && multiline {
+                inner.write_current_indent();
+            }
+            if index > 0 {
+                inner.write(";");
+                if inner.layout.break_before(param.span.offset) {
+                    inner.write_line_end();
+                    inner.write_current_indent();
+                } else {
+                    inner.write(" ");
+                }
+            }
+            emit_formal_param(inner, param);
+        }
+    });
+    if multiline {
+        emitter.newline_to_indent(base);
+    }
+    emitter.write(")");
+    emitter.write(close_suffix);
 }
 
 fn emit_formal_param(emitter: &mut Emitter, param: &FormalParam) {
@@ -227,12 +254,12 @@ mod tests {
     }
 
     #[test]
-    fn long_formal_param_list_wraps() {
+    fn ast_only_long_formal_param_list_stays_compact() {
         assert_eq!(
             type_from_const(
                 "program T; begin const F: function(AlphaParameter: integer; BetaParameter: integer; GammaParameter: integer; DeltaParameter: integer): boolean := Check; end.",
             ),
-            "function(\n  AlphaParameter: integer;\n  BetaParameter: integer;\n  GammaParameter: integer;\n  DeltaParameter: integer\n): boolean"
+            "function(AlphaParameter: integer; BetaParameter: integer; GammaParameter: integer; DeltaParameter: integer): boolean"
         );
     }
 }

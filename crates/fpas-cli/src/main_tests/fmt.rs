@@ -153,7 +153,7 @@ include = ["src/**/*.fpas"]
 fn fmt_cli_stdout_does_not_modify_file_on_disk() {
     let cwd = create_temp_dir("fmt-stdout");
     let source_path = cwd.join("hello.fpas");
-    let original = "program Hello; uses Std.Console as Console; begin Console.WriteLn('hi'); end.";
+    let original = "program Hello; uses Std.Console as Console; begin Console.WriteLn('hello ', 'a message with enough words to exceed the target width when combined with the call prefix'); end.";
     write_text(&source_path, original);
 
     let (exit_code, stdout_output, stderr_output) = run_cli_args_and_capture_output(
@@ -171,6 +171,10 @@ fn fmt_cli_stdout_does_not_modify_file_on_disk() {
     assert_eq!(exit_code, 0, "stderr: {stderr_output}");
     assert_eq!(unchanged, original);
     assert!(stdout_output.contains("program Hello;\n\nuses Std.Console as Console;\n\nbegin\n"));
+    assert!(
+        stdout_output.contains("  Console.WriteLn(\n    'hello ',\n    'a message with enough words to exceed the target width when combined with the call prefix'\n  );"),
+        "{stdout_output}"
+    );
 }
 
 #[test]

@@ -16,6 +16,7 @@
 mod comments;
 mod emit;
 mod error;
+mod layout;
 mod span;
 mod style;
 
@@ -27,8 +28,8 @@ pub use error::FormatError;
 
 /// Formats a parsed compilation unit without access to original source.
 ///
-/// Comments cannot be preserved without source text. Prefer [`format_source`] for `fpas fmt`
-/// and any workflow where comments must be kept.
+/// Comments and authored line groups cannot be preserved without source text.
+/// Prefer [`format_source`] for `fpas fmt` and editor formatting.
 ///
 /// **Documentation:** `docs/pascal/tools/fmt-style.md`
 #[must_use]
@@ -36,7 +37,7 @@ pub fn format_compilation_unit(unit: &CompilationUnit) -> String {
     format_with_comments(unit, &CommentMap::default())
 }
 
-/// Formats `unit` using `source` to preserve every `//` comment.
+/// Formats `unit` using `source` to preserve comments and authored line groups.
 ///
 /// **Documentation:** `docs/pascal/tools/fmt-style.md#comments`
 ///

@@ -24,7 +24,7 @@ fn arguments_and_enclosing_declarations_have_distinct_terminator_owners() {
         "{formatted}"
     );
     assert!(
-        formatted.contains("end function, P with X := 2; end with);"),
+        formatted.contains("end function, P with X := 2; end with\n  );"),
         "{formatted}"
     );
     assert!(!formatted.contains("end function;,"));
@@ -82,7 +82,7 @@ fn comments_before_inside_and_after_expression_endings_survive_once() {
         );
     }
     assert!(
-        formatted.contains("end procedure // argument ending"),
+        formatted.contains("end procedure, // argument ending"),
         "{formatted}"
     );
     assert!(
@@ -140,7 +140,7 @@ fn if_expressions_stay_compact_or_break_before_each_branch() {
         "program T;\n\nbegin\n  const Noun: string := if Count = 1 then 'item' elsif Count = 0 then 'none' else 'items' end if;\nend.\n",
     );
     let formatted = format(
-        "program T; begin const Long: string := if Mode = 1 then 'a rather long first branch value' elsif Mode = 2 then 'another long branch value here' else 'and the final else branch' end if; end.",
+        "program T; begin const Long: string := if Mode = 1 then 'a rather long first branch value'\n elsif Mode = 2 then 'another long branch value here'\n else 'and the final else branch' end if; end.",
     );
     assert!(
         formatted.contains(

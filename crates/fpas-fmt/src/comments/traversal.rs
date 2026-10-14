@@ -10,17 +10,19 @@ use fpas_lexer::{Span, Token, lex_with_comments};
 use fpas_parser::{CaseArm, CaseLabel, CompilationUnit, Decl, Pattern, Program, Stmt, Unit};
 
 use super::anchors::{EmissionAnchor, span_end, stmt_end, stmt_start};
-use expressions::{collect_designator, collect_expr};
+use expressions::{collect_designator, collect_expr, collect_list};
 
 /// Complete set of source positions consumed by comment emission.
 #[derive(Debug, Default)]
 pub(crate) struct CollectedAnchors {
+    pub layout: std::sync::Arc<crate::layout::SourceLayout>,
     pub leading: Vec<usize>,
     pub emission: Vec<EmissionAnchor>,
     pub bodies: BTreeMap<usize, usize>,
     pub headers: BTreeMap<usize, usize>,
     pub declarations: BTreeSet<usize>,
     pub closers: BTreeMap<usize, usize>,
+    pub lists: Vec<Span>,
     semicolons: Vec<EmissionAnchor>,
     pub named_ends: Vec<EmissionAnchor>,
     else_keywords: Vec<usize>,
@@ -36,6 +38,7 @@ pub(crate) fn collect(unit: &CompilationUnit, source: &str) -> CollectedAnchors 
         .map(|token| token.span.offset)
         .collect();
     let mut anchors = CollectedAnchors {
+        layout: std::sync::Arc::new(crate::layout::SourceLayout::build(source)),
         named_ends: tokens
             .windows(2)
             .filter_map(|pair| {
@@ -85,6 +88,12 @@ pub(crate) fn collect(unit: &CompilationUnit, source: &str) -> CollectedAnchors 
         }
         CompilationUnit::Unit(unit) => collect_unit(unit, source, &begin_offsets, &mut anchors),
     }
+    anchors.leading.extend(
+        anchors
+            .lists
+            .iter()
+            .filter_map(|span| anchors.layout.group(*span).map(|group| group.close)),
+    );
     anchors.leading.sort_unstable();
     anchors.leading.dedup();
     anchors
@@ -214,7 +223,7 @@ fn collect_stmt_contents(stmt: &Stmt, begins: &[usize], out: &mut CollectedAncho
                 collect_expr(value, begins, out);
             }
         }
-        Stmt::Panic(value, _) => collect_expr(value, begins, out),
+        Stmt::Panic(value, span) => collect_list(std::slice::from_ref(value), *span, begins, out),
         Stmt::If {
             condition,
             then_branch,
@@ -296,12 +305,12 @@ fn collect_stmt_contents(stmt: &Stmt, begins: &[usize], out: &mut CollectedAncho
             collect_stmts(body, begins, out);
         }
         Stmt::Call {
-            designator, args, ..
+            designator,
+            args,
+            span,
         } => {
             collect_designator(designator, begins, out);
-            for arg in args {
-                collect_expr(arg, begins, out);
-            }
+            collect_list(args, *span, begins, out);
         }
         Stmt::Expression { expr, .. } | Stmt::Discard { expr, .. } => {
             collect_expr(expr, begins, out)

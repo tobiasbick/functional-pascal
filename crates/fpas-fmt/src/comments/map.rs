@@ -17,6 +17,7 @@ use crate::FormatError;
 /// Comments grouped by where they are emitted during formatting.
 #[derive(Debug, Default, Clone)]
 pub struct CommentMap {
+    pub(crate) layout: std::sync::Arc<crate::layout::SourceLayout>,
     leading: BTreeMap<usize, Vec<LeadingComment>>,
     leading_blank_after: BTreeMap<usize, bool>,
     trailing: BTreeMap<usize, Vec<String>>,
@@ -59,6 +60,7 @@ impl CommentMap {
         map.body_anchors = anchors.bodies;
         map.header_anchors = anchors.headers;
         map.closer_anchors = anchors.closers;
+        map.layout = anchors.layout;
         Ok(map)
     }
 
@@ -201,6 +203,7 @@ impl CommentMap {
 
         let (leading, leading_blank_after) = prepare_leading(source, leading, declaration_anchors);
         Ok(Self {
+            layout: Default::default(),
             leading,
             leading_blank_after,
             trailing: sort_grouped(trailing),

@@ -106,12 +106,12 @@ fn negation_comparisons_and_try_preserve_their_ast_grouping() {
 
 #[test]
 fn wrapped_logical_expressions_keep_mixed_grouping_and_comments() {
-    let source = "program T; begin\n// keep this condition\nreturn (VeryLongIdentifierAlpha = VeryLongIdentifierBeta and VeryLongIdentifierGamma < VeryLongIdentifierDelta) or not VeryLongIdentifierEpsilon = VeryLongIdentifierZeta; end.";
+    let source = "program T; begin\n// keep this condition\nreturn (VeryLongIdentifierAlpha = VeryLongIdentifierBeta and VeryLongIdentifierGamma < VeryLongIdentifierDelta) or\nnot VeryLongIdentifierEpsilon = VeryLongIdentifierZeta; end.";
     let (unit, errors) = fpas_parser::parse_compilation_unit(source);
     assert!(errors.is_empty(), "{errors:?}");
     let formatted = fpas_fmt::format_source(source, &unit).expect("matching source");
     assert_eq!(formatted.matches("// keep this condition").count(), 1);
-    assert!(formatted.contains(" or\n"), "{formatted}");
+    assert!(formatted.contains("\n    or\n"), "{formatted}");
     let (again, errors) = fpas_parser::parse_compilation_unit(&formatted);
     assert!(errors.is_empty(), "{formatted}: {errors:?}");
     assert_eq!(

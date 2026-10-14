@@ -12,7 +12,7 @@ use fpas_parser::Stmt;
 use crate::comments::{CommentMap, emit_leading_comments, stmt_start};
 
 use super::Emitter;
-use super::expr::{emit_arg_list, emit_designator, emit_expr};
+use super::expr::{emit_arguments, emit_designator, emit_expr};
 use line::{finish_stmt_after_newline, finish_stmt_line, write_indented};
 
 pub(crate) use case::emit_case_labels;
@@ -28,7 +28,10 @@ pub(crate) fn format_block_stmts(stmts: &[Stmt]) -> String {
 /// Emits every statement with its terminator while preserving block spacing and comments.
 pub(crate) fn emit_stmts_in_block(emitter: &mut Emitter, stmts: &[Stmt], comments: &CommentMap) {
     for (index, stmt) in stmts.iter().enumerate() {
-        if index > 0 && spacing::needs_blank_line(&stmts[index - 1], stmt) {
+        if index > 0
+            && (spacing::needs_blank_line(&stmts[index - 1], stmt)
+                || emitter.layout.blank_before(stmt_start(stmt)))
+        {
             emitter.blank_line();
         }
         emit_leading_comments(emitter, comments, stmt_start(stmt), false);
@@ -73,11 +76,10 @@ fn emit_stmt_in_block(emitter: &mut Emitter, stmt: &Stmt, comments: &CommentMap)
             }
             finish_stmt_line(emitter, comments, stmt);
         }
-        Stmt::Panic(expr, ..) => {
+        Stmt::Panic(expr, span) => {
             write_indented(emitter);
-            emitter.write("panic(");
-            emit_expr(emitter, expr, 0, comments);
-            emitter.write(")");
+            emitter.write("panic");
+            emit_arguments(emitter, std::slice::from_ref(expr), *span, comments);
             finish_stmt_line(emitter, comments, stmt);
         }
         Stmt::If { .. } => {
@@ -111,13 +113,13 @@ fn emit_stmt_in_block(emitter: &mut Emitter, stmt: &Stmt, comments: &CommentMap)
             finish_stmt_line(emitter, comments, stmt);
         }
         Stmt::Call {
-            designator, args, ..
+            designator,
+            args,
+            span,
         } => {
             write_indented(emitter);
             emit_designator(emitter, designator, comments);
-            emitter.write("(");
-            emit_arg_list(emitter, args, comments);
-            emitter.write(")");
+            emit_arguments(emitter, args, *span, comments);
             finish_stmt_line(emitter, comments, stmt);
         }
         Stmt::Expression { expr, .. } => {

@@ -38,6 +38,7 @@ pub fn assert_round_trip(name: &str, source: &str) {
 
 /// Parses `source`, formats it, and compares to `expected`.
 pub fn assert_golden(name: &str, source: &str, expected: &str) {
+    assert_round_trip(name, source);
     let (unit, errors) = parse_compilation_unit(source);
     assert!(errors.is_empty(), "{name}: {errors:?}");
     let formatted = format_source(source, &unit).expect("matching source and AST");

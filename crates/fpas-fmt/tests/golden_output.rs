@@ -44,7 +44,7 @@ fn record_member_visibility() {
 fn long_uses() {
     common::assert_golden(
         "long_uses",
-        "program LongUses; uses Std.Console as Console, Std.Conv as Conv, Std.Crypto as Crypto, MyApp.Very.Long.Namespace.One as One, MyApp.Very.Long.Namespace.Two as Two; begin Console.WriteLn('ok'); end.",
+        "program LongUses; uses\nStd.Console as Console, Std.Conv as Conv, Std.Crypto as Crypto,\nMyApp.Very.Long.Namespace.One as One, MyApp.Very.Long.Namespace.Two as Two; begin Console.WriteLn('ok'); end.",
         include_str!("golden/long_uses.expected.fpas"),
     );
 }
@@ -71,8 +71,8 @@ fn logical_block_spacing() {
 fn wrapped_parenthesized_comparisons_preserve_full_expression() {
     common::assert_golden(
         "wrapped_parenthesized_comparisons",
-        "program T; begin const InsideHorizontalBounds: boolean := (MouseEvent.mouse_x > ButtonBounds.x) and (MouseEvent.mouse_x <= ButtonBounds.x + ButtonBounds.width); end.",
-        "program T;\n\nbegin\n  const InsideHorizontalBounds: boolean := (MouseEvent.mouse_x > ButtonBounds.x) and\n                                           (MouseEvent.mouse_x <= ButtonBounds.x + ButtonBounds.width);\nend.\n",
+        "program T; begin const InsideHorizontalBounds: boolean := (MouseEvent.mouse_x > ButtonBounds.x) and\n(MouseEvent.mouse_x <= ButtonBounds.x + ButtonBounds.width); end.",
+        "program T;\n\nbegin\n  const InsideHorizontalBounds: boolean := (MouseEvent.mouse_x > ButtonBounds.x)\n    and\n    (MouseEvent.mouse_x <= ButtonBounds.x + ButtonBounds.width);\nend.\n",
     );
 }
 
@@ -117,20 +117,14 @@ fn postfix_chaining_compact() {
 }
 
 #[test]
-fn postfix_chaining_wraps_long_chain() {
+fn postfix_chaining_keeps_suffixes_attached_when_arguments_wrap() {
     let source = "program T; begin const X: integer := VeryLongFactoryName.CreateVeryLongThing().TransformWithVeryLongName(VeryLongArgumentAlpha).ScaleWithAnotherLongName(VeryLongArgumentBeta).Value; end.";
     let (unit, errors) = fpas_parser::parse_compilation_unit(source);
     assert!(errors.is_empty(), "{errors:?}");
     let formatted = fpas_fmt::format_source(source, &unit).expect("matching source and AST");
     assert!(
-        formatted.contains("\n") && formatted.contains('.'),
-        "expected wrapped postfix suffixes: {formatted}"
-    );
-    assert!(
-        formatted
-            .lines()
-            .any(|line| line.trim_start().starts_with('.')),
-        "expected continuation line starting with `.`: {formatted}"
+        formatted.contains("CreateVeryLongThing().TransformWithVeryLongName(\n    VeryLongArgumentAlpha\n  ).ScaleWithAnotherLongName(VeryLongArgumentBeta).Value;"),
+        "suffixes remain attached: {formatted}"
     );
     common::assert_round_trip("postfix_chaining_wrapped", &formatted);
 }

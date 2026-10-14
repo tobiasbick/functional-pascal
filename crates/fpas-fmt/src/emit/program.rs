@@ -10,12 +10,11 @@ use super::Emitter;
 use super::decl::emit_decls;
 use super::stmt::emit_stmts_in_block;
 use super::types::emit_qualified_id;
-use super::wrap::{emit_wrapped_comma_list, measure_emit};
 
 /// Formats a `program` compilation unit.
 #[must_use]
 pub(crate) fn format_program(program: &Program, comments: &CommentMap) -> String {
-    let mut emitter = Emitter::new();
+    let mut emitter = Emitter::with_comments(comments);
     emit_program(&mut emitter, program, comments);
     emitter.finish()
 }
@@ -23,7 +22,7 @@ pub(crate) fn format_program(program: &Program, comments: &CommentMap) -> String
 /// Formats a `unit` compilation unit.
 #[must_use]
 pub(crate) fn format_unit(unit: &Unit, comments: &CommentMap) -> String {
-    let mut emitter = Emitter::new();
+    let mut emitter = Emitter::with_comments(comments);
     emit_unit(&mut emitter, unit, comments);
     emitter.finish()
 }
@@ -93,11 +92,33 @@ fn emit_optional_uses(emitter: &mut Emitter, uses: &[Import], comments: &Comment
         emitter.blank_line();
         return;
     }
-    let items: Vec<String> = uses
+    let multiline = uses
         .iter()
-        .map(|unit_name| measure_emit(|inner| emit_import(inner, unit_name)))
-        .collect();
-    emit_wrapped_comma_list(emitter, "uses ", crate::style::INDENT_WIDTH, &items, ";");
+        .any(|import| emitter.layout.break_before(import.span.offset));
+    emitter.write("uses");
+    if multiline {
+        emitter.write_line_end();
+    } else {
+        emitter.write(" ");
+    }
+    emitter.with_indent(|inner| {
+        for (index, import) in uses.iter().enumerate() {
+            if index == 0 && multiline {
+                inner.write_current_indent();
+            }
+            if index > 0 {
+                if inner.layout.break_before(import.span.offset) {
+                    inner.write_line_end();
+                    inner.write_current_indent();
+                } else {
+                    inner.write(" ");
+                }
+            }
+            emit_import(inner, import);
+            inner.write(if index + 1 == uses.len() { ";" } else { "," });
+        }
+    });
+    emitter.write_line_end();
     emitter.blank_line();
 }
 
@@ -201,11 +222,11 @@ mod tests {
     }
 
     #[test]
-    fn long_uses_clause_wraps() {
+    fn long_uses_clause_stays_compact_without_authored_breaks() {
         let formatted = parse_and_format(
             "program LongUses; uses Std.Console as Console, Std.Conv as Conv, Std.String as StdString, MyApp.Very.Long.Namespace.One as One, MyApp.Very.Long.Namespace.Two as Two; begin WriteLn('ok'); end.",
         );
-        assert!(formatted.contains("uses\n"));
+        assert!(formatted.contains("uses Std.Console as Console, Std.Conv as Conv,"));
         assert!(formatted.contains("MyApp.Very.Long.Namespace.Two"));
     }
 
@@ -221,7 +242,10 @@ mod tests {
         let long = parse_and_format(
             "unit Demo.Consumer; uses App.Very.Long.Namespace.One as FirstNamespace, App.Very.Long.Namespace.Two as SecondNamespace, Std.Math as Numbers; end unit;",
         );
-        assert!(long.contains("uses\n"), "{long}");
+        assert!(
+            long.contains("uses App.Very.Long.Namespace.One as FirstNamespace,"),
+            "{long}"
+        );
         assert_eq!(parse_and_format(&long), long);
     }
 

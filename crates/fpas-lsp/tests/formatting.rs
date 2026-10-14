@@ -47,14 +47,17 @@ fn formatting_matches_the_canonical_fpas_formatter_for_the_unsaved_buffer() {
 #[test]
 fn formatting_preserves_comments_and_is_idempotent() {
     let uri = "file:///phase5/format-comments.fpas";
-    let source =
-        "program Comments; // header\nbegin\n// before\nWriteLn('ok'); // tail\nend. // done\n";
+    let source = "program Comments; // header\nbegin\n// before\nWriteLn('hello ', 'a message with enough words to exceed the target width when combined with the call prefix'); // tail\nend. // done\n";
     let (unit, diagnostics) = fpas_parser::parse_compilation_unit(source);
     assert!(diagnostics.is_empty(), "{diagnostics:?}");
     let canonical = fpas_fmt::format_source(source, &unit).expect("matching source and AST");
     for comment in ["// header", "// before", "// tail", "// done"] {
         assert!(canonical.contains(comment), "{canonical}");
     }
+    assert!(
+        canonical.contains("  WriteLn(\n    'hello ',\n    'a message with enough words to exceed the target width when combined with the call prefix'\n  ); // tail"),
+        "{canonical}"
+    );
     let transcript = run(&[
         initialize(1),
         initialized(),

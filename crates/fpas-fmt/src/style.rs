@@ -1,6 +1,6 @@
 //! Canonical formatting constants from [`fmt-style.md`](../../../docs/pascal/tools/fmt-style.md).
 
-/// Maximum line width before wrapping (v2).
+/// Target display width for automatic expression wrapping.
 pub const MAX_LINE_WIDTH: usize = 100;
 
 /// Spaces per indentation level.

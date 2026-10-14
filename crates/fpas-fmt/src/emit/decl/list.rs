@@ -12,7 +12,12 @@ use super::item::emit_decl;
 /// Emit individual declarations, keeping related simple bindings adjacent.
 pub(crate) fn emit_decls(emitter: &mut Emitter, declarations: &[Decl], comments: &CommentMap) {
     for (index, declaration) in declarations.iter().enumerate() {
-        if index > 0 && needs_blank_line(&declarations[index - 1], declaration) {
+        if index > 0
+            && (needs_blank_line(&declarations[index - 1], declaration)
+                || emitter
+                    .layout
+                    .blank_before(crate::span::decl_span(declaration)))
+        {
             emitter.blank_line();
         }
         emit_decl(emitter, declaration, comments);

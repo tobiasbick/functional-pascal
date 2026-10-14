@@ -44,9 +44,10 @@ pub(crate) fn trailing_gap_allows(source: &str, anchor_end: usize, comment_start
     if comment_start < anchor_end || !same_line(source, anchor_end, comment_start) {
         return false;
     }
-    source
-        .get(anchor_end..comment_start)
-        .is_some_and(|gap| gap.chars().all(|c| c == ';' || c.is_whitespace()))
+    source.get(anchor_end..comment_start).is_some_and(|gap| {
+        gap.chars()
+            .all(|c| matches!(c, ';' | ',') || c.is_whitespace())
+    })
 }
 
 /// Returns `true` when `left` and `right` are on the same source line.

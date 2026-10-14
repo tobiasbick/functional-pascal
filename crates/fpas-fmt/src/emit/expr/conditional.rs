@@ -1,4 +1,4 @@
-//! `if` expressions: one line when they fit and carry no comments, otherwise one
+//! `if` expressions: preserve compact input without comments, otherwise one
 //! branch per line with `elsif`, `else`, and `end if` indented one level.
 //!
 //! **Documentation:** `docs/pascal/tools/fmt-style.md` and
@@ -8,7 +8,7 @@ use fpas_lexer::Span;
 use fpas_parser::{Expr, IfExprBranch};
 
 use super::super::Emitter;
-use super::super::wrap::{exceeds_width, measure_emit, text_width};
+use super::super::width;
 use super::{emit_expr, emit_expression_end};
 use crate::comments::{CommentMap, emit_leading_comments, emit_trailing_comments};
 
@@ -22,20 +22,16 @@ pub(super) fn emit_if_expression(
     comments: &CommentMap,
 ) {
     let closer = comments.closer_anchor(span.offset);
-    let has_comments = branches
-        .iter()
-        .map(|branch| branch.span.offset)
-        .chain(std::iter::once(else_span.offset))
-        .chain(closer)
-        .any(|anchor| {
-            !comments.leading_at(anchor).is_empty() || !comments.trailing_at(anchor).is_empty()
-        });
-    if !has_comments {
-        let compact = measure_emit(|inner| emit_compact(inner, branches, else_value, comments));
-        if !compact.contains('\n') && !exceeds_width(emitter.column(), text_width(&compact)) {
-            emit_compact(emitter, branches, else_value, comments);
-            return;
-        }
+    let compact_width = if emitter.measuring {
+        None
+    } else {
+        width::measure(|flat| emit_compact(flat, branches, else_value, comments))
+    };
+    if !needs_multiline(branches, else_value, else_span, span, comments)
+        && !emitter.would_exceed_width(compact_width, 1)
+    {
+        emit_compact(emitter, branches, else_value, comments);
+        return;
     }
     let Some((first, rest)) = branches.split_first() else {
         return;
@@ -56,6 +52,37 @@ pub(super) fn emit_if_expression(
         finish_line(inner, else_span.offset, comments);
         emit_expression_end(inner, closer, "end if", comments);
     });
+}
+
+/// Returns whether retained branch layout or child expressions require multiple lines.
+pub(super) fn needs_multiline(
+    branches: &[IfExprBranch],
+    else_value: &Expr,
+    else_span: Span,
+    span: Span,
+    comments: &CommentMap,
+) -> bool {
+    let closer = comments.closer_anchor(span.offset);
+    let has_comments = branches
+        .iter()
+        .map(|branch| branch.span.offset)
+        .chain(std::iter::once(else_span.offset))
+        .chain(closer)
+        .any(|anchor| {
+            !comments.leading_at(anchor).is_empty() || !comments.trailing_at(anchor).is_empty()
+        });
+    let multiline = branches
+        .iter()
+        .skip(1)
+        .any(|branch| comments.layout.break_before(branch.span.offset))
+        || comments.layout.break_before(else_span.offset)
+        || closer.is_some_and(|offset| comments.layout.break_before(offset))
+        || branches.iter().any(|branch| {
+            super::lists::expression_multiline(&branch.condition, comments)
+                || super::lists::expression_multiline(&branch.value, comments)
+        })
+        || super::lists::expression_multiline(else_value, comments);
+    has_comments || multiline
 }
 
 /// Ends a branch line after its trailing comments.

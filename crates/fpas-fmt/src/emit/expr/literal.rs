@@ -5,79 +5,31 @@
 use fpas_parser::{Expr, FieldInit};
 
 use crate::comments::CommentMap;
-use crate::style::INDENT_WIDTH;
 
 use super::super::Emitter;
-use super::super::wrap::{exceeds_width, measure_emit, text_width};
-
-pub(super) fn write_to_column(emitter: &mut Emitter, column: usize) {
-    let pad = column.saturating_sub(emitter.column());
-    emitter.write(&" ".repeat(pad));
-}
-
-pub(super) fn emit_array_literal(emitter: &mut Emitter, elements: &[Expr], comments: &CommentMap) {
-    let items: Vec<String> = elements
-        .iter()
-        .map(|element| {
-            measure_emit(|inner| super::emit_expr_impl(inner, element, 0, false, comments))
-        })
-        .collect();
-    if items.is_empty() {
-        emitter.write("[]");
-        return;
-    }
-
-    // Multi-line items (closures, record updates) continue relative to the indentation of the line that
-    // opens the array, so their bodies stay one level deeper and their endings on that level.
-    let single_line = format!("[{}]", items.join(", "));
-    let line_indent = emitter.line_indent();
-    let fits = single_line.split('\n').enumerate().all(|(index, line)| {
-        let column = if index == 0 {
-            emitter.column()
-        } else {
-            line_indent
-        };
-        !exceeds_width(column, text_width(line))
-    });
-    if fits {
-        write_block_relative(emitter, line_indent, &single_line);
-        return;
-    }
-
-    let base_column = emitter.column();
-    let item_column = base_column + INDENT_WIDTH;
-    emitter.write("[\n");
-    for (index, item) in items.iter().enumerate() {
-        write_block_at_column(emitter, item_column, item);
-        if index + 1 < items.len() {
-            emitter.write(",");
-        }
-        emitter.write("\n");
-    }
-    write_to_column(emitter, base_column);
-    emitter.write("]");
-}
-
-/// Writes `text`, starting continuation lines at `indent` plus their own leading spaces.
-fn write_block_relative(emitter: &mut Emitter, indent: usize, text: &str) {
-    for (index, line) in text.split('\n').enumerate() {
-        if index > 0 {
-            emitter.newline_to_column(indent);
-        }
-        emitter.write(line);
-    }
-}
-
-pub(super) fn write_block_at_column(emitter: &mut Emitter, column: usize, text: &str) {
-    for (index, line) in text.split('\n').enumerate() {
-        if index > 0 {
-            emitter.newline_to_column(column);
-        } else {
-            let pad = column.saturating_sub(emitter.column());
-            emitter.write(&" ".repeat(pad));
-        }
-        emitter.write(line);
-    }
+/// Emits array items using source line groups and structural indentation.
+pub(super) fn emit_array_literal(
+    emitter: &mut Emitter,
+    elements: &[Expr],
+    span: fpas_lexer::Span,
+    comments: &CommentMap,
+) {
+    super::lists::emit_list(
+        emitter,
+        elements,
+        super::lists::ListStyle {
+            span,
+            open: "[",
+            close: "]",
+            compact_collection: false,
+        },
+        Expr::span,
+        elements
+            .iter()
+            .any(|element| super::lists::expression_multiline(element, comments)),
+        comments,
+        |inner, element| super::emit_expr(inner, element, 0, comments),
+    );
 }
 pub(super) fn emit_record_field_inits(
     emitter: &mut Emitter,

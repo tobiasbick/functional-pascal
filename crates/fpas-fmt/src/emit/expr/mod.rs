@@ -4,6 +4,7 @@ mod binary;
 mod case_expression;
 mod closure;
 mod conditional;
+mod lists;
 mod literal;
 mod patterns;
 mod postfix;
@@ -15,12 +16,12 @@ use fpas_parser::{Designator, DesignatorPart, Expr, UnaryOp};
 use crate::comments::CommentMap;
 
 use super::Emitter;
-use super::wrap::{exceeds_width, measure_emit, text_width};
-use binary::{binary_op_spaced, emit_binary_with_break};
+use binary::emit_binary;
+pub(crate) use lists::emit_arguments;
 use literal::{emit_array_literal, format_real, format_string, needs_space_after_negate};
 pub(crate) use patterns::emit_pattern;
 use postfix::emit_postfix;
-use precedence::{PREFIX_PREC, binary_prec, operand_prec, unary_prec};
+use precedence::{PREFIX_PREC, unary_prec};
 
 /// Formats an expression.
 #[must_use]
@@ -32,30 +33,6 @@ pub(crate) fn format_expr(expr: &Expr) -> String {
 
 /// Emits an expression, leaving any terminator to its statement or declaration owner.
 pub(crate) fn emit_expr(emitter: &mut Emitter, expr: &Expr, min_prec: u8, comments: &CommentMap) {
-    emit_expr_impl(emitter, expr, min_prec, min_prec == 0, comments);
-}
-
-/// Emits an expression at the requested precedence and wrapping mode.
-pub(super) fn emit_expr_impl(
-    emitter: &mut Emitter,
-    expr: &Expr,
-    min_prec: u8,
-    allow_wrap: bool,
-    comments: &CommentMap,
-) {
-    if allow_wrap {
-        let base_column = emitter.column();
-        if matches!(expr, Expr::BinaryOp { .. }) {
-            let rendered = measure_emit(|inner| emit_expr_impl(inner, expr, 0, false, comments));
-            if exceeds_width(base_column, text_width(&rendered)) {
-                // The break emitter must receive the complete expression so no surrounding
-                // operators or parentheses are discarded when a nested operator has lower precedence.
-                emit_binary_with_break(emitter, expr, base_column, comments);
-                return;
-            }
-        }
-    }
-
     match expr {
         Expr::Integer(value, ..) => emitter.write(&value.to_string()),
         Expr::Real(value, ..) => emitter.write(&format_real(*value)),
@@ -63,100 +40,99 @@ pub(super) fn emit_expr_impl(
         Expr::Bool(value, ..) => emitter.write(if *value { "true" } else { "false" }),
         Expr::Designator(designator) => emit_designator(emitter, designator, comments),
         Expr::Call {
-            designator, args, ..
+            designator,
+            args,
+            span,
         } => {
             emit_designator(emitter, designator, comments);
-            emitter.write("(");
-            emit_arg_list(emitter, args, comments);
-            emitter.write(")");
+            emit_arguments(emitter, args, *span, comments);
         }
         Expr::UnaryOp { op, operand, .. } => {
             let prec = unary_prec(*op);
             if prec < min_prec {
                 emitter.write("(");
-                emit_expr_impl(emitter, expr, 0, false, comments);
+                emit_expr(emitter, expr, 0, comments);
                 emitter.write(")");
                 return;
             }
             match op {
                 UnaryOp::Not => {
                     emitter.write("not ");
-                    emit_expr_impl(emitter, operand, prec, false, comments);
+                    emit_expr(emitter, operand, prec, comments);
                 }
                 UnaryOp::Negate => {
                     emitter.write("-");
                     if needs_space_after_negate(operand) {
                         emitter.write(" ");
                     }
-                    emit_expr_impl(emitter, operand, prec, false, comments);
+                    emit_expr(emitter, operand, prec, comments);
                 }
             }
         }
         Expr::BinaryOp {
             op, left, right, ..
-        } => {
-            let prec = binary_prec(*op);
-            if prec < min_prec {
-                emitter.write("(");
-                emit_expr_impl(emitter, expr, 0, false, comments);
-                emitter.write(")");
-                return;
-            }
-            emit_expr_impl(
-                emitter,
-                left,
-                operand_prec(*op, left, false),
-                false,
-                comments,
-            );
-            emitter.write(binary_op_spaced(*op));
-            emit_expr_impl(
-                emitter,
-                right,
-                operand_prec(*op, right, true),
-                false,
-                comments,
-            );
+        } => emit_binary(emitter, *op, left, right, min_prec, comments),
+        Expr::Paren(inner, span) => emit_arguments(
+            emitter,
+            std::slice::from_ref(inner.as_ref()),
+            *span,
+            comments,
+        ),
+        Expr::ArrayLiteral(elements, span) => {
+            emit_array_literal(emitter, elements, *span, comments)
         }
-        Expr::Paren(inner, ..) => {
-            emitter.write("(");
-            emit_expr_impl(emitter, inner, 0, false, comments);
-            emitter.write(")");
-        }
-        Expr::ArrayLiteral(elements, ..) => emit_array_literal(emitter, elements, comments),
-        Expr::DictLiteral(pairs, ..) => {
-            if pairs.is_empty() {
-                emitter.write("[:]");
-                return;
-            }
-            emitter.write("[");
-            for (index, (key, value)) in pairs.iter().enumerate() {
-                if index > 0 {
-                    emitter.write(", ");
-                }
-                emit_expr(emitter, key, 0, comments);
-                emitter.write(": ");
-                emit_expr(emitter, value, 0, comments);
-            }
-            emitter.write("]");
+        Expr::DictLiteral(pairs, span) => {
+            lists::emit_list(
+                emitter,
+                pairs,
+                lists::ListStyle {
+                    span: *span,
+                    open: if pairs.is_empty() { "[:" } else { "[" },
+                    close: "]",
+                    compact_collection: false,
+                },
+                |(key, _)| key.span(),
+                pairs.iter().any(|(key, value)| {
+                    lists::expression_multiline(key, comments)
+                        || lists::expression_multiline(value, comments)
+                }),
+                comments,
+                |inner, (key, value)| {
+                    emit_expr(inner, key, 0, comments);
+                    inner.write(": ");
+                    emit_expr(inner, value, 0, comments);
+                },
+            );
         }
         Expr::RecordUpdate { base, fields, span } => {
             record_update::emit_record_update(emitter, base, fields, span.offset, comments);
         }
-        Expr::ResultOk(inner, ..) => {
-            emitter.write("Ok(");
-            emit_expr(emitter, inner, 0, comments);
-            emitter.write(")");
+        Expr::ResultOk(inner, span) => {
+            emitter.write("Ok");
+            emit_arguments(
+                emitter,
+                std::slice::from_ref(inner.as_ref()),
+                *span,
+                comments,
+            );
         }
-        Expr::ResultError(inner, ..) => {
-            emitter.write("Error(");
-            emit_expr(emitter, inner, 0, comments);
-            emitter.write(")");
+        Expr::ResultError(inner, span) => {
+            emitter.write("Error");
+            emit_arguments(
+                emitter,
+                std::slice::from_ref(inner.as_ref()),
+                *span,
+                comments,
+            );
         }
-        Expr::OptionSome(inner, ..) => {
-            emitter.write("Some(");
-            emit_expr(emitter, inner, 0, comments);
-            emitter.write(")");
+        Expr::OptionSome(inner, span) => {
+            emitter.write("Some");
+            emit_arguments(
+                emitter,
+                std::slice::from_ref(inner.as_ref()),
+                *span,
+                comments,
+            );
         }
         Expr::OptionNone(..) => emitter.write("None"),
         Expr::Try(inner, ..) => {
@@ -169,7 +145,7 @@ pub(super) fn emit_expr_impl(
         }
         Expr::Postfix {
             base, operations, ..
-        } => emit_postfix(emitter, base, operations, allow_wrap, comments),
+        } => emit_postfix(emitter, base, operations, comments),
         Expr::Closure(closure) => closure::emit_closure(
             emitter,
             closure.is_function,
@@ -193,11 +169,11 @@ pub(super) fn emit_expr_impl(
             const IS_PREC: u8 = 3;
             if IS_PREC < min_prec {
                 emitter.write("(");
-                emit_expr_impl(emitter, expr, 0, false, comments);
+                emit_expr(emitter, expr, 0, comments);
                 emitter.write(")");
                 return;
             }
-            emit_expr_impl(emitter, value, IS_PREC + 1, false, comments);
+            emit_expr(emitter, value, IS_PREC + 1, comments);
             emitter.write(" is ");
             emit_pattern(emitter, pattern, comments);
         }
@@ -245,6 +221,7 @@ fn emit_expression_end(
     }
 }
 
+/// Emits a designator without changing its field or index evaluation order.
 pub(crate) fn emit_designator(
     emitter: &mut Emitter,
     designator: &Designator,
@@ -261,21 +238,10 @@ pub(crate) fn emit_designator(
                 }
                 emitter.write(name);
             }
-            DesignatorPart::Index(index_expr, ..) => {
-                emitter.write("[");
-                emit_expr(emitter, index_expr, 0, comments);
-                emitter.write("]");
+            DesignatorPart::Index(index_expr, span) => {
+                lists::emit_index(emitter, index_expr, *span, comments)
             }
         }
-    }
-}
-
-pub(crate) fn emit_arg_list(emitter: &mut Emitter, args: &[Expr], comments: &CommentMap) {
-    for (index, arg) in args.iter().enumerate() {
-        if index > 0 {
-            emitter.write(", ");
-        }
-        emit_expr(emitter, arg, 0, comments);
     }
 }
 
@@ -424,10 +390,10 @@ mod tests {
     }
 
     #[test]
-    fn long_binary_chain_wraps() {
+    fn ast_only_long_binary_chain_wraps_structurally() {
         let formatted = expr_from_body(
             "program T; begin const X: boolean := VeryLongIdentifierAlpha + VeryLongIdentifierBeta + VeryLongIdentifierGamma + VeryLongIdentifierDelta + VeryLongIdentifierEpsilon; end.",
         );
-        assert!(formatted.contains(" +\n"), "formatted: {formatted}");
+        assert!(formatted.contains(" +\n  "), "formatted: {formatted}");
     }
 }

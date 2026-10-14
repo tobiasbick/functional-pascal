@@ -15,7 +15,7 @@ fn format(source: &str) -> String {
 
 #[test]
 fn wrapped_array_has_no_blank_line_before_closing_bracket() {
-    let source = "program T; begin const Values: array of string := ['aaaaaaaaaaaaaaaaaaaa', 'bbbbbbbbbbbbbbbbbbbb', 'cccccccccccccccccccc', 'dddddddddddddddddddd']; end.";
+    let source = "program T; begin const Values: array of string := [\n'aaaaaaaaaaaaaaaaaaaa',\n'bbbbbbbbbbbbbbbbbbbb',\n'cccccccccccccccccccc',\n'dddddddddddddddddddd'\n]; end.";
     let formatted = format(source);
 
     assert!(formatted.contains("[\n"), "array should wrap:\n{formatted}");

@@ -76,10 +76,12 @@ export async function verifyStructuredEditing(): Promise<void> {
     assert.equal(view.getText(), beforeTyping, "signature view rejects normal editor input");
     assert.equal(view.isDirty, false);
 
-    const addExport = new vscode.WorkspaceEdit();
-    addExport.insert(unit.uri, unit.positionAt(unit.getText().indexOf("const Hidden")), "public const Added: integer := 2;\n\n");
-    assert.equal(await vscode.workspace.applyEdit(addExport), true);
-    await waitFor(async () => view.getText().includes("public const Added: integer;"));
+    for (const name of ["Added", "AddedAgain", "AddedLast"]) {
+      const addExport = new vscode.WorkspaceEdit();
+      addExport.insert(unit.uri, unit.positionAt(unit.getText().indexOf("const Hidden")), `public const ${name}: integer := 2;\n\n`);
+      assert.equal(await vscode.workspace.applyEdit(addExport), true);
+      await waitFor(async () => view.getText().includes(`public const ${name}: integer;`), () => `view refresh at source version ${unit.version}: ${view.getText()}`);
+    }
     assert.ok(!view.getText().includes("Hidden"));
     assert.equal(await fs.readFile(path.join(root, "api.fpas"), "utf8"), unitSource);
     assert.equal(await fs.readFile(path.join(root, "main.fpas"), "utf8"), mainSource);
@@ -101,11 +103,11 @@ export async function verifyStructuredEditing(): Promise<void> {
   }
 }
 
-async function waitFor(predicate: () => Promise<boolean>): Promise<void> {
+async function waitFor(predicate: () => Promise<boolean>, describe = () => "structured-editing result"): Promise<void> {
   const deadline = Date.now() + 10_000;
   while (Date.now() < deadline) {
     if (await predicate()) return;
     await new Promise(resolve => setTimeout(resolve, 50));
   }
-  assert.fail("structured-editing result did not arrive");
+  assert.fail(`${describe()} did not arrive`);
 }

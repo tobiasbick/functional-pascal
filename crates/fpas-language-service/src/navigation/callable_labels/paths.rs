@@ -105,8 +105,8 @@ pub(super) fn pattern_selector(
         let mut position = 0usize;
         let mut field_start = open + 1;
         let mut depth = 0usize;
-        for index in open + 1..cursor {
-            match tokens[index].token {
+        for (index, token) in tokens.iter().enumerate().take(cursor).skip(open + 1) {
+            match token.token {
                 Token::LParen | Token::LBracket => depth += 1,
                 Token::RParen | Token::RBracket => depth = depth.saturating_sub(1),
                 Token::Comma if depth == 0 => {

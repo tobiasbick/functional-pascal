@@ -213,9 +213,11 @@ impl Checker {
                     .iter()
                     .any(|old| name.eq_ignore_ascii_case(old)),
                 _ => false,
-            };
-            let hint = if removed_wrapper {
-                crate::std_registry::native_migration_hint(name).expect("removed wrapper repair")
+            }
+            .then(|| crate::std_registry::native_migration_hint(name))
+            .flatten();
+            let hint = if let Some(hint) = removed_wrapper {
+                hint
             } else if receiver_ty == &Ty::String && name.eq_ignore_ascii_case("Substring") {
                 "Use `.Slice(Start, Len)` for a checked Unicode-scalar range.".to_string()
             } else if receiver_ty == &Ty::String && name.eq_ignore_ascii_case("CharAt") {

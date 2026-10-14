@@ -6,7 +6,8 @@ use fpas_language_service::{LanguageService, WorkspaceContext};
 use support::TempDirectory;
 
 #[test]
-fn forward_nested_routines_shadow_outer_names_in_navigation_and_completion() {
+fn forward_nested_routines_shadow_outer_names_in_navigation_and_completion()
+-> Result<(), Box<dyn std::error::Error>> {
     let temp = TempDirectory::new("forward-routine");
     let source = "program T;
 function Read(): integer; begin return 1; end function;
@@ -18,42 +19,60 @@ const Later: integer := 2;
 begin discard Outer(); end.";
     let path = temp.write("forward.fpas", source);
     let mut service = LanguageService::new(WorkspaceContext::loose(temp.path()));
-    let use_offset = source.find("return Read()").unwrap() + "return ".len();
-    let selected = service.definitions(&path, use_offset).unwrap().value;
+    let use_offset = source.find("return Read()").ok_or("missing nested call")? + "return ".len();
+    let selected = service.definitions(&path, use_offset)?.value;
     assert_eq!(selected.len(), 1);
     assert_eq!(
         selected[0].symbol.selection_span.offset(),
-        source.rfind("function Read").unwrap() + "function ".len()
+        source
+            .rfind("function Read")
+            .ok_or("missing nested routine")?
+            + "function ".len()
     );
-    let completions = service.completions(&path, use_offset + 2).unwrap().value;
+    let completions = service.completions(&path, use_offset + 2)?.value;
     let reads: Vec<_> = completions
         .iter()
         .filter(|candidate| candidate.label == "Read")
         .collect();
     assert_eq!(reads.len(), 1);
     assert!(
-        reads[0].owner.as_deref().unwrap().contains("Outer"),
+        reads[0]
+            .owner
+            .as_deref()
+            .is_some_and(|owner| owner.contains("Outer")),
         "{reads:?}"
     );
-    let later_use = source.find("return Later").unwrap() + "return ".len();
-    let selected = service.definitions(&path, later_use).unwrap().value;
+    let later_use = source
+        .find("return Later")
+        .ok_or("missing later binding use")?
+        + "return ".len();
+    let selected = service.definitions(&path, later_use)?.value;
     assert_eq!(selected.len(), 1);
     assert_eq!(
         selected[0].symbol.selection_span.offset(),
-        source.find("const Later").unwrap() + "const ".len()
+        source.find("const Later").ok_or("missing later binding")? + "const ".len()
     );
-    let references = service.references(&path, use_offset, true).unwrap().value;
+    let references = service.references(&path, use_offset, true)?.value;
     assert!(
         references
             .iter()
             .any(|reference| reference.span.offset() == use_offset)
     );
-    assert!(references.iter().all(|reference| reference.span.offset()
-        != source.find("function Read").unwrap() + "function ".len()));
+    let outer_routine = source
+        .find("function Read")
+        .ok_or("missing outer routine")?
+        + "function ".len();
+    assert!(
+        references
+            .iter()
+            .all(|reference| reference.span.offset() != outer_routine)
+    );
+    Ok(())
 }
 
 #[test]
-fn anonymous_body_navigation_retains_the_compilers_later_binding_identity() {
+fn anonymous_body_navigation_retains_the_compilers_later_binding_identity()
+-> Result<(), Box<dyn std::error::Error>> {
     let temp = TempDirectory::new("forward-anonymous-value");
     let source = "program T;
 const Stored: function(): integer := function(): integer begin return Later; end function;
@@ -61,11 +80,15 @@ const Later: integer := 7;
 begin discard Stored(); end.";
     let path = temp.write("anonymous.fpas", source);
     let mut service = LanguageService::new(WorkspaceContext::loose(temp.path()));
-    let offset = source.find("return Later").unwrap() + "return ".len();
-    let selected = service.definitions(&path, offset).unwrap().value;
+    let offset = source
+        .find("return Later")
+        .ok_or("missing later binding use")?
+        + "return ".len();
+    let selected = service.definitions(&path, offset)?.value;
     assert_eq!(selected.len(), 1);
     assert_eq!(
         selected[0].symbol.selection_span.offset(),
-        source.find("const Later").unwrap() + "const ".len()
+        source.find("const Later").ok_or("missing later binding")? + "const ".len()
     );
+    Ok(())
 }

@@ -21,11 +21,9 @@ impl Walker<'_, '_> {
                 self.ready.insert(identity(binding.span));
             }
             Stmt::Block(body, _) | Stmt::Scope { body, .. } => self.statements(body),
-            Stmt::Return(value, _) => {
-                if let Some(value) = value {
-                    let returned = self.expr(value);
-                    self.summary.returned.extend(returned);
-                }
+            Stmt::Return(Some(value), _) => {
+                let returned = self.expr(value);
+                self.summary.returned.extend(returned);
             }
             Stmt::Panic(value, _)
             | Stmt::Discard { expr: value, .. }

@@ -19,8 +19,7 @@ impl NavigationDocument {
             .analysis
             .as_ref()
             .and_then(|analysis| analysis.semantic())
-        {
-            if self
+            && self
                 .tokens
                 .iter()
                 .filter(|token| {
@@ -33,9 +32,8 @@ impl NavigationDocument {
                         .get(&(token.span.source_id, token.span.offset))
                         == Some(&(symbol.full_span.source_id(), symbol.full_span.offset()))
                 })
-            {
-                return true;
-            }
+        {
+            return true;
         }
         self.all_symbols()
             .into_iter()

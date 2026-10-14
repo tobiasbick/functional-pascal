@@ -28,11 +28,16 @@ pub(super) fn qualified_variant_candidates(
         let Some(alias) = documents[target_index].namespace_for(&document.owner) else {
             continue;
         };
-        types.extend(document.top_level().iter().filter_map(|symbol| {
-            (symbol.visibility == SymbolVisibility::Public
-                && matches!(symbol.kind, SymbolKind::Enum | SymbolKind::Type))
-            .then(|| (index, symbol, format!("{alias}.{}", symbol.name)))
-        }));
+        types.extend(
+            document
+                .top_level()
+                .iter()
+                .filter(|symbol| {
+                    symbol.visibility == SymbolVisibility::Public
+                        && matches!(symbol.kind, SymbolKind::Enum | SymbolKind::Type)
+                })
+                .map(|symbol| (index, symbol, format!("{alias}.{}", symbol.name))),
+        );
     }
     let mut candidates = Vec::new();
     for (index, symbol, qualifier) in types {

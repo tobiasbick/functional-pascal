@@ -49,32 +49,28 @@ fn runtime_record(text: &str, call: &str) -> Value {
 #[test]
 fn nonempty_character_string_bounds_json_hints_use_native_length() {
     for index in [-1, 2, i64::MAX] {
-        for call in [format!("SetCharAt({index}, 'z')")] {
-            let record = runtime_record("é😀", &call);
-            assert_eq!(
-                record["hint"],
-                "Ensure the index is within 0..S.Length()-1."
-            );
-            assert!(
-                record["message"]
-                    .as_str()
-                    .expect("message")
-                    .contains("length 2")
-            );
-        }
+        let record = runtime_record("é😀", &format!("SetCharAt({index}, 'z')"));
+        assert_eq!(
+            record["hint"],
+            "Ensure the index is within 0..S.Length()-1."
+        );
+        assert!(
+            record["message"]
+                .as_str()
+                .expect("message")
+                .contains("length 2")
+        );
     }
 }
 
 #[test]
 fn empty_character_string_bounds_json_hints_recommend_is_empty() {
     for index in [-1, 0, 1] {
-        for call in [format!("SetCharAt({index}, 'z')")] {
-            let record = runtime_record("", &call);
-            assert_eq!(
-                record["hint"],
-                "An empty string has no valid character index. Check S.IsEmpty() before calling this operation."
-            );
-        }
+        let record = runtime_record("", &format!("SetCharAt({index}, 'z')"));
+        assert_eq!(
+            record["hint"],
+            "An empty string has no valid character index. Check S.IsEmpty() before calling this operation."
+        );
     }
 }
 

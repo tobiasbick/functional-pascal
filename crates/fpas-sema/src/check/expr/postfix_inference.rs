@@ -19,9 +19,7 @@ impl Checker {
         if !needs_expected_type(base) {
             return None;
         }
-        let mut context = expected
-            .cloned()
-            .unwrap_or_else(|| types.last().unwrap().clone());
+        let mut context = expected.unwrap_or(types.last()?).clone();
         for (index, operation) in operations.iter().enumerate().rev() {
             let input = &types[index];
             let output = &types[index + 1];

@@ -63,8 +63,7 @@ pub(super) fn lower_analyzed_root(
         &mut type_table,
         &metadata,
         1,
-        FunctionId::new(0),
-        &[],
+        (FunctionId::new(0), &[]),
     )
     .map_err(|error| vec![error])?;
     let first_import_id = u32::try_from(routines.len().saturating_add(1))

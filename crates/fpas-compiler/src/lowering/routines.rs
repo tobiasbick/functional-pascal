@@ -218,7 +218,7 @@ fn nested_runtime_name(parent_name: &str, name: &str) -> String {
     }
 }
 
-/// Lower routine signatures and their captures into the callable table.
+/// Lower routine signatures and captures, seeded by the inherited owner and its captures.
 pub(super) fn callable_table(
     routines: &[Routine<'_>],
     owners: &[FunctionId],
@@ -226,8 +226,7 @@ pub(super) fn callable_table(
     types: &mut types::TypeTable,
     metadata: &AnalysisMetadata,
     first_id: u32,
-    inherited_owner: FunctionId,
-    inherited_captures: &[super::context::CaptureInput],
+    (inherited_owner, inherited_captures): (FunctionId, &[super::context::CaptureInput]),
 ) -> Result<BTreeMap<String, Callable>, CompileError> {
     let mut table = BTreeMap::new();
     let mut captures_by_function = BTreeMap::<FunctionId, Vec<super::context::CaptureInput>>::new();

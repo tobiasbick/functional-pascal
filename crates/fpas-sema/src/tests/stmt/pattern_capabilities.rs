@@ -202,9 +202,9 @@ fn extracted_record_callables_keep_capabilities_but_scalar_fields_remain_free() 
 
 #[test]
 fn binding_names_may_shadow_the_source_without_changing_its_proof() {
-    for body in
-        ["case Wrapped of when Some(const Wrapped): discard Wrapped; when None: null; end case;"]
     {
+        let body =
+            "case Wrapped of when Some(const Wrapped): discard Wrapped; when None: null; end case;";
         check_ok(&program(
             "const Wrapped: Option of function(): integer := Some(Work);",
             body,

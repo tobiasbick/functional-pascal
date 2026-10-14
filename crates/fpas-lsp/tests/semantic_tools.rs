@@ -176,8 +176,12 @@ fn semantic_tokens_and_quick_fixes_use_utf16_and_reject_stale_diagnostics() {
     );
     edits.sort_by_key(|edit| {
         std::cmp::Reverse((
-            edit["range"]["start"]["line"].as_u64().unwrap(),
-            edit["range"]["start"]["character"].as_u64().unwrap(),
+            edit["range"]["start"]["line"]
+                .as_u64()
+                .expect("edit start line"),
+            edit["range"]["start"]["character"]
+                .as_u64()
+                .expect("edit start character"),
         ))
     });
     let mut edited = source.to_owned();

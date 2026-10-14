@@ -4,12 +4,12 @@ use fpas_debug::{PreparedDebugTarget, jsonl::JsonlServer};
 use serde_json::json;
 
 #[test]
-fn watches_decode_unicode_codes_and_reject_invalid_scalars() {
+fn watches_decode_unicode_codes_and_reject_invalid_scalars()
+-> Result<(), Box<dyn std::error::Error>> {
     let (program, diagnostics) = fpas_parser::parse("program T; begin end.");
     assert!(diagnostics.is_empty(), "{diagnostics:?}");
-    let executable = fpas_compiler::compile(&program).expect("compile watch target");
-    let mut server =
-        JsonlServer::new(PreparedDebugTarget::new(executable, Vec::new())).expect("watch server");
+    let executable = fpas_compiler::compile(&program).map_err(|errors| format!("{errors:?}"))?;
+    let mut server = JsonlServer::new(PreparedDebugTarget::new(executable, Vec::new()))?;
     for (id, command, arguments) in [
         (1, "initialize", json!({"version":2})),
         (2, "launch", json!({"stop_on_entry":true})),
@@ -51,4 +51,5 @@ fn watches_decode_unicode_codes_and_reject_invalid_scalars() {
             .as_str()
             .is_some_and(|hint| hint.contains("#8364"))
     );
+    Ok(())
 }

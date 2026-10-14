@@ -84,11 +84,11 @@ impl Checker {
                     continue;
                 };
                 let info = self.binding_constant_info(&value.value, &ty);
-                if let Some(symbol) = self.scopes.lookup_mut(&value.name) {
-                    if symbol.constant.as_ref() != Some(&info) {
-                        symbol.constant = Some(info);
-                        changed = true;
-                    }
+                if let Some(symbol) = self.scopes.lookup_mut(&value.name)
+                    && symbol.constant.as_ref() != Some(&info)
+                {
+                    symbol.constant = Some(info);
+                    changed = true;
                 }
             }
             if !changed {

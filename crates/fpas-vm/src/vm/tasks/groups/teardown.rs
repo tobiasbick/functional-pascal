@@ -28,6 +28,10 @@ impl Worker {
                 .map_err(|message| self.group_error(message))?;
         }
         if self.poll_owned_groups(groups, outcome)? {
+            #[expect(
+                clippy::expect_used,
+                reason = "poll_owned_groups stores the terminal outcome before returning true"
+            )]
             self.pending_completion
                 .take()
                 .expect("joined owners retain their outcome")
@@ -62,16 +66,16 @@ impl Worker {
                             .get_or_insert_with(String::new)
                             .push_str("\nThe creating task was closing its remaining task groups.");
                         outcome = Err(diagnostic);
-                    } else if let Err(primary) = &mut outcome {
-                        if self.observed_task_failure.get() != Some(failure.task) {
-                            primary
+                    } else if let Err(primary) = &mut outcome
+                        && self.observed_task_failure.get() != Some(failure.task)
+                    {
+                        primary
                                 .help
                                 .get_or_insert_with(String::new)
                                 .push_str(&format!(
                                     "\nFurther failure during task group cleanup: Task {} (FP{} at {}:{}): {}",
                                     failure.task, failure.code, failure.line, failure.column, diagnostic.message
                                 ));
-                        }
                     }
                 }
             }
@@ -101,6 +105,10 @@ impl Worker {
             };
             if self.poll_owned_groups(groups, outcome)? {
                 self.suspend_requested = false;
+                #[expect(
+                    clippy::expect_used,
+                    reason = "poll_owned_groups stores the terminal outcome before returning true"
+                )]
                 return self
                     .pending_completion
                     .take()

@@ -104,15 +104,15 @@ impl LanguageService {
                 )
             })
             .flatten();
-            if symbol.callable.is_none() {
-                if let Some(owner) = crate::navigation::named_arguments::callable_type_owner(
+            if symbol.callable.is_none()
+                && let Some(owner) = crate::navigation::named_arguments::callable_type_owner(
                     &context.documents,
                     target_index,
                     document_index,
                     &symbol,
-                ) {
-                    (document_index, symbol) = owner;
-                }
+                )
+            {
+                (document_index, symbol) = owner;
             }
             let qualified_name = symbol.qualified_name.clone();
             let mut signature = if symbol.kind == crate::SymbolKind::Type

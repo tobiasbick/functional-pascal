@@ -304,7 +304,7 @@ fn unowned_spawn_bytecode_cannot_enqueue_a_child() {
         instruction_start: InstructionAddress::new(3),
         line: 2,
         column: 1,
-        ..image.source_map.runs[0].clone()
+        ..image.source_map.runs[0]
     });
     let mut vm = Vm::new(image.verify().unwrap());
     let scheduler = vm.scheduler.clone();

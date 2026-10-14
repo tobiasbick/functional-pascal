@@ -61,16 +61,14 @@ impl Walker<'_, '_> {
         if let Some(target) = self.checker.fluent_calls.get(&key) {
             if crate::std_registry::native_operation_by_implementation(&target.name)
                 .is_some_and(|operation| operation.receiver_mode() == crate::types::ParamMode::Var)
-            {
-                if let Some(binding) = self
+                && let Some(binding) = self
                     .checker
                     .initialization
                     .references
                     .get(&identity(designator.span))
                     .and_then(|reference| reference.declaration)
-                {
-                    self.write(binding);
-                }
+            {
+                self.write(binding);
             }
             return self.standard(&target.name, &values, receiver, span);
         }
@@ -247,34 +245,32 @@ impl Walker<'_, '_> {
     /// Invalidate storage passed by reference after evaluating all call arguments.
     pub fn invalidate_var_arguments(&mut self, args: &[Expr]) {
         for arg in args {
-            if let Expr::VarArgument { designator, .. } = arg.argument_value() {
-                if let Some(binding) = self
+            if let Expr::VarArgument { designator, .. } = arg.argument_value()
+                && let Some(binding) = self
                     .checker
                     .initialization
                     .references
                     .get(&identity(designator.span))
                     .and_then(|reference| reference.declaration)
-                {
-                    self.write(binding);
-                }
+            {
+                self.write(binding);
             }
         }
     }
 
     /// Map already evaluated written arguments to their checked parameter positions.
     pub fn order_arguments(&self, args: &[Expr], values: &mut Vec<Value>) {
-        if let Some(first) = args.first() {
-            if let Some(order) = self
+        if let Some(first) = args.first()
+            && let Some(order) = self
                 .checker
                 .named_argument_orders
                 .get(&crate::expr_lookup_key(first))
-            {
-                let written = values.clone();
-                *values = order
-                    .iter()
-                    .map(|&index| written.get(index).cloned().unwrap_or_default())
-                    .collect();
-            }
+        {
+            let written = values.clone();
+            *values = order
+                .iter()
+                .map(|&index| written.get(index).cloned().unwrap_or_default())
+                .collect();
         }
     }
 

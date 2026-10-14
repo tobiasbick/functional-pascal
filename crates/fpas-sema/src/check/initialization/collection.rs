@@ -73,12 +73,8 @@ impl<'a> Model<'a> {
     fn add_routine(
         &mut self,
         name: &str,
-        body: &'a FuncBody,
-        params: &'a [FormalParam],
-        requires: &'a [fpas_parser::RequiresClause],
-        ensures: &'a [fpas_parser::EnsuresClause],
+        routine: Routine<'a>,
         span: Span,
-        key: usize,
         parent: Owner,
         public: bool,
     ) {
@@ -86,15 +82,11 @@ impl<'a> Model<'a> {
         self.routines.insert(
             owner,
             Routine {
-                body,
-                params,
-                requires,
-                ensures,
-                capture_key: key,
                 export_name: (parent == Owner::Root && public).then(|| name.to_owned()),
+                ..routine
             },
         );
-        for (index, param) in params.iter().enumerate() {
+        for (index, param) in routine.params.iter().enumerate() {
             self.bindings.insert(
                 identity(param.span),
                 Binding {
@@ -107,11 +99,11 @@ impl<'a> Model<'a> {
                 },
             );
         }
-        self.body(body, owner);
-        for clause in requires {
+        self.body(routine.body, owner);
+        for clause in routine.requires {
             self.expression(&clause.condition, owner);
         }
-        for clause in ensures {
+        for clause in routine.ensures {
             self.expression(&clause.condition, owner);
         }
     }
@@ -137,23 +129,29 @@ impl<'a> Model<'a> {
                 ),
                 Decl::Function(f) => self.add_routine(
                     &f.name,
-                    &f.body,
-                    &f.params,
-                    &f.requires,
-                    &f.ensures,
+                    Routine {
+                        body: &f.body,
+                        params: &f.params,
+                        requires: &f.requires,
+                        ensures: &f.ensures,
+                        capture_key: crate::function_decl_lookup_key(f),
+                        export_name: None,
+                    },
                     f.span,
-                    crate::function_decl_lookup_key(f),
                     owner,
                     f.visibility == Visibility::Public,
                 ),
                 Decl::Procedure(p) => self.add_routine(
                     &p.name,
-                    &p.body,
-                    &p.params,
-                    &p.requires,
-                    &p.ensures,
+                    Routine {
+                        body: &p.body,
+                        params: &p.params,
+                        requires: &p.requires,
+                        ensures: &p.ensures,
+                        capture_key: crate::procedure_decl_lookup_key(p),
+                        export_name: None,
+                    },
                     p.span,
-                    crate::procedure_decl_lookup_key(p),
                     owner,
                     p.visibility == Visibility::Public,
                 ),
@@ -165,12 +163,15 @@ impl<'a> Model<'a> {
                                 RecordMethod::Function(f) | RecordMethod::StaticFunction(f) => {
                                     self.add_routine(
                                         &name,
-                                        &f.body,
-                                        &f.params,
-                                        &f.requires,
-                                        &f.ensures,
+                                        Routine {
+                                            body: &f.body,
+                                            params: &f.params,
+                                            requires: &f.requires,
+                                            ensures: &f.ensures,
+                                            capture_key: crate::function_decl_lookup_key(f),
+                                            export_name: None,
+                                        },
                                         f.span,
-                                        crate::function_decl_lookup_key(f),
                                         owner,
                                         definition.visibility == Visibility::Public
                                             && f.visibility == Visibility::Public,
@@ -180,12 +181,15 @@ impl<'a> Model<'a> {
                                 RecordMethod::Procedure(p) | RecordMethod::StaticProcedure(p) => {
                                     self.add_routine(
                                         &name,
-                                        &p.body,
-                                        &p.params,
-                                        &p.requires,
-                                        &p.ensures,
+                                        Routine {
+                                            body: &p.body,
+                                            params: &p.params,
+                                            requires: &p.requires,
+                                            ensures: &p.ensures,
+                                            capture_key: crate::procedure_decl_lookup_key(p),
+                                            export_name: None,
+                                        },
                                         p.span,
-                                        crate::procedure_decl_lookup_key(p),
                                         owner,
                                         definition.visibility == Visibility::Public
                                             && p.visibility == Visibility::Public,

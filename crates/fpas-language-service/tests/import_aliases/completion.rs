@@ -10,8 +10,11 @@ fn enum_completion_inserts_the_type_qualifier_and_preserves_symbol_identity() {
     let mut f = fixture(source);
     let candidate = f
         .service
-        .completions(&f.main, source.find("Re;").unwrap() + 2)
-        .unwrap()
+        .completions(
+            &f.main,
+            source.find("Re;").expect("enum completion prefix") + 2,
+        )
+        .expect("enum completions")
         .value
         .into_iter()
         .find(|candidate| candidate.filter_text == "Red")
@@ -26,11 +29,11 @@ fn enum_completion_inserts_the_type_qualifier_and_preserves_symbol_identity() {
     f.service
         .documents_mut()
         .open_document(&f.main, 1, edited)
-        .unwrap();
+        .expect("open completed enum source");
     assert!(
         f.service
             .analyze_document(&f.main)
-            .unwrap()
+            .expect("completed enum source analysis")
             .diagnostics()
             .is_empty()
     );
@@ -42,8 +45,11 @@ fn new_auto_import_qualifies_the_use_and_avoids_a_nested_parameter_collision() {
     let mut f = fixture(source);
     let candidates = f
         .service
-        .completions(&f.main, source.find("Ans(1)").unwrap() + 3)
-        .unwrap()
+        .completions(
+            &f.main,
+            source.find("Ans(1)").expect("auto-import prefix") + 3,
+        )
+        .expect("auto-import completions")
         .value;
     let answer = candidates
         .iter()
@@ -64,11 +70,11 @@ fn new_auto_import_qualifies_the_use_and_avoids_a_nested_parameter_collision() {
     f.service
         .documents_mut()
         .open_document(&f.main, 1, edited)
-        .unwrap();
+        .expect("open auto-imported source");
     assert!(
         f.service
             .analyze_document(&f.main)
-            .unwrap()
+            .expect("auto-imported source analysis")
             .diagnostics()
             .is_empty()
     );
@@ -148,9 +154,9 @@ fn auto_import_defaults_ignore_member_names_and_reserve_single_segment_units() {
             .service
             .completions(
                 &f.main,
-                source.find("NewValue()").unwrap() + "NewValue".len(),
+                source.find("NewValue()").expect("auto-import call") + "NewValue".len(),
             )
-            .unwrap()
+            .expect("auto-import completions")
             .value
             .into_iter()
             .find(|candidate| candidate.filter_text == "NewValue")
@@ -161,16 +167,16 @@ fn auto_import_defaults_ignore_member_names_and_reserve_single_segment_units() {
             candidate.replacement_span.offset()..candidate.replacement_span.end(),
             &candidate.insert_text,
         );
-        let import = candidate.additional_edit.unwrap();
+        let import = candidate.additional_edit.expect("required import edit");
         edited.replace_range(import.span.offset()..import.span.end(), &import.new_text);
         f.service
             .documents_mut()
             .open_document(&f.main, 1, edited.clone())
-            .unwrap();
+            .expect("open auto-imported source");
         assert!(
             f.service
                 .analyze_document(&f.main)
-                .unwrap()
+                .expect("auto-imported source analysis")
                 .diagnostics()
                 .is_empty()
         );
@@ -182,7 +188,7 @@ fn auto_import_defaults_ignore_member_names_and_reserve_single_segment_units() {
         let members = f
             .service
             .completions(&f.main, member + "New".len())
-            .unwrap()
+            .expect("qualified member completions")
             .value;
         assert!(
             members
@@ -190,7 +196,11 @@ fn auto_import_defaults_ignore_member_names_and_reserve_single_segment_units() {
                 .any(|candidate| candidate.qualified_name == format!("{owner}.NewValue")),
             "program headers never compete with imported namespaces"
         );
-        let definitions = f.service.definitions(&f.main, member).unwrap().value;
+        let definitions = f
+            .service
+            .definitions(&f.main, member)
+            .expect("qualified member definitions")
+            .value;
         assert_eq!(definitions.len(), 1);
         assert_eq!(
             definitions[0].symbol.qualified_name,
@@ -240,7 +250,8 @@ fn existing_alias_auto_import_qualifies_without_changing_uses() {
 
 #[test]
 fn import_alias_is_offered_as_a_namespace_case_insensitively() {
-    for (import, expected, kind) in [("Demo.Math as Maths", "Maths", SymbolKind::ImportAlias)] {
+    {
+        let (import, expected, kind) = ("Demo.Math as Maths", "Maths", SymbolKind::ImportAlias);
         let source =
             format!("program App;\nuses {import};\nbegin\n  discard Ans;\n  discard Mat;\nend.\n");
         let mut f = fixture(&source);

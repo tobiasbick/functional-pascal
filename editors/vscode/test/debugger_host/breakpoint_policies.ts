@@ -33,7 +33,7 @@ export async function verifyBreakpointPolicies(
     ""
   ];
   const sourcePath = await writeSource(workspaceRoot, "policies", lines);
-  const line = lines.indexOf("    WriteLn(Counter);");
+  const line = lines.indexOf("    Console.WriteLn(Counter);");
   try {
     await verifyExactHit(workspaceRoot, sourcePath, line, received, sent);
     await verifyLogpoint(workspaceRoot, sourcePath, line, received, sent);

@@ -56,7 +56,13 @@ impl<'a> ClosureRegistry<'a> {
             Decl::TypeDef(value) => value.span,
         };
         let table = routines::callable_table(
-            &sources, &owners, &names, types, metadata, first_id, owner, captures,
+            &sources,
+            &owners,
+            &names,
+            types,
+            metadata,
+            first_id,
+            (owner, captures),
         )?;
         self.next_id = first_id
             .checked_add(

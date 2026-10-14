@@ -46,7 +46,7 @@ impl Checker {
             self.prechecked_receivers
                 .remove(&Self::expr_lookup_key(value));
         }
-        let ty = Ty::Record(record);
-        ty
+
+        Ty::Record(record)
     }
 }

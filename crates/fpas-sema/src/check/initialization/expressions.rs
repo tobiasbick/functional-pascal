@@ -92,7 +92,9 @@ impl Walker<'_, '_> {
                             self.invalidate_var_arguments(args);
                             let previous = self.worker;
                             if self.worker_start == Some(crate::expr_lookup_key(expr))
-                                && std::ptr::eq(operation, operations.last().unwrap())
+                                && operations
+                                    .last()
+                                    .is_some_and(|last| std::ptr::eq(operation, last))
                             {
                                 self.worker = true;
                             }

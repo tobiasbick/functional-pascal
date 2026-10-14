@@ -186,7 +186,7 @@ fn unknown_name_action_adds_one_canonical_unambiguous_import() {
     assert!(
         service
             .analyze_document(&fixture.main)
-            .unwrap()
+            .expect("completed auto-import source analysis")
             .diagnostics()
             .is_empty()
     );
@@ -250,7 +250,7 @@ fn unknown_type_action_adds_one_canonical_unambiguous_import() {
     assert!(
         service
             .analyze_document(&main)
-            .unwrap()
+            .expect("source analysis after applying the repair")
             .diagnostics()
             .is_empty()
     );

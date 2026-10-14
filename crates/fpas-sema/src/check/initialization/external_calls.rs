@@ -76,10 +76,9 @@ impl Walker<'_, '_> {
             if matches!(
                 parameter.ty,
                 crate::types::Ty::Function(_) | crate::types::Ty::Procedure(_)
-            ) {
-                if !(starts_worker && index == 1) {
-                    self.invoke(values.get(index).unwrap_or(&Value::new()), &[], span);
-                }
+            ) && !(starts_worker && index == 1)
+            {
+                self.invoke(values.get(index).unwrap_or(&Value::new()), &[], span);
             }
         }
         let mut returned: Value = receiver

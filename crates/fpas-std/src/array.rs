@@ -14,6 +14,7 @@ use fpas_diagnostics::codes::{
     RUNTIME_VM_OPERAND_TYPE_MISMATCH,
 };
 
+/// Executes array intrinsics after validating their runtime operands.
 pub(crate) fn run(
     intrinsic: Intrinsic,
     call: &mut IntrinsicCall<'_>,
@@ -49,6 +50,10 @@ pub(crate) fn run(
                 }
             }
             // Stable sort preserves input order for equal values, including signed zeros.
+            #[expect(
+                clippy::expect_used,
+                reason = "all elements have the same scalar type and finite reals were checked above"
+            )]
             arr.sort_by(|left, right| {
                 left.scalar_ordering(right)
                     .expect("validated scalar elements")

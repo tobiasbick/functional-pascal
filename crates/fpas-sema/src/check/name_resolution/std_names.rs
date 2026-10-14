@@ -24,15 +24,15 @@ impl Checker {
             })?;
         let mut spellings = candidates
             .iter()
-            .cloned()
-            .filter(|candidate| !candidate.eq_ignore_ascii_case(name))
-            .filter(|candidate| {
+            .filter(|&candidate| !candidate.eq_ignore_ascii_case(name))
+            .filter(|&candidate| {
                 alias_prefix.as_ref().is_none_or(|prefix| {
                     candidate
                         .to_ascii_lowercase()
                         .starts_with(&prefix.to_ascii_lowercase())
                 })
             })
+            .cloned()
             .collect::<Vec<_>>();
         spellings.sort_by_key(|candidate| candidate.to_ascii_lowercase());
         spellings.dedup_by(|left, right| left.eq_ignore_ascii_case(right));

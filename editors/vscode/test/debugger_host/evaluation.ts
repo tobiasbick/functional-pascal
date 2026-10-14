@@ -57,7 +57,7 @@ export async function verifyDebuggerEvaluation(
     "",
   ];
   const sourcePath = await writeSource(workspaceRoot, "evaluation", lines);
-  const line = lines.indexOf("  WriteLn(Offset);");
+  const line = lines.indexOf("  Console.WriteLn(Offset);");
   const breakpoint = new vscode.SourceBreakpoint(
     new vscode.Location(vscode.Uri.file(sourcePath), new vscode.Position(line, 2))
   );
@@ -113,7 +113,7 @@ export async function verifyDebuggerEvaluation(
     const activeSession = session;
     await assert.rejects(
       async () => activeSession.customRequest("evaluate", {
-        expression: "WriteLn(Offset)",
+        expression: "Std.Console.WriteLn(Offset)",
         frameId,
         context: "repl"
       }),

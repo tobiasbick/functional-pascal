@@ -6,6 +6,10 @@ use crate::types::{FunctionTy, Ty};
 use std::collections::HashMap;
 
 fn signature(entries: &[NativeOperation], name: &str) -> FunctionTy {
+    #[expect(
+        clippy::expect_used,
+        reason = "the static InPlace catalog lists existing value operations from the same receiver catalog"
+    )]
     let entry = entries
         .iter()
         .find(|entry| entry.name == name)

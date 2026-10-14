@@ -7,7 +7,8 @@ use fpas_language_service::{LanguageService, WorkspaceContext};
 use support::TempDirectory;
 
 #[test]
-fn enum_values_overlay_diagnostics_follow_edits_without_changing_disk() {
+fn enum_values_overlay_diagnostics_follow_edits_without_changing_disk()
+-> Result<(), Box<dyn std::error::Error>> {
     let temp = TempDirectory::new("enum-values-overlay");
     let disk = "program T; type Phase = enum First = 1; Second = 2; end enum; begin end.";
     let path = temp.write("enum.fpas", disk);
@@ -32,15 +33,13 @@ fn enum_values_overlay_diagnostics_follow_edits_without_changing_disk() {
         if version == 1 {
             service
                 .documents_mut()
-                .open_document(&path, version, source)
-                .expect("open overlay");
+                .open_document(&path, version, source)?;
         } else {
             service
                 .documents_mut()
-                .apply_full_text(&path, version, source)
-                .expect("edit overlay");
+                .apply_full_text(&path, version, source)?;
         }
-        let analysis = service.analyze_document(&path).expect("overlay analysis");
+        let analysis = service.analyze_document(&path)?;
         match expected {
             Some(code) => {
                 assert_eq!(
@@ -58,5 +57,6 @@ fn enum_values_overlay_diagnostics_follow_edits_without_changing_disk() {
             ),
         }
     }
-    assert_eq!(std::fs::read_to_string(&path).expect("disk source"), disk);
+    assert_eq!(std::fs::read_to_string(&path)?, disk);
+    Ok(())
 }

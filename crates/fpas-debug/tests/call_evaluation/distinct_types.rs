@@ -99,7 +99,8 @@ fn imported_distinct_names_follow_the_source_import_form() {
     let mut default_alias =
         DebugSession::new(linked("program Consumer; uses Ids as IdsUnit; begin end."))
             .expect("session");
-    for visible in ["IdsUnit.UserId"] {
+    {
+        let visible = "IdsUnit.UserId";
         assert_eq!(
             default_alias
                 .evaluate(&wrap(visible), None)

@@ -67,17 +67,12 @@ compiled units. AP28 changes no language syntax or semantics.
 
 ## Verification
 
-Formatting, the Rust build, the full workspace test suite and TypeScript
-compilation pass. The AP28 Extension Host acceptance checks pass, including
-applied rename and public-view refresh. Both specification and standards reviews
-are complete. The full editor suite and strict Clippy gate still encounter the
-independent findings listed below.
+Formatting, the Rust build, the full workspace test suite, TypeScript compilation,
+the full editor suite and strict workspace Clippy pass. The AP28 Extension Host
+acceptance checks include applied rename and successive public-view refreshes.
+Both specification and standards reviews are complete.
 
-## Independent follow-ups
-
-- The existing debugger evaluation host fixture searches for an unqualified
-  `WriteLn(Offset)` breakpoint although its source contains `Console.WriteLn`.
-  Align that fixture's breakpoint selection in debugger-owned work.
-- Existing strict-Clippy findings in array sorting, editor navigation/intellisense
-  and older editor tests require their own cleanup. They are independent of this
-  tooling delivery.
+Debugger fixtures use qualified console calls, scoped typed function-task handles
+and executable-catalog names for forbidden-effect checks. Clippy repairs preserve
+behavior and assertions; local lint expectations document proven runtime and
+catalog invariants without changing workspace lint policy.

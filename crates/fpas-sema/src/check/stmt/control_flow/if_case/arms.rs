@@ -97,7 +97,7 @@ impl Checker {
                                 std::slice::from_ref(&case_ty),
                             ) && !self.pattern_row_is_useful(
                                 std::slice::from_ref(&row),
-                                &[previous.clone()],
+                                std::slice::from_ref(previous),
                                 std::slice::from_ref(&case_ty),
                             ))
                     }) {

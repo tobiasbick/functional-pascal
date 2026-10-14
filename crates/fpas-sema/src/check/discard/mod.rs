@@ -50,7 +50,6 @@ impl Checker {
                 "Call the procedure directly without `discard`.",
                 span,
             );
-            return;
         }
     }
 }

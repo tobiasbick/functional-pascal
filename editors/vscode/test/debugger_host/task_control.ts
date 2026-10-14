@@ -39,8 +39,10 @@ export async function verifyTaskControl(
     "end function;",
     "",
     "begin",
-    "  const Pending: task := go Work();",
-    "  Console.WriteLn(Tasks.Wait(Pending));",
+    "  scope",
+    "    const Pending: task of integer := go Work();",
+    "    Console.WriteLn(Tasks.Wait(Pending));",
+    "  end scope;",
     "end.",
     ""
   ];

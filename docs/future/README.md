@@ -9,8 +9,6 @@ Current implemented behavior belongs under `docs/pascal/`, not here.
 | Area | Plan | Scope |
 |------|------|-------|
 | Language | [Strict ISO/IEC 14977 grammar](iso-14977-grammar.md) | Open decision on grammar authority, strict notation, and automated drift checks |
-| Language | [Syntax improvement implementation plan](improve-syntax/README.md) | Pascal-family syntax changes, explicit contracts, structured task scopes; one directory per package (AP01–AP29) with individually verifiable work packages, dependencies, and regression checks |
-| Editor and LSP | [Structured editing](improve-syntax/ap28-structured-editing/structured-editing.md) | AP28 tooling scope: source edits and public-signature views derived from shared declarations |
 | Standard library | [Standard library roadmap](std-roadmap.md) | Future `Std.*` units and longer-term stdlib direction |
 | Networked applications | [Networked application platform](networked-applications/README.md) | Storage, security, concurrency, transports, interactive clients, operations, and distributed nodes |
 | WebDAV | [WebDAV](webdav.md) | Deferred WebDAV client and server ideas |
@@ -18,6 +16,8 @@ Current implemented behavior belongs under `docs/pascal/`, not here.
 
 ## Ideas without an implementation plan
 
+- [FPAS 2 language directions](fpas2-language-directions.md): retained design questions;
+  no implementation is scheduled. Selected work uses the [AP workflow](improve-syntax/README.md).
 - [Hardware information](hardware-information.md): access to CPU parallelism, RAM, and related
   hardware information; recorded as an idea only.
 - [Graphics and 3D rendering](graphics.md): runtime, standard-library, build, and language gaps
@@ -34,6 +34,7 @@ Current implemented behavior belongs under `docs/pascal/`, not here.
 
 | Area | Document | Scope |
 |------|----------|-------|
+| Planning | [AP workflow and templates](improve-syntax/README.md) | Empty package index, reusable decision/implementation work packages, dependencies and completion checks |
 | Compiler | [Panic and language-limit follow-ups](compiler-panic-followups.md) | Intake for newly discovered compiler panics and language limitations |
 | Dogfooding | [Dogfooding gaps](dogfooding-gaps.md) | Intake for gaps found while writing agent helper scripts in FPAS |
 

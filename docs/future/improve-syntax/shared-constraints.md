@@ -1,99 +1,51 @@
 # Shared constraints and regression checks
 
-See the [steering document](README.md) for package completion and language
-gates, and [development-process.md](development-process.md) for the required
-checks per work package. This document supplies cross-package checks, not a
-second implementation backlog.
+These checks supplement each work package's verification list and the
+[development process](development-process.md). They are not a second backlog
+or language specification. Apply the relevant boundaries when completing a
+package; name any intentional behavior change in its approved contract.
 
-The regression checks below are applied when a package is marked complete, in
-addition to the verification list of each of its work packages.
+## Planning boundaries
 
-## Per-package regression checks
+- Use the [current handbook](../../pascal/README.md) and
+  [grammar](../../specs/grammar.ebnf) as the implemented baseline.
+- Keep unresolved language choices explicit. Do not approve one indirectly
+  through an implementation detail, dependency update or source migration.
+- Prefer one canonical contract and established Pascal-family terminology.
+  Do not add a parallel syntax, compatibility mode or speculative abstraction.
+- Preserve evaluation count, ordering, effects and ownership unless the agreed
+  scope changes them. Separate value transformation from caller mutation,
+  expected error data from runtime failure, and completion from result retrieval.
+- Keep checks at the owning public boundary and reuse shared implementations.
+  Check parser recovery, diagnostics, runtime and tooling where they expose
+  different observable risks.
 
-| Area | Test case | Required result |
-|------|-------|-----------------|
-| Arguments | Two same-typed path parameters | Visible role mapping; invalid names rejected |
-| Mutation | Local parameter copy versus caller variable | Only explicitly authorized caller mutation escapes |
-| Enums | Add a closed-enum variant | Missing cases identified explicitly |
-| Imports | Introduce a colliding helper | Qualified calls retain their target |
-| Dot calls | Declare a free function named like a standard operation | The dot call keeps its catalog or member target |
-| Native type operations | Use the complete built-in catalog without imports | Operations remain available; the five former helper units provide no parallel public API |
-| Catalog coverage | Check every currently published native entry against the handbooks | Names, receiver shapes, signatures, constraints, errors, and evaluation rules match; removed aliases stay absent |
-| Booleans | `X > 0 and Y > 0`; `A and B or C` | First parses as two comparisons; second asks for parentheses |
-| Discard | Unused `Result` from a cleanup call | Rejected without `discard`; accepted with it |
-| Blocks | Nested conditionals and endings | Unambiguous branch ownership and useful recovery |
-| Domain types | Swap UserId and OrderId | Type mismatch rejected |
-| Subranges | Convert dynamic input to Percent | Out-of-range input cannot bypass checks |
-| Contracts | Clamp with inverted bounds | Precondition violation detected |
-| Scopes | Scoped child task and detached task | Ownership and completion remain explicit |
-| Properties | Sort idempotence and encoding round-trip | Existing test mechanisms express the property |
+## Regression boundaries
 
-Do not invent native test syntax for these tests.
+| Area | What to verify when affected |
+| --- | --- |
+| Arguments and calls | Parameter roles, named/positional rules, evaluation order and invalid argument diagnostics |
+| Bindings and mutation | Read-only storage, explicit caller writes, aliases, callback effects and aggregate sharing |
+| Names and imports | Qualified identity, collisions, visibility, callable labels and cached-unit consumers |
+| Native operations | Published names, receiver shapes, constraints and errors agree with the current type handbooks |
+| Patterns and case | Payload binding, closed-type coverage, constants, reachability and statement/expression consistency |
+| Numeric and domain types | Type identity, inference, bounds, overflow and consistent checking/folding/runtime behavior |
+| Blocks and literals | Nested ownership, lexical decoding, source spans, recovery and formatting round trips |
+| Contracts and error handling | Allowed expressions, return timing, propagation, expected errors and preserved effects |
+| Tasks and shared resources | Admission, ownership, cancellation, wait priorities, result consumption and cleanup |
+| Projects and artifacts | Fresh and reused source-adjacent sidecars, interface identity and correct invalidation |
+| Editor and CLI | Unsaved source, diagnostics, formatting, navigation, templates and public signatures |
+| Migration | FPAS files, embedded fixtures, generators, generated API declarations, skills and handbook examples |
 
-## Cross-package rules and remaining details
+For each changed contract, identify positive, negative and boundary cases that
+can distinguish correct behavior from a credible regression. Reuse suitable
+existing tests. Use normal FPAS test programs and existing Rust test mechanisms;
+do not add native test syntax or model-based acceptance gates.
 
-| Concern | Required distinction | Open details |
-|---------|----------------------|--------------|
-| Bindings | Immutable name versus mutable/shared value | Binding, aggregate-write, and capture rules are delivered in [AP16](ap16-immutable-and-mutable-bindings/README.md); shared handles retain their resource semantics |
-| Constants | Computed initialization versus compile-time constant | Case-label rules are delivered in [AP16.1](ap16-immutable-and-mutable-bindings/01-computed-const-bindings.md); subrange bounds use the same classification in [AP18.1](ap18-subrange-types/01-subrange-declarations.md) |
-| Parameters | Read-only parameter versus `var` caller mutation | See [AP17](ap17-visible-caller-mutation/README.md) |
-| Patterns | Explicit binding versus literal/constant comparison | Scalar guard bindings, shadowing, constructor lookup, and recursive coverage are delivered in [AP20](ap20-nested-patterns-and-explicit-bindings/README.md#decisions); closed-enum `else` rejection is delivered in [AP03](ap03-explicit-closed-enum-cases/README.md) |
-| Types | One `of` application form for built-in and user generic types | None; see [AP24](ap24-generic-data-structures/README.md) |
-| Arguments | Fully positional versus fully named | None; see [AP09](ap09-named-arguments/README.md) |
-| Records | Typed structural construction versus factory | None; see [AP10](ap10-typed-record-construction/README.md) |
-| Domain types | Subrange restriction versus distinct identity | Decided in [AP18](ap18-subrange-types/README.md) and [AP19](ap19-distinct-domain-types/README.md) (Q10–Q13) |
-| Contracts | Contract violation versus expected domain error (`Result`) | AP23.1 preconditions and AP23.2 postconditions are complete. Q15–Q17 and the implemented expression/propagated-return rules are recorded in [AP23](ap23-preconditions-and-postconditions/README.md#decisions); no open language decision remains |
-| Scopes | Owned child task versus detached work | Q19, Q20, and Q24–Q27 are recorded in [AP26](ap26-structured-task-scopes/README.md#decisions); no open language decision remains |
+## Current references
 
-## Integrated target example
-
-This example combines [AP03](ap03-explicit-closed-enum-cases/README.md),
-[AP13](ap13-explicit-block-boundaries/README.md),
-[AP20](ap20-nested-patterns-and-explicit-bindings/README.md),
-[AP21](ap21-decision-expressions/README.md),
-[AP24](ap24-generic-data-structures/README.md).
-AP03 closed-enum cases, AP13 block boundaries, AP20 pattern bindings, AP21
-decision expressions, and AP24 generic data declarations are implemented.
-The fragment uses implemented syntax and omits its containing program.
-AP25 is closed; this example uses an ordinary function without a purity claim.
-
-```pascal
-type Lookup of T = enum
-  Found(Value: T);
-  Missing;
-  Failed(Message: string);
-end enum;
-
-function Describe(Response: Lookup of string): string;
-begin
-  return case Response of
-    when Lookup.Found(const Text): 'Found: ' + Text;
-    when Lookup.Missing: 'Not found';
-    when Lookup.Failed(const Message): 'Error: ' + Message;
-  end case;
-end function;
-```
-
-There is no automatic free-function receiver lookup, extra lambda syntax, or
-closed-enum catch-all. Statement and block endings follow the agreed AP13
-rules; the `case` expression syntax follows AP21.
-
-## Design inspiration, not API commitments
-
-| Inspiration | Design idea |
-|-------------|------------------|
-| Pascal | Familiar binding words, `of` type application, subranges, explicit assignment |
-| Delphi | Distinct type declarations (`type X = type Y`), conditional expressions |
-| Ada | Named block endings, restricted ranges, named argument associations |
-| Ada and Swift | Visible mutable arguments at the call site |
-| Eiffel, Dafny, and SPARK | Simple `requires`/`ensures` contracts |
-| Haskell | Generic algebraic data, distinct domain types, nested patterns |
-| Lisp/Scheme | Value-producing decisions, function values, structured editing |
-| Modula | Clear public module contracts |
-| Oberon and Gleam | Fewer language rules and exceptions |
-| Elm | Diagnostics that support concrete corrections |
-| Swift and Kotlin | Structured concurrency scopes for child tasks |
-
-These are design influences, not claims of identical grammar or semantics.
-Before implementation, verify relevant primary references for the selected
-idea and the current FPAS checkout.
+- [Language reference](../../pascal/agent-reference.md)
+- [Built-in type operations](../../pascal/language/types/README.md)
+- [Dot calls](../../pascal/language/functions/fluent-calls.md)
+- [Standard-library implementation touchpoints](../../pascal/std/README.md#shared-implementation-touchpoints)
+- [FPAS test runner](../../pascal/std/testing/test.md)

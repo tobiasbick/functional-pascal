@@ -2,7 +2,9 @@
 
 Status: proposals retained for later evaluation; no implementation is scheduled.
 These are design questions, not approved language changes or the current spec.
-FPAS 1 stabilization belongs to the [syntax plan](improve-syntax/README.md).
+FPAS 1 stabilization is complete. Selected FPAS 2 topics use the
+[AP workflow and templates](improve-syntax/README.md); selecting a topic still
+requires an explicit decision before implementation.
 
 ## Boundary
 
@@ -39,7 +41,7 @@ also require wrapper functions when used as callbacks.
 Consider making declared signatures sufficient to obtain callable values,
 independent of whether implementation uses source code or an intrinsic. Preserve
 static parameter labels, receiver capture by value, var modes and task effects.
-This does not reopen deferred AP12's arbitrary callable-expression chaining.
+Arbitrary callable-expression chaining remains deferred and is outside this topic.
 
 Open questions: which native operations can be bound, variadic operations,
 generic specialization and the cost of consistent compiler/editor support.
@@ -76,10 +78,10 @@ necessary. Until a replacement is agreed, retrieve once and pass the value on.
 
 Explicit-width numeric types and Decimal need a separate coherent numeric
 design, migration and buffer/API assessment. They are not FPAS 1 prerequisites.
-A purity/effects system is not reopened here: [AP25](improve-syntax/ap25-conservative-purity/README.md)
-is rejected and closed. Reconsideration would require a new decision and a
-demonstrated benefit. FPAS currently remains function-oriented with explicit
-binding mutation, rather than a guarantee that every function is pure.
+A purity/effects system was rejected and is not reopened here. Reconsideration
+would require a new decision and a demonstrated benefit. FPAS currently remains
+function-oriented with explicit binding mutation, rather than a guarantee that
+every function is pure.
 
 ## Evaluation before implementation
 

@@ -1,6 +1,6 @@
 //! Fixed operations of built-in types, shared by checking, lowering, and editors.
 //!
-//! **Documentation:** `docs/future/improve-syntax/ap06-dot-call-targets/catalog.md`
+//! **Documentation:** `docs/pascal/language/functions/fluent-calls.md`
 
 mod array;
 mod dictionary;

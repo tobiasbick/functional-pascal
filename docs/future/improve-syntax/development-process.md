@@ -1,152 +1,142 @@
 # Development process
 
-This document defines how the [syntax plan](README.md) is implemented and how
-its status is tracked. It applies to every package and work package in this
-directory, in addition to the repository rules in [AGENTS.md](../../../AGENTS.md).
+This process applies to every package and work package in the
+[AP plan](README.md), together with [AGENTS.md](../../../AGENTS.md).
+Use the [example package](example-apNN-topic/README.md) when creating new work.
 
 ## Terms
 
-- **Package (`APnn`)**: one planned language or tooling change, such as
-  AP13 explicit block boundaries. Each package has its own directory
-  `apNN-<name>/` with a `README.md` entry point.
-- **Work package (`APnn.m`)**: a small, clearly bounded, separately reviewable
-  part of a package. Each work package has its own file in the package
-  directory, numbered in its recommended order (`01-…`, `02-…`).
-- **Decision work package**: a work package whose deliverable is a recorded
-  language decision, not code. It is complete when the user's decision is
-  recorded in the package README and the dependent work package files.
+- A package (`APnn`) groups one planned language, runtime or tooling change.
+  Its directory is `apNN-<topic>/`, with a `README.md` entry point.
+- A work package (`APnn.m`) is a bounded, separately reviewable part of that
+  change. It has one numbered file, such as `01-decision.md` or
+  `02-implementation.md`, in the package directory.
+- A decision work package delivers a recorded user decision rather than code.
+  Its acceptance criterion names the questions that must be resolved.
 
 ## Status tracking
 
-- The central Status column distinguishes decision from delivery: `Decision
-  pending` means a proposal or design choice is unresolved; `Deferred` means
-  the user has parked it, with no scheduled work. Uncertainty alone is not
-  approval or rejection. A deferred package may retain unresolved decisions;
-  its README records the rationale and reopening gate. Optional scope and low
-  priority are qualifiers, not decision statuses. Use the central README's
-  status legend for the remaining labels.
-- The [central README](README.md) is the only package-completion index.
-  A package's Done cell becomes `[x]` only when every work package in its
-  checklist is done.
-- Each package README holds the only checklist of its work packages. A work
-  package checkbox becomes `[x]` when its implementation, migration,
-  documentation, and applicable verification are complete in the working
-  branch. For decision work packages, the recorded decision is the delivery.
-  Known pre-existing check failures must be reported with evidence that they
-  are independent of the work package; failures caused by the delivery keep
-  its checkbox open.
-- Completion checkboxes describe delivered work, not commit or merge status.
-  Git and the pull request track integration separately; uncommitted delivery
-  may be marked complete once the applicable verification is complete.
-- Rejected packages use `—` in the Done column and keep their recorded
-  decision. Work transferred to another plan also uses `—`; its README records
-  the destination and transfer conditions. Neither retains active
-  implementation work packages.
-- Deferred proposals retained in this plan keep `[ ]` for the package and
-  unimplemented work. Their decision work package may be complete when deferral
-  is recorded; retained implementation sketches remain unscheduled and require
-  renewed explicit approval. A closed package may retain a completed decision
-  assessment as rationale, without retaining implementation work packages.
-- Do not add dates, personal or machine metadata, or a chronological change
-  log. Evidence (commands run, results, notable findings) belongs in the pull
-  request description. Completed work-package files state current behavior,
-  implementation ownership, regression coverage and actual open follow-ups.
-  Remove intermediate migration states, superseded rules, branch comparisons,
-  old test-run counts and chronological delivery reports. Keep package and
-  work-package checkboxes consistent with their factual status.
+The [central README](README.md#package-status) owns package completion and the
+status legend. A package's Done cell becomes `[x]` only when every work package
+in its README checklist is complete.
 
-## Branches and pull requests
+Each package README owns the only checklist of its work packages. A work-package
+checkbox becomes `[x]` after its implementation, consumer migration,
+documentation and applicable verification are complete in the working branch.
+For a decision work package, completion means the user's decision is recorded
+in the package README and reflected in dependent work-package files.
 
-1. Pick the next ready work package: every prerequisite listed in its file
-   is merged on `main` (or, for a decision prerequisite, recorded).
-2. Create one branch per work package from the current `main`, for example
-   `syntax/ap06.2-migrate-receiver-calls`. Do not stack a work package branch
-   on another unmerged work package branch.
-3. Before editing code, inspect the owning modules, file sizes, existing
-   features, and tests. List the actual files to create, modify, move, split,
-   or remove in the pull request description.
-4. Implement only that work package. If it turns out to need another work
-   package first, stop and record the dependency instead of folding the other
-   work package in.
-5. Merge only after the complete delivery: implementation, migration of every
-   repository consumer, current documentation, tests, and all required checks
-   (see below).
-6. Mark the work package as done in its package README when delivery is
-   complete, and include that update in the pull request. If it is the last
-   open work package, also mark the package as done in the central README.
+Known pre-existing check failures need evidence that they are independent of
+the delivery. Failures caused by the work package keep its checkbox open.
+Completion describes delivered work, not whether it has been committed,
+merged or pushed. Git and pull requests track integration separately.
 
-When the user selects an integration branch for several work packages, use
-that branch instead of the default branch-per-work-package workflow. Completed
-prerequisites on the selected branch may be used before they are merged into
-`main`.
+`Decision pending` means a required choice is unresolved. `Deferred` means the
+user has parked the proposal with no scheduled implementation; reopening needs
+a new decision. Rejected and transferred packages use `—` in the Done column
+and retain the rationale or linked destination, without active implementation
+work packages. Effort and priority do not replace a decision status.
 
-A package is complete only when all of its work packages are complete.
+Keep planning documents in English. Do not add dates, personal or machine
+metadata, or chronological delivery logs. Commands and results belong in the
+delivery report or pull request. Completed work-package files describe the
+delivered contract, implementation owners, regression coverage and actual open
+follow-ups. Remove intermediate states, superseded rules and stale test counts.
 
-## Dependencies
+## Decision gates
 
-Dependencies in these documents are real prerequisites: a work package needs
-the named behavior, rule, or migration to exist on `main`, or on the user's
-selected integration branch. Packages and work
-packages without a dependency may proceed in any order; do not serialize them
-artificially. Equally, do not split work that only yields a consistent state
-together (for example, removing a syntax form and migrating its last users).
+Before implementation, state the current behavior, proposed replacement,
+preserved behavior, exclusions and acceptance criterion. Record language
+decisions in the owning package README, with their IDs and affected work
+packages. An agreed direction is not a complete specification.
 
-A recurring pattern is:
+List unresolved details under Open decisions and name them as prerequisites of
+the affected work packages. Resolve them with the user before changing syntax,
+semantics or user-facing language specifications. Draft examples stay in this
+plan and are identified as proposals. Check the current checkout before relying
+on any earlier plan or result.
 
-1. introduce a new form additively,
-2. migrate repository sources to it while the old form still works,
-3. remove the old form and diagnose it with the canonical replacement.
+## Dependencies and branches
 
-Each step is mergeable on its own because every intermediate state builds,
-passes the checks, and has accurate documentation.
+1. Pick a ready work package. Each prerequisite must be implemented on `main`,
+   or its required decision must be recorded.
+2. Create a branch from current `main`, for example
+   `codex/ap47.2-implement-topic`. Do not base it on an unmerged work-package
+   branch unless the user selected an integration branch for the campaign.
+3. Inspect owning modules, file sizes, nearby implementations and tests.
+   Before editing, list the actual paths to create, modify, move, split or
+   remove and explain each purpose. Record the scope in the work-package file.
+4. Implement that bounded scope. If another prerequisite is missing, record
+   the dependency and resolve it before continuing dependent work.
+5. Complete migration, documentation, verification and review. Then check off
+   the work package in its package README. If it is the last open part, update
+   the central package row as well.
+6. Commit, push and merge only as authorized by the user. Completion checks
+   still apply before requesting integration.
 
-## Language decisions
+On a user-selected integration branch, completed prerequisites on that branch
+may be used before they are merged into `main`. Independent packages need no
+artificial ordering. Work that only produces a consistent result together
+belongs in one work package.
 
-- **Agreed direction** records a design direction, not a complete grammar.
-  **Proposal** requires an explicit decision before language implementation.
-- Open details in either category must be resolved with the user before
-  changing syntax or semantics. Such details are listed in the package README
-  under **Open decisions**; the affected work package names them in its
-  prerequisites.
-- Code fragments in open packages are draft syntax unless explicitly identified
-  as current examples. Completed packages describe implemented behavior and
-  link to its handbook. Check the checkout before implementing an open package.
+## Migration
 
-## Migration rules
+Preserve behavior unless the user explicitly agrees to a semantic change.
+Implement the selected contract without a compatibility layer or a shipped
+legacy parser mode. Choose intermediate steps only when each step builds,
+passes its applicable checks and has accurate current documentation.
 
-- Migration preserves behavior unless a semantic change is explicitly agreed.
-- Migrate every repository consumer in the same work package: `.fpas` sources
-  under `lib/`, `apps/`, `examples/`, and `tests/`; generated declarations under
-  `lib/api/`; Rust-embedded fixtures; formatter goldens; CLI templates; editor
-  snippets, grammars, completion, and auto-import; benchmark source
-  generators; repository skills; and documentation examples.
-- Use resolved semantic information for rewrites where meaning depends on name
-  resolution, not textual substitution.
-- Temporary conversion tools may be used on the work package branch. They are
-  not merged, and no legacy parser mode ships.
+Inspect and migrate every affected consumer: `lib/`, `apps/`, `examples/`,
+`tests/`, generated `lib/api/` declarations, Rust-embedded fixtures, formatter
+goldens, CLI templates, editor snippets and grammars, completion and auto-import,
+benchmark source generators, repository skills and documentation examples.
+Use resolved semantic information when a rewrite depends on name resolution.
+Temporary conversion helpers stay outside tracked deliverables.
+
+## Review
+
+Review the final change against both the approved contract (Spec) and repository
+rules, module ownership and test quality (Standards). Record the selected work
+packages and fixed baseline/target revisions. Confirm findings with concrete
+evidence, expected versus actual behavior, an owning path and a bounded repair.
+Keep unresolved suspicions out of the required repair list.
+
+Repair confirmed findings at their owning boundary, run the relevant checks and
+review the result again. Review completion does not authorize a language change,
+commit, push or merge. Preserve any coverage limits in the delivery report.
 
 ## Required checks
 
-Run the checks that apply before requesting a merge, and record the results in
-the pull request:
+Choose checks from the actual change and record what ran and its result:
 
-- `cargo fmt`, `cargo build`, and `cargo test --workspace`.
-- `fpas fmt --check lib apps examples tests` when FPAS sources, the formatter,
-  or the grammar change (see [fmt style](../../pascal/tools/fmt-style.md)).
-- `fpas test tests/suite.fpasprj` for language, runtime, or library changes.
-- `fpas check` for affected example and app projects.
-- `node editors/vscode/scripts/verify-grammar.mjs` when keywords or
-  highlighting change.
-- Relative Markdown links in changed documents resolve; `git diff --check`.
-- The work package's own verification list and, at package completion, the
-  package acceptance criterion and the [shared regression checks](shared-constraints.md).
+- Rust changes: `cargo fmt`, `cargo build`, `cargo test --workspace`.
+- FPAS source, formatter or grammar changes:
+  `fpas fmt --check lib apps examples tests`; see
+  [formatter style](../../pascal/tools/fmt-style.md).
+- Language, runtime or library changes: `fpas test tests/suite.fpasprj`.
+- Affected app and example projects: `fpas check <project.fpasprj>`.
+- Editor keyword or highlighting changes:
+  `node editors/vscode/scripts/verify-grammar.mjs`, plus affected editor tests.
+- Documentation changes: relative links, stated commands and examples;
+  `git diff --check`.
+- Every work package: its own verification list. At package completion, also
+  check the package acceptance criterion and
+  [shared regression boundaries](shared-constraints.md).
 
-There is no GitHub Actions CI in this repository; checks run locally.
+Docs-only changes need document validation, not an unrelated build or test run.
+There is no GitHub Actions CI; checks run locally. Existing tests may provide
+sufficient coverage when their observable contract matches the change. Avoid
+duplicate tests that only restate an implementation.
 
-## Documentation rules
+## Documentation
 
-- `docs/pascal/` and `docs/specs/grammar.ebnf` describe only implemented
-  behavior. Update them in the work package that implements the behavior.
-- Planned behavior stays in this directory.
-- Rust `///` comments that cite `docs/pascal/…` must match the current path.
-- Each work package states which current documentation it changes.
+Planned behavior stays under `docs/future/`. Current behavior belongs under
+`docs/pascal/` and `docs/specs/grammar.ebnf`; update it with the implementation.
+Every work package names the documentation it affects. Rust doc comments that
+cite handbook files must point to their current paths.
+
+Language and authoring changes also update or confirm the
+[compact reference](../../pascal/agent-reference.md) under its
+[maintenance guide](../../pascal/agent-reference-maintenance.md).
+Reuse its existing executable example test. For `Std.*` changes, check the
+[shared implementation touchpoints](../../pascal/std/README.md#shared-implementation-touchpoints).

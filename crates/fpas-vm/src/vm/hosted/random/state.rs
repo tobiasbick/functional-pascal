@@ -1,6 +1,6 @@
 //! Deterministic pseudorandom state and integer range sampling.
 
-use rand::{RngCore, SeedableRng};
+use rand::{Rng, SeedableRng};
 use rand_chacha::ChaCha12Rng;
 
 const REAL_SCALE: f64 = 1.0 / ((1_u64 << 53) as f64);

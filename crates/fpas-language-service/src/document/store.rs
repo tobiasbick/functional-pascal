@@ -201,7 +201,7 @@ impl DocumentStore {
 
     fn next_snapshot_revision(&self, path: &Path) -> Result<u64, LanguageServiceError> {
         self.next_snapshot_revision
-            .fetch_update(Ordering::AcqRel, Ordering::Acquire, |revision| {
+            .try_update(Ordering::AcqRel, Ordering::Acquire, |revision| {
                 revision.checked_add(1)
             })
             .map(|revision| revision + 1)

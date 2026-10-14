@@ -120,7 +120,7 @@ impl GroupRegistry {
             return Err("At most 4096 task groups may be live; close existing groups".into());
         }
         let id = NEXT
-            .fetch_update(Ordering::Relaxed, Ordering::Relaxed, |id| {
+            .try_update(Ordering::Relaxed, Ordering::Relaxed, |id| {
                 (id < (TAG | !MASK)).then(|| id + 1)
             })
             .map_err(|_| "TaskGroup identity space exhausted".to_string())?;

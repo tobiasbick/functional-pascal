@@ -50,7 +50,7 @@ impl CaseRegistry {
             return Err("At most 4096 unused WaitCase handles may belong to one VM; select or close existing cases".into());
         }
         let handle = NEXT
-            .fetch_update(Ordering::Relaxed, Ordering::Relaxed, |id| {
+            .try_update(Ordering::Relaxed, Ordering::Relaxed, |id| {
                 (id & MASK == TAG && id < (TAG | !MASK)).then(|| id + 1)
             })
             .map_err(|_| "WaitCase identity space is exhausted".to_string())?;

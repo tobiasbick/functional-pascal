@@ -29,18 +29,18 @@ blake3 = "1.8.5"
 caseless = "0.2.2"
 crossterm = "0.29"
 glob = "0.3"
-getrandom = "0.3"
-libc = "0.2"
+getrandom = "0.4.3"
+libc = "0.2.190"
 mimalloc = "0.1"
-rand = "0.9"
-rand_chacha = "0.9"
-rcgen = { version = "0.14.9", default-features = false, features = ["crypto", "pem", "ring"] }
-rustls = { version = "0.23.43", default-features = false, features = ["ring", "std", "tls12"] }
-rustls-platform-verifier = "0.7.0"
+rand = "0.10.3"
+rand_chacha = "0.10.0"
+rcgen = { version = "0.14.10", default-features = false, features = ["crypto", "pem", "ring"] }
+rustls = { version = "0.23.45", default-features = false, features = ["ring", "std", "tls12"] }
+rustls-platform-verifier = "0.7.1"
 serde = { version = "1", features = ["derive"] }
 # Objects keep insertion order so Std.Json agrees with ordered FPAS dictionaries.
-serde_json = { version = "1", features = ["preserve_order"] }
+serde_json = { version = "1.0.154", features = ["preserve_order"] }
 socket2 = "0.6"
-toml = "0.9"
+toml = "1.1.8"
 unicode-segmentation = "1"
 unicode-width = "0.2"

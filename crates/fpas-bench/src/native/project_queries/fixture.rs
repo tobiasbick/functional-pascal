@@ -30,7 +30,7 @@ impl Fixture {
             if unit > 0 {
                 source.push_str(", ");
             }
-            write!(source, "Bench.U{unit}").map_err(|error| error.to_string())?;
+            write!(source, "Bench.U{unit} as U{unit}").map_err(|error| error.to_string())?;
             std::fs::write(directory.join(format!("unit{unit}.fpas")), format!("unit Bench.U{unit};\npublic function Answer{unit}(): integer;\nbegin return {unit}; end function;\nend unit;\n")).map_err(|error| error.to_string())?;
         }
         if units > 0 {
@@ -38,8 +38,11 @@ impl Fixture {
         }
         source.push_str("begin\nconst Count: integer := 'é😀'.Length();\n");
         for unit in 0..units {
-            writeln!(source, "const Value{unit}: integer := Answer{unit}();")
-                .map_err(|error| error.to_string())?;
+            writeln!(
+                source,
+                "const Value{unit}: integer := U{unit}.Answer{unit}();"
+            )
+            .map_err(|error| error.to_string())?;
         }
         source.push_str("end.\n");
         let main = directory.join("main.fpas");

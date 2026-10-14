@@ -1,6 +1,6 @@
 program TuiResizeMessageTest;
 
-uses Std.Test, Std.Tui;
+uses Std.Test as Test, Std.Tui as Tui;
 
 type ResizeModel = record
   Events: array of string;
@@ -16,17 +16,17 @@ begin
 end function;
 
 begin
-  var App: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(20, 6));
-  AssertEquals(20, App.SurfaceSnapshot().Width);
-  AssertEquals(6, App.SurfaceSnapshot().Height);
-  App.Inject(TuiMsg.Tick(1));
-  App.InjectResizeForTest(TuiSize.Create(32, 10));
-  App.Inject(TuiMsg.Tick(2));
+  var App: Tui.TuiApplication := Tui.TuiApplication.OpenForTest(Tui.TuiSize.Create(20, 6));
+  Test.AssertEquals(20, App.SurfaceSnapshot().Width);
+  Test.AssertEquals(6, App.SurfaceSnapshot().Height);
+  App.Inject(Tui.TuiMsg.Tick(1));
+  App.InjectResizeForTest(Tui.TuiSize.Create(32, 10));
+  App.Inject(Tui.TuiMsg.Tick(2));
   var Model: ResizeModel := ResizeModel(Events := [], ResizeWidth := 0, ResizeHeight := 0, HostWidthAtResize := 0, HostHeightAtResize := 0);
-  Model := App.RunIterations(Model, function(State: ResizeModel; Msg: TuiMsg; Cmd: TuiCmdOutput): ResizeModel begin
-    Cmd.Set(TuiCmd.NoCommand);
+  Model := App.RunIterations(Model, function(State: ResizeModel; Msg: Tui.TuiMsg; Cmd: Tui.TuiCmdOutput): ResizeModel begin
+    Cmd.Set(Tui.TuiCmd.NoCommand);
     case Msg of
-      when TuiMsg.Tick(const Delta):
+      when Tui.TuiMsg.Tick(const Delta):
         begin
           if Delta = 1 then
             begin
@@ -36,30 +36,30 @@ begin
 
           return PushEvent(State, 'tick-2');
         end;
-      when TuiMsg.Resize(const Size):
+      when Tui.TuiMsg.Resize(const Size):
         begin
-          const Snapshot: TuiSurfaceSnapshot := App.SurfaceSnapshot();
+          const Snapshot: Tui.TuiSurfaceSnapshot := App.SurfaceSnapshot();
           return ResizeModel(Events := State.Events.Concat(['resize']), ResizeWidth := Size.Width, ResizeHeight := Size.Height, HostWidthAtResize := Snapshot.Width, HostHeightAtResize := Snapshot.Height);
         end;
-      when TuiMsg.Started, TuiMsg.Key(_), TuiMsg.Pointer(_), TuiMsg.FocusChanged(_, _), TuiMsg.Action(_, _), TuiMsg.TextChanged(_, _, _, _), TuiMsg.TextAreaChanged(_, _, _, _, _), TuiMsg.CheckChanged(_, _, _), TuiMsg.SelectionChanged(_, _, _), TuiMsg.ScrollChanged(_, _, _), TuiMsg.MenuChanged(_, _, _), TuiMsg.BackgroundFailed(_, _, _, _, _, _), TuiMsg.QuitRequested:
+      when Tui.TuiMsg.Started, Tui.TuiMsg.Key(_), Tui.TuiMsg.Pointer(_), Tui.TuiMsg.FocusChanged(_, _), Tui.TuiMsg.Action(_, _), Tui.TuiMsg.TextChanged(_, _, _, _), Tui.TuiMsg.TextAreaChanged(_, _, _, _, _), Tui.TuiMsg.CheckChanged(_, _, _), Tui.TuiMsg.SelectionChanged(_, _, _), Tui.TuiMsg.ScrollChanged(_, _, _), Tui.TuiMsg.MenuChanged(_, _, _), Tui.TuiMsg.BackgroundFailed(_, _, _, _, _, _), Tui.TuiMsg.QuitRequested:
         begin
           return State;
         end;
     end case;
-  end function, function(State: ResizeModel): TuiElement begin
-    return TuiElementBuilders.MakeLabel('resize');
+  end function, function(State: ResizeModel): Tui.TuiElement begin
+    return Tui.TuiElementBuilders.MakeLabel('resize');
   end function, 3, 0);
-  AssertEquals(3, Model.Events.Length());
-  AssertEquals('tick-1', Model.Events[0]);
-  AssertEquals('resize', Model.Events[1]);
-  AssertEquals('tick-2', Model.Events[2]);
-  AssertEquals(32, Model.ResizeWidth);
-  AssertEquals(10, Model.ResizeHeight);
-  AssertEquals(32, Model.HostWidthAtResize);
-  AssertEquals(10, Model.HostHeightAtResize);
-  AssertEquals(32, App.SurfaceSnapshot().Width);
-  AssertEquals(10, App.SurfaceSnapshot().Height);
+  Test.AssertEquals(3, Model.Events.Length());
+  Test.AssertEquals('tick-1', Model.Events[0]);
+  Test.AssertEquals('resize', Model.Events[1]);
+  Test.AssertEquals('tick-2', Model.Events[2]);
+  Test.AssertEquals(32, Model.ResizeWidth);
+  Test.AssertEquals(10, Model.ResizeHeight);
+  Test.AssertEquals(32, Model.HostWidthAtResize);
+  Test.AssertEquals(10, Model.HostHeightAtResize);
+  Test.AssertEquals(32, App.SurfaceSnapshot().Width);
+  Test.AssertEquals(10, App.SurfaceSnapshot().Height);
   App.Close();
-  const Probe: TuiWorkingSurface := TuiWorkingSurface.Create(TuiSize.Create(1, 1));
-  AssertEquals(2, Probe.Slot);
+  const Probe: Tui.TuiWorkingSurface := Tui.TuiWorkingSurface.Create(Tui.TuiSize.Create(1, 1));
+  Test.AssertEquals(2, Probe.Slot);
 end.

@@ -7,28 +7,28 @@ requiring a nested `case` per key.
 ```pascal
 program Example;
 
-uses Std.Console, Std.Toml, Std.Toml.Fields;
+uses Std.Console as Console, Std.Toml as Toml, Std.Toml.Fields as TomlFields;
 
 function ReadPort(Text: string): result of (integer, string);
 begin
-  const Fields: dict of string to TomlValue := try ParseTable(Text);
-  const Allowed: boolean := try RequireOnlyFields(Fields, ['host', 'port']);
-  return IntegerField(Fields, 'port');
+  const Fields: dict of string to Toml.TomlValue := try TomlFields.ParseTable(Text);
+  const Allowed: boolean := try TomlFields.RequireOnlyFields(Fields, ['host', 'port']);
+  return TomlFields.IntegerField(Fields, 'port');
 end function;
 
 begin
   case ReadPort('host = ''localhost''' + string.Chr(10) + 'port = 8080') of
     when Ok(const Port):
-      WriteLn(Port);
+      Console.WriteLn(Port);
     when Error(const Message):
-      WriteLn('invalid configuration: ' + Message);
+      Console.WriteLn('invalid configuration: ' + Message);
   end case;
 end.
 ```
 
 ## Importing and names
 
-`uses Std.Toml.Fields;` provides the accessors. Values and tables keep the
+`uses Std.Toml.Fields as Fields;` provides the accessors through `Fields.Name`. Values and tables keep the
 `Std.Toml` types, so programs usually import both units.
 
 ## Quick reference

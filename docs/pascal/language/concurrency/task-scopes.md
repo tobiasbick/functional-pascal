@@ -8,7 +8,7 @@ Formal syntax: [`grammar.ebnf`](../../../specs/grammar.ebnf) (`scope_stmt`).
 ```pascal
 program ScopeExample;
 
-uses Std.Console, Std.Tasks;
+uses Std.Console as Console, Std.Tasks as Tasks;
 
 function Fetch(Id: integer): integer;
 begin
@@ -19,7 +19,7 @@ begin
   scope
     const A: task of integer := go Fetch(1);
     const B: task of integer := go Fetch(2);
-    WriteLn(Wait(A) + Wait(B));
+    Console.WriteLn(Tasks.Wait(A) + Tasks.Wait(B));
   end scope;
 end.
 ```
@@ -115,14 +115,14 @@ begin
   scope
     const A: task of result of (string, string) := go Load(Left);
     const B: task of result of (string, string) := go Load(Right);
-    const First: string := try Wait(A);
-    const Second: string := try Wait(B);
+    const First: string := try Tasks.Wait(A);
+    const Second: string := try Tasks.Wait(B);
     return Ok(First + Second);
   end scope;
 end function;
 ```
 
-If `try Wait(A)` propagates an error, `B` is cancelled before `LoadBoth` returns.
+If `try Tasks.Wait(A)` propagates an error, `B` is cancelled before `LoadBoth` returns.
 
 Discarding a handle or Result data is permitted. It deliberately gives up
 retrieval; the scope still monitors unexpected child panic/runtime failures.
@@ -155,7 +155,7 @@ function Total(Jobs: array of task of integer): integer;
 begin
   var Sum: integer := 0;
   for Job: task of integer in Jobs do
-    Sum := Sum + Wait(Job);
+    Sum := Sum + Tasks.Wait(Job);
   end for;
   return Sum;
 end function;
@@ -165,7 +165,7 @@ begin
     var Jobs: array of task of integer := [];
     Jobs.PushInPlace(go Fetch(1));
     Jobs.PushInPlace(go Fetch(2));
-    WriteLn(Total(Jobs));
+    Console.WriteLn(Total(Jobs));
   end scope;
 end.
 ```

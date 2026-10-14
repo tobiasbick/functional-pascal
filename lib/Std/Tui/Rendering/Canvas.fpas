@@ -1,28 +1,29 @@
 unit Std.Tui.Rendering.Canvas;
 
 uses
-  Std.Console, Std.Tui.Cells.Cell, Std.Tui.Cells.StyleRole, Std.Tui.Geometry.Point,
-  Std.Tui.Geometry.Rect, Std.Tui.Geometry.Size, Std.Tui.Rendering.Surface;
+  Std.Console as Console, Std.Tui.Cells.Cell as CellsCell, Std.Tui.Cells.StyleRole as StyleRole,
+  Std.Tui.Geometry.Point as Point, Std.Tui.Geometry.Rect as Rect,
+  Std.Tui.Geometry.Size as GeometrySize, Std.Tui.Rendering.Surface as RenderingSurface;
 
 // Private frame-scoped drawing capability over one working surface.
 public type TuiCanvas = record
   // Working surface targeted by the canvas.
-  public Surface: TuiWorkingSurface;
+  public Surface: RenderingSurface.TuiWorkingSurface;
   // Clipping rectangle in surface coordinates.
-  public Clip: TuiRect;
+  public Clip: Rect.TuiRect;
   // Canvas origin in surface coordinates.
-  public Origin: TuiPoint;
+  public Origin: Point.TuiPoint;
 
   // Creates a canvas clipped to `Bounds` intersected with the surface.
   //
   // Parameters:
   // - `Surface`: Working surface affected by the operation.
   // - `Bounds`: Rectangle affected by the operation.
-  public static function Create(Surface: TuiWorkingSurface; Bounds: TuiRect): TuiCanvas;
+  public static function Create(Surface: RenderingSurface.TuiWorkingSurface; Bounds: Rect.TuiRect): TuiCanvas;
   begin
-    const Size: TuiSize := Surface.Size();
-    const SurfaceBounds: TuiRect := TuiRect.Create(0, 0, Size.Width, Size.Height);
-    return TuiCanvas(Surface := Surface, Clip := Bounds.Intersect(SurfaceBounds), Origin := TuiPoint.Create(0, 0));
+    const Size: GeometrySize.TuiSize := Surface.Size();
+    const SurfaceBounds: Rect.TuiRect := Rect.TuiRect.Create(0, 0, Size.Width, Size.Height);
+    return TuiCanvas(Surface := Surface, Clip := Bounds.Intersect(SurfaceBounds), Origin := Point.TuiPoint.Create(0, 0));
   end function;
 
   // Creates a canvas with an explicit surface origin and local clip rectangle.
@@ -31,7 +32,11 @@ public type TuiCanvas = record
   // - `Surface`: Working surface affected by the operation.
   // - `Origin`: Canvas origin in surface coordinates.
   // - `Clip`: Clipping rectangle for drawing.
-  public static function CreateLocal(Surface: TuiWorkingSurface; Origin: TuiPoint; Clip: TuiRect): TuiCanvas;
+  public static function CreateLocal(
+  Surface: RenderingSurface.TuiWorkingSurface;
+  Origin: Point.TuiPoint;
+  Clip: Rect.TuiRect
+): TuiCanvas;
   begin
     return TuiCanvas(Surface := Surface, Clip := Clip, Origin := Origin);
   end function;
@@ -41,12 +46,13 @@ public type TuiCanvas = record
   // Parameters:
   // - `Self`: Receiver value operated on by the method.
   // - `LocalBounds`: Bounds expressed in the parent canvas coordinate system.
-  public function Child(Self: TuiCanvas; LocalBounds: TuiRect): TuiCanvas;
+  public function Child(Self: TuiCanvas; LocalBounds: Rect.TuiRect): TuiCanvas;
   begin
-    const Visible: TuiRect := LocalBounds.Intersect(Self.Clip);
-    const ChildClip: TuiRect := TuiRect.Create(Visible.X - LocalBounds.X, Visible.Y - LocalBounds.Y, Visible.Width, Visible.Height);
-    return TuiCanvas.CreateLocal(Self.Surface, TuiPoint.Create(Self.Origin.X + LocalBounds.X, Self.Origin.Y +
-                                                                                              LocalBounds.Y), ChildClip);
+    const Visible: Rect.TuiRect := LocalBounds.Intersect(Self.Clip);
+    const ChildClip: Rect.TuiRect := Rect.TuiRect.Create(Visible.X - LocalBounds.X, Visible.Y -
+                                                                                    LocalBounds.Y, Visible.Width, Visible.Height);
+    return TuiCanvas.CreateLocal(Self.Surface, Point.TuiPoint.Create(Self.Origin.X + LocalBounds.X, Self.Origin.Y +
+                                                                                                    LocalBounds.Y), ChildClip);
   end function;
 
   // Paints one cell in local coordinates; clipped and wide-glyph aware.
@@ -55,7 +61,7 @@ public type TuiCanvas = record
   // - `Self`: Receiver value operated on by the method.
   // - `Position`: Position in terminal-cell coordinates.
   // - `Cell`: Terminal cell written by the operation.
-  public procedure PutCell(Self: TuiCanvas; Position: TuiPoint; Cell: TuiCell);
+  public procedure PutCell(Self: TuiCanvas; Position: Point.TuiPoint; Cell: CellsCell.TuiCell);
   begin
     if not Self.Clip.Contains(Position) then
       begin
@@ -63,14 +69,16 @@ public type TuiCanvas = record
       end;
     end if;
     const CellWidth: integer := Cell.Width();
-    if (CellWidth = 2) and not Self.Clip.Contains(TuiPoint.Create(Position.X + 1, Position.Y)) then
+    if (CellWidth = 2) and not Self.Clip.Contains(Point.TuiPoint.Create(Position.X + 1, Position.Y)) then
       begin
-        Self.Surface.PutCell(TuiPoint.Create(Self.Origin.X + Position.X, Self.Origin.Y + Position.Y), TuiCell.Create(' ', TuiStyleRole.Normal));
+        Self.Surface.PutCell(Point.TuiPoint.Create(Self.Origin.X + Position.X, Self.Origin.Y +
+                                                                               Position.Y), CellsCell.TuiCell.Create(' ', StyleRole.TuiStyleRole.Normal));
         return;
       end;
     end if;
 
-    Self.Surface.PutCell(TuiPoint.Create(Self.Origin.X + Position.X, Self.Origin.Y + Position.Y), Cell);
+    Self.Surface.PutCell(Point.TuiPoint.Create(Self.Origin.X + Position.X, Self.Origin.Y +
+                                                                           Position.Y), Cell);
   end procedure;
 
   // Paints one glyph with the normal role.
@@ -82,7 +90,7 @@ public type TuiCanvas = record
   // - `Glyph`: Single renderable grapheme.
   public procedure PutGlyph(Self: TuiCanvas; X: integer; Y: integer; Glyph: string);
   begin
-    Self.PutCell(TuiPoint.Create(X, Y), TuiCell.Create(Glyph, TuiStyleRole.Normal));
+    Self.PutCell(Point.TuiPoint.Create(X, Y), CellsCell.TuiCell.Create(Glyph, StyleRole.TuiStyleRole.Normal));
   end procedure;
 
   // Fills the visible intersection with a one-column cell.
@@ -91,7 +99,7 @@ public type TuiCanvas = record
   // - `Self`: Receiver value operated on by the method.
   // - `Bounds`: Rectangle affected by the operation.
   // - `Cell`: Terminal cell written by the operation.
-  public procedure FillRect(Self: TuiCanvas; Bounds: TuiRect; Cell: TuiCell);
+  public procedure FillRect(Self: TuiCanvas; Bounds: Rect.TuiRect; Cell: CellsCell.TuiCell);
   begin
     const CellWidth: integer := Cell.Width();
     if CellWidth <> 1 then
@@ -99,9 +107,9 @@ public type TuiCanvas = record
         panic('Tui canvas FillRect requires a one-column cell');
       end;
     end if;
-    const Visible: TuiRect := Bounds.Intersect(Self.Clip);
-    TuiSurfaceFillRect(Self.Surface, TuiRect.Create(Self.Origin.X + Visible.X, Self.Origin.Y +
-                                                                               Visible.Y, Visible.Width, Visible.Height), Cell);
+    const Visible: Rect.TuiRect := Bounds.Intersect(Self.Clip);
+    RenderingSurface.TuiSurfaceFillRect(Self.Surface, Rect.TuiRect.Create(Self.Origin.X + Visible.X, Self.Origin.Y +
+                                                                                                     Visible.Y, Visible.Width, Visible.Height), Cell);
   end procedure;
 
   // Draws one logical line of text; stops before a newline.
@@ -111,7 +119,12 @@ public type TuiCanvas = record
   // - `Position`: Position in terminal-cell coordinates.
   // - `Text`: Text processed or displayed by the operation.
   // - `Role`: Semantic style role used by the operation.
-  public procedure WriteText(Self: TuiCanvas; Position: TuiPoint; Text: string; Role: TuiStyleRole);
+  public procedure WriteText(
+  Self: TuiCanvas;
+  Position: Point.TuiPoint;
+  Text: string;
+  Role: StyleRole.TuiStyleRole
+);
   begin
     var X: integer := Position.X;
     var AsciiOnly: boolean := true;
@@ -138,7 +151,7 @@ public type TuiCanvas = record
               end;
             end if;
 
-            Self.PutCell(TuiPoint.Create(X, Position.Y), TuiCell.Create(Glyph, Role));
+            Self.PutCell(Point.TuiPoint.Create(X, Position.Y), CellsCell.TuiCell.Create(Glyph, Role));
             X := X + 1;
           end;
         end for;
@@ -147,17 +160,17 @@ public type TuiCanvas = record
       end;
     end if;
 
-    for Glyph: string in Std.Console.SplitGraphemes(Text) do
+    for Glyph: string in Console.SplitGraphemes(Text) do
       begin
         if Glyph = string.Chr(10) then
           begin
             return;
           end;
         end if;
-        const GlyphWidth: integer := Std.Console.DisplayWidth(Glyph);
+        const GlyphWidth: integer := Console.DisplayWidth(Glyph);
         if GlyphWidth > 0 then
           begin
-            Self.PutCell(TuiPoint.Create(X, Position.Y), TuiCell.Create(Glyph, Role));
+            Self.PutCell(Point.TuiPoint.Create(X, Position.Y), CellsCell.TuiCell.Create(Glyph, Role));
             X := X + GlyphWidth;
           end;
         end if;
@@ -178,13 +191,13 @@ public type TuiCanvas = record
   X: integer;
   Y: integer;
   Width: integer;
-  Role: TuiStyleRole
+  Role: StyleRole.TuiStyleRole
 );
   begin
-    const Cell: TuiCell := TuiCell.Create('─', Role);
+    const Cell: CellsCell.TuiCell := CellsCell.TuiCell.Create('─', Role);
     for Offset: integer := 0 to Width - 1 do
       begin
-        Self.PutCell(TuiPoint.Create(X + Offset, Y), Cell);
+        Self.PutCell(Point.TuiPoint.Create(X + Offset, Y), Cell);
       end;
     end for;
   end procedure;
@@ -202,13 +215,13 @@ public type TuiCanvas = record
   X: integer;
   Y: integer;
   Height: integer;
-  Role: TuiStyleRole
+  Role: StyleRole.TuiStyleRole
 );
   begin
-    const Cell: TuiCell := TuiCell.Create('│', Role);
+    const Cell: CellsCell.TuiCell := CellsCell.TuiCell.Create('│', Role);
     for Offset: integer := 0 to Height - 1 do
       begin
-        Self.PutCell(TuiPoint.Create(X, Y + Offset), Cell);
+        Self.PutCell(Point.TuiPoint.Create(X, Y + Offset), Cell);
       end;
     end for;
   end procedure;
@@ -219,7 +232,7 @@ public type TuiCanvas = record
   // - `Self`: Receiver value operated on by the method.
   // - `Bounds`: Rectangle affected by the operation.
   // - `Role`: Semantic style role used by the operation.
-  public procedure DrawFrame(Self: TuiCanvas; Bounds: TuiRect; Role: TuiStyleRole);
+  public procedure DrawFrame(Self: TuiCanvas; Bounds: Rect.TuiRect; Role: StyleRole.TuiStyleRole);
   begin
     if Bounds.IsEmpty() then
       begin
@@ -230,10 +243,10 @@ public type TuiCanvas = record
     if Bounds.Width = 1 then
       begin
         Self.DrawVerticalLine(Bounds.X, Bounds.Y, Bounds.Height, Role);
-        Self.PutCell(TuiPoint.Create(Bounds.X, Bounds.Y), TuiCell.Create('╭', Role));
+        Self.PutCell(Point.TuiPoint.Create(Bounds.X, Bounds.Y), CellsCell.TuiCell.Create('╭', Role));
         if Bounds.Height > 1 then
           begin
-            Self.PutCell(TuiPoint.Create(Bounds.X, Bounds.Bottom() - 1), TuiCell.Create('╰', Role));
+            Self.PutCell(Point.TuiPoint.Create(Bounds.X, Bounds.Bottom() - 1), CellsCell.TuiCell.Create('╰', Role));
           end;
         end if;
 
@@ -244,8 +257,8 @@ public type TuiCanvas = record
     if Bounds.Height = 1 then
       begin
         Self.DrawHorizontalLine(Bounds.X, Bounds.Y, Bounds.Width, Role);
-        Self.PutCell(TuiPoint.Create(Bounds.X, Bounds.Y), TuiCell.Create('╭', Role));
-        Self.PutCell(TuiPoint.Create(Bounds.Right() - 1, Bounds.Y), TuiCell.Create('╮', Role));
+        Self.PutCell(Point.TuiPoint.Create(Bounds.X, Bounds.Y), CellsCell.TuiCell.Create('╭', Role));
+        Self.PutCell(Point.TuiPoint.Create(Bounds.Right() - 1, Bounds.Y), CellsCell.TuiCell.Create('╮', Role));
         return;
       end;
     end if;
@@ -254,15 +267,19 @@ public type TuiCanvas = record
     Self.DrawHorizontalLine(Bounds.X, Bounds.Bottom() - 1, Bounds.Width, Role);
     Self.DrawVerticalLine(Bounds.X, Bounds.Y + 1, Bounds.Height - 2, Role);
     Self.DrawVerticalLine(Bounds.Right() - 1, Bounds.Y + 1, Bounds.Height - 2, Role);
-    Self.PutCell(TuiPoint.Create(Bounds.X, Bounds.Y), TuiCell.Create('╭', Role));
-    Self.PutCell(TuiPoint.Create(Bounds.Right() - 1, Bounds.Y), TuiCell.Create('╮', Role));
-    Self.PutCell(TuiPoint.Create(Bounds.X, Bounds.Bottom() - 1), TuiCell.Create('╰', Role));
-    Self.PutCell(TuiPoint.Create(Bounds.Right() - 1, Bounds.Bottom() - 1), TuiCell.Create('╯', Role));
+    Self.PutCell(Point.TuiPoint.Create(Bounds.X, Bounds.Y), CellsCell.TuiCell.Create('╭', Role));
+    Self.PutCell(Point.TuiPoint.Create(Bounds.Right() - 1, Bounds.Y), CellsCell.TuiCell.Create('╮', Role));
+    Self.PutCell(Point.TuiPoint.Create(Bounds.X, Bounds.Bottom() - 1), CellsCell.TuiCell.Create('╰', Role));
+    Self.PutCell(Point.TuiPoint.Create(Bounds.Right() - 1, Bounds.Bottom() - 1), CellsCell.TuiCell.Create('╯', Role));
   end procedure;
 end record;
 
 // Paints consecutive cells in local coordinates with canvas clipping.
-public procedure TuiCanvasPutCells(Canvas: TuiCanvas; Position: TuiPoint; Cells: array of TuiCell);
+public procedure TuiCanvasPutCells(
+  Canvas: TuiCanvas;
+  Position: Point.TuiPoint;
+  Cells: array of CellsCell.TuiCell
+);
 begin
   if (Position.Y < Canvas.Clip.Y) or (Position.Y >= Canvas.Clip.Bottom()) then
     begin
@@ -289,14 +306,15 @@ begin
       return;
     end;
   end if;
-  var Values: array of TuiCell := Cells.Slice(SourceX, Count);
+  var Values: array of CellsCell.TuiCell := Cells.Slice(SourceX, Count);
   if (TargetX + Count = Canvas.Clip.Right()) and (Values[Count - 1].Columns = 2) then
     begin
-      Values[Count - 1] := TuiCell.Create(' ', TuiStyleRole.Normal);
+      Values[Count - 1] := CellsCell.TuiCell.Create(' ', StyleRole.TuiStyleRole.Normal);
     end;
   end if;
 
-  TuiSurfacePutCells(Canvas.Surface, TuiPoint.Create(Canvas.Origin.X + TargetX, Canvas.Origin.Y +
-                                                                                Position.Y), Values);
+  RenderingSurface.TuiSurfacePutCells(Canvas.Surface, Point.TuiPoint.Create(Canvas.Origin.X +
+                                                                            TargetX, Canvas.Origin.Y +
+                                                                                     Position.Y), Values);
 end procedure;
 end unit;

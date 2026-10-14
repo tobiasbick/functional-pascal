@@ -1,6 +1,6 @@
 program GenericEnumsTest;
 
-uses Std.Test;
+uses Std.Test as Test;
 
 type List of T = enum
   Empty;
@@ -31,18 +31,18 @@ end function;
 begin
   const Numbers: List of integer := List.Cons(Tail := List.Cons(2, List.Empty), Head := 1);
   const Words: List of string := List.Cons('one', List.Empty);
-  AssertEquals(2, Length(Numbers));
-  AssertEquals(1, Length(Words));
-  AssertEquals(3, Sum(Numbers));
+  Test.AssertEquals(2, Length(Numbers));
+  Test.AssertEquals(1, Length(Words));
+  Test.AssertEquals(3, Sum(Numbers));
   const Wrapped: Lookup of List of integer := Lookup.Found(Numbers);
   case Wrapped of
     when Lookup.Found(List.Cons(const Head, const Tail)):
-      AssertEquals(1, Head);
-      AssertEquals(2, Sum(Tail));
+      Test.AssertEquals(1, Head);
+      Test.AssertEquals(2, Sum(Tail));
     when Lookup.Found(List.Empty):
-      Fail('Expected a nonempty list');
+      Test.Fail('Expected a nonempty list');
     when Lookup.Missing:
-      Fail('Expected a list value');
+      Test.Fail('Expected a list value');
   end case;
   const Missing: Lookup of string := Lookup.Missing;
   var Matched: boolean := false;
@@ -50,5 +50,5 @@ begin
     Matched := true;
   end if;
 
-  AssertTrue(Matched);
+  Test.AssertTrue(Matched);
 end.

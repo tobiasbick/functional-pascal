@@ -1,6 +1,6 @@
 program RectangleExample;
 
-uses Std.Console, Std.Conv;
+uses Std.Console as Console, Std.Conv as Conv;
 
 type Rectangle = record
   W: integer;
@@ -30,8 +30,8 @@ type Rectangle = record
       end;
     end if;
 
-    WriteLn(Kind + ' ' + IntToStr(Self.W) + 'x' + IntToStr(Self.H) + ' area=' + IntToStr(Self.Area()) + ' perimeter=' +
-            IntToStr(Self.Perimeter()));
+    Console.WriteLn(Kind + ' ' + Conv.IntToStr(Self.W) + 'x' + Conv.IntToStr(Self.H) + ' area=' + Conv.IntToStr(Self.Area()) + ' perimeter=' +
+                    Conv.IntToStr(Self.Perimeter()));
   end procedure;
 end record;
 

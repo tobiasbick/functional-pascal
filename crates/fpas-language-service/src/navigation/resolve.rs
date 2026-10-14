@@ -130,7 +130,7 @@ pub(crate) fn token_name(document: &NavigationDocument, index: usize) -> Option<
         .map(|()| value.to_owned())
 }
 
-/// Resolves lexical bindings and public short names opened by plain imports.
+/// Resolves ordinary local names; imports and enum members require qualifiers.
 pub(crate) fn resolve_unqualified(
     documents: &[NavigationDocument],
     target_index: usize,
@@ -155,14 +155,7 @@ pub(crate) fn resolve_unqualified(
         return Some((target_index, (*symbol).clone()));
     }
 
-    let imported = imported_top_level(documents, target_index)
-        .into_iter()
-        .filter(|(_, symbol)| symbol.name.eq_ignore_ascii_case(name))
-        .collect::<Vec<_>>();
-    (imported.len() == 1).then(|| {
-        let (index, symbol) = imported[0];
-        (index, symbol.clone())
-    })
+    None
 }
 
 /// Resolves a visible unit namespace or members of a resolved value or type.
@@ -178,6 +171,12 @@ pub(crate) fn resolve_qualified(
         .iter()
         .enumerate()
         .filter_map(|(index, document)| {
+            if !matches!(
+                document.snapshot.compilation_unit(),
+                fpas_parser::CompilationUnit::Unit(_)
+            ) {
+                return None;
+            }
             let namespace = target.namespace_for(&document.owner)?;
             let owner_parts = namespace.split('.').count();
             (parts.len() >= owner_parts
@@ -293,51 +292,14 @@ pub(crate) fn find_type<'a>(
     }) {
         return Some((preferred_index, symbol));
     }
-    let mut matches = documents
-        .iter()
-        .enumerate()
-        .filter_map(|(index, document)| {
-            if !preferred.opens_owner(&document.owner) {
-                return None;
-            }
-            document
-                .top_level()
-                .iter()
-                .find(|symbol| {
-                    matches!(symbol.kind, SymbolKind::Type | SymbolKind::Enum)
-                        && symbol.name.eq_ignore_ascii_case(name)
-                        && (index == target_index || symbol.visibility == SymbolVisibility::Public)
-                })
-                .map(|symbol| (index, symbol))
-        })
-        .collect::<Vec<_>>();
-    (matches.len() == 1).then(|| matches.remove(0))
-}
-
-fn imported_top_level(
-    documents: &[NavigationDocument],
-    target_index: usize,
-) -> Vec<(usize, &DocumentSymbol)> {
-    let target = &documents[target_index];
-    documents
-        .iter()
-        .enumerate()
-        .filter(|(index, document)| *index != target_index && target.opens_owner(&document.owner))
-        .flat_map(|(index, document)| {
-            document
-                .top_level()
-                .iter()
-                .filter(|symbol| symbol.visibility == SymbolVisibility::Public)
-                .map(move |symbol| (index, symbol))
-        })
-        .collect()
+    None
 }
 
 /// Returns whether a declaration kind can be referenced by an unqualified name.
 pub(crate) fn unqualified_kind(kind: SymbolKind) -> bool {
     !matches!(
         kind,
-        SymbolKind::Program | SymbolKind::Unit | SymbolKind::Field
+        SymbolKind::Program | SymbolKind::Unit | SymbolKind::Field | SymbolKind::EnumMember
     )
 }
 

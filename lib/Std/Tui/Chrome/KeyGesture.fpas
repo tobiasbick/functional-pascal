@@ -1,11 +1,11 @@
 unit Std.Tui.Chrome.KeyGesture;
 
-uses Std.Console;
+uses Std.Console as Console;
 
 // Structural keyboard gesture used by menu commands.
 public type TuiKeyGesture = record
   // Variant kind represented by the value.
-  public Kind: Std.Console.KeyKind;
+  public Kind: Console.KeyKind;
   // Character component of the key gesture.
   public Character: string;
   // Whether the Shift modifier is active.
@@ -30,7 +30,7 @@ public type TuiKeyGesture = record
   // - `Meta`: Whether the Meta modifier is active.
   // - `Display`: Text displayed by the element.
   public static function Create(
-  Kind: Std.Console.KeyKind;
+  Kind: Console.KeyKind;
   Character: string;
   Shift: boolean;
   Ctrl: boolean;
@@ -47,7 +47,7 @@ public type TuiKeyGesture = record
   // Parameters:
   // - `Self`: Receiver value operated on by the method.
   // - `Key`: Console key event to route or match.
-  public function Matches(Self: TuiKeyGesture; Key: Std.Console.KeyEvent): boolean;
+  public function Matches(Self: TuiKeyGesture; Key: Console.KeyEvent): boolean;
   begin
     if ((((Self.Kind <> Key.kind) or (Self.Shift <> Key.shift)) or (Self.Ctrl <> Key.ctrl)) or (Self.Alt <> Key.alt)) or
        (Self.Meta <> Key.meta) then
@@ -56,7 +56,7 @@ public type TuiKeyGesture = record
       end;
     end if;
 
-    if Self.Kind = Std.Console.KeyKind.Character then
+    if Self.Kind = Console.KeyKind.Character then
       begin
         return Self.Character.ToLower() = Key.ch.ToLower();
       end;

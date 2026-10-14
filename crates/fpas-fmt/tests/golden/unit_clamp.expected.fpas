@@ -1,6 +1,6 @@
 unit MyApp.Utils;
 
-uses Std.Math;
+uses Std.Math as Math;
 
 public function Clamp(Value: integer; Min: integer; Max: integer): integer;
 begin

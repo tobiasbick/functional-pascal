@@ -168,7 +168,7 @@ fn completion_includes_public_declarations_from_workspace_dependencies() {
         "app/app.fpasprj",
         "[project]\nname = \"completion-app\"\nkind = \"program\"\nmain = \"src/main.fpas\"\n\n[dependencies]\nworkspace = [\"completion-lib\"]\n\n[sources]\ninclude = [\"src/**/*.fpas\"]\n",
     );
-    let source = "program CompletionApp;\n\nuses Completion.Library;\n\nbegin\n  GreetingFor('workspace');\nend.\n";
+    let source = "program CompletionApp;\n\nuses Completion.Library as Library;\n\nbegin\n  Library.GreetingFor('workspace');\nend.\n";
     let path = temp.write("app/src/main.fpas", source);
     let mut service = LanguageService::new(WorkspaceContext::load(temp.path()));
     let cursor = source.find("GreetingFor").expect("call");
@@ -204,7 +204,7 @@ fn completion_includes_public_declarations_from_workspace_dependencies() {
 }
 
 #[test]
-fn auto_import_is_offered_only_for_one_public_declaration_and_preserves_formatting() {
+fn auto_import_qualifies_public_declarations_and_preserves_formatting() {
     let temp = TempDirectory::new("intellisense-auto-import");
     let manifest = temp.write(
         "demo.fpasprj",
@@ -226,7 +226,7 @@ fn auto_import_is_offered_only_for_one_public_declaration_and_preserves_formatti
         "src/second.fpas",
         "unit Demo.Second;\n\npublic function SharedValue(): integer;\nbegin\n  return 2;\nend function;\nend unit;\n",
     );
-    let source = "program AutoImport;\n\nuses Demo.Core;\n\nbegin\n  const Value: integer := UniqueValue;\nend.\n";
+    let source = "program AutoImport;\n\nuses Demo.Core as Core;\n\nbegin\n  const Value: integer := UniqueValue();\nend.\n";
     let main = temp.write("src/main.fpas", source);
     let mut service = LanguageService::load(&manifest);
     let cursor = source.find("UniqueValue").expect("unresolved name") + "UniqueValue".len();
@@ -237,15 +237,19 @@ fn auto_import_is_offered_only_for_one_public_declaration_and_preserves_formatti
         .value;
     let unique = candidates
         .iter()
-        .find(|candidate| candidate.label == "UniqueValue")
+        .find(|candidate| candidate.label == "Importable.UniqueValue")
         .expect("unique auto-import");
 
     assert_eq!(unique.source, CompletionSource::AutoImport);
     let edit = unique.additional_edit.as_ref().expect("uses edit");
     let mut edited = source.to_owned();
+    edited.replace_range(
+        unique.replacement_span.offset()..unique.replacement_span.end(),
+        &unique.insert_text,
+    );
     edited.replace_range(edit.span.offset()..edit.span.end(), &edit.new_text);
     assert!(
-        edited.contains("uses Demo.Core, Demo.Importable;"),
+        edited.contains("Demo.Core as Core") && edited.contains("Demo.Importable as Importable"),
         "{edited}"
     );
     let (unit, errors) = parse_compilation_unit(&edited);
@@ -278,13 +282,19 @@ fn auto_import_is_offered_only_for_one_public_declaration_and_preserves_formatti
             .open_document(&main, 1, query_source.clone())
             .expect("open unresolved query");
         let query_cursor = query_source.find(name).expect("query name") + name.len();
+        let candidates = service
+            .completions(&main, query_cursor)
+            .expect("public auto-import completion")
+            .value;
+        let matches = candidates
+            .iter()
+            .filter(|candidate| candidate.filter_text == name)
+            .collect::<Vec<_>>();
+        assert_eq!(matches.len(), if name == "SharedValue" { 2 } else { 0 });
         assert!(
-            !service
-                .completions(&main, query_cursor)
-                .expect("negative auto-import completion")
-                .value
+            matches
                 .iter()
-                .any(|candidate| candidate.label == name)
+                .all(|candidate| candidate.insert_text.contains('.'))
         );
         service.documents_mut().close_document(&main);
     }

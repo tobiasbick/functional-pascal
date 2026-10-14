@@ -1,29 +1,31 @@
 // Interactive renderer using the shared fractal explorer lifecycle.
 program BurningShipShowcase;
 
-uses Fractal.Camera, Fractal.Explorer, BurningShip.Color, BurningShip.Render;
+uses
+  Fractal.Camera as Camera, Fractal.Explorer as Explorer, BurningShip.Color as Color,
+  BurningShip.Render as Render;
 
-function Palette(Value: integer): PaletteKind;
+function Palette(Value: integer): Color.PaletteKind;
 begin
   case Value of
     when 1:
       begin
-        return PaletteKind.DeepOcean;
+        return Color.PaletteKind.DeepOcean;
       end;
     when 2:
       begin
-        return PaletteKind.Ember;
+        return Color.PaletteKind.Ember;
       end;
     else
       begin
-        return PaletteKind.Aurora;
+        return Color.PaletteKind.Aurora;
       end;
   end case;
 end function;
 
 function Label(Value: integer): string;
 begin
-  return PaletteName(Palette(Value));
+  return Color.PaletteName(Palette(Value));
 end function;
 
 procedure Draw(
@@ -37,10 +39,10 @@ procedure Draw(
   Value: integer
 );
 begin
-  Render(XMin, XMax, YMin, YMax, Width, Height, MaxIter, Palette(Value));
+  Render.Render(XMin, XMax, YMin, YMax, Width, Height, MaxIter, Palette(Value));
 end procedure;
 
 begin
-  const Initial: ExplorerCamera := fractal.camera.explorercamera(CenterX := -0.45, CenterY := -0.55, SpanY := 2.8, MaxIter := 160, Palette := 2);
-  RunExplorer('Functional Pascal Burning Ship', Initial, Draw, Label);
+  const Initial: Camera.ExplorerCamera := Camera.ExplorerCamera(CenterX := -0.45, CenterY := -0.55, SpanY := 2.8, MaxIter := 160, Palette := 2);
+  Explorer.RunExplorer('Functional Pascal Burning Ship', Initial, Draw, Label);
 end.

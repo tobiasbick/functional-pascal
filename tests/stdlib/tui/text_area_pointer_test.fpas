@@ -1,33 +1,33 @@
 program TuiTextAreaPointerTest;
 
-uses Std.Test, Std.Tui;
+uses Std.Test as Test, Std.Tui as Tui;
 
 type PointerModel = record
   Focus: integer;
   Text: string;
   Caret: integer;
-  Offset: TuiPoint;
+  Offset: Tui.TuiPoint;
 end record;
 
-function ViewTextArea(State: PointerModel): TuiElement;
+function ViewTextArea(State: PointerModel): Tui.TuiElement;
 begin
-  var Focused: option of TuiControlId := None;
+  var Focused: option of Tui.TuiControlId := None;
   if State.Focus > 0 then
     begin
-      Focused := Some(TuiControlId.Create(State.Focus));
+      Focused := Some(Tui.TuiControlId.Create(State.Focus));
     end;
   end if;
 
-  return TuiElementBuilders.MakeDesktop(Focused, [
-                                                   TuiElementBuilders.MakeTextArea(TuiControlId.Create(1), State.Text, State.Caret, State.Offset, TuiAction.Create(9))
-                                                 ]);
+  return Tui.TuiElementBuilders.MakeDesktop(Focused, [
+                                                       Tui.TuiElementBuilders.MakeTextArea(Tui.TuiControlId.Create(1), State.Text, State.Caret, State.Offset, Tui.TuiAction.Create(9))
+                                                     ]);
 end function;
 
-function UpdateTextArea(State: PointerModel; Msg: TuiMsg; Cmd: TuiCmdOutput): PointerModel;
+function UpdateTextArea(State: PointerModel; Msg: Tui.TuiMsg; Cmd: Tui.TuiCmdOutput): PointerModel;
 begin
-  Cmd.Set(TuiCmd.NoCommand);
+  Cmd.Set(Tui.TuiCmd.NoCommand);
   case Msg of
-    when TuiMsg.FocusChanged(const Previous, const Current):
+    when Tui.TuiMsg.FocusChanged(const Previous, const Current):
       begin
         case Current of
           when Some(const Id):
@@ -40,13 +40,13 @@ begin
             end;
         end case;
       end;
-    when TuiMsg.TextAreaChanged(const Source, const Action, const Text, const Caret, const Offset):
+    when Tui.TuiMsg.TextAreaChanged(const Source, const Action, const Text, const Caret, const Offset):
       begin
-        AssertEquals(1, Source.Value);
-        AssertEquals(9, Action.Value);
+        Test.AssertEquals(1, Source.Value);
+        Test.AssertEquals(9, Action.Value);
         return PointerModel(Focus := State.Focus, Text := Text, Caret := Caret, Offset := Offset);
       end;
-    when TuiMsg.Started, TuiMsg.Key(_), TuiMsg.Pointer(_), TuiMsg.Tick(_), TuiMsg.Resize(_), TuiMsg.Action(_, _), TuiMsg.TextChanged(_, _, _, _), TuiMsg.CheckChanged(_, _, _), TuiMsg.SelectionChanged(_, _, _), TuiMsg.ScrollChanged(_, _, _), TuiMsg.MenuChanged(_, _, _), TuiMsg.BackgroundFailed(_, _, _, _, _, _), TuiMsg.QuitRequested:
+    when Tui.TuiMsg.Started, Tui.TuiMsg.Key(_), Tui.TuiMsg.Pointer(_), Tui.TuiMsg.Tick(_), Tui.TuiMsg.Resize(_), Tui.TuiMsg.Action(_, _), Tui.TuiMsg.TextChanged(_, _, _, _), Tui.TuiMsg.CheckChanged(_, _, _), Tui.TuiMsg.SelectionChanged(_, _, _), Tui.TuiMsg.ScrollChanged(_, _, _), Tui.TuiMsg.MenuChanged(_, _, _), Tui.TuiMsg.BackgroundFailed(_, _, _, _, _, _), Tui.TuiMsg.QuitRequested:
       begin
         return State;
       end;
@@ -54,32 +54,32 @@ begin
 end function;
 
 function Click(
-  App: TuiApplication;
+  App: Tui.TuiApplication;
   State: PointerModel;
   X: integer;
   Y: integer;
   Iterations: integer
 ): PointerModel;
 begin
-  App.InjectPointerForTest(TuiPointerEvent.Create(TuiPointerAction.Down, TuiPointerButton.Left, TuiPoint.Create(X, Y)));
+  App.InjectPointerForTest(Tui.TuiPointerEvent.Create(Tui.TuiPointerAction.Down, Tui.TuiPointerButton.Left, Tui.TuiPoint.Create(X, Y)));
   return App.RunIterations(State, UpdateTextArea, ViewTextArea, Iterations, 0);
 end function;
 
 begin
-  var App: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(6, 3));
+  var App: Tui.TuiApplication := Tui.TuiApplication.OpenForTest(Tui.TuiSize.Create(6, 3));
   var Model: PointerModel := PointerModel(Focus := 0, Text := 'zero' + string.Chr(10) + 'one' +
-                                                              (string.Chr(10) + 'three'), Caret := 0, Offset := TuiPoint.Create(0, 0));
+                                                              (string.Chr(10) + 'three'), Caret := 0, Offset := Tui.TuiPoint.Create(0, 0));
   Model := App.RunIterations(Model, UpdateTextArea, ViewTextArea, 0, 0);
   Model := Click(App, Model, 2, 1, 2);
-  AssertEquals(1, Model.Focus);
-  AssertEquals(7, Model.Caret);
+  Test.AssertEquals(1, Model.Focus);
+  Test.AssertEquals(7, Model.Caret);
   Model := Click(App, Model, 5, 1, 1);
-  AssertEquals(8, Model.Caret);
-  Model := PointerModel(Focus := 1, Text := Model.Text, Caret := Model.Caret, Offset := TuiPoint.Create(2, 1));
+  Test.AssertEquals(8, Model.Caret);
+  Model := PointerModel(Focus := 1, Text := Model.Text, Caret := Model.Caret, Offset := Tui.TuiPoint.Create(2, 1));
   Model := App.RunIterations(Model, UpdateTextArea, ViewTextArea, 0, 0);
   Model := Click(App, Model, 1, 1, 1);
-  AssertEquals(12, Model.Caret);
-  AssertEquals(2, Model.Offset.X);
-  AssertEquals(1, Model.Offset.Y);
+  Test.AssertEquals(12, Model.Caret);
+  Test.AssertEquals(2, Model.Offset.X);
+  Test.AssertEquals(1, Model.Offset.Y);
   App.Close();
 end.

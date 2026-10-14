@@ -1,27 +1,27 @@
 program TaskGroupWorkers;
 
-uses Std.Tasks, Std.Console;
+uses Std.Tasks as Tasks, Std.Console as Console;
 
-function CheckConfiguration(Token: CancellationToken): result of (boolean, string);
+function CheckConfiguration(Token: Tasks.CancellationToken): result of (boolean, string);
 begin
   return Error('A required setting is missing');
 end function;
 
 begin
-  const Workers: TaskGroup := CreateTaskGroup();
+  const Workers: Tasks.TaskGroup := Tasks.CreateTaskGroup();
   // Keep the group even when individual task handles are not needed.
-  const ConfigurationTask: task of result of (boolean, string) := StartTaskInGroup(Workers, CheckConfiguration);
-  const WorkerTask: task := StartTaskInGroup(Workers, procedure(Token: CancellationToken) begin
-    const Stop: WaitCase := CancellationCase(Token, procedure() begin
-      WriteLn('Background worker stopped');
+  const ConfigurationTask: task of result of (boolean, string) := Tasks.StartTaskInGroup(Workers, CheckConfiguration);
+  const WorkerTask: task := Tasks.StartTaskInGroup(Workers, procedure(Token: Tasks.CancellationToken) begin
+    const Stop: Tasks.WaitCase := Tasks.CancellationCase(Token, procedure() begin
+      Console.WriteLn('Background worker stopped');
     end procedure);
-    discard Select([Stop]);
+    discard Tasks.Select([Stop]);
   end procedure);
   // Close requests cooperative cancellation and waits for every registered worker.
-  const Failures: array of TaskFailure := CloseTaskGroup(Workers);
-  for Failure: TaskFailure in Failures do
+  const Failures: array of Tasks.TaskFailure := Tasks.CloseTaskGroup(Workers);
+  for Failure: Tasks.TaskFailure in Failures do
     begin
-      WriteLn(Failure.Message);
+      Console.WriteLn(Failure.Message);
     end;
   end for;
 end.

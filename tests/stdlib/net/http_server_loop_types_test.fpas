@@ -1,27 +1,27 @@
 // Covers HTTP server-loop defaults and request-handler typing.
 program HttpServerLoopTypesTest;
 
-uses Std.Http, Std.Test;
+uses Std.Http as Http, Std.Test as Test;
 
 // Returns a response whose reason phrase mirrors the request method.
 //
 // Parameters:
 // - `RequestValue`: Request supplied through the handler type.
-function Handle(RequestValue: ServerRequest): ServerResponse;
+function Handle(RequestValue: Http.ServerRequest): Http.ServerResponse;
 begin
-  return ServerResponse.Create(200, RequestValue.Method);
+  return Http.ServerResponse.Create(200, RequestValue.Method);
 end function;
 
 begin
-  const Options: ServerOptions := ServerOptions.Create();
-  AssertEquals(65536, Options.MaxHeaderBytes);
-  AssertEquals(1048576, Options.MaxBodyBytes);
-  AssertEquals(30000, Options.ConnectionTimeoutMillis);
-  AssertEquals(8, Options.MaxConcurrentRequests);
-  AssertEquals(0, Options.MaxRequests);
-  const HandlerValue: RequestHandler := Handle;
-  const RequestValue: ServerRequest := std.http.types.serverrequest(Method := 'OK', Target := '/', Headers := [], Body := []);
-  const ResponseValue: ServerResponse := HandlerValue(RequestValue);
-  AssertEquals(200, ResponseValue.StatusCode);
-  AssertEquals('OK', ResponseValue.ReasonPhrase);
+  const Options: Http.ServerOptions := Http.ServerOptions.Create();
+  Test.AssertEquals(65536, Options.MaxHeaderBytes);
+  Test.AssertEquals(1048576, Options.MaxBodyBytes);
+  Test.AssertEquals(30000, Options.ConnectionTimeoutMillis);
+  Test.AssertEquals(8, Options.MaxConcurrentRequests);
+  Test.AssertEquals(0, Options.MaxRequests);
+  const HandlerValue: Http.RequestHandler := Handle;
+  const RequestValue: Http.ServerRequest := Http.ServerRequest(Method := 'OK', Target := '/', Headers := [], Body := []);
+  const ResponseValue: Http.ServerResponse := HandlerValue(RequestValue);
+  Test.AssertEquals(200, ResponseValue.StatusCode);
+  Test.AssertEquals('OK', ResponseValue.ReasonPhrase);
 end.

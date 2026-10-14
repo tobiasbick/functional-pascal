@@ -1,26 +1,26 @@
 // Driven by the harness's local HTTP fixture; setup and compilation are not timed.
 program HttpBodyAccumulationBenchmark;
 
-uses Std.Args, Std.Console, Std.Conv, Std.Http, Std.Time;
+uses Std.Args as Args, Std.Console as Console, Std.Conv as Conv, Std.Http as Http, Std.Time as Time;
 
 begin
-  if ParamCount() <> 3 then
+  if Args.ParamCount() <> 3 then
     begin
       panic('expected ITERATIONS SIZE URL');
     end;
   end if;
-  const Iterations: integer := StrToInt(ParamStr(0));
-  const Size: integer := StrToInt(ParamStr(1));
-  const Url: string := ParamStr(2);
+  const Iterations: integer := Conv.StrToInt(Args.ParamStr(0));
+  const Size: integer := Conv.StrToInt(Args.ParamStr(1));
+  const Url: string := Args.ParamStr(2);
   if (Iterations < 1) or (Size < 1) then
     begin
       panic('arguments must be positive');
     end;
   end if;
-  const Started: integer := MonotonicMillis();
+  const Started: integer := Time.MonotonicMillis();
   for Iteration: integer := 1 to Iterations do
     begin
-      const ResponseValue: Response := Send(Request.Get(Url)).Unwrap();
+      const ResponseValue: Http.Response := Http.Send(Http.Request.Get(Url)).Unwrap();
       if ResponseValue.Body.Length() <> Size * 128 then
         begin
           panic('body length');
@@ -35,5 +35,5 @@ begin
     end;
   end for;
 
-  WriteLn('elapsed: ' + IntToStr(ElapsedMillis(Started)) + ' ms');
+  Console.WriteLn('elapsed: ' + Conv.IntToStr(Time.ElapsedMillis(Started)) + ' ms');
 end.

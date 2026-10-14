@@ -25,13 +25,7 @@ fn run_cli_imports_forward_recursive_types_and_reuses_compiled_units() {
       end unit;");
     write_text(
         &cwd.join("src/main.fpas"),
-        "program Main; uses App.Tree, Std.Console;
-      begin const Root: Alias := Create();
-        const Child: Edge := Edge.More(Some(Root));
-        const Populated: Node := Root with Children := [Child]; end with;
-        const Bound: function(): boolean := Populated.IsReady;
-        WriteLn(Bound()); WriteLn(Populated.Seed);
-      end.",
+        "program Main; uses App.Tree as Tree, Std.Console as Console;\n      begin const Root: Tree.Alias := Tree.Create();\n        const Child: Tree.Edge := Tree.Edge.More(Some(Root));\n        const Populated: Tree.Node := Root with Children := [Child]; end with;\n        const Bound: function(): boolean := Populated.IsReady;\n        Console.WriteLn(Bound()); Console.WriteLn(Populated.Seed);\n      end.",
     );
     for _ in 0..2 {
         let (code, stdout, stderr) = support::run_cli_and_capture_output(&project, &cwd);

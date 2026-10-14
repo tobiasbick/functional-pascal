@@ -237,7 +237,7 @@ fn sequence_mutation_obeys_shared_limits_effect_policy_and_cancellation() {
         r#"
 program SequenceMutationLimits;
 
-uses Std.Console;
+uses Std.Console as Console;
 
 function Forever(): integer;
 begin
@@ -247,7 +247,7 @@ end function;
 
 procedure Emit();
 begin
-  WriteLn('not live');
+  Console.WriteLn('not live');
 end procedure;
 
 begin

@@ -3,13 +3,7 @@ use super::*;
 #[test]
 fn hello_world() {
     let p = parse_ok(
-        "\
-program Hello;
-uses
-  Std.Console;
-begin
-  Std.Console.WriteLn('Hello, World!');
-end.",
+        "program Hello;\nuses\n  Std.Console as Console;\nbegin\n  Console.WriteLn('Hello, World!');\nend.",
     );
     assert_eq!(p.name, "Hello");
     assert_eq!(p.uses.len(), 1);
@@ -21,31 +15,7 @@ end.",
 #[test]
 fn full_program() {
     let p = parse_ok(
-        "\
-program Calculator;
-uses Std.Console;
-
-type Op = enum
-  OpAdd;
-  OpSub;
-  OpMul;
-  OpDiv;
-end enum;
-
-function Calculate(A: integer; B: integer; Operation: Op): integer;
-begin
-  case Operation of
-    when OpAdd: return A + B;
-    when OpSub: return A - B;
-    when OpMul: return A * B;
-    when OpDiv: return A div B;
-  end case;
-end function;
-
-begin
-  var Answer: integer := Calculate(10, 3, OpAdd);
-  Std.Console.WriteLn(Answer);
-end.",
+        "program Calculator;\nuses Std.Console as Console;\n\ntype Op = enum\n  OpAdd;\n  OpSub;\n  OpMul;\n  OpDiv;\nend enum;\n\nfunction Calculate(A: integer; B: integer; Operation: Op): integer;\nbegin\n  case Operation of\n    when Op.OpAdd: return A + B;\n    when Op.OpSub: return A - B;\n    when Op.OpMul: return A * B;\n    when Op.OpDiv: return A div B;\n  end case;\nend function;\n\nbegin\n  var Answer: integer := Calculate(10, 3, Op.OpAdd);\n  Console.WriteLn(Answer);\nend.",
     );
     assert_eq!(p.name, "Calculator");
     assert_eq!(p.declarations.len(), 2);

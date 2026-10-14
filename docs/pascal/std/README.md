@@ -3,18 +3,16 @@
 Standard-library units under the reserved `Std` namespace. Built-in string,
 array, dictionary, Option, and Result operations are described in the
 [type reference](../language/types/README.md) and are always available through
-[dot calls](../language/functions/fluent-calls.md). Standard units use imports. Import via `uses` and refer to symbols by short or fully qualified names:
+[dot calls](../language/functions/fluent-calls.md). Import every standard unit with
+an explicit alias and access its public symbols through that alias:
 
 ```pascal
 program Hello;
 
-uses
-  Std.Console,
-  Std.Math;
+uses Std.Console as Console, Std.Math as Math;
 
 begin
-  WriteLn(Sqrt(16.0));
-  Std.Console.WriteLn(Std.Math.Sqrt(16.0));
+  Console.WriteLn(Math.Sqrt(16.0));
 end.
 ```
 
@@ -32,7 +30,7 @@ public; its private implementation units cannot be imported by applications. Use
 `fpas test --std-lib <directory> …` to replace the complete source standard library for that
 invocation.
 
-Each unit page is a **self-contained handbook**: importing and short vs qualified
+Each unit page is a **self-contained handbook**: importing and alias-qualified
 names, a **quick reference** table, then routines and types with parameters,
 behavior, edge cases, and examples. Link implementation locations under
 `## Implementation (contributors)` and related pages under `## See also`.
@@ -66,12 +64,12 @@ under [Shared implementation touchpoints](#shared-implementation-touchpoints).
 ### Console I/O
 
 ```pascal
-uses Std.Console;
+uses Std.Console as Console;
 
-WriteLn('Hello!');
-TextColorRGB(255, 160, 0);
-WriteLn('Accent text');
-NormVideo();
+Console.WriteLn('Hello!');
+Console.TextColorRGB(255, 160, 0);
+Console.WriteLn('Accent text');
+Console.NormVideo();
 ```
 
 Fullscreen code can batch explicit cells with `BeginFrame`, `WriteCells`, and `Present`; see
@@ -83,7 +81,7 @@ Fullscreen code can batch explicit cells with `BeginFrame`, `WriteCells`, and `P
 
 
 const R: Result of (integer, string) := Ok(42);
-WriteLn(R.Unwrap());
+Console.WriteLn(R.Unwrap());
 ```
 
 Language rules: [Error handling](../language/error-handling/README.md).

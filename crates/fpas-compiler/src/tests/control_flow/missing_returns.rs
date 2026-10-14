@@ -30,19 +30,6 @@ fn reachable_missing_returns_report_a_user_diagnostic() {
 #[test]
 fn complete_branches_do_not_require_an_unreachable_return() {
     assert_succeeds(
-        "program T; uses Std.Test;
-         function Checked(Value: integer): integer;
-         begin
-           case Value of
-             when 0: return 10;
-             when const N if N > 0: return 20;
-             else return 30;
-           end case;
-         end function;
-         begin
-           AssertEquals(10, Checked(0));
-           AssertEquals(20, Checked(1));
-           AssertEquals(30, Checked(-1));
-         end.",
+        "program T; uses Std.Test as Test;\n         function Checked(Value: integer): integer;\n         begin\n           case Value of\n             when 0: return 10;\n             when const N if N > 0: return 20;\n             else return 30;\n           end case;\n         end function;\n         begin\n           Test.AssertEquals(10, Checked(0));\n           Test.AssertEquals(20, Checked(1));\n           Test.AssertEquals(30, Checked(-1));\n         end.",
     );
 }

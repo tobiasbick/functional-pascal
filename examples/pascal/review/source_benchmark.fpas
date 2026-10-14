@@ -2,21 +2,22 @@
 program SourceReviewBenchmark;
 
 uses
-  Notes.Model, Notes.Repository, Std.Args, Std.Console, Std.Conv, Std.Net.Utf8, Std.Time, Std.Tui;
+  Notes.Model as Model, Notes.Repository as Repository, Std.Args as Args, Std.Console as Console,
+  Std.Conv as Conv, Std.Net.Utf8 as Utf8, Std.Time as Time, Std.Tui as Tui;
 
-function View(Value: integer): TuiElement;
+function View(Value: integer): Tui.TuiElement;
 begin
-  return TuiElementBuilders.MakeEmpty();
+  return Tui.TuiElementBuilders.MakeEmpty();
 end function;
 
-function Update(Value: integer; Msg: TuiMsg; Cmd: TuiCmdOutput): integer;
+function Update(Value: integer; Msg: Tui.TuiMsg; Cmd: Tui.TuiCmdOutput): integer;
 begin
   case Msg of
-    when TuiMsg.Tick(const Delta):
+    when Tui.TuiMsg.Tick(const Delta):
       begin
         return Value + Delta;
       end;
-    when TuiMsg.Started, TuiMsg.Key(_), TuiMsg.Pointer(_), TuiMsg.Resize(_), TuiMsg.FocusChanged(_, _), TuiMsg.Action(_, _), TuiMsg.TextChanged(_, _, _, _), TuiMsg.TextAreaChanged(_, _, _, _, _), TuiMsg.CheckChanged(_, _, _), TuiMsg.SelectionChanged(_, _, _), TuiMsg.ScrollChanged(_, _, _), TuiMsg.MenuChanged(_, _, _), TuiMsg.BackgroundFailed(_, _, _, _, _, _), TuiMsg.QuitRequested:
+    when Tui.TuiMsg.Started, Tui.TuiMsg.Key(_), Tui.TuiMsg.Pointer(_), Tui.TuiMsg.Resize(_), Tui.TuiMsg.FocusChanged(_, _), Tui.TuiMsg.Action(_, _), Tui.TuiMsg.TextChanged(_, _, _, _), Tui.TuiMsg.TextAreaChanged(_, _, _, _, _), Tui.TuiMsg.CheckChanged(_, _, _), Tui.TuiMsg.SelectionChanged(_, _, _), Tui.TuiMsg.ScrollChanged(_, _, _), Tui.TuiMsg.MenuChanged(_, _, _), Tui.TuiMsg.BackgroundFailed(_, _, _, _, _, _), Tui.TuiMsg.QuitRequested:
       begin
         return Value;
       end;
@@ -24,23 +25,23 @@ begin
 end function;
 
 begin
-  const Mode: string := ParamStr(0);
-  const Size: integer := StrToInt(ParamStr(1));
-  const Text: string := ParamStr(2).RepeatStr(Size);
-  var Notes: array of Note := [];
+  const Mode: string := Args.ParamStr(0);
+  const Size: integer := Conv.StrToInt(Args.ParamStr(1));
+  const Text: string := Args.ParamStr(2).RepeatStr(Size);
+  var Notes: array of Model.Note := [];
   for I: integer := 1 to Size do
     begin
-      Notes.PushInPlace(NoteCreate(IntToStr(I), I));
+      Notes.PushInPlace(Model.NoteCreate(Conv.IntToStr(I), I));
     end;
   end for;
-  const App: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(1, 1));
+  const App: Tui.TuiApplication := Tui.TuiApplication.OpenForTest(Tui.TuiSize.Create(1, 1));
   var Sum: integer := 0;
-  const Started: integer := MonotonicMillis();
+  const Started: integer := Time.MonotonicMillis();
   for Pass: integer := 1 to 10 do
     begin
       if Mode = 'utf8' then
         begin
-          case Std.Net.Utf8.Decode(Std.Net.Utf8.Encode(Text)) of
+          case Utf8.Decode(Utf8.Encode(Text)) of
             when Ok(const Decoded):
               begin
                 if Decoded <> Text then
@@ -57,7 +58,7 @@ begin
         end;
       elsif Mode = 'notes' then
         begin
-          const Sorted: array of Note := NotesSort(Notes);
+          const Sorted: array of Model.Note := Repository.NotesSort(Notes);
           if Sorted[0].UpdatedMillis <> Size then
             begin
               panic('sort');
@@ -68,7 +69,7 @@ begin
         begin
           for I: integer := 1 to Size do
             begin
-              App.Inject(TuiMsg.Tick(1));
+              App.Inject(Tui.TuiMsg.Tick(1));
             end;
           end for;
 
@@ -87,6 +88,6 @@ begin
     end;
   end for;
 
-  WriteLn('elapsed: ' + IntToStr(ElapsedMillis(Started)) + ' ms');
+  Console.WriteLn('elapsed: ' + Conv.IntToStr(Time.ElapsedMillis(Started)) + ' ms');
   App.Close();
 end.

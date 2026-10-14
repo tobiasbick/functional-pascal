@@ -1,15 +1,15 @@
 unit Std.Tui.Chrome.MenuItem;
 
-uses Std.Tui.Ids.Action, Std.Tui.Ids.ControlId;
+uses Std.Tui.Ids.Action as IdsAction, Std.Tui.Ids.ControlId as ControlId;
 
 // Immutable description of one flat menu-bar action.
 public type TuiMenuItem = record
   // Stable identifier of the value.
-  public Id: TuiControlId;
+  public Id: ControlId.TuiControlId;
   // Text stored or displayed by the value.
   public Text: string;
   // Application action associated with the value.
-  public Action: TuiAction;
+  public Action: IdsAction.TuiAction;
   // Whether the item can be activated.
   public Enabled: boolean;
   // Shortcut text, gesture, or style.
@@ -21,7 +21,7 @@ public type TuiMenuItem = record
   // - `Id`: Identifier assigned to the created or selected value.
   // - `Text`: Text processed or displayed by the operation.
   // - `Action`: Application action associated with the control or emitted message.
-  public static function Create(Id: TuiControlId; Text: string; Action: TuiAction): TuiMenuItem;
+  public static function Create(Id: ControlId.TuiControlId; Text: string; Action: IdsAction.TuiAction): TuiMenuItem;
   begin
     return TuiMenuItem(Id := Id, Text := Text, Action := Action, Enabled := true, Shortcut := '');
   end function;
@@ -32,7 +32,7 @@ public type TuiMenuItem = record
   // - `Id`: Identifier assigned to the created or selected value.
   // - `Text`: Text processed or displayed by the operation.
   // - `Action`: Application action associated with the control or emitted message.
-  public static function Disabled(Id: TuiControlId; Text: string; Action: TuiAction): TuiMenuItem;
+  public static function Disabled(Id: ControlId.TuiControlId; Text: string; Action: IdsAction.TuiAction): TuiMenuItem;
   begin
     return TuiMenuItem(Id := Id, Text := Text, Action := Action, Enabled := false, Shortcut := '');
   end function;
@@ -44,7 +44,12 @@ public type TuiMenuItem = record
   // - `Text`: Text processed or displayed by the operation.
   // - `Action`: Application action associated with the control or emitted message.
   // - `Shortcut`: Shortcut gesture or display text.
-  public static function WithShortcut(Id: TuiControlId; Text: string; Action: TuiAction; Shortcut: string): TuiMenuItem;
+  public static function WithShortcut(
+  Id: ControlId.TuiControlId;
+  Text: string;
+  Action: IdsAction.TuiAction;
+  Shortcut: string
+): TuiMenuItem;
   begin
     return TuiMenuItem(Id := Id, Text := Text, Action := Action, Enabled := true, Shortcut := Shortcut);
   end function;

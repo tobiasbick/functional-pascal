@@ -1,7 +1,7 @@
 program Hello;
 
-uses Demo.Greet, Std.Console;
+uses Demo.Greet as Greet, Std.Console as Console;
 
 begin
-  WriteLn(Message());
+  Console.WriteLn(Greet.Message());
 end.

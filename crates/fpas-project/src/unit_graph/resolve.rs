@@ -182,12 +182,12 @@ pub(super) fn resolve_reachable(
                     graph,
                     &format!("unit `{}`", node.display_name()),
                 )
-                .at_source(Some(node.path()), used.span));
+                .at_source(Some(node.path()), used.unit.span));
             }
             if !policy.can_import_for_unit(&next, &dependency_key) {
                 return Err(policy
                     .not_exported_error(&dependency_key)
-                    .at_source(Some(node.path()), used.span));
+                    .at_source(Some(node.path()), used.unit.span));
             }
             queue.push(used);
         }
@@ -214,12 +214,12 @@ pub(super) fn all_library_units(graph: &UnitGraph) -> Result<HashSet<String>, Pr
                     graph,
                     &format!("unit `{}`", node.display_name()),
                 )
-                .at_source(Some(node.path()), used.span));
+                .at_source(Some(node.path()), used.unit.span));
             }
             if !policy.can_import_for_unit(key, &dependency_key) {
                 return Err(policy
                     .not_exported_error(&dependency_key)
-                    .at_source(Some(node.path()), used.span));
+                    .at_source(Some(node.path()), used.unit.span));
             }
         }
     }

@@ -5,8 +5,8 @@ Use these functions for integer bits; the logical operators accept `boolean`.
 
 ## Importing and names
 
-Import `uses Std.Bits;` before calling these functions. Both short names such
-as `BitAnd` and qualified names such as `Std.Bits.BitAnd` follow the ordinary
+Import `uses Std.Bits as Bits;` before calling these functions. Use
+`Bits.BitAnd` and the other alias-qualified names under the ordinary
 [unit import rules](../../program-structure/units.md). Every parameter and
 return value is an `integer`. Arguments are evaluated from left to right,
 exactly once; both arguments of a binary function are always evaluated.
@@ -14,17 +14,17 @@ exactly once; both arguments of a binary function are always evaluated.
 ```pascal
 program BitExample;
 
-uses Std.Bits, Std.Console;
+uses Std.Bits as Bits, Std.Console as Console;
 
 begin
-  WriteLn(BitAnd(12, 10));
-  WriteLn(ShiftRight(-8, 1));
+  Console.WriteLn(Bits.BitAnd(12, 10));
+  Console.WriteLn(Bits.ShiftRight(-8, 1));
 end.
 ```
 
 ## Quick reference
 
-Requires `uses Std.Bits;`.
+Requires `uses Std.Bits as Bits;`.
 
 | Kind | Name | Notes |
 |------|------|-------|

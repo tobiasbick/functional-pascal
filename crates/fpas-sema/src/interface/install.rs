@@ -1,14 +1,13 @@
 //! Installation of compiled-unit interface symbols into semantic scopes.
 //! See `docs/pascal/program-structure/units.md` and `docs/pascal/language/types/generics.md`.
 
-use fpas_parser::{Decl, Expr, Program};
+use fpas_parser::Expr;
 use fpas_unit::interface as artifact;
 
 use crate::check;
 use crate::scope::{Symbol, SymbolKind as SemaSymbolKind, canonical_symbol_name};
 
 use super::conversion::{InterfaceConversionError, interface_symbol_to_sema, interface_type_to_ty};
-use super::export::declaration_name;
 
 impl check::Checker {
     /// Install only qualified type definitions from transitive supporting interfaces.
@@ -22,7 +21,6 @@ impl check::Checker {
                     .imported
                     .insert(summary.qualified_name.to_ascii_lowercase(), summary.clone());
             }
-            self.scopes.imports.note_unit(&interface.unit_name);
             for routine in &interface.routine_param_escapes {
                 self.scopes.set_param_escapes(
                     &routine.qualified_name,
@@ -33,7 +31,7 @@ impl check::Checker {
                 if exported.kind != artifact::SymbolKind::Type {
                     continue;
                 }
-                self.scopes.define_in_root(
+                self.scopes.imports.define_metadata(
                     &exported.qualified_name,
                     interface_symbol_to_sema(exported)?,
                 );
@@ -42,41 +40,17 @@ impl check::Checker {
         Ok(())
     }
 
-    /// Install directly visible interfaces for one program.
+    /// Install only canonical public symbols and alias-qualified repair targets.
     pub(crate) fn install_interfaces(
         &mut self,
-        program: &Program,
         interfaces: &[artifact::UnitInterface],
     ) -> Result<(), InterfaceConversionError> {
-        self.install_interfaces_for_declarations(&program.declarations, interfaces)
-    }
-
-    /// Install directly visible interface symbols alongside the given declarations.
-    pub(crate) fn install_interfaces_for_declarations(
-        &mut self,
-        declarations: &[Decl],
-        interfaces: &[artifact::UnitInterface],
-    ) -> Result<(), InterfaceConversionError> {
-        use std::collections::{HashMap, HashSet};
-
-        let own_names: HashSet<String> = declarations
-            .iter()
-            .map(declaration_name)
-            .map(canonical_symbol_name)
-            .collect();
-        let mut short_candidates = HashMap::<String, Vec<(String, Symbol)>>::new();
-
         for interface in interfaces {
             for summary in &interface.routine_initialization {
                 self.initialization
                     .imported
                     .insert(summary.qualified_name.to_ascii_lowercase(), summary.clone());
             }
-            let aliased = self
-                .scopes
-                .imports
-                .aliases
-                .contains_key(&interface.unit_name.to_ascii_lowercase());
             for routine in &interface.routine_param_escapes {
                 self.scopes.set_param_escapes(
                     &routine.qualified_name,
@@ -85,36 +59,29 @@ impl check::Checker {
             }
             for exported in &interface.symbols {
                 let symbol = interface_symbol_to_sema(exported)?;
-                self.scopes
-                    .define_in_root(&exported.qualified_name, symbol.clone());
+                self.scopes.imports.define_source(
+                    &interface.unit_name,
+                    &exported.qualified_name,
+                    symbol.clone(),
+                );
+                if exported.kind == artifact::SymbolKind::Type {
+                    self.scopes
+                        .imports
+                        .define_metadata(&exported.qualified_name, symbol);
+                }
                 self.install_imported_record_defaults(exported);
                 self.imported_candidates
                     .entry(canonical_symbol_name(&exported.name))
                     .or_default()
-                    .push(exported.qualified_name.clone());
-                if !aliased && !own_names.contains(&canonical_symbol_name(&exported.name)) {
-                    short_candidates
-                        .entry(canonical_symbol_name(&exported.name))
-                        .or_default()
-                        .push((exported.qualified_name.clone(), symbol));
-                }
-                self.install_imported_enum_variants(
-                    exported,
-                    &mut short_candidates,
-                    &own_names,
-                    aliased,
-                )?;
+                    .extend(
+                        self.scopes
+                            .imports
+                            .source_name_for(&interface.unit_name, &exported.qualified_name),
+                    );
+                self.install_imported_enum_variants(&interface.unit_name, exported)?;
             }
         }
 
-        // Source and `Std.*` short names are resolved together so either can make a name ambiguous.
-        for (short, candidates) in short_candidates {
-            self.source_short_candidates
-                .entry(short)
-                .or_default()
-                .extend(candidates);
-        }
-        crate::std_registry::register_short_aliases(self);
         Ok(())
     }
 
@@ -162,10 +129,8 @@ impl check::Checker {
 
     fn install_imported_enum_variants(
         &mut self,
+        unit: &str,
         exported: &artifact::InterfaceSymbol,
-        short_candidates: &mut std::collections::HashMap<String, Vec<(String, Symbol)>>,
-        own_names: &std::collections::HashSet<String>,
-        aliased: bool,
     ) -> Result<(), InterfaceConversionError> {
         if exported.kind != artifact::SymbolKind::Type {
             return Ok(());
@@ -188,25 +153,17 @@ impl check::Checker {
                 task_bound: false,
             };
             let fully_qualified = format!("{}.{}", exported.qualified_name, variant.name);
-            self.scopes.define_in_root(&fully_qualified, symbol.clone());
-            if aliased {
-                continue;
-            }
-            if !own_names.contains(&canonical_symbol_name(&exported.name)) {
-                let type_qualified_short = format!("{}.{}", exported.name, variant.name);
-                short_candidates
-                    .entry(canonical_symbol_name(&type_qualified_short))
+            self.scopes
+                .imports
+                .define_source(unit, &fully_qualified, symbol);
+            for key in [
+                variant.name.clone(),
+                format!("{}.{}", exported.name, variant.name),
+            ] {
+                self.imported_candidates
+                    .entry(canonical_symbol_name(&key))
                     .or_default()
-                    .push((fully_qualified.clone(), symbol.clone()));
-            }
-            let short = canonical_symbol_name(&variant.name);
-            if exported.qualified_name.eq_ignore_ascii_case(&enum_ty.name)
-                && !own_names.contains(&short)
-            {
-                short_candidates
-                    .entry(short)
-                    .or_default()
-                    .push((fully_qualified, symbol));
+                    .extend(self.scopes.imports.source_name_for(unit, &fully_qualified));
             }
         }
         Ok(())

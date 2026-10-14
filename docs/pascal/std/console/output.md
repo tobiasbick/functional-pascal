@@ -9,9 +9,9 @@
 - **Effect:** prints each argument in order **without** appending a newline and **without** inserting separators automatically.
 
 ```pascal
-WriteText('count=');
-WriteText(42);
-WriteLn('');
+Console.WriteText('count=');
+Console.WriteText(42);
+Console.WriteLn('');
 ```
 
 ---
@@ -23,9 +23,9 @@ WriteLn('');
 - **Effect:** prints the arguments, then ends the current output line (newline semantics for captures and terminals).
 
 ```pascal
-WriteLn('Hello, World!');
-WriteLn(1, ' ', true);
-WriteLn();
+Console.WriteLn('Hello, World!');
+Console.WriteLn(1, ' ', true);
+Console.WriteLn();
 ```
 
 ---

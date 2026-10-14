@@ -1,29 +1,29 @@
 program ListenerAddressTest;
 
-uses Std.Net, Std.Test;
+uses Std.Net as Net, Std.Test as Test;
 
 function ExerciseListener(): result of (boolean, string);
 begin
-  const First: Listener := try Listen('127.0.0.1', 0);
-  const Second: Listener := try Listen('127.0.0.1', 0);
-  const Address: NetworkAddress := try ListenerLocalAddress(First);
-  const Other: NetworkAddress := try ListenerLocalAddress(Second);
-  AssertEquals('127.0.0.1', Address.Host);
-  AssertTrue(Address.Port > 0);
-  AssertTrue(Address.Port <= 65535);
-  AssertTrue(Address.Port <> Other.Port);
-  const Client: Connection := try Connect(Address.Host, Address.Port, 2000);
-  const Peer: Connection := try Accept(First);
-  const Timed: boolean := try SetTimeout(Peer, 2000);
-  const Sent: integer := try SendBytes(Client, [42]);
-  const Received: array of integer := try ReceiveBytes(Peer, 1);
-  AssertEquals(1, Sent);
-  AssertEquals(42, Received[0]);
-  const ClientClosed: boolean := try Close(Client);
-  const PeerClosed: boolean := try Close(Peer);
-  const FirstClosed: boolean := try CloseListener(First);
-  const SecondClosed: boolean := try CloseListener(Second);
-  case ListenerLocalAddress(First) of
+  const First: Net.Listener := try Net.Listen('127.0.0.1', 0);
+  const Second: Net.Listener := try Net.Listen('127.0.0.1', 0);
+  const Address: Net.NetworkAddress := try Net.ListenerLocalAddress(First);
+  const Other: Net.NetworkAddress := try Net.ListenerLocalAddress(Second);
+  Test.AssertEquals('127.0.0.1', Address.Host);
+  Test.AssertTrue(Address.Port > 0);
+  Test.AssertTrue(Address.Port <= 65535);
+  Test.AssertTrue(Address.Port <> Other.Port);
+  const Client: Net.Connection := try Net.Connect(Address.Host, Address.Port, 2000);
+  const Peer: Net.Connection := try Net.Accept(First);
+  const Timed: boolean := try Net.SetTimeout(Peer, 2000);
+  const Sent: integer := try Net.SendBytes(Client, [42]);
+  const Received: array of integer := try Net.ReceiveBytes(Peer, 1);
+  Test.AssertEquals(1, Sent);
+  Test.AssertEquals(42, Received[0]);
+  const ClientClosed: boolean := try Net.Close(Client);
+  const PeerClosed: boolean := try Net.Close(Peer);
+  const FirstClosed: boolean := try Net.CloseListener(First);
+  const SecondClosed: boolean := try Net.CloseListener(Second);
+  case Net.ListenerLocalAddress(First) of
     when Ok(_):
       begin
         panic('Closed listener returned an address');

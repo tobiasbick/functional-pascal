@@ -1,6 +1,6 @@
 program StringMapMultipleResultInTaskRuntimeError;
 
-uses Std.Tasks;
+uses Std.Tasks as Tasks;
 
 function Expand(C: string): string;
 begin
@@ -15,6 +15,6 @@ end function;
 begin
   scope
     const Job: task of string := go Work();
-    const Mapped: string := Wait(Job);
+    const Mapped: string := Tasks.Wait(Job);
   end scope;
 end.

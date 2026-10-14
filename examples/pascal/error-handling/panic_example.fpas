@@ -1,6 +1,6 @@
 program PanicExample;
 
-uses Std.Console;
+uses Std.Console as Console;
 
 function DivideChecked(A: integer; B: integer): integer;
 begin
@@ -32,7 +32,7 @@ begin
 end function;
 
 begin
-  WriteLn('10 / 3 = ', DivideChecked(10, 3));
-  WriteLn('Monday is a ', DayKind('Monday'));
-  WriteLn('Saturday is a ', DayKind('Saturday'));
+  Console.WriteLn('10 / 3 = ', DivideChecked(10, 3));
+  Console.WriteLn('Monday is a ', DayKind('Monday'));
+  Console.WriteLn('Saturday is a ', DayKind('Saturday'));
 end.

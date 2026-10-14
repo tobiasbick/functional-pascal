@@ -1,37 +1,37 @@
 program CryptoRandomTest;
 
-uses Std.Crypto, Std.Test;
+uses Std.Crypto as Crypto, Std.Test as Test;
 
 begin
-  case RandomBytes(32) of
+  case Crypto.RandomBytes(32) of
     when Ok(const Bytes):
       begin
-        AssertEquals(32, Bytes.Length());
+        Test.AssertEquals(32, Bytes.Length());
         for Index: integer := 0 to Bytes.Length() - 1 do
           begin
-            AssertTrue(Bytes[Index] >= 0);
-            AssertTrue(Bytes[Index] <= 255);
+            Test.AssertTrue(Bytes[Index] >= 0);
+            Test.AssertTrue(Bytes[Index] <= 255);
           end;
         end for;
       end;
     when Error(const Message):
       begin
-        Fail(Message);
+        Test.Fail(Message);
       end;
   end case;
 
-  case RandomInt(7, 7) of
+  case Crypto.RandomInt(7, 7) of
     when Ok(const Value):
       begin
-        AssertEquals(7, Value);
+        Test.AssertEquals(7, Value);
       end;
     when Error(const Message):
       begin
-        Fail(Message);
+        Test.Fail(Message);
       end;
   end case;
 
-  AssertTrue(RandomBytes(-1).IsError());
-  AssertTrue(RandomBytes(1048577).IsError());
-  AssertTrue(RandomInt(2, 1).IsError());
+  Test.AssertTrue(Crypto.RandomBytes(-1).IsError());
+  Test.AssertTrue(Crypto.RandomBytes(1048577).IsError());
+  Test.AssertTrue(Crypto.RandomInt(2, 1).IsError());
 end.

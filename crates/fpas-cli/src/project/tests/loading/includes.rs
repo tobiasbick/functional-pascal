@@ -134,7 +134,7 @@ include = ["src/math.fpas", "lib/*.fpas"]
     );
     write_text(
         &dir.join("src/main.fpas"),
-        "program Main;\nuses App.Math, App.Lib;\nbegin\nend.\n",
+        "program Main;\nuses App.Math as Math, App.Lib as Lib;\nbegin\nend.\n",
     );
     write_text(&dir.join("src/math.fpas"), "unit App.Math;\nend unit;");
     write_text(&dir.join("lib/helpers.fpas"), "unit App.Lib;\nend unit;");

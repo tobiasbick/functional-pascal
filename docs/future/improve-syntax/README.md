@@ -46,12 +46,12 @@ an open work package.
 
 AP01, AP02, AP03, AP04, AP05, AP06, AP07, AP09, AP10, AP11, AP13, AP14, AP15, AP16,
 AP17, AP18, AP19, AP20, AP21, AP22, AP23, AP24, AP26, AP30, AP31, AP32, AP33, AP34,
-AP35, AP36, AP37, AP38, AP39, and AP40 are complete, including all their work packages.
+AP35, AP36, AP37, AP38, AP39, AP40, and AP41 are complete, including all their work packages.
 Their READMEs and work-package files record implemented behavior,
 implementation owners, regression coverage, and any independent follow-ups.
 Checkboxes use the [status-tracking rule](development-process.md#status-tracking).
 
-Of the 43 packages, 34 are implemented, AP08/AP25/AP29 are rejected and closed,
+Of the 43 packages, 35 are implemented, AP08/AP25/AP29 are rejected and closed,
 AP12 and AP27 are deferred with their proposals retained, AP28 is transferred
 to editor/LSP planning. AP36 implements its recorded call, construction, and
 pattern contracts. AP37 implements its value/InPlace contract, named Pop result,
@@ -62,10 +62,13 @@ duplicate/reachability checks, with consumers and editor guidance aligned.
 AP40 implements owned starts, one go expression, ordinary discard, foreign
 mutable-state checks, creating-task group cleanup, ordinary Result errors, and
 consistent controlled wait priorities, with consumers and tooling migrated.
-AP41–AP43 are Decision pending.
-They record the language-consistency audit: concrete defects, underspecified
-contracts, context-dependent rules, and redundant public forms. Adding a
-proposal by itself does not approve its language changes or implementation.
+AP41 implements mandatory alias imports and type-qualified user enum variants,
+including semantic migration, diagnostics, cached interfaces, and editor output.
+AP42–AP43 remain
+Decision pending. These packages record the language-consistency audit: concrete
+defects, underspecified contracts, context-dependent rules, and redundant public
+forms. Adding a proposal by itself does not approve its language changes or
+implementation.
 AP30 and AP31 implement their selected contracts; AP32 corrects diagnostic
 hints and language guidance against current implemented behavior. AP33 delivers
 explicit numeric compatibility, checked arithmetic, and shared numeric text rules.
@@ -84,7 +87,7 @@ scope-wide named routine signatures and source-order value initialization,
 with conservative compile-time checks for premature direct or indirect use.
 AP39 implements always-exhaustive case with one statement/expression matrix and
 uniform reachability checks. AP40 delivers its selected concurrency contract;
-AP41–AP43 remain separate proposals.
+AP41 delivers its qualification contract; AP42–AP43 remain separate proposals.
 Reopening either deferred package requires a new explicit user decision.
 
 Completed APs retain their delivered scope and status. A new package that
@@ -156,7 +159,7 @@ package are listed in each work package file.
 | [x] | [AP38: Routine declaration visibility](ap38-routine-declaration-visibility/README.md) | Medium–large | AP11, AP24 | Complete: scope-wide signatures, checked initialization, compiled-unit summaries, and compiler/editor declaration identity |
 | [x] | [AP39: Consistent case coverage](ap39-consistent-case-coverage/README.md) | Large | AP03, AP18, AP19, AP20, AP21 | Complete (AP39.1–AP39.2): shared exhaustive coverage, fixed else matrix, exact intervals, and uniform reachability |
 | [x] | [AP40: Explicit task lifetimes and shared state](ap40-explicit-task-lifetimes/README.md) | Large | AP26, AP30; preserve AP37/AP38 | Complete (AP40.1–AP40.3): owned starts, ordinary discard, foreign mutable-state checks, joined owner teardown, ordinary Result errors, and consistent wait priorities |
-| [ ] | [AP41: Canonical qualified names](ap41-canonical-qualified-names/README.md) | Medium | AP05, AP20, AP24 | Decision pending; style versus mandatory qualification |
+| [x] | [AP41: Canonical qualified names](ap41-canonical-qualified-names/README.md) | Medium | AP05, AP20, AP24 | Complete: mandatory alias imports, type-qualified user variants, retained reserved Option/Result forms, migrated consumers, and matching diagnostics/editor output |
 | [ ] | [AP42: Canonical collection operations](ap42-canonical-collection-operations/README.md) | Medium–large | AP06; coordinate AP33/AP37 decisions | Decision pending; aliases, absence and static sortability |
 | [ ] | [AP43: Consistent error handling and parsing APIs](ap43-consistent-error-handling/README.md) | Medium | AP33.3; AP35/AP39 only where required | Decision pending; parser APIs and handling conventions |
 
@@ -210,7 +213,7 @@ its dependent implementation complete or approved.
 | AP38 | Complete: AP38.1 visibility decision; AP38.2 routine signatures, initialization proof, tooling, and verification |
 | AP39 | Complete: AP39.1 coverage decision; AP39.2 shared checks, exact intervals, migration, tooling, documentation, and regressions |
 | AP40 | Complete: AP40.1 concurrency decision; AP40.2 ownership/discard/shared state/teardown and migration; AP40.3 controlled wait priorities with retained retrieval/observation and Select case order |
-| AP41 | AP41.1 qualification decision; AP41.2 qualified-name rules |
+| AP41 | Complete: AP41.1 mandatory qualification decision; AP41.2 compiler enforcement, semantic consumer migration, alias/enum tooling, documentation, and regressions |
 | AP42 | AP42.1 collection contract; AP42.2 collection operations |
 | AP43 | AP43.1 error conventions; AP43.2 error APIs and guidance |
 
@@ -237,12 +240,19 @@ the work-package files state actual dependencies.
 | 3. Conditions and call composition | Complete: AP35 and AP36 | Nonbinding conditions and consistent complete call/pattern forms are delivered, preserving AP09/AP10 and AP34/AP35 behavior |
 | 4. Mutation, declarations and matching | Complete: AP37, AP38, and AP39 | Explicit mutation, scope-wide signatures, checked initialization, and shared exhaustive case coverage are delivered |
 | 5. Concurrency contracts | Complete: AP40.1–AP40.3 | Owned starts, ordinary discard, foreign mutable-state checks, joined owner teardown, and consistent controlled wait priorities are delivered; AP30 types/retrieval and Select case order are retained |
-| 6. Canonical public forms | AP41.1 → AP41.2; AP42.1 → AP42.2; AP43.1 → AP43.2 | Qualified-name policy, reduced collection aliases, consistent absence/parsing APIs, and canonical error-handling guidance |
+| 6. Canonical public forms | AP41 complete; AP42.1 → AP42.2; AP43.1 → AP43.2 | Alias imports and type-qualified user variants are delivered; remaining proposals cover reduced collection aliases, consistent absence/parsing APIs, and canonical error-handling guidance |
 
 The next recommended work package is
-[AP41.1](ap41-canonical-qualified-names/01-qualification-decision.md), which
-records the qualification policy before AP41.2 changes public name resolution.
-AP41 remains Decision pending; this recommendation does not approve its syntax.
+[AP42.1](ap42-canonical-collection-operations/01-collection-contract.md),
+whose collection contract remains Decision pending. AP42.2 and AP43 still require
+their separate decisions before implementation.
+AP41 is complete: all imports require an explicit alias and imported symbols use
+that alias; user enum variants carry their type qualifier in every expression and
+pattern position. Some/None/Ok/Error remain the reserved language forms. Alias
+uniqueness/non-shadowing, local names, explicit type aliases, and native/record
+operations retain their rules. Editor auto-imports and completions generate the
+same required forms. Compiler checks, semantic migration, documentation, tooling,
+cached interfaces, and regressions are delivered and independently reviewed.
 AP40 is complete: every start has a lexical scope or explicit group owner,
 helpers do not inherit scopes, and go/discard each have one form. Private
 dependency summaries and mandatory VM checks reject foreign mutable access.

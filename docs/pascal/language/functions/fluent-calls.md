@@ -24,8 +24,8 @@ begin
 end function;
 
 begin
-const Values: array of integer := [1, 2, 3, 4];
-const Total: integer := Values.Filter(IsEven).Map(Double).Reduce(0, Sum);
+  const Values: array of integer := [1, 2, 3, 4];
+  const Total: integer := Values.Filter(IsEven).Map(Double).Reduce(0, Sum);
 end.
 ```
 

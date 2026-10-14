@@ -1,15 +1,15 @@
 program NoteSelectionAfterSaveTest;
 
-uses Notes.Model, Notes.Update, Std.Test, Std.Tui;
+uses Notes.Model as NotesModel, Notes.Update as Update, Std.Test as Test, Std.Tui as Tui;
 
 begin
-  const Target: Note := NoteCreate('target', 2);
-  const Edited: Note := NoteCreate('edited', 1);
-  const Loaded: NotesLoad := notes.model.notesload(Notes := [Target, Edited], Issues := []);
-  var Model: NotesModel := NotesModelCreate(ScratchDir() + '/notes', Loaded);
+  const Target: NotesModel.Note := NotesModel.NoteCreate('target', 2);
+  const Edited: NotesModel.Note := NotesModel.NoteCreate('edited', 1);
+  const Loaded: NotesModel.NotesLoad := NotesModel.NotesLoad(Notes := [Target, Edited], Issues := []);
+  var Model: NotesModel.NotesModel := NotesModel.NotesModelCreate(Test.ScratchDir() + '/notes', Loaded);
   Model.Selected := 1;
   Model.Dirty := true;
-  const Cmd: TuiCmdOutput := TuiCmdOutput.Create();
-  Model := NotesUpdate(Model, TuiMsgSelectionChanged(TuiControlId.Create(2), TuiAction.Create(2), 0), Cmd);
-  AssertEquals('target', Model.Notes[Model.Selected].Id);
+  const Cmd: Tui.TuiCmdOutput := Tui.TuiCmdOutput.Create();
+  Model := Update.NotesUpdate(Model, Tui.TuiMsgSelectionChanged(Tui.TuiControlId.Create(2), Tui.TuiAction.Create(2), 0), Cmd);
+  Test.AssertEquals('target', Model.Notes[Model.Selected].Id);
 end.

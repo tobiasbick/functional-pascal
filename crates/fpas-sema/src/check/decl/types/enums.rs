@@ -144,7 +144,7 @@ impl Checker {
         values
     }
 
-    /// Register `Type.Variant` and, when unambiguous, a short `Variant` alias at program scope.
+    /// Register only `Type.Variant`; retain the short spelling solely for repair hints.
     ///
     /// **Documentation:** `docs/pascal/language/types/enums.md`
     fn register_enum_variant_symbols(
@@ -155,7 +155,7 @@ impl Checker {
         span: Span,
     ) {
         let qualified = format!("{enum_name}.{variant_name}");
-        if !self.scopes.define_in_root(&qualified, symbol.clone()) {
+        if !self.scopes.define_in_root(&qualified, symbol) {
             self.error_with_code(
                 SEMA_DUPLICATE_DECLARATION,
                 format!("Duplicate enum member `{qualified}`"),
@@ -165,43 +165,9 @@ impl Checker {
             return;
         }
 
-        let short_key = canonical_symbol_name(variant_name);
-
-        if self.has_preceding_value(variant_name, span.offset) {
-            return;
-        }
-
-        if let Some(candidates) = self.ambiguous_enum_variants.get(&short_key) {
-            let mut updated = candidates.clone();
-            if !updated
-                .iter()
-                .any(|candidate| candidate.eq_ignore_ascii_case(&qualified))
-            {
-                updated.push(qualified.clone());
-                self.ambiguous_enum_variants
-                    .insert(short_key.clone(), updated);
-            }
-            return;
-        }
-
-        if let Some(existing_qualified) = self.enum_short_variant_keys.get(&short_key).cloned() {
-            if existing_qualified.eq_ignore_ascii_case(&qualified) {
-                return;
-            }
-
-            self.scopes.remove_from_root(variant_name);
-            self.enum_short_variant_keys.remove(&short_key);
-            self.ambiguous_enum_variants
-                .insert(short_key, vec![existing_qualified, qualified.clone()]);
-            return;
-        }
-
-        if self.scopes.lookup(variant_name).is_some() {
-            return;
-        }
-
-        if self.scopes.define_in_root(variant_name, symbol) {
-            self.enum_short_variant_keys.insert(short_key, qualified);
-        }
+        self.imported_candidates
+            .entry(canonical_symbol_name(variant_name))
+            .or_default()
+            .push(qualified);
     }
 }

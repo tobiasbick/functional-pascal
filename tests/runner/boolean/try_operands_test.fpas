@@ -1,6 +1,6 @@
 program TryOperandsTest;
 
-uses Std.Test;
+uses Std.Test as Test;
 
 var Trace: integer := 0;
 
@@ -43,34 +43,34 @@ begin
 end function;
 
 begin
-  AssertTrue(ProbeResult(false, true, false, true) = Ok(false));
-  AssertEquals(1, Trace);
+  Test.AssertTrue(ProbeResult(false, true, false, true) = Ok(false));
+  Test.AssertEquals(1, Trace);
   Trace := 0;
-  AssertTrue(ProbeResult(true, false, false, true) = Ok(true));
-  AssertEquals(1, Trace);
+  Test.AssertTrue(ProbeResult(true, false, false, true) = Ok(true));
+  Test.AssertEquals(1, Trace);
   Trace := 0;
-  AssertTrue(ProbeResult(true, true, false, false) = Ok(true));
-  AssertEquals(12, Trace);
+  Test.AssertTrue(ProbeResult(true, true, false, false) = Ok(true));
+  Test.AssertEquals(12, Trace);
   Trace := 0;
-  AssertTrue(ProbeResult(false, false, false, false) = Ok(false));
-  AssertEquals(12, Trace);
+  Test.AssertTrue(ProbeResult(false, false, false, false) = Ok(false));
+  Test.AssertEquals(12, Trace);
   Trace := 0;
-  AssertTrue(ProbeResult(true, true, false, true) = Error('expected'));
-  AssertEquals(12, Trace);
+  Test.AssertTrue(ProbeResult(true, true, false, true) = Error('expected'));
+  Test.AssertEquals(12, Trace);
   Trace := 0;
-  AssertTrue(ProbeResult(false, false, false, true) = Error('expected'));
-  AssertEquals(12, Trace);
+  Test.AssertTrue(ProbeResult(false, false, false, true) = Error('expected'));
+  Test.AssertEquals(12, Trace);
   Trace := 0;
-  AssertTrue(ProbeResult(true, true, true, false) = Error('expected'));
-  AssertEquals(1, Trace);
+  Test.AssertTrue(ProbeResult(true, true, true, false) = Error('expected'));
+  Test.AssertEquals(1, Trace);
   Trace := 0;
-  AssertTrue(ProbeOption(false, true, true) = Some(false));
-  AssertTrue(ProbeOption(true, false, true) = Some(true));
-  AssertEquals(0, Trace);
-  AssertTrue(ProbeOption(true, true, false) = Some(true));
-  AssertTrue(ProbeOption(false, false, false) = Some(false));
-  AssertEquals(2, Trace);
-  AssertTrue(ProbeOption(true, true, true) = None);
-  AssertTrue(ProbeOption(false, false, true) = None);
-  AssertEquals(4, Trace);
+  Test.AssertTrue(ProbeOption(false, true, true) = Some(false));
+  Test.AssertTrue(ProbeOption(true, false, true) = Some(true));
+  Test.AssertEquals(0, Trace);
+  Test.AssertTrue(ProbeOption(true, true, false) = Some(true));
+  Test.AssertTrue(ProbeOption(false, false, false) = Some(false));
+  Test.AssertEquals(2, Trace);
+  Test.AssertTrue(ProbeOption(true, true, true) = None);
+  Test.AssertTrue(ProbeOption(false, false, true) = None);
+  Test.AssertEquals(4, Trace);
 end.

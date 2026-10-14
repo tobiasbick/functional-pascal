@@ -1,6 +1,6 @@
 program TuiQuitOrderTest;
 
-uses Std.Test, Std.Tui;
+uses Std.Test as Test, Std.Tui as Tui;
 
 type QuitModel = record
   LabelText: string;
@@ -8,30 +8,30 @@ type QuitModel = record
   Updates: integer;
 end record;
 
-function ViewQuit(State: QuitModel): TuiElement;
+function ViewQuit(State: QuitModel): Tui.TuiElement;
 begin
-  return TuiElementBuilders.MakeLabel(State.LabelText);
+  return Tui.TuiElementBuilders.MakeLabel(State.LabelText);
 end function;
 
-function UpdateQuit(State: QuitModel; Msg: TuiMsg; Cmd: TuiCmdOutput): QuitModel;
+function UpdateQuit(State: QuitModel; Msg: Tui.TuiMsg; Cmd: Tui.TuiCmdOutput): QuitModel;
 begin
-  AssertTrue(Cmd.Command() = TuiCmd.NoCommand);
+  Test.AssertTrue(Cmd.Command() = Tui.TuiCmd.NoCommand);
   case Msg of
-    when TuiMsg.MenuChanged(const MenuSource, const MenuAction, const MenuState):
+    when Tui.TuiMsg.MenuChanged(const MenuSource, const MenuAction, const MenuState):
       begin
-        Cmd.Set(TuiCmd.Quit);
+        Cmd.Set(Tui.TuiCmd.Quit);
         return QuitModel(LabelText := 'SHOULD NOT PAINT', Quit := true, Updates := State.Updates + 1);
       end;
-    when TuiMsg.QuitRequested:
+    when Tui.TuiMsg.QuitRequested:
       begin
-        Cmd.Set(TuiCmd.Quit);
+        Cmd.Set(Tui.TuiCmd.Quit);
         return QuitModel(LabelText := 'SHOULD NOT PAINT', Quit := true, Updates := State.Updates + 1);
       end;
-    when TuiMsg.Tick(const Delta):
+    when Tui.TuiMsg.Tick(const Delta):
       begin
         return QuitModel(LabelText := 'after-tick', Quit := false, Updates := State.Updates + 1);
       end;
-    when TuiMsg.Started, TuiMsg.Key(_), TuiMsg.Pointer(_), TuiMsg.Resize(_), TuiMsg.FocusChanged(_, _), TuiMsg.Action(_, _), TuiMsg.TextChanged(_, _, _, _), TuiMsg.TextAreaChanged(_, _, _, _, _), TuiMsg.CheckChanged(_, _, _), TuiMsg.SelectionChanged(_, _, _), TuiMsg.ScrollChanged(_, _, _), TuiMsg.BackgroundFailed(_, _, _, _, _, _):
+    when Tui.TuiMsg.Started, Tui.TuiMsg.Key(_), Tui.TuiMsg.Pointer(_), Tui.TuiMsg.Resize(_), Tui.TuiMsg.FocusChanged(_, _), Tui.TuiMsg.Action(_, _), Tui.TuiMsg.TextChanged(_, _, _, _), Tui.TuiMsg.TextAreaChanged(_, _, _, _, _), Tui.TuiMsg.CheckChanged(_, _, _), Tui.TuiMsg.SelectionChanged(_, _, _), Tui.TuiMsg.ScrollChanged(_, _, _), Tui.TuiMsg.BackgroundFailed(_, _, _, _, _, _):
       begin
         return QuitModel(LabelText := State.LabelText, Quit := State.Quit, Updates := State.Updates +
                                                                                       1);
@@ -40,17 +40,17 @@ begin
 end function;
 
 begin
-  var App: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(20, 4));
+  var App: Tui.TuiApplication := Tui.TuiApplication.OpenForTest(Tui.TuiSize.Create(20, 4));
   var Model: QuitModel := QuitModel(LabelText := 'before', Quit := false, Updates := 0);
   Model := App.RunIterations(Model, UpdateQuit, ViewQuit, 0, 0);
-  AssertTrue(App.SurfaceSnapshot().LineAt(0).Contains('before'));
-  App.Inject(TuiMsg.QuitRequested);
-  App.Inject(TuiMsg.Tick(1));
+  Test.AssertTrue(App.SurfaceSnapshot().LineAt(0).Contains('before'));
+  App.Inject(Tui.TuiMsg.QuitRequested);
+  App.Inject(Tui.TuiMsg.Tick(1));
   Model := App.RunIterations(Model, UpdateQuit, ViewQuit, 5, 0);
-  AssertTrue(Model.Quit);
-  AssertEquals(1, Model.Updates);
-  AssertTrue(App.SurfaceSnapshot().LineAt(0).Contains('before'));
-  AssertFalse(App.SurfaceSnapshot().LineAt(0).Contains('SHOULD NOT PAINT'));
-  AssertFalse(App.SurfaceSnapshot().LineAt(0).Contains('after-tick'));
+  Test.AssertTrue(Model.Quit);
+  Test.AssertEquals(1, Model.Updates);
+  Test.AssertTrue(App.SurfaceSnapshot().LineAt(0).Contains('before'));
+  Test.AssertFalse(App.SurfaceSnapshot().LineAt(0).Contains('SHOULD NOT PAINT'));
+  Test.AssertFalse(App.SurfaceSnapshot().LineAt(0).Contains('after-tick'));
   App.Close();
 end.

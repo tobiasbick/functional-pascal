@@ -1,12 +1,12 @@
 program T;
 
-uses Std.Console, Std.Conv;
+uses Std.Console as Console, Std.Conv as Conv;
 
 begin
   const D: dict of integer to string := [1: 'one', 2: 'two', 3: 'three'];
   for K: integer in D do
     begin
-      WriteLn(IntToStr(K));
+      Console.WriteLn(Conv.IntToStr(K));
     end;
   end for;
 end.

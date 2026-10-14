@@ -26,14 +26,10 @@ fn imported_constructors_and_reexported_aliases_preserve_defaults_and_identity()
         &root.join("src/facade.fpas"),
         "unit Demo.Facade; uses Demo.Model as M; public type Position = M.Location; end unit;",
     );
-    write(&main, "program App; uses Std.Console, Demo.Model as M, Demo.Facade as F;
-      function Move(P: M.Point): M.Point; begin return M.Point(Y := P.Y + 1, X := P.X + 2); end function;
-      begin
-        const P: F.Position := F.Position(X := 3);
-        const Q: M.Point := Move(P);
-        const S: M.Secret := M.CreateSecret();
-        WriteLn(P.X, ':', P.Y, ':', Q.X, ':', Q.Y, ':', S.X);
-      end.");
+    write(
+        &main,
+        "program App; uses Std.Console as Console, Demo.Model as M, Demo.Facade as F;\n      function Move(P: M.Point): M.Point; begin return M.Point(Y := P.Y + 1, X := P.X + 2); end function;\n      begin\n        const P: F.Position := F.Position(X := 3);\n        const Q: M.Point := Move(P);\n        const S: M.Secret := M.CreateSecret();\n        Console.WriteLn(P.X, ':', P.Y, ':', Q.X, ':', Q.Y, ':', S.X);\n      end.",
+    );
     assert_eq!(run(build(&root, &main)), ["3:2:5:3:5"]);
     let second = build(&root, &main);
     assert_eq!(second.counters().sidecar_reused, 2);
@@ -95,28 +91,10 @@ fn evaluated_defaults_match_local_values_through_aliases_generics_and_reused_sid
       public type IntegerBox = M.Box of integer;
       end unit;",
     );
-    write(&main, "program App;
-      uses Std.Console, Demo.Model as M, Demo.Facade as F;
-      const Base: integer := 90;
-      function ReadValue(): integer; begin return Base; end function;
-      type Local = record
-        Literal: integer := 3;
-        Expression: integer := 1 + 2;
-        Reference: integer := Base;
-        Dynamic: integer := ReadValue();
-      end record;
-      begin
-        const P: F.Settings := F.Settings();
-        const Q: M.Defaults := M.Alias(Expression := 4);
-        const L: Local := Local();
-        const B: F.IntegerBox := F.IntegerBox(Value := 5);
-        const G: M.Box of string := M.Box(Value := 'x');
-        WriteLn(P.Literal, ':', P.Expression, ':', P.Reference, ':', P.Parenthesized, ':', P.Negative);
-        WriteLn(P.Ratio, ':', P.Caption, ':', P.Flag, ':', P.Minimum, ':', P.ShortCircuit);
-        WriteLn(P.Current = M.State.Ready, ':', P.Missing.IsNone(), ':', P.Handler.IsNone());
-        WriteLn(Q.Expression, ':', Q.Reference, ':', L.Literal, ':', L.Expression, ':', L.Reference, ':', L.Dynamic);
-        WriteLn(B.Value, ':', B.Count, ':', B.Optional.IsNone(), ':', G.Value, ':', G.Count, ':', G.Optional.IsNone());
-      end.");
+    write(
+        &main,
+        "program App;\n      uses Std.Console as Console, Demo.Model as M, Demo.Facade as F;\n      const Base: integer := 90;\n      function ReadValue(): integer; begin return Base; end function;\n      type Local = record\n        Literal: integer := 3;\n        Expression: integer := 1 + 2;\n        Reference: integer := Base;\n        Dynamic: integer := ReadValue();\n      end record;\n      begin\n        const P: F.Settings := F.Settings();\n        const Q: M.Defaults := M.Alias(Expression := 4);\n        const L: Local := Local();\n        const B: F.IntegerBox := F.IntegerBox(Value := 5);\n        const G: M.Box of string := M.Box(Value := 'x');\n        Console.WriteLn(P.Literal, ':', P.Expression, ':', P.Reference, ':', P.Parenthesized, ':', P.Negative);\n        Console.WriteLn(P.Ratio, ':', P.Caption, ':', P.Flag, ':', P.Minimum, ':', P.ShortCircuit);\n        Console.WriteLn(P.Current = M.State.Ready, ':', P.Missing.IsNone(), ':', P.Handler.IsNone());\n        Console.WriteLn(Q.Expression, ':', Q.Reference, ':', L.Literal, ':', L.Expression, ':', L.Reference, ':', L.Dynamic);\n        Console.WriteLn(B.Value, ':', B.Count, ':', B.Optional.IsNone(), ':', G.Value, ':', G.Count, ':', G.Optional.IsNone());\n      end.",
+    );
     let expected = [
         "3:3:3:3:-3",
         "2.5:ab:true:-9223372036854775808:false",

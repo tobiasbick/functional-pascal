@@ -1,10 +1,10 @@
 program DictionaryMutation;
 
-uses Std.Console;
+uses Std.Console as Console;
 
 var Scores: dict of string to integer := ['Ada': 1, 'Grace': 2];
 
 begin
-  WriteLn(Scores['Hopper']);
-  WriteLn(Scores['Bob']);
+  Console.WriteLn(Scores['Hopper']);
+  Console.WriteLn(Scores['Bob']);
 end.

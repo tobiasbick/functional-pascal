@@ -1,6 +1,6 @@
 program DebuggerTarget;
 
-uses Std.Console;
+uses Std.Console as Console;
 
 type Point = record
   X: integer;
@@ -31,6 +31,6 @@ begin
   const Origin: Point := Point(X := 3, Y := 4);
   const Counter: function(): integer := MakeCounter(10);
   const Values: array of integer := [Origin.X, Origin.Y, Factorial(4)];
-  WriteLn(Values);
-  WriteLn(Counter());
+  Console.WriteLn(Values);
+  Console.WriteLn(Counter());
 end.

@@ -32,12 +32,7 @@ fn imported_distinct_types_convert_explicitly_through_plain_and_aliased_imports(
     );
     write(
         &main,
-        "program App; uses Std.Console, Demo.Ids, Demo.Accounts;
-      begin
-        const First: UserId := Next(Admin);
-        const Second: UserId := Promote(First);
-        WriteLn(integer(Admin), ':', integer(First), ':', integer(Second), ':', Describe(Label('root')));
-      end.",
+        "program App; uses Std.Console as Console, Demo.Ids as Ids, Demo.Accounts as Accounts;\n      begin\n        const First: Ids.UserId := Ids.Next(Ids.Admin);\n        const Second: Ids.UserId := Accounts.Promote(First);\n        Console.WriteLn(integer(Ids.Admin), ':', integer(First), ':', integer(Second), ':', Accounts.Describe(Ids.Label('root')));\n      end.",
     );
     assert_eq!(run(build(&root, &main)), ["7:8:10:root"]);
     let second = build(&root, &main);

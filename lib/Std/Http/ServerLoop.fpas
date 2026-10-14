@@ -1,13 +1,13 @@
 // Bounded concurrent HTTP server-loop orchestration.
 unit Std.Http.ServerLoop;
 
-uses Std.Http.Server, Std.Http.Types, Std.Net, Std.Tasks;
+uses Std.Http.Server as Server, Std.Http.Types as Types, Std.Net as Net, Std.Tasks as StdTasks;
 
 // Validates all server-loop limits before accepting a connection.
 //
 // Parameters:
 // - `Options`: Server-loop limits to validate.
-function ValidateOptions(Options: ServerOptions): result of (boolean, string);
+function ValidateOptions(Options: Types.ServerOptions): result of (boolean, string);
 begin
   if Options.MaxHeaderBytes < 1 then
     begin
@@ -46,9 +46,9 @@ end function;
 //
 // Parameters:
 // - `Connection`: Connection to close.
-procedure CloseQuietly(Connection: Std.Net.Connection);
+procedure CloseQuietly(Connection: Net.Connection);
 begin
-  case Std.Net.Close(Connection) of
+  case Net.Close(Connection) of
     when Ok(_):
       begin
       end;
@@ -62,10 +62,10 @@ end procedure;
 //
 // Parameters:
 // - `Connection`: Connection that supplied a malformed request.
-procedure WriteBadRequestQuietly(Connection: Std.Net.Connection);
+procedure WriteBadRequestQuietly(Connection: Net.Connection);
 begin
-  const ResponseValue: ServerResponse := ServerResponse.Create(400, 'Bad Request');
-  case Std.Http.Server.WriteResponse(Connection, ResponseValue) of
+  const ResponseValue: Types.ServerResponse := Types.ServerResponse.Create(400, 'Bad Request');
+  case Server.WriteResponse(Connection, ResponseValue) of
     when Ok(_):
       begin
       end;
@@ -82,12 +82,12 @@ end procedure;
 // - `Options`: Request and connection limits.
 // - `Handler`: Callback that maps the parsed request to a response.
 function ServeConnection(
-  Connection: Std.Net.Connection;
-  Options: ServerOptions;
-  Handler: RequestHandler
+  Connection: Net.Connection;
+  Options: Types.ServerOptions;
+  Handler: Types.RequestHandler
 ): boolean;
 begin
-  case Std.Net.SetTimeout(Connection, Options.ConnectionTimeoutMillis) of
+  case Net.SetTimeout(Connection, Options.ConnectionTimeoutMillis) of
     when Ok(_):
       begin
       end;
@@ -97,8 +97,8 @@ begin
         return false;
       end;
   end case;
-  var RequestValue: ServerRequest := std.http.types.serverrequest(Method := '', Target := '', Headers := [], Body := []);
-  case Std.Http.Server.ReadRequest(Connection, Options.MaxHeaderBytes, Options.MaxBodyBytes) of
+  var RequestValue: Types.ServerRequest := Types.ServerRequest(Method := '', Target := '', Headers := [], Body := []);
+  case Server.ReadRequest(Connection, Options.MaxHeaderBytes, Options.MaxBodyBytes) of
     when Ok(const Value):
       begin
         RequestValue := Value;
@@ -110,9 +110,9 @@ begin
         return false;
       end;
   end case;
-  const ResponseValue: ServerResponse := Handler(RequestValue);
+  const ResponseValue: Types.ServerResponse := Handler(RequestValue);
   var Succeeded: boolean := false;
-  case Std.Http.Server.WriteResponse(Connection, ResponseValue) of
+  case Server.WriteResponse(Connection, ResponseValue) of
     when Ok(_):
       begin
         Succeeded := true;
@@ -132,7 +132,7 @@ end function;
 // - `Options`: Server-loop concurrency and request limits.
 // - `Accepted`: Total accepted connections.
 // - `BatchLength`: Connections already present in the current batch.
-function HasCapacity(Options: ServerOptions; Accepted: integer; BatchLength: integer): boolean;
+function HasCapacity(Options: Types.ServerOptions; Accepted: integer; BatchLength: integer): boolean;
 begin
   return (BatchLength < Options.MaxConcurrentRequests) and
          ((Options.MaxRequests = 0) or (Accepted < Options.MaxRequests));
@@ -144,7 +144,7 @@ end function;
 // - `Listener`: Open TCP or TLS listener.
 // - `Options`: Request limits and server-loop bounds.
 // - `Handler`: Callback that maps each accepted request to a response.
-public function Serve(Listener: Std.Net.Listener; Options: ServerOptions; Handler: RequestHandler): result of (boolean, string);
+public function Serve(Listener: Net.Listener; Options: Types.ServerOptions; Handler: Types.RequestHandler): result of (boolean, string);
 begin
   scope
     case ValidateOptions(Options) of
@@ -162,7 +162,7 @@ begin
         var Tasks: array of task of boolean := [];
         while HasCapacity(Options, Accepted, Tasks.Length()) do
           begin
-            case Std.Net.Accept(Listener) of
+            case Net.Accept(Listener) of
               when Ok(const Connection):
                 begin
                   Tasks.PushInPlace(go ServeConnection(Connection, Options, Handler));
@@ -170,14 +170,14 @@ begin
                 end;
               when Error(const Message):
                 begin
-                  Std.Tasks.WaitAll(Tasks);
+                  StdTasks.WaitAll(Tasks);
                   return Error(Message);
                 end;
             end case;
           end;
         end while;
 
-        Std.Tasks.WaitAll(Tasks);
+        StdTasks.WaitAll(Tasks);
       end;
     end while;
 

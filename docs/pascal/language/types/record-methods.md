@@ -1,5 +1,7 @@
 # Record methods
 
+The code fragments use `uses Std.Conv as Conv, Std.Math as Math, Std.Console as Console;`.
+
 Records can declare functions and procedures that operate on their data, and
 **static functions and procedures** that belong to the type itself.
 
@@ -59,12 +61,12 @@ type Point = record
   begin
     const DX: real := Other.X - Self.X;
     const DY: real := Other.Y - Self.Y;
-    return Sqrt(DX * DX + DY * DY);
+    return Math.Sqrt(DX * DX + DY * DY);
   end function;
 
   procedure Print(Self: Point);
   begin
-    WriteLn('(' + RealToStr(Self.X) + ', ' + RealToStr(Self.Y) + ')');
+    Console.WriteLn('(' + Conv.RealToStr(Self.X) + ', ' + Conv.RealToStr(Self.Y) + ')');
   end procedure;
 end record;
 ```
@@ -110,7 +112,7 @@ const C: Counter := Counter( Base := 10 );
 const AddTen: function(Value: integer): integer := C.Add;
 
 begin
-  WriteLn(AddTen(5));  // 15: the bound receiver supplies Self, and Value is 5.
+  Console.WriteLn(AddTen(5));  // 15: the bound receiver supplies Self, and Value is 5.
 end.
 ```
 
@@ -153,7 +155,7 @@ type Point = record
 
   static procedure Print(Value: Point);
   begin
-    WriteLn('(' + IntToStr(Value.X) + ', ' + IntToStr(Value.Y) + ')');
+    Console.WriteLn('(' + Conv.IntToStr(Value.X) + ', ' + Conv.IntToStr(Value.Y) + ')');
   end procedure;
 
   function Sum(Self: Point): integer;
@@ -169,7 +171,7 @@ const
   const O: Point := Point.Origin();
 begin
   Point.Print(P);
-  WriteLn(P.Sum());  // 7
+  Console.WriteLn(P.Sum());  // 7
 end.
 ```
 
@@ -212,7 +214,7 @@ built-in type. See [Dot calls](../functions/fluent-calls.md).
 ```pascal
 function PointToString(P: Point): string;
 begin
-  return '(' + RealToStr(P.X) + ', ' + RealToStr(P.Y) + ')';
+  return '(' + Conv.RealToStr(P.X) + ', ' + Conv.RealToStr(P.Y) + ')';
 end function;
 ```
 

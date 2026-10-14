@@ -1,39 +1,41 @@
 program FluentHttpTest;
 
-uses Std.Conv, Std.Http, Std.Net, Std.Net.Utf8, Std.Tasks, Std.Test;
+uses
+  Std.Conv as Conv, Std.Http as Http, Std.Net as Net, Std.Net.Utf8 as Utf8, Std.Tasks as Tasks,
+  Std.Test as Test;
 
 function FetchText(Url: string): result of (string, string);
 begin
-  return Std.Http.Send(Request.Get(Url)).AndThen(BodyText);
+  return Http.Send(Http.Request.Get(Url)).AndThen(Http.BodyText);
 end function;
 
-function Handle(RequestValue: ServerRequest): ServerResponse;
+function Handle(RequestValue: Http.ServerRequest): Http.ServerResponse;
 begin
-  var ResponseValue: ServerResponse := ServerResponse.Create(200, 'OK');
+  var ResponseValue: Http.ServerResponse := Http.ServerResponse.Create(200, 'OK');
   if (RequestValue.Method <> 'GET') or (RequestValue.Target <> '/fluent') then
     begin
-      ResponseValue.Body := Std.Net.Utf8.Encode('unexpected request');
+      ResponseValue.Body := Utf8.Encode('unexpected request');
       return ResponseValue;
     end;
   end if;
 
-  ResponseValue.Body := Std.Net.Utf8.Encode('hello fluent');
+  ResponseValue.Body := Utf8.Encode('hello fluent');
   return ResponseValue;
 end function;
 
 function ExerciseHttp(): result of (boolean, string);
 begin
   scope
-    const ListenerValue: Listener := try Listen('127.0.0.1', 0);
-    const Address: NetworkAddress := try ListenerLocalAddress(ListenerValue);
-    var Options: ServerOptions := ServerOptions.Create();
+    const ListenerValue: Net.Listener := try Net.Listen('127.0.0.1', 0);
+    const Address: Net.NetworkAddress := try Net.ListenerLocalAddress(ListenerValue);
+    var Options: Http.ServerOptions := Http.ServerOptions.Create();
     Options.MaxRequests := 1;
-    const ServerTask: task of result of (boolean, string) := go Serve(ListenerValue, Options, Handle);
-    const Url: string := 'http://127.0.0.1:' + IntToStr(Address.Port) + '/fluent';
+    const ServerTask: task of result of (boolean, string) := go Http.Serve(ListenerValue, Options, Handle);
+    const Url: string := 'http://127.0.0.1:' + Conv.IntToStr(Address.Port) + '/fluent';
     const Text: string := try FetchText(Url);
-    AssertEquals('hello fluent', Text);
-    const Served: boolean := try Wait(ServerTask);
-    const Closed: boolean := try CloseListener(ListenerValue);
+    Test.AssertEquals('hello fluent', Text);
+    const Served: boolean := try Tasks.Wait(ServerTask);
+    const Closed: boolean := try Net.CloseListener(ListenerValue);
     return Ok(Served and Closed);
   end scope;
 end function;
@@ -42,11 +44,11 @@ begin
   case ExerciseHttp() of
     when Ok(const Succeeded):
       begin
-        AssertTrue(Succeeded);
+        Test.AssertTrue(Succeeded);
       end;
     when Error(const Message):
       begin
-        Fail(Message);
+        Test.Fail(Message);
       end;
   end case;
 end.

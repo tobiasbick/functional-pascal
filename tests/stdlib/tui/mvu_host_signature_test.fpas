@@ -1,45 +1,45 @@
 program MvuHostSignatureTest;
 
 // Phase 0: prove the exact generic RunIterations / Update / View callable pattern.
-uses Std.Tui, Std.Test;
+uses Std.Tui as Tui, Std.Test as Test;
 
 type CounterModel = record
   Value: integer;
 end record;
 
-function UpdateCounter(State: CounterModel; Msg: TuiMsg; Cmd: TuiCmdOutput): CounterModel;
+function UpdateCounter(State: CounterModel; Msg: Tui.TuiMsg; Cmd: Tui.TuiCmdOutput): CounterModel;
 begin
-  Cmd.Set(TuiCmd.NoCommand);
+  Cmd.Set(Tui.TuiCmd.NoCommand);
   case Msg of
-    when TuiMsg.Tick(const Delta):
+    when Tui.TuiMsg.Tick(const Delta):
       begin
         return CounterModel(Value := State.Value + 1);
       end;
-    when TuiMsg.MenuChanged(const MenuSource, const MenuAction, const MenuState):
+    when Tui.TuiMsg.MenuChanged(const MenuSource, const MenuAction, const MenuState):
       begin
-        Cmd.Set(TuiCmd.Quit);
+        Cmd.Set(Tui.TuiCmd.Quit);
         return State;
       end;
-    when TuiMsg.QuitRequested:
+    when Tui.TuiMsg.QuitRequested:
       begin
-        Cmd.Set(TuiCmd.Quit);
+        Cmd.Set(Tui.TuiCmd.Quit);
         return State;
       end;
-    when TuiMsg.Started, TuiMsg.Key(_), TuiMsg.Pointer(_), TuiMsg.Resize(_), TuiMsg.FocusChanged(_, _), TuiMsg.Action(_, _), TuiMsg.TextChanged(_, _, _, _), TuiMsg.TextAreaChanged(_, _, _, _, _), TuiMsg.CheckChanged(_, _, _), TuiMsg.SelectionChanged(_, _, _), TuiMsg.ScrollChanged(_, _, _), TuiMsg.BackgroundFailed(_, _, _, _, _, _):
+    when Tui.TuiMsg.Started, Tui.TuiMsg.Key(_), Tui.TuiMsg.Pointer(_), Tui.TuiMsg.Resize(_), Tui.TuiMsg.FocusChanged(_, _), Tui.TuiMsg.Action(_, _), Tui.TuiMsg.TextChanged(_, _, _, _), Tui.TuiMsg.TextAreaChanged(_, _, _, _, _), Tui.TuiMsg.CheckChanged(_, _, _), Tui.TuiMsg.SelectionChanged(_, _, _), Tui.TuiMsg.ScrollChanged(_, _, _), Tui.TuiMsg.BackgroundFailed(_, _, _, _, _, _):
       begin
         return State;
       end;
   end case;
 end function;
 
-function ViewCounter(State: CounterModel): TuiElement;
+function ViewCounter(State: CounterModel): Tui.TuiElement;
 begin
-  return TuiElementBuilders.MakeLabel('count');
+  return Tui.TuiElementBuilders.MakeLabel('count');
 end function;
 
 begin
-  var App: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(40, 12));
+  var App: Tui.TuiApplication := Tui.TuiApplication.OpenForTest(Tui.TuiSize.Create(40, 12));
   const FinalModel: CounterModel := App.RunIterations(CounterModel(Value := 0), UpdateCounter, ViewCounter, 3, 16);
-  AssertEquals(3, FinalModel.Value);
+  Test.AssertEquals(3, FinalModel.Value);
   App.Close();
 end.

@@ -1,4 +1,4 @@
-//! Source-local unit imports and optional aliases.
+//! Source-local unit imports with explicit aliases and malformed-source recovery.
 //!
 //! **Documentation:** `docs/pascal/program-structure/units.md`
 
@@ -11,9 +11,9 @@ use super::QualifiedId;
 pub struct Import {
     /// Unit path identifying the imported unit, independent of its source-local alias.
     pub unit: QualifiedId,
-    /// Optional source-local namespace for the unit's public symbols.
+    /// Required namespace; absent only in a malformed or manually constructed AST.
     pub alias: Option<ImportAlias>,
-    /// Span covering the unit name and optional alias.
+    /// Span covering the unit name and written alias.
     pub span: Span,
 }
 

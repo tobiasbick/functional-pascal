@@ -1,10 +1,12 @@
 unit Std.Tui.Elements.Element;
 
 uses
-  Std.Tui.Chrome.Button, Std.Tui.Chrome.CellGrid, Std.Tui.Chrome.Gauge, Std.Tui.Chrome.Input,
-  Std.Tui.Chrome.MenuItem, Std.Tui.Chrome.MenuNode, Std.Tui.Chrome.StatusItem,
-  Std.Tui.Geometry.Point, Std.Tui.Ids.Action, Std.Tui.Ids.ControlId, Std.Tui.Layout.LayoutSettings,
-  Std.Tui.Layout.Spacer;
+  Std.Tui.Chrome.Button as ChromeButton, Std.Tui.Chrome.CellGrid as ChromeCellGrid,
+  Std.Tui.Chrome.Gauge as ChromeGauge, Std.Tui.Chrome.Input as ChromeInput,
+  Std.Tui.Chrome.MenuItem as MenuItem, Std.Tui.Chrome.MenuNode as MenuNode,
+  Std.Tui.Chrome.StatusItem as StatusItem, Std.Tui.Geometry.Point as Point,
+  Std.Tui.Ids.Action as IdsAction, Std.Tui.Ids.ControlId as ControlId,
+  Std.Tui.Layout.LayoutSettings as LayoutSettings, Std.Tui.Layout.Spacer as LayoutSpacer;
 
 function TuiElementRequireNonNegativeSpacing(Value: integer): integer;
 begin
@@ -30,12 +32,12 @@ public type TuiElement = enum
   //
   // Parameters:
   // - `Value`: Typed value wrapped by the variant.
-  Button(Value: TuiButtonSpec);
+  Button(Value: ChromeButton.TuiButtonSpec);
   // Represents the `Input` variant of `TuiElement`.
   //
   // Parameters:
   // - `Value`: Typed value wrapped by the variant.
-  Input(Value: TuiInputSpec);
+  Input(Value: ChromeInput.TuiInputSpec);
   // Represents the `TextArea` variant of `TuiElement`.
   //
   // Parameters:
@@ -44,7 +46,7 @@ public type TuiElement = enum
   // - `Caret`: Zero-based character index of the caret.
   // - `Offset`: Scroll offset carried by the variant.
   // - `ChangeAction`: Application action emitted when the value changes.
-  TextArea(Id: TuiControlId; Text: string; Caret: integer; Offset: TuiPoint; ChangeAction: TuiAction);
+  TextArea(Id: ControlId.TuiControlId; Text: string; Caret: integer; Offset: Point.TuiPoint; ChangeAction: IdsAction.TuiAction);
   // Represents the `CheckBox` variant of `TuiElement`.
   //
   // Parameters:
@@ -52,7 +54,7 @@ public type TuiElement = enum
   // - `Text`: Text carried or displayed by the variant.
   // - `Checked`: Checked state carried by the variant.
   // - `ChangeAction`: Application action emitted when the value changes.
-  CheckBox(Id: TuiControlId; Text: string; Checked: boolean; ChangeAction: TuiAction);
+  CheckBox(Id: ControlId.TuiControlId; Text: string; Checked: boolean; ChangeAction: IdsAction.TuiAction);
   // Represents the `List` variant of `TuiElement`.
   //
   // Parameters:
@@ -60,7 +62,7 @@ public type TuiElement = enum
   // - `Items`: Ordered items carried by the variant.
   // - `Selected`: Selected item index.
   // - `ChangeAction`: Application action emitted when the value changes.
-  List(Id: TuiControlId; Items: array of string; Selected: integer; ChangeAction: TuiAction);
+  List(Id: ControlId.TuiControlId; Items: array of string; Selected: integer; ChangeAction: IdsAction.TuiAction);
   // Represents the `Scroll` variant of `TuiElement`.
   //
   // Parameters:
@@ -68,12 +70,12 @@ public type TuiElement = enum
   // - `Offset`: Scroll offset carried by the variant.
   // - `ChangeAction`: Application action emitted when the value changes.
   // - `Children`: Ordered child elements contained by the variant.
-  Scroll(Id: TuiControlId; Offset: TuiPoint; ChangeAction: TuiAction; Children: array of TuiElement);
+  Scroll(Id: ControlId.TuiControlId; Offset: Point.TuiPoint; ChangeAction: IdsAction.TuiAction; Children: array of TuiElement);
   // Represents the `MenuBar` variant of `TuiElement`.
   //
   // Parameters:
   // - `Items`: Ordered items carried by the variant.
-  MenuBar(Items: array of TuiMenuItem);
+  MenuBar(Items: array of MenuItem.TuiMenuItem);
   // Represents the `Menu` variant of `TuiElement`.
   //
   // Parameters:
@@ -81,17 +83,17 @@ public type TuiElement = enum
   // - `Nodes`: Flat ordered menu-node collection.
   // - `State`: Controlled menu state carried by the variant.
   // - `ChangeAction`: Application action emitted when the value changes.
-  Menu(Id: TuiControlId; Nodes: array of TuiMenuNode; State: TuiMenuState; ChangeAction: TuiAction);
+  Menu(Id: ControlId.TuiControlId; Nodes: array of MenuNode.TuiMenuNode; State: MenuNode.TuiMenuState; ChangeAction: IdsAction.TuiAction);
   // Represents the `StatusLine` variant of `TuiElement`.
   //
   // Parameters:
   // - `Items`: Ordered items carried by the variant.
-  StatusLine(Items: array of TuiStatusItem);
+  StatusLine(Items: array of StatusItem.TuiStatusItem);
   // Represents the `CellGrid` variant of `TuiElement`.
   //
   // Parameters:
   // - `Value`: Typed value wrapped by the variant.
-  CellGrid(Value: TuiCellGrid);
+  CellGrid(Value: ChromeCellGrid.TuiCellGrid);
   // Represents the `Rule` variant of `TuiElement`.
   //
   // Parameters:
@@ -101,7 +103,7 @@ public type TuiElement = enum
   //
   // Parameters:
   // - `Value`: Typed value wrapped by the variant.
-  Gauge(Value: TuiGauge);
+  Gauge(Value: ChromeGauge.TuiGauge);
   // Represents the `Row` variant of `TuiElement`.
   //
   // Parameters:
@@ -119,12 +121,12 @@ public type TuiElement = enum
   // Parameters:
   // - `Settings`: Layout settings applied to the child elements.
   // - `Children`: Ordered child elements contained by the variant.
-  Layout(Settings: TuiLayoutSettings; Children: array of TuiElement);
+  Layout(Settings: LayoutSettings.TuiLayoutSettings; Children: array of TuiElement);
   // Represents the `Spacer` variant of `TuiElement`.
   //
   // Parameters:
   // - `Value`: Typed value wrapped by the variant.
-  Spacer(Value: TuiSpacer);
+  Spacer(Value: LayoutSpacer.TuiSpacer);
   // Represents the `Panel` variant of `TuiElement`.
   //
   // Parameters:
@@ -142,7 +144,7 @@ public type TuiElement = enum
   // Parameters:
   // - `Focused`: Focused control identifier.
   // - `Children`: Ordered child elements contained by the variant.
-  Desktop(Focused: option of TuiControlId; Children: array of TuiElement);
+  Desktop(Focused: option of ControlId.TuiControlId; Children: array of TuiElement);
 end enum;
 
 // Named constructors for immutable Tui elements.
@@ -168,9 +170,9 @@ public type TuiElementBuilders = record
   // - `Id`: Identifier assigned to the created or selected value.
   // - `TextValue`: Text displayed by the created element.
   // - `Action`: Application action associated with the control or emitted message.
-  public static function MakeButton(Id: TuiControlId; TextValue: string; Action: TuiAction): TuiElement;
+  public static function MakeButton(Id: ControlId.TuiControlId; TextValue: string; Action: IdsAction.TuiAction): TuiElement;
   begin
-    return TuiElement.Button(TuiButtonSpec.Normal(Id, TextValue, '', Action));
+    return TuiElement.Button(ChromeButton.TuiButtonSpec.Normal(Id, TextValue, '', Action));
   end function;
 
   // Creates an enabled normal button with a keyboard mnemonic.
@@ -181,13 +183,13 @@ public type TuiElementBuilders = record
   // - `Mnemonic`: Keyboard mnemonic used to activate the item.
   // - `Action`: Application action associated with the control or emitted message.
   public static function MakeButtonWithMnemonic(
-  Id: TuiControlId;
+  Id: ControlId.TuiControlId;
   TextValue: string;
   Mnemonic: string;
-  Action: TuiAction
+  Action: IdsAction.TuiAction
 ): TuiElement;
   begin
-    return TuiElement.Button(TuiButtonSpec.Normal(Id, TextValue, Mnemonic, Action));
+    return TuiElement.Button(ChromeButton.TuiButtonSpec.Normal(Id, TextValue, Mnemonic, Action));
   end function;
 
   // Creates an enabled default button with a keyboard mnemonic.
@@ -197,9 +199,14 @@ public type TuiElementBuilders = record
   // - `TextValue`: Text displayed by the created element.
   // - `Mnemonic`: Keyboard mnemonic used to activate the item.
   // - `Action`: Application action associated with the control or emitted message.
-  public static function MakeDefaultButton(Id: TuiControlId; TextValue: string; Mnemonic: string; Action: TuiAction): TuiElement;
+  public static function MakeDefaultButton(
+  Id: ControlId.TuiControlId;
+  TextValue: string;
+  Mnemonic: string;
+  Action: IdsAction.TuiAction
+): TuiElement;
   begin
-    return TuiElement.Button(TuiButtonSpec.DefaultButton(Id, TextValue, Mnemonic, Action));
+    return TuiElement.Button(ChromeButton.TuiButtonSpec.DefaultButton(Id, TextValue, Mnemonic, Action));
   end function;
 
   // Creates a disabled button with an optional display mnemonic.
@@ -210,13 +217,13 @@ public type TuiElementBuilders = record
   // - `Mnemonic`: Keyboard mnemonic used to activate the item.
   // - `Action`: Application action associated with the control or emitted message.
   public static function MakeDisabledButton(
-  Id: TuiControlId;
+  Id: ControlId.TuiControlId;
   TextValue: string;
   Mnemonic: string;
-  Action: TuiAction
+  Action: IdsAction.TuiAction
 ): TuiElement;
   begin
-    return TuiElement.Button(TuiButtonSpec.Disabled(Id, TextValue, Mnemonic, Action));
+    return TuiElement.Button(ChromeButton.TuiButtonSpec.Disabled(Id, TextValue, Mnemonic, Action));
   end function;
 
   // Creates a controlled one-line input.
@@ -227,13 +234,13 @@ public type TuiElementBuilders = record
   // - `CaretValue`: Proposed zero-based caret index.
   // - `ChangeAction`: Application action emitted when the value changes.
   public static function MakeInput(
-  Id: TuiControlId;
+  Id: ControlId.TuiControlId;
   TextValue: string;
   CaretValue: integer;
-  ChangeAction: TuiAction
+  ChangeAction: IdsAction.TuiAction
 ): TuiElement;
   begin
-    return TuiElement.Input(TuiInputSpec.Create(Id, TextValue, CaretValue, ChangeAction));
+    return TuiElement.Input(ChromeInput.TuiInputSpec.Create(Id, TextValue, CaretValue, ChangeAction));
   end function;
 
   // Creates a controlled one-line input with placeholder text.
@@ -245,14 +252,14 @@ public type TuiElementBuilders = record
   // - `Hint`: Hint text displayed for an empty input.
   // - `ChangeAction`: Application action emitted when the value changes.
   public static function MakeInputWithHint(
-  Id: TuiControlId;
+  Id: ControlId.TuiControlId;
   TextValue: string;
   CaretValue: integer;
   Hint: string;
-  ChangeAction: TuiAction
+  ChangeAction: IdsAction.TuiAction
 ): TuiElement;
   begin
-    return TuiElement.Input(TuiInputSpec.WithHint(Id, TextValue, CaretValue, Hint, ChangeAction));
+    return TuiElement.Input(ChromeInput.TuiInputSpec.WithHint(Id, TextValue, CaretValue, Hint, ChangeAction));
   end function;
 
   // Creates a controlled input with oldest-to-newest Up/Down history.
@@ -266,16 +273,16 @@ public type TuiElementBuilders = record
   // - `HistoryDraft`: Current editable text retained while browsing history.
   // - `ChangeAction`: Application action emitted when the value changes.
   public static function MakeHistoryInput(
-  Id: TuiControlId;
+  Id: ControlId.TuiControlId;
   TextValue: string;
   CaretValue: integer;
   Hint: string;
   History: array of string;
   HistoryDraft: string;
-  ChangeAction: TuiAction
+  ChangeAction: IdsAction.TuiAction
 ): TuiElement;
   begin
-    return TuiElement.Input(TuiInputSpec.WithHistory(Id, TextValue, CaretValue, Hint, History, HistoryDraft, ChangeAction));
+    return TuiElement.Input(ChromeInput.TuiInputSpec.WithHistory(Id, TextValue, CaretValue, Hint, History, HistoryDraft, ChangeAction));
   end function;
 
   // Creates a controlled multiline text area with model-owned caret and offset.
@@ -287,11 +294,11 @@ public type TuiElementBuilders = record
   // - `OffsetValue`: Proposed scroll offset.
   // - `ChangeAction`: Application action emitted when the value changes.
   public static function MakeTextArea(
-  Id: TuiControlId;
+  Id: ControlId.TuiControlId;
   TextValue: string;
   CaretValue: integer;
-  OffsetValue: TuiPoint;
-  ChangeAction: TuiAction
+  OffsetValue: Point.TuiPoint;
+  ChangeAction: IdsAction.TuiAction
 ): TuiElement;
   begin
     return TuiElement.TextArea(Id, TextValue, CaretValue, OffsetValue, ChangeAction);
@@ -305,10 +312,10 @@ public type TuiElementBuilders = record
   // - `Checked`: Proposed checked state.
   // - `ChangeAction`: Application action emitted when the value changes.
   public static function MakeCheckBox(
-  Id: TuiControlId;
+  Id: ControlId.TuiControlId;
   TextValue: string;
   Checked: boolean;
-  ChangeAction: TuiAction
+  ChangeAction: IdsAction.TuiAction
 ): TuiElement;
   begin
     return TuiElement.CheckBox(Id, TextValue, Checked, ChangeAction);
@@ -322,10 +329,10 @@ public type TuiElementBuilders = record
   // - `Selected`: Selected item index.
   // - `ChangeAction`: Application action emitted when the value changes.
   public static function MakeList(
-  Id: TuiControlId;
+  Id: ControlId.TuiControlId;
   Items: array of string;
   Selected: integer;
-  ChangeAction: TuiAction
+  ChangeAction: IdsAction.TuiAction
 ): TuiElement;
   begin
     return TuiElement.List(Id, Items, Selected, ChangeAction);
@@ -338,7 +345,12 @@ public type TuiElementBuilders = record
   // - `Offset`: Scroll offset or position applied by the operation.
   // - `ChangeAction`: Application action emitted when the value changes.
   // - `Child`: Child element wrapped by the operation.
-  public static function MakeScroll(Id: TuiControlId; Offset: TuiPoint; ChangeAction: TuiAction; Child: TuiElement): TuiElement;
+  public static function MakeScroll(
+  Id: ControlId.TuiControlId;
+  Offset: Point.TuiPoint;
+  ChangeAction: IdsAction.TuiAction;
+  Child: TuiElement
+): TuiElement;
   begin
     return TuiElement.Scroll(Id, Offset, ChangeAction, [Child]);
   end function;
@@ -347,7 +359,7 @@ public type TuiElementBuilders = record
   //
   // Parameters:
   // - `Items`: Ordered child or menu items.
-  public static function MakeMenuBar(Items: array of TuiMenuItem): TuiElement;
+  public static function MakeMenuBar(Items: array of MenuItem.TuiMenuItem): TuiElement;
   begin
     return TuiElement.MenuBar(Items);
   end function;
@@ -360,10 +372,10 @@ public type TuiElementBuilders = record
   // - `State`: Controlled state used by the operation.
   // - `ChangeAction`: Application action emitted when the value changes.
   public static function MakeMenu(
-  Id: TuiControlId;
-  Nodes: array of TuiMenuNode;
-  State: TuiMenuState;
-  ChangeAction: TuiAction
+  Id: ControlId.TuiControlId;
+  Nodes: array of MenuNode.TuiMenuNode;
+  State: MenuNode.TuiMenuState;
+  ChangeAction: IdsAction.TuiAction
 ): TuiElement;
   begin
     return TuiElement.Menu(Id, Nodes, State, ChangeAction);
@@ -373,7 +385,7 @@ public type TuiElementBuilders = record
   //
   // Parameters:
   // - `Items`: Ordered child or menu items.
-  public static function MakeStatusLine(Items: array of TuiStatusItem): TuiElement;
+  public static function MakeStatusLine(Items: array of StatusItem.TuiStatusItem): TuiElement;
   begin
     return TuiElement.StatusLine(Items);
   end function;
@@ -382,7 +394,7 @@ public type TuiElementBuilders = record
   //
   // Parameters:
   // - `Value`: Value used to create or update the result.
-  public static function MakeCellGrid(Value: TuiCellGrid): TuiElement;
+  public static function MakeCellGrid(Value: ChromeCellGrid.TuiCellGrid): TuiElement;
   begin
     return TuiElement.CellGrid(Value);
   end function;
@@ -404,7 +416,7 @@ public type TuiElementBuilders = record
   // - `Maximum`: Maximum accepted value or extent.
   public static function MakeGauge(LabelText: string; Value: integer; Maximum: integer): TuiElement;
   begin
-    return TuiElement.Gauge(TuiGauge.Create(LabelText, Value, Maximum));
+    return TuiElement.Gauge(ChromeGauge.TuiGauge.Create(LabelText, Value, Maximum));
   end function;
 
   // Creates a horizontal layout node with zero spacing.
@@ -450,7 +462,7 @@ public type TuiElementBuilders = record
   // Parameters:
   // - `Settings`: Layout settings applied to the child.
   // - `Child`: Child element wrapped by the operation.
-  public static function MakeLayout(Settings: TuiLayoutSettings; Child: TuiElement): TuiElement;
+  public static function MakeLayout(Settings: LayoutSettings.TuiLayoutSettings; Child: TuiElement): TuiElement;
   begin
     return TuiElement.Layout(Settings, [Child]);
   end function;
@@ -459,7 +471,7 @@ public type TuiElementBuilders = record
   //
   // Parameters:
   // - `Value`: Value used to create or update the result.
-  public static function MakeSpacer(Value: TuiSpacer): TuiElement;
+  public static function MakeSpacer(Value: LayoutSpacer.TuiSpacer): TuiElement;
   begin
     return TuiElement.Spacer(Value);
   end function;
@@ -489,7 +501,7 @@ public type TuiElementBuilders = record
   // Parameters:
   // - `Focused`: Whether the control currently owns focus.
   // - `Items`: Ordered child or menu items.
-  public static function MakeDesktop(Focused: option of TuiControlId; Items: array of TuiElement): TuiElement;
+  public static function MakeDesktop(Focused: option of ControlId.TuiControlId; Items: array of TuiElement): TuiElement;
   begin
     return TuiElement.Desktop(Focused, Items);
   end function;

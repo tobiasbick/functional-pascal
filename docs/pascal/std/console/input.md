@@ -11,8 +11,8 @@ These share one **line-oriented** buffer: typed text and test “stdin” lines 
 - **Buffer:** same stream as `ReadText()`.
 
 ```pascal
-const Line: string := ReadLn();
-WriteLn(Line);
+const Line: string := Console.ReadLn();
+Console.WriteLn(Line);
 ```
 
 ---
@@ -24,8 +24,8 @@ WriteLn(Line);
 - **Buffer:** same as `ReadLn()`.
 
 ```pascal
-const C: string := ReadText();
-WriteLn(C);
+const C: string := Console.ReadText();
+Console.WriteLn(C);
 ```
 
 ---

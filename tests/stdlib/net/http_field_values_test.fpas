@@ -1,7 +1,9 @@
 // Validates raw HTTP field values and SP/HTAB normalization at both public readers.
 program HttpFieldValuesTest;
 
-uses Std.Conv, Std.Http, Std.Net, Std.Net.Utf8, Std.Tasks, Std.Test;
+uses
+  Std.Conv as Conv, Std.Http as Http, Std.Net as Net, Std.Net.Utf8 as Utf8, Std.Tasks as Tasks,
+  Std.Test as Test;
 
 type FieldCase = record
   Raw: string;
@@ -9,12 +11,12 @@ type FieldCase = record
   Expected: string;
 end record;
 
-function ReadPeer(Server: Listener): string;
+function ReadPeer(Server: Net.Listener): string;
 begin
-  const Peer: Connection := Accept(Server).Unwrap();
-  discard SetTimeout(Peer, 1000);
-  const Parsed: result of (ServerRequest, string) := ReadRequest(Peer, 65536, 1024);
-  discard Std.Net.Close(Peer);
+  const Peer: Net.Connection := Net.Accept(Server).Unwrap();
+  discard Net.SetTimeout(Peer, 1000);
+  const Parsed: result of (Http.ServerRequest, string) := Http.ReadRequest(Peer, 65536, 1024);
+  discard Net.Close(Peer);
   case Parsed of
     when Ok(const Incoming):
       return 'accepted: ' + Incoming.Headers[1].Value;
@@ -23,15 +25,15 @@ begin
   end case;
 end function;
 
-procedure ServeResponse(Server: Listener; Value: string);
+procedure ServeResponse(Server: Net.Listener; Value: string);
 begin
-  const Peer: Connection := Accept(Server).Unwrap();
-  discard SetTimeout(Peer, 1000);
-  discard ReadRequest(Peer, 65536, 1024).Unwrap();
+  const Peer: Net.Connection := Net.Accept(Server).Unwrap();
+  discard Net.SetTimeout(Peer, 1000);
+  discard Http.ReadRequest(Peer, 65536, 1024).Unwrap();
   const Head: string := 'HTTP/1.1 200 OK' + #13 + #10 + 'X-Test: ' + Value + #13 + #10 + 'Content-Length: 0' + #13 + #10 + #13 +
                         #10;
-  discard SendBytes(Peer, Std.Net.Utf8.Encode(Head)).Unwrap();
-  discard Std.Net.Close(Peer);
+  discard Net.SendBytes(Peer, Utf8.Encode(Head)).Unwrap();
+  discard Net.Close(Peer);
 end procedure;
 
 begin
@@ -47,33 +49,34 @@ begin
                                FieldCase(Raw := 'a' + #11 + 'b', Valid := false, Expected := ''),
                                FieldCase(Raw := #127 + 'value', Valid := false, Expected := '')
                              ] do
-      const Server: Listener := Listen('127.0.0.1', 0).Unwrap();
-      const Address: NetworkAddress := ListenerLocalAddress(Server).Unwrap();
+      const Server: Net.Listener := Net.Listen('127.0.0.1', 0).Unwrap();
+      const Address: Net.NetworkAddress := Net.ListenerLocalAddress(Server).Unwrap();
       const Parsing: task of string := go ReadPeer(Server);
-      const Peer: Connection := Connect(Address.Host, Address.Port, 1000).Unwrap();
+      const Peer: Net.Connection := Net.Connect(Address.Host, Address.Port, 1000).Unwrap();
       const Head: string := 'GET / HTTP/1.1' + #13 + #10 + 'Host: 127.0.0.1' + #13 + #10 + 'X-Test: ' + Sample.Raw + #13 + #10 + #13 +
                             #10;
-      discard SendBytes(Peer, Std.Net.Utf8.Encode(Head)).Unwrap();
-      discard Std.Net.Close(Peer);
-      const Parsed: string := Wait(Parsing);
+      discard Net.SendBytes(Peer, Utf8.Encode(Head)).Unwrap();
+      discard Net.Close(Peer);
+      const Parsed: string := Tasks.Wait(Parsing);
       if Sample.Valid then
-        AssertEquals('accepted: ' + Sample.Expected, Parsed);
+        Test.AssertEquals('accepted: ' + Sample.Expected, Parsed);
       else
-        AssertTrue(Parsed.Contains('invalid control character'));
+        Test.AssertTrue(Parsed.Contains('invalid control character'));
       end if;
       const Serving: task := go ServeResponse(Server, Sample.Raw);
-      var Outgoing: Request := Request.Get('http://127.0.0.1:' + IntToStr(Address.Port) + '/');
+      var Outgoing: Http.Request := Http.Request.Get('http://127.0.0.1:' + Conv.IntToStr(Address.Port) +
+                                                     '/');
       Outgoing.TimeoutMillis := 1000;
-      const Received: result of (Response, string) := Std.Http.Send(Outgoing);
-      Wait(Serving);
-      discard CloseListener(Server);
+      const Received: result of (Http.Response, string) := Http.Send(Outgoing);
+      Tasks.Wait(Serving);
+      discard Net.CloseListener(Server);
       case Received of
         when Ok(const Incoming):
-          AssertTrue(Sample.Valid);
-          AssertEquals(Sample.Expected, Incoming.Headers[0].Value);
+          Test.AssertTrue(Sample.Valid);
+          Test.AssertEquals(Sample.Expected, Incoming.Headers[0].Value);
         when Error(const Message):
-          AssertFalse(Sample.Valid);
-          AssertTrue(Message.Contains('invalid control character'));
+          Test.AssertFalse(Sample.Valid);
+          Test.AssertTrue(Message.Contains('invalid control character'));
       end case;
     end for;
   end scope;

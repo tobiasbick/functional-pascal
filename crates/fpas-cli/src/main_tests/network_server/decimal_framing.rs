@@ -20,15 +20,15 @@ fn source_review_server_checks_decimal_lengths_and_boundaries() {
         "source-review-server-decimal",
         format!(
             r#"program DecimalServer;
-uses Std.Http, Std.Net, Std.Net.Utf8;
+uses Std.Http as Http, Std.Net as Net, Std.Net.Utf8 as Utf8;
 begin
-  const ListenerValue: Listener := Listen('127.0.0.1', {port}).Unwrap();
+  const ListenerValue: Net.Listener := Net.Listen('127.0.0.1', {port}).Unwrap();
   for I: integer := 1 to {} do
   begin
-    const ConnectionValue: Connection := Accept(ListenerValue).Unwrap();
-    discard SetTimeout(ConnectionValue, 2000).Unwrap();
+    const ConnectionValue: Net.Connection := Net.Accept(ListenerValue).Unwrap();
+    discard Net.SetTimeout(ConnectionValue, 2000).Unwrap();
     var Text: string := 'accepted';
-    case ReadRequest(ConnectionValue, 4096, 16) of
+    case Http.ReadRequest(ConnectionValue, 4096, 16) of
       when Ok(_): begin end;
       when Error(const Message): begin
         if I = {} then
@@ -37,12 +37,12 @@ begin
         Text := 'rejected';
       end;
     end case;
-    var ResponseValue: ServerResponse := ServerResponse.Create(200, 'OK');
-    ResponseValue.Body := Std.Net.Utf8.Encode(Text);
-    discard WriteResponse(ConnectionValue, ResponseValue).Unwrap();
-    discard Close(ConnectionValue).Unwrap();
+    var ResponseValue: Http.ServerResponse := Http.ServerResponse.Create(200, 'OK');
+    ResponseValue.Body := Utf8.Encode(Text);
+    discard Http.WriteResponse(ConnectionValue, ResponseValue).Unwrap();
+    discard Net.Close(ConnectionValue).Unwrap();
   end; end for;
-  discard CloseListener(ListenerValue).Unwrap();
+  discard Net.CloseListener(ListenerValue).Unwrap();
 end.
 "#,
             cases.len(),

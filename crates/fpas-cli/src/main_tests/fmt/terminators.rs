@@ -7,7 +7,7 @@ use std::fs;
 fn missing_final_terminator_is_rejected_without_rewriting_the_file() {
     let cwd = create_temp_dir("fmt-missing-terminator");
     let path = cwd.join("missing.fpas");
-    let source = "program P; uses Std.Console; begin WriteLn('x') end.";
+    let source = "program P; uses Std.Console as Console; begin Console.WriteLn('x') end.";
     write_text(&path, source);
     let (code, _, stderr) =
         run_cli_args_and_capture_output(&["fmt".into(), path.to_string_lossy().into_owned()], &cwd);
@@ -29,7 +29,7 @@ fn terminated_branches_and_loops_keep_their_execution_and_format_idempotently() 
     let path = cwd.join("control.fpas");
     write_text(
         &path,
-        "program P; uses Std.Console; begin var X: integer := 0; if true then WriteLn('then'); else WriteLn('else'); end if; while X < 2 do X := X + 1; end while; repeat X := X - 1; until X = 0; WriteLn(X); end.",
+        "program P; uses Std.Console as Console; begin var X: integer := 0; if true then Console.WriteLn('then'); else Console.WriteLn('else'); end if; while X < 2 do X := X + 1; end while; repeat X := X - 1; until X = 0; Console.WriteLn(X); end.",
     );
     let args = ["run".into(), path.to_string_lossy().into_owned()];
     let (code, before, stderr) = run_cli_args_and_capture_output(&args, &cwd);

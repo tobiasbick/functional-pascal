@@ -1,6 +1,6 @@
 program GenericFunctionsExample;
 
-uses Std.Console, Std.Conv;
+uses Std.Console as Console, Std.Conv as Conv;
 
 function Identity<T>(Value: T): T;
 begin
@@ -18,12 +18,12 @@ begin
 end function;
 
 begin
-  WriteLn('Identity(integer): ', Identity(42));
-  WriteLn('Identity(string): ', Identity('hello'));
-  WriteLn('Identity(boolean): ', Identity(true));
+  Console.WriteLn('Identity(integer): ', Identity(42));
+  Console.WriteLn('Identity(string): ', Identity('hello'));
+  Console.WriteLn('Identity(boolean): ', Identity(true));
   const Numbers: array of integer := Wrap(99);
-  WriteLn('Wrapped length: ', IntToStr(Numbers.Length()));
-  WriteLn('First wrapped value: ', FirstElement(Numbers));
+  Console.WriteLn('Wrapped length: ', Conv.IntToStr(Numbers.Length()));
+  Console.WriteLn('First wrapped value: ', FirstElement(Numbers));
   const Words: array of string := ['red', 'green', 'blue'];
-  WriteLn('First word: ', FirstElement(Words));
+  Console.WriteLn('First word: ', FirstElement(Words));
 end.

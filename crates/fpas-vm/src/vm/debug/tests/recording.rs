@@ -23,10 +23,10 @@ fn local_value(session: &mut DebugSession, name: &str) -> String {
 }
 
 const RANDOM_ASSIGN: &str = r#"program QuietRandom;
-uses Std.Random;
+uses Std.Random as Random;
 begin
   var X: integer := 0;
-  X := RandomInt(1, 1);
+  X := Random.RandomInt(1, 1);
 end.
 "#;
 
@@ -128,9 +128,9 @@ fn recording_stays_empty_until_start() {
 fn start_recording_captures_current_stop_and_later_input() {
     let mut session = compile_session(
         r#"program CaptureInput;
-uses Std.Console;
+uses Std.Console as Console;
 begin
-  WriteLn(ReadLn());
+  Console.WriteLn(Console.ReadLn());
 end.
 "#,
     );

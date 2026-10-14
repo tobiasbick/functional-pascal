@@ -1,6 +1,6 @@
 program PreconditionsTest;
 
-uses Std.Test;
+uses Std.Test as Test;
 
 type Box = record
   Value: integer;
@@ -32,10 +32,10 @@ end function;
 begin
   var Value := 1;
   Increase(var Value);
-  AssertEquals(2, Value);
+  Test.AssertEquals(2, Value);
   const B := Box(Value := 3);
   const Read: function(): integer := B.Read;
-  AssertEquals(3, Read());
+  Test.AssertEquals(3, Read());
   const Guard: function(Value: integer): integer := MakeGuard(2);
-  AssertEquals(2, Guard(2));
+  Test.AssertEquals(2, Guard(2));
 end.

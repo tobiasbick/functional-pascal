@@ -10,27 +10,7 @@ fn enum_payload_infers_nested_anonymous_record_type() {
     let source = cwd.join("main.fpas");
     write_text(
         &source,
-        "program NestedRecordEnumConstructor;
-uses Std.Console;
-type
-  Point = record X: integer; Y: integer; end record;
-  type Position = enum At(Value: Point); end enum;
-  type State = record Player: Position; end record;
-function Moved(Current: Point): State;
-begin
-  return State(
-    Player := Position.At(Point(
-      X := Current.X + 1,
-      Y := Current.Y
-    ))\n  );
-end function;
-begin
-  const Initial: Point := Point( X := 1, Y := 7 );
-  const Outcome: State := Moved(Initial);
-  case Outcome.Player of
-    when Position.At(const Value): WriteLn(Value.X, ',', Value.Y);
-  end case;
-end.",
+        "program NestedRecordEnumConstructor;\nuses Std.Console as Console;\ntype\n  Point = record X: integer; Y: integer; end record;\n  type Position = enum At(Value: Point); end enum;\n  type State = record Player: Position; end record;\nfunction Moved(Current: Point): State;\nbegin\n  return State(\n    Player := Position.At(Point(\n      X := Current.X + 1,\n      Y := Current.Y\n    ))\n  );\nend function;\nbegin\n  const Initial: Point := Point( X := 1, Y := 7 );\n  const Outcome: State := Moved(Initial);\n  case Outcome.Player of\n    when Position.At(const Value): Console.WriteLn(Value.X, ',', Value.Y);\n  end case;\nend.",
     );
     for command in ["check", "run"] {
         let (code, stdout, stderr) = support::run_cli_args_and_capture_output(
@@ -99,29 +79,11 @@ projects = ["json-lib.fpasprj"]
     support::write_library_project_file(&cwd.join("json-lib.fpasprj"), &["json.fpas"]);
     write_text(
         &cwd.join("json.fpas"),
-        "unit Repro.Json;
-uses Std.Json;
-public type
-  Message = enum
-    ErrorMessage(Code: string);
-  end enum;
-public function Encode(Value: Message): string;
-begin
-  case Value of
-    when Message.ErrorMessage(const Code):
-    begin
-      return Stringify(JsonValue.String(Code));
-    end;
-  end case;
-end function;\nend unit;",
+        "unit Repro.Json;\nuses Std.Json as Json;\npublic type\n  Message = enum\n    ErrorMessage(Code: string);\n  end enum;\npublic function Encode(Value: Message): string;\nbegin\n  case Value of\n    when Message.ErrorMessage(const Code):\n    begin\n      return Json.Stringify(Json.JsonValue.String(Code));\n    end;\n  end case;\nend function;\nend unit;",
     );
     write_text(
         &cwd.join("main.fpas"),
-        "program JsonLibraryRepro;
-uses Repro.Json, Std.Console;
-begin
-  WriteLn(Encode(Message.ErrorMessage('code')));
-end.",
+        "program JsonLibraryRepro;\nuses Repro.Json as Json, Std.Console as Console;\nbegin\n  Console.WriteLn(Json.Encode(Json.Message.ErrorMessage('code')));\nend.",
     );
 
     let (exit_code, stdout, stderr) = support::run_cli_and_capture_output(&project_file, &cwd);

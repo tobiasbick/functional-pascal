@@ -31,11 +31,11 @@ Use `const Name` to bind a value or `_` to ignore it:
 ```pascal
 case S of
   when Shape.Circle(const R):
-    WriteLn('Circle');
+    Console.WriteLn('Circle');
   when Shape.Rectangle(const W, const H):
-    WriteLn('Rectangle');
+    Console.WriteLn('Rectangle');
   when Shape.Point:
-    WriteLn('Point');
+    Console.WriteLn('Point');
 end case;
 ```
 

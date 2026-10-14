@@ -7,52 +7,7 @@ use fpas_diagnostics::codes::{SEMA_GO_OUTSIDE_OWNING_SCOPE, SEMA_TASK_HANDLE_ESC
 
 mod escape_regressions;
 
-const PRELUDE: &str = "program T;
-uses Std.Tasks;
-var Kept: array of task of integer := [];
-function Fetch(Value: integer): integer;
-begin
-  return Value;
-end function;
-function Load(Value: integer): result of (integer, string);
-begin
-  return Ok(Value);
-end function;
-procedure Each(Values: array of integer; Action: procedure(Value: integer));
-begin
-  for Value: integer in Values do
-    Action(Value);
-  end for;
-end procedure;
-function Total(Handles: array of task of integer): integer;
-begin
-  var Sum: integer := 0;
-  for Handle: task of integer in Handles do
-    Sum := Sum + Wait(Handle);
-  end for;
-  return Sum;
-end function;
-function TotalTwice(Handles: array of task of integer): integer;
-begin
-  return Total(Handles) + Total(Handles);
-end function;
-procedure Keep(Handle: task of integer);
-begin
-  Kept.PushInPlace(Handle);
-end procedure;
-procedure KeepLater(Handle: task of integer);
-begin
-  Keep(Handle);
-end procedure;
-function First(Handles: array of task of integer): task of integer;
-begin
-  return Handles[0];
-end function;
-procedure Replace(var Slot: task of integer; Handle: task of integer);
-begin
-  Slot := Handle;
-end procedure;
-";
+const PRELUDE: &str = "program T;\nuses Std.Tasks as Tasks;\nvar Kept: array of task of integer := [];\nfunction Fetch(Value: integer): integer;\nbegin\n  return Value;\nend function;\nfunction Load(Value: integer): result of (integer, string);\nbegin\n  return Ok(Value);\nend function;\nprocedure Each(Values: array of integer; Action: procedure(Value: integer));\nbegin\n  for Value: integer in Values do\n    Action(Value);\n  end for;\nend procedure;\nfunction Total(Handles: array of task of integer): integer;\nbegin\n  var Sum: integer := 0;\n  for Handle: task of integer in Handles do\n    Sum := Sum + Tasks.Wait(Handle);\n  end for;\n  return Sum;\nend function;\nfunction TotalTwice(Handles: array of task of integer): integer;\nbegin\n  return Total(Handles) + Total(Handles);\nend function;\nprocedure Keep(Handle: task of integer);\nbegin\n  Kept.PushInPlace(Handle);\nend procedure;\nprocedure KeepLater(Handle: task of integer);\nbegin\n  Keep(Handle);\nend procedure;\nfunction First(Handles: array of task of integer): task of integer;\nbegin\n  return Handles[0];\nend function;\nprocedure Replace(var Slot: task of integer; Handle: task of integer);\nbegin\n  Slot := Handle;\nend procedure;\n";
 
 fn program(body: &str) -> String {
     format!("{PRELUDE}begin scope\n{body}\nend scope; end.")
@@ -98,14 +53,7 @@ fn discarded_go_may_return_an_ordinary_result_error() {
 end scope;",
     ));
     check_ok(&program(
-        "discard go Load(1);
-scope
-  const Job: task of result of (integer, string) := go Load(2);
-  case Wait(Job) of
-    when Ok(_): null;
-    when Error(_): null;
-  end case;
-end scope;",
+        "discard go Load(1);\nscope\n  const Job: task of result of (integer, string) := go Load(2);\n  case Tasks.Wait(Job) of\n    when Ok(_): null;\n    when Error(_): null;\n  end case;\nend scope;",
     ));
 }
 
@@ -146,20 +94,11 @@ end scope;",
             "an argument of `KeepLater`",
         ),
         (
-            "scope
-  const Job: task of integer := go Fetch(1);
-  const Queue: channel of task of integer := CreateChannel(1);
-  discard Send(Queue, Job);
-end scope;",
+            "scope\n  const Job: task of integer := go Fetch(1);\n  const Queue: channel of task of integer := Tasks.CreateChannel(1);\n  discard Tasks.Send(Queue, Job);\nend scope;",
             "a channel send",
         ),
         (
-            "scope
-  const Job: task of integer := go Fetch(1);
-  const Later: function(): integer := function(): integer begin
-    return Wait(Job);
-  end function;
-end scope;",
+            "scope\n  const Job: task of integer := go Fetch(1);\n  const Later: function(): integer := function(): integer begin\n    return Tasks.Wait(Job);\n  end function;\nend scope;",
             "capture of `Job`",
         ),
         (
@@ -219,23 +158,6 @@ end."
 #[test]
 fn scope_owned_handles_stay_usable_inside_their_scope() {
     check_ok(&program(
-        "scope
-  var Jobs: array of task of integer := [];
-  Jobs.PushInPlace(go Fetch(1));
-  Jobs.PushInPlace(go Fetch(2));
-  const Pair: array of task of integer := [Jobs[0], Jobs[1]];
-  discard Total(Pair);
-  discard TotalTwice(Jobs);
-  WaitAll(Jobs);
-  discard WaitAny(Jobs);
-  const Sibling: task of integer := go Total(Jobs);
-  discard Wait(Sibling);
-  scope
-    discard Wait(Jobs[0]);
-    const Inner: task of integer := go Fetch(3);
-    discard Wait(Inner);
-  end scope;
-  const Count: integer := Wait(Jobs[1]);
-end scope;",
+        "scope\n  var Jobs: array of task of integer := [];\n  Jobs.PushInPlace(go Fetch(1));\n  Jobs.PushInPlace(go Fetch(2));\n  const Pair: array of task of integer := [Jobs[0], Jobs[1]];\n  discard Total(Pair);\n  discard TotalTwice(Jobs);\n  Tasks.WaitAll(Jobs);\n  discard Tasks.WaitAny(Jobs);\n  const Sibling: task of integer := go Total(Jobs);\n  discard Tasks.Wait(Sibling);\n  scope\n    discard Tasks.Wait(Jobs[0]);\n    const Inner: task of integer := go Fetch(3);\n    discard Tasks.Wait(Inner);\n  end scope;\n  const Count: integer := Tasks.Wait(Jobs[1]);\nend scope;",
     ));
 }

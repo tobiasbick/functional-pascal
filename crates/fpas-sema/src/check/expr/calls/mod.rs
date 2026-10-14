@@ -10,9 +10,7 @@ use super::super::Checker;
 use crate::check::calls::CallTarget;
 use crate::scope::SymbolKind;
 use crate::types::Ty;
-use fpas_diagnostics::codes::{
-    SEMA_AMBIGUOUS_IMPORTED_NAME, SEMA_TYPE_MISMATCH, SEMA_UNKNOWN_NAME,
-};
+use fpas_diagnostics::codes::{SEMA_TYPE_MISMATCH, SEMA_UNKNOWN_NAME};
 use fpas_lexer::Span;
 use fpas_parser::{Designator, Expr};
 
@@ -110,10 +108,10 @@ impl Checker {
             }
         }
 
-        if let Some(hint) = self.ambiguous_hint(&name) {
+        if let Some(hint) = self.qualification_hint(&name) {
             self.error_with_code(
-                SEMA_AMBIGUOUS_IMPORTED_NAME,
-                format!("Ambiguous imported symbol `{name}`"),
+                fpas_diagnostics::codes::SEMA_UNQUALIFIED_NAME,
+                format!("Name `{name}` requires an explicit qualifier"),
                 hint,
                 span,
             );
@@ -186,7 +184,7 @@ impl Checker {
                 self.error_with_code(
                     SEMA_TYPE_MISMATCH,
                     "`Wait` on a procedure task does not return a value",
-                    "Call `Wait(Handle);` as a statement. A function result requires a handle of type `task of T`.",
+                    format!("Call `{name}(Handle);` as a statement. A function result requires a handle of type `task of T`."),
                     span,
                 );
                 return Ty::Error;

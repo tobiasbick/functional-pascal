@@ -5,7 +5,7 @@ pub const SOURCES: &[(&str, &str)] = &[
     ("minimal_program", "program Hello; begin end."),
     (
         "program_with_uses",
-        "program Test; uses Std.Console, Std.Math; begin end.",
+        "program Test; uses Std.Console as Console, Std.Math as Math; begin end.",
     ),
     (
         "program_with_const",
@@ -21,11 +21,11 @@ pub const SOURCES: &[(&str, &str)] = &[
     ),
     (
         "hello_world",
-        "program Hello;\nuses\n  Std.Console;\nbegin\n  Std.Console.WriteLn('Hello, World!');\nend.",
+        "program Hello;\nuses\n  Std.Console as Console;\nbegin\n  Std.Console.WriteLn('Hello, World!');\nend.",
     ),
     (
         "calculator",
-        "program Calculator;\nuses Std.Console;\n\ntype Op = enum\n  OpAdd;\n  OpSub;\n  OpMul;\n  OpDiv;\nend enum;\n\nfunction Calculate(A: integer; B: integer; Operation: Op): integer;\nbegin\n  case Operation of\n    when OpAdd: return A + B;\n    when OpSub: return A - B;\n    when OpMul: return A * B;\n    when OpDiv: return A div B;\n  end case;\nend function;\n\nbegin\n  const Answer: integer := Calculate(10, 3, OpAdd);\n  Std.Console.WriteLn(Answer);\nend.",
+        "program Calculator;\nuses Std.Console as Console;\n\ntype Op = enum\n  OpAdd;\n  OpSub;\n  OpMul;\n  OpDiv;\nend enum;\n\nfunction Calculate(A: integer; B: integer; Operation: Op): integer;\nbegin\n  case Operation of\n    when OpAdd: return A + B;\n    when OpSub: return A - B;\n    when OpMul: return A * B;\n    when OpDiv: return A div B;\n  end case;\nend function;\n\nbegin\n  const Answer: integer := Calculate(10, 3, OpAdd);\n  Std.Console.WriteLn(Answer);\nend.",
     ),
     (
         "record_creation",
@@ -45,7 +45,7 @@ pub const SOURCES: &[(&str, &str)] = &[
     ),
     (
         "fibonacci",
-        "program Fib;\nuses Std.Console;\n\nfunction Fibonacci(N: integer): integer;\nbegin\n  if N <= 1 then\n    return N;\n  else\n    return Fibonacci(N - 1) + Fibonacci(N - 2); end if;\nend function;\n\nbegin\n  Std.Console.WriteLn(Fibonacci(10));\nend.",
+        "program Fib;\nuses Std.Console as Console;\n\nfunction Fibonacci(N: integer): integer;\nbegin\n  if N <= 1 then\n    return N;\n  else\n    return Fibonacci(N - 1) + Fibonacci(N - 2); end if;\nend function;\n\nbegin\n  Std.Console.WriteLn(Fibonacci(10));\nend.",
     ),
     (
         "nested_mutual_recursion",
@@ -53,7 +53,7 @@ pub const SOURCES: &[(&str, &str)] = &[
     ),
     (
         "unit_clamp_compact",
-        "unit MyApp.Utils; uses Std.Math; function Clamp(Value: integer; Min: integer; Max: integer): integer; begin if Value < Min then return Min; elsif  Value > Max then return Max; else return Value; end if; end function; function IsBlank(S: string): boolean; begin return S.Trim().Length() = 0; end function;\nend unit;",
+        "unit MyApp.Utils; uses Std.Math as Math; function Clamp(Value: integer; Min: integer; Max: integer): integer; begin if Value < Min then return Min; elsif  Value > Max then return Max; else return Value; end if; end function; function IsBlank(S: string): boolean; begin return S.Trim().Length() = 0; end function;\nend unit;",
     ),
     (
         "unit_mixed_visibility",

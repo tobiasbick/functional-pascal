@@ -2,7 +2,9 @@
 
 unit Newton.Render;
 
-uses Std.Console, Std.Tasks, Std.Conv, Std.Math, Newton.Color;
+uses
+  Std.Console as Console, Std.Tasks as StdTasks, Std.Conv as Conv, Std.Math as Math,
+  Newton.Color as Color;
 
 type Complex = record
   public Re: real;
@@ -95,7 +97,7 @@ begin
       const Next: Complex := Z.Scale(2.0 / 3.0).Add(Z2.Inv().Scale(1.0 / 3.0));
       if Next.Sub(Z).MagSq() < Tolerance then
         begin
-          const Shade: real := 1.0 - (IntToReal(N) / IntToReal(Max(MaxIter, 1)));
+          const Shade: real := 1.0 - (Conv.IntToReal(N) / Conv.IntToReal(Math.Max(MaxIter, 1)));
           return PixelSample(Root := ClosestRoot(Next), Shade := Shade);
         end;
       end if;
@@ -132,13 +134,13 @@ begin
       HeightRange := 1;
     end;
   end if;
-  const Wr: real := IntToReal(WidthRange);
-  const Hr: real := IntToReal(HeightRange);
-  const cy: real := YMax - IntToReal(Py) / Hr * (YMax - YMin);
+  const Wr: real := Conv.IntToReal(WidthRange);
+  const Hr: real := Conv.IntToReal(HeightRange);
+  const cy: real := YMax - Conv.IntToReal(Py) / Hr * (YMax - YMin);
   var Row: array of PixelSample := [];
   for Px: integer := 0 to Width - 1 do
     begin
-      const cx: real := XMin + IntToReal(Px) / Wr * (XMax - XMin);
+      const cx: real := XMin + Conv.IntToReal(Px) / Wr * (XMax - XMin);
       Row.PushInPlace(Iterate(Complex.Create(cx, cy), MaxIter));
     end;
   end for;
@@ -150,25 +152,25 @@ function ShadeGlyph(Shade: real): string;
 begin
   const Ramp: string := ' ░▒▓█';
   const Count: integer := Ramp.Length();
-  const Index: integer := Clamp(Trunc(Shade * IntToReal(Count)), 0, Count - 1);
+  const Index: integer := Math.Clamp(Math.Trunc(Shade * Conv.IntToReal(Count)), 0, Count - 1);
   return Ramp.CharAt(Index);
 end function;
 
-function RenderCell(Sample: PixelSample): Cell;
+function RenderCell(Sample: PixelSample): Console.Cell;
 begin
   if Sample.Root = 0 then
     begin
-      const CellShade: Color := InsideColor();
-      return Std.Console.Cell(glyph := ' ', foreground := CellShade, background := CellShade);
+      const CellShade: Console.Color := Color.InsideColor();
+      return Console.Cell(glyph := ' ', foreground := CellShade, background := CellShade);
     end;
   end if;
-  const Fg: Color := RootColor(Sample.Root, Sample.Shade);
-  return Std.Console.Cell(glyph := ShadeGlyph(Sample.Shade), foreground := Fg, background := RgbColor(0, 0, 0));
+  const Fg: Console.Color := Color.RootColor(Sample.Root, Sample.Shade);
+  return Console.Cell(glyph := ShadeGlyph(Sample.Shade), foreground := Fg, background := Console.RgbColor(0, 0, 0));
 end function;
 
 procedure DrawRow(Row: array of PixelSample; Width: integer; Y: integer);
 begin
-  const CurrentWidth: integer := ScreenWidth();
+  const CurrentWidth: integer := Console.ScreenWidth();
   var DrawWidth: integer := Width;
   if DrawWidth > CurrentWidth then
     begin
@@ -181,14 +183,14 @@ begin
       return;
     end;
   end if;
-  var Cells: array of Cell := [];
+  var Cells: array of Console.Cell := [];
   for Px: integer := 0 to DrawWidth - 1 do
     begin
       Cells.PushInPlace(RenderCell(Row[Px]));
     end;
   end for;
 
-  WriteCells(1, Y, Cells);
+  Console.WriteCells(1, Y, Cells);
 end procedure;
 
 public procedure Render(
@@ -211,8 +213,8 @@ begin
 
     for Py: integer := 0 to Height - 1 do
       begin
-        const Row: array of PixelSample := Wait(Tasks[Py]);
-        if (Py + 1) <= Max(ScreenHeight() - 2, 1) then
+        const Row: array of PixelSample := StdTasks.Wait(Tasks[Py]);
+        if (Py + 1) <= Math.Max(Console.ScreenHeight() - 2, 1) then
           begin
             DrawRow(Row, Width, Py + 1);
           end;

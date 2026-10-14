@@ -16,24 +16,7 @@ fn cli(command: &str, source: &str) -> (i32, String, String) {
     result
 }
 
-const DECLARATIONS: &str = "
-uses Std.Console, Std.Tasks;
-type Reader = function(Value: integer): integer;
-type Mutator = procedure(var Value: integer);
-type Reporter = procedure(Output: channel of integer);
-type Holder = record Readers: array of Reader; end record;
-var Trace: integer := 0;
-function Choose(): integer;
-begin Trace := Trace * 10 + 1; return 0; end function;
-function Argument(): integer;
-begin Trace := Trace * 10 + 2; return 21; end function;
-function Double(Value: integer): integer;
-begin return Value * 2; end function;
-procedure Increase(var Value: integer);
-begin Value := Value + 1; end procedure;
-procedure Report(Output: channel of integer);
-begin discard Send(Output, 42); end procedure;
-";
+const DECLARATIONS: &str = "\nuses Std.Console as Console, Std.Tasks as Tasks;\ntype Reader = function(Value: integer): integer;\ntype Mutator = procedure(var Value: integer);\ntype Reporter = procedure(Output: channel of integer);\ntype Holder = record Readers: array of Reader; end record;\nvar Trace: integer := 0;\nfunction Choose(): integer;\nbegin Trace := Trace * 10 + 1; return 0; end function;\nfunction Argument(): integer;\nbegin Trace := Trace * 10 + 2; return 21; end function;\nfunction Double(Value: integer): integer;\nbegin return Value * 2; end function;\nprocedure Increase(var Value: integer);\nbegin Value := Value + 1; end procedure;\nprocedure Report(Output: channel of integer);\nbegin discard Tasks.Send(Output, 42); end procedure;\n";
 
 fn program(body: &str) -> String {
     format!(
@@ -48,17 +31,7 @@ fn program(body: &str) -> String {
 #[test]
 fn indexed_callables_execute_selected_values_once_and_keep_reference_modes() {
     let source = program(
-        "const Mapping: dict of string to Reader := ['double': Double];
-         const Nested: array of array of Reader := [Readers];
-         const Boxed: Holder := Holder(Readers := Readers);
-         if Readers[Choose()](Argument()) <> 42 or Trace <> 12 then
-           panic('callee and arguments must each run once, in order');
-         end if;
-         if Mapping['double'](21) <> 42 or Nested[0][0](21) <> 42
-            or Boxed.Readers[0](21) <> 42 then panic('selected callable'); end if;
-         Mutators[0](var Counter);
-         if Counter <> 1 then panic('reference update'); end if;
-         WriteLn('ok');",
+        "const Mapping: dict of string to Reader := ['double': Double];\n         const Nested: array of array of Reader := [Readers];\n         const Boxed: Holder := Holder(Readers := Readers);\n         if Readers[Choose()](Argument()) <> 42 or Trace <> 12 then\n           panic('callee and arguments must each run once, in order');\n         end if;\n         if Mapping['double'](21) <> 42 or Nested[0][0](21) <> 42\n            or Boxed.Readers[0](21) <> 42 then panic('selected callable'); end if;\n         Mutators[0](var Counter);\n         if Counter <> 1 then panic('reference update'); end if;\n         Console.WriteLn('ok');",
     );
     let (exit, stdout, stderr) = cli("run", &source);
     assert_eq!((exit, stdout.as_str(), stderr.as_str()), (0, "ok\n", ""));
@@ -67,16 +40,7 @@ fn indexed_callables_execute_selected_values_once_and_keep_reference_modes() {
 #[test]
 fn indexed_callables_work_with_bound_and_discarded_handles() {
     let source = program(
-        "const Reports: array of Reporter := [Report];
-         const Output: channel of integer := CreateChannel(1);
-         const Job: task of integer := go Readers[0](21);
-         if Wait(Job) <> 42 then panic('task result'); end if;
-         discard go Reports[0](Output);
-         if ReceiveWithTimeout(Output, 1000).Unwrap() <> 42 then panic('detached'); end if;
-         const ReportJob: task := go Reports[0](Output);
-         Wait(ReportJob);
-         if ReceiveWithTimeout(Output, 1000).Unwrap() <> 42 then panic('retained'); end if;
-         WriteLn('ok');",
+        "const Reports: array of Reporter := [Report];\n         const Output: channel of integer := Tasks.CreateChannel(1);\n         const Job: task of integer := go Readers[0](21);\n         if Tasks.Wait(Job) <> 42 then panic('task result'); end if;\n         discard go Reports[0](Output);\n         if Tasks.ReceiveWithTimeout(Output, 1000).Unwrap() <> 42 then panic('detached'); end if;\n         const ReportJob: task := go Reports[0](Output);\n         Tasks.Wait(ReportJob);\n         if Tasks.ReceiveWithTimeout(Output, 1000).Unwrap() <> 42 then panic('retained'); end if;\n         Console.WriteLn('ok');",
     );
     let (exit, stdout, stderr) = cli("run", &source);
     assert_eq!((exit, stdout.as_str(), stderr.as_str()), (0, "ok\n", ""));

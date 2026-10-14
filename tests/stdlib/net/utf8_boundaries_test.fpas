@@ -1,13 +1,13 @@
 program Utf8BoundariesTest;
 
-uses Std.Net.Utf8, Std.Test;
+uses Std.Net.Utf8 as Utf8, Std.Test as Test;
 
 procedure Invalid(Bytes: array of integer);
 begin
-  case Std.Net.Utf8.Decode(Bytes) of
+  case Utf8.Decode(Bytes) of
     when Ok(_):
       begin
-        Fail('invalid encoding accepted');
+        Test.Fail('invalid encoding accepted');
       end;
     when Error(_):
       begin
@@ -32,7 +32,7 @@ begin
                         ('x' + string.Chr(769)).RepeatStr(2048)
                       ] do
     begin
-      AssertEquals(Text, Std.Net.Utf8.Decode(Std.Net.Utf8.Encode(Text)).Unwrap());
+      Test.AssertEquals(Text, Utf8.Decode(Utf8.Encode(Text)).Unwrap());
     end;
   end for;
 

@@ -1,15 +1,17 @@
 unit Std.Tui.Cells.Cell;
 
-uses Std.Tui.Cells.Glyph, Std.Tui.Cells.Style, Std.Tui.Cells.StyleRole;
+uses
+  Std.Tui.Cells.Glyph as CellsGlyph, Std.Tui.Cells.Style as CellsStyle,
+  Std.Tui.Cells.StyleRole as StyleRole;
 
 // One validated renderable grapheme with a semantic or concrete style.
 public type TuiCell = record
   // Single renderable grapheme.
   public Glyph: string;
   // Semantic style role of the cell.
-  public Role: TuiStyleRole;
+  public Role: StyleRole.TuiStyleRole;
   // Optional concrete style overriding semantic role resolution.
-  public ConcreteStyle: option of TuiStyle;
+  public ConcreteStyle: option of CellsStyle.TuiStyle;
   // Display width of the glyph in terminal cells.
   public Columns: integer;
 
@@ -18,9 +20,9 @@ public type TuiCell = record
   // Parameters:
   // - `Glyph`: Single renderable grapheme.
   // - `Role`: Semantic style role used by the operation.
-  public static function Create(Glyph: string; Role: TuiStyleRole): TuiCell;
+  public static function Create(Glyph: string; Role: StyleRole.TuiStyleRole): TuiCell;
   begin
-    return TuiCell(Glyph := Glyph, Role := Role, ConcreteStyle := None, Columns := TuiGlyphWidth(Glyph));
+    return TuiCell(Glyph := Glyph, Role := Role, ConcreteStyle := None, Columns := CellsGlyph.TuiGlyphWidth(Glyph));
   end function;
 
   // Creates a cell with a concrete style that bypasses theme lookup.
@@ -28,9 +30,9 @@ public type TuiCell = record
   // Parameters:
   // - `Glyph`: Single renderable grapheme.
   // - `Style`: Concrete terminal style.
-  public static function Styled(Glyph: string; Style: TuiStyle): TuiCell;
+  public static function Styled(Glyph: string; Style: CellsStyle.TuiStyle): TuiCell;
   begin
-    return TuiCell(Glyph := Glyph, Role := TuiStyleRole.Normal, ConcreteStyle := Some(Style), Columns := TuiGlyphWidth(Glyph));
+    return TuiCell(Glyph := Glyph, Role := StyleRole.TuiStyleRole.Normal, ConcreteStyle := Some(Style), Columns := CellsGlyph.TuiGlyphWidth(Glyph));
   end function;
 
   // Returns the terminal-column width of the cell glyph (`1` or `2`).

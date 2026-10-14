@@ -47,7 +47,7 @@ impl Worker {
                     self.runtime_error(
                         RUNTIME_ARRAY_INDEX_OUT_OF_BOUNDS,
                         "Program argument index is outside the host index range",
-                        "Use a non-negative index smaller than Std.Args.ParamCount().",
+                        "With `uses Std.Args as Args;`, use a non-negative index smaller than `Args.ParamCount()`.",
                     )
                 })?;
                 let value = self.hosted.program_args.get(index).ok_or_else(|| {
@@ -57,7 +57,7 @@ impl Worker {
                             "Program argument index {index} out of bounds (count {})",
                             self.hosted.program_args.len()
                         ),
-                        "Call Std.Args.ParamCount() before indexing program arguments.",
+                        "Import `uses Std.Args as Args;` and call `Args.ParamCount()` before indexing program arguments.",
                     )
                 })?;
                 Ok(Some(Some(Value::Str(value.as_str().into()))))

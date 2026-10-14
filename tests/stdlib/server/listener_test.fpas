@@ -1,12 +1,12 @@
 program ServerListenerTest;
 
-uses Std.Server, Std.Net, Std.Tasks, Std.Test;
+uses Std.Server as Server, Std.Net as Net, Std.Tasks as Tasks, Std.Test as Test;
 
-function BindListener(): result of (Std.Net.Listener, string);
+function BindListener(): result of (Net.Listener, string);
 begin
   for Port: integer := 28100 to 28199 do
     begin
-      const Opened: result of (Std.Net.Listener, string) := Listen('127.0.0.1', Port);
+      const Opened: result of (Net.Listener, string) := Net.Listen('127.0.0.1', Port);
       if Opened.IsOk() then
         begin
           return Opened;
@@ -19,19 +19,19 @@ begin
 end function;
 
 begin
-  const Life: ServerLifetime := CreateLifetime(1000, false).Unwrap();
-  const Other: ServerLifetime := CreateLifetime(1000, false).Unwrap();
-  const Listener: Std.Net.Listener := BindListener().Unwrap();
-  AssertTrue(OwnListener(Life, Listener).Unwrap());
-  AssertTrue(not OwnListener(Life, Listener).Unwrap());
-  AssertTrue(OwnListener(Other, Listener).IsError());
-  AssertTrue(RequestStop(Life));
-  AssertTrue(Accept(Listener).IsError());
-  AssertTrue(OwnListener(Life, Listener).IsError());
-  AssertEquals(0, CloseTaskGroup(GetWorkGroup(Life)).Length());
-  AssertTrue(FinishShutdown(Life).Unwrap());
-  AssertEquals(0, ShutdownErrors(Life).Length());
-  discard RequestStop(Other);
-  discard CloseTaskGroup(GetWorkGroup(Other));
-  AssertTrue(FinishShutdown(Other).Unwrap());
+  const Life: Server.ServerLifetime := Server.CreateLifetime(1000, false).Unwrap();
+  const Other: Server.ServerLifetime := Server.CreateLifetime(1000, false).Unwrap();
+  const Listener: Net.Listener := BindListener().Unwrap();
+  Test.AssertTrue(Server.OwnListener(Life, Listener).Unwrap());
+  Test.AssertTrue(not Server.OwnListener(Life, Listener).Unwrap());
+  Test.AssertTrue(Server.OwnListener(Other, Listener).IsError());
+  Test.AssertTrue(Server.RequestStop(Life));
+  Test.AssertTrue(Net.Accept(Listener).IsError());
+  Test.AssertTrue(Server.OwnListener(Life, Listener).IsError());
+  Test.AssertEquals(0, Tasks.CloseTaskGroup(Server.GetWorkGroup(Life)).Length());
+  Test.AssertTrue(Server.FinishShutdown(Life).Unwrap());
+  Test.AssertEquals(0, Server.ShutdownErrors(Life).Length());
+  discard Server.RequestStop(Other);
+  discard Tasks.CloseTaskGroup(Server.GetWorkGroup(Other));
+  Test.AssertTrue(Server.FinishShutdown(Other).Unwrap());
 end.

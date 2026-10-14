@@ -32,7 +32,7 @@ end function;
 // Parameters:
 // - `Command`: Executable name or path to start.
 // - `Args`: Command-line arguments in invocation order.
-public function RunCapture(Command: string; Args: array of string): result of (Std.Proc.ProcessOutput, string);
+public function RunCapture(Command: string; Args: array of string): result of (ProcessOutput, string);
 begin
   panic('Intrinsic API declaration');
 end function;

@@ -126,11 +126,7 @@ fn scalar_const_binding_requires_a_guard_and_its_own_arm() {
 #[test]
 fn bare_scalar_labels_compare_constants_and_reject_unknown_names() {
     check_ok(
-        "program T; const Limit: integer := 3; type Color = enum Red; Green; end enum;
-        begin
-          case 3 of when Limit if true: null; else null; end case;
-          case Color.Red of when Red: null; when Green: null; end case;
-        end.",
+        "program T; const Limit: integer := 3; type Color = enum Red; Green; end enum;\n        begin\n          case 3 of when Limit if true: null; else null; end case;\n          case Color.Red of when Color.Red: null; when Color.Green: null; end case;\n        end.",
     );
     let errors = errors_with(
         "program T; begin case 3 of when N if N > 0: null; else null; end case; end.",

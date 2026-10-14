@@ -1,6 +1,6 @@
 program LocalInferenceTest;
 
-uses Std.Test;
+uses Std.Test as Test;
 
 type UserId = distinct integer;
 
@@ -38,31 +38,31 @@ begin
   Index['a'] := 3;
   const Id := UserId(Whole);
   const Raw := integer(Id);
-  AssertEquals(42, Raw);
-  AssertTrue(LowerBound < 0);
-  AssertEquals(1.5, Fraction);
-  AssertTrue(Flag);
-  AssertEquals('Ada', Text);
-  AssertEquals(3, Values[1][0]);
-  AssertEquals(3, Index['a']);
-  AssertEquals(10, Captured());
+  Test.AssertEquals(42, Raw);
+  Test.AssertTrue(LowerBound < 0);
+  Test.AssertEquals(1.5, Fraction);
+  Test.AssertTrue(Flag);
+  Test.AssertEquals('Ada', Text);
+  Test.AssertEquals(3, Values[1][0]);
+  Test.AssertEquals(3, Index['a']);
+  Test.AssertEquals(10, Captured());
   const Boxed := Box(Value := 'text');
   const Found := Lookup.Found(Boxed);
   var Current := IntLookup.Missing;
   Current := Lookup.Found(7);
   case Found of
     when Lookup.Found(const Value):
-      AssertEquals('text', Value.Value);
+      Test.AssertEquals('text', Value.Value);
     when Lookup.Missing:
-      Fail('Expected a constructed payload');
+      Test.Fail('Expected a constructed payload');
   end case;
 
   case Current of
     when Lookup.Found(const Value):
-      AssertEquals(7, Value);
+      Test.AssertEquals(7, Value);
     when Lookup.Missing:
-      Fail('Expected a reassigned payload');
+      Test.Fail('Expected a reassigned payload');
   end case;
   const Present := Some(Boxed);
-  AssertEquals('text', Present.Unwrap().Value);
+  Test.AssertEquals('text', Present.Unwrap().Value);
 end.

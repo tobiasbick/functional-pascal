@@ -37,7 +37,7 @@ export async function verifyDebuggerLifecycle(
   const sourceLines = [
     "program DebuggerHost;",
     "",
-    "uses Std.Console;",
+    "uses Std.Console as Console;",
     "",
     "type",
     "  Point = record",
@@ -59,7 +59,7 @@ export async function verifyDebuggerLifecycle(
     "  );",
     "  var Computed: integer := Factorial(4);",
     "  Computed := Computed + Origin.X;",
-    "  WriteLn(Computed);",
+    "  Console.WriteLn(Computed);",
     "end.",
     "",
   ];

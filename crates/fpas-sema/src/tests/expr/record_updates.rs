@@ -54,9 +54,7 @@ fn imported_update_errors(update: &str) -> Vec<SemaError> {
     assert!(types_analysis.metadata.errors.is_empty());
     let interface = types_analysis.interface.expect("type unit interface");
     let consumer = parse_unit(&format!(
-        "unit Demo.Consumer; uses Demo.Types;
-         public function Change(Original: Holder; Other: OtherPoint): Holder;
-         begin return Original with {update}; end with; end function;\nend unit;"
+        "unit Demo.Consumer; uses Demo.Types as Types;\n         public function Change(Original: Types.Holder; Other: Types.OtherPoint): Types.Holder;\n         begin return Original with {update}; end with; end function;\nend unit;"
     ));
     analyze_unit(&consumer, &[interface])
         .expect("consumer analysis")
@@ -67,8 +65,8 @@ fn imported_update_errors(update: &str) -> Vec<SemaError> {
 #[test]
 fn record_update_accepts_imported_record_constructions_and_array_elements() {
     for update in [
-        "Position := Point( X := 3, Y := 4 )",
-        "Points := [Point( X := 3, Y := 4 )]",
+        "Position := Types.Point( X := 3, Y := 4 )",
+        "Points := [Types.Point( X := 3, Y := 4 )]",
     ] {
         let errors = imported_update_errors(update);
         assert!(errors.is_empty(), "update: {update}; errors: {errors:#?}");
@@ -79,11 +77,11 @@ fn record_update_accepts_imported_record_constructions_and_array_elements() {
 fn record_update_preserves_imported_record_field_and_nominal_validation() {
     for (update, code) in [
         (
-            "Position := Point( X := 'wrong', Y := 4 )",
+            "Position := Types.Point( X := 'wrong', Y := 4 )",
             SEMA_TYPE_MISMATCH,
         ),
         (
-            "Position := Point( X := 3, Y := 4, Missing := 0 )",
+            "Position := Types.Point( X := 3, Y := 4, Missing := 0 )",
             SEMA_UNKNOWN_NAME,
         ),
         ("Position := Other", SEMA_TYPE_MISMATCH),

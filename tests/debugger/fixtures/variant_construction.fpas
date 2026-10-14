@@ -1,6 +1,6 @@
 program VariantConstruction;
 
-uses Std.Console;
+uses Std.Console as Console;
 
 type Point = record
   X: integer;
@@ -110,14 +110,14 @@ begin
   var OuterValue: Outer := Outer.First(Choice.Empty);
   const Fixed: Choice := Choice.Count(99);
   const StopMarker: integer := 0;
-  WriteLn(ChoiceValue(Selected));
-  WriteLn(ChoiceValue(PackedHolder.Item));
-  WriteLn(ChoiceValue(Items[0]));
-  WriteLn(ChoiceValue(Scores['blue']));
-  WriteLn(ChoiceValue(GlobalChoice));
-  WriteLn(ResultValue(Failed));
-  WriteLn(WrappedChoiceValue(WrappedChoice));
-  WriteLn(WrappedChoiceValue(WrappedChoices[0]));
-  WriteLn(OuterChoiceValue(OuterValue));
-  WriteLn(ChoiceValue(Fixed));
+  Console.WriteLn(ChoiceValue(Selected));
+  Console.WriteLn(ChoiceValue(PackedHolder.Item));
+  Console.WriteLn(ChoiceValue(Items[0]));
+  Console.WriteLn(ChoiceValue(Scores['blue']));
+  Console.WriteLn(ChoiceValue(GlobalChoice));
+  Console.WriteLn(ResultValue(Failed));
+  Console.WriteLn(WrappedChoiceValue(WrappedChoice));
+  Console.WriteLn(WrappedChoiceValue(WrappedChoices[0]));
+  Console.WriteLn(OuterChoiceValue(OuterValue));
+  Console.WriteLn(ChoiceValue(Fixed));
 end.

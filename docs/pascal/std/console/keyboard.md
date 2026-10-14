@@ -14,12 +14,12 @@ Keyboard input is **separate** from the `ReadText` / `ReadLn` buffer. Enabling r
   (Turbo Pascal–style). The prefix has length one and is not `''`.
 
 ```pascal
-const C: string := ReadKey();
+const C: string := Console.ReadKey();
 if C = string.Chr(0) then
-  const ScanCode: string := ReadKey();
-  WriteLn('Extended key: ', ScanCode.Ord());
+  const ScanCode: string := Console.ReadKey();
+  Console.WriteLn('Extended key: ', ScanCode.Ord());
 else
-  WriteLn(C);
+  Console.WriteLn(C);
 end if;
 ```
 
@@ -33,10 +33,10 @@ end if;
 Use it to avoid blocking when you want a polling loop.
 
 ```pascal
-if KeyPressed() then
+if Console.KeyPressed() then
   begin
-    const C: string := ReadKey();
-    WriteLn(C);
+    const C: string := Console.ReadKey();
+    Console.WriteLn(C);
   end;
 end if;
 ```
@@ -58,13 +58,13 @@ end if;
 - **Unknown / unmapped:** `kind = KeyKind.Unknown`.
 
 ```pascal
-if KeyPressed() then
+if Console.KeyPressed() then
   begin
-    const E: KeyEvent := ReadKeyEvent();
-    if E.kind = KeyKind.Escape then
-      WriteLn('quit');
+    const E: Console.KeyEvent := Console.ReadKeyEvent();
+    if E.kind = Console.KeyKind.Escape then
+      Console.WriteLn('quit');
     else
-      WriteLn(E.ch);
+      Console.WriteLn(E.ch);
     end if;
   end;
 end if;

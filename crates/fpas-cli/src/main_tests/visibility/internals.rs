@@ -17,7 +17,7 @@ include = ["src/*.fpas"]
     );
     write_text(
         &cwd.join("src/main.fpas"),
-        "program Main;\nuses App.Lib, Std.Console;\nbegin\n  WriteLn(GetValue());\nend.\n",
+        "program Main;\nuses App.Lib as Lib, Std.Console as Console;\nbegin\n  Console.WriteLn(Lib.GetValue());\nend.\n",
     );
     write_text(
         &cwd.join("src/lib.fpas"),
@@ -62,7 +62,7 @@ include = ["src/*.fpas"]
     );
     write_text(
         &cwd.join("src/main.fpas"),
-        "program Main;\nuses App.Lib, Std.Console;\nbegin\n  WriteLn(PublicFn());\nend.\n",
+        "program Main;\nuses App.Lib as Lib, Std.Console as Console;\nbegin\n  Console.WriteLn(Lib.PublicFn());\nend.\n",
     );
     write_text(
         &cwd.join("src/lib.fpas"),
@@ -105,7 +105,7 @@ include = ["src/*.fpas"]
     );
     write_text(
         &cwd.join("src/main.fpas"),
-        "program Main;\nuses App.Lib, Std.Console;\nbegin\n  WriteLn(GetSecret());\nend.\n",
+        "program Main;\nuses App.Lib as Lib, Std.Console as Console;\nbegin\n  Console.WriteLn(Lib.GetSecret());\nend.\n",
     );
     write_text(
         &cwd.join("src/lib.fpas"),
@@ -147,7 +147,7 @@ include = ["src/*.fpas"]
     );
     write_text(
         &cwd.join("src/main.fpas"),
-        "program Main;\nuses App.Lib, Std.Console;\nbegin\n  WriteLn(GetCounter());\nend.\n",
+        "program Main;\nuses App.Lib as Lib, Std.Console as Console;\nbegin\n  Console.WriteLn(Lib.GetCounter());\nend.\n",
     );
     write_text(
         &cwd.join("src/lib.fpas"),
@@ -191,19 +191,11 @@ include = ["src/*.fpas"]
     );
     write_text(
         &cwd.join("src/main.fpas"),
-        "program Main;\nuses App.Caller, Std.Console;\nbegin\n  WriteLn(TryCall());\nend.\n",
+        "program Main;\nuses App.Caller as Caller, Std.Console as Console;\nbegin\n  Console.WriteLn(Caller.TryCall());\nend.\n",
     );
     write_text(
         &cwd.join("src/caller.fpas"),
-        "\
-unit App.Caller;
-uses App.Lib;
-
-public function TryCall(): integer;
-begin
-  return Secret();
-end function;
-end unit;\n",
+        "unit App.Caller;\nuses App.Lib as Lib;\n\npublic function TryCall(): integer;\nbegin\n  return Secret();\nend function;\nend unit;\n",
     );
     write_text(
         &cwd.join("src/lib.fpas"),
@@ -231,20 +223,7 @@ end unit;\n",
 fn private_is_valid_identifier_in_program() {
     let (exit_code, stdout_output, stderr_output) = support::run_source_and_capture_output(
         "private_identifier.fpas",
-        "\
-program Main;
-
-uses Std.Console;
-
-function private(): integer;
-begin
-  return 42;
-end function;
-
-begin
-  WriteLn(private());
-end.
-",
+        "program Main;\n\nuses Std.Console as Console;\n\nfunction private(): integer;\nbegin\n  return 42;\nend function;\n\nbegin\n  Console.WriteLn(private());\nend.\n",
     );
 
     assert_eq!(exit_code, 0, "{stderr_output}");

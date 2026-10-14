@@ -2,12 +2,12 @@
 
 program RandomBasics;
 
-uses Std.Console, Std.Conv, Std.Random;
+uses Std.Console as Console, Std.Conv as Conv, Std.Random as Random;
 
 begin
-  SetSeed(42);
-  WriteLn('repeatable d6: ', IntToStr(RandomInt(1, 6)));
-  Randomize();
-  WriteLn('random real: ', RealToStr(Random()));
-  WriteLn('d6: ', IntToStr(RandomInt(1, 6)));
+  Random.SetSeed(42);
+  Console.WriteLn('repeatable d6: ', Conv.IntToStr(Random.RandomInt(1, 6)));
+  Random.Randomize();
+  Console.WriteLn('random real: ', Conv.RealToStr(Random.Random()));
+  Console.WriteLn('d6: ', Conv.IntToStr(Random.RandomInt(1, 6)));
 end.

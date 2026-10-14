@@ -1,6 +1,6 @@
 program CaseCoverage;
 
-uses Std.Test;
+uses Std.Test as Test;
 
 type Digit = 1..3;
 
@@ -60,45 +60,45 @@ begin
       Picked := 4;
   end case;
 
-  AssertEquals(2, Picked);
-  AssertEquals('ab', Guards);
-  AssertEquals(1, Selectors);
+  Test.AssertEquals(2, Picked);
+  Test.AssertEquals('ab', Guards);
+  Test.AssertEquals(1, Selectors);
   Guards := '';
   const Selected := case Select(7) of
     when 1..5 if Guard('c', true): 1;
     when 3..8 if Guard('d', true): 2;
     else 3;
   end case;
-  AssertEquals(2, Selected);
-  AssertEquals('d', Guards);
-  AssertEquals(2, Selectors);
-  AssertEquals(10, Finite(Digit(1)));
-  AssertEquals(20, Finite(Digit(3)));
-  AssertEquals(1, Truth(true));
-  AssertEquals(0, Truth(false));
+  Test.AssertEquals(2, Selected);
+  Test.AssertEquals('d', Guards);
+  Test.AssertEquals(2, Selectors);
+  Test.AssertEquals(10, Finite(Digit(1)));
+  Test.AssertEquals(20, Finite(Digit(3)));
+  Test.AssertEquals(1, Truth(true));
+  Test.AssertEquals(0, Truth(false));
   const FiniteValue := case Digit(3) of
     when 1..2: 'small';
     when 3: 'last';
   end case;
-  AssertEquals('last', FiniteValue);
+  Test.AssertEquals('last', FiniteValue);
   const Typed := case Flag(false) of
     when Flag(true): 10;
     when Flag(false): 20;
   end case;
-  AssertEquals(20, Typed);
+  Test.AssertEquals(20, Typed);
   const Correlated := case Pair.Item(PairDigit(2), PairDigit(2)) of
     when Pair.Item(1, _): 10;
     when Pair.Item(2, 1): 20;
     when Pair.Item(2, 2): 30;
   end case;
-  AssertEquals(30, Correlated);
+  Test.AssertEquals(30, Correlated);
   const Response: result of (integer, string) := Ok(7);
   const Payload := case Response of
     when Ok(0): 0;
     when Ok(const Value): Value;
     when Error(_): -1;
   end case;
-  AssertEquals(7, Payload);
+  Test.AssertEquals(7, Payload);
   case Select(99) of
     when 1:
       Picked := 99;
@@ -106,8 +106,8 @@ begin
       null;
   end case;
 
-  AssertEquals(2, Picked);
-  AssertEquals(3, Selectors);
+  Test.AssertEquals(2, Picked);
+  Test.AssertEquals(3, Selectors);
   Guards := '';
   case Select(2) of
     when 1..2, 2..3 if Guard('e', Guards = 'e'):
@@ -116,14 +116,14 @@ begin
       Picked := 0;
   end case;
 
-  AssertEquals(7, Picked);
-  AssertEquals('ee', Guards);
+  Test.AssertEquals(7, Picked);
+  Test.AssertEquals('ee', Guards);
   Guards := '';
   const WithinArm := case Select(2) of
     when 1..2, 2..3 if Guard('f', Guards = 'f'): 8;
     else 0;
   end case;
-  AssertEquals(8, WithinArm);
-  AssertEquals('ff', Guards);
-  AssertEquals(5, Selectors);
+  Test.AssertEquals(8, WithinArm);
+  Test.AssertEquals('ff', Guards);
+  Test.AssertEquals(5, Selectors);
 end.

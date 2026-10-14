@@ -23,7 +23,6 @@ pub(crate) struct TypeCollection {
     resolving: Vec<(String, bool)>,
     accepted: HashSet<(u32, usize)>,
     reported_aliases: HashSet<String>,
-    value_positions: HashMap<String, usize>,
     /// Whether only structural definitions are being resolved.
     pub(crate) collecting: bool,
 }
@@ -46,19 +45,6 @@ impl Checker {
                 .cloned()
                 .map(Arc::new)
                 .collect();
-        }
-        for declaration in declarations {
-            let (name, offset) = match declaration {
-                Decl::Const(value) => (&value.name, value.span.offset),
-                Decl::Var(value) => (&value.name, value.span.offset),
-                Decl::Function(routine) => (&routine.name, routine.span.offset),
-                Decl::Procedure(routine) => (&routine.name, routine.span.offset),
-                Decl::TypeDef(_) => continue,
-            };
-            self.type_collection
-                .value_positions
-                .entry(canonical_symbol_name(name))
-                .or_insert(offset);
         }
         for declaration in declarations {
             let Decl::TypeDef(definition) = declaration else {
@@ -160,17 +146,5 @@ impl Checker {
         self.type_collection
             .accepted
             .contains(&(definition.span.source_id, definition.span.offset))
-    }
-
-    /// Preserve a preceding value's priority over an enum's optional short variant alias.
-    pub(in crate::check::decl::types) fn has_preceding_value(
-        &self,
-        name: &str,
-        offset: usize,
-    ) -> bool {
-        self.type_collection
-            .value_positions
-            .get(&canonical_symbol_name(name))
-            .is_some_and(|position| *position < offset)
     }
 }

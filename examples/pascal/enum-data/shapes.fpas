@@ -1,6 +1,6 @@
 program ShapesExample;
 
-uses Std.Console, Std.Conv, Std.Math;
+uses Std.Console as Console, Std.Conv as Conv, Std.Math as Math;
 
 type Shape = enum
   Circle(Radius: real);
@@ -13,7 +13,7 @@ begin
   case S of
     when Shape.Circle(const R):
       begin
-        return Pi * R * R;
+        return Math.Pi * R * R;
       end;
     when Shape.Rectangle(const W, const H):
       begin
@@ -31,11 +31,11 @@ begin
   case S of
     when Shape.Circle(const R):
       begin
-        return 'Circle with radius ' + RealToStr(R);
+        return 'Circle with radius ' + Conv.RealToStr(R);
       end;
     when Shape.Rectangle(const W, const H):
       begin
-        return 'Rectangle ' + RealToStr(W) + ' x ' + RealToStr(H);
+        return 'Rectangle ' + Conv.RealToStr(W) + ' x ' + Conv.RealToStr(H);
       end;
     when Shape.Point:
       begin
@@ -48,7 +48,7 @@ begin
   const C: Shape := Shape.Circle(5.0);
   const R: Shape := Shape.Rectangle(10.0, 3.0);
   const P: Shape := Shape.Point;
-  WriteLn(Describe(C) + ' -> area = ' + RealToStr(Area(C)));
-  WriteLn(Describe(R) + ' -> area = ' + RealToStr(Area(R)));
-  WriteLn(Describe(P) + ' -> area = ' + RealToStr(Area(P)));
+  Console.WriteLn(Describe(C) + ' -> area = ' + Conv.RealToStr(Area(C)));
+  Console.WriteLn(Describe(R) + ' -> area = ' + Conv.RealToStr(Area(R)));
+  Console.WriteLn(Describe(P) + ' -> area = ' + Conv.RealToStr(Area(P)));
 end.

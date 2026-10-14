@@ -1,6 +1,6 @@
 program VariantReplacement;
 
-uses Std.Console;
+uses Std.Console as Console;
 
 type Point = record
   X: integer;
@@ -60,62 +60,62 @@ begin
   var Scores: dict of string to Choice := ['blue': Choice.Count(14)];
   const Fixed: Choice := Choice.Count(99);
   const StopMarker: integer := 0;
-  WriteLn(ChoiceValue(Selected));
-  WriteLn(ChoiceValue(PairValue));
-  WriteLn(ChoiceValue(EmptyValue));
-  WriteLn(ChoiceValue(NestedValue));
+  Console.WriteLn(ChoiceValue(Selected));
+  Console.WriteLn(ChoiceValue(PairValue));
+  Console.WriteLn(ChoiceValue(EmptyValue));
+  Console.WriteLn(ChoiceValue(NestedValue));
   case Outcome of
     when Ok(const Value):
       begin
-        WriteLn(Value);
+        Console.WriteLn(Value);
       end;
     when Error(const Message):
       begin
-        WriteLn(Message);
+        Console.WriteLn(Message);
       end;
   end case;
 
   case Failed of
     when Ok(const Value):
       begin
-        WriteLn(Value);
+        Console.WriteLn(Value);
       end;
     when Error(const Message):
       begin
-        WriteLn(Message);
+        Console.WriteLn(Message);
       end;
   end case;
 
   case Optional of
     when Some(const Value):
       begin
-        WriteLn(Value);
+        Console.WriteLn(Value);
       end;
     when None:
       begin
-        WriteLn(0);
+        Console.WriteLn(0);
       end;
   end case;
 
   case Missing of
     when Some(const Value):
       begin
-        WriteLn(Value);
+        Console.WriteLn(Value);
       end;
     when None:
       begin
-        WriteLn(0);
+        Console.WriteLn(0);
       end;
   end case;
 
   case Packed of
     when Ok(const Value):
       begin
-        WriteLn(Value[1]);
+        Console.WriteLn(Value[1]);
       end;
     when Error(const Message):
       begin
-        WriteLn(Message);
+        Console.WriteLn(Message);
       end;
   end case;
 
@@ -125,23 +125,23 @@ begin
         case Inner of
           when Ok(const Value):
             begin
-              WriteLn(Value);
+              Console.WriteLn(Value);
             end;
           when Error(const Message):
             begin
-              WriteLn(Message);
+              Console.WriteLn(Message);
             end;
         end case;
       end;
     when None:
       begin
-        WriteLn(0);
+        Console.WriteLn(0);
       end;
   end case;
 
-  WriteLn(ChoiceValue(PackedHolder.Item));
-  WriteLn(ChoiceValue(Items[0]));
-  WriteLn(ChoiceValue(Scores['blue']));
-  WriteLn(ChoiceValue(GlobalChoice));
-  WriteLn(ChoiceValue(Fixed));
+  Console.WriteLn(ChoiceValue(PackedHolder.Item));
+  Console.WriteLn(ChoiceValue(Items[0]));
+  Console.WriteLn(ChoiceValue(Scores['blue']));
+  Console.WriteLn(ChoiceValue(GlobalChoice));
+  Console.WriteLn(ChoiceValue(Fixed));
 end.

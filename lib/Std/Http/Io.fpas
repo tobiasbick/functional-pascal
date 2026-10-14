@@ -1,7 +1,7 @@
 // Bounded byte transfers for HTTP transports.
 unit Std.Http.Io;
 
-uses Std.Net;
+uses Std.Net as Net;
 
 // Materializes ordered response or request fragments as one byte array.
 public function JoinChunks(Chunks: array of array of integer): array of integer;
@@ -12,7 +12,7 @@ begin
 end function;
 
 // Reads within the remaining response budget, probing only for EOF at its boundary.
-public function ReadResponseBytes(Connection: Std.Net.Connection; Available: integer): result of (array of integer, string);
+public function ReadResponseBytes(Connection: Net.Connection; Available: integer): result of (array of integer, string);
 begin
   if Available < 0 then
     begin
@@ -32,7 +32,7 @@ begin
     end;
   end if;
 
-  case Std.Net.ReceiveBytes(Connection, Count) of
+  case Net.ReceiveBytes(Connection, Count) of
     when Ok(const Bytes):
       begin
         if Bytes.Length() > Available then
@@ -55,7 +55,7 @@ end function;
 // Parameters:
 // - `Connection`: Open TCP or TLS connection.
 // - `Bytes`: Complete byte sequence to write.
-public function WriteAll(Connection: Std.Net.Connection; Bytes: array of integer): result of (boolean, string);
+public function WriteAll(Connection: Net.Connection; Bytes: array of integer): result of (boolean, string);
 begin
   var Offset: integer := 0;
   while Offset < Bytes.Length() do
@@ -67,7 +67,7 @@ begin
         end;
       end if;
       const Remaining: array of integer := Bytes.Slice(Offset, Count);
-      case Std.Net.SendBytes(Connection, Remaining) of
+      case Net.SendBytes(Connection, Remaining) of
         when Ok(const Count):
           begin
             if Count <= 0 then

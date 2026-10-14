@@ -1,19 +1,21 @@
 // Sends buffered and streaming HTTP requests to the local example server.
 program NetworkHttpClient;
 
-uses Std.Args, Std.Conv, Std.Console, Std.Http, Std.Net.Utf8;
+uses
+  Std.Args as Args, Std.Conv as Conv, Std.Console as Console, Std.Http as Http,
+  Std.Net.Utf8 as Utf8;
 
 // Prints one buffered response after validating its UTF-8 body.
 //
 // Parameters:
 // - `LabelText`: Short operation label written before the response.
 // - `ResponseValue`: Buffered HTTP response to display.
-procedure PrintBuffered(LabelText: string; ResponseValue: Response);
+procedure PrintBuffered(LabelText: string; ResponseValue: Http.Response);
 begin
-  case BodyText(ResponseValue) of
+  case Http.BodyText(ResponseValue) of
     when Ok(const Text):
       begin
-        WriteLn(LabelText + ' ' + IntToStr(ResponseValue.StatusCode) + ': ' + Text);
+        Console.WriteLn(LabelText + ' ' + Conv.IntToStr(ResponseValue.StatusCode) + ': ' + Text);
       end;
     when Error(const Message):
       begin
@@ -27,9 +29,9 @@ end procedure;
 // Parameters:
 // - `LabelText`: Short operation label written before the response.
 // - `RequestValue`: Complete request to send.
-procedure RunBuffered(LabelText: string; RequestValue: Request);
+procedure RunBuffered(LabelText: string; RequestValue: Http.Request);
 begin
-  case Send(RequestValue) of
+  case Http.Send(RequestValue) of
     when Ok(const ResponseValue):
       begin
         PrintBuffered(LabelText, ResponseValue);
@@ -45,13 +47,13 @@ end procedure;
 //
 // Parameters:
 // - `StreamValue`: Open HTTP response-body stream.
-function ReadAll(StreamValue: BodyStream): string;
+function ReadAll(StreamValue: Http.BodyStream): string;
 begin
   var Bytes: array of integer := [];
   var Reading: boolean := true;
   while Reading do
     begin
-      case ReadStream(StreamValue, 5) of
+      case Http.ReadStream(StreamValue, 5) of
         when Ok(const Part):
           begin
             if Part.Length() = 0 then
@@ -72,7 +74,7 @@ begin
     end;
   end while;
 
-  case Std.Net.Utf8.Decode(Bytes) of
+  case Utf8.Decode(Bytes) of
     when Ok(const Text):
       begin
         return Text;
@@ -86,25 +88,26 @@ end function;
 
 begin
   var Port: integer := 18080;
-  if ParamCount() = 1 then
+  if Args.ParamCount() = 1 then
     begin
-      Port := StrToInt(ParamStr(0));
+      Port := Conv.StrToInt(Args.ParamStr(0));
     end;
-  elsif ParamCount() <> 0 then
+  elsif Args.ParamCount() <> 0 then
     begin
       panic('usage: http_client.fpas -- [PORT]');
     end;
   end if;
-  const BaseUrl: string := 'http://127.0.0.1:' + IntToStr(Port);
-  RunBuffered('GET', Request.Get(BaseUrl + '/hello'));
-  var PostRequest: Request := Request.Post(BaseUrl + '/echo');
-  PostRequest.Headers := [Header.Create('Content-Type', 'text/plain; charset=utf-8')];
-  PostRequest.Body := Std.Net.Utf8.Encode('hello from client');
+  const BaseUrl: string := 'http://127.0.0.1:' + Conv.IntToStr(Port);
+  RunBuffered('GET', Http.Request.Get(BaseUrl + '/hello'));
+  var PostRequest: Http.Request := Http.Request.Post(BaseUrl + '/echo');
+  PostRequest.Headers := [Http.Header.Create('Content-Type', 'text/plain; charset=utf-8')];
+  PostRequest.Body := Utf8.Encode('hello from client');
   RunBuffered('POST', PostRequest);
-  case OpenStream(Request.Get(BaseUrl + '/stream')) of
+  case Http.OpenStream(Http.Request.Get(BaseUrl + '/stream')) of
     when Ok(const ResponseValue):
       begin
-        WriteLn('STREAM ' + IntToStr(ResponseValue.StatusCode) + ': ' + ReadAll(ResponseValue.Body));
+        Console.WriteLn('STREAM ' + Conv.IntToStr(ResponseValue.StatusCode) + ': ' +
+                        ReadAll(ResponseValue.Body));
       end;
     when Error(const Message):
       begin

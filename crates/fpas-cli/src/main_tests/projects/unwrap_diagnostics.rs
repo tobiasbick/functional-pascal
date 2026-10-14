@@ -12,8 +12,8 @@ fn native_unwrap_chains_and_retired_namespace_diagnostics() {
         .nth(2)
         .expect("repository root");
     for (container, constructor) in [
-        ("option of TuiStyle", "Some"),
-        ("result of (TuiStyle, string)", "Ok"),
+        ("option of Tui.TuiStyle", "Some"),
+        ("result of (Tui.TuiStyle, string)", "Ok"),
     ] {
         for function in ["Unwrap", "UnwrapOr"] {
             for namespace in [None, Some("Options"), Some("Results")] {
@@ -28,7 +28,7 @@ fn native_unwrap_chains_and_retired_namespace_diagnostics() {
                 write_text(
                     &cwd.join("src/main.fpas"),
                     &format!(
-                        "program UnwrapRepro;\nuses Std.Tui, Std.Test;\nbegin\n  const Base: TuiStyle := TuiStyle.FromColors(\n    TuiColor.FromRgb(1, 2, 3), TuiColor.FromRgb(4, 5, 6));\n  const Style: {container} := {constructor}(Base);\n  const Red: integer := {call}.Background.Red;\n  AssertEquals(4, Red);\nend."
+                        "program UnwrapRepro;\nuses Std.Tui as Tui, Std.Test as Test;\nbegin\n  const Base: Tui.TuiStyle := Tui.TuiStyle.FromColors(\n    Tui.TuiColor.FromRgb(1, 2, 3), Tui.TuiColor.FromRgb(4, 5, 6));\n  const Style: {container} := {constructor}(Base);\n  const Red: integer := {call}.Background.Red;\n  Test.AssertEquals(4, Red);\nend."
                     ),
                 );
                 let command = if namespace.is_none() { "run" } else { "check" };

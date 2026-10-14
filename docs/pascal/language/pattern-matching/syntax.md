@@ -103,11 +103,11 @@ end case;
 ```pascal
 case Status of
   when 0:
-    WriteLn('ok');
+    Console.WriteLn('ok');
   when 1, 2:
-    WriteLn('retry');
+    Console.WriteLn('retry');
   else
-    WriteLn('failed');
+    Console.WriteLn('failed');
 end case;
 ```
 

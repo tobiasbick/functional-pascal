@@ -1,69 +1,55 @@
 use super::Checker;
 use crate::scope::canonical_symbol_name;
-use fpas_diagnostics::codes::SEMA_AMBIGUOUS_IMPORTED_NAME;
+use fpas_diagnostics::codes::SEMA_UNQUALIFIED_NAME;
 
 impl Checker {
-    /// Lists qualified candidates for an ambiguous short import or enum variant.
+    /// Lists required source qualifiers without making the short spellings legal.
     ///
-    /// **Documentation:** `docs/pascal/tools/diagnostics.md` (FP3004).
-    pub(crate) fn ambiguous_hint(&self, name: &str) -> Option<String> {
-        let canonical_name = canonical_symbol_name(name);
-        if let Some(candidates) = self.ambiguous_enum_variants.get(&canonical_name) {
-            return Some(format!(
-                "`{name}` exists in multiple enums: {}. Use the fully qualified variant name to disambiguate.",
-                candidates.join(", ")
-            ));
-        }
-
-        self.ambiguous_imports.get(&canonical_name).map(|candidates| {
-            format!(
-                "`{name}` exists in multiple imported units: {}. Use the fully qualified name to disambiguate.",
-                candidates.join(", ")
-            )
-        })
+    /// **Documentation:** `docs/pascal/tools/diagnostics.md` (FP3043).
+    pub(crate) fn qualification_hint(&self, name: &str) -> Option<String> {
+        let leaf = name.rsplit('.').next().unwrap_or(name);
+        let alias_prefix = name.split_once('.').and_then(|(root, _)| {
+            self.scopes
+                .imports
+                .is_alias(root)
+                .then(|| format!("{root}."))
+        });
+        let candidates = self
+            .imported_candidates
+            .get(&canonical_symbol_name(name))
+            .or_else(|| {
+                (!name.contains('.') || alias_prefix.is_some())
+                    .then(|| self.imported_candidates.get(&canonical_symbol_name(leaf)))
+                    .flatten()
+            })?;
+        let mut spellings = candidates
+            .iter()
+            .cloned()
+            .filter(|candidate| !candidate.eq_ignore_ascii_case(name))
+            .filter(|candidate| {
+                alias_prefix.as_ref().is_none_or(|prefix| {
+                    candidate
+                        .to_ascii_lowercase()
+                        .starts_with(&prefix.to_ascii_lowercase())
+                })
+            })
+            .collect::<Vec<_>>();
+        spellings.sort_by_key(|candidate| candidate.to_ascii_lowercase());
+        spellings.dedup_by(|left, right| left.eq_ignore_ascii_case(right));
+        (!spellings.is_empty()).then(|| format!("Use the required alias/type qualifier: {}. Imported names require `Alias.Name`; user enum variants require `Type.Variant` or `Alias.Type.Variant`.", spellings.iter().map(|candidate| format!("`{candidate}`")).collect::<Vec<_>>().join(", ")))
     }
 
     /// Resolves standard call names while preserving lexical shadowing of imported aliases.
     ///
     /// **Documentation:** `docs/pascal/program-structure/units.md`.
     pub(crate) fn builtin_std_dispatch_name(&self, name: &str) -> String {
-        let canonical = canonical_symbol_name(name);
-        if !name.contains('.')
-            && !(self.std_short_alias_keys.contains(&canonical)
-                && self
-                    .scopes
-                    .lookup_with_scope(name)
-                    .is_some_and(|(scope, _)| scope == 0))
-        {
+        if !name.contains('.') {
             return name.to_string();
         }
-        if let Some(qualified) = self.short_builtin_redirect.get(&canonical) {
-            return qualified.clone();
-        }
-        if name.contains('.') {
-            return self
-                .scopes
-                .lookup_original_name(name)
-                .unwrap_or(name)
-                .to_string();
-        }
-        let mut candidates = self
-            .loaded_std_units
-            .iter()
-            .flat_map(|unit| fpas_std::std_unit_symbols(unit))
-            .filter(|qualified| {
-                qualified
-                    .rsplit_once('.')
-                    .is_some_and(|(_, short)| short.eq_ignore_ascii_case(name))
-            })
-            .copied()
-            .collect::<Vec<_>>();
-        candidates.sort_unstable();
-        candidates.dedup();
-        if let [qualified] = candidates.as_slice() {
-            return (*qualified).to_string();
-        }
-        name.to_string()
+        self.scopes
+            .lookup_original_name(name)
+            .unwrap_or(name)
+            .to_string()
     }
 
     /// Registers the qualified symbols of a `Std.*` unit named in `uses` on first qualified use.
@@ -79,7 +65,11 @@ impl Checker {
         };
 
         if !self.loaded_std_units.contains(&unit)
-            || self.scopes.lookup(fully_qualified_name).is_some()
+            || self
+                .scopes
+                .imports
+                .lookup_metadata(fully_qualified_name)
+                .is_some()
         {
             return;
         }
@@ -87,11 +77,12 @@ impl Checker {
         crate::std_registry::register_single_std_unit(self, unit.as_str());
     }
 
-    pub(crate) fn report_ambiguous_type_name(&mut self, name: &str, span: fpas_lexer::Span) {
-        if let Some(hint) = self.ambiguous_hint(name) {
+    /// Report an imported type whose source-local alias qualifier is missing.
+    pub(crate) fn report_unqualified_type_name(&mut self, name: &str, span: fpas_lexer::Span) {
+        if let Some(hint) = self.qualification_hint(name) {
             self.error_with_code(
-                SEMA_AMBIGUOUS_IMPORTED_NAME,
-                format!("Ambiguous type `{name}`"),
+                SEMA_UNQUALIFIED_NAME,
+                format!("Type `{name}` requires its import alias"),
                 hint,
                 span,
             );

@@ -1,20 +1,21 @@
 // Sends one LF-delimited TCP request to the local echo server.
 program NetworkTcpEchoClient;
 
-uses Std.Args, Std.Conv, Std.Console, Std.Net, Std.Net.Utf8;
+uses
+  Std.Args as Args, Std.Conv as Conv, Std.Console as Console, Std.Net as Net, Std.Net.Utf8 as Utf8;
 
 // Writes every byte even when the transport reports a partial write.
 //
 // Parameters:
 // - `ConnectionValue`: Open TCP connection.
 // - `Bytes`: Complete byte sequence to write.
-procedure WriteAll(ConnectionValue: Connection; Bytes: array of integer);
+procedure WriteAll(ConnectionValue: Net.Connection; Bytes: array of integer);
 begin
   var Offset: integer := 0;
   while Offset < Bytes.Length() do
     begin
       const Remaining: array of integer := Bytes.Slice(Offset, Bytes.Length() - Offset);
-      case Std.Net.SendBytes(ConnectionValue, Remaining) of
+      case Net.SendBytes(ConnectionValue, Remaining) of
         when Ok(const Count):
           begin
             if Count <= 0 then
@@ -38,13 +39,13 @@ end procedure;
 //
 // Parameters:
 // - `ConnectionValue`: Open TCP connection.
-function ReadToEnd(ConnectionValue: Connection): string;
+function ReadToEnd(ConnectionValue: Net.Connection): string;
 begin
   var Bytes: array of integer := [];
   var Reading: boolean := true;
   while Reading do
     begin
-      case Std.Net.ReceiveBytes(ConnectionValue, 4096) of
+      case Net.ReceiveBytes(ConnectionValue, 4096) of
         when Ok(const Part):
           begin
             if Part.Length() = 0 then
@@ -65,7 +66,7 @@ begin
     end;
   end while;
 
-  case Std.Net.Utf8.Decode(Bytes) of
+  case Utf8.Decode(Bytes) of
     when Ok(const Text):
       begin
         return Text;
@@ -79,20 +80,20 @@ end function;
 
 begin
   var Port: integer := 18081;
-  if ParamCount() = 1 then
+  if Args.ParamCount() = 1 then
     begin
-      Port := StrToInt(ParamStr(0));
+      Port := Conv.StrToInt(Args.ParamStr(0));
     end;
-  elsif ParamCount() <> 0 then
+  elsif Args.ParamCount() <> 0 then
     begin
       panic('usage: tcp_echo_client.fpas -- [PORT]');
     end;
   end if;
 
-  case Connect('127.0.0.1', Port, 5000) of
+  case Net.Connect('127.0.0.1', Port, 5000) of
     when Ok(const ConnectionValue):
       begin
-        case SetTimeout(ConnectionValue, 5000) of
+        case Net.SetTimeout(ConnectionValue, 5000) of
           when Ok(_):
             begin
             end;
@@ -102,9 +103,9 @@ begin
             end;
         end case;
 
-        WriteAll(ConnectionValue, Std.Net.Utf8.Encode('hello over TCP' + #10));
-        WriteLn(ReadToEnd(ConnectionValue));
-        case Close(ConnectionValue) of
+        WriteAll(ConnectionValue, Utf8.Encode('hello over TCP' + #10));
+        Console.WriteLn(ReadToEnd(ConnectionValue));
+        case Net.Close(ConnectionValue) of
           when Ok(_):
             begin
             end;

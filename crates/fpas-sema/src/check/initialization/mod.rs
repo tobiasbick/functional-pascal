@@ -73,20 +73,6 @@ impl Checker {
                 self.scopes.lookup_with_scope_and_declaration(&name)
             {
                 let canonical = self.scopes.imports.canonical_name(&name);
-                let canonical = self
-                    .short_builtin_redirect
-                    .get(&name.to_ascii_lowercase())
-                    .cloned()
-                    .unwrap_or(canonical);
-                let canonical = if declaration.is_none() {
-                    self.imported_candidates
-                        .get(&name.to_ascii_lowercase())
-                        .filter(|names| names.len() == 1)
-                        .map(|names| names[0].to_ascii_lowercase())
-                        .unwrap_or(canonical)
-                } else {
-                    canonical
-                };
                 selected = Some(Reference {
                     parts: index + 1,
                     declaration: declaration.map(identity),

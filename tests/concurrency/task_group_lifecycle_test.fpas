@@ -1,47 +1,47 @@
 program TaskGroupLifecycleTest;
 
-uses Std.Tasks, Std.Test;
+uses Std.Tasks as Tasks, Std.Test as Test;
 
 procedure VerifyClose(RequestFirst: boolean);
 begin
-  const Group: TaskGroup := CreateTaskGroup();
-  const Ready: channel of boolean := CreateChannel(1);
-  const Empty: channel of integer := CreateChannel(1);
-  const Finished: channel of boolean := CreateChannel(1);
+  const Group: Tasks.TaskGroup := Tasks.CreateTaskGroup();
+  const Ready: channel of boolean := Tasks.CreateChannel(1);
+  const Empty: channel of integer := Tasks.CreateChannel(1);
+  const Finished: channel of boolean := Tasks.CreateChannel(1);
   // Discard both handles: group ownership must retain the child and grandchild.
-  const ParentTask: task := StartTaskInGroup(Group, procedure(Token: CancellationToken) begin
-    const ChildTask: task := StartTaskInGroup(Group, procedure(ChildToken: CancellationToken) begin
-      case ReceiveWithCancellation(Empty, ChildToken) of
+  const ParentTask: task := Tasks.StartTaskInGroup(Group, procedure(Token: Tasks.CancellationToken) begin
+    const ChildTask: task := Tasks.StartTaskInGroup(Group, procedure(ChildToken: Tasks.CancellationToken) begin
+      case Tasks.ReceiveWithCancellation(Empty, ChildToken) of
         when Ok(_):
           begin
             panic('empty channel unexpectedly delivered');
           end;
         when Error(_):
           begin
-            AssertTrue(IsCancellationRequested(ChildToken));
+            Test.AssertTrue(Tasks.IsCancellationRequested(ChildToken));
           end;
       end case;
 
-      discard Send(Finished, true);
+      discard Tasks.Send(Finished, true);
     end procedure);
-    discard Send(Ready, true);
+    discard Tasks.Send(Ready, true);
   end procedure);
-  AssertTrue(Receive(Ready).Unwrap());
+  Test.AssertTrue(Tasks.Receive(Ready).Unwrap());
   if RequestFirst then
     begin
-      AssertTrue(CancelTaskGroup(Group));
-      AssertFalse(CancelTaskGroup(Group));
-      AssertTrue(IsCancellationRequested(GetTaskGroupToken(Group)));
+      Test.AssertTrue(Tasks.CancelTaskGroup(Group));
+      Test.AssertFalse(Tasks.CancelTaskGroup(Group));
+      Test.AssertTrue(Tasks.IsCancellationRequested(Tasks.GetTaskGroupToken(Group)));
     end;
   end if;
 
-  AssertEquals(0, CloseTaskGroup(Group).Length());
+  Test.AssertEquals(0, Tasks.CloseTaskGroup(Group).Length());
   // Close must not return before the grandchild's final side effect.
-  AssertTrue(Receive(Finished).Unwrap());
-  AssertEquals(0, CloseTaskGroup(Group).Length());
-  discard CloseChannel(Ready);
-  discard CloseChannel(Empty);
-  discard CloseChannel(Finished);
+  Test.AssertTrue(Tasks.Receive(Finished).Unwrap());
+  Test.AssertEquals(0, Tasks.CloseTaskGroup(Group).Length());
+  discard Tasks.CloseChannel(Ready);
+  discard Tasks.CloseChannel(Empty);
+  discard Tasks.CloseChannel(Finished);
 end procedure;
 
 begin

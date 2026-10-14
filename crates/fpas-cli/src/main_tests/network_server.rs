@@ -99,32 +99,32 @@ fn fpas_http_server_accepts_get_and_writes_response() {
         format!(
             r#"program HttpServerGet;
 
-uses Std.Console, Std.Http, Std.Net, Std.Net.Utf8;
+uses Std.Console as Console, Std.Http as Http, Std.Net as Net, Std.Net.Utf8 as Utf8;
 
 begin
-  case Listen('127.0.0.1', {port}) of
+  case Net.Listen('127.0.0.1', {port}) of
     when Ok(const ListenerValue):
     begin
-      case Accept(ListenerValue) of
+      case Net.Accept(ListenerValue) of
         when Ok(const Connection):
         begin
-          case SetTimeout(Connection, 2000) of
+          case Net.SetTimeout(Connection, 2000) of
             when Ok(_):
             begin
             end;
             when Error(const Message): panic(Message);
           end case;
-          case ReadRequest(Connection, 4096, 1024) of
+          case Http.ReadRequest(Connection, 4096, 1024) of
             when Ok(const RequestValue):
             begin
               if (RequestValue.Method <> 'GET') or (RequestValue.Target <> '/hello?name=fpas') then
               begin
                 panic('unexpected request');
               end; end if;
-              var ResponseValue: ServerResponse := ServerResponse.Create(200, 'OK');
-              ResponseValue.Headers := [Header.Create('Content-Type', 'text/plain')];
-              ResponseValue.Body := Std.Net.Utf8.Encode('hello from fpas');
-              case WriteResponse(Connection, ResponseValue) of
+              var ResponseValue: Http.ServerResponse := Http.ServerResponse.Create(200, 'OK');
+              ResponseValue.Headers := [Http.Header.Create('Content-Type', 'text/plain')];
+              ResponseValue.Body := Utf8.Encode('hello from fpas');
+              case Http.WriteResponse(Connection, ResponseValue) of
                 when Ok(_):
                 begin
                 end;
@@ -133,7 +133,7 @@ begin
             end;
             when Error(const Message): panic(Message);
           end case;
-          case Close(Connection) of
+          case Net.Close(Connection) of
             when Ok(_):
             begin
             end;
@@ -142,8 +142,8 @@ begin
         end;
         when Error(const Message): panic(Message);
       end case;
-      case CloseListener(ListenerValue) of
-        when Ok(_): WriteLn('served');
+      case Net.CloseListener(ListenerValue) of
+        when Ok(_): Console.WriteLn('served');
         when Error(const Message): panic(Message);
       end case;
     end;
@@ -175,30 +175,30 @@ fn fpas_http_server_reads_fragmented_post_body() {
         format!(
             r#"program HttpServerPost;
 
-uses Std.Http, Std.Net, Std.Net.Utf8;
+uses Std.Http as Http, Std.Net as Net, Std.Net.Utf8 as Utf8;
 
 begin
-  case Listen('127.0.0.1', {port}) of
+  case Net.Listen('127.0.0.1', {port}) of
     when Ok(const ListenerValue):
     begin
-      case Accept(ListenerValue) of
+      case Net.Accept(ListenerValue) of
         when Ok(const Connection):
         begin
-          case SetTimeout(Connection, 2000) of
+          case Net.SetTimeout(Connection, 2000) of
             when Ok(_):
             begin
             end;
             when Error(const Message): panic(Message);
           end case;
-          case ReadRequest(Connection, 4096, 1024) of
+          case Http.ReadRequest(Connection, 4096, 1024) of
             when Ok(const RequestValue):
             begin
-              case Std.Net.Utf8.Decode(RequestValue.Body) of
+              case Utf8.Decode(RequestValue.Body) of
                 when Ok(const Text):
                 begin
-                  var ResponseValue: ServerResponse := ServerResponse.Create(201, 'Created');
-                  ResponseValue.Body := Std.Net.Utf8.Encode(RequestValue.Target + ':' + Text);
-                  case WriteResponse(Connection, ResponseValue) of
+                  var ResponseValue: Http.ServerResponse := Http.ServerResponse.Create(201, 'Created');
+                  ResponseValue.Body := Utf8.Encode(RequestValue.Target + ':' + Text);
+                  case Http.WriteResponse(Connection, ResponseValue) of
                     when Ok(_):
                     begin
                     end;
@@ -210,7 +210,7 @@ begin
             end;
             when Error(const Message): panic(Message);
           end case;
-          case Close(Connection) of
+          case Net.Close(Connection) of
             when Ok(_):
             begin
             end;
@@ -219,7 +219,7 @@ begin
         end;
         when Error(const Message): panic(Message);
       end case;
-      case CloseListener(ListenerValue) of
+      case Net.CloseListener(ListenerValue) of
         when Ok(_):
         begin
         end;
@@ -257,16 +257,16 @@ fn fpas_http_server_rejects_ambiguous_request_framing() {
         format!(
             r#"program HttpServerHostile;
 
-uses Std.Http, Std.Net, Std.Net.Utf8;
+uses Std.Http as Http, Std.Net as Net, Std.Net.Utf8 as Utf8;
 
 begin
-  case Listen('127.0.0.1', {port}) of
+  case Net.Listen('127.0.0.1', {port}) of
     when Ok(const ListenerValue):
     begin
-      case Accept(ListenerValue) of
+      case Net.Accept(ListenerValue) of
         when Ok(const Connection):
         begin
-          case ReadRequest(Connection, 4096, 1024) of
+          case Http.ReadRequest(Connection, 4096, 1024) of
             when Ok(_): panic('ambiguous framing was accepted');
             when Error(const Message):
             begin
@@ -274,9 +274,9 @@ begin
               begin
                 panic(Message);
               end; end if;
-              var ResponseValue: ServerResponse := ServerResponse.Create(400, 'Bad Request');
-              ResponseValue.Body := Std.Net.Utf8.Encode('rejected');
-              case WriteResponse(Connection, ResponseValue) of
+              var ResponseValue: Http.ServerResponse := Http.ServerResponse.Create(400, 'Bad Request');
+              ResponseValue.Body := Utf8.Encode('rejected');
+              case Http.WriteResponse(Connection, ResponseValue) of
                 when Ok(_):
                 begin
                 end;
@@ -284,7 +284,7 @@ begin
               end case;
             end;
           end case;
-          case Close(Connection) of
+          case Net.Close(Connection) of
             when Ok(_):
             begin
             end;
@@ -293,7 +293,7 @@ begin
         end;
         when Error(const Message): panic(Message);
       end case;
-      case CloseListener(ListenerValue) of
+      case Net.CloseListener(ListenerValue) of
         when Ok(_):
         begin
         end;
@@ -327,16 +327,16 @@ fn fpas_http_server_enforces_request_body_limit() {
         format!(
             r#"program HttpServerBodyLimit;
 
-uses Std.Http, Std.Net, Std.Net.Utf8;
+uses Std.Http as Http, Std.Net as Net, Std.Net.Utf8 as Utf8;
 
 begin
-  case Listen('127.0.0.1', {port}) of
+  case Net.Listen('127.0.0.1', {port}) of
     when Ok(const ListenerValue):
     begin
-      case Accept(ListenerValue) of
+      case Net.Accept(ListenerValue) of
         when Ok(const Connection):
         begin
-          case ReadRequest(Connection, 4096, 4) of
+          case Http.ReadRequest(Connection, 4096, 4) of
             when Ok(_): panic('oversized request body was accepted');
             when Error(const Message):
             begin
@@ -344,9 +344,9 @@ begin
               begin
                 panic(Message);
               end; end if;
-              var ResponseValue: ServerResponse := ServerResponse.Create(413, 'Content Too Large');
-              ResponseValue.Body := Std.Net.Utf8.Encode('too large');
-              case WriteResponse(Connection, ResponseValue) of
+              var ResponseValue: Http.ServerResponse := Http.ServerResponse.Create(413, 'Content Too Large');
+              ResponseValue.Body := Utf8.Encode('too large');
+              case Http.WriteResponse(Connection, ResponseValue) of
                 when Ok(_):
                 begin
                 end;
@@ -354,7 +354,7 @@ begin
               end case;
             end;
           end case;
-          case Close(Connection) of
+          case Net.Close(Connection) of
             when Ok(_):
             begin
             end;
@@ -363,7 +363,7 @@ begin
         end;
         when Error(const Message): panic(Message);
       end case;
-      case CloseListener(ListenerValue) of
+      case Net.CloseListener(ListenerValue) of
         when Ok(_):
         begin
         end;

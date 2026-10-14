@@ -2,10 +2,12 @@
 unit Std.Tui.Rendering.StatusLine;
 
 uses
-  Std.Console, Std.Tui.Cells.Cell, Std.Tui.Cells.StyleRole, Std.Tui.Chrome.StatusItem,
-  Std.Tui.Geometry.Point, Std.Tui.Geometry.Rect, Std.Tui.Ids.ControlId, Std.Tui.Rendering.Canvas;
+  Std.Console as Console, Std.Tui.Cells.Cell as Cell, Std.Tui.Cells.StyleRole as StyleRole,
+  Std.Tui.Chrome.StatusItem as StatusItem, Std.Tui.Geometry.Point as Point,
+  Std.Tui.Geometry.Rect as Rect, Std.Tui.Ids.ControlId as ControlId,
+  Std.Tui.Rendering.Canvas as RenderingCanvas;
 
-function TuiStatusFocused(Focused: option of TuiControlId; Id: TuiControlId): boolean;
+function TuiStatusFocused(Focused: option of ControlId.TuiControlId; Id: ControlId.TuiControlId): boolean;
 begin
   case Focused of
     when Some(const Value):
@@ -19,10 +21,16 @@ begin
   end case;
 end function;
 
-function TuiStatusWrite(Canvas: TuiCanvas; X: integer; Y: integer; Text: string; Role: TuiStyleRole): integer;
+function TuiStatusWrite(
+  Canvas: RenderingCanvas.TuiCanvas;
+  X: integer;
+  Y: integer;
+  Text: string;
+  Role: StyleRole.TuiStyleRole
+): integer;
 begin
-  Canvas.WriteText(TuiPoint.Create(X, Y), Text, Role);
-  return X + Std.Console.DisplayWidth(Text);
+  Canvas.WriteText(Point.TuiPoint.Create(X, Y), Text, Role);
+  return X + Console.DisplayWidth(Text);
 end function;
 
 // Paints one complete status row, including its unused background cells.
@@ -33,43 +41,43 @@ end function;
 // - `Items`: Ordered child or menu items.
 // - `Focused`: Whether the control currently owns focus.
 public procedure TuiPaintStatusLine(
-  Canvas: TuiCanvas;
-  Bounds: TuiRect;
-  Items: array of TuiStatusItem;
-  Focused: option of TuiControlId
+  Canvas: RenderingCanvas.TuiCanvas;
+  Bounds: Rect.TuiRect;
+  Items: array of StatusItem.TuiStatusItem;
+  Focused: option of ControlId.TuiControlId
 );
 begin
-  Canvas.FillRect(Bounds, TuiCell.Create(' ', TuiStyleRole.StatusNormal));
+  Canvas.FillRect(Bounds, Cell.TuiCell.Create(' ', StyleRole.TuiStyleRole.StatusNormal));
   var X: integer := Bounds.X;
   for Index: integer := 0 to Items.Length() - 1 do
     begin
       if Index > 0 then
         begin
-          X := TuiStatusWrite(Canvas, X, Bounds.Y, ' ', TuiStyleRole.StatusNormal);
+          X := TuiStatusWrite(Canvas, X, Bounds.Y, ' ', StyleRole.TuiStyleRole.StatusNormal);
         end;
       end if;
 
       case Items[Index] of
-        when TuiStatusItem.Hint(const Text):
+        when StatusItem.TuiStatusItem.Hint(const Text):
           begin
-            X := TuiStatusWrite(Canvas, X, Bounds.Y, Text, TuiStyleRole.StatusNormal);
+            X := TuiStatusWrite(Canvas, X, Bounds.Y, Text, StyleRole.TuiStyleRole.StatusNormal);
           end;
-        when TuiStatusItem.KeyHint(const KeyText, const Text):
+        when StatusItem.TuiStatusItem.KeyHint(const KeyText, const Text):
           begin
-            X := TuiStatusWrite(Canvas, X, Bounds.Y, KeyText, TuiStyleRole.StatusShortcut);
-            X := TuiStatusWrite(Canvas, X, Bounds.Y, ' ', TuiStyleRole.StatusNormal);
-            X := TuiStatusWrite(Canvas, X, Bounds.Y, Text, TuiStyleRole.StatusNormal);
+            X := TuiStatusWrite(Canvas, X, Bounds.Y, KeyText, StyleRole.TuiStyleRole.StatusShortcut);
+            X := TuiStatusWrite(Canvas, X, Bounds.Y, ' ', StyleRole.TuiStyleRole.StatusNormal);
+            X := TuiStatusWrite(Canvas, X, Bounds.Y, Text, StyleRole.TuiStyleRole.StatusNormal);
           end;
-        when TuiStatusItem.Command(const Id, const Text, const Action, const Enabled):
+        when StatusItem.TuiStatusItem.Command(const Id, const Text, const Action, const Enabled):
           begin
-            var Role: TuiStyleRole := TuiStyleRole.StatusNormal;
+            var Role: StyleRole.TuiStyleRole := StyleRole.TuiStyleRole.StatusNormal;
             if not Enabled then
               begin
-                Role := TuiStyleRole.StatusDisabled;
+                Role := StyleRole.TuiStyleRole.StatusDisabled;
               end;
             elsif TuiStatusFocused(Focused, Id) then
               begin
-                Role := TuiStyleRole.StatusSelected;
+                Role := StyleRole.TuiStyleRole.StatusSelected;
               end;
             end if;
 

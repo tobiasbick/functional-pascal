@@ -5,22 +5,23 @@ Parse and stringify TOML 1.0 documents with an explicit Functional Pascal value 
 ```pascal
 program Example;
 
-uses Std.Console, Std.Toml;
+uses Std.Console as Console, Std.Toml as Toml;
 
 begin
-  const Parsed: result of (TomlValue, string) := Parse('[project]' + string.Chr(10) + 'name = ''demo''');
+  const Parsed: result of (Toml.TomlValue, string) := Toml.Parse('[project]' + string.Chr(10) +
+                                                                 'name = ''demo''');
   case Parsed of
     when Ok(const Value):
-      WriteLn(Stringify(Value));
+      Console.WriteLn(Toml.Stringify(Value));
     when Error(const Message):
-      WriteLn(Message);
+      Console.WriteLn(Message);
   end case;
 end.
 ```
 
 ## Importing and names
 
-After `uses Std.Toml;` use short names (`TomlValue`, `Parse`, `Stringify`) or qualified names such as `Std.Toml.Parse`.
+Import with `uses Std.Toml as Toml;` and access public symbols as `Toml.Name`. User enum variants require `Toml.Type.Variant`.
 
 `TomlValue` is an enum. Tables use `dict of string to TomlValue`; arrays use `array of TomlValue`.
 
@@ -36,13 +37,13 @@ After `uses Std.Toml;` use short names (`TomlValue`, `Parse`, `Stringify`) or qu
 
 ```pascal
 type TomlValue = enum
-  String(Value: string);
-  Integer(Value: integer);
+  String(Value: TomlValue.string);
+  Integer(Value: TomlValue.integer);
   Float(Value: real);
-  Boolean(Value: boolean);
-  Datetime(Value: string);
+  Boolean(Value: TomlValue.boolean);
+  Datetime(Value: TomlValue.string);
   ArrayValue(Items: array of TomlValue);
-  Table(Fields: dict of string to TomlValue);
+  Table(Fields: dict of TomlValue.string to TomlValue);
 end enum;
 ```
 
@@ -51,7 +52,7 @@ end enum;
 ## `Parse`
 
 ```pascal
-function Parse(Text: string): Result of (TomlValue, string);
+function Parse(Text: string): Result of (Toml.TomlValue, string);
 ```
 
 Parses a TOML document. Valid input returns `Ok(TomlValue)`; syntax errors return `Error(Message)` rather than aborting the program. TOML documents are tables at the root, so successful `Parse` results always have the `TomlValue.Table` variant.
@@ -62,34 +63,34 @@ TOML `inf` and `nan` values, including nested ones, return Error because FPAS
 real values must be finite. Stringify also rejects nonfinite real payloads.
 
 ```pascal
-const Parsed: result of (TomlValue, string) := Parse('title = ''example''' + string.Chr(10) + 'enabled = true' + string.Chr(10) + '[server]' + string.Chr(10) +
+const Parsed: result of (Toml.TomlValue, string) := Toml.Parse('title = ''example''' + string.Chr(10) + 'enabled = true' + string.Chr(10) + '[server]' + string.Chr(10) +
                                                  'port = 8080');
 case Parsed of
   when Ok(const Value):
-    if Value is TomlValue.Table(_) then
-      WriteLn('parsed');
+    if Value is Toml.TomlValue.Table(_) then
+      Console.WriteLn('parsed');
     end if;
   when Error(const Message):
-    WriteLn('TOML error: ' + Message);
+    Console.WriteLn('TOML error: ' + Message);
 end case;
 ```
 
 ## `Stringify`
 
 ```pascal
-function Stringify(Value: TomlValue): string;
+function Stringify(Value: Toml.TomlValue): string;
 ```
 
 Encodes a `TomlValue` tree as TOML. The supplied root must be a table because TOML documents have table roots. `Stringify` raises a runtime error for malformed manually constructed values, non-string table keys, invalid date/time text, or nesting deeper than 256 levels.
 
 ```pascal
-const Value: TomlValue := TomlValue.Table([
-  'project': TomlValue.Table([
-    'name': TomlValue.String('demo'),
-    'version': TomlValue.Integer(1)
+const Value: Toml.TomlValue := Toml.TomlValue.Table([
+  'project': Toml.TomlValue.Table([
+    'name': Toml.TomlValue.String('demo'),
+    'version': Toml.TomlValue.Integer(1)
   ])
 ]);
-WriteLn(Stringify(Value));
+Console.WriteLn(Toml.Stringify(Value));
 ```
 
 ## Limits and errors

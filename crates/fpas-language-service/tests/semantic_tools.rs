@@ -167,18 +167,29 @@ fn unknown_name_action_adds_one_canonical_unambiguous_import() {
         .value;
     assert_eq!(actions.len(), 1, "expected one import action: {actions:#?}");
     let action = actions.first().expect("one import action");
-    assert_eq!(action.title, "Import Actions.Importable");
+    assert_eq!(action.title, "Use qualified symbol from Actions.Importable");
     assert_eq!(action.diagnostic, identity);
     let mut edited = fixture.source.clone();
-    let edit = &action.edits[0];
-    edited.replace_range(edit.span.offset()..edit.span.end(), &edit.new_text);
+    for edit in &action.edits {
+        edited.replace_range(edit.span.offset()..edit.span.end(), &edit.new_text);
+    }
     let (unit, diagnostics) = parse_compilation_unit(&edited);
     assert!(diagnostics.is_empty(), "{diagnostics:#?}");
     assert_eq!(
         fpas_fmt::format_source(&edited, &unit).expect("matching source and AST"),
         edited
     );
-    assert!(edited.contains("uses Actions.Core, Actions.Importable;"));
+    service
+        .documents_mut()
+        .open_document(&fixture.main, 1, edited)
+        .expect("apply action");
+    assert!(
+        service
+            .analyze_document(&fixture.main)
+            .unwrap()
+            .diagnostics()
+            .is_empty()
+    );
 }
 
 #[test]
@@ -196,8 +207,7 @@ fn unknown_type_action_adds_one_canonical_unambiguous_import() {
         "src/types.fpas",
         "unit Actions.Types;\n\npublic type UniqueType = integer;\nend unit;\n",
     );
-    let source =
-        "program Actions;\n\nuses Actions.Core;\n\nbegin\n  const Value: UniqueType := 1;\nend.\n";
+    let source = "program Actions;\n\nuses Actions.Core as Core;\n\nbegin\n  const Value: UniqueType := 1;\nend.\n";
     let main = temp.write("src/main.fpas", source);
     let mut service = LanguageService::load(&manifest);
     let analysis = service.analyze_document(&main).expect("project analysis");
@@ -222,17 +232,28 @@ fn unknown_type_action_adds_one_canonical_unambiguous_import() {
         "expected one type import action: {actions:#?}"
     );
     let action = actions.first().expect("one type import action");
-    assert_eq!(action.title, "Import Actions.Types");
-    let edit = &action.edits[0];
+    assert_eq!(action.title, "Use qualified symbol from Actions.Types");
     let mut edited = source.to_owned();
-    edited.replace_range(edit.span.offset()..edit.span.end(), &edit.new_text);
+    for edit in &action.edits {
+        edited.replace_range(edit.span.offset()..edit.span.end(), &edit.new_text);
+    }
     let (unit, parse_diagnostics) = parse_compilation_unit(&edited);
     assert!(parse_diagnostics.is_empty(), "{parse_diagnostics:#?}");
     assert_eq!(
         fpas_fmt::format_source(&edited, &unit).expect("matching source and AST"),
         edited
     );
-    assert!(edited.contains("uses Actions.Core, Actions.Types;"));
+    service
+        .documents_mut()
+        .open_document(&main, 1, edited)
+        .expect("apply action");
+    assert!(
+        service
+            .analyze_document(&main)
+            .unwrap()
+            .diagnostics()
+            .is_empty()
+    );
 }
 
 #[test]
@@ -374,7 +395,7 @@ fn import_fixture(name: &str) -> ImportFixture {
         "unit Actions.Importable;\n\npublic function UniqueValue(): integer;\nbegin\n  return 42;\nend function;\n\nfunction PrivateValue(): integer;\nbegin\n  return 0;\nend function;\nend unit;\n",
     );
     let source = format!(
-        "program Actions;\n\nuses Actions.Core;\n\nbegin\n  const Value: integer := {name}();\nend.\n"
+        "program Actions;\n\nuses Actions.Core as Core;\n\nbegin\n  const Value: integer := {name}();\nend.\n"
     );
     let main = temp.write("src/main.fpas", &source);
     ImportFixture {

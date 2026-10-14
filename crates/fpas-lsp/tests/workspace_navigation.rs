@@ -26,14 +26,14 @@ fn phase09_navigation_capabilities_and_utf16_results_are_exposed() {
         "src/other.fpas",
         "unit Demo.Other;\n\npublic function Create(): integer; begin return 2; end function;\nend unit;\n",
     );
-    let source = "program Nav;\n\nuses Demo.Types, Demo.Other;\n\nvar Value: integer := 1;\n\nbegin\n  const Music: string := '𝄞'; Value := Value + 1;\n  const Item: Point := Demo.Types.Create();\nend.\n";
+    let source = "program Nav;\n\nuses Demo.Types as Types, Demo.Other as Other;\n\nvar Value: integer := 1;\n\nbegin\n  const Music: string := '𝄞'; Value := Value + 1;\n  const Item: Types.Point := Types.Create();\nend.\n";
     temp.write("src/main.fpas", source);
     let root_uri = tower_lsp_server::ls_types::Uri::from_file_path(temp.path())
         .expect("root URI")
         .to_string();
     let uri = temp.uri("src/main.fpas");
     let write = source.find("Value := Value").expect("write occurrence");
-    let type_query = source.find("Item: Point").expect("typed variable");
+    let type_query = source.find("Item: Types.Point").expect("typed variable");
     let read = source.find("Value + 1").expect("read occurrence");
     let transcript = run(&[
         initialize_with_root(1, Some(&root_uri)),

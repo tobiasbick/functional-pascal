@@ -5,8 +5,7 @@
 ```pascal
 program Greet;
 
-uses
-  Std.Console;
+uses Std.Console as Console;
 
 function Greet(Name: string): string;
 begin
@@ -15,7 +14,7 @@ end function;
 
 begin
   const Message: string := Greet('Pascal');
-  WriteLn(Message);
+  Console.WriteLn(Message);
 end.
 ```
 
@@ -29,7 +28,7 @@ as `program Greet` and `function Greet` do in the first example.
 ```pascal
 program MyApp;
 
-uses Std.Console;
+uses Std.Console as Console;
 
 // constant declarations
 
@@ -48,7 +47,7 @@ end function;
 // main block
 begin
   Counter := Add(3, 4);
-  WriteLn(Counter);
+  Console.WriteLn(Counter);
 end.
 ```
 

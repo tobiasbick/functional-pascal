@@ -41,23 +41,27 @@ names and the number of omitted units.
 Multi-line messages, such as TOML parser excerpts, continue on lines prefixed
 with `message:`.
 
-## Ambiguous imports
+## Required qualification
 
-FP3004 lists qualified candidates when a short name belongs to multiple imported
-units. For example, this call is ambiguous even though its argument fits one
-candidate:
+FP2022 rejects an import without its explicit alias and shows an aliased `uses`
+entry. FP3043 rejects an imported short name or a user enum variant without its
+type qualifier. Each diagnostic shows the required source spelling. For example:
 
 ```pascal
 program ReadFile;
-uses Std.Console, Std.Fs;
+
+uses Std.Console as Console, Std.Fs as Files;
+
 begin
   const Text: result of (string, string) := ReadText('input.txt');
 end.
 ```
 
-The help lists `Std.Console.ReadText` and `Std.Fs.ReadText`. Replace the call with
-`Std.Fs.ReadText('input.txt')` to select the file operation. Free routines are
-selected by name, so the argument's type does not disambiguate them. Dot calls
+The help lists `Console.ReadText` and `Files.ReadText`. Use
+`Files.ReadText('input.txt')` to select the file operation. This rule applies even
+with a single import or an unambiguous expected type. User enum variants use
+`Type.Variant` locally and `Alias.Type.Variant` through an import; Some/None/Ok/Error
+remain reserved language forms. Dot calls
 resolve declared methods and native operations; see [dot calls](../language/functions/fluent-calls.md).
 Migration hints for removed native free operations, such as `Length(Text)`,
 recommend the implemented `Text.Length()` form.
@@ -305,6 +309,7 @@ bugs rather than adding a workaround to the program.
 | FP2019 | `if` expression without `else` | `const N: integer := if Ready then 1 end if;` | `const N: integer := if Ready then 1 else 0 end if;` |
 | FP2020 | Statement in an expression branch or arm | `const N: integer := if Ready then 1; else 0 end if;` or `case X of when 1: N := 1; end case` | `const N: integer := if Ready then 1 else 0 end if;` or `case X of when 1: 1; else 0; end case` |
 | FP2021 | Positive integer literal outside signed range | `const N: integer := 9223372036854775808;` | Use at most `9223372036854775807`, or write `-9223372036854775808` for the minimum. |
+| FP2022 | Missing import alias | `uses Std.Console;` | Write `uses Std.Console as Console;` and use `Console.Name`. |
 
 FP2017 names the declared type when the literal is the initializer of a typed
 constant, variable, or field default, for example `Point(X := ..., Y := ...)`;
@@ -329,9 +334,8 @@ Call arguments still use commas; commas inside types such as
 | Code | Cause | Wrong example | Corrected example |
 |---|---|---|---|
 | FP3001 | Unknown type | `const N: Missing := 1;` | `const N: integer := 1;` |
-| FP3002 | Duplicate declaration, repeated import, or conflicting import alias | Two declarations of `N`, `uses Std.Math, std.math;`, or a declaration named like an alias | Keep one import per unit and rename conflicting declarations or aliases. |
+| FP3002 | Duplicate declaration, repeated import, or conflicting import alias | Two declarations of `N`, `uses Std.Math as Math, std.math as Other;`, or a declaration named like an alias | Keep one import per unit and rename conflicting declarations or aliases. |
 | FP3003 | Unknown name or unlisted dot operation | `Missing()` or `Text.Substring(0, 1)` | Declare the routine or use `Text.Slice(0, 1)`. |
-| FP3004 | Ambiguous imported name | `ReadText('input.txt')` after `uses Std.Console, Std.Fs;` | `Std.Fs.ReadText('input.txt')` for the file operation; use one of the listed qualified names. |
 | FP3005 | Immutable assignment | `const N: integer := 1;` followed by `N := 2` | Declare `var N: integer := 1;`. |
 | FP3006 | Type mismatch | `const N: integer := 'hello';` | `const N: integer := 1;` |
 | FP3007 | Argument count | `Add(1)` for a two-parameter Add | `Add(1, 2)` |
@@ -368,6 +372,7 @@ Call arguments still use commas; commas inside types such as
 | FP3040 | Task handle escape | `return go Fetch(1);` or `Outer := go Fetch(1);` inside a `scope` | Keep scope-owned handles in bindings declared inside the scope and wait for them there; see [Task scopes](../language/concurrency/task-scopes.md#handle-escapes). |
 | FP3041 | Uninitialized or unprovable dependency | An initializer calls a helper that reads a later binding, directly or through a callback/default, or captures an unavailable local. | Initialize the dependency before use or pass initialized data explicitly; see [Declaration order](../language/types/declaration-order.md). |
 | FP3042 | Foreign mutable worker state | A worker reads or writes a mutable program/unit global through a routine, helper, or callback | Pass an input value from the starting task, mutate a worker-local copy, or communicate through channels; see [Go](../language/concurrency/go.md). |
+| FP3043 | Required source qualifier | Imported `WriteLn(...)` or user enum variant `Red` | Use `Console.WriteLn(...)`, `Color.Red`, or the applicable `Alias.Type.Variant`. |
 
 FP3025 also reports a parameter or payload field named twice and a named
 call or pattern that omits one; its hint lists the visible static names.
@@ -436,7 +441,7 @@ can describe a structural restriction and leave those fields null.
 | FP4112 | Unit kind mismatch | Library source declares `program Util;` | Declare `unit App.Util;`. |
 | FP4113 | Unit namespace | User library declares `unit Std.Custom;` | Use an application namespace such as `App.Custom`. |
 | FP4114 | Duplicate unit | Two source files declare `unit App.Util;` | Keep one declaration or rename one unit. |
-| FP4115 | Unknown unit | `uses App.Missing;` with no such unit | Include and declare `App.Missing`, or correct the import. |
+| FP4115 | Unknown unit | `uses App.Missing as Missing;` with no such unit | Include and declare `App.Missing`, or correct the import. |
 | FP4116 | Unexported unit | External project imports a library's internal unit | Add the unit to `[exports].units` or use an exported unit. |
 | FP4117 | Unit cycle | App.A uses App.B and App.B uses App.A | Extract shared declarations into a third unit. |
 | FP4118 | Source ID overflow | Graph needs more source IDs than u32 can represent | Reduce the graph's source count. |

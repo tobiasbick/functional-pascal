@@ -1,5 +1,7 @@
 # `Std.Tui` application host
 
+The code fragments use `uses Std.Tasks as Tasks;`.
+
 ## Update and View
 
 The headless and terminal hosts accept this callable shape:
@@ -44,7 +46,7 @@ function UpdateApplication(
   Cmd: TuiCmdOutput
 ): AppModel;
 
-const Inbox: channel of AppMessage := CreateChannel(32);
+const Inbox: channel of AppMessage := Tasks.CreateChannel(32);
 const Final: AppModel := TuiApplication.RunWithBackground(
   Initial, Inbox, Update, UpdateApplication, View
 );

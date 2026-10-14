@@ -1,6 +1,6 @@
 program CapturingClosures;
 
-uses Std.Console, Std.Conv;
+uses Std.Console as Console, Std.Conv as Conv;
 
 function Counter(): function(): integer;
 begin
@@ -22,7 +22,7 @@ end function;
 
 begin
   const Next: function(): integer := Counter();
-  WriteLn('counter: ', IntToStr(Next()), ', ', IntToStr(Next()));
+  Console.WriteLn('counter: ', Conv.IntToStr(Next()), ', ', Conv.IntToStr(Next()));
   var Count: integer := 0;
   const Increment: procedure() := procedure() begin
     Count := Count + 1;
@@ -30,7 +30,7 @@ begin
 
   Increment();
   Increment();
-  WriteLn('shared count: ', IntToStr(Count));
+  Console.WriteLn('shared count: ', Conv.IntToStr(Count));
   const AddTen: function(Value: integer): integer := MakeAdder(10);
-  WriteLn('named escape: ', IntToStr(AddTen(5)));
+  Console.WriteLn('named escape: ', Conv.IntToStr(AddTen(5)));
 end.

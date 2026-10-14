@@ -32,15 +32,15 @@ Guards work with all label types — values, ranges, destructuring, and enum pat
 ```pascal
 case S of
   when Shape.Circle(const R) if R > 10.0:
-    WriteLn('Large circle');
+    Console.WriteLn('Large circle');
   when Shape.Circle(const R):
-    WriteLn('Small circle');
+    Console.WriteLn('Small circle');
   when Shape.Rectangle(const W, const H) if W = H:
-    WriteLn('Square');
+    Console.WriteLn('Square');
   when Shape.Rectangle(const W, const H):
-    WriteLn('Rectangle');
+    Console.WriteLn('Rectangle');
   when Shape.Point:
-    WriteLn('Point');
+    Console.WriteLn('Point');
 end case;
 ```
 
@@ -54,11 +54,11 @@ In scalar `case` arms, `const Name` with a guard binds the matched value:
 ```pascal
 case Value of
   when const N if N > 0:
-    WriteLn('positive');
+    Console.WriteLn('positive');
   when const N if N < 0:
-    WriteLn('negative');
+    Console.WriteLn('negative');
   else
-    WriteLn('zero');
+    Console.WriteLn('zero');
 end case;
 ```
 

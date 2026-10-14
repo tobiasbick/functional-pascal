@@ -87,7 +87,7 @@ fn init_project_creates_formatted_checkable_scaffold() {
     assert!(cwd.join("my-app/my-app.fpasprj").is_file());
     assert_eq!(
         fs::read_to_string(cwd.join("my-app/src/main.fpas")).expect("read generated program"),
-        "program MyApp;\n\nuses Std.Console;\n\nbegin\n  WriteLn('Hello from my-app');\nend.\n"
+        "program MyApp;\n\nuses Std.Console as Console;\n\nbegin\n  Console.WriteLn('Hello from my-app');\nend.\n"
     );
     assert_cli_succeeds(&cwd, &["check", "my-app/my-app.fpasprj"]);
     assert_cli_succeeds(&cwd, &["fmt", "--check", "my-app/my-app.fpasprj"]);
@@ -130,6 +130,14 @@ fn init_workspace_creates_linked_program_and_library() {
     assert!(app_manifest.contains("workspace = [\"acme-suite-core\"]"));
     assert_cli_succeeds(&cwd, &["check", path_text(&workspace).as_str()]);
     assert_cli_succeeds(&cwd, &["fmt", "--check", path_text(&workspace).as_str()]);
+
+    for name in ["core", "console"] {
+        let (code, _, stderr) = run_init(&cwd, &["workspace", name]);
+        assert_eq!(code, 0, "init {name}: {stderr}");
+        let path = cwd.join(name).join(format!("{name}.fpasworkspace"));
+        assert_cli_succeeds(&cwd, &["check", path_text(&path).as_str()]);
+        assert_cli_succeeds(&cwd, &["fmt", "--check", path_text(&path).as_str()]);
+    }
 
     fs::remove_dir_all(&cwd).expect("temp directory must be removed");
 }

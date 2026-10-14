@@ -1,7 +1,7 @@
 use super::*;
 
 #[test]
-fn ambiguity_with_three_units() {
+fn unqualified_name_lists_three_required_aliases() {
     let cwd = create_temp_dir("vis-ambig-three");
     let project_file = cwd.join("app.fpasprj");
     write_text(
@@ -17,7 +17,7 @@ include = ["src/*.fpas"]
     );
     write_text(
         &cwd.join("src/main.fpas"),
-        "program Main;\nuses App.A, App.B, App.C;\nbegin\n  Compute();\nend.\n",
+        "program Main;\nuses App.A as A, App.B as B, App.C as C;\nbegin\n  Compute();\nend.\n",
     );
     write_text(
         &cwd.join("src/a.fpas"),
@@ -37,13 +37,13 @@ include = ["src/*.fpas"]
 
     assert_eq!(exit_code, 1);
     assert!(
-        stderr_output.contains("Ambiguous imported symbol `Compute`"),
-        "expected ambiguity error, got: {stderr_output}"
+        stderr_output.contains("Name `Compute` requires an explicit qualifier"),
+        "expected qualification error, got: {stderr_output}"
     );
 }
 
 #[test]
-fn ambiguity_error_mentions_qualified_alternatives() {
+fn qualification_error_mentions_alias_qualified_alternatives() {
     let cwd = create_temp_dir("vis-ambig-hint");
     let project_file = cwd.join("app.fpasprj");
     write_text(
@@ -59,7 +59,7 @@ include = ["src/*.fpas"]
     );
     write_text(
         &cwd.join("src/main.fpas"),
-        "program Main;\nuses App.X, App.Y;\nbegin\n  Foo();\nend.\n",
+        "program Main;\nuses App.X as X, App.Y as Y;\nbegin\n  Foo();\nend.\n",
     );
     write_text(
         &cwd.join("src/x.fpas"),
@@ -75,7 +75,7 @@ include = ["src/*.fpas"]
 
     assert_eq!(exit_code, 1);
     assert!(
-        stderr_output.contains("App.X.Foo") && stderr_output.contains("App.Y.Foo"),
+        stderr_output.contains("X.Foo") && stderr_output.contains("Y.Foo"),
         "error should mention qualified alternatives, got: {stderr_output}"
     );
 }
@@ -97,7 +97,7 @@ include = ["src/*.fpas"]
     );
     write_text(
         &cwd.join("src/main.fpas"),
-        "program Main;\nuses App.A, App.B, Std.Console;\nbegin\n  WriteLn(Compute());\nend.\n",
+        "program Main;\nuses App.A as A, App.B as B, Std.Console as Console;\nbegin\n  Console.WriteLn(B.Compute());\nend.\n",
     );
     write_text(
         &cwd.join("src/a.fpas"),
@@ -133,14 +133,7 @@ include = ["src/*.fpas"]
     // Two units export the same short name — use qualified names to disambiguate
     write_text(
         &cwd.join("src/main.fpas"),
-        "\
-program Main;
-uses App.Math, App.Advanced, Std.Console;
-begin
-  WriteLn(App.Math.Add(1, 2));
-  WriteLn(App.Advanced.Add(10, 20));
-end.
-",
+        "program Main;\nuses App.Math as Math, App.Advanced as Advanced, Std.Console as Console;\nbegin\n  Console.WriteLn(Math.Add(1, 2));\n  Console.WriteLn(Advanced.Add(10, 20));\nend.\n",
     );
     write_text(
         &cwd.join("src/math.fpas"),
@@ -177,7 +170,7 @@ include = ["src/*.fpas"]
     // Import two units with conflicting short names but never use the ambiguous name
     write_text(
         &cwd.join("src/main.fpas"),
-        "program Main;\nuses App.Math, App.Advanced;\nbegin\nend.\n",
+        "program Main;\nuses App.Math as Math, App.Advanced as Advanced;\nbegin\nend.\n",
     );
     write_text(
         &cwd.join("src/math.fpas"),

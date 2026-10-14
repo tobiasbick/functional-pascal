@@ -42,7 +42,7 @@ pub(super) fn validate(
         .iter()
         .all(|operand| kind(operand) == Kind::Integer)
     {
-        format!("Use `Std.Bits.{replacement}` and import `uses Std.Bits;` for integer bits.")
+        format!("Use `Bits.{replacement}` and import `uses Std.Bits as Bits;` for integer bits.")
     } else {
         "Use Boolean operands; compare numeric values explicitly, such as `Count > 0`.".to_string()
     };
@@ -133,7 +133,7 @@ mod tests {
             assert_eq!(error.code, "evaluation_type", "{source}");
             if let Some(function) = replacement {
                 assert!(error.hint.contains(function), "{error:?}");
-                assert!(error.hint.contains("uses Std.Bits;"));
+                assert!(error.hint.contains("uses Std.Bits as Bits;"));
             } else {
                 assert!(error.hint.contains("Boolean"), "{error:?}");
                 assert!(!error.hint.contains("Std.Bits"));

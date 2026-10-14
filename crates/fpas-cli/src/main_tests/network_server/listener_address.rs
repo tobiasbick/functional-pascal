@@ -12,30 +12,7 @@ fn tls_listener_reports_an_os_assigned_address() {
     let source = cwd.join("main.fpas");
     write_text(
         &source,
-        &"program TlsListenerAddress;
-uses Std.Net, Std.Test;
-function ExerciseListener(): result of (boolean, string);
-begin
-  const Server: Listener := try ListenTls('127.0.0.1', 0, 'cert.pem', 'key.pem', 2000);
-  const Address: NetworkAddress := try ListenerLocalAddress(Server);
-  AssertEquals('127.0.0.1', Address.Host);
-  AssertTrue(Address.Port > 0);
-  AssertTrue(Address.Port <= 65535);
-  const Client: Connection := try Connect(Address.Host, Address.Port, 2000);
-  const ClientClosed: boolean := try Close(Client);
-  const ServerClosed: boolean := try CloseListener(Server);
-  case ListenerLocalAddress(Server) of
-    when Ok(_): panic('Closed TLS listener returned an address');
-    when Error(_): begin end;
-  end case;
-  return Ok(true);
-end function;
-begin
-  case ExerciseListener() of
-    when Ok(_): begin end;
-    when Error(const Message): panic(Message);
-  end case;
-end."
+        &"program TlsListenerAddress;\nuses Std.Net as Net, Std.Test as Test;\nfunction ExerciseListener(): result of (boolean, string);\nbegin\n  const Server: Net.Listener := try Net.ListenTls('127.0.0.1', 0, 'cert.pem', 'key.pem', 2000);\n  const Address: Net.NetworkAddress := try Net.ListenerLocalAddress(Server);\n  Test.AssertEquals('127.0.0.1', Address.Host);\n  Test.AssertTrue(Address.Port > 0);\n  Test.AssertTrue(Address.Port <= 65535);\n  const Client: Net.Connection := try Net.Connect(Address.Host, Address.Port, 2000);\n  const ClientClosed: boolean := try Net.Close(Client);\n  const ServerClosed: boolean := try Net.CloseListener(Server);\n  case Net.ListenerLocalAddress(Server) of\n    when Ok(_): panic('Closed TLS listener returned an address');\n    when Error(_): begin end;\n  end case;\n  return Ok(true);\nend function;\nbegin\n  case ExerciseListener() of\n    when Ok(_): begin end;\n    when Error(const Message): panic(Message);\n  end case;\nend."
             .replace(
                 "cert.pem",
                 &cwd.join("cert.pem")

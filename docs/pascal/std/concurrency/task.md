@@ -28,15 +28,18 @@ execution uses the same pending-operation state with its deterministic schedulin
 
 ```pascal
 program Example;
-uses Std.Console, Std.Tasks;
+
+uses Std.Console as Console, Std.Tasks as Tasks;
+
 function N(): integer;
 begin
   return 7;
 end function;
+
 begin
   scope
-  const T: task of integer := go N();
-  WriteLn(Wait(T));
+    const T: task of integer := go N();
+    Console.WriteLn(Tasks.Wait(T));
   end scope;
 end.
 ```
@@ -44,7 +47,7 @@ end.
 
 ## Importing and names
 
-After `uses Std.Tasks;` use short names (`Wait`, `Cancel`, …) or qualified (`Std.Tasks.Wait`, …).
+Import with `uses Std.Tasks as Tasks;` and access public symbols as `Tasks.Name`. User enum variants require `Tasks.Type.Variant`.
 
 ---
 
@@ -112,11 +115,11 @@ only when it checks the token. The cancellation-aware `Std.Net` connect, accept,
 operations observe tokens while their interruptible network phases are pending.
 
 ```pascal
-const Source: CancellationSource := CreateCancellationSource();
-const Token: CancellationToken := GetCancellationToken(Source);
-discard Cancel(Source);
-if IsCancellationRequested(Token) then
-  WriteLn('stopping');
+const Source: Tasks.CancellationSource := Tasks.CreateCancellationSource();
+const Token: Tasks.CancellationToken := Tasks.GetCancellationToken(Source);
+discard Tasks.Cancel(Source);
+if Tasks.IsCancellationRequested(Token) then
+  Console.WriteLn('stopping');
 end if;
 ```
 
@@ -297,14 +300,14 @@ debugger failure recovery after its terminal report has been published.
 because capacity alone cannot infer `T`:
 
 ```pascal
-const Messages: channel of string := CreateChannel(16);
+const Messages: channel of string := Tasks.CreateChannel(16);
 ```
 
 `Send` waits until space is available. `Receive` waits until a value is available. Successful sends
 return `Ok(true)`; successful receives return `Ok(Value)`. Values are received in send order.
 
 ```pascal
-case Send(Messages, 'ready') of
+case Tasks.Send(Messages, 'ready') of
   when Ok(_):
     begin
     end;
@@ -312,9 +315,9 @@ case Send(Messages, 'ready') of
     panic(Message);
 end case;
 
-case Receive(Messages) of
+case Tasks.Receive(Messages) of
   when Ok(const Message):
-    WriteLn(Message);
+    Console.WriteLn(Message);
   when Error(const Message):
     panic(Message);
 end case;
@@ -360,7 +363,7 @@ aggregate or another call's arguments.
 ```pascal
 scope
   const T: task of integer := go Square(6);
-  WriteLn(Wait(T));
+  Console.WriteLn(Tasks.Wait(T));
 end scope;
 ```
 
@@ -381,10 +384,10 @@ wait on separately typed handles outside a shared scope.
 scope
 const Ta: task := go Work(1); // Work is a procedure.
 const Tb: task := go Work(2);
-WaitAll([Ta, Tb]);
+Tasks.WaitAll([Ta, Tb]);
 // still valid:
-Wait(Ta);
-Wait(Tb);
+Tasks.Wait(Ta);
+Tasks.Wait(Tb);
 end scope;
 ```
 
@@ -412,11 +415,11 @@ by `Wait` still counts as complete, as with `WaitAll`; waiting for its value aga
 Existing runtime-wide worker-failure handling remains active.
 
 ```pascal
-const First: integer := WaitAny([Ta, Tb]);
+const First: integer := Tasks.WaitAny([Ta, Tb]);
 // Both results still belong to their task handles.
-WaitAll([Ta, Tb]);
-Wait(Ta);
-Wait(Tb);
+Tasks.WaitAll([Ta, Tb]);
+Tasks.Wait(Ta);
+Tasks.Wait(Tb);
 ```
 
 The main task waits without executing queued tasks; see [Waiting and execution](#waiting-and-execution).

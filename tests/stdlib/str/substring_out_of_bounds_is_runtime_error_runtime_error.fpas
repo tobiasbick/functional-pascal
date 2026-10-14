@@ -1,7 +1,7 @@
 program T;
 
-uses Std.Console;
+uses Std.Console as Console;
 
 begin
-  WriteLn('hi'.Slice(0, 10));
+  Console.WriteLn('hi'.Slice(0, 10));
 end.

@@ -15,7 +15,7 @@ fn warm_many_import_build_avoids_direct_interface_copies() {
     .expect("manifest");
     for id in 0..32 {
         let imports = (0..id)
-            .map(|used| format!("U{used}"))
+            .map(|used| format!("U{used} as Imported{used}"))
             .collect::<Vec<_>>()
             .join(", ");
         let uses = if imports.is_empty() {

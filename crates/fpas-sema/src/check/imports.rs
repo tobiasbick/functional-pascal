@@ -11,6 +11,7 @@ use fpas_parser::Import;
 use super::Checker;
 
 impl Checker {
+    /// Validate mandatory aliases before installing any direct-import namespace.
     pub(super) fn initialize_imports(&mut self, imports: &[Import], owner_root: Option<&str>) {
         self.scopes.imports = Default::default();
         let mut roots = imports
@@ -29,11 +30,16 @@ impl Checker {
             if !seen.insert(unit.to_ascii_lowercase()) {
                 self.error_with_code(SEMA_DUPLICATE_DECLARATION,
                     format!("Repeated import of unit `{unit}`"),
-                    "Import each unit once per source file. Keep one plain or aliased import; remove the repeated entry.", used.span);
+                    "Import each unit once per source file using `uses Unit.Path as Alias;`; remove the repeated entry.", used.span);
                 continue;
             }
             let Some(alias) = &used.alias else {
-                self.scopes.imports.add_plain(&unit);
+                self.error_with_code(
+                    fpas_diagnostics::codes::SEMA_UNKNOWN_NAME,
+                    format!("Import `{unit}` requires an explicit alias"),
+                    "Write `uses Unit.Path as Alias;` and access public names through `Alias.Name`.",
+                    used.span,
+                );
                 continue;
             };
             let key = alias.name.to_ascii_lowercase();
@@ -50,6 +56,7 @@ impl Checker {
         }
     }
 
+    /// Keep source-local aliases reserved throughout every lexical scope.
     pub(crate) fn check_import_alias_collision(&mut self, name: &str, span: Span) -> bool {
         if !self.scopes.imports.is_alias(name) {
             return false;

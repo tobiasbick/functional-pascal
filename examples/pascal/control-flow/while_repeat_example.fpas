@@ -1,18 +1,18 @@
 program WhileRepeatExample;
 
-uses Std.Console, Std.Conv;
+uses Std.Console as Console, Std.Conv as Conv;
 
 begin
   var Count: integer := 0;
   while Count < 3 do
     begin
-      WriteLn('while step: ', IntToStr(Count));
+      Console.WriteLn('while step: ', Conv.IntToStr(Count));
       Count := Count + 1;
     end;
   end while;
   var Attempts: integer := 0;
   repeat
-    WriteLn('repeat step: ', IntToStr(Attempts));
+    Console.WriteLn('repeat step: ', Conv.IntToStr(Attempts));
     Attempts := Attempts + 1;
   until Attempts >= 3;
 end.

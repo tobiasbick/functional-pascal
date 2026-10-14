@@ -190,10 +190,7 @@ fn generic_callback_returning_recursive_record_is_valid() {
 #[test]
 fn generic_procedure_valid() {
     check_ok(
-        "program T; uses Std.Console; \
-         procedure Print<T>(Value: T); \
-         begin WriteLn(Value); end procedure; \
-         begin Print(42); end.",
+        "program T; uses Std.Console as Console; procedure Print<T>(Value: T); begin Console.WriteLn(Value); end procedure; begin Print(42); end.",
     );
 }
 

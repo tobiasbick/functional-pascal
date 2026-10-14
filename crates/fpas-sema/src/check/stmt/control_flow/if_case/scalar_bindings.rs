@@ -82,6 +82,15 @@ impl Checker {
         if self.scopes.lookup(name).is_some() {
             return false;
         }
+        if let Some(hint) = self.qualification_hint(name) {
+            self.error_with_code(
+                fpas_diagnostics::codes::SEMA_UNQUALIFIED_NAME,
+                format!("Name `{name}` requires an explicit qualifier"),
+                hint,
+                designator.span,
+            );
+            return true;
+        }
         self.error_with_code(
             SEMA_IMPLICIT_PATTERN_BINDING,
             format!("Case label `{name}` is not a constant"),

@@ -27,7 +27,7 @@ export async function verifyCapturingRoutineAssignment(
   const lines = [
     "program DebuggerCapturingRoutineAssignment;",
     "",
-    "uses Std.Console;",
+    "uses Std.Console as Console;",
     "",
     "type",
     "  Handler = function(Value: integer): integer;",
@@ -50,7 +50,7 @@ export async function verifyCapturingRoutineAssignment(
     "",
     "begin",
     "  const Output: Handler := MakeAdder(10);",
-    "  WriteLn(Output(1));",
+    "  Console.WriteLn(Output(1));",
     "end.",
     ""
   ];

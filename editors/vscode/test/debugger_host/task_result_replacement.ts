@@ -28,7 +28,7 @@ export async function verifyTaskResultReplacement(
   const lines = [
     "program DebuggerTaskResult;",
     "",
-    "uses Std.Console, Std.Tasks;",
+    "uses Std.Console as Console, Std.Tasks as Tasks;",
     "",
     "function Work(): integer;",
     "begin",
@@ -37,7 +37,7 @@ export async function verifyTaskResultReplacement(
     "",
     "begin",
     "  const Pending: task := go Work();",
-    "  WriteLn(Wait(Pending));",
+    "  Console.WriteLn(Tasks.Wait(Pending));",
     "end.",
     ""
   ];

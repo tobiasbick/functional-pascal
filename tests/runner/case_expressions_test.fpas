@@ -1,6 +1,6 @@
 program CaseExpressionsTest;
 
-uses Std.Test;
+uses Std.Test as Test;
 
 type Shape = enum
   Circle(Radius: real);
@@ -56,35 +56,35 @@ begin
 end function;
 
 begin
-  AssertEquals(12.0, Area(Shape.Circle(2.0)));
-  AssertEquals(6.0, Area(Shape.Rectangle(2.0, 3.0)));
-  AssertEquals('g', case Tint.Green of
+  Test.AssertEquals(12.0, Area(Shape.Circle(2.0)));
+  Test.AssertEquals(6.0, Area(Shape.Rectangle(2.0, 3.0)));
+  Test.AssertEquals('g', case Tint.Green of
     when Tint.Red: 'r';
     when Tint.Green: 'g';
   end case);
-  AssertEquals('small', Size(5));
-  AssertEquals('medium', Size(50));
-  AssertEquals('huge', Size(500));
-  AssertEquals('yes', case Size(5) = 'small' of
+  Test.AssertEquals('small', Size(5));
+  Test.AssertEquals('medium', Size(50));
+  Test.AssertEquals('huge', Size(500));
+  Test.AssertEquals('yes', case Size(5) = 'small' of
     when true: 'yes';
     when false: 'no';
   end case);
-  AssertEquals(40, Scaled(Some(4)));
-  AssertEquals(2, Scaled(Some(2)));
-  AssertEquals(0, Scaled(None));
-  AssertEquals('admin', case UserId(1) of
+  Test.AssertEquals(40, Scaled(Some(4)));
+  Test.AssertEquals(2, Scaled(Some(2)));
+  Test.AssertEquals(0, Scaled(None));
+  Test.AssertEquals('admin', case UserId(1) of
     when UserId(1): 'admin';
     else 'user';
   end case);
-  AssertEquals(2, 1 + case Mode of
+  Test.AssertEquals(2, 1 + case Mode of
     when 2: Count(1);
     else Count(5);
   end case);
-  AssertEquals(1, Calls);
+  Test.AssertEquals(1, Calls);
   case 20 of
     when Limit:
-      AssertTrue(true);
+      Test.AssertTrue(true);
     else
-      AssertTrue(false);
+      Test.AssertTrue(false);
   end case;
 end.

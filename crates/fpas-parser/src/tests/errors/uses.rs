@@ -29,7 +29,7 @@ fn missing_uses_segment_after_dot_keeps_placeholder_part() {
 #[test]
 fn empty_uses_entry_before_valid_unit_recovers_next_entry() {
     let (unit, errs) =
-        parse_compilation_unit_with_errors("program T; uses , Std.Console; begin end.");
+        parse_compilation_unit_with_errors("program T; uses , Std.Console as Console; begin end.");
     assert!(!errs.is_empty());
 
     let crate::CompilationUnit::Program(program) = unit else {

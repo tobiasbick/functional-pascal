@@ -6,53 +6,7 @@ use super::{repo_root, support};
 use crate::test_support::{create_temp_dir, write_text};
 use std::fs;
 
-const DECLARATIONS: &str = "\
-uses Std.Console, Std.Tasks;
-type Worker = record
-  Value: integer := 42;
-  function Answer(Self: Worker): integer;
-  begin
-    return Self.Value;
-  end function;
-  function Next(Self: Worker): Worker;
-  begin
-    return Self;
-  end function;
-  function SendAnswer(Self: Worker; Output: channel of integer): integer;
-  begin
-    discard Send(Output, Self.Value);
-    return Self.Value;
-  end function;
-  procedure Report(Self: Worker; Output: channel of integer);
-  begin
-    discard Send(Output, Self.Value);
-  end procedure;
-  function Increment(Self: Worker; var Count: integer): integer;
-  begin
-    Count := Count + Self.Value;
-    return Count;
-  end function;
-end record;
-type Group = record
-  Items: array of Worker;
-end record;
-function Make(): Worker;
-begin
-  return Worker();
-end function;
-function MakeWorkers(): array of Worker;
-begin
-  return [Make()];
-end function;
-function MakeGroup(): Group;
-begin
-  return Group(Items := MakeWorkers());
-end function;
-function Direct(): integer;
-begin
-  return 42;
-end function;
-";
+const DECLARATIONS: &str = "uses Std.Console as Console, Std.Tasks as Tasks;\ntype Worker = record\n  Value: integer := 42;\n  function Answer(Self: Worker): integer;\n  begin\n    return Self.Value;\n  end function;\n  function Next(Self: Worker): Worker;\n  begin\n    return Self;\n  end function;\n  function SendAnswer(Self: Worker; Output: channel of integer): integer;\n  begin\n    discard Tasks.Send(Output, Self.Value);\n    return Self.Value;\n  end function;\n  procedure Report(Self: Worker; Output: channel of integer);\n  begin\n    discard Tasks.Send(Output, Self.Value);\n  end procedure;\n  function Increment(Self: Worker; var Count: integer): integer;\n  begin\n    Count := Count + Self.Value;\n    return Count;\n  end function;\nend record;\ntype Group = record\n  Items: array of Worker;\nend record;\nfunction Make(): Worker;\nbegin\n  return Worker();\nend function;\nfunction MakeWorkers(): array of Worker;\nbegin\n  return [Make()];\nend function;\nfunction MakeGroup(): Group;\nbegin\n  return Group(Items := MakeWorkers());\nend function;\nfunction Direct(): integer;\nbegin\n  return 42;\nend function;\n";
 
 fn program(body: &str) -> String {
     format!("program TaskCalls;\n{DECLARATIONS}\nbegin scope\n{body}\nend scope; end.\n")
@@ -91,10 +45,7 @@ fn grammar_task_call_targets_pass_cli_check_and_return_results() {
         "(Make() with Value := 42; end with).Answer()",
     ] {
         let source = program(&format!(
-            "const Instance: Worker := Make();\n\
-             const Callable: function(): integer := Direct;\n\
-             const Job: task of integer := go {target};\n\
-             const Answer: integer := Wait(Job);\nWriteLn(Answer);"
+            "const Instance: Worker := Make();\nconst Callable: function(): integer := Direct;\nconst Job: task of integer := go {target};\nconst Answer: integer := Tasks.Wait(Job);\nConsole.WriteLn(Answer);"
         ));
         let (exit, stdout, stderr) = cli("check", &source);
         assert_eq!(
@@ -114,9 +65,7 @@ fn grammar_task_call_targets_pass_cli_check_and_return_results() {
 #[test]
 fn grammar_discarded_postfix_call_delivers_its_side_effect() {
     let source = program(
-        "const Output: channel of integer := CreateChannel(1);\n\
-         discard go Make().Next().SendAnswer(Output);\n\
-         const Answer: integer := Receive(Output).Unwrap();\nWriteLn(Answer);",
+        "const Output: channel of integer := Tasks.CreateChannel(1);\ndiscard go Make().Next().SendAnswer(Output);\nconst Answer: integer := Tasks.Receive(Output).Unwrap();\nConsole.WriteLn(Answer);",
     );
     let (exit, stdout, stderr) = cli("run", &source);
     assert_eq!((exit, stdout.as_str(), stderr.as_str()), (0, "42\n", ""));
@@ -126,12 +75,10 @@ fn grammar_discarded_postfix_call_delivers_its_side_effect() {
 fn grammar_postfix_procedure_tasks_deliver_their_side_effects() {
     for spawn in [
         "discard go Make().Report(Output);",
-        "const Job: task := go Make().Report(Output); Wait(Job);",
+        "const Job: task := go Make().Report(Output); Tasks.Wait(Job);",
     ] {
         let source = program(&format!(
-            "const Output: channel of integer := CreateChannel(1);\n\
-             {spawn}\n\
-             WriteLn(ReceiveWithTimeout(Output, 1000).Unwrap());"
+            "const Output: channel of integer := Tasks.CreateChannel(1);\n{spawn}\nConsole.WriteLn(Tasks.ReceiveWithTimeout(Output, 1000).Unwrap());"
         ));
         let (exit, stdout, stderr) = cli("run", &source);
         assert_eq!(

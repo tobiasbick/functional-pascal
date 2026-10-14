@@ -95,6 +95,13 @@ fn complete(
     }
 
     if context.receiver.is_none() {
+        candidates.extend(super::enum_variants::qualified_variant_candidates(
+            documents,
+            target_index,
+            offset,
+            &context.prefix,
+            context.replacement,
+        ));
         candidates.extend(keyword_candidates(&context));
         if !context.prefix.is_empty() {
             let visible_labels = candidates
@@ -115,11 +122,9 @@ fn complete(
                             2,
                             candidate.edit,
                         );
-                        if let Some(namespace) = candidate.namespace {
-                            completion.insert_text =
-                                format!("{namespace}.{}", candidate.symbol.name);
-                            completion.label = completion.insert_text.clone();
-                        }
+                        completion.insert_text =
+                            format!("{}.{}", candidate.namespace, candidate.symbol.name);
+                        completion.label = completion.insert_text.clone();
                         completion
                     }),
             );
@@ -137,7 +142,7 @@ fn complete(
     candidates
 }
 
-/// Lists lexical declarations, aliases, and public names from plain imports.
+/// Lists lexical declarations and explicit import aliases.
 pub(super) fn visible_candidates(
     documents: &[NavigationDocument],
     target_index: usize,
@@ -162,25 +167,10 @@ pub(super) fn visible_candidates(
             .entry(symbol.name.to_ascii_lowercase())
             .or_insert(symbol);
     }
-    let mut result = nearest
+    nearest
         .values()
         .map(|symbol| (target_index, *symbol))
-        .collect::<Vec<_>>();
-    for (document_index, document) in documents.iter().enumerate() {
-        if document_index == target_index || !target.opens_owner(&document.owner) {
-            continue;
-        }
-        for symbol in document
-            .top_level()
-            .iter()
-            .filter(|symbol| symbol.visibility == SymbolVisibility::Public)
-        {
-            if !nearest.contains_key(&symbol.name.to_ascii_lowercase()) {
-                result.push((document_index, symbol));
-            }
-        }
-    }
-    result
+        .collect()
 }
 
 fn member_candidates<'a>(
@@ -190,7 +180,10 @@ fn member_candidates<'a>(
     offset: usize,
 ) -> Vec<(usize, &'a DocumentSymbol)> {
     if let Some((index, document)) = documents.iter().enumerate().find(|(_, document)| {
-        documents[target_index]
+        matches!(
+            document.snapshot.compilation_unit(),
+            fpas_parser::CompilationUnit::Unit(_)
+        ) && documents[target_index]
             .namespace_for(&document.owner)
             .is_some_and(|namespace| namespace.eq_ignore_ascii_case(receiver))
     }) {
@@ -324,6 +317,6 @@ fn starts_with(name: &str, prefix: &str) -> bool {
 fn unqualified_kind(kind: SymbolKind) -> bool {
     !matches!(
         kind,
-        SymbolKind::Program | SymbolKind::Unit | SymbolKind::Field
+        SymbolKind::Program | SymbolKind::Unit | SymbolKind::Field | SymbolKind::EnumMember
     )
 }

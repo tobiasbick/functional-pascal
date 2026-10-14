@@ -185,7 +185,7 @@ fn callback_panic_keeps_the_committed_send_and_losing_captures_are_already_relea
     use std::sync::Mutex;
     let (program, errors) = fpas_parser::parse(
         r#"program CallbackFailure;
-uses Std.Tasks;
+uses Std.Tasks as Tasks;
 procedure FailSelected(Outcome: result of (boolean, string));
 begin panic('selected callback failed'); end procedure;
 begin FailSelected(Ok(true)); end."#,

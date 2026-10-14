@@ -66,7 +66,7 @@ initializers, arguments, and return values:
 ```pascal
 procedure Ban(Id: UserId);
 begin
-  WriteLn('banned ', integer(Id));
+  Console.WriteLn('banned ', integer(Id));
 end procedure;
 
 Ban(UserId(42));  // valid
@@ -119,15 +119,15 @@ const Admin: UserId := UserId(1);
 
 case Id of
   when Admin:
-    WriteLn('admin');
+    Console.WriteLn('admin');
   when UserId(2), UserId(3):
-    WriteLn('staff');
+    Console.WriteLn('staff');
   when UserId(4)..UserId(9):
-    WriteLn('early');
+    Console.WriteLn('early');
   when const Other if Other > UserId(100):
-    WriteLn('large');
+    Console.WriteLn('large');
   else
-    WriteLn('other');
+    Console.WriteLn('other');
 end case;
 ```
 
@@ -152,7 +152,8 @@ constraints from its underlying type:
 - Built-in dot operations are not available: `Name.Length()` on a
   `distinct string` is an error; write `string(Name).Length()`.
 - Standard-library routines and console output do not unwrap distinct values:
-  write `WriteLn(integer(Id))`, not `WriteLn(Id)`.
+  import `uses Std.Console as Console;` and write
+  `Console.WriteLn(integer(Id))`; `Console.WriteLn(Id)` is rejected.
 - A distinct value is not a `boolean` condition, ordinal loop variable, or array
   index.
 - A distinct type does not satisfy the `Numeric` or `Printable` constraints.

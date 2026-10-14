@@ -1,9 +1,9 @@
 program TomlParseDuplicateKeyReturnsErrorTest;
 
-uses Std.Test, Std.Toml;
+uses Std.Test as Test, Std.Toml as Toml;
 
 begin
-  const Parsed: result of (TomlValue, string) := Parse('name = ''one''' + string.Chr(10) +
-                                                       'name = ''two''');
-  AssertTrue(Parsed.IsError());
+  const Parsed: result of (Toml.TomlValue, string) := Toml.Parse('name = ''one''' + string.Chr(10) +
+                                                                 'name = ''two''');
+  Test.AssertTrue(Parsed.IsError());
 end.

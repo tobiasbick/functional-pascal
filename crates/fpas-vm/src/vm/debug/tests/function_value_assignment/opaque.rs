@@ -6,16 +6,16 @@ use super::*;
 
 const SOURCE: &str = r#"program OpaqueIdentityBoundary;
 
-uses Std.Console;
+uses Std.Console as Console;
 
 begin
-  const Region: SavedRegion := SaveRegion(Std.Console.Rect(
+  const Region: Console.SavedRegion := Console.SaveRegion(Console.Rect(
     x := 1,
     y := 1,
     width := 1,
     height := 1
   ));
-  var Copy: SavedRegion := SaveRegion(Std.Console.Rect(
+  var Copy: Console.SavedRegion := Console.SaveRegion(Console.Rect(
     x := 1,
     y := 2,
     width := 1,

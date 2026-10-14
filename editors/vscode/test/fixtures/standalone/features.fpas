@@ -1,7 +1,7 @@
 // Representative valid editor fixture.
 program EditorFeatures;
 
-uses Std.Console;
+uses Std.Console as Console;
 
 type Greeting = record
   Text: string;
@@ -18,5 +18,5 @@ begin
   const Message: Greeting := Greeting(Text := 'Grüße aus 東京 🙂', Count := 1);
   // The record and function are intentionally used by the fixture.
   // Keep a line-comment token in the positive fixture.
-  WriteLn(RenderGreeting(Message));
+  Console.WriteLn(RenderGreeting(Message));
 end.

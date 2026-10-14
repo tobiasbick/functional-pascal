@@ -13,13 +13,7 @@ fn loop_const_captures_keep_each_iterations_value_after_the_loop() {
 #[test]
 fn task_const_preserves_declared_result_type_at_global_and_local_levels() {
     assert_succeeds(
-        "program T; uses Std.Tasks;
-        function Work(): integer; begin return 42; end function;
-        const Owner: TaskGroup := CreateTaskGroup();
-        const GlobalTask: task of integer := StartTaskInGroup(Owner, function(Token: CancellationToken): integer begin return Work(); end function);
-        begin scope  const LocalTask: task of integer := go Work();
-        const First: integer := Wait(GlobalTask); const Second: integer := Wait(LocalTask);
-        if First <> 42 or Second <> 42 then panic('task result'); end if;  end scope; end.",
+        "program T; uses Std.Tasks as Tasks;\n        function Work(): integer; begin return 42; end function;\n        const Owner: Tasks.TaskGroup := Tasks.CreateTaskGroup();\n        const GlobalTask: task of integer := Tasks.StartTaskInGroup(Owner, function(Token: Tasks.CancellationToken): integer begin return Work(); end function);\n        begin scope  const LocalTask: task of integer := go Work();\n        const First: integer := Tasks.Wait(GlobalTask); const Second: integer := Tasks.Wait(LocalTask);\n        if First <> 42 or Second <> 42 then panic('task result'); end if;  end scope; end.",
     );
 }
 

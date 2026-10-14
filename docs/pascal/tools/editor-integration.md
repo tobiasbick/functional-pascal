@@ -286,7 +286,7 @@ can restore project analysis; the older disk contents cannot recreate parser
 errors on the corrected buffer.
 
 Missing and nonexported imports in a main program carry FP4115 and FP4116 at
-the imported unit name, excluding an optional alias suffix. These markers use
+the imported unit name, excluding its required alias suffix. These markers use
 the current editor text and clear after the import is corrected.
 
 The opened editor folder does not have to be an FPAS project. At startup, the
@@ -465,18 +465,25 @@ a type tree and ordered diagnostics, with lexer errors before parser errors,
 and rejects trailing tokens. The language service rejects malformed fragments;
 recursive alias resolution shares the receiver lookup's bounded depth.
 
-When one unresolved identifier maps to exactly one public declaration in one
-accessible unit, completion can add that unit to the compilation unit's `uses`
-clause. The edit is produced through the canonical formatter and is withheld
-when the declaration or unit is ambiguous, inaccessible, already visible, or
-the existing clause cannot be edited conservatively.
+Completion offers explicitly alias-qualified public declarations from accessible
+units. A new import uses `uses Unit.Path as Alias;`, and the inserted reference
+uses `Alias.Name`. The default alias is the final unit-name segment; collisions
+with declarations, parameters, aliases, or reserved namespace roots produce a
+readable unused alias derived from the unit path. Single-segment units also use
+an alias distinct from their namespace root. Import edits use the canonical
+formatter and are withheld when an existing clause cannot be edited conservatively.
 Existing direct imports are compared by canonical unit name, case-insensitively.
-A plain import already supplies its short names. For an aliased import,
-completion inserts the existing alias qualifier, such as `M.Answer`, without
+For an existing import, completion inserts its written alias, such as `M.Answer`, without
 editing `uses`, including when the import contains comments. These qualified
 suggestions take precedence over new imports of equal short names. If several
 aliased units supply that name, each qualified suggestion remains distinct.
 Adding a different unit preserves existing aliases and adds no duplicate import.
+User enum members are available through their type qualifier; completion does
+not expose a bare variant as an ordinary lexical name. Some/None/Ok/Error retain
+their language-keyword completion forms. Import quick fixes update both the
+required aliased import and the selected reference; qualification of an existing
+alias changes the reference alone. A quick fix is offered only for one matching
+public target authorized by a current compiler diagnostic.
 
 Signature help covers functions, procedures, record methods, nested routines,
 function values, typed record constructors, enum constructors with associated

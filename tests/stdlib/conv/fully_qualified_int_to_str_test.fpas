@@ -1,7 +1,7 @@
 program T;
 
-uses Std.Console, Std.Conv;
+uses Std.Console as Console, Std.Conv as Conv;
 
 begin
-  WriteLn(Std.Conv.IntToStr(99));
+  Console.WriteLn(Conv.IntToStr(99));
 end.

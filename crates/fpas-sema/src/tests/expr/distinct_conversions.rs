@@ -6,13 +6,7 @@ use fpas_diagnostics::codes::{SEMA_TYPE_MISMATCH, SEMA_UNKNOWN_NAME, SEMA_WRONG_
 
 use super::{check_errors, check_ok};
 
-const PRELUDE: &str = "program T;
-  uses Std.Console;
-  type UserId = distinct integer;
-  type OrderId = distinct integer;
-  type Raw = integer;
-  type Name = distinct string;
-  procedure Show(Id: UserId); begin WriteLn(integer(Id)); end procedure;";
+const PRELUDE: &str = "program T;\n  uses Std.Console as Console;\n  type UserId = distinct integer;\n  type OrderId = distinct integer;\n  type Raw = integer;\n  type Name = distinct string;\n  procedure Show(Id: UserId); begin Console.WriteLn(integer(Id)); end procedure;";
 
 fn program(body: &str) -> String {
     format!("{PRELUDE}\nbegin\n{body}\nend.")
@@ -37,17 +31,7 @@ fn assert_rejected(body: &str, code: fpas_diagnostics::DiagnosticCode, message: 
 #[test]
 fn explicit_conversions_wrap_unwrap_and_round_trip() {
     check_ok(&program(
-        "const Id: UserId := UserId(41);
-         const Next: UserId := UserId(integer(Id) + 1);
-         const Through: integer := Raw(Next);
-         const Same: UserId := UserId(Next);
-         const Order: OrderId := OrderId(integer(Id));
-         const Text: string := string(Name('Ada'));
-         const Size: integer := string(Name('Ada')).Length();
-         Show(Next);
-         WriteLn(integer(Next), Through, Text, Size);
-         const Ids: array of UserId := [Id, Next];
-         const Found: Option of UserId := Some(Id);",
+        "const Id: UserId := UserId(41);\n         const Next: UserId := UserId(integer(Id) + 1);\n         const Through: integer := Raw(Next);\n         const Same: UserId := UserId(Next);\n         const Order: OrderId := OrderId(integer(Id));\n         const Text: string := string(Name('Ada'));\n         const Size: integer := string(Name('Ada')).Length();\n         Show(Next);\n         Console.WriteLn(integer(Next), Through, Text, Size);\n         const Ids: array of UserId := [Id, Next];\n         const Found: Option of UserId := Some(Id);",
     ));
 }
 
@@ -167,9 +151,9 @@ fn arithmetic_is_not_inherited() {
 #[test]
 fn std_output_and_builtin_operations_do_not_unwrap_implicitly() {
     assert_rejected(
-        "WriteLn(UserId(1));",
+        "Console.WriteLn(UserId(1));",
         SEMA_TYPE_MISMATCH,
-        "`WriteLn` does not accept distinct type `UserId` implicitly",
+        "`Console.WriteLn` does not accept distinct type `UserId` implicitly",
         "`integer(Value)`",
     );
     assert_rejected(

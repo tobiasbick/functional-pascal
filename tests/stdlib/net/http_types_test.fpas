@@ -1,42 +1,42 @@
 // Covers HTTP request constructors, buffered responses, and header lookup.
 program HttpTypesTest;
 
-uses Std.Http, Std.Net.Utf8, Std.Test;
+uses Std.Http as Http, Std.Net.Utf8 as Utf8, Std.Test as Test;
 
 begin
-  const RequestValue: Request := Request.Create('POST', 'http://localhost:8080/v1/chat');
-  AssertEquals('POST', RequestValue.Method);
-  AssertEquals(30000, RequestValue.TimeoutMillis);
-  AssertEquals('GET', Request.Get('http://localhost/get').Method);
-  AssertEquals('POST', Request.Post('http://localhost/post').Method);
-  AssertEquals('PUT', Request.Put('http://localhost/put').Method);
-  AssertEquals('PATCH', Request.Patch('http://localhost/patch').Method);
-  AssertEquals('DELETE', Request.Delete('http://localhost/delete').Method);
-  AssertEquals('HEAD', Request.Head('http://localhost/head').Method);
-  AssertEquals('OPTIONS', Request.Options('http://localhost/options').Method);
-  AssertEquals('PROPFIND', Request.Create('PROPFIND', 'http://localhost/webdav').Method);
-  const ResponseValue: Response := std.http.types.response(StatusCode := 200, ReasonPhrase := 'OK', Headers := [
-                                                                                                                 Header.Create('Content-Type', 'application/json')
-                                                                                                               ], Body := Std.Net.Utf8.Encode('{"ok":true}'));
-  case BodyText(ResponseValue) of
+  const RequestValue: Http.Request := Http.Request.Create('POST', 'http://localhost:8080/v1/chat');
+  Test.AssertEquals('POST', RequestValue.Method);
+  Test.AssertEquals(30000, RequestValue.TimeoutMillis);
+  Test.AssertEquals('GET', Http.Request.Get('http://localhost/get').Method);
+  Test.AssertEquals('POST', Http.Request.Post('http://localhost/post').Method);
+  Test.AssertEquals('PUT', Http.Request.Put('http://localhost/put').Method);
+  Test.AssertEquals('PATCH', Http.Request.Patch('http://localhost/patch').Method);
+  Test.AssertEquals('DELETE', Http.Request.Delete('http://localhost/delete').Method);
+  Test.AssertEquals('HEAD', Http.Request.Head('http://localhost/head').Method);
+  Test.AssertEquals('OPTIONS', Http.Request.Options('http://localhost/options').Method);
+  Test.AssertEquals('PROPFIND', Http.Request.Create('PROPFIND', 'http://localhost/webdav').Method);
+  const ResponseValue: Http.Response := Http.Response(StatusCode := 200, ReasonPhrase := 'OK', Headers := [
+                                                                                                            Http.Header.Create('Content-Type', 'application/json')
+                                                                                                          ], Body := Utf8.Encode('{"ok":true}'));
+  case Http.BodyText(ResponseValue) of
     when Ok(const Text):
       begin
-        AssertEquals('{"ok":true}', Text);
+        Test.AssertEquals('{"ok":true}', Text);
       end;
     when Error(const Message):
       begin
-        Fail(Message);
+        Test.Fail(Message);
       end;
   end case;
 
-  case HeaderValue(ResponseValue, 'content-type') of
+  case Http.HeaderValue(ResponseValue, 'content-type') of
     when Some(const Value):
       begin
-        AssertEquals('application/json', Value);
+        Test.AssertEquals('application/json', Value);
       end;
     when None:
       begin
-        Fail('header lookup failed');
+        Test.Fail('header lookup failed');
       end;
   end case;
 end.

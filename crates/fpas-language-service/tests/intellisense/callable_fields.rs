@@ -103,7 +103,7 @@ fn exported_alias_exposes_public_callables_and_hides_private_fields() {
         begin return Hidden(Callback := Identity, Secret := 'private'); end function;
         end unit;";
     let unit_path = temp.write("boxes.fpas", unit);
-    let source = "program T; uses Data.Boxes; begin const B: Published := Make(); discard B.Callback('ok'); end.";
+    let source = "program T; uses Data.Boxes as Boxes; begin const B: Boxes.Published := Boxes.Make(); discard B.Callback('ok'); end.";
     let path = temp.write("main.fpas", source);
     let mut service = LanguageService::load(&manifest);
     let unit_analysis = service.analyze_document(&unit_path).expect("unit analysis");
@@ -293,10 +293,7 @@ fn imported_callable_fields_specialize_through_aliases_and_nested_records() {
         end record;
         public type Outer of Item = record public Inner: Box of Item; end record;
         end unit;";
-    for (import, qualifier) in [
-        ("uses Data.Boxes;", ""),
-        ("uses Data.Boxes as Boxes;", "Boxes."),
-    ] {
+    for (import, qualifier) in [("uses Data.Boxes as Boxes;", "Boxes.")] {
         let source = format!("program T; {import}
             type Payload = Option of array of integer;
             type Concrete = {qualifier}Box of Payload;

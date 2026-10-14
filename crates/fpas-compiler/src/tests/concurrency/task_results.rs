@@ -5,35 +5,35 @@ use super::*;
 #[test]
 fn standard_type_operation_tasks_preserve_results() {
     assert_succeeds(
-        "program IntrinsicTasks; uses Std.Tasks, Std.Math; begin scope  if Wait(go 'abc'.Length()) <> 3 then panic('type operation result'); end if; if Wait(go Abs(-7)) <> 7 then panic('short result'); end if; if Wait(go '%d:%s'.Format(4, 'x')) <> '4:x' then panic('variadic result'); end if;  end scope; end.",
+        "program IntrinsicTasks; uses Std.Tasks as Tasks, Std.Math as Math; begin scope  if Tasks.Wait(go 'abc'.Length()) <> 3 then panic('type operation result'); end if; if Tasks.Wait(go Math.Abs(-7)) <> 7 then panic('short result'); end if; if Tasks.Wait(go '%d:%s'.Format(4, 'x')) <> '4:x' then panic('variadic result'); end if;  end scope; end.",
     );
 }
 
 #[test]
 fn intrinsic_procedure_tasks_support_empty_and_variadic_output() {
     assert_succeeds(
-        "program IntrinsicProcedures; uses Std.Tasks, Std.Console; begin scope  Wait(go WriteLn()); Wait(go Std.Console.WriteLn('value:', 7));  end scope; end.",
+        "program IntrinsicProcedures; uses Std.Tasks as Tasks, Std.Console as Console; begin scope  Tasks.Wait(go Console.WriteLn()); Tasks.Wait(go Console.WriteLn('value:', 7));  end scope; end.",
     );
 }
 
 #[test]
 fn source_routine_shadowing_does_not_become_an_intrinsic_task() {
     assert_succeeds(
-        "program ShadowTask; uses Std.Tasks; function Abs(Value: integer): integer; begin return Value + 10; end function; begin scope  if Wait(go Abs(-7)) <> 3 then panic('shadowed task'); end if;  end scope; end.",
+        "program ShadowTask; uses Std.Tasks as Tasks; function Abs(Value: integer): integer; begin return Value + 10; end function; begin scope  if Tasks.Wait(go Abs(-7)) <> 3 then panic('shadowed task'); end if;  end scope; end.",
     );
 }
 
 #[test]
 fn wait_preserves_integer_before_procedure_task_results() {
     assert_succeeds(
-        "program Reversed; uses Std.Tasks; function Number(): integer; begin return 7; end function; procedure Work(); begin end procedure; begin scope  if Wait(go Number()) <> 7 then panic('wrong result'); end if; Wait(go Work());  end scope; end.",
+        "program Reversed; uses Std.Tasks as Tasks; function Number(): integer; begin return 7; end function; procedure Work(); begin end procedure; begin scope  if Tasks.Wait(go Number()) <> 7 then panic('wrong result'); end if; Tasks.Wait(go Work());  end scope; end.",
     );
 }
 
 #[test]
 fn wait_preserves_mixed_direct_spawn_results() {
     assert_succeeds(
-        "program MixedDirect; uses Std.Tasks; function Number(): integer; begin return 7; end function; procedure Work(); begin end procedure; begin scope  Wait(go Work()); if Wait(go Number()) <> 7 then panic('wrong result'); end if;  end scope; end.",
+        "program MixedDirect; uses Std.Tasks as Tasks; function Number(): integer; begin return 7; end function; procedure Work(); begin end procedure; begin scope  Tasks.Wait(go Work()); if Tasks.Wait(go Number()) <> 7 then panic('wrong result'); end if;  end scope; end.",
     );
 }
 
@@ -41,7 +41,7 @@ fn wait_preserves_mixed_direct_spawn_results() {
 fn wait_preserves_mixed_procedure_and_integer_task_results() {
     assert_succeeds(
         r#"program MixedTaskResults;
-uses Std.Tasks;
+uses Std.Tasks as Tasks;
 function Number(): integer;
 begin
   return 7;
@@ -55,12 +55,12 @@ begin
 end function;
 begin scope
   const A: task of integer := go Number();
-  const Group := CreateTaskGroup();
-  const B: task := StartTaskInGroup(Group, procedure(Token: CancellationToken) begin Work(); end procedure);
+  const Group := Tasks.CreateTaskGroup();
+  const B: task := Tasks.StartTaskInGroup(Group, procedure(Token: Tasks.CancellationToken) begin Work(); end procedure);
   const Nested: task of task := go Identity(B);
-  const Joined: task := Wait(Nested);
-  Wait(Joined);
-  if Wait(A) <> 7 then panic('wrong task result'); end if;
+  const Joined: task := Tasks.Wait(Nested);
+  Tasks.Wait(Joined);
+  if Tasks.Wait(A) <> 7 then panic('wrong task result'); end if;
  end scope; end."#,
     );
 }
@@ -69,7 +69,7 @@ begin scope
 fn wait_preserves_mixed_results_across_routines_and_loop_branches() {
     assert_succeeds(
         r#"program MixedTaskRoutines;
-uses Std.Tasks;
+uses Std.Tasks as Tasks;
 function Number(): integer;
 begin
   return 7;
@@ -79,16 +79,16 @@ begin
 end procedure;
 procedure WaitForWork();
 begin scope
-  Wait(go Work());
+  Tasks.Wait(go Work());
   for Index: integer := 1 to 3 do
   begin
-    Wait(go Work());
+    Tasks.Wait(go Work());
     if Index < 1 then panic('wrong loop branch'); end if;
   end; end for;
  end scope; end procedure;
 function WaitForNumber(): integer;
 begin scope
-  return Wait(go Number());
+  return Tasks.Wait(go Number());
  end scope; end function;
 begin
   WaitForWork();
@@ -100,7 +100,7 @@ end."#,
 #[test]
 fn wait_signature_merges_unit_and_value_without_erasing_call_types() {
     let ast = parse_ok(
-        "program MixedSignature; uses Std.Tasks; function Number(): integer; begin return 7; end function; procedure Work(); begin end procedure; begin scope  Wait(go Work()); if Wait(go Number()) <> 7 then panic('wrong result'); end if;  end scope; end.",
+        "program MixedSignature; uses Std.Tasks as Tasks; function Number(): integer; begin return 7; end function; procedure Work(); begin end procedure; begin scope  Tasks.Wait(go Work()); if Tasks.Wait(go Number()) <> 7 then panic('wrong result'); end if;  end scope; end.",
     );
     let ir = crate::lower(&ast).expect("mixed task result IR");
     let wait = fpas_ir::IntrinsicId::new(u32::from(u16::from(fpas_bytecode::Intrinsic::Task(
@@ -122,7 +122,7 @@ fn wait_signature_merges_unit_and_value_without_erasing_call_types() {
 #[test]
 fn wait_signature_keeps_unit_for_procedure_only_calls() {
     let ast = parse_ok(
-        "program UnitSignature; uses Std.Tasks; procedure Work(); begin end procedure; begin scope  Wait(go Work()); Wait(go Work());  end scope; end.",
+        "program UnitSignature; uses Std.Tasks as Tasks; procedure Work(); begin end procedure; begin scope  Tasks.Wait(go Work()); Tasks.Wait(go Work());  end scope; end.",
     );
     let ir = crate::lower(&ast).expect("procedure task result IR");
     let wait = fpas_ir::IntrinsicId::new(u32::from(u16::from(fpas_bytecode::Intrinsic::Task(

@@ -307,7 +307,7 @@ fn invalid_dependency_manifest_keeps_its_path_instead_of_the_root_manifest() {
 #[test]
 fn unknown_unit_import_is_located_at_its_uses_entry() {
     let fixture = Fixture::new();
-    let source = "unit Demo.A;\nuses Demo.Missing;\nend unit;\n";
+    let source = "unit Demo.A;\nuses Demo.Missing as Missing;\nend unit;\n";
     let unit = fixture.write("a.fpas", source);
     let graph = build_unit_graph(std::slice::from_ref(&unit), &ProjectLinkMeta::default())
         .expect("graph must build");

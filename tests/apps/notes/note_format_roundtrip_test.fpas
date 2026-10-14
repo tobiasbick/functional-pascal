@@ -1,42 +1,42 @@
 program NoteFormatRoundtripTest;
 
-uses Notes.Format, Notes.Model, Std.Test;
+uses Notes.Format as Format, Notes.Model as Model, Std.Test as Test;
 
 begin
-  const Source: Note := notes.model.note(Id := '1700000000000-123456', Title := 'Agent-era notes', CreatedMillis := 1700000000000, UpdatedMillis := 1700000000123, Tags := [
+  const Source: Model.Note := Model.Note(Id := '1700000000000-123456', Title := 'Agent-era notes', CreatedMillis := 1700000000000, UpdatedMillis := 1700000000123, Tags := [
                                                                                                                                                                              'fpas',
                                                                                                                                                                              'tui'
                                                                                                                                                                            ], Pinned := true, Archived := false, Body := 'Human-readable body' + string.Chr(10) +
                                                                                                                                                                                                                          'with Markdown.', Path := '');
-  const Encoded: string := NoteStringify(Source);
-  case NoteParse(Encoded) of
+  const Encoded: string := Format.NoteStringify(Source);
+  case Format.NoteParse(Encoded) of
     when Ok(const Parsed):
       begin
-        AssertEquals(Source.Id, Parsed.Id);
-        AssertEquals(Source.Title, Parsed.Title);
-        AssertEquals(Source.CreatedMillis, Parsed.CreatedMillis);
-        AssertEquals(Source.UpdatedMillis, Parsed.UpdatedMillis);
-        AssertEquals(2, Parsed.Tags.Length());
-        AssertEquals('fpas', Parsed.Tags[0]);
-        AssertEquals(true, Parsed.Pinned);
-        AssertEquals(false, Parsed.Archived);
-        AssertEquals(Source.Body, Parsed.Body);
+        Test.AssertEquals(Source.Id, Parsed.Id);
+        Test.AssertEquals(Source.Title, Parsed.Title);
+        Test.AssertEquals(Source.CreatedMillis, Parsed.CreatedMillis);
+        Test.AssertEquals(Source.UpdatedMillis, Parsed.UpdatedMillis);
+        Test.AssertEquals(2, Parsed.Tags.Length());
+        Test.AssertEquals('fpas', Parsed.Tags[0]);
+        Test.AssertEquals(true, Parsed.Pinned);
+        Test.AssertEquals(false, Parsed.Archived);
+        Test.AssertEquals(Source.Body, Parsed.Body);
       end;
     when Error(const Message):
       begin
-        Fail(Message);
+        Test.Fail(Message);
       end;
   end case;
   const CrLf: string := Encoded.Replace(string.Chr(10), string.Chr(13) + string.Chr(10));
-  case NoteParse(CrLf) of
+  case Format.NoteParse(CrLf) of
     when Ok(const Parsed):
       begin
-        AssertEquals(Source.Title, Parsed.Title);
-        AssertEquals(Source.Body, Parsed.Body);
+        Test.AssertEquals(Source.Title, Parsed.Title);
+        Test.AssertEquals(Source.Body, Parsed.Body);
       end;
     when Error(const Message):
       begin
-        Fail(Message);
+        Test.Fail(Message);
       end;
   end case;
 end.

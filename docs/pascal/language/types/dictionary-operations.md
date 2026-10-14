@@ -4,11 +4,13 @@ Operations on **dictionaries** (`dict of K to V`). Dictionaries are ordered key-
 
 ```pascal
 program Example;
-uses Std.Console;
+
+uses Std.Console as Console;
+
 begin
   const Ages: dict of string to integer := ['Alice': 30, 'Bob': 25];
-  WriteLn(Ages.Length());
-  WriteLn(Ages.ContainsKey('Alice'));
+  Console.WriteLn(Ages.Length());
+  Console.WriteLn(Ages.ContainsKey('Alice'));
 end.
 ```
 
@@ -60,8 +62,8 @@ Returns the number of key-value pairs in the dict.
 
 ```pascal
 const D: dict of string to integer := ['A': 1, 'B': 2];
-WriteLn(D.Length());  // 2
-WriteLn([:].Length());  // 0
+Console.WriteLn(D.Length());  // 2
+Console.WriteLn([:].Length());  // 0
 ```
 
 ### `ContainsKey`
@@ -74,8 +76,8 @@ Returns `true` if the dict contains the given key, `false` otherwise.
 
 ```pascal
 const D: dict of string to integer := ['Alice': 30];
-WriteLn(D.ContainsKey('Alice'));    // true
-WriteLn(D.ContainsKey('Bob'));       // false
+Console.WriteLn(D.ContainsKey('Alice'));    // true
+Console.WriteLn(D.ContainsKey('Bob'));       // false
 ```
 
 ### `Keys`
@@ -88,7 +90,7 @@ Returns an array of all keys in insertion order.
 
 ```pascal
 const D: dict of string to integer := ['Alice': 30, 'Bob': 25];
-WriteLn(D.Keys());  // [Alice, Bob]
+Console.WriteLn(D.Keys());  // [Alice, Bob]
 ```
 
 ### `Values`
@@ -101,7 +103,7 @@ Returns an array of all values in insertion order.
 
 ```pascal
 const D: dict of string to integer := ['Alice': 30, 'Bob': 25];
-WriteLn(D.Values());  // [30, 25]
+Console.WriteLn(D.Values());  // [30, 25]
 ```
 
 ### `Remove`
@@ -115,7 +117,7 @@ Returns a new dict without the given key. If the key does not exist, the origina
 ```pascal
 const D: dict of string to integer := ['A': 1, 'B': 2, 'C': 3];
 const D2: dict of string to integer := D.Remove('B');
-WriteLn(D2);  // {A: 1, C: 3}
+Console.WriteLn(D2);  // {A: 1, C: 3}
 ```
 
 ---
@@ -171,7 +173,7 @@ end function;
 
 const Prices: dict of string to real := ['Apple': 1.0, 'Banana': 0.5];
 const Doubled: dict of string to real := Prices.Map(DoublePrice);
-WriteLn(Doubled);  // {Apple: 2.0, Banana: 1.0}
+Console.WriteLn(Doubled);  // {Apple: 2.0, Banana: 1.0}
 ```
 
 ---
@@ -192,7 +194,7 @@ end function;
 
 const Scores: dict of string to integer := ['Alice': 90, 'Bob': 55, 'Carol': 80];
 const Passing: dict of string to integer := Scores.Filter(IsPassingScore);
-WriteLn(Passing);  // {Alice: 90, Carol: 80}
+Console.WriteLn(Passing);  // {Alice: 90, Carol: 80}
 ```
 
 ---
@@ -206,11 +208,11 @@ Values.Reduce(Init: U; F: function(Acc: U; Key: K; Value: V): U): U
 Visits entries in insertion order. Each callback receives the current accumulator, key, and value. The accumulator type `U` is inferred from `Init`, and the callback must return `U`.
 
 ```pascal
-uses Std.Conv;
+uses Std.Conv as Conv;
 
 function Describe(Acc: string; Key: string; Value: integer): string;
 begin
-  return Acc + Key + ':' + Std.Conv.IntToStr(Value) + ';';
+  return Acc + Key + ':' + Conv.IntToStr(Value) + ';';
 end function;
 
 const Scores: dict of string to integer := ['Alice': 90, 'Bob': 55];

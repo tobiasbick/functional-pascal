@@ -1,6 +1,6 @@
 program T;
 
-uses Std.Console;
+uses Std.Console as Console;
 
 begin
   const D: dict of string to integer := ['A': 1, 'B': 2, 'C': 3];
@@ -12,7 +12,7 @@ begin
         end;
       end if;
 
-      WriteLn(K);
+      Console.WriteLn(K);
     end;
   end for;
 end.

@@ -1,6 +1,6 @@
 program MutatingReceiverOrderTest;
 
-uses Std.Test;
+uses Std.Test as Test;
 
 var Trace: string := '';
 
@@ -21,13 +21,13 @@ begin
   var Rows: array of array of integer := [[1], [2]];
   const Original: array of array of integer := Rows;
   Rows[Index()].PushInPlace(Replace(var Rows));
-  AssertEquals('iv', Trace);
-  AssertEquals(2, Rows[0].Length());
-  AssertEquals(5, Rows[0][0]);
-  AssertEquals(9, Rows[0][1]);
-  AssertEquals(1, Original[0][0]);
+  Test.AssertEquals('iv', Trace);
+  Test.AssertEquals(2, Rows[0].Length());
+  Test.AssertEquals(5, Rows[0][0]);
+  Test.AssertEquals(9, Rows[0][1]);
+  Test.AssertEquals(1, Original[0][0]);
   Trace := '';
-  AssertEquals(9, Rows[Index()].PopInPlace());
-  AssertEquals('i', Trace);
-  AssertEquals(1, Rows[0].Length());
+  Test.AssertEquals(9, Rows[Index()].PopInPlace());
+  Test.AssertEquals('i', Trace);
+  Test.AssertEquals(1, Rows[0].Length());
 end.

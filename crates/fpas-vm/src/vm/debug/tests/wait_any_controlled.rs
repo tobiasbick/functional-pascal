@@ -3,46 +3,46 @@
 use super::*;
 
 const SOURCE: &str = r#"program ControlledWaitAny;
-uses Std.Tasks, Std.Time;
+uses Std.Tasks as Tasks, Std.Time as Time;
 function Work(): integer;
 begin
-  Sleep(30);
+  Time.Sleep(30);
   return 7;
 end function;
-function CancelLater(Source: CancellationSource): integer;
+function CancelLater(Source: Tasks.CancellationSource): integer;
 begin
-  Sleep(1);
-  discard Cancel(Source);
+  Time.Sleep(1);
+  discard Tasks.Cancel(Source);
   return 0;
 end function;
 begin scope
   const T: task of integer := go Work();
-  case WaitAnyWithTimeout([T], 0) of
+  case Tasks.WaitAnyWithTimeout([T], 0) of
     when Ok(_): panic('pending task ready');
     when Error(const Message): if Message <> 'Task wait timed out' then panic(Message); end if;
   end case;
-  case WaitAnyWithTimeout([T], 1) of
+  case Tasks.WaitAnyWithTimeout([T], 1) of
     when Ok(_): panic('deadline extended');
     when Error(const Message): if Message <> 'Task wait timed out' then panic(Message); end if;
   end case;
-  const Source: CancellationSource := CreateCancellationSource();
+  const Source: Tasks.CancellationSource := Tasks.CreateCancellationSource();
   const Canceller: task of integer := go CancelLater(Source);
-  case WaitAnyWithCancellation([T], GetCancellationToken(Source)) of
+  case Tasks.WaitAnyWithCancellation([T], Tasks.GetCancellationToken(Source)) of
     when Ok(_): panic('not cancelled');
     when Error(const Message): if Message <> 'Task wait was cancelled' then panic(Message); end if;
   end case;
-  if Wait(Canceller) <> 0 then panic('canceller result'); end if;
-  if Wait(T) <> 7 then panic('result lost'); end if;
-  case WaitAnyWithTimeout([T], 0) of
+  if Tasks.Wait(Canceller) <> 0 then panic('canceller result'); end if;
+  if Tasks.Wait(T) <> 7 then panic('result lost'); end if;
+  case Tasks.WaitAnyWithTimeout([T], 0) of
     when Ok(const Index): if Index <> 0 then panic('index'); end if;
     when Error(const Message): panic(Message);
   end case;
-  case WaitAnyWithCancellation([T], GetCancellationToken(Source)) of
+  case Tasks.WaitAnyWithCancellation([T], Tasks.GetCancellationToken(Source)) of
     when Ok(_): panic('pre-cancellation lost');
     when Error(const Message): if Message <> 'Task wait was cancelled' then panic(Message); end if;
   end case;
-  const Active: CancellationSource := CreateCancellationSource();
-  case WaitAnyWithCancellation([T], GetCancellationToken(Active)) of
+  const Active: Tasks.CancellationSource := Tasks.CreateCancellationSource();
+  case Tasks.WaitAnyWithCancellation([T], Tasks.GetCancellationToken(Active)) of
     when Ok(const Index): if Index <> 0 then panic('index'); end if;
     when Error(const Message): panic(Message);
   end case;
@@ -65,25 +65,25 @@ fn controlled_wait_any_uses_debugger_deadlines_and_cancellation() {
 fn controlled_wait_any_preserves_results_with_one_worker() {
     let (program, errors) = fpas_parser::parse(
         r#"program ReadyControlledWait;
-uses Std.Tasks;
+uses Std.Tasks as Tasks;
 function Work(): integer;
 begin
   return 7;
 end function;
 begin scope
   const T: task of integer := go Work();
-  WaitAll([T]);
-  case WaitAnyWithTimeout([T], 0) of
+  Tasks.WaitAll([T]);
+  case Tasks.WaitAnyWithTimeout([T], 0) of
     when Ok(const Index): if Index <> 0 then panic('index'); end if;
     when Error(const Message): panic(Message);
   end case;
-  const Source: CancellationSource := CreateCancellationSource();
-  discard Cancel(Source);
-  case WaitAnyWithCancellation([T], GetCancellationToken(Source)) of
+  const Source: Tasks.CancellationSource := Tasks.CreateCancellationSource();
+  discard Tasks.Cancel(Source);
+  case Tasks.WaitAnyWithCancellation([T], Tasks.GetCancellationToken(Source)) of
     when Ok(_): panic('pre-cancellation lost');
     when Error(const Message): if Message <> 'Task wait was cancelled' then panic(Message); end if;
   end case;
-  if Wait(T) <> 7 then panic('result consumed'); end if;
+  if Tasks.Wait(T) <> 7 then panic('result consumed'); end if;
  end scope; end."#,
     );
     assert!(errors.is_empty(), "{errors:?}");

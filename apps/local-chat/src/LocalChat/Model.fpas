@@ -1,7 +1,7 @@
 // Immutable state and transcript formatting for the Local Chat application.
 unit LocalChat.Model;
 
-uses Std.Console, Std.Tui;
+uses Std.Console as Console, Std.Tui as Tui;
 
 // Origin of one visible local chat entry.
 public type ChatRole = enum
@@ -59,7 +59,7 @@ public type LocalChatModel = record
   // Caret position inside the read-only transcript.
   public TranscriptCaret: integer;
   // Current transcript viewport offset.
-  public TranscriptOffset: TuiPoint;
+  public TranscriptOffset: Tui.TuiPoint;
   // Identifier of the focused control.
   public Focus: integer;
   // Short status text shown in the footer.
@@ -77,7 +77,7 @@ end record;
 // - `Height`: Initial terminal height in cells.
 public function LocalChatModelCreate(Width: integer; Height: integer): LocalChatModel;
 begin
-  return LocalChatModel(Entries := [], Draft := '', DraftCaret := 0, TranscriptCaret := 0, TranscriptOffset := TuiPoint.Create(0, 0), Focus := 1, Status := 'Ready', Width := Width, Height := Height);
+  return LocalChatModel(Entries := [], Draft := '', DraftCaret := 0, TranscriptCaret := 0, TranscriptOffset := Tui.TuiPoint.Create(0, 0), Focus := 1, Status := 'Ready', Width := Width, Height := Height);
 end function;
 
 // Wraps text at grapheme boundaries for a cell-width limit.
@@ -95,7 +95,7 @@ begin
   var Wrapped: string := '';
   var LineWidth: integer := 0;
   const NewLine: string := string.Chr(10);
-  for Grapheme: string in Std.Console.SplitGraphemes(Text) do
+  for Grapheme: string in Console.SplitGraphemes(Text) do
     begin
       if Grapheme = NewLine then
         begin
@@ -104,7 +104,7 @@ begin
         end;
       else
         begin
-          const GraphemeWidth: integer := Std.Console.DisplayWidth(Grapheme);
+          const GraphemeWidth: integer := Console.DisplayWidth(Grapheme);
           if (LineWidth > 0) and (LineWidth + GraphemeWidth > MaximumWidth) then
             begin
               Wrapped := Wrapped + NewLine;
@@ -202,7 +202,7 @@ begin
     end;
   end if;
 
-  Next.TranscriptOffset := TuiPoint.Create(0, OffsetY);
+  Next.TranscriptOffset := Tui.TuiPoint.Create(0, OffsetY);
   return Next;
 end function;
 end unit;

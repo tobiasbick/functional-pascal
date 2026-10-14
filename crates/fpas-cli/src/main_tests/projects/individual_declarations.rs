@@ -29,12 +29,7 @@ fn individual_declarations_export_each_name_and_preserve_initialization_order() 
     );
     write_text(
         &cwd.join("src/main.fpas"),
-        "program Main; uses App.Values, Std.Console;
-        begin const Value: Box := Box( Value := A + B );
-            WriteLn(Value.Value); WriteLn(First); WriteLn(Second); WriteLn(Total());
-            Left := Left + 10; Right := Right + 20;
-            WriteLn(Left); WriteLn(Right);
-        end.",
+        "program Main; uses App.Values as Values, Std.Console as Console;\n        begin const Value: Values.Box := Values.Box( Value := Values.A + Values.B );\n            Console.WriteLn(Value.Value); Console.WriteLn(Values.First); Console.WriteLn(Values.Second); Console.WriteLn(Values.Total());\n            Values.Left := Values.Left + 10; Values.Right := Values.Right + 20;\n            Console.WriteLn(Values.Left); Console.WriteLn(Values.Right);\n        end.",
     );
     for _ in 0..2 {
         let (code, stdout, stderr) = support::run_cli_and_capture_output(&project, &cwd);

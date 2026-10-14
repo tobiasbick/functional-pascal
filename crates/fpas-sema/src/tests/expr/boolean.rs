@@ -18,8 +18,17 @@ fn integer_logical_operators_suggest_the_matching_bits_function() {
         assert_eq!(errors[0].code, SEMA_TYPE_MISMATCH);
         assert!(errors[0].message.contains("boolean"));
         let hint = errors[0].help.as_deref().expect("migration hint");
-        assert!(hint.contains(&format!("Std.Bits.{function}")), "{hint}");
-        assert!(hint.contains("uses Std.Bits;"));
+        assert!(hint.contains(&format!("Bits.{function}")), "{hint}");
+        assert!(hint.contains("uses Std.Bits as Bits;"));
+        let imported = check_errors(&format!(
+            "program T; uses Std.Bits as Flags; begin const Value: integer := {expression}; end."
+        ));
+        let hint = imported[0].help.as_deref().expect("written alias repair");
+        assert!(hint.contains(&format!("Flags.{function}")), "{hint}");
+        assert!(
+            !hint.contains("uses Std.Bits"),
+            "existing imports are reused"
+        );
     }
 }
 
@@ -59,7 +68,7 @@ fn aliases_keep_boolean_and_integer_operator_rules() {
             .help
             .as_deref()
             .expect("hint")
-            .contains("Std.Bits.BitOr")
+            .contains("StdBits.BitOr")
     );
 }
 

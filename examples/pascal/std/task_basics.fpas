@@ -2,7 +2,7 @@
 
 program TaskBasics;
 
-uses Std.Console, Std.Conv, Std.Tasks;
+uses Std.Console as Console, Std.Conv as Conv, Std.Tasks as Tasks;
 
 function Square(N: integer): integer;
 begin
@@ -12,15 +12,15 @@ end function;
 begin
   scope
     const One: task of integer := go Square(6);
-    WriteLn('wait one: ', IntToStr(Wait(One)));
+    Console.WriteLn('wait one: ', Conv.IntToStr(Tasks.Wait(One)));
     var Jobs: array of task of integer := [];
     Jobs.PushInPlace(go Square(3));
     Jobs.PushInPlace(go Square(4));
-    WriteLn('wait [0]: ', IntToStr(Wait(Jobs[0])));
-    WriteLn('wait [1]: ', IntToStr(Wait(Jobs[1])));
+    Console.WriteLn('wait [0]: ', Conv.IntToStr(Tasks.Wait(Jobs[0])));
+    Console.WriteLn('wait [1]: ', Conv.IntToStr(Tasks.Wait(Jobs[1])));
     const Ta: task of integer := go Square(2);
     const Tb: task of integer := go Square(3);
-    WaitAll([Ta, Tb]);
-    WriteLn('after waitall: ', IntToStr(Wait(Ta) + Wait(Tb)));
+    Tasks.WaitAll([Ta, Tb]);
+    Console.WriteLn('after waitall: ', Conv.IntToStr(Tasks.Wait(Ta) + Tasks.Wait(Tb)));
   end scope;
 end.

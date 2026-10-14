@@ -1,6 +1,6 @@
 program PatternBindingsTest;
 
-uses Std.Test;
+uses Std.Test as Test;
 
 type Shape = enum
   Circle(Radius: integer);
@@ -38,10 +38,10 @@ begin
 end function;
 
 begin
-  AssertEquals(2, Measure(Shape.Circle(2)));
-  AssertEquals(5, Measure(Shape.Rect(4, 5)));
-  AssertEquals('small', Classify(3));
-  AssertEquals('large', Classify(30));
-  AssertEquals(9, Payload(Some(9)));
-  AssertEquals(0, Payload(None));
+  Test.AssertEquals(2, Measure(Shape.Circle(2)));
+  Test.AssertEquals(5, Measure(Shape.Rect(4, 5)));
+  Test.AssertEquals('small', Classify(3));
+  Test.AssertEquals('large', Classify(30));
+  Test.AssertEquals(9, Payload(Some(9)));
+  Test.AssertEquals(0, Payload(None));
 end.

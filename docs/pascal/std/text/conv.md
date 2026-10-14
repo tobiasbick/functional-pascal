@@ -4,22 +4,25 @@ Explicit conversions between text and numbers (and simple numeric widens). Use t
 
 ```pascal
 program Example;
-uses Std.Console, Std.Conv;
+
+uses Std.Console as Console, Std.Conv as Conv;
+
 begin
-  WriteLn(IntToStr(42));
+  Console.WriteLn(Conv.IntToStr(42));
 end.
 ```
 
 
 ## Importing and names
 
-After `uses Std.Conv;` you may write **`IntToStr`**, **`StrToInt`**, … or **`Std.Conv.IntToStr`**, etc.
+After `uses Std.Conv as Conv;`, call `Conv.IntToStr`, `Conv.StrToInt`, and the
+other exported routines through that alias.
 
 ---
 
 ## Quick reference
 
-Requires `uses Std.Conv;`.
+Requires `uses Std.Conv as Conv;`.
 
 | Kind | Name | Notes |
 |------|------|--------|
@@ -40,7 +43,7 @@ Requires `uses Std.Conv;`.
 Decimal string representation of `N`.
 
 ```pascal
-WriteLn(IntToStr(42));
+Console.WriteLn(Conv.IntToStr(42));
 ```
 
 ---
@@ -54,7 +57,7 @@ Invalid text or overflow is a runtime error. `Std.Parse.TryInt` uses the same
 grammar and returns a Result.
 
 ```pascal
-WriteLn(StrToInt('  -7  '));
+Console.WriteLn(Conv.StrToInt('  -7  '));
 ```
 
 ---
@@ -68,8 +71,8 @@ larger values are exact only when representable at binary64's spacing.
 This is the explicit conversion used before mixing integer and real calculations.
 
 ```pascal
-const X: real := IntToReal(3);
-WriteLn(X);
+const X: real := Conv.IntToReal(3);
+Console.WriteLn(X);
 ```
 
 ---
@@ -81,7 +84,7 @@ to the identical binary64 bits. Integral reals include `.0`, so `RealToStr(1.0)`
 is `'1.0'`. Negative zero is `'-0.0'`. Nonfinite values are rejected.
 
 ```pascal
-WriteLn(RealToStr(1.5));
+Console.WriteLn(Conv.RealToStr(1.5));
 ```
 
 ---
@@ -95,7 +98,7 @@ representable subnormals remain valid. Invalid input is a runtime error.
 `Std.Parse.TryReal` uses the same grammar and returns a Result.
 
 ```pascal
-WriteLn(StrToReal('2.25'));
+Console.WriteLn(Conv.StrToReal('2.25'));
 ```
 
 ---
@@ -105,8 +108,8 @@ WriteLn(StrToReal('2.25'));
 Returns `'true'` or `'false'`.
 
 ```pascal
-WriteLn(BoolToStr(true));   // true
-WriteLn(BoolToStr(false));  // false
+Console.WriteLn(Conv.BoolToStr(true));   // true
+Console.WriteLn(Conv.BoolToStr(false));  // false
 ```
 
 ---
@@ -116,8 +119,8 @@ WriteLn(BoolToStr(false));  // false
 Parses `'true'` or `'false'` (case-insensitive). **Runtime error** if `S` is neither.
 
 ```pascal
-WriteLn(StrToBool('True'));    // true
-WriteLn(StrToBool('FALSE'));    // false
+Console.WriteLn(Conv.StrToBool('True'));    // true
+Console.WriteLn(Conv.StrToBool('FALSE'));    // false
 ```
 
 ---
@@ -129,8 +132,8 @@ Returns `N` as an uppercase hexadecimal string, zero-padded to at least `Digits`
 `Digits` must be at most **1_000_000**. Larger values raise a runtime error.
 
 ```pascal
-WriteLn(IntToHex(255, 2));    // FF
-WriteLn(IntToHex(255, 4));     // 00FF
+Console.WriteLn(Conv.IntToHex(255, 2));    // FF
+Console.WriteLn(Conv.IntToHex(255, 4));     // 00FF
 ```
 
 ---
@@ -143,9 +146,9 @@ is accepted by this explicit hex helper; general integer parsers require `$`
 for hex. Values must fit the signed 64-bit range; invalid text is a runtime error.
 
 ```pascal
-WriteLn(HexToInt('FF'));     // 255
-WriteLn(HexToInt('$FF'));    // 255
-WriteLn(HexToInt('0xFF'));    // 255
+Console.WriteLn(Conv.HexToInt('FF'));     // 255
+Console.WriteLn(Conv.HexToInt('$FF'));    // 255
+Console.WriteLn(Conv.HexToInt('0xFF'));    // 255
 ```
 
 ---

@@ -1,6 +1,6 @@
 program ClosureCaptureTest;
 
-uses Std.Console, Std.Conv, Std.Test;
+uses Std.Console as Console, Std.Conv as Conv, Std.Test as Test;
 
 function Counter(): function(): integer;
 begin
@@ -13,19 +13,19 @@ end function;
 
 begin
   const Next: function(): integer := Counter();
-  AssertEquals('1', IntToStr(Next()));
-  AssertEquals('2', IntToStr(Next()));
+  Test.AssertEquals('1', Conv.IntToStr(Next()));
+  Test.AssertEquals('2', Conv.IntToStr(Next()));
   var Count: integer := 0;
   const Inc: procedure() := procedure() begin
     Count := Count + 1;
   end procedure;
 
   Inc();
-  AssertEquals('1', IntToStr(Count));
+  Test.AssertEquals('1', Conv.IntToStr(Count));
   const Base: integer := 10;
   const Add: function(Value: integer): integer := function(Value: integer): integer begin
     return Base + Value;
   end function;
 
-  AssertEquals('15', IntToStr(Add(5)));
+  Test.AssertEquals('15', Conv.IntToStr(Add(5)));
 end.

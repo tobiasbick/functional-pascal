@@ -1,23 +1,23 @@
 unit Std.Tui.Cells.ButtonPalette;
 
-uses Std.Tui.Cells.Style, Std.Tui.Cells.StyleRole;
+uses Std.Tui.Cells.Style as CellsStyle, Std.Tui.Cells.StyleRole as StyleRole;
 
 // Concrete styles for every flat button state.
 public type TuiButtonPalette = record
   // Style used for normal content.
-  public Normal: TuiStyle;
+  public Normal: CellsStyle.TuiStyle;
   // Style used for the default state.
-  public Default: TuiStyle;
+  public Default: CellsStyle.TuiStyle;
   // Selected item index or style.
-  public Selected: TuiStyle;
+  public Selected: CellsStyle.TuiStyle;
   // Style used for disabled content.
-  public Disabled: TuiStyle;
+  public Disabled: CellsStyle.TuiStyle;
   // Shortcut text, gesture, or style.
-  public Shortcut: TuiStyle;
+  public Shortcut: CellsStyle.TuiStyle;
   // Shortcut style used by a default button.
-  public DefaultShortcut: TuiStyle;
+  public DefaultShortcut: CellsStyle.TuiStyle;
   // Shortcut style used by a selected button.
-  public SelectedShortcut: TuiStyle;
+  public SelectedShortcut: CellsStyle.TuiStyle;
 
   // Creates a complete button palette.
   //
@@ -30,13 +30,13 @@ public type TuiButtonPalette = record
   // - `DefaultShortcut`: Fallback shortcut displayed for the item.
   // - `SelectedShortcut`: Shortcut displayed for the selected item.
   public static function Create(
-  Normal: TuiStyle;
-  Default: TuiStyle;
-  Selected: TuiStyle;
-  Disabled: TuiStyle;
-  Shortcut: TuiStyle;
-  DefaultShortcut: TuiStyle;
-  SelectedShortcut: TuiStyle
+  Normal: CellsStyle.TuiStyle;
+  Default: CellsStyle.TuiStyle;
+  Selected: CellsStyle.TuiStyle;
+  Disabled: CellsStyle.TuiStyle;
+  Shortcut: CellsStyle.TuiStyle;
+  DefaultShortcut: CellsStyle.TuiStyle;
+  SelectedShortcut: CellsStyle.TuiStyle
 ): TuiButtonPalette;
   begin
     return TuiButtonPalette(Normal := Normal, Default := Default, Selected := Selected, Disabled := Disabled, Shortcut := Shortcut, DefaultShortcut := DefaultShortcut, SelectedShortcut := SelectedShortcut);
@@ -47,38 +47,38 @@ public type TuiButtonPalette = record
   // Parameters:
   // - `Self`: Receiver value operated on by the method.
   // - `Role`: Semantic style role used by the operation.
-  public function ForRole(Self: TuiButtonPalette; Role: TuiStyleRole): TuiStyle;
+  public function ForRole(Self: TuiButtonPalette; Role: StyleRole.TuiStyleRole): CellsStyle.TuiStyle;
   begin
     case Role of
-      when TuiStyleRole.ButtonNormal:
+      when StyleRole.TuiStyleRole.ButtonNormal:
         begin
           return Self.Normal;
         end;
-      when TuiStyleRole.ButtonDefault:
+      when StyleRole.TuiStyleRole.ButtonDefault:
         begin
           return Self.Default;
         end;
-      when TuiStyleRole.ButtonSelected:
+      when StyleRole.TuiStyleRole.ButtonSelected:
         begin
           return Self.Selected;
         end;
-      when TuiStyleRole.ButtonDisabled:
+      when StyleRole.TuiStyleRole.ButtonDisabled:
         begin
           return Self.Disabled;
         end;
-      when TuiStyleRole.ButtonShortcut:
+      when StyleRole.TuiStyleRole.ButtonShortcut:
         begin
           return Self.Shortcut;
         end;
-      when TuiStyleRole.ButtonDefaultShortcut:
+      when StyleRole.TuiStyleRole.ButtonDefaultShortcut:
         begin
           return Self.DefaultShortcut;
         end;
-      when TuiStyleRole.ButtonSelectedShortcut:
+      when StyleRole.TuiStyleRole.ButtonSelectedShortcut:
         begin
           return Self.SelectedShortcut;
         end;
-      when TuiStyleRole.Normal, TuiStyleRole.Disabled, TuiStyleRole.Focused, TuiStyleRole.Selected, TuiStyleRole.Shortcut, TuiStyleRole.Frame, TuiStyleRole.Title, TuiStyleRole.MenuNormal, TuiStyleRole.MenuDisabled, TuiStyleRole.MenuShortcut, TuiStyleRole.MenuSelected, TuiStyleRole.MenuSelectedShortcut, TuiStyleRole.StatusNormal, TuiStyleRole.StatusDisabled, TuiStyleRole.StatusShortcut, TuiStyleRole.StatusSelected, TuiStyleRole.InputNormal, TuiStyleRole.InputFocused, TuiStyleRole.InputHint, TuiStyleRole.InputCursor, TuiStyleRole.InputScroll, TuiStyleRole.Rule, TuiStyleRole.GaugeTrack, TuiStyleRole.GaugeFill, TuiStyleRole.Failure, TuiStyleRole.Warning, TuiStyleRole.Accent:
+      when StyleRole.TuiStyleRole.Normal, StyleRole.TuiStyleRole.Disabled, StyleRole.TuiStyleRole.Focused, StyleRole.TuiStyleRole.Selected, StyleRole.TuiStyleRole.Shortcut, StyleRole.TuiStyleRole.Frame, StyleRole.TuiStyleRole.Title, StyleRole.TuiStyleRole.MenuNormal, StyleRole.TuiStyleRole.MenuDisabled, StyleRole.TuiStyleRole.MenuShortcut, StyleRole.TuiStyleRole.MenuSelected, StyleRole.TuiStyleRole.MenuSelectedShortcut, StyleRole.TuiStyleRole.StatusNormal, StyleRole.TuiStyleRole.StatusDisabled, StyleRole.TuiStyleRole.StatusShortcut, StyleRole.TuiStyleRole.StatusSelected, StyleRole.TuiStyleRole.InputNormal, StyleRole.TuiStyleRole.InputFocused, StyleRole.TuiStyleRole.InputHint, StyleRole.TuiStyleRole.InputCursor, StyleRole.TuiStyleRole.InputScroll, StyleRole.TuiStyleRole.Rule, StyleRole.TuiStyleRole.GaugeTrack, StyleRole.TuiStyleRole.GaugeFill, StyleRole.TuiStyleRole.Failure, StyleRole.TuiStyleRole.Warning, StyleRole.TuiStyleRole.Accent:
         begin
           panic('Tui button palette requires a button style role');
         end;
@@ -91,39 +91,39 @@ public type TuiButtonPalette = record
   // - `Self`: Receiver value operated on by the method.
   // - `Role`: Semantic style role used by the operation.
   // - `Style`: Concrete terminal style.
-  public function WithRole(Self: TuiButtonPalette; Role: TuiStyleRole; Style: TuiStyle): TuiButtonPalette;
+  public function WithRole(Self: TuiButtonPalette; Role: StyleRole.TuiStyleRole; Style: CellsStyle.TuiStyle): TuiButtonPalette;
   begin
     var Updated: TuiButtonPalette := Self;
     case Role of
-      when TuiStyleRole.ButtonNormal:
+      when StyleRole.TuiStyleRole.ButtonNormal:
         begin
           Updated.Normal := Style;
         end;
-      when TuiStyleRole.ButtonDefault:
+      when StyleRole.TuiStyleRole.ButtonDefault:
         begin
           Updated.Default := Style;
         end;
-      when TuiStyleRole.ButtonSelected:
+      when StyleRole.TuiStyleRole.ButtonSelected:
         begin
           Updated.Selected := Style;
         end;
-      when TuiStyleRole.ButtonDisabled:
+      when StyleRole.TuiStyleRole.ButtonDisabled:
         begin
           Updated.Disabled := Style;
         end;
-      when TuiStyleRole.ButtonShortcut:
+      when StyleRole.TuiStyleRole.ButtonShortcut:
         begin
           Updated.Shortcut := Style;
         end;
-      when TuiStyleRole.ButtonDefaultShortcut:
+      when StyleRole.TuiStyleRole.ButtonDefaultShortcut:
         begin
           Updated.DefaultShortcut := Style;
         end;
-      when TuiStyleRole.ButtonSelectedShortcut:
+      when StyleRole.TuiStyleRole.ButtonSelectedShortcut:
         begin
           Updated.SelectedShortcut := Style;
         end;
-      when TuiStyleRole.Normal, TuiStyleRole.Disabled, TuiStyleRole.Focused, TuiStyleRole.Selected, TuiStyleRole.Shortcut, TuiStyleRole.Frame, TuiStyleRole.Title, TuiStyleRole.MenuNormal, TuiStyleRole.MenuDisabled, TuiStyleRole.MenuShortcut, TuiStyleRole.MenuSelected, TuiStyleRole.MenuSelectedShortcut, TuiStyleRole.StatusNormal, TuiStyleRole.StatusDisabled, TuiStyleRole.StatusShortcut, TuiStyleRole.StatusSelected, TuiStyleRole.InputNormal, TuiStyleRole.InputFocused, TuiStyleRole.InputHint, TuiStyleRole.InputCursor, TuiStyleRole.InputScroll, TuiStyleRole.Rule, TuiStyleRole.GaugeTrack, TuiStyleRole.GaugeFill, TuiStyleRole.Failure, TuiStyleRole.Warning, TuiStyleRole.Accent:
+      when StyleRole.TuiStyleRole.Normal, StyleRole.TuiStyleRole.Disabled, StyleRole.TuiStyleRole.Focused, StyleRole.TuiStyleRole.Selected, StyleRole.TuiStyleRole.Shortcut, StyleRole.TuiStyleRole.Frame, StyleRole.TuiStyleRole.Title, StyleRole.TuiStyleRole.MenuNormal, StyleRole.TuiStyleRole.MenuDisabled, StyleRole.TuiStyleRole.MenuShortcut, StyleRole.TuiStyleRole.MenuSelected, StyleRole.TuiStyleRole.MenuSelectedShortcut, StyleRole.TuiStyleRole.StatusNormal, StyleRole.TuiStyleRole.StatusDisabled, StyleRole.TuiStyleRole.StatusShortcut, StyleRole.TuiStyleRole.StatusSelected, StyleRole.TuiStyleRole.InputNormal, StyleRole.TuiStyleRole.InputFocused, StyleRole.TuiStyleRole.InputHint, StyleRole.TuiStyleRole.InputCursor, StyleRole.TuiStyleRole.InputScroll, StyleRole.TuiStyleRole.Rule, StyleRole.TuiStyleRole.GaugeTrack, StyleRole.TuiStyleRole.GaugeFill, StyleRole.TuiStyleRole.Failure, StyleRole.TuiStyleRole.Warning, StyleRole.TuiStyleRole.Accent:
         begin
           panic('Tui button palette requires a button style role');
         end;

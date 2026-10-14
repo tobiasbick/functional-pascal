@@ -1,6 +1,6 @@
 program PatternResolutionTest;
 
-uses Std.Test;
+uses Std.Test as Test;
 
 type Pair = enum
   Both(Left: integer; Right: integer);
@@ -66,16 +66,16 @@ end function;
 begin
   const MatchCase: function(Value: Pair): integer := MakeCase();
   const MatchIs: function(Value: Pair): integer := MakeIs();
-  AssertEquals(8, MatchCase(Pair.Both(8, 3)));
-  AssertEquals(-1, MatchCase(Pair.Both(3, 8)));
-  AssertEquals(-1, MatchCase(Pair.Empty));
-  AssertEquals(1, MatchIs(Pair.Both(8, 3)));
-  AssertEquals(-1, MatchIs(Pair.Both(3, 8)));
-  AssertEquals(-1, MatchIs(Pair.Empty));
-  AssertEquals(1, BoolCode(Some(true)));
-  AssertEquals(2, BoolCode(Some(false)));
-  AssertEquals(0, BoolCode(None));
-  AssertEquals(1, ColorCode(Some(Color.Red)));
-  AssertEquals(2, ColorCode(Some(Color.Green)));
-  AssertEquals(0, ColorCode(None));
+  Test.AssertEquals(8, MatchCase(Pair.Both(8, 3)));
+  Test.AssertEquals(-1, MatchCase(Pair.Both(3, 8)));
+  Test.AssertEquals(-1, MatchCase(Pair.Empty));
+  Test.AssertEquals(1, MatchIs(Pair.Both(8, 3)));
+  Test.AssertEquals(-1, MatchIs(Pair.Both(3, 8)));
+  Test.AssertEquals(-1, MatchIs(Pair.Empty));
+  Test.AssertEquals(1, BoolCode(Some(true)));
+  Test.AssertEquals(2, BoolCode(Some(false)));
+  Test.AssertEquals(0, BoolCode(None));
+  Test.AssertEquals(1, ColorCode(Some(Color.Red)));
+  Test.AssertEquals(2, ColorCode(Some(Color.Green)));
+  Test.AssertEquals(0, ColorCode(None));
 end.

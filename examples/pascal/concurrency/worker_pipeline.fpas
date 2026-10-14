@@ -1,16 +1,16 @@
 // A producer, three workers, and a collector share bounded channels.
 program WorkerPipeline;
 
-uses Std.Tasks, Std.Console;
+uses Std.Tasks as Tasks, Std.Console as Console;
 
 begin
-  const Jobs: channel of integer := CreateChannel(2);
-  const Results: channel of integer := CreateChannel(2);
-  const Group: TaskGroup := CreateTaskGroup();
-  const ProducerTask: task := StartTaskInGroup(Group, procedure(Token: CancellationToken) begin
+  const Jobs: channel of integer := Tasks.CreateChannel(2);
+  const Results: channel of integer := Tasks.CreateChannel(2);
+  const Group: Tasks.TaskGroup := Tasks.CreateTaskGroup();
+  const ProducerTask: task := Tasks.StartTaskInGroup(Group, procedure(Token: Tasks.CancellationToken) begin
     for Value: integer := 1 to 12 do
       begin
-        if SendWithCancellation(Jobs, Value, Token).IsError() then
+        if Tasks.SendWithCancellation(Jobs, Value, Token).IsError() then
           begin
             return;
           end;
@@ -18,17 +18,17 @@ begin
       end;
     end for;
 
-    discard CloseChannel(Jobs);
+    discard Tasks.CloseChannel(Jobs);
   end procedure);
   for Worker: integer := 1 to 3 do
     begin
-      const WorkerTask: task := StartTaskInGroup(Group, procedure(Token: CancellationToken) begin
-        while not IsCancellationRequested(Token) do
+      const WorkerTask: task := Tasks.StartTaskInGroup(Group, procedure(Token: Tasks.CancellationToken) begin
+        while not Tasks.IsCancellationRequested(Token) do
           begin
-            case ReceiveWithCancellation(Jobs, Token) of
+            case Tasks.ReceiveWithCancellation(Jobs, Token) of
               when Ok(const Value):
                 begin
-                  if SendWithCancellation(Results, Value * Value, Token).IsError() then
+                  if Tasks.SendWithCancellation(Results, Value * Value, Token).IsError() then
                     begin
                       return;
                     end;
@@ -48,11 +48,11 @@ begin
   var Total: integer := 0;
   for Index: integer := 1 to 12 do
     begin
-      Total := Total + Receive(Results).Unwrap();
+      Total := Total + Tasks.Receive(Results).Unwrap();
     end;
   end for;
 
-  case CloseTaskGroupWithTimeout(Group, 1000) of
+  case Tasks.CloseTaskGroupWithTimeout(Group, 1000) of
     when Ok(const Failures):
       begin
         if Failures.Length() <> 0 then
@@ -64,7 +64,7 @@ begin
     when Error(_):
       begin
         // A timeout retains ownership. Joining is still required, not a forced kill.
-        if CloseTaskGroup(Group).Length() <> 0 then
+        if Tasks.CloseTaskGroup(Group).Length() <> 0 then
           begin
             panic('Worker failed');
           end;
@@ -72,6 +72,6 @@ begin
       end;
   end case;
 
-  discard CloseChannel(Results);
-  WriteLn(Total);
+  discard Tasks.CloseChannel(Results);
+  Console.WriteLn(Total);
 end.

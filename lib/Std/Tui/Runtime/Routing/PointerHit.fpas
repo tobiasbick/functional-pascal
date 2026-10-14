@@ -1,9 +1,11 @@
 unit Std.Tui.Runtime.Routing.PointerHit;
 
 uses
-  Std.Console, Std.Tui.Chrome.Button, Std.Tui.Chrome.Input, Std.Tui.Chrome.StatusItem,
-  Std.Tui.Elements.Element, Std.Tui.Geometry.Point, Std.Tui.Geometry.Rect, Std.Tui.Ids.Action,
-  Std.Tui.Ids.ControlId, Std.Tui.Layout.Frame;
+  Std.Console as Console, Std.Tui.Chrome.Button as ChromeButton, Std.Tui.Chrome.Input as ChromeInput,
+  Std.Tui.Chrome.StatusItem as StatusItem, Std.Tui.Elements.Element as Element,
+  Std.Tui.Geometry.Point as GeometryPoint, Std.Tui.Geometry.Rect as Rect,
+  Std.Tui.Ids.Action as IdsAction, Std.Tui.Ids.ControlId as ControlId,
+  Std.Tui.Layout.Frame as LayoutFrame;
 
 // Hit result for pointer routing against arranged geometry.
 public type TuiPointerHit = enum
@@ -13,19 +15,19 @@ public type TuiPointerHit = enum
   //
   // Parameters:
   // - `Button`: Button specification carried by the variant.
-  ElementButton(Button: TuiButtonSpec);
+  ElementButton(Button: ChromeButton.TuiButtonSpec);
   // Represents the `ImmediateButton` variant of `TuiPointerHit`.
   //
   // Parameters:
   // - `Id`: Identifier carried by the variant.
   // - `Action`: Application action carried by the variant.
-  ImmediateButton(Id: TuiControlId; Action: TuiAction);
+  ImmediateButton(Id: ControlId.TuiControlId; Action: IdsAction.TuiAction);
   // Represents the `Input` variant of `TuiPointerHit`.
   //
   // Parameters:
   // - `Value`: Typed value wrapped by the variant.
   // - `Bounds`: Arranged bounds associated with the hit or control.
-  Input(Value: TuiInputSpec; Bounds: TuiRect);
+  Input(Value: ChromeInput.TuiInputSpec; Bounds: Rect.TuiRect);
   // Represents the `TextArea` variant of `TuiPointerHit`.
   //
   // Parameters:
@@ -34,14 +36,14 @@ public type TuiPointerHit = enum
   // - `Text`: Text carried or displayed by the variant.
   // - `Offset`: Scroll offset carried by the variant.
   // - `Bounds`: Arranged bounds associated with the hit or control.
-  TextArea(Id: TuiControlId; Action: TuiAction; Text: string; Offset: TuiPoint; Bounds: TuiRect);
+  TextArea(Id: ControlId.TuiControlId; Action: IdsAction.TuiAction; Text: string; Offset: GeometryPoint.TuiPoint; Bounds: Rect.TuiRect);
   // Represents the `CheckBox` variant of `TuiPointerHit`.
   //
   // Parameters:
   // - `Id`: Identifier carried by the variant.
   // - `Action`: Application action carried by the variant.
   // - `Checked`: Checked state carried by the variant.
-  CheckBox(Id: TuiControlId; Action: TuiAction; Checked: boolean);
+  CheckBox(Id: ControlId.TuiControlId; Action: IdsAction.TuiAction; Checked: boolean);
   // Represents the `List` variant of `TuiPointerHit`.
   //
   // Parameters:
@@ -49,27 +51,27 @@ public type TuiPointerHit = enum
   // - `Action`: Application action carried by the variant.
   // - `CurrentSelected`: Current selected item index.
   // - `Proposed`: Proposed selected item index.
-  List(Id: TuiControlId; Action: TuiAction; CurrentSelected: integer; Proposed: integer);
+  List(Id: ControlId.TuiControlId; Action: IdsAction.TuiAction; CurrentSelected: integer; Proposed: integer);
   // Represents the `Scroll` variant of `TuiPointerHit`.
   //
   // Parameters:
   // - `Id`: Identifier carried by the variant.
-  Scroll(Id: TuiControlId);
+  Scroll(Id: ControlId.TuiControlId);
 end enum;
 
 var TuiPointerBestHit: TuiPointerHit := TuiPointerHit.Miss;
 
-function TuiPointerModalChildIndex(Children: array of TuiElement): integer;
+function TuiPointerModalChildIndex(Children: array of Element.TuiElement): integer;
 begin
   var LastOverlay: integer := -1;
   for Index: integer := 0 to Children.Length() - 1 do
     begin
       case Children[Index] of
-        when TuiElement.Overlay(const Title, const OverlayChildren):
+        when Element.TuiElement.Overlay(const Title, const OverlayChildren):
           begin
             LastOverlay := Index;
           end;
-        when TuiElement.Empty, TuiElement.Label(_), TuiElement.Button(_), TuiElement.Input(_), TuiElement.TextArea(_, _, _, _, _), TuiElement.CheckBox(_, _, _, _), TuiElement.List(_, _, _, _), TuiElement.Scroll(_, _, _, _), TuiElement.MenuBar(_), TuiElement.Menu(_, _, _, _), TuiElement.StatusLine(_), TuiElement.CellGrid(_), TuiElement.Rule(_), TuiElement.Gauge(_), TuiElement.Row(_, _), TuiElement.Column(_, _), TuiElement.Layout(_, _), TuiElement.Spacer(_), TuiElement.Panel(_, _), TuiElement.Desktop(_, _):
+        when Element.TuiElement.Empty, Element.TuiElement.Label(_), Element.TuiElement.Button(_), Element.TuiElement.Input(_), Element.TuiElement.TextArea(_, _, _, _, _), Element.TuiElement.CheckBox(_, _, _, _), Element.TuiElement.List(_, _, _, _), Element.TuiElement.Scroll(_, _, _, _), Element.TuiElement.MenuBar(_), Element.TuiElement.Menu(_, _, _, _), Element.TuiElement.StatusLine(_), Element.TuiElement.CellGrid(_), Element.TuiElement.Rule(_), Element.TuiElement.Gauge(_), Element.TuiElement.Row(_, _), Element.TuiElement.Column(_, _), Element.TuiElement.Layout(_, _), Element.TuiElement.Spacer(_), Element.TuiElement.Panel(_, _), Element.TuiElement.Desktop(_, _):
           null;
       end case;
     end;
@@ -79,17 +81,17 @@ begin
 end function;
 
 function TuiPointerHitWalk(
-  Frame: TuiArrangedFrame;
-  Node: TuiElement;
+  Frame: LayoutFrame.TuiArrangedFrame;
+  Node: Element.TuiElement;
   Index: integer;
-  Point: TuiPoint;
+  Point: GeometryPoint.TuiPoint;
   AllowHits: boolean
 ): integer;
 begin
-  const Entry: TuiArrangedEntry := Frame.EntryAt(Index);
+  const Entry: LayoutFrame.TuiArrangedEntry := Frame.EntryAt(Index);
   var Next: integer := Index + 1;
   case Node of
-    when TuiElement.Button(const Button):
+    when Element.TuiElement.Button(const Button):
       begin
         var ActiveWidth: integer := Entry.Bounds.Width - 1;
         if ActiveWidth < 0 then
@@ -97,14 +99,14 @@ begin
             ActiveWidth := 0;
           end;
         end if;
-        const ActiveBounds: TuiRect := TuiRect.Create(Entry.Bounds.X, Entry.Bounds.Y, ActiveWidth, 1);
+        const ActiveBounds: Rect.TuiRect := Rect.TuiRect.Create(Entry.Bounds.X, Entry.Bounds.Y, ActiveWidth, 1);
         if (Button.Enabled and AllowHits) and Entry.Clip.Intersect(ActiveBounds).Contains(Point) then
           begin
             TuiPointerBestHit := TuiPointerHit.ElementButton(Button);
           end;
         end if;
       end;
-    when TuiElement.Input(const Input):
+    when Element.TuiElement.Input(const Input):
       begin
         if AllowHits and Entry.Clip.Contains(Point) then
           begin
@@ -112,7 +114,7 @@ begin
           end;
         end if;
       end;
-    when TuiElement.TextArea(const Id, const Text, const Caret, const Offset, const ChangeAction):
+    when Element.TuiElement.TextArea(const Id, const Text, const Caret, const Offset, const ChangeAction):
       begin
         if AllowHits and Entry.Clip.Contains(Point) then
           begin
@@ -120,7 +122,7 @@ begin
           end;
         end if;
       end;
-    when TuiElement.CheckBox(const Id, const Text, const Checked, const ChangeAction):
+    when Element.TuiElement.CheckBox(const Id, const Text, const Checked, const ChangeAction):
       begin
         if AllowHits and Entry.Clip.Contains(Point) then
           begin
@@ -128,7 +130,7 @@ begin
           end;
         end if;
       end;
-    when TuiElement.List(const Id, const Items, const Selected, const ChangeAction):
+    when Element.TuiElement.List(const Id, const Items, const Selected, const ChangeAction):
       begin
         if AllowHits and Entry.Clip.Contains(Point) then
           begin
@@ -141,13 +143,13 @@ begin
           end;
         end if;
       end;
-    when TuiElement.MenuBar(const Items):
+    when Element.TuiElement.MenuBar(const Items):
       begin
         var Cursor: integer := Entry.Bounds.X;
         for ItemIndex: integer := 0 to Items.Length() - 1 do
           begin
-            const Width: integer := Std.Console.DisplayWidth(Items[ItemIndex].Text) + 2;
-            const ItemBounds: TuiRect := TuiRect.Create(Cursor, Entry.Bounds.Y, Width, 1);
+            const Width: integer := Console.DisplayWidth(Items[ItemIndex].Text) + 2;
+            const ItemBounds: Rect.TuiRect := Rect.TuiRect.Create(Cursor, Entry.Bounds.Y, Width, 1);
             if (AllowHits and Items[ItemIndex].Enabled) and
                Entry.Clip.Intersect(ItemBounds).Contains(Point) then
               begin
@@ -159,10 +161,10 @@ begin
           end;
         end for;
       end;
-    when TuiElement.Menu(const Id, const Nodes, const State, const ChangeAction):
+    when Element.TuiElement.Menu(const Id, const Nodes, const State, const ChangeAction):
       begin
       end;
-    when TuiElement.StatusLine(const Items):
+    when Element.TuiElement.StatusLine(const Items):
       begin
         var Cursor: integer := Entry.Bounds.X;
         for ItemIndex: integer := 0 to Items.Length() - 1 do
@@ -174,19 +176,18 @@ begin
             end if;
 
             case Items[ItemIndex] of
-              when TuiStatusItem.Hint(const Text):
+              when StatusItem.TuiStatusItem.Hint(const Text):
                 begin
-                  Cursor := Cursor + Std.Console.DisplayWidth(Text);
+                  Cursor := Cursor + Console.DisplayWidth(Text);
                 end;
-              when TuiStatusItem.KeyHint(const KeyText, const Text):
+              when StatusItem.TuiStatusItem.KeyHint(const KeyText, const Text):
                 begin
-                  Cursor := Cursor + Std.Console.DisplayWidth(KeyText) + Std.Console.DisplayWidth(Text) +
-                            1;
+                  Cursor := Cursor + Console.DisplayWidth(KeyText) + Console.DisplayWidth(Text) + 1;
                 end;
-              when TuiStatusItem.Command(const Id, const Text, const Action, const Enabled):
+              when StatusItem.TuiStatusItem.Command(const Id, const Text, const Action, const Enabled):
                 begin
-                  const Width: integer := Std.Console.DisplayWidth(Text);
-                  const ItemBounds: TuiRect := TuiRect.Create(Cursor, Entry.Bounds.Y, Width, 1);
+                  const Width: integer := Console.DisplayWidth(Text);
+                  const ItemBounds: Rect.TuiRect := Rect.TuiRect.Create(Cursor, Entry.Bounds.Y, Width, 1);
                   if (AllowHits and Enabled) and Entry.Clip.Intersect(ItemBounds).Contains(Point) then
                     begin
                       TuiPointerBestHit := TuiPointerHit.ImmediateButton(Id, Action);
@@ -199,7 +200,7 @@ begin
           end;
         end for;
       end;
-    when TuiElement.Scroll(const Id, const Offset, const ChangeAction, const Children):
+    when Element.TuiElement.Scroll(const Id, const Offset, const ChangeAction, const Children):
       begin
         const ScrollAllowsHits: boolean := AllowHits and Entry.Clip.Contains(Point);
         if ScrollAllowsHits then
@@ -214,7 +215,7 @@ begin
           end;
         end for;
       end;
-    when TuiElement.Row(const Children, const Spacing):
+    when Element.TuiElement.Row(const Children, const Spacing):
       begin
         for ChildIndex: integer := 0 to Children.Length() - 1 do
           begin
@@ -222,7 +223,7 @@ begin
           end;
         end for;
       end;
-    when TuiElement.Column(const Children, const Spacing):
+    when Element.TuiElement.Column(const Children, const Spacing):
       begin
         for ChildIndex: integer := 0 to Children.Length() - 1 do
           begin
@@ -230,7 +231,7 @@ begin
           end;
         end for;
       end;
-    when TuiElement.Layout(const Settings, const Children):
+    when Element.TuiElement.Layout(const Settings, const Children):
       begin
         for ChildIndex: integer := 0 to Children.Length() - 1 do
           begin
@@ -238,7 +239,7 @@ begin
           end;
         end for;
       end;
-    when TuiElement.Panel(const Title, const Children):
+    when Element.TuiElement.Panel(const Title, const Children):
       begin
         for ChildIndex: integer := 0 to Children.Length() - 1 do
           begin
@@ -246,7 +247,7 @@ begin
           end;
         end for;
       end;
-    when TuiElement.Overlay(const Title, const Children):
+    when Element.TuiElement.Overlay(const Title, const Children):
       begin
         for ChildIndex: integer := 0 to Children.Length() - 1 do
           begin
@@ -254,7 +255,7 @@ begin
           end;
         end for;
       end;
-    when TuiElement.Desktop(const Focused, const Children):
+    when Element.TuiElement.Desktop(const Focused, const Children):
       begin
         const ModalIndex: integer := TuiPointerModalChildIndex(Children);
         for ChildIndex: integer := 0 to Children.Length() - 1 do
@@ -270,7 +271,7 @@ begin
           end;
         end for;
       end;
-    when TuiElement.Empty, TuiElement.Label(_), TuiElement.CellGrid(_), TuiElement.Rule(_), TuiElement.Gauge(_), TuiElement.Spacer(_):
+    when Element.TuiElement.Empty, Element.TuiElement.Label(_), Element.TuiElement.CellGrid(_), Element.TuiElement.Rule(_), Element.TuiElement.Gauge(_), Element.TuiElement.Spacer(_):
       null;
   end case;
 
@@ -283,7 +284,11 @@ end function;
 // - `Frame`: Arranged frame containing element geometry.
 // - `Root`: Root of the element tree.
 // - `Point`: Point tested by the operation.
-public function TuiPointerHitAt(Frame: TuiArrangedFrame; Root: TuiElement; Point: TuiPoint): TuiPointerHit;
+public function TuiPointerHitAt(
+  Frame: LayoutFrame.TuiArrangedFrame;
+  Root: Element.TuiElement;
+  Point: GeometryPoint.TuiPoint
+): TuiPointerHit;
 begin
   TuiPointerBestHit := TuiPointerHit.Miss;
   if TuiPointerHitWalk(Frame, Root, 0, Point, true) <> Frame.Count() then

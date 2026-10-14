@@ -8,10 +8,12 @@ Splits `S` around each occurrence of `Delim`. Returns a new array of segments.
 
 ```pascal
 program SplitDemo;
-uses Std.Console;
+
+uses Std.Console as Console;
+
 begin
   const Parts: array of string := 'x,y'.Split(',');
-  WriteLn(Parts.Length());
+  Console.WriteLn(Parts.Length());
 end.
 ```
 
@@ -25,7 +27,7 @@ Native string and array operations require no imports.
 Concatenates every element of `Parts`, inserting `Delim` between elements.
 
 ```pascal
-WriteLn(['x', 'y'].Join(':'));
+Console.WriteLn(['x', 'y'].Join(':'));
 ```
 
 ---

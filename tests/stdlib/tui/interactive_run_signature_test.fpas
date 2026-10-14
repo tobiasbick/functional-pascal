@@ -1,57 +1,57 @@
 program TuiInteractiveRunSignatureTest;
 
-uses Std.Tasks, Std.Test, Std.Tui;
+uses Std.Tasks as Tasks, Std.Test as Test, Std.Tui as Tui;
 
 type DemoModel = record
   Ticks: integer;
 end record;
 
-function UpdateDemo(State: DemoModel; Msg: TuiMsg; Cmd: TuiCmdOutput): DemoModel;
+function UpdateDemo(State: DemoModel; Msg: Tui.TuiMsg; Cmd: Tui.TuiCmdOutput): DemoModel;
 begin
-  Cmd.Set(TuiCmd.NoCommand);
+  Cmd.Set(Tui.TuiCmd.NoCommand);
   case Msg of
-    when TuiMsg.Tick(const Delta):
+    when Tui.TuiMsg.Tick(const Delta):
       begin
         return DemoModel(Ticks := State.Ticks + 1);
       end;
-    when TuiMsg.MenuChanged(const MenuSource, const MenuAction, const MenuState):
+    when Tui.TuiMsg.MenuChanged(const MenuSource, const MenuAction, const MenuState):
       begin
-        Cmd.Set(TuiCmd.Quit);
+        Cmd.Set(Tui.TuiCmd.Quit);
         return State;
       end;
-    when TuiMsg.QuitRequested:
+    when Tui.TuiMsg.QuitRequested:
       begin
-        Cmd.Set(TuiCmd.Quit);
+        Cmd.Set(Tui.TuiCmd.Quit);
         return State;
       end;
-    when TuiMsg.Started, TuiMsg.Key(_), TuiMsg.Pointer(_), TuiMsg.Resize(_), TuiMsg.FocusChanged(_, _), TuiMsg.Action(_, _), TuiMsg.TextChanged(_, _, _, _), TuiMsg.TextAreaChanged(_, _, _, _, _), TuiMsg.CheckChanged(_, _, _), TuiMsg.SelectionChanged(_, _, _), TuiMsg.ScrollChanged(_, _, _), TuiMsg.BackgroundFailed(_, _, _, _, _, _):
+    when Tui.TuiMsg.Started, Tui.TuiMsg.Key(_), Tui.TuiMsg.Pointer(_), Tui.TuiMsg.Resize(_), Tui.TuiMsg.FocusChanged(_, _), Tui.TuiMsg.Action(_, _), Tui.TuiMsg.TextChanged(_, _, _, _), Tui.TuiMsg.TextAreaChanged(_, _, _, _, _), Tui.TuiMsg.CheckChanged(_, _, _), Tui.TuiMsg.SelectionChanged(_, _, _), Tui.TuiMsg.ScrollChanged(_, _, _), Tui.TuiMsg.BackgroundFailed(_, _, _, _, _, _):
       begin
         return State;
       end;
   end case;
 end function;
 
-function ViewDemo(State: DemoModel): TuiElement;
+function ViewDemo(State: DemoModel): Tui.TuiElement;
 begin
-  return TuiElementBuilders.MakeLabel('interactive');
+  return Tui.TuiElementBuilders.MakeLabel('interactive');
 end function;
 
-function UpdateBackground(State: DemoModel; Message: integer; Cmd: TuiCmdOutput): DemoModel;
+function UpdateBackground(State: DemoModel; Message: integer; Cmd: Tui.TuiCmdOutput): DemoModel;
 begin
   return DemoModel(Ticks := State.Ticks + Message);
 end function;
 
 function RunSignatureOnly(): DemoModel;
 begin
-  return TuiApplication.Run(DemoModel(Ticks := 0), UpdateDemo, ViewDemo);
+  return Tui.TuiApplication.Run(DemoModel(Ticks := 0), UpdateDemo, ViewDemo);
 end function;
 
 function RunBackgroundSignatureOnly(): DemoModel;
 begin
-  const Inbox: channel of integer := CreateChannel(4);
-  return TuiApplication.RunWithBackground(DemoModel(Ticks := 0), Inbox, UpdateDemo, UpdateBackground, ViewDemo);
+  const Inbox: channel of integer := Tasks.CreateChannel(4);
+  return Tui.TuiApplication.RunWithBackground(DemoModel(Ticks := 0), Inbox, UpdateDemo, UpdateBackground, ViewDemo);
 end function;
 
 begin
-  AssertTrue(true);
+  Test.AssertTrue(true);
 end.

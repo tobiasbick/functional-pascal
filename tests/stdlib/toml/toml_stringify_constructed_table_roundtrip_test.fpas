@@ -1,71 +1,71 @@
 program TomlStringifyConstructedTableRoundtripTest;
 
-uses Std.Test, Std.Toml;
+uses Std.Test as Test, Std.Toml as Toml;
 
 begin
-  const Source: TomlValue := TomlValue.Table(['project': TomlValue.Table(['name': TomlValue.String('demo'), 'version': TomlValue.Integer(1), 'released': TomlValue.Datetime('2026-07-14')]), 'enabled': TomlValue.Boolean(true), 'targets': TomlValue.ArrayValue([
-                                                                                                                                                                                                                                                                   TomlValue.String('linux'),
-                                                                                                                                                                                                                                                                   TomlValue.String('windows')
-                                                                                                                                                                                                                                                                 ])]);
-  const Encoded: string := Stringify(Source);
-  const Parsed: result of (TomlValue, string) := Parse(Encoded);
+  const Source: Toml.TomlValue := Toml.TomlValue.Table(['project': Toml.TomlValue.Table(['name': Toml.TomlValue.String('demo'), 'version': Toml.TomlValue.Integer(1), 'released': Toml.TomlValue.Datetime('2026-07-14')]), 'enabled': Toml.TomlValue.Boolean(true), 'targets': Toml.TomlValue.ArrayValue([
+                                                                                                                                                                                                                                                                                                           Toml.TomlValue.String('linux'),
+                                                                                                                                                                                                                                                                                                           Toml.TomlValue.String('windows')
+                                                                                                                                                                                                                                                                                                         ])]);
+  const Encoded: string := Toml.Stringify(Source);
+  const Parsed: result of (Toml.TomlValue, string) := Toml.Parse(Encoded);
   case Parsed of
     when Ok(const Value):
       begin
         case Value of
-          when TomlValue.Table(const Fields):
+          when Toml.TomlValue.Table(const Fields):
             begin
               case Fields.Get('project').Unwrap() of
-                when TomlValue.Table(const Project):
+                when Toml.TomlValue.Table(const Project):
                   begin
                     case Project.Get('name').Unwrap() of
-                      when TomlValue.String(const Name):
+                      when Toml.TomlValue.String(const Name):
                         begin
-                          AssertEquals('demo', Name);
+                          Test.AssertEquals('demo', Name);
                         end;
-                      when TomlValue.Integer(_), TomlValue.Float(_), TomlValue.Boolean(_), TomlValue.Datetime(_), TomlValue.ArrayValue(_), TomlValue.Table(_):
+                      when Toml.TomlValue.Integer(_), Toml.TomlValue.Float(_), Toml.TomlValue.Boolean(_), Toml.TomlValue.Datetime(_), Toml.TomlValue.ArrayValue(_), Toml.TomlValue.Table(_):
                         begin
-                          Fail('Expected project name string');
+                          Test.Fail('Expected project name string');
                         end;
                     end case;
 
                     case Project.Get('released').Unwrap() of
-                      when TomlValue.Datetime(const Date):
+                      when Toml.TomlValue.Datetime(const Date):
                         begin
-                          AssertEquals('2026-07-14', Date);
+                          Test.AssertEquals('2026-07-14', Date);
                         end;
-                      when TomlValue.String(_), TomlValue.Integer(_), TomlValue.Float(_), TomlValue.Boolean(_), TomlValue.ArrayValue(_), TomlValue.Table(_):
+                      when Toml.TomlValue.String(_), Toml.TomlValue.Integer(_), Toml.TomlValue.Float(_), Toml.TomlValue.Boolean(_), Toml.TomlValue.ArrayValue(_), Toml.TomlValue.Table(_):
                         begin
-                          Fail('Expected project released datetime');
+                          Test.Fail('Expected project released datetime');
                         end;
                     end case;
                   end;
-                when TomlValue.String(_), TomlValue.Integer(_), TomlValue.Float(_), TomlValue.Boolean(_), TomlValue.Datetime(_), TomlValue.ArrayValue(_):
+                when Toml.TomlValue.String(_), Toml.TomlValue.Integer(_), Toml.TomlValue.Float(_), Toml.TomlValue.Boolean(_), Toml.TomlValue.Datetime(_), Toml.TomlValue.ArrayValue(_):
                   begin
-                    Fail('Expected project table');
+                    Test.Fail('Expected project table');
                   end;
               end case;
 
               case Fields.Get('targets').Unwrap() of
-                when TomlValue.ArrayValue(const Targets):
+                when Toml.TomlValue.ArrayValue(const Targets):
                   begin
-                    AssertEquals(2, Targets.Length());
+                    Test.AssertEquals(2, Targets.Length());
                   end;
-                when TomlValue.String(_), TomlValue.Integer(_), TomlValue.Float(_), TomlValue.Boolean(_), TomlValue.Datetime(_), TomlValue.Table(_):
+                when Toml.TomlValue.String(_), Toml.TomlValue.Integer(_), Toml.TomlValue.Float(_), Toml.TomlValue.Boolean(_), Toml.TomlValue.Datetime(_), Toml.TomlValue.Table(_):
                   begin
-                    Fail('Expected targets array');
+                    Test.Fail('Expected targets array');
                   end;
               end case;
             end;
-          when TomlValue.String(_), TomlValue.Integer(_), TomlValue.Float(_), TomlValue.Boolean(_), TomlValue.Datetime(_), TomlValue.ArrayValue(_):
+          when Toml.TomlValue.String(_), Toml.TomlValue.Integer(_), Toml.TomlValue.Float(_), Toml.TomlValue.Boolean(_), Toml.TomlValue.Datetime(_), Toml.TomlValue.ArrayValue(_):
             begin
-              Fail('Expected TOML table');
+              Test.Fail('Expected TOML table');
             end;
         end case;
       end;
     when Error(const Message):
       begin
-        Fail(Message);
+        Test.Fail(Message);
       end;
   end case;
 end.

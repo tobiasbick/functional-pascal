@@ -1,6 +1,8 @@
 unit Std.Tui.Layout.LayoutSettings;
 
-uses Std.Tui.Layout.Alignment, Std.Tui.Layout.Margins, Std.Tui.Layout.SizePolicy;
+uses
+  Std.Tui.Layout.Alignment as LayoutAlignment, Std.Tui.Layout.Margins as LayoutMargins,
+  Std.Tui.Layout.SizePolicy as LayoutSizePolicy;
 
 function TuiLayoutSettingsRequireNonNegativeStretch(Value: integer): integer;
 begin
@@ -16,11 +18,11 @@ end function;
 // Immutable layout inputs attached to a single-child layout wrapper.
 public type TuiLayoutSettings = record
   // Outer margins applied during layout.
-  public Margins: TuiMargins;
+  public Margins: LayoutMargins.TuiMargins;
   // Horizontal and vertical size policy.
-  public SizePolicy: TuiSizePolicy;
+  public SizePolicy: LayoutSizePolicy.TuiSizePolicy;
   // Alignment applied within the allocated area.
-  public Alignment: TuiAlignment;
+  public Alignment: LayoutAlignment.TuiAlignment;
   // Whether the item stretches across the available extent.
   public Stretch: integer;
   // Width in terminal cells.
@@ -36,9 +38,9 @@ public type TuiLayoutSettings = record
   // - `Alignment`: Alignment applied within the available area.
   // - `Stretch`: Whether the element stretches across the available extent.
   public static function Create(
-  Margins: TuiMargins;
-  SizePolicy: TuiSizePolicy;
-  Alignment: TuiAlignment;
+  Margins: LayoutMargins.TuiMargins;
+  SizePolicy: LayoutSizePolicy.TuiSizePolicy;
+  Alignment: LayoutAlignment.TuiAlignment;
   Stretch: integer
 ): TuiLayoutSettings;
   begin
@@ -80,7 +82,7 @@ public type TuiLayoutSettings = record
   // Zero margins, preferred policy, fill alignment, and stretch zero.
   public static function Default(): TuiLayoutSettings;
   begin
-    return TuiLayoutSettings.Create(TuiMargins.Uniform(0), TuiSizePolicy.Preferred(), TuiAlignment.Fill(), 0);
+    return TuiLayoutSettings.Create(LayoutMargins.TuiMargins.Uniform(0), LayoutSizePolicy.TuiSizePolicy.Preferred(), LayoutAlignment.TuiAlignment.Fill(), 0);
   end function;
 end record;
 end unit;

@@ -2,7 +2,7 @@
 
 program GenericRecordMethods;
 
-uses Std.Console, Std.Conv;
+uses Std.Console as Console, Std.Conv as Conv;
 
 type Box = record
   Value: integer;
@@ -22,13 +22,13 @@ end record;
 
 function ToText(X: integer): string;
 begin
-  return 'value=' + IntToStr(X);
+  return 'value=' + Conv.IntToStr(X);
 end function;
 
 begin
   const B: Box := Box(Value := 42);
-  WriteLn(B.Map(ToText));
+  Console.WriteLn(B.Map(ToText));
   const A: Accumulator := Accumulator();
-  WriteLn('numeric int: ', IntToStr(A.EchoNumeric(21)));
-  WriteLn('numeric real ok: ', A.EchoNumeric(1.5) > 1.0);
+  Console.WriteLn('numeric int: ', Conv.IntToStr(A.EchoNumeric(21)));
+  Console.WriteLn('numeric real ok: ', A.EchoNumeric(1.5) > 1.0);
 end.

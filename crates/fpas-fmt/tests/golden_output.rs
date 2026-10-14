@@ -17,7 +17,7 @@ fn hello_minimal() {
 fn hello_uses() {
     common::assert_golden(
         "hello_uses",
-        "program Hello; uses Std.Console; begin WriteLn('Hello, World!'); end.",
+        "program Hello; uses Std.Console as Console; begin Console.WriteLn('Hello, World!'); end.",
         include_str!("golden/hello_uses.expected.fpas"),
     );
 }
@@ -26,7 +26,7 @@ fn hello_uses() {
 fn unit_clamp() {
     common::assert_golden(
         "unit_clamp",
-        "unit MyApp.Utils; uses Std.Math; public function Clamp(Value: integer; Min: integer; Max: integer): integer; begin if Value < Min then return Min; elsif  Value > Max then return Max; else return Value; end if; end function; function IsBlank(S: string): boolean; begin return S.Trim().Length() = 0; end function;\nend unit;",
+        "unit MyApp.Utils; uses Std.Math as Math; public function Clamp(Value: integer; Min: integer; Max: integer): integer; begin if Value < Min then return Min; elsif  Value > Max then return Max; else return Value; end if; end function; function IsBlank(S: string): boolean; begin return S.Trim().Length() = 0; end function;\nend unit;",
         include_str!("golden/unit_clamp.expected.fpas"),
     );
 }
@@ -44,7 +44,7 @@ fn record_member_visibility() {
 fn long_uses() {
     common::assert_golden(
         "long_uses",
-        "program LongUses; uses Std.Console, Std.Conv, Std.Crypto, MyApp.Very.Long.Namespace.One, MyApp.Very.Long.Namespace.Two; begin WriteLn('ok'); end.",
+        "program LongUses; uses Std.Console as Console, Std.Conv as Conv, Std.Crypto as Crypto, MyApp.Very.Long.Namespace.One as One, MyApp.Very.Long.Namespace.Two as Two; begin Console.WriteLn('ok'); end.",
         include_str!("golden/long_uses.expected.fpas"),
     );
 }
@@ -89,7 +89,7 @@ fn comments_unit_declaration_docs() {
 fn comments_program_uses_begin_body_and_trailing() {
     common::assert_golden(
         "comments_program",
-        "program T;\n// before uses\nuses Std.Console;\n\n// before begin\nbegin\n  // setup\n  WriteLn('ok'); // trail\nend. // tail",
+        "program T;\n// before uses\nuses Std.Console as Console;\n\n// before begin\nbegin\n  // setup\n  Console.WriteLn('ok'); // trail\nend. // tail",
         include_str!("golden/comments_program.expected.fpas"),
     );
 }

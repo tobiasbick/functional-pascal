@@ -1,7 +1,8 @@
 // Accepts one LF-delimited TCP request, echoes it, and exits.
 program NetworkTcpEchoServer;
 
-uses Std.Args, Std.Conv, Std.Console, Std.Net, Std.Net.Utf8;
+uses
+  Std.Args as Args, Std.Conv as Conv, Std.Console as Console, Std.Net as Net, Std.Net.Utf8 as Utf8;
 
 // Returns the first LF delimiter index or minus one.
 //
@@ -26,13 +27,13 @@ end function;
 //
 // Parameters:
 // - `ConnectionValue`: Open TCP connection.
-function ReadLine(ConnectionValue: Connection): string;
+function ReadLine(ConnectionValue: Net.Connection): string;
 begin
   var Bytes: array of integer := [];
   var LineEnd: integer := -1;
   while LineEnd < 0 do
     begin
-      case Std.Net.ReceiveBytes(ConnectionValue, 4096) of
+      case Net.ReceiveBytes(ConnectionValue, 4096) of
         when Ok(const Part):
           begin
             if Part.Length() = 0 then
@@ -58,7 +59,7 @@ begin
     end;
   end if;
   const TextBytes: array of integer := Bytes.Slice(0, LineEnd);
-  case Std.Net.Utf8.Decode(TextBytes) of
+  case Utf8.Decode(TextBytes) of
     when Ok(const Text):
       begin
         return Text;
@@ -75,13 +76,13 @@ end function;
 // Parameters:
 // - `ConnectionValue`: Open TCP connection.
 // - `Bytes`: Complete byte sequence to write.
-procedure WriteAll(ConnectionValue: Connection; Bytes: array of integer);
+procedure WriteAll(ConnectionValue: Net.Connection; Bytes: array of integer);
 begin
   var Offset: integer := 0;
   while Offset < Bytes.Length() do
     begin
       const Remaining: array of integer := Bytes.Slice(Offset, Bytes.Length() - Offset);
-      case Std.Net.SendBytes(ConnectionValue, Remaining) of
+      case Net.SendBytes(ConnectionValue, Remaining) of
         when Ok(const Count):
           begin
             if Count <= 0 then
@@ -103,24 +104,24 @@ end procedure;
 
 begin
   var Port: integer := 18081;
-  if ParamCount() = 1 then
+  if Args.ParamCount() = 1 then
     begin
-      Port := StrToInt(ParamStr(0));
+      Port := Conv.StrToInt(Args.ParamStr(0));
     end;
-  elsif ParamCount() <> 0 then
+  elsif Args.ParamCount() <> 0 then
     begin
       panic('usage: tcp_echo_server.fpas -- [PORT]');
     end;
   end if;
 
-  case Listen('127.0.0.1', Port) of
+  case Net.Listen('127.0.0.1', Port) of
     when Ok(const ListenerValue):
       begin
-        WriteLn('TCP echo server listening on 127.0.0.1:' + IntToStr(Port));
-        case Accept(ListenerValue) of
+        Console.WriteLn('TCP echo server listening on 127.0.0.1:' + Conv.IntToStr(Port));
+        case Net.Accept(ListenerValue) of
           when Ok(const ConnectionValue):
             begin
-              case SetTimeout(ConnectionValue, 5000) of
+              case Net.SetTimeout(ConnectionValue, 5000) of
                 when Ok(_):
                   begin
                   end;
@@ -130,8 +131,8 @@ begin
                   end;
               end case;
               const Text: string := ReadLine(ConnectionValue);
-              WriteAll(ConnectionValue, Std.Net.Utf8.Encode('Echo: ' + Text));
-              case Close(ConnectionValue) of
+              WriteAll(ConnectionValue, Utf8.Encode('Echo: ' + Text));
+              case Net.Close(ConnectionValue) of
                 when Ok(_):
                   begin
                   end;
@@ -147,10 +148,10 @@ begin
             end;
         end case;
 
-        case CloseListener(ListenerValue) of
+        case Net.CloseListener(ListenerValue) of
           when Ok(_):
             begin
-              WriteLn('TCP echo server stopped');
+              Console.WriteLn('TCP echo server stopped');
             end;
           when Error(const Message):
             begin

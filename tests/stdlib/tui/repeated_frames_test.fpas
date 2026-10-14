@@ -1,51 +1,51 @@
 program RepeatedFramesTest;
 
-uses Std.Tui, Std.Test;
+uses Std.Tui as Tui, Std.Test as Test;
 
-function UpdateFrames(State: integer; Msg: TuiMsg; Cmd: TuiCmdOutput): integer;
+function UpdateFrames(State: integer; Msg: Tui.TuiMsg; Cmd: Tui.TuiCmdOutput): integer;
 begin
-  Cmd.Set(TuiCmd.NoCommand);
+  Cmd.Set(Tui.TuiCmd.NoCommand);
   case Msg of
-    when TuiMsg.Tick(const Delta):
+    when Tui.TuiMsg.Tick(const Delta):
       begin
         return State + 1;
       end;
-    when TuiMsg.Started, TuiMsg.Key(_), TuiMsg.Pointer(_), TuiMsg.Resize(_), TuiMsg.FocusChanged(_, _), TuiMsg.Action(_, _), TuiMsg.TextChanged(_, _, _, _), TuiMsg.TextAreaChanged(_, _, _, _, _), TuiMsg.CheckChanged(_, _, _), TuiMsg.SelectionChanged(_, _, _), TuiMsg.ScrollChanged(_, _, _), TuiMsg.MenuChanged(_, _, _), TuiMsg.BackgroundFailed(_, _, _, _, _, _), TuiMsg.QuitRequested:
+    when Tui.TuiMsg.Started, Tui.TuiMsg.Key(_), Tui.TuiMsg.Pointer(_), Tui.TuiMsg.Resize(_), Tui.TuiMsg.FocusChanged(_, _), Tui.TuiMsg.Action(_, _), Tui.TuiMsg.TextChanged(_, _, _, _), Tui.TuiMsg.TextAreaChanged(_, _, _, _, _), Tui.TuiMsg.CheckChanged(_, _, _), Tui.TuiMsg.SelectionChanged(_, _, _), Tui.TuiMsg.ScrollChanged(_, _, _), Tui.TuiMsg.MenuChanged(_, _, _), Tui.TuiMsg.BackgroundFailed(_, _, _, _, _, _), Tui.TuiMsg.QuitRequested:
       begin
         return State;
       end;
   end case;
 end function;
 
-function ViewFrames(State: integer): TuiElement;
+function ViewFrames(State: integer): Tui.TuiElement;
 begin
-  var Children: array of TuiElement := [];
+  var Children: array of Tui.TuiElement := [];
   for Index: integer := 1 to 32 do
     begin
-      Children.PushInPlace(TuiElementBuilders.MakeLabel('row'));
+      Children.PushInPlace(Tui.TuiElementBuilders.MakeLabel('row'));
     end;
   end for;
-  const SharedAction: TuiAction := TuiAction.Create(100);
+  const SharedAction: Tui.TuiAction := Tui.TuiAction.Create(100);
   for Index: integer := 1 to 8 do
     begin
-      Children.PushInPlace(TuiElementBuilders.MakeButton(TuiControlId.Create(Index), 'action', SharedAction));
+      Children.PushInPlace(Tui.TuiElementBuilders.MakeButton(Tui.TuiControlId.Create(Index), 'action', SharedAction));
     end;
   end for;
 
-  return TuiElementBuilders.MakeDesktop(Some(TuiControlId.Create(1)), [
-                                                                        TuiElementBuilders.MakePanel('Repeated frames', [TuiElementBuilders.MakeColumn(Children)])
-                                                                      ]);
+  return Tui.TuiElementBuilders.MakeDesktop(Some(Tui.TuiControlId.Create(1)), [
+                                                                                Tui.TuiElementBuilders.MakePanel('Repeated frames', [Tui.TuiElementBuilders.MakeColumn(Children)])
+                                                                              ]);
 end function;
 
 begin
-  var Small: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(40, 12));
+  var Small: Tui.TuiApplication := Tui.TuiApplication.OpenForTest(Tui.TuiSize.Create(40, 12));
   const SmallResult: integer := Small.RunIterations(0, UpdateFrames, ViewFrames, 100, 16);
-  AssertEquals(100, SmallResult);
-  AssertEquals(40, Small.SurfaceSnapshot().Width);
+  Test.AssertEquals(100, SmallResult);
+  Test.AssertEquals(40, Small.SurfaceSnapshot().Width);
   Small.Close();
-  var Large: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(120, 40));
+  var Large: Tui.TuiApplication := Tui.TuiApplication.OpenForTest(Tui.TuiSize.Create(120, 40));
   const LargeResult: integer := Large.RunIterations(0, UpdateFrames, ViewFrames, 100, 16);
-  AssertEquals(100, LargeResult);
-  AssertEquals(120, Large.SurfaceSnapshot().Width);
+  Test.AssertEquals(100, LargeResult);
+  Test.AssertEquals(120, Large.SurfaceSnapshot().Width);
   Large.Close();
 end.

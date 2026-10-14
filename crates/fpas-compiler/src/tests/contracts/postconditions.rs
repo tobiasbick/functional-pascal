@@ -121,17 +121,7 @@ fn implicit_and_explicit_procedure_returns_read_current_var_parameters() {
 #[test]
 fn worker_local_var_writes_precede_grouped_postcondition_failure() {
     assert_succeeds(
-        "program T; uses Std.Tasks;
-        procedure Set(var X: integer; Observed: channel of integer);
-        ensures X = 1; begin X := 2; discard Send(Observed, X); end procedure;
-        procedure Verify(); begin
-            const Group: TaskGroup := CreateTaskGroup();
-            const Observed: channel of integer := CreateChannel(1);
-            const Child: task := StartTaskInGroup(Group, procedure(Token: CancellationToken)
-                begin var Local := 1; Set(var Local, Observed); end procedure);
-            const Failures: array of TaskFailure := CloseTaskGroup(Group);
-            if Receive(Observed).Unwrap() <> 2 or Failures.Length() <> 1 then panic('lost write or failure'); end if;
-        end procedure; begin Verify(); end.",
+        "program T; uses Std.Tasks as Tasks;\n        procedure Set(var X: integer; Observed: channel of integer);\n        ensures X = 1; begin X := 2; discard Tasks.Send(Observed, X); end procedure;\n        procedure Verify(); begin\n            const Group: Tasks.TaskGroup := Tasks.CreateTaskGroup();\n            const Observed: channel of integer := Tasks.CreateChannel(1);\n            const Child: task := Tasks.StartTaskInGroup(Group, procedure(Token: Tasks.CancellationToken)\n                begin var Local := 1; Set(var Local, Observed); end procedure);\n            const Failures: array of Tasks.TaskFailure := Tasks.CloseTaskGroup(Group);\n            if Tasks.Receive(Observed).Unwrap() <> 2 or Failures.Length() <> 1 then panic('lost write or failure'); end if;\n        end procedure; begin Verify(); end.",
     );
 }
 

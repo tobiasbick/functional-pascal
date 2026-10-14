@@ -15,7 +15,8 @@ fn request(id: u64, command: &str, arguments: Value) -> String {
 
 #[test]
 fn bits_watch_calls_preserve_signed_patterns_and_reject_invalid_shift_counts() {
-    let (program, errors) = fpas_parser::parse("program BitsWatch; uses Std.Bits; begin end.");
+    let (program, errors) =
+        fpas_parser::parse("program BitsWatch; uses Std.Bits as Bits; begin end.");
     assert!(errors.is_empty(), "{errors:?}");
     let executable = fpas_compiler::compile(&program).expect("compile bit watch fixture");
     let mut server =

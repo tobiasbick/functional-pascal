@@ -25,7 +25,7 @@ fn run_cli_executes_program_with_library_project_dependency() {
     );
     write_text(
         &app_dir.join("src/main.fpas"),
-        "program Calc;\nuses Calc.Math, Std.Console;\nbegin\n  WriteLn(Mul(6, 7));\nend.\n",
+        "program Calc;\nuses Calc.Math as Math, Std.Console as Console;\nbegin\n  Console.WriteLn(Math.Mul(6, 7));\nend.\n",
     );
 
     let (exit_code, stdout_output, stderr_output) =
@@ -48,46 +48,11 @@ fn run_cli_static_record_function_via_public_alias_over_private_unit() {
     write_library_fpasprj_with_exports(&lib_project, &["src/**/*.fpas"], &["Geom.Api"]);
     write_text(
         &lib_dir.join("src/internal.fpas"),
-        "\
-unit Geom.Internal;
-
-uses Std.Console;
-
-public type
-  PointImpl = record
-    public X: integer;
-    public Y: integer;
-
-    public static function Create(X: integer; Y: integer): PointImpl;
-    begin
-      return PointImpl(
-        X := X,
-        Y := Y
-      );
-    end function;
-
-    public static procedure Print(Value: PointImpl);
-    begin
-      Std.Console.WriteLn(Value.Sum());
-    end procedure;
-
-    public function Sum(Self: PointImpl): integer;
-    begin
-      return Self.X + Self.Y;
-    end function;
-  end record;
-end unit;\n",
+        "unit Geom.Internal;\n\nuses Std.Console as Console;\n\npublic type\n  PointImpl = record\n    public X: integer;\n    public Y: integer;\n\n    public static function Create(X: integer; Y: integer): PointImpl;\n    begin\n      return PointImpl(\n        X := X,\n        Y := Y\n      );\n    end function;\n\n    public static procedure Print(Value: PointImpl);\n    begin\n      Console.WriteLn(Value.Sum());\n    end procedure;\n\n    public function Sum(Self: PointImpl): integer;\n    begin\n      return Self.X + Self.Y;\n    end function;\n  end record;\nend unit;\n",
     );
     write_text(
         &lib_dir.join("src/api.fpas"),
-        "\
-unit Geom.Api;
-
-uses Geom.Internal;
-
-public type
-  Point = PointImpl;
-end unit;\n",
+        "unit Geom.Api;\n\nuses Geom.Internal as Internal;\n\npublic type\n  Point = Internal.PointImpl;\nend unit;\n",
     );
 
     write_program_fpasprj_with_deps(
@@ -98,14 +63,7 @@ end unit;\n",
     );
     write_text(
         &app_dir.join("src/main.fpas"),
-        "\
-program App;
-uses Geom.Api;
-begin
-  const P: Point := Point.Create(3, 4);
-  Point.Print(P);
-end.
-",
+        "program App;\nuses Geom.Api as Api;\nbegin\n  const P: Api.Point := Api.Point.Create(3, 4);\n  Api.Point.Print(P);\nend.\n",
     );
 
     let (exit_code, stdout_output, stderr_output) =

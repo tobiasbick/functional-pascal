@@ -1,20 +1,20 @@
 // Covers OpenAI-compatible client, message, and option defaults.
 program OpenAiTypesTest;
 
-uses Std.Ai.OpenAi, Std.Test;
+uses Std.Ai.OpenAi as OpenAi, Std.Test as Test;
 
 begin
-  const ClientValue: Client := Client.Create('http://localhost:8080/v1', 'local-model');
-  AssertEquals('http://localhost:8080/v1', ClientValue.BaseUrl);
-  AssertEquals('local-model', ClientValue.Model);
-  const MessageValue: ChatMessage := ChatMessage.User('Hello');
-  AssertEquals('user', MessageValue.Role);
-  AssertEquals('Hello', MessageValue.Content);
-  const Options: ChatOptions := ChatOptions.Default();
+  const ClientValue: OpenAi.Client := OpenAi.Client.Create('http://localhost:8080/v1', 'local-model');
+  Test.AssertEquals('http://localhost:8080/v1', ClientValue.BaseUrl);
+  Test.AssertEquals('local-model', ClientValue.Model);
+  const MessageValue: OpenAi.ChatMessage := OpenAi.ChatMessage.User('Hello');
+  Test.AssertEquals('user', MessageValue.Role);
+  Test.AssertEquals('Hello', MessageValue.Content);
+  const Options: OpenAi.ChatOptions := OpenAi.ChatOptions.Default();
   case Options.MaxTokens of
     when Some(const Value):
       begin
-        Fail('unexpected max tokens');
+        Test.Fail('unexpected max tokens');
       end;
     when None:
       begin

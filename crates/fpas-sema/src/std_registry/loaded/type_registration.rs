@@ -28,7 +28,7 @@ pub(super) fn register_enum_type(
         type_args: Vec::new(),
         variants: variants.clone(),
     }));
-    checker.scopes.define(
+    checker.scopes.imports.define_metadata(
         qualified_name,
         Symbol {
             constant: None,
@@ -41,7 +41,7 @@ pub(super) fn register_enum_type(
 
     for variant in &variants {
         let qualified_member = format!("{qualified_name}.{}", variant.name);
-        checker.scopes.define(
+        checker.scopes.imports.define_metadata(
             &qualified_member,
             Symbol {
                 constant: None,
@@ -73,7 +73,7 @@ pub(super) fn register_record_type(
         static_functions: Vec::new(),
         static_procedures: Vec::new(),
     }));
-    checker.scopes.define(
+    checker.scopes.imports.define_metadata(
         qualified_name,
         Symbol {
             constant: None,

@@ -1,36 +1,43 @@
 unit Julia.Render;
 
-uses Std.Console, Std.Tasks, Std.Conv, Std.Math, Julia.Color, Julia.Compute;
+uses
+  Std.Console as Console, Std.Tasks as Tasks, Std.Conv as Conv, Std.Math as Math,
+  Julia.Color as Color, Julia.Compute as Compute;
 
 public type RenderRow = record
   public Y: integer;
-  public Samples: array of PixelSample;
+  public Samples: array of Compute.PixelSample;
 end record;
 
 function EscapeGlyph(EscapeValue: real): string;
 begin
   const Ramp: string := ' ░▒▓█';
   const Count: integer := Ramp.Length();
-  const Phase: real := Frac(EscapeValue * 0.08);
-  const Index: integer := Clamp(Trunc(Phase * IntToReal(Count)), 0, Count - 1);
+  const Phase: real := Math.Frac(EscapeValue * 0.08);
+  const Index: integer := Math.Clamp(Math.Trunc(Phase * Conv.IntToReal(Count)), 0, Count - 1);
   return Ramp.CharAt(Index);
 end function;
 
-function RenderCell(Sample: PixelSample; Palette: PaletteKind): Cell;
+function RenderCell(Sample: Compute.PixelSample; Palette: Color.PaletteKind): Console.Cell;
 begin
   if Sample.IsInside then
     begin
-      const CellShade: Color := InsideColor();
-      return Std.Console.Cell(glyph := ' ', foreground := CellShade, background := CellShade);
+      const CellShade: Console.Color := Color.InsideColor();
+      return Console.Cell(glyph := ' ', foreground := CellShade, background := CellShade);
     end;
   end if;
 
-  return Std.Console.Cell(glyph := EscapeGlyph(Sample.EscapeValue), foreground := EscapeColor(Palette, Sample.EscapeValue), background := RgbColor(0, 0, 0));
+  return Console.Cell(glyph := EscapeGlyph(Sample.EscapeValue), foreground := Color.EscapeColor(Palette, Sample.EscapeValue), background := Console.RgbColor(0, 0, 0));
 end function;
 
-procedure DrawRow(Row: array of PixelSample; Width: integer; Y: integer; Palette: PaletteKind);
+procedure DrawRow(
+  Row: array of Compute.PixelSample;
+  Width: integer;
+  Y: integer;
+  Palette: Color.PaletteKind
+);
 begin
-  const CurrentWidth: integer := ScreenWidth();
+  const CurrentWidth: integer := Console.ScreenWidth();
   var DrawWidth: integer := Width;
   if DrawWidth > CurrentWidth then
     begin
@@ -43,22 +50,22 @@ begin
       return;
     end;
   end if;
-  var Cells: array of Cell := [];
+  var Cells: array of Console.Cell := [];
   for Px: integer := 0 to DrawWidth - 1 do
     begin
       Cells.PushInPlace(RenderCell(Row[Px], Palette));
     end;
   end for;
 
-  WriteCells(1, Y, Cells);
+  Console.WriteCells(1, Y, Cells);
 end procedure;
 
 // A render owns four workers and at most four queued rows.
 public type RenderJob = record
-  public Group: TaskGroup;
+  public Group: Tasks.TaskGroup;
   public Rows: channel of RenderRow;
   public Width: integer;
-  public Palette: PaletteKind;
+  public Palette: Color.PaletteKind;
 end record;
 
 // Start a bounded render. Each worker owns every fourth row.
@@ -70,27 +77,27 @@ public function StartRender(
   Width: integer;
   Height: integer;
   MaxIter: integer;
-  Palette: PaletteKind;
+  Palette: Color.PaletteKind;
   Jr: real;
   Ji: real
 ): RenderJob;
 begin
-  const Group: TaskGroup := CreateTaskGroup();
-  const Rows: channel of RenderRow := CreateChannel(4);
+  const Group: Tasks.TaskGroup := Tasks.CreateTaskGroup();
+  const Rows: channel of RenderRow := Tasks.CreateChannel(4);
   for Worker: integer := 0 to 3 do
     begin
-      const WorkerTask: task := StartTaskInGroup(Group, procedure(Token: CancellationToken) begin
+      const WorkerTask: task := Tasks.StartTaskInGroup(Group, procedure(Token: Tasks.CancellationToken) begin
         var Py: integer := Worker;
-        while (Py < Height) and not IsCancellationRequested(Token) do
+        while (Py < Height) and not Tasks.IsCancellationRequested(Token) do
           begin
-            const Samples: array of PixelSample := ComputeRow(Py, Width, Height, XMin, XMax, YMin, YMax, MaxIter, Jr, Ji, Token);
-            if IsCancellationRequested(Token) then
+            const Samples: array of Compute.PixelSample := Compute.ComputeRow(Py, Width, Height, XMin, XMax, YMin, YMax, MaxIter, Jr, Ji, Token);
+            if Tasks.IsCancellationRequested(Token) then
               begin
                 return;
               end;
             end if;
             const Row: RenderRow := RenderRow(Y := Py, Samples := Samples);
-            if SendWithCancellation(Rows, Row, Token).IsError() then
+            if Tasks.SendWithCancellation(Rows, Row, Token).IsError() then
               begin
                 return;
               end;
@@ -111,10 +118,10 @@ public procedure PollRender(Job: RenderJob);
 begin
   for Index: integer := 1 to 4 do
     begin
-      case TryReceive(Job.Rows).Unwrap() of
+      case Tasks.TryReceive(Job.Rows).Unwrap() of
         when Some(const Row):
           begin
-            if (Row.Y + 1) <= Max(ScreenHeight() - 3, 1) then
+            if (Row.Y + 1) <= Math.Max(Console.ScreenHeight() - 3, 1) then
               begin
                 DrawRow(Row.Samples, Job.Width, Row.Y + 1, Job.Palette);
               end;
@@ -133,8 +140,8 @@ end procedure;
 // Joining first prevents old rows from appearing in a replacement render.
 public procedure StopRender(Job: RenderJob);
 begin
-  const Failures: array of TaskFailure := CloseTaskGroup(Job.Group);
-  discard CloseChannel(Job.Rows);
+  const Failures: array of Tasks.TaskFailure := Tasks.CloseTaskGroup(Job.Group);
+  discard Tasks.CloseChannel(Job.Rows);
   if Failures.Length() <> 0 then
     begin
       panic(Failures[0].Message);

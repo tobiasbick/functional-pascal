@@ -23,14 +23,8 @@ fn unwrap_rejects_non_containers_without_cascading_argument_errors() {
 
 #[test]
 fn std_math_sqrt_wrong_arg_count() {
-    let errs = check_errors(
-        "\
-program T;
-uses Std.Math;
-begin
-  Std.Math.Sqrt(1.0, 2.0);
-end.",
-    );
+    let errs =
+        check_errors("program T;\nuses Std.Math as Math;\nbegin\n  Math.Sqrt(1.0, 2.0);\nend.");
     assert!(
         errs.iter()
             .any(|e| e.message.contains("expects 1 argument")),
@@ -41,12 +35,7 @@ end.",
 #[test]
 fn std_conv_str_to_int_type_mismatch() {
     let errs = check_errors(
-        "\
-program T;
-uses Std.Conv;
-begin
-  const N: integer := Std.Conv.StrToInt(42);
-end.",
+        "program T;\nuses Std.Conv as Conv;\nbegin\n  const N: integer := Conv.StrToInt(42);\nend.",
     );
     assert!(
         errs.iter().any(|e| {

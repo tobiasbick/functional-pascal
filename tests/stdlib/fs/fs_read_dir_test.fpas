@@ -1,33 +1,33 @@
 // Verifies immediate sorted files/directories, empty results, errors, and task execution.
 program FsReadDirTest;
 
-uses Std.Fs, Std.Tasks, Std.Test;
+uses Std.Fs as Fs, Std.Tasks as Tasks, Std.Test as Test;
 
 begin
   scope
-    const Root: string := ScratchDir() + '/read-dir';
-    AssertTrue(CreateDirAll(Root).Unwrap());
-    AssertEquals(0, ReadDir(Root).Unwrap().Length());
-    AssertTrue(CreateDir(Root + '/b-empty').Unwrap());
-    AssertTrue(CreateDir(Root + '/a-child').Unwrap());
-    AssertTrue(WriteText(Root + '/a-child/nested.txt', 'nested').Unwrap());
-    AssertTrue(WriteText(Root + '/c-file.txt', 'file').Unwrap());
-    const Entries: array of string := ReadDir(Root).Unwrap();
-    AssertEquals(3, Entries.Length());
-    AssertEquals(Root + '/a-child', Entries[0]);
-    AssertEquals(Root + '/b-empty', Entries[1]);
-    AssertEquals(Root + '/c-file.txt', Entries[2]);
-    AssertTrue(IsDir(Entries[0]));
-    AssertTrue(IsDir(Entries[1]));
-    AssertTrue(IsFile(Entries[2]));
-    AssertTrue(ReadDir(Root + '/missing').IsError());
-    AssertTrue(ReadDir(Root + '/c-file.txt').IsError());
-    AssertTrue(ReadDir('').IsError());
-    const Job: task of result of (array of string, string) := go ReadDir(Root);
-    const FromTask: array of string := Std.Tasks.Wait(Job).Unwrap();
-    AssertEquals(3, FromTask.Length());
+    const Root: string := Test.ScratchDir() + '/read-dir';
+    Test.AssertTrue(Fs.CreateDirAll(Root).Unwrap());
+    Test.AssertEquals(0, Fs.ReadDir(Root).Unwrap().Length());
+    Test.AssertTrue(Fs.CreateDir(Root + '/b-empty').Unwrap());
+    Test.AssertTrue(Fs.CreateDir(Root + '/a-child').Unwrap());
+    Test.AssertTrue(Fs.WriteText(Root + '/a-child/nested.txt', 'nested').Unwrap());
+    Test.AssertTrue(Fs.WriteText(Root + '/c-file.txt', 'file').Unwrap());
+    const Entries: array of string := Fs.ReadDir(Root).Unwrap();
+    Test.AssertEquals(3, Entries.Length());
+    Test.AssertEquals(Root + '/a-child', Entries[0]);
+    Test.AssertEquals(Root + '/b-empty', Entries[1]);
+    Test.AssertEquals(Root + '/c-file.txt', Entries[2]);
+    Test.AssertTrue(Fs.IsDir(Entries[0]));
+    Test.AssertTrue(Fs.IsDir(Entries[1]));
+    Test.AssertTrue(Fs.IsFile(Entries[2]));
+    Test.AssertTrue(Fs.ReadDir(Root + '/missing').IsError());
+    Test.AssertTrue(Fs.ReadDir(Root + '/c-file.txt').IsError());
+    Test.AssertTrue(Fs.ReadDir('').IsError());
+    const Job: task of result of (array of string, string) := go Fs.ReadDir(Root);
+    const FromTask: array of string := Tasks.Wait(Job).Unwrap();
+    Test.AssertEquals(3, FromTask.Length());
     for Index: integer := 0 to 2 do
-      AssertEquals(Entries[Index], FromTask[Index]);
+      Test.AssertEquals(Entries[Index], FromTask[Index]);
     end for;
   end scope;
 end.

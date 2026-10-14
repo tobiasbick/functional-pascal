@@ -4,9 +4,11 @@ Pure path manipulation without filesystem access. This page is the full API for 
 
 ```pascal
 program Example;
-uses Std.Console, Std.Path;
+
+uses Std.Console as Console, Std.Path as Path;
+
 begin
-  WriteLn(BaseName(Normalize('dir/nested/../file.txt')));
+  Console.WriteLn(Path.BaseName(Path.Normalize('dir/nested/../file.txt')));
 end.
 ```
 
@@ -15,13 +17,13 @@ end.
 
 ## Importing and names
 
-After `uses Std.Path;` use **`Join`**, **`BaseName`**, **`DirName`**, **`Extension`**, **`Normalize`**, or the fully qualified forms such as **`Std.Path.Join`**.
+Import with `uses Std.Path as Path;` and access public symbols as `Path.Name`. User enum variants require `Path.Type.Variant`.
 
 ---
 
 ## Quick reference
 
-Requires `uses Std.Path;`.
+Requires `uses Std.Path as Path;`.
 
 | Kind | Name | Notes |
 |------|------|-------|
@@ -51,12 +53,12 @@ An absolute segment replaces earlier segments (host `PathBuf::push` semantics):
 
 ```pascal
 // Unix example: result is '/etc/hosts', not 'home/etc/hosts'
-WriteLn(Join(['home', '/etc/hosts']));
+Console.WriteLn(Path.Join(['home', '/etc/hosts']));
 ```
 
 ```pascal
 const Parts: array of string := ['src', 'main', 'app.txt'];
-WriteLn(BaseName(Join(Parts)));
+Console.WriteLn(Path.BaseName(Path.Join(Parts)));
 ```
 
 ---
@@ -66,7 +68,7 @@ WriteLn(BaseName(Join(Parts)));
 Returns the final component of `Path`.
 
 ```pascal
-WriteLn(BaseName('dir/nested/file.txt'));  // file.txt
+Console.WriteLn(Path.BaseName('dir/nested/file.txt'));  // file.txt
 ```
 
 Trailing separators follow host `std::path::Path` rules and may differ between Windows and Unix.
@@ -78,8 +80,8 @@ Trailing separators follow host `std::path::Path` rules and may differ between W
 Returns the parent path without the final component.
 
 ```pascal
-WriteLn(DirName('dir/nested/file.txt'));  // dir/nested
-WriteLn(DirName('file.txt'));             // ''
+Console.WriteLn(Path.DirName('dir/nested/file.txt'));  // dir/nested
+Console.WriteLn(Path.DirName('file.txt'));             // ''
 ```
 
 ---
@@ -89,8 +91,8 @@ WriteLn(DirName('file.txt'));             // ''
 Returns the final extension without a leading dot.
 
 ```pascal
-WriteLn(Extension('archive.tar.gz'));  // gz
-WriteLn(Extension('README'));            // ''
+Console.WriteLn(Path.Extension('archive.tar.gz'));  // gz
+Console.WriteLn(Path.Extension('README'));            // ''
 ```
 
 ---
@@ -105,14 +107,14 @@ Parent components cannot climb above a rooted path's root, including a Windows U
 
 ```pascal
 // Windows examples:
-WriteLn(Normalize('D:/projects/demo'));       // D:\projects\demo
-WriteLn(Normalize('D:\projects\..\demo'));   // D:\demo
-WriteLn(Normalize('D:projects\..\demo'));     // D:demo (drive-relative)
+Console.WriteLn(Path.Normalize('D:/projects/demo'));       // D:\projects\demo
+Console.WriteLn(Path.Normalize('D:\projects\..\demo'));   // D:\demo
+Console.WriteLn(Path.Normalize('D:projects\..\demo'));     // D:demo (drive-relative)
 ```
 
 ```pascal
-WriteLn(Normalize('a/b/../c'));
-WriteLn(BaseName(Normalize('dir/nested/../file.txt')));
+Console.WriteLn(Path.Normalize('a/b/../c'));
+Console.WriteLn(Path.BaseName(Path.Normalize('dir/nested/../file.txt')));
 ```
 
 ---

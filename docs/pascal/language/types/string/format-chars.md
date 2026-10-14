@@ -8,8 +8,8 @@ signed `$` hex, digit separators, and finite real values. Nonzero real input
 that rounds to zero is not numeric. See [numeric parsing](../../../std/text/parse.md).
 
 ```pascal
-WriteLn('42'.IsNumeric());
-WriteLn('nope'.IsNumeric());
+Console.WriteLn('42'.IsNumeric());
+Console.WriteLn('nope'.IsNumeric());
 ```
 
 ---
@@ -21,7 +21,7 @@ Builds a string of `N` copies of the receiver. The receiver must contain exactly
 Positive `N` must be at most **1_000_000**. Larger counts raise a runtime error.
 
 ```pascal
-WriteLn('─'.FromChar(40));
+Console.WriteLn('─'.FromChar(40));
 ```
 
 ---
@@ -37,7 +37,7 @@ checking `S.IsEmpty()` for empty strings.
 
 ```pascal
 const C: string := 'Hello'.CharAt(0);
-WriteLn(C);  // H
+Console.WriteLn(C);  // H
 ```
 
 ---
@@ -49,7 +49,7 @@ Returns a **new** string that is identical to `S` except the character at `Index
 `Index` follows the same scalar bounds and empty-string checks as `CharAt`.
 
 ```pascal
-WriteLn('Hello'.SetCharAt(0, 'J'));  // Jello
+Console.WriteLn('Hello'.SetCharAt(0, 'J'));  // Jello
 ```
 
 ---
@@ -59,7 +59,7 @@ WriteLn('Hello'.SetCharAt(0, 'J'));  // Jello
 Returns the Unicode codepoint (integer value) of the receiver. The receiver must contain exactly one Unicode scalar value; empty or multi-character strings are runtime errors.
 
 ```pascal
-WriteLn('A'.Ord());  // 65
+Console.WriteLn('A'.Ord());  // 65
 ```
 
 ---
@@ -69,7 +69,7 @@ WriteLn('A'.Ord());  // 65
 Returns the character with Unicode codepoint `N`. **Runtime error** if `N` is not a valid Unicode scalar value.
 
 ```pascal
-WriteLn(string.Chr(65));  // A
+Console.WriteLn(string.Chr(65));  // A
 ```
 
 ---

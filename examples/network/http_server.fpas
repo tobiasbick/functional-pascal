@@ -1,7 +1,9 @@
 // Serves three local HTTP requests and then exits.
 program NetworkHttpServer;
 
-uses Std.Args, Std.Conv, Std.Console, Std.Http, Std.Net, Std.Net.Utf8;
+uses
+  Std.Args as Args, Std.Conv as Conv, Std.Console as Console, Std.Http as Http, Std.Net as Net,
+  Std.Net.Utf8 as Utf8;
 
 // Creates a UTF-8 text response with one content-type field.
 //
@@ -9,11 +11,11 @@ uses Std.Args, Std.Conv, Std.Console, Std.Http, Std.Net, Std.Net.Utf8;
 // - `StatusCode`: HTTP status code to return.
 // - `ReasonPhrase`: HTTP reason phrase to return.
 // - `Text`: UTF-8 response body.
-function TextResponse(StatusCode: integer; ReasonPhrase: string; Text: string): ServerResponse;
+function TextResponse(StatusCode: integer; ReasonPhrase: string; Text: string): Http.ServerResponse;
 begin
-  var ResponseValue: ServerResponse := ServerResponse.Create(StatusCode, ReasonPhrase);
-  ResponseValue.Headers := [Header.Create('Content-Type', 'text/plain; charset=utf-8')];
-  ResponseValue.Body := Std.Net.Utf8.Encode(Text);
+  var ResponseValue: Http.ServerResponse := Http.ServerResponse.Create(StatusCode, ReasonPhrase);
+  ResponseValue.Headers := [Http.Header.Create('Content-Type', 'text/plain; charset=utf-8')];
+  ResponseValue.Body := Utf8.Encode(Text);
   return ResponseValue;
 end function;
 
@@ -21,7 +23,7 @@ end function;
 //
 // Parameters:
 // - `RequestValue`: Validated request accepted by the server loop.
-function Handle(RequestValue: ServerRequest): ServerResponse;
+function Handle(RequestValue: Http.ServerRequest): Http.ServerResponse;
 begin
   if (RequestValue.Method = 'GET') and (RequestValue.Target = '/hello') then
     begin
@@ -31,7 +33,7 @@ begin
 
   if (RequestValue.Method = 'POST') and (RequestValue.Target = '/echo') then
     begin
-      case Std.Net.Utf8.Decode(RequestValue.Body) of
+      case Utf8.Decode(RequestValue.Body) of
         when Ok(const Text):
           begin
             return TextResponse(200, 'OK', 'Echo: ' + Text);
@@ -55,27 +57,27 @@ end function;
 
 begin
   var Port: integer := 18080;
-  if ParamCount() = 1 then
+  if Args.ParamCount() = 1 then
     begin
-      Port := StrToInt(ParamStr(0));
+      Port := Conv.StrToInt(Args.ParamStr(0));
     end;
-  elsif ParamCount() <> 0 then
+  elsif Args.ParamCount() <> 0 then
     begin
       panic('usage: http_server.fpas -- [PORT]');
     end;
   end if;
 
-  case Listen('127.0.0.1', Port) of
+  case Net.Listen('127.0.0.1', Port) of
     when Ok(const ListenerValue):
       begin
-        WriteLn('HTTP server listening on http://127.0.0.1:' + IntToStr(Port));
-        var Options: ServerOptions := ServerOptions.Create();
+        Console.WriteLn('HTTP server listening on http://127.0.0.1:' + Conv.IntToStr(Port));
+        var Options: Http.ServerOptions := Http.ServerOptions.Create();
         Options.MaxConcurrentRequests := 1;
         Options.MaxRequests := 3;
-        case Serve(ListenerValue, Options, Handle) of
+        case Http.Serve(ListenerValue, Options, Handle) of
           when Ok(_):
             begin
-              WriteLn('HTTP server handled 3 requests');
+              Console.WriteLn('HTTP server handled 3 requests');
             end;
           when Error(const Message):
             begin
@@ -83,7 +85,7 @@ begin
             end;
         end case;
 
-        case CloseListener(ListenerValue) of
+        case Net.CloseListener(ListenerValue) of
           when Ok(_):
             begin
             end;

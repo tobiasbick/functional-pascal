@@ -58,9 +58,9 @@ fn records(error: &ProjectError) -> Vec<FileDiagnostic> {
 fn graph_failure_preserves_every_field_and_the_graph_source_id() {
     let fixture = Fixture::new("graph");
     let manifest = fixture.project();
-    let source = "program Demo; uses Demo.Dep; begin end.\n";
+    let source = "program Demo; uses Demo.Dep as Dep; begin end.\n";
     let main = fixture.write("main.fpas", source);
-    let unit_source = "unit Demo.Dep;\nuses Demo.Missing;\nend unit;\n";
+    let unit_source = "unit Demo.Dep;\nuses Demo.Missing as Missing;\nend unit;\n";
     let dependency = fixture.write("dep.fpas", unit_source);
     let loaded = fpas_project::load_project(&manifest).expect("loaded project");
     let (CompilationUnit::Unit(unit), errors) = fpas_parser::parse_compilation_unit(unit_source)

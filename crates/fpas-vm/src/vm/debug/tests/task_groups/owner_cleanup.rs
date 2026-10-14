@@ -27,15 +27,7 @@ fn debugger_parent_cleanup_has_the_same_publication_boundary() {
     ));
 }
 
-const MAIN: &str = "program MainCleanup; uses Std.Tasks, Std.Console;
-    begin const Group := CreateTaskGroup();
-    const Gate: channel of boolean := CreateChannel(1);
-    discard StartTaskInGroup(Group, procedure(Token: CancellationToken) begin
-        discard ReceiveWithCancellation(Gate, Token);
-        if not IsCancellationRequested(Token) then panic('owner did not cancel'); end if;
-        WriteLn('joined');
-    end procedure);
-    end.";
+const MAIN: &str = "program MainCleanup; uses Std.Tasks as Tasks, Std.Console as Console;\n    begin const Group := Tasks.CreateTaskGroup();\n    const Gate: channel of boolean := Tasks.CreateChannel(1);\n    discard Tasks.StartTaskInGroup(Group, procedure(Token: Tasks.CancellationToken) begin\n        discard Tasks.ReceiveWithCancellation(Gate, Token);\n        if not Tasks.IsCancellationRequested(Token) then panic('owner did not cancel'); end if;\n        Console.WriteLn('joined');\n    end procedure);\n    end.";
 
 #[test]
 fn main_cleanup_executes_children_before_returning() {
@@ -64,13 +56,7 @@ fn debugger_main_cleanup_finishes_children_before_termination() {
 
 #[test]
 fn dynamically_received_callable_cannot_authorize_foreign_global_access() {
-    let source = "program DynamicWorker; uses Std.Tasks;
-        var Counter: integer := 1;
-        function Read(): integer; begin return Counter; end function;
-        begin const Queue: channel of function(): integer := CreateChannel(1);
-        discard Send(Queue, Read);
-        const Work := Receive(Queue).Unwrap();
-        scope discard go Work(); end scope; end.";
+    let source = "program DynamicWorker; uses Std.Tasks as Tasks;\n        var Counter: integer := 1;\n        function Read(): integer; begin return Counter; end function;\n        begin const Queue: channel of function(): integer := Tasks.CreateChannel(1);\n        discard Tasks.Send(Queue, Read);\n        const Work := Tasks.Receive(Queue).Unwrap();\n        scope discard go Work(); end scope; end.";
     let mut vm = crate::vm::Vm::new(compile(source));
     vm.pool_size = 1;
     let error = vm
@@ -87,10 +73,13 @@ fn dynamically_received_callable_cannot_authorize_foreign_global_access() {
 #[test]
 fn forced_main_entry_keeps_cleanup_pending_without_dispatching_children() {
     let source = MAIN
-        .replace("Std.Console;", "Std.Console, Std.Time;")
+        .replace(
+            "Std.Console as Console;",
+            "Std.Console as Console, Std.Time as Time;",
+        )
         .replace(
             "begin const Group",
-            "procedure Finish(); begin Sleep(0); end procedure; begin const Group",
+            "procedure Finish(); begin Time.Sleep(0); end procedure; begin const Group",
         )
         .replace("    end.", "    Finish(); end.");
     let mut session = DebugSession::with_manual_clock(compile(&source)).unwrap();
@@ -132,16 +121,7 @@ fn forced_main_entry_keeps_cleanup_pending_without_dispatching_children() {
 
 #[test]
 fn cancellation_cannot_hide_an_unexpected_child_failure_during_group_cleanup() {
-    let source = "program CancelOwner; uses Std.Tasks, Std.Time;
-        procedure Finish(); begin Sleep(0); end procedure;
-        function Parent(): integer;
-        begin const Group := CreateTaskGroup();
-        const Gate: channel of boolean := CreateChannel(1);
-        discard StartTaskInGroup(Group, procedure(Token: CancellationToken) begin
-            discard ReceiveWithCancellation(Gate, Token); panic('cleanup panic');
-        end procedure);
-        Finish(); return 42; end function;
-        begin scope discard go Parent(); end scope; end.";
+    let source = "program CancelOwner; uses Std.Tasks as Tasks, Std.Time as Time;\n        procedure Finish(); begin Time.Sleep(0); end procedure;\n        function Parent(): integer;\n        begin const Group := Tasks.CreateTaskGroup();\n        const Gate: channel of boolean := Tasks.CreateChannel(1);\n        discard Tasks.StartTaskInGroup(Group, procedure(Token: Tasks.CancellationToken) begin\n            discard Tasks.ReceiveWithCancellation(Gate, Token); panic('cleanup panic');\n        end procedure);\n        Finish(); return 42; end function;\n        begin scope discard go Parent(); end scope; end.";
     let mut session = DebugSession::with_manual_clock(compile(source)).unwrap();
     session
         .replace_function_breakpoints(vec![FunctionBreakpoint {
@@ -163,16 +143,7 @@ fn cancellation_cannot_hide_an_unexpected_child_failure_during_group_cleanup() {
 
 #[test]
 fn cancellation_preserves_an_already_terminal_group_child_failure() {
-    let source = "program CancelCompletedChild; uses Std.Tasks, Std.Time;
-        procedure Finish(); begin Sleep(0); end procedure;
-        function Parent(): integer;
-        begin const Group := CreateTaskGroup();
-        discard StartTaskInGroup(Group, procedure(Token: CancellationToken) begin
-            panic('already failed child');
-        end procedure);
-        discard Select([TimerCase(5, procedure() begin end procedure)]);
-        Finish(); return 42; end function;
-        begin scope discard go Parent(); end scope; end.";
+    let source = "program CancelCompletedChild; uses Std.Tasks as Tasks, Std.Time as Time;\n        procedure Finish(); begin Time.Sleep(0); end procedure;\n        function Parent(): integer;\n        begin const Group := Tasks.CreateTaskGroup();\n        discard Tasks.StartTaskInGroup(Group, procedure(Token: Tasks.CancellationToken) begin\n            panic('already failed child');\n        end procedure);\n        discard Tasks.Select([Tasks.TimerCase(5, procedure() begin end procedure)]);\n        Finish(); return 42; end function;\n        begin scope discard go Parent(); end scope; end.";
     let mut session = DebugSession::with_manual_clock(compile(source)).unwrap();
     session
         .replace_function_breakpoints(vec![FunctionBreakpoint {
@@ -206,13 +177,7 @@ fn cancellation_preserves_an_already_terminal_group_child_failure() {
 
 #[test]
 fn identical_group_child_diagnostics_remain_independent_failures() {
-    let source = "program DuplicateCleanup; uses Std.Tasks, Std.Time;
-        procedure Fail(Token: CancellationToken); begin panic('same child failure'); end procedure;
-        begin const Group := CreateTaskGroup();
-        const A := StartTaskInGroup(Group, Fail);
-        discard StartTaskInGroup(Group, Fail);
-        discard Select([TimerCase(5, procedure() begin end procedure)]);
-        Wait(A); end.";
+    let source = "program DuplicateCleanup; uses Std.Tasks as Tasks, Std.Time as Time;\n        procedure Fail(Token: Tasks.CancellationToken); begin panic('same child failure'); end procedure;\n        begin const Group := Tasks.CreateTaskGroup();\n        const A := Tasks.StartTaskInGroup(Group, Fail);\n        discard Tasks.StartTaskInGroup(Group, Fail);\n        discard Tasks.Select([Tasks.TimerCase(5, procedure() begin end procedure)]);\n        Tasks.Wait(A); end.";
     let check = |error: crate::vm::VmError| {
         assert_eq!(error.code, fpas_diagnostics::codes::RUNTIME_PROGRAM_PANIC);
         let help = error.help.unwrap();

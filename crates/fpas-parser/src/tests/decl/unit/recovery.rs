@@ -41,7 +41,7 @@ fn unit_with_invalid_uses_entry_still_parses_following_declaration() {
     let (unit, errors) = parse_compilation_unit_with_errors(
         "\
 unit MyApp.Core;
-uses , Std.Console;
+uses , Std.Console as Console;
 
 function Answer(): integer;
 begin

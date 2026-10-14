@@ -13,7 +13,7 @@ use serde_json::{Value, json};
 
 const SOURCE: &str = r#"program JsonlTaskDebugging;
 
-uses Std.Console, Std.Tasks;
+uses Std.Console as Console, Std.Tasks as Tasks;
 
 function Work(): integer;
 begin
@@ -24,7 +24,7 @@ end function;
 
 begin scope
   const Pending: task of integer := go Work();
-  WriteLn(Wait(Pending));
+  Console.WriteLn(Tasks.Wait(Pending));
  end scope; end.
 "#;
 
@@ -219,7 +219,7 @@ fn task_snapshots_and_mutation_remain_bound_to_their_task() {
 fn dictionary_structure_mutation_remains_bound_to_the_child_task() {
     const DICTIONARY_TASK: &str = r#"program TaskDictionaryMutation;
 
-uses Std.Console, Std.Tasks;
+uses Std.Console as Console, Std.Tasks as Tasks;
 
 function Work(): integer;
 begin
@@ -230,7 +230,7 @@ end function;
 
 begin scope
   const Pending: task of integer := go Work();
-  WriteLn(Wait(Pending));
+  Console.WriteLn(Tasks.Wait(Pending));
  end scope; end.
 "#;
     let mut server = server_for(DICTIONARY_TASK);
@@ -275,11 +275,11 @@ begin scope
 fn wait_all_sleep_detached_and_nested_spawn_complete_under_debugging() {
     const WAIT_ALL: &str = r#"program TaskWaitAll;
 
-uses Std.Console, Std.Tasks, Std.Time;
+uses Std.Console as Console, Std.Tasks as Tasks, Std.Time as Time;
 
 function Work(Value: integer): integer;
 begin
-  Sleep(1);
+  Time.Sleep(1);
   return Value;
 end function;
 
@@ -292,14 +292,14 @@ begin scope
   const First: task of integer := go Work(20);
   const Second: task of integer := go Work(22);
   const Pending: array of task of integer := [First, Second, First];
-  WaitAll(Pending);
-  WriteLn(Wait(First));
-  WriteLn(Wait(Second));
+  Tasks.WaitAll(Pending);
+  Console.WriteLn(Tasks.Wait(First));
+  Console.WriteLn(Tasks.Wait(Second));
  end scope; end.
 "#;
     const NESTED: &str = r#"program NestedTasks;
 
-uses Std.Console, Std.Tasks;
+uses Std.Console as Console, Std.Tasks as Tasks;
 
 function Leaf(Value: integer): integer;
 begin
@@ -309,12 +309,12 @@ end function;
 function Parent(): integer;
 begin scope
   const Child: task of integer := go Leaf(41);
-  return Wait(Child) + 1;
+  return Tasks.Wait(Child) + 1;
  end scope; end function;
 
 begin scope
   const Pending: task of integer := go Parent();
-  WriteLn(Wait(Pending));
+  Console.WriteLn(Tasks.Wait(Pending));
  end scope; end.
 "#;
 
@@ -356,7 +356,7 @@ begin scope
 fn child_failure_and_root_shutdown_report_one_clean_lifecycle() {
     const FAILURE: &str = r#"program TaskFailure;
 
-uses Std.Tasks;
+uses Std.Tasks as Tasks;
 
 procedure Explode();
 begin
@@ -365,22 +365,22 @@ end procedure;
 
 begin scope
   const Pending: task := go Explode();
-  Wait(Pending);
+  Tasks.Wait(Pending);
  end scope; end.
 "#;
     const SHUTDOWN: &str = r#"program OwnedShutdown;
 
-uses Std.Console, Std.Tasks;
-const Gate: channel of boolean := CreateChannel(1);
+uses Std.Console as Console, Std.Tasks as Tasks;
+const Gate: channel of boolean := Tasks.CreateChannel(1);
 
-procedure Later(Token: CancellationToken);
+procedure Later(Token: Tasks.CancellationToken);
 begin
-  if ReceiveWithCancellation(Gate, Token).IsOk() then WriteLn('too late'); end if;
+  if Tasks.ReceiveWithCancellation(Gate, Token).IsOk() then Console.WriteLn('too late'); end if;
 end procedure;
 
 begin
-  const Group := CreateTaskGroup();
-  discard StartTaskInGroup(Group, Later);
+  const Group := Tasks.CreateTaskGroup();
+  discard Tasks.StartTaskInGroup(Group, Later);
 end.
 "#;
 

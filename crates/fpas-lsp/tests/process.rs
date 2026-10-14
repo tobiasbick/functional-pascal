@@ -250,7 +250,7 @@ fn cancelling_an_active_reference_scan_keeps_the_server_responsive() {
         temp.write(
             format!("src/use_{index}.fpas"),
             &format!(
-                "unit Demo.Use{index};\n\nuses Demo.Core;\n\npublic procedure Exercise{index}();\nbegin\n{calls}end procedure;\nend unit;\n"
+                "unit Demo.Use{index};\n\nuses Demo.Core as Core;\n\npublic procedure Exercise{index}();\nbegin\n{calls}end procedure;\nend unit;\n"
             ),
         );
     }

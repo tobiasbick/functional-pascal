@@ -2,25 +2,26 @@
 unit Std.Http.Client;
 
 uses
-  Std.Http.Head, Std.Http.Headers, Std.Http.Io, Std.Http.Redirect, Std.Http.Stream, Std.Http.Types,
-  Std.Http.Wire, Std.Net, Std.Net.Uri;
+  Std.Http.Head as Head, Std.Http.Headers as Headers, Std.Http.Io as Io,
+  Std.Http.Redirect as Redirect, Std.Http.Stream as Stream, Std.Http.Types as Types,
+  Std.Http.Wire as Wire, Std.Net as Net, Std.Net.Uri as Uri;
 
 // Opens a TCP or verified TLS connection selected by URI scheme.
 //
 // Parameters:
 // - `UriValue`: Parsed absolute request URI.
 // - `TimeoutMillis`: Connection and TLS handshake timeout.
-function OpenConnection(UriValue: Uri; TimeoutMillis: integer): result of (Std.Net.Connection, string);
+function OpenConnection(UriValue: Uri.Uri; TimeoutMillis: integer): result of (Net.Connection, string);
 begin
   if UriValue.Scheme = 'http' then
     begin
-      return Std.Net.Connect(UriValue.Host, UriValue.Port, TimeoutMillis);
+      return Net.Connect(UriValue.Host, UriValue.Port, TimeoutMillis);
     end;
   end if;
 
   if UriValue.Scheme = 'https' then
     begin
-      return Std.Net.ConnectTls(UriValue.Host, UriValue.Port, TimeoutMillis);
+      return Net.ConnectTls(UriValue.Host, UriValue.Port, TimeoutMillis);
     end;
   end if;
 
@@ -31,9 +32,9 @@ end function;
 //
 // Parameters:
 // - `Connection`: Connection to close.
-procedure CloseQuietly(Connection: Std.Net.Connection);
+procedure CloseQuietly(Connection: Net.Connection);
 begin
-  case Std.Net.Close(Connection) of
+  case Net.Close(Connection) of
     when Ok(_):
       begin
       end;
@@ -47,14 +48,14 @@ end procedure;
 //
 // Parameters:
 // - `RequestValue`: Complete request and its transport limits.
-function OpenOnce(RequestValue: Request): result of (StreamResponse, string);
+function OpenOnce(RequestValue: Types.Request): result of (Types.StreamResponse, string);
 begin
-  const UriValue: Uri := try Std.Net.Uri.Parse(RequestValue.Url);
-  const Encoded: array of integer := try Std.Http.Wire.EncodeRequest(RequestValue, UriValue);
+  const UriValue: Uri.Uri := try Uri.Parse(RequestValue.Url);
+  const Encoded: array of integer := try Wire.EncodeRequest(RequestValue, UriValue);
   case OpenConnection(UriValue, RequestValue.TimeoutMillis) of
     when Ok(const Connection):
       begin
-        case Std.Net.SetTimeout(Connection, RequestValue.TimeoutMillis) of
+        case Net.SetTimeout(Connection, RequestValue.TimeoutMillis) of
           when Ok(const Configured):
             begin
               if not Configured then
@@ -71,7 +72,7 @@ begin
             end;
         end case;
 
-        case Std.Http.Io.WriteAll(Connection, Encoded) of
+        case Io.WriteAll(Connection, Encoded) of
           when Ok(const Written):
             begin
             end;
@@ -82,13 +83,13 @@ begin
             end;
         end case;
 
-        case Std.Http.Head.ReadFinal(Connection, RequestValue.MaxHeaderBytes, RequestValue.MaxResponseBytes) of
+        case Head.ReadFinal(Connection, RequestValue.MaxHeaderBytes, RequestValue.MaxResponseBytes) of
           when Ok(const FinalHead):
             begin
-              case Std.Http.Stream.CreateBody(Connection, FinalHead.InitialBody, FinalHead.Head.Headers, Std.Http.Wire.ResponseHasBody(RequestValue.Method, FinalHead.Head.StatusCode), FinalHead.BytesReceived, RequestValue.MaxResponseBytes) of
+              case Stream.CreateBody(Connection, FinalHead.InitialBody, FinalHead.Head.Headers, Wire.ResponseHasBody(RequestValue.Method, FinalHead.Head.StatusCode), FinalHead.BytesReceived, RequestValue.MaxResponseBytes) of
                 when Ok(const Body):
                   begin
-                    return Ok(StreamResponse(StatusCode := FinalHead.Head.StatusCode, ReasonPhrase := FinalHead.Head.ReasonPhrase, Headers := FinalHead.Head.Headers, Body := Body));
+                    return Ok(Types.StreamResponse(StatusCode := FinalHead.Head.StatusCode, ReasonPhrase := FinalHead.Head.ReasonPhrase, Headers := FinalHead.Head.Headers, Body := Body));
                   end;
                 when Error(const Message):
                   begin
@@ -114,7 +115,7 @@ end function;
 //
 // Parameters:
 // - `RequestValue`: Complete request and its transport limits.
-public function OpenStream(RequestValue: Request): result of (StreamResponse, string);
+public function OpenStream(RequestValue: Types.Request): result of (Types.StreamResponse, string);
 begin
   if RequestValue.MaxHeaderBytes < 1 then
     begin
@@ -133,21 +134,21 @@ begin
       return Error('HTTP MaxRedirects must not be negative');
     end;
   end if;
-  var Current: Request := RequestValue;
+  var Current: Types.Request := RequestValue;
   var Redirects: integer := 0;
   while true do
     begin
       case OpenOnce(Current) of
         when Ok(const ResponseValue):
           begin
-            if Std.Http.Redirect.IsStatus(ResponseValue.StatusCode) then
+            if Redirect.IsStatus(ResponseValue.StatusCode) then
               begin
-                case Std.Http.Headers.Find(ResponseValue.Headers, 'Location') of
+                case Headers.Find(ResponseValue.Headers, 'Location') of
                   when Some(const Location):
                     begin
                       if Redirects >= RequestValue.MaxRedirects then
                         begin
-                          case Std.Http.Stream.CloseBody(ResponseValue.Body) of
+                          case Stream.CloseBody(ResponseValue.Body) of
                             when Ok(_):
                               begin
                               end;
@@ -159,15 +160,15 @@ begin
                           return Error('HTTP redirect count exceeds MaxRedirects');
                         end;
                       end if;
-                      var Next: Request := Current;
-                      case Std.Http.Redirect.NextRequest(Current, ResponseValue.StatusCode, Location) of
+                      var Next: Types.Request := Current;
+                      case Redirect.NextRequest(Current, ResponseValue.StatusCode, Location) of
                         when Ok(const Value):
                           begin
                             Next := Value;
                           end;
                         when Error(const Message):
                           begin
-                            case Std.Http.Stream.CloseBody(ResponseValue.Body) of
+                            case Stream.CloseBody(ResponseValue.Body) of
                               when Ok(_):
                                 begin
                                 end;
@@ -180,7 +181,7 @@ begin
                           end;
                       end case;
 
-                      case Std.Http.Stream.CloseBody(ResponseValue.Body) of
+                      case Stream.CloseBody(ResponseValue.Body) of
                         when Ok(_):
                           begin
                           end;
@@ -219,7 +220,7 @@ end function;
 //
 // Parameters:
 // - `RequestValue`: Complete request and its transport limits.
-public function Send(RequestValue: Request): result of (Response, string);
+public function Send(RequestValue: Types.Request): result of (Types.Response, string);
 begin
   case OpenStream(RequestValue) of
     when Ok(const StreamResponseValue):
@@ -227,12 +228,12 @@ begin
         var Chunks: array of array of integer := [];
         while true do
           begin
-            case Std.Http.Stream.ReadBody(StreamResponseValue.Body, 65536) of
+            case Stream.ReadBody(StreamResponseValue.Body, 65536) of
               when Ok(const Bytes):
                 begin
                   if Bytes.Length() = 0 then
                     begin
-                      return Ok(Response(StatusCode := StreamResponseValue.StatusCode, ReasonPhrase := StreamResponseValue.ReasonPhrase, Headers := StreamResponseValue.Headers, Body := Std.Http.Io.JoinChunks(Chunks)));
+                      return Ok(Types.Response(StatusCode := StreamResponseValue.StatusCode, ReasonPhrase := StreamResponseValue.ReasonPhrase, Headers := StreamResponseValue.Headers, Body := Io.JoinChunks(Chunks)));
                     end;
                   end if;
 
@@ -240,7 +241,7 @@ begin
                 end;
               when Error(const Message):
                 begin
-                  case Std.Http.Stream.CloseBody(StreamResponseValue.Body) of
+                  case Stream.CloseBody(StreamResponseValue.Body) of
                     when Ok(_):
                       begin
                       end;

@@ -27,7 +27,7 @@ export async function verifyTaskHandleAssignment(
   const lines = [
     "program DebuggerTaskHandleAssignment;",
     "",
-    "uses Std.Console, Std.Tasks;",
+    "uses Std.Console as Console, Std.Tasks as Tasks;",
     "",
     "function Seven(): integer;",
     "begin",
@@ -45,7 +45,7 @@ export async function verifyTaskHandleAssignment(
     "  const Frozen: task := go Seven();",
     "  var StopMarker: integer := 0;",
     "  StopMarker := StopMarker + 1;",
-    "  WriteLn(Wait(Current));",
+    "  Console.WriteLn(Tasks.Wait(Current));",
     "end.",
     ""
   ];

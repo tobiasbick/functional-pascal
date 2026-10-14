@@ -195,7 +195,7 @@ fn load_project_allows_same_library_reached_through_multiple_dependencies() {
     );
     write(
         &dir.join("wrapper/wrapper.fpas"),
-        "unit Lib.Wrapper;\nuses Lib.Base;\nend unit;\n",
+        "unit Lib.Wrapper;\nuses Lib.Base as Base;\nend unit;\n",
     );
     write(
         &consumer,

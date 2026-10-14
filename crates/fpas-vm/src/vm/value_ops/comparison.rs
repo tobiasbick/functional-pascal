@@ -75,7 +75,7 @@ fn ordering(left: &Value, right: &Value) -> Result<Ordering, ValueOperationError
 fn numeric_mixture() -> ValueOperationError {
     ValueOperationError::type_mismatch(
         "Numeric operands must have the same type",
-        "Use Std.Conv.IntToReal explicitly before comparing integer and real values.",
+        "Import `uses Std.Conv as Conv;` and use `Conv.IntToReal` explicitly before comparing integer and real values.",
     )
 }
 

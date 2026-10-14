@@ -81,15 +81,13 @@ fn imported_contracts_survive_reuse_indirect_calls_and_clause_changes() {
 fn native_bundle_checks_before_body_output_and_argument_expressions_run_once() {
     for (guard, call, stdout, failed) in [
         (
-            "procedure Guard(var X: integer; Input: integer); requires X > 0; begin X := 1; WriteLn('body'); end procedure;",
+            "procedure Guard(var X: integer; Input: integer); requires X > 0; begin X := 1; Console.WriteLn('body'); end procedure;",
             "Guard(var X, Read());",
             "argument\n",
             "requires X > 0;",
         ),
         (
-            "function Returned(): integer; begin WriteLn('return'); return 0; end function;
-          function Guard(var X: integer; Input: integer): integer; ensures (Value): Value > 0;
-          begin X := 2; WriteLn('body'); return Returned(); end function;",
+            "function Returned(): integer; begin Console.WriteLn('return'); return 0; end function;\n          function Guard(var X: integer; Input: integer): integer; ensures (Value): Value > 0;\n          begin X := 2; Console.WriteLn('body'); return Returned(); end function;",
             "const Value: integer := Guard(var X, Read());",
             "argument\nbody\nreturn\n",
             "ensures (Value): Value > 0;",
@@ -99,9 +97,7 @@ fn native_bundle_checks_before_body_output_and_argument_expressions_run_once() {
         write(
             &root.join("main.fpas"),
             &format!(
-                "program T; uses Std.Console;
-        function Read(): integer; begin WriteLn('argument'); return 0; end function;
-        {guard} begin var X := 0; {call} end."
+                "program T; uses Std.Console as Console;\n        function Read(): integer; begin Console.WriteLn('argument'); return 0; end function;\n        {guard} begin var X := 0; {call} end."
             ),
         );
         write(

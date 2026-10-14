@@ -1,20 +1,20 @@
 program ShiftBoundariesTest;
 
-uses Std.Bits, Std.Test;
+uses Std.Bits as Bits, Std.Test as Test;
 
 begin
   const Minimum: integer := -9223372036854775807 - 1;
   const Maximum: integer := 9223372036854775807;
-  AssertEquals(7, ShiftLeft(7, 0));
-  AssertEquals(-8, ShiftRight(-8, 0));
-  AssertEquals(Minimum, ShiftLeft(Minimum, 0));
-  AssertEquals(Maximum, ShiftRight(Maximum, 0));
-  AssertEquals(-4, ShiftRight(-8, 1));
-  AssertEquals(-1, ShiftRight(-1, 63));
-  AssertEquals(-1, ShiftRight(Minimum, 63));
-  AssertEquals(0, ShiftRight(Maximum, 63));
-  AssertEquals(Minimum, ShiftLeft(1, 63));
-  AssertEquals(Minimum, ShiftLeft(-1, 63));
-  AssertEquals(0, ShiftLeft(Minimum, 1));
-  AssertEquals(-2, ShiftLeft(Maximum, 1));
+  Test.AssertEquals(7, Bits.ShiftLeft(7, 0));
+  Test.AssertEquals(-8, Bits.ShiftRight(-8, 0));
+  Test.AssertEquals(Minimum, Bits.ShiftLeft(Minimum, 0));
+  Test.AssertEquals(Maximum, Bits.ShiftRight(Maximum, 0));
+  Test.AssertEquals(-4, Bits.ShiftRight(-8, 1));
+  Test.AssertEquals(-1, Bits.ShiftRight(-1, 63));
+  Test.AssertEquals(-1, Bits.ShiftRight(Minimum, 63));
+  Test.AssertEquals(0, Bits.ShiftRight(Maximum, 63));
+  Test.AssertEquals(Minimum, Bits.ShiftLeft(1, 63));
+  Test.AssertEquals(Minimum, Bits.ShiftLeft(-1, 63));
+  Test.AssertEquals(0, Bits.ShiftLeft(Minimum, 1));
+  Test.AssertEquals(-2, Bits.ShiftLeft(Maximum, 1));
 end.

@@ -1,7 +1,7 @@
 // HTTP request, response, server, streaming, and SSE data types.
 unit Std.Http.Types;
 
-uses Std.Http.Handles;
+uses Std.Http.Handles as Handles;
 
 // One HTTP field name and value.
 public type Header = record
@@ -127,7 +127,7 @@ public type Response = record
 end record;
 
 // Opaque pull-based HTTP response body.
-public type BodyStream = Std.Http.Handles.BodyStream;
+public type BodyStream = Handles.BodyStream;
 
 // Status and headers returned before a streaming response body is consumed.
 public type StreamResponse = record
@@ -224,5 +224,5 @@ public type SseEvent = record
 end record;
 
 // Opaque incremental Server-Sent Events decoder.
-public type SseDecoder = Std.Http.Handles.SseDecoder;
+public type SseDecoder = Handles.SseDecoder;
 end unit;

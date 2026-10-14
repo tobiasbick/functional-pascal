@@ -1,7 +1,7 @@
 // MVU update logic for the Local Chat application.
 unit LocalChat.Update;
 
-uses LocalChat.Model, LocalChat.Service, Std.Console, Std.Tui;
+uses LocalChat.Model as Model, LocalChat.Service as Service, Std.Console as Console, Std.Tui as Tui;
 
 // Identifier of the prompt input control.
 const PromptControl: integer := 1;
@@ -17,10 +17,10 @@ const SendAction: integer := 10;
 // Parameters:
 // - `State`: Current application state.
 // - `Entry`: Entry to append to the conversation.
-function AppendEntry(State: LocalChatModel; Entry: ChatEntry): LocalChatModel;
+function AppendEntry(State: Model.LocalChatModel; Entry: Model.ChatEntry): Model.LocalChatModel;
 begin
-  var Next: LocalChatModel := State;
-  var Entries: array of ChatEntry := Next.Entries;
+  var Next: Model.LocalChatModel := State;
+  var Entries: array of Model.ChatEntry := Next.Entries;
   Entries.PushInPlace(Entry);
   Next.Entries := Entries;
   return Next;
@@ -30,44 +30,44 @@ end function;
 //
 // Parameters:
 // - `State`: Current application state containing the draft.
-function SendPrompt(State: LocalChatModel): LocalChatModel;
+function SendPrompt(State: Model.LocalChatModel): Model.LocalChatModel;
 begin
   const Prompt: string := State.Draft.Trim();
   if Prompt = '' then
     begin
-      var Empty: LocalChatModel := State;
+      var Empty: Model.LocalChatModel := State;
       Empty.Status := 'Enter a message first';
       return Empty;
     end;
   end if;
-  var Next: LocalChatModel := AppendEntry(State, ChatEntry.User(Prompt));
+  var Next: Model.LocalChatModel := AppendEntry(State, Model.ChatEntry.User(Prompt));
   Next.Draft := '';
   Next.DraftCaret := 0;
   Next.Status := 'Contacting local model…';
-  case LocalChatRequest(Prompt) of
+  case Service.LocalChatRequest(Prompt) of
     when Ok(const Content):
       begin
-        Next := AppendEntry(Next, ChatEntry.Assistant(Content));
+        Next := AppendEntry(Next, Model.ChatEntry.Assistant(Content));
         Next.Status := 'Ready';
       end;
     when Error(const Message):
       begin
-        Next := AppendEntry(Next, ChatEntry.Failure(Message));
+        Next := AppendEntry(Next, Model.ChatEntry.Failure(Message));
         Next.Status := 'Request failed';
       end;
   end case;
 
   Next.Focus := PromptControl;
-  return LocalChatScrollToEnd(Next);
+  return Model.LocalChatScrollToEnd(Next);
 end function;
 
 // Reports whether a key event is the Alt+X quit shortcut.
 //
 // Parameters:
 // - `Key`: Key event to inspect.
-function IsQuitShortcut(Key: TuiKeyEvent): boolean;
+function IsQuitShortcut(Key: Tui.TuiKeyEvent): boolean;
 begin
-  return ((((Key.kind = Std.Console.KeyKind.Character) and Key.alt) and (not Key.ctrl)) and (not Key.meta)) and
+  return ((((Key.kind = Console.KeyKind.Character) and Key.alt) and (not Key.ctrl)) and (not Key.meta)) and
          ((Key.ch = 'x') or (Key.ch = 'X'));
 end function;
 
@@ -77,15 +77,15 @@ end function;
 // - `State`: Current immutable application state.
 // - `Msg`: Routed TUI message to process.
 // - `Cmd`: Command output updated when the message requests a host action.
-public function LocalChatUpdate(State: LocalChatModel; Msg: TuiMsg; Cmd: TuiCmdOutput): LocalChatModel;
+public function LocalChatUpdate(State: Model.LocalChatModel; Msg: Tui.TuiMsg; Cmd: Tui.TuiCmdOutput): Model.LocalChatModel;
 begin
-  Cmd.Set(TuiCmd.NoCommand);
+  Cmd.Set(Tui.TuiCmd.NoCommand);
   case Msg of
-    when TuiMsg.TextChanged(const Source, const Action, const Text, const Caret):
+    when Tui.TuiMsg.TextChanged(const Source, const Action, const Text, const Caret):
       begin
         if Action.Value = PromptChangedAction then
           begin
-            var Next: LocalChatModel := State;
+            var Next: Model.LocalChatModel := State;
             Next.Draft := Text;
             Next.DraftCaret := Caret;
             Next.Status := 'Ready';
@@ -95,11 +95,11 @@ begin
 
         return State;
       end;
-    when TuiMsg.TextAreaChanged(const Source, const Action, const Text, const Caret, const Offset):
+    when Tui.TuiMsg.TextAreaChanged(const Source, const Action, const Text, const Caret, const Offset):
       begin
         if Action.Value = TranscriptChangedAction then
           begin
-            var Next: LocalChatModel := State;
+            var Next: Model.LocalChatModel := State;
             Next.TranscriptCaret := Caret;
             Next.TranscriptOffset := Offset;
             return Next;
@@ -108,7 +108,7 @@ begin
 
         return State;
       end;
-    when TuiMsg.Action(const Source, const Action):
+    when Tui.TuiMsg.Action(const Source, const Action):
       begin
         if Action.Value = SendAction then
           begin
@@ -118,29 +118,29 @@ begin
 
         return State;
       end;
-    when TuiMsg.Key(const Key):
+    when Tui.TuiMsg.Key(const Key):
       begin
         if IsQuitShortcut(Key) then
           begin
-            Cmd.Set(TuiCmd.Quit);
+            Cmd.Set(Tui.TuiCmd.Quit);
           end;
         end if;
 
         return State;
       end;
-    when TuiMsg.Resize(const Size):
+    when Tui.TuiMsg.Resize(const Size):
       begin
-        var Next: LocalChatModel := State;
+        var Next: Model.LocalChatModel := State;
         Next.Width := Size.Width;
         Next.Height := Size.Height;
-        return LocalChatScrollToEnd(Next);
+        return Model.LocalChatScrollToEnd(Next);
       end;
-    when TuiMsg.FocusChanged(const Previous, const Current):
+    when Tui.TuiMsg.FocusChanged(const Previous, const Current):
       begin
         case Current of
           when Some(const CurrentId):
             begin
-              var Next: LocalChatModel := State;
+              var Next: Model.LocalChatModel := State;
               Next.Focus := CurrentId.Value;
               return Next;
             end;
@@ -150,35 +150,35 @@ begin
             end;
         end case;
       end;
-    when TuiMsg.QuitRequested:
+    when Tui.TuiMsg.QuitRequested:
       begin
         return State;
       end;
-    when TuiMsg.Pointer(const Pointer):
+    when Tui.TuiMsg.Pointer(const Pointer):
       begin
         return State;
       end;
-    when TuiMsg.Tick(const Delta):
+    when Tui.TuiMsg.Tick(const Delta):
       begin
         return State;
       end;
-    when TuiMsg.SelectionChanged(const Source, const Action, const Selected):
+    when Tui.TuiMsg.SelectionChanged(const Source, const Action, const Selected):
       begin
         return State;
       end;
-    when TuiMsg.CheckChanged(const CheckSource, const CheckAction, const Checked):
+    when Tui.TuiMsg.CheckChanged(const CheckSource, const CheckAction, const Checked):
       begin
         return State;
       end;
-    when TuiMsg.ScrollChanged(const ScrollSource, const ScrollAction, const ScrollOffset):
+    when Tui.TuiMsg.ScrollChanged(const ScrollSource, const ScrollAction, const ScrollOffset):
       begin
         return State;
       end;
-    when TuiMsg.MenuChanged(const MenuSource, const MenuAction, const MenuState):
+    when Tui.TuiMsg.MenuChanged(const MenuSource, const MenuAction, const MenuState):
       begin
         return State;
       end;
-    when TuiMsg.Started, TuiMsg.BackgroundFailed(_, _, _, _, _, _):
+    when Tui.TuiMsg.Started, Tui.TuiMsg.BackgroundFailed(_, _, _, _, _, _):
       begin
         return State;
       end;

@@ -1,10 +1,10 @@
 program T;
 
-uses Std.Console;
+uses Std.Console as Console;
 
 begin
   var A: array of integer := [];
   A.PushInPlace(42);
-  WriteLn(A.Length());
-  WriteLn(A[0]);
+  Console.WriteLn(A.Length());
+  Console.WriteLn(A[0]);
 end.

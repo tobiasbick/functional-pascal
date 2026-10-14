@@ -1,6 +1,6 @@
 program FluentCollectionTest;
 
-uses Std.Json, Std.Test;
+uses Std.Json as Json, Std.Test as Test;
 
 function IsEven(X: integer): boolean;
 begin
@@ -39,15 +39,15 @@ end function;
 
 begin
   const Numbers: array of integer := [1, 2, 3, 4];
-  AssertEquals(12, Numbers.Filter(IsEven).Map(Double).Reduce(0, Sum));
-  AssertEquals(4, Double(2));
+  Test.AssertEquals(12, Numbers.Filter(IsEven).Map(Double).Reduce(0, Sum));
+  Test.AssertEquals(4, Double(2));
   const Scores: dict of string to integer := ['A': 2, 'B': 3];
-  AssertEquals(5, Scores.Reduce(0, AddEntry));
-  AssertTrue(Scores.Get('A').IsSome());
-  AssertEquals('AB', ('ab').Map(Upper));
-  AssertEquals(2, MakeNumbers().Length());
-  AssertTrue(Parse('1').IsOk());
+  Test.AssertEquals(5, Scores.Reduce(0, AddEntry));
+  Test.AssertTrue(Scores.Get('A').IsSome());
+  Test.AssertEquals('AB', ('ab').Map(Upper));
+  Test.AssertEquals(2, MakeNumbers().Length());
+  Test.AssertTrue(Json.Parse('1').IsOk());
   const DoubleValue: function(X: integer): integer := Double;
-  AssertEquals(6, DoubleValue(3));
-  AssertEquals(8, Apply(4, Double));
+  Test.AssertEquals(6, DoubleValue(3));
+  Test.AssertEquals(8, Apply(4, Double));
 end.

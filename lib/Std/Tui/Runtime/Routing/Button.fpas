@@ -1,13 +1,13 @@
 unit Std.Tui.Runtime.Routing.Button;
 
 uses
-  Std.Console, Std.Tui.Chrome.Button, Std.Tui.Elements.Element, Std.Tui.Ids.ControlId,
-  Std.Tui.Runtime.Msg;
+  Std.Console as Console, Std.Tui.Chrome.Button as ChromeButton, Std.Tui.Elements.Element as Element,
+  Std.Tui.Ids.ControlId as ControlId, Std.Tui.Runtime.Msg as Msg;
 
-function TuiButtonFind(Node: TuiElement; RequireDefault: boolean; Mnemonic: string): option of TuiButtonSpec;
+function TuiButtonFind(Node: Element.TuiElement; RequireDefault: boolean; Mnemonic: string): option of ChromeButton.TuiButtonSpec;
 begin
   case Node of
-    when TuiElement.Button(const Button):
+    when Element.TuiElement.Button(const Button):
       begin
         if Button.Enabled and
            ((RequireDefault and Button.Default) or ((Mnemonic <> '') and (Button.Mnemonic.ToLower() = Mnemonic.ToLower()))) then
@@ -18,17 +18,17 @@ begin
 
         return None;
       end;
-    when TuiElement.Desktop(const Focused, const Children):
+    when Element.TuiElement.Desktop(const Focused, const Children):
       begin
         var ModalIndex: integer := -1;
         for Index: integer := 0 to Children.Length() - 1 do
           begin
             case Children[Index] of
-              when TuiElement.Overlay(const Title, const OverlayChildren):
+              when Element.TuiElement.Overlay(const Title, const OverlayChildren):
                 begin
                   ModalIndex := Index;
                 end;
-              when TuiElement.Empty, TuiElement.Label(_), TuiElement.Button(_), TuiElement.Input(_), TuiElement.TextArea(_, _, _, _, _), TuiElement.CheckBox(_, _, _, _), TuiElement.List(_, _, _, _), TuiElement.Scroll(_, _, _, _), TuiElement.MenuBar(_), TuiElement.Menu(_, _, _, _), TuiElement.StatusLine(_), TuiElement.CellGrid(_), TuiElement.Rule(_), TuiElement.Gauge(_), TuiElement.Row(_, _), TuiElement.Column(_, _), TuiElement.Layout(_, _), TuiElement.Spacer(_), TuiElement.Panel(_, _), TuiElement.Desktop(_, _):
+              when Element.TuiElement.Empty, Element.TuiElement.Label(_), Element.TuiElement.Button(_), Element.TuiElement.Input(_), Element.TuiElement.TextArea(_, _, _, _, _), Element.TuiElement.CheckBox(_, _, _, _), Element.TuiElement.List(_, _, _, _), Element.TuiElement.Scroll(_, _, _, _), Element.TuiElement.MenuBar(_), Element.TuiElement.Menu(_, _, _, _), Element.TuiElement.StatusLine(_), Element.TuiElement.CellGrid(_), Element.TuiElement.Rule(_), Element.TuiElement.Gauge(_), Element.TuiElement.Row(_, _), Element.TuiElement.Column(_, _), Element.TuiElement.Layout(_, _), Element.TuiElement.Spacer(_), Element.TuiElement.Panel(_, _), Element.TuiElement.Desktop(_, _):
                 null;
             end case;
           end;
@@ -56,7 +56,7 @@ begin
 
         return None;
       end;
-    when TuiElement.Scroll(const Id, const Offset, const ChangeAction, const Children):
+    when Element.TuiElement.Scroll(const Id, const Offset, const ChangeAction, const Children):
       begin
         for Index: integer := 0 to Children.Length() - 1 do
           begin
@@ -74,7 +74,7 @@ begin
 
         return None;
       end;
-    when TuiElement.Row(const Children, const Spacing):
+    when Element.TuiElement.Row(const Children, const Spacing):
       begin
         for Index: integer := 0 to Children.Length() - 1 do
           begin
@@ -92,7 +92,7 @@ begin
 
         return None;
       end;
-    when TuiElement.Column(const Children, const Spacing):
+    when Element.TuiElement.Column(const Children, const Spacing):
       begin
         for Index: integer := 0 to Children.Length() - 1 do
           begin
@@ -110,7 +110,7 @@ begin
 
         return None;
       end;
-    when TuiElement.Layout(const Settings, const Children):
+    when Element.TuiElement.Layout(const Settings, const Children):
       begin
         for Index: integer := 0 to Children.Length() - 1 do
           begin
@@ -128,7 +128,7 @@ begin
 
         return None;
       end;
-    when TuiElement.Panel(const Title, const Children):
+    when Element.TuiElement.Panel(const Title, const Children):
       begin
         for Index: integer := 0 to Children.Length() - 1 do
           begin
@@ -146,7 +146,7 @@ begin
 
         return None;
       end;
-    when TuiElement.Overlay(const Title, const Children):
+    when Element.TuiElement.Overlay(const Title, const Children):
       begin
         for Index: integer := 0 to Children.Length() - 1 do
           begin
@@ -164,7 +164,7 @@ begin
 
         return None;
       end;
-    when TuiElement.Empty, TuiElement.Label(_), TuiElement.Input(_), TuiElement.TextArea(_, _, _, _, _), TuiElement.CheckBox(_, _, _, _), TuiElement.List(_, _, _, _), TuiElement.MenuBar(_), TuiElement.Menu(_, _, _, _), TuiElement.StatusLine(_), TuiElement.CellGrid(_), TuiElement.Rule(_), TuiElement.Gauge(_), TuiElement.Spacer(_):
+    when Element.TuiElement.Empty, Element.TuiElement.Label(_), Element.TuiElement.Input(_), Element.TuiElement.TextArea(_, _, _, _, _), Element.TuiElement.CheckBox(_, _, _, _), Element.TuiElement.List(_, _, _, _), Element.TuiElement.MenuBar(_), Element.TuiElement.Menu(_, _, _, _), Element.TuiElement.StatusLine(_), Element.TuiElement.CellGrid(_), Element.TuiElement.Rule(_), Element.TuiElement.Gauge(_), Element.TuiElement.Spacer(_):
       begin
         return None;
       end;
@@ -175,7 +175,7 @@ end function;
 //
 // Parameters:
 // - `Root`: Root of the element tree.
-public function TuiFindDefaultButton(Root: TuiElement): option of TuiButtonSpec;
+public function TuiFindDefaultButton(Root: Element.TuiElement): option of ChromeButton.TuiButtonSpec;
 begin
   return TuiButtonFind(Root, true, '');
 end function;
@@ -185,7 +185,7 @@ end function;
 // Parameters:
 // - `Root`: Root of the element tree.
 // - `Mnemonic`: Keyboard mnemonic used to activate the item.
-public function TuiFindMnemonicButton(Root: TuiElement; Mnemonic: string): option of TuiButtonSpec;
+public function TuiFindMnemonicButton(Root: Element.TuiElement; Mnemonic: string): option of ChromeButton.TuiButtonSpec;
 begin
   if Mnemonic = '' then
     begin
@@ -201,9 +201,9 @@ end function;
 // Parameters:
 // - `Root`: Root of the element tree.
 // - `Key`: Console key event to route or match.
-public function TuiRouteButtonMnemonicKey(Root: TuiElement; Key: Std.Console.KeyEvent): option of array of TuiMsg;
+public function TuiRouteButtonMnemonicKey(Root: Element.TuiElement; Key: Console.KeyEvent): option of array of Msg.TuiMsg;
 begin
-  if (Key.kind <> Std.Console.KeyKind.Character) or not Key.alt then
+  if (Key.kind <> Console.KeyKind.Character) or not Key.alt then
     begin
       return None;
     end;
@@ -212,7 +212,7 @@ begin
   case TuiFindMnemonicButton(Root, Key.ch) of
     when Some(const Button):
       begin
-        return Some([TuiMsg.Action(Button.Id, Button.Action)]);
+        return Some([Msg.TuiMsg.Action(Button.Id, Button.Action)]);
       end;
     when None:
       begin
@@ -228,10 +228,10 @@ end function;
 // - `Target`: Target control identifier.
 // - `Key`: Console key event to route or match.
 public function TuiRouteFocusedButtonKey(
-  Button: TuiButtonSpec;
-  Target: TuiControlId;
-  Key: Std.Console.KeyEvent
-): option of TuiMsg;
+  Button: ChromeButton.TuiButtonSpec;
+  Target: ControlId.TuiControlId;
+  Key: Console.KeyEvent
+): option of Msg.TuiMsg;
 begin
   if Button.Id.Value <> Target.Value then
     begin
@@ -239,10 +239,9 @@ begin
     end;
   end if;
 
-  if Button.Enabled and
-     ((Key.kind = Std.Console.KeyKind.Enter) or (Key.kind = Std.Console.KeyKind.Space)) then
+  if Button.Enabled and ((Key.kind = Console.KeyKind.Enter) or (Key.kind = Console.KeyKind.Space)) then
     begin
-      return Some(TuiMsg.Action(Button.Id, Button.Action));
+      return Some(Msg.TuiMsg.Action(Button.Id, Button.Action));
     end;
   end if;
 
@@ -253,12 +252,12 @@ end function;
 //
 // Parameters:
 // - `Root`: Root of the element tree.
-public function TuiRouteDefaultButtonEnter(Root: TuiElement): option of TuiMsg;
+public function TuiRouteDefaultButtonEnter(Root: Element.TuiElement): option of Msg.TuiMsg;
 begin
   case TuiFindDefaultButton(Root) of
     when Some(const Button):
       begin
-        return Some(TuiMsg.Action(Button.Id, Button.Action));
+        return Some(Msg.TuiMsg.Action(Button.Id, Button.Action));
       end;
     when None:
       begin

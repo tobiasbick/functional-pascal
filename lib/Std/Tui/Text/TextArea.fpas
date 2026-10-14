@@ -1,6 +1,6 @@
 unit Std.Tui.Text.TextArea;
 
-uses Std.Console, Std.Tui.Geometry.Point, Std.Tui.Geometry.Size;
+uses Std.Console as Console, Std.Tui.Geometry.Point as Point, Std.Tui.Geometry.Size as Size;
 
 // Logical and terminal-cell location of one controlled text-area caret.
 public type TuiTextAreaPosition = record
@@ -84,7 +84,7 @@ begin
       if Caret <= LineEnd then
         begin
           const Prefix: string := (Lines[Line]).Slice(0, Caret - LineStart);
-          return TuiTextAreaPosition(Line := Line, LineStart := LineStart, LineEnd := LineEnd, DisplayColumn := Std.Console.DisplayWidth(Prefix));
+          return TuiTextAreaPosition(Line := Line, LineStart := LineStart, LineEnd := LineEnd, DisplayColumn := Console.DisplayWidth(Prefix));
         end;
       end if;
 
@@ -119,9 +119,9 @@ begin
   const LineText: string := Lines[Line];
   var Column: integer := 0;
   var Characters: integer := 0;
-  for Grapheme: string in Std.Console.SplitGraphemes(LineText) do
+  for Grapheme: string in Console.SplitGraphemes(LineText) do
     begin
-      const Width: integer := Std.Console.DisplayWidth(Grapheme);
+      const Width: integer := Console.DisplayWidth(Grapheme);
       // Console display width caps each cluster at two cells. Its final width may
       // be narrower than a prefix (for example an emoji followed by VS15).
       if Column + 2 > TargetColumn then
@@ -129,7 +129,7 @@ begin
           // Preserve scalar-index positions inside the crossing cluster, including emoji selectors.
           for Index: integer := 0 to Grapheme.Length() - 1 do
             begin
-              if Column + Std.Console.DisplayWidth(Grapheme.Slice(0, Index + 1)) > TargetColumn then
+              if Column + Console.DisplayWidth(Grapheme.Slice(0, Index + 1)) > TargetColumn then
                 begin
                   return Start + Characters + Index;
                 end;
@@ -151,13 +151,13 @@ end function;
 //
 // Parameters:
 // - `Text`: Text processed or displayed by the operation.
-public function TuiTextAreaContentSize(Text: string): TuiSize;
+public function TuiTextAreaContentSize(Text: string): Size.TuiSize;
 begin
   const Lines: array of string := Text.Split(string.Chr(10));
   var Width: integer := 1;
   for Index: integer := 0 to Lines.Length() - 1 do
     begin
-      const LineWidth: integer := Std.Console.DisplayWidth(Lines[Index]);
+      const LineWidth: integer := Console.DisplayWidth(Lines[Index]);
       if LineWidth > Width then
         begin
           Width := LineWidth;
@@ -166,7 +166,7 @@ begin
     end;
   end for;
 
-  return TuiSize.Create(Width, Lines.Length());
+  return Size.TuiSize.Create(Width, Lines.Length());
 end function;
 
 // Adjusts a non-negative model offset only as much as needed to reveal the caret.
@@ -179,11 +179,11 @@ end function;
 public function TuiTextAreaEnsureCaretVisible(
   Text: string;
   Caret: integer;
-  Offset: TuiPoint;
-  Viewport: TuiSize
-): TuiPoint;
+  Offset: Point.TuiPoint;
+  Viewport: Size.TuiSize
+): Point.TuiPoint;
 begin
-  var Next: TuiPoint := Offset;
+  var Next: Point.TuiPoint := Offset;
   if (Viewport.Width <= 0) and (Viewport.Height <= 0) then
     begin
       return Next;

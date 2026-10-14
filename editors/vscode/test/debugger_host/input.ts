@@ -34,11 +34,11 @@ export async function verifyDebuggerInput(
   const lines = [
     "program DebuggerInput;",
     "",
-    "uses Std.Console;",
+    "uses Std.Console as Console;",
     "",
     "begin",
-    "  WriteLn(ReadLn());",
-    "  WriteLn(ReadLn());",
+    "  Console.WriteLn(Console.ReadLn());",
+    "  Console.WriteLn(Console.ReadLn());",
     "end.",
     ""
   ];

@@ -17,10 +17,10 @@ fn pause_does_not_wait_inside_missing_readln() {
     let mut session = compile_session(
         r#"program PauseReadLn;
 
-uses Std.Console;
+uses Std.Console as Console;
 
 begin
-  WriteLn(ReadLn());
+  Console.WriteLn(Console.ReadLn());
 end.
 "#,
     );

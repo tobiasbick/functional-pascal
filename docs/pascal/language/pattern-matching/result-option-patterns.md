@@ -1,5 +1,7 @@
 # Result and Option patterns
 
+The code fragments use `uses Std.Conv as Conv, Std.Console as Console;`.
+
 `Some`, `Ok`, and `Error` match one explicit payload, either by position or
 with the case-insensitive label `Value`: `Some(Value := const N)`,
 `Ok(Value := _)`, or `Error(Value := 'timeout')`. Error payloads use their
@@ -12,16 +14,16 @@ Destructuring `case` arms for `Result of (T, E)` and `Option of T`:
 ```pascal
 case Success of
   when Ok(const Value):
-    WriteLn(IntToStr(Value));
+    Console.WriteLn(Conv.IntToStr(Value));
   when Error(const Message):
-    WriteLn(Message);
+    Console.WriteLn(Message);
 end case;
 
 case Present of
   when Some(const Value):
-    WriteLn(IntToStr(Value));
+    Console.WriteLn(Conv.IntToStr(Value));
   when None:
-    WriteLn('empty');
+    Console.WriteLn('empty');
 end case;
 ```
 
@@ -32,11 +34,11 @@ case Lookup of
   when Ok(Some(const User)):
     Greet(User);
   when Ok(None):
-    WriteLn('not found');
+    Console.WriteLn('not found');
   when Error('timeout'):
     Retry();
   when Error(const Message):
-    WriteLn(Message);
+    Console.WriteLn(Message);
 end case;
 ```
 
@@ -45,7 +47,7 @@ Multiple destructure labels in one arm may reuse one binding name:
 ```pascal
 case R of
   when Ok(const Msg), Error(const Msg):
-    WriteLn(Msg);
+    Console.WriteLn(Msg);
 end case;
 ```
 

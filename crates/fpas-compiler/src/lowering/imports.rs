@@ -62,10 +62,10 @@ pub(super) fn install(
         .direct
         .iter()
         .flat_map(|interface| {
-            let plain = !interfaces
-                .aliases
-                .contains_key(&interface.unit_name.to_ascii_lowercase());
-            interface.symbols.iter().map(move |symbol| (symbol, plain))
+            interface
+                .symbols
+                .iter()
+                .map(move |symbol| (symbol, interface.unit_name.as_str()))
         })
         .collect::<Vec<_>>();
     symbols.sort_by_key(|(symbol, _)| symbol.qualified_name.to_ascii_lowercase());
@@ -74,40 +74,10 @@ pub(super) fn install(
             .qualified_name
             .eq_ignore_ascii_case(&right.0.qualified_name)
     });
-    let short_constant_counts = symbols
-        .iter()
-        .filter(|(symbol, plain)| {
-            *plain
-                && matches!(
-                    symbol.kind,
-                    SymbolKind::Constant(Some(_)) | SymbolKind::EnumMember(_)
-                )
-        })
-        .fold(
-            BTreeMap::<String, usize>::new(),
-            |mut counts, (symbol, _)| {
-                *counts.entry(symbol.name.to_ascii_lowercase()).or_default() += 1;
-                counts
-            },
-        );
-    let short_type_counts = symbols
-        .iter()
-        .filter(|(symbol, plain)| {
-            *plain
-                && symbol.kind == SymbolKind::Type
-                && record_names::is_visible(&interfaces, symbol)
-        })
-        .fold(
-            BTreeMap::<String, usize>::new(),
-            |mut counts, (symbol, _)| {
-                *counts.entry(symbol.name.to_ascii_lowercase()).or_default() += 1;
-                counts
-            },
-        );
     let mut plan = ImportPlan::default();
     let mut stubs = Vec::new();
     let mut installed_callables = BTreeSet::new();
-    for (symbol, plain) in symbols {
+    for (symbol, owner) in symbols {
         match &symbol.kind {
             SymbolKind::Function | SymbolKind::Procedure => {
                 let callable_type = match &symbol.ty {
@@ -118,7 +88,6 @@ pub(super) fn install(
                 };
                 install_callable(
                     &symbol.qualified_name,
-                    plain.then_some(symbol.name.as_str()),
                     callable_type,
                     types,
                     callables,
@@ -142,11 +111,6 @@ pub(super) fn install(
                     initializer: None,
                 });
                 let binding = GlobalBinding { id, ty };
-                if plain {
-                    global_bindings
-                        .entry(symbol.name.to_ascii_lowercase())
-                        .or_insert(binding);
-                }
                 global_bindings.insert(symbol.qualified_name.to_ascii_lowercase(), binding);
                 plan.globals.push((
                     id,
@@ -161,23 +125,20 @@ pub(super) fn install(
                     && record_names::is_visible(&interfaces, symbol)
                 {
                     let underlying = interface_type_id(types, &distinct.underlying, span)?;
-                    let short = (plain
-                        && short_type_counts.get(&symbol.name.to_ascii_lowercase()) == Some(&1))
-                    .then_some(symbol.name.as_str());
-                    types.register_imported_distinct_names(
-                        &symbol.qualified_name,
-                        short,
-                        underlying,
-                    );
+                    if let Some(source) =
+                        names::source_name(interfaces.aliases, owner, &symbol.qualified_name)
+                    {
+                        types.register_imported_distinct_names(&source, underlying);
+                    }
                 }
                 if let InterfaceType::Record(record) = &symbol.ty {
                     if record_names::is_visible(&interfaces, symbol) {
                         let ty = interface_type_id(types, &symbol.ty, span)?;
-                        let short = (plain
-                            && short_type_counts.get(&symbol.name.to_ascii_lowercase())
-                                == Some(&1))
-                        .then_some(symbol.name.as_str());
-                        types.register_imported_record_names(&symbol.qualified_name, short, ty);
+                        if let Some(source) =
+                            names::source_name(interfaces.aliases, owner, &symbol.qualified_name)
+                        {
+                            types.register_imported_record_names(&source, ty);
+                        }
                     }
                     install_record_callables(
                         record,
@@ -194,16 +155,6 @@ pub(super) fn install(
             SymbolKind::Constant(Some(value)) | SymbolKind::EnumMember(value) => {
                 let value = lower_constant(value);
                 constants.insert(symbol.qualified_name.to_ascii_lowercase(), value.clone());
-                if plain
-                    && short_constant_counts
-                        .get(&symbol.name.to_ascii_lowercase())
-                        .copied()
-                        == Some(1)
-                {
-                    constants
-                        .entry(symbol.name.to_ascii_lowercase())
-                        .or_insert(value);
-                }
             }
             SymbolKind::EnumVariantConstructor => {}
         }
@@ -239,7 +190,6 @@ pub(super) fn install(
 #[allow(clippy::too_many_arguments)]
 fn install_callable(
     qualified_name: &str,
-    short_name: Option<&str>,
     callable_type: &CallableType,
     types: &mut TypeTable,
     callables: &mut BTreeMap<String, Callable>,
@@ -291,11 +241,6 @@ fn install_callable(
         value_type,
         captures: Vec::new(),
     };
-    if let Some(short_name) = short_name {
-        callables
-            .entry(short_name.to_ascii_lowercase())
-            .or_insert_with(|| callable.clone());
-    }
     callables.insert(qualified_name.clone(), callable);
     plan.functions.push((
         function,

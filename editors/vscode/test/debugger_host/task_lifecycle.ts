@@ -25,7 +25,7 @@ export async function verifyTaskLifecycle(
   const lines = [
     "program DebuggerTaskLifecycle;",
     "",
-    "uses Std.Console, Std.Tasks;",
+    "uses Std.Console as Console, Std.Tasks as Tasks;",
     "",
     "function Work(): integer;",
     "begin",
@@ -36,7 +36,7 @@ export async function verifyTaskLifecycle(
     "",
     "begin",
     "  const Pending: task := go Work();",
-    "  WriteLn(Wait(Pending));",
+    "  Console.WriteLn(Tasks.Wait(Pending));",
     "end.",
     ""
   ];

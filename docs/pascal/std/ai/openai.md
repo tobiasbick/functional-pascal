@@ -15,7 +15,7 @@ Non-streaming chat completions for configurable OpenAI-compatible HTTP endpoints
 const ClientValue: Client := Client.Create('http://127.0.0.1:8080/v1', 'local-model');
 case Complete(ClientValue, [ChatMessage.User('Hello')], ChatOptions.Default()) of
   when Ok(const Content):
-    WriteLn(Content);
+    Console.WriteLn(Content);
   when Error(const Message):
     panic(Message);
 end case;

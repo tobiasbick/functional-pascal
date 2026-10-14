@@ -94,12 +94,7 @@ fn imported_records_use_their_qualified_declaration_identity() {
         ),
     ];
     let consumer = parse_unit(
-        "unit Demo.Consumer; \
-         uses Demo.First, Demo.Second; \
-         public function Keep(Value: Demo.First.Value): Demo.First.Value; \
-         begin return Value; end function; \
-         public function Reject(Value: Demo.Second.Value): Demo.First.Value; \
-         begin return Value; end function;\nend unit;",
+        "unit Demo.Consumer; uses Demo.First as First, Demo.Second as Second; public function Keep(Value: First.Value): First.Value; begin return Value; end function; public function Reject(Value: Second.Value): First.Value; begin return Value; end function;\nend unit;",
     );
     let analysis = analyze_unit(&consumer, &interfaces).expect("consumer analysis must succeed");
 

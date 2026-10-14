@@ -13,7 +13,7 @@ use serde_json::{Value, json};
 
 const SOURCE: &str = r#"program TaskQuiescence;
 
-uses Std.Console, Std.Tasks;
+uses Std.Console as Console, Std.Tasks as Tasks;
 
 function Work(): integer;
 begin
@@ -24,7 +24,7 @@ end function;
 
 begin scope
   const Pending: task of integer := go Work();
-  WriteLn(Wait(Pending));
+  Console.WriteLn(Tasks.Wait(Pending));
  end scope; end.
 "#;
 
@@ -127,7 +127,7 @@ fn continue_ignores_task_id_and_resumes_the_session() {
 fn runtime_error_stop_identifies_the_owner_and_freezes_peers() {
     const FAILURE: &str = r#"program TaskFailure;
 
-uses Std.Tasks;
+uses Std.Tasks as Tasks;
 
 procedure Explode();
 begin
@@ -136,7 +136,7 @@ end procedure;
 
 begin scope
   const Pending: task := go Explode();
-  Wait(Pending);
+  Tasks.Wait(Pending);
  end scope; end.
 "#;
     let (program, diagnostics) = fpas_parser::parse(FAILURE);

@@ -4,6 +4,17 @@
 
 use std::collections::BTreeMap;
 
+/// Spell an export through the alias of its exact owning unit.
+pub(super) fn source_name(
+    aliases: &BTreeMap<String, String>,
+    unit: &str,
+    qualified: &str,
+) -> Option<String> {
+    let alias = aliases.get(&unit.to_ascii_lowercase())?;
+    let suffix = qualified.get(unit.len()..)?;
+    Some(format!("{alias}{suffix}"))
+}
+
 /// Resolve intrinsic constants through the same source alias as interface constants.
 pub(super) fn install_constants(
     aliases: &BTreeMap<String, String>,

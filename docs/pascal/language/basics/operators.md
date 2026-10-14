@@ -1,5 +1,7 @@
 # Operators
 
+The code fragments use `uses Std.Conv as Conv, Std.Console as Console;`.
+
 Formal syntax: [`grammar.ebnf`](../../../specs/grammar.ebnf) (expression precedence).
 
 ## Arithmetic
@@ -22,8 +24,8 @@ Both numeric operands must have the same type. FPAS does not implicitly mix
 values, or call arguments. Import `Std.Conv` and convert explicitly:
 
 ```pascal
-const Sum: real := IntToReal(1) + 0.5;
-const Before: boolean := IntToReal(1) < 1.5;
+const Sum: real := Conv.IntToReal(1) + 0.5;
+const Before: boolean := Conv.IntToReal(1) < 1.5;
 const Half: real := 1 / 2;
 ```
 
@@ -91,10 +93,10 @@ enums with data.
 `in` returns `boolean`. It tests whether an array contains a value, whether a dictionary contains a key, or whether a string contains a substring (or a single-character string):
 
 ```pascal
-WriteLn(2 in [1, 2, 3]);
-WriteLn('Alice' in ['Alice': 30]);
-WriteLn('a' in 'pascal');
-WriteLn('asc' in 'pascal');
+Console.WriteLn(2 in [1, 2, 3]);
+Console.WriteLn('Alice' in ['Alice': 30]);
+Console.WriteLn('a' in 'pascal');
+Console.WriteLn('asc' in 'pascal');
 ```
 
 With a [subrange type](../types/subranges.md#membership) on the right, `in`
@@ -162,7 +164,7 @@ This also applies to an operand skipped by short-circuit evaluation;
 
 ## Integer bit operations
 
-Import `uses Std.Bits;` and call the named integer functions:
+Import `uses Std.Bits as Bits;` and call the named integer functions:
 
 | Operation | Function |
 |-----------|----------|
@@ -222,7 +224,7 @@ Accessing an out-of-bounds index is a **runtime error**. The index must be an `i
 var I: integer := 0;
 while I < S.Length() do
   begin
-    WriteLn(S[I]);
+    Console.WriteLn(S[I]);
     I := I + 1;
   end;
 end while;

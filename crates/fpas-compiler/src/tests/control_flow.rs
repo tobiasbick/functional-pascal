@@ -13,7 +13,7 @@ mod repetition;
 #[test]
 fn for_in_array_and_dictionary_execute() {
     assert_succeeds(
-        "program RegisterForIn;\nuses Std.Console, Std.Conv;\nbegin\n  var Sum: integer := 0;\n  for Value: integer in [1, 2, 3] do Sum := Sum + Value; end for;\n  const Values: dict of string to integer := ['a': 4, 'b': 5];\n  for Key: string in Values do\n  begin\n    WriteLn(IntToStr(Values[Key]));\n    Sum := Sum + Values[Key];\n  end; end for;\n  if Sum <> 15 then panic('for-in mismatch'); end if;\nend.",
+        "program RegisterForIn;\nuses Std.Console as Console, Std.Conv as Conv;\nbegin\n  var Sum: integer := 0;\n  for Value: integer in [1, 2, 3] do Sum := Sum + Value; end for;\n  const Values: dict of string to integer := ['a': 4, 'b': 5];\n  for Key: string in Values do\n  begin\n    Console.WriteLn(Conv.IntToStr(Values[Key]));\n    Sum := Sum + Values[Key];\n  end; end for;\n  if Sum <> 15 then panic('for-in mismatch'); end if;\nend.",
     );
 }
 
@@ -102,17 +102,6 @@ end.",
 #[test]
 fn explicit_numeric_comparisons_and_integer_edges_execute() {
     assert_succeeds(
-        "\
-program RegisterNumeric;
-uses Std.Bits, Std.Conv;
-begin
-  var X: integer := 9223372036854775807;
-  X := X - 1;
-  const Bits: integer := BitOr(BitAnd(12, 10), BitXor(3, 1));
-  const Shifted: integer := ShiftRight(ShiftLeft(1, 5), 2);
-  if (X <> 9223372036854775806) or (Bits <> 10) or (Shifted <> 8) then
-    panic('integer mismatch'); end if;
-  if not (IntToReal(2) < 2.5) then panic('explicit comparison mismatch'); end if;
-end.",
+        "program RegisterNumeric;\nuses Std.Bits as StdBits, Std.Conv as Conv;\nbegin\n  var X: integer := 9223372036854775807;\n  X := X - 1;\n  const Bits: integer := StdBits.BitOr(StdBits.BitAnd(12, 10), StdBits.BitXor(3, 1));\n  const Shifted: integer := StdBits.ShiftRight(StdBits.ShiftLeft(1, 5), 2);\n  if (X <> 9223372036854775806) or (Bits <> 10) or (Shifted <> 8) then\n    panic('integer mismatch'); end if;\n  if not (Conv.IntToReal(2) < 2.5) then panic('explicit comparison mismatch'); end if;\nend.",
     );
 }

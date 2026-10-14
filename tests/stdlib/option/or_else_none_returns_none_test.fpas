@@ -1,6 +1,6 @@
 program T;
 
-uses Std.Console;
+uses Std.Console as Console;
 
 function AlwaysNone(): option of integer;
 begin
@@ -10,5 +10,5 @@ end function;
 begin
   const O: option of integer := None;
   const M: option of integer := O.OrElse(AlwaysNone);
-  WriteLn(M.IsNone());
+  Console.WriteLn(M.IsNone());
 end.

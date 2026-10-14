@@ -1,7 +1,7 @@
 // Strict HTTP message-body framing selection.
 unit Std.Http.BodyFraming;
 
-uses Std.Http.Headers, Std.Http.Types, Std.Net.Decimal;
+uses Std.Http.Headers as HttpHeaders, Std.Http.Types as Types, Std.Net.Decimal as Decimal;
 
 // Selected HTTP message-body framing mode and remaining fixed length.
 public type Framing = record
@@ -15,7 +15,7 @@ end record;
 //
 // Parameters:
 // - `Headers`: Parsed message fields used to determine framing.
-public function Select(Headers: array of Header): result of (Framing, string);
+public function Select(Headers: array of Types.Header): result of (Framing, string);
 begin
   var TransferEncoding: string := '';
   var TransferEncodingCount: integer := 0;
@@ -23,16 +23,16 @@ begin
   var ContentLengthCount: integer := 0;
   for Index: integer := 0 to Headers.Length() - 1 do
     begin
-      if Std.Http.Headers.IsName(Headers[Index].Name, 'Transfer-Encoding') then
+      if HttpHeaders.IsName(Headers[Index].Name, 'Transfer-Encoding') then
         begin
           TransferEncodingCount := TransferEncodingCount + 1;
           TransferEncoding := Headers[Index].Value.Trim().ToLower();
         end;
       end if;
 
-      if Std.Http.Headers.IsName(Headers[Index].Name, 'Content-Length') then
+      if HttpHeaders.IsName(Headers[Index].Name, 'Content-Length') then
         begin
-          case Std.Net.Decimal.Parse(Headers[Index].Value, 9223372036854775807) of
+          case Decimal.Parse(Headers[Index].Value, 9223372036854775807) of
             when Ok(const Length):
               begin
                 if (ContentLengthCount > 0) and (Length <> ContentLength) then

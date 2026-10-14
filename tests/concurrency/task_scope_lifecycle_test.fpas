@@ -1,23 +1,23 @@
 program TaskScopeLifecycleTest;
 
-uses Std.Tasks, Std.Test;
+uses Std.Tasks as Tasks, Std.Test as Test;
 
 procedure Produce(Queue: channel of integer; Value: integer);
 begin
-  discard Send(Queue, Value);
+  discard Tasks.Send(Queue, Value);
 end procedure;
 
 procedure Block(Empty: channel of integer; Ready: channel of integer);
 begin
-  discard Send(Ready, 1);
-  discard Receive(Empty);
+  discard Tasks.Send(Ready, 1);
+  discard Tasks.Receive(Empty);
 end procedure;
 
 procedure Parent(Empty: channel of integer; Ready: channel of integer);
 begin
   scope
     discard go Block(Empty, Ready);
-    discard Receive(Empty);
+    discard Tasks.Receive(Empty);
   end scope;
 end procedure;
 
@@ -25,7 +25,7 @@ function ReturnEarly(Empty: channel of integer; Ready: channel of integer): inte
 begin
   scope
     discard go Parent(Empty, Ready);
-    AssertEquals(1, Receive(Ready).Unwrap());
+    Test.AssertEquals(1, Tasks.Receive(Ready).Unwrap());
     return 7;
   end scope;
 end function;
@@ -36,27 +36,28 @@ begin
 end function;
 
 begin
-  const Queue: channel of integer := CreateChannel(2);
+  const Queue: channel of integer := Tasks.CreateChannel(2);
   scope
     discard go Produce(Queue, 1);
     const Child: task := go Produce(Queue, 2);
   end scope;
 
-  AssertEquals(3, TryReceive(Queue).Unwrap().Unwrap() + TryReceive(Queue).Unwrap().Unwrap());
-  const Empty: channel of integer := CreateChannel(1);
-  const Ready: channel of integer := CreateChannel(1);
-  AssertEquals(7, ReturnEarly(Empty, Ready));
+  Test.AssertEquals(3, Tasks.TryReceive(Queue).Unwrap().Unwrap() +
+                       Tasks.TryReceive(Queue).Unwrap().Unwrap());
+  const Empty: channel of integer := Tasks.CreateChannel(1);
+  const Ready: channel of integer := Tasks.CreateChannel(1);
+  Test.AssertEquals(7, ReturnEarly(Empty, Ready));
   scope
     const Job: task of result of (integer, string) := go Missing();
-    case Wait(Job) of
+    case Tasks.Wait(Job) of
       when Ok(_):
         panic('expected an ordinary error result');
       when Error(const Message):
-        AssertEquals('ordinary result', Message);
+        Test.AssertEquals('ordinary result', Message);
     end case;
   end scope;
 
-  discard CloseChannel(Queue);
-  discard CloseChannel(Empty);
-  discard CloseChannel(Ready);
+  discard Tasks.CloseChannel(Queue);
+  discard Tasks.CloseChannel(Empty);
+  discard Tasks.CloseChannel(Ready);
 end.

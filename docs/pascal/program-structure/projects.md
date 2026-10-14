@@ -192,9 +192,11 @@ include = ["src/**/*.fpas"]
 
 ```pascal
 program MyApp;
-uses MyApp.Math, Std.Console;
+
+uses MyApp.Math as Math, Std.Console as Console;
+
 begin
-  WriteLn(Add(3, 4));
+  Console.WriteLn(Math.Add(3, 4));
 end.
 ```
 
@@ -272,9 +274,11 @@ include = ["src/**/*.fpas"]
 
 ```pascal
 program Portal;
-uses Acme.Math, Std.Console;
+
+uses Acme.Math as Math, Std.Console as Console;
+
 begin
-  WriteLn(Add(3, 4));
+  Console.WriteLn(Math.Add(3, 4));
 end.
 ```
 

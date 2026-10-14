@@ -1,33 +1,33 @@
 program TuiMenuBarKeyboardTest;
 
-uses Std.Test, Std.Tui;
+uses Std.Test as Test, Std.Tui as Tui;
 
 type MenuModel = record
   Focus: integer;
   Actions: array of integer;
 end record;
 
-function MakeKey(Kind: TuiKeyKind): TuiKeyEvent;
+function MakeKey(Kind: Tui.TuiKeyKind): Tui.TuiKeyEvent;
 begin
-  return TuiKeyEvent(kind := Kind, ch := '', shift := false, ctrl := false, alt := false, meta := false);
+  return Tui.TuiKeyEvent(kind := Kind, ch := '', shift := false, ctrl := false, alt := false, meta := false);
 end function;
 
-function ViewMenu(State: MenuModel): TuiElement;
+function ViewMenu(State: MenuModel): Tui.TuiElement;
 begin
-  return TuiElementBuilders.MakeDesktop(Some(TuiControlId.Create(State.Focus)), [
-                                                                                  TuiElementBuilders.MakeMenuBar([
-                                                                                                                   TuiMenuItem.Create(TuiControlId.Create(1), 'Open', TuiAction.Create(10)),
-                                                                                                                   TuiMenuItem.Disabled(TuiControlId.Create(2), 'Save', TuiAction.Create(20)),
-                                                                                                                   TuiMenuItem.WithShortcut(TuiControlId.Create(3), 'Quit', TuiAction.Create(30), 'Ctrl+Q')
-                                                                                                                 ])
-                                                                                ]);
+  return Tui.TuiElementBuilders.MakeDesktop(Some(Tui.TuiControlId.Create(State.Focus)), [
+                                                                                          Tui.TuiElementBuilders.MakeMenuBar([
+                                                                                                                               Tui.TuiMenuItem.Create(Tui.TuiControlId.Create(1), 'Open', Tui.TuiAction.Create(10)),
+                                                                                                                               Tui.TuiMenuItem.Disabled(Tui.TuiControlId.Create(2), 'Save', Tui.TuiAction.Create(20)),
+                                                                                                                               Tui.TuiMenuItem.WithShortcut(Tui.TuiControlId.Create(3), 'Quit', Tui.TuiAction.Create(30), 'Ctrl+Q')
+                                                                                                                             ])
+                                                                                        ]);
 end function;
 
-function UpdateMenu(State: MenuModel; Msg: TuiMsg; Cmd: TuiCmdOutput): MenuModel;
+function UpdateMenu(State: MenuModel; Msg: Tui.TuiMsg; Cmd: Tui.TuiCmdOutput): MenuModel;
 begin
-  Cmd.Set(TuiCmd.NoCommand);
+  Cmd.Set(Tui.TuiCmd.NoCommand);
   case Msg of
-    when TuiMsg.FocusChanged(const Previous, const Current):
+    when Tui.TuiMsg.FocusChanged(const Previous, const Current):
       begin
         case Current of
           when Some(const Id):
@@ -40,11 +40,11 @@ begin
             end;
         end case;
       end;
-    when TuiMsg.Action(const Source, const Action):
+    when Tui.TuiMsg.Action(const Source, const Action):
       begin
         return MenuModel(Focus := State.Focus, Actions := State.Actions.Concat([Action.Value]));
       end;
-    when TuiMsg.Started, TuiMsg.Key(_), TuiMsg.Pointer(_), TuiMsg.Tick(_), TuiMsg.Resize(_), TuiMsg.TextChanged(_, _, _, _), TuiMsg.TextAreaChanged(_, _, _, _, _), TuiMsg.CheckChanged(_, _, _), TuiMsg.SelectionChanged(_, _, _), TuiMsg.ScrollChanged(_, _, _), TuiMsg.MenuChanged(_, _, _), TuiMsg.BackgroundFailed(_, _, _, _, _, _), TuiMsg.QuitRequested:
+    when Tui.TuiMsg.Started, Tui.TuiMsg.Key(_), Tui.TuiMsg.Pointer(_), Tui.TuiMsg.Tick(_), Tui.TuiMsg.Resize(_), Tui.TuiMsg.TextChanged(_, _, _, _), Tui.TuiMsg.TextAreaChanged(_, _, _, _, _), Tui.TuiMsg.CheckChanged(_, _, _), Tui.TuiMsg.SelectionChanged(_, _, _), Tui.TuiMsg.ScrollChanged(_, _, _), Tui.TuiMsg.MenuChanged(_, _, _), Tui.TuiMsg.BackgroundFailed(_, _, _, _, _, _), Tui.TuiMsg.QuitRequested:
       begin
         return State;
       end;
@@ -52,19 +52,19 @@ begin
 end function;
 
 begin
-  var App: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(24, 4));
+  var App: Tui.TuiApplication := Tui.TuiApplication.OpenForTest(Tui.TuiSize.Create(24, 4));
   var Model: MenuModel := MenuModel(Focus := 1, Actions := []);
   Model := App.RunIterations(Model, UpdateMenu, ViewMenu, 0, 0);
-  App.InjectKeyForTest(MakeKey(TuiKeyKind.Enter));
+  App.InjectKeyForTest(MakeKey(Tui.TuiKeyKind.Enter));
   Model := App.RunIterations(Model, UpdateMenu, ViewMenu, 1, 0);
-  AssertEquals(1, Model.Actions.Length());
-  AssertEquals(10, Model.Actions[0]);
-  App.InjectKeyForTest(MakeKey(TuiKeyKind.Tab));
+  Test.AssertEquals(1, Model.Actions.Length());
+  Test.AssertEquals(10, Model.Actions[0]);
+  App.InjectKeyForTest(MakeKey(Tui.TuiKeyKind.Tab));
   Model := App.RunIterations(Model, UpdateMenu, ViewMenu, 1, 0);
-  AssertEquals(3, Model.Focus);
-  App.InjectKeyForTest(MakeKey(TuiKeyKind.Space));
+  Test.AssertEquals(3, Model.Focus);
+  App.InjectKeyForTest(MakeKey(Tui.TuiKeyKind.Space));
   Model := App.RunIterations(Model, UpdateMenu, ViewMenu, 1, 0);
-  AssertEquals(2, Model.Actions.Length());
-  AssertEquals(30, Model.Actions[1]);
+  Test.AssertEquals(2, Model.Actions.Length());
+  Test.AssertEquals(30, Model.Actions[1]);
   App.Close();
 end.

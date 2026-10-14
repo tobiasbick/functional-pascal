@@ -24,9 +24,10 @@ fn legacy_control_syntax_is_rejected_without_rewriting_source() {
 fn control_blocks_execute_before_and_after_idempotent_formatting() {
     let cwd = create_temp_dir("fmt-control-blocks");
     let path = cwd.join("control.fpas");
-    write_text(&path, "program T; uses Std.Console;
-        function Choose(): integer; begin if false then return 0; elsif true then return 42; else return 1; end if; end function;
-        begin for I: integer := 1 to 1 do while true do WriteLn(Choose()); break; end while; end for; end.");
+    write_text(
+        &path,
+        "program T; uses Std.Console as Console;\n        function Choose(): integer; begin if false then return 0; elsif true then return 42; else return 1; end if; end function;\n        begin for I: integer := 1 to 1 do while true do Console.WriteLn(Choose()); break; end while; end for; end.",
+    );
     let run = ["run".into(), path.to_string_lossy().into_owned()];
     let (code, before, stderr) = run_cli_args_and_capture_output(&run, &cwd);
     assert_eq!(code, 0, "{stderr}");

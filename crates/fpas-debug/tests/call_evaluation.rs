@@ -48,30 +48,7 @@ fn call(name: &str, arguments: Vec<DebugExpression>) -> DebugExpression {
 
 #[test]
 fn methods_static_constructors_records_and_intrinsics_execute() {
-    let source = "\
-program DebugMembers;
-uses Std.Math;
-type
-  Counter = record
-    Value: integer;
-    static function Create(Value: integer): Counter;
-    begin
-      return Counter( Value := Value );
-    end function;
-    function Double(Self: Counter): integer;
-    begin
-      return Self.Value * 2;
-    end function;
-    function ReadNumber(Self: Counter): integer;
-    begin
-      return Self.Value;
-    end function;
-  end record;
-procedure Touch();
-begin
-end procedure;
-begin
-end.";
+    let source = "program DebugMembers;\nuses Std.Math as Math;\ntype\n  Counter = record\n    Value: integer;\n    static function Create(Value: integer): Counter;\n    begin\n      return Counter( Value := Value );\n    end function;\n    function Double(Self: Counter): integer;\n    begin\n      return Self.Value * 2;\n    end function;\n    function ReadNumber(Self: Counter): integer;\n    begin\n      return Self.Value;\n    end function;\n  end record;\nprocedure Touch();\nbegin\nend procedure;\nbegin\nend.";
     let mut server = fpas_debug::jsonl::JsonlServer::new(fpas_debug::PreparedDebugTarget::new(
         compile(source),
         Vec::new(),
@@ -107,16 +84,7 @@ end.";
 
 #[test]
 fn denied_host_effects_never_reach_the_live_console() {
-    let source = "\
-program DebugDenied;
-uses Std.Console;
-function Noisy(): integer;
-begin
-  Std.Console.WriteLn('leak');
-  return 1;
-end function;
-begin
-end.";
+    let source = "program DebugDenied;\nuses Std.Console as Console;\nfunction Noisy(): integer;\nbegin\n  Console.WriteLn('leak');\n  return 1;\nend function;\nbegin\nend.";
     let mut session = DebugSession::new(compile(source)).expect("debug session");
     let before = session.output();
 

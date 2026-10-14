@@ -56,7 +56,7 @@ pub(super) fn register_std_json(checker: &mut Checker) {
         variants: variants.clone(),
     }));
 
-    checker.scopes.define(
+    checker.scopes.imports.define_metadata(
         s::STD_JSON_VALUE,
         Symbol {
             constant: None,
@@ -74,7 +74,7 @@ pub(super) fn register_std_json(checker: &mut Checker) {
         } else {
             SymbolKind::EnumVariantConstructor
         };
-        checker.scopes.define(
+        checker.scopes.imports.define_metadata(
             &qualified_name,
             Symbol {
                 constant: None,

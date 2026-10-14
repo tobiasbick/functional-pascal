@@ -4,11 +4,13 @@ Wall-clock and monotonic time helpers plus task-aware sleep. This page is the fu
 
 ```pascal
 program Example;
-uses Std.Console, Std.Time;
+
+uses Std.Console as Console, Std.Time as Time;
+
 begin
-  const Start: integer := MonotonicMillis();
-  Sleep(100);
-  WriteLn(ElapsedMillis(Start));
+  const Start: integer := Time.MonotonicMillis();
+  Time.Sleep(100);
+  Console.WriteLn(Time.ElapsedMillis(Start));
 end.
 ```
 
@@ -17,13 +19,13 @@ end.
 
 ## Importing and names
 
-After `uses Std.Time;` use **`TimestampMillis`**, **`MonotonicMillis`**, **`ElapsedMillis`**, **`Sleep`**, or the fully qualified forms such as **`Std.Time.Sleep`**.
+Import with `uses Std.Time as Time;` and access public symbols as `Time.Name`. User enum variants require `Time.Type.Variant`.
 
 ---
 
 ## Quick reference
 
-Requires `uses Std.Time;`.
+Requires `uses Std.Time as Time;`.
 
 | Kind | Name | Notes |
 |------|------|-------|
@@ -59,7 +61,7 @@ suspends that owner, and resumes the callback without repeating completed elemen
 Returns UTC milliseconds since `1970-01-01T00:00:00Z`.
 
 ```pascal
-WriteLn(TimestampMillis());
+Console.WriteLn(Time.TimestampMillis());
 ```
 
 ---
@@ -69,7 +71,7 @@ WriteLn(TimestampMillis());
 Returns monotonic milliseconds since runtime initialization.
 
 ```pascal
-const Start: integer := MonotonicMillis();
+const Start: integer := Time.MonotonicMillis();
 ```
 
 ---
@@ -79,9 +81,9 @@ const Start: integer := MonotonicMillis();
 Returns monotonic milliseconds elapsed since `Start`, a value from `MonotonicMillis`.
 
 ```pascal
-const Start: integer := MonotonicMillis();
-Sleep(50);
-WriteLn(ElapsedMillis(Start));
+const Start: integer := Time.MonotonicMillis();
+Time.Sleep(50);
+Console.WriteLn(Time.ElapsedMillis(Start));
 ```
 
 ---
@@ -93,7 +95,7 @@ callbacks, wait cooperatively without pinning a pool worker. Negative values pro
 error.
 
 ```pascal
-Sleep(250);
+Time.Sleep(250);
 ```
 
 ---

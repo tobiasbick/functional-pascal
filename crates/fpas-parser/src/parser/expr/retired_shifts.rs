@@ -23,7 +23,9 @@ impl Parser {
             self.error_with_code(
                 PARSE_EXPECTED_EXPRESSION,
                 &format!("Infix `{name}` is not an operator"),
-                &format!("Use `Std.Bits.{replacement}(Value, Count)` and import `uses Std.Bits;`."),
+                &format!(
+                    "Use `Bits.{replacement}(Value, Count)` and import `uses Std.Bits as Bits;`."
+                ),
                 self.current_span(),
             );
             self.advance();

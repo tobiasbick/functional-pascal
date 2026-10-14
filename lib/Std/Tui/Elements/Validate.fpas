@@ -1,8 +1,9 @@
 unit Std.Tui.Elements.Validate;
 
 uses
-  Std.Conv, Std.Tui.Chrome.StatusItem, Std.Tui.Elements.Element, Std.Tui.Elements.MenuValidate,
-  Std.Tui.Ids.Action, Std.Tui.Ids.ControlId;
+  Std.Conv as Conv, Std.Tui.Chrome.StatusItem as StatusItem, Std.Tui.Elements.Element as Element,
+  Std.Tui.Elements.MenuValidate as MenuValidate, Std.Tui.Ids.Action as IdsAction,
+  Std.Tui.Ids.ControlId as ControlId;
 
 function TuiElementControlSeen(Seen: array of integer; Value: integer): boolean;
 begin
@@ -19,7 +20,7 @@ begin
   return false;
 end function;
 
-procedure TuiElementValidateControl(Id: TuiControlId);
+procedure TuiElementValidateControl(Id: ControlId.TuiControlId);
 begin
   if Id.Value <= 0 then
     begin
@@ -28,7 +29,7 @@ begin
   end if;
 end procedure;
 
-procedure TuiElementValidateAction(Action: TuiAction);
+procedure TuiElementValidateAction(Action: IdsAction.TuiAction);
 begin
   if Action.Value <= 0 then
     begin
@@ -37,49 +38,49 @@ begin
   end if;
 end procedure;
 
-function TuiElementChildren(Node: TuiElement): array of TuiElement;
+function TuiElementChildren(Node: Element.TuiElement): array of Element.TuiElement;
 begin
   case Node of
-    when TuiElement.Scroll(const Id, const Offset, const ChangeAction, const Children):
+    when Element.TuiElement.Scroll(const Id, const Offset, const ChangeAction, const Children):
       begin
         return Children;
       end;
-    when TuiElement.Row(const Children, const Spacing):
+    when Element.TuiElement.Row(const Children, const Spacing):
       begin
         return Children;
       end;
-    when TuiElement.Column(const Children, const Spacing):
+    when Element.TuiElement.Column(const Children, const Spacing):
       begin
         return Children;
       end;
-    when TuiElement.Layout(const Settings, const Children):
+    when Element.TuiElement.Layout(const Settings, const Children):
       begin
         return Children;
       end;
-    when TuiElement.Panel(const Title, const Children):
+    when Element.TuiElement.Panel(const Title, const Children):
       begin
         return Children;
       end;
-    when TuiElement.Overlay(const Title, const Children):
+    when Element.TuiElement.Overlay(const Title, const Children):
       begin
         return Children;
       end;
-    when TuiElement.Desktop(const Focused, const Children):
+    when Element.TuiElement.Desktop(const Focused, const Children):
       begin
         return Children;
       end;
-    when TuiElement.Empty, TuiElement.Label(_), TuiElement.Button(_), TuiElement.Input(_), TuiElement.TextArea(_, _, _, _, _), TuiElement.CheckBox(_, _, _, _), TuiElement.List(_, _, _, _), TuiElement.MenuBar(_), TuiElement.Menu(_, _, _, _), TuiElement.StatusLine(_), TuiElement.CellGrid(_), TuiElement.Rule(_), TuiElement.Gauge(_), TuiElement.Spacer(_):
+    when Element.TuiElement.Empty, Element.TuiElement.Label(_), Element.TuiElement.Button(_), Element.TuiElement.Input(_), Element.TuiElement.TextArea(_, _, _, _, _), Element.TuiElement.CheckBox(_, _, _, _), Element.TuiElement.List(_, _, _, _), Element.TuiElement.MenuBar(_), Element.TuiElement.Menu(_, _, _, _), Element.TuiElement.StatusLine(_), Element.TuiElement.CellGrid(_), Element.TuiElement.Rule(_), Element.TuiElement.Gauge(_), Element.TuiElement.Spacer(_):
       begin
         return [];
       end;
   end case;
 end function;
 
-function TuiElementValidateAndCollect(Node: TuiElement): array of integer;
+function TuiElementValidateAndCollect(Node: Element.TuiElement): array of integer;
 begin
   var Seen: array of integer := [];
   case Node of
-    when TuiElement.Button(const Button):
+    when Element.TuiElement.Button(const Button):
       begin
         TuiElementValidateControl(Button.Id);
         TuiElementValidateAction(Button.Action);
@@ -97,7 +98,7 @@ begin
 
         Seen.PushInPlace(Button.Id.Value);
       end;
-    when TuiElement.Input(const Input):
+    when Element.TuiElement.Input(const Input):
       begin
         TuiElementValidateControl(Input.Id);
         TuiElementValidateAction(Input.ChangeAction);
@@ -109,7 +110,7 @@ begin
 
         Seen.PushInPlace(Input.Id.Value);
       end;
-    when TuiElement.TextArea(const Id, const Text, const Caret, const Offset, const ChangeAction):
+    when Element.TuiElement.TextArea(const Id, const Text, const Caret, const Offset, const ChangeAction):
       begin
         TuiElementValidateControl(Id);
         TuiElementValidateAction(ChangeAction);
@@ -127,13 +128,13 @@ begin
 
         Seen.PushInPlace(Id.Value);
       end;
-    when TuiElement.CheckBox(const Id, const Text, const Checked, const ChangeAction):
+    when Element.TuiElement.CheckBox(const Id, const Text, const Checked, const ChangeAction):
       begin
         TuiElementValidateControl(Id);
         TuiElementValidateAction(ChangeAction);
         Seen.PushInPlace(Id.Value);
       end;
-    when TuiElement.List(const Id, const Items, const Selected, const ChangeAction):
+    when Element.TuiElement.List(const Id, const Items, const Selected, const ChangeAction):
       begin
         TuiElementValidateControl(Id);
         TuiElementValidateAction(ChangeAction);
@@ -154,7 +155,7 @@ begin
 
         Seen.PushInPlace(Id.Value);
       end;
-    when TuiElement.Scroll(const Id, const Offset, const ChangeAction, const Children):
+    when Element.TuiElement.Scroll(const Id, const Offset, const ChangeAction, const Children):
       begin
         TuiElementValidateControl(Id);
         TuiElementValidateAction(ChangeAction);
@@ -172,7 +173,7 @@ begin
 
         Seen.PushInPlace(Id.Value);
       end;
-    when TuiElement.MenuBar(const Items):
+    when Element.TuiElement.MenuBar(const Items):
       begin
         for Index: integer := 0 to Items.Length() - 1 do
           begin
@@ -181,7 +182,7 @@ begin
             if TuiElementControlSeen(Seen, Items[Index].Id.Value) then
               begin
                 panic('Tui control id must be unique in one tree: ' +
-                      Std.Conv.IntToStr(Items[Index].Id.Value));
+                      Conv.IntToStr(Items[Index].Id.Value));
               end;
             end if;
 
@@ -189,14 +190,14 @@ begin
           end;
         end for;
       end;
-    when TuiElement.Menu(const Id, const Nodes, const State, const ChangeAction):
+    when Element.TuiElement.Menu(const Id, const Nodes, const State, const ChangeAction):
       begin
         TuiElementValidateControl(Id);
         TuiElementValidateAction(ChangeAction);
-        TuiMenuValidate(Nodes, State);
+        MenuValidate.TuiMenuValidate(Nodes, State);
         Seen.PushInPlace(Id.Value);
       end;
-    when TuiElement.Gauge(const Gauge):
+    when Element.TuiElement.Gauge(const Gauge):
       begin
         if Gauge.Maximum <= 0 then
           begin
@@ -210,31 +211,30 @@ begin
           end;
         end if;
       end;
-    when TuiElement.StatusLine(const Items):
+    when Element.TuiElement.StatusLine(const Items):
       begin
         for Index: integer := 0 to Items.Length() - 1 do
           begin
             case Items[Index] of
-              when TuiStatusItem.Command(const Id, const Text, const Action, const Enabled):
+              when StatusItem.TuiStatusItem.Command(const Id, const Text, const Action, const Enabled):
                 begin
                   TuiElementValidateControl(Id);
                   TuiElementValidateAction(Action);
                   if TuiElementControlSeen(Seen, Id.Value) then
                     begin
-                      panic('Tui control id must be unique in one tree: ' +
-                            Std.Conv.IntToStr(Id.Value));
+                      panic('Tui control id must be unique in one tree: ' + Conv.IntToStr(Id.Value));
                     end;
                   end if;
 
                   Seen.PushInPlace(Id.Value);
                 end;
-              when TuiStatusItem.Hint(_), TuiStatusItem.KeyHint(_, _):
+              when StatusItem.TuiStatusItem.Hint(_), StatusItem.TuiStatusItem.KeyHint(_, _):
                 null;
             end case;
           end;
         end for;
       end;
-    when TuiElement.Row(const Children, const Spacing), TuiElement.Column(const Children, const Spacing):
+    when Element.TuiElement.Row(const Children, const Spacing), Element.TuiElement.Column(const Children, const Spacing):
       begin
         if Spacing < 0 then
           begin
@@ -242,7 +242,7 @@ begin
           end;
         end if;
       end;
-    when TuiElement.Layout(const Settings, const Children):
+    when Element.TuiElement.Layout(const Settings, const Children):
       begin
         if Children.Length() <> 1 then
           begin
@@ -250,10 +250,10 @@ begin
           end;
         end if;
       end;
-    when TuiElement.Empty, TuiElement.Label(_), TuiElement.CellGrid(_), TuiElement.Rule(_), TuiElement.Spacer(_), TuiElement.Panel(_, _), TuiElement.Overlay(_, _), TuiElement.Desktop(_, _):
+    when Element.TuiElement.Empty, Element.TuiElement.Label(_), Element.TuiElement.CellGrid(_), Element.TuiElement.Rule(_), Element.TuiElement.Spacer(_), Element.TuiElement.Panel(_, _), Element.TuiElement.Overlay(_, _), Element.TuiElement.Desktop(_, _):
       null;
   end case;
-  const Children: array of TuiElement := TuiElementChildren(Node);
+  const Children: array of Element.TuiElement := TuiElementChildren(Node);
   for ChildIndex: integer := 0 to Children.Length() - 1 do
     begin
       const ChildIds: array of integer := TuiElementValidateAndCollect(Children[ChildIndex]);
@@ -261,8 +261,7 @@ begin
         begin
           if TuiElementControlSeen(Seen, ChildIds[IdIndex]) then
             begin
-              panic('Tui control id must be unique in one tree: ' +
-                    Std.Conv.IntToStr(ChildIds[IdIndex]));
+              panic('Tui control id must be unique in one tree: ' + Conv.IntToStr(ChildIds[IdIndex]));
             end;
           end if;
 
@@ -273,7 +272,7 @@ begin
   end for;
 
   case Node of
-    when TuiElement.Desktop(const Focused, const DesktopChildren):
+    when Element.TuiElement.Desktop(const Focused, const DesktopChildren):
       begin
         case Focused of
           when Some(const Id):
@@ -281,7 +280,7 @@ begin
               if not TuiElementControlSeen(Seen, Id.Value) then
                 begin
                   panic('Tui focused control id must exist in the rendered tree: ' +
-                        Std.Conv.IntToStr(Id.Value));
+                        Conv.IntToStr(Id.Value));
                 end;
               end if;
             end;
@@ -290,7 +289,7 @@ begin
             end;
         end case;
       end;
-    when TuiElement.Empty, TuiElement.Label(_), TuiElement.Button(_), TuiElement.Input(_), TuiElement.TextArea(_, _, _, _, _), TuiElement.CheckBox(_, _, _, _), TuiElement.List(_, _, _, _), TuiElement.Scroll(_, _, _, _), TuiElement.MenuBar(_), TuiElement.Menu(_, _, _, _), TuiElement.StatusLine(_), TuiElement.CellGrid(_), TuiElement.Rule(_), TuiElement.Gauge(_), TuiElement.Row(_, _), TuiElement.Column(_, _), TuiElement.Layout(_, _), TuiElement.Spacer(_), TuiElement.Panel(_, _), TuiElement.Overlay(_, _):
+    when Element.TuiElement.Empty, Element.TuiElement.Label(_), Element.TuiElement.Button(_), Element.TuiElement.Input(_), Element.TuiElement.TextArea(_, _, _, _, _), Element.TuiElement.CheckBox(_, _, _, _), Element.TuiElement.List(_, _, _, _), Element.TuiElement.Scroll(_, _, _, _), Element.TuiElement.MenuBar(_), Element.TuiElement.Menu(_, _, _, _), Element.TuiElement.StatusLine(_), Element.TuiElement.CellGrid(_), Element.TuiElement.Rule(_), Element.TuiElement.Gauge(_), Element.TuiElement.Row(_, _), Element.TuiElement.Column(_, _), Element.TuiElement.Layout(_, _), Element.TuiElement.Spacer(_), Element.TuiElement.Panel(_, _), Element.TuiElement.Overlay(_, _):
       null;
   end case;
 
@@ -301,7 +300,7 @@ end function;
 //
 // Parameters:
 // - `Root`: Root of the element tree.
-public procedure TuiElementValidate(Root: TuiElement);
+public procedure TuiElementValidate(Root: Element.TuiElement);
 begin
   discard TuiElementValidateAndCollect(Root);
 end procedure;

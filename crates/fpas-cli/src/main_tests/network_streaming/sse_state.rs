@@ -33,9 +33,9 @@ fn source_review_sse_failure_releases_retained_input() {
     source.truncate(source.rfind("end unit;").expect("unit terminator"));
     source.push_str(
         r#"
-public function ReviewRetained(Decoder: Std.Http.Types.SseDecoder): integer;
+public function ReviewRetained(Decoder: Types.SseDecoder): integer;
 begin
-  const Index: integer := Std.Http.Handles.SseDecoderSlot(Decoder);
+  const Index: integer := Handles.SseDecoderSlot(Decoder);
   const State: DecoderState := LoadState(Index);
   return State.Buffer.Length() + State.Data.Length() +
     State.EventType.Length() + State.LastEventId.Length() + State.EventBytes;
@@ -50,7 +50,7 @@ end unit;
     source.push_str(
         r#"
 public function ReviewRetained(Decoder: SseDecoder): integer;
-begin return Std.Http.Sse.ReviewRetained(Decoder); end function;
+begin return Sse.ReviewRetained(Decoder); end function;
 end unit;
 "#,
     );
@@ -59,21 +59,21 @@ end unit;
     write_text(
         &program,
         r#"program RetainedSse;
-uses Std.Http, Std.Net.Utf8, Std.Test;
+uses Std.Http as Http, Std.Net.Utf8 as Utf8, Std.Test as Test;
 begin
-  const Decoder: SseDecoder := CreateSseDecoder(32).Unwrap();
-  discard FeedSse(Decoder, Std.Net.Utf8.Encode('id:old' + #10 + 'data:x' + #10)).Unwrap();
-  AssertTrue(ReviewRetained(Decoder) > 0);
-  case FeedSse(Decoder, Std.Net.Utf8.Encode('x'.RepeatStr(100000))) of
-    when Ok(_): Fail('expected size failure'); when Error(_): begin end;
+  const Decoder: Http.SseDecoder := Http.CreateSseDecoder(32).Unwrap();
+  discard Http.FeedSse(Decoder, Utf8.Encode('id:old' + #10 + 'data:x' + #10)).Unwrap();
+  Test.AssertTrue(Http.ReviewRetained(Decoder) > 0);
+  case Http.FeedSse(Decoder, Utf8.Encode('x'.RepeatStr(100000))) of
+    when Ok(_): Test.Fail('expected size failure'); when Error(_): begin end;
   end case;
-  AssertEquals(0, ReviewRetained(Decoder));
-  const FinalDecoder: SseDecoder := CreateSseDecoder(32).Unwrap();
-  discard FeedSse(FinalDecoder, [255]).Unwrap();
-  case FinishSse(FinalDecoder) of
-    when Ok(_): Fail('expected UTF-8 failure'); when Error(_): begin end;
+  Test.AssertEquals(0, Http.ReviewRetained(Decoder));
+  const FinalDecoder: Http.SseDecoder := Http.CreateSseDecoder(32).Unwrap();
+  discard Http.FeedSse(FinalDecoder, [255]).Unwrap();
+  case Http.FinishSse(FinalDecoder) of
+    when Ok(_): Test.Fail('expected UTF-8 failure'); when Error(_): begin end;
   end case;
-  AssertEquals(0, ReviewRetained(FinalDecoder));
+  Test.AssertEquals(0, Http.ReviewRetained(FinalDecoder));
 end.
 "#,
     );

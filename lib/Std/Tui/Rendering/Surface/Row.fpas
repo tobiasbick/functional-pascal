@@ -1,11 +1,11 @@
 unit Std.Tui.Rendering.Surface.Row;
 
-uses Std.Tui.Cells.Cell, Std.Tui.Cells.StyleRole;
+uses Std.Tui.Cells.Cell as Cell, Std.Tui.Cells.StyleRole as StyleRole;
 
 // Updated cell and continuation arrays for one working-surface row.
 public type TuiSurfaceRow = record
   // Leading cells and blanks for continuation columns.
-  public Cells: array of TuiCell;
+  public Cells: array of Cell.TuiCell;
   // Whether each column continues a wide glyph from its left neighbor.
   public Continuations: array of boolean;
 end record;
@@ -14,15 +14,15 @@ end record;
 // The caller clips Values to the row and supplies matching continuation storage.
 // A trailing wide glyph may occupy the column following the supplied batch.
 public function TuiSurfaceWriteRow(
-  Cells: array of TuiCell;
+  Cells: array of Cell.TuiCell;
   Continuations: array of boolean;
   FirstX: integer;
-  Values: array of TuiCell
+  Values: array of Cell.TuiCell
 ): TuiSurfaceRow;
 begin
-  var NextCells: array of TuiCell := Cells;
+  var NextCells: array of Cell.TuiCell := Cells;
   var NextContinuations: array of boolean := Continuations;
-  const Blank: TuiCell := TuiCell.Create(' ', TuiStyleRole.Normal);
+  const Blank: Cell.TuiCell := Cell.TuiCell.Create(' ', StyleRole.TuiStyleRole.Normal);
   const RightX: integer := Cells.Length();
   for Offset: integer := 0 to Values.Length() - 1 do
     begin
@@ -40,7 +40,7 @@ begin
       end if;
 
       NextCells[X] := Blank;
-      const Value: TuiCell := Values[Offset];
+      const Value: Cell.TuiCell := Values[Offset];
       if (Value.Columns = 2) and (X + 1 >= RightX) then
         begin
           continue;

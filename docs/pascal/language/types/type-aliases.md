@@ -16,10 +16,10 @@ type UserName = string;
 type Callback = function(Value: integer): boolean;
 ```
 
-Aliases to enum types retain qualified variant access. This is useful when a public API exposes an
-enum owned by an internal unit:
+Aliases to enum types retain qualified variant access. The qualifier may be the alias rather than the original enum type:
 
 ```pascal
+type Color = enum Red; Green; Blue; end enum;
 type PaletteColor = Color;
 
 const Value: PaletteColor := PaletteColor.Green;

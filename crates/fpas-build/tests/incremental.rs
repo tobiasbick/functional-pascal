@@ -73,16 +73,11 @@ include = ["src/**/*.fpas"]
         write(&base, &base_source("return Value;", 1));
         write(
             &root.join("src/consumer.fpas"),
-            "unit Demo.Consumer;
-             uses Demo.Base;
-             public function Run(): integer;
-             begin return AddOffset(41); end function;\nend unit;",
+            "unit Demo.Consumer;\n             uses Demo.Base as Base;\n             public function Run(): integer;\n             begin return Base.AddOffset(41); end function;\nend unit;",
         );
         write(
             &root.join("src/main.fpas"),
-            "program Demo;
-             uses Demo.Consumer, Std.Console;
-             begin Std.Console.WriteLn(Run()); end.",
+            "program Demo;\n             uses Demo.Consumer as Consumer, Std.Console as Console;\n             begin Console.WriteLn(Consumer.Run()); end.",
         );
         Self {
             root,
@@ -256,9 +251,7 @@ include = ["main.fpas"]
     );
     write(
         &root.join("app/main.fpas"),
-        "program Demo;
-         uses Demo.Consumer, Std.Console;
-         begin Std.Console.WriteLn(Run()); end.",
+        "program Demo;\n         uses Demo.Consumer as Consumer, Std.Console as Console;\n         begin Console.WriteLn(Consumer.Run()); end.",
     );
     write(
         &root.join("lib/lib.fpasprj"),
@@ -281,10 +274,7 @@ units = ["Demo.Base", "Demo.Consumer"]
     );
     write(
         &root.join("lib/consumer.fpas"),
-        "unit Demo.Consumer;
-         uses Demo.Base;
-         public function Run(): integer;
-         begin return AddOne(41); end function;\nend unit;",
+        "unit Demo.Consumer;\n         uses Demo.Base as Base;\n         public function Run(): integer;\n         begin return Base.AddOne(41); end function;\nend unit;",
     );
 
     let project = load_project(&app_manifest).expect("workspace program project");
@@ -326,9 +316,7 @@ include = ["src/**/*.fpas"]
     );
     write(
         &root.join("src/main.fpas"),
-        "program Demo;
-         uses Demo.Values, Std.Console;
-         begin Std.Console.WriteLn(Demo.Values.State.Ready); end.",
+        "program Demo;\n         uses Demo.Values as Values, Std.Console as Console;\n         begin Console.WriteLn(Values.State.Ready); end.",
     );
 
     let project = load_project(&manifest).expect("enum project loading");

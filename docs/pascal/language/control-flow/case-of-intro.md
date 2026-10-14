@@ -35,13 +35,13 @@ Partial overlaps are allowed and follow written order.
 ```pascal
 case Day of
   when 'Monday':
-    WriteLn('Start of week');
+    Console.WriteLn('Start of week');
   when 'Friday':
-    WriteLn('Almost weekend');
+    Console.WriteLn('Almost weekend');
   when 'Saturday', 'Sunday':
-    WriteLn('Weekend');
+    Console.WriteLn('Weekend');
   else
-    WriteLn('Midweek');
+    Console.WriteLn('Midweek');
 end case;
 ```
 
@@ -75,12 +75,12 @@ an arm retains an additional scope; its ending closes only that inner block.
 case Items of
   when Some(const Value) if Value > 0:
     const Doubled: integer := Value * 2;
-    WriteLn(Doubled);
-    WriteLn('positive');
+    Console.WriteLn(Doubled);
+    Console.WriteLn('positive');
   when Some(const Value):
     null;
   when None:
-    WriteLn('missing');
+    Console.WriteLn('missing');
 end case;
 ```
 

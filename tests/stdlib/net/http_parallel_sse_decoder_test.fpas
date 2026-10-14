@@ -1,46 +1,47 @@
 program HttpParallelSseDecoderTest;
 
-uses Std.Conv, Std.Http, Std.Net.Utf8, Std.Tasks, Std.Test;
+uses
+  Std.Conv as Conv, Std.Http as Http, Std.Net.Utf8 as Utf8, Std.Tasks as StdTasks, Std.Test as Test;
 
-function CreateDecoder(Index: integer): SseDecoder;
+function CreateDecoder(Index: integer): Http.SseDecoder;
 begin
-  case CreateSseDecoder(1024) of
+  case Http.CreateSseDecoder(1024) of
     when Ok(const Decoder):
       begin
         return Decoder;
       end;
     when Error(const Message):
       begin
-        panic('decoder ' + IntToStr(Index) + ' failed: ' + Message);
+        panic('decoder ' + Conv.IntToStr(Index) + ' failed: ' + Message);
       end;
   end case;
 end function;
 
 begin
   scope
-    var Tasks: array of task of SseDecoder := [];
+    var Tasks: array of task of Http.SseDecoder := [];
     for Index: integer := 1 to 128 do
       begin
         Tasks.PushInPlace(go CreateDecoder(Index));
       end;
     end for;
 
-    WaitAll(Tasks);
-    var Decoders: array of SseDecoder := [];
+    StdTasks.WaitAll(Tasks);
+    var Decoders: array of Http.SseDecoder := [];
     for Index: integer := 0 to Tasks.Length() - 1 do
       begin
-        Decoders.PushInPlace(Wait(Tasks[Index]));
+        Decoders.PushInPlace(StdTasks.Wait(Tasks[Index]));
       end;
     end for;
 
     for Index: integer := 0 to Decoders.Length() - 1 do
       begin
-        const Expected: string := IntToStr(Index);
-        case FeedSse(Decoders[Index], Std.Net.Utf8.Encode('data: ' + Expected + #10 + #10)) of
+        const Expected: string := Conv.IntToStr(Index);
+        case Http.FeedSse(Decoders[Index], Utf8.Encode('data: ' + Expected + #10 + #10)) of
           when Ok(const Events):
             begin
-              AssertEquals(1, Events.Length());
-              AssertEquals(Expected, Events[0].Data);
+              Test.AssertEquals(1, Events.Length());
+              Test.AssertEquals(Expected, Events[0].Data);
             end;
           when Error(const Message):
             begin
@@ -48,7 +49,7 @@ begin
             end;
         end case;
 
-        case FinishSse(Decoders[Index]) of
+        case Http.FinishSse(Decoders[Index]) of
           when Ok(_):
             begin
             end;

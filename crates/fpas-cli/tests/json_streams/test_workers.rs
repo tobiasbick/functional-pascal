@@ -13,12 +13,12 @@ fn oversized_program_stderr_keeps_test_outcomes_and_reports_in_both_modes() {
         ("sh", "['-c', 'cat stderr.txt >&2']")
     };
     for (ending, exit, runtime_code) in [
-        ("AssertTrue(true)", 0, None),
-        ("AssertTrue(false)", 1, Some("FP5023")),
+        ("Test.AssertTrue(true)", 0, None),
+        ("Test.AssertTrue(false)", 1, Some("FP5023")),
         ("panic('boom')", 3, Some("FP5010")),
     ] {
         let source = format!(
-            "program P; uses Std.Proc, Std.Test; begin const Status: Result of (integer, string) := Run('{command}', {arguments}); {ending}; end."
+            "program P; uses Std.Proc as Proc, Std.Test as Test; begin const Status: Result of (integer, string) := Proc.Run('{command}', {arguments}); {ending}; end."
         );
         for name in ["first_test.fpas", "second_test.fpas"] {
             write(&root.join(name), &source);

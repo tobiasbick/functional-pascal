@@ -48,29 +48,24 @@ fn enum_duplicate_member_rejected() {
 #[test]
 fn enum_members_in_scope() {
     check_ok(
-        "program T; \
-         type Color = enum Red; Green; Blue; end enum; \
-         const C: Color := Red; \
-         begin end.",
+        "program T; type Color = enum Red; Green; Blue; end enum; const C: Color := Color.Red; begin end.",
     );
 }
 
 #[test]
-fn enum_shared_variant_name_becomes_ambiguous_at_use_site() {
+fn enum_shared_variant_names_require_explicit_type_qualification() {
     let errors = check_errors(
-        "program T; \
-         type Color = enum Red; Green; end enum; \
-         type Status = enum Red; Ready; end enum; \
-         begin \
-           const C: Color := Red; \
-         end.",
+        "program T; type Color = enum Red; Green; end enum; type Status = enum Red; Ready; end enum; begin const C: Color := Red; end.",
     );
     assert!(
         errors.iter().any(|error| {
-            error.code == fpas_diagnostics::codes::SEMA_AMBIGUOUS_IMPORTED_NAME
-                && error.message.contains("Ambiguous name `Red`")
+            error.code == fpas_diagnostics::codes::SEMA_UNQUALIFIED_NAME
+                && error
+                    .help
+                    .as_ref()
+                    .is_some_and(|help| help.contains("Color.Red") && help.contains("Status.Red"))
         }),
-        "expected ambiguous short enum variant at use site, got: {errors:#?}"
+        "expected type qualification repairs, got: {errors:#?}"
     );
 }
 
@@ -153,15 +148,7 @@ fn enum_data_fieldless_construct_valid() {
 #[test]
 fn enum_data_case_destructure_valid() {
     check_ok(
-        "program T; uses Std.Console; \
-         type Shape = enum Circle(Radius: real); Dot; end enum; \
-         begin \
-           const S: Shape := Shape.Circle(1.0); \
-           case S of \
-             when Shape.Circle(const R): WriteLn(R); when \
-             Shape.Dot: WriteLn('dot'); \
-           end case; \
-         end.",
+        "program T; uses Std.Console as Console; type Shape = enum Circle(Radius: real); Dot; end enum; begin const S: Shape := Shape.Circle(1.0); case S of when Shape.Circle(const R): Console.WriteLn(R); when Shape.Dot: Console.WriteLn('dot'); end case; end.",
     );
 }
 
@@ -333,32 +320,14 @@ fn record_duplicate_field_rejected() {
 #[test]
 fn record_method_valid() {
     check_ok(
-        "program T; uses Std.Console; \
-         type Point = record \
-           X: integer; Y: integer; \
-           function Sum(Self: Point): integer; \
-           begin return Self.X + Self.Y; end function; \
-         end record; \
-         begin \
-           const P: Point := Point( X := 3, Y := 7 ); \
-           WriteLn(P.Sum()); \
-         end.",
+        "program T; uses Std.Console as Console; type Point = record X: integer; Y: integer; function Sum(Self: Point): integer; begin return Self.X + Self.Y; end function; end record; begin const P: Point := Point( X := 3, Y := 7 ); Console.WriteLn(P.Sum()); end.",
     );
 }
 
 #[test]
 fn record_method_names_are_case_insensitive() {
     check_ok(
-        "program T; uses Std.Console; \
-                 type Point = record \
-                     X: integer; \
-                     function Sum(Self: Point): integer; \
-                     begin return Self.X; end function; \
-                 end record; \
-                 begin \
-                     const P: Point := Point( X := 3 ); \
-                     WriteLn(P.sum()); \
-                 end.",
+        "program T; uses Std.Console as Console; type Point = record X: integer; function Sum(Self: Point): integer; begin return Self.X; end function; end record; begin const P: Point := Point( X := 3 ); Console.WriteLn(P.sum()); end.",
     );
 }
 
@@ -386,49 +355,21 @@ fn record_duplicate_method_rejected() {
 #[test]
 fn static_record_function_valid() {
     check_ok(
-        "program T; uses Std.Console; \
-         type Point = record \
-           X: integer; Y: integer; \
-           static function Create(X: integer; Y: integer): Point; \
-           begin return Point( X := X, Y := Y ); end function; \
-         end record; \
-         begin \
-           const P: Point := Point.Create(3, 4); \
-           WriteLn(P.X); \
-         end.",
+        "program T; uses Std.Console as Console; type Point = record X: integer; Y: integer; static function Create(X: integer; Y: integer): Point; begin return Point( X := X, Y := Y ); end function; end record; begin const P: Point := Point.Create(3, 4); Console.WriteLn(P.X); end.",
     );
 }
 
 #[test]
 fn static_record_function_case_insensitive() {
     check_ok(
-        "program T; uses Std.Console; \
-         type Point = record \
-           X: integer; Y: integer; \
-           static function Create(X: integer; Y: integer): Point; \
-           begin return Point( X := X, Y := Y ); end function; \
-         end record; \
-         begin \
-           const P: Point := point.create(1, 2); \
-           WriteLn(P.X); \
-         end.",
+        "program T; uses Std.Console as Console; type Point = record X: integer; Y: integer; static function Create(X: integer; Y: integer): Point; begin return Point( X := X, Y := Y ); end function; end record; begin const P: Point := point.create(1, 2); Console.WriteLn(P.X); end.",
     );
 }
 
 #[test]
 fn static_record_function_via_alias() {
     check_ok(
-        "program T; uses Std.Console; \
-         type Point = record \
-           X: integer; Y: integer; \
-           static function Create(X: integer; Y: integer): Point; \
-           begin return Point( X := X, Y := Y ); end function; \
-         end record; \
-         type Alias = Point; \
-         begin \
-           const P: Alias := Alias.Create(5, 6); \
-           WriteLn(P.X); \
-         end.",
+        "program T; uses Std.Console as Console; type Point = record X: integer; Y: integer; static function Create(X: integer; Y: integer): Point; begin return Point( X := X, Y := Y ); end function; end record; type Alias = Point; begin const P: Alias := Alias.Create(5, 6); Console.WriteLn(P.X); end.",
     );
 }
 
@@ -523,29 +464,14 @@ fn static_overload_attempt_rejected() {
 #[test]
 fn static_generic_function_valid() {
     check_ok(
-        "program T; uses Std.Console; \
-         type Box = record \
-           Value: integer; \
-           static function Wrap<T>(V: T): T; \
-           begin return V; end function; \
-         end record; \
-         begin \
-           WriteLn(Box.Wrap(42)); \
-         end.",
+        "program T; uses Std.Console as Console; type Box = record Value: integer; static function Wrap<T>(V: T): T; begin return V; end function; end record; begin Console.WriteLn(Box.Wrap(42)); end.",
     );
 }
 
 #[test]
 fn static_record_procedure_valid() {
     check_ok(
-        "program T; uses Std.Console; \
-         type Counter = record \
-           static procedure Print(Value: integer); \
-           begin WriteLn(Value); end procedure; \
-         end record; \
-         begin \
-           Counter.Print(4); \
-         end.",
+        "program T; uses Std.Console as Console; type Counter = record static procedure Print(Value: integer); begin Console.WriteLn(Value); end procedure; end record; begin Counter.Print(4); end.",
     );
 }
 

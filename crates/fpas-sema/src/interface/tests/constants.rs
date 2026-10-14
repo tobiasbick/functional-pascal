@@ -27,11 +27,7 @@ fn constant_classification_and_values_survive_transitive_unit_interfaces() {
         &[],
     );
     let second = interface(
-        "unit Facade; uses Original;
-        public const Fixed: integer := Original.Fixed + 1;
-        public const Dynamic: integer := Original.Dynamic + 2;
-        public const Values: array of integer := Original.Values;
-        end unit;",
+        "unit Facade; uses Original as OriginalUnit;\n        public const Fixed: integer := OriginalUnit.Fixed + 1;\n        public const Dynamic: integer := OriginalUnit.Dynamic + 2;\n        public const Values: array of integer := OriginalUnit.Values;\n        end unit;",
         &[first],
     );
     let kind = |name: &str| {
@@ -50,9 +46,7 @@ fn constant_classification_and_values_survive_transitive_unit_interfaces() {
     assert_eq!(kind("Values"), &SymbolKind::Constant(None));
     let consumer = analyze_unit(
         &parse_unit(
-            "unit Consumer; uses Facade;
-        procedure Check(); begin case 43 of when Facade.Fixed: null; end case;
-        case 42 of when Facade.Dynamic: null; end case; end procedure; end unit;",
+            "unit Consumer; uses Facade as FacadeUnit;\n        procedure Check(); begin case 43 of when FacadeUnit.Fixed: null; end case;\n        case 42 of when FacadeUnit.Dynamic: null; end case; end procedure; end unit;",
         ),
         &[second],
     )
@@ -60,7 +54,7 @@ fn constant_classification_and_values_survive_transitive_unit_interfaces() {
     assert!(
         consumer.metadata.errors.iter().any(|error| error.code
             == fpas_diagnostics::codes::SEMA_NON_CONSTANT_EXPRESSION
-            && error.message.contains("Facade.Dynamic")),
+            && error.message.contains("FacadeUnit.Dynamic")),
         "{:?}",
         consumer.metadata.errors
     );
@@ -198,20 +192,18 @@ fn imported_record_patterns_detect_duplicates_and_reject_computed_fields() {
     );
     for (label, rest, expected) in [
         (
-            "Flags.Fixed.Enabled",
+            "FlagsUnit.Fixed.Enabled",
             "when Some(true): null; when Some(false): null;",
             fpas_diagnostics::codes::SEMA_UNREACHABLE_CASE_LABEL,
         ),
         (
-            "Flags.Dynamic.Enabled",
+            "FlagsUnit.Dynamic.Enabled",
             "when Some(_): null;",
             fpas_diagnostics::codes::SEMA_NON_CONSTANT_EXPRESSION,
         ),
     ] {
         let source = format!(
-            "unit Consumer; uses Flags;
-            procedure Check(B: Option of boolean); begin case B of
-            when Some({label}): null; {rest} when None: null; end case; end procedure; end unit;"
+            "unit Consumer; uses Flags as FlagsUnit;\n            procedure Check(B: Option of boolean); begin case B of\n            when Some({label}): null; {rest} when None: null; end case; end procedure; end unit;"
         );
         let consumer =
             analyze_unit(&parse_unit(&source), std::slice::from_ref(&original)).expect("consumer");

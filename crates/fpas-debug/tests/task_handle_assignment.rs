@@ -174,7 +174,7 @@ fn jsonl_task_handles_copy_atomically_and_continue_through_wait() {
 fn jsonl_task_handle_assignment_stays_bound_to_the_selected_child_task() {
     const TASK_SOURCE: &str = r#"program TaskHandleChildAssignment;
 
-uses Std.Console, Std.Tasks;
+uses Std.Console as Console, Std.Tasks as Tasks;
 
 function Seven(): integer;
 begin
@@ -191,12 +191,12 @@ begin scope
   const Backup: task of integer := go Seven();
   var Current: task of integer := go Nine();
   const Marker: integer := 0;
-  return Wait(Current);
+  return Tasks.Wait(Current);
  end scope; end function;
 
 begin scope
   const Pending: task of integer := go Work();
-  WriteLn(Wait(Pending));
+  Console.WriteLn(Tasks.Wait(Pending));
  end scope; end.
 "#;
     let mut server = server_for(TASK_SOURCE);

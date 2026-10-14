@@ -98,17 +98,20 @@ fn documented_introductory_programs_run_with_expected_output() {
 fn removing_introductory_console_import_reports_fp3003() {
     for example in introductory_examples() {
         assert!(
-            example
-                .source
-                .lines()
-                .any(|line| line.trim().eq_ignore_ascii_case("uses Std.Console;")),
+            example.source.lines().any(|line| line
+                .trim()
+                .eq_ignore_ascii_case("uses Std.Console as Console;")),
             "{}: explicit Console import",
             example.name
         );
         let source = example
             .source
             .lines()
-            .filter(|line| !line.trim().eq_ignore_ascii_case("uses Std.Console;"))
+            .filter(|line| {
+                !line
+                    .trim()
+                    .eq_ignore_ascii_case("uses Std.Console as Console;")
+            })
             .collect::<Vec<_>>()
             .join("\n");
         let (exit, stdout, stderr) = check_or_run(&example, &source, "check");
@@ -120,7 +123,7 @@ fn removing_introductory_console_import_reports_fp3003() {
             example.name
         );
         assert!(
-            stderr.contains("Unknown procedure"),
+            stderr.contains("Undefined identifier `Console`"),
             "{}\n{stderr}",
             example.name
         );

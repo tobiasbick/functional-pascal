@@ -10,17 +10,17 @@ use serde_json::{Value, json};
 
 const SOURCE: &str = r#"program InstructionChange;
 
-uses Std.Console;
+uses Std.Console as Console;
 
 function Branch(Value: integer): integer;
 begin
   var Local: integer := Value + 10;
-  WriteLn('effect');
+  Console.WriteLn('effect');
   return Local;
 end function;
 
 begin
-  WriteLn(Branch(1));
+  Console.WriteLn(Branch(1));
 end.
 "#;
 

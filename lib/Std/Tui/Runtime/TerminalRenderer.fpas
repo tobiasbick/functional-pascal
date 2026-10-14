@@ -1,30 +1,31 @@
 unit Std.Tui.Runtime.TerminalRenderer;
 
 uses
-  Std.Console, Std.Tui.Cells.Cell, Std.Tui.Cells.Color, Std.Tui.Cells.Palette, Std.Tui.Cells.Style,
-  Std.Tui.Rendering.Surface;
+  Std.Console as Console, Std.Tui.Cells.Cell as CellsCell, Std.Tui.Cells.Color as CellsColor,
+  Std.Tui.Cells.Palette as CellsPalette, Std.Tui.Cells.Style as CellsStyle,
+  Std.Tui.Rendering.Surface as RenderingSurface;
 
-function TuiColorToConsole(Color: TuiColor): Std.Console.Color;
+function TuiColorToConsole(Color: CellsColor.TuiColor): Console.Color;
 begin
   case Color.Kind of
-    when TuiColorKind.Crt:
+    when CellsColor.TuiColorKind.Crt:
       begin
-        return CrtColor(Color.Index);
+        return Console.CrtColor(Color.Index);
       end;
-    when TuiColorKind.Ansi256:
+    when CellsColor.TuiColorKind.Ansi256:
       begin
-        return Ansi256Color(Color.Index);
+        return Console.Ansi256Color(Color.Index);
       end;
-    when TuiColorKind.Rgb:
+    when CellsColor.TuiColorKind.Rgb:
       begin
-        return RgbColor(Color.Red, Color.Green, Color.Blue);
+        return Console.RgbColor(Color.Red, Color.Green, Color.Blue);
       end;
   end case;
 end function;
 
-function TuiCellToConsole(Cell: TuiCell; Palette: TuiPalette): Std.Console.Cell;
+function TuiCellToConsole(Cell: CellsCell.TuiCell; Palette: CellsPalette.TuiPalette): Console.Cell;
 begin
-  var Style: TuiStyle := Palette.ForRole(Cell.Role);
+  var Style: CellsStyle.TuiStyle := Palette.ForRole(Cell.Role);
   case Cell.ConcreteStyle of
     when Some(const Concrete):
       begin
@@ -35,13 +36,16 @@ begin
       end;
   end case;
 
-  return Std.Console.Cell(glyph := Cell.Glyph, foreground := TuiColorToConsole(Style.Foreground), background := TuiColorToConsole(Style.Background));
+  return Console.Cell(glyph := Cell.Glyph, foreground := TuiColorToConsole(Style.Foreground), background := TuiColorToConsole(Style.Background));
 end function;
 
-function TuiTerminalDamageRow(Damage: TuiSurfaceDamage; Palette: TuiPalette): array of Std.Console.Cell;
+function TuiTerminalDamageRow(
+  Damage: RenderingSurface.TuiSurfaceDamage;
+  Palette: CellsPalette.TuiPalette
+): array of Console.Cell;
 begin
-  var Row: array of Std.Console.Cell := [];
-  for Cell: TuiCell in Damage.Cells do
+  var Row: array of Console.Cell := [];
+  for Cell: CellsCell.TuiCell in Damage.Cells do
     begin
       Row.PushInPlace(TuiCellToConsole(Cell, Palette));
     end;
@@ -58,27 +62,30 @@ end function;
 // Parameters:
 // - `Surface`: Working surface affected by the operation.
 // - `Palette`: Palette used to resolve semantic style roles.
-public procedure TuiFlushSurface(Surface: TuiWorkingSurface; Palette: TuiPalette);
+public procedure TuiFlushSurface(
+  Surface: RenderingSurface.TuiWorkingSurface;
+  Palette: CellsPalette.TuiPalette
+);
 begin
-  const Damage: array of TuiSurfaceDamage := TuiSurfaceTakeTerminalDamage(Surface);
+  const Damage: array of RenderingSurface.TuiSurfaceDamage := RenderingSurface.TuiSurfaceTakeTerminalDamage(Surface);
   if Damage.Length() = 0 then
     begin
       return;
     end;
   end if;
 
-  BeginFrame();
-  for Item: TuiSurfaceDamage in Damage do
+  Console.BeginFrame();
+  for Item: RenderingSurface.TuiSurfaceDamage in Damage do
     begin
-      const Row: array of Std.Console.Cell := TuiTerminalDamageRow(Item, Palette);
+      const Row: array of Console.Cell := TuiTerminalDamageRow(Item, Palette);
       if Row.Length() > 0 then
         begin
-          WriteCells(Item.FirstX + 1, Item.Y + 1, Row);
+          Console.WriteCells(Item.FirstX + 1, Item.Y + 1, Row);
         end;
       end if;
     end;
   end for;
 
-  Present();
+  Console.Present();
 end procedure;
 end unit;

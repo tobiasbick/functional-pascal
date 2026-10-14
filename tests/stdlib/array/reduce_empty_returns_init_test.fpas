@@ -1,6 +1,6 @@
 program T;
 
-uses Std.Console;
+uses Std.Console as Console;
 
 function AddAcc(Acc: integer; V: integer): integer;
 begin
@@ -10,5 +10,5 @@ end function;
 begin
   const A: array of integer := [];
   const Val: integer := A.Reduce(99, AddAcc);
-  WriteLn(Val);
+  Console.WriteLn(Val);
 end.

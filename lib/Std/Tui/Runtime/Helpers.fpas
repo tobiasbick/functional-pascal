@@ -1,17 +1,18 @@
 unit Std.Tui.Runtime.Helpers;
 
 uses
-  Std.Tui.Elements.Element, Std.Tui.Geometry.Size, Std.Tui.Ids.ControlId, Std.Tui.Layout.LayoutFit,
-  Std.Tui.Layout.Measure, Std.Tui.Layout.MeasureResult, Std.Tui.Layout.MeasureSpec,
-  Std.Tui.Runtime.Routing.Focus;
+  Std.Tui.Elements.Element as Element, Std.Tui.Geometry.Size as Size,
+  Std.Tui.Ids.ControlId as ControlId, Std.Tui.Layout.LayoutFit as LayoutFit,
+  Std.Tui.Layout.Measure as Measure, Std.Tui.Layout.MeasureResult as MeasureResult,
+  Std.Tui.Layout.MeasureSpec as MeasureSpec, Std.Tui.Runtime.Routing.Focus as Focus;
 
 // Returns the first focusable control in the active modal or full tree, or `None`.
 //
 // Parameters:
 // - `Root`: Root of the element tree.
-public function TuiFocusFirst(Root: TuiElement): option of TuiControlId;
+public function TuiFocusFirst(Root: Element.TuiElement): option of ControlId.TuiControlId;
 begin
-  const Controls: array of TuiControlId := TuiFocusableControls(Root);
+  const Controls: array of ControlId.TuiControlId := Focus.TuiFocusableControls(Root);
   if Controls.Length() = 0 then
     begin
       return None;
@@ -26,9 +27,9 @@ end function;
 // Parameters:
 // - `Root`: Root of the element tree.
 // - `Preferred`: Preferred size or focus identifier.
-public function TuiFocusResolve(Root: TuiElement; Preferred: option of TuiControlId): option of TuiControlId;
+public function TuiFocusResolve(Root: Element.TuiElement; Preferred: option of ControlId.TuiControlId): option of ControlId.TuiControlId;
 begin
-  const Controls: array of TuiControlId := TuiFocusableControls(Root);
+  const Controls: array of ControlId.TuiControlId := Focus.TuiFocusableControls(Root);
   if Controls.Length() = 0 then
     begin
       return None;
@@ -38,7 +39,7 @@ begin
   case Preferred of
     when Some(const Id):
       begin
-        if TuiControlIndex(Controls, Id) >= 0 then
+        if Focus.TuiControlIndex(Controls, Id) >= 0 then
           begin
             return Preferred;
           end;
@@ -57,9 +58,9 @@ end function;
 // Parameters:
 // - `Root`: Root of the element tree.
 // - `Available`: Available terminal size.
-public function TuiLayoutFitFor(Root: TuiElement; Available: TuiSize): TuiLayoutFit;
+public function TuiLayoutFitFor(Root: Element.TuiElement; Available: Size.TuiSize): LayoutFit.TuiLayoutFit;
 begin
-  const Measured: TuiMeasureResult := TuiMeasure(Root, TuiMeasureSpec.Unbounded());
-  return TuiLayoutFit.Create(Measured.Minimum, Available);
+  const Measured: MeasureResult.TuiMeasureResult := Measure.TuiMeasure(Root, MeasureSpec.TuiMeasureSpec.Unbounded());
+  return LayoutFit.TuiLayoutFit.Create(Measured.Minimum, Available);
 end function;
 end unit;

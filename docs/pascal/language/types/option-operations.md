@@ -1,13 +1,17 @@
 # Option operations
 
+The code fragments use `uses Std.Conv as Conv, Std.Console as Console;`.
+
 Helper functions for `Option of T` values. See [Error handling](../error-handling/README.md) for the type itself, constructors (`Some`, `None`), the `try` operator, and `case` destructuring.
 
 ```pascal
 program Example;
-uses Std.Console;
+
+uses Std.Console as Console;
+
 begin
-  const O: Option of integer := Some(7);
-  WriteLn(O.Unwrap());
+  const O: option of integer := Some(7);
+  Console.WriteLn(O.Unwrap());
 end.
 ```
 
@@ -40,7 +44,7 @@ Extracts the value from `Some(value)`. **Runtime error** if `O` is `None`.
 
 ```pascal
 const O: Option of integer := Some(7);
-WriteLn(O.Unwrap());                             // 7
+Console.WriteLn(O.Unwrap());                             // 7
 ```
 
 ---
@@ -51,7 +55,7 @@ Extracts the value from `Some(value)`, or returns `Default` if `O` is `None`.
 
 ```pascal
 const O: Option of integer := None;
-WriteLn(O.UnwrapOr(-1));                      // -1
+Console.WriteLn(O.UnwrapOr(-1));                      // -1
 ```
 
 ---
@@ -62,7 +66,7 @@ Returns `true` if `O` is a `Some` variant.
 
 ```pascal
 const O: Option of integer := Some(7);
-WriteLn(O.IsSome());                             // true
+Console.WriteLn(O.IsSome());                             // true
 ```
 
 ---
@@ -73,7 +77,7 @@ Returns `true` if `O` is `None`.
 
 ```pascal
 const O: Option of integer := None;
-WriteLn(O.IsNone());                             // true
+Console.WriteLn(O.IsNone());                             // true
 ```
 
 ---
@@ -85,7 +89,7 @@ Transforms the `Some` value with `F`. If `O` is `None`, returns `None`.
 ```pascal
 function TripleToString(V: integer): string;
 begin
-  return IntToStr(V * 3);
+  return Conv.IntToStr(V * 3);
 end function;
 
 const O: Option of integer := Some(7);
@@ -103,7 +107,7 @@ Calls `F` with the `Some` value. `F` returns a new `Option`, enabling chained lo
 function PositiveToOptionString(V: integer): option of string;
 begin
   if V > 0 then
-    return Some(IntToStr(V));
+    return Some(Conv.IntToStr(V));
   else
     return None;
   end if;

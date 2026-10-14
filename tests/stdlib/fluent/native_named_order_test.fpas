@@ -1,6 +1,6 @@
 program NativeNamedOrderTest;
 
-uses Std.Test;
+uses Std.Test as Test;
 
 var Trace: string := '';
 
@@ -64,43 +64,43 @@ end function;
 
 begin
   const Part: string := Text().Slice(Len := Number('L', 2), Start := Number('S', 1));
-  AssertEquals('😀a', Part);
-  AssertEquals('RLS', Trace);
+  Test.AssertEquals('😀a', Part);
+  Test.AssertEquals('RLS', Trace);
   Trace := '';
   const LowerCase: string := Text().sLiCe(lEn := Number('L', 1), sTaRt := Number('S', 0));
-  AssertEquals('é', LowerCase);
-  AssertEquals('RLS', Trace);
+  Test.AssertEquals('é', LowerCase);
+  Test.AssertEquals('RLS', Trace);
   Trace := '';
   const Folded: integer := [1, 2, 3].Reduce(F := Reducer(), Init := Number('I', 0));
-  AssertEquals(6, Folded);
-  AssertEquals('FI', Trace);
+  Test.AssertEquals(6, Folded);
+  Test.AssertEquals('FI', Trace);
   Trace := '';
   const Failed: result of (string, string) := SliceAfterFailure();
-  AssertTrue(Failed.IsError());
-  AssertEquals('RL', Trace);
+  Test.AssertTrue(Failed.IsError());
+  Test.AssertEquals('RL', Trace);
   Trace := '';
   const Copies: array of string := array.Fill(Count := Number('C', 2), Value := Word());
-  AssertEquals('hi|hi', Copies.Join(Delim := '|'));
-  AssertEquals('CV', Trace);
+  Test.AssertEquals('hi|hi', Copies.Join(Delim := '|'));
+  Test.AssertEquals('CV', Trace);
   Trace := '';
   const Letter: string := string.Chr(N := Number('N', 128512));
-  AssertEquals('😀', Letter);
-  AssertEquals('N', Trace);
+  Test.AssertEquals('😀', Letter);
+  Test.AssertEquals('N', Trace);
   const EmptyCopies: array of string := array.Fill(Value := 'x', Count := 0);
-  AssertTrue(EmptyCopies.IsEmpty());
+  Test.AssertTrue(EmptyCopies.IsEmpty());
   Trace := '';
-  AssertTrue(EmptyString().IsEmpty());
-  AssertTrue(EmptyArray().IsEmpty());
-  AssertTrue(EmptyDictionary().IsEmpty());
-  AssertEquals('EAD', Trace);
-  AssertTrue(not '😀'.IsEmpty());
-  AssertTrue(not [1].IsEmpty());
-  AssertTrue(not ['a': 1].IsEmpty());
+  Test.AssertTrue(EmptyString().IsEmpty());
+  Test.AssertTrue(EmptyArray().IsEmpty());
+  Test.AssertTrue(EmptyDictionary().IsEmpty());
+  Test.AssertEquals('EAD', Trace);
+  Test.AssertTrue(not '😀'.IsEmpty());
+  Test.AssertTrue(not [1].IsEmpty());
+  Test.AssertTrue(not ['a': 1].IsEmpty());
   var Items: array of integer := [1];
   const Original: array of integer := Items;
   Items.PushInPlace(Value := 3);
-  AssertEquals(3, Items.PopInPlace());
-  AssertEquals(1, Items.Length());
-  AssertEquals(1, Original.Length());
-  AssertEquals('x: 3', '%s: %d'.Format('x', 3));
+  Test.AssertEquals(3, Items.PopInPlace());
+  Test.AssertEquals(1, Items.Length());
+  Test.AssertEquals(1, Original.Length());
+  Test.AssertEquals('x: 3', '%s: %d'.Format('x', 3));
 end.

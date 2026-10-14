@@ -101,26 +101,14 @@ fn case_option_rejects_result_patterns() {
 #[test]
 fn case_result_multi_label_shared_binding_valid() {
     check_ok(
-        "program T; uses Std.Console; \
-         begin \
-           const R: Result of (string, string) := Ok('hello'); \
-           case R of \
-             when Ok(const Msg), Error(const Msg): WriteLn(Msg); \
-           end case; \
-         end.",
+        "program T; uses Std.Console as Console; begin const R: Result of (string, string) := Ok('hello'); case R of when Ok(const Msg), Error(const Msg): Console.WriteLn(Msg); end case; end.",
     );
 }
 
 #[test]
 fn case_result_multi_label_binding_names_are_case_insensitive() {
     check_ok(
-        "program T; uses Std.Console; \
-         begin \
-           const R: Result of (string, string) := Ok('hello'); \
-           case R of \
-             when Ok(const Message), Error(const message): WriteLn(Message); \
-           end case; \
-         end.",
+        "program T; uses Std.Console as Console; begin const R: Result of (string, string) := Ok('hello'); case R of when Ok(const Message), Error(const message): Console.WriteLn(Message); end case; end.",
     );
 }
 

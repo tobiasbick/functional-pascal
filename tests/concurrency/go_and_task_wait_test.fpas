@@ -1,6 +1,6 @@
 program GoWait;
 
-uses Std.Tasks, Std.Test;
+uses Std.Tasks as Tasks, Std.Test as Test;
 
 function Worker(): integer;
 begin
@@ -10,6 +10,6 @@ end function;
 begin
   scope
     const T: task of integer := go Worker();
-    AssertEquals(42, Std.Tasks.Wait(T));
+    Test.AssertEquals(42, Tasks.Wait(T));
   end scope;
 end.

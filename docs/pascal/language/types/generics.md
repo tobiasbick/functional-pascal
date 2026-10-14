@@ -1,5 +1,7 @@
 # Generics
 
+The code fragments use `uses Std.Conv as Conv, Std.Console as Console;`.
+
 Records and enums declare type parameters after `of`; routines and record methods declare
 their own parameters in angle brackets (`<T>`).
 
@@ -192,7 +194,7 @@ end function;
 
 procedure PrintValue<T>(Value: T);
 begin
-  WriteLn(Value);
+  Console.WriteLn(Value);
 end procedure;
 ```
 
@@ -221,7 +223,7 @@ end record;
 
 function ToText(X: integer): string;
 begin
-  return 'value=' + IntToStr(X);
+  return 'value=' + Conv.IntToStr(X);
 end function;
 
 const B: Box := Box(

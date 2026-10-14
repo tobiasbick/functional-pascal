@@ -196,10 +196,9 @@ fn typed_construction_retains_task_bound_and_discard_capture_guarantees() {
             .any(|error| error.code == fpas_diagnostics::codes::SEMA_TASK_BOUND_CALLABLE),
         "{errors:#?}"
     );
-    check_ok("program T; uses Std.Tasks;
-      const Callback: function(Job: task of integer): integer := function(Job: task of integer): integer begin return Wait(Job); end function;
-      type Holder = record Value: function(Job: task of integer): integer := Callback; end record;
-      begin discard Holder(); end.");
+    check_ok(
+        "program T; uses Std.Tasks as Tasks;\n      const Callback: function(Job: task of integer): integer := function(Job: task of integer): integer begin return Tasks.Wait(Job); end function;\n      type Holder = record Value: function(Job: task of integer): integer := Callback; end record;\n      begin discard Holder(); end.",
+    );
 }
 
 #[test]

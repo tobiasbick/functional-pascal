@@ -40,7 +40,9 @@ end procedure;
 "#;
 
 fn program(body: &str) -> String {
-    format!("program T;\nuses Std.Console, Std.Math;\n{ROUTINES}\nbegin\n{body}\nend.")
+    format!(
+        "program T;\nuses Std.Console as Console, Std.Math as Math;\n{ROUTINES}\nbegin\n{body}\nend."
+    )
 }
 
 fn single_error_code(body: &str) -> fpas_diagnostics::DiagnosticCode {
@@ -120,7 +122,7 @@ fn invalid_named_mappings_list_the_parameters() {
 #[test]
 fn positional_only_targets_reject_named_arguments() {
     for body in [
-        "  WriteLn(Text := 'x');",
+        "  Console.WriteLn(Text := 'x');",
         "  const S: string := '%d'.Format(Value := 1);",
     ] {
         assert_eq!(
@@ -136,7 +138,7 @@ fn named_arguments_construct_enum_variants_by_field_name() {
     check_ok(&program(
         r#"
   const A: Shape := Shape.Rect(Height := 1.0, width := 2.0);
-  const B: Shape := Circle(Radius := 1.0);
+  const B: Shape := Shape.Circle(Radius := 1.0);
 "#,
     ));
 }
@@ -170,8 +172,8 @@ fn enum_patterns_accept_named_fields() {
         r#"
   const S: Shape := Shape.Rect(1.0, 2.0);
   case S of
-    when Shape.Rect(Width := const W, Height := const H): WriteLn(W + H);
-    when Shape.Circle(_): WriteLn(0);
+    when Shape.Rect(Width := const W, Height := const H): Console.WriteLn(W + H);
+    when Shape.Circle(_): Console.WriteLn(0);
   end case;
 "#,
     ));
@@ -185,7 +187,7 @@ fn callable_labels_come_from_the_visible_signature() {
       const N := F(B := 1, A := 9);
       const G := Sub;
       const M := G(Right := 1, Left := 9);
-      const R: result of (integer, string) := Ok(Value := Abs(N := -1));
+      const R: result of (integer, string) := Ok(Value := Math.Abs(N := -1));
       const O := Some(value := 3);
     "#,
     ));
@@ -237,15 +239,15 @@ fn named_payloads_and_pattern_fields_require_complete_unique_labels() {
             SEMA_INVALID_NAMED_ARGUMENT,
         ),
         (
-            "const S: Shape := Circle(1.0); const B := S is Shape.Rect(Width := _);",
+            "const S: Shape := Shape.Circle(1.0); const B := S is Shape.Rect(Width := _);",
             SEMA_INVALID_NAMED_ARGUMENT,
         ),
         (
-            "const S: Shape := Circle(1.0); const B := S is Shape.Rect(Width := _, width := _);",
+            "const S: Shape := Shape.Circle(1.0); const B := S is Shape.Rect(Width := _, width := _);",
             SEMA_INVALID_NAMED_ARGUMENT,
         ),
         (
-            "const S: Shape := Circle(1.0); const B := S is Shape.Rect(Width := _, Wrong := _);",
+            "const S: Shape := Shape.Circle(1.0); const B := S is Shape.Rect(Width := _, Wrong := _);",
             SEMA_INVALID_NAMED_ARGUMENT,
         ),
         (
@@ -264,7 +266,7 @@ fn named_payloads_and_pattern_fields_require_complete_unique_labels() {
 #[test]
 fn polymorphic_labels_do_not_make_unspecialized_intrinsics_callable_values() {
     let errors = check_errors(&program(
-        "const F: function(N: integer): integer := Abs; const A := F(N := -1);",
+        "const F: function(N: integer): integer := Math.Abs; const A := F(N := -1);",
     ));
     assert!(
         errors.iter().any(|error| error.code == SEMA_TYPE_MISMATCH

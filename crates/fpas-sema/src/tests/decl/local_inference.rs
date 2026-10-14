@@ -3,10 +3,7 @@
 use super::{check_errors, check_ok};
 use fpas_diagnostics::codes::{SEMA_TYPE_ANNOTATION_REQUIRED, SEMA_TYPE_MISMATCH};
 
-const PREFIX: &str = "program T; uses Std.Conv; type UserId = distinct integer; type Raw = integer;
-type Point = record X: integer; end record;
-type Shape = enum Circle(Radius: real); end enum;
-function ReadValue(): integer; begin return 42; end function;";
+const PREFIX: &str = "program T; uses Std.Conv as Conv; type UserId = distinct integer; type Raw = integer;\ntype Point = record X: integer; end record;\ntype Shape = enum Circle(Radius: real); end enum;\nfunction ReadValue(): integer; begin return 42; end function;";
 
 #[test]
 fn local_literals_and_conversions_have_fixed_types() {
@@ -29,7 +26,7 @@ fn all_fully_determined_initializer_forms_infer() {
     for initializer in [
         "ReadValue()",
         "'x'.ToUpper()",
-        "IntToReal(1)",
+        "Conv.IntToReal(1)",
         "1 + 2",
         "not true",
         "Whole",
@@ -150,7 +147,7 @@ fn inferred_aggregates_allow_discard_without_losing_task_escape_checks() {
         "Envelope.Held(Job)",
     ] {
         check_ok(&format!(
-            "program T; uses Std.Tasks; type Holder = record Value: task of integer; end record; type Envelope of T = enum Held(Value: T); end enum; function Work(): integer; begin return 1; end function; begin scope  const Job: task of integer := go Work(); const Values := {initializer}; discard Values;  end scope; end."
+            "program T; uses Std.Tasks as Tasks; type Holder = record Value: task of integer; end record; type Envelope of T = enum Held(Value: T); end enum; function Work(): integer; begin return 1; end function; begin scope  const Job: task of integer := go Work(); const Values := {initializer}; discard Values;  end scope; end."
         ));
     }
 }

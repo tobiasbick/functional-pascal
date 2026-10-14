@@ -48,20 +48,20 @@ fn close_delimited_response_limit_includes_exact_boundary_and_empty_body() {
         &format!(
             r#"
 program HttpExactLimit;
-uses Std.Http, Std.Test;
-function Fetch(RequestValue: Request; Streaming: boolean): result of (integer, string);
+uses Std.Http as Http, Std.Test as Test;
+function Fetch(RequestValue: Http.Request; Streaming: boolean): result of (integer, string);
 begin
   if not Streaming then
   begin
-    const ResponseValue: Response := try Send(RequestValue);
+    const ResponseValue: Http.Response := try Http.Send(RequestValue);
     return Ok(ResponseValue.Body.Length());
   end; end if;
-  const ResponseValue: StreamResponse := try OpenStream(RequestValue);
+  const ResponseValue: Http.StreamResponse := try Http.OpenStream(RequestValue);
   var Count: integer := 0;
   var Reading: boolean := true;
   while Reading do
   begin
-    const Bytes: array of integer := try ReadStream(ResponseValue.Body, 2);
+    const Bytes: array of integer := try Http.ReadStream(ResponseValue.Body, 2);
     Count := Count + Bytes.Length();
     Reading := Bytes.Length() > 0;
   end; end while;
@@ -74,12 +74,12 @@ begin
     begin
       for Delta: integer := -1 to 1 do
       begin
-        var RequestValue: Request := Request.Get('http://127.0.0.1:{port}/');
+        var RequestValue: Http.Request := Http.Request.Get('http://127.0.0.1:{port}/');
         RequestValue.MaxResponseBytes := {head_len} + BodyIndex * 3 + Delta;
         RequestValue.TimeoutMillis := 1000;
         const Received: result of (integer, string) := Fetch(RequestValue, Streaming);
-        AssertEquals(Delta >= 0, Received.IsOk());
-        if Delta >= 0 then AssertEquals(BodyIndex * 3, Received.Unwrap()); end if;
+        Test.AssertEquals(Delta >= 0, Received.IsOk());
+        if Delta >= 0 then Test.AssertEquals(BodyIndex * 3, Received.Unwrap()); end if;
       end; end for;
     end; end for;
   end; end for;

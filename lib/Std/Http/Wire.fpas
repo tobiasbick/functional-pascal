@@ -2,8 +2,9 @@
 unit Std.Http.Wire;
 
 uses
-  Std.Conv, Std.Http.BodyFraming, Std.Http.Fields, Std.Http.Headers, Std.Http.Method, Std.Http.Types,
-  Std.Net.Uri, Std.Net.Utf8, Std.Parse;
+  Std.Conv as Conv, Std.Http.BodyFraming as BodyFraming, Std.Http.Fields as Fields,
+  Std.Http.Headers as HttpHeaders, Std.Http.Method as Method, Std.Http.Types as Types,
+  Std.Net.Uri as Uri, Std.Net.Utf8 as Utf8, Std.Parse as Parse;
 
 const MaximumChunkSize: integer := 9223372036854775807;
 
@@ -189,7 +190,7 @@ begin
       end if;
       const LineBytes: array of integer := Bytes.Slice(Position, LineEnd - Position);
       var Line: string := '';
-      case Std.Net.Utf8.Decode(LineBytes) of
+      case Utf8.Decode(LineBytes) of
         when Ok(const Value):
           begin
             Line := Value;
@@ -262,7 +263,7 @@ end function;
 // - `Headers`: Parsed response fields.
 // - `Bytes`: Raw bytes following the response head.
 // - `HasBody`: Whether response semantics permit a body.
-function ResponseBody(Headers: array of Header; Bytes: array of integer; HasBody: boolean): result of (array of integer, string);
+function ResponseBody(Headers: array of Types.Header; Bytes: array of integer; HasBody: boolean): result of (array of integer, string);
 begin
   if not HasBody then
     begin
@@ -270,7 +271,7 @@ begin
     end;
   end if;
 
-  case Std.Http.BodyFraming.Select(Headers) of
+  case BodyFraming.Select(Headers) of
     when Ok(const Framing):
       begin
         if Framing.Mode = 2 then
@@ -304,7 +305,7 @@ end function;
 //
 // Parameters:
 // - `Bytes`: Response bytes containing a complete head.
-public function ParseResponseHead(Bytes: array of integer): result of (ResponseHead, string);
+public function ParseResponseHead(Bytes: array of integer): result of (Types.ResponseHead, string);
 begin
   const Separator: integer := FindSeparator(Bytes, 0);
   if Separator < 0 then
@@ -314,7 +315,7 @@ begin
   end if;
   const HeaderBytes: array of integer := Bytes.Slice(0, Separator);
   var HeaderText: string := '';
-  case Std.Net.Utf8.Decode(HeaderBytes) of
+  case Utf8.Decode(HeaderBytes) of
     when Ok(const Value):
       begin
         HeaderText := Value;
@@ -348,7 +349,7 @@ begin
     end;
   end if;
 
-  case Std.Parse.TryInt(Status[0]) of
+  case Parse.TryInt(Status[0]) of
     when Ok(const Value):
       begin
         StatusCode := Value;
@@ -358,8 +359,8 @@ begin
         return Error('Invalid HTTP status code: ' + Message);
       end;
   end case;
-  var Headers: array of Header := [];
-  case Std.Http.Fields.Parse(HeaderText, 'response') of
+  var Headers: array of Types.Header := [];
+  case Fields.Parse(HeaderText, 'response') of
     when Ok(const Value):
       begin
         Headers := Value;
@@ -370,8 +371,8 @@ begin
       end;
   end case;
 
-  return Ok(ResponseHead(StatusCode := StatusCode, ReasonPhrase := Status[1], Headers := Headers, BodyOffset := Separator +
-                                                                                                                4));
+  return Ok(Types.ResponseHead(StatusCode := StatusCode, ReasonPhrase := Status[1], Headers := Headers, BodyOffset := Separator +
+                                                                                                                      4));
 end function;
 
 // Parses one complete buffered HTTP response.
@@ -379,7 +380,7 @@ end function;
 // Parameters:
 // - `Bytes`: Complete HTTP response bytes.
 // - `RequestMethod`: Method used by the matching request.
-public function ParseResponse(Bytes: array of integer; RequestMethod: string): result of (Response, string);
+public function ParseResponse(Bytes: array of integer; RequestMethod: string): result of (Types.Response, string);
 begin
   case ParseResponseHead(Bytes) of
     when Ok(const Head):
@@ -389,7 +390,7 @@ begin
         case ResponseBody(Head.Headers, RawBody, ResponseHasBody(RequestMethod, Head.StatusCode)) of
           when Ok(const Body):
             begin
-              return Ok(Response(StatusCode := Head.StatusCode, ReasonPhrase := Head.ReasonPhrase, Headers := Head.Headers, Body := Body));
+              return Ok(Types.Response(StatusCode := Head.StatusCode, ReasonPhrase := Head.ReasonPhrase, Headers := Head.Headers, Body := Body));
             end;
           when Error(const Message):
             begin
@@ -408,7 +409,7 @@ end function;
 //
 // Parameters:
 // - `UriValue`: Parsed request URI.
-function HostHeader(UriValue: Uri): string;
+function HostHeader(UriValue: Uri.Uri): string;
 begin
   var Host: string := UriValue.Host;
   if Host.Contains(':') then
@@ -429,7 +430,7 @@ begin
     end;
   end if;
 
-  return Host + ':' + Std.Conv.IntToStr(UriValue.Port);
+  return Host + ':' + Conv.IntToStr(UriValue.Port);
 end function;
 
 // Validates and serializes one HTTP/1.1 request.
@@ -437,33 +438,33 @@ end function;
 // Parameters:
 // - `RequestValue`: Complete request to encode.
 // - `UriValue`: Parsed absolute request URI.
-public function EncodeRequest(RequestValue: Request; UriValue: Uri): result of (array of integer, string);
+public function EncodeRequest(RequestValue: Types.Request; UriValue: Uri.Uri): result of (array of integer, string);
 begin
-  if not Std.Http.Method.IsValidToken(RequestValue.Method) then
+  if not Method.IsValidToken(RequestValue.Method) then
     begin
       return Error('HTTP method must be a non-empty RFC 9110 token');
     end;
   end if;
 
-  if ContainsUnsafeText(UriValue.Path) then
+  if HttpHeaders.ContainsUnsafeText(UriValue.Path) then
     begin
       return Error('HTTP request target contains CR or LF');
     end;
   end if;
-  var Head: string := RequestValue.Method + ' ' + UriValue.Path + ' HTTP/1.1' + #13 + #10 + 'Host: ' + HostHeader(UriValue) + #13 + #10 + 'Connection: close' + #13 + #10 + 'Content-Length: ' + Std.Conv.IntToStr(RequestValue.Body.Length()) + #13 +
+  var Head: string := RequestValue.Method + ' ' + UriValue.Path + ' HTTP/1.1' + #13 + #10 + 'Host: ' + HostHeader(UriValue) + #13 + #10 + 'Connection: close' + #13 + #10 + 'Content-Length: ' + Conv.IntToStr(RequestValue.Body.Length()) + #13 +
                       #10;
   for Index: integer := 0 to RequestValue.Headers.Length() - 1 do
     begin
-      const HeaderValue: Header := RequestValue.Headers[Index];
-      if (not Std.Http.Method.IsValidToken(HeaderValue.Name)) or
-         (ContainsUnsafeText(HeaderValue.Value) or (not Std.Http.Fields.IsValidValue(HeaderValue.Value))) then
+      const HeaderValue: Types.Header := RequestValue.Headers[Index];
+      if (not Method.IsValidToken(HeaderValue.Name)) or
+         (HttpHeaders.ContainsUnsafeText(HeaderValue.Value) or (not Fields.IsValidValue(HeaderValue.Value))) then
         begin
           return Error('HTTP request contains an invalid header');
         end;
       end if;
 
-      if ((IsName(HeaderValue.Name, 'Host') or IsName(HeaderValue.Name, 'Content-Length')) or IsName(HeaderValue.Name, 'Connection')) or
-         IsName(HeaderValue.Name, 'Transfer-Encoding') then
+      if ((HttpHeaders.IsName(HeaderValue.Name, 'Host') or HttpHeaders.IsName(HeaderValue.Name, 'Content-Length')) or HttpHeaders.IsName(HeaderValue.Name, 'Connection')) or
+         HttpHeaders.IsName(HeaderValue.Name, 'Transfer-Encoding') then
         begin
           return Error('Host, Content-Length, Transfer-Encoding, and Connection headers are managed by Std.Http');
         end;
@@ -474,6 +475,6 @@ begin
   end for;
 
   Head := Head + #13 + #10;
-  return Ok(Std.Net.Utf8.Encode(Head).Concat(RequestValue.Body));
+  return Ok(Utf8.Encode(Head).Concat(RequestValue.Body));
 end function;
 end unit;

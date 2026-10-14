@@ -1,6 +1,6 @@
 unit Std.Tui.Text.Input;
 
-uses Std.Console;
+uses Std.Console as Console;
 
 // Derived horizontal viewport for a one-line input.
 public type TuiInputViewport = record
@@ -24,7 +24,7 @@ begin
     end;
   end if;
 
-  return Std.Console.DisplayWidth(Text.Slice(Start, EndIndex - Start));
+  return Console.DisplayWidth(Text.Slice(Start, EndIndex - Start));
 end function;
 
 // Derives the smallest viewport that keeps the controlled caret visible.
@@ -91,7 +91,7 @@ begin
   var Width: integer := 0;
   for Index: integer := Viewport.Start to Viewport.EndIndex - 1 do
     begin
-      const GlyphWidth: integer := Std.Console.DisplayWidth(Text.CharAt(Index));
+      const GlyphWidth: integer := Console.DisplayWidth(Text.CharAt(Index));
       if Column < Width + GlyphWidth then
         begin
           return Index;

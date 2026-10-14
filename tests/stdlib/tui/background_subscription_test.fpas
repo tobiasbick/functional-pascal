@@ -1,6 +1,6 @@
 program TuiBackgroundSubscriptionTest;
 
-uses Std.Tasks, Std.Test, Std.Tui;
+uses Std.Tasks as Tasks, Std.Test as Test, Std.Tui as Tui;
 
 type SubscriptionModel = record
   Gate: channel of boolean;
@@ -9,17 +9,17 @@ type SubscriptionModel = record
   Generation: integer;
 end record;
 
-procedure ReplaceWorker(State: SubscriptionModel; Cmd: TuiCmdOutput);
+procedure ReplaceWorker(State: SubscriptionModel; Cmd: Tui.TuiCmdOutput);
 begin
   const Gate: channel of boolean := State.Gate;
   const Started: channel of integer := State.Started;
   const Stopped: channel of integer := State.Stopped;
   const Generation: integer := State.Generation;
-  Cmd.ReplaceSubscription(1, function(Token: CancellationToken): result of (boolean, string) begin
-    discard Send(Started, Generation);
-    if ReceiveWithCancellation(Gate, Token).IsError() then
+  Cmd.ReplaceSubscription(1, function(Token: Tasks.CancellationToken): result of (boolean, string) begin
+    discard Tasks.Send(Started, Generation);
+    if Tasks.ReceiveWithCancellation(Gate, Token).IsError() then
       begin
-        discard Send(Stopped, Generation);
+        discard Tasks.Send(Stopped, Generation);
       end;
     end if;
 
@@ -27,15 +27,15 @@ begin
   end function);
 end procedure;
 
-function UpdateFramework(State: SubscriptionModel; Msg: TuiMsg; Cmd: TuiCmdOutput): SubscriptionModel;
+function UpdateFramework(State: SubscriptionModel; Msg: Tui.TuiMsg; Cmd: Tui.TuiCmdOutput): SubscriptionModel;
 begin
   case Msg of
-    when TuiMsg.Started:
+    when Tui.TuiMsg.Started:
       begin
         ReplaceWorker(State, Cmd);
         return State;
       end;
-    when TuiMsg.Tick(const Delta):
+    when Tui.TuiMsg.Tick(const Delta):
       begin
         if Delta = 0 then
           begin
@@ -47,41 +47,41 @@ begin
         ReplaceWorker(Next, Cmd);
         return Next;
       end;
-    when TuiMsg.Key(_), TuiMsg.Pointer(_), TuiMsg.Resize(_), TuiMsg.FocusChanged(_, _), TuiMsg.Action(_, _), TuiMsg.TextChanged(_, _, _, _), TuiMsg.TextAreaChanged(_, _, _, _, _), TuiMsg.CheckChanged(_, _, _), TuiMsg.SelectionChanged(_, _, _), TuiMsg.ScrollChanged(_, _, _), TuiMsg.MenuChanged(_, _, _), TuiMsg.BackgroundFailed(_, _, _, _, _, _), TuiMsg.QuitRequested:
+    when Tui.TuiMsg.Key(_), Tui.TuiMsg.Pointer(_), Tui.TuiMsg.Resize(_), Tui.TuiMsg.FocusChanged(_, _), Tui.TuiMsg.Action(_, _), Tui.TuiMsg.TextChanged(_, _, _, _), Tui.TuiMsg.TextAreaChanged(_, _, _, _, _), Tui.TuiMsg.CheckChanged(_, _, _), Tui.TuiMsg.SelectionChanged(_, _, _), Tui.TuiMsg.ScrollChanged(_, _, _), Tui.TuiMsg.MenuChanged(_, _, _), Tui.TuiMsg.BackgroundFailed(_, _, _, _, _, _), Tui.TuiMsg.QuitRequested:
       begin
         return State;
       end;
   end case;
 end function;
 
-function UpdateApplication(State: SubscriptionModel; Message: integer; Cmd: TuiCmdOutput): SubscriptionModel;
+function UpdateApplication(State: SubscriptionModel; Message: integer; Cmd: Tui.TuiCmdOutput): SubscriptionModel;
 begin
   return State;
 end function;
 
-function View(State: SubscriptionModel): TuiElement;
+function View(State: SubscriptionModel): Tui.TuiElement;
 begin
-  return TuiElementBuilders.MakeLabel('subscription');
+  return Tui.TuiElementBuilders.MakeLabel('subscription');
 end function;
 
 begin
-  const Inbox: channel of integer := CreateChannel(1);
-  const Gate: channel of boolean := CreateChannel(1);
-  const Started: channel of integer := CreateChannel(2);
-  const Stopped: channel of integer := CreateChannel(2);
-  const App: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(24, 4));
+  const Inbox: channel of integer := Tasks.CreateChannel(1);
+  const Gate: channel of boolean := Tasks.CreateChannel(1);
+  const Started: channel of integer := Tasks.CreateChannel(2);
+  const Stopped: channel of integer := Tasks.CreateChannel(2);
+  const App: Tui.TuiApplication := Tui.TuiApplication.OpenForTest(Tui.TuiSize.Create(24, 4));
   var Model: SubscriptionModel := App.RunBackgroundIterations(SubscriptionModel(Gate := Gate, Started := Started, Stopped := Stopped, Generation := 0), Inbox, UpdateFramework, UpdateApplication, View, 1, 0);
-  AssertEquals(0, ReceiveWithTimeout(Started, 10000).Unwrap());
-  App.Inject(TuiMsg.Tick(1));
+  Test.AssertEquals(0, Tasks.ReceiveWithTimeout(Started, 10000).Unwrap());
+  App.Inject(Tui.TuiMsg.Tick(1));
   Model := App.RunBackgroundIterations(Model, Inbox, UpdateFramework, UpdateApplication, View, 1, 0);
-  AssertEquals(1, Model.Generation);
-  AssertEquals(0, ReceiveWithTimeout(Stopped, 10000).Unwrap());
+  Test.AssertEquals(1, Model.Generation);
+  Test.AssertEquals(0, Tasks.ReceiveWithTimeout(Stopped, 10000).Unwrap());
   Model := App.RunBackgroundIterations(Model, Inbox, UpdateFramework, UpdateApplication, View, 1, 0);
-  AssertEquals(1, ReceiveWithTimeout(Started, 10000).Unwrap());
+  Test.AssertEquals(1, Tasks.ReceiveWithTimeout(Started, 10000).Unwrap());
   App.CloseWithBackground(Inbox);
-  AssertEquals(1, ReceiveWithTimeout(Stopped, 10000).Unwrap());
-  AssertTrue(TrySend(Inbox, 1).IsError());
-  discard CloseChannel(Gate);
-  discard CloseChannel(Started);
-  discard CloseChannel(Stopped);
+  Test.AssertEquals(1, Tasks.ReceiveWithTimeout(Stopped, 10000).Unwrap());
+  Test.AssertTrue(Tasks.TrySend(Inbox, 1).IsError());
+  discard Tasks.CloseChannel(Gate);
+  discard Tasks.CloseChannel(Started);
+  discard Tasks.CloseChannel(Stopped);
 end.

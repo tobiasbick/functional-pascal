@@ -1,12 +1,12 @@
 program T;
 
-uses Std.Console;
+uses Std.Console as Console;
 
 begin
   const A: dict of string to integer := ['A': 1, 'B': 2];
   const B: dict of string to integer := ['C': 3];
   const M: dict of string to integer := A.Merge(B);
-  WriteLn(M.Length());
-  WriteLn(M['A']);
-  WriteLn(M['C']);
+  Console.WriteLn(M.Length());
+  Console.WriteLn(M['A']);
+  Console.WriteLn(M['C']);
 end.

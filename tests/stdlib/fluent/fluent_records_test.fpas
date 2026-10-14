@@ -1,6 +1,6 @@
 program FluentRecordsTest;
 
-uses Std.Tasks, Std.Test;
+uses Std.Tasks as Tasks, Std.Test as Test;
 
 function Double(X: integer): integer;
 begin
@@ -25,19 +25,19 @@ end function;
 begin
   scope
     const Item: Box := Box(Value := 3, Callback := Double);
-    AssertEquals(5, Item.Add(2));
-    AssertEquals(5, ValueOf(Item) + 2);
-    AssertEquals(4, Item.Callback(2));
-    AssertEquals(6, (Item).Callback(3));
+    Test.AssertEquals(5, Item.Add(2));
+    Test.AssertEquals(5, ValueOf(Item) + 2);
+    Test.AssertEquals(4, Item.Callback(2));
+    Test.AssertEquals(6, (Item).Callback(3));
     const Bound: function(X: integer): integer := Item.Add;
-    AssertEquals(5, Bound(2));
+    Test.AssertEquals(5, Bound(2));
     const NamedTask: task of integer := go Item.Add(4);
-    AssertEquals(7, Wait(NamedTask));
+    Test.AssertEquals(7, Tasks.Wait(NamedTask));
     const PostfixTask: task of integer := go (Item).Add(5);
-    AssertEquals(8, Wait(PostfixTask));
+    Test.AssertEquals(8, Tasks.Wait(PostfixTask));
     const FieldTask: task of integer := go Item.Callback(6);
-    AssertEquals(12, Wait(FieldTask));
+    Test.AssertEquals(12, Tasks.Wait(FieldTask));
     const PostfixFieldTask: task of integer := go (Item).Callback(7);
-    AssertEquals(14, Wait(PostfixFieldTask));
+    Test.AssertEquals(14, Tasks.Wait(PostfixFieldTask));
   end scope;
 end.

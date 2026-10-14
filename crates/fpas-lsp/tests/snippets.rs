@@ -69,7 +69,11 @@ fn repository_root() -> PathBuf {
 fn wrap_snippet(name: &str, source: &str) -> String {
     match name {
         "Program" | "Unit" => source.to_owned(),
-        "Function declaration" | "Procedure declaration" | "Record type" | "Mutable variable" => {
+        "Function declaration"
+        | "Procedure declaration"
+        | "Record type"
+        | "Mutable variable"
+        | "Aliased import" => {
             format!("program SnippetHost;\n\n{source}\n\nbegin\nend.")
         }
         "Anonymous function" | "Anonymous procedure" | "Record update" => {

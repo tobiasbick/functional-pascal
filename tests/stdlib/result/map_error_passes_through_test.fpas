@@ -1,6 +1,6 @@
 program T;
 
-uses Std.Console;
+uses Std.Console as Console;
 
 function AlwaysOk(V: integer): string;
 begin
@@ -10,5 +10,5 @@ end function;
 begin
   const R: result of (integer, string) := Error('fail');
   const M: result of (string, string) := R.Map(AlwaysOk);
-  WriteLn(M.IsError());
+  Console.WriteLn(M.IsError());
 end.

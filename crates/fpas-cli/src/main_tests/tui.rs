@@ -35,11 +35,11 @@ include = ["{source_glob}"]
         &once,
         r#"program FlushOnce;
 
-uses Std.Tui, Std.Tui.Runtime.TerminalRenderer;
+uses Std.Tui as Tui, Std.Tui.Runtime.TerminalRenderer as TerminalRenderer;
 
 begin
-  const Surface: TuiWorkingSurface := TuiWorkingSurface.Create(TuiSize.Create(4, 2));
-  TuiFlushSurface(Surface, TuiPalette.Default());
+  const Surface: Tui.TuiWorkingSurface := Tui.TuiWorkingSurface.Create(Tui.TuiSize.Create(4, 2));
+  TerminalRenderer.TuiFlushSurface(Surface, Tui.TuiPalette.Default());
 end.
 "#,
     );
@@ -48,12 +48,12 @@ end.
         &unchanged,
         r#"program FlushUnchanged;
 
-uses Std.Tui, Std.Tui.Runtime.TerminalRenderer;
+uses Std.Tui as Tui, Std.Tui.Runtime.TerminalRenderer as TerminalRenderer;
 
 begin
-  const Surface: TuiWorkingSurface := TuiWorkingSurface.Create(TuiSize.Create(4, 2));
-  TuiFlushSurface(Surface, TuiPalette.Default());
-  TuiFlushSurface(Surface, TuiPalette.Default());
+  const Surface: Tui.TuiWorkingSurface := Tui.TuiWorkingSurface.Create(Tui.TuiSize.Create(4, 2));
+  TerminalRenderer.TuiFlushSurface(Surface, Tui.TuiPalette.Default());
+  TerminalRenderer.TuiFlushSurface(Surface, Tui.TuiPalette.Default());
 end.
 "#,
     );
@@ -62,13 +62,13 @@ end.
         &changed,
         r#"program FlushChanged;
 
-uses Std.Tui, Std.Tui.Runtime.TerminalRenderer;
+uses Std.Tui as Tui, Std.Tui.Runtime.TerminalRenderer as TerminalRenderer;
 
 begin
-  const Surface: TuiWorkingSurface := TuiWorkingSurface.Create(TuiSize.Create(4, 2));
-  TuiFlushSurface(Surface, TuiPalette.Default());
+  const Surface: Tui.TuiWorkingSurface := Tui.TuiWorkingSurface.Create(Tui.TuiSize.Create(4, 2));
+  TerminalRenderer.TuiFlushSurface(Surface, Tui.TuiPalette.Default());
   Surface.PutGlyph(1, 0, 'X');
-  TuiFlushSurface(Surface, TuiPalette.Default());
+  TerminalRenderer.TuiFlushSurface(Surface, Tui.TuiPalette.Default());
 end.
 "#,
     );
@@ -77,16 +77,16 @@ end.
         &wide,
         r#"program FlushWideTransition;
 
-uses Std.Console, Std.Test, Std.Tui, Std.Tui.Runtime.TerminalRenderer;
+uses Std.Console as Console, Std.Test as Test, Std.Tui as Tui, Std.Tui.Runtime.TerminalRenderer as TerminalRenderer;
 
 begin
-  const Surface: TuiWorkingSurface := TuiWorkingSurface.Create(TuiSize.Create(4, 1));
-  Surface.PutCell(TuiPoint.Create(1, 0), TuiCell.Create('中', TuiStyleRole.Accent));
-  TuiFlushSurface(Surface, TuiPalette.Default());
+  const Surface: Tui.TuiWorkingSurface := Tui.TuiWorkingSurface.Create(Tui.TuiSize.Create(4, 1));
+  Surface.PutCell(Tui.TuiPoint.Create(1, 0), Tui.TuiCell.Create('中', Tui.TuiStyleRole.Accent));
+  TerminalRenderer.TuiFlushSurface(Surface, Tui.TuiPalette.Default());
   Surface.PutGlyph(2, 0, 'X');
-  TuiFlushSurface(Surface, TuiPalette.Default());
-  AssertEquals(' ', GetCell(2, 1).Unwrap().glyph);
-  AssertEquals('X', GetCell(3, 1).Unwrap().glyph);
+  TerminalRenderer.TuiFlushSurface(Surface, Tui.TuiPalette.Default());
+  Test.AssertEquals(' ', Console.GetCell(2, 1).Unwrap().glyph);
+  Test.AssertEquals('X', Console.GetCell(3, 1).Unwrap().glyph);
 end.
 "#,
     );
@@ -134,46 +134,46 @@ fn theme_switch_repaints_unchanged_terminal_cells() {
         &program,
         r#"program ThemeSwitch;
 
-uses Std.Console, Std.Test, Std.Tui;
+uses Std.Console as Console, Std.Test as Test, Std.Tui as Tui;
 
-function UpdateTheme(State: integer; Msg: TuiMsg; Cmd: TuiCmdOutput): integer;
+function UpdateTheme(State: integer; Msg: Tui.TuiMsg; Cmd: Tui.TuiCmdOutput): integer;
 begin
   case Msg of
-    when TuiMsg.Resize(const Size):
+    when Tui.TuiMsg.Resize(const Size):
       begin
-        Cmd.SetPalette(TuiPalette.Default()
-                         .WithRole(TuiStyleRole.Normal, TuiStyle.FromColors(TuiColor.FromRgb(1, 2, 3), TuiColor.FromRgb(4, 5, 6))));
+        Cmd.SetPalette(Tui.TuiPalette.Default()
+                         .WithRole(Tui.TuiStyleRole.Normal, Tui.TuiStyle.FromColors(Tui.TuiColor.FromRgb(1, 2, 3), Tui.TuiColor.FromRgb(4, 5, 6))));
         return State + 1;
       end;
-    when TuiMsg.QuitRequested:
+    when Tui.TuiMsg.QuitRequested:
       begin
-        Cmd.Set(TuiCmd.Quit);
+        Cmd.Set(Tui.TuiCmd.Quit);
         return State;
       end;
-    when TuiMsg.Started, TuiMsg.Key(_), TuiMsg.Pointer(_), TuiMsg.Tick(_), TuiMsg.FocusChanged(_, _), TuiMsg.Action(_, _), TuiMsg.TextChanged(_, _, _, _), TuiMsg.TextAreaChanged(_, _, _, _, _), TuiMsg.CheckChanged(_, _, _), TuiMsg.SelectionChanged(_, _, _), TuiMsg.ScrollChanged(_, _, _), TuiMsg.MenuChanged(_, _, _), TuiMsg.BackgroundFailed(_, _, _, _, _, _):
+    when Tui.TuiMsg.Started, Tui.TuiMsg.Key(_), Tui.TuiMsg.Pointer(_), Tui.TuiMsg.Tick(_), Tui.TuiMsg.FocusChanged(_, _), Tui.TuiMsg.Action(_, _), Tui.TuiMsg.TextChanged(_, _, _, _), Tui.TuiMsg.TextAreaChanged(_, _, _, _, _), Tui.TuiMsg.CheckChanged(_, _, _), Tui.TuiMsg.SelectionChanged(_, _, _), Tui.TuiMsg.ScrollChanged(_, _, _), Tui.TuiMsg.MenuChanged(_, _, _), Tui.TuiMsg.BackgroundFailed(_, _, _, _, _, _):
       begin
         return State;
       end;
   end case;
 end function;
 
-function ViewTheme(State: integer): TuiElement;
+function ViewTheme(State: integer): Tui.TuiElement;
 begin
-  return TuiElementBuilders.MakeLabel('theme');
+  return Tui.TuiElementBuilders.MakeLabel('theme');
 end function;
 
 begin
-  const Initial: TuiPalette := TuiPalette.Default()
-                                 .WithRole(TuiStyleRole.Normal, TuiStyle.FromColors(TuiColor.FromRgb(10, 20, 30), TuiColor.FromRgb(40, 50, 60)));
-  AssertEquals(1, TuiApplication.RunWithPalette(0, UpdateTheme, ViewTheme, Initial));
-  const Painted: Cell := GetCell(1, 1).Unwrap();
-  AssertTrue(Painted.foreground.kind = ColorKind.Rgb);
-  AssertEquals(1, Painted.foreground.red);
-  AssertEquals(2, Painted.foreground.green);
-  AssertEquals(3, Painted.foreground.blue);
-  AssertEquals(4, Painted.background.red);
-  AssertEquals(5, Painted.background.green);
-  AssertEquals(6, Painted.background.blue);
+  const Initial: Tui.TuiPalette := Tui.TuiPalette.Default()
+                                 .WithRole(Tui.TuiStyleRole.Normal, Tui.TuiStyle.FromColors(Tui.TuiColor.FromRgb(10, 20, 30), Tui.TuiColor.FromRgb(40, 50, 60)));
+  Test.AssertEquals(1, Tui.TuiApplication.RunWithPalette(0, UpdateTheme, ViewTheme, Initial));
+  const Painted: Console.Cell := Console.GetCell(1, 1).Unwrap();
+  Test.AssertTrue(Painted.foreground.kind = Console.ColorKind.Rgb);
+  Test.AssertEquals(1, Painted.foreground.red);
+  Test.AssertEquals(2, Painted.foreground.green);
+  Test.AssertEquals(3, Painted.foreground.blue);
+  Test.AssertEquals(4, Painted.background.red);
+  Test.AssertEquals(5, Painted.background.green);
+  Test.AssertEquals(6, Painted.background.blue);
 end.
 "#,
     );
@@ -204,7 +204,7 @@ fn interactive_host_debounces_resize_burst_after_quiet_period() {
         &program,
         r#"program ResizeDebounce;
 
-uses Std.Console, Std.Tui;
+uses Std.Console as Console, Std.Tui as Tui;
 
 type Model = record
   ResizeCount: integer;
@@ -212,31 +212,31 @@ type Model = record
   Height: integer;
 end record;
 
-function Update(State: Model; Msg: TuiMsg; Cmd: TuiCmdOutput): Model;
+function Update(State: Model; Msg: Tui.TuiMsg; Cmd: Tui.TuiCmdOutput): Model;
 begin
   case Msg of
-    when TuiMsg.Resize(const Size):
+    when Tui.TuiMsg.Resize(const Size):
       begin
-        Cmd.Set(TuiCmd.Quit);
+        Cmd.Set(Tui.TuiCmd.Quit);
         return Model(ResizeCount := State.ResizeCount + 1, Width := Size.Width, Height := Size.Height);
       end;
-    when TuiMsg.Started, TuiMsg.Key(_), TuiMsg.Pointer(_), TuiMsg.Tick(_), TuiMsg.FocusChanged(_, _), TuiMsg.Action(_, _), TuiMsg.TextChanged(_, _, _, _), TuiMsg.TextAreaChanged(_, _, _, _, _), TuiMsg.CheckChanged(_, _, _), TuiMsg.SelectionChanged(_, _, _), TuiMsg.ScrollChanged(_, _, _), TuiMsg.MenuChanged(_, _, _), TuiMsg.BackgroundFailed(_, _, _, _, _, _), TuiMsg.QuitRequested:
+    when Tui.TuiMsg.Started, Tui.TuiMsg.Key(_), Tui.TuiMsg.Pointer(_), Tui.TuiMsg.Tick(_), Tui.TuiMsg.FocusChanged(_, _), Tui.TuiMsg.Action(_, _), Tui.TuiMsg.TextChanged(_, _, _, _), Tui.TuiMsg.TextAreaChanged(_, _, _, _, _), Tui.TuiMsg.CheckChanged(_, _, _), Tui.TuiMsg.SelectionChanged(_, _, _), Tui.TuiMsg.ScrollChanged(_, _, _), Tui.TuiMsg.MenuChanged(_, _, _), Tui.TuiMsg.BackgroundFailed(_, _, _, _, _, _), Tui.TuiMsg.QuitRequested:
       begin
         return State;
       end;
   end case;
 end function;
 
-function View(State: Model): TuiElement;
+function View(State: Model): Tui.TuiElement;
 begin
-  return TuiElementBuilders.MakeLabel('resize');
+  return Tui.TuiElementBuilders.MakeLabel('resize');
 end function;
 
 begin
-  const Final: Model := TuiApplication.Run(Model(ResizeCount := 0, Width := 0, Height := 0), Update, View);
-  WriteLn(Final.ResizeCount);
-  WriteLn(Final.Width);
-  WriteLn(Final.Height);
+  const Final: Model := Tui.TuiApplication.Run(Model(ResizeCount := 0, Width := 0, Height := 0), Update, View);
+  Console.WriteLn(Final.ResizeCount);
+  Console.WriteLn(Final.Width);
+  Console.WriteLn(Final.Height);
 end.
 "#,
     );
@@ -263,39 +263,39 @@ fn interactive_host_does_not_emit_ticks_without_explicit_timer_input() {
         &program,
         r#"program EventDrivenIdle;
 
-uses Std.Console, Std.Tui;
+uses Std.Console as Console, Std.Tui as Tui;
 
 type Model = record
   Ticks: integer;
 end record;
 
-function Update(State: Model; Msg: TuiMsg; Cmd: TuiCmdOutput): Model;
+function Update(State: Model; Msg: Tui.TuiMsg; Cmd: Tui.TuiCmdOutput): Model;
 begin
   case Msg of
-    when TuiMsg.Tick(const Delta):
+    when Tui.TuiMsg.Tick(const Delta):
       begin
         return Model(Ticks := State.Ticks + 1);
       end;
-    when TuiMsg.QuitRequested:
+    when Tui.TuiMsg.QuitRequested:
       begin
-        Cmd.Set(TuiCmd.Quit);
+        Cmd.Set(Tui.TuiCmd.Quit);
         return State;
       end;
-    when TuiMsg.Started, TuiMsg.Key(_), TuiMsg.Pointer(_), TuiMsg.Resize(_), TuiMsg.FocusChanged(_, _), TuiMsg.Action(_, _), TuiMsg.TextChanged(_, _, _, _), TuiMsg.TextAreaChanged(_, _, _, _, _), TuiMsg.CheckChanged(_, _, _), TuiMsg.SelectionChanged(_, _, _), TuiMsg.ScrollChanged(_, _, _), TuiMsg.MenuChanged(_, _, _), TuiMsg.BackgroundFailed(_, _, _, _, _, _):
+    when Tui.TuiMsg.Started, Tui.TuiMsg.Key(_), Tui.TuiMsg.Pointer(_), Tui.TuiMsg.Resize(_), Tui.TuiMsg.FocusChanged(_, _), Tui.TuiMsg.Action(_, _), Tui.TuiMsg.TextChanged(_, _, _, _), Tui.TuiMsg.TextAreaChanged(_, _, _, _, _), Tui.TuiMsg.CheckChanged(_, _, _), Tui.TuiMsg.SelectionChanged(_, _, _), Tui.TuiMsg.ScrollChanged(_, _, _), Tui.TuiMsg.MenuChanged(_, _, _), Tui.TuiMsg.BackgroundFailed(_, _, _, _, _, _):
       begin
         return State;
       end;
   end case;
 end function;
 
-function View(State: Model): TuiElement;
+function View(State: Model): Tui.TuiElement;
 begin
-  return TuiElementBuilders.MakeLabel('idle');
+  return Tui.TuiElementBuilders.MakeLabel('idle');
 end function;
 
 begin
-  const Final: Model := TuiApplication.Run(Model(Ticks := 0), Update, View);
-  WriteLn(Final.Ticks);
+  const Final: Model := Tui.TuiApplication.Run(Model(Ticks := 0), Update, View);
+  Console.WriteLn(Final.Ticks);
 end.
 "#,
     );
@@ -331,50 +331,50 @@ fn interactive_background_message_wakes_idle_host_and_repaints() {
         &program,
         r#"program BackgroundWakeup;
 
-uses Std.Console, Std.Tasks, Std.Tui;
+uses Std.Console as Console, Std.Tasks as Tasks, Std.Tui as Tui;
 
 type Model = record
   Inbox: channel of integer;
   Value: integer;
 end record;
 
-function Update(State: Model; Msg: TuiMsg; Cmd: TuiCmdOutput): Model;
+function Update(State: Model; Msg: Tui.TuiMsg; Cmd: Tui.TuiCmdOutput): Model;
 begin
   case Msg of
-    when TuiMsg.Started:
+    when Tui.TuiMsg.Started:
       begin
         const Target: channel of integer := State.Inbox;
-        Cmd.StartBackground(1, function(Token: CancellationToken): result of (boolean, string) begin
-          return SendWithCancellation(Target, 42, Token);
+        Cmd.StartBackground(1, function(Token: Tasks.CancellationToken): result of (boolean, string) begin
+          return Tasks.SendWithCancellation(Target, 42, Token);
         end function);
         return State;
       end;
-    when TuiMsg.BackgroundFailed(const Id, const Kind, const Message, const Code, const Line, const Column):
+    when Tui.TuiMsg.BackgroundFailed(const Id, const Kind, const Message, const Code, const Line, const Column):
       begin
         panic(Message);
       end;
-    when TuiMsg.Key(_), TuiMsg.Pointer(_), TuiMsg.Tick(_), TuiMsg.Resize(_), TuiMsg.FocusChanged(_, _), TuiMsg.Action(_, _), TuiMsg.TextChanged(_, _, _, _), TuiMsg.TextAreaChanged(_, _, _, _, _), TuiMsg.CheckChanged(_, _, _), TuiMsg.SelectionChanged(_, _, _), TuiMsg.ScrollChanged(_, _, _), TuiMsg.MenuChanged(_, _, _), TuiMsg.QuitRequested:
+    when Tui.TuiMsg.Key(_), Tui.TuiMsg.Pointer(_), Tui.TuiMsg.Tick(_), Tui.TuiMsg.Resize(_), Tui.TuiMsg.FocusChanged(_, _), Tui.TuiMsg.Action(_, _), Tui.TuiMsg.TextChanged(_, _, _, _), Tui.TuiMsg.TextAreaChanged(_, _, _, _, _), Tui.TuiMsg.CheckChanged(_, _, _), Tui.TuiMsg.SelectionChanged(_, _, _), Tui.TuiMsg.ScrollChanged(_, _, _), Tui.TuiMsg.MenuChanged(_, _, _), Tui.TuiMsg.QuitRequested:
       begin
         return State;
       end;
   end case;
 end function;
 
-function UpdateApplication(State: Model; Message: integer; Cmd: TuiCmdOutput): Model;
+function UpdateApplication(State: Model; Message: integer; Cmd: Tui.TuiCmdOutput): Model;
 begin
-  Cmd.Set(TuiCmd.Quit);
+  Cmd.Set(Tui.TuiCmd.Quit);
   return Model(Inbox := State.Inbox, Value := Message);
 end function;
 
-function View(State: Model): TuiElement;
+function View(State: Model): Tui.TuiElement;
 begin
-  return TuiElementBuilders.MakeLabel('value');
+  return Tui.TuiElementBuilders.MakeLabel('value');
 end function;
 
 begin
-  const Inbox: channel of integer := CreateChannel(1);
-  const Final: Model := TuiApplication.RunWithBackground(Model(Inbox := Inbox, Value := 0), Inbox, Update, UpdateApplication, View);
-  WriteLn(Final.Value);
+  const Inbox: channel of integer := Tasks.CreateChannel(1);
+  const Final: Model := Tui.TuiApplication.RunWithBackground(Model(Inbox := Inbox, Value := 0), Inbox, Update, UpdateApplication, View);
+  Console.WriteLn(Final.Value);
 end.
 "#,
     );

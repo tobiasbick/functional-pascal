@@ -1,14 +1,16 @@
 // Covers Local Chat rendering, editing, resizing, transcript, and quit behavior.
 program LocalChatWorkflowTest;
 
-uses LocalChat.Model, LocalChat.Theme, LocalChat.Update, LocalChat.View, Std.Test, Std.Tui;
+uses
+  LocalChat.Model as LocalChatModel, LocalChat.Theme as Theme, LocalChat.Update as Update,
+  LocalChat.View as View, Std.Test as Test, Std.Tui as Tui;
 
 // Reports whether any rendered row contains text.
 //
 // Parameters:
 // - `Snapshot`: Rendered surface to inspect.
 // - `Text`: Text fragment to find.
-function ScreenContains(Snapshot: TuiSurfaceSnapshot; Text: string): boolean;
+function ScreenContains(Snapshot: Tui.TuiSurfaceSnapshot; Text: string): boolean;
 begin
   for Row: integer := 0 to Snapshot.Height - 1 do
     begin
@@ -24,38 +26,38 @@ begin
 end function;
 
 // Creates the Alt+X key event used by the application quit shortcut.
-function QuitKey(): TuiKeyEvent;
+function QuitKey(): Tui.TuiKeyEvent;
 begin
-  return TuiKeyEvent(kind := TuiKeyKind.Character, ch := 'x', shift := false, ctrl := false, alt := true, meta := false);
+  return Tui.TuiKeyEvent(kind := Tui.TuiKeyKind.Character, ch := 'x', shift := false, ctrl := false, alt := true, meta := false);
 end function;
 
 begin
-  var Model: LocalChatModel := LocalChatModelCreate(80, 24);
-  const App: TuiApplication := TuiApplication.OpenForTestWithPalette(TuiSize.Create(80, 24), LocalChatPalette());
-  Model := App.RunIterations(Model, LocalChatUpdate, LocalChatView, 0, 0);
-  const Initial: TuiSurfaceSnapshot := App.SurfaceSnapshot();
-  AssertTrue(ScreenContains(Initial, 'LOCAL CHAT'));
-  AssertTrue(ScreenContains(Initial, 'No messages yet.'));
-  AssertTrue(ScreenContains(Initial, 'Message the local model'));
-  App.Inject(TuiMsgTextChanged(TuiControlId.Create(1), TuiAction.Create(1), 'hello', 5));
-  Model := App.RunIterations(Model, LocalChatUpdate, LocalChatView, 1, 0);
-  AssertEquals('hello', Model.Draft);
-  AssertEquals(5, Model.DraftCaret);
+  var Model: LocalChatModel.LocalChatModel := LocalChatModel.LocalChatModelCreate(80, 24);
+  const App: Tui.TuiApplication := Tui.TuiApplication.OpenForTestWithPalette(Tui.TuiSize.Create(80, 24), Theme.LocalChatPalette());
+  Model := App.RunIterations(Model, Update.LocalChatUpdate, View.LocalChatView, 0, 0);
+  const Initial: Tui.TuiSurfaceSnapshot := App.SurfaceSnapshot();
+  Test.AssertTrue(ScreenContains(Initial, 'LOCAL CHAT'));
+  Test.AssertTrue(ScreenContains(Initial, 'No messages yet.'));
+  Test.AssertTrue(ScreenContains(Initial, 'Message the local model'));
+  App.Inject(Tui.TuiMsgTextChanged(Tui.TuiControlId.Create(1), Tui.TuiAction.Create(1), 'hello', 5));
+  Model := App.RunIterations(Model, Update.LocalChatUpdate, View.LocalChatView, 1, 0);
+  Test.AssertEquals('hello', Model.Draft);
+  Test.AssertEquals(5, Model.DraftCaret);
   Model.Entries := [
-                     ChatEntry.User('A deliberately long user line for wrapping'),
-                     ChatEntry.Assistant('Local answer')
+                     LocalChatModel.ChatEntry.User('A deliberately long user line for wrapping'),
+                     LocalChatModel.ChatEntry.Assistant('Local answer')
                    ];
-  Model := LocalChatScrollToEnd(Model);
-  AssertTrue(LocalChatTranscript(Model).Contains('YOU'));
-  AssertTrue(LocalChatTranscript(Model).Contains('ASSISTANT'));
-  Model := App.RunIterations(Model, LocalChatUpdate, LocalChatView, 0, 0);
-  AssertTrue(ScreenContains(App.SurfaceSnapshot(), 'Local answer'));
-  App.InjectResizeForTest(TuiSize.Create(60, 18));
-  Model := App.RunIterations(Model, LocalChatUpdate, LocalChatView, 1, 0);
-  AssertEquals(60, Model.Width);
-  AssertEquals(18, Model.Height);
-  const Cmd: TuiCmdOutput := TuiCmdOutput.Create();
-  discard LocalChatUpdate(Model, TuiMsg.Key(QuitKey()), Cmd);
-  AssertTrue(Cmd.Command() = TuiCmd.Quit);
+  Model := LocalChatModel.LocalChatScrollToEnd(Model);
+  Test.AssertTrue(LocalChatModel.LocalChatTranscript(Model).Contains('YOU'));
+  Test.AssertTrue(LocalChatModel.LocalChatTranscript(Model).Contains('ASSISTANT'));
+  Model := App.RunIterations(Model, Update.LocalChatUpdate, View.LocalChatView, 0, 0);
+  Test.AssertTrue(ScreenContains(App.SurfaceSnapshot(), 'Local answer'));
+  App.InjectResizeForTest(Tui.TuiSize.Create(60, 18));
+  Model := App.RunIterations(Model, Update.LocalChatUpdate, View.LocalChatView, 1, 0);
+  Test.AssertEquals(60, Model.Width);
+  Test.AssertEquals(18, Model.Height);
+  const Cmd: Tui.TuiCmdOutput := Tui.TuiCmdOutput.Create();
+  discard Update.LocalChatUpdate(Model, Tui.TuiMsg.Key(QuitKey()), Cmd);
+  Test.AssertTrue(Cmd.Command() = Tui.TuiCmd.Quit);
   App.Close();
 end.

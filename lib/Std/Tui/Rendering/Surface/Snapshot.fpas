@@ -1,6 +1,6 @@
 unit Std.Tui.Rendering.Surface.Snapshot;
 
-uses Std.Tui.Cells.Cell;
+uses Std.Tui.Cells.Cell as Cell;
 
 // Explicit immutable copy of the most recently painted headless surface.
 public type TuiSurfaceSnapshot = record
@@ -9,7 +9,7 @@ public type TuiSurfaceSnapshot = record
   // Height in terminal cells.
   public Height: integer;
   // Row-major terminal cells.
-  public Cells: array of TuiCell;
+  public Cells: array of Cell.TuiCell;
 
   // Returns one leading cell at a zero-based position.
   //
@@ -17,7 +17,7 @@ public type TuiSurfaceSnapshot = record
   // - `Self`: Receiver value operated on by the method.
   // - `X`: Zero-based horizontal terminal-cell coordinate.
   // - `Y`: Zero-based vertical terminal-cell coordinate.
-  public function CellAt(Self: TuiSurfaceSnapshot; X: integer; Y: integer): TuiCell;
+  public function CellAt(Self: TuiSurfaceSnapshot; X: integer; Y: integer): Cell.TuiCell;
   begin
     if (((X < 0) or (X >= Self.Width)) or (Y < 0)) or (Y >= Self.Height) then
       begin

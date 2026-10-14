@@ -35,19 +35,19 @@ public type TomlValue = enum
   //
   // Parameters:
   // - `Items`: Array elements stored in the constructed value.
-  ArrayValue(Items: array of Std.Toml.TomlValue);
+  ArrayValue(Items: array of TomlValue);
   // `Table` enum member.
   //
   // Parameters:
   // - `Fields`: `dict of string to Std.Toml.TomlValue` input value used by `Table`.
-  Table(Fields: dict of string to Std.Toml.TomlValue);
+  Table(Fields: dict of string to TomlValue);
 end enum;
 
 // Parses one TOML document.
 //
 // Parameters:
 // - `Text`: UTF-8 text processed by the operation.
-public function Parse(Text: string): result of (Std.Toml.TomlValue, string);
+public function Parse(Text: string): result of (TomlValue, string);
 begin
   panic('Intrinsic API declaration');
 end function;
@@ -56,7 +56,7 @@ end function;
 //
 // Parameters:
 // - `Value`: Value consumed or returned by the operation.
-public function Stringify(Value: Std.Toml.TomlValue): string;
+public function Stringify(Value: TomlValue): string;
 begin
   panic('Intrinsic API declaration');
 end function;

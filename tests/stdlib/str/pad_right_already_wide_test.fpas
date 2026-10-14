@@ -1,7 +1,7 @@
 program T;
 
-uses Std.Console;
+uses Std.Console as Console;
 
 begin
-  WriteLn('Hello'.PadRight(2, '.'));
+  Console.WriteLn('Hello'.PadRight(2, '.'));
 end.

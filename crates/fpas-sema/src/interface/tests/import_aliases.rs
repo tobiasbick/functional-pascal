@@ -96,7 +96,7 @@ fn alias_hides_original_paths_and_all_short_names() {
                     .help
                     .as_deref()
                     .unwrap_or_default()
-                    .contains("imported as `Api`")),
+                    .contains("Api.")),
                 "{body}: {diagnostics:#?}"
             );
         }
@@ -104,12 +104,11 @@ fn alias_hides_original_paths_and_all_short_names() {
 }
 
 #[test]
-fn repeated_units_are_rejected_in_every_plain_alias_combination() {
+fn repeated_units_are_rejected_with_distinct_aliases_and_case_variations() {
     for imports in [
-        "Demo.Api, demo.api",
+        "Demo.Api as First, demo.api as Second",
         "Demo.Api as Api, DEMO.API as Other",
-        "Demo.Api, Demo.Api as Api",
-        "Demo.Api as Api, Demo.Api",
+        "Demo.Api as Same, Demo.Api as Same",
     ] {
         let diagnostics = errors(imports, "", "");
         let repeated = diagnostics
@@ -119,7 +118,7 @@ fn repeated_units_are_rejected_in_every_plain_alias_combination() {
         assert_eq!(repeated.code, SEMA_DUPLICATE_DECLARATION);
         assert!(
             repeated.span.expect("source span").offset()
-                > "unit Demo.Consumer; uses Demo.Api".len()
+                > "unit Demo.Consumer; uses Demo.Api as Api".len()
         );
         assert!(
             repeated
@@ -187,10 +186,10 @@ fn alias_cannot_be_shadowed_by_declarations_parameters_loops_or_patterns() {
 }
 
 #[test]
-fn unrelated_plain_import_does_not_change_alias_lookup_or_open_its_short_names() {
+fn another_import_keeps_explicit_alias_targets_distinct() {
     let math = analyze_unit(&parse_unit("unit Other.Math; public function Next(Value: integer): integer; begin return Value * 2; end function; end unit;"), &[]).expect("analysis").interface.expect("interface");
     let consumer = parse_unit(
-        "unit Demo.Consumer; uses Demo.Api as Api, Other.Math; public function Run(): integer; begin return Api.Next(1) + Next(1); end function; end unit;",
+        "unit Demo.Consumer; uses Demo.Api as Api, Other.Math as Math; public function Run(): integer; begin return Api.Next(1) + Math.Next(1); end function; end unit;",
     );
     let result = analyze_unit(&consumer, &[api(), math]).expect("analysis");
     assert!(
@@ -224,14 +223,15 @@ fn intrinsic_aliases_require_alias_qualification_and_preserve_contextual_as() {
 }
 
 #[test]
-fn alias_does_not_expose_nested_units_and_keeps_their_plain_paths_visible() {
+fn each_nested_unit_requires_its_own_alias() {
     let child = analyze_unit(&parse_unit("unit Demo.Api.Extra; public function Value(): integer; begin return 5; end function; end unit;"), &[]).expect("child analysis").interface.expect("child interface");
     for (expression, valid) in [
-        ("Api.Next(1) + Demo.Api.Extra.Value()", true),
+        ("Api.Next(1) + Extra.Value()", true),
+        ("Demo.Api.Extra.Value()", false),
         ("Api.Extra.Value()", false),
     ] {
         let source = format!(
-            "unit Demo.Consumer; uses Demo.Api as Api, Demo.Api.Extra; public function Run(): integer; begin return {expression}; end function; end unit;"
+            "unit Demo.Consumer; uses Demo.Api as Api, Demo.Api.Extra as Extra; public function Run(): integer; begin return {expression}; end function; end unit;"
         );
         let result =
             analyze_unit(&parse_unit(&source), &[api(), child.clone()]).expect("consumer analysis");
@@ -246,14 +246,20 @@ fn alias_does_not_expose_nested_units_and_keeps_their_plain_paths_visible() {
 
 #[test]
 fn alias_does_not_expose_types_from_transitive_supporting_units() {
-    let child = analyze_unit(&parse_unit("unit Demo.Api.Internal; public type Secret = record public Value: integer; end record; end unit;"), &[]).expect("support analysis").interface.expect("support interface");
-    let consumer = parse_unit(
-        "unit Demo.Consumer; uses Demo.Api as Api; public type Leak = Api.Internal.Secret; end unit;",
-    );
-    let result = super::super::analyze_unit_with_interface_support(&consumer, &[api()], &[child])
-        .expect("consumer analysis");
-    assert!(
-        !result.metadata.errors.is_empty(),
-        "supporting types are not unit exports"
-    );
+    for (owner, reference) in [
+        ("Demo.Api.Internal", "Api.Internal.Secret"),
+        ("Other.Internal", "Other.Internal.Secret"),
+    ] {
+        let child = analyze_unit(&parse_unit(&format!("unit {owner}; public type Secret = record public Value: integer; end record; end unit;")), &[]).expect("support analysis").interface.expect("support interface");
+        let consumer = parse_unit(&format!(
+            "unit Demo.Consumer; uses Demo.Api as Api; public type Leak = {reference}; end unit;"
+        ));
+        let result =
+            super::super::analyze_unit_with_interface_support(&consumer, &[api()], &[child])
+                .expect("consumer analysis");
+        assert!(
+            !result.metadata.errors.is_empty(),
+            "supporting types are not unit exports"
+        );
+    }
 }

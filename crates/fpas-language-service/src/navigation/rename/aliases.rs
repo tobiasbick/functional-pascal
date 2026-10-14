@@ -24,14 +24,24 @@ pub(super) fn reject_alias_conflicts(
             && (renaming_alias || symbol.kind == SymbolKind::ImportAlias)
     });
     let reserved = renaming_alias
-        && (["Std", "integer", "real", "boolean", "string"]
-            .iter()
-            .any(|name| name.eq_ignore_ascii_case(new_name))
-            || document
+        && ([
+            "Std",
+            "integer",
+            "real",
+            "boolean",
+            "string",
+            "ArrayPopResult",
+        ]
+        .iter()
+        .any(|name| name.eq_ignore_ascii_case(new_name))
+            || (matches!(
+                document.snapshot.compilation_unit(),
+                fpas_parser::CompilationUnit::Unit(_)
+            ) && document
                 .owner
                 .split('.')
                 .next()
-                .is_some_and(|root| root.eq_ignore_ascii_case(new_name))
+                .is_some_and(|root| root.eq_ignore_ascii_case(new_name)))
             || document.uses.iter().any(|import| {
                 import
                     .unit

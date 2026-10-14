@@ -1,7 +1,7 @@
 program T;
 
-uses Std.Console;
+uses Std.Console as Console;
 
 begin
-  WriteLn('Hi'.Delete(0, 2));
+  Console.WriteLn('Hi'.Delete(0, 2));
 end.

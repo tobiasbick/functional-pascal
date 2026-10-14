@@ -1,6 +1,6 @@
 program TaskSpawnLoopWithArgumentTest;
 
-uses Std.Tasks, Std.Test;
+uses Std.Tasks as StdTasks, Std.Test as Test;
 
 function Worker(Value: integer): integer;
 begin
@@ -16,12 +16,12 @@ begin
       end;
     end for;
 
-    WaitAll(Tasks);
-    AssertEquals(8, Tasks.Length());
+    StdTasks.WaitAll(Tasks);
+    Test.AssertEquals(8, Tasks.Length());
     for Index: integer := 0 to Tasks.Length() - 1 do
       begin
-        const WorkerResult: integer := Std.Tasks.Wait(Tasks[Index]);
-        AssertEquals(Index + 2, WorkerResult);
+        const WorkerResult: integer := StdTasks.Wait(Tasks[Index]);
+        Test.AssertEquals(Index + 2, WorkerResult);
       end;
     end for;
   end scope;

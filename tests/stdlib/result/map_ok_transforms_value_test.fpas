@@ -1,14 +1,14 @@
 program T;
 
-uses Std.Console, Std.Conv;
+uses Std.Console as Console, Std.Conv as Conv;
 
 function DoubleToStr(V: integer): string;
 begin
-  return IntToStr(V * 2);
+  return Conv.IntToStr(V * 2);
 end function;
 
 begin
   const R: result of (integer, string) := Ok(21);
   const M: result of (string, string) := R.Map(DoubleToStr);
-  WriteLn(M.Unwrap());
+  Console.WriteLn(M.Unwrap());
 end.

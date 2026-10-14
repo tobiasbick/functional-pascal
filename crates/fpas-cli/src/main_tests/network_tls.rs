@@ -42,10 +42,10 @@ fn https_client_rejects_untrusted_server_certificate() {
         &format!(
             r#"program HttpsUntrustedCertificate;
 
-uses Std.Console, Std.Http;
+uses Std.Console as Console, Std.Http as Http;
 
 begin
-  case Send(Request.Get('https://localhost:{port}/')) of
+  case Http.Send(Http.Request.Get('https://localhost:{port}/')) of
     when Ok(const ResponseValue):
     begin
       panic('untrusted HTTPS server was accepted');
@@ -58,7 +58,7 @@ begin
       end; end if;
     end;
   end case;
-  WriteLn('ok');
+  Console.WriteLn('ok');
 end.
 "#
         ),

@@ -1,6 +1,6 @@
 program CollectionCallbacksTest;
 
-uses Std.Tasks, Std.Test;
+uses Std.Tasks as Tasks, Std.Test as Test;
 
 function Identity(C: string): string;
 begin
@@ -24,8 +24,8 @@ end function;
 
 function StringWork(): integer;
 begin
-  AssertEquals('a😀b', 'a😀b'.Map(Identity));
-  AssertEquals('😀', 'a😀b'.Filter(KeepFace));
+  Test.AssertEquals('a😀b', 'a😀b'.Map(Identity));
+  Test.AssertEquals('😀', 'a😀b'.Filter(KeepFace));
   return 'a😀b'.Reduce(0, Count);
 end function;
 
@@ -39,7 +39,7 @@ begin
   scope
     const StringTask: task of integer := go StringWork();
     const DictionaryTask: task of integer := go DictionaryWork();
-    AssertEquals(3, Wait(StringTask));
-    AssertEquals(7, Wait(DictionaryTask));
+    Test.AssertEquals(3, Tasks.Wait(StringTask));
+    Test.AssertEquals(7, Tasks.Wait(DictionaryTask));
   end scope;
 end.

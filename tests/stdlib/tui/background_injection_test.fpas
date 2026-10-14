@@ -1,15 +1,15 @@
 program TuiBackgroundInjectionTest;
 
-uses Std.Tasks, Std.Test, Std.Tui;
+uses Std.Tasks as Tasks, Std.Test as Test, Std.Tui as Tui;
 
 type InjectionModel = record
   Values: array of integer;
   Starts: integer;
 end record;
 
-function UpdateFramework(State: InjectionModel; Msg: TuiMsg; Cmd: TuiCmdOutput): InjectionModel;
+function UpdateFramework(State: InjectionModel; Msg: Tui.TuiMsg; Cmd: Tui.TuiCmdOutput): InjectionModel;
 begin
-  if Msg is TuiMsg.Started then
+  if Msg is Tui.TuiMsg.Started then
     begin
       return InjectionModel(Values := State.Values, Starts := State.Starts + 1);
     end;
@@ -20,27 +20,27 @@ begin
   end if;
 end function;
 
-function UpdateApplication(State: InjectionModel; Message: integer; Cmd: TuiCmdOutput): InjectionModel;
+function UpdateApplication(State: InjectionModel; Message: integer; Cmd: Tui.TuiCmdOutput): InjectionModel;
 begin
   return InjectionModel(Values := State.Values.Concat([Message]), Starts := State.Starts);
 end function;
 
-function View(State: InjectionModel): TuiElement;
+function View(State: InjectionModel): Tui.TuiElement;
 begin
-  return TuiElementBuilders.MakeLabel('background');
+  return Tui.TuiElementBuilders.MakeLabel('background');
 end function;
 
 begin
-  const Inbox: channel of integer := CreateChannel(2);
-  const App: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(24, 4));
-  AssertTrue(App.InjectBackgroundForTest(Inbox, 4).Unwrap());
-  AssertTrue(App.InjectBackgroundForTest(Inbox, 7).Unwrap());
-  AssertFalse(App.InjectBackgroundForTest(Inbox, 9).Unwrap());
+  const Inbox: channel of integer := Tasks.CreateChannel(2);
+  const App: Tui.TuiApplication := Tui.TuiApplication.OpenForTest(Tui.TuiSize.Create(24, 4));
+  Test.AssertTrue(App.InjectBackgroundForTest(Inbox, 4).Unwrap());
+  Test.AssertTrue(App.InjectBackgroundForTest(Inbox, 7).Unwrap());
+  Test.AssertFalse(App.InjectBackgroundForTest(Inbox, 9).Unwrap());
   const Model: InjectionModel := App.RunBackgroundIterations(InjectionModel(Values := [], Starts := 0), Inbox, UpdateFramework, UpdateApplication, View, 3, 0);
-  AssertEquals(1, Model.Starts);
-  AssertEquals(2, Model.Values.Length());
-  AssertEquals(4, Model.Values[0]);
-  AssertEquals(7, Model.Values[1]);
+  Test.AssertEquals(1, Model.Starts);
+  Test.AssertEquals(2, Model.Values.Length());
+  Test.AssertEquals(4, Model.Values[0]);
+  Test.AssertEquals(7, Model.Values[1]);
   App.CloseWithBackground(Inbox);
-  AssertTrue(TrySend(Inbox, 11).IsError());
+  Test.AssertTrue(Tasks.TrySend(Inbox, 11).IsError());
 end.

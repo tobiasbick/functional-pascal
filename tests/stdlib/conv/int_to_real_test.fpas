@@ -1,8 +1,8 @@
 program T;
 
-uses Std.Console, Std.Conv;
+uses Std.Console as Console, Std.Conv as Conv;
 
 begin
-  const X: real := IntToReal(3);
-  WriteLn(X);
+  const X: real := Conv.IntToReal(3);
+  Console.WriteLn(X);
 end.

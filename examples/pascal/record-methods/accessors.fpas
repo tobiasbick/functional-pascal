@@ -1,6 +1,6 @@
 program AccessorsExample;
 
-uses Std.Console, Std.Conv;
+uses Std.Console as Console, Std.Conv as Conv;
 
 type Counter = record
   Base: integer;
@@ -12,14 +12,14 @@ type Counter = record
 
   procedure SetBase(Self: Counter; Value: integer);
   begin
-    WriteLn('Setter received: ' + IntToStr(Value));
+    Console.WriteLn('Setter received: ' + Conv.IntToStr(Value));
   end procedure;
 end record;
 
 begin
   const C: Counter := Counter(Base := 10);
-  WriteLn('Stored value: ' + IntToStr(C.GetBase()));
+  Console.WriteLn('Stored value: ' + Conv.IntToStr(C.GetBase()));
   // The setter receives Self by value, so this records the request but does not mutate C.
   C.SetBase(20);
-  WriteLn('Stored value after setter: ' + IntToStr(C.GetBase()));
+  Console.WriteLn('Stored value after setter: ' + Conv.IntToStr(C.GetBase()));
 end.

@@ -1,6 +1,6 @@
 program ExpressionMutation;
 
-uses Std.Console;
+uses Std.Console as Console;
 
 type Box = record
   Value: integer;
@@ -16,7 +16,7 @@ begin
   var Index: integer := 0;
   var State: Container := Container(Items := [Box(Value := 10)]);
   var Scores: dict of string to integer := ['blue': 20];
-  WriteLn(GlobalValue);
-  WriteLn(State.Items[Index].Value);
-  WriteLn(Scores['blue']);
+  Console.WriteLn(GlobalValue);
+  Console.WriteLn(State.Items[Index].Value);
+  Console.WriteLn(Scores['blue']);
 end.

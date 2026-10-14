@@ -1,7 +1,7 @@
 program T;
 
-uses Std.Console, Std.Conv;
+uses Std.Console as Console, Std.Conv as Conv;
 
 begin
-  WriteLn(StrToReal('  3.14  '));
+  Console.WriteLn(Conv.StrToReal('  3.14  '));
 end.

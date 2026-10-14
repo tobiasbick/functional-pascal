@@ -1,6 +1,6 @@
 program CapturingRoutineAssignment;
 
-uses Std.Console, Std.Tasks;
+uses Std.Console as Console, Std.Tasks as Tasks;
 
 type Handler = function(Value: integer): integer;
 
@@ -165,7 +165,7 @@ begin
     const Pending: task of integer := go Worker(8);
     const Held: Handler := HoldTask(Pending);
     const RootStop: integer := 0;
-    WriteLn(Wait(Pending));
-    WriteLn(First(1));
+    Console.WriteLn(Tasks.Wait(Pending));
+    Console.WriteLn(First(1));
   end scope;
 end.

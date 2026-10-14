@@ -73,8 +73,18 @@ end.
 #[test]
 fn hierarchical_unit_resolution_is_independent_of_source_and_uses_order() {
     for (label, a_path, ab_path, uses) in [
-        ("forward", "src/01-a.fpas", "src/02-ab.fpas", "A, A.B"),
-        ("reverse", "src/02-a.fpas", "src/01-ab.fpas", "A.B, A"),
+        (
+            "forward",
+            "src/01-a.fpas",
+            "src/02-ab.fpas",
+            "A as Root, A.B as Nested",
+        ),
+        (
+            "reverse",
+            "src/02-a.fpas",
+            "src/01-ab.fpas",
+            "A.B as Nested, A as Root",
+        ),
     ] {
         let temp = TempDirectory::new(label);
         let manifest = project_manifest(&temp);
@@ -87,7 +97,7 @@ fn hierarchical_unit_resolution_is_independent_of_source_and_uses_order() {
             "unit A.B;\n\npublic function Target(): integer;\nbegin return 2; end function;\nend unit;\n",
         );
         let main_source = format!(
-            "program App;\n\nuses {uses};\n\nbegin\n  const Value: integer := A.B.Target();\nend.\n"
+            "program App;\n\nuses {uses};\n\nbegin\n  const Value: integer := Nested.Target();\nend.\n"
         );
         let main = temp.write("src/main.fpas", &main_source);
         let mut service = LanguageService::load(&manifest);
@@ -102,7 +112,7 @@ fn hierarchical_unit_resolution_is_independent_of_source_and_uses_order() {
 }
 
 #[test]
-fn genuinely_ambiguous_qualified_candidates_do_not_pick_source_order() {
+fn hidden_namespace_paths_do_not_pick_imported_candidates() {
     let temp = TempDirectory::new("navigation-qualified-ambiguity");
     let manifest = project_manifest(&temp);
     temp.write(
@@ -113,8 +123,7 @@ fn genuinely_ambiguous_qualified_candidates_do_not_pick_source_order() {
         "src/ab.fpas",
         "unit A.B;\n\npublic const C: integer := 1;\nend unit;\n",
     );
-    let main_source =
-        "program App;\n\nuses A, A.B;\n\nbegin\n  const Value: integer := A.B.C;\nend.\n";
+    let main_source = "program App;\n\nuses A as AUnit, A.B as B;\n\nbegin\n  const Value: integer := A.B.C;\nend.\n";
     let main = temp.write("src/main.fpas", main_source);
     let mut service = LanguageService::load(&manifest);
 

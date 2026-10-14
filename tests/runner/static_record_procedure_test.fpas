@@ -1,11 +1,11 @@
 program StaticRecordProcedureTest;
 
-uses Std.Test;
+uses Std.Test as Test;
 
 type Verifier = record
   static procedure Verify(Value: integer);
   begin
-    AssertEquals(42, Value);
+    Test.AssertEquals(42, Value);
   end procedure;
 end record;
 

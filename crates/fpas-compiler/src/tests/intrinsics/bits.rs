@@ -13,7 +13,7 @@ fn integer_literal(value: i64) -> String {
 
 #[test]
 fn bits_intrinsics_preserve_results_after_operator_removal() {
-    let mut source = String::from("program BitsCalls; uses Std.Bits; begin\n");
+    let mut source = String::from("program BitsCalls; uses Std.Bits as Bits; begin\n");
     for value in [0_i64, 1, -1, -8, i64::MIN, i64::MAX] {
         let literal = integer_literal(value);
         for (function, expected) in [
@@ -22,12 +22,12 @@ fn bits_intrinsics_preserve_results_after_operator_removal() {
             ("BitXor", value ^ 7),
         ] {
             source.push_str(&format!(
-                "if {function}({literal}, 7) <> {} then panic('{function}'); end if;\n",
+                "if Bits.{function}({literal}, 7) <> {} then panic('{function}'); end if;\n",
                 integer_literal(expected)
             ));
         }
         source.push_str(&format!(
-            "if BitNot({literal}) <> {} then panic('not'); end if;\n",
+            "if Bits.BitNot({literal}) <> {} then panic('not'); end if;\n",
             integer_literal(!value)
         ));
         for count in 0..64 {
@@ -36,7 +36,7 @@ fn bits_intrinsics_preserve_results_after_operator_removal() {
                 ("ShiftRight", value >> count),
             ] {
                 source.push_str(&format!(
-                    "if {function}({literal}, {count}) <> {} then panic('{function}'); end if;\n",
+                    "if Bits.{function}({literal}, {count}) <> {} then panic('{function}'); end if;\n",
                     integer_literal(expected)
                 ));
             }
@@ -51,7 +51,7 @@ fn invalid_shift_counts_keep_numeric_domain_diagnostics() {
     for function in ["ShiftLeft", "ShiftRight"] {
         for count in [-1, 64, i64::MAX] {
             let error = run_program(&format!(
-                "program Bad; uses Std.Bits; begin const A: integer := {function}(1, {count}); end."
+                "program Bad; uses Std.Bits as Bits; begin const A: integer := Bits.{function}(1, {count}); end."
             ))
             .unwrap_err();
             assert_eq!(error.code, RUNTIME_NUMERIC_DOMAIN_ERROR);

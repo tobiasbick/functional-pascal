@@ -61,13 +61,13 @@ instead of `End`, `NoCommand` instead of `None`, or `CompletedCommand` instead o
 Keywords and identifiers are case-insensitive:
 
 ```pascal
-PROGRAM KeywordDemo;
+program KeywordDemo;
 
-USES Std.Console;
+uses Std.Console as Console;
 
-BEGIN
-  writeln('same keywords, different casing');
-END.
+begin
+  Console.writeln('same keywords, different casing');
+end.
 ```
 
 ## See also

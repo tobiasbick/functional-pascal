@@ -6,7 +6,7 @@ Number of elements in `A`.
 
 ```pascal
 const A: array of integer := [1, 2, 3];
-WriteLn(A.Length());
+Console.WriteLn(A.Length());
 ```
 
 ---
@@ -24,7 +24,7 @@ inspecting their component type.
 ```pascal
 const A: array of integer := [3, 1, 2];
 const B: array of integer := A.Sort();
-WriteLn(B.IndexOf(2));
+Console.WriteLn(B.IndexOf(2));
 ```
 
 ---
@@ -36,7 +36,7 @@ Returns a **new** array with elements in reverse order. **`A` is not modified.**
 ```pascal
 const A: array of integer := [1, 2, 3];
 const R: array of integer := A.Reverse();
-WriteLn(R.Length());
+Console.WriteLn(R.Length());
 ```
 
 ---
@@ -47,8 +47,8 @@ WriteLn(R.Length());
 
 ```pascal
 const A: array of integer := [1, 2, 3];
-WriteLn(A.Contains(2));
-WriteLn(A.Contains(99));
+Console.WriteLn(A.Contains(2));
+Console.WriteLn(A.Contains(99));
 ```
 
 ---
@@ -58,7 +58,7 @@ WriteLn(A.Contains(99));
 First index where `A[i] = Value`, or **`-1`**.
 
 ```pascal
-WriteLn([10, 20, 30].IndexOf(20));
+Console.WriteLn([10, 20, 30].IndexOf(20));
 ```
 
 ---
@@ -70,7 +70,7 @@ Copies `Len` elements starting at `Start`. **Runtime error** if the range is out
 ```pascal
 const A: array of integer := [10, 20, 30, 40];
 const C: array of integer := A.Slice(1, 2);
-WriteLn(C.Length());
+Console.WriteLn(C.Length());
 ```
 
 ## See also

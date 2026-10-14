@@ -1,6 +1,6 @@
 program ValueStackOperations;
 
-uses Std.Test;
+uses Std.Test as Test;
 
 type Holder = record
   Items: array of integer;
@@ -12,7 +12,7 @@ begin
   Popped.Value.Items.SortInPlace();
   Popped.Value.Items.PushInPlace(4);
   const Last := Popped.Value.Items.PopInPlace();
-  AssertEquals(4, Last);
+  Test.AssertEquals(4, Last);
   Popped.Value.Text.ToUpperInPlace();
 end procedure;
 
@@ -24,52 +24,52 @@ end function;
 begin
   const Items := [10, 20, 30];
   const Extended := Items.Push(Value := 40);
-  AssertEquals(3, Items.Length());
-  AssertEquals(4, Extended.Length());
-  AssertEquals(40, Extended[3]);
+  Test.AssertEquals(3, Items.Length());
+  Test.AssertEquals(4, Extended.Length());
+  Test.AssertEquals(40, Extended[3]);
   const Popped: ArrayPopResult of integer := RemoveLast(Items);
-  AssertEquals(2, Popped.Remaining.Length());
-  AssertEquals(20, Popped.Remaining[1]);
-  AssertEquals(30, Popped.Value);
-  AssertEquals(3, Items.Length());
+  Test.AssertEquals(2, Popped.Remaining.Length());
+  Test.AssertEquals(20, Popped.Remaining[1]);
+  Test.AssertEquals(30, Popped.Value);
+  Test.AssertEquals(3, Items.Length());
   const Text := ['a', 'b'].Pop();
-  AssertEquals('b', Text.Value);
-  AssertEquals('a', Text.Remaining[0]);
+  Test.AssertEquals('b', Text.Value);
+  Test.AssertEquals('a', Text.Remaining[0]);
   const Nested := [[1], [2, 3]].Pop();
-  AssertEquals(3, Nested.Value[1]);
-  AssertEquals(1, Nested.Remaining[0][0]);
-  AssertEquals(1, [5].Pop().Remaining.Push(6).Length());
+  Test.AssertEquals(3, Nested.Value[1]);
+  Test.AssertEquals(1, Nested.Remaining[0][0]);
+  Test.AssertEquals(1, [5].Pop().Remaining.Push(6).Length());
   const Constructed: ArrayPopResult of integer := ArrayPopResult(Remaining := [7], Value := 8);
-  AssertEquals(7, Constructed.Remaining[0]);
-  AssertEquals(8, Constructed.Value);
+  Test.AssertEquals(7, Constructed.Remaining[0]);
+  Test.AssertEquals(8, Constructed.Value);
   var Mutable := [3, 2, 1].Pop();
   Mutable.Remaining.SortInPlace();
   Mutable.Remaining.PushInPlace(4);
   const Tail := Mutable.Remaining.PopInPlace();
-  AssertEquals(4, Tail);
-  AssertEquals(2, Mutable.Remaining[0]);
+  Test.AssertEquals(4, Tail);
+  Test.AssertEquals(2, Mutable.Remaining[0]);
   var Words := ['abc'].Pop();
   Words.Value.ToUpperInPlace();
-  AssertEquals('ABC', Words.Value);
+  Test.AssertEquals('ABC', Words.Value);
   var NestedRecord := [Holder(Items := [3, 2, 1], Text := 'abc')].Pop();
   ChangeNested(var NestedRecord);
-  AssertEquals(1, NestedRecord.Value.Items[0]);
-  AssertEquals('ABC', NestedRecord.Value.Text);
+  Test.AssertEquals(1, NestedRecord.Value.Items[0]);
+  Test.AssertEquals('ABC', NestedRecord.Value.Text);
   const Records := [
                      Holder(Items := [9, 8], Text := 'first'),
                      Holder(Items := [3, 2], Text := 'last')
                    ];
   var RecordList := Records.Pop();
   RecordList.Remaining[0].Items.SortInPlace();
-  AssertEquals(8, RecordList.Remaining[0].Items[0]);
-  AssertEquals(9, Records[0].Items[0]);
+  Test.AssertEquals(8, RecordList.Remaining[0].Items[0]);
+  Test.AssertEquals(9, Records[0].Items[0]);
   var ArrayList := [[[3, 1]]].Pop();
   ArrayList.Value[0].SortInPlace();
-  AssertEquals(1, ArrayList.Value[0][0]);
+  Test.AssertEquals(1, ArrayList.Value[0][0]);
   var Working := Items;
   Working.PushInPlace(Value := 40);
   const Removed := Working.PopInPlace();
-  AssertEquals(40, Removed);
-  AssertEquals(3, Working.Length());
-  AssertEquals(3, Items.Length());
+  Test.AssertEquals(40, Removed);
+  Test.AssertEquals(3, Working.Length());
+  Test.AssertEquals(3, Items.Length());
 end.

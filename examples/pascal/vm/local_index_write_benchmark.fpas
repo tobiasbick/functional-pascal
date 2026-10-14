@@ -1,7 +1,7 @@
 // Measures repeated direct writes to a local copy-on-write array.
 program LocalIndexWriteBenchmark;
 
-uses Std.Args, Std.Console, Std.Conv, Std.Time;
+uses Std.Args as Args, Std.Console as Console, Std.Conv as Conv, Std.Time as Time;
 
 const WarmupIterations: integer := 100;
 
@@ -22,13 +22,13 @@ begin
 end function;
 
 begin
-  if ParamCount() <> 2 then
+  if Args.ParamCount() <> 2 then
     begin
       panic('usage: local_index_write_benchmark.fpas -- ITERATIONS SIZE');
     end;
   end if;
-  const Iterations: integer := StrToInt(ParamStr(0));
-  const Size: integer := StrToInt(ParamStr(1));
+  const Iterations: integer := Conv.StrToInt(Args.ParamStr(0));
+  const Size: integer := Conv.StrToInt(Args.ParamStr(1));
   if (Iterations < 1) or (Size < 1) then
     begin
       panic('ITERATIONS and SIZE must be positive');
@@ -36,23 +36,24 @@ begin
   end if;
   var Checksum: integer := RewriteValues(array.Fill(0, Size), WarmupIterations);
   const Values: array of integer := array.Fill(0, Size);
-  const Started: integer := MonotonicMillis();
+  const Started: integer := Time.MonotonicMillis();
   Checksum := RewriteValues(Values, Iterations);
-  const Elapsed: integer := ElapsedMillis(Started);
+  const Elapsed: integer := Time.ElapsedMillis(Started);
   if Checksum <> (Iterations * 2) + Size - 1 then
     begin
       panic('local index write benchmark checksum mismatch');
     end;
   end if;
 
-  WriteLn('elapsed: ' + IntToStr(Elapsed) + ' ms');
+  Console.WriteLn('elapsed: ' + Conv.IntToStr(Elapsed) + ' ms');
   if Elapsed > 0 then
     begin
-      WriteLn('throughput: ' + IntToStr(Iterations * Size * 1000 div Elapsed) + ' writes/s');
+      Console.WriteLn('throughput: ' + Conv.IntToStr(Iterations * Size * 1000 div Elapsed) +
+                      ' writes/s');
     end;
   else
     begin
-      WriteLn('throughput: unavailable (elapsed time is 0 ms)');
+      Console.WriteLn('throughput: unavailable (elapsed time is 0 ms)');
     end;
   end if;
 end.

@@ -1,7 +1,7 @@
 program T;
 
-uses Std.Console, Std.Conv;
+uses Std.Console as Console, Std.Conv as Conv;
 
 begin
-  WriteLn(StrToBool('true'));
+  Console.WriteLn(Conv.StrToBool('true'));
 end.

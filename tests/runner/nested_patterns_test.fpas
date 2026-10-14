@@ -1,6 +1,6 @@
 program NestedPatternsTest;
 
-uses Std.Test;
+uses Std.Test as Test;
 
 type Color = enum
   Red;
@@ -47,7 +47,7 @@ begin
       return W * H;
     when Some(Shape.Tinted(Color.Red, const Size)):
       return Size;
-    when Some(Shape.Tinted(Green, _)):
+    when Some(Shape.Tinted(Color.Green, _)):
       return 7;
     when Some(Shape.Point):
       return 0;
@@ -69,21 +69,21 @@ begin
 end function;
 
 begin
-  AssertEquals('zero', Describe(Ok(Some(0))));
-  AssertEquals('limit', Describe(Ok(Some(3))));
-  AssertEquals('negative', Describe(Ok(Some(-4))));
-  AssertEquals('value', Describe(Ok(Some(9))));
-  AssertEquals('empty', Describe(Ok(None)));
-  AssertEquals('timeout', Describe(Error('timeout')));
-  AssertEquals('error:disk', Describe(Error('disk')));
-  AssertEquals(4, Area(Some(Shape.Circle(2))));
-  AssertEquals(-1, Area(Some(Shape.Rect(5, 0))));
-  AssertEquals(6, Area(Some(Shape.Rect(2, 3))));
-  AssertEquals(8, Area(Some(Shape.Tinted(Color.Red, 8))));
-  AssertEquals(7, Area(Some(Shape.Tinted(Color.Green, 8))));
-  AssertEquals(0, Area(Some(Shape.Point)));
-  AssertEquals(-2, Area(None));
-  AssertEquals(1, Flag(Some(true)));
-  AssertEquals(0, Flag(Some(false)));
-  AssertEquals(-1, Flag(None));
+  Test.AssertEquals('zero', Describe(Ok(Some(0))));
+  Test.AssertEquals('limit', Describe(Ok(Some(3))));
+  Test.AssertEquals('negative', Describe(Ok(Some(-4))));
+  Test.AssertEquals('value', Describe(Ok(Some(9))));
+  Test.AssertEquals('empty', Describe(Ok(None)));
+  Test.AssertEquals('timeout', Describe(Error('timeout')));
+  Test.AssertEquals('error:disk', Describe(Error('disk')));
+  Test.AssertEquals(4, Area(Some(Shape.Circle(2))));
+  Test.AssertEquals(-1, Area(Some(Shape.Rect(5, 0))));
+  Test.AssertEquals(6, Area(Some(Shape.Rect(2, 3))));
+  Test.AssertEquals(8, Area(Some(Shape.Tinted(Color.Red, 8))));
+  Test.AssertEquals(7, Area(Some(Shape.Tinted(Color.Green, 8))));
+  Test.AssertEquals(0, Area(Some(Shape.Point)));
+  Test.AssertEquals(-2, Area(None));
+  Test.AssertEquals(1, Flag(Some(true)));
+  Test.AssertEquals(0, Flag(Some(false)));
+  Test.AssertEquals(-1, Flag(None));
 end.

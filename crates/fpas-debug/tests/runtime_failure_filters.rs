@@ -31,8 +31,8 @@ fn request(id: u64, command: &str, arguments: Value) -> String {
 }
 
 fn run(server: &mut JsonlServer) -> Vec<Value> {
-    let _ = server.handle_line(&request(10, "launch", json!({"stop_on_entry":false})));
-    let mut records = Vec::new();
+    // A short program may publish its stop in the launch response itself.
+    let mut records = server.handle_line(&request(10, "launch", json!({"stop_on_entry":false})));
     while server.status() == ServerStatus::Running {
         records.extend(server.wait());
     }

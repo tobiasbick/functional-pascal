@@ -5,23 +5,29 @@ use fpas_lexer::Span;
 use fpas_parser::Expr;
 use fpas_std::std_symbols as s;
 
+/// Checks polymorphic numeric operations with source-alias examples in diagnostics.
 pub(super) fn check_math_builtin_std_call(
     c: &mut Checker,
     name: &str,
     args: &[&Expr],
     span: Span,
 ) -> Option<Ty> {
+    let source = c
+        .scopes
+        .imports
+        .source_name_for("Std.Math", name)
+        .unwrap_or_else(|| name.to_owned());
     let ty = match name {
-        s::STD_MATH_ABS => check_abs(c, args, span),
-        s::STD_MATH_MIN | s::STD_MATH_MAX => check_min_max(c, name, args, span),
-        s::STD_MATH_SIGN => check_sign(c, args, span),
-        s::STD_MATH_CLAMP => check_clamp(c, args, span),
+        s::STD_MATH_ABS => check_abs(c, &source, args, span),
+        s::STD_MATH_MIN | s::STD_MATH_MAX => check_min_max(c, &source, args, span),
+        s::STD_MATH_SIGN => check_sign(c, &source, args, span),
+        s::STD_MATH_CLAMP => check_clamp(c, &source, args, span),
         _ => return None,
     };
     Some(ty)
 }
 
-fn check_abs(c: &mut Checker, args: &[&Expr], span: Span) -> Ty {
+fn check_abs(c: &mut Checker, name: &str, args: &[&Expr], span: Span) -> Ty {
     if args.len() != 1 {
         c.error_with_code(
             SEMA_WRONG_ARGUMENT_COUNT,
@@ -30,7 +36,7 @@ fn check_abs(c: &mut Checker, args: &[&Expr], span: Span) -> Ty {
                 s::STD_MATH_ABS,
                 args.len()
             ),
-            "Example: Std.Math.Abs(-5) or Std.Math.Abs(-3.5).",
+            format!("Example: `{name}(-5)` or `{name}(-3.5)`."),
             span,
         );
         return Ty::Error;
@@ -56,7 +62,7 @@ fn check_min_max(c: &mut Checker, name: &str, args: &[&Expr], span: Span) -> Ty 
         c.error_with_code(
             SEMA_WRONG_ARGUMENT_COUNT,
             format!("`{name}` expects 2 arguments, got {}", args.len()),
-            "Example: Std.Math.Min(A, B).",
+            format!("Example: `{name}(A, B)`."),
             span,
         );
         return Ty::Error;
@@ -79,7 +85,7 @@ fn check_min_max(c: &mut Checker, name: &str, args: &[&Expr], span: Span) -> Ty 
             c.error_with_code(
                 SEMA_TYPE_MISMATCH,
                 format!("`{name}` requires both arguments to be the same numeric kind (both integer or both real)"),
-                "Use explicit conversion, for example `IntToReal(N)`, to match types.",
+                "Use explicit conversion to match types, for example `uses Std.Conv as Conv;` and `Conv.IntToReal(N)`.",
                 span,
             );
             Ty::Error
@@ -87,7 +93,7 @@ fn check_min_max(c: &mut Checker, name: &str, args: &[&Expr], span: Span) -> Ty 
     }
 }
 
-fn check_sign(c: &mut Checker, args: &[&Expr], span: Span) -> Ty {
+fn check_sign(c: &mut Checker, name: &str, args: &[&Expr], span: Span) -> Ty {
     if args.len() != 1 {
         c.error_with_code(
             SEMA_WRONG_ARGUMENT_COUNT,
@@ -96,7 +102,7 @@ fn check_sign(c: &mut Checker, args: &[&Expr], span: Span) -> Ty {
                 s::STD_MATH_SIGN,
                 args.len()
             ),
-            "Example: Std.Math.Sign(-5) or Std.Math.Sign(-3.5).",
+            format!("Example: `{name}(-5)` or `{name}(-3.5)`."),
             span,
         );
         return Ty::Error;
@@ -115,7 +121,7 @@ fn check_sign(c: &mut Checker, args: &[&Expr], span: Span) -> Ty {
     }
 }
 
-fn check_clamp(c: &mut Checker, args: &[&Expr], span: Span) -> Ty {
+fn check_clamp(c: &mut Checker, name: &str, args: &[&Expr], span: Span) -> Ty {
     if args.len() != 3 {
         c.error_with_code(
             SEMA_WRONG_ARGUMENT_COUNT,
@@ -124,7 +130,7 @@ fn check_clamp(c: &mut Checker, args: &[&Expr], span: Span) -> Ty {
                 s::STD_MATH_CLAMP,
                 args.len()
             ),
-            "Example: Std.Math.Clamp(X, Lo, Hi).",
+            format!("Example: `{name}(X, Lo, Hi)`."),
             span,
         );
         return Ty::Error;
@@ -151,7 +157,7 @@ fn check_clamp(c: &mut Checker, args: &[&Expr], span: Span) -> Ty {
                     "`{}` requires all three arguments to be the same numeric kind (all integer or all real)",
                     s::STD_MATH_CLAMP
                 ),
-                "Use explicit conversion, for example `IntToReal(N)`, to match types.",
+                "Use explicit conversion to match types, for example `uses Std.Conv as Conv;` and `Conv.IntToReal(N)`.",
                 span,
             );
             Ty::Error

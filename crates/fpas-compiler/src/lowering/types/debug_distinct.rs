@@ -13,22 +13,15 @@ impl TypeTable {
     pub(in crate::lowering) fn register_imported_distinct_names(
         &mut self,
         qualified: &str,
-        short: Option<&str>,
         underlying: TypeId,
     ) {
         self.imported_distinct_names
             .insert(qualified.to_ascii_lowercase(), underlying);
-        if let Some(short) = short {
-            self.imported_distinct_names
-                .entry(short.to_ascii_lowercase())
-                .or_insert(underlying);
-        }
     }
 
     /// Lists distinct type names declared in or imported into the compiling source.
     ///
-    /// Qualified names of aliased imports are rewritten to the alias, matching the
-    /// names the source can spell.
+    /// Imported spellings already contain the source-local unit alias.
     pub(in crate::lowering) fn distinct_type_names(
         &mut self,
         metadata: &fpas_sema::AnalysisMetadata,
@@ -48,17 +41,8 @@ impl TypeTable {
             }
         }
         for (name, underlying) in &self.imported_distinct_names {
-            let visible = metadata
-                .import_aliases
-                .iter()
-                .find_map(|(unit, alias)| {
-                    let prefix = format!("{}.", unit.to_ascii_lowercase());
-                    name.strip_prefix(&prefix)
-                        .map(|tail| format!("{}.{tail}", alias.to_ascii_lowercase()))
-                })
-                .unwrap_or_else(|| name.clone());
             names.push(DistinctTypeName {
-                name: visible,
+                name: name.clone(),
                 underlying: *underlying,
             });
         }

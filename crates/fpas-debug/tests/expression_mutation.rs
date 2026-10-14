@@ -11,7 +11,7 @@ use serde_json::{Value, json};
 
 const SOURCE: &str = r#"program JsonlExpressionMutation;
 
-uses Std.Console;
+uses Std.Console as Console;
 
 type
   Box = record
@@ -49,11 +49,11 @@ begin
   var Scores: dict of string to integer := ['blue': 30];
   var Text: string := 'abc';
   Counter := Counter + Fixed;
-  WriteLn(GlobalValue);
-  WriteLn(Counter);
-  WriteLn(State.Items[1].Value);
-  WriteLn(Scores['blue']);
-  WriteLn(Text);
+  Console.WriteLn(GlobalValue);
+  Console.WriteLn(Counter);
+  Console.WriteLn(State.Items[1].Value);
+  Console.WriteLn(Scores['blue']);
+  Console.WriteLn(Text);
 end.
 "#;
 

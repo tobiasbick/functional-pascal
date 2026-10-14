@@ -29,12 +29,7 @@ fn ordinary_names_preserve_every_ascii_letter_case() {
 
 #[test]
 fn reserved_keywords_and_ordinary_identifiers() {
-    let input = "program unit uses const var mutable function procedure begin end return discard \
-                 if then else elsif case when of for to downto in in do while \
-                 repeat until and or not xor div mod \
-                 true false type record enum array channel task panic break continue \
-                 public result option ok error some none try \
-                 go dict with static property event read write comparable numeric printable self nil null is distinct";
+    let input = "program unit uses const var mutable function procedure begin end return discard if then else elsif case when of for to downto in in do while repeat until and or not xor div mod true false type record enum array channel task panic break continue public result option ok error some none try go dict with static property event read write comparable numeric printable self nil null is distinct";
     let tokens = toks(input);
     assert_eq!(
         tokens,

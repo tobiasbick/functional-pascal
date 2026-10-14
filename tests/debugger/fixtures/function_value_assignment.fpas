@@ -1,6 +1,6 @@
 program FunctionValueAssignment;
 
-uses Std.Console;
+uses Std.Console as Console;
 
 type Handler = function(Value: integer): integer;
 
@@ -59,6 +59,6 @@ begin
   var WrongSignature: NoArgHandler := Answer;
   const Receiver: Counter := Counter(Base := 10);
   const StopMarker: integer := 0;
-  WriteLn(Current(1));
-  WriteLn(Captured(1));
+  Console.WriteLn(Current(1));
+  Console.WriteLn(Captured(1));
 end.

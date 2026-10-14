@@ -82,7 +82,7 @@ fn debug_output_limit_is_a_stable_protocol_error() {
     let commands = cwd.join("commands.jsonl");
     write_text(
         &source,
-        "program Main; uses Std.Console; begin WriteLn('too much output'); end.\n",
+        "program Main; uses Std.Console as Console; begin Console.WriteLn('too much output'); end.\n",
     );
     write_text(
         &commands,

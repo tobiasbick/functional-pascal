@@ -7,21 +7,7 @@ use fpas_unit::interface::{decode_interface, encode_interface};
 #[test]
 fn imported_helpers_enforce_escaping_parameters_after_interface_encoding() {
     let dependency = parse_unit(
-        "unit Demo.Scopes;
-uses Std.Tasks;
-var Kept: array of task of integer := [];
-public function Read(H: task of integer): integer;
-  function Take(): integer; begin return Wait(H); end function;
-begin return Take(); end function;
-public procedure Save(H: task of integer);
-  procedure Store(); begin Kept.PushInPlace(H); end procedure;
-begin Store(); end procedure;
-public type Reader = record
-  public Value: integer;
-  public function Read(Self: Reader; H: task of integer): integer;
-  begin return Wait(H) + Self.Value; end function;
-end record;
-end unit;",
+        "unit Demo.Scopes;\nuses Std.Tasks as Tasks;\nvar Kept: array of task of integer := [];\npublic function Read(H: task of integer): integer;\n  function Take(): integer; begin return Tasks.Wait(H); end function;\nbegin return Take(); end function;\npublic procedure Save(H: task of integer);\n  procedure Store(); begin Kept.PushInPlace(H); end procedure;\nbegin Store(); end procedure;\npublic type Reader = record\n  public Value: integer;\n  public function Read(Self: Reader; H: task of integer): integer;\n  begin return Tasks.Wait(H) + Self.Value; end function;\nend record;\nend unit;",
     );
     let analysis = analyze_unit(&dependency, &[]).expect("dependency");
     assert!(
@@ -74,10 +60,7 @@ end unit;"));
 fn changed_parameter_escapes_change_the_unit_interface_digest() {
     let interface = |body: &str| {
         let unit = parse_unit(&format!(
-            "unit Demo.Contract; uses Std.Tasks;
-var Kept: array of task of integer := [];
-public procedure Use(H: task of integer); begin {body} end procedure;
-end unit;"
+            "unit Demo.Contract; uses Std.Tasks as Tasks;\nvar Kept: array of task of integer := [];\npublic procedure Use(H: task of integer); begin {body} end procedure;\nend unit;"
         ));
         let analysis = analyze_unit(&unit, &[]).expect("analysis");
         assert!(
@@ -87,7 +70,7 @@ end unit;"
         );
         analysis.interface.expect("interface")
     };
-    let safe = interface("discard Wait(H);");
+    let safe = interface("discard Tasks.Wait(H);");
     let escaping = interface("Kept.PushInPlace(H);");
     assert_ne!(
         safe.digest().expect("digest"),

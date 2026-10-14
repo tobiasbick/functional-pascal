@@ -42,7 +42,7 @@ fn imported_source_routines_use_qualified_ordinary_calls() {
         ),
     ];
     let errors = imported_call_errors(
-        "program T; uses Demo.First, Demo.Second; begin const N: integer := Demo.First.Choose(1, 'x'); end.",
+        "program T; uses Demo.First as First, Demo.Second as Second; begin const N: integer := First.Choose(1, 'x'); end.",
         &interfaces,
     );
     assert!(errors.is_empty(), "{errors:#?}");
@@ -59,7 +59,7 @@ fn trailing_arguments_do_not_break_imported_receiver_tie() {
         ),
     ];
     let errors = imported_call_errors(
-        "program T; uses Demo.First, Demo.Second; begin const N: integer := (1).Choose('x'); end.",
+        "program T; uses Demo.First as First, Demo.Second as Second; begin const N: integer := (1).Choose('x'); end.",
         &interfaces,
     );
     assert!(
@@ -176,12 +176,12 @@ fn imported_same_named_free_functions_coexist_with_fixed_native_targets() {
         "unit Demo.Helpers; public function Length(Value: string): integer; begin return 99; end function; end unit;",
     )];
     let errors = imported_call_errors(
-        "program T; uses Demo.Helpers; begin const Own: integer := Length('x'); const Native: integer := 'x'.Length(); end.",
+        "program T; uses Demo.Helpers as Helpers; begin const Own: integer := Helpers.Length('x'); const Native: integer := 'x'.Length(); end.",
         &interfaces,
     );
     assert!(errors.is_empty(), "{errors:#?}");
     let errors = imported_call_errors(
-        "program T; uses Demo.Helpers; begin const N: integer := 'x'.Length('extra'); end.",
+        "program T; uses Demo.Helpers as Helpers; begin const N: integer := 'x'.Length('extra'); end.",
         &interfaces,
     );
     assert_eq!(errors.len(), 1, "{errors:#?}");

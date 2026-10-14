@@ -1,17 +1,17 @@
 program T;
 
-uses Std.Console, Std.Json;
+uses Std.Console as Console, Std.Json as Json;
 
 begin
-  const R: result of (JsonValue, string) := Parse('[false,null,"x"]');
+  const R: result of (Json.JsonValue, string) := Json.Parse('[false,null,"x"]');
   case R of
     when Ok(const V):
       begin
-        WriteLn(Stringify(V));
+        Console.WriteLn(Json.Stringify(V));
       end;
     when Error(const E):
       begin
-        WriteLn('error: ' + E);
+        Console.WriteLn('error: ' + E);
       end;
   end case;
 end.

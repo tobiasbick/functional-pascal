@@ -1,58 +1,58 @@
 program TuiScrollLayoutTest;
 
-uses Std.Test, Std.Tui;
+uses Std.Test as Test, Std.Tui as Tui;
 
 type ScrollModel = record
-  Offset: TuiPoint;
+  Offset: Tui.TuiPoint;
 end record;
 
-function ScrollChild(): TuiElement;
+function ScrollChild(): Tui.TuiElement;
 begin
-  return TuiElementBuilders.MakeColumn([
-                                         TuiElementBuilders.MakeLabel('One'),
-                                         TuiElementBuilders.MakeLabel('Two'),
-                                         TuiElementBuilders.MakeLabel('Three'),
-                                         TuiElementBuilders.MakeLabel('Four'),
-                                         TuiElementBuilders.MakeLabel('Five')
-                                       ]);
+  return Tui.TuiElementBuilders.MakeColumn([
+                                             Tui.TuiElementBuilders.MakeLabel('One'),
+                                             Tui.TuiElementBuilders.MakeLabel('Two'),
+                                             Tui.TuiElementBuilders.MakeLabel('Three'),
+                                             Tui.TuiElementBuilders.MakeLabel('Four'),
+                                             Tui.TuiElementBuilders.MakeLabel('Five')
+                                           ]);
 end function;
 
-function ViewScroll(State: ScrollModel): TuiElement;
+function ViewScroll(State: ScrollModel): Tui.TuiElement;
 begin
-  return TuiElementBuilders.MakeDesktop(Some(TuiControlId.Create(1)), [
-                                                                        TuiElementBuilders.MakeScroll(TuiControlId.Create(1), State.Offset, TuiAction.Create(7), ScrollChild())
-                                                                      ]);
+  return Tui.TuiElementBuilders.MakeDesktop(Some(Tui.TuiControlId.Create(1)), [
+                                                                                Tui.TuiElementBuilders.MakeScroll(Tui.TuiControlId.Create(1), State.Offset, Tui.TuiAction.Create(7), ScrollChild())
+                                                                              ]);
 end function;
 
-function UpdateScroll(State: ScrollModel; Msg: TuiMsg; Cmd: TuiCmdOutput): ScrollModel;
+function UpdateScroll(State: ScrollModel; Msg: Tui.TuiMsg; Cmd: Tui.TuiCmdOutput): ScrollModel;
 begin
-  Cmd.Set(TuiCmd.NoCommand);
+  Cmd.Set(Tui.TuiCmd.NoCommand);
   return State;
 end function;
 
 begin
-  const Scroll: TuiElement := TuiElementBuilders.MakeScroll(TuiControlId.Create(1), TuiPoint.Create(0, 0), TuiAction.Create(7), ScrollChild());
-  const Measured: TuiMeasureResult := TuiMeasure(Scroll, TuiMeasureSpec.Unbounded());
-  AssertEquals(1, Measured.Minimum.Width);
-  AssertEquals(1, Measured.Minimum.Height);
-  AssertEquals(5, Measured.Preferred.Width);
-  AssertEquals(5, Measured.Preferred.Height);
-  const Constrained: TuiMeasureResult := TuiMeasure(Scroll, TuiMeasureSpec.AtMost(TuiSize.Create(1, 1)));
-  AssertEquals(1, Constrained.Preferred.Width);
-  AssertEquals(1, Constrained.Preferred.Height);
-  const FixedViewport: TuiElement := TuiElementBuilders.MakeLayout(TuiLayoutSettings.Default()
-                                                                     .WithFixedHeight(2), TuiElementBuilders.MakeScroll(TuiControlId.Create(1), TuiPoint.Create(0, 0), TuiAction.Create(7), ScrollChild()));
-  const FixedMeasured: TuiMeasureResult := TuiMeasure(FixedViewport, TuiMeasureSpec.Unbounded());
-  AssertEquals(2, FixedMeasured.Minimum.Height);
-  AssertEquals(2, FixedMeasured.Preferred.Height);
-  AssertEquals(2, FixedMeasured.Maximum.Height);
-  var App: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(12, 5));
-  var Model: ScrollModel := ScrollModel(Offset := TuiPoint.Create(0, 4));
+  const Scroll: Tui.TuiElement := Tui.TuiElementBuilders.MakeScroll(Tui.TuiControlId.Create(1), Tui.TuiPoint.Create(0, 0), Tui.TuiAction.Create(7), ScrollChild());
+  const Measured: Tui.TuiMeasureResult := Tui.TuiMeasure(Scroll, Tui.TuiMeasureSpec.Unbounded());
+  Test.AssertEquals(1, Measured.Minimum.Width);
+  Test.AssertEquals(1, Measured.Minimum.Height);
+  Test.AssertEquals(5, Measured.Preferred.Width);
+  Test.AssertEquals(5, Measured.Preferred.Height);
+  const Constrained: Tui.TuiMeasureResult := Tui.TuiMeasure(Scroll, Tui.TuiMeasureSpec.AtMost(Tui.TuiSize.Create(1, 1)));
+  Test.AssertEquals(1, Constrained.Preferred.Width);
+  Test.AssertEquals(1, Constrained.Preferred.Height);
+  const FixedViewport: Tui.TuiElement := Tui.TuiElementBuilders.MakeLayout(Tui.TuiLayoutSettings.Default()
+                                                                             .WithFixedHeight(2), Tui.TuiElementBuilders.MakeScroll(Tui.TuiControlId.Create(1), Tui.TuiPoint.Create(0, 0), Tui.TuiAction.Create(7), ScrollChild()));
+  const FixedMeasured: Tui.TuiMeasureResult := Tui.TuiMeasure(FixedViewport, Tui.TuiMeasureSpec.Unbounded());
+  Test.AssertEquals(2, FixedMeasured.Minimum.Height);
+  Test.AssertEquals(2, FixedMeasured.Preferred.Height);
+  Test.AssertEquals(2, FixedMeasured.Maximum.Height);
+  var App: Tui.TuiApplication := Tui.TuiApplication.OpenForTest(Tui.TuiSize.Create(12, 5));
+  var Model: ScrollModel := ScrollModel(Offset := Tui.TuiPoint.Create(0, 4));
   Model := App.RunIterations(Model, UpdateScroll, ViewScroll, 0, 0);
-  AssertTrue(App.SurfaceSnapshot().LineAt(0).Contains('One'));
-  App.InjectResizeForTest(TuiSize.Create(12, 2));
+  Test.AssertTrue(App.SurfaceSnapshot().LineAt(0).Contains('One'));
+  App.InjectResizeForTest(Tui.TuiSize.Create(12, 2));
   Model := App.RunIterations(Model, UpdateScroll, ViewScroll, 1, 0);
-  AssertEquals(12, App.SurfaceSnapshot().Width);
-  AssertTrue(App.SurfaceSnapshot().LineAt(0).Contains('Four'));
+  Test.AssertEquals(12, App.SurfaceSnapshot().Width);
+  Test.AssertTrue(App.SurfaceSnapshot().LineAt(0).Contains('Four'));
   App.Close();
 end.

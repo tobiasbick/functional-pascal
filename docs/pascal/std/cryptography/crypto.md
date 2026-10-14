@@ -4,15 +4,17 @@ Cryptographically secure randomness supplied directly by the operating system. T
 
 ```pascal
 program Example;
-uses Std.Crypto;
+
+uses Std.Crypto as Crypto;
+
 begin
-  const Token: array of integer := RandomBytes(32).Unwrap();
+  const Token: array of integer := Crypto.RandomBytes(32).Unwrap();
 end.
 ```
 
 ## Importing and names
 
-After `uses Std.Crypto;` use **`RandomBytes`** and **`RandomInt`**, or the fully qualified forms **`Std.Crypto.RandomBytes`** and **`Std.Crypto.RandomInt`**.
+Import with `uses Std.Crypto as Crypto;` and access public symbols as `Crypto.Name`. User enum variants require `Crypto.Type.Variant`.
 
 ## Quick reference
 
@@ -28,9 +30,9 @@ Both functions request randomness from the operating system. Failure is returned
 Returns exactly `Count` bytes. Each byte is represented by an `integer` in `0..255`, matching the existing FPAS byte-array convention. `Count` must be in `0..1048576`; invalid counts return `Error` without contacting the operating-system source.
 
 ```pascal
-case RandomBytes(32) of
+case Crypto.RandomBytes(32) of
   when Ok(const Bytes):
-    WriteLn(Bytes.Length());
+    Console.WriteLn(Bytes.Length());
   when Error(const Message):
     panic(Message);
 end case;
@@ -41,9 +43,9 @@ end case;
 Returns a uniformly sampled integer in the inclusive range `[Lo, Hi]`. Equal bounds and the full `integer` range are supported. `Lo > Hi` returns `Error`.
 
 ```pascal
-case RandomInt(100000, 999999) of
+case Crypto.RandomInt(100000, 999999) of
   when Ok(const Code):
-    WriteLn(Code);
+    Console.WriteLn(Code);
   when Error(const Message):
     panic(Message);
 end case;

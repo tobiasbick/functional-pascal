@@ -1,25 +1,25 @@
 program CooperativeSleepTest;
 
-uses Std.Tasks, Std.Test, Std.Time;
+uses Std.Tasks as StdTasks, Std.Test as Test, Std.Time as Time;
 
 procedure Sleeper();
 begin
-  Sleep(50);
+  Time.Sleep(50);
 end procedure;
 
 begin
   scope
     var Tasks: array of task := [];
-    const Started: integer := MonotonicMillis();
+    const Started: integer := Time.MonotonicMillis();
     for I: integer := 1 to 8 do
       begin
         Tasks.PushInPlace(go Sleeper());
       end;
     end for;
 
-    WaitAll(Tasks);
-    const Elapsed: integer := ElapsedMillis(Started);
-    AssertTrue(Elapsed >= 40);
-    AssertTrue(Elapsed < 1000);
+    StdTasks.WaitAll(Tasks);
+    const Elapsed: integer := Time.ElapsedMillis(Started);
+    Test.AssertTrue(Elapsed >= 40);
+    Test.AssertTrue(Elapsed < 1000);
   end scope;
 end.

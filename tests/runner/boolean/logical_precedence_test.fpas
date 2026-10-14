@@ -1,6 +1,6 @@
 program LogicalPrecedenceTest;
 
-uses Std.Test;
+uses Std.Test as Test;
 
 function TryComparison(): option of boolean;
 begin
@@ -9,18 +9,18 @@ end function;
 
 begin
   const Count: integer := 2;
-  AssertFalse(not Count > 0);
-  AssertTrue(not Count = 3);
-  AssertFalse(not Count in [1, 2, 3]);
-  AssertTrue(1 < Count and Count < 3 and Count = 2);
-  AssertTrue(Count < 1 or Count > 1 or Count = 0);
-  AssertFalse(Count = 2 xor Count = 3 xor Count < 3);
-  AssertTrue(not false and true);
-  AssertTrue(not not Count > 0);
-  AssertTrue((not false) = true);
-  AssertFalse((true or false) and false);
-  AssertTrue(true or (false and false));
-  AssertFalse(false and 1 div 0 > 0);
-  AssertTrue(true or 1 div 0 > 0);
-  AssertTrue(TryComparison() = Some(true));
+  Test.AssertFalse(not Count > 0);
+  Test.AssertTrue(not Count = 3);
+  Test.AssertFalse(not Count in [1, 2, 3]);
+  Test.AssertTrue(1 < Count and Count < 3 and Count = 2);
+  Test.AssertTrue(Count < 1 or Count > 1 or Count = 0);
+  Test.AssertFalse(Count = 2 xor Count = 3 xor Count < 3);
+  Test.AssertTrue(not false and true);
+  Test.AssertTrue(not not Count > 0);
+  Test.AssertTrue((not false) = true);
+  Test.AssertFalse((true or false) and false);
+  Test.AssertTrue(true or (false and false));
+  Test.AssertFalse(false and 1 div 0 > 0);
+  Test.AssertTrue(true or 1 div 0 > 0);
+  Test.AssertTrue(TryComparison() = Some(true));
 end.

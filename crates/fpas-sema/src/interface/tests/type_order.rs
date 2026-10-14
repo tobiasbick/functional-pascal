@@ -41,12 +41,7 @@ fn forward_recursive_types_survive_encoded_interfaces() {
     let bytes = fpas_unit::interface::encode_interface(&interface).unwrap();
     let interface = fpas_unit::interface::decode_interface(&bytes).unwrap();
     let consumer = parse_unit(
-        "unit Demo.Consumer; uses Demo.Tree;
-      public function Run(): integer; begin
-        const Root: Alias := Create();
-        const Next: Edge := Edge.More(Some(Root));
-        discard Next; return Root.Count() + Alias.Empty().Count();
-      end function; end unit;",
+        "unit Demo.Consumer; uses Demo.Tree as Tree;\n      public function Run(): integer; begin\n        const Root: Tree.Alias := Tree.Create();\n        const Next: Tree.Edge := Tree.Edge.More(Some(Root));\n        discard Next; return Root.Count() + Tree.Alias.Empty().Count();\n      end function; end unit;",
     );
     let analysis = analyze_unit(&consumer, &[interface]).unwrap();
     assert!(
@@ -79,9 +74,7 @@ fn early_references_do_not_expose_private_types_or_members() {
     );
     let interface = analyze_unit(&dependency, &[]).unwrap().interface.unwrap();
     let consumer = parse_unit(
-        "unit Demo.Consumer; uses Demo.Secret;
-      function Run(): integer; begin return Wrapper.Hidden(); end function;
-      type Wrapper = Box; end unit;",
+        "unit Demo.Consumer; uses Demo.Secret as Secret;\n      function Run(): integer; begin return Wrapper.Hidden(); end function;\n      type Wrapper = Secret.Box; end unit;",
     );
     let analysis = analyze_unit(&consumer, &[interface]).unwrap();
     assert!(

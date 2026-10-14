@@ -19,20 +19,20 @@ use serde_json::{Value, json};
 
 const OUTPUT_SOURCE: &str = r#"program TransportOutput;
 
-uses Std.Console;
+uses Std.Console as Console;
 
 begin
-  WriteLn('hello-raw');
+  Console.WriteLn('hello-raw');
 end.
 "#;
 
 const INPUT_SOURCE: &str = r#"program TransportInput;
 
-uses Std.Console;
+uses Std.Console as Console;
 
 begin
-  WriteLn(ReadLn());
-  WriteLn(ReadLn());
+  Console.WriteLn(Console.ReadLn());
+  Console.WriteLn(Console.ReadLn());
 end.
 "#;
 

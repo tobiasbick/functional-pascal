@@ -26,7 +26,7 @@ export async function verifyDebuggerEvaluation(
   const lines = [
     "program DebuggerEvaluation;",
     "",
-    "uses Std.Console;",
+    "uses Std.Console as Console;",
     "",
     "type",
     "  Point = record",
@@ -52,7 +52,7 @@ export async function verifyDebuggerEvaluation(
     "    Y := 4",
     "  );",
     "  const Offset: integer := 2;",
-    "  WriteLn(Offset);",
+    "  Console.WriteLn(Offset);",
     "end.",
     "",
   ];

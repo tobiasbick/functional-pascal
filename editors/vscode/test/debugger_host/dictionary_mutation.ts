@@ -48,13 +48,13 @@ export async function verifyDictionaryMutation(
   const lines = [
     "program DebuggerDictionaryMutation;",
     "",
-    "uses Std.Console;",
+    "uses Std.Console as Console;",
     "",
     "begin",
     "  var Scores: dict of string to integer := ['Ada': 1, 'Grace': 2];",
     "  const StopMarker: integer := 0;",
-    "  WriteLn(Scores['Hopper']);",
-    "  WriteLn(Scores['Bob']);",
+    "  Console.WriteLn(Scores['Hopper']);",
+    "  Console.WriteLn(Scores['Bob']);",
     "end.",
     ""
   ];

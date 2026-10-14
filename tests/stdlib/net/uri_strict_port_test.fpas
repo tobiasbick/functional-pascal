@@ -1,13 +1,13 @@
 program UriStrictPortTest;
 
-uses Std.Net.Uri, Std.Test;
+uses Std.Net.Uri as Uri, Std.Test as Test;
 
 procedure Rejected(Text: string);
 begin
-  case Std.Net.Uri.Parse(Text) of
+  case Uri.Parse(Text) of
     when Ok(_):
       begin
-        Fail('accepted ' + Text);
+        Test.Fail('accepted ' + Text);
       end;
     when Error(_):
       begin
@@ -17,15 +17,15 @@ end procedure;
 
 procedure Accepted(Text: string; Scheme: string; Port: integer);
 begin
-  case Std.Net.Uri.Parse(Text) of
+  case Uri.Parse(Text) of
     when Ok(const Value):
       begin
-        AssertEquals(Scheme, Value.Scheme);
-        AssertEquals(Port, Value.Port);
+        Test.AssertEquals(Scheme, Value.Scheme);
+        Test.AssertEquals(Port, Value.Port);
       end;
     when Error(const Message):
       begin
-        Fail(Message);
+        Test.Fail(Message);
       end;
   end case;
 end procedure;

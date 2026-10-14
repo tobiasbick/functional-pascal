@@ -8,10 +8,10 @@ fn output_session() -> DebugSession {
     compile_session(
         r#"program TransportOutput;
 
-uses Std.Console;
+uses Std.Console as Console;
 
 begin
-  WriteLn('hello-raw');
+  Console.WriteLn('hello-raw');
 end.
 "#,
     )
@@ -21,11 +21,11 @@ fn readln_session() -> DebugSession {
     compile_session(
         r#"program TransportInput;
 
-uses Std.Console;
+uses Std.Console as Console;
 
 begin
-  WriteLn(ReadLn());
-  WriteLn(ReadLn());
+  Console.WriteLn(Console.ReadLn());
+  Console.WriteLn(Console.ReadLn());
 end.
 "#,
     )
@@ -130,10 +130,10 @@ fn input_limit_rejects_without_mutation() {
         {
             let source = r#"program TransportLimit;
 
-uses Std.Console;
+uses Std.Console as Console;
 
 begin
-  WriteLn(ReadLn());
+  Console.WriteLn(Console.ReadLn());
 end.
 "#;
             let (program, diagnostics) = fpas_parser::parse(source);

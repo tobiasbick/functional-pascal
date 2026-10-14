@@ -24,8 +24,8 @@ The [cell drawing API](cells-frames.md) stores foreground and background colors 
 | `RgbColor(Red, Green, Blue)` | each channel `0..255` | `Rgb` |
 
 ```pascal
-const Value: Cell := Cell(glyph := 'X', foreground := RgbColor(255, 128, 0), background := Ansi256Color(17));
-PutCell(1, 1, Value);
+const Value: Console.Cell := Console.Cell(glyph := 'X', foreground := Console.RgbColor(255, 128, 0), background := Console.Ansi256Color(17));
+Console.PutCell(1, 1, Value);
 ```
 
 Unlike the stateful text-color procedures below, these are values attached to cells. All three
@@ -44,7 +44,7 @@ next section, such as `White` and `Black`.
 - **Effect:** changes the foreground/background color used for subsequent writes.
 - **Errors:** runtime error if the color index is outside `0..15`.
 
-The following CRT-style constants are available after `uses Std.Console;`:
+The following CRT-style constants are available after `uses Std.Console as Console;`:
 
 | Value | Constant |
 |------:|----------|
@@ -103,11 +103,11 @@ Additional text-mode constants:
 - **Errors:** runtime error if any channel is outside `0..255`.
 
 ```pascal
-uses Std.Console;
+uses Std.Console as Console;
 
-TextColorRGB(255, 128, 0);       // orange foreground
-TextBackgroundRGB(0, 0, 64);     // dark-blue background
-WriteLn('truecolor text');
+Console.TextColorRGB(255, 128, 0);       // orange foreground
+Console.TextBackgroundRGB(0, 0, 64);     // dark-blue background
+Console.WriteLn('truecolor text');
 ```
 
 ### `procedure TextColor256(Index)`
@@ -121,10 +121,10 @@ WriteLn('truecolor text');
 - **Errors:** runtime error if the index is outside `0..255`.
 
 ```pascal
-uses Std.Console;
+uses Std.Console as Console;
 
-TextColor256(196);        // bright red in xterm-256color
-WriteLn('256-color text');
+Console.TextColor256(196);        // bright red in xterm-256color
+Console.WriteLn('256-color text');
 ```
 
 ### `function TextAttr(): integer`

@@ -1,6 +1,6 @@
 program LocalInference;
 
-uses Std.Console;
+uses Std.Console as Console;
 
 type UserId = distinct integer;
 
@@ -34,13 +34,13 @@ begin
   const Options := [Absent, Some(Count)];
   Offset := Offset + 1;
   const Total := Raw + Offset;
-  WriteLn(Total, Names.Length(), Scores.Length(), Options.Length());
+  Console.WriteLn(Total, Names.Length(), Scores.Length(), Options.Length());
   const Boxed := Box(Value := 'Ada');
   const Found := Lookup.Found(Boxed);
   case Found of
     when Lookup.Found(const Value):
-      WriteLn(Value.Value);
+      Console.WriteLn(Value.Value);
     when Lookup.Missing:
-      WriteLn('Missing');
+      Console.WriteLn('Missing');
   end case;
 end.

@@ -34,7 +34,7 @@ fn non_tail_recursion_still_reports_the_call_stack_limit() {
 
 #[test]
 fn unit_tail_calls_return_to_the_original_caller() {
-    let source = "program UnitTail; uses Std.Console; procedure Leaf(N: integer); begin WriteLn(N); end procedure; procedure Forward(N: integer); begin Leaf(N + 1); end procedure; begin Forward(1); WriteLn(3); end.";
+    let source = "program UnitTail; uses Std.Console as Console; procedure Leaf(N: integer); begin Console.WriteLn(N); end procedure; procedure Forward(N: integer); begin Leaf(N + 1); end procedure; begin Forward(1); Console.WriteLn(3); end.";
     assert!(opcodes(source).contains(&Opcode::TailCall));
     assert_succeeds(source);
 }

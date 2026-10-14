@@ -1,8 +1,8 @@
 program T;
 
-uses Std.Console;
+uses Std.Console as Console;
 
 begin
   const O: option of integer := None;
-  WriteLn(O.IsSome());
+  Console.WriteLn(O.IsSome());
 end.

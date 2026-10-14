@@ -5,11 +5,11 @@ Process environment access for hosted FPAS programs. This page is the full API f
 ```pascal
 program Example;
 
-uses Std.Console, Std.Env;
+uses Std.Console as Console, Std.Env as Env;
 
 begin
-  if Exists('PATH') then
-    WriteLn(Get('PATH').Unwrap());
+  if Env.Exists('PATH') then
+    Console.WriteLn(Env.Get('PATH').Unwrap());
   end if;
 end.
 ```
@@ -19,13 +19,13 @@ end.
 
 ## Importing and names
 
-After `uses Std.Env;` use **`Get`**, **`Exists`**, or the fully qualified forms **`Std.Env.Get`**, **`Std.Env.Exists`**.
+Import with `uses Std.Env as Env;` and access public symbols as `Env.Name`. User enum variants require `Env.Type.Variant`.
 
 ---
 
 ## Quick reference
 
-Requires `uses Std.Env;`.
+Requires `uses Std.Env as Env;`.
 
 | Kind | Name | Notes |
 |------|------|-------|
@@ -41,9 +41,9 @@ Environment lookup is process-wide and effectful because it reads host process s
 Returns the environment variable named `Name`, or `None` when it is missing.
 
 ```pascal
-const Home: option of string := Get('HOME');
+const Home: option of string := Env.Get('HOME');
 if Home.IsSome() then
-  WriteLn(Home.Unwrap());
+  Console.WriteLn(Home.Unwrap());
 end if;
 ```
 
@@ -54,8 +54,8 @@ end if;
 Returns `true` when the process environment contains `Name`.
 
 ```pascal
-if Exists('PATH') then
-  WriteLn('PATH is available');
+if Env.Exists('PATH') then
+  Console.WriteLn('PATH is available');
 end if;
 ```
 

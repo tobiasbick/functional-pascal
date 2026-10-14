@@ -1,6 +1,6 @@
 program GenericRecordsTest;
 
-uses Std.Test;
+uses Std.Test as Test;
 
 type Box of T = record
   Value: T;
@@ -53,18 +53,18 @@ begin
   const EmptyValue: Optional of integer := Optional();
   const Updated: Box of string := Text with Value := 'updated'; end with;
   const Root: Node of integer := Node(Value := 2, Next := Some(Node(Value := 1)));
-  AssertEquals(8, Nested.Value.Get());
-  AssertEquals(8, Entry.Key);
-  AssertEquals('eight', Entry.Value);
-  AssertEquals('updated', Updated.Value);
-  AssertFalse(EmptyValue.Value.IsSome());
-  AssertTrue(Number = Make(8));
-  AssertEquals(1, Root.Next.Unwrap().Value);
+  Test.AssertEquals(8, Nested.Value.Get());
+  Test.AssertEquals(8, Entry.Key);
+  Test.AssertEquals('eight', Entry.Value);
+  Test.AssertEquals('updated', Updated.Value);
+  Test.AssertFalse(EmptyValue.Value.IsSome());
+  Test.AssertTrue(Number = Make(8));
+  Test.AssertEquals(1, Root.Next.Unwrap().Value);
   const HandlerValue := Handler(Callbacks := [Identity], Value := 3);
-  AssertEquals(3, HandlerValue.Callbacks[0](HandlerValue.Value));
+  Test.AssertEquals(3, HandlerValue.Callbacks[0](HandlerValue.Value));
   const Choice := CallbackChoice.Ready([Identity], 4);
   case Choice of
     when CallbackChoice.Ready(const Callbacks, const Value):
-      AssertEquals(4, Callbacks[0](Value));
+      Test.AssertEquals(4, Callbacks[0](Value));
   end case;
 end.

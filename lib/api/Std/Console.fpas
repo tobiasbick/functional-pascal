@@ -58,13 +58,13 @@ public const Yellow: integer := 0;
 // Glyph plus foreground/background colors.
 public type Cell = record
   public glyph: string;
-  public foreground: Std.Console.Color;
-  public background: Std.Console.Color;
+  public foreground: Color;
+  public background: Color;
 end record;
 
 // Cell color record.
 public type Color = record
-  public kind: Std.Console.ColorKind;
+  public kind: ColorKind;
   public index: integer;
   public red: integer;
   public green: integer;
@@ -83,10 +83,10 @@ end enum;
 
 // Record.
 public type ConsoleEvent = record
-  public kind: Std.Console.EventKind;
-  public key: Std.Console.KeyEvent;
-  public mouse_action: Std.Console.MouseAction;
-  public mouse_button: Std.Console.MouseButton;
+  public kind: EventKind;
+  public key: KeyEvent;
+  public mouse_action: MouseAction;
+  public mouse_button: MouseButton;
   public mouse_x: integer;
   public mouse_y: integer;
   public width: integer;
@@ -116,7 +116,7 @@ end enum;
 
 // Record.
 public type KeyEvent = record
-  public kind: Std.Console.KeyKind;
+  public kind: KeyKind;
   public ch: string;
   public shift: boolean;
   public ctrl: boolean;
@@ -243,7 +243,7 @@ end procedure;
 //
 // Parameters:
 // - `Index`: Zero-based index unless the operation documents another base.
-public function Ansi256Color(Index: integer): Std.Console.Color;
+public function Ansi256Color(Index: integer): Color;
 begin
   panic('Intrinsic API declaration');
 end function;
@@ -276,7 +276,7 @@ end procedure;
 //
 // Parameters:
 // - `Index`: Zero-based index unless the operation documents another base.
-public function CrtColor(Index: integer): Std.Console.Color;
+public function CrtColor(Index: integer): Color;
 begin
   panic('Intrinsic API declaration');
 end function;
@@ -342,7 +342,7 @@ end procedure;
 //
 // Parameters:
 // - `Region`: `Std.Console.SavedRegion` input value used by `DiscardRegion`.
-public procedure DiscardRegion(Region: Std.Console.SavedRegion);
+public procedure DiscardRegion(Region: SavedRegion);
 begin
   panic('Intrinsic API declaration');
 end procedure;
@@ -397,7 +397,7 @@ end function;
 // Parameters:
 // - `Bounds`: `Std.Console.Rect` input value used by `FillRect`.
 // - `Value`: Value consumed or returned by the operation.
-public procedure FillRect(Bounds: Std.Console.Rect; Value: Std.Console.Cell);
+public procedure FillRect(Bounds: Rect; Value: Cell);
 begin
   panic('Intrinsic API declaration');
 end procedure;
@@ -407,7 +407,7 @@ end procedure;
 // Parameters:
 // - `X`: Horizontal coordinate.
 // - `Y`: Vertical coordinate.
-public function GetCell(X: integer; Y: integer): option of Std.Console.Cell;
+public function GetCell(X: integer; Y: integer): option of Cell;
 begin
   panic('Intrinsic API declaration');
 end function;
@@ -480,7 +480,7 @@ begin
 end procedure;
 
 // Non-blocking check; queued events are available without raw mode.
-public function PollEvent(): option of Std.Console.ConsoleEvent;
+public function PollEvent(): option of ConsoleEvent;
 begin
   panic('Intrinsic API declaration');
 end function;
@@ -497,13 +497,13 @@ end procedure;
 // - `X`: Horizontal coordinate.
 // - `Y`: Vertical coordinate.
 // - `Value`: Value consumed or returned by the operation.
-public procedure PutCell(X: integer; Y: integer; Value: Std.Console.Cell);
+public procedure PutCell(X: integer; Y: integer; Value: Cell);
 begin
   panic('Intrinsic API declaration');
 end procedure;
 
 // Unified terminal event for keyboard, mouse, resize, paste, and focus.
-public function ReadEvent(): Std.Console.ConsoleEvent;
+public function ReadEvent(): ConsoleEvent;
 begin
   panic('Intrinsic API declaration');
 end function;
@@ -512,7 +512,7 @@ end function;
 //
 // Parameters:
 // - `Milliseconds`: Non-negative duration in milliseconds.
-public function ReadEventTimeout(Milliseconds: integer): option of Std.Console.ConsoleEvent;
+public function ReadEventTimeout(Milliseconds: integer): option of ConsoleEvent;
 begin
   panic('Intrinsic API declaration');
 end function;
@@ -524,7 +524,7 @@ begin
 end function;
 
 // Structured key + modifiers.
-public function ReadKeyEvent(): Std.Console.KeyEvent;
+public function ReadKeyEvent(): KeyEvent;
 begin
   panic('Intrinsic API declaration');
 end function;
@@ -551,7 +551,7 @@ end procedure;
 //
 // Parameters:
 // - `Region`: `Std.Console.SavedRegion` input value used by `RestoreRegion`.
-public procedure RestoreRegion(Region: Std.Console.SavedRegion);
+public procedure RestoreRegion(Region: SavedRegion);
 begin
   panic('Intrinsic API declaration');
 end procedure;
@@ -562,7 +562,7 @@ end procedure;
 // - `Red`: `integer` input value used by `RgbColor`.
 // - `Green`: `integer` input value used by `RgbColor`.
 // - `Blue`: `integer` input value used by `RgbColor`.
-public function RgbColor(Red: integer; Green: integer; Blue: integer): Std.Console.Color;
+public function RgbColor(Red: integer; Green: integer; Blue: integer): Color;
 begin
   panic('Intrinsic API declaration');
 end function;
@@ -571,7 +571,7 @@ end function;
 //
 // Parameters:
 // - `Bounds`: `Std.Console.Rect` input value used by `SaveRegion`.
-public function SaveRegion(Bounds: Std.Console.Rect): Std.Console.SavedRegion;
+public function SaveRegion(Bounds: Rect): SavedRegion;
 begin
   panic('Intrinsic API declaration');
 end function;
@@ -730,7 +730,7 @@ end procedure;
 // - `X`: Horizontal coordinate.
 // - `Y`: Vertical coordinate.
 // - `Values`: `array of Std.Console.Cell` input value used by `WriteCells`.
-public procedure WriteCells(X: integer; Y: integer; Values: array of Std.Console.Cell);
+public procedure WriteCells(X: integer; Y: integer; Values: array of Cell);
 begin
   panic('Intrinsic API declaration');
 end procedure;

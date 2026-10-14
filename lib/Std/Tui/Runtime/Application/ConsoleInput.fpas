@@ -1,40 +1,41 @@
 unit Std.Tui.Runtime.Application.ConsoleInput;
 
 uses
-  Std.Tasks, Std.Time, Std.Tui.Geometry.Size, Std.Tui.Runtime.ConsoleEvents, Std.Tui.Runtime.Input;
+  Std.Tasks as Tasks, Std.Time as Time, Std.Tui.Geometry.Size as GeometrySize,
+  Std.Tui.Runtime.ConsoleEvents as ConsoleEvents, Std.Tui.Runtime.Input as RuntimeInput;
 
 const TuiResizeSettleMilliseconds: integer := 50;
 
 function TuiConsoleInputSend(
-  Token: CancellationToken;
-  Output: channel of TuiHostInput;
-  Input: TuiHostInput
+  Token: Tasks.CancellationToken;
+  Output: channel of RuntimeInput.TuiHostInput;
+  Input: RuntimeInput.TuiHostInput
 ): boolean;
 begin
-  return SendWithCancellation(Output, Input, Token).IsError();
+  return Tasks.SendWithCancellation(Output, Input, Token).IsError();
 end function;
 
 function TuiConsoleInputSettleResize(
-  Token: CancellationToken;
-  Output: channel of TuiHostInput;
-  InitialSize: TuiSize
+  Token: Tasks.CancellationToken;
+  Output: channel of RuntimeInput.TuiHostInput;
+  InitialSize: GeometrySize.TuiSize
 ): boolean;
 begin
-  var LatestSize: TuiSize := InitialSize;
-  while not IsCancellationRequested(Token) do
+  var LatestSize: GeometrySize.TuiSize := InitialSize;
+  while not Tasks.IsCancellationRequested(Token) do
     begin
-      case TuiReadConsoleHostInputWithTimeout(TuiResizeSettleMilliseconds) of
+      case ConsoleEvents.TuiReadConsoleHostInputWithTimeout(TuiResizeSettleMilliseconds) of
         when Some(const Input):
           begin
             case Input of
-              when TuiHostInput.Resize(const Size):
+              when RuntimeInput.TuiHostInput.Resize(const Size):
                 begin
                   LatestSize := Size;
-                  Sleep(0);
+                  Time.Sleep(0);
                 end;
-              when TuiHostInput.Message(_), TuiHostInput.Key(_), TuiHostInput.Pointer(_):
+              when RuntimeInput.TuiHostInput.Message(_), RuntimeInput.TuiHostInput.Key(_), RuntimeInput.TuiHostInput.Pointer(_):
                 begin
-                  if TuiConsoleInputSend(Token, Output, TuiHostInput.Resize(LatestSize)) then
+                  if TuiConsoleInputSend(Token, Output, RuntimeInput.TuiHostInput.Resize(LatestSize)) then
                     begin
                       return true;
                     end;
@@ -46,7 +47,7 @@ begin
           end;
         when None:
           begin
-            return TuiConsoleInputSend(Token, Output, TuiHostInput.Resize(LatestSize));
+            return TuiConsoleInputSend(Token, Output, RuntimeInput.TuiHostInput.Resize(LatestSize));
           end;
       end case;
     end;
@@ -60,15 +61,18 @@ end function;
 // Parameters:
 // - `Token`: Cancellation token owned by the interactive application.
 // - `Output`: Destination for normalized host input.
-public function TuiConsoleInputPump(Token: CancellationToken; Output: channel of TuiHostInput): result of (boolean, string);
+public function TuiConsoleInputPump(
+  Token: Tasks.CancellationToken;
+  Output: channel of RuntimeInput.TuiHostInput
+): result of (boolean, string);
 begin
-  while not IsCancellationRequested(Token) do
+  while not Tasks.IsCancellationRequested(Token) do
     begin
-      case TuiReadConsoleHostInputWithTimeout(TuiResizeSettleMilliseconds) of
+      case ConsoleEvents.TuiReadConsoleHostInputWithTimeout(TuiResizeSettleMilliseconds) of
         when Some(const Input):
           begin
             case Input of
-              when TuiHostInput.Resize(const Size):
+              when RuntimeInput.TuiHostInput.Resize(const Size):
                 begin
                   if TuiConsoleInputSettleResize(Token, Output, Size) then
                     begin
@@ -76,7 +80,7 @@ begin
                     end;
                   end if;
                 end;
-              when TuiHostInput.Message(_), TuiHostInput.Key(_), TuiHostInput.Pointer(_):
+              when RuntimeInput.TuiHostInput.Message(_), RuntimeInput.TuiHostInput.Key(_), RuntimeInput.TuiHostInput.Pointer(_):
                 begin
                   if TuiConsoleInputSend(Token, Output, Input) then
                     begin
@@ -92,7 +96,7 @@ begin
       end case;
 
       // Release the pool worker even when Console polling returns no event.
-      Sleep(0);
+      Time.Sleep(0);
     end;
   end while;
 

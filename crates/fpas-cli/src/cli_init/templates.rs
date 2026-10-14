@@ -29,7 +29,7 @@ pub(super) fn project(name: &str, identifier: &str) -> TemplatePlan {
             file(
                 "src/main.fpas",
                 format!(
-                    "program {identifier};\n\nuses Std.Console;\n\nbegin\n  WriteLn('Hello from {name}');\nend.\n"
+                    "program {identifier};\n\nuses Std.Console as Console;\n\nbegin\n  Console.WriteLn('Hello from {name}');\nend.\n"
                 ),
             ),
         ],
@@ -63,6 +63,16 @@ pub(super) fn workspace(name: &str, identifier: &str) -> TemplatePlan {
     let app_name = format!("{name}-app");
     let library_name = format!("{name}-core");
     let unit = format!("{identifier}.Core");
+    let core_alias = if identifier.eq_ignore_ascii_case("Core") {
+        "CoreUnit"
+    } else {
+        "Core"
+    };
+    let console_alias = if identifier.eq_ignore_ascii_case("Console") {
+        "ConsoleUnit"
+    } else {
+        "Console"
+    };
     TemplatePlan {
         manifest: PathBuf::from(format!("{name}.fpasworkspace")),
         files: vec![
@@ -94,7 +104,7 @@ pub(super) fn workspace(name: &str, identifier: &str) -> TemplatePlan {
             file(
                 &format!("apps/{name}/src/main.fpas"),
                 format!(
-                    "program {identifier};\n\nuses {unit}, Std.Console;\n\nbegin\n  WriteLn(Message());\nend.\n"
+                    "program {identifier};\n\nuses {unit} as {core_alias}, Std.Console as {console_alias};\n\nbegin\n  {console_alias}.WriteLn({core_alias}.Message());\nend.\n"
                 ),
             ),
         ],

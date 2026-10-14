@@ -17,7 +17,7 @@ include = ["src/*.fpas"]
     );
     write_text(
         &cwd.join("src/main.fpas"),
-        "program Main;\nuses App.Lib, Std.Console;\nbegin\n  WriteLn(Secret());\nend.\n",
+        "program Main;\nuses App.Lib as Lib, Std.Console as Console;\nbegin\n  Console.WriteLn(Secret());\nend.\n",
     );
     write_text(
         &cwd.join("src/lib.fpas"),
@@ -51,7 +51,7 @@ include = ["src/*.fpas"]
     );
     write_text(
         &cwd.join("src/main.fpas"),
-        "program Main;\nuses App.Lib, Std.Console;\nbegin\n  WriteLn(App.Lib.Secret());\nend.\n",
+        "program Main;\nuses App.Lib as Lib, Std.Console as Console;\nbegin\n  Console.WriteLn(App.Lib.Secret());\nend.\n",
     );
     write_text(
         &cwd.join("src/lib.fpas"),
@@ -85,7 +85,7 @@ include = ["src/*.fpas"]
     );
     write_text(
         &cwd.join("src/main.fpas"),
-        "program Main;\nuses App.Lib, Std.Console;\nbegin\n  WriteLn(Secret);\nend.\n",
+        "program Main;\nuses App.Lib as Lib, Std.Console as Console;\nbegin\n  Console.WriteLn(Secret);\nend.\n",
     );
     write_text(
         &cwd.join("src/lib.fpas"),
@@ -119,7 +119,7 @@ include = ["src/*.fpas"]
     );
     write_text(
         &cwd.join("src/main.fpas"),
-        "program Main;\nuses App.Lib;\nbegin\n  DoSecret();\nend.\n",
+        "program Main;\nuses App.Lib as Lib;\nbegin\n  DoSecret();\nend.\n",
     );
     write_text(
         &cwd.join("src/lib.fpas"),
@@ -153,13 +153,7 @@ include = ["src/*.fpas"]
     );
     write_text(
         &cwd.join("src/main.fpas"),
-        "\
-program Main;
-uses App.Lib;
-begin
-  const P: SecretPoint := SecretPoint( X := 1, Y := 2 );
-end.
-",
+        "program Main;\nuses App.Lib as Lib;\nbegin\n  const P: SecretPoint := SecretPoint( X := 1, Y := 2 );\nend.\n",
     );
     write_text(
         &cwd.join("src/lib.fpas"),
@@ -201,13 +195,7 @@ include = ["src/*.fpas"]
     );
     write_text(
         &cwd.join("src/main.fpas"),
-        "\
-program Main;
-uses App.Lib;
-begin
-  const P: App.Lib.SecretPoint := App.Lib.SecretPoint( X := 1, Y := 2 );
-end.
-",
+        "program Main;\nuses App.Lib as Lib;\nbegin\n  const P: App.Lib.SecretPoint := App.Lib.SecretPoint( X := 1, Y := 2 );\nend.\n",
     );
     write_text(
         &cwd.join("src/lib.fpas"),
@@ -249,7 +237,7 @@ include = ["src/*.fpas"]
     );
     write_text(
         &cwd.join("src/main.fpas"),
-        "program Main;\nuses App.Lib, Std.Console;\nbegin\n  WriteLn(Secret);\nend.\n",
+        "program Main;\nuses App.Lib as Lib, Std.Console as Console;\nbegin\n  Console.WriteLn(Secret);\nend.\n",
     );
     write_text(
         &cwd.join("src/lib.fpas"),
@@ -283,7 +271,7 @@ include = ["src/*.fpas"]
     );
     write_text(
         &cwd.join("src/main.fpas"),
-        "program Main;\nuses App.Lib, Std.Console;\nbegin\n  WriteLn(Counter);\nend.\n",
+        "program Main;\nuses App.Lib as Lib, Std.Console as Console;\nbegin\n  Console.WriteLn(Counter);\nend.\n",
     );
     write_text(
         &cwd.join("src/lib.fpas"),
@@ -317,7 +305,7 @@ include = ["src/*.fpas"]
     );
     write_text(
         &cwd.join("src/main.fpas"),
-        "program Main;\nuses App.Lib, Std.Console;\nbegin\n  WriteLn(App.Lib.Secret);\nend.\n",
+        "program Main;\nuses App.Lib as Lib, Std.Console as Console;\nbegin\n  Console.WriteLn(App.Lib.Secret);\nend.\n",
     );
     write_text(
         &cwd.join("src/lib.fpas"),
@@ -351,7 +339,7 @@ include = ["src/*.fpas"]
     );
     write_text(
         &cwd.join("src/main.fpas"),
-        "program Main;\nuses App.Lib, Std.Console;\nbegin\n  WriteLn(App.Lib.Secret);\nend.\n",
+        "program Main;\nuses App.Lib as Lib, Std.Console as Console;\nbegin\n  Console.WriteLn(App.Lib.Secret);\nend.\n",
     );
     write_text(
         &cwd.join("src/lib.fpas"),
@@ -385,7 +373,7 @@ include = ["src/*.fpas"]
     );
     write_text(
         &cwd.join("src/main.fpas"),
-        "program Main;\nuses App.Lib;\nbegin\n  App.Lib.DoSecret();\nend.\n",
+        "program Main;\nuses App.Lib as Lib;\nbegin\n  Lib.DoSecret();\nend.\n",
     );
     write_text(
         &cwd.join("src/lib.fpas"),

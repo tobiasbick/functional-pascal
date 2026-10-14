@@ -1,5 +1,7 @@
 # Option
 
+The code fragments use `uses Std.Conv as Conv, Std.Console as Console;`.
+
 `Option of T` represents a value that may be absent:
 
 ```pascal
@@ -30,9 +32,9 @@ end function;
 const Idx: option of integer := FindIndex([10, 20, 30], 20);
 case Idx of
   when Some(const I):
-    WriteLn('Found at ' + IntToStr(I));
+    Console.WriteLn('Found at ' + Conv.IntToStr(I));
   when None:
-    WriteLn('Not found');
+    Console.WriteLn('Not found');
 end case;
 ```
 

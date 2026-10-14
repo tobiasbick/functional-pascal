@@ -45,7 +45,9 @@ end function;
 "#;
 
 fn program(body: &str) -> String {
-    format!("program T;\nuses Std.Console, Std.Tasks;\n{DECLARATIONS}\nbegin\n{body}\nend.")
+    format!(
+        "program T;\nuses Std.Console as Console, Std.Tasks as Tasks;\n{DECLARATIONS}\nbegin\n{body}\nend."
+    )
 }
 
 fn error_codes(body: &str) -> Vec<DiagnosticCode> {
@@ -160,28 +162,7 @@ fn var_arguments_of_one_call_must_not_share_a_root() {
 #[test]
 fn var_parameters_cannot_outlive_the_call() {
     let escapes = check_errors(
-        "program T;
-uses Std.Tasks;
-procedure Increase(var Value: integer);
-begin
-  Value := Value + 1;
-end procedure;
-procedure Outer(var Total: integer);
-  procedure Add();
-  begin
-    Total := Total + 1;
-  end procedure;
-begin scope
-  const Closure: procedure() := procedure() begin
-    Total := 0;
-  end procedure;
-  const RoutineValue: procedure() := Add;
-  discard go Add();
- end scope; end procedure;
-begin scope
-  var Counter: integer := 0;
-  discard go Increase(var Counter);
- end scope; end.",
+        "program T;\nuses Std.Tasks as Tasks;\nprocedure Increase(var Value: integer);\nbegin\n  Value := Value + 1;\nend procedure;\nprocedure Outer(var Total: integer);\n  procedure Add();\n  begin\n    Total := Total + 1;\n  end procedure;\nbegin scope\n  const Closure: procedure() := procedure() begin\n    Total := 0;\n  end procedure;\n  const RoutineValue: procedure() := Add;\n  discard go Add();\n end scope; end procedure;\nbegin scope\n  var Counter: integer := 0;\n  discard go Increase(var Counter);\n end scope; end.",
     );
     let codes = escapes.iter().map(|error| error.code).collect::<Vec<_>>();
     assert_eq!(

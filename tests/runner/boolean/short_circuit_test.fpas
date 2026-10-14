@@ -1,6 +1,6 @@
 program ShortCircuitTest;
 
-uses Std.Bits, Std.Test;
+uses Std.Bits as Bits, Std.Test as Test;
 
 var Trace: integer := 0;
 
@@ -17,33 +17,33 @@ begin
 end function;
 
 begin
-  AssertFalse(Mark(false, 1) and Mark(true, 2));
-  AssertEquals(1, Trace);
+  Test.AssertFalse(Mark(false, 1) and Mark(true, 2));
+  Test.AssertEquals(1, Trace);
   Trace := 0;
-  AssertTrue(Mark(true, 1) or Mark(false, 2));
-  AssertEquals(1, Trace);
+  Test.AssertTrue(Mark(true, 1) or Mark(false, 2));
+  Test.AssertEquals(1, Trace);
   Trace := 0;
-  AssertFalse(Mark(true, 1) and Mark(false, 2));
-  AssertEquals(12, Trace);
+  Test.AssertFalse(Mark(true, 1) and Mark(false, 2));
+  Test.AssertEquals(12, Trace);
   Trace := 0;
-  AssertTrue(Mark(false, 1) or Mark(true, 2));
-  AssertEquals(12, Trace);
+  Test.AssertTrue(Mark(false, 1) or Mark(true, 2));
+  Test.AssertEquals(12, Trace);
   Trace := 0;
-  AssertTrue(Mark(false, 1) xor Mark(true, 2));
-  AssertEquals(12, Trace);
+  Test.AssertTrue(Mark(false, 1) xor Mark(true, 2));
+  Test.AssertEquals(12, Trace);
   Trace := 0;
-  AssertFalse((Mark(true, 1) and Mark(false, 2)) and Mark(true, 3));
-  AssertEquals(12, Trace);
+  Test.AssertFalse((Mark(true, 1) and Mark(false, 2)) and Mark(true, 3));
+  Test.AssertEquals(12, Trace);
   Trace := 0;
-  AssertTrue((Mark(false, 1) or Mark(true, 2)) or Mark(false, 3));
-  AssertEquals(12, Trace);
+  Test.AssertTrue((Mark(false, 1) or Mark(true, 2)) or Mark(false, 3));
+  Test.AssertEquals(12, Trace);
   Trace := 0;
-  AssertTrue((Mark(false, 1) and Mark(true, 2)) or Mark(true, 3));
-  AssertEquals(13, Trace);
+  Test.AssertTrue((Mark(false, 1) and Mark(true, 2)) or Mark(true, 3));
+  Test.AssertEquals(13, Trace);
   Trace := 0;
-  AssertEquals(0, BitAnd(MarkInteger(0, 1), MarkInteger(7, 2)));
-  AssertEquals(12, Trace);
+  Test.AssertEquals(0, Bits.BitAnd(MarkInteger(0, 1), MarkInteger(7, 2)));
+  Test.AssertEquals(12, Trace);
   Trace := 0;
-  AssertEquals(-1, BitOr(MarkInteger(-1, 1), MarkInteger(7, 2)));
-  AssertEquals(12, Trace);
+  Test.AssertEquals(-1, Bits.BitOr(MarkInteger(-1, 1), MarkInteger(7, 2)));
+  Test.AssertEquals(12, Trace);
 end.

@@ -1,6 +1,6 @@
 program SubrangeTest;
 
-uses Std.Test;
+uses Std.Test as Test;
 
 type Percent = 0..100;
 
@@ -23,37 +23,37 @@ begin
   const High := Percent(ReadValue(100));
   var Level := Same(5);
   Change(var Level);
-  AssertTrue(Low = 0);
-  AssertTrue(High = 100);
-  AssertTrue(Level = 10);
-  AssertTrue(ReadValue(0) in Percent);
-  AssertTrue(ReadValue(100) in Same);
-  AssertFalse(ReadValue(-1) in Percent);
-  AssertFalse(ReadValue(101) in Percent);
-  AssertTrue(Level in Small);
+  Test.AssertTrue(Low = 0);
+  Test.AssertTrue(High = 100);
+  Test.AssertTrue(Level = 10);
+  Test.AssertTrue(ReadValue(0) in Percent);
+  Test.AssertTrue(ReadValue(100) in Same);
+  Test.AssertFalse(ReadValue(-1) in Percent);
+  Test.AssertFalse(ReadValue(101) in Percent);
+  Test.AssertTrue(Level in Small);
   for Input: integer := -1 to 101 do
     if Input in Percent then
       const Checked := Percent(Input);
-      AssertTrue(Checked = Input);
+      Test.AssertTrue(Checked = Input);
     else
-      AssertTrue(Input = -1 or Input = 101);
+      Test.AssertTrue(Input = -1 or Input = 101);
     end if;
   end for;
 
-  AssertFalse(ReadValue(101) in Percent and Percent(ReadValue(101)) >= 0);
+  Test.AssertFalse(ReadValue(101) in Percent and Percent(ReadValue(101)) >= 0);
   const Sum: integer := High + Level;
-  AssertEquals(110, Sum);
+  Test.AssertEquals(110, Sum);
   const Half: real := High / Level;
-  AssertEquals(10.0, Half);
+  Test.AssertEquals(10.0, Half);
   const Values: array of Percent := [Low, High];
-  AssertTrue(Values[1] = 100);
+  Test.AssertTrue(Values[1] = 100);
   for I: integer := 0 to 10 do
     const Current := Small(I);
-    AssertTrue(Current = I);
+    Test.AssertTrue(Current = I);
   end for;
   const Label: integer := case Level of
     when Percent(10): 1;
     when 0..9, 11..100: 0;
   end case;
-  AssertEquals(1, Label);
+  Test.AssertEquals(1, Label);
 end.

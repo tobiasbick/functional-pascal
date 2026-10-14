@@ -10,7 +10,7 @@ use serde_json::{Value, json};
 
 const SOURCE: &str = r#"program CompletedTaskResult;
 
-uses Std.Console, Std.Tasks;
+uses Std.Console as Console, Std.Tasks as Tasks;
 
 function Work(): integer;
 begin
@@ -19,7 +19,7 @@ end function;
 
 begin scope
   const Pending: task of integer := go Work();
-  WriteLn(Wait(Pending));
+  Console.WriteLn(Tasks.Wait(Pending));
  end scope; end.
 "#;
 

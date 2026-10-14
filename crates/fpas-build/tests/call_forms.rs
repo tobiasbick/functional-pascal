@@ -80,9 +80,7 @@ include = ["src/**/*.fpas"]
     );
     write(
         &main,
-        "program Demo;
-         uses Demo.Math, Std.Console;
-         begin Std.Console.WriteLn(Sub(Right := 1, Left := 10)); end.",
+        "program Demo;\n         uses Demo.Math as Math, Std.Console as Console;\n         begin Console.WriteLn(Math.Sub(Right := 1, Left := 10)); end.",
     );
 
     let cold = build(&root, &main);
@@ -90,12 +88,7 @@ include = ["src/**/*.fpas"]
 
     write(
         &main,
-        "program Demo;
-         uses Demo.Math, Std.Console;
-         begin
-           Std.Console.WriteLn(Demo.Math.Sub(Right := 2, Left := 10));
-           Std.Console.WriteLn(Area(Shape.Rect(Height := 3, Width := 4)));
-         end.",
+        "program Demo;\n         uses Demo.Math as Math, Std.Console as Console;\n         begin\n           Console.WriteLn(Math.Sub(Right := 2, Left := 10));\n           Console.WriteLn(Math.Area(Math.Shape.Rect(Height := 3, Width := 4)));\n         end.",
     );
     let warm = build(&root, &main);
     assert_eq!(warm.counters().compiled, 0, "the unit sidecar is reused");
@@ -132,15 +125,7 @@ end unit;",
     );
     write(
         &main,
-        "program Demo;
-         uses Demo.Counters, Std.Console;
-         begin
-           var Counter: integer := 1;
-           Increase(var Counter);
-           Apply(Increase, var Counter);
-           Increase(var Demo.Counters.Total);
-           Std.Console.WriteLn(Counter, ' ', Total);
-         end.",
+        "program Demo;\n         uses Demo.Counters as Counters, Std.Console as Console;\n         begin\n           var Counter: integer := 1;\n           Counters.Increase(var Counter);\n           Counters.Apply(Counters.Increase, var Counter);\n           Counters.Increase(var Counters.Total);\n           Console.WriteLn(Counter, ' ', Counters.Total);\n         end.",
     );
     assert_eq!(run(build(&root, &main)), ["3 1"]);
     let warm = build(&root, &main);
@@ -178,14 +163,14 @@ end unit;"#,
     write(
         &main,
         r#"program Demo;
-uses Demo.State, Std.Console;
+uses Demo.State as State, Std.Console as Console;
 begin
-  Demo.State.Items.PushInPlace(3);
-  Demo.State.State.Items.PushInPlace(4);
-  Append(var Demo.State.Items, 5);
-  Append(var State.Items, 6);
-  WriteLn(Demo.State.Items.PopInPlace(), ' ', Demo.State.Items.PopInPlace(), ' ', Demo.State.Items[0]);
-  WriteLn(State.Items.PopInPlace(), ' ', Demo.State.State.Items.PopInPlace(), ' ', State.Items[0]);
+  State.Items.PushInPlace(3);
+  State.State.Items.PushInPlace(4);
+  State.Append(var State.Items, 5);
+  State.Append(var State.State.Items, 6);
+  Console.WriteLn(State.Items.PopInPlace(), ' ', State.Items.PopInPlace(), ' ', State.Items[0]);
+  Console.WriteLn(State.State.Items.PopInPlace(), ' ', State.State.Items.PopInPlace(), ' ', State.State.Items[0]);
 end."#,
     );
     assert_eq!(run(build(&root, &main)), ["5 3 1", "6 4 2"]);

@@ -1,5 +1,7 @@
 # Result and Option types
 
+The code fragments use `uses Std.Conv as Conv, Std.Console as Console;`.
+
 `Some`, `Ok` and `Error` accept one positional payload or the case-insensitive
 label `Value`, for example `Some(Value := 3)` and `Error(Value := 'missing')`.
 The error payload uses the declared error type. These labels also work in
@@ -28,16 +30,16 @@ Use `case` destructuring to handle both forms:
 ```pascal
 case Success of
   when Ok(const Value):
-    WriteLn(IntToStr(Value));
+    Console.WriteLn(Conv.IntToStr(Value));
   when Error(const Message):
-    WriteLn(Message);
+    Console.WriteLn(Message);
 end case;
 
 case Present of
   when Some(const Value):
-    WriteLn(IntToStr(Value));
+    Console.WriteLn(Conv.IntToStr(Value));
   when None:
-    WriteLn('empty');
+    Console.WriteLn('empty');
 end case;
 ```
 

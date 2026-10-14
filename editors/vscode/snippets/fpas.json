@@ -1,4 +1,9 @@
 {
+  "Aliased import": {
+    "prefix": "uses",
+    "body": "uses ${1:Std.Console} as ${2:Console};",
+    "description": "Import one unit through its required source-local alias"
+  },
   "Program": {
     "prefix": "program",
     "body": [

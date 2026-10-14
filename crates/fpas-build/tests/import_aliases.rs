@@ -26,6 +26,10 @@ fn write(path: &Path, source: &str) {
 }
 
 fn build(root: &Path, main: &Path) -> fpas_build::BuiltProgram {
+    try_build(root, main).expect("program build")
+}
+
+fn try_build(root: &Path, main: &Path) -> Result<fpas_build::BuiltProgram, fpas_build::BuildError> {
     let project = load_project(&root.join("demo.fpasprj")).expect("project loading");
     let graph = build_unit_graph_for_program(main, &project.source_files, &project.link_meta)
         .expect("program unit graph");
@@ -48,13 +52,37 @@ fn build(root: &Path, main: &Path) -> fpas_build::BuiltProgram {
         },
         &BuildOptions::default(),
     )
-    .expect("program build")
 }
 
 fn run(program: fpas_build::BuiltProgram) -> Vec<String> {
     let mut vm = fpas_vm::Vm::new(program.executable);
     vm.run().expect("compiled program execution");
     vm.output().lines.clone()
+}
+
+#[test]
+fn ancestor_enum_members_and_child_unit_constants_keep_their_own_aliases() {
+    let root = std::env::temp_dir().join(format!("fpas-owner-aliases-{}", std::process::id()));
+    let main = root.join("src/main.fpas");
+    write(
+        &root.join("demo.fpasprj"),
+        "[project]\nname = 'demo'\nkind = 'program'\nmain = 'src/main.fpas'\n[sources]\ninclude = ['src/**/*.fpas']\n",
+    );
+    write(
+        &root.join("src/parent.fpas"),
+        "unit A; public type B = enum C = 7; D = 8; end enum; public function IsC(Value: B): boolean; begin return Value is B.C; end function; end unit;",
+    );
+    write(
+        &root.join("src/child.fpas"),
+        "unit A.B; public const C: integer := 42; end unit;",
+    );
+    write(
+        &main,
+        "program Demo; uses A as Parent, A.B as Child; begin if not Parent.IsC(Parent.B.C) or Child.C <> 42 then panic('owning alias changed a constant'); end if; end.",
+    );
+    run(build(&root, &main));
+    run(build(&root, &main));
+    fs::remove_dir_all(root).ok();
 }
 
 #[test]
@@ -143,27 +171,7 @@ include = ["src/**/*.fpas"]
         begin return Value * 2; end function;
         end unit;",
     );
-    let source = "program Demo;
-        uses Demo.Api as Api, Demo.Types as Model, Other.Helper, Std.Console as Console, Std.Tasks as Jobs;
-        begin scope
-          var Counter: integer := 1;
-          Api.Increase(var Counter);
-          Api.Apply(Api.Increase, var Counter);
-          Api.Increase(var Api.Total);
-          Api.Items.PushInPlace(2);
-          const Shape: Model.Shape := Model.Shape.Rect(Height := 3, Width := 4);
-          const Point: Model.Point := Api.Make(Value := 10);
-          const Bound: function(Value: integer): integer := Point.Add;
-          const Increment: function(Value: integer): integer := Api.Next;
-          const Pending: task of integer := go Api.Next(Value := 6);
-          Console.WriteLn(Api.Next(Value := 9), ' ', Next(9));
-          Console.WriteLn(Counter, ' ', Api.Total, ' ', Api.Items.Length(), ' ', Api.Answer);
-          Console.WriteLn(Api.Area(Shape), ' ', Point.Add(3), ' ', Bound(4), ' ', Increment(4));
-          Console.WriteLn(Point.Status = Model.State.Ready, ' ', Jobs.Wait(Pending));
-          Console.WriteLn(Api.StateCode(Some(Model.State.Ready)), ' ', Api.StateCode(Some(Model.State.Busy)), ' ', Api.StateCode(None));
-          Console.WriteLn(Api.BoolCode(Some(true)), ' ', Api.BoolCode(Some(false)), ' ', Api.BoolCode(None));
-          Console.WriteLn(Api.NestedArea(Some(Shape)), ' ', Api.NestedArea(None));
-         end scope; end.";
+    let source = "program Demo;\n        uses Demo.Api as Api, Demo.Types as Model, Other.Helper as Helper, Std.Console as Console, Std.Tasks as Jobs;\n        begin scope\n          var Counter: integer := 1;\n          Api.Increase(var Counter);\n          Api.Apply(Api.Increase, var Counter);\n          Api.Increase(var Api.Total);\n          Api.Items.PushInPlace(2);\n          const Shape: Model.Shape := Model.Shape.Rect(Height := 3, Width := 4);\n          const Point: Model.Point := Api.Make(Value := 10);\n          const Bound: function(Value: integer): integer := Point.Add;\n          const Increment: function(Value: integer): integer := Api.Next;\n          const Pending: task of integer := go Api.Next(Value := 6);\n          Console.WriteLn(Api.Next(Value := 9), ' ', Helper.Next(9));\n          Console.WriteLn(Counter, ' ', Api.Total, ' ', Api.Items.Length(), ' ', Api.Answer);\n          Console.WriteLn(Api.Area(Shape), ' ', Point.Add(3), ' ', Bound(4), ' ', Increment(4));\n          Console.WriteLn(Point.Status = Model.State.Ready, ' ', Jobs.Wait(Pending));\n          Console.WriteLn(Api.StateCode(Some(Model.State.Ready)), ' ', Api.StateCode(Some(Model.State.Busy)), ' ', Api.StateCode(None));\n          Console.WriteLn(Api.BoolCode(Some(true)), ' ', Api.BoolCode(Some(false)), ' ', Api.BoolCode(None));\n          Console.WriteLn(Api.NestedArea(Some(Shape)), ' ', Api.NestedArea(None));\n         end scope; end.";
     write(&main, source);
     let cold = build(&root, &main);
     assert_eq!(cold.counters().compiled, 3);
@@ -190,5 +198,29 @@ include = ["src/**/*.fpas"]
         "source alias renaming preserves unit sidecars"
     );
     assert_eq!(run(warm), expected);
+    for (before, after, repair) in [
+        ("Model.State.Ready", "Model.Ready", "Model.state.ready"),
+        ("Model.Shape.Rect", "Rect", "Model.shape.Rect"),
+        ("Api.Next(Value := 9)", "Next(Value := 9)", "Service.Next"),
+    ] {
+        let invalid = source
+            .replace(before, after)
+            .replace("as Api", "as Service")
+            .replace("Api.", "Service.");
+        write(&main, &invalid);
+        let error = try_build(&root, &main)
+            .err()
+            .expect("cached interfaces keep required qualifiers");
+        assert!(
+            error.diagnostics().iter().any(|record| {
+                record.diagnostic.code == fpas_diagnostics::codes::SEMA_UNQUALIFIED_NAME
+                    && record.diagnostic.help.as_ref().is_some_and(|help| {
+                        help.to_ascii_lowercase()
+                            .contains(&repair.to_ascii_lowercase())
+                    })
+            }),
+            "{error}"
+        );
+    }
     fs::remove_dir_all(&root).ok();
 }

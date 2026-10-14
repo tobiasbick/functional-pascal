@@ -1,13 +1,13 @@
 unit Std.Tui.Cells.Style;
 
-uses Std.Tui.Cells.Color;
+uses Std.Tui.Cells.Color as Color;
 
 // Concrete foreground/background colors and text attributes.
 public type TuiStyle = record
   // Foreground color.
-  public Foreground: TuiColor;
+  public Foreground: Color.TuiColor;
   // Background color.
-  public Background: TuiColor;
+  public Background: Color.TuiColor;
   // Whether bold rendering is enabled.
   public Bold: boolean;
   // Whether dim rendering is enabled.
@@ -22,7 +22,7 @@ public type TuiStyle = record
   // Parameters:
   // - `Foreground`: Foreground color.
   // - `Background`: Background color.
-  public static function FromColors(Foreground: TuiColor; Background: TuiColor): TuiStyle;
+  public static function FromColors(Foreground: Color.TuiColor; Background: Color.TuiColor): TuiStyle;
   begin
     return TuiStyle(Foreground := Foreground, Background := Background, Bold := false, Dim := false, Underline := false, Inverse := false);
   end function;
@@ -37,8 +37,8 @@ public type TuiStyle = record
   // - `Underline`: Whether underlined text rendering is enabled.
   // - `Inverse`: Whether inverse text rendering is enabled.
   public static function Create(
-  Foreground: TuiColor;
-  Background: TuiColor;
+  Foreground: Color.TuiColor;
+  Background: Color.TuiColor;
   Bold: boolean;
   Dim: boolean;
   Underline: boolean;

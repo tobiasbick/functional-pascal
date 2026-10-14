@@ -12,7 +12,7 @@ for I: integer := 1 to 100 do
     break;
   end if;
 
-  WriteLn(I);
+  Console.WriteLn(I);
 end for;
 ```
 

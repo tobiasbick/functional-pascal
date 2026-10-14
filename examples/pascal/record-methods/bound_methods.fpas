@@ -1,6 +1,6 @@
 program BoundMethodsExample;
 
-uses Std.Console, Std.Conv;
+uses Std.Console as Console, Std.Conv as Conv;
 
 type Counter = record
   Base: integer;
@@ -12,7 +12,7 @@ type Counter = record
 
   procedure Show(Self: Counter);
   begin
-    WriteLn('Base: ' + IntToStr(Self.Base));
+    Console.WriteLn('Base: ' + Conv.IntToStr(Self.Base));
   end procedure;
 
   static function Make(Base: integer): Counter;
@@ -30,8 +30,8 @@ begin
   var C: Counter := Counter(Base := 10);
   const AddTen: function(Value: integer): integer := C.Add;
   C := Counter(Base := 99);
-  WriteLn(IntToStr(AddTen(5)));
-  WriteLn(IntToStr(Apply(AddTen, 7)));
+  Console.WriteLn(Conv.IntToStr(AddTen(5)));
+  Console.WriteLn(Conv.IntToStr(Apply(AddTen, 7)));
   const ShowBase: procedure() := Counter.Make(3).Show;
   ShowBase();
 end.

@@ -5,10 +5,12 @@ This page lists every operation in the native array catalog.
 
 ```pascal
 program Example;
-uses Std.Console;
+
+uses Std.Console as Console;
+
 begin
   const A: array of integer := [1, 2, 3];
-  WriteLn(A.Length());
+  Console.WriteLn(A.Length());
 end.
 ```
 

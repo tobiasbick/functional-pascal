@@ -65,16 +65,11 @@ include = ["src/**/*.fpas"]
         write(&base, &base_source("return Value;"));
         write(
             &root.join("src/consumer.fpas"),
-            "unit Demo.Consumer;
-             uses Demo.Base;
-             public function Run(): integer;
-             begin return AddOne(41); end function;\nend unit;",
+            "unit Demo.Consumer;\n             uses Demo.Base as Base;\n             public function Run(): integer;\n             begin return Base.AddOne(41); end function;\nend unit;",
         );
         write(
             &main,
-            "program Demo;
-             uses Demo.Consumer, Std.Console;
-             begin Std.Console.WriteLn(Run()); end.",
+            "program Demo;\n             uses Demo.Consumer as Consumer, Std.Console as Console;\n             begin Console.WriteLn(Consumer.Run()); end.",
         );
         Self {
             root,
@@ -169,9 +164,7 @@ fn unchanged_program_artifact_is_reused_without_relinking() {
 fn main_source_change_relinks_the_program() {
     let fixture = Fixture::create();
     fixture.build().expect("initial build");
-    let changed = b"program Demo;
-                    uses Demo.Consumer, Std.Console;
-                    begin Std.Console.WriteLn(Run() + 1); end.";
+    let changed = b"program Demo;\n                    uses Demo.Consumer as Consumer, Std.Console as Console;\n                    begin Console.WriteLn(Consumer.Run() + 1); end.";
     write(
         &fixture.main,
         std::str::from_utf8(changed).expect("changed source"),
@@ -244,9 +237,7 @@ fn failed_program_rebuild_preserves_the_previous_artifact() {
     let fixture = Fixture::create();
     fixture.build().expect("initial build");
     let previous = fs::read(&fixture.artifact).expect("initial artifact");
-    let invalid = b"program Demo;
-                    uses Demo.Consumer, Std.Console;
-                    begin Std.Console.WriteLn(Missing()); end.";
+    let invalid = b"program Demo;\n                    uses Demo.Consumer as Consumer, Std.Console as Console;\n                    begin Std.Console.WriteLn(Missing()); end.";
 
     assert!(fixture.build_source(invalid).is_err());
     assert_eq!(

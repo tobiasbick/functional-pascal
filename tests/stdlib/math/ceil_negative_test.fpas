@@ -1,7 +1,7 @@
 program T;
 
-uses Std.Console, Std.Math;
+uses Std.Console as Console, Std.Math as Math;
 
 begin
-  WriteLn(Ceil(-2.9));
+  Console.WriteLn(Math.Ceil(-2.9));
 end.

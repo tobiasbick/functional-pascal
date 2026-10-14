@@ -96,13 +96,14 @@ fn imported_distinct_names_follow_the_source_import_form() {
             "{hidden}"
         );
     }
-    let mut plain =
-        DebugSession::new(linked("program Consumer; uses Ids; begin end.")).expect("session");
-    for visible in ["UserId", "Ids.UserId"] {
+    let mut default_alias =
+        DebugSession::new(linked("program Consumer; uses Ids as IdsUnit; begin end."))
+            .expect("session");
+    for visible in ["IdsUnit.UserId"] {
         assert_eq!(
-            plain
+            default_alias
                 .evaluate(&wrap(visible), None)
-                .expect("plain import conversion")
+                .expect("qualified import conversion")
                 .value,
             "5",
             "{visible}"

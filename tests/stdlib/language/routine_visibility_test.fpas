@@ -1,6 +1,6 @@
 program RoutineVisibility;
 
-uses Std.Test, Std.Tasks;
+uses Std.Test as Test, Std.Tasks as Tasks;
 
 const Initial: integer := Twice(3);
 
@@ -42,7 +42,7 @@ begin
   scope
     const Selected: function(): integer := Read;
     const Running: task of integer := go Read();
-    return Read() + Selected() + Std.Tasks.Wait(Running);
+    return Read() + Selected() + Tasks.Wait(Running);
   end scope;
 end function;
 function Read(): integer;
@@ -57,7 +57,7 @@ function Apply(GlobalRead: function(): integer): integer;
 begin
   scope
     const Running: task of integer := go GlobalRead();
-    return GlobalRead() + Std.Tasks.Wait(Running);
+    return GlobalRead() + Tasks.Wait(Running);
   end scope;
 end function;
 
@@ -176,24 +176,24 @@ begin
       return Before(Value);
     end function;
 
-    AssertEquals(12, Anonymous(5));
+    Test.AssertEquals(12, Anonymous(5));
     const Inferred := CreateAnonymous();
-    AssertEquals(12, Inferred(5));
-    AssertEquals(6, Initial);
-    AssertEquals('first;second;', InitializationOrder);
-    AssertEquals(6, First);
-    AssertEquals(13, Second);
-    AssertTrue(IsEven(8));
-    AssertTrue(IsOdd(9));
-    AssertEquals(6, Outer());
-    AssertEquals(1, Read());
-    AssertEquals(2, Apply(Read));
+    Test.AssertEquals(12, Inferred(5));
+    Test.AssertEquals(6, Initial);
+    Test.AssertEquals('first;second;', InitializationOrder);
+    Test.AssertEquals(6, First);
+    Test.AssertEquals(13, Second);
+    Test.AssertTrue(IsEven(8));
+    Test.AssertTrue(IsOdd(9));
+    Test.AssertEquals(6, Outer());
+    Test.AssertEquals(1, Read());
+    Test.AssertEquals(2, Apply(Read));
     const GlobalTask: task of integer := go Read();
-    AssertEquals(1, Std.Tasks.Wait(GlobalTask));
-    AssertEquals(13, CaptureSiblings());
-    AssertEquals(42, ProcedureHelpers());
-    AssertEquals(42, PassThrough(42));
-    AssertEquals('text', PassThrough('text'));
-    AssertEquals(9, Constructed.ReadValue());
+    Test.AssertEquals(1, Tasks.Wait(GlobalTask));
+    Test.AssertEquals(13, CaptureSiblings());
+    Test.AssertEquals(42, ProcedureHelpers());
+    Test.AssertEquals(42, PassThrough(42));
+    Test.AssertEquals('text', PassThrough('text'));
+    Test.AssertEquals(9, Constructed.ReadValue());
   end scope;
 end.

@@ -1,15 +1,15 @@
 program ElementMakeLabelTest;
 
-uses Std.Tui, Std.Test;
+uses Std.Tui as Tui, Std.Test as Test;
 
 begin
-  const Node: TuiElement := TuiElementBuilders.MakeLabel('hi');
+  const Node: Tui.TuiElement := Tui.TuiElementBuilders.MakeLabel('hi');
   case Node of
-    when TuiElement.Label(const Text):
+    when Tui.TuiElement.Label(const Text):
       begin
-        AssertEquals('hi', Text);
+        Test.AssertEquals('hi', Text);
       end;
-    when TuiElement.Empty, TuiElement.Button(_), TuiElement.Input(_), TuiElement.TextArea(_, _, _, _, _), TuiElement.CheckBox(_, _, _, _), TuiElement.List(_, _, _, _), TuiElement.Scroll(_, _, _, _), TuiElement.MenuBar(_), TuiElement.Menu(_, _, _, _), TuiElement.StatusLine(_), TuiElement.CellGrid(_), TuiElement.Rule(_), TuiElement.Gauge(_), TuiElement.Row(_, _), TuiElement.Column(_, _), TuiElement.Layout(_, _), TuiElement.Spacer(_), TuiElement.Panel(_, _), TuiElement.Overlay(_, _), TuiElement.Desktop(_, _):
+    when Tui.TuiElement.Empty, Tui.TuiElement.Button(_), Tui.TuiElement.Input(_), Tui.TuiElement.TextArea(_, _, _, _, _), Tui.TuiElement.CheckBox(_, _, _, _), Tui.TuiElement.List(_, _, _, _), Tui.TuiElement.Scroll(_, _, _, _), Tui.TuiElement.MenuBar(_), Tui.TuiElement.Menu(_, _, _, _), Tui.TuiElement.StatusLine(_), Tui.TuiElement.CellGrid(_), Tui.TuiElement.Rule(_), Tui.TuiElement.Gauge(_), Tui.TuiElement.Row(_, _), Tui.TuiElement.Column(_, _), Tui.TuiElement.Layout(_, _), Tui.TuiElement.Spacer(_), Tui.TuiElement.Panel(_, _), Tui.TuiElement.Overlay(_, _), Tui.TuiElement.Desktop(_, _):
       begin
         panic('expected label element');
       end;

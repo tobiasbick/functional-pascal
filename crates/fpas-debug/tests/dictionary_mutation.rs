@@ -11,7 +11,7 @@ use serde_json::{Value, json};
 
 const SOURCE: &str = r#"program JsonlDictionaryMutation;
 
-uses Std.Console;
+uses Std.Console as Console;
 
 type
   Row = record
@@ -37,11 +37,11 @@ begin
       Scores := ['Right': 20]
     )
   ];
-  WriteLn(Scores['Hopper']);
-  WriteLn(Scores['Bob']);
-  WriteLn(Rows[1].Scores['Nested']);
-  WriteLn(GlobalScores['Zed']);
-  WriteLn(FixedScores['Fixed']);
+  Console.WriteLn(Scores['Hopper']);
+  Console.WriteLn(Scores['Bob']);
+  Console.WriteLn(Rows[1].Scores['Nested']);
+  Console.WriteLn(GlobalScores['Zed']);
+  Console.WriteLn(FixedScores['Fixed']);
 end.
 "#;
 

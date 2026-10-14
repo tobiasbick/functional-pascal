@@ -4,9 +4,11 @@ String helpers: measure, search, transform, split, and join. This page lists eve
 
 ```pascal
 program Example;
-uses Std.Console;
+
+uses Std.Console as Console;
+
 begin
-  WriteLn('hello'.Length());
+  Console.WriteLn('hello'.Length());
 end.
 ```
 

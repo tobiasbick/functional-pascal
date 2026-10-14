@@ -61,7 +61,7 @@ pub(super) fn register_std_toml(checker: &mut Checker) {
         variants: variants.clone(),
     }));
 
-    checker.scopes.define(
+    checker.scopes.imports.define_metadata(
         s::STD_TOML_VALUE,
         Symbol {
             constant: None,
@@ -74,7 +74,7 @@ pub(super) fn register_std_toml(checker: &mut Checker) {
 
     for variant in &variants {
         let qualified_name = format!("{}.{}", s::STD_TOML_VALUE, variant.name);
-        checker.scopes.define(
+        checker.scopes.imports.define_metadata(
             &qualified_name,
             Symbol {
                 constant: None,

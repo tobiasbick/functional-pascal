@@ -1,16 +1,16 @@
 program ForExample;
 
-uses Std.Console;
+uses Std.Console as Console;
 
 begin
   const Scores: array of integer := [12, 45, 3, 67, 29, 88, 51, 7, 93, 34];
-  WriteLn('Filtered scores:');
+  Console.WriteLn('Filtered scores:');
   for I: integer := 0 to Scores.Length() - 1 do
     begin
       const S: integer := Scores[I];
       if S > 90 then
         begin
-          WriteLn('Stopping — score above 90 found');
+          Console.WriteLn('Stopping — score above 90 found');
           break;
         end;
       end if;
@@ -21,7 +21,7 @@ begin
         end;
       end if;
 
-      WriteLn(S);
+      Console.WriteLn(S);
     end;
   end for;
 end.

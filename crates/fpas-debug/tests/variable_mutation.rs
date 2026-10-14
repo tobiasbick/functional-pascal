@@ -565,7 +565,7 @@ fn dictionary_structure_mutation_obeys_shared_limits_effect_policy_and_cancellat
         r#"
 program DictionaryMutationLimits;
 
-uses Std.Console;
+uses Std.Console as Console;
 
 function Forever(): integer;
 begin
@@ -575,7 +575,7 @@ end function;
 
 procedure Emit();
 begin
-  WriteLn('not live');
+  Console.WriteLn('not live');
 end procedure;
 
 begin
@@ -678,7 +678,7 @@ fn textual_selectors_share_one_call_and_limit_budget_before_commit() {
         r#"
 program SelectorMutation;
 
-uses Std.Console;
+uses Std.Console as Console;
 
 function ChooseIndex(): integer;
 begin
@@ -687,7 +687,7 @@ end function;
 
 procedure Emit();
 begin
-  WriteLn('not live');
+  Console.WriteLn('not live');
 end procedure;
 
 begin

@@ -164,6 +164,15 @@ impl Checker {
         span: Span,
         bindings: Option<&mut PatternBindings>,
     ) -> Pat {
+        if let Some(hint) = self.qualification_hint(name) {
+            self.error_with_code(
+                fpas_diagnostics::codes::SEMA_UNQUALIFIED_NAME,
+                format!("Name `{name}` requires an explicit qualifier"),
+                hint,
+                span,
+            );
+            return Pat::Wild;
+        }
         self.error_with_code(
             SEMA_IMPLICIT_PATTERN_BINDING,
             format!("Pattern binding `{name}` must be written `const {name}`"),

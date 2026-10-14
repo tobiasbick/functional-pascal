@@ -102,7 +102,7 @@ or subrange bounds. Boolean conditions never accept an integer as truthy.
 ```pascal
 program ReferenceBasics;
 
-uses Std.Conv, Std.Math, Std.Parse, Std.Test;
+uses Std.Conv as Conv, Std.Math as Math, Std.Parse as Parse, Std.Test as Test;
 
 const Limit: integer := 1000;
 
@@ -116,23 +116,23 @@ begin
     Total := Total + Step;
   end;
 
-  AssertEquals(258, Total);
-  AssertEquals(150.0, Scale);
-  AssertEquals('i', Text[0]);
-  AssertEquals(5, Text.Length());
-  AssertTrue((Total < Limit and Total <> 0) or false);
-  AssertTrue(not false xor false);
-  AssertEquals(2, 7 div 3);
-  AssertEquals(1, 7 mod 3);
-  AssertEquals(2.5, 5 / 2);
+  Test.AssertEquals(258, Total);
+  Test.AssertEquals(150.0, Scale);
+  Test.AssertEquals('i', Text[0]);
+  Test.AssertEquals(5, Text.Length());
+  Test.AssertTrue((Total < Limit and Total <> 0) or false);
+  Test.AssertTrue(not false xor false);
+  Test.AssertEquals(2, 7 div 3);
+  Test.AssertEquals(1, 7 mod 3);
+  Test.AssertEquals(2.5, 5 / 2);
   const Minimum: integer := -9223372036854775808;
-  AssertEquals(0, Minimum mod (-1));
-  AssertEquals(-2, -7 div 3);
-  AssertEquals(1.5, IntToReal(1) + 0.5);
-  AssertEquals(2, Round(2.5));
-  AssertEquals(255, TryInt('$FF').Unwrap());
-  AssertEquals('-0.0', RealToStr(StrToReal('-0.0')));
-  AssertTrue(TryReal('1.0e-9999').IsError());
+  Test.AssertEquals(0, Minimum mod (-1));
+  Test.AssertEquals(-2, -7 div 3);
+  Test.AssertEquals(1.5, Conv.IntToReal(1) + 0.5);
+  Test.AssertEquals(2, Math.Round(2.5));
+  Test.AssertEquals(255, Parse.TryInt('$FF').Unwrap());
+  Test.AssertEquals('-0.0', Conv.RealToStr(Conv.StrToReal('-0.0')));
+  Test.AssertTrue(Parse.TryReal('1.0e-9999').IsError());
 end.
 ```
 
@@ -155,7 +155,7 @@ starts its next iteration. Do not change the loop variable yourself.
 ```pascal
 program ReferenceControl;
 
-uses Std.Test;
+uses Std.Test as Test;
 
 begin
   var Sum := 0;
@@ -187,11 +187,11 @@ begin
     Sum := Sum - 1;
   until Sum = 10;
   if Sum < 0 then
-    AssertTrue(false);
+    Test.AssertTrue(false);
   elsif Sum = 10 then
     null;
   else
-    AssertTrue(false);
+    Test.AssertTrue(false);
   end if;
   const Sign: string := if Sum > 0 then 'positive' else 'other' end if;
   const Band: string := case Sum of
@@ -202,15 +202,15 @@ begin
   end case;
   case Sum of
     when 0, 1:
-      AssertTrue(false);
+      Test.AssertTrue(false);
     when 10:
       null;
     else
-      AssertTrue(false);
+      Test.AssertTrue(false);
   end case;
 
-  AssertEquals('positive', Sign);
-  AssertEquals('large', Band);
+  Test.AssertEquals('positive', Sign);
+  Test.AssertEquals('large', Band);
 end.
 ```
 
@@ -257,7 +257,7 @@ Postconditions also run on returns caused by `try` propagation.
 ```pascal
 program ReferenceRoutines;
 
-uses Std.Test;
+uses Std.Test as Test;
 
 function AddPositive(Left: integer; Right: integer): integer;
 requires Left > 0;
@@ -277,8 +277,8 @@ begin
   var Count := 0;
   Increment(var Count);
   Increment(Value := var Count);
-  AssertEquals(2, Count);
-  AssertEquals(7, AddPositive(Right := 4, Left := 3));
+  Test.AssertEquals(2, Count);
+  Test.AssertEquals(7, AddPositive(Right := 4, Left := 3));
   discard AddPositive(1, 2);
 end.
 ```
@@ -315,7 +315,7 @@ functions by the type of their first parameter. Call free functions ordinarily.
 ```pascal
 program ReferenceRecords;
 
-uses Std.Test;
+uses Std.Test as Test;
 
 type Counter = record
   Value: integer := 0;
@@ -336,9 +336,9 @@ begin
   const Add: function(Amount: integer): Counter := Original.Add;
   Original.Value := 10;
   const Updated: Counter := Add(3);
-  AssertEquals(3, Updated.Value);
-  AssertEquals(10, Original.Value);
-  AssertTrue(Updated = Counter(Value := 3));
+  Test.AssertEquals(3, Updated.Value);
+  Test.AssertEquals(10, Original.Value);
+  Test.AssertTrue(Updated = Counter(Value := 3));
 end.
 ```
 
@@ -373,7 +373,7 @@ descend into nested payload patterns; already covered arms are rejected.
 ```pascal
 program ReferencePatterns;
 
-uses Std.Test;
+uses Std.Test as Test;
 
 type Mode = enum
   Off;
@@ -398,22 +398,22 @@ end function;
 
 begin
   const Selected: Mode := Mode.On;
-  AssertTrue(Selected <> Mode.Off);
-  AssertEquals(6, Size(Shape.Rect(Width := 2, Height := 3)));
-  AssertEquals(4, Size(Shape.Circle(4)));
+  Test.AssertTrue(Selected <> Mode.Off);
+  Test.AssertEquals(6, Size(Shape.Rect(Width := 2, Height := 3)));
+  Test.AssertEquals(4, Size(Shape.Circle(4)));
   const Nested: option of option of integer := Some(Value := Some(7));
-  AssertTrue(Nested is Some(Value := Some(Value := 7)));
+  Test.AssertTrue(Nested is Some(Value := Some(Value := 7)));
   case Nested of
     when Some(Some(const Value)) if Value > 0:
-      AssertEquals(7, Value);
+      Test.AssertEquals(7, Value);
     when Some(_), None:
-      AssertTrue(false);
+      Test.AssertTrue(false);
   end case;
   var Next: option of integer := Some(1);
   while true do
     case Next of
       when Some(const Value):
-        AssertEquals(1, Value);
+        Test.AssertEquals(1, Value);
         Next := None;
       when None:
         break;
@@ -448,7 +448,7 @@ an `Error` or `None`, and there is no language catch block.
 ```pascal
 program ReferenceErrors;
 
-uses Std.Test;
+uses Std.Test as Test;
 
 function Positive(Value: integer): result of (integer, string);
 begin
@@ -482,17 +482,17 @@ end function;
 begin
   const Good: result of (integer, string) := Twice(3);
   const Bad: result of (integer, string) := Twice(0);
-  AssertEquals(6, Good.Unwrap());
+  Test.AssertEquals(6, Good.Unwrap());
   case Bad of
     when Ok(_):
-      AssertTrue(false);
+      Test.AssertTrue(false);
     when Error(const Message):
-      AssertEquals('positive value required', Message);
+      Test.AssertEquals('positive value required', Message);
   end case;
   const Missing: option of integer := Next(None);
-  AssertTrue(Missing = None);
-  AssertEquals(4, Next(Some(3)).Unwrap());
-  AssertEquals(1, MustBePositive(1));
+  Test.AssertTrue(Missing = None);
+  Test.AssertEquals(4, Next(Some(3)).Unwrap());
+  Test.AssertEquals(1, MustBePositive(1));
 end.
 ```
 
@@ -524,7 +524,7 @@ with positional arguments; `{}` is ordinary text.
 ```pascal
 program ReferenceCollections;
 
-uses Std.Test;
+uses Std.Test as Test;
 
 function Double(Value: integer): integer;
 begin
@@ -537,15 +537,15 @@ begin
   Items.PushInPlace(3);
   Items[0] := 5;
   const Doubled: array of integer := Items.Map(Double);
-  AssertEquals(2, Before.Length());
-  AssertEquals(1, Before[0]);
-  AssertEquals(10, Doubled[0]);
-  AssertTrue(3 in Items);
+  Test.AssertEquals(2, Before.Length());
+  Test.AssertEquals(1, Before[0]);
+  Test.AssertEquals(10, Doubled[0]);
+  Test.AssertTrue(3 in Items);
   const Repeated: array of integer := array.Fill(7, 2);
   const Empty: array of integer := [];
   const EmptyLookup: dict of string to integer := [:];
-  AssertEquals(7, Repeated[1]);
-  AssertTrue(Empty.IsEmpty() and EmptyLookup.IsEmpty());
+  Test.AssertEquals(7, Repeated[1]);
+  Test.AssertTrue(Empty.IsEmpty() and EmptyLookup.IsEmpty());
   var Scores: dict of string to integer := ['red': 2];
   Scores['blue'] := 3;
   var Total := 0;
@@ -553,14 +553,14 @@ begin
     Total := Total + Scores[Key];
   end for;
 
-  AssertEquals(5, Total);
-  AssertTrue('red' in Scores);
-  AssertEquals(2, Scores.Get('red').Unwrap());
+  Test.AssertEquals(5, Total);
+  Test.AssertTrue('red' in Scores);
+  Test.AssertEquals(2, Scores.Get('red').Unwrap());
   const Text := 'a,b';
   const Parts: array of string := Text.Split(',');
-  AssertEquals('a-b', Parts.Join('-'));
-  AssertTrue('a' in Text);
-  AssertEquals('λ', string.Chr(955));
+  Test.AssertEquals('a-b', Parts.Join('-'));
+  Test.AssertTrue('a' in Text);
+  Test.AssertEquals('λ', string.Chr(955));
 end.
 ```
 
@@ -597,7 +597,7 @@ through callbacks and defaults; unsafe or unprovable uses produce FP3041.
 ```pascal
 program ReferenceCallables;
 
-uses Std.Test;
+uses Std.Test as Test;
 
 function MakeAdder(Base: integer): function(Value: integer): integer;
 function Add(Value: integer): integer;
@@ -610,7 +610,7 @@ end function;
 
 begin
   const AddThree: function(Input: integer): integer := MakeAdder(3);
-  AssertEquals(8, AddThree(Input := 5));
+  Test.AssertEquals(8, AddThree(Input := 5));
   var Count := 0;
   const Tick: procedure() := procedure() begin
     Count := Count + 1;
@@ -622,8 +622,8 @@ begin
   const Shifted: array of integer := Values.Map(function(Value: integer): integer begin
     return Value + 10;
   end function);
-  AssertEquals(2, Count);
-  AssertEquals(12, Shifted[1]);
+  Test.AssertEquals(2, Count);
+  Test.AssertEquals(12, Shifted[1]);
 end.
 ```
 
@@ -668,7 +668,7 @@ normally with explicit `return`.
 ```pascal
 program ReferenceGenerics;
 
-uses Std.Console, Std.Test;
+uses Std.Console as Console, Std.Test as Test;
 
 type Box of T = record
   Value: T;
@@ -706,7 +706,7 @@ end function;
 
 procedure PrintValue<T: Printable>(Value: T);
 begin
-  WriteLn(Value);
+  Console.WriteLn(Value);
 end procedure;
 
 function Double(Value: integer): integer;
@@ -733,16 +733,16 @@ begin
   const EndOfChain: Chain of integer := Chain.Empty;
   const Values: Chain of integer := Chain.Link(1, EndOfChain);
   const Absent: option of integer := Missing();
-  AssertTrue(Absent.IsNone());
-  AssertEquals(4, Wrapped.Value);
-  AssertEquals(8, Wrapped.Map(Double));
-  AssertEquals('one', Entry.Value);
-  AssertEquals(5, Add(2, 3));
-  AssertEquals(4.0, Add(1.5, 2.5));
-  AssertEquals(0.5, Divide(1, 2));
-  AssertEquals(0.5, Divide(1.0, 2.0));
-  AssertEquals('a', Smaller('b', 'a'));
-  AssertEquals(1, Length(Values));
+  Test.AssertTrue(Absent.IsNone());
+  Test.AssertEquals(4, Wrapped.Value);
+  Test.AssertEquals(8, Wrapped.Map(Double));
+  Test.AssertEquals('one', Entry.Value);
+  Test.AssertEquals(5, Add(2, 3));
+  Test.AssertEquals(4.0, Add(1.5, 2.5));
+  Test.AssertEquals(0.5, Divide(1, 2));
+  Test.AssertEquals(0.5, Divide(1.0, 2.0));
+  Test.AssertEquals('a', Smaller('b', 'a'));
+  Test.AssertEquals(1, Length(Values));
   PrintValue(Wrapped.Value);
 end.
 ```
@@ -770,7 +770,7 @@ use the appropriate `Std.Math` rounding operation. Other conversions live in `St
 ```pascal
 program ReferenceScalarTypes;
 
-uses Std.Test;
+uses Std.Test as Test;
 
 type Count = integer;
 
@@ -781,14 +781,14 @@ type Percent = 0..100;
 begin
   const Number: Count := 7;
   const Id: UserId := UserId(Number);
-  AssertEquals(7, integer(Id));
-  AssertTrue(Id = UserId(7));
+  Test.AssertEquals(7, integer(Id));
+  Test.AssertTrue(Id = UserId(7));
   const Half: Percent := Percent(50);
   const Next: Percent := Percent(Half + 1);
   const Wide: integer := Next;
-  AssertEquals(51, Wide);
-  AssertTrue(100 in Percent);
-  AssertTrue(not (101 in Percent));
+  Test.AssertEquals(51, Wide);
+  Test.AssertTrue(100 in Percent);
+  Test.AssertTrue(not (101 in Percent));
 end.
 ```
 
@@ -801,8 +801,8 @@ for a function returning T, or `task` for a procedure with no result. Bare
 `task` has that fixed meaning in every annotation and never infers T. Every go
 requires a scope in the same routine; bind its handle or write `discard go Work();`.
 Standalone go is FP3022; missing ownership is FP3038. `Wait`, channels and cancellation APIs require
-`uses Std.Tasks;`. `Wait(Handle)` consumes the retained result once; procedure
-tasks use `Wait(Handle);` without a value. WaitAll/WaitAny use homogeneous task
+`uses Std.Tasks as Tasks;`. `Tasks.Wait(Handle)` consumes the retained result once; procedure
+tasks use `Tasks.Wait(Handle);` without a value. WaitAll/WaitAny use homogeneous task
 arrays; mixed completion selection uses TaskCase/Select with original typed handles.
 Spawned result types must be known from the call; explicitly type unresolved
 inputs first. Group workers require a fully instantiated callable with exactly
@@ -835,7 +835,7 @@ APIs described in [Std.Tasks](std/concurrency/task.md), not extra language const
 ```pascal
 program ReferenceTasks;
 
-uses Std.Tasks, Std.Test;
+uses Std.Tasks as Tasks, Std.Test as Test;
 
 function Double(Value: integer): integer;
 begin
@@ -844,19 +844,19 @@ end function;
 
 procedure Produce(Output: channel of integer);
 begin
-  AssertTrue(Send(Output, 9).Unwrap());
+  Test.AssertTrue(Tasks.Send(Output, 9).Unwrap());
 end procedure;
 
 begin
   scope
     const Work: task of integer := go Double(21);
-    const Answer: integer := Wait(Work);
-    AssertEquals(42, Answer);
-    const Queue: channel of integer := CreateChannel(1);
+    const Answer: integer := Tasks.Wait(Work);
+    Test.AssertEquals(42, Answer);
+    const Queue: channel of integer := Tasks.CreateChannel(1);
     discard go Produce(Queue);
-    const Message: integer := Receive(Queue).Unwrap();
-    AssertEquals(9, Message);
-    AssertTrue(CloseChannel(Queue));
+    const Message: integer := Tasks.Receive(Queue).Unwrap();
+    Test.AssertEquals(9, Message);
+    Test.AssertTrue(Tasks.CloseChannel(Queue));
   end scope;
 end.
 ```
@@ -897,8 +897,7 @@ end function;
 end unit;
 ```
 
-Plain `uses UnitName;` makes public names available both unqualified and fully
-qualified; qualify ambiguous short names. `uses UnitName as Alias;` exposes names
+Every import uses `uses UnitName as Alias;` and exposes names
 only through `Alias.Name`, not unqualified or through the original unit name.
 Each unit can be imported only once per source, comparing case-insensitively.
 An alias cannot be shadowed by bindings, parameters or other declarations.
@@ -907,13 +906,13 @@ An alias cannot be shadowed by bindings, parameters or other declarations.
 ```pascal
 program ReferenceImports;
 
-uses Reference.Values as Values, Std.Test;
+uses Reference.Values as Values, Std.Test as Test;
 
 begin
   const First: Values.Number := Values.Make(2);
   const Second: Values.Number := First.Next();
-  AssertEquals(2, First.Value);
-  AssertEquals(3, Second.Value);
+  Test.AssertEquals(2, First.Value);
+  Test.AssertEquals(3, Second.Value);
 end.
 ```
 
@@ -933,7 +932,7 @@ in a library project (`kind = "library"`, the same sources, no `main`).
 ## 14. Find APIs and verify the source
 
 Use native dot operations for arrays, dicts, strings, Option and Result. For hosted
-services, import the owning unit explicitly, even for fully qualified calls:
+services, import the owning unit with `uses Unit.Path as Alias;` and call `Alias.Name`:
 
 | Need | Starting point |
 | --- | --- |

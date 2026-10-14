@@ -1,6 +1,8 @@
 unit Std.Tui.Runtime.Input;
 
-uses Std.Console, Std.Tui.Geometry.Size, Std.Tui.Runtime.Msg, Std.Tui.Runtime.PointerEvent;
+uses
+  Std.Console as Console, Std.Tui.Geometry.Size as GeometrySize, Std.Tui.Runtime.Msg as RuntimeMsg,
+  Std.Tui.Runtime.PointerEvent as PointerEvent;
 
 // One externally injected headless event, kept in arrival order.
 public type TuiHostInput = enum
@@ -8,21 +10,21 @@ public type TuiHostInput = enum
   //
   // Parameters:
   // - `Msg`: Framework message carried by the host input.
-  Message(Msg: TuiMsg);
+  Message(Msg: RuntimeMsg.TuiMsg);
   // Represents the `Key` variant of `TuiHostInput`.
   //
   // Parameters:
   // - `Key`: Console key event carried by the variant.
-  Key(Key: Std.Console.KeyEvent);
+  Key(Key: Console.KeyEvent);
   // Represents the `Pointer` variant of `TuiHostInput`.
   //
   // Parameters:
   // - `Pointer`: Normalized pointer event carried by the variant.
-  Pointer(Pointer: TuiPointerEvent);
+  Pointer(Pointer: PointerEvent.TuiPointerEvent);
   // Represents the `Resize` variant of `TuiHostInput`.
   //
   // Parameters:
   // - `Size`: Size in terminal cells.
-  Resize(Size: TuiSize);
+  Resize(Size: GeometrySize.TuiSize);
 end enum;
 end unit;

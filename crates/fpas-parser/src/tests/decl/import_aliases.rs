@@ -3,8 +3,25 @@
 use super::*;
 
 #[test]
+fn direct_import_requires_an_explicit_alias() {
+    let (_, diagnostics) = parse_with_errors("program P; uses Std.Console; begin end.");
+    assert!(
+        diagnostics.iter().any(|diagnostic| {
+            let diagnostic = diagnostic.as_diagnostic();
+            diagnostic.code == fpas_diagnostics::codes::PARSE_MISSING_IMPORT_ALIAS
+                && diagnostic
+                    .help
+                    .as_ref()
+                    .is_some_and(|help| help.contains("as Console"))
+        }),
+        "{diagnostics:?}"
+    );
+}
+
+#[test]
 fn imports_keep_unit_alias_and_source_spans() {
-    let source = "program T; uses Std.Math AS Numbers, App.As as As, Std.Console; begin end.";
+    let source =
+        "program T; uses Std.Math AS Numbers, App.As as As, Std.Console as Console; begin end.";
     let program = parse_ok(source);
     assert_eq!(program.uses.len(), 3);
     let first = &program.uses[0];
@@ -21,7 +38,10 @@ fn imports_keep_unit_alias_and_source_spans() {
     );
     assert_eq!(program.uses[1].unit.parts, ["App", "As"]);
     assert_eq!(program.uses[1].alias.as_ref().expect("alias").name, "As");
-    assert!(program.uses[2].alias.is_none());
+    assert_eq!(
+        program.uses[2].alias.as_ref().expect("required alias").name,
+        "Console"
+    );
 }
 
 #[test]
@@ -38,7 +58,7 @@ fn as_remains_an_identifier_outside_uses() {
 #[test]
 fn missing_alias_recovers_at_comma_and_semicolon() {
     for source in [
-        "program T; uses Std.Math as, Std.Console; begin end.",
+        "program T; uses Std.Math as, Std.Console as Console; begin end.",
         "program T; uses Std.Math as; begin end.",
     ] {
         let (program, errors) = parse_with_errors(source);

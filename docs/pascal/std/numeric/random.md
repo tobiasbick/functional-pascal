@@ -4,10 +4,12 @@ Deterministic pseudo-random number helpers for simulations, games, randomized te
 
 ```pascal
 program Example;
-uses Std.Console, Std.Random;
+
+uses Std.Console as Console, Std.Random as Random;
+
 begin
-  SetSeed(42);
-  WriteLn(RandomInt(1, 6));
+  Random.SetSeed(42);
+  Console.WriteLn(Random.RandomInt(1, 6));
 end.
 ```
 
@@ -15,7 +17,7 @@ Do not use this unit for secrets, tokens, passwords, keys, or nonces. Use [`Std.
 
 ## Importing and names
 
-After `uses Std.Random;` use **`Random`**, **`RandomInt`**, **`Randomize`**, and **`SetSeed`**, or their fully qualified `Std.Random.*` forms.
+Import with `uses Std.Random as Random;` and access public symbols as `Random.Name`. User enum variants require `Random.Type.Variant`.
 
 ## Quick reference
 
@@ -35,7 +37,7 @@ Calling `Random` or `RandomInt` before either seeding procedure automatically in
 Returns a pseudo-random real number in `[0.0, 1.0)`.
 
 ```pascal
-const R: real := Random();
+const R: real := Random.Random();
 ```
 
 ## `function RandomInt(Lo: integer; Hi: integer): integer`
@@ -43,7 +45,7 @@ const R: real := Random();
 Returns an unbiased pseudo-random integer in `[Lo, Hi]`, including either bound. The full `integer` range is supported. A runtime error occurs when `Lo > Hi`.
 
 ```pascal
-const Die: integer := RandomInt(1, 6);
+const Die: integer := Random.RandomInt(1, 6);
 ```
 
 ## `procedure Randomize()`
@@ -51,7 +53,7 @@ const Die: integer := RandomInt(1, 6);
 Replaces the current VM's pseudo-random state with a seed supplied by the operating system. A runtime error occurs if that source is unavailable; the runtime never substitutes a predictable seed.
 
 ```pascal
-Randomize();
+Random.Randomize();
 ```
 
 ## `procedure SetSeed(Seed: integer)`
@@ -59,10 +61,10 @@ Randomize();
 Replaces the current VM's pseudo-random state with the repeatable sequence selected by `Seed`. Reusing a seed restarts that sequence.
 
 ```pascal
-SetSeed(17);
-const First: integer := RandomInt(1, 100);
-SetSeed(17);
-const Repeated: integer := RandomInt(1, 100);
+Random.SetSeed(17);
+const First: integer := Random.RandomInt(1, 100);
+Random.SetSeed(17);
+const Repeated: integer := Random.RandomInt(1, 100);
 ```
 
 ## Implementation (contributors)

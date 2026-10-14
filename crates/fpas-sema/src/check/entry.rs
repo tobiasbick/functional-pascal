@@ -50,7 +50,7 @@ impl Checker {
             .map(|used| used.unit.parts.join(".").to_ascii_lowercase())
             .collect();
         self.install_supporting_interface_types(supporting_interfaces)?;
-        self.install_interfaces(program, interfaces)?;
+        self.install_interfaces(interfaces)?;
         self.collect_unit_types(&program.declarations);
 
         self.check_scope_declarations(&program.declarations);
@@ -96,7 +96,7 @@ impl Checker {
             .map(|used| used.unit.parts.join(".").to_ascii_lowercase())
             .collect();
         self.install_supporting_interface_types(supporting_interfaces)?;
-        self.install_interfaces_for_declarations(&unit.declarations, interfaces)?;
+        self.install_interfaces(interfaces)?;
 
         let previous_context = self.scopes.function_ctx.take();
         self.scopes.function_ctx = Some(FunctionCtx {
@@ -134,12 +134,6 @@ impl Checker {
             .collect();
         self.loaded_std_units.clear();
         self.imported_candidates.clear();
-        self.short_builtin_redirect.clear();
-        self.std_short_alias_keys.clear();
-        self.source_short_alias_keys.clear();
-        self.source_short_candidates.clear();
-        self.ambiguous_enum_variants.clear();
-        self.enum_short_variant_keys.clear();
         for u in intrinsic_uses {
             match canonical_unit_from_uses_clause(&u.unit) {
                 Ok(canon) => {
@@ -209,6 +203,6 @@ impl Checker {
     /// Symbols from standard units that are actually in scope (requires matching `uses`).
     fn register_loaded_std_library(&mut self) {
         crate::std_registry::register_loaded_std(self);
-        crate::std_registry::register_short_aliases(self);
+        crate::std_registry::register_qualified_import_candidates(self);
     }
 }

@@ -15,11 +15,11 @@ fn test_cli_runs_tests_from_test_project_file() {
     );
     write_text(
         &cwd.join("alpha_test.fpas"),
-        "program A;\nuses Std.Test;\nbegin AssertTrue(true); end.",
+        "program A;\nuses Std.Test as Test;\nbegin Test.AssertTrue(true); end.",
     );
     write_text(
         &cwd.join("beta_test.fpas"),
-        "program B;\nuses Std.Test;\nbegin AssertEquals(2, 1 + 1); end.",
+        "program B;\nuses Std.Test as Test;\nbegin Test.AssertEquals(2, 1 + 1); end.",
     );
 
     let mut stderr = Vec::new();
@@ -64,7 +64,7 @@ fn test_cli_runs_tests_from_workspace_test_member() {
     );
     write_text(
         &cwd.join("tests/only_test.fpas"),
-        "program O;\nuses Std.Test;\nbegin AssertTrue(true); end.",
+        "program O;\nuses Std.Test as Test;\nbegin Test.AssertTrue(true); end.",
     );
 
     let mut stderr = Vec::new();
@@ -104,7 +104,7 @@ fn test_cli_uses_manifest_script_override() {
     );
     write_text(
         &cwd.join("prompt_test.fpas"),
-        "program P;\nuses Std.Console, Std.Test;\nbegin\n  const Name: string := ReadLn();\n  AssertTrue(Name = 'Alice');\nend.",
+        "program P;\nuses Std.Console as Console, Std.Test as Test;\nbegin\n  const Name: string := Console.ReadLn();\n  Test.AssertTrue(Name = 'Alice');\nend.",
     );
     write_text(
         &cwd.join("prompt.script.toml"),
@@ -148,11 +148,11 @@ fn test_cli_runs_setup_and_teardown_hooks() {
     );
     write_text(
         &cwd.join("fixture.fpas"),
-        "unit Tests.Fixture;\nuses Std.Test;\npublic procedure Setup();\nbegin AssertTrue(true); end procedure;\npublic procedure Teardown();\nbegin AssertTrue(true); end procedure;\nend unit;",
+        "unit Tests.Fixture;\nuses Std.Test as Test;\npublic procedure Setup();\nbegin Test.AssertTrue(true); end procedure;\npublic procedure Teardown();\nbegin Test.AssertTrue(true); end procedure;\nend unit;",
     );
     write_text(
         &cwd.join("demo_test.fpas"),
-        "program D;\nuses Std.Test;\nbegin AssertTrue(true); end.",
+        "program D;\nuses Std.Test as Test;\nbegin Test.AssertTrue(true); end.",
     );
 
     let mut stderr = Vec::new();
@@ -193,11 +193,11 @@ fn test_cli_fails_when_teardown_hook_fails() {
     );
     write_text(
         &cwd.join("fixture.fpas"),
-        "unit Tests.Fixture;\nuses Std.Test;\npublic procedure Teardown();\nbegin AssertTrue(false); end procedure;\nend unit;",
+        "unit Tests.Fixture;\nuses Std.Test as Test;\npublic procedure Teardown();\nbegin Test.AssertTrue(false); end procedure;\nend unit;",
     );
     write_text(
         &cwd.join("demo_test.fpas"),
-        "program D;\nuses Std.Test;\nbegin AssertTrue(true); end.",
+        "program D;\nuses Std.Test as Test;\nbegin Test.AssertTrue(true); end.",
     );
 
     let mut stderr = Vec::new();
@@ -245,7 +245,7 @@ fn test_cli_timeout_aborts_hanging_setup_hook() {
     );
     write_text(
         &cwd.join("demo_test.fpas"),
-        "program D;\nuses Std.Test;\nbegin AssertTrue(true); end.",
+        "program D;\nuses Std.Test as Test;\nbegin Test.AssertTrue(true); end.",
     );
 
     let mut stderr = Vec::new();
@@ -291,7 +291,7 @@ fn test_cli_reports_runtime_errors_of_units_linked_out_of_graph_order() {
         // `util.fpas` precedes `zeta.fpas` in the unit graph, but the linker emits App.Zeta first.
         write_text(
             &cwd.join("util.fpas"),
-            "unit App.Util;\nuses App.Zeta;\npublic procedure Trigger();\nbegin\n  if Seven() = 7 then panic('util failure'); end if;\nend procedure;\nend unit;\n",
+            "unit App.Util;\nuses App.Zeta as Zeta;\npublic procedure Trigger();\nbegin\n  if Zeta.Seven() = 7 then panic('util failure'); end if;\nend procedure;\nend unit;\n",
         );
         write_text(
             &cwd.join("zeta.fpas"),
@@ -299,7 +299,7 @@ fn test_cli_reports_runtime_errors_of_units_linked_out_of_graph_order() {
         );
         write_text(
             &cwd.join("trigger_test.fpas"),
-            "program TriggerTest;\nuses App.Util;\nbegin\n  Trigger();\nend.",
+            "program TriggerTest;\nuses App.Util as Util;\nbegin\n  Util.Trigger();\nend.",
         );
 
         let mut stderr = Vec::new();

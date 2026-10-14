@@ -1,37 +1,37 @@
 program FsWriteTextAtomicRoundtripTest;
 
-uses Std.Fs, Std.Test;
+uses Std.Fs as Fs, Std.Test as Test;
 
 begin
-  const Path: string := ScratchDir() + '/atomic-roundtrip.txt';
-  case WriteText(Path, 'old') of
+  const Path: string := Test.ScratchDir() + '/atomic-roundtrip.txt';
+  case Fs.WriteText(Path, 'old') of
     when Ok(const Written):
       begin
       end;
     when Error(const Message):
       begin
-        Fail(Message);
+        Test.Fail(Message);
       end;
   end case;
 
-  case WriteTextAtomic(Path, 'new') of
+  case Fs.WriteTextAtomic(Path, 'new') of
     when Ok(const Written):
       begin
       end;
     when Error(const Message):
       begin
-        Fail(Message);
+        Test.Fail(Message);
       end;
   end case;
 
-  case ReadText(Path) of
+  case Fs.ReadText(Path) of
     when Ok(const Text):
       begin
-        AssertEquals('new', Text);
+        Test.AssertEquals('new', Text);
       end;
     when Error(const Message):
       begin
-        Fail(Message);
+        Test.Fail(Message);
       end;
   end case;
 end.

@@ -28,7 +28,7 @@ fn semantic_tokens_and_quick_fixes_use_utf16_and_reject_stale_diagnostics() {
         "src/importable.fpas",
         "unit Actions.Importable;\n\npublic function UniqueValue(): integer;\nbegin\n  return 42;\nend function;\nend unit;\n",
     );
-    let source = "program Actions;\n\nuses Actions.Core;\n\nbegin\n  const Music: string := '𝄞' + ExistingText;\n  const Value: integer := UniqueValue();\nend.\n";
+    let source = "program Actions;\n\nuses Actions.Core as Core;\n\nbegin\n  const Music: string := '𝄞' + Core.ExistingText;\n  const Value: integer := UniqueValue();\nend.\n";
     let main_path = temp.write("src/main.fpas", source);
     let root_uri = temp.uri(".");
     let main_uri = temp.uri("src/main.fpas");
@@ -52,7 +52,7 @@ fn semantic_tokens_and_quick_fixes_use_utf16_and_reject_stale_diagnostics() {
         "source": "fpas",
         "message": unknown.message
     });
-    let changed = source.replace("UniqueValue", "Existing");
+    let changed = source.replace("UniqueValue", "Core.Existing");
 
     let transcript = run(&[
         initialize_with_root(1, Some(&root_uri)),
@@ -150,16 +150,40 @@ fn semantic_tokens_and_quick_fixes_use_utf16_and_reject_stale_diagnostics() {
     let [action] = actions.as_slice() else {
         panic!("expected one safe import action: {actions:#?}")
     };
-    assert_eq!(action["title"], "Import Actions.Importable");
+    assert_eq!(
+        action["title"],
+        "Use qualified symbol from Actions.Importable"
+    );
     assert_eq!(action["kind"], "quickfix");
     assert_eq!(action["isPreferred"], true);
     assert_eq!(action["diagnostics"], json!([diagnostic]));
     let document_edit = &action["edit"]["documentChanges"][0];
     assert_eq!(document_edit["textDocument"]["uri"], main_uri);
     assert_eq!(document_edit["textDocument"]["version"], 1);
-    let edit = &document_edit["edits"][0];
-    assert_eq!(edit["newText"], "uses Actions.Core, Actions.Importable;");
-    let edited = apply_edit(source, edit);
+    let mut edits = document_edit["edits"]
+        .as_array()
+        .expect("qualification and import edits")
+        .clone();
+    assert_eq!(edits.len(), 2);
+    assert!(
+        edits
+            .iter()
+            .any(|edit| edit["newText"] == "Importable.UniqueValue")
+    );
+    assert!(
+        edits.iter().any(|edit| edit["newText"]
+            == "uses Actions.Core as Core, Actions.Importable as Importable;")
+    );
+    edits.sort_by_key(|edit| {
+        std::cmp::Reverse((
+            edit["range"]["start"]["line"].as_u64().unwrap(),
+            edit["range"]["start"]["character"].as_u64().unwrap(),
+        ))
+    });
+    let mut edited = source.to_owned();
+    for edit in &edits {
+        edited = apply_edit(&edited, edit);
+    }
     let (unit, parse_diagnostics) = fpas_parser::parse_compilation_unit(&edited);
     assert!(parse_diagnostics.is_empty(), "{parse_diagnostics:#?}");
     assert_eq!(

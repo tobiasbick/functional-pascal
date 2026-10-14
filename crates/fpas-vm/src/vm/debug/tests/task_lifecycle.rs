@@ -27,7 +27,7 @@ fn fingerprint(session: &mut DebugSession) -> StateFingerprint {
 fn retained_session() -> DebugSession {
     const SOURCE: &str = r#"program TaskLifecycle;
 
-uses Std.Tasks;
+uses Std.Tasks as Tasks;
 
 function Work(): integer;
 begin
@@ -38,7 +38,7 @@ end function;
 
 begin scope
   const Pending: task of integer := go Work();
-  discard Wait(Pending);
+  discard Tasks.Wait(Pending);
  end scope; end.
 "#;
     let (program, diagnostics) = fpas_parser::parse(SOURCE);

@@ -7,7 +7,7 @@ fn duplicate_unit_names_in_different_files_rejected() {
     support::write_program_project_file(&project_file, "src/main.fpas", &["src/*.fpas"]);
     write_text(
         &cwd.join("src/main.fpas"),
-        "program Main;\nuses App.Lib;\nbegin\nend.\n",
+        "program Main;\nuses App.Lib as Lib;\nbegin\nend.\n",
     );
     write_text(
         &cwd.join("src/lib1.fpas"),
@@ -38,11 +38,11 @@ fn duplicate_direct_imports_are_rejected() {
         "unit App.Lib; public function GetVal(): integer; begin return 7; end function; end unit;",
     );
     for imports in [
-        "App.Lib, app.lib",
+        "App.Lib as Lib, app.lib as Other",
         "App.Lib as Lib, App.Lib as Other",
-        "App.Lib, App.Lib as Lib",
-        "App.Lib as Lib, App.Lib",
-        "Std.Math, std.math",
+        "App.Lib as First, App.Lib as Lib",
+        "App.Lib as Lib, App.Lib as Second",
+        "Std.Math as Math, std.math as OtherMath",
     ] {
         write_text(
             &cwd.join("src/main.fpas"),
@@ -71,7 +71,7 @@ fn single_segment_unit_name_compiles() {
     support::write_program_project_file(&project_file, "src/main.fpas", &["src/*.fpas"]);
     write_text(
         &cwd.join("src/main.fpas"),
-        "program Main;\nuses Utils, Std.Console;\nbegin\n  WriteLn(GetNum());\nend.\n",
+        "program Main;\nuses Utils as UtilsUnit, Std.Console as Console;\nbegin\n  Console.WriteLn(UtilsUnit.GetNum());\nend.\n",
     );
     write_text(
         &cwd.join("src/utils.fpas"),
@@ -93,7 +93,7 @@ fn empty_unit_compiles_successfully() {
     support::write_program_project_file(&project_file, "src/main.fpas", &["src/*.fpas"]);
     write_text(
         &cwd.join("src/main.fpas"),
-        "program Main;\nuses App.Empty;\nbegin\nend.\n",
+        "program Main;\nuses App.Empty as Empty;\nbegin\nend.\n",
     );
     write_text(&cwd.join("src/empty.fpas"), "unit App.Empty;\nend unit;\n");
 
@@ -111,7 +111,7 @@ fn unit_name_resolved_case_insensitively() {
     // uses clause has different casing than unit declaration
     write_text(
         &cwd.join("src/main.fpas"),
-        "program Main;\nuses app.lib, Std.Console;\nbegin\n  WriteLn(GetValue());\nend.\n",
+        "program Main;\nuses app.lib as lib, Std.Console as Console;\nbegin\n  Console.WriteLn(lib.GetValue());\nend.\n",
     );
     write_text(
         &cwd.join("src/lib.fpas"),
@@ -133,7 +133,7 @@ fn unit_name_is_resolved_from_declaration_not_file_path() {
     support::write_program_project_file(&project_file, "src/main.fpas", &["src/**/*.fpas"]);
     write_text(
         &cwd.join("src/main.fpas"),
-        "program Main;\nuses App.Tools, Std.Console;\nbegin\n  WriteLn(GetValue());\nend.\n",
+        "program Main;\nuses App.Tools as Tools, Std.Console as Console;\nbegin\n  Console.WriteLn(Tools.GetValue());\nend.\n",
     );
     write_text(
         &cwd.join("src/nested/mismatched_name.fpas"),

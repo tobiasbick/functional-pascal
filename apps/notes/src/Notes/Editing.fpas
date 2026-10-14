@@ -1,20 +1,20 @@
 // Controlled text proposals and selection updates for Notes.
 unit Notes.Editing;
 
-uses Notes.Actions, Notes.Model, Std.Conv, Std.Tui;
+uses Notes.Actions as Actions, Notes.Model as Model, Std.Conv as Conv, Std.Tui as Tui;
 
 // Reports whether the selection refers to an existing note.
-public function NotesHasSelection(State: NotesModel): boolean;
+public function NotesHasSelection(State: Model.NotesModel): boolean;
 begin
   return (State.Selected >= 0) and (State.Selected < State.Notes.Length());
 end function;
 
 // Replaces one note while preserving the remaining model state.
-public function NotesWithNote(State: NotesModel; Index: integer; NoteValue: Note): NotesModel;
+public function NotesWithNote(State: Model.NotesModel; Index: integer; NoteValue: Model.Note): Model.NotesModel;
 begin
-  var Notes: array of Note := State.Notes;
+  var Notes: array of Model.Note := State.Notes;
   Notes[Index] := NoteValue;
-  var Next: NotesModel := State;
+  var Next: Model.NotesModel := State;
   Next.Notes := Notes;
   return Next;
 end function;
@@ -41,21 +41,22 @@ begin
 end function;
 
 // Applies a single-line proposal, preserving clean state for caret-only changes.
-public function NotesEditText(State: NotesModel; Action: integer; Text: string; Caret: integer): NotesModel;
+public function NotesEditText(State: Model.NotesModel; Action: integer; Text: string; Caret: integer): Model.NotesModel;
 begin
-  var Next: NotesModel := State;
-  if Action = SearchChangedAction then
+  var Next: Model.NotesModel := State;
+  if Action = Actions.SearchChangedAction then
     begin
       Next.Search := Text;
       Next.SearchCaret := Caret;
-      Next.Status := IntToStr(NotesFilteredIndices(Next.Notes, Text).Length()) + ' matching note(s)';
+      Next.Status := Conv.IntToStr(Model.NotesFilteredIndices(Next.Notes, Text).Length()) +
+                     ' matching note(s)';
       return Next;
     end;
   end if;
 
-  if (Action = TitleChangedAction) and NotesHasSelection(Next) then
+  if (Action = Actions.TitleChangedAction) and NotesHasSelection(Next) then
     begin
-      var NoteValue: Note := Next.Notes[Next.Selected];
+      var NoteValue: Model.Note := Next.Notes[Next.Selected];
       Next.TitleCaret := Caret;
       if NoteValue.Title = Text then
         begin
@@ -71,12 +72,12 @@ begin
     end;
   end if;
 
-  if (Action = TagsChangedAction) and NotesHasSelection(Next) then
+  if (Action = Actions.TagsChangedAction) and NotesHasSelection(Next) then
     begin
       Next.TagsText := Text;
       Next.TagsCaret := Caret;
-      var NoteValue: Note := Next.Notes[Next.Selected];
-      const Tags: array of string := NoteTagsFromText(Text);
+      var NoteValue: Model.Note := Next.Notes[Next.Selected];
+      const Tags: array of string := Model.NoteTagsFromText(Text);
       if SameTags(NoteValue.Tags, Tags) then
         begin
           return Next;
@@ -96,17 +97,17 @@ end function;
 
 // Applies body text, caret and viewport changes independently.
 public function NotesEditBody(
-  State: NotesModel;
+  State: Model.NotesModel;
   Action: integer;
   Text: string;
   Caret: integer;
-  Offset: TuiPoint
-): NotesModel;
+  Offset: Tui.TuiPoint
+): Model.NotesModel;
 begin
-  var Next: NotesModel := State;
-  if (Action = BodyChangedAction) and NotesHasSelection(Next) then
+  var Next: Model.NotesModel := State;
+  if (Action = Actions.BodyChangedAction) and NotesHasSelection(Next) then
     begin
-      var NoteValue: Note := Next.Notes[Next.Selected];
+      var NoteValue: Model.Note := Next.Notes[Next.Selected];
       Next.BodyCaret := Caret;
       Next.BodyOffset := Offset;
       if NoteValue.Body = Text then

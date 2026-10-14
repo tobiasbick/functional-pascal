@@ -1,6 +1,6 @@
 program TypeOrderTest;
 
-uses Std.Test;
+uses Std.Test as Test;
 
 const InitialState: State := State.Ready;
 
@@ -72,10 +72,10 @@ begin
   const Person: Member := Member(Home := Some(Group));
   const Populated: Team := Group with Members := [Person]; end with;
   const Bound: function(): boolean := Populated.IsReady;
-  AssertTrue(Bound());
-  AssertTrue(Group.Status = State.Ready);
-  AssertEquals(2, Depth(ChainAlias.Link(ChainAlias.Link(ChainAlias.Empty))));
-  AssertEquals(1, First);
-  AssertEquals(2, Second);
-  AssertEquals(2, Calls);
+  Test.AssertTrue(Bound());
+  Test.AssertTrue(Group.Status = State.Ready);
+  Test.AssertEquals(2, Depth(ChainAlias.Link(ChainAlias.Link(ChainAlias.Empty))));
+  Test.AssertEquals(1, First);
+  Test.AssertEquals(2, Second);
+  Test.AssertEquals(2, Calls);
 end.

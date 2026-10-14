@@ -1,9 +1,10 @@
 unit Std.Tui.Runtime.Routing;
 
 uses
-  Std.Console, Std.Tui.Elements.Element, Std.Tui.Ids.ControlId, Std.Tui.Layout.Frame,
-  Std.Tui.Runtime.Msg, Std.Tui.Runtime.PointerEvent, Std.Tui.Runtime.Routing.Key,
-  Std.Tui.Runtime.Routing.Pointer;
+  Std.Console as Console, Std.Tui.Elements.Element as Element, Std.Tui.Ids.ControlId as ControlId,
+  Std.Tui.Layout.Frame as LayoutFrame, Std.Tui.Runtime.Msg as Msg,
+  Std.Tui.Runtime.PointerEvent as PointerEvent, Std.Tui.Runtime.Routing.Key as RoutingKey,
+  Std.Tui.Runtime.Routing.Pointer as Pointer;
 
 // Routes one key against the previous rendered tree into ordered framework messages.
 //
@@ -11,16 +12,20 @@ uses
 // - `Root`: Root of the element tree.
 // - `Frame`: Arranged frame containing element geometry.
 // - `Key`: Console key event to route or match.
-public function TuiRouteKey(Root: TuiElement; Frame: TuiArrangedFrame; Key: Std.Console.KeyEvent): array of TuiMsg;
+public function TuiRouteKey(
+  Root: Element.TuiElement;
+  Frame: LayoutFrame.TuiArrangedFrame;
+  Key: Console.KeyEvent
+): array of Msg.TuiMsg;
 begin
-  return Std.Tui.Runtime.Routing.Key.TuiRouteKey(Root, Frame, Key);
+  return RoutingKey.TuiRouteKey(Root, Frame, Key);
 end function;
 
 // Routes one pointer event against arranged geometry into ordered framework messages.
 // Allocates idle pointer-button state for one application.
 public procedure TuiPointerRoutingOpen();
 begin
-  Std.Tui.Runtime.Routing.Pointer.TuiPointerRoutingOpen();
+  Pointer.TuiPointerRoutingOpen();
 end procedure;
 
 // Clears pointer-button state for one application.
@@ -29,15 +34,15 @@ end procedure;
 // - `ApplicationId`: Identifier of the application-owned routing state.
 public procedure TuiPointerRoutingClose(ApplicationId: integer);
 begin
-  Std.Tui.Runtime.Routing.Pointer.TuiPointerRoutingClose(ApplicationId);
+  Pointer.TuiPointerRoutingClose(ApplicationId);
 end procedure;
 
 // Returns the button painted pressed for one application.
 //
 // Parameters:
 // - `ApplicationId`: Identifier of the application-owned routing state.
-public function TuiPointerRoutingPressed(ApplicationId: integer): option of TuiControlId;
+public function TuiPointerRoutingPressed(ApplicationId: integer): option of ControlId.TuiControlId;
 begin
-  return Std.Tui.Runtime.Routing.Pointer.TuiPointerRoutingPressed(ApplicationId);
+  return Pointer.TuiPointerRoutingPressed(ApplicationId);
 end function;
 end unit;

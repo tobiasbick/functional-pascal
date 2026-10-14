@@ -11,11 +11,7 @@ fn run_cli_rejects_property_in_imported_unit_with_accessor_hint() {
     support::write_program_project_file(&project_file, "src/main.fpas", &["src/*.fpas"]);
     write_text(
         &cwd.join("src/main.fpas"),
-        "program Main;
-uses App.Data, Std.Console, Std.Conv;
-begin
-  WriteLn(IntToStr(Global.GetValue()));
-end.",
+        "program Main;\nuses App.Data as Data, Std.Console as Console, Std.Conv as Conv;\nbegin\n  WriteLn(IntToStr(Global.GetValue()));\nend.",
     );
     write_text(
         &cwd.join("src/data.fpas"),

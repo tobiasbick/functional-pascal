@@ -5,46 +5,48 @@
 
 program TaskMemoryBenchmark;
 
-uses Std.Args, Std.Console, Std.Conv, Std.Tasks, Std.Time;
+uses
+  Std.Args as Args, Std.Console as Console, Std.Conv as Conv, Std.Tasks as StdTasks,
+  Std.Time as Time;
 
 const SleepMillis: integer := 10000;
 const ProgressEvery: integer := 10000;
 
 procedure Worker();
 begin
-  Sleep(SleepMillis);
+  Time.Sleep(SleepMillis);
 end procedure;
 
 begin
   scope
-    if ParamCount() <> 1 then
+    if Args.ParamCount() <> 1 then
       begin
         panic('usage: task_memory_benchmark.fpas -- TASK_COUNT');
       end;
     end if;
-    const TaskCount: integer := StrToInt(ParamStr(0));
+    const TaskCount: integer := Conv.StrToInt(Args.ParamStr(0));
     if TaskCount < 1 then
       begin
         panic('TASK_COUNT must be positive');
       end;
     end if;
 
-    WriteLn('spawning ' + IntToStr(TaskCount) + ' tasks');
-    const Started: integer := MonotonicMillis();
+    Console.WriteLn('spawning ' + Conv.IntToStr(TaskCount) + ' tasks');
+    const Started: integer := Time.MonotonicMillis();
     var Tasks: array of task := [];
     for I: integer := 1 to TaskCount do
       begin
         Tasks.PushInPlace(go Worker());
         if I mod ProgressEvery = 0 then
           begin
-            WriteLn('spawned ' + IntToStr(I));
+            Console.WriteLn('spawned ' + Conv.IntToStr(I));
           end;
         end if;
       end;
     end for;
 
-    WriteLn('all tasks spawned; waiting');
-    WaitAll(Tasks);
-    WriteLn('completed in ' + IntToStr(ElapsedMillis(Started)) + ' ms');
+    Console.WriteLn('all tasks spawned; waiting');
+    StdTasks.WaitAll(Tasks);
+    Console.WriteLn('completed in ' + Conv.IntToStr(Time.ElapsedMillis(Started)) + ' ms');
   end scope;
 end.

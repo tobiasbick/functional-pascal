@@ -1,11 +1,12 @@
 unit Std.Tui.Runtime.Routing.Focus;
 
 uses
-  Std.Tui.Chrome.StatusItem, Std.Tui.Elements.Element, Std.Tui.Ids.ControlId, Std.Tui.Layout.Frame;
+  Std.Tui.Chrome.StatusItem as StatusItem, Std.Tui.Elements.Element as Element,
+  Std.Tui.Ids.ControlId as ControlId, Std.Tui.Layout.Frame as LayoutFrame;
 
 function TuiRouteFrameMatchesNode(
-  Frame: TuiArrangedFrame;
-  Node: TuiElement;
+  Frame: LayoutFrame.TuiArrangedFrame;
+  Node: Element.TuiElement;
   Index: integer;
   ParentIndex: integer
 ): integer;
@@ -16,37 +17,37 @@ begin
     end;
   end if;
   var Next: integer := Index + 1;
-  var Descendants: array of TuiElement := [];
+  var Descendants: array of Element.TuiElement := [];
   case Node of
-    when TuiElement.Scroll(const Id, const Offset, const ChangeAction, const ScrollChildren):
+    when Element.TuiElement.Scroll(const Id, const Offset, const ChangeAction, const ScrollChildren):
       begin
         Descendants := ScrollChildren;
       end;
-    when TuiElement.Row(const RowChildren, const Spacing):
+    when Element.TuiElement.Row(const RowChildren, const Spacing):
       begin
         Descendants := RowChildren;
       end;
-    when TuiElement.Column(const ColumnChildren, const Spacing):
+    when Element.TuiElement.Column(const ColumnChildren, const Spacing):
       begin
         Descendants := ColumnChildren;
       end;
-    when TuiElement.Layout(const Settings, const LayoutChildren):
+    when Element.TuiElement.Layout(const Settings, const LayoutChildren):
       begin
         Descendants := LayoutChildren;
       end;
-    when TuiElement.Panel(const Title, const PanelChildren):
+    when Element.TuiElement.Panel(const Title, const PanelChildren):
       begin
         Descendants := PanelChildren;
       end;
-    when TuiElement.Overlay(const Title, const OverlayChildren):
+    when Element.TuiElement.Overlay(const Title, const OverlayChildren):
       begin
         Descendants := OverlayChildren;
       end;
-    when TuiElement.Desktop(const Focused, const DesktopChildren):
+    when Element.TuiElement.Desktop(const Focused, const DesktopChildren):
       begin
         Descendants := DesktopChildren;
       end;
-    when TuiElement.Empty, TuiElement.Label(_), TuiElement.Button(_), TuiElement.Input(_), TuiElement.TextArea(_, _, _, _, _), TuiElement.CheckBox(_, _, _, _), TuiElement.List(_, _, _, _), TuiElement.MenuBar(_), TuiElement.Menu(_, _, _, _), TuiElement.StatusLine(_), TuiElement.CellGrid(_), TuiElement.Rule(_), TuiElement.Gauge(_), TuiElement.Spacer(_):
+    when Element.TuiElement.Empty, Element.TuiElement.Label(_), Element.TuiElement.Button(_), Element.TuiElement.Input(_), Element.TuiElement.TextArea(_, _, _, _, _), Element.TuiElement.CheckBox(_, _, _, _), Element.TuiElement.List(_, _, _, _), Element.TuiElement.MenuBar(_), Element.TuiElement.Menu(_, _, _, _), Element.TuiElement.StatusLine(_), Element.TuiElement.CellGrid(_), Element.TuiElement.Rule(_), Element.TuiElement.Gauge(_), Element.TuiElement.Spacer(_):
       null;
   end case;
 
@@ -64,7 +65,10 @@ end function;
 // Parameters:
 // - `Frame`: Arranged frame containing element geometry.
 // - `Root`: Root of the element tree.
-public procedure TuiRouteRequireMatchingFrame(Frame: TuiArrangedFrame; Root: TuiElement);
+public procedure TuiRouteRequireMatchingFrame(
+  Frame: LayoutFrame.TuiArrangedFrame;
+  Root: Element.TuiElement
+);
 begin
   if Frame.Count() = 0 then
     begin
@@ -83,11 +87,11 @@ end procedure;
 //
 // Parameters:
 // - `Node`: Element or menu node processed by the operation.
-public function TuiFocusableControls(Node: TuiElement): array of TuiControlId;
+public function TuiFocusableControls(Node: Element.TuiElement): array of ControlId.TuiControlId;
 begin
-  var Descendants: array of TuiElement := [];
+  var Descendants: array of Element.TuiElement := [];
   case Node of
-    when TuiElement.Button(const Button):
+    when Element.TuiElement.Button(const Button):
       begin
         if Button.Enabled then
           begin
@@ -99,29 +103,29 @@ begin
           end;
         end if;
       end;
-    when TuiElement.Input(const Input):
+    when Element.TuiElement.Input(const Input):
       begin
         return [Input.Id];
       end;
-    when TuiElement.TextArea(const Id, const Text, const Caret, const Offset, const ChangeAction):
+    when Element.TuiElement.TextArea(const Id, const Text, const Caret, const Offset, const ChangeAction):
       begin
         return [Id];
       end;
-    when TuiElement.CheckBox(const Id, const Text, const Checked, const ChangeAction):
+    when Element.TuiElement.CheckBox(const Id, const Text, const Checked, const ChangeAction):
       begin
         return [Id];
       end;
-    when TuiElement.List(const Id, const Items, const Selected, const ChangeAction):
+    when Element.TuiElement.List(const Id, const Items, const Selected, const ChangeAction):
       begin
         return [Id];
       end;
-    when TuiElement.Menu(const Id, const Nodes, const State, const ChangeAction):
+    when Element.TuiElement.Menu(const Id, const Nodes, const State, const ChangeAction):
       begin
         return [Id];
       end;
-    when TuiElement.Scroll(const Id, const Offset, const ChangeAction, const Children):
+    when Element.TuiElement.Scroll(const Id, const Offset, const ChangeAction, const Children):
       begin
-        var Controls: array of TuiControlId := [Id];
+        var Controls: array of ControlId.TuiControlId := [Id];
         for Index: integer := 0 to Children.Length() - 1 do
           begin
             Controls := Controls.Concat(TuiFocusableControls(Children[Index]));
@@ -130,9 +134,9 @@ begin
 
         return Controls;
       end;
-    when TuiElement.MenuBar(const Items):
+    when Element.TuiElement.MenuBar(const Items):
       begin
-        var Controls: array of TuiControlId := [];
+        var Controls: array of ControlId.TuiControlId := [];
         for Index: integer := 0 to Items.Length() - 1 do
           begin
             if Items[Index].Enabled then
@@ -145,13 +149,13 @@ begin
 
         return Controls;
       end;
-    when TuiElement.StatusLine(const Items):
+    when Element.TuiElement.StatusLine(const Items):
       begin
-        var Controls: array of TuiControlId := [];
+        var Controls: array of ControlId.TuiControlId := [];
         for Index: integer := 0 to Items.Length() - 1 do
           begin
             case Items[Index] of
-              when TuiStatusItem.Command(const Id, const Text, const Action, const Enabled):
+              when StatusItem.TuiStatusItem.Command(const Id, const Text, const Action, const Enabled):
                 begin
                   if Enabled then
                     begin
@@ -159,7 +163,7 @@ begin
                     end;
                   end if;
                 end;
-              when TuiStatusItem.Hint(_), TuiStatusItem.KeyHint(_, _):
+              when StatusItem.TuiStatusItem.Hint(_), StatusItem.TuiStatusItem.KeyHint(_, _):
                 null;
             end case;
           end;
@@ -167,37 +171,37 @@ begin
 
         return Controls;
       end;
-    when TuiElement.Row(const RowChildren, const Spacing):
+    when Element.TuiElement.Row(const RowChildren, const Spacing):
       begin
         Descendants := RowChildren;
       end;
-    when TuiElement.Column(const ColumnChildren, const Spacing):
+    when Element.TuiElement.Column(const ColumnChildren, const Spacing):
       begin
         Descendants := ColumnChildren;
       end;
-    when TuiElement.Layout(const Settings, const LayoutChildren):
+    when Element.TuiElement.Layout(const Settings, const LayoutChildren):
       begin
         Descendants := LayoutChildren;
       end;
-    when TuiElement.Panel(const Title, const PanelChildren):
+    when Element.TuiElement.Panel(const Title, const PanelChildren):
       begin
         Descendants := PanelChildren;
       end;
-    when TuiElement.Overlay(const Title, const OverlayChildren):
+    when Element.TuiElement.Overlay(const Title, const OverlayChildren):
       begin
         Descendants := OverlayChildren;
       end;
-    when TuiElement.Desktop(const Focused, const Children):
+    when Element.TuiElement.Desktop(const Focused, const Children):
       begin
         var LastOverlay: integer := -1;
         for Index: integer := 0 to Children.Length() - 1 do
           begin
             case Children[Index] of
-              when TuiElement.Overlay(const Title, const OverlayChildren):
+              when Element.TuiElement.Overlay(const Title, const OverlayChildren):
                 begin
                   LastOverlay := Index;
                 end;
-              when TuiElement.Empty, TuiElement.Label(_), TuiElement.Button(_), TuiElement.Input(_), TuiElement.TextArea(_, _, _, _, _), TuiElement.CheckBox(_, _, _, _), TuiElement.List(_, _, _, _), TuiElement.Scroll(_, _, _, _), TuiElement.MenuBar(_), TuiElement.Menu(_, _, _, _), TuiElement.StatusLine(_), TuiElement.CellGrid(_), TuiElement.Rule(_), TuiElement.Gauge(_), TuiElement.Row(_, _), TuiElement.Column(_, _), TuiElement.Layout(_, _), TuiElement.Spacer(_), TuiElement.Panel(_, _), TuiElement.Desktop(_, _):
+              when Element.TuiElement.Empty, Element.TuiElement.Label(_), Element.TuiElement.Button(_), Element.TuiElement.Input(_), Element.TuiElement.TextArea(_, _, _, _, _), Element.TuiElement.CheckBox(_, _, _, _), Element.TuiElement.List(_, _, _, _), Element.TuiElement.Scroll(_, _, _, _), Element.TuiElement.MenuBar(_), Element.TuiElement.Menu(_, _, _, _), Element.TuiElement.StatusLine(_), Element.TuiElement.CellGrid(_), Element.TuiElement.Rule(_), Element.TuiElement.Gauge(_), Element.TuiElement.Row(_, _), Element.TuiElement.Column(_, _), Element.TuiElement.Layout(_, _), Element.TuiElement.Spacer(_), Element.TuiElement.Panel(_, _), Element.TuiElement.Desktop(_, _):
                 null;
             end case;
           end;
@@ -209,7 +213,7 @@ begin
           end;
         else
           begin
-            var Controls: array of TuiControlId := [];
+            var Controls: array of ControlId.TuiControlId := [];
             for Index: integer := 0 to Children.Length() - 1 do
               begin
                 Controls := Controls.Concat(TuiFocusableControls(Children[Index]));
@@ -220,12 +224,12 @@ begin
           end;
         end if;
       end;
-    when TuiElement.Empty, TuiElement.Label(_), TuiElement.CellGrid(_), TuiElement.Rule(_), TuiElement.Gauge(_), TuiElement.Spacer(_):
+    when Element.TuiElement.Empty, Element.TuiElement.Label(_), Element.TuiElement.CellGrid(_), Element.TuiElement.Rule(_), Element.TuiElement.Gauge(_), Element.TuiElement.Spacer(_):
       begin
         return [];
       end;
   end case;
-  var Controls: array of TuiControlId := [];
+  var Controls: array of ControlId.TuiControlId := [];
   for Index: integer := 0 to Descendants.Length() - 1 do
     begin
       Controls := Controls.Concat(TuiFocusableControls(Descendants[Index]));
@@ -239,14 +243,14 @@ end function;
 //
 // Parameters:
 // - `Root`: Root of the element tree.
-public function TuiRootFocus(Root: TuiElement): option of TuiControlId;
+public function TuiRootFocus(Root: Element.TuiElement): option of ControlId.TuiControlId;
 begin
   case Root of
-    when TuiElement.Desktop(const Focused, const Children):
+    when Element.TuiElement.Desktop(const Focused, const Children):
       begin
         return Focused;
       end;
-    when TuiElement.Empty, TuiElement.Label(_), TuiElement.Button(_), TuiElement.Input(_), TuiElement.TextArea(_, _, _, _, _), TuiElement.CheckBox(_, _, _, _), TuiElement.List(_, _, _, _), TuiElement.Scroll(_, _, _, _), TuiElement.MenuBar(_), TuiElement.Menu(_, _, _, _), TuiElement.StatusLine(_), TuiElement.CellGrid(_), TuiElement.Rule(_), TuiElement.Gauge(_), TuiElement.Row(_, _), TuiElement.Column(_, _), TuiElement.Layout(_, _), TuiElement.Spacer(_), TuiElement.Panel(_, _), TuiElement.Overlay(_, _):
+    when Element.TuiElement.Empty, Element.TuiElement.Label(_), Element.TuiElement.Button(_), Element.TuiElement.Input(_), Element.TuiElement.TextArea(_, _, _, _, _), Element.TuiElement.CheckBox(_, _, _, _), Element.TuiElement.List(_, _, _, _), Element.TuiElement.Scroll(_, _, _, _), Element.TuiElement.MenuBar(_), Element.TuiElement.Menu(_, _, _, _), Element.TuiElement.StatusLine(_), Element.TuiElement.CellGrid(_), Element.TuiElement.Rule(_), Element.TuiElement.Gauge(_), Element.TuiElement.Row(_, _), Element.TuiElement.Column(_, _), Element.TuiElement.Layout(_, _), Element.TuiElement.Spacer(_), Element.TuiElement.Panel(_, _), Element.TuiElement.Overlay(_, _):
       begin
         return None;
       end;
@@ -258,7 +262,7 @@ end function;
 // Parameters:
 // - `Controls`: Ordered control identifiers to search.
 // - `Id`: Identifier assigned to the created or selected value.
-public function TuiControlIndex(Controls: array of TuiControlId; Id: TuiControlId): integer;
+public function TuiControlIndex(Controls: array of ControlId.TuiControlId; Id: ControlId.TuiControlId): integer;
 begin
   for Index: integer := 0 to Controls.Length() - 1 do
     begin
@@ -278,7 +282,7 @@ end function;
 // Parameters:
 // - `Left`: Left input value or edge.
 // - `Right`: Right input value or edge.
-public function TuiSameControlId(Left: TuiControlId; Right: TuiControlId): boolean;
+public function TuiSameControlId(Left: ControlId.TuiControlId; Right: ControlId.TuiControlId): boolean;
 begin
   return Left.Value = Right.Value;
 end function;
@@ -288,7 +292,7 @@ end function;
 // Parameters:
 // - `Focused`: Whether the control currently owns focus.
 // - `Target`: Target control identifier.
-public function TuiFocusMatches(Focused: option of TuiControlId; Target: TuiControlId): boolean;
+public function TuiFocusMatches(Focused: option of ControlId.TuiControlId; Target: ControlId.TuiControlId): boolean;
 begin
   case Focused of
     when Some(const Id):

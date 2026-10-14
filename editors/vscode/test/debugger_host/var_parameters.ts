@@ -11,7 +11,7 @@ export async function verifyVarParameterCalls(
 ): Promise<void> {
   const lines = [
     "program DebuggerVarParameters;",
-    "uses Std.Console;",
+    "uses Std.Console as Console;",
     "type Box = record",
     "  Value: integer := 2;",
     "  static function Create(Value: integer): Box;",
@@ -54,7 +54,7 @@ export async function verifyVarParameterCalls(
     "  const Bound: function(var Item: integer): integer := Holder.FailFirst;",
     "  const SafeHandler: function(var Item: integer): integer := Increment;",
     "  const StopMarker: integer := 0;",
-    "  WriteLn(Item);",
+    "  Console.WriteLn(Item);",
     "end.",
     ""
   ];
@@ -125,7 +125,7 @@ export async function verifyVarParameterCalls(
 async function verifyVarParameterWrites(workspaceRoot: string, sent: DapMessage[]): Promise<void> {
   const lines = [
     "program DebuggerVarWrites;",
-    "uses Std.Console;",
+    "uses Std.Console as Console;",
     "var Original: integer := 1;",
     "procedure Change(var Item: integer);",
     "begin",
@@ -134,7 +134,7 @@ async function verifyVarParameterWrites(workspaceRoot: string, sent: DapMessage[
     "end procedure;",
     "begin",
     "  Change(var Original);",
-    "  WriteLn(Original);",
+    "  Console.WriteLn(Original);",
     "end.", ""
   ];
   const sourcePath = await writeSource(workspaceRoot, "var-writes", lines);

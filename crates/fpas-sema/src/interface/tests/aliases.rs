@@ -16,7 +16,10 @@ fn imported_enum_aliases_register_variants_without_overwriting_the_generic_type(
     .expect("dependency analysis")
     .interface
     .expect("dependency interface");
-    for (imports, qualifier) in [("Domain", ""), ("Domain as D", "D.")] {
+    for (imports, qualifier) in [
+        ("Domain as D", "D."),
+        ("Domain as DomainUnit", "DomainUnit."),
+    ] {
         let consumer = parse_unit(&format!(
             "unit Consumer; uses {imports}; public procedure Run(); begin
             const Missing := {qualifier}ZIntLookup.Missing;
@@ -57,8 +60,8 @@ end record;\nend unit;",
     let original_type = original.symbols[0].ty.clone();
     let mut interfaces = vec![original];
     for (unit, dependency, target) in [
-        ("Repro.Facade", "Repro.Model", "Repro.Model.Model"),
-        ("Repro.Second", "Repro.Facade", "Repro.Facade.Model"),
+        ("Repro.Facade", "Repro.Model as Data", "Data.Model"),
+        ("Repro.Second", "Repro.Facade as Data", "Data.Model"),
     ] {
         let analysis = analyze_unit(
             &parse_unit(&format!(

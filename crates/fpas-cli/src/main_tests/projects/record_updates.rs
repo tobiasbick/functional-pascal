@@ -22,26 +22,7 @@ public type Holder = record public Position: Point; public Points: array of Poin
     );
     write_text(
         &cwd.join("main.fpas"),
-        "program Main;
-uses Demo.Types, Std.Console;
-begin
-  const Original: Holder := Holder(
-    Position := Demo.Types.Point( X := 1, Y := 2 ),
-    Points := [Demo.Types.Point( X := 5, Y := 6 )]
-  );
-  const Changed: Holder := Original with
-    Position := Demo.Types.Point( X := 3, Y := 4 );
-    Points := [Demo.Types.Point( X := 7, Y := 8 )];
-  end with;
-  WriteLn(Changed.Position.X);
-  WriteLn(Changed.Position.Y);
-  WriteLn(Changed.Points[0].X);
-  WriteLn(Changed.Points[0].Y);
-  WriteLn(Original.Position.X);
-  WriteLn(Original.Position.Y);
-  WriteLn(Original.Points[0].X);
-  WriteLn(Original.Points[0].Y);
-end.",
+        "program Main;\nuses Demo.Types as Types, Std.Console as Console;\nbegin\n  const Original: Types.Holder := Types.Holder(\n    Position := Types.Point( X := 1, Y := 2 ),\n    Points := [Types.Point( X := 5, Y := 6 )]\n  );\n  const Changed: Types.Holder := Original with\n    Position := Types.Point( X := 3, Y := 4 );\n    Points := [Types.Point( X := 7, Y := 8 )];\n  end with;\n  Console.WriteLn(Changed.Position.X);\n  Console.WriteLn(Changed.Position.Y);\n  Console.WriteLn(Changed.Points[0].X);\n  Console.WriteLn(Changed.Points[0].Y);\n  Console.WriteLn(Original.Position.X);\n  Console.WriteLn(Original.Position.Y);\n  Console.WriteLn(Original.Points[0].X);\n  Console.WriteLn(Original.Points[0].Y);\nend.",
     );
     let (exit_code, stdout, stderr) =
         super::super::support::run_cli_and_capture_output(&project, &cwd);

@@ -1,7 +1,7 @@
 program T;
 
-uses Std.Console, Std.Math;
+uses Std.Console as Console, Std.Math as Math;
 
 begin
-  WriteLn(RandomInt(1, 1));
+  Console.WriteLn(RandomInt(1, 1));
 end.

@@ -32,12 +32,12 @@ end unit;
         &path,
         r#"
 program Consumer;
-uses CallableLibrary, Std.Console;
+uses CallableLibrary as CallableLibraryUnit, Std.Console as Console;
 begin
-  case Make() of
+  case CallableLibraryUnit.Make() of
     when Some(const F):
       discard F;
-      WriteLn(F());
+      Console.WriteLn(F());
     when None: null;
   end case;
 end.
@@ -86,21 +86,12 @@ fn cli_preserves_imported_record_fields_in_fresh_and_reused_sidecars() {
     );
     write_text(
         &dir.join("Facade.fpas"),
-        "unit Facade; uses Original;
-      public const Copy: Original.Flags := Original.Settings;
-      public const Enabled: boolean := Copy.Enabled;
-      public const Current: Original.State := Copy.Current;
-      end unit;",
+        "unit Facade; uses Original as OriginalUnit;\n      public const Copy: OriginalUnit.Flags := OriginalUnit.Settings;\n      public const Enabled: boolean := Copy.Enabled;\n      public const Current: OriginalUnit.State := Copy.Current;\n      end unit;",
     );
-    write_text(&dir.join("consumer.fpas"), "program Consumer; uses Original, Facade as Values, Std.Console;
-      begin
-        const Defaulted: Original.Flags := Original.Flags(Current := Original.State.Ready);
-        case Some(Defaulted.Enabled) of when Some(Values.Copy.Enabled): null; when Some(false): panic('false'); when None: panic('none'); end case;
-        case Some(Original.State.Ready) of when Some(Values.Copy.Current): null; when Some(Original.State.Busy): panic('busy'); when None: panic('none'); end case;
-        if not Values.Copy.Enabled then panic('record global'); end if;
-        if Values.Copy.Current <> Values.Current then panic('enum global'); end if;
-        WriteLn('records');
-      end.");
+    write_text(
+        &dir.join("consumer.fpas"),
+        "program Consumer; uses Original as OriginalUnit, Facade as Values, Std.Console as Console;\n      begin\n        const Defaulted: OriginalUnit.Flags := OriginalUnit.Flags(Current := OriginalUnit.State.Ready);\n        case Some(Defaulted.Enabled) of when Some(Values.Copy.Enabled): null; when Some(false): panic('false'); when None: panic('none'); end case;\n        case Some(OriginalUnit.State.Ready) of when Some(Values.Copy.Current): null; when Some(OriginalUnit.State.Busy): panic('busy'); when None: panic('none'); end case;\n        if not Values.Copy.Enabled then panic('record global'); end if;\n        if Values.Copy.Current <> Values.Current then panic('enum global'); end if;\n        Console.WriteLn('records');\n      end.",
+    );
     for command in ["check", "run", "check", "run"] {
         let (exit, stdout, stderr) = support::run_cli_args_and_capture_output(
             &[command.into(), project.to_string_lossy().into_owned()],

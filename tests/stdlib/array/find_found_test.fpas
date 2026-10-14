@@ -1,6 +1,6 @@
 program T;
 
-uses Std.Console;
+uses Std.Console as Console;
 
 function IsGreaterThanThree(X: integer): boolean;
 begin
@@ -10,6 +10,6 @@ end function;
 begin
   const A: array of integer := [1, 2, 3, 4, 5];
   const R: option of integer := A.Find(IsGreaterThanThree);
-  WriteLn(R.IsSome());
-  WriteLn(R.Unwrap());
+  Console.WriteLn(R.IsSome());
+  Console.WriteLn(R.Unwrap());
 end.

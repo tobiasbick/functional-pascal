@@ -1,51 +1,58 @@
 unit Std.Tui.Runtime.Application.State;
 
 uses
-  Std.Tui.Cells.Palette, Std.Tui.Elements.Element, Std.Tui.Geometry.Size, Std.Tui.Layout.Frame,
-  Std.Tui.Rendering.Surface, Std.Tui.Runtime.Application.Background, Std.Tui.Runtime.Cmd,
-  Std.Tui.Runtime.Input, Std.Tui.Runtime.Msg, Std.Tui.Runtime.Routing,
-  Std.Tui.Runtime.Routing.Pointer, Std.Tui.Runtime.TerminalSession, Std.Time;
+  Std.Tui.Cells.Palette as CellsPalette, Std.Tui.Elements.Element as Element,
+  Std.Tui.Geometry.Size as GeometrySize, Std.Tui.Layout.Frame as Frame,
+  Std.Tui.Rendering.Surface as Surface, Std.Tui.Runtime.Application.Background as Background,
+  Std.Tui.Runtime.Cmd as Cmd, Std.Tui.Runtime.Input as RuntimeInput,
+  Std.Tui.Runtime.Msg as RuntimeMsg, Std.Tui.Runtime.Routing as Routing,
+  Std.Tui.Runtime.Routing.Pointer as RoutingPointer,
+  Std.Tui.Runtime.TerminalSession as TerminalSession, Std.Time as Time;
 
 public var TuiAppInputHead: array of integer := [];
 public var TuiAppMessageHead: array of integer := [];
 public var TuiAppOpen: array of boolean := [];
-public var TuiAppInputs: array of array of TuiHostInput := [];
-public var TuiAppMessages: array of array of TuiMsg := [];
-public var TuiAppSurfaces: array of TuiWorkingSurface := [];
-public var TuiAppFrames: array of TuiArrangedFrame := [];
-public var TuiAppTrees: array of TuiElement := [];
-public var TuiAppCommands: array of TuiCmdOutput := [];
+public var TuiAppInputs: array of array of RuntimeInput.TuiHostInput := [];
+public var TuiAppMessages: array of array of RuntimeMsg.TuiMsg := [];
+public var TuiAppSurfaces: array of Surface.TuiWorkingSurface := [];
+public var TuiAppFrames: array of Frame.TuiArrangedFrame := [];
+public var TuiAppTrees: array of Element.TuiElement := [];
+public var TuiAppCommands: array of Cmd.TuiCmdOutput := [];
 public var TuiAppInteractive: array of boolean := [];
-public var TuiAppPalettes: array of TuiPalette := [];
+public var TuiAppPalettes: array of CellsPalette.TuiPalette := [];
 public var TuiAppStarted: array of boolean := [];
 // Monotonic time of the pending tick request and its due time; negative due means none.
 public var TuiAppTickRequestedAt: array of integer := [];
 public var TuiAppTickDueAt: array of integer := [];
 
 // Opens application-owned state and returns its stable identifier.
-public function TuiAppOpenApplication(Size: TuiSize; Palette: TuiPalette; Interactive: boolean): integer;
+public function TuiAppOpenApplication(
+  Size: GeometrySize.TuiSize;
+  Palette: CellsPalette.TuiPalette;
+  Interactive: boolean
+): integer;
 begin
   TuiAppInputHead.PushInPlace(0);
   TuiAppMessageHead.PushInPlace(0);
   TuiAppOpen := TuiAppOpen.Concat([true]);
   TuiAppInputs := TuiAppInputs.Concat([[]]);
   TuiAppMessages := TuiAppMessages.Concat([[]]);
-  TuiAppSurfaces := TuiAppSurfaces.Concat([TuiWorkingSurface.Create(Size)]);
-  TuiAppFrames := TuiAppFrames.Concat([TuiArrangedFrame.Create()]);
-  TuiAppTrees := TuiAppTrees.Concat([TuiElement.Empty]);
-  TuiAppCommands := TuiAppCommands.Concat([TuiCmdOutput.Create()]);
+  TuiAppSurfaces := TuiAppSurfaces.Concat([Surface.TuiWorkingSurface.Create(Size)]);
+  TuiAppFrames := TuiAppFrames.Concat([Frame.TuiArrangedFrame.Create()]);
+  TuiAppTrees := TuiAppTrees.Concat([Element.TuiElement.Empty]);
+  TuiAppCommands := TuiAppCommands.Concat([Cmd.TuiCmdOutput.Create()]);
   TuiAppInteractive := TuiAppInteractive.Concat([Interactive]);
   TuiAppPalettes := TuiAppPalettes.Concat([Palette]);
   TuiAppStarted := TuiAppStarted.Concat([false]);
   TuiAppTickRequestedAt := TuiAppTickRequestedAt.Concat([0]);
   TuiAppTickDueAt := TuiAppTickDueAt.Concat([-1]);
-  TuiBackgroundOpenApplication();
-  Std.Tui.Runtime.Routing.Pointer.TuiPointerRoutingOpen();
+  Background.TuiBackgroundOpenApplication();
+  RoutingPointer.TuiPointerRoutingOpen();
   return TuiAppOpen.Length();
 end function;
 
 // Cancels owned work, closes application state, and returns shutdown failures.
-public function TuiAppCloseApplication(ApplicationId: integer): array of TuiMsg;
+public function TuiAppCloseApplication(ApplicationId: integer): array of RuntimeMsg.TuiMsg;
 begin
   if (ApplicationId < 1) or (ApplicationId > TuiAppOpen.Length()) then
     begin
@@ -58,17 +65,17 @@ begin
       return [];
     end;
   end if;
-  const BackgroundFailures: array of TuiMsg := TuiBackgroundCloseApplication(ApplicationId);
+  const BackgroundFailures: array of RuntimeMsg.TuiMsg := Background.TuiBackgroundCloseApplication(ApplicationId);
   TuiAppOpen[ApplicationId - 1] := false;
   TuiAppInputHead[ApplicationId - 1] := 0;
   TuiAppMessageHead[ApplicationId - 1] := 0;
   TuiAppInputs[ApplicationId - 1] := [];
   TuiAppMessages[ApplicationId - 1] := [];
-  Std.Tui.Runtime.Routing.Pointer.TuiPointerRoutingClose(ApplicationId);
+  RoutingPointer.TuiPointerRoutingClose(ApplicationId);
   if TuiAppInteractive[ApplicationId - 1] then
     begin
       TuiAppInteractive[ApplicationId - 1] := false;
-      TuiTerminalSessionRelease();
+      TerminalSession.TuiTerminalSessionRelease();
     end;
   end if;
 
@@ -76,7 +83,7 @@ begin
 end function;
 
 // Raises the first shutdown failure after application resources have been released.
-public procedure TuiAppRaiseShutdownFailure(Failures: array of TuiMsg);
+public procedure TuiAppRaiseShutdownFailure(Failures: array of RuntimeMsg.TuiMsg);
 begin
   if Failures.Length() = 0 then
     begin
@@ -85,11 +92,11 @@ begin
   end if;
 
   case Failures[0] of
-    when TuiMsg.BackgroundFailed(const IgnoredId, const Kind, const Message, const Code, const Line, const Column):
+    when RuntimeMsg.TuiMsg.BackgroundFailed(const IgnoredId, const Kind, const Message, const Code, const Line, const Column):
       begin
         panic(Message);
       end;
-    when TuiMsg.Started, TuiMsg.Key(_), TuiMsg.Pointer(_), TuiMsg.Tick(_), TuiMsg.Resize(_), TuiMsg.FocusChanged(_, _), TuiMsg.Action(_, _), TuiMsg.TextChanged(_, _, _, _), TuiMsg.TextAreaChanged(_, _, _, _, _), TuiMsg.CheckChanged(_, _, _), TuiMsg.SelectionChanged(_, _, _), TuiMsg.ScrollChanged(_, _, _), TuiMsg.MenuChanged(_, _, _), TuiMsg.QuitRequested:
+    when RuntimeMsg.TuiMsg.Started, RuntimeMsg.TuiMsg.Key(_), RuntimeMsg.TuiMsg.Pointer(_), RuntimeMsg.TuiMsg.Tick(_), RuntimeMsg.TuiMsg.Resize(_), RuntimeMsg.TuiMsg.FocusChanged(_, _), RuntimeMsg.TuiMsg.Action(_, _), RuntimeMsg.TuiMsg.TextChanged(_, _, _, _), RuntimeMsg.TuiMsg.TextAreaChanged(_, _, _, _, _), RuntimeMsg.TuiMsg.CheckChanged(_, _, _), RuntimeMsg.TuiMsg.SelectionChanged(_, _, _), RuntimeMsg.TuiMsg.ScrollChanged(_, _, _), RuntimeMsg.TuiMsg.MenuChanged(_, _, _), RuntimeMsg.TuiMsg.QuitRequested:
       begin
         panic('Tui background operation failed during shutdown');
       end;
@@ -126,11 +133,11 @@ begin
 end function;
 
 // Removes the next queued input, compacting only after at least half is consumed.
-public function TuiAppPopInput(ApplicationId: integer): TuiHostInput;
+public function TuiAppPopInput(ApplicationId: integer): RuntimeInput.TuiHostInput;
 begin
   const Slot: integer := ApplicationId - 1;
   const Head: integer := TuiAppInputHead[Slot];
-  const Item: TuiHostInput := TuiAppInputs[Slot][Head];
+  const Item: RuntimeInput.TuiHostInput := TuiAppInputs[Slot][Head];
   const Next: integer := Head + 1;
   const Count: integer := TuiAppInputs[Slot].Length();
   if (Next = Count) or ((Next >= 64) and (Next >= Count div 2)) then
@@ -154,11 +161,11 @@ begin
 end function;
 
 // Removes the next queued message, compacting only after at least half is consumed.
-public function TuiAppPopMessage(ApplicationId: integer): TuiMsg;
+public function TuiAppPopMessage(ApplicationId: integer): RuntimeMsg.TuiMsg;
 begin
   const Slot: integer := ApplicationId - 1;
   const Head: integer := TuiAppMessageHead[Slot];
-  const Item: TuiMsg := TuiAppMessages[Slot][Head];
+  const Item: RuntimeMsg.TuiMsg := TuiAppMessages[Slot][Head];
   const Next: integer := Head + 1;
   const Count: integer := TuiAppMessages[Slot].Length();
   if (Next = Count) or ((Next >= 64) and (Next >= Count div 2)) then
@@ -176,11 +183,11 @@ begin
 end function;
 
 // Enqueues messages in their original order.
-public procedure TuiAppPushMessages(ApplicationId: integer; Messages: array of TuiMsg);
+public procedure TuiAppPushMessages(ApplicationId: integer; Messages: array of RuntimeMsg.TuiMsg);
 begin
-  var Queue: array of TuiMsg := TuiAppMessages[ApplicationId - 1];
+  var Queue: array of RuntimeMsg.TuiMsg := TuiAppMessages[ApplicationId - 1];
   TuiAppMessages[ApplicationId - 1] := [];
-  for Item: TuiMsg in Messages do
+  for Item: RuntimeMsg.TuiMsg in Messages do
     begin
       Queue.PushInPlace(Item);
     end;
@@ -190,9 +197,9 @@ begin
 end procedure;
 
 // Enqueues one input for the application.
-public procedure TuiAppPushInput(ApplicationId: integer; Input: TuiHostInput);
+public procedure TuiAppPushInput(ApplicationId: integer; Input: RuntimeInput.TuiHostInput);
 begin
-  var Queue: array of TuiHostInput := TuiAppInputs[ApplicationId - 1];
+  var Queue: array of RuntimeInput.TuiHostInput := TuiAppInputs[ApplicationId - 1];
   TuiAppInputs[ApplicationId - 1] := [];
   Queue.PushInPlace(Input);
   TuiAppInputs[ApplicationId - 1] := Queue;
@@ -205,64 +212,64 @@ begin
   if not TuiAppStarted[ApplicationId - 1] then
     begin
       TuiAppStarted[ApplicationId - 1] := true;
-      TuiAppPushMessages(ApplicationId, [TuiMsg.Started]);
+      TuiAppPushMessages(ApplicationId, [RuntimeMsg.TuiMsg.Started]);
     end;
   end if;
 end procedure;
 
-public procedure TuiAppApplyResize(ApplicationId: integer; Size: TuiSize);
+public procedure TuiAppApplyResize(ApplicationId: integer; Size: GeometrySize.TuiSize);
 begin
   TuiAppSurfaces[ApplicationId - 1].Resize(Size);
 end procedure;
 
-public procedure TuiAppRouteInput(ApplicationId: integer; Input: TuiHostInput);
+public procedure TuiAppRouteInput(ApplicationId: integer; Input: RuntimeInput.TuiHostInput);
 begin
   case Input of
-    when TuiHostInput.Message(const InputMsg):
+    when RuntimeInput.TuiHostInput.Message(const InputMsg):
       begin
         TuiAppPushMessages(ApplicationId, [InputMsg]);
       end;
-    when TuiHostInput.Key(const Key):
+    when RuntimeInput.TuiHostInput.Key(const Key):
       begin
-        TuiAppPushMessages(ApplicationId, TuiRouteKey(TuiAppTrees[ApplicationId - 1], TuiAppFrames[ApplicationId -
-                                                                                                   1], Key));
+        TuiAppPushMessages(ApplicationId, Routing.TuiRouteKey(TuiAppTrees[ApplicationId - 1], TuiAppFrames[ApplicationId -
+                                                                                                           1], Key));
       end;
-    when TuiHostInput.Pointer(const Pointer):
+    when RuntimeInput.TuiHostInput.Pointer(const Pointer):
       begin
-        TuiAppPushMessages(ApplicationId, Std.Tui.Runtime.Routing.Pointer.TuiRouteApplicationPointer(Pointer, ApplicationId, TuiAppTrees[ApplicationId -
-                                                                                                                                         1], TuiAppFrames[ApplicationId -
-                                                                                                                                                          1]));
+        TuiAppPushMessages(ApplicationId, RoutingPointer.TuiRouteApplicationPointer(Pointer, ApplicationId, TuiAppTrees[ApplicationId -
+                                                                                                                        1], TuiAppFrames[ApplicationId -
+                                                                                                                                         1]));
       end;
-    when TuiHostInput.Resize(const Size):
+    when RuntimeInput.TuiHostInput.Resize(const Size):
       begin
-        TuiAppPushMessages(ApplicationId, [TuiMsg.Resize(Size)]);
+        TuiAppPushMessages(ApplicationId, [RuntimeMsg.TuiMsg.Resize(Size)]);
       end;
   end case;
 end procedure;
 
-public procedure TuiAppApplyResizeIfNeeded(ApplicationId: integer; Msg: TuiMsg);
+public procedure TuiAppApplyResizeIfNeeded(ApplicationId: integer; Msg: RuntimeMsg.TuiMsg);
 begin
   case Msg of
-    when TuiMsg.Resize(const Size):
+    when RuntimeMsg.TuiMsg.Resize(const Size):
       begin
         TuiAppApplyResize(ApplicationId, Size);
       end;
-    when TuiMsg.Started, TuiMsg.Key(_), TuiMsg.Pointer(_), TuiMsg.Tick(_), TuiMsg.FocusChanged(_, _), TuiMsg.Action(_, _), TuiMsg.TextChanged(_, _, _, _), TuiMsg.TextAreaChanged(_, _, _, _, _), TuiMsg.CheckChanged(_, _, _), TuiMsg.SelectionChanged(_, _, _), TuiMsg.ScrollChanged(_, _, _), TuiMsg.MenuChanged(_, _, _), TuiMsg.BackgroundFailed(_, _, _, _, _, _), TuiMsg.QuitRequested:
+    when RuntimeMsg.TuiMsg.Started, RuntimeMsg.TuiMsg.Key(_), RuntimeMsg.TuiMsg.Pointer(_), RuntimeMsg.TuiMsg.Tick(_), RuntimeMsg.TuiMsg.FocusChanged(_, _), RuntimeMsg.TuiMsg.Action(_, _), RuntimeMsg.TuiMsg.TextChanged(_, _, _, _), RuntimeMsg.TuiMsg.TextAreaChanged(_, _, _, _, _), RuntimeMsg.TuiMsg.CheckChanged(_, _, _), RuntimeMsg.TuiMsg.SelectionChanged(_, _, _), RuntimeMsg.TuiMsg.ScrollChanged(_, _, _), RuntimeMsg.TuiMsg.MenuChanged(_, _, _), RuntimeMsg.TuiMsg.BackgroundFailed(_, _, _, _, _, _), RuntimeMsg.TuiMsg.QuitRequested:
       null;
   end case;
 end procedure;
 
-public function TuiAppApplyCommand(ApplicationId: integer; Output: TuiCmdOutput): boolean;
+public function TuiAppApplyCommand(ApplicationId: integer; Output: Cmd.TuiCmdOutput): boolean;
 begin
   case Output.Command() of
-    when TuiCmd.NoCommand:
+    when Cmd.TuiCmd.NoCommand:
       begin
       end;
-    when TuiCmd.Quit:
+    when Cmd.TuiCmd.Quit:
       begin
         return true;
       end;
-    when TuiCmd.SetPalette:
+    when Cmd.TuiCmd.SetPalette:
       begin
         case Output.ReadPalette() of
           when Some(const Palette):
@@ -275,14 +282,14 @@ begin
             end;
         end case;
 
-        TuiSurfaceInvalidateTerminal(TuiAppSurfaces[ApplicationId - 1]);
+        Surface.TuiSurfaceInvalidateTerminal(TuiAppSurfaces[ApplicationId - 1]);
       end;
   end case;
 
   case Output.ReadTickRequest() of
     when Some(const Delay):
       begin
-        const Now: integer := MonotonicMillis();
+        const Now: integer := Time.MonotonicMillis();
         TuiAppTickRequestedAt[ApplicationId - 1] := Now;
         TuiAppTickDueAt[ApplicationId - 1] := Now + Delay;
       end;
@@ -291,7 +298,7 @@ begin
       end;
   end case;
 
-  TuiAppPushMessages(ApplicationId, TuiBackgroundApply(ApplicationId, Output.ReadBackground()));
+  TuiAppPushMessages(ApplicationId, Background.TuiBackgroundApply(ApplicationId, Output.ReadBackground()));
   return false;
 end function;
 
@@ -304,7 +311,7 @@ begin
       return -1;
     end;
   end if;
-  const Remaining: integer := Due - MonotonicMillis();
+  const Remaining: integer := Due - Time.MonotonicMillis();
   if Remaining < 0 then
     begin
       return 0;
@@ -315,10 +322,10 @@ begin
 end function;
 
 // Clears the pending tick and returns it with the milliseconds elapsed since its request.
-public function TuiAppTakeTick(ApplicationId: integer): TuiMsg;
+public function TuiAppTakeTick(ApplicationId: integer): RuntimeMsg.TuiMsg;
 begin
   TuiAppTickDueAt[ApplicationId - 1] := -1;
-  return TuiMsg.Tick(ElapsedMillis(TuiAppTickRequestedAt[ApplicationId - 1]));
+  return RuntimeMsg.TuiMsg.Tick(Time.ElapsedMillis(TuiAppTickRequestedAt[ApplicationId - 1]));
 end function;
 
 // Discards a pending tick request; headless runs deliver their own deterministic ticks.

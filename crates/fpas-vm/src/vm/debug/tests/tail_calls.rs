@@ -2,24 +2,7 @@
 
 use super::*;
 
-const SOURCE: &str = "program TailDebug;
-
-uses Std.Console;
-
-function Count(N: integer): integer;
-begin
-  if N = 0 then
-  begin
-    return 0;
-  end; end if;
-
-  return Count(N - 1);
-end function;
-
-begin
-  WriteLn(Count(3));
-end.
-";
+const SOURCE: &str = "program TailDebug;\n\nuses Std.Console as Console;\n\nfunction Count(N: integer): integer;\nbegin\n  if N = 0 then\n  begin\n    return 0;\n  end; end if;\n\n  return Count(N - 1);\nend function;\n\nbegin\n  Console.WriteLn(Count(3));\nend.\n";
 
 #[test]
 fn debug_stacks_show_each_tail_call_frame() {

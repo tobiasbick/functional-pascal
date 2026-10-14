@@ -1,6 +1,6 @@
 program GenericEnums;
 
-uses Std.Console;
+uses Std.Console as Console;
 
 type List of T = enum
   Empty;
@@ -18,6 +18,6 @@ end function;
 begin
   const Numbers: List of integer := List.Cons(1, List.Cons(2, List.Empty));
   const Words: List of string := List.Cons('one', List.Empty);
-  WriteLn(Length(Numbers));
-  WriteLn(Length(Words));
+  Console.WriteLn(Length(Numbers));
+  Console.WriteLn(Length(Words));
 end.

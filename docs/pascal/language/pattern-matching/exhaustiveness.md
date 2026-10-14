@@ -1,5 +1,7 @@
 # Exhaustiveness
 
+The code fragments use `uses Std.Test as Test, Std.Conv as Conv, Std.Console as Console;`.
+
 Every `case` is exhaustive, with the same rules for statements and expressions.
 Use `if` for selective handling. A missing value or variant reports FP3011;
 a forbidden `else` reports FP3035, including after complete explicit coverage.
@@ -31,9 +33,9 @@ type
 
 case L of
   when Light.Red:
-    WriteLn('Stop');
+    Console.WriteLn('Stop');
   when Light.Green:
-    WriteLn('Go');
+    Console.WriteLn('Go');
 end case;
 ```
 
@@ -42,11 +44,11 @@ Fix by covering all variants:
 ```pascal
 case L of
   when Light.Red:
-    WriteLn('Stop');
+    Console.WriteLn('Stop');
   when Light.Yellow:
-    WriteLn('Caution');
+    Console.WriteLn('Caution');
   when Light.Green:
-    WriteLn('Go');
+    Console.WriteLn('Go');
 end case;
 ```
 
@@ -55,9 +57,9 @@ Variants with the same behavior can share an arm:
 ```pascal
 case L of
   when Light.Red:
-    WriteLn('Stop');
+    Console.WriteLn('Stop');
   when Light.Yellow, Light.Green:
-    WriteLn('Proceed with caution');
+    Console.WriteLn('Proceed with caution');
 end case;
 ```
 
@@ -70,7 +72,7 @@ Replace it with explicit arms, grouping variants with the same behavior:
 ```pascal
 case L of
   when Light.Red:
-    WriteLn('Stop');
+    Console.WriteLn('Stop');
   when Light.Yellow, Light.Green:
     null;
 end case;
@@ -81,7 +83,7 @@ For handling just one variant, use an [`is` test](is-test.md):
 
 ```pascal
 if L is Light.Red then
-  WriteLn('Stop');
+  Console.WriteLn('Stop');
 end if;
 ```
 
@@ -93,15 +95,15 @@ end if;
 // ERROR: non-exhaustive — missing Error
 case R of
   when Ok(const V):
-    WriteLn(IntToStr(V));
+    Console.WriteLn(Conv.IntToStr(V));
 end case;
 
 // OK: both variants covered
 case R of
   when Ok(const V):
-    WriteLn(IntToStr(V));
+    Console.WriteLn(Conv.IntToStr(V));
   when Error(const E):
-    WriteLn('Error: ' + E);
+    Console.WriteLn('Error: ' + E);
 end case;
 ```
 
@@ -133,7 +135,7 @@ case Item of
   when Some(_):
     Use();
   when Some(0): // ERROR: unreachable after Some(_)
-    Skip();
+    Test.Skip();
   when None:
     null;
 end case;

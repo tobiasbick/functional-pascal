@@ -1,7 +1,7 @@
 // JSON encoding and decoding for OpenAI-compatible chat completions.
 unit Std.Ai.OpenAi.Json;
 
-uses Std.Ai.OpenAi.Types, Std.Conv, Std.Json;
+uses Std.Ai.OpenAi.Types as Types, Std.Conv as Conv, Std.Json as Json;
 
 // Encodes one non-streaming chat-completion request body.
 //
@@ -9,19 +9,23 @@ uses Std.Ai.OpenAi.Types, Std.Conv, Std.Json;
 // - `Model`: Model identifier placed in the request.
 // - `Messages`: Conversation messages encoded in order.
 // - `Options`: Optional generation controls to include.
-public function EncodeRequest(Model: string; Messages: array of ChatMessage; Options: ChatOptions): string;
+public function EncodeRequest(
+  Model: string;
+  Messages: array of Types.ChatMessage;
+  Options: Types.ChatOptions
+): string;
 begin
-  var MessageValues: array of JsonValue := [];
+  var MessageValues: array of Json.JsonValue := [];
   for Index: integer := 0 to Messages.Length() - 1 do
     begin
-      MessageValues.PushInPlace(JsonValue.Object(['role': JsonValue.String(Messages[Index].Role), 'content': JsonValue.String(Messages[Index].Content)]));
+      MessageValues.PushInPlace(Json.JsonValue.Object(['role': Json.JsonValue.String(Messages[Index].Role), 'content': Json.JsonValue.String(Messages[Index].Content)]));
     end;
   end for;
-  var Fields: dict of string to JsonValue := ['model': JsonValue.String(Model), 'messages': JsonValue.ArrayValue(MessageValues), 'stream': JsonValue.Bool(false)];
+  var Fields: dict of string to Json.JsonValue := ['model': Json.JsonValue.String(Model), 'messages': Json.JsonValue.ArrayValue(MessageValues), 'stream': Json.JsonValue.Bool(false)];
   case Options.Temperature of
     when Some(const Value):
       begin
-        Fields['temperature'] := JsonValue.Number(Value);
+        Fields['temperature'] := Json.JsonValue.Number(Value);
       end;
     when None:
       begin
@@ -31,14 +35,14 @@ begin
   case Options.MaxTokens of
     when Some(const Value):
       begin
-        Fields['max_tokens'] := JsonValue.Number(Std.Conv.IntToReal(Value));
+        Fields['max_tokens'] := Json.JsonValue.Number(Conv.IntToReal(Value));
       end;
     when None:
       begin
       end;
   end case;
 
-  return Std.Json.Stringify(JsonValue.Object(Fields));
+  return Json.Stringify(Json.JsonValue.Object(Fields));
 end function;
 
 // Returns a required object field or an actionable error.
@@ -46,7 +50,7 @@ end function;
 // Parameters:
 // - `Fields`: JSON object fields to inspect.
 // - `Name`: Required field name.
-function RequiredField(Fields: dict of string to JsonValue; Name: string): result of (JsonValue, string);
+function RequiredField(Fields: dict of string to Json.JsonValue; Name: string): result of (Json.JsonValue, string);
 begin
   case Fields.Get(Name) of
     when Some(const Value):
@@ -66,17 +70,17 @@ end function;
 // - `Text`: Complete JSON response text.
 public function DecodeResponse(Text: string): result of (string, string);
 begin
-  case Std.Json.Parse(Text) of
+  case Json.Parse(Text) of
     when Ok(const Root):
       begin
         case Root of
-          when JsonValue.Object(const RootFields):
+          when Json.JsonValue.Object(const RootFields):
             begin
               case RequiredField(RootFields, 'choices') of
                 when Ok(const ChoicesValue):
                   begin
                     case ChoicesValue of
-                      when JsonValue.ArrayValue(const Choices):
+                      when Json.JsonValue.ArrayValue(const Choices):
                         begin
                           if Choices.Length() = 0 then
                             begin
@@ -85,23 +89,23 @@ begin
                           end if;
 
                           case Choices[0] of
-                            when JsonValue.Object(const ChoiceFields):
+                            when Json.JsonValue.Object(const ChoiceFields):
                               begin
                                 case RequiredField(ChoiceFields, 'message') of
                                   when Ok(const MessageValue):
                                     begin
                                       case MessageValue of
-                                        when JsonValue.Object(const MessageFields):
+                                        when Json.JsonValue.Object(const MessageFields):
                                           begin
                                             case RequiredField(MessageFields, 'content') of
                                               when Ok(const ContentValue):
                                                 begin
                                                   case ContentValue of
-                                                    when JsonValue.String(const Content):
+                                                    when Json.JsonValue.String(const Content):
                                                       begin
                                                         return Ok(Content);
                                                       end;
-                                                    when JsonValue.NullValue, JsonValue.Bool(_), JsonValue.Number(_), JsonValue.ArrayValue(_), JsonValue.Object(_):
+                                                    when Json.JsonValue.NullValue, Json.JsonValue.Bool(_), Json.JsonValue.Number(_), Json.JsonValue.ArrayValue(_), Json.JsonValue.Object(_):
                                                       begin
                                                         return Error('OpenAI-compatible message content is not text');
                                                       end;
@@ -113,7 +117,7 @@ begin
                                                 end;
                                             end case;
                                           end;
-                                        when JsonValue.NullValue, JsonValue.Bool(_), JsonValue.Number(_), JsonValue.String(_), JsonValue.ArrayValue(_):
+                                        when Json.JsonValue.NullValue, Json.JsonValue.Bool(_), Json.JsonValue.Number(_), Json.JsonValue.String(_), Json.JsonValue.ArrayValue(_):
                                           begin
                                             return Error('OpenAI-compatible choice message is not an object');
                                           end;
@@ -125,13 +129,13 @@ begin
                                     end;
                                 end case;
                               end;
-                            when JsonValue.NullValue, JsonValue.Bool(_), JsonValue.Number(_), JsonValue.String(_), JsonValue.ArrayValue(_):
+                            when Json.JsonValue.NullValue, Json.JsonValue.Bool(_), Json.JsonValue.Number(_), Json.JsonValue.String(_), Json.JsonValue.ArrayValue(_):
                               begin
                                 return Error('OpenAI-compatible choice is not an object');
                               end;
                           end case;
                         end;
-                      when JsonValue.NullValue, JsonValue.Bool(_), JsonValue.Number(_), JsonValue.String(_), JsonValue.Object(_):
+                      when Json.JsonValue.NullValue, Json.JsonValue.Bool(_), Json.JsonValue.Number(_), Json.JsonValue.String(_), Json.JsonValue.Object(_):
                         begin
                           return Error('OpenAI-compatible choices field is not an array');
                         end;
@@ -143,7 +147,7 @@ begin
                   end;
               end case;
             end;
-          when JsonValue.NullValue, JsonValue.Bool(_), JsonValue.Number(_), JsonValue.String(_), JsonValue.ArrayValue(_):
+          when Json.JsonValue.NullValue, Json.JsonValue.Bool(_), Json.JsonValue.Number(_), Json.JsonValue.String(_), Json.JsonValue.ArrayValue(_):
             begin
               return Error('OpenAI-compatible response root is not an object');
             end;

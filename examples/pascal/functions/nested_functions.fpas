@@ -1,6 +1,6 @@
 program NestedFunctions;
 
-uses Std.Console, Std.Math, Std.Conv;
+uses Std.Console as Console, Std.Math as Math, Std.Conv as Conv;
 
 function Hypotenuse(A: real; B: real): real;
 function Square(X: real): real;
@@ -8,9 +8,9 @@ begin
   return X * X;
 end function;
 begin
-  return Sqrt(Square(A) + Square(B));
+  return Math.Sqrt(Square(A) + Square(B));
 end function;
 
 begin
-  WriteLn('hypotenuse(3, 4) = ', RealToStr(Hypotenuse(3.0, 4.0)));
+  Console.WriteLn('hypotenuse(3, 4) = ', Conv.RealToStr(Hypotenuse(3.0, 4.0)));
 end.

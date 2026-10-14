@@ -2,17 +2,17 @@
 
 program ProcBasics;
 
-uses Std.Console, Std.Conv, Std.Proc;
+uses Std.Console as Console, Std.Conv as Conv, Std.Proc as Proc;
 
 begin
-  case Run('fpas', ['--version']) of
+  case Proc.Run('fpas', ['--version']) of
     when Ok(const Code):
       begin
-        WriteLn('fpas --version exit: ', IntToStr(Code));
+        Console.WriteLn('fpas --version exit: ', Conv.IntToStr(Code));
       end;
     when Error(const M):
       begin
-        WriteLn('run error: ', M);
+        Console.WriteLn('run error: ', M);
       end;
   end case;
 end.

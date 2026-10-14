@@ -15,9 +15,9 @@ another event follows the burst, it remains next in FIFO order. Test-injected
 `ConsoleEvent` values retain their explicit queue order.
 
 ```pascal
-const E: ConsoleEvent := ReadEvent();
-if E.kind = EventKind.Resize then
-  WriteLn(E.width, 'x', E.height);
+const E: Console.ConsoleEvent := Console.ReadEvent();
+if E.kind = Console.EventKind.Resize then
+  Console.WriteLn(E.width, 'x', E.height);
 end if;
 ```
 
@@ -33,19 +33,19 @@ runtime continues waiting with the remaining deadline instead of returning
 deadline reaches zero.
 
 ```pascal
-uses Std.Console;
+uses Std.Console as Console;
 
 
-EnableRawMode();
-const MaybeEvent: option of ConsoleEvent := ReadEventTimeout(100);
+Console.EnableRawMode();
+const MaybeEvent: option of Console.ConsoleEvent := Console.ReadEventTimeout(100);
 case MaybeEvent of
   when Some(const E):
     begin
-      WriteLn(E.kind);
+      Console.WriteLn(E.kind);
     end;
   when None:
     begin
-      WriteLn('timeout');
+      Console.WriteLn('timeout');
     end;
 end case;
 ```
@@ -61,19 +61,19 @@ that no FPAS event is available, so a ready press following a release is
 returned by the same call.
 
 ```pascal
-uses Std.Console;
+uses Std.Console as Console;
 
 
-EnableRawMode();
-const MaybeE: option of ConsoleEvent := PollEvent();
+Console.EnableRawMode();
+const MaybeE: option of Console.ConsoleEvent := Console.PollEvent();
 case MaybeE of
   when Some(const E):
     begin
-      WriteLn('got event');
+      Console.WriteLn('got event');
     end;
   when None:
     begin
-      WriteLn('nothing pending');
+      Console.WriteLn('nothing pending');
     end;
 end case;
 ```

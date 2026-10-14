@@ -56,7 +56,8 @@ pub fn intrinsic_std_symbols(unit: &str) -> Vec<IntrinsicStdSymbol> {
     let prefix = format!("{unit}.");
     checker
         .scopes
-        .root_symbols_with_prefix(&prefix)
+        .imports
+        .metadata_symbols_with_prefix(&prefix)
         .into_iter()
         .filter_map(|(qualified_name, symbol)| {
             symbol_kind(symbol.kind).map(|kind| IntrinsicStdSymbol {

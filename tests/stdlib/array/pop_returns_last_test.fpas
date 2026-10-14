@@ -1,10 +1,10 @@
 program T;
 
-uses Std.Console;
+uses Std.Console as Console;
 
 begin
   var A: array of integer := [1, 2, 3];
   const Last: integer := A.PopInPlace();
-  WriteLn(Last);
-  WriteLn(A.Length());
+  Console.WriteLn(Last);
+  Console.WriteLn(A.Length());
 end.

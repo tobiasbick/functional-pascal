@@ -3,9 +3,7 @@ use crate::check::calls::CallTarget;
 use crate::check::expr::MethodCallSite;
 use crate::scope::SymbolKind;
 use crate::types::Ty;
-use fpas_diagnostics::codes::{
-    SEMA_AMBIGUOUS_IMPORTED_NAME, SEMA_TYPE_MISMATCH, SEMA_UNKNOWN_NAME,
-};
+use fpas_diagnostics::codes::{SEMA_TYPE_MISMATCH, SEMA_UNKNOWN_NAME};
 use fpas_lexer::Span;
 use fpas_parser::{Designator, Expr};
 
@@ -140,11 +138,12 @@ impl Checker {
             }
         }
 
-        let (code, message, hint) = if let Some(ambiguous_hint) = self.ambiguous_hint(&name) {
+        let (code, message, hint) = if let Some(qualification_hint) = self.qualification_hint(&name)
+        {
             (
-                SEMA_AMBIGUOUS_IMPORTED_NAME,
-                format!("Ambiguous imported symbol `{name}`"),
-                ambiguous_hint,
+                fpas_diagnostics::codes::SEMA_UNQUALIFIED_NAME,
+                format!("Name `{name}` requires an explicit qualifier"),
+                qualification_hint,
             )
         } else {
             (

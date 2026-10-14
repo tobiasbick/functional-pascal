@@ -1,6 +1,6 @@
 unit Std.Tui.Runtime.TerminalSession;
 
-uses Std.Console;
+uses Std.Console as Console;
 
 var TuiTerminalSessionOpen: boolean := false;
 
@@ -9,7 +9,7 @@ var TuiTerminalSessionOpen: boolean := false;
 // `Std.Console` performs transactional mode acquisition and reverse-order rollback.
 public procedure TuiTerminalSessionAcquire();
 begin
-  AcquireInteractiveTerminal();
+  Console.AcquireInteractiveTerminal();
   TuiTerminalSessionOpen := true;
 end procedure;
 
@@ -23,6 +23,6 @@ begin
   end if;
 
   TuiTerminalSessionOpen := false;
-  ReleaseInteractiveTerminal();
+  Console.ReleaseInteractiveTerminal();
 end procedure;
 end unit;

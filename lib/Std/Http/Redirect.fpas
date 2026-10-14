@@ -1,13 +1,13 @@
 // Redirect URL resolution, header filtering, and method rewriting.
 unit Std.Http.Redirect;
 
-uses Std.Conv, Std.Http.Headers, Std.Http.Types, Std.Net.Uri;
+uses Std.Conv as Conv, Std.Http.Headers as HttpHeaders, Std.Http.Types as Types, Std.Net.Uri as Uri;
 
 // Formats a URI authority with a non-default port when required.
 //
 // Parameters:
 // - `UriValue`: Parsed absolute URI.
-function Authority(UriValue: Uri): string;
+function Authority(UriValue: Uri.Uri): string;
 begin
   var Host: string := UriValue.Host;
   if Host.Contains(':') then
@@ -23,14 +23,14 @@ begin
     end;
   end if;
 
-  return Host + ':' + Std.Conv.IntToStr(UriValue.Port);
+  return Host + ':' + Conv.IntToStr(UriValue.Port);
 end function;
 
 // Formats the scheme and authority portion of a URI.
 //
 // Parameters:
 // - `UriValue`: Parsed absolute URI.
-function Origin(UriValue: Uri): string;
+function Origin(UriValue: Uri.Uri): string;
 begin
   return (UriValue.Scheme + '://' + Authority(UriValue));
 end function;
@@ -118,9 +118,9 @@ end function;
 // Parameters:
 // - `Base`: Parsed URI of the current request.
 // - `Location`: Location field value from the redirect response.
-function Resolve(Base: Uri; Location: string): result of (string, string);
+function Resolve(Base: Uri.Uri; Location: string): result of (string, string);
 begin
-  if Std.Http.Headers.ContainsUnsafeText(Location) then
+  if HttpHeaders.ContainsUnsafeText(Location) then
     begin
       return Error('HTTP redirect Location contains CR or LF');
     end;
@@ -162,7 +162,7 @@ begin
     end;
   end if;
 
-  case Std.Net.Uri.Parse(Target) of
+  case Uri.Parse(Target) of
     when Ok(const Parsed):
       begin
         if Reference.Contains('://') or Reference.StartsWith('//') then
@@ -185,7 +185,7 @@ end function;
 // Parameters:
 // - `Left`: First parsed URI.
 // - `Right`: Second parsed URI.
-function SameOrigin(Left: Uri; Right: Uri): boolean;
+function SameOrigin(Left: Uri.Uri; Right: Uri.Uri): boolean;
 begin
   return ((Left.Scheme.ToLower() = Right.Scheme.ToLower()) and (Left.Host.ToLower() = Right.Host.ToLower())) and
          (Left.Port = Right.Port);
@@ -197,21 +197,21 @@ end function;
 // - `Headers`: Current request fields.
 // - `CrossOrigin`: Whether the redirect changes origin.
 // - `DropBody`: Whether redirect semantics discard the request body.
-function FilterHeaders(Headers: array of Header; CrossOrigin: boolean; DropBody: boolean): array of Header;
+function FilterHeaders(Headers: array of Types.Header; CrossOrigin: boolean; DropBody: boolean): array of Types.Header;
 begin
-  var Output: array of Header := [];
+  var Output: array of Types.Header := [];
   for Index: integer := 0 to Headers.Length() - 1 do
     begin
       const Name: string := Headers[Index].Name;
       if CrossOrigin and
-         ((Std.Http.Headers.IsName(Name, 'Authorization') or Std.Http.Headers.IsName(Name, 'Proxy-Authorization')) or Std.Http.Headers.IsName(Name, 'Cookie')) then
+         ((HttpHeaders.IsName(Name, 'Authorization') or HttpHeaders.IsName(Name, 'Proxy-Authorization')) or HttpHeaders.IsName(Name, 'Cookie')) then
         begin
           continue;
         end;
       end if;
 
       if DropBody and
-         ((Std.Http.Headers.IsName(Name, 'Content-Type') or Std.Http.Headers.IsName(Name, 'Content-Encoding')) or (Std.Http.Headers.IsName(Name, 'Content-Language') or Std.Http.Headers.IsName(Name, 'Content-Location'))) then
+         ((HttpHeaders.IsName(Name, 'Content-Type') or HttpHeaders.IsName(Name, 'Content-Encoding')) or (HttpHeaders.IsName(Name, 'Content-Language') or HttpHeaders.IsName(Name, 'Content-Location'))) then
         begin
           continue;
         end;
@@ -240,10 +240,10 @@ end function;
 // - `Current`: Request that received the redirect response.
 // - `StatusCode`: Redirect response status code.
 // - `Location`: Location field value from the redirect response.
-public function NextRequest(Current: Request; StatusCode: integer; Location: string): result of (Request, string);
+public function NextRequest(Current: Types.Request; StatusCode: integer; Location: string): result of (Types.Request, string);
 begin
-  var Base: Uri := std.net.uri.uri(Scheme := '', Host := '', Port := 0, Path := '');
-  case Std.Net.Uri.Parse(Current.Url) of
+  var Base: Uri.Uri := Uri.Uri(Scheme := '', Host := '', Port := 0, Path := '');
+  case Uri.Parse(Current.Url) of
     when Ok(const Value):
       begin
         Base := Value;
@@ -264,8 +264,8 @@ begin
         return Error(Message);
       end;
   end case;
-  var TargetUri: Uri := Base;
-  case Std.Net.Uri.Parse(Target) of
+  var TargetUri: Uri.Uri := Base;
+  case Uri.Parse(Target) of
     when Ok(const Value):
       begin
         TargetUri := Value;
@@ -277,7 +277,7 @@ begin
   end case;
   const DropBody: boolean := ((StatusCode = 303) and (Current.Method <> 'HEAD')) or
                              (((StatusCode = 301) or (StatusCode = 302)) and (Current.Method = 'POST'));
-  var Output: Request := Current;
+  var Output: Types.Request := Current;
   Output.Url := Target;
   Output.Headers := FilterHeaders(Current.Headers, not SameOrigin(Base, TargetUri), DropBody);
   if DropBody then

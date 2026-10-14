@@ -14,14 +14,14 @@ Operations:
 ```pascal
 program ArrayOperations;
 
-
 const Numbers: array of integer := [1, 2, 3];
-const Len: integer := Numbers.Length();  // 3
-const First: integer := Numbers[0];     // 1
+const Len: integer := Numbers.Length(); // 3
+const First: integer := Numbers[0]; // 1
+
 var Items: array of integer := [1, 2];
 
 begin
-  Items.PushInPlace(3);  // [1, 2, 3]
+  Items.PushInPlace(3); // [1, 2, 3]
 end.
 ```
 

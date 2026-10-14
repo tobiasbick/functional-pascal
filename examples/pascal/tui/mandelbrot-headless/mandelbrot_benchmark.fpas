@@ -2,17 +2,17 @@
 program MandelbrotBenchmark;
 
 uses
-  Mandelbrot.Color, Mandelbrot.Render, Std.Args, Std.Console, Std.Conv, Std.Tasks, Std.Time,
-  Std.Tui;
+  Mandelbrot.Color as Color, Mandelbrot.Render as Render, Std.Args as Args, Std.Console as Console,
+  Std.Conv as Conv, Std.Tasks as Tasks, Std.Time as Time, Std.Tui as Tui;
 
-function Update(Grid: TuiCellGrid; Msg: TuiMsg; Cmd: TuiCmdOutput): TuiCellGrid;
+function Update(Grid: Tui.TuiCellGrid; Msg: Tui.TuiMsg; Cmd: Tui.TuiCmdOutput): Tui.TuiCellGrid;
 begin
   return Grid;
 end function;
 
-function View(Grid: TuiCellGrid): TuiElement;
+function View(Grid: Tui.TuiCellGrid): Tui.TuiElement;
 begin
-  return TuiElementBuilders.MakeCellGrid(Grid);
+  return Tui.TuiElementBuilders.MakeCellGrid(Grid);
 end function;
 
 function RenderOnce(Paint: boolean): integer;
@@ -20,61 +20,62 @@ begin
   scope
     const Width: integer := 152;
     const Height: integer := 35;
-    const Request: MandelbrotRenderRequest := mandelbrot.render.mandelbrotrenderrequest(Generation := 1, XMin := -3.355714285714286, XMax := 1.855714285714286, YMin := -1.2, YMax := 1.2, Width := Width, Height := Height, MaxIter := 160, Palette := PaletteKind.DeepOcean);
-    const Inbox: channel of MandelbrotRenderFrame := CreateChannel(8);
-    const Source: CancellationSource := CreateCancellationSource();
-    const Worker: task of result of (boolean, string) := go RunBackgroundRender(Request, Inbox, GetCancellationToken(Source));
-    const App: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(Width, Height));
-    var Grid: TuiCellGrid := TuiCellGrid.Create(Width, Height, array.Fill(TuiCell.Styled(' ', TuiStyle.FromColors(TuiColor.FromRgb(0, 0, 0), TuiColor.FromRgb(0, 0, 0))), Width *
-                                                                                                                                                                          Height));
+    const Request: Render.MandelbrotRenderRequest := Render.MandelbrotRenderRequest(Generation := 1, XMin := -3.355714285714286, XMax := 1.855714285714286, YMin := -1.2, YMax := 1.2, Width := Width, Height := Height, MaxIter := 160, Palette := Color.PaletteKind.DeepOcean);
+    const Inbox: channel of Render.MandelbrotRenderFrame := Tasks.CreateChannel(8);
+    const Source: Tasks.CancellationSource := Tasks.CreateCancellationSource();
+    const Worker: task of result of (boolean, string) := go Render.RunBackgroundRender(Request, Inbox, Tasks.GetCancellationToken(Source));
+    const App: Tui.TuiApplication := Tui.TuiApplication.OpenForTest(Tui.TuiSize.Create(Width, Height));
+    var Grid: Tui.TuiCellGrid := Tui.TuiCellGrid.Create(Width, Height, array.Fill(Tui.TuiCell.Styled(' ', Tui.TuiStyle.FromColors(Tui.TuiColor.FromRgb(0, 0, 0), Tui.TuiColor.FromRgb(0, 0, 0))), Width *
+                                                                                                                                                                                                  Height));
     var Count: integer := 0;
     while Count < Width * Height do
       begin
-        const Message: MandelbrotRenderFrame := ReceiveWithTimeout(Inbox, 30000).Unwrap();
+        const Message: Render.MandelbrotRenderFrame := Tasks.ReceiveWithTimeout(Inbox, 30000)
+                                                         .Unwrap();
         Count := Count + Message.Cells.Length();
         if Paint then
           begin
-            Grid := TuiCellGrid.Create(Width, Height, Message.Cells);
+            Grid := Tui.TuiCellGrid.Create(Width, Height, Message.Cells);
             Grid := App.RunIterations(Grid, Update, View, 1, 0);
           end;
         end if;
       end;
     end while;
 
-    if not Wait(Worker).IsOk() then
+    if not Tasks.Wait(Worker).IsOk() then
       begin
         panic('render failed');
       end;
     end if;
 
     App.Close();
-    discard CloseChannel(Inbox);
+    discard Tasks.CloseChannel(Inbox);
     return Count;
   end scope;
 end function;
 
 begin
-  const Iterations: integer := StrToInt(ParamStr(0));
-  const Paint: boolean := ParamStr(1) = 'paint';
+  const Iterations: integer := Conv.StrToInt(Args.ParamStr(0));
+  const Paint: boolean := Args.ParamStr(1) = 'paint';
   if Iterations < 1 then
     begin
       panic('iterations must be positive');
     end;
   end if;
   var Checksum: integer := RenderOnce(Paint);
-  const Started: integer := MonotonicMillis();
+  const Started: integer := Time.MonotonicMillis();
   for Iteration: integer := 1 to Iterations do
     begin
       Checksum := Checksum + RenderOnce(Paint);
     end;
   end for;
-  const Elapsed: integer := ElapsedMillis(Started);
+  const Elapsed: integer := Time.ElapsedMillis(Started);
   if Checksum <> (Iterations + 1) * 152 * 35 then
     begin
       panic('incomplete render');
     end;
   end if;
 
-  WriteLn('elapsed: ' + IntToStr(Elapsed) + ' ms');
-  WriteLn('checksum: ' + IntToStr(Checksum));
+  Console.WriteLn('elapsed: ' + Conv.IntToStr(Elapsed) + ' ms');
+  Console.WriteLn('checksum: ' + Conv.IntToStr(Checksum));
 end.

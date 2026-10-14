@@ -11,13 +11,13 @@ including when the arm also has a guard. Put dynamic comparisons in a
 ```pascal
 case Value of
   when 1:
-    WriteLn('one');
+    Console.WriteLn('one');
   when 2:
-    WriteLn('two');
+    Console.WriteLn('two');
   when 3:
-    WriteLn('three');
+    Console.WriteLn('three');
   else
-    WriteLn('other');
+    Console.WriteLn('other');
 end case;
 ```
 
@@ -28,13 +28,13 @@ Separate multiple values with commas. Every label in the list shares the same ar
 ```pascal
 case Day of
   when 'Monday':
-    WriteLn('Start of week');
+    Console.WriteLn('Start of week');
   when 'Friday':
-    WriteLn('Almost weekend');
+    Console.WriteLn('Almost weekend');
   when 'Saturday', 'Sunday':
-    WriteLn('Weekend');
+    Console.WriteLn('Weekend');
   else
-    WriteLn('Midweek');
+    Console.WriteLn('Midweek');
 end case;
 ```
 
@@ -48,9 +48,9 @@ explicit variant arms instead:
 ```pascal
 case Command of
   when 'stop':
-    WriteLn('Stop');
+    Console.WriteLn('Stop');
   else
-    WriteLn('Proceed with caution');
+    Console.WriteLn('Proceed with caution');
 end case;
 ```
 
@@ -66,12 +66,12 @@ only when those statements need an additional nested scope:
 ```pascal
 case Command of
   when 'help':
-    WriteLn('Available commands:');
-    WriteLn('  help, quit, run');
+    Console.WriteLn('Available commands:');
+    Console.WriteLn('  help, quit, run');
   when 'quit':
-    WriteLn('Goodbye');
+    Console.WriteLn('Goodbye');
   else
-    WriteLn('Unknown command');
+    Console.WriteLn('Unknown command');
 end case;
 ```
 

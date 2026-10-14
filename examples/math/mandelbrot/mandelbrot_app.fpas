@@ -3,30 +3,30 @@
 unit Mandelbrot.App;
 
 uses
-  Std.Console, Std.Conv, Std.Math, Std.Tasks, Std.Tui, Mandelbrot.Color, Mandelbrot.Model,
-  Mandelbrot.Render;
+  Std.Console as Console, Std.Conv as Conv, Std.Math as Math, Std.Tasks as Tasks, Std.Tui as Tui,
+  Mandelbrot.Color as Color, Mandelbrot.Model as Model, Mandelbrot.Render as Render;
 
 const RenderSubscriptionId: integer := 1;
 
-procedure QueueRender(State: MandelbrotModel; Cmd: TuiCmdOutput);
+procedure QueueRender(State: Model.MandelbrotModel; Cmd: Tui.TuiCmdOutput);
 begin
-  const Request: MandelbrotRenderRequest := MandelbrotRequest(State);
-  const Inbox: channel of MandelbrotRenderFrame := State.Inbox;
-  Cmd.ReplaceSubscription(RenderSubscriptionId, function(Token: CancellationToken): result of (boolean, string) begin
-    return RunBackgroundRender(Request, Inbox, Token);
+  const Request: Render.MandelbrotRenderRequest := Model.MandelbrotRequest(State);
+  const Inbox: channel of Render.MandelbrotRenderFrame := State.Inbox;
+  Cmd.ReplaceSubscription(RenderSubscriptionId, function(Token: Tasks.CancellationToken): result of (boolean, string) begin
+    return Render.RunBackgroundRender(Request, Inbox, Token);
   end function);
 end procedure;
 
 function RestartRender(
-  State: MandelbrotModel;
-  Explorer: ExplorerState;
+  State: Model.MandelbrotModel;
+  Explorer: Model.ExplorerState;
   TerminalWidth: integer;
   TerminalHeight: integer;
-  Cmd: TuiCmdOutput
-): MandelbrotModel;
+  Cmd: Tui.TuiCmdOutput
+): Model.MandelbrotModel;
 begin
-  var Next: MandelbrotModel := CreateMandelbrotModel(Explorer, TerminalWidth, TerminalHeight, State.HelpOpen, State.Generation +
-                                                                                                              1, State.Inbox);
+  var Next: Model.MandelbrotModel := Model.CreateMandelbrotModel(Explorer, TerminalWidth, TerminalHeight, State.HelpOpen, State.Generation +
+                                                                                                                          1, State.Inbox);
   if (Next.Grid.Width = State.Grid.Width) and (Next.Grid.Height = State.Grid.Height) then
     begin
       Next.Grid := State.Grid;
@@ -37,95 +37,95 @@ begin
   return Next;
 end function;
 
-function ToggleHelp(State: MandelbrotModel): MandelbrotModel;
+function ToggleHelp(State: Model.MandelbrotModel): Model.MandelbrotModel;
 begin
-  return mandelbrot.model.mandelbrotmodel(Explorer := State.Explorer, TerminalWidth := State.TerminalWidth, TerminalHeight := State.TerminalHeight, Grid := State.Grid, HelpOpen := not State.HelpOpen, Generation := State.Generation, RowsRendered := State.RowsRendered, FailureMessage := State.FailureMessage, Inbox := State.Inbox);
+  return Model.MandelbrotModel(Explorer := State.Explorer, TerminalWidth := State.TerminalWidth, TerminalHeight := State.TerminalHeight, Grid := State.Grid, HelpOpen := not State.HelpOpen, Generation := State.Generation, RowsRendered := State.RowsRendered, FailureMessage := State.FailureMessage, Inbox := State.Inbox);
 end function;
 
-function WithFailure(State: MandelbrotModel; Message: string): MandelbrotModel;
+function WithFailure(State: Model.MandelbrotModel; Message: string): Model.MandelbrotModel;
 begin
-  return mandelbrot.model.mandelbrotmodel(Explorer := State.Explorer, TerminalWidth := State.TerminalWidth, TerminalHeight := State.TerminalHeight, Grid := State.Grid, HelpOpen := State.HelpOpen, Generation := State.Generation, RowsRendered := State.RowsRendered, FailureMessage := Message, Inbox := State.Inbox);
+  return Model.MandelbrotModel(Explorer := State.Explorer, TerminalWidth := State.TerminalWidth, TerminalHeight := State.TerminalHeight, Grid := State.Grid, HelpOpen := State.HelpOpen, Generation := State.Generation, RowsRendered := State.RowsRendered, FailureMessage := Message, Inbox := State.Inbox);
 end function;
 
-function ViewportX(State: ExplorerState; Width: integer; Height: integer; CellX: integer): real;
+function ViewportX(State: Model.ExplorerState; Width: integer; Height: integer; CellX: integer): real;
 begin
   return State.XMin(Width, Height) +
-         IntToReal(CellX) / IntToReal(Max(Width - 1, 1)) * (State.XMax(Width, Height) - State.XMin(Width, Height));
+         Conv.IntToReal(CellX) / Conv.IntToReal(Math.Max(Width - 1, 1)) * (State.XMax(Width, Height) - State.XMin(Width, Height));
 end function;
 
-function ViewportY(State: ExplorerState; Height: integer; CellY: integer): real;
+function ViewportY(State: Model.ExplorerState; Height: integer; CellY: integer): real;
 begin
   return State.YMax() -
-         IntToReal(CellY) / IntToReal(Max(Height - 1, 1)) * (State.YMax() - State.YMin());
+         Conv.IntToReal(CellY) / Conv.IntToReal(Math.Max(Height - 1, 1)) * (State.YMax() - State.YMin());
 end function;
 
-function UpdateKey(State: MandelbrotModel; Key: TuiKeyEvent; Cmd: TuiCmdOutput): MandelbrotModel;
+function UpdateKey(State: Model.MandelbrotModel; Key: Tui.TuiKeyEvent; Cmd: Tui.TuiCmdOutput): Model.MandelbrotModel;
 begin
-  var Explorer: ExplorerState := State.Explorer;
+  var Explorer: Model.ExplorerState := State.Explorer;
   var Changed: boolean := false;
   const StepX: real := Explorer.SpanX(State.Grid.Width, State.Grid.Height) * 0.14;
   const StepY: real := Explorer.SpanY * 0.14;
-  if Key.kind = Std.Console.KeyKind.Left then
+  if Key.kind = Console.KeyKind.Left then
     begin
       Explorer.CenterX := Explorer.CenterX - StepX;
       Changed := true;
     end;
-  elsif Key.kind = Std.Console.KeyKind.Right then
+  elsif Key.kind = Console.KeyKind.Right then
     begin
       Explorer.CenterX := Explorer.CenterX + StepX;
       Changed := true;
     end;
-  elsif Key.kind = Std.Console.KeyKind.Up then
+  elsif Key.kind = Console.KeyKind.Up then
     begin
       Explorer.CenterY := Explorer.CenterY + StepY;
       Changed := true;
     end;
-  elsif Key.kind = Std.Console.KeyKind.Down then
+  elsif Key.kind = Console.KeyKind.Down then
     begin
       Explorer.CenterY := Explorer.CenterY - StepY;
       Changed := true;
     end;
-  elsif Key.kind = Std.Console.KeyKind.PageUp then
+  elsif Key.kind = Console.KeyKind.PageUp then
     begin
-      Explorer.MaxIter := Min(Explorer.MaxIter + 32, 2048);
+      Explorer.MaxIter := Math.Min(Explorer.MaxIter + 32, 2048);
       Changed := true;
     end;
-  elsif Key.kind = Std.Console.KeyKind.PageDown then
+  elsif Key.kind = Console.KeyKind.PageDown then
     begin
-      Explorer.MaxIter := Max(Explorer.MaxIter - 32, 32);
+      Explorer.MaxIter := Math.Max(Explorer.MaxIter - 32, 32);
       Changed := true;
     end;
-  elsif Key.kind = Std.Console.KeyKind.Character then
+  elsif Key.kind = Console.KeyKind.Character then
     begin
       case Key.ch of
         when '+', '=':
           begin
-            Explorer.SpanY := Max(Explorer.SpanY * 0.82, 0.000001);
+            Explorer.SpanY := Math.Max(Explorer.SpanY * 0.82, 0.000001);
             Changed := true;
           end;
         when '-':
           begin
-            Explorer.SpanY := Min(Explorer.SpanY / 0.82, 3.5);
+            Explorer.SpanY := Math.Min(Explorer.SpanY / 0.82, 3.5);
             Changed := true;
           end;
         when '1':
           begin
-            Explorer.Palette := PaletteKind.DeepOcean;
+            Explorer.Palette := Color.PaletteKind.DeepOcean;
             Changed := true;
           end;
         when '2':
           begin
-            Explorer.Palette := PaletteKind.Ember;
+            Explorer.Palette := Color.PaletteKind.Ember;
             Changed := true;
           end;
         when '3':
           begin
-            Explorer.Palette := PaletteKind.Aurora;
+            Explorer.Palette := Color.PaletteKind.Aurora;
             Changed := true;
           end;
         when 'r', 'R':
           begin
-            Explorer := ExplorerState.Default();
+            Explorer := Model.ExplorerState.Default();
             Changed := true;
           end;
         when 'h', 'H':
@@ -147,33 +147,37 @@ begin
   return State;
 end function;
 
-function UpdatePointer(State: MandelbrotModel; Pointer: TuiPointerEvent; Cmd: TuiCmdOutput): MandelbrotModel;
+function UpdatePointer(
+  State: Model.MandelbrotModel;
+  Pointer: Tui.TuiPointerEvent;
+  Cmd: Tui.TuiCmdOutput
+): Model.MandelbrotModel;
 begin
-  var Explorer: ExplorerState := State.Explorer;
+  var Explorer: Model.ExplorerState := State.Explorer;
   var Changed: boolean := false;
-  if Pointer.Action = Std.Console.MouseAction.ScrollUp then
+  if Pointer.Action = Console.MouseAction.ScrollUp then
     begin
-      Explorer.SpanY := Max(Explorer.SpanY * 0.88, 0.000001);
+      Explorer.SpanY := Math.Max(Explorer.SpanY * 0.88, 0.000001);
       Changed := true;
     end;
-  elsif Pointer.Action = Std.Console.MouseAction.ScrollDown then
+  elsif Pointer.Action = Console.MouseAction.ScrollDown then
     begin
-      Explorer.SpanY := Min(Explorer.SpanY / 0.88, 3.5);
+      Explorer.SpanY := Math.Min(Explorer.SpanY / 0.88, 3.5);
       Changed := true;
     end;
-  elsif ((((Pointer.Action = Std.Console.MouseAction.Down) and (Pointer.Position.X >= 1)) and (Pointer.Position.X <= State.Grid.Width)) and (Pointer.Position.Y >= 1)) and
+  elsif ((((Pointer.Action = Console.MouseAction.Down) and (Pointer.Position.X >= 1)) and (Pointer.Position.X <= State.Grid.Width)) and (Pointer.Position.Y >= 1)) and
         (Pointer.Position.Y <= State.Grid.Height) then
     begin
-      if Pointer.Button = TuiPointerButton.Left then
+      if Pointer.Button = Tui.TuiPointerButton.Left then
         begin
           Explorer.CenterX := ViewportX(Explorer, State.Grid.Width, State.Grid.Height, Pointer.Position.X -
                                                                                        1);
           Explorer.CenterY := ViewportY(Explorer, State.Grid.Height, Pointer.Position.Y - 1);
           Changed := true;
         end;
-      elsif Pointer.Button = TuiPointerButton.Middle then
+      elsif Pointer.Button = Tui.TuiPointerButton.Middle then
         begin
-          Explorer := ExplorerState.Default();
+          Explorer := Model.ExplorerState.Default();
           Changed := true;
         end;
       end if;
@@ -190,24 +194,24 @@ begin
 end function;
 
 // Handles framework input and owns the render subscription lifecycle.
-public function UpdateMandelbrot(State: MandelbrotModel; Msg: TuiMsg; Cmd: TuiCmdOutput): MandelbrotModel;
+public function UpdateMandelbrot(State: Model.MandelbrotModel; Msg: Tui.TuiMsg; Cmd: Tui.TuiCmdOutput): Model.MandelbrotModel;
 begin
-  Cmd.Set(TuiCmd.NoCommand);
+  Cmd.Set(Tui.TuiCmd.NoCommand);
   case Msg of
-    when TuiMsg.Started:
+    when Tui.TuiMsg.Started:
       begin
         QueueRender(State, Cmd);
         return State;
       end;
-    when TuiMsg.Key(const Key):
+    when Tui.TuiMsg.Key(const Key):
       begin
         return UpdateKey(State, Key, Cmd);
       end;
-    when TuiMsg.Pointer(const Pointer):
+    when Tui.TuiMsg.Pointer(const Pointer):
       begin
         return UpdatePointer(State, Pointer, Cmd);
       end;
-    when TuiMsg.Resize(const Size):
+    when Tui.TuiMsg.Resize(const Size):
       begin
         if (Size.Width = State.TerminalWidth) and (Size.Height = State.TerminalHeight) then
           begin
@@ -217,7 +221,7 @@ begin
 
         return RestartRender(State, State.Explorer, Size.Width, Size.Height, Cmd);
       end;
-    when TuiMsg.BackgroundFailed(const Id, const Kind, const Message, const Code, const Line, const Column):
+    when Tui.TuiMsg.BackgroundFailed(const Id, const Kind, const Message, const Code, const Line, const Column):
       begin
         if Id = RenderSubscriptionId then
           begin
@@ -227,7 +231,7 @@ begin
 
         return State;
       end;
-    when TuiMsg.QuitRequested:
+    when Tui.TuiMsg.QuitRequested:
       begin
         if State.HelpOpen then
           begin
@@ -235,10 +239,10 @@ begin
           end;
         end if;
 
-        Cmd.Set(TuiCmd.Quit);
+        Cmd.Set(Tui.TuiCmd.Quit);
         return State;
       end;
-    when TuiMsg.Tick(_), TuiMsg.FocusChanged(_, _), TuiMsg.Action(_, _), TuiMsg.TextChanged(_, _, _, _), TuiMsg.TextAreaChanged(_, _, _, _, _), TuiMsg.CheckChanged(_, _, _), TuiMsg.SelectionChanged(_, _, _), TuiMsg.ScrollChanged(_, _, _), TuiMsg.MenuChanged(_, _, _):
+    when Tui.TuiMsg.Tick(_), Tui.TuiMsg.FocusChanged(_, _), Tui.TuiMsg.Action(_, _), Tui.TuiMsg.TextChanged(_, _, _, _), Tui.TuiMsg.TextAreaChanged(_, _, _, _, _), Tui.TuiMsg.CheckChanged(_, _, _), Tui.TuiMsg.SelectionChanged(_, _, _), Tui.TuiMsg.ScrollChanged(_, _, _), Tui.TuiMsg.MenuChanged(_, _, _):
       begin
         return State;
       end;
@@ -247,20 +251,20 @@ end function;
 
 // Replaces the displayed image only after a complete current-generation render.
 public function UpdateMandelbrotFrame(
-  State: MandelbrotModel;
-  Message: MandelbrotRenderFrame;
-  Cmd: TuiCmdOutput
-): MandelbrotModel;
+  State: Model.MandelbrotModel;
+  Message: Render.MandelbrotRenderFrame;
+  Cmd: Tui.TuiCmdOutput
+): Model.MandelbrotModel;
 begin
-  Cmd.Set(TuiCmd.NoCommand);
+  Cmd.Set(Tui.TuiCmd.NoCommand);
   if (Message.Generation <> State.Generation) or
      (Message.Cells.Length() <> State.Grid.Width * State.Grid.Height) then
     begin
       return State;
     end;
   end if;
-  var Next: MandelbrotModel := State;
-  Next.Grid := TuiCellGrid.Create(State.Grid.Width, State.Grid.Height, Message.Cells);
+  var Next: Model.MandelbrotModel := State;
+  Next.Grid := Tui.TuiCellGrid.Create(State.Grid.Width, State.Grid.Height, Message.Cells);
   Next.RowsRendered := State.Grid.Height;
   return Next;
 end function;

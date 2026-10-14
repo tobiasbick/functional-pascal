@@ -2,131 +2,78 @@ use super::*;
 
 #[test]
 fn short_name_console_writeln() {
-    check_ok(
-        "\
-program T;
-uses Std.Console;
-begin
-  WriteLn('Hello');
-end.",
-    );
+    check_ok("program T;\nuses Std.Console as Console;\nbegin\n  Console.WriteLn('Hello');\nend.");
 }
 
 #[test]
 fn short_name_console_keypressed() {
     check_ok(
-        "\
-program T;
-uses Std.Console;
-begin
-  const P: boolean := KeyPressed();
-end.",
+        "program T;\nuses Std.Console as Console;\nbegin\n  const P: boolean := Console.KeyPressed();\nend.",
     );
 }
 
 #[test]
 fn short_name_console_crt_names_and_constants() {
     check_ok(
-        "\
-program T;
-uses Std.Console;
-begin
-  Window(1, 1, 5, 5);
-  GotoXY(1, 1);
-  TextColor(Yellow);
-  TextBackground(Blue);
-  ClrScr();
-  const X: integer := WhereX();
-  const Y: integer := WhereY();
-end.",
+        "program T;\nuses Std.Console as Console;\nbegin\n  Console.Window(1, 1, 5, 5);\n  Console.GotoXY(1, 1);\n  Console.TextColor(Console.Yellow);\n  Console.TextBackground(Console.Blue);\n  Console.ClrScr();\n  const X: integer := Console.WhereX();\n  const Y: integer := Console.WhereY();\nend.",
     );
 }
 
 #[test]
 fn short_name_math_sqrt() {
-    check_ok(
-        "\
-program T;
-uses Std.Math;
-begin
-  const R: real := Sqrt(4.0);
-end.",
-    );
+    check_ok("program T;\nuses Std.Math as Math;\nbegin\n  const R: real := Math.Sqrt(4.0);\nend.");
 }
 
 #[test]
 fn short_name_math_pi_const() {
-    check_ok(
-        "\
-program T;
-uses Std.Math;
-begin
-  const R: real := Pi;
-end.",
-    );
+    check_ok("program T;\nuses Std.Math as Math;\nbegin\n  const R: real := Math.Pi;\nend.");
 }
 
 #[test]
 fn short_name_conv_int_to_str() {
     check_ok(
-        "\
-program T;
-uses Std.Conv;
-begin
-  const S: string := IntToStr(42);
-end.",
+        "program T;\nuses Std.Conv as Conv;\nbegin\n  const S: string := Conv.IntToStr(42);\nend.",
     );
 }
 
 #[test]
 fn short_name_console_key_event_type() {
     check_ok(
-        "\
-program T;
-uses Std.Console;
-begin
-  const E: KeyEvent := ReadKeyEvent();
-  WriteLn(E.kind = KeyKind.Space);
-  WriteLn(E.shift);
-end.",
+        "program T;\nuses Std.Console as Console;\nbegin\n  const E: Console.KeyEvent := Console.ReadKeyEvent();\n  Console.WriteLn(E.kind = Console.KeyKind.Space);\n  Console.WriteLn(E.shift);\nend.",
     );
 }
 
 #[test]
 fn short_name_mixed_with_qualified() {
     check_ok(
-        "\
-program T;
-uses Std.Console, Std.Math;
-begin
-  WriteLn(Std.Math.Sqrt(Pi));
-end.",
+        "program T;\nuses Std.Console as Console, Std.Math as Math;\nbegin\n  Console.WriteLn(Math.Sqrt(Math.Pi));\nend.",
     );
 }
 
 #[test]
-fn ambiguous_import_hint_leads_to_a_valid_qualified_call() {
-    let source = "program T; uses Std.Console, Std.Fs; begin const Text: result of (string, string) := ReadText('input.txt'); end.";
+fn required_qualification_hint_lists_each_import_and_leads_to_a_valid_call() {
+    let source = "program T; uses Std.Console as Console, Std.Fs as Fs; begin const Text: result of (string, string) := ReadText('input.txt'); end.";
     let errors = check_errors(source);
     assert_eq!(errors.len(), 1, "{errors:#?}");
     assert_eq!(
         errors[0].code,
-        fpas_diagnostics::codes::SEMA_AMBIGUOUS_IMPORTED_NAME
+        fpas_diagnostics::codes::SEMA_UNQUALIFIED_NAME
     );
     let hint = errors[0].help.as_deref().expect("qualification hint");
-    assert_eq!(
-        hint,
-        "`ReadText` exists in multiple imported units: Std.Console.ReadText, Std.Fs.ReadText. Use the fully qualified name to disambiguate."
+    assert!(
+        hint.contains("Console.ReadText") && hint.contains("Fs.ReadText"),
+        "{hint}"
     );
-    check_ok(&source.replace(":= ReadText(", ":= Std.Fs.ReadText("));
+    check_ok(&source.replace(":= ReadText(", ":= Fs.ReadText("));
 
-    let statement_errors =
-        check_errors("program T; uses Std.Console, Std.Fs; begin ReadText('input.txt'); end.");
+    let statement_errors = check_errors(
+        "program T; uses Std.Console as Console, Std.Fs as Fs; begin ReadText('input.txt'); end.",
+    );
     assert_eq!(statement_errors.len(), 1, "{statement_errors:#?}");
     assert_eq!(statement_errors[0].code, errors[0].code);
     assert_eq!(statement_errors[0].help, errors[0].help);
     check_ok(
-        "program T; uses Std.Console, Std.Fs; begin discard Std.Fs.ReadText('input.txt'); end.",
+        "program T; uses Std.Console as Console, Std.Fs as Fs; begin discard Fs.ReadText('input.txt'); end.",
     );
 }
 
@@ -183,7 +130,7 @@ fn removed_helpers_have_stable_native_hints() {
 #[test]
 fn removed_type_units_cannot_be_imported() {
     for unit in ["Str", "Arrays", "Dictionaries", "Options", "Results"] {
-        let errors = check_errors(&format!("program T; uses Std.{unit}; begin end."));
+        let errors = check_errors(&format!("program T; uses Std.{unit} as Legacy; begin end."));
         assert_eq!(errors.len(), 1, "{errors:#?}");
         assert!(errors[0].message.contains("removed"), "{errors:#?}");
     }

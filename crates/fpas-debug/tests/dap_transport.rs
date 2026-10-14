@@ -16,44 +16,44 @@ use serde_json::{Value, json};
 
 const OUTPUT_SOURCE: &str = r#"program TransportOutput;
 
-uses Std.Console;
+uses Std.Console as Console;
 
 begin
-  WriteLn('hello-raw');
+  Console.WriteLn('hello-raw');
 end.
 "#;
 
 const INPUT_SOURCE: &str = r#"program TransportInput;
 
-uses Std.Console;
+uses Std.Console as Console;
 
 begin
-  WriteLn(ReadLn());
-  WriteLn(ReadLn());
+  Console.WriteLn(Console.ReadLn());
+  Console.WriteLn(Console.ReadLn());
 end.
 "#;
 
 const TERMINAL_SOURCE: &str = r#"program TerminalInput;
 
-uses Std.Console;
+uses Std.Console as Console;
 
 begin
-  AcquireInteractiveTerminal();
-  WriteLn('terminal-ready');
-  while not EventPending() do
+  Console.AcquireInteractiveTerminal();
+  Console.WriteLn('terminal-ready');
+  while not Console.EventPending() do
   begin null;
   end; end while;
-  const InputEvent: ConsoleEvent := ReadEvent();
-  WriteLn(InputEvent.key.ch);
-  if KeyPressed() then
+  const InputEvent: Console.ConsoleEvent := Console.ReadEvent();
+  Console.WriteLn(InputEvent.key.ch);
+  if Console.KeyPressed() then
   begin
-    WriteLn('duplicate');
+    Console.WriteLn('duplicate');
   end;
   else
   begin
-    WriteLn('clean');
+    Console.WriteLn('clean');
   end; end if;
-  ReleaseInteractiveTerminal();
+  Console.ReleaseInteractiveTerminal();
 end.
 "#;
 

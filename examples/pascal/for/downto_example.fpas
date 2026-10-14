@@ -2,7 +2,7 @@
 
 program DowntoExample;
 
-uses Std.Console, Std.Conv;
+uses Std.Console as Console, Std.Conv as Conv;
 
 begin
   var Sum: integer := 0;
@@ -12,5 +12,5 @@ begin
     end;
   end for;
 
-  WriteLn('sum: ', IntToStr(Sum));
+  Console.WriteLn('sum: ', Conv.IntToStr(Sum));
 end.

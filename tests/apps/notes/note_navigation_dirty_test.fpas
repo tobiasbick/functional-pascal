@@ -1,33 +1,33 @@
 program NoteNavigationDirtyTest;
 
-uses Notes.Model, Notes.Update, Std.Test, Std.Tui;
+uses Notes.Model as Model, Notes.Update as Update, Std.Test as Test, Std.Tui as Tui;
 
 begin
-  var NoteValue: Note := NoteCreate('navigation', 123);
+  var NoteValue: Model.Note := Model.NoteCreate('navigation', 123);
   NoteValue.Title := 'Title';
   NoteValue.Body := 'Body';
   NoteValue.Tags := ['one'];
-  const Loaded: NotesLoad := notes.model.notesload(Notes := [NoteValue], Issues := []);
-  var State: NotesModel := NotesModelCreate(ScratchDir(), Loaded);
-  const Cmd: TuiCmdOutput := TuiCmdOutput.Create();
+  const Loaded: Model.NotesLoad := Model.NotesLoad(Notes := [NoteValue], Issues := []);
+  var State: Model.NotesModel := Model.NotesModelCreate(Test.ScratchDir(), Loaded);
+  const Cmd: Tui.TuiCmdOutput := Tui.TuiCmdOutput.Create();
   for Caret: integer := 0 to 4 do
     begin
-      State := NotesUpdate(State, TuiMsgTextChanged(TuiControlId.Create(3), TuiAction.Create(3), 'Title', Caret), Cmd);
-      AssertFalse(State.Dirty);
-      AssertEquals(Caret, State.TitleCaret);
-      State := NotesUpdate(State, TuiMsgTextAreaChanged(TuiControlId.Create(5), TuiAction.Create(5), 'Body', Caret, TuiPoint.Create(0, 1)), Cmd);
-      AssertFalse(State.Dirty);
-      AssertEquals(Caret, State.BodyCaret);
-      AssertEquals(1, State.BodyOffset.Y);
+      State := Update.NotesUpdate(State, Tui.TuiMsgTextChanged(Tui.TuiControlId.Create(3), Tui.TuiAction.Create(3), 'Title', Caret), Cmd);
+      Test.AssertFalse(State.Dirty);
+      Test.AssertEquals(Caret, State.TitleCaret);
+      State := Update.NotesUpdate(State, Tui.TuiMsgTextAreaChanged(Tui.TuiControlId.Create(5), Tui.TuiAction.Create(5), 'Body', Caret, Tui.TuiPoint.Create(0, 1)), Cmd);
+      Test.AssertFalse(State.Dirty);
+      Test.AssertEquals(Caret, State.BodyCaret);
+      Test.AssertEquals(1, State.BodyOffset.Y);
     end;
   end for;
 
-  State := NotesUpdate(State, TuiMsgTextChanged(TuiControlId.Create(4), TuiAction.Create(4), 'one', 0), Cmd);
-  AssertFalse(State.Dirty);
-  State := NotesPersistCurrent(State);
-  AssertEquals(123, State.Notes[0].UpdatedMillis);
-  State := NotesUpdate(State, TuiMsgTextChanged(TuiControlId.Create(3), TuiAction.Create(3), 'Edited', 6), Cmd);
-  AssertTrue(State.Dirty);
-  State := NotesUpdate(State, TuiMsgTextAreaChanged(TuiControlId.Create(5), TuiAction.Create(5), 'Body', 0, TuiPoint.Create(0, 0)), Cmd);
-  AssertTrue(State.Dirty);
+  State := Update.NotesUpdate(State, Tui.TuiMsgTextChanged(Tui.TuiControlId.Create(4), Tui.TuiAction.Create(4), 'one', 0), Cmd);
+  Test.AssertFalse(State.Dirty);
+  State := Update.NotesPersistCurrent(State);
+  Test.AssertEquals(123, State.Notes[0].UpdatedMillis);
+  State := Update.NotesUpdate(State, Tui.TuiMsgTextChanged(Tui.TuiControlId.Create(3), Tui.TuiAction.Create(3), 'Edited', 6), Cmd);
+  Test.AssertTrue(State.Dirty);
+  State := Update.NotesUpdate(State, Tui.TuiMsgTextAreaChanged(Tui.TuiControlId.Create(5), Tui.TuiAction.Create(5), 'Body', 0, Tui.TuiPoint.Create(0, 0)), Cmd);
+  Test.AssertTrue(State.Dirty);
 end.

@@ -15,7 +15,7 @@ declarations and record members).
 ```pascal
 unit MyApp.Geometry;
 
-uses Std.Math;
+uses Std.Math as Math;
 
 public type Point = record
   public X: real;
@@ -29,7 +29,7 @@ end function;
 
 public function Distance(A: Point; B: Point): real;
 begin
-  return Sqrt(Square(B.X - A.X) + Square(B.Y - A.Y));
+  return Math.Sqrt(Square(B.X - A.X) + Square(B.Y - A.Y));
 end function;
 end unit;
 ```

@@ -28,10 +28,10 @@ end unit;
         &cwd.join("src/facade.fpas"),
         r#"
 unit Data.Facade;
-uses Data.Boxes;
-public type IntBox = Box of integer;
-public function Empty(): Optional of string; begin return Optional(); end function;
-public function Nested(): Box of Box of integer; begin return Box(Value := Make(9)); end function;
+uses Data.Boxes as Boxes;
+public type IntBox = Boxes.Box of integer;
+public function Empty(): Boxes.Optional of string; begin return Boxes.Optional(); end function;
+public function Nested(): Boxes.Box of Boxes.Box of integer; begin return Boxes.Box(Value := Boxes.Make(9)); end function;
 end unit;
 "#,
     );
@@ -40,15 +40,15 @@ end unit;
         &main,
         r#"
 program T;
-uses Data.Boxes, Data.Facade;
+uses Data.Boxes as Boxes, Data.Facade as Facade;
 begin
-  var I: IntBox := IntBox(Value := 7);
+  var I: Facade.IntBox := Facade.IntBox(Value := 7);
   I.Value := 8;
-  const S: Box of string := Make('eight');
-  const N: Box of Box of integer := Nested();
-  const O: Optional of integer := Optional();
-  const E: Optional of string := Empty();
-  const Root: Node of integer := Node(Value := 2, Next := Some(Node(Value := 1)));
+  const S: Boxes.Box of string := Boxes.Make('eight');
+  const N: Boxes.Box of Boxes.Box of integer := Facade.Nested();
+  const O: Boxes.Optional of integer := Boxes.Optional();
+  const E: Boxes.Optional of string := Facade.Empty();
+  const Root: Boxes.Node of integer := Boxes.Node(Value := 2, Next := Some(Boxes.Node(Value := 1)));
   if (I.Get() <> 8) or (S.Get() <> 'eight') or (N.Value.Get() <> 9) or O.Value.IsSome() or E.Value.IsSome() then panic('generic unit records'); end if;
   if Root.Next.Unwrap().Value <> 1 then panic('recursive generic unit record'); end if;
 end.
@@ -67,14 +67,17 @@ end.
     }
     for (statement, message) in [
         (
-            "const V: PrivateBox of integer := PrivateBox(Value := 1);",
+            "const V: Boxes.PrivateBox of integer := Boxes.PrivateBox(Value := 1);",
             "private",
         ),
-        ("const V: Box of string := Make(1);", "type mismatch"),
+        (
+            "const V: Boxes.Box of string := Boxes.Make(1);",
+            "type mismatch",
+        ),
     ] {
         write_text(
             &main,
-            &format!("program T; uses Data.Boxes; begin {statement} end."),
+            &format!("program T; uses Data.Boxes as Boxes; begin {statement} end."),
         );
         let (code, _, stderr) = support::run_cli_args_and_capture_output(
             &["check".into(), project.to_string_lossy().into_owned()],

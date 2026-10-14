@@ -1,7 +1,7 @@
 // Validated conversion between FPAS strings and UTF-8 byte arrays.
 unit Std.Net.Utf8;
 
-uses Std.Conv;
+uses Std.Conv as Conv;
 
 // Internal bulk codec implemented by the string runtime.
 function EncodeBytes(Text: string): array of integer;
@@ -23,7 +23,7 @@ end function;
 // - `Message`: Reason the byte sequence is invalid.
 function Invalid(Index: integer; Message: string): result of (string, string);
 begin
-  return Error('Invalid UTF-8 at byte ' + Std.Conv.IntToStr(Index) + ': ' + Message);
+  return Error('Invalid UTF-8 at byte ' + Conv.IntToStr(Index) + ': ' + Message);
 end function;
 
 // Reports whether an integer is a UTF-8 continuation byte.

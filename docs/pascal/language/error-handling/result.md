@@ -1,5 +1,7 @@
 # Result
 
+The code fragments use `uses Std.Conv as Conv, Std.Console as Console;`.
+
 `Result of (T, E)` represents either a success (`Ok`) or a failure (`Error`):
 
 ```pascal
@@ -28,9 +30,9 @@ Use `case of` with destructuring to handle both branches:
 const R: result of (integer, string) := Divide(10, 0);
 case R of
   when Ok(const V):
-    WriteLn('Value: ' + IntToStr(V));
+    Console.WriteLn('Value: ' + Conv.IntToStr(V));
   when Error(const E):
-    WriteLn('Error: ' + E);
+    Console.WriteLn('Error: ' + E);
 end case;
 ```
 

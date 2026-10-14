@@ -1,7 +1,7 @@
 program T;
 
-uses Std.Console;
+uses Std.Console as Console;
 
 begin
-  WriteLn('hello'.Replace('xyz', '!'));
+  Console.WriteLn('hello'.Replace('xyz', '!'));
 end.

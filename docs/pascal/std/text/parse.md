@@ -4,17 +4,19 @@ Structured parsing helpers for text input. `Std.Parse` is for callers that want 
 
 ```pascal
 program Example;
-uses Std.Console, Std.Parse;
+
+uses Std.Console as Console, Std.Parse as Parse;
+
 begin
-  const Parsed: Result of (integer, string) := TryInt('42');
-  WriteLn(Parsed.UnwrapOr(0));
+  const Parsed: result of (integer, string) := Parse.TryInt('42');
+  Console.WriteLn(Parsed.UnwrapOr(0));
 end.
 ```
 
 
 ## Importing and names
 
-After `uses Std.Parse;` use short names (`TryInt`, `TryReal`, `TryBool`) or qualified names (`Std.Parse.TryInt`, etc.).
+Import with `uses Std.Parse as Parse;` and access public symbols as `Parse.Name`. User enum variants require `Parse.Type.Variant`.
 
 ---
 
@@ -38,8 +40,8 @@ success or `Error(Message)` on invalid text or overflow. `StrToInt` uses the sam
 grammar with a runtime error instead of Result.
 
 ```pascal
-const R: Result of (integer, string) := TryInt(' +1_024 ');
-WriteLn(R.UnwrapOr(0));                       // 1024
+const R: Result of (integer, string) := Parse.TryInt(' +1_024 ');
+Console.WriteLn(R.UnwrapOr(0));                       // 1024
 ```
 
 ---
@@ -57,8 +59,8 @@ including integral reals and either sign of zero. See
 [RealToStr](conv.md#function-realtostrr-real-string).
 
 ```pascal
-const R: Result of (real, string) := TryReal('1_024.0e-2');
-WriteLn(R.UnwrapOr(0.0));                     // 10.24
+const R: Result of (real, string) := Parse.TryReal('1_024.0e-2');
+Console.WriteLn(R.UnwrapOr(0.0));                     // 10.24
 ```
 
 ---
@@ -68,8 +70,8 @@ WriteLn(R.UnwrapOr(0.0));                     // 10.24
 Parses boolean text. Leading and trailing whitespace is ignored; casing does not matter.
 
 ```pascal
-const R: Result of (boolean, string) := TryBool(' FALSE ');
-WriteLn(R.UnwrapOr(true));                    // false
+const R: Result of (boolean, string) := Parse.TryBool(' FALSE ');
+Console.WriteLn(R.UnwrapOr(true));                    // false
 ```
 
 ---
@@ -79,11 +81,11 @@ WriteLn(R.UnwrapOr(true));                    // false
 `Try*` functions do not raise runtime parse errors. Inspect the result with `.IsOk()` / `.IsError()`, recover with `.UnwrapOr(Default)`, or destructure the result with `case`.
 
 ```pascal
-case TryInt(Input) of
+case Parse.TryInt(Input) of
   when Ok(const N):
-    WriteLn(N);
+    Console.WriteLn(N);
   when Error(const Message):
-    WriteLn(Message);
+    Console.WriteLn(Message);
 end case;
 ```
 

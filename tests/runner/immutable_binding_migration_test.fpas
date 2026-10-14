@@ -1,6 +1,6 @@
 program ImmutableBindingMigrationTest;
 
-uses Std.Test;
+uses Std.Test as Test;
 
 type Item = record
   N: integer;
@@ -32,6 +32,6 @@ begin
       Score := -1;
   end case;
 
-  AssertEquals(49, Score);
-  AssertEquals(1, N);
+  Test.AssertEquals(49, Score);
+  Test.AssertEquals(1, N);
 end.

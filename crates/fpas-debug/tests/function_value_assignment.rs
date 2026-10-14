@@ -261,7 +261,7 @@ fn jsonl_function_values_copy_atomically_and_continue() {
 fn jsonl_function_value_assignment_stays_bound_to_the_selected_child_task() {
     const TASK_SOURCE: &str = r#"program TaskFunctionValueAssignment;
 
-uses Std.Console, Std.Tasks;
+uses Std.Console as Console, Std.Tasks as Tasks;
 
 type
   Handler = function(Value: integer): integer;
@@ -286,7 +286,7 @@ end function;
 
 begin scope
   const Pending: task of integer := go Work();
-  WriteLn(Wait(Pending));
+  Console.WriteLn(Tasks.Wait(Pending));
  end scope; end.
 "#;
     let (program, diagnostics) = fpas_parser::parse(TASK_SOURCE);

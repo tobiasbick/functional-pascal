@@ -21,7 +21,10 @@ fn unused_function_result_reports_code_location_and_result_fixes() {
 fn unused_intrinsic_result_is_rejected_by_check_in_json_mode() {
     let cwd = create_temp_dir("unused-result-json");
     let main = cwd.join("main.fpas");
-    write_text(&main, "program T; uses Std.Math; begin Abs(-1); end.");
+    write_text(
+        &main,
+        "program T; uses Std.Math as Math; begin Math.Abs(-1); end.",
+    );
     let (exit, stdout, stderr) = support::run_cli_args_and_capture_output(
         &[
             "check".into(),
@@ -48,16 +51,7 @@ fn unused_intrinsic_result_is_rejected_by_check_in_json_mode() {
 
 #[test]
 fn explicit_discard_runs_postfix_result_once_and_procedure_calls_still_run() {
-    let source = "program T; uses Std.Console;
-      var Count: integer := 0;
-      type Box = record Value: integer;
-        function Get(Self: Box): result of (integer, string);
-        begin Count := Count + 1; return Error('ignored'); end function;
-        procedure Show(Self: Box); begin WriteLn(Self.Value); end procedure;
-      end record;
-      function Make(): Box;
-      begin Count := Count + 1; return Box( Value := 7 ); end function;
-      begin discard Make().Get(); Make().Show(); WriteLn(Count); end.";
+    let source = "program T; uses Std.Console as Console;\n      var Count: integer := 0;\n      type Box = record Value: integer;\n        function Get(Self: Box): result of (integer, string);\n        begin Count := Count + 1; return Error('ignored'); end function;\n        procedure Show(Self: Box); begin Console.WriteLn(Self.Value); end procedure;\n      end record;\n      function Make(): Box;\n      begin Count := Count + 1; return Box( Value := 7 ); end function;\n      begin discard Make().Get(); Make().Show(); Console.WriteLn(Count); end.";
     let (exit, stdout, stderr) = support::run_source_and_capture_output("discard.fpas", source);
     assert_eq!(exit, 0, "{stderr}");
     assert_eq!(stdout, "7\n3\n");
@@ -74,7 +68,10 @@ fn imported_function_result_is_rejected_then_explicit_discard_runs() {
       end unit;",
     );
     let main = cwd.join("main.fpas");
-    write_text(&main, "program T; uses Values; begin Values.Get(); end.");
+    write_text(
+        &main,
+        "program T; uses Values as ValuesUnit; begin ValuesUnit.Get(); end.",
+    );
     let (exit, _, stderr) = support::run_cli_args_and_capture_output(
         &["check".into(), cwd.to_string_lossy().into_owned()],
         &cwd,
@@ -83,7 +80,7 @@ fn imported_function_result_is_rejected_then_explicit_discard_runs() {
     assert!(stderr.contains("FP3022"), "{stderr}");
     write_text(
         &main,
-        "program T; uses Values; begin discard Values.Get(); end.",
+        "program T; uses Values as ValuesUnit; begin discard ValuesUnit.Get(); end.",
     );
     let (exit, _, stderr) = support::run_cli_args_and_capture_output(
         &["check".into(), cwd.to_string_lossy().into_owned()],

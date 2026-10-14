@@ -1,7 +1,7 @@
 // Shared HTTP field validation and parsing.
 unit Std.Http.Fields;
 
-uses Std.Http.Method, Std.Http.Types;
+uses Std.Http.Method as Method, Std.Http.Types as Types;
 
 // Reports whether an HTTP field value contains only permitted text characters.
 //
@@ -53,10 +53,10 @@ end function;
 // Parameters:
 // - `Text`: Complete decoded message head.
 // - `MessageKind`: Message label used in diagnostics.
-public function Parse(Text: string; MessageKind: string): result of (array of Header, string);
+public function Parse(Text: string; MessageKind: string): result of (array of Types.Header, string);
 begin
   const Lines: array of string := Text.Split(#13 + #10);
-  var Headers: array of Header := [];
+  var Headers: array of Types.Header := [];
   for Index: integer := 1 to Lines.Length() - 1 do
     begin
       const Colon: integer := Lines[Index].IndexOf(':');
@@ -67,7 +67,7 @@ begin
       end if;
       const Name: string := (Lines[Index]).Slice(0, Colon);
       const Value: string := (Lines[Index]).Slice(Colon + 1, Lines[Index].Length() - Colon - 1);
-      if not Std.Http.Method.IsValidToken(Name) then
+      if not Method.IsValidToken(Name) then
         begin
           return Error('Invalid HTTP ' + MessageKind + ' header name: ' + Name);
         end;
@@ -79,7 +79,7 @@ begin
         end;
       end if;
 
-      Headers.PushInPlace(Header.Create(Name, TrimOptionalWhitespace(Value)));
+      Headers.PushInPlace(Types.Header.Create(Name, TrimOptionalWhitespace(Value)));
     end;
   end for;
 

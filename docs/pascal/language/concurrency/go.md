@@ -14,7 +14,7 @@ a function returning T, or `task` for a procedure:
 ```pascal
 program TaskExample;
 
-uses Std.Console, Std.Tasks;
+uses Std.Console as Console, Std.Tasks as Tasks;
 
 function Worker(): integer;
 begin
@@ -24,8 +24,8 @@ end function;
 begin
   scope
     const T: task of integer := go Worker();
-    const R: integer := Wait(T);
-    WriteLn(R);
+    const R: integer := Tasks.Wait(T);
+    Console.WriteLn(R);
     discard go Worker();
   end scope;
 end.

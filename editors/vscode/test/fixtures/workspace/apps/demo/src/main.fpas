@@ -1,7 +1,7 @@
 program EditorDemo;
 
-uses Editor.Greetings, Std.Console;
+uses Editor.Greetings as Greetings, Std.Console as Console;
 
 begin
-  WriteLn(GreetingFor('workspace'));
+  Console.WriteLn(Greetings.GreetingFor('workspace'));
 end.

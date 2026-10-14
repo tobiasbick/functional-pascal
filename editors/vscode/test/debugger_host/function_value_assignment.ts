@@ -27,7 +27,7 @@ export async function verifyFunctionValueAssignment(
   const lines = [
     "program DebuggerFunctionValueAssignment;",
     "",
-    "uses Std.Console;",
+    "uses Std.Console as Console;",
     "",
     "type",
     "  Handler = function(Value: integer): integer;",
@@ -48,7 +48,7 @@ export async function verifyFunctionValueAssignment(
     "  const Frozen: Handler := AddOne;",
     "  var StopMarker: integer := 0;",
     "  StopMarker := StopMarker + 1;",
-    "  WriteLn(Current(1));",
+    "  Console.WriteLn(Current(1));",
     "end.",
     ""
   ];

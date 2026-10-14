@@ -1,6 +1,6 @@
 program DiscardTest;
 
-uses Std.Test;
+uses Std.Test as Test;
 
 var Calls: integer := 0;
 
@@ -24,5 +24,5 @@ begin
     return 1;
   end function;
 
-  AssertEquals(1, Calls);
+  Test.AssertEquals(1, Calls);
 end.

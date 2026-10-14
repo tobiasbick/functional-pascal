@@ -1,6 +1,6 @@
 unit Notes.Model;
 
-uses Notes.Actions, Std.Console, Std.Conv, Std.Tui;
+uses Notes.Actions as Actions, Std.Console as Console, Std.Conv as Conv, Std.Tui as Tui;
 
 // One persisted `.note` document and its source path.
 public type Note = record
@@ -54,7 +54,7 @@ public type NotesModel = record
   public TagsText: string;
   public TagsCaret: integer;
   public BodyCaret: integer;
-  public BodyOffset: TuiPoint;
+  public BodyOffset: Tui.TuiPoint;
   public Focus: integer;
   public Pane: NotesPane;
   public Overlay: NotesOverlay;
@@ -84,7 +84,7 @@ begin
   if Loaded.Notes.Length() > 0 then
     begin
       Selected := 0;
-      Focus := TitleControl;
+      Focus := Actions.TitleControl;
       Pane := NotesPane.Editor;
       TitleCaret := Loaded.Notes[0].Title.Length();
       TagsText := Loaded.Notes[0].Tags.Join(', ');
@@ -94,11 +94,11 @@ begin
 
   if Loaded.Issues.Length() > 0 then
     begin
-      Status := IntToStr(Loaded.Issues.Length()) + ' invalid note file(s)';
+      Status := Conv.IntToStr(Loaded.Issues.Length()) + ' invalid note file(s)';
     end;
   end if;
 
-  return NotesModel(Directory := Directory, Notes := Loaded.Notes, Issues := Loaded.Issues, Selected := Selected, Search := '', SearchCaret := 0, TitleCaret := TitleCaret, TagsText := TagsText, TagsCaret := TagsCaret, BodyCaret := 0, BodyOffset := TuiPoint.Create(0, 0), Focus := Focus, Pane := Pane, Overlay := NotesOverlay.Closed, Dirty := false, Status := Status, ErrorMessage := '', Width := 100, Height := 30);
+  return NotesModel(Directory := Directory, Notes := Loaded.Notes, Issues := Loaded.Issues, Selected := Selected, Search := '', SearchCaret := 0, TitleCaret := TitleCaret, TagsText := TagsText, TagsCaret := TagsCaret, BodyCaret := 0, BodyOffset := Tui.TuiPoint.Create(0, 0), Focus := Focus, Pane := Pane, Overlay := NotesOverlay.Closed, Dirty := false, Status := Status, ErrorMessage := '', Width := 100, Height := 30);
 end function;
 
 // Formats a note's tags for the controlled metadata input.
@@ -171,7 +171,7 @@ begin
     end;
   end if;
 
-  if Std.Console.DisplayWidth(Text) <= MaximumWidth then
+  if Console.DisplayWidth(Text) <= MaximumWidth then
     begin
       return Text;
     end;
@@ -185,9 +185,9 @@ begin
   var Clipped: string := '';
   var Width: integer := 0;
   const ContentWidth: integer := MaximumWidth - 1;
-  for Grapheme: string in Std.Console.SplitGraphemes(Text) do
+  for Grapheme: string in Console.SplitGraphemes(Text) do
     begin
-      const GraphemeWidth: integer := Std.Console.DisplayWidth(Grapheme);
+      const GraphemeWidth: integer := Console.DisplayWidth(Grapheme);
       if Width + GraphemeWidth > ContentWidth then
         begin
           return Clipped + '…';

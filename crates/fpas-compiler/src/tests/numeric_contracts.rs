@@ -15,10 +15,10 @@ fn integer_overflows_and_nonfinite_real_results_fail_on_the_executed_path() {
         "1.0e308 * 10.0",
         "1.0e308 + 1.0e308",
         "1.0e308 / 0.1",
-        "Exp(1000.0)",
-        "Pow(-1.0, 0.5)",
+        "Math.Exp(1000.0)",
+        "Math.Pow(-1.0, 0.5)",
     ] {
-        let source = format!("program T; uses Std.Math; begin discard {expression}; end.");
+        let source = format!("program T; uses Std.Math as Math; begin discard {expression}; end.");
         let error = run_program(&source).expect_err("numeric domain failure");
         assert_eq!(
             error.code, RUNTIME_NUMERIC_DOMAIN_ERROR,
@@ -50,15 +50,9 @@ fn integer_overflows_and_nonfinite_real_results_fail_on_the_executed_path() {
 
 #[test]
 fn rounding_and_numeric_text_use_the_selected_contract() {
-    assert_succeeds("program T; uses Std.Math, Std.Conv, Std.Parse; begin
-        if Round(2.5) <> 2 or Round(3.5) <> 4 or Round(-2.5) <> -2 or Trunc(-2.9) <> -2 then panic('rounding'); end if;
-        if RealToStr(1.0) <> '1.0' or RealToStr(-0.0) <> '-0.0' then panic('real text'); end if;
-        if not TryReal(RealToStr(1.0)).IsOk() then panic('roundtrip'); end if;
-        if TryInt('$FF').Unwrap() <> 255 or TryInt('-$8000000000000000').Unwrap() <> (-9223372036854775807 - 1) then panic('hex'); end if;
-        if not TryReal('1.0e-9999').IsError() or not '$FF'.IsNumeric() then panic('numeric range'); end if;
-        const Tiny: real := 5.0e-324;
-        if RealToStr(Tiny * 0.5) <> '0.0' or RealToStr(-Tiny * 0.5) <> '-0.0' then panic('arithmetic underflow'); end if;
-    end.");
+    assert_succeeds(
+        "program T; uses Std.Math as Math, Std.Conv as Conv, Std.Parse as Parse; begin\n        if Math.Round(2.5) <> 2 or Math.Round(3.5) <> 4 or Math.Round(-2.5) <> -2 or Math.Trunc(-2.9) <> -2 then panic('rounding'); end if;\n        if Conv.RealToStr(1.0) <> '1.0' or Conv.RealToStr(-0.0) <> '-0.0' then panic('real text'); end if;\n        if not Parse.TryReal(Conv.RealToStr(1.0)).IsOk() then panic('roundtrip'); end if;\n        if Parse.TryInt('$FF').Unwrap() <> 255 or Parse.TryInt('-$8000000000000000').Unwrap() <> (-9223372036854775807 - 1) then panic('hex'); end if;\n        if not Parse.TryReal('1.0e-9999').IsError() or not '$FF'.IsNumeric() then panic('numeric range'); end if;\n        const Tiny: real := 5.0e-324;\n        if Conv.RealToStr(Tiny * 0.5) <> '0.0' or Conv.RealToStr(-Tiny * 0.5) <> '-0.0' then panic('arithmetic underflow'); end if;\n    end.",
+    );
 }
 
 #[test]

@@ -64,7 +64,7 @@ include = ["src/**/*.fpas"]
     );
     let main = temp.write(
         "src/main.fpas",
-        "program App;\n\nuses Demo.Math;\n\nbegin\n  const Value: integer := Answer();\nend.\n",
+        "program App;\n\nuses Demo.Math as Math;\n\nbegin\n  const Value: integer := Math.Answer();\nend.\n",
     );
     let unit = temp.write(
         "src/math.fpas",

@@ -6,8 +6,7 @@ use super::*;
 use serde_json::{Value, json};
 use std::path::PathBuf;
 
-const MISSING_SOURCE: &str =
-    "program Demo; // 😀\r\nuses Std.Console, Demo.Missing as Missing;\r\nbegin\r\nend.\r\n";
+const MISSING_SOURCE: &str = "program Demo; // 😀\r\nuses Std.Console as Console, Demo.Missing as Missing;\r\nbegin\r\nend.\r\n";
 const PRIVATE_SOURCE: &str = "program Demo;\nuses Library.Hidden as Hidden;\nbegin\nend.\n";
 
 fn assert_import_record(stderr: &str, main: &Path, code: &str, start: u32, end: u32) {
@@ -101,7 +100,7 @@ fn missing_root_import_in_source_check_and_run_retains_its_name_range() {
         &main,
         &["check", "run"],
         "FP4115",
-        (19, 31),
+        (30, 42),
         None,
     );
     fs::remove_dir_all(&cwd).expect("fixture cleanup");
@@ -123,7 +122,7 @@ fn missing_root_import_in_project_and_workspace_check_build_and_run_is_located()
             &main,
             &["check", "build", "run"],
             "FP4115",
-            (19, 31),
+            (30, 42),
             None,
         );
     }
@@ -193,7 +192,7 @@ fn root_import_text_and_json_agree_on_source_position_code_and_help() {
         support::run_cli_args_and_capture_output(&["check".into(), path.clone()], &cwd);
     assert_eq!(status, 1);
     assert!(
-        text.starts_with(&format!("{path}:2:19: error[FP4115]: Unknown unit")),
+        text.starts_with(&format!("{path}:2:30: error[FP4115]: Unknown unit")),
         "{text}"
     );
     assert!(text.contains("help:"));
@@ -202,7 +201,7 @@ fn root_import_text_and_json_agree_on_source_position_code_and_help() {
         &cwd,
     );
     assert_eq!(status, 1);
-    assert_import_record(&json, &main, "FP4115", 19, 31);
+    assert_import_record(&json, &main, "FP4115", 30, 42);
     fs::remove_dir_all(&cwd).expect("fixture cleanup");
 }
 
@@ -250,7 +249,7 @@ fn root_import_failures_in_a_shared_test_graph_identify_each_entry_source() {
                     )
                 })
                 .expect("entry diagnostic");
-            assert_import_record(record, path, "FP4115", 19, 31);
+            assert_import_record(record, path, "FP4115", 30, 42);
         }
     }
     fs::remove_dir_all(&cwd).expect("fixture cleanup");

@@ -25,7 +25,7 @@ fn intrinsic_std_fixture(source: &str) -> (TempDirectory, std::path::PathBuf, La
 
 #[test]
 fn intrinsic_std_hover_includes_markdown_and_parameter_documentation() {
-    let source = "program IntrinsicHover;\n\nuses Std.Fs;\n\nbegin\n  discard ReadText('notes.txt');\nend.\n";
+    let source = "program IntrinsicHover;\n\nuses Std.Fs as Fs;\n\nbegin\n  discard Fs.ReadText('notes.txt');\nend.\n";
     let (_temp, path, mut service) = intrinsic_std_fixture(source);
     let offset = source.find("ReadText").expect("ReadText call");
 
@@ -45,7 +45,7 @@ fn intrinsic_std_hover_includes_markdown_and_parameter_documentation() {
 
 #[test]
 fn intrinsic_std_completion_resolves_lazy_markdown_documentation() {
-    let source = "program IntrinsicCompletion;\n\nuses Std.Fs;\n\nbegin\n  Read;\nend.\n";
+    let source = "program IntrinsicCompletion;\n\nuses Std.Fs as Fs;\n\nbegin\n  Read;\nend.\n";
     let (_temp, path, mut service) = intrinsic_std_fixture(source);
     let offset = source.find("Read;\n").expect("Read prefix") + "Read".len();
 
@@ -96,13 +96,13 @@ fn intrinsic_std_completion_offers_the_required_unit_import() {
             .additional_edit
             .expect("Std.Fs import edit")
             .new_text,
-        "\n\nuses Std.Fs;"
+        "\n\nuses Std.Fs as Fs;"
     );
 }
 
 #[test]
 fn intrinsic_std_definition_targets_the_editor_api_declaration() {
-    let source = "program IntrinsicDefinition;\n\nuses Std.Console;\n\nbegin\n  const Value: Color := CrtColor(1);\nend.\n";
+    let source = "program IntrinsicDefinition;\n\nuses Std.Console as Console;\n\nbegin\n  const Value: Console.Color := Console.CrtColor(1);\nend.\n";
     let (_temp, path, mut service) = intrinsic_std_fixture(source);
     let offset = source.find("Color :=").expect("Color type");
 
@@ -193,7 +193,7 @@ fn receiver_call_definition_and_signature_use_selected_array_routine() {
 
 #[test]
 fn intrinsic_std_editor_api_declarations_cannot_be_renamed() {
-    let source = "program IntrinsicRename;\n\nuses Std.Fs;\n\nbegin\n  discard ReadText('notes.txt');\nend.\n";
+    let source = "program IntrinsicRename;\n\nuses Std.Fs as Fs;\n\nbegin\n  discard Fs.ReadText('notes.txt');\nend.\n";
     let (_temp, path, mut service) = intrinsic_std_fixture(source);
     let offset = source.find("ReadText").expect("ReadText call");
 
@@ -212,7 +212,7 @@ fn intrinsic_std_editor_api_declarations_cannot_be_renamed() {
 
 #[test]
 fn intrinsic_std_signature_help_uses_declared_parameters() {
-    let source = "program IntrinsicSignature;\n\nuses Std.Fs;\n\nbegin\n  discard WriteText('notes.txt', 'hello');\nend.\n";
+    let source = "program IntrinsicSignature;\n\nuses Std.Fs as Fs;\n\nbegin\n  discard Fs.WriteText('notes.txt', 'hello');\nend.\n";
     let (_temp, path, mut service) = intrinsic_std_fixture(source);
     let offset = source.find(", 'hello'").expect("second argument") + 2;
 
@@ -241,7 +241,7 @@ fn intrinsic_std_signature_help_uses_declared_parameters() {
 
 #[test]
 fn intrinsic_std_enum_member_has_hover_and_definition() {
-    let source = "program IntrinsicEnum;\n\nuses Std.Json;\n\nbegin\n  const Value: JsonValue := JsonValue.ArrayValue([]);\nend.\n";
+    let source = "program IntrinsicEnum;\n\nuses Std.Json as Json;\n\nbegin\n  const Value: Json.JsonValue := Json.JsonValue.ArrayValue([]);\nend.\n";
     let (_temp, path, mut service) = intrinsic_std_fixture(source);
     let offset = source.rfind("Array").expect("Array variant");
 
@@ -271,7 +271,7 @@ fn intrinsic_std_enum_member_has_hover_and_definition() {
 
 #[test]
 fn intrinsic_std_enum_constructor_has_signature_help() {
-    let source = "program IntrinsicEnumSignature;\n\nuses Std.Json;\n\nbegin\n  const Value: JsonValue := JsonValue.ArrayValue([]);\nend.\n";
+    let source = "program IntrinsicEnumSignature;\n\nuses Std.Json as Json;\n\nbegin\n  const Value: Json.JsonValue := Json.JsonValue.ArrayValue([]);\nend.\n";
     let (_temp, path, mut service) = intrinsic_std_fixture(source);
     let offset = source.find("[]").expect("Array argument") + 1;
 
@@ -281,10 +281,7 @@ fn intrinsic_std_enum_constructor_has_signature_help() {
         .value
         .expect("Array constructor signature");
 
-    assert_eq!(
-        help.signature.parameters,
-        ["Items: array of Std.Json.JsonValue"]
-    );
+    assert_eq!(help.signature.parameters, ["Items: array of JsonValue"]);
     assert_eq!(
         help.parameter_documentation,
         [Some(
@@ -295,8 +292,7 @@ fn intrinsic_std_enum_constructor_has_signature_help() {
 
 #[test]
 fn intrinsic_std_keyword_enum_member_is_completed() {
-    let source =
-        "program IntrinsicEnumCompletion;\n\nuses Std.Json;\n\nbegin\n  JsonValue.Arr;\nend.\n";
+    let source = "program IntrinsicEnumCompletion;\n\nuses Std.Json as Json;\n\nbegin\n  Json.JsonValue.Arr;\nend.\n";
     let (_temp, path, mut service) = intrinsic_std_fixture(source);
     let offset = source.find("Arr;\n").expect("Array prefix") + "Arr".len();
 

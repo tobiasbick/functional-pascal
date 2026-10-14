@@ -5,20 +5,14 @@ use super::{Fixture, assert_output, fs, write};
 #[test]
 fn cached_unit_worker_summaries_reject_foreign_globals_through_imported_starters() {
     let fixture = Fixture::create();
-    write(&fixture.base, "unit Demo.Base; uses Std.Tasks;
-        var Counter: integer := 1;
-        public function Read(): integer; begin return Counter; end function;
-        public function Start(Group: TaskGroup; Work: function(Token: CancellationToken): integer): task of integer;
-        begin return StartTaskInGroup(Group, Work); end function; end unit;");
+    write(
+        &fixture.base,
+        "unit Demo.Base; uses Std.Tasks as Tasks;\n        var Counter: integer := 1;\n        public function Read(): integer; begin return Counter; end function;\n        public function Start(Group: Tasks.TaskGroup; Work: function(Token: Tasks.CancellationToken): integer): task of integer;\n        begin return Tasks.StartTaskInGroup(Group, Work); end function; end unit;",
+    );
     let consumer = fixture.root.join("src/consumer.fpas");
     let source = |body: &str| {
         format!(
-            "unit Demo.Consumer; uses Std.Tasks, Demo.Base as API;
-        function Work(Token: CancellationToken): integer; begin {body} end function;
-        public function Run(): integer; begin
-        const Group := CreateTaskGroup(); const Job := API.Start(Group, Work);
-        const Value := Wait(Job); discard CloseTaskGroup(Group); return Value;
-        end function; end unit;"
+            "unit Demo.Consumer; uses Std.Tasks as Tasks, Demo.Base as API;\n        function Work(Token: Tasks.CancellationToken): integer; begin {body} end function;\n        public function Run(): integer; begin\n        const Group := Tasks.CreateTaskGroup(); const Job := API.Start(Group, Work);\n        const Value := Tasks.Wait(Job); discard Tasks.CloseTaskGroup(Group); return Value;\n        end function; end unit;"
         )
     };
     write(&consumer, &source("return 7;"));

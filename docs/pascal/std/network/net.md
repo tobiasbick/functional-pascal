@@ -3,10 +3,10 @@
 Hosted blocking TCP/TLS listeners and connections with explicit timeouts and byte arrays.
 
 ```pascal
-uses Std.Net;
+uses Std.Net as Net;
 
 
-case Connect('127.0.0.1', 8080, 5000) of
+case Net.Connect('127.0.0.1', 8080, 5000) of
   when Ok(const Connection):
     begin
       // Use ReceiveBytes, SendBytes, SetTimeout, and Close.
@@ -86,12 +86,12 @@ The port remains reserved by the listener; there is no separate probe-and-rebind
 An address queried after `CloseListener` returns `Error`.
 
 ```pascal
-function InspectListener(): Result of (NetworkAddress, string);
+function InspectListener(): Result of (Net.NetworkAddress, string);
 begin
-  const Server: Listener := try Listen('127.0.0.1', 0);
-  const Address: NetworkAddress := try ListenerLocalAddress(Server);
+  const Server: Net.Listener := try Net.Listen('127.0.0.1', 0);
+  const Address: Net.NetworkAddress := try Net.ListenerLocalAddress(Server);
   // Address.Host is '127.0.0.1'; Address.Port is the assigned nonzero port.
-  const Closed: boolean := try CloseListener(Server);
+  const Closed: boolean := try Net.CloseListener(Server);
   return Ok(Address);
 end function;
 ```

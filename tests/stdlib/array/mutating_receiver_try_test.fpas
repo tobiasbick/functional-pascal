@@ -1,6 +1,6 @@
 program MutatingReceiverTryTest;
 
-uses Std.Test;
+uses Std.Test as Test;
 
 type Holder = record
   Items: array of integer;
@@ -27,12 +27,12 @@ begin
   const Outcome: result of (integer, string) := Change(var H);
   case Outcome of
     when Error(const Message):
-      AssertEquals('stopped', Message);
+      Test.AssertEquals('stopped', Message);
     when Ok(const Value):
       panic('Expected failure');
   end case;
 
-  AssertEquals(2, H.Items.Length());
-  AssertEquals(3, H.Items[1]);
-  AssertEquals(1, Original.Items.Length());
+  Test.AssertEquals(2, H.Items.Length());
+  Test.AssertEquals(3, H.Items[1]);
+  Test.AssertEquals(1, Original.Items.Length());
 end.

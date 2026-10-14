@@ -17,7 +17,7 @@ include = ["src/*.fpas"]
     );
     write_text(
         &cwd.join("src/main.fpas"),
-        "program Main;\nuses App.Lib, Std.Console;\nbegin\n  WriteLn(GetValue());\nend.\n",
+        "program Main;\nuses App.Lib as Lib, Std.Console as Console;\nbegin\n  Console.WriteLn(Lib.GetValue());\nend.\n",
     );
     write_text(
         &cwd.join("src/lib.fpas"),
@@ -48,7 +48,7 @@ include = ["src/*.fpas"]
     );
     write_text(
         &cwd.join("src/main.fpas"),
-        "program Main;\nuses App.Lib, Std.Console;\nbegin\n  WriteLn(GetValue());\nend.\n",
+        "program Main;\nuses App.Lib as Lib, Std.Console as Console;\nbegin\n  Console.WriteLn(GetValue());\nend.\n",
     );
     write_text(
         &cwd.join("src/lib.fpas"),
@@ -82,7 +82,7 @@ include = ["src/*.fpas"]
     );
     write_text(
         &cwd.join("src/main.fpas"),
-        "program Main;\nuses App.Config, Std.Console;\nbegin\n  WriteLn(MaxSize);\nend.\n",
+        "program Main;\nuses App.Config as Config, Std.Console as Console;\nbegin\n  Console.WriteLn(Config.MaxSize);\nend.\n",
     );
     write_text(
         &cwd.join("src/config.fpas"),
@@ -114,7 +114,7 @@ include = ["src/*.fpas"]
     );
     write_text(
         &cwd.join("src/main.fpas"),
-        "program Main;\nuses App.Lib, Std.Console;\nbegin\n  WriteLn(GetValue());\nend.\n",
+        "program Main;\nuses App.Lib as Lib, Std.Console as Console;\nbegin\n  Console.WriteLn(Lib.GetValue());\nend.\n",
     );
     write_text(
         &cwd.join("src/lib.fpas"),

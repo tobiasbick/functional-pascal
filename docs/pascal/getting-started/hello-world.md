@@ -3,11 +3,10 @@
 ```pascal
 program Hello;
 
-uses
-  Std.Console;
+uses Std.Console as Console;
 
 begin
-  WriteLn('Hello, World!');
+  Console.WriteLn('Hello, World!');
 end.
 ```
 

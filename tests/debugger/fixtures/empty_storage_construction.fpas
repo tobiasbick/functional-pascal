@@ -1,6 +1,6 @@
 program EmptyStorageConstruction;
 
-uses Std.Console;
+uses Std.Console as Console;
 
 type Point = record
   X: integer;
@@ -58,7 +58,7 @@ begin
   var Boxed: BoxFn := BoxFn(Action := Identity);
   const Frozen: integer := 1;
   const StopMarker: integer := 0;
-  WriteLn(State.Count);
-  WriteLn(State.Nested.X);
-  WriteLn(GlobalState.Count);
+  Console.WriteLn(State.Count);
+  Console.WriteLn(State.Nested.X);
+  Console.WriteLn(GlobalState.Count);
 end.

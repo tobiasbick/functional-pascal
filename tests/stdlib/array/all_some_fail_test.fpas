@@ -1,6 +1,6 @@
 program T;
 
-uses Std.Console;
+uses Std.Console as Console;
 
 function IsPositive(X: integer): boolean;
 begin
@@ -9,5 +9,5 @@ end function;
 
 begin
   const A: array of integer := [1, -2, 3];
-  WriteLn(A.All(IsPositive));
+  Console.WriteLn(A.All(IsPositive));
 end.

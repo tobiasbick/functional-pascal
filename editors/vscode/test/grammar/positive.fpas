@@ -1,7 +1,7 @@
 // Positive syntax-highlighting fixture.
 program HighlightingShowcase;
 
-uses Std.Console;
+uses Std.Console as Console;
 
 type Point = record
   X: integer;
@@ -20,7 +20,7 @@ begin
   const Mask: integer := 42;
   if Mask >= 1 then
     begin
-      Std.Console.WriteLn('It''s the origin');
+      Console.WriteLn('It''s the origin');
     end;
   end if;
 end.

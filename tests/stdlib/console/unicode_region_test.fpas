@@ -1,23 +1,23 @@
 program UnicodeRegionTest;
 
-uses Std.Console, Std.Test;
+uses Std.Console as Console, Std.Test as Test;
 
-function CellWith(Glyph: string; Foreground: Color): Cell;
+function CellWith(Glyph: string; Foreground: Console.Color): Console.Cell;
 begin
-  return Std.Console.Cell(glyph := Glyph, foreground := Foreground, background := CrtColor(Black));
+  return Console.Cell(glyph := Glyph, foreground := Foreground, background := Console.CrtColor(Console.Black));
 end function;
 
 begin
-  AssertEquals(4, DisplayWidth('A中B'));
-  BeginFrame();
-  BeginFrame();
-  PutCell(2, 1, CellWith('中', CrtColor(Yellow)));
-  Present();
-  const Region: SavedRegion := SaveRegion(Std.Console.Rect(x := 3, y := 1, width := 1, height := 1));
-  PutCell(3, 1, CellWith('X', CrtColor(White)));
-  RestoreRegion(Region);
-  Present();
-  const WideCell: Cell := GetCell(2, 1).Unwrap();
-  AssertEquals('中', WideCell.glyph);
-  AssertTrue(GetCell(3, 1).IsNone());
+  Test.AssertEquals(4, Console.DisplayWidth('A中B'));
+  Console.BeginFrame();
+  Console.BeginFrame();
+  Console.PutCell(2, 1, CellWith('中', Console.CrtColor(Console.Yellow)));
+  Console.Present();
+  const Region: Console.SavedRegion := Console.SaveRegion(Console.Rect(x := 3, y := 1, width := 1, height := 1));
+  Console.PutCell(3, 1, CellWith('X', Console.CrtColor(Console.White)));
+  Console.RestoreRegion(Region);
+  Console.Present();
+  const WideCell: Console.Cell := Console.GetCell(2, 1).Unwrap();
+  Test.AssertEquals('中', WideCell.glyph);
+  Test.AssertTrue(Console.GetCell(3, 1).IsNone());
 end.

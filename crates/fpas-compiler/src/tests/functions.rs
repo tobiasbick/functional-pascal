@@ -125,7 +125,7 @@ fn parameters_shadow_short_standard_constant_names() {
     assert_succeeds(
         r#"
 program ParameterConstantShadowing;
-uses Std.Console;
+uses Std.Console as Console;
 function Pack(Red: integer; Green: integer; Blue: integer): integer;
 begin
   return Red * 10000 + Green * 100 + Blue;
@@ -143,7 +143,7 @@ fn record_fields_shadow_short_standard_constant_names() {
     assert_succeeds(
         r#"
 program FieldConstantShadowing;
-uses Std.Console;
+uses Std.Console as Console;
 type
   Channels = record
     Red: integer;

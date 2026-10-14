@@ -10,7 +10,7 @@ Use `null;` when an iteration intentionally performs no action.
 
 ```pascal
 for I: integer := 1 to 10 do
-  WriteLn(I);
+  Console.WriteLn(I);
 end for;
 ```
 
@@ -18,7 +18,7 @@ end for;
 
 ```pascal
 for I: integer := 10 downto 1 do
-  WriteLn(I);
+  Console.WriteLn(I);
 end for;
 ```
 

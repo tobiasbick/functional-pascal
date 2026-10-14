@@ -1,5 +1,7 @@
 # For-in
 
+The code fragments use `uses Std.Console as Console;`.
+
 Formal syntax: [`grammar.ebnf`](../../../specs/grammar.ebnf) (`for_in_stmt`).
 
 The loop body is a nonempty statement list with its own local scope, closed
@@ -12,7 +14,7 @@ Iterates over each element of an array. The loop variable is immutable.
 ```pascal
 const Names: array of string := ['Alice', 'Bob', 'Charlie'];
 for Name: string in Names do
-  WriteLn(Name);
+  Console.WriteLn(Name);
 end for;
 ```
 
@@ -21,7 +23,7 @@ The element type must match the array's element type:
 ```pascal
 const Scores: array of integer := [10, 20, 30];
 for S: integer in Scores do
-  WriteLn(S);
+  Console.WriteLn(S);
 end for;
 ```
 
@@ -30,12 +32,12 @@ end for;
 Iterates over the **keys** of a `dict of K to V` in insertion order. The loop variable receives each key; values can be looked up via the key inside the body. No import is required.
 
 ```pascal
-uses Std.Conv;
+uses Std.Conv as Conv;
 
 const Ages: dict of string to integer := ['Alice': 30, 'Bob': 25];
 
 for Name: string in Ages do
-  WriteLn(Name + ': ' + IntToStr(Ages[Name]));
+  Console.WriteLn(Name + ': ' + Conv.IntToStr(Ages[Name]));
 end for;
 ```
 
@@ -50,7 +52,7 @@ for K: string in Ages do
     continue;
   end if;
 
-  WriteLn(K);
+  Console.WriteLn(K);
 end for;
 ```
 

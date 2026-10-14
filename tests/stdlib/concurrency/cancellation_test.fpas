@@ -1,12 +1,12 @@
 program CancellationTest;
 
-uses Std.Tasks, Std.Test;
+uses Std.Tasks as Tasks, Std.Test as Test;
 
 begin
-  const Source: CancellationSource := CreateCancellationSource();
-  const Token: CancellationToken := GetCancellationToken(Source);
-  AssertFalse(IsCancellationRequested(Token));
-  AssertTrue(Cancel(Source));
-  AssertTrue(IsCancellationRequested(Token));
-  AssertFalse(Cancel(Source));
+  const Source: Tasks.CancellationSource := Tasks.CreateCancellationSource();
+  const Token: Tasks.CancellationToken := Tasks.GetCancellationToken(Source);
+  Test.AssertFalse(Tasks.IsCancellationRequested(Token));
+  Test.AssertTrue(Tasks.Cancel(Source));
+  Test.AssertTrue(Tasks.IsCancellationRequested(Token));
+  Test.AssertFalse(Tasks.Cancel(Source));
 end.

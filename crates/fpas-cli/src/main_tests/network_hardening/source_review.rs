@@ -70,11 +70,11 @@ fn source_review_redirects_preserve_exact_request_paths() {
         "source-review-redirect",
         &format!(
             r#"program RedirectPaths;
-uses Std.Http;
+uses Std.Http as Http;
 begin
   for Base: string in [{paths}] do
   begin
-    case Send(Request.Get('http://127.0.0.1:{port}' + Base)) of
+    case Http.Send(Http.Request.Get('http://127.0.0.1:{port}' + Base)) of
       when Ok(_): begin end;
       when Error(const Message): panic(Message);
     end case;
@@ -116,11 +116,11 @@ fn source_review_client_rejects_non_decimal_lengths() {
         "source-review-lengths",
         &format!(
             r#"program DecimalLengths;
-uses Std.Http;
+uses Std.Http as Http;
 begin
   for I: integer := 1 to {} do
   begin
-    case Send(Request.Get('http://127.0.0.1:{port}/')) of
+    case Http.Send(Http.Request.Get('http://127.0.0.1:{port}/')) of
       when Ok(_): panic('invalid Content-Length accepted');
       when Error(const Message): begin
         if not Message.Contains('Content-Length') then panic(Message); end if;

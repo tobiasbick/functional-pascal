@@ -1,5 +1,7 @@
 # Try operator
 
+The code fragments use `uses Std.Conv as Conv;`.
+
 `try` propagates errors automatically. If the expression is `Error` (for `Result`) or `None` (for `Option`), the enclosing function returns that value immediately. Otherwise, the inner value is unwrapped:
 
 Formal syntax: [`grammar.ebnf`](../../../specs/grammar.ebnf) (`try` expression).
@@ -8,7 +10,7 @@ Formal syntax: [`grammar.ebnf`](../../../specs/grammar.ebnf) (`try` expression).
 function Process(A: integer; B: integer): Result of (string, string);
 begin
   const Quotient: integer := try Divide(A, B);
-  return Ok(IntToStr(Quotient));
+  return Ok(Conv.IntToStr(Quotient));
 end function;
 ```
 

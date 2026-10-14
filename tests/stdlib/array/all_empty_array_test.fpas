@@ -1,6 +1,6 @@
 program T;
 
-uses Std.Console;
+uses Std.Console as Console;
 
 function AlwaysFalse(X: integer): boolean;
 begin
@@ -9,5 +9,5 @@ end function;
 
 begin
   const A: array of integer := [];
-  WriteLn(A.All(AlwaysFalse));
+  Console.WriteLn(A.All(AlwaysFalse));
 end.

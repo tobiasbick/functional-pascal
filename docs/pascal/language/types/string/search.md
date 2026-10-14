@@ -6,7 +6,7 @@
 
 ```pascal
 if 'abc'.Contains('b') then
-  WriteLn('yes');
+  Console.WriteLn('yes');
 end if;
 ```
 
@@ -17,7 +17,7 @@ end if;
 `true` if `S` begins with `Pre`.
 
 ```pascal
-WriteLn('abc'.StartsWith('ab'));
+Console.WriteLn('abc'.StartsWith('ab'));
 ```
 
 ---
@@ -27,7 +27,7 @@ WriteLn('abc'.StartsWith('ab'));
 `true` if `S` ends with `Suf`.
 
 ```pascal
-WriteLn('abc'.EndsWith('bc'));
+Console.WriteLn('abc'.EndsWith('bc'));
 ```
 
 ---
@@ -37,7 +37,7 @@ WriteLn('abc'.EndsWith('bc'));
 Copies `Len` characters starting at `Start`. **Bounds are checked at runtime**; invalid ranges produce a runtime error.
 
 ```pascal
-WriteLn('Hello'.Slice(0, 3));
+Console.WriteLn('Hello'.Slice(0, 3));
 ```
 
 ---
@@ -47,8 +47,8 @@ WriteLn('Hello'.Slice(0, 3));
 Returns the **first** character index of `Sub` in `S`, or **`-1`** if not found.
 
 ```pascal
-WriteLn('aba'.IndexOf('a'));
-WriteLn('aba'.IndexOf('z'));
+Console.WriteLn('aba'.IndexOf('a'));
+Console.WriteLn('aba'.IndexOf('z'));
 ```
 
 ---
@@ -58,8 +58,8 @@ WriteLn('aba'.IndexOf('z'));
 Returns the **last** character index of `Sub` in `S`, or **`-1`** if not found.
 
 ```pascal
-WriteLn('abcabc'.LastIndexOf('abc'));  // 3
-WriteLn('abc'.LastIndexOf('z'));       // -1
+Console.WriteLn('abcabc'.LastIndexOf('abc'));  // 3
+Console.WriteLn('abc'.LastIndexOf('z'));       // -1
 ```
 
 ## See also

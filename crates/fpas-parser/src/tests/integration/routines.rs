@@ -3,21 +3,7 @@ use super::*;
 #[test]
 fn fibonacci() {
     let p = parse_ok(
-        "\
-program Fib;
-uses Std.Console;
-
-function Fibonacci(N: integer): integer;
-begin
-  if N <= 1 then
-    return N;
-  else
-    return Fibonacci(N - 1) + Fibonacci(N - 2); end if;
-end function;
-
-begin
-  Std.Console.WriteLn(Fibonacci(10));
-end.",
+        "program Fib;\nuses Std.Console as Console;\n\nfunction Fibonacci(N: integer): integer;\nbegin\n  if N <= 1 then\n    return N;\n  else\n    return Fibonacci(N - 1) + Fibonacci(N - 2); end if;\nend function;\n\nbegin\n  Console.WriteLn(Fibonacci(10));\nend.",
     );
     assert_eq!(p.name, "Fib");
     assert_eq!(p.declarations.len(), 1);

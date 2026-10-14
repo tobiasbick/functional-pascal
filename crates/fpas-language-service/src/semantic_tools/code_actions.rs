@@ -2,7 +2,7 @@
 
 use std::path::Path;
 
-use fpas_diagnostics::codes::{SEMA_UNKNOWN_NAME, SEMA_UNKNOWN_TYPE};
+use fpas_diagnostics::codes::{SEMA_UNKNOWN_NAME, SEMA_UNKNOWN_TYPE, SEMA_UNQUALIFIED_NAME};
 use fpas_parser::parse_compilation_unit;
 
 use super::{DiagnosticIdentity, SemanticCodeAction, SemanticEdit};
@@ -50,26 +50,43 @@ fn import_action(
     snapshot: &crate::DocumentSnapshot,
     diagnostic: &DiagnosticIdentity,
 ) -> Option<SemanticCodeAction> {
-    if !matches!(diagnostic.code, SEMA_UNKNOWN_NAME | SEMA_UNKNOWN_TYPE) {
+    if !matches!(
+        diagnostic.code,
+        SEMA_UNQUALIFIED_NAME | SEMA_UNKNOWN_NAME | SEMA_UNKNOWN_TYPE
+    ) {
         return None;
     }
     let name = diagnostic_name(&diagnostic.message)?;
     let identifier = identifier_in_span(snapshot.source(), diagnostic.span, name)?;
     let completions = service.completions(path, identifier.end()).ok()?;
-    let candidate = completions.value.into_iter().find(|candidate| {
-        candidate.source == CompletionSource::AutoImport
-            && candidate.label.eq_ignore_ascii_case(name)
-    })?;
+    let mut candidates = completions.value.into_iter().filter(|candidate| {
+        (candidate.source == CompletionSource::AutoImport
+            || (diagnostic.code == SEMA_UNQUALIFIED_NAME && candidate.insert_text.contains('.')))
+            && candidate
+                .insert_text
+                .rsplit('.')
+                .next()
+                .is_some_and(|leaf| leaf.eq_ignore_ascii_case(name))
+    });
+    let candidate = candidates.next()?;
+    if candidates.next().is_some() {
+        return None;
+    }
     let owner = candidate.owner?;
-    let edit = candidate.additional_edit?;
-    let semantic_edit = SemanticEdit {
-        span: edit.span,
-        new_text: edit.new_text,
-    };
-    canonical_after_edit(snapshot.source(), &semantic_edit).then(|| SemanticCodeAction {
-        title: format!("Import {owner}"),
+    let mut edits = vec![SemanticEdit {
+        span: identifier,
+        new_text: candidate.insert_text,
+    }];
+    if let Some(edit) = candidate.additional_edit {
+        edits.push(SemanticEdit {
+            span: edit.span,
+            new_text: edit.new_text,
+        });
+    }
+    canonical_after_edits(snapshot.source(), &edits).then(|| SemanticCodeAction {
+        title: format!("Use qualified symbol from {owner}"),
         diagnostic: diagnostic.clone(),
-        edits: vec![semantic_edit],
+        edits,
     })
 }
 
@@ -113,16 +130,22 @@ fn identifier_byte(value: u8) -> bool {
     value.is_ascii_alphanumeric() || value == b'_'
 }
 
-fn canonical_after_edit(source: &str, edit: &SemanticEdit) -> bool {
-    let end = edit.span.end();
-    if end > source.len()
-        || !source.is_char_boundary(edit.span.offset())
-        || !source.is_char_boundary(end)
-    {
-        return false;
-    }
+fn canonical_after_edits(source: &str, edits: &[SemanticEdit]) -> bool {
     let mut edited = source.to_owned();
-    edited.replace_range(edit.span.offset()..end, &edit.new_text);
+    let mut ordered = edits.iter().collect::<Vec<_>>();
+    ordered.sort_by_key(|edit| std::cmp::Reverse(edit.span.offset()));
+    let mut previous = source.len();
+    for edit in ordered {
+        let end = edit.span.end();
+        if end > previous
+            || !source.is_char_boundary(edit.span.offset())
+            || !source.is_char_boundary(end)
+        {
+            return false;
+        }
+        edited.replace_range(edit.span.offset()..end, &edit.new_text);
+        previous = edit.span.offset();
+    }
     let (unit, diagnostics) = parse_compilation_unit(&edited);
     diagnostics.is_empty()
         && fpas_fmt::format_source(&edited, &unit).is_ok_and(|formatted| formatted == edited)

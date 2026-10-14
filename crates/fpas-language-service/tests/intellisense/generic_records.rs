@@ -63,7 +63,7 @@ fn imported_nested_generic_record_fields_keep_concrete_descriptions() {
         "box.fpas",
         "unit Data.Boxes; public type Box of T = record public Value: T; end record; end unit;",
     );
-    let source = "program T; uses Data.Boxes; begin const Nested: Box of Box of string := Box(Value := Box(Value := 'one')); discard Nested.Value.Value; end.";
+    let source = "program T; uses Data.Boxes as Boxes; begin const Nested: Boxes.Box of Boxes.Box of string := Boxes.Box(Value := Boxes.Box(Value := 'one')); discard Nested.Value.Value; end.";
     let path = temp.write("main.fpas", source);
     let mut service = LanguageService::load(&manifest);
     let offset = source.rfind(".Value").expect("nested field use") + 1;

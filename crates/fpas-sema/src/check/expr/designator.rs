@@ -5,9 +5,7 @@
 use super::super::Checker;
 use crate::scope::SymbolKind;
 use crate::types::Ty;
-use fpas_diagnostics::codes::{
-    SEMA_AMBIGUOUS_IMPORTED_NAME, SEMA_TYPE_MISMATCH, SEMA_UNKNOWN_NAME,
-};
+use fpas_diagnostics::codes::{SEMA_TYPE_MISMATCH, SEMA_UNKNOWN_NAME};
 use fpas_parser::{Designator, DesignatorPart, Expr};
 
 impl Checker {
@@ -43,7 +41,7 @@ impl Checker {
             self.error_with_code(
                 SEMA_TYPE_MISMATCH,
                 format!("Polymorphic operation `{name}` must be called directly"),
-                "Use a typed wrapper when a callable value is required, for example `function(N: integer): integer begin return Abs(N); end function`.",
+                "Declare a wrapper with explicit parameter and result types, and call this operation through its import alias inside the wrapper.",
                 designator.span,
             );
             return Ty::Error;
@@ -129,19 +127,20 @@ impl Checker {
                             .iter()
                             .all(|part| matches!(part, DesignatorPart::Ident(_, _)));
 
-                    if let Some(ambiguous_hint) = self.ambiguous_hint(first) {
-                        let message = if self
-                            .ambiguous_imports
-                            .contains_key(&crate::scope::canonical_symbol_name(first))
-                        {
-                            format!("Ambiguous imported symbol `{first}`")
-                        } else {
-                            format!("Ambiguous name `{first}`")
-                        };
+                    let repair_name = if is_qualified_ident_chain
+                        && self.scopes.imports.hidden_path_hint(&full_name).is_none()
+                    {
+                        full_name.as_str()
+                    } else {
+                        first.as_str()
+                    };
+                    if let Some(qualification_hint) = self.qualification_hint(repair_name) {
+                        let message =
+                            format!("Name `{repair_name}` requires an explicit qualifier");
                         self.error_with_code(
-                            SEMA_AMBIGUOUS_IMPORTED_NAME,
+                            fpas_diagnostics::codes::SEMA_UNQUALIFIED_NAME,
                             message,
-                            ambiguous_hint,
+                            qualification_hint,
                             designator.span,
                         );
                         return Ty::Error;
@@ -154,9 +153,7 @@ impl Checker {
                         self.error_with_code(
                             SEMA_UNKNOWN_NAME,
                             format!("Unit `{unit}` is not imported"),
-                            format!(
-                                "Add `{unit}` to the `uses` clause; qualified names do not import a unit."
-                            ),
+                            crate::std_units::missing_import_hint(&unit),
                             designator.span,
                         );
                         return Ty::Error;

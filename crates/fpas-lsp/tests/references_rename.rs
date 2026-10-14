@@ -110,8 +110,7 @@ fn rename_versions_open_documents_and_leaves_disk_documents_unversioned() {
         "src/core.fpas",
         "unit Demo.Core;\n\npublic function Answer(): integer;\nbegin return 42; end function;\nend unit;\n",
     );
-    let source =
-        "program Demo;\n\nuses Demo.Core;\n\nbegin const Value: integer := Answer(); end.\n";
+    let source = "program Demo;\n\nuses Demo.Core as Core;\n\nbegin const Value: integer := Core.Answer(); end.\n";
     temp.write("src/main.fpas", source);
     let root_uri = temp.uri(".");
     let main_uri = temp.uri("src/main.fpas");
@@ -183,7 +182,7 @@ fn watched_manifest_change_refreshes_reverse_consumers_without_restart() {
     );
     temp.write(
         "app/src/main.fpas",
-        "program App;\n\nuses Demo.Core;\n\nbegin const Value: integer := Answer(); end.\n",
+        "program App;\n\nuses Demo.Core as Core;\n\nbegin const Value: integer := Core.Answer(); end.\n",
     );
     let library_uri = temp.uri("core/src/core.fpas");
     let manifest_uri = temp.uri("app/app.fpasprj");

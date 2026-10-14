@@ -61,14 +61,14 @@
 ## Example
 
 ```pascal
-uses Std.Console;
+uses Std.Console as Console;
 
 begin
-  AssignCrt();
-  TextMode(C80);
-  CursorOff();
-  Delay(100);
-  CursorOn();
+  Console.AssignCrt();
+  Console.TextMode(Console.C80);
+  Console.CursorOff();
+  Console.Delay(100);
+  Console.CursorOn();
 end.
 ```
 

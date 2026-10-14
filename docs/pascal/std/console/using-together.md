@@ -9,19 +9,19 @@
 ## Example
 
 ```pascal
-uses Std.Console;
+uses Std.Console as Console;
 
 begin
-  WriteText('Name: ');
-  const Name: string := ReadLn();
-  WriteLn('Hello, ', Name);
+  Console.WriteText('Name: ');
+  const Name: string := Console.ReadLn();
+  Console.WriteLn('Hello, ', Name);
 
-  WriteLn('Press Escape or any printable key.');
-  const Key: KeyEvent := ReadKeyEvent();
-  if Key.kind = KeyKind.Escape then
-    WriteLn('escape');
+  Console.WriteLn('Press Escape or any printable key.');
+  const Key: Console.KeyEvent := Console.ReadKeyEvent();
+  if Key.kind = Console.KeyKind.Escape then
+    Console.WriteLn('escape');
   else
-    WriteLn(Key.ch);
+    Console.WriteLn(Key.ch);
   end if;
 end.
 ```

@@ -5,19 +5,14 @@
 use super::super::super::{check_errors, check_ok};
 use fpas_diagnostics::codes::SEMA_TYPE_MISMATCH;
 
-const DECLARATIONS: &str = "\
-uses Std.Tasks;
-function Number(): integer; begin return 42; end function;
-function Text(): string; begin return 'answer'; end function;
-procedure Work(); begin null; end procedure;
-";
+const DECLARATIONS: &str = "uses Std.Tasks as Tasks;\nfunction Number(): integer; begin return 42; end function;\nfunction Text(): string; begin return 'answer'; end function;\nprocedure Work(); begin null; end procedure;\n";
 
 #[test]
 fn procedure_task_storage_never_erases_a_function_result() {
     for (declarations, body) in [
         ("", "const Job: task := go Number();"),
         (
-            "function Read(Job: task): string; begin return Wait(Job); end function;",
+            "function Read(Job: task): string; begin return Tasks.Wait(Job); end function;",
             "const Job: task of integer := go Number(); const Value: string := Read(Job);",
         ),
         (
@@ -51,7 +46,11 @@ fn procedure_task_storage_never_erases_a_function_result() {
 
 #[test]
 fn procedure_wait_cannot_supply_a_value_inside_an_aggregate() {
-    for value in ["Some(Wait(Job))", "[Wait(Job)]", "Ok(Wait(Job))"] {
+    for value in [
+        "Some(Tasks.Wait(Job))",
+        "[Tasks.Wait(Job)]",
+        "Ok(Tasks.Wait(Job))",
+    ] {
         let source = format!(
             "program T; {DECLARATIONS} begin scope  const Job: task := go Work(); discard {value};  end scope; end."
         );
@@ -67,20 +66,20 @@ fn procedure_wait_cannot_supply_a_value_inside_an_aggregate() {
 fn generic_task_arguments_do_not_expose_internal_unit() {
     for (declarations, body) in [
         (
-            "function Fetch<T>(Job: task of T): T; begin return Wait(Job); end function;",
+            "function Fetch<T>(Job: task of T): T; begin return Tasks.Wait(Job); end function;",
             "discard Some(Fetch(go Work()));",
         ),
         (
-            "function Fetch<T>(Job: task of T): T; begin return Wait(Job); end function;",
-            "const Job: task := go Work(); const FunctionJob: task := go Fetch(Job); Wait(FunctionJob);",
+            "function Fetch<T>(Job: task of T): T; begin return Tasks.Wait(Job); end function;",
+            "const Job: task := go Work(); const FunctionJob: task := go Fetch(Job); Tasks.Wait(FunctionJob);",
         ),
         (
             "type Holder of T = record Job: task of T; end record;",
-            "const Value := Holder(Job := go Work()); Wait(Value.Job);",
+            "const Value := Holder(Job := go Work()); Tasks.Wait(Value.Job);",
         ),
         (
             "type Holder of T = enum Held(Job: task of T); end enum;",
-            "const Value := Holder.Held(go Work()); case Value of when Holder.Held(const Job): Wait(Job); end case;",
+            "const Value := Holder.Held(go Work()); case Value of when Holder.Held(const Job): Tasks.Wait(Job); end case;",
         ),
         (
             "function Ignore<T>(Job: task of T): integer; begin return 0; end function;",
@@ -114,23 +113,23 @@ fn task_starts_require_resolved_results_and_value_worker_parameters() {
         ),
         (
             "",
-            "const Job: task of channel of integer := go CreateChannel(1);",
+            "const Job: task of channel of integer := go Tasks.CreateChannel(1);",
         ),
         (
             "function Worker<T: Numeric>(Token: T): T; begin return Token + 1; end function;",
-            "const Group: TaskGroup := CreateTaskGroup(); const CaseValue: WaitCase := TaskCase(StartTaskInGroup(Group, Worker), procedure() begin null; end procedure);",
+            "const Group: Tasks.TaskGroup := Tasks.CreateTaskGroup(); const CaseValue: Tasks.WaitCase := Tasks.TaskCase(Tasks.StartTaskInGroup(Group, Worker), procedure() begin null; end procedure);",
         ),
         (
-            "function Worker(var Token: CancellationToken): integer; begin return 0; end function;",
-            "const Group: TaskGroup := CreateTaskGroup(); const Job: task of integer := StartTaskInGroup(Group, Worker);",
+            "function Worker(var Token: Tasks.CancellationToken): integer; begin return 0; end function;",
+            "const Group: Tasks.TaskGroup := Tasks.CreateTaskGroup(); const Job: task of integer := Tasks.StartTaskInGroup(Group, Worker);",
         ),
         (
             "procedure Worker<T: Numeric>(Token: T); begin discard Token + Token; end procedure;",
-            "const Group: TaskGroup := CreateTaskGroup(); const Job: task := StartSupervisedTask(Group, Worker, 0, 0);",
+            "const Group: Tasks.TaskGroup := Tasks.CreateTaskGroup(); const Job: task := Tasks.StartSupervisedTask(Group, Worker, 0, 0);",
         ),
         (
-            "procedure Worker(var Token: CancellationToken); begin null; end procedure;",
-            "const Group: TaskGroup := CreateTaskGroup(); const Job: task := StartSupervisedTask(Group, Worker, 0, 0);",
+            "procedure Worker(var Token: Tasks.CancellationToken); begin null; end procedure;",
+            "const Group: Tasks.TaskGroup := Tasks.CreateTaskGroup(); const Job: task := Tasks.StartSupervisedTask(Group, Worker, 0, 0);",
         ),
     ] {
         let source =
@@ -150,13 +149,7 @@ fn spawn_arguments_do_not_hide_ordinary_type_errors() {
         "Echo(Read())",
     ] {
         let source = format!(
-            "program T; uses Std.Tasks;
-function Invoke(Callback: function(): string): string; begin return Callback(); end function;
-function Echo(Value: string): string; begin return Value; end function;
-procedure Outer<T>(Value: T);
-function Read<T>(): T; begin return Value; end function;
-begin scope  const Job: task of string := go {call}; discard Wait(Job);  end scope; end procedure;
-begin Outer(42); end."
+            "program T; uses Std.Tasks as Tasks;\nfunction Invoke(Callback: function(): string): string; begin return Callback(); end function;\nfunction Echo(Value: string): string; begin return Value; end function;\nprocedure Outer<T>(Value: T);\nfunction Read<T>(): T; begin return Value; end function;\nbegin scope  const Job: task of string := go {call}; discard Tasks.Wait(Job);  end scope; end procedure;\nbegin Outer(42); end."
         );
         assert!(
             check_errors(&source)
@@ -170,48 +163,6 @@ begin Outer(42); end."
 #[test]
 fn typed_and_procedure_handles_support_completion_without_erasure() {
     check_ok(&format!(
-        "program T; {DECLARATIONS}
-function Fetch<T>(Job: task of T): T; begin return Wait(Job); end function;
-function Identity<T>(Value: T): T; begin return Value; end function;
-function Spawn<T>(Group: TaskGroup; Value: T): task of T;
-begin return StartTaskInGroup(Group, function(Token: CancellationToken): T begin return Value; end function); end function;
-function GenericWorker<T>(Token: T): integer; begin return 42; end function;
-function Answer(): integer; begin return 42; end function;
-function Invoke(Callback: function(): integer): integer; begin return Callback(); end function;
-procedure Join(Job: task); begin Wait(Job); end procedure;
-begin scope
-  const Empty: Option of integer := None;
-  const Optional: task of Option of integer := go Identity(Empty);
-  discard Wait(Optional);
-  const GenericGroup := CreateTaskGroup();
-  const Generic: task of integer := Spawn(GenericGroup, 42);
-  discard Wait(Generic);
-  const CallbackJob: task of integer := go Invoke(function(): integer begin return Answer(); end function);
-  const DirectJob: task of integer := go Answer();
-  discard Wait(CallbackJob); discard Wait(DirectJob);
-  const Worker: function(Token: CancellationToken): integer := GenericWorker;
-  const Group: TaskGroup := CreateTaskGroup();
-  const Grouped: task of integer := StartTaskInGroup(Group, Worker);
-  const Supervised: task of integer := StartSupervisedTask(Group, Worker, 0, 0);
-  discard Wait(Grouped); discard Wait(Supervised);
-  discard CloseTaskGroup(Group);
-  const Numbers: array of task of integer := [go Number(), go Number()];
-  const Procedures: array of task := [go Work(), go Work()];
-  WaitAll(Numbers); WaitAll(Procedures);
-  discard WaitAny(Numbers); discard WaitAny(Procedures);
-  const Answer: integer := Wait(Numbers[0]);
-  Join(Procedures[0]);
-  const GroupProcedure := StartTaskInGroup(GenericGroup, procedure(Token: CancellationToken) begin null; end procedure);
-  const Nested: task of task := go Identity(GroupProcedure);
-  const Copy: task := Wait(Nested);
-  Join(Copy);
-  const Label: task of string := go Text();
-  const Cases: array of WaitCase := [
-    TaskCase(Numbers[1], procedure() begin null; end procedure),
-    TaskCase(Label, procedure() begin null; end procedure),
-    TaskCase(Procedures[1], procedure() begin null; end procedure)
-  ];
-  discard Select(Cases);
- end scope; end."
+        "program T; {DECLARATIONS}\nfunction Fetch<T>(Job: task of T): T; begin return Tasks.Wait(Job); end function;\nfunction Identity<T>(Value: T): T; begin return Value; end function;\nfunction Spawn<T>(Group: Tasks.TaskGroup; Value: T): task of T;\nbegin return Tasks.StartTaskInGroup(Group, function(Token: Tasks.CancellationToken): T begin return Value; end function); end function;\nfunction GenericWorker<T>(Token: T): integer; begin return 42; end function;\nfunction Answer(): integer; begin return 42; end function;\nfunction Invoke(Callback: function(): integer): integer; begin return Callback(); end function;\nprocedure Join(Job: task); begin Tasks.Wait(Job); end procedure;\nbegin scope\n  const Empty: Option of integer := None;\n  const Optional: task of Option of integer := go Identity(Empty);\n  discard Tasks.Wait(Optional);\n  const GenericGroup := Tasks.CreateTaskGroup();\n  const Generic: task of integer := Spawn(GenericGroup, 42);\n  discard Tasks.Wait(Generic);\n  const CallbackJob: task of integer := go Invoke(function(): integer begin return Answer(); end function);\n  const DirectJob: task of integer := go Answer();\n  discard Tasks.Wait(CallbackJob); discard Tasks.Wait(DirectJob);\n  const Worker: function(Token: Tasks.CancellationToken): integer := GenericWorker;\n  const Group: Tasks.TaskGroup := Tasks.CreateTaskGroup();\n  const Grouped: task of integer := Tasks.StartTaskInGroup(Group, Worker);\n  const Supervised: task of integer := Tasks.StartSupervisedTask(Group, Worker, 0, 0);\n  discard Tasks.Wait(Grouped); discard Tasks.Wait(Supervised);\n  discard Tasks.CloseTaskGroup(Group);\n  const Numbers: array of task of integer := [go Number(), go Number()];\n  const Procedures: array of task := [go Work(), go Work()];\n  Tasks.WaitAll(Numbers); Tasks.WaitAll(Procedures);\n  discard Tasks.WaitAny(Numbers); discard Tasks.WaitAny(Procedures);\n  const Answer: integer := Tasks.Wait(Numbers[0]);\n  Join(Procedures[0]);\n  const GroupProcedure := Tasks.StartTaskInGroup(GenericGroup, procedure(Token: Tasks.CancellationToken) begin null; end procedure);\n  const Nested: task of task := go Identity(GroupProcedure);\n  const Copy: task := Tasks.Wait(Nested);\n  Join(Copy);\n  const Label: task of string := go Text();\n  const Cases: array of Tasks.WaitCase := [\n    Tasks.TaskCase(Numbers[1], procedure() begin null; end procedure),\n    Tasks.TaskCase(Label, procedure() begin null; end procedure),\n    Tasks.TaskCase(Procedures[1], procedure() begin null; end procedure)\n  ];\n  discard Tasks.Select(Cases);\n end scope; end."
     ));
 }

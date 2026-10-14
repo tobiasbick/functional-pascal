@@ -156,11 +156,7 @@ fn qualified_import_with_private_local_short_name_remains_valid() {
     .expect("dependency interface must be valid");
     let analysis = analyze_unit(
         &parse_unit(
-            "unit Demo.Consumer;
-             uses Demo.Dependency;
-             type Hidden = record Value: string; end record;
-             public procedure Accept(Value: Demo.Dependency.Hidden);
-             begin end procedure;\nend unit;",
+            "unit Demo.Consumer;\n             uses Demo.Dependency as Dependency;\n             type Hidden = record Value: string; end record;\n             public procedure Accept(Value: Dependency.Hidden);\n             begin end procedure;\nend unit;",
         ),
         &[dependency],
     )

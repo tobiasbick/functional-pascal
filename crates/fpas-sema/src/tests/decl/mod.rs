@@ -7,6 +7,7 @@ mod dictionary_keys;
 mod distinct_types;
 mod local_construction;
 mod local_inference;
+mod qualified_names;
 mod record_compatibility;
 mod routine_initialization;
 mod routines;

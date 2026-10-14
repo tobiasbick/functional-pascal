@@ -1,42 +1,41 @@
-//! Visibility and canonical identities of source-local import namespaces.
-//!
-//! **Documentation:** `docs/pascal/program-structure/units.md`
+//! Public source aliases and canonical imported metadata have separate namespaces.
+//! See `docs/pascal/program-structure/units.md`.
 
-use std::collections::{BTreeMap, HashMap, HashSet};
+use std::collections::{BTreeMap, HashMap};
 
-/// Unit identities and aliases used in one source file.
+use super::{Symbol, SymbolKind};
+
+#[derive(Debug)]
+struct ImportedSymbol {
+    original_name: String,
+    symbol: Symbol,
+}
+
+/// Imports belonging to one source file; supporting metadata never exposes source names.
 #[derive(Debug, Default)]
 pub(crate) struct ImportNames {
-    /// Canonical unit name to source alias spelling.
+    /// Canonical direct unit name to its written source alias.
     pub(crate) aliases: BTreeMap<String, String>,
     units_by_alias: HashMap<String, String>,
-    plain_units: HashSet<String>,
-    known_units: HashSet<String>,
+    source_symbols: HashMap<String, ImportedSymbol>,
+    metadata_symbols: HashMap<String, ImportedSymbol>,
 }
 
 impl ImportNames {
-    pub(crate) fn add_plain(&mut self, unit: &str) {
-        self.note_unit(unit);
-        self.plain_units.insert(unit.to_ascii_lowercase());
-    }
-
+    /// Install one explicit source-local alias.
     pub(crate) fn add_alias(&mut self, unit: &str, alias: &str) {
-        self.note_unit(unit);
         let unit = unit.to_ascii_lowercase();
         self.units_by_alias
             .insert(alias.to_ascii_lowercase(), unit.clone());
-        self.aliases.insert(unit, alias.to_string());
+        self.aliases.insert(unit, alias.to_owned());
     }
 
+    /// Whether this identifier denotes a directly imported namespace.
     pub(crate) fn is_alias(&self, name: &str) -> bool {
         self.units_by_alias.contains_key(&name.to_ascii_lowercase())
     }
 
-    pub(crate) fn note_unit(&mut self, unit: &str) {
-        self.known_units.insert(unit.to_ascii_lowercase());
-    }
-
-    /// Resolves alias prefixes while keeping linked names available to internal metadata.
+    /// Canonicalize a source alias for linked identities and initialization summaries.
     pub(crate) fn canonical_name(&self, name: &str) -> String {
         let (root, suffix) = name.split_once('.').unwrap_or((name, ""));
         if let Some(unit) = self.units_by_alias.get(&root.to_ascii_lowercase()) {
@@ -49,54 +48,108 @@ impl ImportNames {
         name.to_ascii_lowercase()
     }
 
-    /// Resolves a source name, rejecting canonical paths hidden by an alias.
-    pub(crate) fn visible_name(&self, name: &str) -> Option<String> {
-        let canonical = name.to_ascii_lowercase();
-        if self.aliases.is_empty() {
-            return Some(canonical);
+    /// Store imported metadata without creating a source binding.
+    pub(crate) fn define_metadata(&mut self, name: &str, symbol: Symbol) -> bool {
+        let key = name.to_ascii_lowercase();
+        if self
+            .metadata_symbols
+            .get(&key)
+            .is_some_and(|entry| entry.symbol.kind == SymbolKind::Type)
+        {
+            return false;
         }
-        let (root, _) = canonical.split_once('.').unwrap_or((&canonical, ""));
-        if let Some(unit) = self.units_by_alias.get(root) {
-            let resolved = self.canonical_name(name);
-            // An alias denotes one unit, not other units beneath its namespace.
-            if self
-                .known_units
-                .iter()
-                .any(|other| other.len() > unit.len() && matches_unit(&resolved, other))
-            {
-                return None;
-            }
-            return Some(resolved);
-        }
-        self.hidden_unit(&canonical).is_none().then_some(canonical)
+        self.metadata_symbols.insert(
+            key,
+            ImportedSymbol {
+                original_name: name.to_owned(),
+                symbol,
+            },
+        );
+        true
     }
 
+    /// Install one direct public symbol through its exact owning unit's alias.
+    pub(crate) fn define_source(
+        &mut self,
+        unit: &str,
+        name: &str,
+        symbol: Symbol,
+    ) -> Option<String> {
+        let spelling = self.source_name_for(unit, name)?;
+        self.source_symbols.insert(
+            spelling.to_ascii_lowercase(),
+            ImportedSymbol {
+                original_name: name.to_owned(),
+                symbol,
+            },
+        );
+        Some(spelling)
+    }
+
+    /// Render an exported name using its owning unit, even when a child unit shares its prefix.
+    pub(crate) fn source_name_for(&self, unit: &str, name: &str) -> Option<String> {
+        let alias = self.aliases.get(&unit.to_ascii_lowercase())?;
+        let suffix = name.get(unit.len()..)?;
+        (name.get(..unit.len())?.eq_ignore_ascii_case(unit) && suffix.starts_with('.'))
+            .then(|| format!("{alias}{suffix}"))
+    }
+
+    /// Resolve only a directly imported public source spelling.
+    pub(crate) fn lookup_source(&self, name: &str) -> Option<&Symbol> {
+        self.source_symbols
+            .get(&name.to_ascii_lowercase())
+            .map(|entry| &entry.symbol)
+    }
+
+    /// Return the linked name retained by a source binding.
+    pub(crate) fn original_source_name(&self, name: &str) -> Option<&str> {
+        self.source_symbols
+            .get(&name.to_ascii_lowercase())
+            .map(|entry| entry.original_name.as_str())
+    }
+
+    /// Resolve a stored canonical identity independently of source aliases and local values.
+    pub(crate) fn lookup_metadata(&self, name: &str) -> Option<&Symbol> {
+        self.metadata_symbols
+            .get(&name.to_ascii_lowercase())
+            .map(|entry| &entry.symbol)
+    }
+
+    /// Retain canonical layouts and their visible alias spellings for compiler lowering.
+    pub(crate) fn type_symbols(&self) -> BTreeMap<String, super::Ty> {
+        self.metadata_symbols
+            .iter()
+            .chain(self.source_symbols.iter())
+            .filter(|(_, entry)| entry.symbol.kind == SymbolKind::Type)
+            .map(|(name, entry)| (name.clone(), entry.symbol.ty.clone()))
+            .collect()
+    }
+
+    /// List canonical intrinsic declarations for registration and the editor catalog.
+    pub(crate) fn metadata_symbols_with_prefix(&self, prefix: &str) -> Vec<(String, Symbol)> {
+        let prefix = prefix.to_ascii_lowercase();
+        let mut symbols = self
+            .metadata_symbols
+            .iter()
+            .filter(|(name, _)| name.starts_with(&prefix))
+            .map(|(_, entry)| (entry.original_name.clone(), entry.symbol.clone()))
+            .collect::<Vec<_>>();
+        symbols.sort_by(|left, right| left.0.cmp(&right.0));
+        symbols
+    }
+
+    /// Explain the explicit alias required for a removed original unit path.
     pub(crate) fn hidden_path_hint(&self, name: &str) -> Option<String> {
         let canonical = name.to_ascii_lowercase();
-        let hidden = self.hidden_unit(&canonical)?;
-        let alias = &self.aliases[hidden];
-        let suffix = &name[hidden.len()..];
-        Some(format!(
-            "This unit is imported as `{alias}`. Use `{alias}{suffix}`; the original unit path is not visible for an aliased import."
-        ))
-    }
-
-    fn hidden_unit(&self, name: &str) -> Option<&String> {
-        let matches = |unit: &&String| matches_unit(name, unit);
-        let hidden = self
+        let (unit, alias) = self
             .aliases
-            .keys()
-            .filter(matches)
-            .max_by_key(|unit| unit.len())?;
-        if self
-            .plain_units
             .iter()
-            .filter(matches)
-            .any(|unit| unit.len() > hidden.len())
-        {
-            return None;
-        }
-        Some(hidden)
+            .filter(|(unit, _)| matches_unit(&canonical, unit))
+            .max_by_key(|(unit, _)| unit.len())?;
+        Some(format!(
+            "This unit is imported as `{alias}`. Use `{alias}{suffix}`; the original unit path is not visible for an aliased import.",
+            suffix = &name[unit.len()..]
+        ))
     }
 }
 

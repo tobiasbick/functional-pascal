@@ -12,22 +12,22 @@ fn task_count_is_checked_before_allocating_identity_storage() {
 fn one_worker_completes_nested_wait_any() {
     let (program, errors) = fpas_parser::parse(
         r#"program SingleWorkerWaitAny;
-uses Std.Tasks, Std.Time;
+uses Std.Tasks as Tasks, Std.Time as Time;
 function Child(): integer;
 begin
-  Sleep(1);
+  Time.Sleep(1);
   return 9;
 end function;
 function Parent(): integer;
 begin scope
   const T: task of integer := go Child();
-  if WaitAny([T]) <> 0 then panic('child index'); end if;
-  return Wait(T);
+  if Tasks.WaitAny([T]) <> 0 then panic('child index'); end if;
+  return Tasks.Wait(T);
  end scope; end function;
 begin scope
   const T: task of integer := go Parent();
-  if WaitAny([T]) <> 0 then panic('parent index'); end if;
-  if Wait(T) <> 9 then panic('result'); end if;
+  if Tasks.WaitAny([T]) <> 0 then panic('parent index'); end if;
+  if Tasks.Wait(T) <> 9 then panic('result'); end if;
  end scope; end."#,
     );
     assert!(errors.is_empty(), "{errors:?}");

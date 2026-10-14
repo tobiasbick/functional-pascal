@@ -1,6 +1,6 @@
 program CellCapturingRoutineAssignment;
 
-uses Std.Console, Std.Tasks;
+uses Std.Console as Console, Std.Tasks as Tasks;
 
 type Handler = function(Value: integer): integer;
 
@@ -36,8 +36,8 @@ begin
   var Packed: Pack := Pack(Item := Identity);
   const CellStop: integer := 0;
   Cell := Cell + 10;
-  WriteLn(Current(0));
-  WriteLn(Original(0));
+  Console.WriteLn(Current(0));
+  Console.WriteLn(Original(0));
   return Current;
 end function;
 
@@ -191,7 +191,7 @@ begin
     var Current: Action := Noop;
     const SpawnStop: integer := 0;
     const Pending: task := go Current();
-    Wait(Pending);
+    Tasks.Wait(Pending);
     return Cell;
   end scope;
 end function;
@@ -209,7 +209,7 @@ begin
   return Current;
 end function;
 
-function GroupWorker(Token: CancellationToken): Handler;
+function GroupWorker(Token: Tasks.CancellationToken): Handler;
 begin
   return Worker();
 end function;
@@ -227,10 +227,10 @@ begin
   const Boxed: integer := NestedBox();
   const CapturedDest: Handler := CaptureDest();
   const Spawned: integer := SpawnProbe();
-  const Group := CreateTaskGroup();
-  const Child: task of Handler := StartTaskInGroup(Group, GroupWorker);
-  const Stolen: Handler := Wait(Child);
+  const Group := Tasks.CreateTaskGroup();
+  const Child: task of Handler := Tasks.StartTaskInGroup(Group, GroupWorker);
+  const Stolen: Handler := Tasks.Wait(Child);
   const RootStop: integer := 0;
-  WriteLn(Stolen(1));
-  discard CloseTaskGroup(Group);
+  Console.WriteLn(Stolen(1));
+  discard Tasks.CloseTaskGroup(Group);
 end.

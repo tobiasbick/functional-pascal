@@ -1,6 +1,6 @@
 program PostconditionsTest;
 
-uses Std.Test;
+uses Std.Test as Test;
 
 type Box = record
   Value: integer;
@@ -46,23 +46,23 @@ end function;
 begin
   var Value := 1;
   Increase(var Value);
-  AssertEquals(2, Value);
+  Test.AssertEquals(2, Value);
   const B := Box(Value := 3);
   const Read: function(): integer := B.Read;
-  AssertEquals(3, Read());
-  AssertTrue(case Checked(3) of
+  Test.AssertEquals(3, Read());
+  Test.AssertTrue(case Checked(3) of
     when Ok(const N): N = 3;
     when Error(_): false;
   end case);
-  AssertTrue(case Checked(-1) of
+  Test.AssertTrue(case Checked(-1) of
     when Ok(_): false;
     when Error(const Message): Message = 'negative';
   end case);
-  AssertTrue(case Optional(3) of
+  Test.AssertTrue(case Optional(3) of
     when Some(const N): N = 3;
     when None: false;
   end case);
-  AssertTrue(case Optional(-1) of
+  Test.AssertTrue(case Optional(-1) of
     when Some(_): false;
     when None: true;
   end case);

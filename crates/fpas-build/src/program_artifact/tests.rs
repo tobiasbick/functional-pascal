@@ -90,7 +90,7 @@ fn changed_unit_is_rejected_by_final_snapshot_validation() {
     fs::create_dir_all(&root).expect("temporary directory");
     let main = root.join("main.fpas");
     let unit = root.join("unit.fpas");
-    let main_source = b"program Race; uses Race.Work; begin end.";
+    let main_source = b"program Race; uses Race.Work as Work; begin end.";
     fs::write(&main, main_source).expect("main source");
     fs::write(
         &unit,
@@ -123,7 +123,8 @@ fn reordered_source_ids_keep_correct_portable_path_bindings() {
     let first = root.join("first.fpas");
     let second = root.join("second.fpas");
     let artifact = root.join("sources.fpascp");
-    let main_source = b"program Sources; uses Race.First, Race.Second; begin end.";
+    let main_source =
+        b"program Sources; uses Race.First as First, Race.Second as Second; begin end.";
     fs::write(&main, main_source).expect("main source");
     fs::write(
         &first,
@@ -210,7 +211,7 @@ fn changed_source_hash_rebuilds_the_program_image() {
     let main = root.join("main.fpas");
     let unit = root.join("unit.fpas");
     let artifact = root.join("hash.fpascp");
-    let main_source = b"program Sources; uses Race.Work; begin end.";
+    let main_source = b"program Sources; uses Race.Work as Work; begin end.";
     let initial_unit = b"unit Race.Work; public function Value(): integer; begin return 1; end function;\nend unit;";
     fs::write(&main, main_source).expect("main source");
     fs::write(&unit, initial_unit).expect("initial unit source");

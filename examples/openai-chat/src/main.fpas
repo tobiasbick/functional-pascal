@@ -1,18 +1,18 @@
 // Runs an interactive chat against a configured OpenAI-compatible endpoint.
 program OpenAiChat;
 
-uses Std.Ai.OpenAi, Std.Args, Std.Console, Std.Env;
+uses Std.Ai.OpenAi as OpenAi, Std.Args as Args, Std.Console as Console, Std.Env as Env;
 
 begin
-  if ParamCount() <> 2 then
+  if Args.ParamCount() <> 2 then
     begin
-      WriteLn('Usage: fpas run examples/openai-chat/openai-chat.fpasprj -- <base-url> <model>');
-      WriteLn('Example: ... -- http://127.0.0.1:8080/v1 local-model');
+      Console.WriteLn('Usage: fpas run examples/openai-chat/openai-chat.fpasprj -- <base-url> <model>');
+      Console.WriteLn('Example: ... -- http://127.0.0.1:8080/v1 local-model');
       return;
     end;
   end if;
-  var ClientValue: Client := Client.Create(ParamStr(0), ParamStr(1));
-  case Std.Env.Get('OPENAI_API_KEY') of
+  var ClientValue: OpenAi.Client := OpenAi.Client.Create(Args.ParamStr(0), Args.ParamStr(1));
+  case Env.Get('OPENAI_API_KEY') of
     when Some(const Value):
       begin
         ClientValue.ApiKey := Some(Value);
@@ -21,13 +21,13 @@ begin
       begin
       end;
   end case;
-  var Messages: array of ChatMessage := [];
-  const Options: ChatOptions := ChatOptions.Default();
-  WriteLn('OpenAI-compatible FPAS chat. Enter /exit to quit.');
+  var Messages: array of OpenAi.ChatMessage := [];
+  const Options: OpenAi.ChatOptions := OpenAi.ChatOptions.Default();
+  Console.WriteLn('OpenAI-compatible FPAS chat. Enter /exit to quit.');
   while true do
     begin
-      WriteText('you> ');
-      const Prompt: string := ReadLn();
+      Console.WriteText('you> ');
+      const Prompt: string := Console.ReadLn();
       if Prompt = '/exit' then
         begin
           break;
@@ -36,18 +36,18 @@ begin
 
       if Prompt <> '' then
         begin
-          var RequestMessages: array of ChatMessage := Messages;
-          RequestMessages.PushInPlace(ChatMessage.User(Prompt));
-          case Complete(ClientValue, RequestMessages, Options) of
+          var RequestMessages: array of OpenAi.ChatMessage := Messages;
+          RequestMessages.PushInPlace(OpenAi.ChatMessage.User(Prompt));
+          case OpenAi.Complete(ClientValue, RequestMessages, Options) of
             when Ok(const Content):
               begin
-                WriteLn('assistant> ' + Content);
-                Messages.PushInPlace(ChatMessage.User(Prompt));
-                Messages.PushInPlace(ChatMessage.Assistant(Content));
+                Console.WriteLn('assistant> ' + Content);
+                Messages.PushInPlace(OpenAi.ChatMessage.User(Prompt));
+                Messages.PushInPlace(OpenAi.ChatMessage.Assistant(Content));
               end;
             when Error(const Message):
               begin
-                WriteLn('error> ' + Message);
+                Console.WriteLn('error> ' + Message);
               end;
           end case;
         end;

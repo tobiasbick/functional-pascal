@@ -1,6 +1,6 @@
 program RetiredShiftNamesTest;
 
-uses Std.Bits, Std.Test;
+uses Std.Bits as Bits, Std.Test as Test;
 
 type Values = record
   shl: integer;
@@ -24,9 +24,9 @@ end function;
 
 begin
   const Pair: Values := Values(shl := 4, shr := 2);
-  AssertEquals(4, ShL(3));
-  AssertEquals(2, SHR(3));
-  AssertEquals(6, Add(Pair.SHL, Pair.Shr));
-  AssertEquals(8, ShiftLeft(Pair.shl, 1));
-  AssertEquals(1, ShiftRight(Pair.shr, 1));
+  Test.AssertEquals(4, ShL(3));
+  Test.AssertEquals(2, SHR(3));
+  Test.AssertEquals(6, Add(Pair.SHL, Pair.Shr));
+  Test.AssertEquals(8, Bits.ShiftLeft(Pair.shl, 1));
+  Test.AssertEquals(1, Bits.ShiftRight(Pair.shr, 1));
 end.

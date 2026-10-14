@@ -21,24 +21,7 @@ function MakeShape(): Shape; begin return Shape.Origin; end function;";
 #[test]
 fn complete_local_record_and_enum_constructions_infer_their_nominal_types() {
     check_ok(&format!(
-        "{TYPES} begin
-        const P := (Point(X := 1)); const Alias := Position(X := 2);
-        const Zero := Empty(); const Number := Box(Value := 1);
-        const Fixed := StringBox(Value := 'fixed');
-        const Nested := Box(Value := Box(Value := 'nested'));
-        const Defaulted: Defaults of integer := Defaults();
-        const Red := Color.Red; const Short := Blue;
-        var S := Shape.Circle(Radius := 2.0); S := Shape.Origin;
-        const Found := Lookup.Found(Value := Box(Value := 3));
-        const Missing := TextLookup.Missing; const Wrapped := Some(Lookup.Found('text'));
-        const Keep: Point := P; const KeepAlias: Point := Alias; const KeepEmpty: Empty := Zero;
-        const KeepNumber: Box of integer := Number; const KeepFixed: Box of string := Fixed;
-        const KeepNested: Box of Box of string := Nested;
-        const KeepRed: Color := Red; const KeepShort: Color := Short;
-        const KeepFound: Lookup of Box of integer := Found;
-        const KeepMissing: Lookup of string := Missing;
-        const KeepWrapped: Option of Lookup of string := Wrapped;
-        end."
+        "{TYPES} begin\n        const P := (Point(X := 1)); const Alias := Position(X := 2);\n        const Zero := Empty(); const Number := Box(Value := 1);\n        const Fixed := StringBox(Value := 'fixed');\n        const Nested := Box(Value := Box(Value := 'nested'));\n        const Defaulted: Defaults of integer := Defaults();\n        const Red := Color.Red; const Short := Color.Blue;\n        var S := Shape.Circle(Radius := 2.0); S := Shape.Origin;\n        const Found := Lookup.Found(Value := Box(Value := 3));\n        const Missing := TextLookup.Missing; const Wrapped := Some(Lookup.Found('text'));\n        const Keep: Point := P; const KeepAlias: Point := Alias; const KeepEmpty: Empty := Zero;\n        const KeepNumber: Box of integer := Number; const KeepFixed: Box of string := Fixed;\n        const KeepNested: Box of Box of string := Nested;\n        const KeepRed: Color := Red; const KeepShort: Color := Short;\n        const KeepFound: Lookup of Box of integer := Found;\n        const KeepMissing: Lookup of string := Missing;\n        const KeepWrapped: Option of Lookup of string := Wrapped;\n        end."
     ));
 }
 

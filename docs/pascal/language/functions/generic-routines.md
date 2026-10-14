@@ -12,7 +12,7 @@ end function;
 
 procedure PrintValue<T>(Value: T);
 begin
-  WriteLn(Value);
+  Console.WriteLn(Value);
 end procedure;
 ```
 
@@ -20,8 +20,8 @@ Type arguments are inferred from supplied values first:
 
 ```pascal
 begin
-  WriteLn(Identity(42));       // T = integer
-  WriteLn(Identity('hello'));  // T = string
+  Console.WriteLn(Identity(42));       // T = integer
+  Console.WriteLn(Identity('hello'));  // T = string
   PrintValue(3.14);             // T = real
 end.
 ```
@@ -35,19 +35,19 @@ rule, including imported routines. Named argument order does not change inferenc
 ```pascal
 program ContextualFactory;
 
-function Empty<T>(): Option of T;
+function Empty<T>(): option of T;
 begin
   return None;
 end function;
 
-function Missing(): Option of integer;
+function Missing(): option of integer;
 begin
   return Empty();
 end function;
 
 begin
-  const Value: Option of integer := Empty();
-  const Factory: function(): Option of integer := Empty;
+  const Value: option of integer := Empty();
+  const Factory: function(): option of integer := Empty;
   const Copy := Factory();
   if not Value.IsNone() or not Copy.IsNone() or not Missing().IsNone() then
     panic('expected empty values');

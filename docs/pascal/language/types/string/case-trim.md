@@ -6,7 +6,7 @@ Returns how many characters are in `S` (scalar count).
 
 ```pascal
 const N: integer := 'café'.Length();
-WriteLn(N);
+Console.WriteLn(N);
 ```
 
 ---
@@ -16,7 +16,7 @@ WriteLn(N);
 Returns a new string with letters uppercased (Unicode-aware where the runtime supports it).
 
 ```pascal
-WriteLn('ab'.ToUpper());
+Console.WriteLn('ab'.ToUpper());
 ```
 
 ---
@@ -26,7 +26,7 @@ WriteLn('ab'.ToUpper());
 Returns a new string with letters lowercased.
 
 ```pascal
-WriteLn('AB'.ToLower());
+Console.WriteLn('AB'.ToLower());
 ```
 
 ---
@@ -36,7 +36,7 @@ WriteLn('AB'.ToLower());
 Strips leading and trailing whitespace.
 
 ```pascal
-WriteLn('  x  '.Trim());
+Console.WriteLn('  x  '.Trim());
 ```
 
 ---
@@ -46,7 +46,7 @@ WriteLn('  x  '.Trim());
 Strips leading whitespace only.
 
 ```pascal
-WriteLn('  hi  '.TrimLeft());  // 'hi  '
+Console.WriteLn('  hi  '.TrimLeft());  // 'hi  '
 ```
 
 ---
@@ -56,7 +56,7 @@ WriteLn('  hi  '.TrimLeft());  // 'hi  '
 Strips trailing whitespace only.
 
 ```pascal
-WriteLn('  hi  '.TrimRight());  // '  hi'
+Console.WriteLn('  hi  '.TrimRight());  // '  hi'
 ```
 
 ## See also

@@ -1,10 +1,10 @@
 program T;
 
-uses Std.Console;
+uses Std.Console as Console;
 
 procedure PrintValue(X: integer);
 begin
-  WriteLn(X);
+  Console.WriteLn(X);
 end procedure;
 
 begin

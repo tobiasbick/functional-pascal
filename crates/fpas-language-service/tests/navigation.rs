@@ -143,12 +143,12 @@ end unit;
     std::fs::write(&unit, unit_source).expect("replace unit fixture");
     let main_source = r#"program App;
 
-uses Demo.Math;
+uses Demo.Math as Math;
 
 begin
-  const A: integer := Answer();
-  const B: integer := Demo.Math.Answer();
-  const P: Point := demo.math.point( X := 0 );
+  const A: integer := Math.Answer();
+  const B: integer := mAtH.Answer();
+  const P: Math.Point := Math.point( X := 0 );
   const C: integer := P.X;
   const D: integer := Hidden();
 end.
@@ -168,13 +168,8 @@ end.
         "{unit_symbols:?}"
     );
 
-    for reference in ["Answer();", "Demo.Math.Answer();"] {
-        let offset = main_source.find(reference).expect("public reference")
-            + if reference.starts_with("Demo.") {
-                "Demo.Math.".len()
-            } else {
-                0
-            };
+    for reference in ["Math.Answer();", "mAtH.Answer();"] {
+        let offset = main_source.find(reference).expect("public reference") + "Math.".len();
         let definition = service
             .definitions(&main, offset)
             .expect("cross-unit definition");
@@ -198,7 +193,7 @@ end.
     let unit_definition = service
         .definitions(
             &main,
-            main_source.find("Math.Answer").expect("qualified unit") + 1,
+            main_source.find("Demo.Math").expect("imported unit") + "Demo.".len(),
         )
         .expect("qualified unit definition");
     assert_eq!(unit_definition.value[0].symbol.kind, SymbolKind::Unit);
@@ -215,7 +210,7 @@ end.
         .completions(&main, main_source.find("begin").expect("body"))
         .expect("project completion")
         .value;
-    assert!(normal.iter().any(|entry| entry.label == "Answer"));
+    assert!(normal.iter().any(|entry| entry.label == "Math"));
     assert!(!normal.iter().any(|entry| entry.label == "Hidden"));
     assert!(
         service
@@ -315,7 +310,7 @@ include = ["src/**/*.fpas"]
     );
     let main = temp.write(
         "src/main.fpas",
-        "program App;\n\nuses Demo.First, Demo.Second;\n\nbegin\nend.\n",
+        "program App;\n\nuses Demo.First as First, Demo.Second as Second;\n\nbegin\n  discard Cre;\nend.\n",
     );
     temp.write(
         "src/first.fpas",
@@ -329,11 +324,11 @@ include = ["src/**/*.fpas"]
     let source = std::fs::read_to_string(&main).expect("main source");
 
     let candidates = service
-        .completions(&main, source.find("end.").expect("completion position"))
+        .completions(&main, source.find("Cre;").expect("completion position") + 3)
         .expect("completion candidates")
         .value
         .into_iter()
-        .filter(|candidate| candidate.label == "Create")
+        .filter(|candidate| candidate.filter_text == "Create")
         .collect::<Vec<_>>();
 
     assert_eq!(candidates.len(), 2, "{candidates:?}");
@@ -380,7 +375,7 @@ include = ["src/**/*.fpas"]
     );
     let main = temp.write(
         "app/src/main.fpas",
-        "program App;\n\nuses Demo.Internal;\n\nbegin\n  const Value: integer := Hidden();\nend.\n",
+        "program App;\n\nuses Demo.Internal as Internal;\n\nbegin\n  const Value: integer := Internal.Hidden();\nend.\n",
     );
     let mut service = LanguageService::load(&manifest);
     let source = std::fs::read_to_string(&main).expect("main source");

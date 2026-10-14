@@ -1,9 +1,11 @@
 // Starts the fixed-endpoint Local Chat terminal application.
 program LocalChat;
 
-uses LocalChat.Model, LocalChat.Theme, LocalChat.Update, LocalChat.View, Std.Console, Std.Tui;
+uses
+  LocalChat.Model as Model, LocalChat.Theme as Theme, LocalChat.Update as Update,
+  LocalChat.View as View, Std.Console as Console, Std.Tui as Tui;
 
 begin
-  const Initial: LocalChatModel := LocalChatModelCreate(Std.Console.ScreenWidth(), Std.Console.ScreenHeight());
-  discard TuiApplication.RunWithPalette(Initial, LocalChatUpdate, LocalChatView, LocalChatPalette());
+  const Initial: Model.LocalChatModel := Model.LocalChatModelCreate(Console.ScreenWidth(), Console.ScreenHeight());
+  discard Tui.TuiApplication.RunWithPalette(Initial, Update.LocalChatUpdate, View.LocalChatView, Theme.LocalChatPalette());
 end.

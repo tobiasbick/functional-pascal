@@ -22,17 +22,11 @@ impl TypeTable {
     pub(in crate::lowering) fn register_imported_record_names(
         &mut self,
         qualified: &str,
-        short: Option<&str>,
         ty: TypeId,
     ) {
         self.named.insert(qualified.to_ascii_lowercase(), ty);
         self.imported_record_names
             .insert(qualified.to_ascii_lowercase());
-        if let Some(short) = short {
-            self.named.entry(short.to_ascii_lowercase()).or_insert(ty);
-            self.imported_record_names
-                .insert(short.to_ascii_lowercase());
-        }
     }
 
     /// Retains visible type aliases and schedules default bodies owned by this source.
@@ -72,18 +66,6 @@ impl TypeTable {
                         .map(|_| name.clone())
                 })
                 .collect();
-            for visible in &mut info.aliases {
-                for (unit, alias) in &metadata.import_aliases {
-                    let prefix = format!("{unit}.");
-                    if visible
-                        .get(..prefix.len())
-                        .is_some_and(|name| name.eq_ignore_ascii_case(&prefix))
-                    {
-                        *visible = format!("{alias}.{}", &visible[prefix.len()..]);
-                        break;
-                    }
-                }
-            }
             info.aliases.sort();
             info.aliases.dedup();
             let Some(defaults) = metadata.record_defaults.get(&layout.name) else {

@@ -1,11 +1,11 @@
 unit Std.Tui.Chrome.Input;
 
-uses Std.Tui.Ids.Action, Std.Tui.Ids.ControlId;
+uses Std.Tui.Ids.Action as Action, Std.Tui.Ids.ControlId as ControlId;
 
 // Immutable controlled one-line input state and optional history.
 public type TuiInputSpec = record
   // Stable identifier of the value.
-  public Id: TuiControlId;
+  public Id: ControlId.TuiControlId;
   // Text stored or displayed by the value.
   public Text: string;
   // Zero-based character index of the caret.
@@ -17,7 +17,7 @@ public type TuiInputSpec = record
   // Editable text retained while browsing input history.
   public HistoryDraft: string;
   // Action emitted when the controlled value changes.
-  public ChangeAction: TuiAction;
+  public ChangeAction: Action.TuiAction;
 
   // Creates an input without a hint or history.
   //
@@ -26,7 +26,12 @@ public type TuiInputSpec = record
   // - `Text`: Text processed or displayed by the operation.
   // - `Caret`: Zero-based character index of the caret.
   // - `ChangeAction`: Application action emitted when the value changes.
-  public static function Create(Id: TuiControlId; Text: string; Caret: integer; ChangeAction: TuiAction): TuiInputSpec;
+  public static function Create(
+  Id: ControlId.TuiControlId;
+  Text: string;
+  Caret: integer;
+  ChangeAction: Action.TuiAction
+): TuiInputSpec;
   begin
     return TuiInputSpec(Id := Id, Text := Text, Caret := Caret, Hint := '', History := [], HistoryDraft := '', ChangeAction := ChangeAction);
   end function;
@@ -40,11 +45,11 @@ public type TuiInputSpec = record
   // - `Hint`: Hint text displayed for an empty input.
   // - `ChangeAction`: Application action emitted when the value changes.
   public static function WithHint(
-  Id: TuiControlId;
+  Id: ControlId.TuiControlId;
   Text: string;
   Caret: integer;
   Hint: string;
-  ChangeAction: TuiAction
+  ChangeAction: Action.TuiAction
 ): TuiInputSpec;
   begin
     return TuiInputSpec(Id := Id, Text := Text, Caret := Caret, Hint := Hint, History := [], HistoryDraft := '', ChangeAction := ChangeAction);
@@ -61,13 +66,13 @@ public type TuiInputSpec = record
   // - `HistoryDraft`: Current editable text retained while browsing history.
   // - `ChangeAction`: Application action emitted when the value changes.
   public static function WithHistory(
-  Id: TuiControlId;
+  Id: ControlId.TuiControlId;
   Text: string;
   Caret: integer;
   Hint: string;
   History: array of string;
   HistoryDraft: string;
-  ChangeAction: TuiAction
+  ChangeAction: Action.TuiAction
 ): TuiInputSpec;
   begin
     return TuiInputSpec(Id := Id, Text := Text, Caret := Caret, Hint := Hint, History := History, HistoryDraft := HistoryDraft, ChangeAction := ChangeAction);

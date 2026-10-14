@@ -1,6 +1,6 @@
 unit Julia.Compute;
 
-uses Std.Tasks, Std.Math, Std.Conv;
+uses Std.Tasks as Tasks, Std.Math as Math, Std.Conv as Conv;
 
 type Complex = record
   public Re: real;
@@ -32,14 +32,14 @@ public type PixelSample = record
   public EscapeValue: real;
 end record;
 
-function Iterate(Z0: Complex; C: Complex; MaxIter: integer; Token: CancellationToken): PixelSample;
+function Iterate(Z0: Complex; C: Complex; MaxIter: integer; Token: Tasks.CancellationToken): PixelSample;
 begin
   const EscapeRadiusSq: real := 256.0;
   var Z: Complex := Z0;
   var N: integer := 0;
   while (N < MaxIter) and (Z.MagSq() <= EscapeRadiusSq) do
     begin
-      if (N mod 32 = 0) and IsCancellationRequested(Token) then
+      if (N mod 32 = 0) and Tasks.IsCancellationRequested(Token) then
         begin
           break;
         end;
@@ -55,8 +55,9 @@ begin
       return PixelSample(IsInside := true, EscapeValue := 0.0);
     end;
   end if;
-  const MagnitudeSq: real := Max(Z.MagSq(), 4.0);
-  const Smooth: real := IntToReal(N) + 1.0 - (Log(Log(MagnitudeSq) * 0.5) / Log(2.0));
+  const MagnitudeSq: real := Math.Max(Z.MagSq(), 4.0);
+  const Smooth: real := Conv.IntToReal(N) + 1.0 -
+                        (Math.Log(Math.Log(MagnitudeSq) * 0.5) / Math.Log(2.0));
   return PixelSample(IsInside := false, EscapeValue := Smooth);
 end function;
 
@@ -72,7 +73,7 @@ public function ComputeRow(
   MaxIter: integer;
   Jr: real;
   Ji: real;
-  Token: CancellationToken
+  Token: Tasks.CancellationToken
 ): array of PixelSample;
 begin
   var WidthRange: integer := Width - 1;
@@ -88,24 +89,24 @@ begin
       HeightRange := 1;
     end;
   end if;
-  const Wr: real := IntToReal(WidthRange);
-  const Hr: real := IntToReal(HeightRange);
-  const cy: real := YMax - IntToReal(Py) / Hr * (YMax - YMin);
+  const Wr: real := Conv.IntToReal(WidthRange);
+  const Hr: real := Conv.IntToReal(HeightRange);
+  const cy: real := YMax - Conv.IntToReal(Py) / Hr * (YMax - YMin);
   const C: Complex := Complex.Create(Jr, Ji);
   var Row: array of PixelSample := [];
   for Px: integer := 0 to Width - 1 do
     begin
-      if IsCancellationRequested(Token) then
+      if Tasks.IsCancellationRequested(Token) then
         begin
           return [];
         end;
       end if;
-      const cx: real := XMin + IntToReal(Px) / Wr * (XMax - XMin);
+      const cx: real := XMin + Conv.IntToReal(Px) / Wr * (XMax - XMin);
       Row.PushInPlace(Iterate(Complex.Create(cx, cy), C, MaxIter, Token));
     end;
   end for;
 
-  if IsCancellationRequested(Token) then
+  if Tasks.IsCancellationRequested(Token) then
     begin
       return [];
     end;

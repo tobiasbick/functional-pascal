@@ -40,13 +40,7 @@ impl Write for ScopeWriter {
 }
 
 fn worker() -> Worker {
-    let source = "program Cancellation;
-uses Std.Console;
-function Warm(): integer;
-begin return 0; end function;
-function Work(): integer;
-begin WriteLn('first'); WriteLn('after'); return 1; end function;
-begin WriteLn('first'); WriteLn('after'); end.";
+    let source = "program Cancellation;\nuses Std.Console as Console;\nfunction Warm(): integer;\nbegin return 0; end function;\nfunction Work(): integer;\nbegin Console.WriteLn('first'); Console.WriteLn('after'); return 1; end function;\nbegin Console.WriteLn('first'); Console.WriteLn('after'); end.";
     let (program, errors) = fpas_parser::parse(source);
     assert!(errors.is_empty(), "{errors:?}");
     Worker::new(Arc::new(fpas_compiler::compile(&program).expect("compile")))

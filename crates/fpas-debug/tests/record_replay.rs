@@ -138,9 +138,9 @@ fn jsonl_recording_describe_names_portable_identity_without_recording() {
 #[test]
 fn jsonl_record_captures_queued_input_without_replay() {
     let source = r#"program CaptureInput;
-uses Std.Console;
+uses Std.Console as Console;
 begin
-  WriteLn(ReadLn());
+  Console.WriteLn(Console.ReadLn());
 end.
 "#;
     let (program, diagnostics) = fpas_parser::parse(source);
@@ -188,10 +188,10 @@ fn jsonl_recording_describe_after_stop_does_not_resume() {
 }
 
 const RANDOM_ASSIGN: &str = r#"program QuietRandom;
-uses Std.Random;
+uses Std.Random as Random;
 begin
   var X: integer := 0;
-  X := RandomInt(1, 1);
+  X := Random.RandomInt(1, 1);
 end.
 "#;
 

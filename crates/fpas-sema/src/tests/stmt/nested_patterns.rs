@@ -35,28 +35,7 @@ fn codes(source: &str, code: DiagnosticCode) -> usize {
 #[test]
 fn nested_result_option_and_enum_patterns_are_exhaustive_without_else() {
     check_ok(&program(
-        "case R of
-           when Ok(Some(const User)): null;
-           when Ok(None): null;
-           when Error(_): null;
-         end case;
-         case O of
-           when Some(Shape.Circle(const Radius)): null;
-           when Some(Shape.Rect(_, 0)): null;
-           when Some(Shape.Rect(const W, const H)): null;
-           when Some(Shape.Point): null;
-           when None: null;
-         end case;
-         case C of
-           when Some(Color.Red): null;
-           when Some(Green): null;
-           when None: null;
-         end case;
-         case B of
-           when Some(true): null;
-           when Some(false): null;
-           when None: null;
-         end case;",
+        "case R of\n           when Ok(Some(const User)): null;\n           when Ok(None): null;\n           when Error(_): null;\n         end case;\n         case O of\n           when Some(Shape.Circle(const Radius)): null;\n           when Some(Shape.Rect(_, 0)): null;\n           when Some(Shape.Rect(const W, const H)): null;\n           when Some(Shape.Point): null;\n           when None: null;\n         end case;\n         case C of\n           when Some(Color.Red): null;\n           when Some(Color.Green): null;\n           when None: null;\n         end case;\n         case B of\n           when Some(true): null;\n           when Some(false): null;\n           when None: null;\n         end case;",
     ));
 }
 
@@ -125,7 +104,7 @@ fn covered_labels_are_unreachable() {
     for body in [
         "case R of when Ok(_): null; when Ok(Some(1)): null; when Error(_): null; end case;",
         "case O of when None: null; when None: null; when Some(_): null; end case;",
-        "case C of when Some(Red): null; when Some(Green): null; when Some(_): null; when None: null; end case;",
+        "case C of when Some(Color.Red): null; when Some(Color.Green): null; when Some(_): null; when None: null; end case;",
     ] {
         assert_eq!(
             codes(&program(body), SEMA_UNREACHABLE_CASE_LABEL),

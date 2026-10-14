@@ -5,7 +5,7 @@
 Replaces **all** non-overlapping occurrences of `Old` with `New`.
 
 ```pascal
-WriteLn('aaa'.Replace('a', 'b'));
+Console.WriteLn('aaa'.Replace('a', 'b'));
 ```
 
 ---
@@ -16,8 +16,8 @@ Returns `S` concatenated `Count` times. `Count` ≤ 0 yields an empty string.
 
 
 ```pascal
-WriteLn('ab'.RepeatStr(3));  // ababab
-WriteLn('─'.RepeatStr(40)); // ────────────────────────────────────────
+Console.WriteLn('ab'.RepeatStr(3));  // ababab
+Console.WriteLn('─'.RepeatStr(40)); // ────────────────────────────────────────
 ```
 
 `Count` must be at most **1_000_000** when positive. Larger counts raise a runtime error instead of allocating unbounded memory.
@@ -37,7 +37,7 @@ used; additional characters are ignored.
 `Width` must be at most **1_000_000**. Larger widths raise a runtime error.
 
 ```pascal
-WriteLn('42'.PadLeft(5, '0'));  // 00042
+Console.WriteLn('42'.PadLeft(5, '0'));  // 00042
 ```
 
 ---
@@ -50,7 +50,7 @@ validation and first-scalar rules apply, including when no padding is needed.
 `Width` must be at most **1_000_000**. Larger widths raise a runtime error.
 
 ```pascal
-WriteLn('Hi'.PadRight(6, '.'));  // Hi....
+Console.WriteLn('Hi'.PadRight(6, '.'));  // Hi....
 ```
 
 ---
@@ -64,7 +64,7 @@ right. The same nonempty `PadChar` validation applies even when no padding is ne
 `Width` must be at most **1_000_000**. Larger widths raise a runtime error.
 
 ```pascal
-WriteLn('Hi'.PadCenter(6, '-'));  // --Hi--
+Console.WriteLn('Hi'.PadCenter(6, '-'));  // --Hi--
 ```
 
 ---
@@ -76,7 +76,7 @@ Builds a string of `Count` copies of `C`. `C` must contain exactly one Unicode s
 Positive `Count` must be at most **1_000_000**. Larger counts raise a runtime error.
 
 ```pascal
-WriteLn('─'.FromChar(40));
+Console.WriteLn('─'.FromChar(40));
 ```
 
 ---
@@ -92,7 +92,7 @@ checking `S.IsEmpty()` for empty strings.
 
 ```pascal
 const C: string := 'Hello'.CharAt(0);
-WriteLn(C);  // H
+Console.WriteLn(C);  // H
 ```
 
 ---
@@ -104,7 +104,7 @@ Returns a **new** string that is identical to `S` except the character at `Index
 `Index` follows the same scalar bounds and empty-string checks as `CharAt`.
 
 ```pascal
-WriteLn('Hello'.SetCharAt(0, 'J'));  // Jello
+Console.WriteLn('Hello'.SetCharAt(0, 'J'));  // Jello
 ```
 
 ---
@@ -114,7 +114,7 @@ WriteLn('Hello'.SetCharAt(0, 'J'));  // Jello
 Returns the Unicode codepoint (integer value) of `C`. `C` must contain exactly one Unicode scalar value; empty or multi-character strings are runtime errors.
 
 ```pascal
-WriteLn('A'.Ord());  // 65
+Console.WriteLn('A'.Ord());  // 65
 ```
 
 ---
@@ -124,7 +124,7 @@ WriteLn('A'.Ord());  // 65
 Returns the character with Unicode codepoint `N`. **Runtime error** if `N` is not a valid Unicode scalar value.
 
 ```pascal
-WriteLn(string.Chr(65));  // A
+Console.WriteLn(string.Chr(65));  // A
 ```
 
 ---
@@ -138,7 +138,7 @@ For an empty string, index `0` is valid. Invalid indices report FP5021 with a
 hint naming the inclusive `0..S.Length()` range.
 
 ```pascal
-WriteLn('Hllo'.Insert(1, 'e'));  // Hello
+Console.WriteLn('Hllo'.Insert(1, 'e'));  // Hello
 ```
 
 ---
@@ -148,7 +148,7 @@ WriteLn('Hllo'.Insert(1, 'e'));  // Hello
 Returns a new string with `Len` characters removed starting at `Start`. **Runtime error** if the range is out of bounds.
 
 ```pascal
-WriteLn('Hello'.Delete(1, 3));  // Ho
+Console.WriteLn('Hello'.Delete(1, 3));  // Ho
 ```
 
 ---
@@ -158,7 +158,7 @@ WriteLn('Hello'.Delete(1, 3));  // Ho
 Returns a new string with characters in reverse order.
 
 ```pascal
-WriteLn('abc'.Reverse());  // cba
+Console.WriteLn('abc'.Reverse());  // cba
 ```
 
 ## See also

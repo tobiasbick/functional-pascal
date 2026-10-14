@@ -1,108 +1,108 @@
 program TomlParseArraysOfTablesAndEdgeValuesTest;
 
-uses Std.Test, Std.Toml;
+uses Std.Test as Test, Std.Toml as Toml;
 
 begin
-  const Parsed: result of (TomlValue, string) := Parse('empty = []' + string.Chr(10) + 'special = -0.0' + string.Chr(10) + 'point.x = 1' + string.Chr(10) + 'point.y = 2' + string.Chr(10) + '[[products]]' + string.Chr(10) + 'name = ''Hammer''' + string.Chr(10) + '[[products]]' + string.Chr(10) +
-                                                       'name = ''Nail''');
+  const Parsed: result of (Toml.TomlValue, string) := Toml.Parse('empty = []' + string.Chr(10) + 'special = -0.0' + string.Chr(10) + 'point.x = 1' + string.Chr(10) + 'point.y = 2' + string.Chr(10) + '[[products]]' + string.Chr(10) + 'name = ''Hammer''' + string.Chr(10) + '[[products]]' + string.Chr(10) +
+                                                                 'name = ''Nail''');
   case Parsed of
     when Ok(const Value):
       begin
         case Value of
-          when TomlValue.Table(const Fields):
+          when Toml.TomlValue.Table(const Fields):
             begin
               case Fields.Get('empty').Unwrap() of
-                when TomlValue.ArrayValue(const Items):
+                when Toml.TomlValue.ArrayValue(const Items):
                   begin
-                    AssertEquals(0, Items.Length());
+                    Test.AssertEquals(0, Items.Length());
                   end;
-                when TomlValue.String(_), TomlValue.Integer(_), TomlValue.Float(_), TomlValue.Boolean(_), TomlValue.Datetime(_), TomlValue.Table(_):
+                when Toml.TomlValue.String(_), Toml.TomlValue.Integer(_), Toml.TomlValue.Float(_), Toml.TomlValue.Boolean(_), Toml.TomlValue.Datetime(_), Toml.TomlValue.Table(_):
                   begin
-                    Fail('Expected empty array');
+                    Test.Fail('Expected empty array');
                   end;
               end case;
 
               case Fields.Get('special').Unwrap() of
-                when TomlValue.Float(const Number):
+                when Toml.TomlValue.Float(const Number):
                   begin
-                    AssertEquals(0.0, Number);
+                    Test.AssertEquals(0.0, Number);
                   end;
-                when TomlValue.String(_), TomlValue.Integer(_), TomlValue.Boolean(_), TomlValue.Datetime(_), TomlValue.ArrayValue(_), TomlValue.Table(_):
+                when Toml.TomlValue.String(_), Toml.TomlValue.Integer(_), Toml.TomlValue.Boolean(_), Toml.TomlValue.Datetime(_), Toml.TomlValue.ArrayValue(_), Toml.TomlValue.Table(_):
                   begin
-                    Fail('Expected finite float');
+                    Test.Fail('Expected finite float');
                   end;
               end case;
 
               case Fields.Get('point').Unwrap() of
-                when TomlValue.Table(const Point):
+                when Toml.TomlValue.Table(const Point):
                   begin
-                    AssertEquals(2, Point.Length());
+                    Test.AssertEquals(2, Point.Length());
                   end;
-                when TomlValue.String(_), TomlValue.Integer(_), TomlValue.Float(_), TomlValue.Boolean(_), TomlValue.Datetime(_), TomlValue.ArrayValue(_):
+                when Toml.TomlValue.String(_), Toml.TomlValue.Integer(_), Toml.TomlValue.Float(_), Toml.TomlValue.Boolean(_), Toml.TomlValue.Datetime(_), Toml.TomlValue.ArrayValue(_):
                   begin
-                    Fail('Expected point table');
+                    Test.Fail('Expected point table');
                   end;
               end case;
 
               case Fields.Get('products').Unwrap() of
-                when TomlValue.ArrayValue(const Products):
+                when Toml.TomlValue.ArrayValue(const Products):
                   begin
-                    AssertEquals(2, Products.Length());
+                    Test.AssertEquals(2, Products.Length());
                     case Products[0] of
-                      when TomlValue.Table(const Product):
+                      when Toml.TomlValue.Table(const Product):
                         begin
                           case Product.Get('name').Unwrap() of
-                            when TomlValue.String(const Name):
+                            when Toml.TomlValue.String(const Name):
                               begin
-                                AssertEquals('Hammer', Name);
+                                Test.AssertEquals('Hammer', Name);
                               end;
-                            when TomlValue.Integer(_), TomlValue.Float(_), TomlValue.Boolean(_), TomlValue.Datetime(_), TomlValue.ArrayValue(_), TomlValue.Table(_):
+                            when Toml.TomlValue.Integer(_), Toml.TomlValue.Float(_), Toml.TomlValue.Boolean(_), Toml.TomlValue.Datetime(_), Toml.TomlValue.ArrayValue(_), Toml.TomlValue.Table(_):
                               begin
-                                Fail('Expected product name string');
+                                Test.Fail('Expected product name string');
                               end;
                           end case;
                         end;
-                      when TomlValue.String(_), TomlValue.Integer(_), TomlValue.Float(_), TomlValue.Boolean(_), TomlValue.Datetime(_), TomlValue.ArrayValue(_):
+                      when Toml.TomlValue.String(_), Toml.TomlValue.Integer(_), Toml.TomlValue.Float(_), Toml.TomlValue.Boolean(_), Toml.TomlValue.Datetime(_), Toml.TomlValue.ArrayValue(_):
                         begin
-                          Fail('Expected first product table');
+                          Test.Fail('Expected first product table');
                         end;
                     end case;
 
                     case Products[1] of
-                      when TomlValue.Table(const Product):
+                      when Toml.TomlValue.Table(const Product):
                         begin
                           case Product.Get('name').Unwrap() of
-                            when TomlValue.String(const Name):
+                            when Toml.TomlValue.String(const Name):
                               begin
-                                AssertEquals('Nail', Name);
+                                Test.AssertEquals('Nail', Name);
                               end;
-                            when TomlValue.Integer(_), TomlValue.Float(_), TomlValue.Boolean(_), TomlValue.Datetime(_), TomlValue.ArrayValue(_), TomlValue.Table(_):
+                            when Toml.TomlValue.Integer(_), Toml.TomlValue.Float(_), Toml.TomlValue.Boolean(_), Toml.TomlValue.Datetime(_), Toml.TomlValue.ArrayValue(_), Toml.TomlValue.Table(_):
                               begin
-                                Fail('Expected product name string');
+                                Test.Fail('Expected product name string');
                               end;
                           end case;
                         end;
-                      when TomlValue.String(_), TomlValue.Integer(_), TomlValue.Float(_), TomlValue.Boolean(_), TomlValue.Datetime(_), TomlValue.ArrayValue(_):
+                      when Toml.TomlValue.String(_), Toml.TomlValue.Integer(_), Toml.TomlValue.Float(_), Toml.TomlValue.Boolean(_), Toml.TomlValue.Datetime(_), Toml.TomlValue.ArrayValue(_):
                         begin
-                          Fail('Expected second product table');
+                          Test.Fail('Expected second product table');
                         end;
                     end case;
                   end;
-                when TomlValue.String(_), TomlValue.Integer(_), TomlValue.Float(_), TomlValue.Boolean(_), TomlValue.Datetime(_), TomlValue.Table(_):
+                when Toml.TomlValue.String(_), Toml.TomlValue.Integer(_), Toml.TomlValue.Float(_), Toml.TomlValue.Boolean(_), Toml.TomlValue.Datetime(_), Toml.TomlValue.Table(_):
                   begin
-                    Fail('Expected products array');
+                    Test.Fail('Expected products array');
                   end;
               end case;
             end;
-          when TomlValue.String(_), TomlValue.Integer(_), TomlValue.Float(_), TomlValue.Boolean(_), TomlValue.Datetime(_), TomlValue.ArrayValue(_):
+          when Toml.TomlValue.String(_), Toml.TomlValue.Integer(_), Toml.TomlValue.Float(_), Toml.TomlValue.Boolean(_), Toml.TomlValue.Datetime(_), Toml.TomlValue.ArrayValue(_):
             begin
-              Fail('Expected TOML table');
+              Test.Fail('Expected TOML table');
             end;
         end case;
       end;
     when Error(const Message):
       begin
-        Fail(Message);
+        Test.Fail(Message);
       end;
   end case;
 end.

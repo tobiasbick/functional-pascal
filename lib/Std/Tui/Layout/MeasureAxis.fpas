@@ -1,6 +1,6 @@
 unit Std.Tui.Layout.MeasureAxis;
 
-uses Std.Tui.Layout.MeasureConstraint;
+uses Std.Tui.Layout.MeasureConstraint as MeasureConstraint;
 
 // Largest integer used for checked layout-axis calculations.
 public const TuiMeasureAxisIntegerMax: integer := 9223372036854775807;
@@ -74,7 +74,7 @@ public type TuiMeasureAxis = record
   Minimum: integer;
   Preferred: integer;
   Maximum: integer;
-  Constraint: TuiMeasureConstraint
+  Constraint: MeasureConstraint.TuiMeasureConstraint
 ): TuiMeasureAxisResult;
   begin
     if not Constraint.IsBounded() then

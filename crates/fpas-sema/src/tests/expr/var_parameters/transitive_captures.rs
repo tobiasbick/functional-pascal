@@ -28,19 +28,10 @@ fn recursive_capture_completion_preserves_task_and_discard_boundaries() {
         "const Wrapped: Option of procedure() := Some(Work); case Wrapped of when Some(const Extracted): discard go Extracted(); when None: null; end case;",
         "const Wrapped: Option of procedure() := Some(Work); const Extracted: procedure() := Wrapped.Unwrap(); discard go Extracted();",
         "const Wrapped: procedure() := procedure() begin Work(); end procedure; discard go Wrapped();",
-        "const Queue: channel of procedure() := CreateChannel(1); discard Send(Queue, Work);",
+        "const Queue: channel of procedure() := Tasks.CreateChannel(1); discard Tasks.Send(Queue, Work);",
     ] {
         let errors = check_errors(&format!(
-            "program T; uses Std.Tasks;
-procedure Outer();
-  procedure First();
-  begin scope
-    const Work: procedure() := procedure() begin First(); end procedure;
-    {statement}
-    Value := Value + 1;
-  end scope; end procedure;
-begin var Value: integer := 0; end procedure;
-begin end."
+            "program T; uses Std.Tasks as Tasks;\nprocedure Outer();\n  procedure First();\n  begin scope\n    const Work: procedure() := procedure() begin First(); end procedure;\n    {statement}\n    Value := Value + 1;\n  end scope; end procedure;\nbegin var Value: integer := 0; end procedure;\nbegin end."
         ));
         assert!(
             errors
@@ -54,31 +45,11 @@ begin end."
         "const Wrapped: Option of procedure() := Some(Work); discard Wrapped.Unwrap();",
     ] {
         check_ok(&format!(
-            "program T; uses Std.Tasks;
-procedure Outer(Value: task);
-  procedure First();
-  begin scope
-    const Work: procedure() := procedure() begin First(); end procedure;
-    {statement}
-    const Snapshot: task := Value;
-  end scope; end procedure;
-begin end procedure;
-begin end."
+            "program T; uses Std.Tasks as Tasks;\nprocedure Outer(Value: task);\n  procedure First();\n  begin scope\n    const Work: procedure() := procedure() begin First(); end procedure;\n    {statement}\n    const Snapshot: task := Value;\n  end scope; end procedure;\nbegin end procedure;\nbegin end."
         ));
     }
     check_ok(
-        "program T; uses Std.Tasks;
-procedure Outer(Value: task);
-  procedure First();
-  begin
-    const Work: procedure() := procedure() begin First(); end procedure;
-    discard Some(Work).IsSome();
-    const Present: boolean := Some(Work).IsSome();
-    discard Present;
-    const Snapshot: task := Value;
-  end procedure;
-begin end procedure;
-begin end.",
+        "program T; uses Std.Tasks as Tasks;\nprocedure Outer(Value: task);\n  procedure First();\n  begin\n    const Work: procedure() := procedure() begin First(); end procedure;\n    discard Some(Work).IsSome();\n    const Present: boolean := Some(Work).IsSome();\n    discard Present;\n    const Snapshot: task := Value;\n  end procedure;\nbegin end procedure;\nbegin end.",
     );
 }
 
@@ -91,15 +62,7 @@ fn recursive_routine_values_and_tasks_cannot_escape_reference_captures() {
         "const Escape: procedure() := procedure() begin First(); end procedure;",
     ] {
         let source = format!(
-            "program T; uses Std.Tasks;
-procedure Outer(var Value: integer);
-  procedure First();
-  begin scope
-    {statement}
-    Value := Value + 1;
-  end scope; end procedure;
-begin First(); end procedure;
-begin end."
+            "program T; uses Std.Tasks as Tasks;\nprocedure Outer(var Value: integer);\n  procedure First();\n  begin scope\n    {statement}\n    Value := Value + 1;\n  end scope; end procedure;\nbegin First(); end procedure;\nbegin end."
         );
         let errors = check_errors(&source);
         assert!(
@@ -127,17 +90,7 @@ fn recursive_reference_dependencies_reach_anonymous_and_named_wrappers() {
         ),
     ] {
         let source = format!(
-            "program T; uses Std.Tasks;
-procedure Outer(var Value: integer);
-  procedure First();
-    procedure Bridge();
-    begin {bridge_body} end procedure;
-  begin scope
-    {statement}
-    Value := Value + 1;
-  end scope; end procedure;
-begin First(); end procedure;
-begin end."
+            "program T; uses Std.Tasks as Tasks;\nprocedure Outer(var Value: integer);\n  procedure First();\n    procedure Bridge();\n    begin {bridge_body} end procedure;\n  begin scope\n    {statement}\n    Value := Value + 1;\n  end scope; end procedure;\nbegin First(); end procedure;\nbegin end."
         );
         let errors = check_errors(&source);
         assert!(
@@ -233,9 +186,7 @@ fn sibling_reference_wrappers_cannot_be_spawned_or_captured_by_anonymous_closure
         "const Escape: procedure(Value: string) := procedure(Value: string) begin Second(); end procedure;",
     ] {
         let source = format!(
-            "program T; uses Std.Tasks;
-procedure Outer(var Value: integer); {REFERENCE_HELPERS}
-begin {statement} end procedure; begin end."
+            "program T; uses Std.Tasks as Tasks;\nprocedure Outer(var Value: integer); {REFERENCE_HELPERS}\nbegin {statement} end procedure; begin end."
         );
         let errors = check_errors(&source);
         assert!(

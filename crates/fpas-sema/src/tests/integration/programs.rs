@@ -23,29 +23,7 @@ end.",
 #[test]
 fn calculator() {
     check_ok(
-        "\
-program Calculator;
-
-type Op = enum
-  OpAdd;
-  OpSub;
-  OpMul;
-  OpDiv;
-end enum;
-
-function Calculate(A: integer; B: integer; Operation: Op): integer;
-begin
-  case Operation of
-    when OpAdd: return A + B;
-    when OpSub: return A - B;
-    when OpMul: return A * B;
-    when OpDiv: return A div B;
-  end case;
-end function;
-
-begin
-  const Answer: integer := Calculate(10, 3, OpAdd);
-end.",
+        "program Calculator;\n\ntype Op = enum\n  OpAdd;\n  OpSub;\n  OpMul;\n  OpDiv;\nend enum;\n\nfunction Calculate(A: integer; B: integer; Operation: Op): integer;\nbegin\n  case Operation of\n    when Op.OpAdd: return A + B;\n    when Op.OpSub: return A - B;\n    when Op.OpMul: return A * B;\n    when Op.OpDiv: return A div B;\n  end case;\nend function;\n\nbegin\n  const Answer: integer := Calculate(10, 3, Op.OpAdd);\nend.",
     );
 }
 

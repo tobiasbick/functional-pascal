@@ -2,7 +2,7 @@
 
 program StrBasics;
 
-uses Std.Console, Std.Conv;
+uses Std.Console as Console, Std.Conv as Conv;
 
 function ReplaceStar(C: string): string;
 begin
@@ -27,17 +27,17 @@ end function;
 
 begin
   const S: string := '  Hello, World!  ';
-  WriteLn('trim: ', S.Trim());
-  WriteLn('upper: ', 'fpas'.ToUpper());
-  WriteLn('split+join: ', 'a,b,c'.Split(',').Join('|'));
+  Console.WriteLn('trim: ', S.Trim());
+  Console.WriteLn('upper: ', 'fpas'.ToUpper());
+  Console.WriteLn('split+join: ', 'a,b,c'.Split(',').Join('|'));
   const Msg: string := 'n=%d upper=%s'.Format(42, 'ok'.ToUpper());
-  WriteLn('format: ', Msg);
-  WriteLn('contains b: ', 'abc'.Contains('b'));
-  WriteLn('substring: ', 'Hello'.Slice(0, 3));
-  WriteLn('replace: ', 'banana'.Replace('na', 'NA'));
-  WriteLn('reverse: ', 'draw'.Reverse());
-  WriteLn('pad: ', '7'.PadLeft(4, '0'));
-  WriteLn('map: ', 'a*b'.Map(ReplaceStar));
-  WriteLn('filter: ', 'a b'.Filter(KeepLetter));
-  WriteLn('reduce: ', IntToStr('a😀b'.Reduce(0, Count)));
+  Console.WriteLn('format: ', Msg);
+  Console.WriteLn('contains b: ', 'abc'.Contains('b'));
+  Console.WriteLn('substring: ', 'Hello'.Slice(0, 3));
+  Console.WriteLn('replace: ', 'banana'.Replace('na', 'NA'));
+  Console.WriteLn('reverse: ', 'draw'.Reverse());
+  Console.WriteLn('pad: ', '7'.PadLeft(4, '0'));
+  Console.WriteLn('map: ', 'a*b'.Map(ReplaceStar));
+  Console.WriteLn('filter: ', 'a b'.Filter(KeepLetter));
+  Console.WriteLn('reduce: ', Conv.IntToStr('a😀b'.Reduce(0, Count)));
 end.

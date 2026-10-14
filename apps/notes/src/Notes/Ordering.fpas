@@ -1,9 +1,9 @@
 // Stable ordering of persisted notes.
 unit Notes.Ordering;
 
-uses Notes.Model;
+uses Notes.Model as Model;
 
-function Before(Left: Note; Right: Note): boolean;
+function Before(Left: Model.Note; Right: Model.Note): boolean;
 begin
   if Left.Pinned <> Right.Pinned then
     begin
@@ -15,7 +15,7 @@ begin
 end function;
 
 // Merge-sorts notes without rebuilding the output for every inserted item.
-public function NotesOrdered(Notes: array of Note): array of Note;
+public function NotesOrdered(Notes: array of Model.Note): array of Model.Note;
 begin
   const Count: integer := Notes.Length();
   if Count < 2 then
@@ -24,9 +24,9 @@ begin
     end;
   end if;
   const Middle: integer := Count div 2;
-  const Left: array of Note := NotesOrdered(Notes.Slice(0, Middle));
-  const Right: array of Note := NotesOrdered(Notes.Slice(Middle, Count - Middle));
-  var Output: array of Note := [];
+  const Left: array of Model.Note := NotesOrdered(Notes.Slice(0, Middle));
+  const Right: array of Model.Note := NotesOrdered(Notes.Slice(Middle, Count - Middle));
+  var Output: array of Model.Note := [];
   var L: integer := 0;
   var R: integer := 0;
   while (L < Left.Length()) and (R < Right.Length()) do

@@ -8,15 +8,14 @@ use super::*;
 #[test]
 fn missing_root_unit_publishes_its_original_code_and_exclusive_name_range() {
     let temp = TempDirectory::new("missing-root-unit");
-    let source =
-        "program Demo; // 😀\r\nuses Std.Console, Demo.Missing as Missing;\r\nbegin\r\nend.\r\n";
+    let source = "program Demo; // 😀\r\nuses Std.Console as Console, Demo.Missing as Missing;\r\nbegin\r\nend.\r\n";
     program_project(&temp, source);
     let transcript = analyze_project(&temp, source);
     assert_success(&transcript);
     let diagnostic = located_diagnostic(&transcript, &temp.uri("src/main.fpas"), "FP4115");
     assert_eq!(
         diagnostic["range"],
-        json!({"start":{"line":1,"character":18},"end":{"line":1,"character":30}})
+        json!({"start":{"line":1,"character":29},"end":{"line":1,"character":41}})
     );
     assert_eq!(diagnostic["severity"], json!(1));
     assert_eq!(diagnostic["data"]["source_id"], json!(0));

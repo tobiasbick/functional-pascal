@@ -22,10 +22,10 @@ export async function verifyDebuggerTransport(
   const lines = [
     "program DebuggerTransport;",
     "",
-    "uses Std.Console;",
+    "uses Std.Console as Console;",
     "",
     "begin",
-    "  WriteLn('hello-raw');",
+    "  Console.WriteLn('hello-raw');",
     "end.",
     ""
   ];

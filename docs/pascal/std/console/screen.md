@@ -24,9 +24,9 @@ These operations use a **text screen model** with a current cursor position, an 
 - **Errors:** runtime error if `X` / `Y` are outside the active window.
 
 ```pascal
-Window(10, 5, 30, 15);
-GotoXY(1, 1);
-WriteLn('top-left of the window');
+Console.Window(10, 5, 30, 15);
+Console.GotoXY(1, 1);
+Console.WriteLn('top-left of the window');
 ```
 
 ### `function WhereX(): integer`

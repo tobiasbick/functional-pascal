@@ -7,7 +7,7 @@ fn run_cli_emits_warning_for_program_source_file_and_still_runs() {
     support::write_program_project_file(&project_file, "src/main.fpas", &["src/*.fpas"]);
     write_text(
         &cwd.join("src/main.fpas"),
-        "program Main;\nuses App.Util, Std.Console;\nbegin\n  WriteLn(GetValue());\nend.\n",
+        "program Main;\nuses App.Util as Util, Std.Console as Console;\nbegin\n  Console.WriteLn(Util.GetValue());\nend.\n",
     );
     write_text(
         &cwd.join("src/util.fpas"),
@@ -36,7 +36,7 @@ fn run_cli_emits_warning_for_duplicate_source_file_and_still_runs() {
     );
     write_text(
         &cwd.join("src/main.fpas"),
-        "program Main;\nuses App.Util, Std.Console;\nbegin\n  WriteLn(GetValue());\nend.\n",
+        "program Main;\nuses App.Util as Util, Std.Console as Console;\nbegin\n  Console.WriteLn(Util.GetValue());\nend.\n",
     );
     write_text(
         &cwd.join("src/util.fpas"),

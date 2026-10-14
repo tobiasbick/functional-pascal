@@ -1,6 +1,6 @@
 program CaseBlocksTest;
 
-uses Std.Test;
+uses Std.Test as Test;
 
 type Message = enum
   Number(Value: integer);
@@ -46,7 +46,7 @@ begin
         null;
       else
         const Value: integer := 100;
-        AssertEquals(100, Value);
+        Test.AssertEquals(100, Value);
     end case;
 
     return Value;
@@ -62,7 +62,7 @@ begin
         null;
       when Some(_):
         const Value: integer := 200;
-        AssertEquals(200, Value);
+        Test.AssertEquals(200, Value);
     end case;
 
     return Value;
@@ -70,36 +70,36 @@ begin
 end function;
 
 begin
-  AssertEquals(42, Choose());
-  AssertEquals(1, Evaluations);
-  AssertEquals(2, Guards);
+  Test.AssertEquals(42, Choose());
+  Test.AssertEquals(1, Evaluations);
+  Test.AssertEquals(2, Guards);
   const ScalarReader: function(): integer := MakeScalarReader();
-  AssertEquals(7, ScalarReader());
+  Test.AssertEquals(7, ScalarReader());
   const VariantReader: function(): integer := MakeVariantReader();
-  AssertEquals(8, VariantReader());
+  Test.AssertEquals(8, VariantReader());
   const Value: integer := 7;
   case Message.Number(3) of
     when Message.Number(const N) if N > 0:
       const Value: integer := N;
       begin
         const Value: integer := 9;
-        AssertEquals(9, Value);
+        Test.AssertEquals(9, Value);
       end;
 
-      AssertEquals(3, Value);
+      Test.AssertEquals(3, Value);
       case Some(Value) of
         when Some(const V):
-          AssertEquals(3, V);
+          Test.AssertEquals(3, V);
         when None:
-          AssertTrue(false);
+          Test.AssertTrue(false);
       end case;
     when Message.Number(const N):
-      AssertTrue(false);
+      Test.AssertTrue(false);
     when Message.Empty:
       null;
   end case;
 
-  AssertEquals(7, Value);
+  Test.AssertEquals(7, Value);
   var Sum: integer := 0;
   for I: integer := 1 to 5 do
     case I of
@@ -113,5 +113,5 @@ begin
     end case;
   end for;
 
-  AssertEquals(8, Sum);
+  Test.AssertEquals(8, Sum);
 end.

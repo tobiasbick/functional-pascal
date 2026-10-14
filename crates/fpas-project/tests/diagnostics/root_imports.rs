@@ -109,12 +109,12 @@ fn private_root_import_keeps_its_program_path_and_name_span() {
 #[test]
 fn unavailable_root_path_stays_absent_while_the_original_span_is_preserved() {
     let fixture = Fixture::new();
-    let source = "program Demo;\nuses Library.Hidden;\nbegin\nend.\n";
+    let source = "program Demo;\nuses Library.Hidden as Hidden;\nbegin\nend.\n";
     let (_, graph) = private_graph(&fixture, source);
     for (source, code, name) in [
         (source, PROJECT_UNIT_NOT_EXPORTED, "Library.Hidden"),
         (
-            "program Demo;\nuses Library.Missing;\nbegin\nend.\n",
+            "program Demo;\nuses Library.Missing as Missing;\nbegin\nend.\n",
             PROJECT_UNKNOWN_UNIT,
             "Library.Missing",
         ),
@@ -128,7 +128,7 @@ fn unavailable_root_path_stays_absent_while_the_original_span_is_preserved() {
 
 #[test]
 fn multiple_missing_roots_keep_the_selected_imports_own_span() {
-    let source = "program Demo;\nuses Std.Console,\n     Demo.First as First,\n     Demo.Second as Second;\nbegin\nend.\n";
+    let source = "program Demo;\nuses Std.Console as Console,\n     Demo.First as First,\n     Demo.Second as Second;\nbegin\nend.\n";
     let program = program(source);
     let graph = build_unit_graph(&[], &ProjectLinkMeta::default()).expect("empty graph");
     let main = Path::new("virtual/actual_main.fpas");
@@ -148,7 +148,7 @@ fn multiple_missing_roots_keep_the_selected_imports_own_span() {
 
 #[test]
 fn shared_program_graph_reports_each_entries_own_path() {
-    let source = "program Demo;\nuses Demo.Missing;\nbegin\nend.\n";
+    let source = "program Demo;\nuses Demo.Missing as Missing;\nbegin\nend.\n";
     let program = program(source);
     let template =
         prepare_program_unit_graph(&[], &ProjectLinkMeta::default(), None).expect("shared graph");
@@ -173,9 +173,9 @@ fn shared_program_graph_reports_each_entries_own_path() {
 #[test]
 fn transitive_import_failure_retains_the_unit_path_instead_of_the_program_path() {
     let fixture = Fixture::new();
-    let source = "program Demo;\nuses Demo.Dep;\nbegin\nend.\n";
+    let source = "program Demo;\nuses Demo.Dep as Dep;\nbegin\nend.\n";
     let main = fixture.write("main.fpas", source);
-    let unit_source = "unit Demo.Dep;\nuses Demo.Missing;\nend unit;\n";
+    let unit_source = "unit Demo.Dep;\nuses Demo.Missing as Missing;\nend unit;\n";
     let unit = fixture.write("dep.fpas", unit_source);
     let graph = build_unit_graph_for_program(
         &main,

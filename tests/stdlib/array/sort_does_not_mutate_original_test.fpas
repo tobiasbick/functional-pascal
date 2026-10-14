@@ -1,10 +1,10 @@
 program T;
 
-uses Std.Console;
+uses Std.Console as Console;
 
 begin
   const A: array of integer := [3, 1, 2];
   const B: array of integer := A.Sort();
-  WriteLn(A[0]);
-  WriteLn(B[0]);
+  Console.WriteLn(A[0]);
+  Console.WriteLn(B[0]);
 end.

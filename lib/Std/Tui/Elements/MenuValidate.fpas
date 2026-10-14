@@ -1,8 +1,11 @@
 unit Std.Tui.Elements.MenuValidate;
 
-uses Std.Tui.Chrome.MenuNode, Std.Tui.Chrome.MenuQuery;
+uses Std.Tui.Chrome.MenuNode as MenuNode, Std.Tui.Chrome.MenuQuery as MenuQuery;
 
-function TuiMenuSameOptionalId(Left: option of TuiMenuNodeId; Right: option of TuiMenuNodeId): boolean;
+function TuiMenuSameOptionalId(
+  Left: option of MenuNode.TuiMenuNodeId;
+  Right: option of MenuNode.TuiMenuNodeId
+): boolean;
 begin
   case Left of
     when Some(const LeftId):
@@ -39,38 +42,38 @@ end function;
 // Parameters:
 // - `Nodes`: Flat ordered menu-node collection.
 // - `State`: Controlled state used by the operation.
-public procedure TuiMenuValidate(Nodes: array of TuiMenuNode; State: TuiMenuState);
+public procedure TuiMenuValidate(Nodes: array of MenuNode.TuiMenuNode; State: MenuNode.TuiMenuState);
 begin
   for Index: integer := 0 to Nodes.Length() - 1 do
     begin
-      const Id: TuiMenuNodeId := TuiMenuNodeIdOf(Nodes[Index]);
+      const Id: MenuNode.TuiMenuNodeId := MenuQuery.TuiMenuNodeIdOf(Nodes[Index]);
       for Previous: integer := 0 to Index - 1 do
         begin
-          if TuiMenuNodeIdOf(Nodes[Previous]).Value = Id.Value then
+          if MenuQuery.TuiMenuNodeIdOf(Nodes[Previous]).Value = Id.Value then
             begin
               panic('Tui menu node id must be unique');
             end;
           end if;
         end;
       end for;
-      const Mnemonic: string := TuiMenuNodeMnemonic(Nodes[Index]);
+      const Mnemonic: string := MenuQuery.TuiMenuNodeMnemonic(Nodes[Index]);
       if Mnemonic.Length() > 1 then
         begin
           panic('Tui menu mnemonic must be empty or one character');
         end;
       end if;
 
-      case TuiMenuNodeParent(Nodes[Index]) of
+      case MenuQuery.TuiMenuNodeParent(Nodes[Index]) of
         when Some(const Parent):
           begin
-            const ParentIndex: integer := TuiMenuFind(Nodes, Parent);
+            const ParentIndex: integer := MenuQuery.TuiMenuFind(Nodes, Parent);
             if ParentIndex < 0 then
               begin
                 panic('Tui menu parent id must exist');
               end;
             end if;
 
-            if not TuiMenuNodeIsSubmenu(Nodes[ParentIndex]) then
+            if not MenuQuery.TuiMenuNodeIsSubmenu(Nodes[ParentIndex]) then
               begin
                 panic('Tui menu parent must be a submenu');
               end;
@@ -78,20 +81,20 @@ begin
           end;
         when None:
           begin
-            if not TuiMenuNodeIsSubmenu(Nodes[Index]) then
+            if not MenuQuery.TuiMenuNodeIsSubmenu(Nodes[Index]) then
               begin
                 panic('Tui root menu nodes must be submenus');
               end;
             end if;
           end;
       end case;
-      var Current: TuiMenuNodeId := Id;
+      var Current: MenuNode.TuiMenuNodeId := Id;
       var Remaining: integer := Nodes.Length();
       while Remaining > 0 do
         begin
           Remaining := Remaining - 1;
-          const CurrentIndex: integer := TuiMenuFind(Nodes, Current);
-          case TuiMenuNodeParent(Nodes[CurrentIndex]) of
+          const CurrentIndex: integer := MenuQuery.TuiMenuFind(Nodes, Current);
+          case MenuQuery.TuiMenuNodeParent(Nodes[CurrentIndex]) of
             when Some(const Parent):
               begin
                 if Parent.Value = Id.Value then
@@ -112,8 +115,8 @@ begin
 
       for Other: integer := 0 to Index - 1 do
         begin
-          if (TuiMenuSameOptionalId(TuiMenuNodeParent(Nodes[Other]), TuiMenuNodeParent(Nodes[Index])) and (Mnemonic <> '')) and
-             (Mnemonic.ToLower() = TuiMenuNodeMnemonic(Nodes[Other]).ToLower()) then
+          if (TuiMenuSameOptionalId(MenuQuery.TuiMenuNodeParent(Nodes[Other]), MenuQuery.TuiMenuNodeParent(Nodes[Index])) and (Mnemonic <> '')) and
+             (Mnemonic.ToLower() = MenuQuery.TuiMenuNodeMnemonic(Nodes[Other]).ToLower()) then
             begin
               panic('Tui sibling menu mnemonics must be unique');
             end;
@@ -128,8 +131,8 @@ begin
       case State.Active of
         when Some(const Active):
           begin
-            const ActiveIndex: integer := TuiMenuFind(Nodes, Active);
-            if (ActiveIndex < 0) or not TuiMenuNodeSelectable(Nodes[ActiveIndex]) then
+            const ActiveIndex: integer := MenuQuery.TuiMenuFind(Nodes, Active);
+            if (ActiveIndex < 0) or not MenuQuery.TuiMenuNodeSelectable(Nodes[ActiveIndex]) then
               begin
                 panic('Tui open menu active id must select an enabled node');
               end;

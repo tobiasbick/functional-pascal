@@ -1,26 +1,26 @@
 program TuiHierarchicalMenuTest;
 
-uses Std.Test, Std.Tui;
+uses Std.Test as Test, Std.Tui as Tui;
 
 type MenuModel = record
   Focus: integer;
-  Menu: TuiMenuState;
+  Menu: Tui.TuiMenuState;
   Actions: array of integer;
 end record;
 
-function MakeKey(Kind: TuiKeyKind; Character: string; Ctrl: boolean; Alt: boolean): TuiKeyEvent;
+function MakeKey(Kind: Tui.TuiKeyKind; Character: string; Ctrl: boolean; Alt: boolean): Tui.TuiKeyEvent;
 begin
-  return TuiKeyEvent(kind := Kind, ch := Character, shift := false, ctrl := Ctrl, alt := Alt, meta := false);
+  return Tui.TuiKeyEvent(kind := Kind, ch := Character, shift := false, ctrl := Ctrl, alt := Alt, meta := false);
 end function;
 
-function FindGlyph(Snapshot: TuiSurfaceSnapshot; Glyph: string): TuiPoint;
+function FindGlyph(Snapshot: Tui.TuiSurfaceSnapshot; Glyph: string): Tui.TuiPoint;
 begin
   for Y: integer := 0 to Snapshot.Height - 1 do
     begin
       const X: integer := Snapshot.LineAt(Y).IndexOf(Glyph);
       if X >= 0 then
         begin
-          return TuiPoint.Create(X, Y);
+          return Tui.TuiPoint.Create(X, Y);
         end;
       end if;
     end;
@@ -29,47 +29,47 @@ begin
   panic('glyph not found in menu snapshot: ' + Glyph);
 end function;
 
-procedure AssertActive(Menu: TuiMenuState; Expected: integer);
+procedure AssertActive(Menu: Tui.TuiMenuState; Expected: integer);
 begin
   case Menu.Active of
     when Some(const Id):
       begin
-        AssertEquals(Expected, Id.Value);
+        Test.AssertEquals(Expected, Id.Value);
       end;
     when None:
       begin
-        Fail('Expected an active menu node.');
+        Test.Fail('Expected an active menu node.');
       end;
   end case;
 end procedure;
 
-function MenuNodes(): array of TuiMenuNode;
+function MenuNodes(): array of Tui.TuiMenuNode;
 begin
-  const FileId: TuiMenuNodeId := TuiMenuNodeId.Create(1);
-  const OptionsId: TuiMenuNodeId := TuiMenuNodeId.Create(2);
-  const ThemeId: TuiMenuNodeId := TuiMenuNodeId.Create(5);
+  const FileId: Tui.TuiMenuNodeId := Tui.TuiMenuNodeId.Create(1);
+  const OptionsId: Tui.TuiMenuNodeId := Tui.TuiMenuNodeId.Create(2);
+  const ThemeId: Tui.TuiMenuNodeId := Tui.TuiMenuNodeId.Create(5);
   return [
-           TuiMenuNodeBuilders.Submenu(FileId, None, 'File', 'F'),
-           TuiMenuNodeBuilders.Submenu(OptionsId, None, 'Options', 'O'),
-           TuiMenuNodeBuilders.CommandWithShortcut(TuiMenuNodeId.Create(3), Some(FileId), 'Open', 'O', TuiAction.Create(10), TuiKeyGesture.Create(TuiKeyKind.Character, 'o', false, true, false, false, 'Ctrl+O')),
-           TuiMenuNodeBuilders.Separator(TuiMenuNodeId.Create(4), FileId),
-           TuiMenuNodeBuilders.Submenu(ThemeId, Some(OptionsId), 'Theme', 'T'),
-           TuiMenuNodeBuilders.Command(TuiMenuNodeId.Create(6), Some(ThemeId), 'Dark', 'D', TuiAction.Create(20))
+           Tui.TuiMenuNodeBuilders.Submenu(FileId, None, 'File', 'F'),
+           Tui.TuiMenuNodeBuilders.Submenu(OptionsId, None, 'Options', 'O'),
+           Tui.TuiMenuNodeBuilders.CommandWithShortcut(Tui.TuiMenuNodeId.Create(3), Some(FileId), 'Open', 'O', Tui.TuiAction.Create(10), Tui.TuiKeyGesture.Create(Tui.TuiKeyKind.Character, 'o', false, true, false, false, 'Ctrl+O')),
+           Tui.TuiMenuNodeBuilders.Separator(Tui.TuiMenuNodeId.Create(4), FileId),
+           Tui.TuiMenuNodeBuilders.Submenu(ThemeId, Some(OptionsId), 'Theme', 'T'),
+           Tui.TuiMenuNodeBuilders.Command(Tui.TuiMenuNodeId.Create(6), Some(ThemeId), 'Dark', 'D', Tui.TuiAction.Create(20))
          ];
 end function;
 
-function ViewMenu(State: MenuModel): TuiElement;
+function ViewMenu(State: MenuModel): Tui.TuiElement;
 begin
-  return TuiElementBuilders.MakeDesktop(Some(TuiControlId.Create(State.Focus)), [
-                                                                                  TuiElementBuilders.MakeMenu(TuiControlId.Create(100), MenuNodes(), State.Menu, TuiAction.Create(101))
-                                                                                ]);
+  return Tui.TuiElementBuilders.MakeDesktop(Some(Tui.TuiControlId.Create(State.Focus)), [
+                                                                                          Tui.TuiElementBuilders.MakeMenu(Tui.TuiControlId.Create(100), MenuNodes(), State.Menu, Tui.TuiAction.Create(101))
+                                                                                        ]);
 end function;
 
-function UpdateMenu(State: MenuModel; Msg: TuiMsg; Cmd: TuiCmdOutput): MenuModel;
+function UpdateMenu(State: MenuModel; Msg: Tui.TuiMsg; Cmd: Tui.TuiCmdOutput): MenuModel;
 begin
-  Cmd.Set(TuiCmd.NoCommand);
+  Cmd.Set(Tui.TuiCmd.NoCommand);
   case Msg of
-    when TuiMsg.FocusChanged(const Previous, const Current):
+    when Tui.TuiMsg.FocusChanged(const Previous, const Current):
       begin
         case Current of
           when Some(const Id):
@@ -82,17 +82,17 @@ begin
             end;
         end case;
       end;
-    when TuiMsg.MenuChanged(const Source, const Action, const Menu):
+    when Tui.TuiMsg.MenuChanged(const Source, const Action, const Menu):
       begin
         return MenuModel(Focus := State.Focus, Menu := Menu, Actions := State.Actions);
       end;
-    when TuiMsg.Action(const Source, const Action):
+    when Tui.TuiMsg.Action(const Source, const Action):
       begin
         return MenuModel(Focus := State.Focus, Menu := State.Menu, Actions := State.Actions.Concat([
                                                                                                      Action.Value
                                                                                                    ]));
       end;
-    when TuiMsg.Started, TuiMsg.Key(_), TuiMsg.Pointer(_), TuiMsg.Tick(_), TuiMsg.Resize(_), TuiMsg.TextChanged(_, _, _, _), TuiMsg.TextAreaChanged(_, _, _, _, _), TuiMsg.CheckChanged(_, _, _), TuiMsg.SelectionChanged(_, _, _), TuiMsg.ScrollChanged(_, _, _), TuiMsg.BackgroundFailed(_, _, _, _, _, _), TuiMsg.QuitRequested:
+    when Tui.TuiMsg.Started, Tui.TuiMsg.Key(_), Tui.TuiMsg.Pointer(_), Tui.TuiMsg.Tick(_), Tui.TuiMsg.Resize(_), Tui.TuiMsg.TextChanged(_, _, _, _), Tui.TuiMsg.TextAreaChanged(_, _, _, _, _), Tui.TuiMsg.CheckChanged(_, _, _), Tui.TuiMsg.SelectionChanged(_, _, _), Tui.TuiMsg.ScrollChanged(_, _, _), Tui.TuiMsg.BackgroundFailed(_, _, _, _, _, _), Tui.TuiMsg.QuitRequested:
       begin
         return State;
       end;
@@ -100,70 +100,70 @@ begin
 end function;
 
 begin
-  var App: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(40, 10));
-  var Model: MenuModel := MenuModel(Focus := 100, Menu := TuiMenuState.Closed(), Actions := []);
+  var App: Tui.TuiApplication := Tui.TuiApplication.OpenForTest(Tui.TuiSize.Create(40, 10));
+  var Model: MenuModel := MenuModel(Focus := 100, Menu := Tui.TuiMenuState.Closed(), Actions := []);
   Model := App.RunIterations(Model, UpdateMenu, ViewMenu, 0, 0);
-  AssertTrue(App.SurfaceSnapshot().CellAt(7, 0).Role = TuiStyleRole.MenuShortcut);
-  AssertTrue(App.SurfaceSnapshot().CellAt(11, 0).Role = TuiStyleRole.MenuNormal);
-  const ClosedFileAt: TuiPoint := FindGlyph(App.SurfaceSnapshot(), 'File');
-  App.InjectPointerForTest(TuiPointerEvent.Create(TuiPointerAction.Move, TuiPointerButton.NoButton, ClosedFileAt));
+  Test.AssertTrue(App.SurfaceSnapshot().CellAt(7, 0).Role = Tui.TuiStyleRole.MenuShortcut);
+  Test.AssertTrue(App.SurfaceSnapshot().CellAt(11, 0).Role = Tui.TuiStyleRole.MenuNormal);
+  const ClosedFileAt: Tui.TuiPoint := FindGlyph(App.SurfaceSnapshot(), 'File');
+  App.InjectPointerForTest(Tui.TuiPointerEvent.Create(Tui.TuiPointerAction.Move, Tui.TuiPointerButton.NoButton, ClosedFileAt));
   Model := App.RunIterations(Model, UpdateMenu, ViewMenu, 1, 0);
-  AssertFalse(Model.Menu.Open);
-  App.InjectKeyForTest(MakeKey(TuiKeyKind.F10, '', false, false));
+  Test.AssertFalse(Model.Menu.Open);
+  App.InjectKeyForTest(MakeKey(Tui.TuiKeyKind.F10, '', false, false));
   Model := App.RunIterations(Model, UpdateMenu, ViewMenu, 1, 0);
-  AssertTrue(Model.Menu.Open);
-  AssertTrue(App.SurfaceSnapshot().LineAt(2).Contains('Open'));
-  AssertFalse(App.SurfaceSnapshot().CellAt(16, 2).Glyph = '░');
-  AssertFalse(App.SurfaceSnapshot().CellAt(2, 5).Glyph = '░');
-  App.InjectKeyForTest(MakeKey(TuiKeyKind.Down, '', false, false));
+  Test.AssertTrue(Model.Menu.Open);
+  Test.AssertTrue(App.SurfaceSnapshot().LineAt(2).Contains('Open'));
+  Test.AssertFalse(App.SurfaceSnapshot().CellAt(16, 2).Glyph = '░');
+  Test.AssertFalse(App.SurfaceSnapshot().CellAt(2, 5).Glyph = '░');
+  App.InjectKeyForTest(MakeKey(Tui.TuiKeyKind.Down, '', false, false));
   Model := App.RunIterations(Model, UpdateMenu, ViewMenu, 1, 0);
-  App.InjectKeyForTest(MakeKey(TuiKeyKind.Enter, '', false, false));
+  App.InjectKeyForTest(MakeKey(Tui.TuiKeyKind.Enter, '', false, false));
   Model := App.RunIterations(Model, UpdateMenu, ViewMenu, 2, 0);
-  AssertEquals(1, Model.Actions.Length());
-  AssertEquals(10, Model.Actions[0]);
-  AssertFalse(Model.Menu.Open);
-  App.InjectKeyForTest(MakeKey(TuiKeyKind.Character, 'o', true, false));
+  Test.AssertEquals(1, Model.Actions.Length());
+  Test.AssertEquals(10, Model.Actions[0]);
+  Test.AssertFalse(Model.Menu.Open);
+  App.InjectKeyForTest(MakeKey(Tui.TuiKeyKind.Character, 'o', true, false));
   Model := App.RunIterations(Model, UpdateMenu, ViewMenu, 2, 0);
-  AssertEquals(2, Model.Actions.Length());
-  AssertEquals(10, Model.Actions[1]);
-  App.InjectKeyForTest(MakeKey(TuiKeyKind.Character, 'o', false, true));
+  Test.AssertEquals(2, Model.Actions.Length());
+  Test.AssertEquals(10, Model.Actions[1]);
+  App.InjectKeyForTest(MakeKey(Tui.TuiKeyKind.Character, 'o', false, true));
   Model := App.RunIterations(Model, UpdateMenu, ViewMenu, 1, 0);
-  App.InjectKeyForTest(MakeKey(TuiKeyKind.Down, '', false, false));
+  App.InjectKeyForTest(MakeKey(Tui.TuiKeyKind.Down, '', false, false));
   Model := App.RunIterations(Model, UpdateMenu, ViewMenu, 1, 0);
-  App.InjectKeyForTest(MakeKey(TuiKeyKind.Right, '', false, false));
+  App.InjectKeyForTest(MakeKey(Tui.TuiKeyKind.Right, '', false, false));
   Model := App.RunIterations(Model, UpdateMenu, ViewMenu, 1, 0);
-  App.InjectKeyForTest(MakeKey(TuiKeyKind.Down, '', false, false));
+  App.InjectKeyForTest(MakeKey(Tui.TuiKeyKind.Down, '', false, false));
   Model := App.RunIterations(Model, UpdateMenu, ViewMenu, 1, 0);
-  App.InjectKeyForTest(MakeKey(TuiKeyKind.Enter, '', false, false));
+  App.InjectKeyForTest(MakeKey(Tui.TuiKeyKind.Enter, '', false, false));
   Model := App.RunIterations(Model, UpdateMenu, ViewMenu, 2, 0);
-  AssertEquals(3, Model.Actions.Length());
-  AssertEquals(20, Model.Actions[2]);
-  App.InjectKeyForTest(MakeKey(TuiKeyKind.F10, '', false, false));
+  Test.AssertEquals(3, Model.Actions.Length());
+  Test.AssertEquals(20, Model.Actions[2]);
+  App.InjectKeyForTest(MakeKey(Tui.TuiKeyKind.F10, '', false, false));
   Model := App.RunIterations(Model, UpdateMenu, ViewMenu, 1, 0);
-  const OptionsAt: TuiPoint := FindGlyph(App.SurfaceSnapshot(), 'Options');
-  App.InjectPointerForTest(TuiPointerEvent.Create(TuiPointerAction.Move, TuiPointerButton.NoButton, OptionsAt));
+  const OptionsAt: Tui.TuiPoint := FindGlyph(App.SurfaceSnapshot(), 'Options');
+  App.InjectPointerForTest(Tui.TuiPointerEvent.Create(Tui.TuiPointerAction.Move, Tui.TuiPointerButton.NoButton, OptionsAt));
   Model := App.RunIterations(Model, UpdateMenu, ViewMenu, 1, 0);
   AssertActive(Model.Menu, 2);
-  const ThemeAt: TuiPoint := FindGlyph(App.SurfaceSnapshot(), 'Theme');
-  App.InjectPointerForTest(TuiPointerEvent.Create(TuiPointerAction.Move, TuiPointerButton.NoButton, ThemeAt));
+  const ThemeAt: Tui.TuiPoint := FindGlyph(App.SurfaceSnapshot(), 'Theme');
+  App.InjectPointerForTest(Tui.TuiPointerEvent.Create(Tui.TuiPointerAction.Move, Tui.TuiPointerButton.NoButton, ThemeAt));
   Model := App.RunIterations(Model, UpdateMenu, ViewMenu, 1, 0);
   AssertActive(Model.Menu, 5);
-  const DarkAt: TuiPoint := FindGlyph(App.SurfaceSnapshot(), 'Dark');
-  App.InjectPointerForTest(TuiPointerEvent.Create(TuiPointerAction.Move, TuiPointerButton.NoButton, DarkAt));
+  const DarkAt: Tui.TuiPoint := FindGlyph(App.SurfaceSnapshot(), 'Dark');
+  App.InjectPointerForTest(Tui.TuiPointerEvent.Create(Tui.TuiPointerAction.Move, Tui.TuiPointerButton.NoButton, DarkAt));
   Model := App.RunIterations(Model, UpdateMenu, ViewMenu, 1, 0);
   AssertActive(Model.Menu, 6);
-  AssertFalse(App.SurfaceSnapshot().CellAt(DarkAt.X + 6, DarkAt.Y).Glyph = '░');
-  AssertFalse(App.SurfaceSnapshot().CellAt(DarkAt.X, DarkAt.Y + 2).Glyph = '░');
-  AssertEquals(3, Model.Actions.Length());
-  App.InjectPointerForTest(TuiPointerEvent.Create(TuiPointerAction.Move, TuiPointerButton.NoButton, TuiPoint.Create(39, 9)));
+  Test.AssertFalse(App.SurfaceSnapshot().CellAt(DarkAt.X + 6, DarkAt.Y).Glyph = '░');
+  Test.AssertFalse(App.SurfaceSnapshot().CellAt(DarkAt.X, DarkAt.Y + 2).Glyph = '░');
+  Test.AssertEquals(3, Model.Actions.Length());
+  App.InjectPointerForTest(Tui.TuiPointerEvent.Create(Tui.TuiPointerAction.Move, Tui.TuiPointerButton.NoButton, Tui.TuiPoint.Create(39, 9)));
   Model := App.RunIterations(Model, UpdateMenu, ViewMenu, 1, 0);
-  AssertTrue(Model.Menu.Open);
+  Test.AssertTrue(Model.Menu.Open);
   AssertActive(Model.Menu, 6);
-  AssertEquals(3, Model.Actions.Length());
-  App.InjectPointerForTest(TuiPointerEvent.Create(TuiPointerAction.Down, TuiPointerButton.Left, DarkAt));
+  Test.AssertEquals(3, Model.Actions.Length());
+  App.InjectPointerForTest(Tui.TuiPointerEvent.Create(Tui.TuiPointerAction.Down, Tui.TuiPointerButton.Left, DarkAt));
   Model := App.RunIterations(Model, UpdateMenu, ViewMenu, 2, 0);
-  AssertFalse(Model.Menu.Open);
-  AssertEquals(4, Model.Actions.Length());
-  AssertEquals(20, Model.Actions[3]);
+  Test.AssertFalse(Model.Menu.Open);
+  Test.AssertEquals(4, Model.Actions.Length());
+  Test.AssertEquals(20, Model.Actions[3]);
   App.Close();
 end.

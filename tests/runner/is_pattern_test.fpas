@@ -1,6 +1,6 @@
 program IsPatternTest;
 
-uses Std.Test;
+uses Std.Test as Test;
 
 type Shape = enum
   Circle(Radius: integer);
@@ -51,18 +51,18 @@ begin
 end function;
 
 begin
-  AssertEquals('large circle', Describe(Shape.Circle(20)));
-  AssertEquals('circle', Describe(Shape.Circle(2)));
-  AssertEquals('square', Describe(Shape.Rect(3, 3)));
-  AssertEquals('other', Describe(Shape.Rect(3, 4)));
-  AssertEquals('point', Describe(Shape.Point));
-  AssertEquals(6, SumUntilNone([Some(1), Some(2), Some(3), None, Some(9)]));
-  AssertEquals(-2, SumUntilNone([Some(1), Some(-5), Some(2), None]));
-  AssertEquals(3, SumUntilNone([Some(1), Some(0), Some(2), None]));
-  AssertEquals(0, SumUntilNone([]));
-  AssertEquals(5, Nested(Ok(Some(5))));
-  AssertEquals(0, Nested(Ok(Some(-5))));
-  AssertEquals(0, Nested(Ok(None)));
-  AssertEquals(-1, Nested(Error('stop')));
-  AssertEquals(0, Nested(Error('other')));
+  Test.AssertEquals('large circle', Describe(Shape.Circle(20)));
+  Test.AssertEquals('circle', Describe(Shape.Circle(2)));
+  Test.AssertEquals('square', Describe(Shape.Rect(3, 3)));
+  Test.AssertEquals('other', Describe(Shape.Rect(3, 4)));
+  Test.AssertEquals('point', Describe(Shape.Point));
+  Test.AssertEquals(6, SumUntilNone([Some(1), Some(2), Some(3), None, Some(9)]));
+  Test.AssertEquals(-2, SumUntilNone([Some(1), Some(-5), Some(2), None]));
+  Test.AssertEquals(3, SumUntilNone([Some(1), Some(0), Some(2), None]));
+  Test.AssertEquals(0, SumUntilNone([]));
+  Test.AssertEquals(5, Nested(Ok(Some(5))));
+  Test.AssertEquals(0, Nested(Ok(Some(-5))));
+  Test.AssertEquals(0, Nested(Ok(None)));
+  Test.AssertEquals(-1, Nested(Error('stop')));
+  Test.AssertEquals(0, Nested(Error('other')));
 end.

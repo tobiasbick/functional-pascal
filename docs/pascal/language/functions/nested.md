@@ -1,5 +1,7 @@
 # Nested functions
 
+The code fragments use `uses Std.Math as Math;`.
+
 Functions and procedures can be declared inside other routines. Use nested
 declarations for local helpers and access to enclosing parameters or locals:
 
@@ -12,7 +14,7 @@ function Hypotenuse(A: real; B: real): real;
   end function;
 
 begin
-  return Sqrt(Square(A) + Square(B));
+  return Math.Sqrt(Square(A) + Square(B));
 end function;
 ```
 

@@ -1,6 +1,6 @@
 program NamedVarArgumentsTest;
 
-uses Std.Test;
+uses Std.Test as Test;
 
 var Trace: string := '';
 
@@ -35,12 +35,12 @@ end procedure;
 begin
   var Items: array of integer := [0, 0, 0];
   Store(Last := Mark('c', 3), Target := var Items[Mark('b', 2)], First := Mark('a', 1));
-  AssertEquals('cba', Trace);
-  AssertEquals(13, Items[2]);
+  Test.AssertEquals('cba', Trace);
+  Test.AssertEquals(13, Items[2]);
   var Counter: integer := 7;
   Swap(B := var Counter, A := var Items[2]);
-  AssertEquals(7, Items[2]);
-  AssertEquals(13, Counter);
+  Test.AssertEquals(7, Items[2]);
+  Test.AssertEquals(13, Counter);
   Forward(Value := var Counter);
-  AssertEquals(14, Counter);
+  Test.AssertEquals(14, Counter);
 end.

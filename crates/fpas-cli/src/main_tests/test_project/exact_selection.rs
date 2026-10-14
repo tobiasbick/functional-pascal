@@ -21,7 +21,7 @@ fn exact_test_selection_preserves_nested_identity_and_project_linking() {
     ] {
         write_text(
             &cwd.join(file),
-            "program Nested; uses Shared, Std.Test; begin AssertEquals(42, Value()); end.",
+            "program Nested; uses Shared as SharedUnit, Std.Test as Test; begin Test.AssertEquals(42, SharedUnit.Value()); end.",
         );
     }
     for jobs in ["1", "2"] {

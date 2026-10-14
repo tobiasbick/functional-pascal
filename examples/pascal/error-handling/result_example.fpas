@@ -1,6 +1,6 @@
 program ResultExample;
 
-uses Std.Console, Std.Conv;
+uses Std.Console as Console, Std.Conv as Conv;
 
 function Divide(A: integer; B: integer): result of (integer, string);
 begin
@@ -18,57 +18,57 @@ end function;
 function Stringify(A: integer; B: integer): result of (string, string);
 begin
   const Quotient: integer := try Divide(A, B);
-  return Ok(IntToStr(A) + ' / ' + IntToStr(B) + ' = ' + IntToStr(Quotient));
+  return Ok(Conv.IntToStr(A) + ' / ' + Conv.IntToStr(B) + ' = ' + Conv.IntToStr(Quotient));
 end function;
 
 begin
   const R1: result of (integer, string) := Divide(10, 3);
-  WriteLn('IsOk: ', R1.IsOk());
-  WriteLn('Value: ', R1.Unwrap());
+  Console.WriteLn('IsOk: ', R1.IsOk());
+  Console.WriteLn('Value: ', R1.Unwrap());
   const R2: result of (integer, string) := Divide(5, 0);
-  WriteLn('IsError: ', R2.IsError());
-  WriteLn('UnwrapOr: ', R2.UnwrapOr(-1));
+  Console.WriteLn('IsError: ', R2.IsError());
+  Console.WriteLn('UnwrapOr: ', R2.UnwrapOr(-1));
   case Divide(42, 6) of
     when Ok(const V):
       begin
-        WriteLn('42 / 6 = ', V);
+        Console.WriteLn('42 / 6 = ', V);
       end;
     when Error(const E):
       begin
-        WriteLn('Error: ', E);
+        Console.WriteLn('Error: ', E);
       end;
   end case;
 
   case Divide(7, 0) of
     when Ok(const V):
       begin
-        WriteLn('7 / 0 = ', V);
+        Console.WriteLn('7 / 0 = ', V);
       end;
     when Error(const E):
       begin
-        WriteLn('Error: ', E);
+        Console.WriteLn('Error: ', E);
       end;
   end case;
 
   case Stringify(100, 4) of
     when Ok(const S):
       begin
-        WriteLn(S);
+        Console.WriteLn(S);
       end;
     when Error(const E):
       begin
-        WriteLn('Failed: ', E);
+        Console.WriteLn('Failed: ', E);
       end;
   end case;
 
   case Stringify(100, 0) of
     when Ok(const S):
       begin
-        WriteLn(S);
+        Console.WriteLn(S);
       end;
     when Error(const E):
       begin
-        WriteLn('Failed: ', E);
+        Console.WriteLn('Failed: ', E);
       end;
   end case;
 end.

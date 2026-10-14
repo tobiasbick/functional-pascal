@@ -1,5 +1,7 @@
 # While and repeat
 
+The code fragments use `uses Std.Proc as Proc, Std.Console as Console;`.
+
 Formal syntax: [`grammar.ebnf`](../../../specs/grammar.ebnf) (`while_stmt`, `repeat_stmt`).
 
 ## While loop
@@ -11,7 +13,7 @@ in the condition and after the loop; the condition uses the enclosing scope.
 ```pascal
 var Count: integer := 0;
 while Count < 10 do
-  WriteLn(Count);
+  Console.WriteLn(Count);
   Count := Count + 1;
 end while;
 ```
@@ -22,7 +24,7 @@ use `case` inside the loop; the selector is evaluated once per iteration:
 ```pascal
 while true do
   case Queue.Next() of
-    when Some(const Job): Run(Job);
+    when Some(const Job): Proc.Run(Job);
     when None: break;
   end case;
 end while;
@@ -43,7 +45,7 @@ the last one before `until`; the condition also ends with `;`:
 ```pascal
 var Input: string := '';
 repeat
-  Input := ReadLn();
+  Input := Console.ReadLn();
 until Input = 'quit';
 ```
 

@@ -1,15 +1,15 @@
 program GraphemeCellTest;
 
-uses Std.Console, Std.Test;
+uses Std.Console as Console, Std.Test as Test;
 
 begin
-  AssertEquals(1, GraphemeWidth('é'));
-  AssertEquals(2, GraphemeWidth('👩‍💻'));
-  const Graphemes: array of string := SplitGraphemes('Aé👩‍💻');
-  AssertEquals(3, Graphemes.Length());
-  AssertEquals('é', Graphemes[1]);
-  AssertEquals('👩‍💻', Graphemes[2]);
-  const Value: Cell := Std.Console.Cell(glyph := 'é', foreground := CrtColor(7), background := CrtColor(0));
-  PutCell(1, 1, Value);
-  AssertEquals('é', GetCell(1, 1).Unwrap().glyph);
+  Test.AssertEquals(1, Console.GraphemeWidth('é'));
+  Test.AssertEquals(2, Console.GraphemeWidth('👩‍💻'));
+  const Graphemes: array of string := Console.SplitGraphemes('Aé👩‍💻');
+  Test.AssertEquals(3, Graphemes.Length());
+  Test.AssertEquals('é', Graphemes[1]);
+  Test.AssertEquals('👩‍💻', Graphemes[2]);
+  const Value: Console.Cell := Console.Cell(glyph := 'é', foreground := Console.CrtColor(7), background := Console.CrtColor(0));
+  Console.PutCell(1, 1, Value);
+  Test.AssertEquals('é', Console.GetCell(1, 1).Unwrap().glyph);
 end.

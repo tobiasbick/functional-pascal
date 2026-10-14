@@ -98,8 +98,18 @@ fn duplicate_hook_error(hook_name: &str, first: &Path, second: &Path) -> String 
 
 /// Builds a synthetic hook program that calls one project procedure.
 pub(super) fn hook_program_source(hook: &TestHook) -> String {
+    let alias = if hook
+        .unit_name
+        .split('.')
+        .next()
+        .is_some_and(|root| root.eq_ignore_ascii_case("TestHooks"))
+    {
+        "HookUnit"
+    } else {
+        "TestHooks"
+    };
     format!(
-        "program __FpasTestHook;\nuses {unit};\nbegin\n  {proc}();\nend.",
+        "program __FpasTestHook;\nuses {unit} as {alias};\nbegin\n  {alias}.{proc}();\nend.",
         unit = hook.unit_name,
         proc = hook.procedure_name,
     )
@@ -123,7 +133,7 @@ mod tests {
         );
         write_text(
             &dir.join("demo_test.fpas"),
-            "program D;\nuses Std.Test;\nbegin AssertTrue(true); end.",
+            "program D;\nuses Std.Test as Test;\nbegin Test.AssertTrue(true); end.",
         );
 
         let hooks = discover_test_hooks(&[dir.join("fixture.fpas"), dir.join("demo_test.fpas")])

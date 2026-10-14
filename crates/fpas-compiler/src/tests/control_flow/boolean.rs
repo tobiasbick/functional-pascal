@@ -29,11 +29,12 @@ fn needed_boolean_operands_and_eager_bits_arguments_still_fail() {
         ("boolean", "false or (1 div 0 > 0)"),
         ("boolean", "false xor (1 div 0 > 0)"),
         ("boolean", "true xor (1 div 0 > 0)"),
-        ("integer", "BitAnd(0, 1 div 0)"),
-        ("integer", "BitOr(-1, 1 div 0)"),
+        ("integer", "Bits.BitAnd(0, 1 div 0)"),
+        ("integer", "Bits.BitOr(-1, 1 div 0)"),
     ] {
-        let source =
-            format!("program Needed; uses Std.Bits; begin const Flag: {ty} := {expression}; end.");
+        let source = format!(
+            "program Needed; uses Std.Bits as Bits; begin const Flag: {ty} := {expression}; end."
+        );
         assert!(
             run_program(&source).is_err(),
             "{expression} must evaluate the right operand"

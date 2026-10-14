@@ -1,32 +1,34 @@
 program NoteSaveRecoveryTest;
 
-uses Notes.Model, Notes.Repository, Notes.Update, Std.Fs, Std.Test, Std.Tui;
+uses
+  Notes.Model as Model, Notes.Repository as Repository, Notes.Update as Update, Std.Fs as Fs,
+  Std.Test as Test, Std.Tui as Tui;
 
 begin
-  const Blocked: string := ScratchDir() + '/blocked';
-  AssertTrue(Std.Fs.WriteText(Blocked, 'file, not directory').Unwrap());
-  const Loaded: NotesLoad := notes.model.notesload(Notes := [
-                                                              NoteCreate('one', 1),
-                                                              NoteCreate('two', 2)
+  const Blocked: string := Test.ScratchDir() + '/blocked';
+  Test.AssertTrue(Fs.WriteText(Blocked, 'file, not directory').Unwrap());
+  const Loaded: Model.NotesLoad := Model.NotesLoad(Notes := [
+                                                              Model.NoteCreate('one', 1),
+                                                              Model.NoteCreate('two', 2)
                                                             ], Issues := []);
-  var State: NotesModel := NotesModelCreate(Blocked, Loaded);
+  var State: Model.NotesModel := Model.NotesModelCreate(Blocked, Loaded);
   State.Dirty := true;
-  State := NotesPersistCurrent(State);
-  AssertTrue(State.Dirty);
-  AssertTrue(State.Overlay = NotesOverlay.SaveFailure);
-  AssertTrue(State.ErrorMessage <> '');
-  AssertTrue(Std.Fs.DeleteFile(Blocked).Unwrap());
-  State := NotesPersistCurrent(State);
-  AssertFalse(State.Dirty);
-  AssertTrue(State.Overlay = NotesOverlay.Closed);
-  AssertEquals('', State.ErrorMessage);
-  const Cmd: TuiCmdOutput := TuiCmdOutput.Create();
-  State := NotesUpdate(State, TuiMsgSelectionChanged(TuiControlId.Create(2), TuiAction.Create(2), 1), Cmd);
-  AssertEquals('two', State.Notes[State.Selected].Id);
-  State := NotesUpdate(State, TuiMsgAction(TuiControlId.Create(27), TuiAction.Create(17)), Cmd);
-  AssertTrue(Cmd.Command() = TuiCmd.Quit);
+  State := Update.NotesPersistCurrent(State);
+  Test.AssertTrue(State.Dirty);
+  Test.AssertTrue(State.Overlay = Model.NotesOverlay.SaveFailure);
+  Test.AssertTrue(State.ErrorMessage <> '');
+  Test.AssertTrue(Fs.DeleteFile(Blocked).Unwrap());
+  State := Update.NotesPersistCurrent(State);
+  Test.AssertFalse(State.Dirty);
+  Test.AssertTrue(State.Overlay = Model.NotesOverlay.Closed);
+  Test.AssertEquals('', State.ErrorMessage);
+  const Cmd: Tui.TuiCmdOutput := Tui.TuiCmdOutput.Create();
+  State := Update.NotesUpdate(State, Tui.TuiMsgSelectionChanged(Tui.TuiControlId.Create(2), Tui.TuiAction.Create(2), 1), Cmd);
+  Test.AssertEquals('two', State.Notes[State.Selected].Id);
+  State := Update.NotesUpdate(State, Tui.TuiMsgAction(Tui.TuiControlId.Create(27), Tui.TuiAction.Create(17)), Cmd);
+  Test.AssertTrue(Cmd.Command() = Tui.TuiCmd.Quit);
   State.Dirty := true;
-  State.Overlay := NotesOverlay.Help;
-  State := NotesPersistCurrent(State);
-  AssertTrue(State.Overlay = NotesOverlay.Help);
+  State.Overlay := Model.NotesOverlay.Help;
+  State := Update.NotesPersistCurrent(State);
+  Test.AssertTrue(State.Overlay = Model.NotesOverlay.Help);
 end.

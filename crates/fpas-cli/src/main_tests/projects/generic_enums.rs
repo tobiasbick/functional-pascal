@@ -27,14 +27,14 @@ end unit;
         &cwd.join("src/facade.fpas"),
         r#"
 unit Data.Facade;
-uses Data.Values;
-public type IntLookup = Lookup of integer;
-public type IntTree = Tree of integer;
-public type IntParcel = Parcel of integer;
-public type IntBox = Box of integer;
-public type Envelope of T = record public Value: Lookup of T; end record;
-public function Nested(): Lookup of Lookup of integer; begin return Lookup.Found(Lookup.Found(9)); end function;
-public function Empty(): Lookup of string; begin return Lookup.Missing; end function;
+uses Data.Values as Values;
+public type IntLookup = Values.Lookup of integer;
+public type IntTree = Values.Tree of integer;
+public type IntParcel = Values.Parcel of integer;
+public type IntBox = Values.Box of integer;
+public type Envelope of T = record public Value: Values.Lookup of T; end record;
+public function Nested(): Values.Lookup of Values.Lookup of integer; begin return Values.Lookup.Found(Values.Lookup.Found(9)); end function;
+public function Empty(): Values.Lookup of string; begin return Values.Lookup.Missing; end function;
 end unit;
 "#,
     );
@@ -43,21 +43,21 @@ end unit;
         &main,
         r#"
 program T;
-uses Data.Values as Values, Data.Facade;
+uses Data.Values as Values, Data.Facade as Facade;
 var Log: string := '';
 function Key(): integer; begin Log := Log + 'k'; return 7; end function;
 function Text(): string; begin Log := Log + 't'; return 'seven'; end function;
 begin
-  const I: IntLookup := IntLookup.Found(6);
+  const I: Facade.IntLookup := Facade.IntLookup.Found(6);
   const S: Values.Lookup of string := Values.Make('six');
   const P: Values.Pair of (integer, string) := Values.Pair.Both(Value := Text(), Key := Key());
-  const TreeValue: IntTree := IntTree.Node(Right := IntTree.Empty, Left := IntTree.Leaf(3));
-  const N: Values.Lookup of Values.Lookup of integer := Nested();
-  const E: Envelope of integer := Envelope(Value := Values.Lookup.Found(8));
-  const Missing: Values.Lookup of string := Data.Facade.Empty();
+  const TreeValue: Facade.IntTree := Facade.IntTree.Node(Right := Facade.IntTree.Empty, Left := Facade.IntTree.Leaf(3));
+  const N: Values.Lookup of Values.Lookup of integer := Facade.Nested();
+  const E: Facade.Envelope of integer := Facade.Envelope(Value := Values.Lookup.Found(8));
+  const Missing: Values.Lookup of string := Facade.Empty();
   if Log <> 'tk' then panic('imported named order'); end if;
   if Values.First(TreeValue).Unwrap() <> 3 then panic('recursive imported enum'); end if;
-  case I of when Values.Lookup.Found(const Value): if Value <> 6 then panic('integer payload'); end if; when IntLookup.Missing: panic('integer missing'); end case;
+  case I of when Values.Lookup.Found(const Value): if Value <> 6 then panic('integer payload'); end if; when Facade.IntLookup.Missing: panic('integer missing'); end case;
   case S of when Values.Lookup.Found(const Value): if Value <> 'six' then panic('string payload'); end if; when Values.Lookup.Missing: panic('string missing'); end case;
   case P of when Values.Pair.Both(Value := const V, Key := const K): if (K <> 7) or (V <> 'seven') then panic('named mapping'); end if; when Values.Pair.Empty: panic('pair missing'); end case;
   if N is Values.Lookup.Found(Value := Values.Lookup.Found(Value := 9)) then null; else panic('nested imported pattern'); end if;
@@ -78,14 +78,14 @@ end.
         &main,
         r#"
 program T;
-uses Data.Facade;
+uses Data.Facade as Facade;
 begin
-  const P: IntParcel := IntParcel.Packed(IntBox(Value := 7));
+  const P: Facade.IntParcel := Facade.IntParcel.Packed(Facade.IntBox(Value := 7));
   case P of
-    when IntParcel.Packed(const BoxValue):
+    when Facade.IntParcel.Packed(const BoxValue):
     const N: integer := BoxValue.Value;
     if N <> 7 then panic('transitive record argument'); end if;
-  when IntParcel.Empty: panic('transitive parcel variant'); end case;
+  when Facade.IntParcel.Empty: panic('transitive parcel variant'); end case;
 end.
 "#,
     );
@@ -95,20 +95,23 @@ end.
     );
     assert_eq!(code, 0, "{stderr}");
     for (statement, message) in [
-        ("const X: Lookup of string := Make(1);", "type mismatch"),
-        ("discard Lookup.Missing;", "Cannot infer"),
         (
-            "const X: Pair of (integer, string) := Pair.Both(Key := 1, Wrong := 'one');",
+            "const X: Values.Lookup of string := Values.Make(1);",
+            "type mismatch",
+        ),
+        ("discard Values.Lookup.Missing;", "Cannot infer"),
+        (
+            "const X: Values.Pair of (integer, string) := Values.Pair.Both(Key := 1, Wrong := 'one');",
             "Wrong",
         ),
         (
-            "const X: Lookup of integer := Lookup.Found(1); case X of when Lookup.Found(const N): begin end; end case;",
+            "const X: Values.Lookup of integer := Values.Lookup.Found(1); case X of when Values.Lookup.Found(const N): begin end; end case;",
             "Missing",
         ),
     ] {
         write_text(
             &main,
-            &format!("program T; uses Data.Values; begin {statement} end."),
+            &format!("program T; uses Data.Values as Values; begin {statement} end."),
         );
         let (code, _, stderr) = support::run_cli_args_and_capture_output(
             &["check".into(), project.to_string_lossy().into_owned()],

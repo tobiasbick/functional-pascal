@@ -1,6 +1,6 @@
 unit Std.Tui.Geometry.Rect;
 
-uses Std.Tui.Geometry.Point, Std.Tui.Geometry.Size;
+uses Std.Tui.Geometry.Point as GeometryPoint, Std.Tui.Geometry.Size as GeometrySize;
 
 // Largest integer used for checked rectangle-edge calculations.
 public const TuiRectIntegerMax: integer := 9223372036854775807;
@@ -112,7 +112,7 @@ public type TuiRect = record
   // Parameters:
   // - `Position`: Position in terminal-cell coordinates.
   // - `Size`: Size in terminal cells.
-  public static function FromPointSize(Position: TuiPoint; Size: TuiSize): TuiRect;
+  public static function FromPointSize(Position: GeometryPoint.TuiPoint; Size: GeometrySize.TuiSize): TuiRect;
   begin
     return TuiRect.Create(Position.X, Position.Y, Size.Width, Size.Height);
   end function;
@@ -122,7 +122,7 @@ public type TuiRect = record
   // Parameters:
   // - `TopLeft`: Top-left corner of the rectangle.
   // - `BottomRight`: Bottom-right corner of the rectangle.
-  public static function FromCorners(TopLeft: TuiPoint; BottomRight: TuiPoint): TuiRect;
+  public static function FromCorners(TopLeft: GeometryPoint.TuiPoint; BottomRight: GeometryPoint.TuiPoint): TuiRect;
   begin
     return TuiRect.FromEdges(TopLeft.X, TopLeft.Y, BottomRight.X, BottomRight.Y);
   end function;
@@ -159,7 +159,7 @@ public type TuiRect = record
   // Parameters:
   // - `Self`: Receiver value operated on by the method.
   // - `Point`: Point tested by the operation.
-  public function Contains(Self: TuiRect; Point: TuiPoint): boolean;
+  public function Contains(Self: TuiRect; Point: GeometryPoint.TuiPoint): boolean;
   begin
     return (((Point.X >= Self.X) and (Point.X < Self.Right())) and (Point.Y >= Self.Y)) and
            (Point.Y < Self.Bottom());
@@ -228,7 +228,7 @@ end record;
 //
 // Parameters:
 // - `Size`: Size in terminal cells.
-public function TuiRectForSize(Size: TuiSize): TuiRect;
+public function TuiRectForSize(Size: GeometrySize.TuiSize): TuiRect;
 begin
   return TuiRect.Create(0, 0, Size.Width, Size.Height);
 end function;

@@ -57,13 +57,13 @@ end unit;
     );
     let source = r#"program IntelliSense;
 
-uses Demo.Core;
+uses Demo.Core as Core;
 
 begin
   const Music: string := '𝄞';
-  const CounterValue: Counter := Counter( Amount := 1 );
+  const CounterValue: Core.Counter := Core.Counter( Amount := 1 );
   const MemberValue: integer := CounterValue.AmTail;
-  const Total: integer := Add(1, Add(2, 3));
+  const Total: integer := Core.Add(1, Core.Add(2, 3));
   const Imported: integer := UniqueValue;
 end.
 "#;
@@ -87,7 +87,10 @@ end.
         TranscriptStep::Message(completion(2, &main_uri, position(source, member_cursor))),
         TranscriptStep::Message(completion(3, &main_uri, position(source, import_cursor))),
         TranscriptStep::MessageFrom(Box::new(|messages| {
-            completion_resolve(4, item(response(messages, 3), "UniqueValue").clone())
+            completion_resolve(
+                4,
+                item(response(messages, 3), "Importable.UniqueValue").clone(),
+            )
         })),
         TranscriptStep::Message(signature_help(
             5,
@@ -95,13 +98,16 @@ end.
             position(source, nested_cursor),
         )),
         TranscriptStep::MessageFrom(Box::new(|messages| {
-            let mut manipulated = item(response(messages, 3), "UniqueValue").clone();
+            let mut manipulated = item(response(messages, 3), "Importable.UniqueValue").clone();
             manipulated["data"]["qualifiedName"] = json!("Demo.Importable.OtherValue");
             completion_resolve(6, manipulated)
         })),
         TranscriptStep::Message(open(&stale_uri, stale_source)),
         TranscriptStep::MessageFrom(Box::new(|messages| {
-            completion_resolve(7, item(response(messages, 3), "UniqueValue").clone())
+            completion_resolve(
+                7,
+                item(response(messages, 3), "Importable.UniqueValue").clone(),
+            )
         })),
         TranscriptStep::Message(shutdown(8)),
         TranscriptStep::Message(exit()),
@@ -135,14 +141,14 @@ end.
         )
     );
 
-    let imported = item(response(&transcript.messages, 3), "UniqueValue");
+    let imported = item(response(&transcript.messages, 3), "Importable.UniqueValue");
     assert_eq!(
         imported["detail"],
         "function UniqueValue(): integer (auto import)"
     );
     assert_eq!(
         imported["additionalTextEdits"][0]["newText"],
-        "uses Demo.Core, Demo.Importable;"
+        "uses Demo.Core as Core, Demo.Importable as Importable;"
     );
     assert_eq!(imported["data"]["uri"], import_uri);
     assert!(imported["data"]["sourceRevision"].is_number());

@@ -42,7 +42,7 @@ export async function verifyTaskDebugging(
   const sourceLines = [
     "program TaskDebuggerHost;",
     "",
-    "uses Std.Console, Std.Tasks;",
+    "uses Std.Console as Console, Std.Tasks as Tasks;",
     "",
     "function Work(Start: integer): integer;",
     "begin",
@@ -55,9 +55,9 @@ export async function verifyTaskDebugging(
     "  const First: task := go Work(10);",
     "  const Second: task := go Work(20);",
     "  const Pending: array of task := [First, Second];",
-    "  WaitAll(Pending);",
-    "  WriteLn(Wait(First));",
-    "  WriteLn(Wait(Second));",
+    "  Tasks.WaitAll(Pending);",
+    "  Console.WriteLn(Tasks.Wait(First));",
+    "  Console.WriteLn(Tasks.Wait(Second));",
     "end.",
     ""
   ];

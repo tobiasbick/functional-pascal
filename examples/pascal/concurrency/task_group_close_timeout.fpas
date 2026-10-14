@@ -1,19 +1,19 @@
 // Model a cleanup operation that needs an explicit release after cancellation.
 program TaskGroupCloseTimeout;
 
-uses Std.Tasks, Std.Console;
+uses Std.Tasks as Tasks, Std.Console as Console;
 
 begin
-  const Release: channel of integer := CreateChannel(1);
-  const Group: TaskGroup := CreateTaskGroup();
-  const WorkerTask: task := StartTaskInGroup(Group, procedure(Token: CancellationToken) begin
+  const Release: channel of integer := Tasks.CreateChannel(1);
+  const Group: Tasks.TaskGroup := Tasks.CreateTaskGroup();
+  const WorkerTask: task := Tasks.StartTaskInGroup(Group, procedure(Token: Tasks.CancellationToken) begin
     // Intentionally not cancellable: the owner must release this cleanup gate.
-    discard Receive(Release).Unwrap();
+    discard Tasks.Receive(Release).Unwrap();
   end procedure);
-  case CloseTaskGroupWithTimeout(Group, 0) of
+  case Tasks.CloseTaskGroupWithTimeout(Group, 0) of
     when Error(const Message):
       begin
-        WriteLn(Message);
+        Console.WriteLn(Message);
       end;
     when Ok(_):
       begin
@@ -21,14 +21,14 @@ begin
       end;
   end case;
 
-  discard Send(Release, 1).Unwrap();
-  const Failures: array of TaskFailure := CloseTaskGroup(Group);
-  discard CloseChannel(Release);
+  discard Tasks.Send(Release, 1).Unwrap();
+  const Failures: array of Tasks.TaskFailure := Tasks.CloseTaskGroup(Group);
+  discard Tasks.CloseChannel(Release);
   if Failures.Length() <> 0 then
     begin
       panic('Cleanup failed');
     end;
   end if;
 
-  WriteLn('Cleanup joined; ownership released');
+  Console.WriteLn('Cleanup joined; ownership released');
 end.

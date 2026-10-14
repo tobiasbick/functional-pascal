@@ -3,11 +3,11 @@
 program MandelbrotShowcase;
 
 uses
-  Std.Console, Std.Tasks, Std.Tui, Mandelbrot.App, Mandelbrot.Model, Mandelbrot.Render,
-  Mandelbrot.View;
+  Std.Console as Console, Std.Tasks as Tasks, Std.Tui as Tui, Mandelbrot.App as App,
+  Mandelbrot.Model as Model, Mandelbrot.Render as Render, Mandelbrot.View as View;
 
 begin
-  const Inbox: channel of MandelbrotRenderFrame := CreateChannel(8);
-  const Initial: MandelbrotModel := NewMandelbrotModel(Inbox, ScreenWidth(), ScreenHeight());
-  discard TuiApplication.RunWithBackground(Initial, Inbox, UpdateMandelbrot, UpdateMandelbrotFrame, ViewMandelbrot);
+  const Inbox: channel of Render.MandelbrotRenderFrame := Tasks.CreateChannel(8);
+  const Initial: Model.MandelbrotModel := Model.NewMandelbrotModel(Inbox, Console.ScreenWidth(), Console.ScreenHeight());
+  discard Tui.TuiApplication.RunWithBackground(Initial, Inbox, App.UpdateMandelbrot, App.UpdateMandelbrotFrame, View.ViewMandelbrot);
 end.

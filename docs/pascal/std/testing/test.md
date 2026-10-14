@@ -4,11 +4,13 @@ Assertion procedures for FPAS test programs. Run single tests with `fpas run` or
 
 ```pascal
 program Example;
-uses Std.Test;
+
+uses Std.Test as Test;
+
 begin
-  AssertEquals(4, 2 + 2);
-  AssertTrue(1 + 1 = 2);
-  AssertFalse(1 = 2);
+  Test.AssertEquals(4, 2 + 2);
+  Test.AssertTrue(1 + 1 = 2);
+  Test.AssertFalse(1 = 2);
 end.
 ```
 
@@ -17,13 +19,13 @@ Test entry files are named `*_test.fpas` and must declare a `program` (not a bar
 
 ## Importing and names
 
-After `uses Std.Test;` use short names (`AssertEquals`, …) or qualified forms (`Std.Test.AssertEquals`, …).
+Import with `uses Std.Test as Test;` and access public symbols as `Test.Name`. User enum variants require `Test.Type.Variant`.
 
 ---
 
 ## Quick reference
 
-Requires `uses Std.Test;`.
+Requires `uses Std.Test as Test;`.
 
 | Kind | Name | Notes |
 |------|------|-------|
@@ -114,7 +116,6 @@ public procedure Teardown();
 begin
   null;
 end procedure;
-
 end unit;
 ```
 

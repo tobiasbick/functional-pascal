@@ -1,12 +1,12 @@
 program ServerFailureTest;
 
-uses Std.Server, Std.Net, Std.Tasks, Std.Test;
+uses Std.Server as Server, Std.Net as Net, Std.Tasks as Tasks, Std.Test as Test;
 
-function BindListener(): result of (Std.Net.Listener, string);
+function BindListener(): result of (Net.Listener, string);
 begin
   for Port: integer := 28200 to 28299 do
     begin
-      const Opened: result of (Std.Net.Listener, string) := Listen('127.0.0.1', Port);
+      const Opened: result of (Net.Listener, string) := Net.Listen('127.0.0.1', Port);
       if Opened.IsOk() then
         begin
           return Opened;
@@ -19,24 +19,24 @@ begin
 end function;
 
 begin
-  const Life: ServerLifetime := CreateLifetime(1000, false).Unwrap();
-  const Group: TaskGroup := GetWorkGroup(Life);
-  const Worker: task of result of (boolean, string) := StartTaskInGroup(Group, function(Token: CancellationToken): result of (boolean, string) begin
+  const Life: Server.ServerLifetime := Server.CreateLifetime(1000, false).Unwrap();
+  const Group: Tasks.TaskGroup := Server.GetWorkGroup(Life);
+  const Worker: task of result of (boolean, string) := Tasks.StartTaskInGroup(Group, function(Token: Tasks.CancellationToken): result of (boolean, string) begin
     return Error('session failed');
   end function);
-  const Listener: Std.Net.Listener := BindListener().Unwrap();
-  discard OwnListener(Life, Listener);
+  const Listener: Net.Listener := BindListener().Unwrap();
+  discard Server.OwnListener(Life, Listener);
   // Deliberate ownership misuse: cleanup must preserve this failure.
-  discard CloseListener(Listener);
-  discard RequestStop(Life);
-  case Wait(Worker) of
+  discard Net.CloseListener(Listener);
+  discard Server.RequestStop(Life);
+  case Tasks.Wait(Worker) of
     when Error(const Message):
-      AssertEquals('session failed', Message);
+      Test.AssertEquals('session failed', Message);
     when Ok(_):
       panic('expected ordinary worker error data');
   end case;
-  const Failures: array of TaskFailure := CloseTaskGroup(Group);
-  AssertEquals(0, Failures.Length());
-  AssertEquals(1, ShutdownErrors(Life).Length());
-  AssertTrue(FinishShutdown(Life).Unwrap());
+  const Failures: array of Tasks.TaskFailure := Tasks.CloseTaskGroup(Group);
+  Test.AssertEquals(0, Failures.Length());
+  Test.AssertEquals(1, Server.ShutdownErrors(Life).Length());
+  Test.AssertTrue(Server.FinishShutdown(Life).Unwrap());
 end.

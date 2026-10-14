@@ -32,7 +32,6 @@ pub(super) fn install_record_callables(
         }
         install_callable(
             &format!("{}.{}", record.name, method.name),
-            None,
             &method.callable,
             types,
             callables,

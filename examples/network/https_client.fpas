@@ -1,23 +1,23 @@
 // Fetches one HTTPS URL with operating-system certificate verification.
 program NetworkHttpsClient;
 
-uses Std.Args, Std.Conv, Std.Console, Std.Http;
+uses Std.Args as Args, Std.Conv as Conv, Std.Console as Console, Std.Http as Http;
 
 begin
-  if ParamCount() <> 1 then
+  if Args.ParamCount() <> 1 then
     begin
       panic('usage: https_client.fpas -- URL');
     end;
   end if;
 
-  case Send(Request.Get(ParamStr(0))) of
+  case Http.Send(Http.Request.Get(Args.ParamStr(0))) of
     when Ok(const ResponseValue):
       begin
-        WriteLn('HTTPS status: ' + IntToStr(ResponseValue.StatusCode));
-        case BodyText(ResponseValue) of
+        Console.WriteLn('HTTPS status: ' + Conv.IntToStr(ResponseValue.StatusCode));
+        case Http.BodyText(ResponseValue) of
           when Ok(const Text):
             begin
-              WriteLn(Text);
+              Console.WriteLn(Text);
             end;
           when Error(const Message):
             begin

@@ -58,7 +58,7 @@ A procedure performs an action but returns no value:
 ```pascal
 procedure SayHello(Name: string);
 begin
-  WriteLn('Hello, ' + Name + '!');
+  Console.WriteLn('Hello, ' + Name + '!');
 end procedure;
 ```
 
@@ -73,7 +73,7 @@ if Value <= 0 then
   end if;
 
   LocalCount := LocalCount + 1;
-  WriteLn('logged ', Value);
+  Console.WriteLn('logged ', Value);
 end procedure;
 ```
 

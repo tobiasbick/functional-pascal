@@ -41,7 +41,7 @@ fn named_callable_values_use_static_names_and_written_order() {
     assert_succeeds(
         r#"
 program NamedCallable;
-uses Std.Math, Std.Tasks;
+uses Std.Math as Math, Std.Tasks as Tasks;
 var Trace: string := '';
 function Mark(Tag: string; Value: integer): integer;
 begin
@@ -67,22 +67,22 @@ begin scope
   if Jobs[0](Y := 2, X := 8) <> 6 then panic('aggregate signature'); end if;
   if Trace <> 'yxba' then panic('written order'); end if;
   const Handle := go F(Y := 2, X := 30);
-  if Wait(Handle := Handle) <> 28 then panic('named task'); end if;
-  if Clamp(Hi := 8, V := 12, Lo := 3) <> 8 then panic('polymorphic slots'); end if;
-  if Abs(N := -4) <> 4 then panic('polymorphic single argument'); end if;
-  const MathJob := go Clamp(Hi := 8, V := 12, Lo := 3);
-  if Wait(Handle := MathJob) <> 8 then panic('polymorphic intrinsic task'); end if;
-  const Queue: channel of integer := CreateChannel(Capacity := 1);
-  const Sent := Send(Value := 42, Queue := Queue);
+  if Tasks.Wait(Handle := Handle) <> 28 then panic('named task'); end if;
+  if Math.Clamp(Hi := 8, V := 12, Lo := 3) <> 8 then panic('polymorphic slots'); end if;
+  if Math.Abs(N := -4) <> 4 then panic('polymorphic single argument'); end if;
+  const MathJob := go Math.Clamp(Hi := 8, V := 12, Lo := 3);
+  if Tasks.Wait(Handle := MathJob) <> 8 then panic('polymorphic intrinsic task'); end if;
+  const Queue: channel of integer := Tasks.CreateChannel(Capacity := 1);
+  const Sent := Tasks.Send(Value := 42, Queue := Queue);
   if not (Sent is Ok(Value := true)) then panic('named send'); end if;
-  const Received := Receive(Queue := Queue);
+  const Received := Tasks.Receive(Queue := Queue);
   if not (Received is Ok(Value := 42)) then panic('named receive'); end if;
-  discard CloseChannel(Queue := Queue);
-  const Wrapped: option of channel of integer := Some(Value := CreateChannel(Capacity := 1));
+  discard Tasks.CloseChannel(Queue := Queue);
+  const Wrapped: option of channel of integer := Some(Value := Tasks.CreateChannel(Capacity := 1));
   const Inner := Wrapped.Unwrap();
-  discard Send(Value := 7, Queue := Inner).Unwrap();
-  if Receive(Queue := Inner).Unwrap() <> 7 then panic('named payload context'); end if;
-  discard CloseChannel(Queue := Inner);
+  discard Tasks.Send(Value := 7, Queue := Inner).Unwrap();
+  if Tasks.Receive(Queue := Inner).Unwrap() <> 7 then panic('named payload context'); end if;
+  discard Tasks.CloseChannel(Queue := Inner);
  end scope; end.
 "#,
     );
@@ -128,7 +128,7 @@ fn named_arguments_apply_to_methods_static_routines_generics_and_go() {
     assert_succeeds(
         r#"
 program NamedMembers;
-uses Std.Tasks;
+uses Std.Tasks as Tasks;
 type Point = record
   X: integer;
   Y: integer;
@@ -169,7 +169,7 @@ begin scope
   const B := Bound(Vertical := 30, Horizontal := 40);
   if (B.X <> 41) or (B.Y <> 32) then panic('bound static signature'); end if;
   const T: task of integer := go Work(Factor := 7, Base := 6);
-  if Std.Tasks.Wait(T) <> 42 then
+  if Tasks.Wait(T) <> 42 then
     panic('go named arguments'); end if;
  end scope; end.
 "#,
@@ -215,7 +215,7 @@ begin
   end case;
   if Trace <> 'hw' then
     panic('named variant fields were not evaluated in written order'); end if;
-  if Circle(Radius := 2.0) <> Shape.Circle(2.0) then
+  if Shape.Circle(Radius := 2.0) <> Shape.Circle(2.0) then
     panic('short named variant construction'); end if;
 end.
 "#,

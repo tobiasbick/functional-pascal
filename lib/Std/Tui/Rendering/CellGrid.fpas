@@ -2,7 +2,8 @@
 unit Std.Tui.Rendering.CellGrid;
 
 uses
-  Std.Tui.Chrome.CellGrid, Std.Tui.Geometry.Point, Std.Tui.Geometry.Rect, Std.Tui.Rendering.Canvas;
+  Std.Tui.Chrome.CellGrid as CellGrid, Std.Tui.Geometry.Point as Point,
+  Std.Tui.Geometry.Rect as Rect, Std.Tui.Rendering.Canvas as RenderingCanvas;
 
 // Paints the visible part of a row-major terminal cell grid.
 //
@@ -10,7 +11,11 @@ uses
 // - `Canvas`: Canvas that receives the drawing operation.
 // - `Bounds`: Rectangle affected by the operation.
 // - `Grid`: Cell grid to paint.
-public procedure TuiPaintCellGrid(Canvas: TuiCanvas; Bounds: TuiRect; Grid: TuiCellGrid);
+public procedure TuiPaintCellGrid(
+  Canvas: RenderingCanvas.TuiCanvas;
+  Bounds: Rect.TuiRect;
+  Grid: CellGrid.TuiCellGrid
+);
 begin
   var Width: integer := Grid.Width;
   var Height: integer := Grid.Height;
@@ -28,8 +33,8 @@ begin
 
   for Y: integer := 0 to Height - 1 do
     begin
-      TuiCanvasPutCells(Canvas, TuiPoint.Create(Bounds.X, Bounds.Y + Y), Grid.Cells.Slice(Y *
-                                                                                          Grid.Width, Width));
+      RenderingCanvas.TuiCanvasPutCells(Canvas, Point.TuiPoint.Create(Bounds.X, Bounds.Y + Y), Grid.Cells.Slice(Y *
+                                                                                                                Grid.Width, Width));
     end;
   end for;
 end procedure;

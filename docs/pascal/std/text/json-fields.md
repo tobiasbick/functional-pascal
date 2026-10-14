@@ -7,28 +7,28 @@ requiring a nested `case` per field.
 ```pascal
 program Example;
 
-uses Std.Console, Std.Json, Std.Json.Fields;
+uses Std.Console as Console, Std.Json as Json, Std.Json.Fields as JsonFields;
 
 function ReadPort(Text: string): result of (integer, string);
 begin
-  const Fields: dict of string to JsonValue := try ParseObject(Text);
-  const Allowed: boolean := try RequireOnlyFields(Fields, ['host', 'port']);
-  return IntegerField(Fields, 'port');
+  const Fields: dict of string to Json.JsonValue := try JsonFields.ParseObject(Text);
+  const Allowed: boolean := try JsonFields.RequireOnlyFields(Fields, ['host', 'port']);
+  return JsonFields.IntegerField(Fields, 'port');
 end function;
 
 begin
   case ReadPort('{"host":"localhost","port":8080}') of
     when Ok(const Port):
-      WriteLn(Port);
+      Console.WriteLn(Port);
     when Error(const Message):
-      WriteLn('invalid configuration: ' + Message);
+      Console.WriteLn('invalid configuration: ' + Message);
   end case;
 end.
 ```
 
 ## Importing and names
 
-`uses Std.Json.Fields;` provides the accessors. Values and objects keep the
+`uses Std.Json.Fields as Fields;` provides the accessors through `Fields.Name`. Values and objects keep the
 `Std.Json` types, so programs usually import both units.
 
 ## Quick reference

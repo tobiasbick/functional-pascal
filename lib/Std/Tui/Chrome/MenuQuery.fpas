@@ -1,23 +1,25 @@
 unit Std.Tui.Chrome.MenuQuery;
 
-uses Std.Tui.Chrome.KeyGesture, Std.Tui.Chrome.MenuNode, Std.Tui.Ids.Action;
+uses
+  Std.Tui.Chrome.KeyGesture as KeyGesture, Std.Tui.Chrome.MenuNode as MenuNode,
+  Std.Tui.Ids.Action as IdsAction;
 
 // Returns a menu node's identity.
 //
 // Parameters:
 // - `Node`: Element or menu node processed by the operation.
-public function TuiMenuNodeIdOf(Node: TuiMenuNode): TuiMenuNodeId;
+public function TuiMenuNodeIdOf(Node: MenuNode.TuiMenuNode): MenuNode.TuiMenuNodeId;
 begin
   case Node of
-    when TuiMenuNode.Command(const Id, const Parent, const Text, const Mnemonic, const Action, const Enabled, const Shortcut):
+    when MenuNode.TuiMenuNode.Command(const Id, const Parent, const Text, const Mnemonic, const Action, const Enabled, const Shortcut):
       begin
         return Id;
       end;
-    when TuiMenuNode.Submenu(const Id, const Parent, const Text, const Mnemonic, const Enabled):
+    when MenuNode.TuiMenuNode.Submenu(const Id, const Parent, const Text, const Mnemonic, const Enabled):
       begin
         return Id;
       end;
-    when TuiMenuNode.Separator(const Id, const Parent):
+    when MenuNode.TuiMenuNode.Separator(const Id, const Parent):
       begin
         return Id;
       end;
@@ -28,18 +30,18 @@ end function;
 //
 // Parameters:
 // - `Node`: Element or menu node processed by the operation.
-public function TuiMenuNodeParent(Node: TuiMenuNode): option of TuiMenuNodeId;
+public function TuiMenuNodeParent(Node: MenuNode.TuiMenuNode): option of MenuNode.TuiMenuNodeId;
 begin
   case Node of
-    when TuiMenuNode.Command(const Id, const Parent, const Text, const Mnemonic, const Action, const Enabled, const Shortcut):
+    when MenuNode.TuiMenuNode.Command(const Id, const Parent, const Text, const Mnemonic, const Action, const Enabled, const Shortcut):
       begin
         return Parent;
       end;
-    when TuiMenuNode.Submenu(const Id, const Parent, const Text, const Mnemonic, const Enabled):
+    when MenuNode.TuiMenuNode.Submenu(const Id, const Parent, const Text, const Mnemonic, const Enabled):
       begin
         return Parent;
       end;
-    when TuiMenuNode.Separator(const Id, const Parent):
+    when MenuNode.TuiMenuNode.Separator(const Id, const Parent):
       begin
         return Parent;
       end;
@@ -50,18 +52,18 @@ end function;
 //
 // Parameters:
 // - `Node`: Element or menu node processed by the operation.
-public function TuiMenuNodeText(Node: TuiMenuNode): string;
+public function TuiMenuNodeText(Node: MenuNode.TuiMenuNode): string;
 begin
   case Node of
-    when TuiMenuNode.Command(const Id, const Parent, const Text, const Mnemonic, const Action, const Enabled, const Shortcut):
+    when MenuNode.TuiMenuNode.Command(const Id, const Parent, const Text, const Mnemonic, const Action, const Enabled, const Shortcut):
       begin
         return Text;
       end;
-    when TuiMenuNode.Submenu(const Id, const Parent, const Text, const Mnemonic, const Enabled):
+    when MenuNode.TuiMenuNode.Submenu(const Id, const Parent, const Text, const Mnemonic, const Enabled):
       begin
         return Text;
       end;
-    when TuiMenuNode.Separator(const Id, const Parent):
+    when MenuNode.TuiMenuNode.Separator(const Id, const Parent):
       begin
         return '';
       end;
@@ -72,18 +74,18 @@ end function;
 //
 // Parameters:
 // - `Node`: Element or menu node processed by the operation.
-public function TuiMenuNodeMnemonic(Node: TuiMenuNode): string;
+public function TuiMenuNodeMnemonic(Node: MenuNode.TuiMenuNode): string;
 begin
   case Node of
-    when TuiMenuNode.Command(const Id, const Parent, const Text, const Mnemonic, const Action, const Enabled, const Shortcut):
+    when MenuNode.TuiMenuNode.Command(const Id, const Parent, const Text, const Mnemonic, const Action, const Enabled, const Shortcut):
       begin
         return Mnemonic;
       end;
-    when TuiMenuNode.Submenu(const Id, const Parent, const Text, const Mnemonic, const Enabled):
+    when MenuNode.TuiMenuNode.Submenu(const Id, const Parent, const Text, const Mnemonic, const Enabled):
       begin
         return Mnemonic;
       end;
-    when TuiMenuNode.Separator(const Id, const Parent):
+    when MenuNode.TuiMenuNode.Separator(const Id, const Parent):
       begin
         return '';
       end;
@@ -94,18 +96,18 @@ end function;
 //
 // Parameters:
 // - `Node`: Element or menu node processed by the operation.
-public function TuiMenuNodeSelectable(Node: TuiMenuNode): boolean;
+public function TuiMenuNodeSelectable(Node: MenuNode.TuiMenuNode): boolean;
 begin
   case Node of
-    when TuiMenuNode.Command(const Id, const Parent, const Text, const Mnemonic, const Action, const Enabled, const Shortcut):
+    when MenuNode.TuiMenuNode.Command(const Id, const Parent, const Text, const Mnemonic, const Action, const Enabled, const Shortcut):
       begin
         return Enabled;
       end;
-    when TuiMenuNode.Submenu(const Id, const Parent, const Text, const Mnemonic, const Enabled):
+    when MenuNode.TuiMenuNode.Submenu(const Id, const Parent, const Text, const Mnemonic, const Enabled):
       begin
         return Enabled;
       end;
-    when TuiMenuNode.Separator(const Id, const Parent):
+    when MenuNode.TuiMenuNode.Separator(const Id, const Parent):
       begin
         return false;
       end;
@@ -116,18 +118,18 @@ end function;
 //
 // Parameters:
 // - `Node`: Element or menu node processed by the operation.
-public function TuiMenuNodeIsSubmenu(Node: TuiMenuNode): boolean;
+public function TuiMenuNodeIsSubmenu(Node: MenuNode.TuiMenuNode): boolean;
 begin
   case Node of
-    when TuiMenuNode.Submenu(const Id, const Parent, const Text, const Mnemonic, const Enabled):
+    when MenuNode.TuiMenuNode.Submenu(const Id, const Parent, const Text, const Mnemonic, const Enabled):
       begin
         return true;
       end;
-    when TuiMenuNode.Command(const Id, const Parent, const Text, const Mnemonic, const Action, const Enabled, const Shortcut):
+    when MenuNode.TuiMenuNode.Command(const Id, const Parent, const Text, const Mnemonic, const Action, const Enabled, const Shortcut):
       begin
         return false;
       end;
-    when TuiMenuNode.Separator(const Id, const Parent):
+    when MenuNode.TuiMenuNode.Separator(const Id, const Parent):
       begin
         return false;
       end;
@@ -138,18 +140,18 @@ end function;
 //
 // Parameters:
 // - `Node`: Element or menu node processed by the operation.
-public function TuiMenuNodeAction(Node: TuiMenuNode): option of TuiAction;
+public function TuiMenuNodeAction(Node: MenuNode.TuiMenuNode): option of IdsAction.TuiAction;
 begin
   case Node of
-    when TuiMenuNode.Command(const Id, const Parent, const Text, const Mnemonic, const Action, const Enabled, const Shortcut):
+    when MenuNode.TuiMenuNode.Command(const Id, const Parent, const Text, const Mnemonic, const Action, const Enabled, const Shortcut):
       begin
         return Some(Action);
       end;
-    when TuiMenuNode.Submenu(const Id, const Parent, const Text, const Mnemonic, const Enabled):
+    when MenuNode.TuiMenuNode.Submenu(const Id, const Parent, const Text, const Mnemonic, const Enabled):
       begin
         return None;
       end;
-    when TuiMenuNode.Separator(const Id, const Parent):
+    when MenuNode.TuiMenuNode.Separator(const Id, const Parent):
       begin
         return None;
       end;
@@ -160,18 +162,18 @@ end function;
 //
 // Parameters:
 // - `Node`: Element or menu node processed by the operation.
-public function TuiMenuNodeShortcut(Node: TuiMenuNode): option of TuiKeyGesture;
+public function TuiMenuNodeShortcut(Node: MenuNode.TuiMenuNode): option of KeyGesture.TuiKeyGesture;
 begin
   case Node of
-    when TuiMenuNode.Command(const Id, const Parent, const Text, const Mnemonic, const Action, const Enabled, const Shortcut):
+    when MenuNode.TuiMenuNode.Command(const Id, const Parent, const Text, const Mnemonic, const Action, const Enabled, const Shortcut):
       begin
         return Shortcut;
       end;
-    when TuiMenuNode.Submenu(const Id, const Parent, const Text, const Mnemonic, const Enabled):
+    when MenuNode.TuiMenuNode.Submenu(const Id, const Parent, const Text, const Mnemonic, const Enabled):
       begin
         return None;
       end;
-    when TuiMenuNode.Separator(const Id, const Parent):
+    when MenuNode.TuiMenuNode.Separator(const Id, const Parent):
       begin
         return None;
       end;
@@ -183,7 +185,7 @@ end function;
 // Parameters:
 // - `Nodes`: Flat ordered menu-node collection.
 // - `Id`: Identifier assigned to the created or selected value.
-public function TuiMenuFind(Nodes: array of TuiMenuNode; Id: TuiMenuNodeId): integer;
+public function TuiMenuFind(Nodes: array of MenuNode.TuiMenuNode; Id: MenuNode.TuiMenuNodeId): integer;
 begin
   for Index: integer := 0 to Nodes.Length() - 1 do
     begin
@@ -203,7 +205,7 @@ end function;
 // Parameters:
 // - `Node`: Element or menu node processed by the operation.
 // - `Parent`: Optional parent menu-node identifier.
-public function TuiMenuHasParent(Node: TuiMenuNode; Parent: option of TuiMenuNodeId): boolean;
+public function TuiMenuHasParent(Node: MenuNode.TuiMenuNode; Parent: option of MenuNode.TuiMenuNodeId): boolean;
 begin
   case TuiMenuNodeParent(Node) of
     when Some(const NodeParent):
@@ -240,7 +242,10 @@ end function;
 // Parameters:
 // - `Nodes`: Flat ordered menu-node collection.
 // - `Parent`: Optional parent menu-node identifier.
-public function TuiMenuFirstSelectable(Nodes: array of TuiMenuNode; Parent: option of TuiMenuNodeId): option of TuiMenuNodeId;
+public function TuiMenuFirstSelectable(
+  Nodes: array of MenuNode.TuiMenuNode;
+  Parent: option of MenuNode.TuiMenuNodeId
+): option of MenuNode.TuiMenuNodeId;
 begin
   for Index: integer := 0 to Nodes.Length() - 1 do
     begin
@@ -262,10 +267,10 @@ end function;
 // - `Current`: Current extent used by the calculation.
 // - `Direction`: Direction of the requested movement.
 public function TuiMenuNextSelectable(
-  Nodes: array of TuiMenuNode;
-  Current: TuiMenuNodeId;
+  Nodes: array of MenuNode.TuiMenuNode;
+  Current: MenuNode.TuiMenuNodeId;
   Direction: integer
-): option of TuiMenuNodeId;
+): option of MenuNode.TuiMenuNodeId;
 begin
   const CurrentIndex: integer := TuiMenuFind(Nodes, Current);
   if CurrentIndex < 0 then
@@ -273,8 +278,8 @@ begin
       return None;
     end;
   end if;
-  const Parent: option of TuiMenuNodeId := TuiMenuNodeParent(Nodes[CurrentIndex]);
-  var Siblings: array of TuiMenuNodeId := [];
+  const Parent: option of MenuNode.TuiMenuNodeId := TuiMenuNodeParent(Nodes[CurrentIndex]);
+  var Siblings: array of MenuNode.TuiMenuNodeId := [];
   for Index: integer := 0 to Nodes.Length() - 1 do
     begin
       if TuiMenuHasParent(Nodes[Index], Parent) and TuiMenuNodeSelectable(Nodes[Index]) then
@@ -320,9 +325,9 @@ end function;
 // Parameters:
 // - `Nodes`: Flat ordered menu-node collection.
 // - `Id`: Identifier assigned to the created or selected value.
-public function TuiMenuRootOf(Nodes: array of TuiMenuNode; Id: TuiMenuNodeId): option of TuiMenuNodeId;
+public function TuiMenuRootOf(Nodes: array of MenuNode.TuiMenuNode; Id: MenuNode.TuiMenuNodeId): option of MenuNode.TuiMenuNodeId;
 begin
-  var Current: TuiMenuNodeId := Id;
+  var Current: MenuNode.TuiMenuNodeId := Id;
   var Remaining: integer := Nodes.Length() + 1;
   while Remaining > 0 do
     begin

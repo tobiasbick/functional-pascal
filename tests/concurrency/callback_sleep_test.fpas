@@ -1,10 +1,10 @@
 program CallbackSleepTest;
 
-uses Std.Tasks, Std.Test, Std.Time;
+uses Std.Tasks as Tasks, Std.Test as Test, Std.Time as Time;
 
 function SleepAndDouble(Value: integer): integer;
 begin
-  Sleep(25);
+  Time.Sleep(25);
   return Value * 2;
 end function;
 
@@ -23,7 +23,7 @@ begin
   scope
     const Mapper: task of integer := go MapValue();
     const Peer: task of integer := go PeerValue();
-    AssertEquals(7, Wait(Peer));
-    AssertEquals(42, Wait(Mapper));
+    Test.AssertEquals(7, Tasks.Wait(Peer));
+    Test.AssertEquals(42, Tasks.Wait(Mapper));
   end scope;
 end.

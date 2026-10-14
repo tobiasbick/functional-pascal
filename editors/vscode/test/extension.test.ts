@@ -279,7 +279,7 @@ async function verifyExternalProjectChanges(): Promise<void> {
     );
     await fs.writeFile(
       appSource,
-      "program WatchApp;\n\nuses Watch.Core;\n\nbegin const First: integer := WatchedValue(); end.\n"
+      "program WatchApp;\n\nuses Watch.Core as Core;\n\nbegin const First: integer := Core.WatchedValue(); end.\n"
     );
 
     const declarationUri = vscode.Uri.file(coreSource);
@@ -296,7 +296,7 @@ async function verifyExternalProjectChanges(): Promise<void> {
 
     await fs.writeFile(
       appSource,
-      "program WatchApp;\n\nuses Watch.Core;\n\nbegin\n  const First: integer := WatchedValue();\n  const Second: integer := WatchedValue();\nend.\n"
+      "program WatchApp;\n\nuses Watch.Core as Core;\n\nbegin\n  const First: integer := Core.WatchedValue();\n  const Second: integer := Core.WatchedValue();\nend.\n"
     );
     await waitForReferences(declarationUri, position, 3);
   } finally {
@@ -329,7 +329,7 @@ async function verifyWorkspaceNavigation(): Promise<void> {
       '[project]\nname = "navigation-app"\nkind = "program"\nmain = "src/main.fpas"\n\n[dependencies]\nprojects = ["../core/core.fpasprj"]\n\n[sources]\ninclude = ["src/**/*.fpas"]\n'
     );
     const source =
-      "program NavigationApp;\n\nuses Navigation.Core;\n\nvar Counter: integer := 0;\n\nbegin\n  Counter := Counter + 1;\n  const Value: HostPoint := HostPoint( X := Counter );\nend.\n";
+      "program NavigationApp;\n\nuses Navigation.Core as Core;\n\nvar Counter: integer := 0;\n\nbegin\n  Counter := Counter + 1;\n  const Value: Core.HostPoint := Core.HostPoint( X := Counter );\nend.\n";
     await fs.writeFile(appSource, source);
 
     const symbols = await waitForWorkspaceSymbols("HostPoint");

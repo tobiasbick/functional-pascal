@@ -1,9 +1,9 @@
 program T;
 
-uses Std.Console;
+uses Std.Console as Console;
 
 begin
   const A: array of integer := [42];
   const B: array of integer := A.Sort();
-  WriteLn(B[0]);
+  Console.WriteLn(B[0]);
 end.

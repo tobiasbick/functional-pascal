@@ -82,7 +82,7 @@ fn task_keyword_cannot_be_a_name() {
         "program T; var Task: integer := 1; begin end.",
         "program T; function F(Task: integer): integer; begin return Task end; begin end.",
         "program T; type Job = record Task: integer; end record; begin end.",
-        "program T; uses Std.Task; begin end.",
+        "program T; uses Std.Task as StdTask; begin end.",
     ] {
         let (_, errors) = parse_with_errors(source);
         assert!(!errors.is_empty(), "{source}");

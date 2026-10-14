@@ -1,6 +1,6 @@
 program TypedConstructionTest;
 
-uses Std.Test;
+uses Std.Test as Test;
 
 type Point = record
   X: integer;
@@ -23,9 +23,9 @@ begin
   const P: Point := Position(Y := 4, X := 1);
   const B: Box := Box(Items := [Point(X := 3)], Value := P);
   const G: Point := Make('value');
-  AssertEquals(1, P.X);
-  AssertEquals(4, P.Y);
-  AssertEquals(2, B.Items[0].Y);
-  AssertEquals(5, G.X);
-  AssertTrue(Point(X := 1, Y := 4) = P);
+  Test.AssertEquals(1, P.X);
+  Test.AssertEquals(4, P.Y);
+  Test.AssertEquals(2, B.Items[0].Y);
+  Test.AssertEquals(5, G.X);
+  Test.AssertTrue(Point(X := 1, Y := 4) = P);
 end.

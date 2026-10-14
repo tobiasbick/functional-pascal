@@ -1,7 +1,7 @@
 program T;
 
-uses Std.Console, Std.Math;
+uses Std.Console as Console, Std.Math as Math;
 
 begin
-  WriteLn(Round(Frac(-3.75) * 100.0));
+  Console.WriteLn(Math.Round(Math.Frac(-3.75) * 100.0));
 end.

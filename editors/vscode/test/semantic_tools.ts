@@ -29,7 +29,7 @@ export async function verifySemanticTools(
   );
   const sourcePath = path.join(fixtureRoot, "src", "main.fpas");
   const source =
-    "program SemanticHost;\n\nuses Semantic.Core;\n\nbegin\n  const Music: string := '𝄞' + ExistingText;\n  const Value: integer := UniqueValue();\nend.\n";
+    "program SemanticHost;\n\nuses Semantic.Core as Core;\n\nbegin\n  const Music: string := '𝄞' + Core.ExistingText;\n  const Value: integer := UniqueValue();\nend.\n";
   let document: vscode.TextDocument | undefined;
   try {
     await fs.mkdir(path.dirname(sourcePath), { recursive: true });
@@ -84,7 +84,7 @@ export async function verifySemanticTools(
     assert.equal(await vscode.workspace.applyEdit(action.edit), true);
     assert.match(
       document.getText(),
-      /uses Semantic\.Core, Semantic\.Importable;/
+      /uses Semantic\.Core as Core, Semantic\.Importable as Importable;/
     );
     await waitForDiagnostics(
       uri,
@@ -135,7 +135,7 @@ async function waitForCodeAction(
     const action = actions.find(
       (candidate): candidate is vscode.CodeAction =>
         candidate instanceof vscode.CodeAction &&
-        candidate.title === "Import Semantic.Importable"
+        candidate.title === "Use qualified symbol from Semantic.Importable"
     );
     if (action) {
       return action;

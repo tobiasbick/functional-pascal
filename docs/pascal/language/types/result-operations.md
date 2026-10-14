@@ -1,13 +1,17 @@
 # Result operations
 
+The code fragments use `uses Std.Conv as Conv, Std.Console as Console;`.
+
 Helper functions for `Result of (T, E)` values. See [Error handling](../error-handling/README.md) for the type itself, constructors (`Ok`, `Error`), the `try` operator, and `case` destructuring.
 
 ```pascal
 program Example;
-uses Std.Console;
+
+uses Std.Console as Console;
+
 begin
-  const R: Result of (integer, string) := Ok(42);
-  WriteLn(R.Unwrap());
+  const R: result of (integer, string) := Ok(42);
+  Console.WriteLn(R.Unwrap());
 end.
 ```
 
@@ -40,7 +44,7 @@ Extracts the value from `Ok(value)`. **Runtime error** if `R` is `Error`.
 
 ```pascal
 const R: Result of (integer, string) := Ok(42);
-WriteLn(R.Unwrap());                             // 42
+Console.WriteLn(R.Unwrap());                             // 42
 ```
 
 ---
@@ -51,7 +55,7 @@ Extracts the value from `Ok(value)`, or returns `Default` if `R` is `Error`.
 
 ```pascal
 const R: Result of (integer, string) := Error('oops');
-WriteLn(R.UnwrapOr(0));                       // 0
+Console.WriteLn(R.UnwrapOr(0));                       // 0
 ```
 
 ---
@@ -62,7 +66,7 @@ Returns `true` if `R` is an `Ok` variant.
 
 ```pascal
 const R: Result of (integer, string) := Ok(42);
-WriteLn(R.IsOk());                               // true
+Console.WriteLn(R.IsOk());                               // true
 ```
 
 ---
@@ -73,7 +77,7 @@ Returns `true` if `R` is an `Error` variant.
 
 ```pascal
 const R: Result of (integer, string) := Error('fail');
-WriteLn(R.IsError());                              // true
+Console.WriteLn(R.IsError());                              // true
 ```
 
 ---
@@ -85,7 +89,7 @@ Transforms the `Ok` value with `F`. If `R` is `Error`, returns it unchanged.
 ```pascal
 function DoubleToString(V: integer): string;
 begin
-  return IntToStr(V * 2);
+  return Conv.IntToStr(V * 2);
 end function;
 
 const R: Result of (integer, string) := Ok(21);
@@ -103,7 +107,7 @@ Calls `F` with the `Ok` value. `F` returns a new `Result`, enabling chained fall
 function PositiveToResult(V: integer): result of (string, string);
 begin
   if V > 0 then
-    return Ok(IntToStr(V));
+    return Ok(Conv.IntToStr(V));
   else
     return Error('non-positive');
   end if;

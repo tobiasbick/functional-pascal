@@ -1,6 +1,6 @@
 program TypeOrderExample;
 
-uses Std.Console;
+uses Std.Console as Console;
 
 const InitialState: State := State.Ready;
 
@@ -30,5 +30,5 @@ end enum;
 
 begin
   const Group: Team := CreateTeam();
-  WriteLn(Group.Status = State.Ready);
+  Console.WriteLn(Group.Status = State.Ready);
 end.

@@ -1,7 +1,7 @@
 // Absolute HTTP and HTTPS URI parsing for network clients.
 unit Std.Net.Uri;
 
-uses Std.Net.Decimal;
+uses Std.Net.Decimal as Decimal;
 
 // Parsed absolute network URI used by protocol clients.
 public type Uri = record
@@ -42,7 +42,7 @@ end function;
 // - `Text`: Decimal port text.
 function ParsePort(Text: string): result of (integer, string);
 begin
-  case Std.Net.Decimal.Parse(Text, 65535) of
+  case Decimal.Parse(Text, 65535) of
     when Ok(const Port):
       begin
         if (Port >= 1) and (Port <= 65535) then

@@ -160,19 +160,19 @@ mod tests {
     #[test]
     fn program_with_uses() {
         let formatted = parse_and_format(
-            "program Hello; uses Std.Console; begin WriteLn('Hello, World!'); end.",
+            "program Hello; uses Std.Console as Console; begin WriteLn('Hello, World!'); end.",
         );
         assert_eq!(
             formatted,
-            "program Hello;\n\nuses Std.Console;\n\nbegin\n  WriteLn('Hello, World!');\nend.\n"
+            "program Hello;\n\nuses Std.Console as Console;\n\nbegin\n  WriteLn('Hello, World!');\nend.\n"
         );
     }
 
     #[test]
     fn unit_clamp_emits_named_conditional_ending() {
-        let source = "unit MyApp.Utils; uses Std.Math; function Clamp(Value: integer; Min: integer; Max: integer): integer; begin if Value < Min then return Min; elsif  Value > Max then return Max; else return Value; end if; end function; function IsBlank(S: string): boolean; begin return Length(Trim(S)) = 0; end function;\nend unit;";
+        let source = "unit MyApp.Utils; uses Std.Math as Math; function Clamp(Value: integer; Min: integer; Max: integer): integer; begin if Value < Min then return Min; elsif  Value > Max then return Max; else return Value; end if; end function; function IsBlank(S: string): boolean; begin return Length(Trim(S)) = 0; end function;\nend unit;";
         let formatted = parse_and_format(source);
-        assert!(formatted.starts_with("unit MyApp.Utils;\n\nuses Std.Math;\n\n"));
+        assert!(formatted.starts_with("unit MyApp.Utils;\n\nuses Std.Math as Math;\n\n"));
         assert!(
             formatted.contains("if Value < Min then\n    return Min;\n  elsif Value > Max then")
         );
@@ -203,7 +203,7 @@ mod tests {
     #[test]
     fn long_uses_clause_wraps() {
         let formatted = parse_and_format(
-            "program LongUses; uses Std.Console, Std.Conv, Std.String, MyApp.Very.Long.Namespace.One, MyApp.Very.Long.Namespace.Two; begin WriteLn('ok'); end.",
+            "program LongUses; uses Std.Console as Console, Std.Conv as Conv, Std.String as StdString, MyApp.Very.Long.Namespace.One as One, MyApp.Very.Long.Namespace.Two as Two; begin WriteLn('ok'); end.",
         );
         assert!(formatted.contains("uses\n"));
         assert!(formatted.contains("MyApp.Very.Long.Namespace.Two"));
@@ -227,8 +227,7 @@ mod tests {
 
     #[test]
     fn round_trip_hello() {
-        let source =
-            "program Hello;\nuses Std.Console;\nbegin\n  WriteLn('Hello, World!');\nend.\n";
+        let source = "program Hello;\nuses Std.Console as Console;\nbegin\n  WriteLn('Hello, World!');\nend.\n";
         let formatted = parse_and_format(source);
         let (_, errors) = parse_compilation_unit(&formatted);
         assert!(errors.is_empty(), "{errors:?}");

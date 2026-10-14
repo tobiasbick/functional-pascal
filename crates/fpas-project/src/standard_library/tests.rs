@@ -36,7 +36,7 @@ include = ["Std/**/*.fpas"]
     let program = dir.join("main.fpas");
     write_text(
         &program,
-        "program Main;\nuses Std.Sample;\nbegin\n  const Answer: integer := Value;\nend.\n",
+        "program Main;\nuses Std.Sample as Sample;\nbegin\n  const Answer: integer := Value;\nend.\n",
     );
 
     let library = load_standard_library(&dir).expect("standard library must load");
@@ -78,7 +78,7 @@ include = ["Std/**/*.fpas"]
     let program = dir.join("main.fpas");
     write_text(
         &program,
-        "program Main;\nuses Std.Sample;\nbegin\n  const Answer: integer := Value;\nend.\n",
+        "program Main;\nuses Std.Sample as Sample;\nbegin\n  const Answer: integer := Value;\nend.\n",
     );
 
     let library = load_standard_library(&dir).expect("standard library must load");
@@ -149,7 +149,10 @@ include = ["Std/**/*.fpas"]
         "unit Std.Internal;\nend unit;\n",
     );
     let program = dir.join("main.fpas");
-    write_text(&program, "program Main;\nuses Std.Internal;\nbegin\nend.\n");
+    write_text(
+        &program,
+        "program Main;\nuses Std.Internal as Internal;\nbegin\nend.\n",
+    );
 
     let library = load_standard_library(&dir).expect("standard library must load");
     let result = build_unit_graph_for_program_with_standard_library(

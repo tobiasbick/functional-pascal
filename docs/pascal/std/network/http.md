@@ -33,12 +33,12 @@ An HTTP/1.1 and HTTPS client plus bounded HTTP/1.x server helpers, implemented i
 Create a request with defaults, then replace the fields needed by the caller:
 
 ```pascal
-var RequestValue: Request := Request.Create('POST', 'http://127.0.0.1:8080/v1/items');
-RequestValue.Headers := [Header.Create('Content-Type', 'application/json')];
-RequestValue.Body := Std.Net.Utf8.Encode('{"name":"example"}');
-case Send(RequestValue) of
+var RequestValue: Http.Request := Http.Request.Create('POST', 'http://127.0.0.1:8080/v1/items');
+RequestValue.Headers := [Http.Header.Create('Content-Type', 'application/json')];
+RequestValue.Body := Utf8.Encode('{"name":"example"}');
+case Http.Send(RequestValue) of
   when Ok(const ResponseValue):
-    WriteLn(ResponseValue.StatusCode);
+    Console.WriteLn(ResponseValue.StatusCode);
   when Error(const Message):
     panic(Message);
 end case;
@@ -47,19 +47,19 @@ end case;
 Standard methods have short constructors:
 
 ```pascal
-const GetRequest: Request := Request.Get('http://127.0.0.1:8080/items');
-var PutRequest: Request := Request.Put('http://127.0.0.1:8080/items/42');
-PutRequest.Body := Std.Net.Utf8.Encode('{"name":"updated"}');
+const GetRequest: Http.Request := Http.Request.Get('http://127.0.0.1:8080/items');
+var PutRequest: Http.Request := Http.Request.Put('http://127.0.0.1:8080/items/42');
+PutRequest.Body := Utf8.Encode('{"name":"updated"}');
 ```
 
 Call `Send` with the request, then chain on the explicit `Result` without
 unwrapping implicitly:
 
 ```pascal
-uses Std.Http;
+uses Std.Http as Http;
 
 const TextResult: result of (string, string) :=
-  Std.Http.Send(Request.Get('https://example.test/items')).AndThen(BodyText);
+  Http.Send(Http.Request.Get('https://example.test/items')).AndThen(Http.BodyText);
 ```
 
 `Method` deliberately remains a string so extension methods are not excluded. For example, a
@@ -103,13 +103,13 @@ Independent streams may be opened and consumed by different tasks. Calls that mu
 `BodyStream` handle must remain serialized.
 
 ```pascal
-case OpenStream(Request.Get('https://example.test/events')) of
+case Http.OpenStream(Http.Request.Get('https://example.test/events')) of
   when Ok(const ResponseValue):
     begin
       var Reading: boolean := true;
       while Reading do
         begin
-          case ReadStream(ResponseValue.Body, 4096) of
+          case Http.ReadStream(ResponseValue.Body, 4096) of
             when Ok(const Bytes):
               begin
                 Reading := Bytes.Length() <> 0;
@@ -170,16 +170,16 @@ permitted characters other than SP/HTAB are preserved at the boundaries.
 ambiguous framing, unsupported transfer codings, and truncated bodies are rejected.
 
 ```pascal
-uses Std.Http, Std.Net, Std.Net.Utf8;
+uses Std.Http as Http, Std.Net as Net, Std.Net.Utf8 as Utf8;
 
 
-case Listen('127.0.0.1', 8080) of
+case Net.Listen('127.0.0.1', 8080) of
   when Ok(const ListenerValue):
     begin
-      case Accept(ListenerValue) of
+      case Net.Accept(ListenerValue) of
         when Ok(const Connection):
           begin
-            case SetTimeout(Connection, 30000) of
+            case Net.SetTimeout(Connection, 30000) of
               when Ok(_):
                 begin
                 end;
@@ -187,12 +187,12 @@ case Listen('127.0.0.1', 8080) of
                 panic(Message);
             end case;
 
-            case ReadRequest(Connection, 65536, 1048576) of
+            case Http.ReadRequest(Connection, 65536, 1048576) of
               when Ok(const RequestValue):
                 begin
-                  var ResponseValue: ServerResponse := ServerResponse.Create(200, 'OK');
-                  ResponseValue.Body := Std.Net.Utf8.Encode('Hello');
-                  case WriteResponse(Connection, ResponseValue) of
+                  var ResponseValue: Http.ServerResponse := Http.ServerResponse.Create(200, 'OK');
+                  ResponseValue.Body := Utf8.Encode('Hello');
+                  case Http.WriteResponse(Connection, ResponseValue) of
                     when Ok(_):
                       begin
                       end;
@@ -204,7 +204,7 @@ case Listen('127.0.0.1', 8080) of
                 panic(Message);
             end case;
 
-            case Close(Connection) of
+            case Net.Close(Connection) of
               when Ok(_):
                 begin
                 end;
@@ -228,22 +228,22 @@ accept another request.
 For a reusable loop, pass the listener and a handler to `Serve`:
 
 ```pascal
-uses Std.Http, Std.Net, Std.Net.Utf8;
+uses Std.Http as Http, Std.Net as Net, Std.Net.Utf8 as Utf8;
 
-function Handle(RequestValue: ServerRequest): ServerResponse;
+function Handle(RequestValue: Http.ServerRequest): Http.ServerResponse;
 begin
-  var ResponseValue: ServerResponse := ServerResponse.Create(200, 'OK');
-  ResponseValue.Body := Std.Net.Utf8.Encode('Path: ' + RequestValue.Target);
+  var ResponseValue: Http.ServerResponse := Http.ServerResponse.Create(200, 'OK');
+  ResponseValue.Body := Utf8.Encode('Path: ' + RequestValue.Target);
   return ResponseValue;
 end function;
 
 
-case Listen('127.0.0.1', 8080) of
+case Net.Listen('127.0.0.1', 8080) of
   when Ok(const ListenerValue):
     begin
-      var Options: ServerOptions := ServerOptions.Create();
+      var Options: Http.ServerOptions := Http.ServerOptions.Create();
       Options.MaxConcurrentRequests := 16;
-      case Serve(ListenerValue, Options, Handle) of
+      case Http.Serve(ListenerValue, Options, Handle) of
         when Ok(_):
           begin
           end;
@@ -272,11 +272,11 @@ For HTTPS, replace `Listen` with a certificate-configured TLS listener; the hand
 remain unchanged:
 
 ```pascal
-case ListenTls('127.0.0.1', 8443, 'certificate.pem', 'private-key.pem', 10000) of
+case Net.ListenTls('127.0.0.1', 8443, 'certificate.pem', 'private-key.pem', 10000) of
   when Ok(const ListenerValue):
     begin
-      var Options: ServerOptions := ServerOptions.Create();
-      case Serve(ListenerValue, Options, Handle) of
+      var Options: Http.ServerOptions := Http.ServerOptions.Create();
+      case Http.Serve(ListenerValue, Options, Handle) of
         when Ok(_):
           begin
           end;

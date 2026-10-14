@@ -98,12 +98,7 @@ begin end.",
 #[test]
 fn default_routines_follow_the_detached_call_effect_policy() {
     let mut server = server(
-        "program DebugDefaultEffects;
-uses Std.Console;
-function Noisy(): integer;
-begin WriteLn('no leak'); return 1; end function;
-type NoisyRecord = record Value: integer := Noisy(); end record;
-begin end.",
+        "program DebugDefaultEffects;\nuses Std.Console as Console;\nfunction Noisy(): integer;\nbegin Console.WriteLn('no leak'); return 1; end function;\ntype NoisyRecord = record Value: integer := Noisy(); end record;\nbegin end.",
     );
     let response = evaluate(&mut server, "NoisyRecord()");
     assert_eq!(response["success"], false, "{response}");

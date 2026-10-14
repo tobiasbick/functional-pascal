@@ -1,6 +1,6 @@
 program NativeTasksTest;
 
-uses Std.Tasks, Std.Test;
+uses Std.Tasks as Tasks, Std.Test as Test;
 
 var Trace: string := '';
 
@@ -26,14 +26,14 @@ begin
   scope
     const PartTask: task of string := go Text()
                                            .Slice(Len := Number('L', 2), Start := Number('S', 1));
-    AssertEquals('RLS', Trace);
-    AssertEquals('😀a', Wait(PartTask));
+    Test.AssertEquals('RLS', Trace);
+    Test.AssertEquals('😀a', Tasks.Wait(PartTask));
     const EmptyTask: task of boolean := go Empty().IsEmpty();
-    AssertTrue(Wait(EmptyTask));
-    AssertEquals('RLSE', Trace);
+    Test.AssertTrue(Tasks.Wait(EmptyTask));
+    Test.AssertEquals('RLSE', Trace);
     const CopiesTask: task of array of string := go array.Fill(Count := 2, Value := 'x');
-    AssertEquals('xx', Wait(CopiesTask).Join(''));
+    Test.AssertEquals('xx', Tasks.Wait(CopiesTask).Join(''));
     const CharacterTask: task of string := go string.Chr(N := 65);
-    AssertEquals('A', Wait(CharacterTask));
+    Test.AssertEquals('A', Tasks.Wait(CharacterTask));
   end scope;
 end.

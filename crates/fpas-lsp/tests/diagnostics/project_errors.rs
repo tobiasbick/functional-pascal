@@ -33,8 +33,8 @@ pub(super) fn analyze_project(temp: &TempDirectory, source: &str) -> support::Tr
     ])
 }
 
-const IMPORT_DEPENDENCY: &str = "program Demo;\nuses Demo.Dep;\nbegin\nend.\n";
-const MISSING_IMPORT: &str = "unit Demo.Dep;\nuses Demo.Missing;\nend unit;\n";
+const IMPORT_DEPENDENCY: &str = "program Demo;\nuses Demo.Dep as Dep;\nbegin\nend.\n";
+const MISSING_IMPORT: &str = "unit Demo.Dep;\nuses Demo.Missing as Missing;\nend unit;\n";
 
 /// Finds a coded diagnostic published at its actual source URI.
 pub(super) fn located_diagnostic<'a>(
@@ -140,7 +140,7 @@ fn nonexported_dependency_import_preserves_code_source_and_range() {
     );
     let dependency = temp.write(
         "src/dep.fpas",
-        "unit Demo.Dep;\nuses Library.Hidden;\nend unit;\n",
+        "unit Demo.Dep;\nuses Library.Hidden as Hidden;\nend unit;\n",
     );
     let transcript = analyze_project(&temp, IMPORT_DEPENDENCY);
     assert_success(&transcript);
@@ -164,11 +164,11 @@ fn unit_cycle_retains_its_original_code_without_inventing_a_location() {
     program_project(&temp, IMPORT_DEPENDENCY);
     temp.write(
         "src/dep.fpas",
-        "unit Demo.Dep; uses Demo.Other; end unit;\n",
+        "unit Demo.Dep; uses Demo.Other as Other; end unit;\n",
     );
     temp.write(
         "src/other.fpas",
-        "unit Demo.Other; uses Demo.Dep; end unit;\n",
+        "unit Demo.Other; uses Demo.Dep as Dep; end unit;\n",
     );
     let transcript = analyze_project(&temp, IMPORT_DEPENDENCY);
     assert_unlocated(&transcript, "FP4117", None);
@@ -329,7 +329,7 @@ fn reopened_dependency_version_ignores_project_records_from_an_older_snapshot() 
 fn unsaved_dependency_correction_does_not_republish_disk_parser_errors() {
     let temp = TempDirectory::new("unsaved-dependency-correction");
     let main_source =
-        "program Demo;\nuses Demo.Dep;\nbegin\n  const Value: integer := 'wrong';\nend.\n";
+        "program Demo;\nuses Demo.Dep as Dep;\nbegin\n  const Value: integer := 'wrong';\nend.\n";
     program_project(&temp, main_source);
     let broken = "unit Demo.Dep\nend unit;\n";
     temp.write("src/dep.fpas", broken);

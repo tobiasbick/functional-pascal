@@ -1,18 +1,18 @@
 program GoValueStackOperations;
 
-uses Std.Test, Std.Tasks;
+uses Std.Test as Test, Std.Tasks as Tasks;
 
 begin
   scope
     const Items := [1, 2];
     const Append: task of array of integer := go Items.Push(Value := 3);
     const Remove: task of ArrayPopResult of integer := go Items.Pop();
-    const Appended := Wait(Append);
-    const Removed := Wait(Remove);
-    AssertEquals(3, Appended.Length());
-    AssertEquals(3, Appended[2]);
-    AssertEquals(2, Removed.Value);
-    AssertEquals(1, Removed.Remaining[0]);
-    AssertEquals(2, Items.Length());
+    const Appended := Tasks.Wait(Append);
+    const Removed := Tasks.Wait(Remove);
+    Test.AssertEquals(3, Appended.Length());
+    Test.AssertEquals(3, Appended[2]);
+    Test.AssertEquals(2, Removed.Value);
+    Test.AssertEquals(1, Removed.Remaining[0]);
+    Test.AssertEquals(2, Items.Length());
   end scope;
 end.

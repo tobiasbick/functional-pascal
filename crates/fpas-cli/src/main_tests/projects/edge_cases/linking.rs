@@ -26,7 +26,7 @@ fn unit_with_only_private_declarations_exports_nothing() {
     // Import the unit but don't call anything — should succeed
     write_text(
         &cwd.join("src/main.fpas"),
-        "program Main;\nuses App.Internal;\nbegin\nend.\n",
+        "program Main;\nuses App.Internal as Internal;\nbegin\nend.\n",
     );
     write_text(
         &cwd.join("src/internal.fpas"),
@@ -53,7 +53,7 @@ fn calling_private_symbol_from_only_private_unit_fails() {
     support::write_program_project_file(&project_file, "src/main.fpas", &["src/*.fpas"]);
     write_text(
         &cwd.join("src/main.fpas"),
-        "program Main;\nuses App.Internal, Std.Console;\nbegin\n  WriteLn(Secret());\nend.\n",
+        "program Main;\nuses App.Internal as Internal, Std.Console as Console;\nbegin\n  Console.WriteLn(Secret());\nend.\n",
     );
     write_text(
         &cwd.join("src/internal.fpas"),
@@ -85,7 +85,7 @@ fn unused_import_does_not_cause_error() {
     // Import the unit but never call any of its functions
     write_text(
         &cwd.join("src/main.fpas"),
-        "program Main;\nuses App.Lib;\nbegin\nend.\n",
+        "program Main;\nuses App.Lib as Lib;\nbegin\nend.\n",
     );
     write_text(
         &cwd.join("src/lib.fpas"),

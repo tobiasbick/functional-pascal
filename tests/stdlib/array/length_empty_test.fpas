@@ -1,8 +1,8 @@
 program T;
 
-uses Std.Console;
+uses Std.Console as Console;
 
 begin
   const A: array of integer := [];
-  WriteLn(A.Length());
+  Console.WriteLn(A.Length());
 end.

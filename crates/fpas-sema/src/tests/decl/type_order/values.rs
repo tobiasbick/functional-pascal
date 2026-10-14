@@ -1,5 +1,5 @@
 use super::{check_errors, check_ok};
-use fpas_diagnostics::codes::{SEMA_AMBIGUOUS_IMPORTED_NAME, SEMA_UNINITIALIZED_DEPENDENCY};
+use fpas_diagnostics::codes::{SEMA_UNINITIALIZED_DEPENDENCY, SEMA_UNQUALIFIED_NAME};
 
 #[test]
 fn defaults_and_method_bodies_keep_preceding_values_visible() {
@@ -36,7 +36,7 @@ fn later_values_are_available_in_deferred_bodies_but_not_earlier_initializers() 
 }
 
 #[test]
-fn later_enum_variants_still_require_qualification_when_ambiguous() {
+fn later_enum_variants_require_qualification_in_earlier_initializers() {
     let errors = check_errors(
         "program T; const Initial: A := Ready;
       type A = enum Ready; end enum; type B = enum Ready; end enum;
@@ -45,7 +45,7 @@ fn later_enum_variants_still_require_qualification_when_ambiguous() {
     assert!(
         errors
             .iter()
-            .any(|error| error.code == SEMA_AMBIGUOUS_IMPORTED_NAME)
+            .any(|error| error.code == SEMA_UNQUALIFIED_NAME)
     );
     check_ok(
         "program T; const Initial: A := A.Ready;
@@ -55,11 +55,9 @@ fn later_enum_variants_still_require_qualification_when_ambiguous() {
 }
 
 #[test]
-fn preceding_values_keep_priority_over_optional_enum_short_names() {
+fn ordinary_values_keep_their_names_beside_qualified_enum_variants() {
     check_ok(
-        "program T; const Ready: integer := 10;
-      type State = enum Ready; end enum;
-      begin const Value: State := State.Ready; discard Value; discard Ready; end.",
+        "program T; const Ready: integer := 10;\n      type State = enum Ready; end enum;\n      begin const Value: State := State.Ready; const Number: integer := Ready; discard Value; discard Number; end.",
     );
 }
 

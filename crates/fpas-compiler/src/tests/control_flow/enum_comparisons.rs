@@ -152,7 +152,10 @@ end unit;",
             .expect("decode Palette");
     let interfaces = [shades.interface.clone(), palette.interface.clone()];
 
-    for (import, qualifier) in [("Palette", "Palette"), ("Palette as Colors", "Colors")] {
+    for (import, qualifier) in [
+        ("Palette as PaletteUnit", "PaletteUnit"),
+        ("Palette as Colors", "Colors"),
+    ] {
         for pattern in [format!("{qualifier}.Red"), format!("({qualifier}.Red)")] {
             let program = parse_ok(&format!(
                 "program ImportedEnumConstants;

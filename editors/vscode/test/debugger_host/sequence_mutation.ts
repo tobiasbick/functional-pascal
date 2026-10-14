@@ -49,16 +49,16 @@ export async function verifySequenceMutation(
   const lines = [
     "program DebuggerSequenceMutation;",
     "",
-    "uses Std.Console;",
+    "uses Std.Console as Console;",
     "",
     "begin",
     "  var Numbers: array of integer := [1, 2, 3];",
     "  var Text: string := 'A😀B';",
     "  const StopMarker: integer := 0;",
-    "  WriteLn(Numbers[0]);",
-    "  WriteLn(Numbers[1]);",
-    "  WriteLn(Numbers[2]);",
-    "  WriteLn(Text);",
+    "  Console.WriteLn(Numbers[0]);",
+    "  Console.WriteLn(Numbers[1]);",
+    "  Console.WriteLn(Numbers[2]);",
+    "  Console.WriteLn(Text);",
     "end.",
     ""
   ];

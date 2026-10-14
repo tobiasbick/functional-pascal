@@ -1,6 +1,6 @@
 program TuiBackgroundResponsivenessTest;
 
-uses Std.Tasks, Std.Test, Std.Time, Std.Tui;
+uses Std.Tasks as Tasks, Std.Test as Test, Std.Time as Time, Std.Tui as Tui;
 
 type Model = record
   Generation: integer;
@@ -9,17 +9,17 @@ type Model = record
   Painted: channel of integer;
 end record;
 
-procedure Replace(State: Model; Cmd: TuiCmdOutput);
+procedure Replace(State: Model; Cmd: Tui.TuiCmdOutput);
 begin
   const Generation: integer := State.Generation;
   const Gate: channel of boolean := State.Gate;
   const Started: channel of integer := State.Started;
-  Cmd.ReplaceSubscription(1, function(Token: CancellationToken): result of (boolean, string) begin
-    discard Send(Started, Generation);
+  Cmd.ReplaceSubscription(1, function(Token: Tasks.CancellationToken): result of (boolean, string) begin
+    discard Tasks.Send(Started, Generation);
     if Generation = 0 then
       begin
         // Deliberately defer cooperation to prove that the host remains responsive.
-        discard Receive(Gate);
+        discard Tasks.Receive(Gate);
       end;
     end if;
 
@@ -27,14 +27,14 @@ begin
   end function);
 end procedure;
 
-function Update(State: Model; Msg: TuiMsg; Cmd: TuiCmdOutput): Model;
+function Update(State: Model; Msg: Tui.TuiMsg; Cmd: Tui.TuiCmdOutput): Model;
 begin
   case Msg of
-    when TuiMsg.Started:
+    when Tui.TuiMsg.Started:
       begin
         Replace(State, Cmd);
       end;
-    when TuiMsg.Tick(const Delta):
+    when Tui.TuiMsg.Tick(const Delta):
       begin
         if Delta > 0 then
           begin
@@ -45,70 +45,70 @@ begin
           end;
         end if;
       end;
-    when TuiMsg.Key(_), TuiMsg.Pointer(_), TuiMsg.Resize(_), TuiMsg.FocusChanged(_, _), TuiMsg.Action(_, _), TuiMsg.TextChanged(_, _, _, _), TuiMsg.TextAreaChanged(_, _, _, _, _), TuiMsg.CheckChanged(_, _, _), TuiMsg.SelectionChanged(_, _, _), TuiMsg.ScrollChanged(_, _, _), TuiMsg.MenuChanged(_, _, _), TuiMsg.BackgroundFailed(_, _, _, _, _, _), TuiMsg.QuitRequested:
+    when Tui.TuiMsg.Key(_), Tui.TuiMsg.Pointer(_), Tui.TuiMsg.Resize(_), Tui.TuiMsg.FocusChanged(_, _), Tui.TuiMsg.Action(_, _), Tui.TuiMsg.TextChanged(_, _, _, _), Tui.TuiMsg.TextAreaChanged(_, _, _, _, _), Tui.TuiMsg.CheckChanged(_, _, _), Tui.TuiMsg.SelectionChanged(_, _, _), Tui.TuiMsg.ScrollChanged(_, _, _), Tui.TuiMsg.MenuChanged(_, _, _), Tui.TuiMsg.BackgroundFailed(_, _, _, _, _, _), Tui.TuiMsg.QuitRequested:
       null;
   end case;
 
   return State;
 end function;
 
-function UpdateMessage(State: Model; Message: integer; Cmd: TuiCmdOutput): Model;
+function UpdateMessage(State: Model; Message: integer; Cmd: Tui.TuiCmdOutput): Model;
 begin
   return State;
 end function;
 
-function View(State: Model): TuiElement;
+function View(State: Model): Tui.TuiElement;
 begin
   if State.Generation = 3 then
     begin
-      discard TrySend(State.Painted, 3);
+      discard Tasks.TrySend(State.Painted, 3);
     end;
   end if;
 
-  return TuiElementBuilders.MakeLabel('responsive');
+  return Tui.TuiElementBuilders.MakeLabel('responsive');
 end function;
 
 function ReleaseAfterPaint(Painted: channel of integer; Gate: channel of boolean): boolean;
 begin
   // A timeout releases the gate even on the old blocking implementation.
-  const Paint: result of (integer, string) := ReceiveWithTimeout(Painted, 3000);
-  discard Send(Gate, true);
+  const Paint: result of (integer, string) := Tasks.ReceiveWithTimeout(Painted, 3000);
+  discard Tasks.Send(Gate, true);
   return Paint.IsOk();
 end function;
 
 begin
   scope
-    const Inbox: channel of integer := CreateChannel(1);
-    const Gate: channel of boolean := CreateChannel(1);
-    const Started: channel of integer := CreateChannel(4);
-    const Painted: channel of integer := CreateChannel(1);
-    const App: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(20, 4));
+    const Inbox: channel of integer := Tasks.CreateChannel(1);
+    const Gate: channel of boolean := Tasks.CreateChannel(1);
+    const Started: channel of integer := Tasks.CreateChannel(4);
+    const Painted: channel of integer := Tasks.CreateChannel(1);
+    const App: Tui.TuiApplication := Tui.TuiApplication.OpenForTest(Tui.TuiSize.Create(20, 4));
     var State: Model := App.RunBackgroundIterations(Model(Generation := 0, Gate := Gate, Started := Started, Painted := Painted), Inbox, Update, UpdateMessage, View, 1, 0);
-    AssertEquals(0, ReceiveWithTimeout(Started, 5000).Unwrap());
+    Test.AssertEquals(0, Tasks.ReceiveWithTimeout(Started, 5000).Unwrap());
     const Observer: task of boolean := go ReleaseAfterPaint(Painted, Gate);
     for Index: integer := 1 to 3 do
       begin
-        App.Inject(TuiMsg.Tick(1));
+        App.Inject(Tui.TuiMsg.Tick(1));
         State := App.RunBackgroundIterations(State, Inbox, Update, UpdateMessage, View, 1, 0);
-        AssertEquals(Index, State.Generation);
+        Test.AssertEquals(Index, State.Generation);
       end;
     end for;
 
-    AssertTrue(Wait(Observer));
-    var Replacement: result of (integer, string) := ReceiveWithTimeout(Started, 0);
-    const Deadline: integer := MonotonicMillis() + 5000;
-    while Replacement.IsError() and (MonotonicMillis() < Deadline) do
+    Test.AssertTrue(Tasks.Wait(Observer));
+    var Replacement: result of (integer, string) := Tasks.ReceiveWithTimeout(Started, 0);
+    const Deadline: integer := Time.MonotonicMillis() + 5000;
+    while Replacement.IsError() and (Time.MonotonicMillis() < Deadline) do
       begin
         State := App.RunBackgroundIterations(State, Inbox, Update, UpdateMessage, View, 1, 0);
-        Replacement := ReceiveWithTimeout(Started, 1);
+        Replacement := Tasks.ReceiveWithTimeout(Started, 1);
       end;
     end while;
 
-    AssertEquals(3, Replacement.Unwrap());
-    AssertTrue(ReceiveWithTimeout(Started, 0).IsError());
+    Test.AssertEquals(3, Replacement.Unwrap());
+    Test.AssertTrue(Tasks.ReceiveWithTimeout(Started, 0).IsError());
     App.CloseWithBackground(Inbox);
-    discard CloseChannel(Gate);
-    discard CloseChannel(Started);
-    discard CloseChannel(Painted);
+    discard Tasks.CloseChannel(Gate);
+    discard Tasks.CloseChannel(Started);
+    discard Tasks.CloseChannel(Painted);
   end scope;
 end.

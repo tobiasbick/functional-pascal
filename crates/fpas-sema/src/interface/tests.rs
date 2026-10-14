@@ -11,8 +11,8 @@ mod distinct_types;
 mod import_aliases;
 mod initialization;
 mod public_signatures;
+mod qualified_names;
 mod record_construction;
-mod short_names;
 mod task_scopes;
 mod type_order;
 mod worker_state;
@@ -90,13 +90,7 @@ fn consumer_analysis_uses_interface_without_dependency_ast() {
     );
 
     let consumer = parse_unit(
-        "unit Demo.Consumer;
-         uses Demo.Api;
-         public function Run(Value: integer): integer;
-         begin
-           const Current: State := State.Ready;
-           return Next(Value);
-         end function;\nend unit;",
+        "unit Demo.Consumer;\n         uses Demo.Api as Api;\n         public function Run(Value: integer): integer;\n         begin\n           const Current: Api.State := Api.State.Ready;\n           return Api.Next(Value);\n         end function;\nend unit;",
     );
     let consumer_analysis = analyze_unit(
         &consumer,
@@ -138,9 +132,7 @@ fn enum_backing_values_survive_export_import_and_alias_export() {
     );
 
     let consumer = parse_unit(
-        "unit Demo.Aliases;
-         uses Demo.Values;
-         public type StateAlias = State;\nend unit;",
+        "unit Demo.Aliases;\n         uses Demo.Values as Values;\n         public type StateAlias = Values.State;\nend unit;",
     );
     let consumer_interface = analyze_unit(&consumer, &[dependency_interface])
         .expect("consumer analysis must succeed")
@@ -195,7 +187,7 @@ fn private_body_changes_do_not_change_interface_digest() {
 }
 
 #[test]
-fn imported_name_ambiguity_is_reported_only_when_short_name_is_used() {
+fn imported_routines_require_the_selected_unit_alias() {
     let first = parse_unit(
         "unit Demo.First;
          public function Value(): integer;
@@ -218,10 +210,7 @@ fn imported_name_ambiguity_is_reported_only_when_short_name_is_used() {
     ];
 
     let qualified = parse_unit(
-        "unit Demo.Qualified;
-         uses Demo.First, Demo.Second;
-         public function Run(): integer;
-         begin return Demo.First.Value() + Demo.Second.Value(); end function;\nend unit;",
+        "unit Demo.Qualified;\n         uses Demo.First as First, Demo.Second as Second;\n         public function Run(): integer;\n         begin return First.Value() + Second.Value(); end function;\nend unit;",
     );
     let qualified_analysis = analyze_unit(&qualified, &interfaces).expect("qualified analysis");
     assert!(
@@ -231,23 +220,20 @@ fn imported_name_ambiguity_is_reported_only_when_short_name_is_used() {
     );
 
     let ambiguous = parse_unit(
-        "unit Demo.Ambiguous;
-         uses Demo.First, Demo.Second;
-         public function Run(): integer;
-         begin return Value(); end function;\nend unit;",
+        "unit Demo.Ambiguous;\n         uses Demo.First as First, Demo.Second as Second;\n         public function Run(): integer;\n         begin return Value(); end function;\nend unit;",
     );
     let ambiguous_analysis = analyze_unit(&ambiguous, &interfaces).expect("ambiguous analysis");
     assert_eq!(ambiguous_analysis.metadata.errors.len(), 1);
     assert!(
         ambiguous_analysis.metadata.errors[0]
             .message
-            .contains("Ambiguous imported symbol `Value`")
+            .contains("requires an explicit qualifier")
     );
     assert!(ambiguous_analysis.interface.is_none());
 }
 
 #[test]
-fn imported_enum_type_qualified_short_variant_is_ambiguous() {
+fn imported_enum_types_and_variants_require_the_unit_alias() {
     let first = parse_unit(
         "unit Demo.First;
          public type Color = enum Red; Blue; end enum;\nend unit;",
@@ -268,10 +254,7 @@ fn imported_enum_type_qualified_short_variant_is_ambiguous() {
     ];
 
     let qualified = parse_unit(
-        "unit Demo.Qualified;
-         uses Demo.First, Demo.Second;
-         public function Run(): Demo.First.Color;
-         begin return Demo.First.Color.Red; end function;\nend unit;",
+        "unit Demo.Qualified;\n         uses Demo.First as First, Demo.Second as Second;\n         public function Run(): First.Color;\n         begin return First.Color.Red; end function;\nend unit;",
     );
     let qualified_analysis = analyze_unit(&qualified, &interfaces).expect("qualified analysis");
     assert!(
@@ -281,17 +264,14 @@ fn imported_enum_type_qualified_short_variant_is_ambiguous() {
     );
 
     let ambiguous = parse_unit(
-        "unit Demo.Ambiguous;
-         uses Demo.First, Demo.Second;
-         public function Run(): Demo.First.Color;
-         begin return Color.Red; end function;\nend unit;",
+        "unit Demo.Ambiguous;\n         uses Demo.First as First, Demo.Second as Second;\n         public function Run(): First.Color;\n         begin return Color.Red; end function;\nend unit;",
     );
     let ambiguous_analysis = analyze_unit(&ambiguous, &interfaces).expect("ambiguous analysis");
     assert!(
         ambiguous_analysis.metadata.errors.iter().any(|error| {
-            error.code == fpas_diagnostics::codes::SEMA_AMBIGUOUS_IMPORTED_NAME
+            error.code == fpas_diagnostics::codes::SEMA_UNQUALIFIED_NAME
                 && error.help.as_deref().is_some_and(|help| {
-                    help.contains("Demo.First.Color") && help.contains("Demo.Second.Color")
+                    help.contains("First.Color.Red") && help.contains("Second.Color.Red")
                 })
         }),
         "{:#?}",

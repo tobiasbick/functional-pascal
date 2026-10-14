@@ -65,12 +65,17 @@ Read the pages relevant to the change. For exact productions, consult
   depth. Use case arms to extract payloads. `is` is reserved. Return binders
   require the colon in `ensures (Returned): Expression;`; `ensures (Flag);`
   is an ordinary grouped Boolean condition.
-- Import every referenced unit with `uses`, including fully qualified `Std.*`
-  calls. Qualify ambiguous short names with the current unit name from its handbook.
+- Import every referenced unit with `uses Unit.Path as Alias;`, including `Std.*`.
+  Access imported public names only through the source-local alias.
   Import each unit only once per file, comparing names case-insensitively.
   `uses Std.Math as Math;` exposes only `Math.Name`, with no short names or
   access through `Std.Math.Name`. Alias names cannot be shadowed by declarations,
   parameters, loop variables, or pattern bindings. `as` remains contextual in `uses`.
+- Qualify every user enum variant with its visible type: `Color.Red` locally or
+  `Domain.Color.Red` through an import. Use the same form in construction,
+  comparisons, nested patterns, and `is` tests. Some/None/Ok/Error keep their
+  reserved language forms; explicit local type aliases and native operations
+  retain their existing rules.
 - Functions return with `return`. Consume function results or use an allowed
   explicit [discard](../../../docs/pascal/language/functions/discard.md).
 - Go is one expression and requires a lexical scope in the same routine.

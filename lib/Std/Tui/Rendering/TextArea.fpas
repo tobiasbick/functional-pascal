@@ -1,8 +1,9 @@
 unit Std.Tui.Rendering.TextArea;
 
 uses
-  Std.Tui.Cells.Cell, Std.Tui.Cells.StyleRole, Std.Tui.Geometry.Point, Std.Tui.Geometry.Rect,
-  Std.Tui.Rendering.Canvas, Std.Tui.Text.TextArea;
+  Std.Tui.Cells.Cell as Cell, Std.Tui.Cells.StyleRole as StyleRole, Std.Tui.Geometry.Point as Point,
+  Std.Tui.Geometry.Rect as Rect, Std.Tui.Rendering.Canvas as RenderingCanvas,
+  Std.Tui.Text.TextArea as TextArea;
 
 // Paints clipped text-area lines and a focused visible caret.
 //
@@ -16,14 +17,14 @@ uses
 // - `NormalRole`: Style role used in the normal state.
 // - `FocusedRole`: Style role used while the control owns focus.
 public procedure TuiPaintTextArea(
-  Canvas: TuiCanvas;
-  Bounds: TuiRect;
+  Canvas: RenderingCanvas.TuiCanvas;
+  Bounds: Rect.TuiRect;
   Text: string;
   Caret: integer;
-  Offset: TuiPoint;
+  Offset: Point.TuiPoint;
   Focused: boolean;
-  NormalRole: TuiStyleRole;
-  FocusedRole: TuiStyleRole
+  NormalRole: StyleRole.TuiStyleRole;
+  FocusedRole: StyleRole.TuiStyleRole
 );
 begin
   if Bounds.IsEmpty() then
@@ -31,7 +32,7 @@ begin
       return;
     end;
   end if;
-  const Area: TuiCanvas := Canvas.Child(Bounds);
+  const Area: RenderingCanvas.TuiCanvas := Canvas.Child(Bounds);
   const Lines: array of string := Text.Split(string.Chr(10));
   const LineCount: integer := Lines.Length();
   for Row: integer := 0 to Bounds.Height - 1 do
@@ -39,7 +40,7 @@ begin
       const Line: integer := Offset.Y + Row;
       if Line < LineCount then
         begin
-          Area.WriteText(TuiPoint.Create(- Offset.X, Row), Lines[Line], NormalRole);
+          Area.WriteText(Point.TuiPoint.Create(- Offset.X, Row), Lines[Line], NormalRole);
         end;
       end if;
     end;
@@ -47,13 +48,13 @@ begin
 
   if Focused then
     begin
-      const Position: TuiTextAreaPosition := TuiTextAreaLocate(Text, Caret);
+      const Position: TextArea.TuiTextAreaPosition := TextArea.TuiTextAreaLocate(Text, Caret);
       const CaretX: integer := Position.DisplayColumn - Offset.X;
       const CaretY: integer := Position.Line - Offset.Y;
       if (((CaretX >= 0) and (CaretX < Bounds.Width)) and (CaretY >= 0)) and
          (CaretY < Bounds.Height) then
         begin
-          Area.PutCell(TuiPoint.Create(CaretX, CaretY), TuiCell.Create('▏', FocusedRole));
+          Area.PutCell(Point.TuiPoint.Create(CaretX, CaretY), Cell.TuiCell.Create('▏', FocusedRole));
         end;
       end if;
     end;

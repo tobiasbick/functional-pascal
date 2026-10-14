@@ -232,7 +232,7 @@ include = ["src/**/*.fpas"]
     );
     let main = temp.write(
         "app/src/main.fpas",
-        "program App;\n\nuses Demo.Math;\n\nbegin\n  const Value: integer := Answer();\nend.\n",
+        "program App;\n\nuses Demo.Math as Math;\n\nbegin\n  const Value: integer := Math.Answer();\nend.\n",
     );
     let mut service = LanguageService::load(&workspace);
 
@@ -280,7 +280,11 @@ fn diagnostic_analysis_stays_current_when_a_sibling_source_vanishes() {
     let mut service = LanguageService::load(&manifest);
     service
         .documents_mut()
-        .open_document(&main, 1, "program App;\n\nuses Demo.Math;\n\nbegin\nend.\n")
+        .open_document(
+            &main,
+            1,
+            "program App;\n\nuses Demo.Math as Math;\n\nbegin\nend.\n",
+        )
         .expect("open main");
     let baseline = service
         .analyze_document_diagnostics(&main)
@@ -324,7 +328,7 @@ fn diagnostic_analysis_stays_current_when_a_sibling_source_vanishes() {
         .apply_full_text(
             &main,
             3,
-            "program App;\n\nuses Demo.Math;\n\nbegin\n  const Value: integer := Answer();\nend.\n",
+            "program App;\n\nuses Demo.Math as Math;\n\nbegin\n  const Value: integer := Math.Answer();\nend.\n",
         )
         .expect("restore main");
     let restored = service

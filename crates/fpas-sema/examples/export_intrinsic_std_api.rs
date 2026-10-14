@@ -2,6 +2,8 @@
 
 #[path = "export_intrinsic_std_api/documentation.rs"]
 mod documentation;
+#[path = "export_intrinsic_std_api/qualified_names.rs"]
+mod qualified_names;
 
 use std::collections::{BTreeMap, HashMap};
 use std::fmt::Write as _;
@@ -141,7 +143,7 @@ fn render_unit(
     render_types(&mut output, unit, &mut by_name, documentation)?;
     render_routines(&mut output, unit, &by_name, documentation);
     output.push_str("\nend unit;\n");
-    Ok(output)
+    qualified_names::source_names(unit, &output)
 }
 
 fn render_constants(

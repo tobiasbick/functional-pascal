@@ -1,7 +1,7 @@
 program T;
 
-uses Std.Console, Std.Math;
+uses Std.Console as Console, Std.Math as Math;
 
 begin
-  WriteLn(Log2(-1.0));
+  Console.WriteLn(Math.Log2(-1.0));
 end.

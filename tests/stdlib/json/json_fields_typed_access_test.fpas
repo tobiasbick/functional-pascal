@@ -1,13 +1,13 @@
 program JsonFieldsTypedAccessTest;
 
-uses Std.Json, Std.Json.Fields, Std.Test;
+uses Std.Json as Json, Std.Json.Fields as JsonFields, Std.Test as Test;
 
 function ErrorText<T>(Value: result of (T, string)): string;
 begin
   case Value of
     when Ok(_):
       begin
-        Fail('expected an error result');
+        Test.Fail('expected an error result');
         return '';
       end;
     when Error(const Message):
@@ -18,26 +18,33 @@ begin
 end function;
 
 begin
-  const Fields: dict of string to JsonValue := ParseObject('{"s":"x","b":true,"n":2.5,"i":-7,"big":1e300,"o":{"k":1},"rows":["a","b"],"mixed":["a",1]}')
-                                                 .Unwrap();
-  AssertEquals('x', StringField(Fields, 's').Unwrap());
-  AssertTrue(BooleanField(Fields, 'b').Unwrap());
-  AssertEquals(2.5, NumberField(Fields, 'n').Unwrap());
-  AssertEquals(-7, IntegerField(Fields, 'i').Unwrap());
-  AssertEquals(1, ObjectField(Fields, 'o').Unwrap().Length());
-  AssertEquals(2, ArrayField(Fields, 'mixed').Unwrap().Length());
-  AssertEquals(2, StringArrayField(Fields, 'rows').Unwrap().Length());
-  AssertEquals('missing field absent', ErrorText(Field(Fields, 'absent')));
-  AssertEquals('field n must be a string', ErrorText(StringField(Fields, 'n')));
-  AssertEquals('field n must be an integer', ErrorText(IntegerField(Fields, 'n')));
-  AssertEquals('field s must be a number', ErrorText(IntegerField(Fields, 's')));
+  const Fields: dict of string to Json.JsonValue := JsonFields.ParseObject('{"s":"x","b":true,"n":2.5,"i":-7,"big":1e300,"o":{"k":1},"rows":["a","b"],"mixed":["a",1]}')
+                                                      .Unwrap();
+  Test.AssertEquals('x', JsonFields.StringField(Fields, 's').Unwrap());
+  Test.AssertTrue(JsonFields.BooleanField(Fields, 'b').Unwrap());
+  Test.AssertEquals(2.5, JsonFields.NumberField(Fields, 'n').Unwrap());
+  Test.AssertEquals(-7, JsonFields.IntegerField(Fields, 'i').Unwrap());
+  Test.AssertEquals(1, JsonFields.ObjectField(Fields, 'o').Unwrap().Length());
+  Test.AssertEquals(2, JsonFields.ArrayField(Fields, 'mixed').Unwrap().Length());
+  Test.AssertEquals(2, JsonFields.StringArrayField(Fields, 'rows').Unwrap().Length());
+  Test.AssertEquals('missing field absent', ErrorText(JsonFields.Field(Fields, 'absent')));
+  Test.AssertEquals('field n must be a string', ErrorText(JsonFields.StringField(Fields, 'n')));
+  Test.AssertEquals('field n must be an integer', ErrorText(JsonFields.IntegerField(Fields, 'n')));
+  Test.AssertEquals('field s must be a number', ErrorText(JsonFields.IntegerField(Fields, 's')));
   // Out-of-range numbers are reported instead of raising a Trunc runtime error.
-  AssertEquals('field big is outside the integer range', ErrorText(IntegerField(Fields, 'big')));
-  AssertEquals('field mixed must be an array of strings', ErrorText(StringArrayField(Fields, 'mixed')));
-  AssertEquals('field s must be an object', ErrorText(ObjectField(Fields, 's')));
-  AssertTrue(RequireOnlyFields(ParseObject('{"a":1}').Unwrap(), ['a', 'b']).Unwrap());
-  AssertEquals('unexpected field c', ErrorText(RequireOnlyFields(ParseObject('{"a":1,"c":2}')
-                                                                   .Unwrap(), ['a', 'b'])));
-  AssertEquals('JSON root must be an object', ErrorText(ParseObject('[1]')));
-  AssertTrue(ParseObject('{').IsError());
+  Test.AssertEquals('field big is outside the integer range', ErrorText(JsonFields.IntegerField(Fields, 'big')));
+  Test.AssertEquals('field mixed must be an array of strings', ErrorText(JsonFields.StringArrayField(Fields, 'mixed')));
+  Test.AssertEquals('field s must be an object', ErrorText(JsonFields.ObjectField(Fields, 's')));
+  Test.AssertTrue(JsonFields.RequireOnlyFields(JsonFields.ParseObject('{"a":1}').Unwrap(), [
+                                                                                             'a',
+                                                                                             'b'
+                                                                                           ])
+                    .Unwrap());
+  Test.AssertEquals('unexpected field c', ErrorText(JsonFields.RequireOnlyFields(JsonFields.ParseObject('{"a":1,"c":2}')
+                                                                                   .Unwrap(), [
+                                                                                                'a',
+                                                                                                'b'
+                                                                                              ])));
+  Test.AssertEquals('JSON root must be an object', ErrorText(JsonFields.ParseObject('[1]')));
+  Test.AssertTrue(JsonFields.ParseObject('{').IsError());
 end.

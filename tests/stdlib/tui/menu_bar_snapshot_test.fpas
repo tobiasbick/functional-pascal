@@ -1,34 +1,34 @@
 program TuiMenuBarSnapshotTest;
 
-uses Std.Test, Std.Tui;
+uses Std.Test as Test, Std.Tui as Tui;
 
 type MenuModel = record
 end record;
 
-function ViewMenu(State: MenuModel): TuiElement;
+function ViewMenu(State: MenuModel): Tui.TuiElement;
 begin
-  return TuiElementBuilders.MakeDesktop(Some(TuiControlId.Create(1)), [
-                                                                        TuiElementBuilders.MakeMenuBar([
-                                                                                                         TuiMenuItem.Create(TuiControlId.Create(1), 'Open', TuiAction.Create(10)),
-                                                                                                         TuiMenuItem.Disabled(TuiControlId.Create(2), 'Save', TuiAction.Create(20))
-                                                                                                       ])
-                                                                      ]);
+  return Tui.TuiElementBuilders.MakeDesktop(Some(Tui.TuiControlId.Create(1)), [
+                                                                                Tui.TuiElementBuilders.MakeMenuBar([
+                                                                                                                     Tui.TuiMenuItem.Create(Tui.TuiControlId.Create(1), 'Open', Tui.TuiAction.Create(10)),
+                                                                                                                     Tui.TuiMenuItem.Disabled(Tui.TuiControlId.Create(2), 'Save', Tui.TuiAction.Create(20))
+                                                                                                                   ])
+                                                                              ]);
 end function;
 
-function UpdateMenu(State: MenuModel; Msg: TuiMsg; Cmd: TuiCmdOutput): MenuModel;
+function UpdateMenu(State: MenuModel; Msg: Tui.TuiMsg; Cmd: Tui.TuiCmdOutput): MenuModel;
 begin
-  Cmd.Set(TuiCmd.NoCommand);
+  Cmd.Set(Tui.TuiCmd.NoCommand);
   return State;
 end function;
 
 begin
-  var App: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(20, 3));
+  var App: Tui.TuiApplication := Tui.TuiApplication.OpenForTest(Tui.TuiSize.Create(20, 3));
   var Model: MenuModel := MenuModel();
   Model := App.RunIterations(Model, UpdateMenu, ViewMenu, 0, 0);
-  const Surface: TuiSurfaceSnapshot := App.SurfaceSnapshot();
-  AssertTrue(Surface.LineAt(0).Contains(' Open  Save '));
-  AssertTrue(Surface.CellAt(0, 0).Role = TuiStyleRole.MenuSelected);
-  AssertTrue(Surface.CellAt(7, 0).Role = TuiStyleRole.MenuDisabled);
-  AssertTrue(Surface.CellAt(19, 0).Role = TuiStyleRole.MenuNormal);
+  const Surface: Tui.TuiSurfaceSnapshot := App.SurfaceSnapshot();
+  Test.AssertTrue(Surface.LineAt(0).Contains(' Open  Save '));
+  Test.AssertTrue(Surface.CellAt(0, 0).Role = Tui.TuiStyleRole.MenuSelected);
+  Test.AssertTrue(Surface.CellAt(7, 0).Role = Tui.TuiStyleRole.MenuDisabled);
+  Test.AssertTrue(Surface.CellAt(19, 0).Role = Tui.TuiStyleRole.MenuNormal);
   App.Close();
 end.

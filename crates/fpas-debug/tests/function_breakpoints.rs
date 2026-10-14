@@ -52,8 +52,7 @@ fn jsonl_function_breakpoints_bind_metadata_and_apply_hit_policy() {
     assert_eq!(breakpoint["match_count"], 1);
     assert_eq!(breakpoint["matched_functions"], json!([1]));
 
-    let _ = server.handle_line(&request(3, "launch", json!({"stop_on_entry":false})));
-    let mut records = Vec::new();
+    let mut records = server.handle_line(&request(3, "launch", json!({"stop_on_entry":false})));
     while server.status() == ServerStatus::Running {
         records.extend(server.wait());
     }
@@ -84,8 +83,7 @@ fn invalid_replace_is_atomic_and_missing_selector_is_unverified() {
     ));
     assert_eq!(rejected[0]["success"], false);
     assert_eq!(rejected[0]["error"]["code"], "invalid_request");
-    let _ = server.handle_line(&request(4, "launch", json!({"stop_on_entry":false})));
-    let mut records = Vec::new();
+    let mut records = server.handle_line(&request(4, "launch", json!({"stop_on_entry":false})));
     while server.status() == ServerStatus::Running {
         records.extend(server.wait());
     }
@@ -123,8 +121,7 @@ fn function_breakpoint_condition_uses_the_shared_read_only_policy() {
         "function_breakpoints.replace",
         json!({"breakpoints":[{"name":"Helper","condition":"Value = 2"}]}),
     ));
-    let _ = server.handle_line(&request(3, "launch", json!({"stop_on_entry":false})));
-    let mut records = Vec::new();
+    let mut records = server.handle_line(&request(3, "launch", json!({"stop_on_entry":false})));
     while server.status() == ServerStatus::Running {
         records.extend(server.wait());
     }
@@ -157,8 +154,7 @@ fn same_boundary_source_log_precedes_the_single_function_stop() {
     let function_id = function["breakpoint_id"].clone();
     assert_eq!(source_log[0]["body"]["verified"], true, "{source_log:?}");
 
-    let _ = server.handle_line(&request(4, "launch", json!({"stop_on_entry":false})));
-    let mut records = Vec::new();
+    let mut records = server.handle_line(&request(4, "launch", json!({"stop_on_entry":false})));
     while server.status() == ServerStatus::Running {
         records.extend(server.wait());
     }

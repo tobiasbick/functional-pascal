@@ -4,22 +4,25 @@
 
 program NotesHeadlessBenchmark;
 
-uses Notes.Model, Notes.Update, Notes.View, Std.Args, Std.Console, Std.Conv, Std.Time, Std.Tui;
+uses
+  Notes.Model as NotesModel, Notes.Update as Update, Notes.View as View, Std.Args as Args,
+  Std.Console as Console, Std.Conv as Conv, Std.Time as Time, Std.Tui as Tui;
 
 const WarmupIterations: integer := 25;
 const DeltaMillis: integer := 16;
 const NoteCount: integer := 40;
 
-function BenchmarkNotes(): array of Note;
+function BenchmarkNotes(): array of NotesModel.Note;
 begin
-  var Notes: array of Note := [];
+  var Notes: array of NotesModel.Note := [];
   for Index: integer := 1 to NoteCount do
     begin
-      var NoteValue: Note := NoteCreate('benchmark-' + IntToStr(Index), 1700000000000 + Index);
-      NoteValue.Title := 'Performance note ' + IntToStr(Index) + ' with a representative title';
+      var NoteValue: NotesModel.Note := NotesModel.NoteCreate('benchmark-' + Conv.IntToStr(Index), 1700000000000 +
+                                                                                                   Index);
+      NoteValue.Title := 'Performance note ' + Conv.IntToStr(Index) + ' with a representative title';
       NoteValue.Tags := ['performance', 'tui', 'benchmark'];
       NoteValue.Pinned := (Index mod 7) = 0;
-      NoteValue.Body := 'This is a representative note body for frame ' + IntToStr(Index) + '.' + string.Chr(10) +
+      NoteValue.Body := 'This is a representative note body for frame ' + Conv.IntToStr(Index) + '.' + string.Chr(10) +
                         'It keeps the editor, list, metadata, and layout paths active.';
       Notes.PushInPlace(NoteValue);
     end;
@@ -29,21 +32,21 @@ begin
 end function;
 
 begin
-  if (ParamCount() < 1) or (ParamCount() > 2) then
+  if (Args.ParamCount() < 1) or (Args.ParamCount() > 2) then
     begin
       panic('usage: notes-headless-benchmark.fpasprj -- ITERATIONS [MAX_MILLIS]');
     end;
   end if;
-  const Iterations: integer := StrToInt(ParamStr(0));
+  const Iterations: integer := Conv.StrToInt(Args.ParamStr(0));
   if Iterations < 1 then
     begin
       panic('ITERATIONS must be positive');
     end;
   end if;
   var MaxMillis: integer := 0;
-  if ParamCount() = 2 then
+  if Args.ParamCount() = 2 then
     begin
-      MaxMillis := StrToInt(ParamStr(1));
+      MaxMillis := Conv.StrToInt(Args.ParamStr(1));
       if MaxMillis < 1 then
         begin
           panic('MAX_MILLIS must be positive');
@@ -51,15 +54,15 @@ begin
       end if;
     end;
   end if;
-  const Loaded: NotesLoad := notes.model.notesload(Notes := BenchmarkNotes(), Issues := []);
-  var Model: NotesModel := NotesModelCreate('.temp-data/bench/notes', Loaded);
+  const Loaded: NotesModel.NotesLoad := NotesModel.NotesLoad(Notes := BenchmarkNotes(), Issues := []);
+  var Model: NotesModel.NotesModel := NotesModel.NotesModelCreate('.temp-data/bench/notes', Loaded);
   Model.Width := 120;
   Model.Height := 40;
-  var App: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(120, 40));
-  Model := App.RunIterations(Model, NotesUpdate, NotesView, WarmupIterations, DeltaMillis);
-  const Started: integer := MonotonicMillis();
-  Model := App.RunIterations(Model, NotesUpdate, NotesView, Iterations, DeltaMillis);
-  const Elapsed: integer := ElapsedMillis(Started);
+  var App: Tui.TuiApplication := Tui.TuiApplication.OpenForTest(Tui.TuiSize.Create(120, 40));
+  Model := App.RunIterations(Model, Update.NotesUpdate, View.NotesView, WarmupIterations, DeltaMillis);
+  const Started: integer := Time.MonotonicMillis();
+  Model := App.RunIterations(Model, Update.NotesUpdate, View.NotesView, Iterations, DeltaMillis);
+  const Elapsed: integer := Time.ElapsedMillis(Started);
   App.Close();
   var FramesPerSecond: integer := 0;
   if Elapsed > 0 then
@@ -68,22 +71,23 @@ begin
     end;
   end if;
 
-  WriteLn('iterations: ' + IntToStr(Iterations) + ', warm-up: ' + IntToStr(WarmupIterations));
-  WriteLn('elapsed: ' + IntToStr(Elapsed) + ' ms');
+  Console.WriteLn('iterations: ' + Conv.IntToStr(Iterations) + ', warm-up: ' +
+                  Conv.IntToStr(WarmupIterations));
+  Console.WriteLn('elapsed: ' + Conv.IntToStr(Elapsed) + ' ms');
   if Elapsed > 0 then
     begin
-      WriteLn('throughput: ' + IntToStr(FramesPerSecond) + ' frames/s');
+      Console.WriteLn('throughput: ' + Conv.IntToStr(FramesPerSecond) + ' frames/s');
     end;
   else
     begin
-      WriteLn('throughput: unavailable (elapsed time is 0 ms)');
+      Console.WriteLn('throughput: unavailable (elapsed time is 0 ms)');
     end;
   end if;
 
-  WriteLn('notes rendered: ' + IntToStr(Model.Notes.Length()));
+  Console.WriteLn('notes rendered: ' + Conv.IntToStr(Model.Notes.Length()));
   if (MaxMillis > 0) and (Elapsed > MaxMillis) then
     begin
-      panic('Notes TUI benchmark regression: ' + IntToStr(Elapsed) + ' ms exceeds limit ' + IntToStr(MaxMillis) +
+      panic('Notes TUI benchmark regression: ' + Conv.IntToStr(Elapsed) + ' ms exceeds limit ' + Conv.IntToStr(MaxMillis) +
             ' ms');
     end;
   end if;

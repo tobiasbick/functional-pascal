@@ -1,6 +1,6 @@
 program RecursiveEnumExpressionTest;
 
-uses Std.Test;
+uses Std.Test as Test;
 
 type Expr = enum
   Num(Value: integer);
@@ -27,5 +27,5 @@ begin
 end function;
 
 begin
-  AssertEquals(39, Eval(Expr.Mul(Expr.Add(Expr.Num(3), Expr.Num(10)), Expr.Num(3))));
+  Test.AssertEquals(39, Eval(Expr.Mul(Expr.Add(Expr.Num(3), Expr.Num(10)), Expr.Num(3))));
 end.

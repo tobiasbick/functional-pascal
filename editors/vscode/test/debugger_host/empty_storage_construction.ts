@@ -34,7 +34,7 @@ export async function verifyEmptyStorageConstruction(
   const lines = [
     "program DebuggerEmptyStorageConstruction;",
     "",
-    "uses Std.Console;",
+    "uses Std.Console as Console;",
     "",
     "type",
     "  Point = record",
@@ -59,8 +59,8 @@ export async function verifyEmptyStorageConstruction(
     "",
     "begin",
     "  var State: Holder := MakeInitialState();",
-    "  WriteLn(State.Count);",
-    "  WriteLn(State.Nested.X);",
+    "  Console.WriteLn(State.Count);",
+    "  Console.WriteLn(State.Nested.X);",
     "end.",
     "",
   ];

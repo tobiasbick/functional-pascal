@@ -1,6 +1,6 @@
 program OrdinaryNamesTest;
 
-uses Std.Test;
+uses Std.Test as Test;
 
 type Event = record
   Nil: integer;
@@ -24,8 +24,8 @@ end function;
 begin
   var Value: Event := Event(Nil := 1);
   Value.NIL := 2;
-  AssertEquals(2, Value.READ());
+  Test.AssertEquals(2, Value.READ());
   const Copy: Event := Value.WRITE(aSsIgNeD(3, 4));
-  AssertEquals(7, Copy.Read());
-  AssertEquals(2, Value.Read());
+  Test.AssertEquals(7, Copy.Read());
+  Test.AssertEquals(2, Value.Read());
 end.

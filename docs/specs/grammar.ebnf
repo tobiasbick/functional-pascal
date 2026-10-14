@@ -144,11 +144,10 @@ unit_heading        = 'unit' qualified_id ';' ;
 
 (* Units have no main block. They contain declarations only.        *)
 
-(* uses_clause: each import_entry names a unit to import. Plain imports bring public symbols into
-   scope under their short (unqualified) name. If two units export the same short name, the name is
-   ambiguous and the compiler reports an error at the point of use (not at the uses site). The fully
-   qualified name works for a plain import. An aliased import exposes public symbols only through
-   Alias.Name, without short names or access through the original path. Each unit occurs at most
+(* uses_clause: each import_entry requires an explicit alias. Imported public symbols use
+   Alias.Name and user enum variants use Alias.Type.Variant; no imported short names or original
+   unit paths are exposed. Local user enum variants use Type.Variant. Some/None/Ok/Error retain
+   their reserved language forms. Each unit occurs at most
    once per file's direct imports, comparing names case-insensitively. `as` is contextual immediately
    after the imported unit name, not a reserved keyword. User-defined project and library units may use qualified
    names but must not use `Std` as their leading segment. Intrinsic standard-library units use
@@ -157,7 +156,7 @@ unit_heading        = 'unit' qualified_id ';' ;
    units exported by that manifest. Unknown or non-exported `Std.*` units are rejected. *)
 
 uses_clause         = 'uses' import_entry { ',' import_entry } ';' ;
-import_entry        = qualified_id [ 'as' identifier ] ;
+import_entry        = qualified_id 'as' identifier ;
 
 main_block          = 'begin' statement_list 'end' ;
 

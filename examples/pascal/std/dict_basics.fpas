@@ -2,7 +2,7 @@
 
 program DictBasics;
 
-uses Std.Console, Std.Conv;
+uses Std.Console as Console, Std.Conv as Conv;
 
 function DoubleScore(V: integer): integer;
 begin
@@ -21,25 +21,25 @@ end function;
 
 begin
   const Scores: dict of string to integer := ['Ada': 95, 'Bob': 72, 'Cara': 91];
-  WriteLn('length: ', IntToStr(Scores.Length()));
-  WriteLn('has Ada: ', Scores.ContainsKey('Ada'));
+  Console.WriteLn('length: ', Conv.IntToStr(Scores.Length()));
+  Console.WriteLn('has Ada: ', Scores.ContainsKey('Ada'));
   const Merged: dict of string to integer := Scores.Merge(['Bob': 88, 'Dan': 70]);
-  WriteLn('merged Bob: ', IntToStr(Merged['Bob']));
+  Console.WriteLn('merged Bob: ', Conv.IntToStr(Merged['Bob']));
   case Merged.Get('Eve') of
     when Some(const V):
       begin
-        WriteLn('unexpected Eve: ', IntToStr(V));
+        Console.WriteLn('unexpected Eve: ', Conv.IntToStr(V));
       end;
     when None:
       begin
-        WriteLn('get missing: none (ok)');
+        Console.WriteLn('get missing: none (ok)');
       end;
   end case;
   const Doubled: dict of string to integer := Merged.Map(DoubleScore);
-  WriteLn('map Ada doubled: ', IntToStr(Doubled['Ada']));
+  Console.WriteLn('map Ada doubled: ', Conv.IntToStr(Doubled['Ada']));
   const Top: dict of string to integer := Merged.Filter(IsHighScore);
-  WriteLn('filter len: ', IntToStr(Top.Length()));
+  Console.WriteLn('filter len: ', Conv.IntToStr(Top.Length()));
   const Ks: array of string := Top.Keys();
-  WriteLn('keys array len: ', IntToStr(Ks.Length()));
-  WriteLn('score total: ', IntToStr(Scores.Reduce(0, SumScores)));
+  Console.WriteLn('keys array len: ', Conv.IntToStr(Ks.Length()));
+  Console.WriteLn('score total: ', Conv.IntToStr(Scores.Reduce(0, SumScores)));
 end.

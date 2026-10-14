@@ -215,30 +215,7 @@ impl Checker {
     }
 
     fn install_routine_symbol(&mut self, name: &str, symbol: Symbol, span: Span) -> RoutineInstall {
-        if self
-            .scopes
-            .define_with_declaration(name, symbol.clone(), span)
-        {
-            return RoutineInstall::Installed;
-        }
-
-        let Some(existing) = self.scopes.lookup_current(name) else {
-            return RoutineInstall::Duplicate;
-        };
-
-        if existing.kind != SymbolKind::BuiltinStd {
-            return RoutineInstall::Duplicate;
-        }
-
-        if let Some(existing) = self.scopes.lookup_mut(name) {
-            *existing = symbol;
-            self.scopes.set_declaration(name, span);
-            if self.scopes.scope_count() == 1 {
-                // Alias refresh must not remove a routine that replaced an imported builtin.
-                let canonical = crate::scope::canonical_symbol_name(name);
-                self.std_short_alias_keys.remove(&canonical);
-                self.short_builtin_redirect.remove(&canonical);
-            }
+        if self.scopes.define_with_declaration(name, symbol, span) {
             return RoutineInstall::Installed;
         }
 

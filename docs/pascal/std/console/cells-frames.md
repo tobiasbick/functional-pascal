@@ -64,8 +64,8 @@ end record;
 Use the constructors instead of assembling a `Color` record by hand:
 
 ```pascal
-const Accent: Color := RgbColor(255, 160, 32);
-const Tile: Cell := Cell(glyph := 'A', foreground := Accent, background := CrtColor(Black));
+const Accent: Console.Color := Console.RgbColor(255, 160, 32);
+const Tile: Console.Cell := Console.Cell(glyph := 'A', foreground := Accent, background := Console.CrtColor(Console.Black));
 ```
 
 `CrtColor` accepts `0..15`, including the named CRT constants such as `Black`, `LightGray`, and
@@ -102,11 +102,11 @@ positive; a fully off-screen rectangle has no visible effect.
 at the screen edge. A wide glyph reserves its following column as a continuation:
 
 ```pascal
-const Cells: array of Cell := [
-                                Cell(glyph := 'A', foreground := CrtColor(White), background := CrtColor(Black)),
-                                Cell(glyph := '中', foreground := RgbColor(80, 200, 255), background := CrtColor(Black))
+const Cells: array of Console.Cell := [
+                                Console.Cell(glyph := 'A', foreground := Console.CrtColor(Console.White), background := Console.CrtColor(Console.Black)),
+                                Console.Cell(glyph := '中', foreground := Console.RgbColor(80, 200, 255), background := Console.CrtColor(Console.Black))
                               ];
-WriteCells(1, 1, Cells);
+Console.WriteCells(1, 1, Cells);
 ```
 
 `GetCell` returns:
@@ -124,10 +124,10 @@ Without a frame, cell operations and existing console operations remain immediat
 screen changes until `Present`, reducing visible tearing in fullscreen redraws:
 
 ```pascal
-BeginFrame();
-FillRect(Rect(x := 1, y := 1, width := ScreenWidth(), height := ScreenHeight()), Cell(glyph := ' ', foreground := CrtColor(LightGray), background := CrtColor(Black)));
-WriteCells(1, 1, Cells);
-Present();
+Console.BeginFrame();
+Console.FillRect(Console.Rect(x := 1, y := 1, width := Console.ScreenWidth(), height := Console.ScreenHeight()), Console.Cell(glyph := ' ', foreground := Console.CrtColor(Console.LightGray), background := Console.CrtColor(Console.Black)));
+Console.WriteCells(1, 1, Cells);
+Console.Present();
 ```
 
 Frames may nest. Each `BeginFrame` requires a matching `Present`; an inner `Present` only decreases
@@ -150,9 +150,9 @@ not checked again for further expansion.
 Each handle is one-shot:
 
 ```pascal
-const Underlay: SavedRegion := SaveRegion(Rect(x := 10, y := 4, width := 24, height := 5));
-FillRect(Rect(x := 10, y := 4, width := 24, height := 5), Cell(glyph := ' ', foreground := CrtColor(White), background := Ansi256Color(24)));
-RestoreRegion(Underlay);
+const Underlay: Console.SavedRegion := Console.SaveRegion(Console.Rect(x := 10, y := 4, width := 24, height := 5));
+Console.FillRect(Console.Rect(x := 10, y := 4, width := 24, height := 5), Console.Cell(glyph := ' ', foreground := Console.CrtColor(Console.White), background := Console.Ansi256Color(24)));
+Console.RestoreRegion(Underlay);
 ```
 
 `RestoreRegion` restores the entire captured rectangle, including expanded columns outside

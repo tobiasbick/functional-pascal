@@ -115,13 +115,15 @@ define_codes!(PARSE_ALLOCATED_CODES => {
     ///
     /// Documentation: `docs/pascal/tools/diagnostics.md` (FP2021).
     PARSE_INTEGER_LITERAL_OVERFLOW = 2021;
+    /// A direct import omitted its required source-local alias.
+    /// Documentation: `docs/pascal/tools/diagnostics.md` (FP2022).
+    PARSE_MISSING_IMPORT_ALIAS = 2022;
 });
 
 define_codes!(SEMA_ALLOCATED_CODES => {
     SEMA_UNKNOWN_TYPE = 3001;
     SEMA_DUPLICATE_DECLARATION = 3002;
     SEMA_UNKNOWN_NAME = 3003;
-    SEMA_AMBIGUOUS_IMPORTED_NAME = 3004;
     SEMA_IMMUTABLE_ASSIGNMENT = 3005;
     SEMA_TYPE_MISMATCH = 3006;
     SEMA_WRONG_ARGUMENT_COUNT = 3007;
@@ -234,6 +236,9 @@ define_codes!(SEMA_ALLOCATED_CODES => {
     /// A worker's known callable dependencies access foreign mutable variables.
     /// Documentation: `docs/pascal/tools/diagnostics.md` (FP3042).
     SEMA_FOREIGN_TASK_STATE = 3042;
+    /// An imported name or user enum variant omitted its required source qualifier.
+    /// Documentation: `docs/pascal/tools/diagnostics.md` (FP3043).
+    SEMA_UNQUALIFIED_NAME = 3043;
 });
 
 define_codes!(COMPILE_ALLOCATED_CODES => {

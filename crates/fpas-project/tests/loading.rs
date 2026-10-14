@@ -455,7 +455,7 @@ include = ["src/**/*.fpas"]
     );
     write(
         &util_dir.join("src/util.fpas"),
-        "unit Lib.Util;\nuses Lib.Base;\nend unit;\n",
+        "unit Lib.Util;\nuses Lib.Base as Base;\nend unit;\n",
     );
 
     write(
@@ -474,7 +474,7 @@ include = ["src/**/*.fpas"]
     );
     write(
         &app_dir.join("src/main.fpas"),
-        "program Demo;\nuses Lib.Util;\nbegin\nend.\n",
+        "program Demo;\nuses Lib.Util as Util;\nbegin\nend.\n",
     );
 
     let loaded = load_project(&app_project).expect("project should load");

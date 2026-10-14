@@ -2,7 +2,8 @@
 unit Std.Tui.Rendering.Rule;
 
 uses
-  Std.Tui.Cells.StyleRole, Std.Tui.Geometry.Point, Std.Tui.Geometry.Rect, Std.Tui.Rendering.Canvas;
+  Std.Tui.Cells.StyleRole as StyleRole, Std.Tui.Geometry.Point as Point,
+  Std.Tui.Geometry.Rect as Rect, Std.Tui.Rendering.Canvas as RenderingCanvas;
 
 // Paints a thin horizontal separator with optional left-aligned text.
 //
@@ -10,7 +11,7 @@ uses
 // - `Canvas`: Canvas that receives the drawing operation.
 // - `Bounds`: Rectangle affected by the operation.
 // - `Text`: Text processed or displayed by the operation.
-public procedure TuiPaintRule(Canvas: TuiCanvas; Bounds: TuiRect; Text: string);
+public procedure TuiPaintRule(Canvas: RenderingCanvas.TuiCanvas; Bounds: Rect.TuiRect; Text: string);
 begin
   if Bounds.IsEmpty() then
     begin
@@ -18,11 +19,11 @@ begin
     end;
   end if;
 
-  Canvas.DrawHorizontalLine(Bounds.X, Bounds.Y, Bounds.Width, TuiStyleRole.Rule);
+  Canvas.DrawHorizontalLine(Bounds.X, Bounds.Y, Bounds.Width, StyleRole.TuiStyleRole.Rule);
   if (Text <> '') and (Bounds.Width > 4) then
     begin
-      Canvas.Child(TuiRect.Create(Bounds.X + 2, Bounds.Y, Bounds.Width - 4, 1))
-        .WriteText(TuiPoint.Create(0, 0), ' ' + Text + ' ', TuiStyleRole.Title);
+      Canvas.Child(Rect.TuiRect.Create(Bounds.X + 2, Bounds.Y, Bounds.Width - 4, 1))
+        .WriteText(Point.TuiPoint.Create(0, 0), ' ' + Text + ' ', StyleRole.TuiStyleRole.Title);
     end;
   end if;
 end procedure;

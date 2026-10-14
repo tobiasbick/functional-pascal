@@ -21,7 +21,7 @@ operations still recommend the implemented native receiver forms.
 ## Migration and documentation
 
 No language migration or diagnostic-code change. The
-[diagnostic reference](../../../pascal/tools/diagnostics.md#ambiguous-imports)
+[diagnostic reference](../../../pascal/tools/diagnostics.md#required-qualification)
 shows a real `ReadText` conflict and its valid qualified correction.
 
 ## Regression coverage

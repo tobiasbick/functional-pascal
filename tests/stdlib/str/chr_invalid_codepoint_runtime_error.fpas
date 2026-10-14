@@ -1,7 +1,7 @@
 program T;
 
-uses Std.Console;
+uses Std.Console as Console;
 
 begin
-  WriteLn(string.Chr(-1));
+  Console.WriteLn(string.Chr(-1));
 end.

@@ -29,22 +29,13 @@ fn computed_and_aggregate_constants_link_through_dependency_initializers() {
         &[],
     );
     let facade = unit(
-        "unit Facade; uses Original;
-        public const Derived: integer := Original.Second + Original.Fixed;
-        public const Values: array of integer := Original.Values;
-        end unit;",
+        "unit Facade; uses Original as OriginalUnit;\n        public const Derived: integer := OriginalUnit.Second + OriginalUnit.Fixed;\n        public const Values: array of integer := OriginalUnit.Values;\n        end unit;",
         std::slice::from_ref(&original.interface),
     );
     let interfaces = vec![original.interface.clone(), facade.interface.clone()];
     let root = crate::compile_program_object_with_support(
         &parse_ok(
-            "program Consumer;
-        uses Original, Facade;
-        const Final: integer := Facade.Derived + Original.First;
-        begin const Original: integer := 0;
-        if Final <> 45 or Original.Count() <> 2 or Original.First <> 1 then panic('initialization order'); end if;
-        if Facade.Values[1] <> 2 then panic('aggregate import'); end if;
-        case 42 of when Original.Fixed: null; else panic('static import'); end case; end.",
+            "program Consumer;\n        uses Original as OriginalUnit, Facade as FacadeUnit;\n        const Final: integer := FacadeUnit.Derived + OriginalUnit.First;\n        begin const Original: integer := 0;\n        if Final <> 45 or OriginalUnit.Count() <> 2 or OriginalUnit.First <> 1 then panic('initialization order'); end if;\n        if FacadeUnit.Values[1] <> 2 then panic('aggregate import'); end if;\n        case 42 of when OriginalUnit.Fixed: null; else panic('static import'); end case; end.",
         ),
         &interfaces,
         &interfaces,
@@ -71,18 +62,15 @@ fn writable_exports_and_value_parameters_survive_interface_round_trip() {
     let interfaces = [state.interface.clone()];
     let root = crate::compile_program_object_with_support(
         &parse_ok(
-            "program Consumer; uses State;
-            begin State.Current := State.Current + 3; State.Values[0] := 9;
-              const F: function(Value: integer): integer := Increment;
-              if F(State.Current) <> 5 or State.Current <> 4 or State.Values[0] <> 9 then panic('interface'); end if;
-            end.",
+            "program Consumer; uses State as StateUnit;\n            begin StateUnit.Current := StateUnit.Current + 3; StateUnit.Values[0] := 9;\n              const F: function(Value: integer): integer := StateUnit.Increment;\n              if F(StateUnit.Current) <> 5 or StateUnit.Current <> 4 or StateUnit.Values[0] <> 9 then panic('interface'); end if;\n            end.",
         ),
         &interfaces,
         &interfaces,
     )
     .expect("consumer object");
-    for target in ["State.Fixed", "State.Frozen[0]"] {
-        let source = format!("program Consumer; uses State; begin {target} := 2; end.");
+    for target in ["StateUnit.Fixed", "StateUnit.Frozen[0]"] {
+        let source =
+            format!("program Consumer; uses State as StateUnit; begin {target} := 2; end.");
         let errors = crate::compile_program_object_with_support(
             &parse_ok(&source),
             &interfaces,

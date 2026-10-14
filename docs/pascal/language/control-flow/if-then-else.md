@@ -9,11 +9,11 @@ the first matching branch runs. An `else` branch is optional.
 
 ```pascal
 if X > 0 then
-  WriteLn('positive');
+  Console.WriteLn('positive');
 elsif X = 0 then
-  WriteLn('zero');
+  Console.WriteLn('zero');
 else
-  WriteLn('negative');
+  Console.WriteLn('negative');
 end if;
 ```
 
@@ -21,10 +21,10 @@ Multiple statements need no compound wrapper:
 
 ```pascal
 if X > 10 then
-  WriteLn('large');
+  Console.WriteLn('large');
   X := X - 10;
 else
-  WriteLn('small');
+  Console.WriteLn('small');
 end if;
 ```
 
@@ -72,7 +72,7 @@ end function;
   evaluated.
 - All branches have one type, checked like an assignment. There is no numeric
   widening: `if Ready then 1 else 2.5 end if` is an error; write `1.0` or
-  `IntToReal(1)`. Values that take their type from context, such as `None` or
+  `Conv.IntToReal(1)` with `uses Std.Conv as Conv;`. Values that take their type from context, such as `None` or
   `[]`, take the type of the other branches, for example
   `if Found then Some(Value) else None end if`. The result must then match the
   expected type of its position. Branches also complete result-only generic

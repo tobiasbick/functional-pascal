@@ -57,7 +57,7 @@ fn parsed_unit(source: &str) -> fpas_parser::Unit {
 #[test]
 fn unknown_root_std_unit_is_rejected() {
     let graph = build_unit_graph(&[], &ProjectLinkMeta::default()).expect("empty graph");
-    let root_uses = uses("program App;\nuses Std.DoesNotExist;\nbegin\nend.\n");
+    let root_uses = uses("program App;\nuses Std.DoesNotExist as DoesNotExist;\nbegin\nend.\n");
 
     let error =
         resolve_program_units(&graph, &root_uses, None).expect_err("unknown Unit must fail");
@@ -76,10 +76,10 @@ fn unknown_transitive_std_unit_is_rejected() {
     let source = dir.join("feature.fpas");
     write(
         &source,
-        "unit Demo.Feature;\nuses Std.DoesNotExist;\nend unit;\n",
+        "unit Demo.Feature;\nuses Std.DoesNotExist as DoesNotExist;\nend unit;\n",
     );
     let graph = build_unit_graph(&[source], &ProjectLinkMeta::default()).expect("graph");
-    let root_uses = uses("program App;\nuses Demo.Feature;\nbegin\nend.\n");
+    let root_uses = uses("program App;\nuses Demo.Feature as Feature;\nbegin\nend.\n");
 
     let error =
         resolve_program_units(&graph, &root_uses, None).expect_err("unknown Unit must fail");
@@ -91,7 +91,7 @@ fn unknown_transitive_std_unit_is_rejected() {
 #[test]
 fn known_intrinsic_std_unit_needs_no_source_node() {
     let graph = build_unit_graph(&[], &ProjectLinkMeta::default()).expect("empty graph");
-    let root_uses = uses("program App;\nuses Std.Console;\nbegin\nend.\n");
+    let root_uses = uses("program App;\nuses Std.Console as Console;\nbegin\nend.\n");
 
     let resolved = resolve_program_units(&graph, &root_uses, None).expect("intrinsic Unit");
 
@@ -101,7 +101,7 @@ fn known_intrinsic_std_unit_needs_no_source_node() {
 #[test]
 fn source_defined_std_tui_must_be_present() {
     let graph = build_unit_graph(&[], &ProjectLinkMeta::default()).expect("empty graph");
-    let root_uses = uses("program App;\nuses Std.Tui;\nbegin\nend.\n");
+    let root_uses = uses("program App;\nuses Std.Tui as Tui;\nbegin\nend.\n");
 
     let error = resolve_program_units(&graph, &root_uses, None).expect_err("missing source Unit");
 
@@ -123,7 +123,7 @@ fn source_defined_std_tui_resolves_from_standard_library() {
     let graph =
         build_unit_graph_with_standard_library(&[], &ProjectLinkMeta::default(), &standard_library)
             .expect("graph");
-    let root_uses = uses("program App;\nuses Std.Tui;\nbegin\nend.\n");
+    let root_uses = uses("program App;\nuses Std.Tui as Tui;\nbegin\nend.\n");
 
     let resolved = resolve_program_units(&graph, &root_uses, None).expect("source Unit");
 
@@ -136,7 +136,7 @@ fn graph_dependencies_come_from_source_instead_of_matching_hash_sidecar() {
     let dir = temp_dir("sidecar");
     let feature = dir.join("feature.fpas");
     let real = dir.join("real.fpas");
-    let source = b"unit Demo.Feature;\nuses Demo.Real;\nend unit;\n";
+    let source = b"unit Demo.Feature;\nuses Demo.Real as DemoReal;\nend unit;\n";
     fs::create_dir_all(&dir).expect("fixture directory");
     fs::write(&feature, source).expect("feature source");
     write(&real, "unit Demo.Real;\nend unit;\n");
@@ -186,7 +186,7 @@ fn lexical_aliases_preserve_library_exports() {
     );
     let graph = build_unit_graph(&[source], &link_meta).expect("graph");
     for source in [
-        "program App; uses Lib.Internal; begin end.",
+        "program App; uses Lib.Internal as Internal; begin end.",
         "program App; uses Lib.Internal as Internal; begin end.",
     ] {
         let error =
@@ -237,7 +237,7 @@ fn symlink_alias_preserves_library_origin() {
         .library_export_policies
         .insert(library, LibraryExportPolicy::ListedUnits(HashSet::new()));
     let graph = build_unit_graph(&[source], &link_meta).expect("graph");
-    let root_uses = uses("program App;\nuses Lib.Internal;\nbegin\nend.\n");
+    let root_uses = uses("program App;\nuses Lib.Internal as Internal;\nbegin\nend.\n");
 
     let error =
         resolve_program_units(&graph, &root_uses, None).expect_err("private Unit must fail");

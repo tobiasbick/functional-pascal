@@ -31,16 +31,7 @@ fn named_declarations_keep_execution_and_format_idempotently() {
     write_text(&unit_path, "unit Empty; end unit;");
     write_text(
         &path,
-        "program Demo; uses Std.Console;
-        type Status = enum Ready; end enum;
-        type Point = record Value: integer;
-            function ReadValue(Self: Point): integer; begin return Self.Value; end function;
-        end record;
-        function Answer(): integer;
-            procedure Prepare(); begin return; end procedure;
-        begin Prepare(); const P: Point := Point( Value := 42 ); return P.ReadValue(); end function;
-        procedure Show(); begin WriteLn(Answer()); end procedure;
-        begin Show(); end.",
+        "program Demo; uses Std.Console as Console;\n        type Status = enum Ready; end enum;\n        type Point = record Value: integer;\n            function ReadValue(Self: Point): integer; begin return Self.Value; end function;\n        end record;\n        function Answer(): integer;\n            procedure Prepare(); begin return; end procedure;\n        begin Prepare(); const P: Point := Point( Value := 42 ); return P.ReadValue(); end function;\n        procedure Show(); begin Console.WriteLn(Answer()); end procedure;\n        begin Show(); end.",
     );
     let run = ["run".into(), path.to_string_lossy().into_owned()];
     let (code, before, stderr) = run_cli_args_and_capture_output(&run, &cwd);

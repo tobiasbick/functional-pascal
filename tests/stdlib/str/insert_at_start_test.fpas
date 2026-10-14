@@ -1,7 +1,7 @@
 program T;
 
-uses Std.Console;
+uses Std.Console as Console;
 
 begin
-  WriteLn('world'.Insert(0, 'Hello '));
+  Console.WriteLn('world'.Insert(0, 'Hello '));
 end.

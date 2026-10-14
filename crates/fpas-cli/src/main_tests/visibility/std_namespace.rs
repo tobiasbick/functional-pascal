@@ -4,7 +4,7 @@ use super::*;
 fn unknown_std_unit_rejected_with_available_units_hint() {
     let (exit_code, _, stderr_output) = support::run_source_and_capture_output(
         "unknown_std.fpas",
-        "program Test;\nuses Std.Nonexistent;\nbegin\nend.\n",
+        "program Test;\nuses Std.Nonexistent as Nonexistent;\nbegin\nend.\n",
     );
 
     assert_eq!(exit_code, 1);
@@ -23,7 +23,7 @@ fn unknown_std_unit_rejected_with_available_units_hint() {
 fn bare_std_uses_rejected() {
     let (exit_code, _, stderr_output) = support::run_source_and_capture_output(
         "bare_std.fpas",
-        "program Test;\nuses Std;\nbegin\nend.\n",
+        "program Test;\nuses Std as StdUnit;\nbegin\nend.\n",
     );
 
     assert_eq!(exit_code, 1);
@@ -37,7 +37,7 @@ fn bare_std_uses_rejected() {
 fn std_uses_case_insensitive() {
     let (exit_code, stdout_output, stderr_output) = support::run_source_and_capture_output(
         "std_case.fpas",
-        "program Test;\nuses std.console;\nbegin\n  WriteLn(42);\nend.\n",
+        "program Test;\nuses std.console as console;\nbegin\n  console.WriteLn(42);\nend.\n",
     );
 
     assert_eq!(exit_code, 0, "stderr: {stderr_output}");
@@ -48,7 +48,7 @@ fn std_uses_case_insensitive() {
 fn std_unit_with_extra_segments_rejected() {
     let (exit_code, _, stderr_output) = support::run_source_and_capture_output(
         "std_extra_seg.fpas",
-        "program Test;\nuses Std.Console.Extra;\nbegin\nend.\n",
+        "program Test;\nuses Std.Console.Extra as Extra;\nbegin\nend.\n",
     );
 
     assert_eq!(exit_code, 1);

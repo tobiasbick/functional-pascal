@@ -1,17 +1,17 @@
 program TuiTerminalTooSmallOverlayTest;
 
-uses Std.Test, Std.Tui;
+uses Std.Test as Test, Std.Tui as Tui;
 
 begin
-  const Wide: TuiElement := TuiElementBuilders.MakePanel('WideTitleWindow', [
-                                                                              TuiElementBuilders.MakeLabel('abcdefghijklmnopqrstuvwxyz'),
-                                                                              TuiElementBuilders.MakeLabel('ABCDEFGHIJKLMNOPQRSTUVWXYZ'),
-                                                                              TuiElementBuilders.MakeLabel('01234567890123456789012345')
-                                                                            ]);
-  AssertTrue(TuiLayoutFitFor(Wide, TuiSize.Create(40, 12)).Fits());
-  AssertFalse(TuiLayoutFitFor(Wide, TuiSize.Create(8, 3)).Fits());
-  const Surface: TuiWorkingSurface := TuiWorkingSurface.Create(TuiSize.Create(24, 5));
-  TuiPaintTooSmallOverlay(Surface);
-  const Snapshot: TuiSurfaceSnapshot := Surface.Snapshot();
-  AssertTrue(Snapshot.LineAt(2).Contains('Terminal too small'));
+  const Wide: Tui.TuiElement := Tui.TuiElementBuilders.MakePanel('WideTitleWindow', [
+                                                                                      Tui.TuiElementBuilders.MakeLabel('abcdefghijklmnopqrstuvwxyz'),
+                                                                                      Tui.TuiElementBuilders.MakeLabel('ABCDEFGHIJKLMNOPQRSTUVWXYZ'),
+                                                                                      Tui.TuiElementBuilders.MakeLabel('01234567890123456789012345')
+                                                                                    ]);
+  Test.AssertTrue(Tui.TuiLayoutFitFor(Wide, Tui.TuiSize.Create(40, 12)).Fits());
+  Test.AssertFalse(Tui.TuiLayoutFitFor(Wide, Tui.TuiSize.Create(8, 3)).Fits());
+  const Surface: Tui.TuiWorkingSurface := Tui.TuiWorkingSurface.Create(Tui.TuiSize.Create(24, 5));
+  Tui.TuiPaintTooSmallOverlay(Surface);
+  const Snapshot: Tui.TuiSurfaceSnapshot := Surface.Snapshot();
+  Test.AssertTrue(Snapshot.LineAt(2).Contains('Terminal too small'));
 end.

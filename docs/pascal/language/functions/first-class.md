@@ -16,7 +16,7 @@ end function;
 begin
   const R: integer := Apply(Double, 5); // 10
   const Op: function(X: integer): integer := Double;
-  WriteLn(Op(7)); // 14
+  Console.WriteLn(Op(7)); // 14
 end.
 ```
 
@@ -55,8 +55,8 @@ begin
     Base := 10
   );
   const AddTen: function(Value: integer): integer := C.Add;
-  WriteLn(AddTen(5)); // 15
-  WriteLn(Apply(AddTen, 7)); // 17
+  Console.WriteLn(AddTen(5)); // 15
+  Console.WriteLn(Apply(AddTen, 7)); // 17
 end.
 ```
 
@@ -73,25 +73,28 @@ should run only when present:
 ```pascal
 program OptionalHandlers;
 
-uses Std.Console;
+uses Std.Console as Console;
 
 type ClickHandler = procedure(Sender: integer);
+
 type Button = record
   Id: integer;
-  OnClick: Option of ClickHandler := None;
+  OnClick: option of ClickHandler := None;
 
   procedure Click(Self: Button);
   begin
     case Self.OnClick of
-      when Some(const Handler): Handler(Self.Id);
-      when None: null;
+      when Some(const Handler):
+        Handler(Self.Id);
+      when None:
+        null;
     end case;
   end procedure;
 end record;
 
 procedure HandleClick(Sender: integer);
 begin
-  WriteLn(Sender);
+  Console.WriteLn(Sender);
 end procedure;
 
 begin

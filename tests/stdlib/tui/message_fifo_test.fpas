@@ -1,15 +1,15 @@
 program TuiMessageFifoTest;
 
-uses Std.Test, Std.Tui;
+uses Std.Test as Test, Std.Tui as Tui;
 
 type FifoModel = record
   Events: array of string;
   SeenCmdWasNoCommand: boolean;
 end record;
 
-function MakeKey(Kind: TuiKeyKind; Character: string): TuiKeyEvent;
+function MakeKey(Kind: Tui.TuiKeyKind; Character: string): Tui.TuiKeyEvent;
 begin
-  return TuiKeyEvent(kind := Kind, ch := Character, shift := false, ctrl := false, alt := false, meta := false);
+  return Tui.TuiKeyEvent(kind := Kind, ch := Character, shift := false, ctrl := false, alt := false, meta := false);
 end function;
 
 function PushEvent(State: FifoModel; InputEvent: string; CmdWasNoCommand: boolean): FifoModel;
@@ -18,37 +18,37 @@ begin
                                                                                        CmdWasNoCommand);
 end function;
 
-function ViewFifo(State: FifoModel): TuiElement;
+function ViewFifo(State: FifoModel): Tui.TuiElement;
 begin
-  return TuiElementBuilders.MakeDesktop(Some(TuiControlId.Create(1)), [
-                                                                        TuiElementBuilders.MakePanel('Host', [
-                                                                                                               TuiElementBuilders.MakeButton(TuiControlId.Create(1), 'Go', TuiAction.Create(7))
-                                                                                                             ])
-                                                                      ]);
+  return Tui.TuiElementBuilders.MakeDesktop(Some(Tui.TuiControlId.Create(1)), [
+                                                                                Tui.TuiElementBuilders.MakePanel('Host', [
+                                                                                                                           Tui.TuiElementBuilders.MakeButton(Tui.TuiControlId.Create(1), 'Go', Tui.TuiAction.Create(7))
+                                                                                                                         ])
+                                                                              ]);
 end function;
 
-function UpdateFifo(State: FifoModel; Msg: TuiMsg; Cmd: TuiCmdOutput): FifoModel;
+function UpdateFifo(State: FifoModel; Msg: Tui.TuiMsg; Cmd: Tui.TuiCmdOutput): FifoModel;
 begin
-  const ResetOk: boolean := Cmd.Command() = TuiCmd.NoCommand;
-  Cmd.Set(TuiCmd.NoCommand);
+  const ResetOk: boolean := Cmd.Command() = Tui.TuiCmd.NoCommand;
+  Cmd.Set(Tui.TuiCmd.NoCommand);
   case Msg of
-    when TuiMsg.Tick(const Delta):
+    when Tui.TuiMsg.Tick(const Delta):
       begin
         return PushEvent(State, 'tick', ResetOk);
       end;
-    when TuiMsg.Action(const Source, const Action):
+    when Tui.TuiMsg.Action(const Source, const Action):
       begin
         return PushEvent(State, 'action', ResetOk);
       end;
-    when TuiMsg.FocusChanged(const Previous, const Current):
+    when Tui.TuiMsg.FocusChanged(const Previous, const Current):
       begin
         return PushEvent(State, 'focus', ResetOk);
       end;
-    when TuiMsg.Key(const Key):
+    when Tui.TuiMsg.Key(const Key):
       begin
         return PushEvent(State, 'key', ResetOk);
       end;
-    when TuiMsg.Started, TuiMsg.Pointer(_), TuiMsg.Resize(_), TuiMsg.TextChanged(_, _, _, _), TuiMsg.TextAreaChanged(_, _, _, _, _), TuiMsg.CheckChanged(_, _, _), TuiMsg.SelectionChanged(_, _, _), TuiMsg.ScrollChanged(_, _, _), TuiMsg.MenuChanged(_, _, _), TuiMsg.BackgroundFailed(_, _, _, _, _, _), TuiMsg.QuitRequested:
+    when Tui.TuiMsg.Started, Tui.TuiMsg.Pointer(_), Tui.TuiMsg.Resize(_), Tui.TuiMsg.TextChanged(_, _, _, _), Tui.TuiMsg.TextAreaChanged(_, _, _, _, _), Tui.TuiMsg.CheckChanged(_, _, _), Tui.TuiMsg.SelectionChanged(_, _, _), Tui.TuiMsg.ScrollChanged(_, _, _), Tui.TuiMsg.MenuChanged(_, _, _), Tui.TuiMsg.BackgroundFailed(_, _, _, _, _, _), Tui.TuiMsg.QuitRequested:
       begin
         return State;
       end;
@@ -56,26 +56,26 @@ begin
 end function;
 
 begin
-  var App: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(20, 6));
+  var App: Tui.TuiApplication := Tui.TuiApplication.OpenForTest(Tui.TuiSize.Create(20, 6));
   var Model: FifoModel := FifoModel(Events := [], SeenCmdWasNoCommand := true);
   Model := App.RunIterations(Model, UpdateFifo, ViewFifo, 0, 0);
-  App.Inject(TuiMsg.Tick(1));
-  App.InjectKeyForTest(MakeKey(TuiKeyKind.Enter, ''));
-  App.Inject(TuiMsg.Tick(2));
+  App.Inject(Tui.TuiMsg.Tick(1));
+  App.InjectKeyForTest(MakeKey(Tui.TuiKeyKind.Enter, ''));
+  App.Inject(Tui.TuiMsg.Tick(2));
   Model := App.RunIterations(Model, UpdateFifo, ViewFifo, 3, 0);
-  AssertEquals(3, Model.Events.Length());
-  AssertEquals('tick', Model.Events[0]);
-  AssertEquals('action', Model.Events[1]);
-  AssertEquals('tick', Model.Events[2]);
-  AssertTrue(Model.SeenCmdWasNoCommand);
-  App.InjectKeyForTest(MakeKey(TuiKeyKind.Tab, ''));
-  App.Inject(TuiMsg.Tick(3));
+  Test.AssertEquals(3, Model.Events.Length());
+  Test.AssertEquals('tick', Model.Events[0]);
+  Test.AssertEquals('action', Model.Events[1]);
+  Test.AssertEquals('tick', Model.Events[2]);
+  Test.AssertTrue(Model.SeenCmdWasNoCommand);
+  App.InjectKeyForTest(MakeKey(Tui.TuiKeyKind.Tab, ''));
+  App.Inject(Tui.TuiMsg.Tick(3));
   Model := App.RunIterations(Model, UpdateFifo, ViewFifo, 1, 0);
-  AssertEquals(4, Model.Events.Length());
-  AssertEquals('focus', Model.Events[3]);
+  Test.AssertEquals(4, Model.Events.Length());
+  Test.AssertEquals('focus', Model.Events[3]);
   Model := App.RunIterations(Model, UpdateFifo, ViewFifo, 1, 0);
-  AssertEquals(5, Model.Events.Length());
-  AssertEquals('tick', Model.Events[4]);
-  AssertTrue(Model.SeenCmdWasNoCommand);
+  Test.AssertEquals(5, Model.Events.Length());
+  Test.AssertEquals('tick', Model.Events[4]);
+  Test.AssertTrue(Model.SeenCmdWasNoCommand);
   App.Close();
 end.

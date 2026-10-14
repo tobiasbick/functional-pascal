@@ -5,17 +5,17 @@ Blocking host process execution for FPAS programs. This page is the full API for
 ```pascal
 program Example;
 
-uses Std.Console, Std.Proc;
+uses Std.Console as Console, Std.Proc as Proc;
 
 begin
-  case Std.Proc.RunCapture('fpas', ['--version']) of
+  case Proc.RunCapture('fpas', ['--version']) of
     when Ok(const Output):
       begin
-        WriteLn(Output.Stdout);
-        WriteLn('exit code: ', Output.ExitCode);
+        Console.WriteLn(Output.Stdout);
+        Console.WriteLn('exit code: ', Output.ExitCode);
       end;
     when Error(const Message):
-      WriteLn(Message);
+      Console.WriteLn(Message);
   end case;
 end.
 ```
@@ -33,14 +33,14 @@ arguments.
 
 ## Importing and names
 
-After `uses Std.Proc;`, public names can be used unqualified or with the
-`Std.Proc.` prefix.
+After `uses Std.Proc as Proc;`, use `Proc.Run`, `Proc.RunCapture`, and
+`Proc.ProcOutput` through that alias.
 
 ---
 
 ## Quick reference
 
-Requires `uses Std.Proc;`.
+Requires `uses Std.Proc as Proc;`.
 
 | Kind | Name | Notes |
 |------|------|-------|
@@ -88,9 +88,9 @@ Combine a process call in `go` with `Std.Tasks.Wait` for task-based workflows.
 Starts `Command` with `Args`, waits for the process to exit, and returns `Ok(exitCode)`.
 
 ```pascal
-const Status: result of (integer, string) := Run('fpas', ['--version']);
+const Status: result of (integer, string) := Proc.Run('fpas', ['--version']);
 if Status.IsError() then
-  WriteLn(Status.UnwrapOr(-1));
+  Console.WriteLn(Status.UnwrapOr(-1));
 end if;
 ```
 
@@ -110,14 +110,14 @@ Starts `Command` with `Args`, waits for it to finish, and returns
 terminal.
 
 ```pascal
-case RunCapture('fpas', ['check', 'main.fpas']) of
+case Proc.RunCapture('fpas', ['check', 'main.fpas']) of
   when Ok(const Output):
     begin
-      WriteLn(Output.Stdout);
-      WriteLn(Output.Stderr);
+      Console.WriteLn(Output.Stdout);
+      Console.WriteLn(Output.Stderr);
     end;
   when Error(const Message):
-    WriteLn(Message);
+    Console.WriteLn(Message);
 end case;
 ```
 

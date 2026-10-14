@@ -1,41 +1,43 @@
 // Serves one HTTPS response using caller-supplied PEM credentials.
 program NetworkHttpsServer;
 
-uses Std.Args, Std.Conv, Std.Console, Std.Http, Std.Net, Std.Net.Utf8;
+uses
+  Std.Args as Args, Std.Conv as Conv, Std.Console as Console, Std.Http as Http, Std.Net as Net,
+  Std.Net.Utf8 as Utf8;
 
 // Creates the single response returned by this bounded demo server.
 //
 // Parameters:
 // - `_RequestValue`: Validated request accepted over TLS.
-function Handle(_RequestValue: ServerRequest): ServerResponse;
+function Handle(_RequestValue: Http.ServerRequest): Http.ServerResponse;
 begin
-  var ResponseValue: ServerResponse := ServerResponse.Create(200, 'OK');
-  ResponseValue.Headers := [Header.Create('Content-Type', 'text/plain; charset=utf-8')];
-  ResponseValue.Body := Std.Net.Utf8.Encode('Hello over HTTPS from FPAS');
+  var ResponseValue: Http.ServerResponse := Http.ServerResponse.Create(200, 'OK');
+  ResponseValue.Headers := [Http.Header.Create('Content-Type', 'text/plain; charset=utf-8')];
+  ResponseValue.Body := Utf8.Encode('Hello over HTTPS from FPAS');
   return ResponseValue;
 end function;
 
 begin
-  if (ParamCount() < 2) or (ParamCount() > 3) then
+  if (Args.ParamCount() < 2) or (Args.ParamCount() > 3) then
     begin
       panic('usage: https_server.fpas -- CERTIFICATE_PEM PRIVATE_KEY_PEM [PORT]');
     end;
   end if;
   var Port: integer := 18443;
-  if ParamCount() = 3 then
+  if Args.ParamCount() = 3 then
     begin
-      Port := StrToInt(ParamStr(2));
+      Port := Conv.StrToInt(Args.ParamStr(2));
     end;
   end if;
 
-  case ListenTls('127.0.0.1', Port, ParamStr(0), ParamStr(1), 10000) of
+  case Net.ListenTls('127.0.0.1', Port, Args.ParamStr(0), Args.ParamStr(1), 10000) of
     when Ok(const ListenerValue):
       begin
-        WriteLn('HTTPS server listening on https://127.0.0.1:' + IntToStr(Port));
-        var Options: ServerOptions := ServerOptions.Create();
+        Console.WriteLn('HTTPS server listening on https://127.0.0.1:' + Conv.IntToStr(Port));
+        var Options: Http.ServerOptions := Http.ServerOptions.Create();
         Options.MaxConcurrentRequests := 1;
         Options.MaxRequests := 1;
-        case Serve(ListenerValue, Options, Handle) of
+        case Http.Serve(ListenerValue, Options, Handle) of
           when Ok(_):
             begin
             end;
@@ -45,10 +47,10 @@ begin
             end;
         end case;
 
-        case CloseListener(ListenerValue) of
+        case Net.CloseListener(ListenerValue) of
           when Ok(_):
             begin
-              WriteLn('HTTPS server handled 1 request');
+              Console.WriteLn('HTTPS server handled 1 request');
             end;
           when Error(const Message):
             begin

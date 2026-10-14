@@ -10,30 +10,30 @@ fn fpas_http_server_loop_dispatches_multiple_requests() {
         format!(
             r#"program HttpServerLoop;
 
-uses Std.Console, Std.Http, Std.Net, Std.Net.Utf8;
+uses Std.Console as Console, Std.Http as Http, Std.Net as Net, Std.Net.Utf8 as Utf8;
 
-function Handle(RequestValue: ServerRequest): ServerResponse;
+function Handle(RequestValue: Http.ServerRequest): Http.ServerResponse;
 begin
-  var ResponseValue: ServerResponse := ServerResponse.Create(200, 'OK');
-  ResponseValue.Body := Std.Net.Utf8.Encode(RequestValue.Target);
+  var ResponseValue: Http.ServerResponse := Http.ServerResponse.Create(200, 'OK');
+  ResponseValue.Body := Utf8.Encode(RequestValue.Target);
   return ResponseValue;
 end function;
 
 begin
-  case Listen('127.0.0.1', {port}) of
+  case Net.Listen('127.0.0.1', {port}) of
     when Ok(const ListenerValue):
     begin
-      var Options: ServerOptions := ServerOptions.Create();
+      var Options: Http.ServerOptions := Http.ServerOptions.Create();
       Options.MaxConcurrentRequests := 2;
       Options.MaxRequests := 2;
-      case Serve(ListenerValue, Options, Handle) of
+      case Http.Serve(ListenerValue, Options, Handle) of
         when Ok(_):
         begin
         end;
         when Error(const Message): panic(Message);
       end case;
-      case CloseListener(ListenerValue) of
-        when Ok(_): WriteLn('served');
+      case Net.CloseListener(ListenerValue) of
+        when Ok(_): Console.WriteLn('served');
         when Error(const Message): panic(Message);
       end case;
     end;
@@ -75,27 +75,27 @@ fn fpas_http_server_loop_isolates_malformed_requests() {
         format!(
             r#"program HttpServerLoopInvalidRequest;
 
-uses Std.Http, Std.Net;
+uses Std.Http as Http, Std.Net as Net;
 
-function Handle(_RequestValue: ServerRequest): ServerResponse;
+function Handle(_RequestValue: Http.ServerRequest): Http.ServerResponse;
 begin
-  return ServerResponse.Create(204, 'No Content');
+  return Http.ServerResponse.Create(204, 'No Content');
 end function;
 
 begin
-  case Listen('127.0.0.1', {port}) of
+  case Net.Listen('127.0.0.1', {port}) of
     when Ok(const ListenerValue):
     begin
-      var Options: ServerOptions := ServerOptions.Create();
+      var Options: Http.ServerOptions := Http.ServerOptions.Create();
       Options.MaxConcurrentRequests := 2;
       Options.MaxRequests := 2;
-      case Serve(ListenerValue, Options, Handle) of
+      case Http.Serve(ListenerValue, Options, Handle) of
         when Ok(_):
         begin
         end;
         when Error(const Message): panic(Message);
       end case;
-      case CloseListener(ListenerValue) of
+      case Net.CloseListener(ListenerValue) of
         when Ok(_):
         begin
         end;
@@ -137,20 +137,20 @@ fn fpas_http_server_loop_rejects_invalid_options_before_accepting() {
         format!(
             r#"program HttpServerLoopInvalidOptions;
 
-uses Std.Console, Std.Http, Std.Net;
+uses Std.Console as Console, Std.Http as Http, Std.Net as Net;
 
-function Handle(_RequestValue: ServerRequest): ServerResponse;
+function Handle(_RequestValue: Http.ServerRequest): Http.ServerResponse;
 begin
-  return ServerResponse.Create(204, 'No Content');
+  return Http.ServerResponse.Create(204, 'No Content');
 end function;
 
 begin
-  case Listen('127.0.0.1', {port}) of
+  case Net.Listen('127.0.0.1', {port}) of
     when Ok(const ListenerValue):
     begin
-      var Options: ServerOptions := ServerOptions.Create();
+      var Options: Http.ServerOptions := Http.ServerOptions.Create();
       Options.MaxConcurrentRequests := 0;
-      case Serve(ListenerValue, Options, Handle) of
+      case Http.Serve(ListenerValue, Options, Handle) of
         when Ok(_): panic('invalid server options were accepted');
         when Error(const Message):
         begin
@@ -160,8 +160,8 @@ begin
           end; end if;
         end;
       end case;
-      case CloseListener(ListenerValue) of
-        when Ok(_): WriteLn('rejected');
+      case Net.CloseListener(ListenerValue) of
+        when Ok(_): Console.WriteLn('rejected');
         when Error(const Message): panic(Message);
       end case;
     end;

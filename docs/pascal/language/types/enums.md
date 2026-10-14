@@ -1,5 +1,7 @@
 # Enumerations
 
+The code fragments use `uses Std.Conv as Conv, Std.Console as Console;`.
+
 Enums define a set of named constants, optionally with explicit integer backing values.
 
 Enum types and their variants are available throughout the declaring unit or
@@ -26,7 +28,16 @@ Using:
 const C: Color := Color.Red;
 ```
 
-When a program defines only one enum, unqualified variant names such as `Red` may also resolve if the short name is unique. If two enums export the same variant name (for example both define `Red`), the short name becomes ambiguous: the compiler reports an error and you must use fully qualified names such as `Color.Red` and `Status.Red`. A type with the same short name hides the variant's short name, whether declared in the same unit or imported: the variant stays reachable only as `Type.Variant`.
+Every user enum variant requires its type qualifier: `Color.Red`, or
+`Domain.Color.Red` when accessed through an imported unit alias. This applies
+to values, construction, comparisons, case labels, nested patterns, and `is`
+tests. Bare `Red` and imported `Domain.Red` are rejected even when an expected
+type would make them unambiguous. Adding `Status.Red` or a separate type named
+`Red` leaves `Color.Red` unchanged. Explicit local type aliases may also
+qualify their variants, for example `LocalColor.Red`.
+
+`Some`, `None`, `Ok`, and `Error` remain reserved Option/Result language forms.
+They keep their existing spellings and require no import or type qualifier.
 
 ## Enum with backing values
 
@@ -91,11 +102,11 @@ Destructuring uses `case`:
 ```pascal
 case S of
   when Shape.Circle(const R):
-    WriteLn('Circle with radius ' + RealToStr(R));
+    Console.WriteLn('Circle with radius ' + Conv.RealToStr(R));
   when Shape.Rectangle(const W, const H):
-    WriteLn('Rectangle ' + RealToStr(W) + 'x' + RealToStr(H));
+    Console.WriteLn('Rectangle ' + Conv.RealToStr(W) + 'x' + Conv.RealToStr(H));
   when Shape.Point:
-    WriteLn('Point');
+    Console.WriteLn('Point');
 end case;
 ```
 

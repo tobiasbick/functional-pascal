@@ -29,7 +29,7 @@ export async function verifyTaskControl(
   const lines = [
     "program DebuggerTaskControl;",
     "",
-    "uses Std.Console, Std.Tasks;",
+    "uses Std.Console as Console, Std.Tasks as Tasks;",
     "",
     "function Work(): integer;",
     "begin",
@@ -40,7 +40,7 @@ export async function verifyTaskControl(
     "",
     "begin",
     "  const Pending: task := go Work();",
-    "  WriteLn(Wait(Pending));",
+    "  Console.WriteLn(Tasks.Wait(Pending));",
     "end.",
     ""
   ];

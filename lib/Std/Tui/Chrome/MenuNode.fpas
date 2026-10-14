@@ -1,6 +1,6 @@
 unit Std.Tui.Chrome.MenuNode;
 
-uses Std.Tui.Chrome.KeyGesture, Std.Tui.Ids.Action;
+uses Std.Tui.Chrome.KeyGesture as KeyGesture, Std.Tui.Ids.Action as IdsAction;
 
 // Positive identity of one node in a flat menu definition.
 public type TuiMenuNodeId = record
@@ -35,7 +35,7 @@ public type TuiMenuNode = enum
   // - `Action`: Application action carried by the variant.
   // - `Enabled`: Whether the represented item is enabled.
   // - `Shortcut`: Optional keyboard shortcut.
-  Command(Id: TuiMenuNodeId; Parent: option of TuiMenuNodeId; Text: string; Mnemonic: string; Action: TuiAction; Enabled: boolean; Shortcut: option of TuiKeyGesture);
+  Command(Id: TuiMenuNodeId; Parent: option of TuiMenuNodeId; Text: string; Mnemonic: string; Action: IdsAction.TuiAction; Enabled: boolean; Shortcut: option of KeyGesture.TuiKeyGesture);
   // Represents the `Submenu` variant of `TuiMenuNode`.
   //
   // Parameters:
@@ -103,7 +103,7 @@ public type TuiMenuNodeBuilders = record
   Parent: option of TuiMenuNodeId;
   Text: string;
   Mnemonic: string;
-  Action: TuiAction
+  Action: IdsAction.TuiAction
 ): TuiMenuNode;
   begin
     return TuiMenuNode.Command(Id, Parent, Text, Mnemonic, Action, true, None);
@@ -123,8 +123,8 @@ public type TuiMenuNodeBuilders = record
   Parent: option of TuiMenuNodeId;
   Text: string;
   Mnemonic: string;
-  Action: TuiAction;
-  Shortcut: TuiKeyGesture
+  Action: IdsAction.TuiAction;
+  Shortcut: KeyGesture.TuiKeyGesture
 ): TuiMenuNode;
   begin
     return TuiMenuNode.Command(Id, Parent, Text, Mnemonic, Action, true, Some(Shortcut));
@@ -143,7 +143,7 @@ public type TuiMenuNodeBuilders = record
   Parent: option of TuiMenuNodeId;
   Text: string;
   Mnemonic: string;
-  Action: TuiAction
+  Action: IdsAction.TuiAction
 ): TuiMenuNode;
   begin
     return TuiMenuNode.Command(Id, Parent, Text, Mnemonic, Action, false, None);

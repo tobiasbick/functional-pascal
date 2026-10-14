@@ -5,7 +5,7 @@ use super::{check_errors, check_ok};
 #[test]
 fn bits_supports_imported_short_and_case_insensitive_qualified_names() {
     check_ok(
-        "program Bits; uses sTd.bItS; begin const A: integer := BitAnd(12, 10); const B: integer := std.bits.shiftleft(A, 1); const C: integer := BitNot(BitOr(B, BitXor(1, 2))); end.",
+        "program Bits; uses sTd.bItS as sTdbItS; begin const A: integer := sTdbItS.BitAnd(12, 10); const B: integer := sTdbItS.shiftleft(A, 1); const C: integer := sTdbItS.BitNot(sTdbItS.BitOr(B, sTdbItS.BitXor(1, 2))); end.",
     );
 }
 
@@ -38,7 +38,7 @@ fn bits_rejects_wrong_arity_and_types_for_every_function() {
         };
         for arguments in cases {
             let errors = check_errors(&format!(
-                "program Invalid; uses Std.Bits; begin const A: integer := {name}({arguments}); end."
+                "program Invalid; uses Std.Bits as Bits; begin const A: integer := {name}({arguments}); end."
             ));
             assert!(!errors.is_empty(), "{name}({arguments}) was accepted");
         }

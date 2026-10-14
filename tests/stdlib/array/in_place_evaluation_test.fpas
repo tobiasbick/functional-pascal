@@ -1,6 +1,6 @@
 program InPlaceEvaluation;
 
-uses Std.Test;
+uses Std.Test as Test;
 
 type Holder = record
   Items: array of integer;
@@ -24,10 +24,10 @@ begin
   end function;
 
   Rows[SelectRow()].Items.SliceInPlace(Len := LengthArgument(), Start := StartArgument());
-  AssertEquals('RLS', Calls);
-  AssertEquals(2, Rows[0].Items.Length());
-  AssertEquals(8, Rows[0].Items[0]);
-  AssertEquals(7, Rows[0].Items[1]);
+  Test.AssertEquals('RLS', Calls);
+  Test.AssertEquals(2, Rows[0].Items.Length());
+  Test.AssertEquals(8, Rows[0].Items[0]);
+  Test.AssertEquals(7, Rows[0].Items[1]);
   var Items := [1, 2];
   var Seen := '';
   const Copy := Items;
@@ -41,16 +41,16 @@ begin
     Items := [99];
     return X * 10;
   end function);
-  AssertEquals('12', Seen);
-  AssertEquals(2, Items.Length());
-  AssertEquals(10, Items[0]);
-  AssertEquals(20, Items[1]);
-  AssertEquals(1, Copy[0]);
+  Test.AssertEquals('12', Seen);
+  Test.AssertEquals(2, Items.Length());
+  Test.AssertEquals(10, Items[0]);
+  Test.AssertEquals(20, Items[1]);
+  Test.AssertEquals(1, Copy[0]);
   var Local := [2, 1];
   const Change: procedure() := procedure() begin
     Local.SortInPlace();
   end procedure;
 
   Change();
-  AssertEquals(1, Local[0]);
+  Test.AssertEquals(1, Local[0]);
 end.

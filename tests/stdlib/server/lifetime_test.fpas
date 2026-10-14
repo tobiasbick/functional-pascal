@@ -1,32 +1,32 @@
 program ServerLifetimeTest;
 
-uses Std.Server, Std.Tasks, Std.Time, Std.Test;
+uses Std.Server as Server, Std.Tasks as Tasks, Std.Time as Time, Std.Test as Test;
 
 begin
-  AssertTrue(CreateLifetime(-1, false).IsError());
-  AssertTrue(CreateLifetime(86400001, false).IsError());
-  const Life: ServerLifetime := CreateLifetime(20, false).Unwrap();
-  const Group: TaskGroup := GetWorkGroup(Life);
-  const Gate: channel of boolean := CreateChannel(1);
-  const Worker: task of boolean := StartTaskInGroup(Group, function(Token: CancellationToken): boolean begin
-    return Receive(Gate).Unwrap();
+  Test.AssertTrue(Server.CreateLifetime(-1, false).IsError());
+  Test.AssertTrue(Server.CreateLifetime(86400001, false).IsError());
+  const Life: Server.ServerLifetime := Server.CreateLifetime(20, false).Unwrap();
+  const Group: Tasks.TaskGroup := Server.GetWorkGroup(Life);
+  const Gate: channel of boolean := Tasks.CreateChannel(1);
+  const Worker: task of boolean := Tasks.StartTaskInGroup(Group, function(Token: Tasks.CancellationToken): boolean begin
+    return Tasks.Receive(Gate).Unwrap();
   end function);
-  AssertTrue(IsReady(Life));
-  AssertTrue(not IsCancellationRequested(GetStopToken(Life)));
-  AssertTrue(FinishShutdown(Life).IsError());
-  AssertTrue(RequestStop(Life));
-  AssertTrue(not IsReady(Life));
-  AssertTrue(IsCancellationRequested(GetStopToken(Life)));
-  AssertTrue(not RequestStop(Life));
-  AssertTrue(CloseTaskGroupWithTimeout(Group, RemainingMillis(Life)).IsError());
-  AssertEquals(0, RemainingMillis(Life));
-  AssertTrue(FinishShutdown(Life).IsError());
-  AssertTrue(not RequestStop(Life));
-  AssertEquals(0, RemainingMillis(Life));
-  discard Send(Gate, true);
-  AssertEquals(0, CloseTaskGroup(Group).Length());
-  AssertTrue(FinishShutdown(Life).Unwrap());
-  AssertTrue(FinishShutdown(Life).Unwrap());
-  AssertEquals(0, ShutdownErrors(Life).Length());
-  discard CloseChannel(Gate);
+  Test.AssertTrue(Server.IsReady(Life));
+  Test.AssertTrue(not Tasks.IsCancellationRequested(Server.GetStopToken(Life)));
+  Test.AssertTrue(Server.FinishShutdown(Life).IsError());
+  Test.AssertTrue(Server.RequestStop(Life));
+  Test.AssertTrue(not Server.IsReady(Life));
+  Test.AssertTrue(Tasks.IsCancellationRequested(Server.GetStopToken(Life)));
+  Test.AssertTrue(not Server.RequestStop(Life));
+  Test.AssertTrue(Tasks.CloseTaskGroupWithTimeout(Group, Server.RemainingMillis(Life)).IsError());
+  Test.AssertEquals(0, Server.RemainingMillis(Life));
+  Test.AssertTrue(Server.FinishShutdown(Life).IsError());
+  Test.AssertTrue(not Server.RequestStop(Life));
+  Test.AssertEquals(0, Server.RemainingMillis(Life));
+  discard Tasks.Send(Gate, true);
+  Test.AssertEquals(0, Tasks.CloseTaskGroup(Group).Length());
+  Test.AssertTrue(Server.FinishShutdown(Life).Unwrap());
+  Test.AssertTrue(Server.FinishShutdown(Life).Unwrap());
+  Test.AssertEquals(0, Server.ShutdownErrors(Life).Length());
+  discard Tasks.CloseChannel(Gate);
 end.

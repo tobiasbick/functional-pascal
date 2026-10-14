@@ -118,6 +118,16 @@ pub fn missing_std_unit(name: &str, loaded: &HashSet<String>) -> Option<String> 
 }
 
 /// LLM-friendly hint when a call or identifier is missing from scope.
+/// Suggests an explicit alias without opening names implicitly.
+pub(crate) fn missing_import_hint(unit: &str) -> String {
+    let alias = unit.rsplit('.').next().unwrap_or("Imported");
+    format!(
+        "Add an import with a non-conflicting alias, for example `uses {unit} as {alias};`, then use `{alias}.Name`. Qualified names never import a unit implicitly."
+    )
+}
+
+/// LLM-friendly hint when a call or identifier is missing from scope.
+/// See `docs/pascal/program-structure/units.md` for mandatory source aliases.
 pub fn hint_for_unknown_std_name(name: &str, loaded: &HashSet<String>) -> String {
     if let Some(hint) = crate::std_registry::native_migration_hint(name) {
         return hint;
@@ -135,9 +145,7 @@ pub fn hint_for_unknown_std_name(name: &str, loaded: &HashSet<String>) -> String
 
     if let Some((unit, _member)) = parsed {
         if !loaded.contains(&unit) {
-            return format!(
-                "Add `uses {unit};` immediately after the program name (before constants, variables, or `begin`). Example: `program Main; uses {unit}; begin ... end.`"
-            );
+            return missing_import_hint(&unit);
         }
         return format!(
             "The standard unit `{unit}` is listed in `uses`, but `{name}` is not implemented in the runtime. Check docs/pascal/std/README.md for supported members."
@@ -148,9 +156,7 @@ pub fn hint_for_unknown_std_name(name: &str, loaded: &HashSet<String>) -> String
     for unit in STD_UNITS_KNOWN {
         let candidate = format!("{unit}.{name}");
         if std_unit_symbols(unit).contains(&candidate.as_str()) && !loaded.contains(*unit) {
-            return format!(
-                "`{name}` may be `{candidate}`. Add `uses {unit};` to import the unit."
-            );
+            return missing_import_hint(unit);
         }
     }
 

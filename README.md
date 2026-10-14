@@ -61,9 +61,11 @@ Create `hello.fpas`:
 
 ```pascal
 program Hello;
-uses Std.Console;
+
+uses Std.Console as Console;
+
 begin
-  WriteLn('Hello, World!');
+  Console.WriteLn('Hello, World!');
 end.
 ```
 
@@ -140,7 +142,7 @@ standard-library demonstrations remain under `examples/`.
 ```pascal
 program Fibonacci;
 
-uses Std.Console;
+uses Std.Console as Console;
 
 function Fib(N: integer): integer;
 begin
@@ -152,9 +154,9 @@ begin
 end function;
 
 begin
-  WriteLn('Fibonacci sequence:');
+  Console.WriteLn('Fibonacci sequence:');
   for I: integer := 0 to 9 do
-    WriteLn(Fib(I));
+    Console.WriteLn(Fib(I));
   end for;
 end.
 ```
@@ -164,7 +166,7 @@ end.
 ```pascal
 program PatternMatching;
 
-uses Std.Console;
+uses Std.Console as Console;
 
 type Light = enum
   Red;
@@ -185,7 +187,7 @@ begin
 end function;
 
 begin
-  WriteLn(TrafficAdvice(Light.Red));
+  Console.WriteLn(TrafficAdvice(Light.Red));
 end.
 ```
 
@@ -194,7 +196,7 @@ end.
 ```pascal
 program HigherOrderFunctions;
 
-uses Std.Console;
+uses Std.Console as Console;
 
 function Double(X: integer): integer;
 begin
@@ -208,7 +210,7 @@ end function;
 
 begin
   const Op: function(X: integer): integer := Double;
-  WriteLn(Apply(Op, 10)); // 20
+  Console.WriteLn(Apply(Op, 10)); // 20
 end.
 ```
 
@@ -217,7 +219,7 @@ end.
 ```pascal
 program OptionExample;
 
-uses Std.Console;
+uses Std.Console as Console;
 
 function FindFirst(Items: array of integer; Min: integer): option of integer;
 begin
@@ -234,11 +236,11 @@ begin
   case FindFirst([3, 7, 15, 42], 10) of
     when Some(const V):
       begin
-        WriteLn('Found: ', V);
+        Console.WriteLn('Found: ', V);
       end;
     when None:
       begin
-        WriteLn('Not found');
+        Console.WriteLn('Not found');
       end;
   end case;
 end.

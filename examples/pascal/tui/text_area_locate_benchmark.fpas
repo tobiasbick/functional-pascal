@@ -1,44 +1,44 @@
 // Long-document caret rendering through the public headless TUI.
 program TextAreaLocateBenchmark;
 
-uses Std.Args, Std.Console, Std.Conv, Std.Time, Std.Tui;
+uses Std.Args as Args, Std.Console as Console, Std.Conv as Conv, Std.Time as Time, Std.Tui as Tui;
 
-function View(Text: string): TuiElement;
+function View(Text: string): Tui.TuiElement;
 begin
-  return TuiElementBuilders.MakeDesktop(Some(TuiControlId.Create(1)), [
-                                                                        TuiElementBuilders.MakeTextArea(TuiControlId.Create(1), Text, Text.Length(), TuiPoint.Create(0, 0), TuiAction.Create(1))
-                                                                      ]);
+  return Tui.TuiElementBuilders.MakeDesktop(Some(Tui.TuiControlId.Create(1)), [
+                                                                                Tui.TuiElementBuilders.MakeTextArea(Tui.TuiControlId.Create(1), Text, Text.Length(), Tui.TuiPoint.Create(0, 0), Tui.TuiAction.Create(1))
+                                                                              ]);
 end function;
 
-function Update(Text: string; Msg: TuiMsg; Cmd: TuiCmdOutput): string;
+function Update(Text: string; Msg: Tui.TuiMsg; Cmd: Tui.TuiCmdOutput): string;
 begin
   return Text;
 end function;
 
 begin
-  if ParamCount() <> 2 then
+  if Args.ParamCount() <> 2 then
     begin
       panic('expected ITERATIONS SIZE');
     end;
   end if;
-  const Iterations: integer := StrToInt(ParamStr(0));
-  const Size: integer := StrToInt(ParamStr(1));
+  const Iterations: integer := Conv.StrToInt(Args.ParamStr(0));
+  const Size: integer := Conv.StrToInt(Args.ParamStr(1));
   if (Iterations < 1) or (Size < 1) then
     begin
       panic('arguments must be positive');
     end;
   end if;
   const Text: string := 'é'.RepeatStr(Size);
-  const App: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(80, 24));
+  const App: Tui.TuiApplication := Tui.TuiApplication.OpenForTest(Tui.TuiSize.Create(80, 24));
   discard App.RunIterations(Text, Update, View, 0, 0);
-  const Started: integer := MonotonicMillis();
+  const Started: integer := Time.MonotonicMillis();
   for Iteration: integer := 1 to Iterations do
     begin
       discard App.RunIterations(Text, Update, View, 0, 0);
     end;
   end for;
 
-  WriteLn('elapsed: ' + IntToStr(ElapsedMillis(Started)) + ' ms');
+  Console.WriteLn('elapsed: ' + Conv.IntToStr(Time.ElapsedMillis(Started)) + ' ms');
   var Visible: integer := Size;
   if Visible > 80 then
     begin

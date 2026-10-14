@@ -24,7 +24,7 @@ updates canonical declarations and uses through aliases while preserving alias
 spellings.
 
 Auto-import compares direct imports by canonical unit name, case-insensitively.
-Existing plain imports supply normal declaration completions. Existing aliases
+AP41 removes plain imports and requires qualified inserted references. Existing aliases
 produce qualified insertions such as `M.Answer`, with no `uses` edit even when
 the import has comments. These take precedence over new imports of equal short
 names; distinct existing aliases retain distinct qualified suggestions.

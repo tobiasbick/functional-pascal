@@ -1,16 +1,16 @@
 program SupervisedWorker;
 
-uses Std.Tasks, Std.Console;
+uses Std.Tasks as Tasks, Std.Console as Console;
 
 begin
-  const Workers: TaskGroup := CreateTaskGroup();
+  const Workers: Tasks.TaskGroup := Tasks.CreateTaskGroup();
   // This queue models a transient failure followed by a successful operation.
-  const Outcomes: channel of boolean := CreateChannel(2);
-  discard Send(Outcomes, false);
-  discard Send(Outcomes, true);
-  const Worker: task of result of (string, string) := StartSupervisedTask(Workers, function(Token: CancellationToken): result of (string, string) begin
-    WriteLn('Starting an attempt');
-    if not Receive(Outcomes).Unwrap() then
+  const Outcomes: channel of boolean := Tasks.CreateChannel(2);
+  discard Tasks.Send(Outcomes, false);
+  discard Tasks.Send(Outcomes, true);
+  const Worker: task of result of (string, string) := Tasks.StartSupervisedTask(Workers, function(Token: Tasks.CancellationToken): result of (string, string) begin
+    Console.WriteLn('Starting an attempt');
+    if not Tasks.Receive(Outcomes).Unwrap() then
       begin
         return Error('temporary failure');
       end;
@@ -19,7 +19,7 @@ begin
     return Ok('Worker completed');
   end function, 2, 10);
   // Wait retrieves the final result; intermediate failures remain inside the supervisor.
-  WriteLn(Wait(Worker).Unwrap());
-  discard CloseTaskGroup(Workers);
-  discard CloseChannel(Outcomes);
+  Console.WriteLn(Tasks.Wait(Worker).Unwrap());
+  discard Tasks.CloseTaskGroup(Workers);
+  discard Tasks.CloseChannel(Outcomes);
 end.

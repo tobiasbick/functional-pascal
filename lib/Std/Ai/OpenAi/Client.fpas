@@ -1,7 +1,9 @@
 // HTTP orchestration for OpenAI-compatible chat completions.
 unit Std.Ai.OpenAi.Client;
 
-uses Std.Ai.OpenAi.Json, Std.Ai.OpenAi.Types, Std.Conv, Std.Http, Std.Net.Utf8;
+uses
+  Std.Ai.OpenAi.Json as Json, Std.Ai.OpenAi.Types as Types, Std.Conv as Conv, Std.Http as Http,
+  Std.Net.Utf8 as Utf8;
 
 // Appends the chat-completions path to a base API URL.
 //
@@ -24,7 +26,11 @@ end function;
 // - `ClientValue`: Endpoint, model, authorization, and response-limit settings.
 // - `Messages`: Conversation messages sent in order.
 // - `Options`: Optional generation controls for this completion.
-public function Complete(ClientValue: Client; Messages: array of ChatMessage; Options: ChatOptions): result of (string, string);
+public function Complete(
+  ClientValue: Types.Client;
+  Messages: array of Types.ChatMessage;
+  Options: Types.ChatOptions
+): result of (string, string);
 begin
   if ClientValue.BaseUrl = '' then
     begin
@@ -43,16 +49,16 @@ begin
       return Error('OpenAI-compatible chat requires at least one message');
     end;
   end if;
-  var Headers: array of Header := [
-                                    Header.Create('Content-Type', 'application/json'),
-                                    Header.Create('Accept', 'application/json')
-                                  ];
+  var Headers: array of Http.Header := [
+                                         Http.Header.Create('Content-Type', 'application/json'),
+                                         Http.Header.Create('Accept', 'application/json')
+                                       ];
   case ClientValue.ApiKey of
     when Some(const Value):
       begin
         if Value <> '' then
           begin
-            Headers.PushInPlace(Header.Create('Authorization', 'Bearer ' + Value));
+            Headers.PushInPlace(Http.Header.Create('Authorization', 'Bearer ' + Value));
           end;
         end if;
       end;
@@ -60,25 +66,25 @@ begin
       begin
       end;
   end case;
-  var RequestValue: Request := Request.Create('POST', CompletionUrl(ClientValue.BaseUrl));
+  var RequestValue: Http.Request := Http.Request.Create('POST', CompletionUrl(ClientValue.BaseUrl));
   RequestValue.Headers := Headers;
-  RequestValue.Body := Std.Net.Utf8.Encode(Std.Ai.OpenAi.Json.EncodeRequest(ClientValue.Model, Messages, Options));
+  RequestValue.Body := Utf8.Encode(Json.EncodeRequest(ClientValue.Model, Messages, Options));
   RequestValue.TimeoutMillis := ClientValue.TimeoutMillis;
   RequestValue.MaxResponseBytes := ClientValue.MaxResponseBytes;
-  case Std.Http.Send(RequestValue) of
+  case Http.Send(RequestValue) of
     when Ok(const ResponseValue):
       begin
-        case Std.Http.BodyText(ResponseValue) of
+        case Http.BodyText(ResponseValue) of
           when Ok(const Text):
             begin
               if (ResponseValue.StatusCode < 200) or (ResponseValue.StatusCode >= 300) then
                 begin
-                  return Error('OpenAI-compatible endpoint returned HTTP ' + Std.Conv.IntToStr(ResponseValue.StatusCode) + ': ' +
+                  return Error('OpenAI-compatible endpoint returned HTTP ' + Conv.IntToStr(ResponseValue.StatusCode) + ': ' +
                                Text);
                 end;
               end if;
 
-              return Std.Ai.OpenAi.Json.DecodeResponse(Text);
+              return Json.DecodeResponse(Text);
             end;
           when Error(const Message):
             begin

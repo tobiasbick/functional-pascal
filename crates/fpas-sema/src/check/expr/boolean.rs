@@ -9,7 +9,7 @@ use fpas_lexer::Span;
 use fpas_parser::BinaryOp;
 
 impl Checker {
-    /// Checks Boolean negation, suggesting `Std.Bits.BitNot` for an integer operand.
+    /// Checks Boolean negation, suggesting `Bits.BitNot` for an integer operand.
     pub(super) fn check_boolean_not(&mut self, operand: &Ty, span: Span) -> Ty {
         let operand = self.resolve_visible_type(operand);
         if operand.is_error() {
@@ -19,9 +19,9 @@ impl Checker {
             return Ty::Boolean;
         }
         let hint = if operand == Ty::Integer {
-            "For integer bits, use `Std.Bits.BitNot(Value)` and import `uses Std.Bits;`."
+            self.integer_bits_hint("BitNot", "Value")
         } else {
-            "Use a boolean operand, such as `not (Count > 0)`."
+            "Use a boolean operand, such as `not (Count > 0)`.".to_owned()
         };
         self.error_with_code(
             SEMA_TYPE_MISMATCH,
@@ -50,9 +50,7 @@ impl Checker {
             _ => unreachable!("logical operator checked by caller"),
         };
         let hint = if *left == Ty::Integer && *right == Ty::Integer {
-            format!(
-                "For integer bits, use `Std.Bits.{replacement}(Left, Right)` and import `uses Std.Bits;`."
-            )
+            self.integer_bits_hint(replacement, "Left, Right")
         } else {
             "Both operands must be boolean; compare numeric values explicitly, for example `Count > 0`.".into()
         };
@@ -63,5 +61,21 @@ impl Checker {
             span,
         );
         Ty::Error
+    }
+
+    /// Uses the written bit-unit alias, or proposes a fresh explicit import.
+    fn integer_bits_hint(&self, member: &str, arguments: &str) -> String {
+        let canonical = format!("Std.Bits.{member}");
+        if let Some(name) = self.scopes.imports.source_name_for("Std.Bits", &canonical) {
+            return format!("For integer bits, use `{name}({arguments})`.");
+        }
+        let alias = if self.scopes.lookup("Bits").is_some() {
+            "StdBits"
+        } else {
+            "Bits"
+        };
+        format!(
+            "For integer bits, import `uses Std.Bits as {alias};` and use `{alias}.{member}({arguments})`."
+        )
     }
 }

@@ -41,7 +41,7 @@ fn program_source() -> String {
         ("sh", "['-c', 'echo child err >&2']")
     };
     format!(
-        "program Main;\nuses Std.Console, Std.Proc, Std.Args;\nbegin\n  WriteLn('out');\n  if ParamCount() > 0 then WriteLn(ParamStr(0)); end if;\n  case Run('{command}', {script}) of\n    when Ok(const Code): WriteLn(Code);\n    when Error(const Message): WriteLn(Message);\n  end case;\n  panic('boom');\nend.\n"
+        "program Main;\nuses Std.Console as Console, Std.Proc as Proc, Std.Args as Args;\nbegin\n  Console.WriteLn('out');\n  if Args.ParamCount() > 0 then Console.WriteLn(Args.ParamStr(0)); end if;\n  case Proc.Run('{command}', {script}) of\n    when Ok(const Code): Console.WriteLn(Code);\n    when Error(const Message): Console.WriteLn(Message);\n  end case;\n  panic('boom');\nend.\n"
     )
 }
 
@@ -170,7 +170,7 @@ fn all_four_commands_preserve_source_failures_in_text_and_json() {
             "FP2014",
         ),
         (
-            "program P; uses Std.Console; begin WriteLn('ä😀'); MissingCall(); end.",
+            "program P; uses Std.Console as Console; begin Console.WriteLn('ä😀'); MissingCall(); end.",
             "FP3003",
         ),
     ] {
@@ -249,7 +249,7 @@ fn real_process_records_keep_imported_paths_multiple_errors_and_absent_positions
     );
     write(
         &root.join("src/main.fpas"),
-        "program P; uses App.Bad; begin end.",
+        "program P; uses App.Bad as Bad; begin end.",
     );
     write(
         &root.join("src/bad.fpas"),

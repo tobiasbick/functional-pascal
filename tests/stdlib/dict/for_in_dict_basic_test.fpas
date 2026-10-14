@@ -1,12 +1,12 @@
 program T;
 
-uses Std.Console;
+uses Std.Console as Console;
 
 begin
   const D: dict of string to integer := ['Alice': 30, 'Bob': 25];
   for K: string in D do
     begin
-      WriteLn(K);
+      Console.WriteLn(K);
     end;
   end for;
 end.

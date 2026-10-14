@@ -1,35 +1,35 @@
 program NoteModelFilterSortTest;
 
-uses Notes.Model, Notes.Repository, Std.Console, Std.Test;
+uses Notes.Model as Model, Notes.Repository as Repository, Std.Console as Console, Std.Test as Test;
 
 begin
-  const Tags: array of string := NoteTagsFromText(' FPAS, tui, FPAS, ');
-  AssertEquals(2, Tags.Length());
-  AssertEquals('FPAS', Tags[0]);
-  AssertEquals('tui', Tags[1]);
-  var Older: Note := NoteCreate('older', 10);
+  const Tags: array of string := Model.NoteTagsFromText(' FPAS, tui, FPAS, ');
+  Test.AssertEquals(2, Tags.Length());
+  Test.AssertEquals('FPAS', Tags[0]);
+  Test.AssertEquals('tui', Tags[1]);
+  var Older: Model.Note := Model.NoteCreate('older', 10);
   Older.Title := 'Compiler design';
   Older.Body := 'Functional notes';
   Older.Tags := ['pascal'];
-  var Newer: Note := NoteCreate('newer', 20);
+  var Newer: Model.Note := Model.NoteCreate('newer', 20);
   Newer.Title := 'Terminal UI';
   Newer.Tags := ['tui'];
-  AssertTrue(NoteMatches(Older, 'COMPILER'));
-  AssertTrue(NoteMatches(Older, 'functional'));
-  AssertTrue(NoteMatches(Older, 'PASCAL'));
-  AssertFalse(NoteMatches(Older, 'missing'));
+  Test.AssertTrue(Model.NoteMatches(Older, 'COMPILER'));
+  Test.AssertTrue(Model.NoteMatches(Older, 'functional'));
+  Test.AssertTrue(Model.NoteMatches(Older, 'PASCAL'));
+  Test.AssertFalse(Model.NoteMatches(Older, 'missing'));
   Older.Archived := true;
-  AssertFalse(NoteMatches(Older, 'compiler'));
+  Test.AssertFalse(Model.NoteMatches(Older, 'compiler'));
   Older.Archived := false;
   Older.Pinned := true;
-  const Sorted: array of Note := NotesSort([Newer, Older]);
-  AssertEquals('older', Sorted[0].Id);
-  AssertEquals('newer', Sorted[1].Id);
+  const Sorted: array of Model.Note := Repository.NotesSort([Newer, Older]);
+  Test.AssertEquals('older', Sorted[0].Id);
+  Test.AssertEquals('newer', Sorted[1].Id);
   Newer.Title := 'Terminal 👩‍💻 interface with a long title';
-  const Items: array of string := NotesListItems([Newer], '', 14);
-  AssertEquals(1, Items.Length());
-  AssertEquals(14, Std.Console.DisplayWidth(Items[0]));
-  AssertTrue(Items[0].Contains('👩‍💻'));
-  AssertTrue(Items[0].EndsWith('…'));
-  AssertEquals('', NotesListItems([Newer], '', 0)[0]);
+  const Items: array of string := Model.NotesListItems([Newer], '', 14);
+  Test.AssertEquals(1, Items.Length());
+  Test.AssertEquals(14, Console.DisplayWidth(Items[0]));
+  Test.AssertTrue(Items[0].Contains('👩‍💻'));
+  Test.AssertTrue(Items[0].EndsWith('…'));
+  Test.AssertEquals('', Model.NotesListItems([Newer], '', 0)[0]);
 end.

@@ -5,31 +5,7 @@
 use super::*;
 use fpas_diagnostics::codes::RUNTIME_PROGRAM_PANIC;
 
-const PRELUDE: &str = "uses Std.Tasks, Std.Time;
-procedure Produce(Queue: channel of integer; Value: integer);
-begin
-  Sleep(5);
-  discard Send(Queue, Value);
-end procedure;
-function Block(Gate: channel of integer): integer;
-begin
-  return Receive(Gate).Unwrap();
-end function;
-function Spin(): integer;
-begin
-  var Count: integer := 0;
-  while true do
-    Count := Count + 1;
-  end while;
-  return Count;
-end function;
-function Fail(Message: string): integer;
-begin
-  Sleep(5);
-  panic(Message);
-  return 0;
-end function;
-";
+const PRELUDE: &str = "uses Std.Tasks as Tasks, Std.Time as Time;\nprocedure Produce(Queue: channel of integer; Value: integer);\nbegin\n  Time.Sleep(5);\n  discard Tasks.Send(Queue, Value);\nend procedure;\nfunction Block(Gate: channel of integer): integer;\nbegin\n  return Tasks.Receive(Gate).Unwrap();\nend function;\nfunction Spin(): integer;\nbegin\n  var Count: integer := 0;\n  while true do\n    Count := Count + 1;\n  end while;\n  return Count;\nend function;\nfunction Fail(Message: string): integer;\nbegin\n  Time.Sleep(5);\n  panic(Message);\n  return 0;\nend function;\n";
 
 fn program(declarations: &str, body: &str) -> String {
     format!("program Scopes;\n{PRELUDE}{declarations}begin\n{body}\nend.")
@@ -39,85 +15,23 @@ fn program(declarations: &str, body: &str) -> String {
 fn normal_exit_waits_for_both_go_forms() {
     assert_succeeds(&program(
         "",
-        "const Queue: channel of integer := CreateChannel(2);
-scope
-  discard go Produce(Queue, 1);
-  const Second: task := go Produce(Queue, 2);
-end scope;
-for Index: integer := 1 to 2 do
-  case TryReceive(Queue) of
-    when Ok(Some(_)): null;
-    when Ok(None): panic('scope ended before its children');
-    when Error(_): panic('closed');
-  end case;
-end for;",
+        "const Queue: channel of integer := Tasks.CreateChannel(2);\nscope\n  discard go Produce(Queue, 1);\n  const Second: task := go Produce(Queue, 2);\nend scope;\nfor Index: integer := 1 to 2 do\n  case Tasks.TryReceive(Queue) of\n    when Ok(Some(_)): null;\n    when Ok(None): panic('scope ended before its children');\n    when Error(_): panic('closed');\n  end case;\nend for;",
     ));
 }
 
 #[test]
 fn early_exits_cancel_running_and_blocked_children() {
     assert_succeeds(&program(
-        "function FirstPositive(Values: array of integer): integer;
-begin
-  for Value: integer in Values do
-    scope
-      discard go Spin();
-      if Value < 0 then
-        continue;
-      end if;
-      if Value = 0 then
-        break;
-      end if;
-      return Value;
-    end scope;
-  end for;
-  return 0;
-end function;
-function Load(): result of (integer, string);
-begin
-  return Error('missing');
-end function;
-function Forward(Gate: channel of integer): result of (integer, string);
-begin
-  scope
-    const Blocked: task of integer := go Block(Gate);
-    const Failed: task of result of (integer, string) := go Load();
-    const Value: integer := try Wait(Failed);
-    return Ok(Value + Wait(Blocked));
-  end scope;
-end function;
-",
-        "if FirstPositive([-1, 4]) <> 4 then panic('return value'); end if;
-if FirstPositive([0, 4]) <> 0 then panic('break value'); end if;
-const Gate: channel of integer := CreateChannel(1);
-case Forward(Gate) of
-  when Ok(_): panic('error was not forwarded');
-  when Error(const Message): if Message <> 'missing' then panic(Message); end if;
-end case;",
+        "function FirstPositive(Values: array of integer): integer;\nbegin\n  for Value: integer in Values do\n    scope\n      discard go Spin();\n      if Value < 0 then\n        continue;\n      end if;\n      if Value = 0 then\n        break;\n      end if;\n      return Value;\n    end scope;\n  end for;\n  return 0;\nend function;\nfunction Load(): result of (integer, string);\nbegin\n  return Error('missing');\nend function;\nfunction Forward(Gate: channel of integer): result of (integer, string);\nbegin\n  scope\n    const Blocked: task of integer := go Block(Gate);\n    const Failed: task of result of (integer, string) := go Load();\n    const Value: integer := try Tasks.Wait(Failed);\n    return Ok(Value + Tasks.Wait(Blocked));\n  end scope;\nend function;\n",
+        "if FirstPositive([-1, 4]) <> 4 then panic('return value'); end if;\nif FirstPositive([0, 4]) <> 0 then panic('break value'); end if;\nconst Gate: channel of integer := Tasks.CreateChannel(1);\ncase Forward(Gate) of\n  when Ok(_): panic('error was not forwarded');\n  when Error(const Message): if Message <> 'missing' then panic(Message); end if;\nend case;",
     ));
 }
 
 #[test]
 fn helpers_use_an_explicit_group_for_work_that_outlives_the_callers_scope() {
     assert_succeeds(&program(
-        "procedure Relay(Gate: channel of integer; Queue: channel of integer);
-begin
-  discard Send(Queue, Block(Gate));
-end procedure;
-procedure StartProducer(Group: TaskGroup; Gate: channel of integer; Queue: channel of integer);
-begin
-  discard StartTaskInGroup(Group, procedure(Token: CancellationToken) begin Relay(Gate, Queue); end procedure);
-end procedure;
-",
-        "const Gate: channel of integer := CreateChannel(1);
-const Queue: channel of integer := CreateChannel(1);
-const Group := CreateTaskGroup();
-scope
-  StartProducer(Group, Gate, Queue);
-end scope;
-discard Send(Gate, 7);
-if Receive(Queue).Unwrap() <> 7 then panic('group task result'); end if;
-discard CloseTaskGroup(Group);",
+        "procedure Relay(Gate: channel of integer; Queue: channel of integer);\nbegin\n  discard Tasks.Send(Queue, Block(Gate));\nend procedure;\nprocedure StartProducer(Group: Tasks.TaskGroup; Gate: channel of integer; Queue: channel of integer);\nbegin\n  discard Tasks.StartTaskInGroup(Group, procedure(Token: Tasks.CancellationToken) begin Relay(Gate, Queue); end procedure);\nend procedure;\n",
+        "const Gate: channel of integer := Tasks.CreateChannel(1);\nconst Queue: channel of integer := Tasks.CreateChannel(1);\nconst Group := Tasks.CreateTaskGroup();\nscope\n  StartProducer(Group, Gate, Queue);\nend scope;\ndiscard Tasks.Send(Gate, 7);\nif Tasks.Receive(Queue).Unwrap() <> 7 then panic('group task result'); end if;\ndiscard Tasks.CloseTaskGroup(Group);",
     ));
 }
 
@@ -129,10 +43,7 @@ begin
   return Error('ignored');
 end function;
 ",
-        "scope
-  const Job: task of result of (integer, string) := go Load();
-  WaitAll([Job]);
-end scope;",
+        "scope\n  const Job: task of result of (integer, string) := go Load();\n  Tasks.WaitAll([Job]);\nend scope;",
     ));
 }
 
@@ -140,25 +51,11 @@ end scope;",
 fn child_failure_cancels_siblings_and_body_and_is_reraised() {
     for body in [
         // The body waits on a channel that no task will ever fill.
-        "const Gate: channel of integer := CreateChannel(1);
-scope
-  discard go Spin();
-  const Failed: task of integer := go Fail('child failed');
-  discard Block(Gate);
-end scope;",
+        "const Gate: channel of integer := Tasks.CreateChannel(1);\nscope\n  discard go Spin();\n  const Failed: task of integer := go Fail('child failed');\n  discard Block(Gate);\nend scope;",
         // The body waits for the failed child itself.
-        "scope
-  const Failed: task of integer := go Fail('child failed');
-  discard Wait(Failed);
-end scope;",
+        "scope\n  const Failed: task of integer := go Fail('child failed');\n  discard Tasks.Wait(Failed);\nend scope;",
         // A failure in a nested scope leaves the outer scope too.
-        "scope
-  discard go Spin();
-  scope
-    discard go Fail('child failed');
-    Sleep(5000);
-  end scope;
-end scope;",
+        "scope\n  discard go Spin();\n  scope\n    discard go Fail('child failed');\n    Time.Sleep(5000);\n  end scope;\nend scope;",
     ] {
         let error = run_program(&program("", body)).expect_err("scope failure");
         assert_eq!(error.code, RUNTIME_PROGRAM_PANIC, "{body}\n{error:?}");

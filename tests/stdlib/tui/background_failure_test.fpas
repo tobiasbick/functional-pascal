@@ -1,56 +1,56 @@
 program TuiBackgroundFailureTest;
 
-uses Std.Tasks, Std.Test, Std.Tui;
+uses Std.Tasks as Tasks, Std.Test as Test, Std.Tui as Tui;
 
 type FailureModel = record
   Ready: channel of boolean;
   FailureSeen: boolean;
 end record;
 
-function UpdateFramework(State: FailureModel; Msg: TuiMsg; Cmd: TuiCmdOutput): FailureModel;
+function UpdateFramework(State: FailureModel; Msg: Tui.TuiMsg; Cmd: Tui.TuiCmdOutput): FailureModel;
 begin
   case Msg of
-    when TuiMsg.Started:
+    when Tui.TuiMsg.Started:
       begin
         const Ready: channel of boolean := State.Ready;
-        Cmd.StartBackground(19, function(Token: CancellationToken): result of (boolean, string) begin
-          discard Send(Ready, true);
+        Cmd.StartBackground(19, function(Token: Tasks.CancellationToken): result of (boolean, string) begin
+          discard Tasks.Send(Ready, true);
           panic('expected background failure');
         end function);
         return State;
       end;
-    when TuiMsg.BackgroundFailed(const Id, const Kind, const Message, const Code, const Line, const Column):
+    when Tui.TuiMsg.BackgroundFailed(const Id, const Kind, const Message, const Code, const Line, const Column):
       begin
-        AssertEquals(19, Id);
-        AssertTrue(Kind = TaskFailureKind.Panicked);
-        AssertEquals('panic: expected background failure', Message);
+        Test.AssertEquals(19, Id);
+        Test.AssertTrue(Kind = Tasks.TaskFailureKind.Panicked);
+        Test.AssertEquals('panic: expected background failure', Message);
         return FailureModel(Ready := State.Ready, FailureSeen := true);
       end;
-    when TuiMsg.Key(_), TuiMsg.Pointer(_), TuiMsg.Tick(_), TuiMsg.Resize(_), TuiMsg.FocusChanged(_, _), TuiMsg.Action(_, _), TuiMsg.TextChanged(_, _, _, _), TuiMsg.TextAreaChanged(_, _, _, _, _), TuiMsg.CheckChanged(_, _, _), TuiMsg.SelectionChanged(_, _, _), TuiMsg.ScrollChanged(_, _, _), TuiMsg.MenuChanged(_, _, _), TuiMsg.QuitRequested:
+    when Tui.TuiMsg.Key(_), Tui.TuiMsg.Pointer(_), Tui.TuiMsg.Tick(_), Tui.TuiMsg.Resize(_), Tui.TuiMsg.FocusChanged(_, _), Tui.TuiMsg.Action(_, _), Tui.TuiMsg.TextChanged(_, _, _, _), Tui.TuiMsg.TextAreaChanged(_, _, _, _, _), Tui.TuiMsg.CheckChanged(_, _, _), Tui.TuiMsg.SelectionChanged(_, _, _), Tui.TuiMsg.ScrollChanged(_, _, _), Tui.TuiMsg.MenuChanged(_, _, _), Tui.TuiMsg.QuitRequested:
       begin
         return State;
       end;
   end case;
 end function;
 
-function UpdateApplication(State: FailureModel; Message: integer; Cmd: TuiCmdOutput): FailureModel;
+function UpdateApplication(State: FailureModel; Message: integer; Cmd: Tui.TuiCmdOutput): FailureModel;
 begin
   return State;
 end function;
 
-function View(State: FailureModel): TuiElement;
+function View(State: FailureModel): Tui.TuiElement;
 begin
-  return TuiElementBuilders.MakeLabel('failure');
+  return Tui.TuiElementBuilders.MakeLabel('failure');
 end function;
 
 begin
-  const Inbox: channel of integer := CreateChannel(1);
-  const Ready: channel of boolean := CreateChannel(1);
-  const App: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(24, 4));
+  const Inbox: channel of integer := Tasks.CreateChannel(1);
+  const Ready: channel of boolean := Tasks.CreateChannel(1);
+  const App: Tui.TuiApplication := Tui.TuiApplication.OpenForTest(Tui.TuiSize.Create(24, 4));
   var Model: FailureModel := App.RunBackgroundIterations(FailureModel(Ready := Ready, FailureSeen := false), Inbox, UpdateFramework, UpdateApplication, View, 1, 0);
-  AssertTrue(ReceiveWithTimeout(Ready, 10000).Unwrap());
+  Test.AssertTrue(Tasks.ReceiveWithTimeout(Ready, 10000).Unwrap());
   Model := App.RunBackgroundIterations(Model, Inbox, UpdateFramework, UpdateApplication, View, 1, 0);
-  AssertTrue(Model.FailureSeen);
+  Test.AssertTrue(Model.FailureSeen);
   App.CloseWithBackground(Inbox);
-  discard CloseChannel(Ready);
+  discard Tasks.CloseChannel(Ready);
 end.

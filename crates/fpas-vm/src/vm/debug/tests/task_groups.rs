@@ -10,34 +10,34 @@ const LIFECYCLE: &str =
     include_str!("../../../../../../tests/concurrency/task_group_lifecycle_test.fpas");
 
 const SOURCE: &str = r#"program GroupFailures;
-uses Std.Tasks, Std.Time;
-function Ordinary(Token: CancellationToken): result of (integer, string);
+uses Std.Tasks as Tasks, Std.Time as Time;
+function Ordinary(Token: Tasks.CancellationToken): result of (integer, string);
 begin
-  Sleep(1);
+  Time.Sleep(1);
   return Error('ordinary');
 end function;
-procedure Broken(Token: CancellationToken);
+procedure Broken(Token: Tasks.CancellationToken);
 begin
-  Sleep(2);
+  Time.Sleep(2);
   panic('owned panic');
 end procedure;
-function Successful(Token: CancellationToken): integer;
+function Successful(Token: Tasks.CancellationToken): integer;
 begin return 42; end function;
 begin
-  const G: TaskGroup := CreateTaskGroup();
-  const A: task of result of (integer, string) := StartTaskInGroup(G, Ordinary);
-  const B: task := StartTaskInGroup(G, Broken);
-  const C: task of integer := StartTaskInGroup(G, Successful);
-  if Wait(C) <> 42 then panic('child value'); end if;
-  case Wait(A) of
+  const G: Tasks.TaskGroup := Tasks.CreateTaskGroup();
+  const A: task of result of (integer, string) := Tasks.StartTaskInGroup(G, Ordinary);
+  const B: task := Tasks.StartTaskInGroup(G, Broken);
+  const C: task of integer := Tasks.StartTaskInGroup(G, Successful);
+  if Tasks.Wait(C) <> 42 then panic('child value'); end if;
+  case Tasks.Wait(A) of
     when Error(const Message): if Message <> 'ordinary' then panic('ordinary result lost'); end if;
     when Ok(_): panic('ordinary result changed');
   end case;
-  const Failures: array of TaskFailure := CloseTaskGroup(G);
+  const Failures: array of Tasks.TaskFailure := Tasks.CloseTaskGroup(G);
   if Failures.Length() <> 1 then panic('failure count'); end if;
-  if Failures[0].Kind <> TaskFailureKind.Panicked then panic('panic kind'); end if;
+  if Failures[0].Kind <> Tasks.TaskFailureKind.Panicked then panic('panic kind'); end if;
   if Failures[0].Line <= 0 then panic('panic location'); end if;
-  if CloseTaskGroup(G).Length() <> 0 then panic('repeat close'); end if;
+  if Tasks.CloseTaskGroup(G).Length() <> 0 then panic('repeat close'); end if;
 end."#;
 
 #[test]
@@ -100,7 +100,7 @@ fn stop_before_close(source: &str) -> DebugSession {
     let source = source
         .replace(
             "\nbegin\n  const G:",
-            "\nprocedure BeforeClose(); begin Sleep(0); end procedure;\nbegin\n  const G:",
+            "\nprocedure BeforeClose(); begin Time.Sleep(0); end procedure;\nbegin\n  const G:",
         )
         .replace("  const Failures:", "  BeforeClose();\n  const Failures:");
     let (program, errors) = fpas_parser::parse(&source);
@@ -123,7 +123,7 @@ fn stop_before_close(source: &str) -> DebugSession {
 fn task_group_exited_failure_cannot_be_resumed_or_force_returned() {
     let source = SOURCE.replace(
         "  const Failures:",
-        "  discard Select([TimerCase(5, procedure() begin end procedure)]);\n  const Failures:",
+        "  discard Tasks.Select([Tasks.TimerCase(5, procedure() begin end procedure)]);\n  const Failures:",
     );
     let mut session = stop_before_close(&source);
     let events = session.take_task_events();
@@ -161,14 +161,14 @@ fn task_group_exited_failure_cannot_be_resumed_or_force_returned() {
 #[test]
 fn task_group_debugger_cancellation_is_reported_as_cancelled() {
     let source = r#"program CancelOwnedChild;
-uses Std.Tasks, Std.Time;
-procedure Work(Token: CancellationToken); begin Sleep(1000); end procedure;
+uses Std.Tasks as Tasks, Std.Time as Time;
+procedure Work(Token: Tasks.CancellationToken); begin Time.Sleep(1000); end procedure;
 begin
-  const G: TaskGroup := CreateTaskGroup();
-  const WorkerTask: task := StartTaskInGroup(G, Work);
-  const Failures: array of TaskFailure := CloseTaskGroup(G);
+  const G: Tasks.TaskGroup := Tasks.CreateTaskGroup();
+  const WorkerTask: task := Tasks.StartTaskInGroup(G, Work);
+  const Failures: array of Tasks.TaskFailure := Tasks.CloseTaskGroup(G);
   if Failures.Length() <> 1 then panic('failure count'); end if;
-  if Failures[0].Kind <> TaskFailureKind.Cancelled then panic('cancellation kind'); end if;
+  if Failures[0].Kind <> Tasks.TaskFailureKind.Cancelled then panic('cancellation kind'); end if;
 end."#;
     let mut session = stop_before_close(source);
     session.cancel_task(1).expect("cancel owned child");
@@ -183,13 +183,13 @@ end."#;
 #[test]
 fn task_group_child_close_is_rejected_and_collected_as_runtime_failure() {
     let source = r#"program ChildCannotClose;
-uses Std.Tasks;
+uses Std.Tasks as Tasks;
 begin
-  const G: TaskGroup := CreateTaskGroup();
-  const WorkerTask: task := StartTaskInGroup(G, procedure(Token: CancellationToken) begin discard CloseTaskGroup(G); end procedure);
-  const Failures: array of TaskFailure := CloseTaskGroup(G);
+  const G: Tasks.TaskGroup := Tasks.CreateTaskGroup();
+  const WorkerTask: task := Tasks.StartTaskInGroup(G, procedure(Token: Tasks.CancellationToken) begin discard Tasks.CloseTaskGroup(G); end procedure);
+  const Failures: array of Tasks.TaskFailure := Tasks.CloseTaskGroup(G);
   if Failures.Length() <> 1 then panic('failure count'); end if;
-  if Failures[0].Kind <> TaskFailureKind.RuntimeError then panic('runtime kind'); end if;
+  if Failures[0].Kind <> Tasks.TaskFailureKind.RuntimeError then panic('runtime kind'); end if;
 end."#;
     let (program, errors) = fpas_parser::parse(source);
     assert!(errors.is_empty(), "{errors:?}");
@@ -207,12 +207,12 @@ end."#;
 #[test]
 fn task_group_explicit_wait_keeps_the_original_panic_diagnostic() {
     let source = r#"program ExplicitFailedWait;
-uses Std.Tasks;
-procedure Work(Token: CancellationToken); begin panic('original child failure'); end procedure;
+uses Std.Tasks as Tasks;
+procedure Work(Token: Tasks.CancellationToken); begin panic('original child failure'); end procedure;
 begin
-  const G: TaskGroup := CreateTaskGroup();
-  const Child: task := StartTaskInGroup(G, Work);
-  Wait(Child);
+  const G: Tasks.TaskGroup := Tasks.CreateTaskGroup();
+  const Child: task := Tasks.StartTaskInGroup(G, Work);
+  Tasks.Wait(Child);
 end."#;
     let (program, errors) = fpas_parser::parse(source);
     assert!(errors.is_empty(), "{errors:?}");
@@ -226,12 +226,12 @@ end."#;
 #[test]
 fn task_group_ignored_close_report_still_has_verified_record_metadata() {
     let source = r#"program IgnoreReport;
-uses Std.Tasks;
-procedure Work(Token: CancellationToken); begin panic('contained'); end procedure;
+uses Std.Tasks as Tasks;
+procedure Work(Token: Tasks.CancellationToken); begin panic('contained'); end procedure;
 begin
-  const G: TaskGroup := CreateTaskGroup();
-  const WorkerTask: task := StartTaskInGroup(G, Work);
-  discard CloseTaskGroup(G);
+  const G: Tasks.TaskGroup := Tasks.CreateTaskGroup();
+  const WorkerTask: task := Tasks.StartTaskInGroup(G, Work);
+  discard Tasks.CloseTaskGroup(G);
 end."#;
     let (program, errors) = fpas_parser::parse(source);
     assert!(errors.is_empty(), "{errors:?}");

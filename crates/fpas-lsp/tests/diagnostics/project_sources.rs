@@ -20,7 +20,7 @@ include = ["src/**/*.fpas"]
     );
     temp.write(
         "src/main.fpas",
-        "program App;\n\nuses Demo.Math;\n\nbegin\n  const Value: integer := Answer();\nend.\n",
+        "program App;\n\nuses Demo.Math as Math;\n\nbegin\n  const Value: integer := Math.Answer();\nend.\n",
     );
     let unit_source = "unit Demo.Math;\n\npublic function Answer(): integer;\nbegin\n  return 'wrong';\nend function;\nend unit;\n";
     temp.write("src/math.fpas", unit_source);
@@ -68,8 +68,7 @@ main = "src/main.fpas"
 include = ["src/**/*.fpas"]
 "#,
         );
-        let valid =
-            "program App;\n\nuses Demo.Math;\n\nbegin\n  const Value: integer := Answer();\nend.\n";
+        let valid = "program App;\n\nuses Demo.Math as Math;\n\nbegin\n  const Value: integer := Math.Answer();\nend.\n";
         let unit_source = "unit Demo.Math;\n\npublic function Answer(): integer;\nbegin\n  return 42;\nend function;\nend unit;\n";
         let main = temp.write("src/main.fpas", valid);
         let unit = temp.write("src/math.fpas", unit_source);
@@ -181,9 +180,9 @@ end unit;
     );
     let facade_source = r#"unit Std.Facade;
 
-uses Std.Point;
+uses Std.Point as Point;
 
-public type FacadePoint = Std.Point.Point;
+public type FacadePoint = Point.Point;
 end unit;
 "#;
     temp.write("repository/lib/Std/Facade.fpas", facade_source);
@@ -250,8 +249,7 @@ main = "main.fpas"
 include = ["main.fpas"]
 "#,
     );
-    let source =
-        "program External;\n\nuses Std.Tui;\n\nbegin\n  const Palette: TuiPalette := 1;\nend.\n";
+    let source = "program External;\n\nuses Std.Tui as Tui;\n\nbegin\n  const Palette: Tui.TuiPalette := 1;\nend.\n";
     temp.write("external/main.fpas", source);
     let root_uri = temp.uri("external");
     let standard_library_uri = temp.uri("bundle");

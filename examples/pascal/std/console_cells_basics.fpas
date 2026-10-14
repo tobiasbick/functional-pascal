@@ -2,30 +2,30 @@
 
 program ConsoleCellsBasics;
 
-uses Std.Console;
+uses Std.Console as Console;
 
 begin
-  const Bounds: Rect := Std.Console.Rect(x := 1, y := 1, width := 6, height := 1);
-  const Underlay: SavedRegion := SaveRegion(Bounds);
-  BeginFrame();
-  FillRect(Bounds, Std.Console.Cell(glyph := ' ', foreground := CrtColor(White), background := Ansi256Color(24)));
-  const First: Cell := Std.Console.Cell(glyph := 'O', foreground := RgbColor(255, 220, 120), background := Ansi256Color(24));
-  const Second: Cell := Std.Console.Cell(glyph := 'K', foreground := RgbColor(156, 204, 255), background := Ansi256Color(24));
-  const LabelCells: array of Cell := [First, Second];
-  WriteCells(2, 1, LabelCells);
-  const ReadBack: option of Cell := GetCell(2, 1);
-  Present();
-  BeginFrame();
-  RestoreRegion(Underlay);
-  Present();
+  const Bounds: Console.Rect := Console.Rect(x := 1, y := 1, width := 6, height := 1);
+  const Underlay: Console.SavedRegion := Console.SaveRegion(Bounds);
+  Console.BeginFrame();
+  Console.FillRect(Bounds, Console.Cell(glyph := ' ', foreground := Console.CrtColor(Console.White), background := Console.Ansi256Color(24)));
+  const First: Console.Cell := Console.Cell(glyph := 'O', foreground := Console.RgbColor(255, 220, 120), background := Console.Ansi256Color(24));
+  const Second: Console.Cell := Console.Cell(glyph := 'K', foreground := Console.RgbColor(156, 204, 255), background := Console.Ansi256Color(24));
+  const LabelCells: array of Console.Cell := [First, Second];
+  Console.WriteCells(2, 1, LabelCells);
+  const ReadBack: option of Console.Cell := Console.GetCell(2, 1);
+  Console.Present();
+  Console.BeginFrame();
+  Console.RestoreRegion(Underlay);
+  Console.Present();
   case ReadBack of
     when Some(const Value):
       begin
-        WriteLn('ReadText back: ' + Value.glyph);
+        Console.WriteLn('ReadText back: ' + Value.glyph);
       end;
     when None:
       begin
-        WriteLn('No cell');
+        Console.WriteLn('No cell');
       end;
   end case;
 end.

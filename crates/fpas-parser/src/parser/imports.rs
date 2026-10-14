@@ -2,6 +2,7 @@
 //!
 //! **Documentation:** `docs/pascal/program-structure/units.md`
 
+use fpas_diagnostics::codes::PARSE_MISSING_IMPORT_ALIAS;
 use fpas_lexer::Token;
 
 use super::Parser;
@@ -28,7 +29,22 @@ impl Parser {
                 .expect_ident()
                 .unwrap_or_else(|| self.error_ident(self.current_span()));
             Some(ImportAlias { name, span })
+        } else if unit.parts.iter().any(|part| part == "_error_") {
+            None
         } else {
+            let unit_name = unit.parts.join(".");
+            let last = unit.parts.last().map(String::as_str).unwrap_or("Imported");
+            let suggested = if unit.parts.len() == 1 || last.eq_ignore_ascii_case("std") {
+                format!("{last}Unit")
+            } else {
+                last.to_owned()
+            };
+            self.error_with_code(
+                PARSE_MISSING_IMPORT_ALIAS,
+                &format!("Import `{unit_name}` requires an explicit alias"),
+                &format!("Write `uses {unit_name} as {suggested};` and access public names through `{suggested}.Name`."),
+                unit.span,
+            );
             None
         };
         Import {

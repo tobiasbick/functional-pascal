@@ -11,22 +11,7 @@ fn run_cli_assigns_and_calls_optional_handler_field() {
     support::write_program_project_file(&project_file, "src/main.fpas", &["src/*.fpas"]);
     write_text(
         &cwd.join("src/main.fpas"),
-        "program Main;
-uses App.Widget, Std.Console, Std.Conv;
-procedure Handle(Value: integer);
-begin
-  WriteLn(IntToStr(Value));
-end procedure;
-begin
-  var B: Button := Button.Make(14);
-  const Empty: Button := Button(Id := 0);
-  if Empty.OnClick.IsSome() then panic('imported handler default'); end if;
-  B.OnClick := Some(Handle);
-  if B.OnClick is Some(_) then
-    B.Click(); end if;
-  B.OnClick := None;
-  B.Click();
-end.",
+        "program Main;\nuses App.Widget as Widget, Std.Console as Console, Std.Conv as Conv;\nprocedure Handle(Value: integer);\nbegin\n  Console.WriteLn(Conv.IntToStr(Value));\nend procedure;\nbegin\n  var B: Widget.Button := Widget.Button.Make(14);\n  const Empty: Widget.Button := Widget.Button(Id := 0);\n  if Empty.OnClick.IsSome() then panic('imported handler default'); end if;\n  B.OnClick := Some(Handle);\n  if B.OnClick is Some(_) then\n    B.Click(); end if;\n  B.OnClick := None;\n  B.Click();\nend.",
     );
     write_text(
         &cwd.join("src/widget.fpas"),

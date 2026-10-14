@@ -1,6 +1,6 @@
 program RecordUpdateContextTest;
 
-uses Std.Test;
+uses Std.Test as Test;
 
 type Holder = record
   Items: array of integer;
@@ -13,10 +13,10 @@ begin
   const Original: Holder := Holder(Items := [1, 2], Tags := ['old': 1], MaybeItems := Some([3]), Lookup := Ok(['old': 2]));
   const Updated: Holder := Original with Items := []; Tags := [:]; MaybeItems := Some([]); Lookup := Ok([:]); end with;
 
-  AssertEquals(0, Updated.Items.Length());
-  AssertEquals(0, Updated.Tags.Length());
-  AssertEquals(0, Updated.MaybeItems.Unwrap().Length());
-  AssertEquals(0, Updated.Lookup.Unwrap().Length());
-  AssertEquals(2, Original.Items.Length());
-  AssertEquals(1, Original.Tags.Length());
+  Test.AssertEquals(0, Updated.Items.Length());
+  Test.AssertEquals(0, Updated.Tags.Length());
+  Test.AssertEquals(0, Updated.MaybeItems.Unwrap().Length());
+  Test.AssertEquals(0, Updated.Lookup.Unwrap().Length());
+  Test.AssertEquals(2, Original.Items.Length());
+  Test.AssertEquals(1, Original.Tags.Length());
 end.

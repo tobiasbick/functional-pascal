@@ -30,7 +30,7 @@ Equivalent conceptual declaration:
 
 ```pascal
 type KeyEvent = record
-  kind: KeyKind;
+  kind: Console.KeyKind;
   ch: string;
   shift: boolean;
   ctrl: boolean;
@@ -53,16 +53,16 @@ end record;
 ```pascal
 program Demo;
 
-uses Std.Console;
+uses Std.Console as Console;
 
 begin
-  const E: KeyEvent := ReadKeyEvent();
-  if E.kind = KeyKind.Escape then
-    WriteLn('escape');
-  elsif E.kind = KeyKind.Character then
-    WriteLn(E.ch);
+  const E: Console.KeyEvent := Console.ReadKeyEvent();
+  if E.kind = Console.KeyKind.Escape then
+    Console.WriteLn('escape');
+  elsif E.kind = Console.KeyKind.Character then
+    Console.WriteLn(E.ch);
   else
-    WriteLn('other');
+    Console.WriteLn('other');
   end if;
 end.
 ```
@@ -114,9 +114,9 @@ The language represents the underlying ordinal as an integer index in the **fixe
 **Literals** (with `uses Std.Console`):
 
 ```pascal
-const K: KeyKind := KeyKind.Space;
-if K = KeyKind.F1 then
-  WriteLn('F1');
+const K: Console.KeyKind := Console.KeyKind.Space;
+if K = Console.KeyKind.F1 then
+  Console.WriteLn('F1');
 end if;
 ```
 
@@ -130,10 +130,10 @@ Equivalent conceptual declaration:
 
 ```pascal
 type ConsoleEvent = record
-  kind: EventKind;
-  key: KeyEvent;
-  mouse_action: MouseAction;
-  mouse_button: MouseButton;
+  kind: Console.EventKind;
+  key: Console.KeyEvent;
+  mouse_action: Console.MouseAction;
+  mouse_button: Console.MouseButton;
   mouse_x: integer;
   mouse_y: integer;
   width: integer;

@@ -1,6 +1,6 @@
 program HigherOrderFunctionsExample;
 
-uses Std.Console;
+uses Std.Console as Console;
 
 // First-class named functions
 
@@ -37,38 +37,38 @@ begin
 end function;
 
 begin
-  WriteLn('Apply(Square, 6) = ', Apply(Square, 6));
+  Console.WriteLn('Apply(Square, 6) = ', Apply(Square, 6));
   const Op: function(X: integer): integer := Double;
-  WriteLn('Op(7) = ', Op(7));
+  Console.WriteLn('Op(7) = ', Op(7));
   const Nums: array of integer := [1, 2, 3, 4, 5];
   const Doubled: array of integer := Nums.Map(Double);
-  WriteText('Map double: ');
+  Console.WriteText('Map double: ');
   for V: integer in Doubled do
     begin
-      WriteText(V, ' ');
+      Console.WriteText(V, ' ');
     end;
   end for;
 
-  WriteLn('');
+  Console.WriteLn('');
   const Big: array of integer := Nums.Filter(IsGreaterThanThree);
-  WriteText('Filter > 3: ');
+  Console.WriteText('Filter > 3: ');
   for V: integer in Big do
     begin
-      WriteText(V, ' ');
+      Console.WriteText(V, ' ');
     end;
   end for;
 
-  WriteLn('');
+  Console.WriteLn('');
   const Total: integer := Nums.Reduce(0, Sum);
-  WriteLn('Reduce sum: ', Total);
+  Console.WriteLn('Reduce sum: ', Total);
   const Squared: array of integer := Nums.Map(Square);
   const LargeSquares: array of integer := Squared.Filter(IsGreaterThanTen);
-  WriteText('Squares > 10: ');
+  Console.WriteText('Squares > 10: ');
   for V: integer in LargeSquares do
     begin
-      WriteText(V, ' ');
+      Console.WriteText(V, ' ');
     end;
   end for;
 
-  WriteLn('');
+  Console.WriteLn('');
 end.

@@ -3,15 +3,7 @@ use super::*;
 #[test]
 fn unit_with_uses_and_declarations() {
     let unit = parse_unit_ok(
-        "\
-unit MyApp.Math;
-uses Std.Math;
-
-function Double(X: integer): integer;
-begin
-  return X * 2;
-end function;
-end unit;\n",
+        "unit MyApp.Math;\nuses Std.Math as Math;\n\nfunction Double(X: integer): integer;\nbegin\n  return X * 2;\nend function;\nend unit;\n",
     );
 
     assert_eq!(unit.name.parts, vec!["MyApp", "Math"]);
@@ -23,8 +15,9 @@ end unit;\n",
 
 #[test]
 fn unit_with_multiple_uses_comma_separated() {
-    let unit =
-        parse_unit_ok("unit MyApp.Core;\nuses Std.Console, Std.Math, Std.Crypto;\nend unit;\n");
+    let unit = parse_unit_ok(
+        "unit MyApp.Core;\nuses Std.Console as Console, Std.Math as Math, Std.Crypto as Crypto;\nend unit;\n",
+    );
 
     assert_eq!(unit.uses.len(), 3);
     assert_eq!(unit.uses[0].unit.parts, vec!["Std", "Console"]);

@@ -1,7 +1,7 @@
 program T;
 
-uses Std.Console, Std.Math;
+uses Std.Console as Console, Std.Math as Math;
 
 begin
-  WriteLn(Min(3, 1.5));
+  Console.WriteLn(Math.Min(3, 1.5));
 end.

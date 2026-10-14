@@ -1,6 +1,6 @@
 program SkippedErrorsTest;
 
-uses Std.Test;
+uses Std.Test as Test;
 
 function UnexpectedCall(): boolean;
 begin
@@ -9,11 +9,11 @@ begin
 end function;
 
 begin
-  AssertFalse(false and UnexpectedCall());
-  AssertTrue(true or UnexpectedCall());
-  AssertFalse(false and (1 div 0 > 0));
-  AssertTrue(true or (1 div 0 > 0));
+  Test.AssertFalse(false and UnexpectedCall());
+  Test.AssertTrue(true or UnexpectedCall());
+  Test.AssertFalse(false and (1 div 0 > 0));
+  Test.AssertTrue(true or (1 div 0 > 0));
   const Values: array of integer := [];
-  AssertFalse(false and (Values[0] = 1));
-  AssertTrue(true or (Values[0] = 1));
+  Test.AssertFalse(false and (Values[0] = 1));
+  Test.AssertTrue(true or (Values[0] = 1));
 end.

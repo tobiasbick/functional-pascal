@@ -1,15 +1,15 @@
 // Covers default and mutable HTTP request limits.
 program HttpRequestLimitsTest;
 
-uses Std.Http, Std.Test;
+uses Std.Http as Http, Std.Test as Test;
 
 begin
-  var RequestValue: Request := Request.Get('http://localhost/');
-  AssertEquals(65536, RequestValue.MaxHeaderBytes);
-  AssertEquals(16777216, RequestValue.MaxResponseBytes);
-  AssertEquals(5, RequestValue.MaxRedirects);
+  var RequestValue: Http.Request := Http.Request.Get('http://localhost/');
+  Test.AssertEquals(65536, RequestValue.MaxHeaderBytes);
+  Test.AssertEquals(16777216, RequestValue.MaxResponseBytes);
+  Test.AssertEquals(5, RequestValue.MaxRedirects);
   RequestValue.MaxHeaderBytes := 1024;
   RequestValue.MaxRedirects := 0;
-  AssertEquals(1024, RequestValue.MaxHeaderBytes);
-  AssertEquals(0, RequestValue.MaxRedirects);
+  Test.AssertEquals(1024, RequestValue.MaxHeaderBytes);
+  Test.AssertEquals(0, RequestValue.MaxRedirects);
 end.

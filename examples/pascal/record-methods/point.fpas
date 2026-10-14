@@ -1,6 +1,6 @@
 program PointExample;
 
-uses Std.Console, Std.Conv;
+uses Std.Console as Console, Std.Conv as Conv;
 
 type Point = record
   X: integer;
@@ -20,7 +20,7 @@ type Point = record
 
   procedure Print(Self: Point);
   begin
-    WriteLn('(' + IntToStr(Self.X) + ', ' + IntToStr(Self.Y) + ')');
+    Console.WriteLn('(' + Conv.IntToStr(Self.X) + ', ' + Conv.IntToStr(Self.Y) + ')');
   end procedure;
 end record;
 
@@ -29,8 +29,8 @@ begin
   const B: Point := Point(X := 10, Y := 20);
   A.Print();
   B.Print();
-  WriteLn('Sum of A: ' + IntToStr(A.Sum()));
+  Console.WriteLn('Sum of A: ' + Conv.IntToStr(A.Sum()));
   const C: Point := A.Add(B);
-  WriteLn('A + B =');
+  Console.WriteLn('A + B =');
   C.Print();
 end.

@@ -1,6 +1,6 @@
 program GoArgs;
 
-uses Std.Tasks, Std.Test;
+uses Std.Tasks as Tasks, Std.Test as Test;
 
 function Add(A: integer; B: integer): integer;
 begin
@@ -10,6 +10,6 @@ end function;
 begin
   scope
     const T: task of integer := go Add(10, 32);
-    AssertEquals(42, Std.Tasks.Wait(T));
+    Test.AssertEquals(42, Tasks.Wait(T));
   end scope;
 end.

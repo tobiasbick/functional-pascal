@@ -1,8 +1,8 @@
 program T;
 
-uses Std.Console;
+uses Std.Console as Console;
 
 begin
   const D: dict of string to integer := ['A': 1, 'B': 2];
-  WriteLn(D.Length());
+  Console.WriteLn(D.Length());
 end.

@@ -48,11 +48,11 @@ mod tests {
         let second = dir.join("second_test.fpas");
         write_text(
             &first,
-            "program First; uses Std.Test; begin AssertEquals(2, 1 + 1); end.",
+            "program First; uses Std.Test as Test; begin Test.AssertEquals(2, 1 + 1); end.",
         );
         write_text(
             &second,
-            "program Second; uses Std.Test; begin AssertTrue(true); end.",
+            "program Second; uses Std.Test as Test; begin Test.AssertTrue(true); end.",
         );
         let mut prepared = vec![
             PreparedTest {
@@ -123,7 +123,7 @@ mod tests {
             write_text(
                 path,
                 &format!(
-                    "program {name}; uses Suite.Helper, Std.Test; begin AssertEquals(42, GetAnswer()); end."
+                    "program {name}; uses Suite.Helper as Helper, Std.Test as Test; begin Test.AssertEquals(42, Helper.GetAnswer()); end."
                 ),
             );
         }
@@ -171,7 +171,7 @@ mod tests {
             write_text(
                 path,
                 &format!(
-                    "program {name}; uses Std.Test; const Value: integer := {value}; begin AssertEquals({value}, Value); end."
+                    "program {name}; uses Std.Test as Test; const Value: integer := {value}; begin Test.AssertEquals({value}, Value); end."
                 ),
             );
         }

@@ -162,8 +162,7 @@ impl ScopeStack {
         )
     }
 
-    /// Define in the outermost (program) scope. Used for `Std.*` short aliases so nested checking
-    /// (for example inside a routine body) does not attach imports to a transient inner scope.
+    /// Define a local qualified source symbol in the outermost scope, including enum variants.
     ///
     /// **Documentation:** `docs/pascal/program-structure/units.md` (from the repository root).
     pub fn define_in_root(&mut self, name: &str, symbol: Symbol) -> bool {
@@ -206,12 +205,6 @@ impl ScopeStack {
         }
     }
 
-    /// Remove a symbol from the program root scope. Used when rebuilding `Std` short aliases.
-    pub fn remove_from_root(&mut self, name: &str) -> bool {
-        let canonical_name = canonical_symbol_name(name);
-        self.scopes[0].symbols.remove(&canonical_name).is_some()
-    }
-
     /// Remove a symbol from the innermost scope.
     pub fn remove_from_current(&mut self, name: &str) -> bool {
         let canonical_name = canonical_symbol_name(name);
@@ -231,13 +224,15 @@ impl ScopeStack {
         &self,
         name: &str,
     ) -> Option<(usize, &Symbol, Option<Span>)> {
-        let canonical_name = self.imports.visible_name(name)?;
+        let canonical_name = canonical_symbol_name(name);
         for (index, scope) in self.scopes.iter().enumerate().rev() {
             if let Some(sym) = scope.symbols.get(&canonical_name) {
                 return Some((index, &sym.symbol, sym.declaration));
             }
         }
-        None
+        self.imports
+            .lookup_source(name)
+            .map(|symbol| (0, symbol, None))
     }
 
     /// Number of scopes currently on the stack (including the program root).
@@ -253,7 +248,12 @@ impl ScopeStack {
 
     /// Resolves a stored unit-level type identity without accepting a shadowing value or parameter.
     pub(crate) fn lookup_type(&self, name: &str) -> Option<&Symbol> {
-        let canonical = self.imports.canonical_name(name);
+        if let Some(symbol) = self.imports.lookup_metadata(name)
+            && symbol.kind == SymbolKind::Type
+        {
+            return Some(symbol);
+        }
+        let canonical = canonical_symbol_name(name);
         self.scopes
             .first()
             .and_then(|scope| scope.symbols.get(&canonical))
@@ -278,22 +278,13 @@ impl ScopeStack {
 
     /// Look up the original stored spelling for a symbol name.
     pub fn lookup_original_name(&self, name: &str) -> Option<&str> {
-        let canonical_name = self.imports.visible_name(name)?;
+        let canonical_name = canonical_symbol_name(name);
         for scope in self.scopes.iter().rev() {
             if let Some(sym) = scope.symbols.get(&canonical_name) {
                 return Some(&sym.original_name);
             }
         }
-        None
-    }
-
-    /// Look up a symbol only in the current (innermost) scope.
-    pub fn lookup_current(&self, name: &str) -> Option<&Symbol> {
-        let canonical_name = canonical_symbol_name(name);
-        self.scopes
-            .last()
-            .and_then(|scope| scope.symbols.get(&canonical_name))
-            .map(|entry| &entry.symbol)
+        self.imports.original_source_name(name)
     }
 
     /// Look up a symbol only in the program root scope.
@@ -313,19 +304,7 @@ impl ScopeStack {
             .filter(|(_, entry)| entry.symbol.kind == SymbolKind::Type)
             .map(|(name, entry)| (name.clone(), entry.symbol.ty.clone()))
             .collect::<BTreeMap<_, _>>();
-        for (unit, alias) in &self.imports.aliases {
-            let prefix = format!("{unit}.");
-            for (name, entry) in &self.scopes[0].symbols {
-                if entry.symbol.kind == SymbolKind::Type
-                    && let Some(tail) = name.strip_prefix(&prefix)
-                {
-                    types.insert(
-                        format!("{}.{}", alias.to_ascii_lowercase(), tail),
-                        entry.symbol.ty.clone(),
-                    );
-                }
-            }
-        }
+        types.extend(self.imports.type_symbols());
         types
     }
 
@@ -338,32 +317,6 @@ impl ScopeStack {
             }
         }
         None
-    }
-
-    /// Return all symbol names that start with a given prefix.
-    pub fn names_with_prefix(&self, prefix: &str) -> Vec<String> {
-        let canonical_prefix = canonical_symbol_name(prefix);
-        let mut names = Vec::new();
-        for scope in &self.scopes {
-            for (canonical_name, symbol) in &scope.symbols {
-                if canonical_name.starts_with(&canonical_prefix) {
-                    names.push(symbol.original_name.clone());
-                }
-            }
-        }
-        names
-    }
-
-    pub(crate) fn root_symbols_with_prefix(&self, prefix: &str) -> Vec<(String, Symbol)> {
-        let canonical_prefix = canonical_symbol_name(prefix);
-        let mut symbols = self.scopes[0]
-            .symbols
-            .iter()
-            .filter(|(name, _)| name.starts_with(&canonical_prefix))
-            .map(|(_, entry)| (entry.original_name.clone(), entry.symbol.clone()))
-            .collect::<Vec<_>>();
-        symbols.sort_by(|left, right| left.0.cmp(&right.0));
-        symbols
     }
 }
 

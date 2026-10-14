@@ -8,29 +8,7 @@ fn network_write_reports_progress_and_pre_cancellation_end_to_end() {
     let listener = std::net::TcpListener::bind("127.0.0.1:0").expect("bind");
     let port = listener.local_addr().expect("address").port();
     assert_succeeds(&format!(
-        "\
-program CancellableWrite;
-uses Std.Net, Std.Tasks;
-begin
-  case Std.Net.Connect('127.0.0.1', {port}, 1000) of
-    when Ok(const ConnectionValue):
-    begin
-      const Source: Std.Tasks.CancellationSource := Std.Tasks.CreateCancellationSource();
-      const Token: Std.Tasks.CancellationToken := Std.Tasks.GetCancellationToken(Source);
-      case Std.Net.SendBytesWithCancellation(ConnectionValue, [42, 43], Token) of
-        when Ok(const Count): if Count <> 2 then panic('wrong write count'); end if;
-        when Error(const Message): panic(Message);
-      end case;
-      discard Std.Tasks.Cancel(Source);
-      case Std.Net.SendBytesWithCancellation(ConnectionValue, [99], Token) of
-        when Ok(const Count): panic('cancelled write succeeded');
-        when Error(const Message): if Message <> 'Network write cancelled' then panic(Message); end if;
-      end case;
-      discard Std.Net.Close(ConnectionValue);
-    end;
-    when Error(const Message): panic(Message);
-  end case;
-end."
+        "program CancellableWrite;\nuses Std.Net as Net, Std.Tasks as Tasks;\nbegin\n  case Net.Connect('127.0.0.1', {port}, 1000) of\n    when Ok(const ConnectionValue):\n    begin\n      const Source: Tasks.CancellationSource := Tasks.CreateCancellationSource();\n      const Token: Tasks.CancellationToken := Tasks.GetCancellationToken(Source);\n      case Net.SendBytesWithCancellation(ConnectionValue, [42, 43], Token) of\n        when Ok(const Count): if Count <> 2 then panic('wrong write count'); end if;\n        when Error(const Message): panic(Message);\n      end case;\n      discard Tasks.Cancel(Source);\n      case Net.SendBytesWithCancellation(ConnectionValue, [99], Token) of\n        when Ok(const Count): panic('cancelled write succeeded');\n        when Error(const Message): if Message <> 'Network write cancelled' then panic(Message); end if;\n      end case;\n      discard Net.Close(ConnectionValue);\n    end;\n    when Error(const Message): panic(Message);\n  end case;\nend."
     ));
     let (mut peer, _) = listener.accept().expect("accept");
     peer.set_read_timeout(Some(Duration::from_secs(2)))

@@ -25,12 +25,12 @@ export async function verifyIntelliSense(extensionPath: string): Promise<void> {
   const source = [
     "program IntelliSenseHost;",
     "",
-    "uses Intellisense.Core;",
+    "uses Intellisense.Core as Core;",
     "",
     "begin",
-    "  const CounterValue: Counter := Counter( Amount := 1 );",
+    "  const CounterValue: Core.Counter := Core.Counter( Amount := 1 );",
     "  const Member: integer := CounterValue.Amount;",
-    "  const Sum: integer := Add(1, 2);",
+    "  const Sum: integer := Core.Add(1, 2);",
     "  const Imported: integer := UniqueHostValue();",
     "end.",
     ""
@@ -107,7 +107,7 @@ export async function verifyIntelliSense(extensionPath: string): Promise<void> {
       uri,
       autoImportPosition,
       "safe auto-import UniqueHostValue",
-      (item) => completionLabel(item) === "UniqueHostValue"
+      (item) => completionLabel(item) === "Importable.UniqueHostValue"
     );
     assert.ok(autoImport.additionalTextEdits?.length);
     assert.ok(

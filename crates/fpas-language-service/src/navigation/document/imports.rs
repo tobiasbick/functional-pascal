@@ -19,24 +19,20 @@ impl NavigationDocument {
         self.owner.eq_ignore_ascii_case(owner) || self.import_for(owner).is_some()
     }
 
-    /// Returns whether short public names are opened by a plain import.
-    pub(crate) fn opens_owner(&self, owner: &str) -> bool {
-        self.import_for(owner)
-            .is_some_and(|import| import.alias.is_none())
-    }
-
     /// Returns the source namespace used for the unit, preserving alias spelling.
     pub(crate) fn namespace_for(&self, owner: &str) -> Option<String> {
-        if self.owner.eq_ignore_ascii_case(owner) {
+        if let Some(import) = self.import_for(owner) {
+            return import.alias.as_ref().map(|alias| alias.name.clone());
+        }
+        if self.owner.eq_ignore_ascii_case(owner)
+            && matches!(
+                self.snapshot.compilation_unit(),
+                fpas_parser::CompilationUnit::Unit(_)
+            )
+        {
             return Some(self.owner.clone());
         }
-        let import = self.import_for(owner)?;
-        Some(
-            import
-                .alias
-                .as_ref()
-                .map_or_else(|| import.unit.parts.join("."), |alias| alias.name.clone()),
-        )
+        None
     }
 
     /// Expands a source-local alias in a qualified type name.

@@ -1,6 +1,6 @@
 program FluentMutationTaskTest;
 
-uses Std.Math, Std.Tasks, Std.Test;
+uses Std.Math as Math, Std.Tasks as Tasks, Std.Test as Test;
 
 function Add(X: integer; Y: integer): integer;
 begin
@@ -11,11 +11,11 @@ begin
   scope
     var Items: array of integer := [1, 2];
     Items.PushInPlace(3);
-    AssertEquals(3, Items.PopInPlace());
-    AssertEquals(2, Items.Length());
+    Test.AssertEquals(3, Items.PopInPlace());
+    Test.AssertEquals(2, Items.Length());
     const Job: task of integer := go Add(20, 22);
-    AssertEquals(42, Wait(Job));
-    const IntrinsicTask: task of integer := go Std.Math.Abs(-2);
-    AssertEquals(2, Wait(IntrinsicTask));
+    Test.AssertEquals(42, Tasks.Wait(Job));
+    const IntrinsicTask: task of integer := go Math.Abs(-2);
+    Test.AssertEquals(2, Tasks.Wait(IntrinsicTask));
   end scope;
 end.

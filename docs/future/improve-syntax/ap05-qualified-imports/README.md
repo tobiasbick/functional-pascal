@@ -9,24 +9,29 @@ Status: complete (Q04). Effort: medium. Completion is tracked in the
 Qualified lookup is stable under unrelated imports, with concrete collision
 diagnostics, and the default meaning of `uses` is a recorded decision.
 
-Current behavior: plain `uses` imports open short and fully qualified public
-names; aliases expose only `Alias.Name`. Repeated direct imports and alias
-collisions are rejected; ambiguous plain-import short names are reported at
-the point of use ([grammar](../../../specs/grammar.ebnf),
-`uses_clause`).
+Current behavior after AP41: every direct `uses` import requires an alias and
+exposes only `Alias.Name`. Repeated direct imports and alias collisions are
+rejected ([grammar](../../../specs/grammar.ebnf), `uses_clause`).
+
+[AP41.1](../ap41-canonical-qualified-names/01-qualification-decision.md) records
+the approved successor contract: every direct import requires an alias and
+imported access uses that alias. [AP41.2](../ap41-canonical-qualified-names/02-qualified-name-rules.md)
+delivers enforcement and migration. AP05 retains its completed status and alias
+identity/tooling contract; AP41 replaces its plain-import allowance and related
+optional forms.
 
 ## Decisions (Q04)
 
-- A plain `uses Std.Fs;` keeps opening public symbols under their short names.
-  Ambiguous short names are errors at the point of use; qualified names remain
-  available.
+- Replaced by AP41: the original decision allowed plain `uses Std.Fs;` to open
+  short and original-path public names, with ambiguity diagnosed at use sites.
+  Plain imports and those alternative access forms are now rejected.
 - `uses Std.Fs as Files;` exposes an alias. An aliased import opens no short names; its
   symbols are reached only through the alias, for example `Files.ReadText(Path)`.
   The five type-helper units removed by AP06 are unavailable as imports;
   other standard units follow these rules.
 - Import each unit at most once per source file, comparing canonical unit
-  names case-insensitively. Repeated plain imports, multiple aliases for one
-  unit, and a mixture of plain and aliased imports of that unit are errors.
+  names case-insensitively. Repeated imports and multiple aliases for one
+  unit are errors.
   This applies to that file's direct imports, not to transitive dependencies.
 - `as` is contextual syntax in `uses`, recognized case-insensitively after
   the imported unit name. It is not globally reserved and remains an ordinary
@@ -64,4 +69,4 @@ import-modifier position in both semantic tokens and TextMate highlighting.
 ## Acceptance
 
 Qualified lookup is stable under unrelated imports, with concrete collision
-diagnostics, and plain imports keep their recorded default meaning.
+diagnostics, and imports use the required alias form delivered by AP41.

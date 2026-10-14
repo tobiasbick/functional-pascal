@@ -5,38 +5,6 @@ fn task_token_cancels_network_read_end_to_end() {
     let listener = std::net::TcpListener::bind("127.0.0.1:0").expect("bind silent peer");
     let port = listener.local_addr().expect("address").port();
     assert_succeeds(&format!(
-        "\
-program CancellableRead;
-uses Std.Net, Std.Tasks, Std.Time;
-
-function ReadUntilCancelled(ConnectionValue: Std.Net.Connection;
-  Token: Std.Tasks.CancellationToken): string;
-begin
-  case Std.Net.ReceiveBytesWithCancellation(ConnectionValue, 1, Token) of
-    when Ok(const Data): return 'received';
-    when Error(const Message): return Message;
-  end case;
-end function;
-
-begin scope
-  case Std.Net.Connect('127.0.0.1', {port}, 1000) of
-    when Ok(const ConnectionValue):
-    begin
-      discard Std.Net.SetTimeout(ConnectionValue, 1000);
-      const Source: Std.Tasks.CancellationSource := Std.Tasks.CreateCancellationSource();
-      const Token: Std.Tasks.CancellationToken := Std.Tasks.GetCancellationToken(Source);
-      const Waiting: task of string := go ReadUntilCancelled(ConnectionValue, Token);
-      Std.Time.Sleep(30);
-      discard Std.Tasks.Cancel(Source);
-      if Std.Tasks.Wait(Waiting) <> 'Network read cancelled' then
-        panic('read did not report cancellation'); end if;
-      case Std.Net.Close(ConnectionValue) of
-        when Ok(const Closed): if not Closed then panic('close failed'); end if;
-        when Error(const Message): panic(Message);
-      end case;
-    end;
-    when Error(const Message): panic(Message);
-  end case;
- end scope; end."
+        "program CancellableRead;\nuses Std.Net as Net, Std.Tasks as Tasks, Std.Time as Time;\n\nfunction ReadUntilCancelled(ConnectionValue: Net.Connection;\n  Token: Tasks.CancellationToken): string;\nbegin\n  case Net.ReceiveBytesWithCancellation(ConnectionValue, 1, Token) of\n    when Ok(const Data): return 'received';\n    when Error(const Message): return Message;\n  end case;\nend function;\n\nbegin scope\n  case Net.Connect('127.0.0.1', {port}, 1000) of\n    when Ok(const ConnectionValue):\n    begin\n      discard Net.SetTimeout(ConnectionValue, 1000);\n      const Source: Tasks.CancellationSource := Tasks.CreateCancellationSource();\n      const Token: Tasks.CancellationToken := Tasks.GetCancellationToken(Source);\n      const Waiting: task of string := go ReadUntilCancelled(ConnectionValue, Token);\n      Time.Sleep(30);\n      discard Tasks.Cancel(Source);\n      if Tasks.Wait(Waiting) <> 'Network read cancelled' then\n        panic('read did not report cancellation'); end if;\n      case Net.Close(ConnectionValue) of\n        when Ok(const Closed): if not Closed then panic('close failed'); end if;\n        when Error(const Message): panic(Message);\n      end case;\n    end;\n    when Error(const Message): panic(Message);\n  end case;\n end scope; end."
     ));
 }

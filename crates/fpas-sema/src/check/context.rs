@@ -210,7 +210,7 @@ pub struct Checker {
     pub(crate) fluent_calls: FluentCallMap,
     /// Calls through callable record fields.
     pub(crate) member_value_calls: MemberValueCallMap,
-    /// Imported public symbols grouped by their unqualified name.
+    /// Required qualified spellings grouped by removed short names, for diagnostics only.
     pub(crate) imported_candidates: HashMap<String, Vec<String>>,
     /// Synthetic receiver expressions already checked as part of a fluent call.
     pub(crate) prechecked_receivers: ExprTypeMap,
@@ -218,22 +218,6 @@ pub struct Checker {
     pub(crate) loaded_std_units: HashSet<String>,
     /// All unit names in the current `uses` clause, including source units.
     pub(crate) used_unit_names: HashSet<String>,
-    /// Short names that map to multiple fully-qualified std symbols (ambiguous).
-    pub(crate) ambiguous_imports: HashMap<String, Vec<String>>,
-    /// Unqualified enum variant names that map to multiple `Type.Variant` symbols (ambiguous).
-    pub(crate) ambiguous_enum_variants: HashMap<String, Vec<String>>,
-    /// Canonical short enum variant names registered at the program root without ambiguity.
-    pub(crate) enum_short_variant_keys: HashMap<String, String>,
-    /// Unqualified `BuiltinStd` call -> fully qualified name for the polymorphic checker.
-    pub(crate) short_builtin_redirect: HashMap<String, String>,
-    /// Canonical short names inserted at the program root by [`crate::std_registry::register_short_aliases`].
-    pub(crate) std_short_alias_keys: HashSet<String>,
-    /// Canonical short names currently bound to imported source-unit symbols.
-    pub(crate) source_short_alias_keys: HashSet<String>,
-    /// Short-name candidates exported by directly imported source units, keyed canonically.
-    ///
-    /// [`crate::std_registry::register_short_aliases`] merges them with `Std.*` candidates.
-    pub(crate) source_short_candidates: HashMap<String, Vec<(String, crate::scope::Symbol)>>,
     /// Named record type → ordered (field_name, optional_default_expr) pairs.
     pub(crate) record_defaults: RecordDefaultsMap,
     /// Identity keys of calls that construct a concrete record type.
@@ -321,13 +305,6 @@ impl Checker {
             prechecked_receivers: ExprTypeMap::new(),
             loaded_std_units: HashSet::new(),
             used_unit_names: HashSet::new(),
-            ambiguous_imports: HashMap::new(),
-            ambiguous_enum_variants: HashMap::new(),
-            enum_short_variant_keys: HashMap::new(),
-            short_builtin_redirect: HashMap::new(),
-            std_short_alias_keys: HashSet::new(),
-            source_short_alias_keys: HashSet::new(),
-            source_short_candidates: HashMap::new(),
             record_defaults: RecordDefaultsMap::new(),
             record_constructions: HashSet::new(),
             distinct_conversions: HashSet::new(),

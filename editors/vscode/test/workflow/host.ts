@@ -60,15 +60,15 @@ export async function verifyWorkflowHost(
     );
     await fs.writeFile(
       testPaths.pass,
-      "program PassTest;\n\nuses Std.Test;\n\nbegin\n  AssertTrue(true);\nend.\n"
+      "program PassTest;\n\nuses Std.Test as Test;\n\nbegin\n  Test.AssertTrue(true);\nend.\n"
     );
     await fs.writeFile(
       testPaths.fail,
-      "program FailTest;\n\nuses Std.Test;\n\nbegin\n  AssertTrue(false);\nend.\n"
+      "program FailTest;\n\nuses Std.Test as Test;\n\nbegin\n  Test.AssertTrue(false);\nend.\n"
     );
     await fs.writeFile(
       testPaths.skip,
-      "program SkipTest;\n\nuses Std.Test;\n\nbegin\n  Skip('host fixture');\nend.\n"
+      "program SkipTest;\n\nuses Std.Test as Test;\n\nbegin\n  Test.Skip('host fixture');\nend.\n"
     );
     await fs.writeFile(
       testPaths.compile,

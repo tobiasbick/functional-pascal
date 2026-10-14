@@ -4,14 +4,13 @@
 //! **Maintenance:** Registering or changing a `Std.*` symbol here must be reflected in the matching unit
 //! Markdown file and in runtime/compiler/bytecode code (`fpas-std`, `fpas-bytecode`, `fpas-compiler`).
 
-mod aliases;
 mod api;
 mod builtins;
 mod loaded;
 mod native;
+mod qualified_names;
 mod receiver;
 
-pub use aliases::register_short_aliases;
 pub use api::{
     IntrinsicStdSymbol, IntrinsicStdSymbolKind, intrinsic_std_symbols, intrinsic_std_units,
 };
@@ -22,6 +21,7 @@ pub use native::{
     native_operation, native_operation_by_implementation, native_operations,
     validate_native_catalog,
 };
+pub(crate) use qualified_names::register_qualified_import_candidates;
 pub use receiver::intrinsic_std_receiver_mode;
 
 use crate::check::Checker;
@@ -33,7 +33,7 @@ fn p(name: &str, ty: Ty) -> ParamTy {
 }
 
 fn define_func(c: &mut Checker, q: &str, params: Vec<ParamTy>, ret: Ty) {
-    c.scopes.define(
+    c.scopes.imports.define_metadata(
         q,
         Symbol {
             constant: None,
@@ -51,7 +51,7 @@ fn define_func(c: &mut Checker, q: &str, params: Vec<ParamTy>, ret: Ty) {
 }
 
 fn define_proc_variadic(c: &mut Checker, q: &str) {
-    c.scopes.define(
+    c.scopes.imports.define_metadata(
         q,
         Symbol {
             constant: None,
@@ -68,7 +68,7 @@ fn define_proc_variadic(c: &mut Checker, q: &str) {
 }
 
 fn define_proc(c: &mut Checker, q: &str, params: Vec<ParamTy>) {
-    c.scopes.define(
+    c.scopes.imports.define_metadata(
         q,
         Symbol {
             constant: None,
@@ -85,7 +85,7 @@ fn define_proc(c: &mut Checker, q: &str, params: Vec<ParamTy>) {
 }
 
 fn define_const(c: &mut Checker, q: &str, ty: Ty) {
-    c.scopes.define(
+    c.scopes.imports.define_metadata(
         q,
         Symbol {
             constant: None,
@@ -107,7 +107,7 @@ fn define_builtin_std(c: &mut Checker, q: &str, mut placeholder: Ty) {
         Ty::Procedure(procedure) => procedure.params = params,
         _ => unreachable!("polymorphic operation must be callable"),
     }
-    c.scopes.define(
+    c.scopes.imports.define_metadata(
         q,
         Symbol {
             constant: None,

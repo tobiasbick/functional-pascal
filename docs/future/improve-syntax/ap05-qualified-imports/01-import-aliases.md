@@ -2,14 +2,15 @@
 
 Package: [AP05: Qualified imports](README.md)
 
-Status: complete.
+Status: complete. AP41 replaces the original plain-import allowance while
+retaining this package's alias and canonical-identity contract.
 
 ## Result
 
 `uses Unit as Alias;` exposes the unit's public symbols only through
 `Alias.Name`. It opens no short names and hides that import's original unit
-path. Plain imports keep short and fully qualified names; ambiguous short
-names remain errors at the point of use.
+path. AP41 now requires that alias form on every direct import; the original
+plain-import short/full-name alternatives are removed.
 
 `as` is contextual immediately after a unit name in `uses`, recognized
 case-insensitively without a globally reserved lexer keyword. Identifiers named
@@ -18,8 +19,8 @@ case-insensitively without a globally reserved lexer keyword. Identifiers named
 ## Import and collision rules
 
 Each unit occurs at most once in a file's direct imports, comparing canonical
-unit names case-insensitively. Repeated plain imports, multiple aliases, and
-plain/aliased combinations are rejected with FP3002 at the repeated entry.
+unit names case-insensitively. Repeated aliased imports and multiple aliases
+are rejected with FP3002 at the repeated entry. Missing aliases report FP2022.
 Shared transitive dependencies are allowed.
 
 Aliases cannot collide with each other, primitive type names, imported or
@@ -65,7 +66,7 @@ interfaces, linked symbols, and sidecar dependencies keep canonical unit names.
   construction, routine values, tasks, colliding helpers, and dependency
   sidecar reuse after a program alias is renamed.
 - `crates/fpas-cli/src/main_tests/projects/edge_cases/unit_names.rs`: direct
-  duplicate imports in plain, aliased, mixed, and case-varied forms emit FP3002.
+  duplicate aliased imports in case-varied forms emit FP3002.
 - `crates/fpas-fmt/src/emit/program.rs`: casing, wrapping, comment preservation,
   and idempotence.
 - `tests/stdlib/imports/aliases_test.fpas`: intrinsic aliases, constants,

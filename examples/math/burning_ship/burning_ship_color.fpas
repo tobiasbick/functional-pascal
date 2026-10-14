@@ -2,7 +2,7 @@
 
 unit BurningShip.Color;
 
-uses Std.Console, Std.Math;
+uses Std.Console as Console, Std.Math as Math;
 
 public type PaletteKind = enum
   DeepOcean;
@@ -30,10 +30,10 @@ end function;
 
 function BandIndex(EscapeValue: real): integer;
 begin
-  return Clamp(Trunc(Frac(EscapeValue * 0.08) * 12.0), 0, 11);
+  return Math.Clamp(Math.Trunc(Math.Frac(EscapeValue * 0.08) * 12.0), 0, 11);
 end function;
 
-public function EscapeColor(Kind: PaletteKind; EscapeValue: real): Color;
+public function EscapeColor(Kind: PaletteKind; EscapeValue: real): Console.Color;
 begin
   const Band: integer := BandIndex(EscapeValue);
   case Kind of
@@ -42,51 +42,51 @@ begin
         case Band of
           when 0:
             begin
-              return RgbColor(5, 16, 37);
+              return Console.RgbColor(5, 16, 37);
             end;
           when 1:
             begin
-              return RgbColor(11, 31, 70);
+              return Console.RgbColor(11, 31, 70);
             end;
           when 2:
             begin
-              return RgbColor(16, 51, 106);
+              return Console.RgbColor(16, 51, 106);
             end;
           when 3:
             begin
-              return RgbColor(20, 74, 138);
+              return Console.RgbColor(20, 74, 138);
             end;
           when 4:
             begin
-              return RgbColor(26, 99, 167);
+              return Console.RgbColor(26, 99, 167);
             end;
           when 5:
             begin
-              return RgbColor(34, 127, 193);
+              return Console.RgbColor(34, 127, 193);
             end;
           when 6:
             begin
-              return RgbColor(46, 156, 207);
+              return Console.RgbColor(46, 156, 207);
             end;
           when 7:
             begin
-              return RgbColor(76, 183, 216);
+              return Console.RgbColor(76, 183, 216);
             end;
           when 8:
             begin
-              return RgbColor(112, 208, 219);
+              return Console.RgbColor(112, 208, 219);
             end;
           when 9:
             begin
-              return RgbColor(161, 224, 216);
+              return Console.RgbColor(161, 224, 216);
             end;
           when 10:
             begin
-              return RgbColor(212, 237, 232);
+              return Console.RgbColor(212, 237, 232);
             end;
           else
             begin
-              return RgbColor(242, 248, 255);
+              return Console.RgbColor(242, 248, 255);
             end;
         end case;
       end;
@@ -95,51 +95,51 @@ begin
         case Band of
           when 0:
             begin
-              return RgbColor(64, 0, 0);
+              return Console.RgbColor(64, 0, 0);
             end;
           when 1:
             begin
-              return RgbColor(106, 10, 0);
+              return Console.RgbColor(106, 10, 0);
             end;
           when 2:
             begin
-              return RgbColor(138, 30, 0);
+              return Console.RgbColor(138, 30, 0);
             end;
           when 3:
             begin
-              return RgbColor(176, 58, 0);
+              return Console.RgbColor(176, 58, 0);
             end;
           when 4:
             begin
-              return RgbColor(212, 90, 0);
+              return Console.RgbColor(212, 90, 0);
             end;
           when 5:
             begin
-              return RgbColor(240, 122, 0);
+              return Console.RgbColor(240, 122, 0);
             end;
           when 6:
             begin
-              return RgbColor(255, 159, 26);
+              return Console.RgbColor(255, 159, 26);
             end;
           when 7:
             begin
-              return RgbColor(255, 190, 74);
+              return Console.RgbColor(255, 190, 74);
             end;
           when 8:
             begin
-              return RgbColor(255, 217, 120);
+              return Console.RgbColor(255, 217, 120);
             end;
           when 9:
             begin
-              return RgbColor(255, 231, 166);
+              return Console.RgbColor(255, 231, 166);
             end;
           when 10:
             begin
-              return RgbColor(255, 241, 204);
+              return Console.RgbColor(255, 241, 204);
             end;
           else
             begin
-              return RgbColor(255, 248, 232);
+              return Console.RgbColor(255, 248, 232);
             end;
         end case;
       end;
@@ -148,59 +148,59 @@ begin
         case Band of
           when 0:
             begin
-              return RgbColor(4, 16, 32);
+              return Console.RgbColor(4, 16, 32);
             end;
           when 1:
             begin
-              return RgbColor(10, 46, 72);
+              return Console.RgbColor(10, 46, 72);
             end;
           when 2:
             begin
-              return RgbColor(16, 77, 106);
+              return Console.RgbColor(16, 77, 106);
             end;
           when 3:
             begin
-              return RgbColor(20, 104, 134);
+              return Console.RgbColor(20, 104, 134);
             end;
           when 4:
             begin
-              return RgbColor(25, 124, 143);
+              return Console.RgbColor(25, 124, 143);
             end;
           when 5:
             begin
-              return RgbColor(35, 142, 124);
+              return Console.RgbColor(35, 142, 124);
             end;
           when 6:
             begin
-              return RgbColor(52, 169, 104);
+              return Console.RgbColor(52, 169, 104);
             end;
           when 7:
             begin
-              return RgbColor(100, 191, 100);
+              return Console.RgbColor(100, 191, 100);
             end;
           when 8:
             begin
-              return RgbColor(148, 217, 118);
+              return Console.RgbColor(148, 217, 118);
             end;
           when 9:
             begin
-              return RgbColor(200, 230, 138);
+              return Console.RgbColor(200, 230, 138);
             end;
           when 10:
             begin
-              return RgbColor(234, 240, 180);
+              return Console.RgbColor(234, 240, 180);
             end;
           else
             begin
-              return RgbColor(248, 248, 224);
+              return Console.RgbColor(248, 248, 224);
             end;
         end case;
       end;
   end case;
 end function;
 
-public function InsideColor(): Color;
+public function InsideColor(): Console.Color;
 begin
-  return RgbColor(0, 0, 0);
+  return Console.RgbColor(0, 0, 0);
 end function;
 end unit;

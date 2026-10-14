@@ -20,14 +20,14 @@ export async function verifyBreakpointPolicies(
   const lines = [
     "program DebuggerBreakpointPolicies;",
     "",
-    "uses Std.Console;",
+    "uses Std.Console as Console;",
     "",
     "begin",
     "  var Counter: integer := 0;",
     "  while Counter < 4 do",
     "  begin",
     "    Counter := Counter + 1;",
-    "    WriteLn(Counter);",
+    "    Console.WriteLn(Counter);",
     "  end; end while;",
     "end.",
     ""

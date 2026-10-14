@@ -1,6 +1,6 @@
 unit Std.Tui.Chrome.StatusItem;
 
-uses Std.Tui.Ids.Action, Std.Tui.Ids.ControlId;
+uses Std.Tui.Ids.Action as IdsAction, Std.Tui.Ids.ControlId as ControlId;
 
 // Immutable display or action item in a status line.
 public type TuiStatusItem = enum
@@ -22,7 +22,7 @@ public type TuiStatusItem = enum
   // - `Text`: Text carried or displayed by the variant.
   // - `Action`: Application action carried by the variant.
   // - `Enabled`: Whether the represented item is enabled.
-  Command(Id: TuiControlId; Text: string; Action: TuiAction; Enabled: boolean);
+  Command(Id: ControlId.TuiControlId; Text: string; Action: IdsAction.TuiAction; Enabled: boolean);
 end enum;
 
 // Constructors for immutable status-line items.
@@ -52,7 +52,7 @@ public type TuiStatusItemBuilders = record
   // - `Id`: Identifier assigned to the created or selected value.
   // - `Text`: Text processed or displayed by the operation.
   // - `Action`: Application action associated with the control or emitted message.
-  public static function MakeCommand(Id: TuiControlId; Text: string; Action: TuiAction): TuiStatusItem;
+  public static function MakeCommand(Id: ControlId.TuiControlId; Text: string; Action: IdsAction.TuiAction): TuiStatusItem;
   begin
     return TuiStatusItem.Command(Id, Text, Action, true);
   end function;
@@ -63,7 +63,7 @@ public type TuiStatusItemBuilders = record
   // - `Id`: Identifier assigned to the created or selected value.
   // - `Text`: Text processed or displayed by the operation.
   // - `Action`: Application action associated with the control or emitted message.
-  public static function MakeDisabledCommand(Id: TuiControlId; Text: string; Action: TuiAction): TuiStatusItem;
+  public static function MakeDisabledCommand(Id: ControlId.TuiControlId; Text: string; Action: IdsAction.TuiAction): TuiStatusItem;
   begin
     return TuiStatusItem.Command(Id, Text, Action, false);
   end function;

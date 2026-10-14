@@ -9,7 +9,7 @@ fn immutable_pattern_callables_can_be_spawned_and_discarded() {
     assert_succeeds(
         r#"program PatternTasks;
 
-uses Std.Tasks;
+uses Std.Tasks as Tasks;
 
 function Work(): integer;
 begin
@@ -29,7 +29,7 @@ begin scope
 
     discard Alias;
     const Job: task of integer := go Alias();
-    Sum := Sum + Wait(Job);
+    Sum := Sum + Tasks.Wait(Job);
     when None: panic('missing payload');
   end case;
 
@@ -38,7 +38,7 @@ begin scope
       when Some(const F):
         discard F;
         const Job: task of integer := go F();
-        Sum := Sum + Wait(Job);
+        Sum := Sum + Tasks.Wait(Job);
         break;
       when None: break;
     end case;
@@ -48,7 +48,7 @@ begin scope
     when Some(Ok(Some(const F))):
       discard F;
       const Job: task of integer := go F();
-      Sum := Sum + Wait(Job);
+      Sum := Sum + Tasks.Wait(Job);
     when Some(_), None:
       panic('missing payload');
   end case;
@@ -104,7 +104,7 @@ fn scalar_fields_of_task_bound_pattern_values_can_be_captured_and_spawned() {
     assert_succeeds(
         r#"
 program PatternScalar;
-uses Std.Tasks;
+uses Std.Tasks as Tasks;
 type WorkBox = record
   Change: procedure();
   Number: integer;
@@ -122,7 +122,7 @@ begin scope
       return N;
     end function;
     const Job: task of integer := go GetNumber();
-    if Wait(Job) <> 42 then panic('scalar capture'); end if;
+    if Tasks.Wait(Job) <> 42 then panic('scalar capture'); end if;
     Box.Change();
     when None: null;
   end case;
@@ -140,7 +140,7 @@ fn closures_capture_distinct_pattern_bindings_from_the_same_label() {
     assert_succeeds(
         r#"
 program MultiplePatternCaptures;
-uses Std.Tasks;
+uses Std.Tasks as Tasks;
 type Pair = enum
   Values(First: integer; Second: integer);
 end enum;
@@ -154,7 +154,7 @@ begin scope
       end function;
       discard Add;
       const Job: task of integer := go Add();
-      if Wait(Job) <> 42 then panic('distinct captures'); end if;
+      if Tasks.Wait(Job) <> 42 then panic('distinct captures'); end if;
   end case;
  end scope; end procedure;
 begin

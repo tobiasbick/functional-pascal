@@ -1,6 +1,6 @@
 program ParenthesizedTypeArgumentsTest;
 
-uses Std.Test;
+uses Std.Test as Test;
 
 type Payload = result of (option of array of integer, result of (integer, string));
 
@@ -25,19 +25,19 @@ end function;
 
 begin
   const Success: Payload := Nested(true);
-  AssertEquals(5, Success.Unwrap().Unwrap()[1]);
+  Test.AssertEquals(5, Success.Unwrap().Unwrap()[1]);
   const Failure: Payload := Nested(false);
   case Failure of
     when Ok(_):
-      AssertTrue(false);
+      Test.AssertTrue(false);
     when Error(const Inner):
       case Inner of
         when Ok(_):
-          AssertTrue(false);
+          Test.AssertTrue(false);
         when Error(const Message):
-          AssertEquals('failed', Message);
+          Test.AssertEquals('failed', Message);
       end case;
   end case;
   const Values: dict of string to result of (integer, string) := ['key': Apply(Increment, 8)];
-  AssertEquals(9, Values['key'].Unwrap());
+  Test.AssertEquals(9, Values['key'].Unwrap());
 end.

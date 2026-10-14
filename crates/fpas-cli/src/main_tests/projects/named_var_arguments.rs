@@ -24,18 +24,7 @@ end unit;",
     );
     write_text(
         &cwd.join("src/main.fpas"),
-        "program Main;
-uses App.Counter, Std.Console;
-begin
-  var Value: integer := 1;
-  Add(Step := 2, Value := var Value);
-  Forward(Target := var Value);
-  Add(Value := var App.Counter.Total, Step := 4);
-  Edit(Amount := 2, Destination := var Value);
-  const Renamed: procedure(var Slot: integer; Delta: integer) := Edit;
-  Renamed(Delta := 1, Slot := var Value);
-  WriteLn(Value); WriteLn(App.Counter.Total);
-end.",
+        "program Main;\nuses App.Counter as Counter, Std.Console as Console;\nbegin\n  var Value: integer := 1;\n  Counter.Add(Step := 2, Value := var Value);\n  Counter.Forward(Target := var Value);\n  Counter.Add(Value := var Counter.Total, Step := 4);\n  Counter.Edit(Amount := 2, Destination := var Value);\n  const Renamed: procedure(var Slot: integer; Delta: integer) := Counter.Edit;\n  Renamed(Delta := 1, Slot := var Value);\n  Console.WriteLn(Value); Console.WriteLn(Counter.Total);\nend.",
     );
     let mut sidecar_modified = None;
     for _ in 0..2 {
@@ -68,11 +57,7 @@ fn run_cli_named_var_arguments_report_marker_alias_and_lifetime_errors() {
         ("Swap(A := var Counter, var Other);", "FP2016"),
     ] {
         let source = format!(
-            "program Invalid;
-uses Std.Tasks;
-procedure Increase(var Value: integer); begin Value := Value + 1; end procedure;
-procedure Swap(var A: integer; var B: integer); begin end procedure;
-begin var Counter: integer := 0; var Other: integer := 0; {body} end."
+            "program Invalid;\nuses Std.Tasks as Tasks;\nprocedure Increase(var Value: integer); begin Value := Value + 1; end procedure;\nprocedure Swap(var A: integer; var B: integer); begin end procedure;\nbegin var Counter: integer := 0; var Other: integer := 0; {body} end."
         );
         let (exit, stdout, stderr) = run_source_and_capture_output("named-var.fpas", &source);
         assert_ne!(exit, 0, "{body}");

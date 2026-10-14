@@ -1,35 +1,35 @@
 program TuiButtonSnapshotTest;
 
-uses Std.Test, Std.Tui;
+uses Std.Test as Test, Std.Tui as Tui;
 
-function ViewButtons(State: integer): TuiElement;
+function ViewButtons(State: integer): Tui.TuiElement;
 begin
-  return TuiElementBuilders.MakeDesktop(Some(TuiControlId.Create(1)), [
-                                                                        TuiElementBuilders.MakePanel('Buttons', [
-                                                                                                                  TuiElementBuilders.MakeColumn([
-                                                                                                                                                  TuiElementBuilders.MakeButtonWithMnemonic(TuiControlId.Create(1), 'Go', 'G', TuiAction.Create(1)),
-                                                                                                                                                  TuiElementBuilders.MakeDefaultButton(TuiControlId.Create(2), 'OK', 'O', TuiAction.Create(2)),
-                                                                                                                                                  TuiElementBuilders.MakeDisabledButton(TuiControlId.Create(3), 'Stop', 'S', TuiAction.Create(3))
-                                                                                                                                                ])
-                                                                                                                ])
-                                                                      ]);
+  return Tui.TuiElementBuilders.MakeDesktop(Some(Tui.TuiControlId.Create(1)), [
+                                                                                Tui.TuiElementBuilders.MakePanel('Buttons', [
+                                                                                                                              Tui.TuiElementBuilders.MakeColumn([
+                                                                                                                                                                  Tui.TuiElementBuilders.MakeButtonWithMnemonic(Tui.TuiControlId.Create(1), 'Go', 'G', Tui.TuiAction.Create(1)),
+                                                                                                                                                                  Tui.TuiElementBuilders.MakeDefaultButton(Tui.TuiControlId.Create(2), 'OK', 'O', Tui.TuiAction.Create(2)),
+                                                                                                                                                                  Tui.TuiElementBuilders.MakeDisabledButton(Tui.TuiControlId.Create(3), 'Stop', 'S', Tui.TuiAction.Create(3))
+                                                                                                                                                                ])
+                                                                                                                            ])
+                                                                              ]);
 end function;
 
-function UpdateButtons(State: integer; Msg: TuiMsg; Cmd: TuiCmdOutput): integer;
+function UpdateButtons(State: integer; Msg: Tui.TuiMsg; Cmd: Tui.TuiCmdOutput): integer;
 begin
-  Cmd.Set(TuiCmd.NoCommand);
+  Cmd.Set(Tui.TuiCmd.NoCommand);
   return State;
 end function;
 
 begin
-  const App: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(24, 10));
+  const App: Tui.TuiApplication := Tui.TuiApplication.OpenForTest(Tui.TuiSize.Create(24, 10));
   discard App.RunIterations(0, UpdateButtons, ViewButtons, 0, 0);
-  const Surface: TuiSurfaceSnapshot := App.SurfaceSnapshot();
+  const Surface: Tui.TuiSurfaceSnapshot := App.SurfaceSnapshot();
   const GoX: integer := Surface.LineAt(1).IndexOf('G');
   const OkX: integer := Surface.LineAt(2).IndexOf('O');
   const StopX: integer := Surface.LineAt(3).IndexOf('S');
-  AssertTrue(Surface.CellAt(GoX, 1).Role = TuiStyleRole.ButtonSelectedShortcut);
-  AssertTrue(Surface.CellAt(OkX, 2).Role = TuiStyleRole.ButtonDefaultShortcut);
-  AssertTrue(Surface.CellAt(StopX, 3).Role = TuiStyleRole.ButtonDisabled);
+  Test.AssertTrue(Surface.CellAt(GoX, 1).Role = Tui.TuiStyleRole.ButtonSelectedShortcut);
+  Test.AssertTrue(Surface.CellAt(OkX, 2).Role = Tui.TuiStyleRole.ButtonDefaultShortcut);
+  Test.AssertTrue(Surface.CellAt(StopX, 3).Role = Tui.TuiStyleRole.ButtonDisabled);
   App.Close();
 end.

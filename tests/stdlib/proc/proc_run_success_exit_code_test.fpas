@@ -1,25 +1,25 @@
 program ProcRunSuccessExitCodeTest;
 
-uses Std.Proc, Std.Test;
+uses Std.Proc as Proc, Std.Test as Test;
 
 begin
   // Host process that exits 0 on Windows and Unix.
-  case Run('cmd', ['/C', 'exit 0']) of
+  case Proc.Run('cmd', ['/C', 'exit 0']) of
     when Ok(const Code):
       begin
-        AssertEquals(0, Code);
+        Test.AssertEquals(0, Code);
       end;
     when Error(const Message):
       begin
         // Fall back for non-Windows hosts where `cmd` is absent.
-        case Run('sh', ['-c', 'exit 0']) of
+        case Proc.Run('sh', ['-c', 'exit 0']) of
           when Ok(const Code):
             begin
-              AssertEquals(0, Code);
+              Test.AssertEquals(0, Code);
             end;
           when Error(const FallbackMessage):
             begin
-              Fail(Message + ' / ' + FallbackMessage);
+              Test.Fail(Message + ' / ' + FallbackMessage);
             end;
         end case;
       end;

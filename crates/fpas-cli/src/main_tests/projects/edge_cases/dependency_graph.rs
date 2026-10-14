@@ -7,15 +7,15 @@ fn diamond_dependency_graph() {
     support::write_program_project_file(&project_file, "src/main.fpas", &["src/*.fpas"]);
     write_text(
         &cwd.join("src/main.fpas"),
-        "program Main;\nuses App.A, App.B, Std.Console;\nbegin\n  WriteLn(FromA() + FromB());\nend.\n",
+        "program Main;\nuses App.A as A, App.B as B, Std.Console as Console;\nbegin\n  Console.WriteLn(A.FromA() + B.FromB());\nend.\n",
     );
     write_text(
         &cwd.join("src/a.fpas"),
-        "unit App.A;\nuses App.Shared;\npublic function FromA(): integer;\nbegin\n  return Base() + 1;\nend function;\nend unit;\n",
+        "unit App.A;\nuses App.Shared as Shared;\npublic function FromA(): integer;\nbegin\n  return Shared.Base() + 1;\nend function;\nend unit;\n",
     );
     write_text(
         &cwd.join("src/b.fpas"),
-        "unit App.B;\nuses App.Shared;\npublic function FromB(): integer;\nbegin\n  return Base() + 10;\nend function;\nend unit;\n",
+        "unit App.B;\nuses App.Shared as Shared;\npublic function FromB(): integer;\nbegin\n  return Shared.Base() + 10;\nend function;\nend unit;\n",
     );
     write_text(
         &cwd.join("src/shared.fpas"),
@@ -37,19 +37,19 @@ fn three_unit_cyclic_dependency() {
     support::write_program_project_file(&project_file, "src/main.fpas", &["src/*.fpas"]);
     write_text(
         &cwd.join("src/main.fpas"),
-        "program Main;\nuses App.A;\nbegin\nend.\n",
+        "program Main;\nuses App.A as A;\nbegin\nend.\n",
     );
     write_text(
         &cwd.join("src/a.fpas"),
-        "unit App.A;\nuses App.B;\nend unit;\n",
+        "unit App.A;\nuses App.B as B;\nend unit;\n",
     );
     write_text(
         &cwd.join("src/b.fpas"),
-        "unit App.B;\nuses App.C;\nend unit;\n",
+        "unit App.B;\nuses App.C as C;\nend unit;\n",
     );
     write_text(
         &cwd.join("src/c.fpas"),
-        "unit App.C;\nuses App.A;\nend unit;\n",
+        "unit App.C;\nuses App.A as A;\nend unit;\n",
     );
 
     let (exit_code, _, stderr_output) = support::run_cli_and_capture_output(&project_file, &cwd);
@@ -69,11 +69,11 @@ fn self_import_reports_cycle() {
     support::write_program_project_file(&project_file, "src/main.fpas", &["src/*.fpas"]);
     write_text(
         &cwd.join("src/main.fpas"),
-        "program Main;\nuses App.A;\nbegin\nend.\n",
+        "program Main;\nuses App.A as A;\nbegin\nend.\n",
     );
     write_text(
         &cwd.join("src/a.fpas"),
-        "unit App.A;\nuses App.A;\nend unit;\n",
+        "unit App.A;\nuses App.A as A;\nend unit;\n",
     );
 
     let (exit_code, _, stderr_output) = support::run_cli_and_capture_output(&project_file, &cwd);
@@ -106,12 +106,12 @@ members = ["common/lib.fpasprj", "left/lib.fpasprj", "right/lib.fpasprj", "app/a
         (
             "left",
             "workspace = [\"common\"]",
-            "uses Repro.common; public function LeftValue(): integer; begin return Value(); end function;",
+            "uses Repro.common as Common; public function LeftValue(): integer; begin return Common.Value(); end function;",
         ),
         (
             "right",
             "workspace = [\"common\"]",
-            "uses Repro.common; public function RightValue(): integer; begin return Value(); end function;",
+            "uses Repro.common as Common; public function RightValue(): integer; begin return Common.Value(); end function;",
         ),
     ] {
         write_text(
@@ -149,7 +149,7 @@ workspace = ["left", "right"]
     );
     write_text(
         &cwd.join("app/main.fpas"),
-        "program App; uses Repro.left, Repro.right, Std.Console; begin WriteLn(LeftValue() + RightValue()); end.",
+        "program App; uses Repro.left as left, Repro.right as right, Std.Console as Console; begin Console.WriteLn(left.LeftValue() + right.RightValue()); end.",
     );
     for (command, path) in [
         ("check", &workspace),

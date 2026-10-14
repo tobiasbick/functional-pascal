@@ -27,7 +27,7 @@ export async function verifyVariableMutation(
   const lines = [
     "program DebuggerVariableMutation;",
     "",
-    "uses Std.Console;",
+    "uses Std.Console as Console;",
     "",
     "type",
     "  Point = record",
@@ -48,7 +48,7 @@ export async function verifyVariableMutation(
     "  var Items: array of integer := [6, 7];",
     "  var Scores: dict of string to integer := ['Ada': 8];",
     "  const StopMarker: integer := Fixed;",
-    "  WriteLn(Scalar + Origin.X + Items[1] + Scores['Ada'] + GlobalValue);",
+    "  Console.WriteLn(Scalar + Origin.X + Items[1] + Scores['Ada'] + GlobalValue);",
     "end.",
     "",
   ];

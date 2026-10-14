@@ -1,6 +1,6 @@
 program MutatingReceiversTest;
 
-uses Std.Test;
+uses Std.Test as Test;
 
 type Holder = record
   Items: array of integer;
@@ -22,7 +22,7 @@ procedure Change(var H: Holder; var Rows: array of array of integer);
 begin
   H.Items.PushInPlace(4);
   Rows[0].PushInPlace(5);
-  AssertEquals(5, Rows[0].PopInPlace());
+  Test.AssertEquals(5, Rows[0].PopInPlace());
 end procedure;
 
 begin
@@ -32,30 +32,30 @@ begin
   const OldRows: array of array of integer := Rows;
   Change(var H, var Rows);
   Forward(var H.Items, 6);
-  AssertEquals(6, H.Items.PopInPlace());
-  AssertEquals(4, H.Items.PopInPlace());
-  AssertEquals(1, Original.Items.Length());
-  AssertEquals(2, Original.Items[0]);
-  AssertEquals(1, OldRows[0].Length());
+  Test.AssertEquals(6, H.Items.PopInPlace());
+  Test.AssertEquals(4, H.Items.PopInPlace());
+  Test.AssertEquals(1, Original.Items.Length());
+  Test.AssertEquals(2, Original.Items[0]);
+  Test.AssertEquals(1, OldRows[0].Length());
   Global.Items.PushInPlace(7);
-  AssertEquals(7, Global.Items.PopInPlace());
+  Test.AssertEquals(7, Global.Items.PopInPlace());
   var Holders: array of Holder := [H];
   Holders[0].Items.PushInPlace(8);
-  AssertEquals(8, Holders[0].Items.PopInPlace());
-  AssertEquals(1, H.Items.Length());
+  Test.AssertEquals(8, Holders[0].Items.PopInPlace());
+  Test.AssertEquals(1, H.Items.Length());
   var Local: Holder := Holder(Items := [9]);
   const AddCaptured: procedure() := procedure() begin
     Local.Items.PushInPlace(10);
   end procedure;
 
   AddCaptured();
-  AssertEquals(10, Local.Items.PopInPlace());
+  Test.AssertEquals(10, Local.Items.PopInPlace());
   const TakeCaptured: function(): integer := function(): integer begin
     return Local.Items.PopInPlace();
   end function;
 
-  AssertEquals(9, TakeCaptured());
+  Test.AssertEquals(9, TakeCaptured());
   var Lists: array of array of integer := [[11, 12]];
-  AssertEquals(2, Lists.PopInPlace().Length());
-  AssertEquals(0, Lists.Length());
+  Test.AssertEquals(2, Lists.PopInPlace().Length());
+  Test.AssertEquals(0, Lists.Length());
 end.

@@ -19,7 +19,7 @@ end record;
 // Child identity, failure kind, message, diagnostic code, and source position.
 public type TaskFailure = record
   public TaskId: integer;
-  public Kind: Std.Tasks.TaskFailureKind;
+  public Kind: TaskFailureKind;
   public Message: string;
   public Code: integer;
   public Line: integer;
@@ -52,7 +52,7 @@ end record;
 //
 // Parameters:
 // - `Source`: `Std.Tasks.CancellationSource` input value used by `Cancel`.
-public function Cancel(Source: Std.Tasks.CancellationSource): boolean;
+public function Cancel(Source: CancellationSource): boolean;
 begin
   panic('Intrinsic API declaration');
 end function;
@@ -61,7 +61,7 @@ end function;
 //
 // Parameters:
 // - `Group`: `Std.Tasks.TaskGroup` input value used by `CancelTaskGroup`.
-public function CancelTaskGroup(Group: Std.Tasks.TaskGroup): boolean;
+public function CancelTaskGroup(Group: TaskGroup): boolean;
 begin
   panic('Intrinsic API declaration');
 end function;
@@ -89,7 +89,7 @@ end function;
 //
 // Parameters:
 // - `Group`: `Std.Tasks.TaskGroup` input value used by `CloseTaskGroup`.
-public function CloseTaskGroup(Group: Std.Tasks.TaskGroup): array of Std.Tasks.TaskFailure;
+public function CloseTaskGroup(Group: TaskGroup): array of TaskFailure;
 begin
   panic('Intrinsic API declaration');
 end function;
@@ -99,7 +99,7 @@ end function;
 // Parameters:
 // - `Group`: `Std.Tasks.TaskGroup` input value used by `CloseTaskGroupWithTimeout`.
 // - `TimeoutMillis`: `integer` input value used by `CloseTaskGroupWithTimeout`.
-public function CloseTaskGroupWithTimeout(Group: Std.Tasks.TaskGroup; TimeoutMillis: integer): result of (array of Std.Tasks.TaskFailure, string);
+public function CloseTaskGroupWithTimeout(Group: TaskGroup; TimeoutMillis: integer): result of (array of TaskFailure, string);
 begin
   panic('Intrinsic API declaration');
 end function;
@@ -108,13 +108,13 @@ end function;
 //
 // Parameters:
 // - `Handle`: Unused selection case to discard.
-public function CloseWaitCase(Handle: Std.Tasks.WaitCase): boolean;
+public function CloseWaitCase(Handle: WaitCase): boolean;
 begin
   panic('Intrinsic API declaration');
 end function;
 
 // Creates an active source.
-public function CreateCancellationSource(): Std.Tasks.CancellationSource;
+public function CreateCancellationSource(): CancellationSource;
 begin
   panic('Intrinsic API declaration');
 end function;
@@ -129,7 +129,7 @@ begin
 end function;
 
 // Creates a group owned by the calling task.
-public function CreateTaskGroup(): Std.Tasks.TaskGroup;
+public function CreateTaskGroup(): TaskGroup;
 begin
   panic('Intrinsic API declaration');
 end function;
@@ -138,7 +138,7 @@ end function;
 //
 // Parameters:
 // - `Source`: `Std.Tasks.CancellationSource` input value used by `GetCancellationToken`.
-public function GetCancellationToken(Source: Std.Tasks.CancellationSource): Std.Tasks.CancellationToken;
+public function GetCancellationToken(Source: CancellationSource): CancellationToken;
 begin
   panic('Intrinsic API declaration');
 end function;
@@ -147,7 +147,7 @@ end function;
 //
 // Parameters:
 // - `Group`: `Std.Tasks.TaskGroup` input value used by `GetTaskGroupToken`.
-public function GetTaskGroupToken(Group: Std.Tasks.TaskGroup): Std.Tasks.CancellationToken;
+public function GetTaskGroupToken(Group: TaskGroup): CancellationToken;
 begin
   panic('Intrinsic API declaration');
 end function;
@@ -156,7 +156,7 @@ end function;
 //
 // Parameters:
 // - `Token`: `Std.Tasks.CancellationToken` input value used by `IsCancellationRequested`.
-public function IsCancellationRequested(Token: Std.Tasks.CancellationToken): boolean;
+public function IsCancellationRequested(Token: CancellationToken): boolean;
 begin
   panic('Intrinsic API declaration');
 end function;
@@ -204,7 +204,7 @@ end function;
 //
 // Parameters:
 // - `Cases`: `array of Std.Tasks.WaitCase` input value used by `Select`.
-public function Select(Cases: array of Std.Tasks.WaitCase): integer;
+public function Select(Cases: array of WaitCase): integer;
 begin
   panic('Intrinsic API declaration');
 end function;
@@ -307,7 +307,7 @@ end function;
 //
 // Parameters:
 // - `Group`: `Std.Tasks.TaskGroup` input value used by `TryCloseCompletedTaskGroup`.
-public function TryCloseCompletedTaskGroup(Group: Std.Tasks.TaskGroup): option of array of Std.Tasks.TaskFailure;
+public function TryCloseCompletedTaskGroup(Group: TaskGroup): option of array of TaskFailure;
 begin
   panic('Intrinsic API declaration');
 end function;

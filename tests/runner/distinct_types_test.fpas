@@ -1,6 +1,6 @@
 program DistinctTypesTest;
 
-uses Std.Test;
+uses Std.Test as Test;
 
 type Raw = integer;
 
@@ -34,28 +34,28 @@ end function;
 
 begin
   const Next: UserId := NextId(Admin);
-  AssertEquals(8, integer(Next));
-  AssertEquals(8, Raw(Next));
-  AssertEquals(7, AdminRaw);
-  AssertEquals(3, integer(AccountId(3)));
-  AssertEquals('Ada', string(Name('Ada')));
-  AssertEquals(3, string(Name('Ada')).Length());
-  AssertEquals(2.5, real(Price(2.5)));
-  AssertTrue(boolean(Flag(true)));
+  Test.AssertEquals(8, integer(Next));
+  Test.AssertEquals(8, Raw(Next));
+  Test.AssertEquals(7, AdminRaw);
+  Test.AssertEquals(3, integer(AccountId(3)));
+  Test.AssertEquals('Ada', string(Name('Ada')));
+  Test.AssertEquals(3, string(Name('Ada')).Length());
+  Test.AssertEquals(2.5, real(Price(2.5)));
+  Test.AssertTrue(boolean(Flag(true)));
   const U: User := User(Label := Name('root'));
-  AssertEquals(0, integer(U.Id));
-  AssertEquals('root', string(U.Label));
+  Test.AssertEquals(0, integer(U.Id));
+  Test.AssertEquals('root', string(U.Label));
   const Ids: array of UserId := [Admin, Next];
-  AssertEquals(2, Ids.Length());
-  AssertEquals(8, integer(Ids[1]));
-  AssertEquals(7, integer(Same(Admin)));
+  Test.AssertEquals(2, Ids.Length());
+  Test.AssertEquals(8, integer(Ids[1]));
+  Test.AssertEquals(7, integer(Same(Admin)));
   var Current: UserId := Admin;
   Current := NextId(NextId(Current));
-  AssertEquals(9, integer(Current));
+  Test.AssertEquals(9, integer(Current));
   case AdminRaw of
     when 7:
-      AssertTrue(true);
+      Test.AssertTrue(true);
     else
-      AssertTrue(false);
+      Test.AssertTrue(false);
   end case;
 end.

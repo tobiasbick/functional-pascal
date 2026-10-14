@@ -1,7 +1,7 @@
 // Viewport geometry shared by the interactive fractal examples.
 unit Fractal.Camera;
 
-uses Std.Conv, Std.Math;
+uses Std.Conv as Conv, Std.Math as Math;
 
 // Complex-plane viewport and renderer settings.
 public type ExplorerCamera = record
@@ -19,9 +19,9 @@ public type ExplorerCamera = record
   // Horizontal span adjusted for terminal cell proportions.
   public function SpanX(Self: ExplorerCamera; Width: integer; Height: integer): real;
   begin
-    const SafeWidth: integer := Max(Width, 1);
-    const SafeHeight: integer := Max(Height, 1);
-    return Self.SpanY * (IntToReal(SafeWidth) / IntToReal(SafeHeight)) * 0.5;
+    const SafeWidth: integer := Math.Max(Width, 1);
+    const SafeHeight: integer := Math.Max(Height, 1);
+    return Self.SpanY * (Conv.IntToReal(SafeWidth) / Conv.IntToReal(SafeHeight)) * 0.5;
   end function;
 
   // Left viewport boundary.

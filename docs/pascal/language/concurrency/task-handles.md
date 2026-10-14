@@ -1,5 +1,7 @@
 # Task handles
 
+The code fragments use `uses Std.Tasks as Tasks;`.
+
 A retained task handle has one fixed type determined by the spawned routine:
 
 - `task` is a procedure-task handle with no result.
@@ -13,8 +15,8 @@ bindings, parameters, fields, aliases, containers, and exported signatures.
 scope
 const Calculation: task of integer := go Compute(100);
 const Worker: task := go RunWorker();
-const Value: integer := Wait(Calculation);
-Wait(Worker);
+const Value: integer := Tasks.Wait(Calculation);
+Tasks.Wait(Worker);
 end scope;
 ```
 
@@ -39,17 +41,17 @@ variable, field, or unit segment.
 ```pascal
 function Doubled(Job: task of integer): integer;
 begin
-  return Wait(Job) * 2;
+  return Tasks.Wait(Job) * 2;
 end function;
 
 procedure Join(Job: task);
 begin
-  Wait(Job);
+  Tasks.Wait(Job);
 end procedure;
 
 scope
   const Jobs: array of task of result of (boolean, string) := [go Connect(), go Serve()];
-  WaitAll(Jobs);
+  Tasks.WaitAll(Jobs);
 end scope;
 ```
 
@@ -75,11 +77,11 @@ while pool workers run queued work. See [Waiting and execution](../../std/concur
 ```pascal
 scope
   const T: task of integer := go Compute(100);
-  const TaskValue: integer := Wait(T);
+  const TaskValue: integer := Tasks.Wait(T);
 end scope;
 ```
 
-For a procedure task, Wait is a procedure operation: write `Wait(Job);` as
+For a procedure task, Wait is a procedure operation: write `Tasks.Wait(Job);` as
 a statement. It cannot supply a value, including inside Some, Ok, an array,
 or another call's arguments. No public unit/void value type is needed.
 
@@ -91,7 +93,7 @@ They observe completion without consuming results. Mixed task arrays are
 rejected. WaitAll uses the same cooperative child-wait mechanism as Wait:
 
 ```pascal
-WaitAll([T1, T2, T3]);
+Tasks.WaitAll([T1, T2, T3]);
 ```
 
 `WaitAll` is a barrier only: it does not consume return values. You may still `Wait` each handle afterward. See [`Std.Tasks`](../../std/concurrency/task.md).

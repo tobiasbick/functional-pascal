@@ -31,11 +31,11 @@ export async function verifyForcedReturn(
   const lines = [
     "program DebuggerForcedReturn;",
     "",
-    "uses Std.Console;",
+    "uses Std.Console as Console;",
     "",
     "function Leaf(Value: integer): integer;",
     "begin",
-    "  WriteLn('leaf');",
+    "  Console.WriteLn('leaf');",
     "  return Value + 1;",
     "end function;",
     "",
@@ -43,13 +43,13 @@ export async function verifyForcedReturn(
     "begin",
     "  const Local: integer := Value + 10;",
     "  const Nested: integer := Leaf(Local);",
-    "  WriteLn('branch');",
+    "  Console.WriteLn('branch');",
     "  return Nested;",
     "end function;",
     "",
     "begin",
     "  const Answer: integer := Branch(1);",
-    "  WriteLn(Answer);",
+    "  Console.WriteLn(Answer);",
     "end.",
     ""
   ];
@@ -158,7 +158,7 @@ export async function verifyForcedReturn(
     recoverySourcePath = await writeSource(workspaceRoot, "forced-return-recovery", [
       "program DebuggerRecovery;",
       "",
-      "uses Std.Console;",
+      "uses Std.Console as Console;",
       "",
       "function Fail(): integer;",
       "begin",
@@ -168,7 +168,7 @@ export async function verifyForcedReturn(
       "",
       "begin",
       "  const Value: integer := Fail();",
-      "  WriteLn(Value);",
+      "  Console.WriteLn(Value);",
       "end.",
       ""
     ]);

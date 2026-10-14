@@ -1,6 +1,6 @@
 program GoStr;
 
-uses Std.Tasks, Std.Test;
+uses Std.Tasks as Tasks, Std.Test as Test;
 
 function Greet(): string;
 begin
@@ -10,6 +10,6 @@ end function;
 begin
   scope
     const T: task of string := go Greet();
-    AssertEquals('hello', Std.Tasks.Wait(T));
+    Test.AssertEquals('hello', Tasks.Wait(T));
   end scope;
 end.

@@ -48,10 +48,10 @@ Visual checklist:
 ```pascal
 program Hello;
 
-uses Std.Console;
+uses Std.Console as Console;
 
 begin
-  WriteLn('Hello, World!');
+  Console.WriteLn('Hello, World!');
 end.
 ```
 
@@ -60,10 +60,10 @@ end.
 ```pascal
 program Hello;
 
-uses Std.Console;
+uses Std.Console as Console;
 
 begin
-  WriteLn('Hello, World!');
+  Console.WriteLn('Hello, World!');
 end.
 ```
 
@@ -74,46 +74,46 @@ Same file **after** fmt. Explicit scoping blocks from the source are retained:
 ```pascal
 program ControlFlowDemo;
 
-uses Std.Console, Std.Conv;
+uses Std.Console as Console, Std.Conv as Conv;
 
 begin
   var X: integer := 5;
   if X > 0 then
     begin
-      WriteLn('positive');
+      Console.WriteLn('positive');
     end;
   elsif X = 0 then
     begin
-      WriteLn('zero');
+      Console.WriteLn('zero');
     end;
   else
     begin
-      WriteLn('negative');
+      Console.WriteLn('negative');
     end;
   end if;
 
   case X of
     when 1:
       begin
-        WriteLn('one');
+        Console.WriteLn('one');
       end;
     when 2, 3:
       begin
-        WriteLn('two or three');
+        Console.WriteLn('two or three');
       end;
     when 10..20:
       begin
-        WriteLn('ten to twenty');
+        Console.WriteLn('ten to twenty');
       end;
     else
       begin
-        WriteLn('other');
+        Console.WriteLn('other');
       end;
   end case;
 
   for I: integer := 1 to 3 do
     begin
-      WriteLn(IntToStr(I));
+      Console.WriteLn(Conv.IntToStr(I));
     end;
   end for;
 
@@ -124,7 +124,7 @@ begin
   end while;
   var N: integer := 0;
   repeat
-    WriteLn(IntToStr(N));
+    Console.WriteLn(Conv.IntToStr(N));
     N := N + 1;
   until N >= 3;
 end.
@@ -137,7 +137,7 @@ Golden output for a file like [`examples/pascal/record-methods/point.fpas`](../.
 ```pascal
 program PointExample;
 
-uses Std.Console, Std.Conv;
+uses Std.Console as Console, Std.Conv as Conv;
 
 type Point = record
   X: integer;
@@ -157,7 +157,7 @@ type Point = record
 
   procedure Print(Self: Point);
   begin
-    WriteLn('(' + IntToStr(Self.X) + ', ' + IntToStr(Self.Y) + ')');
+    Console.WriteLn('(' + Conv.IntToStr(Self.X) + ', ' + Conv.IntToStr(Self.Y) + ')');
   end procedure;
 end record;
 
@@ -166,9 +166,9 @@ begin
   const B: Point := Point(X := 10, Y := 20);
   A.Print();
   B.Print();
-  WriteLn('Sum of A: ' + IntToStr(A.Sum()));
+  Console.WriteLn('Sum of A: ' + Conv.IntToStr(A.Sum()));
   const C: Point := A.Add(B);
-  WriteLn('A + B =');
+  Console.WriteLn('A + B =');
   C.Print();
 end.
 ```
@@ -181,7 +181,7 @@ Branch statements are indented directly under their clause (see
 ```pascal
 unit MyApp.Utils;
 
-uses Std.Math;
+uses Std.Math as Math;
 
 function Clamp(Value: integer; Min: integer; Max: integer): integer;
 begin
@@ -207,7 +207,7 @@ end unit;
 ```pascal
 unit MyApp.Utils;
 
-uses Std.Math;
+uses Std.Math as Math;
 
 function Clamp(Value: integer; Min: integer; Max: integer): integer;
 begin
@@ -390,7 +390,7 @@ statement. Comments stay with the branch they precede or follow.
 - `uses` clause: comma-separated, one space after comma.
   An alias is emitted as `Unit as Alias`: lowercase contextual `as`, one
   space on either side, and the written spelling of both names preserved.
-  Alias entries follow the same wrapping and comment rules as plain imports.
+  Every entry requires its alias and follows these wrapping and comment rules.
 
 Routine contracts occupy separate lines after the heading and before any
 nested declarations or `begin`, at the heading's indentation. Emit lowercase
@@ -461,10 +461,11 @@ line. Indent the import list by two spaces and wrap after commas when needed:
 program LongUses;
 
 uses
-  Std.Console, Std.Conv, Std.Crypto, MyApp.Very.Long.Namespace.One, MyApp.Very.Long.Namespace.Two;
+  Std.Console as Console, Std.Conv as Conv, Std.Crypto as Crypto,
+  MyApp.Very.Long.Namespace.One as One, MyApp.Very.Long.Namespace.Two as Two;
 
 begin
-  WriteLn('ok');
+  Console.WriteLn('ok');
 end.
 ```
 

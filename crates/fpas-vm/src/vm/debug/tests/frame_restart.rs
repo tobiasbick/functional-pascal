@@ -8,18 +8,18 @@ use super::*;
 
 const ACTIVE_SOURCE: &str = r#"program RestartActive;
 
-uses Std.Console;
+uses Std.Console as Console;
 
 function Branch(Value: integer): integer;
 begin
   var Local: integer := Value + 10;
-  WriteLn('effect');
+  Console.WriteLn('effect');
   return Local;
 end function;
 
 begin
   const Answer: integer := Branch(1);
-  WriteLn(Answer);
+  Console.WriteLn(Answer);
 end.
 "#;
 
@@ -132,7 +132,7 @@ fn active_restart_preserves_parameters_clears_locals_and_repeats_effects_only_af
 fn selected_older_restart_discards_younger_frames_and_reenters_the_selected_function() {
     const SOURCE: &str = r#"program RestartOlder;
 
-uses Std.Console;
+uses Std.Console as Console;
 
 function Leaf(Value: integer): integer;
 begin
@@ -146,7 +146,7 @@ begin
 end function;
 
 begin
-  WriteLn(Branch(1));
+  Console.WriteLn(Branch(1));
 end.
 "#;
     let mut session = session(SOURCE);
@@ -181,13 +181,13 @@ end.
 fn restart_preserves_the_exact_mutable_capture_cell() {
     const SOURCE: &str = r#"program RestartCapture;
 
-uses Std.Console;
+uses Std.Console as Console;
 
 function Outer(Start: integer): integer;
   function Inner(): integer;
   begin
     Counter := Counter + 1;
-    WriteLn(Counter);
+    Console.WriteLn(Counter);
     return Counter;
   end function;
 begin
@@ -196,7 +196,7 @@ begin
 end function;
 
 begin
-  WriteLn(Outer(5));
+  Console.WriteLn(Outer(5));
 end.
 "#;
     let mut session = session(SOURCE);
@@ -248,7 +248,7 @@ end.
 fn peer_and_stale_frames_are_rejected_without_worker_changes() {
     const SOURCE: &str = r#"program RestartPeer;
 
-uses Std.Tasks;
+uses Std.Tasks as Tasks;
 
 function Work(): integer;
 begin
@@ -257,7 +257,7 @@ end function;
 
 begin scope
   const Pending: task of integer := go Work();
-  discard Wait(Pending);
+  discard Tasks.Wait(Pending);
  end scope; end.
 "#;
     let mut session = session(SOURCE);

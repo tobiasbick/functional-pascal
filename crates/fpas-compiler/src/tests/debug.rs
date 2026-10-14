@@ -267,7 +267,7 @@ fn compiler_retains_distinct_task_result_types_for_local_and_global_bindings() {
         r#"
 program DebugTaskResultTypes;
 
-uses Std.Tasks;
+uses Std.Tasks as Tasks;
 
 function Seven(): integer;
 begin
@@ -279,9 +279,9 @@ begin
   return 'nope';
 end function;
 
-const Owner: TaskGroup := CreateTaskGroup();
-const GlobalCurrent: task of integer := StartTaskInGroup(Owner, function(Token: CancellationToken): integer begin return Seven(); end function);
-const GlobalWrong: task of string := StartTaskInGroup(Owner, function(Token: CancellationToken): string begin return Label(); end function);
+const Owner: Tasks.TaskGroup := Tasks.CreateTaskGroup();
+const GlobalCurrent: task of integer := Tasks.StartTaskInGroup(Owner, function(Token: Tasks.CancellationToken): integer begin return Seven(); end function);
+const GlobalWrong: task of string := Tasks.StartTaskInGroup(Owner, function(Token: Tasks.CancellationToken): string begin return Label(); end function);
 
 begin scope
   const Current: task of integer := go Seven();

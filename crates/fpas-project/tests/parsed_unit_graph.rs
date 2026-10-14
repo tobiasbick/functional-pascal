@@ -32,7 +32,7 @@ fn parsed_source_graph_does_not_read_nonexistent_source_paths() {
         parsed_unit("virtual/base.fpas", "unit Demo.Base;\nend unit;\n"),
         parsed_unit(
             "virtual/feature.fpas",
-            "unit Demo.Feature;\nuses Demo.Base;\nend unit;\n",
+            "unit Demo.Feature;\nuses Demo.Base as Base;\nend unit;\n",
         ),
     ];
 
@@ -50,11 +50,11 @@ fn parsed_program_graph_reserves_main_source_and_resolves_dependencies() {
         parsed_unit("virtual/base.fpas", "unit Demo.Base;\nend unit;\n"),
         parsed_unit(
             "virtual/feature.fpas",
-            "unit Demo.Feature;\nuses Demo.Base;\nend unit;\n",
+            "unit Demo.Feature;\nuses Demo.Base as Base;\nend unit;\n",
         ),
     ];
     let (program, diagnostics) =
-        fpas_parser::parse("program App;\nuses Demo.Feature;\nbegin\nend.\n");
+        fpas_parser::parse("program App;\nuses Demo.Feature as Feature;\nbegin\nend.\n");
     assert!(diagnostics.is_empty(), "{diagnostics:?}");
 
     let graph = build_unit_graph_for_program_from_parsed_sources(

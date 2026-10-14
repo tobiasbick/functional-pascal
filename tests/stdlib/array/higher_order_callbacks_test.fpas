@@ -1,6 +1,6 @@
 program ArrayHigherOrderCallbacksTest;
 
-uses Std.Test;
+uses Std.Test as Test;
 
 function Double(Value: integer): integer;
 begin
@@ -21,12 +21,12 @@ begin
   const Values: array of integer := [1, 2, 3, 4];
   const Mapped: array of integer := Values.Map(Double);
   const Filtered: array of integer := Mapped.Filter(IsAboveFour);
-  AssertEquals(4, Mapped.Length());
-  AssertEquals(2, Mapped[0]);
-  AssertEquals(8, Mapped[3]);
-  AssertEquals(2, Filtered.Length());
-  AssertEquals(6, Filtered[0]);
-  AssertEquals(8, Filtered[1]);
-  AssertEquals(14, Filtered.Reduce(0, Sum));
-  AssertEquals(20, Mapped.Reduce(0, Sum));
+  Test.AssertEquals(4, Mapped.Length());
+  Test.AssertEquals(2, Mapped[0]);
+  Test.AssertEquals(8, Mapped[3]);
+  Test.AssertEquals(2, Filtered.Length());
+  Test.AssertEquals(6, Filtered[0]);
+  Test.AssertEquals(8, Filtered[1]);
+  Test.AssertEquals(14, Filtered.Reduce(0, Sum));
+  Test.AssertEquals(20, Mapped.Reduce(0, Sum));
 end.

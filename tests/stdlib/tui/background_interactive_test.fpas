@@ -1,19 +1,19 @@
 program TuiBackgroundInteractiveTest;
 
-uses Std.Tasks, Std.Test, Std.Tui;
+uses Std.Tasks as Tasks, Std.Test as Test, Std.Tui as Tui;
 
 type InteractiveModel = record
   Inbox: channel of integer;
   Received: integer;
 end record;
 
-function Update(State: InteractiveModel; Msg: TuiMsg; Cmd: TuiCmdOutput): InteractiveModel;
+function Update(State: InteractiveModel; Msg: Tui.TuiMsg; Cmd: Tui.TuiCmdOutput): InteractiveModel;
 begin
-  if Msg is TuiMsg.Started then
+  if Msg is Tui.TuiMsg.Started then
     begin
       const Inbox: channel of integer := State.Inbox;
-      Cmd.StartBackground(1, function(Token: CancellationToken): result of (boolean, string) begin
-        return SendWithCancellation(Inbox, 42, Token);
+      Cmd.StartBackground(1, function(Token: Tasks.CancellationToken): result of (boolean, string) begin
+        return Tasks.SendWithCancellation(Inbox, 42, Token);
       end function);
     end;
   end if;
@@ -21,22 +21,22 @@ begin
   return State;
 end function;
 
-function UpdateMessage(State: InteractiveModel; Message: integer; Cmd: TuiCmdOutput): InteractiveModel;
+function UpdateMessage(State: InteractiveModel; Message: integer; Cmd: Tui.TuiCmdOutput): InteractiveModel;
 begin
-  Cmd.Set(TuiCmd.Quit);
+  Cmd.Set(Tui.TuiCmd.Quit);
   var Next: InteractiveModel := State;
   Next.Received := Message;
   return Next;
 end function;
 
-function View(State: InteractiveModel): TuiElement;
+function View(State: InteractiveModel): Tui.TuiElement;
 begin
-  return TuiElementBuilders.MakeLabel('background wakeup');
+  return Tui.TuiElementBuilders.MakeLabel('background wakeup');
 end function;
 
 begin
-  const Inbox: channel of integer := CreateChannel(1);
-  const Final: InteractiveModel := TuiApplication.RunWithBackground(InteractiveModel(Inbox := Inbox, Received := 0), Inbox, Update, UpdateMessage, View);
-  AssertEquals(42, Final.Received);
-  AssertTrue(TrySend(Inbox, 1).IsError());
+  const Inbox: channel of integer := Tasks.CreateChannel(1);
+  const Final: InteractiveModel := Tui.TuiApplication.RunWithBackground(InteractiveModel(Inbox := Inbox, Received := 0), Inbox, Update, UpdateMessage, View);
+  Test.AssertEquals(42, Final.Received);
+  Test.AssertTrue(Tasks.TrySend(Inbox, 1).IsError());
 end.

@@ -27,7 +27,7 @@ export async function verifyCellCapturingRoutineAssignment(
   const lines = [
     "program DebuggerCellCapturingRoutineAssignment;",
     "",
-    "uses Std.Console;",
+    "uses Std.Console as Console;",
     "",
     "type",
     "  Handler = function(Value: integer): integer;",
@@ -50,14 +50,14 @@ export async function verifyCellCapturingRoutineAssignment(
     "  var Copy: Handler := Identity;",
     "  const CellStop: integer := 0;",
     "  Cell := Cell + 10;",
-    "  WriteLn(Current(0));",
-    "  WriteLn(Original(0));",
+    "  Console.WriteLn(Current(0));",
+    "  Console.WriteLn(Original(0));",
     "  return Current;",
     "end function;",
     "",
     "begin",
     "  const Output: Handler := Mutating();",
-    "  WriteLn(Output(0));",
+    "  Console.WriteLn(Output(0));",
     "end.",
     ""
   ];

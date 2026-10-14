@@ -1,70 +1,72 @@
 program TuiButtonPointerTest;
 
-uses Std.Test, Std.Tui;
+uses Std.Test as Test, Std.Tui as Tui;
 
 type ButtonPointerModel = record
   Actions: integer;
   PointerEvents: integer;
 end record;
 
-function ViewButton(State: ButtonPointerModel): TuiElement;
+function ViewButton(State: ButtonPointerModel): Tui.TuiElement;
 begin
-  return TuiElementBuilders.MakeDesktop(None, [
-                                                TuiElementBuilders.MakeButtonWithMnemonic(TuiControlId.Create(1), 'Go', 'G', TuiAction.Create(10))
-                                              ]);
+  return Tui.TuiElementBuilders.MakeDesktop(None, [
+                                                    Tui.TuiElementBuilders.MakeButtonWithMnemonic(Tui.TuiControlId.Create(1), 'Go', 'G', Tui.TuiAction.Create(10))
+                                                  ]);
 end function;
 
-function UpdateButton(State: ButtonPointerModel; Msg: TuiMsg; Cmd: TuiCmdOutput): ButtonPointerModel;
+function UpdateButton(State: ButtonPointerModel; Msg: Tui.TuiMsg; Cmd: Tui.TuiCmdOutput): ButtonPointerModel;
 begin
-  Cmd.Set(TuiCmd.NoCommand);
+  Cmd.Set(Tui.TuiCmd.NoCommand);
   case Msg of
-    when TuiMsg.Action(const Source, const Action):
+    when Tui.TuiMsg.Action(const Source, const Action):
       begin
         return ButtonPointerModel(Actions := State.Actions + 1, PointerEvents := State.PointerEvents);
       end;
-    when TuiMsg.Pointer(const Pointer):
+    when Tui.TuiMsg.Pointer(const Pointer):
       begin
         return ButtonPointerModel(Actions := State.Actions, PointerEvents := State.PointerEvents + 1);
       end;
-    when TuiMsg.Started, TuiMsg.Key(_), TuiMsg.Tick(_), TuiMsg.Resize(_), TuiMsg.FocusChanged(_, _), TuiMsg.TextChanged(_, _, _, _), TuiMsg.TextAreaChanged(_, _, _, _, _), TuiMsg.CheckChanged(_, _, _), TuiMsg.SelectionChanged(_, _, _), TuiMsg.ScrollChanged(_, _, _), TuiMsg.MenuChanged(_, _, _), TuiMsg.BackgroundFailed(_, _, _, _, _, _), TuiMsg.QuitRequested:
+    when Tui.TuiMsg.Started, Tui.TuiMsg.Key(_), Tui.TuiMsg.Tick(_), Tui.TuiMsg.Resize(_), Tui.TuiMsg.FocusChanged(_, _), Tui.TuiMsg.TextChanged(_, _, _, _), Tui.TuiMsg.TextAreaChanged(_, _, _, _, _), Tui.TuiMsg.CheckChanged(_, _, _), Tui.TuiMsg.SelectionChanged(_, _, _), Tui.TuiMsg.ScrollChanged(_, _, _), Tui.TuiMsg.MenuChanged(_, _, _), Tui.TuiMsg.BackgroundFailed(_, _, _, _, _, _), Tui.TuiMsg.QuitRequested:
       begin
         return State;
       end;
   end case;
 end function;
 
-function Pointer(Action: TuiPointerAction; Position: TuiPoint): TuiPointerEvent;
+function Pointer(Action: Tui.TuiPointerAction; Position: Tui.TuiPoint): Tui.TuiPointerEvent;
 begin
-  return TuiPointerEvent.Create(Action, TuiPointerButton.Left, Position);
+  return Tui.TuiPointerEvent.Create(Action, Tui.TuiPointerButton.Left, Position);
 end function;
 
 begin
-  const App: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(16, 4));
+  const App: Tui.TuiApplication := Tui.TuiApplication.OpenForTest(Tui.TuiSize.Create(16, 4));
   var Model: ButtonPointerModel := ButtonPointerModel(Actions := 0, PointerEvents := 0);
   Model := App.RunIterations(Model, UpdateButton, ViewButton, 0, 0);
   const GoX: integer := App.SurfaceSnapshot().LineAt(0).IndexOf('G');
-  const Inside: TuiPoint := TuiPoint.Create(GoX, 0);
-  AssertTrue(App.SurfaceSnapshot().CellAt(GoX, 0).Role = TuiStyleRole.ButtonShortcut);
-  App.InjectPointerForTest(Pointer(TuiPointerAction.Down, Inside));
+  const Inside: Tui.TuiPoint := Tui.TuiPoint.Create(GoX, 0);
+  Test.AssertTrue(App.SurfaceSnapshot().CellAt(GoX, 0).Role = Tui.TuiStyleRole.ButtonShortcut);
+  App.InjectPointerForTest(Pointer(Tui.TuiPointerAction.Down, Inside));
   Model := App.RunIterations(Model, UpdateButton, ViewButton, 2, 0);
-  AssertEquals(0, Model.Actions);
-  AssertEquals(1, Model.PointerEvents);
-  AssertTrue(App.SurfaceSnapshot().CellAt(GoX, 0).Role = TuiStyleRole.ButtonSelectedShortcut);
-  App.InjectPointerForTest(Pointer(TuiPointerAction.Drag, TuiPoint.Create(15, 3)));
+  Test.AssertEquals(0, Model.Actions);
+  Test.AssertEquals(1, Model.PointerEvents);
+  Test.AssertTrue(App.SurfaceSnapshot().CellAt(GoX, 0).Role =
+                  Tui.TuiStyleRole.ButtonSelectedShortcut);
+  App.InjectPointerForTest(Pointer(Tui.TuiPointerAction.Drag, Tui.TuiPoint.Create(15, 3)));
   Model := App.RunIterations(Model, UpdateButton, ViewButton, 1, 0);
-  AssertTrue(App.SurfaceSnapshot().CellAt(GoX, 0).Role = TuiStyleRole.ButtonShortcut);
-  App.InjectPointerForTest(Pointer(TuiPointerAction.Up, TuiPoint.Create(15, 3)));
+  Test.AssertTrue(App.SurfaceSnapshot().CellAt(GoX, 0).Role = Tui.TuiStyleRole.ButtonShortcut);
+  App.InjectPointerForTest(Pointer(Tui.TuiPointerAction.Up, Tui.TuiPoint.Create(15, 3)));
   Model := App.RunIterations(Model, UpdateButton, ViewButton, 1, 0);
-  AssertEquals(0, Model.Actions);
-  App.InjectPointerForTest(Pointer(TuiPointerAction.Down, Inside));
+  Test.AssertEquals(0, Model.Actions);
+  App.InjectPointerForTest(Pointer(Tui.TuiPointerAction.Down, Inside));
   Model := App.RunIterations(Model, UpdateButton, ViewButton, 2, 0);
-  App.InjectPointerForTest(Pointer(TuiPointerAction.Drag, TuiPoint.Create(15, 3)));
+  App.InjectPointerForTest(Pointer(Tui.TuiPointerAction.Drag, Tui.TuiPoint.Create(15, 3)));
   Model := App.RunIterations(Model, UpdateButton, ViewButton, 1, 0);
-  App.InjectPointerForTest(Pointer(TuiPointerAction.Drag, Inside));
+  App.InjectPointerForTest(Pointer(Tui.TuiPointerAction.Drag, Inside));
   Model := App.RunIterations(Model, UpdateButton, ViewButton, 1, 0);
-  AssertTrue(App.SurfaceSnapshot().CellAt(GoX, 0).Role = TuiStyleRole.ButtonSelectedShortcut);
-  App.InjectPointerForTest(Pointer(TuiPointerAction.Up, Inside));
+  Test.AssertTrue(App.SurfaceSnapshot().CellAt(GoX, 0).Role =
+                  Tui.TuiStyleRole.ButtonSelectedShortcut);
+  App.InjectPointerForTest(Pointer(Tui.TuiPointerAction.Up, Inside));
   Model := App.RunIterations(Model, UpdateButton, ViewButton, 1, 0);
-  AssertEquals(1, Model.Actions);
+  Test.AssertEquals(1, Model.Actions);
   App.Close();
 end.

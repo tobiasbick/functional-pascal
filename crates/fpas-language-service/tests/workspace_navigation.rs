@@ -166,13 +166,13 @@ end unit;
     );
     let main_source = r#"program TypesApp;
 
-uses Demo.Types;
+uses Demo.Types as Types;
 
 begin
-  const AliasValue: PointAlias := PointAlias( X := 1 );
-  const HolderValue: Holder := Holder( Item := AliasValue );
-  const PointValue: Point := HolderValue.Item;
-  const ResultValue: Point := Demo.Types.Echo(PointValue);
+  const AliasValue: Types.PointAlias := Types.PointAlias( X := 1 );
+  const HolderValue: Types.Holder := Types.Holder( Item := AliasValue );
+  const PointValue: Types.Point := HolderValue.Item;
+  const ResultValue: Types.Point := Types.Echo(PointValue);
   const HiddenValue: Secret := PointValue;
 end.
 "#;
@@ -209,9 +209,9 @@ end.
     assert_eq!(parameter_target[0].symbol.name, "Point");
 
     let call = main_source
-        .find("Demo.Types.Echo(PointValue)")
+        .find("Types.Echo(PointValue)")
         .expect("qualified function call")
-        + "Demo.Types.".len();
+        + "Types.".len();
     let result_target = service
         .type_definitions(&main, call)
         .expect("routine result type")

@@ -15,7 +15,7 @@ fn references_find_cross_unit_uses_and_optionally_include_the_declaration() {
     let temp = TempDirectory::new("references-project");
     let (manifest, main, unit) = write_program_project(&temp);
     let unit_source = "unit Demo.Math;\n\npublic function Answer(): integer;\nbegin return 42; end function;\nend unit;\n";
-    let main_source = "program App;\n\nuses Demo.Math;\n\nbegin\n  const A: integer := Answer();\n  const B: integer := Demo.Math.Answer();\n  const Text: string := 'Answer';\n  // Answer()\nend.\n";
+    let main_source = "program App;\n\nuses Demo.Math as Math;\n\nbegin\n  const A: integer := Math.Answer();\n  const B: integer := Math.Answer();\n  const Text: string := 'Answer';\n  // Answer()\nend.\n";
     std::fs::write(&unit, unit_source).expect("write unit");
     std::fs::write(&main, main_source).expect("write program");
     let mut service = LanguageService::load(&manifest);
@@ -62,7 +62,7 @@ fn rename_produces_cross_unit_edits_for_declaration_and_uses() {
     let temp = TempDirectory::new("rename-project");
     let (manifest, main, unit) = write_program_project(&temp);
     let unit_source = "unit Demo.Math;\n\npublic function Answer(): integer;\nbegin return 42; end function;\nend unit;\n";
-    let main_source = "program App;\n\nuses Demo.Math;\n\nbegin\n  const A: integer := Answer();\n  const B: integer := Demo.Math.Answer();\nend.\n";
+    let main_source = "program App;\n\nuses Demo.Math as Math;\n\nbegin\n  const A: integer := Math.Answer();\n  const B: integer := Math.Answer();\nend.\n";
     std::fs::write(&unit, unit_source).expect("write unit");
     std::fs::write(&main, main_source).expect("write program");
     let mut service = LanguageService::load(&manifest);
@@ -83,8 +83,7 @@ fn reference_and_rename_spans_keep_the_snapshot_used_by_navigation() {
     let temp = TempDirectory::new("navigation-snapshot-binding");
     let (manifest, main, unit) = write_program_project(&temp);
     let unit_source = "unit Demo.Math;\n\npublic function Answer(): integer;\nbegin return 42; end function;\nend unit;\n";
-    let main_source =
-        "program App;\n\nuses Demo.Math;\n\nbegin const Value: integer := Answer(); end.\n";
+    let main_source = "program App;\n\nuses Demo.Math as Math;\n\nbegin const Value: integer := Math.Answer(); end.\n";
     std::fs::write(&unit, unit_source).expect("write unit");
     std::fs::write(&main, main_source).expect("write program");
     let mut service = LanguageService::load(&manifest);
@@ -186,8 +185,7 @@ fn rename_rejects_compilation_units_and_dependencies_outside_the_editor_root() {
         "app/app.fpasprj",
         "[project]\nname = \"app\"\nkind = \"program\"\nmain = \"src/main.fpas\"\n\n[dependencies]\nprojects = [\"../lib/lib.fpasprj\"]\n\n[sources]\ninclude = [\"src/**/*.fpas\"]\n",
     );
-    let main_source =
-        "program App;\n\nuses Demo.Math;\n\nbegin\n  const Value: integer := Answer();\nend.\n";
+    let main_source = "program App;\n\nuses Demo.Math as Math;\n\nbegin\n  const Value: integer := Math.Answer();\nend.\n";
     let main = temp.write("app/src/main.fpas", main_source);
     assert!(library.exists() && unit.exists());
     let mut service = LanguageService::load(&manifest);
@@ -222,7 +220,7 @@ fn rename_rejects_reverse_consumers_outside_the_editor_root() {
     );
     let main = temp.write(
         "app/src/main.fpas",
-        "program App;\n\nuses Demo.Math;\n\nbegin\n  const Value: integer := Answer();\nend.\n",
+        "program App;\n\nuses Demo.Math as Math;\n\nbegin\n  const Value: integer := Math.Answer();\nend.\n",
     );
     let mut service = LanguageService::load(&library);
     service

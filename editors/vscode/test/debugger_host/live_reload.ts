@@ -101,7 +101,7 @@ function sourceWithValue(value: number): string[] {
   return [
     "program DebuggerLiveReload;",
     "",
-    "uses Std.Console;",
+    "uses Std.Console as Console;",
     "",
     "function Value(): integer;",
     "begin",
@@ -109,7 +109,7 @@ function sourceWithValue(value: number): string[] {
     "end function;",
     "",
     "begin",
-    "  WriteLn(Value());",
+    "  Console.WriteLn(Value());",
     "end.",
     ""
   ];

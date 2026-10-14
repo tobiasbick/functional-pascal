@@ -73,7 +73,7 @@ members = ["libs/math.fpasprj", "apps/demo.fpasprj"]
     );
     write_text(
         &app_project.parent().unwrap().join("src/main.fpas"),
-        "program Demo;\nuses Suite.Math, Std.Console;\nbegin\n  WriteLn(Square(6));\nend.\n",
+        "program Demo;\nuses Suite.Math as Math, Std.Console as Console;\nbegin\n  Console.WriteLn(Math.Square(6));\nend.\n",
     );
 
     let (exit_code, _, stderr_output) =
@@ -185,7 +185,7 @@ fn check_cli_validates_transitive_library_dependencies() {
     write_library_fpasprj_with_deps(&util_project, &["src/**/*.fpas"], &["../base/base.fpasprj"]);
     write_text(
         &util_dir.join("src/util.fpas"),
-        "unit Lib.Util;\nuses Lib.Base;\npublic function Label(): string;\nbegin\n  return Tag;\nend function;\nend unit;\n",
+        "unit Lib.Util;\nuses Lib.Base as Base;\npublic function Label(): string;\nbegin\n  return Base.Tag;\nend function;\nend unit;\n",
     );
 
     let util_dep = toml_path(&util_project);
@@ -197,7 +197,7 @@ fn check_cli_validates_transitive_library_dependencies() {
     );
     write_text(
         &app_dir.join("src/main.fpas"),
-        "program Demo;\nuses Lib.Util, Std.Console;\nbegin\n  WriteLn(Label());\nend.\n",
+        "program Demo;\nuses Lib.Util as Util, Std.Console as Console;\nbegin\n  Console.WriteLn(Util.Label());\nend.\n",
     );
 
     let (exit_code, _, stderr_output) = support::run_cli_args_and_capture_output(
@@ -219,7 +219,7 @@ fn check_cli_validates_directory_of_sources() {
     write_text(&cwd.join("ok.fpas"), "program Ok;\nbegin\nend.\n");
     write_text(
         &cwd.join("bad.fpas"),
-        "program Bad;\nuses Std.Console;\nbegin\n  WriteLn(1 + 'nope');\nend.\n",
+        "program Bad;\nuses Std.Console as Console;\nbegin\n  Console.WriteLn(1 + 'nope');\nend.\n",
     );
 
     let (exit_code, _, stderr_output) = support::run_cli_args_and_capture_output(
@@ -244,7 +244,7 @@ fn check_cli_validates_directory_program_with_sibling_unit_without_sidecars() {
     );
     write_text(
         &cwd.join("main.fpas"),
-        "program Main;\nuses Demo.Math;\nbegin\n  discard Answer();\nend.\n",
+        "program Main;\nuses Demo.Math as Math;\nbegin\n  discard Math.Answer();\nend.\n",
     );
 
     let (exit_code, _, stderr_output) = support::run_cli_args_and_capture_output(
@@ -271,7 +271,7 @@ fn check_cli_validates_directory_containing_only_units() {
     );
     write_text(
         &cwd.join("derived.fpas"),
-        "unit Demo.Derived;\nuses Demo.Base;\npublic function Value(): integer;\nbegin\n  return Answer;\nend function;\nend unit;\n",
+        "unit Demo.Derived;\nuses Demo.Base as Base;\npublic function Value(): integer;\nbegin\n  return Base.Answer;\nend function;\nend unit;\n",
     );
 
     let (exit_code, _, stderr_output) = support::run_cli_args_and_capture_output(
@@ -298,11 +298,11 @@ fn check_cli_validates_multiple_programs_against_shared_units() {
     );
     write_text(
         &cwd.join("first.fpas"),
-        "program First;\nuses Demo.Shared;\nbegin\n  discard Value();\nend.\n",
+        "program First;\nuses Demo.Shared as Shared;\nbegin\n  discard Shared.Value();\nend.\n",
     );
     write_text(
         &cwd.join("second.fpas"),
-        "program Second;\nuses Demo.Shared;\nbegin\n  discard Value();\nend.\n",
+        "program Second;\nuses Demo.Shared as Shared;\nbegin\n  discard Shared.Value();\nend.\n",
     );
 
     let (exit_code, _, stderr_output) = support::run_cli_args_and_capture_output(

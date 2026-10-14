@@ -34,7 +34,7 @@ export async function verifyVariantConstruction(
   const lines = [
     "program DebuggerVariantConstruction;",
     "",
-    "uses Std.Console;",
+    "uses Std.Console as Console;",
     "",
     "type",
     "  Choice = enum",
@@ -59,7 +59,7 @@ export async function verifyVariantConstruction(
     "begin",
     "  var Selected: Choice := Choice.Empty;",
     "  const StopMarker: integer := 0;",
-    "  WriteLn(ChoiceValue(Selected));",
+    "  Console.WriteLn(ChoiceValue(Selected));",
     "end.",
     ""
   ];

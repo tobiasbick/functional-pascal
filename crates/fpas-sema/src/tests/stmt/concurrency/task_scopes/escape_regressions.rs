@@ -33,15 +33,7 @@ end scope;"
 
 #[test]
 fn nested_routine_captures_contribute_to_parameter_escapes() {
-    let declarations = "procedure Leak(Handle: task of integer);
-  procedure Save();
-  begin Kept.PushInPlace(Handle); end procedure;
-begin Save(); end procedure;
-function Read(Handle: task of integer): integer;
-  function Take(): integer;
-  begin return Wait(Handle); end function;
-begin return Take(); end function;
-";
+    let declarations = "procedure Leak(Handle: task of integer);\n  procedure Save();\n  begin Kept.PushInPlace(Handle); end procedure;\nbegin Save(); end procedure;\nfunction Read(Handle: task of integer): integer;\n  function Take(): integer;\n  begin return Tasks.Wait(Handle); end function;\nbegin return Take(); end function;\n";
     for declarations in [declarations.to_string(), declarations.replace("begin Save(); end procedure;",
         "begin const SaveValue: procedure() := Save; SaveValue(); end procedure;"),
         declarations.replace("begin Save(); end procedure;",
@@ -59,15 +51,7 @@ begin return Take(); end function;
 #[test]
 fn task_start_callbacks_cannot_retain_scope_handle_parameters() {
     let source = format!(
-        "{PRELUDE}
-procedure Start(Handle: task of integer);
-  procedure Work(Token: CancellationToken); begin discard Wait(Handle); end procedure;
-begin
-  const Group: TaskGroup := CreateTaskGroup();
-  const Child: task := StartTaskInGroup(Group, Work);
-  discard CloseTaskGroup(Group);
-end procedure;
-begin scope Start(go Fetch(1)); end scope; end."
+        "{PRELUDE}\nprocedure Start(Handle: task of integer);\n  procedure Work(Token: Tasks.CancellationToken); begin discard Tasks.Wait(Handle); end procedure;\nbegin\n  const Group: Tasks.TaskGroup := Tasks.CreateTaskGroup();\n  const Child: task := Tasks.StartTaskInGroup(Group, Work);\n  discard Tasks.CloseTaskGroup(Group);\nend procedure;\nbegin scope Start(go Fetch(1)); end scope; end."
     );
     let errors = check_errors(&source);
     assert!(
@@ -106,17 +90,7 @@ fn higher_order_intrinsics_cannot_pass_owned_handles_to_callable_values() {
 #[test]
 fn local_callable_containers_do_not_escape_handle_parameters() {
     check_ok(&format!(
-        "{PRELUDE}
-type CallbackBox = record Work: function(): integer; end record;
-function Read(Handle: task of integer): integer;
-  function Take(): integer; begin return Wait(Handle); end function;
-begin
-  const Box: CallbackBox := CallbackBox(Work := Take);
-  var Callbacks: array of function(): integer := [];
-  Callbacks.PushInPlace(Box.Work);
-  return Wait(Handle);
-end function;
-begin scope discard Read(go Fetch(1)); end scope; end."
+        "{PRELUDE}\ntype CallbackBox = record Work: function(): integer; end record;\nfunction Read(Handle: task of integer): integer;\n  function Take(): integer; begin return Tasks.Wait(Handle); end function;\nbegin\n  const Box: CallbackBox := CallbackBox(Work := Take);\n  var Callbacks: array of function(): integer := [];\n  Callbacks.PushInPlace(Box.Work);\n  return Tasks.Wait(Handle);\nend function;\nbegin scope discard Read(go Fetch(1)); end scope; end."
     ));
 }
 

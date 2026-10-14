@@ -13,7 +13,7 @@ fn shadowed_standard_names_do_not_produce_intrinsic_call_metadata() {
         ),
     ] {
         let source = format!(
-            "program Shadow; uses Std.Tasks, Std.Console; {routine} begin {prefix}Send(1, 2, 3); Std.Console.WriteLn('ok'); {prefix}sEnD(1, 2, 3); end."
+            "program Shadow; uses Std.Tasks as Tasks, Std.Console as Console; {routine} begin {prefix}Send(1, 2, 3); Console.WriteLn('ok'); {prefix}sEnD(1, 2, 3); end."
         );
         let (program, errors) = fpas_parser::parse(&source);
         assert!(errors.is_empty(), "{errors:?}");

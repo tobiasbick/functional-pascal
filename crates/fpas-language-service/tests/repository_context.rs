@@ -173,7 +173,7 @@ fn loose_program_analysis_resolves_the_source_standard_library() {
     let temp = TempDirectory::new("loose-standard-library");
     let source = temp.write(
         "standalone.fpas",
-        "program Standalone;\n\nuses Std.Tui;\n\nbegin\n  const Palette: TuiPalette := TuiPalette.Default();\nend.\n",
+        "program Standalone;\n\nuses Std.Tui as Tui;\n\nbegin\n  const Palette: Tui.TuiPalette := Tui.TuiPalette.Default();\nend.\n",
     );
     let mut service =
         LanguageService::load_with_standard_library(temp.path(), &repository_root.join("lib"))
@@ -254,7 +254,7 @@ include = ["src/**/*.fpas"]
     );
     let main = temp.write(
         "repository/app/src/main.fpas",
-        "program App;\n\nuses Demo.Api;\n\nbegin\n  const Value: integer := Answer();\nend.\n",
+        "program App;\n\nuses Demo.Api as Api;\n\nbegin\n  const Value: integer := Api.Answer();\nend.\n",
     );
     let mut service = LanguageService::load(&temp.join("repository"));
     service

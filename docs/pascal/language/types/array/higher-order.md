@@ -76,7 +76,7 @@ begin
 end function;
 
 const Idx: integer := [10, 20, 30].FindIndex(IsAboveFifteen);
-WriteLn(Idx);  // 1
+Console.WriteLn(Idx);  // 1
 ```
 
 ---
@@ -92,7 +92,7 @@ begin
 end function;
 
 const HasNeg: boolean := [1, -2, 3].Any(IsNegative);
-WriteLn(HasNeg);  // true
+Console.WriteLn(HasNeg);  // true
 ```
 
 ---
@@ -108,7 +108,7 @@ begin
 end function;
 
 const AllPos: boolean := [1, 2, 3].All(IsPositive);
-WriteLn(AllPos);  // true
+Console.WriteLn(AllPos);  // true
 ```
 
 ## See also

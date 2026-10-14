@@ -22,15 +22,15 @@ fn run_cli_reports_cyclic_unit_dependencies() {
     support::write_program_project_file(&project_file, "src/main.fpas", &["src/*.fpas"]);
     write_text(
         &cwd.join("src/main.fpas"),
-        "program Main;\nuses App.A;\nbegin\nend.\n",
+        "program Main;\nuses App.A as A;\nbegin\nend.\n",
     );
     write_text(
         &cwd.join("src/a.fpas"),
-        "unit App.A;\nuses App.B;\nend unit;\n",
+        "unit App.A;\nuses App.B as B;\nend unit;\n",
     );
     write_text(
         &cwd.join("src/b.fpas"),
-        "unit App.B;\nuses App.A;\nend unit;\n",
+        "unit App.B;\nuses App.A as A;\nend unit;\n",
     );
 
     let (exit_code, _, stderr_output) = support::run_cli_and_capture_output(&project_file, &cwd);
@@ -47,7 +47,7 @@ fn run_cli_reports_unknown_user_unit() {
     support::write_program_project_file(&project_file, "src/main.fpas", &["src/*.fpas"]);
     write_text(
         &cwd.join("src/main.fpas"),
-        "program Main;\nuses App.Missing;\nbegin\nend.\n",
+        "program Main;\nuses App.Missing as Missing;\nbegin\nend.\n",
     );
 
     let (exit_code, _, stderr_output) = support::run_cli_and_capture_output(&project_file, &cwd);
@@ -58,13 +58,13 @@ fn run_cli_reports_unknown_user_unit() {
 }
 
 #[test]
-fn run_cli_reports_ambiguous_user_imports() {
+fn run_cli_requires_qualifiers_for_same_named_imports() {
     let cwd = create_temp_dir("run-ambiguous-import");
     let project_file = cwd.join("app.fpasprj");
     support::write_program_project_file(&project_file, "src/main.fpas", &["src/*.fpas"]);
     write_text(
         &cwd.join("src/main.fpas"),
-        "program Main;\nuses App.Math, App.Advanced;\nbegin\n  Add(1, 2);\nend.\n",
+        "program Main;\nuses App.Math as Math, App.Advanced as Advanced;\nbegin\n  Add(1, 2);\nend.\n",
     );
     write_text(
         &cwd.join("src/math.fpas"),
@@ -79,7 +79,7 @@ fn run_cli_reports_ambiguous_user_imports() {
     fs::remove_dir_all(&cwd).expect("temp directory must be removed");
 
     assert_eq!(exit_code, 1);
-    assert!(stderr_output.contains("Ambiguous imported symbol `Add`"));
+    assert!(stderr_output.contains("Name `Add` requires an explicit qualifier"));
 }
 
 #[test]
@@ -89,7 +89,7 @@ fn run_cli_reports_unit_sema_errors_with_the_unit_path() {
     support::write_program_project_file(&project_file, "src/main.fpas", &["src/*.fpas"]);
     write_text(
         &cwd.join("src/main.fpas"),
-        "program Main;\nuses App.Util;\nbegin\nend.\n",
+        "program Main;\nuses App.Util as Util;\nbegin\nend.\n",
     );
     write_text(
         &cwd.join("src/util.fpas"),
@@ -113,7 +113,7 @@ fn run_cli_reports_unit_runtime_errors_with_the_unit_path() {
     support::write_program_project_file(&project_file, "src/main.fpas", &["src/*.fpas"]);
     write_text(
         &cwd.join("src/main.fpas"),
-        "program Main;\nuses App.Util;\nbegin\n  Trigger();\nend.\n",
+        "program Main;\nuses App.Util as Util;\nbegin\n  Util.Trigger();\nend.\n",
     );
     write_text(
         &cwd.join("src/util.fpas"),
@@ -135,12 +135,12 @@ fn run_cli_reports_runtime_errors_of_units_linked_out_of_graph_order() {
     support::write_program_project_file(&project_file, "src/main.fpas", &["src/*.fpas"]);
     write_text(
         &cwd.join("src/main.fpas"),
-        "program Main;\nuses App.Util;\nbegin\n  Trigger();\nend.\n",
+        "program Main;\nuses App.Util as Util;\nbegin\n  Util.Trigger();\nend.\n",
     );
     // `util.fpas` precedes `zeta.fpas` in the unit graph, but the linker emits App.Zeta first.
     write_text(
         &cwd.join("src/util.fpas"),
-        "unit App.Util;\nuses App.Zeta;\npublic procedure Trigger();\nbegin\n  if Seven() = 7 then panic('util failure'); end if;\nend procedure;\nend unit;\n",
+        "unit App.Util;\nuses App.Zeta as Zeta;\npublic procedure Trigger();\nbegin\n  if Zeta.Seven() = 7 then panic('util failure'); end if;\nend procedure;\nend unit;\n",
     );
     write_text(
         &cwd.join("src/zeta.fpas"),

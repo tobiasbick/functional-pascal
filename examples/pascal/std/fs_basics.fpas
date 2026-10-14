@@ -2,49 +2,49 @@
 
 program FsBasics;
 
-uses Std.Console, Std.Fs;
+uses Std.Console as Console, Std.Fs as Fs;
 
 const Scratch: string := '.temp-data';
 const DemoPath: string := Scratch + '/_fpas_fs_demo.txt';
 
 begin
-  if not Exists(Scratch) then
+  if not Fs.Exists(Scratch) then
     begin
-      case CreateDir(Scratch) of
+      case Fs.CreateDir(Scratch) of
         when Ok(_):
           begin
           end;
         when Error(const M):
           begin
-            WriteLn('create scratch error: ', M);
+            Console.WriteLn('create scratch error: ', M);
             return;
           end;
       end case;
     end;
   end if;
 
-  case Std.Fs.WriteText(DemoPath, 'hello from Std.Fs') of
+  case Fs.WriteText(DemoPath, 'hello from Std.Fs') of
     when Ok(_):
       begin
-        WriteLn('write: ok');
+        Console.WriteLn('write: ok');
       end;
     when Error(const M):
       begin
-        WriteLn('write error: ', M);
+        Console.WriteLn('write error: ', M);
       end;
   end case;
 
-  case Std.Fs.ReadText(DemoPath) of
+  case Fs.ReadText(DemoPath) of
     when Ok(const Text):
       begin
-        WriteLn('read: ', Text);
+        Console.WriteLn('read: ', Text);
       end;
     when Error(const M):
       begin
-        WriteLn('read error: ', M);
+        Console.WriteLn('read error: ', M);
       end;
   end case;
 
-  WriteLn('exists: ', Exists(DemoPath));
-  WriteLn('isFile: ', IsFile(DemoPath));
+  Console.WriteLn('exists: ', Fs.Exists(DemoPath));
+  Console.WriteLn('isFile: ', Fs.IsFile(DemoPath));
 end.

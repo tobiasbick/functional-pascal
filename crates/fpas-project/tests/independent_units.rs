@@ -52,22 +52,11 @@ include = ["src/**/*.fpas"]
     );
     write(
         &root.join("src/math.fpas"),
-        "unit Demo.Math;
-         uses Demo.Base;
-         public function Compute(X: integer): integer;
-         begin
-           const P: Point := Make(X);
-           return P.X;
-         end function;\nend unit;",
+        "unit Demo.Math;\n         uses Demo.Base as Base;\n         public function Compute(X: integer): integer;\n         begin\n           const P: Base.Point := Base.Make(X);\n           return P.X;\n         end function;\nend unit;",
     );
     write(
         &root.join("src/app.fpas"),
-        "unit Demo.App;
-         uses Demo.Math;
-         public function Run(): integer;
-         begin
-           return Compute(7);
-         end function;\nend unit;",
+        "unit Demo.App;\n         uses Demo.Math as Math;\n         public function Run(): integer;\n         begin\n           return Math.Compute(7);\n         end function;\nend unit;",
     );
 
     let project = load_project(&manifest).expect("project load");

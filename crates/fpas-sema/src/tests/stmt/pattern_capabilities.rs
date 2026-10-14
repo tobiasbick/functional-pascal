@@ -18,13 +18,9 @@ fn patterns(action: &str) -> Vec<String> {
 }
 
 fn program(bindings: &str, body: &str) -> String {
-    let bindings = bindings.replace("const Job: task of integer := go Work();", "const Group := CreateTaskGroup(); const Job := StartTaskInGroup(Group, function(Token: CancellationToken): integer begin return Work(); end function);");
+    let bindings = bindings.replace("const Job: task of integer := go Work();", "const Group := Tasks.CreateTaskGroup(); const Job := Tasks.StartTaskInGroup(Group, function(Token: Tasks.CancellationToken): integer begin return Work(); end function);");
     format!(
-        "program T; uses Std.Tasks;
-function Work(): integer; begin return 42; end function;
-function Ready(Job: task): boolean; begin return true; end function;
-procedure Main(); begin scope {bindings} {body} end scope; end procedure;
-begin Main(); end."
+        "program T; uses Std.Tasks as Tasks;\nfunction Work(): integer; begin return 42; end function;\nfunction Ready(Job: task): boolean; begin return true; end function;\nprocedure Main(); begin scope {bindings} {body} end scope; end procedure;\nbegin Main(); end."
     )
 }
 
@@ -58,7 +54,7 @@ fn named_payload_constructors_preserve_task_bound_callables() {
                 "var Count: integer := 0; const Wrapped: {ty} := {constructor}(Value := function(): integer begin Count := Count + 1; return Count; end function);"
             ),
             &format!(
-                "case Wrapped of when {constructor}(Value := const F): const Job := go F(); discard Wait(Job); when {other}: null; end case;"
+                "case Wrapped of when {constructor}(Value := const F): const Job := go F(); discard Tasks.Wait(Job); when {other}: null; end case;"
             ),
         ));
         assert!(
@@ -83,7 +79,7 @@ fn pattern_callables_keep_task_bound_flags_in_branches_loops_and_nested_payloads
 fn pattern_callables_keep_task_bound_flags_in_guards_and_channel_sends() {
     for body in [
         "case Wrapped of when Some(const F) if Ready(go F()): null; when Some(_), None: null; end case;",
-        "case Wrapped of when Some(const F): const Queue: channel of procedure() := CreateChannel(1); discard Send(Queue, F); when None: null; end case;",
+        "case Wrapped of when Some(const F): const Queue: channel of procedure() := Tasks.CreateChannel(1); discard Tasks.Send(Queue, F); when None: null; end case;",
     ] {
         let errors = check_errors(&program(MUTABLE_CAPTURE, body));
         assert_eq!(errors.len(), 1, "{body}: {errors:#?}");
@@ -120,9 +116,9 @@ fn immutable_pattern_callables_can_be_spawned_and_discarded() {
         for body in patterns("discard F;") {
             check_ok(&program(bindings, &body));
         }
-        for body in
-            patterns("const Job: task of integer := go F(); const Answer: integer := Wait(Job);")
-        {
+        for body in patterns(
+            "const Job: task of integer := go F(); const Answer: integer := Tasks.Wait(Job);",
+        ) {
             check_ok(&program(bindings, &body));
         }
     }
@@ -138,7 +134,7 @@ fn task_bound_does_not_prevent_discard_of_pattern_callables() {
 #[test]
 fn pattern_callable_discard_is_independent_of_captures_and_mutability() {
     for bindings in [
-        "const Job: task of integer := go Work(); const Change: function(): integer := function(): integer begin return Wait(Job); end function; const Wrapped: Option of function(): integer := Some(Change);",
+        "const Job: task of integer := go Work(); const Change: function(): integer := function(): integer begin return Tasks.Wait(Job); end function; const Wrapped: Option of function(): integer := Some(Change);",
         "const Change: function(): integer := Work; var Wrapped: Option of function(): integer := Some(Change);",
     ] {
         for body in patterns("discard F;") {
@@ -153,16 +149,15 @@ fn pattern_callable_discard_is_independent_of_captures_and_mutability() {
 fn scalar_pattern_bindings_accept_ordinary_discard() {
     check_ok(&program(
         "const Job: task of integer := go Work(); const Wrapped: Result of (integer, task of integer) := Ok(7);",
-        "case Wrapped of when Ok(const N): discard N; when Error(const Job): const N: integer := Wait(Job); end case;
-case 7 of when const N if N > 0: discard N; else null; end case;",
+        "case Wrapped of when Ok(const N): discard N; when Error(const Job): const N: integer := Tasks.Wait(Job); end case;\ncase 7 of when const N if N > 0: discard N; else null; end case;",
     ));
 }
 
 #[test]
 fn scalar_bindings_do_not_inherit_another_payloads_task_bound_state() {
     for body in [
-        "while true do case Mixed of when Ok(const N): const Get: function(): integer := function(): integer begin return N; end function; const Job: task of integer := go Get(); const Answer: integer := Wait(Job); break; when Error(_): break; end case; end while;",
-        "case Mixed of when Ok(const N): const Get: function(): integer := function(): integer begin return N; end function; const Job: task of integer := go Get(); const Answer: integer := Wait(Job); when Error(_): null; end case;",
+        "while true do case Mixed of when Ok(const N): const Get: function(): integer := function(): integer begin return N; end function; const Job: task of integer := go Get(); const Answer: integer := Tasks.Wait(Job); break; when Error(_): break; end case; end while;",
+        "case Mixed of when Ok(const N): const Get: function(): integer := function(): integer begin return N; end function; const Job: task of integer := go Get(); const Answer: integer := Tasks.Wait(Job); when Error(_): null; end case;",
     ] {
         check_ok(&program(
             &format!(
@@ -177,19 +172,7 @@ fn scalar_bindings_do_not_inherit_another_payloads_task_bound_state() {
 fn generic_scalar_constraints_exclude_callable_capture_capabilities() {
     for constraint in ["Numeric", "Comparable"] {
         check_ok(&format!(
-            "program T; uses Std.Tasks;
-procedure Main<T: {constraint}>(Value: T);
-begin scope
-var Count: integer := 0;
-const Change: procedure() := procedure() begin Count := Count + 1; end procedure;
-const Mixed: Result of (T, procedure()) := Error(Change);
-case Mixed of when Ok(const N):
-  const Get: function(): T := function(): T begin return N; end function;
-  const Job: task of T := go Get();
-  const Answer: T := Wait(Job);
-when Error(_): null; end case;
- end scope; end procedure;
-begin Main(42); end."
+            "program T; uses Std.Tasks as Tasks;\nprocedure Main<T: {constraint}>(Value: T);\nbegin scope\nvar Count: integer := 0;\nconst Change: procedure() := procedure() begin Count := Count + 1; end procedure;\nconst Mixed: Result of (T, procedure()) := Error(Change);\ncase Mixed of when Ok(const N):\n  const Get: function(): T := function(): T begin return N; end function;\n  const Job: task of T := go Get();\n  const Answer: T := Tasks.Wait(Job);\nwhen Error(_): null; end case;\n end scope; end procedure;\nbegin Main(42); end."
         ));
     }
 }
@@ -200,19 +183,12 @@ fn extracted_record_callables_keep_capabilities_but_scalar_fields_remain_free() 
         ("discard go Box.Change();", true),
         ("discard Box.Change;", false),
         (
-            "const N: integer := Box.Number; const ReadNumber: function(): integer := function(): integer begin return N; end function; const Job: task of integer := go ReadNumber(); const Answer: integer := Wait(Job);",
+            "const N: integer := Box.Number; const ReadNumber: function(): integer := function(): integer begin return N; end function; const Job: task of integer := go ReadNumber(); const Answer: integer := Tasks.Wait(Job);",
             false,
         ),
     ] {
         let source = format!(
-            "program T; uses Std.Tasks;
-type WorkBox = record Change: procedure(); Number: integer; end record;
-procedure Main(); begin scope
-var Count: integer := 0;
-const Change: procedure() := procedure() begin Count := Count + 1; end procedure;
-const Wrapped: Option of WorkBox := Some(WorkBox(Change := Change, Number := 7));
-case Wrapped of when Some(const Box): {body} when None: null; end case;
-end scope; end procedure; begin Main(); end."
+            "program T; uses Std.Tasks as Tasks;\ntype WorkBox = record Change: procedure(); Number: integer; end record;\nprocedure Main(); begin scope\nvar Count: integer := 0;\nconst Change: procedure() := procedure() begin Count := Count + 1; end procedure;\nconst Wrapped: Option of WorkBox := Some(WorkBox(Change := Change, Number := 7));\ncase Wrapped of when Some(const Box): {body} when None: null; end case;\nend scope; end procedure; begin Main(); end."
         );
         if rejects {
             let errors = check_errors(&source);

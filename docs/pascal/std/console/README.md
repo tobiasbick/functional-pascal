@@ -5,31 +5,27 @@ screen control plus structured key and event APIs).
 
 ```pascal
 program Example;
-uses Std.Console;
+
+uses Std.Console as Console;
+
 begin
-  WriteLn('ok');
+  Console.WriteLn('ok');
 end.
 ```
 
 ## Importing and names
 
-After `uses Std.Console;` you can call symbols in either form:
-
-| Style | Example |
-|--------|---------|
-| **Fully qualified** | `Std.Console.WriteLn('hi')` |
-| **Short** | `WriteLn('hi')` |
-
-Short names exist only for exported symbols of imported units. If two imported
-units expose the same short name, qualify the ordinary call with its unit.
+After `uses Std.Console as Console;`, call exported routines as
+`Console.WriteLn('hi')` and refer to constants as `Console.Yellow`.
 Built-in type operations are always available and use their static receiver type;
 `Text.Length()` and `Items.Length()` need no imports.
 
-Types follow the same idea: `KeyEvent` is the short form of `Std.Console.KeyEvent` when `Std.Console` is imported.
+Types use the same alias: `Console.KeyEvent`. Enum members include their type,
+for example `Console.KeyKind.Space`.
 
 ## Quick reference
 
-Everything below requires `uses Std.Console;`.
+Everything below requires `uses Std.Console as Console;`.
 
 | Kind | Name | Notes |
 |------|------|--------|

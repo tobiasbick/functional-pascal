@@ -38,6 +38,13 @@ fn remove_from_current_drops_only_the_innermost_symbol() {
         }
     ));
     assert!(stack.remove_from_current("Offset"));
-    assert!(stack.lookup_current("offset").is_none());
+    assert!(
+        !stack
+            .scopes
+            .last()
+            .expect("nested scope")
+            .symbols
+            .contains_key("offset")
+    );
     assert!(!stack.remove_from_current("offset"));
 }

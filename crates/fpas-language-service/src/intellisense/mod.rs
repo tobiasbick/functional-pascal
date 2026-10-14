@@ -5,6 +5,8 @@ mod auto_import;
 pub(crate) mod callable_values;
 mod completion;
 mod context;
+mod enum_variants;
+mod import_aliases;
 pub(crate) mod native;
 mod native_receiver;
 mod record_construction;

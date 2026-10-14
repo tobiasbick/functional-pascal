@@ -1,8 +1,8 @@
 program T;
 
-uses Std.Console, Std.Random;
+uses Std.Console as Console, Std.Random as Random;
 
 begin
-  Randomize();
-  WriteLn('ok');
+  Random.Randomize();
+  Console.WriteLn('ok');
 end.

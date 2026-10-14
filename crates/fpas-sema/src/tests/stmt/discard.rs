@@ -74,49 +74,24 @@ fn discard_accepts_unconstrained_generic_and_callable_parameters() {
 #[test]
 fn discard_accepts_handles_aliases_aggregates_and_task_capturing_closures() {
     check_ok(
-        "program T; uses Std.Tasks;
-        function Work(): integer; begin return 1; end function;
-        function Make(Job: task of integer): function(): integer;
-        begin return function(): integer begin return Wait(Job); end function; end function;
-        begin scope
-        const Job := go Work(); const Copy := Job;
-        discard Job; discard Copy; discard [Job]; discard Some(Job);
-        discard go Work(); discard (go Work());
-        end scope; end.",
+        "program T; uses Std.Tasks as Tasks;\n        function Work(): integer; begin return 1; end function;\n        function Make(Job: task of integer): function(): integer;\n        begin return function(): integer begin return Tasks.Wait(Job); end function; end function;\n        begin scope\n        const Job := go Work(); const Copy := Job;\n        discard Job; discard Copy; discard [Job]; discard Some(Job);\n        discard go Work(); discard (go Work());\n        end scope; end.",
     );
     check_ok(
-        "program T; uses Std.Tasks;
-        procedure Ignore(Job: task of integer);
-        begin const Read := function(): integer begin return Wait(Job); end function;
-        const Outer := function(): integer begin return Read(); end function;
-        discard Read; discard Outer; discard [Outer];
-        end procedure; begin end.",
+        "program T; uses Std.Tasks as Tasks;\n        procedure Ignore(Job: task of integer);\n        begin const Read := function(): integer begin return Tasks.Wait(Job); end function;\n        const Outer := function(): integer begin return Read(); end function;\n        discard Read; discard Outer; discard [Outer];\n        end procedure; begin end.",
     );
 }
 
 #[test]
 fn discard_accepts_channels_bound_receivers_and_mutable_captures() {
     check_ok(
-        "program T; uses Std.Tasks;
-        type Box = record Job: Option of task of integer;
-        function Ready(Self: Box): boolean; begin return true; end function;
-        end record;
-        begin const Values: channel of task of integer := CreateChannel(1);
-        const Copy := Values; discard Copy;
-        discard function(): integer begin discard Values; return 1; end function;
-        const Value: Box := Box(Job := None); discard Value.Ready;
-        var Count := 0;
-        discard procedure() begin Count := Count + 1; end procedure;
-        end.",
+        "program T; uses Std.Tasks as Tasks;\n        type Box = record Job: Option of task of integer;\n        function Ready(Self: Box): boolean; begin return true; end function;\n        end record;\n        begin const Values: channel of task of integer := Tasks.CreateChannel(1);\n        const Copy := Values; discard Copy;\n        discard function(): integer begin discard Values; return 1; end function;\n        const Value: Box := Box(Job := None); discard Value.Ready;\n        var Count := 0;\n        discard procedure() begin Count := Count + 1; end procedure;\n        end.",
     );
 }
 
 #[test]
 fn unused_results_always_offer_the_ordinary_discard_repair() {
     let errors = check_errors(
-        "program T; uses Std.Tasks;
-        function Work(): integer; begin return 1; end function;
-        begin scope go Work(); end scope; end.",
+        "program T; uses Std.Tasks as Tasks;\n        function Work(): integer; begin return 1; end function;\n        begin scope go Work(); end scope; end.",
     );
     let error = errors
         .iter()

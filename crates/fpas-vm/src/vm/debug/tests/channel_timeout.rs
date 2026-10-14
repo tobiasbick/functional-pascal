@@ -5,20 +5,20 @@ use super::*;
 fn timeout_session() -> DebugSession {
     const SOURCE: &str = r#"program DebugChannelTimeout;
 
-uses Std.Tasks;
+uses Std.Tasks as Tasks;
 
 begin
-  const Messages: channel of integer := CreateChannel(1);
-  case ReceiveWithTimeout(Messages, 25) of
+  const Messages: channel of integer := Tasks.CreateChannel(1);
+  case Tasks.ReceiveWithTimeout(Messages, 25) of
     when Ok(_): panic('empty channel did not time out');
     when Error(const Message):
       if Message <> 'Channel receive timed out' then panic(Message); end if;
   end case;
-  case Send(Messages, 1) of
+  case Tasks.Send(Messages, 1) of
     when Ok(_): begin end;
     when Error(const Message): panic(Message);
   end case;
-  case SendWithTimeout(Messages, 2, 25) of
+  case Tasks.SendWithTimeout(Messages, 2, 25) of
     when Ok(_): panic('full channel did not time out');
     when Error(const Message):
       if Message <> 'Channel send timed out' then panic(Message); end if;

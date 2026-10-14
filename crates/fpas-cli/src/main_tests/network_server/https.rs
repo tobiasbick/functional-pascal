@@ -24,29 +24,29 @@ fn fpas_https_server_serves_one_verified_request() {
         format!(
             r#"program HttpsServer;
 
-uses Std.Console, Std.Http, Std.Net, Std.Net.Utf8;
+uses Std.Console as Console, Std.Http as Http, Std.Net as Net, Std.Net.Utf8 as Utf8;
 
-function Handle(RequestValue: ServerRequest): ServerResponse;
+function Handle(RequestValue: Http.ServerRequest): Http.ServerResponse;
 begin
-  var ResponseValue: ServerResponse := ServerResponse.Create(200, 'OK');
-  ResponseValue.Body := Std.Net.Utf8.Encode('secure ' + RequestValue.Target);
+  var ResponseValue: Http.ServerResponse := Http.ServerResponse.Create(200, 'OK');
+  ResponseValue.Body := Utf8.Encode('secure ' + RequestValue.Target);
   return ResponseValue;
 end function;
 
 begin
-  case ListenTls('127.0.0.1', {port}, '{certificate_source}', '{private_key_source}', 2000) of
+  case Net.ListenTls('127.0.0.1', {port}, '{certificate_source}', '{private_key_source}', 2000) of
     when Ok(const ListenerValue):
     begin
-      var Options: ServerOptions := ServerOptions.Create();
+      var Options: Http.ServerOptions := Http.ServerOptions.Create();
       Options.MaxRequests := 1;
-      case Serve(ListenerValue, Options, Handle) of
+      case Http.Serve(ListenerValue, Options, Handle) of
         when Ok(_):
         begin
         end;
         when Error(const Message): panic(Message);
       end case;
-      case CloseListener(ListenerValue) of
-        when Ok(_): WriteLn('served https');
+      case Net.CloseListener(ListenerValue) of
+        when Ok(_): Console.WriteLn('served https');
         when Error(const Message): panic(Message);
       end case;
     end;

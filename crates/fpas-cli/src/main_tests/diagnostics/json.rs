@@ -31,7 +31,7 @@ fn check_emits_located_compile_records_with_unicode_columns() {
     let main = cwd.join("main.fpas");
     write_text(
         &main,
-        "program Broken;\nuses Std.Console;\nbegin\n  WriteLn('ä😀'); MissingCall();\nend.\n",
+        "program Broken;\nuses Std.Console as Console;\nbegin\n  Console.WriteLn('ä😀'); MissingCall();\nend.\n",
     );
 
     let (exit_code, stdout, stderr) = support::run_cli_args_and_capture_output(
@@ -55,7 +55,7 @@ fn check_emits_located_compile_records_with_unicode_columns() {
     );
     // `ä` and `😀` each count as one scalar column.
     assert_eq!(record["location"]["start"]["line"], 4);
-    assert_eq!(record["location"]["start"]["column"], 18);
+    assert_eq!(record["location"]["start"]["column"], 26);
     assert!(record["location"]["end"].is_object());
 }
 
@@ -94,7 +94,7 @@ fn run_keeps_program_stdout_and_exit_status_for_runtime_records() {
     let main = cwd.join("main.fpas");
     write_text(
         &main,
-        "program RuntimeFail;\nuses Std.Console;\nbegin\n  WriteLn('before');\n  panic('boom');\nend.\n",
+        "program RuntimeFail;\nuses Std.Console as Console;\nbegin\n  Console.WriteLn('before');\n  panic('boom');\nend.\n",
     );
 
     let (exit_code, stdout, stderr) = support::run_cli_args_and_capture_output(
@@ -144,11 +144,11 @@ fn test_command_emits_only_records_and_keeps_the_json_report_on_stdout() {
     let cwd = create_temp_dir("json-test");
     write_text(
         &cwd.join("fail_test.fpas"),
-        "program F;\nuses Std.Test;\nbegin\n  AssertTrue(false);\nend.\n",
+        "program F;\nuses Std.Test as Test;\nbegin\n  Test.AssertTrue(false);\nend.\n",
     );
     write_text(
         &cwd.join("pass_test.fpas"),
-        "program P;\nuses Std.Test;\nbegin\n  AssertTrue(true);\nend.\n",
+        "program P;\nuses Std.Test as Test;\nbegin\n  Test.AssertTrue(true);\nend.\n",
     );
 
     for jobs in ["1", "2"] {

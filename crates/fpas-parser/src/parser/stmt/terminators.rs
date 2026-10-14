@@ -51,7 +51,7 @@ impl Parser {
         let error = parse_error(
             PARSE_EXPECTED_TOKEN,
             format!("Expected `;` after statement, found `{found}`"),
-            "Terminate the preceding statement with `;`, for example `WriteLn('value');`.",
+            "Terminate the preceding statement with `;`, for example `const Value := 1;`.",
             self.current_span(),
         )
         .with_expected_found(";", found);

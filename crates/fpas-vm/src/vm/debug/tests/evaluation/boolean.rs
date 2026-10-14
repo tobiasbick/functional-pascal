@@ -120,6 +120,6 @@ fn resolved_integer_logical_values_are_rejected_with_bits_hints() {
         .expect_err("integer logical operands");
         assert_eq!(error.kind, DebugErrorKind::EvaluationType);
         assert!(error.hint.contains(function), "{error:?}");
-        assert!(error.hint.contains("uses Std.Bits;"));
+        assert!(error.hint.contains("uses Std.Bits as Bits;"));
     }
 }

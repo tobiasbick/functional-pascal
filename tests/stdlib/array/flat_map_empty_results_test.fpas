@@ -1,6 +1,6 @@
 program T;
 
-uses Std.Console;
+uses Std.Console as Console;
 
 function EmptyArray(X: integer): array of integer;
 begin
@@ -9,5 +9,5 @@ end function;
 
 begin
   const R: array of integer := [1, 2, 3].FlatMap(EmptyArray);
-  WriteLn(R.Length());
+  Console.WriteLn(R.Length());
 end.

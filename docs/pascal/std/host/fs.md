@@ -4,11 +4,12 @@ Basic blocking filesystem operations for hosted FPAS programs. This page is the 
 
 ```pascal
 program Example;
-uses Std.Fs, Std.Tasks;
+
+uses Std.Fs as Fs, Std.Tasks as Tasks;
 
 begin
-  const ReadJob: task of result of (string, string) := go ReadText('input.txt');
-  const Text: string := Std.Tasks.Wait(ReadJob).Unwrap();
+  const ReadJob: task of result of (string, string) := go Fs.ReadText('input.txt');
+  const Text: string := Tasks.Wait(ReadJob).Unwrap();
 end.
 ```
 
@@ -26,7 +27,7 @@ Text reads and writes use UTF-8.
 
 ## Importing and names
 
-After `uses Std.Fs;` use **`ReadText`**, **`WriteText`**, **`WriteTextAtomic`**, **`DeleteFile`**, **`Exists`**, **`IsFile`**, **`IsDir`**, **`CreateDir`**, **`CreateDirAll`**, **`Glob`**, **`ReadDir`**, or the fully qualified forms such as **`Std.Fs.ReadText`**.
+Import with `uses Std.Fs as Fs;` and access public symbols as `Fs.Name`. User enum variants require `Fs.Type.Variant`.
 
 ---
 
@@ -36,7 +37,7 @@ Deletes one file entry and returns `Ok(true)`. Missing paths, directories, permi
 
 ## Quick reference
 
-Requires `uses Std.Fs;`.
+Requires `uses Std.Fs as Fs;`.
 
 | Kind | Name | Notes |
 |------|------|-------|
@@ -71,7 +72,7 @@ Files larger than 64 MiB return `Error(message)` instead of loading into memory.
 ```pascal
 const Content: result of (string, string) := ReadText('notes.txt');
 if Content.IsOk() then
-  WriteLn(Content.Unwrap());
+  Console.WriteLn(Content.Unwrap());
 end if;
 ```
 
@@ -82,8 +83,8 @@ end if;
 Writes UTF-8 text to `Path`, creating or replacing the file.
 
 ```pascal
-if Std.Fs.WriteText('out.txt', 'hello').IsOk() then
-  WriteLn('written');
+if Fs.WriteText('out.txt', 'hello').IsOk() then
+  Console.WriteLn('written');
 end if;
 ```
 
@@ -99,11 +100,11 @@ Callers therefore never observe a successfully published partially written
 file.
 
 ```pascal
-case WriteTextAtomic('note.note', EncodedNote) of
+case Fs.WriteTextAtomic('note.note', EncodedNote) of
   when Ok(const Written):
-    WriteLn('saved');
+    Console.WriteLn('saved');
   when Error(const Message):
-    WriteLn(Message);
+    Console.WriteLn(Message);
 end case;
 ```
 
@@ -118,8 +119,8 @@ backup and does not remove stale sibling files that it does not own.
 Returns `true` when the host filesystem reports that `Path` exists.
 
 ```pascal
-if Exists('config.json') then
-  WriteLn('config is present');
+if Fs.Exists('config.json') then
+  Console.WriteLn('config is present');
 end if;
 ```
 
@@ -130,7 +131,7 @@ end if;
 Returns `true` when `Path` exists and is a regular file.
 
 ```pascal
-WriteLn(IsFile('data.txt'));
+Console.WriteLn(Fs.IsFile('data.txt'));
 ```
 
 ---
@@ -140,7 +141,7 @@ WriteLn(IsFile('data.txt'));
 Returns `true` when `Path` exists and is a directory.
 
 ```pascal
-WriteLn(IsDir('src'));
+Console.WriteLn(Fs.IsDir('src'));
 ```
 
 ---
@@ -150,8 +151,8 @@ WriteLn(IsDir('src'));
 Creates a single directory at `Path`. Parent directories must already exist. An existing entry at `Path`, including an existing directory, returns `Error(message)`.
 
 ```pascal
-if CreateDir('build/output').IsOk() then
-  WriteLn('directory created');
+if Fs.CreateDir('build/output').IsOk() then
+  Console.WriteLn('directory created');
 end if;
 ```
 
@@ -162,11 +163,11 @@ end if;
 Creates the directory at `Path` together with every missing parent directory and returns `Ok(true)`. The call is idempotent: when `Path` already is a directory, including one created concurrently by another task or process, it also returns `Ok(true)`. A path component that exists but is not a directory, permission failures, and other OS errors return `Error(message)`. Directories created before a failure are not removed.
 
 ```pascal
-case CreateDirAll('build/output/logs') of
+case Fs.CreateDirAll('build/output/logs') of
   when Ok(const Created):
-    WriteLn('directory ready');
+    Console.WriteLn('directory ready');
   when Error(const Message):
-    WriteLn('cannot create directory: ' + Message);
+    Console.WriteLn('cannot create directory: ' + Message);
 end case;
 ```
 
@@ -177,14 +178,14 @@ end case;
 Expands `Pattern` against the host filesystem and returns every matching **file** path in stable sorted order. Directory entries are never included.
 
 ```pascal
-case Glob('src/**/*.fpas') of
+case Fs.Glob('src/**/*.fpas') of
   when Ok(const Paths):
     begin
-      WriteLn(Paths.Length());
+      Console.WriteLn(Paths.Length());
     end;
   when Error(const Message):
     begin
-      WriteLn(Message);
+      Console.WriteLn(Message);
     end;
 end case;
 ```

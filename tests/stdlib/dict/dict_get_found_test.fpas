@@ -1,10 +1,10 @@
 program T;
 
-uses Std.Console;
+uses Std.Console as Console;
 
 begin
   const D: dict of string to integer := ['Alice': 30, 'Bob': 25];
   const R: option of integer := D.Get('Alice');
-  WriteLn(R.IsSome());
-  WriteLn(R.Unwrap());
+  Console.WriteLn(R.IsSome());
+  Console.WriteLn(R.Unwrap());
 end.

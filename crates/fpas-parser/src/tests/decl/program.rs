@@ -11,7 +11,7 @@ fn minimal_program() {
 
 #[test]
 fn program_with_uses() {
-    let p = parse_ok("program Test; uses Std.Console, Std.Math; begin end.");
+    let p = parse_ok("program Test; uses Std.Console as Console, Std.Math as Math; begin end.");
     assert_eq!(p.uses.len(), 2);
     assert_eq!(p.uses[0].unit.parts, vec!["Std", "Console"]);
     assert_eq!(p.uses[1].unit.parts, vec!["Std", "Math"]);
@@ -19,14 +19,14 @@ fn program_with_uses() {
 
 #[test]
 fn program_with_single_standard_unit() {
-    let p = parse_ok("program T; uses Std.Crypto; begin end.");
+    let p = parse_ok("program T; uses Std.Crypto as Crypto; begin end.");
     assert_eq!(p.uses.len(), 1);
     assert_eq!(p.uses[0].unit.parts, vec!["Std", "Crypto"]);
 }
 
 #[test]
 fn program_with_standard_unit_preserves_written_case() {
-    let p = parse_ok("program T; uses std.crypto; begin end.");
+    let p = parse_ok("program T; uses std.crypto as crypto; begin end.");
     assert_eq!(p.uses.len(), 1);
     assert_eq!(p.uses[0].unit.parts, vec!["std", "crypto"]);
 }

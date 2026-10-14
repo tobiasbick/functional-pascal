@@ -12,7 +12,7 @@ use serde_json::{Value, json};
 const SOURCE: &str = include_str!("../../../tests/debugger/fixtures/forced_return.fpas");
 const RECOVERY_SOURCE: &str = r#"program DebuggerRecovery;
 
-uses Std.Console;
+uses Std.Console as Console;
 
 function Fail(): integer;
 begin
@@ -22,7 +22,7 @@ end function;
 
 begin
   const Value: integer := Fail();
-  WriteLn(Value);
+  Console.WriteLn(Value);
 end.
 "#;
 
@@ -239,11 +239,11 @@ fn jsonl_frame_return_completes_a_procedure_and_rejects_convention_errors() {
 fn jsonl_frame_return_stays_bound_to_the_selected_stop_task() {
     const TASK_SOURCE: &str = r#"program TaskForcedReturn;
 
-uses Std.Console, Std.Tasks, Std.Time;
+uses Std.Console as Console, Std.Tasks as Tasks, Std.Time as Time;
 
 function Work(): integer;
 begin
-  Sleep(30000);
+  Time.Sleep(30000);
   return 1;
 end function;
 
@@ -255,7 +255,7 @@ end function;
 begin scope
   const Pending: task of integer := go Work();
   const Answer: integer := Compute(41);
-  WriteLn(Answer);
+  Console.WriteLn(Answer);
  end scope; end.
 "#;
     let (program, diagnostics) = fpas_parser::parse(TASK_SOURCE);

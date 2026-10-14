@@ -1,14 +1,14 @@
 program FsGlobRecursivePatternTest;
 
-uses Std.Fs, Std.Test;
+uses Std.Fs as Fs, Std.Test as Test;
 
 procedure EnsureDir(Path: string);
 begin
-  if Exists(Path) then
+  if Fs.Exists(Path) then
     begin
-      if not IsDir(Path) then
+      if not Fs.IsDir(Path) then
         begin
-          Fail(('Expected directory: ') + Path);
+          Test.Fail(('Expected directory: ') + Path);
         end;
       end if;
 
@@ -16,52 +16,52 @@ begin
     end;
   end if;
 
-  case CreateDir(Path) of
+  case Fs.CreateDir(Path) of
     when Ok(_):
       begin
       end;
     when Error(const Message):
       begin
-        Fail(Message);
+        Test.Fail(Message);
       end;
   end case;
 end procedure;
 
 begin
-  const Root: string := ScratchDir() + '/glob-tree';
+  const Root: string := Test.ScratchDir() + '/glob-tree';
   EnsureDir(Root);
   EnsureDir(Root + '/src');
   EnsureDir(Root + '/src/ui');
-  case WriteText(Root + '/src/main.fpas', '') of
+  case Fs.WriteText(Root + '/src/main.fpas', '') of
     when Ok(_):
       begin
       end;
     when Error(const Message):
       begin
-        Fail(Message);
+        Test.Fail(Message);
       end;
   end case;
 
-  case WriteText(Root + '/src/ui/menu.fpas', '') of
+  case Fs.WriteText(Root + '/src/ui/menu.fpas', '') of
     when Ok(_):
       begin
       end;
     when Error(const Message):
       begin
-        Fail(Message);
+        Test.Fail(Message);
       end;
   end case;
 
-  case Glob(Root + '/src/**/*.fpas') of
+  case Fs.Glob(Root + '/src/**/*.fpas') of
     when Ok(const Paths):
       begin
-        AssertEquals(2, Paths.Length());
-        AssertEquals(Root + '/src/main.fpas', Paths[0]);
-        AssertEquals(Root + '/src/ui/menu.fpas', Paths[1]);
+        Test.AssertEquals(2, Paths.Length());
+        Test.AssertEquals(Root + '/src/main.fpas', Paths[0]);
+        Test.AssertEquals(Root + '/src/ui/menu.fpas', Paths[1]);
       end;
     when Error(const Message):
       begin
-        Fail(Message);
+        Test.Fail(Message);
       end;
   end case;
 end.

@@ -1,19 +1,19 @@
 program TuiArrangedFrameLifetimeTest;
 
-uses Std.Test, Std.Tui;
+uses Std.Test as Test, Std.Tui as Tui;
 
-function MakeKey(Kind: TuiKeyKind; Character: string): TuiKeyEvent;
+function MakeKey(Kind: Tui.TuiKeyKind; Character: string): Tui.TuiKeyEvent;
 begin
-  return TuiKeyEvent(kind := Kind, ch := Character, shift := false, ctrl := false, alt := false, meta := false);
+  return Tui.TuiKeyEvent(kind := Kind, ch := Character, shift := false, ctrl := false, alt := false, meta := false);
 end function;
 
 begin
-  const App: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(24, 8));
+  const App: Tui.TuiApplication := Tui.TuiApplication.OpenForTest(Tui.TuiSize.Create(24, 8));
   var Model: integer := 0;
   var Focus: integer := 1;
-  Model := App.RunIterations(Model, function(State: integer; Msg: TuiMsg; Cmd: TuiCmdOutput): integer begin
+  Model := App.RunIterations(Model, function(State: integer; Msg: Tui.TuiMsg; Cmd: Tui.TuiCmdOutput): integer begin
     case Msg of
-      when TuiMsg.FocusChanged(const Previous, const Current):
+      when Tui.TuiMsg.FocusChanged(const Previous, const Current):
         begin
           case Current of
             when Some(const Id):
@@ -27,31 +27,31 @@ begin
               end;
           end case;
         end;
-      when TuiMsg.Action(const Source, const Action):
+      when Tui.TuiMsg.Action(const Source, const Action):
         begin
           return State + Action.Value;
         end;
-      when TuiMsg.Started, TuiMsg.Key(_), TuiMsg.Pointer(_), TuiMsg.Tick(_), TuiMsg.Resize(_), TuiMsg.TextChanged(_, _, _, _), TuiMsg.TextAreaChanged(_, _, _, _, _), TuiMsg.CheckChanged(_, _, _), TuiMsg.SelectionChanged(_, _, _), TuiMsg.ScrollChanged(_, _, _), TuiMsg.MenuChanged(_, _, _), TuiMsg.BackgroundFailed(_, _, _, _, _, _), TuiMsg.QuitRequested:
+      when Tui.TuiMsg.Started, Tui.TuiMsg.Key(_), Tui.TuiMsg.Pointer(_), Tui.TuiMsg.Tick(_), Tui.TuiMsg.Resize(_), Tui.TuiMsg.TextChanged(_, _, _, _), Tui.TuiMsg.TextAreaChanged(_, _, _, _, _), Tui.TuiMsg.CheckChanged(_, _, _), Tui.TuiMsg.SelectionChanged(_, _, _), Tui.TuiMsg.ScrollChanged(_, _, _), Tui.TuiMsg.MenuChanged(_, _, _), Tui.TuiMsg.BackgroundFailed(_, _, _, _, _, _), Tui.TuiMsg.QuitRequested:
         begin
           return State;
         end;
     end case;
-  end function, function(State: integer): TuiElement begin
-    return TuiElementBuilders.MakeDesktop(Some(TuiControlId.Create(Focus)), [
-                                                                              TuiElementBuilders.MakePanel('Host', [
-                                                                                                                     TuiElementBuilders.MakeRow([
-                                                                                                                                                  TuiElementBuilders.MakeButton(TuiControlId.Create(1), 'One', TuiAction.Create(1)),
-                                                                                                                                                  TuiElementBuilders.MakeButton(TuiControlId.Create(2), 'Two', TuiAction.Create(2))
-                                                                                                                                                ])
-                                                                                                                   ])
-                                                                            ]);
+  end function, function(State: integer): Tui.TuiElement begin
+    return Tui.TuiElementBuilders.MakeDesktop(Some(Tui.TuiControlId.Create(Focus)), [
+                                                                                      Tui.TuiElementBuilders.MakePanel('Host', [
+                                                                                                                                 Tui.TuiElementBuilders.MakeRow([
+                                                                                                                                                                  Tui.TuiElementBuilders.MakeButton(Tui.TuiControlId.Create(1), 'One', Tui.TuiAction.Create(1)),
+                                                                                                                                                                  Tui.TuiElementBuilders.MakeButton(Tui.TuiControlId.Create(2), 'Two', Tui.TuiAction.Create(2))
+                                                                                                                                                                ])
+                                                                                                                               ])
+                                                                                    ]);
   end function, 0, 0);
-  AssertEquals(0, Model);
-  AssertEquals(1, Focus);
-  App.InjectKeyForTest(MakeKey(TuiKeyKind.Tab, ''));
-  Model := App.RunIterations(Model, function(State: integer; Msg: TuiMsg; Cmd: TuiCmdOutput): integer begin
+  Test.AssertEquals(0, Model);
+  Test.AssertEquals(1, Focus);
+  App.InjectKeyForTest(MakeKey(Tui.TuiKeyKind.Tab, ''));
+  Model := App.RunIterations(Model, function(State: integer; Msg: Tui.TuiMsg; Cmd: Tui.TuiCmdOutput): integer begin
     case Msg of
-      when TuiMsg.FocusChanged(const Previous, const Current):
+      when Tui.TuiMsg.FocusChanged(const Previous, const Current):
         begin
           case Current of
             when Some(const Id):
@@ -65,30 +65,30 @@ begin
               end;
           end case;
         end;
-      when TuiMsg.Action(const Source, const Action):
+      when Tui.TuiMsg.Action(const Source, const Action):
         begin
           return State + Action.Value;
         end;
-      when TuiMsg.Started, TuiMsg.Key(_), TuiMsg.Pointer(_), TuiMsg.Tick(_), TuiMsg.Resize(_), TuiMsg.TextChanged(_, _, _, _), TuiMsg.TextAreaChanged(_, _, _, _, _), TuiMsg.CheckChanged(_, _, _), TuiMsg.SelectionChanged(_, _, _), TuiMsg.ScrollChanged(_, _, _), TuiMsg.MenuChanged(_, _, _), TuiMsg.BackgroundFailed(_, _, _, _, _, _), TuiMsg.QuitRequested:
+      when Tui.TuiMsg.Started, Tui.TuiMsg.Key(_), Tui.TuiMsg.Pointer(_), Tui.TuiMsg.Tick(_), Tui.TuiMsg.Resize(_), Tui.TuiMsg.TextChanged(_, _, _, _), Tui.TuiMsg.TextAreaChanged(_, _, _, _, _), Tui.TuiMsg.CheckChanged(_, _, _), Tui.TuiMsg.SelectionChanged(_, _, _), Tui.TuiMsg.ScrollChanged(_, _, _), Tui.TuiMsg.MenuChanged(_, _, _), Tui.TuiMsg.BackgroundFailed(_, _, _, _, _, _), Tui.TuiMsg.QuitRequested:
         begin
           return State;
         end;
     end case;
-  end function, function(State: integer): TuiElement begin
-    return TuiElementBuilders.MakeDesktop(Some(TuiControlId.Create(Focus)), [
-                                                                              TuiElementBuilders.MakePanel('Host', [
-                                                                                                                     TuiElementBuilders.MakeRow([
-                                                                                                                                                  TuiElementBuilders.MakeButton(TuiControlId.Create(1), 'One', TuiAction.Create(1)),
-                                                                                                                                                  TuiElementBuilders.MakeButton(TuiControlId.Create(2), 'Two', TuiAction.Create(2))
-                                                                                                                                                ])
-                                                                                                                   ])
-                                                                            ]);
+  end function, function(State: integer): Tui.TuiElement begin
+    return Tui.TuiElementBuilders.MakeDesktop(Some(Tui.TuiControlId.Create(Focus)), [
+                                                                                      Tui.TuiElementBuilders.MakePanel('Host', [
+                                                                                                                                 Tui.TuiElementBuilders.MakeRow([
+                                                                                                                                                                  Tui.TuiElementBuilders.MakeButton(Tui.TuiControlId.Create(1), 'One', Tui.TuiAction.Create(1)),
+                                                                                                                                                                  Tui.TuiElementBuilders.MakeButton(Tui.TuiControlId.Create(2), 'Two', Tui.TuiAction.Create(2))
+                                                                                                                                                                ])
+                                                                                                                               ])
+                                                                                    ]);
   end function, 1, 0);
-  AssertEquals(2, Focus);
-  App.InjectKeyForTest(MakeKey(TuiKeyKind.Enter, ''));
-  Model := App.RunIterations(Model, function(State: integer; Msg: TuiMsg; Cmd: TuiCmdOutput): integer begin
+  Test.AssertEquals(2, Focus);
+  App.InjectKeyForTest(MakeKey(Tui.TuiKeyKind.Enter, ''));
+  Model := App.RunIterations(Model, function(State: integer; Msg: Tui.TuiMsg; Cmd: Tui.TuiCmdOutput): integer begin
     case Msg of
-      when TuiMsg.FocusChanged(const Previous, const Current):
+      when Tui.TuiMsg.FocusChanged(const Previous, const Current):
         begin
           case Current of
             when Some(const Id):
@@ -102,25 +102,25 @@ begin
               end;
           end case;
         end;
-      when TuiMsg.Action(const Source, const Action):
+      when Tui.TuiMsg.Action(const Source, const Action):
         begin
           return State + Action.Value;
         end;
-      when TuiMsg.Started, TuiMsg.Key(_), TuiMsg.Pointer(_), TuiMsg.Tick(_), TuiMsg.Resize(_), TuiMsg.TextChanged(_, _, _, _), TuiMsg.TextAreaChanged(_, _, _, _, _), TuiMsg.CheckChanged(_, _, _), TuiMsg.SelectionChanged(_, _, _), TuiMsg.ScrollChanged(_, _, _), TuiMsg.MenuChanged(_, _, _), TuiMsg.BackgroundFailed(_, _, _, _, _, _), TuiMsg.QuitRequested:
+      when Tui.TuiMsg.Started, Tui.TuiMsg.Key(_), Tui.TuiMsg.Pointer(_), Tui.TuiMsg.Tick(_), Tui.TuiMsg.Resize(_), Tui.TuiMsg.TextChanged(_, _, _, _), Tui.TuiMsg.TextAreaChanged(_, _, _, _, _), Tui.TuiMsg.CheckChanged(_, _, _), Tui.TuiMsg.SelectionChanged(_, _, _), Tui.TuiMsg.ScrollChanged(_, _, _), Tui.TuiMsg.MenuChanged(_, _, _), Tui.TuiMsg.BackgroundFailed(_, _, _, _, _, _), Tui.TuiMsg.QuitRequested:
         begin
           return State;
         end;
     end case;
-  end function, function(State: integer): TuiElement begin
-    return TuiElementBuilders.MakeDesktop(Some(TuiControlId.Create(Focus)), [
-                                                                              TuiElementBuilders.MakePanel('Host', [
-                                                                                                                     TuiElementBuilders.MakeRow([
-                                                                                                                                                  TuiElementBuilders.MakeButton(TuiControlId.Create(1), 'One', TuiAction.Create(1)),
-                                                                                                                                                  TuiElementBuilders.MakeButton(TuiControlId.Create(2), 'Two', TuiAction.Create(2))
-                                                                                                                                                ])
-                                                                                                                   ])
-                                                                            ]);
+  end function, function(State: integer): Tui.TuiElement begin
+    return Tui.TuiElementBuilders.MakeDesktop(Some(Tui.TuiControlId.Create(Focus)), [
+                                                                                      Tui.TuiElementBuilders.MakePanel('Host', [
+                                                                                                                                 Tui.TuiElementBuilders.MakeRow([
+                                                                                                                                                                  Tui.TuiElementBuilders.MakeButton(Tui.TuiControlId.Create(1), 'One', Tui.TuiAction.Create(1)),
+                                                                                                                                                                  Tui.TuiElementBuilders.MakeButton(Tui.TuiControlId.Create(2), 'Two', Tui.TuiAction.Create(2))
+                                                                                                                                                                ])
+                                                                                                                               ])
+                                                                                    ]);
   end function, 1, 0);
-  AssertEquals(2, Model);
+  Test.AssertEquals(2, Model);
   App.Close();
 end.

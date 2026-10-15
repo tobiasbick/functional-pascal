@@ -40,6 +40,9 @@ toml = { workspace = true }
 rcgen.workspace = true
 rustls.workspace = true
 
+[target.'cfg(unix)'.dev-dependencies]
+nix = { version = "0.31.3", features = ["term"] }
+
 [lints]
 workspace = true
 

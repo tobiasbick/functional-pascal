@@ -474,6 +474,7 @@ dependencies = [
  "fpas-std",
  "fpas-vm",
  "mimalloc",
+ "nix",
  "rcgen",
  "rustls",
  "serde",
@@ -521,6 +522,7 @@ version = "0.0.1"
 dependencies = [
  "serde",
  "serde_json",
+ "unicode-width",
 ]
 
 [[package]]

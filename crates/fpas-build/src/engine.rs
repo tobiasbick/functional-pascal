@@ -169,6 +169,10 @@ fn compile_units<Backend: UnitBackend>(
             )
             .map_err(|diagnostics| {
                 BuildError::from_diagnostics(diagnostics, Some((node.source_id(), node.path())))
+                    .with_source(
+                        node.source_id(),
+                        std::str::from_utf8(source.bytes()).unwrap_or(""),
+                    )
             })?;
             events.push(event(unit_name, BuildEventKind::InterfaceAnalyzed));
             events.push(event(unit_name, BuildEventKind::ImplementationAnalyzed));

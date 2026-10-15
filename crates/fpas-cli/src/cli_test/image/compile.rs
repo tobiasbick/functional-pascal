@@ -69,6 +69,7 @@ fn compile_image_batch(mut batch: ImageBatch) -> Vec<ImageAssignment> {
                 compiled: CompiledTestProgram {
                     image: Arc::new(built.executable),
                     source_paths: Arc::new(built.source_paths),
+                    sources: Arc::new(built.sources),
                 },
             })
         })

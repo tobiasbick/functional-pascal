@@ -11,20 +11,26 @@ use fpas_diagnostics::codes::{
 };
 use fpas_project::{LoadedProject, ResolvedUnitGraph, StandardLibrary, UnitGraph};
 
-use crate::cli_output::CliFailure;
+use crate::cli_output::{CliFailure, RuntimeSource};
 
+/// Linked bytecode and source identities retained from its compilation inputs.
 pub(crate) struct ProjectProgram {
     pub(crate) executable: fpas_bytecode::VerifiedExecutable,
     pub(crate) source_paths: Vec<PathBuf>,
+    pub(crate) sources: Vec<RuntimeSource>,
 }
 
+/// A compiled image with portable labels and their authoritative source paths.
 pub(crate) struct ProgramArtifact {
     pub(crate) path: PathBuf,
     pub(crate) reused: bool,
     pub(crate) executable: fpas_bytecode::VerifiedExecutable,
     pub(crate) source_paths: Vec<PathBuf>,
+    /// Compilation snapshots and hashes paired with portable diagnostic labels.
+    pub(crate) sources: Vec<RuntimeSource>,
 }
 
+/// Compiles a program project, retaining root-source context on failures.
 pub(crate) fn build_program(
     loaded: &LoadedProject,
     standard_library: Option<&StandardLibrary>,
@@ -36,13 +42,18 @@ pub(crate) fn build_program(
         &prepared.program,
         &fpas_build::BuildOptions::default(),
     )
-    .map_err(|error| CliFailure::from_build(&error, prepared.graph.source_paths()))?;
+    .map_err(|error| {
+        CliFailure::from_build(&error, prepared.graph.source_paths())
+            .with_source(prepared.main, &prepared.source)
+    })?;
     Ok(ProjectProgram {
         executable: built.executable,
         source_paths: prepared.graph.source_paths().to_vec(),
+        sources: RuntimeSource::graph(&prepared.graph, prepared.main, &prepared.source),
     })
 }
 
+/// Publishes or reuses an image, preserving diagnostic-to-filesystem source mapping.
 pub(crate) fn build_program_artifact(
     project_path: &Path,
     loaded: &LoadedProject,
@@ -64,13 +75,19 @@ pub(crate) fn build_program_artifact(
     .map_err(|error| {
         CliFailure::from_build(&error, prepared.graph.source_paths())
             .with_actual_paths(&source_paths, prepared.graph.source_paths())
+            .with_source(prepared.main, &prepared.source)
     })?;
     let reused = built.counters().program_image_reused == 1;
+    let mut sources = RuntimeSource::graph(&prepared.graph, prepared.main, &prepared.source);
+    for source in &mut sources {
+        source.relabel(prepared.graph.source_paths(), &source_paths);
+    }
     Ok(ProgramArtifact {
         path: artifact_path,
         reused,
         executable: built.executable,
         source_paths: source_paths.into_iter().map(PathBuf::from).collect(),
+        sources,
     })
 }
 
@@ -81,9 +98,10 @@ pub(crate) fn build_test_program(
     link_meta: &fpas_project::ProjectLinkMeta,
     standard_library: Option<&StandardLibrary>,
 ) -> Result<ProjectProgram, CliFailure> {
-    let (_, program) = parse_program(main)?;
+    let (source, program) = parse_program(main)?;
     let graph = test_program_graph(main, source_files, link_meta, standard_library)?;
-    build_graph_program(main, &graph, &program)
+    build_graph_program(main, &graph, &program, &source)
+        .map_err(|failure| failure.with_source(main, &source))
 }
 
 /// Builds one entry against shared units while retaining the entry's source identity.
@@ -91,15 +109,17 @@ pub(crate) fn build_test_program_with_graph(
     main: &Path,
     program_graph: &fpas_project::ProgramUnitGraph,
 ) -> Result<ProjectProgram, CliFailure> {
-    let (_, program) = parse_program(main)?;
+    let (source, program) = parse_program(main)?;
     let graph = program_graph.instantiate(main);
-    build_graph_program(main, &graph, &program)
+    build_graph_program(main, &graph, &program, &source)
+        .map_err(|failure| failure.with_source(main, &source))
 }
 
 fn build_graph_program(
     main: &Path,
     graph: &UnitGraph,
     program: &fpas_parser::Program,
+    source: &str,
 ) -> Result<ProjectProgram, CliFailure> {
     let selection = fpas_project::resolve_program_units(graph, &program.uses, Some(main))?;
     let built = fpas_build::build_program(
@@ -112,6 +132,7 @@ fn build_graph_program(
     Ok(ProjectProgram {
         executable: built.executable,
         source_paths: graph.source_paths().to_vec(),
+        sources: RuntimeSource::graph(graph, main, source),
     })
 }
 
@@ -122,7 +143,7 @@ pub(crate) fn check_source_program(
     link_meta: &fpas_project::ProjectLinkMeta,
     standard_library: Option<&StandardLibrary>,
 ) -> Result<(), CliFailure> {
-    let (_, program) = parse_program(main)?;
+    let (source, program) = parse_program(main)?;
     let graph = test_program_graph(main, source_files, link_meta, standard_library)?;
     let selection = fpas_project::resolve_program_units(&graph, &program.uses, Some(main))?;
     fpas_build::check_program(
@@ -132,7 +153,9 @@ pub(crate) fn check_source_program(
         &fpas_build::BuildOptions::default(),
     )
     .map(|_| ())
-    .map_err(|error| CliFailure::from_build(&error, graph.source_paths()))
+    .map_err(|error| {
+        CliFailure::from_build(&error, graph.source_paths()).with_source(main, &source)
+    })
 }
 
 fn test_program_graph(
@@ -293,7 +316,7 @@ fn parse_program(path: &Path) -> Result<(String, fpas_parser::Program), CliFailu
         .cloned()
         .collect::<Vec<_>>();
     if !errors.is_empty() {
-        return Err(CliFailure::from_diagnostics(path, &errors));
+        return Err(CliFailure::from_diagnostics(path, &errors).with_source(path, &source));
     }
     match unit {
         fpas_parser::CompilationUnit::Program(program) => Ok((source, program)),

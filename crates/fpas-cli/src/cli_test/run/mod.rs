@@ -35,6 +35,8 @@ pub(super) struct TestRunSettings<'a> {
     pub show_output: bool,
     /// Diagnostic stream format for captured per-test output.
     pub diagnostics: DiagnosticFormat,
+    /// Color policy inherited from the final stderr destination.
+    pub color: bool,
 }
 
 /// Project sources used when linking a test program with local units.
@@ -69,11 +71,13 @@ pub(super) fn run_single_test_capture(
             timeout,
             show_output: false,
             diagnostics: DiagnosticFormat::Text,
+            color: false,
         },
         None,
     )
 }
 
+/// Captures one prepared run using the final destination's inherited output policy.
 pub(super) fn run_single_test_capture_prepared(
     path: &Path,
     link: Option<&LinkContext>,
@@ -81,7 +85,7 @@ pub(super) fn run_single_test_capture_prepared(
     compiled: Option<&CompiledTestProgram>,
 ) -> (TestOutcome, Vec<u8>) {
     let mut buffer = Vec::new();
-    let mut reporter = Reporter::new(settings.diagnostics, &mut buffer);
+    let mut reporter = Reporter::new(settings.diagnostics, &mut buffer).with_color(settings.color);
     let outcome = run_single_test_prepared(path, link, settings, &mut reporter, compiled);
     (outcome, buffer)
 }
@@ -98,6 +102,7 @@ pub(super) fn run_single_test_prepared(
         timeout,
         show_output,
         diagnostics: _,
+        color: _,
     } = settings;
     let display = test_display_path(path);
     let scratch = match TestScratch::create(path) {

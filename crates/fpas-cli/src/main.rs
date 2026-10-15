@@ -28,6 +28,7 @@ mod standard_library;
 mod test_script;
 
 use std::env;
+use std::io::IsTerminal;
 use std::process;
 
 /// Process-wide allocator; FPAS strings, arrays, and records allocate heavily.
@@ -48,6 +49,8 @@ fn main() {
     if let Some(exit_code) = cli_test::run_process_worker(&args) {
         process::exit(exit_code);
     }
+    let color = std::io::stderr().is_terminal()
+        && std::env::var_os("NO_COLOR").is_none_or(|value| value.is_empty());
     let cwd = match env::current_dir() {
         Ok(cwd) => cwd,
         Err(e) => {
@@ -55,7 +58,8 @@ fn main() {
             let mut reporter = cli_output::Reporter::new(
                 cli_output::DiagnosticFormat::requested(&args),
                 &mut stderr,
-            );
+            )
+            .with_color(color);
             process::exit(reporter.failure(&cli_output::CliFailure::new(
                 fpas_diagnostics::codes::PROJECT_DIRECTORY_READ_FAILED,
                 format!("Error reading current directory: {e}"),
@@ -67,7 +71,7 @@ fn main() {
     let stdout: Box<dyn std::io::Write + Send> = Box::new(std::io::stdout());
     // Unlocked: program-output events from VM tasks write to the same stream.
     let mut stderr = std::io::stderr();
-    let exit_code = run_cli(&args, &cwd, stdout, &mut stderr);
+    let exit_code = run_cli(&args, &cwd, stdout, &mut stderr, color);
     if exit_code != 0 {
         process::exit(exit_code);
     }

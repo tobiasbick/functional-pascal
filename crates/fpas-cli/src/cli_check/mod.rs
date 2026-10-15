@@ -141,6 +141,7 @@ fn check_workspace_file(
 }
 
 fn check_parsed_source(path: &Path, source: &str, reporter: &mut Reporter<'_>) -> i32 {
+    reporter.remember_source(path, source);
     let (program, parse_errors) = fpas_parser::parse(source);
     let has_errors = parse_errors
         .iter()

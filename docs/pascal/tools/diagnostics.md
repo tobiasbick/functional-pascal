@@ -77,11 +77,45 @@ Known source positions retain this form:
 
 ```text
 parse.fpas:2:1: error[FP2001]: Expected `;`, found `begin`
+  2 | begin
+    | ^^^^^
   help: Insert `;` here.
 ```
 
 For example, `program Demo` without its terminating semicolon produces that
 error before the following `begin`. Correct the heading to `program Demo;`.
+
+CLI text diagnostics show one numbered source line and a caret marker before
+the help when matching source text and a valid position are available. Byte
+ranges mark their visible extent; runtime point locations use one caret.
+Multi-line ranges show the first affected line and `...` after its marker.
+Empty ranges, empty lines and end-of-file positions still receive one caret.
+
+Source coordinates remain one-based Unicode scalar positions. Display alignment
+uses terminal cells: tabs expand to four-cell stops, wide characters take their
+display width, and combining characters add no width. Control characters use
+the same visible escapes as other diagnostic content. Long source lines are
+cropped to at most 100 display cells, including `...` cropping markers and
+excluding the gutter. The diagnostic start stays visible; ranges use the same
+cropped window. UTF-8 scalars and displayed escapes are never split.
+
+The CLI prefers retained compilation text and caches known runtime sources
+before execution. Source IDs select the corresponding file, including imported
+units; a project or image fallback name is not a source file. Direct `.fpascp`
+execution displays text only when an exact stored source path can be read and
+its content matches the image's source hash. It does not search for relocated
+sources. Missing, unreadable, mismatched or invalid source data silently keeps
+the original header and help. The source-free embedded rendering API also keeps
+that compact form and performs no filesystem access.
+
+Text diagnostics automatically color severity/code and carets red for errors
+and yellow for warnings when the final stderr destination is a terminal. A
+nonempty `NO_COLOR` disables color, including `NO_COLOR=0`; an empty value does
+not. Redirected output and ordinary capture buffers stay plain. Parallel and
+isolated test workers inherit the outer output policy and indent every excerpt
+line. Source text cannot inject ANSI styling. JSON diagnostics, program stderr,
+stdout, exit codes and runtime failure-report documents keep their existing
+formats; no excerpt or color field is added to JSON.
 
 When a position is unavailable, the renderer omits the line/column prefix.
 An available path can still identify the file:
@@ -96,6 +130,8 @@ entry that names a missing unit is located at the import:
 
 ```text
 src/a.fpas:2:6: error[FP4115]: Unknown unit `Demo.Missing` in unit `Demo.A`.
+  2 | uses Demo.Missing as Missing;
+    |      ^^^^^^^^^^^^
   help: Known units in `Demo`: Demo.A, Demo.B.
 ```
 

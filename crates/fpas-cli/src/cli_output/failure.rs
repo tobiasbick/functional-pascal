@@ -78,6 +78,24 @@ impl CliFailure {
         }
     }
 
+    /// Retains the loaded root source only for records attributed to that source.
+    #[must_use]
+    pub(crate) fn with_source(mut self, path: &Path, source: &str) -> Self {
+        let source: std::sync::Arc<str> = source.into();
+        for record in &mut self.records {
+            if record.source.is_none()
+                && record.path.as_deref() == Some(path)
+                && record
+                    .diagnostic
+                    .span
+                    .is_some_and(|span| span.source_id() == 0)
+            {
+                record.source = Some(source.clone());
+            }
+        }
+        self
+    }
+
     /// Converts a build failure, resolving pathless spans through the graph source table.
     pub(crate) fn from_build(error: &fpas_build::BuildError, source_paths: &[PathBuf]) -> Self {
         Self {
@@ -89,7 +107,9 @@ impl CliFailure {
                         let index = usize::try_from(record.diagnostic.span?.source_id()).ok()?;
                         source_paths.get(index).cloned()
                     });
-                    FileDiagnostic::new(record.diagnostic.clone(), path)
+                    let mut resolved = record.clone();
+                    resolved.path = path;
+                    resolved
                 })
                 .collect(),
         }
@@ -124,7 +144,11 @@ impl From<fpas_project::ProjectError> for CliFailure {
             records: error
                 .diagnostics()
                 .iter()
-                .map(|diagnostic| FileDiagnostic::new(diagnostic.clone(), path.clone()))
+                .map(|diagnostic| {
+                    let mut record = FileDiagnostic::new(diagnostic.clone(), path.clone());
+                    record.source = error.source_text().map(Into::into);
+                    record
+                })
                 .collect(),
         }
     }

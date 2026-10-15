@@ -22,10 +22,10 @@ pub struct BuildError {
 impl BuildError {
     /// Creates a positionless build failure without a help line.
     pub(crate) fn new(code: DiagnosticCode, message: impl Into<String>) -> Self {
-        Self::from_records(vec![FileDiagnostic {
-            diagnostic: Diagnostic::error_without_source(code, message, None),
-            path: None,
-        }])
+        Self::from_records(vec![FileDiagnostic::new(
+            Diagnostic::error_without_source(code, message, None),
+            None,
+        )])
     }
 
     /// Attaches actionable help to every record of this failure.
@@ -61,7 +61,7 @@ impl BuildError {
                             diagnostic.span.is_some_and(|span| span.source_id() == *id)
                         })
                         .map(|(_, path)| path.to_path_buf());
-                    FileDiagnostic { diagnostic, path }
+                    FileDiagnostic::new(diagnostic, path)
                 })
                 .collect(),
         )
@@ -94,6 +94,22 @@ impl BuildError {
         &self.records
     }
 
+    /// Retains a compilation snapshot only for diagnostics naming its source ID.
+    #[must_use]
+    pub(crate) fn with_source(mut self, source_id: u32, source: &str) -> Self {
+        let source: std::sync::Arc<str> = source.into();
+        for record in &mut self.records {
+            if record
+                .diagnostic
+                .span
+                .is_some_and(|span| span.source_id() == source_id)
+            {
+                record.source = Some(source.clone());
+            }
+        }
+        self
+    }
+
     /// Returns the original typed linker failure, when linking failed.
     #[must_use]
     pub fn link_error(&self) -> Option<&LinkError> {
@@ -116,9 +132,11 @@ impl From<fpas_project::ProjectError> for BuildError {
             error
                 .diagnostics()
                 .iter()
-                .map(|diagnostic| FileDiagnostic {
-                    diagnostic: diagnostic.clone(),
-                    path: path.map(Path::to_path_buf),
+                .map(|diagnostic| {
+                    let mut record =
+                        FileDiagnostic::new(diagnostic.clone(), path.map(Path::to_path_buf));
+                    record.source = error.source_text().map(Into::into);
+                    record
                 })
                 .collect(),
         )

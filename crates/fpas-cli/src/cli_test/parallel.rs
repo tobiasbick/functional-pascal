@@ -68,6 +68,7 @@ pub(super) fn run_tests_parallel(
         timeout,
         show_output,
         diagnostics,
+        color,
         ..
     } = settings;
     let stop = Arc::new(AtomicBool::new(false));
@@ -80,7 +81,7 @@ pub(super) fn run_tests_parallel(
                 prepared[batch_start..]
                     .iter()
                     .cloned()
-                    .map(|test| not_run_result(test, diagnostics)),
+                    .map(|test| not_run_result(test, diagnostics, color)),
             );
             break;
         }
@@ -93,7 +94,7 @@ pub(super) fn run_tests_parallel(
             let stop = Arc::clone(&stop);
             let handle = thread::spawn(move || {
                 if fail_fast && stop.load(Ordering::Relaxed) {
-                    return not_run_result(test, diagnostics);
+                    return not_run_result(test, diagnostics, color);
                 }
                 let result = run_prepared_test(
                     test,
@@ -102,6 +103,7 @@ pub(super) fn run_tests_parallel(
                         timeout,
                         show_output,
                         diagnostics,
+                        color,
                     },
                 );
                 if fail_fast && result.outcome.is_failure() {
@@ -117,6 +119,7 @@ pub(super) fn run_tests_parallel(
                 handle,
                 (index, display),
                 diagnostics,
+                color,
                 fail_fast,
                 stop.as_ref(),
             ));
@@ -138,7 +141,7 @@ fn run_tests_sequential(
     let mut stop = false;
     for test in prepared {
         if fail_fast && stop {
-            results.push(not_run_result(test, settings.diagnostics));
+            results.push(not_run_result(test, settings.diagnostics, settings.color));
             continue;
         }
         let result = run_prepared_test(test, settings);
@@ -153,26 +156,29 @@ fn run_tests_sequential(
 /// Renders buffered per-test output in the selected diagnostic format.
 pub(super) fn render_output(
     format: DiagnosticFormat,
+    color: bool,
     write: impl FnOnce(&mut Reporter<'_>),
 ) -> String {
     let mut buffer = Vec::new();
-    write(&mut Reporter::new(format, &mut buffer));
+    write(&mut Reporter::new(format, &mut buffer).with_color(color));
     String::from_utf8_lossy(&buffer).into_owned()
 }
 
-fn not_run_result(test: PreparedTest, format: DiagnosticFormat) -> IndexedTestResult {
-    not_run_result_for(test.index, test.display, format)
+fn not_run_result(test: PreparedTest, format: DiagnosticFormat, color: bool) -> IndexedTestResult {
+    not_run_result_for(test.index, test.display, format, color)
 }
 
+/// Renders the fail-fast result for an entry that never started.
 pub(super) fn not_run_result_for(
     index: usize,
     display: String,
     format: DiagnosticFormat,
+    color: bool,
 ) -> IndexedTestResult {
     IndexedTestResult {
         index,
         outcome: TestOutcome::NotRun,
-        output: render_output(format, |reporter| {
+        output: render_output(format, color, |reporter| {
             log::banner(
                 reporter,
                 "---",
@@ -186,6 +192,7 @@ fn collect_worker_result(
     handle: thread::JoinHandle<IndexedTestResult>,
     (index, display): (usize, String),
     format: DiagnosticFormat,
+    color: bool,
     fail_fast: bool,
     stop: &AtomicBool,
 ) -> IndexedTestResult {
@@ -197,7 +204,7 @@ fn collect_worker_result(
             }
             IndexedTestResult {
                 index,
-                output: render_output(format, |reporter| {
+                output: render_output(format, color, |reporter| {
                     log::banner(reporter, "FAIL", &display);
                     log::failure(
                         reporter,
@@ -236,6 +243,7 @@ mod tests {
             timeout: None,
             show_output: false,
             diagnostics: DiagnosticFormat::Text,
+            color: false,
         }
     }
     use std::thread;
@@ -259,6 +267,7 @@ mod tests {
             handle,
             (4, "panic_test.fpas".to_string()),
             DiagnosticFormat::Text,
+            false,
             true,
             &stop,
         );

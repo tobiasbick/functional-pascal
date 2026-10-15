@@ -64,6 +64,7 @@ pub(crate) struct Reporter<'a> {
     format: DiagnosticFormat,
     stderr: &'a mut dyn Write,
     program_output: Option<&'a mut dyn Write>,
+    color: bool,
     // Source text keyed by path, read lazily to resolve JSON end positions.
     sources: HashMap<PathBuf, Option<String>>,
 }
@@ -75,8 +76,54 @@ impl<'a> Reporter<'a> {
             format,
             stderr,
             program_output: None,
+            color: false,
             sources: HashMap::new(),
         }
+    }
+
+    /// Applies the color policy of the final stderr destination, including worker buffers.
+    pub(crate) fn with_color(mut self, color: bool) -> Self {
+        self.color = color;
+        self
+    }
+
+    /// Returns the inherited text color policy for downstream renderers.
+    pub(crate) fn color(&self) -> bool {
+        self.color
+    }
+
+    /// Caches a known source snapshot under its diagnostic display path.
+    pub(crate) fn remember_source(&mut self, path: &Path, source: &str) {
+        self.sources
+            .insert(path.to_path_buf(), Some(source.to_owned()));
+    }
+
+    /// Loads known runtime sources before the program can change or remove them.
+    pub(crate) fn load_sources(&mut self, sources: &[super::RuntimeSource]) {
+        for source in sources {
+            self.sources
+                .insert(source.label().to_path_buf(), source.text());
+        }
+    }
+
+    fn text_record(&mut self, record: &FileDiagnostic) -> String {
+        let style = if self.color {
+            fpas_diagnostics::TextStyle::Color
+        } else {
+            fpas_diagnostics::TextStyle::Plain
+        };
+        let source = record.source.as_deref().or_else(|| {
+            let path = record.path.as_deref()?;
+            if record.diagnostic.stage() == fpas_diagnostics::DiagnosticStage::Runtime {
+                self.sources.get(path)?.as_deref()
+            } else if path.extension().is_some_and(|ext| ext == "fpas") {
+                self.source(path)
+            } else {
+                None
+            }
+        });
+        let path = record.path.as_deref().map(|path| path.to_string_lossy());
+        fpas_diagnostics::render_text(path.as_deref(), source, &record.diagnostic, style)
     }
 
     /// Routes program-output records into a separate worker buffer.
@@ -103,7 +150,7 @@ impl<'a> Reporter<'a> {
     /// Writes one diagnostic record.
     pub(crate) fn record(&mut self, record: &FileDiagnostic) {
         let line = match self.format {
-            DiagnosticFormat::Text => record.to_string(),
+            DiagnosticFormat::Text => self.text_record(record),
             DiagnosticFormat::Json => {
                 let source = record.path.as_deref().and_then(|path| self.source(path));
                 let path = record.path.as_deref().map(|path| path.to_string_lossy());
@@ -121,7 +168,9 @@ impl<'a> Reporter<'a> {
     pub(crate) fn record_indented(&mut self, record: &FileDiagnostic, indent: &str) {
         match self.format {
             DiagnosticFormat::Text => {
-                let text = record.to_string().replace('\n', &format!("\n{indent}"));
+                let text = self
+                    .text_record(record)
+                    .replace('\n', &format!("\n{indent}"));
                 self.write_line(&format!("{indent}{text}"));
             }
             DiagnosticFormat::Json => self.record(record),

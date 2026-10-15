@@ -9,7 +9,7 @@ use fpas_diagnostics::codes::{PROJECT_UNIT_KIND_MISMATCH, TEST_RUNNER_FAILED};
 use fpas_parser::{CompilationUnit, parse_compilation_unit};
 use fpas_project as project;
 
-use crate::cli_output::CliFailure;
+use crate::cli_output::{CliFailure, RuntimeSource};
 use crate::project_build::source_read_failure;
 use crate::test_script::{apply_script_to_vm, load_script, sidecar_path_for_test};
 
@@ -17,7 +17,7 @@ use super::LinkContext;
 
 pub(super) fn load_program(
     path: &Path,
-) -> Result<(fpas_parser::Program, Option<Vec<PathBuf>>), CliFailure> {
+) -> Result<(fpas_parser::Program, RuntimeSource), CliFailure> {
     let source = fs::read_to_string(path).map_err(|error| source_read_failure(path, &error))?;
     let (unit, diagnostics) = parse_compilation_unit(&source);
     let errors = diagnostics
@@ -27,10 +27,10 @@ pub(super) fn load_program(
         .cloned()
         .collect::<Vec<_>>();
     if !errors.is_empty() {
-        return Err(CliFailure::from_diagnostics(path, &errors));
+        return Err(CliFailure::from_diagnostics(path, &errors).with_source(path, &source));
     }
     match unit {
-        CompilationUnit::Program(program) => Ok((program, None)),
+        CompilationUnit::Program(program) => Ok((program, RuntimeSource::snapshot(path, &source))),
         CompilationUnit::Unit(unit) => Err(unit_entry_failure(path, &unit)),
     }
 }

@@ -38,7 +38,8 @@ pub(super) fn parse(bytes: &[u8], source_paths: &[String]) -> Result<Program, Bu
                 .map(|diagnostic| diagnostic.as_diagnostic().clone())
                 .collect(),
             path.map(|path| (0, path)),
-        ));
+        )
+        .with_source(0, source));
     }
     match unit {
         CompilationUnit::Program(program) => Ok(program),

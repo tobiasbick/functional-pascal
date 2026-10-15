@@ -39,12 +39,14 @@ const MAX_CAPTURED_OUTPUT: usize = 8 * 1024 * 1024;
 struct WorkerRequest {
     test_path: PathBuf,
     source_paths: Option<Vec<PathBuf>>,
+    sources: Vec<crate::cli_output::RuntimeSource>,
     script_override: Option<PathBuf>,
     manifest_override: Option<ManifestOverride>,
     display: String,
     output: RunOutput,
     show_output: bool,
     diagnostics: DiagnosticFormat,
+    color: bool,
     scratch_dir: PathBuf,
 }
 
@@ -133,7 +135,8 @@ fn run_with_files(
     reporter: &mut Reporter<'_>,
     files: &WorkerFiles,
 ) -> TestOutcome {
-    if let Err(message) = write_worker_inputs(files, &prepared, reporter.format()) {
+    if let Err(message) = write_worker_inputs(files, &prepared, reporter.format(), reporter.color())
+    {
         return worker_failure(reporter, &prepared, &message);
     }
 
@@ -201,6 +204,7 @@ fn write_worker_inputs(
     files: &WorkerFiles,
     prepared: &PreparedProgram,
     diagnostics: DiagnosticFormat,
+    color: bool,
 ) -> Result<(), String> {
     let manifest_override = prepared
         .manifest_override
@@ -211,12 +215,14 @@ fn write_worker_inputs(
     let request = WorkerRequest {
         test_path: prepared.test_path.clone(),
         source_paths: prepared.source_paths.as_deref().cloned(),
+        sources: (*prepared.sources).clone(),
         script_override: prepared.script_override.clone(),
         manifest_override,
         display: prepared.display.clone(),
         output: prepared.output,
         show_output: prepared.show_output,
         diagnostics,
+        color,
         scratch_dir: prepared.scratch_dir.clone(),
     };
     let request_bytes = serde_json::to_vec(&request)

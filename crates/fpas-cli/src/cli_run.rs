@@ -30,11 +30,13 @@ pub(crate) fn run_cli(
     cwd: &Path,
     mut stdout: Box<dyn Write + Send>,
     stderr: &mut dyn Write,
+    color: bool,
 ) -> i32 {
     let resolved = match resolve_cli_config(args, cwd) {
         Ok(resolved) => resolved,
         Err(message) => {
-            let mut reporter = Reporter::new(DiagnosticFormat::requested(args), stderr);
+            let mut reporter =
+                Reporter::new(DiagnosticFormat::requested(args), stderr).with_color(color);
             return reporter.failure(&CliFailure::from_message(CLI_ARGUMENTS_INVALID, &message));
         }
     };
@@ -68,7 +70,7 @@ pub(crate) fn run_cli(
         }
         ResolvedCli::Lsp => crate::cli_lsp::run_language_server(cwd, stderr),
         ResolvedCli::Build(config) => {
-            let mut reporter = Reporter::new(config.diagnostics, stderr);
+            let mut reporter = Reporter::new(config.diagnostics, stderr).with_color(color);
             let library = match crate::standard_library::resolve_standard_library(
                 config.standard_library.as_deref(),
             ) {
@@ -78,7 +80,7 @@ pub(crate) fn run_cli(
             crate::cli_build::build_cli(config, library.as_ref(), stdout.as_mut(), &mut reporter)
         }
         ResolvedCli::Check(config) => {
-            let mut reporter = Reporter::new(config.diagnostics, stderr);
+            let mut reporter = Reporter::new(config.diagnostics, stderr).with_color(color);
             let library = match crate::standard_library::resolve_standard_library(
                 config.standard_library.as_deref(),
             ) {
@@ -89,12 +91,12 @@ pub(crate) fn run_cli(
         }
         ResolvedCli::Fmt(config) => crate::cli_fmt::format_cli(config, stdout.as_mut(), stderr),
         ResolvedCli::Test(config) => {
-            let mut reporter = Reporter::new(config.diagnostics, stderr);
+            let mut reporter = Reporter::new(config.diagnostics, stderr).with_color(color);
             crate::cli_test::test_cli(config, stdout.as_mut(), &mut reporter)
         }
         ResolvedCli::Debug(config) => crate::cli_debug::debug_cli(config, stdout, stderr),
         ResolvedCli::Run(config) => {
-            let mut reporter = Reporter::new(config.diagnostics, stderr);
+            let mut reporter = Reporter::new(config.diagnostics, stderr).with_color(color);
             run_input(config, stdout, &mut reporter)
         }
     }
@@ -181,6 +183,7 @@ fn run_source_file(
             return reporter.failure(&crate::project_build::source_read_failure(path, &error));
         }
     };
+    reporter.remember_source(path, &source);
 
     if let Some(standard_library) = standard_library {
         let built = match crate::project_build::build_test_program(
@@ -192,6 +195,7 @@ fn run_source_file(
             Ok(built) => built,
             Err(failure) => return reporter.failure(&failure),
         };
+        reporter.load_sources(&built.sources);
         return run_executable(
             path,
             built.executable,
@@ -227,6 +231,7 @@ fn run_project_file(
                     Ok(artifact) => artifact,
                     Err(failure) => return reporter.failure(&failure),
                 };
+            reporter.load_sources(&artifact.sources);
             run_executable(
                 &artifact.path,
                 artifact.executable,
@@ -290,6 +295,14 @@ fn run_compiled_program_file(
         .iter()
         .map(PathBuf::from)
         .collect::<Vec<_>>();
+    // Portable image labels are not source roots. Only exact paths with matching hashes qualify.
+    reporter.load_sources(
+        &source_paths
+            .iter()
+            .zip(image.source_hashes())
+            .map(|(path, hash)| crate::cli_output::RuntimeSource::hashed(path, *hash))
+            .collect::<Vec<_>>(),
+    );
     run_executable(
         path,
         image.into_executable(),
@@ -309,6 +322,7 @@ fn run_source_impl(
     stdout: Box<dyn Write + Send>,
     reporter: &mut Reporter<'_>,
 ) -> i32 {
+    reporter.remember_source(path, source);
     let (program, parse_errors) = fpas_parser::parse(source);
     let has_errors = parse_errors
         .iter()

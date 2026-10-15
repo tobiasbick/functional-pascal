@@ -58,6 +58,7 @@ fn classify_sources(
                 continue;
             }
         };
+        reporter.remember_source(path, &source);
         let (parsed, diagnostics) = parse_compilation_unit(&source);
         let mut file_has_errors = false;
         for diagnostic in &diagnostics {

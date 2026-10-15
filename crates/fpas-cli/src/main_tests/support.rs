@@ -55,7 +55,7 @@ pub(super) fn run_cli_args_and_capture_output(
 ) -> (i32, String, String) {
     let stdout = SharedWriter::default();
     let mut stderr = Vec::<u8>::new();
-    let exit_code = run_cli(args, cwd, Box::new(stdout.clone()), &mut stderr);
+    let exit_code = run_cli(args, cwd, Box::new(stdout.clone()), &mut stderr, false);
 
     let stdout_output = stdout.into_string();
     let stderr_output = String::from_utf8(stderr).expect("stderr must be valid UTF-8");

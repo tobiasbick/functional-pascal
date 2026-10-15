@@ -4,6 +4,7 @@
 
 use std::fmt;
 use std::path::PathBuf;
+use std::sync::Arc;
 
 use crate::{Diagnostic, render, render_without_path};
 
@@ -14,13 +15,26 @@ pub struct FileDiagnostic {
     pub diagnostic: Diagnostic,
     /// File named by the producer; `None` when the record concerns no single file.
     pub path: Option<PathBuf>,
+    /// Matching compilation text when retained by the producer; never read by `Display`.
+    pub source: Option<Arc<str>>,
 }
 
 impl FileDiagnostic {
     /// Pairs a diagnostic with an optional file path.
     #[must_use]
     pub fn new(diagnostic: Diagnostic, path: Option<PathBuf>) -> Self {
-        Self { diagnostic, path }
+        Self {
+            diagnostic,
+            path,
+            source: None,
+        }
+    }
+
+    /// Retains the source snapshot belonging to this record's source identity.
+    #[must_use]
+    pub fn with_source(mut self, source: impl Into<Arc<str>>) -> Self {
+        self.source = Some(source.into());
+        self
     }
 }
 

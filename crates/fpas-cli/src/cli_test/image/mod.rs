@@ -92,6 +92,7 @@ mod tests {
                     timeout: None,
                     show_output: false,
                     diagnostics: crate::cli_output::DiagnosticFormat::Text,
+                    color: false,
                 },
                 test.compiled.as_ref(),
             );
@@ -155,6 +156,7 @@ mod tests {
                     timeout: None,
                     show_output: false,
                     diagnostics: crate::cli_output::DiagnosticFormat::Text,
+                    color: false,
                 },
                 Some(compiled),
             );
@@ -204,6 +206,7 @@ mod tests {
                     timeout: None,
                     show_output: false,
                     diagnostics: crate::cli_output::DiagnosticFormat::Text,
+                    color: false,
                 },
                 test.compiled.as_ref(),
             );

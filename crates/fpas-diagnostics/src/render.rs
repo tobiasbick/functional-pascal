@@ -2,8 +2,32 @@
 
 use crate::Diagnostic;
 
+mod display;
+mod excerpt;
 mod json;
 pub use json::{render_json, render_program_stderr_json};
+
+/// Explicit presentation policy chosen by the owner of the final output stream.
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
+pub enum TextStyle {
+    /// Terminal-safe text without ANSI styling.
+    #[default]
+    Plain,
+    /// Red errors and yellow warnings, with resets around every styled segment.
+    Color,
+}
+
+impl TextStyle {
+    fn push(self, output: &mut String, text: &str, warning: bool) {
+        if self == Self::Color {
+            output.push_str(if warning { "\x1b[33m" } else { "\x1b[31m" });
+        }
+        output.push_str(text);
+        if self == Self::Color {
+            output.push_str("\x1b[0m");
+        }
+    }
+}
 
 /// Renders a diagnostic with a source path.
 ///
@@ -11,7 +35,7 @@ pub use json::{render_json, render_program_stderr_json};
 /// while `CRLF`, bare `CR`, and `LF` in messages or help text become consistently prefixed lines.
 #[must_use]
 pub fn render(path: &str, diagnostic: &Diagnostic) -> String {
-    render_at(Some(path), diagnostic)
+    render_text(Some(path), None, diagnostic, TextStyle::Plain)
 }
 
 /// Renders a diagnostic when no source path is available.
@@ -20,10 +44,20 @@ pub fn render(path: &str, diagnostic: &Diagnostic) -> String {
 /// `CRLF`, bare `CR`, and `LF` become consistently prefixed lines.
 #[must_use]
 pub fn render_without_path(diagnostic: &Diagnostic) -> String {
-    render_at(None, diagnostic)
+    render_text(None, None, diagnostic, TextStyle::Plain)
 }
 
-fn render_at(path: Option<&str>, diagnostic: &Diagnostic) -> String {
+/// Renders a terminal-safe diagnostic, optionally showing its matching source text.
+///
+/// The caller owns source identity and output policy. No filesystem or environment
+/// access occurs here. Invalid source ranges fall back to the compact header/help.
+#[must_use]
+pub fn render_text(
+    path: Option<&str>,
+    source: Option<&str>,
+    diagnostic: &Diagnostic,
+    style: TextStyle,
+) -> String {
     let mut rendered = String::new();
     if let Some(path) = path {
         push_escaped(&mut rendered, path);
@@ -37,15 +71,22 @@ fn render_at(path: Option<&str>, diagnostic: &Diagnostic) -> String {
     } else if path.is_some() {
         rendered.push(' ');
     }
-    rendered.push_str(if diagnostic.is_warning() {
+    let severity = if diagnostic.is_warning() {
         "warning"
     } else {
         "error"
-    });
-    rendered.push('[');
-    rendered.push_str(&diagnostic.code.to_string());
-    rendered.push_str("]: ");
+    };
+    style.push(
+        &mut rendered,
+        &format!("{severity}[{}]", diagnostic.code),
+        diagnostic.is_warning(),
+    );
+    rendered.push_str(": ");
     push_lines(&mut rendered, &diagnostic.message, "", "\n  message: ");
+
+    if let Some(source) = source {
+        excerpt::push(&mut rendered, source, diagnostic, style);
+    }
 
     if let Some(help) = diagnostic
         .help

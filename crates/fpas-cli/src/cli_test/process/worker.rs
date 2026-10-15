@@ -49,6 +49,7 @@ fn worker_main(files: &WorkerFiles) -> Result<(), String> {
         test_path: request.test_path,
         executable: image.into_executable(),
         source_paths: request.source_paths.map(std::sync::Arc::new),
+        sources: std::sync::Arc::new(request.sources),
         script_override: request.script_override,
         manifest_override,
         display: request.display,
@@ -58,8 +59,9 @@ fn worker_main(files: &WorkerFiles) -> Result<(), String> {
     };
     let mut output = CappedBuffer::new(MAX_CAPTURED_OUTPUT);
     let mut program_output = Vec::new();
-    let mut reporter =
-        Reporter::new(request.diagnostics, &mut output).with_program_output(&mut program_output);
+    let mut reporter = Reporter::new(request.diagnostics, &mut output)
+        .with_color(request.color)
+        .with_program_output(&mut program_output);
     let outcome = run_prepared_program(prepared, &mut reporter, || {
         fs::write(files.ready(), [])
             .map_err(|error| format!("Error signaling worker readiness: {error}"))?;

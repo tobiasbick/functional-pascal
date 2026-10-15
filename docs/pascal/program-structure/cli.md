@@ -231,6 +231,15 @@ in paths and non-line-ending control characters in messages or help text are ren
 escapes, so diagnostic content cannot inject terminal control sequences or synthetic location
 lines.
 
+With matching source text, a numbered source line and caret marker appear before
+the help. Long lines are cropped to 100 display cells; tabs use four-cell stops
+and markers account for Unicode display width. Runtime point locations use one
+caret. Text is colored automatically only when the final stderr is a terminal;
+any nonempty `NO_COLOR` value disables it. Test workers inherit this policy.
+Missing or unverified source text keeps the compact header/help. See
+[diagnostic rendering](../tools/diagnostics.md#text-output) for range, cropping
+and compiled-image source rules. JSON output keeps its existing schema.
+
 `CRLF`, bare `CR`, and `LF` inside messages or help text are normalized as logical line breaks.
 Every continuation is explicit: message continuations use `  message: ` and every help line uses
 `  help: `. A source path always remains on one physical output line.

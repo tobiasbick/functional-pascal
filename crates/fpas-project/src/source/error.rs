@@ -17,6 +17,7 @@ use fpas_diagnostics::{Diagnostic, DiagnosticCode, SourceSpan};
 pub struct ProjectError {
     path: Option<PathBuf>,
     diagnostics: Vec<Diagnostic>,
+    source: Option<std::sync::Arc<str>>,
 }
 
 impl ProjectError {
@@ -25,6 +26,7 @@ impl ProjectError {
         Self {
             path: None,
             diagnostics: vec![Diagnostic::error_without_source(code, message, None)],
+            source: None,
         }
     }
 
@@ -63,7 +65,21 @@ impl ProjectError {
         Self {
             path: Some(path.to_path_buf()),
             diagnostics,
+            source: None,
         }
+    }
+
+    /// Retains the matching text used to produce this source failure.
+    #[must_use]
+    pub(crate) fn with_source(mut self, source: &str) -> Self {
+        self.source = Some(source.into());
+        self
+    }
+
+    /// Returns the retained compilation text, when parsing supplied it.
+    #[must_use]
+    pub fn source_text(&self) -> Option<&str> {
+        self.source.as_deref()
     }
 
     /// Returns the coded diagnostics in producer order; never empty.

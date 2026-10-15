@@ -13,7 +13,7 @@ use super::super::log;
 use super::super::process;
 use super::super::report::TestOutcome;
 use super::LinkContext;
-use crate::cli_output::{CliFailure, Reporter, locate};
+use crate::cli_output::{CliFailure, Reporter, RuntimeSource, locate};
 
 use super::load::apply_test_script;
 
@@ -22,6 +22,8 @@ use super::load::apply_test_script;
 pub(in crate::cli_test) struct CompiledTestProgram {
     pub image: Arc<fpas_bytecode::VerifiedExecutable>,
     pub source_paths: Arc<Vec<PathBuf>>,
+    /// Compilation snapshots and hashes retained across earlier tests and hooks.
+    pub sources: Arc<Vec<RuntimeSource>>,
 }
 
 /// Controls PASS/FAIL lines emitted while executing a linked program.
@@ -69,6 +71,8 @@ pub(in crate::cli_test) struct PreparedProgram {
     pub test_path: PathBuf,
     pub executable: fpas_bytecode::VerifiedExecutable,
     pub source_paths: Option<Arc<Vec<PathBuf>>>,
+    /// Matching source identities transferred to ordinary and isolated runners.
+    pub sources: Arc<Vec<RuntimeSource>>,
     pub script_override: Option<PathBuf>,
     pub manifest_override: Option<fpas_project::TestFileOverride>,
     pub display: String,
@@ -121,21 +125,28 @@ fn prepare_test_program(
         Ok((
             (*compiled.image).clone(),
             Some(Arc::clone(&compiled.source_paths)),
+            Arc::clone(&compiled.sources),
         ))
     } else if let Some(link) = link {
         super::load::reject_unit_test_entry(path, link)
             .and_then(|()| {
                 crate::project_build::build_test_program_with_graph(path, &link.program_graph)
             })
-            .map(|built| (built.executable, Some(Arc::new(built.source_paths))))
+            .map(|built| {
+                (
+                    built.executable,
+                    Some(Arc::new(built.source_paths)),
+                    Arc::new(built.sources),
+                )
+            })
     } else {
-        super::load::load_program(path).and_then(|(program, source_paths)| {
+        super::load::load_program(path).and_then(|(program, source)| {
             fpas_compiler::compile(&program)
-                .map(|executable| (executable, source_paths.map(Arc::new)))
+                .map(|executable| (executable, None, Arc::new(vec![source])))
                 .map_err(|diagnostics| CliFailure::from_diagnostics(path, &diagnostics))
         })
     };
-    let (executable, source_paths) = match built {
+    let (executable, source_paths, sources) = match built {
         Ok(built) => built,
         Err(failure) => {
             render_failure(reporter, display, output, &failure);
@@ -147,6 +158,7 @@ fn prepare_test_program(
         test_path: path.to_path_buf(),
         executable,
         source_paths,
+        sources,
         script_override: script_override.map(Path::to_path_buf),
         manifest_override: link
             .and_then(|context| context.test_manifest.override_for(path))
@@ -180,6 +192,7 @@ pub(in crate::cli_test) fn run_prepared_program(
         test_path,
         executable,
         source_paths,
+        sources,
         script_override,
         manifest_override,
         display,
@@ -190,6 +203,7 @@ pub(in crate::cli_test) fn run_prepared_program(
     // Runtime diagnostics carry linked source IDs; the prepared list is indexed by graph source.
     let source_paths =
         source_paths.map(|paths| fpas_build::linked_source_paths(&executable, &paths));
+    reporter.load_sources(&sources);
     let mut vm = fpas_vm::Vm::new(executable);
     vm.set_test_scratch_dir(scratch_dir);
     let (program_stderr, receiver) = process::ProgramStderrBuffer::new(reporter.format());

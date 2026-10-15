@@ -100,11 +100,13 @@ pub(super) fn parse_compilation_unit_source(
     );
 
     if diagnostics.iter().any(Diagnostic::is_error) {
-        return Err(ProjectError::from_source(path, diagnostics));
+        return Err(ProjectError::from_source(path, diagnostics).with_source(source_text));
     }
     let warnings = diagnostics
         .into_iter()
-        .map(|diagnostic| FileDiagnostic::new(diagnostic, Some(path.to_path_buf())))
+        .map(|diagnostic| {
+            FileDiagnostic::new(diagnostic, Some(path.to_path_buf())).with_source(source_text)
+        })
         .collect();
 
     Ok((unit, warnings))

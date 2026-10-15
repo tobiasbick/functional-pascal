@@ -11,6 +11,7 @@
 
 [A1](#a1-one-compact-language-reference) is implemented.
 [S1](#s1-compile-every-documentation-example) is implemented.
+[S2](#s2-diagnostics-with-source-excerpt-and-caret) is implemented.
 [D1](#d1-automatic-failure-dump) has an approved full-scope
 [implementation plan](failure-dump/README.md). Shared inspection, original-fault
 capture, cooperative task collection and CLI/JSON publication are implemented,
@@ -29,12 +30,11 @@ navigation.
 ## Where to start
 
 Most value for the least work among the remaining wishes. Effort is a rough guess,
-not an estimate. A1 and S1 are already implemented; see their status below.
+not an estimate. A1, S1 and S2 are already implemented; see their status below.
 
 | Wish | Why first | Effort |
 | --- | --- | --- |
 | [D1](#d1-automatic-failure-dump) Automatic failure dump | Solves most bugs without a debugger | medium |
-| [S2](#s2-diagnostics-with-source-excerpt-and-caret) Diagnostics with source excerpt and caret | Both notice it every day | medium |
 | [A2](#a2-diagnostics-for-pascal-and-ada-habits) Diagnostics for Pascal and Ada habits | Biggest lever in the long run | large, ongoing |
 
 Everything else can wait until these exist.
@@ -139,11 +139,18 @@ prose, signature outlines and schematic notation still need review.
 
 #### S2. Diagnostics with source excerpt and caret
 
-Today a text diagnostic is `path:line:column: error[CODE]: message`, followed by `help:` lines. It
-shows no source line, no caret under the error, and no color. Wanted, in the style of rustc: the
-offending line with a `^^^` marker, colored when the output is a terminal, honoring `NO_COLOR`. The
-human sees at a glance where the error is; the agent sees the faulty code without opening the file.
-JSON output stays as it is.
+**Status: implemented, verified and independently reviewed.** Text diagnostics
+show one bounded source line and caret markers, with automatic terminal colors
+and nonempty `NO_COLOR` support. Compilation snapshots or verified source hashes
+keep excerpts tied to the bytecode, including precompiled tests and isolated
+workers. Unicode sequence widths, four-cell tab stops, control escaping and
+100-cell cropping share one renderer. JSON output keeps its existing contract.
+
+The permanent [diagnostics handbook](../pascal/tools/diagnostics.md#text-output)
+owns the output rules. Renderer, real CLI and Unix pseudoterminal tests cover
+alignment, source provenance, color policy and worker forwarding. The temporary
+S2 plan is complete and removed. D1's separate local performance acceptance
+remains open.
 
 #### S3. Declaration comments as the single source
 

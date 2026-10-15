@@ -169,6 +169,10 @@ Check interactive programs without launching them in batch validation. Use
 scripted or headless tests for their runtime behavior. After FPAS regression-test
 changes, run the repository suite as required by AGENTS.md.
 
+CLI text diagnostics include a bounded source excerpt and caret when matching
+text is available. Use `--diagnostics json` for structured records. Redirected
+text stays plain; nonempty `NO_COLOR` disables automatic terminal colors.
+
 For an escaping runtime error, run with
 `fpas run <file-or-project> --failure-dump .temp-data/<fresh-name>.json`.
 The [bounded report](../../../docs/pascal/tools/failure-dump.md) keeps the original

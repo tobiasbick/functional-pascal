@@ -93,6 +93,7 @@ pub(super) fn run_tests_sequential(
                 timeout: config.timeout,
                 show_output: config.show_output,
                 diagnostics: config.diagnostics,
+                color: reporter.color(),
             },
             reporter,
             test.compiled.as_ref(),
@@ -130,10 +131,11 @@ pub(super) fn run_tests_parallel(
                 compiled: None,
             }),
             Err(failure) => {
-                let output = parallel::render_output(config.diagnostics, |reporter| {
-                    log::banner(reporter, "FAIL", &display);
-                    log::failure(reporter, &failure);
-                });
+                let output =
+                    parallel::render_output(config.diagnostics, reporter.color(), |reporter| {
+                        log::banner(reporter, "FAIL", &display);
+                        log::failure(reporter, &failure);
+                    });
                 preload_results.push(parallel::IndexedTestResult {
                     index,
                     outcome: TestOutcome::CompileError,
@@ -154,6 +156,7 @@ pub(super) fn run_tests_parallel(
                     index,
                     test_display_path(path).into_owned(),
                     config.diagnostics,
+                    reporter.color(),
                 )
             },
         ));
@@ -170,6 +173,7 @@ pub(super) fn run_tests_parallel(
             timeout: config.timeout,
             show_output: config.show_output,
             diagnostics: config.diagnostics,
+            color: reporter.color(),
         },
         config.fail_fast,
     ));

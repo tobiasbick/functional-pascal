@@ -3,12 +3,14 @@
 mod diagnostics;
 mod failure;
 mod program_output;
+mod sources;
 
 use std::io::{self, Write};
 
 pub(crate) use diagnostics::{DiagnosticFormat, Reporter, locate};
 pub(crate) use failure::CliFailure;
 pub(crate) use program_output::{program_stderr_receiver, program_stderr_receiver_with};
+pub(crate) use sources::RuntimeSource;
 
 /// Writes a command result to stdout and reports failures on stderr.
 pub(crate) fn write_stdout(

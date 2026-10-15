@@ -14,7 +14,7 @@ fn help_and_version_fail_when_stdout_cannot_be_written() {
     ] {
         for writer in [FailingWriter::immediately(), FailingWriter::after(3)] {
             let mut stderr = Vec::new();
-            let exit_code = run_cli(&args, &cwd, Box::new(writer), &mut stderr);
+            let exit_code = run_cli(&args, &cwd, Box::new(writer), &mut stderr, false);
             let stderr = String::from_utf8(stderr).expect("stderr must be UTF-8");
 
             assert_eq!(exit_code, 1);
@@ -37,7 +37,7 @@ fn fmt_stdout_fails_when_formatted_source_is_only_partially_written() {
     ];
     for writer in [FailingWriter::immediately(), FailingWriter::after(8)] {
         let mut stderr = Vec::new();
-        let exit_code = run_cli(&args, &cwd, Box::new(writer), &mut stderr);
+        let exit_code = run_cli(&args, &cwd, Box::new(writer), &mut stderr, false);
         let stderr = String::from_utf8(stderr).expect("stderr must be UTF-8");
 
         assert_eq!(exit_code, 1);
@@ -62,7 +62,7 @@ fn fmt_list_fails_when_changed_file_list_cannot_be_written() {
     ];
     for writer in [FailingWriter::immediately(), FailingWriter::after(8)] {
         let mut stderr = Vec::new();
-        let exit_code = run_cli(&args, &cwd, Box::new(writer), &mut stderr);
+        let exit_code = run_cli(&args, &cwd, Box::new(writer), &mut stderr, false);
         let stderr = String::from_utf8(stderr).expect("stderr must be UTF-8");
 
         assert_eq!(exit_code, 1);

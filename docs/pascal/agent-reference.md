@@ -1065,6 +1065,11 @@ with assertions are discovered by the runner. `--std-lib lib` selects this check
 standard library when invoking the repository build directly. For machine-readable
 diagnostics use `fpas check --diagnostics json file.fpas`.
 
+Text diagnostics include a bounded source line and caret when matching text is
+available. Terminal stderr receives automatic color unless `NO_COLOR` is
+nonempty; redirected output stays plain. [Diagnostic rendering](tools/diagnostics.md#text-output)
+describes source validation and display alignment. JSON remains unchanged.
+
 For an escaping runtime error, `fpas run file.fpas --failure-dump .temp-data/failure.json`
 retains a [bounded task/frame/value report](tools/failure-dump.md); choose a fresh
 file path. Successful runs create no report. Check interactive programs

@@ -29,8 +29,9 @@ pub use vm::{
     DebugTerminalMouseButton, DebugTermination, DebugUnaryOperation, DebugVariable,
     DebugVariantConstructionResult, DebugVariantDescription, DebugVariantField, DebugVariantInfo,
     DebuggeeChannelState, DebuggeeInputResult, Execution, FailureBinding, FailureDiagnostic,
-    FailureFrame, FailureObservation, FailureScalar, FailureSnapshot, FailureValue,
-    FunctionBreakpoint, LiveImageClassification, LiveImageReplaceResult, LiveImageUpdateClass,
-    MAX_RECORDING_EVENTS, Paginated, RECORDING_ENVELOPE_VERSION, ShutdownHandle, SourceBreakpoint,
-    SourceLocation, Vm, VmError, VmOutput,
+    FailureFrame, FailureGlobal, FailureGlobals, FailureObservation, FailureScalar,
+    FailureSnapshot, FailureTask, FailureTaskCatalog, FailureValue, FunctionBreakpoint,
+    LiveImageClassification, LiveImageReplaceResult, LiveImageUpdateClass, MAX_RECORDING_EVENTS,
+    Paginated, RECORDING_ENVELOPE_VERSION, ShutdownHandle, SourceBreakpoint, SourceLocation, Vm,
+    VmError, VmOutput,
 };

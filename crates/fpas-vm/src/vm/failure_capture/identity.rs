@@ -55,6 +55,9 @@ pub(super) struct Related {
 impl CaptureState {
     /// Preserve a context from this VM or create an explicit new fault identity.
     pub(super) fn ensure(self: &Arc<Self>, error: &mut VmError, worker: Option<&Worker>) {
+        if worker.is_some() && self.finished.load(Ordering::Acquire) {
+            return;
+        }
         if error
             .attachment::<Context>()
             .is_some_and(|context| context.owner.ptr_eq(&Arc::downgrade(self)))
@@ -147,7 +150,9 @@ impl Worker {
             .as_ref()
             .and_then(|scheduler| scheduler.failure_capture.get())
         {
-            state.ensure(&mut error, Some(self));
+            if !state.finished.load(Ordering::Acquire) {
+                state.ensure(&mut error, Some(self));
+            }
         }
         error
     }

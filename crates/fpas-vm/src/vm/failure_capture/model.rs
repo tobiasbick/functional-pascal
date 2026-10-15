@@ -34,7 +34,7 @@ pub struct FailureFrame {
 
 /// Immutable original-cause data whose storage follows its owning diagnostic.
 pub struct FailureSnapshot {
-    /// VM-local identity, preserved through diagnostic clones and propagation.
+    /// VM-local failure identity, preserved through clones; zero for a later peer observation.
     pub id: u64,
     /// Responsible task, or unavailable for diagnostics raised outside execution.
     pub task_id: Option<u64>,
@@ -64,6 +64,8 @@ impl std::fmt::Debug for FailureSnapshot {
 /// Receiving this data does not change ownership barriers or cancel/stop the VM.
 #[derive(Debug)]
 pub struct FailureObservation {
+    /// Present on the selected top-level observation; secondary errors share this catalog.
+    pub task_catalog: Option<Arc<super::FailureTaskCatalog>>,
     /// The selected diagnostic; any omitted text has an explicit reason.
     pub error: Arc<FailureDiagnostic>,
     /// The original responsible task's state.

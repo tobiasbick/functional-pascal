@@ -21,7 +21,8 @@ use std::{
     panic::{AssertUnwindSafe, catch_unwind},
 };
 
-const LIMITS: ValueLimits = ValueLimits {
+/// Value bounds shared by original faults, peers, and globals.
+pub(super) const LIMITS: ValueLimits = ValueLimits {
     max_children: 256,
     max_string_chars: MAX_STRING,
     max_summary_chars: MAX_STRING,
@@ -30,6 +31,48 @@ const LIMITS: ValueLimits = ValueLimits {
 
 impl CaptureState {
     pub(super) fn capture(self: &Arc<Self>, worker: &Worker, snapshot: &mut FailureSnapshot) {
+        self.capture_at(worker, snapshot, Boundary::Continuation);
+    }
+
+    /// Capture a live peer at its next instruction without executing it.
+    pub(in crate::vm) fn capture_peer(self: &Arc<Self>, worker: &Worker) -> Arc<FailureSnapshot> {
+        self.capture_observation(worker, Boundary::Stopped)
+    }
+
+    /// Retain this task's propagation stack without substituting the foreign cause's frames.
+    pub(in crate::vm) fn capture_handling(
+        self: &Arc<Self>,
+        worker: &Worker,
+    ) -> Arc<FailureSnapshot> {
+        self.capture_observation(worker, Boundary::Fault)
+    }
+
+    fn capture_observation(
+        self: &Arc<Self>,
+        worker: &Worker,
+        boundary: Boundary,
+    ) -> Arc<FailureSnapshot> {
+        let mut snapshot = FailureSnapshot {
+            id: 0,
+            task_id: Some(worker.task_id),
+            frames: Vec::new(),
+            total_frames: None,
+            reason: None,
+            lease: super::Lease::default(),
+        };
+        self.capture_at(worker, &mut snapshot, boundary);
+        if worker.capture_callback {
+            snapshot.reason = snapshot.reason.or(Some("storage_unavailable"));
+        }
+        Arc::new(snapshot)
+    }
+
+    fn capture_at(
+        self: &Arc<Self>,
+        worker: &Worker,
+        snapshot: &mut FailureSnapshot,
+        boundary: Boundary,
+    ) {
         let (mut usage, mut budget) = self.budget();
         let before = (budget.values, budget.bytes);
         let offset = snapshot.frames.len();
@@ -43,7 +86,7 @@ impl CaptureState {
             }
             let count = frames::visit(
                 worker,
-                Boundary::Continuation,
+                boundary,
                 MAX_FRAMES.saturating_sub(offset),
                 |owner, frame, depth| {
                     if omission.is_some() {

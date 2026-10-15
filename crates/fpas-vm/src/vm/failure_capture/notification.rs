@@ -25,7 +25,7 @@ impl CaptureState {
             });
             let lease = self.reserve_terminal(std::mem::size_of::<FailureObservation>() + 16);
             let mut remaining = super::MAX_RELATED;
-            let observation = observe(
+            let mut observation = observe(
                 self,
                 &context,
                 self.terminal_presentation(error),
@@ -33,6 +33,7 @@ impl CaptureState {
                 &mut remaining,
                 0,
             );
+            observation.task_catalog = Some(self.collect_tasks(&observation));
             (self.observer)(Arc::new(observation));
         }));
     }
@@ -92,6 +93,7 @@ fn observe(
         ));
     }
     FailureObservation {
+        task_catalog: None,
         error,
         cause,
         related_errors,

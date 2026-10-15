@@ -47,6 +47,7 @@ fn queued_work_wakes_a_registered_helper_without_consuming_the_task() {
     let _registration = scheduler.subscribe(&signal);
     assert!(scheduler.try_dequeue().is_none());
     scheduler.enqueue(TaskState {
+        capture_record: None,
         observed_task_failure: None,
         pending_completion: None,
         suspension: None,

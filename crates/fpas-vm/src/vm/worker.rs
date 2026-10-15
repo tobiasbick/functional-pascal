@@ -16,6 +16,12 @@ use super::tasks::{TaskClock, TaskScheduler, TaskState, TaskSuspension, TaskSusp
 use super::{VmError, diagnostics};
 
 pub(super) struct Worker {
+    /// Optional ownership record transferred with this task, absent without D1.
+    pub(in crate::vm) capture_record: Option<Arc<super::failure_capture::catalog::TaskRecord>>,
+    /// Whether this worker owns the top-level root, rather than a synchronous callback.
+    pub(in crate::vm) capture_root: bool,
+    /// A synchronous callback has FPAS callers outside this worker's register windows.
+    pub(in crate::vm) capture_callback: bool,
     pub(in crate::vm) supervision: Option<Box<super::tasks::supervision::SupervisedTask>>,
     pub executable: Arc<VerifiedExecutable>,
     pub function: FunctionId,
@@ -159,6 +165,9 @@ impl Worker {
             arguments.iter().chain(captures).cloned(),
         );
         Ok(Self {
+            capture_record: None,
+            capture_root: false,
+            capture_callback: false,
             supervision: None,
             executable,
             function: entry,
@@ -220,9 +229,13 @@ impl Worker {
         self.debug_last_global_store.take()
     }
 
+    /// Share immutable execution context without transferring task-owned registers.
     pub(super) fn pool_template(&self) -> Self {
         Self {
             supervision: None,
+            capture_record: None,
+            capture_root: false,
+            capture_callback: false,
             executable: Arc::clone(&self.executable),
             function: self.function,
             ip: self.ip,
@@ -259,6 +272,7 @@ impl Worker {
         }
     }
 
+    /// Take a saved task's execution and optional inspection ownership.
     pub(super) fn worker_for_task(&self, task: TaskState) -> Self {
         debug_assert_eq!(
             task.register_initialized.len(),
@@ -267,6 +281,9 @@ impl Worker {
         );
         Self {
             supervision: task.supervision,
+            capture_record: task.capture_record,
+            capture_root: false,
+            capture_callback: false,
             executable: Arc::clone(&self.executable),
             function: task.function,
             ip: task.ip,
@@ -303,8 +320,10 @@ impl Worker {
         }
     }
 
+    /// Move all resumable task state to its next scheduler owner.
     pub(super) fn take_task_state(&mut self) -> TaskState {
         TaskState {
+            capture_record: self.capture_record.take(),
             observed_task_failure: self.observed_task_failure.take(),
             pending_completion: self.pending_completion.take(),
             suspension: self.task_suspension.take(),

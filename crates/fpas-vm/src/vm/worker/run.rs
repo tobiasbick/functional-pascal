@@ -11,11 +11,23 @@ use crate::vm::{Execution, VmError, diagnostics};
 const ABORT_CHECK_INTERVAL: u32 = 256;
 
 impl Worker {
+    /// Execute one scheduled task until return, suspension or scheduler abort.
     pub(in crate::vm) fn run_task(&mut self) -> Result<Option<Value>, VmError> {
+        if self.capture_record.is_some() {
+            self.run_task_inner::<true>()
+        } else {
+            self.run_task_inner::<false>()
+        }
+    }
+
+    fn run_task_inner<const CAPTURE: bool>(&mut self) -> Result<Option<Value>, VmError> {
         if let Some(outcome) = self.pending_completion.take() {
             return outcome.map(Some);
         }
         loop {
+            if CAPTURE {
+                self.capture_peer_boundary();
+            }
             if self
                 .scheduler
                 .as_ref()
@@ -48,7 +60,13 @@ impl Worker {
         }
     }
 
+    /// Execute and consume a standalone worker through its ownership barriers.
     pub fn run(mut self) -> Result<Execution, VmError> {
+        self.run_retained()
+    }
+
+    /// Execute while retaining ownership of root storage through VM finalization.
+    pub(in crate::vm) fn run_retained(&mut self) -> Result<Execution, VmError> {
         let outcome = self.run_in_place().map(|execution| execution.value);
         let value = self.finish_owned_groups_blocking(outcome)?;
         Ok(Execution {
@@ -59,15 +77,28 @@ impl Worker {
         })
     }
 
+    /// Execute a synchronous root/callback, retaining failure state before scope unwind.
     pub(in crate::vm) fn run_in_place(&mut self) -> Result<Execution, VmError> {
         self.run_in_place_inner().map_err(|error| {
             let error = self.capture_failure(error);
+            self.capture_root_propagation(&error);
             self.unwind_task_scopes_blocking(error)
         })
     }
 
     fn run_in_place_inner(&mut self) -> Result<Execution, VmError> {
+        if self.capture_record.is_some() {
+            self.run_in_place_loop::<true>()
+        } else {
+            self.run_in_place_loop::<false>()
+        }
+    }
+
+    fn run_in_place_loop<const CAPTURE: bool>(&mut self) -> Result<Execution, VmError> {
         loop {
+            if CAPTURE {
+                self.capture_peer_boundary();
+            }
             if self
                 .scheduler
                 .as_ref()

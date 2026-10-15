@@ -2,6 +2,7 @@
 
 #[cfg(test)]
 mod any_tests;
+mod capture;
 mod completion_ranges;
 mod group_results;
 #[cfg(test)]
@@ -28,6 +29,7 @@ use crate::vm::shared::wakeups::{WakeRegistration, WakeSignal, WakeSource};
 use crate::vm::{TaskResultState, TaskTimers, VmError, runtime_error};
 
 use super::state::TaskState;
+use crate::vm::failure_capture::catalog::ScheduledTask;
 
 /// Outcome of replacing one retained successful result without consuming it.
 pub(in crate::vm) enum RetainedResultReplacement {
@@ -45,12 +47,12 @@ pub(in crate::vm) enum RetainedResultReplacement {
 
 /// Mutable scheduler state shared by register workers; executable metadata remains immutable.
 pub(in crate::vm) struct TaskScheduler {
-    /// Optional original-fault capture, initialized before execution and read only on errors.
+    /// Optional failure capture and task catalog, installed before execution.
     pub(in crate::vm) failure_capture:
         std::sync::OnceLock<Arc<crate::vm::failure_capture::CaptureState>>,
-    queue: Mutex<VecDeque<TaskState>>,
+    queue: Mutex<VecDeque<ScheduledTask>>,
     available: Condvar,
-    timers: TaskTimers<TaskState>,
+    timers: TaskTimers<ScheduledTask>,
     accepting_timers: AtomicBool,
     results: Mutex<HashMap<u64, TaskResultState>>,
     completions: Mutex<CompletionRanges>,
@@ -101,6 +103,14 @@ impl TaskScheduler {
     }
     /// Publish runnable work and wake pool workers and completion-barrier helpers.
     pub fn enqueue(&self, task: TaskState) {
+        let task = match self.failure_capture.get() {
+            Some(capture) => capture.save(task, false),
+            None => ScheduledTask::Direct(task),
+        };
+        self.enqueue_owned(task);
+    }
+
+    fn enqueue_owned(&self, task: ScheduledTask) {
         self.queue
             .lock()
             .unwrap_or_else(|e| e.into_inner())
@@ -110,17 +120,20 @@ impl TaskScheduler {
         let _results = self.results.lock().unwrap_or_else(|e| e.into_inner());
         self.notify_result_change();
     }
+    /// Transfer the next runnable task to its worker without waiting.
     pub fn try_dequeue(&self) -> Option<TaskState> {
         self.queue
             .lock()
             .unwrap_or_else(|e| e.into_inner())
             .pop_front()
+            .map(ScheduledTask::take)
     }
+    /// Transfer runnable ownership, waiting until work or shutdown is available.
     pub fn dequeue(&self) -> Option<TaskState> {
         let mut queue = self.queue.lock().unwrap_or_else(|e| e.into_inner());
         loop {
             if let Some(task) = queue.pop_front() {
-                return Some(task);
+                return Some(task.take());
             }
             if self.is_shutdown() {
                 return None;
@@ -148,12 +161,18 @@ impl TaskScheduler {
             self.groups.complete(id, None);
             self.scopes.complete(id, None);
             results.insert(id, state);
+            if let Some(capture) = self.failure_capture.get() {
+                capture.task_finished(id, None);
+            }
         }
         drop(results);
         self.notify_result_change();
     }
     /// Publish failure and report whether an explicit group owns its propagation.
     pub fn store_failure(&self, id: u64, error: VmError) -> bool {
+        if let Some(capture) = self.failure_capture.get() {
+            capture.task_finished(id, Some(&error));
+        }
         let mut results = self.results.lock().unwrap_or_else(|e| e.into_inner());
         let owned = self
             .groups
@@ -284,18 +303,25 @@ impl TaskScheduler {
             self.fail_pending_result_if_shutdown(*task_id);
         }
     }
+    /// Move a suspended task to the timer owner until its next wake deadline.
     pub fn schedule(&self, task: TaskState, milliseconds: u64) {
+        let task = match self.failure_capture.get() {
+            Some(capture) => capture.save(task, true),
+            None => ScheduledTask::Direct(task),
+        };
         if let Err(task) = self
             .timers
             .schedule(task, milliseconds, &self.accepting_timers)
         {
-            self.cancel(task);
+            self.cancel(task.take());
         }
     }
+    /// Transfer due timer entries to the runnable queue without duplicating saved state.
     pub fn timer_loop(&self) {
         while self.timers.dispatch_next_due(&self.shutdown, |tasks| {
             for task in tasks {
-                self.enqueue(task);
+                task.timer_ready();
+                self.enqueue_owned(task);
             }
         }) {}
     }
@@ -305,7 +331,7 @@ impl TaskScheduler {
         self.scopes.shutdown();
         self.accepting_timers.store(false, Ordering::Release);
         for task in self.timers.cancel_all() {
-            self.cancel(task);
+            self.cancel(task.take());
         }
         self.shutdown.store(true, Ordering::Release);
         self.complete_pending_results();

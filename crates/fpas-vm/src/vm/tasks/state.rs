@@ -8,6 +8,9 @@ use crate::vm::hosted::callbacks::CallbackContinuation;
 
 /// Complete mutable register-machine state transferable between pool workers.
 pub(in crate::vm) struct TaskState {
+    /// Optional catalog ownership, moved out before storing this state in its record.
+    pub(in crate::vm) capture_record:
+        Option<std::sync::Arc<crate::vm::failure_capture::catalog::TaskRecord>>,
     /// Child failure already observed by this task, retained through cleanup suspension.
     pub observed_task_failure: Option<u64>,
     /// Terminal body value/error retained while its owner cleanup suspends.
@@ -53,6 +56,7 @@ impl TaskState {
                 .chain(function.captures.iter().cloned()),
         );
         Self {
+            capture_record: None,
             observed_task_failure: None,
             pending_completion: None,
             suspension: None,

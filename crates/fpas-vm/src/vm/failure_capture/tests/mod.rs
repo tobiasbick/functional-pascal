@@ -1,5 +1,6 @@
 //! Observable original-cause and ownership contracts for normal VM execution.
 
+mod catalog;
 mod lifetime;
 mod ownership;
 mod termination;
@@ -52,6 +53,14 @@ fn nested_root_fault_retains_parameters_and_callers_after_worker_disposal() {
         assert_eq!(data.cause.task_id, Some(0));
         assert_eq!(data.cause.total_frames, Some(3));
         assert_eq!(data.cause.reason, None);
+        let catalog = data.task_catalog.as_ref().unwrap();
+        assert_eq!(catalog.tasks.len(), 1);
+        assert_eq!(catalog.tasks[0].id, 0);
+        assert_eq!(catalog.tasks[0].observation, "fault");
+        assert!(Arc::ptr_eq(
+            catalog.tasks[0].snapshot.as_ref().unwrap(),
+            &data.cause
+        ));
         assert_eq!(
             scalar(&data.cause.frames[0], "Number"),
             &Some(FailureScalar::Integer("7".into()))

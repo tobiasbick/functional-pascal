@@ -1,10 +1,14 @@
 //! Opt-in original-fault capture and terminal notification.
 
 mod capture;
+/// Optional task ownership and cooperative collection.
+pub(in crate::vm) mod catalog;
+mod globals;
 mod identity;
 mod model;
 mod notification;
 mod presentation;
+mod task_model;
 #[cfg(test)]
 mod tests;
 
@@ -16,6 +20,7 @@ pub use crate::vm::inspection::values::snapshot::{
 pub(in crate::vm) use identity::attach_related;
 pub use model::{FailureBinding, FailureFrame, FailureObservation, FailureSnapshot};
 pub use presentation::FailureDiagnostic;
+pub use task_model::{FailureGlobal, FailureGlobals, FailureTask, FailureTaskCatalog};
 
 use crate::vm::inspection::values::budget::ValueBudget;
 
@@ -25,7 +30,7 @@ const MAX_FRAMES: usize = 256;
 const MAX_STRING: usize = 4096;
 const MAX_RELATED: usize = 1024;
 // Keep control/model storage and a short terminal diagnostic available after large values.
-const CONTROL_RESERVE: usize = 512 * 1024;
+const CONTROL_RESERVE: usize = 2 * 1024 * 1024;
 const TERMINAL_RESERVE: usize = 128 * 1024;
 
 #[derive(Default)]
@@ -40,6 +45,10 @@ pub(in crate::vm) struct CaptureState {
     usage: Mutex<Usage>,
     observer: Box<dyn Fn(Arc<FailureObservation>) + Send + Sync>,
     notified: std::sync::atomic::AtomicBool,
+    finished: std::sync::atomic::AtomicBool,
+    catalog: catalog::Catalog,
+    root_globals: Mutex<Option<Arc<FailureGlobals>>>,
+    scheduler: std::sync::OnceLock<Weak<crate::vm::tasks::TaskScheduler>>,
 }
 
 impl CaptureState {
@@ -52,6 +61,10 @@ impl CaptureState {
             usage: Mutex::default(),
             observer: Box::new(observer),
             notified: std::sync::atomic::AtomicBool::new(false),
+            finished: std::sync::atomic::AtomicBool::new(false),
+            catalog: catalog::Catalog::default(),
+            root_globals: Mutex::new(None),
+            scheduler: std::sync::OnceLock::new(),
         })
     }
 

@@ -35,6 +35,9 @@ impl TaskScheduler {
             .lock()
             .unwrap_or_else(|e| e.into_inner())
             .insert(id);
+        if let Some(capture) = self.failure_capture.get() {
+            capture.release_task(id);
+        }
         TaskResultPoll::Available(match state {
             TaskResultState::Unit => Value::Unit,
             TaskResultState::Value(value) => *value,

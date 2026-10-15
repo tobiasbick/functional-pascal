@@ -72,6 +72,9 @@ impl TaskScheduler {
         let mut completions = self.completions.lock().unwrap_or_else(|e| e.into_inner());
         for task in group.tasks {
             results.remove(&task);
+            if let Some(capture) = self.failure_capture.get() {
+                capture.release_task(task);
+            }
             completions.insert(task);
         }
         group.failures

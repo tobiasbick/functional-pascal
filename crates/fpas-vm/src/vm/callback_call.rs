@@ -130,6 +130,8 @@ impl Worker {
             Box::new(callback)
         };
         callback.inherit_scope_cancellation(self);
+        callback.capture_record = self.capture_record.clone();
+        callback.capture_callback = true;
         let execution = callback.run_in_place();
         if let Err(error) = &execution {
             self.capture_failure_continuation(error);

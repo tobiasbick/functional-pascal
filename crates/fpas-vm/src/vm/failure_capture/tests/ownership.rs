@@ -30,7 +30,7 @@ fn worker_causes_survive_wait_scope_exit_and_owner_group_cleanup() {
         "scope discard go Work(Ready); discard Tasks.Receive(Ready); end scope;",
         "const Group := Tasks.CreateTaskGroup(); const Child := Tasks.StartTaskInGroup(Group, function(Token: Tasks.CancellationToken): integer begin return Work(Ready); end function); discard Tasks.WaitAny([Child]);",
     ];
-    for body in cases {
+    for (index, body) in cases.into_iter().enumerate() {
         let source = format!(
             "program WorkerCause; uses Std.Tasks as Tasks;\nfunction Work(Ready: channel of integer): integer; begin const Before := 37; discard Tasks.Send(Ready, 1); panic('worker cause'); end function;\nbegin const Ready: channel of integer := Tasks.CreateChannel(1); {body} end."
         );
@@ -43,6 +43,20 @@ fn worker_causes_survive_wait_scope_exit_and_owner_group_cleanup() {
         let data = &output[0];
         assert_eq!(data.error.diagnostic, error);
         assert_ne!(data.cause.task_id, Some(0));
+        let catalog = data.task_catalog.as_ref().unwrap();
+        assert_eq!(catalog.tasks.len(), 2);
+        let main = catalog.tasks.iter().find(|task| task.id == 0).unwrap();
+        assert_eq!(main.observation, "failure_handling");
+        if let Some(snapshot) = &main.snapshot {
+            assert_eq!(snapshot.task_id, Some(0));
+            assert_ne!(snapshot.frames[0].function.to_ascii_lowercase(), "work");
+        } else {
+            assert_eq!(
+                index, 2,
+                "Wait/scope propagation retains the live main task"
+            );
+            assert_eq!(main.reason, Some("no_live_frame"));
+        }
         assert_eq!(data.cause.frames[0].function.to_ascii_lowercase(), "work");
         assert_eq!(
             scalar(&data.cause.frames[0], "Before"),

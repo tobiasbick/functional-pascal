@@ -15,6 +15,33 @@ the responsible task's available pre-cleanup frames and source bindings, and
 structured secondary failures in the existing runtime attachment order. Source
 positions use the verified image's source IDs. No filesystem lookup is performed.
 
+The top-level observation also contains a `FailureTaskCatalog`: main, cause
+tasks, live tasks and terminal tasks whose outcomes remain retained at the cut.
+Released outcomes are not reconstructed. Entries use runtime task IDs and
+`runnable`, `running`, `waiting`, `sleeping`, `completed`, `failed`, or `cancelled`
+states. Task output is sorted by ID; selection preserves the primary and main
+identities before other causes and peers. At most 1,024 entries are retained;
+known totals and omitted counts disclose task or storage limits.
+
+Fault frames keep `observation: "fault"`. Live peer frames and the distinct
+main-task propagation stack use `"failure_handling"`; these are later
+cooperative observations. Running workers answer at existing batch boundaries.
+Saved tasks are inspected under their current owner's synchronization, without
+executing queued code or consuming results/channels. Running peers continue
+after answering; they are not held for the observer. A peer blocked in native
+work retains its identity and known state, with frames unavailable after the
+single 500-ms collection deadline. Completed/cancelled peers have no invented
+stack. A synchronous callback peer reports partial data if its outer worker's
+storage is unavailable. An unexecuted source initializer is explicitly uninitialized.
+
+Globals are captured once from the root's actual local or shared storage,
+after primary frame values and before root disposal, including errors first
+selected during server finalization or worker joins. A completed main task keeps
+its own completed state if a peer fails afterward. `globals_status`, task inspection
+states and omission reasons distinguish
+available, partial and unavailable data. Synchronization is released before the
+observer runs, and ordinary cancellation and cleanup continue afterward.
+
 The observer runs after ownership barriers have selected the escaping error and
 before remaining server shutdown and worker joins when the error is already
 known. It must return promptly. Cleanup and joins still run; observer panics do
@@ -37,6 +64,8 @@ Control data and the selected diagnostic have reserved capacity within the same
 relationships and terminal model collections are charged before allocation;
 at most 1,024 relationships are retained, with explicit omitted counts when a
 relationship, model-storage, or nesting bound prevents retaining more.
+The control reservation also covers the task catalog. Disabled runs allocate no
+D1 catalog; their batch loops use the specialization without capture polling.
 
 ## Text output
 

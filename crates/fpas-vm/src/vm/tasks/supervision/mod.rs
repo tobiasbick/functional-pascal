@@ -29,6 +29,11 @@ pub(in crate::vm) struct SupervisedTask {
 }
 
 impl SupervisedTask {
+    /// Whether retry admission or backoff is still pending before the attempt starts.
+    pub(in crate::vm) fn is_admission_pending(&self) -> bool {
+        self.admission_pending
+    }
+
     /// Retain immutable callable inputs only after group admission succeeds.
     pub(in crate::vm) fn new(function: SharedFunction, token: u64, policy: RetryPolicy) -> Self {
         Self {

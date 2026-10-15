@@ -31,6 +31,7 @@ pub(super) fn run_helped(
 }
 
 fn run_to_completion(mut worker: Worker, scheduler: &TaskScheduler) -> Result<(), VmError> {
+    let _capture_panic = worker.capture_pool_guard();
     let attempt = (|| {
         if !worker.supervised_ready()? || !worker.resume_pool_suspension()? {
             return Ok(None);
@@ -39,10 +40,14 @@ fn run_to_completion(mut worker: Worker, scheduler: &TaskScheduler) -> Result<()
     })();
     // A body that ends with open task scopes first waits for their cancelled children.
     let attempt = match attempt {
-        Err(error) => match worker.begin_scope_unwind(worker.capture_failure(error)) {
-            Ok(()) => worker.park_pool_suspension().map(|()| None),
-            Err(error) => Err(error),
-        },
+        Err(error) => {
+            let error = worker.capture_failure(error);
+            worker.capture_root_propagation(&error);
+            match worker.begin_scope_unwind(error) {
+                Ok(()) => worker.park_pool_suspension().map(|()| None),
+                Err(error) => Err(error),
+            }
+        }
         other => other,
     };
     let outcome = match attempt {
@@ -59,6 +64,8 @@ fn run_to_completion(mut worker: Worker, scheduler: &TaskScheduler) -> Result<()
         Ok(Some(value)) => {
             if worker.retain_result {
                 scheduler.store_result(worker.task_id, value);
+            } else if let Some(capture) = scheduler.failure_capture.get() {
+                capture.release_task(worker.task_id);
             }
             Ok(())
         }
@@ -68,6 +75,9 @@ fn run_to_completion(mut worker: Worker, scheduler: &TaskScheduler) -> Result<()
                 Some(super::TaskSuspension::OwnerCleanup { .. })
             ) {
                 worker.park_pool_suspension()?;
+            }
+            if scheduler.is_aborted() {
+                worker.capture_aborted_task();
             }
             Ok(())
         }

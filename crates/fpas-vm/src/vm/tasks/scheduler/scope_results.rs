@@ -12,6 +12,9 @@ impl TaskScheduler {
         let closed = self.scopes.try_close(id)?;
         let mut completions = self.completions.lock().unwrap_or_else(|e| e.into_inner());
         for task in closed.tasks {
+            if let Some(capture) = self.failure_capture.get() {
+                capture.release_task(task);
+            }
             if results.remove(&task).is_some() {
                 completions.insert(task);
             }

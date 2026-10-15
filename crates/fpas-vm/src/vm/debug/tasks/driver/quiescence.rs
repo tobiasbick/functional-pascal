@@ -39,6 +39,7 @@ impl DebugTaskRuntime {
         let register_count = usize::from(info.register_count);
         let ip = usize::try_from(info.code.start.get()).unwrap_or(0);
         self.scheduler.enqueue(crate::vm::tasks::TaskState {
+            capture_record: None,
             observed_task_failure: None,
             pending_completion: None,
             suspension: None,

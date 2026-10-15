@@ -13,6 +13,7 @@ mod execute;
 mod frame;
 mod globals;
 mod hosted;
+mod inspection;
 mod layouts;
 mod register_stack;
 mod shared;

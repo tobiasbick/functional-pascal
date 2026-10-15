@@ -8,7 +8,7 @@ use fpas_bytecode::{FunctionId, VerifiedExecutable};
 ///
 /// **Documentation:** `docs/pascal/tools/debugger.md`
 pub(in crate::vm::debug) fn display_name(name: &str) -> &str {
-    name.strip_prefix("$entry_").unwrap_or(name)
+    crate::vm::inspection::location::routine_name(name)
 }
 
 /// Return every executable function whose canonical or unique-short name matches `name`.

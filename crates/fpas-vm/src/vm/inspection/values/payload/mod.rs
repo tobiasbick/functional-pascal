@@ -1,12 +1,13 @@
-//! Shared runtime and metadata resolution for writable payload descendants.
+//! Portable runtime payload metadata and typed structural selectors.
 
 use fpas_bytecode::{DebugType, DebugTypeId, EnumValue, Executable, Value};
 
-use super::MutationPath;
+use super::ValuePath;
+use super::render::metadata;
 
 /// Structured failure while resolving one payload child name.
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub(in crate::vm::debug) enum PayloadError {
+pub(in crate::vm) enum PayloadError {
     /// The name is absent from the currently active payload.
     UnknownField {
         /// Active variant or wrapper label used in diagnostics.
@@ -25,12 +26,12 @@ pub(in crate::vm::debug) enum PayloadError {
 }
 
 /// Resolves one payload field name to a guarded path component and declared type.
-pub(in crate::vm::debug) fn resolve(
+pub(in crate::vm) fn resolve(
     executable: &Executable,
     expected: DebugTypeId,
     current: &Value,
     name: &str,
-) -> Result<(MutationPath, DebugTypeId), PayloadError> {
+) -> Result<(ValuePath, DebugTypeId), PayloadError> {
     match current {
         Value::Enum(enumeration) => enum_field(executable, expected, enumeration.body(), name),
         Value::ResultOk(_) => wrapper_field(
@@ -38,21 +39,21 @@ pub(in crate::vm::debug) fn resolve(
             expected,
             name,
             WrapperKind::ResultOk,
-            MutationPath::ResultOk,
+            ValuePath::ResultOk,
         ),
         Value::ResultError(_) => wrapper_field(
             executable,
             expected,
             name,
             WrapperKind::ResultError,
-            MutationPath::ResultError,
+            ValuePath::ResultError,
         ),
         Value::OptionSome(_) => wrapper_field(
             executable,
             expected,
             name,
             WrapperKind::OptionSome,
-            MutationPath::OptionSome,
+            ValuePath::OptionSome,
         ),
         Value::OptionNone => Err(PayloadError::UnsupportedActive {
             active: active_label(current),
@@ -64,11 +65,15 @@ pub(in crate::vm::debug) fn resolve(
 }
 
 /// Human-readable label for the currently active payload-bearing value.
-pub(in crate::vm::debug) fn active_label(value: &Value) -> String {
+pub(in crate::vm) fn active_label(value: &Value) -> String {
     match value {
         Value::Enum(enumeration) => {
             let layout = &enumeration.body().layout;
-            format!("{}.{}", layout.type_name, layout.variant)
+            format!(
+                "{}.{}",
+                metadata(&layout.type_name),
+                metadata(&layout.variant)
+            )
         }
         other => other.type_name().to_string(),
     }
@@ -86,8 +91,12 @@ fn enum_field(
     expected: DebugTypeId,
     body: &EnumValue,
     name: &str,
-) -> Result<(MutationPath, DebugTypeId), PayloadError> {
-    let active = format!("{}.{}", body.layout.type_name, body.layout.variant);
+) -> Result<(ValuePath, DebugTypeId), PayloadError> {
+    let active = format!(
+        "{}.{}",
+        metadata(&body.layout.type_name),
+        metadata(&body.layout.variant)
+    );
     let Some(index) = body
         .layout
         .fields
@@ -126,12 +135,15 @@ fn enum_field(
     }
     let Some(field_type) = variant.field_types.get(index).copied() else {
         return Err(PayloadError::UnavailableMetadata {
-            detail: format!("enum field `{name}` on `{active}` is out of range"),
+            detail: format!(
+                "enum field `{}` on `{active}` is out of range",
+                metadata(name)
+            ),
         });
     };
     require_declared_type(executable, field_type)?;
     Ok((
-        MutationPath::EnumField {
+        ValuePath::EnumField {
             variant: body.layout.variant_id,
             index,
         },
@@ -144,8 +156,8 @@ fn wrapper_field(
     expected: DebugTypeId,
     name: &str,
     kind: WrapperKind,
-    component: MutationPath,
-) -> Result<(MutationPath, DebugTypeId), PayloadError> {
+    component: ValuePath,
+) -> Result<(ValuePath, DebugTypeId), PayloadError> {
     let active = match kind {
         WrapperKind::ResultOk => "Result.Ok",
         WrapperKind::ResultError => "Result.Error",

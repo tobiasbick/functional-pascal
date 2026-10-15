@@ -7,7 +7,7 @@ use fpas_bytecode::{
     StringTable, Value,
 };
 
-use super::{MutationPath, PayloadError, resolve};
+use super::{PayloadError, ValuePath, resolve};
 
 fn image(debug_types: Vec<DebugType>, enum_variants: Vec<EnumVariant>) -> Executable {
     Executable {
@@ -99,7 +99,7 @@ fn resolves_each_result_branch_some_and_enum_field_positions() {
         "value",
     )
     .expect("ok payload");
-    assert_eq!(ok, (MutationPath::ResultOk, DebugTypeId::new(0)));
+    assert_eq!(ok, (ValuePath::ResultOk, DebugTypeId::new(0)));
 
     let error = resolve(
         &executable,
@@ -108,7 +108,7 @@ fn resolves_each_result_branch_some_and_enum_field_positions() {
         "VaLuE",
     )
     .expect("error payload");
-    assert_eq!(error, (MutationPath::ResultError, DebugTypeId::new(1)));
+    assert_eq!(error, (ValuePath::ResultError, DebugTypeId::new(1)));
 
     let some = resolve(
         &executable,
@@ -117,7 +117,7 @@ fn resolves_each_result_branch_some_and_enum_field_positions() {
         "value",
     )
     .expect("some payload");
-    assert_eq!(some, (MutationPath::OptionSome, DebugTypeId::new(0)));
+    assert_eq!(some, (ValuePath::OptionSome, DebugTypeId::new(0)));
 
     let count = resolve(
         &executable,
@@ -129,7 +129,7 @@ fn resolves_each_result_branch_some_and_enum_field_positions() {
     assert_eq!(
         count,
         (
-            MutationPath::EnumField {
+            ValuePath::EnumField {
                 variant: EnumVariantId::new(0),
                 index: 0
             },
@@ -152,7 +152,7 @@ fn resolves_each_result_branch_some_and_enum_field_positions() {
     assert_eq!(
         right,
         (
-            MutationPath::EnumField {
+            ValuePath::EnumField {
                 variant: EnumVariantId::new(1),
                 index: 1
             },

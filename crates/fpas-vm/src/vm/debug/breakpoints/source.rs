@@ -1,6 +1,8 @@
 //! Source breakpoint requests and deterministic sequence-point binding.
 
-use fpas_bytecode::{InstructionAddress, VerifiedExecutable};
+use fpas_bytecode::VerifiedExecutable;
+
+pub(in crate::vm::debug) use crate::vm::inspection::location::point_at;
 
 use crate::vm::debug::types::SourceLocation;
 
@@ -82,37 +84,13 @@ pub(in crate::vm::debug) fn bind(
     }
 }
 
-pub(in crate::vm::debug) fn point_at(
-    executable: &VerifiedExecutable,
-    function: fpas_bytecode::FunctionId,
-    instruction: InstructionAddress,
-) -> Option<&fpas_bytecode::SequencePoint> {
-    executable
-        .executable()
-        .functions
-        .get(usize::from(function.get()))?
-        .debug
-        .sequence_points
-        .binary_search_by_key(&instruction, |point| point.instruction)
-        .ok()
-        .and_then(|index| {
-            executable.executable().functions[usize::from(function.get())]
-                .debug
-                .sequence_points
-                .get(index)
-        })
-}
-
+/// Translate a portable sequence point into the debugger's public source record.
 pub(in crate::vm::debug) fn source_location(
     executable: &VerifiedExecutable,
     point: &fpas_bytecode::SequencePoint,
 ) -> Option<SourceLocation> {
     let image = executable.executable();
-    let source = image
-        .source_map
-        .sources
-        .get(point.location.source.get() as usize)
-        .and_then(|name| image.strings.get(*name))?;
+    let source = crate::vm::inspection::location::source_path(image, point.location)?;
     Some(SourceLocation {
         source: source.to_string(),
         line: point.location.line,

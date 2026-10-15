@@ -17,7 +17,7 @@ fn retained(value: Value) -> RetainedValue {
         depth: 0,
         visited_cells: HashSet::new(),
         debug_type: None,
-        mutation: super::MutationAccess::NotMutable,
+        origin: super::MutationAccess::NotMutable,
     }
 }
 
@@ -159,7 +159,7 @@ fn cells_report_cycles_contention_and_poisoning_without_blocking() {
 fn writable(value: Value, ty: fpas_bytecode::DebugTypeId) -> RetainedValue {
     let mut retained = retained(value);
     retained.debug_type = Some(ty);
-    retained.mutation = super::MutationAccess::Writable(super::super::targets::MutationTarget {
+    retained.origin = super::MutationAccess::Writable(super::super::targets::MutationTarget {
         root: super::super::targets::MutationRoot::FrameRegister(0),
         path: Vec::new(),
         expected_type: ty,
@@ -237,7 +237,7 @@ fn payload_executable() -> fpas_bytecode::Executable {
 }
 
 fn is_writable(value: &RetainedValue) -> bool {
-    matches!(value.mutation, super::MutationAccess::Writable(_))
+    matches!(value.origin, super::MutationAccess::Writable(_))
 }
 
 #[test]
@@ -309,14 +309,14 @@ fn payload_children_are_writable_only_through_writable_typed_roots() {
     let immutable = super::render_with_executable(
         &{
             let mut value = writable(Value::option_some(Value::Integer(7)), DebugTypeId::new(4));
-            value.mutation = super::MutationAccess::NotMutable;
+            value.origin = super::MutationAccess::NotMutable;
             value
         },
         limits,
         Some(&executable),
     );
     assert!(matches!(
-        immutable.children[0].mutation,
+        immutable.children[0].origin,
         super::MutationAccess::NotMutable
     ));
     assert_eq!(immutable.children[0].name, "value");

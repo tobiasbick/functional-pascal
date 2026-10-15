@@ -262,7 +262,7 @@ impl InspectionSnapshot {
             depth: 0,
             visited_cells: HashSet::new(),
             debug_type: None,
-            mutation: MutationAccess::NotMutable,
+            origin: MutationAccess::NotMutable,
         };
         let rendered = render::render_with_executable(
             &retained,

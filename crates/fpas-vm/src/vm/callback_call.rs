@@ -131,6 +131,7 @@ impl Worker {
         };
         callback.inherit_scope_cancellation(self);
         let execution = callback.run_in_place();
+        self.callback_failed.set(execution.is_err());
         if execution.is_err() {
             self.scope_failure_sequence
                 .set(callback.scope_failure_sequence.take());
@@ -177,6 +178,7 @@ impl Worker {
         self.call_stack.clear();
         self.instruction_count = 0;
         self.callback_instruction_count.set(0);
+        self.callback_failed.set(false);
         self.current_address = start;
         self.observed_task_failure.set(None);
         self.task_id = task_id;

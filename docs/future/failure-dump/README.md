@@ -2,7 +2,8 @@
 
 Temporary implementation plan for [agent wish D1](../agent-wishes.md#d1-automatic-failure-dump).
 The user approved the full D1 scope on 2026-10-15. This is a separate tooling
-project, outside the AP campaign. No failure-dump behavior is implemented yet.
+project, outside the AP campaign. Shared inspection is implemented; automatic
+failure capture, task collection and CLI/report output remain open.
 
 ## Goal
 
@@ -26,13 +27,13 @@ Record Git integration separately from implementation and verification.
 | Done | Step | Depends on | Status |
 | --- | --- | --- | --- |
 | [x] | [01: contract](01-contract.md) | — | Defined; checked against the current runtime and CLI |
-| [ ] | [02: shared inspection](02-shared-inspection.md) | 01 | Not started |
+| [x] | [02: shared inspection](02-shared-inspection.md) | 01 | Implemented and verified; existing TCP test failures documented |
 | [ ] | [03: failure capture](03-failure-capture.md) | 02 | Not started |
 | [ ] | [04: task snapshots](04-task-snapshots.md) | 03 | Not started |
 | [ ] | [05: CLI and JSON report](05-cli-and-json-report.md) | 03, 04 | Not started |
 | [ ] | [06: verification and documentation](06-verification-and-documentation.md) | 02–05 | Not started |
 
-Next: **02, shared read-only inspection**. Implementation tests belong to each
+Next: **03, failure capture before unwind**. Implementation tests belong to each
 step; step 06 verifies the complete feature and its performance together.
 
 ## Boundaries
@@ -58,9 +59,11 @@ Inspection started at commit `853ed527`. The important existing boundaries are:
   different scheduler from normal execution, so it cannot implement ordinary
   `run` dumps by switching execution modes.
 
-Step 01 is a documentation/design deliverable. No runtime test or implemented
-CLI option is claimed by that completed row. Steps 02–06 remain open, and no
-implementation commit exists for them.
+Step 01 was committed as `013500f2` with a Co-Author trailer. Step 02 is implemented,
+verified and committed with a Co-Author trailer; Git history owns its commit identity.
+Its [verification record](02-shared-inspection.md#verification-evidence) distinguishes
+the existing TCP failures from the passing checks. Steps 03–06 remain open, and
+no failure-dump CLI option or automatic capture is implemented yet.
 
 ## Removal after completion
 

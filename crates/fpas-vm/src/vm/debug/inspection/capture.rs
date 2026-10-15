@@ -3,26 +3,24 @@
 use std::collections::{HashMap, HashSet};
 use std::sync::Arc;
 
-use fpas_bytecode::{DebugBindingKind, FunctionId, InstructionAddress, Value};
+use fpas_bytecode::{DebugBindingKind, Value};
 
 use super::model::{DebugFrame, DebugInspectionLimits, DebugScope, DebugScopeKind};
 use super::render::RetainedValue;
 use super::snapshot::{FrameSnapshot, InspectionSnapshot, item_id};
 use super::targets::{MutationAccess, MutationRoot, MutationTarget};
-use crate::vm::debug::breakpoints;
 use crate::vm::debug::initializer_suppression::SourceInitializerTarget;
 use crate::vm::debug::routines::display_name;
 use crate::vm::debug::types::SourceLocation;
+use crate::vm::inspection::{
+    bindings,
+    frames::{self, Boundary, Frame as CapturedFrame},
+    globals, location,
+};
 use crate::vm::worker::Worker;
 
-struct CapturedFrame {
-    function: FunctionId,
-    instruction: InstructionAddress,
-    next_instruction: InstructionAddress,
-    base: usize,
-}
-
 impl InspectionSnapshot {
+    /// Capture debugger-owned handles at the current stopped boundary.
     pub(in crate::vm::debug) fn capture(
         worker: &Worker,
         generation: u32,
@@ -50,28 +48,16 @@ impl InspectionSnapshot {
             child_handles: HashMap::new(),
             limits: capture_limits,
         };
-        let mut captured = vec![CapturedFrame {
-            function: worker.function,
-            instruction: InstructionAddress::try_from_index(worker.ip)
-                .unwrap_or(worker.current_address),
-            next_instruction: InstructionAddress::try_from_index(worker.ip)
-                .unwrap_or(worker.current_address),
-            base: worker.base,
-        }];
-        captured.extend(worker.call_stack.iter().rev().map(|frame| {
-            CapturedFrame {
-                function: frame.function,
-                instruction: InstructionAddress::try_from_index(frame.ip.saturating_sub(1))
-                    .unwrap_or(worker.current_address),
-                next_instruction: InstructionAddress::try_from_index(frame.ip)
-                    .unwrap_or(worker.current_address),
-                base: frame.base,
-            }
-        }));
-        captured.truncate(limits.max_frames);
-        for (depth, frame) in captured.into_iter().enumerate() {
-            snapshot.capture_frame(worker, frame, depth);
-        }
+        let count = frames::visit(
+            worker,
+            Boundary::Stopped,
+            limits.max_frames,
+            |owner, frame, depth| {
+                snapshot.capture_frame(owner, frame, depth);
+            },
+        );
+        debug_assert!(count.unavailable_reason.is_none());
+        snapshot.total_frames = count.total.unwrap_or(snapshot.frames.len());
         snapshot.limits = limits;
         snapshot
     }
@@ -81,9 +67,9 @@ impl InspectionSnapshot {
         let Some(function) = image.functions.get(usize::from(frame.function.get())) else {
             return;
         };
-        let point = breakpoints::point_at(&worker.executable, frame.function, frame.instruction);
-        let active_scope = point.map_or(0, |point| point.scope);
-        let visible_scopes = visible_scope_chain(function, active_scope);
+        let active_scope =
+            location::scope_at(image, frame.function, frame.instruction).unwrap_or(0);
+        let visible_scopes = location::visible_scope_chain(function, active_scope);
         let visible_scope_set = visible_scopes.iter().copied().collect::<HashSet<_>>();
         let mut parameters = Vec::new();
         let mut locals = Vec::new();
@@ -105,15 +91,7 @@ impl InspectionSnapshot {
                 _ => None,
             };
             // A `var` parameter shows the caller's current value, not its reference.
-            let value = initialized
-                .then(|| worker.registers.get(register).cloned())
-                .flatten()
-                .and_then(|value| match value {
-                    fpas_bytecode::Value::Reference(reference) => {
-                        worker.read_reference(&reference).ok()
-                    }
-                    other => Some(other),
-                });
+            let (value, unavailable) = bindings::read(worker, frame.base, binding).into_parts();
             frame_bindings.push(super::snapshot::FrameBinding {
                 initialized,
                 value: value.clone(),
@@ -164,11 +142,13 @@ impl InspectionSnapshot {
                 name: name.to_string(),
                 value,
                 type_name: type_name.to_string(),
-                presentation_hint: binding.cell_backed.then(|| "captured mutable".to_string()),
+                presentation_hint: unavailable
+                    .map(|reason| format!("unavailable: {reason}"))
+                    .or_else(|| binding.cell_backed.then(|| "captured mutable".to_string())),
                 depth: 0,
                 visited_cells: HashSet::new(),
-                debug_type: Some(referent_type.unwrap_or(binding.ty)),
-                mutation,
+                debug_type: Some(bindings::value_type(worker, binding)),
+                origin: mutation,
             };
             retained_bindings.push((binding.scope, retained.clone()));
             match binding.kind {
@@ -206,9 +186,14 @@ impl InspectionSnapshot {
                 })
         })
         .collect();
-        let location = point
-            .and_then(|point| breakpoints::source_location(&worker.executable, point))
-            .or_else(|| diagnostic_location(worker, frame.instruction));
+        let location =
+            location::position_at(image, frame.function, frame.instruction).and_then(|position| {
+                Some(SourceLocation {
+                    source: location::source_path(image, position)?.to_string(),
+                    line: position.line,
+                    column: position.column,
+                })
+            });
         let name = image.strings.get(function.name).unwrap_or("<function>");
         self.frames.push(FrameSnapshot {
             frame: DebugFrame {
@@ -263,38 +248,19 @@ fn binding_mutation(
     })
 }
 
-fn visible_scope_chain(function: &fpas_bytecode::FunctionInfo, mut scope: u32) -> Vec<u32> {
-    let mut visible = Vec::new();
-    loop {
-        if visible.contains(&scope) {
-            break;
-        }
-        visible.push(scope);
-        let Some(parent) = function
-            .debug
-            .scopes
-            .get(scope as usize)
-            .and_then(|scope| scope.parent)
-        else {
-            break;
-        };
-        scope = parent;
-    }
-    visible
-}
-
 fn capture_globals(worker: &Worker, generation: u32) -> Vec<RetainedValue> {
     let image = worker.executable.executable();
-    let globals = worker
-        .globals
-        .read()
-        .unwrap_or_else(|poisoned| poisoned.into_inner());
+    let slots = globals::slots(worker);
     image
         .globals
         .iter()
         .enumerate()
         .map(|(index, global)| {
-            let value = globals.get(index).cloned().flatten();
+            let (value, unavailable) = match &slots {
+                Ok(slots) => globals::read_slot(slots, index),
+                Err(reason) => bindings::ReadValue::Unavailable(reason),
+            }
+            .into_parts();
             RetainedValue {
                 name: image
                     .strings
@@ -303,11 +269,13 @@ fn capture_globals(worker: &Worker, generation: u32) -> Vec<RetainedValue> {
                     .to_string(),
                 value: value.clone(),
                 type_name: "dynamic".to_string(),
-                presentation_hint: None,
+                presentation_hint: unavailable.map(|reason| format!("unavailable: {reason}")),
                 depth: 0,
                 visited_cells: HashSet::new(),
                 debug_type: Some(global.ty),
-                mutation: if global.mutable {
+                origin: if unavailable.is_some() {
+                    MutationAccess::Unavailable
+                } else if global.mutable {
                     MutationAccess::Writable(MutationTarget {
                         root: MutationRoot::Global(index),
                         path: Vec::new(),
@@ -355,19 +323,4 @@ fn pending_global_initializer(
         })
     }));
     (matches.len() == 1).then(|| matches[0])
-}
-
-fn diagnostic_location(worker: &Worker, instruction: InstructionAddress) -> Option<SourceLocation> {
-    let image = worker.executable.executable();
-    let run = image.source_map.lookup(instruction)?;
-    let source = image
-        .source_map
-        .sources
-        .get(run.source.get() as usize)
-        .and_then(|source| image.strings.get(*source))?;
-    Some(SourceLocation {
-        source: source.to_string(),
-        line: run.line,
-        column: run.column,
-    })
 }

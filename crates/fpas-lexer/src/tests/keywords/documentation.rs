@@ -45,6 +45,7 @@ fn handbook_keywords() -> BTreeSet<&'static str> {
         .split("```")
         .nth(1)
         .expect("handbook keyword table");
+    let (_, table) = table.split_once('\n').expect("keyword table fence line");
     let words = table.split_whitespace().collect::<Vec<_>>();
     keyword_set(&words, "handbook keyword table")
 }

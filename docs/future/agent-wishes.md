@@ -173,9 +173,11 @@ out as structured data, and every run can be repeated exactly.
 
 #### D1. Automatic failure dump
 
-**Status: approved for implementation.** The full scope is tracked in the temporary
+**Status: implementation in progress.** The full scope is tracked in the temporary
 [failure-dump plan](failure-dump/README.md), outside the AP campaign. The first
-step defines the [contract](failure-dump/01-contract.md); implementation is pending.
+step defines the [contract](failure-dump/01-contract.md). Shared read-only inspection
+is implemented and verified; failure capture, task collection and CLI/report
+output remain open. The overview owns the completion checklist and next step.
 
 With the planned `--failure-dump PATH` option, an escaping panic or runtime error
 in `fpas run` writes one JSON document: original error, call stack, frame values,

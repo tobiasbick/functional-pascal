@@ -86,7 +86,7 @@ fn writable_target(
     retained: &RetainedValue,
     name: &str,
 ) -> Result<MutationTarget, DebugSessionError> {
-    match &retained.mutation {
+    match &retained.origin {
         MutationAccess::Writable(target) => Ok(target.clone()),
         MutationAccess::NotMutable => Err(DebugSessionError {
             kind: DebugErrorKind::VariableNotMutable,

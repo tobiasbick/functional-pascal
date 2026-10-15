@@ -1,15 +1,17 @@
 //! Stop-local writable origins retained alongside immutable presentation values.
 
-mod payload;
-
 use std::sync::{Arc, Mutex};
 
-use fpas_bytecode::{DebugTypeId, EnumVariantId, Value};
+use fpas_bytecode::{DebugTypeId, Value};
 
 use crate::vm::debug::initializer_suppression::SourceInitializerTarget;
 
-pub(in crate::vm::debug) use payload::{PayloadError, active_label, resolve as resolve_payload};
+pub(in crate::vm::debug) use crate::vm::inspection::values::{
+    ValuePath as MutationPath,
+    payload::{PayloadError, active_label, resolve as resolve_payload},
+};
 
+/// Stop-local writability retained separately from value presentation.
 #[derive(Clone)]
 pub(in crate::vm::debug) enum MutationAccess {
     Writable(MutationTarget),
@@ -18,6 +20,7 @@ pub(in crate::vm::debug) enum MutationAccess {
     Unavailable,
 }
 
+/// Typed storage path owned by one debugger generation.
 #[derive(Clone)]
 pub(in crate::vm::debug) struct MutationTarget {
     pub root: MutationRoot,
@@ -30,6 +33,7 @@ pub(in crate::vm::debug) struct MutationTarget {
     pub initializer: Option<SourceInitializerTarget>,
 }
 
+/// Live storage root used only by debugger mutation adapters.
 #[derive(Clone)]
 pub(in crate::vm::debug) enum MutationRoot {
     FrameRegister(usize),
@@ -37,21 +41,8 @@ pub(in crate::vm::debug) enum MutationRoot {
     ClosureCell(Arc<Mutex<Value>>),
 }
 
-#[derive(Clone, Debug, PartialEq)]
-pub(in crate::vm::debug) enum MutationPath {
-    RecordField(usize),
-    ArrayIndex(usize),
-    DictionaryValue(Value),
-    EnumField {
-        variant: EnumVariantId,
-        index: usize,
-    },
-    ResultOk,
-    ResultError,
-    OptionSome,
-}
-
 impl MutationAccess {
+    /// Carry writable storage through one typed structural descendant.
     pub(super) fn descendant(&self, component: MutationPath, expected_type: DebugTypeId) -> Self {
         match self {
             Self::Writable(target) => {
@@ -62,5 +53,14 @@ impl MutationAccess {
             }
             other => other.clone(),
         }
+    }
+}
+
+impl crate::vm::inspection::values::ValueOrigin for MutationAccess {
+    fn unsupported() -> Self {
+        Self::Unsupported
+    }
+    fn descendant(&self, component: MutationPath, expected_type: DebugTypeId) -> Self {
+        self.descendant(component, expected_type)
     }
 }

@@ -137,7 +137,7 @@ value.
 
 ## Build
 
-Node.js 22 or newer and a stable Rust toolchain are required. From the
+Node.js 22 or newer is required. From the
 repository root, install the pinned Node dependencies once:
 
 ```text
@@ -150,13 +150,24 @@ Then build the VSIX:
 npm run package --prefix editors/vscode
 ```
 
-The command runs the extension tests, creates a platform-independent archive,
+The command compiles the extension, creates a platform-independent archive,
 and verifies that no compiler, language-server binary, or standard-library
-source is included. It produces:
+source is included. It does not build FPAS or run integration tests. It produces:
 
 ```text
 editors/vscode/dist/functional-pascal-<version>.vsix
 ```
+
+To run the full extension test suite before packaging, use:
+
+```text
+npm run package:verified --prefix editors/vscode
+```
+
+This command additionally requires a stable Rust toolchain. It builds the current
+debug `fpas` toolchain and runs the extension tests before creating the VSIX.
+If a test fails, packaging stops and an existing VSIX is left unchanged.
+Run `npm test --prefix editors/vscode` for the tests alone.
 
 Install an FPAS distribution containing `fpas`, `fpas-lsp`, `fpas-runner`, and
 `lib/` separately. Put its directory on `PATH`, or use **Functional Pascal:

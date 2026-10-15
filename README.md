@@ -107,13 +107,18 @@ works with the editor's standard format-on-save setting; no FPAS watch mode is r
 
 ### VS Code-compatible extension
 
-With Node.js 22 or newer and a stable Rust toolchain installed, build the local
+With Node.js 22 or newer installed, build the local
 toolchain-independent VSIX from the repository root:
 
 ```sh
 npm ci --prefix editors/vscode
 npm run package --prefix editors/vscode
 ```
+
+This compiles the extension and verifies the archive without building FPAS or
+running integration tests. To run the full extension test suite before packaging,
+use `npm run package:verified --prefix editors/vscode`; that command also requires
+a stable Rust toolchain.
 
 The result is `editors/vscode/dist/functional-pascal-<version>.vsix`. Install
 it in VS Code, Cursor, VSCodium, or another compatible desktop editor through

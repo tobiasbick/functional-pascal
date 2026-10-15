@@ -211,7 +211,7 @@ session stopped without changing the live value.
 
 ## Build and installation
 
-Node.js 22 or newer and a stable Rust toolchain are required. From the
+Node.js 22 or newer is required. From the
 repository root, install the pinned Node dependencies once and build the
 extension:
 
@@ -220,14 +220,24 @@ npm ci --prefix editors/vscode
 npm run package --prefix editors/vscode
 ```
 
-The package command is non-interactive. It runs the extension tests, creates a
+The package command is non-interactive. It compiles the extension, creates a
 platform-independent editor archive, and verifies that no compiler,
 language-server binary, source standard library, or derived artifact is
-packaged. The output is:
+packaged. It does not build FPAS or run integration tests. The output is:
 
 ```text
 editors/vscode/dist/functional-pascal-<version>.vsix
 ```
+
+For a fully tested package, use:
+
+```text
+npm run package:verified --prefix editors/vscode
+```
+
+This command additionally requires a stable Rust toolchain. It builds the current
+debug `fpas` toolchain and runs the full extension test suite before packaging.
+If a test fails, packaging stops and an existing VSIX is left unchanged.
 
 Install that file through **Extensions: Install from VSIX** in a compatible
 desktop editor. Install an FPAS distribution separately and put `fpas` on

@@ -318,6 +318,7 @@
     "verify:contracts": "node scripts/verify-contracts.mjs",
     "verify:grammar": "node scripts/verify-grammar.mjs",
     "package": "node scripts/package.mjs",
+    "package:verified": "node scripts/package.mjs --verified",
     "vscode:prepublish": "npm run compile"
   },
   "dependencies": {

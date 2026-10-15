@@ -3,7 +3,6 @@ import path from "node:path";
 import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 
-import { runTests } from "./run-tests.mjs";
 import { verifyPackage } from "./verify-package.mjs";
 
 const scriptDirectory = path.dirname(fileURLToPath(import.meta.url));
@@ -20,9 +19,20 @@ const outputPath = path.join(
 function printHelp() {
   console.log(`Usage:
   npm run package --prefix editors/vscode
+  npm run package:verified --prefix editors/vscode
 
-Builds, tests, packages, and verifies one platform-independent Functional Pascal VSIX.
+Compiles the extension, packages one platform-independent VSIX, and verifies its contents.
+The default command requires Node.js 22 or newer and does not build FPAS or run tests.
 The installed extension resolves an FPAS toolchain from its executable setting or PATH.
+
+Options:
+  --verified  Build FPAS and run the full extension test suite before packaging.
+              Requires a stable Rust toolchain; packaging stops if a test fails.
+  -h, --help  Show this help without building or testing.
+
+Examples:
+  npm run package --prefix editors/vscode
+  npm run package:verified --prefix editors/vscode
 
 Output:
   editors/vscode/dist/functional-pascal-<version>.vsix
@@ -49,10 +59,16 @@ if (arguments_.includes("--help") || arguments_.includes("-h")) {
   printHelp();
   process.exit(0);
 }
-if (arguments_.length > 0) {
+const unknownArgument = arguments_.find((argument) => argument !== "--verified");
+if (unknownArgument !== undefined) {
   throw new Error(
-    `Unknown package argument: ${arguments_[0]}\nRun \`npm run package --prefix editors/vscode -- --help\` for usage.`
+    `Unknown package argument: ${unknownArgument}\nRun \`npm run package --prefix editors/vscode -- --help\` for usage.`
   );
+}
+
+if (arguments_.includes("--verified")) {
+  const { runTests } = await import("./run-tests.mjs");
+  await runTests();
 }
 
 if (path.relative(extensionRoot, distDirectory) !== "dist") {
@@ -60,7 +76,6 @@ if (path.relative(extensionRoot, distDirectory) !== "dist") {
 }
 await rm(distDirectory, { recursive: true, force: true });
 await mkdir(distDirectory, { recursive: true });
-await runTests();
 
 const vsceScript = path.join(
   extensionRoot,

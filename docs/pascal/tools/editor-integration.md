@@ -282,7 +282,9 @@ and forwarded after `--`.
 
 Compiler output becomes a dedicated `fpas workflow` Problems collection with
 the real source URI, source position, severity, stable `FPnxxx` code, message,
-and help. The Testing view discovers cases through `fpas test --list` and runs
+and help. CLI source excerpts remain in command output; Problems preserves all
+help lines, including those following a source excerpt.
+The Testing view discovers cases through `fpas test --list` and runs
 them through the versioned `fpas test --report json` contract. Run, rerun, all,
 and selected/filtered runs preserve pass, assertion failure, skip, compile
 error, runtime error, and timeout as distinct results. The per-test timeout is

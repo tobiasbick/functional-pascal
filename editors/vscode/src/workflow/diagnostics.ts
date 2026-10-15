@@ -9,6 +9,7 @@ const DIAGNOSTIC_HEADER =
 const WRAPPED_BUILD_ERROR = /^Cannot build [^`]+`([^`]+)`: (.*)$/u;
 const PATHLESS_DIAGNOSTIC =
   /^(\d+):(\d+): (error|warning)\[(FP\d{4})\]: (.*)$/u;
+const DIAGNOSTIC_EXCERPT = /^(?:\d+\s+)?\| /u;
 
 /** Parses stable compiler diagnostics while preserving optional help lines. */
 export function parseWorkflowDiagnostics(
@@ -37,11 +38,14 @@ export function parseWorkflowDiagnostics(
     const severity = values[offset + 3];
     const code = values[offset + 4];
     const message = values[offset + 5];
-    const next = lines[index + 1]?.trimStart();
-    const help = next?.startsWith("help: ")
-      ? next.slice("help: ".length)
-      : undefined;
-    if (help !== undefined) {
+    const helpLines: string[] = [];
+    while (index + 1 < lines.length) {
+      const detail = lines[index + 1].trimStart();
+      if (detail.startsWith("help: ")) {
+        helpLines.push(detail.slice("help: ".length));
+      } else if (!DIAGNOSTIC_EXCERPT.test(detail)) {
+        break;
+      }
       index += 1;
     }
     diagnostics.push({
@@ -53,7 +57,7 @@ export function parseWorkflowDiagnostics(
       severity: severity as "error" | "warning",
       code,
       message,
-      help
+      help: helpLines.length > 0 ? helpLines.join("\n") : undefined
     });
   }
   return diagnostics;

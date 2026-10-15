@@ -82,7 +82,18 @@ export async function verifyWorkflowUnits(): Promise<void> {
   const mainDiagnostic = path.join(diagnosticRoot, "main.fpas");
   const wrappedDiagnostic = path.join(diagnosticRoot, "wrapped.fpas");
   const parsed = parseWorkflowDiagnostics(
-    `${mainDiagnostic}:12:8: error[FP3003]: Unknown function \`Missing\`\n  help: Add a declaration.\nrelative.fpas:2:3: warning[FP3004]: Warning text\nCannot build project \`${wrappedDiagnostic}\`: 3:4: error[FP3003]: Wrapped error\n        ${mainDiagnostic}:5:6: error[FP3001]: Indented test error\n          help: Add the missing type.\n`,
+    [
+      `${mainDiagnostic}:12:8: error[FP3003]: Unknown function \`Missing\``,
+      "  12 | Value:=Missing();",
+      "     |        ^^^^^^^",
+      "  help: Add a declaration.",
+      "  help: Import its public unit if declared elsewhere.",
+      "relative.fpas:2:3: warning[FP3004]: Warning text",
+      `Cannot build project \`${wrappedDiagnostic}\`: 3:4: error[FP3003]: Wrapped error`,
+      `        ${mainDiagnostic}:5:6: error[FP3001]: Indented test error`,
+      "          help: Add the missing type.",
+      ""
+    ].join("\n"),
     diagnosticRoot
   );
   assert.equal(parsed.length, 4);
@@ -90,11 +101,16 @@ export async function verifyWorkflowUnits(): Promise<void> {
   assert.equal(parsed[0].line, 11);
   assert.equal(parsed[0].column, 7);
   assert.equal(parsed[0].code, "FP3003");
-  assert.equal(parsed[0].help, "Add a declaration.");
+  assert.equal(
+    parsed[0].help,
+    "Add a declaration.\nImport its public unit if declared elsewhere."
+  );
   assert.equal(parsed[1].severity, "warning");
+  assert.equal(parsed[1].help, undefined);
   assert.equal(parsed[2].path, path.normalize(wrappedDiagnostic));
   assert.equal(parsed[2].line, 2);
   assert.equal(parsed[2].column, 3);
+  assert.equal(parsed[2].help, undefined);
   assert.equal(parsed[3].path, path.normalize(mainDiagnostic));
   assert.equal(parsed[3].code, "FP3001");
   assert.equal(parsed[3].help, "Add the missing type.");

@@ -8,6 +8,10 @@ not line zero or an invented first line.
 
 ## Embedded VM failure observation
 
+The CLI exposes this capture through `fpas run --failure-dump PATH`. See
+[runtime failure reports](failure-dump.md) for activation, publication and the
+versioned JSON schema.
+
 Rust hosts can opt into `fpas_vm::Vm::set_failure_observer` before `Vm::run`.
 The observer receives one immutable `FailureObservation` for an escaping runtime
 error. It contains the selected diagnostic, an explicit original-failure identity,

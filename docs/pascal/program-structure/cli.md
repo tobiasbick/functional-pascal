@@ -190,6 +190,15 @@ The entry function takes no parameters or captures and uses the `unit` return co
 normal completion uses `Return`. Direct calls and closure targets are checked against the
 function table, including direct-call arity, before the VM starts.
 
+To retain runtime failure data, use `fpas run <path> --failure-dump <new-file>`.
+The option also works with discovery and direct `.fpascp` execution. It writes
+one bounded JSON document only when a runtime diagnostic escapes the run; success
+and pre-execution failures create no report or report directories. Existing or
+racing destinations are preserved. Publication failure adds FP4139 after the
+original diagnostic, retaining runtime exit code `2`. Only `run` accepts this
+option; flags after `--` remain program arguments. See the
+[failure-report schema and limits](../tools/failure-dump.md).
+
 ## Checking without running
 
 Use `fpas check` to parse, link, and type-check without executing code:

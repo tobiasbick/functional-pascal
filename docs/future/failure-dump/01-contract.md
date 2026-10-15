@@ -1,7 +1,9 @@
 # 01: failure-dump contract
 
-Recorded on 2026-10-15 against commit `853ed527`. This defines planned behavior;
-the option and report are not implemented. Progress lives in the [overview](README.md).
+Recorded on 2026-10-15 against commit `853ed527` as the initial design contract.
+The option and report are now implemented in [step 05](05-cli-and-json-report.md);
+the implemented user contract lives in [runtime failure reports](../../pascal/tools/failure-dump.md).
+Current progress lives in the [overview](README.md).
 
 ## Invocation and publication
 
@@ -325,8 +327,8 @@ CLI behavior; no new language rule or diagnostic-number allocation is needed.
 Remaining implementation choices must satisfy this contract and be recorded in
 their owning step. Completing this document does not claim runtime behavior.
 
-Planning validation: all 102 relative file links in the changed planning files
-resolve, the complete JSON example parses with `Std.Json`, and
-`git diff --check` passes. The overview marks only step 01 complete, with five
+At the step-01 checkpoint, all 102 relative file links in the changed planning files
+resolved, the complete JSON example parsed with `Std.Json`, and
+`git diff --check` passed. The overview marked only step 01 complete, with five
 implementation work packages still open. Planned CLI commands were not executed
 as existing functionality; no compiler or runtime source was changed.

@@ -3,8 +3,9 @@
 Temporary implementation plan for [agent wish D1](../agent-wishes.md#d1-automatic-failure-dump).
 The user approved the full D1 scope on 2026-10-15. This is a separate tooling
 project, outside the AP campaign. Shared inspection, original-failure capture
-and cooperative task collection are implemented. CLI/report output and complete
-feature verification remain open.
+and cooperative task collection, CLI integration and report publication are
+implemented, independently reviewed and verified. Complete feature verification
+and performance measurement remain open.
 
 ## Goal
 
@@ -31,11 +32,11 @@ Record Git integration separately from implementation and verification.
 | [x] | [02: shared inspection](02-shared-inspection.md) | 01 | Implemented and verified; existing TCP test failures documented |
 | [x] | [03: failure capture](03-failure-capture.md) | 02 | Implemented and independently reviewed; workspace passes with two existing TCP tests excluded |
 | [x] | [04: task snapshots](04-task-snapshots.md) | 03 | Implemented, independently reviewed and verified; workspace and final VM checks pass with two existing TCP tests excluded |
-| [ ] | [05: CLI and JSON report](05-cli-and-json-report.md) | 03, 04 | Not started |
+| [x] | [05: CLI and JSON report](05-cli-and-json-report.md) | 03, 04 | Implemented, independently reviewed and verified; real CLI/publication regressions and workspace checks pass with the same two existing TCP exclusions |
 | [ ] | [06: verification and documentation](06-verification-and-documentation.md) | 02–05 | Not started |
 
-Next: **05, CLI and JSON report**. Implementation tests belong to each
-step; step 06 verifies the complete feature and its performance together.
+Next: **06, complete verification and permanent documentation**. Implementation
+tests belong to each step; step 06 verifies the complete feature and its performance together.
 
 ## Boundaries
 
@@ -71,8 +72,12 @@ records the passing final workspace run and its explicit baseline exclusions.
 Step 04 adds the bounded task catalog, cooperative peer frames and actual-root
 globals. It is implemented, independently reviewed and verified; its
 [verification record](04-task-snapshots.md#verification-evidence) owns the final
-checks and measured development smoke sample. Steps 05–06 remain open; no
-failure-dump CLI option or report publication is implemented yet.
+checks and measured development smoke sample. Step 05 adds the single opt-in
+CLI option, bounded version-1 JSON and atomic fresh-file publication. It is
+implemented, independently reviewed and verified; its
+[verification record](05-cli-and-json-report.md#verification-evidence) records
+real CLI regression proof and the passing workspace/final CLI checks. Only
+step 06 remains open; D1 is not marked fully delivered yet.
 
 ## Removal after completion
 

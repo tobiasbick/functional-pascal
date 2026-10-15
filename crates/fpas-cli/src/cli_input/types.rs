@@ -58,6 +58,8 @@ pub(crate) struct CliConfig {
     pub standard_library: Option<PathBuf>,
     /// Diagnostic stream format selected with `--diagnostics`.
     pub diagnostics: DiagnosticFormat,
+    /// Fresh report destination selected only by `run --failure-dump`.
+    pub failure_dump: Option<PathBuf>,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]

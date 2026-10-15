@@ -1063,6 +1063,10 @@ Multiline statement conditions place `then` on a separate line; wrapped `and`,
 Use `fpas test tests/` or the owning `.fpasprj` for tests; `*_test.fpas` programs
 with assertions are discovered by the runner. `--std-lib lib` selects this checkout's
 standard library when invoking the repository build directly. For machine-readable
-diagnostics use `fpas check --diagnostics json file.fpas`. Check interactive programs
+diagnostics use `fpas check --diagnostics json file.fpas`.
+
+For an escaping runtime error, `fpas run file.fpas --failure-dump .temp-data/failure.json`
+retains a [bounded task/frame/value report](tools/failure-dump.md); choose a fresh
+file path. Successful runs create no report. Check interactive programs
 without launching them in unattended validation. See [CLI](program-structure/cli.md)
 and [formatter style](tools/fmt-style.md).

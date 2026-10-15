@@ -179,16 +179,17 @@ out as structured data, and every run can be repeated exactly.
 step defines the [contract](failure-dump/01-contract.md). Shared read-only inspection
 is implemented and verified. Original-failure capture and the opt-in embedded VM
 observer are implemented, independently reviewed and verified. Cooperative task
-collection is implemented, independently reviewed and verified; CLI/report output
-and complete feature verification remain open. The overview
-owns the completion checklist and next step.
+collection and CLI/JSON publication are implemented, independently reviewed and
+verified; complete feature verification and performance measurements remain open.
+The overview owns the completion checklist and next step.
 
-With the planned `--failure-dump PATH` option, an escaping panic or runtime error
+With the implemented `--failure-dump PATH` option, an escaping panic or runtime error
 in `fpas run` writes one JSON document: original error, call stack, frame values,
 and the state and available frames of all relevant tasks. Bounds, unavailable
 data, ordinary concurrent scheduling, handled task failures and atomic
-publication belong to the same delivery. A failing-task-only dump does not
-complete D1. Many runtime bugs can then be diagnosed without a debug session.
+publication belong to the same delivery. See the implemented
+[report schema and CLI contract](../pascal/tools/failure-dump.md). A failing-task-only
+dump does not complete D1. Many runtime bugs can then be diagnosed without a debug session.
 
 #### D2. Record, replay, and query
 

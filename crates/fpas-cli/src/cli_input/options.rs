@@ -20,6 +20,7 @@ pub(super) struct ParsedOptions {
     pub(super) files: Vec<PathBuf>,
     pub(super) report: Option<TestReportFormat>,
     pub(super) diagnostics: Option<DiagnosticFormat>,
+    pub(super) failure_dump: Option<PathBuf>,
     pub(super) timeout: Option<Duration>,
     pub(super) jobs: Option<usize>,
     pub(super) standard_library: Option<PathBuf>,
@@ -48,6 +49,7 @@ pub(super) fn parse_options(mode: CliMode, cli_args: &[String]) -> Result<Parsed
         files: Vec::new(),
         report: None,
         diagnostics: None,
+        failure_dump: None,
         timeout: None,
         jobs: None,
         standard_library: None,
@@ -64,6 +66,23 @@ pub(super) fn parse_options(mode: CliMode, cli_args: &[String]) -> Result<Parsed
     let mut index = 0;
     while index < cli_args.len() {
         match cli_args[index].as_str() {
+            "--failure-dump" if mode == CliMode::Run => {
+                let value = take_option_value(
+                    cli_args,
+                    &mut index,
+                    "--failure-dump",
+                    "Missing path after `--failure-dump`.\n  help: `fpas run app.fpas --failure-dump .temp-data/failure.json`.",
+                )?;
+                if value.is_empty() || value == "-" {
+                    return Err(
+                        "`--failure-dump` requires a new file path, not an empty path or `-`."
+                            .into(),
+                    );
+                }
+                if options.failure_dump.replace(PathBuf::from(value)).is_some() {
+                    return Err("Duplicate `--failure-dump` option.".into());
+                }
+            }
             "--std-lib"
                 if matches!(
                     mode,
@@ -330,6 +349,7 @@ fn is_known_option(value: &str) -> bool {
     matches!(
         value,
         "--std-lib"
+            | "--failure-dump"
             | "--executable"
             | "--name"
             | "--check"

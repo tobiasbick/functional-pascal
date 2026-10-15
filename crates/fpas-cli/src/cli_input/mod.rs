@@ -113,6 +113,18 @@ pub(crate) fn resolve_cli_config(args: &[String], cwd: &Path) -> Result<Resolved
 
     let options = parse_options(mode, cli_args)?;
     let diagnostics = options.diagnostics.unwrap_or_default();
+    let failure_dump = options
+        .failure_dump
+        .map(|path| {
+            let path = if path.is_absolute() {
+                path
+            } else {
+                cwd.join(path)
+            };
+            crate::cli_failure_dump::validate_destination(&path)?;
+            Ok::<_, String>(path)
+        })
+        .transpose()?;
     let positional = options.positional;
 
     if mode == CliMode::Fmt {
@@ -227,6 +239,7 @@ pub(crate) fn resolve_cli_config(args: &[String], cwd: &Path) -> Result<Resolved
             program_args,
             standard_library: options.standard_library,
             diagnostics,
+            failure_dump,
         }),
         CliMode::Debug => ResolvedCli::Debug(DebugCliConfig {
             cwd: cwd.to_path_buf(),
@@ -248,6 +261,7 @@ pub(crate) fn resolve_cli_config(args: &[String], cwd: &Path) -> Result<Resolved
             program_args,
             standard_library: options.standard_library,
             diagnostics,
+            failure_dump: None,
         }),
         CliMode::Fmt => unreachable!("fmt mode handled above"),
         CliMode::Test => ResolvedCli::Test(TestCliConfig {

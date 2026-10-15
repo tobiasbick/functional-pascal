@@ -24,6 +24,7 @@ pub(crate) fn authorize_process_lifecycle() {
     PROCESS_LIFECYCLE_AUTHORIZED.store(true, std::sync::atomic::Ordering::Release);
 }
 
+/// Resolve and execute one command while preserving its stdout/diagnostic contracts.
 pub(crate) fn run_cli(
     args: &[String],
     cwd: &Path,
@@ -106,7 +107,13 @@ fn run_input(
 ) -> i32 {
     let input = match config.input {
         CliInput::CompiledProgramFile(path) => {
-            return run_compiled_program_file(&path, config.program_args, stdout, reporter);
+            return run_compiled_program_file(
+                &path,
+                config.program_args,
+                config.failure_dump,
+                stdout,
+                reporter,
+            );
         }
         input => input,
     };
@@ -128,6 +135,7 @@ fn run_input(
             &path,
             library.as_ref(),
             config.program_args,
+            config.failure_dump,
             stdout,
             reporter,
         ),
@@ -135,6 +143,7 @@ fn run_input(
             &path,
             library.as_ref(),
             config.program_args,
+            config.failure_dump,
             stdout,
             reporter,
         ),
@@ -147,6 +156,7 @@ fn run_input(
                 &project_path,
                 library.as_ref(),
                 config.program_args,
+                config.failure_dump,
                 stdout,
                 reporter,
             )
@@ -161,6 +171,7 @@ fn run_source_file(
     path: &Path,
     standard_library: Option<&project::StandardLibrary>,
     program_args: Vec<String>,
+    failure_dump: Option<PathBuf>,
     stdout: Box<dyn Write + Send>,
     reporter: &mut Reporter<'_>,
 ) -> i32 {
@@ -186,17 +197,19 @@ fn run_source_file(
             built.executable,
             Some(&built.source_paths),
             program_args,
+            failure_dump,
             stdout,
             reporter,
         );
     }
-    run_source_impl(path, &source, program_args, stdout, reporter)
+    run_source_impl(path, &source, program_args, failure_dump, stdout, reporter)
 }
 
 fn run_project_file(
     path: &Path,
     standard_library: Option<&project::StandardLibrary>,
     program_args: Vec<String>,
+    failure_dump: Option<PathBuf>,
     stdout: Box<dyn Write + Send>,
     reporter: &mut Reporter<'_>,
 ) -> i32 {
@@ -219,6 +232,7 @@ fn run_project_file(
                 artifact.executable,
                 Some(&artifact.source_paths),
                 program_args,
+                failure_dump,
                 stdout,
                 reporter,
             )
@@ -246,6 +260,7 @@ fn run_project_file(
 fn run_compiled_program_file(
     path: &Path,
     program_args: Vec<String>,
+    failure_dump: Option<PathBuf>,
     stdout: Box<dyn Write + Send>,
     reporter: &mut Reporter<'_>,
 ) -> i32 {
@@ -280,6 +295,7 @@ fn run_compiled_program_file(
         image.into_executable(),
         Some(&source_paths),
         program_args,
+        failure_dump,
         stdout,
         reporter,
     )
@@ -289,6 +305,7 @@ fn run_source_impl(
     path: &Path,
     source: &str,
     program_args: Vec<String>,
+    failure_dump: Option<PathBuf>,
     stdout: Box<dyn Write + Send>,
     reporter: &mut Reporter<'_>,
 ) -> i32 {
@@ -315,10 +332,19 @@ fn run_source_impl(
         }
     };
 
-    run_executable(path, executable, None, program_args, stdout, reporter)
+    run_executable(
+        path,
+        executable,
+        None,
+        program_args,
+        failure_dump,
+        stdout,
+        reporter,
+    )
 }
 
 #[cfg(test)]
+/// Execute a source fixture through ordinary runtime diagnostic rendering.
 pub(crate) fn run_source(
     path: &str,
     source: &str,
@@ -326,7 +352,14 @@ pub(crate) fn run_source(
     stderr: &mut dyn Write,
 ) -> i32 {
     let mut reporter = Reporter::new(DiagnosticFormat::Text, stderr);
-    run_source_impl(Path::new(path), source, Vec::new(), stdout, &mut reporter)
+    run_source_impl(
+        Path::new(path),
+        source,
+        Vec::new(),
+        None,
+        stdout,
+        &mut reporter,
+    )
 }
 
 fn run_executable(
@@ -334,21 +367,40 @@ fn run_executable(
     executable: fpas_bytecode::VerifiedExecutable,
     source_paths: Option<&[PathBuf]>,
     program_args: Vec<String>,
+    failure_dump: Option<PathBuf>,
     stdout: Box<dyn Write + Send>,
     reporter: &mut Reporter<'_>,
 ) -> i32 {
     // Runtime diagnostics carry linked source IDs; callers pass paths indexed by graph source.
     let source_paths =
         source_paths.map(|paths| fpas_build::linked_source_paths(&executable, paths));
+    let sources = failure_dump
+        .as_ref()
+        .map(|_| crate::cli_failure_dump::Sources::new(&executable, source_paths.as_deref()));
     let mut vm = fpas_vm::Vm::with_writer_and_args(executable, stdout, program_args);
+    let session = failure_dump
+        .clone()
+        .zip(sources)
+        .map(|(path, sources)| crate::cli_failure_dump::Session::start(&mut vm, path, sources));
     if PROCESS_LIFECYCLE_AUTHORIZED.load(std::sync::atomic::Ordering::Acquire) {
         vm.allow_process_lifecycle();
     }
     if let Some(receiver) = crate::cli_output::program_stderr_receiver(reporter.format()) {
         vm.set_program_stderr(receiver);
     }
-    if let Err(diagnostic) = vm.run() {
+    let outcome = vm.run();
+    let publication = session.map(|session| {
+        session
+            .and_then(|session| session.finish(outcome.as_ref().err().map(|error| error.as_ref())))
+    });
+    if let Err(diagnostic) = outcome {
         reporter.record(&locate(path, source_paths.as_deref(), &diagnostic));
+        if let Some(Err(error)) = publication {
+            let failure = CliFailure::new(fpas_diagnostics::codes::CLI_OUTPUT_FAILED,
+                format!("Cannot publish failure dump `{}`: {error}", failure_dump.as_deref().unwrap_or(Path::new("<report>")).display()))
+                .with_help("Choose a new writable file path on a filesystem supporting atomic hard-link publication.");
+            reporter.failure(&failure);
+        }
         return 2;
     }
 

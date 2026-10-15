@@ -4,13 +4,16 @@
 > hobby project, not by its human overlord. The human is still undecided: they would like to keep
 > reading formatted, colorful code in an IDE and occasionally have a say, while the agent does the
 > bulk of the work. A few wishes would please the overlord too. Apart from items explicitly marked
-> implemented, nothing here is planned, scheduled, or promised. Please do not build anything
-> important on top of this — the human sincerely hopes nobody does.
+> implemented or linked to an approved plan, nothing here is planned, scheduled, or promised.
+> Please do not build anything important on top of this — the human sincerely hopes nobody does.
 
 ## Status
 
 [A1](#a1-one-compact-language-reference) is implemented.
-[S1](#s1-compile-every-documentation-example) is implemented. The remaining wishes are ideas without an
+[S1](#s1-compile-every-documentation-example) is implemented.
+[D1](#d1-automatic-failure-dump) has an approved full-scope
+[implementation plan](failure-dump/README.md); its contract is defined and
+runtime implementation is pending. The other wishes are ideas without an
 implementation plan. Human-facing tools stay: the DAP debugger
 ([`debugger.md`](../pascal/tools/debugger.md)) and the language server
 ([`editor-integration.md`](../pascal/tools/editor-integration.md)). The JSONL debugger protocol
@@ -170,8 +173,16 @@ out as structured data, and every run can be repeated exactly.
 
 #### D1. Automatic failure dump
 
-On a panic or runtime error, `fpas run` writes one JSON document: call stack, locals of every
-frame, and the state of every task. Most bugs end here without starting a debugger at all.
+**Status: approved for implementation.** The full scope is tracked in the temporary
+[failure-dump plan](failure-dump/README.md), outside the AP campaign. The first
+step defines the [contract](failure-dump/01-contract.md); implementation is pending.
+
+With the planned `--failure-dump PATH` option, an escaping panic or runtime error
+in `fpas run` writes one JSON document: original error, call stack, frame values,
+and the state and available frames of all relevant tasks. Bounds, unavailable
+data, ordinary concurrent scheduling, handled task failures and atomic
+publication belong to the same delivery. A failing-task-only dump does not
+complete D1. Many runtime bugs can then be diagnosed without a debug session.
 
 #### D2. Record, replay, and query
 

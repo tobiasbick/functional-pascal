@@ -5,7 +5,7 @@ or unit, regardless of declaration order. This includes aliases, enum variants,
 and record member signatures. Qualified names and existing visibility and
 short-name ambiguity rules apply at every source position.
 
-```pascal
+```pascal id=example-1
 program TypeOrderExample;
 
 const InitialState: State := State.Ready;
@@ -68,7 +68,7 @@ direct and transitive calls, callbacks, captures, and omitted record defaults.
 An ordinary expression cannot read or write a binding before initialization.
 Initializers are never reordered to satisfy dependencies.
 
-```pascal
+```pascal id=example-2 fragment context=declarations
 const Initial: integer := Twice(3);
 
 function Twice(Value: integer): integer;
@@ -126,7 +126,7 @@ of declaration or variant order.
   including cycles wrapped in container types. Aliases to finite recursive
   records and enums remain valid.
 
-```pascal
+```pascal id=example-3 fragment context=declarations
 type Chain = enum
   Empty;
   Link(Next: Chain);

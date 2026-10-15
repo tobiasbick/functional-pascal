@@ -1,0 +1,237 @@
+// Exercise the real CLI boundary: Markdown policy, context expansion, compiler failures and run opt-in.
+program DocumentationExamplesBehaviorTest;
+
+uses Std.Conv as Conv, Std.Fs as Fs, Std.Json.Fields as Fields, Std.Path as Path, Std.Proc as Proc, Std.Test as Test;
+
+type Scenario = record
+  Name: string;
+  Markdown: string;
+  Accepted: boolean;
+  Expected: string := '';
+end record;
+
+function Fence(Info: string; Source: string): string;
+begin
+  return '```' + Info + #10 + Source + #10'```'#10;
+end function;
+
+procedure Write(FileName: string; Content: string);
+begin
+  discard Fs.CreateDirAll(Path.DirName(FileName)).Unwrap();
+  discard Fs.WriteText(FileName, Content).Unwrap();
+end procedure;
+
+begin
+  const Root := Test.ScratchDir();
+  var Repository := '.';
+  while not Fs.IsFile(Path.Join([Repository, 'tools/doc-examples/doc-examples.fpasprj'])) do
+    Repository := Path.Join([Repository, '..']);
+    if Repository.Length() > 40 then
+      Test.Fail('Run documentation tests inside the repository.');
+    end if;
+  end while;
+  const Library := Path.Join([Repository, 'lib']);
+  const Project := Path.Join([Repository, 'tools/doc-examples/doc-examples.fpasprj']);
+  const Contexts := Path.Join([Root, 'tools/doc-examples/contexts']);
+  Write(
+    Path.Join([Contexts, 'body.fpas.txt']),
+    'program Example;'#10'begin'#10'// @example'#10'end.'
+  );
+  Write(
+    Path.Join([Contexts, 'included.fpas.txt']),
+    'program Example;'#10'// @include docs/pascal/definitions.md#value'#10'begin'#10'// @example'#10'end.'
+  );
+  Write(
+    Path.Join([Root, 'docs/pascal/definitions.md']),
+    Fence('pascal fragment context=body id=value', 'const Value: integer := 7;')
+  );
+  const Valid := 'program Example; begin const Value := 7; end.';
+  Write(
+    Path.Join([Contexts, 'broken.fpas.txt']),
+    'program Example;'#10'const Broken: integer := ''wrong'';'#10'begin'#10'// @example'#10'end.'
+  );
+  const Fragment := 'pascal fragment context=body';
+  const Cases := [
+    Scenario(Name := 'program', Markdown := Fence('pascal', Valid), Accepted := true),
+    Scenario(
+      Name := 'fragment',
+      Markdown := Fence(Fragment, 'const Value := 7;'),
+      Accepted := true
+    ),
+    Scenario(
+      Name := 'expected-error',
+      Markdown := Fence(Fragment + ' error=FP3006', 'const Value: integer := ''wrong'';'),
+      Accepted := true
+    ),
+    Scenario(Name := 'run', Markdown := Fence('pascal run', Valid), Accepted := true),
+    Scenario(
+      Name := 'run-empty-selection',
+      Markdown := Fence('pascal run file=plain.fpas', Valid),
+      Accepted := false
+    ),
+    Scenario(
+      Name := 'run-skipped',
+      Markdown := Fence(
+        'pascal run',
+        'program Skipped; uses Std.Test as Test; begin Test.Skip(''intentional''); end.'
+      ),
+      Accepted := false
+    ),
+    Scenario(
+      Name := 'run-timeout',
+      Markdown := Fence(Fragment + ' run', 'while true do null; end while;'),
+      Accepted := false
+    ),
+    Scenario(
+      Name := 'canonical-tag',
+      Markdown := Fence('Pascal', Valid),
+      Accepted := false,
+      Expected := 'canonical pascal'
+    ),
+    Scenario(
+      Name := 'panic',
+      Markdown := Fence(Fragment + ' run error=FP5010', 'panic(''expected'');'),
+      Accepted := true
+    ),
+    Scenario(
+      Name := 'compile-only',
+      Markdown := Fence('pascal', 'program CompileOnly; begin panic(''must not run''); end.'),
+      Accepted := true
+    ),
+    Scenario(
+      Name := 'broken-example',
+      Markdown := '# Heading'#10#10 + Fence(Fragment, 'const Value: integer := ''wrong'';'),
+      Accepted := false,
+      Expected := 'broken-example.md:4'
+    ),
+    Scenario(
+      Name := 'wrong-diagnostic',
+      Markdown := Fence(Fragment + ' error=FP3006', 'discard UnknownName;'),
+      Accepted := false,
+      Expected := 'FP3003'
+    ),
+    Scenario(
+      Name := 'missing-error',
+      Markdown := Fence('pascal error=FP3006', Valid),
+      Accepted := false,
+      Expected := 'was not reported'
+    ),
+    Scenario(
+      Name := 'runtime-failure',
+      Markdown := Fence(Fragment + ' run', 'panic(''unexpected'');'),
+      Accepted := false,
+      Expected := 'FP5010'
+    ),
+    Scenario(
+      Name := 'fragment-without-context',
+      Markdown := Fence('pascal fragment', 'null;'),
+      Accepted := false,
+      Expected := 'requires context'
+    ),
+    Scenario(
+      Name := 'unknown-context',
+      Markdown := Fence('pascal fragment context=missing', 'null;'),
+      Accepted := false,
+      Expected := 'missing context'
+    ),
+    Scenario(
+      Name := 'unknown-option',
+      Markdown := Fence('pascal skip', Valid),
+      Accepted := false,
+      Expected := 'Unknown fence option'
+    ),
+    Scenario(
+      Name := 'duplicate-option',
+      Markdown := Fence('pascal run run', Valid),
+      Accepted := false,
+      Expected := 'Repeated fence option'
+    ),
+    Scenario(
+      Name := 'duplicate-id',
+      Markdown := Fence('pascal id=same', Valid) + Fence('pascal id=same', Valid),
+      Accepted := false,
+      Expected := 'Duplicate example id'
+    ),
+    Scenario(
+      Name := 'unclosed',
+      Markdown := '~~~pascal'#10 + Valid,
+      Accepted := false,
+      Expected := 'Unclosed Markdown fence'
+    ),
+    Scenario(
+      Name := 'tilde',
+      Markdown := '~~~~pascal'#9'fragment context=body'#10'null;'#10'~~~~'#10,
+      Accepted := true
+    ),
+    Scenario(
+      Name := 'non-code',
+      Markdown := Fence('text', 'not source') + Fence('pascal', Valid),
+      Accepted := true
+    ),
+    Scenario(
+      Name := 'include',
+      Markdown := Fence('pascal fragment context=included', 'const Answer := Value * 6;'),
+      Accepted := true
+    ),
+    Scenario(
+      Name := 'changed-include',
+      Markdown := Fence('pascal fragment context=included', 'const Answer: string := Value;'),
+      Accepted := false,
+      Expected := 'FP3006'
+    ),
+    Scenario(
+      Name := 'broken-context',
+      Markdown := Fence('pascal fragment context=broken error=FP3006', 'null;'),
+      Accepted := false,
+      Expected := 'FP3006'
+    ),
+    Scenario(
+      Name := 'unsafe-path',
+      Markdown := Fence('pascal file=../escape.fpas', Valid),
+      Accepted := false,
+      Expected := 'Invalid example output path'
+    ),
+    Scenario(
+      Name := 'project',
+      Markdown := Fence(
+        'toml project=demo file=demo.fpasprj',
+        '[project]'#10'name="demo"'#10'kind="program"'#10'main="main.fpas"'#10'[sources]'#10'include=["*.fpas"]'
+      ) +
+      Fence(
+        'pascal project=demo file=values.fpas manifest=demo.fpasprj',
+        'unit Values; public const Number: integer := 42; end unit;'
+      ) +
+      Fence(
+        'pascal project=demo file=main.fpas manifest=demo.fpasprj',
+        'program Demo; uses Values as Data; begin const Answer := Data.Number; end.'
+      ), Accepted := true
+    )
+  ];
+  for Index: integer := 0 to Cases.Length() - 1 do
+    const Item := Cases[Index];
+    const Document := Path.Join([Root, Item.Name + '.md']);
+    const Output := Path.Join([Root, 'output-' + Conv.IntToStr(Index)]);
+    Write(Document, Item.Markdown);
+    const Checked := Proc.RunCapture(
+      Proc.CurrentExecutable().Unwrap(), [
+        'run', '--std-lib', Library, Project, '--',
+        '--root', Root, '--std-lib', Library, '--document', Document, '--output', Output
+      ]
+    ).Unwrap();
+    const Details := Item.Name + ': ' + Checked.Stdout + Checked.Stderr;
+    if Item.Accepted <> (Checked.ExitCode = 0) then
+      Test.Fail(Details);
+    end if;
+
+    if not Item.Expected.IsEmpty() and not (Item.Expected in (Checked.Stdout + Checked.Stderr)) then
+      Test.Fail(Details);
+    end if;
+
+    if Item.Accepted then
+      const Report := Fields.ParseObject(
+        Fs.ReadText(Path.Join([Output, 'report.json'])).Unwrap()
+      ).Unwrap();
+      Test.AssertEquals(0, Fields.IntegerField(Report, 'failed').Unwrap());
+    end if;
+  end for;
+end.

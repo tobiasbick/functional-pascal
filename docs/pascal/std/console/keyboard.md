@@ -13,7 +13,7 @@ Keyboard input is **separate** from the `ReadText` / `ReadLn` buffer. Enabling r
   string `string.Chr(0)`, then a second `string` encoding the physical key
   (Turbo Pascal–style). The prefix has length one and is not `''`.
 
-```pascal
+```pascal id=example-1 fragment context=body-console
 const C: string := Console.ReadKey();
 if C = string.Chr(0) then
   const ScanCode: string := Console.ReadKey();
@@ -32,7 +32,7 @@ end if;
 
 Use it to avoid blocking when you want a polling loop.
 
-```pascal
+```pascal id=example-2 fragment context=body-console
 if Console.KeyPressed() then
   begin
     const C: string := Console.ReadKey();
@@ -57,7 +57,7 @@ end if;
 - **Special keys:** dedicated `KeyKind` values (`Enter`, arrows, `F1`…`F12`, etc.); `ch` is often `''`.
 - **Unknown / unmapped:** `kind = KeyKind.Unknown`.
 
-```pascal
+```pascal id=example-3 fragment context=body-console
 if Console.KeyPressed() then
   begin
     const E: Console.KeyEvent := Console.ReadKeyEvent();

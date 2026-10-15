@@ -1,0 +1,5 @@
+program DocumentationExample;
+uses Std.Conv as Conv;
+// @include docs/pascal/language/types/records.md#example-1
+// @example
+begin end.

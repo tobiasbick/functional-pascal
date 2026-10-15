@@ -3,7 +3,7 @@
 Value-producing array operations and explicitly mutating InPlace counterparts.
 This page lists every operation in the native array catalog.
 
-```pascal
+```pascal id=example-1
 program Example;
 
 uses Std.Console as Console;

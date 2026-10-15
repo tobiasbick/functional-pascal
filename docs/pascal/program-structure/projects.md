@@ -168,7 +168,7 @@ Entries may be mixed freely. All **included** files must have the `.fpas` extens
 
 Directory structure:
 
-```
+```text
 my-app/
   my-app.fpasprj
   src/
@@ -178,7 +178,7 @@ my-app/
 
 `my-app.fpasprj`:
 
-```toml
+```toml id=example-5 project=single file=my-app.fpasprj
 [project]
 name = "my-app"
 kind = "program"
@@ -190,7 +190,7 @@ include = ["src/**/*.fpas"]
 
 `src/main.fpas`:
 
-```pascal
+```pascal id=example-6 project=single file=src/main.fpas manifest=my-app.fpasprj
 program MyApp;
 
 uses MyApp.Math as Math, Std.Console as Console;
@@ -202,7 +202,7 @@ end.
 
 `src/math.fpas`:
 
-```pascal
+```pascal id=example-7 project=single file=src/math.fpas manifest=my-app.fpasprj
 unit MyApp.Math;
 
 public function Add(A: integer; B: integer): integer;
@@ -218,7 +218,7 @@ The `suite/`, `libs/acme-utils/`, and `apps/portal/` paths below are **illustrat
 
 Monorepo layout:
 
-```
+```text
 suite/
   libs/
     acme-utils/
@@ -232,7 +232,7 @@ suite/
 
 `libs/acme-utils/acme-utils.fpasprj`:
 
-```toml
+```toml id=example-9 project=library file=libs/acme-utils/acme-utils.fpasprj
 [project]
 name = "acme-utils"
 kind = "library"
@@ -243,7 +243,7 @@ include = ["src/**/*.fpas"]
 
 `libs/acme-utils/src/math.fpas`:
 
-```pascal
+```pascal id=example-10 project=library file=libs/acme-utils/src/math.fpas manifest=libs/acme-utils/acme-utils.fpasprj
 unit Acme.Math;
 
 public function Add(A: integer; B: integer): integer;
@@ -255,7 +255,7 @@ end unit;
 
 `apps/portal/portal.fpasprj`:
 
-```toml
+```toml id=example-11 project=library file=apps/portal/portal.fpasprj
 [project]
 name = "portal"
 kind = "program"
@@ -272,7 +272,7 @@ include = ["src/**/*.fpas"]
 
 `apps/portal/src/main.fpas`:
 
-```pascal
+```pascal id=example-12 project=library file=apps/portal/src/main.fpas manifest=apps/portal/portal.fpasprj
 program Portal;
 
 uses Acme.Math as Math, Std.Console as Console;

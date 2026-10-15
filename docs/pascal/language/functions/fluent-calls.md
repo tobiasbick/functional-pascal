@@ -5,7 +5,7 @@ receiver type. Strings, arrays, dictionaries, `Option`, and `Result` provide
 these operations without imports. Each receiver type has one signature per
 case-insensitive operation name. Your own free functions are called ordinarily.
 
-```pascal
+```pascal id=example-1
 program Chaining;
 
 function IsEven(Value: integer): boolean;
@@ -47,7 +47,7 @@ Built-in operations use the static receiver type and catalog name alone.
 Local or imported functions with the same name cannot redirect a dot call.
 Wrong argument names, counts, or types produce errors on that selected entry.
 
-```pascal
+```pascal id=example-2 fragment context=declarations
 function Length(Text: string): integer;
 begin
   return 100;
@@ -75,7 +75,7 @@ Fixed-signature operations accept positional or fully named explicit arguments.
 Names match case-insensitively; all parameters are required. Mixed, unknown,
 duplicate, or missing names are rejected. The receiver cannot be named.
 
-```pascal
+```pascal id=example-3 fragment context=body
 const Text: string := 'hello';
 const Part: string := Text.Slice(Len := 3, Start := 1);
 const Letter: string := string.Chr(N := 65);

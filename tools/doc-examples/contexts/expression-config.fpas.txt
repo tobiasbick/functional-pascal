@@ -1,0 +1,6 @@
+program DocumentationExample;
+type Config = record Host: string; Port: integer; Retries: integer; end record;
+begin discard
+// @example
+;
+end.

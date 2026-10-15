@@ -1,0 +1,6 @@
+program DocumentationExample;
+uses Std.Console as Console;
+// @include docs/pascal/language/types/generics.md#example-6
+begin
+// @example
+end.

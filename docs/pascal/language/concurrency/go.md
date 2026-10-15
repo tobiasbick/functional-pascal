@@ -11,7 +11,7 @@ Formal syntax: [`grammar.ebnf`](../../../specs/grammar.ebnf) (`go_call` and the 
 Use `go` as an expression and assign it to capture a handle: `task of T` for
 a function returning T, or `task` for a procedure:
 
-```pascal
+```pascal id=example-1
 program TaskExample;
 
 uses Std.Console as Console, Std.Tasks as Tasks;

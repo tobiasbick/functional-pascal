@@ -1,0 +1,17 @@
+program DocumentationExample;
+uses Std.Math as Math;
+type Point = record
+  X: real;
+  Y: real;
+  function Offset(Self: Point; X: real; Y: real): Point;
+  begin return Point(X := Self.X + X, Y := Self.Y + Y); end function;
+  function Normalize(Self: Point): Point;
+  begin
+    const Length := Math.Sqrt(Self.X * Self.X + Self.Y * Self.Y);
+    return if Length = 0.0 then Self else Point(X := Self.X / Length, Y := Self.Y / Length) end if;
+  end function;
+end record;
+function BuildOrigin(): Point; begin return Point(X := 0.0, Y := 0.0); end function;
+begin
+// @example
+end.

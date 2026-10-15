@@ -1,0 +1,7 @@
+program DocumentationExample;
+procedure Use(Value: integer); begin end procedure;
+procedure Retry(); begin end procedure;
+begin
+const Response: result of (integer, string) := Ok(1);
+// @example
+end.

@@ -10,7 +10,7 @@ These share one **line-oriented** buffer: typed text and test “stdin” lines 
 - **Returns:** the next full line, **without** the line terminator.
 - **Buffer:** same stream as `ReadText()`.
 
-```pascal
+```pascal id=example-1 fragment context=body-console
 const Line: string := Console.ReadLn();
 Console.WriteLn(Line);
 ```
@@ -23,7 +23,7 @@ Console.WriteLn(Line);
 - **Returns:** the next single character from the **current** line buffer (or the next line’s data as exposed by the runtime).
 - **Buffer:** same as `ReadLn()`.
 
-```pascal
+```pascal id=example-2 fragment context=body-console
 const C: string := Console.ReadText();
 Console.WriteLn(C);
 ```

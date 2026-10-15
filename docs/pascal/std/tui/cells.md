@@ -1,9 +1,12 @@
 # `Std.Tui` cells and styles
 
+Examples use explicit local aliases for `Tui.Name` after importing
+`uses Std.Tui as Tui;`; their named documentation contexts supply these aliases.
+
 `TuiColor` has distinct constructors for each representation. `FromCrt` accepts
 `0..15`; `FromAnsi256` and every `FromRgb` channel accept `0..255`.
 
-```pascal
+```pascal id=example-1 fragment context=tui-basic
 const Foreground: TuiColor := TuiColor.FromCrt(14);
 const Background: TuiColor := TuiColor.FromRgb(10, 20, 30);
 const Style: TuiStyle := TuiStyle.FromColors(Foreground, Background);
@@ -59,7 +62,7 @@ should keep these roles on a common field background while changing foreground
 or inverse cursor colors. `TuiInputPalette.WithRole` returns a copy with one
 input role replaced, while `ForRole` resolves one input role.
 
-```pascal
+```pascal id=example-2 fragment context=tui-basic
 const Palette: TuiPalette := TuiPalette.Default();
 const Warning: TuiStyle := Palette.ForRole(TuiStyleRole.Warning);
 const Custom: TuiStyle := TuiStyle.FromColors(TuiColor.FromRgb(255, 128, 0), TuiColor.FromCrt(0));
@@ -74,7 +77,7 @@ required.
 Use `OpenForTestWithPalette` or `RunWithPalette` to select the initial palette.
 An Update function can switch it immediately:
 
-```pascal
+```pascal id=example-3 fragment context=tui-palette
 Cmd.SetPalette(MyPalette);
 ```
 

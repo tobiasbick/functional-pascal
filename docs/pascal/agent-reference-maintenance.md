@@ -35,11 +35,15 @@ with the change rather than keeping a cached count in the reference.
    disagree; follow the language-change boundary in [AGENTS.md](../../AGENTS.md).
 3. Keep every fence tagged `pascal` and containing a uniquely named, complete program
    or unit. Programs use explicit imports and meaningful assertions; units retain
-   their described companion/project setup. Rejection examples belong in prose.
+   their described companion/project setup. Keep stable fence ids and the
+   [documentation checker instructions](tools/documentation-examples.md), including
+   `run` for the assertion programs. Rejection examples belong in prose.
 4. Reuse the [CLI reference test](../../crates/fpas-cli/src/main_tests/examples/agent_reference.rs):
    run `cargo test -p fpas-cli agent_reference_examples_check_and_run`, check example
    formatting, and validate changed links and `git diff --check`. The test checks
    every source and runs each program through the documented project model.
+   The normal FPAS suite additionally checks all handbook examples through
+   `tools/doc-examples/doc-examples.fpasprj`.
 5. Keep this guide discoverable from the reference and the repository's Definition
    of done. Keep maintenance instructions here so the authoring reference spends
    its context on the language. Record validation results in the delivery report.

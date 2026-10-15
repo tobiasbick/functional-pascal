@@ -3,7 +3,7 @@
 Text output, line-buffered stdin, retained cell/frame drawing, and terminal input (CRT-style
 screen control plus structured key and event APIs).
 
-```pascal
+```pascal id=example-1
 program Example;
 
 uses Std.Console as Console;

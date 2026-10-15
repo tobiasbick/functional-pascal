@@ -1,0 +1,5 @@
+program DocumentationExample;
+// @include docs/pascal/language/types/enums.md#example-5
+begin
+// @example
+end.

@@ -1,5 +1,8 @@
 # `Std.Tui` menus
 
+Examples use local aliases for `Tui.Name` after `uses Std.Tui as Tui;`.
+Their named documentation contexts supply these aliases and model values.
+
 `TuiElementBuilders.MakeMenu` creates one controlled hierarchical menu. The
 menu is a leaf in the element tree; its hierarchy is a flat array of
 `TuiMenuNode` values linked by `Parent: option of TuiMenuNodeId`. Menu nodes
@@ -8,7 +11,7 @@ never contain recursive child arrays.
 Root nodes must be submenus. Commands, nested submenus, and separators refer to
 their parent by identity:
 
-```pascal
+```pascal id=example-1 fragment context=tui-basic
 const FileId: TuiMenuNodeId := TuiMenuNodeId.Create(1);
 const Nodes: array of TuiMenuNode := [
   TuiMenuNodeBuilders.Submenu(FileId, None, 'File', 'F'),
@@ -36,13 +39,13 @@ popup.
 The application model owns `TuiMenuState`. Render it with a stable menu control
 and change action:
 
-```pascal
+```pascal id=example-2 fragment context=tui-menu
 TuiElementBuilders.MakeMenu(MenuId, Nodes, Model.Menu, MenuChangedAction);
 ```
 
 Routing proposes changes through:
 
-```pascal
+```pascal id=example-3 fragment context=tui-menu-message
 TuiMsg.MenuChanged(Source, Action, State);
 ```
 

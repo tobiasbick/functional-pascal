@@ -5,7 +5,7 @@ The code fragments use `uses Std.Math as Math;`.
 Functions and procedures can be declared inside other routines. Use nested
 declarations for local helpers and access to enclosing parameters or locals:
 
-```pascal
+```pascal id=example-1 fragment context=declarations-math
 function Hypotenuse(A: real; B: real): real;
 function Square(X: real): real;
 begin
@@ -21,7 +21,7 @@ end function;
 All named sibling signatures are available throughout their lexical scope.
 Mutually recursive routines may stand beside each other:
 
-```pascal
+```pascal id=example-2 fragment context=declarations
 function IsEven(N: integer): boolean;
 begin
   if N = 0 then

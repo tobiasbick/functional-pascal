@@ -30,7 +30,7 @@ pub(super) fn pascal_blocks(markdown: &str) -> Vec<CodeBlock> {
         } else if let Some(language) = trimmed.strip_prefix("```") {
             fence = Some((
                 index + 2,
-                matches!(language, "pascal" | "fpas"),
+                matches!(language.split_whitespace().next(), Some("pascal" | "fpas")),
                 String::new(),
             ));
         }
@@ -55,7 +55,7 @@ pub(super) fn catalog_example<'a>(markdown: &'a str, code: &str, corrected: bool
 #[test]
 fn extraction_keeps_comments_and_skips_non_pascal_fences() {
     let blocks = pascal_blocks(
-        "```text\n```pascal\n```\n\n```pascal\nWriteLn(); // comment\n```\n```fpas\nnull;\n```\n",
+        "```text\n```pascal\n```\n\n```pascal fragment context=body id=comment\nWriteLn(); // comment\n```\n```fpas\nnull;\n```\n",
     );
     assert_eq!(blocks.len(), 2);
     assert_eq!(blocks[0].line, 6);

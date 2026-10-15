@@ -2,7 +2,7 @@
 
 Parse and stringify TOML 1.0 documents with an explicit Functional Pascal value representation.
 
-```pascal
+```pascal id=example-1
 program Example;
 
 uses Std.Console as Console, Std.Toml as Toml;
@@ -37,15 +37,19 @@ Import with `uses Std.Toml as Toml;` and access public symbols as `Toml.Name`. U
 
 ### `TomlValue`
 
-```pascal
+```pascal id=example-2 fragment context=declarations
+type TomlText = string;
+type TomlInteger = integer;
+type TomlBoolean = boolean;
+
 type TomlValue = enum
-  String(Value: TomlValue.string);
-  Integer(Value: TomlValue.integer);
+  String(Value: TomlText);
+  Integer(Value: TomlInteger);
   Float(Value: real);
-  Boolean(Value: TomlValue.boolean);
-  Datetime(Value: TomlValue.string);
+  Boolean(Value: TomlBoolean);
+  Datetime(Value: TomlText);
   ArrayValue(Items: array of TomlValue);
-  Table(Fields: dict of TomlValue.string to TomlValue);
+  Table(Fields: dict of TomlText to TomlValue);
 end enum;
 ```
 
@@ -53,7 +57,7 @@ end enum;
 
 ## `Parse`
 
-```pascal
+```text
 function Parse(Text: string): Result of (Toml.TomlValue, string);
 ```
 
@@ -64,7 +68,7 @@ values, arrays, tables, inline tables, and arrays of tables are represented.
 TOML `inf` and `nan` values, including nested ones, return Error because FPAS
 real values must be finite. Stringify also rejects nonfinite real payloads.
 
-```pascal
+```pascal id=example-4 fragment context=body-console-toml
 const Parsed: result of (Toml.TomlValue, string) := Toml.Parse(
   'title = ''example''' + string.Chr(10) + 'enabled = true' + string.Chr(10) + '[server]' +
   string.Chr(10) +
@@ -82,13 +86,13 @@ end case;
 
 ## `Stringify`
 
-```pascal
+```text
 function Stringify(Value: Toml.TomlValue): string;
 ```
 
 Encodes a `TomlValue` tree as TOML. The supplied root must be a table because TOML documents have table roots. `Stringify` raises a runtime error for malformed manually constructed values, non-string table keys, invalid date/time text, or nesting deeper than 256 levels.
 
-```pascal
+```pascal id=example-6 fragment context=body-console-toml
 const Value: Toml.TomlValue := Toml.TomlValue.Table([
   'project': Toml.TomlValue.Table([
     'name': Toml.TomlValue.String('demo'),

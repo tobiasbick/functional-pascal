@@ -4,7 +4,7 @@ The code fragments use `uses Std.Console as Console;`.
 
 Functions can be assigned to variables and passed as arguments:
 
-```pascal
+```pascal id=example-1 fragment context=header-console
 function Apply(F: function(X: integer): integer; Value: integer): integer;
 begin
   return F(Value);
@@ -31,7 +31,7 @@ Array elements and dictionary entries with callable types are also called
 through their designators. The indexed callable is selected once before its
 arguments are evaluated:
 
-```pascal
+```pascal id=example-2 fragment context=first-class-collections
 const Operations: array of function(X: integer): integer := [Double];
 const ByName: dict of string to function(X: integer): integer := ['double': Double];
 const First: integer := Operations[0](7); // 14
@@ -44,7 +44,7 @@ argument style throughout, like other first-class callable values.
 Procedure elements may be called as statements. Their `var` parameter modes
 and the restrictions on [task calls](../concurrency/go.md) remain the same.
 
-```pascal
+```pascal id=example-3 fragment context=first-class-bound
 type Counter = record
   Base: integer;
 
@@ -74,7 +74,7 @@ Its `None` default represents the absence of a handler; `Some(...)` stores a
 named routine, closure, or bound method. Use a `case` arm when the callback
 should run only when present:
 
-```pascal
+```pascal id=example-4
 program OptionalHandlers;
 
 uses Std.Console as Console;

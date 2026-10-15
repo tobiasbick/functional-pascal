@@ -2,7 +2,7 @@
 
 Formal syntax: [`grammar.ebnf`](../../../specs/grammar.ebnf) (`break_stmt`, `continue_stmt`).
 
-```pascal
+```pascal id=example-1 fragment context=body-console
 for I: integer := 1 to 100 do
   if I mod 2 = 0 then
     continue;

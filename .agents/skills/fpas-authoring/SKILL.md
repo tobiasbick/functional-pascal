@@ -168,3 +168,8 @@ fpas test <test-path>
 Check interactive programs without launching them in batch validation. Use
 scripted or headless tests for their runtime behavior. After FPAS regression-test
 changes, run the repository suite as required by AGENTS.md.
+
+For handbook examples, follow the [Markdown example instructions](../../../docs/pascal/tools/documentation-examples.md).
+Complete `pascal` fences compile by default; fragments name an explicit context.
+Mark deterministic assertion programs `run` and separate intentional errors with
+their exact `error=FPnnnn` code. The normal suite checks the actual Markdown.

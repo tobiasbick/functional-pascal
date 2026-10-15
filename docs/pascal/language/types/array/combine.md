@@ -4,7 +4,7 @@
 
 Returns a **new** array containing all elements of `A` followed by all elements of `B`.
 
-```pascal
+```pascal id=example-1 fragment context=body-console
 const C: array of integer := [1, 2].Concat([3, 4]);
 Console.WriteLn(C.Length()); // 4
 ```
@@ -15,7 +15,7 @@ Console.WriteLn(C.Length()); // 4
 
 Applies `F` to each element (producing an array), then flattens all results into a single array.
 
-```pascal
+```pascal id=example-2 fragment context=declarations
 function ExpandPair(X: integer): array of integer;
 begin
   return [X, X * 10];
@@ -31,7 +31,7 @@ const Output: array of integer := [1, 2, 3].FlatMap(ExpandPair);
 
 Creates a new array containing `Count` copies of `Value`.
 
-```pascal
+```pascal id=example-3 fragment context=body-console
 const Zeros: array of integer := array.Fill(0, 5);
 Console.WriteLn(Zeros.Length()); // 5
 ```
@@ -44,13 +44,16 @@ Console.WriteLn(Zeros.Length()); // 5
 
 Calls `F` for each element in `A`. Does not return a value.
 
-```pascal
+```pascal id=example-4 fragment context=header-console
 procedure PrintValue(X: integer);
 begin
   Console.WriteLn(X);
 end procedure;
+begin
 
 [1, 2, 3].ForEach(PrintValue);
+
+end.
 ```
 
 ## See also

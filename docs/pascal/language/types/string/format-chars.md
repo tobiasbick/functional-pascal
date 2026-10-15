@@ -7,7 +7,7 @@ It uses the same bounded grammar as `Std.Parse.Int` and `Real`, including
 signed `$` hex, digit separators, and finite real values. Nonzero real input
 that rounds to zero is not numeric. See [numeric parsing](../../../std/text/parse.md).
 
-```pascal
+```pascal id=example-1 fragment context=body-console
 Console.WriteLn('42'.IsNumeric());
 Console.WriteLn('nope'.IsNumeric());
 ```
@@ -22,7 +22,7 @@ Indices count Unicode scalars. For a nonempty string, valid indices are
 `0..S.Length()-1`. Empty strings have no valid character index. Invalid indices
 raise a runtime error. Check `S.IsEmpty()` before reading an empty string.
 
-```pascal
+```pascal id=example-2 fragment context=body-console
 const C: string := 'Hello'[0];
 Console.WriteLn(C); // H
 ```
@@ -35,7 +35,7 @@ Returns a **new** string that is identical to `S` except the character at `Index
 
 `Index` follows the same scalar bounds and empty-string checks as scalar indexing.
 
-```pascal
+```pascal id=example-3 fragment context=body-console
 Console.WriteLn('Hello'.SetCharAt(0, 'J')); // Jello
 ```
 
@@ -45,7 +45,7 @@ Console.WriteLn('Hello'.SetCharAt(0, 'J')); // Jello
 
 Returns the Unicode codepoint (integer value) of the receiver. The receiver must contain exactly one Unicode scalar value; empty or multi-character strings are runtime errors.
 
-```pascal
+```pascal id=example-4 fragment context=body-console
 Console.WriteLn('A'.Ord()); // 65
 ```
 
@@ -59,7 +59,7 @@ decimal value, the [`#N` literal](../../basics/primitive-types.md#character-code
 produces the same one-scalar string at compile time; invalid literals are lexical
 errors. Values such as 255 denote Unicode scalars rather than raw encoded bytes.
 
-```pascal
+```pascal id=example-5 fragment context=body-console
 Console.WriteLn(string.Chr(65)); // A
 Console.WriteLn(string.Chr(8364) = #8_364); // true
 Console.WriteLn(#128512.Length()); // 1 (😀)
@@ -73,7 +73,7 @@ Returns a new string by substituting format specifiers in `Template` with the su
 
 The string receiver is the template. Its heterogeneous arguments are positional only; named arguments are rejected.
 
-```pascal
+```pascal id=example-6 fragment context=body
 const Zoom: real := 2.0;
 const CX: real := 0.5;
 const CY: real := -0.5;

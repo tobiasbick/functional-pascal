@@ -46,6 +46,11 @@ then consult the owning handbook page for details. Keep reference updates under
 the [maintenance guide](docs/pascal/agent-reference-maintenance.md), reusing its
 existing CLI example test.
 
+Handbook and root README Pascal fences are checked automatically by the FPAS
+suite. Follow [documentation example instructions](docs/pascal/tools/documentation-examples.md):
+give fragments explicit contexts, keep stable ids, and mark execution or expected
+diagnostic codes explicitly. Keep generated examples under `.temp-data/`.
+
 - **`examples/`** — runnable demos and tutorials. No `*_test.fpas` here.
 - **`tests/`** — FPAS regression and integration tests (`*_test.fpas`, optional golden sidecars), grouped by theme (`stdlib/`, `concurrency/`, `runner/`, `console/`, `apps/`, `debugger/`, `manual/`). `Std.Tui` tests live under `tests/stdlib/tui/`. Bundled via [`tests/suite.fpasprj`](tests/suite.fpasprj). Spec: [`docs/pascal/std/testing/test.md`](docs/pascal/std/testing/test.md).
 - **`.temp-data/`** — gitignored scratch root for FPAS tests/demos that create files via `Std.Fs`. Run those from the repository root; do not write fixtures under `crates/` or as bare `_fpas_*` names in the cwd.

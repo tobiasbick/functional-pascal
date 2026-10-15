@@ -9,7 +9,7 @@ diagnostic applies to procedures, record methods, anonymous routines and
 callable types. Commas inside a type such as `Result of (integer, string)`
 are allowed.
 
-```pascal
+```pascal id=example-1 fragment context=header
 function Clamp(Value: integer; Min: integer; Max: integer): integer;
 begin
   if Value < Min then
@@ -32,7 +32,7 @@ Parameters are read-only bindings unless they are declared with `var`. Copy a
 read-only parameter into a local `var` when its value, fields, or elements need
 to change. Changes to that copy do not change the caller's binding:
 
-```pascal
+```pascal id=example-2 fragment context=declarations
 function Increment(Value: integer): integer;
 begin
   var LocalValue: integer := Value;
@@ -56,7 +56,7 @@ A call can pass every argument by name with `Name := Value`. Names are the
 declared parameter names and are matched without regard to case. The order of
 named arguments is free:
 
-```pascal
+```pascal id=example-3 fragment context=named-file-calls
 procedure CopyFile(Source: string; Destination: string; Overwrite: boolean);
 begin
 end procedure;
@@ -97,7 +97,7 @@ names (FP3026), including a named prefix followed by a positional tail (FP2016).
 `Some`, `Ok`, and `Error` accept their single payload by position or with the
 canonical field label `Value`, for example `Some(Value := 3)`.
 
-```pascal
+```pascal id=example-4 fragment context=declarations
 function Double(N: integer): integer;
 begin
   return N * 2;

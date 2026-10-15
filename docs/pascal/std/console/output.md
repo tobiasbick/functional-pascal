@@ -8,7 +8,7 @@
 - **Result:** none.
 - **Effect:** prints each argument in order **without** appending a newline and **without** inserting separators automatically.
 
-```pascal
+```pascal id=example-1 fragment context=body-console
 Console.WriteText('count=');
 Console.WriteText(42);
 Console.WriteLn('');
@@ -22,7 +22,7 @@ Console.WriteLn('');
 - **Result:** none.
 - **Effect:** prints the arguments, then ends the current output line (newline semantics for captures and terminals).
 
-```pascal
+```pascal id=example-2 fragment context=body-console
 Console.WriteLn('Hello, World!');
 Console.WriteLn(1, ' ', true);
 Console.WriteLn();

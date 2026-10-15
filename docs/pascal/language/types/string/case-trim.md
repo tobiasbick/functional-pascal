@@ -4,7 +4,7 @@
 
 Returns how many characters are in `S` (scalar count).
 
-```pascal
+```pascal id=example-1 fragment context=body-console
 const N: integer := 'café'.Length();
 Console.WriteLn(N);
 ```
@@ -15,7 +15,7 @@ Console.WriteLn(N);
 
 Returns a new string with letters uppercased (Unicode-aware where the runtime supports it).
 
-```pascal
+```pascal id=example-2 fragment context=body-console
 Console.WriteLn('ab'.ToUpper());
 ```
 
@@ -25,7 +25,7 @@ Console.WriteLn('ab'.ToUpper());
 
 Returns a new string with letters lowercased.
 
-```pascal
+```pascal id=example-3 fragment context=body-console
 Console.WriteLn('AB'.ToLower());
 ```
 
@@ -35,7 +35,7 @@ Console.WriteLn('AB'.ToLower());
 
 Strips leading and trailing whitespace.
 
-```pascal
+```pascal id=example-4 fragment context=body-console
 Console.WriteLn('  x  '.Trim());
 ```
 
@@ -45,7 +45,7 @@ Console.WriteLn('  x  '.Trim());
 
 Strips leading whitespace only.
 
-```pascal
+```pascal id=example-5 fragment context=body-console
 Console.WriteLn('  hi  '.TrimLeft()); // 'hi  '
 ```
 
@@ -55,7 +55,7 @@ Console.WriteLn('  hi  '.TrimLeft()); // 'hi  '
 
 Strips trailing whitespace only.
 
-```pascal
+```pascal id=example-6 fragment context=body-console
 Console.WriteLn('  hi  '.TrimRight()); // '  hi'
 ```
 

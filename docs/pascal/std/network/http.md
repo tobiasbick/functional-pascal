@@ -32,7 +32,7 @@ An HTTP/1.1 and HTTPS client plus bounded HTTP/1.x server helpers, implemented i
 
 Create a request with defaults, then replace the fields needed by the caller:
 
-```pascal
+```pascal id=example-1 fragment context=http-body
 var RequestValue: Http.Request := Http.Request.Create('POST', 'http://127.0.0.1:8080/v1/items');
 RequestValue.Headers := [Http.Header.Create('Content-Type', 'application/json')];
 RequestValue.Body := Utf8.Encode('{"name":"example"}');
@@ -46,7 +46,7 @@ end case;
 
 Standard methods have short constructors:
 
-```pascal
+```pascal id=example-2 fragment context=http-body
 const GetRequest: Http.Request := Http.Request.Get('http://127.0.0.1:8080/items');
 var PutRequest: Http.Request := Http.Request.Put('http://127.0.0.1:8080/items/42');
 PutRequest.Body := Utf8.Encode('{"name":"updated"}');
@@ -55,12 +55,14 @@ PutRequest.Body := Utf8.Encode('{"name":"updated"}');
 Call `Send` with the request, then chain on the explicit `Result` without
 unwrapping implicitly:
 
-```pascal
+```pascal id=example-3 fragment context=header
 uses Std.Http as Http;
-
+begin
 const TextResult: result of (string, string) := Http.Send(
   Http.Request.Get('https://example.test/items')
 ).AndThen(Http.BodyText);
+
+end.
 ```
 
 `Method` deliberately remains a string so extension methods are not excluded. For example, a
@@ -103,7 +105,7 @@ when abandoning a response early.
 Independent streams may be opened and consumed by different tasks. Calls that mutate the same
 `BodyStream` handle must remain serialized.
 
-```pascal
+```pascal id=example-4 fragment context=body-http
 case Http.OpenStream(Http.Request.Get('https://example.test/events')) of
   when Ok(const ResponseValue):
     begin
@@ -170,9 +172,9 @@ permitted characters other than SP/HTAB are preserved at the boundaries.
 `MaxHeaderBytes` and `MaxBodyBytes` are caller-selected protection limits. Chunked request bodies,
 ambiguous framing, unsupported transfer codings, and truncated bodies are rejected.
 
-```pascal
+```pascal id=example-5 fragment context=header
 uses Std.Http as Http, Std.Net as Net, Std.Net.Utf8 as Utf8;
-
+begin
 case Net.Listen('127.0.0.1', 8080) of
   when Ok(const ListenerValue):
     begin
@@ -219,6 +221,8 @@ case Net.Listen('127.0.0.1', 8080) of
   when Error(const Message):
     panic(Message);
 end case;
+
+end.
 ```
 
 `WriteResponse` emits HTTP/1.1 with managed `Content-Length` and `Connection: close` fields. It does
@@ -227,15 +231,15 @@ accept another request.
 
 For a reusable loop, pass the listener and a handler to `Serve`:
 
-```pascal
+```pascal id=example-6 fragment context=header
 uses Std.Http as Http, Std.Net as Net, Std.Net.Utf8 as Utf8;
-
 function Handle(RequestValue: Http.ServerRequest): Http.ServerResponse;
 begin
   var ResponseValue: Http.ServerResponse := Http.ServerResponse.Create(200, 'OK');
   ResponseValue.Body := Utf8.Encode('Path: ' + RequestValue.Target);
   return ResponseValue;
 end function;
+begin
 
 case Net.Listen('127.0.0.1', 8080) of
   when Ok(const ListenerValue):
@@ -253,6 +257,8 @@ case Net.Listen('127.0.0.1', 8080) of
   when Error(const Message):
     panic(Message);
 end case;
+
+end.
 ```
 
 `ServerOptions.Create` defaults to a 64 KiB request-head limit, a 1 MiB request-body limit, a
@@ -270,7 +276,7 @@ normal task-failure path and stops the server loop.
 For HTTPS, replace `Listen` with a certificate-configured TLS listener; the handler and server loop
 remain unchanged:
 
-```pascal
+```pascal id=example-7 fragment context=http-tls
 case Net.ListenTls('127.0.0.1', 8443, 'certificate.pem', 'private-key.pem', 10000) of
   when Ok(const ListenerValue):
     begin

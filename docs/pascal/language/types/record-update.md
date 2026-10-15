@@ -4,7 +4,7 @@ The `with` expression creates a copy of a record with selected fields replaced. 
 
 Formal syntax: [`grammar.ebnf`](../../../specs/grammar.ebnf) (`record_update`).
 
-```
+```text
 base with Field := NewValue; … end with
 ```
 
@@ -16,7 +16,7 @@ The expression has no final terminator of its own. In `Apply(P with X := 1;
 end with)`, no `;` separates `end with` from `)`. A following `;` terminates
 the enclosing statement or declaration.
 
-```pascal
+```pascal id=example-2 fragment context=declarations
 type Point = record
   X: integer;
   Y: integer;
@@ -28,19 +28,19 @@ const Q: Point := P with X := 99; end with; // Q.X=99, Q.Y=2; P is unchanged
 
 Multiple fields can be updated in one expression:
 
-```pascal
+```pascal id=example-3 fragment context=point-update
 const R: Point := P with X := 10; Y := 20; end with;
 ```
 
 Updates may be chained by wrapping the inner expression in parentheses:
 
-```pascal
+```pascal id=example-4 fragment context=point-update
 const S: Point := (P with X := 5; end with) with Y := 7; end with;
 ```
 
 `with` works on any record value, including function return values:
 
-```pascal
+```pascal id=example-5 fragment context=point-origin
 function Origin(): Point;
 begin
   return Point(X := 0, Y := 0);

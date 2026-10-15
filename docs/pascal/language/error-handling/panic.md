@@ -6,7 +6,7 @@ for child tasks, the owner determines how failure is propagated or collected.
 
 Formal syntax: [`grammar.ebnf`](../../../specs/grammar.ebnf) (`panic_stmt`).
 
-```pascal
+```pascal id=example-1 fragment context=header run error=FP5010
 begin
   panic('Something went terribly wrong');
 end.
@@ -14,7 +14,7 @@ end.
 
 ## Guarding assumptions
 
-```pascal
+```pascal id=example-2 fragment context=declarations
 function DivideChecked(A: integer; B: integer): integer;
 begin
   if B = 0 then

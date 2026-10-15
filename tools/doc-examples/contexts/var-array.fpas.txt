@@ -1,0 +1,10 @@
+program DocumentationExample;
+procedure Swap(var A: integer; var B: integer); begin const Temp := A; A := B; B := Temp; end procedure;
+procedure SwapAt(var Items: array of integer; I: integer; J: integer);
+begin const Temp := Items[I]; Items[I] := Items[J]; Items[J] := Temp; end procedure;
+begin
+var A := [1, 2];
+const I := 0;
+const J := 1;
+// @example
+end.

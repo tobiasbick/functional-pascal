@@ -1,0 +1,13 @@
+program DocumentationExample;
+uses Std.Tui as Tui, Std.Tasks as Tasks;
+type TuiControlId = Tui.TuiControlId;
+type TuiAction = Tui.TuiAction;
+type TuiMenuState = Tui.TuiMenuState;
+type TuiMsg = Tui.TuiMsg;
+begin
+const Source := TuiControlId.Create(1);
+const Action := TuiAction.Create(1);
+const State := TuiMenuState.Closed();
+discard
+// @example
+end.

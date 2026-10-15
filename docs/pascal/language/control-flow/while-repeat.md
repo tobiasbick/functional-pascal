@@ -10,7 +10,7 @@ The body contains a nonempty list of statements and closes with `end while;`.
 Every body statement ends with `;`. Body-local declarations are unavailable
 in the condition and after the loop; the condition uses the enclosing scope.
 
-```pascal
+```pascal id=example-1 fragment context=body-console
 var Count: integer := 0;
 while Count < 10 do
   Console.WriteLn(Count);
@@ -21,11 +21,11 @@ end while;
 A loop condition may use a nonbinding `is` test. To process a payload,
 use `case` inside the loop; the selector is evaluated once per iteration:
 
-```pascal
+```pascal id=example-2 fragment context=queue-loop
 while true do
   case Queue.Next() of
     when Some(const Job):
-      Proc.Run(Job);
+      discard Proc.Run(Job, []);
     when None:
       break;
   end case;
@@ -44,7 +44,7 @@ an outer name, the condition still uses the outer binding, including after
 The body executes at least once. Every body statement ends with `;`, including
 the last one before `until`; the condition also ends with `;`:
 
-```pascal
+```pascal id=example-3 fragment context=body-console
 var Input: string := '';
 repeat
   Input := Console.ReadLn();

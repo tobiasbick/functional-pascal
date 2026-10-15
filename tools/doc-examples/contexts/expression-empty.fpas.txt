@@ -1,0 +1,6 @@
+program DocumentationExample;
+function Empty(): integer; begin return 0; end function;
+begin discard
+// @example
+;
+end.

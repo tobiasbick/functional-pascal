@@ -1,0 +1,8 @@
+program DocumentationExample;
+function ReadExpected(): integer; begin return 1; end function;
+procedure HandleMatch(); begin end procedure;
+procedure HandleOther(); begin end procedure;
+begin
+const Actual := 1;
+// @example
+end.

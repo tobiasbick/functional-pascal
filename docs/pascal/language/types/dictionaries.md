@@ -4,7 +4,7 @@
 
 Formal syntax: [`grammar.ebnf`](../../../specs/grammar.ebnf) (`type_expr` — `dict of`, dict literals, indexing).
 
-```pascal
+```pascal id=example-1 fragment context=body
 const Ages: dict of string to integer := ['Alice': 30, 'Bob': 25];
 const Empty: dict of string to integer := [:];
 const AliceAge: integer := Ages['Alice'];
@@ -20,7 +20,7 @@ key type parameter needs the `Comparable` constraint, for example
 
 Dictionary writes require a mutable binding:
 
-```pascal
+```pascal id=example-2 fragment context=header
 var Counts: dict of string to integer := ['A': 1];
 
 begin

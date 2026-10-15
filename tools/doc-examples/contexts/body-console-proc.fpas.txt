@@ -1,0 +1,7 @@
+program DocumentationExample;
+uses Std.Console as Console, Std.Proc as Proc;
+
+begin
+// @example
+
+end.

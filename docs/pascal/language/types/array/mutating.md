@@ -16,7 +16,7 @@ ArrayPopResult of T returns a named generic record with public fields:
 ArrayPopResult needs no import and supports annotations and generic signatures.
 Its fields follow ordinary record access and construction rules.
 
-```pascal
+```pascal id=example-1 fragment context=body
 const Items := [10, 20, 30];
 const Extended := Items.Push(Value := 40);
 const Popped: ArrayPopResult of integer := Items.Pop();
@@ -30,7 +30,7 @@ const Popped: ArrayPopResult of integer := Items.Pop();
 Items.PushInPlace(Value: T) updates the receiver and returns no value.
 Items.PopInPlace(): T updates it and returns only the removed element.
 
-```pascal
+```pascal id=example-2 fragment context=body
 var Items := [10, 20];
 Items.PushInPlace(30);
 const Last := Items.PopInPlace();

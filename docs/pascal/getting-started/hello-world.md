@@ -1,6 +1,6 @@
 # Hello world
 
-```pascal
+```pascal id=example-1
 program Hello;
 
 uses Std.Console as Console;

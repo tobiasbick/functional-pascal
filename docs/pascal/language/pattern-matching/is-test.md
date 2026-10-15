@@ -3,7 +3,7 @@
 `Value is Pattern` evaluates to `boolean`. It tests a value without introducing
 names and can appear wherever a Boolean expression is accepted:
 
-```pascal
+```pascal id=example-1 fragment context=option-is
 const Present: boolean := Item is Some(_);
 if (Item is None) or not Present then
   ReportMissing();
@@ -26,7 +26,7 @@ it never creates a binding.
 
 Use a `case` arm when you need a payload:
 
-```pascal
+```pascal id=example-2 fragment context=option-use
 case Item of
   when Some(const Value):
     Use(Value);

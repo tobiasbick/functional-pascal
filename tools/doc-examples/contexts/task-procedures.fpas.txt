@@ -1,0 +1,6 @@
+program DocumentationExample;
+uses Std.Tasks as Tasks;
+procedure Work(Id: integer); begin end procedure;
+begin
+// @example
+end.

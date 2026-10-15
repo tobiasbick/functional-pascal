@@ -11,7 +11,7 @@ Formal syntax: [`grammar.ebnf`](../../../specs/grammar.ebnf) (literals, `type_ex
 
 Single-character text uses the same `string` type as longer text:
 
-```pascal
+```pascal id=example-1 fragment context=body
 const Letter: string := 'A';
 const Word: string := 'Hello';
 ```
@@ -20,7 +20,7 @@ Strings use single quotes with doubled apostrophes for escaping: `'It''s Pascal'
 
 Strings may span multiple lines:
 
-```pascal
+```pascal id=example-2 fragment context=body
 const Poem: string := 'Roses are red'#10'Violets are blue';
 ```
 
@@ -36,7 +36,7 @@ one underscore may separate digits, as in `#8_364`. A sign or hexadecimal prefix
 is not allowed. Adjacent quoted strings and character codes concatenate without
 an operator; whitespace separates literals.
 
-```pascal
+```pascal id=example-3 fragment context=body
 const LineBreak: string := #13#10; // CR+LF
 const Greeting: string := 'Hello'#13#10'World'; // Hello\r\nWorld
 const Tab: string := #9; // Tab character

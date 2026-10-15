@@ -47,7 +47,7 @@ FP2022 rejects an import without its explicit alias and shows an aliased `uses`
 entry. FP3043 rejects an imported short name or a user enum variant without its
 type qualifier. Each diagnostic shows the required source spelling. For example:
 
-```pascal
+```pascal id=example-4 error=FP3043
 program ReadFile;
 
 uses Std.Console as Console, Std.Fs as Files;

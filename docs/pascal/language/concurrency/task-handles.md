@@ -11,7 +11,7 @@ At runtime both are opaque task identities. Bare `task` never infers a
 function result and is not an erased handle. Use the same annotation for
 bindings, parameters, fields, aliases, containers, and exported signatures.
 
-```pascal
+```pascal id=example-1 fragment context=tasks-compute
 scope
   const Calculation: task of integer := go Compute(100);
   const Worker: task := go RunWorker();
@@ -38,7 +38,7 @@ returns T. The ordinary type checks preserve the result type; no implicit
 conversion occurs through the handle. `task` is reserved and cannot name a
 variable, field, or unit segment.
 
-```pascal
+```pascal id=example-2 fragment context=tasks-join
 function Doubled(Job: task of integer): integer;
 begin
   return Tasks.Wait(Job) * 2;
@@ -49,10 +49,12 @@ begin
   Tasks.Wait(Job);
 end procedure;
 
+begin
 scope
   const Jobs: array of task of result of (boolean, string) := [go Connect(), go Serve()];
   Tasks.WaitAll(Jobs);
 end scope;
+end.
 ```
 
 Generic parameters may use `task of T` for function tasks; they cannot infer
@@ -74,7 +76,7 @@ See [Task groups](../../std/concurrency/task.md#task-groups).
 save their continuation and release the pool thread; the main task waits for scheduler notification
 while pool workers run queued work. See [Waiting and execution](../../std/concurrency/task.md#waiting-and-execution).
 
-```pascal
+```pascal id=example-3 fragment context=tasks-compute
 scope
   const T: task of integer := go Compute(100);
   const TaskValue: integer := Tasks.Wait(T);
@@ -92,7 +94,7 @@ arrays: either `array of task` or `array of task of T` with one result type.
 They observe completion without consuming results. Mixed task arrays are
 rejected. WaitAll uses the same cooperative child-wait mechanism as Wait:
 
-```pascal
+```pascal id=example-4 fragment context=tasks-wait-all
 Tasks.WaitAll([T1, T2, T3]);
 ```
 

@@ -1,0 +1,10 @@
+program DocumentationExample;
+uses Std.Tasks as Tasks;
+procedure Work(Id: integer); begin end procedure;
+begin
+scope
+const Ta := go Work(1);
+const Tb := go Work(2);
+// @example
+end scope;
+end.

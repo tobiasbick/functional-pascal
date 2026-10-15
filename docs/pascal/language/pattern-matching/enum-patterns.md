@@ -2,7 +2,7 @@
 
 Match on enum variants:
 
-```pascal
+```pascal id=example-1 fragment context=declarations
 type Direction = enum
   North;
   South;
@@ -28,7 +28,7 @@ end function;
 Enum patterns match all fields either positionally or by their declared names.
 Use `const Name` to bind a value or `_` to ignore it:
 
-```pascal
+```pascal id=example-2 fragment context=shape-case
 case S of
   when Shape.Circle(const R):
     Console.WriteLn('Circle');

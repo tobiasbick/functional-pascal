@@ -1,0 +1,5 @@
+program DocumentationExample;
+// @include docs/pascal/language/types/subranges.md#example-1
+begin
+// @example
+end.

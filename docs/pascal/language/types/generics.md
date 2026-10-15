@@ -24,7 +24,7 @@ apply types. User-defined generic records and enums use the same `of` form.
 
 ## Generic records
 
-```pascal
+```pascal id=example-1 fragment context=declarations
 type Box of T = record
   Value: T;
 
@@ -76,7 +76,7 @@ expected signature after all supplied fields have contributed.
 Conflicting values are errors; inference does not promote numeric types or
 search for a common type. Parameters left undetermined require a type annotation.
 
-```pascal
+```pascal id=example-2 fragment context=declarations
 type Optional of T = record
   Value: option of T := None;
 end record;
@@ -95,7 +95,7 @@ in declaration order.
 
 ### Recursive records
 
-```pascal
+```pascal id=example-3 fragment context=declarations
 type Node of T = record
   Value: T;
   Next: option of Node of T := None;
@@ -113,7 +113,7 @@ See the runnable [generic records example](../../../../examples/pascal/types/gen
 
 ## Generic enums
 
-```pascal
+```pascal id=example-4 fragment context=declarations
 type Lookup of T = enum
   Found(Value: T);
   Missing;
@@ -149,7 +149,7 @@ numeric types. Payload values are evaluated once in written order.
 
 ### Recursive enums and matching
 
-```pascal
+```pascal id=example-5 fragment context=declarations
 type List of T = enum
   Empty;
   Cons(Head: T; Tail: List of T);
@@ -186,7 +186,7 @@ See the runnable [generic enums example](../../../../examples/pascal/types/gener
 
 ## Generic functions and procedures
 
-```pascal
+```pascal id=example-6 fragment context=declarations-console
 function Identity<T>(Value: T): T;
 begin
   return Value;
@@ -202,7 +202,7 @@ Type arguments are inferred from supplied arguments first. An expected result ty
 fills only unresolved parameters, as described in
 [Generic routines](../functions/generic-routines.md). No explicit instantiation is needed:
 
-```pascal
+```pascal id=example-7 fragment context=generic-values
 const X: integer := Identity(42); // T inferred as integer
 const S: string := Identity('hi'); // T inferred as string
 ```
@@ -211,7 +211,7 @@ const S: string := Identity('hi'); // T inferred as string
 
 Record methods declare type parameters in the method header; those parameters are scoped to the method.
 
-```pascal
+```pascal id=example-8 fragment context=declarations-conv
 type Box = record
   Value: integer;
 
@@ -234,7 +234,7 @@ const S: string := B.Map(ToText); // R inferred as string
 
 Method-level type parameters may also use constraints:
 
-```pascal
+```pascal id=example-9 fragment context=declarations
 type Accumulator = record
   function Add<T: Numeric>(Self: Accumulator; Extra: T): T;
   begin
@@ -277,7 +277,7 @@ type parameter or a concrete integer/real is rejected. Call-site inference
 also rejects mixed integer/real arguments instead of promoting them.
 `+`, `-`, and `*` return T, while `/` always returns real:
 
-```pascal
+```pascal id=example-10 fragment context=declarations
 function Divide<T: Numeric>(A: T; B: T): real;
 begin
   return A / B;
@@ -289,7 +289,7 @@ ordinary [numeric operators](../basics/operators.md#arithmetic).
 
 ### Examples
 
-```pascal
+```pascal id=example-11 fragment context=declarations
 function Max<T: Comparable>(A: T; B: T): T;
 begin
   if A > B then
@@ -307,7 +307,7 @@ end function;
 
 Constraint violations at call sites are compile-time errors:
 
-```pascal
+```pascal id=example-12 fragment context=generic-max
 const M: integer := Max(3, 7); // Valid — integer is Comparable
 // var Bad := Max([1], [2]);   ← compile error: array is not Comparable
 ```

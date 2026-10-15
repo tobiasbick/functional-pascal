@@ -11,7 +11,7 @@ Import `uses Std.Bits as Bits;` before calling these functions. Use
 return value is an `integer`. Arguments are evaluated from left to right,
 exactly once; both arguments of a binary function are always evaluated.
 
-```pascal
+```pascal id=example-1
 program BitExample;
 
 uses Std.Bits as Bits, Std.Console as Console;

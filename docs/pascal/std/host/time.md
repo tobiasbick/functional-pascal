@@ -2,7 +2,7 @@
 
 Wall-clock and monotonic time helpers plus task-aware sleep. This page is the full API for the unit.
 
-```pascal
+```pascal id=example-1
 program Example;
 
 uses Std.Console as Console, Std.Time as Time;
@@ -60,7 +60,7 @@ suspends that owner, and resumes the callback without repeating completed elemen
 
 Returns UTC milliseconds since `1970-01-01T00:00:00Z`.
 
-```pascal
+```pascal id=example-2 fragment context=body-console-time
 Console.WriteLn(Time.TimestampMillis());
 ```
 
@@ -70,7 +70,7 @@ Console.WriteLn(Time.TimestampMillis());
 
 Returns monotonic milliseconds since runtime initialization.
 
-```pascal
+```pascal id=example-3 fragment context=body-time
 const Start: integer := Time.MonotonicMillis();
 ```
 
@@ -80,7 +80,7 @@ const Start: integer := Time.MonotonicMillis();
 
 Returns monotonic milliseconds elapsed since `Start`, a value from `MonotonicMillis`.
 
-```pascal
+```pascal id=example-4 fragment context=body-console-time
 const Start: integer := Time.MonotonicMillis();
 Time.Sleep(50);
 Console.WriteLn(Time.ElapsedMillis(Start));
@@ -94,7 +94,7 @@ Waits for the given number of milliseconds. Spawned tasks, including their activ
 callbacks, wait cooperatively without pinning a pool worker. Negative values produce a runtime
 error.
 
-```pascal
+```pascal id=example-5 fragment context=body-time
 Time.Sleep(250);
 ```
 

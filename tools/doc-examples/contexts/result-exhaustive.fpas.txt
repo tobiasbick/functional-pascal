@@ -1,0 +1,6 @@
+program DocumentationExample;
+uses Std.Console as Console, Std.Conv as Conv;
+begin
+const R: result of (integer, string) := Ok(1);
+// @example
+end.

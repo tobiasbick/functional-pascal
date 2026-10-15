@@ -60,9 +60,8 @@
 
 ## Example
 
-```pascal
+```pascal id=example-1 fragment context=header
 uses Std.Console as Console;
-
 begin
   Console.AssignCrt();
   Console.TextMode(Console.C80);

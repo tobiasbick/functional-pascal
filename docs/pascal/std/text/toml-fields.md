@@ -4,7 +4,7 @@ Strict typed access to the keys of parsed TOML tables. Every accessor returns
 `Error(Message)` for a missing key or a value of the wrong TOML kind instead of
 requiring a nested `case` per key.
 
-```pascal
+```pascal id=example-1
 program Example;
 
 uses Std.Console as Console, Std.Toml as Toml, Std.Toml.Fields as TomlFields;

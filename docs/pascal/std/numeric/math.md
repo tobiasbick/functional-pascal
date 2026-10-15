@@ -9,7 +9,7 @@ Rounding operations also check that their integer result fits the signed 64-bit
 range. Integer arguments are not implicitly converted for a real parameter;
 use `Std.Conv.IntToReal` explicitly.
 
-```pascal
+```pascal id=example-1
 program Example;
 
 uses Std.Console as Console, Std.Math as Math;
@@ -72,7 +72,7 @@ result is non-finite or outside the signed 64-bit integer range. In particular,
 - **Value:** the mathematical constant π.
 - **Note:** provided via compile-time lowering for `Std.Math.Pi` (and short `Pi` when imported).
 
-```pascal
+```pascal id=example-2 fragment context=body-console-math
 const R: real := Math.Pi;
 Console.WriteLn(Math.Round(R));
 ```
@@ -83,7 +83,7 @@ Console.WriteLn(Math.Round(R));
 
 Square root. **Runtime error** if `R` is negative.
 
-```pascal
+```pascal id=example-3 fragment context=body-console-math
 Console.WriteLn(Math.Sqrt(16.0));
 ```
 
@@ -93,7 +93,7 @@ Console.WriteLn(Math.Sqrt(16.0));
 
 Raises `Base` to `Exp`.
 
-```pascal
+```pascal id=example-4 fragment context=body-console-math
 Console.WriteLn(Math.Pow(2.0, 3.0));
 ```
 
@@ -103,7 +103,7 @@ Console.WriteLn(Math.Pow(2.0, 3.0));
 
 Greatest integer ≤ `R`.
 
-```pascal
+```pascal id=example-5 fragment context=body-console-math
 Console.WriteLn(Math.Floor(2.9));
 ```
 
@@ -113,7 +113,7 @@ Console.WriteLn(Math.Floor(2.9));
 
 Smallest integer ≥ `R`.
 
-```pascal
+```pascal id=example-6 fragment context=body-console-math
 Console.WriteLn(Math.Ceil(2.1));
 ```
 
@@ -125,7 +125,7 @@ Nearest integer, with exact half values rounded to the even integer:
 `Round(2.5)` is 2, `Round(3.5)` is 4, and `Round(-2.5)` is -2.
 The result must fit the signed 64-bit range. `Trunc` remains truncation toward zero.
 
-```pascal
+```pascal id=example-7 fragment context=body-console-math
 Console.WriteLn(Math.Round(Math.Pi));
 ```
 
@@ -135,7 +135,7 @@ Console.WriteLn(Math.Round(Math.Pi));
 
 Trigonometric functions; angle in **radians**.
 
-```pascal
+```pascal id=example-8 fragment context=body-console-math
 Console.WriteLn(Math.Sin(0.0));
 Console.WriteLn(Math.Cos(0.0));
 ```
@@ -146,7 +146,7 @@ Console.WriteLn(Math.Cos(0.0));
 
 Natural logarithm. **Runtime error** if `R ≤ 0`.
 
-```pascal
+```pascal id=example-9 fragment context=body-console-math
 Console.WriteLn(Math.Log(2.718281828459045));
 ```
 
@@ -156,7 +156,7 @@ Console.WriteLn(Math.Log(2.718281828459045));
 
 Absolute value. `N` may be `integer` or `real`; the result has the **same** kind.
 
-```pascal
+```pascal id=example-10 fragment context=body-console-math
 Console.WriteLn(Math.Abs(-7));
 Console.WriteLn(Math.Abs(-1.5));
 ```
@@ -167,7 +167,7 @@ Console.WriteLn(Math.Abs(-1.5));
 
 `A` and `B` must be the **same** numeric kind. Returns the smaller or larger.
 
-```pascal
+```pascal id=example-11 fragment context=body-console-math
 Console.WriteLn(Math.Min(3, 9));
 Console.WriteLn(Math.Max(3, 9));
 ```
@@ -178,7 +178,7 @@ Console.WriteLn(Math.Max(3, 9));
 
 Tangent of `R` (radians).
 
-```pascal
+```pascal id=example-12 fragment context=body-console-math
 Console.WriteLn(Math.Tan(0.0));
 ```
 
@@ -188,7 +188,7 @@ Console.WriteLn(Math.Tan(0.0));
 
 Inverse sine (arc sine). **Runtime error** if `R` is outside `[-1, 1]`.
 
-```pascal
+```pascal id=example-13 fragment context=body-console-math
 Console.WriteLn(Math.ArcSin(1.0)); // Pi/2
 ```
 
@@ -198,7 +198,7 @@ Console.WriteLn(Math.ArcSin(1.0)); // Pi/2
 
 Inverse cosine. **Runtime error** if `R` is outside `[-1, 1]`.
 
-```pascal
+```pascal id=example-14 fragment context=body-console-math
 Console.WriteLn(Math.ArcCos(1.0)); // 0.0
 ```
 
@@ -208,7 +208,7 @@ Console.WriteLn(Math.ArcCos(1.0)); // 0.0
 
 Inverse tangent (classic Pascal `ArcTan`).
 
-```pascal
+```pascal id=example-15 fragment context=body-console-math
 Console.WriteLn(Math.ArcTan(1.0)); // Pi/4
 ```
 
@@ -221,7 +221,7 @@ For finite inputs the result is in `[-Pi, Pi]`. Signed zero selects the boundary
 on the negative X-axis: `ArcTan2(0.0, -1.0)` is `Pi`, while
 `ArcTan2(-0.0, -1.0)` is `-Pi`.
 
-```pascal
+```pascal id=example-16 fragment context=body-console-math
 Console.WriteLn(Math.ArcTan2(1.0, 1.0)); // Pi/4
 ```
 
@@ -231,7 +231,7 @@ Console.WriteLn(Math.ArcTan2(1.0, 1.0)); // Pi/4
 
 Returns e^R. Inverse of `Log`.
 
-```pascal
+```pascal id=example-17 fragment context=body-console-math
 Console.WriteLn(Math.Exp(1.0)); // ~2.718
 ```
 
@@ -241,7 +241,7 @@ Console.WriteLn(Math.Exp(1.0)); // ~2.718
 
 Base-10 logarithm. **Runtime error** if `R ≤ 0`.
 
-```pascal
+```pascal id=example-18 fragment context=body-console-math
 Console.WriteLn(Math.Log10(100.0)); // 2.0
 ```
 
@@ -251,7 +251,7 @@ Console.WriteLn(Math.Log10(100.0)); // 2.0
 
 Base-2 logarithm. **Runtime error** if `R ≤ 0`.
 
-```pascal
+```pascal id=example-19 fragment context=body-console-math
 Console.WriteLn(Math.Log2(8.0)); // 3.0
 ```
 
@@ -261,7 +261,7 @@ Console.WriteLn(Math.Log2(8.0)); // 3.0
 
 Truncates toward zero (classic Pascal `Trunc`). Unlike `Floor`, `Trunc(-3.7)` yields `-3`, not `-4`.
 
-```pascal
+```pascal id=example-20 fragment context=body-console-math
 Console.WriteLn(Math.Trunc(3.9)); // 3
 Console.WriteLn(Math.Trunc(-3.7)); // -3
 ```
@@ -272,7 +272,7 @@ Console.WriteLn(Math.Trunc(-3.7)); // -3
 
 Fractional part: `Frac(R) = R - Trunc(R)`.
 
-```pascal
+```pascal id=example-21 fragment context=body-console-math
 Console.WriteLn(Math.Frac(3.14)); // 0.14
 Console.WriteLn(Math.Frac(-3.14)); // -0.14
 ```
@@ -283,7 +283,7 @@ Console.WriteLn(Math.Frac(-3.14)); // -0.14
 
 Returns `-1`, `0`, or `1` depending on the sign of `N`. `N` may be `integer` or `real`; result is always `integer`.
 
-```pascal
+```pascal id=example-22 fragment context=body-console-math
 Console.WriteLn(Math.Sign(-42)); // -1
 Console.WriteLn(Math.Sign(0)); // 0
 Console.WriteLn(Math.Sign(3.14)); // 1
@@ -301,7 +301,7 @@ as a callable value, for example `function(N: integer): integer begin return Abs
 
 Returns `V` constrained to `[Lo, Hi]`. All three arguments must be the same numeric kind. Result matches the input kind.
 
-```pascal
+```pascal id=example-23 fragment context=body-console-math
 Console.WriteLn(Math.Clamp(150, 0, 100)); // 100
 Console.WriteLn(Math.Clamp(-5, 0, 100)); // 0
 Console.WriteLn(Math.Clamp(1.5, 0.0, 1.0)); // 1.0

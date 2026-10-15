@@ -1,0 +1,6 @@
+program DocumentationExample;
+// @include docs/pascal/language/types/subranges.md#example-1
+begin
+const Level: Percent := Percent(50);
+// @example
+end.

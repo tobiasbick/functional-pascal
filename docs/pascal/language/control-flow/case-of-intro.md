@@ -32,7 +32,7 @@ Guards never contribute coverage, even constant-true guards. Duplicate labels
 within an arm and labels fully covered by earlier unguarded arms are errors.
 Partial overlaps are allowed and follow written order.
 
-```pascal
+```pascal id=example-1 fragment context=day-case
 case Day of
   when 'Monday':
     Console.WriteLn('Start of week');
@@ -47,7 +47,7 @@ end case;
 
 Ranges use `..`; comma-separated labels share one body:
 
-```pascal
+```pascal id=example-2 fragment context=score-case
 case Score of
   when 0..59:
     Grade := 'F';
@@ -71,7 +71,7 @@ be used in its guard, another arm, or after the case. Pattern bindings are
 available in the guard and selected body. An explicit `begin ... end;` inside
 an arm retains an additional scope; its ending closes only that inner block.
 
-```pascal
+```pascal id=example-3 fragment context=option-case
 case Items of
   when Some(const Value) if Value > 0:
     const Doubled: integer := Value * 2;
@@ -96,7 +96,7 @@ and `None`.
 
 Where a value is expected, `case` selects the value of the first matching arm:
 
-```pascal
+```pascal id=example-4 fragment context=case-expressions
 function Area(Value: Shape): real;
 begin
   return case Value of
@@ -105,6 +105,7 @@ begin
   end case;
 end function;
 
+begin
 const Label: string := case Count of
   when 0: 'none';
   when 1: 'one';
@@ -114,6 +115,7 @@ const State: string := case Enabled of
   when true: 'enabled';
   when false: 'disabled';
 end case;
+end.
 ```
 
 - Each arm is `when Labels [if Guard]: Value;` with exactly one expression

@@ -4,7 +4,7 @@ The code fragments use `uses Std.Conv as Conv, Std.Console as Console;`.
 
 Helper functions for `Option of T` values. See [Error handling](../error-handling/README.md) for the type itself, constructors (`Some`, `None`), the `try` operator, and `case` destructuring.
 
-```pascal
+```pascal id=example-1
 program Example;
 
 uses Std.Console as Console;
@@ -38,7 +38,7 @@ functions with the same name do not affect this selection.
 Extracts the value from `Some(value)`. **Runtime error** if `O` is `None`.
 Use Unwrap when abort is intended; handle expected absence with case.
 
-```pascal
+```pascal id=example-2 fragment context=body-console
 const O: option of integer := Some(7);
 Console.WriteLn(O.Unwrap()); // 7
 ```
@@ -51,7 +51,7 @@ Console.WriteLn(O.Unwrap()); // 7
 Case binds the payload and handles absence locally. A plain default is evaluated
 only in its selected arm:
 
-```pascal
+```pascal id=example-3 fragment context=body
 const O: option of integer := None;
 const Value: integer := case O of
   when Some(const Present): Present;
@@ -68,7 +68,7 @@ None arm. Map, AndThen, and OrElse keep Option wrapping.
 
 Transforms the `Some` value with `F`. If `O` is `None`, returns `None`.
 
-```pascal
+```pascal id=example-4 fragment context=declarations-conv
 function TripleToString(V: integer): string;
 begin
   return Conv.IntToStr(V * 3);
@@ -85,7 +85,7 @@ const M: option of string := O.Map(TripleToString);
 
 Calls `F` with the `Some` value. `F` returns a new `Option`, enabling chained lookups. If `O` is `None`, returns `None`.
 
-```pascal
+```pascal id=example-5 fragment context=declarations-conv
 function PositiveToOptionString(V: integer): option of string;
 begin
   if V > 0 then
@@ -109,7 +109,7 @@ The callback body runs only for None. The expression supplying F is an ordinary
 eager argument and is evaluated once even for Some. OrElse returns Option of T;
 use case for a plain replacement value. Callback runtime failures propagate.
 
-```pascal
+```pascal id=example-6 fragment context=declarations
 function Fallback99(): option of integer;
 begin
   return Some(99);

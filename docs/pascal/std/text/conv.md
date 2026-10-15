@@ -3,7 +3,7 @@
 Formatting of typed values and explicit integer-to-real conversion. Parse input
 text with [Std.Parse](parse.md), whose operations return Result.
 
-```pascal
+```pascal id=example-1
 program Example;
 
 uses Std.Console as Console, Std.Conv as Conv;
@@ -38,7 +38,7 @@ Requires `uses Std.Conv as Conv;`.
 
 Decimal string representation of `N`.
 
-```pascal
+```pascal id=example-2 fragment context=body-console-conv
 Console.WriteLn(Conv.IntToStr(42));
 ```
 
@@ -52,7 +52,7 @@ Every integer between `-9007199254740992` and `9007199254740992` is exact;
 larger values are exact only when representable at binary64's spacing.
 This is the explicit conversion used before mixing integer and real calculations.
 
-```pascal
+```pascal id=example-3 fragment context=body-console-conv
 const X: real := Conv.IntToReal(3);
 Console.WriteLn(X);
 ```
@@ -65,7 +65,7 @@ Returns locale-independent real text that `Parse.Real` parses back
 to the identical binary64 bits. Integral reals include `.0`, so `RealToStr(1.0)`
 is `'1.0'`. Negative zero is `'-0.0'`. Nonfinite values are rejected.
 
-```pascal
+```pascal id=example-4 fragment context=body-console-conv
 Console.WriteLn(Conv.RealToStr(1.5));
 ```
 
@@ -75,7 +75,7 @@ Console.WriteLn(Conv.RealToStr(1.5));
 
 Returns `'true'` or `'false'`.
 
-```pascal
+```pascal id=example-5 fragment context=body-console-conv
 Console.WriteLn(Conv.BoolToStr(true)); // true
 Console.WriteLn(Conv.BoolToStr(false)); // false
 ```
@@ -88,7 +88,7 @@ Returns `N` as an uppercase hexadecimal string, zero-padded to at least `Digits`
 
 `Digits` must be at most **1_000_000**. Larger values raise a runtime error.
 
-```pascal
+```pascal id=example-6 fragment context=body-console-conv
 Console.WriteLn(Conv.IntToHex(255, 2)); // FF
 Console.WriteLn(Conv.IntToHex(255, 4)); // 00FF
 ```

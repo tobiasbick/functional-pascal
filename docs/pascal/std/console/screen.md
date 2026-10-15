@@ -23,7 +23,7 @@ These operations use a **text screen model** with a current cursor position, an 
 - **Coordinates:** **1-based** and **relative to the active window**.
 - **Errors:** runtime error if `X` / `Y` are outside the active window.
 
-```pascal
+```pascal id=example-1 fragment context=body-console
 Console.Window(10, 5, 30, 15);
 Console.GotoXY(1, 1);
 Console.WriteLn('top-left of the window');

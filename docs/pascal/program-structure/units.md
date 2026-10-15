@@ -12,7 +12,7 @@ Every type, constant, and variable has its own
 `type`, `const`, or `var` keyword. Repeat `public`
 before each exported declaration; it applies to that declaration only.
 
-```pascal
+```pascal id=example-1 project=units file=utils.fpas
 unit MyApp.Utils;
 
 public function Clamp(Value: integer; Min: integer; Max: integer): integer;
@@ -44,7 +44,7 @@ Every directly referenced unit requires an explicit aliased import, including
 for example `Math.Abs(-3)`. A project source list and a qualified expression
 never import a unit automatically.
 
-```pascal
+```pascal id=example-2 project=units file=main.fpas
 program Main;
 
 uses MyApp.Utils as Utils, Std.Console as Console;
@@ -62,7 +62,7 @@ Ordinary local declarations retain their short names. Imported symbols require
 and public signatures. User enum variants require their type qualifier, such as
 `Domain.Color.Red`; see [Enums](../language/types/enums.md).
 
-```pascal
+```pascal id=example-3
 program Hello;
 
 uses Std.Console as Console;
@@ -77,7 +77,7 @@ end.
 Every import declares an alias. It exposes public symbols through `Alias.Name`
 and hides the original unit path in the importing file:
 
-```pascal
+```pascal id=example-4
 program Aliases;
 
 uses Std.Math as Math, Std.Console as Console;
@@ -121,7 +121,7 @@ reports FP3043 and gives the required alias-qualified spelling. Aliases cannot
 be shadowed by local declarations. Built-in operations are independent of
 unit imports and their free routine names:
 
-```pascal
+```pascal id=example-5
 program Demo;
 
 begin

@@ -24,11 +24,12 @@ rules, and examples.
 
 ### Type `KeyEvent` (record)
 
-Logical name in the compiler: `Std.Console.KeyEvent`. With `uses Std.Console`, you may write `KeyEvent`.
+Logical name in the compiler: `Std.Console.KeyEvent`. Import with
+`uses Std.Console as Console;` and write `Console.KeyEvent`.
 
 Equivalent conceptual declaration:
 
-```pascal
+```pascal id=example-1 fragment context=declarations-console
 type KeyEvent = record
   kind: Console.KeyKind;
   ch: string;
@@ -50,7 +51,7 @@ end record;
 
 **Example:** read one event and branch on the key kind.
 
-```pascal
+```pascal id=example-2
 program Demo;
 
 uses Std.Console as Console;
@@ -73,7 +74,7 @@ You can always use qualified enum literals instead, e.g. `Std.Console.KeyKind.Es
 
 ### Type `KeyKind` (enum)
 
-Logical name: `Std.Console.KeyKind`. Short: `KeyKind` when `Std.Console` is imported.
+Logical name: `Std.Console.KeyKind`. With that import, write `Console.KeyKind`.
 
 Each variant is a **distinct enum value**. You compare with `=` / `<>`, use it in `case` (if your program uses ordinal `case` on enums), and assign to `KeyEvent.kind`.
 
@@ -113,7 +114,7 @@ The language represents the underlying ordinal as an integer index in the **fixe
 
 **Literals** (with `uses Std.Console`):
 
-```pascal
+```pascal id=example-3 fragment context=body-console
 const K: Console.KeyKind := Console.KeyKind.Space;
 if K = Console.KeyKind.F1 then
   Console.WriteLn('F1');
@@ -124,11 +125,11 @@ end if;
 
 ### Type `ConsoleEvent` (record)
 
-Logical name: `Std.Console.ConsoleEvent`. Short: `ConsoleEvent` when `Std.Console` is imported.
+Logical name: `Std.Console.ConsoleEvent`. With that import, write `Console.ConsoleEvent`.
 
 Equivalent conceptual declaration:
 
-```pascal
+```pascal id=example-4 fragment context=declarations-console
 type ConsoleEvent = record
   kind: Console.EventKind;
   key: Console.KeyEvent;

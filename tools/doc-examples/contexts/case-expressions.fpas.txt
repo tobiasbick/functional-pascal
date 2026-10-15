@@ -1,0 +1,5 @@
+program DocumentationExample;
+type Shape = enum Circle(Radius: real); Rectangle(Width: real; Height: real); end enum;
+const Count: integer := 3;
+const Enabled: boolean := true;
+// @example

@@ -12,7 +12,7 @@ declarations and record members).
 | *(none)* | Private — usable only within the declaring unit |
 | `public` | Public — exported to importing units |
 
-```pascal
+```pascal id=example-1
 unit MyApp.Geometry;
 
 uses Std.Math as Math;

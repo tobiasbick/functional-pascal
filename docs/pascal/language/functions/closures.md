@@ -13,7 +13,7 @@ The expression has no terminating `;` of its own. An enclosing declaration,
 assignment, or `return` statement supplies its terminator. As a call argument,
 the named ending is followed by `,` or `)` without an intervening `;`:
 
-```pascal
+```pascal id=example-1 fragment context=closure-apply
 Apply(
   function(Value: integer): integer begin
     return Value * 2;
@@ -23,7 +23,7 @@ Apply(
 
 Here the `;` after `)` terminates the call statement.
 
-```pascal
+```pascal id=example-2 fragment context=body
 var Count: integer := 0;
 
 const Increment: procedure() := procedure() begin
@@ -59,7 +59,7 @@ a local, parameter, or enclosing capture that is not declared by the closure its
 All closures created by one activation and capturing the same mutable local observe
 the same cell. The cell survives until the final closure that references it is released.
 
-```pascal
+```pascal id=example-3 fragment context=declarations
 function Counter(): function(): integer;
 begin
   var Value: integer := 0;
@@ -79,7 +79,7 @@ captured by an anonymous closure.
 A nested named routine that refers to enclosing locals becomes a capturing closure
 when it is used as a first-class value (assigned, returned, or passed):
 
-```pascal
+```pascal id=example-4 fragment context=declarations
 function MakeAdder(Base: integer): function(Value: integer): integer;
 function Add(Value: integer): integer;
 begin
@@ -134,7 +134,7 @@ guards or closures that capture the extracted callable. Binding a scalar
 payload does not make that scalar task-bound. An `is` test never binds names;
 use `case` to extract a payload.
 
-```pascal
+```pascal id=example-5-valid fragment context=body
 // Accepted: immutable capture
 const N: integer := 3;
 const Work: function(): integer := function(): integer begin
@@ -145,6 +145,9 @@ scope
   const Handle: task of integer := go Work();
   discard Handle;
 end scope;
+```
+
+```pascal id=example-5 fragment context=mutable-closure error=FP3016
 // Rejected: mutable capture
 var Count: integer := 0;
 const Inc: procedure() := procedure() begin
@@ -154,6 +157,15 @@ end procedure;
 scope
   discard go Inc();
 end scope; // Compile-time error
+```
+
+```pascal id=example-5-nested fragment context=body error=FP3016
+
+var Count: integer := 0;
+const Inc: procedure() := procedure() begin
+  Count := Count + 1;
+end procedure;
+
 // Rejected: nested task-bound capture
 const Outer: procedure() := procedure() begin
   Inc();

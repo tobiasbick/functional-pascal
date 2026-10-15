@@ -1,0 +1,3 @@
+program DocumentationExample;
+const Candidate: option of boolean := Some(true);
+// @example

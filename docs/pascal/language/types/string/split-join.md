@@ -6,7 +6,7 @@ Splits `S` around each occurrence of `Delim`. Returns a new array of segments.
 
 - **`Delim` must not be empty** — empty delimiter is a **runtime error**.
 
-```pascal
+```pascal id=example-1
 program SplitDemo;
 
 uses Std.Console as Console;
@@ -26,7 +26,7 @@ Native string and array operations require no imports.
 
 Concatenates every element of `Parts`, inserting `Delim` between elements.
 
-```pascal
+```pascal id=example-2 fragment context=body-console
 Console.WriteLn(['x', 'y'].Join(':'));
 ```
 

@@ -5,7 +5,7 @@ are read-only unless they are declared with `var`. Every explicitly written argu
 parameter is marked with `var` at the call site, so a call that changes caller
 state is visible where it is written:
 
-```pascal
+```pascal id=example-1 fragment context=header
 procedure Increase(var Value: integer);
 begin
   Value := Value + 1;
@@ -26,7 +26,7 @@ end.
 
 Named calls put the marker after the parameter label:
 
-```pascal
+```pascal id=example-2 fragment context=var-calls
 Increase(Value := var Counter);
 Swap(B := var Right, A := var Left);
 ```
@@ -62,8 +62,11 @@ marker is rejected for a read-only parameter (FP3027).
 Two `var` arguments of one call must not refer to the same variable, including
 different fields or elements of it (FP3029):
 
-```pascal
+```pascal id=example-3 fragment context=var-array error=FP3029
 Swap(var A[I], var A[J]); // FP3029: both arguments refer to `A`
+```
+
+```pascal id=example-3-valid fragment context=var-array
 SwapAt(var A, I, J); // pass the array once instead
 ```
 
@@ -82,7 +85,7 @@ caller's variable immediately.
 Writes that completed before a runtime failure or an early `try` exit remain in
 the caller's variable; nothing is rolled back:
 
-```pascal
+```pascal id=example-4 fragment context=declarations
 function Partial(var Value: integer): result of (integer, string);
 begin
   Value := 1;
@@ -115,7 +118,7 @@ part of the type: a routine with a read-only parameter and one with a `var`
 parameter cannot be substituted for each other. Calls through a function value
 mark `var` arguments the same way:
 
-```pascal
+```pascal id=example-5 fragment context=var-calls
 const Step: procedure(var Value: integer) := Increase;
 Step(var Counter);
 ```

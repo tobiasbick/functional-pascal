@@ -2,14 +2,16 @@
 
 Basic blocking filesystem operations for hosted FPAS programs. This page is the full API for the unit.
 
-```pascal
+```pascal id=example-1
 program Example;
 
 uses Std.Fs as Fs, Std.Tasks as Tasks;
 
 begin
-  const ReadJob: task of result of (string, string) := go Fs.ReadText('input.txt');
-  const Text: string := Tasks.Wait(ReadJob).Unwrap();
+  scope
+    const ReadJob: task of result of (string, string) := go Fs.ReadText('input.txt');
+    const Text: string := Tasks.Wait(ReadJob).Unwrap();
+  end scope;
 end.
 ```
 
@@ -69,7 +71,7 @@ Reads the entire file at `Path` as UTF-8 text.
 
 Files larger than 64 MiB return `Error(message)` instead of loading into memory.
 
-```pascal
+```pascal id=example-2 fragment context=body-console-fs
 const Content: result of (string, string) := Fs.ReadText('notes.txt');
 case Content of
   when Ok(const Text):
@@ -85,7 +87,7 @@ end case;
 
 Writes UTF-8 text to `Path`, creating or replacing the file.
 
-```pascal
+```pascal id=example-3 fragment context=body-console-fs
 if Fs.WriteText('out.txt', 'hello') is Ok(_) then
   Console.WriteLn('written');
 end if;
@@ -102,7 +104,7 @@ existing destination, and removes the temporary file owned by that call.
 Callers therefore never observe a successfully published partially written
 file.
 
-```pascal
+```pascal id=example-4 fragment context=atomic-write
 case Fs.WriteTextAtomic('note.note', EncodedNote) of
   when Ok(const Written):
     Console.WriteLn('saved');
@@ -121,7 +123,7 @@ backup and does not remove stale sibling files that it does not own.
 
 Returns `true` when the host filesystem reports that `Path` exists.
 
-```pascal
+```pascal id=example-5 fragment context=body-console-fs
 if Fs.Exists('config.json') then
   Console.WriteLn('config is present');
 end if;
@@ -133,7 +135,7 @@ end if;
 
 Returns `true` when `Path` exists and is a regular file.
 
-```pascal
+```pascal id=example-6 fragment context=body-console-fs
 Console.WriteLn(Fs.IsFile('data.txt'));
 ```
 
@@ -143,7 +145,7 @@ Console.WriteLn(Fs.IsFile('data.txt'));
 
 Returns `true` when `Path` exists and is a directory.
 
-```pascal
+```pascal id=example-7 fragment context=body-console-fs
 Console.WriteLn(Fs.IsDir('src'));
 ```
 
@@ -153,7 +155,7 @@ Console.WriteLn(Fs.IsDir('src'));
 
 Creates a single directory at `Path`. Parent directories must already exist. An existing entry at `Path`, including an existing directory, returns `Error(message)`.
 
-```pascal
+```pascal id=example-8 fragment context=body-console-fs
 if Fs.CreateDir('build/output') is Ok(_) then
   Console.WriteLn('directory created');
 end if;
@@ -165,7 +167,7 @@ end if;
 
 Creates the directory at `Path` together with every missing parent directory and returns `Ok(true)`. The call is idempotent: when `Path` already is a directory, including one created concurrently by another task or process, it also returns `Ok(true)`. A path component that exists but is not a directory, permission failures, and other OS errors return `Error(message)`. Directories created before a failure are not removed.
 
-```pascal
+```pascal id=example-9 fragment context=body-console-fs
 case Fs.CreateDirAll('build/output/logs') of
   when Ok(const Created):
     Console.WriteLn('directory ready');
@@ -180,7 +182,7 @@ end case;
 
 Expands `Pattern` against the host filesystem and returns every matching **file** path in stable sorted order. Directory entries are never included.
 
-```pascal
+```pascal id=example-10 fragment context=body-console-fs
 case Fs.Glob('src/**/*.fpas') of
   when Ok(const Paths):
     begin

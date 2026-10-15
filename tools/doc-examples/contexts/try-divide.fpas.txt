@@ -1,0 +1,5 @@
+program DocumentationExample;
+uses Std.Conv as Conv;
+// @include docs/pascal/language/error-handling/result.md#example-2
+// @example
+begin end.

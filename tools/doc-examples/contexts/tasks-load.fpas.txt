@@ -1,0 +1,5 @@
+program DocumentationExample;
+uses Std.Tasks as Tasks;
+function Load(Name: string): result of (string, string); begin return Ok(Name); end function;
+// @example
+begin end.

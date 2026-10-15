@@ -1,0 +1,6 @@
+program DocumentationExample;
+uses Std.Tasks as Tasks, Std.Console as Console;
+function Square(Value: integer): integer; begin return Value * Value; end function;
+begin
+// @example
+end.

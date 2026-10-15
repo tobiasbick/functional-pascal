@@ -1,0 +1,20 @@
+program DocumentationExample;
+uses Std.Tui as Tui, Std.Tasks as Tasks;
+type TuiPoint = Tui.TuiPoint;
+type TuiRect = Tui.TuiRect;
+type TuiColor = Tui.TuiColor;
+type TuiStyleRole = Tui.TuiStyleRole;
+type TuiStyle = Tui.TuiStyle;
+type TuiCell = Tui.TuiCell;
+type TuiPalette = Tui.TuiPalette;
+type TuiAction = Tui.TuiAction;
+type TuiKeyGesture = Tui.TuiKeyGesture;
+type TuiMenuNodeId = Tui.TuiMenuNodeId;
+type TuiMenuNode = Tui.TuiMenuNode;
+type TuiMenuNodeBuilders = Tui.TuiMenuNodeBuilders;
+type TuiCmd = Tui.TuiCmd;
+type TuiCmdOutput = Tui.TuiCmdOutput;
+type TuiMsg = Tui.TuiMsg;
+type TuiKeyKind = Tui.TuiKeyKind;
+// @example
+begin end.

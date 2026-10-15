@@ -8,7 +8,7 @@ including when the arm also has a guard. Put dynamic comparisons in a
 
 ## Basic matching
 
-```pascal
+```pascal id=example-1 fragment context=scalar-guard
 case Value of
   when 1:
     Console.WriteLn('one');
@@ -25,7 +25,7 @@ end case;
 
 Separate multiple values with commas. Every label in the list shares the same arm body (and the same pattern bindings when applicable):
 
-```pascal
+```pascal id=example-2 fragment context=day-case
 case Day of
   when 'Monday':
     Console.WriteLn('Start of week');
@@ -45,7 +45,7 @@ and expressions alike. Boolean and subrange selectors cover their finite domain
 explicitly and forbid `else`. Closed enum, `Option`, and `Result` cases use
 explicit variant arms instead:
 
-```pascal
+```pascal id=example-3 fragment context=command-case
 case Command of
   when 'stop':
     Console.WriteLn('Stop');
@@ -63,7 +63,7 @@ Partial overlaps are allowed; a failed guard permits later matching labels.
 An arm holds multiple statements directly. Use an explicit `begin ... end;`
 only when those statements need an additional nested scope:
 
-```pascal
+```pascal id=example-4 fragment context=command-case
 case Command of
   when 'help':
     Console.WriteLn('Available commands:');

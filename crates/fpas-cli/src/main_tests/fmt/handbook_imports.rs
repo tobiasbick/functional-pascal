@@ -14,7 +14,7 @@ fn long_import_example() -> String {
         .collect::<Vec<_>>();
     assert_eq!(blocks.len(), 1, "one complete long-import golden");
     let (language, source) = blocks[0].split_once('\n').expect("fenced language");
-    assert_eq!(language.trim(), "pascal");
+    assert_eq!(language.split_whitespace().next(), Some("pascal"));
     source.replace("\r\n", "\n")
 }
 

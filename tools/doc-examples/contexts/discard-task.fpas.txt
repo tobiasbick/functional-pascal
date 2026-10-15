@@ -1,0 +1,5 @@
+program DocumentationExample;
+function Worker(): integer; begin return 1; end function;
+begin
+// @example
+end.

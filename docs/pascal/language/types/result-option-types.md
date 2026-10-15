@@ -17,7 +17,7 @@ Single-argument `Option` types do not put parentheses around their type argument
 
 Formal syntax: [`grammar.ebnf`](../../../specs/grammar.ebnf) (`type_expr` — `result` / `option`).
 
-```pascal
+```pascal id=example-1 fragment context=body
 const Success: result of (integer, string) := Ok(42);
 const Failure: result of (integer, string) := Error('not found');
 const Present: option of integer := Some(7);
@@ -26,7 +26,7 @@ const Missing: option of integer := None;
 
 Use `case` destructuring to handle both forms:
 
-```pascal
+```pascal id=example-2 fragment context=result-option
 case Success of
   when Ok(const Value):
     Console.WriteLn(Conv.IntToStr(Value));

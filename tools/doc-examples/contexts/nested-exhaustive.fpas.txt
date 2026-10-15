@@ -1,0 +1,7 @@
+program DocumentationExample;
+procedure Greet(User: string); begin end procedure;
+procedure Retry(); begin end procedure;
+begin
+const Response: result of (option of string, string) := Ok(None);
+// @example
+end.

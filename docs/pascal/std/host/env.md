@@ -2,7 +2,7 @@
 
 Process environment access for hosted FPAS programs. This page is the full API for the unit.
 
-```pascal
+```pascal id=example-1
 program Example;
 
 uses Std.Console as Console, Std.Env as Env;
@@ -40,7 +40,7 @@ Environment lookup is process-wide and effectful because it reads host process s
 
 Returns the environment variable named `Name`, or `None` when it is missing.
 
-```pascal
+```pascal id=example-2 fragment context=body-console-env
 const Home: option of string := Env.Get('HOME');
 case Home of
   when Some(const Value):
@@ -56,7 +56,7 @@ end case;
 
 Returns `true` when the process environment contains `Name`.
 
-```pascal
+```pascal id=example-3 fragment context=body-console-env
 if Env.Exists('PATH') then
   Console.WriteLn('PATH is available');
 end if;

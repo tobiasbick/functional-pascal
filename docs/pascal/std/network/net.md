@@ -2,9 +2,9 @@
 
 Hosted blocking TCP/TLS listeners and connections with explicit timeouts and byte arrays.
 
-```pascal
+```pascal id=example-1 fragment context=header
 uses Std.Net as Net;
-
+begin
 case Net.Connect('127.0.0.1', 8080, 5000) of
   when Ok(const Connection):
     begin
@@ -14,6 +14,8 @@ case Net.Connect('127.0.0.1', 8080, 5000) of
   when Error(const Message):
     panic(Message);
 end case;
+
+end.
 ```
 
 ## Quick reference
@@ -84,7 +86,7 @@ listener, `ListenerLocalAddress` returns its actual bound numeric IP address and
 The port remains reserved by the listener; there is no separate probe-and-rebind step.
 An address queried after `CloseListener` returns `Error`.
 
-```pascal
+```pascal id=example-2 fragment context=declarations-net
 function InspectListener(): result of (Net.NetworkAddress, string);
 begin
   const Server: Net.Listener := try Net.Listen('127.0.0.1', 0);

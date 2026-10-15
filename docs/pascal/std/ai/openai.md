@@ -11,9 +11,9 @@ Non-streaming chat completions for configurable OpenAI-compatible HTTP endpoints
 | type | `ChatOptions` | optional temperature and maximum token count |
 | function | `Complete(Client; Messages; Options): Result of (string, string)` | returns the first text choice |
 
-```pascal
-const ClientValue: Client := Client.Create('http://127.0.0.1:8080/v1', 'local-model');
-case Complete(ClientValue, [ChatMessage.User('Hello')], ChatOptions.Default()) of
+```pascal id=example-1 fragment context=openai
+const ClientValue: OpenAi.Client := OpenAi.Client.Create('http://127.0.0.1:8080/v1', 'local-model');
+case OpenAi.Complete(ClientValue, [OpenAi.ChatMessage.User('Hello')], OpenAi.ChatOptions.Default()) of
   when Ok(const Content):
     Console.WriteLn(Content);
   when Error(const Message):

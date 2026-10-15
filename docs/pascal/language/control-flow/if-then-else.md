@@ -7,7 +7,7 @@ including the last before `elsif`, `else`, or `end if;`. The named ending
 closes the whole conditional. Conditions are evaluated in order, and only
 the first matching branch runs. An `else` branch is optional.
 
-```pascal
+```pascal id=example-1 fragment context=integer-condition
 if X > 0 then
   Console.WriteLn('positive');
 elsif X = 0 then
@@ -19,7 +19,7 @@ end if;
 
 Multiple statements need no compound wrapper:
 
-```pascal
+```pascal id=example-2 fragment context=integer-condition
 if X > 10 then
   Console.WriteLn('large');
   X := X - 10;
@@ -35,7 +35,7 @@ other branches, later `elsif` conditions, or after the conditional. A plain
 `elsif` continues the existing conditional. `else if` starts a nested
 conditional and requires two matching endings:
 
-```pascal
+```pascal id=example-3 fragment context=nested-condition
 if Outer then
   null;
 else
@@ -56,7 +56,7 @@ The formatter preserves nested conditionals and explicit scoping blocks.
 
 Where a value is expected, `if` selects one of several values:
 
-```pascal
+```pascal id=example-4 fragment context=condition-expression
 const Noun: string := if Count = 1 then 'item' else 'items' end if;
 
 function Grade(Points: integer): string;
@@ -94,7 +94,7 @@ The formatter keeps a short `if` expression on one line. A longer one, or one
 with comments, puts `elsif`, `else`, and `end if` on their own lines, indented
 one level:
 
-```pascal
+```pascal id=example-5 fragment context=mode-expression
 const Label: string := if Mode = 1 then 'a rather long first branch value'
   elsif Mode = 2 then 'another long branch value here'
   else 'and the final else branch'

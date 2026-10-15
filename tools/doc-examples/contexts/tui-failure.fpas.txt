@@ -1,0 +1,13 @@
+program DocumentationExample;
+uses Std.Tui as Tui, Std.Tasks as Tasks;
+type TuiMsg = Tui.TuiMsg;
+begin
+const Id := 1;
+const Kind := Tasks.TaskFailureKind.Panicked;
+const Message := 'failed';
+const Code := 5010;
+const Line := 1;
+const Column := 1;
+discard
+// @example
+end.

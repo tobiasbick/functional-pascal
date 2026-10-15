@@ -2,7 +2,7 @@
 
 Blocking host process execution for FPAS programs. This page is the full API for the unit.
 
-```pascal
+```pascal id=example-1
 program Example;
 
 uses Std.Console as Console, Std.Proc as Proc;
@@ -87,7 +87,7 @@ Combine a process call in `go` with `Std.Tasks.Wait` for task-based workflows.
 
 Starts `Command` with `Args`, waits for the process to exit, and returns `Ok(exitCode)`.
 
-```pascal
+```pascal id=example-2 fragment context=body-console-proc
 const Status: result of (integer, string) := Proc.Run('fpas', ['--version']);
 case Status of
   when Ok(_):
@@ -112,7 +112,7 @@ Starts `Command` with `Args`, waits for it to finish, and returns
 `Ok(ProcessOutput)` without writing the child's stdout or stderr to the parent
 terminal.
 
-```pascal
+```pascal id=example-3 fragment context=body-console-proc
 case Proc.RunCapture('fpas', ['check', 'main.fpas']) of
   when Ok(const Output):
     begin

@@ -4,14 +4,14 @@ The code fragments use `uses Std.Conv as Conv, Std.Console as Console;`.
 
 `Result of (T, E)` represents either a success (`Ok`) or a failure (`Error`):
 
-```pascal
+```pascal id=example-1 fragment context=body
 const R: result of (integer, string) := Ok(42);
 const E: result of (integer, string) := Error('not found');
 ```
 
 ## Returning errors
 
-```pascal
+```pascal id=example-2 fragment context=declarations
 function Divide(A: integer; B: integer): result of (integer, string);
 begin
   if B = 0 then
@@ -26,7 +26,7 @@ end function;
 
 Use `case of` with destructuring to handle both branches:
 
-```pascal
+```pascal id=example-3 fragment context=result-divide
 const R: result of (integer, string) := Divide(10, 0);
 case R of
   when Ok(const V):

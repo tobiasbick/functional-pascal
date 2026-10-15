@@ -1,0 +1,5 @@
+program DocumentationExample;
+uses Std.Console as Console;
+function Apply(F: function(Value: integer): integer; Value: integer): integer;
+begin return F(Value); end function;
+// @example

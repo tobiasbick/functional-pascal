@@ -6,7 +6,7 @@ underlying type without an explicit conversion.
 
 Formal syntax: [`grammar.ebnf`](../../../specs/grammar.ebnf) (`distinct_type`, `distinct_conversion`).
 
-```pascal
+```pascal id=example-1 fragment context=declarations
 type UserId = distinct integer;
 
 type OrderId = distinct integer;
@@ -23,7 +23,7 @@ name for `integer`. A distinct type such as `UserId` is a new type: `UserId`,
 The underlying type is `integer`, `real`, `string`, or `boolean`, written
 directly or through an alias of one of them:
 
-```pascal
+```pascal id=example-2 fragment context=declarations
 type Raw = integer;
 
 type AccountId = distinct Raw;
@@ -42,7 +42,7 @@ Use a record for a structured domain value.
 Construction and unwrapping are explicit. Call the distinct type to wrap a value
 of its underlying type, and call the underlying type name to unwrap it:
 
-```pascal
+```pascal id=example-3 fragment context=distinct-values
 const Admin: UserId := UserId(1);
 const Raw: integer := integer(Admin);
 ```
@@ -63,14 +63,22 @@ Each conversion takes exactly one positional value:
 Implicit conversion is an error in both directions, including assignments,
 initializers, arguments, and return values:
 
-```pascal
+```pascal id=example-4-declaration fragment context=distinct-ban-declaration
 procedure Ban(Id: UserId);
 begin
   Console.WriteLn('banned ', integer(Id));
 end procedure;
+```
 
+```pascal id=example-4 fragment context=distinct-ban
 Ban(UserId(42)); // valid
+```
+
+```pascal id=example-4-integer fragment context=distinct-ban error=FP3006
 Ban(42); // error: expected `UserId`, found `integer`
+```
+
+```pascal id=example-4-other fragment context=distinct-ban error=FP3006
 Ban(OrderId(42)); // error: expected `UserId`, found `OrderId`
 ```
 
@@ -86,7 +94,7 @@ value. The [debugger](../../tools/debugger.md) evaluates the same conversions.
 Two values of the same distinct type compare with `=`, `<>`, `<`, `>`, `<=`, and
 `>=`, using the ordering of the underlying type:
 
-```pascal
+```pascal id=example-5 fragment context=distinct-values
 const First: UserId := UserId(1);
 const Second: UserId := UserId(2);
 const Earlier: boolean := First < Second; // true
@@ -113,7 +121,7 @@ A distinct value can be a `case` selector when its underlying type is `integer`,
 constants of the same distinct type: a conversion of a constant or a `const` of
 that type.
 
-```pascal
+```pascal id=example-6 fragment context=distinct-values
 const Admin: UserId := UserId(1);
 
 case Id of

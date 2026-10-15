@@ -3,7 +3,7 @@
 A named function or procedure can declare Boolean entry conditions after its
 heading and before nested declarations or `begin`:
 
-```pascal
+```pascal id=example-1 fragment context=declarations
 function Divide(A: integer; B: integer): integer;
 requires B <> 0;
 begin
@@ -28,7 +28,7 @@ declarations or `begin`. Each expression must have type `boolean`; repeated
 clauses run in source order and stop at the first false clause. Checks run in
 every build mode, including release builds.
 
-```pascal
+```pascal id=example-2 fragment context=declarations
 function Increment(Value: integer): integer;
 ensures (Incremented): Incremented = Value + 1;
 begin
@@ -58,7 +58,7 @@ explicit procedure returns, and normal procedure completion. A `try` error exit
 also checks them: the named value is the complete `Error(...)` or `None`, rather
 than an unwrapped success payload. For example:
 
-```pascal
+```pascal id=example-3 fragment context=declarations
 function Read(Input: result of (integer, string)): result of (integer, string);
 ensures (Returned): case Returned of
   when Ok(const Value): Value >= 0;

@@ -5,7 +5,7 @@ mutate their receiver. Queries return answers; transformations return new values
 Mutating counterparts require InPlace. There are no Sorted/Reversed aliases,
 free native aliases or optional receiver markers.
 
-```pascal
+```pascal id=example-1 fragment context=body
 const Original := [3, 1, 2];
 const Sorted := Original.Sort();
 var Working := Original;

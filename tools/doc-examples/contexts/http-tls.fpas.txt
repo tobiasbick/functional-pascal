@@ -1,0 +1,7 @@
+program DocumentationExample;
+uses Std.Http as Http, Std.Net as Net;
+function Handle(RequestValue: Http.ServerRequest): Http.ServerResponse;
+begin return Http.ServerResponse.Create(200, 'OK'); end function;
+begin
+// @example
+end.

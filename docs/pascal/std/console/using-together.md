@@ -8,9 +8,8 @@
 
 ## Example
 
-```pascal
+```pascal id=example-1 fragment context=header
 uses Std.Console as Console;
-
 begin
   Console.WriteText('Name: ');
   const Name: string := Console.ReadLn();

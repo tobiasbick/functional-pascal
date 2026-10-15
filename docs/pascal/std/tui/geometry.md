@@ -1,12 +1,15 @@
 # `Std.Tui` geometry
 
+Examples use local aliases such as `type TuiRect = Tui.TuiRect;` after
+`uses Std.Tui as Tui;`, supplied by their named documentation context.
+
 `TuiPoint`, `TuiSize`, and `TuiRect` are immutable value records. Coordinates
 are zero-based. Sizes and rectangle extents must be non-negative. Rectangles
 are half-open: `right = x + width` and `bottom = y + height`.
 An empty rectangle shares no cells with any rectangle, so `Intersects` returns
 false whenever either operand is empty.
 
-```pascal
+```pascal id=example-1 fragment context=tui-basic
 const Bounds: TuiRect := TuiRect.FromEdges(2, 3, 10, 8);
 const Inside: boolean := Bounds.Contains(TuiPoint.Create(9, 7));
 const Content: TuiRect := Bounds.Inset();

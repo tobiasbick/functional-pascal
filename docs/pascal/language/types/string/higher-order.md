@@ -9,7 +9,7 @@ string catalog operation by type and name, independently of visible free routine
 
 Calls `F` once per scalar and returns the mapped scalars in order. Every callback result must contain **exactly one Unicode scalar**. An empty or multi-scalar result raises a runtime error naming String `Map`; the result is not returned. The scalar length of the result equals that of `S`. Use `Filter` to remove scalars; `Map` does not expand one scalar into several.
 
-```pascal
+```pascal id=example-1 fragment context=declarations
 function ReplaceStar(C: string): string;
 begin
   if C = '*' then
@@ -26,7 +26,7 @@ const ResultText: string := 'a*b'.Map(ReplaceStar); // 'a★b'
 
 Calls `F` once per scalar and retains those for which it returns `true`, preserving their order.
 
-```pascal
+```pascal id=example-2 fragment context=declarations
 function NotSpace(C: string): boolean;
 begin
   return C <> ' ';
@@ -39,7 +39,7 @@ const Compact: string := 'a b c'.Filter(NotSpace); // 'abc'
 
 Starts with `Init` and passes the current accumulator and scalar to `F` in left-to-right order. The callback must return the accumulator type, which is inferred from `Init`.
 
-```pascal
+```pascal id=example-3 fragment context=declarations
 function CountNonSpaces(Acc: integer; C: string): integer;
 begin
   if C = ' ' then

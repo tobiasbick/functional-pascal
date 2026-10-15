@@ -4,7 +4,7 @@
 
 Replaces **all** non-overlapping occurrences of `Old` with `New`.
 
-```pascal
+```pascal id=example-1 fragment context=body-console
 Console.WriteLn('aaa'.Replace('a', 'b'));
 ```
 
@@ -18,7 +18,7 @@ The receiver is preserved; `RepeatStrInPlace` replaces writable storage.
 User APIs needing exactly one scalar declare an explicit precondition such as
 `requires Text.Length() = 1;` before using repetition.
 
-```pascal
+```pascal id=example-2 fragment context=body-console
 Console.WriteLn('ab'.RepeatStr(3)); // ababab
 Console.WriteLn('─'.RepeatStr(40)); // ────────────────────────────────────────
 ```
@@ -39,7 +39,7 @@ used; additional characters are ignored.
 
 `Width` must be at most **1_000_000**. Larger widths raise a runtime error.
 
-```pascal
+```pascal id=example-3 fragment context=body-console
 Console.WriteLn('42'.PadLeft(5, '0')); // 00042
 ```
 
@@ -52,7 +52,7 @@ validation and first-scalar rules apply, including when no padding is needed.
 
 `Width` must be at most **1_000_000**. Larger widths raise a runtime error.
 
-```pascal
+```pascal id=example-4 fragment context=body-console
 Console.WriteLn('Hi'.PadRight(6, '.')); // Hi....
 ```
 
@@ -66,7 +66,7 @@ right. The same nonempty `PadChar` validation applies even when no padding is ne
 
 `Width` must be at most **1_000_000**. Larger widths raise a runtime error.
 
-```pascal
+```pascal id=example-5 fragment context=body-console
 Console.WriteLn('Hi'.PadCenter(6, '-')); // --Hi--
 ```
 
@@ -80,7 +80,7 @@ Indices count Unicode scalars. For a nonempty string, valid indices are
 `0..S.Length()-1`. Empty strings have no valid character index. Invalid indices
 raise a runtime error. Check `S.IsEmpty()` before reading an empty string.
 
-```pascal
+```pascal id=example-6 fragment context=body-console
 const C: string := 'Hello'[0];
 Console.WriteLn(C); // H
 ```
@@ -93,7 +93,7 @@ Returns a **new** string that is identical to `S` except the character at `Index
 
 `Index` follows the same scalar bounds and empty-string checks as scalar indexing.
 
-```pascal
+```pascal id=example-7 fragment context=body-console
 Console.WriteLn('Hello'.SetCharAt(0, 'J')); // Jello
 ```
 
@@ -103,7 +103,7 @@ Console.WriteLn('Hello'.SetCharAt(0, 'J')); // Jello
 
 Returns the Unicode codepoint (integer value) of `C`. `C` must contain exactly one Unicode scalar value; empty or multi-character strings are runtime errors.
 
-```pascal
+```pascal id=example-8 fragment context=body-console
 Console.WriteLn('A'.Ord()); // 65
 ```
 
@@ -113,7 +113,7 @@ Console.WriteLn('A'.Ord()); // 65
 
 Returns the character with Unicode codepoint `N`. **Runtime error** if `N` is not a valid Unicode scalar value.
 
-```pascal
+```pascal id=example-9 fragment context=body-console
 Console.WriteLn(string.Chr(65)); // A
 ```
 
@@ -127,7 +127,7 @@ Indices count Unicode scalars, and `S.Length()` is a valid insertion position.
 For an empty string, index `0` is valid. Invalid indices report FP5021 with a
 hint naming the inclusive `0..S.Length()` range.
 
-```pascal
+```pascal id=example-10 fragment context=body-console
 Console.WriteLn('Hllo'.Insert(1, 'e')); // Hello
 ```
 
@@ -137,7 +137,7 @@ Console.WriteLn('Hllo'.Insert(1, 'e')); // Hello
 
 Returns a new string with `Len` characters removed starting at `Start`. **Runtime error** if the range is out of bounds.
 
-```pascal
+```pascal id=example-11 fragment context=body-console
 Console.WriteLn('Hello'.Delete(1, 3)); // Ho
 ```
 
@@ -147,7 +147,7 @@ Console.WriteLn('Hello'.Delete(1, 3)); // Ho
 
 Returns a new string with characters in reverse order.
 
-```pascal
+```pascal id=example-12 fragment context=body-console
 Console.WriteLn('abc'.Reverse()); // cba
 ```
 

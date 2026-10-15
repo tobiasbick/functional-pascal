@@ -18,7 +18,7 @@ fn type_declarations() -> String {
     let blocks = section.split("```").skip(1).step_by(2).collect::<Vec<_>>();
     assert_eq!(blocks.len(), 1, "one other-types example");
     let (language, source) = blocks[0].split_once('\n').expect("fenced language");
-    assert_eq!(language.trim(), "pascal");
+    assert_eq!(language.split_whitespace().next(), Some("pascal"));
     source.replace("\r\n", "\n")
 }
 

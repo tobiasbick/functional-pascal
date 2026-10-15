@@ -1,5 +1,9 @@
 # Expression postfix chaining
 
+The examples assume the project-local helpers supplied by their named
+[documentation contexts](../../../../tools/doc-examples/contexts), including
+`Factory`, `Num`, `BuildPalette` and `TuiContainer`.
+
 A primary expression can be followed by one or more postfix suffixes that operate
 on its result. Suffixes bind as tightly as designator field and index access —
 tighter than unary, multiplicative, additive, comparison, and record-update
@@ -21,7 +25,7 @@ the previous step. The base expression and every argument are evaluated exactly
 once in source order. When a generic call infers a concrete return type from its
 arguments, later suffixes use that concrete type.
 
-```pascal
+```pascal id=example-1 fragment context=postfix-values
 const Green: integer := BuildPalette().ForRole(TuiStyleRole.Normal).Foreground.Green;
 const First: string := LoadItems()[0];
 const Scaled: integer := Num.Create(3).Scale(2).Next().Value;
@@ -31,7 +35,7 @@ Qualified root calls such as `Math.Sqrt(4.0)` after `uses Std.Math as Math;`
 remain ordinary calls. Only suffixes that follow a completed primary become
 postfix operations:
 
-```pascal
+```text
 Factory.Create().Value
 Factory.Create().Transform(2).Value
 Factory.Create()[0]
@@ -50,7 +54,7 @@ only through a type designator (`Point.Create(...)`).
 Procedures may appear only as the final call of a postfix chain used as
 a statement. The procedure runs without producing a value:
 
-```pascal
+```pascal id=example-3 fragment context=discard-compute
 TuiContainer.AsView(Container).Destroy();
 Factory.Create().Configure().Start();
 ```
@@ -61,7 +65,7 @@ final function result must be consumed, just like an ordinary function result.
 Use [explicit discard](discard.md) when deliberately ignoring a permitted
 result:
 
-```pascal
+```pascal id=example-4 fragment context=discard-compute
 discard Factory.Create().Compute();
 const Value: integer := Factory.Create().Compute();
 ```

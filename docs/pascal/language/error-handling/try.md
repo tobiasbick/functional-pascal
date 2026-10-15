@@ -6,7 +6,7 @@ The code fragments use `uses Std.Conv as Conv;`.
 
 Formal syntax: [`grammar.ebnf`](../../../specs/grammar.ebnf) (`try` expression).
 
-```pascal
+```pascal id=example-1 fragment context=try-divide
 function Process(A: integer; B: integer): result of (string, string);
 begin
   const Quotient: integer := try Divide(A, B);
@@ -17,7 +17,7 @@ end function;
 `try` also works with `Option`. This function reads the first occurrence of one,
 or propagates `None` when one is absent:
 
-```pascal
+```pascal id=example-2 fragment context=declarations
 function FindOne(Items: array of integer): option of integer;
 begin
   const Idx: integer := try Items.IndexOf(1);

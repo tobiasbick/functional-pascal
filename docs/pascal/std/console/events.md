@@ -14,7 +14,7 @@ Consecutive live `Resize` events are coalesced to the latest dimensions. When
 another event follows the burst, it remains next in FIFO order. Test-injected
 `ConsoleEvent` values retain their explicit queue order.
 
-```pascal
+```pascal id=example-1 fragment context=body-console
 const E: Console.ConsoleEvent := Console.ReadEvent();
 if E.kind = Console.EventKind.Resize then
   Console.WriteLn(E.width, 'x', E.height);
@@ -32,9 +32,9 @@ runtime continues waiting with the remaining deadline instead of returning
 `None`. An immediately ready key press is still returned when the remaining
 deadline reaches zero.
 
-```pascal
+```pascal id=example-2 fragment context=header
 uses Std.Console as Console;
-
+begin
 Console.EnableRawMode();
 const MaybeEvent: option of Console.ConsoleEvent := Console.ReadEventTimeout(100);
 case MaybeEvent of
@@ -47,6 +47,8 @@ case MaybeEvent of
       Console.WriteLn('timeout');
     end;
 end case;
+
+end.
 ```
 
 ### `function PollEvent(): Option of ConsoleEvent`
@@ -59,9 +61,9 @@ The poll drains immediately ready key-release notifications before deciding
 that no FPAS event is available, so a ready press following a release is
 returned by the same call.
 
-```pascal
+```pascal id=example-3 fragment context=header
 uses Std.Console as Console;
-
+begin
 Console.EnableRawMode();
 const MaybeE: option of Console.ConsoleEvent := Console.PollEvent();
 case MaybeE of
@@ -74,6 +76,8 @@ case MaybeE of
       Console.WriteLn('nothing pending');
     end;
 end case;
+
+end.
 ```
 
 ### `procedure DisableRawMode()`

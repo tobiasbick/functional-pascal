@@ -4,7 +4,7 @@
 
 Returns a new array where each element is the result of calling `F` on the corresponding element of `A`.
 
-```pascal
+```pascal id=example-1 fragment context=declarations
 function Double(X: integer): integer;
 begin
   return X * 2;
@@ -20,7 +20,7 @@ const Doubled: array of integer := Nums.Map(Double);
 
 Returns a new array containing only elements for which `F` returns `true`.
 
-```pascal
+```pascal id=example-2 fragment context=declarations
 function IsEven(X: integer): boolean;
 begin
   return X mod 2 = 0;
@@ -36,7 +36,7 @@ const Evens: array of integer := Nums.Filter(IsEven);
 
 Folds elements left-to-right, starting from `Init`.
 
-```pascal
+```pascal id=example-3 fragment context=declarations
 function Sum(Acc: integer; V: integer): integer;
 begin
   return Acc + V;
@@ -52,7 +52,7 @@ const Total: integer := Nums.Reduce(0, Sum);
 
 Returns the **first** element for which `F` returns `true`, wrapped in `Some`. Returns `None` if no element matches. The `Option` result needs no import.
 
-```pascal
+```pascal id=example-4 fragment context=declarations
 function IsAboveThree(X: integer): boolean;
 begin
   return X > 3;
@@ -71,11 +71,12 @@ Returns `Some(Index)` for the first zero-based index whose element makes F retur
 `true`, or `None` if none matches. Visits elements in order and stops at the first
 match. Empty arrays return `None` without invoking F; callback failures propagate.
 
-```pascal
+```pascal id=example-5 fragment context=header-console
 function IsAboveFifteen(X: integer): boolean;
 begin
   return X > 15;
 end function;
+begin
 
 const Idx: option of integer := [10, 20, 30].FindIndex(IsAboveFifteen);
 case Idx of
@@ -84,6 +85,8 @@ case Idx of
   when None:
     Console.WriteLn('absent');
 end case;
+
+end.
 ```
 
 ---
@@ -92,14 +95,17 @@ end case;
 
 Returns `true` if **at least one** element satisfies `F`.
 
-```pascal
+```pascal id=example-6 fragment context=header-console
 function IsNegative(X: integer): boolean;
 begin
   return X < 0;
 end function;
+begin
 
 const HasNeg: boolean := [1, -2, 3].Any(IsNegative);
 Console.WriteLn(HasNeg); // true
+
+end.
 ```
 
 ---
@@ -108,14 +114,17 @@ Console.WriteLn(HasNeg); // true
 
 Returns `true` if **every** element satisfies `F`.
 
-```pascal
+```pascal id=example-7 fragment context=header-console
 function IsPositive(X: integer): boolean;
 begin
   return X > 0;
 end function;
+begin
 
 const AllPos: boolean := [1, 2, 3].All(IsPositive);
 Console.WriteLn(AllPos); // true
+
+end.
 ```
 
 ## See also

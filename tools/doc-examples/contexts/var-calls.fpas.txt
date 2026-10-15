@@ -1,0 +1,9 @@
+program DocumentationExample;
+procedure Increase(var Value: integer); begin Value := Value + 1; end procedure;
+procedure Swap(var A: integer; var B: integer); begin const Temp := A; A := B; B := Temp; end procedure;
+begin
+var Counter := 0;
+var Left := 1;
+var Right := 2;
+// @example
+end.

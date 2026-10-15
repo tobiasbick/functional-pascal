@@ -9,8 +9,9 @@
 
 ## Status
 
-[A1](#a1-one-compact-language-reference) is implemented. All other items remain ideas,
-without an implementation plan. Human-facing tools stay: the DAP debugger
+[A1](#a1-one-compact-language-reference) is implemented.
+[S1](#s1-compile-every-documentation-example) is implemented. The remaining wishes are ideas without an
+implementation plan. Human-facing tools stay: the DAP debugger
 ([`debugger.md`](../pascal/tools/debugger.md)) and the language server
 ([`editor-integration.md`](../pascal/tools/editor-integration.md)). The JSONL debugger protocol
 would be replaced; see [Consequence: JSONL would go away](#consequence-jsonl-would-go-away).
@@ -21,11 +22,10 @@ navigation.
 ## Where to start
 
 Most value for the least work among the remaining wishes. Effort is a rough guess,
-not an estimate. A1 is already implemented; see its status below.
+not an estimate. A1 and S1 are already implemented; see their status below.
 
 | Wish | Why first | Effort |
 | --- | --- | --- |
-| [S1](#s1-compile-every-documentation-example) Compile every documentation example | Wrong examples teach the agent wrong FPAS | medium |
 | [D1](#d1-automatic-failure-dump) Automatic failure dump | Solves most bugs without a debugger | medium |
 | [S2](#s2-diagnostics-with-source-excerpt-and-caret) Diagnostics with source excerpt and caret | Both notice it every day | medium |
 | [A2](#a2-diagnostics-for-pascal-and-ada-habits) Diagnostics for Pascal and Ada habits | Biggest lever in the long run | large, ongoing |
@@ -75,7 +75,7 @@ imported by the companion programs. Run it with
 
 This closes A1's request for one compact language reference instead of
 loading the full handbook. Checking examples throughout the rest of the handbook
-remains the separate [S1](#s1-compile-every-documentation-example) wish.
+is implemented by the separate [S1](#s1-compile-every-documentation-example) checker.
 
 Purpose and upkeep live in the permanent
 [maintenance guide](../pascal/agent-reference-maintenance.md) beside the reference.
@@ -118,12 +118,17 @@ examples and errors it can act on without opening files. Some changes serve both
 
 #### S1. Compile every documentation example
 
-The docs contain about 450 fenced `pascal` blocks. Tests compile selected ones, for example the
-project examples in [`projects.md`](../pascal/program-structure/projects.md), but not all of them.
-For the human, the docs are guaranteed to be correct. For the agent, the docs replace training data:
-every wrong example is learned and repeated. Fragments that cannot compile on their own, such as a
-lone expression, need a marker in the fence info string; GitHub uses only the first word for
-highlighting, so `pascal` keeps its colors.
+**Status: implemented.** The [FPAS checker](../../tools/doc-examples) extracts the
+actual handbook and root README examples, writes isolated projects under
+`.temp-data/`, and checks them with the current compiler. The normal FPAS and
+Cargo test suites run it automatically. Fragment contexts, explicit execution,
+expected diagnostic codes, companion files and reports are documented in
+[Checking documentation examples](../pascal/tools/documentation-examples.md).
+
+The [inventory](documentation-example-inventory.md) and
+[block list](documentation-example-blocks.md) retain the historical baseline.
+The checker validates compilation and explicitly selected runtime behavior;
+prose, signature outlines and schematic notation still need review.
 
 #### S2. Diagnostics with source excerpt and caret
 

@@ -45,7 +45,7 @@ Visual checklist:
 
 ### Program — minimal
 
-```pascal
+```pascal id=example-1
 program Hello;
 
 uses Std.Console as Console;
@@ -57,7 +57,7 @@ end.
 
 ### Program — with `uses`
 
-```pascal
+```pascal id=example-2
 program Hello;
 
 uses Std.Console as Console;
@@ -71,7 +71,7 @@ end.
 
 Same file **after** fmt. Explicit scoping blocks from the source are retained:
 
-```pascal
+```pascal id=example-3
 program ControlFlowDemo;
 
 uses Std.Console as Console, Std.Conv as Conv;
@@ -134,7 +134,7 @@ end.
 
 Golden output for a file like [`examples/pascal/record-methods/point.fpas`](../../../examples/pascal/record-methods/point.fpas) (comments, extra blank lines, and missing header blank lines from the repo copy are **not** in the output).
 
-```pascal
+```pascal id=example-4
 program PointExample;
 
 uses Std.Console as Console, Std.Conv as Conv;
@@ -178,7 +178,7 @@ end.
 Branch statements are indented directly under their clause (see
 [`program-structure/units.md`](../program-structure/units.md)). Golden unit file:
 
-```pascal
+```pascal id=example-5
 unit MyApp.Utils;
 
 uses Std.Math as Math;
@@ -204,7 +204,7 @@ end unit;
 <details>
 <summary>Before fmt (valid source — <strong>not</strong> golden output)</summary>
 
-```pascal
+```pascal id=example-6
 unit MyApp.Utils;
 
 uses Std.Math as Math;
@@ -270,8 +270,8 @@ operator precedence, argument order and evaluation order are preserved.
 
 For example, these authored concatenation groups remain intact:
 
-```pascal
-  return Builders.MakeRule(
+```pascal id=example-7 fragment context=formatter-return
+  return Builders.TuiElementBuilders.MakeRule(
     ' NOTES  ·  ' +
     Conv.IntToStr(Filtered(State.Notes, '').Length()) +
     ' active' + Issues + Dirty +
@@ -445,7 +445,7 @@ Preconditions precede postconditions. Comments before and after clauses are pres
 
 ### One field
 
-```pascal
+```pascal id=example-8 fragment context=declarations
 type IdBox = record
   Value: integer;
 end record;
@@ -453,7 +453,7 @@ end record;
 
 ### Five fields
 
-```pascal
+```pascal id=example-9 fragment context=declarations
 type Person = record
   Id: integer;
   Name: string;
@@ -465,7 +465,7 @@ end record;
 
 ### Fields with defaults
 
-```pascal
+```pascal id=example-10 fragment context=declarations
 type Config = record
   Host: string := 'localhost';
   Port: integer := 8080;
@@ -479,15 +479,15 @@ Record construction follows named-call formatting. Short constructions stay comp
 long constructions expand automatically. Authored argument line groups are retained
 with structural indentation. Empty construction has no spaces inside parentheses:
 
-```pascal
+```pascal id=example-11 fragment context=expression-empty
 Empty()
 ```
 
-```pascal
+```pascal id=example-12 fragment context=expression-point
 Point(X := 3, Y := 4)
 ```
 
-```pascal
+```pascal id=example-13 fragment context=expression-config
 Config(Host := 'api', Port := 443, Retries := 5)
 ```
 
@@ -496,7 +496,7 @@ Config(Host := 'api', Port := 443, Retries := 5)
 This source keeps its two authored import groups. Indent the list by two spaces;
 a source written on one line remains on one line regardless of its width:
 
-```pascal
+```pascal id=example-14 fragment context=long-uses
 program LongUses;
 
 uses
@@ -512,7 +512,7 @@ end.
 
 The long construction expands automatically, even from single-line input.
 
-```pascal
+```pascal id=example-15 fragment context=declarations
 type NetworkConfig = record
   Host: string;
   Port: integer;
@@ -532,7 +532,7 @@ const Remote: NetworkConfig := NetworkConfig(
 
 ## More examples — other types (snippet)
 
-```pascal
+```pascal id=example-16 fragment context=declarations
 type Color = enum
   Red;
   Green;

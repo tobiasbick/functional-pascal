@@ -4,7 +4,7 @@ Strict typed access to the fields of parsed JSON objects. Every accessor returns
 `Error(Message)` for a missing field or a value of the wrong JSON kind instead of
 requiring a nested `case` per field.
 
-```pascal
+```pascal id=example-1
 program Example;
 
 uses Std.Console as Console, Std.Json as Json, Std.Json.Fields as JsonFields;

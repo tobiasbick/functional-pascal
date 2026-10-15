@@ -2,7 +2,7 @@
 
 String helpers: measure, search, transform, split, and join. This page lists every operation in the native string catalog.
 
-```pascal
+```pascal id=example-1
 program Example;
 
 uses Std.Console as Console;

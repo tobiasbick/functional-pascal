@@ -1,12 +1,15 @@
 # `Std.Tui` application host
 
-The code fragments use `uses Std.Tasks as Tasks;`.
+The code fragments use `uses Std.Tasks as Tasks, Std.Tui as Tui;` and local
+aliases such as `type TuiMsg = Tui.TuiMsg;`. Their named
+[contexts](../../../../tools/doc-examples/contexts) supply these aliases and
+application fixture types.
 
 ## Update and View
 
 The headless and terminal hosts accept this callable shape:
 
-```pascal
+```text
 function Update(
   State: AppModel;
   Msg: TuiMsg;
@@ -18,7 +21,7 @@ function View(State: AppModel): TuiElement;
 
 Set a command explicitly when needed:
 
-```pascal
+```pascal id=example-2 fragment context=tui-quit
 when TuiMsg.QuitRequested:
   begin
     Cmd.Set(TuiCmd.Quit);
@@ -39,12 +42,16 @@ paint. `TuiCmd` remains a closed scalar command enum; the host-owned
 A background-enabled application uses a caller-created bounded `channel of TMessage` and a second
 update callback:
 
-```pascal
+```pascal id=example-3 fragment context=tui-background
 function UpdateApplication(
   State: AppModel;
   Message: AppMessage;
   Cmd: TuiCmdOutput
 ): AppModel;
+begin
+  return State;
+end function;
+begin
 
 const Inbox: channel of AppMessage := Tasks.CreateChannel(32);
 const Final: AppModel := TuiApplication.RunWithBackground(
@@ -61,7 +68,7 @@ open queue is full, while `Error` means it is closed. No application message is 
 The initial frame is rendered before the background-enabled host delivers `TuiMsg.Started`.
 `Update` can use that message to queue initial work:
 
-```pascal
+```pascal id=example-4 fragment context=tui-started
 when TuiMsg.Started:
   begin
     Cmd.StartBackground(1, LoadData);
@@ -70,7 +77,7 @@ when TuiMsg.Started:
 
 The fixed work signature is:
 
-```pascal
+```text
 function Work(Token: CancellationToken): result of (boolean, string)
 ```
 
@@ -89,7 +96,7 @@ Returned Result values, including Error, are ordinary data and are reaped
 silently. Send required application outcomes through the typed inbox explicitly.
 A panic or runtime error is delivered on the main application thread as:
 
-```pascal
+```pascal id=example-6 fragment context=tui-failure
 TuiMsg.BackgroundFailed(Id, Kind, Message, Code, Line, Column);
 ```
 
@@ -157,7 +164,7 @@ animating by not requesting another. A later request replaces a pending one, so
 at most one tick is pending per application. Input, application messages, and
 paint continue while a tick is pending. A negative delay is a runtime error.
 
-```pascal
+```pascal id=example-7 fragment context=tui-tick
 when TuiMsg.Tick(const Elapsed):
   begin
     Next.Animation := Advance(State.Animation, Elapsed);

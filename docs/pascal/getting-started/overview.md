@@ -13,7 +13,7 @@ Functional Pascal is a modern, function-first programming language built on Pasc
 
 ## Example
 
-```pascal
+```pascal id=example-1
 program Greeting;
 
 uses Std.Console as Console;

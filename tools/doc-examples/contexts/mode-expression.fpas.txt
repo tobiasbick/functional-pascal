@@ -1,0 +1,5 @@
+program DocumentationExample;
+begin
+const Mode := 1;
+// @example
+end.

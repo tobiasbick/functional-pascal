@@ -2,7 +2,7 @@
 
 ## A first taste
 
-```pascal
+```pascal id=example-1
 program Greet;
 
 uses Std.Console as Console;
@@ -25,7 +25,7 @@ Every Functional Pascal program starts with a `program` declaration, optional `u
 The program heading names the program. Declarations inside it can share that name,
 as `program Greet` and `function Greet` do in the first example.
 
-```pascal
+```pascal id=example-2
 program MyApp;
 
 uses Std.Console as Console;

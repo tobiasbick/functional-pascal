@@ -1,0 +1,5 @@
+program DocumentationExample;
+// @include docs/pascal/language/types/record-update.md#example-2
+begin
+// @example
+end.

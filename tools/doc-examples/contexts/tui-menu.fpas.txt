@@ -1,0 +1,17 @@
+program DocumentationExample;
+uses Std.Tui as Tui, Std.Tasks as Tasks;
+type TuiControlId = Tui.TuiControlId;
+type TuiAction = Tui.TuiAction;
+type TuiMenuNode = Tui.TuiMenuNode;
+type TuiMenuState = Tui.TuiMenuState;
+type TuiElement = Tui.TuiElement;
+type TuiElementBuilders = Tui.TuiElementBuilders;
+type MenuModel = record Menu: TuiMenuState; end record;
+begin
+const MenuId := TuiControlId.Create(1);
+const Nodes: array of TuiMenuNode := [];
+const Model := MenuModel(Menu := TuiMenuState.Closed());
+const MenuChangedAction := TuiAction.Create(1);
+discard
+// @example
+end.

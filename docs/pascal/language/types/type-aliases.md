@@ -8,7 +8,7 @@ remain valid. See [type declaration order](declaration-order.md).
 
 Formal syntax: [`grammar.ebnf`](../../../specs/grammar.ebnf) (`type_def`, `type_expr` — alias form).
 
-```pascal
+```pascal id=example-1 fragment context=declarations
 type UserId = integer;
 
 type UserName = string;
@@ -18,7 +18,7 @@ type Callback = function(Value: integer): boolean;
 
 Aliases to enum types retain qualified variant access. The qualifier may be the alias rather than the original enum type:
 
-```pascal
+```pascal id=example-2 fragment context=declarations
 type Color = enum
   Red;
   Green;

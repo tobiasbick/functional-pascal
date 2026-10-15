@@ -1,0 +1,10 @@
+program DocumentationExample;
+uses Std.Tui as Tui, Std.Tasks as Tasks;
+type TuiPalette = Tui.TuiPalette;
+type TuiCmd = Tui.TuiCmd;
+type TuiCmdOutput = Tui.TuiCmdOutput;
+procedure Example(Cmd: TuiCmdOutput; MyPalette: TuiPalette);
+begin
+// @example
+end procedure;
+begin end.

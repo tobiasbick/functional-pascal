@@ -2,7 +2,7 @@
 
 Pure path manipulation without filesystem access. This page is the full API for the unit.
 
-```pascal
+```pascal id=example-1
 program Example;
 
 uses Std.Console as Console, Std.Path as Path;
@@ -51,12 +51,12 @@ Joins path segments in order using the platform separator.
 
 An absolute segment replaces earlier segments (host `PathBuf::push` semantics):
 
-```pascal
+```pascal id=example-2 fragment context=body-console-path
 // Unix example: result is '/etc/hosts', not 'home/etc/hosts'
 Console.WriteLn(Path.Join(['home', '/etc/hosts']));
 ```
 
-```pascal
+```pascal id=example-3 fragment context=body-console-path
 const Parts: array of string := ['src', 'main', 'app.txt'];
 Console.WriteLn(Path.BaseName(Path.Join(Parts)));
 ```
@@ -67,7 +67,7 @@ Console.WriteLn(Path.BaseName(Path.Join(Parts)));
 
 Returns the final component of `Path`.
 
-```pascal
+```pascal id=example-4 fragment context=body-console-path
 Console.WriteLn(Path.BaseName('dir/nested/file.txt')); // file.txt
 ```
 
@@ -79,7 +79,7 @@ Trailing separators follow host `std::path::Path` rules and may differ between W
 
 Returns the parent path without the final component.
 
-```pascal
+```pascal id=example-5 fragment context=body-console-path
 Console.WriteLn(Path.DirName('dir/nested/file.txt')); // dir/nested
 Console.WriteLn(Path.DirName('file.txt')); // ''
 ```
@@ -90,7 +90,7 @@ Console.WriteLn(Path.DirName('file.txt')); // ''
 
 Returns the final extension without a leading dot.
 
-```pascal
+```pascal id=example-6 fragment context=body-console-path
 Console.WriteLn(Path.Extension('archive.tar.gz')); // gz
 Console.WriteLn(Path.Extension('README')); // ''
 ```
@@ -105,14 +105,14 @@ Normalization preserves the path's root and prefix. On Windows, an absolute driv
 keeps the separator after its drive letter; a drive-relative path stays drive-relative.
 Parent components cannot climb above a rooted path's root, including a Windows UNC share.
 
-```pascal
+```pascal id=example-7 fragment context=body-console-path
 // Windows examples:
 Console.WriteLn(Path.Normalize('D:/projects/demo')); // D:\projects\demo
 Console.WriteLn(Path.Normalize('D:\projects\..\demo')); // D:\demo
 Console.WriteLn(Path.Normalize('D:projects\..\demo')); // D:demo (drive-relative)
 ```
 
-```pascal
+```pascal id=example-8 fragment context=body-console-path
 Console.WriteLn(Path.Normalize('a/b/../c'));
 Console.WriteLn(Path.BaseName(Path.Normalize('dir/nested/../file.txt')));
 ```

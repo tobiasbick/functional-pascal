@@ -1,0 +1,6 @@
+program DocumentationExample;
+uses Std.Conv as Conv;
+function ReadValue(): integer; begin return 42; end function;
+begin
+// @example
+end.

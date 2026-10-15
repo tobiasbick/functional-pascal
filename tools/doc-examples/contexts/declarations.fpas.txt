@@ -1,0 +1,5 @@
+program DocumentationExample;
+
+// @example
+
+begin end.

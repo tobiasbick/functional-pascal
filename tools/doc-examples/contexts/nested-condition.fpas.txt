@@ -1,0 +1,6 @@
+program DocumentationExample;
+begin
+const Outer := false;
+const Inner := true;
+// @example
+end.

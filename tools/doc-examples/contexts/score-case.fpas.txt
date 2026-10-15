@@ -1,0 +1,6 @@
+program DocumentationExample;
+begin
+const Score := 85;
+var Grade := '';
+// @example
+end.

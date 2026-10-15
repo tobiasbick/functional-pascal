@@ -1,0 +1,6 @@
+program DocumentationExample;
+procedure Process(Item: integer); begin end procedure;
+begin
+const Items := [1, 2, 3];
+// @example
+end.

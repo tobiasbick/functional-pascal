@@ -1,9 +1,12 @@
 # `Std.Tui` controlled text area
 
+Examples use local aliases for `Tui.Name` after `uses Std.Tui as Tui;`.
+Their named documentation contexts supply these aliases and fixture values.
+
 `TextArea` is a multiline controlled element. The application model owns its
 complete state and supplies it again on every `View`:
 
-```pascal
+```pascal id=example-1 fragment context=tui-text-area
 TuiElementBuilders.MakeTextArea(
   Id,
   Text,
@@ -22,14 +25,14 @@ zero-based `String operations` character index in the inclusive range
 
 Keyboard and pointer routing propose the entire next value:
 
-```pascal
+```pascal id=example-2 fragment context=tui-text-message
 TuiMsg.TextAreaChanged(Source, Action, Text, Caret, Offset);
 ```
 
 Use `TuiMsgTextAreaChanged` to construct the same message explicitly. An
 application normally accepts a routed proposal in `Update`:
 
-```pascal
+```pascal id=example-3 fragment context=tui-basic
 type EditorModel = record
   Text: string;
   Caret: integer;

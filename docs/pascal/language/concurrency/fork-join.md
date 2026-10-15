@@ -2,7 +2,7 @@
 
 The idiomatic way to run parallel work is to spawn one task per unit of work and then wait for all results:
 
-```pascal
+```pascal id=example-1
 program ParallelSum;
 
 uses Std.Console as Console, Std.Tasks as Tasks;

@@ -4,14 +4,14 @@ Dynamic arrays that grow as needed (0-based indexing).
 
 Formal syntax: [`grammar.ebnf`](../../../specs/grammar.ebnf) (`type_expr` — `array of`, array literals, indexing).
 
-```pascal
+```pascal id=example-1 fragment context=body
 const Numbers: array of integer := [1, 2, 3];
 const Empty: array of string := [];
 ```
 
 Operations:
 
-```pascal
+```pascal id=example-2
 program ArrayOperations;
 
 const Numbers: array of integer := [1, 2, 3];

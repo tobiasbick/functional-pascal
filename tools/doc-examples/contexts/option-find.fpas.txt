@@ -1,0 +1,6 @@
+program DocumentationExample;
+uses Std.Console as Console, Std.Conv as Conv;
+// @include docs/pascal/language/error-handling/option.md#example-2
+begin
+// @example
+end.

@@ -1,0 +1,7 @@
+program DocumentationExample;
+uses Std.Time as Time;
+
+begin
+// @example
+
+end.

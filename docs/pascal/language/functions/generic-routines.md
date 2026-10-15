@@ -4,7 +4,7 @@ Functions and procedures can declare type parameters in angle brackets after the
 
 Formal syntax: [`grammar.ebnf`](../../../specs/grammar.ebnf) (`type_params` on `function_heading` and `procedure_heading`).
 
-```pascal
+```pascal id=example-1 fragment context=declarations-console
 function Identity<T>(Value: T): T;
 begin
   return Value;
@@ -18,7 +18,7 @@ end procedure;
 
 Type arguments are inferred from supplied values first:
 
-```pascal
+```pascal id=example-2 fragment context=generic-calls
 begin
   Console.WriteLn(Identity(42)); // T = integer
   Console.WriteLn(Identity('hello')); // T = string
@@ -32,7 +32,7 @@ return, routine argument, constructor field, or typed callable signature.
 Direct calls, record instance/static methods, and callable values use the same
 rule, including imported routines. Named argument order does not change inference.
 
-```pascal
+```pascal id=example-3
 program ContextualFactory;
 
 function Empty<T>(): option of T;
@@ -66,7 +66,7 @@ routine declares another parameter with the same source name.
 
 Multiple type parameters are separated by commas:
 
-```pascal
+```pascal id=example-4 fragment context=declarations
 function First<A, B>(X: A; Y: B): A;
 begin
   return X;

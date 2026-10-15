@@ -17,7 +17,7 @@ Formal syntax: [`grammar.ebnf`](../../../specs/grammar.ebnf) (`record_type`, `ty
 A record declaration ends with `end record;`. Its methods use `end function;` or
 `end procedure;` according to their declaration kind.
 
-```pascal
+```pascal id=example-1 fragment context=declarations
 type Point = record
   X: real;
   Y: real;
@@ -33,7 +33,7 @@ for constraints, substitution, inference, defaults, and recursive records.
 
 Call the record type with named fields:
 
-```pascal
+```pascal id=example-2 fragment context=point-value
 const P: Point := Point(X := 0.0, Y := 5.0);
 ```
 
@@ -60,7 +60,7 @@ and method calls, such as `Point(X := 1.0, Y := 2.0).X`.
 Type aliases construct the original nominal type with the same defaults and
 visibility rules:
 
-```pascal
+```pascal id=example-3 fragment context=point-value
 type Position = Point;
 
 const Q: Position := Position(Y := 2.0, X := 1.0);
@@ -86,7 +86,7 @@ values must use the same record declaration or an alias of that declaration.
 Generic records must also have compatible arguments: `Box of integer` cannot
 be assigned to `Box of string`.
 
-```pascal
+```pascal id=example-4-valid fragment context=declarations
 type Point = record
   X: integer;
   Y: integer;
@@ -101,6 +101,9 @@ type PointAlias = Point;
 
 const P: Point := Point(X := 1, Y := 2);
 const A: PointAlias := P; // Valid: PointAlias names the Point declaration.
+```
+
+```pascal id=example-4 fragment context=record-nominal error=FP3006
 const S: Size := P; // Error: Point and Size are distinct declarations.
 ```
 
@@ -110,7 +113,7 @@ field has no whole-value equality.
 
 ## Accessing fields
 
-```pascal
+```pascal id=example-5 fragment context=point-field
 const PosX: real := P.X;
 ```
 
@@ -120,7 +123,7 @@ Fields in records declared by a unit are private by default. Write `public`
 directly before each field that importing units may access. FPAS has no
 visibility sections and no explicit `private` keyword.
 
-```pascal
+```pascal id=example-6
 unit MyApp.Counters;
 
 public type Counter = record
@@ -147,7 +150,7 @@ Functions and procedures use the same private-default rule.
 
 Record instances follow the same immutability rules as variables. A `var` record allows field reassignment:
 
-```pascal
+```pascal id=example-7 fragment context=point-mutable
 var P: Point := Point(X := 1.0, Y := 2.0);
 
 begin
@@ -182,7 +185,7 @@ produces FP3014 at its source field. Supply such values explicitly at constructi
 Program-local and non-exported record defaults retain their declaring lexical
 environment and follow the initialization checks described above.
 
-```pascal
+```pascal id=example-8 fragment context=declarations
 type Config = record
   Host: string := 'localhost';
   Port: integer := 8080;
@@ -192,20 +195,20 @@ end record;
 
 Omitting defaulted fields:
 
-```pascal
+```pascal id=example-9 fragment context=record-defaults
 const C: Config := Config(); // Host='localhost', Port=8080, Debug=false
 const D: Config := Config(Port := 9000); // Host='localhost', Debug=false
 ```
 
 Explicitly providing a value overrides the default:
 
-```pascal
+```pascal id=example-10 fragment context=record-defaults
 const E: Config := Config(Host := 'example.com', Port := 443, Debug := true);
 ```
 
 Fields without a default remain required:
 
-```pascal
+```pascal id=example-11 fragment context=declarations
 type Vertex = record
   Id: integer; // Required
   X: integer := 0; // Optional

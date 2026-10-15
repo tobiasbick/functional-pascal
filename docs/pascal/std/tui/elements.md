@@ -2,7 +2,7 @@
 
 `TuiElement` is a data-carrying enum. Its implemented variants are:
 
-```pascal
+```text
 TuiElement.Empty
 TuiElement.Label(Text)
 TuiElement.Button(Value)

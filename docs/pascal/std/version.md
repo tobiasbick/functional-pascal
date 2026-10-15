@@ -2,7 +2,7 @@
 
 `Std.Version` provides the versions published with the installed Functional Pascal standard library.
 
-```pascal
+```pascal id=example-1
 program ShowVersion;
 
 uses Std.Console as Console, Std.Version as Version;

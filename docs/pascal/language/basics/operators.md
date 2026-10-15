@@ -23,7 +23,7 @@ Both numeric operands must have the same type. FPAS does not implicitly mix
 `integer` and `real` in arithmetic, equality, ordering, assignment, return
 values, or call arguments. Import `Std.Conv` and convert explicitly:
 
-```pascal
+```pascal id=example-1 fragment context=body-conv
 const Sum: real := Conv.IntToReal(1) + 0.5;
 const Before: boolean := Conv.IntToReal(1) < 1.5;
 const Half: real := 1 / 2;
@@ -92,7 +92,7 @@ enums with data.
 
 `in` returns `boolean`. It tests whether an array contains a value, whether a dictionary contains a key, or whether a string contains a substring (or a single-character string):
 
-```pascal
+```pascal id=example-2 fragment context=body-console
 Console.WriteLn(2 in [1, 2, 3]);
 Console.WriteLn('Alice' in ['Alice': 30]);
 Console.WriteLn('a' in 'pascal');
@@ -197,7 +197,7 @@ An operand that is skipped performs no calls or other side effects, raises no
 runtime errors, and does not propagate an error or `None` through `try`. It must
 still be syntactically valid and pass normal compile-time type checking.
 
-```pascal
+```pascal id=example-3 fragment context=body
 const Denominator: integer := 0;
 const NonzeroQuotient: boolean := (Denominator <> 0) and (10 div Denominator > 0);
 // NonzeroQuotient is false; division is skipped.
@@ -211,7 +211,7 @@ Debugger watch expressions follow these same evaluation rules.
 
 Individual characters can be read by 0-based integer index using bracket notation. The result type is `string` (a single-character string).
 
-```pascal
+```pascal id=example-4 fragment context=body
 const S: string := 'Hello';
 const C: string := S[0]; // 'H'
 const L: string := S[4]; // 'o'
@@ -219,7 +219,7 @@ const L: string := S[4]; // 'o'
 
 Accessing an out-of-bounds index is a **runtime error**. The index must be an `integer`; non-integer indices are a compile-time error.
 
-```pascal
+```pascal id=example-5 fragment context=scalar-loop
 // iterate over characters
 var I: integer := 0;
 while I < S.Length() do
@@ -232,7 +232,7 @@ end while;
 
 ## String concatenation
 
-```pascal
+```pascal id=example-6 fragment context=body
 const Full: string := 'Hello' + ' ' + 'World'; // 'Hello World'
 ```
 

@@ -2,9 +2,8 @@
 
 `Result operations` and `Option operations` provide `Map`, `AndThen`, and `OrElse` for transforming and chaining values without manual `case` destructuring. See [`Result operations`](../types/result-operations.md) and [`Option operations`](../types/option-operations.md) for full API details.
 
-```pascal
+```pascal id=example-1 fragment context=header
 uses Std.Conv as Conv;
-
 function DoubleToString(V: integer): string;
 begin
   return Conv.IntToStr(V * 2);
@@ -13,11 +12,12 @@ end function;
 const R: result of (integer, string) := Ok(21);
 const M: result of (string, string) := R.Map(DoubleToString);
 // M = Ok('42')
+
+begin end.
 ```
 
-```pascal
+```pascal id=example-2 fragment context=header
 uses Std.Conv as Conv;
-
 function PositiveToString(V: integer): option of string;
 begin
   if V > 0 then
@@ -30,6 +30,8 @@ end function;
 const O: option of integer := Some(5);
 const M: option of string := O.AndThen(PositiveToString);
 // M = Some('5')
+
+begin end.
 ```
 
 | Combinator | Result | Option |

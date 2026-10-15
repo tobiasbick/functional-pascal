@@ -1,0 +1,6 @@
+program DocumentationExample;
+uses Std.Console as Console;
+begin
+const Items: option of integer := Some(3);
+// @example
+end.

@@ -8,7 +8,7 @@ For dynamic bounds, use a [guard](guards.md), for example
 
 Formal syntax: [`grammar.ebnf`](../../../specs/grammar.ebnf) (`case_label` — range form).
 
-```pascal
+```pascal id=example-1 fragment context=score-case
 case Score of
   when 0..59:
     Grade := 'F';

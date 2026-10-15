@@ -1,0 +1,6 @@
+program DocumentationExample;
+procedure Apply(F: function(Value: integer): integer);
+begin discard F(3); end procedure;
+begin
+// @example
+end.

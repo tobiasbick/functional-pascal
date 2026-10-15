@@ -1,0 +1,187 @@
+unit DocExamples.Markdown;
+
+uses DocExamples.Model as Model, Std.Conv as Conv, Std.Fs as Fs;
+
+function PrefixCount(Text: string; Character: string): integer;
+begin
+  var Count := 0;
+  while (Count < Text.Length()) and (Text[Count] = Character) do
+    Count := Count + 1;
+  end while;
+
+  return Count;
+end function;
+
+procedure Invalid(Document: string; Line: integer; Message: string);
+begin
+  panic(Document + ':' + Conv.IntToStr(Line) + ': ' + Message);
+end procedure;
+
+// Names select a single context file or document-local example/project.
+public function ValidName(Name: string): boolean;
+begin
+  if Name.IsEmpty() then
+    return false;
+  end if;
+
+  for Index: integer := 0 to Name.Length() - 1 do
+    const Character := Name[Index];
+    if not (Character in 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-_') then
+      return false;
+    end if;
+  end for;
+
+  return true;
+end function;
+
+function Instructions(Document: string; Line: integer; Info: string; Source: string): Model.Example;
+begin
+  const Words := Info.Replace(#9, ' ').Split(' ').Filter(
+    function(X: string): boolean begin
+      return not X.IsEmpty();
+    end function
+  );
+  var Item := Model.Example(
+    Document := Document,
+    Line := Line,
+    Language := Words[0],
+    Source := Source
+  );
+  var Seen: dict of string to boolean := [:];
+  for Index: integer := 1 to Words.Length() - 1 do
+    const Word := Words[Index];
+    const Key := Word.Split('=')[0];
+    if Key in Seen then
+      Invalid(Document, Line, 'Repeated fence option ' + Key);
+    end if;
+
+    Seen[Key] := true;
+    if Word = 'fragment' then
+      Item.Fragment := true;
+    elsif Word = 'run' then
+      Item.Execute := true;
+    else
+      const Parts := Word.Split('=');
+      if (Parts.Length() <> 2) or Parts[1].IsEmpty() then
+        Invalid(Document, Line, 'Unknown fence option ' + Word);
+      end if;
+      const Value := Parts[1];
+      case Key of
+        when 'id':
+          Item.Id := Value;
+        when 'context':
+          Item.Context := Value;
+        when 'error':
+          Item.ExpectedError := Value;
+        when 'project':
+          Item.Project := Value;
+        when 'file':
+          Item.FileName := Value;
+        when 'manifest':
+          Item.Manifest := Value;
+        else
+          Invalid(Document, Line, 'Unknown fence option ' + Key);
+      end case;
+    end if;
+  end for;
+
+  for Name: string in [Item.Id, Item.Context, Item.Project] do
+    if not Name.IsEmpty() and not ValidName(Name) then
+      Invalid(Document, Line, 'Invalid example/context/project name ' + Name);
+    end if;
+  end for;
+
+  if Item.Id.IsEmpty() then
+    Item.Id := 'line-' + Conv.IntToStr(Line);
+  end if;
+
+  if Item.Fragment and Item.Context.IsEmpty() then
+    Invalid(Document, Line, 'A fragment requires context=NAME.');
+  end if;
+
+  if not Item.ExpectedError.IsEmpty() then
+    if (Item.ExpectedError.Length() <> 6) or not Item.ExpectedError.StartsWith('FP') then
+      Invalid(Document, Line, 'Expected error=FP followed by four digits.');
+    end if;
+
+    for Index: integer := 2 to 5 do
+      const Character := Item.ExpectedError[Index];
+      if not (Character in '0123456789') then
+        Invalid(Document, Line, 'Invalid diagnostic code.');
+      end if;
+    end for;
+  end if;
+
+  if (Item.Language = 'toml') and (Item.Project.IsEmpty() or Item.FileName.IsEmpty()) then
+    Invalid(Document, Line, 'A supporting TOML fence requires project=NAME and file=PATH.');
+  end if;
+
+  if (Item.Language = 'toml')
+    and
+    (
+      Item.Fragment or Item.Execute or not Item.Context.IsEmpty()
+      or
+      not Item.ExpectedError.IsEmpty() or not Item.Manifest.IsEmpty()
+    )
+  then
+    Invalid(Document, Line, 'A supporting TOML fence accepts only id, project and file.');
+  end if;
+
+  if not Item.Manifest.IsEmpty() and Item.Project.IsEmpty() then
+    Invalid(Document, Line, 'manifest=PATH requires project=NAME.');
+  end if;
+
+  return Item;
+end function;
+
+// Extract source fences, preserving their locations and validating all options.
+public function Read(Document: string): array of Model.Example;
+begin
+  var Items: array of Model.Example := [];
+  var Delimiter := '';
+  var Width := 0;
+  var Info := '';
+  var Source := '';
+  var Start := 0;
+  var Number := 0;
+  for Line: string in Fs.ReadText(Document).Unwrap().Replace(#13#10, #10).Split(#10) do
+    Number := Number + 1;
+    const Trimmed := Line.Trim();
+    if not Delimiter.IsEmpty() then
+      if (PrefixCount(Trimmed, Delimiter) >= Width) and Trimmed.Replace(Delimiter, '').IsEmpty() then
+        const Language := Info.Split(' ')[0];
+        if (Language.ToLower() in ['fpas', 'pascal']) and (Language <> 'pascal') then
+          Invalid(Document, Start, 'Use the canonical pascal fence tag.');
+        end if;
+
+        if (Language = 'pascal') or ((Language = 'toml') and ('project=' in Info)) then
+          const Item := Instructions(Document, Start, Info, Source);
+          for Previous: Model.Example in Items do
+            if Previous.Id = Item.Id then
+              Invalid(Document, Start, 'Duplicate example id ' + Item.Id);
+            end if;
+          end for;
+
+          Items.PushInPlace(Item);
+        end if;
+
+        Delimiter := '';
+      else
+        Source := Source + Line + #10;
+      end if;
+    elsif Trimmed.StartsWith('```') or Trimmed.StartsWith('~~~') then
+      Delimiter := Trimmed[0];
+      Width := PrefixCount(Trimmed, Delimiter);
+      Info := Trimmed.Slice(Width, Trimmed.Length() - Width).Trim().Replace(#9, ' ');
+      Source := '';
+      Start := Number;
+    end if;
+  end for;
+
+  if not Delimiter.IsEmpty() then
+    Invalid(Document, Start, 'Unclosed Markdown fence.');
+  end if;
+
+  return Items;
+end function;
+end unit;

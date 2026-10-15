@@ -1,0 +1,161 @@
+unit DocExamples.Validation;
+
+uses
+  DocExamples.Model as Model, DocExamples.Preparation as Preparation,
+  Std.Fs as Fs, Std.Json.Fields as Fields, Std.Path as Path, Std.Proc as Proc;
+
+type Diagnostics = record
+  Codes: array of string;
+  Message: string;
+  SourceLine: integer;
+  OnlyExampleErrors: boolean;
+end record;
+
+function ReadDiagnostics(Output: string; Item: Model.Example; Prepared: Model.Prepared): Diagnostics;
+begin
+  var Codes: array of string := [];
+  var Message := '';
+  var SourceLine := Item.Line;
+  var OnlyExampleErrors := true;
+  for Line: string in Output.Split(#10) do
+    if not Line.Trim().IsEmpty() then
+      case Fields.ParseObject(Line) of
+        when Ok(const Data):
+          case Fields.StringField(Data, 'severity') of
+            when Ok(const Severity):
+              if Severity = 'error' then
+                const Code := Fields.StringField(Data, 'code').Unwrap();
+                Codes.PushInPlace(Code);
+                if Message.IsEmpty() then
+                  Message := Code + ': ' + Fields.StringField(Data, 'message').Unwrap();
+                end if;
+                var InExample := false;
+                case Fields.StringField(Data, 'source') of
+                  when Ok(const Source):
+                    const ExpectedPath := Path.Normalize(Prepared.FileName).Replace('\', '/');
+                    const ActualPath := Path.Normalize(Source).Replace('\', '/');
+                    if (ActualPath = ExpectedPath) or ActualPath.EndsWith('/' + ExpectedPath) then
+                      case Fields.ObjectField(Data, 'location') of
+                        when Ok(const Location):
+                          const Start := Fields.ObjectField(Location, 'start').Unwrap();
+                          const Number := Fields.IntegerField(Start, 'line').Unwrap();
+                          if (Number >= Prepared.SourceStart)
+                            and
+                            (Number < Prepared.SourceStart + Item.Source.Split(#10).Length() - 1)
+                          then
+                            SourceLine := Item.Line + 1 + Number - Prepared.SourceStart;
+                            InExample := true;
+                          end if;
+                        when Error(_):
+                          null;
+                      end case;
+                    end if;
+                  when Error(_):
+                    null;
+                end case;
+
+                OnlyExampleErrors := OnlyExampleErrors and InExample;
+              end if;
+            when Error(_):
+              null;
+          end case;
+        when Error(_):
+          Codes.PushInPlace('INVALID-OUTPUT');
+          if Message.IsEmpty() then
+            Message := 'Unstructured compiler output: ' + Line;
+          end if;
+      end case;
+    end if;
+  end for;
+
+  return Diagnostics(
+    Codes := Codes,
+    Message := Message,
+    SourceLine := SourceLine,
+    OnlyExampleErrors := OnlyExampleErrors
+  );
+end function;
+
+function Matches(ExitCode: integer; Errors: Diagnostics; Expected: string): boolean;
+begin
+  if Expected.IsEmpty() then
+    return (ExitCode = 0) and Errors.Codes.IsEmpty();
+  end if;
+
+  if (ExitCode = 0) or Errors.Codes.IsEmpty() or not Errors.OnlyExampleErrors then
+    return false;
+  end if;
+
+  for Code: string in Errors.Codes do
+    if Code <> Expected then
+      return false;
+    end if;
+  end for;
+
+  return true;
+end function;
+
+// Check a source and, only when explicitly requested, execute it with a timeout.
+public function Check(Item: Model.Example; Options: Model.Options; Items: array of Model.Example; Directory: string): Model.Outcome;
+begin
+  const Prepared := Preparation.Prepare(Item, Options, Items, Directory);
+  const Checked := Proc.RunCapture(
+    Options.Compiler,
+    ['check', '--diagnostics', 'json', '--std-lib', Options.StandardLibrary, Prepared.Target]
+  ).Unwrap();
+  discard Fs.WriteText(Path.Join([Directory, 'check.jsonl']), Checked.Stderr).Unwrap();
+  var Errors := ReadDiagnostics(Checked.Stderr, Item, Prepared);
+  const CompileExpected := if Item.Execute then '' else Item.ExpectedError end if;
+  var Passed := Matches(Checked.ExitCode, Errors, CompileExpected);
+  var Message := Errors.Message;
+  if Passed and Item.Execute then
+    const Executed := Proc.RunCapture(
+      Options.Compiler, [
+        'test', '--diagnostics', 'json', '--report', 'json', '--strict', '--timeout', '5', '--jobs',
+        '1',
+        '--std-lib', Options.StandardLibrary, Prepared.Target
+      ]
+    ).Unwrap();
+    discard Fs.WriteText(Path.Join([Directory, 'run.json']), Executed.Stdout).Unwrap();
+    discard Fs.WriteText(Path.Join([Directory, 'run.jsonl']), Executed.Stderr).Unwrap();
+    Errors := ReadDiagnostics(Executed.Stderr, Item, Prepared);
+    Passed := Matches(Executed.ExitCode, Errors, Item.ExpectedError);
+    Message := Errors.Message;
+    case Fields.ParseObject(Executed.Stdout) of
+      when Ok(const Data):
+        const Summary := Fields.ObjectField(Data, 'summary').Unwrap();
+        if Fields.IntegerField(Summary, 'total').Unwrap() <> 1 then
+          Passed := false;
+          Message := 'A run example must execute exactly one test program.';
+        end if;
+      when Error(_):
+        Passed := false;
+        Message := 'Missing structured execution report.';
+    end case;
+
+    if not Passed and Message.IsEmpty() then
+      Message := 'Execution did not satisfy the expected result: ' + Executed.Stdout;
+    end if;
+  end if;
+
+  if not Passed and Message.IsEmpty() then
+    Message := if Item.ExpectedError.IsEmpty() then 'Compiler failed without a diagnostic.'
+      else 'Expected ' + Item.ExpectedError + ' was not reported.'
+      end if;
+  end if;
+
+  if Passed then
+    Message := if Item.ExpectedError.IsEmpty() then 'passed'
+      else 'expected ' + Item.ExpectedError
+      end if;
+  end if;
+
+  return Model.Outcome(
+    Document := Item.Document,
+    Line := Errors.SourceLine,
+    Id := Item.Id,
+    Passed := Passed,
+    Message := Message
+  );
+end function;
+end unit;

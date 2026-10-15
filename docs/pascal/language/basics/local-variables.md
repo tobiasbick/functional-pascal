@@ -11,7 +11,7 @@ See [Constants](constants.md) for runtime initialization and static classificati
 
 Formal syntax: [`grammar.ebnf`](../../../specs/grammar.ebnf) (`const_stmt` and `var_stmt` in statement position).
 
-```pascal
+```pascal id=example-1 fragment context=declarations
 function FullName(First: string; Last: string): string;
 begin
   const Space: string := ' ';
@@ -32,7 +32,7 @@ signatures and `if`/`case` expressions follow the same rule as literals,
 constructors and conversions. The inferred type is fixed for the lifetime of
 the binding. Explicit annotations remain valid and supply context when needed.
 
-```pascal
+```pascal id=example-2 fragment context=declarations
 type UserId = distinct integer;
 
 function Sample(): integer;
@@ -66,7 +66,7 @@ its type; a generic payloadless variant needs an annotation or a fixed alias.
 See [Records](../types/records.md), [Enums](../types/enums.md), and
 [constructor inference](../types/generics.md#generic-records).
 
-```pascal
+```pascal id=example-3 fragment context=declarations
 type Point = record
   X: integer;
   Y: integer;
@@ -106,7 +106,7 @@ is rejected. See [Generic routines](../functions/generic-routines.md).
 [FP3036](../../tools/diagnostics.md#semantic-analysis) requests an annotation
 when a local initializer still has an incomplete type.
 
-```pascal
+```pascal id=example-4 fragment context=inferred-call
 const Empty: array of integer := [];
 const Mixed: array of real := [Conv.IntToReal(1), 2.0];
 const Converted := Conv.IntToReal(42);

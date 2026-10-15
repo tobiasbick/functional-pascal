@@ -4,7 +4,7 @@
 
 Number of elements in `A`.
 
-```pascal
+```pascal id=example-1 fragment context=body-console
 const A: array of integer := [1, 2, 3];
 Console.WriteLn(A.Length());
 ```
@@ -35,7 +35,7 @@ arguments, for example `const Empty: array of integer := [].Sort();` or
 even when a later `Map` changes the result's element type. A bare `[].Sort()`
 without evidence is rejected.
 
-```pascal
+```pascal id=example-2 fragment context=body-console
 const A: array of integer := [3, 1, 2];
 const B: array of integer := A.Sort();
 Console.WriteLn(B.IndexOf(2));
@@ -62,11 +62,12 @@ arrays invoke it once. The snapshot and cached keys survive task suspension.
 On callback failure no sorted result is committed. Other callback effects remain
 visible, following [collection mutation](../collection-mutation.md).
 
-```pascal
+```pascal id=example-3 fragment context=header
 type Edit = record
   Offset: integer;
   Text: string;
 end record;
+begin
 
 const Edits := [Edit(Offset := 2, Text := 'later'), Edit(Offset := 0, Text := 'first')];
 const Ascending := Edits.SortBy(
@@ -80,6 +81,8 @@ Descending.SortByInPlace(
     return - Entry.Offset;
   end function
 );
+
+end.
 ```
 
 Negating nonnegative offsets produces descending offset order. Ordinary integer
@@ -92,7 +95,7 @@ arrays whose elements already have the required order.
 
 Returns a **new** array with elements in reverse order. **`A` is not modified.**
 
-```pascal
+```pascal id=example-4 fragment context=body-console
 const A: array of integer := [1, 2, 3];
 const R: array of integer := A.Reverse();
 Console.WriteLn(R.Length());
@@ -105,7 +108,7 @@ Console.WriteLn(R.Length());
 `Value in Items` is `true` if some element equals Value under the existing
 equality and type-compatibility rules.
 
-```pascal
+```pascal id=example-5 fragment context=body-console
 const A: array of integer := [1, 2, 3];
 Console.WriteLn(2 in A);
 Console.WriteLn(99 in A);
@@ -118,7 +121,7 @@ Console.WriteLn(99 in A);
 Returns `Some(Index)` for the first zero-based index where `Items[Index] = Value`,
 or `None` if absent. An empty array returns `None`.
 
-```pascal
+```pascal id=example-6 fragment context=body-console
 case [10, 20, 30].IndexOf(20) of
   when Some(const Index):
     Console.WriteLn(Index); // 1
@@ -133,7 +136,7 @@ end case;
 
 Copies `Len` elements starting at `Start`. **Runtime error** if the range is out of bounds.
 
-```pascal
+```pascal id=example-7 fragment context=body-console
 const A: array of integer := [10, 20, 30, 40];
 const C: array of integer := A.Slice(1, 2);
 Console.WriteLn(C.Length());

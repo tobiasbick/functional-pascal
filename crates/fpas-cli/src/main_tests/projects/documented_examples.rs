@@ -11,6 +11,9 @@ fn documented_first_program_checks_and_runs_with_source_stdlib() {
         .split_once("```pascal")
         .expect("Pascal example")
         .1
+        .split_once('\n')
+        .expect("end of fence metadata")
+        .1
         .split_once("```")
         .expect("end of example")
         .0;

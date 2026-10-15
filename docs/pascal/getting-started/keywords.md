@@ -2,7 +2,7 @@
 
 All keywords are case-insensitive, following traditional Pascal convention:
 
-```
+```text
 program   unit      uses      const
 var       function  procedure
 begin     end       return    if
@@ -60,7 +60,7 @@ instead of `End`, `NoCommand` instead of `None`, or `CompletedCommand` instead o
 
 Keywords and identifiers are case-insensitive:
 
-```pascal
+```pascal id=example-2
 program KeywordDemo;
 
 uses Std.Console as Console;

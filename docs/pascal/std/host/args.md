@@ -2,7 +2,7 @@
 
 Process argument access for hosted FPAS programs. This page is the full API for the unit.
 
-```pascal
+```pascal id=example-1
 program Example;
 
 uses Std.Console as Console, Std.Args as Args;
@@ -45,7 +45,7 @@ The input file name and the `fpas` executable name are not included. Only values
 
 Returns the number of program arguments supplied after the CLI separator.
 
-```pascal
+```pascal id=example-3 fragment context=body-console-args
 Console.WriteLn(Args.ParamCount());
 ```
 
@@ -57,7 +57,7 @@ Returns the argument at 0-based `Index`.
 
 Runtime error if `Index` is negative or greater than or equal to `ParamCount()`.
 
-```pascal
+```pascal id=example-4 fragment context=body-console-args
 if Args.ParamCount() > 0 then
   Console.WriteLn(Args.ParamStr(0));
 end if;

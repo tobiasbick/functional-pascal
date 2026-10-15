@@ -1,0 +1,5 @@
+program DocumentationExample;
+uses Std.Console as Console;
+// @include docs/pascal/language/types/distinct-types.md#example-1
+// @example
+begin end.

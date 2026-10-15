@@ -1,0 +1,6 @@
+program DocumentationExample;
+uses Std.Console as Console;
+begin
+const Command := 'help';
+// @example
+end.

@@ -16,7 +16,7 @@ execution or compile-time classification.
 
 Formal syntax: [`grammar.ebnf`](../../../specs/grammar.ebnf) (`const_declaration`, `const_def`, `const_stmt`).
 
-```pascal
+```pascal id=example-1 fragment context=body
 const Pi: real := 3.14159265;
 const MaxSize: integer := 1024;
 const Greeting: string := 'Hello';
@@ -61,7 +61,7 @@ Scalar `case` value labels and both range endpoints require compile-time
 constants. A diagnostic names the offending call or binding. Use a
 [guard](../pattern-matching/guards.md) for a dynamic condition:
 
-```pascal
+```pascal id=example-2 fragment context=constant-guard
 const Expected: integer := ReadExpected();
 case Actual of
   when const Value if Value = Expected:

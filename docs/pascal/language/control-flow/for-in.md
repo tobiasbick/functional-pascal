@@ -50,7 +50,7 @@ does not deep-clone these resources or provide synchronization between tasks.
 
 Iterates over each element of an array. The loop variable is immutable.
 
-```pascal
+```pascal id=example-1 fragment context=body-console
 const Names: array of string := ['Alice', 'Bob', 'Charlie'];
 for Name: string in Names do
   Console.WriteLn(Name);
@@ -59,7 +59,7 @@ end for;
 
 The element type must match the array's element type:
 
-```pascal
+```pascal id=example-2 fragment context=body-console
 const Scores: array of integer := [10, 20, 30];
 for S: integer in Scores do
   Console.WriteLn(S);
@@ -68,7 +68,7 @@ end for;
 
 The source can be changed after the loop:
 
-```pascal
+```pascal id=example-3 fragment context=body-console
 var Items: array of integer := [1, 2, 3];
 for Item: integer in Items do
   Console.WriteLn(Item);
@@ -80,7 +80,7 @@ Items.PushInPlace(9);
 To change one array while visiting its original values, make the source copy
 explicit. The copy retains ordinary value independence:
 
-```pascal
+```pascal id=example-4 fragment context=body
 var Items: array of integer := [1, 2, 3];
 const Source := Items;
 for Item: integer in Source do
@@ -93,14 +93,16 @@ end for;
 
 Iterates over the **keys** of a `dict of K to V` in insertion order. The loop variable receives each key; values can be looked up via the key inside the body. No import is required.
 
-```pascal
-uses Std.Conv as Conv;
-
+```pascal id=example-5 fragment context=header
+uses Std.Conv as Conv, Std.Console as Console;
+begin
 const Ages: dict of string to integer := ['Alice': 30, 'Bob': 25];
 
 for Name: string in Ages do
   Console.WriteLn(Name + ': ' + Conv.IntToStr(Ages[Name]));
 end for;
+
+end.
 ```
 
 The loop variable type must match the dict's key type. Iterating an empty dict executes the body zero times. `break` and `continue` work as usual.
@@ -109,7 +111,7 @@ Adding, removing or reinserting keys, replacing values, or assigning another
 dictionary to the source is a compiler error during the body. Ordinary lookups
 remain readable:
 
-```pascal
+```pascal id=example-6 fragment context=body-console-conv
 var Scores: dict of string to integer := ['Ada': 1, 'Grace': 2];
 for Name: string in Scores do
   Console.WriteLn(Name + ': ' + Conv.IntToStr(Scores[Name]));
@@ -125,7 +127,7 @@ absence is expected. The protected source itself cannot lose a key in the body.
 
 This is separate from the `in` membership operator in expressions. In `for K: string in Ages`, `in` introduces iteration. In `'Alice' in Ages`, `in` returns whether the dictionary contains that key.
 
-```pascal
+```pascal id=example-7 fragment context=ages-loop
 // Print only keys whose value exceeds 10
 for K: string in Ages do
   if Ages[K] <= 10 then

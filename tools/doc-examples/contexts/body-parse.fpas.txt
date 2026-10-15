@@ -1,0 +1,7 @@
+program DocumentationExample;
+uses Std.Parse as Parse;
+
+begin
+// @example
+
+end.

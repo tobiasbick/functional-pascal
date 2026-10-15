@@ -1,0 +1,18 @@
+program DocumentationExample;
+type Product = record
+  function Compute(Self: Product): integer; begin return 42; end function;
+  function Configure(Self: Product): Product; begin return Self; end function;
+  procedure Start(Self: Product); begin end procedure;
+  procedure Destroy(Self: Product); begin end procedure;
+end record;
+type Factory = record
+  static function Create(): Product; begin return Product(); end function;
+end record;
+type TuiContainer = record
+  static function AsView(Value: Product): Product; begin return Value; end function;
+end record;
+function Compute(): integer; begin return 42; end function;
+begin
+const Container := Product();
+// @example
+end.

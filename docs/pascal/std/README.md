@@ -6,7 +6,7 @@ array, dictionary, Option, and Result operations are described in the
 [dot calls](../language/functions/fluent-calls.md). Import every standard unit with
 an explicit alias and access its public symbols through that alias:
 
-```pascal
+```pascal id=example-1
 program Hello;
 
 uses Std.Console as Console, Std.Math as Math;
@@ -63,13 +63,15 @@ under [Shared implementation touchpoints](#shared-implementation-touchpoints).
 
 ### Console I/O
 
-```pascal
+```pascal id=example-2 fragment context=header
 uses Std.Console as Console;
-
+begin
 Console.WriteLn('Hello!');
 Console.TextColorRGB(255, 160, 0);
 Console.WriteLn('Accent text');
 Console.NormVideo();
+
+end.
 ```
 
 Fullscreen code can batch explicit cells with `BeginFrame`, `WriteCells`, and `Present`; see
@@ -77,7 +79,7 @@ Fullscreen code can batch explicit cells with `BeginFrame`, `WriteCells`, and `P
 
 ### Error handling helpers
 
-```pascal
+```pascal id=example-3 fragment context=body-console
 const R: result of (integer, string) := Ok(42);
 Console.WriteLn(R.Unwrap());
 ```

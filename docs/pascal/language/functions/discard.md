@@ -6,7 +6,7 @@ including task handles, aliases, aggregates, channels, unconstrained generic
 values, and callables with captures. No task-free proof or generic constraint
 is required for discard.
 
-```pascal
+```pascal id=example-1 fragment context=body
 discard 42;
 discard Some('unused');
 discard Error('deliberately ignored');
@@ -23,7 +23,7 @@ FP3022, including the final function call of a postfix chain and a standalone
 go expression. The repair is valid independently of the returned value's type
 or captures.
 
-```pascal
+```pascal id=example-2 fragment context=discard-compute
 const Value: integer := Compute();
 discard Compute();
 discard Factory.Create().Compute();
@@ -41,7 +41,7 @@ user handles. Panic/runtime failures remain monitored by that owner; returned
 Error values remain ordinary Result data. Retrieve required results with Wait
 before the owner releases them.
 
-```pascal
+```pascal id=example-3 fragment context=discard-task
 scope
   const Job := go Worker();
   discard Job;

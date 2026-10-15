@@ -2,7 +2,7 @@
 
 Assertion procedures for FPAS test programs. Run single tests with `fpas run` or batch-discover them with `fpas test` (see [CLI](../../program-structure/cli.md)).
 
-```pascal
+```pascal id=example-1
 program Example;
 
 uses Std.Test as Test;
@@ -104,7 +104,7 @@ the helper unit if hooks need assertions.
 
 For example, include this helper unit as a source in the test project:
 
-```pascal
+```pascal id=example-2
 unit TestHooks;
 
 public procedure Setup();

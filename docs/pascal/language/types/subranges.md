@@ -2,7 +2,7 @@
 
 A subrange restricts an `integer` to inclusive compile-time bounds:
 
-```pascal
+```pascal id=example-1 fragment context=declarations
 type Percent = 0..100;
 
 type Signed = -10..10;
@@ -22,7 +22,7 @@ Boolean, string, and enum bounds are invalid.
 
 Call the type with exactly one positional integer or subrange value:
 
-```pascal
+```pascal id=example-2 fragment context=subrange-values
 const Low: Percent := Percent(0);
 const High: Percent := Percent(100);
 ```
@@ -51,7 +51,7 @@ panic for an out-of-range value. Normal Boolean precedence and short-circuit
 rules apply. With a compile-time integer value, membership is a compile-time
 constant expression.
 
-```pascal
+```pascal id=example-3 fragment context=declarations
 type Percent = 0..100;
 
 function IsPositivePercent(Input: integer): boolean;
@@ -83,7 +83,7 @@ Scalar widening also applies to array and string indices, integer dictionary
 keys, and value membership in integer arrays and dictionaries. A dictionary or
 array with a subrange component still requires a value of that subrange type.
 
-```pascal
+```pascal id=example-4 fragment context=subrange-values
 const Level: Percent := Percent(50);
 const Raw: integer := Level;
 const Sum: integer := Level + 60;
@@ -108,7 +108,7 @@ conversions are accepted. The compiler combines inclusive intervals without
 enumerating their values, including inside nested patterns. Extending the bounds
 reveals uncovered values at cases that listed only the former domain.
 
-```pascal
+```pascal id=example-5 fragment context=subrange-case
 const Category: string := case Level of
   when 0..49: 'low';
   when 50..100: 'high';

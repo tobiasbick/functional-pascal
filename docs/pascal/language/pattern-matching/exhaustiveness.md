@@ -21,13 +21,15 @@ integer selectors still require `else`, even with a machine-wide range label.
 
 ## Enum exhaustiveness
 
-```pascal
+```pascal id=example-1-declaration fragment context=declarations
 type Light = enum
   Red;
   Yellow;
   Green;
 end enum;
+```
 
+```pascal id=example-1 fragment context=light-case error=FP3011
 // ERROR: non-exhaustive match — missing Light.Yellow
 case L of
   when Light.Red:
@@ -39,7 +41,7 @@ end case;
 
 Fix by covering all variants:
 
-```pascal
+```pascal id=example-2 fragment context=light-case
 case L of
   when Light.Red:
     Console.WriteLn('Stop');
@@ -52,7 +54,7 @@ end case;
 
 Variants with the same behavior can share an arm:
 
-```pascal
+```pascal id=example-3 fragment context=light-case
 case L of
   when Light.Red:
     Console.WriteLn('Stop');
@@ -67,7 +69,7 @@ An enum catch-all hides the cases that need attention when the enum grows.
 FP3035 rejects `else` and names a missing pattern for each uncovered variant.
 Replace it with explicit arms, grouping variants with the same behavior:
 
-```pascal
+```pascal id=example-4 fragment context=light-case
 case L of
   when Light.Red:
     Console.WriteLn('Stop');
@@ -79,7 +81,7 @@ end case;
 When all values already have explicit coverage, remove the redundant `else`.
 For handling just one variant, use an [`is` test](is-test.md):
 
-```pascal
+```pascal id=example-5 fragment context=light-case
 if L is Light.Red then
   Console.WriteLn('Stop');
 end if;
@@ -89,13 +91,15 @@ end if;
 
 `Result` requires both `Ok` and `Error`. `Option` requires both `Some` and `None`:
 
-```pascal
+```pascal id=example-6 fragment context=result-exhaustive error=FP3011
 // ERROR: non-exhaustive — missing Error
 case R of
   when Ok(const V):
     Console.WriteLn(Conv.IntToStr(V));
 end case;
+```
 
+```pascal id=example-6-valid fragment context=result-exhaustive
 // OK: both variants covered
 case R of
   when Ok(const V):
@@ -110,7 +114,7 @@ end case;
 Coverage is checked recursively. Every value of the case type must match some
 unguarded arm, including the payloads of nested patterns:
 
-```pascal
+```pascal id=example-7 fragment context=nested-exhaustive error=FP3011
 // ERROR: non-exhaustive — missing Ok(None)
 case Response of
   when Ok(Some(const User)):
@@ -128,13 +132,13 @@ The diagnostic names one missing pattern per uncovered variant, such as
 A label is unreachable when earlier unguarded arms already match every value
 it matches, for scalar and variant cases alike. It is an error (FP3033):
 
-```pascal
+```pascal id=example-8 fragment context=unreachable-option error=FP3033
 case Item of
   when Some(_):
     Use();
   when Some(0):
     // ERROR: unreachable after Some(_)
-    Test.Skip();
+    Test.Skip('unreachable');
   when None:
     null;
 end case;
@@ -157,13 +161,14 @@ and `Some(1 + 2)` overlap completely when `Limit` is `3`.
 The same value comparison applies to known fields of static record constants,
 including nested fields and constants derived from them. For example:
 
-```pascal
+```pascal id=example-9 fragment context=boolean-pattern
 type Flags = record
   Enabled: boolean;
 end record;
 
 const Settings: Flags := Flags(Enabled := true);
 const Enabled: boolean := Settings.Enabled;
+begin
 case Candidate of
   when Some(Enabled):
     null;
@@ -172,6 +177,7 @@ case Candidate of
   when None:
     null;
 end case;
+end.
 ```
 
 For `Candidate: Option of boolean`, these arms are exhaustive. Replacing

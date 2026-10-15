@@ -8,7 +8,7 @@ The selector is evaluated once; bindings come from the label being tried.
 
 Formal syntax: [`grammar.ebnf`](../../../specs/grammar.ebnf) (guarded `case_label`).
 
-```pascal
+```pascal id=example-1 fragment context=declarations
 function Classify(N: integer): string;
 begin
   case N of
@@ -29,7 +29,7 @@ subrange cases require unguarded finite coverage and forbid `else`.
 
 Guards work with all label types — values, ranges, destructuring, and enum patterns:
 
-```pascal
+```pascal id=example-2 fragment context=shape-case
 case S of
   when Shape.Circle(const R) if R > 10.0:
     Console.WriteLn('Large circle');
@@ -51,7 +51,7 @@ For enum, Result, and Option patterns, payload positions bind with `const Name`,
 
 In scalar `case` arms, `const Name` with a guard binds the matched value:
 
-```pascal
+```pascal id=example-3 fragment context=scalar-guard
 case Value of
   when const N if N > 0:
     Console.WriteLn('positive');

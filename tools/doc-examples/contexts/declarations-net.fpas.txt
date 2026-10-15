@@ -1,0 +1,6 @@
+program DocumentationExample;
+uses Std.Net as Net;
+
+// @example
+
+begin end.

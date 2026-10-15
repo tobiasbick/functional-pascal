@@ -1,0 +1,7 @@
+program DocumentationExample;
+uses Std.Tasks as Tasks;
+function Compute(Value: integer): integer; begin return Value * 2; end function;
+procedure RunWorker(); begin end procedure;
+begin
+// @example
+end.

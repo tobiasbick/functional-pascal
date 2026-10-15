@@ -14,7 +14,7 @@ Formal syntax: [`grammar.ebnf`](../../../specs/grammar.ebnf) (`enum_type`, `enum
 
 An enum declaration ends with `end enum;` after its final terminated member.
 
-```pascal
+```pascal id=example-1 fragment context=declarations
 type Color = enum
   Red;
   Green;
@@ -24,7 +24,7 @@ end enum;
 
 Using:
 
-```pascal
+```pascal id=example-2 fragment context=enum-color
 const C: Color := Color.Red;
 ```
 
@@ -48,7 +48,7 @@ Enums with payload fields do not support ordering or satisfy `Comparable`.
 
 Each member can have an explicit integer value:
 
-```pascal
+```pascal id=example-3 fragment context=declarations
 type HttpStatus = enum
   Success = 200;
   NotFound = 404;
@@ -74,7 +74,7 @@ the exhaustiveness checker counts. Different enums remain nominally distinct,
 even when their backing values coincide. A type alias retains the original
 enum's identity and values.
 
-```pascal
+```pascal id=example-4 fragment context=declarations
 type Limit = enum
   Last = 9223372036854775807;
   Restart = 0;
@@ -86,7 +86,7 @@ end enum;
 
 Enum variants can carry data fields (like Rust enums or tagged unions):
 
-```pascal
+```pascal id=example-5 fragment context=declarations
 type Shape = enum
   Circle(Radius: real);
   Rectangle(Width: real; Height: real);
@@ -97,7 +97,7 @@ end enum;
 Variants with fields are constructed by calling the variant with positional arguments in
 field order, or with every field named:
 
-```pascal
+```pascal id=example-6 fragment context=enum-shape
 const S: Shape := Shape.Circle(5.0);
 const R: Shape := Shape.Rectangle(10.0, 20.0);
 const N: Shape := Shape.Rectangle(Height := 20.0, Width := 10.0);
@@ -116,7 +116,7 @@ rules. See [Type inference](../basics/local-variables.md#type-inference).
 
 Destructuring uses `case`:
 
-```pascal
+```pascal id=example-7 fragment context=shape-case
 case S of
   when Shape.Circle(const R):
     Console.WriteLn('Circle with radius ' + Conv.RealToStr(R));

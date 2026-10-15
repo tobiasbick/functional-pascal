@@ -1,0 +1,5 @@
+program DocumentationExample;
+uses Std.Tasks as Tasks;
+function Connect(): result of (boolean, string); begin return Ok(true); end function;
+function Serve(): result of (boolean, string); begin return Ok(true); end function;
+// @example

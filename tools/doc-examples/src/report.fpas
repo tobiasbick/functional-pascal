@@ -1,0 +1,53 @@
+unit DocExamples.Report;
+
+uses DocExamples.Model as Model, Std.Console as Console, Std.Conv as Conv, Std.Fs as Fs, Std.Json as Json, Std.Path as Path;
+
+// Write a structured report and print every failing Markdown location.
+public function Write(Outcomes: array of Model.Outcome; Options: Model.Options): integer;
+begin
+  var Failed := 0;
+  var Results: array of Json.JsonValue := [];
+  for Item: Model.Outcome in Outcomes do
+    if not Item.Passed then
+      Failed := Failed + 1;
+    end if;
+    const Fields: dict of string to Json.JsonValue := [
+      'document': Json.JsonValue.String(Item.Document),
+      'line': Json.JsonValue.Number(Conv.IntToReal(Item.Line)),
+      'id': Json.JsonValue.String(Item.Id),
+      'passed': Json.JsonValue.Bool(Item.Passed),
+      'message': Json.JsonValue.String(Item.Message)
+    ];
+    Results.PushInPlace(Json.JsonValue.Object(Fields));
+  end for;
+  const Fields: dict of string to Json.JsonValue := [
+    'schema': Json.JsonValue.Number(1.0),
+    'total': Json.JsonValue.Number(Conv.IntToReal(Outcomes.Length())),
+    'failed': Json.JsonValue.Number(Conv.IntToReal(Failed)),
+    'results': Json.JsonValue.ArrayValue(Results)
+  ];
+  const Output := Json.Stringify(Json.JsonValue.Object(Fields));
+  discard Fs.WriteText(Path.Join([Options.Output, 'report.json']), Output + #10).Unwrap();
+  if Options.JsonReport then
+    Console.WriteLn(Output);
+  else
+    for Item: Model.Outcome in Outcomes do
+      if not Item.Passed then
+        Console.WriteLn(Item.Document, ':', Item.Line, ' [', Item.Id, ']: ', Item.Message);
+      end if;
+    end for;
+
+    Console.WriteLn(
+      'Documentation examples: ',
+      Outcomes.Length() - Failed,
+      ' passed, ',
+      Failed,
+      ' failed (',
+      Outcomes.Length(),
+      ' total)'
+    );
+  end if;
+
+  return Failed;
+end function;
+end unit;

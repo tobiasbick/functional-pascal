@@ -1,0 +1,44 @@
+unit DocExamples.Model;
+
+// One Markdown fence and its explicit validation instructions.
+public type Example = record
+  public Document: string;
+  public Line: integer;
+  public Language: string;
+  public Source: string;
+  public Id: string := '';
+  public Fragment: boolean := false;
+  public Context: string := '';
+  public Execute: boolean := false;
+  public ExpectedError: string := '';
+  public Project: string := '';
+  public FileName: string := '';
+  public Manifest: string := '';
+end record;
+
+// Repository and compiler selected for one independent validation run.
+public type Options = record
+  public Root: string;
+  public Output: string;
+  public Compiler: string;
+  public StandardLibrary: string;
+  public Documents: array of string;
+  public JsonReport: boolean := false;
+end record;
+
+// Generated source and the source-line offset of the primary example.
+public type Prepared = record
+  public Target: string;
+  public FileName: string;
+  public SourceStart: integer;
+end record;
+
+// Result presented with the original Markdown location.
+public type Outcome = record
+  public Document: string;
+  public Line: integer;
+  public Id: string;
+  public Passed: boolean;
+  public Message: string;
+end record;
+end unit;

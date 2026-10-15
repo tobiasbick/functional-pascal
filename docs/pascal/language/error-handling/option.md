@@ -4,14 +4,14 @@ The code fragments use `uses Std.Conv as Conv, Std.Console as Console;`.
 
 `Option of T` represents a value that may be absent:
 
-```pascal
+```pascal id=example-1 fragment context=body
 const O: option of integer := Some(42);
 const N: option of integer := None;
 ```
 
 ## Using Option
 
-```pascal
+```pascal id=example-2 fragment context=declarations
 function FindIndex(Items: array of integer; Target: integer): option of integer;
 begin
   for I: integer := 0 to Items.Length() - 1 do
@@ -26,7 +26,7 @@ end function;
 
 ## Handling with case
 
-```pascal
+```pascal id=example-3 fragment context=option-find
 const Idx: option of integer := FindIndex([10, 20, 30], 20);
 case Idx of
   when Some(const I):

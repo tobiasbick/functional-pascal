@@ -1,0 +1,7 @@
+program DocumentationExample;
+uses Std.Random as Random;
+
+begin
+// @example
+
+end.

@@ -4,7 +4,7 @@
 pub(super) struct CodeBlock {
     /// One-based line of the first source statement.
     pub(super) line: usize,
-    /// Fence info string; callers validate the accepted languages.
+    /// First fence-info word; callers validate the accepted language.
     pub(super) language: String,
     /// Source with normalized line endings, otherwise unchanged.
     pub(super) source: String,
@@ -26,7 +26,7 @@ pub(super) fn code_blocks(markdown: &str) -> Vec<CodeBlock> {
         } else if let Some(language) = trimmed.strip_prefix("```") {
             current = Some(CodeBlock {
                 line: index + 2,
-                language: language.to_owned(),
+                language: language.split_whitespace().next().unwrap_or("").to_owned(),
                 source: String::new(),
             });
         } else {

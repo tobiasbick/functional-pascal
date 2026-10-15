@@ -1,0 +1,31 @@
+// The normal regression suite checks every handbook and root README Pascal example.
+program DocumentationExamplesTest;
+
+uses Std.Fs as Fs, Std.Json.Fields as Fields, Std.Path as Path, Std.Proc as Proc, Std.Test as Test;
+
+begin
+  var Repository := '.';
+  while not Fs.IsFile(Path.Join([Repository, 'tools/doc-examples/doc-examples.fpasprj'])) do
+    Repository := Path.Join([Repository, '..']);
+    if Repository.Length() > 40 then
+      Test.Fail('Run documentation tests inside the repository.');
+    end if;
+  end while;
+  const Library := Path.Join([Repository, 'lib']);
+  const Project := Path.Join([Repository, 'tools/doc-examples/doc-examples.fpasprj']);
+  const Output := Path.Join([Test.ScratchDir(), 'documentation']);
+  const Checked := Proc.RunCapture(
+    Proc.CurrentExecutable().Unwrap(), [
+      'run', '--std-lib', Library, Project, '--', '--root', Repository,
+      '--output', Output, '--json'
+    ]
+  ).Unwrap();
+  if Checked.ExitCode <> 0 then
+    Test.Fail(Checked.Stdout + Checked.Stderr);
+  end if;
+  const Report := Fields.ParseObject(
+    Fs.ReadText(Path.Join([Output, 'report.json'])).Unwrap()
+  ).Unwrap();
+  Test.AssertTrue(Fields.IntegerField(Report, 'total').Unwrap() > 0);
+  Test.AssertEquals(0, Fields.IntegerField(Report, 'failed').Unwrap());
+end.

@@ -1,0 +1,10 @@
+program DocumentationExample;
+uses Std.Proc as Proc;
+type JobQueue = record
+  function Next(Self: JobQueue): option of string;
+  begin return None; end function;
+end record;
+begin
+const Queue := JobQueue();
+// @example
+end.

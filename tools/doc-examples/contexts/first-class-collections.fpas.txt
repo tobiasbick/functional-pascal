@@ -1,0 +1,5 @@
+program DocumentationExample;
+function Double(X: integer): integer; begin return X * 2; end function;
+begin
+// @example
+end.

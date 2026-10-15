@@ -1,0 +1,15 @@
+program DocumentationExample;
+uses Std.Tui as Tui, Std.Tasks as Tasks;
+type TuiCmd = Tui.TuiCmd;
+type TuiCmdOutput = Tui.TuiCmdOutput;
+type TuiMsg = Tui.TuiMsg;
+type TuiElement = Tui.TuiElement;
+type TuiElementBuilders = Tui.TuiElementBuilders;
+type TuiApplication = Tui.TuiApplication;
+type AppModel = record Value: integer; end record;
+type AppMessage = enum Loaded; end enum;
+const Initial: AppModel := AppModel(Value := 0);
+function Update(State: AppModel; Msg: TuiMsg; Cmd: TuiCmdOutput): AppModel; begin return State; end function;
+function View(State: AppModel): TuiElement; begin return TuiElementBuilders.MakeLabel('hello'); end function;
+// @example
+end.

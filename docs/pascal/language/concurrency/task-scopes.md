@@ -5,7 +5,7 @@ its child tasks have finished, so no child outlives the block that started it.
 
 Formal syntax: [`grammar.ebnf`](../../../specs/grammar.ebnf) (`scope_stmt`).
 
-```pascal
+```pascal id=example-1
 program ScopeExample;
 
 uses Std.Console as Console, Std.Tasks as Tasks;
@@ -40,7 +40,7 @@ Ownership never crosses a routine boundary:
   for work that finishes there, or pass an explicit TaskGroup for dynamic work
   owned by the calling task. A caller's scope is never inherited.
 
-```pascal
+```pascal id=example-2 fragment context=tasks-process
 scope
   for Item: integer in Items do
     discard go Process(Item);
@@ -59,7 +59,7 @@ end scope;
 Nested scopes are left innermost first. A routine's postconditions run after all of its
 scopes have ended.
 
-```pascal
+```pascal id=example-3 fragment context=tasks-audit
 function FirstMatch(Values: array of integer): integer;
 begin
   for Value: integer in Values do
@@ -110,7 +110,7 @@ Independent failures remain distinct even when their messages and source positio
 A child that returns `Error(...)` has **not** failed: its `Result` is an ordinary value. Keep
 the handle and forward the error explicitly:
 
-```pascal
+```pascal id=example-4 fragment context=tasks-load
 function LoadBoth(Left: string; Right: string): result of (string, string);
 begin
   scope
@@ -151,7 +151,7 @@ Everything else is rejected with FP3040, which names the owning scope:
 This also rejects native operations such as `Jobs.ForEach(Callback)` when they would pass
 scope-owned handles to a callback through a callable value.
 
-```pascal
+```pascal id=example-5 fragment context=tasks-fetch
 function Total(Jobs: array of task of integer): integer;
 begin
   var Sum: integer := 0;

@@ -1,0 +1,6 @@
+program DocumentationExample;
+type Point = record X: integer; Y: integer; end record;
+begin discard
+// @example
+;
+end.

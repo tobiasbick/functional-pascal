@@ -2,7 +2,7 @@
 
 Deterministic pseudo-random number helpers for simulations, games, randomized tests, and similar non-security work. This page is the **full API** for the unit.
 
-```pascal
+```pascal id=example-1
 program Example;
 
 uses Std.Console as Console, Std.Random as Random;
@@ -36,7 +36,7 @@ Calling `Random` or `RandomInt` before either seeding procedure automatically in
 
 Returns a pseudo-random real number in `[0.0, 1.0)`.
 
-```pascal
+```pascal id=example-2 fragment context=body-random
 const R: real := Random.Random();
 ```
 
@@ -44,7 +44,7 @@ const R: real := Random.Random();
 
 Returns an unbiased pseudo-random integer in `[Lo, Hi]`, including either bound. The full `integer` range is supported. A runtime error occurs when `Lo > Hi`.
 
-```pascal
+```pascal id=example-3 fragment context=body-random
 const Die: integer := Random.RandomInt(1, 6);
 ```
 
@@ -52,7 +52,7 @@ const Die: integer := Random.RandomInt(1, 6);
 
 Replaces the current VM's pseudo-random state with a seed supplied by the operating system. A runtime error occurs if that source is unavailable; the runtime never substitutes a predictable seed.
 
-```pascal
+```pascal id=example-4 fragment context=body-random
 Random.Randomize();
 ```
 
@@ -60,7 +60,7 @@ Random.Randomize();
 
 Replaces the current VM's pseudo-random state with the repeatable sequence selected by `Seed`. Reusing a seed restarts that sequence.
 
-```pascal
+```pascal id=example-5 fragment context=body-random
 Random.SetSeed(17);
 const First: integer := Random.RandomInt(1, 100);
 Random.SetSeed(17);

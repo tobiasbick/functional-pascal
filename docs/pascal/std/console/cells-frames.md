@@ -9,7 +9,7 @@ All coordinates in this API are **1-based and screen-absolute**. They do not use
 
 ## Quick reference
 
-```pascal
+```pascal id=example-1 fragment context=declarations
 type ColorKind = enum
   Crt;
   Ansi256;
@@ -63,7 +63,7 @@ end record;
 
 Use the constructors instead of assembling a `Color` record by hand:
 
-```pascal
+```pascal id=example-2 fragment context=body-console
 const Accent: Console.Color := Console.RgbColor(255, 160, 32);
 const Tile: Console.Cell := Console.Cell(
   glyph := 'A',
@@ -105,7 +105,7 @@ positive; a fully off-screen rectangle has no visible effect.
 `WriteCells` starts at `(X, Y)` and advances by each glyph's terminal display width. Painting stops
 at the screen edge. A wide glyph reserves its following column as a continuation:
 
-```pascal
+```pascal id=example-3 fragment context=body-console
 const Cells: array of Console.Cell := [
   Console.Cell(
     glyph := 'A',
@@ -135,7 +135,7 @@ remains.
 Without a frame, cell operations and existing console operations remain immediate. A frame batches
 screen changes until `Present`, reducing visible tearing in fullscreen redraws:
 
-```pascal
+```pascal id=example-4 fragment context=console-frame
 Console.BeginFrame();
 Console.FillRect(
   Console.Rect(x := 1, y := 1, width := Console.ScreenWidth(), height := Console.ScreenHeight()),
@@ -168,7 +168,7 @@ not checked again for further expansion.
 
 Each handle is one-shot:
 
-```pascal
+```pascal id=example-5 fragment context=body-console
 const Underlay: Console.SavedRegion := Console.SaveRegion(
   Console.Rect(x := 10, y := 4, width := 24, height := 5)
 );

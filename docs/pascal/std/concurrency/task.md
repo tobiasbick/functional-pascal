@@ -26,7 +26,7 @@ probe. Hosted blocking I/O and non-cooperative computation in children can still
 worker and delay progress; this is not a hard shutdown or wall-clock deadline guarantee. Debugger
 execution uses the same pending-operation state with its deterministic scheduling clock.
 
-```pascal
+```pascal id=example-1
 program Example;
 
 uses Std.Console as Console, Std.Tasks as Tasks;
@@ -114,7 +114,7 @@ Cancellation is a request, not forced task termination. A task or hosted blockin
 only when it checks the token. The cancellation-aware `Std.Net` connect, accept, read, and write
 operations observe tokens while their interruptible network phases are pending.
 
-```pascal
+```pascal id=example-2 fragment context=body-console-tasks
 const Source: Tasks.CancellationSource := Tasks.CreateCancellationSource();
 const Token: Tasks.CancellationToken := Tasks.GetCancellationToken(Source);
 discard Tasks.Cancel(Source);
@@ -299,14 +299,14 @@ debugger failure recovery after its terminal report has been published.
 `CreateChannel` creates a FIFO queue with fixed capacity. The declaration supplies the element type
 because capacity alone cannot infer `T`:
 
-```pascal
+```pascal id=example-3 fragment context=body-tasks
 const Messages: channel of string := Tasks.CreateChannel(16);
 ```
 
 `Send` waits until space is available. `Receive` waits until a value is available. Successful sends
 return `Ok(true)`; successful receives return `Ok(Value)`. Values are received in send order.
 
-```pascal
+```pascal id=example-4 fragment context=channel-messages
 case Tasks.Send(Messages, 'ready') of
   when Ok(_):
     begin
@@ -360,7 +360,7 @@ it is a procedure operation: `Wait(Handle);` completes without a value.
 Using that procedure form as an expression is rejected, including inside an
 aggregate or another call's arguments.
 
-```pascal
+```pascal id=example-5 fragment context=task-square
 scope
   const T: task of integer := go Square(6);
   Console.WriteLn(Tasks.Wait(T));
@@ -380,7 +380,7 @@ for functions with one result type. Differently typed function/procedure handles
 cannot share a task array. Use a scope to join differently typed children, or
 wait on separately typed handles outside a shared scope.
 
-```pascal
+```pascal id=example-6 fragment context=task-procedures
 scope
   const Ta: task := go Work(1); // Work is a procedure.
   const Tb: task := go Work(2);
@@ -414,7 +414,7 @@ physical order in which workers finished, and does not promise fairness.
 by `Wait` still counts as complete, as with `WaitAll`; waiting for its value again remains an error.
 Existing runtime-wide worker-failure handling remains active.
 
-```pascal
+```pascal id=example-7 fragment context=task-wait-any
 const First: integer := Tasks.WaitAny([Ta, Tb]);
 // Both results still belong to their task handles.
 Tasks.WaitAll([Ta, Tb]);

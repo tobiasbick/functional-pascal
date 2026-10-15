@@ -2,7 +2,7 @@
 
 JSON parsing and stringification with an explicit Functional Pascal value representation.
 
-```pascal
+```pascal id=example-1
 program Example;
 
 uses Std.Console as Console, Std.Json as Json;
@@ -37,14 +37,16 @@ Import with `uses Std.Json as Json;` and access public symbols as `Json.Name`. U
 
 ### `JsonValue`
 
-```pascal
+```pascal id=example-2 fragment context=declarations
+type JsonText = string;
+
 type JsonValue = enum
   NullValue;
   Bool(Value: boolean);
   Number(Value: real);
-  String(Value: JsonValue.string);
+  String(Value: JsonText);
   ArrayValue(Items: array of JsonValue);
-  Object(Fields: dict of JsonValue.string to JsonValue);
+  Object(Fields: dict of JsonText to JsonValue);
 end enum;
 ```
 
@@ -58,7 +60,7 @@ Arrays use `array of JsonValue`.
 
 ### `Parse`
 
-```pascal
+```text
 function Parse(Text: string): Result of (Json.JsonValue, string);
 ```
 
@@ -66,7 +68,7 @@ Object members become dictionary entries in document order. Rejects duplicate ob
 
 Parses JSON text. Accepted JSON returns `Ok(JsonValue)`. Invalid JSON returns `Error(Message)` instead of aborting the program.
 
-```pascal
+```pascal id=example-4 fragment context=body-console-json
 const R: result of (Json.JsonValue, string) := Json.Parse('[1, true, null]');
 case R of
   when Ok(const Value):
@@ -78,7 +80,7 @@ end case;
 
 ### `Stringify`
 
-```pascal
+```text
 function Stringify(Value: Json.JsonValue): string;
 ```
 
@@ -89,7 +91,7 @@ A number with an integral value up to 2^53 in magnitude is written without a fra
 zero stays `-0.0`. JSON does not distinguish these forms, so `Parse` reads either back as the same
 real value.
 
-```pascal
+```pascal id=example-6 fragment context=body-console-json
 const Value: Json.JsonValue := Json.JsonValue.ArrayValue([
   Json.JsonValue.Bool(true),
   Json.JsonValue.NullValue,

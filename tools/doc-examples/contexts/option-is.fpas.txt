@@ -1,0 +1,7 @@
+program DocumentationExample;
+procedure ReportMissing(); begin end procedure;
+function Example(Item: option of integer; Response: result of (option of string, string)): boolean;
+begin
+// @example
+end function;
+begin end.

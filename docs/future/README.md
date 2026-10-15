@@ -28,7 +28,8 @@ Current implemented behavior belongs under `docs/pascal/`, not here.
 - [Agent wishes](agent-wishes.md): the agent's wish list — writing FPAS without training data,
   shared wins for humans and agents (tested documentation examples, richer diagnostics), and CLI
   tools with JSON output for debugging (replacing the JSONL protocol) and code navigation; DAP and
-  LSP stay for humans; the human is still undecided; recorded as an idea only.
+  LSP stay for humans. A1 and S1 are implemented; the
+  remaining tooling wishes are ideas without an implementation plan.
 
 ## Architecture records and development intake
 
@@ -37,6 +38,7 @@ Current implemented behavior belongs under `docs/pascal/`, not here.
 | Planning | [AP workflow and templates](improve-syntax/README.md) | Empty package index, reusable decision/implementation work packages, dependencies and completion checks |
 | Compiler | [Panic and language-limit follow-ups](compiler-panic-followups.md) | Intake for newly discovered compiler panics and language limitations |
 | Dogfooding | [Dogfooding gaps](dogfooding-gaps.md) | Intake for gaps found while writing agent helper scripts in FPAS |
+| Documentation | [Example inventory](documentation-example-inventory.md) | Historical S1 baseline before the implemented Markdown example checker |
 
 ## Rules
 

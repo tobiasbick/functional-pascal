@@ -8,7 +8,7 @@ Use `null;` when an iteration intentionally performs no action.
 
 ## Counting up
 
-```pascal
+```pascal id=example-1 fragment context=body-console
 for I: integer := 1 to 10 do
   Console.WriteLn(I);
 end for;
@@ -16,7 +16,7 @@ end for;
 
 ## Counting down
 
-```pascal
+```pascal id=example-2 fragment context=body-console
 for I: integer := 10 downto 1 do
   Console.WriteLn(I);
 end for;

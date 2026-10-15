@@ -1,0 +1,6 @@
+program DocumentationExample;
+uses Std.Console as Console;
+begin
+const Status := 0;
+// @example
+end.

@@ -24,14 +24,17 @@ Record functions and procedures declared in a unit are private by default.
 `public` is written directly before each exported routine, before an optional
 `static`. FPAS has no visibility sections and no explicit `private` keyword.
 
-```pascal
+```pascal id=example-1 fragment context=unit
 type
   Counter = record
     Value: integer;
 
     function ReadValue(Self: Counter): integer;
+    begin return Self.Value; end function;
     public static function Create(): Counter;
+    begin return Counter(Value := 0); end function;
     public function Current(Self: Counter): integer;
+    begin return Self.ReadValue(); end function;
   end record;
 ```
 
@@ -52,7 +55,7 @@ For a generic record, the receiver forwards the record's parameters in declarati
 order, such as `Self: Box of T`. A different concrete instantiation or reordered
 parameters cannot replace that receiver. See [generic records](generics.md#generic-records).
 
-```pascal
+```pascal id=example-2 fragment context=declarations-console-conv-math
 type Point = record
   X: real;
   Y: real;
@@ -73,7 +76,7 @@ end record;
 
 Calling instance methods:
 
-```pascal
+```pascal id=example-3 fragment context=point-distance
 const A: Point := Point(X := 0.0, Y := 0.0);
 const B: Point := Point(X := 3.0, Y := 4.0);
 const Dist: real := A.DistanceTo(B); // Self = A, Other = B
@@ -86,7 +89,7 @@ end.
 Returned record values can keep calling instance methods (and reading fields)
 without intermediate variables:
 
-```pascal
+```pascal id=example-4 fragment context=point-chain
 const Next: Point := BuildOrigin().Offset(1.0, 2.0).Normalize();
 ```
 
@@ -97,7 +100,7 @@ See [Expression postfix chaining](../functions/postfix-chaining.md).
 Reading an instance method without calling it produces a callable value with the
 receiver bound. The resulting type omits the implicit `Self` parameter:
 
-```pascal
+```pascal id=example-5 fragment context=header-console
 type Counter = record
   Base: integer;
 
@@ -137,7 +140,7 @@ A record may declare a `static function` or `static procedure` inside its type
 body. Static routines have no implicit receiver and must not declare a `Self`
 parameter. They are called through the type name:
 
-```pascal
+```pascal id=example-6 fragment context=declarations-console-conv
 type Point = record
   X: integer;
   Y: integer;
@@ -164,7 +167,7 @@ type Point = record
 end record;
 ```
 
-```pascal
+```pascal id=example-7 fragment context=point-static
 const P: Point := Point.Create(3, 4);
 const O: Point := Point.Origin();
 
@@ -191,14 +194,14 @@ Rules:
 Construction helpers often use distinct names such as `Create` and `From…`
 instead of overloads:
 
-```pascal
+```text
 TuiRect.Create(X, Y, Width, Height)
 TuiRect.FromEdges(Left, Top, Right, Bottom);
 ```
 
 Copying a record does not need a static function; records have value semantics:
 
-```pascal
+```pascal id=example-9 fragment context=point-copy
 const Copy: Point := OtherPoint;
 ```
 
@@ -210,7 +213,7 @@ record or built-in value can start a chain, such as `PointToString(P).Trim()`.
 Declared methods continue a chain by returning `Self`, another record, or a
 built-in type. See [Dot calls](../functions/fluent-calls.md).
 
-```pascal
+```pascal id=example-10 fragment context=point-conversion
 function PointToString(P: Point): string;
 begin
   return '(' + Conv.RealToStr(P.X) + ', ' + Conv.RealToStr(P.Y) + ')';

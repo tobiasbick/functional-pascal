@@ -4,7 +4,7 @@ Integers support decimal and hexadecimal notation. Underscores are allowed as vi
 
 Formal syntax: [`grammar.ebnf`](../../../specs/grammar.ebnf) (`integer_literal`, `real_literal`).
 
-```pascal
+```pascal id=example-1 fragment context=body
 const A: integer := 1_000_000; // One million with digit separators
 const B: integer := $FF; // Hexadecimal notation for 255
 const C: integer := $FFFF; // Hexadecimal notation for 65535
@@ -12,7 +12,7 @@ const C: integer := $FFFF; // Hexadecimal notation for 65535
 
 Real literals require digits on both sides of the decimal point. Scientific notation is supported:
 
-```pascal
+```pascal id=example-2 fragment context=body
 const X: real := 3.14;
 const Y: real := 1.5e10; // Scientific notation for 15000000000.0
 const Z: real := 3.0e-4; // Scientific notation for 0.0003
@@ -27,7 +27,7 @@ minimum integer. Their positive magnitudes cannot be used as integer values.
 The minimum form is recognized immediately after `-`; a parenthesized positive
 magnitude such as `-(9223372036854775808)` remains invalid.
 
-```pascal
+```pascal id=example-3 fragment context=body
 const Minimum: integer := -9223372036854775808;
 const HexMinimum: integer := -$8000000000000000;
 const Maximum: integer := 9223372036854775807;

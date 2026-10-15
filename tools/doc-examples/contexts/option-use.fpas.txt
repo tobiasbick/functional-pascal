@@ -1,0 +1,6 @@
+program DocumentationExample;
+procedure Use(Value: integer); begin end procedure;
+begin
+const Item: option of integer := Some(1);
+// @example
+end.

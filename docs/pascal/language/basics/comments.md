@@ -5,14 +5,14 @@ Functional Pascal has one comment syntax: `//`. A comment starts with `//` and e
 
 Formal syntax: [`grammar.ebnf`](../../../specs/grammar.ebnf) (Part 1 — comments).
 
-```pascal
+```pascal id=example-1 fragment context=body
 // This is a comment.
 const Count: integer := 1; // This is also a comment.
 ```
 
 For multiple comment lines, prefix every line with `//`:
 
-```pascal
+```pascal id=example-2 fragment context=body
 // The next value is displayed in the status line.
 // It is measured in seconds.
 const ElapsedSeconds: integer := 0;
@@ -28,7 +28,7 @@ A contiguous block of standalone `//` lines immediately before a declaration is 
 declaration's Markdown documentation. There must be no blank source line between the comment block
 and the declaration.
 
-```pascal
+```pascal id=example-3 fragment context=declarations
 // Returns the larger value.
 //
 // - `Left`: first candidate
@@ -49,7 +49,7 @@ contains only `//` becomes a blank Markdown line.
 
 A blank source line detaches a comment from the following declaration:
 
-```pascal
+```pascal id=example-4 fragment context=body
 // This comment is not declaration documentation.
 
 const Count: integer := 1;

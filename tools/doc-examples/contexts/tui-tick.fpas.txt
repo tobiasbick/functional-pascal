@@ -1,0 +1,17 @@
+program DocumentationExample;
+uses Std.Tui as Tui, Std.Tasks as Tasks;
+type TuiCmd = Tui.TuiCmd;
+type TuiCmdOutput = Tui.TuiCmdOutput;
+type TuiMsg = Tui.TuiMsg;
+type AnimationState = record Running: boolean; end record;
+type AppModel = record Animation: AnimationState; end record;
+function Advance(Animation: AnimationState; Elapsed: integer): AnimationState; begin return Animation; end function;
+procedure Update(State: AppModel; Msg: TuiMsg; Cmd: TuiCmdOutput);
+begin
+var Next := State;
+case Msg of
+// @example
+when TuiMsg.Started, TuiMsg.Key(_), TuiMsg.Pointer(_), TuiMsg.QuitRequested, TuiMsg.Resize(_), TuiMsg.FocusChanged(_, _), TuiMsg.Action(_, _), TuiMsg.TextChanged(_, _, _, _), TuiMsg.TextAreaChanged(_, _, _, _, _), TuiMsg.CheckChanged(_, _, _), TuiMsg.SelectionChanged(_, _, _), TuiMsg.ScrollChanged(_, _, _), TuiMsg.MenuChanged(_, _, _), TuiMsg.BackgroundFailed(_, _, _, _, _, _): null;
+end case;
+end procedure;
+begin end.

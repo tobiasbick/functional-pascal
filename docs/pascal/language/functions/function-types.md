@@ -4,7 +4,7 @@ Function types describe the signature of a callable:
 
 Formal syntax: [`grammar.ebnf`](../../../specs/grammar.ebnf) (`function_type`, `procedure_type`).
 
-```pascal
+```pascal id=example-1 fragment context=declarations
 type IntBinaryOp = function(A: integer; B: integer): integer;
 
 type StringAction = procedure(S: string);

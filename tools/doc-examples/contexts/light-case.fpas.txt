@@ -1,0 +1,7 @@
+program DocumentationExample;
+uses Std.Console as Console;
+// @include docs/pascal/language/pattern-matching/exhaustiveness.md#example-1-declaration
+begin
+const L := Light.Red;
+// @example
+end.

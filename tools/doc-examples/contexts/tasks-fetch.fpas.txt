@@ -1,0 +1,4 @@
+program DocumentationExample;
+uses Std.Tasks as Tasks, Std.Console as Console;
+function Fetch(Id: integer): integer; begin return Id; end function;
+// @example

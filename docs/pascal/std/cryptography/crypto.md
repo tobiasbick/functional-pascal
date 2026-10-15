@@ -2,7 +2,7 @@
 
 Cryptographically secure randomness supplied directly by the operating system. This page is the **full API** for the unit.
 
-```pascal
+```pascal id=example-1
 program Example;
 
 uses Std.Crypto as Crypto;
@@ -29,7 +29,7 @@ Both functions request randomness from the operating system. Failure is returned
 
 Returns exactly `Count` bytes. Each byte is represented by an `integer` in `0..255`, matching the existing FPAS byte-array convention. `Count` must be in `0..1048576`; invalid counts return `Error` without contacting the operating-system source.
 
-```pascal
+```pascal id=example-2 fragment context=body-console-crypto
 case Crypto.RandomBytes(32) of
   when Ok(const Bytes):
     Console.WriteLn(Bytes.Length());
@@ -42,7 +42,7 @@ end case;
 
 Returns a uniformly sampled integer in the inclusive range `[Lo, Hi]`. Equal bounds and the full `integer` range are supported. `Lo > Hi` returns `Error`.
 
-```pascal
+```pascal id=example-3 fragment context=body-console-crypto
 case Crypto.RandomInt(100000, 999999) of
   when Ok(const Code):
     Console.WriteLn(Code);

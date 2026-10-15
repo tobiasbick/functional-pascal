@@ -1,0 +1,8 @@
+program DocumentationExample;
+uses Std.Console as Console;
+procedure Greet(User: string); begin end procedure;
+procedure Retry(); begin end procedure;
+begin
+const Lookup: result of (option of string, string) := Ok(None);
+// @example
+end.

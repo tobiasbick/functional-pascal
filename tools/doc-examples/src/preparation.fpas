@@ -1,0 +1,177 @@
+unit DocExamples.Preparation;
+
+uses DocExamples.Model as Model, DocExamples.Markdown as Markdown, Std.Fs as Fs, Std.Path as Path;
+
+type Wrapped = record
+  Source: string;
+  Start: integer;
+end record;
+
+function SafePath(Name: string): boolean;
+begin
+  if Name.IsEmpty() or Name.StartsWith('/') or ('\' in Name) or (':' in Name) or ('"' in Name) then
+    return false;
+  end if;
+
+  for Part: string in Name.Split('/') do
+    if Part.IsEmpty() or (Part in ['.', '..']) then
+      return false;
+    end if;
+  end for;
+
+  return true;
+end function;
+
+function IncludedSource(Root: string; Reference: string): string;
+begin
+  const Parts := Reference.Split('#');
+  if (Parts.Length() <> 2) or not SafePath(Parts[0]) then
+    panic('Invalid context reference ' + Reference);
+  end if;
+
+  for Item: Model.Example in Markdown.Read(Path.Join([Root, Parts[0]])) do
+    if (Item.Id = Parts[1]) and (Item.Language = 'pascal') then
+      return Item.Source;
+    end if;
+  end for;
+
+  panic('Unknown context example ' + Reference);
+end function;
+
+function Wrap(Item: Model.Example; Options: Model.Options): Wrapped;
+begin
+  if Item.Context.IsEmpty() then
+    return Wrapped(Source := Item.Source, Start := 1);
+  end if;
+  const FileName := Path.Join([
+    Options.Root,
+    'tools/doc-examples/contexts',
+    Item.Context + '.fpas.txt'
+  ]);
+  if not Fs.IsFile(FileName) then
+    panic(Item.Document + ': missing context ' + Item.Context);
+  end if;
+  var Output := '';
+  var Slots := 0;
+  var Start := 1;
+  for Line: string in Fs.ReadText(FileName).Unwrap().Replace(#13#10, #10).Split(#10) do
+    const Trimmed := Line.Trim();
+    if Trimmed = '// @example' then
+      Start := Output.Split(#10).Length();
+      Output := Output + Item.Source;
+      Slots := Slots + 1;
+    elsif Trimmed.StartsWith('// @include ') then
+      Output := Output + IncludedSource(Options.Root, Trimmed.Slice(12, Trimmed.Length() - 12));
+    else
+      Output := Output + Line + #10;
+    end if;
+  end for;
+
+  if Slots <> 1 then
+    panic('Context must contain exactly one // @example: ' + Item.Context);
+  end if;
+
+  return Wrapped(Source := Output, Start := Start);
+end function;
+
+procedure WriteSource(FileName: string; Source: string);
+begin
+  discard Fs.CreateDirAll(Path.DirName(FileName)).Unwrap();
+  discard Fs.WriteText(FileName, Source).Unwrap();
+end procedure;
+
+function UnitSource(Source: string): boolean;
+begin
+  for Line: string in Source.Split(#10) do
+    const Text := Line.Trim();
+    if not Text.IsEmpty() and not Text.StartsWith('//') then
+      return Text.ToLower().StartsWith('unit ');
+    end if;
+  end for;
+
+  return false;
+end function;
+
+// Expand the explicit context and copy only this example's project companions.
+public function Prepare(Item: Model.Example; Options: Model.Options; Items: array of Model.Example; Directory: string): Model.Prepared;
+begin
+  discard Fs.CreateDirAll(Directory).Unwrap();
+  const Expanded := Wrap(Item, Options);
+  const Source := Expanded.Source;
+  var FileName := Item.FileName;
+  if FileName.IsEmpty() then
+    FileName := if Item.Execute then 'example_test.fpas' else 'example.fpas' end if;
+  end if;
+
+  if not SafePath(FileName) then
+    panic('Invalid example output path ' + FileName);
+  end if;
+  const Destination := Path.Join([Directory, FileName]);
+  WriteSource(Destination, Source);
+  var Included: array of string := [FileName];
+  var Written: array of string := [FileName];
+  const Library := UnitSource(Source);
+  if Library and Item.Execute then
+    panic('A unit cannot have the run fence option: ' + Item.Document);
+  end if;
+
+  if not Item.Project.IsEmpty() then
+    for Companion: Model.Example in Items do
+      if (Companion.Document = Item.Document) and (Companion.Project = Item.Project)
+        and
+        (Companion.Id <> Item.Id)
+      then
+        if Companion.FileName.IsEmpty() or not SafePath(Companion.FileName) then
+          panic('Project companions require a relative file path.');
+        end if;
+
+        if Companion.FileName in Written then
+          panic('Duplicate project output file ' + Companion.FileName);
+        end if;
+
+        Written.PushInPlace(Companion.FileName);
+        WriteSource(Path.Join([Directory, Companion.FileName]), Companion.Source);
+        if (Companion.Language = 'pascal') and (not Library or UnitSource(Companion.Source)) then
+          Included.PushInPlace(Companion.FileName);
+        end if;
+      end if;
+    end for;
+  end if;
+
+  if not Item.Context.IsEmpty() then
+    for Companion: string in Fs.Glob(
+      Path.Join([Options.Root, 'tools/doc-examples/contexts', Item.Context, '*.fpas'])
+    ).Unwrap() do
+      const Name := Path.BaseName(Companion);
+      if Name in Included then
+        panic('Duplicate context output file ' + Name);
+      end if;
+
+      WriteSource(Path.Join([Directory, Name]), Fs.ReadText(Companion).Unwrap());
+      Included.PushInPlace(Name);
+    end for;
+  end if;
+  var Target := Path.Join([Directory, 'example.fpasprj']);
+  if not Item.Manifest.IsEmpty() then
+    if not SafePath(Item.Manifest) then
+      panic('Invalid example manifest path.');
+    end if;
+
+    Target := Path.Join([Directory, Item.Manifest]);
+    if not Fs.IsFile(Target) then
+      panic('Missing documented project manifest ' + Item.Manifest);
+    end if;
+  else
+    const Sources := '"' + Included.Join('", "') + '"';
+    const Kind := if Library then 'library' elsif Item.Execute then 'test' else 'program' end if;
+    const Main := if Kind = 'program' then 'main = "' + FileName + '"'#10 else '' end if;
+    discard Fs.WriteText(
+      Target,
+      '[project]'#10'name = "documentation-example"'#10'kind = "' + Kind + '"'#10 + Main +
+      #10'[sources]'#10'include = [' + Sources + ']'#10
+    ).Unwrap();
+  end if;
+
+  return Model.Prepared(Target := Target, FileName := Destination, SourceStart := Expanded.Start);
+end function;
+end unit;

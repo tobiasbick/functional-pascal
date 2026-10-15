@@ -29,7 +29,7 @@ Formal syntax: [`grammar.ebnf`](../../../specs/grammar.ebnf) (`case_stmt`, `case
 
 Patterns bind names explicitly with `const Name` and ignore a field with `_`:
 
-```pascal
+```pascal id=example-2 fragment context=result-use
 case Response of
   when Ok(const Value):
     Use(Value);
@@ -68,7 +68,7 @@ to nonbinding [`is` tests](is-test.md).
 Patterns nest inside payload positions, and a payload may compare with a
 literal, a named compile-time constant, or an enum member:
 
-```pascal
+```pascal id=example-3 fragment context=nested-response
 case Response of
   when Ok(Some(const User)):
     Greet(User);
@@ -100,7 +100,7 @@ end case;
 
 ## Example
 
-```pascal
+```pascal id=example-4 fragment context=status-case
 case Status of
   when 0:
     Console.WriteLn('ok');

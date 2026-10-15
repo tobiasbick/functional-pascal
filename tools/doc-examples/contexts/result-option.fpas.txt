@@ -1,0 +1,6 @@
+program DocumentationExample;
+uses Std.Console as Console, Std.Conv as Conv;
+// @include docs/pascal/language/types/result-option-types.md#example-1
+begin
+// @example
+end.

@@ -1,0 +1,6 @@
+program DocumentationExample;
+// @include docs/pascal/language/types/records.md#example-1
+begin
+const OtherPoint := Point(X := 1.0, Y := 2.0);
+// @example
+end.

@@ -1,0 +1,16 @@
+program DocumentationExample;
+uses Std.Tui as Tui, Std.Tasks as Tasks;
+type TuiPoint = Tui.TuiPoint;
+type TuiControlId = Tui.TuiControlId;
+type TuiAction = Tui.TuiAction;
+type TuiElement = Tui.TuiElement;
+type TuiElementBuilders = Tui.TuiElementBuilders;
+begin
+const Id := TuiControlId.Create(1);
+const Text := 'hello';
+const Caret := 0;
+const Offset := TuiPoint.Create(0, 0);
+const ChangeAction := TuiAction.Create(1);
+discard
+// @example
+end.

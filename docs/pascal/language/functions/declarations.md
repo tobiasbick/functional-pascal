@@ -39,7 +39,7 @@ See [declaration order](../types/declaration-order.md).
 
 A function returns a value using `return`:
 
-```pascal
+```pascal id=example-2 fragment context=declarations
 function Add(A: integer; B: integer): integer;
 begin
   return A + B;
@@ -55,7 +55,7 @@ for task-handle and callable-capture restrictions.
 
 A procedure performs an action but returns no value:
 
-```pascal
+```pascal id=example-3 fragment context=declarations-console
 procedure SayHello(Name: string);
 begin
   Console.WriteLn('Hello, ' + Name + '!');
@@ -64,7 +64,7 @@ end procedure;
 
 Procedures use bare `return` to exit early without a value:
 
-```pascal
+```pascal id=example-4 fragment context=declarations-console
 procedure LogIfPositive(Count: integer; Value: integer);
 begin
   var LocalCount: integer := Count;

@@ -4,7 +4,7 @@ Text parsers returning `Result of (T, string)`. Use `case` to handle input
 locally, `try` to propagate a returned error, or `.Unwrap()` for deliberate abort.
 Formatting and conversions of typed values belong to [Std.Conv](conv.md).
 
-```pascal
+```pascal id=example-1
 program Example;
 
 uses Std.Console as Console, Std.Parse as Parse;
@@ -46,7 +46,7 @@ magnitude, not an unsigned bit-pattern reinterpretation. Returns `Ok(Value)` on
 success or `Error(Message)` on invalid text or overflow. A deliberate abort is
 `Parse.Int(Text).Unwrap()`.
 
-```pascal
+```pascal id=example-2 fragment context=body-console-parse
 const R: result of (integer, string) := Parse.Int(' +1_024 ');
 case R of
   when Ok(const Value):
@@ -70,7 +70,7 @@ For every finite R, `Real(RealToStr(R))` returns the identical binary64 bits,
 including integral reals and either sign of zero. See
 [RealToStr](conv.md#function-realtostrr-real-string).
 
-```pascal
+```pascal id=example-3 fragment context=body-console-parse
 const R: result of (real, string) := Parse.Real('1_024.0e-2');
 case R of
   when Ok(const Value):
@@ -86,7 +86,7 @@ end case;
 
 Parses boolean text. Leading and trailing whitespace is ignored; casing does not matter.
 
-```pascal
+```pascal id=example-4 fragment context=body-console-parse
 const R: result of (boolean, string) := Parse.Bool(' FALSE ');
 case R of
   when Ok(const Value):
@@ -110,7 +110,7 @@ HexInt and Int have distinct interpretations: `Parse.HexInt('10')` returns
 `Ok(16)`, whereas `Parse.Int('10')` returns `Ok(10)`. General Int requires `$`
 for hex and rejects the `0x`/`0X` prefix.
 
-```pascal
+```pascal id=example-5 fragment context=body-console-parse
 const R := Parse.HexInt('-0x8000000000000000');
 case R of
   when Ok(const Value):
@@ -127,7 +127,7 @@ Invalid text is a returned Error. Test its variant without binding data using
 error locally, and try to propagate an error from a compatible Result-returning
 function. Unwrap is the explicit runtime-failure boundary; try does not catch it.
 
-```pascal
+```pascal id=example-6 fragment context=parse-input
 case Parse.Int(Input) of
   when Ok(const N):
     Console.WriteLn(N);
@@ -139,7 +139,7 @@ end case;
 A plain default belongs in a case expression's failure arm, which runs only
 when selected:
 
-```pascal
+```pascal id=example-7 fragment context=parse-input
 const Count: integer := case Parse.Int(Input) of
   when Ok(const Value): Value;
   when Error(_): 0;
@@ -149,7 +149,7 @@ end case;
 All four parsers have the named parameter Text, accept positional or fully named
 calls, and can be used as ordinary callable values with matching signatures:
 
-```pascal
+```pascal id=example-8 fragment context=body-parse
 const Read: function(Text: string): result of (integer, string) := Parse.Int;
 const Value := Read(Text := '42');
 ```

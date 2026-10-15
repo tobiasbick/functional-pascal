@@ -107,7 +107,7 @@ are comparable. Whole arrays, dicts, callables, tasks and channels do not suppor
 equality. Ordering is scalar. `in` tests array values, dict keys, string substrings,
 or subrange bounds. Boolean conditions never accept an integer as truthy.
 
-```pascal
+```pascal id=example-1 run
 program ReferenceBasics;
 
 uses Std.Conv as Conv, Std.Math as Math, Std.Parse as Parse, Std.Test as Test;
@@ -172,7 +172,7 @@ retain their resource semantics. `break;` exits
 the innermost loop; `continue;` starts its next iteration. Do not change the loop
 variable yourself. See [for-in](language/control-flow/for-in.md).
 
-```pascal
+```pascal id=example-2 run
 program ReferenceControl;
 
 uses Std.Test as Test;
@@ -281,7 +281,7 @@ old-value snapshot, access to body locals, or mutable global state in contracts.
 Contracts execute in all build modes; a failed contract is a runtime failure.
 Postconditions also run on returns caused by `try` propagation.
 
-```pascal
+```pascal id=example-3 run
 program ReferenceRoutines;
 
 uses Std.Test as Test;
@@ -339,7 +339,7 @@ once. A procedure may only finish a statement chain. Dot calls select declared r
 members (including callable fields) or native operations; they never search free
 functions by the type of their first parameter. Call free functions ordinarily.
 
-```pascal
+```pascal id=example-4 run
 program ReferenceRecords;
 
 uses Std.Test as Test;
@@ -400,7 +400,7 @@ cases must be exhaustive, even in statement form, and forbid `else`, including
 a redundant one. Guarded arms do not establish exhaustiveness. Coverage checks
 descend into nested payload patterns; already covered arms are rejected.
 
-```pascal
+```pascal id=example-5 run
 program ReferencePatterns;
 
 uses Std.Test as Test;
@@ -499,7 +499,7 @@ an `Error` or `None`, and there is no language catch block. `try` does not catch
 panic, failed Unwrap, or other runtime failures. It is forbidden in the program
 body, procedures, and functions returning an incompatible wrapper or ordinary type.
 
-```pascal
+```pascal id=example-6 run
 program ReferenceErrors;
 
 uses Std.Test as Test, Std.Parse as Parse;
@@ -607,7 +607,7 @@ arrays make no calls. InPlace commits only after success.
 String formatting uses Pascal specifiers (`'%d'.Format(7)`, `'%s'.Format('text')`),
 with positional arguments; `{}` is ordinary text.
 
-```pascal
+```pascal id=example-7 run
 program ReferenceCollections;
 
 uses Std.Test as Test;
@@ -694,7 +694,7 @@ recursive. The nearest lexical declaration wins, including before its source
 position. Calls and capture creation require initialized dependencies, including
 through callbacks and defaults; unsafe or unprovable uses produce FP3041.
 
-```pascal
+```pascal id=example-8 run
 program ReferenceCallables;
 
 uses Std.Test as Test;
@@ -769,7 +769,7 @@ recursive records can break the cycle through an Option. Generic recursive
 references preserve the same type parameters. Functions can recurse and return
 normally with explicit `return`.
 
-```pascal
+```pascal id=example-9 run
 program ReferenceGenerics;
 
 uses Std.Console as Console, Std.Test as Test;
@@ -871,7 +871,7 @@ different bounds need explicit conversion. They satisfy `Comparable` and `Printa
 but not `Numeric`. Converting real to integer is not an `integer(...)` cast;
 use the appropriate `Std.Math` rounding operation. Other conversions live in `Std.Conv`.
 
-```pascal
+```pascal id=example-10 run
 program ReferenceScalarTypes;
 
 uses Std.Test as Test;
@@ -936,7 +936,7 @@ channels when done; `CloseChannel` reports whether it closed the channel.
 Cancellation, timed operations, selection, task groups and supervision are library
 APIs described in [Std.Tasks](std/concurrency/task.md), not extra language constructs.
 
-```pascal
+```pascal id=example-11 run
 program ReferenceTasks;
 
 uses Std.Tasks as Tasks, Std.Test as Test;
@@ -980,7 +980,7 @@ write the unit using its declared name so the program imports exactly this sourc
 Units need a project to make their sources discoverable; a standalone program-file
 invocation does not automatically import neighboring files.
 
-```pascal
+```pascal id=example-12 project=reference file=values.fpas
 unit Reference.Values;
 
 const Offset: integer := 1;
@@ -1007,7 +1007,7 @@ Each unit can be imported only once per source, comparing case-insensitively.
 An alias cannot be shadowed by bindings, parameters or other declarations.
 `as` is contextual in `uses`; it is not a general cast operator.
 
-```pascal
+```pascal id=example-13 project=reference file=imports_test.fpas run
 program ReferenceImports;
 
 uses Reference.Values as Values, Std.Test as Test;

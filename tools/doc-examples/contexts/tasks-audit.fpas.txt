@@ -1,0 +1,4 @@
+program DocumentationExample;
+procedure Audit(Value: integer); begin end procedure;
+// @example
+begin end.

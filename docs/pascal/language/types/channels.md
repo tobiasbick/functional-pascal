@@ -3,10 +3,12 @@
 `channel of T` is a built-in handle type for bounded FIFO communication between tasks. The element
 type is part of the static type: `channel of integer` and `channel of string` are different types.
 
-```pascal
+```pascal id=example-1 fragment context=header
 uses Std.Tasks as Tasks;
-
+begin
 const Messages: channel of string := Tasks.CreateChannel(16);
+
+end.
 ```
 
 ## Type rules

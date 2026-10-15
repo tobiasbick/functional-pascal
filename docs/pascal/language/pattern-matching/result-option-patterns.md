@@ -11,7 +11,7 @@ ignores a payload. `None` has no payload and uses no parentheses.
 
 Destructuring `case` arms for `Result of (T, E)` and `Option of T`:
 
-```pascal
+```pascal id=example-1 fragment context=result-option
 case Success of
   when Ok(const Value):
     Console.WriteLn(Conv.IntToStr(Value));
@@ -29,7 +29,7 @@ end case;
 
 Payloads may hold nested patterns and comparisons:
 
-```pascal
+```pascal id=example-2 fragment context=nested-lookup
 case Lookup of
   when Ok(Some(const User)):
     Greet(User);
@@ -44,7 +44,7 @@ end case;
 
 Multiple destructure labels in one arm may reuse one binding name:
 
-```pascal
+```pascal id=example-3 fragment context=result-shared-binding
 case R of
   when Ok(const Msg), Error(const Msg):
     Console.WriteLn(Msg);

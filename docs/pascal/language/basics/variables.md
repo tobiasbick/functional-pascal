@@ -8,7 +8,7 @@ statement lists. Declaration groups are rejected with
 Formal syntax: [`grammar.ebnf`](../../../specs/grammar.ebnf)
 (`var_declaration`, `var_stmt`, `const_declaration`, and `const_stmt`).
 
-```pascal
+```pascal id=example-1 fragment context=body
 const Name: string := 'Alice';
 var Age: integer := 30;
 Age := Age + 1;
@@ -22,7 +22,7 @@ value semantics. Shared handles retain their existing sharing rules.
 
 Inline variables use the same syntax:
 
-```pascal
+```pascal id=example-2 fragment context=header
 begin
   var Count: integer := 0;
   Count := Count + 1;

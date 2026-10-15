@@ -60,7 +60,7 @@ cargo run -p fpas-cli -- run examples/hello.fpas
 
 Create `hello.fpas`:
 
-```pascal
+```pascal id=example-3
 program Hello;
 
 uses Std.Console as Console;
@@ -146,7 +146,7 @@ standard-library demonstrations remain under `examples/`.
 
 ### Fibonacci
 
-```pascal
+```pascal id=example-10
 program Fibonacci;
 
 uses Std.Console as Console;
@@ -170,7 +170,7 @@ end.
 
 ### Pattern Matching
 
-```pascal
+```pascal id=example-11
 program PatternMatching;
 
 uses Std.Console as Console;
@@ -200,7 +200,7 @@ end.
 
 ### Higher-Order Functions
 
-```pascal
+```pascal id=example-12
 program HigherOrderFunctions;
 
 uses Std.Console as Console;
@@ -223,7 +223,7 @@ end.
 
 ### Error Handling with Option
 
-```pascal
+```pascal id=example-13
 program OptionExample;
 
 uses Std.Console as Console;
@@ -259,7 +259,7 @@ Import `Std.Parse` through an alias. Its `Int`, `Real`, `Bool`, and `HexInt`
 operations take `Text: string` and return `Result of (T, string)`. Use `try`
 inside a compatible function and `case` to handle the result locally:
 
-```pascal
+```pascal id=example-14
 program ParseExample;
 
 uses Std.Parse as Parse, Std.Console as Console;
@@ -301,6 +301,12 @@ and its background-work structure.
 ### Tests
 
 Author-facing tests are `*_test.fpas` programs under [`tests/`](tests) (`stdlib/`, including `stdlib/tui/`, `concurrency/`, `runner/`, `console/`, and `apps/`). Run the full suite with `fpas test tests/` or `fpas test tests/suite.fpasprj`. See [`docs/pascal/std/testing/test.md`](docs/pascal/std/testing/test.md) and [`examples/README.md`](examples/README.md).
+
+The suite also checks every Pascal example in this README and `docs/pascal/`.
+The [documentation example checker](docs/pascal/tools/documentation-examples.md)
+is written in FPAS. It checks fragments with explicit contexts and executes only
+examples marked `run`. Use `fpas run tools/doc-examples/doc-examples.fpasprj` to
+keep the generated sources and report under `.temp-data/` for inspection.
 
 ### Multi-file projects and libraries
 

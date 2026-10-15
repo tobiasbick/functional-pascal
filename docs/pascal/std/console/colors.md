@@ -23,7 +23,7 @@ The [cell drawing API](cells-frames.md) stores foreground and background colors 
 | `Ansi256Color(Index)` | `Index: 0..255` | `Ansi256` |
 | `RgbColor(Red, Green, Blue)` | each channel `0..255` | `Rgb` |
 
-```pascal
+```pascal id=example-1 fragment context=body-console
 const Value: Console.Cell := Console.Cell(
   glyph := 'X',
   foreground := Console.RgbColor(255, 128, 0),
@@ -106,12 +106,14 @@ Additional text-mode constants:
 - **State interaction:** does not change the packed value returned by `TextAttr()`. A later call to `TextColor`, `TextBackground`, `HighVideo`, `LowVideo`, `NormVideo`, or `SetTextAttr` overrides the RGB color.
 - **Errors:** runtime error if any channel is outside `0..255`.
 
-```pascal
+```pascal id=example-2 fragment context=header
 uses Std.Console as Console;
-
+begin
 Console.TextColorRGB(255, 128, 0); // orange foreground
 Console.TextBackgroundRGB(0, 0, 64); // dark-blue background
 Console.WriteLn('truecolor text');
+
+end.
 ```
 
 ### `procedure TextColor256(Index)`
@@ -124,11 +126,13 @@ Console.WriteLn('truecolor text');
 - **State interaction:** does not change the packed value returned by `TextAttr()`. A later call to `TextColor`, `TextBackground`, `HighVideo`, `LowVideo`, `NormVideo`, or `SetTextAttr` overrides the 256-color selection.
 - **Errors:** runtime error if the index is outside `0..255`.
 
-```pascal
+```pascal id=example-3 fragment context=header
 uses Std.Console as Console;
-
+begin
 Console.TextColor256(196); // bright red in xterm-256color
 Console.WriteLn('256-color text');
+
+end.
 ```
 
 ### `function TextAttr(): integer`

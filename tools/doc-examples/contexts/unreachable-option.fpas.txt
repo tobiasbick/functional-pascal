@@ -1,0 +1,7 @@
+program DocumentationExample;
+uses Std.Test as Test;
+procedure Use(); begin end procedure;
+begin
+const Item: option of integer := None;
+// @example
+end.

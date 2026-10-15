@@ -1,0 +1,124 @@
+program DocExamples;
+
+uses
+  DocExamples.Model as Model, DocExamples.Markdown as Markdown, DocExamples.Validation as Validation, DocExamples.Report as Report,
+  Std.Args as Args, Std.Conv as Conv, Std.Crypto as Crypto, Std.Fs as Fs, Std.Path as Path, Std.Proc as Proc, Std.Tasks as Tasks;
+
+function Arguments(): Model.Options;
+begin
+  var Root := '.';
+  var Output := '';
+  var Compiler := Proc.CurrentExecutable().Unwrap();
+  var StandardLibrary := '';
+  var Documents: array of string := [];
+  var JsonReport := false;
+  var Index := 0;
+  while Index < Args.ParamCount() do
+    const Name := Args.ParamStr(Index);
+    if Name = '--json' then
+      JsonReport := true;
+    else
+      if Index + 1 >= Args.ParamCount() then
+        panic('Missing value after ' + Name);
+      end if;
+
+      Index := Index + 1;
+      const Value := Args.ParamStr(Index);
+      case Name of
+        when '--root':
+          Root := Value;
+        when '--output':
+          Output := Value;
+        when '--compiler':
+          Compiler := Value;
+        when '--std-lib':
+          StandardLibrary := Value;
+        when '--document':
+          Documents.PushInPlace(Value);
+        else
+          panic('Unknown option ' + Name);
+      end case;
+    end if;
+
+    Index := Index + 1;
+  end while;
+
+  if StandardLibrary.IsEmpty() then
+    StandardLibrary := Path.Join([Root, 'lib']);
+  end if;
+
+  if Output.IsEmpty() then
+    Output := Path.Join([
+      Root,
+      '.temp-data/doc-examples/run-' +
+      Conv.IntToHex(Crypto.RandomInt(0, 9223372036854775807).Unwrap(), 16)
+    ]);
+  end if;
+
+  if Documents.IsEmpty() then
+    Documents := Fs.Glob(Path.Join([Root, 'docs/pascal/**/*.md'])).Unwrap();
+    if Fs.IsFile(Path.Join([Root, 'README.md'])) then
+      Documents.PushInPlace(Path.Join([Root, 'README.md']));
+    end if;
+  end if;
+
+  if Documents.IsEmpty() then
+    panic('No Markdown documents selected.');
+  end if;
+
+  return Model.Options(
+    Root := Root,
+    Output := Output,
+    Compiler := Compiler,
+    StandardLibrary := StandardLibrary,
+    Documents := Documents,
+    JsonReport := JsonReport
+  );
+end function;
+
+begin
+  const Options := Arguments();
+  if Fs.Exists(Options.Output) then
+    panic('Output directory must be new: ' + Options.Output);
+  end if;
+
+  discard Fs.CreateDirAll(Options.Output).Unwrap();
+  var Items: array of Model.Example := [];
+  for Document: string in Options.Documents do
+    Items.ConcatInPlace(Markdown.Read(Path.Normalize(Document)));
+  end for;
+  const Examples := Items.Filter(
+    function(Item: Model.Example): boolean begin
+      return Item.Language = 'pascal';
+    end function
+  );
+  if Examples.IsEmpty() then
+    panic('No Pascal examples found.');
+  end if;
+  var Outcomes: array of Model.Outcome := [];
+  for Batch: integer := 0 to (Examples.Length() - 1) div 4 do
+    scope
+      var Jobs: array of task of Model.Outcome := [];
+      for Index: integer := Batch * 4 to Batch * 4 + 3 do
+        if Index < Examples.Length() then
+          Jobs.PushInPlace(
+            go Validation.Check(
+              Examples[Index],
+              Options,
+              Items,
+              Path.Join([Options.Output, 'example-' + Conv.IntToStr(Index + 1)])
+            )
+          );
+        end if;
+      end for;
+
+      for Job: task of Model.Outcome in Jobs do
+        Outcomes.PushInPlace(Tasks.Wait(Job));
+      end for;
+    end scope;
+  end for;
+
+  if Report.Write(Outcomes, Options) <> 0 then
+    panic('Documentation examples failed.');
+  end if;
+end.

@@ -4,7 +4,7 @@ The code fragments use `uses Std.Conv as Conv, Std.Console as Console;`.
 
 Helper functions for `Result of (T, E)` values. See [Error handling](../error-handling/README.md) for the type itself, constructors (`Ok`, `Error`), the `try` operator, and `case` destructuring.
 
-```pascal
+```pascal id=example-1
 program Example;
 
 uses Std.Console as Console;
@@ -39,7 +39,7 @@ Extracts the value from `Ok(value)`. **Runtime error** if `R` is `Error`.
 Use Unwrap when abort is intended; handle expected errors with case or propagate
 them with try inside a compatible Result-returning function.
 
-```pascal
+```pascal id=example-2 fragment context=body-console
 const R: result of (integer, string) := Ok(42);
 Console.WriteLn(R.Unwrap()); // 42
 ```
@@ -50,7 +50,7 @@ Console.WriteLn(R.Unwrap()); // 42
 
 Transforms the `Ok` value with `F`. If `R` is `Error`, returns it unchanged.
 
-```pascal
+```pascal id=example-3 fragment context=declarations-conv
 function DoubleToString(V: integer): string;
 begin
   return Conv.IntToStr(V * 2);
@@ -67,7 +67,7 @@ const M: result of (string, string) := R.Map(DoubleToString);
 
 Calls `F` with the `Ok` value. `F` returns a new `Result`, enabling chained fallible operations. If `R` is `Error`, returns it unchanged.
 
-```pascal
+```pascal id=example-4 fragment context=declarations-conv
 function PositiveToResult(V: integer): result of (string, string);
 begin
   if V > 0 then
@@ -88,7 +88,7 @@ const M: result of (string, string) := R.AndThen(PositiveToResult);
 
 Calls `F` with the `Error` value to attempt recovery. If `R` is `Ok`, returns it unchanged.
 
-```pascal
+```pascal id=example-5 fragment context=declarations
 function RecoverToZero(E: string): result of (integer, string);
 begin
   return Ok(0);

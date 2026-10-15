@@ -14,6 +14,30 @@ cargo bench-fpas record "vm-only note" --group vm
 
 Newest entries are prepended below this header.
 
+## 2026-10-15 — Failure dump balanced paired latency baseline
+
+- Group: `failure-dump`
+- Suite: [`suite.toml`](suite.toml)
+
+| bench | elapsed_ms | throughput |
+|-------|------------|------------|
+| failure_dump_scalar | 392 | throughput: enabled/disabled median change 4.761904761904759% |
+| failure_dump_calls | 355 | throughput: enabled/disabled median change 5.263157894736835% |
+| failure_dump_globals | 701 | throughput: enabled/disabled median change 0% |
+| failure_dump_spawn_wait | 966 | throughput: enabled/disabled median change 3.773584905660371% |
+| failure_dump_suspension | 9161 | throughput: enabled/disabled median change 0.38986354775828147% |
+| failure_dump_failure | 218 | throughput: enabled/disabled median change 18.181818181818187% |
+| failure_dump_large_report | 706 | throughput: enabled/disabled median change 384.61538461538464% |
+
+Local release baseline on a working tree based on `c49c0ae20`, using Rust
+1.99.0. Both modes pass the same unique report path, so they share the
+operating system's per-command-line process start cost. Three complete runs
+on a quiet system agree. `elapsed_ms` sums both modes' nine measured samples;
+the percentage compares rounded millisecond medians within the run and is not
+a before/after implementation speedup. Scalar, call and global rows differ by
+at most one timer tick. The [paired results and measurement limits](failure-dump.md#local-measurements-2026-10-15)
+include saved sample arrays, report sizes and in-process live-peer profiling.
+
 ## 2026-10-14 — In-place typed real register stores
 
 - Group: `vm`

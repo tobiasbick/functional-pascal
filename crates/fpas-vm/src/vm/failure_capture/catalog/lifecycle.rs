@@ -109,7 +109,7 @@ impl CaptureState {
                 record.state.store(COMPLETED, Ordering::Release);
             }
         }
-        self.catalog.changed.notify_all();
+        self.catalog.notify_changed();
     }
 
     /// Forget an outcome when the existing scheduler owner releases it.
@@ -251,7 +251,7 @@ impl Worker {
         if state.catalog.collecting.load(Ordering::Acquire) {
             *response = Some(snapshot);
         }
-        state.catalog.changed.notify_all();
+        state.catalog.notify_changed();
     }
 }
 
@@ -275,7 +275,7 @@ impl Drop for PoolCaptureGuard {
                 .lock()
                 .unwrap_or_else(|p| p.into_inner()) = Weak::new();
             self.record.state.store(FAILED, Ordering::Release);
-            self.state.catalog.changed.notify_all();
+            self.state.catalog.notify_changed();
         }
     }
 }

@@ -2,6 +2,7 @@
 
 mod bounds;
 mod lifecycle;
+mod live_peers;
 mod native;
 mod regressions;
 

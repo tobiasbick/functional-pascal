@@ -22,6 +22,8 @@ and syncs a sibling staging file, then atomically publishes a hard link to the
 new destination. A racing destination is preserved. The filesystem must support
 hard-link publication; failure is reported instead of using a non-atomic fallback.
 Owned staging files are removed on success and attempted cleanup follows errors.
+Process kills, out-of-memory termination, host aborts and native crashes end the
+process without a report.
 
 Program stdout and the selected text/JSON stderr diagnostic format are preserved.
 Successful publication prints no extra record. Runtime failure returns exit code

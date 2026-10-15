@@ -13,7 +13,7 @@ use std::{
     collections::BTreeMap,
     sync::{
         Arc, Condvar, Mutex,
-        atomic::{AtomicBool, AtomicU8},
+        atomic::{AtomicBool, AtomicU8, AtomicU64, Ordering},
     },
 };
 
@@ -40,7 +40,19 @@ pub(super) struct Catalog {
     template: Mutex<Option<Worker>>,
     changed: Condvar,
     signal: Mutex<()>,
+    // Counts published changes, so a collector never sleeps through one made during its scan.
+    generation: AtomicU64,
     collecting: AtomicBool,
+}
+
+impl Catalog {
+    /// Wake a waiting collector after a response or task state has been published.
+    fn notify_changed(&self) {
+        self.generation.fetch_add(1, Ordering::Release);
+        // Serialize with a collector between its generation check and its wait.
+        drop(self.signal.lock().unwrap_or_else(|p| p.into_inner()));
+        self.changed.notify_all();
+    }
 }
 
 const RUNNABLE: u8 = 0;

@@ -193,6 +193,7 @@ impl CaptureState {
             });
         }
         loop {
+            let observed = self.catalog.generation.load(Ordering::Acquire);
             let mut pending = false;
             for task in &mut tasks {
                 if task.snapshot.is_some()
@@ -239,7 +240,10 @@ impl CaptureState {
                 .signal
                 .lock()
                 .unwrap_or_else(|p| p.into_inner());
-            let _ = self.catalog.changed.wait_timeout(signal, wait);
+            // A change published during the scan is visible here; rescan instead of sleeping.
+            if self.catalog.generation.load(Ordering::Acquire) == observed {
+                let _ = self.catalog.changed.wait_timeout(signal, wait);
+            }
         }
         for task in &mut tasks {
             if let Some(snapshot) = &task.snapshot {

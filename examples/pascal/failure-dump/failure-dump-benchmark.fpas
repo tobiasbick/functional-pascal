@@ -73,9 +73,13 @@ begin
       const ReportPath := Path.Join([
         Output, 'report-' + Conv.IntToStr(Sample) + '-' + Conv.IntToStr(Position) + '.json'
       ]);
+      // Both modes pass the unique report path, so they share the operating system's
+      // per-command-line process start cost. The fixtures ignore program arguments.
       var Arguments := ['run', '--diagnostics', 'json', Image];
       if Capture then
         Arguments := Arguments.Push('--failure-dump').Push(ReportPath);
+      else
+        Arguments := Arguments.Push('--').Push(ReportPath);
       end if;
       const Started := Time.MonotonicMillis();
       const Outcome := Proc.RunCapture(Compiler, Arguments).Unwrap();

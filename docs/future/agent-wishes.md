@@ -12,14 +12,8 @@
 [A1](#a1-one-compact-language-reference) is implemented.
 [S1](#s1-compile-every-documentation-example) is implemented.
 [S2](#s2-diagnostics-with-source-excerpt-and-caret) is implemented.
-[D1](#d1-automatic-failure-dump) has an approved full-scope
-[implementation plan](failure-dump/README.md). Shared inspection, original-fault
-capture, cooperative task collection and CLI/JSON publication are implemented,
-reviewed and verified. Step 06's functional checks, documentation and local
-measurement tooling are complete and independently reviewed; valid local
-performance evidence remains open. Cloud timings are excluded from performance
-claims. The other wishes are ideas without an
-implementation plan. Human-facing tools stay: the DAP debugger
+[D1](#d1-automatic-failure-dump) is implemented.
+The other wishes are ideas without an implementation plan. Human-facing tools stay: the DAP debugger
 ([`debugger.md`](../pascal/tools/debugger.md)) and the language server
 ([`editor-integration.md`](../pascal/tools/editor-integration.md)). The JSONL debugger protocol
 would be replaced; see [Consequence: JSONL would go away](#consequence-jsonl-would-go-away).
@@ -30,11 +24,10 @@ navigation.
 ## Where to start
 
 Most value for the least work among the remaining wishes. Effort is a rough guess,
-not an estimate. A1, S1 and S2 are already implemented; see their status below.
+not an estimate. A1, S1, S2 and D1 are already implemented; see their status below.
 
 | Wish | Why first | Effort |
 | --- | --- | --- |
-| [D1](#d1-automatic-failure-dump) Automatic failure dump | Solves most bugs without a debugger | medium |
 | [A2](#a2-diagnostics-for-pascal-and-ada-habits) Diagnostics for Pascal and Ada habits | Biggest lever in the long run | large, ongoing |
 
 Everything else can wait until these exist.
@@ -149,8 +142,7 @@ workers. Unicode sequence widths, four-cell tab stops, control escaping and
 The permanent [diagnostics handbook](../pascal/tools/diagnostics.md#text-output)
 owns the output rules. Renderer, real CLI and Unix pseudoterminal tests cover
 alignment, source provenance, color policy and worker forwarding. The temporary
-S2 plan is complete and removed. D1's separate local performance acceptance
-remains open.
+S2 plan is complete and removed.
 
 #### S3. Declaration comments as the single source
 
@@ -184,25 +176,22 @@ out as structured data, and every run can be repeated exactly.
 
 #### D1. Automatic failure dump
 
-**Status: functional implementation verified; local performance acceptance pending.**
-The full scope is tracked in the temporary
-[failure-dump plan](failure-dump/README.md), outside the AP campaign. The first
-step defines the [contract](failure-dump/01-contract.md). Shared read-only inspection
-is implemented and verified. Original-failure capture and the opt-in embedded VM
-observer are implemented, independently reviewed and verified. Cooperative task
-collection and CLI/JSON publication are implemented, independently reviewed and
-verified. Functional end-to-end verification is complete and the
-[local measurement path](../bench/failure-dump.md) is ready. Valid local performance
-evidence remains open. Cloud timing results are excluded at the user's request.
-The overview owns the completion checklist and next step.
+**Status: implemented and verified.** With
+`fpas run --failure-dump PATH`, an escaping panic or runtime error writes one
+bounded JSON document: the original error, the failing task's call stack and
+frame values, globals, and the state and available frames of all relevant tasks.
+Execution keeps the ordinary concurrent scheduler; handled task failures create
+no report, and publication is atomic to a fresh path.
 
-With the implemented `--failure-dump PATH` option, an escaping panic or runtime error
-in `fpas run` writes one JSON document: original error, call stack, frame values,
-and the state and available frames of all relevant tasks. Bounds, unavailable
-data, ordinary concurrent scheduling, handled task failures and atomic
-publication belong to the same delivery. See the implemented
-[report schema and CLI contract](../pascal/tools/failure-dump.md). A failing-task-only
-dump does not complete D1. Many runtime bugs can then be diagnosed without a debug session.
+The permanent [runtime failure reports](../pascal/tools/failure-dump.md) page
+owns the CLI contract, JSON schema and bounds. Rust embedders use
+`Vm::set_failure_observer`, described under
+[diagnostics](../pascal/tools/diagnostics.md). VM, CLI and FPAS runner tests
+cover capture, task collection, publication and lifecycle. The
+[local measurements](../bench/failure-dump.md#local-measurements-2026-10-15)
+show no successful-run cost beyond timer resolution for scalar, call and global
+work, a small per-task cost for spawn/wait, bounded report costs, and live-peer
+collection far below its deadline. The temporary plan is complete and removed.
 
 #### D2. Record, replay, and query
 

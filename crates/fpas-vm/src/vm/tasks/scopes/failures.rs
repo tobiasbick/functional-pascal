@@ -73,6 +73,7 @@ pub(in crate::vm) fn scope_outcome(
 }
 
 fn attach_further_failures(primary: &mut VmError, further: &[VmError]) {
+    crate::vm::failure_capture::attach_related(primary, further);
     if further.is_empty() {
         return;
     }

@@ -45,6 +45,9 @@ pub(in crate::vm) enum RetainedResultReplacement {
 
 /// Mutable scheduler state shared by register workers; executable metadata remains immutable.
 pub(in crate::vm) struct TaskScheduler {
+    /// Optional original-fault capture, initialized before execution and read only on errors.
+    pub(in crate::vm) failure_capture:
+        std::sync::OnceLock<Arc<crate::vm::failure_capture::CaptureState>>,
     queue: Mutex<VecDeque<TaskState>>,
     available: Condvar,
     timers: TaskTimers<TaskState>,
@@ -65,6 +68,7 @@ impl TaskScheduler {
     /// Create an empty scheduler with no retained work or wait registrations.
     pub fn new() -> Self {
         Self {
+            failure_capture: std::sync::OnceLock::new(),
             queue: Mutex::new(VecDeque::new()),
             available: Condvar::new(),
             timers: TaskTimers::new(),

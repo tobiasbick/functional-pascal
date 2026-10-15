@@ -131,6 +131,9 @@ impl Worker {
         };
         callback.inherit_scope_cancellation(self);
         let execution = callback.run_in_place();
+        if let Err(error) = &execution {
+            self.capture_failure_continuation(error);
+        }
         self.callback_failed.set(execution.is_err());
         if execution.is_err() {
             self.scope_failure_sequence

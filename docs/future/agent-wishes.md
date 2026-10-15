@@ -12,8 +12,9 @@
 [A1](#a1-one-compact-language-reference) is implemented.
 [S1](#s1-compile-every-documentation-example) is implemented.
 [D1](#d1-automatic-failure-dump) has an approved full-scope
-[implementation plan](failure-dump/README.md); its contract is defined and
-runtime implementation is pending. The other wishes are ideas without an
+[implementation plan](failure-dump/README.md). Shared inspection and original-fault
+capture are implemented and verified; task collection and CLI/report output
+remain open. The other wishes are ideas without an
 implementation plan. Human-facing tools stay: the DAP debugger
 ([`debugger.md`](../pascal/tools/debugger.md)) and the language server
 ([`editor-integration.md`](../pascal/tools/editor-integration.md)). The JSONL debugger protocol
@@ -176,8 +177,10 @@ out as structured data, and every run can be repeated exactly.
 **Status: implementation in progress.** The full scope is tracked in the temporary
 [failure-dump plan](failure-dump/README.md), outside the AP campaign. The first
 step defines the [contract](failure-dump/01-contract.md). Shared read-only inspection
-is implemented and verified; failure capture, task collection and CLI/report
-output remain open. The overview owns the completion checklist and next step.
+is implemented and verified. Original-failure capture and the opt-in embedded VM
+observer are implemented, independently reviewed and verified. Task collection
+and CLI/report output remain open. The overview
+owns the completion checklist and next step.
 
 With the planned `--failure-dump PATH` option, an escaping panic or runtime error
 in `fpas run` writes one JSON document: original error, call stack, frame values,

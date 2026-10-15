@@ -2,6 +2,8 @@
 
 use crate::{DiagnosticCode, SourceSpan};
 
+mod attachment;
+
 /// The compiler or runtime stage that emitted a diagnostic.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum DiagnosticStage {
@@ -47,6 +49,7 @@ pub struct Diagnostic {
     pub expected: Option<Box<str>>,
     /// Actual token or value, when the producer can identify it precisely.
     pub found: Option<Box<str>>,
+    attachment: attachment::Attachment,
 }
 
 impl DiagnosticCode {
@@ -81,6 +84,7 @@ impl Diagnostic {
             span: None,
             expected: None,
             found: None,
+            attachment: attachment::Attachment::default(),
         }
     }
 
@@ -107,6 +111,18 @@ impl Diagnostic {
         self.expected = Some(expected.into().into_boxed_str());
         self.found = Some(found.into().into_boxed_str());
         self
+    }
+
+    /// Returns non-rendered producer context shared by clones of this diagnostic.
+    /// Attachments do not participate in diagnostic equality or rendering.
+    #[must_use]
+    pub fn attachment<T: std::any::Any + Send + Sync>(&self) -> Option<&T> {
+        self.attachment.get()
+    }
+
+    /// Retains producer-owned context for exactly as long as this diagnostic's clones.
+    pub fn set_attachment<T: std::any::Any + Send + Sync>(&mut self, value: T) {
+        self.attachment.set(value);
     }
 
     /// Returns the toolchain stage derived from this diagnostic's current code.
@@ -164,6 +180,7 @@ impl Diagnostic {
             span: Some(span),
             expected: None,
             found: None,
+            attachment: attachment::Attachment::default(),
         }
     }
 }

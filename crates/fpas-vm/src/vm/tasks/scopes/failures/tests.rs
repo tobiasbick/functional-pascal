@@ -37,17 +37,45 @@ fn no_failures_and_no_body_error_end_normally() {
 
 #[test]
 fn first_observed_child_failure_is_primary_and_others_follow_in_start_order() {
-    let (sequence, error) = scope_outcome(
-        vec![
-            failure(9, 0, "first started"),
-            failure(4, 2, "first observed"),
-            failure(7, 1, "second started"),
-        ],
-        None,
-    )
-    .expect("failure");
+    use crate::vm::{Vm, worker::Worker};
+    use std::sync::{Arc, Mutex};
+    let (program, errors) = fpas_parser::parse("program Selection; begin end.");
+    assert!(errors.is_empty());
+    let mut vm = Vm::new(fpas_compiler::compile(&program).unwrap());
+    let observed = Arc::new(Mutex::new(None));
+    let sink = Arc::clone(&observed);
+    assert!(vm.set_failure_observer(move |data| *sink.lock().unwrap() = Some(data)));
+    let mut failures = vec![
+        failure(9, 0, "first started"),
+        failure(4, 2, "first observed"),
+        failure(7, 1, "second started"),
+    ];
+    for (index, failure) in failures.iter_mut().enumerate() {
+        let mut worker = Worker::new(Arc::clone(&vm.executable))
+            .unwrap()
+            .with_scheduler(Some(Arc::clone(&vm.scheduler)));
+        worker.task_id = index as u64 + 1;
+        failure.error = worker.capture_failure(failure.error.clone());
+    }
+    let (sequence, error) = scope_outcome(failures, None).expect("failure");
     assert_eq!(sequence, 4);
     assert_eq!(error.message, "first observed");
+    vm.notify_failure(&error.clone());
+    let data = observed.lock().unwrap().take().unwrap();
+    assert_eq!(data.cause.task_id, Some(2));
+    assert_eq!(
+        data.related_errors
+            .iter()
+            .map(|data| data.cause.task_id)
+            .collect::<Vec<_>>(),
+        [Some(1), Some(3)]
+    );
+    let ids = [
+        data.cause.id,
+        data.related_errors[0].cause.id,
+        data.related_errors[1].cause.id,
+    ];
+    assert!(ids[0] != ids[1] && ids[1] != ids[2] && ids[0] != ids[2]);
     let help = error.help.expect("help");
     let first = help.find("first started").expect("first started attached");
     let second = help

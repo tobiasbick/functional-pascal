@@ -10,6 +10,7 @@ mod debug;
 mod diagnostics;
 mod dispatch;
 mod execute;
+mod failure_capture;
 mod frame;
 mod globals;
 mod hosted;
@@ -55,6 +56,10 @@ pub use debug::{
 };
 pub use diagnostics::VmError;
 pub(crate) use diagnostics::runtime_error;
+pub use failure_capture::{
+    FailureBinding, FailureDiagnostic, FailureFrame, FailureObservation, FailureScalar,
+    FailureSnapshot, FailureValue,
+};
 
 /// Captured console output produced by the virtual machine.
 pub type VmOutput = fpas_std::CapturedOutput;
@@ -268,6 +273,14 @@ impl Vm {
     /// Returns the preserved runtime diagnostic for scalar failures, or an internal invariant
     /// diagnostic if a verified executable requests an opcode assigned to a later phase.
     pub fn run(&mut self) -> Result<Execution, VmError> {
+        let result = self.run_inner();
+        if let Err(error) = &result {
+            self.notify_failure(error);
+        }
+        result
+    }
+
+    fn run_inner(&mut self) -> Result<Execution, VmError> {
         if std::mem::replace(&mut self.has_run, true) {
             return Err(diagnostics::at_address(
                 self.executable.executable(),
@@ -304,6 +317,7 @@ impl Vm {
             let timer = scope.spawn(move || timer_scheduler.timer_loop());
             let main = self.finish_server_execution(worker.run());
             if let Err(error) = &main {
+                self.notify_failure(error);
                 scheduler.fail(error.clone());
             } else {
                 scheduler.finish_main();
@@ -340,6 +354,11 @@ impl Vm {
         &self,
         result: Result<Execution, VmError>,
     ) -> Result<Execution, VmError> {
+        // An escaping root error already wins over server cleanup and pool joins.
+        // Do not wait for those operations before delivering its original state.
+        if let Err(error) = &result {
+            self.notify_failure(error);
+        }
         self.hosted.servers.request_stop_all();
         result.and_then(|execution| {
             self.hosted.servers.ensure_finished().map_err(|message| diagnostics::at_address(

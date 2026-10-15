@@ -6,6 +6,38 @@ severity, message, optional help, optional source span, and optional
 producer-supplied expected/found details. A missing position is `None`; it is
 not line zero or an invented first line.
 
+## Embedded VM failure observation
+
+Rust hosts can opt into `fpas_vm::Vm::set_failure_observer` before `Vm::run`.
+The observer receives one immutable `FailureObservation` for an escaping runtime
+error. It contains the selected diagnostic, an explicit original-failure identity,
+the responsible task's available pre-cleanup frames and source bindings, and
+structured secondary failures in the existing runtime attachment order. Source
+positions use the verified image's source IDs. No filesystem lookup is performed.
+
+The observer runs after ownership barriers have selected the escaping error and
+before remaining server shutdown and worker joins when the error is already
+known. It must return promptly. Cleanup and joins still run; observer panics do
+not replace the program diagnostic. Handled task-group failures, successful
+supervisor retries, ordinary `Result` data and successful runs do not notify.
+
+Capture is disabled by default. Enabled captures share a VM-wide limit of 16,384
+value objects and 8 MiB of charged retained data. Each cause retains at most 256
+frames, each aggregate 256 children, each string 4,096 Unicode scalars, and
+each value tree 16 child edges. Missing metadata, busy storage and exhausted
+bounds have explicit markers. Diagnostic presentation text is bounded as well,
+with a separate reason when text cannot be retained. The ordinary error returned
+by `Vm::run` is unchanged. Captured data follows the diagnostic's lifetime;
+handled or released outcomes do not create a failure history. Diagnostic
+attachments preserve identity through clones and do not change text/JSON
+diagnostic rendering or diagnostic equality.
+
+Control data and the selected diagnostic have reserved capacity within the same
+8 MiB limit, so large values cannot erase the primary error message. Secondary
+relationships and terminal model collections are charged before allocation;
+at most 1,024 relationships are retained, with explicit omitted counts when a
+relationship, model-storage, or nesting bound prevents retaining more.
+
 ## Text output
 
 Known source positions retain this form:

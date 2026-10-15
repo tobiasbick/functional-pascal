@@ -10,7 +10,7 @@ use super::{ValuePath as MutationPath, payload::resolve as resolve_payload};
 pub(in crate::vm) use super::model::{RenderedValue, RetainedValue};
 
 /// Borrow a bounded metadata prefix before allocating names or constructor summaries.
-pub(super) fn metadata(text: &str) -> &str {
+pub(in crate::vm) fn metadata(text: &str) -> &str {
     let end = text
         .char_indices()
         .nth(4096)

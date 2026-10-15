@@ -69,6 +69,10 @@ impl Worker {
                     } else if let Err(primary) = &mut outcome
                         && self.observed_task_failure.get() != Some(failure.task)
                     {
+                        crate::vm::failure_capture::attach_related(
+                            primary,
+                            std::slice::from_ref(&diagnostic),
+                        );
                         primary
                                 .help
                                 .get_or_insert_with(String::new)

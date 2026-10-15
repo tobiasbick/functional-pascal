@@ -2,8 +2,8 @@
 
 Temporary implementation plan for [agent wish D1](../agent-wishes.md#d1-automatic-failure-dump).
 The user approved the full D1 scope on 2026-10-15. This is a separate tooling
-project, outside the AP campaign. Shared inspection is implemented; automatic
-failure capture, task collection and CLI/report output remain open.
+project, outside the AP campaign. Shared inspection and original-failure capture
+are implemented; task collection and CLI/report output remain open.
 
 ## Goal
 
@@ -28,12 +28,12 @@ Record Git integration separately from implementation and verification.
 | --- | --- | --- | --- |
 | [x] | [01: contract](01-contract.md) | — | Defined; checked against the current runtime and CLI |
 | [x] | [02: shared inspection](02-shared-inspection.md) | 01 | Implemented and verified; existing TCP test failures documented |
-| [ ] | [03: failure capture](03-failure-capture.md) | 02 | Not started |
+| [x] | [03: failure capture](03-failure-capture.md) | 02 | Implemented and independently reviewed; workspace passes with two existing TCP tests excluded |
 | [ ] | [04: task snapshots](04-task-snapshots.md) | 03 | Not started |
 | [ ] | [05: CLI and JSON report](05-cli-and-json-report.md) | 03, 04 | Not started |
 | [ ] | [06: verification and documentation](06-verification-and-documentation.md) | 02–05 | Not started |
 
-Next: **03, failure capture before unwind**. Implementation tests belong to each
+Next: **04, task snapshots**. Implementation tests belong to each
 step; step 06 verifies the complete feature and its performance together.
 
 ## Boundaries
@@ -62,8 +62,13 @@ Inspection started at commit `853ed527`. The important existing boundaries are:
 Step 01 was committed as `013500f2` with a Co-Author trailer. Step 02 is implemented,
 verified and committed with a Co-Author trailer; Git history owns its commit identity.
 Its [verification record](02-shared-inspection.md#verification-evidence) distinguishes
-the existing TCP failures from the passing checks. Steps 03–06 remain open, and
-no failure-dump CLI option or automatic capture is implemented yet.
+the existing TCP failures from the passing checks. Step 03 adds opt-in original-fault
+capture and an embedded VM observer. It is implemented, independently reviewed,
+verified and committed with a Co-Author trailer; Git history owns the commit
+identity. Its [verification record](03-failure-capture.md#verification-evidence)
+records the passing final workspace run and its explicit baseline exclusions.
+Steps 04–06 remain open; no failure-dump CLI option or report publication is
+implemented yet.
 
 ## Removal after completion
 

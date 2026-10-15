@@ -39,7 +39,7 @@ fn run_to_completion(mut worker: Worker, scheduler: &TaskScheduler) -> Result<()
     })();
     // A body that ends with open task scopes first waits for their cancelled children.
     let attempt = match attempt {
-        Err(error) => match worker.begin_scope_unwind(error) {
+        Err(error) => match worker.begin_scope_unwind(worker.capture_failure(error)) {
             Ok(()) => worker.park_pool_suspension().map(|()| None),
             Err(error) => Err(error),
         },
@@ -72,6 +72,7 @@ fn run_to_completion(mut worker: Worker, scheduler: &TaskScheduler) -> Result<()
             Ok(())
         }
         Err(error) => {
+            let error = worker.capture_failure(error);
             if worker.retain_result {
                 let grouped = scheduler.store_failure(worker.task_id, error.clone());
                 if grouped && !scheduler.is_aborted() {

@@ -29,7 +29,9 @@ impl Worker {
             } else {
                 ABORT_CHECK_INTERVAL
             };
-            let batch = self.dispatch_batch::<false>(budget)?;
+            let batch = self
+                .dispatch_batch::<false>(budget)
+                .map_err(|error| self.capture_failure(error))?;
             match batch.step {
                 DispatchStep::Continue => {}
                 DispatchStep::Suspend => return Ok(None),
@@ -58,8 +60,10 @@ impl Worker {
     }
 
     pub(in crate::vm) fn run_in_place(&mut self) -> Result<Execution, VmError> {
-        self.run_in_place_inner()
-            .map_err(|error| self.unwind_task_scopes_blocking(error))
+        self.run_in_place_inner().map_err(|error| {
+            let error = self.capture_failure(error);
+            self.unwind_task_scopes_blocking(error)
+        })
     }
 
     fn run_in_place_inner(&mut self) -> Result<Execution, VmError> {

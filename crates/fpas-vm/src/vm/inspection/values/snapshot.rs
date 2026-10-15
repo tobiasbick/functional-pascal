@@ -10,7 +10,7 @@ use std::sync::{Arc, TryLockError};
 
 /// Canonical scalar payload, preserving the full FPAS integer range.
 #[derive(Debug, PartialEq)]
-pub(in crate::vm) enum Scalar {
+pub enum Scalar {
     /// Integers are decimal strings, never lossy JSON numbers.
     Integer(String),
     /// Finite binary64 value.
@@ -25,7 +25,7 @@ pub(in crate::vm) enum Scalar {
 
 /// Immutable bounded value data suitable for retaining after a worker is dropped.
 #[derive(Debug, PartialEq)]
-pub(in crate::vm) struct ValueSnapshot {
+pub struct ValueSnapshot {
     /// Source or runtime type name.
     pub type_name: String,
     /// Stable value category.

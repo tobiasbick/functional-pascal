@@ -10,6 +10,8 @@ pub(in crate::vm) enum Boundary {
     Stopped,
     /// The last dispatched instruction, before failure unwind.
     Fault,
+    /// A fault or hosted caller whose nested callback has already been captured.
+    Continuation,
 }
 
 /// Register window and source addresses for one logical frame.
@@ -50,8 +52,18 @@ pub(in crate::vm) fn visit(
             walk(callback, boundary, maximum, depth, callbacks + 1, visitor)?;
         }
         let next = InstructionAddress::try_from_index(worker.ip).unwrap_or(worker.current_address);
-        let instruction = if boundary == Boundary::Fault {
-            worker.current_address
+        let instruction = if boundary != Boundary::Stopped {
+            // An inline hosted callback may have returned before its continuation fails.
+            // Its Return address is no longer an instruction in the restored caller.
+            let caller_site = InstructionAddress::try_from_index(worker.ip.saturating_sub(1))
+                .unwrap_or(worker.current_address);
+            let code =
+                &worker.executable.executable().functions[usize::from(worker.function.get())].code;
+            if !code.contains(worker.current_address) && code.contains(caller_site) {
+                caller_site
+            } else {
+                worker.current_address
+            }
         } else {
             next
         };

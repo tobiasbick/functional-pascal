@@ -59,6 +59,34 @@ impl Worker {
         self.store_real_register(self.base + usize::from(operand), value)
     }
 
+    /// Store an integer result in a verified register operand of the current frame.
+    #[inline(always)]
+    pub(super) fn write_integer_operand(
+        &mut self,
+        operand: u16,
+        value: i64,
+    ) -> Result<(), VmError> {
+        debug_assert_ne!(
+            operand, NO_REGISTER,
+            "verified register operands are never NO_REGISTER"
+        );
+        self.store_integer_register(self.base + usize::from(operand), value)
+    }
+
+    /// Store a Boolean result in a verified register operand of the current frame.
+    #[inline(always)]
+    pub(super) fn write_boolean_operand(
+        &mut self,
+        operand: u16,
+        value: bool,
+    ) -> Result<(), VmError> {
+        debug_assert_ne!(
+            operand, NO_REGISTER,
+            "verified register operands are never NO_REGISTER"
+        );
+        self.store_boolean_register(self.base + usize::from(operand), value)
+    }
+
     /// Remove a value from a register without cloning it.
     pub(super) fn take(&mut self, register: Register) -> Result<Value, VmError> {
         self.take_register(self.base + usize::from(register.get()))

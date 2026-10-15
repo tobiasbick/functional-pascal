@@ -49,7 +49,8 @@ impl Worker {
         let right = self.read_operand(operands.c)?;
         let result = match (left, right) {
             (Value::Real(left), Value::Real(right)) if left.is_finite() && right.is_finite() => {
-                Value::Boolean(compare(operation, *left, *right))
+                let result = compare(operation, *left, *right);
+                return self.write_boolean_operand(operands.a, result);
             }
             _ => value_ops::binary(operation, left, right)
                 .map_err(|error| self.runtime_error(error.code, error.message, error.hint))?,

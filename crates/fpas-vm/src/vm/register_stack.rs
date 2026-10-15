@@ -74,6 +74,43 @@ impl Worker {
         self.store_register(index, Value::Real(value))
     }
 
+    /// Write an integer to an absolute active register, updating an existing integer in place.
+    ///
+    /// Like [`Self::store_real_register`], this skips building and dropping a whole `Value`
+    /// when the slot already holds an integer, as loop counters and accumulators do.
+    #[inline(always)]
+    pub(super) fn store_integer_register(
+        &mut self,
+        index: usize,
+        value: i64,
+    ) -> Result<(), VmError> {
+        if index < self.register_initialized.len()
+            && let Some(Value::Integer(slot)) = self.registers.get_mut(index)
+        {
+            *slot = value;
+            self.register_initialized[index] = true;
+            return Ok(());
+        }
+        self.store_register(index, Value::Integer(value))
+    }
+
+    /// Write a Boolean to an absolute active register, updating an existing Boolean in place.
+    #[inline(always)]
+    pub(super) fn store_boolean_register(
+        &mut self,
+        index: usize,
+        value: bool,
+    ) -> Result<(), VmError> {
+        if index < self.register_initialized.len()
+            && let Some(Value::Boolean(slot)) = self.registers.get_mut(index)
+        {
+            *slot = value;
+            self.register_initialized[index] = true;
+            return Ok(());
+        }
+        self.store_register(index, Value::Boolean(value))
+    }
+
     /// Remove an absolute active register value and mark the slot uninitialized.
     pub(super) fn take_register(&mut self, index: usize) -> Result<Value, VmError> {
         if index >= self.registers.len() || index >= self.register_initialized.len() {

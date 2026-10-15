@@ -19,7 +19,7 @@ impl Worker {
         let result = match (left, right) {
             (Value::Integer(left), Value::Integer(right)) => {
                 if let Some(result) = direct_integer_binary(operation, *left, *right) {
-                    return self.write_operand(operands.a, result);
+                    return self.write_direct_integer_result(operands.a, result);
                 }
                 value_ops::integer_binary(operation, *left, *right)
             }
@@ -27,6 +27,20 @@ impl Worker {
         }
         .map_err(|error| self.runtime_error(error.code, error.message, error.hint))?;
         self.write_operand(operands.a, result)
+    }
+
+    /// Store a [`direct_integer_binary`] result, updating a same-typed destination in place.
+    #[inline(always)]
+    pub(in crate::vm) fn write_direct_integer_result(
+        &mut self,
+        operand: u16,
+        result: Value,
+    ) -> Result<(), VmError> {
+        match result {
+            Value::Integer(value) => self.write_integer_operand(operand, value),
+            Value::Boolean(value) => self.write_boolean_operand(operand, value),
+            result => self.write_operand(operand, result),
+        }
     }
 
     /// Execute a typed integer unary operation on verified register operands.

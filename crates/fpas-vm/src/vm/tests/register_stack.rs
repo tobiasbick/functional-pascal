@@ -132,3 +132,61 @@ fn integer_overwrite_preserves_the_slot_and_releases_previous_references() {
     assert_eq!(worker.registers[0], Value::Integer(4));
     assert!(worker.register_is_initialized(0));
 }
+
+#[test]
+fn typed_scalar_stores_update_in_place_or_replace_other_values() {
+    use std::sync::{Arc, Mutex};
+
+    let executable = super::verified(
+        vec![super::return_unit()],
+        Vec::new(),
+        vec!["root", "test.fpas"],
+        2,
+    );
+    let mut worker = crate::vm::worker::Worker::new(Arc::new(executable)).expect("worker");
+
+    worker
+        .store_integer_register(0, 7)
+        .expect("store into an empty slot");
+    assert_eq!(worker.registers[0], Value::Integer(7));
+    assert!(worker.register_is_initialized(0));
+    worker
+        .store_integer_register(0, 8)
+        .expect("update an integer in place");
+    assert_eq!(worker.registers[0], Value::Integer(8));
+    worker
+        .store_boolean_register(0, true)
+        .expect("replace an integer");
+    assert_eq!(worker.registers[0], Value::Boolean(true));
+    worker
+        .store_boolean_register(0, false)
+        .expect("update a Boolean in place");
+    assert_eq!(worker.registers[0], Value::Boolean(false));
+    worker
+        .store_integer_register(0, 9)
+        .expect("replace a Boolean");
+    assert_eq!(worker.registers[0], Value::Integer(9));
+
+    let cell = Arc::new(Mutex::new(Value::Unit));
+    worker
+        .store_register(1, Value::Cell(Arc::clone(&cell)))
+        .expect("store reference");
+    worker
+        .store_integer_register(1, 1)
+        .expect("replace reference");
+    assert_eq!(
+        Arc::strong_count(&cell),
+        1,
+        "the replaced reference is released"
+    );
+    assert_eq!(worker.registers[1], Value::Integer(1));
+
+    assert!(
+        worker.store_integer_register(2, 0).is_err(),
+        "outside the frame"
+    );
+    assert!(
+        worker.store_boolean_register(2, true).is_err(),
+        "outside the frame"
+    );
+}

@@ -306,7 +306,7 @@ impl Worker {
         let result = match left {
             Value::Integer(value) => {
                 if let Some(result) = direct_integer_binary(operation, *value, immediate) {
-                    return self.write_operand(operands.a, result);
+                    return self.write_direct_integer_result(operands.a, result);
                 }
                 value_ops::integer_binary(operation, *value, immediate)
             }
@@ -366,7 +366,7 @@ impl Worker {
             )
         };
         if let Some(updated) = updated {
-            self.write_operand(operands.a, Value::Integer(updated))?;
+            self.write_integer_operand(operands.a, updated)?;
         }
         self.jump(target);
         Ok(())

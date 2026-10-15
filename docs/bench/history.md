@@ -14,6 +14,37 @@ cargo bench-fpas record "vm-only note" --group vm
 
 Newest entries are prepended below this header.
 
+## 2026-10-15 — In-place integer and Boolean register stores
+
+- Group: `vm`
+- Suite: [`suite.toml`](suite.toml)
+
+| bench | elapsed_ms | throughput |
+|-------|------------|------------|
+| integer_loop | 706 | throughput: 70821529 iters/s |
+| typed_real | 168 | - |
+| typed_boolean | 273 | - |
+| typed_string | 141 | - |
+| global_access | 103 | throughput: 48543689 global updates/s |
+| record_field_access | 325 | throughput: 46153846 field accesses/s |
+| closure_call | 157 | throughput: 19108280 closure calls/s |
+| mutable_capture | 200 | throughput: 15000000 captured updates/s |
+| branch_dispatch | 357 | throughput: 56022408 branches/s |
+| dynamic_numeric | 304 | throughput: 16447368 dynamic numeric ops/s |
+| array_push | 55 | throughput: 36363636 pushes/s |
+| array_length | 24 | throughput: 20833333 lengths/s |
+| string_concat | 931 | throughput: 5370569 concats/s |
+| string_length | 21 | throughput: 23809523 lengths/s |
+| intrinsic_dispatch | 649 | throughput: 23112480 intrinsic calls/s |
+| function_call | 280 | throughput: 21428571 calls/s |
+| array_callbacks | 863 | throughput: 11123986 callbacks/s |
+| record_update | 89 | throughput: 11235955 updates/s |
+| unicode_char_at | 267 | throughput: 11235955 chars/s |
+| wrapper_payload | 697 | throughput: 14347202 wrappers/s |
+| string_search | 69 | - |
+| substring_ascii | 6 | - |
+| substring_unicode | 11 | - |
+
 ## 2026-10-15 — Failure dump balanced paired latency baseline
 
 - Group: `failure-dump`

@@ -160,7 +160,10 @@ impl CaptureState {
             }
             let (name, name_reason, name_lease) = self.task_name(
                 id,
-                task.record.as_ref().map(|record| record.function),
+                task.record
+                    .as_ref()
+                    .map(|record| record.function)
+                    .or_else(|| fault.as_ref().and_then(|snapshot| snapshot.entry_function)),
                 observation.cause.task_id == Some(id) || id == 0,
             );
             let absent = if terminal && task.state == FAILED && snapshot.is_none() {

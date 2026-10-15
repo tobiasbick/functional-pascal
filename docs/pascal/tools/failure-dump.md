@@ -94,6 +94,10 @@ show the current referent. Globals use the actual main worker's local/shared slo
 Images without debug bindings retain stored diagnostic positions and identify
 missing bindings with `missing_metadata`; locals are not inferred from registers.
 
+A known task entry name survives `Wait` and result release with its original
+failure, including when a tail call has removed that entry's frame. It is not
+inferred from the remaining stack.
+
 Every **value** has these keys:
 
 | Key | Meaning |
@@ -216,3 +220,5 @@ Its report contains:
 
 See [CLI](../program-structure/cli.md), [shared diagnostics](diagnostics.md) and
 [debugger](debugger.md) for the surrounding tools and Rust embedding API.
+The [local benchmark guide](../../bench/failure-dump.md) describes reproducible
+disabled/enabled comparisons and their measurement boundaries.

@@ -7,6 +7,10 @@ debugging of the host process is unsupported. It accepts a
 `.fpas` program, a program `.fpasprj`, a workspace with one program, or a
 `.fpascp` image. No debugger operation changes FPAS language semantics.
 
+For an ordinary run, `fpas run app.fpasprj --failure-dump .temp-data/failure.json`
+retains a [bounded runtime failure report](failure-dump.md) with task/frame/value
+data. This uses the normal concurrent scheduler and requires no debug session.
+
 ```text
 fpas debug app.fpasprj --protocol jsonl
 fpas debug app.fpasprj --protocol jsonl --commands session.jsonl

@@ -1,0 +1,23 @@
+program CaptureSuspension;
+
+uses Std.Tasks as Tasks, Std.Time as Time;
+
+function Work(): integer;
+begin
+  var Total := 0;
+  for I: integer := 1 to 32 do
+    Time.Sleep(1);
+    Total := Total + 1;
+  end for;
+
+  return Total;
+end function;
+
+begin
+  scope
+    const Child := go Work();
+    if Tasks.Wait(Child) <> 32 then
+      panic('suspension checksum');
+    end if;
+  end scope;
+end.

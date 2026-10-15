@@ -4,8 +4,10 @@ Temporary implementation plan for [agent wish D1](../agent-wishes.md#d1-automati
 The user approved the full D1 scope on 2026-10-15. This is a separate tooling
 project, outside the AP campaign. Shared inspection, original-failure capture
 and cooperative task collection, CLI integration and report publication are
-implemented, independently reviewed and verified. Complete feature verification
-and performance measurement remain open.
+implemented, independently reviewed and verified. Step 06's functional verification
+and reproducible local measurement path are implemented, reviewed and verified.
+Performance validation
+remains open: the user explicitly excluded cloud timings as performance evidence.
 
 ## Goal
 
@@ -33,10 +35,12 @@ Record Git integration separately from implementation and verification.
 | [x] | [03: failure capture](03-failure-capture.md) | 02 | Implemented and independently reviewed; workspace passes with two existing TCP tests excluded |
 | [x] | [04: task snapshots](04-task-snapshots.md) | 03 | Implemented, independently reviewed and verified; workspace and final VM checks pass with two existing TCP tests excluded |
 | [x] | [05: CLI and JSON report](05-cli-and-json-report.md) | 03, 04 | Implemented, independently reviewed and verified; real CLI/publication regressions and workspace checks pass with the same two existing TCP exclusions |
-| [ ] | [06: verification and documentation](06-verification-and-documentation.md) | 02–05 | Not started |
+| [ ] | [06: verification and documentation](06-verification-and-documentation.md) | 02–05 | Functional verification, documentation and local measurement tooling complete and independently reviewed; valid local performance evidence remains open |
 
-Next: **06, complete verification and permanent documentation**. Implementation
-tests belong to each step; step 06 verifies the complete feature and its performance together.
+Next: **06, remaining local performance acceptance**. Functional checks,
+documentation and the local measurement path are complete. Performance conclusions
+require quiet local release runs; cloud smoke timings do not qualify.
+The temporary plan stays until that remaining acceptance criterion is satisfied.
 
 ## Boundaries
 
@@ -76,8 +80,12 @@ checks and measured development smoke sample. Step 05 adds the single opt-in
 CLI option, bounded version-1 JSON and atomic fresh-file publication. It is
 implemented, independently reviewed and verified; its
 [verification record](05-cli-and-json-report.md#verification-evidence) records
-real CLI regression proof and the passing workspace/final CLI checks. Only
-step 06 remains open; D1 is not marked fully delivered yet.
+real CLI regression proof and the passing workspace/final CLI checks. Step 06
+adds the combined worker/JSON acceptance case, preserves original entry names
+after `Wait`, and supplies the locally reproducible measurement workflow. Its
+[verification record](06-verification-and-documentation.md#verification-evidence)
+records the passing functional checks and independent review. Only valid local
+performance acceptance remains open; D1 is not marked fully delivered yet.
 
 ## Removal after completion
 

@@ -8,6 +8,8 @@
 
 #[path = "failure_dump/activation.rs"]
 mod activation;
+#[path = "failure_dump/end_to_end.rs"]
+mod end_to_end;
 #[path = "failure_dump/limits.rs"]
 mod limits;
 #[path = "failure_dump/native.rs"]

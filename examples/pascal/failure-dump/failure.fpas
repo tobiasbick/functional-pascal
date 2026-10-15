@@ -1,0 +1,6 @@
+program CaptureFailure;
+
+begin
+  const Local := 42;
+  panic('measured failure');
+end.

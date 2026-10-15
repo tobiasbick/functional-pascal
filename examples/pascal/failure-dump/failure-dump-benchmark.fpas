@@ -1,0 +1,156 @@
+// Run with a release CLI on a quiet local machine; cloud timings are smoke results only.
+program FailureDumpBenchmark;
+
+uses
+  Std.Args as Args, Std.Console as Console, Std.Conv as Conv, Std.Fs as Fs,
+  Std.Json.Fields as Fields, Std.Parse as Parse, Std.Path as Path, Std.Proc as Proc,
+  Std.Time as Time;
+
+begin
+  if (Args.ParamCount() < 2) or (Args.ParamCount() > 3) then
+    panic('usage: failure-dump-benchmark.fpas -- WORKLOAD ODD_SAMPLES [NEW_OUTPUT_DIR]');
+  end if;
+  const Workload := Args.ParamStr(0);
+  if not (
+    Workload in
+    ['scalar', 'calls', 'globals', 'spawn-wait', 'suspension', 'failure', 'large-report']
+  )
+  then
+    panic('unknown failure-dump workload');
+  end if;
+  const Samples := Parse.Int(Args.ParamStr(1)).Unwrap();
+  if (Samples < 1) or (Samples > 31) or (Samples mod 2 = 0) then
+    panic('sample count must be odd and between 1 and 31');
+  end if;
+  var Repository := '.';
+  while not Fs.IsFile(Path.Join([Repository, 'docs/bench/suite.toml'])) do
+    Repository := Path.Join([Repository, '..']);
+    if Repository.Length() > 40 then
+      panic('run inside the repository');
+    end if;
+  end while;
+  var Output := Path.Join([
+    Repository,
+    '.temp-data/bench/failure-dump-' + Workload + '-' + Conv.IntToStr(Time.TimestampMillis())
+  ]);
+  if Args.ParamCount() = 3 then
+    Output := Args.ParamStr(2);
+  end if;
+
+  if Fs.Exists(Output) then
+    panic('benchmark output directory must be new');
+  end if;
+
+  discard Fs.CreateDirAll(Output).Unwrap();
+  discard Fs.WriteText(
+    Path.Join([Output, 'main.fpas']),
+    Fs.ReadText(
+      Path.Join([Repository, 'examples/pascal/failure-dump', Workload + '.fpas'])
+    ).Unwrap()
+  ).Unwrap();
+  const Manifest := Path.Join([Output, 'benchmark.fpasprj']);
+  discard Fs.WriteText(
+    Manifest,
+    '[project]' + #10 + 'name = "capture-benchmark"' + #10 + 'kind = "program"' + #10 +
+    'main = "main.fpas"' + #10 + '[sources]' + #10 + 'include = ["main.fpas"]' + #10
+  ).Unwrap();
+  const Compiler := Proc.CurrentExecutable().Unwrap();
+  const Built := Proc.RunCapture(Compiler, ['build', Manifest]).Unwrap();
+  if Built.ExitCode <> 0 then
+    panic(Built.Stdout + Built.Stderr);
+  end if;
+  const Image := Path.Join([Output, 'capture-benchmark.fpascp']);
+  const ExpectedExit := if Workload in ['failure', 'large-report'] then 2 else 0 end if;
+  var Disabled: array of integer := [];
+  var Enabled: array of integer := [];
+  var PeakBytes := 0;
+  var TotalMillis := 0;
+
+  // Warm both modes once. Alternating pair order reduces systematic order bias.
+  for Sample: integer := 0 to Samples do
+    for Position: integer := 0 to 1 do
+      const Capture := (Sample + Position) mod 2 = 1;
+      const ReportPath := Path.Join([
+        Output, 'report-' + Conv.IntToStr(Sample) + '-' + Conv.IntToStr(Position) + '.json'
+      ]);
+      var Arguments := ['run', '--diagnostics', 'json', Image];
+      if Capture then
+        Arguments := Arguments.Push('--failure-dump').Push(ReportPath);
+      end if;
+      const Started := Time.MonotonicMillis();
+      const Outcome := Proc.RunCapture(Compiler, Arguments).Unwrap();
+      const Elapsed := Time.ElapsedMillis(Started);
+      if Outcome.ExitCode <> ExpectedExit then
+        panic(Outcome.Stdout + Outcome.Stderr);
+      end if;
+
+      if not Outcome.Stdout.IsEmpty() then
+        panic('unexpected workload output');
+      end if;
+
+      if ExpectedExit = 2 then
+        const Diagnostic := Fields.ParseObject(Outcome.Stderr.Trim()).Unwrap();
+        if (Fields.StringField(Diagnostic, 'code').Unwrap() <> 'FP5010')
+          or
+          (Fields.StringField(Diagnostic, 'message').Unwrap() <> 'panic: measured failure')
+        then
+          panic('unexpected failure diagnostic');
+        end if;
+      elsif not Outcome.Stderr.IsEmpty() then
+        panic(Outcome.Stderr);
+      end if;
+
+      if Capture and (ExpectedExit = 2) then
+        // These fixtures and portable image names contain only ASCII; JSON length equals bytes.
+        const Text := Fs.ReadText(ReportPath).Unwrap();
+        const Report := Fields.ParseObject(Text).Unwrap();
+        if Fields.IntegerField(Report, 'schema_version').Unwrap() <> 1 then
+          panic('report version');
+        end if;
+
+        if Text.Length() > 8388608 then
+          panic('report byte bound');
+        end if;
+
+        if Text.Length() > PeakBytes then
+          PeakBytes := Text.Length();
+        end if;
+
+        if (Workload = 'large-report') and (Text.Length() < 6291456) then
+          panic('large report was not exercised');
+        end if;
+      elsif Fs.Exists(ReportPath) then
+        panic('successful run created a report');
+      end if;
+
+      if Sample > 0 then
+        TotalMillis := TotalMillis + Elapsed;
+        if Capture then
+          Enabled.PushInPlace(Elapsed);
+        else
+          Disabled.PushInPlace(Elapsed);
+        end if;
+      end if;
+    end for;
+  end for;
+
+  Console.WriteLn('disabled_samples_ms: ', Disabled);
+  Console.WriteLn('enabled_samples_ms: ', Enabled);
+  Disabled.SortInPlace();
+  Enabled.SortInPlace();
+  const Before := Disabled[Samples div 2];
+  const After := Enabled[Samples div 2];
+  Console.WriteLn('disabled_median_ms: ', Before);
+  Console.WriteLn('enabled_median_ms: ', After);
+  Console.WriteLn('peak_report_bytes: ', PeakBytes);
+  Console.WriteLn('elapsed: ', TotalMillis, ' ms');
+  if Before > 0 then
+    Console.WriteLn(
+      'throughput: enabled/disabled median change ',
+      100.0 * Conv.IntToReal(After) / Conv.IntToReal(Before) - 100.0,
+      '%'
+    );
+  else
+    Console.WriteLn('throughput: unavailable (disabled median below timer resolution)');
+  end if;
+end.

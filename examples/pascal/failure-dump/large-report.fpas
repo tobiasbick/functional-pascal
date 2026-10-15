@@ -1,0 +1,16 @@
+program CaptureLargeReport;
+
+procedure Fail(Values: array of string);
+begin
+  const Copy := Values;
+  panic('measured failure');
+end procedure;
+
+begin
+  var Items: array of string := [];
+  for I: integer := 1 to 256 do
+    Items.PushInPlace((#0).RepeatStr(4096));
+  end for;
+
+  Fail(Items);
+end.

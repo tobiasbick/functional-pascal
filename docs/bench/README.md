@@ -4,6 +4,11 @@ End-to-end performance measurements use Functional Pascal programs under `exampl
 
 The curated suite lives in [`suite.toml`](suite.toml). Run it with the `fpas-bench` harness (cargo alias `bench-fpas`). The `typed_real`, `typed_boolean`, and `typed_string` VM rows exercise typed scalar handlers separately.
 
+The [`failure-dump` group](failure-dump.md) pairs identical compiled programs with
+capture disabled/enabled, covering scalar work, calls, globals, tasks, timer
+suspension and small/large failure reports. Use a quiet local release build for
+performance conclusions; cloud smoke checks establish correctness only.
+
 The `tui_styled_cells` row builds 128-by-44 frames of half-block cells with a concrete RGB
 style per cell, the per-frame path of pixel renderers such as terminal raycasters. A checksum
 over the built cells validates the result.
@@ -206,7 +211,7 @@ Snapshot JSON and committed history are written to a flushed same-directory stag
 Add or adjust entries in [`suite.toml`](suite.toml):
 
 - `id` — short name used in tables and JSON
-- `group` — `mandelbrot`, `vm`, `concurrency`, `tui`, `tooling`, `startup`,
+- `group` — `failure-dump`, `mandelbrot`, `vm`, `concurrency`, `tui`, `tooling`, `startup`,
   `review`, `local-index`, `source-review`, or `source-navigation` (filter with `--group`)
 - `path` — `.fpas` program or `.fpasprj` project relative to the repo root
 - `driver` — defaults to `fpas`; `http-body`, `language-service`, `language-service-project`, `compiler-lowering`, `project-build`, `unit-artifact`, and `program-artifact` run native workloads and omit `path`

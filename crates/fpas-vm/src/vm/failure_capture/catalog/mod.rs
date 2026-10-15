@@ -23,7 +23,8 @@ pub(in crate::vm) use saved::ScheduledTask;
 /// One task's current owner; saved storage contains the scheduler's original state.
 pub(in crate::vm) struct TaskRecord {
     id: u64,
-    function: FunctionId,
+    /// Original task entry used by fault snapshots after scheduler-result release.
+    pub(in crate::vm::failure_capture) function: FunctionId,
     state: AtomicU8,
     requested: AtomicBool,
     saved: Mutex<Option<TaskState>>,

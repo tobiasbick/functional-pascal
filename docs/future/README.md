@@ -8,7 +8,7 @@ Current implemented behavior belongs under `docs/pascal/`, not here.
 
 | Area | Plan | Scope |
 |------|------|-------|
-| Runtime tooling | [D1 failure dump](failure-dump/README.md) | Failure capture, cooperative task collection and CLI/JSON publication implemented; complete verification and performance measurements remain; temporary work packages removed after delivery |
+| Runtime tooling | [D1 failure dump](failure-dump/README.md) | Implemented, functionally verified and independently reviewed; local measurement tooling ready, valid local performance evidence remains open; cloud timings are excluded |
 | Language | [Strict ISO/IEC 14977 grammar](iso-14977-grammar.md) | Open decision on grammar authority, strict notation, and automated drift checks |
 | Standard library | [Standard library roadmap](std-roadmap.md) | Future `Std.*` units and longer-term stdlib direction |
 | Networked applications | [Networked application platform](networked-applications/README.md) | Storage, security, concurrency, transports, interactive clients, operations, and distributed nodes |

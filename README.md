@@ -331,6 +331,10 @@ The full language specification lives in [`docs/pascal/`](docs/pascal). Start wi
 For authoring with an LLM, start with the [compact FPAS language reference](docs/pascal/agent-reference.md).
 Its [maintenance guide](docs/pascal/agent-reference-maintenance.md) defines how to keep the rules and executable examples current.
 
+For runtime failures, `fpas run app.fpasprj --failure-dump .temp-data/failure.json`
+retains a [bounded JSON report](docs/pascal/tools/failure-dump.md) with the original
+error, task states, frames and values. Choose a fresh report path for each run.
+
 | Area | Hub |
 |------|-----|
 | Getting started | [getting-started/](docs/pascal/getting-started/README.md) |

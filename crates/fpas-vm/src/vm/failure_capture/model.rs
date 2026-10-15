@@ -38,6 +38,8 @@ pub struct FailureSnapshot {
     pub id: u64,
     /// Responsible task, or unavailable for diagnostics raised outside execution.
     pub task_id: Option<u64>,
+    /// Original task entry, retained even after Wait releases its scheduler record.
+    pub(super) entry_function: Option<fpas_bytecode::FunctionId>,
     /// Available frames captured before cleanup, never a waiter's substituted stack.
     pub frames: Vec<FailureFrame>,
     /// Total known frame count, including frames omitted by a bound.

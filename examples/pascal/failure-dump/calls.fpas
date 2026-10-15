@@ -1,0 +1,17 @@
+program CaptureCalls;
+
+function Add(Value: integer): integer;
+begin
+  return Value + 3;
+end function;
+
+begin
+  var Total := 0;
+  for I: integer := 1 to 200000 do
+    Total := Add(Total);
+  end for;
+
+  if Total <> 600000 then
+    panic('call checksum');
+  end if;
+end.

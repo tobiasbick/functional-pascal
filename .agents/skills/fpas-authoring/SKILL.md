@@ -169,6 +169,13 @@ Check interactive programs without launching them in batch validation. Use
 scripted or headless tests for their runtime behavior. After FPAS regression-test
 changes, run the repository suite as required by AGENTS.md.
 
+For an escaping runtime error, run with
+`fpas run <file-or-project> --failure-dump .temp-data/<fresh-name>.json`.
+The [bounded report](../../../docs/pascal/tools/failure-dump.md) keeps the original
+error and available task/frame/value data. Inspect `capture.incomplete` and
+omission reasons before assuming a value was absent. Success creates no report;
+the destination must be a new file.
+
 For handbook examples, follow the [Markdown example instructions](../../../docs/pascal/tools/documentation-examples.md).
 Complete `pascal` fences compile by default; fragments name an explicit context.
 Mark deterministic assertion programs `run` and separate intentional errors with

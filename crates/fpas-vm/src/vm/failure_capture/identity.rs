@@ -73,6 +73,8 @@ impl CaptureState {
         let mut snapshot = FailureSnapshot {
             id: self.next_id.fetch_add(1, Ordering::Relaxed),
             task_id: worker.map(|worker| worker.task_id),
+            entry_function: worker
+                .and_then(|worker| worker.capture_record.as_ref().map(|record| record.function)),
             frames: Vec::new(),
             total_frames: None,
             reason: Some("no_live_frame"),

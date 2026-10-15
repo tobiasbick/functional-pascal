@@ -2,7 +2,57 @@
 # Paths are relative to the repository root.
 # Groups: `vm` (interpreter hot paths), `concurrency` (task scheduling), and
 # `tui` (headless Std.Tui), and `tooling` (native editor and compiler workloads).
+# `failure-dump` compares paired capture modes for local release validation.
 # FPAS rows run through the production `fpas run` path.
+
+[[bench]]
+id = "failure_dump_scalar"
+group = "failure-dump"
+path = "examples/pascal/failure-dump/failure-dump-benchmark.fpas"
+args = ["scalar", "9"]
+timeout_ms = 120000
+
+[[bench]]
+id = "failure_dump_calls"
+group = "failure-dump"
+path = "examples/pascal/failure-dump/failure-dump-benchmark.fpas"
+args = ["calls", "9"]
+timeout_ms = 120000
+
+[[bench]]
+id = "failure_dump_globals"
+group = "failure-dump"
+path = "examples/pascal/failure-dump/failure-dump-benchmark.fpas"
+args = ["globals", "9"]
+timeout_ms = 120000
+
+[[bench]]
+id = "failure_dump_spawn_wait"
+group = "failure-dump"
+path = "examples/pascal/failure-dump/failure-dump-benchmark.fpas"
+args = ["spawn-wait", "9"]
+timeout_ms = 120000
+
+[[bench]]
+id = "failure_dump_suspension"
+group = "failure-dump"
+path = "examples/pascal/failure-dump/failure-dump-benchmark.fpas"
+args = ["suspension", "9"]
+timeout_ms = 120000
+
+[[bench]]
+id = "failure_dump_failure"
+group = "failure-dump"
+path = "examples/pascal/failure-dump/failure-dump-benchmark.fpas"
+args = ["failure", "9"]
+timeout_ms = 120000
+
+[[bench]]
+id = "failure_dump_large_report"
+group = "failure-dump"
+path = "examples/pascal/failure-dump/failure-dump-benchmark.fpas"
+args = ["large-report", "9"]
+timeout_ms = 120000
 
 [[bench]]
 id = "mandelbrot_render"

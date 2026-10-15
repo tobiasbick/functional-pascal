@@ -1,0 +1,42 @@
+// Smoke-check benchmark correctness; these timings are never performance evidence.
+program FailureDumpBenchmarkTest;
+
+uses Std.Fs as Fs, Std.Path as Path, Std.Proc as Proc, Std.Test as Test;
+
+begin
+  var Repository := '.';
+  while not Fs.IsFile(Path.Join([Repository, 'docs/bench/suite.toml'])) do
+    Repository := Path.Join([Repository, '..']);
+    if Repository.Length() > 40 then
+      Test.Fail('Run inside the repository.');
+    end if;
+  end while;
+  const Driver := Path.Join([
+    Repository,
+    'examples/pascal/failure-dump/failure-dump-benchmark.fpas'
+  ]);
+  const Library := Path.Join([Repository, 'lib']);
+  for Workload: string in [
+    'scalar',
+    'calls',
+    'globals',
+    'spawn-wait',
+    'suspension',
+    'failure',
+    'large-report'
+  ] do
+    const Output := Path.Join([Test.ScratchDir(), Workload]);
+    const Outcome := Proc.RunCapture(
+      Proc.CurrentExecutable().Unwrap(), [
+        'run', '--std-lib', Library, Driver, '--', Workload, '1', Output
+      ]
+    ).Unwrap();
+    if Outcome.ExitCode <> 0 then
+      Test.Fail(Outcome.Stdout + Outcome.Stderr);
+    end if;
+
+    Test.AssertTrue('disabled_median_ms:' in Outcome.Stdout);
+    Test.AssertTrue('enabled_median_ms:' in Outcome.Stdout);
+    Test.AssertTrue(Fs.IsFile(Path.Join([Output, 'capture-benchmark.fpascp'])));
+  end for;
+end.

@@ -1,0 +1,27 @@
+program CaptureSpawnWait;
+
+uses Std.Tasks as Tasks;
+
+function Work(Value: integer): integer;
+begin
+  var Total := 0;
+  for I: integer := 1 to 10000 do
+    Total := Total + Value;
+  end for;
+
+  return Total;
+end function;
+
+begin
+  var Total := 0;
+  for I: integer := 1 to 128 do
+    scope
+      const Child := go Work(I);
+      Total := Total + Tasks.Wait(Child);
+    end scope;
+  end for;
+
+  if Total <> 82560000 then
+    panic('spawn/wait checksum');
+  end if;
+end.

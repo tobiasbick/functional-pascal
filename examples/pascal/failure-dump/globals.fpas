@@ -1,0 +1,17 @@
+program CaptureGlobals;
+
+var Total: integer := 0;
+
+procedure Update();
+begin
+  for I: integer := 1 to 1000000 do
+    Total := Total + I;
+  end for;
+end procedure;
+
+begin
+  Update();
+  if Total <> 500000500000 then
+    panic('global checksum');
+  end if;
+end.

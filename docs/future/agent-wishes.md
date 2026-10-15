@@ -13,8 +13,11 @@
 [S1](#s1-compile-every-documentation-example) is implemented.
 [D1](#d1-automatic-failure-dump) has an approved full-scope
 [implementation plan](failure-dump/README.md). Shared inspection, original-fault
-capture and cooperative task collection are implemented, reviewed and verified;
-CLI/report output and complete feature verification remain open. The other wishes are ideas without an
+capture, cooperative task collection and CLI/JSON publication are implemented,
+reviewed and verified. Step 06's functional checks, documentation and local
+measurement tooling are complete and independently reviewed; valid local
+performance evidence remains open. Cloud timings are excluded from performance
+claims. The other wishes are ideas without an
 implementation plan. Human-facing tools stay: the DAP debugger
 ([`debugger.md`](../pascal/tools/debugger.md)) and the language server
 ([`editor-integration.md`](../pascal/tools/editor-integration.md)). The JSONL debugger protocol
@@ -174,13 +177,16 @@ out as structured data, and every run can be repeated exactly.
 
 #### D1. Automatic failure dump
 
-**Status: implementation in progress.** The full scope is tracked in the temporary
+**Status: functional implementation verified; local performance acceptance pending.**
+The full scope is tracked in the temporary
 [failure-dump plan](failure-dump/README.md), outside the AP campaign. The first
 step defines the [contract](failure-dump/01-contract.md). Shared read-only inspection
 is implemented and verified. Original-failure capture and the opt-in embedded VM
 observer are implemented, independently reviewed and verified. Cooperative task
 collection and CLI/JSON publication are implemented, independently reviewed and
-verified; complete feature verification and performance measurements remain open.
+verified. Functional end-to-end verification is complete and the
+[local measurement path](../bench/failure-dump.md) is ready. Valid local performance
+evidence remains open. Cloud timing results are excluded at the user's request.
 The overview owns the completion checklist and next step.
 
 With the implemented `--failure-dump PATH` option, an escaping panic or runtime error

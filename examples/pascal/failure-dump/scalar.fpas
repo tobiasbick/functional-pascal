@@ -1,0 +1,12 @@
+program CaptureScalar;
+
+begin
+  var Total := 0;
+  for I: integer := 1 to 1000000 do
+    Total := Total + I;
+  end for;
+
+  if Total <> 500000500000 then
+    panic('scalar checksum');
+  end if;
+end.

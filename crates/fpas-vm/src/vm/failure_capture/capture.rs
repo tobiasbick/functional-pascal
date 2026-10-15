@@ -55,6 +55,7 @@ impl CaptureState {
         let mut snapshot = FailureSnapshot {
             id: 0,
             task_id: Some(worker.task_id),
+            entry_function: worker.capture_record.as_ref().map(|record| record.function),
             frames: Vec::new(),
             total_frames: None,
             reason: None,

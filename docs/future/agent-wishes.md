@@ -13,6 +13,7 @@
 [S1](#s1-compile-every-documentation-example) is implemented.
 [S2](#s2-diagnostics-with-source-excerpt-and-caret) is implemented.
 [D1](#d1-automatic-failure-dump) is implemented.
+[A2](#a2-diagnostics-for-pascal-and-ada-habits) has an implementation plan ready to start.
 The other wishes are ideas without an implementation plan. Human-facing tools stay: the DAP debugger
 ([`debugger.md`](../pascal/tools/debugger.md)) and the language server
 ([`editor-integration.md`](../pascal/tools/editor-integration.md)). The JSONL debugger protocol
@@ -81,6 +82,9 @@ Purpose and upkeep live in the permanent
 [maintenance guide](../pascal/agent-reference-maintenance.md) beside the reference.
 
 #### A2. Diagnostics for Pascal and Ada habits
+
+**Status: implementation plan ready** under
+[foreign-habit-diagnostics](foreign-habit-diagnostics/README.md); nothing is implemented yet.
 
 When the agent writes Delphi or Ada syntax, the compiler recognizes it and answers "FPAS writes
 this as: …". Build the catalog systematically: let an agent write programs without the docs, log

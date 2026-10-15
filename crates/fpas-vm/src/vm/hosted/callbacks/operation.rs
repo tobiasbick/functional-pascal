@@ -3,6 +3,7 @@
 use fpas_bytecode::{SharedFunction, Value};
 
 use super::arguments::CallbackArguments;
+use super::sorting::KeyedSort;
 use super::string::{StringReduction, StringSequence};
 
 /// Complete resumable state for one higher-order intrinsic owned by a task.
@@ -17,6 +18,7 @@ pub(in crate::vm) struct CallbackContinuation {
 /// Partial result and cursor state for each supported callback intrinsic.
 pub(super) enum CallbackOperation {
     ArrayMap(Sequence),
+    ArraySortBy(KeyedSort),
     ArrayFilter(Sequence),
     ArrayReduce {
         values: Vec<Value>,
@@ -88,6 +90,7 @@ pub(super) enum AdvanceError {
     UnexpectedResult(Value),
     InvalidStringMapResult(Value),
     InvalidState(&'static str),
+    Sorting(fpas_std::StdError),
 }
 
 impl CallbackContinuation {
@@ -123,6 +126,7 @@ impl CallbackContinuation {
     /// Consume a pending result and choose the next invocation or final value.
     pub(super) fn advance(&mut self) -> Result<Advance, AdvanceError> {
         match &mut self.operation {
+            CallbackOperation::ArraySortBy(sort) => sort.advance(self.pending.take()),
             CallbackOperation::ArrayMap(sequence) => {
                 sequence.push_pending(self.pending.take());
                 Ok(sequence.next_or_array())

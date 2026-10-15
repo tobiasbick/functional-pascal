@@ -43,6 +43,7 @@ mod time;
 mod toml;
 
 pub use aggregate_factory::{AggregateFactory, RUNTIME_AGGREGATE_TYPES};
+pub use array::sorting::sort_by_cached_keys;
 pub use console::{
     CONSOLE_COLOR_KIND_VARIANTS, CapturedOutput, Console, ConsoleCell, ConsoleColor, ConsoleRect,
     KeyInput, ReadLnQueue, SavedRegionId, ScreenSnapshot, TextInput, read_line_from_stdin,

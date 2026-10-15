@@ -9,10 +9,9 @@ use crate::error::{StdError, std_runtime_error};
 use crate::intrinsic_args::{IntrinsicCall, expect_array, pop_array, pop_int, pop_value};
 use crate::limits::checked_collection_len;
 use fpas_bytecode::{ArrayIntrinsic, Intrinsic, SourceLocation, Value};
-use fpas_diagnostics::codes::{
-    RUNTIME_ARRAY_INDEX_OUT_OF_BOUNDS, RUNTIME_NUMERIC_DOMAIN_ERROR,
-    RUNTIME_VM_OPERAND_TYPE_MISMATCH,
-};
+use fpas_diagnostics::codes::RUNTIME_ARRAY_INDEX_OUT_OF_BOUNDS;
+
+pub(crate) mod sorting;
 
 /// Executes array intrinsics after validating their runtime operands.
 pub(crate) fn run(
@@ -27,37 +26,7 @@ pub(crate) fn run(
         }
         Intrinsic::Array(ArrayIntrinsic::Sort) => {
             let mut arr = pop_array(pop_value(call, location)?, location)?;
-            if let Some(first) = arr.first() {
-                for value in &arr {
-                    if let Value::Real(real) = value {
-                        fpas_numeric::real::finite(*real).map_err(|error| {
-                            std_runtime_error(
-                                RUNTIME_NUMERIC_DOMAIN_ERROR,
-                                error.message(),
-                                error.hint(),
-                                location,
-                            )
-                        })?;
-                    }
-                    if value.scalar_ordering(first).is_none() {
-                        return Err(std_runtime_error(
-                            RUNTIME_VM_OPERAND_TYPE_MISMATCH,
-                            format!("cannot sort arrays of {}", value.type_name()),
-                            "Use a homogeneous array of Comparable elements with Items.Sort().",
-                            location,
-                        ));
-                    }
-                }
-            }
-            // Stable sort preserves input order for equal values, including signed zeros.
-            #[expect(
-                clippy::expect_used,
-                reason = "all elements have the same scalar type and finite reals were checked above"
-            )]
-            arr.sort_by(|left, right| {
-                left.scalar_ordering(right)
-                    .expect("validated scalar elements")
-            });
+            sorting::sort_values(&mut arr, location)?;
             call.push(Value::Array(arr.into()));
         }
         Intrinsic::Array(ArrayIntrinsic::Reverse) => {
@@ -115,6 +84,7 @@ pub(crate) fn run(
 mod tests {
     use super::*;
     use crate::limits::MAX_COLLECTION_LEN;
+    use fpas_diagnostics::codes::RUNTIME_NUMERIC_DOMAIN_ERROR;
 
     fn loc() -> SourceLocation {
         SourceLocation::new(1, 1)

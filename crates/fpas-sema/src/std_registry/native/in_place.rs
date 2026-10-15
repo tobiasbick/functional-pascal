@@ -48,6 +48,7 @@ macro_rules! operations {
 
 operations! {
     array, Array, "Std.Arrays", "Sort", "Sort";
+    array, Array, "Std.Arrays", "SortBy", "SortBy";
     array, Array, "Std.Arrays", "Reverse", "Reverse";
     array, Array, "Std.Arrays", "Filter", "Filter";
     array, Array, "Std.Arrays", "Slice", "Slice";

@@ -4,6 +4,7 @@ mod arguments;
 mod continuation;
 mod operation;
 mod plan;
+mod sorting;
 mod string;
 mod synchronous;
 
@@ -50,15 +51,15 @@ impl Worker {
         &mut self,
         intrinsic: Intrinsic,
         arguments: &[Value],
-        _location: SourceLocation,
+        location: SourceLocation,
         destination: Option<usize>,
     ) -> Result<Option<CallbackOutcome>, VmError> {
         if self.task_id == 0 {
             return self
-                .execute_callback_intrinsic_sync(intrinsic, arguments, _location)
+                .execute_callback_intrinsic_sync(intrinsic, arguments, location)
                 .map(|result| result.flatten().map(CallbackOutcome::Complete));
         }
-        continuation::start(self, intrinsic, arguments, destination)
+        continuation::start(self, intrinsic, arguments, location, destination)
     }
 
     /// Advance the active hosted operation when its callback is not running.

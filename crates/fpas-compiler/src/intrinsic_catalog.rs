@@ -366,7 +366,7 @@ fn resolve_array(member: &str) -> Option<Intrinsic> {
         Array,
         ArrayIntrinsic,
         [
-            Length, Sort, Reverse, IndexOf, Slice, Map, Filter, Reduce, Concat, Fill, Find,
+            Length, Sort, SortBy, Reverse, IndexOf, Slice, Map, Filter, Reduce, Concat, Fill, Find,
             FindIndex, Any, All, FlatMap, ForEach,
         ]
     )

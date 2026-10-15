@@ -202,6 +202,27 @@ pub(super) const OPERATIONS: &[NativeOperation] = &[
     },
     NativeOperation {
         receiver: NativeReceiver::Array,
+        name: "SortBy",
+        implementation: "Std.Arrays.SortBy",
+        signature: || {
+            function(
+                vec![p(
+                    "F",
+                    Ty::Function(function(
+                        vec![p("X", Ty::GenericParam("T".into(), None))],
+                        Ty::GenericParam("K".into(), None),
+                        false,
+                    )),
+                )],
+                Ty::Array(Box::new(Ty::GenericParam("T".into(), None))),
+                false,
+            )
+        },
+        lowering: NativeLowering::Intrinsic,
+        documentation: "Stable ascending sort by Comparable keys; evaluate F once per element in input order",
+    },
+    NativeOperation {
+        receiver: NativeReceiver::Array,
         name: "Reverse",
         implementation: "Std.Arrays.Reverse",
         signature: || {

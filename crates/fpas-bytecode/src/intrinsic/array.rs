@@ -13,6 +13,10 @@ documented_intrinsic_enum! {
 pub enum ArrayIntrinsic {
     Length = 80,
     Sort = 81,
+    /// `Items.SortBy(F)` — stable ascending order by cached Comparable keys.
+    ///
+    /// **Documentation:** `docs/pascal/language/types/array/basics.md`
+    SortBy = 573,
     Reverse = 82,
     IndexOf = 84,
     Slice = 85,

@@ -314,7 +314,9 @@ impl LoweringContext {
             result_ty,
             span,
         )?;
-        Ok((result, result_ty))
+        let concrete_ty = self.path_result_type(span, result_ty)?;
+        let result = self.value_as(result, concrete_ty, span)?;
+        Ok((result, concrete_ty))
     }
 }
 

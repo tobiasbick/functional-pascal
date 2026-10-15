@@ -26,6 +26,11 @@ fn for_in_rejects_direct_array_and_dictionary_writes() {
         ("var Items := [1, 2];", "integer", "Items := [9];"),
         ("var Items := [1, 2];", "integer", "Items.SortInPlace();"),
         (
+            "var Items := [1, 2];",
+            "integer",
+            "Items.SortByInPlace(function(X: integer): integer begin return X; end function);",
+        ),
+        (
             "var Items: dict of string to integer := ['a': 1];",
             "string",
             "Items['a'] := 9;",

@@ -53,6 +53,7 @@ impl Intrinsic {
             Self::Task(_) => IntrinsicOwner::Task,
             Self::Array(
                 ArrayIntrinsic::Map
+                | ArrayIntrinsic::SortBy
                 | ArrayIntrinsic::Filter
                 | ArrayIntrinsic::Reduce
                 | ArrayIntrinsic::Find

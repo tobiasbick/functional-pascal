@@ -1,0 +1,78 @@
+program SortByCallbacksTest;
+
+uses Std.Tasks as Tasks, Std.Test as Test, Std.Time as Time;
+
+type Edit = record
+  Offset: integer;
+  Text: string;
+end record;
+
+function Work(): string;
+begin
+  var Items := [
+    Edit(Offset := 2, Text := 'a'),
+    Edit(Offset := 1, Text := 'b'),
+    Edit(Offset := 2, Text := 'c')
+  ];
+  var Visits := '';
+  const Key: function(X: Edit): integer := function(X: Edit): integer begin
+    Time.Sleep(1);
+    Visits := Visits + X.Text;
+    return X.Offset;
+  end function;
+  const Sorted := Items.SortBy(Key);
+  Test.AssertEquals('abc', Visits);
+  Test.AssertEquals('b', Sorted[0].Text);
+  Test.AssertEquals('a', Sorted[1].Text);
+  Test.AssertEquals('c', Sorted[2].Text);
+  Test.AssertEquals('a', Items[0].Text);
+  Visits := '';
+  Items.SortByInPlace(Key);
+  Test.AssertEquals('abc', Visits);
+  Test.AssertEquals('b', Items[0].Text);
+  Test.AssertEquals('a', Items[1].Text);
+  Test.AssertEquals('c', Items[2].Text);
+  return Visits;
+end function;
+
+begin
+  scope
+    const Job := go Work();
+    Test.AssertEquals('abc', Tasks.Wait(Job));
+    const Direct := go [2, 1].SortBy(
+      function(X: integer): integer begin
+        Time.Sleep(1);
+        return X;
+      end function
+    );
+    const Sorted := Tasks.Wait(Direct);
+    Test.AssertEquals(1, Sorted[0]);
+    Test.AssertEquals(2, Sorted[1]);
+  end scope;
+  const Group := Tasks.CreateTaskGroup();
+  const Visits: channel of integer := Tasks.CreateChannel(4);
+  const Failed := Tasks.StartTaskInGroup(
+    Group, procedure(Token: Tasks.CancellationToken) begin
+      var Items := [3, 2, 1];
+      Items.SortByInPlace(
+        function(X: integer): integer begin
+          Time.Sleep(1);
+          discard Tasks.Send(Visits, X);
+          if X = 2 then
+            Items := [9];
+            panic('key failed');
+          end if;
+
+          return X;
+        end function
+      );
+    end procedure
+  );
+  const Failures := Tasks.CloseTaskGroup(Group);
+  Test.AssertEquals(1, Failures.Length());
+  Test.AssertEquals('panic: key failed', Failures[0].Message);
+  Test.AssertEquals(3, Tasks.TryReceive(Visits).Unwrap().Unwrap());
+  Test.AssertEquals(2, Tasks.TryReceive(Visits).Unwrap().Unwrap());
+  Test.AssertTrue(Tasks.TryReceive(Visits).Unwrap() is None);
+  discard Tasks.CloseChannel(Visits);
+end.

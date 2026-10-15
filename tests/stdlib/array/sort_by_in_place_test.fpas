@@ -1,0 +1,65 @@
+program SortByInPlaceTest;
+
+uses Std.Test as Test;
+
+type Edit = record
+  Offset: integer;
+  Text: string;
+end record;
+
+type Holder = record
+  Items: array of Edit;
+end record;
+
+function OffsetKey(Entry: Edit): integer;
+begin
+  return Entry.Offset;
+end function;
+
+procedure Order(var Items: array of Edit);
+begin
+  Items.SortByInPlace(F := OffsetKey);
+end procedure;
+
+begin
+  var Rows := [Holder(Items := [Edit(Offset := 3, Text := 'a'), Edit(Offset := 1, Text := 'b')])];
+  const Copy := Rows;
+  var Calls := '';
+  const SelectRow: function(): integer := function(): integer begin
+    Calls := Calls + 'R';
+    return 0;
+  end function;
+  const SelectKey: function(): function(X: Edit): integer := function(): function(X: Edit): integer begin
+    Calls := Calls + 'F';
+    Rows[0].Items := [Edit(Offset := 2, Text := 'c'), Edit(Offset := 1, Text := 'd')];
+    return function(X: Edit): integer begin
+      Calls := Calls + X.Text;
+      Rows[0].Items := [];
+      return X.Offset;
+    end function;
+  end function;
+
+  Rows[SelectRow()].Items.SortByInPlace(SelectKey());
+  Test.AssertEquals('RFcd', Calls);
+  Test.AssertEquals(2, Rows[0].Items.Length());
+  Test.AssertEquals('d', Rows[0].Items[0].Text);
+  Test.AssertEquals('c', Rows[0].Items[1].Text);
+  Test.AssertEquals('a', Copy[0].Items[0].Text);
+  var Items := Copy[0].Items;
+  Order(var Items);
+  Test.AssertEquals('b', Items[0].Text);
+  Test.AssertEquals('a', Items[1].Text);
+  const Change: procedure() := procedure() begin
+    Items.SortByInPlace(
+      function(X: Edit): integer begin
+        return - X.Offset;
+      end function
+    );
+  end procedure;
+
+  Change();
+  Test.AssertEquals('a', Items[0].Text);
+  var Empty: array of Edit := [];
+  Empty.SortByInPlace(OffsetKey);
+  Test.AssertEquals(0, Empty.Length());
+end.

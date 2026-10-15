@@ -40,6 +40,7 @@ end."#,
 fn writable_receivers_reject_readonly_and_computed_storage() {
     for body in [
         "const A: array of integer := [1]; A.SortInPlace();",
+        "const A := [1]; A.SortByInPlace(function(X: integer): integer begin return X; end function);",
         "const S: string := 'abc'; S.ReverseInPlace();",
         "const D: dict of string to integer := ['a': 1]; D.RemoveInPlace('a');",
         "var D: dict of string to string := ['a': 'x']; D['a'].TrimInPlace();",
@@ -97,6 +98,7 @@ fn in_place_callbacks_preserve_types_and_mutators_cannot_chain() {
         "var A := [1]; A.FlatMapInPlace(function(X: integer): array of string begin return ['x']; end function);",
         "var D: dict of string to integer := ['a': 1]; D.MapInPlace(function(X: integer): string begin return 'x'; end function);",
         "var A := [1]; const N := A.SortInPlace().Length();",
+        "var A := [1]; const N := A.SortByInPlace(function(X: integer): integer begin return X; end function).Length();",
         "var S := 'abc'; const N := S.TrimInPlace().Length();",
     ] {
         let errors = check_errors(&program(body));
@@ -117,6 +119,7 @@ fn go_cannot_receive_implicit_writable_storage() {
     for body in [
         "go A.PushInPlace(2);",
         "go A.SortInPlace();",
+        "go A.SortByInPlace(function(X: integer): integer begin return X; end function);",
         "var S := 'abc'; discard go S.TrimInPlace();",
         "var D: dict of string to integer := ['a': 1]; discard go D.RemoveInPlace('a');",
         "go A.PopInPlace();",

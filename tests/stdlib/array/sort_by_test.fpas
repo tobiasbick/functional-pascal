@@ -1,0 +1,118 @@
+program SortByTest;
+
+uses Std.Test as Test;
+
+type Edit = record
+  Offset: integer;
+  Text: string;
+end record;
+
+type Phase = enum
+  Last;
+  First;
+  Middle;
+end enum;
+
+type Rank = distinct integer;
+
+type Small = 0..5;
+
+type Edits = array of Edit;
+
+function OffsetKey(Entry: Edit): integer;
+begin
+  return Entry.Offset;
+end function;
+
+function Ordered<T, K: Comparable>(Items: array of T; F: function(X: T): K): array of T;
+begin
+  return Items.SortBy(F);
+end function;
+
+begin
+  const Original: Edits := [
+    Edit(Offset := 3, Text := 'a'),
+    Edit(Offset := 1, Text := 'b'),
+    Edit(Offset := 3, Text := 'c'),
+    Edit(Offset := 2, Text := 'd')
+  ];
+  const Ascending: Edits := Original.SortBy(F := OffsetKey);
+  Test.AssertEquals('b', Ascending[0].Text);
+  Test.AssertEquals('d', Ascending[1].Text);
+  Test.AssertEquals('a', Ascending[2].Text);
+  Test.AssertEquals('c', Ascending[3].Text);
+  Test.AssertEquals('a', Original[0].Text);
+  var Visits := '';
+  const Descending := Original.SortBy(
+    function(Entry: Edit): integer begin
+      Visits := Visits + Entry.Text;
+      return - Entry.Offset;
+    end function
+  );
+  Test.AssertEquals('abcd', Visits);
+  Test.AssertEquals('a', Descending[0].Text);
+  Test.AssertEquals('c', Descending[1].Text);
+  Test.AssertEquals('d', Descending[2].Text);
+  Test.AssertEquals('b', Descending[3].Text);
+  Test.AssertEquals('b', Ordered(Original, OffsetKey)[0].Text);
+  const Empty: Edits := [];
+  Test.AssertEquals(0, Empty.SortBy(OffsetKey).Length());
+  const InferredEmpty: Edits := [].SortBy(OffsetKey);
+  Test.AssertEquals(0, InferredEmpty.Length());
+  const EmptyVisits := Empty.SortBy(
+    function(Entry: Edit): integer begin
+      Visits := Visits + 'unexpected';
+      return Entry.Offset;
+    end function
+  );
+  Test.AssertEquals(0, EmptyVisits.Length());
+  Test.AssertEquals('abcd', Visits);
+  const Singleton := [Original[0]].SortBy(
+    function(Entry: Edit): integer begin
+      Visits := Visits + Entry.Text;
+      return Entry.Offset;
+    end function
+  );
+  Test.AssertEquals('a', Singleton[0].Text);
+  Test.AssertEquals('abcda', Visits);
+  const ByText := Original.SortBy(
+    function(Entry: Edit): string begin
+      return Entry.Text;
+    end function
+  );
+  Test.AssertEquals('a', ByText[0].Text);
+  Test.AssertEquals('d', ByText[3].Text);
+  const Flags := [true, false, true].SortBy(
+    function(X: boolean): boolean begin
+      return X;
+    end function
+  );
+  Test.AssertFalse(Flags[0]);
+  Test.AssertTrue(Flags[2]);
+  const Reals := [0.0, -0.0, -1.0].SortBy(
+    function(X: real): real begin
+      return X;
+    end function
+  );
+  Test.AssertTrue(Reals[0] = -1.0);
+  const Phases := Ordered(
+    [Phase.Middle, Phase.Last, Phase.First],
+    function(X: Phase): Phase begin
+      return X;
+    end function
+  );
+  Test.AssertTrue(Phases[0] = Phase.Last);
+  Test.AssertTrue(Phases[2] = Phase.Middle);
+  const Ranks := [Rank(3), Rank(-1)].SortBy(
+    function(X: Rank): Rank begin
+      return X;
+    end function
+  );
+  Test.AssertTrue(Ranks[0] = Rank(-1));
+  const Bounds := [Small(4), Small(0)].SortBy(
+    function(X: Small): Small begin
+      return X;
+    end function
+  );
+  Test.AssertTrue(Bounds[0] = Small(0));
+end.

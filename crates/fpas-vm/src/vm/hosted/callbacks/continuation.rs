@@ -1,6 +1,6 @@
 //! Task-owned orchestration for resumable hosted callbacks.
 
-use fpas_bytecode::{Intrinsic, Value};
+use fpas_bytecode::{Intrinsic, SourceLocation, Value};
 
 use super::operation::{Advance, AdvanceError, CallbackContinuation};
 use super::{CallbackOutcome, Worker, plan};
@@ -11,12 +11,14 @@ pub(super) fn start(
     worker: &mut Worker,
     intrinsic: Intrinsic,
     arguments: &[Value],
+    location: SourceLocation,
     destination: Option<usize>,
 ) -> Result<Option<CallbackOutcome>, VmError> {
     if let Some(value) = plan::inactive_result(worker, intrinsic, arguments)? {
         return Ok(Some(CallbackOutcome::Complete(value)));
     }
-    let Some((callback, operation)) = plan::operation(worker, intrinsic, arguments)? else {
+    let Some((callback, operation)) = plan::operation(worker, intrinsic, arguments, location)?
+    else {
         return Ok(None);
     };
     let callback = worker.resolve_callback(&callback, operation.first_arity())?;
@@ -44,6 +46,7 @@ pub(super) fn resume(worker: &mut Worker) -> Result<bool, VmError> {
         }
         AdvanceError::InvalidStringMapResult(value) => worker.string_map_result_error(&value),
         AdvanceError::InvalidState(message) => worker.callback_state_error(message),
+        AdvanceError::Sorting(error) => error.into(),
     })?;
     match action {
         Advance::Call(arguments) => {

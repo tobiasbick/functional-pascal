@@ -27,6 +27,7 @@ pub(super) fn check_array_builtin_std_call(
         s::STD_ARRAY_PUSH => mutation::check_push(c, name, args, span),
         s::STD_ARRAY_POP => mutation::check_pop(c, name, args, span),
         s::STD_ARRAY_MAP => higher_order::check_map(c, args, span),
+        s::STD_ARRAY_SORT_BY => higher_order::check_sort_by(c, args, span),
         s::STD_ARRAY_FILTER => higher_order::check_filter(c, args, span),
         s::STD_ARRAY_REDUCE => higher_order::check_reduce(c, args, span),
         s::STD_ARRAY_CONCAT => query::check_concat(c, args, span),

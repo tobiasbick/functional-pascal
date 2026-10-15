@@ -43,6 +43,51 @@ Console.WriteLn(B.IndexOf(2));
 
 ---
 
+## `Items.SortBy(F: function(X: T): K): array of T`
+
+Returns a new array sorted ascending by the keys returned by `F`. The receiver
+is preserved. `SortByInPlace(F)` applies the same ordering to writable storage
+and returns no value. Both forms are stable: elements with equal keys keep their
+input order. Keys use the same `<` ordering and finite-real rules as `Sort`.
+
+Only the key type `K` must satisfy `Comparable`; elements can be records or any
+other array element type. Unsupported keys fail checking even for empty arrays.
+Generic keys require `K: Comparable` or `K: Numeric`. Use a named function or an
+anonymous function; its single read-only parameter has the array's element type.
+The named argument is `F`, consistent with other unary array callbacks.
+
+The callback runs exactly once per element, from left to right over a snapshot
+of the input, before sorting starts. Empty arrays invoke it zero times; singleton
+arrays invoke it once. The snapshot and cached keys survive task suspension.
+On callback failure no sorted result is committed. Other callback effects remain
+visible, following [collection mutation](../collection-mutation.md).
+
+```pascal
+type Edit = record
+  Offset: integer;
+  Text: string;
+end record;
+
+const Edits := [Edit(Offset := 2, Text := 'later'), Edit(Offset := 0, Text := 'first')];
+const Ascending := Edits.SortBy(
+  function(Entry: Edit): integer begin
+    return Entry.Offset;
+  end function
+);
+var Descending := Edits;
+Descending.SortByInPlace(
+  function(Entry: Edit): integer begin
+    return - Entry.Offset;
+  end function
+);
+```
+
+Negating nonnegative offsets produces descending offset order. Ordinary integer
+overflow rules still apply when computing keys. Use parameterless `Sort()` for
+arrays whose elements already have the required order.
+
+---
+
 ## `Items.Reverse(): array of T`
 
 Returns a **new** array with elements in reverse order. **`A` is not modified.**

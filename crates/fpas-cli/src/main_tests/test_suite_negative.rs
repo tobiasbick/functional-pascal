@@ -151,6 +151,19 @@ fn dictionary_reduce_propagates_callback_failure() {
 }
 
 #[test]
+fn sort_by_stops_at_callback_failure_without_completing_the_mutation() {
+    let root = repo_root();
+    let path = root.join("tests/stdlib/array/sort_by_callback_failure_runtime_error.fpas");
+    let (exit, stdout, stderr) = support::run_cli_args_and_capture_output(
+        &["run".into(), path.to_string_lossy().into_owned()],
+        &root,
+    );
+    assert_ne!(exit, 0, "callback failure must propagate");
+    assert!(stderr.contains("panic: key failed"), "{stderr}");
+    assert_eq!(stdout.replace("\r\n", "\n"), "3\n2\n");
+}
+
+#[test]
 fn pop_empty_is_runtime_error() {
     for path in [
         "tests/stdlib/array/pop_empty_is_runtime_error_runtime_error.fpas",

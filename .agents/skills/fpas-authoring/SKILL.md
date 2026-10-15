@@ -129,9 +129,12 @@ Read the pages relevant to the change. For exact productions, consult
   Repetition uses RepeatStr/RepeatStrInPlace with arbitrary strings; an API that
   requires one scalar states that precondition explicitly. Array IndexOf/FindIndex
   and string IndexOf/LastIndexOf return Option of integer, so handle Some/None.
+  SortBy/SortByInPlace take F: function(X: T): K with Comparable keys; record
+  elements are allowed. They sort ascending and stably, evaluating F once per
+  snapshot element in input order (zero times when empty).
   Sort/SortInPlace are ascending and stable and require Comparable elements,
   including payload-free enums; typed empty unsupported arrays fail checking.
-  Generic sorting needs T: Comparable or T: Numeric.
+  Their generic elements need T: Comparable or T: Numeric.
 - Statements end with `;`. Use each construct's named closer, such as
   `end function;`, `end if;`, and `end unit;`; programs end with `end.`.
   Expression closers receive their terminator from the enclosing statement.

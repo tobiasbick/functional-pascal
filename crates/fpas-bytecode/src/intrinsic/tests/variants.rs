@@ -211,6 +211,7 @@ pub(super) const ALL_INTRINSICS: &[Intrinsic] = &[
     Intrinsic::Crypto(CryptoIntrinsic::RandomInt),
     Intrinsic::Array(ArrayIntrinsic::Length),
     Intrinsic::Array(ArrayIntrinsic::Sort),
+    Intrinsic::Array(ArrayIntrinsic::SortBy),
     Intrinsic::Array(ArrayIntrinsic::Reverse),
     Intrinsic::Array(ArrayIntrinsic::IndexOf),
     Intrinsic::Array(ArrayIntrinsic::Slice),

@@ -2,6 +2,7 @@
 use super::{check_errors, check_ok};
 mod collections;
 mod in_place_calls;
+mod sort_by;
 
 #[test]
 fn every_catalog_entry_accepts_positional_and_fully_named_explicit_arguments() {
@@ -161,6 +162,10 @@ fn every_catalog_entry_accepts_positional_and_fully_named_explicit_arguments() {
         (
             "program T; begin var Receiver: array of integer := [1]; const Output: array of integer := Receiver.Sort(); end.",
             "program T; begin var Receiver: array of integer := [1]; const Output: array of integer := Receiver.Sort(); end.",
+        ),
+        (
+            "program T; begin var Receiver: array of integer := [1]; const Output: array of integer := Receiver.SortBy(function(X: integer): integer begin return -X; end function); end.",
+            "program T; begin var Receiver: array of integer := [1]; const Output: array of integer := Receiver.SortBy(F := function(X: integer): integer begin return -X; end function); end.",
         ),
         (
             "program T; begin var Receiver: array of integer := [1]; const Output: array of integer := Receiver.Reverse(); end.",

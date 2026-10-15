@@ -190,6 +190,7 @@ pub const fn intrinsic_debug_effects(intrinsic: Intrinsic) -> DebugEffectSet {
 const fn array_effects(operation: ArrayIntrinsic) -> DebugEffectSet {
     match operation {
         ArrayIntrinsic::Map
+        | ArrayIntrinsic::SortBy
         | ArrayIntrinsic::Filter
         | ArrayIntrinsic::Reduce
         | ArrayIntrinsic::Find

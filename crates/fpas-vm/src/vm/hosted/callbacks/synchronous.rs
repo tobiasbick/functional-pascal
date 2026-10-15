@@ -13,9 +13,19 @@ impl Worker {
         &self,
         intrinsic: Intrinsic,
         arguments: &[Value],
-        _location: SourceLocation,
+        location: SourceLocation,
     ) -> Result<Option<Option<Value>>, VmError> {
         let result = match intrinsic {
+            Intrinsic::Array(ArrayIntrinsic::SortBy) => {
+                let values = self.array_argument(arguments.first(), "SortBy")?;
+                let callback = arguments.get(1).ok_or_else(|| self.arity_error("SortBy"))?;
+                let mut entries = Vec::with_capacity(values.len());
+                for value in values {
+                    let key = self.call_callback_sync(callback, std::slice::from_ref(value))?;
+                    entries.push((key, value.clone()));
+                }
+                Some(fpas_std::sort_by_cached_keys(entries, location)?)
+            }
             Intrinsic::Array(operation) => self.array_callback(operation, arguments)?,
             Intrinsic::Dict(operation) => self.dict_callback(operation, arguments)?,
             Intrinsic::Str(operation) => self.str_callback(operation, arguments)?,

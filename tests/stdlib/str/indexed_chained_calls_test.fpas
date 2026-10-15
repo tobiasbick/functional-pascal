@@ -1,0 +1,13 @@
+program IndexedChainedCalls;
+
+uses Std.Test as Test;
+
+type ImportInfo = record
+  Owner: string;
+end record;
+
+begin
+  const Import := ImportInfo(Owner := 'Std.Console');
+  const Alias := Import.Owner.Split('.')[Import.Owner.Split('.').Length() - 1];
+  Test.AssertEquals('Console', Alias);
+end.

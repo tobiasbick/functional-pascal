@@ -599,6 +599,11 @@ Array `IndexOf`/`FindIndex` and string `IndexOf`/`LastIndexOf` return `Option of
 `Text.Length()`. Indexes count Unicode scalars. `Sort`/`SortInPlace` are ascending
 and stable, using `<`; unsupported element types fail checking even when empty.
 Sorting generics require `T: Comparable` or `T: Numeric`.
+`Items.SortBy(F)` and `Items.SortByInPlace(F)` sort by a named or anonymous unary
+key function. Only its return type must be Comparable (generic `K: Comparable`
+or `K: Numeric`); records can be elements. Both sorts are stable and ascending.
+The function runs once per element in original order over a snapshot; empty
+arrays make no calls. InPlace commits only after success.
 String formatting uses Pascal specifiers (`'%d'.Format(7)`, `'%s'.Format('text')`),
 with positional arguments; `{}` is ordinary text.
 
@@ -646,6 +651,12 @@ begin
   Test.AssertTrue(Items.IndexOf(99) = None);
   const Ordered := Items.Sort();
   Test.AssertEquals(2, Ordered[0]);
+  const Descending := Items.SortBy(
+    function(Value: integer): integer begin
+      return - Value;
+    end function
+  );
+  Test.AssertEquals(5, Descending[0]);
   Test.AssertTrue('aé😀'.IndexOf('😀') = Some(2));
   Test.AssertTrue('aé😀'.LastIndexOf('') = Some(3));
   Test.AssertEquals('😀', 'aé😀'[2]);

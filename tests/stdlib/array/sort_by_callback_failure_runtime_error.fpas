@@ -1,0 +1,19 @@
+program SortByCallbackFailureRuntimeError;
+
+uses Std.Console as Console;
+
+function Key(X: integer): integer;
+begin
+  Console.WriteLn(X);
+  if X = 2 then
+    panic('key failed');
+  end if;
+
+  return X;
+end function;
+
+begin
+  var Items := [3, 2, 1];
+  Items.SortByInPlace(Key);
+  Console.WriteLn('unexpected completed sort');
+end.

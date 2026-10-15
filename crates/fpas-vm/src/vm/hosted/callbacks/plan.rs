@@ -1,7 +1,8 @@
 //! Construction of resumable higher-order operation state.
 
 use fpas_bytecode::{
-    ArrayIntrinsic, DictIntrinsic, Intrinsic, OptionIntrinsic, ResultIntrinsic, StrIntrinsic, Value,
+    ArrayIntrinsic, DictIntrinsic, Intrinsic, OptionIntrinsic, ResultIntrinsic, SourceLocation,
+    StrIntrinsic, Value,
 };
 
 use super::Worker;
@@ -9,6 +10,7 @@ use super::arguments::CallbackArguments;
 use super::operation::{
     CallbackOperation, Cursor, Dictionary, DictionaryReduction, Sequence, SingleWrapper,
 };
+use super::sorting::KeyedSort;
 use super::string::{StringReduction, StringSequence};
 use crate::vm::VmError;
 
@@ -52,9 +54,10 @@ pub(super) fn operation(
     worker: &Worker,
     intrinsic: Intrinsic,
     arguments: &[Value],
+    location: SourceLocation,
 ) -> Result<Option<(Value, CallbackOperation)>, VmError> {
     match intrinsic {
-        Intrinsic::Array(operation) => array_operation(worker, operation, arguments),
+        Intrinsic::Array(operation) => array_operation(worker, operation, arguments, location),
         Intrinsic::Dict(operation) => dict_operation(worker, operation, arguments),
         Intrinsic::Str(operation) => str_operation(worker, operation, arguments),
         Intrinsic::Result(operation) => result_operation(worker, operation, arguments),
@@ -67,11 +70,14 @@ fn array_operation(
     worker: &Worker,
     operation: ArrayIntrinsic,
     arguments: &[Value],
+    location: SourceLocation,
 ) -> Result<Option<(Value, CallbackOperation)>, VmError> {
-    use ArrayIntrinsic::{All, Any, Filter, Find, FindIndex, FlatMap, ForEach, Map, Reduce};
+    use ArrayIntrinsic::{
+        All, Any, Filter, Find, FindIndex, FlatMap, ForEach, Map, Reduce, SortBy,
+    };
     if !matches!(
         operation,
-        Map | Filter | Reduce | Find | FindIndex | Any | All | FlatMap | ForEach
+        Map | Filter | Reduce | Find | FindIndex | Any | All | FlatMap | ForEach | SortBy
     ) {
         return Ok(None);
     }
@@ -85,6 +91,7 @@ fn array_operation(
         .clone();
     let operation = match operation {
         Map => CallbackOperation::ArrayMap(Sequence::new(values)),
+        SortBy => CallbackOperation::ArraySortBy(KeyedSort::new(values, location)),
         Filter => CallbackOperation::ArrayFilter(Sequence::new(values)),
         Reduce => CallbackOperation::ArrayReduce {
             values,

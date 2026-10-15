@@ -249,6 +249,11 @@ toolchain, exposes it through the test Extension Host's `PATH`, and runs the
 real VS Code Extension Host checks. More detail is in the
 [extension README](../../../editors/vscode/README.md).
 
+The extension targets the stable VS Code 1.91.0 API and tests against the pinned
+VS Code 1.142.0 release by default. Set `FPAS_VSCODE_TEST_VERSION=1.91.0` to run
+the same tests against the minimum supported editor version. API types stay
+aligned with that minimum; testing a newer editor does not raise the requirement.
+
 ## Project workflows
 
 The extension resolves one `fpas` executable. The machine-scoped

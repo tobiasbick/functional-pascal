@@ -72,7 +72,7 @@ export async function runTests() {
     await verifyManifest();
     await verifyContracts();
     await verifyGrammar();
-    const version = process.env.FPAS_VSCODE_TEST_VERSION ?? "1.137.0";
+    const version = process.env.FPAS_VSCODE_TEST_VERSION ?? "1.142.0";
     const testPath = path.join(extensionRoot, "out", "test",
       restricted ? "restricted.test.js" : "extension.test.js");
     const environment = {

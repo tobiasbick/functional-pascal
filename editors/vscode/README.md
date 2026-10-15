@@ -299,10 +299,13 @@ restarts it once, and shuts it down with the extension:
 npm test --prefix editors/vscode
 ```
 
-The runner pins VS Code 1.137.0 and creates a fresh user-data directory for each
+The runner pins VS Code 1.142.0 and creates a fresh user-data directory for each
 run, removing it after the Extension Host exits. Downloaded VS Code binaries
 remain cached. Set `FPAS_VSCODE_TEST_VERSION=1.91.0` when running the test
-command to check the minimum declared editor version. Run
+command to check the minimum declared editor version. The `@types/vscode`
+dependency stays at 1.91.0 to type-check against that minimum API; newer editor
+releases do not by themselves require a new SDK or a higher minimum version.
+Node.js types stay on the Node 24 line used for development. Run
 `npm run test:restricted --prefix editors/vscode` to check that the extension
 stays inactive in an untrusted workspace. The F9 check opens the source with its breakpoint selection
 already applied before invoking the editor command.

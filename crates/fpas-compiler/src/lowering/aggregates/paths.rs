@@ -171,28 +171,56 @@ impl LoweringContext {
         }
     }
 
-    /// Reads local or qualified unit globals before following field and index suffixes.
+    /// Reads local storage or qualified unit values before following field and index suffixes.
     pub(in crate::lowering) fn lower_designator_read(
         &mut self,
         designator: &Designator,
     ) -> Result<ValueId, CompileError> {
-        let (root_name, root_parts) = self.designator_root(designator)?;
-        let name = root_name.as_str();
-        let mut ty = self
-            .root_type(name)
-            .ok_or_else(|| unsupported(designator.span, "unresolved designator"))?;
-        let mut value = if self.has_binding(name) {
-            self.read_named_local(name, designator.span)?
-        } else {
-            self.read_global(name, designator.span)?
-        };
-        for part in &designator.parts[root_parts..] {
-            (value, ty) = self.lower_designator_part(value, ty, part)?;
-        }
-        Ok(value)
+        self.lower_designator_prefix(designator, designator.parts.len())
+            .map(|(value, _)| value)
     }
 
-    /// Resolves the same local or qualified global root for reads and writes.
+    /// Reads a prefix while retaining original index nodes and their checked metadata.
+    pub(in crate::lowering) fn lower_designator_prefix(
+        &mut self,
+        designator: &Designator,
+        part_count: usize,
+    ) -> Result<(ValueId, TypeId), CompileError> {
+        let (root_name, root_parts) = self.designator_root(designator)?;
+        let name = root_name.as_str();
+        let (mut value, mut ty) =
+            if !self.has_binding(name) && !self.has_global(name) && self.constant(name).is_some() {
+                let root = Designator {
+                    parts: designator.parts[..root_parts].to_vec(),
+                    span: designator.span,
+                };
+                let value = self.lower_expression(&Expr::Designator(root))?;
+                let ty = self
+                    .lowered_value_type(value)
+                    .ok_or_else(|| unsupported(designator.span, "constant designator type"))?;
+                (value, ty)
+            } else {
+                let ty = self
+                    .root_type(name)
+                    .ok_or_else(|| unsupported(designator.span, "unresolved designator"))?;
+                let value = if self.has_binding(name) {
+                    self.read_named_local(name, designator.span)?
+                } else {
+                    self.read_global(name, designator.span)?
+                };
+                (value, ty)
+            };
+        let parts = designator
+            .parts
+            .get(root_parts..part_count)
+            .ok_or_else(|| unsupported(designator.span, "designator prefix"))?;
+        for part in parts {
+            (value, ty) = self.lower_designator_part(value, ty, part)?;
+        }
+        Ok((value, ty))
+    }
+
+    /// Resolves local storage or a qualified unit value before its field and index suffixes.
     pub(in crate::lowering) fn designator_root(
         &self,
         designator: &Designator,
@@ -209,7 +237,7 @@ impl LoweringContext {
             };
             qualified.push('.');
             qualified.push_str(part);
-            if self.has_global(&qualified) {
+            if self.has_global(&qualified) || self.constant(&qualified).is_some() {
                 root_name.clone_from(&qualified);
                 root_parts = index + 1;
             }

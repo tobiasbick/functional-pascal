@@ -31,10 +31,7 @@ impl check::Checker {
                 if exported.kind != artifact::SymbolKind::Type {
                     continue;
                 }
-                self.scopes.imports.define_metadata(
-                    &exported.qualified_name,
-                    interface_symbol_to_sema(exported)?,
-                );
+                self.install_interface_type_metadata(exported, interface_symbol_to_sema(exported)?);
             }
         }
         Ok(())
@@ -65,9 +62,7 @@ impl check::Checker {
                     symbol.clone(),
                 );
                 if exported.kind == artifact::SymbolKind::Type {
-                    self.scopes
-                        .imports
-                        .define_metadata(&exported.qualified_name, symbol);
+                    self.install_interface_type_metadata(exported, symbol);
                 }
                 self.install_imported_record_defaults(exported);
                 self.imported_candidates
@@ -83,6 +78,25 @@ impl check::Checker {
         }
 
         Ok(())
+    }
+
+    // Field references retain the original enum identity even when only its alias is imported.
+    fn install_interface_type_metadata(
+        &mut self,
+        exported: &artifact::InterfaceSymbol,
+        symbol: Symbol,
+    ) {
+        self.scopes
+            .imports
+            .define_metadata(&exported.qualified_name, symbol.clone());
+        if let artifact::InterfaceType::Enum(enumeration) = &exported.ty
+            && enumeration.type_arguments.is_empty()
+        {
+            // A concrete generic alias is not a definition of its uninstantiated base enum.
+            self.scopes
+                .imports
+                .define_metadata(&enumeration.name, symbol);
+        }
     }
 
     fn install_imported_record_defaults(&mut self, exported: &artifact::InterfaceSymbol) {

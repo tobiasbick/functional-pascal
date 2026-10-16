@@ -6,6 +6,23 @@ fn parse_ok(source: &str) -> fpas_parser::Program {
     program
 }
 
+fn compiled_unit(
+    source: &str,
+    interfaces: &[fpas_unit::interface::UnitInterface],
+) -> crate::CompiledUnitObject {
+    let (parsed, errors) = fpas_parser::parse_compilation_unit(source);
+    assert!(errors.is_empty(), "{errors:?}");
+    let fpas_parser::CompilationUnit::Unit(unit) = parsed else {
+        panic!("unit expected");
+    };
+    let mut compiled = crate::compile_unit_object(&unit, interfaces).expect("compiled unit");
+    compiled.interface = fpas_unit::interface::decode_interface(
+        &fpas_unit::interface::encode_interface(&compiled.interface).expect("encode"),
+    )
+    .expect("decode");
+    compiled
+}
+
 fn run_program(source: &str) -> Result<fpas_vm::Execution, fpas_vm::VmError> {
     let program = parse_ok(source);
     let executable = crate::compile(&program).expect("compilation should succeed");

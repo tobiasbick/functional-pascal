@@ -83,3 +83,95 @@ end record;\nend unit;",
         interfaces.push(interface);
     }
 }
+
+fn native_keys() -> fpas_unit::interface::UnitInterface {
+    let analysis = analyze_unit(
+        &parse_unit(
+            "unit NativeKeys; uses Std.Console as Console;
+          public type Kind = Console.KeyKind;
+          public type Key = Console.KeyEvent;
+          end unit;",
+        ),
+        &[],
+    )
+    .expect("native facade analysis");
+    assert!(
+        analysis.metadata.errors.is_empty(),
+        "{:?}",
+        analysis.metadata.errors
+    );
+    let interface = analysis.interface.expect("native facade interface");
+    fpas_unit::interface::decode_interface(
+        &fpas_unit::interface::encode_interface(&interface).expect("encode"),
+    )
+    .expect("decode")
+}
+
+#[test]
+fn native_enum_aliases_resolve_record_fields_without_importing_the_native_unit() {
+    let first = native_keys();
+    let middle = analyze_unit(
+        &parse_unit(
+            "unit Middle; uses NativeKeys as Keys;
+          public type Kind = Keys.Kind; public type Key = Keys.Key; end unit;",
+        ),
+        std::slice::from_ref(&first),
+    )
+    .expect("second facade analysis");
+    assert!(
+        middle.metadata.errors.is_empty(),
+        "{:?}",
+        middle.metadata.errors
+    );
+    let second = middle.interface.expect("second facade interface");
+    for interface in [first, second] {
+        let consumer = parse_unit(&format!(
+            "unit Consumer; uses {} as Keys;
+          public function IsEnter(Key: Keys.Key): boolean;
+          begin return Key.kind = Keys.Kind.Enter; end function;
+          public function IsEscape(Kind: Keys.Kind): boolean;
+          begin return Kind = Keys.Kind.Escape; end function;
+          end unit;",
+            interface.unit_name
+        ));
+        let analysis = analyze_unit(&consumer, &[interface]).expect("consumer analysis");
+        assert!(
+            analysis.metadata.errors.is_empty(),
+            "{:?}",
+            analysis.metadata.errors
+        );
+    }
+}
+
+#[test]
+fn native_enum_alias_metadata_does_not_expose_native_names_or_merge_other_enums() {
+    let interface = native_keys();
+    for declarations in [
+        "public function Check(Key: Keys.Key): boolean; begin return Key.kind = Other.Enter; end function;",
+        "public type Leak = Std.Console.KeyKind;",
+        "public type Leak = Console.KeyKind;",
+    ] {
+        let consumer = parse_unit(&format!(
+            "unit Consumer; uses NativeKeys as Keys;
+          type Other = enum Enter; Escape; end enum;
+          {declarations} end unit;"
+        ));
+        let analysis =
+            analyze_unit(&consumer, std::slice::from_ref(&interface)).expect("consumer analysis");
+        assert!(
+            !analysis.metadata.errors.is_empty(),
+            "accepted {declarations}"
+        );
+        if declarations.contains("Other.Enter") {
+            assert!(
+                analysis
+                    .metadata
+                    .errors
+                    .iter()
+                    .any(|error| error.code == fpas_diagnostics::codes::SEMA_TYPE_MISMATCH),
+                "{:?}",
+                analysis.metadata.errors
+            );
+        }
+    }
+}

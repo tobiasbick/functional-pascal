@@ -1,4 +1,5 @@
 //! Lowering for semantically resolved record methods and callable fields.
+//! Documentation: `docs/pascal/language/functions/fluent-calls.md`.
 
 use fpas_ir::{Operation, TypeId, ValueId};
 use fpas_parser::{Designator, DesignatorPart, Expr, PostfixOperation};
@@ -187,6 +188,8 @@ impl LoweringContext {
         )
     }
 
+    /// Reads the receiver prefix once, including imported constants and indexed suffixes.
+    /// Callers retain this value before evaluating explicit arguments.
     pub(in crate::lowering) fn lower_member_receiver(
         &mut self,
         designator: &Designator,
@@ -195,41 +198,7 @@ impl LoweringContext {
         if part_count == 0 || part_count > designator.parts.len() {
             return Err(unsupported(designator.span, "record member receiver path"));
         }
-        self.lower_raw_designator_prefix(designator, part_count)
-    }
-
-    fn lower_raw_designator_prefix(
-        &mut self,
-        designator: &Designator,
-        part_count: usize,
-    ) -> Result<(ValueId, TypeId), CompileError> {
-        let (name, root_parts) = self.designator_root(designator)?;
-        let name = name.as_str();
-        let ty = self
-            .root_type(name)
-            .ok_or_else(|| unsupported(designator.span, "record member receiver type"))?;
-        let value = if self.has_binding(name) {
-            self.read_named_local(name, designator.span)?
-        } else {
-            self.read_global(name, designator.span)?
-        };
-        let parts = designator
-            .parts
-            .get(root_parts..part_count)
-            .ok_or_else(|| unsupported(designator.span, "record member receiver prefix"))?;
-        self.lower_raw_suffix(value, ty, parts)
-    }
-
-    fn lower_raw_suffix(
-        &mut self,
-        mut value: ValueId,
-        mut ty: TypeId,
-        parts: &[DesignatorPart],
-    ) -> Result<(ValueId, TypeId), CompileError> {
-        for part in parts {
-            (value, ty) = self.lower_designator_part(value, ty, part)?;
-        }
-        Ok((value, ty))
+        self.lower_designator_prefix(designator, part_count)
     }
 
     fn member_callable(

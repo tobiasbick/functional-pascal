@@ -1,5 +1,6 @@
 use super::*;
 
+mod native_aliases;
 mod program_names;
 
 #[test]

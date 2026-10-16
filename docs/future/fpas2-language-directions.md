@@ -290,6 +290,196 @@ cross-library value and callback exchange, initialization failures, incompatible
 interfaces/artifacts and missing exports. Failed loads must leave the running
 application consistent; existing task ownership and cleanup rules must still hold.
 
+## 13. Managed host processes and interactive pipes
+
+[Std.Proc](../pascal/std/host/proc.md) starts external programs and waits for
+completion. It does not expose live process handles, interactive stdin/stdout/
+stderr pipes, per-process environment or working-directory settings, timeouts or
+process-tree termination. Running a process call in go still occupies its worker.
+
+Consider managed process handles with separate start, status observation and wait
+operations, incremental pipe I/O, bounded capture and explicit stop policies.
+Include working-directory and environment settings per launch. This would support
+long-running command-line tools, stdio protocol servers and independently
+terminable FPAS worker processes. Prefer a bundled Rust-backed implementation
+integrated with existing task ownership, cancellation and error handling.
+
+Open questions: process ownership, pipe and binary-buffer types, EOF and stdin
+closure, exit-status representation, repeated waits, output limits, and cleanup
+when an owning task exits. Define cancellation, grace periods, termination
+requests, confirmed exit and child-process reaping separately. Process-tree
+handling and platform differences need an explicit contract.
+
+Evaluation should cover interactive request/reply, simultaneous stdout/stderr
+draining, full pipes, output limits, launch failure, nonzero exit, cancellation,
+timeout and process-tree cleanup. Include an FPAS worker process without requiring
+general in-process task termination.
+
+## 14. Host I/O that releases VM workers
+
+[Task waits and channels](../pascal/std/concurrency/task.md#waiting-and-execution)
+already suspend a task and release its pool thread. Process execution and other
+host I/O can still occupy workers; even
+[cancellable network I/O](../pascal/std/network/net.md) polls while retaining its
+VM worker. Enough pending host calls can therefore occupy the available pool.
+
+Consider integrating pending network, pipe and process operations with task
+suspension so waiting does not retain a VM worker. Assess filesystem and native
+FFI calls separately where the host operation cannot suspend directly. Compare
+event-driven backends and bounded blocking execution using concrete workloads;
+do not assume that cancellation polling or nonblocking sockets alone release a
+VM worker.
+
+Open questions: operation ownership, wake registration, completion races,
+backpressure, pending-operation limits, shutdown and debugger integration.
+Distinguish stopping the caller's wait from ending underlying host work, including
+DNS, certificate verification and arbitrary native calls. Define late completion
+and resource cleanup before choosing a backend.
+
+Evaluation should demonstrate progress with one VM worker and overlapping pending
+operations, including nested callbacks. Cover registration/wakeup races,
+cancellation, timeout, teardown and bounded resource use. Measure throughput and
+latency on the affected workloads before claiming a performance improvement.
+
+## 15. Shared deadlines and linked cancellation
+
+[Std.Tasks](../pascal/std/concurrency/task.md) provides cancellation tokens and
+individual timeouts. [Std.Server](../pascal/std/network/server.md#one-shutdown-budget)
+already shares one remaining budget across shutdown phases. There is no general
+operation context carrying a shared deadline and linked cancellation across
+task, network and process operations.
+
+Consider a composable library contract for parent/child cancellation and a common
+monotonic deadline. A child operation should receive the remaining budget rather
+than restarting a full timeout at each step. Reuse existing cancellation and task
+ownership; connect the design to typed operational errors and distinct duration
+and clock types if those proposals are selected.
+
+Open questions: API shape, parent/child lifetime, deadline inheritance, explicit
+cancellation versus expiry, disposal of registrations and result precedence when
+completion races with cancellation. Define how supported host operations observe
+the context and how unfinished work remains owned after a waiting timeout.
+
+Evaluation should cover nested operations sharing one budget, earlier parent
+deadlines, parent cancellation, independent child cancellation, completion races
+and cleanup. Preserve the distinction between cooperative cancellation and
+confirmed termination of an external process.
+
+## 16. Reusable concurrency patterns
+
+Tasks, bounded channels, groups, selection and supervised retries already supply
+the foundations for pipelines, worker pools and message loops. Applications still
+compose their own coordination for many recurring patterns.
+
+Consider bundled library operations for bounded parallel Map, semaphores,
+request/reply, broadcast subscriptions and latest-value state notifications.
+Small actor/message-loop helpers can build on the same ownership model; a full
+actor runtime or supervision tree needs a separate scope decision. Prefer FPAS
+composition where existing primitives suffice and focused Rust-backed support
+where runtime integration is needed.
+
+Open questions: operation names, result ordering, concurrency and queue limits,
+failure propagation, cancellation and joining unfinished work. Define semaphore
+permit lifetimes, reply ownership, subscriber cleanup and slow-consumer policies.
+Broadcast delivery and latest-value notification need distinct contracts for
+retaining or dropping intermediate values. Additional supervision policies must
+state how they extend the existing fixed-retry behavior.
+
+Evaluation should use real pipeline, worker-pool and request/reply consumers.
+Cover empty input, concurrency limits, failures, cancellation, permit release,
+closed replies, slow subscribers and shutdown without abandoned tasks.
+
+## 17. Fair selection
+
+[Select](../pascal/std/concurrency/task.md#ordering-and-callbacks) currently commits
+the first ready case in input order. This permits explicit priority but does not
+guarantee fairness. Repeated selection with an always-ready early case can leave
+later ready cases unserved.
+
+Consider a selection contract that prevents starvation among eligible ready
+cases. Decide whether fairness replaces ordered selection or is explicitly
+requested before selecting an API. Retain atomic winner commitment, exactly one
+callback, and the rule that losing cases do not transfer channel values.
+
+Open questions: rotation versus randomized choice, the scope and lifetime of
+fairness state across newly created single-use cases, explicit priority for
+cancellation and timers, task-failure precedence, and deterministic debugger
+behavior. State the scheduling and readiness assumptions under which a fairness
+guarantee holds; fairness alone does not establish a wall-clock deadline.
+
+Evaluation should cover multiple continuously ready sources, changing readiness,
+recreated cases, competing selectors, cancellation/timer priority and callback
+failure. Verify the selected starvation guarantee and preserved ownership using
+controlled readiness rather than timing-dependent expectations.
+
+## 18. Validation and typed decoders
+
+[Std.Json.Fields](../pascal/std/text/json-fields.md) already provides strict typed
+field access and rejects unknown fields, returning individual string errors.
+There is no general library of composable validation rules and typed decoders
+with structured, accumulated errors.
+
+Consider reusable validators for scalar values, collections and nested objects,
+and decoders returning a declared FPAS type or validation issues with field paths,
+codes and messages. Support form input as well as external data. Invalid input
+should remain expected Result data; a TUI draft must retain invalid text so users
+can correct it. Existing generics, callables and records are the starting point.
+
+Open questions: rule and decoder composition, optional fields, defaults,
+transformations, cross-field rules, error accumulation and validation limits.
+Start with explicitly declared record types and decoding functions. Automatic
+record-type derivation from schemas or type-driven decoding requires a separate
+decision on generation or compiler support.
+
+Evaluation should cover nested paths, multiple independent errors, missing and
+unknown fields, conversions, defaults and successful typed construction. Include
+a TUI form that retains its draft and associates errors with the correct fields.
+
+## 19. Application stores and selectors
+
+[Std.Tui](../pascal/std/tui/application.md#update-and-view) already owns an
+application model processed through Update and View. Generics and closures can
+express typed state operations, but there is no reusable application-store and
+selector-subscription library.
+
+Consider typed stores with explicit actions, state snapshots, derived selectors
+and subscriptions notified when their selected value changes. Integrate with
+Model-Update-View and serial host-task ownership; background work should continue
+to deliver typed messages through the application inbox. Allow explicit equality
+callbacks, including for types outside current generic comparison constraints.
+
+Open questions: store/model ownership, action ordering, subscription lifetime and
+unsubscription, batched changes, reentrant updates, callback failures and selector
+comparison. Relate default comparison to the equality-constraint proposal without
+making it a prerequisite for explicit comparison callbacks.
+
+Evaluation should cover independent state slices, unchanged selections, previous
+and current values, subscription changes during notification, batching, nested
+actions and shutdown. Include background-message integration and two independent
+application instances.
+
+## 20. Selective TUI updates
+
+The [TUI renderer](../pascal/std/tui/application.md#interactive-terminal) already
+transfers only changed terminal cells. After each processed message, however,
+the host calls View and performs validation, layout and painting again. Terminal
+damage tracking does not itself skip view construction or layout work.
+
+Consider explicit dependencies and cached subviews that reuse unaffected view
+and layout results after a model change. Connect invalidation to selectors where
+useful, while preserving immutable element trees, controlled inputs and serial
+host execution. A store subscription alone does not define layout invalidation.
+
+Open questions: cache identity and lifetime, dependency declaration, effect rules
+for cached View callbacks, comparison, and propagation to parents and siblings.
+Define invalidation for resize, focus, pointer state, modal changes and palettes,
+including cleanup when elements disappear. Automatic dependency tracking and
+language-level reactivity require their own explicit decisions.
+
+Evaluation should compare visible output and input routing with uncached
+execution, including focus, resize, menus, editing and background updates. Verify
+unaffected work is skipped and measure benefits on representative TUI workloads.
+
 ## Other deferred scope
 
 Explicit-width numeric types and Decimal need a separate coherent numeric

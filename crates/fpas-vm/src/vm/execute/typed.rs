@@ -101,7 +101,8 @@ impl Worker {
         let right = self.read_operand(operands.c)?;
         let result = match (left, right) {
             (Value::Str(left), Value::Str(right)) => {
-                Value::Boolean(compare(operation, left.as_ref(), right.as_ref()))
+                let result = compare(operation, left.as_ref(), right.as_ref());
+                return self.write_boolean_operand(operands.a, result);
             }
             _ => value_ops::binary(operation, left, right)
                 .map_err(|error| self.runtime_error(error.code, error.message, error.hint))?,
@@ -119,13 +120,16 @@ impl Worker {
         let left = self.read_operand(operands.b)?;
         let right = self.read_operand(operands.c)?;
         let result = match (left, right) {
-            (Value::Boolean(left), Value::Boolean(right)) => Value::Boolean(match operation {
-                BinaryOperation::Equal => left == right,
-                BinaryOperation::NotEqual => left != right,
-                BinaryOperation::And => *left && *right,
-                BinaryOperation::Or => *left || *right,
-                _ => unreachable!("Boolean binary opcode"),
-            }),
+            (Value::Boolean(left), Value::Boolean(right)) => {
+                let result = match operation {
+                    BinaryOperation::Equal => left == right,
+                    BinaryOperation::NotEqual => left != right,
+                    BinaryOperation::And => *left && *right,
+                    BinaryOperation::Or => *left || *right,
+                    _ => unreachable!("Boolean binary opcode"),
+                };
+                return self.write_boolean_operand(operands.a, result);
+            }
             _ => value_ops::binary(operation, left, right)
                 .map_err(|error| self.runtime_error(error.code, error.message, error.hint))?,
         };

@@ -60,7 +60,9 @@ diagnostic codes explicitly. Keep generated examples under `.temp-data/`.
 | [`fpas-authoring`](.agents/skills/fpas-authoring/SKILL.md) | Writing or editing `.fpas` sources, formatting, file placement |
 | [`fpas-projects`](.agents/skills/fpas-projects/SKILL.md) | Project/workspace manifests, dependencies, exports, test bundles |
 | [`fpas-bench`](.agents/skills/fpas-bench/SKILL.md) | Perf benches: save/compare/record, `docs/bench/history.md` |
-| [`test-audit`](.agents/skills/test-audit/SKILL.md) | Writing, changing, reviewing, or sweeping tests |
+
+The `rust-best-practices`, `rust-refactor-helper`, and `test-audit` skills should
+be installed.
 
 ## Dogfooding
 

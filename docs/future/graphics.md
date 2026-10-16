@@ -1,6 +1,7 @@
 # Future: Graphics and 3D Rendering
 
-> Idea only. No implementation plan, unit name, or API decision.
+> Idea only. No implementation plan, unit name, or API decision, except for the
+> [numeric types](#agreed-design-numeric-types) section, which records an agreed language design.
 
 Functional Pascal has no way to open a window, draw pixels, or use a GPU. This note records the
 runtime and language gaps that a graphics capability would expose, and the properties that would
@@ -45,7 +46,8 @@ representation as an open decision.
 `real` is always 64-bit and `integer` is always 64-bit signed. GPU data is mostly 32-bit float,
 16-bit or 32-bit unsigned integer, and packed 8-bit color channels. Without fixed-width types,
 every boundary call converts and range-checks values, and FPAS code cannot describe a vertex layout
-precisely.
+precisely. Exact monetary amounts also have no type: `real` accumulates binary rounding errors.
+The agreed design is described under [numeric types](#agreed-design-numeric-types).
 
 ### Small value aggregates
 
@@ -81,8 +83,8 @@ headless servers and the test runner.
 ### Runtime and standard library
 
 - A canonical packed buffer type for bytes, together with binary file reads and writes in `Std.Fs`.
-- Typed numeric buffers (`f32`, `u16`, `u32`, `u8`) that native intrinsics can borrow without
-  per-element conversion.
+- Typed numeric buffers (`real32`, `unsigned16`, `unsigned32`, `unsigned8`) that native
+  intrinsics can borrow without per-element conversion.
 - Main-thread event pumping as a selectable source, so `Select` can combine window events, channels,
   task completion, and timeouts.
 - A monotonic clock with sub-millisecond resolution.
@@ -93,8 +95,7 @@ headless servers and the test runner.
 
 ### Language
 
-- **Fixed-width numeric types**, for example `real32`, `uint8`, `uint16`, and `uint32`, with
-  explicit conversions and defined overflow behavior.
+- **Fixed-width numeric types**: agreed, see [numeric types](#agreed-design-numeric-types).
 - **Packed arrays** of fixed-width numeric types or of records that contain only such fields, stored
   contiguously and passed to intrinsics without conversion.
 - **Value records**: small, fixed-size records without heap allocation and with copy semantics, for
@@ -102,7 +103,85 @@ headless servers and the test runner.
 - **Operator declarations** for records, limited to arithmetic and comparison operators, so vector
   and matrix code can use infix notation. They must remain pure and statically resolved.
 
-Each language item needs its own design note and explicit agreement before implementation.
+Each remaining language item needs its own design note and explicit agreement before
+implementation.
+
+## Agreed design: numeric types
+
+FPAS offers exactly one way to express each numeric concept: every type has one name, and there
+are no aliases.
+
+### Types
+
+| Kind | Types |
+| --- | --- |
+| Signed integer | `integer8`, `integer16`, `integer32`, `integer64` |
+| Unsigned integer | `unsigned8`, `unsigned16`, `unsigned32`, `unsigned64` |
+| Binary floating point | `real32`, `real64` |
+| Exact monetary amount | `money` |
+
+- `integer` is renamed to `integer64` and `real` to `real64`. The old names are removed, without
+  an alias. This rename is a separate, mechanical step before the new types are added. A
+  diagnostic for `integer` or `real` names the replacement.
+- Subranges (`type Percent = 0..100;`) remain the only way to restrict values. Width types
+  describe representation; subranges describe permitted values. There is no separate range type.
+- There are no 128-bit integers and no 8-bit floats. A 16-bit float may later become a storage
+  format of packed arrays only.
+
+### Arithmetic and literals
+
+- Arithmetic stays within its type: `integer8 + integer8` is `integer8`. Overflow is a runtime
+  error, as for `integer` today.
+- Operands of different numeric types are a compile-time error whose hint shows the explicit
+  conversion.
+- Wraparound never happens implicitly.
+- A numeric literal takes the expected type: `var Pixel: unsigned8 := 200;`. Without an expected
+  type, an integer literal is `integer64` and a real literal is `real64`. A literal outside the
+  expected type, such as `300` for `unsigned8`, is a compile-time error.
+
+### Conversions
+
+There are no implicit conversions in any direction, including assignments, arguments, and return
+values.
+
+| Conversion | Form | Behavior |
+| --- | --- | --- |
+| Integer to another integer type | `unsigned8(X)`, `integer16(X)` | Checked; an out-of-range value panics. A known constant out of range is a compile-time error. |
+| Integer to floating point | `real32(X)`, `real64(X)` | Replaces `Conv.IntToReal`. Large magnitudes may lose precision. |
+| `real64` to `real32` | `real32(X)` | Rounds to the nearest representable value; overflow panics. |
+| Floating point to integer | `Math.Round`, `Math.Trunc`, `Math.Floor`, `Math.Ceil` | The rounding mode stays visible. The result is `integer64`; narrow it explicitly afterwards. |
+| Value into a subrange | `Percent(X)` | Unchanged. |
+
+- `X in unsigned8` tests whether a value fits without converting, using the existing subrange
+  membership syntax.
+- Saturation is written explicitly: `unsigned8(Math.Clamp(X, 0, 255))`.
+
+### Bit operations
+
+- The Pascal operators `and`, `or`, `xor`, `not`, `shl`, and `shr` apply to the `unsigned`
+  types only. Signed values are converted explicitly first.
+- Shifting by the bit width of the type or more is a runtime error, not a silent zero.
+
+### Money
+
+- `money` is an amount, not a currency. A currency code is an ordinary record field next to it.
+- It is stored as a 64-bit integer scaled by 10,000, giving four exact decimal places.
+- Literals in a `money` context are parsed as exact decimals: `var Price: money := 19.99;`.
+  `money(X)` converts integers exactly.
+- A runtime `real64` becomes `money` only through an explicit rounding function in `Std.Math`.
+- Addition and subtraction are exact.
+
+### Runtime representation
+
+Registers keep computing in 64-bit integers or 64-bit floats. The width of a typed operation is an
+instruction operand, and the result is checked or narrowed when it is stored. This keeps the opcode
+set small and the runtime value at 16 bytes. The width matters for storage only in packed arrays.
+
+### Open points
+
+- The rounding rule for `money` multiplication and division, for example four places with ties to
+  even, as `Math.Round` uses.
+- The name of the rounding function from `real64` to `money`.
 
 ## Non-goals
 

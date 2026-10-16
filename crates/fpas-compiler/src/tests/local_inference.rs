@@ -3,6 +3,75 @@
 use super::assert_succeeds;
 
 #[test]
+fn inferred_generic_call_results_preserve_record_fields_and_mutable_storage() {
+    assert_succeeds(
+        r#"
+program InferredGenericRecords;
+
+type State = record Generation: integer; end record;
+type Box of T = record Value: T; end record;
+
+function Identity<T>(Value: T): T;
+begin
+  return Value;
+end function;
+
+function CopyItems<T>(Values: array of T): array of T;
+begin
+  return Values;
+end function;
+
+begin
+  const Final := Identity(State(Generation := 1));
+  const Generation: integer := Final.Generation;
+  var Current := Identity(State(Generation := 2));
+  Current.Generation := Current.Generation + 1;
+  var Nested := Identity(Box(Value := State(Generation := 4)));
+  Nested.Value.Generation := Nested.Value.Generation + 1;
+  const DirectField: integer := Identity(State(Generation := 6)).Generation;
+  const IndexedField: integer := CopyItems([State(Generation := 7)])[0].Generation;
+  if Generation <> 1 or Current.Generation <> 3 or Nested.Value.Generation <> 5
+    or DirectField <> 6 or IndexedField <> 7 then
+    panic('inferred generic record storage');
+  end if;
+end.
+"#,
+    );
+}
+
+#[test]
+fn inferred_generic_method_results_preserve_concrete_record_types() {
+    assert_succeeds(
+        r#"
+program InferredGenericMethods;
+
+type State = record Generation: integer; end record;
+type Relay = record
+  static function Copy<T>(Value: T): T;
+  begin
+    return Value;
+  end function;
+  function Forward<T>(Self: Relay; Value: T): T;
+  begin
+    return Value;
+  end function;
+end record;
+
+begin
+  const Source := Relay();
+  const StaticValue := Relay.Copy(State(Generation := 6));
+  var InstanceValue := Source.Forward(State(Generation := 7));
+  InstanceValue.Generation := InstanceValue.Generation + 1;
+  const DirectField: integer := Source.Forward(State(Generation := 9)).Generation;
+  if StaticValue.Generation <> 6 or InstanceValue.Generation <> 8 or DirectField <> 9 then
+    panic('inferred generic method storage');
+  end if;
+end.
+"#,
+    );
+}
+
+#[test]
 fn determined_local_expressions_execute_once_with_fixed_types() {
     assert_succeeds("program T; var Trace: string := '';
         type Point = record X: integer; end record;

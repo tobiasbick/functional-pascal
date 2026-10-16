@@ -18,6 +18,8 @@ use super::types;
 
 impl LoweringContext {
     /// Lowers an expression to a value available in its final continuation block.
+    /// Generic call results retain their checked type as described in
+    /// `docs/pascal/language/functions/generic-routines.md`.
     pub(super) fn lower_expression(&mut self, expression: &Expr) -> Result<ValueId, CompileError> {
         match expression {
             Expr::Integer(value, span) => self.emit_value(
@@ -48,7 +50,8 @@ impl LoweringContext {
             } => {
                 let call_key = fpas_sema::expr_lookup_key(expression);
                 let result = self.expression_ir_type(expression)?;
-                self.lower_call(designator, args, result, *span, call_key)
+                let value = self.lower_call(designator, args, result, *span, call_key)?;
+                self.value_as(value, result, *span)
             }
             Expr::Paren(inner, _) => self.lower_expression(inner),
             Expr::Is {

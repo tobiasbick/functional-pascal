@@ -48,13 +48,21 @@ impl LoweringContext {
             })
     }
 
-    /// Use semantic constructor identity before ordinary callable result inference.
+    /// Uses checked expression types, preserving concrete generic call results.
+    ///
+    /// See `docs/pascal/language/basics/local-variables.md` and
+    /// `docs/pascal/language/functions/generic-routines.md`.
     pub(in crate::lowering) fn expression_ir_type(
         &self,
         expression: &fpas_parser::Expr,
     ) -> Result<TypeId, CompileError> {
         let span = expression.span();
-        if let fpas_parser::Expr::Call { designator, .. } = expression {
+        // Synthetic receiver-path calls may have no checked expression entry.
+        if !self
+            .expr_types
+            .contains_key(&fpas_sema::expr_lookup_key(expression))
+            && let fpas_parser::Expr::Call { designator, .. } = expression
+        {
             let key = fpas_sema::expr_lookup_key(expression);
             if !self.intrinsic_calls.contains_key(&key)
                 && !self.record_constructions.contains(&key)

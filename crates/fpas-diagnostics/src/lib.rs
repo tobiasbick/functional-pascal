@@ -13,6 +13,7 @@
 mod code;
 mod diagnostic;
 mod file_diagnostic;
+mod foreign_habit;
 mod location;
 mod render;
 mod source_range;
@@ -24,6 +25,7 @@ pub mod codes;
 pub use code::{DiagnosticCode, InvalidDiagnosticCode};
 pub use diagnostic::{Diagnostic, DiagnosticSeverity, DiagnosticStage};
 pub use file_diagnostic::FileDiagnostic;
+pub use foreign_habit::ForeignHabit;
 pub use location::{SourceLocation, SourceLocationError};
 pub use render::{
     TextStyle, render, render_json, render_program_stderr_json, render_text, render_without_path,

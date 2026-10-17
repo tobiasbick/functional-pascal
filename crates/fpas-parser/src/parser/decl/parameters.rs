@@ -60,6 +60,8 @@ impl Parser {
             );
             self.advance();
         }
+        let const_modifier = self.eat_const_parameter_modifier();
+        let name_start = self.current_span();
         let mode = if self.eat(&Token::Var) {
             ParamMode::Var
         } else {
@@ -80,12 +82,20 @@ impl Parser {
             self.expect_ident()
                 .unwrap_or_else(|| self.error_ident(start))
         };
+        if let Some(modifier) = const_modifier
+            && self.check(&Token::Comma)
+        {
+            self.report_const_parameter(modifier, name_start);
+        }
         if self.check(&Token::Comma) {
             self.invalid_parameter_separator(true);
             return None;
         }
         self.expect(&Token::Colon);
         let type_expr: TypeExpr = self.parse_type_expr();
+        if let Some(modifier) = const_modifier {
+            self.report_const_parameter(modifier, name_start);
+        }
         Some(FormalParam {
             name,
             mode,

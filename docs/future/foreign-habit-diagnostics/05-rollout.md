@@ -12,7 +12,7 @@ Packages run in order; each lists its catalog entries from [02-catalog.md](02-ca
 | --- | --- | --- | --- | --- |
 | [x] | [P0 Structure](#p0-structure) | – (moves only) | plan approved | small |
 | [x] | [E1 Short experiment](#e1-short-experiment) | new entries | P0 | small |
-| [ ] | [P1 Routines and results](#p1-routines-and-results) | H-DECL-07, H-DECL-08, H-CALL-01, H-CALL-02, H-CALL-03, H-CALL-13 | E1 | medium |
+| [x] | [P1 Routines and results](#p1-routines-and-results) | H-DECL-07, H-DECL-08, H-CALL-01, H-CALL-02, H-CALL-03, H-CALL-13 | E1 | medium |
 | [ ] | [P2 Declarations](#p2-declarations) | H-DECL-01, H-DECL-02, H-DECL-03, H-DECL-05, H-DECL-06, H-DECL-10, H-DECL-11, H-DECL-12, H-DECL-13, H-DECL-14 | E1 | medium |
 | [ ] | [P5 Built-in names](#p5-built-in-names) | H-DECL-09, H-DECL-15, H-CALL-07, H-CALL-08, H-CALL-10, H-CALL-12, H-CALL-15, H-CALL-17, H-CALL-19, H-STMT-09 | E1 | small |
 | [ ] | [P3 Control flow](#p3-control-flow) | H-STMT-02, H-STMT-03, H-STMT-04, H-STMT-05, H-STMT-06, H-STMT-07, H-STMT-08 | E1 | medium |
@@ -51,6 +51,26 @@ P3 (three programs) and P4 (two) close. The packages stay independent of each ot
 - Reorder P1–P5 by how often their habits occurred. Docs-only; no code change.
 
 ## P1 Routines and results
+
+**Done** on 2026-10-17.
+
+- Shared helper `fpas_diagnostics::ForeignHabit` builds the help ("… FPAS writes `…`.") and fills
+  `found`/`expected` with the foreign text and its replacement, the single point A3 can extend.
+- Parser `foreign/routines.rs`: `const` parameters, missing parameter lists, Ada headers (the Ada
+  body is skipped through `end Name;`), `Result :=` and `Result.Field :=`. Allocated FP2023
+  (`PARSE_FOREIGN_SYNTAX`). A missing parameter list keeps FP2001 with specific help.
+- Sema `check/foreign/`: assignment to the enclosing function's name reuses FP3005 (the
+  assignment is invalid) instead of the misleading FP3006; `Exit` gets help on FP3003 through
+  the `builtins.rs` table that P5 extends.
+- Docs: [diagnostics handbook](../../pascal/tools/diagnostics.md#diagnostics-for-other-language-spellings)
+  section with the permanent habit table and FP2023 catalog row; three new rows in the
+  [agent reference](../../pascal/agent-reference.md#1-translate-habits-before-writing) habit table.
+- Tests: `fpas-parser` `tests/errors/foreign_routines.rs` and `fpas-sema`
+  `tests/integration/foreign_routines.rs` (positive, negative, recovery).
+- Probes: every P1 probe now yields exactly one diagnostic (before: up to 12). The E1 programs
+  are no longer stopped by `const` parameters; their first P2 and P3 habits are reported now.
+
+Original scope:
 
 - Create `crates/fpas-parser/src/parser/foreign/` and `crates/fpas-sema/src/check/foreign/`
   with the shared hint helper; allocate and document `PARSE_FOREIGN_SYNTAX` if a P1 entry emits it.

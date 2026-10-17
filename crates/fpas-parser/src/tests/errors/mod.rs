@@ -5,6 +5,7 @@ mod api;
 mod chained_comparison;
 mod delimiters;
 mod diagnostics;
+mod foreign_routines;
 mod keywords;
 mod nesting;
 mod parameters;

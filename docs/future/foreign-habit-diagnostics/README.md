@@ -4,7 +4,7 @@ Implementation plan for wish [A2](../agent-wishes.md#a2-diagnostics-for-pascal-a
 the compiler recognizes Delphi, Free Pascal, Ada and common C-family spellings and answers with
 the FPAS form, for example "FPAS writes this as: …".
 
-**Status: in progress.** P0 (structure) and E1 (short experiment) are done; P1 is next,
+**Status: in progress.** P0, E1 and P1 (routines and results) are done; P2 is next,
 see [05-rollout.md](05-rollout.md#package-status). All open questions (Q-1 to Q-5) are decided in
 their files. The user approved this README; the other files may still be revised before the
 package that implements them starts.

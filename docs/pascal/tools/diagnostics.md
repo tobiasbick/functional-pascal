@@ -167,6 +167,43 @@ resolve declared methods and native operations; see [dot calls](../language/func
 Migration hints for removed native free operations, such as `Length(Text)`,
 recommend the implemented `Text.Length()` form.
 
+## Diagnostics for other-language spellings
+
+The compiler recognizes common Delphi, Free Pascal and Ada spellings that FPAS
+rejects and answers with the FPAS form instead of a generic syntax error. One
+habit produces one diagnostic; parsing continues as if the FPAS form had been
+written, so later errors in the file are still reported. Valid FPAS is never
+reported: recognition starts only after the canonical parse has failed.
+
+The help text names why the foreign form does not apply and ends with
+"FPAS writes `…`." In JSON output, `found` holds the foreign text and `expected`
+its FPAS replacement. FP2023 marks constructs that FPAS has no form for; other
+habits keep the code of the underlying error with a specific message and help.
+
+```pascal id=example-5 error=FP2023
+program ResultHabit;
+
+function Answer(): integer;
+begin
+  Result := 42;
+end function;
+
+begin
+end.
+```
+
+The help reads "FPAS writes `return 42`."
+
+| Habit | Origin | FPAS form | Code |
+| --- | --- | --- | --- |
+| `{ comment }`, `(* comment *)` | Pascal | `// comment` | FP1013 |
+| `(const S: string)` parameter modifier | Delphi | `(S: string)`; parameters are read-only | FP2023 |
+| `procedure Q;`, `function F: T;` | Pascal | `procedure Q();`, `function F(): T;` | FP2001 |
+| `function F return T is … end F;` | Ada | `function F(): T; begin … end function;` | FP2023 |
+| `Result := Value;`, `Result.X := Value;` | Delphi | `return Value;` | FP2023 |
+| `F := Value;` inside function `F` | Pascal | `return Value;` | FP3005 |
+| `Exit(Value);` | Delphi | `return Value;`, `return;` in a procedure | FP3003 |
+
 ## Rust JSON rendering API
 
 `render_json(path, source_text, diagnostic)` serializes one record without a
@@ -411,6 +448,7 @@ bugs rather than adding a workaround to the program.
 | FP2020 | Statement in an expression branch or arm | `const N: integer := if Ready then 1; else 0 end if;` or `case X of when 1: N := 1; end case` | `const N: integer := if Ready then 1 else 0 end if;` or `case X of when 1: 1; else 0; end case` |
 | FP2021 | Positive integer literal outside signed range | `const N: integer := 9223372036854775808;` | Use at most `9223372036854775807`, or write `-9223372036854775808` for the minimum. |
 | FP2022 | Missing import alias | `uses Std.Console;` | Write `uses Std.Console as Console;` and use `Console.Name`. |
+| FP2023 | Construct from another language | `function F(const S: string): integer;` | `function F(S: string): integer;` |
 
 FP2017 names the declared type when the literal is the initializer of a typed
 constant, variable, or field default, for example `Point(X := ..., Y := ...)`;

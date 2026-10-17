@@ -11,6 +11,9 @@ pub(super) use types::PendingKey;
 impl Checker {
     /// Gives a qualified repair for unresolved calls without exposing hidden unit symbols.
     pub(crate) fn hint_unknown_callable(&self, name: &str) -> String {
+        if let Some(hint) = crate::check::foreign::foreign_builtin_hint(name) {
+            return hint;
+        }
         if let Some(hint) = self.parser_migration_hint(name) {
             return hint;
         }

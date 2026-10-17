@@ -26,7 +26,10 @@ inheritance, pointers, manual allocation, exceptions with handlers, or preproces
 | A `var` or `type` section containing several declarations | Repeat `var`, `const`, or `type` for each declaration. |
 | Pascal `const N = 3` | `const N: integer := 3;` (locals may infer known types). |
 | Ada `X : Integer := 1` | `var X: integer := 1;`; use `const` for an immutable binding. |
-| Assign to the function name or Delphi `Result` | `return Value;`; procedures use `return;`. |
+| Assign to the function name, Delphi `Result` or `Exit(Value)` | `return Value;`; procedures use `return;`. |
+| Delphi `const` parameters | Parameters are read-only already: `function F(S: string): integer;`. |
+| Pascal `procedure Q;` without parentheses | Every routine declares its parameter list: `procedure Q();`. |
+| Ada `function F return T is ... end F;` | `function F(): T; begin ... end function;`. |
 | Pascal `end;` for every block | `end function;`, `end procedure;`, `end if;`, etc.; program `end.`. |
 | Omit the semicolon before Pascal `else` | Terminate each statement with `;`, including before `else`. |
 | Ada `elsif` | Also `elsif`; nested `else if` requires a second `end if`. |

@@ -3,6 +3,7 @@ mod core;
 mod decl;
 mod display;
 mod expr;
+mod foreign;
 mod imports;
 mod nesting;
 mod patterns;

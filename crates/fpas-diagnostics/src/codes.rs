@@ -118,6 +118,11 @@ define_codes!(PARSE_ALLOCATED_CODES => {
     /// A direct import omitted its required source-local alias.
     /// Documentation: `docs/pascal/tools/diagnostics.md` (FP2022).
     PARSE_MISSING_IMPORT_ALIAS = 2022;
+    /// A construct from another language (Delphi, Free Pascal, Ada, C family) that FPAS has no
+    /// form for; the help names the FPAS replacement.
+    ///
+    /// **Documentation:** `docs/pascal/tools/diagnostics.md` (Diagnostics for other-language spellings)
+    PARSE_FOREIGN_SYNTAX = 2023;
 });
 
 define_codes!(SEMA_ALLOCATED_CODES => {

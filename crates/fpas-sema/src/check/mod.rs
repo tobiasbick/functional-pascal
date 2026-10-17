@@ -6,6 +6,7 @@ mod decl;
 mod discard;
 mod entry;
 mod expr;
+mod foreign;
 mod imports;
 mod inference_completion;
 mod initialization;

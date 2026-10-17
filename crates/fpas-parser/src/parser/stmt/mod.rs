@@ -30,6 +30,9 @@ impl Parser {
                 self.parse_var_stmt()
             }
             Token::Return => self.parse_return_stmt(),
+            Token::Result if self.at_delphi_result_assignment() => {
+                self.parse_delphi_result_assignment()
+            }
             Token::Discard => {
                 let start = self.advance().span;
                 let expr = self.parse_expression();

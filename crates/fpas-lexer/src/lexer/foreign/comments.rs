@@ -2,14 +2,14 @@
 //!
 //! **Documentation:** `docs/pascal/language/basics/comments.md`
 
-use super::Lexer;
+use crate::lexer::Lexer;
 use fpas_diagnostics::codes::LEX_INVALID_COMMENT_FORM;
 
 const COMMENT_HINT: &str = "Use `// comment`. For multiple lines, prefix each line with `//`.";
 
 impl Lexer<'_> {
     /// Consumes `{...}` or the remaining source and reports one actionable diagnostic.
-    pub(super) fn scan_invalid_brace_comment(&mut self) {
+    pub(in crate::lexer) fn scan_invalid_brace_comment(&mut self) {
         let (so, sl, sc) = self.span_here();
         self.advance();
         while !self.at_end() {
@@ -30,7 +30,7 @@ impl Lexer<'_> {
     }
 
     /// Consumes `(*...*)` or the remaining source and reports one actionable diagnostic.
-    pub(super) fn scan_invalid_paren_comment(&mut self) {
+    pub(in crate::lexer) fn scan_invalid_paren_comment(&mut self) {
         let (so, sl, sc) = self.span_here();
         self.advance();
         self.advance();

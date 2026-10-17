@@ -10,7 +10,7 @@ Packages run in order; each lists its catalog entries from [02-catalog.md](02-ca
 
 | Done | Package | Catalog entries | Depends on | Effort |
 | --- | --- | --- | --- | --- |
-| [ ] | [P0 Structure](#p0-structure) | – (moves only) | plan approved | small |
+| [x] | [P0 Structure](#p0-structure) | – (moves only) | plan approved | small |
 | [ ] | [E1 Short experiment](#e1-short-experiment) | new entries | P0 | small |
 | [ ] | [P1 Routines and results](#p1-routines-and-results) | H-DECL-07, H-DECL-08, H-CALL-01, H-CALL-02, H-CALL-03 | E1 | medium |
 | [ ] | [P2 Declarations](#p2-declarations) | H-DECL-01, H-DECL-02, H-DECL-03, H-DECL-05, H-DECL-06, H-DECL-10 | E1 | medium |
@@ -24,16 +24,18 @@ and occur in almost every program. E1 may reorder P1–P5; they are independent 
 
 ## P0 Structure
 
-Refactor-only. No observable behavior change.
+**Done.** Refactor-only; no observable behavior change.
 
-- Create `crates/fpas-lexer/src/lexer/foreign/`, `crates/fpas-parser/src/parser/foreign/`,
-  `crates/fpas-sema/src/check/foreign/` with `mod.rs` and the shared hint helper from
-  [03-architecture.md](03-architecture.md#hint-format).
-- Move `crates/fpas-lexer/src/lexer/invalid_comments.rs` to `lexer/foreign/comments.rs`.
-- Allocate `LEX_FOREIGN_TOKEN` and `PARSE_FOREIGN_SYNTAX` from
-  [03-architecture.md](03-architecture.md#diagnostic-codes); they stay unused until P1 and P4.
-- Docs: code catalog entries in `docs/pascal/tools/diagnostics.md` follow with the first package
-  that emits each code. Tests: existing suite plus the code-range tests in `fpas-diagnostics`.
+- Moved `crates/fpas-lexer/src/lexer/invalid_comments.rs` to `lexer/foreign/comments.rs` under a
+  new `lexer/foreign/mod.rs`. Comment diagnostics (FP1013) are unchanged.
+- Deferred to the first package that uses them, because an unused module, helper or code would
+  be dead code, and the code-catalog test in `fpas-diagnostics` requires a documented example
+  for every allocated code:
+  - parser and sema `foreign/` modules and the shared hint helper from
+    [03-architecture.md](03-architecture.md#hint-format): P1;
+  - `PARSE_FOREIGN_SYNTAX`: the first package that emits it (P1 for Ada
+    `function F return T is`);
+  - `LEX_FOREIGN_TOKEN`: P4.
 
 ## E1 Short experiment
 
@@ -44,6 +46,8 @@ Refactor-only. No observable behavior change.
 
 ## P1 Routines and results
 
+- Create `crates/fpas-parser/src/parser/foreign/` and `crates/fpas-sema/src/check/foreign/`
+  with the shared hint helper; allocate and document `PARSE_FOREIGN_SYNTAX` if a P1 entry emits it.
 - Parser `foreign/routines.rs`: `procedure Q;` / `function F: T;` without parameter list;
   Ada `function F return T is … end F;`; `Result :=` as statement start.
 - Sema `foreign/result_assignment.rs`: assignment to the enclosing function's name; `Exit(V)`
@@ -69,6 +73,7 @@ Refactor-only. No observable behavior change.
 
 ## P4 Tokens and operators
 
+- Allocate and document `LEX_FOREIGN_TOKEN`.
 - Lexer `foreign/operators.rs` and `foreign/strings.rs`: `@`, `^`, `&&`, `||`, `!`, `==`, `!=`,
   double-quoted strings, Ada `--` comments.
 - Parser `foreign/operators.rs` and `foreign/arguments.rs`: `/=`, `X => V`.

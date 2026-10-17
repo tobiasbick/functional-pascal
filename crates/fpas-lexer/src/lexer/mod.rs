@@ -3,8 +3,8 @@
 //! **Documentation:** `docs/pascal/getting-started/README.md` (lexical structure and keywords).
 
 mod directive;
+mod foreign;
 mod identifiers;
-mod invalid_comments;
 mod navigation;
 mod numbers;
 mod strings;

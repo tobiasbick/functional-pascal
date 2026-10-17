@@ -9,7 +9,7 @@ Habit hints exist but are scattered across stages and files:
 
 | Location | Covers |
 | --- | --- |
-| `crates/fpas-lexer/src/lexer/invalid_comments.rs` | `{…}` and `(*…*)` comments (FP1013) |
+| `crates/fpas-lexer/src/lexer/foreign/comments.rs` (moved in P0) | `{…}` and `(*…*)` comments (FP1013) |
 | `crates/fpas-parser/src/parser/block_closers.rs` | `end;` instead of a named ending, unit with trailing `begin` |
 | `crates/fpas-parser/src/parser/decl/data/recovery.rs` | missing `var`/`const`/`type` keyword (FP2015) |
 | `crates/fpas-parser/src/parser/decl/type_arguments.rs`, `decl/data/type_defs.rs` | `<T>` instead of `of` |
@@ -31,12 +31,12 @@ group, named after it (AGENTS.md: one concern per file, no generic names).
 ```text
 crates/fpas-lexer/src/lexer/foreign/
   mod.rs              // dispatch from the lexer's unexpected-character path
-  comments.rs         // moved from invalid_comments.rs; adds Ada `--`
+  comments.rs         // moved from invalid_comments.rs in P0; adds Ada `--`
   operators.rs        // `@`, `^`, `&&`, `||`, `!`, `==`, `!=`
   strings.rs          // double-quoted strings
 ```
 
-`invalid_comments.rs` moves into `foreign/comments.rs`; no duplicate stays behind.
+`invalid_comments.rs` moved into `foreign/comments.rs` in P0; no duplicate stays behind.
 
 ### Parser
 

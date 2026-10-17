@@ -33,7 +33,7 @@ fn terminal(fixture: &Fixture, args: &[&str], no_color: Option<&str>) -> (Output
 #[test]
 fn terminal_color_obeys_no_color_and_keeps_json_plain() {
     let fixture = Fixture::new();
-    fixture.write("bad.fpas", "program Main;\nbegin\n  @\nend.\n");
+    fixture.write("bad.fpas", "program Main;\nbegin\n  ~\nend.\n");
     for (no_color, colored) in [
         (None, true),
         (Some(""), true),
@@ -48,7 +48,7 @@ fn terminal_color_obeys_no_color_and_keeps_json_plain() {
             "{text}"
         );
         assert_eq!(text.contains("\x1b[31m^\x1b[0m"), colored, "{text}");
-        assert_excerpt(&text, "  @");
+        assert_excerpt(&text, "  ~");
         assert_eq!(text.matches('\x1b').count(), if colored { 4 } else { 0 });
     }
     let (output, json) = terminal(

@@ -227,9 +227,17 @@ The help reads "FPAS writes `return 42`."
 | `case X of 1: …; else …; end;` | Pascal | `case X of when 1: …; else …; end case;` | FP2001 |
 | `for I in 1 .. N loop`, `while C loop … end loop;` | Ada | `for I: integer := 1 to N do …; end for;` | FP2023 |
 | `try … except … end;`, `try … finally … end;` | Delphi | `Result of (T, E)` handled with `case` or `try Expr` | FP2023 |
+| `&&`, `\|\|`, `!`, `!=`, `==` | C family | `and`, `or`, `not`, `<>`, `=` | FP1014 |
+| `/=`, `F(X => 1)` | Ada | `<>`, `F(X := 1)` | FP1014 |
+| `"text"` | C family | `'text'` | FP1014 |
+| `-- comment` at a line start or after `;` | Ada | `// comment` | FP1014 |
+| `@F`, `^integer`, `P^` | Pascal | `F` as a callable value; no pointers | FP1014 |
+| `WriteLn(X:0:2)` | Pascal | Format the text first, for example `'%f'.Format(X)` | FP2023 |
 
 Help for built-in names inserts the written arguments when they are plain names or
-literals, and the alias of an already imported `Std` unit.
+literals, and the alias of an already imported `Std` unit. After reporting `&&`, `||`, `!`,
+`!=`, `==`, `/=`, `=>` or a double-quoted string, the lexer continues with the FPAS token, so the
+rest of the expression is still checked.
 
 ## Rust JSON rendering API
 
@@ -449,6 +457,7 @@ bugs rather than adding a workaround to the program.
 | FP1011 | Invalid digit separator | `1__2` | `1_2` |
 | FP1012 | Non-ASCII identifier | `const Größe: integer := 1;` | `const Size: integer := 1;` |
 | FP1013 | Invalid comment form | `(* note *)` | `// note` |
+| FP1014 | Operator, string or comment from another language | `const Same: boolean := A == B;` | `const Same: boolean := A = B;` |
 
 ### Parser
 

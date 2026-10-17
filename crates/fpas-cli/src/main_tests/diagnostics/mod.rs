@@ -9,13 +9,13 @@ mod unused_results;
 
 #[test]
 fn cli_renders_lex_stage_output() {
-    let source = "program LexFail;\nbegin\n  @\nend.\n";
+    let source = "program LexFail;\nbegin\n  ~\nend.\n";
     let (exit_code, stderr_output) = support::run_and_capture_stderr("lex.fpas", source);
 
     assert_eq!(exit_code, 1);
     assert_eq!(
         stderr_output,
-        "lex.fpas:3:3: error[FP1001]: Unexpected character `@`\n  3 |   @\n    |   ^\n  help: Remove this character or replace it with a valid Pascal token such as `:=`, `;`, `(`, or an identifier.\n"
+        "lex.fpas:3:3: error[FP1001]: Unexpected character `~`\n  3 |   ~\n    |   ^\n  help: Remove this character or replace it with a valid Pascal token such as `:=`, `;`, `(`, or an identifier.\n"
     );
 }
 

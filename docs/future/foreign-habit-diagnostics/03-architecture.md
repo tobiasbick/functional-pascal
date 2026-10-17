@@ -47,11 +47,10 @@ crates/fpas-parser/src/parser/foreign/
   classes.rs          // Delphi `class` (P2)
   generics.rs         // `TList<T>` and other angle-bracket applications (P2)
   units.rs            // interface/implementation, Delphi RTL units (P2)
-  declarations.rs     // `^T` pointer types (P4)
+  arguments.rs        // `WriteLn(X:0:2)` width specifiers (P4)
   routines.rs         // `procedure Q;`, Ada `function F return T is`, `Result :=`
-  arguments.rs        // Ada `X => 1`
+  (Ada `X => 1`, `/=` and `^T` are recognized by the lexer in P4)
   control_flow.rs     // `begin … end` bodies, `else` without `;`, Ada/Pascal `for`, `try/except`
-  operators.rs        // Ada `/=` (token pair `/` `=`), C-family `==`
 ```
 
 Existing parser hints whose purpose is a foreign habit (`<T>` → `of`, case arms without

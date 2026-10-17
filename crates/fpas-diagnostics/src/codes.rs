@@ -53,6 +53,11 @@ define_codes!(LEX_ALLOCATED_CODES => {
     LEX_NON_ASCII_IN_IDENTIFIER = 1012;
     /// Lexer: a comment-like form other than `//` was used.
     LEX_INVALID_COMMENT_FORM = 1013;
+    /// Lexer: an operator, string or comment form from another language (Delphi, Ada, C
+    /// family); the help names the FPAS replacement.
+    ///
+    /// **Documentation:** `docs/pascal/tools/diagnostics.md` (Diagnostics for other-language spellings)
+    LEX_FOREIGN_TOKEN = 1014;
 });
 
 define_codes!(PARSE_ALLOCATED_CODES => {

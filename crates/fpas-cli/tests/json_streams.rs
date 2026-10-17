@@ -155,7 +155,7 @@ fn all_four_commands_preserve_source_failures_in_text_and_json() {
         "[project]\nname = \"app\"\nkind = \"program\"\nmain = \"main_test.fpas\"\n\n[sources]\ninclude = [\"main_test.fpas\"]\n",
     );
     for (source, expected) in [
-        ("program P; begin @ end.", "FP1001"),
+        ("program P; begin ~ end.", "FP1001"),
         ("program P begin end.", "FP2001"),
         (
             "program P; begin const N: integer := 'hello'; end.",
@@ -253,7 +253,7 @@ fn real_process_records_keep_imported_paths_multiple_errors_and_absent_positions
     );
     write(
         &root.join("src/bad.fpas"),
-        "unit App.Bad public procedure P(); begin @ end procedure;",
+        "unit App.Bad public procedure P(); begin ~ end procedure;",
     );
     for command in ["check", "build", "run"] {
         let output = command_output(&root, command, "app.fpasprj", true);

@@ -16,7 +16,7 @@ Packages run in order; each lists its catalog entries from [02-catalog.md](02-ca
 | [x] | [P2 Declarations](#p2-declarations) | H-DECL-01, H-DECL-02, H-DECL-03, H-DECL-05, H-DECL-06, H-DECL-10, H-DECL-11, H-DECL-12, H-DECL-13, H-DECL-14 | E1 | medium |
 | [x] | [P5 Built-in names](#p5-built-in-names) | H-DECL-09, H-DECL-15, H-CALL-07, H-CALL-08, H-CALL-10, H-CALL-12, H-CALL-15, H-CALL-17, H-CALL-19, H-STMT-09 | E1 | small |
 | [x] | [P3 Control flow](#p3-control-flow) | H-STMT-02, H-STMT-03, H-STMT-04, H-STMT-05, H-STMT-06, H-STMT-07, H-STMT-08 | E1 | medium |
-| [ ] | [P4 Tokens and operators](#p4-tokens-and-operators) | H-DECL-04, H-CALL-06, H-EXPR-02, H-EXPR-03, H-EXPR-04, H-LEX-02, H-CALL-04, H-CALL-16 | E1 | medium |
+| [x] | [P4 Tokens and operators](#p4-tokens-and-operators) | H-DECL-04, H-CALL-06, H-EXPR-02, H-EXPR-03, H-EXPR-04, H-LEX-02, H-CALL-04, H-CALL-16 | E1 | medium |
 | [ ] | [P6 Experiment and closing](#p6-experiment-and-closing) | new entries from the experiment | P1–P5 | medium |
 
 Order after E1: P1, P2, P5, P3, P4 (the table lists them in this order). Packages whose habits
@@ -149,6 +149,28 @@ Original scope:
   [04-recovery-and-false-positives.md](04-recovery-and-false-positives.md#ambiguities-to-respect).
 
 ## P4 Tokens and operators
+
+**Done** on 2026-10-17.
+
+- Allocated FP1014 (`LEX_FOREIGN_TOKEN`). Lexer `foreign/operators.rs`: `&&`, `||`, `!`, `!=`,
+  `==`, `/=`, `=>`, `@` and `^`; each is reported once and, where FPAS has a token, replaced by
+  it (`=>` becomes `:=`, so Ada named arguments parse as FPAS named arguments). `foreign/strings.rs`
+  reads `"text"` as a string literal; `foreign/comments.rs` skips Ada `--` comments at a line
+  start or after `;`, so `X - -1` stays valid.
+- `/=` and `X => V` are handled in the lexer instead of the planned parser modules: both are
+  adjacent character pairs that are never valid FPAS, and the token replacement gives the
+  parser the FPAS form directly. Parser `foreign/arguments.rs` reports `WriteLn(X:0:2)` width
+  specifiers once per argument.
+- Docs: FP1014 catalog row and habit table in the
+  [diagnostics handbook](../../pascal/tools/diagnostics.md#diagnostics-for-other-language-spellings),
+  two rows in the [agent reference](../../pascal/agent-reference.md#1-translate-habits-before-writing).
+- Tests: `fpas-lexer` `tests/errors/foreign_tokens.rs`, `fpas-parser`
+  `tests/errors/foreign_arguments.rs`; one lexer test and five CLI tests that used `@` as an
+  arbitrary lex error now use `~`, which stays FP1001.
+- Probes: every P4 probe yields one diagnostic (before: up to 7). In the five E1 programs every
+  remaining diagnostic names one habit; the only follow-up error left is H-CALL-20.
+
+Original scope:
 
 - Allocate and document `LEX_FOREIGN_TOKEN`.
 - Lexer `foreign/operators.rs` and `foreign/strings.rs`: `@`, `^`, `&&`, `||`, `!`, `==`, `!=`,

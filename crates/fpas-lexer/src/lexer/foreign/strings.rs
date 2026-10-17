@@ -1,0 +1,31 @@
+//! Double-quoted strings from the C family.
+//!
+//! **Documentation:** `docs/pascal/tools/diagnostics.md` (Diagnostics for other-language spellings),
+//! `docs/pascal/language/basics/primitive-types.md`
+
+use crate::Token;
+use crate::lexer::Lexer;
+
+impl Lexer<'_> {
+    /// Scans `"text"` on one line as a string literal and reports it once.
+    pub(in crate::lexer) fn scan_double_quoted_string(&mut self) {
+        let start = self.span_here();
+        self.advance();
+        let mut value = String::new();
+        while !self.at_end() && !matches!(self.current(), b'"' | b'\n' | b'\r') {
+            value.push(self.advance_utf8_char());
+        }
+        if !self.at_end() && self.current() == b'"' {
+            self.advance();
+        }
+        let replacement = format!("'{}'", value.replace('\'', "''"));
+        self.report_foreign_token(
+            "Double-quoted string is not FPAS syntax",
+            &replacement,
+            "Strings use single quotes; an apostrophe inside is doubled.",
+            start,
+        );
+        let (so, sl, sc) = start;
+        self.push_tok(Token::Str(value), so, sl, sc);
+    }
+}

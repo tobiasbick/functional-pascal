@@ -4,6 +4,7 @@
 //!
 //! **Documentation:** `docs/pascal/tools/diagnostics.md` (Diagnostics for other-language spellings)
 
+mod arguments;
 mod bindings;
 mod classes;
 mod control_flow;

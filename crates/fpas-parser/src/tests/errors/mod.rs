@@ -5,6 +5,7 @@ mod api;
 mod chained_comparison;
 mod delimiters;
 mod diagnostics;
+mod foreign_arguments;
 mod foreign_control_flow;
 mod foreign_declarations;
 mod foreign_habit_assertions;

@@ -70,7 +70,7 @@ fn error_on_second_line() {
 fn unexpected_char_has_correct_code() {
     use fpas_diagnostics::codes::LEX_UNEXPECTED_CHARACTER;
 
-    let (_, errs) = lex_with_errors("  @");
+    let (_, errs) = lex_with_errors("  ~");
     assert_eq!(errs.len(), 1);
     assert_eq!(
         errs[0].code, LEX_UNEXPECTED_CHARACTER,

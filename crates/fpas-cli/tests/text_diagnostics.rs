@@ -73,7 +73,7 @@ fn source_project_workspace_and_import_failures_show_the_matching_line_in_plain_
         "[workspace]\nname = 'app'\nmembers = ['app.fpasprj']\n",
     );
     for (source, line, code) in [
-        ("program Main;\nbegin\n  @\nend.\n", "  @", "FP1001"),
+        ("program Main;\nbegin\n  ~\nend.\n", "  ~", "FP1001"),
         ("program Main\nbegin\nend.\n", "begin", "FP2001"),
         (
             "program Main;\nbegin\n  Missing();\nend.\n",
@@ -101,7 +101,7 @@ fn source_project_workspace_and_import_failures_show_the_matching_line_in_plain_
         "program Main;\nuses App.Bad as Bad;\nbegin end.\n",
     );
     for bad in [
-        "unit App.Bad;\npublic procedure Work();\nbegin @ end procedure;\nend unit;\n",
+        "unit App.Bad;\npublic procedure Work();\nbegin ~ end procedure;\nend unit;\n",
         "unit App.Bad;\npublic procedure Work();\nbegin Missing(); end procedure;\nend unit;\n",
     ] {
         fixture.write("src/bad.fpas", bad);

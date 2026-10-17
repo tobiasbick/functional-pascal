@@ -47,6 +47,8 @@ inheritance, pointers, manual allocation, exceptions with handlers, or preproces
 | Ada named actuals `X => 1` | `X := 1`; an argument list is entirely named or entirely positional. |
 | Pascal `var` parameter passed as `F(X)` | Declare `var X: T`, call `F(var X)` (or `F(X := var X)`). |
 | Pascal routine address `@F` | Use `F` as the callable value and `F(...)` to call. |
+| C-family `==`, `!=`, `&&`, `\|\|`, `!`, `"text"`; Ada `/=` | `=`, `<>`, `and`, `or`, `not`, `'text'`; `<>`. |
+| Pascal `WriteLn(X:0:2)` | No width specifiers; format first, for example `'%f'.Format(X)`. |
 | Delphi `TList<Integer>` | `array of integer`; generic types use `Box of integer`. |
 | Pascal one-based strings / `Char` | Zero-based Unicode scalar indexing; a character is a `string`. |
 | Pascal `{comment}` / `(*comment*)`, Ada `--comment` | Only `//` comments. |

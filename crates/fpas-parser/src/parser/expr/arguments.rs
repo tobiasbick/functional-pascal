@@ -16,6 +16,7 @@ impl Parser {
         let mut args = Vec::new();
         loop {
             let arg = self.parse_argument();
+            self.skip_width_specifiers(&arg);
             if matches!(
                 arg.argument_value(),
                 Expr::Closure(_) | Expr::RecordUpdate { .. }

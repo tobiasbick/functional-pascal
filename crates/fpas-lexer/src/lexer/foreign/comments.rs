@@ -1,4 +1,4 @@
-//! Recovery for comment-like forms that are not valid Functional Pascal syntax.
+//! Recovery for comment forms from Pascal (`{…}`, `(*…*)`) and Ada (`--`).
 //!
 //! **Documentation:** `docs/pascal/language/basics/comments.md`
 
@@ -49,6 +49,49 @@ impl Lexer<'_> {
             so,
             sl,
             sc,
+        );
+    }
+}
+
+impl Lexer<'_> {
+    /// True at an Ada `--` comment: at the start of a line or after a statement terminator, so
+    /// `X - -1` stays an expression.
+    pub(in crate::lexer) fn at_ada_comment(&self) -> bool {
+        if self.current() != b'-' || self.peek_at(1) != Some(b'-') {
+            return false;
+        }
+        let before = self.source.get(..self.pos).unwrap_or_default();
+        let line_start = before
+            .rsplit('\n')
+            .next()
+            .unwrap_or_default()
+            .chars()
+            .all(|ch| ch == ' ' || ch == '\t' || ch == '\r');
+        line_start
+            || self
+                .tokens
+                .last()
+                .is_some_and(|token| token.token == crate::Token::Semicolon)
+    }
+
+    /// Consumes an Ada `--` comment through the end of its line and reports it.
+    pub(in crate::lexer) fn scan_ada_comment(&mut self) {
+        let start = self.span_here();
+        while !self.at_end() && !matches!(self.current(), b'\n' | b'\r') {
+            self.advance_utf8_char();
+        }
+        let text = self
+            .source
+            .get(start.0 + 2..self.pos)
+            .unwrap_or_default()
+            .trim()
+            .to_owned();
+        let replacement = format!("// {text}");
+        self.report_foreign_token(
+            "Ada `--` comment is not FPAS syntax",
+            &replacement,
+            "Comments start with `//`.",
+            start,
         );
     }
 }

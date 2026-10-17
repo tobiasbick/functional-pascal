@@ -12,9 +12,9 @@ reported for the same file. Proposed wording is a draft and is settled per packa
 
 | Rating | Count | Meaning |
 | --- | --- | --- |
-| good | 9 | Specific, correct hint at the right place; at most minor polish |
-| partial | 8 | Right place, but hint is generic, incomplete or followed by cascades |
-| poor | 20 | Generic or misleading diagnostic, or a long cascade |
+| good | 11 | Specific, correct hint at the right place; at most minor polish |
+| partial | 12 | Right place, but hint is generic, incomplete or followed by cascades |
+| poor | 26 | Generic or misleading diagnostic, or a long cascade |
 | deferred | 1 | Not detectable at compile time |
 
 Two probes were valid FPAS and are not habits: Pascal `repeat … until` and Ada `null;`.
@@ -34,12 +34,17 @@ Two probes were valid FPAS and are not habits: Pascal `repeat … until` and Ada
 | H-DECL-08 | `function F return integer is … end F;` | Ada | FP2001 "Expected `(`, found `return`", +11 | poor | "FPAS writes `function F(): integer; begin … end function;`" | parser |
 | H-DECL-09 | `char` type | Pascal | FP3001 "Unknown type `char`" | partial | "FPAS has no character type; one Unicode scalar is a `string`" | sema |
 | H-DECL-10 | `TList<Integer>` | Delphi | FP2001 "Type applications use `of`, not angle brackets", +2 | good | Keep; remove the two follow-up errors | parser |
+| H-DECL-11 | `var I, Sum: integer` grouped variable names | Pascal | FP2001 "Expected `:=`, found `,`", +4 | poor | "Declare one variable per `var`: `var I: integer := 0; var Sum: integer := 0;`" | parser |
+| H-DECL-12 | `const A: array[0..4] of integer = (3, 7, …);` | Pascal | FP2001 "Expected `of`, found `[`", +8, parse stops | poor | "FPAS arrays have no bounds in the type; write `const A: array of integer := [3, 7, …];` (zero-based)" | parser |
+| H-DECL-13 | `var Total: integer;` without initializer | Pascal | FP2001 "Expected `:=`, found `;`", +1 | partial | "Every variable is initialized: `var Total: integer := 0;`" | parser |
+| H-DECL-14 | `uses SysUtils;` (Delphi RTL unit) | Delphi | FP2022 suggests `uses SysUtils as SysUtilsUnit;` for a unit that does not exist | partial | Name the Std units instead: "Delphi `SysUtils` – use `Std.Parse`, `Std.Conv`, `Std.Fs` …" | parser |
+| H-DECL-15 | `Double`, `Single`, `Extended` | Delphi | FP3001 "Unknown type `Double`" with a generic hint | partial | "FPAS writes floating-point numbers as `real` (binary64)" | sema |
 
 ## Routines and calls
 
 | ID | Habit | Origin | Today | Rating | Proposed | Stage |
 | --- | --- | --- | --- | --- | --- | --- |
-| H-CALL-01 | `Result := 1;` | Delphi | FP2003 "Unexpected token `Result` at start of statement" | poor | "Delphi `Result :=` – FPAS returns with `return Value;`" | parser |
+| H-CALL-01 | `Result := 1;` | Delphi | FP2003 "Unexpected token `Result` at start of statement" | poor | "Delphi `Result :=` – FPAS returns with `return Value;`"; also covers `Result.X := …` (E1) | parser |
 | H-CALL-02 | `F := 1;` inside function `F` | Pascal | FP3006 "Type mismatch in assignment: expected `function(): integer`" | poor | "Assigning to the function name does not set its result; write `return Value;`" | sema |
 | H-CALL-03 | `Exit(1);` | Delphi/FPC | FP3003 "Unknown procedure `Exit`" | poor | "Write `return 1;` (or `return;` in a procedure)" | sema |
 | H-CALL-04 | `F(X => 1)` | Ada | FP2005 "Expected expression, found `>`", +5 | poor | "Ada named argument – FPAS writes `F(X := 1)`" | parser |
@@ -51,6 +56,13 @@ Two probes were valid FPAS and are not habits: Pascal `repeat … until` and Ada
 | H-CALL-10 | `Length(S)` | Pascal | FP3003 with hint `Value.Length(…)` and a stale remark about removed helper units | partial | Drop the stale remark; show `S.Length()` with the actual argument | sema |
 | H-CALL-11 | `StrToInt(Text)` | Delphi | FP3003 with hint to `Parse.Int(Text).Unwrap()` | good | Keep | sema |
 | H-CALL-12 | `IntToStr(3)` | Delphi | FP3003 with generic hint to `uses Std.Conv as Conv;` and `Conv.Name` | partial | Name the member: `Conv.IntToStr(3)` | sema |
+| H-CALL-13 | `(const S: string)` parameter modifier | Delphi | FP2002 "Expected identifier, found `const`", +14, parse stops | poor | "Parameters are read-only already; drop `const`: `(S: string)`" | parser |
+| H-CALL-14 | `(A, B: T)` grouped parameter names | Pascal | FP2014 "Grouped parameter names are invalid" with an example | good | Keep | parser |
+| H-CALL-15 | `Low(A)` / `High(A)` | Pascal | FP3003 "Unknown function or procedure `High`" with a generic hint | poor | "Arrays are zero-based: the first index is `0`, the last `A.Length() - 1`" | sema |
+| H-CALL-16 | `WriteLn(X:0:2)` width and precision specifiers | Pascal | FP2001 "Expected `)`, found `:`", +5 | poor | "FPAS output has no `:width:decimals` specifiers; format the value first, for example `'%f'.Format(X)`" | parser |
+| H-CALL-17 | `TryStrToInt(Text, V)` | Delphi | FP3003 with a generic hint | poor | Like H-CALL-11: "`Parse.Int(Text)` returns a Result; match `Ok(const V)`" | sema |
+| H-CALL-18 | `Sqrt(X)` without import | Pascal | FP3003 with hint `uses Std.Math as Math;` | good | Keep | sema |
+| H-CALL-19 | `Write(…)` / `Console.Write(…)` | Pascal | FP3003 with a generic hint | partial | "Pascal `Write` – `Std.Console` writes without a newline via `Console.WriteText(…)`" | sema |
 
 ## Statements and control flow
 
@@ -83,10 +95,50 @@ Two probes were valid FPAS and are not habits: Pascal `repeat … until` and Ada
 | H-LEX-01 | `{ comment }`, `(* comment *)` | Pascal | FP1013 "`{...}` is not valid comment syntax" | good | Keep | lexer |
 | H-LEX-02 | `-- comment` | Ada | FP2001 "Expected `begin`, found `-`", +3 | poor | "Ada comment – FPAS comments start with `//`" | lexer/parser |
 
+## E1 short experiment (2026-10-17)
+
+Tasks 1–5 of the [blind authoring experiment](01-catalog-method.md#blind-authoring-experiment),
+Delphi style only. A subagent wrote the programs without access to the repository or the docs.
+The attempts, the JSON captures and the FPAS collector script stay under `.temp-data/a2-blind/`
+(gitignored); every new habit was then probed in isolation.
+
+The parser stops at the first hard cascade, so most habits in a file were never reported.
+"Seen" counts the files whose source contains the habit, reported or masked.
+
+| Habit | Entry | Seen (of 5) | Reported | Package |
+| --- | --- | --- | --- | --- |
+| `WriteLn` without `uses` | H-CALL-09 | 5 | 0 | – (good) |
+| `var` section, several declarations | H-DECL-01 | 4 | 1 | P2 |
+| Pascal `end;` for routines and records | H-STMT-01 | 4 | 3 | – (good) |
+| `const` parameter modifier | H-CALL-13 | 3 | 3, each fatal | P1 |
+| `Result :=` | H-CALL-01 | 2 | 1 | P1 |
+| Grouped variable names | H-DECL-11 | 2 | 0 | P2 |
+| `Double` | H-DECL-15 | 2 | 0 | P5 |
+| `Length(X)` | H-CALL-10 | 2 | 0 | P5 |
+| `WriteLn(X:0:2)` | H-CALL-16 | 2 | 0 | P4 |
+| Pascal `for I := …` | H-STMT-07 | 2 | 0 | P3 |
+| No `;` before `else` | H-STMT-04 | 2 | 0 | P3 |
+| `array[0..N] of T = (…)` | H-DECL-12 | 1 | 1, fatal | P2 |
+| `var X: T;` without initializer | H-DECL-13 | 1 | 1 | P2 |
+| `uses SysUtils;` | H-DECL-14 | 1 | 1 | P2 |
+| `begin … end` as branch or loop body | H-STMT-02, H-STMT-03 | 1 | 0 | P3 |
+| Grouped parameter names | H-CALL-14 | 1 | 1 | – (good) |
+| `Low` / `High` | H-CALL-15 | 1 | 0 | P5 |
+| `Inc(X)` | H-CALL-08 | 1 | 0 | P5 |
+| `TryStrToInt` | H-CALL-17 | 1 | 0 | P5 |
+| `Sqrt` without import | H-CALL-18 | 1 | 0 | – (good) |
+| `var` argument without `var` | H-CALL-05 | 1 | 0 | – (good) |
+
+Four of five programs stopped at a fatal cascade: H-CALL-13 in three files and H-DECL-12 in one.
+Everything after that point stayed unreported.
+H-CALL-19 came from ongoing intake (writing the collector script), not from the experiment.
+The experiment is not fully blind: the subagent is the same model family as the main author,
+but it saw no FPAS source or documentation.
+
 ## Candidates not yet probed
 
-To be probed in the first experiment run: `with … do`, `SetLength`, `High`/`Low`, `Ord`/`Chr`
-as free functions, `string[N]`, `array[1..N] of T`, `record` with `case` variant part,
-`out`/`const` parameters, `procedure of object`, `Ada package … is`, `declare … begin`,
+To be probed in a later experiment run: `with … do`, `SetLength`, `Ord`/`Chr`
+as free functions, `string[N]`, `record` with `case` variant part,
+`out` parameters, `procedure of object`, `Ada package … is`, `declare … begin`,
 `exit when`, `raise`, `inherited`, `property`, `set of`,
 `Format('%d', [X])`, `Assigned(X)`, `Halt`.

@@ -15,14 +15,16 @@ Current implemented behavior belongs under `docs/pascal/`, not here.
 | FTP | [FTP and FTPS](ftp.md) | Deferred FTP and FTPS ideas |
 | Diagnostics | [Foreign-habit diagnostics](foreign-habit-diagnostics/README.md) | Plan for agent wish A2: recognize Delphi, Pascal, Ada and C-family spellings and answer with the FPAS form; ready to start |
 
-## Ideas without an implementation plan
+## Ideas and designs without an implementation plan
 
-- [FPAS 2 language directions](fpas2-language-directions.md): retained design questions;
+- [FPAS 2 language directions](fpas2-language-directions.md): open language and
+  runtime proposals plus the agreed numeric design with remaining open points;
   no implementation is scheduled. Selected work uses the [AP workflow](improve-syntax/README.md).
 - [Hardware information](hardware-information.md): access to CPU parallelism, RAM, and related
   hardware information; recorded as an idea only.
-- [Graphics and 3D rendering](graphics.md): runtime, standard-library, build, and language gaps
-  for windowing and GPU rendering; recorded as an idea only.
+- [Graphics and 3D rendering](graphics.md): application case for the shared FPAS 2
+  foundations, with graphics-specific windowing, GPU, platform and deployment
+  questions; no graphics implementation plan or API is agreed.
 - [Rewrite in C](c-rewrite.md): the human overlord's intent to rewrite the implementation in pure
   C because of Rust build times and disk usage; the language stays unchanged; recorded as an idea
   only.

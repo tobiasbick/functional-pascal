@@ -1,7 +1,10 @@
 # FPAS 2 language directions
 
-Status: proposals retained for later evaluation; no implementation is scheduled.
-These are design questions, not approved language changes or the current spec.
+Status: planning only; no implementation is scheduled. Topics are open proposals
+unless their section explicitly records an agreed design. The
+[numeric design](#21-explicit-width-numeric-types-and-money) is agreed, with the
+listed open points. Design agreement does not change the current specification
+or authorize implementation.
 FPAS 1 stabilization is complete. Selected FPAS 2 topics use the
 [AP workflow and templates](improve-syntax/README.md); selecting a topic still
 requires an explicit decision before implementation.
@@ -22,6 +25,10 @@ wrappers around established Rust libraries. Native FFI and dynamically loadable
 FPAS libraries extend this model so third parties can add missing functionality
 independently of FPAS releases. Bundled libraries should continue to expose
 consistent FPAS types, error handling and resource management.
+
+This document owns shared language and runtime directions. The
+[graphics application case](graphics.md) records concrete rendering needs and
+keeps graphics-specific API, platform and deployment questions separate.
 
 ## 1. Typed operational errors
 
@@ -212,14 +219,22 @@ First evaluate existing FPAS [distinct types](../pascal/language/types/distinct-
 and explicit library operations. A full units-of-measure type system, unit
 algebra and implicit conversions are not part of this proposal.
 
+The [graphics application case](graphics.md#time-resolution) also needs
+sub-millisecond monotonic readings for frame pacing, interpolation and profiling.
+Evaluate microsecond or nanosecond resolution within the same clock and duration
+contract, including explicit conversion to APIs that still use milliseconds.
+Clock resolution alone does not guarantee timer accuracy or a frame deadline.
+
 Open questions: type and constructor names, supported arithmetic and comparisons,
 explicit unit conversions, valid ranges and overflow, cross-unit API ownership,
-and migration of timeouts, backoff values and clock consumers. Distinguish unit
+and migration of timeouts, backoff values and clock consumers. Include clock
+resolution and precision loss at unit boundaries. Distinguish unit
 conversion from conversion between wall-clock and monotonic readings.
 
 Evaluation should include rejected duration/timestamp and clock-domain mixups,
-valid elapsed-time calculations, conversion boundaries, and migrated time and
-task consumers. Preserve existing clock and scheduling semantics.
+valid elapsed-time calculations, sub-millisecond readings, conversion boundaries,
+and migrated time and task consumers. Preserve existing clock and scheduling
+semantics.
 
 ## 11. C foreign-function interface
 
@@ -250,6 +265,11 @@ lifetimes, allocation/freeing responsibilities, callbacks, variadic calls and
 records passed by value. Define native-library discovery and deployment,
 blocking-call scheduling, cancellation and failure behavior, and the boundary
 with the Rust workspace's current prohibition of unsafe code.
+
+Coordinate buffers and native layouts with
+[packed numeric data](#22-packed-numeric-data-and-binary-buffers) and
+[small-record representation](#23-small-records-without-heap-allocation).
+Bundled graphics can use Rust-backed intrinsics independently of this general FFI.
 
 Evaluation should use one unchanged FPAS distribution with a subsequently added
 binding unit and native library. Cover target OS/architecture compatibility,
@@ -310,6 +330,9 @@ when an owning task exits. Define cancellation, grace periods, termination
 requests, confirmed exit and child-process reaping separately. Process-tree
 handling and platform differences need an explicit contract.
 
+Use the shared [binary-buffer design](#22-packed-numeric-data-and-binary-buffers)
+for pipe payloads rather than defining a process-specific byte representation.
+
 Evaluation should cover interactive request/reply, simultaneous stdout/stderr
 draining, full pipes, output limits, launch failure, nonzero exit, cancellation,
 timeout and process-tree cleanup. Include an FPAS worker process without requiring
@@ -335,6 +358,10 @@ backpressure, pending-operation limits, shutdown and debugger integration.
 Distinguish stopping the caller's wait from ending underlying host work, including
 DNS, certificate verification and arbitrary native calls. Define late completion
 and resource cleanup before choosing a backend.
+
+[Native event loops](#25-native-event-loops-and-selectable-host-events) add
+main-thread ownership and host wakeups to this assessment. Releasing a VM worker
+does not by itself integrate a window event loop or satisfy its thread rules.
 
 Evaluation should demonstrate progress with one VM worker and overlapping pending
 operations, including nested callbacks. Cover registration/wakeup races,
@@ -406,6 +433,10 @@ fairness state across newly created single-use cases, explicit priority for
 cancellation and timers, task-failure precedence, and deterministic debugger
 behavior. State the scheduling and readiness assumptions under which a fairness
 guarantee holds; fairness alone does not establish a wall-clock deadline.
+
+Include [selectable host events](#25-native-event-loops-and-selectable-host-events)
+when defining eligible sources. Event-loop integration must preserve whichever
+priority or fairness contract is selected here.
 
 Evaluation should cover multiple continuously ready sources, changing readiness,
 recreated cases, competing selectors, cancellation/timer priority and callback
@@ -480,10 +511,215 @@ Evaluation should compare visible output and input routing with uncached
 execution, including focus, resize, menus, editing and background updates. Verify
 unaffected work is skipped and measure benefits on representative TUI workloads.
 
+## 21. Explicit-width numeric types and money
+
+Status: agreed numeric design, carried forward from the
+[graphics application case](graphics.md#numeric-types); the open points below
+still need decisions. No implementation is scheduled. These types are not FPAS 1
+prerequisites, and graphics is only one consumer of the design.
+
+FPAS offers exactly one way to express each numeric concept: every built-in
+numeric type has one name, without alternative built-in aliases.
+
+### Types
+
+| Kind | Types |
+| --- | --- |
+| Signed integer | `integer8`, `integer16`, `integer32`, `integer64` |
+| Unsigned integer | `unsigned8`, `unsigned16`, `unsigned32`, `unsigned64` |
+| Binary floating point | `real32`, `real64` |
+| Exact monetary amount | `money` |
+
+- `integer` is renamed to `integer64` and `real` to `real64`. The old names are
+  removed, without an alias. This rename is a separate, mechanical step before
+  the new types are added. A diagnostic for `integer` or `real` names the replacement.
+- Subranges (`type Percent = 0..100;`) remain the only way to restrict values.
+  Width types describe representation; subranges describe permitted values.
+  There is no separate range type.
+- There are no 128-bit integers and no 8-bit floats. A 16-bit float may later
+  become a storage format of packed arrays only.
+
+### Arithmetic and literals
+
+- Arithmetic stays within its type: `integer8 + integer8` is `integer8`.
+  Overflow is a runtime error, as for `integer` today.
+- Operands of different numeric types are a compile-time error whose hint shows
+  the explicit conversion.
+- Wraparound never happens implicitly.
+- A numeric literal takes the expected type: `var Pixel: unsigned8 := 200;`.
+  Without an expected type, an integer literal is `integer64` and a real literal
+  is `real64`. A literal outside the expected type, such as `300` for `unsigned8`,
+  is a compile-time error.
+
+### Conversions
+
+There are no implicit conversions in any direction, including assignments,
+arguments, and return values.
+
+| Conversion | Form | Behavior |
+| --- | --- | --- |
+| Integer to another integer type | `unsigned8(X)`, `integer16(X)` | Checked; an out-of-range value panics. A known constant out of range is a compile-time error. |
+| Integer to floating point | `real32(X)`, `real64(X)` | Replaces `Conv.IntToReal`. Large magnitudes may lose precision. |
+| `real64` to `real32` | `real32(X)` | Rounds to the nearest representable value; overflow panics. |
+| Floating point to integer | `Math.Round`, `Math.Trunc`, `Math.Floor`, `Math.Ceil` | The rounding mode stays visible. The result is `integer64`; narrow it explicitly afterwards. |
+| Value into a subrange | `Percent(X)` | Unchanged. |
+
+- `X in unsigned8` tests whether a value fits without converting, using the
+  existing subrange membership syntax.
+- Saturation is written explicitly: `unsigned8(Math.Clamp(X, 0, 255))`.
+
+### Bit operations
+
+- The Pascal operators `and`, `or`, `xor`, `not`, `shl`, and `shr` apply to the
+  unsigned integer types only. Signed values are converted explicitly first.
+- Shifting by the bit width of the type or more is a runtime error, not a silent zero.
+
+### Money
+
+- `money` is an amount, not a currency. A currency code is an ordinary record
+  field next to it.
+- It is stored as a 64-bit integer scaled by 10,000, giving four exact decimal
+  places. This is a fixed-scale amount, not a general-purpose Decimal type.
+- Literals in a `money` context are parsed as exact decimals:
+  `var Price: money := 19.99;`. `money(X)` converts integers exactly.
+- A runtime `real64` becomes `money` only through an explicit rounding function
+  in `Std.Math`.
+- Addition and subtraction are exact.
+
+### Runtime representation
+
+Registers keep computing in 64-bit integers or 64-bit floats. The width of a
+typed operation is an instruction operand, and the result is checked or narrowed
+when it is stored. This keeps the opcode set small and the runtime value at 16
+bytes. The width matters for storage only in packed arrays.
+
+### Open points and evaluation
+
+- The rounding rule for `money` multiplication and division, for example four
+  places with ties to even, as `Math.Round` uses.
+- The name of the rounding function from `real64` to `money`.
+
+Before implementation, assess migration of source code, standard-library
+signatures, compiler/runtime formats and editor tooling. Coordinate storage with
+[packed numeric data](#22-packed-numeric-data-and-binary-buffers). Evaluation must
+cover literal boundaries, mixed-type rejection, checked arithmetic and
+conversions, shifts, `real32` rounding, exact money literals and the selected
+money-rounding rules. Verify diagnostics for the removed type names.
+
+## 22. Packed numeric data and binary buffers
+
+Status: open proposal; no language form, library API or storage layout is agreed.
+
+The [graphics application case](graphics.md#bulk-numeric-data) needs contiguous
+vertex, index and pixel data without one tagged runtime value or conversion per
+element. Binary files, codecs, audio, process pipes and native FFI share the need
+for a canonical byte representation. The
+[standard-library roadmap](std-roadmap.md#open-decisions) leaves that choice open.
+
+Consider one shared design for byte buffers and typed contiguous numeric data,
+using the [explicit-width types](#21-explicit-width-numeric-types-and-money).
+Evaluate a language-level packed array against a standard-library buffer type
+before choosing either. Native intrinsics should be able to access supported
+layouts without per-element conversion. Include binary reads and writes in
+`Std.Fs`; image decoding and GPU upload policy remain graphics-specific consumers.
+
+Open questions: construction, indexing and slicing, value semantics and mutation,
+borrowing across native calls, task sharing, bounds and allocation limits,
+alignment, byte order and record padding. Decide which numeric types and
+fixed-layout records are eligible and how layouts are described and checked.
+Contiguous FPAS storage does not automatically establish C-ABI compatibility.
+
+Evaluation should include binary-file round trips, embedded zero bytes, malformed
+input, typed upload and download, bounds, aliasing and native-buffer lifetimes.
+Measure memory use and conversion costs on representative data before claiming
+an improvement over ordinary arrays. Preserve one byte representation across
+the affected standard units.
+
+## 23. Small records without heap allocation
+
+Status: open proposal; no new record declaration form is agreed.
+
+Small vectors, matrices, colors and rectangles in the
+[graphics application case](graphics.md#small-value-aggregates) expose allocation
+costs from heap-backed records and intermediate arithmetic results.
+
+First evaluate an optimized representation of existing
+[records](../pascal/language/types/records.md) that preserves their value semantics.
+Establish whether compiler/runtime changes can remove allocation without adding
+another user-visible record category. A separate value-record declaration or
+layout guarantee requires its own justification and explicit agreement.
+
+Open questions: eligible field types and sizes, nested and generic records,
+register and call representation, collection storage, copy costs and interaction
+with shared-resource fields. Coordinate native layouts with
+[packed numeric data](#22-packed-numeric-data-and-binary-buffers) and FFI; an
+allocation optimization alone does not promise a stable external layout.
+
+Evaluation should compare existing observable behavior across assignment,
+field updates, arguments, returns, closures, generics and task transfer. Measure
+allocations and execution costs in representative vector, transform and animation
+code before selecting a representation or claiming a performance improvement.
+
+## 24. Record arithmetic operators
+
+Status: open proposal; user-defined operators are not approved.
+
+The [graphics application case](graphics.md#vector-arithmetic-notation) expresses
+vector arithmetic with calls such as `Add(Scale(V, 2.0), W)`. It suggests operator
+declarations for arithmetic and comparisons on records.
+
+Evaluate this against the rule of one canonical form per concept. Shorter or
+more familiar notation alone does not justify a second form. Record concrete
+transform and matrix examples, establish whether ordinary unit-level routines
+serve them cleanly, and decide whether operator declarations belong in FPAS at all.
+This topic is separate from equality and ordering constraints.
+
+If selected, consider only established arithmetic and comparison operators with
+pure, statically resolved implementations. Open questions include declaration
+syntax, eligible operand/result types, generic resolution, mixed-type rejection,
+equality and ordering consistency, diagnostics and tooling. New symbolic
+operators, implicit numeric conversions and a general effects system are outside
+this proposal.
+
+Evaluation should compare equivalent routine and operator expressions, cover
+matrix multiplication and scalar/vector operands, and test rejected ambiguous or
+effectful declarations under the selected contract. Implementation requires an
+explicit design decision after this evaluation.
+
+## 25. Native event loops and selectable host events
+
+Status: open proposal; no host-event API or new Select case is agreed.
+
+Windowing systems can require event pumping on the main thread. The
+[main task's thread](../pascal/language/concurrency/scheduling.md) provides a
+starting point, but the [graphics application case](graphics.md#event-loop-integration)
+cannot yet wait on native events, channel messages and a frame deadline through
+one integrated host loop.
+
+Consider host-event readiness and wakeups integrated with task suspension and
+selection. Evaluate a selectable source or host-loop integration that can combine
+native events, channels, task completion and deadlines without busy polling.
+Keep main-thread ownership explicit for event pumping and native callbacks;
+background tasks can deliver messages to the serial application host.
+
+Open questions: event-loop ownership, registration and disposal, thread affinity,
+reentrancy, wakeup/completion races, frame scheduling, cancellation and shutdown.
+Coordinate with [host I/O](#14-host-io-that-releases-vm-workers),
+[clock types and resolution](#10-distinct-duration-and-clock-types) and
+[selection fairness](#17-fair-selection). Preserve atomic winner commitment and
+the ownership rules for losing cases. Graphics backend and window APIs remain
+in the application case.
+
+Evaluation should cover a main-thread native event source alongside continuously
+ready channels and frame deadlines, progress with one VM worker, registration
+races, cancellation and teardown. Verify thread affinity and the selected
+priority/fairness contract; measure idle polling and frame-pacing behavior on the
+chosen platforms before claiming a performance or latency improvement.
+
 ## Other deferred scope
 
-Explicit-width numeric types and Decimal need a separate coherent numeric
-design, migration and buffer/API assessment. They are not FPAS 1 prerequisites.
+A general-purpose Decimal type remains deferred and is not part of the agreed
+fixed-scale `money` design. It needs a separate use case and design decision.
 A purity/effects system was rejected and is not reopened here. Reconsideration
 would require a new decision and a demonstrated benefit. FPAS currently remains
 function-oriented with explicit binding mutation, rather than a guarantee that
@@ -493,6 +729,7 @@ every function is pure.
 
 For each selected topic, first record concrete failing or awkward examples,
 the smallest replacement contract, migration scope, compiler/runtime/tooling
-cost and tests that establish the improvement. Resolve the open decisions with
-the user before creating implementation work. This document is not a second
-package-completion index.
+cost and tests that establish the improvement. Preserve recorded design agreements
+and resolve remaining open decisions with the user before creating implementation
+work. An agreed design still needs an explicit implementation decision. This
+document is not a second package-completion index.

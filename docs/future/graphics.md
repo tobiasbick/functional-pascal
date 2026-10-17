@@ -1,7 +1,9 @@
 # Future: Graphics and 3D Rendering
 
-> Idea only. No implementation plan, unit name, or API decision, except for the
-> [numeric types](#agreed-design-numeric-types) section, which records an agreed language design.
+> Graphics application case only. No graphics implementation plan, unit name,
+> or API is agreed. Shared foundations and their decision status are maintained
+> in [FPAS 2 language directions](fpas2-language-directions.md), including the
+> agreed numeric design and the remaining open proposals.
 
 Functional Pascal has no way to open a window, draw pixels, or use a GPU. This note records the
 runtime and language gaps that a graphics capability would expose, and the properties that would
@@ -10,8 +12,10 @@ performance-critical layer (windowing, GPU resources, draw submission) and FPAS 
 higher-level concerns such as scenes, cameras, animation, and the application loop. This is the
 same split that `Std.Tui` already uses over `Std.Console`.
 
-The graphics unit itself is out of scope here. This note covers the surrounding runtime, standard
-library, build, and language support.
+The graphics unit itself is out of scope here. This note records rendering needs
+for the shared runtime, standard-library, build and language directions, together
+with graphics-specific platform and deployment questions. Shared design details
+belong in the linked FPAS 2 topics.
 
 ## Existing support
 
@@ -47,7 +51,8 @@ representation as an open decision.
 16-bit or 32-bit unsigned integer, and packed 8-bit color channels. Without fixed-width types,
 every boundary call converts and range-checks values, and FPAS code cannot describe a vertex layout
 precisely. Exact monetary amounts also have no type: `real` accumulates binary rounding errors.
-The agreed design is described under [numeric types](#agreed-design-numeric-types).
+The agreed design is maintained in
+[FPAS 2 numeric types and money](fpas2-language-directions.md#21-explicit-width-numeric-types-and-money).
 
 ### Small value aggregates
 
@@ -95,105 +100,43 @@ headless servers and the test runner.
 
 ### Language
 
-- **Fixed-width numeric types**: agreed, see [numeric types](#agreed-design-numeric-types).
-- **Packed arrays** of fixed-width numeric types or of records that contain only such fields, stored
-  contiguously and passed to intrinsics without conversion.
-- **Value records**: small, fixed-size records without heap allocation and with copy semantics, for
-  vectors, matrices, colors, and rectangles.
-- **Operator declarations** for records, limited to arithmetic and comparison operators, so vector
-  and matrix code can use infix notation. They must remain pure and statically resolved.
+- [Fixed-width numeric types and money](fpas2-language-directions.md#21-explicit-width-numeric-types-and-money):
+  agreed numeric design with remaining open points; no implementation is scheduled.
+- [Packed numeric data](fpas2-language-directions.md#22-packed-numeric-data-and-binary-buffers):
+  open proposal for contiguous numeric and fixed-layout record data without
+  per-element native conversion. Language-level arrays versus library buffers
+  remain undecided.
+- [Small records without heap allocation](fpas2-language-directions.md#23-small-records-without-heap-allocation):
+  open proposal for vectors, matrices, colors and rectangles. First evaluate
+  optimizing existing records; no separate value-record form is agreed.
+- [Record arithmetic operators](fpas2-language-directions.md#24-record-arithmetic-operators):
+  open proposal for arithmetic and comparisons. Pure, statically resolved
+  operators are a candidate; notation alone does not justify another language form.
 
-Each remaining language item needs its own design note and explicit agreement before
-implementation.
+The shared host requirements are tracked under
+[clock types and resolution](fpas2-language-directions.md#10-distinct-duration-and-clock-types)
+and [native event loops](fpas2-language-directions.md#25-native-event-loops-and-selectable-host-events).
+Open proposals require explicit design agreement, and every selected topic needs
+an implementation decision before work begins.
 
 ## Agreed design: numeric types
 
-FPAS offers exactly one way to express each numeric concept: every type has one name, and there
-are no aliases.
-
-### Types
-
-| Kind | Types |
-| --- | --- |
-| Signed integer | `integer8`, `integer16`, `integer32`, `integer64` |
-| Unsigned integer | `unsigned8`, `unsigned16`, `unsigned32`, `unsigned64` |
-| Binary floating point | `real32`, `real64` |
-| Exact monetary amount | `money` |
-
-- `integer` is renamed to `integer64` and `real` to `real64`. The old names are removed, without
-  an alias. This rename is a separate, mechanical step before the new types are added. A
-  diagnostic for `integer` or `real` names the replacement.
-- Subranges (`type Percent = 0..100;`) remain the only way to restrict values. Width types
-  describe representation; subranges describe permitted values. There is no separate range type.
-- There are no 128-bit integers and no 8-bit floats. A 16-bit float may later become a storage
-  format of packed arrays only.
-
-### Arithmetic and literals
-
-- Arithmetic stays within its type: `integer8 + integer8` is `integer8`. Overflow is a runtime
-  error, as for `integer` today.
-- Operands of different numeric types are a compile-time error whose hint shows the explicit
-  conversion.
-- Wraparound never happens implicitly.
-- A numeric literal takes the expected type: `var Pixel: unsigned8 := 200;`. Without an expected
-  type, an integer literal is `integer64` and a real literal is `real64`. A literal outside the
-  expected type, such as `300` for `unsigned8`, is a compile-time error.
-
-### Conversions
-
-There are no implicit conversions in any direction, including assignments, arguments, and return
-values.
-
-| Conversion | Form | Behavior |
-| --- | --- | --- |
-| Integer to another integer type | `unsigned8(X)`, `integer16(X)` | Checked; an out-of-range value panics. A known constant out of range is a compile-time error. |
-| Integer to floating point | `real32(X)`, `real64(X)` | Replaces `Conv.IntToReal`. Large magnitudes may lose precision. |
-| `real64` to `real32` | `real32(X)` | Rounds to the nearest representable value; overflow panics. |
-| Floating point to integer | `Math.Round`, `Math.Trunc`, `Math.Floor`, `Math.Ceil` | The rounding mode stays visible. The result is `integer64`; narrow it explicitly afterwards. |
-| Value into a subrange | `Percent(X)` | Unchanged. |
-
-- `X in unsigned8` tests whether a value fits without converting, using the existing subrange
-  membership syntax.
-- Saturation is written explicitly: `unsigned8(Math.Clamp(X, 0, 255))`.
-
-### Bit operations
-
-- The Pascal operators `and`, `or`, `xor`, `not`, `shl`, and `shr` apply to the `unsigned`
-  types only. Signed values are converted explicitly first.
-- Shifting by the bit width of the type or more is a runtime error, not a silent zero.
-
-### Money
-
-- `money` is an amount, not a currency. A currency code is an ordinary record field next to it.
-- It is stored as a 64-bit integer scaled by 10,000, giving four exact decimal places.
-- Literals in a `money` context are parsed as exact decimals: `var Price: money := 19.99;`.
-  `money(X)` converts integers exactly.
-- A runtime `real64` becomes `money` only through an explicit rounding function in `Std.Math`.
-- Addition and subtraction are exact.
-
-### Runtime representation
-
-Registers keep computing in 64-bit integers or 64-bit floats. The width of a typed operation is an
-instruction operand, and the result is checked or narrowed when it is stored. This keeps the opcode
-set small and the runtime value at 16 bytes. The width matters for storage only in packed arrays.
-
-### Open points
-
-- The rounding rule for `money` multiplication and division, for example four places with ties to
-  even, as `Math.Round` uses.
-- The name of the rounding function from `real64` to `money`.
+The [full numeric design](fpas2-language-directions.md#21-explicit-width-numeric-types-and-money)
+is maintained in the FPAS 2 directions, including names, literals, conversions,
+arithmetic, bit operations, runtime representation and open money-rounding
+questions. Explicit widths address GPU data; the agreed `money` type also serves
+non-graphics consumers.
 
 ## Non-goals
 
 - A full game engine, scene editor, or entity-component system in the standard library.
-- A generic foreign-function interface to arbitrary native libraries.
+- Designing a generic foreign-function interface to arbitrary native libraries;
+  see the separate [C FFI proposal](fpas2-language-directions.md#11-c-foreign-function-interface).
 - Shader authoring in FPAS.
 - Bindings to C or C++ graphics libraries. Native graphics support should use pure Rust crates.
 
 ## Open decisions
 
-- Should packed numeric data be a language-level array form or a standard-library buffer type?
-- Should value records be a separate declaration form or an inferred property of small records?
 - Which platforms must graphics support cover (desktop only, or also web through WebAssembly)?
 - How should optional capabilities appear in projects: a project-level flag, a separate
   distribution, or detection from `uses`?

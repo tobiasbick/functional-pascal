@@ -29,6 +29,74 @@ pub(super) fn register_std_fs(checker: &mut Checker) {
         vec![p("Path", Ty::String)],
         Ty::Result(Box::new(Ty::Boolean), Box::new(Ty::String)),
     );
+    for symbol in [s::STD_FS_DELETE_DIR, s::STD_FS_DELETE_DIR_ALL] {
+        define_func(
+            checker,
+            symbol,
+            vec![p("Path", Ty::String)],
+            Ty::Result(Box::new(Ty::Boolean), Box::new(Ty::String)),
+        );
+    }
+    for symbol in [s::STD_FS_FILE_SIZE, s::STD_FS_MODIFIED_TIME] {
+        define_func(
+            checker,
+            symbol,
+            vec![p("Path", Ty::String)],
+            Ty::Result(Box::new(Ty::Integer), Box::new(Ty::String)),
+        );
+    }
+    define_func(
+        checker,
+        s::STD_FS_IS_SYM_LINK,
+        vec![p("Path", Ty::String)],
+        Ty::Boolean,
+    );
+    for symbol in [
+        s::STD_FS_CURRENT_DIR,
+        s::STD_FS_CREATE_TEMP_DIR,
+        s::STD_FS_CREATE_TEMP_FILE,
+    ] {
+        define_func(
+            checker,
+            symbol,
+            vec![],
+            Ty::Result(Box::new(Ty::String), Box::new(Ty::String)),
+        );
+    }
+    define_func(checker, s::STD_FS_TEMP_DIR, vec![], Ty::String);
+    define_func(
+        checker,
+        s::STD_FS_SET_CURRENT_DIR,
+        vec![p("Path", Ty::String)],
+        Ty::Result(Box::new(Ty::Boolean), Box::new(Ty::String)),
+    );
+    define_func(
+        checker,
+        s::STD_FS_READ_DIR_ALL,
+        vec![p("Path", Ty::String)],
+        Ty::Result(
+            Box::new(Ty::Array(Box::new(Ty::String))),
+            Box::new(Ty::String),
+        ),
+    );
+    for symbol in [
+        s::STD_FS_RENAME,
+        s::STD_FS_COPY_FILE,
+        s::STD_FS_COPY_DIR_ALL,
+    ] {
+        define_func(
+            checker,
+            symbol,
+            vec![p("Source", Ty::String), p("Target", Ty::String)],
+            Ty::Result(Box::new(Ty::Boolean), Box::new(Ty::String)),
+        );
+    }
+    define_func(
+        checker,
+        s::STD_FS_APPEND_TEXT,
+        vec![p("Path", Ty::String), p("Text", Ty::String)],
+        Ty::Result(Box::new(Ty::Boolean), Box::new(Ty::String)),
+    );
     define_func(
         checker,
         s::STD_FS_EXISTS,

@@ -1,0 +1,39 @@
+program FsMetadataAndDirectoriesTest;
+
+uses Std.Fs as Fs, Std.Test as Test;
+
+begin
+  const Root: string := Test.ScratchDir() + '/metadata-dirs';
+  Test.AssertTrue(Fs.CreateDirAll(Root + '/source/inner').Unwrap());
+  const Note: string := Root + '/source/note.txt';
+  Test.AssertTrue(Fs.WriteText(Note, 'hello').Unwrap());
+  Test.AssertTrue(Fs.WriteText(Root + '/source/inner/deep.txt', 'x').Unwrap());
+
+  Test.AssertEquals(5, Fs.FileSize(Note).Unwrap());
+  Test.AssertTrue((Fs.FileSize(Root) is Error(_)));
+  Test.AssertTrue(Fs.ModifiedTime(Note).Unwrap() > 0);
+  Test.AssertFalse(Fs.IsSymLink(Note));
+
+  Test.AssertTrue(Fs.CopyDirAll(Root + '/source', Root + '/copy').Unwrap());
+  const Entries: array of string := Fs.ReadDirAll(Root + '/copy').Unwrap();
+  Test.AssertEquals(3, Entries.Length());
+  Test.AssertEquals(Root + '/copy/inner', Entries[0]);
+  Test.AssertEquals(Root + '/copy/inner/deep.txt', Entries[1]);
+  Test.AssertEquals(Root + '/copy/note.txt', Entries[2]);
+  Test.AssertTrue((Fs.ReadDirAll(Note) is Error(_)));
+
+  const Here: string := Fs.CurrentDir().Unwrap();
+  Test.AssertTrue(Fs.IsDir(Here));
+  Test.AssertTrue((Fs.SetCurrentDir(Root + '/missing') is Error(_)));
+  Test.AssertEquals(Here, Fs.CurrentDir().Unwrap());
+
+  Test.AssertTrue(Fs.IsDir(Fs.TempDir()));
+  const TempDir: string := Fs.CreateTempDir().Unwrap();
+  Test.AssertTrue(Fs.IsDir(TempDir));
+  Test.AssertTrue(Fs.DeleteDirAll(TempDir).Unwrap());
+  const TempFile: string := Fs.CreateTempFile().Unwrap();
+  Test.AssertEquals(0, Fs.FileSize(TempFile).Unwrap());
+  Test.AssertTrue(Fs.DeleteFile(TempFile).Unwrap());
+
+  Test.AssertTrue(Fs.DeleteDirAll(Root).Unwrap());
+end.

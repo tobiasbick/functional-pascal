@@ -55,5 +55,65 @@ pub enum FsIntrinsic {
     ///
     /// **Documentation:** `docs/pascal/std/host/fs.md`
     DeleteFile = 567,
+    /// `Std.Fs.DeleteDir(Path)` - remove one empty directory.
+    ///
+    /// **Documentation:** `docs/pascal/std/host/fs.md`
+    DeleteDir = 621,
+    /// `Std.Fs.DeleteDirAll(Path)` - remove a directory and all of its contents.
+    ///
+    /// **Documentation:** `docs/pascal/std/host/fs.md`
+    DeleteDirAll = 622,
+    /// `Std.Fs.Rename(Source, Target)` - rename or move a file or directory.
+    ///
+    /// **Documentation:** `docs/pascal/std/host/fs.md`
+    Rename = 623,
+    /// `Std.Fs.CopyFile(Source, Target)` - copy one file, replacing the target.
+    ///
+    /// **Documentation:** `docs/pascal/std/host/fs.md`
+    CopyFile = 624,
+    /// `Std.Fs.AppendText(Path, Text)` - append UTF-8 text, creating the file.
+    ///
+    /// **Documentation:** `docs/pascal/std/host/fs.md`
+    AppendText = 625,
+    /// `Std.Fs.FileSize(Path)` - size in bytes of one regular file.
+    ///
+    /// **Documentation:** `docs/pascal/std/host/fs.md`
+    FileSize = 626,
+    /// `Std.Fs.ModifiedTime(Path)` - last modification time in Unix milliseconds.
+    ///
+    /// **Documentation:** `docs/pascal/std/host/fs.md`
+    ModifiedTime = 627,
+    /// `Std.Fs.IsSymLink(Path)` - check whether a path is a symbolic link.
+    ///
+    /// **Documentation:** `docs/pascal/std/host/fs.md`
+    IsSymLink = 628,
+    /// `Std.Fs.CurrentDir()` - current working directory of the process.
+    ///
+    /// **Documentation:** `docs/pascal/std/host/fs.md`
+    CurrentDir = 629,
+    /// `Std.Fs.SetCurrentDir(Path)` - change the process working directory.
+    ///
+    /// **Documentation:** `docs/pascal/std/host/fs.md`
+    SetCurrentDir = 630,
+    /// `Std.Fs.TempDir()` - host temporary directory.
+    ///
+    /// **Documentation:** `docs/pascal/std/host/fs.md`
+    TempDir = 631,
+    /// `Std.Fs.CreateTempDir()` - create a uniquely named temporary directory.
+    ///
+    /// **Documentation:** `docs/pascal/std/host/fs.md`
+    CreateTempDir = 632,
+    /// `Std.Fs.CreateTempFile()` - create a uniquely named empty temporary file.
+    ///
+    /// **Documentation:** `docs/pascal/std/host/fs.md`
+    CreateTempFile = 633,
+    /// `Std.Fs.ReadDirAll(Path)` - list all entries below a directory recursively.
+    ///
+    /// **Documentation:** `docs/pascal/std/host/fs.md`
+    ReadDirAll = 634,
+    /// `Std.Fs.CopyDirAll(Source, Target)` - copy a directory tree.
+    ///
+    /// **Documentation:** `docs/pascal/std/host/fs.md`
+    CopyDirAll = 635,
 }
 }

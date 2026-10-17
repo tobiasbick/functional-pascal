@@ -4,10 +4,14 @@
 //!
 //! **Documentation:** `docs/pascal/std/host/fs.md` (from the repository root).
 
+mod append;
 mod directory;
 mod glob;
+mod metadata;
 mod publication;
 mod read;
+mod temp;
+mod tree;
 
 use std::fs;
 use std::io;
@@ -45,6 +49,78 @@ pub(crate) fn run(
         Intrinsic::Fs(FsIntrinsic::DeleteFile) => {
             let path = pop_string(pop_value(call, location)?, location)?;
             call.push(result_bool(fs::remove_file(path)));
+        }
+        Intrinsic::Fs(FsIntrinsic::DeleteDir) => {
+            let path = pop_string(pop_value(call, location)?, location)?;
+            call.push(result_bool(fs::remove_dir(path)));
+        }
+        Intrinsic::Fs(FsIntrinsic::DeleteDirAll) => {
+            let path = pop_string(pop_value(call, location)?, location)?;
+            call.push(result_bool(fs::remove_dir_all(path)));
+        }
+        Intrinsic::Fs(FsIntrinsic::Rename) => {
+            let target = pop_string(pop_value(call, location)?, location)?;
+            let source = pop_string(pop_value(call, location)?, location)?;
+            call.push(result_bool(fs::rename(source, target)));
+        }
+        Intrinsic::Fs(FsIntrinsic::CopyFile) => {
+            let target = pop_string(pop_value(call, location)?, location)?;
+            let source = pop_string(pop_value(call, location)?, location)?;
+            call.push(result_bool(fs::copy(source, target).map(|_| ())));
+        }
+        Intrinsic::Fs(FsIntrinsic::AppendText) => {
+            let text = pop_string(pop_value(call, location)?, location)?;
+            let path = pop_string(pop_value(call, location)?, location)?;
+            call.push(result_bool(append::append_text(Path::new(&path), &text)));
+        }
+        Intrinsic::Fs(FsIntrinsic::FileSize) => {
+            let path = pop_string(pop_value(call, location)?, location)?;
+            call.push(result_integer(metadata::file_size(Path::new(&path))));
+        }
+        Intrinsic::Fs(FsIntrinsic::ModifiedTime) => {
+            let path = pop_string(pop_value(call, location)?, location)?;
+            call.push(result_integer(metadata::modified_time_millis(Path::new(
+                &path,
+            ))));
+        }
+        Intrinsic::Fs(FsIntrinsic::IsSymLink) => {
+            let path = pop_string(pop_value(call, location)?, location)?;
+            call.push(Value::Boolean(metadata::is_symlink(Path::new(&path))));
+        }
+        Intrinsic::Fs(FsIntrinsic::CurrentDir) => {
+            call.push(result_string(
+                std::env::current_dir()
+                    .map(|dir| {
+                        dir.to_string_lossy()
+                            .replace(std::path::MAIN_SEPARATOR, "/")
+                    })
+                    .map_err(|error| format!("CurrentDir failed: {error}")),
+            ));
+        }
+        Intrinsic::Fs(FsIntrinsic::SetCurrentDir) => {
+            let path = pop_string(pop_value(call, location)?, location)?;
+            call.push(result_bool(std::env::set_current_dir(path)));
+        }
+        Intrinsic::Fs(FsIntrinsic::TempDir) => {
+            call.push(Value::Str(temp::temp_dir().into()));
+        }
+        Intrinsic::Fs(FsIntrinsic::CreateTempDir) => {
+            call.push(result_string(temp::create_temp_dir()));
+        }
+        Intrinsic::Fs(FsIntrinsic::CreateTempFile) => {
+            call.push(result_string(temp::create_temp_file()));
+        }
+        Intrinsic::Fs(FsIntrinsic::ReadDirAll) => {
+            let path = pop_string(pop_value(call, location)?, location)?;
+            call.push(result_string_array(tree::read_dir_all_paths(&path)));
+        }
+        Intrinsic::Fs(FsIntrinsic::CopyDirAll) => {
+            let target = pop_string(pop_value(call, location)?, location)?;
+            let source = pop_string(pop_value(call, location)?, location)?;
+            call.push(result_bool(
+                tree::copy_dir_all(Path::new(&source), Path::new(&target))
+                    .map_err(io::Error::other),
+            ));
         }
         Intrinsic::Fs(FsIntrinsic::Exists) => {
             let path = pop_string(pop_value(call, location)?, location)?;
@@ -86,6 +162,13 @@ fn result_string(result: Result<String, String>) -> Value {
     }
 }
 
+fn result_integer(result: Result<i64, String>) -> Value {
+    match result {
+        Ok(value) => Value::result_ok(Value::Integer(value)),
+        Err(error) => Value::result_error(Value::Str(error.into())),
+    }
+}
+
 fn result_bool(result: io::Result<()>) -> Value {
     match result {
         Ok(()) => Value::result_ok(Value::Boolean(true)),
@@ -107,7 +190,7 @@ fn result_string_array(result: Result<Vec<String>, String>) -> Value {
 
 #[cfg(test)]
 mod tests {
-    use std::path::Path;
+    use std::path::{Path, PathBuf};
     use std::time::{SystemTime, UNIX_EPOCH};
 
     use super::*;
@@ -237,5 +320,81 @@ mod tests {
 
         assert!(matches!(stack.as_slice(), [Value::ResultError(_)]));
         let _ = fs::remove_file(file_path);
+    }
+
+    fn run_path(intrinsic: FsIntrinsic, path: &Path) -> Value {
+        let mut stack = vec![Value::Str(path.to_string_lossy().into_owned().into())];
+        run_fs(intrinsic, &mut stack);
+        stack.pop().expect("result")
+    }
+
+    fn run_pair(intrinsic: FsIntrinsic, first: &Path, second: &str) -> Value {
+        let mut stack = vec![
+            Value::Str(first.to_string_lossy().into_owned().into()),
+            Value::Str(second.into()),
+        ];
+        run_fs(intrinsic, &mut stack);
+        stack.pop().expect("result")
+    }
+
+    #[test]
+    fn delete_dir_requires_empty_directory_and_delete_dir_all_recurses() {
+        let root = PathBuf::from(unique_temp_path("delete-dir"));
+        fs::create_dir_all(root.join("child")).expect("fixture directory");
+        fs::write(root.join("child").join("file.txt"), "x").expect("fixture file");
+
+        assert!(matches!(
+            run_path(FsIntrinsic::DeleteDir, &root),
+            Value::ResultError(_)
+        ));
+        assert_eq!(
+            run_path(FsIntrinsic::DeleteDirAll, &root),
+            Value::result_ok(Value::Boolean(true))
+        );
+        assert!(!root.exists());
+        assert!(matches!(
+            run_path(FsIntrinsic::DeleteDirAll, &root),
+            Value::ResultError(_)
+        ));
+
+        fs::create_dir(&root).expect("empty directory");
+        assert_eq!(
+            run_path(FsIntrinsic::DeleteDir, &root),
+            Value::result_ok(Value::Boolean(true))
+        );
+        assert!(!root.exists());
+    }
+
+    #[test]
+    fn copy_rename_and_append_operate_on_files() {
+        let root = PathBuf::from(unique_temp_path("copy-rename"));
+        fs::create_dir_all(&root).expect("fixture directory");
+        let source = root.join("a.txt");
+        let copy = root.join("b.txt");
+        let moved = root.join("c.txt");
+        let ok = Value::result_ok(Value::Boolean(true));
+
+        assert_eq!(run_pair(FsIntrinsic::AppendText, &source, "one"), ok);
+        assert_eq!(run_pair(FsIntrinsic::AppendText, &source, "two"), ok);
+        assert_eq!(fs::read_to_string(&source).expect("read"), "onetwo");
+
+        assert_eq!(
+            run_pair(FsIntrinsic::CopyFile, &source, &copy.to_string_lossy()),
+            ok
+        );
+        assert_eq!(fs::read_to_string(&copy).expect("read"), "onetwo");
+
+        assert_eq!(
+            run_pair(FsIntrinsic::Rename, &copy, &moved.to_string_lossy()),
+            ok
+        );
+        assert!(!copy.exists());
+        assert_eq!(fs::read_to_string(&moved).expect("read"), "onetwo");
+
+        assert!(matches!(
+            run_pair(FsIntrinsic::CopyFile, &copy, &moved.to_string_lossy()),
+            Value::ResultError(_)
+        ));
+        let _ = fs::remove_dir_all(root);
     }
 }

@@ -4,6 +4,36 @@ unit Std.Fs;
 // Edit the Rust registry and `docs/pascal/std/`, then regenerate this editor declaration surface.
 // Runtime behavior is implemented by the compiler, VM, or Rust standard-library crate.
 
+// Appends UTF-8 text, creating a missing file.
+//
+// Parameters:
+// - `Path`: File or directory path processed by the operation.
+// - `Text`: UTF-8 text processed by the operation.
+public function AppendText(Path: string; Text: string): result of (boolean, string);
+begin
+  panic('Intrinsic API declaration');
+end function;
+
+// Copies a directory tree into the target.
+//
+// Parameters:
+// - `Source`: `string` input value used by `CopyDirAll`.
+// - `Target`: `string` input value used by `CopyDirAll`.
+public function CopyDirAll(Source: string; Target: string): result of (boolean, string);
+begin
+  panic('Intrinsic API declaration');
+end function;
+
+// Copies one file, replacing the target.
+//
+// Parameters:
+// - `Source`: `string` input value used by `CopyFile`.
+// - `Target`: `string` input value used by `CopyFile`.
+public function CopyFile(Source: string; Target: string): result of (boolean, string);
+begin
+  panic('Intrinsic API declaration');
+end function;
+
 // Creates one directory, returns `Ok(true)`.
 //
 // Parameters:
@@ -22,6 +52,42 @@ begin
   panic('Intrinsic API declaration');
 end function;
 
+// Creates a unique temporary directory.
+public function CreateTempDir(): result of (string, string);
+begin
+  panic('Intrinsic API declaration');
+end function;
+
+// Creates a unique empty temporary file.
+public function CreateTempFile(): result of (string, string);
+begin
+  panic('Intrinsic API declaration');
+end function;
+
+// Process working directory.
+public function CurrentDir(): result of (string, string);
+begin
+  panic('Intrinsic API declaration');
+end function;
+
+// Removes one empty directory, returns `Ok(true)`.
+//
+// Parameters:
+// - `Path`: File or directory path processed by the operation.
+public function DeleteDir(Path: string): result of (boolean, string);
+begin
+  panic('Intrinsic API declaration');
+end function;
+
+// Removes a directory and all of its contents.
+//
+// Parameters:
+// - `Path`: File or directory path processed by the operation.
+public function DeleteDirAll(Path: string): result of (boolean, string);
+begin
+  panic('Intrinsic API declaration');
+end function;
+
 // Removes one file entry, returns `Ok(true)`.
 //
 // Parameters:
@@ -36,6 +102,15 @@ end function;
 // Parameters:
 // - `Path`: File or directory path processed by the operation.
 public function Exists(Path: string): boolean;
+begin
+  panic('Intrinsic API declaration');
+end function;
+
+// Size of a regular file in bytes.
+//
+// Parameters:
+// - `Path`: File or directory path processed by the operation.
+public function FileSize(Path: string): result of (integer, string);
 begin
   panic('Intrinsic API declaration');
 end function;
@@ -67,6 +142,24 @@ begin
   panic('Intrinsic API declaration');
 end function;
 
+// `true` when the path itself is a symbolic link.
+//
+// Parameters:
+// - `Path`: File or directory path processed by the operation.
+public function IsSymLink(Path: string): boolean;
+begin
+  panic('Intrinsic API declaration');
+end function;
+
+// Last modification in Unix milliseconds.
+//
+// Parameters:
+// - `Path`: File or directory path processed by the operation.
+public function ModifiedTime(Path: string): result of (integer, string);
+begin
+  panic('Intrinsic API declaration');
+end function;
+
 // Sorted immediate entries, including files and directories.
 //
 // Parameters:
@@ -76,11 +169,45 @@ begin
   panic('Intrinsic API declaration');
 end function;
 
+// Sorted recursive entries below a directory.
+//
+// Parameters:
+// - `Path`: File or directory path processed by the operation.
+public function ReadDirAll(Path: string): result of (array of string, string);
+begin
+  panic('Intrinsic API declaration');
+end function;
+
 // Reads UTF-8 text.
 //
 // Parameters:
 // - `Path`: File or directory path processed by the operation.
 public function ReadText(Path: string): result of (string, string);
+begin
+  panic('Intrinsic API declaration');
+end function;
+
+// Renames or moves a file or directory.
+//
+// Parameters:
+// - `Source`: `string` input value used by `Rename`.
+// - `Target`: `string` input value used by `Rename`.
+public function Rename(Source: string; Target: string): result of (boolean, string);
+begin
+  panic('Intrinsic API declaration');
+end function;
+
+// Changes the process working directory.
+//
+// Parameters:
+// - `Path`: File or directory path processed by the operation.
+public function SetCurrentDir(Path: string): result of (boolean, string);
+begin
+  panic('Intrinsic API declaration');
+end function;
+
+// Host temporary directory.
+public function TempDir(): string;
 begin
   panic('Intrinsic API declaration');
 end function;

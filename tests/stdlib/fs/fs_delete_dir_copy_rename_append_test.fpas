@@ -1,0 +1,32 @@
+program FsDeleteDirCopyRenameAppendTest;
+
+uses Std.Fs as Fs, Std.Test as Test;
+
+begin
+  const Root: string := Test.ScratchDir() + '/entry-ops';
+  Test.AssertTrue(Fs.CreateDirAll(Root + '/nested/deep').Unwrap());
+
+  const Log: string := Root + '/log.txt';
+  Test.AssertTrue(Fs.AppendText(Log, 'one').Unwrap());
+  Test.AssertTrue(Fs.AppendText(Log, 'two').Unwrap());
+  Test.AssertEquals('onetwo', Fs.ReadText(Log).Unwrap());
+
+  const Copy: string := Root + '/nested/copy.txt';
+  Test.AssertTrue(Fs.CopyFile(Log, Copy).Unwrap());
+  Test.AssertEquals('onetwo', Fs.ReadText(Copy).Unwrap());
+  Test.AssertTrue((Fs.CopyFile(Root + '/missing.txt', Copy) is Error(_)));
+
+  const Moved: string := Root + '/moved.txt';
+  Test.AssertTrue(Fs.Rename(Copy, Moved).Unwrap());
+  Test.AssertFalse(Fs.Exists(Copy));
+  Test.AssertEquals('onetwo', Fs.ReadText(Moved).Unwrap());
+
+  // DeleteDir only removes empty directories.
+  Test.AssertTrue((Fs.DeleteDir(Root + '/nested') is Error(_)));
+  Test.AssertTrue(Fs.DeleteDir(Root + '/nested/deep').Unwrap());
+  Test.AssertTrue((Fs.DeleteDir(Log) is Error(_)));
+
+  Test.AssertTrue(Fs.DeleteDirAll(Root).Unwrap());
+  Test.AssertFalse(Fs.Exists(Root));
+  Test.AssertTrue((Fs.DeleteDirAll(Root) is Error(_)));
+end.

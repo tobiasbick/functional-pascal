@@ -716,6 +716,39 @@ races, cancellation and teardown. Verify thread affinity and the selected
 priority/fairness contract; measure idle polling and frame-pacing behavior on the
 chosen platforms before claiming a performance or latency improvement.
 
+## 26. File handles and random-access file I/O
+
+Status: open proposal; no handle type, open modes or byte API is agreed.
+
+`Std.Fs` reads and writes whole files only. Turbo Pascal programs used
+`Assign`/`Reset`/`Rewrite`/`Append`, `Seek`, `FilePos`, `FileSize`, `Eof`,
+`BlockRead`/`BlockWrite`, `Truncate`, `Flush` and `Close` for large files, logs,
+record files and binary formats. FPAS has no equivalent: a 64 MiB text file
+cannot be processed line by line, and no file can be read or written at an offset.
+
+Consider one opaque handle type in `Std.Fs` with an explicit open mode
+(read, write, read-write, append; create, truncate or require existing), plus
+`Seek`, `Position`, `Size`, `AtEnd`, `ReadLine`, `WriteText`, byte block reads and
+writes, `Truncate`, `Flush` and `Close`. Byte operations depend on the canonical
+byte representation from [packed numeric data and binary buffers](#22-packed-numeric-data-and-binary-buffers);
+whole-file `ReadBytes` and `WriteBytes` should land with the same design.
+Keep `Assign` out: opening returns a handle in one step.
+
+Open questions: who closes a handle and when (explicit `Close`,
+[scope-bound cleanup](#5-scope-bound-cleanup-actions) or both); behavior after
+close; sharing a handle between tasks; positions as byte offsets versus
+character positions for text; line-ending and UTF-8 boundary handling for
+`ReadLine` and `Seek`; buffering and flush-on-close; Windows sharing modes;
+[worker-releasing host I/O](#14-host-io-that-releases-vm-workers); and
+[typed operational errors](#1-typed-operational-errors) for end of file,
+missing files and permission failures. Typed record files (`file of T`) need a
+fixed layout and are out of scope until packed records are decided.
+
+Evaluation should cover streaming a file larger than the `ReadText` limit,
+random reads and in-place updates at offsets, append from several tasks,
+truncate and extend, use after close, partial reads at end of file, and
+handle leaks on early `return` and panics.
+
 ## Other deferred scope
 
 A general-purpose Decimal type remains deferred and is not part of the agreed

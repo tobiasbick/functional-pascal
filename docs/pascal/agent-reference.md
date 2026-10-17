@@ -30,6 +30,8 @@ inheritance, pointers, manual allocation, exceptions with handlers, or preproces
 | Pascal `var` section between a routine header and `begin` | Declare locals as `var`/`const` statements after `begin`. |
 | Pascal `array[0..2] of T = (A, B, C)` | `array of T := [A, B, C]`; arrays have no bounds and start at 0. |
 | Delphi `class`, `uses SysUtils` | A `record` with methods taking `Self`; import `Std` units with an alias. |
+| Pascal `Inc(X)`, `Low(A)`, `High(A)`, `nil` | `X := X + 1;`, `0`, `A.Length() - 1`, `None`. |
+| Delphi `Double`, `Int64`, `Write(Text)` | `real`, `integer`, `Console.WriteText(Text)`. |
 | Assign to the function name, Delphi `Result` or `Exit(Value)` | `return Value;`; procedures use `return;`. |
 | Delphi `const` parameters | Parameters are read-only already: `function F(S: string): integer;`. |
 | Pascal `procedure Q;` without parentheses | Every routine declares its parameter list: `procedure Q();`. |

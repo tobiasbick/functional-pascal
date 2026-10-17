@@ -164,12 +164,14 @@ impl Checker {
                         hint
                     } else if is_qualified_ident_chain {
                         if crate::std_units::looks_like_std_qualified_name(&full_name) {
-                            self.hint_unknown_callable(&full_name)
+                            self.hint_unknown_callable(&full_name, &[])
                         } else {
                             "Check that the unit is listed in `uses` and that the symbol is public. Private unit members are not visible outside their unit.".to_string()
                         }
                     } else if crate::std_units::looks_like_std_qualified_name(first) {
-                        self.hint_unknown_callable(first)
+                        self.hint_unknown_callable(first, &[])
+                    } else if let Some(hint) = self.foreign_builtin_hint(first, &[]) {
+                        hint
                     } else {
                         "Check spelling or declare the variable or constant.".to_string()
                     };

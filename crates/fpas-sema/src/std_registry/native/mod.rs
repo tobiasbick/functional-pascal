@@ -224,7 +224,7 @@ pub fn native_migration_hint(name: &str) -> Option<String> {
         _ => "Value",
     };
     Some(format!(
-        "Use `{prefix}.{}(…)`; built-in type operations are available without imports. The former five type-helper units and their free routine references have been removed.",
+        "Use `{prefix}.{}(…)`; built-in type operations are available without imports.",
         entry.name
     ))
 }

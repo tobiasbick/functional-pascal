@@ -119,7 +119,7 @@ impl Checker {
             return CallResolution::Failed;
         }
 
-        let hint = self.hint_unknown_callable(&name);
+        let hint = self.hint_unknown_callable(&name, args);
         self.error_with_code(
             SEMA_UNKNOWN_NAME,
             format!("Unknown function or procedure `{name}`"),

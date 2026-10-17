@@ -5,6 +5,8 @@
 //! **Documentation:** `docs/pascal/tools/diagnostics.md` (Diagnostics for other-language spellings)
 
 mod builtins;
+mod constructors;
 mod result_assignment;
+mod types;
 
-pub(crate) use builtins::foreign_builtin_hint;
+pub(crate) use types::foreign_type_hint;

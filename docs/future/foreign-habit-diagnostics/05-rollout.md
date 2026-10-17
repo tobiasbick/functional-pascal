@@ -14,7 +14,7 @@ Packages run in order; each lists its catalog entries from [02-catalog.md](02-ca
 | [x] | [E1 Short experiment](#e1-short-experiment) | new entries | P0 | small |
 | [x] | [P1 Routines and results](#p1-routines-and-results) | H-DECL-07, H-DECL-08, H-CALL-01, H-CALL-02, H-CALL-03, H-CALL-13 | E1 | medium |
 | [x] | [P2 Declarations](#p2-declarations) | H-DECL-01, H-DECL-02, H-DECL-03, H-DECL-05, H-DECL-06, H-DECL-10, H-DECL-11, H-DECL-12, H-DECL-13, H-DECL-14 | E1 | medium |
-| [ ] | [P5 Built-in names](#p5-built-in-names) | H-DECL-09, H-DECL-15, H-CALL-07, H-CALL-08, H-CALL-10, H-CALL-12, H-CALL-15, H-CALL-17, H-CALL-19, H-STMT-09 | E1 | small |
+| [x] | [P5 Built-in names](#p5-built-in-names) | H-DECL-09, H-DECL-15, H-CALL-07, H-CALL-08, H-CALL-10, H-CALL-12, H-CALL-15, H-CALL-17, H-CALL-19, H-STMT-09 | E1 | small |
 | [ ] | [P3 Control flow](#p3-control-flow) | H-STMT-02, H-STMT-03, H-STMT-04, H-STMT-05, H-STMT-06, H-STMT-07, H-STMT-08 | E1 | medium |
 | [ ] | [P4 Tokens and operators](#p4-tokens-and-operators) | H-DECL-04, H-CALL-06, H-EXPR-02, H-EXPR-03, H-EXPR-04, H-LEX-02, H-CALL-04, H-CALL-16 | E1 | medium |
 | [ ] | [P6 Experiment and closing](#p6-experiment-and-closing) | new entries from the experiment | P1–P5 | medium |
@@ -136,6 +136,25 @@ Original scope:
   expression stays usable.
 
 ## P5 Built-in names
+
+**Done** on 2026-10-17.
+
+- Sema `check/foreign/builtins.rs`: table of foreign built-ins (`Exit`, `Inc`, `Dec`, `Length`,
+  `Low`, `High`, `TryStrToInt`, `IntToStr`, `Write`, `Console.Write`, `nil`); the help inserts
+  plain written arguments and the alias of an imported `Std` unit. It runs before
+  `native_migration_hint`, which keeps the FPAS-internal migrations and lost its stale remark
+  about removed helper units.
+- Sema `check/foreign/types.rs` (`char`, `Double`, `Single`, `Extended`, Delphi integer and string
+  type names) and `check/foreign/constructors.rs` (`T.Create(…)` on a record, naming its fields).
+- All P5 probes already produced one diagnostic; they now name the FPAS form instead of a generic
+  hint. User declarations with the same names are unaffected.
+- Docs: habit table in the
+  [diagnostics handbook](../../pascal/tools/diagnostics.md#diagnostics-for-other-language-spellings),
+  two rows in the [agent reference](../../pascal/agent-reference.md#1-translate-habits-before-writing).
+- Tests: `fpas-sema` `tests/integration/foreign_builtins.rs`; three existing tests updated to the
+  argument-specific `Length` help.
+
+Original scope:
 
 - Sema `foreign/builtins.rs` table: `Inc`, `Dec`, `Exit`, `nil`, `char`, `Length` (drop the stale
   remark about removed helper units), `IntToStr` member naming.

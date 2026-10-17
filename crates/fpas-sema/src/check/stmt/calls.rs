@@ -149,7 +149,7 @@ impl Checker {
             (
                 SEMA_UNKNOWN_NAME,
                 format!("Unknown procedure `{name}`"),
-                self.hint_unknown_callable(&name),
+                self.hint_unknown_callable(&name, args),
             )
         };
 

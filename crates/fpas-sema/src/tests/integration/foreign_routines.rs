@@ -65,11 +65,9 @@ fn delphi_exit_names_return() {
     assert_eq!(errors.len(), 2, "{errors:#?}");
     assert_eq!(errors[0].code, SEMA_UNKNOWN_NAME);
     assert!(
-        errors[0]
-            .help
-            .as_deref()
-            .is_some_and(|help| help.contains("Delphi `Exit`")
-                && help.contains("FPAS writes `return Value;`")),
+        errors[0].help.as_deref().is_some_and(
+            |help| help.contains("Delphi `Exit`") && help.contains("FPAS writes `return 1;`")
+        ),
         "{errors:#?}"
     );
 }

@@ -155,6 +155,7 @@ impl Checker {
                         self.scopes
                             .imports
                             .hidden_path_hint(&name)
+                            .or_else(|| crate::check::foreign::foreign_type_hint(&name))
                             .unwrap_or_else(|| {
                                 "Check spelling or add a type definition.".to_string()
                             }),

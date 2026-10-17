@@ -214,6 +214,16 @@ The help reads "FPAS writes `return 42`."
 | `interface` / `implementation` sections, unit `end.` | Delphi | One declaration list, exports marked `public`, `end unit;` | FP2023 |
 | `TList<integer>`, `Name<T>` | Delphi | `array of integer`, `Name of T` | FP2001 |
 | `uses SysUtils;` and other Delphi run-time units | Delphi | `Std` units with an alias, such as `uses Std.Parse as Parse;` | FP2022 |
+| `Inc(X)`, `Dec(X, N)` | Pascal | `X := X + 1;`, `X := X - N;` | FP3003 |
+| `Length(S)`, `Low(A)`, `High(A)` | Pascal | `S.Length()`, `0`, `A.Length() - 1` | FP3003 |
+| `IntToStr(N)`, `TryStrToInt(Text, V)` | Delphi | `Conv.IntToStr(N)`, `Parse.Int(Text)` returning a Result | FP3003 |
+| `Write(Text)`, `Console.Write(Text)` | Pascal | `Console.WriteText(Text)` | FP3003 |
+| `TPoint.Create(1, 2)` on a record | Delphi | `TPoint(X := 1, Y := 2)` | FP3003 |
+| `nil` | Pascal | `None` of `Option of T` | FP3003 |
+| `char`, `Double`, `Single`, `Extended`, `Int64`, `AnsiString` | Delphi | `string`, `real`, `integer` | FP3001 |
+
+Help for built-in names inserts the written arguments when they are plain names or
+literals, and the alias of an already imported `Std` unit.
 
 ## Rust JSON rendering API
 

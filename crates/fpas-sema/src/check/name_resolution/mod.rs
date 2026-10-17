@@ -1,6 +1,6 @@
 use super::Checker;
 use crate::std_units::hint_for_unknown_std_name;
-use fpas_parser::{Designator, DesignatorPart};
+use fpas_parser::{Designator, DesignatorPart, Expr};
 
 mod parser_migration;
 mod std_names;
@@ -10,8 +10,11 @@ pub(super) use types::PendingKey;
 
 impl Checker {
     /// Gives a qualified repair for unresolved calls without exposing hidden unit symbols.
-    pub(crate) fn hint_unknown_callable(&self, name: &str) -> String {
-        if let Some(hint) = crate::check::foreign::foreign_builtin_hint(name) {
+    pub(crate) fn hint_unknown_callable(&self, name: &str, args: &[Expr]) -> String {
+        if let Some(hint) = self.foreign_builtin_hint(name, args) {
+            return hint;
+        }
+        if let Some(hint) = self.record_constructor_hint(name, args) {
             return hint;
         }
         if let Some(hint) = self.parser_migration_hint(name) {

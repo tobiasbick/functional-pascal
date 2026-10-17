@@ -13,7 +13,7 @@ Packages run in order; each lists its catalog entries from [02-catalog.md](02-ca
 | [x] | [P0 Structure](#p0-structure) | – (moves only) | plan approved | small |
 | [x] | [E1 Short experiment](#e1-short-experiment) | new entries | P0 | small |
 | [x] | [P1 Routines and results](#p1-routines-and-results) | H-DECL-07, H-DECL-08, H-CALL-01, H-CALL-02, H-CALL-03, H-CALL-13 | E1 | medium |
-| [ ] | [P2 Declarations](#p2-declarations) | H-DECL-01, H-DECL-02, H-DECL-03, H-DECL-05, H-DECL-06, H-DECL-10, H-DECL-11, H-DECL-12, H-DECL-13, H-DECL-14 | E1 | medium |
+| [x] | [P2 Declarations](#p2-declarations) | H-DECL-01, H-DECL-02, H-DECL-03, H-DECL-05, H-DECL-06, H-DECL-10, H-DECL-11, H-DECL-12, H-DECL-13, H-DECL-14 | E1 | medium |
 | [ ] | [P5 Built-in names](#p5-built-in-names) | H-DECL-09, H-DECL-15, H-CALL-07, H-CALL-08, H-CALL-10, H-CALL-12, H-CALL-15, H-CALL-17, H-CALL-19, H-STMT-09 | E1 | small |
 | [ ] | [P3 Control flow](#p3-control-flow) | H-STMT-02, H-STMT-03, H-STMT-04, H-STMT-05, H-STMT-06, H-STMT-07, H-STMT-08 | E1 | medium |
 | [ ] | [P4 Tokens and operators](#p4-tokens-and-operators) | H-DECL-04, H-CALL-06, H-EXPR-02, H-EXPR-03, H-EXPR-04, H-LEX-02, H-CALL-04, H-CALL-16 | E1 | medium |
@@ -84,6 +84,30 @@ Original scope:
 - Acceptance: each probe from the catalog yields exactly one diagnostic with the proposed help.
 
 ## P2 Declarations
+
+**Done** on 2026-10-17.
+
+- Parser `foreign/bindings.rs`: one binding-item parser for all `const`/`var` sites; canonical
+  input yields the canonical AST. Pascal sections, grouped names, missing initializers, Pascal
+  `=` initializers, bounded arrays with `(…)` constants, Ada bindings without keyword and
+  routine declaration sections before `begin` are reported once per group, with the actual
+  names, types and initializers in the help. Type sections without keywords are reported once.
+- Parser `foreign/classes.rs` (`class`), `foreign/units.rs` (`interface`/`implementation`,
+  unit `end.`, Delphi run-time units such as `SysUtils`) and `foreign/generics.rs` (the
+  angle-bracket hint, moved from `decl/type_arguments.rs`, now naming `array of T` for `TList`).
+  The type-parameter hint `type Box<T>` stays in `decl/data/type_defs.rs`; it is an FPAS rule
+  for both routine and type parameters.
+- H-DECL-10 had no follow-up errors left on the current tree; only its help was improved.
+- Docs: habit table and FP2015 text in the
+  [diagnostics handbook](../../pascal/tools/diagnostics.md#diagnostics-for-other-language-spellings),
+  four rows in the [agent reference](../../pascal/agent-reference.md#1-translate-habits-before-writing).
+- Tests: `fpas-parser` `tests/errors/foreign_declarations.rs`; shared assertions moved to
+  `tests/errors/foreign_habit_assertions.rs`; three existing tests updated to one diagnostic per
+  group and whole-application spans.
+- Probes: every P2 probe yields exactly one diagnostic (before: up to 10). In the E1 programs
+  all P2 habits are now single diagnostics; the remaining cascades come from P3 and P4 habits.
+
+Original scope:
 
 - Parser `foreign/declarations.rs`: `const N = V;`, var sections (report once, at the section),
   `class`, `interface`/`implementation` in a unit.

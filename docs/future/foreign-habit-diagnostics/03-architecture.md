@@ -43,7 +43,11 @@ crates/fpas-lexer/src/lexer/foreign/
 ```text
 crates/fpas-parser/src/parser/foreign/
   mod.rs              // shared helpers: recognize a foreign form, emit, skip it
-  declarations.rs     // `const N = 3`, var sections, `class`, `^T`, interface/implementation
+  bindings.rs         // `const N = 3`, var sections, grouped names, bounded arrays (P2)
+  classes.rs          // Delphi `class` (P2)
+  generics.rs         // `TList<T>` and other angle-bracket applications (P2)
+  units.rs            // interface/implementation, Delphi RTL units (P2)
+  declarations.rs     // `^T` pointer types (P4)
   routines.rs         // `procedure Q;`, Ada `function F return T is`, `Result :=`
   arguments.rs        // Ada `X => 1`
   control_flow.rs     // `begin … end` bodies, `else` without `;`, Ada/Pascal `for`, `try/except`

@@ -203,6 +203,17 @@ The help reads "FPAS writes `return 42`."
 | `Result := Value;`, `Result.X := Value;` | Delphi | `return Value;` | FP2023 |
 | `F := Value;` inside function `F` | Pascal | `return Value;` | FP3005 |
 | `Exit(Value);` | Delphi | `return Value;`, `return;` in a procedure | FP3003 |
+| `var` / `const` / `type` section with several declarations | Pascal | Repeat the keyword for each declaration | FP2015 |
+| `var I, J: integer` grouped names | Pascal | `var I: integer := 0; var J: integer := 0;` | FP2015 |
+| `X : integer := 1;` without keyword | Ada | `var X: integer := 1;` | FP2015 |
+| `var Total: integer;` without initializer | Pascal | `var Total: integer := 0;` | FP2001 |
+| `const N = 3;` | Pascal | `const N: integer := 3;` | FP2023 |
+| `array[0..2] of integer = (3, 7, 12)` | Pascal | `array of integer := [3, 7, 12]`, zero-based | FP2023 |
+| `var` / `const` section between a routine header and `begin` | Pascal | Local `var` / `const` statements after `begin` | FP2023 |
+| `type TFoo = class … end;` | Delphi | `type TFoo = record … end record;` with methods taking `Self` | FP2023 |
+| `interface` / `implementation` sections, unit `end.` | Delphi | One declaration list, exports marked `public`, `end unit;` | FP2023 |
+| `TList<integer>`, `Name<T>` | Delphi | `array of integer`, `Name of T` | FP2001 |
+| `uses SysUtils;` and other Delphi run-time units | Delphi | `Std` units with an alias, such as `uses Std.Parse as Parse;` | FP2022 |
 
 ## Rust JSON rendering API
 
@@ -458,8 +469,10 @@ FP2018 names the property's written `read` and `write` methods in its hint, for
 example `Value.GetZoom()`; it does not invent accessor names. A record field or
 other binding may still be named `property`.
 
-FP2015 points at the unprefixed name and shows a complete individual declaration.
-For exported or mutable groups, repeat `public` or `var` in full.
+FP2015 reports a declaration group once: a Pascal `var`, `const` or `type` section from its
+keyword, grouped names, or declarations without keyword from the first unprefixed name. The help
+shows every declaration of the group (up to three) in its complete individual form, including
+the actual initializers. For exported groups, repeat `public` in full.
 
 FP2014 points at the offending comma, supplies expected/found details and shows
 the complete canonical header in its hint. Recovery stops before the list's

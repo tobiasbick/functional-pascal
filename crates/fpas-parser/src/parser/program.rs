@@ -89,9 +89,15 @@ impl Parser {
         let name = self.parse_qualified_id();
         self.expect_semi();
 
+        let delphi_sections = self.at_delphi_interface_section();
+        if delphi_sections {
+            self.skip_delphi_interface_section(&name.parts.join("."));
+        }
         let (uses, declarations) = self.parse_uses_and_declarations(true);
 
-        if self.expect_block_end(&Token::Unit) {
+        if !(delphi_sections && self.eat_delphi_unit_ending())
+            && self.expect_block_end(&Token::Unit)
+        {
             self.expect_semi();
         }
 

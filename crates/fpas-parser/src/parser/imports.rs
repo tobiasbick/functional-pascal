@@ -29,7 +29,9 @@ impl Parser {
                 .expect_ident()
                 .unwrap_or_else(|| self.error_ident(self.current_span()));
             Some(ImportAlias { name, span })
-        } else if unit.parts.iter().any(|part| part == "_error_") {
+        } else if unit.parts.iter().any(|part| part == "_error_")
+            || self.report_delphi_rtl_import(&unit.parts.join("."), unit.span)
+        {
             None
         } else {
             let unit_name = unit.parts.join(".");

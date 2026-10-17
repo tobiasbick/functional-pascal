@@ -2,55 +2,9 @@
 //!
 //! **Documentation:** `docs/pascal/tools/diagnostics.md` (Diagnostics for other-language spellings)
 
-use super::*;
+use super::foreign_habit_assertions::assert_one_habit;
 use crate::tests::parse_ok;
 use fpas_diagnostics::codes::{PARSE_EXPECTED_TOKEN, PARSE_FOREIGN_SYNTAX};
-use fpas_diagnostics::{Diagnostic, DiagnosticCode};
-
-/// A later, unrelated error that recovery must still reach.
-const LATER_ERROR: &str = "begin\n  Foo(1;\nend.";
-
-fn parser_errors(source: &str) -> Vec<Diagnostic> {
-    let (_, diagnostics) = parse_with_errors(source);
-    diagnostics
-        .iter()
-        .filter_map(ParseDiagnostic::as_parser_error)
-        .cloned()
-        .collect()
-}
-
-/// Asserts exactly one habit diagnostic, then that recovery reaches [`LATER_ERROR`].
-fn assert_one_habit(
-    declarations: &str,
-    code: DiagnosticCode,
-    message: &str,
-    found: &str,
-    replacement: &str,
-) {
-    let source = format!("program P;\n\n{declarations}\n\nbegin\nend.");
-    let errors = parser_errors(&source);
-    assert_eq!(errors.len(), 1, "{source}: {errors:#?}");
-    let error = &errors[0];
-    assert_eq!(error.code, code, "{source}");
-    assert!(error.message.contains(message), "{source}: {error:#?}");
-    assert_eq!(error.found.as_deref(), Some(found), "{source}");
-    assert_eq!(error.expected.as_deref(), Some(replacement), "{source}");
-    let help = error.help.as_deref().unwrap_or_default();
-    assert!(
-        help.contains(&format!("FPAS writes `{replacement}`")),
-        "{source}: {help}"
-    );
-
-    let source = format!("program P;\n\n{declarations}\n\n{LATER_ERROR}");
-    let errors = parser_errors(&source);
-    assert_eq!(errors.len(), 2, "{source}: {errors:#?}");
-    let later_line = source.lines().count() - 1;
-    assert_eq!(
-        errors[1].span.expect("source span").line() as usize,
-        later_line,
-        "{source}: {errors:#?}"
-    );
-}
 
 #[test]
 fn const_parameter_modifier_is_reported_once_per_parameter() {

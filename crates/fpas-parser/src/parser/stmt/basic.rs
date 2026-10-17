@@ -1,5 +1,6 @@
 use super::super::Parser;
 use crate::ast::*;
+use crate::parser::foreign::{BindingContext, BindingKeyword};
 use fpas_diagnostics::codes::PARSE_INVALID_CALL_OR_ASSIGNMENT_FORM;
 use fpas_lexer::Token;
 
@@ -24,34 +25,29 @@ impl Parser {
 
     /// Parses an inline constant with an optional type annotation.
     pub(super) fn parse_const_stmt(&mut self) -> Stmt {
-        Stmt::Const(self.parse_local_binding())
+        self.parse_local_binding(BindingKeyword::Const)
     }
 
     /// Parses a reassignable inline binding.
     pub(super) fn parse_var_stmt(&mut self) -> Stmt {
-        Stmt::Var(self.parse_local_binding())
+        self.parse_local_binding(BindingKeyword::Var)
     }
 
-    fn parse_local_binding(&mut self) -> LocalBinding {
-        let start = self.current_span();
-        self.advance();
-        let (name, _) = self.expect_ident_or_error(start);
-        let type_expr = if self.eat(&Token::Colon) {
-            Some(self.parse_type_expr())
-        } else {
-            None
-        };
-        self.expect(&Token::ColonAssign);
-        let value = match &type_expr {
-            Some(ty) => self.parse_initializer(ty),
-            None => self.parse_expression(),
-        };
-        LocalBinding {
-            name,
-            type_expr,
-            value,
-            span: self.span_from(start),
-        }
+    /// Parses one local binding; grouped names keep only the first after their diagnostic.
+    fn parse_local_binding(&mut self, keyword: BindingKeyword) -> Stmt {
+        let start = self.advance().span;
+        let item = self.parse_binding_item(keyword, false);
+        self.report_binding_habits(
+            start,
+            std::slice::from_ref(&item),
+            BindingContext::Keyword,
+            false,
+        );
+        let span = self.span_from(start);
+        Self::binding_statements(item)
+            .into_iter()
+            .next()
+            .unwrap_or(Stmt::Block(Vec::new(), span))
     }
 
     pub(super) fn parse_return_stmt(&mut self) -> Stmt {

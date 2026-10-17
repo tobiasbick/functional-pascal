@@ -25,7 +25,7 @@ fn each_declaration_has_its_own_keyword_and_visibility() {
 }
 
 #[test]
-fn removed_groups_report_each_missing_keyword_at_the_name() {
+fn removed_groups_report_one_missing_keyword_diagnostic_per_section() {
     for (first, second, prefix) in [
         ("type A = integer;", "B = string;", "type"),
         ("const A: integer := 1;", "B: integer := 2;", "const"),
@@ -39,9 +39,12 @@ fn removed_groups_report_each_missing_keyword_at_the_name() {
             assert_eq!(errors.len(), 1, "{source}: {errors:?}");
             let error = errors[0].as_diagnostic();
             assert_eq!(error.code, PARSE_MISSING_DECLARATION_KEYWORD);
+            // Keyword sections are reported from their keyword; type groups from the first
+            // unprefixed name.
+            let section_start = if prefix == "type" { second } else { first };
             assert_eq!(
                 error.span.as_ref().unwrap().offset(),
-                source.find(second).unwrap()
+                source.find(section_start).unwrap()
             );
             assert!(
                 error
@@ -65,11 +68,10 @@ fn group_recovery_keeps_following_explicit_declarations() {
         "program T; type A = integer; B = string; C = boolean;
          const N: integer := 1; var V: A := N; begin end.",
     );
-    assert_eq!(errors.len(), 2, "{errors:?}");
-    assert!(
-        errors
-            .iter()
-            .all(|error| error.as_diagnostic().code == PARSE_MISSING_DECLARATION_KEYWORD)
+    assert_eq!(errors.len(), 1, "{errors:?}");
+    assert_eq!(
+        errors[0].as_diagnostic().code,
+        PARSE_MISSING_DECLARATION_KEYWORD
     );
     assert_eq!(program.declarations.len(), 5);
     assert!(matches!(program.declarations[3], Decl::Const(_)));

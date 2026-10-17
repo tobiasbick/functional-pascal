@@ -4,8 +4,13 @@
 //!
 //! **Documentation:** `docs/pascal/tools/diagnostics.md` (Diagnostics for other-language spellings)
 
+mod bindings;
+mod classes;
+mod generics;
 mod routines;
+mod units;
 
+pub(in crate::parser) use bindings::{BindingContext, BindingKeyword};
 pub(in crate::parser) use routines::AdaHeaderParts;
 
 use super::Parser;

@@ -26,6 +26,10 @@ inheritance, pointers, manual allocation, exceptions with handlers, or preproces
 | A `var` or `type` section containing several declarations | Repeat `var`, `const`, or `type` for each declaration. |
 | Pascal `const N = 3` | `const N: integer := 3;` (locals may infer known types). |
 | Ada `X : Integer := 1` | `var X: integer := 1;`; use `const` for an immutable binding. |
+| Pascal `var I, J: integer;` or a binding without value | One name per declaration, always initialized: `var I: integer := 0;`. |
+| Pascal `var` section between a routine header and `begin` | Declare locals as `var`/`const` statements after `begin`. |
+| Pascal `array[0..2] of T = (A, B, C)` | `array of T := [A, B, C]`; arrays have no bounds and start at 0. |
+| Delphi `class`, `uses SysUtils` | A `record` with methods taking `Self`; import `Std` units with an alias. |
 | Assign to the function name, Delphi `Result` or `Exit(Value)` | `return Value;`; procedures use `return;`. |
 | Delphi `const` parameters | Parameters are read-only already: `function F(S: string): integer;`. |
 | Pascal `procedure Q;` without parentheses | Every routine declares its parameter list: `procedure Q();`. |

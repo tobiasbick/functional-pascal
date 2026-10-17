@@ -39,14 +39,14 @@ impl Parser {
                     }
                 }
                 _ => {
-                    let Some(declaration) = self.recover_unprefixed_declaration(
+                    let Some(declarations) = self.recover_unprefixed_declaration(
                         decls.last(),
                         visibility,
                         allow_visibility,
                     ) else {
                         break;
                     };
-                    decls.push(declaration);
+                    decls.extend(declarations);
                 }
             }
         }

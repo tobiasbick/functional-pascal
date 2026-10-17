@@ -202,9 +202,14 @@ impl Parser {
 
     fn parse_func_body(&mut self, kind: Token) -> FuncBody {
         self.with_block_closer(kind.clone(), |parser| {
-            let nested = parser.parse_nested_decls();
+            let mut nested = parser.parse_nested_decls();
+            let mut stmts = Vec::new();
+            if matches!(parser.current_token(), Token::Var | Token::Const) {
+                stmts = parser.parse_routine_declaration_section();
+                nested.extend(parser.parse_nested_decls());
+            }
             parser.expect(&Token::Begin);
-            let stmts = parser.parse_statement_list();
+            stmts.extend(parser.parse_statement_list());
             if parser.expect_block_end(&kind) {
                 parser.expect_semi();
             }

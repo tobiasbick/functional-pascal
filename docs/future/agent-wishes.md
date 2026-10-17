@@ -13,7 +13,7 @@
 [S1](#s1-compile-every-documentation-example) is implemented.
 [S2](#s2-diagnostics-with-source-excerpt-and-caret) is implemented.
 [D1](#d1-automatic-failure-dump) is implemented.
-[A2](#a2-diagnostics-for-pascal-and-ada-habits) is in progress (P0, E1 and P1 done).
+[A2](#a2-diagnostics-for-pascal-and-ada-habits) is in progress (P0, E1, P1 and P2 done).
 The other wishes are ideas without an implementation plan. Human-facing tools stay: the DAP debugger
 ([`debugger.md`](../pascal/tools/debugger.md)) and the language server
 ([`editor-integration.md`](../pascal/tools/editor-integration.md)). The JSONL debugger protocol
@@ -84,8 +84,8 @@ Purpose and upkeep live in the permanent
 #### A2. Diagnostics for Pascal and Ada habits
 
 **Status: in progress** under
-[foreign-habit-diagnostics](foreign-habit-diagnostics/README.md); P1 (routine and result habits)
-is implemented, see the
+[foreign-habit-diagnostics](foreign-habit-diagnostics/README.md); P1 (routines) and P2 (declarations)
+are implemented, see the
 [diagnostics handbook](../pascal/tools/diagnostics.md#diagnostics-for-other-language-spellings).
 
 When the agent writes Delphi or Ada syntax, the compiler recognizes it and answers "FPAS writes

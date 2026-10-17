@@ -55,7 +55,11 @@ impl Parser {
             self.parse_type_params();
         }
         self.expect(&Token::Equal);
-        let body = self.parse_type_body(allow_member_visibility);
+        let body = if self.at_delphi_class() {
+            self.skip_delphi_class(&name)
+        } else {
+            self.parse_type_body(allow_member_visibility)
+        };
         if !type_params.is_empty() && !matches!(body, TypeBody::Record(_) | TypeBody::Enum(_)) {
             self.error_with_code(
                 PARSE_EXPECTED_TOKEN,

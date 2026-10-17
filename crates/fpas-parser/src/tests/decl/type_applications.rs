@@ -77,14 +77,14 @@ fn unparenthesized_result_is_rejected_without_losing_the_next_declaration() {
 #[test]
 fn angle_bracket_applications_show_the_of_form_and_recover() {
     for (application, replacement) in [
-        ("Result<integer, string>", "Result of (T, E)"),
-        ("Option<integer>", "Option of T"),
-        ("array<integer>", "array of T"),
-        ("channel<integer>", "channel of T"),
-        ("task<integer>", "task of T"),
-        ("dict<string, integer>", "dict of K to V"),
-        ("Geometry.Lookup<string>", "Geometry.Lookup of T"),
-        ("Pair<integer, string>", "Pair of (T1, T2)"),
+        ("Result<integer, string>", "Result of (integer, string)"),
+        ("Option<integer>", "Option of integer"),
+        ("array<integer>", "array of integer"),
+        ("channel<integer>", "channel of integer"),
+        ("task<integer>", "task of integer"),
+        ("dict<string, integer>", "dict of string to integer"),
+        ("Geometry.Lookup<string>", "Geometry.Lookup of string"),
+        ("Pair<integer, string>", "Pair of (integer, string)"),
     ] {
         let source =
             format!("program T; type Bad = {application}; type Next = integer; begin end.");
@@ -96,11 +96,15 @@ fn angle_bracket_applications_show_the_of_form_and_recover() {
             error
                 .help
                 .as_deref()
-                .is_some_and(|hint| hint.contains(replacement)),
+                .is_some_and(|hint| hint.contains(&format!("FPAS writes `{replacement}`"))),
             "{error:?}"
         );
+        assert_eq!(error.expected.as_deref(), Some(replacement));
         let span = error.span.expect("application span");
-        assert_eq!(&source[span.offset()..span.offset() + span.length()], "<");
+        assert_eq!(
+            &source[span.offset()..span.offset() + span.length()],
+            application
+        );
         assert!(
             matches!(&program.declarations[1], Decl::TypeDef(declaration) if declaration.name == "Next")
         );

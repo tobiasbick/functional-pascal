@@ -15,7 +15,7 @@ Packages run in order; each lists its catalog entries from [02-catalog.md](02-ca
 | [x] | [P1 Routines and results](#p1-routines-and-results) | H-DECL-07, H-DECL-08, H-CALL-01, H-CALL-02, H-CALL-03, H-CALL-13 | E1 | medium |
 | [x] | [P2 Declarations](#p2-declarations) | H-DECL-01, H-DECL-02, H-DECL-03, H-DECL-05, H-DECL-06, H-DECL-10, H-DECL-11, H-DECL-12, H-DECL-13, H-DECL-14 | E1 | medium |
 | [x] | [P5 Built-in names](#p5-built-in-names) | H-DECL-09, H-DECL-15, H-CALL-07, H-CALL-08, H-CALL-10, H-CALL-12, H-CALL-15, H-CALL-17, H-CALL-19, H-STMT-09 | E1 | small |
-| [ ] | [P3 Control flow](#p3-control-flow) | H-STMT-02, H-STMT-03, H-STMT-04, H-STMT-05, H-STMT-06, H-STMT-07, H-STMT-08 | E1 | medium |
+| [x] | [P3 Control flow](#p3-control-flow) | H-STMT-02, H-STMT-03, H-STMT-04, H-STMT-05, H-STMT-06, H-STMT-07, H-STMT-08 | E1 | medium |
 | [ ] | [P4 Tokens and operators](#p4-tokens-and-operators) | H-DECL-04, H-CALL-06, H-EXPR-02, H-EXPR-03, H-EXPR-04, H-LEX-02, H-CALL-04, H-CALL-16 | E1 | medium |
 | [ ] | [P6 Experiment and closing](#p6-experiment-and-closing) | new entries from the experiment | P1–P5 | medium |
 
@@ -118,6 +118,29 @@ Original scope:
 - Move the existing angle-bracket and FP2015 hints into `foreign/declarations.rs`.
 
 ## P3 Control flow
+
+**Done** on 2026-10-17.
+
+- Parser `foreign/control_flow.rs`: while an `if`, `while`, `for` or `case` is parsed, signs of
+  Pascal syntax are collected (`begin` as a body, missing `;` before `else`, untyped `for`, arms
+  without `when`). When the named ending is missing, the statement's follow-up errors collapse
+  into one diagnostic; a following `end;` is left to the enclosing routine. Statements that still
+  close with their FPAS ending keep the ordinary diagnostics, since `begin … end` inside a
+  branch is valid FPAS. Ada `for … loop`/`while … loop` and Delphi `try … except/finally` are
+  skipped through their ending and reported once.
+- The old case-arm `when` hint is replaced by the combined Pascal `case` diagnostic; Pascal arms
+  hold one statement, so the next label is no longer parsed as a statement.
+- Docs: habit table in the
+  [diagnostics handbook](../../pascal/tools/diagnostics.md#diagnostics-for-other-language-spellings),
+  one row in the [agent reference](../../pascal/agent-reference.md#1-translate-habits-before-writing).
+- Tests: `fpas-parser` `tests/errors/foreign_control_flow.rs`; two integration tests updated to
+  the combined diagnostics.
+- Probes: every P3 probe yields one diagnostic (before: up to 8). E1 program 4 now reports
+  exactly one diagnostic per habit; the remaining E1 cascades come from `WriteLn(X:0:2)` (P4)
+  and `Inc(Result)`, where `Result` is parsed as a type keyword inside an expression (new intake
+  entry H-CALL-20).
+
+Original scope:
 
 - Parser `foreign/control_flow.rs`: `begin … end` used as a branch or loop body; missing `;`
   before `else`; Pascal `for I := …` and Ada `for I in … loop`; `try … except`.

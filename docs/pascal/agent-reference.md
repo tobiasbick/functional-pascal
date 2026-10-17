@@ -41,6 +41,7 @@ inheritance, pointers, manual allocation, exceptions with handlers, or preproces
 | Ada `elsif` | Also `elsif`; nested `else if` requires a second `end if`. |
 | Pascal `case X of 1: ...` | `case X of when 1: ... end case;`. |
 | Ada `for I in 1 .. 3 loop` | `for I: integer := 1 to 3 do ... end for;`. |
+| Pascal `for I := 1 to N do`, `begin ... end` as a body | Typed loop variable; the body is a statement list closed by `end for;`. |
 | Delphi `T.Create(...)`, positional record initialization | `Point(X := 1, Y := 2)`; record fields are named. |
 | Mutating `Self` or `this` | `Self` is read-only; return an updated record. |
 | Ada named actuals `X => 1` | `X := 1`; an argument list is entirely named or entirely positional. |

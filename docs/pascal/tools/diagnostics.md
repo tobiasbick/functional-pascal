@@ -221,6 +221,12 @@ The help reads "FPAS writes `return 42`."
 | `TPoint.Create(1, 2)` on a record | Delphi | `TPoint(X := 1, Y := 2)` | FP3003 |
 | `nil` | Pascal | `None` of `Option of T` | FP3003 |
 | `char`, `Double`, `Single`, `Extended`, `Int64`, `AnsiString` | Delphi | `string`, `real`, `integer` | FP3001 |
+| `if … then begin … end;`, no `;` before `else` | Pascal | `if … then …; else …; end if;` | FP2001 |
+| `while … do begin … end;` | Pascal | `while … do …; end while;` | FP2001 |
+| `for I := 1 to N do` | Pascal | `for I: integer := 1 to N do …; end for;` | FP2001 |
+| `case X of 1: …; else …; end;` | Pascal | `case X of when 1: …; else …; end case;` | FP2001 |
+| `for I in 1 .. N loop`, `while C loop … end loop;` | Ada | `for I: integer := 1 to N do …; end for;` | FP2023 |
+| `try … except … end;`, `try … finally … end;` | Delphi | `Result of (T, E)` handled with `case` or `try Expr` | FP2023 |
 
 Help for built-in names inserts the written arguments when they are plain names or
 literals, and the alias of an already imported `Std` unit.

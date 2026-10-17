@@ -58,6 +58,7 @@ impl Parser {
                 Stmt::Continue(span)
             }
             Token::Scope => self.parse_scope_stmt(),
+            Token::Try if self.at_delphi_try() => self.skip_delphi_try(),
             Token::Ident(_) | Token::SelfKw => self.parse_call_or_assign(),
             _ if self.can_start_expression() => self.parse_expression_stmt(),
             _ => self.parse_invalid_statement_start(),

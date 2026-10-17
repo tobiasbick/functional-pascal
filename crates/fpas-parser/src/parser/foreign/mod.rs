@@ -6,11 +6,13 @@
 
 mod bindings;
 mod classes;
+mod control_flow;
 mod generics;
 mod routines;
 mod units;
 
 pub(in crate::parser) use bindings::{BindingContext, BindingKeyword};
+pub(in crate::parser) use control_flow::PascalControl;
 pub(in crate::parser) use routines::AdaHeaderParts;
 
 use super::Parser;
@@ -39,5 +41,18 @@ impl Parser {
         self.source
             .get(span.offset..span.offset + span.length)
             .unwrap_or_default()
+    }
+}
+
+impl Parser {
+    /// A named type placeholder used when recovery has to supply a type the author omitted.
+    pub(in crate::parser) fn named_type(name: &str, span: Span) -> crate::ast::TypeExpr {
+        crate::ast::TypeExpr::Named {
+            id: crate::ast::QualifiedId {
+                parts: vec![name.to_owned()],
+                span,
+            },
+            span,
+        }
     }
 }

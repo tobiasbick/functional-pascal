@@ -14,7 +14,7 @@ reported for the same file. Proposed wording is a draft and is settled per packa
 | --- | --- | --- |
 | good | 11 | Specific, correct hint at the right place; at most minor polish |
 | partial | 12 | Right place, but hint is generic, incomplete or followed by cascades |
-| poor | 26 | Generic or misleading diagnostic, or a long cascade |
+| poor | 27 | Generic or misleading diagnostic, or a long cascade |
 | deferred | 1 | Not detectable at compile time |
 
 Two probes were valid FPAS and are not habits: Pascal `repeat … until` and Ada `null;`.
@@ -63,6 +63,7 @@ Two probes were valid FPAS and are not habits: Pascal `repeat … until` and Ada
 | H-CALL-17 | `TryStrToInt(Text, V)` | Delphi | FP3003 with a generic hint | poor | Like H-CALL-11: "`Parse.Int(Text)` returns a Result; match `Ok(const V)`" | sema |
 | H-CALL-18 | `Sqrt(X)` without import | Pascal | FP3003 with hint `uses Std.Math as Math;` | good | Keep | sema |
 | H-CALL-19 | `Write(…)` / `Console.Write(…)` | Pascal | FP3003 with a generic hint | partial | "Pascal `Write` – `Std.Console` writes without a newline via `Console.WriteText(…)`" | sema |
+| H-CALL-20 | `Inc(Result)`, `Result` used as a value | Delphi | FP2005 "Expected expression, found `Result`" | poor | "Delphi `Result` – FPAS has no implicit result variable; use a local `var` and `return` it"; found during P3, assigned to P6 | parser |
 
 ## Statements and control flow
 

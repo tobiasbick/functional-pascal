@@ -98,7 +98,11 @@ fn statements_and_named_endings_require_semicolons() {
 #[test]
 fn legacy_arms_and_wrong_endings_show_the_replacement() {
     for (body, expected, found) in [
-        ("case X of 1: null; end case;", "when", "1"),
+        (
+            "case X of 1: null; end case;",
+            "case X of when 1: …; end case;",
+            "case X of 1: null; end case",
+        ),
         ("case X of when 1: null; end;", "end case;", "end;"),
         ("case X of when 1: null; end if;", "end case;", "end if;"),
     ] {

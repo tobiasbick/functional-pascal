@@ -158,10 +158,10 @@ fn unclosed_else_if_suggests_elsif() {
 fn explicit_scoping_end_does_not_close_the_conditional() {
     parse_ok("if true then begin const X: integer := 1; A(X); end; B(); end if;");
     let (_, errors) = parse("program T; begin if true then begin null; end; end.");
-    assert!(
-        errors
-            .iter()
-            .any(|error| error.as_diagnostic().expected.as_deref() == Some("end if;"))
+    assert_eq!(errors.len(), 1, "{errors:#?}");
+    assert_eq!(
+        errors[0].as_diagnostic().expected.as_deref(),
+        Some("if true then …; end if;")
     );
 }
 

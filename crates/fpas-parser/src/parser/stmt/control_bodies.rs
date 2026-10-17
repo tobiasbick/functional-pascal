@@ -33,7 +33,7 @@ impl Parser {
     }
 
     /// Requires a conditional ending and explains an unclosed nested `else if`.
-    pub(super) fn expect_if_end(&mut self, nested_else_if: bool) {
+    pub(in crate::parser) fn expect_if_end(&mut self, nested_else_if: bool) {
         let error_count = self.errors.len();
         self.expect_block_end(&Token::If);
         if nested_else_if

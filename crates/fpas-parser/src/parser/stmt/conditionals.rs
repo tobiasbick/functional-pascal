@@ -4,6 +4,7 @@
 
 use super::super::Parser;
 use crate::ast::Stmt;
+use crate::parser::foreign::PascalControl;
 use fpas_lexer::Token;
 
 impl Parser {
@@ -17,19 +18,36 @@ impl Parser {
         self.advance();
         let condition = self.parse_expression();
         let then_start = self.expect(&Token::Then).unwrap_or(self.current_span());
+        let mut control = PascalControl::default();
+        self.note_compound_body(&mut control);
+        let errors_before = self.errors.len();
         let then_branch = Box::new(self.parse_control_body(then_start));
+        self.note_else_terminator(&mut control, errors_before);
         let else_branch = if self.check(&Token::Elsif) {
             Some(Box::new(
                 self.with_nesting(|parser| parser.parse_if_branch(false)),
             ))
         } else if self.check(&Token::Else) {
             let else_start = self.advance().span;
+            self.note_compound_body(&mut control);
             Some(Box::new(self.parse_control_body(else_start)))
         } else {
             None
         };
         if owns_ending {
-            self.expect_if_end(contains_nested_else_if(else_branch.as_deref()));
+            let condition_text = self.source_text(condition.span());
+            let form = if else_branch.is_some() {
+                format!("if {condition_text} then …; else …; end if;")
+            } else {
+                format!("if {condition_text} then …; end if;")
+            };
+            self.finish_pascal_control(
+                &Token::If,
+                start,
+                control,
+                &form,
+                contains_nested_else_if(else_branch.as_deref()),
+            );
         }
         Stmt::If {
             condition,

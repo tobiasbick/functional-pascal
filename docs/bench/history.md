@@ -14,6 +14,37 @@ cargo bench-fpas record "vm-only note" --group vm
 
 Newest entries are prepended below this header.
 
+## 2026-10-17 — Borrowed closure and callback function values
+
+- Group: `vm`
+- Suite: [`suite.toml`](suite.toml)
+
+| bench | elapsed_ms | throughput |
+|-------|------------|------------|
+| integer_loop | 709 | throughput: 70521861 iters/s |
+| typed_real | 154 | - |
+| typed_boolean | 243 | - |
+| typed_string | 121 | - |
+| global_access | 101 | throughput: 49504950 global updates/s |
+| record_field_access | 327 | throughput: 45871559 field accesses/s |
+| closure_call | 144 | throughput: 20833333 closure calls/s |
+| mutable_capture | 189 | throughput: 15873015 captured updates/s |
+| branch_dispatch | 349 | throughput: 57306590 branches/s |
+| dynamic_numeric | 297 | throughput: 16835016 dynamic numeric ops/s |
+| array_push | 55 | throughput: 36363636 pushes/s |
+| array_length | 22 | throughput: 22727272 lengths/s |
+| string_concat | 911 | throughput: 5488474 concats/s |
+| string_length | 21 | throughput: 23809523 lengths/s |
+| intrinsic_dispatch | 641 | throughput: 23400936 intrinsic calls/s |
+| function_call | 259 | throughput: 23166023 calls/s |
+| array_callbacks | 809 | throughput: 11866501 callbacks/s |
+| record_update | 91 | throughput: 10989010 updates/s |
+| unicode_char_at | 271 | throughput: 11070110 chars/s |
+| wrapper_payload | 683 | throughput: 14641288 wrappers/s |
+| string_search | 70 | - |
+| substring_ascii | 6 | - |
+| substring_unicode | 11 | - |
+
 ## 2026-10-15 — In-place integer and Boolean register stores
 
 - Group: `vm`

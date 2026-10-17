@@ -22,8 +22,8 @@ impl Worker {
         arguments: impl AsRef<[Value]>,
     ) -> Result<Value, VmError> {
         let arguments = arguments.as_ref();
-        let function = self.resolve_callback(callback, arguments.len())?;
-        self.call_numeric_function(&function, arguments)
+        let function = self.validate_callback(callback, arguments.len())?;
+        self.call_numeric_function(function, arguments)
     }
 
     /// Validate and clone a callback for a call with the given visible arity.

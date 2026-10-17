@@ -3,6 +3,7 @@
 mod aggregates;
 mod callbacks;
 mod calls;
+mod closure_calls;
 mod dispatch_budget;
 mod global_index_path;
 mod intrinsics;

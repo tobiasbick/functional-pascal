@@ -26,25 +26,44 @@ struct PreparedCall {
 impl Worker {
     pub(super) fn call_direct(&mut self, operands: AbcOperands) -> Result<(), VmError> {
         let target = FunctionId::new(operands.b);
-        self.enter_call(target, operands.a, operands.c, operands.auxiliary, &[], &[])
+        self.enter_call(target, operands.a, operands.c, operands.auxiliary, &[], 0)
+            .map(|_| ())
     }
 
+    /// Call a function value, copying its captures from the caller register into the callee.
+    ///
+    /// The function value is borrowed in place instead of cloned. Capture slots follow the
+    /// callee arguments, so they always lie above the caller's function register and the
+    /// register still holds the function while its captures are copied.
     pub(super) fn call_value(&mut self, operands: AbcOperands) -> Result<(), VmError> {
-        let callee = self.read(self.call_register(operands.b)?)?.clone();
+        let function_index = self.base + usize::from(self.call_register(operands.b)?.get());
+        let callee = self.read_operand(operands.b)?;
         let Value::Function(function) = callee else {
-            return Err(self.operand_type_error("function", &callee));
+            return Err(self.operand_type_error("function", callee));
         };
-        self.require_function_task_owner(&function)?;
+        self.require_function_task_owner(function)?;
         let target = function.function;
-        let receiver = function.bound_receiver.as_ref().map(std::slice::from_ref);
-        self.enter_call(
+        let capture_count = function.captures.len();
+        let receiver = function.bound_receiver.clone();
+        let capture_start = self.enter_call(
             target,
             operands.a,
             operands.c,
             operands.auxiliary,
-            receiver.unwrap_or_default(),
-            &function.captures,
-        )
+            receiver
+                .as_ref()
+                .map(std::slice::from_ref)
+                .unwrap_or_default(),
+            capture_count,
+        )?;
+        for index in 0..capture_count {
+            let Value::Function(function) = &self.registers[function_index] else {
+                unreachable!("the caller's function register lies below the capture slots");
+            };
+            let capture = function.captures[index].clone();
+            self.store_register(capture_start + index, capture)?;
+        }
+        Ok(())
     }
 
     pub(super) fn require_function_task_owner(
@@ -84,6 +103,7 @@ impl Worker {
         Ok(DispatchStep::Continue)
     }
 
+    /// Enter a callee frame and return the absolute register of its first capture slot.
     fn enter_call(
         &mut self,
         target: FunctionId,
@@ -91,8 +111,8 @@ impl Worker {
         argument_base: u16,
         argument_count: u8,
         prefix_arguments: &[Value],
-        captures: &[Value],
-    ) -> Result<(), VmError> {
+        capture_count: usize,
+    ) -> Result<usize, VmError> {
         let argument_start = self
             .base
             .checked_add(usize::from(argument_base))
@@ -116,7 +136,7 @@ impl Worker {
         let actual_argument_count =
             usize::from(argument_count).saturating_add(prefix_arguments.len());
         let prepared =
-            self.prepare_call(target, destination, actual_argument_count, captures.len())?;
+            self.prepare_call(target, destination, actual_argument_count, capture_count)?;
         // Arguments that end the caller's frame already sit where the callee's parameters go:
         // the callee frame starts on them instead of copying (overlapping register windows).
         let overlapping = prefix_arguments.is_empty()
@@ -139,12 +159,9 @@ impl Worker {
                 )?;
             }
         }
-        for (index, value) in captures.iter().enumerate() {
-            self.store_register(self.base + prepared.argument_count + index, value.clone())?;
-        }
         self.function = prepared.target;
         self.ip = prepared.instruction_pointer;
-        Ok(())
+        Ok(self.base + prepared.argument_count)
     }
 
     /// Enter a hosted callback on this worker so its task can suspend and resume normally.

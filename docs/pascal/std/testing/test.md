@@ -161,6 +161,10 @@ host-process descendants, waits for cleanup, and reports `TIMEOUT` with exit cod
 bounds blocking host calls such as `Std.Time.Sleep` and `Std.Proc.Run`; no cooperative VM shutdown
 is required.
 
+Worker transport files use a newly created directory below the platform temporary directory.
+If an interrupted run left an occupied name, the runner tries another name without modifying
+the existing file or directory. Other filesystem errors still fail the worker setup.
+
 Executable test images exist only for the current `fpas test` process. Reusable unit objects are
 the source-adjacent `.fpascu` files documented under [Units](../../program-structure/units.md).
 

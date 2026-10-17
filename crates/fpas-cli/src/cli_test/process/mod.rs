@@ -16,6 +16,7 @@ mod unix;
 mod windows;
 
 use std::fs;
+use std::io;
 use std::path::{Path, PathBuf};
 use std::process::{Child, Command, Stdio};
 use std::sync::atomic::{AtomicU64, Ordering};
@@ -67,18 +68,25 @@ struct WorkerFiles {
 impl WorkerFiles {
     fn create() -> Result<Self, String> {
         static NEXT_ID: AtomicU64 = AtomicU64::new(1);
-        let root = std::env::temp_dir().join(format!(
-            "fpas-test-process-{}-{}",
-            std::process::id(),
-            NEXT_ID.fetch_add(1, Ordering::Relaxed)
-        ));
-        fs::create_dir(&root).map_err(|error| {
-            format!(
-                "Error creating isolated test directory `{}`: {error}",
-                root.display()
-            )
-        })?;
-        Ok(Self { root })
+        loop {
+            let root = std::env::temp_dir().join(format!(
+                "fpas-test-process-{}-{}",
+                std::process::id(),
+                NEXT_ID.fetch_add(1, Ordering::Relaxed)
+            ));
+            match fs::create_dir(&root) {
+                Ok(()) => return Ok(Self { root }),
+                // Process IDs can be reused while directories from an interrupted
+                // run remain. Only a newly created directory belongs to this run.
+                Err(error) if error.kind() == io::ErrorKind::AlreadyExists => continue,
+                Err(error) => {
+                    return Err(format!(
+                        "Error creating isolated test directory `{}`: {error}",
+                        root.display()
+                    ));
+                }
+            }
+        }
     }
 
     fn request(&self) -> PathBuf {

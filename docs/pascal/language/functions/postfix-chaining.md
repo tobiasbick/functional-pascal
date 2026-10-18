@@ -62,7 +62,7 @@ Factory.Create().Configure().Start();
 Every earlier step must still produce a value. A procedure cannot appear in the
 middle of a chain, and a postfix statement cannot end in a field or index. A
 final function result must be consumed, just like an ordinary function result.
-Use [explicit discard](discard.md) when deliberately ignoring a permitted
+Use [explicit discard](discard.md) when deliberately ignoring a
 result:
 
 ```pascal id=example-4 fragment context=discard-compute

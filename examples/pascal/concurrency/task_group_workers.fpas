@@ -24,6 +24,13 @@ begin
       discard Tasks.Select([Stop]);
     end procedure
   );
+  // A returned Error is ordinary Result data; retrieve it before close releases results.
+  case Tasks.Wait(ConfigurationTask) of
+    when Ok(_):
+      null;
+    when Error(const Message):
+      Console.WriteLn(Message);
+  end case;
   // Close requests cooperative cancellation and waits for every registered worker.
   const Failures: array of Tasks.TaskFailure := Tasks.CloseTaskGroup(Workers);
   for Failure: Tasks.TaskFailure in Failures do

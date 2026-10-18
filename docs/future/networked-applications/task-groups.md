@@ -4,8 +4,9 @@
 > [Std.Tasks](../../pascal/std/concurrency/task.md#task-groups).
 
 Explicit groups own registered children independently of retained task handles. They propagate
-cooperative cancellation, collect distinct returned errors and runtime failures, and join children
-on creator-only close. Ordinary `go`, task result typing, and nongroup panic handling are unchanged.
+cooperative cancellation, collect panic/runtime failures and cancellation outcomes, and join children
+on creator-only close. Returned Error values remain ordinary Result data; retrieve required results
+with `Wait` before close. Ordinary `go`, task result typing, and nongroup panic handling are unchanged.
 
 ## Evidence
 
@@ -18,7 +19,7 @@ on creator-only close. Ordinary `go`, task result typing, and nongroup panic han
   children, discarded handles, explicit cancellation and cancellation during close, final child
   side effects, and idempotent close. Also executed through the deterministic debugger.
 - [Worker example](../../../examples/pascal/concurrency/task_group_workers.fpas): cooperative
-  worker stop and an ordinary error collected by one group.
+  worker stop and an ordinary Result error retrieved and handled before group close.
 - Workspace build and full tests passed, including all 502 VM unit tests and bundled FPAS suites.
   Affected-crate strict Clippy, formatting, editor generation, and the standalone test/example passed.
 

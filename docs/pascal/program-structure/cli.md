@@ -217,9 +217,13 @@ fpas check
 `fpas check --fix` first applies the machine-applicable [fixes](../tools/diagnostics.md#fixes) of
 the reported diagnostics in place, checks again, and repeats until a pass applies none, at most
 ten passes. Then it reports the remaining diagnostics as usual and, in text mode, one summary
-line such as `applied 7 fixes in 2 files`. Only `.fpas` files of the checked file, directory,
-project or workspace are edited, never dependencies outside it or the standard library. Files
-are replaced atomically. `--fix` does not format; run `fpas fmt` afterwards. The exit code is
+line such as `applied 7 fixes in 2 files`. A file or directory selection fixes its selected `.fpas`
+sources. A project selection fixes its own `main` and files selected by its source include/exclude
+rules, even when those files lie outside the project directory. A workspace selection includes
+each selected member's own sources, including members outside the workspace directory.
+Dependency-only projects and the standard library remain unchanged, even when a dependency's
+directory is nested beneath the selected project directory. Files are replaced atomically.
+`--fix` does not format; run `fpas fmt` afterwards. The exit code is
 that of the final check. To see the fixes without writing, use `--diagnostics json`.
 
 ```sh
@@ -258,7 +262,8 @@ ends with it at a dot, so `ReadText`, `Fs.ReadText` and `Std.Fs.ReadText` find t
 every match is printed, so a short name can list several. Operations on built-in types are
 written on the type: `string`, `array`, `dict`, `Option` or `Result`, for example `dict.Keys`.
 A bare operation name such as `Length` lists it for every type. A unit name prints the unit's
-comment and lists its public declarations with the first line of each comment.
+comment and lists its declarations with the first line of each comment: all declarations for a
+project unit, and public declarations for a `Std` unit.
 
 `<path>` selects the project like `fpas check`; without it the current directory is used.
 Without a project, only `Std` units and built-in operations are searched. A project's own
@@ -281,7 +286,7 @@ header.
 | `documentation` | The declaration comment as Markdown, or `null` |
 | `handbook` | Repository-relative handbook page, or `null` |
 | `location` | `path`, one-based `line` and Unicode-scalar `column` of the declared name; `null` for built-in operations. The path is relative to the current directory when it lies below it. |
-| `members` | For a unit, its public declarations with `name`, `signature` and `summary` |
+| `members` | For a unit, its declarations with `name`, `signature` and `summary`: all project declarations, or public declarations for `Std` units |
 | `suggestions` | Up to five closest names when nothing matches |
 
 When nothing matches, `fpas doc` exits with status 1 and reports `FP4143` on stderr with the

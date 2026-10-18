@@ -111,8 +111,9 @@ tests the keys of a `dict of UserId to T`. A distinct type may be a dictionary
 key. Substring tests are not inherited: for a `distinct string`, write
 `string(Part) in string(Text)`.
 
-A distinct type satisfies the `Comparable` [generic constraint](generics.md), so
-`Max<T: Comparable>(First, Second)` returns a `UserId`.
+A distinct type satisfies the `Comparable` [generic constraint](generics.md). A user-defined
+`function Max<T: Comparable>(Left: T; Right: T): T;` can therefore accept
+`Max(First, Second)` and return a `UserId`; the call infers T from its arguments.
 
 ## `case`
 
@@ -174,8 +175,8 @@ returned from routines.
 
 Public distinct types are exported like other types. Each declaration keeps its
 identity across units: two units that each declare `public type Id = distinct integer;`
-define two incompatible types. Imported distinct types work with plain and
-aliased imports, for example `Ids.UserId(7)` after `uses Demo.Ids as Ids;`.
+define two incompatible types. Import each unit with an explicit alias, for example
+`uses Demo.Ids as Ids;`, then construct its exported distinct type with `Ids.UserId(7)`.
 
 Distinctness does not validate a value. A `distinct string` for a URL accepts
 any string; validate it in a routine that constructs the value.

@@ -47,9 +47,9 @@ end function;
 ```
 
 Consume every function result by assigning, returning, passing, or inspecting
-it. To ignore a permitted result deliberately, write `discard Add(1, 2);`.
+it. To ignore a result deliberately, write `discard Add(1, 2);`.
 A plain `Add(1, 2);` statement is an error. See [discarding values](discard.md)
-for task-handle and callable-capture restrictions.
+for ordinary value disposal and the independent task ownership and transfer rules.
 
 ## Procedures
 

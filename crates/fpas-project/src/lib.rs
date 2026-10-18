@@ -27,7 +27,7 @@ mod test_sources;
 mod unit_graph;
 mod workspace;
 
-pub use loading::{load_project, load_project_with_source_overlays};
+pub use loading::{load_project, load_project_source_paths, load_project_with_source_overlays};
 pub use model::{LibraryExportPolicy, LoadedProject, ProjectKind, ProjectLinkMeta, SourceOrigin};
 pub use path_glob::{PathGlobError, expand_path_glob};
 pub use source::ProjectError;

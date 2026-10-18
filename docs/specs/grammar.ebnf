@@ -198,11 +198,9 @@ const_def           = identifier ':' type_expr ':=' expression ';' ;
 (* Calls and computed dependencies remain computed independently of *)
 (* optimization; static forms require compile-time-known operands.   *)
 
-(* -- Imvariables -- *)
+(* -- Mutable variables -- *)
 var_declaration         = 'var' var_def ;
 var_def             = identifier ':' type_expr ':=' expression ';' ;
-
-(* -- Mutable variables -- *)
 
 (* -- Type definitions -- *)
 type_declaration        = 'type' type_def ;

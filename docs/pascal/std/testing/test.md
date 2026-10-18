@@ -80,7 +80,7 @@ Fail with **FP5023** when row `Y` (one-based) of the virtual CRT back buffer doe
 not equal `Expected` after trailing Unicode whitespace is removed from both
 strings. This includes more than padding spaces. Use `AssertScreenCell` when
 exact whitespace positions or cell colors matter. Use after drawing with
-`Std.Console`. Requires `uses Std.Console`.
+`Std.Console`. Import it with `uses Std.Console as Console;`.
 
 ### `procedure AssertScreenCell(X, Y: integer; Ch: string; Fg, Bg: integer)`
 
@@ -99,7 +99,7 @@ When tests run via `fpas test` inside a `kind = "test"` project, the runner may 
 
 Hooks must be **public, parameterless procedures**. The runner calls them from
 a separate program importing the helper unit; a private procedure is not
-accessible there. Names are matched case-insensitively. Use `uses Std.Test` in
+accessible there. Names are matched case-insensitively. Use `uses Std.Test as Test;` in
 the helper unit if hooks need assertions.
 
 For example, include this helper unit as a source in the test project:

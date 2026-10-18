@@ -284,6 +284,11 @@ other existing entries in `Target` are kept. A `Source` that is not a
 directory, a `Target` inside `Source`, a symbolic link in the tree, and OS
 errors return `Error(message)`; entries copied before a failure remain.
 
+The source/target relationship is checked before creating or writing target entries.
+Relative and absolute targets are resolved through existing filesystem ancestors,
+so aliases of the source itself or its descendants are rejected even when the
+remaining target directories do not yet exist.
+
 ---
 
 ## Metadata

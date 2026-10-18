@@ -68,39 +68,105 @@ fn check_fix_leaves_review_fixes_and_reports_them_as_json() {
 }
 
 #[test]
-fn check_fix_never_edits_dependencies_outside_the_project() {
-    let cwd = create_temp_dir("check-fix-dependencies");
-    let library_dir = cwd.join("libs/base");
-    let app_dir = cwd.join("apps/demo");
-    write_library_fpasprj(&library_dir.join("base.fpasprj"), &["src/**/*.fpas"]);
-    let library_source = "unit Lib.Base;\npublic function Both(A: boolean; B: boolean): boolean;\nbegin\n  return A && B;\nend function;\nend unit;\n";
-    let library_file = library_dir.join("src/base.fpas");
-    write_text(&library_file, library_source);
-    let app_project = app_dir.join("demo.fpasprj");
-    write_program_fpasprj_with_deps(
-        &app_project,
-        "src/main.fpas",
-        &["src/**/*.fpas"],
-        &["../../libs/base/base.fpasprj"],
-    );
-    let main = app_dir.join("src/main.fpas");
-    write_text(
-        &main,
-        "program Demo;\nuses Lib.Base as Base;\nbegin\n  if Base.Both(true, false) != true then\n    discard 0;\n  end if;\nend.\n",
-    );
+fn check_fix_uses_selected_project_ownership_instead_of_dependency_directory_placement() {
+    for (library_path, dependency_path, workspace) in [
+        ("libs/base", "../../libs/base/base.fpasprj", false),
+        ("apps/demo/libs/base", "libs/base/base.fpasprj", false),
+        ("libs/base", "../../libs/base/base.fpasprj", true),
+    ] {
+        let cwd = create_temp_dir("check-fix-dependencies");
+        let library_dir = cwd.join(library_path);
+        let app_dir = cwd.join("apps/demo");
+        write_library_fpasprj(&library_dir.join("base.fpasprj"), &["src/**/*.fpas"]);
+        let library_source = "unit Lib.Base;\npublic function Both(A: boolean; B: boolean): boolean;\nbegin\n  return A && B;\nend function;\nend unit;\n";
+        let library_file = library_dir.join("src/base.fpas");
+        write_text(&library_file, library_source);
+        let app_project = app_dir.join("demo.fpasprj");
+        write_program_fpasprj_with_deps(
+            &app_project,
+            "src/main.fpas",
+            &["src/**/*.fpas"],
+            &[dependency_path],
+        );
+        let main = app_dir.join("src/main.fpas");
+        write_text(
+            &main,
+            "program Demo;\nuses Lib.Base as Base;\nbegin\n  if Base.Both(true, false) != true then\n    discard 0;\n  end if;\nend.\n",
+        );
+        let input = if workspace {
+            let manifest = cwd.join("workspace/root.fpasworkspace");
+            write_text(
+                &manifest,
+                "[workspace]\nname = \"root\"\nmembers = [\"../apps/demo/demo.fpasprj\", \"../libs/base/base.fpasprj\"]\n",
+            );
+            manifest
+        } else {
+            app_project
+        };
 
-    let (exit_code, _, stderr) = support::run_cli_args_and_capture_output(
-        &args(&["check", "--fix", &app_project.to_string_lossy()]),
-        &app_dir,
-    );
-    let library_after = fs::read_to_string(&library_file).expect("library source");
-    let main_after = fs::read_to_string(&main).expect("main source");
-    fs::remove_dir_all(&cwd).expect("temp directory must be removed");
+        let (exit_code, _, stderr) = support::run_cli_args_and_capture_output(
+            &args(&["check", "--fix", &input.to_string_lossy()]),
+            &app_dir,
+        );
+        let library_after = fs::read_to_string(&library_file).expect("library source");
+        let main_after = fs::read_to_string(&main).expect("main source");
+        fs::remove_dir_all(&cwd).expect("temp directory must be removed");
 
-    assert_eq!(exit_code, 1, "stderr: {stderr}");
-    assert_eq!(library_after, library_source);
-    assert!(stderr.contains("base.fpas"), "{stderr}");
-    assert!(!main_after.contains("!="), "{main_after}");
+        if workspace {
+            assert_eq!(exit_code, 0, "stderr: {stderr}");
+            assert_eq!(library_after, library_source.replace("&&", "and"));
+        } else {
+            assert_eq!(exit_code, 1, "stderr: {stderr}");
+            assert_eq!(library_after, library_source);
+            assert!(stderr.contains("base.fpas"), "{stderr}");
+        }
+        assert!(!main_after.contains("!="), "{main_after}");
+    }
+}
+
+#[test]
+fn check_fix_updates_project_owned_sources_outside_the_manifest_directory() {
+    for workspace in [false, true] {
+        let cwd = create_temp_dir("check-fix-external-source");
+        let project_file = cwd.join("project/app.fpasprj");
+        write_program_fpasprj_with_deps(&project_file, "../src/main.fpas", &["../src/*.fpas"], &[]);
+        let main = cwd.join("src/main.fpas");
+        let source = if workspace {
+            "program Demo;\nuses Demo.Logic as Logic;\nbegin\n  discard Logic.Both(true, true) == true;\nend.\n"
+        } else {
+            "program Demo;\nuses Demo.Logic as Logic;\nbegin\n  discard Logic.Both(true, true) = true;\nend.\n"
+        };
+        write_text(&main, source);
+        let unit = cwd.join("src/logic.fpas");
+        let unit_source = "unit Demo.Logic;\npublic function Both(A: boolean; B: boolean): boolean;\nbegin\n  return A && B;\nend function;\nend unit;\n";
+        write_text(&unit, unit_source);
+        let input = if workspace {
+            let manifest = cwd.join("workspace/root.fpasworkspace");
+            write_text(
+                &manifest,
+                "[workspace]\nname = \"root\"\nmembers = [\"../project/app.fpasprj\"]\n",
+            );
+            manifest
+        } else {
+            project_file
+        };
+
+        let (exit_code, _, stderr) = support::run_cli_args_and_capture_output(
+            &args(&["check", "--fix", &input.to_string_lossy()]),
+            &cwd,
+        );
+        let fixed = fs::read_to_string(&main).expect("main source");
+        let fixed_unit = fs::read_to_string(&unit).expect("unit source");
+        fs::remove_dir_all(&cwd).expect("temp directory must be removed");
+
+        assert_eq!(
+            fixed_unit,
+            unit_source.replace("&&", "and"),
+            "stderr: {stderr}"
+        );
+        assert_eq!(fixed, source.replace("==", "="), "stderr: {stderr}");
+        assert_eq!(exit_code, 0, "stderr: {stderr}");
+    }
 }
 
 #[test]

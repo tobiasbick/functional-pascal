@@ -68,7 +68,7 @@ begin
 end.
 ```
 
-You can always use qualified enum literals instead, e.g. `Std.Console.KeyKind.Escape`.
+Qualify enum variants through the import alias, for example `Console.KeyKind.Escape`.
 
 ---
 
@@ -112,7 +112,7 @@ The language represents the underlying ordinal as an integer index in the **fixe
 | 27 | `F12` |
 | 28 | `Character` |
 
-**Literals** (with `uses Std.Console`):
+**Literals** (with `uses Std.Console as Console;`):
 
 ```pascal id=example-3 fragment context=body-console
 const K: Console.KeyKind := Console.KeyKind.Space;

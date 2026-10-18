@@ -25,7 +25,8 @@ end.
 After `uses Std.Math as Math;`, use `Math.Pi`, `Math.Sqrt`, and the other
 exported symbols through that alias.
 
-Collisions with your own identifiers are resolved like ordinary scope rules: a **local** name (e.g. a variable `Pi`) **hides** the short import; use `Std.Math.Pi` if you need the library constant anyway.
+A local binding named `Pi` is independent of `Math.Pi`; imports expose symbols only through their
+alias. The alias itself cannot be shadowed. Use `Math.Pi` for the library constant.
 
 ---
 
@@ -70,7 +71,7 @@ result is non-finite or outside the signed 64-bit integer range. In particular,
 
 - **Type:** `real`
 - **Value:** the mathematical constant π.
-- **Note:** provided via compile-time lowering for `Std.Math.Pi` (and short `Pi` when imported).
+- **Note:** provided via compile-time lowering for `Math.Pi` after `uses Std.Math as Math;`.
 
 ```pascal id=example-2 fragment context=body-console-math
 const R: real := Math.Pi;

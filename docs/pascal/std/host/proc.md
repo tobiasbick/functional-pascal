@@ -34,7 +34,7 @@ arguments.
 ## Importing and names
 
 After `uses Std.Proc as Proc;`, use `Proc.Run`, `Proc.RunCapture`, and
-`Proc.ProcOutput` through that alias.
+`Proc.ProcessOutput` through that alias.
 
 ---
 

@@ -100,7 +100,13 @@ Tasks.WaitAll([T1, T2, T3]);
 
 `WaitAll` is a barrier only: it does not consume return values. You may still `Wait` each handle afterward. See [`Std.Tasks`](../../std/concurrency/task.md).
 
-If a retained task fails, `Wait` and `WaitAll` propagate its original runtime or internal diagnostic. A handle of a child owned by a [task scope](task-scopes.md#handle-escapes) cannot leave that scope. If the main task ends while a retained task is still suspended in `Std.Time.Sleep`, teardown cancels that task with a shutdown diagnostic. Wait for required tasks before the main task returns or halts.
+If a retained task fails, `Wait` and `WaitAll` propagate its original runtime or internal diagnostic.
+A handle of a child owned by a [task scope](task-scopes.md#handle-escapes) cannot leave that scope.
+Normal scope completion joins its children without cancellation. Before a task publishes its
+terminal outcome, any groups it still owns are cancelled and fully closed, including on normal
+main-task return. A sleeping child therefore remains owned and is joined through the scope/group
+cleanup rules. Fatal VM shutdown can instead terminate pending operations with a shutdown diagnostic.
+Retrieve required results before their owner closes; see [Scheduling](scheduling.md).
 
 ## `Std.Tasks`
 

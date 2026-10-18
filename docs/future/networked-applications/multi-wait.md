@@ -1,10 +1,11 @@
-# Future: Multi-source Waiting
+# Multi-source waiting: completed implementation
 
 > Task-only waits and typed mixed-source selection are implemented and verified.
 > Completion evidence is recorded in [concurrency](concurrency.md).
 
-Part of [application concurrency](concurrency.md). Build this in complete, independently tested
-slices. Keep `go`, task result typing, `Wait`, `WaitAll`, and channel ownership unchanged.
+Part of [application concurrency](concurrency.md). The sections below record the completed
+implementation slices and their regression requirements. The current
+[Task reference](../../pascal/std/concurrency/task.md) owns the public API and waiting behavior.
 
 ## First slice: task completion
 
@@ -29,8 +30,9 @@ Implemented contract (current reference: [Std.Tasks](../../pascal/std/concurrenc
 - Waiting neither cancels nor detaches losing tasks. Their existing ownership and lifetime remain.
 - A successful observation wins over a completion or failure published after that observation.
   Existing runtime-wide worker-failure handling remains active.
-- Do not start one helper task or OS thread per input. Reuse scheduler helping and condition-variable
-  waiting. The predicate and transition to sleep must be synchronized to prevent lost wakeups.
+- Waiting uses shared scheduler notifications rather than one helper task or OS thread per input.
+  The main task never runs queued children while waiting; child waits suspend and release their pool
+  thread. The predicate and transition to sleep are synchronized to prevent lost wakeups.
 - Debugger execution suspends explicitly and polls the same selection policy without blocking its
   execution lane. Shutdown releases the wait through the existing task-failure path.
 
@@ -41,10 +43,10 @@ This first slice does not satisfy the mixed-source acceptance requirement by its
 `WaitAnyWithTimeout(Tasks, TimeoutMillis)` and `WaitAnyWithCancellation(Tasks, Token)` are
 implemented with `Result of (integer, string)` outcomes. Task failure still retains its diagnostic.
 The current [Task reference](../../pascal/std/concurrency/task.md) owns their exact contract,
-including the cooperative scheduler-helping limitation.
+including cooperative waiting and scheduling limits.
 
 - Distinguish no completed task yet, cancellation, expiry, and task failure.
-- Use one monotonic deadline; scheduler helping and spurious wakeups do not extend it.
+- Use one monotonic deadline; scheduler probes and spurious wakeups do not extend it.
 - A zero timeout performs one immediate observation. Pre-cancellation takes precedence over a
   ready task; otherwise a ready task wins the immediate attempt before timeout is reported.
 - Use the debugger clock for deterministic deadline tests.
@@ -81,12 +83,14 @@ The implementation addresses these design requirements:
 6. Bounds on cases per wait and outstanding registrations. Repeated waits must not grow retained
    source state after their calls finish.
 
-Keep this separate from `WaitAny`'s task-only array API. Do not pre-allocate a generic public
-`WaitCase` or `WaitSet` handle until its typing and ownership contract is resolved.
+Mixed-source selection remains separate from `WaitAny`'s task-only array API. Its implemented
+`WaitCase` typing and ownership contract is recorded in the [selection notes](selection.md).
 
-## Implementation layout for the first slice
+## Recorded implementation layout for the first slice
 
-Paths below are relative to the repository root. Create only modules that have a production caller.
+Paths below are relative to the repository root. The table records the completed first-slice work,
+rather than pending implementation instructions; later scheduler and ownership changes follow the
+current Task reference.
 
 | Action | Path | Concern |
 |--------|------|---------|
@@ -98,7 +102,7 @@ Paths below are relative to the repository root. Create only modules that have a
 | Modify | `crates/fpas-bytecode/src/intrinsic/task.rs`, `crates/fpas-bytecode/src/intrinsic/execution.rs` | Stable intrinsic identity and execution classification |
 | Modify | `crates/fpas-std/src/std_units/symbols/std_symbols/task.rs`, `crates/fpas-sema/src/std_registry/loaded/channel_task.rs`, `crates/fpas-sema/src/std_registry/builtins/channel_task.rs` | Symbol, declaration, and task-array checking |
 | Modify | `crates/fpas-compiler/src/intrinsic_catalog.rs` | Intrinsic mapping |
-| Modify | `docs/pascal/std/concurrency/task.md`, `lib/api/Std/Task.fpas` | Implemented contract and regenerated editor declaration, only after implementation |
+| Modify | `docs/pascal/std/concurrency/task.md`, `lib/api/Std/Tasks.fpas` | Implemented contract and regenerated editor declaration |
 
 Inspect exhaustive intrinsic matches and debugger suspension consumers before changing the enum;
 the table identifies ownership, not permission to ignore additional required call sites. If a
@@ -114,7 +118,7 @@ proposed addition changes the language contract rather than only the Std API, st
 - Invalid handles anywhere in the array, empty input, and the size bound.
 - Failure precedence and preservation of diagnostic code, message, and source location.
 - Completion between predicate inspection and sleeping; shutdown while waiting; repeated wakeups.
-- A waiting worker can help queued work, including a single-worker configuration.
+- A waiting worker releases its pool thread so queued work can run, including with one worker.
 - Normal and deterministic debugger execution produce the same result and failure policy.
 - Static rejection of non-task arrays and end-to-end FPAS tests for result indexing and later `Wait`.
 

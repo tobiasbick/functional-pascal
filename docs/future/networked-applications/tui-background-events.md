@@ -37,7 +37,10 @@ on the host task.
   framework message with application-specific variants.
 - Framework lifecycle and failures use `Started` and `BackgroundFailed` variants on `TuiMsg`.
 - Work uses the fixed `function(Token): result of (boolean, string)` shape. Its success value is
-  ignored; errors are normalized through task-group failure records.
+  ignored, and ordinary returned Error values do not produce task-group failure records or
+  `BackgroundFailed` messages. Deliver expected application errors explicitly through the typed
+  application inbox. `BackgroundFailed` forwards the group's runtime failure and cancellation
+  reports under the host's existing cancellation-filtering rules.
 - Subscription replacement requests cancellation without blocking the host. The host joins completed
   sources and starts only the latest pending replacement, preserving stop-before-start ordering.
   Shutdown discards replacements, joins existing work cooperatively, and has no forced escalation.

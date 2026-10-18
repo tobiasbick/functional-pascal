@@ -22,9 +22,10 @@ The supervisor builds on explicit TaskGroup ownership rather than implicitly ado
   without waiting for the entire configured delay. An executing worker remains cooperative.
 - Each new attempt receives the same immutable captures and group token. The supervisor does not
   undo external side effects; restartable workers must account for partial work themselves.
-- Successful recovery produces no group failure. Exhaustion preserves the final Result error or
-  panic diagnostic in the normal task result and group report. Earlier attempt failures do not
-  become separate registered children or accumulate unbounded reports.
+- Successful recovery produces no group failure. Exhaustion leaves a final Result Error as ordinary
+  task result data, retrievable with `Wait` before group close, without a group failure record.
+  An exhausted panic preserves its diagnostic and produces one `Panicked` group failure. Earlier
+  attempt failures do not become separate registered children or accumulate unbounded reports.
 - Cancellation before the next attempt produces a terminal Cancelled report. A worker's returned
   Error message is not interpreted as cancellation; the token state controls retry admission.
 - Closing the group requests cancellation and joins the supervised child exactly as it joins an

@@ -22,6 +22,19 @@ pub fn load_project(path: &Path) -> Result<LoadedProject, crate::ProjectError> {
     load_project_with_source_overlays(path, &HashMap::new())
 }
 
+/// Resolves a manifest's own `project.main` and included, non-excluded source paths.
+///
+/// Does not parse source text, load dependency projects, or validate source declarations.
+/// Tools can therefore identify owned files even when those files contain syntax errors.
+/// **Documentation:** `docs/pascal/program-structure/cli.md` (`fpas check --fix`).
+///
+/// # Errors
+/// Returns manifest or source-path selection failures with their original diagnostics.
+pub fn load_project_source_paths(path: &Path) -> Result<Vec<PathBuf>, crate::ProjectError> {
+    let path = absolute_project_path(path)?;
+    own::load_own_source_paths(&path).map_err(|error| error.in_file(&path))
+}
+
 /// Loads a manifest and dependencies using current editor sources before disk text.
 ///
 /// Source selection and manifests remain disk-backed; supplied source paths override

@@ -85,6 +85,22 @@ struct DependenciesSection {
     workspace: Vec<String>,
 }
 
+struct SourceSelection {
+    main: Option<PathBuf>,
+    files: Vec<PathBuf>,
+    warnings: Vec<FileDiagnostic>,
+}
+
+/// Resolves only the files selected by this manifest, without parsing their contents.
+pub(super) fn load_own_source_paths(path: &Path) -> Result<Vec<PathBuf>, ProjectError> {
+    let project_file = read_project_file(path)?;
+    let kind = ProjectKind::parse(&project_file.project.kind, path)?;
+    let selected = select_sources(path, &project_file, kind)?;
+    let mut files = selected.files;
+    files.extend(selected.main);
+    Ok(files)
+}
+
 /// Parse and validate one project file's own sources and metadata.
 pub(crate) fn load_own_project(
     path: &Path,
@@ -97,6 +113,49 @@ fn read_own_project(
     path: &Path,
     parse_cache: &mut ParsedSourceCache,
 ) -> Result<OwnProject, crate::ProjectError> {
+    let project_file = read_project_file(path)?;
+    let kind = ProjectKind::parse(&project_file.project.kind, path)?;
+    let root_dir = path
+        .parent()
+        .ok_or_else(|| unresolvable_root_error("project", path))?;
+
+    if let Some(dependencies) = &project_file.dependencies {
+        validate_dependency_entries("dependencies.projects", &dependencies.projects)?;
+        validate_dependency_entries("dependencies.workspace", &dependencies.workspace)?;
+    }
+
+    let parsed_exports = parse_exports_section(kind, project_file.exports.as_ref(), path)?;
+    let SourceSelection {
+        main,
+        files: source_files,
+        mut warnings,
+    } = select_sources(path, &project_file, kind)?;
+
+    if let Some(main_path) = main.as_deref() {
+        validate_program_main_file(main_path, &mut warnings, parse_cache)?;
+    }
+
+    let export_policy = resolve_export_policy(kind, parsed_exports, &source_files, parse_cache)?;
+    let test_manifest = parse_test_section(kind, project_file.test, &source_files, root_dir, path)?;
+    let (dependency_projects, workspace_dependencies) = project_file
+        .dependencies
+        .map(|section| (section.projects, section.workspace))
+        .unwrap_or_default();
+
+    Ok(OwnProject {
+        name: project_file.project.name,
+        kind,
+        main,
+        source_files,
+        dependency_projects,
+        workspace_dependencies,
+        warnings,
+        export_policy,
+        test_manifest,
+    })
+}
+
+fn read_project_file(path: &Path) -> Result<ProjectFile, ProjectError> {
     let project_text = read_manifest(path, "project")?;
     let project_file: ProjectFile = parse_manifest(
         path,
@@ -108,12 +167,19 @@ fn read_own_project(
     validate_non_empty("project.name", &project_file.project.name)?;
     validate_optional_non_empty("project.version", project_file.project.version.as_deref())?;
 
-    let kind = ProjectKind::parse(&project_file.project.kind, path)?;
+    Ok(project_file)
+}
+
+fn select_sources(
+    path: &Path,
+    project_file: &ProjectFile,
+    kind: ProjectKind,
+) -> Result<SourceSelection, ProjectError> {
     let root_dir = path
         .parent()
         .ok_or_else(|| unresolvable_root_error("project", path))?;
 
-    let sources = project_file.sources.ok_or_else(|| {
+    let sources = project_file.sources.as_ref().ok_or_else(|| {
         invalid_value(
             "Missing `[sources]` section.",
             "Add `[sources]` with `include = [\"src/**/*.fpas\"]`.",
@@ -127,19 +193,9 @@ fn read_own_project(
         ));
     }
 
-    let (dependency_projects, workspace_dependencies) = project_file
-        .dependencies
-        .map(|section| (section.projects, section.workspace))
-        .unwrap_or_default();
-
-    validate_dependency_entries("dependencies.projects", &dependency_projects)?;
-    validate_dependency_entries("dependencies.workspace", &workspace_dependencies)?;
-
     validate_dependency_entries("sources.exclude", &sources.exclude)?;
 
-    let parsed_exports = parse_exports_section(kind, project_file.exports.as_ref(), path)?;
-
-    let (mut source_files, mut warnings) =
+    let (mut source_files, warnings) =
         resolve_source_files(&sources.include, &sources.exclude, root_dir)?;
     let main = match kind {
         ProjectKind::Program => {
@@ -174,23 +230,10 @@ fn read_own_project(
         }
     };
 
-    if let Some(main_path) = main.as_deref() {
-        validate_program_main_file(main_path, &mut warnings, parse_cache)?;
-    }
-
-    let export_policy = resolve_export_policy(kind, parsed_exports, &source_files, parse_cache)?;
-    let test_manifest = parse_test_section(kind, project_file.test, &source_files, root_dir, path)?;
-
-    Ok(OwnProject {
-        name: project_file.project.name,
-        kind,
+    Ok(SourceSelection {
         main,
-        source_files,
-        dependency_projects,
-        workspace_dependencies,
+        files: source_files,
         warnings,
-        export_policy,
-        test_manifest,
     })
 }
 

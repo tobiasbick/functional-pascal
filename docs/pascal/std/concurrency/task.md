@@ -135,7 +135,8 @@ instead: it cancels without tokens and re-raises child failures when it ends. Ta
 dynamic cases such as passing ownership between routines or supervised retries.
 
 Run the [task-group worker example](../../../../examples/pascal/concurrency/task_group_workers.fpas)
-to see cooperative stop and an ordinary error collected by the same group.
+to see an ordinary Result error retrieved with `Wait` and handled before group close,
+followed by cooperative worker stop. Returned Error values do not produce group failure records.
 
 ### CreateTaskGroup and StartTaskInGroup
 

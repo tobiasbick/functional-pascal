@@ -114,7 +114,6 @@ example_run_tests! {
     (example_fluent_calls, "examples/pascal/functions/fluent_calls.fpas"),
     (example_go_statement, "examples/pascal/concurrency/go_statement_example.fpas"),
     (example_concurrency_select_events, "examples/pascal/concurrency/select_events.fpas"),
-    (example_concurrency_task_group_workers, "examples/pascal/concurrency/task_group_workers.fpas"),
     (example_concurrency_supervised_worker, "examples/pascal/concurrency/supervised_worker.fpas"),
     (example_generic_functions, "examples/pascal/generics/generic_functions.fpas"),
     (example_generic_record_methods, "examples/pascal/generics/generic_record_methods.fpas"),

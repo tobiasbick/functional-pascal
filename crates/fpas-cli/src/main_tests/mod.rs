@@ -23,6 +23,7 @@ mod network_streaming;
 mod network_tls;
 mod output;
 mod projects;
+mod query;
 mod standard_library;
 #[path = "../../stdlib_sync.rs"]
 mod stdlib_sync;

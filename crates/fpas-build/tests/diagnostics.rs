@@ -71,7 +71,7 @@ fn root_build_and_check_preserve_multiple_compiler_diagnostics() {
             .iter()
             .map(|record| &record.diagnostic)
             .collect();
-        assert_eq!(actual, expected.iter().collect::<Vec<_>>());
+        assert_eq!(actual, expected.iter().map(Box::as_ref).collect::<Vec<_>>());
         assert!(
             error
                 .diagnostics()
@@ -82,6 +82,7 @@ fn root_build_and_check_preserve_multiple_compiler_diagnostics() {
             error.to_string(),
             expected
                 .iter()
+                .map(Box::as_ref)
                 .map(fpas_diagnostics::render_without_path)
                 .collect::<Vec<_>>()
                 .join("\n")

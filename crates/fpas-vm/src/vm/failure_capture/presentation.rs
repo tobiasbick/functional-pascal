@@ -1,6 +1,6 @@
 //! Budgeted diagnostic copies for retained relationships and terminal delivery.
 
-use super::{CaptureState, Lease, MAX_STRING};
+use super::{CaptureState, Lease, MAX_STRING, ValueBudget};
 use crate::vm::VmError;
 use fpas_diagnostics::Diagnostic;
 use std::{ops::Deref, sync::Arc};
@@ -62,25 +62,19 @@ impl CaptureState {
         if budget
             .charge(std::mem::size_of::<FailureDiagnostic>() + std::mem::size_of::<Diagnostic>())
         {
-            let mut text = |value: &str| {
-                let (value, truncated) = budget.text(value, MAX_STRING);
-                if truncated {
-                    reason = Some(budget.exhausted.unwrap_or("string_limit"));
-                }
-                value
-            };
-            copy.message = text(&error.message);
-            copy.help = error.help.as_deref().map(&mut text);
+            copy.message = bounded_text(&mut budget, &mut reason, &error.message);
+            copy.help = error
+                .help
+                .as_deref()
+                .map(|text| bounded_text(&mut budget, &mut reason, text));
             copy.expected = error
                 .expected
                 .as_deref()
-                .map(&mut text)
-                .map(String::into_boxed_str);
+                .map(|text| bounded_text(&mut budget, &mut reason, text).into_boxed_str());
             copy.found = error
                 .found
                 .as_deref()
-                .map(&mut text)
-                .map(String::into_boxed_str);
+                .map(|text| bounded_text(&mut budget, &mut reason, text).into_boxed_str());
         } else {
             reason = budget.exhausted;
         }
@@ -92,4 +86,16 @@ impl CaptureState {
             _lease: lease,
         })
     }
+}
+
+fn bounded_text(
+    budget: &mut ValueBudget,
+    reason: &mut Option<&'static str>,
+    value: &str,
+) -> String {
+    let (value, truncated) = budget.text(value, MAX_STRING);
+    if truncated {
+        *reason = Some(budget.exhausted.unwrap_or("string_limit"));
+    }
+    value
 }

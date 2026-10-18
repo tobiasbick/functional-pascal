@@ -53,7 +53,7 @@ pub fn compile_unit_object_with_support(
                 )]
             })?;
     if !analysis.metadata.errors.is_empty() {
-        return Err(analysis.metadata.errors);
+        return Err(analysis.metadata.errors.into_iter().map(Box::new).collect());
     }
     let Some(interface) = analysis.interface else {
         return Err(vec![internal_compiler_error(

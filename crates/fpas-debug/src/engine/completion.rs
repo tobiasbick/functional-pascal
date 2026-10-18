@@ -29,7 +29,7 @@ impl DebugEngine {
                     && let Some(diagnostic) = &stop.diagnostic
                 {
                     records.push(event(DebugEvent::RuntimeError {
-                        diagnostic: diagnostic.clone(),
+                        diagnostic: diagnostic.as_ref().clone(),
                         task_id: stop.task_id,
                     }));
                     if !self.runtime_failure_policy.should_stop(diagnostic.code) {

@@ -130,7 +130,7 @@ impl DebugSession {
             let schedule = match self.runtime.schedule(preferred) {
                 Ok(schedule) => schedule,
                 Err((task_id, diagnostic)) => {
-                    return Ok(self.stop_for_runtime_error(task_id, *diagnostic));
+                    return Ok(self.stop_for_runtime_error(task_id, diagnostic));
                 }
             };
             let (task_id, resumed_at_boundary) = match schedule {
@@ -169,12 +169,12 @@ impl DebugSession {
                 return Ok(result);
             }
             if let Some(diagnostic) = self.reject_unsupported_recording_effect(task_id) {
-                return Ok(self.stop_for_runtime_error(task_id, diagnostic));
+                return Ok(self.stop_for_runtime_error(task_id, diagnostic.into()));
             }
             let dispatch = match self.runtime.dispatch(task_id) {
                 Ok(dispatch) => dispatch,
                 Err((task_id, diagnostic)) => {
-                    return Ok(self.stop_for_runtime_error(task_id, *diagnostic));
+                    return Ok(self.stop_for_runtime_error(task_id, diagnostic));
                 }
             };
             match dispatch {
@@ -299,7 +299,7 @@ impl DebugSession {
     fn stop_for_runtime_error(
         &mut self,
         task_id: u64,
-        diagnostic: fpas_diagnostics::Diagnostic,
+        diagnostic: crate::vm::VmError,
     ) -> DebugRunResult {
         self.state = DebugSessionState::Failed;
         let Some(worker) = self

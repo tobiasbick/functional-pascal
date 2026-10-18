@@ -19,8 +19,7 @@
 [S3](#s3-declaration-comments-as-the-single-source) is implemented.
 [D3](#d3-one-shot-batch-runs) is implemented. Its permanent
 [batch debugger contract](../pascal/tools/debugger-batch.md) describes the shipped command.
-[N1–N3](#code-navigation) have a [source-query plan](code-navigation/README.md).
-The user delegated the command decisions to the agent; N1 references is next.
+N1–N3 ([source navigation](#code-navigation)) are implemented.
 The other wishes are ideas without an implementation plan. Human-facing tools stay: the DAP debugger
 ([`debugger.md`](../pascal/tools/debugger.md)) and the language server
 ([`editor-integration.md`](../pascal/tools/editor-integration.md)). The JSONL debugger protocol
@@ -31,11 +30,10 @@ navigation.
 
 ## Where to start
 
-A1, A2, A3, A4, S1, S2, S3, D1 and D3 are implemented. Next is
-[N1 references](code-navigation/02-references.md), followed by N2 definition and
-N3 checked types under the [decided contract](code-navigation/01-contract.md).
-Implementation has not started. The agent chose the details under the user's
-explicit delegation. N4 rename and the remaining debug wishes are not scheduled.
+A1, A2, A3, A4, S1, S2, S3, D1, D3 and N1–N3 are implemented.
+The [source-query plan](code-navigation/README.md) contains additional contract
+requirements that differ from the shipped [source queries](../pascal/tools/source-queries.md).
+Those follow-ups and the remaining debug wishes are not scheduled.
 JSONL removal remains deferred; the protocol and its tests stay supported.
 
 ## Principle: protocols for humans, commands for agents
@@ -312,28 +310,20 @@ navigation the agent uses text search and reads files, which has limits in FPAS:
 
 ### Wishes
 
-**N1–N3 status: contract decided; implementation not started.** The
-[temporary source-query plan](code-navigation/README.md) owns the execution order
-and completion checklist. The user delegated the open decisions to the agent
-that will use the commands; no product questions remain open.
+`fpas query` commands reuse `fpas-language-service` resolution and semantic
+metadata, with one JSON document per invocation. The editor keeps using LSP.
 
-Planned canonical commands, each returning one JSON document:
+- **N1. References — implemented.** `fpas query refs src/Main.fpas:12:5` finds
+  resolved project usages; `--include-declaration` adds the declaration.
+- **N2. Definition — implemented.** `fpas query def src/Main.fpas:12:5` returns
+  the source declaration of the resolved symbol.
+- **N3. Type — implemented.** `fpas query type src/Main.fpas:12:5` returns the
+  checked type and range of the smallest enclosing expression, including generic
+  call results and chain prefixes.
+- **N4. Rename** — a safe rename across the project; with `--dry-run`, the list of edits only.
 
-- **N1. References** — resolved uses of one declaration:
-  `fpas query refs src/Main.fpas:12:5`.
-- **N2. Definition** — the defining source name:
-  `fpas query definition src/Main.fpas:12:5`.
-- **N3. Type** — the checked type of the selected expression or binding:
-  `fpas query type src/Main.fpas:12:5`.
-- **N4. Rename** — not scheduled in this plan. A safe cross-project rename and
-  edit preview need a separate later contract.
-
-N1 comes first. The commands reuse `fpas-language-service` resolution, workspace
-ownership and semantic metadata; the LSP stays unchanged for the editor. N3 needs
-a focused checked-type query API, not a copy of hover text. Scope, exact scalar
-coordinates, incomplete results and resource bounds are fixed in the
-[shared contract](code-navigation/01-contract.md). No command described here is
-shipped until its implementation/tests/docs/review step is complete.
+The permanent [source-query reference](../pascal/tools/source-queries.md) owns the
+position syntax, project selection, JSON schema, and failure behavior of N1–N3.
 
 ## Language note
 

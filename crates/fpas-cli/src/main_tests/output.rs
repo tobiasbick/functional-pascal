@@ -73,3 +73,32 @@ fn fmt_list_fails_when_changed_file_list_cannot_be_written() {
     }
     fs::remove_dir_all(&cwd).expect("temp directory must be removed");
 }
+
+#[test]
+fn query_fails_when_its_json_document_is_only_partially_written() {
+    let cwd = create_temp_dir("contract-output-query");
+    write_text(&cwd.join("main.fpas"), "program T; begin discard 1; end.");
+    let args = [
+        "query".into(),
+        "type".into(),
+        "main.fpas:1:26".into(),
+        "--std-lib".into(),
+        Path::new(env!("CARGO_MANIFEST_DIR"))
+            .join("../../lib")
+            .to_string_lossy()
+            .into_owned(),
+    ];
+    for writer in [FailingWriter::immediately(), FailingWriter::after(8)] {
+        let mut stderr = Vec::new();
+        let code = run_cli(&args, &cwd, Box::new(writer), &mut stderr, false);
+        assert_eq!(code, 1);
+        let record: serde_json::Value =
+            serde_json::from_slice(&stderr).expect("structured write failure");
+        assert!(
+            record["message"]
+                .as_str()
+                .expect("message")
+                .contains("Cannot write query output")
+        );
+    }
+}

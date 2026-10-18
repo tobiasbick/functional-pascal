@@ -315,7 +315,9 @@ fn decode_tokens(data: &[Value]) -> Vec<(usize, usize, usize, u64, u64)> {
     assert_eq!(data.len() % 5, 0, "invalid semantic token data: {data:?}");
     let mut line = 0;
     let mut character = 0;
-    data.chunks_exact(5)
+    data.as_chunks::<5>()
+        .0
+        .iter()
         .map(|token| {
             let delta_line = token[0].as_u64().expect("delta line") as usize;
             let delta_start = token[1].as_u64().expect("delta start") as usize;

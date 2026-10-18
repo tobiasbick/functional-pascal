@@ -129,7 +129,7 @@ impl LoweringContext {
                     fpas_diagnostics::SourceSpan::synthetic_from_location(
                         fpas_diagnostics::SourceLocation::new(span.line, span.column),
                     ),
-                ));
+                ).into());
             }
             self.lower_return(None, span)?;
         }

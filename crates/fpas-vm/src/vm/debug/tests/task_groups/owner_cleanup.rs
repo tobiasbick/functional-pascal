@@ -196,9 +196,9 @@ fn identical_group_child_diagnostics_remain_independent_failures() {
     vm.pool_size = 1;
     check(vm.run().expect_err("both children failed"));
     let mut session = DebugSession::with_manual_clock(compile(source)).unwrap();
-    check(Box::new(
+    check(
         stopped(session.continue_execution().unwrap())
             .diagnostic
             .unwrap(),
-    ));
+    );
 }

@@ -144,6 +144,10 @@ pub(crate) enum HelpTopic {
     Lsp,
     Check,
     Doc,
+    Query,
+    QueryRefs,
+    QueryDef,
+    QueryType,
     Fmt,
     Test,
 }
@@ -187,6 +191,7 @@ pub(crate) enum ResolvedCli {
     Debug(DebugCliConfig),
     Check(CliConfig),
     Doc(DocCliConfig),
+    Query(super::QueryCliConfig),
     Fmt(FmtCliConfig),
     Test(TestCliConfig),
     /// Print the selected toolchain environment as JSON.

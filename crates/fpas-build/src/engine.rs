@@ -162,18 +162,22 @@ fn compile_units<Backend: UnitBackend>(
             let parsed = node
                 .parse_source_snapshot(source.bytes())
                 .map_err(BuildError::from)?;
-            let (interface, object) = Backend::compile(
-                &parsed,
-                &direct_interfaces,
-                interfaces.all(),
-            )
-            .map_err(|diagnostics| {
-                BuildError::from_diagnostics(diagnostics, Some((node.source_id(), node.path())))
-                    .with_source(
-                        node.source_id(),
-                        std::str::from_utf8(source.bytes()).unwrap_or(""),
-                    )
-            })?;
+            let (interface, object) =
+                Backend::compile(&parsed, &direct_interfaces, interfaces.all()).map_err(
+                    |diagnostics| {
+                        BuildError::from_diagnostics(
+                            diagnostics
+                                .into_iter()
+                                .map(|diagnostic| *diagnostic)
+                                .collect(),
+                            Some((node.source_id(), node.path())),
+                        )
+                        .with_source(
+                            node.source_id(),
+                            std::str::from_utf8(source.bytes()).unwrap_or(""),
+                        )
+                    },
+                )?;
             events.push(event(unit_name, BuildEventKind::InterfaceAnalyzed));
             events.push(event(unit_name, BuildEventKind::ImplementationAnalyzed));
             events.push(event(unit_name, BuildEventKind::Compiled));
@@ -265,7 +269,15 @@ pub(crate) fn link_program(
         &root_interfaces,
         units.supporting_interfaces(),
     )
-    .map_err(|diagnostics| BuildError::from_program_diagnostics(diagnostics, source_path))?;
+    .map_err(|diagnostics| {
+        BuildError::from_program_diagnostics(
+            diagnostics
+                .into_iter()
+                .map(|diagnostic| *diagnostic)
+                .collect(),
+            source_path,
+        )
+    })?;
     normalize_sources(&mut program_object, 0);
     let executable =
         fpas_linker::link_objects(&units.objects, &program_object).map_err(BuildError::from)?;

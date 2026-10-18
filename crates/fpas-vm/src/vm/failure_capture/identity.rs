@@ -151,10 +151,9 @@ impl Worker {
             .scheduler
             .as_ref()
             .and_then(|scheduler| scheduler.failure_capture.get())
+            && !state.finished.load(Ordering::Acquire)
         {
-            if !state.finished.load(Ordering::Acquire) {
-                state.ensure(&mut error, Some(self));
-            }
+            state.ensure(&mut error, Some(self));
         }
         error
     }

@@ -105,7 +105,7 @@ fn test_workers_forward_child_stderr_as_json_program_output() {
         }
         let records = stderr_records(&json);
         assert_eq!(records.len(), 4, "jobs={jobs}: {records:?}");
-        for pair in records.chunks_exact(2) {
+        for pair in records.as_chunks::<2>().0 {
             assert_eq!(pair[0]["kind"], "program-output");
             assert_eq!(pair[0]["stream"], "stderr");
             assert_eq!(pair[0]["text"], "child err");

@@ -112,7 +112,7 @@ pub struct DebugStop {
     /// All logical breakpoint identifiers bound to the reached sequence point.
     pub breakpoint_ids: Vec<u64>,
     /// Runtime diagnostic when `reason` is [`DebugStopReason::RuntimeError`].
-    pub diagnostic: Option<fpas_diagnostics::Diagnostic>,
+    pub diagnostic: Option<Box<fpas_diagnostics::Diagnostic>>,
 }
 
 /// Stable lifecycle state for one FPAS task in a stopped debug session.

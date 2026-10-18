@@ -9,6 +9,7 @@ mod help;
 mod init;
 mod mode;
 mod options;
+mod query;
 mod types;
 
 use std::path::Path;
@@ -18,6 +19,7 @@ const DEFAULT_TEST_TIMEOUT: Duration = Duration::from_secs(300);
 
 pub(crate) use discovery::discover_check_input;
 pub(crate) use help::help_text;
+pub(crate) use query::{QueryCliConfig, QueryKind};
 pub(crate) use types::{
     BuildCliConfig, CliConfig, CliInput, DebugCliConfig, DebugProtocol, DocCliConfig,
     DocReportFormat, FmtCliConfig, HelpTopic, InitCliConfig, InitKind, InitReportFormat,
@@ -49,6 +51,7 @@ pub(crate) fn resolve_cli_input(args: &[String], cwd: &Path) -> Result<CliInput,
         }
         ResolvedCli::Test(_)
         | ResolvedCli::Doc(_)
+        | ResolvedCli::Query(_)
         | ResolvedCli::Environment
         | ResolvedCli::Lsp
         | ResolvedCli::Help(_)
@@ -74,6 +77,13 @@ pub(crate) fn resolve_cli_config(args: &[String], cwd: &Path) -> Result<Resolved
             "-V" | "--version" => return Ok(ResolvedCli::Version),
             _ => {}
         }
+    }
+
+    if cli_args[0] == "query" {
+        if !program_args.is_empty() {
+            return Err("`fpas query` does not accept program arguments.\n  help: `fpas query refs src/main.fpas:12:5`.".into());
+        }
+        return query::resolve(&cli_args[1..], cwd);
     }
 
     let (mode, cli_args) = parse_cli_mode(cli_args)?;

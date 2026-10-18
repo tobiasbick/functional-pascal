@@ -1,5 +1,10 @@
 //! Rendering tests for structured diagnostics.
 
+#![expect(
+    clippy::expect_used,
+    reason = "Rendering fixtures require their source tokens and output lines to exist"
+)]
+
 use fpas_diagnostics::{
     Diagnostic, DiagnosticCode, SourceLocation, SourceSpan, TextStyle, render, render_text,
     render_without_path,

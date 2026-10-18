@@ -1071,6 +1071,12 @@ documentation and names the owning handbook page; `--report json` returns the sa
 data. Do not infer a library API from Delphi or an old example using free collection
 helper functions.
 
+For source navigation, use `fpas query refs file.fpas:12:5`, `fpas query def
+file.fpas:12:5`, or `fpas query type file.fpas:12:5`. Each returns one JSON document
+without writing artifacts. Lines and Unicode-scalar columns start at 1;
+`--project <path>` selects an explicit project/workspace and `refs
+--include-declaration` adds the declaration. See [source queries](tools/source-queries.md).
+
 Run `fpas fmt file.fpas`, then `fpas check file.fpas` and `fpas run file.fpas`.
 
 Formatting uses two-space structural indentation and a fixed 100-column expression

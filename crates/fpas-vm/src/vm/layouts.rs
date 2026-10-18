@@ -139,6 +139,7 @@ fn missing_layout(kind: &str, name: &str, location: SourceLocation) -> fpas_std:
         Some("Recompile the program and report this compiler/runtime layout mismatch.".into()),
         fpas_diagnostics::SourceSpan::synthetic_from_location(location),
     )
+    .into()
 }
 
 fn layout_arity_error(
@@ -153,6 +154,7 @@ fn layout_arity_error(
         Some("Recompile the program and report this compiler/runtime layout mismatch.".into()),
         fpas_diagnostics::SourceSpan::synthetic_from_location(location),
     )
+    .into()
 }
 
 fn string(

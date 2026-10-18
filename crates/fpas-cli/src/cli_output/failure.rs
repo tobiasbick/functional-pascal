@@ -2,6 +2,7 @@
 //!
 //! Documentation: `docs/pascal/tools/diagnostics.md`.
 
+use std::borrow::Borrow;
 use std::fmt;
 use std::path::{Path, PathBuf};
 
@@ -69,11 +70,13 @@ impl CliFailure {
     }
 
     /// Wraps compiler or parser diagnostics of one source file.
-    pub(crate) fn from_diagnostics(path: &Path, diagnostics: &[Diagnostic]) -> Self {
+    pub(crate) fn from_diagnostics(path: &Path, diagnostics: &[impl Borrow<Diagnostic>]) -> Self {
         Self {
             records: diagnostics
                 .iter()
-                .map(|diagnostic| FileDiagnostic::new(diagnostic.clone(), Some(path.to_path_buf())))
+                .map(|diagnostic| {
+                    FileDiagnostic::new(diagnostic.borrow().clone(), Some(path.to_path_buf()))
+                })
                 .collect(),
         }
     }

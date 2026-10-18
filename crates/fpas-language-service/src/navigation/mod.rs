@@ -3,6 +3,7 @@
 /// Source owners of static callable parameter labels.
 pub(crate) mod callable_labels;
 mod document;
+mod expression_type;
 mod highlights;
 pub(crate) mod named_arguments;
 pub(crate) mod record_construction;
@@ -22,6 +23,7 @@ use crate::DocumentSnapshot;
 pub use workspace_symbols::WORKSPACE_SYMBOL_LIMIT;
 
 pub(crate) use document::NavigationDocument;
+pub use expression_type::ExpressionType;
 pub use highlights::{DocumentHighlight, HighlightKind};
 pub use references::ReferenceLocation;
 pub(crate) use references::{find_references, resolve_target};

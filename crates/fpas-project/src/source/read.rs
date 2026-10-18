@@ -4,13 +4,14 @@ use std::path::Path;
 
 use fpas_diagnostics::{Diagnostic, codes::PROJECT_SOURCE_READ_FAILED};
 
-pub(super) fn read_source(path: &Path) -> Result<Vec<u8>, Diagnostic> {
+pub(super) fn read_source(path: &Path) -> Result<Vec<u8>, Box<Diagnostic>> {
     std::fs::read(path).map_err(|error| {
         Diagnostic::error_without_source(
             PROJECT_SOURCE_READ_FAILED,
             format!("Error reading source file: {error}"),
             Some("Check that the source file exists and is readable.".into()),
         )
+        .into()
     })
 }
 

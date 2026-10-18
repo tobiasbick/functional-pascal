@@ -63,7 +63,7 @@ impl Worker {
         let Some(overrides) = self.registers.get(start..end) else {
             return Err(self.bad_slot("register window", u32::from(o.b)));
         };
-        for pair in overrides.chunks_exact(2) {
+        for pair in overrides.as_chunks::<2>().0 {
             let Value::Integer(field) = &pair[0] else {
                 return Err(self.type_mismatch("integer record field slot", &pair[0]));
             };
@@ -91,7 +91,7 @@ impl Worker {
             ));
         };
         let values = body.values_mut();
-        for pair in self.registers[start..end].chunks_exact(2) {
+        for pair in self.registers[start..end].as_chunks::<2>().0 {
             // Field slots were validated above.
             if let Value::Integer(field) = pair[0] {
                 values[field as usize] = pair[1].clone();

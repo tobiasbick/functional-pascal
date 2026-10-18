@@ -235,9 +235,7 @@ impl Parser {
         let equals = items.iter().any(|item| item.equals_initializer);
         let bounded = items.iter().any(|item| item.bounded_array);
         let uninitialized = items.iter().find(|item| item.missing_initializer);
-        let Some(first) = items.first() else {
-            return None;
-        };
+        let first = items.first()?;
         let keyword = first.keyword.text();
         let (code, message) = if context == BindingContext::RoutineSection {
             (
@@ -279,13 +277,12 @@ impl Parser {
                 PARSE_FOREIGN_SYNTAX,
                 "Ada aggregate is not FPAS syntax".to_owned(),
             )
-        } else if let Some(item) = uninitialized {
+        } else {
+            let item = uninitialized?;
             (
                 PARSE_EXPECTED_TOKEN,
                 format!("`{}` has no initializer", item.names.join(", ")),
             )
-        } else {
-            return None;
         };
         let mut explanation = Vec::new();
         if context == BindingContext::RoutineSection {

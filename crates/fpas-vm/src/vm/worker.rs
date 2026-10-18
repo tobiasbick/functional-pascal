@@ -73,7 +73,6 @@ impl Worker {
         location: fpas_bytecode::SourceLocation,
     ) -> Result<Value, VmError> {
         fpas_std::AggregateFactory::record(self.layouts.as_ref(), type_name, values, location)
-            .map_err(Box::new)
     }
 
     #[cfg(test)]

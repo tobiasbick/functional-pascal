@@ -106,7 +106,7 @@ impl RelocatableObject {
                         .as_ref()
                         .map(|info| {
                             Ok(super::ObjectRecordConstructionInfo {
-                                owner_unit: info.owner_unit.map(&strings).transpose()?,
+                                owner_unit: info.owner_unit.map(strings).transpose()?,
                                 requires_owner: info.requires_owner,
                                 aliases: info
                                     .aliases
@@ -122,7 +122,7 @@ impl RelocatableObject {
                                 defaults: info
                                     .defaults
                                     .iter()
-                                    .map(|name| name.map(&strings).transpose())
+                                    .map(|name| name.map(strings).transpose())
                                     .collect::<Result<Vec<_>, _>>()?,
                             })
                         })

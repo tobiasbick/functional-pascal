@@ -46,7 +46,7 @@ pub(super) fn resume(worker: &mut Worker) -> Result<bool, VmError> {
         }
         AdvanceError::InvalidStringMapResult(value) => worker.string_map_result_error(&value),
         AdvanceError::InvalidState(message) => worker.callback_state_error(message),
-        AdvanceError::Sorting(error) => error.into(),
+        AdvanceError::Sorting(error) => error,
     })?;
     match action {
         Advance::Call(arguments) => {

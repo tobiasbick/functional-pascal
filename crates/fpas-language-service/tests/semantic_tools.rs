@@ -431,9 +431,10 @@ fn habit_diagnostic_offers_its_compiler_fix_as_a_preferred_quick_fix() {
         .code_actions(&main, &identity)
         .expect("habit quick fix")
         .value;
-    let [action] = actions.as_slice() else {
-        panic!("expected one habit quick fix: {actions:#?}");
-    };
+    let [action]: &[_; 1] = actions
+        .as_slice()
+        .try_into()
+        .expect("expected one habit quick fix");
     assert_eq!(action.title, "Write `Count := Count + 1;`");
     assert!(action.preferred);
     let mut edited = source.to_owned();

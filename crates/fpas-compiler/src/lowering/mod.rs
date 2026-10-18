@@ -52,7 +52,7 @@ pub(crate) struct LoweredUnit {
 pub fn lower(program: &AstProgram) -> Result<Program, Vec<CompileError>> {
     let metadata = fpas_sema::analyze_with_types(program);
     if !metadata.errors.is_empty() {
-        return Err(metadata.errors);
+        return Err(metadata.errors.into_iter().map(Box::new).collect());
     }
     lower_analyzed_root(
         SourceRoot {
@@ -87,7 +87,7 @@ pub(crate) fn lower_unit(
                 )]
             })?;
     if !analysis.metadata.errors.is_empty() {
-        return Err(analysis.metadata.errors);
+        return Err(analysis.metadata.errors.into_iter().map(Box::new).collect());
     }
     lower_analyzed_root(
         SourceRoot {
@@ -124,7 +124,7 @@ pub(crate) fn lower_program_with_support(
         )]
     })?;
     if !metadata.errors.is_empty() {
-        return Err(metadata.errors);
+        return Err(metadata.errors.into_iter().map(Box::new).collect());
     }
     lower_analyzed_root(
         SourceRoot {

@@ -8,7 +8,7 @@ pub(super) fn stop_at_worker(
     worker: &Worker,
     reason: DebugStopReason,
     breakpoint_ids: Vec<u64>,
-    diagnostic: Option<fpas_diagnostics::Diagnostic>,
+    diagnostic: Option<crate::vm::VmError>,
 ) -> DebugStop {
     let instruction = if reason == DebugStopReason::RuntimeError {
         worker.current_address

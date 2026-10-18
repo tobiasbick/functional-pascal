@@ -6,6 +6,10 @@ use crate::vm::tasks::TaskSuspension;
 use std::sync::atomic::Ordering;
 
 /// Uninstrumented tasks remain direct values; only enabled tasks use synchronized ownership.
+#[expect(
+    clippy::large_enum_variant,
+    reason = "Keeping ordinary tasks inline avoids a heap allocation when failure capture is disabled"
+)]
 pub(in crate::vm) enum ScheduledTask {
     /// Ordinary scheduler storage without D1 allocation.
     Direct(TaskState),

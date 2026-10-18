@@ -18,8 +18,7 @@ impl Worker {
         let Intrinsic::Proc(ProcIntrinsic::Run) = intrinsic else {
             return Ok(None);
         };
-        let (command, args) =
-            fpas_std::run_process_arguments(arguments, location).map_err(Box::new)?;
+        let (command, args) = fpas_std::run_process_arguments(arguments, location)?;
         let receiver = self
             .hosted
             .program_stderr

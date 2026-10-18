@@ -57,7 +57,7 @@ pub(super) fn parse_compilation_unit_file(
     source_id: u32,
 ) -> Result<(CompilationUnit, Vec<FileDiagnostic>), ProjectError> {
     let source = read::read_source(path)
-        .map_err(|diagnostic| ProjectError::from_source(path, vec![diagnostic]))?;
+        .map_err(|diagnostic| ProjectError::from_source(path, vec![*diagnostic]))?;
     parse_compilation_unit_source(path, &source, source_id)
 }
 
@@ -67,7 +67,7 @@ pub(super) fn read_compilation_unit_file(
     source_id: u32,
 ) -> Result<(Vec<u8>, CompilationUnit, Vec<FileDiagnostic>), ProjectError> {
     let source = read::read_source(path)
-        .map_err(|diagnostic| ProjectError::from_source(path, vec![diagnostic]))?;
+        .map_err(|diagnostic| ProjectError::from_source(path, vec![*diagnostic]))?;
     let (unit, warnings) = parse_compilation_unit_source(path, &source, source_id)?;
     Ok((source, unit, warnings))
 }

@@ -73,13 +73,13 @@ pub(super) fn compile_program(
                     let function = u16::try_from(initializer.function.get())
                         .map(fpas_bytecode::FunctionId::new)
                         .map_err(|_| compile_error("global initializer function overflow"))?;
-                    Ok(fpas_bytecode::GlobalInitializer {
+                    Ok::<_, CompileError>(fpas_bytecode::GlobalInitializer {
                         function,
                         instruction,
                     })
                 })
                 .transpose()?;
-            Ok(fpas_bytecode::GlobalInfo {
+            Ok::<_, CompileError>(fpas_bytecode::GlobalInfo {
                 name,
                 ty: fpas_bytecode::DebugTypeId::new(global.ty.get()),
                 mutable: global.mutable,
@@ -122,7 +122,7 @@ pub(super) fn compile_program(
                     .construction
                     .as_ref()
                     .map(|info| {
-                        Ok(fpas_bytecode::RecordConstructionInfo {
+                        Ok::<_, CompileError>(fpas_bytecode::RecordConstructionInfo {
                             owner_unit: info
                                 .owner_unit
                                 .as_deref()

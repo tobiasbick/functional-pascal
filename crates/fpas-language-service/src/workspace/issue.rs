@@ -16,7 +16,7 @@ pub struct WorkspaceIssue {
     pub path: PathBuf,
     /// Actionable text for callers displaying a discovery issue.
     pub message: String,
-    error: Option<ProjectError>,
+    error: Option<Box<ProjectError>>,
 }
 
 impl WorkspaceIssue {
@@ -34,7 +34,7 @@ impl WorkspaceIssue {
         Self {
             path: normalized_path(path),
             message: error.to_string(),
-            error: Some(error),
+            error: Some(Box::new(error)),
         }
     }
 
@@ -42,7 +42,7 @@ impl WorkspaceIssue {
     pub(crate) fn into_analysis_error(self) -> LanguageServiceError {
         self.error.map_or_else(
             || LanguageServiceError::analysis(&self.path, self.message),
-            LanguageServiceError::from,
+            |error| LanguageServiceError::from(*error),
         )
     }
 }

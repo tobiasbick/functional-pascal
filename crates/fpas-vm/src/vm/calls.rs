@@ -50,10 +50,7 @@ impl Worker {
             operands.a,
             operands.c,
             operands.auxiliary,
-            receiver
-                .as_ref()
-                .map(std::slice::from_ref)
-                .unwrap_or_default(),
+            receiver.as_slice(),
             capture_count,
         )?;
         for index in 0..capture_count {

@@ -261,14 +261,8 @@ impl LanguageService {
         let target_index = documents
             .iter()
             .position(|document| document.path == target.path());
-        if let Some(index) = target_index
-            && let Ok(analysis) = self.analyze_document(path)
-            && analysis.snapshot().revision() == target.revision()
-        {
-            if !documents[index].is_editor_api {
-                documents[index].roots = analysis.symbols().entries().to_vec();
-            }
-            documents[index].analysis = Some(analysis);
+        if let Some(index) = target_index {
+            self.enrich_navigation_document(&mut documents[index]);
         }
         Ok(NavigationContext {
             snapshot: target,
@@ -319,14 +313,26 @@ impl LanguageService {
         }
 
         let mut documents = Vec::with_capacity(paths.len());
+        let candidate_name = target
+            .symbol
+            .name
+            .rsplit('.')
+            .next()
+            .unwrap_or(&target.symbol.name);
         for source_path in paths {
             cancellation.check()?;
             let snapshot = self.snapshot(&source_path)?;
-            documents.push(if self.is_editor_api_source(&source_path) {
+            let mut document = if self.is_editor_api_source(&source_path) {
                 NavigationDocument::new_editor_api(snapshot)
             } else {
                 NavigationDocument::new(snapshot)
-            });
+            };
+            if document.tokens.iter().any(|token| {
+                matches!(&token.token, fpas_lexer::Token::Ident(name) if name.eq_ignore_ascii_case(candidate_name))
+            }) {
+                self.enrich_navigation_document(&mut document);
+            }
+            documents.push(document);
         }
         let target_index = documents
             .iter()
@@ -336,6 +342,17 @@ impl LanguageService {
             documents,
             target_index,
         })
+    }
+
+    fn enrich_navigation_document(&mut self, document: &mut NavigationDocument) {
+        if let Ok(analysis) = self.analyze_document(&document.path)
+            && analysis.snapshot().revision() == document.snapshot.revision()
+        {
+            if !document.is_editor_api {
+                document.roots = analysis.symbols().entries().to_vec();
+            }
+            document.analysis = Some(analysis);
+        }
     }
 
     fn navigation_allowed(&self, path: &Path) -> bool {

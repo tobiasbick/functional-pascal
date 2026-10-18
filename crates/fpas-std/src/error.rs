@@ -7,8 +7,8 @@
 use fpas_diagnostics::codes::INTERNAL_VM_INVARIANT_FAILURE;
 use fpas_diagnostics::{Diagnostic, DiagnosticCode, SourceLocation, SourceSpan};
 
-/// Diagnostic returned when a standard-library operation fails.
-pub type StdError = Diagnostic;
+/// Boxed diagnostic returned when a standard-library operation fails.
+pub type StdError = Box<Diagnostic>;
 
 /// Runtime error with optional help line; pass `None` when the message alone is sufficient.
 #[must_use]
@@ -24,6 +24,7 @@ pub fn std_runtime_error_opt(
         help,
         SourceSpan::synthetic_from_location(location),
     )
+    .into()
 }
 
 /// Runtime error including a `help:` line; see [`std_runtime_error_opt`] to omit help.
@@ -50,4 +51,5 @@ pub fn std_internal_error(
         Some(help.into()),
         SourceSpan::synthetic_from_location(location),
     )
+    .into()
 }

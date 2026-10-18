@@ -36,7 +36,7 @@ impl Budget {
 
     /// Keep a bounded value prefix when its complete serialized form does not fit.
     pub(super) fn partial<T: Serialize>(&mut self, make: impl Fn(Policy) -> T) -> Option<Policy> {
-        let fits = |policy| size(&make(policy)).is_some_and(|size| size + 1 <= self.remaining);
+        let fits = |policy| size(&make(policy)).is_some_and(|size| size < self.remaining);
         let mut policy = Policy {
             children: 0,
             chars: 4096,

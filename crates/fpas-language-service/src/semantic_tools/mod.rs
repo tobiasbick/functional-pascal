@@ -87,4 +87,7 @@ pub struct SemanticCodeAction {
     pub diagnostic: DiagnosticIdentity,
     /// Deterministic edits in this document.
     pub edits: Vec<SemanticEdit>,
+    /// The edits are certain, so editors may apply the action as the preferred fix; a
+    /// compiler fix that needs review is offered but not preferred.
+    pub preferred: bool,
 }

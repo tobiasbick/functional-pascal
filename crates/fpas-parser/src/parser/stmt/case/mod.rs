@@ -36,7 +36,7 @@ impl Parser {
             let label_start = self.current_span();
             let pascal_arm = !self.eat(&Token::When);
             if pascal_arm {
-                self.note_arm_without_when(&mut control);
+                self.note_arm_without_when(&mut control, label_start);
             }
             let arm = self.parse_case_arm(label_start, pascal_arm);
             labels.push(self.source_text(arm.labels_span).to_owned());

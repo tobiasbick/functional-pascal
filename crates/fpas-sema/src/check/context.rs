@@ -382,6 +382,13 @@ impl Checker {
     ) {
         self.errors.push(sema_error(code, message, hint, span));
     }
+
+    /// Adds `fix` to the diagnostic reported last.
+    pub(crate) fn attach_fix_to_last_error(&mut self, fix: Option<fpas_diagnostics::Fix>) {
+        if let Some(error) = self.errors.last_mut() {
+            error.fixes.extend(fix);
+        }
+    }
 }
 
 impl Default for Checker {

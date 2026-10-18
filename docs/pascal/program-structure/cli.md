@@ -211,6 +211,18 @@ fpas check suite.fpasworkspace
 fpas check
 ```
 
+`fpas check --fix` first applies the machine-applicable [fixes](../tools/diagnostics.md#fixes) of
+the reported diagnostics in place, checks again, and repeats until a pass applies none, at most
+ten passes. Then it reports the remaining diagnostics as usual and, in text mode, one summary
+line such as `applied 7 fixes in 2 files`. Only `.fpas` files of the checked file, directory,
+project or workspace are edited, never dependencies outside it or the standard library. Files
+are replaced atomically. `--fix` does not format; run `fpas fmt` afterwards. The exit code is
+that of the final check. To see the fixes without writing, use `--diagnostics json`.
+
+```sh
+fpas check --fix my-app.fpasprj
+```
+
 With no path, `fpas check` discovers a single `.fpasworkspace` in the current directory first,
 otherwise a single `.fpasprj`. Library projects type-check here the same as program projects. When
 given a directory, all `.fpas` files under that tree form one source set: units are checked
@@ -261,7 +273,7 @@ when the arguments before `--` contain `--diagnostics json`.
 
 ```text
 fpas check --diagnostics json src/main.fpas
-{"kind":"diagnostic","code":"FP3003","severity":"error","phase":"sema","source":"/work/app/src/main.fpas","location":{"source_id":0,"start":{"line":3,"column":3},"end":{"line":3,"column":16}},"message":"Unknown procedure `MissingCall`","expected":null,"found":null,"hint":"Declare the function or procedure before use, or check the spelling."}
+{"kind":"diagnostic","code":"FP3003","severity":"error","phase":"sema","source":"/work/app/src/main.fpas","location":{"source_id":0,"start":{"line":3,"column":3},"end":{"line":3,"column":16}},"message":"Unknown procedure `MissingCall`","expected":null,"found":null,"hint":"Declare the function or procedure before use, or check the spelling.","fixes":[]}
 ```
 
 `source` is the resolved path of the source file for parse, compile and project records. Runtime records of a program project or `.fpascp` name the portable source path stored in the compiled image, relative to the project directory, as in text mode. Runtime records have a known start and a `null` end.

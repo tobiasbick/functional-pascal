@@ -13,10 +13,10 @@ use super::super::{ERROR_IDENT, Parser};
 use crate::ast::{
     ConstDef, Decl, Expr, LocalBinding, QualifiedId, Stmt, TypeExpr, VarDef, Visibility,
 };
-use fpas_diagnostics::ForeignHabit;
 use fpas_diagnostics::codes::{
     PARSE_EXPECTED_TOKEN, PARSE_FOREIGN_SYNTAX, PARSE_MISSING_DECLARATION_KEYWORD,
 };
+use fpas_diagnostics::{Applicability, Fix, FixEdit, ForeignHabit, SourceSpan, fix_title};
 use fpas_lexer::{Span, Token};
 
 /// Declaration groups written with more than three bindings show only the first three.
@@ -185,7 +185,37 @@ impl Parser {
             self.advance();
             items.extend(self.parse_binding_items(keyword, false));
         }
-        self.report_binding_habits(start, &items, BindingContext::RoutineSection, false);
+        let index =
+            self.report_binding_habits(start, &items, BindingContext::RoutineSection, false);
+        // The declarations move behind `begin`; a section followed by nested routines or
+        // anything else keeps the diagnostic without a fix.
+        if self.check(&Token::Begin) {
+            let section = self.span_from(start);
+            let begin = self.current_span();
+            let insertion = Span {
+                offset: begin.offset + begin.length,
+                length: 0,
+                ..begin
+            };
+            let declarations = Self::binding_declaration_texts(&items, false).join(" ");
+            let fix = Self::bindings_fix_applicability(&items).and_then(|applicability| {
+                Fix::new(
+                    "Move the declarations behind `begin`",
+                    applicability,
+                    vec![
+                        FixEdit {
+                            span: SourceSpan::try_from(section).ok()?,
+                            new_text: String::new(),
+                        },
+                        FixEdit {
+                            span: SourceSpan::try_from(insertion).ok()?,
+                            new_text: format!(" {declarations}"),
+                        },
+                    ],
+                )
+            });
+            self.add_habit_fix(index, fix);
+        }
         items
             .into_iter()
             .flat_map(Self::binding_statements)
@@ -199,14 +229,14 @@ impl Parser {
         items: &[BindingItem],
         context: BindingContext,
         public: bool,
-    ) {
+    ) -> Option<usize> {
         let section = items.len() > 1;
         let grouped = items.iter().find(|item| item.names.len() > 1);
         let equals = items.iter().any(|item| item.equals_initializer);
         let bounded = items.iter().any(|item| item.bounded_array);
         let uninitialized = items.iter().find(|item| item.missing_initializer);
         let Some(first) = items.first() else {
-            return;
+            return None;
         };
         let keyword = first.keyword.text();
         let (code, message) = if context == BindingContext::RoutineSection {
@@ -255,7 +285,7 @@ impl Parser {
                 format!("`{}` has no initializer", item.names.join(", ")),
             )
         } else {
-            return;
+            return None;
         };
         let mut explanation = Vec::new();
         if context == BindingContext::RoutineSection {
@@ -293,7 +323,7 @@ impl Parser {
         let written = self.span_from(start);
         let found = self.source_text(written).to_owned();
         let replacement = Self::bindings_fpas_form(items, public);
-        self.report_foreign_habit(
+        let index = self.report_foreign_habit(
             code,
             &message,
             ForeignHabit {
@@ -302,7 +332,20 @@ impl Parser {
                 explanation: &explanation.join(" "),
             },
             written,
+            None,
         );
+        if context != BindingContext::RoutineSection {
+            let fix = Self::bindings_fix_applicability(items).and_then(|applicability| {
+                Fix::replace(
+                    fix_title(&replacement),
+                    applicability,
+                    SourceSpan::try_from(written).ok()?,
+                    Self::binding_declaration_texts(items, public).join(" "),
+                )
+            });
+            self.add_habit_fix(index, fix);
+        }
+        index
     }
 
     /// Converts an item to top-level declarations, one per name.
@@ -388,8 +431,22 @@ impl Parser {
 
     /// FPAS form of a binding group: one complete declaration per name.
     fn bindings_fpas_form(items: &[BindingItem], public: bool) -> String {
+        let declarations = Self::binding_declaration_texts(items, public);
+        let mut shown = declarations
+            .iter()
+            .take(MAX_SHOWN_BINDINGS)
+            .cloned()
+            .collect::<Vec<_>>();
+        if declarations.len() > MAX_SHOWN_BINDINGS {
+            shown.push("…".to_owned());
+        }
+        shown.join(" ")
+    }
+
+    /// Returns one FPAS declaration per bound name.
+    fn binding_declaration_texts(items: &[BindingItem], public: bool) -> Vec<String> {
         let modifier = if public { "public " } else { "" };
-        let declarations = items
+        items
             .iter()
             .flat_map(|item| {
                 item.names.iter().map(move |name| {
@@ -405,16 +462,29 @@ impl Parser {
                     }
                 })
             })
-            .collect::<Vec<_>>();
-        let mut shown = declarations
+            .collect()
+    }
+
+    /// Whether the FPAS form of `items` is a fix: guessed initializers and zero-based arrays
+    /// need review, and placeholders rule a fix out.
+    fn bindings_fix_applicability(items: &[BindingItem]) -> Option<Applicability> {
+        let placeholder = items.iter().any(|item| {
+            item.value_text.contains('…')
+                || item
+                    .type_text
+                    .as_deref()
+                    .is_some_and(|text| text == "TypeName")
+        });
+        if placeholder {
+            None
+        } else if items
             .iter()
-            .take(MAX_SHOWN_BINDINGS)
-            .cloned()
-            .collect::<Vec<_>>();
-        if declarations.len() > MAX_SHOWN_BINDINGS {
-            shown.push("…".to_owned());
+            .any(|item| item.missing_initializer || item.bounded_array)
+        {
+            Some(Applicability::NeedsReview)
+        } else {
+            Some(Applicability::MachineApplicable)
         }
-        shown.join(" ")
     }
 
     /// Type of a Pascal untyped constant, inferred from its literal.

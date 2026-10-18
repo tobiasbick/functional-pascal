@@ -9,6 +9,7 @@ use crate::cli_output::DiagnosticFormat;
 
 pub(super) struct ParsedOptions {
     pub(super) check_only: bool,
+    pub(super) fix: bool,
     pub(super) stdout_mode: bool,
     pub(super) list_changed: bool,
     pub(super) fail_fast: bool,
@@ -38,6 +39,7 @@ pub(super) struct ParsedOptions {
 pub(super) fn parse_options(mode: CliMode, cli_args: &[String]) -> Result<ParsedOptions, String> {
     let mut options = ParsedOptions {
         check_only: false,
+        fix: false,
         stdout_mode: false,
         list_changed: false,
         fail_fast: false,
@@ -157,6 +159,12 @@ pub(super) fn parse_options(mode: CliMode, cli_args: &[String]) -> Result<Parsed
                 }
             }
             "--check" if mode == CliMode::Fmt => options.check_only = true,
+            "--fix" if mode == CliMode::Check => {
+                if options.fix {
+                    return Err("Duplicate `--fix` option.".to_string());
+                }
+                options.fix = true;
+            }
             "--stdout" if mode == CliMode::Fmt => {
                 if options.stdout_mode {
                     return Err("Duplicate `--stdout` option.".to_string());
@@ -353,6 +361,7 @@ fn is_known_option(value: &str) -> bool {
             | "--executable"
             | "--name"
             | "--check"
+            | "--fix"
             | "--stdout"
             | "--list"
             | "--fail-fast"

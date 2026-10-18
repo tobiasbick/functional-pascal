@@ -88,6 +88,7 @@ impl Parser {
                 explanation: "An FPAS unit is one declaration list: mark each export `public` and close the unit with `end unit;`.",
             },
             written,
+            None,
         );
     }
 
@@ -126,6 +127,8 @@ impl Parser {
                 explanation,
             },
             span,
+            // The replacement is a whole `uses` clause, not a unit name.
+            None,
         );
         true
     }

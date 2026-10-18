@@ -47,6 +47,7 @@ impl Parser {
                 explanation: "FPAS has no classes or inheritance; declare a record whose methods take `Self` and return updated values.",
             },
             written,
+            None,
         );
         TypeBody::Alias(TypeExpr::Named {
             id: QualifiedId {

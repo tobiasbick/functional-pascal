@@ -5,8 +5,8 @@
 use crate::ast::{Decl, Stmt, Visibility};
 use crate::parser::Parser;
 use crate::parser::foreign::{BindingContext, BindingKeyword};
-use fpas_diagnostics::ForeignHabit;
 use fpas_diagnostics::codes::PARSE_MISSING_DECLARATION_KEYWORD;
+use fpas_diagnostics::{Applicability, ForeignHabit};
 use fpas_lexer::Token;
 
 impl Parser {
@@ -85,6 +85,7 @@ impl Parser {
                 explanation: "Every declaration repeats its keyword; repeat `public` for every exported declaration.",
             },
             written,
+            Some(Applicability::MachineApplicable),
         );
         declarations
     }

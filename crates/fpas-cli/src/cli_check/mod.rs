@@ -14,20 +14,41 @@ use fpas_diagnostics::{DiagnosticSeverity, FileDiagnostic};
 use fpas_project as project;
 
 mod directory;
+mod fix;
 
-/// Checks sources from CLI-resolved input without execution.
+/// Checks sources from CLI-resolved input without execution; with `--fix`, first applies
+/// machine-applicable fixes.
 pub(crate) fn check_cli(
     config: CliConfig,
     standard_library: Option<&project::StandardLibrary>,
     reporter: &mut Reporter<'_>,
 ) -> i32 {
-    match config.input {
+    if !config.fix {
+        return check_input(&config.input, standard_library, reporter);
+    }
+    let summary = match fix::apply_fixes(&config.input, standard_library, |input, reporter| {
+        check_input(input, standard_library, reporter)
+    }) {
+        Ok(summary) => summary,
+        Err(failure) => return reporter.failure(&failure),
+    };
+    let exit_code = check_input(&config.input, standard_library, reporter);
+    reporter.progress(summary);
+    exit_code
+}
+
+fn check_input(
+    input: &CliInput,
+    standard_library: Option<&project::StandardLibrary>,
+    reporter: &mut Reporter<'_>,
+) -> i32 {
+    match input {
         CliInput::SourceFile(path) if path.is_dir() => {
-            check_source_directory(&path, standard_library, reporter)
+            check_source_directory(path, standard_library, reporter)
         }
-        CliInput::SourceFile(path) => check_source_file(&path, standard_library, reporter),
-        CliInput::ProjectFile(path) => check_project_file(&path, standard_library, reporter),
-        CliInput::WorkspaceFile(path) => check_workspace_file(&path, standard_library, reporter),
+        CliInput::SourceFile(path) => check_source_file(path, standard_library, reporter),
+        CliInput::ProjectFile(path) => check_project_file(path, standard_library, reporter),
+        CliInput::WorkspaceFile(path) => check_workspace_file(path, standard_library, reporter),
         CliInput::CompiledProgramFile(path) => reporter.failure(
             &CliFailure::new(
                 CLI_INPUT_UNSUPPORTED,

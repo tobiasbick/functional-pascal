@@ -60,6 +60,8 @@ pub(crate) struct CliConfig {
     pub diagnostics: DiagnosticFormat,
     /// Fresh report destination selected only by `run --failure-dump`.
     pub failure_dump: Option<PathBuf>,
+    /// `check --fix`: apply machine-applicable fixes before the final check.
+    pub fix: bool,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]

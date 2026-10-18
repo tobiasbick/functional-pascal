@@ -37,9 +37,10 @@ impl LanguageService {
             message: current.message.clone(),
             span: trigger.span,
         };
-        let value = import_action(self, path, &snapshot, &identity)
-            .into_iter()
-            .collect();
+        let mut value = compiler_fix_actions(current, &identity);
+        if value.is_empty() {
+            value.extend(import_action(self, path, &snapshot, &identity));
+        }
         Ok(ResultWithSnapshot { snapshot, value })
     }
 }
@@ -87,7 +88,34 @@ fn import_action(
         title: format!("Use qualified symbol from {owner}"),
         diagnostic: diagnostic.clone(),
         edits,
+        preferred: true,
     })
+}
+
+/// Converts the compiler's own fixes of `current` into quick fixes; edits in another source
+/// rule a fix out.
+fn compiler_fix_actions(
+    current: &fpas_diagnostics::Diagnostic,
+    identity: &DiagnosticIdentity,
+) -> Vec<SemanticCodeAction> {
+    current
+        .fixes
+        .iter()
+        .filter(|fix| fix.edits.iter().all(|edit| edit.span.source_id() == 0))
+        .map(|fix| SemanticCodeAction {
+            title: fix.title.clone(),
+            diagnostic: identity.clone(),
+            edits: fix
+                .edits
+                .iter()
+                .map(|edit| SemanticEdit {
+                    span: edit.span,
+                    new_text: edit.new_text.clone(),
+                })
+                .collect(),
+            preferred: fix.is_machine_applicable(),
+        })
+        .collect()
 }
 
 fn diagnostic_name(message: &str) -> Option<&str> {

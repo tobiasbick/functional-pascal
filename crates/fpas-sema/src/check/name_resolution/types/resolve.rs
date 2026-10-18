@@ -149,18 +149,22 @@ impl Checker {
                     );
                     Ty::Error
                 } else {
+                    let hidden = self.scopes.imports.hidden_path_hint(&name);
+                    let fix = hidden
+                        .is_none()
+                        .then(|| crate::check::foreign::foreign_type_fix(&name, qid.span))
+                        .flatten();
                     self.error_with_code(
                         SEMA_UNKNOWN_TYPE,
                         format!("Unknown type `{name}`"),
-                        self.scopes
-                            .imports
-                            .hidden_path_hint(&name)
+                        hidden
                             .or_else(|| crate::check::foreign::foreign_type_hint(&name))
                             .unwrap_or_else(|| {
                                 "Check spelling or add a type definition.".to_string()
                             }),
                         qid.span,
                     );
+                    self.attach_fix_to_last_error(fix);
                     Ty::Error
                 }
             }

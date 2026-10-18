@@ -39,6 +39,18 @@ impl Checker {
         hint_for_unknown_std_name(name, &self.loaded_std_units)
     }
 
+    /// Returns the fix for an unresolved call over `span` that is a foreign built-in or a
+    /// record `T.Create(…)`, matching the help of [`Self::hint_unknown_callable`].
+    pub(crate) fn unknown_callable_fix(
+        &self,
+        name: &str,
+        args: &[Expr],
+        span: fpas_lexer::Span,
+    ) -> Option<fpas_diagnostics::Fix> {
+        self.foreign_builtin_fix(name, args, span)
+            .or_else(|| self.record_constructor_fix(name, args, span))
+    }
+
     pub(crate) fn resolve_designator_name(designator: &Designator) -> String {
         let mut result = String::new();
         for part in &designator.parts {

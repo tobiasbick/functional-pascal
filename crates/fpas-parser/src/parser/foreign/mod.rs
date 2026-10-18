@@ -9,6 +9,7 @@ mod arguments;
 mod bindings;
 mod classes;
 mod control_flow;
+mod control_flow_fix;
 mod generics;
 mod programs;
 mod routines;
@@ -21,23 +22,43 @@ pub(in crate::parser) use routines::AdaHeaderParts;
 
 use super::Parser;
 use crate::error::parse_error;
-use fpas_diagnostics::{DiagnosticCode, ForeignHabit};
+use fpas_diagnostics::{Applicability, DiagnosticCode, Fix, ForeignHabit, SourceSpan};
 use fpas_lexer::Span;
 
 impl Parser {
-    /// Reports one foreign-habit diagnostic; `span` must cover exactly `habit.found`.
+    /// Reports one foreign-habit diagnostic; `span` must cover exactly `habit.found`. Returns
+    /// the diagnostic's index, or `None` when the nesting limit suppressed it.
+    ///
+    /// With `fix`, the diagnostic carries an edit that replaces `span` with `habit.replacement`;
+    /// pass it only when the replacement is complete FPAS text without placeholders.
     pub(in crate::parser) fn report_foreign_habit(
         &mut self,
         code: DiagnosticCode,
         message: &str,
         habit: ForeignHabit<'_>,
         span: Span,
-    ) {
+        fix: Option<Applicability>,
+    ) -> Option<usize> {
         if self.nesting_limit_reached {
-            return;
+            return None;
         }
-        let diagnostic = habit.attach(parse_error(code, message, String::new(), span));
+        let mut diagnostic = habit.attach(parse_error(code, message, String::new(), span));
+        if let Some(applicability) = fix {
+            diagnostic = diagnostic.with_fix(habit.fix(
+                applicability,
+                SourceSpan::try_from(span).ok(),
+                habit.replacement,
+            ));
+        }
         self.errors.push(diagnostic);
+        Some(self.errors.len() - 1)
+    }
+
+    /// Adds `fix` to the habit diagnostic at `index`, as returned by [`Self::report_foreign_habit`].
+    pub(in crate::parser) fn add_habit_fix(&mut self, index: Option<usize>, fix: Option<Fix>) {
+        if let Some(diagnostic) = index.and_then(|index| self.errors.get_mut(index)) {
+            diagnostic.fixes.extend(fix);
+        }
     }
 
     /// Returns the source text covered by `span`, or an empty string for synthetic spans.

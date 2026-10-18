@@ -22,6 +22,7 @@ impl Parser {
         self.note_compound_body(&mut control);
         let errors_before = self.errors.len();
         let then_branch = Box::new(self.parse_control_body(then_start));
+        self.note_body(&mut control, &then_branch);
         self.note_else_terminator(&mut control, errors_before);
         let else_branch = if self.check(&Token::Elsif) {
             Some(Box::new(
@@ -30,7 +31,9 @@ impl Parser {
         } else if self.check(&Token::Else) {
             let else_start = self.advance().span;
             self.note_compound_body(&mut control);
-            Some(Box::new(self.parse_control_body(else_start)))
+            let else_body = self.parse_control_body(else_start);
+            self.note_body(&mut control, &else_body);
+            Some(Box::new(else_body))
         } else {
             None
         };

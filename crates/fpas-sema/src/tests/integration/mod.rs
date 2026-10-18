@@ -2,6 +2,7 @@ use super::{check_errors, check_ok};
 
 mod diagnostics;
 mod foreign_builtins;
+mod foreign_fixes;
 mod foreign_routines;
 mod programs;
 mod short_names;

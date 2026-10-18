@@ -5,8 +5,8 @@
 
 use super::super::Checker;
 use crate::scope::SymbolKind;
-use fpas_diagnostics::ForeignHabit;
 use fpas_diagnostics::codes::SEMA_IMMUTABLE_ASSIGNMENT;
+use fpas_diagnostics::{Applicability, Fix, ForeignHabit, SourceSpan, fix_title};
 use fpas_lexer::Span;
 use fpas_parser::{Designator, DesignatorPart, Expr};
 
@@ -55,7 +55,21 @@ impl Checker {
             String::new(),
             span,
         );
-        self.errors.push(habit.attach(diagnostic));
+        // `F := Value` becomes `return Value`: the edit covers `F :=` up to the value.
+        let value_start = value.span();
+        let prefix = Span {
+            length: value_start.offset.saturating_sub(target.span.offset),
+            ..target.span
+        };
+        let fix = SourceSpan::try_from(prefix).ok().and_then(|prefix| {
+            Fix::replace(
+                fix_title("return"),
+                Applicability::MachineApplicable,
+                prefix,
+                "return ",
+            )
+        });
+        self.errors.push(habit.attach(diagnostic).with_fix(fix));
         true
     }
 }

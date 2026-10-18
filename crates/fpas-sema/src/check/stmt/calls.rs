@@ -154,6 +154,10 @@ impl Checker {
         };
 
         self.error_with_code(code, message, hint, span);
+        if code == SEMA_UNKNOWN_NAME {
+            let fix = self.unknown_callable_fix(&name, args, span);
+            self.attach_fix_to_last_error(fix);
+        }
         self.check_args_only(args);
         Ty::Error
     }

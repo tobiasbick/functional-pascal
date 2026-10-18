@@ -84,7 +84,7 @@ pub(crate) fn code_action(
             }])),
             ..WorkspaceEdit::default()
         }),
-        is_preferred: Some(true),
+        is_preferred: Some(value.preferred),
         ..CodeAction::default()
     })
 }

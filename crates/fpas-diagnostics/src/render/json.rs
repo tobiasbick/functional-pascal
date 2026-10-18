@@ -2,7 +2,7 @@
 
 use serde::Serialize;
 
-use crate::{Diagnostic, DiagnosticSeverity, DiagnosticStage, SourceRange};
+use crate::{Diagnostic, DiagnosticSeverity, DiagnosticStage, Fix, SourcePosition, SourceRange};
 
 #[derive(Serialize)]
 struct Record<'a> {
@@ -16,6 +16,42 @@ struct Record<'a> {
     expected: Option<&'a str>,
     found: Option<&'a str>,
     hint: Option<&'a str>,
+    fixes: Vec<FixRecord<'a>>,
+}
+
+#[derive(Serialize)]
+struct FixRecord<'a> {
+    title: &'a str,
+    applicability: &'static str,
+    edits: Vec<EditRecord<'a>>,
+}
+
+#[derive(Serialize)]
+struct EditRecord<'a> {
+    start: SourcePosition,
+    end: SourcePosition,
+    new_text: &'a str,
+}
+
+/// Resolves every edit against `source`; a fix with an unresolvable edit is left out.
+fn fix_record<'a>(fix: &'a Fix, source: Option<&str>) -> Option<FixRecord<'a>> {
+    let edits = fix
+        .edits
+        .iter()
+        .map(|edit| {
+            let range = SourceRange::resolve(edit.span, source)?;
+            Some(EditRecord {
+                start: range.start,
+                end: range.end?,
+                new_text: &edit.new_text,
+            })
+        })
+        .collect::<Option<Vec<_>>>()?;
+    Some(FixRecord {
+        title: &fix.title,
+        applicability: fix.applicability.as_str(),
+        edits,
+    })
 }
 
 /// Serializes one diagnostic as JSON without a trailing newline.
@@ -56,6 +92,11 @@ pub fn render_json(
         expected: diagnostic.expected.as_deref(),
         found: diagnostic.found.as_deref(),
         hint: diagnostic.help.as_deref(),
+        fixes: diagnostic
+            .fixes
+            .iter()
+            .filter_map(|fix| fix_record(fix, source))
+            .collect(),
     };
     serde_json::to_string(&record)
 }

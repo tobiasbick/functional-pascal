@@ -6,8 +6,8 @@
 
 use super::super::{ERROR_IDENT, Parser};
 use crate::ast::TypeBody;
-use fpas_diagnostics::ForeignHabit;
 use fpas_diagnostics::codes::PARSE_FOREIGN_SYNTAX;
+use fpas_diagnostics::{Applicability, Fix, ForeignHabit, SourceSpan, fix_title};
 use fpas_lexer::{Span, Token};
 
 impl Parser {
@@ -81,6 +81,14 @@ impl Parser {
         let written = self.span_from(start);
         let found = self.source_text(written).to_owned();
         let replacement = format!("type {name} = {body_form};");
+        // Ada arrays may start at any index; the FPAS array is zero-based.
+        let fix = if body_form.contains('…') || body_form.contains("TypeName") {
+            None
+        } else if ada_is && body_form.starts_with("array of") {
+            Some(Applicability::NeedsReview)
+        } else {
+            Some(Applicability::MachineApplicable)
+        };
         let (message, explanation) = if ada_is {
             (
                 "Ada type declaration `type Name is …` is not FPAS syntax",
@@ -92,7 +100,7 @@ impl Parser {
                 "Enumerations are declared with `enum`, one member per `;`.",
             )
         };
-        self.report_foreign_habit(
+        let index = self.report_foreign_habit(
             PARSE_FOREIGN_SYNTAX,
             message,
             ForeignHabit {
@@ -101,7 +109,24 @@ impl Parser {
                 explanation,
             },
             written,
+            None,
         );
+        // The written span starts at the name, after `type`, and ends before `;`; type
+        // parameters between the name and `=` or `is` rule the fix out.
+        let after_name = found.get(name.len()..).unwrap_or_default().trim_start();
+        let plain_name = after_name.starts_with('=')
+            || after_name
+                .get(..2)
+                .is_some_and(|word| word.eq_ignore_ascii_case("is"));
+        let fix = fix.filter(|_| plain_name).and_then(|applicability| {
+            Fix::replace(
+                fix_title(&replacement),
+                applicability,
+                SourceSpan::try_from(written).ok()?,
+                format!("{name} = {body_form}"),
+            )
+        });
+        self.add_habit_fix(index, fix);
     }
 
     fn placeholder_type_body(&self, span: Span) -> TypeBody {

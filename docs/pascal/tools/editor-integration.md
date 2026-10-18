@@ -17,6 +17,7 @@ desktop editors. The implemented editor features are:
 - signature help, repository snippets, and unambiguous auto-import completion
 - compiler-backed semantic highlighting with TextMate fallback
 - deterministic import quick fixes for eligible `FP3001` and `FP3003` diagnostics
+- compiler fixes for Pascal, Delphi and Ada habits as quick fixes
 - project check, build, run, test, format, and format-check workflows
 - Problems, Testing view, cancellation, active-project status, and terminal runs
 - source debugging with breakpoints, task threads, stepping, inspection,
@@ -584,6 +585,12 @@ clients that cannot apply versioned `documentChanges`. Empty code-action ranges
 act as cursor positions; merely touching the exclusive end of a diagnostic
 does not select that diagnostic.
 Compiler help that only explains an error is not presented as an automatic fix.
+
+A diagnostic that carries compiler [fixes](diagnostics.md#fixes), such as `&&` → `and` or a
+Pascal `if` rewritten with `end if;`, offers each of them as a quick fix titled like the fix.
+Machine-applicable fixes are preferred; fixes that need review are offered but not preferred.
+These edits are not formatted; format the document afterwards. A diagnostic with compiler fixes
+offers no import quick fix.
 
 Comments, string contents, unknown names, inaccessible declarations, and
 sources outside the loaded project produce no navigation result. Recovered or

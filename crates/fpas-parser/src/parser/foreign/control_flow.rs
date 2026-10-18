@@ -25,11 +25,26 @@ pub(in crate::parser) struct PascalControl {
     /// A branch or loop body started with `begin`.
     compound_body: bool,
     /// Index of the error for a missing `;` directly before `else`.
-    else_terminator_error: Option<usize>,
+    pub(super) else_terminator_error: Option<usize>,
     /// The `for` header omitted the loop variable's type.
     untyped_for: bool,
     /// Pascal case arms were written without `when`.
     arms_without_when: bool,
+    /// Branch and loop bodies in source order, for the rewrite fix.
+    pub(super) bodies: Vec<ControlBody>,
+    /// Name of an untyped counting `for` variable, after which `: integer` goes.
+    pub(super) for_variable: Option<Span>,
+    /// An untyped `for … in` variable, whose element type is unknown.
+    pub(super) untyped_for_in: bool,
+    /// Starts of Pascal case arms written without `when`.
+    pub(super) arm_starts: Vec<Span>,
+}
+
+/// One parsed branch or loop body: its statement count and first statement.
+#[derive(Debug)]
+pub(super) struct ControlBody {
+    pub(super) statements: usize,
+    pub(super) first: Option<Span>,
 }
 
 impl Parser {
@@ -58,14 +73,35 @@ impl Parser {
         });
     }
 
-    /// Notes Pascal `for I := …` without a type; recovery continues with `integer`.
-    pub(in crate::parser) fn note_untyped_for(&self, control: &mut PascalControl) {
+    /// Notes Pascal `for I := …` or `for I in …` without a type; recovery continues with
+    /// `integer`. `variable` is the loop variable's name.
+    pub(in crate::parser) fn note_untyped_for(&self, control: &mut PascalControl, variable: Span) {
         control.untyped_for = true;
+        if self.check(&Token::In) {
+            control.untyped_for_in = true;
+        } else {
+            control.for_variable = Some(variable);
+        }
     }
 
-    /// Notes a Pascal case arm without `when`.
-    pub(in crate::parser) fn note_arm_without_when(&self, control: &mut PascalControl) {
+    /// Notes a Pascal case arm without `when` that starts at `label`.
+    pub(in crate::parser) fn note_arm_without_when(
+        &self,
+        control: &mut PascalControl,
+        label: Span,
+    ) {
         control.arms_without_when = true;
+        control.arm_starts.push(label);
+    }
+
+    /// Notes a parsed branch or loop body.
+    pub(in crate::parser) fn note_body(&self, control: &mut PascalControl, body: &Stmt) {
+        if let Stmt::Block(statements, _) = body {
+            control.bodies.push(ControlBody {
+                statements: statements.len(),
+                first: statements.first().map(Stmt::span),
+            });
+        }
     }
 
     /// Requires the named ending of a control statement and collapses its Pascal follow-up
@@ -79,6 +115,7 @@ impl Parser {
         nested_else_if: bool,
     ) {
         let errors_before = self.errors.len();
+        let end_token = self.check(&Token::End).then(|| self.current_span());
         let pascal = control.compound_body
             || control.else_terminator_error.is_some()
             || control.untyped_for
@@ -127,7 +164,8 @@ impl Parser {
         }
         let written = self.span_from(start);
         let found = self.source_text(written).to_owned();
-        self.report_foreign_habit(
+        let fix = self.pascal_control_fix(kind, &control, written, ending_missing, end_token);
+        let index = self.report_foreign_habit(
             PARSE_EXPECTED_TOKEN,
             &format!("Pascal `{keyword}` statement is not FPAS syntax"),
             ForeignHabit {
@@ -136,7 +174,9 @@ impl Parser {
                 explanation: &explanation.join(" "),
             },
             written,
+            None,
         );
+        self.add_habit_fix(index, fix);
     }
 
     /// True at Ada `loop` where FPAS expects `do`.
@@ -179,6 +219,7 @@ impl Parser {
                 explanation: "FPAS loops use `do`, declare a typed loop variable, and close with a named ending.",
             },
             written,
+            None,
         );
         Stmt::Block(Vec::new(), written)
     }
@@ -219,6 +260,7 @@ impl Parser {
                 explanation,
             },
             written,
+            None,
         );
         Stmt::Block(Vec::new(), written)
     }

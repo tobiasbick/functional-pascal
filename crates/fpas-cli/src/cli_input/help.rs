@@ -177,7 +177,7 @@ const CHECK_HELP: &str = "\
 Type-check Functional Pascal sources and projects without running them.
 
 Usage:
-  fpas check [--std-lib <dir>] [--diagnostics <text | json>] [<file.fpas | dir | file.fpasprj | file.fpasworkspace>]
+  fpas check [--std-lib <dir>] [--diagnostics <text | json>] [--fix] [<file.fpas | dir | file.fpasprj | file.fpasworkspace>]
 
 With no path, discovers a `.fpasworkspace` or `.fpasprj` in the current directory.
 
@@ -185,6 +185,8 @@ Options:
   --std-lib <dir>  Replace the complete source standard library
   --diagnostics <text | json>
                    Diagnostic format on stderr; `json` writes one record per line
+  --fix            Apply machine-applicable fixes to the checked sources in
+                   place, then report the remaining diagnostics; never formats
   -h, --help       Print this help
   -V, --version    Print version
 
@@ -193,6 +195,7 @@ Examples:
   fpas check my-app.fpasprj
   fpas check src/
   fpas check --diagnostics json my-app.fpasprj
+  fpas check --fix my-app.fpasprj
 
 ";
 

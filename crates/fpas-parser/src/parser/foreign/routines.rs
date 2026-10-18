@@ -7,20 +7,22 @@
 
 use super::super::Parser;
 use crate::ast::{Expr, FuncBody, Stmt};
-use fpas_diagnostics::ForeignHabit;
 use fpas_diagnostics::codes::{PARSE_EXPECTED_TOKEN, PARSE_FOREIGN_SYNTAX};
+use fpas_diagnostics::{Applicability, Fix, FixEdit, ForeignHabit, SourceSpan};
 use fpas_lexer::{Span, Token};
 
 /// Source text of a routine header, collected to build the FPAS form of an Ada header.
 pub(in crate::parser) struct AdaHeaderParts<'a> {
     /// `function` or `procedure`.
-    pub keyword: &'a str,
+    pub keyword: &'static str,
     /// Routine name as written.
     pub name: &'a str,
     /// Parameter list including parentheses, or `None` when it was omitted.
     pub params: Option<Span>,
     /// Result type of a function.
     pub return_type: Option<Span>,
+    /// `is` ended the header, so an Ada body through `end Name;` follows.
+    pub is_body: bool,
 }
 
 impl Parser {
@@ -47,6 +49,7 @@ impl Parser {
                 explanation: "Parameters are read-only already; remove `const`.",
             },
             written,
+            Some(Applicability::MachineApplicable),
         );
     }
 
@@ -73,6 +76,7 @@ impl Parser {
                 explanation: "Routines always declare a parameter list, also an empty one.",
             },
             name_span,
+            Some(Applicability::MachineApplicable),
         );
     }
 
@@ -102,7 +106,7 @@ impl Parser {
         } else {
             "FPAS has no `is` in routine headers and closes the body with `end procedure;`."
         };
-        self.report_foreign_habit(
+        let index = self.report_foreign_habit(
             PARSE_FOREIGN_SYNTAX,
             "Ada routine header is not FPAS syntax",
             ForeignHabit {
@@ -111,7 +115,12 @@ impl Parser {
                 explanation,
             },
             written,
+            // The body ending is added once `skip_ada_routine_body` finds it.
+            parts.is_body.then_some(Applicability::MachineApplicable),
         );
+        self.ada_header_fix = index
+            .filter(|_| parts.is_body)
+            .map(|index| (index, parts.keyword));
     }
 
     /// Skips an Ada routine body through `end Name;` (or a named FPAS ending) without
@@ -122,11 +131,15 @@ impl Parser {
                 match self.peek_token() {
                     Token::Ident(ending) if ending.eq_ignore_ascii_case(name) => {
                         self.advance();
-                        self.advance();
+                        let ending = self.advance().span;
+                        let pending = self.ada_header_fix.take();
+                        self.complete_ada_fix(pending, Some(ending));
                         self.eat(&Token::Semicolon);
                         break;
                     }
                     Token::Function | Token::Procedure => {
+                        // The FPAS ending needs no edit; the header fix stays as it is.
+                        self.ada_header_fix = None;
                         self.advance();
                         self.advance();
                         self.eat(&Token::Semicolon);
@@ -138,10 +151,43 @@ impl Parser {
             }
             self.advance();
         }
+        let pending = self.ada_header_fix.take();
+        self.complete_ada_fix(pending, None);
         FuncBody::Block {
             nested: Vec::new(),
             stmts: Vec::new(),
         }
+    }
+
+    /// Adds the edit that rewrites an Ada ending, such as `end Name` → `end function`, to the
+    /// pending header fix `(diagnostic index, ending text)`, or drops the fix when the body has
+    /// no Ada ending to rewrite.
+    pub(in crate::parser) fn complete_ada_fix(
+        &mut self,
+        pending: Option<(usize, &'static str)>,
+        ending: Option<Span>,
+    ) {
+        let Some((index, keyword)) = pending else {
+            return;
+        };
+        let Some(diagnostic) = self.errors.get_mut(index) else {
+            return;
+        };
+        let edit = ending
+            .and_then(|span| SourceSpan::try_from(span).ok())
+            .map(|span| FixEdit {
+                span,
+                new_text: keyword.to_owned(),
+            });
+        let fixes = std::mem::take(&mut diagnostic.fixes);
+        diagnostic.fixes = fixes
+            .into_iter()
+            .filter_map(|fix| {
+                let mut edits = fix.edits;
+                edits.push(edit.clone()?);
+                Fix::new(fix.title, fix.applicability, edits)
+            })
+            .collect();
     }
 
     /// True at Delphi `Result :=` or `Result.Field :=`; `Result` is otherwise only a type keyword.
@@ -183,6 +229,9 @@ impl Parser {
                 explanation,
             },
             written,
+            fields
+                .is_empty()
+                .then_some(Applicability::MachineApplicable),
         );
         if fields.is_empty() {
             Stmt::Return(Some(value), written)
@@ -234,6 +283,12 @@ impl Parser {
                 explanation: "Parameters are read-only by default; a writable parameter is declared with `var` before its name, and calls pass it as `var X`.",
             },
             written,
+            // A writable parameter also changes every call, which must pass `var X`.
+            Some(if writable {
+                Applicability::NeedsReview
+            } else {
+                Applicability::MachineApplicable
+            }),
         );
     }
 }
@@ -251,6 +306,8 @@ impl Parser {
                 explanation: "Leave a routine with `return;`, or `return Value;` in a function.",
             },
             span,
+            // Delphi `Exit` in a function returns the current `Result`, which needs a value.
+            Some(Applicability::NeedsReview),
         );
     }
 
@@ -266,6 +323,7 @@ impl Parser {
                 explanation: "FPAS has no implicit result variable; keep the value in a local `var` and `return` it.",
             },
             span,
+            None,
         );
         Expr::Error(span)
     }

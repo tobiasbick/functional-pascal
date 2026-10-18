@@ -2,8 +2,8 @@
 
 The Rust toolchain uses `fpas-diagnostics::Diagnostic` for lexer, parser,
 semantic, compiler and runtime errors. Its fields contain a stable code,
-severity, message, optional help, optional source span, and optional
-producer-supplied expected/found details. A missing position is `None`; it is
+severity, message, optional help, optional source span, optional
+producer-supplied expected/found details, and [fixes](#fixes). A missing position is `None`; it is
 not line zero or an invented first line.
 
 ## Embedded VM failure observation
@@ -194,56 +194,60 @@ end.
 
 The help reads "FPAS writes `return 42`."
 
-| Habit | Origin | FPAS form | Code |
-| --- | --- | --- | --- |
-| `{ comment }`, `(* comment *)` | Pascal | `// comment` | FP1013 |
-| `(const S: string)` parameter modifier | Delphi | `(S: string)`; parameters are read-only | FP2023 |
-| `procedure Q;`, `function F: T;` | Pascal | `procedure Q();`, `function F(): T;` | FP2001 |
-| `function F return T is … end F;` | Ada | `function F(): T; begin … end function;` | FP2023 |
-| `Result := Value;`, `Result.X := Value;` | Delphi | `return Value;` | FP2023 |
-| `F := Value;` inside function `F` | Pascal | `return Value;` | FP3005 |
-| `Exit(Value);` | Delphi | `return Value;`, `return;` in a procedure | FP3003 |
-| `var` / `const` / `type` section with several declarations | Pascal | Repeat the keyword for each declaration | FP2015 |
-| `var I, J: integer` grouped names | Pascal | `var I: integer := 0; var J: integer := 0;` | FP2015 |
-| `X : integer := 1;` without keyword | Ada | `var X: integer := 1;` | FP2015 |
-| `var Total: integer;` without initializer | Pascal | `var Total: integer := 0;` | FP2001 |
-| `const N = 3;` | Pascal | `const N: integer := 3;` | FP2023 |
-| `array[0..2] of integer = (3, 7, 12)` | Pascal | `array of integer := [3, 7, 12]`, zero-based | FP2023 |
-| `var` / `const` section between a routine header and `begin` | Pascal | Local `var` / `const` statements after `begin` | FP2023 |
-| `type TFoo = class … end;` | Delphi | `type TFoo = record … end record;` with methods taking `Self` | FP2023 |
-| `interface` / `implementation` sections, unit `end.` | Delphi | One declaration list, exports marked `public`, `end unit;` | FP2023 |
-| `TList<integer>`, `Name<T>` | Delphi | `array of integer`, `Name of T` | FP2001 |
-| `uses SysUtils;`, `uses System.SysUtils;` and other Delphi run-time units | Delphi | `Std` units with an alias, such as `uses Std.Parse as Parse;` | FP2022 |
-| `Inc(X)`, `Dec(X, N)` | Pascal | `X := X + 1;`, `X := X - N;` | FP3003 |
-| `Length(S)`, `Low(A)`, `High(A)` | Pascal | `S.Length()`, `0`, `A.Length() - 1` | FP3003 |
-| `IntToStr(N)`, `TryStrToInt(Text, V)` | Delphi | `Conv.IntToStr(N)`, `Parse.Int(Text)` returning a Result | FP3003 |
-| `Write(Text)`, `Console.Write(Text)` | Pascal | `Console.WriteText(Text)` | FP3003 |
-| `TPoint.Create(1, 2)` on a record | Delphi | `TPoint(X := 1, Y := 2)` | FP3003 |
-| `nil` | Pascal | `None` of `Option of T` | FP3003 |
-| `char`, `Double`, `Single`, `Extended`, `Int64`, `AnsiString` | Delphi | `string`, `real`, `integer` | FP3001 |
-| `if … then begin … end;`, no `;` before `else` | Pascal | `if … then …; else …; end if;` | FP2001 |
-| `while … do begin … end;` | Pascal | `while … do …; end while;` | FP2001 |
-| `for I := 1 to N do` | Pascal | `for I: integer := 1 to N do …; end for;` | FP2001 |
-| `case X of 1: …; else …; end;` | Pascal | `case X of when 1: …; else …; end case;` | FP2001 |
-| `for I in 1 .. N loop`, `while C loop … end loop;` | Ada | `for I: integer := 1 to N do …; end for;` | FP2023 |
-| `try … except … end;`, `try … finally … end;` | Delphi | `Result of (T, E)` handled with `case` or `try Expr` | FP2023 |
-| `&&`, `\|\|`, `!`, `!=`, `==` | C family | `and`, `or`, `not`, `<>`, `=` | FP1014 |
-| `/=`, `F(X => 1)` | Ada | `<>`, `F(X := 1)` | FP1014 |
-| `"text"` | C family | `'text'` | FP1014 |
-| `-- comment` at a line start or after `;` | Ada | `// comment` | FP1014 |
-| `@F`, `^integer`, `P^` | Pascal | `F` as a callable value; no pointers | FP1014 |
-| `WriteLn(X:0:2)` | Pascal | Format the text first, for example `'%f'.Format(X)` | FP2023 |
-| `program Name is … begin … end Name;` | Ada | `program Name; … begin … end.` | FP2023 |
-| `type T is record …`, `type K is (A, B);`, `type A is array (1 .. N) of T;` | Ada | `type T = record …`, `type K = enum A; B; end enum;`, `type A = array of T;` | FP2023 |
-| `type K = (A, B, C);` | Pascal | `type K = enum A; B; C; end enum;` | FP2023 |
-| `P : constant T := V;` | Ada | `const P: T := V;` | FP2015 |
-| `(Counter : in out integer)` | Ada | `(var Counter: integer)` | FP2023 |
-| `(3, 7, 12)`, `(X => 0.0, Y => 0.0)` aggregates | Ada | `[3, 7, 12]`, `Point(X := 0.0, Y := 0.0)` | FP2023 |
-| `"Sum: " & Text` | Ada | `'Sum: ' + Text` | FP1014 |
-| `Integer'Image (N)`, `Items'Length`, `Items'Range` | Ada | `Conv.IntToStr(N)`, `Items.Length()`, `0 to Items.Length() - 1` | FP1014 |
-| `TList<string>.Create`, `TDictionary<K, V>.Create` | Delphi | `[]`, `[:]` | FP2023 |
-| `Exit;` | Delphi | `return;` | FP2006 |
-| `Inc(Result)`, `Result` as a value | Delphi | A local `var` that the function returns | FP2023 |
+The Fix column names the [fix](#fixes) the diagnostic carries: `exact` is applied by
+`fpas check --fix`, `review` is offered but never applied automatically, and `—` means the
+help text only.
+
+| Habit | Origin | FPAS form | Code | Fix |
+| --- | --- | --- | --- | --- |
+| `{ comment }`, `(* comment *)` | Pascal | `// comment` | FP1013 | exact when the comment ends its line |
+| `(const S: string)` parameter modifier | Delphi | `(S: string)`; parameters are read-only | FP2023 | exact |
+| `procedure Q;`, `function F: T;` | Pascal | `procedure Q();`, `function F(): T;` | FP2001 | exact |
+| `function F return T is … end F;` | Ada | `function F(): T; begin … end function;` | FP2023 | exact |
+| `Result := Value;`, `Result.X := Value;` | Delphi | `return Value;` | FP2023 | exact for `Result := Value`, else — |
+| `F := Value;` inside function `F` | Pascal | `return Value;` | FP3005 | exact |
+| `Exit(Value);` | Delphi | `return Value;`, `return;` in a procedure | FP3003 | exact |
+| `var` / `const` / `type` section with several declarations | Pascal | Repeat the keyword for each declaration | FP2015 | exact; review without initializers |
+| `var I, J: integer` grouped names | Pascal | `var I: integer := 0; var J: integer := 0;` | FP2015 | exact; review without initializers |
+| `X : integer := 1;` without keyword | Ada | `var X: integer := 1;` | FP2015 | exact |
+| `var Total: integer;` without initializer | Pascal | `var Total: integer := 0;` | FP2001 | review |
+| `const N = 3;` | Pascal | `const N: integer := 3;` | FP2023 | exact for literals |
+| `array[0..2] of integer = (3, 7, 12)` | Pascal | `array of integer := [3, 7, 12]`, zero-based | FP2023 | review |
+| `var` / `const` section between a routine header and `begin` | Pascal | Local `var` / `const` statements after `begin` | FP2023 | exact; review without initializers |
+| `type TFoo = class … end;` | Delphi | `type TFoo = record … end record;` with methods taking `Self` | FP2023 | — |
+| `interface` / `implementation` sections, unit `end.` | Delphi | One declaration list, exports marked `public`, `end unit;` | FP2023 | — |
+| `TList<integer>`, `Name<T>` | Delphi | `array of integer`, `Name of T` | FP2001 | review for Delphi collections, else exact |
+| `uses SysUtils;`, `uses System.SysUtils;` and other Delphi run-time units | Delphi | `Std` units with an alias, such as `uses Std.Parse as Parse;` | FP2022 | — |
+| `Inc(X)`, `Dec(X, N)` | Pascal | `X := X + 1;`, `X := X - N;` | FP3003 | exact for plain arguments |
+| `Length(S)`, `Low(A)`, `High(A)` | Pascal | `S.Length()`, `0`, `A.Length() - 1` | FP3003 | exact for plain arguments |
+| `IntToStr(N)`, `TryStrToInt(Text, V)` | Delphi | `Conv.IntToStr(N)`, `Parse.Int(Text)` returning a Result | FP3003 | — |
+| `Write(Text)`, `Console.Write(Text)` | Pascal | `Console.WriteText(Text)` | FP3003 | exact when `Std.Console` is imported |
+| `TPoint.Create(1, 2)` on a record | Delphi | `TPoint(X := 1, Y := 2)` | FP3003 | exact with one plain argument per field |
+| `nil` | Pascal | `None` of `Option of T` | FP3003 | review |
+| `char`, `Double`, `Single`, `Extended`, `Int64`, `AnsiString` | Delphi | `string`, `real`, `integer` | FP3001 | exact; review for `char` |
+| `if … then begin … end;`, no `;` before `else` | Pascal | `if … then …; else …; end if;` | FP2001 | exact |
+| `while … do begin … end;` | Pascal | `while … do …; end while;` | FP2001 | exact |
+| `for I := 1 to N do` | Pascal | `for I: integer := 1 to N do …; end for;` | FP2001 | exact; — for `for I in …` |
+| `case X of 1: …; else …; end;` | Pascal | `case X of when 1: …; else …; end case;` | FP2001 | exact |
+| `for I in 1 .. N loop`, `while C loop … end loop;` | Ada | `for I: integer := 1 to N do …; end for;` | FP2023 | — |
+| `try … except … end;`, `try … finally … end;` | Delphi | `Result of (T, E)` handled with `case` or `try Expr` | FP2023 | — |
+| `&&`, `\|\|`, `!`, `!=`, `==` | C family | `and`, `or`, `not`, `<>`, `=` | FP1014 | exact |
+| `/=`, `F(X => 1)` | Ada | `<>`, `F(X := 1)` | FP1014 | exact |
+| `"text"` | C family | `'text'` | FP1014 | exact; review with `\` escapes |
+| `-- comment` at a line start or after `;` | Ada | `// comment` | FP1014 | exact |
+| `@F`, `^integer`, `P^` | Pascal | `F` as a callable value; no pointers | FP1014 | — |
+| `WriteLn(X:0:2)` | Pascal | Format the text first, for example `'%f'.Format(X)` | FP2023 | review |
+| `program Name is … begin … end Name;` | Ada | `program Name; … begin … end.` | FP2023 | exact |
+| `type T is record …`, `type K is (A, B);`, `type A is array (1 .. N) of T;` | Ada | `type T = record …`, `type K = enum A; B; end enum;`, `type A = array of T;` | FP2023 | exact; review for arrays |
+| `type K = (A, B, C);` | Pascal | `type K = enum A; B; C; end enum;` | FP2023 | exact |
+| `P : constant T := V;` | Ada | `const P: T := V;` | FP2015 | exact |
+| `(Counter : in out integer)` | Ada | `(var Counter: integer)` | FP2023 | review; exact for `in` |
+| `(3, 7, 12)`, `(X => 0.0, Y => 0.0)` aggregates | Ada | `[3, 7, 12]`, `Point(X := 0.0, Y := 0.0)` | FP2023 | exact |
+| `"Sum: " & Text` | Ada | `'Sum: ' + Text` | FP1014 | exact |
+| `Integer'Image (N)`, `Items'Length`, `Items'Range` | Ada | `Conv.IntToStr(N)`, `Items.Length()`, `0 to Items.Length() - 1` | FP1014 | exact for `'Length`; review for `'First`, `'Last`, `'Range` |
+| `TList<string>.Create`, `TDictionary<K, V>.Create` | Delphi | `[]`, `[:]` | FP2023 | review |
+| `Exit;` | Delphi | `return;` | FP2006 | review |
+| `Inc(Result)`, `Result` as a value | Delphi | A local `var` that the function returns | FP2023 | — |
 
 Help for built-in names inserts the written arguments when they are plain names or
 literals, and the alias of an already imported `Std` unit. After reporting `&&`, `||`, `!`,
@@ -258,6 +262,42 @@ can recognize it (`fpas-lexer`, `fpas-parser` or `fpas-sema`), build the help th
 of the [compact language reference](../agent-reference.md#1-translate-habits-before-writing).
 Forms the compiler does not recognize yet include Ada `with`/`package` units, Ada `task`
 declarations and exception handlers, and one-based string indexing, which only fails at run time.
+A new habit gets a fix when its replacement is complete source text; the producer builds it with
+`ForeignHabit::fix` or `fpas_diagnostics::Fix`, and its test applies the fix and checks the result.
+
+## Fixes
+
+A diagnostic can carry fixes: source edits that correct it. Each fix has a title, an
+applicability and one or more edits in the diagnostic's source; an edit replaces a byte range,
+and an empty range is an insertion. The habit table above lists which diagnostics have fixes.
+
+| Applicability | JSON | Meaning |
+| --- | --- | --- |
+| Machine-applicable | `machine-applicable` | The edits are correct as written. `fpas check --fix` applies them. |
+| Needs review | `needs-review` | The edits may change meaning or rest on a guess, such as `0` for a missing initializer or zero-based indexes for Ada arrays. They are offered, never applied automatically. |
+
+Fixes reach three consumers:
+
+- `fpas check --diagnostics json` lists them in each record's `fixes` field; see
+  [the record fields](#rust-json-rendering-api).
+- `fpas check --fix` applies the machine-applicable ones in place; see
+  [checking without running](../program-structure/cli.md#checking-without-running).
+- The [language server](editor-integration.md) offers every fix as a quick fix and marks
+  machine-applicable ones as preferred.
+
+In Rust, `Diagnostic::fixes` holds `fpas_diagnostics::Fix` values; `Fix::apply` applies one,
+and `apply_machine_applicable` applies every machine-applicable fix of a source whose edits
+neither overlap nor touch an edit already chosen, so a second check picks up the rest.
+
+Fixes insert FPAS text but do not format; run `fpas fmt` afterwards. Fix titles name the
+replacement, such as "Write `and`", or the rewrite, such as "Rewrite as an FPAS `if`
+statement".
+
+A Pascal branch or loop body is one statement, so the rewrite of a Pascal `if`, `while` or `for`
+closes it after the first statement of its last body; following statements stay outside, as in
+Pascal. Producers leave a fix out when the rewrite is uncertain: placeholders such as `Value`
+or `…`, arguments that are not plain names or literals, a required `Std` unit that is not
+imported, or other errors inside the statement.
 
 ## Rust JSON rendering API
 
@@ -269,7 +309,13 @@ The caller supplies the name and text matching the diagnostic's source ID.
 The renderer does not read files or guess another source when text is unavailable.
 
 ```json
-{"kind":"diagnostic","code":"FP2001","severity":"error","phase":"parse","source":"parse.fpas","location":{"source_id":0,"start":{"line":2,"column":1},"end":{"line":2,"column":6}},"message":"Expected `;`, found `begin`","expected":";","found":"begin","hint":"Insert `;` here."}
+{"kind":"diagnostic","code":"FP2001","severity":"error","phase":"parse","source":"parse.fpas","location":{"source_id":0,"start":{"line":2,"column":1},"end":{"line":2,"column":6}},"message":"Expected `;`, found `begin`","expected":";","found":"begin","hint":"Insert `;` here.","fixes":[]}
+```
+
+A record with a fix, for `if A && B then` on line 3:
+
+```json
+{"kind":"diagnostic","code":"FP1014","severity":"error","phase":"lex","source":"main.fpas","location":{"source_id":0,"start":{"line":3,"column":8},"end":{"line":3,"column":10}},"message":"C-family `&&` is not FPAS syntax","expected":"and","found":"&&","hint":"Logical operators are words. FPAS writes `and`.","fixes":[{"title":"Write `and`","applicability":"machine-applicable","edits":[{"start":{"line":3,"column":8},"end":{"line":3,"column":10},"new_text":"and"}]}]}
 ```
 
 | Field | Meaning |
@@ -283,6 +329,10 @@ The renderer does not read files or guess another source when text is unavailabl
 | message | Primary explanation |
 | expected / found | Structured details when supplied by the producer, otherwise null |
 | hint | Optional actionable help, or null |
+| fixes | [Fixes](#fixes), each with `title`, `applicability` and `edits` of `start`, exclusive `end` and `new_text`; an empty array when there are none |
+
+Edit positions use the same coordinates as `location`. A fix whose edits cannot be resolved
+against the supplied source text is left out, so every listed edit is exact.
 
 Lines and columns are one-based; columns count Unicode scalar values, including
 tabs as one scalar. A supplementary character counts once, not as two UTF-16

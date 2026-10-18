@@ -405,3 +405,40 @@ fn import_fixture(name: &str) -> ImportFixture {
         source,
     }
 }
+
+#[test]
+fn habit_diagnostic_offers_its_compiler_fix_as_a_preferred_quick_fix() {
+    let temp = TempDirectory::new("semantic-habit-code-action");
+    let manifest = temp.write(
+        "habits.fpasprj",
+        "[project]\nname = \"habits\"\nkind = \"program\"\nmain = \"src/main.fpas\"\n\n[sources]\ninclude = [\"src/**/*.fpas\"]\n",
+    );
+    let source = "program Habits;\n\nbegin\n  var Count: integer := 0;\n  Inc(Count);\nend.\n";
+    let main = temp.write("src/main.fpas", source);
+    let mut service = LanguageService::load(&manifest);
+    let analysis = service.analyze_document(&main).expect("project analysis");
+    let diagnostic = diagnostics_for_document(&analysis)
+        .iter()
+        .find(|diagnostic| diagnostic.code == SEMA_UNKNOWN_NAME)
+        .expect("unknown-name diagnostic");
+    let identity = DiagnosticIdentity {
+        code: diagnostic.code,
+        message: diagnostic.message.clone(),
+        span: diagnostic.span.expect("source diagnostic span"),
+    };
+
+    let actions = service
+        .code_actions(&main, &identity)
+        .expect("habit quick fix")
+        .value;
+    let [action] = actions.as_slice() else {
+        panic!("expected one habit quick fix: {actions:#?}");
+    };
+    assert_eq!(action.title, "Write `Count := Count + 1;`");
+    assert!(action.preferred);
+    let mut edited = source.to_owned();
+    for edit in action.edits.iter().rev() {
+        edited.replace_range(edit.span.offset()..edit.span.end(), &edit.new_text);
+    }
+    assert_eq!(edited, source.replace("Inc(Count)", "Count := Count + 1"));
+}

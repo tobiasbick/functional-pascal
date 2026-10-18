@@ -6,6 +6,7 @@
 
 use crate::Token;
 use crate::lexer::Lexer;
+use fpas_diagnostics::Applicability;
 
 impl Lexer<'_> {
     /// True at an operator from another language.
@@ -94,7 +95,8 @@ impl Lexer<'_> {
         for _ in 0..width {
             self.advance();
         }
-        self.report_foreign_token(message, replacement, explanation, start);
+        let fix = token.as_ref().map(|_| Applicability::MachineApplicable);
+        self.report_foreign_token(message, replacement, explanation, start, fix);
         if let Some(token) = token {
             let (so, sl, sc) = start;
             self.push_tok(token, so, sl, sc);

@@ -9,4 +9,4 @@ mod constructors;
 mod result_assignment;
 mod types;
 
-pub(crate) use types::foreign_type_hint;
+pub(crate) use types::{foreign_type_fix, foreign_type_hint};

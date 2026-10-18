@@ -9,6 +9,7 @@ mod foreign_ada_programs;
 mod foreign_arguments;
 mod foreign_control_flow;
 mod foreign_declarations;
+mod foreign_fixes;
 mod foreign_habit_assertions;
 mod foreign_routines;
 mod keywords;

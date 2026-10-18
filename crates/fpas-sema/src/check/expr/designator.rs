@@ -183,6 +183,10 @@ impl Checker {
                     };
 
                     self.error_with_code(SEMA_UNKNOWN_NAME, message, hint, designator.span);
+                    if !is_qualified_ident_chain {
+                        let fix = self.foreign_builtin_fix(first, &[], designator.span);
+                        self.attach_fix_to_last_error(fix);
+                    }
                     return Ty::Error;
                 };
 

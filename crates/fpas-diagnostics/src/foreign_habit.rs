@@ -3,7 +3,7 @@
 //!
 //! **Documentation:** `docs/pascal/tools/diagnostics.md` (Diagnostics for other-language spellings)
 
-use crate::Diagnostic;
+use crate::{Applicability, Diagnostic, Fix, SourceSpan, fix_title};
 
 /// A recognized foreign spelling and the FPAS text that replaces it.
 ///
@@ -33,6 +33,20 @@ impl ForeignHabit<'_> {
     pub fn attach(&self, mut diagnostic: Diagnostic) -> Diagnostic {
         diagnostic.help = Some(self.help());
         diagnostic.with_expected_found(self.replacement, self.found)
+    }
+
+    /// Returns a fix that replaces `span` with `new_text`, titled after the replacement.
+    ///
+    /// `new_text` is usually [`Self::replacement`]; producers pass a variant when the written
+    /// text needs surrounding spaces or the edit covers less than `found`.
+    #[must_use]
+    pub fn fix(
+        &self,
+        applicability: Applicability,
+        span: Option<SourceSpan>,
+        new_text: impl Into<String>,
+    ) -> Option<Fix> {
+        Fix::replace(fix_title(self.replacement), applicability, span?, new_text)
     }
 }
 

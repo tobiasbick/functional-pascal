@@ -24,6 +24,7 @@ mod cli_paths;
 mod cli_run;
 mod cli_test;
 mod native_executable;
+mod source_publication;
 mod standard_library;
 mod test_script;
 

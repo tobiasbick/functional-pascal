@@ -38,7 +38,7 @@ fn missing_source_is_null_without_fabricated_text_coordinates() {
         json!({
             "kind": "diagnostic", "code": "FP4101", "severity": "error", "phase": "project",
             "source": null, "location": null, "message": "Cannot read source",
-            "expected": null, "found": null, "hint": "Check the path."
+            "expected": null, "found": null, "hint": "Check the path.", "fixes": []
         })
     );
     assert_eq!(render_json(None, None, &diagnostic).unwrap(), encoded);
@@ -173,4 +173,43 @@ fn program_output_records_escape_text_and_name_their_kind() {
         record,
         json!({"kind": "program-output", "stream": "stderr", "text": "warn \"x\"\t\u{1b}[31m"})
     );
+}
+
+#[test]
+fn fixes_serialize_scalar_edit_ranges_after_hint() {
+    use fpas_diagnostics::{Applicability, Fix};
+
+    let source = "é := a && b;";
+    let start = source.find("&&").unwrap();
+    let span = SourceSpan::new(start, 2, 1, 9);
+    let diagnostic = Diagnostic::error(PARSE_EXPECTED_TOKEN, "C-family `&&`", None, span)
+        .with_fix(Fix::replace(
+            "Replace `&&` with `and`",
+            Applicability::MachineApplicable,
+            span,
+            "and",
+        ))
+        .with_fix(Fix::replace(
+            "Unresolvable",
+            Applicability::NeedsReview,
+            SourceSpan::new(100, 1, 1, 1),
+            "x",
+        ));
+    let encoded = render_json(Some("Main.fpas"), Some(source), &diagnostic).unwrap();
+    assert!(encoded.contains(r#""hint":null,"fixes":[{"#));
+    let decoded: Value = serde_json::from_str(&encoded).unwrap();
+    assert_eq!(
+        decoded["fixes"],
+        json!([{
+            "title": "Replace `&&` with `and`",
+            "applicability": "machine-applicable",
+            "edits": [{
+                "start": {"line": 1, "column": 8}, "end": {"line": 1, "column": 10},
+                "new_text": "and"
+            }]
+        }])
+    );
+    let without_source = render_json(Some("Main.fpas"), None, &diagnostic).unwrap();
+    let decoded: Value = serde_json::from_str(&without_source).unwrap();
+    assert_eq!(decoded["fixes"], json!([]));
 }

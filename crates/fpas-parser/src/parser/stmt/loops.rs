@@ -21,7 +21,7 @@ impl Parser {
         let mut control = PascalControl::default();
         let var_type = if self.check(&Token::ColonAssign) || self.check(&Token::In) {
             // Pascal `for I := …` and Ada `for I in …` omit the type.
-            self.note_untyped_for(&mut control);
+            self.note_untyped_for(&mut control, var_span);
             Self::named_type("integer", var_span)
         } else {
             self.expect(&Token::Colon);
@@ -47,6 +47,7 @@ impl Parser {
             let body_start = self.expect(&Token::Do).unwrap_or(self.current_span());
             self.note_compound_body(&mut control);
             let body = Box::new(self.parse_control_body(body_start));
+            self.note_body(&mut control, &body);
             let items = self.source_text(iterable.span()).to_owned();
             let form = format!("for {var_name}: T in {items} do …; end for;");
             self.finish_pascal_control(&Token::For, start, control, &form, false);
@@ -83,6 +84,7 @@ impl Parser {
         let body_start = self.expect(&Token::Do).unwrap_or(self.current_span());
         self.note_compound_body(&mut control);
         let body = Box::new(self.parse_control_body(body_start));
+        self.note_body(&mut control, &body);
         let form = format!(
             "for {var_name}: integer := {} {} {} do …; end for;",
             self.source_text(start_expr.span()),
@@ -128,6 +130,7 @@ impl Parser {
         let mut control = PascalControl::default();
         self.note_compound_body(&mut control);
         let body = Box::new(self.parse_control_body(body_start));
+        self.note_body(&mut control, &body);
         self.finish_pascal_control(&Token::While, start, control, &form, false);
         Stmt::While {
             condition,

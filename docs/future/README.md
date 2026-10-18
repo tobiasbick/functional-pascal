@@ -13,7 +13,6 @@ Current implemented behavior belongs under `docs/pascal/`, not here.
 | Networked applications | [Networked application platform](networked-applications/README.md) | Storage, security, concurrency, transports, interactive clients, operations, and distributed nodes |
 | WebDAV | [WebDAV](webdav.md) | Deferred WebDAV client and server ideas |
 | FTP | [FTP and FTPS](ftp.md) | Deferred FTP and FTPS ideas |
-| Diagnostics | [Fix-its as data](fix-its.md) | Agent wish A3: machine-applicable fixes in diagnostics, `fpas check --fix`, editor quick fixes |
 
 ## Ideas and designs without an implementation plan
 
@@ -31,8 +30,8 @@ Current implemented behavior belongs under `docs/pascal/`, not here.
 - [Agent wishes](agent-wishes.md): the agent's wish list — writing FPAS without training data,
   shared wins for humans and agents (tested documentation examples, richer diagnostics), and CLI
   tools with JSON output for debugging (replacing the JSONL protocol) and code navigation; DAP and
-  LSP stay for humans. A1, A2, S1, S2 and D1 are implemented. The other tooling
-  wishes remain ideas without an implementation plan, except A3.
+  LSP stay for humans. A1, A2, A3, S1, S2 and D1 are implemented. The other tooling
+  wishes remain ideas without an implementation plan.
 
 ## Architecture records and development intake
 

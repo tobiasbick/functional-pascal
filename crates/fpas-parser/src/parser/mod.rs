@@ -30,4 +30,9 @@ pub struct Parser {
     block_closers: Vec<Token>,
     /// Token position and type name of the initializer being parsed for a named declared type.
     initializer_type: Option<(usize, String)>,
+    /// Error index and ending text of an Ada routine header whose fix still needs its
+    /// `end Name` edit.
+    ada_header_fix: Option<(usize, &'static str)>,
+    /// The same for an Ada main program, whose `end Name;` becomes `end.`.
+    ada_program_fix: Option<(usize, &'static str)>,
 }

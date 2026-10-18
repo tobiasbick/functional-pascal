@@ -13,6 +13,7 @@
 mod code;
 mod diagnostic;
 mod file_diagnostic;
+mod fix;
 mod foreign_habit;
 mod location;
 mod render;
@@ -25,6 +26,7 @@ pub mod codes;
 pub use code::{DiagnosticCode, InvalidDiagnosticCode};
 pub use diagnostic::{Diagnostic, DiagnosticSeverity, DiagnosticStage};
 pub use file_diagnostic::FileDiagnostic;
+pub use fix::{Applicability, Fix, FixEdit, apply_edits, apply_machine_applicable, fix_title};
 pub use foreign_habit::ForeignHabit;
 pub use location::{SourceLocation, SourceLocationError};
 pub use render::{

@@ -126,6 +126,8 @@ impl Checker {
             hint,
             span,
         );
+        let fix = self.unknown_callable_fix(&name, args, span);
+        self.attach_fix_to_last_error(fix);
         self.check_args_only(args);
         CallResolution::Failed
     }

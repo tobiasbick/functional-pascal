@@ -240,6 +240,7 @@ pub(crate) fn resolve_cli_config(args: &[String], cwd: &Path) -> Result<Resolved
             standard_library: options.standard_library,
             diagnostics,
             failure_dump,
+            fix: false,
         }),
         CliMode::Debug => ResolvedCli::Debug(DebugCliConfig {
             cwd: cwd.to_path_buf(),
@@ -262,6 +263,7 @@ pub(crate) fn resolve_cli_config(args: &[String], cwd: &Path) -> Result<Resolved
             standard_library: options.standard_library,
             diagnostics,
             failure_dump: None,
+            fix: options.fix,
         }),
         CliMode::Fmt => unreachable!("fmt mode handled above"),
         CliMode::Test => ResolvedCli::Test(TestCliConfig {

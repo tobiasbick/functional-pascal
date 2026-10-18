@@ -1,6 +1,6 @@
 //! Diagnostic records shared across the toolchain.
 
-use crate::{DiagnosticCode, SourceSpan};
+use crate::{DiagnosticCode, Fix, SourceSpan};
 
 mod attachment;
 
@@ -49,6 +49,8 @@ pub struct Diagnostic {
     pub expected: Option<Box<str>>,
     /// Actual token or value, when the producer can identify it precisely.
     pub found: Option<Box<str>>,
+    /// Source edits that correct this diagnostic, in the source of `span`.
+    pub fixes: Vec<Fix>,
     attachment: attachment::Attachment,
 }
 
@@ -84,6 +86,7 @@ impl Diagnostic {
             span: None,
             expected: None,
             found: None,
+            fixes: Vec::new(),
             attachment: attachment::Attachment::default(),
         }
     }
@@ -110,6 +113,13 @@ impl Diagnostic {
     ) -> Self {
         self.expected = Some(expected.into().into_boxed_str());
         self.found = Some(found.into().into_boxed_str());
+        self
+    }
+
+    /// Adds a fix; `None` (an edit set [`Fix::new`] rejected) leaves the diagnostic unchanged.
+    #[must_use]
+    pub fn with_fix(mut self, fix: Option<Fix>) -> Self {
+        self.fixes.extend(fix);
         self
     }
 
@@ -180,6 +190,7 @@ impl Diagnostic {
             span: Some(span),
             expected: None,
             found: None,
+            fixes: Vec::new(),
             attachment: attachment::Attachment::default(),
         }
     }

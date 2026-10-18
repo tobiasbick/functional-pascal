@@ -7,8 +7,8 @@
 use super::super::Parser;
 use crate::QualifiedId;
 use crate::ast::Expr;
-use fpas_diagnostics::ForeignHabit;
 use fpas_diagnostics::codes::{PARSE_EXPECTED_TOKEN, PARSE_FOREIGN_SYNTAX};
+use fpas_diagnostics::{Applicability, ForeignHabit};
 use fpas_lexer::Token;
 
 impl Parser {
@@ -36,6 +36,20 @@ impl Parser {
                 .cloned()
                 .unwrap_or_else(|| fallback.to_owned())
         };
+        let lower = type_name.to_ascii_lowercase();
+        let needed = match lower.as_str() {
+            "result" | "dict" | "tdictionary" => 2,
+            _ => 1,
+        };
+        // Delphi collection classes become FPAS values, so code that calls their methods
+        // needs review; placeholders for missing arguments rule a fix out.
+        let fix = (arguments.len() >= needed).then_some(
+            if matches!(lower.as_str(), "tdictionary" | "tlist" | "tobjectlist") {
+                Applicability::NeedsReview
+            } else {
+                Applicability::MachineApplicable
+            },
+        );
         let replacement = match type_name.to_ascii_lowercase().as_str() {
             "result" => format!("Result of ({}, {})", argument(0, "T"), argument(1, "E")),
             "dict" | "tdictionary" => {
@@ -54,6 +68,7 @@ impl Parser {
                 explanation: "Generic types take their arguments after `of`; only routine declarations use `<T>` parameters.",
             },
             written,
+            fix,
         );
     }
 }
@@ -120,6 +135,7 @@ impl Parser {
                 explanation: "FPAS collections are values without constructors: an empty array is `[]`, an empty dictionary `[:]`.",
             },
             written,
+            (!replacement.contains('…')).then_some(Applicability::NeedsReview),
         );
         Expr::Error(written)
     }

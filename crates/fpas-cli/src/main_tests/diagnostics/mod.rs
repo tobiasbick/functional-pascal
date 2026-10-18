@@ -1,6 +1,7 @@
 use super::*;
 
 mod closed_enum_cases;
+mod fixes;
 mod imported_patterns;
 mod imports;
 mod json;

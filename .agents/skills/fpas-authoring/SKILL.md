@@ -162,8 +162,12 @@ CLI and editor formatting share this style without configuration.
 fpas fmt <paths>
 fpas fmt --check <paths>
 fpas check <file-or-project>
+fpas check --fix <file-or-project>
 fpas test <test-path>
 ```
+
+`fpas check --fix` applies the compiler's machine-applicable fixes for Pascal,
+Delphi and Ada habits in place; format afterwards and fix what remains by hand.
 
 Check interactive programs without launching them in batch validation. Use
 scripted or headless tests for their runtime behavior. After FPAS regression-test

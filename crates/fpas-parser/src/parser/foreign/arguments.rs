@@ -5,8 +5,8 @@
 
 use super::super::Parser;
 use crate::ast::Expr;
-use fpas_diagnostics::ForeignHabit;
 use fpas_diagnostics::codes::PARSE_FOREIGN_SYNTAX;
+use fpas_diagnostics::{Applicability, ForeignHabit};
 use fpas_lexer::Token;
 
 impl Parser {
@@ -31,6 +31,8 @@ impl Parser {
                 explanation: "FPAS output has no `:width` or `:decimals` specifiers; format the text first, for example with `'%d'.Format(N)` or `'%f'.Format(X)`.",
             },
             written,
+            // Dropping the specifiers changes the printed text.
+            Some(Applicability::NeedsReview),
         );
     }
 }

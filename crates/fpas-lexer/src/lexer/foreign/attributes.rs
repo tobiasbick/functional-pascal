@@ -7,6 +7,7 @@
 
 use crate::Token;
 use crate::lexer::Lexer;
+use fpas_diagnostics::{Applicability, Fix, SourceSpan, fix_title};
 
 impl Lexer<'_> {
     /// True at `'Name` directly after an identifier.
@@ -54,7 +55,27 @@ impl Lexer<'_> {
             &replacement,
             "FPAS has no attributes; use `Std.Conv` conversions, methods such as `Items.Length()`, and zero-based indexes.",
             start,
+            None,
         );
+        // `Items'Length` is exactly `Items.Length()`. Ada arrays may start at any index, so
+        // the zero-based forms of `First`, `Last` and `Range` need review.
+        let applicability = match attribute.as_str() {
+            "length" => Some(Applicability::MachineApplicable),
+            "first" | "last" | "range" => Some(Applicability::NeedsReview),
+            _ => None,
+        };
+        let prefix_span = self.tokens.last().map(|token| token.span);
+        if let (Some(applicability), Some(prefix_span), false) =
+            (applicability, prefix_span, prefix.is_empty())
+        {
+            let written = self.make_span(prefix_span.offset, prefix_span.line, prefix_span.column);
+            let fix = SourceSpan::try_from(written).ok().and_then(|span| {
+                Fix::replace(fix_title(&replacement), applicability, span, replacement)
+            });
+            if let Some(diagnostic) = self.errors.pop() {
+                self.errors.push(diagnostic.with_fix(fix));
+            }
+        }
     }
 
     fn attribute_name_length(&self) -> usize {

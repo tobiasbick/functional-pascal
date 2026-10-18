@@ -14,7 +14,7 @@
 [S2](#s2-diagnostics-with-source-excerpt-and-caret) is implemented.
 [D1](#d1-automatic-failure-dump) is implemented.
 [A2](#a2-diagnostics-for-pascal-and-ada-habits) is implemented.
-[A3](#a3-fix-its-as-data) has a plan: [fix-its.md](fix-its.md).
+[A3](#a3-fix-its-as-data) is implemented.
 The other wishes are ideas without an implementation plan. Human-facing tools stay: the DAP debugger
 ([`debugger.md`](../pascal/tools/debugger.md)) and the language server
 ([`editor-integration.md`](../pascal/tools/editor-integration.md)). The JSONL debugger protocol
@@ -26,11 +26,12 @@ navigation.
 ## Where to start
 
 Most value for the least work among the remaining wishes. Effort is a rough guess,
-not an estimate. A1, A2, S1, S2 and D1 are already implemented; see their status below.
+not an estimate. A1, A2, A3, S1, S2 and D1 are already implemented; see their status below.
 
 | Wish | Why first | Effort |
 | --- | --- | --- |
-| [A3](#a3-fix-its-as-data) Fix-its as data ([plan](fix-its.md)) | Every habit diagnostic from A2 already carries its replacement in `expected` and `found` | medium |
+| [D3](#d3-one-shot-batch-runs) One-shot batch runs | With D1 done, the last step before the JSONL protocol can go | medium |
+| [A4](#a4-api-lookup-from-the-cli) API lookup with [S3](#s3-declaration-comments-as-the-single-source) | The declaration comments and the built-in method catalog already exist | medium |
 
 Everything else can wait until these exist.
 
@@ -46,7 +47,7 @@ CLI, the way `fpas check --diagnostics json` already does. No new protocol, no d
 
 | Concern | Humans | Agents |
 | --- | --- | --- |
-| Diagnostics | LSP in the editor, terminal text ([S2](#s2-diagnostics-with-source-excerpt-and-caret)) | `fpas check --diagnostics json` (exists), fix-its ([A3](#a3-fix-its-as-data)) |
+| Diagnostics | LSP in the editor, terminal text ([S2](#s2-diagnostics-with-source-excerpt-and-caret)) | `fpas check --diagnostics json` with fixes, `fpas check --fix` ([A3](#a3-fix-its-as-data)) |
 | Documentation | `docs/pascal/`, hover | compact reference ([A1](#a1-one-compact-language-reference)), `fpas doc` ([A4](#a4-api-lookup-from-the-cli)) |
 | Code navigation | LSP | `fpas query` ([N1–N4](#code-navigation)) |
 | Debugging | DAP | failure dump, batch run, replay ([D1–D5](#debugging)) |
@@ -96,13 +97,14 @@ declarations and exception handlers. The temporary plan is complete and removed.
 
 #### A3. Fix-its as data
 
-**Status: planned** in [fix-its.md](fix-its.md).
-
-Diagnostics carry hints as prose. A structured, machine-applicable replacement field plus
-`fpas check --fix` would let the agent fix simple mistakes directly, like rustfix and
-`clippy --fix`. Habit diagnostics from
-[A2](#a2-diagnostics-for-pascal-and-ada-habits) already put the foreign text in `found` and its
-replacement in `expected`; A3 would add exact replacement spans and the `--fix` command.
+**Status: implemented.** Diagnostics carry [fixes](../pascal/tools/diagnostics.md#fixes): exact
+source edits, either machine-applicable or needing review. Habit diagnostics from
+[A2](#a2-diagnostics-for-pascal-and-ada-habits) carry them wherever the replacement is complete
+source text; the habit table in the diagnostics handbook lists which do. `fpas check
+--diagnostics json` lists them in a `fixes` field, `fpas check --fix` applies the
+machine-applicable ones pass after pass, like rustfix and `clippy --fix`, and the language
+server offers all of them as quick fixes. `--fix` does not format. The temporary plan is
+complete and removed.
 
 #### A4. API lookup from the CLI
 

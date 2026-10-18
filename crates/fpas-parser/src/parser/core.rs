@@ -22,6 +22,8 @@ impl Parser {
             nesting_limit_reached: false,
             block_closers: Vec::new(),
             initializer_type: None,
+            ada_header_fix: None,
+            ada_program_fix: None,
         }
     }
 

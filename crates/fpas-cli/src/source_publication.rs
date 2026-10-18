@@ -1,12 +1,12 @@
-//! Publishes formatted source text to its destination path.
+//! Atomically publishes rewritten source text, used by `fpas fmt` and `fpas check --fix`.
 
 use atomic_write_file::AtomicWriteFile;
 use std::fs;
 use std::io::{self, Write};
 use std::path::Path;
 
-/// Atomically replaces an existing source file with formatted text.
-pub(super) fn write_source(path: &Path, text: &str) -> io::Result<()> {
+/// Atomically replaces an existing source file with new text, keeping its permissions.
+pub(crate) fn write_source(path: &Path, text: &str) -> io::Result<()> {
     write_source_with(path, text, |destination, bytes| {
         destination.write_all(bytes)
     })
@@ -31,7 +31,7 @@ mod tests {
 
     #[test]
     fn partial_write_failure_preserves_existing_source() {
-        let directory = create_temp_dir("fmt-atomic-partial-write");
+        let directory = create_temp_dir("source-publication-partial-write");
         let path = directory.join("source.fpas");
         let original = "program Original;\nbegin\nend.\n";
         fs::write(&path, original).expect("source fixture must be written");
@@ -53,7 +53,7 @@ mod tests {
     fn replacement_preserves_existing_permissions() {
         use std::os::unix::fs::PermissionsExt;
 
-        let directory = create_temp_dir("fmt-atomic-permissions");
+        let directory = create_temp_dir("source-publication-permissions");
         let path = directory.join("source.fpas");
         fs::write(&path, "old").expect("source fixture must be written");
         fs::set_permissions(&path, fs::Permissions::from_mode(0o640))

@@ -67,6 +67,8 @@ pub(crate) struct Reporter<'a> {
     color: bool,
     // Source text keyed by path, read lazily to resolve JSON end positions.
     sources: HashMap<PathBuf, Option<String>>,
+    // Copies of written records, kept only for `check --fix`.
+    collected: Option<Vec<FileDiagnostic>>,
 }
 
 impl<'a> Reporter<'a> {
@@ -78,6 +80,25 @@ impl<'a> Reporter<'a> {
             program_output: None,
             color: false,
             sources: HashMap::new(),
+            collected: None,
+        }
+    }
+
+    /// Also keeps a copy of every written diagnostic record, returned by
+    /// [`Self::take_collected`].
+    pub(crate) fn collecting(mut self) -> Self {
+        self.collected = Some(Vec::new());
+        self
+    }
+
+    /// Returns the records kept since [`Self::collecting`].
+    pub(crate) fn take_collected(&mut self) -> Vec<FileDiagnostic> {
+        self.collected.take().unwrap_or_default()
+    }
+
+    fn collect(&mut self, record: &FileDiagnostic) {
+        if let Some(collected) = &mut self.collected {
+            collected.push(record.clone());
         }
     }
 
@@ -149,6 +170,7 @@ impl<'a> Reporter<'a> {
 
     /// Writes one diagnostic record.
     pub(crate) fn record(&mut self, record: &FileDiagnostic) {
+        self.collect(record);
         let line = match self.format {
             DiagnosticFormat::Text => self.text_record(record),
             DiagnosticFormat::Json => {
@@ -168,6 +190,7 @@ impl<'a> Reporter<'a> {
     pub(crate) fn record_indented(&mut self, record: &FileDiagnostic, indent: &str) {
         match self.format {
             DiagnosticFormat::Text => {
+                self.collect(record);
                 let text = self
                     .text_record(record)
                     .replace('\n', &format!("\n{indent}"));

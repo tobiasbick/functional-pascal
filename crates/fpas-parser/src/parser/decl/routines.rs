@@ -86,7 +86,7 @@ impl Parser {
     fn finish_routine_header(
         &mut self,
         head: &RoutineHead,
-        keyword: &str,
+        keyword: &'static str,
         return_type: Option<Span>,
         ada_return: bool,
     ) -> bool {
@@ -99,6 +99,7 @@ impl Parser {
                     name: &head.name,
                     params: head.params_span,
                     return_type,
+                    is_body: ada_body,
                 },
             );
         }

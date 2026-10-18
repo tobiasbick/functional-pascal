@@ -1078,12 +1078,14 @@ Multiline statement conditions place `then` on a separate line; wrapped `and`,
 Use `fpas test tests/` or the owning `.fpasprj` for tests; `*_test.fpas` programs
 with assertions are discovered by the runner. `--std-lib lib` selects this checkout's
 standard library when invoking the repository build directly. For machine-readable
-diagnostics use `fpas check --diagnostics json file.fpas`.
+diagnostics use `fpas check --diagnostics json file.fpas`; its `fixes` field holds exact
+edits. `fpas check --fix file.fpas` applies the machine-applicable fixes for Pascal, Delphi
+and Ada habits in place; run `fpas fmt` afterwards and review what remains.
 
 Text diagnostics include a bounded source line and caret when matching text is
 available. Terminal stderr receives automatic color unless `NO_COLOR` is
 nonempty; redirected output stays plain. [Diagnostic rendering](tools/diagnostics.md#text-output)
-describes source validation and display alignment. JSON remains unchanged.
+describes source validation and display alignment.
 
 For an escaping runtime error, `fpas run file.fpas --failure-dump .temp-data/failure.json`
 retains a [bounded task/frame/value report](tools/failure-dump.md); choose a fresh

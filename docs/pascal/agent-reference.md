@@ -36,6 +36,9 @@ inheritance, pointers, manual allocation, exceptions with handlers, or preproces
 | Delphi `const` parameters | Parameters are read-only already: `function F(S: string): integer;`. |
 | Pascal `procedure Q;` without parentheses | Every routine declares its parameter list: `procedure Q();`. |
 | Ada `function F return T is ... end F;` | `function F(): T; begin ... end function;`. |
+| Ada `program Main is ... end Main;`, `type T is ...`, `in out` | `program Main; ... end.`, `type T = ...`, `var` parameters. |
+| Ada `&`, `Integer'Image (N)`, `(1, 2)` aggregates | `+`, `Conv.IntToStr(N)`, `[1, 2]` or `Point(X := 1, Y := 2)`. |
+| Pascal `type K = (A, B)` | `type K = enum A; B; end enum;`. |
 | Pascal `end;` for every block | `end function;`, `end procedure;`, `end if;`, etc.; program `end.`. |
 | Omit the semicolon before Pascal `else` | Terminate each statement with `;`, including before `else`. |
 | Ada `elsif` | Also `elsif`; nested `else if` requires a second `end if`. |

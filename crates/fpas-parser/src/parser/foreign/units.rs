@@ -32,6 +32,11 @@ const DELPHI_RTL_UNITS: &[(&str, &str, &str)] = &[
         "Date and time routines live in `Std.Time`, imported with an alias.",
     ),
     (
+        "classes",
+        "uses Std.Tasks as Tasks;",
+        "Delphi `Classes` has no FPAS unit: lists are `array of T`, and threads are tasks from `Std.Tasks`.",
+    ),
+    (
         "generics.collections",
         "array of T",
         "Collections are the native types `array of T` and `dict of K to V`; remove the import.",
@@ -105,6 +110,8 @@ impl Parser {
         span: Span,
     ) -> bool {
         let lower = unit_name.to_ascii_lowercase();
+        // Delphi XE and later qualify run-time units with `System.`.
+        let lower = lower.strip_prefix("system.").unwrap_or(&lower);
         let Some((_, replacement, explanation)) =
             DELPHI_RTL_UNITS.iter().find(|(name, _, _)| *name == lower)
         else {

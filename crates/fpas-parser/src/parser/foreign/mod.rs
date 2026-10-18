@@ -4,12 +4,15 @@
 //!
 //! **Documentation:** `docs/pascal/tools/diagnostics.md` (Diagnostics for other-language spellings)
 
+mod aggregates;
 mod arguments;
 mod bindings;
 mod classes;
 mod control_flow;
 mod generics;
+mod programs;
 mod routines;
+mod types;
 mod units;
 
 pub(in crate::parser) use bindings::{BindingContext, BindingKeyword};

@@ -4,6 +4,7 @@
 //!
 //! **Documentation:** `docs/pascal/tools/diagnostics.md` (Diagnostics for other-language spellings)
 
+mod attributes;
 mod comments;
 mod operators;
 mod strings;

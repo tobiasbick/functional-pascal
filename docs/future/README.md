@@ -13,7 +13,6 @@ Current implemented behavior belongs under `docs/pascal/`, not here.
 | Networked applications | [Networked application platform](networked-applications/README.md) | Storage, security, concurrency, transports, interactive clients, operations, and distributed nodes |
 | WebDAV | [WebDAV](webdav.md) | Deferred WebDAV client and server ideas |
 | FTP | [FTP and FTPS](ftp.md) | Deferred FTP and FTPS ideas |
-| Diagnostics | [Foreign-habit diagnostics](foreign-habit-diagnostics/README.md) | Plan for agent wish A2: recognize Delphi, Pascal, Ada and C-family spellings and answer with the FPAS form; ready to start |
 
 ## Ideas and designs without an implementation plan
 

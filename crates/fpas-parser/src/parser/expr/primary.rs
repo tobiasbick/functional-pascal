@@ -17,6 +17,12 @@ impl Parser {
     /// `.Field` / `.Method(args)` / `[index]` suffixes are applied by
     /// [`Self::apply_postfix_suffixes`].
     fn parse_primary_atom(&mut self) -> Expr {
+        if self.at_generic_constructor() {
+            return self.skip_generic_constructor();
+        }
+        if self.check(&Token::Result) && self.peek_token() != &Token::Of {
+            return self.skip_delphi_result_value();
+        }
         // Avoid cloning the String payload when dispatching an identifier.
         if self.is_ident_designator_start() {
             return self.parse_designator_or_call();

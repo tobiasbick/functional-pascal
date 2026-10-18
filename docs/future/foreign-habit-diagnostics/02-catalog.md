@@ -136,6 +136,41 @@ H-CALL-19 came from ongoing intake (writing the collector script), not from the 
 The experiment is not fully blind: the subagent is the same model family as the main author,
 but it saw no FPAS source or documentation.
 
+## P6 full experiment (2026-10-17)
+
+All ten tasks of the [blind authoring experiment](01-catalog-method.md#blind-authoring-experiment),
+once in Delphi style and once in Ada style (22 files: task 8 has a unit and a program). Two
+subagents wrote the programs without access to the repository or the docs, after P1–P5 were
+implemented. Captures and the collector script stay under `.temp-data/a2-blind/p6/` (gitignored).
+
+**Delphi style.** Every habit from P1–P5 that occurred was reported as exactly one diagnostic.
+Follow-up errors remain only in three programs, all caused by new entries below (H-DECL-16 in
+task 6, H-CALL-21 in tasks 7 and 9). Delphi task 5 reports two diagnostics for its two habits.
+
+**Ada style.** Nine of ten programs stop at their first line: Ada writes the main program as
+`program Name is … begin … end Name;`, and FPAS reports `is` as an unexpected statement with up
+to five follow-up errors. `&` concatenation and attributes such as `Integer'Image (X)` produce
+one or two errors per output line. The P1–P5 Ada entries (`=>`, `"text"`, `function F return T
+is`) were reported correctly where the parser reached them.
+
+| Habit | Entry | Seen (of 10) | Today | Rating |
+| --- | --- | --- | --- | --- |
+| `program Name is … begin … end Name;` | H-ADA-01 | Ada 9 | FP2001 "Expected `;`, found `is`", +5, parse stops | poor |
+| `"Sum: " & Image` string concatenation | H-ADA-02 | Ada 9 | FP1001 "Unexpected character `&`" per use | poor |
+| `Integer'Image (X)` and other attributes | H-ADA-03 | Ada 8 | FP1004 "Unterminated string literal" | poor |
+| `type Point is record … end record;`, `type K is (A, B);` | H-ADA-04 | Ada 6, masked | FP2001 "Expected `=`, found `is`", +7 to +10 | poor |
+| `P : constant T := V;` | H-ADA-05 | Ada 3, masked | FP2001 "Expected `:=`, found `T`", +2 | poor |
+| `(X => 0.0, Y => 0.0)` record aggregate | H-ADA-06 | Ada 2 | FP1014 per `=>`; the aggregate itself is not recognized | partial |
+| `package P is … end P;`, `with P; use P;` | H-ADA-07 | Ada 1 | FP2001 "Expected `program` or `unit`" | partial |
+| `(Counter : in out Integer)` parameter modes | H-ADA-08 | Ada 1, masked | FP2002 "Expected identifier, found `in`", +9 | poor |
+| `task Producer;`, `task body … is` | H-ADA-09 | Ada 1 | FP2003 "Unexpected token `task`" per declaration | poor |
+| `exception when E =>` handlers | H-ADA-10 | Ada 1 | FP1014 for `=>` only | partial |
+| `TShapeKind = (skCircle, skSquare);` Pascal enumeration | H-DECL-16 | Delphi 1 | FP2002 "Expected identifier, found `(`", +8, parse stops | poor |
+| `uses System.SysUtils, System.Classes;` | H-DECL-17 | Delphi 2 | FP2022 asks for an alias of each unit | partial |
+| `TList<string>.Create` | H-CALL-21 | Delphi 2 | FP2005 "Chained comparison operators are not allowed", +1 to +4 | poor |
+| `Exit;` without value | H-CALL-22 | Delphi 1 | FP2006 "Expected `(` for a call …" | partial |
+| `Inc(Result)` | H-CALL-20 | Delphi 1 | FP2005 "Expected expression, found `Result`" | poor |
+
 ## Candidates not yet probed
 
 To be probed in a later experiment run: `with … do`, `SetLength`, `Ord`/`Chr`

@@ -54,11 +54,33 @@ impl Parser {
             // consume to recover
             self.parse_type_params();
         }
-        self.expect(&Token::Equal);
+        // Ada writes `type Name is …`; it is reported once together with its body below.
+        let ada_is = !self.check(&Token::Equal) && self.eat(&Token::Is);
+        if !ada_is {
+            self.expect(&Token::Equal);
+        }
+        let body_start = self.current_span();
         let body = if self.at_delphi_class() {
             self.skip_delphi_class(&name)
+        } else if self.at_enum_literal_list() {
+            let (body, form) = self.parse_enum_literal_list(body_start);
+            self.report_type_habit(start, &name, ada_is, &form);
+            body
+        } else if ada_is && self.at_ada_array_type() {
+            let (body, form) = self.parse_ada_array_type(body_start);
+            self.report_type_habit(start, &name, ada_is, &form);
+            body
         } else {
-            self.parse_type_body(allow_member_visibility)
+            let body = self.parse_type_body(allow_member_visibility);
+            if ada_is {
+                let form = match body {
+                    TypeBody::Record(_) => "record … end record",
+                    TypeBody::Enum(_) => "enum … end enum",
+                    _ => "…",
+                };
+                self.report_type_habit(start, &name, ada_is, form);
+            }
+            body
         };
         if !type_params.is_empty() && !matches!(body, TypeBody::Record(_) | TypeBody::Enum(_)) {
             self.error_with_code(

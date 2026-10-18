@@ -1,4 +1,4 @@
-//! Operators from Delphi, Ada and the C family: `&&`, `||`, `!`, `!=`, `==`, `/=`, `=>`, the
+//! Operators from Delphi, Ada and the C family: `&&`, `||`, `!`, `!=`, `==`, `/=`, `=>`, `&`, the
 //! Pascal address operator `@` and pointer marker `^`.
 //!
 //! **Documentation:** `docs/pascal/tools/diagnostics.md` (Diagnostics for other-language spellings),
@@ -12,7 +12,7 @@ impl Lexer<'_> {
     pub(in crate::lexer) fn at_foreign_operator(&self) -> bool {
         matches!(
             (self.current(), self.peek_at(1)),
-            (b'&', Some(b'&'))
+            (b'&', _)
                 | (b'|', Some(b'|'))
                 | (b'!', _)
                 | (b'=', Some(b'=' | b'>'))
@@ -26,11 +26,17 @@ impl Lexer<'_> {
     pub(in crate::lexer) fn scan_foreign_operator(&mut self) {
         let start = self.span_here();
         let (token, replacement, message, explanation) = match (self.current(), self.peek_at(1)) {
-            (b'&', _) => (
+            (b'&', Some(b'&')) => (
                 Some(Token::And),
                 "and",
                 "C-family `&&` is not FPAS syntax",
                 "Logical operators are words.",
+            ),
+            (b'&', _) => (
+                Some(Token::Plus),
+                "+",
+                "Ada `&` concatenation is not FPAS syntax",
+                "Strings concatenate with `+`.",
             ),
             (b'|', _) => (
                 Some(Token::Or),
@@ -82,7 +88,7 @@ impl Lexer<'_> {
             ),
         };
         let width = match (self.current(), self.peek_at(1)) {
-            (b'!', Some(b'=')) | (b'&' | b'|' | b'=' | b'/', _) => 2,
+            (b'!', Some(b'=')) | (b'&', Some(b'&')) | (b'|' | b'=' | b'/', _) => 2,
             _ => 1,
         };
         for _ in 0..width {

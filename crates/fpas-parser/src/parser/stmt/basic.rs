@@ -110,6 +110,13 @@ impl Parser {
                     args,
                     span,
                 },
+                Expr::Designator(designator)
+                    if matches!(designator.parts.as_slice(),
+                        [DesignatorPart::Ident(name, _)] if name.eq_ignore_ascii_case("exit")) =>
+                {
+                    self.report_bare_exit(designator.span);
+                    Stmt::Return(None, designator.span)
+                }
                 Expr::Designator(designator) => {
                     self.error_with_code(
                         PARSE_INVALID_CALL_OR_ASSIGNMENT_FORM,

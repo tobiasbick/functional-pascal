@@ -6,7 +6,7 @@
 //! `docs/pascal/language/functions/declarations.md`
 
 use super::super::Parser;
-use crate::ast::{FuncBody, Stmt};
+use crate::ast::{Expr, FuncBody, Stmt};
 use fpas_diagnostics::ForeignHabit;
 use fpas_diagnostics::codes::{PARSE_EXPECTED_TOKEN, PARSE_FOREIGN_SYNTAX};
 use fpas_lexer::{Span, Token};
@@ -189,5 +189,84 @@ impl Parser {
         } else {
             Stmt::Block(Vec::new(), written)
         }
+    }
+}
+
+impl Parser {
+    /// Consumes an Ada parameter mode `in`, `out` or `in out` after the colon. Returns whether
+    /// one was written and whether it makes the parameter writable.
+    pub(in crate::parser) fn eat_ada_parameter_mode(&mut self) -> Option<bool> {
+        let is_out =
+            |token: &Token| matches!(token, Token::Ident(word) if word.eq_ignore_ascii_case("out"));
+        if self.eat(&Token::In) {
+            let writable = is_out(self.current_token());
+            if writable {
+                self.advance();
+            }
+            Some(writable)
+        } else if is_out(self.current_token()) && matches!(self.peek_token(), Token::Ident(_)) {
+            self.advance();
+            Some(true)
+        } else {
+            None
+        }
+    }
+
+    /// Reports an Ada parameter mode once the parameter is parsed.
+    pub(in crate::parser) fn report_ada_parameter_mode(
+        &mut self,
+        start: Span,
+        name: &str,
+        writable: bool,
+        type_start: Span,
+    ) {
+        let written = self.span_from(start);
+        let found = self.source_text(written).to_owned();
+        let type_text = self.source_text(self.span_from(type_start)).to_owned();
+        let modifier = if writable { "var " } else { "" };
+        let replacement = format!("{modifier}{name}: {type_text}");
+        self.report_foreign_habit(
+            PARSE_FOREIGN_SYNTAX,
+            "Ada parameter mode is not FPAS syntax",
+            ForeignHabit {
+                found: &found,
+                replacement: &replacement,
+                explanation: "Parameters are read-only by default; a writable parameter is declared with `var` before its name, and calls pass it as `var X`.",
+            },
+            written,
+        );
+    }
+}
+
+impl Parser {
+    /// Reports Delphi `Exit;` written as a statement.
+    pub(in crate::parser) fn report_bare_exit(&mut self, span: Span) {
+        let found = self.source_text(span).to_owned();
+        self.report_foreign_habit(
+            fpas_diagnostics::codes::PARSE_INVALID_CALL_OR_ASSIGNMENT_FORM,
+            "Delphi `Exit` is not FPAS syntax",
+            ForeignHabit {
+                found: &found,
+                replacement: "return",
+                explanation: "Leave a routine with `return;`, or `return Value;` in a function.",
+            },
+            span,
+        );
+    }
+
+    /// Reports Delphi `Result` used as a value, as in `Inc(Result)`, and skips it.
+    pub(in crate::parser) fn skip_delphi_result_value(&mut self) -> Expr {
+        let span = self.advance().span;
+        self.report_foreign_habit(
+            PARSE_FOREIGN_SYNTAX,
+            "Delphi `Result` is not an FPAS variable",
+            ForeignHabit {
+                found: "Result",
+                replacement: "Value",
+                explanation: "FPAS has no implicit result variable; keep the value in a local `var` and `return` it.",
+            },
+            span,
+        );
+        Expr::Error(span)
     }
 }

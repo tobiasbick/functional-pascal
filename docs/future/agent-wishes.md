@@ -13,7 +13,7 @@
 [S1](#s1-compile-every-documentation-example) is implemented.
 [S2](#s2-diagnostics-with-source-excerpt-and-caret) is implemented.
 [D1](#d1-automatic-failure-dump) is implemented.
-[A2](#a2-diagnostics-for-pascal-and-ada-habits) is in progress (P0, E1 and P1–P5 done; P6 open).
+[A2](#a2-diagnostics-for-pascal-and-ada-habits) is implemented.
 The other wishes are ideas without an implementation plan. Human-facing tools stay: the DAP debugger
 ([`debugger.md`](../pascal/tools/debugger.md)) and the language server
 ([`editor-integration.md`](../pascal/tools/editor-integration.md)). The JSONL debugger protocol
@@ -25,11 +25,11 @@ navigation.
 ## Where to start
 
 Most value for the least work among the remaining wishes. Effort is a rough guess,
-not an estimate. A1, S1, S2 and D1 are already implemented; see their status below.
+not an estimate. A1, A2, S1, S2 and D1 are already implemented; see their status below.
 
 | Wish | Why first | Effort |
 | --- | --- | --- |
-| [A2](#a2-diagnostics-for-pascal-and-ada-habits) Diagnostics for Pascal and Ada habits | Biggest lever in the long run | large, ongoing |
+| [A3](#a3-fix-its-as-data) Fix-its as data | Every habit diagnostic from A2 already carries its replacement in `expected` and `found` | medium |
 
 Everything else can wait until these exist.
 
@@ -83,21 +83,23 @@ Purpose and upkeep live in the permanent
 
 #### A2. Diagnostics for Pascal and Ada habits
 
-**Status: in progress** under
-[foreign-habit-diagnostics](foreign-habit-diagnostics/README.md); packages P1–P5 are
-implemented, the closing experiment P6 is open; see the
-[diagnostics handbook](../pascal/tools/diagnostics.md#diagnostics-for-other-language-spellings).
-
-When the agent writes Delphi or Ada syntax, the compiler recognizes it and answers "FPAS writes
-this as: …". Build the catalog systematically: let an agent write programs without the docs, log
-every error, and add a targeted diagnostic per entry. `native_migration_hint` already does this for
-some cases.
+**Status: implemented.** The lexer, parser and semantic analysis recognize common Delphi, Free
+Pascal, Ada and C-family spellings, report each with one diagnostic that ends "FPAS writes `…`",
+and recover as if the FPAS form had been written. Two blind authoring experiments (Delphi only,
+then Delphi and Ada across ten tasks) drove the catalog. The permanent catalog, including how to
+add a newly observed habit, is the habit table in the
+[diagnostics handbook](../pascal/tools/diagnostics.md#diagnostics-for-other-language-spellings);
+the [compact language reference](../pascal/agent-reference.md#1-translate-habits-before-writing)
+teaches the same forms up front. Not recognized yet: Ada `with`/`package` units, Ada `task`
+declarations and exception handlers. The temporary plan is complete and removed.
 
 #### A3. Fix-its as data
 
 Diagnostics carry hints as prose. A structured, machine-applicable replacement field plus
 `fpas check --fix` would let the agent fix simple mistakes directly, like rustfix and
-`clippy --fix`.
+`clippy --fix`. Habit diagnostics from
+[A2](#a2-diagnostics-for-pascal-and-ada-habits) already put the foreign text in `found` and its
+replacement in `expected`; A3 would add exact replacement spans and the `--fix` command.
 
 #### A4. API lookup from the CLI
 

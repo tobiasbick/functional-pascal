@@ -21,6 +21,7 @@ impl Parser {
                     | Token::Function
                     | Token::Procedure
             )
+            && !self.at_pascal_case_label_after_of()
         {
             self.advance();
             self.error_with_code(

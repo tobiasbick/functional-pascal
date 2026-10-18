@@ -52,14 +52,21 @@ impl Parser {
         let (name, name_span) = self
             .expect_ident()
             .unwrap_or_else(|| self.error_ident(self.current_span()));
-        self.expect_semi();
+        let ada_program = self.eat_ada_program_header(start, &name);
+        if !ada_program {
+            self.expect_semi();
+        }
 
         let (uses, declarations) = self.parse_uses_and_declarations(false);
 
         self.expect(&Token::Begin);
         let body = self.parse_statement_list();
-        self.expect(&Token::End);
-        let has_terminating_dot = self.expect(&Token::Dot).is_some();
+        let has_terminating_dot = if ada_program && self.eat_ada_program_ending(&name) {
+            true
+        } else {
+            self.expect(&Token::End);
+            self.expect(&Token::Dot).is_some()
+        };
 
         let span = self.span_from(start);
         if has_terminating_dot {

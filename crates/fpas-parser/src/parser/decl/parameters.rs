@@ -92,10 +92,19 @@ impl Parser {
             return None;
         }
         self.expect(&Token::Colon);
+        let ada_mode = self.eat_ada_parameter_mode();
+        let type_start = self.current_span();
         let type_expr: TypeExpr = self.parse_type_expr();
         if let Some(modifier) = const_modifier {
             self.report_const_parameter(modifier, name_start);
         }
+        let mode = match ada_mode {
+            Some(writable) => {
+                self.report_ada_parameter_mode(name_start, &name, writable, type_start);
+                if writable { ParamMode::Var } else { mode }
+            }
+            None => mode,
+        };
         Some(FormalParam {
             name,
             mode,

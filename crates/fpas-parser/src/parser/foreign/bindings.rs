@@ -63,6 +63,10 @@ pub(in crate::parser) struct BindingItem {
     missing_initializer: bool,
     equals_initializer: bool,
     bounded_array: bool,
+    /// Ada `Name : constant T := V`, recovered as `const`.
+    ada_constant: bool,
+    /// Ada aggregate `(X => 1, Y => 2)` or `(1, 2, 3)` as initializer.
+    ada_aggregate: bool,
 }
 
 impl Parser {
@@ -80,7 +84,15 @@ impl Parser {
             names.push(self.expect_ident_or_error(start).0);
         }
         let mut bounded_array = false;
+        let mut keyword = keyword;
+        let mut ada_constant = false;
         let (type_expr, type_text) = if self.eat(&Token::Colon) {
+            if matches!(self.current_token(), Token::Ident(word) if word.eq_ignore_ascii_case("constant"))
+            {
+                self.advance();
+                keyword = BindingKeyword::Const;
+                ada_constant = true;
+            }
             let type_start = self.current_span();
             if self.check(&Token::Array) && self.peek_token() == &Token::LBracket {
                 bounded_array = true;
@@ -102,16 +114,21 @@ impl Parser {
         };
         let equals_initializer = self.eat(&Token::Equal);
         let mut missing_initializer = false;
-        let (value, value_text) = if equals_initializer || self.eat(&Token::ColonAssign) {
-            self.parse_binding_value(type_expr.as_ref(), bounded_array || equals_initializer)
-        } else if matches!(self.current_token(), Token::Semicolon | Token::Eof) {
-            missing_initializer = true;
-            let default = Self::default_value_text(type_text.as_deref());
-            (Expr::Error(self.current_span()), default)
-        } else {
-            self.expect(&Token::ColonAssign);
-            (Expr::Error(self.current_span()), "…".to_owned())
-        };
+        let (value, value_text, ada_aggregate) =
+            if equals_initializer || self.eat(&Token::ColonAssign) {
+                self.parse_binding_value(
+                    type_expr.as_ref(),
+                    type_text.as_deref(),
+                    bounded_array || equals_initializer,
+                )
+            } else if matches!(self.current_token(), Token::Semicolon | Token::Eof) {
+                missing_initializer = true;
+                let default = Self::default_value_text(type_text.as_deref());
+                (Expr::Error(self.current_span()), default, false)
+            } else {
+                self.expect(&Token::ColonAssign);
+                (Expr::Error(self.current_span()), "…".to_owned(), false)
+            };
         BindingItem {
             names,
             type_expr,
@@ -123,6 +140,8 @@ impl Parser {
             missing_initializer,
             equals_initializer,
             bounded_array,
+            ada_constant,
+            ada_aggregate,
         }
     }
 
@@ -225,6 +244,11 @@ impl Parser {
                 PARSE_FOREIGN_SYNTAX,
                 format!("Pascal `{keyword} Name = Value` is not FPAS syntax"),
             )
+        } else if items.iter().any(|item| item.ada_aggregate) {
+            (
+                PARSE_FOREIGN_SYNTAX,
+                "Ada aggregate is not FPAS syntax".to_owned(),
+            )
         } else if let Some(item) = uninitialized {
             (
                 PARSE_EXPECTED_TOKEN,
@@ -254,6 +278,14 @@ impl Parser {
         }
         if bounded {
             explanation.push("Arrays have no bounds in the type and start at index 0.");
+        }
+        if items.iter().any(|item| item.ada_aggregate) {
+            explanation.push(
+                "Ada aggregates are array literals `[…]` or record constructors `Type(Field := …)`.",
+            );
+        }
+        if items.iter().any(|item| item.ada_constant) {
+            explanation.push("Ada `constant` is the `const` keyword.");
         }
         if uninitialized.is_some() {
             explanation.push("Every binding has an initializer.");
@@ -352,43 +384,6 @@ impl Parser {
             TypeExpr::Array(Box::new(element), self.span_from(start)),
             format!("array of {element_text}"),
         )
-    }
-
-    /// Parses an initializer; a Pascal `(A, B)` array constant becomes an array literal.
-    fn parse_binding_value(
-        &mut self,
-        type_expr: Option<&TypeExpr>,
-        allow_paren_array: bool,
-    ) -> (Expr, String) {
-        let start = self.current_span();
-        if allow_paren_array
-            && self.check(&Token::LParen)
-            && matches!(type_expr, Some(TypeExpr::Array(..)))
-        {
-            self.advance();
-            let mut elements = Vec::new();
-            let mut texts = Vec::new();
-            loop {
-                let element = self.parse_expression();
-                texts.push(self.source_text(element.span()).to_owned());
-                elements.push(element);
-                if !self.eat(&Token::Comma) {
-                    break;
-                }
-            }
-            self.expect(&Token::RParen);
-            let span = self.span_from(start);
-            return (
-                Expr::ArrayLiteral(elements, span),
-                format!("[{}]", texts.join(", ")),
-            );
-        }
-        let value = match type_expr {
-            Some(type_expr) => self.parse_initializer(type_expr),
-            None => self.parse_expression(),
-        };
-        let text = self.source_text(self.span_from(start)).to_owned();
-        (value, text)
     }
 
     /// FPAS form of a binding group: one complete declaration per name.

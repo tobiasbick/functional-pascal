@@ -274,3 +274,16 @@ fn is_named_fpas_ending(token: &Token) -> bool {
             | Token::With
     )
 }
+
+impl Parser {
+    /// True at `of Label:` or `of Label,` where a Pascal case arm without `when` follows the
+    /// selector, so the selector is not read as a type application.
+    pub(in crate::parser) fn at_pascal_case_label_after_of(&self) -> bool {
+        self.check(&Token::Of)
+            && matches!(self.peek_token(), Token::Ident(_))
+            && matches!(
+                self.tokens.get(self.pos + 2).map(|token| &token.token),
+                Some(Token::Colon | Token::Comma)
+            )
+    }
+}

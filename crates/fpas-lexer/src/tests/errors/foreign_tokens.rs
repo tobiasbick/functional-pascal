@@ -98,3 +98,51 @@ fn valid_tokens_with_the_same_characters_are_not_reported() {
         vec![Token::Str("say \"hi\"".to_owned())]
     );
 }
+
+#[test]
+fn ada_concatenation_becomes_plus() {
+    assert_foreign(
+        "A & B",
+        "&",
+        "+",
+        &[
+            Token::Ident("A".to_owned()),
+            Token::Plus,
+            Token::Ident("B".to_owned()),
+        ],
+    );
+}
+
+#[test]
+fn ada_attributes_are_skipped_with_their_fpas_form() {
+    for (source, found, replacement) in [
+        ("Integer'Image (N)", "'Image", "Conv.IntToStr(X)"),
+        ("Float'Image (X)", "'Image", "Conv.RealToStr(X)"),
+        ("Items'Length", "'Length", "Items.Length()"),
+        ("Items'Last", "'Last", "Items.Length() - 1"),
+    ] {
+        let (lexed, errors) = lex_with_errors(source);
+        assert_eq!(errors.len(), 1, "{source}: {errors:#?}");
+        assert_eq!(errors[0].code, LEX_FOREIGN_TOKEN);
+        assert_eq!(errors[0].found.as_deref(), Some(found), "{source}");
+        assert_eq!(errors[0].expected.as_deref(), Some(replacement), "{source}");
+        assert!(
+            !lexed.iter().any(|token| matches!(token, Token::Str(_))),
+            "{source}"
+        );
+    }
+}
+
+#[test]
+fn strings_after_operators_or_spaces_are_not_attributes() {
+    assert_eq!(
+        toks("X + 'a' #65'b' 'it''s'"),
+        vec![
+            Token::Ident("X".to_owned()),
+            Token::Plus,
+            Token::Str("a".to_owned()),
+            Token::Str("Ab".to_owned()),
+            Token::Str("it's".to_owned()),
+        ]
+    );
+}

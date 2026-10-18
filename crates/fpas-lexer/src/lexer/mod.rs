@@ -68,6 +68,7 @@ impl<'a> Lexer<'a> {
             b'{' => self.scan_invalid_brace_comment(),
             b'(' if self.peek_at(1) == Some(b'*') => self.scan_invalid_paren_comment(),
             b'-' if self.at_ada_comment() => self.scan_ada_comment(),
+            b'\'' if self.at_ada_attribute() => self.scan_ada_attribute(),
             b'"' => self.scan_double_quoted_string(),
             _ if self.at_foreign_operator() => self.scan_foreign_operator(),
             b'a'..=b'z' | b'A'..=b'Z' | b'_' => self.scan_ident_or_keyword(),

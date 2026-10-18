@@ -213,7 +213,7 @@ The help reads "FPAS writes `return 42`."
 | `type TFoo = class … end;` | Delphi | `type TFoo = record … end record;` with methods taking `Self` | FP2023 |
 | `interface` / `implementation` sections, unit `end.` | Delphi | One declaration list, exports marked `public`, `end unit;` | FP2023 |
 | `TList<integer>`, `Name<T>` | Delphi | `array of integer`, `Name of T` | FP2001 |
-| `uses SysUtils;` and other Delphi run-time units | Delphi | `Std` units with an alias, such as `uses Std.Parse as Parse;` | FP2022 |
+| `uses SysUtils;`, `uses System.SysUtils;` and other Delphi run-time units | Delphi | `Std` units with an alias, such as `uses Std.Parse as Parse;` | FP2022 |
 | `Inc(X)`, `Dec(X, N)` | Pascal | `X := X + 1;`, `X := X - N;` | FP3003 |
 | `Length(S)`, `Low(A)`, `High(A)` | Pascal | `S.Length()`, `0`, `A.Length() - 1` | FP3003 |
 | `IntToStr(N)`, `TryStrToInt(Text, V)` | Delphi | `Conv.IntToStr(N)`, `Parse.Int(Text)` returning a Result | FP3003 |
@@ -233,11 +233,31 @@ The help reads "FPAS writes `return 42`."
 | `-- comment` at a line start or after `;` | Ada | `// comment` | FP1014 |
 | `@F`, `^integer`, `P^` | Pascal | `F` as a callable value; no pointers | FP1014 |
 | `WriteLn(X:0:2)` | Pascal | Format the text first, for example `'%f'.Format(X)` | FP2023 |
+| `program Name is … begin … end Name;` | Ada | `program Name; … begin … end.` | FP2023 |
+| `type T is record …`, `type K is (A, B);`, `type A is array (1 .. N) of T;` | Ada | `type T = record …`, `type K = enum A; B; end enum;`, `type A = array of T;` | FP2023 |
+| `type K = (A, B, C);` | Pascal | `type K = enum A; B; C; end enum;` | FP2023 |
+| `P : constant T := V;` | Ada | `const P: T := V;` | FP2015 |
+| `(Counter : in out integer)` | Ada | `(var Counter: integer)` | FP2023 |
+| `(3, 7, 12)`, `(X => 0.0, Y => 0.0)` aggregates | Ada | `[3, 7, 12]`, `Point(X := 0.0, Y := 0.0)` | FP2023 |
+| `"Sum: " & Text` | Ada | `'Sum: ' + Text` | FP1014 |
+| `Integer'Image (N)`, `Items'Length`, `Items'Range` | Ada | `Conv.IntToStr(N)`, `Items.Length()`, `0 to Items.Length() - 1` | FP1014 |
+| `TList<string>.Create`, `TDictionary<K, V>.Create` | Delphi | `[]`, `[:]` | FP2023 |
+| `Exit;` | Delphi | `return;` | FP2006 |
+| `Inc(Result)`, `Result` as a value | Delphi | A local `var` that the function returns | FP2023 |
 
 Help for built-in names inserts the written arguments when they are plain names or
 literals, and the alias of an already imported `Std` unit. After reporting `&&`, `||`, `!`,
 `!=`, `==`, `/=`, `=>` or a double-quoted string, the lexer continues with the FPAS token, so the
 rest of the expression is still checked.
+
+This table is the catalog of recognized habits. When a new habit is found, for example while an
+agent writes FPAS without the docs, add its detection in the `foreign` module of the stage that
+can recognize it (`fpas-lexer`, `fpas-parser` or `fpas-sema`), build the help through
+`fpas_diagnostics::ForeignHabit`, add positive, negative and recovery tests beside the existing
+`foreign_*` tests, and add a row here and, if authors should learn it up front, in the habit table
+of the [compact language reference](../agent-reference.md#1-translate-habits-before-writing).
+Forms the compiler does not recognize yet include Ada `with`/`package` units, Ada `task`
+declarations and exception handlers, and one-based string indexing, which only fails at run time.
 
 ## Rust JSON rendering API
 

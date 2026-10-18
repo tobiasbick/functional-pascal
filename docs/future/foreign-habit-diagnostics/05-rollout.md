@@ -17,7 +17,7 @@ Packages run in order; each lists its catalog entries from [02-catalog.md](02-ca
 | [x] | [P5 Built-in names](#p5-built-in-names) | H-DECL-09, H-DECL-15, H-CALL-07, H-CALL-08, H-CALL-10, H-CALL-12, H-CALL-15, H-CALL-17, H-CALL-19, H-STMT-09 | E1 | small |
 | [x] | [P3 Control flow](#p3-control-flow) | H-STMT-02, H-STMT-03, H-STMT-04, H-STMT-05, H-STMT-06, H-STMT-07, H-STMT-08 | E1 | medium |
 | [x] | [P4 Tokens and operators](#p4-tokens-and-operators) | H-DECL-04, H-CALL-06, H-EXPR-02, H-EXPR-03, H-EXPR-04, H-LEX-02, H-CALL-04, H-CALL-16 | E1 | medium |
-| [ ] | [P6 Experiment and closing](#p6-experiment-and-closing) | new entries from the experiment | P1–P5 | medium |
+| [x] | [P6 Experiment and closing](#p6-experiment-and-closing) | new entries from the experiment | P1–P5 | medium |
 
 Order after E1: P1, P2, P5, P3, P4 (the table lists them in this order). Packages whose habits
 stop the parse come first, because they hide every later habit: P1 for `const` parameters
@@ -211,6 +211,10 @@ Original scope:
 
 ## P6 Experiment and closing
 
+**Done** on 2026-10-17; results in [02-catalog.md](02-catalog.md#p6-full-experiment-2026-10-17).
+The frequent new entries were implemented as [P7](#p7-experiment-follow-up); the catalog moved
+to the diagnostics handbook, and A2 is marked implemented.
+
 - Run the full blind authoring experiment from [01-catalog-method.md](01-catalog-method.md).
 - Implement the new high-frequency entries as an additional package or defer them in the catalog.
 - Move the catalog to its permanent home ([06-docs-and-tests.md](06-docs-and-tests.md#permanent-catalog)),
@@ -219,3 +223,25 @@ Original scope:
 ## Decisions
 
 - **Q-4 (decided).** A short experiment (E1) runs before P1; the full experiment runs in P6.
+
+## P7 Experiment follow-up
+
+**Done** on 2026-10-17. Added after P6 at the user's request for the frequent new entries.
+
+- Lexer: Ada `&` becomes `+` (FP1014); Ada attributes such as `Integer'Image` are skipped with
+  their FPAS form (FP1014), recognized only directly after an identifier so strings stay valid.
+- Parser: Ada `program Name is … end Name;` (`foreign/programs.rs`), `type T is …` and Pascal
+  enumerations `(A, B)` (`foreign/types.rs`), Ada `constant` and aggregates in bindings, Ada
+  `in`/`out`/`in out` parameter modes, `System.`-qualified Delphi units, `TList<T>.Create`, bare
+  `Exit;` and `Result` used as a value. Pascal case labels directly after `of` are no longer read
+  as a type application.
+- Ada aggregates were not in the requested list; they were added because they stopped every Ada
+  program with typed constants (H-ADA-06). They live in `foreign/aggregates.rs`; a named
+  aggregate needs `(Name :=` directly after the parenthesis, so a record update
+  `(P with X := 5; end with)` is not reported (found by the documentation example checker).
+- Deferred: H-ADA-07 (`with`/`package`), H-ADA-09 (tasks), H-ADA-10 (exception handlers), Ada
+  `Map of K to V`, H-EXPR-05 (one-based indexing, run time only).
+- Tests: `fpas-lexer` `tests/errors/foreign_tokens.rs` (extended), `fpas-parser`
+  `tests/errors/foreign_ada_programs.rs`.
+- Result: in all 22 P6 programs each remaining diagnostic names one habit, except the deferred
+  Ada units, tasks and `Map of … to …` declarations.

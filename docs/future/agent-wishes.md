@@ -14,6 +14,7 @@
 [S2](#s2-diagnostics-with-source-excerpt-and-caret) is implemented.
 [D1](#d1-automatic-failure-dump) is implemented.
 [A2](#a2-diagnostics-for-pascal-and-ada-habits) is implemented.
+[A3](#a3-fix-its-as-data) has a plan: [fix-its.md](fix-its.md).
 The other wishes are ideas without an implementation plan. Human-facing tools stay: the DAP debugger
 ([`debugger.md`](../pascal/tools/debugger.md)) and the language server
 ([`editor-integration.md`](../pascal/tools/editor-integration.md)). The JSONL debugger protocol
@@ -29,7 +30,7 @@ not an estimate. A1, A2, S1, S2 and D1 are already implemented; see their status
 
 | Wish | Why first | Effort |
 | --- | --- | --- |
-| [A3](#a3-fix-its-as-data) Fix-its as data | Every habit diagnostic from A2 already carries its replacement in `expected` and `found` | medium |
+| [A3](#a3-fix-its-as-data) Fix-its as data ([plan](fix-its.md)) | Every habit diagnostic from A2 already carries its replacement in `expected` and `found` | medium |
 
 Everything else can wait until these exist.
 
@@ -94,6 +95,8 @@ teaches the same forms up front. Not recognized yet: Ada `with`/`package` units,
 declarations and exception handlers. The temporary plan is complete and removed.
 
 #### A3. Fix-its as data
+
+**Status: planned** in [fix-its.md](fix-its.md).
 
 Diagnostics carry hints as prose. A structured, machine-applicable replacement field plus
 `fpas check --fix` would let the agent fix simple mistakes directly, like rustfix and

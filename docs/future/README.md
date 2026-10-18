@@ -8,6 +8,7 @@ Current implemented behavior belongs under `docs/pascal/`, not here.
 
 | Area | Plan | Scope |
 |------|------|-------|
+| Agent tooling | [N1–N3 source queries](code-navigation/README.md) | Decided `fpas query` contract; implement references first, then definition and checked types; N4 and JSONL removal excluded |
 | Language | [Strict ISO/IEC 14977 grammar](iso-14977-grammar.md) | Open decision on grammar authority, strict notation, and automated drift checks |
 | Standard library | [Standard library roadmap](std-roadmap.md) | Future `Std.*` units and longer-term stdlib direction |
 | Networked applications | [Networked application platform](networked-applications/README.md) | Storage, security, concurrency, transports, interactive clients, operations, and distributed nodes |
@@ -32,8 +33,9 @@ Current implemented behavior belongs under `docs/pascal/`, not here.
   tools with JSON output for debugging and code navigation; DAP and
   LSP stay for humans. A1, A2, A3, A4, S1, S2, S3, D1 and D3 are implemented;
   [batch debugging](../pascal/tools/debugger-batch.md) is part of the handbook.
-  The user decided to keep JSONL alongside batch debugging. The other tooling
-  wishes remain ideas without an implementation plan.
+  N1–N3 have the [source-query plan](code-navigation/README.md); its decided
+  contract starts with N1 references. JSONL removal remains deferred. N4 and the
+  other tooling wishes remain ideas without an implementation plan.
 
 ## Architecture records and development intake
 

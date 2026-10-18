@@ -19,6 +19,8 @@
 [S3](#s3-declaration-comments-as-the-single-source) is implemented.
 [D3](#d3-one-shot-batch-runs) is implemented. Its permanent
 [batch debugger contract](../pascal/tools/debugger-batch.md) describes the shipped command.
+[N1–N3](#code-navigation) have a [source-query plan](code-navigation/README.md).
+The user delegated the command decisions to the agent; N1 references is next.
 The other wishes are ideas without an implementation plan. Human-facing tools stay: the DAP debugger
 ([`debugger.md`](../pascal/tools/debugger.md)) and the language server
 ([`editor-integration.md`](../pascal/tools/editor-integration.md)). The JSONL debugger protocol
@@ -29,9 +31,12 @@ navigation.
 
 ## Where to start
 
-A1, A2, A3, A4, S1, S2, S3, D1 and D3 are implemented. The remaining wishes
-are ideas without a selected next implementation. After reviewing the delivered
-D3 replacement, the user decided to keep JSONL. No removal is planned.
+A1, A2, A3, A4, S1, S2, S3, D1 and D3 are implemented. Next is
+[N1 references](code-navigation/02-references.md), followed by N2 definition and
+N3 checked types under the [decided contract](code-navigation/01-contract.md).
+Implementation has not started. The agent chose the details under the user's
+explicit delegation. N4 rename and the remaining debug wishes are not scheduled.
+JSONL removal remains deferred; the protocol and its tests stay supported.
 
 ## Principle: protocols for humans, commands for agents
 
@@ -241,10 +246,11 @@ scripted input, non-executing expressions, structured failures, escaped-byte
 budgets and contained native processes. Independent review findings were fixed
 and verified. The temporary implementation plan is complete and removed.
 
-**JSONL decision: keep it.** After implementation, verification and independent
-review, the user declined removal. Keep the protocol, CLI options, documentation
-and tests. This decision is closed; removal would require a new explicit user
-request. See [Decision: keep JSONL](#decision-keep-jsonl).
+**JSONL decision: keep it; removal deferred.** After implementation, verification
+and independent review, the user declined removal and kept that work deferred.
+Keep the protocol, CLI options, documentation and tests. There is no pending
+removal step; reopening it requires a new explicit user request.
+See [Decision: keep JSONL](#decision-keep-jsonl).
 
 Record/replay, seeded scheduling and tracepoints remain separate wishes.
 
@@ -286,8 +292,9 @@ agent workflow without a session protocol. Replay/query remain separate ideas.
 After D3 was implemented, tested and independently reviewed, the user was asked
 whether JSONL should be removed and decided to keep it. `fpas debug --protocol
 jsonl`, `--commands`, the [JSONL contract](../pascal/tools/debugger-jsonl.md) and
-the existing protocol tests remain supported. No removal or coverage migration
-is planned. Reconsidering this decision requires a new explicit user request.
+the existing protocol tests remain supported. Removal remains deferred; no
+removal or coverage migration is planned. Reconsidering it requires a new explicit
+user request and is not part of the N1–N3 plan.
 
 ## Code navigation
 
@@ -305,14 +312,28 @@ navigation the agent uses text search and reads files, which has limits in FPAS:
 
 ### Wishes
 
-`fpas query` commands backed by `fpas-language-service`, each answering one question as JSON. The
-LSP stays for the human; it already uses the same language service, so these commands add CLI entry
-points, not new analysis.
+**N1–N3 status: contract decided; implementation not started.** The
+[temporary source-query plan](code-navigation/README.md) owns the execution order
+and completion checklist. The user delegated the open decisions to the agent
+that will use the commands; no product questions remain open.
 
-- **N1. References** — every use of the symbol at a position: `fpas query refs src/Main.fpas:12:5`.
-- **N2. Definition** — where the symbol at a position is declared.
-- **N3. Type** — the type of the expression at a position.
-- **N4. Rename** — a safe rename across the project; with `--dry-run`, the list of edits only.
+Planned canonical commands, each returning one JSON document:
+
+- **N1. References** — resolved uses of one declaration:
+  `fpas query refs src/Main.fpas:12:5`.
+- **N2. Definition** — the defining source name:
+  `fpas query definition src/Main.fpas:12:5`.
+- **N3. Type** — the checked type of the selected expression or binding:
+  `fpas query type src/Main.fpas:12:5`.
+- **N4. Rename** — not scheduled in this plan. A safe cross-project rename and
+  edit preview need a separate later contract.
+
+N1 comes first. The commands reuse `fpas-language-service` resolution, workspace
+ownership and semantic metadata; the LSP stays unchanged for the editor. N3 needs
+a focused checked-type query API, not a copy of hover text. Scope, exact scalar
+coordinates, incomplete results and resource bounds are fixed in the
+[shared contract](code-navigation/01-contract.md). No command described here is
+shipped until its implementation/tests/docs/review step is complete.
 
 ## Language note
 

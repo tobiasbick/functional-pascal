@@ -52,6 +52,21 @@ pub(crate) fn resolve(
     }
 
     let (parts, selected_part) = qualified_parts(target, token_index);
+    if token_index > 0 && matches!(target.tokens[token_index - 1].token, Token::Dot) {
+        if let Some((index, symbol)) =
+            super::checked_members::resolve(documents, target_index, token_index, &name)
+        {
+            return Some((index, symbol, range));
+        }
+        if token_index >= 2
+            && matches!(
+                target.tokens[token_index - 2].token,
+                Token::RParen | Token::RBracket
+            )
+        {
+            return None;
+        }
+    }
     if selected_part == 0 {
         return resolve_unqualified(documents, target_index, &name, offset)
             .map(|(index, symbol)| (index, symbol, range));

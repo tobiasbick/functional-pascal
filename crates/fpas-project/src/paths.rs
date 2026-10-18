@@ -20,6 +20,43 @@ pub(super) fn resolve_source_files(
     exclude: &[String],
     root_dir: &Path,
 ) -> Result<(Vec<PathBuf>, Vec<FileDiagnostic>), ProjectError> {
+    if crate::source_inputs::active() {
+        let excluded = exclude
+            .iter()
+            .map(|entry| {
+                validate_non_empty_entry("sources.exclude", entry)?;
+                Ok(entry.trim().to_owned())
+            })
+            .collect::<Result<Vec<_>, ProjectError>>()?;
+        let mut files = Vec::new();
+        let mut warnings = Vec::new();
+        let mut seen = HashSet::new();
+        for entry in include {
+            validate_non_empty_entry("sources.include", entry)?;
+            let entry = entry.trim();
+            let matches = crate::path_glob::expand_selected(
+                root_dir,
+                &entry.replace('\\', "/"),
+                &excluded,
+            )
+            .map_err(|error| ProjectError::new(PROJECT_PATTERN_INVALID, error.to_string()))?;
+            if matches.is_empty()
+                && !crate::path_glob::has_match(root_dir, &entry.replace('\\', "/")).map_err(
+                    |error| ProjectError::new(PROJECT_PATTERN_INVALID, error.to_string()),
+                )?
+            {
+                return Err(ProjectError::new(
+                    PROJECT_PATH_INVALID,
+                    format!("Source pattern `{entry}` matched no files."),
+                ));
+            }
+            for path in matches.into_iter().filter(|p| p.is_file()) {
+                validate_source_extension(&path, "sources.include")?;
+                insert_unique_source_file(path, &mut files, &mut seen, &mut warnings);
+            }
+        }
+        return Ok((files, warnings));
+    }
     let (mut files, warnings) = expand_include_entries(include, root_dir)?;
     if !exclude.is_empty() {
         let excluded = expand_exclude_entries(exclude, root_dir)?;
@@ -77,6 +114,8 @@ fn expand_source_pattern(
 
     let resolved_path = resolve_path(entry, root_dir);
     if resolved_path.is_file() {
+        crate::source_inputs::select(&resolved_path)
+            .map_err(|error| ProjectError::new(PROJECT_PATH_INVALID, error.to_string()))?;
         return Ok(vec![resolved_path]);
     }
 

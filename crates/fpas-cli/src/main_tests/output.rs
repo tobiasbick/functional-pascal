@@ -99,14 +99,18 @@ fn query_fails_when_its_json_document_is_only_partially_written() {
             let mut stderr = Vec::new();
             let code = run_cli(&args, &cwd, Box::new(writer), &mut stderr, false);
             assert_eq!(code, 1);
-            let record: serde_json::Value =
-                serde_json::from_slice(&stderr).expect("structured write failure");
-            assert!(
-                record["message"]
-                    .as_str()
-                    .expect("message")
-                    .contains("Cannot write query output")
-            );
+            if args[1] == "rename" {
+                let record: serde_json::Value =
+                    serde_json::from_slice(&stderr).expect("structured rename write failure");
+                assert!(
+                    record["message"]
+                        .as_str()
+                        .expect("message")
+                        .contains("Cannot write query output")
+                );
+            } else {
+                assert!(String::from_utf8_lossy(&stderr).contains("Cannot write query output"));
+            }
             assert_eq!(
                 fs::read_to_string(cwd.join("main.fpas")).unwrap(),
                 expected,

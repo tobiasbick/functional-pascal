@@ -93,11 +93,16 @@ impl Checker {
             let full_name = Self::resolve_designator_parts_name(parts);
             self.ensure_fq_std_unit_loaded(&full_name);
             if let Some(symbol) = self.scopes.lookup(&full_name) {
+                let ty = symbol.ty.clone();
                 if parts.len() == designator.parts.len() && symbol.kind == SymbolKind::EnumMember {
                     self.enum_members
                         .insert(crate::designator_lookup_key(designator));
                 }
-                return symbol.ty.clone();
+                if let Some(DesignatorPart::Ident(_, span)) = parts.last() {
+                    self.path_types
+                        .insert((span.source_id, span.offset), ty.clone());
+                }
+                return ty;
             }
         }
         self.check_designator_path(designator, parts)
@@ -191,12 +196,20 @@ impl Checker {
                 };
 
                 let designator_key = crate::designator_lookup_key(designator);
+                if let Some(DesignatorPart::Ident(_, span)) =
+                    parts.get(base_part_count.saturating_sub(1))
+                {
+                    self.path_types
+                        .insert((span.source_id, span.offset), ty.clone());
+                }
                 let trailing = parts.len().saturating_sub(base_part_count);
                 for (offset, part) in parts[base_part_count..].iter().enumerate() {
                     ty = self.resolve_visible_type(&ty);
 
                     ty = match part {
                         DesignatorPart::Ident(field, span) => {
+                            self.member_receivers
+                                .insert((span.source_id, span.offset), ty.clone());
                             let is_last = offset + 1 == trailing;
                             let bound_key = if is_last {
                                 Some((designator_key, parts.len() - 1))

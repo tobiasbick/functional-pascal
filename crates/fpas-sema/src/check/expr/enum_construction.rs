@@ -122,6 +122,21 @@ impl Checker {
             .iter()
             .find(|variant| variant.name.eq_ignore_ascii_case(variant_name))
         {
+            for argument in args {
+                if let Expr::NamedArgument {
+                    name, name_span, ..
+                } = argument
+                    && let Some((_, ty)) = variant
+                        .fields
+                        .iter()
+                        .find(|(field, _)| field.eq_ignore_ascii_case(name))
+                {
+                    self.selection_types.insert(
+                        (name_span.source_id, name_span.offset),
+                        (*name_span, ty.clone()),
+                    );
+                }
+            }
             for (value, (_, field_ty)) in ordered.iter().zip(&variant.fields) {
                 let actual = self.check_expr_with_expected(value, Some(field_ty));
                 self.check_type_compat(

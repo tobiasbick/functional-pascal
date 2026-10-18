@@ -2,6 +2,8 @@
 
 /// Source owners of static callable parameter labels.
 pub(crate) mod callable_labels;
+mod checked_bindings;
+mod checked_members;
 mod document;
 mod expression_type;
 mod highlights;
@@ -12,6 +14,8 @@ mod rename;
 mod resolve;
 mod selection;
 mod service;
+mod source_query;
+pub use source_query::{SourceQueryOperation, SourceQueryResult, SourceQueryTarget};
 mod type_aliases;
 mod type_definition;
 mod workspace_symbols;

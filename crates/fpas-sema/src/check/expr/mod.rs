@@ -169,6 +169,9 @@ impl Checker {
         }
         let key = Self::expr_lookup_key(expr);
         self.expr_types.insert(key, ty.clone());
+        let span = expr.span();
+        self.source_expr_types
+            .insert((span.source_id, span.offset, span.length), ty.clone());
         self.propagate_task_bound_expr(expr, key);
         ty
     }

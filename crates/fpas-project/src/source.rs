@@ -99,7 +99,7 @@ pub(super) fn parse_compilation_unit_source(
             .map(|diagnostic| diagnostic.as_diagnostic().clone()),
     );
 
-    if diagnostics.iter().any(Diagnostic::is_error) {
+    if diagnostics.iter().any(Diagnostic::is_error) && !crate::source_inputs::active() {
         return Err(ProjectError::from_source(path, diagnostics).with_source(source_text));
     }
     let warnings = diagnostics

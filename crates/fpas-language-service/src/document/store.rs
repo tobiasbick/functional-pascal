@@ -146,7 +146,7 @@ impl DocumentStore {
             return Ok(Arc::clone(snapshot));
         }
 
-        let source = match std::fs::read_to_string(&path) {
+        let source = match fpas_project::source_inputs::read_to_string(&path) {
             Ok(source) => source,
             Err(error) => {
                 self.disk

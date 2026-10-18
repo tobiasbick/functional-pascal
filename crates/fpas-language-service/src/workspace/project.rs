@@ -106,7 +106,9 @@ impl ProjectContext {
         self.source_paths.contains(&normalized_path(path))
     }
 
-    pub(crate) fn owns_source(&self, path: &Path) -> bool {
+    /// Returns whether this project directly owns the source, excluding dependency sources.
+    #[must_use]
+    pub fn owns_source(&self, path: &Path) -> bool {
         self.owned_source_paths.contains(&normalized_path(path))
     }
 

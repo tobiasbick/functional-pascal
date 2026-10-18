@@ -23,6 +23,10 @@ impl Checker {
                 .iter()
                 .find(|(candidate, _)| candidate.eq_ignore_ascii_case(name))
             {
+                self.selection_types.insert(
+                    (field_span.source_id, field_span.offset),
+                    (field_span, field_ty.clone()),
+                );
                 let value_ty = self.check_expr_with_expected(value, Some(field_ty));
                 self.check_type_compat(
                     field_ty,

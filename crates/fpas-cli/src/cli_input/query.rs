@@ -5,7 +5,7 @@ use std::path::{Path, PathBuf};
 use super::{HelpTopic, ResolvedCli};
 use crate::cli_paths::{has_extension, normalize_input_path};
 
-const USAGE: &str = "Usage: fpas query <refs | def | type | rename> <file.fpas:line:column> [<new-name>] [options]\n  help: `fpas query rename src/main.fpas:12:5 NewName --dry-run` or `fpas query --help`.";
+const USAGE: &str = "Usage: fpas query <refs | definition | type | rename> <file.fpas:line:column> [<new-name>] [options]\n  help: `fpas query rename src/main.fpas:12:5 NewName --dry-run` or `fpas query --help`.";
 
 /// One protocol-independent language-service question.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -20,7 +20,7 @@ impl QueryKind {
     pub(crate) const fn name(self) -> &'static str {
         match self {
             Self::Refs => "refs",
-            Self::Definition => "def",
+            Self::Definition => "definition",
             Self::Type => "type",
             Self::Rename => "rename",
         }
@@ -36,19 +36,23 @@ pub(crate) struct QueryCliConfig {
     pub column: usize,
     pub project: Option<PathBuf>,
     pub standard_library: Option<PathBuf>,
-    pub include_declaration: bool,
+    pub timeout: u64,
+    pub limit: usize,
     pub new_name: Option<String>,
     pub dry_run: bool,
 }
 
 pub(super) fn resolve(args: &[String], cwd: &Path) -> Result<ResolvedCli, String> {
+    if args.iter().any(|arg| arg == "--version" || arg == "-V") {
+        return Ok(ResolvedCli::Version);
+    }
     let Some(command) = args.first() else {
         return Err(format!("Missing query kind.\n{USAGE}"));
     };
     let (kind, topic) = match command.as_str() {
         "--help" | "-h" if args.len() == 1 => return Ok(ResolvedCli::Help(HelpTopic::Query)),
         "refs" => (QueryKind::Refs, HelpTopic::QueryRefs),
-        "def" => (QueryKind::Definition, HelpTopic::QueryDef),
+        "definition" => (QueryKind::Definition, HelpTopic::QueryDef),
         "type" => (QueryKind::Type, HelpTopic::QueryType),
         "rename" => (QueryKind::Rename, HelpTopic::QueryRename),
         other => return Err(format!("Unknown query kind `{other}`.\n{USAGE}")),
@@ -59,20 +63,26 @@ pub(super) fn resolve(args: &[String], cwd: &Path) -> Result<ResolvedCli, String
     let mut position = None;
     let mut project = None;
     let mut standard_library = None;
-    let mut include_declaration = false;
+    let mut timeout = None;
+    let mut limit = None;
     let mut new_name = None;
     let mut dry_run = false;
     let mut index = 1;
     while index < args.len() {
         match args[index].as_str() {
-            "--project" | "--std-lib" => {
+            "--context" | "--project" | "--std-lib" => {
+                if (args[index] == "--project" && kind != QueryKind::Rename)
+                    || (args[index] == "--context" && kind == QueryKind::Rename)
+                {
+                    return Err(format!("Unknown option `{}`.\n{USAGE}", args[index]));
+                }
                 let option = &args[index];
                 index += 1;
                 let value = args
                     .get(index)
                     .filter(|value| !value.is_empty() && !value.starts_with('-'))
                     .ok_or_else(|| format!("`{option}` requires a path.\n{USAGE}"))?;
-                let slot = if option == "--project" {
+                let slot = if option != "--std-lib" {
                     &mut project
                 } else {
                     &mut standard_library
@@ -81,8 +91,28 @@ pub(super) fn resolve(args: &[String], cwd: &Path) -> Result<ResolvedCli, String
                     return Err(format!("Duplicate `{option}` option.\n{USAGE}"));
                 }
             }
-            "--include-declaration" if kind == QueryKind::Refs && !include_declaration => {
-                include_declaration = true;
+            "--timeout" | "--limit" if kind != QueryKind::Rename => {
+                let option = &args[index];
+                if option == "--limit" && kind != QueryKind::Refs {
+                    return Err(format!("Unknown option `{option}`.\n{USAGE}"));
+                }
+                index += 1;
+                let number = args
+                    .get(index)
+                    .and_then(|s| positive_number(Some(s)))
+                    .ok_or_else(|| format!("`{option}` requires a positive integer.\n{USAGE}"))?
+                    as u64;
+                let slot = if option == "--timeout" {
+                    &mut timeout
+                } else {
+                    &mut limit
+                };
+                if slot.replace(number).is_some() {
+                    return Err(format!("Duplicate `{option}` option.\n{USAGE}"));
+                }
+                if option == "--limit" && number > 10000 {
+                    return Err("--limit cannot exceed 10000.".into());
+                }
             }
             "--dry-run" if kind == QueryKind::Rename && !dry_run => dry_run = true,
             other if other.starts_with('-') => {
@@ -123,6 +153,12 @@ pub(super) fn resolve(args: &[String], cwd: &Path) -> Result<ResolvedCli, String
             "Query positions require a `.fpas` source file.\n{USAGE}"
         ));
     }
+    if kind != QueryKind::Rename
+        && let Some(context) = &project
+        && !(has_extension(context, "fpasprj") || has_extension(context, "fpasworkspace"))
+    {
+        return Err("--context requires a .fpasprj or .fpasworkspace manifest.".into());
+    }
     Ok(ResolvedCli::Query(QueryCliConfig {
         kind,
         path,
@@ -130,7 +166,8 @@ pub(super) fn resolve(args: &[String], cwd: &Path) -> Result<ResolvedCli, String
         column,
         project,
         standard_library,
-        include_declaration,
+        timeout: timeout.unwrap_or(30),
+        limit: limit.unwrap_or(1000) as usize,
         new_name,
         dry_run,
     }))
@@ -167,82 +204,9 @@ Examples:
   fpas query rename src/math.fpas:4:17 Compute --project suite.fpasworkspace
 "
         }
-        HelpTopic::QueryRefs => {
-            "Find project references to the symbol at a source position as JSON.
-
-Usage:
-  fpas query refs <file.fpas:line:column> [--include-declaration] [--project <path>] [--std-lib <dir>]
-
-Options:
-  --include-declaration  Include the defining declaration (default: usages only)
-  --project <path>       Explicit project, workspace, or folder context
-  --std-lib <dir>        Replace the complete source standard library
-  -h, --help             Print this help
-
-Positions use one-based lines and Unicode-scalar columns. No source is changed.
-
-Examples:
-  fpas query refs src/main.fpas:12:5
-  fpas query refs src/math.fpas:4:17 --include-declaration --project suite.fpasworkspace
-"
-        }
-        HelpTopic::QueryDef => {
-            "Find the defining declaration of the symbol at a source position as JSON.
-
-Usage:
-  fpas query def <file.fpas:line:column> [--project <path>] [--std-lib <dir>]
-
-Options:
-  --project <path>  Explicit project, workspace, or folder context
-  --std-lib <dir>   Replace the complete source standard library
-  -h, --help        Print this help
-
-Positions use one-based lines and Unicode-scalar columns. No source is changed.
-
-Examples:
-  fpas query def src/main.fpas:12:5
-  fpas query def src/main.fpas:12:5 --project app.fpasprj
-"
-        }
-        HelpTopic::QueryType => {
-            "Find the checked type of the smallest expression at a source position as JSON.
-
-Usage:
-  fpas query type <file.fpas:line:column> [--project <path>] [--std-lib <dir>]
-
-Options:
-  --project <path>  Explicit project, workspace, or folder context
-  --std-lib <dir>   Replace the complete source standard library
-  -h, --help        Print this help
-
-Positions use one-based lines and Unicode-scalar columns. No source is changed.
-
-Examples:
-  fpas query type src/main.fpas:12:5
-  fpas query type src/main.fpas:12:5 --std-lib ./lib
-"
-        }
-        _ => {
-            "Query source navigation through the language service; one JSON document on stdout.
-
-Usage:
-  fpas query <refs | def | type | rename> <file.fpas:line:column> [options]
-
-Commands:
-  refs  Find usages of a resolved symbol (optionally include its declaration)
-  def   Find the resolved declaration
-  type  Find the checked type of the smallest enclosing expression
-  rename <new-name>  Rename a symbol; --dry-run lists edits without writing
-
-Run `fpas query <command> --help` for options. Lines and Unicode-scalar columns
-start at 1. Empty matches succeed; source, context and argument failures exit 1.
-
-Examples:
-  fpas query refs src/main.fpas:12:5
-  fpas query def src/main.fpas:12:5
-  fpas query type src/main.fpas:12:5
-  fpas query rename src/main.fpas:12:5 Total --dry-run
-"
-        }
+        HelpTopic::QueryRefs => "Find resolved source uses as one JSON result.\n\nUsage:\n  fpas query refs <file.fpas:line:column> [--context <manifest>] [--std-lib <dir>] [--timeout <seconds>] [--limit <count>]\n\nDefaults: timeout 30 seconds, limit 1000 uses (maximum 10000).\nThe declaration is separate under target. Positions are one-based Unicode scalars.\nExits: 0 complete success, 1 invalid request or no target, 3 incomplete coverage.\n\nExamples:\n  fpas query refs src/main.fpas:12:5\n  fpas query refs src/math.fpas:4:17 --context suite.fpasworkspace --limit 200\n",
+        HelpTopic::QueryDef => "Find the resolved source declaration as one JSON result.\n\nUsage:\n  fpas query definition <file.fpas:line:column> [--context <manifest>] [--std-lib <dir>] [--timeout <seconds>]\n\nThe default deadline is 30 seconds. Positions are one-based Unicode scalars.\nExits: 0 complete success, 1 invalid request or no definition, 3 incomplete coverage.\n\nExamples:\n  fpas query definition src/main.fpas:12:5\n  fpas query definition src/main.fpas:12:5 --context app.fpasprj\n",
+        HelpTopic::QueryType => "Find the checked static type at a source position as one JSON result.\n\nUsage:\n  fpas query type <file.fpas:line:column> [--context <manifest>] [--std-lib <dir>] [--timeout <seconds>]\n\nThe default deadline is 30 seconds. Positions are one-based Unicode scalars.\nExits: 0 complete success, 1 invalid request or no value type, 3 incomplete coverage.\n\nExamples:\n  fpas query type src/main.fpas:12:5\n  fpas query type src/main.fpas:12:5 --std-lib ./lib\n",
+        _ => "Query saved sources through the language service.\n\nUsage:\n  fpas query <refs | definition | type | rename> <file.fpas:line:column> [options]\n\nCommands:\n  refs        Find resolved uses; the declaration is separate under target\n  definition  Find the defining identifier\n  type        Inspect a checked expression or value binding\n  rename <new-name>  Rename a symbol; --dry-run lists edits without writing\n\nRun fpas query <command> --help for options. Navigation emits one JSON result\nincluding failures; rename retains its separate edit/publication contract.\n\nExamples:\n  fpas query refs src/main.fpas:12:5\n  fpas query definition src/main.fpas:12:5\n  fpas query type src/main.fpas:12:5\n  fpas query rename src/main.fpas:12:5 Total --dry-run\n",
     }
 }

@@ -192,6 +192,16 @@ Complete `pascal` fences compile by default; fragments name an explicit context.
 Mark deterministic assertion programs `run` and separate intentional errors with
 their exact `error=FPnnnn` code. The normal suite checks the actual Markdown.
 
+## Inspecting source bindings
+
+Use `fpas query definition file.fpas:12:5` to identify a declaration,
+`fpas query refs file.fpas:12:5` to find its uses, and `fpas query type
+file.fpas:12:5` to inspect a checked value type. Select a project or workspace
+with `--context <manifest>`. Check `coverage.complete` before treating empty
+matches as absence; exit 3 carries incomplete analysis or a bound. Read the
+[source-query contract](../../../docs/pascal/tools/source-queries.md) for selection
+rules, snapshot provenance and limits.
+
 ## Inspecting a failure or stop
 
 Use `fpas run file.fpas --failure-dump .temp-data/new-failure.json` to retain

@@ -4,6 +4,7 @@
 
 mod declarations;
 mod native;
+pub(crate) use native::qualified_name as native_qualified_name;
 mod suggestions;
 
 use std::collections::HashMap;

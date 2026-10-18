@@ -31,9 +31,9 @@ navigation.
 ## Where to start
 
 A1, A2, A3, A4, S1, S2, S3, D1, D3 and N1–N4 are implemented.
-The [source-query plan](code-navigation/README.md) contains additional contract
-requirements that differ from the shipped [source queries](../pascal/tools/source-queries.md).
-The plan tracks those open follow-ups. The remaining debug wishes are not scheduled.
+The completed N1–N3 contract is documented in
+[source queries](../pascal/tools/source-queries.md). The remaining debug wishes
+are not scheduled.
 JSONL removal remains deferred; the protocol and its tests stay supported.
 
 ## Principle: protocols for humans, commands for agents
@@ -292,7 +292,7 @@ whether JSONL should be removed and decided to keep it. `fpas debug --protocol
 jsonl`, `--commands`, the [JSONL contract](../pascal/tools/debugger-jsonl.md) and
 the existing protocol tests remain supported. Removal remains deferred; no
 removal or coverage migration is planned. Reconsidering it requires a new explicit
-user request and is not part of the N1–N3 plan.
+user request and is outside the source-query contract.
 
 ## Code navigation
 
@@ -314,12 +314,13 @@ navigation the agent uses text search and reads files, which has limits in FPAS:
 metadata, with one JSON document per invocation. The editor keeps using LSP.
 
 - **N1. References — implemented.** `fpas query refs src/Main.fpas:12:5` finds
-  resolved project usages; `--include-declaration` adds the declaration.
-- **N2. Definition — implemented.** `fpas query def src/Main.fpas:12:5` returns
+  resolved project usages with separate target identity, bounded snapshot inputs,
+  source hashes, deadlines and explicit coverage.
+- **N2. Definition — implemented.** `fpas query definition src/Main.fpas:12:5` returns
   the source declaration of the resolved symbol.
 - **N3. Type — implemented.** `fpas query type src/Main.fpas:12:5` returns the
-  checked type and range of the smallest enclosing expression, including generic
-  call results and chain prefixes.
+  checked type, category and source range of the selected expression or value
+  binding, including generic call results, named labels and chain prefixes.
 - **N4. Rename — implemented.** `fpas query rename src/Main.fpas:12:5 NewName`
   validates and applies project-wide source edits; `--dry-run` returns the edit
   list without writing. Rename uses the shared language service's binding checks,

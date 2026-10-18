@@ -1,6 +1,6 @@
 //! Isolated target preparation and shared-engine batch execution.
 
-use super::files::{Files, read_bounded};
+use crate::oneshot::{Files, read_bounded};
 use fpas_debug::batch::{Input, Options, diagnostic, empty_report};
 use serde_json::json;
 use std::{
@@ -44,7 +44,7 @@ fn execute(files: &Files) -> std::io::Result<()> {
         ))
         .report(),
     };
-    files.publish(&mut report)?;
+    files.publish(&fpas_debug::batch::finish_report(&mut report))?;
     // Keep the owning process alive until the parent has copied the result and killed its tree.
     let deadline = Instant::now() + Duration::from_secs(31);
     while Instant::now() < deadline && !files.cancel().is_file() {

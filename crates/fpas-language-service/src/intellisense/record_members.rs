@@ -19,6 +19,14 @@ pub(crate) fn instantiate_member(
     let Some(Ty::Record(record)) = receiver_type(documents, target, receiver, offset, 0) else {
         return;
     };
+    instantiate_checked_member(member, &record);
+}
+
+/// Enriches a source member from the compiler's concrete receiver without parsing text.
+pub(crate) fn instantiate_checked_member(
+    member: &mut DocumentSymbol,
+    record: &fpas_sema::RecordTy,
+) {
     if record.type_params.is_empty() {
         return;
     }

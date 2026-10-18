@@ -45,6 +45,9 @@ pub(super) struct AnalysisSet {
 }
 
 impl AnalysisSet {
+    pub(super) fn documents(&self) -> Vec<Arc<DocumentAnalysis>> {
+        self.documents.values().cloned().collect()
+    }
     pub(super) fn new(documents: HashMap<PathBuf, Arc<DocumentAnalysis>>) -> Self {
         Self { documents }
     }

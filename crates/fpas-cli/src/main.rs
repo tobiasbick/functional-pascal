@@ -27,6 +27,7 @@ mod cli_query;
 mod cli_run;
 mod cli_test;
 mod native_executable;
+mod oneshot;
 mod process_tree;
 mod source_publication;
 mod standard_library;
@@ -51,6 +52,9 @@ pub(crate) use cli_run::{render_cli_diagnostic, run_source};
 
 fn main() {
     let args: Vec<String> = env::args().skip(1).collect();
+    if let Some(exit_code) = cli_query::worker(&args) {
+        process::exit(exit_code);
+    }
     if let Some(exit_code) = cli_batch::worker(&args) {
         process::exit(exit_code);
     }
@@ -62,6 +66,14 @@ fn main() {
     let cwd = match env::current_dir() {
         Ok(cwd) => cwd,
         Err(e) => {
+            if cli_query::selected(&args) {
+                use std::io::Write;
+                if let Err(error) = std::io::stdout().write_all(&cli_query::cwd_failure(&args, &e))
+                {
+                    eprintln!("Cannot write query output: {error}");
+                }
+                process::exit(1);
+            }
             if cli_batch::selected(&args) {
                 use std::io::Write;
                 let mut report = fpas_debug::batch::empty_report("error", 1);

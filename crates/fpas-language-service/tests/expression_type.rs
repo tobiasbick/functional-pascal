@@ -113,3 +113,153 @@ fn expression_types_follow_editor_snapshots_and_exclude_embedded_comments() {
     assert_eq!(result.snapshot.source(), updated);
     assert_eq!(original.snapshot.source(), source);
 }
+
+#[test]
+fn checked_types_select_bindings_labels_callees_and_nominal_categories() {
+    use fpas_language_service::{CancellationToken, SourceQueryOperation};
+    let temp = TempDirectory::new("checked-selection");
+    let source = "program Types;\n\
+type Box of T = record\n  Value: T;\nend record;\n\
+type Money = distinct integer;\n\
+type Defaults = record\n  Value: integer := 1 + 2;\nend record;\n\
+function Identity<T>(Value: T): T;\nbegin\n  return Value;\nend function;\n\
+function Twice(Count: integer): integer;\nbegin\n  return Count * 2;\nend function;\n\
+procedure Use(Value: integer);\nbegin\n  null;\nend procedure;\n\
+var Global: Money := Money(1);\n\
+begin\n  const Boxes := [Box(Value := 'abc')];\n\
+  const Extract := Identity(Value := Boxes[0].Value).Length();\n\
+  const Size := Boxes[0].Value.Length();\n\
+  const Readers := [function(): string begin return 'read'; end function];\n\
+  discard Readers[0]();\n\
+  const Read := Twice;\n\
+  for I: integer := 0 to 1 do\n    discard I;\n  end for;\n\
+  case Some(1) of\n    when Some(const N): discard N;\n    when None: null;\n  end case;\n\
+  Use(Value := 1);\nend.\n";
+    let path = temp.write("main.fpas", source);
+    let mut service = LanguageService::new(WorkspaceContext::loose(temp.path()));
+    for (needle, within, expected, kind, selected) in [
+        ("Global: Money", 0, "Money", "distinct", "Global"),
+        ("Boxes :=", 0, "array of Box of string", "array", "Boxes"),
+        ("Value: T", 0, "T", "generic_parameter", "Value"),
+        ("Count: integer", 0, "integer", "integer", "Count"),
+        ("I: integer", 0, "integer", "integer", "I"),
+        ("const N", 6, "integer", "integer", "N"),
+        (
+            "Identity(Value",
+            0,
+            "string",
+            "string",
+            "Identity(Value := Boxes[0].Value)",
+        ),
+        ("Value := Boxes", 0, "string", "string", "Value"),
+        ("Value := 'abc'", 0, "string", "string", "Value"),
+        (
+            "Boxes[0].Value",
+            0,
+            "array of Box of string",
+            "array",
+            "Boxes",
+        ),
+        ("Boxes[0].Value", 6, "integer", "integer", "0"),
+        ("Boxes[0].Value", 10, "string", "string", "Boxes[0].Value"),
+        (
+            ".Length()",
+            2,
+            "integer",
+            "integer",
+            "Identity(Value := Boxes[0].Value).Length()",
+        ),
+        (
+            "Read :=",
+            0,
+            "function(Count: integer): integer",
+            "callable",
+            "Read",
+        ),
+        (
+            "Boxes[0].Value.Length()",
+            0,
+            "array of Box of string",
+            "array",
+            "Boxes",
+        ),
+        (
+            "Boxes[0].Value.Length()",
+            9,
+            "string",
+            "string",
+            "Boxes[0].Value",
+        ),
+        (
+            "Boxes[0].Value.Length()",
+            16,
+            "integer",
+            "integer",
+            "Boxes[0].Value.Length()",
+        ),
+        ("Readers[0]()", 8, "integer", "integer", "0"),
+        ("1 + 2", 0, "integer", "integer", "1"),
+        ("1 + 2", 2, "integer", "integer", "1 + 2"),
+        ("\nUse(Value", 5, "integer", "integer", "Value"),
+    ] {
+        let query = service
+            .source_query(
+                &path,
+                source.find(needle).expect("needle") + within,
+                SourceQueryOperation::Type,
+                1000,
+                &CancellationToken::new(),
+            )
+            .expect("query");
+        assert!(
+            query.reasons.is_empty(),
+            "{needle}: {:?} {:?}",
+            query.reasons,
+            query.diagnostics
+        );
+        let result = query.expression_type.expect(needle);
+        assert_eq!(result.type_name, expected, "{needle}");
+        assert_eq!(result.kind, kind, "{needle}");
+        assert_eq!(
+            &source[result.span.offset()..result.span.end()],
+            selected,
+            "{needle}"
+        );
+        if needle == "Global: Money" {
+            assert!(result.declaration.is_some());
+        }
+    }
+    for (needle, within) in [("Box of T", 0), ("\nUse(Value", 1), ("Types;", 0)] {
+        let query = service
+            .source_query(
+                &path,
+                source.find(needle).expect("needle") + within,
+                SourceQueryOperation::Type,
+                1000,
+                &CancellationToken::new(),
+            )
+            .expect("query");
+        assert!(query.reasons.is_empty(), "{needle}: {:?}", query.reasons);
+        assert!(query.expression_type.is_none(), "{needle}");
+    }
+}
+
+#[test]
+fn unresolved_inner_types_are_unavailable_without_inventing_dynamic() {
+    use fpas_language_service::{CancellationToken, SourceQueryOperation};
+    let temp = TempDirectory::new("type-holes");
+    let source = "program T; begin discard []; end.";
+    let path = temp.write("main.fpas", source);
+    let mut service = LanguageService::new(WorkspaceContext::loose(temp.path()));
+    let result = service
+        .source_query(
+            &path,
+            source.find("[]").expect("array"),
+            SourceQueryOperation::Type,
+            1000,
+            &CancellationToken::new(),
+        )
+        .expect("query");
+    assert!(result.expression_type.is_none());
+    assert!(result.reasons.contains("type_unavailable"));
+}

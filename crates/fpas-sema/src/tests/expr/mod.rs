@@ -220,6 +220,10 @@ fn analysis_metadata_exposes_all_named_results() {
     assert!(parse_errors.is_empty(), "{parse_errors:#?}");
 
     let crate::AnalysisMetadata {
+        source_expr_types: _,
+        member_receivers: _,
+        declaration_types: _,
+        selection_types: _,
         errors,
         import_aliases,
         expr_types,

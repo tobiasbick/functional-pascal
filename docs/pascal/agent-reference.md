@@ -1071,11 +1071,13 @@ documentation and names the owning handbook page; `--report json` returns the sa
 data. Do not infer a library API from Delphi or an old example using free collection
 helper functions.
 
-For source navigation, use `fpas query refs file.fpas:12:5`, `fpas query def
+For source navigation, use `fpas query refs file.fpas:12:5`, `fpas query definition
 file.fpas:12:5`, or `fpas query type file.fpas:12:5`. Each returns one JSON document
 without writing artifacts. Lines and Unicode-scalar columns start at 1;
-`--project <path>` selects an explicit project/workspace and `refs
---include-declaration` adds the declaration. See [source queries](tools/source-queries.md).
+`--context <manifest>` selects an explicit project/workspace. The declaration
+is separate under `target`; inspect `coverage.complete` before trusting an empty
+use list. `--timeout` bounds the request and `refs --limit` bounds uses.
+Incomplete analysis exits 3. See [source queries](tools/source-queries.md).
 
 For a project-wide rename, use `fpas query rename file.fpas:12:5 NewName
 --dry-run` to validate and list edits as JSON, then omit `--dry-run` to apply them.

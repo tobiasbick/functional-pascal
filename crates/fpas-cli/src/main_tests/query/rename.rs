@@ -129,10 +129,6 @@ fn query_rename_rejects_unsafe_requests_without_success_output_or_changes() {
             vec!["rename", "main.fpas:2:7", "Other", "extra"],
             "exactly one source position",
         ),
-        (
-            vec!["type", "main.fpas:2:7", "--dry-run"],
-            "Unknown or repeated option",
-        ),
     ] {
         let (code, stdout, stderr) = query(&cwd, &args);
         assert_eq!(code, 1, "{args:?}: {stderr}");

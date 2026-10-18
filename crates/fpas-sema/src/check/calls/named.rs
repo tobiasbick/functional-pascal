@@ -29,6 +29,12 @@ impl Checker {
             );
         }
         let ty = self.check_expr_with_expected(argument.argument_value(), expected);
+        if let Expr::NamedArgument { name_span, .. } = argument {
+            self.selection_types.insert(
+                (name_span.source_id, name_span.offset),
+                (*name_span, expected.unwrap_or(&ty).clone()),
+            );
+        }
         self.expr_types
             .insert(Self::expr_lookup_key(argument), ty.clone());
         self.propagate_task_bound_expr(argument, Self::expr_lookup_key(argument));

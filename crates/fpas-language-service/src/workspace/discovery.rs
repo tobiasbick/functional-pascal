@@ -37,7 +37,11 @@ fn discover_initial_context_with(
         match inspect(&directory) {
             Ok(Some(context)) => return context,
             Ok(None) => {}
-            Err(DiscoveryError::Directory(_)) if input.is_file() && directory != start => {
+            Err(DiscoveryError::Directory(_))
+                if !fpas_project::source_inputs::active()
+                    && input.is_file()
+                    && directory != start =>
+            {
                 return WorkspaceContext::loose(input);
             }
             Err(issue) => {
@@ -194,6 +198,17 @@ fn direct_project_manifests(directory: &Path) -> Result<Vec<PathBuf>, DiscoveryE
             format!("Cannot inspect editor workspace directory: {error}"),
         ))
     };
+    if fpas_project::source_inputs::active() {
+        return fpas_project::expand_path_glob(directory, "*.[fF][pP][aA][sS][pP][rR][jJ]")
+            .map(|paths| {
+                paths
+                    .into_iter()
+                    .filter(|p| p.is_file())
+                    .map(|p| normalized_path(&p))
+                    .collect()
+            })
+            .map_err(|error| directory_error(std::io::Error::other(error)));
+    }
     let mut projects = Vec::new();
     for entry in std::fs::read_dir(directory).map_err(directory_error)? {
         let path = entry.map_err(directory_error)?.path();
@@ -279,7 +294,7 @@ mod tests {
         std::fs::create_dir_all(&child).expect("source directory");
         let source = child.join("loose.fpas");
         std::fs::write(&source, "program Loose; begin end.").expect("source file");
-        let context = discover_initial_context_with(&source, |directory| {
+        let inspect = |directory: &Path| {
             if directory == child {
                 Ok(None)
             } else {
@@ -288,9 +303,14 @@ mod tests {
                     "injected access denied",
                 )))
             }
-        });
+        };
+        let context = discover_initial_context_with(&source, inspect);
         assert_eq!(context.kind(), WorkspaceKind::Loose);
         assert!(context.issues().is_empty());
+        let _inputs = fpas_project::source_inputs::SourceInputs::begin(|| false).expect("inputs");
+        let strict_context = discover_initial_context_with(&source, inspect);
+        assert_eq!(strict_context.kind(), WorkspaceKind::Unavailable);
+        assert_eq!(strict_context.issues().len(), 1);
         std::fs::remove_dir_all(base).ok();
     }
 

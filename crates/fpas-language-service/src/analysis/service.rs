@@ -177,21 +177,63 @@ impl LanguageService {
         let Some(project) = project else {
             return self.analyze_loose(target);
         };
-        let snapshots = self.project_snapshots(&project)?;
-        let fingerprint =
-            AnalysisFingerprint::new(project_identity(&project), &snapshots, Some(&project));
-        let set = if let Some(cached) = self.analysis_cache.get(&fingerprint) {
-            cached
-        } else {
-            let analysis = analyze_project(&project, &snapshots)?;
-            self.analysis_cache.insert(fingerprint, analysis)
-        };
+        let set = self.analyzed_project(&project)?;
         set.document(path).ok_or_else(|| {
             LanguageServiceError::analysis(
                 path,
                 "The source is not present in its loaded project analysis.",
             )
         })
+    }
+
+    fn analyzed_project(
+        &mut self,
+        project: &ProjectContext,
+    ) -> Result<Arc<AnalysisSet>, LanguageServiceError> {
+        let snapshots = self.project_snapshots(project)?;
+        let fingerprint =
+            AnalysisFingerprint::new(project_identity(project), &snapshots, Some(project));
+        Ok(
+            if let Some(cached) = self.analysis_cache.get(&fingerprint) {
+                cached
+            } else {
+                let analysis = analyze_project(project, &snapshots)?;
+                self.analysis_cache.insert(fingerprint, analysis)
+            },
+        )
+    }
+
+    /// Retains supporting-unit diagnostics from the same checked project allocation.
+    pub(crate) fn source_analyses(
+        &mut self,
+        path: &Path,
+    ) -> Result<Vec<Arc<DocumentAnalysis>>, LanguageServiceError> {
+        let selected = self.analyze_document(path)?;
+        if selected.semantic().is_none() {
+            return self.source_syntax_analyses(path);
+        }
+        if let Some(project) =
+            self.analysis_project_for(path, selected.snapshot().compilation_unit())
+        {
+            return Ok(self.analyzed_project(&project)?.documents());
+        }
+        Ok(vec![selected])
+    }
+
+    /// Retains parsed supporting sources even when graph construction prevents checking.
+    pub(crate) fn source_syntax_analyses(
+        &mut self,
+        path: &Path,
+    ) -> Result<Vec<Arc<DocumentAnalysis>>, LanguageServiceError> {
+        let target = self.snapshot(path)?;
+        let snapshots = match self.analysis_project_for(path, target.compilation_unit()) {
+            Some(project) => self.project_snapshots(&project)?,
+            None => vec![target],
+        };
+        snapshots
+            .into_iter()
+            .map(|snapshot| self.cached_syntax_only(snapshot))
+            .collect()
     }
 
     /// Returns current diagnostics even when project-wide analysis cannot read a sibling source.
@@ -290,6 +332,9 @@ impl LanguageService {
         &mut self,
         path: &Path,
     ) -> Result<(), LanguageServiceError> {
+        if fpas_project::source_inputs::active() {
+            return Ok(());
+        }
         if self.is_editor_api_source(path) {
             return Ok(());
         }

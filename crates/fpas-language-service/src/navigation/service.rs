@@ -271,7 +271,7 @@ impl LanguageService {
         })
     }
 
-    fn reference_navigation_context(
+    pub(super) fn reference_navigation_context(
         &mut self,
         path: &Path,
         offset: usize,
@@ -310,6 +310,21 @@ impl LanguageService {
                     paths.insert(source_path);
                 }
             }
+        }
+
+        if fpas_project::source_inputs::active() {
+            let scope = self
+                .workspace()
+                .projects()
+                .iter()
+                .flat_map(|p| p.all_source_paths())
+                .collect::<BTreeSet<_>>();
+            paths.retain(|p| {
+                scope.contains(p)
+                    || p == path
+                    || p == &declaration_path
+                    || self.is_editor_api_source(p)
+            });
         }
 
         let mut documents = Vec::with_capacity(paths.len());

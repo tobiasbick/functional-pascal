@@ -477,6 +477,7 @@ dependencies = [
  "mimalloc",
  "nix",
  "rcgen",
+ "ring",
  "rustls",
  "serde",
  "serde_json",

@@ -110,6 +110,15 @@ pub type RecordDefaultsMap = HashMap<String, Vec<(String, Option<std::sync::Arc<
 /// inspecting those same allocations.
 #[derive(Debug, Default)]
 pub struct AnalysisMetadata {
+    /// Checked source expressions whose stable compiler allocation may be a retained default.
+    /// Exact source id, byte start and length keep this fallback bound to its snapshot.
+    pub source_expr_types: HashMap<(u32, usize, usize), Ty>,
+    /// Checked receiver before each record/member suffix, including call/index receivers.
+    pub member_receivers: HashMap<(u32, usize), Ty>,
+    /// Checked types of source declarations, retained after lexical scopes close.
+    pub declaration_types: HashMap<(u32, usize), Ty>,
+    /// Receiving types of named actual and pattern labels, keyed by exact name span.
+    pub selection_types: HashMap<(u32, usize), (Span, Ty)>,
     /// Unqualified identifier offsets to their selected source declaration identities.
     /// Compiler and editor resolution retain lexical shadowing and later enclosing bindings.
     /// **Documentation:** `docs/pascal/language/types/declaration-order.md`
@@ -171,6 +180,9 @@ pub struct AnalysisMetadata {
 
 /// Semantic checking state for whole-unit types and ordered executable declarations.
 pub struct Checker {
+    pub(crate) source_expr_types: HashMap<(u32, usize, usize), Ty>,
+    pub(crate) member_receivers: HashMap<(u32, usize), Ty>,
+    pub(crate) selection_types: HashMap<(u32, usize), (Span, Ty)>,
     /// Declaration-resolved dependencies used to prove ordered initialization safe.
     pub(crate) initialization: super::initialization::InitializationState,
     /// Value headers replaced when their ordered initializer is checked.
@@ -291,6 +303,9 @@ impl Checker {
             path_types: HashMap::new(),
             postfix_types: HashMap::new(),
             pattern_types: HashMap::new(),
+            selection_types: HashMap::new(),
+            member_receivers: HashMap::new(),
+            source_expr_types: HashMap::new(),
             binding_types: HashMap::new(),
             deferred_constructor_inference: 0,
             task_call_depth: 0,
@@ -328,6 +343,10 @@ impl Checker {
     pub fn finish(self) -> AnalysisMetadata {
         let named_types = self.scopes.root_types();
         AnalysisMetadata {
+            source_expr_types: self.source_expr_types,
+            member_receivers: self.member_receivers,
+            declaration_types: self.scopes.declaration_types(),
+            selection_types: self.selection_types,
             binding_references: self.initialization.binding_references(),
             import_aliases: self.scopes.imports.aliases.clone(),
             errors: self.errors,

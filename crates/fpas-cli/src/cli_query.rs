@@ -4,6 +4,11 @@
 
 mod publication;
 mod rename;
+mod report;
+mod request;
+mod worker;
+pub(crate) use request::{cwd_failure, run, selected};
+pub(crate) use worker::worker;
 
 use std::io::Write;
 use std::path::{Path, PathBuf};
@@ -16,7 +21,7 @@ use fpas_diagnostics::{FileDiagnostic, SourceSpan};
 use fpas_language_service::{DocumentSnapshot, LanguageService, LanguageServiceError};
 use serde::Serialize;
 
-use crate::cli_input::{QueryCliConfig, QueryKind};
+use crate::cli_input::QueryCliConfig;
 use crate::cli_output::{CliFailure, Reporter};
 
 /// Executes a single query and writes exactly one versioned JSON document on success.
@@ -76,7 +81,6 @@ impl From<CliFailure> for Failure {
 #[derive(Serialize)]
 #[serde(untagged)]
 enum Report {
-    Navigation(NavigationReport),
     Rename(rename::Report),
 }
 
@@ -86,37 +90,10 @@ struct PreparedQuery {
 }
 
 #[derive(Serialize)]
-struct NavigationReport {
-    #[serde(rename = "schemaVersion")]
-    schema_version: u32,
-    query: &'static str,
-    position: Location,
-    matches: Vec<Match>,
-}
-
-#[derive(Serialize)]
 struct Location {
     path: String,
     line: usize,
     column: usize,
-}
-
-#[derive(Serialize)]
-#[serde(untagged)]
-enum Match {
-    Reference {
-        path: String,
-        range: Range,
-        is_declaration: bool,
-    },
-    Definition {
-        path: String,
-        range: Range,
-    },
-    Type {
-        r#type: String,
-        range: Range,
-    },
 }
 
 #[derive(Serialize)]
@@ -209,67 +186,7 @@ fn check_analysis(service: &mut LanguageService, path: &Path) -> Result<(), Fail
 
 fn query(config: &QueryCliConfig) -> Result<PreparedQuery, Failure> {
     let context = load_context(config)?;
-    if config.kind == QueryKind::Rename {
-        return rename::prepare(config, context);
-    }
-    let Context {
-        mut service,
-        snapshot,
-        offset,
-        ..
-    } = context;
-
-    let matches = match config.kind {
-        QueryKind::Refs => service
-            .references(snapshot.path(), offset, config.include_declaration)?
-            .value
-            .into_iter()
-            .map(|reference| {
-                Ok(Match::Reference {
-                    path: display_path(&reference.path),
-                    range: source_range(&reference.snapshot, reference.span)?,
-                    is_declaration: reference.is_declaration,
-                })
-            })
-            .collect::<Result<Vec<_>, Failure>>()?,
-        QueryKind::Definition => {
-            let definitions = service.definitions(snapshot.path(), offset)?.value;
-            let mut matches = Vec::with_capacity(definitions.len());
-            for definition in definitions {
-                let target = service.snapshot(&definition.path)?;
-                matches.push(Match::Definition {
-                    path: display_path(&definition.path),
-                    range: source_range(&target, definition.symbol.selection_span)?,
-                });
-            }
-            matches
-        }
-        QueryKind::Type => service
-            .expression_type(snapshot.path(), offset)?
-            .value
-            .into_iter()
-            .map(|expression| {
-                Ok(Match::Type {
-                    r#type: expression.type_name,
-                    range: source_range(&snapshot, expression.span)?,
-                })
-            })
-            .collect::<Result<Vec<_>, Failure>>()?,
-        QueryKind::Rename => Vec::new(),
-    };
-    Ok(PreparedQuery {
-        report: Report::Navigation(NavigationReport {
-            schema_version: 1,
-            query: config.kind.name(),
-            position: Location {
-                path: display_path(snapshot.path()),
-                line: config.line,
-                column: config.column,
-            },
-            matches,
-        }),
-        publication: None,
-    })
+    rename::prepare(config, context)
 }
 
 fn outside_context(path: &Path) -> Failure {

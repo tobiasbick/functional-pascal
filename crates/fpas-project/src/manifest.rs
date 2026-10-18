@@ -14,7 +14,7 @@ use crate::ProjectError;
 
 /// Reads a manifest file; `kind` names it in the message (`project`, `workspace`).
 pub(crate) fn read_manifest(path: &Path, kind: &str) -> Result<String, ProjectError> {
-    std::fs::read_to_string(path).map_err(|error| {
+    crate::source_inputs::read_to_string(path).map_err(|error| {
         ProjectError::new(
             PROJECT_MANIFEST_READ_FAILED,
             format!(

@@ -44,8 +44,8 @@ pub use intellisense::{
 };
 pub use navigation::{
     DocumentHighlight, ExpressionType, HighlightKind, HoverInfo, NavigationResult,
-    ReferenceLocation, RenameEdit, RenameError, RenameTarget, SelectionRange,
-    WORKSPACE_SYMBOL_LIMIT,
+    ReferenceLocation, RenameEdit, RenameError, RenameTarget, SelectionRange, SourceQueryOperation,
+    SourceQueryResult, SourceQueryTarget, WORKSPACE_SYMBOL_LIMIT,
 };
 pub use semantic_tools::{
     DiagnosticIdentity, SemanticCodeAction, SemanticEdit, SemanticToken, SemanticTokenKind,

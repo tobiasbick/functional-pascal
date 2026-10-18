@@ -1,6 +1,7 @@
 pub use fpas_parser::ParamMode;
 use std::sync::Arc;
 mod array_pop;
+mod category;
 /// Type equality, assignment compatibility, and scalar capabilities.
 mod compatibility;
 pub use array_pop::{array_pop_result, array_pop_result_declaration};

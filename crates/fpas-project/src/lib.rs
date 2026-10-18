@@ -21,6 +21,7 @@ mod model;
 mod path_glob;
 mod paths;
 mod source;
+pub mod source_inputs;
 mod standard_library;
 mod test_manifest;
 mod test_sources;

@@ -1,12 +1,11 @@
 //! Parent-owned one-shot debug execution and publication of a single JSON document.
 
 mod capture;
-mod files;
 mod utf8;
 mod worker;
 pub(crate) use worker::worker;
 
-use files::{Files, Request};
+use crate::oneshot::{Files, Request};
 use fpas_debug::batch::{diagnostic, empty_report, finish_report};
 use serde_json::{Value, json};
 use std::{
@@ -107,7 +106,8 @@ fn run_parent(args: &[String], cwd: &Path, started: Instant) -> Result<Value, Fa
         "FP4137",
         "Timeout is too large.".into(),
     ))?;
-    let files = Files::create().map_err(|error| (1, "worker_setup", error.to_string()))?;
+    let files =
+        Files::create("debug-batch").map_err(|error| (1, "worker_setup", error.to_string()))?;
     files
         .write_request(&Request {
             args: args.into(),
@@ -139,34 +139,19 @@ fn run_parent(args: &[String], cwd: &Path, started: Instant) -> Result<Value, Fa
         "stderr",
         Arc::clone(&captured),
     );
-    let mut ended = None;
-    let mut grace_deadline = None;
-    let result = loop {
-        let overflow = captured.lock().unwrap_or_else(|p| p.into_inner()).overflow;
-        if ended.is_none() && (overflow || Instant::now() >= deadline) {
-            ended = Some(if overflow {
-                "output_limit"
-            } else {
-                "execution_timeout"
-            });
-            let _ = std::fs::write(files.cancel(), []);
-            grace_deadline = Some(Instant::now() + Duration::from_millis(250));
+    let (result, mut ended) = crate::oneshot::wait(&mut child, &files, deadline, || {
+        captured.lock().unwrap_or_else(|p| p.into_inner()).overflow
+    });
+    let result = result.and_then(|report| {
+        if report["schema_version"] != 1
+            || !report["capture"]["reasons"].is_array()
+            || !report["diagnostics"].is_array()
+            || !report["exit_code"].as_u64().is_some_and(|exit| exit <= 3)
+        {
+            return Err("Worker published an invalid result envelope.".into());
         }
-        if files.result().is_file() {
-            let result = files.read_result();
-            break result;
-        }
-        if grace_deadline.is_some_and(|deadline| Instant::now() >= deadline) {
-            break Err("Worker exceeded its deadline or output limit.".into());
-        }
-        match child.try_wait() {
-            Ok(Some(_)) => break Err("Batch worker terminated before publishing a result.".into()),
-            Err(error) => break Err(error.to_string()),
-            Ok(None) => {}
-        }
-        std::thread::sleep(Duration::from_millis(3));
-    };
-    crate::process_tree::terminate(&mut child);
+        Ok(report)
+    });
     let _ = stdout.join();
     let _ = stderr.join();
     let mut output = captured.lock().unwrap_or_else(|p| p.into_inner());

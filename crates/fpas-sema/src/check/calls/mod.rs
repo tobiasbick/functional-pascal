@@ -196,6 +196,7 @@ impl Checker {
             result,
         } = signature;
         let named = args.iter().any(|arg| arg.argument_name().is_some());
+        let written_args = args;
         let Some(args) = self.order_call_arguments(name, target, params, variadic, args) else {
             return HashMap::new();
         };
@@ -267,6 +268,18 @@ impl Checker {
         );
         for (index, (param, actual)) in params.iter().zip(&arg_types).enumerate() {
             let expected = Self::substitute_type_params(&param.ty, &inferred);
+            for arg in written_args {
+                if let Expr::NamedArgument {
+                    name, name_span, ..
+                } = arg
+                    && name.eq_ignore_ascii_case(&param.name)
+                {
+                    self.selection_types.insert(
+                        (name_span.source_id, name_span.offset),
+                        (*name_span, expected.clone()),
+                    );
+                }
+            }
             let role = if named {
                 format!("argument `{}`", param.name)
             } else {

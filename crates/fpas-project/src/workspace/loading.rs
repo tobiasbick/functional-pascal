@@ -164,13 +164,20 @@ pub fn discover_workspace_file(cwd: &Path) -> Result<Option<PathBuf>, ProjectErr
             ),
         )
     };
-    let read_dir = fs::read_dir(cwd).map_err(directory_error)?;
-
     let mut candidates = Vec::<PathBuf>::new();
-    for entry in read_dir {
-        let path = entry.map_err(directory_error)?.path();
-        if path.is_file() && is_workspace_file(&path) {
-            candidates.push(path);
+    if crate::source_inputs::active() {
+        candidates = crate::expand_path_glob(
+            cwd,
+            "*.[fF][pP][aA][sS][wW][oO][rR][kK][sS][pP][aA][cC][eE]",
+        )
+        .map_err(|error| directory_error(std::io::Error::other(error)))?;
+        candidates.retain(|p| p.is_file());
+    } else {
+        for entry in fs::read_dir(cwd).map_err(directory_error)? {
+            let path = entry.map_err(directory_error)?.path();
+            if path.is_file() && is_workspace_file(&path) {
+                candidates.push(path);
+            }
         }
     }
 

@@ -14,10 +14,15 @@ use fpas_sema::{AnalysisMetadata, Ty};
 use crate::{LanguageService, LanguageServiceError, NavigationResult};
 
 /// A checked expression type tied to its exact source range.
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct ExpressionType {
     /// Functional Pascal spelling of the inferred or declared expression type.
     pub type_name: String,
+    /// Semantic category from the checked type, independent of display spelling.
+    pub kind: &'static str,
+    /// Source declaration of a nominal type, when physically available.
+    pub declaration: Option<super::ReferenceLocation>,
+    pub(crate) ty: Ty,
     /// Smallest checked expression or chain prefix containing the query position.
     pub span: SourceSpan,
 }
@@ -32,57 +37,99 @@ impl LanguageService {
         path: &Path,
         offset: usize,
     ) -> Result<NavigationResult<Option<ExpressionType>>, LanguageServiceError> {
-        let analysis = self.analyze_document(path)?;
-        let value = analysis.semantic().and_then(|semantic| {
-            let mut finder = Finder {
-                metadata: semantic.metadata(),
-                offset,
-                found: None,
-            };
-            match analysis.snapshot().compilation_unit() {
-                CompilationUnit::Program(program) => {
-                    finder.declarations(&program.declarations);
-                    finder.statements(&program.body);
-                }
-                CompilationUnit::Unit(unit) => finder.declarations(&unit.declarations),
-            }
-            finder.found
-        });
-        let value = value.filter(|_| {
-            !fpas_lexer::collect_comments(analysis.snapshot().source())
-                .iter()
-                .any(|comment| {
-                    comment.span.offset <= offset
-                        && offset < comment.span.offset.saturating_add(comment.span.length)
-                })
-        });
-        Ok(NavigationResult {
-            snapshot: Arc::clone(analysis.snapshot()),
-            value,
-        })
+        self.checked_type_selection(path, offset)
+            .map(|(value, _)| value)
     }
+
+    pub(super) fn checked_type_selection(
+        &mut self,
+        path: &Path,
+        offset: usize,
+    ) -> Result<(NavigationResult<Option<ExpressionType>>, bool), LanguageServiceError> {
+        let analysis = self.analyze_document(path)?;
+        let (value, unavailable) = checked_at(&analysis, offset);
+        Ok((
+            NavigationResult {
+                snapshot: Arc::clone(analysis.snapshot()),
+                value,
+            },
+            unavailable,
+        ))
+    }
+}
+
+pub(super) fn checked_at(
+    analysis: &crate::DocumentAnalysis,
+    offset: usize,
+) -> (Option<ExpressionType>, bool) {
+    let mut unavailable = analysis.semantic().is_none();
+    let value = analysis.semantic().and_then(|semantic| {
+        let mut finder = Finder {
+            metadata: semantic.metadata(),
+            offset,
+            found: None,
+        };
+        for (span, ty) in semantic.metadata().selection_types.values() {
+            finder.consider(*span, Some(ty));
+        }
+        super::checked_bindings::select(analysis, offset, &mut |span, ty| {
+            finder.consider(span, ty)
+        });
+        match analysis.snapshot().compilation_unit() {
+            CompilationUnit::Program(program) => {
+                finder.declarations(&program.declarations);
+                finder.statements(&program.body);
+            }
+            CompilationUnit::Unit(unit) => finder.declarations(&unit.declarations),
+        }
+        finder.found.and_then(|(span, ty)| {
+            if let Some(ty) = ty {
+                Some(ExpressionType {
+                    type_name: ty.to_string(),
+                    kind: ty.category(),
+                    span: span.diagnostic_span_or_synthetic(),
+                    declaration: None,
+                    ty,
+                })
+            } else {
+                unavailable = true;
+                None
+            }
+        })
+    });
+    let value = value.filter(|_| {
+        !fpas_lexer::collect_comments(analysis.snapshot().source())
+            .iter()
+            .any(|comment| {
+                comment.span.offset <= offset
+                    && offset < comment.span.offset.saturating_add(comment.span.length)
+            })
+    });
+    (value, unavailable)
 }
 
 struct Finder<'a> {
     metadata: &'a AnalysisMetadata,
     offset: usize,
-    found: Option<ExpressionType>,
+    found: Option<(Span, Option<Ty>)>,
 }
 
 impl Finder<'_> {
     fn consider(&mut self, span: Span, ty: Option<&Ty>) {
+        if matches!(ty, Some(Ty::Unit)) {
+            return;
+        }
         if span.offset <= self.offset
             && self.offset < span.offset.saturating_add(span.length)
             && self
                 .found
                 .as_ref()
-                .is_none_or(|found| span.length < found.span.length())
-            && let Some(ty) = ty.filter(|ty| !ty.is_error())
+                .is_none_or(|(found, _)| span.length <= found.length)
         {
-            self.found = Some(ExpressionType {
-                type_name: ty.to_string(),
-                span: span.diagnostic_span_or_synthetic(),
-            });
+            self.found = Some((
+                span,
+                ty.filter(|ty| super::checked_bindings::usable(ty)).cloned(),
+            ));
         }
     }
 
@@ -224,7 +271,7 @@ impl Finder<'_> {
             Stmt::Call {
                 designator, args, ..
             } => {
-                self.designator(designator);
+                let _ = designator;
                 self.expressions(args);
             }
             Stmt::Null(_) | Stmt::Break(_) | Stmt::Continue(_) => {}
@@ -248,12 +295,21 @@ impl Finder<'_> {
         if self.offset < span.offset || self.offset >= span.offset.saturating_add(span.length) {
             return;
         }
-        self.consider(
-            span,
-            self.metadata
-                .expr_types
-                .get(&fpas_sema::expr_lookup_key(expression)),
-        );
+        if !matches!(expression, Expr::NamedArgument { .. }) {
+            self.consider(
+                span,
+                self.metadata
+                    .expr_types
+                    .get(&fpas_sema::expr_lookup_key(expression))
+                    .or_else(|| {
+                        self.metadata.source_expr_types.get(&(
+                            span.source_id,
+                            span.offset,
+                            span.length,
+                        ))
+                    }),
+            );
+        }
         match expression {
             Expr::Designator(designator) | Expr::VarArgument { designator, .. } => {
                 self.designator(designator)
@@ -261,7 +317,7 @@ impl Finder<'_> {
             Expr::Call {
                 designator, args, ..
             } => {
-                self.designator(designator);
+                self.call_prefix(designator);
                 self.expressions(args);
             }
             Expr::UnaryOp { operand, .. }
@@ -364,8 +420,16 @@ impl Finder<'_> {
         }
     }
 
+    fn call_prefix(&mut self, designator: &Designator) {
+        self.designator_parts(designator, true);
+    }
+
     fn designator(&mut self, designator: &Designator) {
-        for part in &designator.parts {
+        self.designator_parts(designator, false);
+    }
+
+    fn designator_parts(&mut self, designator: &Designator, called: bool) {
+        for (index, part) in designator.parts.iter().enumerate() {
             let suffix = match part {
                 DesignatorPart::Ident(_, span) => *span,
                 DesignatorPart::Index(index, span) => {
@@ -373,15 +437,22 @@ impl Finder<'_> {
                     *span
                 }
             };
-            self.consider(
-                Span {
-                    length: suffix.offset + suffix.length - designator.span.offset,
-                    ..designator.span
-                },
-                self.metadata
-                    .path_types
-                    .get(&(suffix.source_id, suffix.offset)),
-            );
+            if called && index + 1 == designator.parts.len() {
+                continue;
+            }
+            if let Some(ty) = self
+                .metadata
+                .path_types
+                .get(&(suffix.source_id, suffix.offset))
+            {
+                self.consider(
+                    Span {
+                        length: suffix.offset + suffix.length - designator.span.offset,
+                        ..designator.span
+                    },
+                    Some(ty),
+                );
+            }
         }
     }
 

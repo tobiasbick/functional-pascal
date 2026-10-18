@@ -7,6 +7,7 @@ use std::sync::atomic::{AtomicBool, Ordering};
 #[derive(Clone, Default)]
 pub struct CancellationToken {
     cancelled: Arc<AtomicBool>,
+    probe: Option<Arc<dyn Fn() -> bool + Send + Sync>>,
 }
 
 impl CancellationToken {
@@ -14,6 +15,15 @@ impl CancellationToken {
     #[must_use]
     pub fn new() -> Self {
         Self::default()
+    }
+
+    /// Observes a transport-owned cancellation source in addition to explicit cancellation.
+    #[must_use]
+    pub fn with_probe(probe: impl Fn() -> bool + Send + Sync + 'static) -> Self {
+        Self {
+            cancelled: Arc::default(),
+            probe: Some(Arc::new(probe)),
+        }
     }
 
     /// Requests cancellation for every clone of this signal.
@@ -24,7 +34,7 @@ impl CancellationToken {
     /// Returns whether cancellation has been requested.
     #[must_use]
     pub fn is_cancelled(&self) -> bool {
-        self.cancelled.load(Ordering::Acquire)
+        self.cancelled.load(Ordering::Acquire) || self.probe.as_ref().is_some_and(|probe| probe())
     }
 
     /// Returns a cancellation error after cancellation was requested.

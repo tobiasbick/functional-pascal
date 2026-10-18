@@ -42,9 +42,11 @@ the source debugger and in-process test hosts do not grant this authority automa
 - `fpas doc <name> [<path>]` — print the signature, documentation and handbook page of a
   declaration or built-in operation without compiling; see
   [Looking up declarations](#looking-up-declarations).
-- `fpas query refs|def|type <file.fpas:line:column>` — find references, definitions,
+- `fpas query refs|definition|type <file.fpas:line:column>` — find references, definitions,
   or checked expression types as JSON through the shared language service, without
-  writing artifacts. See [Source queries](../tools/source-queries.md).
+  writing artifacts. `--context <manifest>` selects the boundary; `--timeout`
+  bounds the complete request and `refs --limit` bounds retained uses. Incomplete
+  coverage exits 3. See [Source queries](../tools/source-queries.md).
 - `fpas query rename <file.fpas:line:column> <new-name>` — safely rename a
   declaration and its references, returning the edits as JSON. `--dry-run`
   validates and lists edits without writing. `--project <path>` selects the
@@ -80,7 +82,7 @@ the source debugger and in-process test hosts do not grant this authority automa
 - `fpas -V` / `fpas --version` — prints the compiler version to stdout and exits successfully.
 - `fpas build --std-lib <directory> …`, `fpas run --std-lib <directory> …`,
   `fpas check --std-lib <directory> …`, `fpas doc --std-lib <directory> …`,
-  `fpas query refs|def|type|rename --std-lib <directory> …`, and
+  `fpas query refs|definition|type|rename --std-lib <directory> …`, and
   `fpas test --std-lib <directory> …` — replace the complete
   implementation-owned source standard library for that invocation. The
   directory must contain `stdlib.fpasprj`. Without this option, `fpas` loads

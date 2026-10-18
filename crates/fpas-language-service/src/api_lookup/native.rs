@@ -29,7 +29,7 @@ fn owner_matches(receiver: NativeReceiver, owner: &str) -> bool {
         || (receiver == NativeReceiver::StringArray && owner.eq_ignore_ascii_case("array"))
 }
 
-fn qualified_name(entry: &NativeOperation) -> String {
+pub(crate) fn qualified_name(entry: &NativeOperation) -> String {
     let owner = match entry.receiver {
         NativeReceiver::StringArray => "array",
         receiver => receiver.label(),

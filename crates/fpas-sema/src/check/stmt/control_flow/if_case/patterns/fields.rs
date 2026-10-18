@@ -54,6 +54,12 @@ impl Checker {
                 Some(written).filter(|index| *index < declared.len())
             };
             let Some(index) = index else { continue };
+            if let Some((_, label_span)) = &field.label {
+                self.selection_types.insert(
+                    (label_span.source_id, label_span.offset),
+                    (*label_span, declared[index].1.clone()),
+                );
+            }
             if slots[index].is_some() {
                 self.error_with_code(
                     SEMA_INVALID_NAMED_ARGUMENT,

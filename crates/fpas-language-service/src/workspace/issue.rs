@@ -20,6 +20,10 @@ pub struct WorkspaceIssue {
 }
 
 impl WorkspaceIssue {
+    /// Returns attributed diagnostics retained from project loading or discovery.
+    pub fn diagnostics(&self) -> Vec<fpas_diagnostics::FileDiagnostic> {
+        self.clone().into_analysis_error().diagnostics()
+    }
     /// Creates a positionless issue produced by editor discovery.
     pub(super) fn new(path: &Path, message: impl Into<String>) -> Self {
         Self {

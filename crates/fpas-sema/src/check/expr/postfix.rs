@@ -176,6 +176,12 @@ impl Checker {
         }
 
         let resolved = self.resolve_visible_type(ty);
+        if let PostfixOperation::Field { span, .. } | PostfixOperation::MethodCall { span, .. } =
+            operation
+        {
+            self.member_receivers
+                .insert((span.source_id, span.offset), resolved.clone());
+        }
         match operation {
             PostfixOperation::Field { name, span } => {
                 let key = Self::postfix_operation_lookup_key(operation);

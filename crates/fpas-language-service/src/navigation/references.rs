@@ -57,6 +57,23 @@ pub(crate) fn find_references(
     include_declaration: bool,
     cancellation: &CancellationToken,
 ) -> Result<Vec<ReferenceLocation>, LanguageServiceError> {
+    find_references_bounded(
+        documents,
+        target,
+        include_declaration,
+        usize::MAX,
+        cancellation,
+    )
+    .map(|(locations, _)| locations)
+}
+
+pub(super) fn find_references_bounded(
+    documents: &[NavigationDocument],
+    target: &ResolvedTarget,
+    include_declaration: bool,
+    limit: usize,
+    cancellation: &CancellationToken,
+) -> Result<(Vec<ReferenceLocation>, bool), LanguageServiceError> {
     cancellation.check()?;
     let declaration_document = &documents[target.document_index];
     let mut locations = Vec::new();
@@ -75,7 +92,8 @@ pub(crate) fn find_references(
         .rsplit('.')
         .next()
         .unwrap_or(&target.symbol.name);
-    for (document_index, document) in documents.iter().enumerate() {
+    let mut complete = true;
+    'documents: for (document_index, document) in documents.iter().enumerate() {
         cancellation.check()?;
         for (token_index, token) in document.tokens.iter().enumerate() {
             cancellation.check()?;
@@ -96,6 +114,10 @@ pub(crate) fn find_references(
                 continue;
             };
             if same_declaration(&resolved, target) {
+                if locations.len() >= limit {
+                    complete = false;
+                    break 'documents;
+                }
                 locations.push(ReferenceLocation {
                     path: document.path.clone(),
                     span: resolved.occurrence_span,
@@ -113,7 +135,7 @@ pub(crate) fn find_references(
             .then_with(|| left.is_declaration.cmp(&right.is_declaration))
     });
     locations.dedup_by(|left, right| left.path == right.path && left.span == right.span);
-    Ok(locations)
+    Ok((locations, complete))
 }
 
 fn same_declaration(left: &ResolvedTarget, right: &ResolvedTarget) -> bool {

@@ -1,86 +1,142 @@
 # Source queries
 
-`fpas query` answers one source-navigation question with one JSON document on stdout.
-It uses the same language service as the editor and reads saved sources. `refs`,
-`def`, and `type` are read-only. `rename` applies validated source edits unless
-`--dry-run` is present. None of these commands creates compiled units or program artifacts.
+`fpas query` reads saved sources through the editor's language service. Each
+navigation request writes one UTF-8 JSON object and a newline to stdout, including
+invalid requests. Stderr is reserved for a final output-write failure. Queries
+parse and analyze sources without compiling bytecode, executing FPAS, or writing
+source/build artifacts. Private worker IPC files are removed when the request ends.
 
 ```sh
 fpas query refs src/main.fpas:12:5
-fpas query refs src/main.fpas:12:5 --include-declaration
-fpas query def src/main.fpas:12:5
-fpas query type src/main.fpas:12:5
-fpas query rename src/main.fpas:12:5 Total --dry-run
-fpas query rename src/main.fpas:12:5 Total
-fpas query refs src/math.fpas:4:17 --project suite.fpasworkspace
+fpas query refs src/math.fpas:4:17 --context suite.fpasworkspace --limit 200
+fpas query definition src/main.fpas:12:5 --context app.fpasprj
 fpas query type src/main.fpas:12:5 --std-lib ./lib
 ```
 
-Use `fpas query --help` or `fpas query refs|def|type|rename --help` for focused help.
-Paths may be relative to the working directory or absolute, including Windows
-drive letters. Quote the entire position argument when its path contains spaces.
-The last two colon-separated components are the line and column, both starting
-at 1. Columns count Unicode scalar values, like compiler diagnostics: an emoji
-counts as one column. Tabs also count as one character, independently of display width.
+Use `fpas query --help` or the operation's `--help` for examples. Canonical names
+are `refs`, `definition`, and `type`; there are no aliases. Each takes exactly one
+`.fpas` file and one position. Quote the complete position when its path contains
+spaces. The last two colon-separated components are positive line and column
+numbers, so Windows drive letters are preserved. Positions and half-open output
+ranges count one-based Unicode scalars: an emoji or tab counts as one column.
+LF, CRLF and bare CR line endings use the same coordinates. The BOM remains part
+of the exact source bytes and coordinate conversion. Invalid positions are
+rejected; token ends, EOF, comments and strings do not select a preceding name.
 
-The source's enclosing project is discovered automatically. `--project <path>`
-selects a project manifest, workspace manifest, or project folder explicitly;
-the source must belong to a project in that context. A workspace lets references
-include dependent member projects known to the language service. Without a
-manifest, queries work on the loose source and its standard-library context.
-`--std-lib <directory>` selects a complete source standard library containing
-`stdlib.fpasprj`, with the same default as `fpas doc`.
+## Context and bounds
+
+Without `--context`, nearest source ownership determines the project/workspace.
+A loose source has an explicitly limited scope: that file and declared imports
+available through the selected source standard library. An explicit context must
+be a `.fpasprj` or `.fpasworkspace` manifest; directories are rejected. Projects
+include selected sources and reachable dependencies; workspaces include all
+member projects and dependencies. Test programs are separate analysis roots.
+Ambiguous ownership, invalid manifests and out-of-context sources are errors.
+Consumers outside this scope are not discovered. Resolution preserves each
+consumer's import visibility and library export policy. Unused Std implementation
+bodies are not searched for uses of a user declaration.
+
+`--std-lib <dir>` replaces the complete source standard library containing
+`stdlib.fpasprj`; by default the installed adjacent library is used.
+`--timeout <seconds>` sets a positive whole-invocation deadline (default 30).
+The parent requests cancellation then allows at most 250 ms before terminating
+and reaping its isolated worker process tree. OS containment and uninterruptible
+OS/final-output limitations are the same as [batch debugging](debugger-batch.md).
+
+`refs --limit <count>` bounds retained uses during traversal: default 1,000,
+maximum 10,000. Reaching the bound yields explicit incomplete coverage when more
+uses exist; an unknown total stays null. There is no declaration inclusion flag:
+the declaration always appears separately under `target`.
+
+Inputs share immutable request snapshots, including manifests and file selection.
+The ceilings are 4,096 canonical participating files, 8 MiB per file and 64 MiB
+in total. Excluded sources do not count. Discovery also bounds retained paths
+and directories; exceeding discovery capacity is incomplete. Source and manifest
+SHA-256 hashes cover exact bytes. Before publication the worker rechecks bytes,
+file membership and lexical path identities. Changes yield `source_changed`,
+without retrying or combining revisions. This is a checked snapshot rather than
+an atomic filesystem transaction.
 
 ## Questions
 
-- `refs` finds uses of the resolved symbol, respecting identifier case, lexical
-  shadowing, import aliases, and project visibility. Strings and comments are
-  not references. `--include-declaration` also returns the defining declaration.
-  Results are sorted by source path and offset, with duplicates removed.
-- `def` finds the resolved declaration, with the range of its name.
-- `type` returns the compiler's checked type of the smallest expression containing
-  the position. This includes literals, inferred values, calls, generic results,
-  fields, indices, operators, closures, and expression branches. Inside a chain,
-  a completed prefix can supply the type before later operations. Place the
-  position on an operator or opening delimiter to select a larger expression
-  rather than one of its operands. Declaration names are not expressions.
-- `rename <new-name>` renames the resolved declaration and its references across
-  the selected project context. It follows aliases and case-insensitive references,
-  preserves shadowed declarations, and leaves strings and comments untouched.
-  `--dry-run` validates the same edits without writing sources.
+- `refs` returns resolved uses of one declaration, excluding its defining name.
+  Case differences, shadowing, aliases, fields, patterns and named labels follow
+  semantic identity. An unused resolved declaration succeeds with empty matches.
+- `definition` returns the defining identifier as one match and under
+  `target.declaration`, including when the request selects that declaration.
+  Callable values resolve to their own declaration. Generic uses retain the
+  original source declaration. Imported aliases retain their local identity.
+- `type` returns a checked static type and its selected source location. It uses
+  original compiler AST metadata, including generic substitutions and chain
+  prefixes. It never parses hover text or evaluates an expression.
 
-Query coverage follows the shared language service; a built-in operation without a source declaration can have
-an expression type and no definition or references.
+Type selection chooses the innermost checked expression, with deeper expressions
+winning equal spans. An argument selects its own type; an operator selects its
+containing expression. A routine name used as a callee selects the call result;
+a bare routine value has a callable type. In `Items[0].Name.Length()`, `Items`
+selects the array type, `Name` the field type, and `Length` the call result. The
+index expression has its own type. Value declaration names, parameters, loop and
+pattern bindings, and named actual/constructor/pattern labels select their checked
+receiving type. Labels take precedence over the containing call. Comments are
+excluded; every part of a string literal selects the string type. Whitespace
+inside an expression can select its enclosing expression. Type declarations,
+unit/import names and procedure statements have no selected value type. Missing
+metadata, unresolved type holes and error types give incomplete coverage.
+
+The `type` object contains canonical compiler `display`, semantic `kind`, selected
+`location`, and a physical nominal `declaration` or null. Categories are `integer`,
+`real`, `boolean`, `string`, `array`, `dict`, `record`, `enum`, `option`, `result`,
+`callable`, `task`, `channel`, `subrange`, `distinct`, and `generic_parameter`.
+Distinct types preserve their own identity. Internal recursive type structures
+are not serialized.
+
+A built-in without physical source has `origin: builtin` and a null declaration.
+`definition` reports `not_found` with `no_source_definition`; `refs` reports
+`incomplete` with `unsupported_target`. Source-backed Std API declarations remain
+eligible. A checked built-in call result can still have a type.
 
 ## JSON contract
 
-Schema version 1 contains `schemaVersion`, `query`, and `position`.
-`refs`, `def`, and `type` also contain `matches`. `position` contains an absolute source `path`,
-`line`, and `column`. All paths use forward slashes. Every result range has
-inclusive `start` and exclusive `end`, each with one-based `line` and `column`.
-Ranges are translated from the exact snapshots used by the language service.
+Schema version 1 uses these required fields:
 
-A reference result looks like this:
+| Field | Content |
+| --- | --- |
+| `schema_version`, `operation` | `1` and `refs`, `definition`, `type`, or null for an unidentified request. |
+| `outcome`, `exit_code` | Outcome and matching process status from the table below. |
+| `request` | Requested `file`, `line`, `column`; unavailable parts are null. |
+| `context` | Scope `kind`, selected `manifest`, sorted `projects`, and absolute invocation directory `path_base`. |
+| `target` | Name, qualified name, kind, origin, and declaration location; null when unresolved. |
+| `matches` | Sorted, deduplicated use/definition locations; empty for type requests. |
+| `type` | Checked type object for type requests; otherwise null. |
+| `diagnostics` | Original attributed FP records and named query diagnostics. |
+| `coverage` | `complete`, omission `reasons`, hashed `files`, `returned_count`, known `total_count` or null. |
+| `limits` | Effective timeout, result count and source/JSON/text ceilings. |
 
-```json
-{
-  "schemaVersion": 1,
-  "query": "refs",
-  "position": {"path": "/project/main.fpas", "line": 4, "column": 9},
-  "matches": [
-    {
-      "path": "/project/main.fpas",
-      "range": {"start": {"line": 5, "column": 11}, "end": {"line": 5, "column": 16}},
-      "is_declaration": false
-    }
-  ]
-}
-```
+Paths inside the invocation directory are relative to it; other paths are
+absolute. All use `/` separators. Locations contain `path`, a half-open `range`
+with scalar `start`/`end`, a zero-based UTF-8 `byte_span` (`start`, `length`), and
+one line `preview` (`text`, one-based `column_start`, `truncated`). Previews retain
+at most 160 scalars and come from the same snapshot as the location. Matches are
+ordered by reported path and byte offset. Canonical identity and span deduplicate
+physical sources, preserving declaration spelling.
 
-Definition matches contain `path` and `range`. Type matches contain `type` (the
-FPAS type spelling) and `range` in the input source. `matches` is empty when
-there is no symbol or typed expression, or a resolved symbol has no references.
-An empty result is successful and exits with status 0.
+The complete escaped JSON including newline is at most 8 MiB. Type/signature and
+diagnostic fields retain at most 4,096 scalars and carry explicit clipping markers.
+Text clipping alone does not reduce semantic coverage. Omitted matches, type,
+identity or source coverage do. The primary diagnostic and useful partial data
+survive result-budget clipping.
+
+| Exit | Outcome and meaning |
+| --- | --- |
+| 0 | `ok`: complete success, including an unused declaration. |
+| 1 | `not_found`: complete scope without the selected target/type; or `error`: request/setup/read failure. |
+| 3 | `incomplete`: analysis errors, unsupported target, limits, source changes; or `error`: worker/internal failure. |
+
+Parse/type recovery may retain proven matches and original diagnostics, with
+incomplete coverage. Missing analysis is never a complete empty result. Forced
+worker failure can leave coverage unavailable and no target/matches. Query commands
+have no runtime-error exit 2. A final stdout failure may leave a partial document;
+its process status is nonzero.
 
 ## Safe rename
 
@@ -135,13 +191,9 @@ publication. Ordinary publication failures trigger restoration of files already
 replaced; restoration failures identify the affected paths on stderr. Concurrent
 writers and process termination are not covered by a filesystem transaction.
 
-## Failures
+## Rename failures
 
-Argument, position, source-read, project-load, semantic-analysis, and output-write
-failures exit with status 1. Before writing a success document, query execution
-rejects erroneous input analysis. Execution failures use the existing diagnostic
-JSON records on stderr; argument-parser failures use ordinary CLI diagnostics.
-No success document is written for a failed query. An output failure can leave a
-partial document and must be detected through its nonzero exit status. If stdout
-fails after rename publication, source edits have already been applied; inspect
-the saved sources before retrying.
+Rename retains its separate edit/publication schema, `--project` context option
+and stderr diagnostic records. Argument, source, semantic, publication and output
+failures exit 1. A failed rename has no success document. If stdout fails after
+publication, edits have already been applied; inspect saved sources before retrying.

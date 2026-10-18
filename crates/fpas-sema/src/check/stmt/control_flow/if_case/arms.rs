@@ -72,6 +72,12 @@ impl Checker {
                 }
                 self.check_import_alias_collision(binding_name, arm.span);
                 self.scopes.push_scope();
+                for label in arm.labels {
+                    if let fpas_parser::CaseLabel::Binding { span, .. } = label {
+                        self.pattern_types
+                            .insert((span.source_id, span.offset), case_ty.clone());
+                    }
+                }
                 self.define_pattern_binding(binding_name, &case_ty, expr, arm.span);
                 self.check_guard(arm.guard, span);
                 check_body(self, index);

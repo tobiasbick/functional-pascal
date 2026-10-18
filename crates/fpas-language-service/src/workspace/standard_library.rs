@@ -96,6 +96,17 @@ impl StandardLibraryContext {
 }
 
 fn collect_editor_api_sources(directory: &Path, output: &mut Vec<PathBuf>) -> Result<(), String> {
+    if fpas_project::source_inputs::active() {
+        if directory.is_dir() {
+            output.extend(
+                fpas_project::expand_path_glob(directory, "**/*.[fF][pP][aA][sS]")
+                    .map_err(|error| error.to_string())?
+                    .into_iter()
+                    .map(|p| normalized_path(&p)),
+            );
+        }
+        return Ok(());
+    }
     let entries = match std::fs::read_dir(directory) {
         Ok(entries) => entries,
         Err(error) if error.kind() == std::io::ErrorKind::NotFound => return Ok(()),
@@ -116,6 +127,7 @@ fn collect_editor_api_sources(directory: &Path, output: &mut Vec<PathBuf>) -> Re
             .extension()
             .is_some_and(|extension| extension.eq_ignore_ascii_case("fpas"))
         {
+            fpas_project::source_inputs::select(&path).map_err(|error| error.to_string())?;
             output.push(normalized_path(&path));
         }
     }

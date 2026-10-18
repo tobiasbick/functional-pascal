@@ -89,6 +89,7 @@ impl Scope {
 /// Stack of scopes for lexical scoping.
 #[derive(Debug)]
 pub struct ScopeStack {
+    declaration_types: HashMap<(u32, usize), Ty>,
     pub(crate) imports: imports::ImportNames,
     scopes: Vec<Scope>,
     /// Recorded parameter escapes of imported routines and record routines by canonical name.
@@ -113,6 +114,7 @@ pub struct FunctionCtx {
 impl ScopeStack {
     pub fn new() -> Self {
         Self {
+            declaration_types: HashMap::new(),
             scopes: vec![Scope::new()],
             imports: Default::default(),
             param_escapes: HashMap::new(),
@@ -130,7 +132,27 @@ impl ScopeStack {
         if self.scopes.len() <= 1 {
             return;
         }
-        self.scopes.pop();
+        if let Some(scope) = self.scopes.pop() {
+            for symbol in scope.symbols.into_values() {
+                if let Some(span) = symbol.declaration {
+                    self.declaration_types
+                        .insert((span.source_id, span.offset), symbol.symbol.ty);
+                }
+            }
+        }
+    }
+
+    /// Retains checked source types after lexical scopes have left the checker.
+    pub(crate) fn declaration_types(&self) -> HashMap<(u32, usize), Ty> {
+        let mut types = self.declaration_types.clone();
+        for scope in &self.scopes {
+            for symbol in scope.symbols.values() {
+                if let Some(span) = symbol.declaration {
+                    types.insert((span.source_id, span.offset), symbol.symbol.ty.clone());
+                }
+            }
+        }
+        types
     }
 
     /// Define a symbol in the current (innermost) scope.

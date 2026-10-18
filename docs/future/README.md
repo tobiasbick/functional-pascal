@@ -8,7 +8,6 @@ Current implemented behavior belongs under `docs/pascal/`, not here.
 
 | Area | Plan | Scope |
 |------|------|-------|
-| Agent tooling | [Source-query contract follow-ups](code-navigation/README.md) | Remaining differences between the planned query contract and the shipped N1–N4 commands; JSONL removal excluded |
 | Language | [Strict ISO/IEC 14977 grammar](iso-14977-grammar.md) | Open decision on grammar authority, strict notation, and automated drift checks |
 | Standard library | [Standard library roadmap](std-roadmap.md) | Future `Std.*` units and longer-term stdlib direction |
 | Networked applications | [Networked application platform](networked-applications/README.md) | Storage, security, concurrency, transports, interactive clients, operations, and distributed nodes |
@@ -34,8 +33,7 @@ Current implemented behavior belongs under `docs/pascal/`, not here.
   LSP stay for humans. A1, A2, A3, A4, S1, S2, S3, D1 and D3 are implemented;
   [batch debugging](../pascal/tools/debugger-batch.md) is part of the handbook.
   N1–N4 are implemented in [source queries](../pascal/tools/source-queries.md).
-  The [source-query plan](code-navigation/README.md) retains additional contract
-  requirements as open follow-ups. JSONL removal remains deferred; the other
+  The N1–N3 contract follow-ups are complete. JSONL removal remains deferred; the other
   tooling wishes remain ideas without an implementation plan.
 
 ## Architecture records and development intake

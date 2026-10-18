@@ -70,6 +70,10 @@ pub fn breakpoint(text: &str) -> Result<SourceBreakpoint, String> {
 
 /// Executes one prepared target through the shared engine and captures its first result.
 /// Hosted output uses the supplied writer; isolated hosts share it with native stdout.
+#[expect(
+    clippy::unwrap_used,
+    reason = "This function creates its own empty_report envelope with a fixed diagnostics array."
+)]
 pub fn run(
     target: PreparedDebugTarget,
     options: Options,

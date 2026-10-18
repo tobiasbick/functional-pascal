@@ -8,6 +8,10 @@ fn prefix(text: &str) -> String {
 }
 
 /// Renders a coded diagnostic without retaining unbounded panic or compiler text.
+#[expect(
+    clippy::expect_used,
+    reason = "The shared diagnostic serializer emits only JSON-compatible strings, numbers and records."
+)]
 pub fn fp_diagnostic(path: Option<&str>, source: Option<&str>, original: &Diagnostic) -> Value {
     let mut clipped = false;
     let mut text = |value: &str| {

@@ -20,9 +20,9 @@ impl Utf8Output {
                 }
                 Err(error) => {
                     let valid = error.valid_up_to();
-                    result.push_str(
-                        std::str::from_utf8(&self.pending[consumed..consumed + valid]).unwrap(),
-                    );
+                    result.push_str(&String::from_utf8_lossy(
+                        &self.pending[consumed..consumed + valid],
+                    ));
                     consumed += valid;
                     match error.error_len() {
                         Some(length) => {

@@ -5,6 +5,10 @@ use crate::snapshot_value::Value as CapturedValue;
 use fpas_vm::{DebugSnapshot, DebugTaskSnapshot, FailureBinding, FailureFrame};
 use serde_json::{Value, json};
 
+#[expect(
+    clippy::unwrap_used,
+    reason = "The caller supplies the empty_report envelope with its diagnostics array."
+)]
 pub(super) fn append(report: &mut Value, state: DebugSnapshot, expressions: &[String]) {
     report["capture"]["total_tasks"] = json!(state.total_tasks);
     report["capture"]["total_globals"] = json!(state.total_globals);

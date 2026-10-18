@@ -38,6 +38,10 @@ pub(crate) fn selected(args: &[String]) -> bool {
 }
 
 /// Executes one batch worker and publishes exactly one bounded result to stdout.
+#[expect(
+    clippy::unwrap_used,
+    reason = "Batch worker and error results share the fixed array schema created by empty_report."
+)]
 pub(crate) fn run(
     args: &[String],
     cwd: &Path,
@@ -83,6 +87,10 @@ pub(crate) fn run(
 
 type Failure = (i32, &'static str, String);
 
+#[expect(
+    clippy::unwrap_used,
+    reason = "The parent constructs its fixed-schema report using empty_report."
+)]
 fn run_parent(args: &[String], cwd: &Path, started: Instant) -> Result<Value, Failure> {
     let timeout = raw_number(args, "--timeout", 30)?;
     let instruction_limit = raw_number(args, "--instruction-limit", 100_000_000)?;

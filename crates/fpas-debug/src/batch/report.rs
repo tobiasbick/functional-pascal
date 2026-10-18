@@ -16,6 +16,10 @@ pub fn diagnostic(code: &str, stage: &str, message: &str) -> Value {
 }
 
 /// Serializes a complete bounded report, preserving outcome and explicit omitted-data markers.
+#[expect(
+    clippy::unwrap_used,
+    reason = "Batch envelopes originate from empty_report, which initializes the fixed array fields."
+)]
 pub fn finish_report(report: &mut Value) -> Vec<u8> {
     if report["diagnostics"]
         .as_array()

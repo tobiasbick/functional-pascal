@@ -89,11 +89,12 @@ fn prepare_source(
         .map(fpas_parser::ParseDiagnostic::as_diagnostic)
         .find(|diagnostic| diagnostic.is_error())
     {
-        return Err(
-            crate::cli_output::CliFailure::from_diagnostics(path, &[diagnostic.clone()])
-                .with_source(path, &source)
-                .into(),
-        );
+        return Err(crate::cli_output::CliFailure::from_diagnostics(
+            path,
+            std::slice::from_ref(diagnostic),
+        )
+        .with_source(path, &source)
+        .into());
     }
     let executable = fpas_compiler::compile(&program).map_err(|diagnostics| {
         crate::cli_output::CliFailure::from_diagnostics(path, &diagnostics)

@@ -2,8 +2,21 @@
 
 Temporary delivery plan for the [navigation wishes](../agent-wishes.md#code-navigation).
 The user accepted this direction and delegated all open tooling decisions to the
-agent that will use it. The [contract](01-contract.md) records those decisions;
-no implementation or new command has shipped yet. This is not an AP package.
+agent that will use it. The [contract](01-contract.md) records those decisions.
+This is not an AP package.
+
+## Integration status
+
+N1–N4 now have a shipped implementation documented in the permanent
+[source-query reference](../../pascal/tools/source-queries.md). It was developed
+alongside this plan and does not fulfill this plan's complete contract. The
+checklist below tracks the remaining alignment work, not an absent implementation.
+
+Current commands use `def` and `--project`; the plan specifies `definition` and
+`--context`. The shipped JSON schema also differs, and the planned coverage,
+request deadlines, source hashes and result limits remain open. Use the handbook
+for current CLI examples. This directory retains those requirements as follow-ups;
+they are not reported as delivered by the existing N1–N4 commands.
 
 ## Goal
 
@@ -37,9 +50,9 @@ implemented feature, and delivery does not imply a commit or push.
 | Done | Step | Status |
 | --- | --- | --- |
 | [x] | [01: shared command/result contract](01-contract.md) | Decided under the user's delegation |
-| [ ] | [02: N1 references and shared CLI foundation](02-references.md) | Next; not started |
-| [ ] | [03: N2 definition](03-definition.md) | After 02 |
-| [ ] | [04: N3 checked types](04-type.md) | After 02 and 03 |
+| [ ] | [02: N1 references and shared CLI foundation](02-references.md) | `refs` shipped; contract alignment remains open |
+| [ ] | [03: N2 definition](03-definition.md) | `def` shipped; planned command/schema remain open |
+| [ ] | [04: N3 checked types](04-type.md) | Expression types shipped; remaining selection/coverage contract stays open |
 
 There are no unresolved product questions. Implementation findings are resolved
 within this contract; do not silently weaken completeness or substitute textual

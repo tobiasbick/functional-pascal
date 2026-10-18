@@ -1,5 +1,11 @@
 //! Real-process coverage for the one-shot debugger's public result boundary.
 
+#![expect(
+    clippy::unwrap_used,
+    clippy::expect_used,
+    reason = "Integration fixtures and JSON shape assertions must fail immediately on setup or protocol errors."
+)]
+
 #[path = "batch_debug/inspection.rs"]
 mod inspection;
 #[path = "batch_debug/limits.rs"]

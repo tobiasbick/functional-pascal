@@ -94,6 +94,24 @@ pub(crate) struct BuildCliConfig {
     pub diagnostics: DiagnosticFormat,
 }
 
+/// Machine-readable output format selected for `fpas doc`.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub(crate) enum DocReportFormat {
+    Json,
+}
+
+/// Fully resolved configuration for an `fpas doc` lookup.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub(crate) struct DocCliConfig {
+    /// Case-insensitive name to look up.
+    pub query: String,
+    /// Source, project, workspace or directory whose declarations are searched.
+    pub input: PathBuf,
+    pub cwd: PathBuf,
+    pub standard_library: Option<PathBuf>,
+    pub report: Option<DocReportFormat>,
+}
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub(crate) enum TestReportFormat {
     Json,
@@ -113,6 +131,7 @@ pub(crate) enum HelpTopic {
     Env,
     Lsp,
     Check,
+    Doc,
     Fmt,
     Test,
 }
@@ -155,6 +174,7 @@ pub(crate) enum ResolvedCli {
     Run(CliConfig),
     Debug(DebugCliConfig),
     Check(CliConfig),
+    Doc(DocCliConfig),
     Fmt(FmtCliConfig),
     Test(TestCliConfig),
     /// Print the selected toolchain environment as JSON.

@@ -11,6 +11,7 @@ use std::path::Path;
 
 mod debugger;
 mod diagnostics;
+mod doc;
 mod examples;
 mod fmt;
 mod init;

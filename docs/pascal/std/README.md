@@ -43,6 +43,11 @@ the language server concrete targets for hover, completion, signature help,
 not compiled and do not implement runtime behavior. Their maintenance is covered
 under [Shared implementation touchpoints](#shared-implementation-touchpoints).
 
+The same declarations and comments answer
+[`fpas doc`](../program-structure/cli.md#looking-up-declarations). The comment before each
+unit header ends with a `Handbook:` line naming the unit's handbook page, such as
+`docs/pascal/std/host/fs.md`.
+
 ## Areas
 
 | Area | Hub | Units / topics |
@@ -101,12 +106,15 @@ When changing a `Std.*` API, update its handbook and every applicable layer:
 | Source standard-library API | [`lib/Std/`](../../../lib/Std), [`lib/stdlib.fpasprj`](../../../lib/stdlib.fpasprj) |
 | Regression coverage | Owning crate tests and [`tests/stdlib/`](../../../tests/stdlib) or the relevant runner, console, concurrency, or app tests |
 
-Source units such as `Std.Tui` expose their API directly in `lib/Std/`.
+Source units such as `Std.Tui` expose their API directly in `lib/Std/`. A public source
+unit with its own handbook page names it in the comment before its `unit` header, in the same
+`Handbook:` form as the generated declarations.
 Console, network, and test hosts live under
 [`fpas-vm/src/vm/hosted/`](../../../crates/fpas-vm/src/vm/hosted).
 
 Regenerate the intrinsic editor declarations under
-[`lib/api/Std/`](../../../lib/api/Std) after an intrinsic API or handbook change. Native built-in signatures and editor
+[`lib/api/Std/`](../../../lib/api/Std) after an intrinsic API or handbook change. The unit comment comes from
+the first sentence of the handbook page titled with the unit name. Native built-in signatures and editor
 documentation come directly from `fpas-sema/src/std_registry/native/`; the exporter
 removes stale declarations of the five former type-helper units:
 

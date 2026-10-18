@@ -1,3 +1,6 @@
+// Model-Update-View terminal UI facade.
+//
+// Handbook: `docs/pascal/std/tui/README.md`.
 unit Std.Tui;
 
 uses

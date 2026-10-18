@@ -43,7 +43,11 @@ pub(super) fn index(value: &Value, key: &Value) -> Result<Value, ValueOperationE
             values.get(index).cloned().ok_or_else(|| {
                 ValueOperationError::array_bounds(
                     format!("Array index {index} out of bounds (len {})", values.len()),
-                    "Check index bounds before array access.",
+                    bounds_hint(
+                        index,
+                        values.len(),
+                        "Check index bounds before array access.",
+                    ),
                 )
             })
         }
@@ -63,8 +67,15 @@ pub(super) fn index(value: &Value, key: &Value) -> Result<Value, ValueOperationE
                 .map(|character| Value::Str(character.to_string().into()))
                 .ok_or_else(|| {
                     ValueOperationError::array_bounds(
-                        format!("String index {index} out of bounds"),
-                        "Check the index is in the range 0 .. S.Length() - 1.",
+                        format!(
+                            "String index {index} out of bounds (len {})",
+                            text.char_len()
+                        ),
+                        bounds_hint(
+                            index,
+                            text.char_len(),
+                            "Check the index is in the range 0 .. S.Length() - 1.",
+                        ),
                     )
                 })
         }
@@ -75,6 +86,21 @@ pub(super) fn index(value: &Value, key: &Value) -> Result<Value, ValueOperationE
             ),
             "Index an array or string with an integer, or a dictionary with its key type.",
         )),
+    }
+}
+
+/// Explains an index equal to the length, the usual one-based Pascal or Ada habit; otherwise
+/// returns `fallback`.
+///
+/// **Documentation:** `docs/pascal/tools/diagnostics.md` (Diagnostics for other-language spellings)
+pub(crate) fn bounds_hint(index: usize, length: usize, fallback: &str) -> String {
+    if length > 0 && index == length {
+        format!(
+            "Strings and arrays start at index 0, so the last index is {} (`Length() - 1`); index {index} is one past the end.",
+            length - 1
+        )
+    } else {
+        fallback.to_owned()
     }
 }
 
@@ -97,5 +123,32 @@ fn checked_index(key: &Value, kind: &str) -> Result<usize, ValueOperationError> 
             ),
             format!("Use an integer index when reading a {kind}."),
         )),
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn array(length: i64) -> Value {
+        Value::Array((0..length).map(Value::Integer).collect::<Vec<_>>().into())
+    }
+
+    #[test]
+    fn index_equal_to_the_length_names_the_last_index() {
+        let error = index(&array(3), &Value::Integer(3)).expect_err("one past the end");
+        assert!(error.hint.contains("the last index is 2"), "{error:?}");
+
+        let error = index(&Value::Str("Hi".into()), &Value::Integer(2)).expect_err("past end");
+        assert_eq!(error.message, "String index 2 out of bounds (len 2)");
+        assert!(error.hint.contains("start at index 0"), "{error:?}");
+    }
+
+    #[test]
+    fn other_out_of_range_indexes_keep_the_general_hint() {
+        let error = index(&array(3), &Value::Integer(7)).expect_err("far past the end");
+        assert_eq!(error.hint, "Check index bounds before array access.");
+        let error = index(&array(0), &Value::Integer(0)).expect_err("empty array");
+        assert_eq!(error.hint, "Check index bounds before array access.");
     }
 }

@@ -11,6 +11,7 @@ pub(super) enum CliMode {
     Env,
     Lsp,
     Check,
+    Doc,
     Fmt,
     Test,
 }
@@ -25,6 +26,7 @@ impl CliMode {
             Self::Env => HelpTopic::Env,
             Self::Lsp => HelpTopic::Lsp,
             Self::Check => HelpTopic::Check,
+            Self::Doc => HelpTopic::Doc,
             Self::Fmt => HelpTopic::Fmt,
             Self::Test => HelpTopic::Test,
         }
@@ -39,6 +41,7 @@ impl CliMode {
             Self::Env => "env",
             Self::Lsp => "lsp",
             Self::Check => "check",
+            Self::Doc => "doc",
             Self::Fmt => "fmt",
             Self::Test => "test",
         }
@@ -46,7 +49,7 @@ impl CliMode {
 }
 
 const SUBCOMMANDS: &str =
-    "`init`, `build`, `run`, `debug`, `check`, `test`, `fmt`, `env`, or `lsp`";
+    "`init`, `build`, `run`, `debug`, `check`, `doc`, `test`, `fmt`, `env`, or `lsp`";
 
 pub(super) fn parse_cli_mode(cli_args: &[String]) -> Result<(CliMode, &[String]), String> {
     let Some(first) = cli_args.first() else {
@@ -57,6 +60,7 @@ pub(super) fn parse_cli_mode(cli_args: &[String]) -> Result<(CliMode, &[String])
         "init" => Ok((CliMode::Init, &cli_args[1..])),
         "build" => Ok((CliMode::Build, &cli_args[1..])),
         "check" => Ok((CliMode::Check, &cli_args[1..])),
+        "doc" => Ok((CliMode::Doc, &cli_args[1..])),
         "fmt" => Ok((CliMode::Fmt, &cli_args[1..])),
         "test" => Ok((CliMode::Test, &cli_args[1..])),
         "run" => Ok((CliMode::Run, &cli_args[1..])),
@@ -95,6 +99,11 @@ pub(super) fn usage_error(mode: CliMode) -> String {
         }
         CliMode::Check => {
             "Usage: fpas check [<file.fpas | dir | file.fpasprj | file.fpasworkspace>]\n  help: `fpas check --help` shows options and examples."
+                .to_string()
+        }
+        CliMode::Doc => {
+            "Usage: fpas doc <name> [<path>] [--report json] [--std-lib <dir>]
+  help: `fpas doc --help` shows name forms and examples."
                 .to_string()
         }
         CliMode::Fmt => {

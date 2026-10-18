@@ -13,6 +13,7 @@ mod artifact_filename;
 mod cli_build;
 mod cli_check;
 mod cli_debug;
+mod cli_doc;
 mod cli_environment;
 mod cli_failure_dump;
 mod cli_fmt;

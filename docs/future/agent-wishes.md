@@ -15,8 +15,8 @@
 [D1](#d1-automatic-failure-dump) is implemented.
 [A2](#a2-diagnostics-for-pascal-and-ada-habits) is implemented.
 [A3](#a3-fix-its-as-data) is implemented.
-[A4](#a4-api-lookup-from-the-cli) and [S3](#s3-declaration-comments-as-the-single-source) have a
-[plan](api-lookup.md), together with the remaining A2 habits.
+[A4](#a4-api-lookup-from-the-cli) is implemented.
+[S3](#s3-declaration-comments-as-the-single-source) is implemented.
 The other wishes are ideas without an implementation plan. Human-facing tools stay: the DAP debugger
 ([`debugger.md`](../pascal/tools/debugger.md)) and the language server
 ([`editor-integration.md`](../pascal/tools/editor-integration.md)). The JSONL debugger protocol
@@ -28,14 +28,13 @@ navigation.
 ## Where to start
 
 Most value for the least work among the remaining wishes. Effort is a rough guess,
-not an estimate. A1, A2, A3, S1, S2 and D1 are already implemented; see their status below.
+not an estimate. A1, A2, A3, A4, S1, S2, S3 and D1 are already implemented; see their status below.
 
 | Wish | Why first | Effort |
 | --- | --- | --- |
-| [A4](#a4-api-lookup-from-the-cli) API lookup with [S3](#s3-declaration-comments-as-the-single-source) | Helps every authoring task; [plan](api-lookup.md) agreed | medium |
 | [D3](#d3-one-shot-batch-runs) One-shot batch runs | With D1 done, the last step before the JSONL protocol can go | medium |
 
-Everything else can wait until these exist.
+Everything else can wait until this exists.
 
 ## Principle: protocols for humans, commands for agents
 
@@ -94,9 +93,9 @@ then Delphi and Ada across ten tasks) drove the catalog. The permanent catalog, 
 add a newly observed habit, is the habit table in the
 [diagnostics handbook](../pascal/tools/diagnostics.md#diagnostics-for-other-language-spellings);
 the [compact language reference](../pascal/agent-reference.md#1-translate-habits-before-writing)
-teaches the same forms up front. The temporary plan is complete and removed. Not recognized yet:
-Ada `with`/`package` units, Ada `task` declarations and exception handlers; they are planned in
-[API lookup from the CLI](api-lookup.md#habit-diagnostics-still-missing).
+teaches the same forms up front. Ada context clauses, main procedures, packages, tasks, exception
+handlers and `raise` were added after the experiments; one-based indexing, which is valid FPAS,
+gets a runtime hint instead. The temporary plans are complete and removed.
 
 #### A3. Fix-its as data
 
@@ -111,14 +110,13 @@ complete and removed.
 
 #### A4. API lookup from the CLI
 
-**Status: planned** in [API lookup from the CLI](api-lookup.md), together with S3 and the
-remaining A2 habits.
-
-`fpas doc Std.Fs.ReadText` or `fpas doc string.TrimLeft` returns the signature, a short
-description, and an example. Units have generated declarations in `lib/api/`; methods on built-in
-types such as `S.TrimLeft()` exist only in the Rust catalog and have no file the agent can find.
-For user code, `fpas doc` reads the same declaration comments the editor shows on hover
-([S3](#s3-declaration-comments-as-the-single-source)).
+**Status: implemented.** `fpas doc Std.Fs.ReadText`, `fpas doc string.TrimLeft` or `fpas doc
+Std.Fs` prints the signature, the declaration comment and the owning handbook page, as text or
+with `--report json`; see
+[Looking up declarations](../pascal/program-structure/cli.md#looking-up-declarations). It covers
+intrinsic and source `Std` units, the built-in operation catalog and project declarations, and
+suggests the closest names when nothing matches. Examples are not repeated per entry: the
+handbook page holds them. The temporary plan is complete and removed.
 
 #### A5. A principle for language decisions
 
@@ -165,13 +163,11 @@ S2 plan is complete and removed.
 
 #### S3. Declaration comments as the single source
 
-**Status: planned** together with A4 in [API lookup from the CLI](api-lookup.md).
-
-A contiguous block of `//` lines directly before a declaration is already its Markdown
-documentation, and the language server shows it on hover
-([`comments.md`](../pascal/language/basics/comments.md)). `fpas doc`
-([A4](#a4-api-lookup-from-the-cli)) would print the same comments. One comment, two readers: the
-human on hover, the agent on the command line.
+**Status: implemented.** A contiguous block of `//` lines directly before a declaration is its
+Markdown documentation ([`comments.md`](../pascal/language/basics/comments.md)). The language
+server shows it on hover and `fpas doc` ([A4](#a4-api-lookup-from-the-cli)) prints the same text
+through the same language-service code. One comment, two readers: the human on hover, the agent
+on the command line. The comment before a `Std` unit header names its handbook page.
 
 ### Deliberately left out
 

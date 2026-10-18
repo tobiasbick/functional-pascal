@@ -15,6 +15,7 @@
 //! into reusable immutable results for a later language-server transport.
 
 mod analysis;
+mod api_lookup;
 mod cancellation;
 mod diagnostics;
 mod document;
@@ -29,6 +30,7 @@ mod symbols;
 mod workspace;
 
 pub use analysis::{DiagnosticAnalysis, DocumentAnalysis, LanguageService, SemanticAnalysis};
+pub use api_lookup::{ApiCatalog, ApiEntry, ApiEntryKind, ApiLocation, ApiLookup, ApiMember};
 pub use cancellation::CancellationToken;
 pub use diagnostics::diagnostics_for_document;
 pub use document::{

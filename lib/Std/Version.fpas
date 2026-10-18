@@ -1,3 +1,6 @@
+// Versions published with the installed Functional Pascal standard library.
+//
+// Handbook: `docs/pascal/std/version.md`.
 unit Std.Version;
 
 // Version of the Functional Pascal compiler that provides this standard library.

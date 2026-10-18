@@ -39,6 +39,9 @@ the source debugger and in-process test hosts do not grant this authority automa
   - Other extensions — error.
 - `fpas run` with more than one positional path argument — usage error.
 - `fpas check [<path>]` — type-check a `.fpas`, directory of `.fpas` files, `.fpasprj`, or `.fpasworkspace` without running. With no path, discovers `.fpasworkspace` or `.fpasprj` in the current directory.
+- `fpas doc <name> [<path>]` — print the signature, documentation and handbook page of a
+  declaration or built-in operation without compiling; see
+  [Looking up declarations](#looking-up-declarations).
 - `--diagnostics <text | json>` — accepted by `check`, `build`, `run`, and `test`; selects the stderr diagnostic format (see [Machine-readable diagnostics](#machine-readable-diagnostics)).
 - `fpas test [<path>]` — run `*_test.fpas` programs and print a pass/fail/skip summary. With no path, discovers a workspace or `.fpasprj` like `fpas check`. Flags: `--list`, `--fail-fast`, `--strict` (exit `1` when any test called `Skip`), `--show-output` (print captured standard output of passing tests too), `--filter <pattern>`, repeatable `--file <path>` (select an exact discovered file, relative to the current directory), `--report json`, `--timeout <secs>` (default: `300`), `--jobs <n>` (`0` = available CPU parallelism), `--script <path>`. Sidecars beside each test file (all optional): `<test>.script.toml` (scripted input), `<test>.expect.stdout`, and `<test>.expect.screen` (TUI). See [`Std.Test`](../std/testing/test.md). `--list` and `--report json` write results to stdout; JSON test entries identify their full source paths, including nested directories. Progress lines stay on stderr. A failing test's captured standard output is always printed below its result line; `--show-output` does the same for passing tests. A write failure on contracted stdout or summary output returns nonzero instead of reporting success. Each test's timeout budget starts before its isolated worker is spawned and covers worker preparation and VM execution. Tests run in a terminable process tree, so blocking startup, VM, or host calls cannot extend the timeout indefinitely.
 - `fpas debug [<path>] --protocol <jsonl | dap>` — run a source, program
@@ -59,13 +62,13 @@ the source debugger and in-process test hosts do not grant this authority automa
   `--check`.
 - `fpas -h` / `fpas --help` — prints the short command overview to stdout and exits successfully.
 - `fpas init --help`, `fpas init <kind> --help`, `fpas build --help`,
-  `fpas run --help`, `fpas check --help`,
+  `fpas run --help`, `fpas check --help`, `fpas doc --help`,
   `fpas test --help`, `fpas debug --help`, `fpas fmt --help`,
   `fpas env --help`, and `fpas lsp --help` — print focused command help with
   valid examples and exit successfully.
 - `fpas -V` / `fpas --version` — prints the compiler version to stdout and exits successfully.
 - `fpas build --std-lib <directory> …`, `fpas run --std-lib <directory> …`,
-  `fpas check --std-lib <directory> …`, and
+  `fpas check --std-lib <directory> …`, `fpas doc --std-lib <directory> …`, and
   `fpas test --std-lib <directory> …` — replace the complete
   implementation-owned source standard library for that invocation. The
   directory must contain `stdlib.fpasprj`. Without this option, `fpas` loads
@@ -233,6 +236,57 @@ directory entry cannot be read. `fpas fmt` and `fpas test` use the same traversa
 The parser shares a nesting budget of 128 levels across expressions, statements, type expressions,
 and routine declarations. Source that exceeds the budget stops parsing with diagnostic `FP2009`
 instead of exhausting the compiler's native stack.
+
+## Looking up declarations
+
+`fpas doc <name>` prints what the editor shows on hover for a name: its signature, its `//`
+[documentation comment](../language/basics/comments.md) and, when known, the owning handbook
+page. It covers intrinsic and source `Std` units, the operations on built-in types and the
+declarations of the selected project. Nothing is compiled or written, and a project whose
+sources do not check is still searched.
+
+```sh
+fpas doc Std.Fs.ReadText
+fpas doc string.TrimLeft
+fpas doc Std.Path
+fpas doc TPoint.Distance my-app.fpasprj
+fpas doc --report json array.Push
+```
+
+Names are case-insensitive. A name matches a declaration when it equals the qualified name or
+ends with it at a dot, so `ReadText`, `Fs.ReadText` and `Std.Fs.ReadText` find the same routine;
+every match is printed, so a short name can list several. Operations on built-in types are
+written on the type: `string`, `array`, `dict`, `Option` or `Result`, for example `dict.Keys`.
+A bare operation name such as `Length` lists it for every type. A unit name prints the unit's
+comment and lists its public declarations with the first line of each comment.
+
+`<path>` selects the project like `fpas check`; without it the current directory is used.
+Without a project, only `Std` units and built-in operations are searched. A project's own
+declarations are found whether public or not; `Std` units contribute public declarations only.
+A unit's handbook page is the `docs/pascal/….md` path named in the comment before its `unit`
+header.
+
+`--report json` writes one JSON document to stdout:
+
+```json
+{"query":"string.TrimLeft","matches":[{"name":"string.TrimLeft","kind":"operation",
+  "signature":"string.TrimLeft(): string","documentation":"Remove leading whitespace",
+  "handbook":"docs/pascal/language/types/string/README.md","location":null,"members":[]}],
+  "suggestions":[]}
+```
+
+| Field | Content |
+| --- | --- |
+| `kind` | `operation`, `factory`, `unit`, `function`, `procedure`, `method`, `type`, `enum`, `constant`, `variable`, `field` or `enum member` |
+| `documentation` | The declaration comment as Markdown, or `null` |
+| `handbook` | Repository-relative handbook page, or `null` |
+| `location` | `path`, one-based `line` and Unicode-scalar `column` of the declared name; `null` for built-in operations. The path is relative to the current directory when it lies below it. |
+| `members` | For a unit, its public declarations with `name`, `signature` and `summary` |
+| `suggestions` | Up to five closest names when nothing matches |
+
+When nothing matches, `fpas doc` exits with status 1 and reports `FP4143` on stderr with the
+closest names in its help; with `--report json` it still writes the document, with an empty
+`matches` array.
 
 ## Terminal diagnostics
 

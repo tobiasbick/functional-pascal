@@ -41,6 +41,10 @@ impl StandardLibraryContext {
         &self.editor_api_sources
     }
 
+    pub(crate) fn source_paths(&self) -> Vec<PathBuf> {
+        self.project.all_source_paths()
+    }
+
     pub(crate) fn compose(&self, project: &ProjectContext) -> ProjectContext {
         if project.is_source_standard_library()
             || project.manifest_path() == self.project.manifest_path()

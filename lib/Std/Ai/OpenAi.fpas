@@ -1,4 +1,6 @@
 // Public OpenAI-compatible non-streaming chat API.
+//
+// Handbook: `docs/pascal/std/ai/openai.md`.
 unit Std.Ai.OpenAi;
 
 uses Std.Ai.OpenAi.Client as OpenAiClient, Std.Ai.OpenAi.Types as Types;

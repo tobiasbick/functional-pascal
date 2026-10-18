@@ -1,4 +1,6 @@
 // Public buffered, streaming, server, and SSE HTTP API.
+//
+// Handbook: `docs/pascal/std/network/http.md`.
 unit Std.Http;
 
 uses

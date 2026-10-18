@@ -375,6 +375,26 @@ fn char_at_out_of_bounds() {
 }
 
 #[test]
+fn index_at_the_length_names_the_zero_based_last_index() {
+    let (exit_code, _stdout, stderr) = support::run_source_and_capture_output(
+        "index_at_length.fpas",
+        "program T;
+
+begin
+  const Items: array of integer := [3, 7, 12];
+  discard Items[Items.Length()];
+end.
+",
+    );
+    assert_ne!(exit_code, 0);
+    assert!(
+        stderr.contains("error[FP5003]: Array index 3 out of bounds (len 3)"),
+        "{stderr}"
+    );
+    assert!(stderr.contains("the last index is 2"), "{stderr}");
+}
+
+#[test]
 fn char_at_negative_index() {
     run_file_expect_failure(
         "tests/stdlib/str/char_at_negative_index_runtime_error.fpas",

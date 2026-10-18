@@ -11,6 +11,7 @@ Usage:
     fpas run [<path>] [-- <args>...]     Run a source, project, workspace, or image
     fpas debug [<path>] --protocol <p>   Debug through JSONL or DAP
     fpas check [<path>]                  Type-check without running
+    fpas doc <name> [<path>]             Show the signature and documentation of a name
     fpas test [<path>]                   Run `*_test.fpas` programs
     fpas fmt [<path>...]                 Format sources in place
     fpas env --json                      Print installed toolchain paths
@@ -28,6 +29,7 @@ Examples:
   fpas run hello.fpas
   fpas debug hello.fpas --protocol jsonl
   fpas check my-app.fpasprj
+  fpas doc Std.Fs.ReadText
   fpas test --report json tests/
   fpas fmt --check --list
   fpas env --json
@@ -199,6 +201,36 @@ Examples:
 
 ";
 
+const DOC_HELP: &str = "\
+Show the signature, documentation and handbook page of a declaration or built-in
+operation, the same text the editor shows on hover. Nothing is compiled or written.
+
+Usage:
+  fpas doc <name> [<path>] [--report json] [--std-lib <dir>]
+
+Names are case-insensitive. A name matches when it equals a qualified name or ends
+with it, so `ReadText`, `Fs.ReadText` and `Std.Fs.ReadText` all find the routine.
+Built-in operations are written on their type: `string`, `array`, `dict`, `Option`
+or `Result`. A unit name lists the unit's public declarations.
+
+`<path>` selects the project like `fpas check`; without it the current directory is
+used. Without a project, only `Std` units and built-in operations are searched.
+No match exits with status 1 and lists the closest names.
+
+Options:
+  --report json    Write one JSON document to stdout
+  --std-lib <dir>  Replace the complete source standard library
+  -h, --help       Print this help
+
+Examples:
+  fpas doc Std.Fs.ReadText
+  fpas doc string.TrimLeft
+  fpas doc Std.Tui
+  fpas doc TPoint.Distance my-app.fpasprj
+  fpas doc --report json array.Push
+
+";
+
 const DEBUG_HELP: &str = "\
 Debug a Functional Pascal source, project, workspace, or compiled program.
 
@@ -333,6 +365,7 @@ pub(crate) const fn help_text(topic: HelpTopic) -> &'static str {
         HelpTopic::Env => ENV_HELP,
         HelpTopic::Lsp => LSP_HELP,
         HelpTopic::Check => CHECK_HELP,
+        HelpTopic::Doc => DOC_HELP,
         HelpTopic::Fmt => FMT_HELP,
         HelpTopic::Test => TEST_HELP,
     }

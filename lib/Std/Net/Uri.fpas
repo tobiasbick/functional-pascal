@@ -1,4 +1,6 @@
 // Absolute HTTP and HTTPS URI parsing for network clients.
+//
+// Handbook: `docs/pascal/std/network/uri.md`.
 unit Std.Net.Uri;
 
 uses Std.Net.Decimal as Decimal;

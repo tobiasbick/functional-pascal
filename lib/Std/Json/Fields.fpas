@@ -1,5 +1,6 @@
 // Strict typed access to the fields of parsed JSON objects.
-// See docs/pascal/std/text/json-fields.md.
+//
+// Handbook: `docs/pascal/std/text/json-fields.md`.
 unit Std.Json.Fields;
 
 uses Std.Conv as Conv, Std.Json as Json, Std.Math as Math;

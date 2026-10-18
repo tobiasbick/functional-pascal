@@ -1,3 +1,6 @@
+// Hosted blocking TCP/TLS listeners and connections with explicit timeouts and byte arrays.
+//
+// Handbook: `docs/pascal/std/network/net.md`.
 unit Std.Net;
 
 uses Std.Tasks as Tasks;

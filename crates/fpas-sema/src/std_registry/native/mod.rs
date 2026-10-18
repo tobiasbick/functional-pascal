@@ -93,6 +93,26 @@ impl NativeReceiver {
             Self::Result => "Result",
         }
     }
+
+    /// Repository-relative handbook page that documents this receiver's operations.
+    #[must_use]
+    pub fn handbook(self) -> &'static str {
+        match self {
+            Self::String | Self::StringFactory => "docs/pascal/language/types/string/README.md",
+            Self::Array | Self::StringArray | Self::ArrayFactory => {
+                "docs/pascal/language/types/array/README.md"
+            }
+            Self::Dictionary => "docs/pascal/language/types/dictionary-operations.md",
+            Self::Option => "docs/pascal/language/types/option-operations.md",
+            Self::Result => "docs/pascal/language/types/result-operations.md",
+        }
+    }
+
+    /// Whether this owner is a factory written on a type name instead of a value receiver.
+    #[must_use]
+    pub fn is_factory(self) -> bool {
+        matches!(self, Self::StringFactory | Self::ArrayFactory)
+    }
 }
 
 impl NativeOperation {

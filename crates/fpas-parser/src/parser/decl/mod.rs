@@ -33,6 +33,7 @@ impl Parser {
                 Token::Procedure => {
                     decls.push(Decl::Procedure(self.parse_procedure_decl(visibility)));
                 }
+                Token::Task => self.skip_ada_task(),
                 Token::Static => {
                     if let Some(decl) = self.recover_invalid_static_decl() {
                         decls.push(decl);

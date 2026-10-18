@@ -1,13 +1,13 @@
 # `Std.Tasks`
 
+Blocking helpers for **`task`** handles, explicit task groups, cooperative cancellation,
+and typed bounded channels shared by tasks. For the `go` keyword, the `task` type, threading model,
+and fork-join patterns, see [Concurrency](../../language/concurrency/README.md).
+
 Fixed-arity task operations accept all positional or all named arguments using
 the labels in the API tables below, including polymorphic operations such as
 `Send(Value := 3, Queue := Queue)` and `Wait(Handle := Job)`.
 Named values evaluate in written order before they are mapped to parameter slots.
-
-Blocking helpers for **`task`** handles, explicit task groups, cooperative cancellation,
-and typed bounded channels shared by tasks. For the `go` keyword, the `task` type, threading model,
-and fork-join patterns, see [Concurrency](../../language/concurrency/README.md).
 
 ## Waiting and execution
 

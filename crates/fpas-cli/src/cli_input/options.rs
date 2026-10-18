@@ -97,7 +97,9 @@ pub(super) fn parse_options(mode: CliMode, cli_args: &[String]) -> Result<Parsed
                     CliMode::Debug => "fpas debug --std-lib ./lib hello.fpas --protocol jsonl",
                     CliMode::Check => "fpas check --std-lib ./lib my-app.fpasprj",
                     CliMode::Test => "fpas test --std-lib ./lib tests/",
-                    CliMode::Init => unreachable!("init has its own option parser"),
+                    CliMode::Init | CliMode::Doc => {
+                        unreachable!("init and doc have their own option parsers")
+                    }
                     CliMode::Fmt => unreachable!("fmt does not accept --std-lib"),
                     CliMode::Env | CliMode::Lsp => {
                         unreachable!("toolchain commands bypass shared option parsing")

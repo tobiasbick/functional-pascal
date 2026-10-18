@@ -30,6 +30,13 @@ impl LanguageService {
             .unwrap_or_default()
     }
 
+    pub(crate) fn standard_library_source_paths(&self) -> Vec<std::path::PathBuf> {
+        self.standard_library
+            .as_ref()
+            .map(StandardLibraryContext::source_paths)
+            .unwrap_or_default()
+    }
+
     pub(crate) fn is_editor_api_source(&self, path: &Path) -> bool {
         let path = crate::document::normalized_path(path);
         self.standard_library.as_ref().is_some_and(|library| {

@@ -6,9 +6,16 @@ use fpas_lexer::{Span, Token};
 
 impl Parser {
     pub fn parse_compilation_unit(mut self) -> (CompilationUnit, Vec<ParseError>) {
+        self.skip_ada_context_clauses();
         let unit = match self.current_token() {
             Token::Program => CompilationUnit::Program(self.parse_program_ast()),
+            Token::Procedure if self.at_ada_main_procedure() => {
+                CompilationUnit::Program(self.parse_program_ast())
+            }
             Token::Unit => CompilationUnit::Unit(self.parse_unit_ast()),
+            Token::Ident(_) if self.at_ada_package() => {
+                CompilationUnit::Unit(self.parse_ada_package())
+            }
             _ => {
                 let span = self.current_span();
                 self.error_with_code(
@@ -28,7 +35,8 @@ impl Parser {
     }
 
     pub fn parse_program(mut self) -> (Program, Vec<ParseError>) {
-        if !self.check(&Token::Program) {
+        self.skip_ada_context_clauses();
+        if !self.check(&Token::Program) && !self.at_ada_main_procedure() {
             let span = self.current_span();
             self.error_with_code(
                 PARSE_EXPECTED_TOKEN,
@@ -48,7 +56,10 @@ impl Parser {
     fn parse_program_ast(&mut self) -> Program {
         let start = self.current_span();
 
-        self.expect(&Token::Program);
+        // An Ada main `procedure Name is` is reported with the Ada program structure below.
+        if !self.eat(&Token::Procedure) {
+            self.expect(&Token::Program);
+        }
         let (name, name_span) = self
             .expect_ident()
             .unwrap_or_else(|| self.error_ident(self.current_span()));

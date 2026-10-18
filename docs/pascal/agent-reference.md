@@ -56,7 +56,9 @@ inheritance, pointers, manual allocation, exceptions with handlers, or preproces
 | Pascal one-based strings / `Char` | Zero-based Unicode scalar indexing; a character is a `string`. |
 | Pascal `{comment}` / `(*comment*)`, Ada `--comment` | Only `//` comments. |
 | Pascal bitwise `and`, `or`, `xor` on integers | These operators take booleans; use `Std.Bits` for bits. |
-| Delphi `try` / `except` | Return `Result of (T, E)` or `Option of T`; `try Expr` propagates failure. |
+| Delphi `try` / `except`, Ada `exception when`, `raise` | Return `Result of (T, E)` or `Option of T`; `try Expr` propagates failure; `panic` stops on a bug. |
+| Ada `with Ada.Text_IO; use Ada.Text_IO;`, `procedure Main is` | `program Main;`, then `uses Std.Console as Console;`. |
+| Ada `task` declarations | Start a routine with `go Work()` inside `scope ... end scope;`; channels and `Wait` come from `Std.Tasks`. |
 | Delphi `StrToInt(Text)` / `StrToFloat(Text)` | Import `Std.Parse`; use `Parse.Int(Text)` / `Parse.Real(Text)` and handle the Result, or explicitly Unwrap. |
 | Delphi `interface` / `implementation`, Ada package spec/body | One `unit Name; ... end unit;`; mark each export `public`. |
 | An imported unit is automatically available through a dependency | Add `uses`; project dependencies only make sources discoverable. |
@@ -1063,9 +1065,11 @@ services, import the owning unit with `uses Unit.Path as Alias;` and call `Alias
 | Time, tasks, channels | `Std.Time`, `Std.Tasks` |
 | JSON, networking, terminal UI | [Standard library index](std/README.md) |
 
-Read the owning unit's handbook page or generated declarations in `lib/api/` for
-exact signatures. Native methods are described under their type pages. Do not infer
-a library API from Delphi or an old example using free collection helper functions.
+Run `fpas doc` for exact signatures instead of guessing: `fpas doc Std.Fs.ReadText`,
+`fpas doc string.TrimLeft`, or `fpas doc Std.Fs` to list a unit. It prints the
+documentation and names the owning handbook page; `--report json` returns the same as
+data. Do not infer a library API from Delphi or an old example using free collection
+helper functions.
 
 Run `fpas fmt file.fpas`, then `fpas check file.fpas` and `fpas run file.fpas`.
 

@@ -1,3 +1,6 @@
+// Server lifetime ownership for cooperative stop, listener closure, a shared shutdown budget, and explicitly authorized process escalation.
+//
+// Handbook: `docs/pascal/std/network/server.md`.
 unit Std.Server;
 
 uses Std.Net as Net, Std.Tasks as Tasks;

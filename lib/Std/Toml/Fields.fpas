@@ -1,5 +1,6 @@
 // Strict typed access to the keys of parsed TOML tables.
-// See docs/pascal/std/text/toml-fields.md.
+//
+// Handbook: `docs/pascal/std/text/toml-fields.md`.
 unit Std.Toml.Fields;
 
 uses Std.Toml as Toml;

@@ -4,15 +4,18 @@
 //!
 //! **Documentation:** `docs/pascal/tools/diagnostics.md` (Diagnostics for other-language spellings)
 
+mod ada_units;
 mod aggregates;
 mod arguments;
 mod bindings;
 mod classes;
 mod control_flow;
 mod control_flow_fix;
+mod exceptions;
 mod generics;
 mod programs;
 mod routines;
+mod tasks;
 mod types;
 mod units;
 

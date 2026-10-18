@@ -398,6 +398,10 @@ define_codes!(PROJECT_ALLOCATED_CODES => {
     TEST_TIMED_OUT = 4141;
     /// The test runner could not prepare, isolate, or finish a test or hook.
     TEST_RUNNER_FAILED = 4142;
+    /// `fpas doc` found no declaration or built-in operation with the requested name.
+    ///
+    /// **Documentation:** `docs/pascal/program-structure/cli.md#looking-up-declarations`
+    CLI_DOC_NOT_FOUND = 4143;
 });
 
 define_codes!(INTERNAL_ALLOCATED_CODES => {

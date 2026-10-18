@@ -5,6 +5,7 @@ mod index;
 mod integer;
 mod scalar;
 
+pub(crate) use index::bounds_hint;
 pub(crate) use scalar::real_binary;
 
 use fpas_bytecode::Value;

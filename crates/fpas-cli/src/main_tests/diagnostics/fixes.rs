@@ -125,3 +125,30 @@ fn fix_is_only_accepted_by_check() {
         "{duplicate_stderr}"
     );
 }
+
+#[test]
+fn check_fix_rewrites_an_ada_main_procedure_and_keeps_its_context_clause_reported() {
+    let cwd = create_temp_dir("check-fix-ada-main");
+    let main = cwd.join("main.fpas");
+    write_text(
+        &main,
+        "with Ada.Text_IO; use Ada.Text_IO;\n\nprocedure Main is\nbegin\n  null;\nend Main;\n",
+    );
+
+    let (exit_code, _, stderr) = support::run_cli_args_and_capture_output(
+        &args(&["check", "--fix", &main.to_string_lossy()]),
+        &cwd,
+    );
+    let fixed = fs::read_to_string(&main).expect("fixed source");
+    fs::remove_dir_all(&cwd).expect("temp directory must be removed");
+
+    assert_eq!(exit_code, 1, "{stderr}");
+    assert_eq!(
+        fixed,
+        "with Ada.Text_IO; use Ada.Text_IO;\n\nprogram Main;\nbegin\n  null;\nend.\n"
+    );
+    assert!(
+        stderr.contains("FPAS writes `uses Std.Console as Console;`"),
+        "{stderr}"
+    );
+}

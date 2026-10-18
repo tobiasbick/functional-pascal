@@ -89,6 +89,10 @@ pub(crate) fn run_cli(
             };
             crate::cli_check::check_cli(config, library.as_ref(), &mut reporter)
         }
+        ResolvedCli::Doc(config) => {
+            let mut reporter = Reporter::new(DiagnosticFormat::Text, stderr).with_color(color);
+            crate::cli_doc::doc_cli(&config, stdout.as_mut(), &mut reporter)
+        }
         ResolvedCli::Fmt(config) => crate::cli_fmt::format_cli(config, stdout.as_mut(), stderr),
         ResolvedCli::Test(config) => {
             let mut reporter = Reporter::new(config.diagnostics, stderr).with_color(color);

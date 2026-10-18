@@ -6,6 +6,7 @@ mod chained_comparison;
 mod delimiters;
 mod diagnostics;
 mod foreign_ada_programs;
+mod foreign_ada_structure;
 mod foreign_arguments;
 mod foreign_control_flow;
 mod foreign_declarations;

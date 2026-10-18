@@ -20,6 +20,7 @@ atomic-write-file = "0.3.0"
 mimalloc = { workspace = true }
 fpas-project = { path = "../fpas-project" }
 fpas-fmt = { path = "../fpas-fmt" }
+fpas-language-service = { path = "../fpas-language-service" }
 fpas-lexer = { path = "../fpas-lexer" }
 fpas-parser = { path = "../fpas-parser" }
 fpas-compiler = { path = "../fpas-compiler" }

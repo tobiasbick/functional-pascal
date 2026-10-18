@@ -152,11 +152,11 @@ impl Parser {
         self.span_from(start)
     }
 
-    fn is_ident(token: &Token, word: &str) -> bool {
+    pub(super) fn is_ident(token: &Token, word: &str) -> bool {
         matches!(token, Token::Ident(name) if name.eq_ignore_ascii_case(word))
     }
 
-    fn eat_ident(&mut self, word: &str) -> bool {
+    pub(super) fn eat_ident(&mut self, word: &str) -> bool {
         if Self::is_ident(self.current_token(), word) {
             self.advance();
             true

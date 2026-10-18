@@ -136,7 +136,11 @@ impl Worker {
                     return Err(self.aggregate_error_code(
                         RUNTIME_ARRAY_INDEX_OUT_OF_BOUNDS,
                         format!("Array index {index} out of bounds (len {length})"),
-                        "Check index bounds before array assignment.",
+                        crate::vm::value_ops::bounds_hint(
+                            index,
+                            length,
+                            "Check index bounds before array assignment.",
+                        ),
                     ));
                 }
                 Some(index)

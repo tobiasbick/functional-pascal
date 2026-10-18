@@ -75,6 +75,14 @@ impl WorkspaceSymbolIndex {
             .unwrap_or_default()
     }
 
+    pub(crate) fn documents(&self) -> impl Iterator<Item = (&PathBuf, &DocumentSymbols)> {
+        self.documents.iter()
+    }
+
+    pub(crate) fn contains_document(&self, path: &Path) -> bool {
+        self.documents.contains_key(&normalized_path(path))
+    }
+
     /// Returns the number of indexed source documents.
     #[must_use]
     pub fn document_count(&self) -> usize {

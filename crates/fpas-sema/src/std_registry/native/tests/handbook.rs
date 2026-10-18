@@ -4,35 +4,18 @@ use super::*;
 
 #[test]
 fn handbook_tables_match_every_native_signature_and_factory() {
-    let strings = include_str!(concat!(
-        env!("CARGO_MANIFEST_DIR"),
-        "/../../docs/pascal/language/types/string/README.md"
-    ));
-    let arrays = include_str!(concat!(
-        env!("CARGO_MANIFEST_DIR"),
-        "/../../docs/pascal/language/types/array/README.md"
-    ));
-    let dictionaries = include_str!(concat!(
-        env!("CARGO_MANIFEST_DIR"),
-        "/../../docs/pascal/language/types/dictionary-operations.md"
-    ));
-    let options = include_str!(concat!(
-        env!("CARGO_MANIFEST_DIR"),
-        "/../../docs/pascal/language/types/option-operations.md"
-    ));
-    let results = include_str!(concat!(
-        env!("CARGO_MANIFEST_DIR"),
-        "/../../docs/pascal/language/types/result-operations.md"
-    ));
+    let repository = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../..");
     for entry in native_operations() {
-        let (owner, source) = match entry.receiver {
-            NativeReceiver::String => ("Text", strings),
-            NativeReceiver::Array | NativeReceiver::StringArray => ("Items", arrays),
-            NativeReceiver::Dictionary => ("Values", dictionaries),
-            NativeReceiver::Option => ("Value", options),
-            NativeReceiver::Result => ("Value", results),
-            NativeReceiver::StringFactory => ("string", strings),
-            NativeReceiver::ArrayFactory => ("array", arrays),
+        let page = entry.receiver.handbook();
+        let source = std::fs::read_to_string(repository.join(page))
+            .unwrap_or_else(|error| panic!("read handbook {page}: {error}"));
+        let owner = match entry.receiver {
+            NativeReceiver::String => "Text",
+            NativeReceiver::Array | NativeReceiver::StringArray => "Items",
+            NativeReceiver::Dictionary => "Values",
+            NativeReceiver::Option | NativeReceiver::Result => "Value",
+            NativeReceiver::StringFactory => "string",
+            NativeReceiver::ArrayFactory => "array",
         };
         let signature = (entry.signature)();
         let parameters = if signature.variadic {
@@ -54,7 +37,7 @@ fn handbook_tables_match_every_native_signature_and_factory() {
         assert_eq!(
             source.matches(&row).count(),
             1,
-            "missing or duplicate {row}"
+            "missing or duplicate {row} in {page}"
         );
     }
 }

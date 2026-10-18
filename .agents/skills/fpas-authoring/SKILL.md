@@ -23,7 +23,10 @@ details. Repository placement and shared completion checks live in
 | Assertions, scripted input, golden output | [Test runner](../../../docs/pascal/std/testing/test.md) |
 
 Read the pages relevant to the change. For exact productions, consult
-[grammar.ebnf](../../../docs/specs/grammar.ebnf).
+[grammar.ebnf](../../../docs/specs/grammar.ebnf). For the exact signature and
+documentation of a `Std` routine, a built-in operation or a project declaration, run
+`fpas doc <name>` (for example `fpas doc Std.Fs.ReadText` or `fpas doc string.TrimLeft`);
+see [Looking up declarations](../../../docs/pascal/program-structure/cli.md#looking-up-declarations).
 
 ## Source workflow
 

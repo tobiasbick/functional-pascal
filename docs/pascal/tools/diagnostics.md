@@ -237,7 +237,12 @@ help text only.
 | `-- comment` at a line start or after `;` | Ada | `// comment` | FP1014 | exact |
 | `@F`, `^integer`, `P^` | Pascal | `F` as a callable value; no pointers | FP1014 | — |
 | `WriteLn(X:0:2)` | Pascal | Format the text first, for example `'%f'.Format(X)` | FP2023 | review |
-| `program Name is … begin … end Name;` | Ada | `program Name; … begin … end.` | FP2023 | exact |
+| `program Name is … begin … end Name;`, `procedure Main is … end Main;` | Ada | `program Name; … begin … end.` | FP2023 | exact |
+| `with Ada.Text_IO; use Ada.Text_IO;` before the header | Ada | `uses Std.Console as Console;` after the header | FP2023 | — |
+| `package Name is … end Name;`, `package body Name is … end Name;` | Ada | `unit Name; … end unit;` with exports marked `public` | FP2023 | — |
+| `task Name;`, `task type Name is …`, `task body Name is …` | Ada | `go Work()` inside `scope … end scope;` | FP2023 | — |
+| `exception when … =>` handlers | Ada | `Result of (T, E)` handled with `case` or `try Expr` | FP2023 | — |
+| `raise Name;`, `raise Exception.Create('…');` | Ada, Delphi | `return Error('…');`, or `panic('…')` for a bug | FP2023 | — |
 | `type T is record …`, `type K is (A, B);`, `type A is array (1 .. N) of T;` | Ada | `type T = record …`, `type K = enum A; B; end enum;`, `type A = array of T;` | FP2023 | exact; review for arrays |
 | `type K = (A, B, C);` | Pascal | `type K = enum A; B; C; end enum;` | FP2023 | exact |
 | `P : constant T := V;` | Ada | `const P: T := V;` | FP2015 | exact |
@@ -260,8 +265,10 @@ can recognize it (`fpas-lexer`, `fpas-parser` or `fpas-sema`), build the help th
 `fpas_diagnostics::ForeignHabit`, add positive, negative and recovery tests beside the existing
 `foreign_*` tests, and add a row here and, if authors should learn it up front, in the habit table
 of the [compact language reference](../agent-reference.md#1-translate-habits-before-writing).
-Forms the compiler does not recognize yet include Ada `with`/`package` units, Ada `task`
-declarations and exception handlers, and one-based string indexing, which only fails at run time.
+A package specification is skipped, because its routine declarations have no bodies; the
+declarations of a following `package body` become the unit's declarations. One-based indexing
+is valid FPAS and only fails at run time: when an index equals the string or array length,
+FP5003 names the last zero-based index in its help.
 A new habit gets a fix when its replacement is complete source text; the producer builds it with
 `ForeignHabit::fix` or `fpas_diagnostics::Fix`, and its test applies the fix and checks the result.
 
@@ -719,6 +726,7 @@ can describe a structural restriction and leave those fields null.
 | FP4140 | Golden stdout mismatch | Test prints `actual` but sidecar expects `expected` | Fix the output or update the sidecar to the approved output. |
 | FP4141 | Test timeout | Test exceeds `fpas test --timeout 1 slow_test.fpas` (one second) | Fix the hang or set a suitable timeout in seconds. |
 | FP4142 | Runner failure | Test worker cannot be started | Restore the runner executable and its required access. |
+| FP4143 | No `fpas doc` match | `fpas doc Fs.ReadTxt` | `fpas doc Std.Fs.ReadText`; the help lists the closest names. |
 
 ### Runtime
 

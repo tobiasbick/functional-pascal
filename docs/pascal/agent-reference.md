@@ -1096,3 +1096,12 @@ retains a [bounded task/frame/value report](tools/failure-dump.md); choose a fre
 file path. Successful runs create no report. Check interactive programs
 without launching them in unattended validation. See [CLI](program-structure/cli.md)
 and [formatter style](tools/fmt-style.md).
+
+For a targeted stop, run `fpas debug file.fpas --break file.fpas:42 --print Total`.
+The default [batch debugger](tools/debugger-batch.md) returns one JSON document
+with task stacks, stored values, globals and captured output. Repeat `--print`
+for separate expressions; calls and constructors are forbidden. `--script`
+queues test-runner line/key input; the default whole-invocation deadline is
+30 seconds. Exit 2 means runtime failure; exit 3 means a bound, missed breakpoint,
+failed requested inspection or worker error. Ordinary completion exposes globals
+and no expired local frames. DAP/JSONL remain explicit session protocols.

@@ -3,7 +3,6 @@
 use super::*;
 use crate::vm::debug::io::DebuggeeChannelState;
 use crate::vm::debug::types::DebuggeeInputResult;
-#[cfg(test)]
 use fpas_std::KeyInput;
 use fpas_std::TextInput;
 
@@ -44,6 +43,26 @@ impl DebugSession {
             }
             Err(kind) => Err(debuggee_input_error(kind)),
         }
+    }
+
+    /// Queue runner-compatible characters without host terminal reads or bytecode execution.
+    pub fn push_debuggee_keys(
+        &mut self,
+        input: &str,
+    ) -> Result<DebuggeeInputResult, DebugSessionError> {
+        self.require_stopped("io.keys")?;
+        let bytes = input.len();
+        let session_bytes = self
+            .debuggee
+            .lock()
+            .unwrap_or_else(|p| p.into_inner())
+            .accept_input(bytes)
+            .map_err(debuggee_input_error)?;
+        self.with_key_input(|keys| keys.push_chars(input));
+        Ok(DebuggeeInputResult {
+            bytes,
+            session_bytes,
+        })
     }
 
     /// Signal debuggee input EOF without dispatching bytecode.
@@ -92,7 +111,6 @@ impl DebugSession {
     }
 
     /// Apply `operation` to the hosted keyboard and TUI event queue.
-    #[cfg(test)]
     pub(super) fn with_key_input<R>(&self, operation: impl FnOnce(&mut KeyInput) -> R) -> R {
         let Some(worker) = self.runtime.worker(0) else {
             unreachable!("debug runtime always retains the main task")

@@ -7,7 +7,7 @@ mod destination;
 mod plan;
 mod publication;
 mod sources;
-mod value;
+use fpas_debug::snapshot_value as value;
 mod wire;
 
 use fpas_diagnostics::Diagnostic;

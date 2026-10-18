@@ -55,6 +55,7 @@ pub use recording::{
     DebugRecordingEnvelope, DebugRecordingEvent, MAX_RECORDING_EVENTS, RECORDING_ENVELOPE_VERSION,
 };
 pub use session::{DebugEvaluationCancelHandle, DebugPauseHandle, DebugSession};
+pub use session::{DebugSnapshot, DebugTaskSnapshot, non_executing};
 pub use types::{
     DebugErrorKind, DebugExecutionLimits, DebugRunResult, DebugSessionError, DebugSessionState,
     DebugStop, DebugStopReason, DebugTask, DebugTaskEvent, DebugTaskEventKind, DebugTaskState,

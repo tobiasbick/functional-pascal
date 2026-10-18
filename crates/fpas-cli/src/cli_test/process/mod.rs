@@ -10,14 +10,10 @@ pub(crate) use worker::run_worker_from_args;
 mod readiness;
 #[cfg(test)]
 mod tests;
-#[cfg(unix)]
-mod unix;
-#[cfg(windows)]
-mod windows;
 
 use std::fs;
 use std::io;
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 use std::process::{Child, Command, Stdio};
 use std::sync::atomic::{AtomicU64, Ordering};
 use std::thread;
@@ -290,21 +286,8 @@ fn spawn_worker(files: &WorkerFiles) -> Result<Child, String> {
 }
 
 fn worker_executable() -> Result<PathBuf, String> {
-    let current = std::env::current_exe()
-        .map_err(|error| format!("Error locating the fpas executable: {error}"))?;
-    if cfg!(test)
-        && current
-            .parent()
-            .and_then(Path::file_name)
-            .is_some_and(|name| name == "deps")
-        && let Some(profile) = current.parent().and_then(Path::parent)
-    {
-        let candidate = profile.join(if cfg!(windows) { "fpas.exe" } else { "fpas" });
-        if candidate.is_file() {
-            return Ok(candidate);
-        }
-    }
-    Ok(current)
+    crate::process_tree::executable()
+        .map_err(|error| format!("Error locating the fpas executable: {error}"))
 }
 
 fn read_worker_result(
@@ -394,20 +377,9 @@ fn worker_failure(
 }
 
 fn configure_process_tree(command: &mut Command) {
-    #[cfg(unix)]
-    unix::configure(command);
-    #[cfg(windows)]
-    windows::configure(command);
+    crate::process_tree::configure(command);
 }
 
 fn terminate_process_tree(child: &mut Child) {
-    #[cfg(unix)]
-    unix::terminate(child);
-    #[cfg(windows)]
-    windows::terminate(child);
-    #[cfg(not(any(unix, windows)))]
-    {
-        let _ = child.kill();
-        let _ = child.wait();
-    }
+    crate::process_tree::terminate(child);
 }

@@ -32,6 +32,9 @@ pub(crate) fn run_cli(
     stderr: &mut dyn Write,
     color: bool,
 ) -> i32 {
+    if crate::cli_batch::selected(args) {
+        return crate::cli_batch::run(args, cwd, stdout.as_mut(), stderr);
+    }
     let resolved = match resolve_cli_config(args, cwd) {
         Ok(resolved) => resolved,
         Err(message) => {

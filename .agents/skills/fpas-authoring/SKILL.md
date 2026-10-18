@@ -191,3 +191,14 @@ For handbook examples, follow the [Markdown example instructions](../../../docs/
 Complete `pascal` fences compile by default; fragments name an explicit context.
 Mark deterministic assertion programs `run` and separate intentional errors with
 their exact `error=FPnnnn` code. The normal suite checks the actual Markdown.
+
+## Inspecting a failure or stop
+
+Use `fpas run file.fpas --failure-dump .temp-data/new-failure.json` to retain
+an escaping failure from the normal concurrent scheduler. For a targeted all-stop
+inspection, use `fpas debug file.fpas --break file.fpas:42 --print Total`.
+The default command returns one bounded JSON document with stacks, values and
+captured output; it never reads host stdin. Repeat `--print` for independent
+non-executing expressions and use `--script input.toml` for runner-compatible
+line/key input. See [batch debugging](../../../docs/pascal/tools/debugger-batch.md)
+for limits and exit codes. DAP/JSONL remain available through explicit protocol flags.

@@ -142,6 +142,7 @@ pub enum DebugTerminalEvent {
 #[derive(Default)]
 struct TerminalOutput {
     pending: Mutex<Vec<u8>>,
+    writer: Mutex<Option<Box<dyn Write + Send>>>,
     total_bytes: AtomicUsize,
 }
 
@@ -151,11 +152,18 @@ struct TerminalWriter {
 
 impl Write for TerminalWriter {
     fn write(&mut self, bytes: &[u8]) -> io::Result<usize> {
-        self.output
-            .pending
-            .lock()
-            .unwrap_or_else(|poisoned| poisoned.into_inner())
-            .extend_from_slice(bytes);
+        let mut writer = self.output.writer.lock().unwrap_or_else(|p| p.into_inner());
+        if let Some(writer) = writer.as_mut() {
+            writer.write_all(bytes)?;
+            // A following native child inherits the same pipe, so flush before it runs.
+            writer.flush()?;
+        } else {
+            self.output
+                .pending
+                .lock()
+                .unwrap_or_else(|p| p.into_inner())
+                .extend_from_slice(bytes);
+        }
         self.output
             .total_bytes
             .fetch_add(bytes.len(), Ordering::Relaxed);
@@ -197,6 +205,12 @@ impl DebugTerminalHandle {
             console,
             key_input,
         )
+    }
+
+    /// Route future terminal bytes directly to an owned host writer instead of buffering.
+    /// Batch hosts use their isolated worker pipe so native and hosted stdout share order.
+    pub fn set_output_writer(&self, writer: Box<dyn Write + Send>) {
+        *self.output.writer.lock().unwrap_or_else(|p| p.into_inner()) = Some(writer);
     }
 
     /// Remove and return terminal bytes produced since the previous drain.

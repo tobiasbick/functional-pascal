@@ -117,7 +117,11 @@ fn cooperative_pause_and_runtime_failure_leave_stable_states() {
             .expect("runtime failure before source point"),
     );
     assert_eq!(stop.reason, DebugStopReason::RuntimeError);
-    assert!(stop.location.is_none());
+    let location = stop
+        .location
+        .expect("runtime source map remains usable without sequence points");
+    assert_eq!(location.source, "test.fpas");
+    assert_eq!((location.line, location.column), (1, 3));
     assert!(stop.diagnostic.is_some());
 }
 

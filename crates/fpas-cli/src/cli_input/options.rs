@@ -33,6 +33,7 @@ pub(super) struct ParsedOptions {
     pub(super) instruction_limit: Option<u64>,
     pub(super) output_limit: Option<usize>,
     pub(super) positional: Vec<String>,
+    pub(super) batch: super::types::DebugBatchConfig,
 }
 
 /// Parses the options accepted by one CLI subcommand.
@@ -63,6 +64,7 @@ pub(super) fn parse_options(mode: CliMode, cli_args: &[String]) -> Result<Parsed
         instruction_limit: None,
         output_limit: None,
         positional: Vec::new(),
+        batch: Default::default(),
     };
 
     let mut index = 0;
@@ -183,7 +185,7 @@ pub(super) fn parse_options(mode: CliMode, cli_args: &[String]) -> Result<Parsed
             "--strict" if mode == CliMode::Test => options.strict = true,
             "--show-output" if mode == CliMode::Test => options.show_output = true,
             "--list" if mode == CliMode::Test => options.list_only = true,
-            "--script" if mode == CliMode::Test => {
+            "--script" if matches!(mode, CliMode::Test | CliMode::Debug) => {
                 let path = take_option_value(
                     cli_args,
                     &mut index,
@@ -296,9 +298,18 @@ pub(super) fn parse_options(mode: CliMode, cli_args: &[String]) -> Result<Parsed
             }
             "--timeout" if mode == CliMode::Debug => {
                 let value = positive_u64(cli_args, &mut index, "--timeout", "seconds")?;
-                options.timeout = Some(Duration::from_secs(value));
+                if options
+                    .timeout
+                    .replace(Duration::from_secs(value))
+                    .is_some()
+                {
+                    return Err("Duplicate `--timeout` option.".into());
+                }
             }
             "--instruction-limit" if mode == CliMode::Debug => {
+                if options.instruction_limit.is_some() {
+                    return Err("Duplicate `--instruction-limit` option.".into());
+                }
                 options.instruction_limit = Some(positive_u64(
                     cli_args,
                     &mut index,
@@ -308,6 +319,9 @@ pub(super) fn parse_options(mode: CliMode, cli_args: &[String]) -> Result<Parsed
             }
             "--output-limit" if mode == CliMode::Debug => {
                 let value = positive_u64(cli_args, &mut index, "--output-limit", "bytes")?;
+                if options.output_limit.is_some() {
+                    return Err("Duplicate `--output-limit` option.".into());
+                }
                 options.output_limit = Some(
                     usize::try_from(value)
                         .map_err(|_| "`--output-limit` is too large for this host.".to_string())?,
@@ -329,6 +343,9 @@ pub(super) fn parse_options(mode: CliMode, cli_args: &[String]) -> Result<Parsed
                     return Err("Duplicate `--jobs` option.".to_string());
                 }
             }
+            "--break" | "--print" | "--task" | "--frame" if mode == CliMode::Debug => {
+                super::batch::parse_option(cli_args, &mut index, &mut options.batch)?;
+            }
             _ => options.positional.push(cli_args[index].clone()),
         }
         index += 1;
@@ -337,7 +354,7 @@ pub(super) fn parse_options(mode: CliMode, cli_args: &[String]) -> Result<Parsed
     Ok(options)
 }
 
-fn take_option_value<'a>(
+pub(super) fn take_option_value<'a>(
     args: &'a [String],
     index: &mut usize,
     option: &str,
@@ -381,6 +398,10 @@ fn is_known_option(value: &str) -> bool {
             | "--source-root"
             | "--instruction-limit"
             | "--output-limit"
+            | "--break"
+            | "--print"
+            | "--task"
+            | "--frame"
             | "-h"
             | "--help"
             | "-V"

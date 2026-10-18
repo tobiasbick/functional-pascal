@@ -86,7 +86,7 @@ pub(super) fn usage_error(mode: CliMode) -> String {
                 .to_string()
         }
         CliMode::Debug => {
-            "Usage: fpas debug [<file.fpas | file.fpasprj | file.fpasworkspace | file.fpascp>] --protocol <jsonl | dap> [-- <args>...]\n  help: `fpas debug --help` shows options and examples."
+            "Usage: fpas debug [<file.fpas | file.fpasprj | file.fpasworkspace | file.fpascp>] [options] [-- <args>...]\n  help: `fpas debug --help` shows options and examples."
                 .to_string()
         }
         CliMode::Env => {
@@ -122,7 +122,7 @@ pub(super) fn missing_subcommand_error() -> String {
 }
 
 pub(super) fn program_args_require_run_error() -> String {
-    "Program arguments after `--` require `fpas run` or `fpas debug`.\n  help: `fpas debug hello.fpas --protocol jsonl -- <args>...`"
+    "Program arguments after `--` require `fpas run` or `fpas debug`.\n  help: `fpas debug hello.fpas -- <args>...`"
         .to_string()
 }
 

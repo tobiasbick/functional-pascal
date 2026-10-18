@@ -66,12 +66,14 @@ pub(crate) struct CliConfig {
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub(crate) enum DebugProtocol {
+    Batch,
     Jsonl,
     Dap,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(crate) struct DebugCliConfig {
+    pub batch: DebugBatchConfig,
     pub cwd: PathBuf,
     pub input: CliInput,
     pub program_args: Vec<String>,
@@ -82,6 +84,16 @@ pub(crate) struct DebugCliConfig {
     pub timeout: Duration,
     pub instruction_limit: u64,
     pub output_limit: usize,
+}
+
+/// Repeated batch requests and one optional inspection context.
+#[derive(Debug, Clone, PartialEq, Eq, Default)]
+pub(crate) struct DebugBatchConfig {
+    pub breakpoints: Vec<String>,
+    pub expressions: Vec<String>,
+    pub task: Option<u64>,
+    pub frame: Option<usize>,
+    pub script: Option<PathBuf>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]

@@ -10,6 +10,7 @@
     )
 )]
 mod artifact_filename;
+mod cli_batch;
 mod cli_build;
 mod cli_check;
 mod cli_debug;
@@ -25,6 +26,7 @@ mod cli_paths;
 mod cli_run;
 mod cli_test;
 mod native_executable;
+mod process_tree;
 mod source_publication;
 mod standard_library;
 mod test_script;
@@ -48,6 +50,9 @@ pub(crate) use cli_run::{render_cli_diagnostic, run_source};
 
 fn main() {
     let args: Vec<String> = env::args().skip(1).collect();
+    if let Some(exit_code) = cli_batch::worker(&args) {
+        process::exit(exit_code);
+    }
     if let Some(exit_code) = cli_test::run_process_worker(&args) {
         process::exit(exit_code);
     }
@@ -56,6 +61,20 @@ fn main() {
     let cwd = match env::current_dir() {
         Ok(cwd) => cwd,
         Err(e) => {
+            if cli_batch::selected(&args) {
+                use std::io::Write;
+                let mut report = fpas_debug::batch::empty_report("error", 1);
+                report["diagnostics"] = serde_json::json!([fpas_debug::batch::diagnostic(
+                    "current_directory",
+                    "setup",
+                    &e.to_string()
+                )]);
+                let bytes = fpas_debug::batch::finish_report(&mut report);
+                if let Err(error) = std::io::stdout().write_all(&bytes) {
+                    eprintln!("Cannot write batch result: {error}");
+                }
+                process::exit(1);
+            }
             let mut stderr = std::io::stderr().lock();
             let mut reporter = cli_output::Reporter::new(
                 cli_output::DiagnosticFormat::requested(&args),

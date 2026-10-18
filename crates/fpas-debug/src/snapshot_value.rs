@@ -8,9 +8,11 @@ use serde::{
 
 /// Additional document-size clipping, applied without copying the captured tree.
 #[derive(Clone, Copy)]
-pub(super) struct Policy {
-    pub(super) children: usize,
-    pub(super) chars: usize,
+pub struct Policy {
+    /// Maximum children retained by the document view.
+    pub children: usize,
+    /// Maximum Unicode scalars retained in text payloads.
+    pub chars: usize,
 }
 impl Default for Policy {
     fn default() -> Self {
@@ -22,13 +24,15 @@ impl Default for Policy {
 }
 
 /// View over an already bounded immutable value, without cloning its tree.
-pub(super) struct Value<'a> {
-    pub(super) data: &'a FailureValue,
-    pub(super) policy: Policy,
+pub struct Value<'a> {
+    /// Already detached runtime value.
+    pub data: &'a FailureValue,
+    /// Additional serialized-size clipping policy.
+    pub policy: Policy,
 }
 impl<'a> Value<'a> {
     /// Serialize the complete retained capture unless the planner supplies a smaller policy.
-    pub(super) fn new(data: &'a FailureValue) -> Self {
+    pub fn new(data: &'a FailureValue) -> Self {
         Self {
             data,
             policy: Policy::default(),

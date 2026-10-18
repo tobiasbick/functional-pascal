@@ -122,6 +122,9 @@ impl DebugEngine {
                 self.actor.restore(session);
             }
             Ok(fpas_vm::DebugRunResult::Terminated(termination)) => {
+                if self.retain_terminal {
+                    self.actor.restore(session);
+                }
                 self.status = DebugStatus::Terminated;
                 records.push(event(DebugEvent::Terminated {
                     reason: "completed",

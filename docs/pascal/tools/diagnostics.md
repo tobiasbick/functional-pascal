@@ -786,3 +786,13 @@ project records without rendering. Linker categories are assigned in
 
 See also [tools](README.md), [CLI](../program-structure/cli.md), and
 [editor integration](editor-integration.md).
+
+## Batch debugger diagnostics
+
+The default `fpas debug` invocation returns its diagnostics inside one JSON
+[result document](debugger-batch.md), including option, target and build errors.
+Compiler and runtime diagnostics retain their FP codes and structured fields.
+Batch request/worker diagnostics instead have `code`, `stage` and `message`.
+Program stdout, stderr and terminal bytes are captured in `output`; stderr stays
+empty unless the final result cannot be written. This envelope is independent of
+`--diagnostics json`, which remains the diagnostic-line format for other commands.

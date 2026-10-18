@@ -13,6 +13,7 @@ fpas-lexer = { path = "../fpas-lexer" }
 fpas-parser = { path = "../fpas-parser" }
 fpas-vm = { path = "../fpas-vm" }
 serde_json = { workspace = true }
+serde = { workspace = true, features = ["derive"] }
 
 [lints]
 workspace = true

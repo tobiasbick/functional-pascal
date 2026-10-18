@@ -20,6 +20,23 @@ use crate::vm::inspection::{
 use crate::vm::worker::Worker;
 
 impl InspectionSnapshot {
+    /// Retains globals after normal completion without manufacturing a live frame.
+    pub(in crate::vm::debug) fn completed(
+        worker: &Worker,
+        generation: u32,
+        limits: DebugInspectionLimits,
+    ) -> Self {
+        Self {
+            generation,
+            executable: Arc::clone(&worker.executable),
+            frames: Vec::new(),
+            globals: capture_globals(worker, generation),
+            total_frames: 0,
+            handles: Vec::new(),
+            child_handles: HashMap::new(),
+            limits,
+        }
+    }
     /// Capture debugger-owned handles at the current stopped boundary.
     pub(in crate::vm::debug) fn capture(
         worker: &Worker,
@@ -36,6 +53,31 @@ impl InspectionSnapshot {
         limits: DebugInspectionLimits,
         reserved_handles: usize,
     ) -> Self {
+        Self::capture_at(
+            worker,
+            generation,
+            limits,
+            reserved_handles,
+            Boundary::Stopped,
+        )
+    }
+
+    /// Captures faulting callback frames for non-executing batch inspection.
+    pub(in crate::vm::debug) fn capture_fault(
+        worker: &Worker,
+        generation: u32,
+        limits: DebugInspectionLimits,
+    ) -> Self {
+        Self::capture_at(worker, generation, limits, 0, Boundary::Fault)
+    }
+
+    fn capture_at(
+        worker: &Worker,
+        generation: u32,
+        limits: DebugInspectionLimits,
+        reserved_handles: usize,
+        boundary: Boundary,
+    ) -> Self {
         let mut capture_limits = limits;
         capture_limits.max_handles = capture_limits.max_handles.saturating_sub(reserved_handles);
         let mut snapshot = Self {
@@ -50,13 +92,13 @@ impl InspectionSnapshot {
         };
         let count = frames::visit(
             worker,
-            Boundary::Stopped,
+            boundary,
             limits.max_frames,
             |owner, frame, depth| {
                 snapshot.capture_frame(owner, frame, depth);
             },
         );
-        debug_assert!(count.unavailable_reason.is_none());
+        debug_assert!(boundary != Boundary::Stopped || count.unavailable_reason.is_none());
         snapshot.total_frames = count.total.unwrap_or(snapshot.frames.len());
         snapshot.limits = limits;
         snapshot

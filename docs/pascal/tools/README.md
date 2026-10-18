@@ -8,7 +8,8 @@ Compiler and editor tooling for Functional Pascal projects.
 | [Runtime failure reports](failure-dump.md) | Opt-in `fpas run --failure-dump` with bounded task/frame/value JSON and atomic new-file publication |
 | [Formatter style](fmt-style.md) | Normative output rules for `fpas fmt` |
 | [Documentation examples](documentation-examples.md) | FPAS extractor and automatic compilation/execution checks for Markdown examples |
-| [Debugger](debugger.md) | Source debugging through JSONL, DAP, and VS Code |
+| [Debugger](debugger.md) | Source debugging through batch runs, JSONL, DAP, and VS Code |
+| [Batch debugging](debugger-batch.md) | One command, bounded task/frame/value snapshot and JSON result |
 | [Debugger JSONL protocol](debugger-jsonl.md) | Versioned machine-facing debugger contract |
 | [Debugger DAP contract](debugger-dap.md) | VS Code-compatible capabilities and request mapping |
 | [Editor integration](editor-integration.md) | VS Code-compatible highlighting, diagnostics, formatting, and navigation |

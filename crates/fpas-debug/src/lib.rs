@@ -10,8 +10,12 @@
 
 //! Protocol-neutral Functional Pascal source debugger frontends.
 
+/// One-shot execution and immutable inspection for command-line agents.
+pub mod batch;
 pub mod dap;
 pub mod jsonl;
+/// Bounded serialization shared by batch and concurrent failure reports.
+pub mod snapshot_value;
 
 mod breakpoints;
 mod engine;

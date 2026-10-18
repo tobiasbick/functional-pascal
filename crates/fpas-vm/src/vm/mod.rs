@@ -55,6 +55,7 @@ pub use debug::{
     LiveImageReplaceResult, LiveImageUpdateClass, MAX_RECORDING_EVENTS, Paginated,
     RECORDING_ENVELOPE_VERSION, SourceBreakpoint, SourceLocation,
 };
+pub use debug::{DebugSnapshot, DebugTaskSnapshot, non_executing};
 pub use diagnostics::VmError;
 pub(crate) use diagnostics::runtime_error;
 pub use failure_capture::{

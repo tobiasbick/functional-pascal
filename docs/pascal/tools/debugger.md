@@ -11,7 +11,13 @@ For an ordinary run, `fpas run app.fpasprj --failure-dump .temp-data/failure.jso
 retains a [bounded runtime failure report](failure-dump.md) with task/frame/value
 data. This uses the normal concurrent scheduler and requires no debug session.
 
+The default command is a [one-shot batch run](debugger-batch.md): one JSON
+snapshot, no live request protocol. It uses an isolated worker with a parent-owned
+deadline. The session operations described below apply to explicitly selected
+JSONL/DAP sessions; batch printing accepts a smaller, non-executing expression subset.
+
 ```text
+fpas debug app.fpasprj --break src/main.fpas:42 --print Total
 fpas debug app.fpasprj --protocol jsonl
 fpas debug app.fpasprj --protocol jsonl --commands session.jsonl
 fpas debug app.fpasprj --protocol dap

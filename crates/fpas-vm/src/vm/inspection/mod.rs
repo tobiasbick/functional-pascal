@@ -13,3 +13,5 @@ pub(super) mod values;
 
 #[cfg(test)]
 mod tests;
+
+pub(in crate::vm) mod detached_frame;

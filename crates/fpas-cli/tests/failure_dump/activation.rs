@@ -126,7 +126,13 @@ fn activation_is_run_only_and_rejects_invalid_or_existing_destinations_before_ex
     ] {
         let output = fixture.run(&[command, "--failure-dump", "failure.json"]);
         exit(&output, 1);
-        assert!(String::from_utf8_lossy(&output.stderr).contains("FP4137"));
+        if command == "debug" {
+            assert!(output.stderr.is_empty());
+            let report: Value = serde_json::from_slice(&output.stdout).expect("batch error JSON");
+            assert_eq!(report["diagnostics"][0]["code"], "FP4137");
+        } else {
+            assert!(String::from_utf8_lossy(&output.stderr).contains("FP4137"));
+        }
     }
     assert_eq!(
         fs::read_to_string(fixture.0.join("existing.json")).expect("original"),

@@ -1,12 +1,12 @@
 //! Debug target preparation and external protocol transport.
 
-use std::fs::{self, File};
-use std::io::{self, Write};
+use std::fs;
 use std::path::{Path, PathBuf};
 
 use fpas_program::{Digest, ProgramIdentity, ProgramImage};
 
-use crate::{CliInput, DebugCliConfig, DebugProtocol};
+use super::Failure;
+use crate::{CliInput, DebugCliConfig};
 
 #[derive(Debug)]
 struct PreparedExecutable {
@@ -14,70 +14,11 @@ struct PreparedExecutable {
     sources: Vec<fpas_debug::DebugSourceContent>,
 }
 
-pub(crate) fn debug_cli(
-    config: DebugCliConfig,
-    stdout: Box<dyn Write + Send>,
-    stderr: &mut dyn Write,
-) -> i32 {
-    let library =
-        match crate::standard_library::resolve_standard_library(config.standard_library.as_deref())
-        {
-            Ok(library) => library,
-            Err(failure) => return fail(stderr, failure.to_string()),
-        };
-    let target = match prepare_target(&config, library.as_ref()) {
-        Ok(target) => target,
-        Err(message) => return fail(stderr, message),
-    };
-    let limits = fpas_vm::DebugExecutionLimits {
-        max_instructions: config.instruction_limit,
-        timeout: config.timeout,
-        max_output_bytes: config.output_limit,
-        ..fpas_vm::DebugExecutionLimits::default()
-    };
-    let target = target.with_execution_limits(limits);
-    let result = match config.protocol {
-        DebugProtocol::Jsonl => {
-            let server = match fpas_debug::jsonl::JsonlServer::new(target) {
-                Ok(server) => server,
-                Err(error) => return fail(stderr, format!("Cannot start debugger: {error}")),
-            };
-            match config.commands {
-                Some(path) => File::open(&path)
-                    .map_err(|error| {
-                        io::Error::new(
-                            error.kind(),
-                            format!("cannot read command script `{}`: {error}", path.display()),
-                        )
-                    })
-                    .and_then(|reader| fpas_debug::jsonl::serve_script(reader, stdout, server)),
-                None => fpas_debug::jsonl::serve(io::stdin(), stdout, server),
-            }
-        }
-        DebugProtocol::Dap => {
-            if config.commands.is_some() {
-                return fail(
-                    stderr,
-                    "`--commands` is only supported with `--protocol jsonl`.\n  help: DAP uses framed messages over stdin/stdout.",
-                );
-            }
-            let server = match fpas_debug::dap::DapServer::new(target) {
-                Ok(server) => server,
-                Err(error) => return fail(stderr, format!("Cannot start debugger: {error}")),
-            };
-            fpas_debug::dap::serve(io::stdin(), stdout, server)
-        }
-    };
-    match result {
-        Ok(()) => 0,
-        Err(error) => fail(stderr, format!("Debugger transport failed: {error}")),
-    }
-}
-
-fn prepare_target(
+/// Prepares the same verified target for all debugger frontends.
+pub(crate) fn prepare_target(
     config: &DebugCliConfig,
     standard_library: Option<&fpas_project::StandardLibrary>,
-) -> Result<fpas_debug::PreparedDebugTarget, String> {
+) -> Result<fpas_debug::PreparedDebugTarget, Failure> {
     let prepared = prepare_executable(config, standard_library)?;
     let reload_config = config.clone();
     let reload_library = standard_library.cloned();
@@ -96,19 +37,19 @@ fn prepare_target(
 fn prepare_executable(
     config: &DebugCliConfig,
     standard_library: Option<&fpas_project::StandardLibrary>,
-) -> Result<PreparedExecutable, String> {
+) -> Result<PreparedExecutable, Failure> {
     let prepared = match &config.input {
         CliInput::SourceFile(path) if path.is_dir() => {
             return Err(format!(
                 "Cannot debug directory `{}`.\n  help: Pass a program source, project, workspace, or compiled image.",
                 path.display()
-            ));
+            ).into());
         }
         CliInput::SourceFile(path) => prepare_source(path, &config.cwd, standard_library)?,
         CliInput::ProjectFile(path) => prepare_project(path, standard_library)?,
         CliInput::WorkspaceFile(path) => {
             let project = fpas_project::discover_run_project_in_workspace(path)
-                .map_err(|error| error.to_string())?;
+                .map_err(|error| Failure::from(crate::cli_output::CliFailure::from(error)))?;
             prepare_project(&project, standard_library)?
         }
         CliInput::CompiledProgramFile(path) => prepare_image(path, config.source_root.as_deref())?,
@@ -129,7 +70,7 @@ fn prepare_source(
     path: &Path,
     cwd: &Path,
     standard_library: Option<&fpas_project::StandardLibrary>,
-) -> Result<PreparedExecutable, String> {
+) -> Result<PreparedExecutable, Failure> {
     if standard_library.is_some() {
         let built = crate::project_build::build_test_program(
             path,
@@ -137,7 +78,7 @@ fn prepare_source(
             &fpas_project::ProjectLinkMeta::default(),
             standard_library,
         )
-        .map_err(|failure| failure.to_string())?;
+        .map_err(Failure::from)?;
         return install_debug_sources(built.executable, &built.source_paths, Some(cwd));
     }
     let source = fs::read_to_string(path)
@@ -148,17 +89,15 @@ fn prepare_source(
         .map(fpas_parser::ParseDiagnostic::as_diagnostic)
         .find(|diagnostic| diagnostic.is_error())
     {
-        return Err(fpas_diagnostics::render(
-            &path.to_string_lossy(),
-            diagnostic,
-        ));
+        return Err(
+            crate::cli_output::CliFailure::from_diagnostics(path, &[diagnostic.clone()])
+                .with_source(path, &source)
+                .into(),
+        );
     }
     let executable = fpas_compiler::compile(&program).map_err(|diagnostics| {
-        diagnostics
-            .iter()
-            .map(|diagnostic| fpas_diagnostics::render(&path.to_string_lossy(), diagnostic))
-            .collect::<Vec<_>>()
-            .join("\n")
+        crate::cli_output::CliFailure::from_diagnostics(path, &diagnostics)
+            .with_source(path, &source)
     })?;
     install_debug_sources(executable, &[path.to_path_buf()], Some(cwd))
 }
@@ -166,16 +105,17 @@ fn prepare_source(
 fn prepare_project(
     path: &Path,
     standard_library: Option<&fpas_project::StandardLibrary>,
-) -> Result<PreparedExecutable, String> {
-    let loaded = fpas_project::load_project(path).map_err(|error| error.to_string())?;
+) -> Result<PreparedExecutable, Failure> {
+    let loaded = fpas_project::load_project(path)
+        .map_err(|error| Failure::from(crate::cli_output::CliFailure::from(error)))?;
     if loaded.kind != fpas_project::ProjectKind::Program {
         return Err(format!(
             "Project `{}` is not an executable program.\n  help: Debug a project with `kind = \"program\"`.",
             path.display()
-        ));
+        ).into());
     }
-    let built = crate::project_build::build_program(&loaded, standard_library)
-        .map_err(|failure| failure.to_string())?;
+    let built =
+        crate::project_build::build_program(&loaded, standard_library).map_err(Failure::from)?;
     install_debug_sources(built.executable, &built.source_paths, path.parent())
 }
 
@@ -183,7 +123,7 @@ fn install_debug_sources(
     executable: fpas_bytecode::VerifiedExecutable,
     source_paths: &[PathBuf],
     root: Option<&Path>,
-) -> Result<PreparedExecutable, String> {
+) -> Result<PreparedExecutable, Failure> {
     let root = root.unwrap_or_else(|| Path::new("."));
     let portable = source_paths
         .iter()
@@ -252,7 +192,7 @@ fn portable_path(path: &Path, root: &Path, index: usize) -> String {
         )
 }
 
-fn prepare_image(path: &Path, source_root: Option<&Path>) -> Result<PreparedExecutable, String> {
+fn prepare_image(path: &Path, source_root: Option<&Path>) -> Result<PreparedExecutable, Failure> {
     let source_root = source_root.ok_or_else(|| format!("Compiled debug target `{}` requires `--source-root <dir>`.\n  help: Point it at the root used to build the image.", path.display()))?;
     let root = source_root.canonicalize().map_err(|error| {
         format!(
@@ -277,7 +217,7 @@ fn prepare_image(path: &Path, source_root: Option<&Path>) -> Result<PreparedExec
             return Err(format!(
                 "Debug source `{portable}` escapes source root `{}`.\n  help: Rebuild the image with portable source paths.",
                 root.display()
-            ));
+            ).into());
         }
         let bytes = fs::read(&candidate).map_err(|error| {
             format!(
@@ -290,7 +230,7 @@ fn prepare_image(path: &Path, source_root: Option<&Path>) -> Result<PreparedExec
             return Err(format!(
                 "Debug source `{portable}` is stale for compiled program `{}`.\n  help: Rebuild the `.fpascp` or restore the exact source content.",
                 path.display()
-            ));
+            ).into());
         }
         let content = String::from_utf8(bytes)
             .map_err(|error| format!("Debug source `{portable}` is not valid UTF-8: {error}"))?;
@@ -304,11 +244,6 @@ fn prepare_image(path: &Path, source_root: Option<&Path>) -> Result<PreparedExec
         executable: image.into_executable(),
         sources,
     })
-}
-
-fn fail(stderr: &mut dyn Write, message: impl std::fmt::Display) -> i32 {
-    let _ = writeln!(stderr, "{message}");
-    1
 }
 
 #[cfg(test)]
@@ -356,7 +291,7 @@ mod tests {
         );
         crate::test_support::write_text(&source_path, "program Main; begin var X := 1; end.\n");
         let error = prepare_image(&image_path, Some(&root)).expect_err("stale source rejected");
-        assert!(error.contains("is stale"));
+        assert!(error.to_string().contains("is stale"));
         fs::remove_dir_all(root).expect("remove image temp directory");
     }
 }

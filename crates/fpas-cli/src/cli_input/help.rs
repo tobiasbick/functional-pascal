@@ -9,7 +9,7 @@ Usage:
     fpas init <kind> <name>              Create a project, library, or workspace
     fpas build [<path>]                   Build project artifacts
     fpas run [<path>] [-- <args>...]     Run a source, project, workspace, or image
-    fpas debug [<path>] --protocol <p>   Debug through JSONL or DAP
+    fpas debug [<path>] [options]       Run once and return a JSON snapshot
     fpas check [<path>]                  Type-check without running
     fpas doc <name> [<path>]             Show the signature and documentation of a name
     fpas test [<path>]                   Run `*_test.fpas` programs
@@ -27,7 +27,7 @@ Examples:
   fpas init project hello
   fpas build my-app.fpasprj
   fpas run hello.fpas
-  fpas debug hello.fpas --protocol jsonl
+  fpas debug hello.fpas --print Total
   fpas check my-app.fpasprj
   fpas doc Std.Fs.ReadText
   fpas test --report json tests/
@@ -232,29 +232,43 @@ Examples:
 ";
 
 const DEBUG_HELP: &str = "\
-Debug a Functional Pascal source, project, workspace, or compiled program.
+Run to the first breakpoint, runtime failure, or completion and return one JSON document.
 
 Usage:
+  fpas debug [<target>] [options] [-- <args>...]
   fpas debug [<target>] --protocol <jsonl | dap> [options] [-- <args>...]
 
-JSONL live mode reads requests from stdin. `--commands` reads the same protocol
-from a file. Direct `.fpascp` input requires `--source-root` so embedded source
-identities can be verified before launch.
+Batch is the default. It captures tasks, stacks, bindings, globals and program
+output, then exits. --print never executes program code. Direct .fpascp input
+requires --source-root to verify source identities. With no target, discover a
+workspace or project. Program input is scripted; host stdin is never consumed.
 
 Options:
-  --protocol <jsonl | dap>       Select the external debugger protocol
-  --commands <path>              Read deterministic JSONL commands from a file
-  --source-root <dir>            Root containing sources for a compiled image
-  --timeout <secs>               Resume timeout (default: 300)
-  --instruction-limit <count>    Session instruction limit (default: 100000000)
-  --output-limit <bytes>         Captured output limit (default: 1048576)
-  --std-lib <dir>                Replace the complete source standard library
-  -h, --help                     Print this help
+  --break <path:line[:column]>   Stop before a source statement (repeat, max 64)
+  --print <expression>          Inspect one stored-value expression (repeat, max 64)
+  --task <id>                   Inspection task (default: stopping task)
+  --frame <depth>               Inspection frame (default: 0, active frame)
+  --script <path>               Existing runner TOML line/key input script
+  --timeout <secs>              Whole batch deadline (default: 30; protocols: 300/resume)
+  --instruction-limit <count>   Session instruction limit (default: 100000000)
+  --output-limit <bytes>        Batch output bound (default/ceiling: 1048576)
+  --source-root <dir>           Root containing sources for a compiled image
+  --std-lib <dir>               Replace the complete source standard library
+  --protocol <jsonl | dap>      Select a long-lived session instead of batch
+  --commands <path>             JSONL request file (requires --protocol jsonl)
+  -h, --help                    Print this help
+
+Batch exit codes: 0 requested stop/completion; 1 request/build/load error;
+2 runtime failure; 3 limit, missed breakpoint, failed inspection or worker error.
+Result schema: docs/pascal/tools/debugger-batch.md. Batch flags cannot be used
+with --protocol. JSONL and DAP retain their existing options and wire formats.
 
 Examples:
-  fpas debug hello.fpas --protocol jsonl
+  fpas debug hello.fpas
+  fpas debug app.fpasprj --break src/main.fpas:42 --print Total --print 'Items[0]'
+  fpas debug app.fpascp --source-root . --script input.toml --timeout 5
   fpas debug app.fpasprj --protocol jsonl --commands session.jsonl
-  fpas debug app.fpascp --source-root . --protocol jsonl
+  fpas debug app.fpasprj --protocol dap
 
 ";
 

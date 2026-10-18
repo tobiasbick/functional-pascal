@@ -29,8 +29,10 @@ Current implemented behavior belongs under `docs/pascal/`, not here.
   only.
 - [Agent wishes](agent-wishes.md): the agent's wish list — writing FPAS without training data,
   shared wins for humans and agents (tested documentation examples, richer diagnostics), and CLI
-  tools with JSON output for debugging (replacing the JSONL protocol) and code navigation; DAP and
-  LSP stay for humans. A1, A2, A3, A4, S1, S2, S3 and D1 are implemented. The other tooling
+  tools with JSON output for debugging and code navigation; DAP and
+  LSP stay for humans. A1, A2, A3, A4, S1, S2, S3, D1 and D3 are implemented;
+  [batch debugging](../pascal/tools/debugger-batch.md) is part of the handbook.
+  The user decided to keep JSONL alongside batch debugging. The other tooling
   wishes remain ideas without an implementation plan.
 
 ## Architecture records and development intake

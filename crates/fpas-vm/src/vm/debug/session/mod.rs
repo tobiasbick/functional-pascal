@@ -33,6 +33,8 @@ mod execution;
 mod forced_return;
 mod frame_restart;
 mod inspection;
+mod snapshot;
+pub use snapshot::{DebugSnapshot, DebugTaskSnapshot, non_executing};
 mod instruction;
 mod io;
 mod lifecycle;
@@ -42,7 +44,9 @@ mod location_assign;
 mod mutation;
 mod recording;
 mod sequence;
+mod stop;
 mod storage;
+use stop::stop_at_worker;
 mod tasks;
 mod variant;
 
@@ -437,32 +441,6 @@ impl ResumeMode {
             Self::StepOver => "step_over",
             Self::StepOut => "step_out",
         }
-    }
-}
-
-fn stop_at_worker(
-    executable: &VerifiedExecutable,
-    worker: &Worker,
-    reason: DebugStopReason,
-    breakpoint_ids: Vec<u64>,
-    diagnostic: Option<fpas_diagnostics::Diagnostic>,
-) -> DebugStop {
-    let instruction = if reason == DebugStopReason::RuntimeError {
-        worker.current_address
-    } else {
-        InstructionAddress::try_from_index(worker.ip).unwrap_or(worker.current_address)
-    };
-    let point = crate::vm::debug::breakpoints::point_at(executable, worker.function, instruction);
-    DebugStop {
-        reason,
-        task_id: worker.task_id,
-        location: point
-            .and_then(|point| crate::vm::debug::breakpoints::source_location(executable, point)),
-        instruction: instruction.get(),
-        call_depth: worker.call_stack.len(),
-        breakpoint_id: breakpoint_ids.first().copied(),
-        breakpoint_ids,
-        diagnostic,
     }
 }
 

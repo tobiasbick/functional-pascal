@@ -2,6 +2,7 @@
 //!
 //! Spec: [Projects & CLI](../../../docs/pascal/program-structure/cli.md).
 
+mod batch;
 mod discovery;
 mod doc;
 mod help;
@@ -206,8 +207,11 @@ pub(crate) fn resolve_cli_config(args: &[String], cwd: &Path) -> Result<Resolved
                     "Pass a project or workspace path after `fpas build`, or use `fpas build --help`."
                 }
                 CliMode::Run => "Pass a source or project path after `fpas run`, or `fpas --help`.",
-                CliMode::Debug if arg == "--report" => {
+                CliMode::Debug if arg == "--report" && options.debug_protocol.is_some() => {
                     "JSONL is already the protocol output; use `fpas debug <target> --protocol jsonl --commands <path>`."
+                }
+                CliMode::Debug if arg == "--report" => {
+                    "Batch already returns JSON; use `fpas debug <target>` or select an explicit debugger protocol."
                 }
                 CliMode::Debug => {
                     "Pass a debug target after `fpas debug`, or use `fpas debug --help`."
@@ -260,21 +264,43 @@ pub(crate) fn resolve_cli_config(args: &[String], cwd: &Path) -> Result<Resolved
             failure_dump,
             fix: false,
         }),
-        CliMode::Debug => ResolvedCli::Debug(DebugCliConfig {
-            cwd: cwd.to_path_buf(),
-            input,
-            program_args,
-            standard_library: options.standard_library,
-            protocol: options.debug_protocol.ok_or_else(|| {
-                "Missing `--protocol`.\n  help: Use `fpas debug <target> --protocol jsonl`."
-                    .to_string()
-            })?,
-            commands: options.commands,
-            source_root: options.source_root,
-            timeout: options.timeout.unwrap_or(Duration::from_secs(300)),
-            instruction_limit: options.instruction_limit.unwrap_or(100_000_000),
-            output_limit: options.output_limit.unwrap_or(1_048_576),
-        }),
+        CliMode::Debug => {
+            let protocol = options.debug_protocol.unwrap_or(DebugProtocol::Batch);
+            let mut batch = options.batch;
+            batch.script = options.script_path;
+            if protocol != DebugProtocol::Batch && batch != Default::default() {
+                return Err(
+                    "Batch inspection/input options cannot be combined with --protocol.".into(),
+                );
+            }
+            if protocol != DebugProtocol::Jsonl && options.commands.is_some() {
+                return Err("--commands requires --protocol jsonl.".into());
+            }
+            if protocol == DebugProtocol::Batch
+                && options.output_limit.is_some_and(|limit| limit > 1_048_576)
+            {
+                return Err("Batch --output-limit cannot exceed 1048576 bytes.".into());
+            }
+            ResolvedCli::Debug(DebugCliConfig {
+                batch,
+                cwd: cwd.to_path_buf(),
+                input,
+                program_args,
+                standard_library: options.standard_library,
+                protocol,
+                commands: options.commands,
+                source_root: options.source_root,
+                timeout: options.timeout.unwrap_or(Duration::from_secs(
+                    if protocol == DebugProtocol::Batch {
+                        30
+                    } else {
+                        300
+                    },
+                )),
+                instruction_limit: options.instruction_limit.unwrap_or(100_000_000),
+                output_limit: options.output_limit.unwrap_or(1_048_576),
+            })
+        }
         CliMode::Check => ResolvedCli::Check(CliConfig {
             input,
             program_args,

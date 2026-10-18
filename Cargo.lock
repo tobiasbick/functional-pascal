@@ -514,6 +514,7 @@ dependencies = [
  "fpas-program",
  "fpas-unit",
  "fpas-vm",
+ "serde",
  "serde_json",
 ]
 

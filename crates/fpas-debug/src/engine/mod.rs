@@ -1,6 +1,7 @@
 //! Protocol-neutral debugger execution and asynchronous event delivery.
 
 pub(crate) mod actor;
+mod batch;
 mod breakpoints;
 mod command;
 mod completed_result;
@@ -64,6 +65,7 @@ pub enum DebugStatus {
 
 /// Protocol-neutral state and execution engine for one prepared target.
 pub(crate) struct DebugEngine {
+    retain_terminal: bool,
     status: DebugStatus,
     fatal_termination: bool,
     actor: SessionActor,
@@ -93,6 +95,7 @@ impl DebugEngine {
         let reloader = target.take_reloader();
         let sources = target.sources().to_vec();
         Ok(Self {
+            retain_terminal: false,
             status: DebugStatus::Created,
             fatal_termination: false,
             actor: SessionActor::new(target.into_session()?),

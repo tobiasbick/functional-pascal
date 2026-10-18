@@ -17,24 +17,21 @@
 [A3](#a3-fix-its-as-data) is implemented.
 [A4](#a4-api-lookup-from-the-cli) is implemented.
 [S3](#s3-declaration-comments-as-the-single-source) is implemented.
+[D3](#d3-one-shot-batch-runs) is implemented. Its permanent
+[batch debugger contract](../pascal/tools/debugger-batch.md) describes the shipped command.
 The other wishes are ideas without an implementation plan. Human-facing tools stay: the DAP debugger
 ([`debugger.md`](../pascal/tools/debugger.md)) and the language server
 ([`editor-integration.md`](../pascal/tools/editor-integration.md)). The JSONL debugger protocol
-would be replaced; see [Consequence: JSONL would go away](#consequence-jsonl-would-go-away).
+remains supported by user decision; see [Decision: keep JSONL](#decision-keep-jsonl).
 
 Each wish has an ID: **A** for authoring, **S** for shared wins, **D** for debugging, **N** for code
 navigation.
 
 ## Where to start
 
-Most value for the least work among the remaining wishes. Effort is a rough guess,
-not an estimate. A1, A2, A3, A4, S1, S2, S3 and D1 are already implemented; see their status below.
-
-| Wish | Why first | Effort |
-| --- | --- | --- |
-| [D3](#d3-one-shot-batch-runs) One-shot batch runs | With D1 done, the last step before the JSONL protocol can go | medium |
-
-Everything else can wait until this exists.
+A1, A2, A3, A4, S1, S2, S3, D1 and D3 are implemented. The remaining wishes
+are ideas without a selected next implementation. After reviewing the delivered
+D3 replacement, the user decided to keep JSONL. No removal is planned.
 
 ## Principle: protocols for humans, commands for agents
 
@@ -225,9 +222,31 @@ This is known as omniscient or time-travel debugging (prior art: rr, Pernosco).
 
 #### D3. One-shot batch runs
 
-For example `fpas debug prog.fpas --break main.fpas:42 --print Total,Items --until panic`: one
-command, one JSON result, no session handshake. JSONL with `--commands` already comes close but
-needs a hand-written request file.
+**Status: implemented.** The agent chose the command contract under the user's
+delegation. The permanent [batch debugging page](../pascal/tools/debugger-batch.md)
+owns its usage, JSON schema, exit codes and limits:
+
+```text
+fpas debug prog.fpas --break main.fpas:42 --print Total --print 'Items[Selected]'
+```
+
+One command runs to the first breakpoint, runtime failure or normal completion,
+returns one bounded JSON snapshot and exits. Batch is the default `debug` mode;
+explicit DAP and JSONL sessions remain available. Automatic task/stack/value
+capture is supplemented by repeatable, non-executing inspection expressions.
+Existing input scripts supply console lines and queued key characters. A
+parent-owned worker enforces invocation-wide limits, including blocked native
+work. Real CLI tests cover target forms, first-stop state, task/frame selection,
+scripted input, non-executing expressions, structured failures, escaped-byte
+budgets and contained native processes. Independent review findings were fixed
+and verified. The temporary implementation plan is complete and removed.
+
+**JSONL decision: keep it.** After implementation, verification and independent
+review, the user declined removal. Keep the protocol, CLI options, documentation
+and tests. This decision is closed; removal would require a new explicit user
+request. See [Decision: keep JSONL](#decision-keep-jsonl).
+
+Record/replay, seeded scheduling and tracepoints remain separate wishes.
 
 #### D4. Reproducible task scheduling
 
@@ -247,7 +266,9 @@ each cover half of this.
 - `ScreenSnapshot`, which exposes the TUI screen as data, so a headless replay can still "see" what
   was displayed.
 - A deterministic debug scheduler with a manual clock, a good base for D2 and D4.
-- JSONL with `--commands` for scripted sessions (partly D3).
+- One-shot `fpas debug` with automatic state capture and non-executing `--print`
+  expressions (D3); normal-run failure reports (D1).
+- JSONL with `--commands` remains available for scripted sessions.
 - Data breakpoints and logpoints (parts of D5).
 
 ### What the agent rarely needs
@@ -256,25 +277,17 @@ Changing values at runtime, forced return, frame restart, and hot reload. They a
 humans exploring interactively. An agent would rather change the code and run again — cheaper and
 easier to reason about. They stay, because the human still likes having a say.
 
-### Consequence: JSONL would go away
+### Decision: keep JSONL
 
-Today the debugger has two session protocols on one shared engine: DAP for editors and JSONL for
-scripts. JSONL exists for exactly the job these wishes would do better. If they are built, the split
-becomes:
+The debugger retains two session protocols on one shared engine: DAP for editors
+and JSONL for scripts. D1 failure reports and D3 batch commands provide the
+agent workflow without a session protocol. Replay/query remain separate ideas.
 
-- **DAP for humans** — the IDE debugger, unchanged.
-- **CLI commands with JSON output for agents** — failure dump, batch run, replay and query. They call
-  the engine and VM directly, like `fpas run`, and need no session protocol.
-
-The JSONL protocol (`fpas debug --protocol jsonl`, `--commands`, and
-[`debugger-jsonl.md`](../pascal/tools/debugger-jsonl.md)) would then be removed, together with the
-tests that only replay engine behavior through it.
-
-Order matters:
-
-1. Build D1 and D3 first, so agents are never left with DAP only.
-2. Before deleting JSONL tests, make sure every case they cover is owned by a VM or DAP test.
-3. Remove JSONL.
+After D3 was implemented, tested and independently reviewed, the user was asked
+whether JSONL should be removed and decided to keep it. `fpas debug --protocol
+jsonl`, `--commands`, the [JSONL contract](../pascal/tools/debugger-jsonl.md) and
+the existing protocol tests remain supported. No removal or coverage migration
+is planned. Reconsidering this decision requires a new explicit user request.
 
 ## Code navigation
 

@@ -11,6 +11,7 @@
 )]
 
 mod vm;
+pub use vm::{DebugSnapshot, DebugTaskSnapshot, non_executing};
 
 pub use fpas_std::ScreenSnapshot;
 pub use vm::{

@@ -402,7 +402,7 @@ See [`CONTRIBUTING.md`](CONTRIBUTING.md). Short pointers:
 | `fpas-diagnostics` | Error codes and diagnostic utilities |
 | `fpas-language-service` | Compiler-backed editor analysis and language features |
 | `fpas-lsp` | Language Server Protocol transport |
-| `fpas-debug` | Source debug engine with JSONL and DAP adapters |
+| `fpas-debug` | Source debug engine with batch, JSONL and DAP adapters |
 | `fpas-bench` | Bounded performance harness, baselines, and comparisons |
 | `editors/vscode` | VS Code-compatible extension, packaging, and Extension Host tests |
 

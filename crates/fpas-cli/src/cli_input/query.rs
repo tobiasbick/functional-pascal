@@ -1,11 +1,11 @@
-//! Arguments and focused help for read-only source queries.
+//! Arguments and focused help for source navigation and rename.
 
 use std::path::{Path, PathBuf};
 
 use super::{HelpTopic, ResolvedCli};
 use crate::cli_paths::{has_extension, normalize_input_path};
 
-const USAGE: &str = "Usage: fpas query <refs | def | type> <file.fpas:line:column> [--project <path>] [--std-lib <dir>]\n  help: `fpas query refs src/main.fpas:12:5` or `fpas query --help`.";
+const USAGE: &str = "Usage: fpas query <refs | def | type | rename> <file.fpas:line:column> [<new-name>] [options]\n  help: `fpas query rename src/main.fpas:12:5 NewName --dry-run` or `fpas query --help`.";
 
 /// One protocol-independent language-service question.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -13,6 +13,7 @@ pub(crate) enum QueryKind {
     Refs,
     Definition,
     Type,
+    Rename,
 }
 
 impl QueryKind {
@@ -21,6 +22,7 @@ impl QueryKind {
             Self::Refs => "refs",
             Self::Definition => "def",
             Self::Type => "type",
+            Self::Rename => "rename",
         }
     }
 }
@@ -35,6 +37,8 @@ pub(crate) struct QueryCliConfig {
     pub project: Option<PathBuf>,
     pub standard_library: Option<PathBuf>,
     pub include_declaration: bool,
+    pub new_name: Option<String>,
+    pub dry_run: bool,
 }
 
 pub(super) fn resolve(args: &[String], cwd: &Path) -> Result<ResolvedCli, String> {
@@ -46,6 +50,7 @@ pub(super) fn resolve(args: &[String], cwd: &Path) -> Result<ResolvedCli, String
         "refs" => (QueryKind::Refs, HelpTopic::QueryRefs),
         "def" => (QueryKind::Definition, HelpTopic::QueryDef),
         "type" => (QueryKind::Type, HelpTopic::QueryType),
+        "rename" => (QueryKind::Rename, HelpTopic::QueryRename),
         other => return Err(format!("Unknown query kind `{other}`.\n{USAGE}")),
     };
     if matches!(&args[1..], [arg] if arg == "--help" || arg == "-h") {
@@ -55,6 +60,8 @@ pub(super) fn resolve(args: &[String], cwd: &Path) -> Result<ResolvedCli, String
     let mut project = None;
     let mut standard_library = None;
     let mut include_declaration = false;
+    let mut new_name = None;
+    let mut dry_run = false;
     let mut index = 1;
     while index < args.len() {
         match args[index].as_str() {
@@ -77,6 +84,7 @@ pub(super) fn resolve(args: &[String], cwd: &Path) -> Result<ResolvedCli, String
             "--include-declaration" if kind == QueryKind::Refs && !include_declaration => {
                 include_declaration = true;
             }
+            "--dry-run" if kind == QueryKind::Rename && !dry_run => dry_run = true,
             other if other.starts_with('-') => {
                 return Err(format!(
                     "Unknown or repeated option `{other}` for `fpas query {}`.\n{USAGE}",
@@ -84,7 +92,11 @@ pub(super) fn resolve(args: &[String], cwd: &Path) -> Result<ResolvedCli, String
                 ));
             }
             value => {
-                if position.replace(value).is_some() {
+                if position.is_none() {
+                    position = Some(value);
+                } else if kind == QueryKind::Rename && new_name.is_none() {
+                    new_name = Some(value.to_owned());
+                } else {
                     return Err(format!("Expected exactly one source position.\n{USAGE}"));
                 }
             }
@@ -92,6 +104,9 @@ pub(super) fn resolve(args: &[String], cwd: &Path) -> Result<ResolvedCli, String
         index += 1;
     }
     let position = position.ok_or_else(|| format!("Missing source position.\n{USAGE}"))?;
+    if kind == QueryKind::Rename && new_name.is_none() {
+        return Err(format!("Missing replacement name for rename.\n{USAGE}"));
+    }
     // Split from the right so Windows drive letters remain part of the path.
     let mut parts = position.rsplitn(3, ':');
     let column = positive_number(parts.next());
@@ -116,6 +131,8 @@ pub(super) fn resolve(args: &[String], cwd: &Path) -> Result<ResolvedCli, String
         project,
         standard_library,
         include_declaration,
+        new_name,
+        dry_run,
     }))
 }
 
@@ -129,6 +146,27 @@ fn positive_number(value: Option<&str>) -> Option<usize> {
 
 pub(super) const fn help(topic: HelpTopic) -> &'static str {
     match topic {
+        HelpTopic::QueryRename => {
+            "Safely rename a resolved declaration and its project references; report edits as JSON.
+
+Usage:
+  fpas query rename <file.fpas:line:column> <new-name> [--dry-run] [--project <path>] [--std-lib <dir>]
+
+Options:
+  --dry-run         Validate and list edits without writing sources
+  --project <path>  Explicit project, workspace, or folder context
+  --std-lib <dir>   Replace the complete source standard library
+  -h, --help        Print this help
+
+Without --dry-run, applies edits to saved sources. Rejects invalid identifiers,
+name conflicts, erroneous sources, and edits outside the selected root or in Std.
+Positions use one-based lines and Unicode-scalar columns.
+
+Examples:
+  fpas query rename src/main.fpas:12:5 Total --dry-run
+  fpas query rename src/math.fpas:4:17 Compute --project suite.fpasworkspace
+"
+        }
         HelpTopic::QueryRefs => {
             "Find project references to the symbol at a source position as JSON.
 
@@ -188,12 +226,13 @@ Examples:
             "Query source navigation through the language service; one JSON document on stdout.
 
 Usage:
-  fpas query <refs | def | type> <file.fpas:line:column> [options]
+  fpas query <refs | def | type | rename> <file.fpas:line:column> [options]
 
 Commands:
   refs  Find usages of a resolved symbol (optionally include its declaration)
   def   Find the resolved declaration
   type  Find the checked type of the smallest enclosing expression
+  rename <new-name>  Rename a symbol; --dry-run lists edits without writing
 
 Run `fpas query <command> --help` for options. Lines and Unicode-scalar columns
 start at 1. Empty matches succeed; source, context and argument failures exit 1.
@@ -202,6 +241,7 @@ Examples:
   fpas query refs src/main.fpas:12:5
   fpas query def src/main.fpas:12:5
   fpas query type src/main.fpas:12:5
+  fpas query rename src/main.fpas:12:5 Total --dry-run
 "
         }
     }

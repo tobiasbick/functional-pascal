@@ -77,28 +77,41 @@ fn fmt_list_fails_when_changed_file_list_cannot_be_written() {
 #[test]
 fn query_fails_when_its_json_document_is_only_partially_written() {
     let cwd = create_temp_dir("contract-output-query");
-    write_text(&cwd.join("main.fpas"), "program T; begin discard 1; end.");
-    let args = [
-        "query".into(),
-        "type".into(),
-        "main.fpas:1:26".into(),
-        "--std-lib".into(),
-        Path::new(env!("CARGO_MANIFEST_DIR"))
-            .join("../../lib")
-            .to_string_lossy()
-            .into_owned(),
-    ];
-    for writer in [FailingWriter::immediately(), FailingWriter::after(8)] {
-        let mut stderr = Vec::new();
-        let code = run_cli(&args, &cwd, Box::new(writer), &mut stderr, false);
-        assert_eq!(code, 1);
-        let record: serde_json::Value =
-            serde_json::from_slice(&stderr).expect("structured write failure");
-        assert!(
-            record["message"]
-                .as_str()
-                .expect("message")
-                .contains("Cannot write query output")
-        );
+    let source = "program T;\nbegin\n  const Count := 1;\n  discard Count;\nend.\n";
+    for (command, expected) in [
+        (vec!["type", "main.fpas:3:18"], source),
+        (
+            vec!["rename", "main.fpas:3:9", "Total"],
+            "program T;\nbegin\n  const Total := 1;\n  discard Total;\nend.\n",
+        ),
+    ] {
+        let mut args = vec!["query".to_owned()];
+        args.extend(command.into_iter().map(str::to_owned));
+        args.extend([
+            "--std-lib".into(),
+            Path::new(env!("CARGO_MANIFEST_DIR"))
+                .join("../../lib")
+                .to_string_lossy()
+                .into_owned(),
+        ]);
+        for writer in [FailingWriter::immediately(), FailingWriter::after(8)] {
+            write_text(&cwd.join("main.fpas"), source);
+            let mut stderr = Vec::new();
+            let code = run_cli(&args, &cwd, Box::new(writer), &mut stderr, false);
+            assert_eq!(code, 1);
+            let record: serde_json::Value =
+                serde_json::from_slice(&stderr).expect("structured write failure");
+            assert!(
+                record["message"]
+                    .as_str()
+                    .expect("message")
+                    .contains("Cannot write query output")
+            );
+            assert_eq!(
+                fs::read_to_string(cwd.join("main.fpas")).unwrap(),
+                expected,
+                "publication precedes output, so a broken pipe cannot undo a successful rename"
+            );
+        }
     }
 }

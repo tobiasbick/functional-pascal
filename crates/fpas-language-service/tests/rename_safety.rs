@@ -11,6 +11,35 @@ use fpas_language_service::{LanguageService, RenameError, WorkspaceContext};
 use support::TempDirectory;
 
 #[test]
+fn rename_ignores_unrelated_member_declarations_matching_the_new_name() {
+    let temp = TempDirectory::new("rename-unrelated-fields");
+    let source = "program Fields;\ntype Point = record\n  X: integer;\nend record;\ntype Other = record\n  Left: integer;\nend record;\nbegin\n  const P := Point(X := 1);\n  const Q := Other(Left := 2);\n  discard P.X + Q.Left;\nend.\n";
+    let path = temp.write("main.fpas", source);
+    let mut service = LanguageService::new(WorkspaceContext::loose(temp.path()));
+    let edits = service
+        .rename(
+            &path,
+            source.find("X: integer").expect("field declaration"),
+            "Left",
+        )
+        .expect("unrelated record members cannot capture the renamed field")
+        .value;
+    let mut actual = edits
+        .iter()
+        .map(|edit| edit.range.offset())
+        .collect::<Vec<_>>();
+    actual.sort_unstable();
+    assert_eq!(
+        actual,
+        [
+            source.find("X: integer").expect("field declaration"),
+            source.find("X := 1").expect("constructor label"),
+            source.find("P.X").expect("field access") + 2,
+        ]
+    );
+}
+
+#[test]
 fn rename_rejects_an_inner_declaration_capturing_edited_global_uses() {
     let temp = TempDirectory::new("rename-global-capture");
     let source = r#"program GlobalCapture;

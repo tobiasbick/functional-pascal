@@ -45,6 +45,10 @@ the source debugger and in-process test hosts do not grant this authority automa
 - `fpas query refs|def|type <file.fpas:line:column>` — find references, definitions,
   or checked expression types as JSON through the shared language service, without
   writing artifacts. See [Source queries](../tools/source-queries.md).
+- `fpas query rename <file.fpas:line:column> <new-name>` — safely rename a
+  declaration and its references, returning the edits as JSON. `--dry-run`
+  validates and lists edits without writing. `--project <path>` selects the
+  project, workspace, or folder context. See [Safe rename](../tools/source-queries.md#safe-rename).
 - `--diagnostics <text | json>` — accepted by `check`, `build`, `run`, and `test`; selects the stderr diagnostic format (see [Machine-readable diagnostics](#machine-readable-diagnostics)).
 - `fpas test [<path>]` — run `*_test.fpas` programs and print a pass/fail/skip summary. With no path, discovers a workspace or `.fpasprj` like `fpas check`. Flags: `--list`, `--fail-fast`, `--strict` (exit `1` when any test called `Skip`), `--show-output` (print captured standard output of passing tests too), `--filter <pattern>`, repeatable `--file <path>` (select an exact discovered file, relative to the current directory), `--report json`, `--timeout <secs>` (default: `300`), `--jobs <n>` (`0` = available CPU parallelism), `--script <path>`. Sidecars beside each test file (all optional): `<test>.script.toml` (scripted input), `<test>.expect.stdout`, and `<test>.expect.screen` (TUI). See [`Std.Test`](../std/testing/test.md). `--list` and `--report json` write results to stdout; JSON test entries identify their full source paths, including nested directories. Progress lines stay on stderr. A failing test's captured standard output is always printed below its result line; `--show-output` does the same for passing tests. A write failure on contracted stdout or summary output returns nonzero instead of reporting success. Each test's timeout budget starts before its isolated worker is spawned and covers worker preparation and VM execution. Tests run in a terminable process tree, so blocking startup, VM, or host calls cannot extend the timeout indefinitely.
 - `fpas debug [<path>]` — run once to the first breakpoint, runtime error or
@@ -76,7 +80,7 @@ the source debugger and in-process test hosts do not grant this authority automa
 - `fpas -V` / `fpas --version` — prints the compiler version to stdout and exits successfully.
 - `fpas build --std-lib <directory> …`, `fpas run --std-lib <directory> …`,
   `fpas check --std-lib <directory> …`, `fpas doc --std-lib <directory> …`,
-  `fpas query refs|def|type --std-lib <directory> …`, and
+  `fpas query refs|def|type|rename --std-lib <directory> …`, and
   `fpas test --std-lib <directory> …` — replace the complete
   implementation-owned source standard library for that invocation. The
   directory must contain `stdlib.fpasprj`. Without this option, `fpas` loads

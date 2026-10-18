@@ -1,9 +1,13 @@
-//! Read-only JSON navigation queries backed by the shared language service.
+//! JSON navigation and rename commands backed by the shared language service.
 //!
 //! Documentation: `docs/pascal/tools/source-queries.md`.
 
+mod publication;
+mod rename;
+
 use std::io::Write;
-use std::path::Path;
+use std::path::{Path, PathBuf};
+use std::sync::Arc;
 
 use fpas_diagnostics::codes::{
     CLI_ARGUMENTS_INVALID, CLI_INPUT_UNSUPPORTED, PROJECT_STANDARD_LIBRARY_INVALID,
@@ -21,25 +25,34 @@ pub(crate) fn query_cli(
     stdout: &mut dyn Write,
     reporter: &mut Reporter<'_>,
 ) -> i32 {
-    let report = match query(config) {
-        Ok(report) => report,
-        Err(Failure::Cli(failure)) => return reporter.failure(&failure),
+    let result = execute(config, stdout);
+    match result {
+        Ok(()) => 0,
+        Err(Failure::Cli(failure)) => reporter.failure(&failure),
         Err(Failure::Service(error)) => {
             reporter.records(&error.diagnostics());
-            return 1;
+            1
         }
         Err(Failure::Diagnostics(records)) => {
             reporter.records(&records);
-            return 1;
+            1
         }
-    };
-    let result = serde_json::to_writer(&mut *stdout, &report)
-        .map_err(std::io::Error::other)
-        .and_then(|()| writeln!(stdout));
-    match result {
-        Ok(()) => 0,
-        Err(error) => reporter.failure(&crate::cli_output::write_failure("query output", &error)),
     }
+}
+
+fn execute(config: &QueryCliConfig, stdout: &mut dyn Write) -> Result<(), Failure> {
+    let prepared = query(config)?;
+    let mut bytes = serde_json::to_vec(&prepared.report)
+        .map_err(std::io::Error::other)
+        .map_err(|error| crate::cli_output::write_failure("query output", &error))?;
+    bytes.push(b'\n');
+    if let Some(plan) = prepared.publication {
+        plan.publish()?;
+    }
+    stdout
+        .write_all(&bytes)
+        .map_err(|error| crate::cli_output::write_failure("query output", &error))?;
+    Ok(())
 }
 
 enum Failure {
@@ -61,7 +74,19 @@ impl From<CliFailure> for Failure {
 }
 
 #[derive(Serialize)]
-struct Report {
+#[serde(untagged)]
+enum Report {
+    Navigation(NavigationReport),
+    Rename(rename::Report),
+}
+
+struct PreparedQuery {
+    report: Report,
+    publication: Option<publication::Plan>,
+}
+
+#[derive(Serialize)]
+struct NavigationReport {
     #[serde(rename = "schemaVersion")]
     schema_version: u32,
     query: &'static str,
@@ -106,7 +131,14 @@ struct Position {
     column: usize,
 }
 
-fn query(config: &QueryCliConfig) -> Result<Report, Failure> {
+struct Context {
+    service: LanguageService,
+    snapshot: Arc<DocumentSnapshot>,
+    offset: usize,
+    standard_library: Option<PathBuf>,
+}
+
+fn load_context(config: &QueryCliConfig) -> Result<Context, Failure> {
     let library = match &config.standard_library {
         Some(root) => Some(root.clone()),
         None => crate::standard_library::default_standard_library_root().map_err(|message| {
@@ -117,8 +149,8 @@ fn query(config: &QueryCliConfig) -> Result<Report, Failure> {
         })?,
     };
     let input = config.project.as_deref().unwrap_or(&config.path);
-    let mut service = match library {
-        Some(root) => LanguageService::load_with_standard_library(input, &root)?,
+    let mut service = match &library {
+        Some(root) => LanguageService::load_with_standard_library(input, root)?,
         None => LanguageService::load(input),
     };
     if !service.workspace().issues().is_empty() {
@@ -148,17 +180,44 @@ fn query(config: &QueryCliConfig) -> Result<Report, Failure> {
     {
         return Err(outside_context(snapshot.path()));
     }
-    let analysis = service.analyze_document(snapshot.path())?;
+    check_analysis(&mut service, snapshot.path())?;
+    Ok(Context {
+        service,
+        snapshot,
+        offset,
+        standard_library: library,
+    })
+}
+
+fn check_analysis(service: &mut LanguageService, path: &Path) -> Result<(), Failure> {
+    let analysis = service.analyze_document(path)?;
     let errors = analysis
         .diagnostics()
         .iter()
         .filter(|diagnostic| diagnostic.is_error())
         .cloned()
-        .map(|diagnostic| FileDiagnostic::new(diagnostic, Some(snapshot.path().to_path_buf())))
+        .map(|diagnostic| {
+            FileDiagnostic::new(diagnostic, Some(path.to_path_buf()))
+                .with_source(analysis.snapshot().source())
+        })
         .collect::<Vec<_>>();
     if !errors.is_empty() {
         return Err(Failure::Diagnostics(errors));
     }
+    Ok(())
+}
+
+fn query(config: &QueryCliConfig) -> Result<PreparedQuery, Failure> {
+    let context = load_context(config)?;
+    if config.kind == QueryKind::Rename {
+        return rename::prepare(config, context);
+    }
+    let Context {
+        mut service,
+        snapshot,
+        offset,
+        ..
+    } = context;
 
     let matches = match config.kind {
         QueryKind::Refs => service
@@ -196,16 +255,20 @@ fn query(config: &QueryCliConfig) -> Result<Report, Failure> {
                 })
             })
             .collect::<Result<Vec<_>, Failure>>()?,
+        QueryKind::Rename => Vec::new(),
     };
-    Ok(Report {
-        schema_version: 1,
-        query: config.kind.name(),
-        position: Location {
-            path: display_path(snapshot.path()),
-            line: config.line,
-            column: config.column,
-        },
-        matches,
+    Ok(PreparedQuery {
+        report: Report::Navigation(NavigationReport {
+            schema_version: 1,
+            query: config.kind.name(),
+            position: Location {
+                path: display_path(snapshot.path()),
+                line: config.line,
+                column: config.column,
+            },
+            matches,
+        }),
+        publication: None,
     })
 }
 

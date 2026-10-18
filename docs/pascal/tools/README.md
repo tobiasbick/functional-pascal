@@ -5,7 +5,7 @@ Compiler and editor tooling for Functional Pascal projects.
 | Tool | Description |
 |------|-------------|
 | [Shared diagnostics](diagnostics.md) | Codes, source positions and Rust text/JSON rendering |
-| [Source queries](source-queries.md) | Read-only JSON references, definitions, and checked expression types through `fpas query` |
+| [Source queries](source-queries.md) | JSON references, definitions, checked expression types, and safe rename through `fpas query` |
 | [Runtime failure reports](failure-dump.md) | Opt-in `fpas run --failure-dump` with bounded task/frame/value JSON and atomic new-file publication |
 | [Formatter style](fmt-style.md) | Normative output rules for `fpas fmt` |
 | [Documentation examples](documentation-examples.md) | FPAS extractor and automatic compilation/execution checks for Markdown examples |

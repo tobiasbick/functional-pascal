@@ -148,6 +148,7 @@ pub(crate) enum HelpTopic {
     QueryRefs,
     QueryDef,
     QueryType,
+    QueryRename,
     Fmt,
     Test,
 }

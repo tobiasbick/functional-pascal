@@ -1,5 +1,7 @@
 //! JSON query contracts at the actual CLI dispatch boundary.
 
+mod rename;
+
 use super::*;
 use crate::main_tests::support::run_cli_args_and_capture_output;
 use serde_json::{Value, json};
@@ -136,7 +138,8 @@ fn query_rejects_invalid_arguments_positions_sources_and_contexts() {
     write_text(&cwd.join("main.fpas"), "program T; begin discard 1; end.");
     for (args, message) in [
         (vec![], "Missing query kind"),
-        (vec!["rename", "main.fpas:1:1"], "Unknown query kind"),
+        (vec!["unknown", "main.fpas:1:1"], "Unknown query kind"),
+        (vec!["rename", "main.fpas:1:1"], "Missing replacement name"),
         (vec!["type"], "Missing source position"),
         (vec!["type", "main.fpas:0:1"], "Invalid source position"),
         (vec!["type", "main.fpas:1:0"], "Invalid source position"),
@@ -290,6 +293,7 @@ fn query_help_is_available_at_each_level() {
         vec!["query", "refs", "--help"],
         vec!["query", "def", "--help"],
         vec!["query", "type", "--help"],
+        vec!["query", "rename", "--help"],
     ] {
         let args = command
             .iter()

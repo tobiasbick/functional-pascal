@@ -104,6 +104,13 @@ fn ensure_existing_references_still_bind(
             let Some(before) = resolve_target(documents, document_index, token.span.offset) else {
                 continue;
             };
+            // Declarations and owner-bound members are not lexical uses that a rename
+            // could capture. Comparing them to lexical lookup produces false conflicts.
+            if !unqualified_kind(before.symbol.kind)
+                || (before.document_index == document_index && before.symbol.selection_span == span)
+            {
+                continue;
+            }
             let after = resolve_unqualified(renamed, document_index, new_name, token.span.offset);
             if !after.is_some_and(|resolved| {
                 resolved.0 == before.document_index

@@ -12,7 +12,7 @@ Usage:
     fpas debug [<path>] [options]       Run once and return a JSON snapshot
     fpas check [<path>]                  Type-check without running
     fpas doc <name> [<path>]             Show the signature and documentation of a name
-    fpas query <refs | def | type> <position>  Query source navigation as JSON
+    fpas query <command> <position>     Query source navigation or rename as JSON
     fpas test [<path>]                   Run `*_test.fpas` programs
     fpas fmt [<path>...]                 Format sources in place
     fpas env --json                      Print installed toolchain paths
@@ -382,9 +382,11 @@ pub(crate) const fn help_text(topic: HelpTopic) -> &'static str {
         HelpTopic::Lsp => LSP_HELP,
         HelpTopic::Check => CHECK_HELP,
         HelpTopic::Doc => DOC_HELP,
-        HelpTopic::Query | HelpTopic::QueryRefs | HelpTopic::QueryDef | HelpTopic::QueryType => {
-            super::query::help(topic)
-        }
+        HelpTopic::Query
+        | HelpTopic::QueryRefs
+        | HelpTopic::QueryDef
+        | HelpTopic::QueryType
+        | HelpTopic::QueryRename => super::query::help(topic),
         HelpTopic::Fmt => FMT_HELP,
         HelpTopic::Test => TEST_HELP,
     }

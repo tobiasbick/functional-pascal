@@ -1077,6 +1077,12 @@ without writing artifacts. Lines and Unicode-scalar columns start at 1;
 `--project <path>` selects an explicit project/workspace and `refs
 --include-declaration` adds the declaration. See [source queries](tools/source-queries.md).
 
+For a project-wide rename, use `fpas query rename file.fpas:12:5 NewName
+--dry-run` to validate and list edits as JSON, then omit `--dry-run` to apply them.
+Select a containing workspace with `--project` when consumers must change too.
+Invalid names, binding conflicts, source errors, and edits outside the selected
+root or in the standard library are rejected. Unit and program names cannot be renamed.
+
 Run `fpas fmt file.fpas`, then `fpas check file.fpas` and `fpas run file.fpas`.
 
 Formatting uses two-space structural indentation and a fixed 100-column expression

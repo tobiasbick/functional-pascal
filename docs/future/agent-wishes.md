@@ -19,7 +19,7 @@
 [S3](#s3-declaration-comments-as-the-single-source) is implemented.
 [D3](#d3-one-shot-batch-runs) is implemented. Its permanent
 [batch debugger contract](../pascal/tools/debugger-batch.md) describes the shipped command.
-N1–N3 ([source navigation](#code-navigation)) are implemented.
+N1–N4 ([source navigation](#code-navigation)) are implemented.
 The other wishes are ideas without an implementation plan. Human-facing tools stay: the DAP debugger
 ([`debugger.md`](../pascal/tools/debugger.md)) and the language server
 ([`editor-integration.md`](../pascal/tools/editor-integration.md)). The JSONL debugger protocol
@@ -30,10 +30,10 @@ navigation.
 
 ## Where to start
 
-A1, A2, A3, A4, S1, S2, S3, D1, D3 and N1–N3 are implemented.
+A1, A2, A3, A4, S1, S2, S3, D1, D3 and N1–N4 are implemented.
 The [source-query plan](code-navigation/README.md) contains additional contract
 requirements that differ from the shipped [source queries](../pascal/tools/source-queries.md).
-Those follow-ups and the remaining debug wishes are not scheduled.
+The plan tracks those open follow-ups. The remaining debug wishes are not scheduled.
 JSONL removal remains deferred; the protocol and its tests stay supported.
 
 ## Principle: protocols for humans, commands for agents
@@ -320,10 +320,14 @@ metadata, with one JSON document per invocation. The editor keeps using LSP.
 - **N3. Type — implemented.** `fpas query type src/Main.fpas:12:5` returns the
   checked type and range of the smallest enclosing expression, including generic
   call results and chain prefixes.
-- **N4. Rename** — a safe rename across the project; with `--dry-run`, the list of edits only.
+- **N4. Rename — implemented.** `fpas query rename src/Main.fpas:12:5 NewName`
+  validates and applies project-wide source edits; `--dry-run` returns the edit
+  list without writing. Rename uses the shared language service's binding checks,
+  validates the edited sources, and protects sources outside the selected root
+  and the standard library.
 
 The permanent [source-query reference](../pascal/tools/source-queries.md) owns the
-position syntax, project selection, JSON schema, and failure behavior of N1–N3.
+position syntax, project selection, JSON schema, and failure behavior of N1–N4.
 
 ## Language note
 

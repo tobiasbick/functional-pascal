@@ -1,7 +1,7 @@
 # Dogfooding gaps
 
 Intake list for gaps found while agents write their helper scripts in FPAS instead of Python,
-JavaScript, or shell logic. The workflow is defined in [AGENTS.md](../../AGENTS.md#dogfooding).
+JavaScript, or shell logic.
 Compiler panics also follow the entry rule in
 [compiler-panic-followups.md](compiler-panic-followups.md).
 

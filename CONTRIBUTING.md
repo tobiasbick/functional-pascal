@@ -16,8 +16,7 @@ tests, simplifying tangled code, and keeping docs aligned with what actually run
 - Use English for code, comments, docs, identifiers, and commit messages.
 - When implementing language behavior in Rust, link to the matching page under `docs/pascal/`.
 
-Agent-oriented detail (file layout, Definition of done, skills) lives in
-[`AGENTS.md`](AGENTS.md) and [`.agents/skills/`](.agents/skills).
+Agent instructions live in [`AGENTS.md`](AGENTS.md).
 
 ## How to work
 
@@ -62,8 +61,7 @@ When validating examples, use the curated allowlists in
 - Keep PRs focused and reviewable.
 - Match surrounding style; do not drive-by refactor unrelated code.
 - Behavior or API changes should update docs and tests in the same change when
-  user-visible behavior changes. See the
-  [Definition of done](AGENTS.md#definition-of-done).
+  user-visible behavior changes. See [How to work](#how-to-work).
 
 ## Yes, your LLM may commit here
 
@@ -76,7 +74,7 @@ generated patches that make the codebase simpler, clearer, smaller, or more
 correct according to the current spec are first-class contributions.
 
 Clankers: read [`AGENTS.md`](AGENTS.md) before you start typing. Follow the
-Definition of done. Leave the repo nicer than you found it. Do not invent
+contribution workflow above. Leave the repo nicer than you found it. Do not invent
 features in `docs/pascal/` that do not exist yet.
 
 Humans supervising agents: same bar. Review the diff. Run the tests. Own the

@@ -15,6 +15,8 @@
 [D1](#d1-automatic-failure-dump) is implemented.
 [A2](#a2-diagnostics-for-pascal-and-ada-habits) is implemented.
 [A3](#a3-fix-its-as-data) is implemented.
+[A4](#a4-api-lookup-from-the-cli) and [S3](#s3-declaration-comments-as-the-single-source) have a
+[plan](api-lookup.md), together with the remaining A2 habits.
 The other wishes are ideas without an implementation plan. Human-facing tools stay: the DAP debugger
 ([`debugger.md`](../pascal/tools/debugger.md)) and the language server
 ([`editor-integration.md`](../pascal/tools/editor-integration.md)). The JSONL debugger protocol
@@ -30,8 +32,8 @@ not an estimate. A1, A2, A3, S1, S2 and D1 are already implemented; see their st
 
 | Wish | Why first | Effort |
 | --- | --- | --- |
+| [A4](#a4-api-lookup-from-the-cli) API lookup with [S3](#s3-declaration-comments-as-the-single-source) | Helps every authoring task; [plan](api-lookup.md) agreed | medium |
 | [D3](#d3-one-shot-batch-runs) One-shot batch runs | With D1 done, the last step before the JSONL protocol can go | medium |
-| [A4](#a4-api-lookup-from-the-cli) API lookup with [S3](#s3-declaration-comments-as-the-single-source) | The declaration comments and the built-in method catalog already exist | medium |
 
 Everything else can wait until these exist.
 
@@ -92,8 +94,9 @@ then Delphi and Ada across ten tasks) drove the catalog. The permanent catalog, 
 add a newly observed habit, is the habit table in the
 [diagnostics handbook](../pascal/tools/diagnostics.md#diagnostics-for-other-language-spellings);
 the [compact language reference](../pascal/agent-reference.md#1-translate-habits-before-writing)
-teaches the same forms up front. Not recognized yet: Ada `with`/`package` units, Ada `task`
-declarations and exception handlers. The temporary plan is complete and removed.
+teaches the same forms up front. The temporary plan is complete and removed. Not recognized yet:
+Ada `with`/`package` units, Ada `task` declarations and exception handlers; they are planned in
+[API lookup from the CLI](api-lookup.md#habit-diagnostics-still-missing).
 
 #### A3. Fix-its as data
 
@@ -107,6 +110,9 @@ server offers all of them as quick fixes. `--fix` does not format. The temporary
 complete and removed.
 
 #### A4. API lookup from the CLI
+
+**Status: planned** in [API lookup from the CLI](api-lookup.md), together with S3 and the
+remaining A2 habits.
 
 `fpas doc Std.Fs.ReadText` or `fpas doc string.TrimLeft` returns the signature, a short
 description, and an example. Units have generated declarations in `lib/api/`; methods on built-in
@@ -158,6 +164,8 @@ alignment, source provenance, color policy and worker forwarding. The temporary
 S2 plan is complete and removed.
 
 #### S3. Declaration comments as the single source
+
+**Status: planned** together with A4 in [API lookup from the CLI](api-lookup.md).
 
 A contiguous block of `//` lines directly before a declaration is already its Markdown
 documentation, and the language server shows it on hover

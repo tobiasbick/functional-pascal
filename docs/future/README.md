@@ -8,7 +8,7 @@ Current implemented behavior belongs under `docs/pascal/`, not here.
 
 | Area | Plan | Scope |
 |------|------|-------|
-| Debugging | [D5 tracepoint extensions](tracepoint-extensions/README.md) | Scalar paths, stable callback names and concrete debug projections completed/reviewed; whole aggregates deferred |
+| Debugging | [D2: Record, replay, and query](agent-wishes.md#d2-record-replay-and-query) | Unscheduled wish; scope and feasibility open; no implementation approved |
 | Language | [Strict ISO/IEC 14977 grammar](iso-14977-grammar.md) | Open decision on grammar authority, strict notation, and automated drift checks |
 | Standard library | [Standard library roadmap](std-roadmap.md) | Future `Std.*` units and longer-term stdlib direction |
 | Networked applications | [Networked application platform](networked-applications/README.md) | Storage, security, concurrency, transports, interactive clients, operations, and distributed nodes |
@@ -28,22 +28,6 @@ Current implemented behavior belongs under `docs/pascal/`, not here.
 - [Rewrite in C](c-rewrite.md): the human overlord's intent to rewrite the implementation in pure
   C because of Rust build times and disk usage; the language stays unchanged; recorded as an idea
   only.
-- [Agent wishes](agent-wishes.md): the agent's wish list — writing FPAS without training data,
-  shared wins for humans and agents (tested documentation examples, richer diagnostics), and CLI
-  tools with JSON output for debugging and code navigation; DAP and
-  LSP stay for humans. A1, A2, A3, A4, S1, S2, S3, D1 and D3 are implemented;
-  [batch debugging](../pascal/tools/debugger-batch.md) is part of the handbook.
-  N1–N4 are implemented in [source queries](../pascal/tools/source-queries.md).
-  The N1–N3 contract follow-ups and bounded scalar D5
-  [tracepoints](../pascal/tools/debugger-tracepoints.md) for globals/fields and
-  locals/parameters/captures, including fixed array positions, are implemented and
-  independently reviewed. JSONL
-  removal remains deferred. Bounded D4
-  [seeded batch scheduling](../pascal/tools/debugger-scheduling.md) is implemented
-  and independently reviewed. The [D5 extension index](tracepoint-extensions/README.md) records completed scalar
-  work, stable callback names, concrete debug projections and the deferred
-  aggregate decision; D2 remains an
-  unscheduled idea and whole aggregate history remains deferred.
 
 ## Architecture records and development intake
 
@@ -52,7 +36,6 @@ Current implemented behavior belongs under `docs/pascal/`, not here.
 | Planning | [AP workflow and templates](improve-syntax/README.md) | Empty package index, reusable decision/implementation work packages, dependencies and completion checks |
 | Compiler | [Panic and language-limit follow-ups](compiler-panic-followups.md) | Intake for newly discovered compiler panics and language limitations |
 | Dogfooding | [Dogfooding gaps](dogfooding-gaps.md) | Intake for gaps found while writing agent helper scripts in FPAS |
-| Documentation | [Example inventory](documentation-example-inventory.md) | Historical S1 baseline before the implemented Markdown example checker |
 
 ## Rules
 

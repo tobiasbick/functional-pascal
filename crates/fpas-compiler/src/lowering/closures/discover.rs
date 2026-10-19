@@ -187,6 +187,11 @@ impl<'a> ClosureRegistry<'a> {
         match expression {
             Expr::Closure(closure) => {
                 let key = fpas_sema::expr_lookup_key(expression);
+                // Retained defaults can be revisited through transparent aliases.
+                // One checked literal has one target and consumes one source ordinal.
+                if self.targets.contains_key(&key) {
+                    return Ok(());
+                }
                 let info = metadata.closure_infos.get(&key).ok_or_else(|| {
                     unsupported(closure.span, "closure without semantic capture metadata")
                 })?;
@@ -241,19 +246,7 @@ impl<'a> ClosureRegistry<'a> {
                         captures: captures.clone(),
                     },
                 );
-                let owner_name = self
-                    .callables
-                    .iter()
-                    .find(|(_, callable)| callable.function == owner)
-                    .map(|(name, _)| name.as_str())
-                    .or_else(|| {
-                        self.routines
-                            .iter()
-                            .find(|routine| routine.id == owner)
-                            .map(|routine| routine.name.as_str())
-                    })
-                    .unwrap_or(&self.source_name);
-                let name = format!("{owner_name}.{}", info.synthetic_name);
+                let name = self.next_closure_name(owner, closure.span)?;
                 self.routines.push(ClosureRoutine {
                     expression,
                     id,

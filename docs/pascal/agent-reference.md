@@ -1131,6 +1131,10 @@ Missing array positions are known unavailable states and preserve coverage.
 Use an exact callback selector such as `MakeCounter.Next::Total` for captures;
 its history covers each active call with new activation/instance IDs. Dormant
 changes are outside that history; declaring locals keep their lexical lifetime.
+Anonymous routines have source-ordered `$closure_1`, `$closure_2`, … names per
+lexical owner, stable for identical compilation inputs. Use the full executable
+name, for example `'MakeCounter.$closure_1::Total'`; root literals use
+`'$entry_programname.$closure_1::Total'`. Earlier source insertions can renumber them.
 Whole aggregates remain unsupported; mutable globals belong to task 0. Inspect
 `trace.complete` and its reasons. `--trace-limit` defaults to 1,000 events, ceiling 10,000; losing
 requested history is explicit and trace execution limits return exit 3.

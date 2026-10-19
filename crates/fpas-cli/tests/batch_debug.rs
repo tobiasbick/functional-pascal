@@ -16,6 +16,8 @@ mod requests;
 mod scheduling;
 #[path = "batch_debug/trace.rs"]
 mod trace;
+#[path = "batch_debug/trace_callback_names.rs"]
+mod trace_callback_names;
 #[path = "batch_debug/trace_captures.rs"]
 mod trace_captures;
 #[path = "batch_debug/trace_fields.rs"]

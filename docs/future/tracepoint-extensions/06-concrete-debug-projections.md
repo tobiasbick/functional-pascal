@@ -1,6 +1,7 @@
 # D5.6: Concrete debug projections and nominal element names
 
-Status: Planned; follows [stable callback names](05-stable-callback-names.md).
+Status: Planned; follows the completed
+[stable callback names](../../pascal/tools/debugger-tracepoints.md#anonymous-callback-names).
 This package jointly addresses
 [D5-M1](../compiler-panic-followups.md#d5-m1-erased-generic-record-fields) and
 [D5-M2](../compiler-panic-followups.md#d5-m2-erased-nominal-array-element-names).

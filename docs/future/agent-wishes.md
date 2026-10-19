@@ -27,8 +27,8 @@ for paths through globals, locals, parameters and active captures, documented un
 bounded delivery; [seeded batch scheduling](../pascal/tools/debugger-scheduling.md)
 owns its contract. The completed D5 extensions and deferred aggregate decision
 are recorded in the [extension index](tracepoint-extensions/README.md). Stable
-anonymous callback names and concrete debug projections are planned next; D2
-remains unscheduled.
+anonymous callback names are implemented and independently reviewed; concrete
+debug projections are planned next. D2 remains unscheduled.
 Human-facing tools stay: the DAP debugger
 ([`debugger.md`](../pascal/tools/debugger.md)) and the language server
 ([`editor-integration.md`](../pascal/tools/editor-integration.md)). The JSONL debugger protocol
@@ -47,13 +47,12 @@ active captures. Its [permanent contract](../pascal/tools/debugger-tracepoints.m
 describes the scope and limits. Bounded D4 adds
 [seeded fair task rounds and virtual time](../pascal/tools/debugger-scheduling.md)
 for controlled batch runs. All three D5 extension packages are implemented and
-independently reviewed; the [extension index](tracepoint-extensions/README.md)
-records completion and the next debugger work, in this order:
-
-1. [Stable anonymous callback names](tracepoint-extensions/05-stable-callback-names.md),
-   reproducible across compilations for exact trace selectors.
-2. [Concrete debug projections](tracepoint-extensions/06-concrete-debug-projections.md),
-   jointly closing D5-M1/M2 for generic fields and nominal array element names.
+independently reviewed. [Stable anonymous callback names](../pascal/tools/debugger-tracepoints.md#anonymous-callback-names)
+are also implemented and independently reviewed, allowing exact capture selectors
+to be reused across compilations. The [extension index](tracepoint-extensions/README.md)
+records completion. Next debugger work is
+[concrete debug projections](tracepoint-extensions/06-concrete-debug-projections.md),
+jointly closing D5-M1/M2 for generic fields and nominal array element names.
 
 The Notes selection bug found during dogfooding is fixed and covered by
 [headless regressions](../../tests/apps/notes/note_search_selection_test.fpas),
@@ -361,10 +360,11 @@ The three extension packages are complete and tracked in the temporary
 4. Whole aggregate history — assessment: remain deferred, with no current
    implementation commitment. Reopen only with concrete dogfooding cases.
 
-The original three scalar-path extensions are complete. The next planned
-packages are [stable anonymous callback names](tracepoint-extensions/05-stable-callback-names.md)
-and [concrete debug projections](tracepoint-extensions/06-concrete-debug-projections.md).
-These improve existing traces; no new debug mode is selected. Unrestricted
+The original three scalar-path extensions and
+[stable anonymous callback names](../pascal/tools/debugger-tracepoints.md#anonymous-callback-names)
+are complete and independently reviewed. The next planned package is
+[concrete debug projections](tracepoint-extensions/06-concrete-debug-projections.md).
+It improves existing traces; no new debug mode is selected. Unrestricted
 aggregate and dormant escaped-cell history remain deferred. JSONL/DAP and their
 existing behavior remain supported.
 

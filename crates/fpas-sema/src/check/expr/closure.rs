@@ -19,17 +19,19 @@ impl Checker {
         params: &[FormalParam],
         return_type: Option<&TypeExpr>,
         body: &FuncBody,
-        _span: Span,
+        span: Span,
     ) -> Ty {
         self.check_unique_formal_param_names(params);
         let params_ty = self.resolve_formal_params(params);
         let return_ty = return_type.map(|te| self.resolve_type_expr(te));
 
         let key = Self::expr_lookup_key(expr);
-        let synthetic_name = format!("$closure_{key}");
+        // This private lexical type scope must not expose the AST identity address.
+        // Executable names are numbered separately in lowering's source-order walk.
+        let scope_name = format!("$closure_at_{}", span.offset);
 
         let analysis = self.check_routine_body_collecting_captures(
-            &synthetic_name,
+            &scope_name,
             &[],
             &params_ty,
             params,
@@ -40,14 +42,14 @@ impl Checker {
                 ensures: &[],
             },
         );
-        self.reject_closure_var_captures(&analysis.captures, _span);
-        self.defer_closure_var_captures(&analysis.pending_routines, _span);
+        self.reject_closure_var_captures(&analysis.captures, span);
+        self.defer_closure_var_captures(&analysis.pending_routines, span);
         self.register_capture_dependencies(
             CaptureOwner::Closure(key),
             analysis.scope_index,
             &analysis.pending_routines,
         );
-        let info = closure_info_from_captures(synthetic_name, analysis.captures);
+        let info = closure_info_from_captures(analysis.captures);
         if info.task_bound {
             self.mark_expr_task_bound(key);
         }

@@ -47,6 +47,55 @@ require exact declaration-store metadata; unsupported implicit loop bindings
 are rejected during setup. Captures require complete, consistent, acyclic
 lexical-owner/capture-source and ABI metadata. Selector resolution executes no FPAS code.
 
+### Anonymous callback names
+
+Anonymous source routines have deterministic executable names such as
+`MakeCounter.$closure_1`. Each lexical owner numbers its own function/procedure
+literals from 1 in source order. Nested anonymous routines and named helpers
+retain the complete owner path; unit/method components remain part of that path.
+Generated bound-method, parser and task adapters do not consume these ordinals.
+Root literals use the reserved generated entry owner, for example
+`$entry_demo.$closure_1`, so `program Demo` and a routine `Demo` remain distinct.
+
+With identical sources and compilation inputs, these names are reusable across
+fresh compiler processes, source/project targets, cached unit objects and
+portable images. Inserting an earlier literal or changing its owner can change
+the name. Names do not identify closure objects: copies keep their existing
+shared environment, independent factory calls keep separate storage, and each
+invocation keeps its own activation and capture instance.
+Use the exact name from the batch stack, followed by `::Binding`. Quote selectors
+with single quotes in a shell so `$closure_1` is not expanded as a variable.
+
+Save this as `anonymous-counter.fpas`. With
+`fpas debug anonymous-counter.fpas --trace 'MakeCounter.$closure_1::Total'`,
+the new scalar values are `1`, `2`, `2`, `3`, including each call's admission:
+
+```pascal id=trace-anonymous-counter run
+program TraceAnonymousCounter;
+
+function MakeCounter(Seed: integer): function(): integer;
+begin
+  var Total := Seed;
+  return function(): integer
+  begin
+    Total := Total + 1;
+    return Total;
+  end function;
+end function;
+
+begin
+  const Next := MakeCounter(1);
+  if Next() <> 2 then
+    panic('unexpected first value');
+  end if;
+  if Next() <> 3 then
+    panic('unexpected second value');
+  end if;
+end.
+```
+
+### Stored fields and array positions
+
 Global and local paths can include literal array positions, with at most 16
 combined field/index steps. An index is a canonical non-negative decimal integer
 literal in `0..9223372036854775807`: no sign, leading zeros, bracket whitespace,

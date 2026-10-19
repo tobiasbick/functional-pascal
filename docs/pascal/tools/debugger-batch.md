@@ -197,6 +197,8 @@ are known unavailable values, not incomplete history.
 Local observation ends at lexical scope/call exit. Capture selectors such as
 `MakeCounter.Next::Total` initialize at each active call, observe its live aliases
 and end at that call's exit; dormant changes are outside their coverage.
+Anonymous callbacks use source-ordered names such as `MakeCounter.$closure_1`,
+stable for identical compilation inputs; use the full name from the stack.
 Tracepoints do not create additional stops. Trace limits end execution explicitly
 with exit 3.
 The [tracepoint contract](debugger-tracepoints.md) defines selectors, the additive

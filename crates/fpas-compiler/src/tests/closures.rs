@@ -1,3 +1,4 @@
+mod names;
 mod repeat;
 
 use fpas_ir::{

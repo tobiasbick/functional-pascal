@@ -1,14 +1,14 @@
 # D5: Tracepoint extensions
 
-Status: Packages 1–3 completed and independently reviewed; packages 5–6 planned.
+Status: Packages 1–3 and 5 completed and independently reviewed; package 6 planned.
 Whole aggregates remain deferred. This is the temporary D5 extension index, not an AP package or
 an implemented language specification.
 
 The scalar-path implementation scope is complete: local record fields, fixed
 array positions and activation-scoped capture bindings. Permanent docs/tests
 own the completed packages, so their temporary implementation files are removed.
-The next two packages improve stable naming and debug type metadata without
-adding source-language features.
+Stable anonymous names are also complete. The next package improves debug type
+metadata without adding source-language features.
 
 Current behavior belongs to the permanent
 [tracepoint contract](../../pascal/tools/debugger-tracepoints.md). D1 failure
@@ -22,8 +22,8 @@ D2 record/replay is outside this plan. JSONL removal remains deferred.
 | 1 | [Scalar fields of local records](../../pascal/tools/debugger-tracepoints.md#selecting-storage) | Completed; independently reviewed | Existing scalar local/parameter tracing |
 | 2 | [Fixed array positions](../../pascal/tools/debugger-tracepoints.md#selecting-storage) | Completed; independently reviewed | Package 1 and shared metadata path traversal |
 | 3 | [Scalar capture bindings](../../pascal/tools/debugger-tracepoints.md#observed-changes) | Completed; independently reviewed | Packages 1–2 and exact capture provenance |
-| 4 | [Stable anonymous callback names](05-stable-callback-names.md) | Planned; next debugger work | Exact routine selectors and capture provenance |
-| 5 | [Concrete debug projections](06-concrete-debug-projections.md) | Planned | Package 5; D5-M1/M2 together |
+| 4 | [Stable anonymous callback names](../../pascal/tools/debugger-tracepoints.md#anonymous-callback-names) | Completed; independently reviewed | Exact routine selectors and capture provenance |
+| 5 | [Concrete debug projections](06-concrete-debug-projections.md) | Planned | Stable callback names; D5-M1/M2 together |
 | — | [Whole aggregate history](04-aggregate-decision.md) | Deferred; no implementation scheduled | Concrete dogfooding evidence |
 
 Use these status words consistently: **Planned**, **In progress**, **In review**,
@@ -31,11 +31,11 @@ Use these status words consistently: **Planned**, **In progress**, **In review**
 implementation commitment. An implementation blocker is recorded separately
 with its concrete cause and next action.
 
-Next debugger work: package 5, then package 6. Continue dogfooding the delivered
+Next debugger work: package 6. Continue dogfooding the delivered
 scalar paths. The first Notes case found and fixed an application selection bug,
 covered by [headless regressions](../../../tests/apps/notes/note_search_selection_test.fpas)
 and [save-failure checks](../../../tests/apps/notes/note_search_dirty_test.fpas).
-This application fix does not implement either planned debugger package.
+The Notes application fix was delivered separately from the debugger packages.
 Reopen the [aggregate assessment](04-aggregate-decision.md) only when concrete
 cases demonstrate missing information that selected paths or D1/D3 cannot provide.
 Continuous history of dormant escaped cells is also deferred and unscheduled.
@@ -49,7 +49,7 @@ zero-word reads. Regression cases include real callback tail-frame reuse,
 shared/independent cells, escaped/dormant captures, alias ordering, exact event
 capacities, absent indexes, parameter snapshots and UTF-8 bounds.
 
-Final checks passed:
+Checks for packages 1–3 passed:
 
 - 312 compiler tests; 754 VM tests (two baseline ignored, two known cloud TCP
   timing tests excluded); 303 debugger tests; 85 real-process batch tests.
@@ -63,9 +63,36 @@ raw-array nominal element display names are recorded in
 [D5-M2](../compiler-panic-followups.md#d5-m2-erased-nominal-array-element-names).
 Both boundaries are documented and covered by regression tests.
 
+### Stable anonymous names (package 5)
+
+Published `$closure_N` names are allocated once per literal in the lowering
+source walk, with separate ordinals per executable lexical owner. Semantic AST
+identity keys stay private; private generic scope names use source positions.
+Root literals use the reserved `$entry_programname` owner to avoid collisions
+with legal same-named source routines. Named helpers keep the full owner chain.
+Bound-method, parser and intrinsic/native task adapters were audited: their
+existing names use deterministic function IDs, not AST addresses, and do not
+consume anonymous source ordinals. Their provenance classification stays intact.
+
+Two independent subagent reviews are complete. The found root/routine naming
+collision was fixed and rechecked, including mixed-case headings and distinct
+capture sources. Regression coverage includes retained defaults and aliases,
+hoisting versus lexical source order, nested owners, sibling generic helpers,
+independent/shared captures, fresh-process exact selector reuse, unit cache
+reuse and object/image round trips.
+
+Validation passed: 315 compiler tests, 802 Sema tests, 89 real-process batch
+tests, 451 VM debugger tests and 27 debugger report tests. The four new CLI
+tests passed again after adding explicit unchanged-sidecar checks. All 13
+compact-reference examples and six tracepoint examples passed, including the
+new anonymous counter. Strict workspace Clippy, Rust formatting and diff checks
+passed. Cloud timings are not performance acceptance data.
+
+Permanent docs/tests now own this package; its temporary plan file is removed.
+
 ## Shared decisions
 
-The unchanged program/object format rule below describes packages 1–3. Package 6
+The unchanged program/object format rule below describes packages 1–3 and 5. Package 6
 explicitly plans new debug metadata and must version affected encodings.
 
 - Keep one batch command, `--trace`, and one result document. No new session

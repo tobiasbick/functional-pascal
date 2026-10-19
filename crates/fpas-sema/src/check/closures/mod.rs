@@ -22,8 +22,6 @@ pub struct ClosureInfo {
     pub captures: Vec<CaptureBinding>,
     /// `true` when any capture is mutable or already task-bound; restricts task spawning.
     pub task_bound: bool,
-    /// Compiler-facing synthetic routine name for this closure body.
-    pub synthetic_name: String,
 }
 
 /// Maps closure expression identity to [`ClosureInfo`].
@@ -45,14 +43,10 @@ pub type NestedRoutineCaptureMap = HashMap<usize, NestedRoutineCaptureInfo>;
 
 /// Build [`ClosureInfo`] from analyzed captures.
 #[must_use]
-pub fn closure_info_from_captures(
-    synthetic_name: String,
-    captures: Vec<CaptureBinding>,
-) -> ClosureInfo {
+pub fn closure_info_from_captures(captures: Vec<CaptureBinding>) -> ClosureInfo {
     let task_bound = task_bound_from_captures(&captures);
     ClosureInfo {
         captures,
         task_bound,
-        synthetic_name,
     }
 }

@@ -225,7 +225,11 @@ missing history. Local activation/instance identities
 distinguish calls and repeated declarations; observation ends at scope/call exit.
 Use exact `MakeCounter.Next::Total` to select a capture during each active
 callback call. Each admission starts a new instance; dormant changes are outside
-that history. Whole aggregate selectors are unsupported. `--trace-limit`
+that history. Anonymous routines use deterministic source-ordered names such as
+`MakeCounter.$closure_1` per lexical owner; root literals use `$entry_programname`.
+Copy the full name from the stack and single-quote shell selectors; identical
+compilation inputs retain names, but inserting earlier literals can renumber them.
+Whole aggregate selectors are unsupported. `--trace-limit`
 defaults to 1,000 events and stops explicitly at a bound; inspect `trace.complete`
 before relying on an empty or partial history. Tracing executes no expressions.
 

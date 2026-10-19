@@ -6,6 +6,7 @@ mod intrinsic_routines;
 mod intrinsic_tasks;
 mod mutating_receivers;
 mod named_routines;
+mod names;
 mod parser_values;
 
 use std::collections::{BTreeMap, BTreeSet, HashMap};
@@ -65,6 +66,8 @@ pub(super) struct ClosureRegistry<'a> {
     pub intrinsic_targets: HashMap<usize, BoundMethodTarget>,
     pub cell_names: HashMap<FunctionId, BTreeSet<String>>,
     pub(super) callables: BTreeMap<String, Callable>,
+    /// Source literals are counted independently within each executable lexical owner.
+    closure_ordinals: HashMap<FunctionId, u32>,
     source_name: String,
     pub(super) next_id: u32,
 }
@@ -82,6 +85,7 @@ impl<'a> ClosureRegistry<'a> {
             intrinsic_targets: HashMap::new(),
             cell_names: HashMap::new(),
             callables,
+            closure_ordinals: HashMap::new(),
             source_name: source_name.to_string(),
             next_id: first_id,
         }

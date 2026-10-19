@@ -8,7 +8,7 @@ Current implemented behavior belongs under `docs/pascal/`, not here.
 
 | Area | Plan | Scope |
 |------|------|-------|
-| Debugging | [D5 tracepoint extensions](tracepoint-extensions/README.md) | Scalar paths completed/reviewed; stable callback names and concrete debug projections planned; whole aggregates deferred |
+| Debugging | [D5 tracepoint extensions](tracepoint-extensions/README.md) | Scalar paths and stable callback names completed/reviewed; concrete debug projections planned; whole aggregates deferred |
 | Language | [Strict ISO/IEC 14977 grammar](iso-14977-grammar.md) | Open decision on grammar authority, strict notation, and automated drift checks |
 | Standard library | [Standard library roadmap](std-roadmap.md) | Future `Std.*` units and longer-term stdlib direction |
 | Networked applications | [Networked application platform](networked-applications/README.md) | Storage, security, concurrency, transports, interactive clients, operations, and distributed nodes |
@@ -41,7 +41,7 @@ Current implemented behavior belongs under `docs/pascal/`, not here.
   removal remains deferred. Bounded D4
   [seeded batch scheduling](../pascal/tools/debugger-scheduling.md) is implemented
   and independently reviewed. The [D5 extension index](tracepoint-extensions/README.md) records completed scalar
-  work, planned stable callback names/concrete debug projections and the deferred
+  work and stable callback names, planned concrete debug projections and the deferred
   aggregate decision; D2 remains an
   unscheduled idea and whole aggregate history remains deferred.
 

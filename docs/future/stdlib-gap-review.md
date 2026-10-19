@@ -36,7 +36,7 @@ Numbers are stable references within this assessment, not approved work packages
 | 6 | Numeric output formatting | String `Format` supports `%d`, `%f`, `%s` and `%%`, without selectable decimal precision, scientific notation or numeric field width. `RealToStr` provides exact round-trip text rather than presentation controls. | Go `fmt`; Python formatting |
 | 7 | Command-line parsing | `Args` exposes only argument count and indexed lookup. Applications must build typed options, required arguments, help output and consistent parse errors themselves. | Go `flag`; Python `argparse` |
 | 8 | Path helpers | `Path` has five basic operations. Absolute-path checks, relative-path calculation and extension replacement are absent. Resolving a real path through filesystem/symlink state belongs in an effectful API such as `Fs`, preserving the pure `Path` boundary. | Go `path/filepath`; Rust `Path` |
-| 9 | Structured errors | Many filesystem, network, process and parsing APIs return `Error(string)`. Programs cannot reliably branch on a stable error kind such as missing file, permission denied, timeout or cancellation. A consistent error model requires its own API design. | Rust `io::ErrorKind`; Go typed errors |
+| 9 | Structured errors | Many filesystem, network, process and parsing APIs return `Error(string)`. Programs cannot reliably branch on a stable error kind such as missing file, permission denied, timeout or cancellation. The [agreed FPAS 2 direction](fpas2-language-directions.md#1-typed-operational-errors) combines a shared error contract with composable concrete error types, explicit `MapError` conversion and unchanged `try`; shared error APIs and concrete variants remain open. | Rust `io::ErrorKind`; Go typed errors |
 | 10 | Byte codecs | No general Base64/Base64url or hexadecimal encode/decode API for byte arrays. `IntToHex` handles individual numbers. Small codecs can use the existing integer-array byte convention; compact buffers are a separate question. | Go `encoding/base64` and `encoding/hex` |
 | 11 | URL components | `Net.Uri` parses absolute HTTP/HTTPS addresses but exposes no query-parameter builder/parser or percent-encoding helpers for query values and path segments. Those contexts need distinct escaping rules. | Go `net/url`; Python `urllib.parse` |
 
@@ -60,6 +60,36 @@ Numbers are stable references within this assessment, not approved work packages
   [Crypto](../pascal/std/cryptography/crypto.md),
   [UTF-8](../pascal/std/network/utf8.md) and
   [URI](../pascal/std/network/uri.md) APIs: gaps 10 and 11.
+
+### Direction for gap 9: structured errors
+
+The agreed direction is a shared error contract for context and reporting,
+combined with concrete error types defined by standard-library units and
+applications. Composition and variant payloads let an application wrap a
+filesystem error alongside its own configuration errors while preserving the
+original machine-readable case. Public Result signatures retain their concrete
+error types; callers can branch exhaustively without inspecting diagnostic text.
+
+Include `MapError` in the same design package. For `Result of (T, E)`, a mapper
+from `E` to `E2` produces `Result of (T, E2)`: Ok preserves its payload without
+calling the mapper, while Error calls it exactly once and wraps the returned
+error value. The receiver is evaluated once. Unlike recovery through `OrElse`,
+the mapper returns an error value rather than another Result.
+
+Keep `try` unchanged: it extracts success or immediately propagates an error
+through a compatible enclosing Result error type. Cross-type propagation uses
+explicit `MapError` conversion before `try`, for example
+`try Fs.ReadText(Path).MapError(WrapFileError)` with a function wrapping the
+filesystem cause in an application error. No implicit conversion or automatic
+wrapper selection is added. Option propagation, panic, contracts and cleanup
+retain their existing behavior.
+
+The [FPAS 2 error direction](fpas2-language-directions.md#1-typed-operational-errors)
+owns this design and the
+[MapError/try contract](fpas2-language-directions.md#agreed-maperror-and-try-contract).
+Shared fields, unit-specific variants, per-API domain mappings and migration
+remain open. This agreement does not schedule an implementation or introduce
+object inheritance.
 
 ## Additional candidates
 

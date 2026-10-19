@@ -102,12 +102,16 @@ pub(super) fn decode_globals(section: DecodedSection<'_>) -> Result<Vec<GlobalIn
         fpas_bytecode::limits::MAX_GLOBALS,
     )?;
     let mut reader = SectionReader::new(section.bytes, "global section");
-    reader.ensure_entries(section.item_count, 10, "global_name")?;
+    reader.ensure_entries(section.item_count, 14, "global_name")?;
     let mut globals = Vec::with_capacity(section.item_count);
     for _ in 0..section.item_count {
         globals.push(GlobalInfo {
             name: StringId::new(reader.u32("global_name")?),
             ty: DebugTypeId::new(reader.u32("global_type")?),
+            type_name: match reader.u32("global_type_name")? {
+                u32::MAX => None,
+                name => Some(StringId::new(name)),
+            },
             mutable: read_bool(&mut reader, "global_mutable")?,
             initializer: if read_bool(&mut reader, "global_has_initializer")? {
                 Some(GlobalInitializer {
@@ -141,12 +145,16 @@ pub(super) fn decode_records(
         let name = StringId::new(reader.u32("record_name")?);
         let count = reader.u32("record_field_count")? as usize;
         check_count(section.tag, count, fpas_bytecode::limits::MAX_LAYOUT_FIELDS)?;
-        reader.ensure_entries(count, 8, "record_field_name")?;
+        reader.ensure_entries(count, 12, "record_field_name")?;
         let mut fields = Vec::with_capacity(count);
         for _ in 0..count {
             fields.push(RecordField {
                 name: StringId::new(reader.u32("record_field_name")?),
                 ty: DebugTypeId::new(reader.u32("record_field_type")?),
+                type_name: match reader.u32("record_field_type_name")? {
+                    u32::MAX => None,
+                    name => Some(StringId::new(name)),
+                },
             });
         }
         let method_count = reader.u32("record_method_count")? as usize;

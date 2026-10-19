@@ -37,6 +37,7 @@ fn global_index_path_updates_nested_arrays_and_preserves_aliases() {
     image.globals = vec![GlobalInfo {
         name: StringId::new(2),
         ty: fpas_bytecode::DebugTypeId::new(0),
+        type_name: None,
         mutable: true,
         initializer: None,
     }];
@@ -68,6 +69,7 @@ fn global_index_path_rejects_out_of_bounds_indexes() {
     image.globals = vec![GlobalInfo {
         name: StringId::new(2),
         ty: fpas_bytecode::DebugTypeId::new(0),
+        type_name: None,
         mutable: true,
         initializer: None,
     }];

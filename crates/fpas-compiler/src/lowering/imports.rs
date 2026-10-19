@@ -107,6 +107,7 @@ pub(super) fn install(
                     id,
                     name: symbol.qualified_name.to_ascii_lowercase(),
                     ty,
+                    type_name: None,
                     mutable,
                     initializer: None,
                 });

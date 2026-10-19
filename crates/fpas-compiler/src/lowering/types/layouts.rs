@@ -48,6 +48,7 @@ impl TypeTable {
                     })?,
                     name: name.clone(),
                     ty: self.intern(ty, line, column)?,
+                    type_name: self.declared_semantic_scalar_name(ty),
                 })
             })
             .collect::<Result<Vec<_>, CompileError>>()?;

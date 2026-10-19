@@ -9,6 +9,8 @@ pub struct RecordField {
     pub name: StringId,
     /// Machine-readable stored field type.
     pub ty: DebugTypeId,
+    /// Declared nominal scalar name, before runtime type erasure.
+    pub type_name: Option<StringId>,
 }
 
 /// Ordered field layout for one record type.

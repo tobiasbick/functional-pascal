@@ -141,6 +141,7 @@ pub(super) fn order_executable() -> VerifiedExecutable {
         globals: vec![GlobalInfo {
             name: StringId::new(9),
             ty: DebugTypeId::new(0),
+            type_name: None,
             mutable: true,
             initializer: None,
         }],

@@ -21,6 +21,7 @@ fn positional_record_clones_share_layout_and_detach_values() {
         fields: vec![RecordField {
             name: StringId::new(3),
             ty: fpas_bytecode::DebugTypeId::new(0),
+            type_name: None,
         }],
         methods: Vec::new(),
     }];
@@ -56,6 +57,7 @@ fn store_field_reuses_unique_storage() {
         fields: vec![RecordField {
             name: StringId::new(3),
             ty: fpas_bytecode::DebugTypeId::new(0),
+            type_name: None,
         }],
         methods: Vec::new(),
     }];
@@ -94,6 +96,7 @@ fn point_image(
         fields: vec![RecordField {
             name: StringId::new(3),
             ty: fpas_bytecode::DebugTypeId::new(0),
+            type_name: None,
         }],
         methods: Vec::new(),
     }];

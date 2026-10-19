@@ -317,6 +317,7 @@ fn typed_executable(consume_pending: bool) -> VerifiedExecutable {
         globals: vec![GlobalInfo {
             name: StringId::new(25),
             ty: DebugTypeId::new(4),
+            type_name: None,
             mutable: true,
             initializer: None,
         }],
@@ -326,6 +327,7 @@ fn typed_executable(consume_pending: bool) -> VerifiedExecutable {
             fields: vec![RecordField {
                 name: StringId::new(26),
                 ty: DebugTypeId::new(4),
+                type_name: None,
             }],
             methods: Vec::new(),
         }],

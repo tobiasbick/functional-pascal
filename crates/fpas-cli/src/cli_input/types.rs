@@ -91,6 +91,8 @@ pub(crate) struct DebugCliConfig {
 pub(crate) struct DebugBatchConfig {
     pub breakpoints: Vec<String>,
     pub expressions: Vec<String>,
+    pub trace: Vec<String>,
+    pub trace_limit: Option<usize>,
     pub task: Option<u64>,
     pub frame: Option<usize>,
     pub script: Option<PathBuf>,

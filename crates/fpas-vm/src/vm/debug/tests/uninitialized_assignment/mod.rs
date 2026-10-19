@@ -132,6 +132,7 @@ pub(super) fn assignment_executable() -> VerifiedExecutable {
         globals: vec![GlobalInfo {
             name: StringId::new(15),
             ty: DebugTypeId::new(0),
+            type_name: None,
             mutable: true,
             initializer: Some(fpas_bytecode::GlobalInitializer {
                 function: FunctionId::new(0),
@@ -154,10 +155,12 @@ pub(super) fn assignment_executable() -> VerifiedExecutable {
                 RecordField {
                     name: StringId::new(13),
                     ty: DebugTypeId::new(0),
+                    type_name: None,
                 },
                 RecordField {
                     name: StringId::new(14),
                     ty: DebugTypeId::new(0),
+                    type_name: None,
                 },
             ],
             methods: Vec::new(),

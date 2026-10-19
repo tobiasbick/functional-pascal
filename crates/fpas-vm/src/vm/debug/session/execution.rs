@@ -113,6 +113,11 @@ impl DebugSession {
         let mut pause_pending = false;
         let started = Instant::now();
         loop {
+            if let Some(error) = self.trace_error() {
+                self.state = DebugSessionState::Stopped;
+                self.refresh_inspection();
+                return Err(error);
+            }
             if let Some(value) = self.runtime.take_finished_root_result() {
                 let instruction_count = self.runtime.instruction_count();
                 self.state = DebugSessionState::Terminated;
@@ -130,6 +135,11 @@ impl DebugSession {
             let schedule = match self.runtime.schedule(preferred) {
                 Ok(schedule) => schedule,
                 Err((task_id, diagnostic)) => {
+                    if let Some(error) = self.trace_error() {
+                        self.state = DebugSessionState::Stopped;
+                        self.refresh_inspection();
+                        return Err(error);
+                    }
                     return Ok(self.stop_for_runtime_error(task_id, diagnostic));
                 }
             };
@@ -174,9 +184,19 @@ impl DebugSession {
             let dispatch = match self.runtime.dispatch(task_id) {
                 Ok(dispatch) => dispatch,
                 Err((task_id, diagnostic)) => {
+                    if let Some(error) = self.trace_error() {
+                        self.state = DebugSessionState::Stopped;
+                        self.refresh_inspection();
+                        return Err(error);
+                    }
                     return Ok(self.stop_for_runtime_error(task_id, diagnostic));
                 }
             };
+            if let Some(error) = self.trace_error() {
+                self.state = DebugSessionState::Stopped;
+                self.refresh_inspection();
+                return Err(error);
+            }
             match dispatch {
                 DebugDispatch::Completed {
                     task_id,

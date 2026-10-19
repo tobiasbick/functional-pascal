@@ -203,9 +203,10 @@ pub(super) fn record_layouts(image: &Executable) -> Vec<String> {
                 .iter()
                 .map(|field| {
                     format!(
-                        "{}:{}",
+                        "{}:{}:{:?}",
                         string_at(image, field.name),
-                        type_key(image, field.ty)
+                        type_key(image, field.ty),
+                        field.type_name.map(|name| string_at(image, name))
                     )
                 })
                 .collect();
@@ -270,10 +271,11 @@ pub(super) fn global_layouts(image: &Executable) -> Vec<String> {
         .iter()
         .map(|global| {
             format!(
-                "{}:{}:{}",
+                "{}:{}:{}:{:?}",
                 string_at(image, global.name),
                 type_key(image, global.ty),
-                global.mutable
+                global.mutable,
+                global.type_name.map(|name| string_at(image, name))
             )
         })
         .collect()

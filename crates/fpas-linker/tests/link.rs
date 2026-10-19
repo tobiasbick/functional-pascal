@@ -117,6 +117,7 @@ fn linker_rebases_exact_local_and_global_initializer_stores() {
     library.globals.push(fpas_unit::object::ObjectGlobal {
         name: "library.unit.counter".to_string(),
         ty: 0,
+        type_name: None,
         mutable: true,
         initializer: Some(fpas_unit::object::ObjectInitializer {
             function: 0,

@@ -61,6 +61,15 @@ impl Worker {
         let mut steps = 0;
         while steps < budget {
             self.check_task_cancellation()?;
+            if self.trace_interrupted() {
+                return Err(diagnostics::at_address(
+                    self.executable.executable(),
+                    self.current_address,
+                    fpas_diagnostics::codes::RUNTIME_VM_SHUTDOWN,
+                    "Debug trace collection reached a bound",
+                    "Inspect the bounded batch trace result.",
+                ));
+            }
             let Some(&instruction) = self.executable.decoded().get(self.ip) else {
                 return Err(self.invalid_instruction_pointer());
             };

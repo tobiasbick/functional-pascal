@@ -278,6 +278,9 @@ pub(crate) fn resolve_cli_config(args: &[String], cwd: &Path) -> Result<Resolved
             let protocol = options.debug_protocol.unwrap_or(DebugProtocol::Batch);
             let mut batch = options.batch;
             batch.script = options.script_path;
+            if batch.trace_limit.is_some() && batch.trace.is_empty() {
+                return Err("--trace-limit requires at least one --trace.".into());
+            }
             if protocol != DebugProtocol::Batch && batch != Default::default() {
                 return Err(
                     "Batch inspection/input options cannot be combined with --protocol.".into(),

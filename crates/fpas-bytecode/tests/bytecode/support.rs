@@ -141,6 +141,7 @@ pub fn all_opcodes_executable() -> Executable {
         globals: vec![GlobalInfo {
             name: StringId::new(7),
             ty: DebugTypeId::new(0),
+            type_name: None,
             mutable: true,
             initializer: None,
         }],
@@ -150,6 +151,7 @@ pub fn all_opcodes_executable() -> Executable {
             fields: vec![RecordField {
                 name: StringId::new(4),
                 ty: DebugTypeId::new(0),
+                type_name: None,
             }],
             methods: vec![RecordMethod {
                 name: StringId::new(4),

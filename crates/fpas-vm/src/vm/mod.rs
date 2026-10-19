@@ -315,3 +315,8 @@ impl ShutdownHandle {
         self.hosted.shutdown_blocking_operations();
     }
 }
+
+pub use debug::{
+    DEFAULT_TRACE_EVENTS, DebugTraceEvent, DebugTraceIdentity, DebugTraceLocation,
+    DebugTraceReport, DebugTraceWatch, MAX_TRACE_BYTES, MAX_TRACE_EVENTS,
+};

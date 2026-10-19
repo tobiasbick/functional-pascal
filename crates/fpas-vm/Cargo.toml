@@ -7,6 +7,8 @@ license.workspace = true
 repository.workspace = true
 
 [dependencies]
+serde = { workspace = true, features = ["derive"] }
+serde_json.workspace = true
 fpas-numeric = { path = "../fpas-numeric" }
 ctrlc = { version = "3.5.2", features = ["termination"] }
 crossterm.workspace = true

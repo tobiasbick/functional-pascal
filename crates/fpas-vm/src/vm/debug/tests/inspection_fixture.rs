@@ -163,6 +163,7 @@ pub(super) fn inspection_executable() -> VerifiedExecutable {
         globals: vec![GlobalInfo {
             name: StringId::new(10),
             ty: fpas_bytecode::DebugTypeId::new(0),
+            type_name: None,
             mutable: true,
             initializer: None,
         }],

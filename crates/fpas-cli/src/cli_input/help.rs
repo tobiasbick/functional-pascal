@@ -241,13 +241,16 @@ Usage:
   fpas debug [<target>] --protocol <jsonl | dap> [options] [-- <args>...]
 
 Batch is the default. It captures tasks, stacks, bindings, globals and program
-output, then exits. --print never executes program code. Direct .fpascp input
+output, then exits. --print never executes program code. --trace records scalar
+global or stored record-field changes from initialization through that stop. Direct .fpascp input
 requires --source-root to verify source identities. With no target, discover a
 workspace or project. Program input is scripted; host stdin is never consumed.
 
 Options:
   --break <path:line[:column]>   Stop before a source statement (repeat, max 64)
   --print <expression>          Inspect one stored-value expression (repeat, max 64)
+  --trace <selector>           Record a mutable global/scalar record field (repeat, max 64)
+  --trace-limit <count>        Retained events (default: 1000; ceiling: 10000)
   --task <id>                   Inspection task (default: stopping task)
   --frame <depth>               Inspection frame (default: 0, active frame)
   --script <path>               Existing runner TOML line/key input script
@@ -268,6 +271,7 @@ with --protocol. JSONL and DAP retain their existing options and wire formats.
 Examples:
   fpas debug hello.fpas
   fpas debug app.fpasprj --break src/main.fpas:42 --print Total --print 'Items[0]'
+  fpas debug app.fpasprj --trace Total --trace State.Selected --trace-limit 200
   fpas debug app.fpascp --source-root . --script input.toml --timeout 5
   fpas debug app.fpasprj --protocol jsonl --commands session.jsonl
   fpas debug app.fpasprj --protocol dap

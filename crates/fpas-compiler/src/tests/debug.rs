@@ -509,3 +509,5 @@ end.
         assert_eq!(image.strings.get(binding.name), Some(source_name));
     }
 }
+
+mod scalar_names;

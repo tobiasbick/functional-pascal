@@ -250,6 +250,7 @@ fn record_layout_changes_are_rejected() {
         fields: vec![RecordField {
             name: StringId::new(1),
             ty: DebugTypeId::new(0),
+            type_name: None,
         }],
         methods: Vec::new(),
     });
@@ -279,6 +280,7 @@ fn global_layout_changes_are_rejected() {
     image.globals.push(GlobalInfo {
         name: StringId::new(3),
         ty: DebugTypeId::new(0),
+        type_name: None,
         mutable: true,
         initializer: None,
     });
@@ -591,6 +593,7 @@ fn incompatible_replace_is_rejected_before_the_live_image_changes() {
         fields: vec![RecordField {
             name: StringId::new(1),
             ty: DebugTypeId::new(0),
+            type_name: None,
         }],
         methods: Vec::new(),
     });

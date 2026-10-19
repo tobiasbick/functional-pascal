@@ -160,3 +160,32 @@ fn distinct_type_names_require_a_scalar_underlying_type_and_valid_source() {
         })
     ));
 }
+
+#[test]
+fn declared_global_and_field_names_require_valid_string_references() {
+    for is_field in [false, true] {
+        let mut executable = super::support::all_opcodes_executable();
+        let invalid = fpas_bytecode::StringId::new(u32::MAX);
+        if is_field {
+            executable.records[0].fields[0].type_name = Some(invalid);
+        } else {
+            executable.globals[0].type_name = Some(invalid);
+        }
+        let count = executable.strings.len();
+        assert_eq!(
+            executable
+                .verify()
+                .expect_err("missing declared name rejected")
+                .kind,
+            ValidationErrorKind::StringReference {
+                owner: if is_field {
+                    "record field declared type name"
+                } else {
+                    "global declared type name"
+                },
+                actual: u32::MAX,
+                strings: count,
+            }
+        );
+    }
+}

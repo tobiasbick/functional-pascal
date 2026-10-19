@@ -297,6 +297,7 @@ pub(super) fn assignment_executable() -> VerifiedExecutable {
         globals: vec![GlobalInfo {
             name: StringId::new(31),
             ty: DebugTypeId::new(2),
+            type_name: None,
             mutable: true,
             initializer: None,
         }],
@@ -306,6 +307,7 @@ pub(super) fn assignment_executable() -> VerifiedExecutable {
             fields: vec![RecordField {
                 name: StringId::new(28),
                 ty: DebugTypeId::new(2),
+                type_name: None,
             }],
             methods: vec![RecordMethod {
                 name: StringId::new(38),

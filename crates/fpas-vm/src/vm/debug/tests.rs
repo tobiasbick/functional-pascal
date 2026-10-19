@@ -478,3 +478,5 @@ mod wait_any;
 mod wait_any_controlled;
 
 use inspection_fixture::inspection_executable;
+
+mod trace;

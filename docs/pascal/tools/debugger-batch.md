@@ -23,6 +23,8 @@ Stale, missing or escaping sources are errors.
 | --- | --- |
 | `--break path:line[:column]` | Repeatable source location, at most 64; coordinates start at 1. |
 | `--print expression` | One expression per occurrence, at most 64; never comma-split. |
+| `--trace selector` | Record committed changes to a mutable global or stored scalar record field; repeat, at most 64. |
+| `--trace-limit count` | Complete trace event capacity, default 1,000, ceiling 10,000; requires `--trace`. |
 | `--task id` | Inspection task; defaults to the stopping task. |
 | `--frame depth` | Inspection stack depth; defaults to 0, the active frame. |
 | `--script path` | Explicit runner-compatible TOML input script. |
@@ -105,6 +107,7 @@ contains these fields:
 | `tasks` | Actual task IDs/states and bounded logical stack frames. |
 | `expressions` | Requests in order with selected context, typed value or error. |
 | `output` | Ordered captured text records. |
+| `trace` | Bound watches and ordered typed initialization/change history, with explicit coverage and counts. |
 | `capture` | `incomplete`, omission `reasons`, and known task/global totals. |
 | `limits` | Effective execution, output, report and snapshot bounds. |
 
@@ -173,3 +176,14 @@ wall-clock return guarantee. External host kills, OOM and crashes cannot promise
 a final JSON result. Stderr is otherwise empty except a final publication error.
 
 Existing JSONL and DAP protocols, documentation and tests remain supported.
+
+## Tracepoints
+
+`fpas debug app.fpasprj --trace Total --trace State.Selected` keeps a bounded
+history while running to the existing first stop/end. It records initialization
+and consecutive unequal successful stores, including `var` and callback writes,
+with typed old/new values and the actual writing instruction/task. Mutable globals
+belong to the main task; locals and captures are not supported. Tracepoints do
+not create additional stops. Trace limits end execution explicitly with exit 3.
+The [tracepoint contract](debugger-tracepoints.md) defines selectors, the additive
+`trace` JSON object, exact comparison, event/byte bounds and missing-history rules.

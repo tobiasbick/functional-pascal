@@ -18,6 +18,8 @@ pub struct GlobalInfo {
     pub name: StringId,
     /// Machine-readable type of values stored in this slot.
     pub ty: DebugTypeId,
+    /// Declared nominal scalar name, before runtime type erasure.
+    pub type_name: Option<StringId>,
     /// Whether bytecode may store a new value after initialization.
     pub mutable: bool,
     /// Exact source-declaration store, when present in this executable.

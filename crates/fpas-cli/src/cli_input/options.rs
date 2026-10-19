@@ -343,7 +343,9 @@ pub(super) fn parse_options(mode: CliMode, cli_args: &[String]) -> Result<Parsed
                     return Err("Duplicate `--jobs` option.".to_string());
                 }
             }
-            "--break" | "--print" | "--task" | "--frame" if mode == CliMode::Debug => {
+            "--break" | "--print" | "--trace" | "--trace-limit" | "--task" | "--frame"
+                if mode == CliMode::Debug =>
+            {
                 super::batch::parse_option(cli_args, &mut index, &mut options.batch)?;
             }
             _ => options.positional.push(cli_args[index].clone()),
@@ -400,6 +402,8 @@ fn is_known_option(value: &str) -> bool {
             | "--output-limit"
             | "--break"
             | "--print"
+            | "--trace"
+            | "--trace-limit"
             | "--task"
             | "--frame"
             | "-h"

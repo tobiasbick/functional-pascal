@@ -15,11 +15,13 @@ pub(super) fn parse_option(
         &format!("Missing value after `{option}`."),
     )?;
     match option.as_str() {
-        "--break" | "--print" => {
+        "--break" | "--print" | "--trace" => {
             let values = if option == "--break" {
                 &mut batch.breakpoints
-            } else {
+            } else if option == "--print" {
                 &mut batch.expressions
+            } else {
+                &mut batch.trace
             };
             if values.len() >= 64 || value.is_empty() || value.len() > 4096 {
                 return Err(format!(
@@ -27,6 +29,16 @@ pub(super) fn parse_option(
                 ));
             }
             values.push(value.into());
+        }
+        "--trace-limit" => {
+            let value = value
+                .parse::<usize>()
+                .ok()
+                .filter(|n| (1..=10_000).contains(n))
+                .ok_or("`--trace-limit` requires an integer from 1 to 10000.")?;
+            if batch.trace_limit.replace(value).is_some() {
+                return Err("Duplicate --trace-limit.".into());
+            }
         }
         "--task" => {
             let value = value

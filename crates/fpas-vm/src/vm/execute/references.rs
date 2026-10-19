@@ -137,6 +137,7 @@ impl Worker {
                         "Recompile the program and report this internal bytecode invariant failure.",
                     ));
                 }
+                let trace = self.begin_trace_store(index);
                 let outcome = {
                     let mut globals = self.global_slots_mut();
                     globals
@@ -148,6 +149,7 @@ impl Worker {
                     None => Err(self.uninitialized_global(*slot)),
                     Some(Err(failure)) => Err(self.path_failure(failure)),
                     Some(Ok(())) => {
+                        self.finish_trace_store(trace);
                         self.note_debug_global_store(index);
                         Ok(())
                     }

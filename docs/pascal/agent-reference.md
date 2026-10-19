@@ -1119,3 +1119,11 @@ queues test-runner line/key input; the default whole-invocation deadline is
 30 seconds. Exit 2 means runtime failure; exit 3 means a bound, missed breakpoint,
 failed requested inspection or worker error. Ordinary completion exposes globals
 and no expired local frames. DAP/JSONL remain explicit session protocols.
+
+For value history, repeat `--trace Total` or `--trace State.Selected` on the batch
+command. [Tracepoints](tools/debugger-tracepoints.md) record initialization and
+consecutive changes to mutable globals or stored scalar record fields, including
+`var` and callback writes, without additional stops. Local variables and captures
+are unsupported; mutable globals belong to task 0. Inspect `trace.complete` and
+its reasons. `--trace-limit` defaults to 1,000 events, ceiling 10,000; losing
+requested history is explicit and trace execution limits return exit 3.

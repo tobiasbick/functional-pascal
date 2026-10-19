@@ -151,6 +151,7 @@ fn debugger_initializer_metadata_requires_exact_verified_stores() {
     valid.globals = vec![GlobalInfo {
         name: StringId::new(0),
         ty: DebugTypeId::new(0),
+        type_name: None,
         mutable: true,
         initializer: Some(GlobalInitializer {
             function: FunctionId::new(0),
@@ -432,6 +433,7 @@ fn global_index_path_global_and_window_are_checked() {
     window.globals = vec![GlobalInfo {
         name: StringId::new(0),
         ty: DebugTypeId::new(0),
+        type_name: None,
         mutable: true,
         initializer: None,
     }];

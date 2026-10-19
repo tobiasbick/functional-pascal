@@ -44,6 +44,7 @@ impl Worker {
             ));
         }
 
+        let trace = self.begin_trace_store(global_index);
         let mut root = self.take(root_register)?;
         enum StoreOutcome {
             Stored,
@@ -86,6 +87,7 @@ impl Worker {
                 ));
             }
         }
+        self.finish_trace_store(trace);
         self.note_debug_global_store(global_index);
         Ok(())
     }

@@ -17,6 +17,7 @@ mod recording;
 mod routines;
 mod session;
 mod tasks;
+pub(in crate::vm) mod trace;
 mod types;
 
 pub(in crate::vm::debug) use calls::{construct_enum, construct_enum_payload};
@@ -60,4 +61,9 @@ pub use types::{
     DebugErrorKind, DebugExecutionLimits, DebugRunResult, DebugSessionError, DebugSessionState,
     DebugStop, DebugStopReason, DebugTask, DebugTaskEvent, DebugTaskEventKind, DebugTaskState,
     DebugTermination, DebuggeeInputResult, SourceLocation,
+};
+
+pub use trace::{
+    DEFAULT_TRACE_EVENTS, DebugTraceEvent, DebugTraceIdentity, DebugTraceLocation,
+    DebugTraceReport, DebugTraceWatch, MAX_TRACE_BYTES, MAX_TRACE_EVENTS,
 };

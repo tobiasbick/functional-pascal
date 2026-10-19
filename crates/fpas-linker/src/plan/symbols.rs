@@ -188,6 +188,16 @@ fn matching_layout_definition(
             };
             left_layout.fields.len() == right_layout.fields.len()
                 && left_layout.field_types.len() == right_layout.field_types.len()
+                && left_layout.field_type_names.len() == right_layout.field_type_names.len()
+                && left_layout
+                    .field_type_names
+                    .iter()
+                    .zip(&right_layout.field_type_names)
+                    .all(|(left, right)| match (left, right) {
+                        (Some(left), Some(right)) => left.eq_ignore_ascii_case(right),
+                        (None, None) => true,
+                        _ => false,
+                    })
                 && left_layout
                     .fields
                     .iter()

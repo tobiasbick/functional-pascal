@@ -82,6 +82,11 @@ pub(super) fn compile_program(
             Ok::<_, CompileError>(fpas_bytecode::GlobalInfo {
                 name,
                 ty: fpas_bytecode::DebugTypeId::new(global.ty.get()),
+                type_name: global
+                    .type_name
+                    .as_deref()
+                    .map(|name| metadata.intern_string(name))
+                    .transpose()?,
                 mutable: global.mutable,
                 initializer,
             })
@@ -96,12 +101,15 @@ pub(super) fn compile_program(
                 .fields
                 .iter()
                 .map(|field| {
-                    metadata
-                        .intern_string(&field.name)
-                        .map(|name| fpas_bytecode::RecordField {
-                            name,
-                            ty: fpas_bytecode::DebugTypeId::new(field.ty.get()),
-                        })
+                    Ok::<_, CompileError>(fpas_bytecode::RecordField {
+                        name: metadata.intern_string(&field.name)?,
+                        ty: fpas_bytecode::DebugTypeId::new(field.ty.get()),
+                        type_name: field
+                            .type_name
+                            .as_deref()
+                            .map(|name| metadata.intern_string(name))
+                            .transpose()?,
+                    })
                 })
                 .collect::<Result<Vec<_>, _>>()?;
             let methods = layout

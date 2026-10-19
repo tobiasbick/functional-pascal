@@ -2,6 +2,7 @@
 
 mod debug_distinct;
 mod debug_records;
+mod debug_scalars;
 mod expressions;
 mod layouts;
 /// Stable scalar ids and erased generic values.
@@ -36,6 +37,8 @@ pub(super) struct TypeTable {
     imported_record_names: BTreeSet<String>,
     /// Explicitly imported distinct type names and their scalar underlying types.
     imported_distinct_names: BTreeMap<String, TypeId>,
+    /// Source-visible nominal scalar names, independent from erased runtime ids.
+    debug_scalar_names: BTreeMap<String, String>,
 }
 
 impl TypeTable {
@@ -78,6 +81,7 @@ impl TypeTable {
             named: BTreeMap::new(),
             imported_record_names: BTreeSet::new(),
             imported_distinct_names: BTreeMap::new(),
+            debug_scalar_names: debug_scalars::collect_names(metadata),
         };
         for (name, ty) in named_types.clone() {
             let id = match ty {

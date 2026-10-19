@@ -48,6 +48,7 @@ mod stop;
 mod storage;
 use stop::stop_at_worker;
 mod tasks;
+mod trace;
 mod variant;
 
 /// Thread-safe cooperative pause request handle.
@@ -100,6 +101,7 @@ pub struct DebugSession {
     debuggee: Arc<Mutex<DebuggeeChannel>>,
     terminal: DebugTerminalHandle,
     recording: DebugRecordingLog,
+    pub(in crate::vm::debug) trace: Option<Arc<Mutex<super::trace::TraceHistory>>>,
 }
 
 impl DebugSession {
@@ -258,6 +260,7 @@ impl DebugSession {
             debuggee,
             terminal,
             recording: DebugRecordingLog::default(),
+            trace: None,
         })
     }
 

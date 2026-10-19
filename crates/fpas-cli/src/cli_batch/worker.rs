@@ -44,6 +44,7 @@ fn execute(files: &Files) -> std::io::Result<()> {
         ))
         .report(),
     };
+    super::trace::preserve_request(&mut report, &request.args);
     files.publish(&fpas_debug::batch::finish_report(&mut report))?;
     // Keep the owning process alive until the parent has copied the result and killed its tree.
     let deadline = Instant::now() + Duration::from_secs(31);
@@ -65,6 +66,8 @@ fn prepare(
     let mut options = Options {
         breakpoints: config.batch.breakpoints.clone(),
         expressions: config.batch.expressions.clone(),
+        trace: config.batch.trace.clone(),
+        trace_limit: config.batch.trace_limit.unwrap_or(1000),
         task: config.batch.task,
         frame: config.batch.frame,
         input: Vec::new(),

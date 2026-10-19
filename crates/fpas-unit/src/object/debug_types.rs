@@ -40,15 +40,21 @@ pub(super) fn validate_debug_types(
     }
     for global in globals {
         validate_debug_type_id(global.ty, types.len())?;
+        validate_declared_name(global.type_name.as_deref())?;
     }
     for record in records {
-        if record.fields.len() != record.field_types.len() {
+        if record.fields.len() != record.field_types.len()
+            || record.fields.len() != record.field_type_names.len()
+        {
             return Err(ObjectError::InvalidTableReference(
                 "record debug field type shape",
             ));
         }
         for ty in &record.field_types {
             validate_debug_type_id(*ty, types.len())?;
+        }
+        for name in &record.field_type_names {
+            validate_declared_name(name.as_deref())?;
         }
     }
     for enumeration in enums {
@@ -62,6 +68,15 @@ pub(super) fn validate_debug_types(
                 validate_debug_type_id(*ty, types.len())?;
             }
         }
+    }
+    Ok(())
+}
+
+fn validate_declared_name(name: Option<&str>) -> Result<(), ObjectError> {
+    if name.is_some_and(str::is_empty) {
+        return Err(ObjectError::InvalidTableReference(
+            "declared scalar type name",
+        ));
     }
     Ok(())
 }

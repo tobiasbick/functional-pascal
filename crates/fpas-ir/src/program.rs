@@ -141,6 +141,8 @@ pub struct Global {
     pub name: String,
     /// Type of values stored in the global.
     pub ty: TypeId,
+    /// Declared nominal scalar name retained only for debugger display.
+    pub type_name: Option<String>,
     /// Whether stores after initialization are permitted.
     pub mutable: bool,
     /// Exact source-declaration store, when this global is source-defined.
@@ -215,6 +217,8 @@ pub struct RecordField {
     pub name: String,
     /// Type stored in the field.
     pub ty: TypeId,
+    /// Declared nominal scalar name retained only for debugger display.
+    pub type_name: Option<String>,
 }
 
 /// An enum layout known to the IR.

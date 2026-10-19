@@ -1,6 +1,7 @@
 //! Parent-owned one-shot debug execution and publication of a single JSON document.
 
 mod capture;
+mod trace;
 mod utf8;
 mod worker;
 pub(crate) use worker::worker;
@@ -31,6 +32,12 @@ pub(crate) fn selected(args: &[String]) -> bool {
     {
         return false;
     }
+    if args
+        .iter()
+        .any(|arg| ["--trace", "--trace-limit"].contains(&arg.as_str()))
+    {
+        return true;
+    }
     !args
         .windows(2)
         .any(|pair| pair[0] == "--protocol" && ["dap", "jsonl"].contains(&pair[1].as_str()))
@@ -56,6 +63,7 @@ pub(crate) fn run(
             report
         }
     };
+    trace::preserve_request(&mut report, args);
     let mut bytes = finish_report(&mut report);
     let timeout = report["limits"]["timeout_seconds"].as_u64().unwrap_or(30);
     if report["outcome"] != "limit" && started.elapsed() >= Duration::from_secs(timeout) {
@@ -94,6 +102,14 @@ fn run_parent(args: &[String], cwd: &Path, started: Instant) -> Result<Value, Fa
     let timeout = raw_number(args, "--timeout", 30)?;
     let instruction_limit = raw_number(args, "--instruction-limit", 100_000_000)?;
     let output_limit = raw_number(args, "--output-limit", 1_048_576)?;
+    let trace_limit = raw_number(args, "--trace-limit", 1000)?;
+    if trace_limit > 10_000 {
+        return Err((
+            1,
+            "FP4137",
+            "--trace-limit cannot exceed 10000 events.".into(),
+        ));
+    }
     if output_limit > 1_048_576 {
         return Err((
             1,
@@ -146,6 +162,9 @@ fn run_parent(args: &[String], cwd: &Path, started: Instant) -> Result<Value, Fa
         if report["schema_version"] != 1
             || !report["capture"]["reasons"].is_array()
             || !report["diagnostics"].is_array()
+            || !report["trace"]["events"].is_array()
+            || !report["trace"]["requested"].is_array()
+            || !report["trace"]["complete"].is_boolean()
             || !report["exit_code"].as_u64().is_some_and(|exit| exit <= 3)
         {
             return Err("Worker published an invalid result envelope.".into());

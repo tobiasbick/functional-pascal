@@ -129,6 +129,7 @@ impl Worker {
             callback.task_id = self.task_id;
             Box::new(callback)
         };
+        callback.debug_trace = self.debug_trace.clone();
         callback.inherit_scope_cancellation(self);
         callback.capture_record = self.capture_record.clone();
         callback.capture_callback = true;

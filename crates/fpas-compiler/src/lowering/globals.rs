@@ -39,6 +39,7 @@ pub(super) fn collect(
             id,
             name: name.clone(),
             ty,
+            type_name: type_table.declared_scalar_name(type_expr),
             mutable,
             initializer: None,
         });

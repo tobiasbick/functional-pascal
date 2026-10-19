@@ -93,6 +93,15 @@ pub(in crate::vm::debug) struct DebugTaskRuntime {
 }
 
 impl DebugTaskRuntime {
+    pub(in crate::vm::debug) fn set_trace(
+        &mut self,
+        trace: Option<Arc<std::sync::Mutex<super::super::trace::TraceHistory>>>,
+    ) {
+        for slot in self.tasks.values_mut() {
+            slot.worker.debug_trace = trace.clone();
+        }
+    }
+
     /// Create the debugger-owned task runtime around the main worker.
     pub(in crate::vm::debug) fn new(
         root: Worker,

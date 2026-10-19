@@ -10,6 +10,9 @@
     )
 )]
 
+/// Canonical bounded serialization for detached diagnostic and trace values.
+pub mod snapshot_value;
+
 mod vm;
 pub use vm::{DebugSnapshot, DebugTaskSnapshot, non_executing};
 
@@ -35,4 +38,9 @@ pub use vm::{
     LiveImageClassification, LiveImageReplaceResult, LiveImageUpdateClass, MAX_RECORDING_EVENTS,
     Paginated, RECORDING_ENVELOPE_VERSION, ShutdownHandle, SourceBreakpoint, SourceLocation, Vm,
     VmError, VmOutput,
+};
+
+pub use vm::{
+    DEFAULT_TRACE_EVENTS, DebugTraceEvent, DebugTraceIdentity, DebugTraceLocation,
+    DebugTraceReport, DebugTraceWatch, MAX_TRACE_BYTES, MAX_TRACE_EVENTS,
 };

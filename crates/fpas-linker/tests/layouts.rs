@@ -29,6 +29,7 @@ fn many_layouts_keep_canonical_name_order_with_unrelated_definitions() {
             name: name.clone(),
             fields: Vec::new(),
             field_types: Vec::new(),
+            field_type_names: vec![None; 0],
             methods: Vec::new(),
         });
         library.definitions.push(ObjectDefinition {
@@ -62,6 +63,7 @@ fn matching_private_layout_copies_share_one_canonical_type_id() {
         name: "std.console.keyevent".to_string(),
         fields: vec!["kind".to_string(), "character".to_string()],
         field_types: vec![0, 0],
+        field_type_names: vec![None; 2],
         methods: Vec::new(),
     });
     first.definitions.push(ObjectDefinition {
@@ -86,6 +88,7 @@ fn matching_private_layout_copies_share_one_canonical_type_id() {
         name: "std.console.keyevent".to_string(),
         fields: vec!["kind".to_string(), "character".to_string()],
         field_types: vec![0, 0],
+        field_type_names: vec![None; 2],
         methods: Vec::new(),
     });
     second.definitions.push(ObjectDefinition {
@@ -246,6 +249,7 @@ fn incompatible_record_layout_import_is_rejected_before_relocation() {
         name: "library.unit.point".to_string(),
         fields: vec!["x".to_string(), "y".to_string()],
         field_types: vec![0, 0],
+        field_type_names: vec![None; 2],
         methods: Vec::new(),
     });
     library.definitions.push(ObjectDefinition {
@@ -285,6 +289,7 @@ fn imported_global_record_and_enum_references_become_dense_numeric_ids() {
     library.globals.push(fpas_unit::object::ObjectGlobal {
         name: "library.unit.counter".to_string(),
         ty: 0,
+        type_name: None,
         mutable: true,
         initializer: None,
     });
@@ -293,6 +298,7 @@ fn imported_global_record_and_enum_references_become_dense_numeric_ids() {
         name: "library.unit.point".to_string(),
         fields: vec!["x".to_string()],
         field_types: vec![0],
+        field_type_names: vec![None; 1],
         methods: vec![fpas_unit::object::ObjectRecordMethod {
             name: "translate".to_string(),
             routine: "library.unit.alpha".to_string(),
@@ -447,4 +453,25 @@ fn imported_global_record_and_enum_references_become_dense_numeric_ids() {
             .b,
         0
     );
+}
+
+#[test]
+fn record_layout_copies_reject_different_declared_scalar_names_after_erasure() {
+    let mut first_layout = common::one_field_record(0);
+    first_layout.field_type_names[0] = Some("UserId".to_string());
+    let mut second_layout = first_layout.clone();
+    second_layout.field_type_names[0] = Some("OrderId".to_string());
+    let first = common::private_record_copy(
+        "library.unit",
+        vec![fpas_unit::object::ObjectDebugType::Integer],
+        first_layout,
+    );
+    let second = common::private_record_copy(
+        "other.unit",
+        vec![fpas_unit::object::ObjectDebugType::Integer],
+        second_layout,
+    );
+    let error =
+        link_objects(&[first, second], &common::program()).expect_err("nominal metadata conflict");
+    assert!(matches!(error, LinkError::IncompatibleLayoutCopies { .. }));
 }

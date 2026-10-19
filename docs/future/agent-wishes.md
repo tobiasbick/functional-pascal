@@ -20,7 +20,10 @@
 [D3](#d3-one-shot-batch-runs) is implemented. Its permanent
 [batch debugger contract](../pascal/tools/debugger-batch.md) describes the shipped command.
 N1–N4 ([source navigation](#code-navigation)) are implemented.
-The other wishes are ideas without an implementation plan. Human-facing tools stay: the DAP debugger
+[D5](#d5-tracepoints) has an implemented, independently reviewed global-tracepoint
+subset, documented under [batch tracepoints](../pascal/tools/debugger-tracepoints.md).
+D2, D4 and broader D5 tracing remain unscheduled ideas.
+Human-facing tools stay: the DAP debugger
 ([`debugger.md`](../pascal/tools/debugger.md)) and the language server
 ([`editor-integration.md`](../pascal/tools/editor-integration.md)). The JSONL debugger protocol
 remains supported by user decision; see [Decision: keep JSONL](#decision-keep-jsonl).
@@ -32,8 +35,11 @@ navigation.
 
 A1, A2, A3, A4, S1, S2, S3, D1, D3 and N1–N4 are implemented.
 The completed N1–N3 contract is documented in
-[source queries](../pascal/tools/source-queries.md). The remaining debug wishes
-are not scheduled.
+[source queries](../pascal/tools/source-queries.md). The first D5 delivery is
+implemented for mutable globals and scalar stored record fields; its
+[permanent contract](../pascal/tools/debugger-tracepoints.md) describes the scope
+and limits. There is no next scheduled tooling implementation. D2, D4 and D5
+extensions to locals/captures/indexed/aggregate values remain ideas.
 JSONL removal remains deferred; the protocol and its tests stay supported.
 
 ## Principle: protocols for humans, commands for agents
@@ -250,7 +256,9 @@ Keep the protocol, CLI options, documentation and tests. There is no pending
 removal step; reopening it requires a new explicit user request.
 See [Decision: keep JSONL](#decision-keep-jsonl).
 
-Record/replay, seeded scheduling and tracepoints remain separate wishes.
+Record/replay and seeded scheduling remain separate unscheduled wishes.
+The implemented global tracepoint subset is documented under
+[batch tracepoints](../pascal/tools/debugger-tracepoints.md).
 
 #### D4. Reproducible task scheduling
 
@@ -259,8 +267,33 @@ its seed; the agent reruns that exact interleaving.
 
 #### D5. Tracepoints
 
-"Log every change of `X` with line and task, keep running." Today's data breakpoints and logpoints
-each cover half of this.
+**Status: bounded global subset implemented and independently reviewed.**
+The agent chose the first-delivery contract under the user's delegation. The
+permanent [tracepoint page](../pascal/tools/debugger-tracepoints.md) owns usage,
+JSON fields, observation semantics and bounds:
+
+```text
+fpas debug app.fpasprj --trace Total --trace State.Selected
+```
+
+One bounded JSON result retains initialization and consecutive committed scalar
+changes with typed old/new values, actual writing location/function/task and
+explicit coverage. Tracepoints keep running to the existing batch stop/end or
+an explicit resource limit. Per-commit observation covers `var` writes, callbacks
+and record replacement without changing stopping data-breakpoint semantics.
+Nominal scalar names survive source compilation and portable image storage.
+
+The first delivery watches mutable globals and fixed stored record-field paths
+ending in scalar values. Mutable globals belong to the main task, so events
+normally name task 0. VM and real-process tests cover equality/backtracking,
+metadata identities, typed capture, event/value/work/escaped-byte limits,
+structured failures and worker containment. Independent review findings for
+NaN comparison and bounded ambiguous binding were fixed with regression tests.
+
+Local variables, parameters, captures, indexed selectors and whole aggregates
+remain unscheduled D5 extensions. The unrestricted wish is not fully implemented.
+JSONL/DAP and their existing behavior remain supported. The completed temporary
+plan is removed after final verification.
 
 ### What already exists
 

@@ -185,6 +185,7 @@ fn globals_are_dense_and_immutable_slots_initialize_once() {
     image.globals = vec![GlobalInfo {
         name: StringId::new(2),
         ty: fpas_bytecode::DebugTypeId::new(0),
+        type_name: None,
         mutable: false,
         initializer: None,
     }];
@@ -216,6 +217,7 @@ fn record_and_enum_slots_are_positional() {
         fields: vec![RecordField {
             name: StringId::new(3),
             ty: fpas_bytecode::DebugTypeId::new(0),
+            type_name: None,
         }],
         methods: Vec::new(),
     }];
@@ -287,6 +289,7 @@ fn immutable_global_rejects_a_second_store() {
     image.globals = vec![GlobalInfo {
         name: StringId::new(2),
         ty: fpas_bytecode::DebugTypeId::new(0),
+        type_name: None,
         mutable: false,
         initializer: None,
     }];

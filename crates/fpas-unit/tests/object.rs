@@ -116,6 +116,7 @@ fn candidate() -> Executable {
         globals: vec![GlobalInfo {
             name: StringId::new(3),
             ty: fpas_bytecode::DebugTypeId::new(0),
+            type_name: None,
             mutable: true,
             initializer: Some(fpas_bytecode::GlobalInitializer {
                 function: FunctionId::new(0),
@@ -128,6 +129,7 @@ fn candidate() -> Executable {
             fields: vec![RecordField {
                 name: StringId::new(5),
                 ty: fpas_bytecode::DebugTypeId::new(0),
+                type_name: None,
             }],
             methods: vec![RecordMethod {
                 name: StringId::new(9),
@@ -364,5 +366,37 @@ fn capture_provenance_owner_binding_and_count_are_validated() {
     assert_eq!(
         binding.validate(),
         Err(ObjectError::InvalidTableReference("capture source"))
+    );
+}
+
+#[test]
+fn object_retains_declared_scalar_names_and_validates_field_name_shape() {
+    let mut executable = candidate();
+    let display = StringId::new(0);
+    executable.globals[0].type_name = Some(display);
+    executable.records[0].fields[0].type_name = Some(display);
+    let expected = executable
+        .strings
+        .get(display)
+        .expect("display string")
+        .to_string();
+    let mut object = RelocatableObject::from_executable(
+        "demo.program",
+        executable.verify().expect("verified nominal-name fixture"),
+    )
+    .expect("object retains display names");
+    assert_eq!(object.globals[0].type_name, Some(expected.clone()));
+    assert_eq!(object.records[0].field_type_names, vec![Some(expected)]);
+    let encoded = encode_object(&object).expect("encode declared names");
+    assert_eq!(
+        decode_object(&encoded).expect("decode declared names"),
+        object
+    );
+    object.records[0].field_type_names.clear();
+    assert_eq!(
+        object.validate(),
+        Err(ObjectError::InvalidTableReference(
+            "record debug field type shape"
+        ))
     );
 }

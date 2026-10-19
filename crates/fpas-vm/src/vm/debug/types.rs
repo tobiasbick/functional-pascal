@@ -315,6 +315,14 @@ pub enum DebugErrorKind {
     InstructionLimit,
     /// Captured program output exceeded its byte budget.
     OutputLimit,
+    /// A requested trace exceeded its complete event capacity.
+    TraceEventLimit,
+    /// Exact scalar observation exceeded the supported value bound.
+    TraceValueLimit,
+    /// Exact scalar comparison exhausted its invocation work budget.
+    TraceWorkLimit,
+    /// Retained escaped trace history exceeded its byte budget.
+    TraceByteLimit,
     /// A recording envelope would name a host filesystem path.
     RecordingHostPath,
     /// A live-image candidate is incompatible and was rejected before commit.

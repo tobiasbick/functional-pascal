@@ -127,6 +127,7 @@ pub fn program_image() -> ProgramImage {
         globals: vec![GlobalInfo {
             name: StringId::new(3),
             ty: fpas_bytecode::DebugTypeId::new(2),
+            type_name: Some(StringId::new(9)),
             mutable: true,
             initializer: Some(fpas_bytecode::GlobalInitializer {
                 function: FunctionId::new(0),
@@ -139,6 +140,7 @@ pub fn program_image() -> ProgramImage {
             fields: vec![RecordField {
                 name: StringId::new(5),
                 ty: fpas_bytecode::DebugTypeId::new(2),
+                type_name: Some(StringId::new(9)),
             }],
             methods: vec![RecordMethod {
                 name: StringId::new(12),

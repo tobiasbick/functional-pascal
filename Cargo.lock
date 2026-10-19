@@ -692,6 +692,8 @@ dependencies = [
  "rcgen",
  "rustls",
  "rustls-platform-verifier",
+ "serde",
+ "serde_json",
  "socket2",
 ]
 

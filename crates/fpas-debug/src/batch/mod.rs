@@ -4,7 +4,9 @@ mod diagnostics;
 mod report;
 pub use diagnostics::fp_diagnostic;
 mod snapshot;
+mod trace;
 pub use report::{MAX_REPORT_BYTES, diagnostic, empty_report, finish_report};
+pub use trace::{coverage as trace_coverage, request as trace_request};
 
 use crate::{
     PreparedDebugTarget,
@@ -32,6 +34,10 @@ pub struct Options {
     pub breakpoints: Vec<String>,
     /// Ordered non-executing expressions.
     pub expressions: Vec<String>,
+    /// Mutable scalar globals or stored record-field paths.
+    pub trace: Vec<String>,
+    /// Maximum retained events across all watches (zero selects the default).
+    pub trace_limit: usize,
     /// Explicit task context, otherwise the stopping task.
     pub task: Option<u64>,
     /// Explicit frame depth, otherwise the active frame.
@@ -70,11 +76,22 @@ pub fn breakpoint(text: &str) -> Result<SourceBreakpoint, String> {
 
 /// Executes one prepared target through the shared engine and captures its first result.
 /// Hosted output uses the supplied writer; isolated hosts share it with native stdout.
+pub fn run(
+    target: PreparedDebugTarget,
+    options: Options,
+    output: Box<dyn std::io::Write + Send>,
+    mut cancelled: impl FnMut() -> bool,
+) -> Value {
+    let mut report = run_inner(target, options, output, &mut cancelled);
+    trace::coverage(&mut report);
+    report
+}
+
 #[expect(
     clippy::unwrap_used,
-    reason = "This function creates its own empty_report envelope with a fixed diagnostics array."
+    reason = "This function creates its own empty_report envelope with fixed array fields."
 )]
-pub fn run(
+fn run_inner(
     target: PreparedDebugTarget,
     options: Options,
     output: Box<dyn std::io::Write + Send>,
@@ -82,6 +99,15 @@ pub fn run(
 ) -> Value {
     let limits = target.execution_limits();
     let mut report = empty_report("error", 1);
+    trace::request(
+        &mut report,
+        &options.trace,
+        if options.trace_limit == 0 {
+            1000
+        } else {
+            options.trace_limit
+        },
+    );
     report["limits"]["timeout_seconds"] = json!(limits.timeout.as_secs());
     report["limits"]["instruction_limit"] = json!(limits.max_instructions);
     report["limits"]["output_bytes"] = json!(limits.max_output_bytes);
@@ -155,6 +181,21 @@ pub fn run(
     engine.retain_for_batch();
     if let Some(session) = engine.batch_session() {
         session.terminal_handle().set_output_writer(output);
+        if !options.trace.is_empty()
+            && let Err(error) = session.install_trace(
+                &options.trace,
+                if options.trace_limit == 0 {
+                    1000
+                } else {
+                    options.trace_limit
+                },
+            )
+        {
+            report["trace"]["reasons"] = json!(["binding_failed"]);
+            report["diagnostics"] = json!([diagnostic("trace_binding", "setup", &error.message)]);
+            trace::coverage(&mut report);
+            return report;
+        }
     }
     let mut id = 1;
     let _ = engine.execute(DebugRequest::new(id, DebugOp::Initialize));
@@ -268,16 +309,21 @@ pub fn run(
                     outcome: Err(error),
                     ..
                 } => {
-                    report["outcome"] =
-                        json!(
-                            if ["instruction_limit", "output_limit", "execution_timeout"]
-                                .contains(&error.code.as_str())
-                            {
-                                "limit"
-                            } else {
-                                "error"
-                            }
-                        );
+                    report["outcome"] = json!(if [
+                        "instruction_limit",
+                        "output_limit",
+                        "execution_timeout",
+                        "trace_event_limit",
+                        "trace_value_limit",
+                        "trace_work_limit",
+                        "trace_byte_limit"
+                    ]
+                    .contains(&error.code.as_str())
+                    {
+                        "limit"
+                    } else {
+                        "error"
+                    });
                     report["exit_code"] = json!(3);
                     report["diagnostics"]
                         .as_array_mut()
@@ -301,6 +347,10 @@ pub fn run(
     if let Some(session) = engine.batch_session() {
         let state = session.capture_snapshot(&expressions, options.task, options.frame);
         snapshot::append(&mut report, state, &options.expressions);
+        if let Some(trace) = session.take_trace() {
+            report["trace"] = json!(trace);
+        }
+        trace::coverage(&mut report);
         session.disconnect();
     } else {
         report["capture"]["incomplete"] = json!(true);

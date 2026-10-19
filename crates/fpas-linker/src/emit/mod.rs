@@ -52,6 +52,11 @@ pub fn link_objects(
             Ok(GlobalInfo {
                 name: strings.intern(&global.name)?,
                 ty: debug_type_ids.translate(*object, global.ty)?,
+                type_name: global
+                    .type_name
+                    .as_deref()
+                    .map(|name| strings.intern(name))
+                    .transpose()?,
                 mutable: global.mutable,
                 initializer: None,
             })
@@ -69,10 +74,15 @@ pub fn link_objects(
                     .fields
                     .iter()
                     .zip(&record.field_types)
-                    .map(|(field, ty)| {
+                    .zip(&record.field_type_names)
+                    .map(|((field, ty), type_name)| {
                         Ok(RecordField {
                             name: strings.intern(field)?,
                             ty: debug_type_ids.translate(*object, *ty)?,
+                            type_name: type_name
+                                .as_deref()
+                                .map(|name| strings.intern(name))
+                                .transpose()?,
                         })
                     })
                     .collect::<Result<Vec<_>, _>>()?,

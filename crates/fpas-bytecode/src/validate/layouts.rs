@@ -55,6 +55,9 @@ pub(super) fn validate_tables(executable: &crate::Executable) -> Result<(), Vali
     }
     for global in &executable.globals {
         validate_string(executable, global.name, "global name")?;
+        if let Some(name) = global.type_name {
+            validate_string(executable, name, "global declared type name")?;
+        }
     }
     for function in &executable.functions {
         validate_string(executable, function.name, "function name")?;
@@ -67,6 +70,9 @@ pub(super) fn validate_tables(executable: &crate::Executable) -> Result<(), Vali
         validate_string(executable, record.name, "record name")?;
         for field in &record.fields {
             validate_string(executable, field.name, "record field name")?;
+            if let Some(name) = field.type_name {
+                validate_string(executable, name, "record field declared type name")?;
+            }
         }
         if let Some(info) = &record.construction {
             if info.defaults.len() != record.fields.len()

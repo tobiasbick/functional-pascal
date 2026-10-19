@@ -57,7 +57,10 @@ the source debugger and in-process test hosts do not grant this authority automa
   completion and return one bounded JSON snapshot on stdout. Repeat `--break
   path:line[:column]` and `--print expression` for targeted inspection; `--script`
   supplies runner-compatible input. The whole-invocation deadline defaults to
-  30 seconds. See [Batch debugging](../tools/debugger-batch.md) for the result
+  30 seconds. Repeat `--trace selector` to retain scalar global/record-field
+  changes, with `--trace-limit count` for bounded event capacity; see
+  [Tracepoints](../tools/debugger-tracepoints.md). See
+  [Batch debugging](../tools/debugger-batch.md) for the result
   schema, bounds and exit codes. Explicit `--protocol jsonl|dap` selects the
   existing long-lived source-debugger sessions; see [Source debugger](../tools/debugger.md).
 - `fpas env --json` — print the installed toolchain contract. Schema version 1

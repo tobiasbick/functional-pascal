@@ -31,6 +31,8 @@ pub struct ObjectGlobal {
     pub name: String,
     /// Object-local portable debugger type identifier.
     pub ty: u32,
+    /// Declared nominal scalar name retained for debugger display.
+    pub type_name: Option<String>,
     /// Whether stores are allowed after initialization.
     pub mutable: bool,
     /// Exact source initializer in object-local coordinates.
@@ -56,6 +58,8 @@ pub struct ObjectRecordLayout {
     pub fields: Vec<String>,
     /// Object-local debugger types for fields in declaration order.
     pub field_types: Vec<u32>,
+    /// Declared nominal scalar names in field order.
+    pub field_type_names: Vec<Option<String>>,
     /// Instance methods and canonical routine names.
     pub methods: Vec<ObjectRecordMethod>,
     /// Typed construction metadata; see `docs/pascal/language/types/records.md`.

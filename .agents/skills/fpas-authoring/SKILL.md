@@ -212,3 +212,12 @@ captured output; it never reads host stdin. Repeat `--print` for independent
 non-executing expressions and use `--script input.toml` for runner-compatible
 line/key input. See [batch debugging](../../../docs/pascal/tools/debugger-batch.md)
 for limits and exit codes. DAP/JSONL remain available through explicit protocol flags.
+
+To explain how a global value changed, repeat `--trace Total` or
+`--trace State.Selected` on the batch command. The
+[tracepoint contract](../../../docs/pascal/tools/debugger-tracepoints.md) covers
+typed initialization/change events, actual writing locations, exact scalar
+comparison and incomplete history. Only mutable globals and fixed scalar record
+fields are supported; local/capture history is unavailable. `--trace-limit`
+defaults to 1,000 events and stops explicitly at a bound; inspect `trace.complete`
+before relying on an empty or partial history. Tracing executes no expressions.

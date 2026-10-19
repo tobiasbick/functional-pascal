@@ -113,6 +113,10 @@ pub(super) fn encode_globals(executable: &Executable) -> Result<EncodedSection, 
     for global in &executable.globals {
         write_u32(&mut bytes, global.name.get());
         write_u32(&mut bytes, global.ty.get());
+        write_u32(
+            &mut bytes,
+            global.type_name.map_or(u32::MAX, |name| name.get()),
+        );
         write_u8(&mut bytes, u8::from(global.mutable));
         write_u8(&mut bytes, u8::from(global.initializer.is_some()));
         if let Some(initializer) = global.initializer {
@@ -148,6 +152,10 @@ pub(super) fn encode_records(executable: &Executable) -> Result<EncodedSection, 
         for field in &record.fields {
             write_u32(&mut bytes, field.name.get());
             write_u32(&mut bytes, field.ty.get());
+            write_u32(
+                &mut bytes,
+                field.type_name.map_or(u32::MAX, |name| name.get()),
+            );
         }
         write_u32(
             &mut bytes,

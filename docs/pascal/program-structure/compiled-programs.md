@@ -74,7 +74,7 @@ layouts, source maps, and the entry function before the VM can execute the image
 
 ## Format validation
 
-The sectioned envelope uses program format version 20 and register-bytecode version 23.
+The sectioned envelope uses program format version 21 and register-bytecode version 23.
 These formats are versioned independently: a producer that changes a wire contract must
 increment its corresponding version; the two version numbers need not match.
 Readers reject unsupported versions before execution, and

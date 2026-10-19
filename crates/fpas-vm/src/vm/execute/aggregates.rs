@@ -52,6 +52,7 @@ impl Worker {
             Immutable,
             Missing,
         }
+        let trace = self.begin_trace_store(index);
         let outcome = {
             let mut globals = self.global_slots_mut();
             if !mutable && globals.get(index).is_some_and(Option::is_some) {
@@ -73,6 +74,7 @@ impl Worker {
             }
             StoreOutcome::Missing => return Err(self.bad_slot("global", o.bx)),
         }
+        self.finish_trace_store(trace);
         self.note_debug_global_store(index);
         Ok(())
     }

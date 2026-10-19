@@ -64,6 +64,7 @@ impl RelocatableObject {
                 Ok(ObjectGlobal {
                     name: strings(global.name)?,
                     ty: global.ty.get(),
+                    type_name: global.type_name.map(strings).transpose()?,
                     mutable: global.mutable,
                     initializer: global
                         .initializer
@@ -128,6 +129,11 @@ impl RelocatableObject {
                         })
                         .transpose()?,
                     field_types: record.fields.iter().map(|field| field.ty.get()).collect(),
+                    field_type_names: record
+                        .fields
+                        .iter()
+                        .map(|field| field.type_name.map(strings).transpose())
+                        .collect::<Result<Vec<_>, _>>()?,
                     methods: record
                         .methods
                         .iter()

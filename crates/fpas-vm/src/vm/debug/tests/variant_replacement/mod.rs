@@ -179,6 +179,7 @@ pub(super) fn variant_executable() -> VerifiedExecutable {
         globals: vec![GlobalInfo {
             name: StringId::new(27),
             ty: DebugTypeId::new(2),
+            type_name: None,
             mutable: true,
             initializer: None,
         }],
@@ -188,6 +189,7 @@ pub(super) fn variant_executable() -> VerifiedExecutable {
             fields: vec![RecordField {
                 name: StringId::new(26),
                 ty: DebugTypeId::new(2),
+                type_name: None,
             }],
             methods: Vec::new(),
         }],

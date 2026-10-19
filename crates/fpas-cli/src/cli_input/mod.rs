@@ -3,6 +3,7 @@
 //! Spec: [Projects & CLI](../../../docs/pascal/program-structure/cli.md).
 
 mod batch;
+pub(crate) use batch::parse_seed as parse_schedule_seed;
 mod discovery;
 mod doc;
 mod help;

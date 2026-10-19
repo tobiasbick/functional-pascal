@@ -15,6 +15,12 @@ pub(super) fn parse_option(
         &format!("Missing value after `{option}`."),
     )?;
     match option.as_str() {
+        "--schedule-seed" => {
+            let seed = parse_seed(value)?;
+            if batch.schedule_seed.replace(seed).is_some() {
+                return Err("Duplicate --schedule-seed.".into());
+            }
+        }
         "--break" | "--print" | "--trace" => {
             let values = if option == "--break" {
                 &mut batch.breakpoints
@@ -59,4 +65,12 @@ pub(super) fn parse_option(
         _ => unreachable!("batch option selected by the owning parser"),
     }
     Ok(())
+}
+
+pub(crate) fn parse_seed(text: &str) -> Result<u64, String> {
+    if text.is_empty() || !text.bytes().all(|byte| byte.is_ascii_digit()) {
+        return Err("--schedule-seed requires decimal digits from 0 to 18446744073709551615. Example: fpas debug app.fpas --schedule-seed 42".into());
+    }
+    text.parse()
+        .map_err(|_| "--schedule-seed exceeds 18446744073709551615.".into())
 }

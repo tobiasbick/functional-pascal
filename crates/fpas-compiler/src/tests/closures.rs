@@ -168,6 +168,7 @@ fn root_function() -> Function {
             bindings: vec![DebugBinding {
                 local: LocalId::new(0),
                 name: "cell".to_string(),
+                type_name: None,
                 kind: DebugBindingKind::Local,
                 ty: INTEGER,
                 mutable: true,
@@ -277,6 +278,7 @@ fn increment_function() -> Function {
             bindings: vec![DebugBinding {
                 local: LocalId::new(0),
                 name: "cell".to_string(),
+                type_name: None,
                 kind: DebugBindingKind::Capture,
                 ty: INTEGER,
                 mutable: true,

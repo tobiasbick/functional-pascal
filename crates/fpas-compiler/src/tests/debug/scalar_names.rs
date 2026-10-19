@@ -25,7 +25,15 @@ var Progress: Percent := Percent(50);
 var Color: Shade := Shade.Red;
 var Count: Counter := 2;
 var Current: State := State(Id := Id, Progress := Progress, Color := Color, Count := Count);
+procedure Track(Value: UserAlias; Small: Percent; Color: Shade; var Progress: Percent);
 begin
+  const LocalId: UserAlias := Value;
+  var LocalProgress := Small;
+  const LocalColor := Color;
+  Progress := Percent(7);
+end procedure;
+begin
+  Track(Id, Percent(4), Color, var Progress);
   Id := UserId(4);
   Progress := Percent(51);
   Color := Shade.Blue;
@@ -43,6 +51,28 @@ end.
 }
 
 fn assert_names(image: &fpas_bytecode::Executable) {
+    let track = image
+        .functions
+        .iter()
+        .find(|function| image.strings.get(function.name) == Some("track"))
+        .expect("Track metadata");
+    for (binding, expected) in [
+        ("Value", "UserId"),
+        ("Small", "Percent"),
+        ("Color", "Shade"),
+        ("Progress", "var Percent"),
+        ("LocalId", "UserId"),
+        ("LocalProgress", "Percent"),
+        ("LocalColor", "Shade"),
+    ] {
+        let actual = track
+            .debug
+            .bindings
+            .iter()
+            .find(|b| image.strings.get(b.name) == Some(binding))
+            .expect("source binding");
+        assert_eq!(image.strings.get(actual.type_name), Some(expected));
+    }
     for (name, expected) in [
         ("Id", Some("UserId")),
         ("Progress", Some("Percent")),

@@ -13,6 +13,12 @@ pub(in crate::vm) struct TraceHistory {
     event_limit: usize,
     bytes: usize,
     work: usize,
+    pub(super) local_values: std::collections::BTreeMap<u64, super::local_history::LocalLast>,
+    pub(super) next_activation: u64,
+    pub(super) next_instance: u64,
+    pub(super) local_bytes: usize,
+    pub(super) next_commit: u64,
+    pub(super) pending: std::collections::BTreeMap<u64, super::pending::PendingCommit>,
 }
 
 impl TraceHistory {
@@ -39,6 +45,12 @@ impl TraceHistory {
             event_limit: limit,
             bytes,
             work: MAX_WORK_BYTES,
+            local_values: Default::default(),
+            next_activation: 0,
+            next_instance: 0,
+            local_bytes: 0,
+            next_commit: 0,
+            pending: Default::default(),
         })
     }
 
@@ -59,10 +71,20 @@ impl TraceHistory {
         self.report
             .watches
             .iter()
-            .filter(|watch| watch.identity.global_slot == global)
+            .filter(|watch| {
+                watch
+                    .identity
+                    .global()
+                    .is_some_and(|(slot, _)| slot == global)
+            })
             .map(|watch| {
                 let mut leaf = root;
-                for slot in &watch.identity.field_slots {
+                for slot in watch
+                    .identity
+                    .global()
+                    .map(|(_, slots)| slots)
+                    .unwrap_or_default()
+                {
                     leaf = match leaf {
                         None => None,
                         Some(Value::Record(record)) => {
@@ -94,9 +116,8 @@ impl TraceHistory {
         image: &Executable,
         old: Vec<(usize, Option<Value>)>,
         new: Vec<(usize, Option<Value>)>,
-        task: u64,
-        function: Option<&str>,
-        location: Option<(&str, u32, u32)>,
+        site: super::pending::TraceSite<'_>,
+        context: Option<(u64, u64)>,
     ) {
         for ((id, old), (_, new)) in old.into_iter().zip(new) {
             let cost = string_bytes(old.as_ref()).saturating_add(string_bytes(new.as_ref()));
@@ -117,53 +138,76 @@ impl TraceHistory {
             if self.limit.is_some() {
                 continue;
             }
-            if self.report.events.len() == self.event_limit {
-                self.fail("trace_event_limit", true);
-                continue;
+            if let Some(commit) = site.commit {
+                self.queue(commit, id, (old, new), site, context);
+            } else {
+                self.record_change(image, id, old, new, site, context);
             }
-            let watch = &self.report.watches[id];
-            let old_value = capture(image, watch, old);
-            let new_value = capture(image, watch, new);
-            let (Some(old_value), Some(new_value)) = (old_value, new_value) else {
-                self.fail("trace_byte_limit", true);
-                continue;
-            };
-            if function.is_some_and(|name| name.len() > 4096)
-                || location.is_some_and(|(source, _, _)| source.len() > 4096)
-            {
-                self.fail("trace_byte_limit", true);
-                continue;
-            }
-            let event = DebugTraceEvent {
-                sequence: self.report.event_count + 1,
-                watch_id: id,
-                kind: if old_value.status == "uninitialized" {
-                    "initialize"
-                } else {
-                    "change"
-                },
-                task_id: task,
-                function: function.map(str::to_owned),
-                location: location.map(|(source, line, column)| DebugTraceLocation {
-                    source: source.into(),
-                    line,
-                    column,
-                }),
-                old_value,
-                new_value,
-            };
-            let bytes = encoded_size(&event).saturating_add(1);
-            if bytes > MAX_TRACE_BYTES.saturating_sub(self.bytes) {
-                self.fail("trace_byte_limit", true);
-                continue;
-            }
-            self.bytes += bytes;
-            if event.old_value.status == "truncated" || event.new_value.status == "truncated" {
-                self.report.reasons.insert("value_truncated");
-            }
-            self.report.events.push(event);
-            self.report.event_count += 1;
         }
+    }
+    pub(super) fn record_change(
+        &mut self,
+        image: &Executable,
+        id: usize,
+        old: Option<Value>,
+        new: Option<Value>,
+        site: super::pending::TraceSite<'_>,
+        context: Option<(u64, u64)>,
+    ) {
+        if self.limit.is_some() {
+            return;
+        }
+        if self.report.events.len() == self.event_limit {
+            self.fail("trace_event_limit", true);
+            return;
+        }
+        let task = site.task;
+        let function = site.function;
+        let location = site.location;
+        let watch = &self.report.watches[id];
+        let old_value = capture(image, watch, old);
+        let new_value = capture(image, watch, new);
+        let (Some(old_value), Some(new_value)) = (old_value, new_value) else {
+            self.fail("trace_byte_limit", true);
+            return;
+        };
+        if function.is_some_and(|name| name.len() > 4096)
+            || location.is_some_and(|(source, _, _)| source.len() > 4096)
+        {
+            self.fail("trace_byte_limit", true);
+            return;
+        }
+        let event = DebugTraceEvent {
+            sequence: self.report.event_count + 1,
+            watch_id: id,
+            kind: if old_value.status == "uninitialized" {
+                "initialize"
+            } else {
+                "change"
+            },
+            task_id: task,
+            activation_id: context.map(|(activation, _)| activation.to_string()),
+            instance_id: context.map(|(_, instance)| instance.to_string()),
+            function: function.map(str::to_owned),
+            location: location.map(|(source, line, column)| DebugTraceLocation {
+                source: source.into(),
+                line,
+                column,
+            }),
+            old_value,
+            new_value,
+        };
+        let bytes = encoded_size(&event).saturating_add(1);
+        if bytes > MAX_TRACE_BYTES.saturating_sub(self.bytes) {
+            self.fail("trace_byte_limit", true);
+            return;
+        }
+        self.bytes += bytes;
+        if event.old_value.status == "truncated" || event.new_value.status == "truncated" {
+            self.report.reasons.insert("value_truncated");
+        }
+        self.report.events.push(event);
+        self.report.event_count += 1;
     }
 }
 

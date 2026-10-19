@@ -332,6 +332,7 @@ pub(super) fn lower(
                 .formal_param_type(parameter, &type_parameters)
                 .map(|ty| ParameterInput {
                     name: parameter.name.clone(),
+                    type_name: types.declared_scalar_name(&parameter.type_expr),
                     ty,
                     declaration: Some(parameter.span.diagnostic_span_or_synthetic()),
                     reference: parameter.mode == fpas_parser::ParamMode::Var,

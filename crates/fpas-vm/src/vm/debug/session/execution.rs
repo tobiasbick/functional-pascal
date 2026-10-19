@@ -113,6 +113,9 @@ impl DebugSession {
         let mut pause_pending = false;
         let started = Instant::now();
         loop {
+            if let Some((task_id, error)) = self.runtime.scheduling_rejection() {
+                return Ok(self.stop_for_runtime_error(task_id, error));
+            }
             if let Some(error) = self.trace_error() {
                 self.state = DebugSessionState::Stopped;
                 self.refresh_inspection();
@@ -143,6 +146,12 @@ impl DebugSession {
                     return Ok(self.stop_for_runtime_error(task_id, diagnostic));
                 }
             };
+            // Scheduling admits newly spawned parameters before their first source stop.
+            if let Some(error) = self.trace_error() {
+                self.state = DebugSessionState::Stopped;
+                self.refresh_inspection();
+                return Err(error);
+            }
             let (task_id, resumed_at_boundary) = match schedule {
                 DebugSchedule::Runnable {
                     task_id,
@@ -165,6 +174,16 @@ impl DebugSession {
                         DebugStopReason::Pause,
                         Vec::new(),
                     ));
+                }
+                DebugSchedule::Deadlock | DebugSchedule::ClockExhausted => {
+                    self.state = DebugSessionState::Failed;
+                    self.refresh_inspection();
+                    let deadlock = matches!(schedule, DebugSchedule::Deadlock);
+                    return Err(DebugSessionError {
+                        kind: if deadlock { DebugErrorKind::ScheduleDeadlock } else { DebugErrorKind::ScheduleClockLimit },
+                        message: if deadlock { "Seeded scheduling settled with blocked tasks and no internal wake source." } else { "Seeded scheduling cannot advance virtual time further." }.into(),
+                        hint: "Inspect the blocked tasks and channel/timer dependencies, then rerun with the same seed.".into(),
+                    });
                 }
             };
             if resumed_at_boundary

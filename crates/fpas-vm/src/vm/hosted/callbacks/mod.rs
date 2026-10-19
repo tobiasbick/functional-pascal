@@ -42,6 +42,7 @@ impl Worker {
                 arguments: Some(arguments),
                 wrapper: operation::SingleWrapper::SelectionIndex(index as i64),
             },
+            (self.function, self.current_address),
         ));
         continuation::resume(self)?;
         Ok(())
@@ -65,6 +66,13 @@ impl Worker {
     /// Advance the active hosted operation when its callback is not running.
     pub(in crate::vm) fn resume_callback_continuation(&mut self) -> Result<bool, VmError> {
         continuation::resume(self)
+    }
+
+    /// Original instruction owning the top resumable operation and its result store.
+    pub(in crate::vm) fn callback_origin(
+        &self,
+    ) -> Option<(fpas_bytecode::FunctionId, fpas_bytecode::InstructionAddress)> {
+        self.callback_continuations.last().map(|state| state.origin)
     }
 
     /// Return whether the top hosted callback operation is ready for its next step.

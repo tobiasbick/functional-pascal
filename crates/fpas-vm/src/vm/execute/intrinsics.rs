@@ -21,6 +21,7 @@ impl Worker {
                 format!("Verified intrinsic identifier {} is unknown", operands.b),
             )
         })?;
+        self.check_scheduling_effect(intrinsic)?;
         let owner = intrinsic.owner();
         let start = self
             .base

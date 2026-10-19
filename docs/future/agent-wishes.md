@@ -20,9 +20,12 @@
 [D3](#d3-one-shot-batch-runs) is implemented. Its permanent
 [batch debugger contract](../pascal/tools/debugger-batch.md) describes the shipped command.
 N1–N4 ([source navigation](#code-navigation)) are implemented.
-[D5](#d5-tracepoints) has an implemented, independently reviewed global-tracepoint
-subset, documented under [batch tracepoints](../pascal/tools/debugger-tracepoints.md).
-D2, D4 and broader D5 tracing remain unscheduled ideas.
+[D5](#d5-tracepoints) has an implemented, independently reviewed scalar delivery
+for globals/record fields and locals/parameters, documented under
+[batch tracepoints](../pascal/tools/debugger-tracepoints.md).
+[D4](#d4-reproducible-task-scheduling) has an implemented, independently reviewed
+bounded delivery; [seeded batch scheduling](../pascal/tools/debugger-scheduling.md)
+owns its contract. D2 and broader D5 tracing remain unscheduled ideas.
 Human-facing tools stay: the DAP debugger
 ([`debugger.md`](../pascal/tools/debugger.md)) and the language server
 ([`editor-integration.md`](../pascal/tools/editor-integration.md)). The JSONL debugger protocol
@@ -33,13 +36,14 @@ navigation.
 
 ## Where to start
 
-A1, A2, A3, A4, S1, S2, S3, D1, D3 and N1–N4 are implemented.
+A1, A2, A3, A4, S1, S2, S3, D1, D3, bounded D4 and N1–N4 are implemented.
 The completed N1–N3 contract is documented in
-[source queries](../pascal/tools/source-queries.md). The first D5 delivery is
-implemented for mutable globals and scalar stored record fields; its
+[source queries](../pascal/tools/source-queries.md). Bounded D5 is implemented for
+mutable globals, scalar stored record fields and scalar locals/parameters; its
 [permanent contract](../pascal/tools/debugger-tracepoints.md) describes the scope
-and limits. There is no next scheduled tooling implementation. D2, D4 and D5
-extensions to locals/captures/indexed/aggregate values remain ideas.
+and limits. Bounded D4 adds [seeded fair task rounds and virtual time](../pascal/tools/debugger-scheduling.md)
+for controlled batch runs. There is no next scheduled tooling implementation.
+D2 and capture/indexed/aggregate tracing remain ideas.
 JSONL removal remains deferred; the protocol and its tests stay supported.
 
 ## Principle: protocols for humans, commands for agents
@@ -256,24 +260,46 @@ Keep the protocol, CLI options, documentation and tests. There is no pending
 removal step; reopening it requires a new explicit user request.
 See [Decision: keep JSONL](#decision-keep-jsonl).
 
-Record/replay and seeded scheduling remain separate unscheduled wishes.
-The implemented global tracepoint subset is documented under
+Record/replay remains an unscheduled wish. Bounded D4
+[seeded scheduling](../pascal/tools/debugger-scheduling.md) is an opt-in addition
+to the batch debugger; ordinary D3 execution is unchanged.
+The implemented scalar tracepoint delivery is documented under
 [batch tracepoints](../pascal/tools/debugger-tracepoints.md).
 
 #### D4. Reproducible task scheduling
 
-Start the scheduler from a seed so a race happens the same way on every run. A failing run reports
-its seed; the agent reruns that exact interleaving.
+**Status: bounded delivery implemented, verified and independently reviewed.**
+The permanent [seeded scheduling contract](../pascal/tools/debugger-scheduling.md)
+owns batch-only `fpas debug ... --schedule-seed N`: fair seeded task rounds,
+virtual task time, sealed text input and pre-invocation rejection of unsupported
+host effects. The bounded JSON result retains the seed, actual driver counters
+and explicit scheduling coverage on failures and interruptions.
+
+With the same executable, runtime build/platform and algorithm, seed, arguments,
+queued input, breakpoints and deterministic limits, the controlled debug dispatch order can
+be repeated unless a host deadline or external interruption cuts it short.
+This explores task/channel/cancellation/timer ordering; it does not reproduce
+the concurrent worker pool, capture external nondeterminism, or implement D2
+record/replay. Different seeds are not guaranteed to produce different outcomes
+or cover all possible interleavings.
+
+VM, real-process CLI and report-reduction tests cover fixed PRNG/shuffle vectors,
+mid-round spawn admission, skipped tasks, changed channel outcomes and exact
+repetition, CPU/timer progress, idle jumps, clock overflow, deadlock, cleanup,
+supervision, direct/worker/callback effect guards, sealed input, source/project/
+image targets and host interruption. Review findings were fixed and rechecked.
+The completed temporary plan is removed; D2 record/replay remains unscheduled.
 
 #### D5. Tracepoints
 
-**Status: bounded global subset implemented and independently reviewed.**
+**Status: bounded scalar delivery implemented and independently reviewed.**
 The agent chose the first-delivery contract under the user's delegation. The
 permanent [tracepoint page](../pascal/tools/debugger-tracepoints.md) owns usage,
 JSON fields, observation semantics and bounds:
 
 ```text
 fpas debug app.fpasprj --trace Total --trace State.Selected
+fpas debug app.fpasprj --trace 'Calculate::Total' --trace 'Calculate::Count'
 ```
 
 One bounded JSON result retains initialization and consecutive committed scalar
@@ -290,10 +316,25 @@ metadata identities, typed capture, event/value/work/escaped-byte limits,
 structured failures and worker containment. Independent review findings for
 NaN comparison and bounded ambiguous binding were fixed with regression tests.
 
-Local variables, parameters, captures, indexed selectors and whole aggregates
-remain unscheduled D5 extensions. The unrestricted wish is not fully implemented.
-JSONL/DAP and their existing behavior remain supported. The completed temporary
-plan is removed after final verification.
+The scalar locals/parameters extension adds exact `Routine::Name` selectors,
+decimal-string activation/declaration-instance identities and bounded lexical
+lifetimes, including const locals and scalar `var` references. Recursion, tail
+calls, repeated declarations, worker tasks and nested callbacks keep separate
+histories. Scope/call exit releases comparison values; later escaped-capture
+writes are outside the declaring local's history. Nominal scalar type names
+survive compilation and portable image storage without an image-format change.
+
+Independent review findings for callback scope exit, delayed result source
+attribution, suspension commits before breakpoints and nominal names were fixed
+and independently rechecked. Regression tests cover these cases plus event,
+retained-value and live-instance bounds. The affected VM, compiler/IR, debugger
+and batch suites and strict workspace Clippy pass. The permanent tracepoint page
+and authoring guidance own the implemented contract; the completed temporary
+extension plan is removed.
+
+Capture bindings, indexed selectors and whole aggregates remain unscheduled D5
+extensions. The unrestricted wish is not fully implemented. JSONL/DAP and their
+existing behavior remain supported.
 
 ### What already exists
 
@@ -302,7 +343,9 @@ plan is removed after final verification.
   recording would have to capture those results and feed them back during replay.
 - `ScreenSnapshot`, which exposes the TUI screen as data, so a headless replay can still "see" what
   was displayed.
-- A deterministic debug scheduler with a manual clock, a good base for D2 and D4.
+- A stable single-lane debug scheduler with real monotonic time by default.
+  D4 adds opt-in seeded fair rounds, production virtual task time and controlled
+  effects for repeatable batch runs; it does not record or replay external events.
 - One-shot `fpas debug` with automatic state capture and non-executing `--print`
   expressions (D3); normal-run failure reports (D1).
 - JSONL with `--commands` remains available for scripted sessions.

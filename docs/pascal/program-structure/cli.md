@@ -57,9 +57,12 @@ the source debugger and in-process test hosts do not grant this authority automa
   completion and return one bounded JSON snapshot on stdout. Repeat `--break
   path:line[:column]` and `--print expression` for targeted inspection; `--script`
   supplies runner-compatible input. The whole-invocation deadline defaults to
-  30 seconds. Repeat `--trace selector` to retain scalar global/record-field
+  30 seconds. Repeat `--trace selector` to retain scalar global/record-field or
+  exact `Routine::Name` local/parameter
   changes, with `--trace-limit count` for bounded event capacity; see
-  [Tracepoints](../tools/debugger-tracepoints.md). See
+  [Tracepoints](../tools/debugger-tracepoints.md). Use `--schedule-seed N` for
+  [controlled task ordering](../tools/debugger-scheduling.md) with virtual time
+  and text-line input. See
   [Batch debugging](../tools/debugger-batch.md) for the result
   schema, bounds and exit codes. Explicit `--protocol jsonl|dap` selects the
   existing long-lived source-debugger sessions; see [Source debugger](../tools/debugger.md).

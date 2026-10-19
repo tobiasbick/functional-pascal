@@ -35,7 +35,12 @@ pub(super) fn compile_debug_info(
         .map(|binding| {
             Ok(DebugBinding {
                 name: metadata.intern_string(&binding.name)?,
-                type_name: metadata.intern_string(&type_name(program, binding.ty, 0))?,
+                type_name: metadata.intern_string(
+                    &binding
+                        .type_name
+                        .clone()
+                        .unwrap_or_else(|| type_name(program, binding.ty, 0)),
+                )?,
                 ty: debug_binding_type(program, binding.ty, binding.cell_backed),
                 register: allocation.local(binding.local)?,
                 kind: match binding.kind {

@@ -3,7 +3,6 @@
 #[cfg(test)]
 mod clock_tests;
 
-#[cfg(test)]
 use std::sync::atomic::{AtomicU64, Ordering};
 use std::time::{Duration, Instant};
 
@@ -11,11 +10,10 @@ use fpas_bytecode::{Register, Value};
 
 enum TaskClockMode {
     Realtime(Instant),
-    #[cfg(test)]
     Manual(AtomicU64),
 }
 
-/// Monotonic task clock, manually advanced only by deterministic debugger tests.
+/// Monotonic task clock, manually advanced by controlled debugger execution.
 pub(in crate::vm) struct TaskClock {
     mode: TaskClockMode,
 }
@@ -28,8 +26,7 @@ impl TaskClock {
         }
     }
 
-    /// Create a manually advanced clock for deterministic scheduler tests.
-    #[cfg(test)]
+    /// Create a manually advanced clock for controlled scheduling.
     pub(in crate::vm) fn manual() -> Self {
         Self {
             mode: TaskClockMode::Manual(AtomicU64::new(0)),
@@ -37,12 +34,11 @@ impl TaskClock {
     }
 
     /// Return elapsed monotonic milliseconds.
-    pub(super) fn now_millis(&self) -> u64 {
+    pub(in crate::vm) fn now_millis(&self) -> u64 {
         match &self.mode {
             TaskClockMode::Realtime(origin) => {
                 origin.elapsed().as_millis().min(u128::from(u64::MAX)) as u64
             }
-            #[cfg(test)]
             TaskClockMode::Manual(now) => now.load(Ordering::Acquire),
         }
     }
@@ -54,7 +50,6 @@ impl TaskClock {
         }
         let elapsed_nanos = match &self.mode {
             TaskClockMode::Realtime(origin) => origin.elapsed().as_nanos(),
-            #[cfg(test)]
             TaskClockMode::Manual(now) => u128::from(now.load(Ordering::Acquire)) * 1_000_000,
         };
         elapsed_nanos
@@ -67,10 +62,11 @@ impl TaskClock {
     pub(in crate::vm) fn wait(&self, duration: Duration) {
         match &self.mode {
             TaskClockMode::Realtime(_) => std::thread::sleep(duration),
-            #[cfg(test)]
             TaskClockMode::Manual(now) => {
                 let milliseconds = duration.as_millis().max(1).min(u128::from(u64::MAX)) as u64;
-                now.fetch_add(milliseconds, Ordering::AcqRel);
+                let _ = now.try_update(Ordering::AcqRel, Ordering::Acquire, |value| {
+                    Some(value.saturating_add(milliseconds))
+                });
             }
         }
     }

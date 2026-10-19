@@ -33,9 +33,12 @@ Current implemented behavior belongs under `docs/pascal/`, not here.
   LSP stay for humans. A1, A2, A3, A4, S1, S2, S3, D1 and D3 are implemented;
   [batch debugging](../pascal/tools/debugger-batch.md) is part of the handbook.
   N1–N4 are implemented in [source queries](../pascal/tools/source-queries.md).
-  The N1–N3 contract follow-ups and bounded global D5
-  [tracepoints](../pascal/tools/debugger-tracepoints.md) are implemented. JSONL
-  removal remains deferred; D2, D4 and broader D5 extensions remain unscheduled ideas.
+  The N1–N3 contract follow-ups and bounded scalar D5
+  [tracepoints](../pascal/tools/debugger-tracepoints.md) for globals/fields and
+  locals/parameters are implemented and independently reviewed. JSONL
+  removal remains deferred. Bounded D4
+  [seeded batch scheduling](../pascal/tools/debugger-scheduling.md) is implemented
+  and independently reviewed; D2 and broader D5 extensions remain unscheduled ideas.
 
 ## Architecture records and development intake
 

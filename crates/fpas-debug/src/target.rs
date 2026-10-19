@@ -21,6 +21,7 @@ pub struct PreparedDebugTarget {
     execution_limits: fpas_vm::DebugExecutionLimits,
     sources: Vec<DebugSourceContent>,
     reloader: Option<DebugReloadProvider>,
+    schedule_seed: Option<u64>,
 }
 
 impl PreparedDebugTarget {
@@ -33,6 +34,7 @@ impl PreparedDebugTarget {
             execution_limits: fpas_vm::DebugExecutionLimits::default(),
             sources: Vec::new(),
             reloader: None,
+            schedule_seed: None,
         }
     }
 
@@ -82,6 +84,11 @@ impl PreparedDebugTarget {
         &self.sources
     }
 
+    pub(crate) const fn with_schedule_seed(mut self, seed: Option<u64>) -> Self {
+        self.schedule_seed = seed;
+        self
+    }
+
     pub(crate) const fn execution_limits(&self) -> fpas_vm::DebugExecutionLimits {
         self.execution_limits
     }
@@ -91,11 +98,12 @@ impl PreparedDebugTarget {
     }
 
     pub(crate) fn into_session(self) -> Result<fpas_vm::DebugSession, fpas_vm::DebugSessionError> {
-        fpas_vm::DebugSession::with_limits(
+        fpas_vm::DebugSession::with_limits_and_schedule(
             self.executable,
             self.arguments,
             fpas_vm::DebugInspectionLimits::default(),
             self.execution_limits,
+            self.schedule_seed,
         )
     }
 }

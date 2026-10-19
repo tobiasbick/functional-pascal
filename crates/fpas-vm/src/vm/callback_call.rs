@@ -130,6 +130,11 @@ impl Worker {
             Box::new(callback)
         };
         callback.debug_trace = self.debug_trace.clone();
+        callback.debug_local_trace = self.trace_callback_state();
+        callback.debug_schedule = self.debug_schedule.clone();
+        if self.debug_schedule.is_some() {
+            callback.task_clock = self.task_clock.clone();
+        }
         callback.inherit_scope_cancellation(self);
         callback.capture_record = self.capture_record.clone();
         callback.capture_callback = true;
@@ -137,6 +142,9 @@ impl Worker {
         if let Err(error) = &execution {
             self.capture_failure_continuation(error);
         }
+        // Cached callback workers must not retain finished trace lifetimes or aliases.
+        callback.debug_local_trace = None;
+        callback.debug_trace = None;
         self.callback_failed.set(execution.is_err());
         if execution.is_err() {
             self.scope_failure_sequence

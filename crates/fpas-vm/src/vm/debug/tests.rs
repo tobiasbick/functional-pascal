@@ -479,4 +479,6 @@ mod wait_any_controlled;
 
 use inspection_fixture::inspection_executable;
 
+mod scheduling;
 mod trace;
+mod trace_locals;

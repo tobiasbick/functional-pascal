@@ -45,6 +45,7 @@ fn execute(files: &Files) -> std::io::Result<()> {
         .report(),
     };
     super::trace::preserve_request(&mut report, &request.args);
+    super::schedule::preserve_request(&mut report, &request.args);
     files.publish(&fpas_debug::batch::finish_report(&mut report))?;
     // Keep the owning process alive until the parent has copied the result and killed its tree.
     let deadline = Instant::now() + Duration::from_secs(31);
@@ -64,6 +65,7 @@ fn prepare(
     config: &crate::DebugCliConfig,
 ) -> Result<(fpas_debug::PreparedDebugTarget, Options), crate::cli_debug::Failure> {
     let mut options = Options {
+        schedule_seed: config.batch.schedule_seed,
         breakpoints: config.batch.breakpoints.clone(),
         expressions: config.batch.expressions.clone(),
         trace: config.batch.trace.clone(),
@@ -79,7 +81,10 @@ fn prepare(
         for event in script.events {
             options.input.push(match event {
                 crate::test_script::ScriptEvent::Readln { line } => Input::Line(line),
-                crate::test_script::ScriptEvent::ReadkeyChars { chars } => Input::Keys(chars),
+                crate::test_script::ScriptEvent::ReadkeyChars { chars } => {
+                    if options.schedule_seed.is_some() { return Err("Seeded scheduling accepts text-line script input only; remove key events or --schedule-seed.".to_string().into()); }
+                    Input::Keys(chars)
+                },
             });
         }
     }

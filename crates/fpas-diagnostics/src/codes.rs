@@ -311,6 +311,9 @@ define_codes!(RUNTIME_ALLOCATED_CODES => {
 
     /// The operating system could not supply random bytes.
     RUNTIME_RANDOM_SOURCE_FAILURE = 5025;
+
+    /// Seeded debug scheduling rejected an uncontrolled host or callback effect.
+    RUNTIME_SCHEDULE_UNSUPPORTED_EFFECT = 5026;
 });
 
 define_codes!(PROJECT_ALLOCATED_CODES => {

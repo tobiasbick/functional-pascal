@@ -7,7 +7,9 @@ mod failure;
 mod lifecycle;
 mod live_image;
 mod quiescence;
+mod readiness;
 mod recovery;
+mod seeded;
 
 use std::collections::{BTreeMap, BTreeSet};
 use std::sync::Arc;
@@ -64,6 +66,10 @@ pub(in crate::vm::debug) enum DebugSchedule {
     Idle(Duration),
     /// Live work remains, but every unpaused task is blocked on a paused peer.
     NoUnpausedWork,
+    /// Controlled execution has settled with no runnable task or future deadline.
+    Deadlock,
+    /// Virtual time cannot advance without overflowing its supported range.
+    ClockExhausted,
 }
 
 /// Result of dispatching exactly one task instruction.
@@ -90,6 +96,7 @@ pub(in crate::vm::debug) struct DebugTaskRuntime {
     resumed_at_boundary: BTreeSet<u64>,
     events: Vec<DebugTaskEvent>,
     root_result: Option<Value>,
+    seeded: Option<super::super::scheduling::rounds::SeededRounds>,
 }
 
 impl DebugTaskRuntime {
@@ -98,6 +105,25 @@ impl DebugTaskRuntime {
         trace: Option<Arc<std::sync::Mutex<super::super::trace::TraceHistory>>>,
     ) {
         for slot in self.tasks.values_mut() {
+            slot.worker.debug_local_trace = trace.as_ref().and_then(|history| {
+                let local = history
+                    .lock()
+                    .unwrap_or_else(|p| p.into_inner())
+                    .report
+                    .watches
+                    .iter()
+                    .any(|watch| {
+                        matches!(
+                            watch.identity,
+                            super::super::trace::DebugTraceIdentity::Local { .. }
+                        )
+                    });
+                local.then(|| {
+                    Box::new(super::super::trace::LocalTraceState::new(Arc::clone(
+                        history,
+                    )))
+                })
+            });
             slot.worker.debug_trace = trace.clone();
         }
     }
@@ -129,6 +155,7 @@ impl DebugTaskRuntime {
             resumed_at_boundary: BTreeSet::new(),
             events: Vec::new(),
             root_result: None,
+            seeded: None,
         }
     }
 
@@ -184,6 +211,9 @@ impl DebugTaskRuntime {
         &mut self,
         preferred: Option<u64>,
     ) -> Result<DebugSchedule, (u64, VmError)> {
+        if self.seeded.is_some() {
+            return self.seeded_schedule();
+        }
         self.drain_spawned();
         self.refresh_readiness()?;
         if let Some(task_id) = preferred.filter(|task_id| {
@@ -234,6 +264,9 @@ impl DebugTaskRuntime {
         &mut self,
         task_id: u64,
     ) -> Result<DebugDispatch, (u64, VmError)> {
+        if let Some(rounds) = &mut self.seeded {
+            rounds.dispatched();
+        }
         let Some(slot) = self.tasks.get_mut(&task_id) else {
             unreachable!("scheduled debug task must exist")
         };
@@ -369,38 +402,6 @@ impl DebugTaskRuntime {
         }
     }
 
-    fn refresh_readiness(&mut self) -> Result<(), (u64, VmError)> {
-        for (&task_id, slot) in &mut self.tasks {
-            if !matches!(
-                slot.state,
-                DebugTaskState::Waiting | DebugTaskState::Sleeping | DebugTaskState::Runnable
-            ) || slot.worker.task_suspension.is_none()
-            {
-                continue;
-            }
-            match slot.worker.poll_task_suspension() {
-                Ok(true) => {
-                    slot.state = DebugTaskState::Runnable;
-                    if slot.worker.pending_completion.is_none() {
-                        self.resumed_at_boundary.insert(task_id);
-                    }
-                }
-                Ok(false) => slot.state = state_from_suspension(&slot.worker),
-                Err(error) => {
-                    if slot.worker.begin_scope_unwind(error.clone()).is_ok() {
-                        slot.state = state_from_suspension(&slot.worker);
-                        continue;
-                    }
-                    // Complete group cleanup and supervision through the same
-                    // terminal boundary as ordinary instruction dispatch.
-                    slot.worker.pending_completion = Some(Err(error));
-                    slot.state = DebugTaskState::Runnable;
-                }
-            }
-        }
-        Ok(())
-    }
-
     fn drain_spawned(&mut self) {
         while let Some(task) = self.scheduler.try_dequeue() {
             let task_id = task.id;
@@ -408,7 +409,8 @@ impl DebugTaskRuntime {
             let Some(template) = self.tasks.get(&0).map(|slot| &slot.worker) else {
                 break;
             };
-            let worker = template.worker_for_task(task);
+            let mut worker = template.worker_for_task(task);
+            worker.trace_local_begin();
             let function_name = worker
                 .executable
                 .executable()

@@ -43,6 +43,7 @@ mod location;
 mod location_assign;
 mod mutation;
 mod recording;
+mod scheduling;
 mod sequence;
 mod stop;
 mod storage;
@@ -165,12 +166,12 @@ impl DebugSession {
         inspection_limits: DebugInspectionLimits,
         execution_limits: DebugExecutionLimits,
     ) -> Result<Self, DebugSessionError> {
-        Self::with_task_clock(
+        Self::with_limits_and_schedule(
             executable,
             arguments,
             inspection_limits,
             execution_limits,
-            Arc::new(TaskClock::realtime()),
+            None,
         )
     }
 
@@ -185,6 +186,7 @@ impl DebugSession {
             DebugInspectionLimits::default(),
             DebugExecutionLimits::default(),
             Arc::new(TaskClock::manual()),
+            None,
         )
     }
 
@@ -194,6 +196,7 @@ impl DebugSession {
         inspection_limits: DebugInspectionLimits,
         execution_limits: DebugExecutionLimits,
         task_clock: Arc<TaskClock>,
+        seed: Option<u64>,
     ) -> Result<Self, DebugSessionError> {
         let executable = Arc::new(executable);
         let globals = Arc::new(RwLock::new(vec![
@@ -236,7 +239,10 @@ impl DebugSession {
         let inspection =
             InspectionSnapshot::capture(&worker, inspection_generation, inspection_limits);
         let inspections = BTreeMap::from([(0, inspection)]);
-        let runtime = DebugTaskRuntime::new(worker, scheduler, task_clock);
+        let mut runtime = DebugTaskRuntime::new(worker, scheduler, task_clock);
+        if let Some(seed) = seed {
+            runtime.enable_seeded(seed);
+        }
         Ok(Self {
             executable,
             previous_executable: None,

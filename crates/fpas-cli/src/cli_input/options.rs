@@ -343,7 +343,8 @@ pub(super) fn parse_options(mode: CliMode, cli_args: &[String]) -> Result<Parsed
                     return Err("Duplicate `--jobs` option.".to_string());
                 }
             }
-            "--break" | "--print" | "--trace" | "--trace-limit" | "--task" | "--frame"
+            "--break" | "--print" | "--trace" | "--trace-limit" | "--schedule-seed" | "--task"
+            | "--frame"
                 if mode == CliMode::Debug =>
             {
                 super::batch::parse_option(cli_args, &mut index, &mut options.batch)?;
@@ -404,6 +405,7 @@ fn is_known_option(value: &str) -> bool {
             | "--print"
             | "--trace"
             | "--trace-limit"
+            | "--schedule-seed"
             | "--task"
             | "--frame"
             | "-h"

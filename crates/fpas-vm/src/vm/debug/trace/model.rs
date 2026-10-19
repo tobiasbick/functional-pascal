@@ -20,9 +20,9 @@ pub struct DebugTraceWatch {
     pub id: usize,
     /// First authored selector spelling for this binding.
     pub request: String,
-    /// Canonical metadata global and stored-field path.
+    /// Canonical metadata path or Routine::Name local selector.
     pub name: String,
-    /// Executable-global root and fixed stored-field slots.
+    /// Fixed executable global/field or source-binding identity.
     pub identity: DebugTraceIdentity,
     #[serde(rename = "type")]
     /// Declared scalar source type name.
@@ -31,13 +31,40 @@ pub struct DebugTraceWatch {
     pub(super) ty: fpas_bytecode::DebugTypeId,
 }
 
-/// Fixed executable-global root and positional stored record-field path.
+/// Pre-execution identity independent of live call frames or value handles.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
-pub struct DebugTraceIdentity {
-    /// Zero-based executable global slot.
-    pub global_slot: usize,
-    /// Stored record field indexes in root-to-leaf order.
-    pub field_slots: Vec<usize>,
+#[serde(untagged)]
+pub enum DebugTraceIdentity {
+    /// Existing executable-global identity, unchanged on the wire.
+    Global {
+        /// Zero-based executable global slot.
+        global_slot: usize,
+        /// Stored record field indexes in root-to-leaf order.
+        field_slots: Vec<usize>,
+    },
+    /// One exact source binding in one executable function.
+    Local {
+        /// Executable function identity.
+        function_id: u16,
+        /// Dense debug binding identity within that function.
+        binding_id: usize,
+        /// Lexical declaration scope.
+        scope_id: u32,
+        /// Source-level local or parameter role.
+        kind: &'static str,
+    },
+}
+
+impl DebugTraceIdentity {
+    pub(super) fn global(&self) -> Option<(usize, &[usize])> {
+        match self {
+            Self::Global {
+                global_slot,
+                field_slots,
+            } => Some((*global_slot, field_slots)),
+            Self::Local { .. } => None,
+        }
+    }
 }
 
 /// The actual writing instruction, including callbacks with a separate worker.
@@ -62,6 +89,10 @@ pub struct DebugTraceEvent {
     pub kind: &'static str,
     /// Actual writing task identity.
     pub task_id: u64,
+    /// Invocation-local call identity; null for global watches.
+    pub activation_id: Option<String>,
+    /// Declaration-instance identity; renewed on repeated local initialization.
+    pub instance_id: Option<String>,
     /// Logical writing routine name when retained in metadata.
     pub function: Option<String>,
     /// Actual store instruction location, never the following stop.

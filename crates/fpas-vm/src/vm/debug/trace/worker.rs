@@ -17,11 +17,12 @@ impl Worker {
         let history = self.debug_trace.as_ref()?;
         let state = history.lock().unwrap_or_else(|p| p.into_inner());
         if state.limit.is_some()
-            || !state
-                .report
-                .watches
-                .iter()
-                .any(|watch| watch.identity.global_slot == index)
+            || !state.report.watches.iter().any(|watch| {
+                watch
+                    .identity
+                    .global()
+                    .is_some_and(|(slot, _)| slot == index)
+            })
         {
             return None;
         }
@@ -73,7 +74,18 @@ impl Worker {
             crate::vm::inspection::location::source_path(image, p)
                 .map(|source| (source, p.line, p.column))
         });
-        state.commit(image, before, after, self.task_id, function, location);
+        state.commit(
+            image,
+            before,
+            after,
+            super::pending::TraceSite {
+                task: self.task_id,
+                function,
+                location,
+                commit: self.debug_local_trace.as_ref().map(|state| state.commit),
+            },
+            None,
+        );
     }
 
     pub(in crate::vm) fn trace_interrupted(&self) -> bool {

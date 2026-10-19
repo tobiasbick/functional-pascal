@@ -74,7 +74,10 @@ execution, replay, debugger task creation, task restart, retained execution hist
 restart reconstructs a selected live frame at its function entry; it is not a
 general `goto`.
 
-Task debugging is deterministic and all-stop. The debug session runs the main
+Task debugging is stable and all-stop by default, with real monotonic task time.
+Batch-only [seeded scheduling](debugger-scheduling.md) adds opt-in fair seeded
+rounds, virtual task time and controlled-effect checks. It does not change the
+default or session protocols. The debug session runs the main
 program and spawned FPAS tasks on one host execution lane, while normal
 non-debug execution keeps using the concurrent worker pool. Each stop freezes
 all live tasks at complete bytecode instruction boundaries. Task IDs are stable

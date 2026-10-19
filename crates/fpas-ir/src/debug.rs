@@ -71,6 +71,8 @@ pub struct DebugBinding {
     pub local: LocalId,
     /// Canonical source name.
     pub name: String,
+    /// Declared nominal scalar display name, independent of erased runtime types.
+    pub type_name: Option<String>,
     /// Source-level role.
     pub kind: DebugBindingKind,
     /// Lowered value type.

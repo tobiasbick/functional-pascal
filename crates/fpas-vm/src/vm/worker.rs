@@ -48,6 +48,8 @@ pub(super) struct Worker {
     pub instructions_until_yield: u32,
     pub suspend_requested: bool,
     pub(in crate::vm) debug_tasks: bool,
+    pub(in crate::vm) debug_schedule: Option<Arc<super::debug::scheduling::ScheduleGuard>>,
+    pub(in crate::vm) debug_local_trace: Option<Box<super::debug::trace::LocalTraceState>>,
     pub(in crate::vm) debug_last_global_store: Option<u32>,
     pub(in crate::vm) debug_trace: Option<Arc<std::sync::Mutex<super::debug::trace::TraceHistory>>>,
     pub(in crate::vm) task_suspension: Option<TaskSuspension>,
@@ -192,6 +194,8 @@ impl Worker {
             instructions_until_yield: super::TIMESLICE,
             suspend_requested: false,
             debug_tasks: false,
+            debug_schedule: None,
+            debug_local_trace: None,
             debug_last_global_store: None,
             debug_trace: None,
             task_suspension: None,
@@ -260,6 +264,11 @@ impl Worker {
             instructions_until_yield: super::TIMESLICE,
             suspend_requested: false,
             debug_tasks: self.debug_tasks,
+            debug_schedule: self.debug_schedule.clone(),
+            debug_local_trace: self
+                .debug_local_trace
+                .as_ref()
+                .map(|state| Box::new(state.for_task())),
             debug_last_global_store: None,
             debug_trace: None,
             task_suspension: None,
@@ -309,8 +318,13 @@ impl Worker {
             instructions_until_yield: super::TIMESLICE,
             suspend_requested: false,
             debug_tasks: self.debug_tasks,
+            debug_schedule: self.debug_schedule.clone(),
+            debug_local_trace: self
+                .debug_local_trace
+                .as_ref()
+                .map(|state| Box::new(state.for_task())),
             debug_last_global_store: None,
-            debug_trace: None,
+            debug_trace: self.debug_trace.clone(),
             task_suspension: task.suspension,
             pending_completion: task.pending_completion,
             task_clock: self.task_clock.clone(),

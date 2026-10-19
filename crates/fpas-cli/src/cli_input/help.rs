@@ -249,7 +249,8 @@ workspace or project. Program input is scripted; host stdin is never consumed.
 Options:
   --break <path:line[:column]>   Stop before a source statement (repeat, max 64)
   --print <expression>          Inspect one stored-value expression (repeat, max 64)
-  --trace <selector>           Record a mutable global/scalar record field (repeat, max 64)
+  --schedule-seed <N>          Seeded fair task rounds and virtual time (controlled text-input runs only)
+  --trace <selector>           Scalar global/field or Routine::Name local/parameter (max 64)
   --trace-limit <count>        Retained events (default: 1000; ceiling: 10000)
   --task <id>                   Inspection task (default: stopping task)
   --frame <depth>               Inspection frame (default: 0, active frame)
@@ -272,6 +273,7 @@ Examples:
   fpas debug hello.fpas
   fpas debug app.fpasprj --break src/main.fpas:42 --print Total --print 'Items[0]'
   fpas debug app.fpasprj --trace Total --trace State.Selected --trace-limit 200
+  fpas debug app.fpasprj --schedule-seed 42 --script input.toml
   fpas debug app.fpascp --source-root . --script input.toml --timeout 5
   fpas debug app.fpasprj --protocol jsonl --commands session.jsonl
   fpas debug app.fpasprj --protocol dap

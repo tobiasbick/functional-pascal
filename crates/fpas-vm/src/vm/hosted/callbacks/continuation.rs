@@ -24,7 +24,12 @@ pub(super) fn start(
     let callback = worker.resolve_callback(&callback, operation.first_arity())?;
     worker
         .callback_continuations
-        .push(CallbackContinuation::new(callback, destination, operation));
+        .push(CallbackContinuation::new(
+            callback,
+            destination,
+            operation,
+            (worker.function, worker.current_address),
+        ));
     resume(worker)?;
     Ok(Some(CallbackOutcome::Deferred))
 }

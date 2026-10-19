@@ -213,11 +213,22 @@ non-executing expressions and use `--script input.toml` for runner-compatible
 line/key input. See [batch debugging](../../../docs/pascal/tools/debugger-batch.md)
 for limits and exit codes. DAP/JSONL remain available through explicit protocol flags.
 
-To explain how a global value changed, repeat `--trace Total` or
-`--trace State.Selected` on the batch command. The
+To explain how a scalar value changed, repeat `--trace Total`,
+`--trace State.Selected` or exact `--trace 'Routine::Name'` on the batch command. The
 [tracepoint contract](../../../docs/pascal/tools/debugger-tracepoints.md) covers
 typed initialization/change events, actual writing locations, exact scalar
-comparison and incomplete history. Only mutable globals and fixed scalar record
-fields are supported; local/capture history is unavailable. `--trace-limit`
+comparison and incomplete history. Mutable globals/fixed scalar record fields
+and scalar locals/parameters are supported. Local activation/instance identities
+distinguish calls and repeated declarations; observation ends at scope/call exit.
+Capture/index/aggregate selectors are unsupported. `--trace-limit`
 defaults to 1,000 events and stops explicitly at a bound; inspect `trace.complete`
 before relying on an empty or partial history. Tracing executes no expressions.
+
+For task/channel/timer ordering, use `fpas debug file.fpas --schedule-seed 42`.
+The [seeded scheduling contract](../../../docs/pascal/tools/debugger-scheduling.md)
+uses fair task rounds, virtual task time and controlled effects. Supply fixed
+arguments and text-line scripts; key scripts and uncontrolled host effects are
+rejected. Pure synchronous callbacks work, but their task/sleep/scope operations
+reject. Check `schedule.status` and reasons, and retain the executable, runtime
+build/platform, inputs, limits and seed when repeating. This is not replay of the
+normal concurrent worker pool; DAP/JSONL keep their existing behavior.

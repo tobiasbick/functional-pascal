@@ -117,6 +117,13 @@ impl LoweringContext {
         definition: &LocalBinding,
         mutable: bool,
     ) -> Result<(), CompileError> {
+        let type_name = match &definition.type_expr {
+            Some(ty) => self.type_table.declared_scalar_name(ty),
+            None => self
+                .expr_types
+                .get(&fpas_sema::expr_lookup_key(&definition.value))
+                .and_then(|ty| self.type_table.declared_semantic_scalar_name(ty)),
+        };
         let ty = match &definition.type_expr {
             Some(ty) => self.declared_type(ty)?,
             None => self.expression_ir_type(&definition.value)?,
@@ -127,9 +134,11 @@ impl LoweringContext {
             let cell = self.emit_value(Operation::MakeCell(value), cell_ty, definition.span)?;
             let local = self.declare_local(&definition.name, cell_ty, true, definition.span)?;
             self.mark_binding_cell(&definition.name, ty);
+            self.set_binding_type_name(local, type_name);
             self.initialize_local(local, cell, definition.span)
         } else {
             let local = self.declare_local(&definition.name, ty, mutable, definition.span)?;
+            self.set_binding_type_name(local, type_name);
             self.initialize_local(local, value, definition.span)
         }
     }

@@ -3,7 +3,9 @@
 mod diagnostics;
 mod report;
 pub use diagnostics::fp_diagnostic;
+mod schedule;
 mod snapshot;
+pub use schedule::coverage as schedule_coverage;
 mod trace;
 pub use report::{MAX_REPORT_BYTES, diagnostic, empty_report, finish_report};
 pub use trace::{coverage as trace_coverage, request as trace_request};
@@ -30,11 +32,13 @@ pub enum Input {
 /// Complete batch inspection request, independent of argv and transport.
 #[derive(Debug, Clone, Default)]
 pub struct Options {
+    /// Explicit seed for fair debug rounds and a virtual task clock.
+    pub schedule_seed: Option<u64>,
     /// Repeatable source locations, resolved before bytecode runs.
     pub breakpoints: Vec<String>,
     /// Ordered non-executing expressions.
     pub expressions: Vec<String>,
-    /// Mutable scalar globals or stored record-field paths.
+    /// Mutable scalar globals/stored fields, or exact Routine::Name locals/parameters.
     pub trace: Vec<String>,
     /// Maximum retained events across all watches (zero selects the default).
     pub trace_limit: usize,
@@ -84,6 +88,7 @@ pub fn run(
 ) -> Value {
     let mut report = run_inner(target, options, output, &mut cancelled);
     trace::coverage(&mut report);
+    schedule::coverage(&mut report);
     report
 }
 
@@ -99,6 +104,23 @@ fn run_inner(
 ) -> Value {
     let limits = target.execution_limits();
     let mut report = empty_report("error", 1);
+    report["schedule"] = json!(fpas_vm::DebugScheduleReport::requested(
+        options.schedule_seed
+    ));
+    if options.schedule_seed.is_some()
+        && options
+            .input
+            .iter()
+            .any(|input| matches!(input, Input::Keys(_)))
+    {
+        report["diagnostics"] = json!([diagnostic(
+            "input_invalid",
+            "setup",
+            "Seeded scheduling accepts queued text lines only."
+        )]);
+        return report;
+    }
+    let target = target.with_schedule_seed(options.schedule_seed);
     trace::request(
         &mut report,
         &options.trace,
@@ -345,6 +367,7 @@ fn run_inner(
         records = engine.poll();
     }
     if let Some(session) = engine.batch_session() {
+        report["schedule"] = json!(session.schedule_report());
         let state = session.capture_snapshot(&expressions, options.task, options.frame);
         snapshot::append(&mut report, state, &options.expressions);
         if let Some(trace) = session.take_trace() {
@@ -359,6 +382,16 @@ fn run_inner(
     if cancellation_requested {
         report["outcome"] = json!("limit");
         report["exit_code"] = json!(3);
+        if options.schedule_seed.is_some() {
+            report["diagnostics"]
+                .as_array_mut()
+                .unwrap()
+                .push(diagnostic(
+                    "external_cancel",
+                    "execution",
+                    "Controlled execution was interrupted by its host.",
+                ));
+        }
     }
     report
 }
@@ -373,5 +406,26 @@ mod tests {
         assert_eq!((b.line, b.column), (42, Some(7)));
         assert_eq!(breakpoint(r"C:\src\main.fpas:42").unwrap().column, None);
         assert!(breakpoint("main.fpas:0").is_err());
+    }
+
+    #[test]
+    fn cancelled_seeded_execution_reports_interruption_not_controlled_completion() {
+        let (program, diagnostics) =
+            fpas_parser::parse("program Busy; begin while true do null; end while; end.");
+        assert!(diagnostics.is_empty());
+        let image = fpas_compiler::compile(&program).unwrap();
+        let report = run(
+            PreparedDebugTarget::new(image, Vec::new()),
+            Options {
+                schedule_seed: Some(42),
+                ..Options::default()
+            },
+            Box::new(std::io::sink()),
+            || true,
+        );
+        assert_eq!(report["exit_code"], 3);
+        assert_eq!(report["schedule"]["status"], "interrupted");
+        assert_eq!(report["schedule"]["reasons"], json!(["external_cancel"]));
+        assert!(report["schedule"]["dispatches"].is_string());
     }
 }

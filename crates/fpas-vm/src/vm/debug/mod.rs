@@ -15,6 +15,7 @@ mod location;
 mod mutation;
 mod recording;
 mod routines;
+pub(in crate::vm) mod scheduling;
 mod session;
 mod tasks;
 pub(in crate::vm) mod trace;
@@ -55,6 +56,7 @@ pub use mutation::{
 pub use recording::{
     DebugRecordingEnvelope, DebugRecordingEvent, MAX_RECORDING_EVENTS, RECORDING_ENVELOPE_VERSION,
 };
+pub use scheduling::{DebugScheduleReport, SCHEDULE_ALGORITHM};
 pub use session::{DebugEvaluationCancelHandle, DebugPauseHandle, DebugSession};
 pub use session::{DebugSnapshot, DebugTaskSnapshot, non_executing};
 pub use types::{

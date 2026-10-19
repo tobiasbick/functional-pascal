@@ -259,19 +259,26 @@ impl Worker {
                 return Ok(Flow::Boundary);
             }
             Opcode::SpawnTask => {
+                self.check_scheduling_scope()?;
                 self.spawn_task(instruction.abc())?;
                 return Ok(Flow::Boundary);
             }
             Opcode::Yield => {
+                self.check_scheduling_scope()?;
                 self.yield_task();
                 return Ok(Flow::Boundary);
             }
-            Opcode::EnterTaskScope => self.enter_task_scope()?,
+            Opcode::EnterTaskScope => {
+                self.check_scheduling_scope()?;
+                self.enter_task_scope()?;
+            }
             Opcode::ExitTaskScope => {
+                self.check_scheduling_scope()?;
                 self.exit_task_scope(false)?;
                 return Ok(Flow::Boundary);
             }
             Opcode::CancelTaskScope => {
+                self.check_scheduling_scope()?;
                 self.exit_task_scope(true)?;
                 return Ok(Flow::Boundary);
             }

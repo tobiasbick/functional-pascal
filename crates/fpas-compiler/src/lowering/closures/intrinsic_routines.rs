@@ -31,6 +31,7 @@ impl ClosureRegistry<'_> {
             .enumerate()
             .map(|(index, ty)| ParameterInput {
                 name: format!("argument{index}"),
+                type_name: None,
                 ty: *ty,
                 declaration: None,
                 reference: false,

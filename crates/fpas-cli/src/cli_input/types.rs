@@ -89,6 +89,7 @@ pub(crate) struct DebugCliConfig {
 /// Repeated batch requests and one optional inspection context.
 #[derive(Debug, Clone, PartialEq, Eq, Default)]
 pub(crate) struct DebugBatchConfig {
+    pub schedule_seed: Option<u64>,
     pub breakpoints: Vec<String>,
     pub expressions: Vec<String>,
     pub trace: Vec<String>,

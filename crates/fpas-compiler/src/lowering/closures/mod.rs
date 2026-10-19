@@ -139,6 +139,7 @@ impl<'a> ClosureRegistry<'a> {
                     .formal_param_type(parameter, &[])
                     .map(|ty| ParameterInput {
                         name: parameter.name.clone(),
+                        type_name: types.declared_scalar_name(&parameter.type_expr),
                         ty,
                         declaration: Some(parameter.span.diagnostic_span_or_synthetic()),
                         reference: parameter.mode == fpas_parser::ParamMode::Var,

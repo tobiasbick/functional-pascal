@@ -52,11 +52,21 @@ impl Worker {
         budget: u32,
     ) -> Result<DispatchBatch, VmError> {
         self.check_task_cancellation()?;
-        if !self.callback_continuations.is_empty() && self.resume_callback_continuation()? {
-            return Ok(DispatchBatch {
-                step: DispatchStep::Continue,
-                steps: 1,
-            });
+        if !self.callback_continuations.is_empty() {
+            self.trace_local_begin();
+            let (owner, address) = self
+                .callback_origin()
+                .unwrap_or((self.function, self.current_address));
+            let result = self.resume_callback_continuation();
+            // Continuation work has no declaration store, even if current_address still
+            // names the last completed Move in a callback frame.
+            self.trace_local_finish(owner, address, false, false, false);
+            if result? {
+                return Ok(DispatchBatch {
+                    step: DispatchStep::Continue,
+                    steps: 1,
+                });
+            }
         }
         let mut steps = 0;
         while steps < budget {
@@ -75,6 +85,16 @@ impl Worker {
             };
             // Verified code length fits an instruction address.
             self.current_address = InstructionAddress::new(self.ip as u32);
+            self.trace_local_begin();
+            if self.trace_interrupted() {
+                return Err(diagnostics::at_address(
+                    self.executable.executable(),
+                    self.current_address,
+                    fpas_diagnostics::codes::RUNTIME_VM_SHUTDOWN,
+                    "Debug trace reached a bound",
+                    "Inspect trace coverage.",
+                ));
+            }
             self.ip += 1;
             self.instruction_count = self.instruction_count.wrapping_add(1);
             steps += 1;
@@ -83,7 +103,23 @@ impl Worker {
             {
                 break;
             }
-            match self.execute(instruction)? {
+            let owner = self.function;
+            let address = self.current_address;
+            let old_depth = self.call_stack.len();
+            let result = self.execute(instruction);
+            let tail = matches!(
+                instruction.opcode(),
+                fpas_bytecode::Opcode::TailCall | fpas_bytecode::Opcode::TailCallValue
+            ) && self.call_stack.len() == old_depth
+                && result.is_ok();
+            self.trace_local_finish(
+                owner,
+                address,
+                result.is_ok(),
+                matches!(result, Ok(Flow::Return(_))),
+                tail,
+            );
+            match result? {
                 Flow::Next => {}
                 Flow::Boundary => {
                     if self.suspend_requested {

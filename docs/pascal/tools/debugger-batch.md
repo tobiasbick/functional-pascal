@@ -23,8 +23,9 @@ Stale, missing or escaping sources are errors.
 | --- | --- |
 | `--break path:line[:column]` | Repeatable source location, at most 64; coordinates start at 1. |
 | `--print expression` | One expression per occurrence, at most 64; never comma-split. |
-| `--trace selector` | Record committed changes to a mutable global or stored scalar record field; repeat, at most 64. |
+| `--trace selector` | Scalar global/stored record field or exact `Routine::Name` local/parameter; repeat, at most 64. |
 | `--trace-limit count` | Complete trace event capacity, default 1,000, ceiling 10,000; requires `--trace`. |
+| `--schedule-seed N` | Explicit unsigned 64-bit seed for fair task rounds, virtual task time and controlled effects; text-line input only. |
 | `--task id` | Inspection task; defaults to the stopping task. |
 | `--frame depth` | Inspection stack depth; defaults to 0, the active frame. |
 | `--script path` | Explicit runner-compatible TOML input script. |
@@ -53,8 +54,11 @@ default expressions, or assignments. An unresolved dotted name never constructs
 an enum value. All expressions inspect the same frozen state; an individual
 lookup/index/type error preserves other successful results.
 
-The debugger uses its deterministic all-stop task scheduler. This does not
-reproduce the normal concurrent scheduler or provide a scheduling seed/replay.
+The debugger normally uses its stable all-stop task scheduler with real task
+time. Opt into [seeded scheduling](debugger-scheduling.md) with
+`--schedule-seed N` to vary fair task rounds and use virtual time under controlled
+effects. Neither mode reproduces the normal concurrent worker pool or provides
+external-event replay.
 For a failure from an ordinary concurrent run use
 [`fpas run --failure-dump`](failure-dump.md).
 
@@ -108,6 +112,7 @@ contains these fields:
 | `expressions` | Requests in order with selected context, typed value or error. |
 | `output` | Ordered captured text records. |
 | `trace` | Bound watches and ordered typed initialization/change history, with explicit coverage and counts. |
+| `schedule` | Requested scheduling mode/seed, observed counters and explicit controlled/rejected/interrupted/unavailable coverage. |
 | `capture` | `incomplete`, omission `reasons`, and known task/global totals. |
 | `limits` | Effective execution, output, report and snapshot bounds. |
 
@@ -183,7 +188,9 @@ Existing JSONL and DAP protocols, documentation and tests remain supported.
 history while running to the existing first stop/end. It records initialization
 and consecutive unequal successful stores, including `var` and callback writes,
 with typed old/new values and the actual writing instruction/task. Mutable globals
-belong to the main task; locals and captures are not supported. Tracepoints do
-not create additional stops. Trace limits end execution explicitly with exit 3.
+belong to the main task. Use `--trace 'Routine::Name'` for scalar locals and
+parameters across calls/tasks, with activation and declaration-instance identities.
+Observation ends at lexical scope/call exit; capture and indexed selectors are
+unsupported. Tracepoints do not create additional stops. Trace limits end execution explicitly with exit 3.
 The [tracepoint contract](debugger-tracepoints.md) defines selectors, the additive
 `trace` JSON object, exact comparison, event/byte bounds and missing-history rules.

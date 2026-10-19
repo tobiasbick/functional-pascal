@@ -7,7 +7,9 @@ pub const MAX_REPORT_BYTES: usize = 8 * 1024 * 1024;
 
 /// Builds a complete empty envelope for errors before a target can be prepared.
 pub fn empty_report(outcome: &str, exit_code: i32) -> Value {
-    json!({"schema_version":1,"outcome":outcome,"exit_code":exit_code,"stop":null,"diagnostics":[],"sources":[],"globals":[],"tasks":[],"expressions":[],"output":[],"trace":{"requested":[],"watches":[],"events":[],"complete":true,"reasons":[],"event_count":0,"total_count":0},"capture":{"incomplete":false,"reasons":[],"total_tasks":null,"total_globals":null},"limits":{"timeout_seconds":30,"instruction_limit":100000000,"output_bytes":1048576,"report_bytes":MAX_REPORT_BYTES,"tasks":64,"frames_per_task":32,"frames":256,"bindings":4096,"depth":8,"children":64,"string_scalars":4096,"trace_events":1000,"trace_watches":64,"trace_field_depth":16,"trace_value_bytes":65536,"trace_retained_value_bytes":8388608,"trace_work_bytes":16777216,"trace_bytes":2097152}})
+    let mut report = json!({"schema_version":1,"outcome":outcome,"exit_code":exit_code,"stop":null,"diagnostics":[],"sources":[],"globals":[],"tasks":[],"expressions":[],"output":[],"trace":{"requested":[],"watches":[],"events":[],"complete":true,"reasons":[],"event_count":0,"total_count":0},"capture":{"incomplete":false,"reasons":[],"total_tasks":null,"total_globals":null},"limits":{"timeout_seconds":30,"instruction_limit":100000000,"output_bytes":1048576,"report_bytes":MAX_REPORT_BYTES,"tasks":64,"frames_per_task":32,"frames":256,"bindings":4096,"depth":8,"children":64,"string_scalars":4096,"trace_events":1000,"trace_watches":64,"trace_field_depth":16,"trace_value_bytes":65536,"trace_retained_value_bytes":8388608,"trace_live_instances":1024,"trace_local_retained_value_bytes":8388608,"trace_work_bytes":16777216,"trace_bytes":2097152}});
+    report["schedule"] = json!(fpas_vm::DebugScheduleReport::requested(None));
+    report
 }
 
 /// Creates one structured request, execution or transport diagnostic.
@@ -152,6 +154,18 @@ pub fn finish_report(report: &mut Value) -> Vec<u8> {
         // Valid control data cannot reach this path. A malformed worker envelope
         // must still terminate and preserve the primary diagnostic and outcome.
         let old = std::mem::replace(report, empty_report("error", 3));
+        if encoded_size(&old["schedule"]) <= 1024 {
+            report["schedule"] = old["schedule"].clone();
+        } else {
+            let seed = old["schedule"]["seed"]
+                .as_str()
+                .and_then(|text| text.parse::<u64>().ok());
+            report["schedule"] = json!(fpas_vm::DebugScheduleReport::requested(seed));
+            if seed.is_some() {
+                report["schedule"]["status"] = json!("unavailable");
+                report["schedule"]["reasons"] = json!(["state_unavailable"]);
+            }
+        }
         report["outcome"] = old["outcome"].clone();
         report["exit_code"] = if old["exit_code"] == 0 {
             json!(3)
@@ -324,5 +338,31 @@ mod tests {
         assert_eq!(report["trace"]["complete"], true);
         assert_eq!(report["expressions"][0]["value"]["scalar"], "42");
         assert_eq!(report["exit_code"], 0);
+    }
+
+    #[test]
+    fn snapshot_clipping_preserves_bounded_scheduling_identity_and_counters() {
+        let mut report = empty_report("runtime_error", 2);
+        report["schedule"] = json!(fpas_vm::DebugScheduleReport::requested(Some(u64::MAX)));
+        report["schedule"]["status"] = json!("controlled");
+        report["schedule"]["dispatches"] = json!("42");
+        let schedule = report["schedule"].clone();
+        report["globals"] = json!([{"value":"\u{1}".repeat(1_400_000)}]);
+        let bytes = finish_report(&mut report);
+        assert!(bytes.len() <= MAX_REPORT_BYTES);
+        assert_eq!(report["schedule"], schedule);
+        assert_eq!(report["exit_code"], 2);
+    }
+
+    #[test]
+    fn malformed_oversized_schedule_cannot_make_report_reduction_loop() {
+        let mut report = empty_report("error", 3);
+        report["schedule"] = json!(fpas_vm::DebugScheduleReport::requested(Some(42)));
+        report["schedule"]["unexpected"] = json!("x".repeat(MAX_REPORT_BYTES));
+        let bytes = finish_report(&mut report);
+        assert!(bytes.len() <= MAX_REPORT_BYTES);
+        assert_eq!(report["schedule"]["seed"], "42");
+        assert_eq!(report["schedule"]["status"], "unavailable");
+        assert_eq!(report["schedule"]["dispatches"], Value::Null);
     }
 }

@@ -34,6 +34,7 @@ impl LoweringContext {
         self.debug.bindings.push(fpas_ir::DebugBinding {
             local,
             name: name.to_string(),
+            type_name: None,
             kind: fpas_ir::DebugBindingKind::Local,
             ty,
             mutable,
@@ -62,6 +63,16 @@ impl LoweringContext {
     ) -> Result<LocalId, CompileError> {
         let name = format!("$p4_{}", self.locals.len());
         self.declare_local(&name, ty, true, span)
+    }
+
+    pub(in crate::lowering) fn set_binding_type_name(
+        &mut self,
+        local: LocalId,
+        type_name: Option<String>,
+    ) {
+        if let Some(binding) = self.debug.bindings.iter_mut().find(|b| b.local == local) {
+            binding.type_name = type_name;
+        }
     }
 
     fn resolve_local(

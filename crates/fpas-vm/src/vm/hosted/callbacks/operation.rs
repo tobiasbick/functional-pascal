@@ -1,6 +1,6 @@
 //! State machine for one resumable higher-order operation.
 
-use fpas_bytecode::{SharedFunction, Value};
+use fpas_bytecode::{FunctionId, InstructionAddress, SharedFunction, Value};
 
 use super::arguments::CallbackArguments;
 use super::sorting::KeyedSort;
@@ -8,6 +8,8 @@ use super::string::{StringReduction, StringSequence};
 
 /// Complete resumable state for one higher-order intrinsic owned by a task.
 pub(in crate::vm) struct CallbackContinuation {
+    /// Original intrinsic site, retained while callbacks temporarily replace the active frame.
+    pub(super) origin: (FunctionId, InstructionAddress),
     pub(super) callback: SharedFunction,
     pub(super) destination: Option<usize>,
     pub(super) operation: CallbackOperation,
@@ -99,8 +101,10 @@ impl CallbackContinuation {
         callback: SharedFunction,
         destination: Option<usize>,
         operation: CallbackOperation,
+        origin: (FunctionId, InstructionAddress),
     ) -> Self {
         Self {
+            origin,
             callback,
             destination,
             operation,
@@ -429,6 +433,7 @@ mod tests {
                 arguments: Some(CallbackArguments::empty()),
                 wrapper: SingleWrapper::Direct,
             },
+            (FunctionId::new(0), InstructionAddress::new(0)),
         );
 
         assert!(matches!(continuation.advance(), Ok(Advance::Call(_))));

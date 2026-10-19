@@ -315,6 +315,10 @@ pub enum DebugErrorKind {
     InstructionLimit,
     /// Captured program output exceeded its byte budget.
     OutputLimit,
+    /// Controlled tasks have no remaining internal source of progress.
+    ScheduleDeadlock,
+    /// The virtual task clock exhausted its numeric range.
+    ScheduleClockLimit,
     /// A requested trace exceeded its complete event capacity.
     TraceEventLimit,
     /// Exact scalar observation exceeded the supported value bound.

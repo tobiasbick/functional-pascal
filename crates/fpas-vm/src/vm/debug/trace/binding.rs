@@ -15,6 +15,14 @@ pub(super) fn bind(
         if selector.is_empty() || selector.len() > 4096 {
             return Err("Trace selectors require 1..4096 UTF-8 bytes.".into());
         }
+        if selector.contains("::") {
+            let mut watch = super::local_binding::bind(image, selector)?;
+            if !watches.iter().any(|prior| prior.identity == watch.identity) {
+                watch.id = watches.len();
+                watches.push(watch);
+            }
+            continue;
+        }
         let parts = selector.split('.').collect::<Vec<_>>();
         if parts.iter().any(|part| !identifier(part)) {
             return Err(format!(
@@ -92,7 +100,7 @@ pub(super) fn bind(
                 id: watches.len(),
                 request: selector.clone(),
                 name: canonical,
-                identity: DebugTraceIdentity {
+                identity: DebugTraceIdentity::Global {
                     global_slot: index,
                     field_slots: slots,
                 },
@@ -102,7 +110,7 @@ pub(super) fn bind(
         }
         let Some(watch) = candidate else {
             return Err(format!(
-                "Trace `{selector}` requires one mutable executable global or stored scalar record field. Use the full metadata unit name; locals, captures, aggregates and aliases are unsupported."
+                "Trace `{selector}` requires one mutable executable global or stored scalar record field, using the full metadata unit name. Use Routine::Name for scalar locals/parameters; captures, aggregates and aliases are unsupported."
             ));
         };
         if !watches.iter().any(|prior| prior.identity == watch.identity) {
@@ -118,7 +126,7 @@ pub(super) fn bind(
     Ok(watches)
 }
 
-fn identifier(text: &str) -> bool {
+pub(super) fn identifier(text: &str) -> bool {
     let mut bytes = text.bytes();
     bytes
         .next()
@@ -126,7 +134,7 @@ fn identifier(text: &str) -> bool {
         && bytes.all(|c| c.is_ascii_alphanumeric() || c == b'_')
 }
 
-fn scalar_type(image: &Executable, ty: DebugTypeId) -> Option<&str> {
+pub(super) fn scalar_type(image: &Executable, ty: DebugTypeId) -> Option<&str> {
     match image.debug_types.get(ty.get() as usize)? {
         DebugType::Integer => Some("integer"),
         DebugType::Real => Some("real"),

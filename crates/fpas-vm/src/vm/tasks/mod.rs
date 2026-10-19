@@ -249,7 +249,9 @@ impl Worker {
                 }
             }
             Intrinsic::Time(TimeIntrinsic::Sleep)
-                if self.task_id != 0 || self.has_task_scope_ownership() =>
+                if self.debug_schedule.is_some()
+                    || self.task_id != 0
+                    || self.has_task_scope_ownership() =>
             {
                 let [Value::Integer(milliseconds)] = arguments else {
                     return Err(
@@ -270,6 +272,19 @@ impl Worker {
 
     /// Resume a pool or debugger task when its suspended operation becomes ready.
     pub(in crate::vm) fn poll_task_suspension(&mut self) -> Result<bool, VmError> {
+        if self.task_suspension.is_none() {
+            self.suspend_requested = false;
+            return Ok(true);
+        }
+        // Resume stores commit at the suspended intrinsic before the next source stop.
+        let (owner, address) = (self.function, self.current_address);
+        self.trace_local_resume_begin();
+        let result = self.poll_task_suspension_inner();
+        self.trace_local_finish(owner, address, false, false, false);
+        result
+    }
+
+    fn poll_task_suspension_inner(&mut self) -> Result<bool, VmError> {
         let Some(suspension) = self.task_suspension.take() else {
             self.suspend_requested = false;
             return Ok(true);

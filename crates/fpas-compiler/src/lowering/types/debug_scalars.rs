@@ -27,7 +27,7 @@ pub(super) fn declared_name(ty: &Ty) -> Option<String> {
 }
 
 impl TypeTable {
-    pub(super) fn declared_semantic_scalar_name(&self, ty: &Ty) -> Option<String> {
+    pub(in crate::lowering) fn declared_semantic_scalar_name(&self, ty: &Ty) -> Option<String> {
         declared_name(ty).or_else(|| match ty {
             Ty::Named(name) => self.lookup_scalar_name(name),
             _ => None,

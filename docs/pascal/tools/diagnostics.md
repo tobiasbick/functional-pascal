@@ -756,6 +756,7 @@ can describe a structural restriction and leave those fields null.
 | FP5023 | Test assertion | `AssertTrue(false)` | `AssertTrue(true)` after fixing the behavior under test. |
 | FP5024 | Unsupported recording effect | Record a host effect that cannot be replayed | Perform the effect outside the recording session. |
 | FP5025 | Host random failure | OS random-byte provider fails | Restore the host provider and retry the operation. |
+| FP5026 | Unsupported seeded scheduling effect | A controlled debug run reaches a host effect or a task operation inside a synchronous native callback | Use ordinary debugging, fixed arguments/queued text input, or move the task operation outside the synchronous callback. |
 
 ### Internal invariants
 

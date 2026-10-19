@@ -95,6 +95,8 @@ impl CaptureInput {
 pub(crate) struct ParameterInput {
     /// Source-level parameter name.
     pub name: String,
+    /// Nominal scalar name retained before lowering erases its operational type.
+    pub type_name: Option<String>,
     /// Lowered parameter type.
     pub ty: TypeId,
     /// Exact source declaration when the parameter originates in user code.

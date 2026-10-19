@@ -1120,10 +1120,20 @@ queues test-runner line/key input; the default whole-invocation deadline is
 failed requested inspection or worker error. Ordinary completion exposes globals
 and no expired local frames. DAP/JSONL remain explicit session protocols.
 
-For value history, repeat `--trace Total` or `--trace State.Selected` on the batch
+For value history, repeat `--trace Total`, `--trace State.Selected` or
+`--trace 'Routine::Name'` on the batch
 command. [Tracepoints](tools/debugger-tracepoints.md) record initialization and
-consecutive changes to mutable globals or stored scalar record fields, including
-`var` and callback writes, without additional stops. Local variables and captures
-are unsupported; mutable globals belong to task 0. Inspect `trace.complete` and
+consecutive changes to scalar globals/fields and locals/parameters, including
+`var` and callback writes, without additional stops. Local events identify the
+activation and declaration instance; observation ends at lexical scope/call exit.
+Capture/index/aggregate selectors are unsupported; mutable globals belong to task 0. Inspect `trace.complete` and
 its reasons. `--trace-limit` defaults to 1,000 events, ceiling 10,000; losing
 requested history is explicit and trace execution limits return exit 3.
+
+To explore task ordering, use `fpas debug file.fpas --schedule-seed 42`.
+[Seeded scheduling](tools/debugger-scheduling.md) uses fair task rounds and
+virtual time with fixed arguments and sealed text-line input. Host effects and
+task operations inside synchronous native callbacks reject with FP5026. Repeating
+requires the same executable, runtime build/platform, seed, inputs and limits;
+this does not reproduce the normal concurrent worker pool. Inspect
+`schedule.status` and its reasons. DAP/JSONL do not accept the seed flag.

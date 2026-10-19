@@ -12,10 +12,14 @@ mod inspection;
 mod limits;
 #[path = "batch_debug/requests.rs"]
 mod requests;
+#[path = "batch_debug/scheduling.rs"]
+mod scheduling;
 #[path = "batch_debug/trace.rs"]
 mod trace;
 #[path = "batch_debug/trace_limits.rs"]
 mod trace_limits;
+#[path = "batch_debug/trace_locals.rs"]
+mod trace_locals;
 
 use serde_json::Value;
 use std::{
@@ -104,6 +108,7 @@ fn report(output: Output, exit: i32) -> Value {
         "capture",
         "trace",
         "limits",
+        "schedule",
     ] {
         assert!(report.get(key).is_some(), "missing {key}");
     }

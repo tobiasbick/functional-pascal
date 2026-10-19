@@ -161,6 +161,13 @@ impl LoweringContext {
             debug.bindings.push(fpas_ir::DebugBinding {
                 local,
                 name: input.name.clone(),
+                type_name: input.type_name.as_ref().map(|name| {
+                    if input.reference {
+                        format!("var {name}")
+                    } else {
+                        name.clone()
+                    }
+                }),
                 kind: fpas_ir::DebugBindingKind::Parameter,
                 ty: input.ty,
                 mutable: false,
@@ -207,6 +214,7 @@ impl LoweringContext {
             debug.bindings.push(fpas_ir::DebugBinding {
                 local,
                 name: capture.name.clone(),
+                type_name: None,
                 kind: fpas_ir::DebugBindingKind::Capture,
                 ty: if capture.reference {
                     capture.storage_ty

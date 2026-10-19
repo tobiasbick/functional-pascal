@@ -1,6 +1,7 @@
 //! Parent-owned one-shot debug execution and publication of a single JSON document.
 
 mod capture;
+mod schedule;
 mod trace;
 mod utf8;
 mod worker;
@@ -34,7 +35,7 @@ pub(crate) fn selected(args: &[String]) -> bool {
     }
     if args
         .iter()
-        .any(|arg| ["--trace", "--trace-limit"].contains(&arg.as_str()))
+        .any(|arg| ["--trace", "--trace-limit", "--schedule-seed"].contains(&arg.as_str()))
     {
         return true;
     }
@@ -64,6 +65,7 @@ pub(crate) fn run(
         }
     };
     trace::preserve_request(&mut report, args);
+    schedule::preserve_request(&mut report, args);
     let mut bytes = finish_report(&mut report);
     let timeout = report["limits"]["timeout_seconds"].as_u64().unwrap_or(30);
     if report["outcome"] != "limit" && started.elapsed() >= Duration::from_secs(timeout) {
@@ -82,6 +84,7 @@ pub(crate) fn run(
                 "publication",
                 "The invocation deadline expired while preparing the result.",
             ));
+        schedule::normalize(&mut report);
         bytes = finish_report(&mut report);
     }
     let exit = report["exit_code"].as_i64().unwrap_or(3) as i32;
@@ -165,6 +168,7 @@ fn run_parent(args: &[String], cwd: &Path, started: Instant) -> Result<Value, Fa
             || !report["trace"]["events"].is_array()
             || !report["trace"]["requested"].is_array()
             || !report["trace"]["complete"].is_boolean()
+            || !report["schedule"].is_object()
             || !report["exit_code"].as_u64().is_some_and(|exit| exit <= 3)
         {
             return Err("Worker published an invalid result envelope.".into());

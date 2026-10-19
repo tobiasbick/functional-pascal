@@ -26,8 +26,9 @@ for paths through globals, locals, parameters and active captures, documented un
 [D4](#d4-reproducible-task-scheduling) has an implemented, independently reviewed
 bounded delivery; [seeded batch scheduling](../pascal/tools/debugger-scheduling.md)
 owns its contract. The completed D5 extensions and deferred aggregate decision
-are recorded in the [extension index](tracepoint-extensions/README.md); D2 remains
-unscheduled.
+are recorded in the [extension index](tracepoint-extensions/README.md). Stable
+anonymous callback names and concrete debug projections are planned next; D2
+remains unscheduled.
 Human-facing tools stay: the DAP debugger
 ([`debugger.md`](../pascal/tools/debugger.md)) and the language server
 ([`editor-integration.md`](../pascal/tools/editor-integration.md)). The JSONL debugger protocol
@@ -47,9 +48,18 @@ describes the scope and limits. Bounded D4 adds
 [seeded fair task rounds and virtual time](../pascal/tools/debugger-scheduling.md)
 for controlled batch runs. All three D5 extension packages are implemented and
 independently reviewed; the [extension index](tracepoint-extensions/README.md)
-records completion and the remaining deferred assessment. Dogfood scalar paths
-before revisiting whole aggregates or continuous dormant escaped-cell history.
-D2 remains an unscheduled idea; no further implementation package is selected.
+records completion and the next debugger work, in this order:
+
+1. [Stable anonymous callback names](tracepoint-extensions/05-stable-callback-names.md),
+   reproducible across compilations for exact trace selectors.
+2. [Concrete debug projections](tracepoint-extensions/06-concrete-debug-projections.md),
+   jointly closing D5-M1/M2 for generic fields and nominal array element names.
+
+The Notes selection bug found during dogfooding is fixed and covered by
+[headless regressions](../../tests/apps/notes/note_search_selection_test.fpas),
+including [unsaved changes and save failures](../../tests/apps/notes/note_search_dirty_test.fpas).
+Continue dogfooding with capture and task/seed cases. Whole aggregates and continuous dormant
+escaped-cell history remain deferred; D2 remains an unscheduled idea.
 JSONL removal remains deferred; the protocol and its tests stay supported.
 
 ## Principle: protocols for humans, commands for agents
@@ -351,8 +361,12 @@ The three extension packages are complete and tracked in the temporary
 4. Whole aggregate history — assessment: remain deferred, with no current
    implementation commitment. Reopen only with concrete dogfooding cases.
 
-The scheduled scalar-path extensions are complete; unrestricted aggregate and
-dormant escaped-cell history remain unimplemented and deferred. JSONL/DAP and their existing behavior remain supported.
+The original three scalar-path extensions are complete. The next planned
+packages are [stable anonymous callback names](tracepoint-extensions/05-stable-callback-names.md)
+and [concrete debug projections](tracepoint-extensions/06-concrete-debug-projections.md).
+These improve existing traces; no new debug mode is selected. Unrestricted
+aggregate and dormant escaped-cell history remain deferred. JSONL/DAP and their
+existing behavior remain supported.
 
 ### What already exists
 

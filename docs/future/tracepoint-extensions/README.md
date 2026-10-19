@@ -1,12 +1,14 @@
 # D5: Tracepoint extensions
 
-Status: Completed for packages 1–3; independently reviewed. Whole aggregates
-remain deferred. This is the temporary D5 extension index, not an AP package or
+Status: Packages 1–3 completed and independently reviewed; packages 5–6 planned.
+Whole aggregates remain deferred. This is the temporary D5 extension index, not an AP package or
 an implemented language specification.
 
 The scalar-path implementation scope is complete: local record fields, fixed
 array positions and activation-scoped capture bindings. Permanent docs/tests
 own the completed packages, so their temporary implementation files are removed.
+The next two packages improve stable naming and debug type metadata without
+adding source-language features.
 
 Current behavior belongs to the permanent
 [tracepoint contract](../../pascal/tools/debugger-tracepoints.md). D1 failure
@@ -20,21 +22,27 @@ D2 record/replay is outside this plan. JSONL removal remains deferred.
 | 1 | [Scalar fields of local records](../../pascal/tools/debugger-tracepoints.md#selecting-storage) | Completed; independently reviewed | Existing scalar local/parameter tracing |
 | 2 | [Fixed array positions](../../pascal/tools/debugger-tracepoints.md#selecting-storage) | Completed; independently reviewed | Package 1 and shared metadata path traversal |
 | 3 | [Scalar capture bindings](../../pascal/tools/debugger-tracepoints.md#observed-changes) | Completed; independently reviewed | Packages 1–2 and exact capture provenance |
-| 4 | [Whole aggregate history](04-aggregate-decision.md) | Deferred; no implementation scheduled | Dogfooding of packages 1–3 |
+| 4 | [Stable anonymous callback names](05-stable-callback-names.md) | Planned; next debugger work | Exact routine selectors and capture provenance |
+| 5 | [Concrete debug projections](06-concrete-debug-projections.md) | Planned | Package 5; D5-M1/M2 together |
+| — | [Whole aggregate history](04-aggregate-decision.md) | Deferred; no implementation scheduled | Concrete dogfooding evidence |
 
 Use these status words consistently: **Planned**, **In progress**, **In review**,
 **Completed**, **Decision open**, **Deferred**. Deferred work has no implied
 implementation commitment. An implementation blocker is recorded separately
 with its concrete cause and next action.
 
-No implementation package remains scheduled. Dogfood the delivered scalar paths.
+Next debugger work: package 5, then package 6. Continue dogfooding the delivered
+scalar paths. The first Notes case found and fixed an application selection bug,
+covered by [headless regressions](../../../tests/apps/notes/note_search_selection_test.fpas)
+and [save-failure checks](../../../tests/apps/notes/note_search_dirty_test.fpas).
+This application fix does not implement either planned debugger package.
 Reopen the [aggregate assessment](04-aggregate-decision.md) only when concrete
 cases demonstrate missing information that selected paths or D1/D3 cannot provide.
 Continuous history of dormant escaped cells is also deferred and unscheduled.
 
 ## Verification and review
 
-All three packages received independent subagent review; no findings remain open.
+Packages 1–3 received independent subagent review; no findings remain open.
 Review fixes include exact enum IDs, capture definition scope/declaration order,
 strict capture ABI representation and the compiler scope correction for forwarded
 zero-word reads. Regression cases include real callback tail-frame reuse,
@@ -56,6 +64,9 @@ raw-array nominal element display names are recorded in
 Both boundaries are documented and covered by regression tests.
 
 ## Shared decisions
+
+The unchanged program/object format rule below describes packages 1–3. Package 6
+explicitly plans new debug metadata and must version affected encodings.
 
 - Keep one batch command, `--trace`, and one result document. No new session
   protocol, alias flag, source instrumentation or interactive setup is needed.

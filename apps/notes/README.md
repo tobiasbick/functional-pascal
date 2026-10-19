@@ -65,6 +65,13 @@ or change its saved timestamp. Changes to the persisted title, tags, or body
 mark the note as unsaved. A successful retry after a save failure clears the error overlay
 and allows navigation and Save-and-quit again.
 
+Searching keeps the selected note and its editor position while it still matches.
+If a new query hides it, Notes saves pending changes before selecting the first
+match, or clearing the editor when there are no matches. A failed save keeps the
+previous query, selection and edits and shows the save error. Typing in search
+keeps focus there. Editing a note so it no longer matches, or creating a note
+outside the current filter, clears the query to keep that note visible.
+
 ## Keyboard
 
 | Key | Action |
@@ -130,6 +137,7 @@ apps/notes/
         ├── Format.fpas      # .note parser and encoder
         ├── Repository.fpas  # directory loading and durable saves
         ├── Theme.fpas       # truecolor palette
+        ├── Selection.fpas   # note identity, editor selection and filter visibility
         ├── Update.fpas      # state transitions and shortcuts
         └── View.fpas        # responsive TUI and overlays
 ```

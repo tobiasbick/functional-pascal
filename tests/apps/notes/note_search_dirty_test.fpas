@@ -1,0 +1,109 @@
+program NoteSearchDirtyTest;
+
+uses
+  Notes.Actions as Actions, Notes.Model as Model, Notes.Repository as Repository,
+  Notes.Update as Update, Notes.View as View, Std.Fs as Fs, Std.Test as Test, Std.Tui as Tui;
+
+function Search(State: Model.NotesModel; Text: string): Model.NotesModel;
+begin
+  var Focused := State;
+  Focused.Focus := Actions.SearchControl;
+  Focused.Pane := Model.NotesPane.List;
+  const App := Tui.TuiApplication.OpenForTest(Tui.TuiSize.Create(100, 30));
+  App.Inject(
+    Tui.TuiMsgTextChanged(
+      Tui.TuiControlId.Create(Actions.SearchControl),
+      Tui.TuiAction.Create(Actions.SearchChangedAction),
+      Text,
+      Text.Length()
+    )
+  );
+  const Next := App.RunIterations(Focused, Update.NotesUpdate, View.NotesView, 1, 0);
+  App.Close();
+  Test.AssertEquals(Actions.SearchControl, Next.Focus);
+  return Next;
+end function;
+
+begin
+  const Directory := Test.ScratchDir() + '/blocked';
+  discard Fs.WriteText(Directory, 'file, not directory').Unwrap();
+  var Other := Model.NoteCreate('other', 2);
+  Other.Title := 'Shopping';
+  Other.Body := 'original';
+  var Match := Model.NoteCreate('match', 1);
+  Match.Title := 'FPAS';
+  const Loaded := Model.NotesLoad(Notes := [Other, Match], Issues := []);
+  var State := Model.NotesModelCreate(Directory, Loaded);
+  const Cmd := Tui.TuiCmdOutput.Create();
+  State := Update.NotesUpdate(
+    State, Tui.TuiMsgTextAreaChanged(
+      Tui.TuiControlId.Create(Actions.BodyControl),
+      Tui.TuiAction.Create(Actions.BodyChangedAction),
+      'unsaved',
+      3,
+      Tui.TuiPoint.Create(0, 0)
+    ), Cmd
+  );
+  Test.AssertTrue(State.Dirty);
+
+  // Keeping the dirty note visible does not try to save into the blocked path.
+  State := Search(State, 'Shopping');
+  Test.AssertTrue(State.Dirty);
+  Test.AssertTrue(State.Overlay = Model.NotesOverlay.Closed);
+  Test.AssertEquals('other', State.Notes[State.Selected].Id);
+  Test.AssertEquals(3, State.BodyCaret);
+
+  // A failed save rejects the new filter and preserves both edits and carets.
+  State := Search(State, 'FPAS');
+  Test.AssertTrue(State.Dirty);
+  Test.AssertTrue(State.Overlay = Model.NotesOverlay.SaveFailure);
+  Test.AssertTrue(State.ErrorMessage <> '');
+  Test.AssertEquals('Shopping', State.Search);
+  Test.AssertEquals('Shopping'.Length(), State.SearchCaret);
+  Test.AssertEquals('other', State.Notes[State.Selected].Id);
+  Test.AssertEquals('unsaved', State.Notes[State.Selected].Body);
+  Test.AssertEquals(3, State.BodyCaret);
+  Test.AssertEquals('file, not directory', Fs.ReadText(Directory).Unwrap());
+
+  // Retrying saves the former selection before switching to the matching note.
+  discard Fs.DeleteFile(Directory).Unwrap();
+  State := Search(State, 'FPAS');
+  Test.AssertFalse(State.Dirty);
+  Test.AssertTrue(State.Overlay = Model.NotesOverlay.Closed);
+  Test.AssertEquals('', State.ErrorMessage);
+  Test.AssertEquals('match', State.Notes[State.Selected].Id);
+  Test.AssertEquals('FPAS', State.Search);
+  Test.AssertEquals(0, State.BodyCaret);
+  const Saved := Repository.NotesLoadDirectory(Directory).Unwrap();
+  Test.AssertEquals(1, Saved.Notes.Length());
+  Test.AssertEquals('other', Saved.Notes[0].Id);
+  Test.AssertEquals('unsaved', Saved.Notes[0].Body);
+
+  // A dirty selection is also saved before a filter with no results clears it.
+  State := Update.NotesUpdate(
+    State, Tui.TuiMsgTextAreaChanged(
+      Tui.TuiControlId.Create(Actions.BodyControl),
+      Tui.TuiAction.Create(Actions.BodyChangedAction),
+      'edited match',
+      2,
+      Tui.TuiPoint.Create(0, 0)
+    ), Cmd
+  );
+  State := Search(State, 'no results');
+  Test.AssertEquals(-1, State.Selected);
+  Test.AssertFalse(State.Dirty);
+  const SavedAll := Repository.NotesLoadDirectory(Directory).Unwrap();
+  Test.AssertEquals(2, SavedAll.Notes.Length());
+  var Found := false;
+  for Value: Model.Note in SavedAll.Notes do
+    if Value.Id = 'match' then
+      Test.AssertEquals('edited match', Value.Body);
+      Found := true;
+    end if;
+  end for;
+
+  Test.AssertTrue(Found);
+  State := Search(State, '');
+  Test.AssertTrue(State.Selected >= 0);
+  Test.AssertFalse(State.Dirty);
+end.

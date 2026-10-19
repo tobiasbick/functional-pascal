@@ -1,7 +1,7 @@
 // Controlled text proposals and selection updates for Notes.
 unit Notes.Editing;
 
-uses Notes.Actions as Actions, Notes.Model as Model, Std.Conv as Conv, Std.Tui as Tui;
+uses Notes.Actions as Actions, Notes.Model as Model, Notes.Selection as Selection, Std.Conv as Conv, Std.Tui as Tui;
 
 // Reports whether the selection refers to an existing note.
 public function NotesHasSelection(State: Model.NotesModel): boolean;
@@ -68,7 +68,7 @@ begin
       Next := NotesWithNote(Next, Next.Selected, NoteValue);
       Next.Dirty := true;
       Next.Status := 'Unsaved changes';
-      return Next;
+      return Selection.NotesRevealEdited(Next);
     end;
   end if;
 
@@ -88,7 +88,7 @@ begin
       Next := NotesWithNote(Next, Next.Selected, NoteValue);
       Next.Dirty := true;
       Next.Status := 'Unsaved changes';
-      return Next;
+      return Selection.NotesRevealEdited(Next);
     end;
   end if;
 
@@ -120,6 +120,7 @@ begin
       Next := NotesWithNote(Next, Next.Selected, NoteValue);
       Next.Dirty := true;
       Next.Status := 'Unsaved changes';
+      return Selection.NotesRevealEdited(Next);
     end;
   end if;
 

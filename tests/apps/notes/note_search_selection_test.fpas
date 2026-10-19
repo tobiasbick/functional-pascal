@@ -1,0 +1,107 @@
+program NoteSearchSelectionTest;
+
+uses
+  Notes.Actions as Actions, Notes.Model as Model, Notes.Update as Update, Notes.View as View,
+  Std.Test as Test, Std.Tui as Tui;
+
+function MakeNote(Id: string; Title: string; Tags: array of string; Body: string): Model.Note;
+begin
+  var Value := Model.NoteCreate(Id, 1);
+  Value.Title := Title;
+  Value.Tags := Tags;
+  Value.Body := Body;
+  return Value;
+end function;
+
+function Search(State: Model.NotesModel; Text: string): Model.NotesModel;
+begin
+  var Focused := State;
+  Focused.Focus := Actions.SearchControl;
+  Focused.Pane := Model.NotesPane.List;
+  const App := Tui.TuiApplication.OpenForTest(Tui.TuiSize.Create(100, 30));
+  App.Inject(
+    Tui.TuiMsgTextChanged(
+      Tui.TuiControlId.Create(Actions.SearchControl),
+      Tui.TuiAction.Create(Actions.SearchChangedAction),
+      Text,
+      Text.Length()
+    )
+  );
+  const Next := App.RunIterations(Focused, Update.NotesUpdate, View.NotesView, 1, 0);
+  App.Close();
+  Test.AssertEquals(Actions.SearchControl, Next.Focus);
+  Test.AssertTrue(Next.Pane = Model.NotesPane.List);
+  return Next;
+end function;
+
+begin
+  const Loaded := Model.NotesLoad(
+    Notes := [
+      MakeNote('shopping', 'Shopping', ['errands'], 'Bread'),
+      MakeNote('parser', 'FPAS parser', ['syntax'], 'Grammar'),
+      MakeNote('docs', 'FPAS docs', ['manual'], 'Reference')
+    ],
+    Issues := []
+  );
+  var State := Model.NotesModelCreate(Test.ScratchDir(), Loaded);
+
+  // Hiding the current note selects the first match and refreshes its editor.
+  State := Search(State, 'FPAS');
+  Test.AssertEquals('parser', State.Notes[State.Selected].Id);
+  Test.AssertEquals(0, Update.NotesSelectedFilteredPosition(State));
+  Test.AssertEquals('syntax', State.TagsText);
+  Test.AssertEquals('FPAS parser'.Length(), State.TitleCaret);
+  Test.AssertEquals(0, State.BodyCaret);
+  Test.AssertFalse(State.Dirty);
+  // The visible list position maps back to the original source-array index.
+  const Cmd := Tui.TuiCmdOutput.Create();
+  State := Update.NotesUpdate(
+    State, Tui.TuiMsgSelectionChanged(
+      Tui.TuiControlId.Create(Actions.ListControl),
+      Tui.TuiAction.Create(Actions.SelectionChangedAction),
+      1
+    ), Cmd
+  );
+  State.BodyCaret := 3;
+  State := Search(State, 'FP');
+  Test.AssertEquals('docs', State.Notes[State.Selected].Id);
+  Test.AssertEquals(1, Update.NotesSelectedFilteredPosition(State));
+  Test.AssertEquals(3, State.BodyCaret);
+  State := Search(State, 'docs');
+  Test.AssertEquals('docs', State.Notes[State.Selected].Id);
+  Test.AssertEquals(0, Update.NotesSelectedFilteredPosition(State));
+
+  // No matches clears the editor; clearing search then restores a valid selection.
+  State := Search(State, 'absent');
+  Test.AssertEquals(-1, State.Selected);
+  Test.AssertEquals(-1, Update.NotesSelectedFilteredPosition(State));
+  Test.AssertEquals('', State.TagsText);
+  Test.AssertEquals(0, State.TitleCaret);
+  Test.AssertFalse(State.Dirty);
+  State := Search(State, '');
+  Test.AssertEquals('shopping', State.Notes[State.Selected].Id);
+  Test.AssertEquals(0, Update.NotesSelectedFilteredPosition(State));
+
+  // A caret-only proposal must not reset the editor or change selection.
+  State := Search(State, 'FPAS');
+  State.BodyCaret := 2;
+  State := Update.NotesUpdate(
+    State, Tui.TuiMsgTextChanged(
+      Tui.TuiControlId.Create(Actions.SearchControl),
+      Tui.TuiAction.Create(Actions.SearchChangedAction),
+      'FPAS',
+      1
+    ), Cmd
+  );
+  Test.AssertEquals('parser', State.Notes[State.Selected].Id);
+  Test.AssertEquals(2, State.BodyCaret);
+  Test.AssertEquals(1, State.SearchCaret);
+  const Empty := Model.NotesModelCreate(
+    Test.ScratchDir(),
+    Model.NotesLoad(Notes := [], Issues := [])
+  );
+  const EmptySearch := Search(Empty, 'FPAS');
+  Test.AssertEquals(-1, EmptySearch.Selected);
+  Test.AssertEquals('FPAS', EmptySearch.Search);
+  Test.AssertFalse(EmptySearch.Dirty);
+end.

@@ -2,56 +2,15 @@ unit Notes.Update;
 
 uses
   Notes.Actions as Actions, Notes.Model as Model, Notes.Editing as Editing,
+  Notes.Selection as Selection,
   Notes.Repository as Repository, Std.Console as Console, Std.Conv as Conv, Std.Time as Time,
   Std.Tui as Tui;
-
-function NoteIndexById(Notes: array of Model.Note; Id: string): integer;
-begin
-  for Index: integer := 0 to Notes.Length() - 1 do
-    begin
-      if Notes[Index].Id = Id then
-        begin
-          return Index;
-        end;
-      end if;
-    end;
-  end for;
-
-  return -1;
-end function;
 
 function ResortSelected(State: Model.NotesModel; SelectedId: string): Model.NotesModel;
 begin
   var Next: Model.NotesModel := State;
   Next.Notes := Repository.NotesSort(State.Notes);
-  Next.Selected := NoteIndexById(Next.Notes, SelectedId);
-  return Next;
-end function;
-
-function WithEditorFields(State: Model.NotesModel; Selected: integer): Model.NotesModel;
-begin
-  var Next: Model.NotesModel := State;
-  Next.Selected := Selected;
-  Next.Pane := Model.NotesPane.Editor;
-  Next.Focus := Actions.BodyControl;
-  Next.Dirty := false;
-  Next.BodyCaret := 0;
-  Next.BodyOffset := Tui.TuiPoint.Create(0, 0);
-  if (Selected >= 0) and (Selected < State.Notes.Length()) then
-    begin
-      const NoteValue: Model.Note := State.Notes[Selected];
-      Next.TitleCaret := NoteValue.Title.Length();
-      Next.TagsText := Model.NoteTagsText(NoteValue);
-      Next.TagsCaret := Next.TagsText.Length();
-    end;
-  else
-    begin
-      Next.TitleCaret := 0;
-      Next.TagsText := '';
-      Next.TagsCaret := 0;
-    end;
-  end if;
-
+  Next.Selected := Selection.NoteIndexById(Next.Notes, SelectedId);
   return Next;
 end function;
 
@@ -93,22 +52,6 @@ begin
   end case;
 end function;
 
-function SelectedFilteredPosition(State: Model.NotesModel): integer;
-begin
-  const Indices: array of integer := Model.NotesFilteredIndices(State.Notes, State.Search);
-  for Index: integer := 0 to Indices.Length() - 1 do
-    begin
-      if Indices[Index] = State.Selected then
-        begin
-          return Index;
-        end;
-      end if;
-    end;
-  end for;
-
-  return -1;
-end function;
-
 function SelectFiltered(State: Model.NotesModel; Position: integer): Model.NotesModel;
 begin
   const Indices: array of integer := Model.NotesFilteredIndices(State.Notes, State.Search);
@@ -124,9 +67,30 @@ begin
       return Saved;
     end;
   end if;
-  var Next: Model.NotesModel := WithEditorFields(Saved, NoteIndexById(Saved.Notes, TargetId));
+  var Next: Model.NotesModel := Selection.NotesWithEditorFields(
+    Saved,
+    Selection.NoteIndexById(Saved.Notes, TargetId)
+  );
   Next.Pane := Model.NotesPane.List;
   Next.Focus := Actions.ListControl;
+  return Next;
+end function;
+
+function ChangeSearch(State: Model.NotesModel; Text: string; Caret: integer): Model.NotesModel;
+begin
+  const Proposed := Editing.NotesEditText(State, Actions.SearchChangedAction, Text, Caret);
+  if Selection.NotesSelectedFilteredPosition(Proposed) >= 0 then
+    return Proposed;
+  end if;
+  // Persist using the old filter so a failed save leaves a valid visible selection.
+  const Saved := NotesPersistCurrent(State);
+  if Saved.Dirty or (Saved.Overlay = Model.NotesOverlay.SaveFailure) then
+    return Saved;
+  end if;
+  var Next := Editing.NotesEditText(Saved, Actions.SearchChangedAction, Text, Caret);
+  Next := Selection.NotesFirstVisible(Next);
+  Next.Pane := Model.NotesPane.List;
+  Next.Focus := Actions.SearchControl;
   return Next;
 end function;
 
@@ -148,11 +112,11 @@ begin
         Notes.PushInPlace(Draft);
         Next.Notes := Notes;
         Next := ResortSelected(Next, Draft.Id);
-        Next := WithEditorFields(Next, Next.Selected);
+        Next := Selection.NotesWithEditorFields(Next, Next.Selected);
         Next.TitleCaret := Draft.Title.Length();
         Next.Focus := Actions.TitleControl;
         Next.Status := 'Created a new note';
-        return Next;
+        return Selection.NotesRevealEdited(Next);
       end;
     when Error(const Message):
       begin
@@ -180,22 +144,6 @@ begin
   return NotesPersistCurrent(Next);
 end function;
 
-function SelectFirstVisible(State: Model.NotesModel): Model.NotesModel;
-begin
-  const Indices: array of integer := Model.NotesFilteredIndices(State.Notes, State.Search);
-  if Indices.Length() = 0 then
-    begin
-      var Empty: Model.NotesModel := State;
-      Empty.Selected := -1;
-      Empty.Pane := Model.NotesPane.List;
-      Empty.Focus := Actions.ListControl;
-      return Empty;
-    end;
-  end if;
-
-  return WithEditorFields(State, Indices[0]);
-end function;
-
 function ArchiveNote(State: Model.NotesModel): Model.NotesModel;
 begin
   if not Editing.NotesHasSelection(State) then
@@ -216,7 +164,7 @@ begin
   end if;
 
   Next.Status := 'Note archived';
-  return SelectFirstVisible(Next);
+  return Selection.NotesFirstVisible(Next);
 end function;
 
 function HandleAction(State: Model.NotesModel; Action: integer; Cmd: Tui.TuiCmdOutput): Model.NotesModel;
@@ -424,6 +372,10 @@ begin
       end;
     when Tui.TuiMsg.TextChanged(const Source, const Action, const Text, const Caret):
       begin
+        if Action.Value = Actions.SearchChangedAction then
+          return ChangeSearch(State, Text, Caret);
+        end if;
+
         return Editing.NotesEditText(State, Action.Value, Text, Caret);
       end;
     when Tui.TuiMsg.TextAreaChanged(const Source, const Action, const Text, const Caret, const Offset):
@@ -484,6 +436,6 @@ end function;
 // Maps the source note selection to its position in the filtered list.
 public function NotesSelectedFilteredPosition(State: Model.NotesModel): integer;
 begin
-  return SelectedFilteredPosition(State);
+  return Selection.NotesSelectedFilteredPosition(State);
 end function;
 end unit;

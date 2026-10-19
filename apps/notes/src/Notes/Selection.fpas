@@ -1,0 +1,83 @@
+// Pure note identity, editor selection and filter visibility operations.
+unit Notes.Selection;
+
+uses Notes.Actions as Actions, Notes.Model as Model, Std.Tui as Tui;
+
+// Finds the current array position of a stable note identity.
+public function NoteIndexById(Notes: array of Model.Note; Id: string): integer;
+begin
+  for Index: integer := 0 to Notes.Length() - 1 do
+    if Notes[Index].Id = Id then
+      return Index;
+    end if;
+  end for;
+
+  return -1;
+end function;
+
+// Initializes editor fields after a successful selection change.
+public function NotesWithEditorFields(State: Model.NotesModel; Selected: integer): Model.NotesModel;
+begin
+  var Next := State;
+  Next.Selected := Selected;
+  Next.Pane := Model.NotesPane.Editor;
+  Next.Focus := Actions.BodyControl;
+  Next.Dirty := false;
+  Next.BodyCaret := 0;
+  Next.BodyOffset := Tui.TuiPoint.Create(0, 0);
+  if (Selected >= 0) and (Selected < State.Notes.Length()) then
+    const NoteValue := State.Notes[Selected];
+    Next.TitleCaret := NoteValue.Title.Length();
+    Next.TagsText := Model.NoteTagsText(NoteValue);
+    Next.TagsCaret := Next.TagsText.Length();
+  else
+    Next.TitleCaret := 0;
+    Next.TagsText := '';
+    Next.TagsCaret := 0;
+  end if;
+
+  return Next;
+end function;
+
+// Maps the selected note's source index to its visible list position.
+public function NotesSelectedFilteredPosition(State: Model.NotesModel): integer;
+begin
+  const Indices := Model.NotesFilteredIndices(State.Notes, State.Search);
+  for Index: integer := 0 to Indices.Length() - 1 do
+    if Indices[Index] = State.Selected then
+      return Index;
+    end if;
+  end for;
+
+  return -1;
+end function;
+
+// Selects the first visible note, or clears the editor for an empty result.
+public function NotesFirstVisible(State: Model.NotesModel): Model.NotesModel;
+begin
+  const Indices := Model.NotesFilteredIndices(State.Notes, State.Search);
+  if Indices.Length() = 0 then
+    var Empty := NotesWithEditorFields(State, -1);
+    Empty.Pane := Model.NotesPane.List;
+    Empty.Focus := Actions.ListControl;
+    return Empty;
+  end if;
+
+  return NotesWithEditorFields(State, Indices[0]);
+end function;
+
+// Keeps an edited or newly created note visible without changing or saving it.
+public function NotesRevealEdited(State: Model.NotesModel): Model.NotesModel;
+begin
+  if (State.Search <> '') and ((State.Selected >= 0) and (State.Selected < State.Notes.Length())) then
+    if not Model.NoteMatches(State.Notes[State.Selected], State.Search) then
+      var Next := State;
+      Next.Search := '';
+      Next.SearchCaret := 0;
+      return Next;
+    end if;
+  end if;
+
+  return State;
+end function;
+end unit;

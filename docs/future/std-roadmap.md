@@ -7,6 +7,9 @@ strings, math, arrays, dictionaries, options, results, tasks, filesystem access,
 HTTP, and OpenAI-compatible chat. The next standard-library work should keep that unit-based shape
 and add focused units instead of merging unrelated APIs into larger buckets.
 
+The [gap review](stdlib-gap-review.md) records the current API assessment excluding
+AI, comparison languages and suggested FPAS 1 candidates. It does not schedule implementation.
+
 ## Direction
 
 - Keep `Std.*` split by domain.

@@ -1120,6 +1120,10 @@ queues test-runner line/key input; the default whole-invocation deadline is
 failed requested inspection or worker error. Ordinary completion exposes globals
 and no expired local frames. DAP/JSONL remain explicit session protocols.
 
+For compiled-image debugging, use `--source-root` with the `Debug source root`
+printed by `fpas build`; sibling source dependencies share that canonical tree.
+Rebuild older images whose source paths traverse above their project directory.
+
 For value history, repeat `--trace Total`, `--trace State.Selected` or
 `--trace 'Routine::Name'` on the batch
 command. [Tracepoints](tools/debugger-tracepoints.md) record initialization and

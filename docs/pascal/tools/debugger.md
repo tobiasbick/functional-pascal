@@ -53,6 +53,10 @@ and the [Debug Adapter Protocol contract](debugger-dap.md).
 Direct `.fpascp` debugging requires `--source-root`. Every portable source path
 must remain below that root and its BLAKE3 identity must match the image. Stale
 or escaping sources are rejected before execution.
+Pass the `Debug source root` printed by `fpas build`; paths are relative to the
+common root of the program project and resolved source dependencies, so sibling
+projects can share one verified source tree. See
+[source roots for debugging](../program-structure/compiled-programs.md#source-roots-for-debugging).
 
 The debugger supports source and function breakpoints, global write and change
 data breakpoints, optional assignment of one executable global when a source or

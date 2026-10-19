@@ -177,8 +177,12 @@ fn build_project_file(
             crate::project_build::build_program_artifact(path, &loaded, standard_library).map(
                 |artifact| {
                     let action = if artifact.reused { "Reused" } else { "Built" };
+                    let source_root = artifact.source_root.as_ref().map_or_else(
+                        || "unavailable across filesystem volumes; debug the project or stage sources below one root".to_string(),
+                        |root| root.display().to_string(),
+                    );
                     format!(
-                        "{action} program `{}`: {}",
+                        "{action} program `{}`: {}\nDebug source root: {source_root}",
                         loaded.name,
                         artifact.path.display()
                     )

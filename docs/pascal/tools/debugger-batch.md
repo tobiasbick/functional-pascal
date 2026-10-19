@@ -16,6 +16,9 @@ program project, workspace with one program, or verified compiled image. Omittin
 the target discovers a workspace/project in the current directory. Direct images
 require `--source-root`; every embedded source identity is checked before launch.
 Stale, missing or escaping sources are errors.
+Use the `Debug source root` printed by `fpas build`. Build and project debugging
+share a [common source root](../program-structure/compiled-programs.md#source-roots-for-debugging)
+covering the program and resolved dependencies, including sibling projects.
 
 ## Request
 
@@ -32,7 +35,7 @@ Stale, missing or escaping sources are errors.
 | `--timeout seconds` | Positive whole-invocation deadline; default 30 seconds. |
 | `--instruction-limit count` | Positive dispatched-instruction bound; default 100,000,000. |
 | `--output-limit bytes` | Positive combined output bound; default and ceiling 1,048,576 bytes. |
-| `--source-root dir` | Source root required for a compiled image. |
+| `--source-root dir` | Common source root printed by `fpas build`; required for a compiled image. |
 | `--std-lib dir` | Replace the complete source standard library. |
 | `-- arguments...` | Program arguments, available through `Std.Args`. |
 

@@ -212,6 +212,9 @@ captured output; it never reads host stdin. Repeat `--print` for independent
 non-executing expressions and use `--script input.toml` for runner-compatible
 line/key input. See [batch debugging](../../../docs/pascal/tools/debugger-batch.md)
 for limits and exit codes. DAP/JSONL remain available through explicit protocol flags.
+For a compiled target, pass `--source-root` with the `Debug source root` printed
+by `fpas build`; it covers the program and resolved source dependencies, including
+sibling projects. Rebuild older images with upward-relative source paths.
 
 To explain how a scalar value changed, repeat `--trace Total`,
 `--trace State.Selected` or exact `--trace 'Routine::Name'` on the batch command. The

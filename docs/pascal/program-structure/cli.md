@@ -158,6 +158,10 @@ Program artifacts are named from `project.name` and written beside the
 `.fpasprj`. Repeating an unchanged build reports reuse and leaves the compatible
 artifact in place. A test project has multiple entry programs, so it validates
 those programs but does not produce one shared `.fpascp`.
+Program builds also print `Debug source root: ...`: the canonical common root
+used for program and resolved-dependency source paths. Pass it to
+`fpas debug image.fpascp --source-root <dir>`; see
+[source roots for debugging](compiled-programs.md#source-roots-for-debugging).
 
 `--executable` requires a program project or a workspace containing exactly one
 program. Project applications are written beside the `.fpasprj`; workspace

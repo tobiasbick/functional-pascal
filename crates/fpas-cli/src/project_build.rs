@@ -2,6 +2,10 @@
 //!
 //! Failures are coded records; see `docs/pascal/tools/diagnostics.md`.
 
+mod source_layout;
+
+pub(crate) use source_layout::SourceLayout;
+
 use std::fs;
 use std::path::{Path, PathBuf};
 
@@ -17,6 +21,7 @@ use crate::cli_output::{CliFailure, RuntimeSource};
 pub(crate) struct ProjectProgram {
     pub(crate) executable: fpas_bytecode::VerifiedExecutable,
     pub(crate) source_paths: Vec<PathBuf>,
+    pub(crate) selected_sources: Vec<PathBuf>,
     pub(crate) sources: Vec<RuntimeSource>,
 }
 
@@ -24,6 +29,8 @@ pub(crate) struct ProjectProgram {
 pub(crate) struct ProgramArtifact {
     pub(crate) path: PathBuf,
     pub(crate) reused: bool,
+    /// Canonical directory containing the project and selected sources on one drive root.
+    pub(crate) source_root: Option<PathBuf>,
     pub(crate) executable: fpas_bytecode::VerifiedExecutable,
     pub(crate) source_paths: Vec<PathBuf>,
     /// Compilation snapshots and hashes paired with portable diagnostic labels.
@@ -49,6 +56,7 @@ pub(crate) fn build_program(
     Ok(ProjectProgram {
         executable: built.executable,
         source_paths: prepared.graph.source_paths().to_vec(),
+        selected_sources: selected_source_paths(&prepared.graph, &prepared.selection),
         sources: RuntimeSource::graph(&prepared.graph, prepared.main, &prepared.source),
     })
 }
@@ -62,7 +70,19 @@ pub(crate) fn build_program_artifact(
     let prepared = prepare_program(loaded, standard_library)?;
     let artifact_path = program_artifact_path(project_path, &loaded.name)?;
     let project_root = project_root(project_path)?;
-    let source_paths = portable_source_paths(&prepared.graph, prepared.main, project_root)?;
+    let selected_sources = selected_source_paths(&prepared.graph, &prepared.selection);
+    let layout = SourceLayout::derive(
+        project_root,
+        prepared.graph.source_paths(),
+        &selected_sources,
+    )?;
+    let (source_root, source_paths) = match layout {
+        Some(layout) => (Some(layout.root), layout.paths),
+        None => (
+            None,
+            portable_source_paths(&prepared.graph, prepared.main, project_root)?,
+        ),
+    };
     let built = fpas_build::build_program_artifact(
         &prepared.graph,
         fpas_build::ProgramArtifactTarget {
@@ -85,6 +105,7 @@ pub(crate) fn build_program_artifact(
     Ok(ProgramArtifact {
         path: artifact_path,
         reused,
+        source_root,
         executable: built.executable,
         source_paths: source_paths.into_iter().map(PathBuf::from).collect(),
         sources,
@@ -132,6 +153,7 @@ fn build_graph_program(
     Ok(ProjectProgram {
         executable: built.executable,
         source_paths: graph.source_paths().to_vec(),
+        selected_sources: selected_source_paths(graph, &selection),
         sources: RuntimeSource::graph(graph, main, source),
     })
 }
@@ -247,6 +269,21 @@ fn library_graph(
             fpas_project::build_unit_graph_with_standard_library(source_files, link_meta, library)
         },
     )?)
+}
+
+fn selected_source_paths(graph: &UnitGraph, selection: &ResolvedUnitGraph) -> Vec<PathBuf> {
+    graph
+        .source_paths()
+        .first()
+        .cloned()
+        .into_iter()
+        .chain(
+            selection
+                .order()
+                .iter()
+                .filter_map(|name| graph.get(name).map(|node| node.path().to_path_buf())),
+        )
+        .collect()
 }
 
 fn program_graph(

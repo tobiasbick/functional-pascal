@@ -79,7 +79,12 @@ fn prepare_source(
             standard_library,
         )
         .map_err(Failure::from)?;
-        return install_debug_sources(built.executable, &built.source_paths, Some(cwd));
+        return install_debug_sources(
+            built.executable,
+            &built.source_paths,
+            &built.selected_sources,
+            Some(cwd),
+        );
     }
     let source = fs::read_to_string(path)
         .map_err(|error| format!("Error reading `{}`: {error}", path.display()))?;
@@ -100,7 +105,12 @@ fn prepare_source(
         crate::cli_output::CliFailure::from_diagnostics(path, &diagnostics)
             .with_source(path, &source)
     })?;
-    install_debug_sources(executable, &[path.to_path_buf()], Some(cwd))
+    install_debug_sources(
+        executable,
+        &[path.to_path_buf()],
+        &[path.to_path_buf()],
+        Some(cwd),
+    )
 }
 
 fn prepare_project(
@@ -117,20 +127,29 @@ fn prepare_project(
     }
     let built =
         crate::project_build::build_program(&loaded, standard_library).map_err(Failure::from)?;
-    install_debug_sources(built.executable, &built.source_paths, path.parent())
+    install_debug_sources(
+        built.executable,
+        &built.source_paths,
+        &built.selected_sources,
+        path.parent(),
+    )
 }
 
 fn install_debug_sources(
     executable: fpas_bytecode::VerifiedExecutable,
     source_paths: &[PathBuf],
+    selected: &[PathBuf],
     root: Option<&Path>,
 ) -> Result<PreparedExecutable, Failure> {
     let root = root.unwrap_or_else(|| Path::new("."));
-    let portable = source_paths
-        .iter()
-        .enumerate()
-        .map(|(index, path)| portable_path(path, root, index))
-        .collect::<Vec<_>>();
+    let portable = match crate::project_build::SourceLayout::derive(root, source_paths, selected)? {
+        Some(layout) => layout.paths,
+        None => source_paths
+            .iter()
+            .enumerate()
+            .map(|(index, path)| portable_path(path, root, index))
+            .collect(),
+    };
     let bytes = source_paths
         .iter()
         .map(|path| {
@@ -216,7 +235,7 @@ fn prepare_image(path: &Path, source_root: Option<&Path>) -> Result<PreparedExec
         })?;
         if !candidate.starts_with(&root) {
             return Err(format!(
-                "Debug source `{portable}` escapes source root `{}`.\n  help: Rebuild the image with portable source paths.",
+                "Debug source `{portable}` escapes source root `{}`.\n  help: Rebuild the project and pass the Debug source root printed by `fpas build`; stage sources below one root when they span filesystem volumes.",
                 root.display()
             ).into());
         }

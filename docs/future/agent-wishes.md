@@ -57,7 +57,12 @@ No further debugger implementation package is scheduled.
 The Notes selection bug found during dogfooding is fixed and covered by
 [headless regressions](../../tests/apps/notes/note_search_selection_test.fpas),
 including [unsaved changes and save failures](../../tests/apps/notes/note_search_dirty_test.fpas).
-Continue dogfooding with capture and task/seed cases. Whole aggregates and continuous dormant
+The Julia capture/task dogfooding round is complete:
+both real-renderer cases pass repeated seed runs and existing snapshots/traces
+explain them. Its image source-root gap is fixed: builds and project debugging
+now use a [common source tree](../pascal/program-structure/compiled-programs.md#source-roots-for-debugging)
+for sibling dependencies, with unchanged hash/containment checks and matching
+project/image traces. No further debugger package is scheduled. Whole aggregates and continuous dormant
 escaped-cell history remain deferred; D2 remains an unscheduled idea.
 JSONL removal remains deferred; the protocol and its tests stay supported.
 

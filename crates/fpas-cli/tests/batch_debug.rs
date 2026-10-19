@@ -14,6 +14,8 @@ mod limits;
 mod requests;
 #[path = "batch_debug/scheduling.rs"]
 mod scheduling;
+#[path = "batch_debug/source_roots.rs"]
+mod source_roots;
 #[path = "batch_debug/trace.rs"]
 mod trace;
 #[path = "batch_debug/trace_callback_names.rs"]

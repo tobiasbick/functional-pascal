@@ -40,6 +40,17 @@ Reopen the [aggregate assessment](04-aggregate-decision.md) only when concrete
 cases demonstrate missing information that selected paths or D1/D3 cannot provide.
 Continuous history of dormant escaped cells is also deferred and unscheduled.
 
+The post-D5.6 Julia dogfooding round verified
+worker captures, blocked-send cancellation and replacement using existing scalar
+paths/snapshots. Its source-root portability gap for sibling dependencies is
+fixed and covered by [real-process regressions](../../../crates/fpas-cli/tests/batch_debug/source_roots.rs).
+Builds and project debugging share the canonical
+[source-root contract](../../pascal/program-structure/compiled-programs.md#source-roots-for-debugging);
+the original Julia project and image now produce equal complete traces without
+source staging. The completed temporary dogfooding plan is removed; detailed
+investigation artifacts remain in the ignored scratch directory.
+No new trace capability is justified by that round.
+
 ## Verification and review
 
 Packages 1–3 received independent subagent review; no findings remain open.

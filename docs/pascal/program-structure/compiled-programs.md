@@ -23,6 +23,27 @@ the current build snapshot. The build matches these digests by portable path bec
 already replaced compiler-local source identifiers with concrete paths. Reordering the wider project
 source list therefore remains reusable when all retained path-to-content bindings are unchanged.
 
+### Source roots for debugging
+
+CLI builds and project debugging derive paths from the same canonical source
+root: the smallest directory containing the project directory, main program and
+resolved source-unit dependencies. Merely available, unselected units do not
+widen that root. Paths use forward slashes and contain no upward traversal.
+`fpas build` prints `Debug source root: ...` for both new and reused program images.
+
+For sibling `app` and `shared` projects, retained paths can be
+`app/src/main.fpas` and `shared/src/main.fpas`. Debug their image with
+`fpas debug app/app.fpascp --source-root .` from that common parent. The image
+may be stored elsewhere; `--source-root` identifies the source tree, not the
+image directory. A relocated tree with identical relative paths and source bytes
+is accepted. Source hashes and canonical containment are checked before execution.
+
+If selected sources span different drive roots, normal builds retain their
+existing labels and report that no common debug source root exists. Use the
+project target, or stage the sources below one root and rebuild for image
+debugging. Rebuild older images with upward-relative source paths; their source
+table is refreshed without changing the program format.
+
 ## Register executable payload
 
 The payload is a deterministic sectioned binary representation of the verified register

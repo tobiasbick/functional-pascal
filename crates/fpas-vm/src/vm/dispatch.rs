@@ -51,16 +51,33 @@ impl Worker {
         &mut self,
         budget: u32,
     ) -> Result<DispatchBatch, VmError> {
+        // Trace hooks must not enter the ordinary per-instruction hot path. Select once
+        // per batch; synchronous callbacks can inherit traces without debug_tasks.
+        if self.debug_trace.is_some() || self.debug_local_trace.is_some() {
+            self.dispatch_batch_inner::<SUPPRESS_INITIALIZERS, true>(budget)
+        } else {
+            self.dispatch_batch_inner::<SUPPRESS_INITIALIZERS, false>(budget)
+        }
+    }
+
+    fn dispatch_batch_inner<const SUPPRESS_INITIALIZERS: bool, const TRACE: bool>(
+        &mut self,
+        budget: u32,
+    ) -> Result<DispatchBatch, VmError> {
         self.check_task_cancellation()?;
         if !self.callback_continuations.is_empty() {
-            self.trace_local_begin();
+            if TRACE {
+                self.trace_local_begin();
+            }
             let (owner, address) = self
                 .callback_origin()
                 .unwrap_or((self.function, self.current_address));
             let result = self.resume_callback_continuation();
             // Continuation work has no declaration store, even if current_address still
             // names the last completed Move in a callback frame.
-            self.trace_local_finish(owner, address, false, false, false);
+            if TRACE {
+                self.trace_local_finish(owner, address, false, false, false);
+            }
             if result? {
                 return Ok(DispatchBatch {
                     step: DispatchStep::Continue,
@@ -71,7 +88,7 @@ impl Worker {
         let mut steps = 0;
         while steps < budget {
             self.check_task_cancellation()?;
-            if self.trace_interrupted() {
+            if TRACE && self.trace_interrupted() {
                 return Err(diagnostics::at_address(
                     self.executable.executable(),
                     self.current_address,
@@ -85,8 +102,10 @@ impl Worker {
             };
             // Verified code length fits an instruction address.
             self.current_address = InstructionAddress::new(self.ip as u32);
-            self.trace_local_begin();
-            if self.trace_interrupted() {
+            if TRACE {
+                self.trace_local_begin();
+            }
+            if TRACE && self.trace_interrupted() {
                 return Err(diagnostics::at_address(
                     self.executable.executable(),
                     self.current_address,
@@ -107,18 +126,20 @@ impl Worker {
             let address = self.current_address;
             let old_depth = self.call_stack.len();
             let result = self.execute(instruction);
-            let tail = matches!(
-                instruction.opcode(),
-                fpas_bytecode::Opcode::TailCall | fpas_bytecode::Opcode::TailCallValue
-            ) && self.call_stack.len() == old_depth
-                && result.is_ok();
-            self.trace_local_finish(
-                owner,
-                address,
-                result.is_ok(),
-                matches!(result, Ok(Flow::Return(_))),
-                tail,
-            );
+            if TRACE {
+                let tail = matches!(
+                    instruction.opcode(),
+                    fpas_bytecode::Opcode::TailCall | fpas_bytecode::Opcode::TailCallValue
+                ) && self.call_stack.len() == old_depth
+                    && result.is_ok();
+                self.trace_local_finish(
+                    owner,
+                    address,
+                    result.is_ok(),
+                    matches!(result, Ok(Flow::Return(_))),
+                    tail,
+                );
+            }
             match result? {
                 Flow::Next => {}
                 Flow::Boundary => {

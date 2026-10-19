@@ -14,6 +14,56 @@ cargo bench-fpas record "vm-only note" --group vm
 
 Newest entries are prepended below this header.
 
+## 2026-10-19 — Keep inactive trace hooks out of VM instruction dispatch
+
+Local tracepoints added instruction-boundary hooks to ordinary execution, even
+without an installed trace. Dispatch now selects a const-specialized path once
+per batch, keeping trace calls and interruption checks out of untraced execution.
+The traced path still covers synchronous callbacks that inherit a trace without
+being debugger-owned tasks.
+
+Three complete-suite runs before and after the dispatch-only change reduced the
+sum of the 23 VM row medians from 9,418 to 6,470 ms (-31.3%); the October 17
+historical VM total was 6,484 ms. The integer-loop median fell from 1,422 to
+683 ms (-52.0%). Alternating saved pre-fix and fixed binaries independently
+measured 1,406–1,433 versus 693–719 ms with identical results. The existing
+integer-loop guard at 1,000 ms failed before the fix and passed afterwards on
+this machine; that threshold is not a portable CI requirement.
+
+The three-run TUI total improved by 22.8%. Mandelbrot changed by -1.7%, tooling
+by +1.8%, and startup by +2.9%; no individual row median regressed by more than
+5%. These group totals sum row medians, not whole-suite wall time. The table
+below is a separate VM recording run, rather than those three-run medians.
+
+- Group: `vm`
+- Suite: [`suite.toml`](suite.toml)
+
+| bench | elapsed_ms | throughput |
+|-------|------------|------------|
+| integer_loop | 686 | throughput: 72886297 iters/s |
+| typed_real | 153 | - |
+| typed_boolean | 243 | - |
+| typed_string | 123 | - |
+| global_access | 98 | throughput: 51020408 global updates/s |
+| record_field_access | 332 | throughput: 45180722 field accesses/s |
+| closure_call | 144 | throughput: 20833333 closure calls/s |
+| mutable_capture | 179 | throughput: 16759776 captured updates/s |
+| branch_dispatch | 342 | throughput: 58479532 branches/s |
+| dynamic_numeric | 292 | throughput: 17123287 dynamic numeric ops/s |
+| array_push | 53 | throughput: 37735849 pushes/s |
+| array_length | 23 | throughput: 21739130 lengths/s |
+| string_concat | 882 | throughput: 5668934 concats/s |
+| string_length | 21 | throughput: 23809523 lengths/s |
+| intrinsic_dispatch | 650 | throughput: 23076923 intrinsic calls/s |
+| function_call | 258 | throughput: 23255813 calls/s |
+| array_callbacks | 832 | throughput: 11538461 callbacks/s |
+| record_update | 86 | throughput: 11627906 updates/s |
+| unicode_char_at | 269 | throughput: 11152416 chars/s |
+| wrapper_payload | 719 | throughput: 13908205 wrappers/s |
+| string_search | 69 | - |
+| substring_ascii | 6 | - |
+| substring_unicode | 10 | - |
+
 ## 2026-10-17 — Borrowed closure and callback function values
 
 - Group: `vm`

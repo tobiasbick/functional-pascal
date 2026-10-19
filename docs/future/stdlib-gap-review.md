@@ -36,7 +36,7 @@ Numbers are stable references within this assessment, not approved work packages
 | 6 | Numeric output formatting | String `Format` supports `%d`, `%f`, `%s` and `%%`, without selectable decimal precision, scientific notation or numeric field width. `RealToStr` provides exact round-trip text rather than presentation controls. | Go `fmt`; Python formatting |
 | 7 | Command-line parsing | `Args` exposes only argument count and indexed lookup. Applications must build typed options, required arguments, help output and consistent parse errors themselves. | Go `flag`; Python `argparse` |
 | 8 | Path helpers | `Path` has five basic operations. Absolute-path checks, relative-path calculation and extension replacement are absent. Resolving a real path through filesystem/symlink state belongs in an effectful API such as `Fs`, preserving the pure `Path` boundary. | Go `path/filepath`; Rust `Path` |
-| 9 | Structured errors | Many filesystem, network, process and parsing APIs return `Error(string)`. Programs cannot reliably branch on a stable error kind such as missing file, permission denied, timeout or cancellation. The [agreed FPAS 2 direction](fpas2-language-directions.md#1-typed-operational-errors) combines a shared error contract with composable concrete error types, explicit `MapError` conversion and unchanged `try`; shared error APIs and concrete variants remain open. | Rust `io::ErrorKind`; Go typed errors |
+| 9 | Structured errors | Many filesystem, network, process and parsing APIs return `Error(string)`. Programs cannot reliably branch on stable missing-file, permission, timeout or cancellation cases. [AP47](improve-syntax/ap47-typed-operational-errors/README.md) selects native error declarations, automatic output, explicit `MapError` and unchanged `try`; implementation is not authorized. | Rust `io::ErrorKind`; Go typed errors |
 | 10 | Byte codecs | No general Base64/Base64url or hexadecimal encode/decode API for byte arrays. `IntToHex` handles individual numbers. Small codecs can use the existing integer-array byte convention; compact buffers are a separate question. | Go `encoding/base64` and `encoding/hex` |
 | 11 | URL components | `Net.Uri` parses absolute HTTP/HTTPS addresses but exposes no query-parameter builder/parser or percent-encoding helpers for query values and path segments. Those contexts need distinct escaping rules. | Go `net/url`; Python `urllib.parse` |
 
@@ -63,33 +63,32 @@ Numbers are stable references within this assessment, not approved work packages
 
 ### Direction for gap 9: structured errors
 
-The agreed direction is a shared error contract for context and reporting,
-combined with concrete error types defined by standard-library units and
-applications. Composition and variant payloads let an application wrap a
-filesystem error alongside its own configuration errors while preserving the
-original machine-readable case. Public Result signatures retain their concrete
-error types; callers can branch exhaustively without inspecting diagnostic text.
+The selected [FPAS 2 direction](fpas2-language-directions.md#1-typed-operational-errors)
+is a native `type T = error ... end error` declaration. Standard-library and
+application error families retain concrete variants and typed payloads in Result.
+Literal message labels, automatic output and a designated typed Cause remove
+per-type reporting functions and preserve the original error under wrappers.
 
-Include `MapError` in the same design package. For `Result of (T, E)`, a mapper
-from `E` to `E2` produces `Result of (T, E2)`: Ok preserves its payload without
-calling the mapper, while Error calls it exactly once and wraps the returned
-error value. The receiver is evaluated once. Unlike recovery through `OrElse`,
-the mapper returns an error value rather than another Result.
+The [AP47 plan](improve-syntax/ap47-typed-operational-errors/README.md) records the
+user's direction and autonomous detail decisions. It owns the complete contract,
+seven ordered work packages and [Std error catalog](improve-syntax/ap47-typed-operational-errors/standard-errors.md).
+The catalog covers host/parsing and task/network cohorts, nested callback Results,
+a shared native HostError leaf and explicit domain mappings. Native conditions are
+classified from structured outcomes, never by parsing message strings.
 
-Keep `try` unchanged: it extracts success or immediately propagates an error
-through a compatible enclosing Result error type. Cross-type propagation uses
-explicit `MapError` conversion before `try`, for example
-`try Fs.ReadText(Path).MapError(WrapFileError)` with a function wrapping the
-filesystem cause in an application error. No implicit conversion or automatic
-wrapper selection is added. Option propagation, panic, contracts and cleanup
-retain their existing behavior.
+MapError is the explicit general Result error transformation. Ok preserves its
+payload without calling the mapper; Error calls it once. Constructor values make
+wrapping concise, for example `try Fs.ReadText(Path).MapError(ConfigError.FileFailure)`.
+Try still requires compatible error types after mapping and does not choose a
+wrapper automatically. Option, runtime failures, contracts and cleanup retain
+their existing behavior.
 
-The [FPAS 2 error direction](fpas2-language-directions.md#1-typed-operational-errors)
-owns this design and the
-[MapError/try contract](fpas2-language-directions.md#agreed-maperror-and-try-contract).
-Shared fields, unit-specific variants, per-API domain mappings and migration
-remain open. This agreement does not schedule an implementation or introduce
-object inheritance.
+Selected public signatures are replaced in place with all affected consumers;
+there is no parallel string/typed wrapper family. Existing successes, limits,
+EOF and lifecycle distinctions remain specified at their current owner. No new
+I/O capability is bundled into the error migration. All source implementation,
+migration, executable documentation and performance verification packages remain
+unchecked and require implementation authorization.
 
 ## Additional candidates
 
@@ -146,9 +145,10 @@ These candidates provide immediate everyday value without requiring new
 source-language features. Select one canonical API for each operation rather
 than copying every variant from the comparison libraries.
 
-Incremental file I/O, process control and structured errors deserve separate
-designs covering ownership, bounds, cancellation and the public Result types.
-The remaining candidates should be driven by concrete application needs.
+Incremental file I/O and process control need separate designs covering ownership,
+bounds and cancellation. Structured errors have the selected AP47 design and
+delivery plan; implementation still requires authorization. The remaining
+candidates should be driven by concrete application needs.
 
 ## Comparison sources
 

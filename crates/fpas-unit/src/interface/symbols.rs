@@ -66,6 +66,12 @@ pub struct InterfaceSymbol {
 /// Complete public semantic surface of one source unit.
 #[derive(Debug, Clone, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 pub struct UnitInterface {
+    /// Essential error declarations and hidden constructor ABI.
+    #[serde(
+        default,
+        skip_serializing_if = "crate::errors::ErrorInterface::is_empty"
+    )]
+    pub errors: crate::errors::ErrorInterface,
     /// Conservative callback dependencies of exported routines and record methods.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub routine_initialization: Vec<super::RoutineInitialization>,
@@ -89,6 +95,12 @@ impl UnitInterface {
     /// Source spelling of unit and symbol names is retained for diagnostics.
     #[must_use]
     pub fn canonicalized(mut self) -> Self {
+        self.errors
+            .schemas
+            .sort_by(|left, right| left.declaration.cmp(&right.declaration));
+        self.errors
+            .routines
+            .sort_by(|left, right| left.routine.cmp(&right.routine));
         self.routine_initialization
             .sort_by_key(|routine| canonical_name(&routine.qualified_name));
         for routine in &mut self.routine_initialization {

@@ -266,5 +266,6 @@ fn constraint_from_interface(constraint: artifact::TypeConstraint) -> TypeConstr
         artifact::TypeConstraint::Comparable => TypeConstraint::Comparable,
         artifact::TypeConstraint::Numeric => TypeConstraint::Numeric,
         artifact::TypeConstraint::Printable => TypeConstraint::Printable,
+        artifact::TypeConstraint::Error => TypeConstraint::Error,
     }
 }

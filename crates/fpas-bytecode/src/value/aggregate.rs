@@ -4,7 +4,9 @@ use std::ops::{Deref, DerefMut};
 use std::sync::Arc;
 
 use super::Value;
-use super::managed_heap::{clone_pairs, clone_values, recycle_pairs, recycle_values};
+use super::managed_heap::{
+    clone_pairs, clone_values, recycle_error_values, recycle_pairs, recycle_values,
+};
 use crate::{EnumTypeId, EnumVariantId, RecordTypeId};
 
 /// Shared immutable metadata for one runtime record layout.
@@ -47,6 +49,11 @@ impl Drop for RecordValue {
 pub struct SharedRecord(Arc<RecordValue>);
 
 impl SharedRecord {
+    pub(super) fn drain_unique(self, pending: &mut Vec<Value>) {
+        if let Some(mut body) = Arc::into_inner(self.0) {
+            pending.append(&mut body.values);
+        }
+    }
     /// Construct a record from shared layout metadata.
     #[must_use]
     pub fn new(layout: Arc<RuntimeRecordLayout>, values: Vec<Value>) -> Self {
@@ -68,6 +75,8 @@ impl SharedRecord {
 /// Shared immutable metadata for one runtime enum variant.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct RuntimeEnumLayout {
+    /// Automatic error rendering and exact Cause identity, absent for ordinary enums.
+    pub error: Option<RuntimeErrorVariant>,
     /// Numeric executable-local enum identity.
     pub enumeration: EnumTypeId,
     /// Numeric executable-wide variant identity.
@@ -79,6 +88,51 @@ pub struct RuntimeEnumLayout {
     /// Associated field names in slot order.
     pub fields: Vec<String>,
 }
+
+/// Shared error information resolved from admitted executable metadata.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct RuntimeErrorVariant {
+    /// Optional literal message, without formatting placeholders.
+    pub message: Option<String>,
+    /// Exact original cause field and family.
+    pub cause: Option<crate::ErrorCause>,
+}
+
+impl RuntimeErrorVariant {
+    /// Resolve checked literal references once while building shared runtime layouts.
+    ///
+    /// # Errors
+    /// Rejects an unavailable label, indicating an unadmitted or inconsistent image.
+    pub fn from_metadata(
+        error: &crate::ErrorVariant,
+        strings: &crate::StringTable,
+    ) -> Result<Self, EnumConstructionError> {
+        Ok(Self {
+            message: error
+                .message
+                .map(|id| {
+                    strings
+                        .get(id)
+                        .map(str::to_owned)
+                        .ok_or(EnumConstructionError("error message string is unavailable"))
+                })
+                .transpose()?,
+            cause: error.cause,
+        })
+    }
+}
+
+/// A value does not match its admitted enum construction contract.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct EnumConstructionError(pub &'static str);
+
+impl std::fmt::Display for EnumConstructionError {
+    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        formatter.write_str(self.0)
+    }
+}
+
+impl std::error::Error for EnumConstructionError {}
 
 /// Stored enum body.
 #[derive(Debug)]
@@ -100,7 +154,11 @@ impl Clone for EnumValue {
 
 impl Drop for EnumValue {
     fn drop(&mut self) {
-        recycle_values(&mut self.values);
+        if self.layout.error.is_some() {
+            recycle_error_values(&mut self.values);
+        } else {
+            recycle_values(&mut self.values);
+        }
     }
 }
 
@@ -109,6 +167,35 @@ impl Drop for EnumValue {
 pub struct SharedEnum(Arc<EnumValue>);
 
 impl SharedEnum {
+    pub(super) fn drain_unique(self, pending: &mut Vec<Value>) {
+        if let Some(mut body) = Arc::into_inner(self.0) {
+            pending.append(&mut body.values);
+        }
+    }
+    /// Construct a value after checking arity and its original typed Cause.
+    ///
+    /// # Errors
+    /// Rejects wrong field counts or a Cause from another concrete error instance.
+    pub fn try_new(
+        layout: Arc<RuntimeEnumLayout>,
+        values: Vec<Value>,
+    ) -> Result<Self, EnumConstructionError> {
+        if layout.fields.len() != values.len() {
+            return Err(EnumConstructionError(
+                "enum constructor field count does not match its layout",
+            ));
+        }
+        if let Some(cause) = layout.error.as_ref().and_then(|error| error.cause.as_ref())
+            && !matches!(values.get(usize::from(cause.field)), Some(Value::Enum(value))
+                if value.body().layout.enumeration == cause.family && value.body().layout.error.is_some())
+        {
+            return Err(EnumConstructionError(
+                "error Cause does not match its concrete error family",
+            ));
+        }
+        Ok(Self::new(layout, values))
+    }
+
     /// Construct an enum from shared variant metadata.
     #[must_use]
     pub fn new(layout: Arc<RuntimeEnumLayout>, values: Vec<Value>) -> Self {
@@ -155,6 +242,17 @@ pub struct SharedDict(Arc<DictValue>);
 impl From<Vec<(Value, Value)>> for SharedDict {
     fn from(pairs: Vec<(Value, Value)>) -> Self {
         Self(Arc::new(DictValue { pairs }))
+    }
+}
+
+impl SharedDict {
+    pub(super) fn drain_unique(self, pending: &mut Vec<Value>) {
+        if let Some(mut body) = Arc::into_inner(self.0) {
+            for (key, value) in body.pairs.drain(..) {
+                pending.push(key);
+                pending.push(value);
+            }
+        }
     }
 }
 
@@ -229,6 +327,7 @@ mod tests {
     #[test]
     fn cloned_enum_detaches_on_mutation() {
         let layout = Arc::new(RuntimeEnumLayout {
+            error: None,
             enumeration: EnumTypeId::new(0),
             variant_id: EnumVariantId::new(0),
             type_name: "Choice".to_string(),

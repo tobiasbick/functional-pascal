@@ -9,6 +9,8 @@ pub enum TypeConstraint {
     Numeric,
     /// Values can be rendered as text.
     Printable,
+    /// Native error families; also guarantee Printable without erasure.
+    Error,
 }
 
 /// One generic parameter in a callable, record, or enum declaration.

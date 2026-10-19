@@ -12,6 +12,8 @@ fpas-diagnostics = { path = "../fpas-diagnostics" }
 fpas-unit = { path = "../fpas-unit" }
 
 [dev-dependencies]
+serde_json.workspace = true
+fpas-program = { path = "../fpas-program" }
 fpas-vm = { path = "../fpas-vm" }
 
 [lints]

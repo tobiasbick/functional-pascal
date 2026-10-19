@@ -4,6 +4,7 @@ mod calls;
 mod control_flow;
 mod debug;
 mod debug_types;
+mod errors;
 mod instruction;
 mod layouts;
 mod projections;
@@ -77,6 +78,11 @@ impl ValidationError {
 /// Specific register executable invariant violated by untrusted input.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum ValidationErrorKind {
+    /// Essential native-error metadata is inconsistent or unbounded.
+    ErrorMetadata {
+        /// Violated layout or identity invariant.
+        reason: &'static str,
+    },
     /// A bounded table or byte count exceeds its configured maximum.
     ResourceLimit {
         /// Resource whose limit was exceeded.
@@ -394,6 +400,7 @@ impl std::error::Error for ValidationError {}
 pub(super) fn validate(executable: &crate::Executable) -> Result<(), ValidationError> {
     resources::validate_resources(executable)?;
     layouts::validate_tables(executable)?;
+    errors::validate(executable)?;
     debug_types::validate_debug_types(executable)?;
     control_flow::validate_functions(executable)?;
     source_map::validate_source_map(executable)?;

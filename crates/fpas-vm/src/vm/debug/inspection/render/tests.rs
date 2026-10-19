@@ -84,6 +84,7 @@ fn summaries_cover_scalars_wrappers_aggregates_functions_and_opaque_values() {
 
     let enumeration = Value::Enum(SharedEnum::new(
         Arc::new(RuntimeEnumLayout {
+            error: None,
             enumeration: EnumTypeId::new(0),
             variant_id: EnumVariantId::new(0),
             type_name: "Choice".to_string(),
@@ -196,16 +197,19 @@ fn payload_executable() -> fpas_bytecode::Executable {
         globals: Vec::new(),
         records: Vec::new(),
         enums: vec![EnumLayout {
+            error: None,
             name: StringId::new(0),
         }],
         enum_variants: vec![
             EnumVariant {
+                error: None,
                 owner: EnumTypeId::new(0),
                 name: StringId::new(0),
                 fields: vec![StringId::new(0)],
                 field_types: vec![DebugTypeId::new(0)],
             },
             EnumVariant {
+                error: None,
                 owner: EnumTypeId::new(0),
                 name: StringId::new(0),
                 fields: vec![StringId::new(0), StringId::new(0)],
@@ -248,6 +252,7 @@ fn payload_children_are_writable_only_through_writable_typed_roots() {
     let executable = payload_executable();
     let enumeration = Value::Enum(SharedEnum::new(
         Arc::new(RuntimeEnumLayout {
+            error: None,
             enumeration: EnumTypeId::new(0),
             variant_id: EnumVariantId::new(1),
             type_name: "Choice".to_string(),

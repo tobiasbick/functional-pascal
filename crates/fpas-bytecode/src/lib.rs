@@ -44,9 +44,10 @@ pub use intrinsic::{
     TestIntrinsic, TimeIntrinsic, TomlIntrinsic,
 };
 pub use metadata::{
-    Constant, DistinctTypeName, EnumLayout, EnumVariant, GlobalInfo, GlobalInitializer,
+    Constant, DistinctTypeName, EnumLayout, EnumVariant, ErrorCause, ErrorInstanceKey,
+    ErrorVariant, GlobalInfo, GlobalInitializer, IdentityParameter, NominalKind,
     RecordConstructionInfo, RecordField, RecordLayout, RecordMethod, RecordTypeAlias, SourceMap,
-    SourceRun, StringTable,
+    SourceRun, StringTable, TypeIdentity,
 };
 pub use operand::{
     ConstantId, DebugBindingId, DebugTypeId, EnumTypeId, EnumVariantId, FunctionId, GlobalId,
@@ -55,9 +56,10 @@ pub use operand::{
 };
 pub use validate::{ValidationError, ValidationErrorKind};
 pub use value::{
-    EnumValue, FunctionValue, RecordValue, ReferenceRoot, ReferenceStep, RuntimeEnumLayout,
-    RuntimeRecordLayout, SharedArray, SharedDict, SharedEnum, SharedFunction, SharedRecord,
-    SharedReference, SharedStr, Value, VariableReference, managed_value_buffer,
+    EnumConstructionError, EnumValue, FunctionValue, RecordValue, ReferenceRoot, ReferenceStep,
+    RuntimeEnumLayout, RuntimeErrorVariant, RuntimeRecordLayout, SharedArray, SharedDict,
+    SharedEnum, SharedFunction, SharedRecord, SharedReference, SharedStr, Value, VariableReference,
+    managed_value_buffer,
 };
 
 /// Persistent register instruction-set version recorded in compiled artifacts.

@@ -149,16 +149,19 @@ pub(super) fn order_executable() -> VerifiedExecutable {
         }],
         records: Vec::new(),
         enums: vec![EnumLayout {
+            error: None,
             name: StringId::new(5),
         }],
         enum_variants: vec![
             EnumVariant {
+                error: None,
                 owner: EnumTypeId::new(0),
                 name: StringId::new(10),
                 fields: Vec::new(),
                 field_types: Vec::new(),
             },
             EnumVariant {
+                error: None,
                 owner: EnumTypeId::new(0),
                 name: StringId::new(6),
                 fields: vec![StringId::new(7), StringId::new(8)],

@@ -160,9 +160,11 @@ pub fn all_opcodes_executable() -> Executable {
             }],
         }],
         enums: vec![EnumLayout {
+            error: None,
             name: StringId::new(5),
         }],
         enum_variants: vec![EnumVariant {
+            error: None,
             owner: EnumTypeId::new(0),
             name: StringId::new(6),
             fields: vec![StringId::new(4)],

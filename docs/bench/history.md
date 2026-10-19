@@ -14,6 +14,113 @@ cargo bench-fpas record "vm-only note" --group vm
 
 Newest entries are prepended below this header.
 
+## 2026-10-19 — AP47.2 native error metadata and portable artifacts
+
+Native errors reuse shared enum values and essential portable metadata. Iterative
+release starts at error-enum ownership boundaries, keeping ordinary aggregate
+buffer release on its existing path. Source declarations and Std migration remain
+planned; no feature benchmark group has been registered yet.
+
+Three serial runs per selection keep the unchanged suite comparable. The sum of
+23 VM row medians changes from 6,566 to 6,574 ms (+0.12%); the sum of all 72 row
+medians changes from 39,048 to 38,920 ms (-0.33%). These are sums of row medians,
+not whole-suite wall times.
+
+The short array-push row has VM samples of 50/54/50 before and 50/53/54 ms after
+(medians 50/53 ms, +6%). Its full-suite median stays at 53 ms. Interleaved fixed
+old/current binaries measure 50/55/62 versus 53/52/63 ms (medians 55/53 ms).
+The earlier broad aggregate traversal measured a 56 ms VM median; restricting
+its entry to errors removes that ordinary-array work. No repeatable increase
+above the 5% VM gate remains in the matched controls.
+
+Edited-project analysis measures 2,990/3,021 ms in the full-suite comparison;
+overlapping queries measure 616/651 ms. The larger initial editor outliers do
+not reproduce in interleaved release harnesses built from the fixed pre-change
+commit and current sources: edited-query medians are 2,974/2,963 ms, overlapping
+cache hits 751/757 ms. Notes-frame medians change from 2,876 to 2,819 ms and
+buffered HTTP from 186 to 175 ms in the final full-suite comparison.
+
+The table below is an additional recorded current snapshot; comparison figures
+above use the three-run medians and separate matched controls.
+
+- Group: `all`
+- Suite: [`suite.toml`](suite.toml)
+
+| bench | elapsed_ms | throughput |
+|-------|------------|------------|
+| failure_dump_scalar | 404 | throughput: enabled/disabled median change 0% |
+| failure_dump_calls | 424 | throughput: enabled/disabled median change -4.347826086956516% |
+| failure_dump_globals | 628 | throughput: enabled/disabled median change 2.941176470588232% |
+| failure_dump_spawn_wait | 988 | throughput: enabled/disabled median change 5.769230769230774% |
+| failure_dump_suspension | 9169 | throughput: enabled/disabled median change -0.38759689922480334% |
+| failure_dump_failure | 287 | throughput: enabled/disabled median change 7.142857142857139% |
+| failure_dump_large_report | 759 | throughput: enabled/disabled median change 385.7142857142857% |
+| mandelbrot_render | 1164 | - |
+| mandelbrot_paint | 1122 | - |
+| integer_loop | 706 | throughput: 70821529 iters/s |
+| typed_real | 153 | - |
+| typed_boolean | 241 | - |
+| typed_string | 130 | - |
+| global_access | 105 | throughput: 47619047 global updates/s |
+| record_field_access | 331 | throughput: 45317220 field accesses/s |
+| closure_call | 144 | throughput: 20833333 closure calls/s |
+| mutable_capture | 181 | throughput: 16574585 captured updates/s |
+| branch_dispatch | 353 | throughput: 56657223 branches/s |
+| dynamic_numeric | 301 | throughput: 16611295 dynamic numeric ops/s |
+| array_push | 51 | throughput: 39215686 pushes/s |
+| array_length | 23 | throughput: 21739130 lengths/s |
+| string_concat | 894 | throughput: 5592841 concats/s |
+| string_length | 23 | throughput: 21739130 lengths/s |
+| intrinsic_dispatch | 657 | throughput: 22831050 intrinsic calls/s |
+| function_call | 263 | throughput: 22813688 calls/s |
+| array_callbacks | 843 | throughput: 11387900 callbacks/s |
+| record_update | 86 | throughput: 11627906 updates/s |
+| unicode_char_at | 265 | throughput: 11320754 chars/s |
+| wrapper_payload | 735 | throughput: 13605442 wrappers/s |
+| task_spawn_wait | 497 | throughput: 201207 tasks/s |
+| task_array_callbacks | 674 | throughput: 5697329 callbacks/s |
+| tui_headless | 1475 | throughput: 338 frames/s |
+| notes_headless | 3002 | throughput: 83 frames/s |
+| tui_styled_cells | 346 | - |
+| analysis_queries | 225 | - |
+| string_search | 69 | - |
+| compiler_lowering | 1959 | - |
+| substring_ascii | 6 | - |
+| substring_unicode | 12 | - |
+| project_queries | 975 | - |
+| project_edits | 3614 | - |
+| project_overlapping_queries | 597 | - |
+| project_build_cold | 1901 | - |
+| project_build_warm | 1254 | - |
+| unit_artifact_shared_types | 0 | - |
+| program_artifact_shared_types | 0 | - |
+| dictionary_reads | 3 | - |
+| scalar_membership | 27 | - |
+| array_pop | 1 | - |
+| text_area_locate | 841 | - |
+| http_body_accumulation | 172 | - |
+| local_index_write | 16 | throughput: 40000000 writes/s |
+| cell_grid_headless | 94 | throughput: 1063 paints/s |
+| partial_surface_fill | 55 | - |
+| source_utf8_ascii_2048 | 7 | - |
+| source_utf8_ascii_4096 | 15 | - |
+| source_utf8_ascii_8192 | 31 | - |
+| source_utf8_unicode_2048 | 27 | - |
+| source_utf8_unicode_4096 | 53 | - |
+| source_utf8_unicode_8192 | 106 | - |
+| source_notes_ascii_128 | 3 | - |
+| source_notes_ascii_256 | 7 | - |
+| source_notes_ascii_512 | 15 | - |
+| source_queue_ascii_256 | 62 | - |
+| source_queue_ascii_512 | 120 | - |
+| source_queue_ascii_1024 | 243 | - |
+| source_navigation_long_512 | 25 | - |
+| source_navigation_long_1024 | 45 | - |
+| source_navigation_long_2048 | 87 | - |
+| source_navigation_lines_512 | 6 | - |
+| source_navigation_lines_1024 | 10 | - |
+| source_navigation_lines_2048 | 18 | - |
+
 ## 2026-10-19 — Keep inactive trace hooks out of VM instruction dispatch
 
 Local tracepoints added instruction-boundary hooks to ordinary execution, even

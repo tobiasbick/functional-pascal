@@ -16,6 +16,12 @@ pub(crate) struct LayoutIds {
     pub variants: Vec<Vec<Vec<Option<EnumVariantId>>>>,
 }
 
+#[derive(Clone, PartialEq, Eq, PartialOrd, Ord)]
+enum EnumKey {
+    Ordinary(String),
+    Error(fpas_bytecode::ErrorInstanceKey),
+}
+
 /// Assigns canonical layout and variant IDs for independently compiled units.
 /// See `docs/pascal/program-structure/projects.md`.
 pub(super) fn assign(
@@ -31,9 +37,9 @@ pub(super) fn assign(
         .iter()
         .map(|object| vec![None; object.enums.len()])
         .collect::<Vec<_>>();
-    let mut enum_order = Vec::new();
+    let mut enum_order: Vec<(usize, usize)> = Vec::new();
     let mut canonical_records = BTreeMap::new();
-    let mut canonical_enums = BTreeMap::new();
+    let mut canonical_enums: BTreeMap<EnumKey, EnumTypeId> = BTreeMap::new();
     for (object_index, object) in objects.iter().enumerate() {
         let mut local_records = (0..object.records.len())
             .map(|index| {
@@ -60,7 +66,15 @@ pub(super) fn assign(
         let mut local_enums = (0..object.enums.len())
             .map(|index| {
                 Ok((
-                    canonical_enum_name(objects, symbols, object_index, index)?,
+                    match &object.enums[index].error {
+                        Some(key) => EnumKey::Error(key.clone()),
+                        None => EnumKey::Ordinary(canonical_enum_name(
+                            objects,
+                            symbols,
+                            object_index,
+                            index,
+                        )?),
+                    },
                     index,
                 ))
             })
@@ -68,6 +82,17 @@ pub(super) fn assign(
         local_enums.sort_by(|left, right| left.0.cmp(&right.0));
         for (canonical, local) in local_enums {
             let id = if let Some(id) = canonical_enums.get(&canonical).copied() {
+                if let EnumKey::Error(_) = &canonical {
+                    let (previous_object, previous_local) = enum_order[usize::from(id.get())];
+                    if !super::symbols::matching_error_layout(
+                        &objects[previous_object].enums[previous_local],
+                        &object.enums[local],
+                    ) {
+                        return Err(crate::errors::invalid(
+                            "conflicting copies of an error instance",
+                        ));
+                    }
+                }
                 id
             } else {
                 let id = EnumTypeId::try_from_index(enum_order.len())

@@ -16,6 +16,11 @@ impl check::Checker {
         interfaces: &[artifact::UnitInterface],
     ) -> Result<(), InterfaceConversionError> {
         for interface in interfaces {
+            if !interface.errors.is_empty() {
+                return Err(InterfaceConversionError::new(
+                    "native-error source declarations are not supported by this compiler",
+                ));
+            }
             for summary in &interface.routine_initialization {
                 self.initialization
                     .imported
@@ -43,6 +48,11 @@ impl check::Checker {
         interfaces: &[artifact::UnitInterface],
     ) -> Result<(), InterfaceConversionError> {
         for interface in interfaces {
+            if !interface.errors.is_empty() {
+                return Err(InterfaceConversionError::new(
+                    "native-error source declarations are not supported by this compiler",
+                ));
+            }
             for summary in &interface.routine_initialization {
                 self.initialization
                     .imported

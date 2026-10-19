@@ -63,6 +63,19 @@ impl RuntimeLayouts {
                     .map(|field| string(executable, *field, address).map(str::to_owned))
                     .collect::<Result<Vec<_>, _>>()?;
                 Ok(Arc::new(RuntimeEnumLayout {
+                    error: variant
+                        .error
+                        .as_ref()
+                        .map(|error| {
+                            fpas_bytecode::RuntimeErrorVariant::from_metadata(
+                                error,
+                                &executable.strings,
+                            )
+                        })
+                        .transpose()
+                        .map_err(|error| {
+                            diagnostics::internal(executable, address, error.to_string())
+                        })?,
                     enumeration: variant.owner,
                     variant_id,
                     type_name,
@@ -128,7 +141,17 @@ impl fpas_std::AggregateFactory for RuntimeLayouts {
                 location,
             ));
         }
-        Ok(Value::Enum(SharedEnum::new(layout, values)))
+        SharedEnum::try_new(layout, values)
+            .map(Value::Enum)
+            .map_err(|error| {
+                fpas_diagnostics::Diagnostic::error(
+                    fpas_diagnostics::codes::INTERNAL_VM_INVARIANT_FAILURE,
+                    error.to_string(),
+                    None,
+                    fpas_diagnostics::SourceSpan::synthetic_from_location(location),
+                )
+                .into()
+            })
     }
 }
 

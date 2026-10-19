@@ -33,8 +33,8 @@ keeps graphics-specific API, platform and deployment questions separate.
 
 ## 1. Typed operational errors
 
-Status: selected native-error design and implementation plan; no implementation
-is authorized. The user selected native error declarations, automatic output,
+Status: selected native-error design; AP47.2's runtime/artifact foundation is
+implemented. The user selected native error declarations, automatic output,
 explicit MapError and unchanged try, then delegated the detailed planning choices.
 The [AP47 package](improve-syntax/ap47-typed-operational-errors/README.md) records
 those choices, dependencies and seven delivery work packages. Its design work is

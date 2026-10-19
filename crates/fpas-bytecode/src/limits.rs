@@ -16,6 +16,8 @@ pub const MAX_RECORD_LAYOUTS: usize = 65_536;
 pub const MAX_ENUM_LAYOUTS: usize = 65_536;
 /// Maximum executable-wide enum variants.
 pub const MAX_ENUM_VARIANTS: usize = 65_536;
+/// Maximum generated error metadata nodes in one source-less link expansion.
+pub const MAX_ERROR_EXPANSION_NODES: usize = 1_000_000;
 /// Maximum fields in one record or enum variant.
 pub const MAX_LAYOUT_FIELDS: usize = 65_535;
 /// Maximum instructions in one executable.

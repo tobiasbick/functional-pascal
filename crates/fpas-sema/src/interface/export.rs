@@ -70,6 +70,7 @@ impl check::Checker {
             });
         }
         Ok(artifact::UnitInterface {
+            errors: Default::default(),
             routine_initialization: self
                 .initialization
                 .exported

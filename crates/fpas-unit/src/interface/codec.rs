@@ -7,6 +7,8 @@ use super::UnitInterface;
 /// Invalid semantic-interface payload.
 #[derive(Debug)]
 pub enum InterfaceFormatError {
+    /// Native-error declarations or construction requirements are inconsistent.
+    ErrorMetadata(String),
     /// Payload exceeds the compiled-unit resource limit.
     LimitExceeded {
         /// Encoded or requested size.
@@ -23,6 +25,7 @@ pub enum InterfaceFormatError {
 impl fmt::Display for InterfaceFormatError {
     fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
+            Self::ErrorMetadata(reason) => write!(formatter, "invalid error interface: {reason}"),
             Self::LimitExceeded { size, maximum } => write!(
                 formatter,
                 "unit interface payload has size {size}, exceeding limit {maximum}"
@@ -36,7 +39,7 @@ impl fmt::Display for InterfaceFormatError {
 impl std::error::Error for InterfaceFormatError {
     fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
         match self {
-            Self::LimitExceeded { .. } => None,
+            Self::LimitExceeded { .. } | Self::ErrorMetadata(_) => None,
             Self::Encode(error) | Self::Decode(error) => Some(error),
         }
     }
@@ -49,8 +52,12 @@ impl std::error::Error for InterfaceFormatError {
 /// Returns [`InterfaceFormatError`] when serialization fails or the encoded
 /// payload exceeds the compiled-unit payload limit.
 pub fn encode_interface(interface: &UnitInterface) -> Result<Vec<u8>, InterfaceFormatError> {
-    let bytes = serde_json::to_vec(&interface.clone().canonicalized())
-        .map_err(InterfaceFormatError::Encode)?;
+    let interface = interface.clone().canonicalized();
+    interface
+        .errors
+        .validate()
+        .map_err(|reason| InterfaceFormatError::ErrorMetadata(reason.to_owned()))?;
+    let bytes = serde_json::to_vec(&interface).map_err(InterfaceFormatError::Encode)?;
     check_size(bytes.len())?;
     Ok(bytes)
 }
@@ -63,9 +70,14 @@ pub fn encode_interface(interface: &UnitInterface) -> Result<Vec<u8>, InterfaceF
 /// limit or is not a supported semantic-interface encoding.
 pub fn decode_interface(bytes: &[u8]) -> Result<UnitInterface, InterfaceFormatError> {
     check_size(bytes.len())?;
-    serde_json::from_slice::<UnitInterface>(bytes)
-        .map(UnitInterface::canonicalized)
-        .map_err(InterfaceFormatError::Decode)
+    let interface = serde_json::from_slice::<UnitInterface>(bytes)
+        .map_err(InterfaceFormatError::Decode)?
+        .canonicalized();
+    interface
+        .errors
+        .validate()
+        .map_err(|reason| InterfaceFormatError::ErrorMetadata(reason.to_owned()))?;
+    Ok(interface)
 }
 
 fn check_size(size: usize) -> Result<(), InterfaceFormatError> {

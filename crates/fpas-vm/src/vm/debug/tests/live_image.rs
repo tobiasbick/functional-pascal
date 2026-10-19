@@ -1,5 +1,8 @@
 //! Live-image compatibility classes without replacement.
 
+#[path = "live_image/errors.rs"]
+mod errors;
+
 use super::*;
 use crate::vm::debug::{DebugErrorKind, LiveImageClassification, LiveImageUpdateClass};
 use fpas_bytecode::{
@@ -266,6 +269,7 @@ fn enum_layout_changes_are_rejected() {
     let current = pair_executable();
     let mut image = current.clone().into_unverified();
     image.enums.push(EnumLayout {
+        error: None,
         name: StringId::new(3),
     });
     let candidate = image.verify().expect("enum layout candidate");

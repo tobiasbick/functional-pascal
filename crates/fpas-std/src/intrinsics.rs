@@ -163,6 +163,7 @@ impl crate::AggregateFactory for TestAggregateFactory {
     ) -> Result<Value, StdError> {
         Ok(Value::Enum(fpas_bytecode::SharedEnum::new(
             std::sync::Arc::new(fpas_bytecode::RuntimeEnumLayout {
+                error: None,
                 enumeration: fpas_bytecode::EnumTypeId::new(test_id(type_name)),
                 variant_id: fpas_bytecode::EnumVariantId::new(test_id(&format!(
                     "{type_name}.{variant}"

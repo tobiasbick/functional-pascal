@@ -1,9 +1,10 @@
 # AP47.1: Selected language and error contract
 
-Status: Design recorded under delegated authority; implementation not authorized.
+Status: Design recorded; AP47.2's internal runtime/artifact foundation is complete.
 Package and decisions: [AP47](README.md#decisions-and-authority).
-This document specifies future behavior only. Keep the current handbook,
-grammar, libraries and compiler unchanged until implementation is authorized.
+Source-language behavior here remains planned. AP47.2 implements the internal
+runtime and artifact foundation; source syntax and library migration belong to
+the later work packages.
 
 ## Declaration and identity
 

@@ -30,6 +30,14 @@ pub struct FunctionValue {
 pub struct SharedFunction(Arc<FunctionValue>);
 
 impl SharedFunction {
+    pub(super) fn drain_unique(self, pending: &mut Vec<Value>) {
+        if let Some(mut body) = Arc::into_inner(self.0) {
+            pending.append(&mut body.captures);
+            if let Some(receiver) = body.bound_receiver.take() {
+                pending.push(receiver);
+            }
+        }
+    }
     /// Create a non-task-bound function with no runtime task owner.
     pub fn unbound(function: FunctionId, name: impl Into<Arc<str>>, captures: Vec<Value>) -> Self {
         Self(Arc::new(FunctionValue {

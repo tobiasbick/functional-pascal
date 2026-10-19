@@ -8,10 +8,12 @@ fn constructors_and_patterns_keep_variant_identity_after_layout_sorting() {
     for name in ["shared.zed", "shared.alpha"] {
         let index = u32::try_from(library.enums.len()).expect("layout index");
         library.enums.push(fpas_unit::object::ObjectEnumLayout {
+            error: None,
             name: name.to_string(),
             variants: ["first", "second"]
                 .into_iter()
                 .map(|variant| fpas_unit::object::ObjectEnumVariant {
+                    error: None,
                     name: variant.to_string(),
                     fields: Vec::new(),
                     field_types: Vec::new(),

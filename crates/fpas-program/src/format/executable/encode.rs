@@ -193,6 +193,7 @@ pub(super) fn encode_enums(executable: &Executable) -> Result<EncodedSection, Fo
     );
     for enumeration in &executable.enums {
         write_u32(&mut bytes, enumeration.name.get());
+        super::errors::encode_key(&mut bytes, enumeration.error.as_ref())?;
     }
     for variant in &executable.enum_variants {
         check_count(
@@ -212,6 +213,7 @@ pub(super) fn encode_enums(executable: &Executable) -> Result<EncodedSection, Fo
         for ty in &variant.field_types {
             write_u32(&mut bytes, ty.get());
         }
+        super::errors::encode_variant(&mut bytes, variant.error.as_ref())?;
     }
     Ok(EncodedSection {
         tag: TAGS[5],

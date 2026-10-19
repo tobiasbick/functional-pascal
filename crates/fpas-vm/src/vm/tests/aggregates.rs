@@ -223,9 +223,11 @@ fn record_and_enum_slots_are_positional() {
         methods: Vec::new(),
     }];
     image.enums = vec![EnumLayout {
+        error: None,
         name: StringId::new(4),
     }];
     image.enum_variants = vec![EnumVariant {
+        error: None,
         owner: EnumTypeId::new(0),
         name: StringId::new(5),
         fields: vec![StringId::new(6)],

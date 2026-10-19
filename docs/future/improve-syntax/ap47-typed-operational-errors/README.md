@@ -1,8 +1,9 @@
 # AP47: Native typed operational errors
 
-Status: Planned. The user selected native `error` declarations, automatic error
+Status: AP47.2 complete; later packages planned.
+The user selected native `error` declarations, automatic error
 output, explicit MapError and unchanged try, and delegated the remaining design
-choices. This plan records those choices. Implementation is not authorized.
+choices. This plan records those choices. Only AP47.2 is authorized for implementation.
 
 Effort: large across compiler, runtime, standard library and consumers.
 Completion is tracked only in the [central plan](../README.md#package-status).
@@ -33,6 +34,8 @@ contract is [AP47.1](01-decision.md); the standard-library contract is
   the built-in Error constraint are not implemented.
 - Enum layouts and shared enum values already provide nominal variants and
   payload storage. Runtime values have a stack-safe display implementation.
+- AP47.2 supplies essential native-error metadata, typed causes, automatic
+  rendering and portable constructor factories without exposing source syntax.
 - Result supplies Map, AndThen, OrElse and Unwrap. MapError is not implemented.
 - Many [Std interfaces](../../../pascal/std/README.md) return string errors,
   including nested selection callbacks and source HTTP/field helpers.
@@ -49,8 +52,8 @@ information is an ordinary leaf error, not a reporting framework.
 ## Decisions and authority
 
 Q28/Q29 record the user's replacement direction. Q30-Q36 are concrete choices
-made under the user's delegation to prepare this implementation plan. They do
-not claim separate user approval of each detail or permission to implement.
+made under the user's delegation to prepare this implementation plan. The later
+implementation request authorizes AP47.2 only, not the remaining packages.
 
 | ID | Selected decision | Contract owner | Affected work packages |
 | --- | --- | --- | --- |
@@ -62,15 +65,15 @@ not claim separate user approval of each detail or permission to implement.
 | Q33 | Per-domain error catalogs plus one native HostError leaf; classify from structured native outcomes | standard-errors.md | AP47.5, AP47.6 |
 | Q34 | Replace selected Std signatures in place with all affected consumers; no parallel legacy wrappers | AP47.5, AP47.6 | AP47.5, AP47.6 |
 | Q35 | Reuse shared enum values with concrete error instance keys and hidden generic constructor factories; preserve ordinary enum erasure and 16-byte Value; version essential metadata and gate regressions | AP47.2, AP47.7 | AP47.2-AP47.7 |
-| Q36 | Seven coherent delivery packages, one completion index and planning-only authorization | This README | AP47.1-AP47.7 |
+| Q36 | Seven coherent delivery packages, one completion index and implementation authorization bounded to the selected work package | This README | AP47.1-AP47.7 |
 
 ## Dependencies and work packages
 
-The only completed item below is the recorded planning contract. All source
-implementation, migration and acceptance packages remain unchecked.
+The design contract and internal runtime/artifact foundation are complete.
+Source-language support, migration and final acceptance remain open.
 
 - [x] [AP47.1: Language and error contract](01-decision.md)
-- [ ] [AP47.2: Runtime layouts and portable artifacts](02-runtime-and-artifacts.md)
+- [x] [AP47.2: Runtime layouts and portable artifacts](02-runtime-and-artifacts.md)
 - [ ] [AP47.3: Language, compiler and editor support](03-language-and-tooling.md)
 - [ ] [AP47.4: Constructor values and MapError](04-maperror-and-constructors.md)
 - [ ] [AP47.5: Host, parsing and related Std migration](05-host-and-parsing.md)
@@ -93,7 +96,7 @@ later without changing the error contract.
 ## Open decisions and exclusions
 
 No language or interface choices are left for an implementer to guess within
-this package. Implementation authorization is still required. Profiling, exact
+this package. Later work packages still require implementation authorization. Profiling, exact
 internal file splits and diagnostic-code allocation are implementation work,
 not requests to reopen the selected contract.
 

@@ -12,6 +12,8 @@ pub enum TypeConstraint {
     Numeric,
     /// Can be converted to a string representation.
     Printable,
+    /// Native-error constraint retained in compiled interfaces before source support.
+    Error,
 }
 
 impl TypeConstraint {
@@ -34,6 +36,7 @@ impl TypeConstraint {
             Self::Comparable => "Comparable",
             Self::Numeric => "Numeric",
             Self::Printable => "Printable",
+            Self::Error => "Error",
         }
     }
 
@@ -42,6 +45,7 @@ impl TypeConstraint {
         if let Ty::GenericParam(_, constraint) = ty {
             return constraint.is_some_and(|actual| {
                 actual == self
+                    || (actual == Self::Error && self == Self::Printable)
                     || (actual == Self::Numeric
                         && matches!(self, Self::Comparable | Self::Printable))
             });
@@ -52,6 +56,8 @@ impl TypeConstraint {
             Self::Comparable => ty.is_comparable(),
             Self::Numeric => matches!(ty, Ty::Integer | Ty::Real),
             Self::Printable => !matches!(ty, Ty::Function(_) | Ty::Procedure(_) | Ty::Distinct(_)),
+            // Error source declarations are introduced by AP47.3, not inferred from enum shape.
+            Self::Error => false,
         }
     }
 }

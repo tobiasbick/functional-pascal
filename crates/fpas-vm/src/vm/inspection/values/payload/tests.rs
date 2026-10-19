@@ -29,6 +29,7 @@ fn image(debug_types: Vec<DebugType>, enum_variants: Vec<EnumVariant>) -> Execut
         globals: Vec::new(),
         records: Vec::new(),
         enums: vec![EnumLayout {
+            error: None,
             name: StringId::new(0),
         }],
         enum_variants,
@@ -50,6 +51,7 @@ fn image(debug_types: Vec<DebugType>, enum_variants: Vec<EnumVariant>) -> Execut
 fn choice(variant_id: u16, variant: &str, fields: &[&str], values: Vec<Value>) -> Value {
     Value::Enum(SharedEnum::new(
         Arc::new(RuntimeEnumLayout {
+            error: None,
             enumeration: EnumTypeId::new(0),
             variant_id: EnumVariantId::new(variant_id),
             type_name: "Choice".to_string(),
@@ -74,12 +76,14 @@ fn payload_types() -> Executable {
         ],
         vec![
             EnumVariant {
+                error: None,
                 owner: EnumTypeId::new(0),
                 name: StringId::new(0),
                 fields: vec![StringId::new(0)],
                 field_types: vec![DebugTypeId::new(0)],
             },
             EnumVariant {
+                error: None,
                 owner: EnumTypeId::new(0),
                 name: StringId::new(0),
                 fields: vec![StringId::new(0), StringId::new(0)],
@@ -218,6 +222,7 @@ fn rejects_none_unknown_names_and_inconsistent_metadata() {
     let owner_mismatch = image(
         vec![DebugType::Integer, DebugType::Enum(EnumTypeId::new(0))],
         vec![EnumVariant {
+            error: None,
             owner: EnumTypeId::new(1),
             name: StringId::new(0),
             fields: vec![StringId::new(0)],
@@ -237,6 +242,7 @@ fn rejects_none_unknown_names_and_inconsistent_metadata() {
     let short_metadata = image(
         vec![DebugType::Integer, DebugType::Enum(EnumTypeId::new(0))],
         vec![EnumVariant {
+            error: None,
             owner: EnumTypeId::new(0),
             name: StringId::new(0),
             fields: Vec::new(),
@@ -256,6 +262,7 @@ fn rejects_none_unknown_names_and_inconsistent_metadata() {
     let count_mismatch = image(
         vec![DebugType::Integer, DebugType::Enum(EnumTypeId::new(0))],
         vec![EnumVariant {
+            error: None,
             owner: EnumTypeId::new(0),
             name: StringId::new(0),
             fields: vec![StringId::new(0), StringId::new(0)],

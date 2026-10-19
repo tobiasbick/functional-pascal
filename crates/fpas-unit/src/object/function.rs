@@ -14,6 +14,8 @@ pub enum ObjectReturn {
 /// One independently encoded function with local registers and branch addresses.
 #[derive(Debug, Clone, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 pub struct ObjectFunction {
+    /// Hidden readonly construction parameters of an erased generic routine.
+    pub error_constructors: Option<crate::errors::ErrorConstructorSignature>,
     /// Canonical diagnostic name.
     pub name: String,
     /// Packed logical instruction words with function-local branch targets.

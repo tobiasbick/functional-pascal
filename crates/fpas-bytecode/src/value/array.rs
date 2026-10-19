@@ -36,6 +36,14 @@ impl Drop for ArrayValue {
 #[derive(Debug, Clone)]
 pub struct SharedArray(Arc<ArrayValue>);
 
+impl SharedArray {
+    pub(super) fn drain_unique(self, pending: &mut Vec<Value>) {
+        if let Some(mut body) = Arc::into_inner(self.0) {
+            pending.append(&mut body.values);
+        }
+    }
+}
+
 impl From<Vec<Value>> for SharedArray {
     fn from(values: Vec<Value>) -> Self {
         Self(Arc::new(ArrayValue { values }))

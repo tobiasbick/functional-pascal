@@ -173,6 +173,7 @@ pub(super) fn compile_program(
     let mut enum_variants = Vec::new();
     for layout in &program.enum_layouts {
         enums.push(fpas_bytecode::EnumLayout {
+            error: None,
             name: metadata.intern_string(&layout.name)?,
         });
         for variant in &layout.variants {
@@ -182,6 +183,7 @@ pub(super) fn compile_program(
                 .map(|name| metadata.intern_string(name))
                 .collect::<Result<Vec<_>, _>>()?;
             enum_variants.push(fpas_bytecode::EnumVariant {
+                error: None,
                 owner: fpas_bytecode::EnumTypeId::new(
                     u16::try_from(layout.id.get())
                         .map_err(|_| compile_error("enum layout exceeds u16"))?,

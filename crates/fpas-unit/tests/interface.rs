@@ -12,11 +12,14 @@ use fpas_unit::interface::{
     RecordType, SymbolKind, TypeConstraint, UnitInterface, decode_interface, encode_interface,
 };
 
+#[path = "interface/errors.rs"]
+mod errors;
 #[path = "interface/record_constants.rs"]
 mod record_constants;
 
 fn sample_interface() -> UnitInterface {
     UnitInterface {
+        errors: Default::default(),
         routine_initialization: Vec::new(),
         routine_contracts: Vec::new(),
         routine_param_escapes: Vec::new(),

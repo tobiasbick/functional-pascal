@@ -163,6 +163,17 @@ impl RelocatableObject {
                 return Err(ObjectError::InvalidTableReference("enum owner"));
             };
             owner.push(ObjectEnumVariant {
+                error: variant
+                    .error
+                    .as_ref()
+                    .map(|error| {
+                        Ok(super::ObjectErrorVariant {
+                            field_types: error.field_types.clone(),
+                            message: error.message.map(strings).transpose()?,
+                            cause: error.cause.map(|cause| cause.field),
+                        })
+                    })
+                    .transpose()?,
                 name: strings(variant.name)?,
                 fields,
                 field_types: variant.field_types.iter().map(|ty| ty.get()).collect(),
@@ -174,6 +185,7 @@ impl RelocatableObject {
             .zip(variants_by_owner)
             .map(|(layout, variants)| {
                 Ok(ObjectEnumLayout {
+                    error: layout.error.clone(),
                     name: strings(layout.name)?,
                     variants,
                 })
@@ -319,6 +331,7 @@ impl RelocatableObject {
                     .collect(),
             };
             functions.push(ObjectFunction {
+                error_constructors: None,
                 name: strings(function.name)?,
                 code: local_code,
                 arity: function.arity,
@@ -351,6 +364,7 @@ impl RelocatableObject {
             })
             .collect::<Result<Vec<_>, ObjectError>>()?;
         let mut object = Self {
+            error_schemas: Vec::new(),
             version: OBJECT_VERSION,
             owner: canonical(&owner.into()),
             entry,

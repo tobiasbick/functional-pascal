@@ -83,19 +83,23 @@ pub(super) fn compile_debug_info(
         else {
             continue;
         };
-        // A forwarded read shares the address of the word that consumes it; the first point at
-        // an address wins because it belongs to the earliest source position of that word.
-        if sequence_points
-            .last()
-            .is_some_and(|previous| previous.instruction == emitted.address)
-        {
-            continue;
-        }
-        sequence_points.push(SequencePoint {
+        let current = SequencePoint {
             instruction: emitted.address,
             location: location(point.source),
             scope: point.scope,
-        });
+        };
+        // Forwarded reads can belong to an already exited scope (e.g. discard
+        // Local). The real instruction owns its current scope; within that scope
+        // keep the earliest source position of the word as before.
+        if let Some(previous) = sequence_points.last_mut()
+            && previous.instruction == emitted.address
+        {
+            if emitted.emitted && previous.scope != current.scope {
+                *previous = current;
+            }
+        } else {
+            sequence_points.push(current);
+        }
     }
     let lexical_owner = function
         .debug

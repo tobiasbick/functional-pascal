@@ -23,7 +23,7 @@ impl DebugSession {
             .map_err(|message| DebugSessionError {
                 kind: DebugErrorKind::VariablePathUnsupported,
                 message,
-                hint: "Trace a mutable global/stored scalar record field or exact Routine::Name scalar local/parameter, using full executable metadata names.".into(),
+                hint: "Trace a scalar global path or exact Routine::Name local/parameter/capture path, using stored fields, literal indexes and full executable metadata names.".into(),
             })?;
         if selectors.is_empty() {
             self.trace = None;

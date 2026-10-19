@@ -218,9 +218,14 @@ To explain how a scalar value changed, repeat `--trace Total`,
 [tracepoint contract](../../../docs/pascal/tools/debugger-tracepoints.md) covers
 typed initialization/change events, actual writing locations, exact scalar
 comparison and incomplete history. Mutable globals/fixed scalar record fields
-and scalar locals/parameters are supported. Local activation/instance identities
+and scalar locals/parameters/captures or their stored record fields are supported, for
+example `--trace 'Update::State.Selected'`, or fixed array positions such as
+`--trace 'Update::Items[0]'`. Absent positions are known unavailable values, not
+missing history. Local activation/instance identities
 distinguish calls and repeated declarations; observation ends at scope/call exit.
-Capture/index/aggregate selectors are unsupported. `--trace-limit`
+Use exact `MakeCounter.Next::Total` to select a capture during each active
+callback call. Each admission starts a new instance; dormant changes are outside
+that history. Whole aggregate selectors are unsupported. `--trace-limit`
 defaults to 1,000 events and stops explicitly at a bound; inspect `trace.complete`
 before relying on an empty or partial history. Tracing executes no expressions.
 

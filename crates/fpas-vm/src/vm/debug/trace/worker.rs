@@ -1,13 +1,13 @@
 //! Successful-store observation at the existing global write owners.
 
 use super::TraceHistory;
+use super::model::TraceLeaf;
 use crate::vm::worker::Worker;
-use fpas_bytecode::Value;
 use std::sync::{Arc, Mutex};
 
 pub(in crate::vm) struct TraceWrite {
     global: usize,
-    before: Result<Vec<(usize, Option<Value>)>, &'static str>,
+    before: Result<Vec<(usize, Option<TraceLeaf>)>, &'static str>,
     history: Arc<Mutex<TraceHistory>>,
 }
 
@@ -27,7 +27,11 @@ impl Worker {
             return None;
         }
         let globals = self.global_slots();
-        let before = state.leaves(index, globals.get(index).and_then(Option::as_ref));
+        let before = state.leaves(
+            self.executable.executable(),
+            index,
+            globals.get(index).and_then(Option::as_ref),
+        );
         Some(TraceWrite {
             global: index,
             before,
@@ -49,6 +53,7 @@ impl Worker {
         let after = {
             let globals = self.global_slots();
             state.leaves(
+                self.executable.executable(),
                 write.global,
                 globals.get(write.global).and_then(Option::as_ref),
             )

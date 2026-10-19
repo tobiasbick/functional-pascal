@@ -13,6 +13,42 @@ pub const DEFAULT_TRACE_EVENTS: usize = 1000;
 pub(super) const MAX_SCALAR_BYTES: usize = 65_536;
 pub(super) const MAX_WORK_BYTES: usize = 16 * 1024 * 1024;
 
+/// Fixed metadata path; indexes are exact decimal strings on the wire.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+#[serde(tag = "kind", rename_all = "snake_case")]
+pub enum DebugTracePathStep {
+    /// Stored field slot in the current record layout.
+    Field {
+        /// Zero-based stored field position.
+        slot: usize,
+    },
+    /// Absolute zero-based position, never an element identity.
+    Index {
+        /// Exact zero-based position in the integer range.
+        #[serde(serialize_with = "index_string")]
+        index: u64,
+    },
+}
+
+fn index_string<S: Serializer>(index: &u64, serializer: S) -> Result<S::Ok, S::Error> {
+    serializer.serialize_str(&index.to_string())
+}
+
+#[derive(Clone, PartialEq)]
+pub(super) enum TraceLeaf {
+    Value(fpas_bytecode::Value),
+    Absent,
+}
+
+impl TraceLeaf {
+    pub(super) fn value(&self) -> Option<&fpas_bytecode::Value> {
+        match self {
+            Self::Value(value) => Some(value),
+            Self::Absent => None,
+        }
+    }
+}
+
 /// A pre-execution metadata binding, independent of stop-local inspection handles.
 #[derive(Debug, Clone, Serialize)]
 pub struct DebugTraceWatch {
@@ -29,6 +65,21 @@ pub struct DebugTraceWatch {
     pub type_name: String,
     #[serde(skip)]
     pub(super) ty: fpas_bytecode::DebugTypeId,
+    #[serde(skip)]
+    pub(super) root_ty: fpas_bytecode::DebugTypeId,
+    #[serde(skip)]
+    pub(super) path: Vec<DebugTracePathStep>,
+}
+
+/// Exact declaration provenance for an activation-scoped capture watch.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+pub struct DebugTraceCaptureSource {
+    /// Function declaring the original source local or parameter.
+    pub function_id: u16,
+    /// Exact original source binding within that function.
+    pub binding_id: usize,
+    /// Zero-based slot in the selected callback's closure capture ABI.
+    pub slot: usize,
 }
 
 /// Pre-execution identity independent of live call frames or value handles.
@@ -41,6 +92,9 @@ pub enum DebugTraceIdentity {
         global_slot: usize,
         /// Stored record field indexes in root-to-leaf order.
         field_slots: Vec<usize>,
+        /// Present only for indexed selectors; legacy field slots are empty in that case.
+        #[serde(skip_serializing_if = "Vec::is_empty")]
+        path: Vec<DebugTracePathStep>,
     },
     /// One exact source binding in one executable function.
     Local {
@@ -50,8 +104,17 @@ pub enum DebugTraceIdentity {
         binding_id: usize,
         /// Lexical declaration scope.
         scope_id: u32,
-        /// Source-level local or parameter role.
+        /// Source-level local, parameter or capture role.
         kind: &'static str,
+        /// Original source declaration and this callback's capture ABI slot.
+        #[serde(skip_serializing_if = "Option::is_none")]
+        capture_source: Option<DebugTraceCaptureSource>,
+        /// Fixed fields after the binding; omitted for existing scalar selectors.
+        #[serde(skip_serializing_if = "Vec::is_empty")]
+        field_slots: Vec<usize>,
+        /// Complete path for indexed selectors; absent for existing field-only selectors.
+        #[serde(skip_serializing_if = "Vec::is_empty")]
+        path: Vec<DebugTracePathStep>,
     },
 }
 
@@ -61,6 +124,7 @@ impl DebugTraceIdentity {
             Self::Global {
                 global_slot,
                 field_slots,
+                ..
             } => Some((*global_slot, field_slots)),
             Self::Local { .. } => None,
         }

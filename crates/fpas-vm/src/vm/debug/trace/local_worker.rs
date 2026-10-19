@@ -2,15 +2,9 @@
 
 use super::{
     DebugTraceIdentity, LocalTraceState,
-    local_state::{InheritedLocal, LiveLocal, LocalFrame},
+    local_state::{InheritedLocal, LocalFrame, ParameterValue},
 };
-use crate::vm::{
-    inspection::{
-        bindings::{self, ReadValue},
-        location,
-    },
-    worker::Worker,
-};
+use crate::vm::{inspection::location, worker::Worker};
 use fpas_bytecode::{DebugBindingKind, FunctionId, InstructionAddress, Value};
 
 impl Worker {
@@ -103,16 +97,19 @@ impl Worker {
             for live in &frame.live {
                 let binding = &info.debug.bindings[live.binding];
                 let register = frame.base + usize::from(binding.register.get());
-                if let Some(storage @ (Value::Cell(_) | Value::Reference(_))) = live
-                    .parameter
-                    .as_ref()
-                    .or_else(|| self.registers.get(register))
+                let source = match &live.parameter {
+                    Some(ParameterValue::Alias(value)) => Some(value),
+                    Some(ParameterValue::Frozen(_)) => None,
+                    None => self.registers.get(register),
+                };
+                if let Some(storage @ (Value::Cell(_) | Value::Reference(_))) = source
                     && !child
                         .inherited
                         .iter()
-                        .any(|prior| prior.instance == live.instance)
+                        .any(|prior| prior.instance == live.instance && prior.watch == live.watch)
                 {
                     child.inherited.push(InheritedLocal {
+                        watch: live.watch,
                         instance: live.instance,
                         storage: storage.clone(),
                     });
@@ -163,31 +160,17 @@ impl LocalTraceState {
                         binding_id,
                         ..
                     } if function_id == function.get()
-                        && info.debug.bindings[binding_id].kind == DebugBindingKind::Parameter =>
+                        && info.debug.bindings[binding_id].kind != DebugBindingKind::Local =>
                     {
                         Some((watch.id, binding_id))
                     }
                     _ => None,
                 })
                 .collect();
-            for (watch, binding) in parameters {
-                if let Some(instance) = history.instance(watch, activation) {
-                    let ordinal = info.debug.bindings[..binding]
-                        .iter()
-                        .filter(|binding| binding.kind == DebugBindingKind::Parameter)
-                        .count();
-                    let parameter = worker.registers.get(base + ordinal).cloned();
-                    frame.live.push(LiveLocal {
-                        watch,
-                        binding,
-                        instance,
-                        parameter,
-                    });
-                }
-            }
+            super::local_admission::admit(&mut history, worker, &mut frame, parameters);
             self.frames.push(frame);
         }
-        // Parameter admission precedes the callee's first instruction.
+        // Parameter/capture admission precedes the callee's first instruction.
         self.observe(
             worker,
             worker.function,
@@ -217,7 +200,7 @@ impl LocalTraceState {
         frame.live.retain(|live| {
             let keep = visible.contains(&info.debug.bindings[live.binding].scope);
             if !keep {
-                history.retire(live.instance);
+                history.retire(live.watch, live.instance);
             }
             keep
         });
@@ -245,6 +228,7 @@ impl LocalTraceState {
                     binding_id,
                     ..
                 } if function_id == owner.get()
+                    && info.debug.bindings[binding_id].kind == DebugBindingKind::Local
                     && info.debug.bindings[binding_id].initializer == Some(address) =>
                 {
                     Some((watch.id, binding_id))
@@ -252,24 +236,15 @@ impl LocalTraceState {
                 _ => None,
             })
             .collect();
-        for (watch, binding) in declarations {
-            frame.live.retain(|live| {
-                if live.watch == watch {
-                    history.retire(live.instance);
-                    false
-                } else {
-                    true
-                }
-            });
-            if let Some(instance) = history.instance(watch, frame.activation) {
-                frame.live.push(LiveLocal {
-                    watch,
-                    binding,
-                    instance,
-                    parameter: None,
-                });
+        frame.live.retain(|live| {
+            if declarations.iter().any(|(watch, _)| *watch == live.watch) {
+                history.retire(live.watch, live.instance);
+                false
+            } else {
+                true
             }
-        }
+        });
+        super::local_admission::admit(&mut history, worker, frame, declarations);
     }
 
     fn observe(&self, worker: &Worker, owner: FunctionId, address: InstructionAddress) {
@@ -292,16 +267,15 @@ impl LocalTraceState {
             let info = &image.functions[frame.function.get() as usize];
             for live in &frame.live {
                 let binding = &info.debug.bindings[live.binding];
-                let value = if let Some(parameter) = &live.parameter {
-                    scalar(worker, parameter)
-                } else {
-                    match bindings::read(worker, frame.base, binding) {
-                        ReadValue::Available(value) => scalar(worker, &value),
-                        _ => None,
-                    }
-                };
+                let value = super::local_value::binding_value(
+                    worker,
+                    frame.base,
+                    binding,
+                    &history.report.watches[live.watch],
+                    live.parameter.as_ref(),
+                );
                 if let Some(value) = value {
-                    history.observe_local(image, live.instance, value, site);
+                    history.observe_local(image, live.watch, live.instance, value, site);
                 } else {
                     history.fail("trace_value_limit", false);
                     return;
@@ -309,23 +283,15 @@ impl LocalTraceState {
             }
         }
         for inherited in &self.inherited {
-            if let Some(value) = scalar(worker, &inherited.storage) {
-                history.observe_local(image, inherited.instance, value, site);
+            let watch = &history.report.watches[inherited.watch];
+            if let Some(value) =
+                super::local_value::read(worker, &inherited.storage, watch.root_ty, &watch.path)
+            {
+                history.observe_local(image, inherited.watch, inherited.instance, value, site);
             } else {
                 history.fail("trace_value_limit", false);
                 return;
             }
         }
-    }
-}
-
-fn scalar(worker: &Worker, value: &Value) -> Option<Value> {
-    match value {
-        Value::Cell(cell) => cell.try_lock().ok().map(|value| value.clone()),
-        Value::Reference(reference) => match bindings::read_reference(worker, reference) {
-            ReadValue::Available(value) => Some(value),
-            _ => None,
-        },
-        other => Some(other.clone()),
     }
 }

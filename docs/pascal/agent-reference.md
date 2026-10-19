@@ -1123,11 +1123,16 @@ and no expired local frames. DAP/JSONL remain explicit session protocols.
 For value history, repeat `--trace Total`, `--trace State.Selected` or
 `--trace 'Routine::Name'` on the batch
 command. [Tracepoints](tools/debugger-tracepoints.md) record initialization and
-consecutive changes to scalar globals/fields and locals/parameters, including
-`var` and callback writes, without additional stops. Local events identify the
+consecutive changes to scalar paths through globals, locals, parameters and
+captures. Stored fields such as `Update::State.Selected`, fixed positions such
+as `Update::Items[0]`, `var` and callback writes are covered without additional stops. Local events identify the
 activation and declaration instance; observation ends at lexical scope/call exit.
-Capture/index/aggregate selectors are unsupported; mutable globals belong to task 0. Inspect `trace.complete` and
-its reasons. `--trace-limit` defaults to 1,000 events, ceiling 10,000; losing
+Missing array positions are known unavailable states and preserve coverage.
+Use an exact callback selector such as `MakeCounter.Next::Total` for captures;
+its history covers each active call with new activation/instance IDs. Dormant
+changes are outside that history; declaring locals keep their lexical lifetime.
+Whole aggregates remain unsupported; mutable globals belong to task 0. Inspect
+`trace.complete` and its reasons. `--trace-limit` defaults to 1,000 events, ceiling 10,000; losing
 requested history is explicit and trace execution limits return exit 3.
 
 To explore task ordering, use `fpas debug file.fpas --schedule-seed 42`.

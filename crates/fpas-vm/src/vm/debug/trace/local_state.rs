@@ -23,11 +23,19 @@ pub(super) struct LiveLocal {
     pub watch: usize,
     pub binding: usize,
     pub instance: u64,
-    pub parameter: Option<Value>,
+    pub parameter: Option<ParameterValue>,
+}
+
+pub(super) enum ParameterValue {
+    /// Immutable admission snapshot of just the selected scalar leaf.
+    Frozen(Option<super::model::TraceLeaf>),
+    /// A live source cell/reference; it is never a copy of an aggregate root.
+    Alias(Value),
 }
 
 #[derive(Clone)]
 pub(super) struct InheritedLocal {
+    pub watch: usize,
     pub instance: u64,
     /// Only a live scalar cell/reference lease, never a copy of an enclosing aggregate.
     pub storage: Value,
@@ -52,7 +60,7 @@ impl LocalTraceState {
         let mut history = self.history.lock().unwrap_or_else(|p| p.into_inner());
         for frame in self.frames.drain(depth..) {
             for live in frame.live {
-                history.retire(live.instance);
+                history.retire(live.watch, live.instance);
             }
         }
     }

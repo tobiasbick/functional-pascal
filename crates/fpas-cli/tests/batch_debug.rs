@@ -16,6 +16,12 @@ mod requests;
 mod scheduling;
 #[path = "batch_debug/trace.rs"]
 mod trace;
+#[path = "batch_debug/trace_captures.rs"]
+mod trace_captures;
+#[path = "batch_debug/trace_fields.rs"]
+mod trace_fields;
+#[path = "batch_debug/trace_indices.rs"]
+mod trace_indices;
 #[path = "batch_debug/trace_limits.rs"]
 mod trace_limits;
 #[path = "batch_debug/trace_locals.rs"]

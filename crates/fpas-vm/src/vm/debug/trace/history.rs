@@ -13,7 +13,8 @@ pub(in crate::vm) struct TraceHistory {
     event_limit: usize,
     bytes: usize,
     work: usize,
-    pub(super) local_values: std::collections::BTreeMap<u64, super::local_history::LocalLast>,
+    pub(super) local_values:
+        std::collections::BTreeMap<(u64, usize), super::local_history::LocalLast>,
     pub(super) next_activation: u64,
     pub(super) next_instance: u64,
     pub(super) local_bytes: usize,
@@ -65,9 +66,10 @@ impl TraceHistory {
 
     pub(super) fn leaves(
         &self,
+        image: &Executable,
         global: usize,
         root: Option<&Value>,
-    ) -> Result<Vec<(usize, Option<Value>)>, &'static str> {
+    ) -> Result<Vec<(usize, Option<TraceLeaf>)>, &'static str> {
         self.report
             .watches
             .iter()
@@ -78,22 +80,14 @@ impl TraceHistory {
                     .is_some_and(|(slot, _)| slot == global)
             })
             .map(|watch| {
-                let mut leaf = root;
-                for slot in watch
-                    .identity
-                    .global()
-                    .map(|(_, slots)| slots)
-                    .unwrap_or_default()
-                {
-                    leaf = match leaf {
-                        None => None,
-                        Some(Value::Record(record)) => {
-                            Some(record.body().values.get(*slot).ok_or("trace_value_limit")?)
-                        }
-                        _ => return Err("trace_value_limit"),
-                    };
-                }
-                let valid = match leaf {
+                let leaf = match root {
+                    Some(value) => Some(
+                        super::local_value::project(image, value, watch.root_ty, &watch.path)
+                            .ok_or("trace_value_limit")?,
+                    ),
+                    None => None,
+                };
+                let valid = match leaf.as_ref().and_then(TraceLeaf::value) {
                     None | Some(Value::Integer(_) | Value::Real(_) | Value::Boolean(_)) => true,
                     Some(Value::Str(text)) => text.len() <= MAX_SCALAR_BYTES,
                     Some(Value::Enum(value)) => {
@@ -106,7 +100,7 @@ impl TraceHistory {
                 if !valid {
                     return Err("trace_value_limit");
                 }
-                Ok((watch.id, leaf.cloned()))
+                Ok((watch.id, leaf))
             })
             .collect()
     }
@@ -114,8 +108,8 @@ impl TraceHistory {
     pub(super) fn commit(
         &mut self,
         image: &Executable,
-        old: Vec<(usize, Option<Value>)>,
-        new: Vec<(usize, Option<Value>)>,
+        old: Vec<(usize, Option<TraceLeaf>)>,
+        new: Vec<(usize, Option<TraceLeaf>)>,
         site: super::pending::TraceSite<'_>,
         context: Option<(u64, u64)>,
     ) {
@@ -127,7 +121,10 @@ impl TraceHistory {
             }
             self.work -= cost;
             let equal = match (&old, &new) {
-                (Some(Value::Real(left)), Some(Value::Real(right))) => left == right,
+                (
+                    Some(TraceLeaf::Value(Value::Real(left))),
+                    Some(TraceLeaf::Value(Value::Real(right))),
+                ) => left == right,
                 _ => old == new,
             };
             if equal {
@@ -149,8 +146,8 @@ impl TraceHistory {
         &mut self,
         image: &Executable,
         id: usize,
-        old: Option<Value>,
-        new: Option<Value>,
+        old: Option<TraceLeaf>,
+        new: Option<TraceLeaf>,
         site: super::pending::TraceSite<'_>,
         context: Option<(u64, u64)>,
     ) {
@@ -211,8 +208,8 @@ impl TraceHistory {
     }
 }
 
-fn string_bytes(value: Option<&Value>) -> usize {
-    match value {
+fn string_bytes(value: Option<&TraceLeaf>) -> usize {
+    match value.and_then(TraceLeaf::value) {
         Some(Value::Str(text)) => text.len(),
         _ => 0,
     }
@@ -221,8 +218,13 @@ fn string_bytes(value: Option<&Value>) -> usize {
 fn capture(
     image: &Executable,
     watch: &DebugTraceWatch,
-    value: Option<Value>,
+    value: Option<TraceLeaf>,
 ) -> Option<crate::FailureValue> {
+    let absent = matches!(&value, Some(TraceLeaf::Absent));
+    let value = value.and_then(|leaf| match leaf {
+        TraceLeaf::Value(value) => Some(value),
+        TraceLeaf::Absent => None,
+    });
     let value = RetainedValue {
         name: String::new(),
         value,
@@ -233,7 +235,7 @@ fn capture(
         debug_type: Some(watch.ty),
         origin: (),
     };
-    snapshot::capture(
+    let mut captured = snapshot::capture(
         &value,
         ValueLimits {
             max_children: 0,
@@ -243,5 +245,11 @@ fn capture(
         },
         Some(image),
         &mut ValueBudget::new(2, 128 * 1024),
-    )
+    )?;
+    if absent {
+        captured.status = "unavailable";
+        captured.reason = Some("index_out_of_bounds");
+        captured.summary = "<unavailable>".into();
+    }
+    Some(captured)
 }

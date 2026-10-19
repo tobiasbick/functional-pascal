@@ -3,7 +3,7 @@
 use super::*;
 use serde_json::{Value as Json, json};
 
-fn session(source: &str, selectors: &[&str]) -> DebugSession {
+pub(super) fn session(source: &str, selectors: &[&str]) -> DebugSession {
     let (program, diagnostics) = fpas_parser::parse(source);
     assert!(diagnostics.is_empty(), "{diagnostics:?}");
     let image = fpas_compiler::compile(&program).unwrap();
@@ -17,7 +17,7 @@ fn session(source: &str, selectors: &[&str]) -> DebugSession {
     session
 }
 
-fn finish(mut s: DebugSession) -> Json {
+pub(super) fn finish(mut s: DebugSession) -> Json {
     let result = s.continue_execution().unwrap();
     assert!(
         matches!(result, DebugRunResult::Terminated(_)),
@@ -26,7 +26,7 @@ fn finish(mut s: DebugSession) -> Json {
     serde_json::to_value(s.take_trace().unwrap()).unwrap()
 }
 
-fn values(report: &Json, watch: usize) -> Vec<Json> {
+pub(super) fn values(report: &Json, watch: usize) -> Vec<Json> {
     report["events"]
         .as_array()
         .unwrap()

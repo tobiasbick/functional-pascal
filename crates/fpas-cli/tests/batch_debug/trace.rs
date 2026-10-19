@@ -168,7 +168,7 @@ fn request_errors_never_run_initializers_or_the_first_statement() {
         vec!["--trace", "Fixed"],
         vec!["--trace", "State"],
         vec!["--trace", "Items"],
-        vec!["--trace", "Items[0]"],
+        vec!["--trace", "Items[Missing]"],
         vec!["--trace", "Total()"],
         vec!["--trace", "Total", "--trace-limit", "0"],
         vec!["--trace", "Total", "--trace-limit", "10001"],

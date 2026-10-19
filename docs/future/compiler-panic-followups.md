@@ -13,4 +13,56 @@ language or hide the limitation inside a library implementation.
 
 ## Open entries
 
-No open entries.
+### D5-M1: Erased generic record fields
+
+Status: Open metadata limitation; no language or runtime representation change
+is scheduled as part of the current tracepoint extensions.
+
+Source shape: `type Box of T = record Item: T; Other: integer; end record;`
+with local `State: Box of integer`. The program compiles and executes normally,
+but `--trace 'F::State.Item'` fails during binding because the executable's shared
+generic record layout describes `Item` as `dynamic`. `F::State.Other` remains
+traceable. The limitation also applies to global generic field paths.
+
+Cause: `lowering/types/layouts.rs` deliberately uses the erased generic template
+for one canonical runtime record layout. No concrete instantiation-specific
+field type is retained for the trace binder. A runtime integer observed later
+cannot certify that a pre-execution selector is a supported scalar.
+
+Workaround: stop at the useful source location and use non-executing
+`--print 'State.Item'`, or trace a concretely typed scalar binding already
+receiving the field. These inspect the selected stop/current binding, not a
+fabricated complete history of the erased field.
+
+Later remedy: design debug-only structural/projection metadata for a concrete
+binding's semantic type, separate from the erased runtime record layout. Carry
+it through lowering, object encoding/linking and portable image storage; settle
+any required format-version change in that separate work. Do not specialize
+operational layouts or infer types by executing the program. Regression coverage
+must include multiple generic instantiations, aliases, recursive/nested generic
+paths, nominal scalar names, global/local/reference roots, atomic binding and
+source/object/image round trips. Current D5 VM tests preserve atomic rejection
+and positive support for the same record's concrete fields.
+
+### D5-M2: Erased nominal array element names
+
+Status: Open display-metadata limitation; indexed scalar values remain traceable.
+
+For `type Dollars = distinct integer`, a source parameter `Items: array of Dollars`
+has executable element type `integer`. The array debug type retains no separate
+nominal element display name. `--trace 'F::Items[0]'` therefore reports the
+underlying executable name `integer`; it still compares/captures the correct
+scalar value. The same applies to erased subrange and payload-free enum names.
+Record fields reached through an array keep their own nominal field metadata.
+
+Workaround: inspect the source declaration with source queries, or trace an
+existing concretely typed scalar binding/record field where the nominal name is
+already retained. Never infer a nominal name by parsing an aggregate display
+string or by observing one runtime value.
+
+Later remedy: extend the debug-only structural/projection design in
+[D5-M1](#d5-m1-erased-generic-record-fields) to preserve nested nominal element
+names through lowering, object/linking and images without changing operational
+type erasure. Include nested arrays, aliases, distinct containers and source/
+object/image round trips in that follow-up. The current index package does not
+silently add a new image format to recover display-only information.

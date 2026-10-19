@@ -250,7 +250,7 @@ Options:
   --break <path:line[:column]>   Stop before a source statement (repeat, max 64)
   --print <expression>          Inspect one stored-value expression (repeat, max 64)
   --schedule-seed <N>          Seeded fair task rounds and virtual time (controlled text-input runs only)
-  --trace <selector>           Scalar global/field or Routine::Name local/parameter (max 64)
+  --trace <selector>           Scalar global/local/capture path, fields/literal indexes (max 64)
   --trace-limit <count>        Retained events (default: 1000; ceiling: 10000)
   --task <id>                   Inspection task (default: stopping task)
   --frame <depth>               Inspection frame (default: 0, active frame)

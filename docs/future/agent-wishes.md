@@ -21,11 +21,13 @@
 [batch debugger contract](../pascal/tools/debugger-batch.md) describes the shipped command.
 N1–N4 ([source navigation](#code-navigation)) are implemented.
 [D5](#d5-tracepoints) has an implemented, independently reviewed scalar delivery
-for globals/record fields and locals/parameters, documented under
+for paths through globals, locals, parameters and active captures, documented under
 [batch tracepoints](../pascal/tools/debugger-tracepoints.md).
 [D4](#d4-reproducible-task-scheduling) has an implemented, independently reviewed
 bounded delivery; [seeded batch scheduling](../pascal/tools/debugger-scheduling.md)
-owns its contract. D2 and broader D5 tracing remain unscheduled ideas.
+owns its contract. The completed D5 extensions and deferred aggregate decision
+are recorded in the [extension index](tracepoint-extensions/README.md); D2 remains
+unscheduled.
 Human-facing tools stay: the DAP debugger
 ([`debugger.md`](../pascal/tools/debugger.md)) and the language server
 ([`editor-integration.md`](../pascal/tools/editor-integration.md)). The JSONL debugger protocol
@@ -39,11 +41,15 @@ navigation.
 A1, A2, A3, A4, S1, S2, S3, D1, D3, bounded D4 and N1–N4 are implemented.
 The completed N1–N3 contract is documented in
 [source queries](../pascal/tools/source-queries.md). Bounded D5 is implemented for
-mutable globals, scalar stored record fields and scalar locals/parameters; its
-[permanent contract](../pascal/tools/debugger-tracepoints.md) describes the scope
-and limits. Bounded D4 adds [seeded fair task rounds and virtual time](../pascal/tools/debugger-scheduling.md)
-for controlled batch runs. There is no next scheduled tooling implementation.
-D2 and capture/indexed/aggregate tracing remain ideas.
+mutable globals and scalar paths through records/arrays, locals, parameters and
+active captures. Its [permanent contract](../pascal/tools/debugger-tracepoints.md)
+describes the scope and limits. Bounded D4 adds
+[seeded fair task rounds and virtual time](../pascal/tools/debugger-scheduling.md)
+for controlled batch runs. All three D5 extension packages are implemented and
+independently reviewed; the [extension index](tracepoint-extensions/README.md)
+records completion and the remaining deferred assessment. Dogfood scalar paths
+before revisiting whole aggregates or continuous dormant escaped-cell history.
+D2 remains an unscheduled idea; no further implementation package is selected.
 JSONL removal remains deferred; the protocol and its tests stay supported.
 
 ## Principle: protocols for humans, commands for agents
@@ -307,7 +313,9 @@ changes with typed old/new values, actual writing location/function/task and
 explicit coverage. Tracepoints keep running to the existing batch stop/end or
 an explicit resource limit. Per-commit observation covers `var` writes, callbacks
 and record replacement without changing stopping data-breakpoint semantics.
-Nominal scalar names survive source compilation and portable image storage.
+Nominal scalar names survive where executable metadata retains them;
+[metadata follow-ups](compiler-panic-followups.md#open-entries) record
+the existing erased-generic and raw-array-element display-name gaps.
 
 The first delivery watches mutable globals and fixed stored record-field paths
 ending in scalar values. Mutable globals belong to the main task, so events
@@ -330,11 +338,21 @@ and independently rechecked. Regression tests cover these cases plus event,
 retained-value and live-instance bounds. The affected VM, compiler/IR, debugger
 and batch suites and strict workspace Clippy pass. The permanent tracepoint page
 and authoring guidance own the implemented contract; the completed temporary
-extension plan is removed.
+scalar-local delivery plan is removed.
 
-Capture bindings, indexed selectors and whole aggregates remain unscheduled D5
-extensions. The unrestricted wish is not fully implemented. JSONL/DAP and their
-existing behavior remain supported.
+The three extension packages are complete and tracked in the temporary
+[D5 extension plan](tracepoint-extensions/README.md), in this order:
+
+1. Scalar stored fields of local/parameter records — implemented and independently reviewed.
+2. Fixed array positions ending in scalar leaves, including explicit known absence — implemented and independently reviewed.
+3. Scalar capture bindings during their callback activations — implemented and
+   independently reviewed; declaring locals
+   retain their existing lifetime. Continuous escaped-cell history remains deferred.
+4. Whole aggregate history — assessment: remain deferred, with no current
+   implementation commitment. Reopen only with concrete dogfooding cases.
+
+The scheduled scalar-path extensions are complete; unrestricted aggregate and
+dormant escaped-cell history remain unimplemented and deferred. JSONL/DAP and their existing behavior remain supported.
 
 ### What already exists
 

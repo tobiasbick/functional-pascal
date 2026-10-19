@@ -11,7 +11,7 @@ Compiler and editor tooling for Functional Pascal projects.
 | [Documentation examples](documentation-examples.md) | FPAS extractor and automatic compilation/execution checks for Markdown examples |
 | [Debugger](debugger.md) | Source debugging through batch runs, JSONL, DAP, and VS Code |
 | [Batch debugging](debugger-batch.md) | One command, bounded task/frame/value snapshot and JSON result |
-| [Batch tracepoints](debugger-tracepoints.md) | Bounded scalar global/field and local/parameter history with declaration lifetimes |
+| [Batch tracepoints](debugger-tracepoints.md) | Bounded scalar paths through globals, locals, parameters and active captures |
 | [Seeded batch scheduling](debugger-scheduling.md) | Repeatable fair task rounds, virtual task time and controlled effects through `--schedule-seed` |
 | [Debugger JSONL protocol](debugger-jsonl.md) | Versioned machine-facing debugger contract |
 | [Debugger DAP contract](debugger-dap.md) | VS Code-compatible capabilities and request mapping |

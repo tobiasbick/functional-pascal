@@ -1,7 +1,8 @@
 //! Commit-local ordering shared by global hooks and local/alias observations.
 
+use super::model::TraceLeaf;
 use super::{TraceHistory, local_history::MAX_LOCAL_INSTANCES};
-use fpas_bytecode::{Executable, Value};
+use fpas_bytecode::Executable;
 
 #[derive(Clone, Copy)]
 pub(super) struct TraceSite<'a> {
@@ -20,8 +21,8 @@ pub(super) struct PendingCommit {
 
 struct PendingChange {
     watch: usize,
-    old: Option<Value>,
-    new: Option<Value>,
+    old: Option<TraceLeaf>,
+    new: Option<TraceLeaf>,
     context: Option<(u64, u64)>,
 }
 
@@ -43,7 +44,7 @@ impl TraceHistory {
         &mut self,
         id: u64,
         watch: usize,
-        values: (Option<Value>, Option<Value>),
+        values: (Option<TraceLeaf>, Option<TraceLeaf>),
         site: TraceSite<'_>,
         context: Option<(u64, u64)>,
     ) {

@@ -58,8 +58,8 @@ the source debugger and in-process test hosts do not grant this authority automa
   path:line[:column]` and `--print expression` for targeted inspection; `--script`
   supplies runner-compatible input. The whole-invocation deadline defaults to
   30 seconds. Repeat `--trace selector` to retain scalar global/record-field or
-  exact `Routine::Name` local/parameter
-  changes, with `--trace-limit count` for bounded event capacity; see
+  exact `Routine::Name` local/parameter/capture changes through stored fields or
+  literal array positions, with `--trace-limit count` for bounded event capacity; see
   [Tracepoints](../tools/debugger-tracepoints.md). Use `--schedule-seed N` for
   [controlled task ordering](../tools/debugger-scheduling.md) with virtual time
   and text-line input. See

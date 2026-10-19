@@ -1,14 +1,15 @@
 //! Exact function-and-binding admission for scalar local trace selectors.
 
-use super::{DebugTraceIdentity, DebugTraceWatch, binding};
+use super::{DebugTraceIdentity, DebugTraceWatch};
 use fpas_bytecode::{DebugBindingKind, DebugType, Executable};
 
 pub(super) fn bind(image: &Executable, selector: &str) -> Result<DebugTraceWatch, String> {
-    let Some((owner, name)) = selector.split_once("::") else {
+    let Some((owner, path)) = selector.split_once("::") else {
         unreachable!("local selector delimiter checked");
     };
-    if owner.is_empty() || !binding::identifier(name) {
-        return Err("Local trace selectors use exact executable Routine::Name, without fields, indexes or expressions.".into());
+    let (name, parts) = super::selector::local(path)?;
+    if owner.is_empty() {
+        return Err("Local traces require exact Routine::Binding.".into());
     }
     let mut candidate = None;
     for (function_id, function) in image.functions.iter().enumerate() {
@@ -19,9 +20,18 @@ pub(super) fn bind(image: &Executable, selector: &str) -> Result<DebugTraceWatch
         else {
             continue;
         };
+        let direct = function.debug.bindings.iter().any(|b| {
+            !b.hidden
+                && b.kind != DebugBindingKind::Capture
+                && image
+                    .strings
+                    .get(b.name)
+                    .is_some_and(|n| n.eq_ignore_ascii_case(name))
+        });
+        let mut roots = Vec::new();
         for (binding_id, local) in function.debug.bindings.iter().enumerate() {
             if local.hidden
-                || local.kind == DebugBindingKind::Capture
+                || (direct && local.kind == DebugBindingKind::Capture)
                 || !image
                     .strings
                     .get(local.name)
@@ -29,6 +39,28 @@ pub(super) fn bind(image: &Executable, selector: &str) -> Result<DebugTraceWatch
             {
                 continue;
             }
+            let capture = if local.kind == DebugBindingKind::Capture {
+                let Some(capture) =
+                    super::capture_binding::resolve(image, function_id, binding_id)?
+                else {
+                    continue;
+                };
+                Some(capture)
+            } else {
+                None
+            };
+            roots.push((binding_id, local, capture));
+        }
+        // Compare exact retained provenance only. An unrelated owner block local
+        // cannot hide a capture. Equal nearest declarations remain ambiguous.
+        let nearest = roots
+            .iter()
+            .filter_map(|(_, _, c)| c.as_ref().map(|c| c.depth))
+            .min();
+        for (binding_id, local, capture) in roots
+            .into_iter()
+            .filter(|(_, _, capture)| capture.as_ref().is_none_or(|c| Some(c.depth) == nearest))
+        {
             if candidate.is_some() {
                 return Err(format!(
                     "Trace `{selector}` is ambiguous across functions or lexical bindings; use a uniquely named binding in the full executable routine name."
@@ -38,9 +70,7 @@ pub(super) fn bind(image: &Executable, selector: &str) -> Result<DebugTraceWatch
                 Some(DebugType::Reference(inner)) => *inner,
                 _ => local.ty,
             };
-            if binding::scalar_type(image, ty).is_none()
-                || (local.kind == DebugBindingKind::Local && local.initializer.is_none())
-            {
+            if local.kind == DebugBindingKind::Local && local.initializer.is_none() {
                 return Err(format!(
                     "Trace `{selector}` requires a scalar parameter or a local with exact declaration-store metadata."
                 ));
@@ -56,10 +86,17 @@ pub(super) fn bind(image: &Executable, selector: &str) -> Result<DebugTraceWatch
             {
                 return Err("Local trace requires complete parameter admission metadata.".into());
             }
-            let type_name = image
-                .strings
-                .get(local.type_name)
+            let type_name = capture
+                .as_ref()
+                .map(|c| c.type_name)
+                .or_else(|| image.strings.get(local.type_name))
                 .ok_or("Missing local type metadata")?;
+            let fields = super::stored_path::bind(
+                image,
+                ty,
+                Some(type_name.trim_start_matches("var ")),
+                &parts,
+            )?;
             let name = image
                 .strings
                 .get(local.name)
@@ -76,22 +113,31 @@ pub(super) fn bind(image: &Executable, selector: &str) -> Result<DebugTraceWatch
             candidate = Some(DebugTraceWatch {
                 id: 0,
                 request: selector.into(),
-                name: format!("{function_name}::{name}"),
+                name: format!("{function_name}::{name}{}", fields.suffix),
                 identity: DebugTraceIdentity::Local {
                     function_id: u16::try_from(function_id)
                         .map_err(|_| "Trace function identity exceeds the executable ID range")?,
                     binding_id,
                     scope_id: local.scope,
-                    kind: if local.kind == DebugBindingKind::Parameter {
-                        "parameter"
+                    field_slots: fields.slots,
+                    path: if fields.indexed {
+                        fields.steps.clone()
                     } else {
-                        "local"
+                        Vec::new()
                     },
+                    kind: match local.kind {
+                        DebugBindingKind::Parameter => "parameter",
+                        DebugBindingKind::Local => "local",
+                        DebugBindingKind::Capture => "capture",
+                    },
+                    capture_source: capture.map(|c| c.source),
                 },
-                type_name: type_name.trim_start_matches("var ").into(),
-                ty,
+                type_name: fields.type_name,
+                ty: fields.ty,
+                root_ty: ty,
+                path: fields.steps,
             });
         }
     }
-    candidate.ok_or_else(|| format!("Trace `{selector}` requires one visible scalar local or parameter in an exact executable routine; captures and function aliases are unsupported."))
+    candidate.ok_or_else(|| format!("Trace `{selector}` requires one visible scalar local, parameter or capture in an exact executable routine; function aliases are unsupported."))
 }

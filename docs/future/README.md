@@ -8,6 +8,7 @@ Current implemented behavior belongs under `docs/pascal/`, not here.
 
 | Area | Plan | Scope |
 |------|------|-------|
+| Debugging | [D5 tracepoint extensions](tracepoint-extensions/README.md) | Local record fields, fixed array positions and active captures completed/reviewed; whole aggregates remain deferred |
 | Language | [Strict ISO/IEC 14977 grammar](iso-14977-grammar.md) | Open decision on grammar authority, strict notation, and automated drift checks |
 | Standard library | [Standard library roadmap](std-roadmap.md) | Future `Std.*` units and longer-term stdlib direction |
 | Networked applications | [Networked application platform](networked-applications/README.md) | Storage, security, concurrency, transports, interactive clients, operations, and distributed nodes |
@@ -35,10 +36,13 @@ Current implemented behavior belongs under `docs/pascal/`, not here.
   N1–N4 are implemented in [source queries](../pascal/tools/source-queries.md).
   The N1–N3 contract follow-ups and bounded scalar D5
   [tracepoints](../pascal/tools/debugger-tracepoints.md) for globals/fields and
-  locals/parameters are implemented and independently reviewed. JSONL
+  locals/parameters/captures, including fixed array positions, are implemented and
+  independently reviewed. JSONL
   removal remains deferred. Bounded D4
   [seeded batch scheduling](../pascal/tools/debugger-scheduling.md) is implemented
-  and independently reviewed; D2 and broader D5 extensions remain unscheduled ideas.
+  and independently reviewed. The [D5 extension index](tracepoint-extensions/README.md) records completed scalar
+  work and the deferred aggregate decision; D2 remains an
+  unscheduled idea and whole aggregate history remains deferred.
 
 ## Architecture records and development intake
 

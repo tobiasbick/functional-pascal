@@ -23,7 +23,7 @@ Stale, missing or escaping sources are errors.
 | --- | --- |
 | `--break path:line[:column]` | Repeatable source location, at most 64; coordinates start at 1. |
 | `--print expression` | One expression per occurrence, at most 64; never comma-split. |
-| `--trace selector` | Scalar global/stored record field or exact `Routine::Name` local/parameter; repeat, at most 64. |
+| `--trace selector` | Scalar global or exact `Routine::Name` local/parameter/capture, with stored fields/literal array positions; repeat, at most 64. |
 | `--trace-limit count` | Complete trace event capacity, default 1,000, ceiling 10,000; requires `--trace`. |
 | `--schedule-seed N` | Explicit unsigned 64-bit seed for fair task rounds, virtual task time and controlled effects; text-line input only. |
 | `--task id` | Inspection task; defaults to the stopping task. |
@@ -189,8 +189,15 @@ history while running to the existing first stop/end. It records initialization
 and consecutive unequal successful stores, including `var` and callback writes,
 with typed old/new values and the actual writing instruction/task. Mutable globals
 belong to the main task. Use `--trace 'Routine::Name'` for scalar locals and
-parameters across calls/tasks, with activation and declaration-instance identities.
-Observation ends at lexical scope/call exit; capture and indexed selectors are
-unsupported. Tracepoints do not create additional stops. Trace limits end execution explicitly with exit 3.
+parameters across calls/tasks or active callback captures, optionally followed
+by stored fields such as
+`Routine::State.Selected` or literal indexes such as `Routine::Items[0]`, with
+activation and shared declaration-instance identities. Missing array positions
+are known unavailable values, not incomplete history.
+Local observation ends at lexical scope/call exit. Capture selectors such as
+`MakeCounter.Next::Total` initialize at each active call, observe its live aliases
+and end at that call's exit; dormant changes are outside their coverage.
+Tracepoints do not create additional stops. Trace limits end execution explicitly
+with exit 3.
 The [tracepoint contract](debugger-tracepoints.md) defines selectors, the additive
 `trace` JSON object, exact comparison, event/byte bounds and missing-history rules.

@@ -38,7 +38,7 @@ pub struct Options {
     pub breakpoints: Vec<String>,
     /// Ordered non-executing expressions.
     pub expressions: Vec<String>,
-    /// Mutable scalar globals/stored fields, or exact Routine::Name locals/parameters.
+    /// Scalar global paths or exact Routine::Name locals/parameters/active captures.
     pub trace: Vec<String>,
     /// Maximum retained events across all watches (zero selects the default).
     pub trace_limit: usize,

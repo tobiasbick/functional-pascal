@@ -15,8 +15,9 @@ The default command is a [one-shot batch run](debugger-batch.md): one JSON
 snapshot, no live request protocol. It uses an isolated worker with a parent-owned
 deadline. The session operations described below apply to explicitly selected
 JSONL/DAP sessions; batch printing accepts a smaller, non-executing expression subset.
-Batch [tracepoints](debugger-tracepoints.md) record scalar global/record-field
-changes without stopping, with actual writing locations and typed old/new values.
+Batch [tracepoints](debugger-tracepoints.md) record scalar paths through globals,
+locals, parameters and active captures without evaluating expressions or stopping,
+with actual writing locations and typed old/new values.
 
 ```text
 fpas debug app.fpasprj --break src/main.fpas:42 --print Total

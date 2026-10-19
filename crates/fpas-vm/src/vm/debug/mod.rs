@@ -66,6 +66,7 @@ pub use types::{
 };
 
 pub use trace::{
-    DEFAULT_TRACE_EVENTS, DebugTraceEvent, DebugTraceIdentity, DebugTraceLocation,
-    DebugTraceReport, DebugTraceWatch, MAX_TRACE_BYTES, MAX_TRACE_EVENTS,
+    DEFAULT_TRACE_EVENTS, DebugTraceCaptureSource, DebugTraceEvent, DebugTraceIdentity,
+    DebugTraceLocation, DebugTracePathStep, DebugTraceReport, DebugTraceWatch, MAX_TRACE_BYTES,
+    MAX_TRACE_EVENTS,
 };

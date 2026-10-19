@@ -481,4 +481,7 @@ use inspection_fixture::inspection_executable;
 
 mod scheduling;
 mod trace;
+mod trace_captures;
+mod trace_fields;
+mod trace_indices;
 mod trace_locals;

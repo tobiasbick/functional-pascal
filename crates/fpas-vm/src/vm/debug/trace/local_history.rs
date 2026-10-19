@@ -1,6 +1,9 @@
 //! Bounded live declaration instances; completed calls retain events only.
 
-use super::{TraceHistory, model::MAX_SCALAR_BYTES};
+use super::{
+    TraceHistory,
+    model::{MAX_SCALAR_BYTES, TraceLeaf},
+};
 use fpas_bytecode::{Executable, Value};
 
 pub(super) const MAX_LOCAL_INSTANCES: usize = 1024;
@@ -9,7 +12,7 @@ pub(super) const MAX_LOCAL_BYTES: usize = 8 * 1024 * 1024;
 pub(super) struct LocalLast {
     watch: usize,
     activation: u64,
-    value: Option<Value>,
+    value: Option<TraceLeaf>,
 }
 
 impl TraceHistory {
@@ -21,28 +24,32 @@ impl TraceHistory {
         Some(self.next_activation)
     }
 
-    pub(super) fn instance(&mut self, watch: usize, activation: u64) -> Option<u64> {
-        if self.local_values.len() >= MAX_LOCAL_INSTANCES {
-            self.fail("trace_value_limit", false);
-            return None;
-        }
+    pub(super) fn declaration(&mut self) -> Option<u64> {
         self.next_instance = self.next_instance.checked_add(1).or_else(|| {
             self.fail("trace_value_limit", false);
             None
         })?;
+        Some(self.next_instance)
+    }
+
+    pub(super) fn instance(&mut self, watch: usize, activation: u64, instance: u64) -> bool {
+        if self.local_values.len() >= MAX_LOCAL_INSTANCES {
+            self.fail("trace_value_limit", false);
+            return false;
+        }
         self.local_values.insert(
-            self.next_instance,
+            (instance, watch),
             LocalLast {
                 watch,
                 activation,
                 value: None,
             },
         );
-        Some(self.next_instance)
+        true
     }
 
-    pub(super) fn retire(&mut self, instance: u64) {
-        if let Some(last) = self.local_values.remove(&instance) {
+    pub(super) fn retire(&mut self, watch: usize, instance: u64) {
+        if let Some(last) = self.local_values.remove(&(instance, watch)) {
             self.local_bytes = self.local_bytes.saturating_sub(bytes(last.value.as_ref()));
         }
     }
@@ -50,14 +57,15 @@ impl TraceHistory {
     pub(super) fn observe_local(
         &mut self,
         image: &Executable,
+        watch: usize,
         instance: u64,
-        value: Value,
+        value: TraceLeaf,
         site: super::pending::TraceSite<'_>,
     ) {
         if self.limit.is_some() {
             return;
         }
-        let Some(last) = self.local_values.get(&instance) else {
+        let Some(last) = self.local_values.get(&(instance, watch)) else {
             return;
         };
         if !valid(&value) {
@@ -66,7 +74,8 @@ impl TraceHistory {
         }
         let old = last.value.clone();
         // Immutable identical string storage requires neither scanning nor comparison budget.
-        if let (Some(Value::Str(left)), Value::Str(right)) = (&old, &value)
+        if let (Some(Value::Str(left)), Some(Value::Str(right))) =
+            (old.as_ref().and_then(TraceLeaf::value), value.value())
             && left.as_ptr() == right.as_ptr()
             && left.len() == right.len()
         {
@@ -83,7 +92,7 @@ impl TraceHistory {
             return;
         }
         self.local_bytes = retained;
-        if let Some(last) = self.local_values.get_mut(&instance) {
+        if let Some(last) = self.local_values.get_mut(&(instance, watch)) {
             last.value = Some(value.clone());
         }
         self.commit(
@@ -96,14 +105,17 @@ impl TraceHistory {
     }
 }
 
-fn bytes(value: Option<&Value>) -> usize {
-    match value {
+fn bytes(value: Option<&TraceLeaf>) -> usize {
+    match value.and_then(TraceLeaf::value) {
         Some(Value::Str(text)) => text.len(),
         _ => 0,
     }
 }
 
-fn valid(value: &Value) -> bool {
+fn valid(value: &TraceLeaf) -> bool {
+    let Some(value) = value.value() else {
+        return true;
+    };
     match value {
         Value::Integer(_) | Value::Boolean(_) => true,
         Value::Real(value) => value.is_finite(),

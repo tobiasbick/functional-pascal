@@ -90,6 +90,7 @@ impl Scope {
 #[derive(Debug)]
 pub struct ScopeStack {
     declaration_types: HashMap<(u32, usize), Ty>,
+    value_declaration_types: HashMap<(u32, usize, String), Ty>,
     pub(crate) imports: imports::ImportNames,
     scopes: Vec<Scope>,
     /// Recorded parameter escapes of imported routines and record routines by canonical name.
@@ -115,6 +116,7 @@ impl ScopeStack {
     pub fn new() -> Self {
         Self {
             declaration_types: HashMap::new(),
+            value_declaration_types: HashMap::new(),
             scopes: vec![Scope::new()],
             imports: Default::default(),
             param_escapes: HashMap::new(),
@@ -135,6 +137,22 @@ impl ScopeStack {
         if let Some(scope) = self.scopes.pop() {
             for symbol in scope.symbols.into_values() {
                 if let Some(span) = symbol.declaration {
+                    if matches!(
+                        symbol.symbol.kind,
+                        SymbolKind::Const
+                            | SymbolKind::Var
+                            | SymbolKind::Param
+                            | SymbolKind::ForVar
+                    ) {
+                        self.value_declaration_types.insert(
+                            (
+                                span.source_id,
+                                span.offset,
+                                symbol.original_name.to_ascii_lowercase(),
+                            ),
+                            symbol.symbol.ty.clone(),
+                        );
+                    }
                     self.declaration_types
                         .insert((span.source_id, span.offset), symbol.symbol.ty);
                 }
@@ -149,6 +167,35 @@ impl ScopeStack {
             for symbol in scope.symbols.values() {
                 if let Some(span) = symbol.declaration {
                     types.insert((span.source_id, span.offset), symbol.symbol.ty.clone());
+                }
+            }
+        }
+        types
+    }
+
+    /// Value declarations retain source names because one case arm can declare
+    /// multiple differently typed bindings at the same source span.
+    pub(crate) fn value_declaration_types(&self) -> HashMap<(u32, usize, String), Ty> {
+        let mut types = self.value_declaration_types.clone();
+        for scope in &self.scopes {
+            for symbol in scope.symbols.values() {
+                if let Some(span) = symbol.declaration
+                    && matches!(
+                        symbol.symbol.kind,
+                        SymbolKind::Const
+                            | SymbolKind::Var
+                            | SymbolKind::Param
+                            | SymbolKind::ForVar
+                    )
+                {
+                    types.insert(
+                        (
+                            span.source_id,
+                            span.offset,
+                            symbol.original_name.to_ascii_lowercase(),
+                        ),
+                        symbol.symbol.ty.clone(),
+                    );
                 }
             }
         }

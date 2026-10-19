@@ -183,6 +183,7 @@ fn globals_are_dense_and_immutable_slots_initialize_once() {
         2,
     );
     image.globals = vec![GlobalInfo {
+        projection: None,
         name: StringId::new(2),
         ty: fpas_bytecode::DebugTypeId::new(0),
         type_name: None,
@@ -287,6 +288,7 @@ fn immutable_global_rejects_a_second_store() {
         1,
     );
     image.globals = vec![GlobalInfo {
+        projection: None,
         name: StringId::new(2),
         ty: fpas_bytecode::DebugTypeId::new(0),
         type_name: None,

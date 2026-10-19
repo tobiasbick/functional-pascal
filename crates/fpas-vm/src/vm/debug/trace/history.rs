@@ -82,7 +82,7 @@ impl TraceHistory {
             .map(|watch| {
                 let leaf = match root {
                     Some(value) => Some(
-                        super::local_value::project(image, value, watch.root_ty, &watch.path)
+                        super::local_value::project(image, value, &watch.path_types, &watch.path)
                             .ok_or("trace_value_limit")?,
                     ),
                     None => None,

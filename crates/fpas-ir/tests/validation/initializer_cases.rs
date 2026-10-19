@@ -135,7 +135,8 @@ fn add_binding(program: &mut Program, local: LocalId, ty: TypeId, instruction: u
     program.functions[0].debug.bindings = vec![fpas_ir::DebugBinding {
         local,
         name: "value".to_string(),
-                type_name: None,
+        type_name: None,
+        projection: None,
         kind: fpas_ir::DebugBindingKind::Local,
         ty,
         mutable: true,

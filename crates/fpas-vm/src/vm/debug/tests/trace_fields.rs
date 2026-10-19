@@ -169,18 +169,12 @@ fn invalid_field_selectors_never_install_a_partial_request() {
 }
 
 #[test]
-fn erased_generic_fields_fail_atomically_but_concrete_siblings_are_supported() {
+fn applied_generic_fields_and_concrete_siblings_have_exact_histories() {
     let source = "program T; type Box of T = record Item: T; Other: integer; end record; procedure F(); begin var State: Box of integer := Box(Item := 1, Other := 0); State.Item := 2; State.Other := 3; end procedure; begin F(); end.";
-    let r = finish(session(source, &["F::State.Other"]));
+    let r = finish(session(source, &["F::State.Other", "F::State.Item"]));
     assert_eq!(values(&r, 0), vec![json!("0"), json!("3")]);
-    let (p, errors) = fpas_parser::parse(source);
-    assert!(errors.is_empty());
-    let mut s = DebugSession::new(fpas_compiler::compile(&p).unwrap()).unwrap();
-    assert!(
-        s.install_trace(&["F::State.Other".into(), "F::State.Item".into()], 10)
-            .is_err()
-    );
-    assert!(s.take_trace().is_none());
+    assert_eq!(values(&r, 1), vec![json!("1"), json!("2")]);
+    assert_eq!(r["complete"], true);
 }
 
 #[test]
@@ -210,6 +204,11 @@ fn nominal_enum_layout_mismatch_is_unknown_coverage_instead_of_a_false_typed_eve
     }
     image.records[0].fields[0].ty = fpas_bytecode::DebugTypeId::new(ty as u32);
     image.records[0].fields[0].type_name = Some(image.enums[b].name);
+    for function in &mut image.functions {
+        for binding in &mut function.debug.bindings {
+            binding.projection = None;
+        }
+    }
     let mut s = DebugSession::new(image.verify().unwrap()).unwrap();
     s.install_trace(&["F::State.X".into()], 100).unwrap();
     assert_eq!(
@@ -270,13 +269,14 @@ fn field_depth_limit_is_exact_and_unexpected_runtime_layouts_are_explicit() {
         .iter_mut()
         .find(|f| image.strings.get(f.name) == Some("f"))
         .unwrap();
-    function
+    let binding = function
         .debug
         .bindings
         .iter_mut()
         .find(|b| image.strings.get(b.name) == Some("State"))
-        .unwrap()
-        .ty = fpas_bytecode::DebugTypeId::new(ty as u32);
+        .unwrap();
+    binding.ty = fpas_bytecode::DebugTypeId::new(ty as u32);
+    binding.projection = None;
     let mut s = DebugSession::new(image.verify().unwrap()).unwrap();
     s.install_trace(&["F::State.X".into()], 10).unwrap();
     assert_eq!(

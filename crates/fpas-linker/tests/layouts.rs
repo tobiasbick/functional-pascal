@@ -287,6 +287,7 @@ fn incompatible_record_layout_import_is_rejected_before_relocation() {
 fn imported_global_record_and_enum_references_become_dense_numeric_ids() {
     let mut library = unit(true);
     library.globals.push(fpas_unit::object::ObjectGlobal {
+        projection: None,
         name: "library.unit.counter".to_string(),
         ty: 0,
         type_name: None,

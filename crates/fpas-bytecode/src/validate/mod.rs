@@ -6,6 +6,7 @@ mod debug;
 mod debug_types;
 mod instruction;
 mod layouts;
+mod projections;
 mod resources;
 mod site;
 mod source_map;
@@ -343,6 +344,11 @@ pub enum ValidationErrorKind {
         names: usize,
         /// Number of field types.
         types: usize,
+    },
+    /// Source-checked stored-path projection is inconsistent or exceeds its bounds.
+    DebugProjection {
+        /// Projection invariant that failed.
+        reason: &'static str,
     },
     /// Debugger capture provenance is incomplete, ordered wrongly, or refers to an invalid owner.
     DebugCaptureProvenance {

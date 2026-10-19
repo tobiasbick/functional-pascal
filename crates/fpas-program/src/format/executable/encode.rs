@@ -123,6 +123,7 @@ pub(super) fn encode_globals(executable: &Executable) -> Result<EncodedSection, 
             write_u16(&mut bytes, initializer.function.get());
             write_u32(&mut bytes, initializer.instruction.get());
         }
+        super::super::projections::encode(&mut bytes, global.projection.as_ref())?;
     }
     Ok(EncodedSection {
         tag: TAGS[3],

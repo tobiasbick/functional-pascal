@@ -52,7 +52,7 @@ fn canonical_image_has_target_independent_digest() {
 
     assert_eq!(
         format!("{:?}", fpas_program::Digest::of(bytes)),
-        "cae9bfa5613595103e4cdcc55b22fec8b8d03c6159f7480c04fccf4f8f869c53"
+        "76268771d44b64559bade824315a3f7e1886bbb3c1716c67a4bb14c8b98db3c0"
     );
 }
 

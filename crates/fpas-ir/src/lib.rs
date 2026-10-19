@@ -20,6 +20,7 @@ mod function;
 mod id;
 mod instruction;
 mod program;
+mod projection;
 mod terminator;
 pub mod validate;
 
@@ -42,4 +43,5 @@ pub use program::{
     IrType, Program, RecordConstructionInfo, RecordField, RecordLayout, RecordMethod,
     TypeDefinition,
 };
+pub use projection::{DebugProjection, DebugProjectionKind};
 pub use terminator::{BlockTarget, Terminator};

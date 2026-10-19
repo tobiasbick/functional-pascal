@@ -5,6 +5,7 @@ mod blocks;
 mod debug;
 mod function;
 mod metadata;
+mod projections;
 mod selection;
 mod superinstructions;
 
@@ -88,6 +89,11 @@ pub(super) fn compile_program(
                     .map(|name| metadata.intern_string(name))
                     .transpose()?,
                 mutable: global.mutable,
+                projection: global
+                    .projection
+                    .as_ref()
+                    .map(|projection| projections::compile(projection, &mut metadata))
+                    .transpose()?,
                 initializer,
             })
         })

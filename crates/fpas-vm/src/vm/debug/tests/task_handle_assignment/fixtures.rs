@@ -69,6 +69,7 @@ fn typed_executable(consume_pending: bool) -> VerifiedExecutable {
         column: 3,
     };
     let local = |name, register, ty, mutable, kind, hidden| DebugBinding {
+        projection: None,
         name: StringId::new(name),
         type_name: StringId::new(if ty == 7 { 29 } else { 28 }),
         ty: DebugTypeId::new(ty),
@@ -315,6 +316,7 @@ fn typed_executable(consume_pending: bool) -> VerifiedExecutable {
         ],
         strings,
         globals: vec![GlobalInfo {
+            projection: None,
             name: StringId::new(25),
             ty: DebugTypeId::new(4),
             type_name: None,

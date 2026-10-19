@@ -102,7 +102,7 @@ pub(super) fn decode_globals(section: DecodedSection<'_>) -> Result<Vec<GlobalIn
         fpas_bytecode::limits::MAX_GLOBALS,
     )?;
     let mut reader = SectionReader::new(section.bytes, "global section");
-    reader.ensure_entries(section.item_count, 14, "global_name")?;
+    reader.ensure_entries(section.item_count, 15, "global_name")?;
     let mut globals = Vec::with_capacity(section.item_count);
     for _ in 0..section.item_count {
         globals.push(GlobalInfo {
@@ -123,6 +123,7 @@ pub(super) fn decode_globals(section: DecodedSection<'_>) -> Result<Vec<GlobalIn
             } else {
                 None
             },
+            projection: super::super::projections::decode(&mut reader)?,
         });
     }
     reader.finish()?;

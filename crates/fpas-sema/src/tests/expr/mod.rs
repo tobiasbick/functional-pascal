@@ -223,6 +223,7 @@ fn analysis_metadata_exposes_all_named_results() {
         source_expr_types: _,
         member_receivers: _,
         declaration_types: _,
+        value_declaration_types: _,
         selection_types: _,
         errors,
         import_aliases,

@@ -485,3 +485,4 @@ mod trace_captures;
 mod trace_fields;
 mod trace_indices;
 mod trace_locals;
+mod trace_projections;

@@ -21,6 +21,7 @@ pub(super) fn binding(
     mutable: bool,
 ) -> DebugBinding {
     DebugBinding {
+        projection: None,
         name: StringId::new(name),
         type_name: StringId::new(8),
         ty: DebugTypeId::new(ty),

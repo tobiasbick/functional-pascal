@@ -8,6 +8,8 @@ use fpas_bytecode::{DebugBindingKind, DebugType, Opcode};
 
 use super::parse_ok;
 
+mod projections;
+
 #[test]
 fn compiler_retains_exact_record_method_mappings_for_debugger_binding() {
     let program = parse_ok(

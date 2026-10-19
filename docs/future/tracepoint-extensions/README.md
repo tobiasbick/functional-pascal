@@ -1,14 +1,14 @@
 # D5: Tracepoint extensions
 
-Status: Packages 1–3 and 5 completed and independently reviewed; package 6 planned.
+Status: Packages 1–3, 5 and 6 completed and independently reviewed.
 Whole aggregates remain deferred. This is the temporary D5 extension index, not an AP package or
 an implemented language specification.
 
 The scalar-path implementation scope is complete: local record fields, fixed
 array positions and activation-scoped capture bindings. Permanent docs/tests
 own the completed packages, so their temporary implementation files are removed.
-Stable anonymous names are also complete. The next package improves debug type
-metadata without adding source-language features.
+Stable anonymous names are also complete. Concrete debug projections improve
+type metadata without adding source-language features.
 
 Current behavior belongs to the permanent
 [tracepoint contract](../../pascal/tools/debugger-tracepoints.md). D1 failure
@@ -23,7 +23,7 @@ D2 record/replay is outside this plan. JSONL removal remains deferred.
 | 2 | [Fixed array positions](../../pascal/tools/debugger-tracepoints.md#selecting-storage) | Completed; independently reviewed | Package 1 and shared metadata path traversal |
 | 3 | [Scalar capture bindings](../../pascal/tools/debugger-tracepoints.md#observed-changes) | Completed; independently reviewed | Packages 1–2 and exact capture provenance |
 | 4 | [Stable anonymous callback names](../../pascal/tools/debugger-tracepoints.md#anonymous-callback-names) | Completed; independently reviewed | Exact routine selectors and capture provenance |
-| 5 | [Concrete debug projections](06-concrete-debug-projections.md) | Planned | Stable callback names; D5-M1/M2 together |
+| 5 | [Concrete debug projections](../../pascal/tools/debugger-tracepoints.md#stored-fields-and-array-positions) | Completed; independently reviewed | Stable callback names; D5-M1/M2 together |
 | — | [Whole aggregate history](04-aggregate-decision.md) | Deferred; no implementation scheduled | Concrete dogfooding evidence |
 
 Use these status words consistently: **Planned**, **In progress**, **In review**,
@@ -31,8 +31,8 @@ Use these status words consistently: **Planned**, **In progress**, **In review**
 implementation commitment. An implementation blocker is recorded separately
 with its concrete cause and next action.
 
-Next debugger work: package 6. Continue dogfooding the delivered
-scalar paths. The first Notes case found and fixed an application selection bug,
+No further debugger implementation package is scheduled. Continue dogfooding the
+delivered scalar paths. The first Notes case found and fixed an application selection bug,
 covered by [headless regressions](../../../tests/apps/notes/note_search_selection_test.fpas)
 and [save-failure checks](../../../tests/apps/notes/note_search_dirty_test.fpas).
 The Notes application fix was delivered separately from the debugger packages.
@@ -57,11 +57,9 @@ Checks for packages 1–3 passed:
 - Strict workspace Clippy for all targets, Rust formatting, changed Markdown links
   and `git diff --check`. Cloud timings are not performance acceptance data.
 
-The existing erased-generic field metadata limitation is recorded in
-[D5-M1](../compiler-panic-followups.md#d5-m1-erased-generic-record-fields); erased
-raw-array nominal element display names are recorded in
-[D5-M2](../compiler-panic-followups.md#d5-m2-erased-nominal-array-element-names).
-Both boundaries are documented and covered by regression tests.
+Package 6 addresses the D5-M1/M2 follow-ups: erased generic record fields and
+nominal array element names. Its permanent contract is documented under
+[stored fields and array positions](../../pascal/tools/debugger-tracepoints.md#stored-fields-and-array-positions).
 
 ### Stable anonymous names (package 5)
 
@@ -90,10 +88,45 @@ passed. Cloud timings are not performance acceptance data.
 
 Permanent docs/tests now own this package; its temporary plan file is removed.
 
+### Concrete debug projections (package 6)
+
+Exact globals and source bindings retain bounded, acyclic source-type projections
+beside the erased operational layouts. Applied generic fields and nested nominal
+array element names now survive lowering, objects, linking and portable images.
+References and captures use their exact declaration provenance; unresolved generic
+types remain unsupported. Compiler cutoffs resume existing concrete operational
+metadata rather than disabling previously supported scalar selectors. Bounds are
+depth 32 (root 0), 4,096 nodes and 65,536 nominal-name UTF-8 bytes per root.
+Object/program formats advance to 14/22; instruction format 23 and runtime
+storage layouts stay unchanged. Old artifacts require rebuilding.
+
+Independent review findings were fixed and rechecked: recursive expansion reserves
+later scalar siblings; same-span pattern bindings retain separate checked types;
+synthetic lowering temporaries do not inherit source projections; imported erased
+terminals and array/reference containers reconcile with canonical linked layouts
+without changing eligibility or hiding known type contradictions. Unsupported
+children remain unsupported after linking. The strict final verifier is retained.
+
+Regression coverage includes generic instantiations sharing one runtime layout,
+nested and recursive records, aliases, distinct/subrange/enum array elements,
+mutable aliases, replacements, absent indexes, immutable/mutable/transitive
+captures, mixed pattern captures, expansion cutoffs, trace limits, atomic setup
+failures and source/project/cached-object/image equivalence. Permanent docs/tests
+own this package; its temporary implementation file is removed. The D5-M1/M2
+intake entries are resolved. Whole aggregates and dormant escaped-cell history
+remain deferred.
+
+Validation passed: 317 compiler tests, 803 Sema tests, 43 IR validation tests,
+the bytecode/object/program/linker suites, 458 VM debugger tests, 303 debugger
+tests and 101 real-process batch tests. All 13 Notes tests, all 13 compact-reference
+examples and seven tracepoint examples passed. Strict workspace Clippy for all
+targets, Rust formatting, changed Markdown links/anchors and diff checks passed.
+Cloud runs provide correctness evidence, not performance acceptance measurements.
+
 ## Shared decisions
 
-The unchanged program/object format rule below describes packages 1–3 and 5. Package 6
-explicitly plans new debug metadata and must version affected encodings.
+The unchanged program/object format rule below describes packages 1–3 and 5.
+Package 6 adds debug metadata and versions the affected encodings separately.
 
 - Keep one batch command, `--trace`, and one result document. No new session
   protocol, alias flag, source instrumentation or interactive setup is needed.

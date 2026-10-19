@@ -17,7 +17,7 @@ pub(super) fn binding_value(
     use super::local_state::ParameterValue;
     match parameter {
         Some(ParameterValue::Frozen(value)) => value.clone(),
-        Some(ParameterValue::Alias(value)) => read(worker, value, watch.root_ty, &watch.path),
+        Some(ParameterValue::Alias(value)) => read(worker, value, &watch.path_types, &watch.path),
         None => {
             let register = base + usize::from(binding.register.get());
             if !worker.register_is_initialized(register) {
@@ -26,7 +26,7 @@ pub(super) fn binding_value(
             read(
                 worker,
                 worker.registers.get(register)?,
-                watch.root_ty,
+                &watch.path_types,
                 &watch.path,
             )
         }
@@ -36,16 +36,16 @@ pub(super) fn binding_value(
 pub(super) fn read(
     worker: &Worker,
     root: &Value,
-    ty: DebugTypeId,
+    types: &[DebugTypeId],
     fields: &[DebugTracePathStep],
 ) -> Option<TraceLeaf> {
-    dereference(worker, root, ty, fields, 0)
+    dereference(worker, root, types, fields, 0)
 }
 
 fn dereference(
     worker: &Worker,
     root: &Value,
-    ty: DebugTypeId,
+    types: &[DebugTypeId],
     fields: &[DebugTracePathStep],
     depth: usize,
 ) -> Option<TraceLeaf> {
@@ -55,23 +55,27 @@ fn dereference(
     match root {
         Value::Cell(cell) => {
             let value = cell.try_lock().ok()?;
-            dereference(worker, &value, ty, fields, depth + 1)
+            dereference(worker, &value, types, fields, depth + 1)
         }
         Value::Reference(reference) => match bindings::read_reference(worker, reference) {
-            ReadValue::Available(value) => dereference(worker, &value, ty, fields, depth + 1),
+            ReadValue::Available(value) => dereference(worker, &value, types, fields, depth + 1),
             _ => None,
         },
-        value => project(worker.executable.executable(), value, ty, fields),
+        value => project(worker.executable.executable(), value, types, fields),
     }
 }
 
 pub(super) fn project(
     image: &Executable,
     mut value: &Value,
-    mut ty: DebugTypeId,
+    types: &[DebugTypeId],
     fields: &[DebugTracePathStep],
 ) -> Option<TraceLeaf> {
-    for step in fields {
+    if types.len() != fields.len() + 1 {
+        return None;
+    }
+    for (position, step) in fields.iter().enumerate() {
+        let ty = types[position];
         match step {
             DebugTracePathStep::Field { slot } => {
                 let DebugType::Record(expected) = image.debug_types.get(ty.get() as usize)? else {
@@ -83,22 +87,15 @@ pub(super) fn project(
                 if record.body().layout.record != *expected {
                     return None;
                 }
-                ty = image
-                    .records
-                    .get(expected.get() as usize)?
-                    .fields
-                    .get(*slot)?
-                    .ty;
                 value = record.body().values.get(*slot)?;
             }
             DebugTracePathStep::Index { index } => {
-                let DebugType::Array(element) = image.debug_types.get(ty.get() as usize)? else {
+                let DebugType::Array(_) = image.debug_types.get(ty.get() as usize)? else {
                     return None;
                 };
                 let Value::Array(values) = value else {
                     return None;
                 };
-                ty = *element;
                 let Some(child) = usize::try_from(*index).ok().and_then(|n| values.get(n)) else {
                     return Some(TraceLeaf::Absent);
                 };
@@ -106,6 +103,7 @@ pub(super) fn project(
             }
         }
     }
+    let ty = *types.last()?;
     let valid = match (image.debug_types.get(ty.get() as usize)?, value) {
         (DebugType::Enum(expected), Value::Enum(value)) => {
             let actual = &value.body().layout;

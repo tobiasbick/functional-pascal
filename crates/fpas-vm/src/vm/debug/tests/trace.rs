@@ -316,7 +316,7 @@ fn duplicate_external_metadata_bindings_are_rejected_without_installation() {
         fpas_parser::parse("program T; var Total: integer := 0; begin Total := 1; end.");
     assert!(errors.is_empty());
     let mut image = fpas_compiler::compile(&program).unwrap().into_unverified();
-    let mut duplicate = image.globals[0];
+    let mut duplicate = image.globals[0].clone();
     duplicate.initializer = None;
     image.globals.extend(std::iter::repeat_n(duplicate, 10000));
     let mut s = DebugSession::new(image.verify().unwrap()).unwrap();

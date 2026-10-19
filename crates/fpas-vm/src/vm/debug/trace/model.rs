@@ -66,7 +66,7 @@ pub struct DebugTraceWatch {
     #[serde(skip)]
     pub(super) ty: fpas_bytecode::DebugTypeId,
     #[serde(skip)]
-    pub(super) root_ty: fpas_bytecode::DebugTypeId,
+    pub(super) path_types: Vec<fpas_bytecode::DebugTypeId>,
     #[serde(skip)]
     pub(super) path: Vec<DebugTracePathStep>,
 }

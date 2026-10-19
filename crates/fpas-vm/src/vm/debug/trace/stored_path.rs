@@ -1,13 +1,14 @@
 //! Metadata-only selection of a bounded stored record path ending at a scalar.
 
 use super::{model::DebugTracePathStep, selector::Part};
-use fpas_bytecode::{DebugType, DebugTypeId, Executable};
+use fpas_bytecode::{DebugProjection, DebugProjectionKind, DebugType, DebugTypeId, Executable};
 
 pub(super) struct Fields {
     pub slots: Vec<usize>,
     pub steps: Vec<DebugTracePathStep>,
     pub indexed: bool,
     pub ty: DebugTypeId,
+    pub path_types: Vec<DebugTypeId>,
     pub type_name: String,
     pub suffix: String,
 }
@@ -16,6 +17,7 @@ pub(super) fn bind<'a>(
     image: &'a Executable,
     mut ty: DebugTypeId,
     mut type_name: Option<&'a str>,
+    mut projection: Option<&'a DebugProjection>,
     parts: &[Part<'_>],
 ) -> Result<Fields, String> {
     if parts.len() > 16 {
@@ -25,6 +27,15 @@ pub(super) fn bind<'a>(
     let mut suffix = String::new();
     let mut steps = Vec::new();
     let mut indexed = false;
+    if let Some(projected) = projection {
+        ty = projected.ty;
+        if matches!(projected.kind, DebugProjectionKind::Operational) {
+            projection = None;
+        } else {
+            type_name = projected.type_name.and_then(|id| image.strings.get(id));
+        }
+    }
+    let mut path_types = vec![ty];
     for part in parts {
         let part = match part {
             Part::Field(name) => *name,
@@ -34,9 +45,20 @@ pub(super) fn bind<'a>(
                     return Err("Trace index steps require an array.".into());
                 };
                 ty = *element;
-                // Array element nominal names are not stored separately in current metadata.
-                // Do not parse display strings as a substitute for a concrete debug type.
                 type_name = None;
+                if let Some(projected) = projection {
+                    let DebugProjectionKind::Array(child) = &projected.kind else {
+                        return Err("Trace index projection requires an array.".into());
+                    };
+                    projection = Some(child);
+                    ty = child.ty;
+                    if matches!(child.kind, DebugProjectionKind::Operational) {
+                        projection = None;
+                    } else {
+                        type_name = child.type_name.and_then(|id| image.strings.get(id));
+                    }
+                }
+                path_types.push(ty);
                 steps.push(DebugTracePathStep::Index { index: *index });
                 suffix.push_str(&format!("[{index}]"));
                 indexed = true;
@@ -66,6 +88,25 @@ pub(super) fn bind<'a>(
         suffix.push_str(image.strings.get(field.name).ok_or("Missing field name")?);
         ty = field.ty;
         type_name = field.type_name.and_then(|id| image.strings.get(id));
+        if let Some(projected) = projection {
+            let DebugProjectionKind::Record(fields) = &projected.kind else {
+                return Err("Trace field projection requires an ordinary stored record.".into());
+            };
+            let child = fields
+                .get(slot)
+                .ok_or("Missing stored trace field projection")?;
+            projection = Some(child);
+            ty = child.ty;
+            if matches!(child.kind, DebugProjectionKind::Operational) {
+                projection = None;
+            } else {
+                type_name = child.type_name.and_then(|id| image.strings.get(id));
+            }
+        }
+        path_types.push(ty);
+    }
+    if projection.is_some_and(|node| !matches!(node.kind, DebugProjectionKind::Scalar)) {
+        return Err("Trace projections must end in a supported scalar.".into());
     }
     let scalar = super::binding::scalar_type(image, ty)
         .ok_or("Trace paths must end in a supported scalar")?;
@@ -78,6 +119,7 @@ pub(super) fn bind<'a>(
         steps,
         indexed,
         ty,
+        path_types,
         type_name: type_name.into(),
         suffix,
     })

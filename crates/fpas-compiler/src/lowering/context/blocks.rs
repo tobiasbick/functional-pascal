@@ -147,6 +147,15 @@ impl LoweringContext {
         self.debug
             .sequence_points
             .retain(|point| reachable.contains(&point.block));
+        for binding in &mut self.debug.bindings {
+            if !binding.hidden
+                && let Some(declaration) = binding.declaration
+            {
+                binding.projection =
+                    self.type_table
+                        .debug_projection(declaration, &binding.name, binding.ty)?;
+            }
+        }
         let function = Function {
             id: self.function_id,
             name: self.program_name,

@@ -1,7 +1,7 @@
 //! Exact function-and-binding admission for scalar local trace selectors.
 
 use super::{DebugTraceIdentity, DebugTraceWatch};
-use fpas_bytecode::{DebugBindingKind, DebugType, Executable};
+use fpas_bytecode::{DebugBindingKind, DebugProjectionKind, DebugType, Executable};
 
 pub(super) fn bind(image: &Executable, selector: &str) -> Result<DebugTraceWatch, String> {
     let Some((owner, path)) = selector.split_once("::") else {
@@ -70,6 +70,14 @@ pub(super) fn bind(image: &Executable, selector: &str) -> Result<DebugTraceWatch
                 Some(DebugType::Reference(inner)) => *inner,
                 _ => local.ty,
             };
+            let projection = match local.projection.as_ref() {
+                Some(node) => match &node.kind {
+                    DebugProjectionKind::Reference(inner) => Some(inner.as_ref()),
+                    DebugProjectionKind::Operational => None,
+                    _ => Some(node),
+                },
+                None => None,
+            };
             if local.kind == DebugBindingKind::Local && local.initializer.is_none() {
                 return Err(format!(
                     "Trace `{selector}` requires a scalar parameter or a local with exact declaration-store metadata."
@@ -95,6 +103,7 @@ pub(super) fn bind(image: &Executable, selector: &str) -> Result<DebugTraceWatch
                 image,
                 ty,
                 Some(type_name.trim_start_matches("var ")),
+                projection,
                 &parts,
             )?;
             let name = image
@@ -134,7 +143,7 @@ pub(super) fn bind(image: &Executable, selector: &str) -> Result<DebugTraceWatch
                 },
                 type_name: fields.type_name,
                 ty: fields.ty,
-                root_ty: ty,
+                path_types: fields.path_types,
                 path: fields.steps,
             });
         }

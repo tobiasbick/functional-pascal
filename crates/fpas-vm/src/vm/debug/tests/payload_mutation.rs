@@ -42,6 +42,7 @@ fn payload_executable() -> VerifiedExecutable {
         column: 3,
     };
     let local = |name, register, ty, mutable| DebugBinding {
+        projection: None,
         name: StringId::new(name),
         type_name: StringId::new(15),
         ty: DebugTypeId::new(ty),
@@ -80,6 +81,7 @@ fn payload_executable() -> VerifiedExecutable {
             parent: None,
         }],
         bindings: vec![DebugBinding {
+            projection: None,
             name: StringId::new(14),
             type_name: StringId::new(15),
             ty: DebugTypeId::new(0),

@@ -12,8 +12,10 @@ pub struct GlobalInitializer {
 }
 
 /// Metadata for one executable-wide global slot.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct GlobalInfo {
+    /// Source-checked stored-path projection, independent of erased storage types.
+    pub projection: Option<crate::DebugProjection>,
     /// Canonical diagnostic name in the string table.
     pub name: StringId,
     /// Machine-readable type of values stored in this slot.

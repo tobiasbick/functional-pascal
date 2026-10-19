@@ -285,7 +285,7 @@ impl LocalTraceState {
         for inherited in &self.inherited {
             let watch = &history.report.watches[inherited.watch];
             if let Some(value) =
-                super::local_value::read(worker, &inherited.storage, watch.root_ty, &watch.path)
+                super::local_value::read(worker, &inherited.storage, &watch.path_types, &watch.path)
             {
                 history.observe_local(image, inherited.watch, inherited.instance, value, site);
             } else {

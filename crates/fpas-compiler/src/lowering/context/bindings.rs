@@ -35,6 +35,7 @@ impl LoweringContext {
             local,
             name: name.to_string(),
             type_name: None,
+            projection: None,
             kind: fpas_ir::DebugBindingKind::Local,
             ty,
             mutable,

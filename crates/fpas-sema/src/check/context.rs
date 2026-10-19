@@ -117,6 +117,8 @@ pub struct AnalysisMetadata {
     pub member_receivers: HashMap<(u32, usize), Ty>,
     /// Checked types of source declarations, retained after lexical scopes close.
     pub declaration_types: HashMap<(u32, usize), Ty>,
+    /// Exact source value types, distinguishing same-span case bindings by declared name.
+    pub value_declaration_types: HashMap<(u32, usize, String), Ty>,
     /// Receiving types of named actual and pattern labels, keyed by exact name span.
     pub selection_types: HashMap<(u32, usize), (Span, Ty)>,
     /// Unqualified identifier offsets to their selected source declaration identities.
@@ -346,6 +348,7 @@ impl Checker {
             source_expr_types: self.source_expr_types,
             member_receivers: self.member_receivers,
             declaration_types: self.scopes.declaration_types(),
+            value_declaration_types: self.scopes.value_declaration_types(),
             selection_types: self.selection_types,
             binding_references: self.initialization.binding_references(),
             import_aliases: self.scopes.imports.aliases.clone(),

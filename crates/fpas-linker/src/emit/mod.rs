@@ -2,6 +2,7 @@
 
 mod constants;
 mod distinct_types;
+mod projections;
 mod record_construction;
 mod relocation;
 mod source_map;
@@ -50,6 +51,11 @@ pub fn link_objects(
         .map(|(object, local)| {
             let global = &objects[*object].globals[*local];
             Ok(GlobalInfo {
+                projection: global
+                    .projection
+                    .as_ref()
+                    .map(|node| projections::merge(node, *object, &debug_type_ids, &mut strings))
+                    .transpose()?,
                 name: strings.intern(&global.name)?,
                 ty: debug_type_ids.translate(*object, global.ty)?,
                 type_name: global
@@ -246,7 +252,7 @@ pub fn link_objects(
     for (function, debug) in linked_functions.iter_mut().zip(function_debug) {
         function.debug = debug;
     }
-    let executable = Executable {
+    let mut executable = Executable {
         code,
         functions: linked_functions,
         constants: constants.values,
@@ -260,5 +266,6 @@ pub fn link_objects(
         source_map,
         entry: fpas_bytecode::FunctionId::new(0),
     };
+    projections::rebase_canonical_terminals(&mut executable);
     executable.verify().map_err(LinkError::InvalidExecutable)
 }

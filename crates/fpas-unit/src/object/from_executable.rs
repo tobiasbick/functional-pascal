@@ -62,6 +62,11 @@ impl RelocatableObject {
             .iter()
             .map(|global| {
                 Ok(ObjectGlobal {
+                    projection: global
+                        .projection
+                        .as_ref()
+                        .map(|node| super::projections::from_executable(node, &strings))
+                        .transpose()?,
                     name: strings(global.name)?,
                     ty: global.ty.get(),
                     type_name: global.type_name.map(strings).transpose()?,
@@ -230,6 +235,11 @@ impl RelocatableObject {
                     .iter()
                     .map(|binding| {
                         Ok(ObjectDebugBinding {
+                            projection: binding
+                                .projection
+                                .as_ref()
+                                .map(|node| super::projections::from_executable(node, &strings))
+                                .transpose()?,
                             name: strings(binding.name)?,
                             type_name: strings(binding.type_name)?,
                             ty: binding.ty.get(),

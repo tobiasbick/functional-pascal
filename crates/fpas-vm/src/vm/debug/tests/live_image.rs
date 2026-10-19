@@ -133,6 +133,7 @@ fn inactive_between_active_functions_pair() -> (VerifiedExecutable, VerifiedExec
 
 fn owner_binding() -> DebugBinding {
     DebugBinding {
+        projection: None,
         name: StringId::new(1),
         type_name: StringId::new(1),
         ty: DebugTypeId::new(0),
@@ -278,6 +279,7 @@ fn global_layout_changes_are_rejected() {
     let current = pair_executable();
     let mut image = current.clone().into_unverified();
     image.globals.push(GlobalInfo {
+        projection: None,
         name: StringId::new(3),
         ty: DebugTypeId::new(0),
         type_name: None,

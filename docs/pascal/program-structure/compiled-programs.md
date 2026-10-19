@@ -74,7 +74,11 @@ layouts, source maps, and the entry function before the VM can execute the image
 
 ## Format validation
 
-The sectioned envelope uses program format version 21 and register-bytecode version 23.
+The sectioned envelope uses program format version 22 and register-bytecode version 23.
+Version 22 retains bounded concrete source-type projection trees on globals and
+debug bindings, independently of shared erased runtime layouts. Relocatable unit
+objects use schema version 14. Older image/object schemas require rebuilding;
+the instruction set and value representation are unchanged.
 These formats are versioned independently: a producer that changes a wire contract must
 increment its corresponding version; the two version numbers need not match.
 Readers reject unsupported versions before execution, and

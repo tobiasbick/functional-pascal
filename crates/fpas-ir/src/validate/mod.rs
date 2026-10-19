@@ -3,6 +3,7 @@
 mod control_flow;
 mod debug;
 mod operands;
+mod projections;
 
 use std::fmt;
 
@@ -67,6 +68,11 @@ impl ValidationLocation {
 /// Describes the exact invariant rejected by typed-IR validation.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum ValidationErrorKind {
+    /// Concrete source debug metadata is malformed or contradicts operational storage.
+    DebugProjection {
+        /// The bounded structural invariant that failed.
+        reason: &'static str,
+    },
     /// An identifier appears more than once in one deterministic namespace.
     DuplicateId {
         /// Entity namespace containing the duplicate.

@@ -23,6 +23,7 @@ pub(super) fn validate_debug_types(executable: &crate::Executable) -> Result<(),
     }
     for global in &executable.globals {
         validate_type_reference(executable, global.ty, "global type")?;
+        super::projections::validate(executable, global.projection.as_ref(), global.ty)?;
     }
     for record in &executable.records {
         for field in &record.fields {
@@ -47,6 +48,7 @@ pub(super) fn validate_debug_types(executable: &crate::Executable) -> Result<(),
     for function in &executable.functions {
         for binding in &function.debug.bindings {
             validate_type_reference(executable, binding.ty, "debug binding type")?;
+            super::projections::validate(executable, binding.projection.as_ref(), binding.ty)?;
         }
         if let Some(result_type) = function.debug.result_type {
             validate_type_reference(executable, result_type, "function result type")?;

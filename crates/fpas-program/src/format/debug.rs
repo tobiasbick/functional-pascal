@@ -74,6 +74,7 @@ pub(super) fn encode(output: &mut Vec<u8>, debug: &FunctionDebugInfo) -> Result<
         if let Some(initializer) = binding.initializer {
             write_u32(output, initializer.get());
         }
+        super::projections::encode(output, binding.projection.as_ref())?;
     }
 
     check_limit(
@@ -149,7 +150,7 @@ pub(super) fn decode(
         &mut totals.bindings,
         fpas_bytecode::limits::MAX_DEBUG_BINDINGS,
     )?;
-    reader.ensure_entries(binding_count, 24, "debug_binding_name")?;
+    reader.ensure_entries(binding_count, 25, "debug_binding_name")?;
     let mut bindings = Vec::new();
     for _ in 0..binding_count {
         let name = StringId::new(reader.u32("debug_binding_name")?);
@@ -188,6 +189,7 @@ pub(super) fn decode(
             None
         };
         bindings.push(DebugBinding {
+            projection: super::projections::decode(reader)?,
             name,
             type_name,
             ty,

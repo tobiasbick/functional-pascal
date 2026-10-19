@@ -16,6 +16,9 @@ use fpas_unit::object::{
     OBJECT_VERSION, ObjectError, RelocatableObject, RelocationKind, decode_object, encode_object,
 };
 
+#[path = "object/projections.rs"]
+mod projections;
+
 fn abc(opcode: Opcode, a: u16, b: u16, c: u16) -> Instruction {
     Instruction::abc(opcode, a, b, c, 0).expect("valid ABC fixture")
 }
@@ -51,6 +54,7 @@ fn candidate() -> Executable {
                         parent: None,
                     }],
                     bindings: vec![DebugBinding {
+                        projection: None,
                         name: StringId::new(2),
                         type_name: StringId::new(2),
                         ty: fpas_bytecode::DebugTypeId::new(0),
@@ -114,6 +118,7 @@ fn candidate() -> Executable {
             "demo.record.method".to_string(),
         ]),
         globals: vec![GlobalInfo {
+            projection: None,
             name: StringId::new(3),
             ty: fpas_bytecode::DebugTypeId::new(0),
             type_name: None,

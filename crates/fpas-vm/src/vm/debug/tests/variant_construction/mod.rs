@@ -87,6 +87,7 @@ pub(super) fn order_executable() -> VerifiedExecutable {
             parent: None,
         }],
         bindings: vec![DebugBinding {
+            projection: None,
             name: StringId::new(3),
             type_name: StringId::new(5),
             ty: DebugTypeId::new(1),
@@ -139,6 +140,7 @@ pub(super) fn order_executable() -> VerifiedExecutable {
         constants: vec![Constant::Integer(0), Constant::Integer(1)],
         strings,
         globals: vec![GlobalInfo {
+            projection: None,
             name: StringId::new(9),
             ty: DebugTypeId::new(0),
             type_name: None,

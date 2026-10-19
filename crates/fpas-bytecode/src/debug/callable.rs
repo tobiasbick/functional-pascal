@@ -88,6 +88,8 @@ pub struct DebugSourceLocation {
 /// A source-visible binding mapped to its fixed register.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct DebugBinding {
+    /// Source-checked stored-path projection, independent of erased storage types.
+    pub projection: Option<crate::DebugProjection>,
     /// Source name in the executable string table.
     pub name: StringId,
     /// Display type in the executable string table.

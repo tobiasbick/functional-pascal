@@ -119,6 +119,11 @@ fn merge_debug(
         .iter()
         .map(|binding| {
             Ok(DebugBinding {
+                projection: binding
+                    .projection
+                    .as_ref()
+                    .map(|node| super::projections::merge(node, object_index, debug_types, strings))
+                    .transpose()?,
                 name: strings.intern(&binding.name)?,
                 type_name: strings.intern(&binding.type_name)?,
                 ty: debug_types.translate(object_index, binding.ty)?,

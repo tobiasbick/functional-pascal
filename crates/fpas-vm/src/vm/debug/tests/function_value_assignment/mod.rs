@@ -63,6 +63,7 @@ pub(super) fn assignment_executable() -> VerifiedExecutable {
         column: 3,
     };
     let local = |name, register, ty, mutable, kind, hidden| DebugBinding {
+        projection: None,
         name: StringId::new(name),
         type_name: StringId::new(match ty {
             0 => 25,
@@ -295,6 +296,7 @@ pub(super) fn assignment_executable() -> VerifiedExecutable {
         ],
         strings,
         globals: vec![GlobalInfo {
+            projection: None,
             name: StringId::new(31),
             ty: DebugTypeId::new(2),
             type_name: None,

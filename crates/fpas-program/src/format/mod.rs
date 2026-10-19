@@ -4,6 +4,7 @@ mod debug;
 mod debug_types;
 mod executable;
 mod header;
+mod projections;
 mod read;
 mod sections;
 mod write;
@@ -16,7 +17,7 @@ pub use read::decode;
 pub use write::encode;
 
 /// Current sectioned register `.fpascp` envelope format version.
-pub const PROGRAM_FORMAT_VERSION: u16 = 21;
+pub const PROGRAM_FORMAT_VERSION: u16 = 22;
 
 /// Invalid or unsupported `.fpascp` binary data.
 #[derive(Debug, Clone, PartialEq, Eq)]

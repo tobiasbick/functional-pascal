@@ -212,7 +212,7 @@ fn indexed_types_use_machine_metadata_and_do_not_parse_display_names() {
     let mut s = DebugSession::new(image.verify().unwrap()).unwrap();
     s.install_trace(&["F::Items[0]".into()], 10).unwrap();
     let r = finish(s);
-    assert_eq!(r["watches"][0]["type"], "integer");
-    assert_eq!(r["events"][0]["new_value"]["type"], "integer");
+    assert_eq!(r["watches"][0]["type"], "Dollars");
+    assert_eq!(r["events"][0]["new_value"]["type"], "Dollars");
     assert_eq!(values(&r, 0), vec![json!("1")]);
 }

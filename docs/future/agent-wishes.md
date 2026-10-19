@@ -27,8 +27,8 @@ for paths through globals, locals, parameters and active captures, documented un
 bounded delivery; [seeded batch scheduling](../pascal/tools/debugger-scheduling.md)
 owns its contract. The completed D5 extensions and deferred aggregate decision
 are recorded in the [extension index](tracepoint-extensions/README.md). Stable
-anonymous callback names are implemented and independently reviewed; concrete
-debug projections are planned next. D2 remains unscheduled.
+anonymous callback names and concrete debug projections are implemented and
+independently reviewed. D2 remains unscheduled.
 Human-facing tools stay: the DAP debugger
 ([`debugger.md`](../pascal/tools/debugger.md)) and the language server
 ([`editor-integration.md`](../pascal/tools/editor-integration.md)). The JSONL debugger protocol
@@ -50,9 +50,9 @@ for controlled batch runs. All three D5 extension packages are implemented and
 independently reviewed. [Stable anonymous callback names](../pascal/tools/debugger-tracepoints.md#anonymous-callback-names)
 are also implemented and independently reviewed, allowing exact capture selectors
 to be reused across compilations. The [extension index](tracepoint-extensions/README.md)
-records completion. Next debugger work is
-[concrete debug projections](tracepoint-extensions/06-concrete-debug-projections.md),
-jointly closing D5-M1/M2 for generic fields and nominal array element names.
+records completion. [Concrete debug projections](../pascal/tools/debugger-tracepoints.md#stored-fields-and-array-positions)
+also close D5-M1/M2 for generic fields and nominal array element names.
+No further debugger implementation package is scheduled.
 
 The Notes selection bug found during dogfooding is fixed and covered by
 [headless regressions](../../tests/apps/notes/note_search_selection_test.fpas),
@@ -322,9 +322,10 @@ changes with typed old/new values, actual writing location/function/task and
 explicit coverage. Tracepoints keep running to the existing batch stop/end or
 an explicit resource limit. Per-commit observation covers `var` writes, callbacks
 and record replacement without changing stopping data-breakpoint semantics.
-Nominal scalar names survive where executable metadata retains them;
-[metadata follow-ups](compiler-panic-followups.md#open-entries) record
-the existing erased-generic and raw-array-element display-name gaps.
+Concrete source projections retain applied generic field types and nested
+nominal array element names independently from erased runtime layouts.
+Unresolved generic types remain unsupported; runtime observations do not
+establish selector eligibility.
 
 The first delivery watches mutable globals and fixed stored record-field paths
 ending in scalar values. Mutable globals belong to the main task, so events
@@ -360,12 +361,14 @@ The three extension packages are complete and tracked in the temporary
 4. Whole aggregate history — assessment: remain deferred, with no current
    implementation commitment. Reopen only with concrete dogfooding cases.
 
-The original three scalar-path extensions and
+The original three scalar-path extensions,
 [stable anonymous callback names](../pascal/tools/debugger-tracepoints.md#anonymous-callback-names)
-are complete and independently reviewed. The next planned package is
-[concrete debug projections](tracepoint-extensions/06-concrete-debug-projections.md).
-It improves existing traces; no new debug mode is selected. Unrestricted
-aggregate and dormant escaped-cell history remain deferred. JSONL/DAP and their
+and [concrete debug projections](../pascal/tools/debugger-tracepoints.md#stored-fields-and-array-positions)
+are complete and independently reviewed. The projection metadata passes through
+objects, linking and portable images; object/program formats are now 14/22,
+while instruction format 23 and runtime layouts are unchanged. Bounded expansion
+preserves existing concrete operational paths. No further package is scheduled.
+Unrestricted aggregate and dormant escaped-cell history remain deferred. JSONL/DAP and their
 existing behavior remain supported.
 
 ### What already exists

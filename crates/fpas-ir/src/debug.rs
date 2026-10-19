@@ -73,6 +73,8 @@ pub struct DebugBinding {
     pub name: String,
     /// Declared nominal scalar display name, independent of erased runtime types.
     pub type_name: Option<String>,
+    /// Concrete source-type projection, separate from the operational register type.
+    pub projection: Option<crate::DebugProjection>,
     /// Source-level role.
     pub kind: DebugBindingKind,
     /// Lowered value type.

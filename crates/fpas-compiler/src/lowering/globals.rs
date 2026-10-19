@@ -40,6 +40,11 @@ pub(super) fn collect(
             name: name.clone(),
             ty,
             type_name: type_table.declared_scalar_name(type_expr),
+            projection: type_table.debug_projection(
+                span.diagnostic_span_or_synthetic(),
+                name,
+                ty,
+            )?,
             mutable,
             initializer: None,
         });

@@ -37,6 +37,7 @@ pub(super) fn inspection_executable() -> VerifiedExecutable {
         column: 3,
     };
     let binding = |name, register, scope, hidden| DebugBinding {
+        projection: None,
         name: StringId::new(name),
         type_name: StringId::new(8),
         ty: fpas_bytecode::DebugTypeId::new(0),
@@ -75,6 +76,7 @@ pub(super) fn inspection_executable() -> VerifiedExecutable {
             binding(6, 4, 2, false),
             binding(7, 4, 1, true),
             DebugBinding {
+                projection: None,
                 name: StringId::new(12),
                 type_name: StringId::new(13),
                 ty: fpas_bytecode::DebugTypeId::new(2),
@@ -104,6 +106,7 @@ pub(super) fn inspection_executable() -> VerifiedExecutable {
             parent: None,
         }],
         bindings: vec![DebugBinding {
+            projection: None,
             name: StringId::new(11),
             type_name: StringId::new(8),
             ty: fpas_bytecode::DebugTypeId::new(0),
@@ -161,6 +164,7 @@ pub(super) fn inspection_executable() -> VerifiedExecutable {
         ],
         strings,
         globals: vec![GlobalInfo {
+            projection: None,
             name: StringId::new(10),
             ty: fpas_bytecode::DebugTypeId::new(0),
             type_name: None,

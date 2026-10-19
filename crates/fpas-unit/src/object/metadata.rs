@@ -27,6 +27,8 @@ pub enum ObjectConstant {
 /// Object-local global slot declaration.
 #[derive(Debug, Clone, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 pub struct ObjectGlobal {
+    /// Source-checked stored-path projection, independent of erased storage types.
+    pub projection: Option<ObjectDebugProjection>,
     /// Canonical diagnostic name.
     pub name: String,
     /// Object-local portable debugger type identifier.
@@ -122,6 +124,34 @@ pub struct ObjectEnumVariant {
     pub fields: Vec<String>,
     /// Object-local debugger types for associated fields.
     pub field_types: Vec<u32>,
+}
+
+/// Portable object-local debugger type graph.
+#[derive(Debug, Clone, PartialEq, Eq, serde::Serialize)]
+pub struct ObjectDebugProjection {
+    /// Object-local concrete portable type.
+    pub ty: u32,
+    /// Nominal source name of this exact path.
+    pub type_name: Option<String>,
+    /// Bounded source-checked structure.
+    pub kind: ObjectDebugProjectionKind,
+}
+
+/// Bounded source-checked stored structures.
+#[derive(Debug, Clone, PartialEq, Eq, serde::Serialize)]
+pub enum ObjectDebugProjectionKind {
+    /// Unknown or unsupported source type; never eligible for scalar tracing.
+    Unsupported,
+    /// Bounded tail using only operational types, without semantic refinement.
+    Operational,
+    /// Supported scalar leaf.
+    Scalar,
+    /// Source-checked array element.
+    Array(Box<ObjectDebugProjection>),
+    /// Stored fields in operational slot order.
+    Record(Vec<ObjectDebugProjection>),
+    /// Writable parameter referent.
+    Reference(Box<ObjectDebugProjection>),
 }
 
 /// Portable object-local debugger type graph.
@@ -260,6 +290,8 @@ pub struct ObjectDebugLocation {
 /// Source-visible object binding backed by a function-local register.
 #[derive(Debug, Clone, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 pub struct ObjectDebugBinding {
+    /// Source-checked stored-path projection, independent of erased storage types.
+    pub projection: Option<ObjectDebugProjection>,
     /// Source name.
     pub name: String,
     /// Portable display type.

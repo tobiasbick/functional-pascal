@@ -197,6 +197,33 @@ fn reachable_types(object: &RelocatableObject) -> Vec<bool> {
                 .flat_map(|variant| variant.field_types.iter().copied()),
         )
         .collect::<Vec<_>>();
+    let mut projections = object
+        .globals
+        .iter()
+        .filter_map(|global| global.projection.as_ref())
+        .chain(
+            object
+                .functions
+                .iter()
+                .flat_map(|function| &function.debug.bindings)
+                .filter_map(|binding| binding.projection.as_ref()),
+        )
+        .collect::<Vec<_>>();
+    while let Some(projection) = projections.pop() {
+        pending.push(projection.ty);
+        match &projection.kind {
+            fpas_unit::object::ObjectDebugProjectionKind::Array(child)
+            | fpas_unit::object::ObjectDebugProjectionKind::Reference(child) => {
+                projections.push(child)
+            }
+            fpas_unit::object::ObjectDebugProjectionKind::Record(fields) => {
+                projections.extend(fields)
+            }
+            fpas_unit::object::ObjectDebugProjectionKind::Unsupported
+            | fpas_unit::object::ObjectDebugProjectionKind::Operational
+            | fpas_unit::object::ObjectDebugProjectionKind::Scalar => {}
+        }
+    }
     while let Some(id) = pending.pop() {
         let Some(marked) = reachable.get_mut(id as usize) else {
             continue;

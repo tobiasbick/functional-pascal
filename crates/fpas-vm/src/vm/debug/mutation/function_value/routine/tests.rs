@@ -11,6 +11,7 @@ use fpas_bytecode::{
 
 fn parameter(register: u16, hidden: bool) -> DebugBinding {
     DebugBinding {
+        projection: None,
         name: StringId::new(2),
         type_name: StringId::new(3),
         ty: DebugTypeId::new(0),
@@ -129,6 +130,7 @@ fn attach_cell_capture_provenance(functions: &mut [FunctionInfo]) {
     }];
     functions[0].debug.bindings = (0..slots)
         .map(|index| DebugBinding {
+            projection: None,
             name: StringId::new(2),
             type_name: StringId::new(3),
             ty: DebugTypeId::new(0),

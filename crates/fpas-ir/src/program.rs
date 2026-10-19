@@ -143,6 +143,8 @@ pub struct Global {
     pub ty: TypeId,
     /// Declared nominal scalar name retained only for debugger display.
     pub type_name: Option<String>,
+    /// Concrete source-type projection retained independently of operational layout erasure.
+    pub projection: Option<crate::DebugProjection>,
     /// Whether stores after initialization are permitted.
     pub mutable: bool,
     /// Exact source-declaration store, when this global is source-defined.

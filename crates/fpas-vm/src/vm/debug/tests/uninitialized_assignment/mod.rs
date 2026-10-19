@@ -41,6 +41,7 @@ pub(super) fn assignment_executable() -> VerifiedExecutable {
         column: 3,
     };
     let local = |name, register, ty, mutable, kind| DebugBinding {
+        projection: None,
         name: StringId::new(name),
         type_name: StringId::new(if ty == 1 { 11 } else { 10 }),
         ty: DebugTypeId::new(ty),
@@ -130,6 +131,7 @@ pub(super) fn assignment_executable() -> VerifiedExecutable {
         ],
         strings,
         globals: vec![GlobalInfo {
+            projection: None,
             name: StringId::new(15),
             ty: DebugTypeId::new(0),
             type_name: None,
@@ -249,6 +251,7 @@ pub(super) fn task_assignment_executable() -> VerifiedExecutable {
                 parent: None,
             }],
             bindings: vec![DebugBinding {
+                projection: None,
                 name: StringId::new(3),
                 type_name: StringId::new(4),
                 ty: DebugTypeId::new(0),

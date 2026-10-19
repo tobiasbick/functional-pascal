@@ -223,6 +223,9 @@ example `--trace 'Update::State.Selected'`, or fixed array positions such as
 `--trace 'Update::Items[0]'`. Absent positions are known unavailable values, not
 missing history. Local activation/instance identities
 distinguish calls and repeated declarations; observation ends at scope/call exit.
+Concrete source projections retain applied generic field types and nominal
+array element names through aliases, references and captures. Unresolved generic
+parameters remain unsupported; never infer types from values/display strings.
 Use exact `MakeCounter.Next::Total` to select a capture during each active
 callback call. Each admission starts a new instance; dormant changes are outside
 that history. Anonymous routines use deterministic source-ordered names such as

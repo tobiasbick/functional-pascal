@@ -99,6 +99,7 @@ fn attach_cell_capture_provenance(functions: &mut [FunctionInfo]) {
     }];
     functions[0].debug.bindings = (0..slots)
         .map(|index| DebugBinding {
+            projection: None,
             name: StringId::new(0),
             type_name: StringId::new(0),
             ty: DebugTypeId::new(0),

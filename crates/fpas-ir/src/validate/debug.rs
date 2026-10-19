@@ -7,6 +7,7 @@ use crate::{CaptureKind, DebugInstructionLocation, Function, Operation, Program}
 
 pub(super) fn validate_program(program: &Program) -> Result<(), ValidationError> {
     for global in &program.globals {
+        super::projections::validate(program, global.projection.as_ref(), global.ty)?;
         let Some(initializer) = global.initializer else {
             continue;
         };
@@ -81,6 +82,7 @@ pub(super) fn validate_function(
     }
 
     for binding in &function.debug.bindings {
+        super::projections::validate(program, binding.projection.as_ref(), binding.ty)?;
         if function.local(binding.local).is_none() {
             return Err(function_error(
                 function.id,

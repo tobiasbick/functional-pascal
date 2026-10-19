@@ -68,6 +68,7 @@ fn debugger_metadata_references_ranges_and_order_are_checked() {
         parent: None,
     }];
     valid.functions[0].debug.bindings = vec![DebugBinding {
+        projection: None,
         name: StringId::new(0),
         type_name: StringId::new(0),
         ty: DebugTypeId::new(0),
@@ -136,6 +137,7 @@ fn debugger_initializer_metadata_requires_exact_verified_stores() {
         parent: None,
     }];
     valid.functions[0].debug.bindings = vec![DebugBinding {
+        projection: None,
         name: StringId::new(0),
         type_name: StringId::new(0),
         ty: DebugTypeId::new(0),
@@ -149,6 +151,7 @@ fn debugger_initializer_metadata_requires_exact_verified_stores() {
         initializer: Some(InstructionAddress::new(1)),
     }];
     valid.globals = vec![GlobalInfo {
+        projection: None,
         name: StringId::new(0),
         ty: DebugTypeId::new(0),
         type_name: None,
@@ -196,6 +199,7 @@ fn capturing_executable() -> fpas_bytecode::Executable {
         parent: None,
     }];
     executable.functions[0].debug.bindings = vec![DebugBinding {
+        projection: None,
         name: StringId::new(0),
         type_name: StringId::new(0),
         ty: DebugTypeId::new(0),
@@ -431,6 +435,7 @@ fn global_index_path_global_and_window_are_checked() {
     let mut window = minimal_executable();
     window.functions[0].register_count = 2;
     window.globals = vec![GlobalInfo {
+        projection: None,
         name: StringId::new(0),
         ty: DebugTypeId::new(0),
         type_name: None,

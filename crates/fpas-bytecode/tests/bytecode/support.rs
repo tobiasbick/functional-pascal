@@ -139,6 +139,7 @@ pub fn all_opcodes_executable() -> Executable {
         ],
         strings: StringTable::new(strings),
         globals: vec![GlobalInfo {
+            projection: None,
             name: StringId::new(7),
             ty: DebugTypeId::new(0),
             type_name: None,

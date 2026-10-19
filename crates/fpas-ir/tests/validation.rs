@@ -21,3 +21,4 @@ include!("validation/initializer_cases.rs");
 include!("validation/p5_cases.rs");
 include!("validation/local_index_cases.rs");
 include!("validation/table_cases.rs");
+include!("validation/projection_cases.rs");

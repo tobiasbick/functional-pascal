@@ -47,6 +47,7 @@ pub(super) fn bind(
                 image,
                 global.ty,
                 global.type_name.and_then(|id| image.strings.get(id)),
+                global.projection.as_ref(),
                 &tail,
             ) else {
                 continue;
@@ -72,7 +73,7 @@ pub(super) fn bind(
                 },
                 type_name: fields.type_name,
                 ty: fields.ty,
-                root_ty: global.ty,
+                path_types: fields.path_types,
                 path: fields.steps,
             });
         }

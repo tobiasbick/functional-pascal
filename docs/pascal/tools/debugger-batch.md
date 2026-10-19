@@ -194,6 +194,9 @@ by stored fields such as
 `Routine::State.Selected` or literal indexes such as `Routine::Items[0]`, with
 activation and shared declaration-instance identities. Missing array positions
 are known unavailable values, not incomplete history.
+Concrete source projections preserve applied generic field types and nominal
+array element names through references and captures; unresolved generic types
+remain unsupported.
 Local observation ends at lexical scope/call exit. Capture selectors such as
 `MakeCounter.Next::Total` initialize at each active call, observe its live aliases
 and end at that call's exit; dormant changes are outside their coverage.

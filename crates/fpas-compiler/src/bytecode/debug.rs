@@ -42,6 +42,11 @@ pub(super) fn compile_debug_info(
                         .unwrap_or_else(|| type_name(program, binding.ty, 0)),
                 )?,
                 ty: debug_binding_type(program, binding.ty, binding.cell_backed),
+                projection: binding
+                    .projection
+                    .as_ref()
+                    .map(|projection| super::projections::compile(projection, metadata))
+                    .transpose()?,
                 register: allocation.local(binding.local)?,
                 kind: match binding.kind {
                     fpas_ir::DebugBindingKind::Parameter => DebugBindingKind::Parameter,

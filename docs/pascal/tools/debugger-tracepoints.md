@@ -104,15 +104,53 @@ position 0 of the current root array, including after insertion, removal,
 reordering or replacement. It does not follow a previously observed element.
 Dictionary keys and string indexing are unsupported trace steps.
 
-The stored path must have concrete executable debug types. Generic field types
-erased to `dynamic` cannot be selected even when source analysis knew an applied
-type: `Box of integer` may still store `Item: dynamic` in its shared layout.
-Concretely described fields of the same generic record remain eligible. Such
-requests fail atomically; use a breakpoint with `--print 'State.Item'` for
-inspection, or trace an existing concretely typed scalar local. Missing type
-metadata is never inferred from initialized values. The
-[metadata follow-up](../../future/compiler-panic-followups.md#d5-m1-erased-generic-record-fields)
-records the limitation and later remedy.
+The stored path must have a concrete checked type in its exact source projection
+or existing operational debug metadata. Applied generic fields such as
+`Box of integer.Item` are supported even when the shared runtime layout stores
+`Item: dynamic`. Each source binding keeps its own applied types; integer and
+string applications continue using the same runtime layout. Scalar names also
+survive nested array indexes and generic field paths. Aliases, `var` references
+and captures retain the projection selected by their exact source declaration.
+
+A generic routine's unresolved `T` remains unknown: observing an integer at
+runtime cannot make that path eligible. Unsupported or unknown requests still
+fail atomically. Use a breakpoint with `--print 'State.Item'` for current-value
+inspection when a complete history cannot be selected. Projection metadata is
+never reconstructed by parsing container display strings or running user code.
+
+Source projections are bounded acyclic trees: maximum node depth 32 (root 0),
+4,096 nodes and 65,536 nominal-name UTF-8 bytes per root. At a compiler expansion
+cutoff, existing concrete operational types remain usable; an erased `dynamic` leaf beyond that
+cutoff is still unsupported. Unknown source types are explicitly unsupported.
+Malformed metadata, contradictory shapes/types and inconsistent capture-source
+projections reject before execution. Runtime reads still check exact record
+layouts and scalar kinds; a mismatch ends coverage instead of fabricating values.
+
+Save this as `applied-types.fpas`. With
+`fpas debug applied-types.fpas --trace 'Update::Copy.Item'`, the values are
+`5`, `7`, both declared as `Dollars`:
+
+```pascal id=trace-applied-types run
+program TraceAppliedTypes;
+
+type Dollars = distinct integer;
+type Box of T = record
+  Item: T;
+end record;
+
+procedure Update(Input: Box of Dollars);
+begin
+  var Copy := Input;
+  Copy.Item := Dollars(7);
+  if integer(Copy.Item) <> 7 then
+    panic('unexpected amount');
+  end if;
+end procedure;
+
+begin
+  Update(Box(Item := Dollars(5)));
+end.
+```
 
 Names match ASCII case-insensitively. Equivalent identities are deduplicated in
 request order, retaining the first spelling. Unit roots use their full executable
@@ -125,9 +163,10 @@ Private retained globals/fields remain inspectable by the debugger.
 Supported leaves are integer, real, Boolean, string, integer subrange, distinct
 scalar and enums with no payload-bearing variants. Declared nominal scalar
 names are retained where executable metadata carries them; transparent aliases
-preserve their underlying type. Raw array elements use their executable element
-type: erased nominal element display names are not recovered from formatted
-container names or runtime values (see [D5-M2](../../future/compiler-panic-followups.md#d5-m2-erased-nominal-array-element-names)).
+preserve their underlying type. Source projections retain distinct, subrange and
+payload-free enum names for raw array elements, including nested arrays and
+generic record fields. Without concrete source projections, existing operational
+metadata supplies only the names it already retains.
 Stored record fields reached through arrays retain their field type metadata.
 Whole aggregates, Option/Result values,
 task/channel/callable/resource values, getters, method calls and

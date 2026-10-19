@@ -1128,6 +1128,10 @@ captures. Stored fields such as `Update::State.Selected`, fixed positions such
 as `Update::Items[0]`, `var` and callback writes are covered without additional stops. Local events identify the
 activation and declaration instance; observation ends at lexical scope/call exit.
 Missing array positions are known unavailable states and preserve coverage.
+Concrete source projections retain applied generic field types and nominal names
+through nested array indexes, `var` aliases and exact capture sources without
+specializing runtime layouts. Unresolved generic parameters stay unsupported;
+types are never inferred from runtime values or container display strings.
 Use an exact callback selector such as `MakeCounter.Next::Total` for captures;
 its history covers each active call with new activation/instance IDs. Dormant
 changes are outside that history; declaring locals keep their lexical lifetime.

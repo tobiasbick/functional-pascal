@@ -68,7 +68,7 @@ pub(super) fn admit(
                 other => {
                     let selected = &history.report.watches[watch];
                     ParameterValue::Frozen(other.and_then(|root| {
-                        super::local_value::read(worker, root, selected.root_ty, &selected.path)
+                        super::local_value::read(worker, root, &selected.path_types, &selected.path)
                     }))
                 }
             })

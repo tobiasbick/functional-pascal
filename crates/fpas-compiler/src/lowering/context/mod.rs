@@ -169,6 +169,7 @@ impl LoweringContext {
                     }
                 }),
                 kind: fpas_ir::DebugBindingKind::Parameter,
+                projection: None,
                 ty: input.ty,
                 mutable: false,
                 scope: 0,
@@ -215,6 +216,7 @@ impl LoweringContext {
                 local,
                 name: capture.name.clone(),
                 type_name: None,
+                projection: None,
                 kind: fpas_ir::DebugBindingKind::Capture,
                 ty: if capture.reference {
                     capture.storage_ty

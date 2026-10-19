@@ -32,6 +32,7 @@ pub(super) fn child_task_executable() -> VerifiedExecutable {
         column: 3,
     };
     let local = |name, register, ty, mutable, line| DebugBinding {
+        projection: None,
         name: StringId::new(name),
         type_name: StringId::new(8),
         ty: DebugTypeId::new(ty),

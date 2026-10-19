@@ -24,8 +24,10 @@ mod value;
 
 pub use debug::{
     DebugBinding, DebugBindingKind, DebugCaptureKind, DebugCaptureSource, DebugEffectSet,
-    DebugScope, DebugSourceLocation, DebugType, FunctionDebugInfo, FunctionEffectSummary,
-    SequencePoint, analyze_debug_effects, intrinsic_debug_effects,
+    DebugProjection, DebugProjectionKind, DebugScope, DebugSourceLocation, DebugType,
+    FunctionDebugInfo, FunctionEffectSummary, MAX_DEBUG_PROJECTION_DEPTH,
+    MAX_DEBUG_PROJECTION_NAME_BYTES, MAX_DEBUG_PROJECTION_NODES, SequencePoint,
+    analyze_debug_effects, intrinsic_debug_effects,
 };
 pub use decoded::DecodedInstruction;
 pub use executable::{Executable, VerifiedExecutable};

@@ -1,6 +1,7 @@
 //! Compact semantic-to-IR scalar type mapping.
 
 mod debug_distinct;
+mod debug_projections;
 mod debug_records;
 mod debug_scalars;
 mod expressions;
@@ -39,6 +40,10 @@ pub(super) struct TypeTable {
     imported_distinct_names: BTreeMap<String, TypeId>,
     /// Source-visible nominal scalar names, independent from erased runtime ids.
     debug_scalar_names: BTreeMap<String, String>,
+    /// Exact checked declaration types retained after lexical scopes close.
+    debug_declarations: std::collections::HashMap<(u32, usize, String), Ty>,
+    /// Canonical semantic definitions used to expand recursive source headers.
+    debug_named_types: BTreeMap<String, Ty>,
 }
 
 impl TypeTable {
@@ -82,6 +87,12 @@ impl TypeTable {
             imported_record_names: BTreeSet::new(),
             imported_distinct_names: BTreeMap::new(),
             debug_scalar_names: debug_scalars::collect_names(metadata),
+            debug_declarations: metadata.value_declaration_types.clone(),
+            debug_named_types: metadata
+                .named_types
+                .iter()
+                .map(|(name, ty)| (name.to_ascii_lowercase(), ty.clone()))
+                .collect(),
         };
         for (name, ty) in named_types.clone() {
             let id = match ty {

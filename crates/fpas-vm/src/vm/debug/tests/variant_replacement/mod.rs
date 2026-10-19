@@ -52,6 +52,7 @@ pub(super) fn variant_executable() -> VerifiedExecutable {
         column: 3,
     };
     let local = |name, register, ty, mutable| DebugBinding {
+        projection: None,
         name: StringId::new(name),
         type_name: StringId::new(16),
         ty: DebugTypeId::new(ty),
@@ -92,6 +93,7 @@ pub(super) fn variant_executable() -> VerifiedExecutable {
             parent: None,
         }],
         bindings: vec![DebugBinding {
+            projection: None,
             name: StringId::new(15),
             type_name: StringId::new(16),
             ty: DebugTypeId::new(0),
@@ -177,6 +179,7 @@ pub(super) fn variant_executable() -> VerifiedExecutable {
         ],
         strings,
         globals: vec![GlobalInfo {
+            projection: None,
             name: StringId::new(27),
             ty: DebugTypeId::new(2),
             type_name: None,
@@ -298,6 +301,7 @@ pub(super) fn collision_executable() -> VerifiedExecutable {
             parent: None,
         }],
         bindings: vec![DebugBinding {
+            projection: None,
             name: StringId::new(3),
             type_name: StringId::new(4),
             ty: DebugTypeId::new(1),
@@ -350,6 +354,7 @@ pub(super) fn collision_executable() -> VerifiedExecutable {
                         .into_iter()
                         .enumerate()
                         .map(|(index, name)| DebugBinding {
+                            projection: None,
                             name: StringId::new(name),
                             type_name: StringId::new(4),
                             ty: DebugTypeId::new(0),

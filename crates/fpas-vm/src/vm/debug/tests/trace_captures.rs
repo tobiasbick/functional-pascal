@@ -376,7 +376,12 @@ fn inconsistent_or_cyclic_external_capture_provenance_rejects_before_execution()
         "program T; function Make(): function(): integer; function Next(): integer; begin Total := Total + 1; return Total; end function; begin var Total := 0; return Next; end function; begin const A := Make(); discard A(); end.",
     );
     assert!(errors.is_empty());
-    let original = fpas_compiler::compile(&p).unwrap().into_unverified();
+    let mut original = fpas_compiler::compile(&p).unwrap().into_unverified();
+    for function in &mut original.functions {
+        for binding in &mut function.debug.bindings {
+            binding.projection = None;
+        }
+    }
     let f = original
         .functions
         .iter()

@@ -97,6 +97,7 @@ pub(super) fn resolve(
         };
         if source.ty != local.ty
             || source.ty != original.ty
+            || local.projection != original.projection
             || !representation
             || local.declaration.is_none()
             || local.declaration != original.declaration

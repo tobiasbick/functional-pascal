@@ -28,6 +28,8 @@ mod trace_indices;
 mod trace_limits;
 #[path = "batch_debug/trace_locals.rs"]
 mod trace_locals;
+#[path = "batch_debug/trace_projections.rs"]
+mod trace_projections;
 
 use serde_json::Value;
 use std::{

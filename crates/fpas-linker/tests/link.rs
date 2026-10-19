@@ -100,6 +100,7 @@ fn linker_rebases_exact_local_and_global_initializer_stores() {
             parent: None,
         }],
         bindings: vec![fpas_unit::object::ObjectDebugBinding {
+            projection: None,
             name: "value".to_string(),
             type_name: "dynamic".to_string(),
             ty: 0,
@@ -115,6 +116,7 @@ fn linker_rebases_exact_local_and_global_initializer_stores() {
         ..Default::default()
     };
     library.globals.push(fpas_unit::object::ObjectGlobal {
+        projection: None,
         name: "library.unit.counter".to_string(),
         ty: 0,
         type_name: None,
@@ -202,6 +204,7 @@ fn linker_relocates_lexical_owner_function_ids() {
             parent: None,
         }],
         bindings: vec![fpas_unit::object::ObjectDebugBinding {
+            projection: None,
             name: "captured".to_string(),
             type_name: "dynamic".to_string(),
             ty: 0,

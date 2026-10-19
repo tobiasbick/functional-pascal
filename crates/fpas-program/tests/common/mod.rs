@@ -59,6 +59,7 @@ pub fn program_image() -> ProgramImage {
                         parent: None,
                     }],
                     bindings: vec![DebugBinding {
+                        projection: None,
                         name: StringId::new(8),
                         type_name: StringId::new(9),
                         ty: fpas_bytecode::DebugTypeId::new(2),
@@ -125,6 +126,7 @@ pub fn program_image() -> ProgramImage {
         ],
         strings: StringTable::new(strings),
         globals: vec![GlobalInfo {
+            projection: None,
             name: StringId::new(3),
             ty: fpas_bytecode::DebugTypeId::new(2),
             type_name: Some(StringId::new(9)),

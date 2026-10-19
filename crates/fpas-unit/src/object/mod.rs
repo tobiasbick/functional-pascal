@@ -7,6 +7,8 @@ mod error;
 mod from_executable;
 mod function;
 mod metadata;
+mod projection_decode;
+mod projections;
 mod relocation;
 mod symbol;
 mod validation;
@@ -20,10 +22,11 @@ pub use error::ObjectError;
 pub use function::{ObjectFunction, ObjectReturn};
 pub use metadata::{
     ObjectCaptureKind, ObjectCaptureSource, ObjectConstant, ObjectDebugBinding,
-    ObjectDebugBindingKind, ObjectDebugLocation, ObjectDebugScope, ObjectDebugType,
-    ObjectDistinctTypeName, ObjectEnumLayout, ObjectEnumVariant, ObjectFunctionDebugInfo,
-    ObjectGlobal, ObjectInitializer, ObjectRecordConstructionInfo, ObjectRecordLayout,
-    ObjectRecordMethod, ObjectRecordTypeAlias, ObjectSequencePoint, ObjectSourceRun,
+    ObjectDebugBindingKind, ObjectDebugLocation, ObjectDebugProjection, ObjectDebugProjectionKind,
+    ObjectDebugScope, ObjectDebugType, ObjectDistinctTypeName, ObjectEnumLayout, ObjectEnumVariant,
+    ObjectFunctionDebugInfo, ObjectGlobal, ObjectInitializer, ObjectRecordConstructionInfo,
+    ObjectRecordLayout, ObjectRecordMethod, ObjectRecordTypeAlias, ObjectSequencePoint,
+    ObjectSourceRun,
 };
 pub use relocation::{Relocation, RelocationKind};
 pub use symbol::{
@@ -36,7 +39,7 @@ use validation::{
 };
 
 /// Schema version embedded in every encoded register object payload.
-pub const OBJECT_VERSION: u16 = 13;
+pub const OBJECT_VERSION: u16 = 14;
 
 /// Independently compiled register-bytecode object with symbolic external references.
 #[derive(Debug, Clone, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
@@ -194,6 +197,7 @@ impl RelocatableObject {
             &self.records,
             &self.enums,
         )?;
+        projections::validate(self)?;
         if self.distinct_types.iter().any(|distinct| {
             distinct.source as usize >= self.sources.len()
                 || distinct.name.is_empty()

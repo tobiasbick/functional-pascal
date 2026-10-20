@@ -59,6 +59,45 @@ fn trace_image(f: &Fixture, target: &str, root: &str, exit: i32) -> Value {
 }
 
 #[test]
+fn absolute_breakpoint_paths_bind_to_the_loaded_source_identity() {
+    let f = sibling_projects();
+    build(&f);
+    let library = f.0.join("shared/src/main.fpas");
+    let paths = [
+        "shared/src/main.fpas".to_string(),
+        library.to_string_lossy().into_owned(),
+        library.to_string_lossy().replace('\\', "/"),
+        library
+            .canonicalize()
+            .unwrap()
+            .to_string_lossy()
+            .into_owned(),
+    ];
+    for target in ["app/app.fpasprj", "app/app.fpascp"] {
+        for path in &paths {
+            let location = format!("{path}:5");
+            let stopped = f.run(
+                &["debug", target, "--source-root", ".", "--break", &location],
+                0,
+            );
+            assert_eq!(stopped["outcome"], "breakpoint", "{target}: {path}");
+            assert_eq!(
+                stopped["stop"]["location"]["source"],
+                "shared/src/main.fpas"
+            );
+            assert_eq!(stopped["stop"]["location"]["line"], 5);
+            assert_eq!(stopped["globals"][0]["value"]["scalar"], "1");
+        }
+    }
+
+    // A file with the same name and contents outside the target is not an alias.
+    let other = Fixture::new(LIBRARY);
+    let location = format!("{}:5", other.0.join("main.fpas").display());
+    let rejected = f.run(&["debug", "app/app.fpasprj", "--break", &location], 1);
+    assert_eq!(rejected["diagnostics"][0]["code"], "breakpoint_unbound");
+}
+
+#[test]
 fn sibling_sources_share_paths_cache_reuse_legacy_rebuild_and_relocated_image_traces() {
     let f = sibling_projects();
     assert!(build(&f).contains("Built program"));

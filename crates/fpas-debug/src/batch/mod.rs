@@ -163,15 +163,22 @@ fn run_inner(
                 return report;
             }
         };
+        let requested_path = std::path::Path::new(&location.source);
+        // Loaded sources use canonical paths, including Windows verbatim prefixes.
+        // Keep portable relative identities independent of the process directory.
+        let canonical_path = if requested_path.is_absolute() {
+            requested_path.canonicalize().ok()
+        } else {
+            None
+        };
         let matching = target
             .sources()
             .iter()
             .filter(|source| {
                 source.path == location.source
-                    || source
-                        .original_path
-                        .as_ref()
-                        .is_some_and(|path| path == std::path::Path::new(&location.source))
+                    || source.original_path.as_ref().is_some_and(|path| {
+                        path == requested_path || canonical_path.as_ref() == Some(path)
+                    })
             })
             .collect::<Vec<_>>();
         if matching.len() == 1 {

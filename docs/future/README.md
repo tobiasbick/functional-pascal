@@ -9,6 +9,7 @@ Current implemented behavior belongs under `docs/pascal/`, not here.
 | Area | Plan | Scope |
 |------|------|-------|
 | Debugging | [D2: Record, replay, and query](agent-wishes.md#d2-record-replay-and-query) | Unscheduled wish; scope and feasibility open; no implementation approved |
+| Runtime memory | [AP48: Task ownership and a local cycle collector](improve-syntax/ap48-local-cycle-collector/README.md) | Seven work packages for ownership, transfers, roots and local reclamation; planning only, no implementation authorized |
 | Language | [Strict ISO/IEC 14977 grammar](iso-14977-grammar.md) | Open decision on grammar authority, strict notation, and automated drift checks |
 | Standard library | [Standard library roadmap](std-roadmap.md) | Future `Std.*` units and longer-term stdlib direction |
 | Networked applications | [Networked application platform](networked-applications/README.md) | Storage, security, concurrency, transports, interactive clients, operations, and distributed nodes |
@@ -33,7 +34,7 @@ Current implemented behavior belongs under `docs/pascal/`, not here.
 
 | Area | Document | Scope |
 |------|----------|-------|
-| Planning | [AP workflow and templates](improve-syntax/README.md) | Empty package index, reusable decision/implementation work packages, dependencies and completion checks |
+| Planning | [AP workflow and templates](improve-syntax/README.md) | Package index, reusable decision/implementation work packages, dependencies and completion checks |
 | Compiler | [Panic and language-limit follow-ups](compiler-panic-followups.md) | Intake for newly discovered compiler panics and language limitations |
 | Dogfooding | [Dogfooding gaps](dogfooding-gaps.md) | Intake for gaps found while writing agent helper scripts in FPAS |
 

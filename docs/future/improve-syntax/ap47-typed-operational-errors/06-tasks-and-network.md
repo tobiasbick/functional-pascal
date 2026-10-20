@@ -120,7 +120,6 @@ The final workspace run passed 4894 tests with three existing ignored tests;
 the Pascal suite passed 535 with one intentional skip and includes all 520
 executable documentation examples. All 24 app/project checks and the standalone
 network example directory passed.
-The [original 72-workload comparison](../../../bench/ap47-tasks-network.md)
-records three unchanged before/after samples per row and any isolated controls.
 AP47.7 completes [final cross-package acceptance](07-acceptance-and-performance.md#integrated-delivery-record)
-and registers the new errors benchmark group after this original-suite comparison.
+and registers the new errors benchmark group. Cloud timings are not performance
+acceptance evidence.

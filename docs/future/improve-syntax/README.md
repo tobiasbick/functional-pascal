@@ -4,7 +4,7 @@ The FPAS 1 syntax campaign is closed. This directory keeps its planning workflow
 and a copyable package template for later work, including
 [FPAS 2 language directions](../fpas2-language-directions.md).
 AP47 contains the selected native-error design and its implementation work packages.
-AP47.1-AP47.7 are complete, including final acceptance and performance.
+AP47.1-AP47.7 are complete, including functional acceptance and benchmark workloads.
 
 Implemented behavior belongs in the [current handbook](../../pascal/README.md)
 and [grammar](../../specs/grammar.ebnf). A proposal here does not authorize a
@@ -52,8 +52,9 @@ completion index.
 
 ## Package status
 
-AP47.1-AP47.7 are complete, including final acceptance and performance. Add real packages here
-when planning begins; keep the example out of this table.
+AP47.1-AP47.7 are complete, including functional acceptance and benchmark
+workloads. Add real packages here when planning begins; keep the example out of
+this table.
 
 | Done | Package | Effort | Depends on | Status |
 | --- | --- | --- | --- | --- |

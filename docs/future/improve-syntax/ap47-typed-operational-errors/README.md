@@ -5,7 +5,9 @@ The user selected native `error` declarations, automatic error
 output, explicit MapError and unchanged try, and delegated the remaining design
 choices. This plan records those choices. The runtime, language, constructor-value, explicit-mapping
 and both Std migration cohorts are delivered. AP47.7 closes integrated acceptance,
-documentation and performance with the user-authorized final implementation.
+documentation and benchmark workloads with the user-authorized final implementation.
+Elapsed-time acceptance requires controlled local measurements; cloud timings
+are not retained as evidence.
 
 Effort: large across compiler, runtime, standard library and consumers.
 Completion is tracked only in the [central plan](../README.md#package-status).
@@ -78,7 +80,7 @@ are complete; publication remains a separate action.
 The design contract, runtime/artifact foundation and source-language slice are
 complete, including constructor values, MapError and both Std migration cohorts.
 Final acceptance is complete; its [delivery record](07-acceptance-and-performance.md#integrated-delivery-record)
-links the integrated proof, verification and measured performance.
+links the integrated proof, verification and benchmark workload boundaries.
 
 - [x] [AP47.1: Language and error contract](01-decision.md)
 - [x] [AP47.2: Runtime layouts and portable artifacts](02-runtime-and-artifacts.md)

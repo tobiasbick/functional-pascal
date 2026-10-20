@@ -1,10 +1,9 @@
 # Typed error workloads
 
 The `errors` group measures production error values with matched controls in the
-same release build. It was added after the original 72-row AP47.6 and AP47.7
-comparisons.
-New language features have no invented old-checkout baseline. The expanded
-full-suite baseline must be saved again when IDs or arguments change.
+same release build. New language features have no invented old-checkout baseline.
+The expanded full-suite baseline must be captured on a controlled local host and
+saved again when IDs or arguments change. Cloud runs establish correctness only.
 
 | Rows | Boundary and checks | Same-build control |
 | --- | --- | --- |

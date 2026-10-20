@@ -67,26 +67,20 @@ second error tutorial API, generated reporter function or hidden wrapper.
 
 ## Performance plan and gates
 
-Before AP47.2 changes measured code, use cargo bench-fpas to save the unchanged
-full suite and VM group. Keep compiler/toolchain, power settings and machine load
+Cloud elapsed-time results are not accepted performance evidence. At the user's
+request, the reports, recorded timings and baselines from 2026-10-19 and
+2026-10-20 have been removed. No performance gate or slowdown conclusion is
+claimed from those runs. Functional checks and deterministic structural checks
+remain the delivered evidence; timing acceptance needs a controlled local host.
+
+For future local measurements, keep toolchain, power settings and load
 comparable. The harness owns rebuilding the release CLI. Capture three serial
-runs for medians, with correctness checks and no builds/tests running alongside
-timings. Re-run VM microbenchmarks after metadata, language and callback changes;
-run the complete suite after Std integration. Investigate any repeatable runtime
-slowdown; the recent trace-dispatch regression is specifically not an acceptable
-tradeoff for typed errors.
+runs for medians, with correctness checks and no builds/tests during timings.
+Investigate repeatable slowdowns. On that host, unchanged VM rows with baseline
+medians of at least 20 ms retain the 5% regression gate. Compare group sums as
+sums of row medians, not whole-suite wall time, and report every affected row.
 
-For unchanged VM rows with baseline medians of at least 20 ms, a repeatable
-increase over 5% blocks completion until repaired or the user explicitly accepts
-the measured tradeoff. Smaller rows are reported with raw samples rather than
-percentage gates. Compare group sums of row medians as such, not as whole-suite
-wall time. Codec/tooling/host changes get their own complete before/after report;
-no material regression is hidden by a geometric mean or an improvement elsewhere.
-
-After AP47.6's original full-suite comparison, register a bounded `errors` group
-before further feature performance tuning. AP47.4 makes its language available;
-suite registration waits so the original full-suite IDs stay comparable.
-Planned workloads:
+The bounded `errors` group is registered with these workloads and controls:
 
 | Workload | Boundary and correctness | Control |
 | --- | --- | --- |
@@ -115,10 +109,9 @@ cargo bench-fpas compare ap47-errors --group errors
 cargo bench-fpas record "native typed operational errors"
 ```
 
-The `errors` commands are valid only after its workloads have been registered.
-Register them after the original full-suite comparison, then save a fresh
-full-suite baseline including the new rows for subsequent tuning.
-Do not weaken the harness's group/row validation to compare different suites.
+Run these timing commands only on a controlled local host. Save a fresh
+full-suite baseline including the new rows for subsequent tuning. Do not weaken
+the harness's group/row validation to compare different suites.
 
 ## Required integration checks
 
@@ -192,13 +185,10 @@ plus the new errors directory pass. Grammar validation, Rust/Pascal formatting,
 relative links and diff checks complete the delivery. The intrinsic API exporter
 produces byte-identical generated declarations.
 
-The [performance report](../../../bench/ap47-acceptance.md) records every original
-row, raw samples, group sums and isolated regression controls, followed by the new
-matched error workloads and fresh expanded-suite baseline. It also records exact
-rendering/decode boundaries and shared-factory/metadata representation sizes.
-The VM regression gate passes. The report explicitly retains the non-VM
-Mandelbrot render increase and its image/CLI/A/A investigation as a measurement
-limitation; no semantic rendering work was added or runtime tradeoff claimed.
-The errors group is registered only after the unchanged 72-row comparison; suite
-comparison validation is preserved. The subagent reviews implementation, controls
-and documentation; all reported findings are resolved before completion.
+The `errors` group contains 13 matched workloads, bringing the suite to 85 rows.
+Its [workload reference](../../../bench/errors.md) specifies rendering/decode
+boundaries and structural constructor/metadata checks. Cloud timings, reports
+and baseline claims have been removed at the user's request. No reliable timing
+baseline or elapsed-time acceptance is claimed; that requires a controlled local
+host. Suite comparison validation is preserved. The subagent reviewed the
+implementation, controls and documentation; all reported findings were resolved.

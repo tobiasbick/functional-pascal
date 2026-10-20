@@ -84,8 +84,7 @@ uninferred generic arguments must fail at checking, not runtime.
 Try rejection for incompatible E/E2 is still observable without explicit mapping;
 mapping before try succeeds. Option and OrElse retain their contracts. Source,
 cached-unit and program-image constructor calls agree. Compiler, sema, VM/debugger, CLI, native catalog and public examples cover the
-same operation. The [VM/concurrency comparison](../../../bench/ap47-maperror.md)
-records the unchanged workload boundaries.
+same operation.
 
 Additional integration owners are `crates/fpas-std/src/std_units/symbols/std_symbols/result.rs`,
 `crates/fpas-compiler/src/intrinsic_catalog.rs`, bytecode execution/debug-effect

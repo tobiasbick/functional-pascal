@@ -11,8 +11,7 @@ performance conclusions; cloud smoke checks establish correctness only.
 
 The [typed error workloads](errors.md) add the `errors` group: construction,
 generic helpers/callables, MapError/case controls, cause rendering and a structural
-deep-image round trip. [AP47.7 acceptance](ap47-acceptance.md) retains the original
-72-row comparison, the same-build controls and the fresh 85-row baseline.
+deep-image round trip. The configured suite contains 85 workloads.
 
 The `tui_styled_cells` row builds 128-by-44 frames of half-block cells with a concrete RGB
 style per cell, the per-frame path of pixel renderers such as terminal raycasters. A checksum
@@ -66,12 +65,10 @@ The array drain includes array construction within each timed iteration.
 
 Committed progress over time lives in [`history.md`](history.md). Agent workflow: [`.agents/skills/fpas-bench/SKILL.md`](../../.agents/skills/fpas-bench/SKILL.md).
 
-The current full-suite starting point is the 85-row
-[AP47.7 baseline](ap47-acceptance.md#fresh-expanded-suite-baseline). Its local
-snapshot is `.temp-data/bench/ap47-7-expanded-full.json`; compare it with
-`cargo bench-fpas compare ap47-7-expanded-full`. Historical 72-row snapshots
-remain evidence for their original suite and are rejected against the expanded
-suite. Save a new local baseline if that snapshot is unavailable.
+There is no accepted timing baseline for the current 85-row suite. Capture a
+fresh baseline on a controlled local performance host before comparing elapsed
+times. Historical snapshots with different workload selections cannot be used
+against the expanded suite; group/row validation remains strict.
 
 `substring_ascii` and `substring_unicode` measure beginning, middle, end, empty,
 and full-range slices of a 32,768-scalar string. Input construction and warmup
@@ -126,6 +123,10 @@ Use `cargo bench-fpas save mandelbrot-before --group mandelbrot` and
 `cargo bench-fpas compare mandelbrot-before --group mandelbrot`.
 
 ## Prerequisites
+
+Cloud environments support correctness checks only. Do not collect timing
+baselines, publish elapsed-time comparisons or record cloud measurements in
+`history.md`. Use a controlled local host for performance acceptance.
 
 - Quiet machine (avoid heavy background load).
 - Same power settings when comparing runs.

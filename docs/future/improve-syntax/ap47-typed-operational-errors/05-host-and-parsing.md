@@ -107,17 +107,14 @@ source execution and portable images, parser/field causes, native error details,
 file limits, process failures/nonzero exits and secure entropy backend failure.
 A controlled denied-access check preserved the native permission code. The same
 valid OutOfRange pattern fails on the unchanged control because its payload is
-string, and succeeds after migration. The measured scalar-membership regression
-was repaired with an exact Integer comparison; mixed/nested/empty arrays and
-integer extrema retain their previous membership semantics.
+string, and succeeds after migration. Scalar membership uses an exact Integer
+comparison; mixed/nested/empty arrays and integer extrema retain their previous
+membership semantics.
 
 Validation: 4,887 Rust tests passed with 3 ignored; 534 Pascal tests passed with
 1 intentional skip; all 24 affected project/source checks passed. Workspace build,
 strict all-target/all-feature Clippy, both formatters, editor grammar and whitespace
 checks passed. Regenerating all 20 native API files produces identical output.
-The [full-suite comparison](../../../bench/ap47-host-parsing.md) records the
-unchanged 72 workloads, paired samples and regression controls. No VM row
-crosses the selected gate; additional Mandelbrot controls do not establish a
-repeatable slowdown. AP47.6 and AP47.7 are now complete;
+AP47.6 and AP47.7 are now complete;
 [integrated acceptance](07-acceptance-and-performance.md#integrated-delivery-record)
 records the final AP47 closure.

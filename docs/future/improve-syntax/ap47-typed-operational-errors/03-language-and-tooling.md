@@ -115,7 +115,5 @@ effects inside contracts. Run the appropriate crate tests, workspace checks,
 language suite, compact-reference example test and editor grammar verification.
 No MapError example is published as runnable until AP47.4 is delivered.
 
-The [performance comparison](../../../bench/ap47-language.md) records unchanged
-VM, tooling and artifact workloads against the completed AP47.2 source baseline.
 The independent imported-generic-enum projection failure and NotesUpdate
 reference-count assertion remain the checkout follow-ups recorded in AP47.2.

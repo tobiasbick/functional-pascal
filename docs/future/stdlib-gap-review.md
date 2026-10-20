@@ -94,7 +94,7 @@ foundation and AP47.3's source syntax, constraints, Message() and executable
 handbook are implemented. AP47.4 delivers constructor values and MapError, and
 AP47.5 delivers host/parsing families with migrated callers. AP47.6 delivers
 task/network families and layered HTTP consumers. AP47.7 completes integrated
-acceptance, documentation and measured performance. SDK and TUI boundaries that
+acceptance, documentation and benchmark workloads. SDK and TUI boundaries that
 retain strings use explicit Message() mappings.
 
 ## Additional candidates

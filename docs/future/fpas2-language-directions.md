@@ -40,7 +40,8 @@ explicit MapError and unchanged try, then delegated the detailed planning choice
 The [AP47 package](improve-syntax/ap47-typed-operational-errors/README.md) records
 those choices, dependencies and seven delivery work packages. Its design work is
 recorded; AP47.1-AP47.7 and final acceptance are complete. The acceptance record
-includes executable examples, artifact/editor checks and measured performance.
+includes executable examples, artifact/editor checks and benchmark workloads.
+Elapsed-time performance acceptance requires a controlled local host.
 
 Channel closure, timeout and cancellation use `Tasks.TaskError` inside Result;
 see [task APIs](../pascal/std/concurrency/task.md).
@@ -110,7 +111,7 @@ application Result errors remain general and need no runtime registration.
 
 [AP47's acceptance plan](improve-syntax/ap47-typed-operational-errors/07-acceptance-and-performance.md)
 covers artifacts, standalone images, editor/query behavior, runtime and Std
-integration, executable examples and measured performance. Error metadata must
+integration, executable examples and local performance checks. Error metadata must
 not add work to ordinary VM instruction dispatch. Remaining profiling/file-split
 work does not reopen the selected public contract or authorize implementation.
 
